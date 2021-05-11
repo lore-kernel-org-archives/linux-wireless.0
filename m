@@ -2,214 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9300C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 22:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C67C433ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 01:11:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F89761581
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 May 2021 22:29:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C0EC60C40
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 01:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231289AbhEJWa4 (ORCPT
+        id S230236AbhEKBMj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 May 2021 18:30:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43178 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231281AbhEJWay (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 May 2021 18:30:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1287361581;
-        Mon, 10 May 2021 22:29:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620685789;
-        bh=P76/1MMWh4HZqIQTVVGkmFQftzTWoXSf7yPpB+C4i/c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Vp2Cw6c73poizpJZe/4ErwgmMyw0krtLwE/Ee/KHNTv3dKLBqKTpNhqrhGxr3hHOl
-         UpoA+afgMqbPJiThTPCjShqpAy2VdmZgSfNBvXBrGKd/hLbhlgZNZ/jvl03TDKJL/m
-         yrsgWDBYtTgS6ijEMLy+WFYsBJAE6J0z+m/OjFFwAOkBx9dWo9Jv3bTloJl3zSt889
-         ojiNxQ0MLhJDEsudB3uDPGCm7amBgCrI3JE0325BZfdPwh9XjTv1aFOrx8fYSbfghn
-         N72BEvlJtcSn6c/wGe8e0354DxFWtT2KiCxtrMu8e5xCkaV/bJ0tm+cX7uG/TIp2yw
-         CUG4BSoKrSkFw==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com
-Subject: [PATCH 5/5] mt76: mt7615: set macwork timeout according to runtime-pm
-Date:   Tue, 11 May 2021 00:29:24 +0200
-Message-Id: <7ccfbf127354bc4552fc76959a3f57e3e3c685de.1620685619.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1620685619.git.lorenzo@kernel.org>
-References: <cover.1620685619.git.lorenzo@kernel.org>
+        Mon, 10 May 2021 21:12:39 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:2049 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230154AbhEKBMg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 May 2021 21:12:36 -0400
+Received: from dggeml715-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4FfKX32sySzWhV5;
+        Tue, 11 May 2021 09:07:15 +0800 (CST)
+Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
+ dggeml715-chm.china.huawei.com (10.3.17.126) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Tue, 11 May 2021 09:11:28 +0800
+Received: from [127.0.0.1] (10.174.177.72) by dggpemm500006.china.huawei.com
+ (7.185.36.236) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 11 May
+ 2021 09:11:28 +0800
+Subject: Re: [PATCH 1/1] b43: phy_n: Delete some useless empty code
+To:     Andrew Lunn <andrew@lunn.ch>
+CC:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        b43-dev <b43-dev@lists.infradead.org>,
+        netdev <netdev@vger.kernel.org>
+References: <20210510145117.4066-1-thunder.leizhen@huawei.com>
+ <YJmRUQwPPDE+hWiN@lunn.ch>
+From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Message-ID: <1890aa92-ddf2-78f7-51e7-bdc3a58a04c6@huawei.com>
+Date:   Tue, 11 May 2021 09:11:27 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <YJmRUQwPPDE+hWiN@lunn.ch>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.72]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500006.china.huawei.com (7.185.36.236)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set macwork timeout value according to runtime-pm in order to reduce
-power consumption
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7615/mac.c    | 15 +++++++++++----
- .../net/wireless/mediatek/mt76/mt7615/main.c   | 18 +++++++++++-------
- .../net/wireless/mediatek/mt76/mt7615/mt7615.h |  7 ++++++-
- .../wireless/mediatek/mt76/mt7615/pci_mac.c    |  7 ++++---
- 4 files changed, 32 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 12c628bb200e..afcb71699c41 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1918,9 +1918,14 @@ void mt7615_pm_wake_work(struct work_struct *work)
- 			mt76_queue_tx_cleanup(dev, mdev->q_mcu[MT_MCUQ_WM],
- 					      false);
- 		}
--		if (test_bit(MT76_STATE_RUNNING, &mphy->state))
-+
-+		if (test_bit(MT76_STATE_RUNNING, &mphy->state)) {
-+			unsigned long timeout;
-+
-+			timeout = mt7615_get_macwork_timeout(dev);
- 			ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
--						     MT7615_WATCHDOG_TIME);
-+						     timeout);
-+		}
- 	}
- 
- 	ieee80211_wake_queues(mphy->hw);
-@@ -1955,6 +1960,7 @@ void mt7615_mac_work(struct work_struct *work)
- {
- 	struct mt7615_phy *phy;
- 	struct mt76_phy *mphy;
-+	unsigned long timeout;
- 
- 	mphy = (struct mt76_phy *)container_of(work, struct mt76_phy,
- 					       mac_work.work);
-@@ -1973,8 +1979,9 @@ void mt7615_mac_work(struct work_struct *work)
- 	mt7615_mutex_release(phy->dev);
- 
- 	mt76_tx_status_check(mphy->dev, NULL, false);
--	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
--				     MT7615_WATCHDOG_TIME);
-+
-+	timeout = mt7615_get_macwork_timeout(phy->dev);
-+	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work, timeout);
- }
- 
- void mt7615_tx_token_put(struct mt7615_dev *dev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index faae60775b16..827f19727f3c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -28,6 +28,7 @@ static int mt7615_start(struct ieee80211_hw *hw)
- {
- 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
- 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
-+	unsigned long timeout;
- 	bool running;
- 	int ret;
- 
-@@ -78,8 +79,8 @@ static int mt7615_start(struct ieee80211_hw *hw)
- 
- 	set_bit(MT76_STATE_RUNNING, &phy->mt76->state);
- 
--	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
--				     MT7615_WATCHDOG_TIME);
-+	timeout = mt7615_get_macwork_timeout(dev);
-+	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work, timeout);
- 
- 	if (!running)
- 		mt7615_mac_reset_counters(dev);
-@@ -352,10 +353,12 @@ int mt7615_set_channel(struct mt7615_phy *phy)
- 	mt7615_mutex_release(dev);
- 
- 	mt76_worker_schedule(&dev->mt76.tx_worker);
--	if (!mt76_testmode_enabled(phy->mt76))
-+	if (!mt76_testmode_enabled(phy->mt76)) {
-+		unsigned long timeout = mt7615_get_macwork_timeout(dev);
-+
- 		ieee80211_queue_delayed_work(phy->mt76->hw,
--					     &phy->mt76->mac_work,
--					     MT7615_WATCHDOG_TIME);
-+					     &phy->mt76->mac_work, timeout);
-+	}
- 
- 	return ret;
- }
-@@ -1200,6 +1203,7 @@ static int mt7615_resume(struct ieee80211_hw *hw)
- {
- 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
- 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
-+	unsigned long timeout;
- 	bool running;
- 
- 	mt7615_mutex_acquire(dev);
-@@ -1223,8 +1227,8 @@ static int mt7615_resume(struct ieee80211_hw *hw)
- 					    mt76_connac_mcu_set_suspend_iter,
- 					    phy->mt76);
- 
--	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
--				     MT7615_WATCHDOG_TIME);
-+	timeout = mt7615_get_macwork_timeout(dev);
-+	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work, timeout);
- 
- 	mt7615_mutex_release(dev);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 2ba86bd96a31..1e0f6a0f8c66 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -20,7 +20,6 @@
- 					 MT7615_MAX_INTERFACES)
- 
- #define MT7615_PM_TIMEOUT		(HZ / 12)
--#define MT7615_WATCHDOG_TIME		(HZ / 10)
- #define MT7615_HW_SCAN_TIMEOUT		(HZ / 10)
- #define MT7615_RESET_TIMEOUT		(30 * HZ)
- #define MT7615_RATE_RETRY		2
-@@ -460,6 +459,12 @@ static inline u32 mt7615_tx_mcu_int_mask(struct mt7615_dev *dev)
- 	return MT_INT_TX_DONE(dev->mt76.q_mcu[MT_MCUQ_WM]->hw_idx);
- }
- 
-+static inline unsigned long
-+mt7615_get_macwork_timeout(struct mt7615_dev *dev)
-+{
-+	return dev->pm.enable ? HZ / 3 : HZ / 10;
-+}
-+
- void mt7615_dma_reset(struct mt7615_dev *dev);
- void mt7615_scan_work(struct work_struct *work);
- void mt7615_roc_work(struct work_struct *work);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-index cc278d8cb888..da87c02a73eb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
-@@ -268,6 +268,7 @@ void mt7615_mac_reset_work(struct work_struct *work)
- 	struct mt7615_phy *phy2;
- 	struct mt76_phy *ext_phy;
- 	struct mt7615_dev *dev;
-+	unsigned long timeout;
- 
- 	dev = container_of(work, struct mt7615_dev, reset_work);
- 	ext_phy = dev->mt76.phy2;
-@@ -345,11 +346,11 @@ void mt7615_mac_reset_work(struct work_struct *work)
- 
- 	mt7615_mutex_release(dev);
- 
-+	timeout = mt7615_get_macwork_timeout(dev);
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mphy.mac_work,
--				     MT7615_WATCHDOG_TIME);
-+				     timeout);
- 	if (phy2)
- 		ieee80211_queue_delayed_work(ext_phy->hw,
--					     &phy2->mt76->mac_work,
--					     MT7615_WATCHDOG_TIME);
-+					     &phy2->mt76->mac_work, timeout);
- 
- }
--- 
-2.31.1
+On 2021/5/11 4:02, Andrew Lunn wrote:
+> On Mon, May 10, 2021 at 10:51:17PM +0800, Zhen Lei wrote:
+>> These TODO empty code are added by
+>> commit 9442e5b58edb ("b43: N-PHY: partly implement SPUR workaround"). It's
+>> been more than a decade now. I don't think anyone who wants to perfect
+>> this workaround can follow this TODO tip exactly. Instead, it limits them
+>> to new thinking. Remove it will be better.
+>>
+>> No functional change.
+> 
+> No function change, apart from the new warning?
+> 
+> Does your bot to compile the change and look for new warnings/errors?
+
+Sorry, I have compiled it. I guess it's probably separated by macros, which I didn't notice. I will check it.
+
+> 
+>      Andrew
+> 
+> .
+> 
 
