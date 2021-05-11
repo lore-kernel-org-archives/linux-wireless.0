@@ -2,157 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3400EC433B4
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 16:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07430C43461
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AED0613CD
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 16:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE70C61628
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 18:03:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231852AbhEKQYZ (ORCPT
+        id S231825AbhEKSEW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 May 2021 12:24:25 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:31550 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231812AbhEKQYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 May 2021 12:24:21 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1620750195; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=TUpFo7fqbEDDZ7AMoUDruakSieCRFrnRHfwDZQngGPY=; b=uE/twga6knxifqrff5iDWbG88X1pazvYjuAYGk76mFF2RqVs5p/jqI01I8cF3l+OtgwjnOgH
- kl20Z0U8vuDLCAIsVOLvU+f5m01SZzjzZEFPtrV2GNWML3wxqK++s2UI/1g5lSHoyd16GKtv
- BJPsnSZCYOBnrERlB8NXYkrpFNE=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 609aaf6eff1bb9beec18fd1c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 11 May 2021 16:23:10
- GMT
-Sender: jouni=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A4E02C433D3; Tue, 11 May 2021 16:23:09 +0000 (UTC)
-Received: from jouni.codeaurora.org (85-76-96-12-nat.elisa-mobile.fi [85.76.96.12])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: jouni)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D3CD6C43145;
-        Tue, 11 May 2021 16:23:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D3CD6C43145
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=jouni@codeaurora.org
-From:   Jouni Malinen <jouni@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Baochen Qiang <bqiang@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 7/7] ath11k: don't call ath11k_pci_set_l1ss for WCN6855
-Date:   Tue, 11 May 2021 19:22:14 +0300
-Message-Id: <20210511162214.29475-8-jouni@codeaurora.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210511162214.29475-1-jouni@codeaurora.org>
-References: <20210511162214.29475-1-jouni@codeaurora.org>
+        Tue, 11 May 2021 14:04:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41154 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231454AbhEKSEV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 May 2021 14:04:21 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA198C06174A;
+        Tue, 11 May 2021 11:03:10 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lgWiq-007aAS-OQ; Tue, 11 May 2021 20:03:08 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>, stable@vger.kernel.org
+Subject: [PATCH 01/18] mac80211: assure all fragments are encrypted
+Date:   Tue, 11 May 2021 20:02:42 +0200
+Message-Id: <20210511200110.30c4394bb835.I5acfdb552cc1d20c339c262315950b3eac491397@changeid>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210511180259.159598-1-johannes@sipsolutions.net>
+References: <20210511180259.159598-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Baochen Qiang <bqiang@codeaurora.org>
+From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
 
-For QCA6390, one PCI related clock drifts sometimes, and it makes
-PCI link difficult to quit L1ss. Current implementation fixed this
-by configuring some related regs using ath11k_pci_fix_l1ss.
+Do not mix plaintext and encrypted fragments in protected Wi-Fi
+networks. This fixes CVE-2020-26147.
 
-WCN6855 does not have this clock drift problem, so no need to set
-these regs.
+Previously, an attacker was able to first forward a legitimate encrypted
+fragment towards a victim, followed by a plaintext fragment. The
+encrypted and plaintext fragment would then be reassembled. For further
+details see Section 6.3 and Appendix D in the paper "Fragment and Forge:
+Breaking Wi-Fi Through Frame Aggregation and Fragmentation".
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Because of this change there are now two equivalent conditions in the
+code to determine if a received fragment requires sequential PNs, so we
+also move this test to a separate function to make the code easier to
+maintain.
 
-Signed-off-by: Baochen Qiang <bqiang@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath11k/core.c | 5 +++++
- drivers/net/wireless/ath/ath11k/hw.h   | 1 +
- drivers/net/wireless/ath/ath11k/pci.c  | 3 ++-
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ net/mac80211/rx.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index fd8941905fdb..4a1051418f33 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -70,6 +70,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = true,
- 		.supports_suspend = false,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
-+		.fix_l1ss = true,
- 	},
- 	{
- 		.hw_rev = ATH11K_HW_IPQ6018_HW10,
-@@ -110,6 +111,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = true,
- 		.supports_suspend = false,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
-+		.fix_l1ss = true,
- 	},
- 	{
- 		.name = "qca6390 hw2.0",
-@@ -149,6 +151,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.supports_suspend = true,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
-+		.fix_l1ss = true,
- 	},
- 	{
- 		.name = "qcn9074 hw1.0",
-@@ -186,6 +189,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.supports_suspend = false,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_qcn9074),
-+		.fix_l1ss = true,
- 	},
- 	{
- 		.name = "wcn6855 hw2.0",
-@@ -225,6 +229,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.supports_suspend = true,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_wcn6855),
-+		.fix_l1ss = false,
- 	},
- };
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 62047e93e217..65fc674e27cc 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2194,6 +2194,16 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
+ 	return NULL;
+ }
  
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index be62f0c2e25e..62f5978b3005 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -162,6 +162,7 @@ struct ath11k_hw_params {
- 	bool cold_boot_calib;
- 	bool supports_suspend;
- 	u32 hal_desc_sz;
-+	bool fix_l1ss;
- };
++static bool requires_sequential_pn(struct ieee80211_rx_data *rx, __le16 fc)
++{
++	return rx->key &&
++		(rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP ||
++		 rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP_256 ||
++		 rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP ||
++		 rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP_256) &&
++		ieee80211_has_protected(fc);
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ {
+@@ -2238,12 +2248,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		/* This is the first fragment of a new frame. */
+ 		entry = ieee80211_reassemble_add(rx->sdata, frag, seq,
+ 						 rx->seqno_idx, &(rx->skb));
+-		if (rx->key &&
+-		    (rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP ||
+-		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP_256 ||
+-		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP ||
+-		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP_256) &&
+-		    ieee80211_has_protected(fc)) {
++		if (requires_sequential_pn(rx, fc)) {
+ 			int queue = rx->security_idx;
  
- struct ath11k_hw_ops {
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index d33b5d66b494..9fe42194f488 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -434,7 +434,8 @@ static void ath11k_pci_sw_reset(struct ath11k_base *ab, bool power_on)
- 		ath11k_pci_enable_ltssm(ab);
- 		ath11k_pci_clear_all_intrs(ab);
- 		ath11k_pci_set_wlaon_pwr_ctrl(ab);
--		ath11k_pci_fix_l1ss(ab);
-+		if (ab->hw_params.fix_l1ss)
-+			ath11k_pci_fix_l1ss(ab);
- 	}
+ 			/* Store CCMP/GCMP PN so that we can verify that the
+@@ -2285,11 +2290,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		u8 pn[IEEE80211_CCMP_PN_LEN], *rpn;
+ 		int queue;
  
- 	ath11k_mhi_clear_vector(ab);
+-		if (!rx->key ||
+-		    (rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP &&
+-		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP_256 &&
+-		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_GCMP &&
+-		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_GCMP_256))
++		if (!requires_sequential_pn(rx, fc))
+ 			return RX_DROP_UNUSABLE;
+ 		memcpy(pn, entry->last_pn, IEEE80211_CCMP_PN_LEN);
+ 		for (i = IEEE80211_CCMP_PN_LEN - 1; i >= 0; i--) {
 -- 
-2.25.1
+2.30.2
 
