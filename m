@@ -2,72 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF12C433ED
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 10:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4FEBC433ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 10:22:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 852D9610C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 10:16:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93EA6610C9
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 10:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231245AbhEKKRu (ORCPT
+        id S231377AbhEKKXQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 May 2021 06:17:50 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:47805 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230482AbhEKKRt (ORCPT
+        Tue, 11 May 2021 06:23:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49158 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231177AbhEKKXP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 May 2021 06:17:49 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212])
-        by youngberry.canonical.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <colin.king@canonical.com>)
-        id 1lgPRS-0001td-Qa; Tue, 11 May 2021 10:16:42 +0000
-Subject: Re: [RFC PATCH] mt7601u: make the driver work again
-To:     Rui Salvaterra <rsalvaterra@gmail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>
-Cc:     lorenzo@kernel.org, kuba@kernel.org, linux-wireless@vger.kernel.org
-References: <20210504212828.815-1-rsalvaterra@gmail.com>
- <20210505045044.GA735251@wp.pl>
- <CALjTZvYZ8Rr-UFyqFststt+vG+Ei1avUvPVxQwHe72QU0NEeKA@mail.gmail.com>
- <20210505092542.GA757514@wp.pl>
- <CALjTZvausPmK+AubwcV71b1Vi+JxN23fM-AfUr1+jRD+NbnW1g@mail.gmail.com>
- <20210505132513.GA759295@wp.pl>
- <CALjTZvaQjGDc2iO7gLvTzXp1xWs78UqFVFxdGVD9ta971bRYSQ@mail.gmail.com>
-From:   Colin Ian King <colin.king@canonical.com>
-Message-ID: <ab30bf35-b05b-685f-2b31-5d211f896e2e@canonical.com>
-Date:   Tue, 11 May 2021 11:16:42 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        Tue, 11 May 2021 06:23:15 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBA6CC06175F
+        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2021 03:22:06 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id s6so22184321edu.10
+        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2021 03:22:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QmTpaJGbdRDVabZ/Ya/snqIhQgVbSrIzekeHrdrwMYI=;
+        b=gr6ABjLbHUzUXY182Vs6Ufiv8nW6iU41UhcGlhr4t2Y1qM75yRwcxCUrzTMFwzyDee
+         gz+2KxabVUkpBgv3+Vujwch4b9+9tMDqHBPM5v8NdqS6AnTjR+nzHup/OgdDH2pDCBlc
+         0QRmfk3W0C40+ubymSdM8cJgJ/MNY/sPMbIQTDr5jjNuu+L7wTDg9Wfk8RyPALXwZE8Z
+         hoTh40EdI+evead0YMXFHbvQ5ZPTX5B7e7OEV2untHHfkTN/GevLElwsN1GaA5eH15Qb
+         Bb319haX6Bc9Mn4tvwJBgy6EtDOogO6isMpcl0FV/adzPSfBSzxDYJQ13QPZwd5gGwRx
+         EuFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QmTpaJGbdRDVabZ/Ya/snqIhQgVbSrIzekeHrdrwMYI=;
+        b=NDJDCxR4YWA/jkvZKI66iou9iGhsdEZ/yBcBBaS7mZChgdZkj2QxuHrSyx9KD2c+d2
+         3+rgPc/BZs7Wvp9QrnpJEhmpvRDmdG758vv5LzriaqZ7tx5/jYifpXc/o09c9C6NMSpJ
+         jzA9WF+IMXfygjYn4Pd03pSCDyAnHAa5M/R+W9AoQEubGuBVgQtFK2CcRyYM58QwGyBA
+         jXyg6ZhkUkOWvtr715LRXlINmijhWYjVWbkENmWDBBR/z2/ExQXKGybCiioEX/9xZocp
+         S3g5oanva+YunxesF0pFHYwt+huI5S/mByfvJ698WMgbdsuiUPTFkILh9QysmChrs/D1
+         JxSg==
+X-Gm-Message-State: AOAM5304wKSmtDofBAmMFKxzje1Ei6AlgclnLIBp0/42ZT/jOViEM84E
+        SKGXYN6TYmKRa8FH/i/n8U2Vzl7u9gs7SoXoJg==
+X-Google-Smtp-Source: ABdhPJw1p7rnLMKksuPaAzR6xbE58mkpd6GcxYyyQVohKHv2wtPQ+nfzNFaKQakMQh0IHqpnN9XB9eolH5Q2HrUoybE=
+X-Received: by 2002:aa7:cf19:: with SMTP id a25mr35833312edy.231.1620728525645;
+ Tue, 11 May 2021 03:22:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CALjTZvaQjGDc2iO7gLvTzXp1xWs78UqFVFxdGVD9ta971bRYSQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210504212828.815-1-rsalvaterra@gmail.com> <20210505045044.GA735251@wp.pl>
+ <CALjTZvYZ8Rr-UFyqFststt+vG+Ei1avUvPVxQwHe72QU0NEeKA@mail.gmail.com>
+ <20210505092542.GA757514@wp.pl> <CALjTZvausPmK+AubwcV71b1Vi+JxN23fM-AfUr1+jRD+NbnW1g@mail.gmail.com>
+ <20210505132513.GA759295@wp.pl> <CALjTZvaQjGDc2iO7gLvTzXp1xWs78UqFVFxdGVD9ta971bRYSQ@mail.gmail.com>
+ <ab30bf35-b05b-685f-2b31-5d211f896e2e@canonical.com>
+In-Reply-To: <ab30bf35-b05b-685f-2b31-5d211f896e2e@canonical.com>
+From:   Rui Salvaterra <rsalvaterra@gmail.com>
+Date:   Tue, 11 May 2021 11:21:54 +0100
+Message-ID: <CALjTZvZje0BNj8Vjxjjn8Lmxrhj5N2-o8ZJJASd-0TZOBZZJFA@mail.gmail.com>
+Subject: Re: [RFC PATCH] mt7601u: make the driver work again
+To:     Colin Ian King <colin.king@canonical.com>
+Cc:     Stanislaw Gruszka <stf_xl@wp.pl>, lorenzo@kernel.org,
+        kuba@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/05/2021 11:13, Rui Salvaterra wrote:
-> Hi, again,
-> 
-> Well, this was "fun"… I rebased my patch on top of 5.13-rc1 and now my
-> MT7601U adapters are broken again. I tried different combinations of
-> mine and the the last two upstream patches [1][2], but the result is
-> the same, so now I have no idea of what's going on.
-> 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mediatek/mt7601u?h=v5.13-rc1&id=87fce88658ba047ae62e83497d3f3c5dc22fa6f9
-> [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mediatek/mt7601u?h=v5.13-rc1&id=670d9e53886c942b7f29c475b2b494278e586921
+Hi, Colin,
 
-If reverting the above patches does not work, I suspect a bisect is
-required to corner the exact reason.
+On Tue, 11 May 2021 at 11:16, Colin Ian King <colin.king@canonical.com> wrote:
+>
+> If reverting the above patches does not work, I suspect a bisect is
+> required to corner the exact reason.
 
-> 
-> Thanks,
-> Rui
-> 
+Sure, I was just trying to be as lazy as possible, but I guess there's
+no way around it. :)
 
-
+Thanks,
+Rui
