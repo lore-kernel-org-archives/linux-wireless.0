@@ -2,83 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFED3C433B4
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 03:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F43C433ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 03:42:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 993F961409
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 03:00:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C263A61623
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 May 2021 03:42:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbhEKDBT (ORCPT
+        id S229931AbhEKDnV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 May 2021 23:01:19 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2684 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229931AbhEKDBS (ORCPT
+        Mon, 10 May 2021 23:43:21 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2616 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229465AbhEKDnU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 May 2021 23:01:18 -0400
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FfMzH6bcFz1BLCD;
-        Tue, 11 May 2021 10:57:31 +0800 (CST)
-Received: from [127.0.0.1] (10.174.177.72) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.498.0; Tue, 11 May 2021
- 11:00:07 +0800
-Subject: Re: [PATCH 1/1] b43: phy_n: Delete some useless empty code
-From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-To:     Andrew Lunn <andrew@lunn.ch>
-CC:     Kalle Valo <kvalo@codeaurora.org>,
+        Mon, 10 May 2021 23:43:20 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FfNtz2LxmzQlQq;
+        Tue, 11 May 2021 11:38:51 +0800 (CST)
+Received: from thunder-town.china.huawei.com (10.174.177.72) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.498.0; Tue, 11 May 2021 11:42:06 +0800
+From:   Zhen Lei <thunder.leizhen@huawei.com>
+To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         b43-dev <b43-dev@lists.infradead.org>,
         netdev <netdev@vger.kernel.org>
-References: <20210510145117.4066-1-thunder.leizhen@huawei.com>
- <YJmRUQwPPDE+hWiN@lunn.ch> <1890aa92-ddf2-78f7-51e7-bdc3a58a04c6@huawei.com>
-Message-ID: <c7c7c332-acc3-4907-1c7d-ccf2413ef837@huawei.com>
-Date:   Tue, 11 May 2021 11:00:07 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+CC:     Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH v2 0/1] b43: phy_n: Delete some useless TODO code
+Date:   Tue, 11 May 2021 11:42:02 +0800
+Message-ID: <20210511034203.4122-1-thunder.leizhen@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
-In-Reply-To: <1890aa92-ddf2-78f7-51e7-bdc3a58a04c6@huawei.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.174.177.72]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+v1 --> v2:
+Fixes "W=1" warnings. That's because after removing the todo code,
+the local variables 'noise' and 'tone' are not referenced.
+
+Thanks to Andrew Lunn for his review.
 
 
-On 2021/5/11 9:11, Leizhen (ThunderTown) wrote:
-> 
-> 
-> On 2021/5/11 4:02, Andrew Lunn wrote:
->> On Mon, May 10, 2021 at 10:51:17PM +0800, Zhen Lei wrote:
->>> These TODO empty code are added by
->>> commit 9442e5b58edb ("b43: N-PHY: partly implement SPUR workaround"). It's
->>> been more than a decade now. I don't think anyone who wants to perfect
->>> this workaround can follow this TODO tip exactly. Instead, it limits them
->>> to new thinking. Remove it will be better.
->>>
->>> No functional change.
->>
->> No function change, apart from the new warning?
->>
->> Does your bot to compile the change and look for new warnings/errors?
-> 
-> Sorry, I have compiled it. I guess it's probably separated by macros, which I didn't notice. I will check it.
+Zhen Lei (1):
+  b43: phy_n: Delete some useless TODO code
 
-I got it. It reported by W=1.
+ drivers/net/wireless/broadcom/b43/phy_n.c | 47 -----------------------
+ 1 file changed, 47 deletions(-)
 
-> 
->>
->>      Andrew
->>
->> .
->>
+-- 
+2.26.0.106.g9fadedd
+
 
