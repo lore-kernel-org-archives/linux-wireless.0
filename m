@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B85C43600
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB815C433ED
 	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28618611AE
+	by mail.kernel.org (Postfix) with ESMTP id AECEE611AE
 	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230379AbhENCGY (ORCPT
+        id S232304AbhENCGZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 May 2021 22:06:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56312 "EHLO
+        Thu, 13 May 2021 22:06:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230478AbhENCGV (ORCPT
+        with ESMTP id S231168AbhENCGV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 13 May 2021 22:06:21 -0400
-Received: from mxout013.mail.hostpoint.ch (mxout013.mail.hostpoint.ch [IPv6:2a00:d70:0:e::313])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFC66C061761
+Received: from mxout017.mail.hostpoint.ch (mxout017.mail.hostpoint.ch [IPv6:2a00:d70:0:e::317])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56B3BC061763
         for <linux-wireless@vger.kernel.org>; Thu, 13 May 2021 19:05:08 -0700 (PDT)
 Received: from [10.0.2.45] (helo=asmtp012.mail.hostpoint.ch)
-        by mxout013.mail.hostpoint.ch with esmtp (Exim 4.94.2 (FreeBSD))
+        by mxout017.mail.hostpoint.ch with esmtp (Exim 4.94.2 (FreeBSD))
         (envelope-from <code@reto-schneider.ch>)
-        id 1lhNCJ-000HmN-Gy; Fri, 14 May 2021 04:05:03 +0200
+        id 1lhNCK-0005TO-Ec; Fri, 14 May 2021 04:05:04 +0200
 Received: from [2a02:168:6182:1:4ea5:a8cc:a141:509c] (helo=ryzen2700.home.reto-schneider.ch)
         by asmtp012.mail.hostpoint.ch with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
         (Exim 4.94.2 (FreeBSD))
         (envelope-from <code@reto-schneider.ch>)
-        id 1lhNCJ-000L6T-AY; Fri, 14 May 2021 04:05:03 +0200
+        id 1lhNCK-000L6T-AK; Fri, 14 May 2021 04:05:04 +0200
 X-Authenticated-Sender-Id: reto-schneider@reto-schneider.ch
 From:   Reto Schneider <code@reto-schneider.ch>
 To:     Jes.Sorensen@gmail.com, linux-wireless@vger.kernel.org,
@@ -42,9 +42,9 @@ Cc:     yhchuang@realtek.com, Larry.Finger@lwfinger.net,
         ccchiu77@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
         kuba@kernel.org, Chris Chiu <chiu@endlessos.org>,
         linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/7] rtl8xxxu: add code to handle BSS_CHANGED_TXPOWER/IEEE80211_CONF_CHANGE_POWER
-Date:   Fri, 14 May 2021 04:04:36 +0200
-Message-Id: <20210514020442.946-2-code@reto-schneider.ch>
+Subject: [PATCH 5/7] rtl8xxxu: fill up txrate info for all chips
+Date:   Fri, 14 May 2021 04:04:40 +0200
+Message-Id: <20210514020442.946-6-code@reto-schneider.ch>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210514020442.946-1-code@reto-schneider.ch>
 References: <a31d9500-73a3-f890-bebd-d0a4014f87da@reto-schneider.ch>
@@ -57,187 +57,146 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chris Chiu <chiu@endlessos.org>
 
-The 'iw set txpower' is not handled by the driver. Use the existing
-set_tx_power function to apply the tx power change
+RTL8188CUS/RTL8192CU (gen1) doesn't support rate adaptive report
+hence no real txrate info can be retrieved. The vendor driver reports
+the highest rate in HT capabilities from AP side.
+This commit follows the same way to avoid empty info for txrate.
 
-Signed-off-by: Chris Chiu <chiu@endlessos.org>
-(cherry picked from commit 48f8fbccb7dff2d3c5f72a4267313d3c4cfc7df9)
+(cherry picked from commit 831ecaf5e80b1cba26d3606b064020a22268f694)
 Signed-off-by: Reto Schneider <reto.schneider@husqvarnagroup.com>
 ---
 
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  3 +
- .../realtek/rtl8xxxu/rtl8xxxu_8192c.c         |  1 +
- .../realtek/rtl8xxxu/rtl8xxxu_8723a.c         |  1 +
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 90 +++++++++++++++++++
- 4 files changed, 95 insertions(+)
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 86 ++++++++++++-------
+ 1 file changed, 57 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index d6d1be4169e5..c15e4a52b9e5 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1426,6 +1426,7 @@ struct rtl8xxxu_fileops {
- 	void (*enable_rf) (struct rtl8xxxu_priv *priv);
- 	void (*disable_rf) (struct rtl8xxxu_priv *priv);
- 	void (*usb_quirks) (struct rtl8xxxu_priv *priv);
-+	u8 (*dbm_to_txpwridx)(struct rtl8xxxu_priv *priv, u16 mode, int dbm);
- 	void (*set_tx_power) (struct rtl8xxxu_priv *priv, int channel,
- 			      bool ht40);
- 	void (*update_rate_mask) (struct rtl8xxxu_priv *priv,
-@@ -1508,6 +1509,8 @@ void rtl8xxxu_disabled_to_emu(struct rtl8xxxu_priv *priv);
- int rtl8xxxu_init_llt_table(struct rtl8xxxu_priv *priv);
- void rtl8xxxu_gen1_phy_iq_calibrate(struct rtl8xxxu_priv *priv);
- void rtl8xxxu_gen1_init_phy_bb(struct rtl8xxxu_priv *priv);
-+u8 rtl8xxxu_gen1_dbm_to_txpwridx(struct rtl8xxxu_priv *priv,
-+				 u16 mode, int dbm);
- void rtl8xxxu_gen1_set_tx_power(struct rtl8xxxu_priv *priv,
- 				int channel, bool ht40);
- void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-index 27c4cb688be4..bb6df8cac82f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-@@ -556,6 +556,7 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.enable_rf = rtl8xxxu_gen1_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
-+	.dbm_to_txpwridx = rtl8xxxu_gen1_dbm_to_txpwridx,
- 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
- 	.update_rate_mask = rtl8xxxu_update_rate_mask,
- 	.report_connect = rtl8xxxu_gen1_report_connect,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-index 4f93f88716a9..a5d56f61c4eb 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-@@ -373,6 +373,7 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.enable_rf = rtl8xxxu_gen1_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
-+	.dbm_to_txpwridx = rtl8xxxu_gen1_dbm_to_txpwridx,
- 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
- 	.update_rate_mask = rtl8xxxu_update_rate_mask,
- 	.report_connect = rtl8xxxu_gen1_report_connect,
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 5cd7ef3625c5..e8459cb6035f 100644
+index 0a04ce00b1fe..0c997c360028 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -1382,6 +1382,38 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
- 	}
+@@ -4670,6 +4670,35 @@ static void rtl8xxxu_update_txpower(struct rtl8xxxu_priv *priv, int power)
+ 	priv->fops->set_tx_power(priv, channel, ht40);
  }
  
-+#define MAX_TXPWR_IDX_NMODE_92S		63
++static struct ieee80211_rate rtl8xxxu_legacy_ratetable[] = {
++	{.bitrate = 10, .hw_value = 0x00,},
++	{.bitrate = 20, .hw_value = 0x01,},
++	{.bitrate = 55, .hw_value = 0x02,},
++	{.bitrate = 110, .hw_value = 0x03,},
++	{.bitrate = 60, .hw_value = 0x04,},
++	{.bitrate = 90, .hw_value = 0x05,},
++	{.bitrate = 120, .hw_value = 0x06,},
++	{.bitrate = 180, .hw_value = 0x07,},
++	{.bitrate = 240, .hw_value = 0x08,},
++	{.bitrate = 360, .hw_value = 0x09,},
++	{.bitrate = 480, .hw_value = 0x0a,},
++	{.bitrate = 540, .hw_value = 0x0b,},
++};
 +
-+u8
-+rtl8xxxu_gen1_dbm_to_txpwridx(struct rtl8xxxu_priv *priv, u16 mode, int dbm)
++static void rtl8xxxu_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
 +{
-+	u8 txpwridx;
-+	long offset;
-+
-+	switch (mode) {
-+	case WIRELESS_MODE_B:
-+		offset = -7;
-+		break;
-+	case WIRELESS_MODE_G:
-+	case WIRELESS_MODE_N_24G:
-+		offset = -8;
-+		break;
-+	default:
-+		offset = -8;
-+		break;
-+	}
-+
-+	if ((dbm - offset) > 0)
-+		txpwridx = (u8)((dbm - offset) * 2);
-+	else
-+		txpwridx = 0;
-+
-+	if (txpwridx > MAX_TXPWR_IDX_NMODE_92S)
-+		txpwridx = MAX_TXPWR_IDX_NMODE_92S;
-+
-+	return txpwridx;
-+}
-+
- void
- rtl8xxxu_gen1_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- {
-@@ -4508,6 +4540,55 @@ rtl8xxxu_wireless_mode(struct ieee80211_hw *hw, struct ieee80211_sta *sta)
- 	return network_type;
- }
- 
-+static void rtl8xxxu_update_txpower(struct rtl8xxxu_priv *priv, int power)
-+{
-+	bool ht40 = false;
-+	struct ieee80211_hw *hw = priv->hw;
-+	int channel = hw->conf.chandef.chan->hw_value;
-+	u8 cck_txpwridx, ofdm_txpwridx;
-+	int i, group;
-+
-+	if (!priv->fops->dbm_to_txpwridx)
++	if (rate <= DESC_RATE_54M)
 +		return;
 +
-+	switch (hw->conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_20:
-+		ht40 = false;
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+		ht40 = true;
-+		break;
-+	default:
-+		return;
++	if (rate >= DESC_RATE_MCS0 && rate <= DESC_RATE_MCS15) {
++		if (rate < DESC_RATE_MCS8)
++			*nss = 1;
++		else
++			*nss = 2;
++		*mcs = rate - DESC_RATE_MCS0;
 +	}
-+
-+	// change the power level to power index
-+	cck_txpwridx = priv->fops->dbm_to_txpwridx(priv, WIRELESS_MODE_B,
-+						   power);
-+	ofdm_txpwridx = priv->fops->dbm_to_txpwridx(priv, WIRELESS_MODE_N_24G,
-+						    power);
-+
-+	if (ofdm_txpwridx - priv->ofdm_tx_power_index_diff[1].a > 0)
-+		ofdm_txpwridx -= priv->ofdm_tx_power_index_diff[1].a;
-+	else
-+		ofdm_txpwridx = 0;
-+
-+	group = rtl8xxxu_gen1_channel_to_group(channel);
-+
-+	if (cck_txpwridx <= priv->cck_tx_power_index_A[group]) {
-+		priv->cck_tx_power_index_A[group] = cck_txpwridx;
-+		priv->cck_tx_power_index_B[group] = cck_txpwridx;
-+	}
-+
-+	if (ofdm_txpwridx <= priv->ht40_1s_tx_power_index_A[group]) {
-+		priv->ht40_1s_tx_power_index_A[i] = ofdm_txpwridx;
-+		priv->ht40_1s_tx_power_index_B[i] = ofdm_txpwridx;
-+	}
-+
-+	priv->fops->set_tx_power(priv, channel, ht40);
 +}
 +
  static void
  rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  			  struct ieee80211_bss_conf *bss_conf, u32 changed)
-@@ -4604,6 +4685,12 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		dev_dbg(dev, "Changed BASIC_RATES!\n");
- 		rtl8xxxu_set_basic_rates(priv, bss_conf->basic_rates);
- 	}
-+
-+	if (changed & BSS_CHANGED_TXPOWER) {
-+		dev_dbg(dev, "Changed TX power!\n");
-+		//rtl8xxxu_update_txpower(priv, bss_conf->txpower);	// iterate
-+		rtl8xxxu_update_txpower(priv, hw->conf.power_level);
-+	}
- error:
- 	return;
- }
-@@ -5891,6 +5978,9 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
- 		priv->fops->config_channel(hw);
- 	}
+@@ -4677,9 +4706,12 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct device *dev = &priv->udev->dev;
+ 	struct ieee80211_sta *sta;
++	struct rtl8xxxu_ra_report *rarpt;
+ 	u32 val32;
+ 	u8 val8;
  
-+	if (changed & IEEE80211_CONF_CHANGE_POWER)
-+		rtl8xxxu_update_txpower(priv, hw->conf.power_level);
++	rarpt = &priv->ra_report;
 +
- exit:
- 	return ret;
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		dev_dbg(dev, "Changed ASSOC: %i!\n", bss_conf->assoc);
+ 
+@@ -4688,6 +4720,9 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		if (bss_conf->assoc) {
+ 			u32 ramask;
+ 			int sgi = 0;
++			u8 highest_rate;
++			u8 mcs = 0, nss = 0;
++			u32 bit_rate;
+ 
+ 			rcu_read_lock();
+ 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
+@@ -4712,6 +4747,28 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 				sgi = 1;
+ 			rcu_read_unlock();
+ 
++			highest_rate = fls(ramask) - 1;
++			if (highest_rate < DESC_RATE_MCS0) {
++				rarpt->txrate.legacy =
++					rtl8xxxu_legacy_ratetable[highest_rate].bitrate;
++			} else {
++				rtl8xxxu_desc_to_mcsrate(highest_rate, &mcs, &nss);
++				rarpt->txrate.flags |= RATE_INFO_FLAGS_MCS;
++
++				rarpt->txrate.mcs = mcs;
++				rarpt->txrate.nss = nss;
++
++				if (sgi) {
++					rarpt->txrate.flags |=
++						RATE_INFO_FLAGS_SHORT_GI;
++				}
++
++				rarpt->txrate.bw |= RATE_INFO_BW_20;
++			}
++			bit_rate = cfg80211_calculate_bitrate(&rarpt->txrate);
++			rarpt->bit_rate = bit_rate;
++			rarpt->desc_rate = highest_rate;
++
+ 			priv->vif = vif;
+ 			priv->rssi_level = RTL8XXXU_RATR_STA_INIT;
+ 
+@@ -5557,35 +5614,6 @@ void rtl8723bu_handle_bt_info(struct rtl8xxxu_priv *priv)
+ 	}
  }
+ 
+-static struct ieee80211_rate rtl8xxxu_legacy_ratetable[] = {
+-	{.bitrate = 10, .hw_value = 0x00,},
+-	{.bitrate = 20, .hw_value = 0x01,},
+-	{.bitrate = 55, .hw_value = 0x02,},
+-	{.bitrate = 110, .hw_value = 0x03,},
+-	{.bitrate = 60, .hw_value = 0x04,},
+-	{.bitrate = 90, .hw_value = 0x05,},
+-	{.bitrate = 120, .hw_value = 0x06,},
+-	{.bitrate = 180, .hw_value = 0x07,},
+-	{.bitrate = 240, .hw_value = 0x08,},
+-	{.bitrate = 360, .hw_value = 0x09,},
+-	{.bitrate = 480, .hw_value = 0x0a,},
+-	{.bitrate = 540, .hw_value = 0x0b,},
+-};
+-
+-static void rtl8xxxu_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+-{
+-	if (rate <= DESC_RATE_54M)
+-		return;
+-
+-	if (rate >= DESC_RATE_MCS0 && rate <= DESC_RATE_MCS15) {
+-		if (rate < DESC_RATE_MCS8)
+-			*nss = 1;
+-		else
+-			*nss = 2;
+-		*mcs = rate - DESC_RATE_MCS0;
+-	}
+-}
+-
+ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
+ {
+ 	struct rtl8xxxu_priv *priv;
 -- 
 2.29.2
 
