@@ -2,37 +2,36 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72E47C43462
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3E9EC43460
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F5AC61402
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF9B861402
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 May 2021 02:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230525AbhENCGW (ORCPT
+        id S230307AbhENCGW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 13 May 2021 22:06:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56300 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229888AbhENCGU (ORCPT
+        with ESMTP id S230204AbhENCGU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 13 May 2021 22:06:20 -0400
-Received: from mxout017.mail.hostpoint.ch (mxout017.mail.hostpoint.ch [IPv6:2a00:d70:0:e::317])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB485C061756
+Received: from mxout012.mail.hostpoint.ch (mxout012.mail.hostpoint.ch [IPv6:2a00:d70:0:e::312])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83EDFC061574
         for <linux-wireless@vger.kernel.org>; Thu, 13 May 2021 19:05:08 -0700 (PDT)
 Received: from [10.0.2.45] (helo=asmtp012.mail.hostpoint.ch)
-        by mxout017.mail.hostpoint.ch with esmtp (Exim 4.94.2 (FreeBSD))
+        by mxout012.mail.hostpoint.ch with esmtp (Exim 4.94.2 (FreeBSD))
         (envelope-from <code@reto-schneider.ch>)
-        id 1lhNCK-0005TS-Li; Fri, 14 May 2021 04:05:04 +0200
+        id 1lhNCJ-000H3s-1R; Fri, 14 May 2021 04:05:03 +0200
 Received: from [2a02:168:6182:1:4ea5:a8cc:a141:509c] (helo=ryzen2700.home.reto-schneider.ch)
         by asmtp012.mail.hostpoint.ch with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
         (Exim 4.94.2 (FreeBSD))
         (envelope-from <code@reto-schneider.ch>)
-        id 1lhNCK-000L6T-HT; Fri, 14 May 2021 04:05:04 +0200
+        id 1lhNCI-000L6T-VM; Fri, 14 May 2021 04:05:03 +0200
 X-Authenticated-Sender-Id: reto-schneider@reto-schneider.ch
 From:   Reto Schneider <code@reto-schneider.ch>
 To:     Jes.Sorensen@gmail.com, linux-wireless@vger.kernel.org,
@@ -40,54 +39,44 @@ To:     Jes.Sorensen@gmail.com, linux-wireless@vger.kernel.org,
 Cc:     yhchuang@realtek.com, Larry.Finger@lwfinger.net,
         tehuang@realtek.com, reto.schneider@husqvarnagroup.com,
         ccchiu77@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, Chris Chiu <chiu@endlessos.org>,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 6/7] rtl8xxxu: Fix the reported rx signal strength
-Date:   Fri, 14 May 2021 04:04:41 +0200
-Message-Id: <20210514020442.946-7-code@reto-schneider.ch>
+        kuba@kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH 0/7] [RFC] rtl8xxxu/RTL8188CUS: Wi-Fi Alliance Certification
+Date:   Fri, 14 May 2021 04:04:35 +0200
+Message-Id: <20210514020442.946-1-code@reto-schneider.ch>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210514020442.946-1-code@reto-schneider.ch>
+In-Reply-To: <a31d9500-73a3-f890-bebd-d0a4014f87da@reto-schneider.ch>
 References: <a31d9500-73a3-f890-bebd-d0a4014f87da@reto-schneider.ch>
- <20210514020442.946-1-code@reto-schneider.ch>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessos.org>
+From: Reto Schneider <reto.schneider@husqvarnagroup.com>
 
-In rtl8xxxx_rx_query_desc for each chip in rtlwifi family, the
-rx_status->signal is always the status->recvsignalpower + 10.
+This is our most recent, WIP code. It is plagued by the too-frequent
+retransmission issue as described in the original mail.
 
-We also observe the same thing in air capture that the RSSI is
-always ~10dBm higher than reported from driver.
+Any kind of help is welcome.
 
-Add this 10dBm to avoid confusion.
 
-(cherry picked from commit e1a4f83da577474dfa23e85483a83eb7fb707edc)
-Signed-off-by: Reto Schneider <reto.schneider@husqvarnagroup.com>
----
+Chris Chiu (7):
+  rtl8xxxu: add code to handle
+    BSS_CHANGED_TXPOWER/IEEE80211_CONF_CHANGE_POWER
+  rtl8xxxu: add handle for mac80211 get_txpower
+  rtl8xxxu: Enable RX STBC by default
+  rtl8xxxu: feed antenna information for mac80211
+  rtl8xxxu: fill up txrate info for all chips
+  rtl8xxxu: Fix the reported rx signal strength
+  rtl8xxxu: Fix ampdu_action to get block ack session work
 
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |   7 +
+ .../realtek/rtl8xxxu/rtl8xxxu_8192c.c         |   2 +
+ .../realtek/rtl8xxxu/rtl8xxxu_8723a.c         |   1 +
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 301 +++++++++++++++---
+ 4 files changed, 270 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 0c997c360028..088e007e8bd0 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5319,6 +5319,11 @@ static void rtl8xxxu_rx_parse_phystats(struct rtl8xxxu_priv *priv,
- 		rx_status->signal =
- 			(phy_stats->cck_sig_qual_ofdm_pwdb_all >> 1) - 110;
- 	}
-+
-+	// refers to rtlxxxx_rx_query_desc of rtlwifi/rtlxxxx/trx.c
-+	// needs to verify on RTL8723BU
-+	if (priv->rtl_chip != RTL8723B && priv->rtl_chip != RTL8192E)
-+		rx_status->signal += 10;
- }
- 
- static void rtl8xxxu_free_rx_resources(struct rtl8xxxu_priv *priv)
 -- 
 2.29.2
 
