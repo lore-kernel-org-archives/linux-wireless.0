@@ -7,38 +7,39 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC627C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C69CC43460
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C734060C3D
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2940611EE
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235500AbhEQIQJ (ORCPT
+        id S235516AbhEQIQJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 17 May 2021 04:16:09 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:2946 "EHLO
+Received: from szxga07-in.huawei.com ([45.249.212.35]:2943 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235308AbhEQIQF (ORCPT
+        with ESMTP id S235246AbhEQIQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 17 May 2021 04:16:05 -0400
-Received: from dggems703-chm.china.huawei.com (unknown [172.30.72.59])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FkBgQ6frdzCtZ2;
-        Mon, 17 May 2021 16:12:02 +0800 (CST)
+Received: from dggems706-chm.china.huawei.com (unknown [172.30.72.60])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FkBgP4RD1zCsjs;
+        Mon, 17 May 2021 16:12:01 +0800 (CST)
 Received: from dggema704-chm.china.huawei.com (10.3.20.68) by
- dggems703-chm.china.huawei.com (10.3.19.180) with Microsoft SMTP Server
+ dggems706-chm.china.huawei.com (10.3.19.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:47 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
 Received: from localhost.localdomain (10.67.165.2) by
  dggema704-chm.china.huawei.com (10.3.20.68) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:47 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
 From:   Yang Shen <shenyang39@huawei.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Yang Shen" <shenyang39@huawei.com>
-Subject: [PATCH 11/11] net: ti: wlcore: Fix missing function name in comments
-Date:   Mon, 17 May 2021 13:01:41 +0800
-Message-ID: <20210517050141.61488-12-shenyang39@huawei.com>
+        "Yang Shen" <shenyang39@huawei.com>,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 03/11] net: ath: wil6210: Fix wrong function name in comments
+Date:   Mon, 17 May 2021 13:01:33 +0800
+Message-ID: <20210517050141.61488-4-shenyang39@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210517050141.61488-1-shenyang39@huawei.com>
 References: <20210517050141.61488-1-shenyang39@huawei.com>
@@ -54,46 +55,62 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ti/wlcore/cmd.c:824: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
- drivers/net/wireless/ti/wlcore/cmd.c:853: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
- drivers/net/wireless/ti/wlcore/cmd.c:882: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+ drivers/net/wireless/ath/wil6210/interrupt.c:28: warning: expecting prototype for Theory of operation(). Prototype was for WIL6210_IRQ_DISABLE() instead
+ drivers/net/wireless/ath/wil6210/wmi.c:227: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+ drivers/net/wireless/ath/wil6210/wmi.c:245: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+ drivers/net/wireless/ath/wil6210/wmi.c:263: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
 
+Cc: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Yang Shen <shenyang39@huawei.com>
 ---
- drivers/net/wireless/ti/wlcore/cmd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c       | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 32a2e27cc561..8b798b5fcaf5 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -821,7 +821,7 @@ int wl12xx_cmd_role_start_ibss(struct wl1271 *wl, struct wl12xx_vif *wlvif)
-
-
- /**
-- * send test command to firmware
-+ * wl1271_cmd_test - send test command to firmware
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index d13d081fdcc6..67172385a5d6 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -9,7 +9,7 @@
+ #include "wil6210.h"
+ #include "trace.h"
+ 
+-/**
++/*
+  * Theory of operation:
   *
-  * @wl: wl struct
-  * @buf: buffer containing the command, with all headers, must work with dma
-@@ -850,7 +850,7 @@ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer)
- EXPORT_SYMBOL_GPL(wl1271_cmd_test);
-
+  * There is ISR pseudo-cause register,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 02ad44997e87..2dc8406736f4 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -224,7 +224,7 @@ struct auth_no_hdr {
+ u8 led_polarity = LED_POLARITY_LOW_ACTIVE;
+ 
  /**
-- * read acx from firmware
-+ * wl1271_cmd_interrogate - read acx from firmware
-  *
-  * @wl: wl struct
-  * @id: acx id
-@@ -879,7 +879,7 @@ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf,
+- * return AHB address for given firmware internal (linker) address
++ * wmi_addr_remap - return AHB address for given firmware internal (linker) address
+  * @x: internal address
+  * If address have no valid AHB mapping, return 0
+  */
+@@ -242,7 +242,7 @@ static u32 wmi_addr_remap(u32 x)
  }
-
+ 
  /**
-- * write acx value to firmware
-+ * wlcore_cmd_configure_failsafe - write acx value to firmware
+- * find fw_mapping entry by section name
++ * wil_find_fw_mapping - find fw_mapping entry by section name
+  * @section: section name
   *
-  * @wl: wl struct
-  * @id: acx id
---
+  * Return pointer to section or NULL if not found
+@@ -260,7 +260,7 @@ struct fw_map *wil_find_fw_mapping(const char *section)
+ }
+ 
+ /**
+- * Check address validity for WMI buffer; remap if needed
++ * wmi_buffer_block - Check address validity for WMI buffer; remap if needed
+  * @wil: driver data
+  * @ptr_: internal (linker) fw/ucode address
+  * @size: if non zero, validate the block does not
+-- 
 2.17.1
 
