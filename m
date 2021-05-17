@@ -2,312 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47756C43461
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 21:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D15C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 22:40:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27B9B611C1
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 21:08:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F49E611CA
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 22:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237651AbhEQVJ2 (ORCPT
+        id S1343929AbhEQWlb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 May 2021 17:09:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46154 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237551AbhEQVJU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 May 2021 17:09:20 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57114C061573
-        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2021 14:08:03 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1likT1-00AVFx-PB; Mon, 17 May 2021 23:08:00 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] mac80211: refactor SKB queue processing a bit
-Date:   Mon, 17 May 2021 23:07:55 +0200
-Message-Id: <20210517230754.6bc6cdd68570.I28a86ebdb19601ca1965c4dc654cc49fc1064efa@changeid>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210517230754.113b65febd5a.Ie0e1d58a2885e75f242cb6e06f3b9660117fef93@changeid>
-References: <20210517230754.113b65febd5a.Ie0e1d58a2885e75f242cb6e06f3b9660117fef93@changeid>
+        Mon, 17 May 2021 18:41:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234833AbhEQWl1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 May 2021 18:41:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 9FC64611CA;
+        Mon, 17 May 2021 22:40:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621291209;
+        bh=0ilneqf8ZsGndIyeA4Py/b5HTnbhrBOzM3IqiPm10vg=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=H/oNu8UYP/QoFL3iGTQcRpP9S0Qw4dnTmqA53ci3LAHcNxRf7mVS57mM+Sela7I5t
+         x2Pj2pIVvmw2EJMEjq0FCQJaUbxk6FkoIx8aSYtmhs7FlpLjs4f0ak1vAyHWz8WTj5
+         j5NwelYlLwc81ikCz8O+T9/rFC0Kd/HbXGHMD12JZjYNW8XYAlCFSmdOvmGtFthNmE
+         JPmxUVFzuLAMNPSqkY1Z2W2uuNPJZr6iyxa4q4XZu6EF3dL2M6QLZZFHMs8K1z6gdj
+         6kVC/Al7Zk1uXt1lIqWN4Zy9SjmFhNjtyoixot8kuAT6Gb4WeKkL8cdaguDRLkLk4r
+         TPqaxjLaylu5w==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH net] netlink: disable IRQs for netlink_lock_table()
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <162129120960.10606.6632218946410253940.git-patchwork-notify@kernel.org>
+Date:   Mon, 17 May 2021 22:40:09 +0000
+References: <20210517163807.4d305e53c177.Ic19a47c0690e366ee84e3957b73ec6baddffad8a@changeid>
+In-Reply-To: <20210517163807.4d305e53c177.Ic19a47c0690e366ee84e3957b73ec6baddffad8a@changeid>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        johannes.berg@intel.com,
+        syzbot+69ff9dff50dcfe14ddd4@syzkaller.appspotmail.com
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello:
 
-This is a very long loop body, move it into its own function
-instead, keeping only the kcov and free outside in the loop
-body.
+This patch was applied to netdev/net.git (refs/heads/master):
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c | 228 ++++++++++++++++++++++---------------------
- 1 file changed, 119 insertions(+), 109 deletions(-)
+On Mon, 17 May 2021 16:38:09 +0200 you wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Syzbot reports that in mac80211 we have a potential deadlock
+> between our "local->stop_queue_reasons_lock" (spinlock) and
+> netlink's nl_table_lock (rwlock). This is because there's at
+> least one situation in which we might try to send a netlink
+> message with this spinlock held while it is also possible to
+> take the spinlock from a hardirq context, resulting in the
+> following deadlock scenario reported by lockdep:
+> 
+> [...]
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 7032a2b59249..3a998ae50429 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1320,13 +1320,130 @@ static void ieee80211_if_setup_no_queue(struct net_device *dev)
- 	dev->priv_flags |= IFF_NO_QUEUE;
- }
- 
-+static void ieee80211_iface_process_skb(struct ieee80211_local *local,
-+					struct ieee80211_sub_if_data *sdata,
-+					struct sk_buff *skb)
-+{
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+
-+	if (ieee80211_is_action(mgmt->frame_control) &&
-+	    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+		struct sta_info *sta;
-+		int len = skb->len;
-+
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			switch (mgmt->u.action.u.addba_req.action_code) {
-+			case WLAN_ACTION_ADDBA_REQ:
-+				ieee80211_process_addba_request(local, sta,
-+								mgmt, len);
-+				break;
-+			case WLAN_ACTION_ADDBA_RESP:
-+				ieee80211_process_addba_resp(local, sta,
-+							     mgmt, len);
-+				break;
-+			case WLAN_ACTION_DELBA:
-+				ieee80211_process_delba(sdata, sta,
-+							mgmt, len);
-+				break;
-+			default:
-+				WARN_ON(1);
-+				break;
-+			}
-+		}
-+		mutex_unlock(&local->sta_mtx);
-+	} else if (ieee80211_is_action(mgmt->frame_control) &&
-+		   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
-+		switch (mgmt->u.action.u.vht_group_notif.action_code) {
-+		case WLAN_VHT_ACTION_OPMODE_NOTIF: {
-+			struct ieee80211_rx_status *status;
-+			enum nl80211_band band;
-+			struct sta_info *sta;
-+			u8 opmode;
-+
-+			status = IEEE80211_SKB_RXCB(skb);
-+			band = status->band;
-+			opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
-+
-+			mutex_lock(&local->sta_mtx);
-+			sta = sta_info_get_bss(sdata, mgmt->sa);
-+
-+			if (sta)
-+				ieee80211_vht_handle_opmode(sdata, sta, opmode,
-+							    band);
-+
-+			mutex_unlock(&local->sta_mtx);
-+			break;
-+		}
-+		case WLAN_VHT_ACTION_GROUPID_MGMT:
-+			ieee80211_process_mu_groups(sdata, mgmt);
-+			break;
-+		default:
-+			WARN_ON(1);
-+			break;
-+		}
-+	} else if (ieee80211_is_ext(mgmt->frame_control)) {
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+			ieee80211_sta_rx_queued_ext(sdata, skb);
-+		else
-+			WARN_ON(1);
-+	} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
-+		struct ieee80211_hdr *hdr = (void *)mgmt;
-+		struct sta_info *sta;
-+
-+		/*
-+		 * So the frame isn't mgmt, but frame_control
-+		 * is at the right place anyway, of course, so
-+		 * the if statement is correct.
-+		 *
-+		 * Warn if we have other data frame types here,
-+		 * they must not get here.
-+		 */
-+		WARN_ON(hdr->frame_control &
-+				cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
-+		WARN_ON(!(hdr->seq_ctrl &
-+				cpu_to_le16(IEEE80211_SCTL_FRAG)));
-+		/*
-+		 * This was a fragment of a frame, received while
-+		 * a block-ack session was active. That cannot be
-+		 * right, so terminate the session.
-+		 */
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			u16 tid = ieee80211_get_tid(hdr);
-+
-+			__ieee80211_stop_rx_ba_session(
-+				sta, tid, WLAN_BACK_RECIPIENT,
-+				WLAN_REASON_QSTA_REQUIRE_SETUP,
-+				true);
-+		}
-+		mutex_unlock(&local->sta_mtx);
-+	} else switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!ieee80211_vif_is_mesh(&sdata->vif))
-+			break;
-+		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
-+		break;
-+	default:
-+		WARN(1, "frame for unexpected interface type");
-+		break;
-+	}
-+}
-+
- static void ieee80211_iface_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
--	struct sta_info *sta;
- 
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
-@@ -1339,116 +1456,9 @@ static void ieee80211_iface_work(struct work_struct *work)
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		struct ieee80211_mgmt *mgmt = (void *)skb->data;
--
- 		kcov_remote_start_common(skb_get_kcov_handle(skb));
--		if (ieee80211_is_action(mgmt->frame_control) &&
--		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
--			int len = skb->len;
--
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					ieee80211_process_addba_request(
--							local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					ieee80211_process_addba_resp(local, sta,
--								     mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					ieee80211_process_delba(sdata, sta,
--								mgmt, len);
--					break;
--				default:
--					WARN_ON(1);
--					break;
--				}
--			}
--			mutex_unlock(&local->sta_mtx);
--		} else if (ieee80211_is_action(mgmt->frame_control) &&
--			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
--			switch (mgmt->u.action.u.vht_group_notif.action_code) {
--			case WLAN_VHT_ACTION_OPMODE_NOTIF: {
--				struct ieee80211_rx_status *status;
--				enum nl80211_band band;
--				u8 opmode;
--
--				status = IEEE80211_SKB_RXCB(skb);
--				band = status->band;
--				opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
--
--				mutex_lock(&local->sta_mtx);
--				sta = sta_info_get_bss(sdata, mgmt->sa);
--
--				if (sta)
--					ieee80211_vht_handle_opmode(sdata, sta,
--								    opmode,
--								    band);
--
--				mutex_unlock(&local->sta_mtx);
--				break;
--			}
--			case WLAN_VHT_ACTION_GROUPID_MGMT:
--				ieee80211_process_mu_groups(sdata, mgmt);
--				break;
--			default:
--				WARN_ON(1);
--				break;
--			}
--		} else if (ieee80211_is_ext(mgmt->frame_control)) {
--			if (sdata->vif.type == NL80211_IFTYPE_STATION)
--				ieee80211_sta_rx_queued_ext(sdata, skb);
--			else
--				WARN_ON(1);
--		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
--			struct ieee80211_hdr *hdr = (void *)mgmt;
--			/*
--			 * So the frame isn't mgmt, but frame_control
--			 * is at the right place anyway, of course, so
--			 * the if statement is correct.
--			 *
--			 * Warn if we have other data frame types here,
--			 * they must not get here.
--			 */
--			WARN_ON(hdr->frame_control &
--					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
--			WARN_ON(!(hdr->seq_ctrl &
--					cpu_to_le16(IEEE80211_SCTL_FRAG)));
--			/*
--			 * This was a fragment of a frame, received while
--			 * a block-ack session was active. That cannot be
--			 * right, so terminate the session.
--			 */
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				u16 tid = ieee80211_get_tid(hdr);
- 
--				__ieee80211_stop_rx_ba_session(
--					sta, tid, WLAN_BACK_RECIPIENT,
--					WLAN_REASON_QSTA_REQUIRE_SETUP,
--					true);
--			}
--			mutex_unlock(&local->sta_mtx);
--		} else switch (sdata->vif.type) {
--		case NL80211_IFTYPE_STATION:
--			ieee80211_sta_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_ADHOC:
--			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_MESH_POINT:
--			if (!ieee80211_vif_is_mesh(&sdata->vif))
--				break;
--			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
--			break;
--		default:
--			WARN(1, "frame for unexpected interface type");
--			break;
--		}
-+		ieee80211_iface_process_skb(local, sdata, skb);
- 
- 		kfree_skb(skb);
- 		kcov_remote_stop();
--- 
-2.31.1
+Here is the summary with links:
+  - [net] netlink: disable IRQs for netlink_lock_table()
+    https://git.kernel.org/netdev/net/c/1d482e666b8e
+
+You are awesome, thank you!
+--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
