@@ -2,139 +2,240 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FA5C433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 20:20:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1496AC433B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 21:08:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F10861352
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 20:20:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9B8860241
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 21:08:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239511AbhEQUVq (ORCPT
+        id S237474AbhEQVJ0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 May 2021 16:21:46 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:37502 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238834AbhEQUVl (ORCPT
+        Mon, 17 May 2021 17:09:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46160 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234755AbhEQVJU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 May 2021 16:21:41 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1621282825; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=r4C048Cyt1NAQETCpOJSuLki6BUx/oLBHbbMepKinxY=; b=atZ6J8j09UZYwQxSOzWioCz4o4PQ05LdeXfwdhppu6Lm8s3hOM3zcY27OJ9lYX0q47mOu8+3
- A/47fL5J+HS2HgPcnJZcitokh6D2vOohcgajrrA61O4J8TQs78m+TVTwZpRXMjW+RHyWkBqE
- F03yYY4yswrOHqtY8uK1x3ewVgo=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 60a2cff65f788b52a542f777 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 17 May 2021 20:20:06
- GMT
-Sender: wgong=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2D60EC43460; Mon, 17 May 2021 20:20:06 +0000 (UTC)
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9D1D7C4338A;
-        Mon, 17 May 2021 20:20:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9D1D7C4338A
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath11k@lists.infradead.org, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH 1/9] cfg80211: add power type definition for 6G Hz
-Date:   Mon, 17 May 2021 16:19:24 -0400
-Message-Id: <20210517201932.8860-2-wgong@codeaurora.org>
+        Mon, 17 May 2021 17:09:20 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64A23C061760
+        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2021 14:08:03 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1likT2-00AVFx-Gm; Mon, 17 May 2021 23:08:00 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] mac80211: use sdata->skb_queue for TDLS
+Date:   Mon, 17 May 2021 23:07:56 +0200
+Message-Id: <20210517230754.17034990abef.I5342f2183c0d246b18d36c511eb3b6be298a6572@changeid>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210517201932.8860-1-wgong@codeaurora.org>
-References: <20210517201932.8860-1-wgong@codeaurora.org>
+In-Reply-To: <20210517230754.113b65febd5a.Ie0e1d58a2885e75f242cb6e06f3b9660117fef93@changeid>
+References: <20210517230754.113b65febd5a.Ie0e1d58a2885e75f242cb6e06f3b9660117fef93@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-6GHz regulatory domains introduces different modes for 6GHz AP
-operations Low Power Indoor(LPI), Standard Power(SP) and Very Low
-Power(VLP). 6GHz STAs could be operated as either Regular or
-Subordinate clients. This patch is define the flags for power type
-of AP and STATION mode.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+We need to differentiate these frames since the ones we
+currently put on the skb_queue_tdls_chsw have already
+been converted to ethernet format, but now that we've
+got a single place to enqueue to the sdata->skb_queue
+this isn't hard. Just differentiate based on protocol
+and adjust the code to queue the SKBs appropriately.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ net/mac80211/ieee80211_i.h | 10 +++++-----
+ net/mac80211/iface.c       |  5 ++++-
+ net/mac80211/main.c        |  5 -----
+ net/mac80211/rx.c          | 21 +++++++++++++--------
+ net/mac80211/tdls.c        | 28 +---------------------------
+ 5 files changed, 23 insertions(+), 46 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 911fae42b0c0..13d92c643794 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -675,6 +675,7 @@ struct key_params {
-  *	chan will define the primary channel and all other
-  *	parameters are ignored.
-  * @freq1_offset: offset from @center_freq1, in KHz
-+ * @power_type: power type of BSS for 6G
-  */
- struct cfg80211_chan_def {
- 	struct ieee80211_channel *chan;
-@@ -683,6 +684,7 @@ struct cfg80211_chan_def {
- 	u32 center_freq2;
- 	struct ieee80211_edmg edmg;
- 	u16 freq1_offset;
-+	enum nl80211_ap_reg_power power_type;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8fcbaa1eedf3..a27225be1a1e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1427,10 +1427,6 @@ struct ieee80211_local {
+ 
+ 	/* extended capabilities provided by mac80211 */
+ 	u8 ext_capa[8];
+-
+-	/* TDLS channel switch */
+-	struct work_struct tdls_chsw_work;
+-	struct sk_buff_head skb_queue_tdls_chsw;
  };
  
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ac78da99fccd..9f8e9e49a16a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4085,6 +4085,36 @@ enum nl80211_dfs_regions {
- 	NL80211_DFS_JP		= 3,
- };
+ static inline struct ieee80211_sub_if_data *
+@@ -2300,9 +2296,13 @@ void ieee80211_tdls_cancel_channel_switch(struct wiphy *wiphy,
+ 					  struct net_device *dev,
+ 					  const u8 *addr);
+ void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_tdls_chsw_work(struct work_struct *wk);
+ void ieee80211_tdls_handle_disconnect(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *peer, u16 reason);
++void
++ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
++				      struct sk_buff *skb);
++
++
+ const char *ieee80211_get_reason_code_string(u16 reason_code);
+ u16 ieee80211_encode_usf(int val);
+ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3a998ae50429..8625f19a2547 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1458,7 +1458,10 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+ 		kcov_remote_start_common(skb_get_kcov_handle(skb));
  
-+/**
-+ * enum nl80211_ap_reg_power - regulatory power for a Access Point
-+ *
-+ * @NL80211_REG_UNSET_AP: Access Point has no regulatory power mode
-+ * @NL80211_REG_LPI: Indoor Access Point
-+ * @NL80211_REG_SP: Standard power Access Point
-+ * @NL80211_REG_VLP: Very low power Access Point
-+ */
-+enum nl80211_ap_reg_power {
-+	NL80211_REG_UNSET_AP,
-+	NL80211_REG_LPI_AP,
-+	NL80211_REG_SP_AP,
-+	NL80211_REG_VLP_AP,
-+	NL80211_REG_MAX_AP_TYPE = 3,
-+};
+-		ieee80211_iface_process_skb(local, sdata, skb);
++		if (skb->protocol == cpu_to_be16(ETH_P_TDLS))
++			ieee80211_process_tdls_channel_switch(sdata, skb);
++		else
++			ieee80211_iface_process_skb(local, sdata, skb);
+ 
+ 		kfree_skb(skb);
+ 		kcov_remote_stop();
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 62145e5f9628..9a12db51fdb6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -734,8 +734,6 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	INIT_WORK(&local->sched_scan_stopped_work,
+ 		  ieee80211_sched_scan_stopped_work);
+ 
+-	INIT_WORK(&local->tdls_chsw_work, ieee80211_tdls_chsw_work);
+-
+ 	spin_lock_init(&local->ack_status_lock);
+ 	idr_init(&local->ack_status_frames);
+ 
+@@ -752,7 +750,6 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 
+ 	skb_queue_head_init(&local->skb_queue);
+ 	skb_queue_head_init(&local->skb_queue_unreliable);
+-	skb_queue_head_init(&local->skb_queue_tdls_chsw);
+ 
+ 	ieee80211_alloc_led_names(local);
+ 
+@@ -1384,7 +1381,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	cancel_delayed_work_sync(&local->roc_work);
+ 	cancel_work_sync(&local->restart_work);
+ 	cancel_work_sync(&local->reconfig_filter);
+-	cancel_work_sync(&local->tdls_chsw_work);
+ 	flush_work(&local->sched_scan_stopped_work);
+ 	flush_work(&local->radar_detected_work);
+ 
+@@ -1396,7 +1392,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 		wiphy_warn(local->hw.wiphy, "skb_queue not empty\n");
+ 	skb_queue_purge(&local->skb_queue);
+ 	skb_queue_purge(&local->skb_queue_unreliable);
+-	skb_queue_purge(&local->skb_queue_tdls_chsw);
+ 
+ 	wiphy_unregister(local->hw.wiphy);
+ 	destroy_workqueue(local->workqueue);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 06ea259bb385..69acca2cfe88 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -214,9 +214,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 	return len;
+ }
+ 
+-static void ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
+-					 struct sta_info *sta,
+-					 struct sk_buff *skb)
++static void __ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
++					   struct sta_info *sta,
++					   struct sk_buff *skb)
+ {
+ 	skb_queue_tail(&sdata->skb_queue, skb);
+ 	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+@@ -224,6 +224,14 @@ static void ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
+ 		sta->rx_stats.packets++;
+ }
+ 
++static void ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
++					 struct sta_info *sta,
++					 struct sk_buff *skb)
++{
++	skb->protocol = 0;
++	__ieee80211_queue_skb_to_iface(sdata, sta, skb);
++}
 +
-+/**
-+ * enum nl80211_client_reg_power - regulatory power for a client
-+ *
-+ * @NL80211_REG_UNSET_CLIENT: Client has no regulatory power mode
-+ * @NL80211_REG_DEFAULT_CLIENT: Default Client
-+ * @NL80211_REG_SUBORDINATE_CLIENT: Subordinate Client
-+ */
-+enum nl80211_client_reg_power {
-+	NL80211_REG_UNSET_CLIENT,
-+	NL80211_REG_DEFAULT_CLIENT,
-+	NL80211_REG_SUBORDINATE_CLIENT,
-+	NL80211_REG_MAX_CLIENT_TYPE = 2,
-+};
-+
- /**
-  * enum nl80211_user_reg_hint_type - type of user regulatory hint
-  *
+ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
+ 					 struct sk_buff *skb,
+ 					 int rtap_space)
+@@ -2935,11 +2943,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 		    tf->category == WLAN_CATEGORY_TDLS &&
+ 		    (tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_REQUEST ||
+ 		     tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_RESPONSE)) {
+-			skb_queue_tail(&local->skb_queue_tdls_chsw, rx->skb);
+-			schedule_work(&local->tdls_chsw_work);
+-			if (rx->sta)
+-				rx->sta->rx_stats.packets++;
+-
++			rx->skb->protocol = cpu_to_be16(ETH_P_TDLS);
++			__ieee80211_queue_skb_to_iface(sdata, rx->sta, rx->skb);
+ 			return RX_QUEUED;
+ 		}
+ 	}
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index f91d02b81b92..45e532ad1215 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1920,7 +1920,7 @@ ieee80211_process_tdls_channel_switch_req(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-static void
++void
+ ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
+ 				      struct sk_buff *skb)
+ {
+@@ -1971,32 +1971,6 @@ void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata)
+ 	rcu_read_unlock();
+ }
+ 
+-void ieee80211_tdls_chsw_work(struct work_struct *wk)
+-{
+-	struct ieee80211_local *local =
+-		container_of(wk, struct ieee80211_local, tdls_chsw_work);
+-	struct ieee80211_sub_if_data *sdata;
+-	struct sk_buff *skb;
+-	struct ieee80211_tdls_data *tf;
+-
+-	wiphy_lock(local->hw.wiphy);
+-	while ((skb = skb_dequeue(&local->skb_queue_tdls_chsw))) {
+-		tf = (struct ieee80211_tdls_data *)skb->data;
+-		list_for_each_entry(sdata, &local->interfaces, list) {
+-			if (!ieee80211_sdata_running(sdata) ||
+-			    sdata->vif.type != NL80211_IFTYPE_STATION ||
+-			    !ether_addr_equal(tf->da, sdata->vif.addr))
+-				continue;
+-
+-			ieee80211_process_tdls_channel_switch(sdata, skb);
+-			break;
+-		}
+-
+-		kfree_skb(skb);
+-	}
+-	wiphy_unlock(local->hw.wiphy);
+-}
+-
+ void ieee80211_tdls_handle_disconnect(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *peer, u16 reason)
+ {
 -- 
 2.31.1
 
