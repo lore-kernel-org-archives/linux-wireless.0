@@ -2,109 +2,122 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 369EFC433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA64C433B4
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 10:45:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1584F610A1
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:15:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C06E60FE6
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 10:45:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235607AbhEQIQQ (ORCPT
+        id S236485AbhEQKqv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 May 2021 04:16:16 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:2947 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbhEQIQJ (ORCPT
+        Mon, 17 May 2021 06:46:51 -0400
+Received: from mail-io1-f71.google.com ([209.85.166.71]:44865 "EHLO
+        mail-io1-f71.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236461AbhEQKqt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 May 2021 04:16:09 -0400
-Received: from dggems704-chm.china.huawei.com (unknown [172.30.72.60])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FkBgW0CMLzCtcG;
-        Mon, 17 May 2021 16:12:07 +0800 (CST)
-Received: from dggema704-chm.china.huawei.com (10.3.20.68) by
- dggems704-chm.china.huawei.com (10.3.19.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
-Received: from localhost.localdomain (10.67.165.2) by
- dggema704-chm.china.huawei.com (10.3.20.68) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
-From:   Yang Shen <shenyang39@huawei.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Yang Shen" <shenyang39@huawei.com>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH 05/11] net: intel: ipw2x00: Fix wrong function name in comments
-Date:   Mon, 17 May 2021 13:01:35 +0800
-Message-ID: <20210517050141.61488-6-shenyang39@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210517050141.61488-1-shenyang39@huawei.com>
-References: <20210517050141.61488-1-shenyang39@huawei.com>
+        Mon, 17 May 2021 06:46:49 -0400
+Received: by mail-io1-f71.google.com with SMTP id z25-20020a05660200d9b02903de90ff885fso3013873ioe.11
+        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2021 03:45:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=ci9TNO3sk6ZfPoN7cYBZhsWewxbiJdSRX4/qNKu6FyQ=;
+        b=f4VvmmzfufdNq1pOQYwA92T1ydtjkUUbBxt+atXdLs+5/Cu9wzd3n/YSn3B8MasG2K
+         uIJYTeVe0jP408gpIW/y9mr0/bJVgsnvbLtWUyvLGSJw/2KJLCiS5bY7aFmFTVjTonkD
+         asl45UXh3XFYbAcwUjrr8SSbmEAyXwDDP3kK2usP9Erq1ZPNhr8G3beXKZSS4CTUanIM
+         APxi38sX4eSgnsvB6gyBXUBZXRmjSqURpkl+V2aXvmFje2qFrN/2JuAsG45EIP5eHnvm
+         uVDQCrLLS/O9qaeF4Y+3GoU1GQOnmAOlheFyanCa34Zzzfz+93c0RF9d9DjeMX18ZbxO
+         7AOw==
+X-Gm-Message-State: AOAM5303y3xwZV/dq1AaEBYGBcePGPTFgIPUr+0Fa1p3Yn0Snk445/oH
+        hTcjadaI08CZ27m383JO7J75MJ07yElU5x01P4MF2jmmwam0
+X-Google-Smtp-Source: ABdhPJzGZdNrHY27D8Ccic4m6oHTkXOBLFT3ziSZSJ+0pFK6P5g3sHVT6X5Ib+mNx5Hf89jWMj7N0U+WDtRjOUVhjimr7OVFM1eJ
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.2]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggema704-chm.china.huawei.com (10.3.20.68)
-X-CFilter-Loop: Reflected
+X-Received: by 2002:a6b:6c0b:: with SMTP id a11mr7074611ioh.37.1621248333000;
+ Mon, 17 May 2021 03:45:33 -0700 (PDT)
+Date:   Mon, 17 May 2021 03:45:32 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000fb328005c2844acc@google.com>
+Subject: [syzbot] divide error in mac80211_hwsim_bss_info_changed
+From:   syzbot <syzbot+26727b5e00947e02242c@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+Hello,
 
- drivers/net/wireless/intel/ipw2x00/ipw2100.c:5359: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
- drivers/net/wireless/intel/ipw2x00/ipw2100.c:6533: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
- drivers/net/wireless/intel/ipw2x00/ipw2100.c:6565: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+syzbot found the following issue on:
 
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Signed-off-by: Yang Shen <shenyang39@huawei.com>
+HEAD commit:    eebe426d Merge tag 'fixes-for-5.12-rc7' of git://git.kerne..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=15e73ceed00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=9c3d8981d2bdb103
+dashboard link: https://syzkaller.appspot.com/bug?extid=26727b5e00947e02242c
+compiler:       Debian clang version 11.0.1-2
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+26727b5e00947e02242c@syzkaller.appspotmail.com
+
+divide error: 0000 [#1] PREEMPT SMP KASAN
+CPU: 1 PID: 13049 Comm: kworker/u4:16 Not tainted 5.12.0-rc7-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: phy10 ieee80211_roc_work
+RIP: 0010:mac80211_hwsim_bss_info_changed+0x514/0xf90 drivers/net/wireless/mac80211_hwsim.c:2024
+Code: 48 b8 00 00 00 00 00 fc ff df 80 7c 05 00 00 74 0a 48 8b 7c 24 08 e8 9b a6 68 fc 48 8b 44 24 08 48 8b 08 89 ce 48 89 d8 31 d2 <48> f7 f6 29 d1 48 69 f1 e8 03 00 00 48 8b 7c 24 10 31 d2 b9 05 00
+RSP: 0018:ffffc900023bfb88 EFLAGS: 00010246
+RAX: 0005bfe4b761f015 RBX: 0005bfe4b761f015 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000040
+RBP: 1ffff11004556dcf R08: ffffffff81698b49 R09: fffffbfff1f272bd
+R10: fffffbfff1f272bd R11: 0000000000000000 R12: ffff888022ab0d50
+R13: 0000000000000200 R14: ffff888022ab6fd8 R15: 1ffff110045561aa
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000543038 CR3: 000000007746b000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ drv_bss_info_changed net/mac80211/driver-ops.h:177 [inline]
+ ieee80211_bss_info_change_notify+0x27c/0x3a0 net/mac80211/main.c:210
+ ieee80211_offchannel_return+0x33b/0x470 net/mac80211/offchannel.c:158
+ __ieee80211_roc_work+0x282/0x340 net/mac80211/offchannel.c:444
+ ieee80211_roc_work+0x2b/0x40 net/mac80211/offchannel.c:458
+ process_one_work+0x789/0xfd0 kernel/workqueue.c:2275
+ worker_thread+0xac1/0x1300 kernel/workqueue.c:2421
+ kthread+0x39a/0x3c0 kernel/kthread.c:292
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+Modules linked in:
+---[ end trace 2380ddc5fa748069 ]---
+RIP: 0010:mac80211_hwsim_bss_info_changed+0x514/0xf90 drivers/net/wireless/mac80211_hwsim.c:2024
+Code: 48 b8 00 00 00 00 00 fc ff df 80 7c 05 00 00 74 0a 48 8b 7c 24 08 e8 9b a6 68 fc 48 8b 44 24 08 48 8b 08 89 ce 48 89 d8 31 d2 <48> f7 f6 29 d1 48 69 f1 e8 03 00 00 48 8b 7c 24 10 31 d2 b9 05 00
+RSP: 0018:ffffc900023bfb88 EFLAGS: 00010246
+RAX: 0005bfe4b761f015 RBX: 0005bfe4b761f015 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000040
+RBP: 1ffff11004556dcf R08: ffffffff81698b49 R09: fffffbfff1f272bd
+R10: fffffbfff1f272bd R11: 0000000000000000 R12: ffff888022ab0d50
+R13: 0000000000000200 R14: ffff888022ab6fd8 R15: 1ffff110045561aa
+FS:  0000000000000000(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000000219a708 CR3: 000000007746b000 CR4: 00000000001506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+
+
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 23fbddd0c1f8..a1c7b04930f5 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -5356,7 +5356,7 @@ struct ipw2100_wep_key {
- #define WEP_STR_128(x) x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10]
- 
- /**
-- * Set a the wep key
-+ * ipw2100_set_key - Set a the wep key
-  *
-  * @priv: struct to work on
-  * @idx: index of the key we want to set
-@@ -6530,7 +6530,7 @@ static struct pci_driver ipw2100_pci_driver = {
- };
- 
- /**
-- * Initialize the ipw2100 driver/module
-+ * ipw2100_init - Initialize the ipw2100 driver/module
-  *
-  * @returns 0 if ok, < 0 errno node con error.
-  *
-@@ -6562,7 +6562,7 @@ static int __init ipw2100_init(void)
- }
- 
- /**
-- * Cleanup ipw2100 driver registration
-+ * ipw2100_exit - Cleanup ipw2100 driver registration
-  */
- static void __exit ipw2100_exit(void)
- {
-@@ -7197,7 +7197,7 @@ static int ipw2100_wx_set_txpow(struct net_device *dev,
- {
- 	struct ipw2100_priv *priv = libipw_priv(dev);
- 	int err = 0, value;
--	
-+
- 	if (ipw_radio_kill_sw(priv, wrqu->txpower.disabled))
- 		return -EINPROGRESS;
- 
--- 
-2.17.1
-
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
