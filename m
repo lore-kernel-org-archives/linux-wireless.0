@@ -2,46 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C078FC433ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5B5C43461
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CC0E610A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C153D61260
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235406AbhEQIQF (ORCPT
+        id S235438AbhEQIQG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 May 2021 04:16:05 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:3004 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbhEQIQD (ORCPT
+        Mon, 17 May 2021 04:16:06 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3715 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233996AbhEQIQE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 May 2021 04:16:03 -0400
-Received: from dggems703-chm.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FkBgz3d38zmW8n;
-        Mon, 17 May 2021 16:12:31 +0800 (CST)
+        Mon, 17 May 2021 04:16:04 -0400
+Received: from dggems701-chm.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FkBgQ5x4vz16QnL;
+        Mon, 17 May 2021 16:12:02 +0800 (CST)
 Received: from dggema704-chm.china.huawei.com (10.3.20.68) by
- dggems703-chm.china.huawei.com (10.3.19.180) with Microsoft SMTP Server
+ dggems701-chm.china.huawei.com (10.3.19.178) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:47 +0800
 Received: from localhost.localdomain (10.67.165.2) by
  dggema704-chm.china.huawei.com (10.3.20.68) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:45 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
 From:   Yang Shen <shenyang39@huawei.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Yang Shen" <shenyang39@huawei.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "Nick Kossifidis" <mickflemm@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 01/11] net: ath: ath5k: Fix wrong function name in comments
-Date:   Mon, 17 May 2021 13:01:31 +0800
-Message-ID: <20210517050141.61488-2-shenyang39@huawei.com>
+        "Yang Shen" <shenyang39@huawei.com>
+Subject: [PATCH 07/11] net: marvell: libertas_tf: Fix wrong function name in comments
+Date:   Mon, 17 May 2021 13:01:37 +0800
+Message-ID: <20210517050141.61488-8-shenyang39@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210517050141.61488-1-shenyang39@huawei.com>
 References: <20210517050141.61488-1-shenyang39@huawei.com>
@@ -57,29 +54,26 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/ath/ath5k/pcu.c:865: warning: expecting prototype for at5k_hw_stop_rx_pcu(). Prototype was for ath5k_hw_stop_rx_pcu() instead
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c:56: warning: expecting prototype for if_usb_wrike_bulk_callback(). Prototype was for if_usb_write_bulk_callback() instead
 
-Cc: Jiri Slaby <jirislaby@kernel.org>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Yang Shen <shenyang39@huawei.com>
 ---
- drivers/net/wireless/ath/ath5k/pcu.c | 2 +-
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index f2db7cf16566..3f4ce4e9c532 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -855,7 +855,7 @@ ath5k_hw_start_rx_pcu(struct ath5k_hw *ah)
- }
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index a92916dc81a9..fe0a69e804d8 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -48,7 +48,7 @@ static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
+ static int if_usb_reset_device(struct lbtf_private *priv);
 
  /**
-- * at5k_hw_stop_rx_pcu() - Stop RX engine
-+ * ath5k_hw_stop_rx_pcu() - Stop RX engine
-  * @ah: The &struct ath5k_hw
+- *  if_usb_wrike_bulk_callback -  call back to handle URB status
++ *  if_usb_write_bulk_callback -  call back to handle URB status
   *
-  * Stops RX engine on PCU
+  *  @urb:		pointer to urb structure
+  */
 --
 2.17.1
 
