@@ -7,40 +7,38 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40DB3C43462
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F06E6C433ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:15:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28C3860C3D
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:14:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3046611EE
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 May 2021 08:15:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235548AbhEQIQL (ORCPT
+        id S235542AbhEQIQO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 May 2021 04:16:11 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:3005 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235431AbhEQIQG (ORCPT
+        Mon, 17 May 2021 04:16:14 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2994 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235513AbhEQIQK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 May 2021 04:16:06 -0400
-Received: from dggems703-chm.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FkBh06ZgfzmVcB;
-        Mon, 17 May 2021 16:12:32 +0800 (CST)
+        Mon, 17 May 2021 04:16:10 -0400
+Received: from dggems705-chm.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FkBfj3Kp8zQpPM;
+        Mon, 17 May 2021 16:11:25 +0800 (CST)
 Received: from dggema704-chm.china.huawei.com (10.3.20.68) by
- dggems703-chm.china.huawei.com (10.3.19.180) with Microsoft SMTP Server
+ dggems705-chm.china.huawei.com (10.3.19.182) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:47 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:46 +0800
 Received: from localhost.localdomain (10.67.165.2) by
  dggema704-chm.china.huawei.com (10.3.20.68) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Mon, 17 May 2021 16:14:47 +0800
+ 15.1.2176.2; Mon, 17 May 2021 16:14:45 +0800
 From:   Yang Shen <shenyang39@huawei.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Yang Shen" <shenyang39@huawei.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        "Siva Rebbagondla" <siva8118@gmail.com>
-Subject: [PATCH 09/11] net: rsi: Fix missing function name in comments
-Date:   Mon, 17 May 2021 13:01:39 +0800
-Message-ID: <20210517050141.61488-10-shenyang39@huawei.com>
+        "Yang Shen" <shenyang39@huawei.com>
+Subject: [PATCH 02/11] net: ath: Fix wrong function name in comments
+Date:   Mon, 17 May 2021 13:01:32 +0800
+Message-ID: <20210517050141.61488-3-shenyang39@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210517050141.61488-1-shenyang39@huawei.com>
 References: <20210517050141.61488-1-shenyang39@huawei.com>
@@ -56,30 +54,26 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/net/wireless/rsi/rsi_91x_mgmt.c:1550: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+ drivers/net/wireless/ath/hw.c:119: warning: expecting prototype for ath_hw_set_bssid_mask(). Prototype was for ath_hw_setbssidmask() instead
 
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Siva Rebbagondla <siva8118@gmail.com>
 Signed-off-by: Yang Shen <shenyang39@huawei.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 33c76d39a8e9..dffe1d6cc592 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1547,8 +1547,8 @@ static int rsi_eeprom_read(struct rsi_common *common)
- }
- 
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index eae9abf540a7..b53ebb3ac9a2 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -24,7 +24,7 @@
+ #define REG_WRITE(_ah, _reg, _val)	(common->ops->write)(_ah, _val, _reg)
+
  /**
-- * This function sends a frame to block/unblock
-- * data queues in the firmware
-+ * rsi_send_block_unblock_frame() - This function sends a frame to block/unblock
-+ *                                  data queues in the firmware
+- * ath_hw_set_bssid_mask - filter out bssids we listen
++ * ath_hw_setbssidmask - filter out bssids we listen
   *
-  * @common: Pointer to the driver private structure.
-  * @block_event: Event block if true, unblock if false
--- 
+  * @common: the ath_common struct for the device.
+  *
+--
 2.17.1
 
