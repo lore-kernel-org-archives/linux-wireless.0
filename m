@@ -2,73 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E054C433B4
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 May 2021 12:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CFE3C433ED
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 May 2021 14:44:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A4A660FE8
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 May 2021 12:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E7F36109F
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 May 2021 14:44:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243384AbhESMnI (ORCPT
+        id S1354600AbhESOpT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 May 2021 08:43:08 -0400
-Received: from lpdvacalvio01.broadcom.com ([192.19.229.182]:33806 "EHLO
-        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239251AbhESMnI (ORCPT
+        Wed, 19 May 2021 10:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44766 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354578AbhESOpO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 May 2021 08:43:08 -0400
-Received: from bld-lvn-bcawlan-34.lvn.broadcom.net (bld-lvn-bcawlan-34.lvn.broadcom.net [10.75.138.137])
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 8815D24718;
-        Wed, 19 May 2021 05:41:48 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 8815D24718
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1621428108;
-        bh=Pp5sVN3z7TafUlzwcbTe1his5AB3BD4IhdDQ2rcg+q8=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=Nci6TU1yLuRaYfQsFK8ELZlBsOzYz6VdJgnSl+41bE2xdB7mrOR6+nksj2nZQPV2U
-         31wVGDT5Lbep6GMG06BAZaKNAHtmkrwnfSSmT5MloMCFfEXI+/dR2vYA3otSS8wemR
-         XpvBIEvQCfgeeRQanenMKt4BKYrS1F6qG2gKoT7Y=
-Received: from [10.230.42.155] (unknown [10.230.42.155])
-        by bld-lvn-bcawlan-34.lvn.broadcom.net (Postfix) with ESMTPSA id 4403C1874BE;
-        Wed, 19 May 2021 05:41:45 -0700 (PDT)
-Subject: Re: [PATCH 04/11] net: broadcom: brcmfmac: Demote non-compliant
- kernel-doc headers
-To:     Yang Shen <shenyang39@huawei.com>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <20210517050141.61488-1-shenyang39@huawei.com>
- <20210517050141.61488-5-shenyang39@huawei.com>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c37eb46b-1ac8-4d04-187d-9ec870f707d8@broadcom.com>
-Date:   Wed, 19 May 2021 14:41:43 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        Wed, 19 May 2021 10:45:14 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E71FEC06175F;
+        Wed, 19 May 2021 07:43:51 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id 62so6414923wmb.3;
+        Wed, 19 May 2021 07:43:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=UdIoL7xzUohWDYDq39HuAacSmY9Xlky/Lcw5imKunnY=;
+        b=bypUtzusRqUCDyEnGAbj3+UDU44NgRU0P60ZrFOklJXxCmpVZCt6OkEO8ORifHH2pP
+         URtioI2PehZxglQqyWuuQ4bIrxS0ucR36GyP0sW45x5RlfezyHq5AB5PJc3MLrLQzDqG
+         gTgrRzFdb7QDdcoT2TG/blqK05HCS1XA1xH7ZDaasMVm7PQflm19+NmGaoaWj6G4dATb
+         xcNc9yc1K6iV/BpelMAeltNIANcmNsw4x5t/wJJxBxLpZZ42scBNMwGNnNiPJTh9VcZh
+         C8222SaYtjvyY6v6KcaQgYKG/+958BfkJi+ZvNy8xYqLCjR1TZodq+WBBg18TMsjoZfj
+         befw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=UdIoL7xzUohWDYDq39HuAacSmY9Xlky/Lcw5imKunnY=;
+        b=JSshXJUH1ZXXplTdvWRAsGglFaKMFIsFWm0a6Es+J9xkCOloTMpPGoYRuYWDE6nUO+
+         QzUEoGhbivdpFMQACIjopKzTiOja82hWsQPDwCCTvY7j7VSx4iqTlgmzCMS7Ed5nucBS
+         06mqQaaD1Y7lHF2SkjhrFqs4/QbWHS7iXqlb7O1y+m1mdGDLT8AR8DVfwDdAy/FEUIqZ
+         D/0Xhs2rjA+xS4Ex3QvSQusWQwLQ1HPSu2yHxtJSlQThmOf+yjB7yOQjt3t4WCJNR3Fs
+         dt3O/mLaYyZjJnVfol4OG37iuFLzwsd9Aa/P2If31S2k5PEH2KNWboVSzzC3/VO6yxRU
+         WnQg==
+X-Gm-Message-State: AOAM530HOoiue3OHN1hqnFCVwvhS1yJguww4B/TMTqd6tV4OI7TFSoZ4
+        7oR2cpeFZ+DFyjwZEOvYmZ0pUR5gbiI79Q==
+X-Google-Smtp-Source: ABdhPJz8JXxLywSbYWhIdAWUqpIlaTKfvF0Ksh6Av09VAh2O6BKaKMCurHrfnX9tm+BLxs4KSZTELA==
+X-Received: by 2002:a1c:b384:: with SMTP id c126mr11935026wmf.110.1621435430399;
+        Wed, 19 May 2021 07:43:50 -0700 (PDT)
+Received: from agape.jhs ([5.171.80.197])
+        by smtp.gmail.com with ESMTPSA id y6sm4645735wmy.23.2021.05.19.07.43.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 May 2021 07:43:50 -0700 (PDT)
+Date:   Wed, 19 May 2021 16:43:48 +0200
+From:   Fabio Aiuto <fabioaiuto83@gmail.com>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: subscription
+Message-ID: <20210519144347.GB1417@agape.jhs>
 MIME-Version: 1.0
-In-Reply-To: <20210517050141.61488-5-shenyang39@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 17-05-2021 07:01, Yang Shen wrote:
-> Fixes the following W=1 kernel build warning(s):
-> 
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c:2040: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1295: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+Hello all,
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Cc: Franky Lin <franky.lin@broadcom.com>
-> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Yang Shen <shenyang39@huawei.com>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c  | 2 +-
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
+I tried two times to subscribe to linux-wireless, but majordomo
+didn't answered yet. May I try again?
+
+thank you,
+
+fabio
