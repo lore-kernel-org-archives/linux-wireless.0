@@ -2,80 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28639C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 19:29:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB24C433ED
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 22:17:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0444261244
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 19:29:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4283661244
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 22:17:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239757AbhETTaY (ORCPT
+        id S231147AbhETWSq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 May 2021 15:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39684 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239506AbhETTaW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 May 2021 15:30:22 -0400
-X-Greylist: delayed 481 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 20 May 2021 12:29:01 PDT
-Received: from relay03.th.seeweb.it (relay03.th.seeweb.it [IPv6:2001:4b7a:2000:18::164])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D69C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2021 12:29:01 -0700 (PDT)
-Received: from [192.168.1.101] (83.6.168.18.neoplus.adsl.tpnet.pl [83.6.168.18])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        Thu, 20 May 2021 18:18:46 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:39965 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229750AbhETWSn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 May 2021 18:18:43 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1621549041; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=57/hC72HhnxmP1EKSlG0sZcTh/U0DAPClbYA6t6qUrQ=;
+ b=mmiNgyTmuk04crdvxIs5DpJ0dp5uBqxtN8gMVtNpcG4ODw7WIXWufftjMvvQU030iR+eNW+8
+ XjWvMXx/842aeOF8nL4aW1DR7uSE2R1FbQLI9XnEqnQFzTUOZTjm0cB6RfBrc9cnwp8GdKLs
+ gT4uuKfjJnAzFSkVP2Knqg8WrsE=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 60a6dfc4f752fca668439835 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 20 May 2021 22:16:36
+ GMT
+Sender: jjohnson=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 26DCDC43143; Thu, 20 May 2021 22:16:36 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by m-r1.th.seeweb.it (Postfix) with ESMTPSA id D60D01FF04;
-        Thu, 20 May 2021 21:20:54 +0200 (CEST)
-Subject: Re: [PATCH] brcmfmac: Add support for BCM43596 PCIe Wi-Fi
-To:     AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@somainline.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        phone-devel@vger.kernel.org
-Cc:     ~postmarketos/upstreaming@lists.sr.ht, martin.botka@somainline.org,
-        marijn.suijten@somainline.org,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        (Authenticated sender: jjohnson)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7EDA9C433F1;
+        Thu, 20 May 2021 22:16:35 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 20 May 2021 15:16:35 -0700
+From:   Jeff Johnson <jjohnson@codeaurora.org>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20210307113550.7720-1-konrad.dybcio@somainline.org>
- <5e7b575a-7820-3d10-8617-36911d49f4a9@broadcom.com>
- <754923af-407e-05f8-148e-4c2a3faf42ab@somainline.org>
-From:   Konrad Dybcio <konrad.dybcio@somainline.org>
-Message-ID: <bfe3d2d5-6ee6-678f-644f-e5448480d94e@somainline.org>
-Date:   Thu, 20 May 2021 21:20:53 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-In-Reply-To: <754923af-407e-05f8-148e-4c2a3faf42ab@somainline.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+        Kees Cook <keescook@chromium.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Chao Yu <chao@kernel.org>,
+        Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCH v2] b43: don't save dentries for debugfs
+In-Reply-To: <YKU2vMoDO0Ch1Lyg@kroah.com>
+References: <20210518163304.3702015-1-gregkh@linuxfoundation.org>
+ <891f28e4c1f3c24ed1b257de83cbb3a0@codeaurora.org>
+ <f539277054c06e1719832b9e99cbf7f1@codeaurora.org>
+ <YKScfFKhxtVqfRkt@kroah.com>
+ <2eb3af43025436c0832c8f61fbf519ad@codeaurora.org>
+ <YKUyAoBq/cepglmk@kroah.com>
+ <48aea7ae33faaafab388e24c3b8eb199@codeaurora.org>
+ <YKU2vMoDO0Ch1Lyg@kroah.com>
+Message-ID: <36d75173b785819a4792ccceb5bf26b8@codeaurora.org>
+X-Sender: jjohnson@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On 2021-05-19 09:03, Greg Kroah-Hartman wrote:
+> On Wed, May 19, 2021 at 08:57:00AM -0700, Jeff Johnson wrote:
+>> Unless debugfs is disabled, like on Android, which is the real problem 
+>> I'm
+>> trying to solve.
+> 
+> Then use some other filesystem to place your relay file in.  A relay
+> file is not a file that userspace should rely on for normal operation,
+> so why do you need it at all?
+> 
+> What tools/operation requires access to this file that systems without
+> debugfs support is causing problems on?
 
+(trimmed some lists)
 
-sorry for the lack of answer from me (I've had a lot going on..), but the one Angelo has given you is right. We have to use the files that SONY ships with their stock Android firmware. Could you look into this patch once again?
+For the ath drivers (as well as the out-of-tree Android driver) it is 
+being used for RF spectral scan which produces a large amount of data 
+that is processed by a userspace analysis application.
 
+I've been looking for an alternate filesystem to use, but am not finding 
+anything where it appears easy to get a parent dentry, so any clues for 
+the clueless (me) would be appreciated.
 
-Konrad
+Jeff
 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
+Forum,
+a Linux Foundation Collaborative Project
