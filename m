@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC93C433B4
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 657B7C43460
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C78C6100A
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A586109F
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231791AbhETOKQ (ORCPT
+        id S236159AbhETOKS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 May 2021 10:10:16 -0400
-Received: from mga11.intel.com ([192.55.52.93]:5245 "EHLO mga11.intel.com"
+        Thu, 20 May 2021 10:10:18 -0400
+Received: from mga11.intel.com ([192.55.52.93]:5047 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240141AbhETOIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 May 2021 10:08:45 -0400
-IronPort-SDR: kZmNl6N9TgyynuC9uhJeOrehDfLPTyBpBrMTWoFTnk7YI+YL71StqMIbV82jujoQ+hFzbZsNBe
- gOaJ7kt58Y/A==
-X-IronPort-AV: E=McAfee;i="6200,9189,9989"; a="198144639"
+        id S242228AbhETOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 May 2021 10:08:46 -0400
+IronPort-SDR: XqSM+tMS7aAFfg09Kd5VtrlW2lFCqQNDiN7dH00t+YFBIQZrH31zBUgFhFHRaQOeJXNl7tUNIG
+ 4JvcGvNQHJKQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9989"; a="198144714"
 X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
-   d="scan'208";a="198144639"
+   d="scan'208";a="198144714"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2021 07:02:52 -0700
-IronPort-SDR: w8M09LeLAxuUjAxW1MblRaMyV1+7oL5CO9aa5aCTmO4D7RCl7QDxmcRBay0mS/TrYUjzaLzX53
- rt0XhPJmeDOA==
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2021 07:02:58 -0700
+IronPort-SDR: LyYcg8eCBpqEEsSSzGzyhONUWcXgFgxsHcgC5n64drJQvKIPqmQ210NKYm2v/bwyl8ZMcrHidi
+ z4XDdnZa5lIw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
-   d="scan'208";a="631407577"
+   d="scan'208";a="631407600"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by fmsmga005.fm.intel.com with ESMTP; 20 May 2021 07:02:51 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 20 May 2021 07:02:57 -0700
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         linuxwwan@intel.com
-Subject: [PATCH V3 09/16] net: iosm: multiplex IP sessions
-Date:   Thu, 20 May 2021 19:31:51 +0530
-Message-Id: <20210520140158.10132-10-m.chetan.kumar@intel.com>
+Subject: [PATCH V3 11/16] net: iosm: power management
+Date:   Thu, 20 May 2021 19:31:53 +0530
+Message-Id: <20210520140158.10132-12-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210520140158.10132-1-m.chetan.kumar@intel.com>
 References: <20210520140158.10132-1-m.chetan.kumar@intel.com>
@@ -48,832 +48,573 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Establish IP session between host-device & session management.
+Implements state machine to handle host & device sleep.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
 v3: Aligned ipc_ prefix for function name to be consistent across file.
 v2:
-* Endianness type correction for Host-Device protocol structure.
 * Removed space around the : for the bitfields.
-* Change session from dynamic to static.
-* Streamline multiple returns using goto.
+* Moved pm module under static allocation
+* Added memory barriers around atomic operations.
 ---
- drivers/net/wwan/iosm/iosm_ipc_mux.c | 455 +++++++++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_mux.h | 343 ++++++++++++++++++++
- 2 files changed, 798 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux.h
+ drivers/net/wwan/iosm/iosm_ipc_pm.c | 333 ++++++++++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_pm.h | 207 +++++++++++++++++
+ 2 files changed, 540 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pm.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_pm.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux.c b/drivers/net/wwan/iosm/iosm_ipc_mux.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_pm.c b/drivers/net/wwan/iosm/iosm_ipc_pm.c
 new file mode 100644
-index 000000000000..c1c77ce699da
+index 000000000000..413601c72dcd
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_mux.c
-@@ -0,0 +1,455 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_pm.c
+@@ -0,0 +1,333 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020-21 Intel Corporation.
 + */
 +
-+#include "iosm_ipc_mux_codec.h"
++#include "iosm_ipc_protocol.h"
 +
-+/* At the begin of the runtime phase the IP MUX channel shall created. */
-+static int ipc_mux_channel_create(struct iosm_mux *ipc_mux)
++/* Timeout value in MS for the PM to wait for device to reach active state */
++#define IPC_PM_ACTIVE_TIMEOUT_MS (500)
++
++/* Note that here "active" has the value 1, as compared to the enums
++ * ipc_mem_host_pm_state or ipc_mem_dev_pm_state, where "active" is 0
++ */
++#define IPC_PM_SLEEP (0)
++#define CONSUME_STATE (0)
++#define IPC_PM_ACTIVE (1)
++
++void ipc_pm_signal_hpda_doorbell(struct iosm_pm *ipc_pm, u32 identifier,
++				 bool host_slp_check)
 +{
-+	int channel_id;
-+
-+	channel_id = ipc_imem_channel_alloc(ipc_mux->imem, ipc_mux->instance_id,
-+					    IPC_CTYPE_WWAN);
-+
-+	if (channel_id < 0) {
-+		dev_err(ipc_mux->dev,
-+			"allocation of the MUX channel id failed");
-+		ipc_mux->state = MUX_S_ERROR;
-+		ipc_mux->event = MUX_E_NOT_APPLICABLE;
-+		goto no_channel;
-+	}
-+
-+	/* Establish the MUX channel in blocking mode. */
-+	ipc_mux->channel = ipc_imem_channel_open(ipc_mux->imem, channel_id,
-+						 IPC_HP_NET_CHANNEL_INIT);
-+
-+	if (!ipc_mux->channel) {
-+		dev_err(ipc_mux->dev, "ipc_imem_channel_open failed");
-+		ipc_mux->state = MUX_S_ERROR;
-+		ipc_mux->event = MUX_E_NOT_APPLICABLE;
-+		return -ENODEV; /* MUX channel is not available. */
-+	}
-+
-+	/* Define the MUX active state properties. */
-+	ipc_mux->state = MUX_S_ACTIVE;
-+	ipc_mux->event = MUX_E_NO_ORDERS;
-+
-+no_channel:
-+	return channel_id;
-+}
-+
-+/* Reset the session/if id state. */
-+static void ipc_mux_session_free(struct iosm_mux *ipc_mux, int if_id)
-+{
-+	struct mux_session *if_entry;
-+
-+	if_entry = &ipc_mux->session[if_id];
-+	/* Reset the session state. */
-+	if_entry->wwan = NULL;
-+}
-+
-+/* Create and send the session open command. */
-+static struct mux_cmd_open_session_resp *
-+ipc_mux_session_open_send(struct iosm_mux *ipc_mux, int if_id)
-+{
-+	struct mux_cmd_open_session_resp *open_session_resp;
-+	struct mux_acb *acb = &ipc_mux->acb;
-+	union mux_cmd_param param;
-+
-+	/* open_session commands to one ACB and start transmission. */
-+	param.open_session.flow_ctrl = 0;
-+	param.open_session.ipv4v6_hints = 0;
-+	param.open_session.reserved2 = 0;
-+	param.open_session.dl_head_pad_len = cpu_to_le32(IPC_MEM_DL_ETH_OFFSET);
-+
-+	/* Finish and transfer ACB. The user thread is suspended.
-+	 * It is a blocking function call, until CP responds or timeout.
-+	 */
-+	acb->wanted_response = MUX_CMD_OPEN_SESSION_RESP;
-+	if (ipc_mux_dl_acb_send_cmds(ipc_mux, MUX_CMD_OPEN_SESSION, if_id, 0,
-+				     &param, sizeof(param.open_session), true,
-+				 false) ||
-+	    acb->got_response != MUX_CMD_OPEN_SESSION_RESP) {
-+		dev_err(ipc_mux->dev, "if_id %d: OPEN_SESSION send failed",
-+			if_id);
-+		return NULL;
-+	}
-+
-+	open_session_resp = &ipc_mux->acb.got_param.open_session_resp;
-+	if (open_session_resp->response != cpu_to_le32(MUX_CMD_RESP_SUCCESS)) {
-+		dev_err(ipc_mux->dev,
-+			"if_id %d,session open failed,response=%d", if_id,
-+			open_session_resp->response);
-+		return NULL;
-+	}
-+
-+	return open_session_resp;
-+}
-+
-+/* Open the first IP session. */
-+static bool ipc_mux_session_open(struct iosm_mux *ipc_mux,
-+				 struct mux_session_open *session_open)
-+{
-+	struct mux_cmd_open_session_resp *open_session_resp;
-+	int if_id;
-+
-+	/* Search for a free session interface id. */
-+	if_id = le32_to_cpu(session_open->if_id);
-+	if (if_id < 0 || if_id >= ipc_mux->nr_sessions) {
-+		dev_err(ipc_mux->dev, "invalid interface id=%d", if_id);
-+		return false;
-+	}
-+
-+	/* Create and send the session open command.
-+	 * It is a blocking function call, until CP responds or timeout.
-+	 */
-+	open_session_resp = ipc_mux_session_open_send(ipc_mux, if_id);
-+	if (!open_session_resp) {
-+		ipc_mux_session_free(ipc_mux, if_id);
-+		session_open->if_id = cpu_to_le32(-1);
-+		return false;
-+	}
-+
-+	/* Initialize the uplink skb accumulator. */
-+	skb_queue_head_init(&ipc_mux->session[if_id].ul_list);
-+
-+	ipc_mux->session[if_id].dl_head_pad_len = IPC_MEM_DL_ETH_OFFSET;
-+	ipc_mux->session[if_id].ul_head_pad_len =
-+		le32_to_cpu(open_session_resp->ul_head_pad_len);
-+	ipc_mux->session[if_id].wwan = ipc_mux->wwan;
-+
-+	/* Reset the flow ctrl stats of the session */
-+	ipc_mux->session[if_id].flow_ctl_en_cnt = 0;
-+	ipc_mux->session[if_id].flow_ctl_dis_cnt = 0;
-+	ipc_mux->session[if_id].ul_flow_credits = 0;
-+	ipc_mux->session[if_id].net_tx_stop = false;
-+	ipc_mux->session[if_id].flow_ctl_mask = 0;
-+
-+	/* Save and return the assigned if id. */
-+	session_open->if_id = cpu_to_le32(if_id);
-+
-+	return true;
-+}
-+
-+/* Free pending session UL packet. */
-+static void ipc_mux_session_reset(struct iosm_mux *ipc_mux, int if_id)
-+{
-+	/* Reset the session/if id state. */
-+	ipc_mux_session_free(ipc_mux, if_id);
-+
-+	/* Empty the uplink skb accumulator. */
-+	skb_queue_purge(&ipc_mux->session[if_id].ul_list);
-+}
-+
-+static void ipc_mux_session_close(struct iosm_mux *ipc_mux,
-+				  struct mux_session_close *msg)
-+{
-+	int if_id;
-+
-+	/* Copy the session interface id. */
-+	if_id = le32_to_cpu(msg->if_id);
-+
-+	if (if_id < 0 || if_id >= ipc_mux->nr_sessions) {
-+		dev_err(ipc_mux->dev, "invalid session id %d", if_id);
++	if (host_slp_check && ipc_pm->host_pm_state != IPC_MEM_HOST_PM_ACTIVE &&
++	    ipc_pm->host_pm_state != IPC_MEM_HOST_PM_ACTIVE_WAIT) {
++		ipc_pm->pending_hpda_update = true;
++		dev_dbg(ipc_pm->dev,
++			"Pend HPDA update set. Host PM_State: %d identifier:%d",
++			ipc_pm->host_pm_state, identifier);
 +		return;
 +	}
 +
-+	/* Create and send the session close command.
-+	 * It is a blocking function call, until CP responds or timeout.
-+	 */
-+	if (ipc_mux_dl_acb_send_cmds(ipc_mux, MUX_CMD_CLOSE_SESSION, if_id, 0,
-+				     NULL, 0, true, false))
-+		dev_err(ipc_mux->dev, "if_id %d: CLOSE_SESSION send failed",
-+			if_id);
-+
-+	/* Reset the flow ctrl stats of the session */
-+	ipc_mux->session[if_id].flow_ctl_en_cnt = 0;
-+	ipc_mux->session[if_id].flow_ctl_dis_cnt = 0;
-+	ipc_mux->session[if_id].flow_ctl_mask = 0;
-+
-+	ipc_mux_session_reset(ipc_mux, if_id);
-+}
-+
-+static void ipc_mux_channel_close(struct iosm_mux *ipc_mux,
-+				  struct mux_channel_close *channel_close_p)
-+{
-+	int i;
-+
-+	/* Free pending session UL packet. */
-+	for (i = 0; i < ipc_mux->nr_sessions; i++)
-+		if (ipc_mux->session[i].wwan)
-+			ipc_mux_session_reset(ipc_mux, i);
-+
-+	ipc_imem_channel_close(ipc_mux->imem, ipc_mux->channel_id);
-+
-+	/* Reset the MUX object. */
-+	ipc_mux->state = MUX_S_INACTIVE;
-+	ipc_mux->event = MUX_E_INACTIVE;
-+}
-+
-+/* CP has interrupted AP. If AP is in IP MUX mode, execute the pending ops. */
-+static int ipc_mux_schedule(struct iosm_mux *ipc_mux, union mux_msg *msg)
-+{
-+	enum mux_event order;
-+	bool success;
-+	int ret = -EIO;
-+
-+	if (!ipc_mux->initialized) {
-+		ret = -EAGAIN;
-+		goto out;
++	if (!ipc_pm_trigger(ipc_pm, IPC_PM_UNIT_IRQ, true)) {
++		ipc_pm->pending_hpda_update = true;
++		dev_dbg(ipc_pm->dev, "Pending HPDA update set. identifier:%d",
++			identifier);
++		return;
 +	}
++	ipc_pm->pending_hpda_update = false;
 +
-+	order = msg->common.event;
++	/* Trigger the irq towards CP */
++	ipc_cp_irq_hpda_update(ipc_pm->pcie, identifier);
 +
-+	switch (ipc_mux->state) {
-+	case MUX_S_INACTIVE:
-+		if (order != MUX_E_MUX_SESSION_OPEN)
-+			goto out; /* Wait for the request to open a session */
++	ipc_pm_trigger(ipc_pm, IPC_PM_UNIT_IRQ, false);
++}
 +
-+		if (ipc_mux->event == MUX_E_INACTIVE)
-+			/* Establish the MUX channel and the new state. */
-+			ipc_mux->channel_id = ipc_mux_channel_create(ipc_mux);
++/* Wake up the device if it is in low power mode. */
++static bool ipc_pm_link_activate(struct iosm_pm *ipc_pm)
++{
++	if (ipc_pm->cp_state == IPC_MEM_DEV_PM_ACTIVE)
++		return true;
 +
-+		if (ipc_mux->state != MUX_S_ACTIVE) {
-+			ret = ipc_mux->channel_id; /* Missing the MUX channel */
-+			goto out;
++	if (ipc_pm->cp_state == IPC_MEM_DEV_PM_SLEEP) {
++		if (ipc_pm->ap_state == IPC_MEM_DEV_PM_SLEEP) {
++			/* Wake up the device. */
++			ipc_cp_irq_sleep_control(ipc_pm->pcie,
++						 IPC_MEM_DEV_PM_WAKEUP);
++			ipc_pm->ap_state = IPC_MEM_DEV_PM_ACTIVE_WAIT;
++
++			goto not_active;
 +		}
 +
-+		/* Disable the TD update timer and open the first IP session. */
-+		ipc_imem_td_update_timer_suspend(ipc_mux->imem, true);
-+		ipc_mux->event = MUX_E_MUX_SESSION_OPEN;
-+		success = ipc_mux_session_open(ipc_mux, &msg->session_open);
++		if (ipc_pm->ap_state == IPC_MEM_DEV_PM_ACTIVE_WAIT)
++			goto not_active;
 +
-+		ipc_imem_td_update_timer_suspend(ipc_mux->imem, false);
-+		if (success)
-+			ret = ipc_mux->channel_id;
-+		goto out;
-+
-+	case MUX_S_ACTIVE:
-+		switch (order) {
-+		case MUX_E_MUX_SESSION_OPEN:
-+			/* Disable the TD update timer and open a session */
-+			ipc_imem_td_update_timer_suspend(ipc_mux->imem, true);
-+			ipc_mux->event = MUX_E_MUX_SESSION_OPEN;
-+			success = ipc_mux_session_open(ipc_mux,
-+						       &msg->session_open);
-+			ipc_imem_td_update_timer_suspend(ipc_mux->imem, false);
-+			if (success)
-+				ret = ipc_mux->channel_id;
-+			goto out;
-+
-+		case MUX_E_MUX_SESSION_CLOSE:
-+			/* Release an IP session. */
-+			ipc_mux->event = MUX_E_MUX_SESSION_CLOSE;
-+			ipc_mux_session_close(ipc_mux, &msg->session_close);
-+			ret = ipc_mux->channel_id;
-+			goto out;
-+
-+		case MUX_E_MUX_CHANNEL_CLOSE:
-+			/* Close the MUX channel pipes. */
-+			ipc_mux->event = MUX_E_MUX_CHANNEL_CLOSE;
-+			ipc_mux_channel_close(ipc_mux, &msg->channel_close);
-+			ret = ipc_mux->channel_id;
-+			goto out;
-+
-+		default:
-+			/* Invalid order. */
-+			goto out;
-+		}
-+
-+	default:
-+		dev_err(ipc_mux->dev,
-+			"unexpected MUX transition: state=%d, event=%d",
-+			ipc_mux->state, ipc_mux->event);
-+	}
-+out:
-+	return ret;
-+}
-+
-+struct iosm_mux *ipc_mux_init(struct ipc_mux_config *mux_cfg,
-+			      struct iosm_imem *imem)
-+{
-+	struct iosm_mux *ipc_mux = kzalloc(sizeof(*ipc_mux), GFP_KERNEL);
-+	int i, ul_tds, ul_td_size;
-+	struct sk_buff_head *free_list;
-+	struct sk_buff *skb;
-+
-+	if (!ipc_mux)
-+		return NULL;
-+
-+	ipc_mux->protocol = mux_cfg->protocol;
-+	ipc_mux->ul_flow = mux_cfg->ul_flow;
-+	ipc_mux->nr_sessions = mux_cfg->nr_sessions;
-+	ipc_mux->instance_id = mux_cfg->instance_id;
-+	ipc_mux->wwan_q_offset = 0;
-+
-+	ipc_mux->pcie = imem->pcie;
-+	ipc_mux->imem = imem;
-+	ipc_mux->ipc_protocol = imem->ipc_protocol;
-+	ipc_mux->dev = imem->dev;
-+	ipc_mux->wwan = imem->wwan;
-+
-+	/* Get the reference to the UL ADB list. */
-+	free_list = &ipc_mux->ul_adb.free_list;
-+
-+	/* Initialize the list with free ADB. */
-+	skb_queue_head_init(free_list);
-+
-+	ul_td_size = IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE;
-+
-+	ul_tds = IPC_MEM_MAX_TDS_MUX_LITE_UL;
-+
-+	ipc_mux->ul_adb.dest_skb = NULL;
-+
-+	ipc_mux->initialized = true;
-+	ipc_mux->adb_prep_ongoing = false;
-+	ipc_mux->size_needed = 0;
-+	ipc_mux->ul_data_pend_bytes = 0;
-+	ipc_mux->state = MUX_S_INACTIVE;
-+	ipc_mux->ev_mux_net_transmit_pending = false;
-+	ipc_mux->tx_transaction_id = 0;
-+	ipc_mux->rr_next_session = 0;
-+	ipc_mux->event = MUX_E_INACTIVE;
-+	ipc_mux->channel_id = -1;
-+	ipc_mux->channel = NULL;
-+
-+	/* Allocate the list of UL ADB. */
-+	for (i = 0; i < ul_tds; i++) {
-+		dma_addr_t mapping;
-+
-+		skb = ipc_pcie_alloc_skb(ipc_mux->pcie, ul_td_size, GFP_ATOMIC,
-+					 &mapping, DMA_TO_DEVICE, 0);
-+		if (!skb) {
-+			ipc_mux_deinit(ipc_mux);
-+			return NULL;
-+		}
-+		/* Extend the UL ADB list. */
-+		skb_queue_tail(free_list, skb);
++		return true;
 +	}
 +
-+	return ipc_mux;
++not_active:
++	/* link is not ready */
++	return false;
 +}
 +
-+/* Informs the network stack to restart transmission for all opened session if
-+ * Flow Control is not ON for that session.
-+ */
-+static void ipc_mux_restart_tx_for_all_sessions(struct iosm_mux *ipc_mux)
++bool ipc_pm_wait_for_device_active(struct iosm_pm *ipc_pm)
 +{
-+	struct mux_session *session;
-+	int idx;
++	bool ret_val = false;
 +
-+	for (idx = 0; idx < ipc_mux->nr_sessions; idx++) {
-+		session = &ipc_mux->session[idx];
++	if (ipc_pm->ap_state != IPC_MEM_DEV_PM_ACTIVE) {
++		/* Complete all memory stores before setting bit */
++		smp_mb__before_atomic();
 +
-+		if (!session->wwan)
-+			continue;
-+
-+		/* If flow control of the session is OFF and if there was tx
-+		 * stop then restart. Inform the network interface to restart
-+		 * sending data.
++		/* Wait for IPC_PM_ACTIVE_TIMEOUT_MS for Device sleep state
++		 * machine to enter ACTIVE state.
 +		 */
-+		if (session->flow_ctl_mask == 0) {
-+			session->net_tx_stop = false;
-+			ipc_mux_netif_tx_flowctrl(session, idx, false);
++		set_bit(0, &ipc_pm->host_sleep_pend);
++
++		/* Complete all memory stores after setting bit */
++		smp_mb__after_atomic();
++
++		if (!wait_for_completion_interruptible_timeout
++		   (&ipc_pm->host_sleep_complete,
++		    msecs_to_jiffies(IPC_PM_ACTIVE_TIMEOUT_MS))) {
++			dev_err(ipc_pm->dev,
++				"PM timeout. Expected State:%d. Actual: %d",
++				IPC_MEM_DEV_PM_ACTIVE, ipc_pm->ap_state);
++			goto  active_timeout;
 +		}
 +	}
-+}
 +
-+/* Informs the network stack to stop sending further pkt for all opened
-+ * sessions
-+ */
-+static void ipc_mux_stop_netif_for_all_sessions(struct iosm_mux *ipc_mux)
-+{
-+	struct mux_session *session;
-+	int idx;
++	ret_val = true;
++active_timeout:
++	/* Complete all memory stores before clearing bit */
++	smp_mb__before_atomic();
 +
-+	for (idx = 0; idx < ipc_mux->nr_sessions; idx++) {
-+		session = &ipc_mux->session[idx];
++	/* Reset the atomic variable in any case as device sleep
++	 * state machine change is no longer of interest.
++	 */
++	clear_bit(0, &ipc_pm->host_sleep_pend);
 +
-+		if (!session->wwan)
-+			continue;
-+
-+		ipc_mux_netif_tx_flowctrl(session, session->if_id, true);
-+	}
-+}
-+
-+void ipc_mux_check_n_restart_tx(struct iosm_mux *ipc_mux)
-+{
-+	if (ipc_mux->ul_flow == MUX_UL) {
-+		int low_thresh = IPC_MEM_MUX_UL_FLOWCTRL_LOW_B;
-+
-+		if (ipc_mux->ul_data_pend_bytes < low_thresh)
-+			ipc_mux_restart_tx_for_all_sessions(ipc_mux);
-+	}
-+}
-+
-+int ipc_mux_get_max_sessions(struct iosm_mux *ipc_mux)
-+{
-+	return ipc_mux ? ipc_mux->nr_sessions : -EFAULT;
-+}
-+
-+enum ipc_mux_protocol ipc_mux_get_active_protocol(struct iosm_mux *ipc_mux)
-+{
-+	return ipc_mux ? ipc_mux->protocol : MUX_UNKNOWN;
-+}
-+
-+int ipc_mux_open_session(struct iosm_mux *ipc_mux, int session_nr)
-+{
-+	struct mux_session_open *session_open;
-+	union mux_msg mux_msg;
-+
-+	session_open = &mux_msg.session_open;
-+	session_open->event = MUX_E_MUX_SESSION_OPEN;
-+
-+	session_open->if_id = cpu_to_le32(session_nr);
-+	ipc_mux->session[session_nr].flags |= IPC_MEM_WWAN_MUX;
-+	return ipc_mux_schedule(ipc_mux, &mux_msg);
-+}
-+
-+int ipc_mux_close_session(struct iosm_mux *ipc_mux, int session_nr)
-+{
-+	struct mux_session_close *session_close;
-+	union mux_msg mux_msg;
-+	int ret_val;
-+
-+	session_close = &mux_msg.session_close;
-+	session_close->event = MUX_E_MUX_SESSION_CLOSE;
-+
-+	session_close->if_id = cpu_to_le32(session_nr);
-+	ret_val = ipc_mux_schedule(ipc_mux, &mux_msg);
-+	ipc_mux->session[session_nr].flags &= ~IPC_MEM_WWAN_MUX;
++	/* Complete all memory stores after clearing bit */
++	smp_mb__after_atomic();
 +
 +	return ret_val;
 +}
 +
-+void ipc_mux_deinit(struct iosm_mux *ipc_mux)
++static void ipc_pm_on_link_sleep(struct iosm_pm *ipc_pm)
 +{
-+	struct mux_channel_close *channel_close;
-+	struct sk_buff_head *free_list;
-+	union mux_msg mux_msg;
-+	struct sk_buff *skb;
++	/* pending sleep ack and all conditions are cleared
++	 * -> signal SLEEP__ACK to CP
++	 */
++	ipc_pm->cp_state = IPC_MEM_DEV_PM_SLEEP;
++	ipc_pm->ap_state = IPC_MEM_DEV_PM_SLEEP;
 +
-+	if (!ipc_mux->initialized)
-+		return;
-+	ipc_mux_stop_netif_for_all_sessions(ipc_mux);
++	ipc_cp_irq_sleep_control(ipc_pm->pcie, IPC_MEM_DEV_PM_SLEEP);
++}
 +
-+	channel_close = &mux_msg.channel_close;
-+	channel_close->event = MUX_E_MUX_CHANNEL_CLOSE;
-+	ipc_mux_schedule(ipc_mux, &mux_msg);
++static void ipc_pm_on_link_wake(struct iosm_pm *ipc_pm, bool ack)
++{
++	ipc_pm->ap_state = IPC_MEM_DEV_PM_ACTIVE;
 +
-+	/* Empty the ADB free list. */
-+	free_list = &ipc_mux->ul_adb.free_list;
++	if (ack) {
++		ipc_pm->cp_state = IPC_MEM_DEV_PM_ACTIVE;
 +
-+	/* Remove from the head of the downlink queue. */
-+	while ((skb = skb_dequeue(free_list)))
-+		ipc_pcie_kfree_skb(ipc_mux->pcie, skb);
++		ipc_cp_irq_sleep_control(ipc_pm->pcie, IPC_MEM_DEV_PM_ACTIVE);
 +
-+	if (ipc_mux->channel) {
-+		ipc_mux->channel->ul_pipe.is_open = false;
-+		ipc_mux->channel->dl_pipe.is_open = false;
++		/* check the consume state !!! */
++		if (test_bit(CONSUME_STATE, &ipc_pm->host_sleep_pend))
++			complete(&ipc_pm->host_sleep_complete);
 +	}
 +
-+	kfree(ipc_mux);
++	/* Check for pending HPDA update.
++	 * Pending HP update could be because of sending message was
++	 * put on hold due to Device sleep state or due to TD update
++	 * which could be because of Device Sleep and Host Sleep
++	 * states.
++	 */
++	if (ipc_pm->pending_hpda_update &&
++	    ipc_pm->host_pm_state == IPC_MEM_HOST_PM_ACTIVE)
++		ipc_pm_signal_hpda_doorbell(ipc_pm, IPC_HP_PM_TRIGGER, true);
 +}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux.h b/drivers/net/wwan/iosm/iosm_ipc_mux.h
++
++bool ipc_pm_trigger(struct iosm_pm *ipc_pm, enum ipc_pm_unit unit, bool active)
++{
++	union ipc_pm_cond old_cond;
++	union ipc_pm_cond new_cond;
++	bool link_active;
++
++	/* Save the current D3 state. */
++	new_cond = ipc_pm->pm_cond;
++	old_cond = ipc_pm->pm_cond;
++
++	/* Calculate the power state only in the runtime phase. */
++	switch (unit) {
++	case IPC_PM_UNIT_IRQ: /* CP irq */
++		new_cond.irq = active;
++		break;
++
++	case IPC_PM_UNIT_LINK: /* Device link state. */
++		new_cond.link = active;
++		break;
++
++	case IPC_PM_UNIT_HS: /* Host sleep trigger requires Link. */
++		new_cond.hs = active;
++		break;
++
++	default:
++		break;
++	}
++
++	/* Something changed ? */
++	if (old_cond.raw == new_cond.raw) {
++		/* Stay in the current PM state. */
++		link_active = old_cond.link == IPC_PM_ACTIVE;
++		goto ret;
++	}
++
++	ipc_pm->pm_cond = new_cond;
++
++	if (new_cond.link)
++		ipc_pm_on_link_wake(ipc_pm, unit == IPC_PM_UNIT_LINK);
++	else if (unit == IPC_PM_UNIT_LINK)
++		ipc_pm_on_link_sleep(ipc_pm);
++
++	if (old_cond.link == IPC_PM_SLEEP && new_cond.raw) {
++		link_active = ipc_pm_link_activate(ipc_pm);
++		goto ret;
++	}
++
++	link_active = old_cond.link == IPC_PM_ACTIVE;
++
++ret:
++	return link_active;
++}
++
++bool ipc_pm_prepare_host_sleep(struct iosm_pm *ipc_pm)
++{
++	/* suspend not allowed if host_pm_state is not IPC_MEM_HOST_PM_ACTIVE */
++	if (ipc_pm->host_pm_state != IPC_MEM_HOST_PM_ACTIVE) {
++		dev_err(ipc_pm->dev, "host_pm_state=%d\tExpected to be: %d",
++			ipc_pm->host_pm_state, IPC_MEM_HOST_PM_ACTIVE);
++		return false;
++	}
++
++	ipc_pm->host_pm_state = IPC_MEM_HOST_PM_SLEEP_WAIT_D3;
++
++	return true;
++}
++
++bool ipc_pm_prepare_host_active(struct iosm_pm *ipc_pm)
++{
++	if (ipc_pm->host_pm_state != IPC_MEM_HOST_PM_SLEEP) {
++		dev_err(ipc_pm->dev, "host_pm_state=%d\tExpected to be: %d",
++			ipc_pm->host_pm_state, IPC_MEM_HOST_PM_SLEEP);
++		return false;
++	}
++
++	/* Sending Sleep Exit message to CP. Update the state */
++	ipc_pm->host_pm_state = IPC_MEM_HOST_PM_ACTIVE_WAIT;
++
++	return true;
++}
++
++void ipc_pm_set_s2idle_sleep(struct iosm_pm *ipc_pm, bool sleep)
++{
++	if (sleep) {
++		ipc_pm->ap_state = IPC_MEM_DEV_PM_SLEEP;
++		ipc_pm->cp_state = IPC_MEM_DEV_PM_SLEEP;
++		ipc_pm->device_sleep_notification = IPC_MEM_DEV_PM_SLEEP;
++	} else {
++		ipc_pm->ap_state = IPC_MEM_DEV_PM_ACTIVE;
++		ipc_pm->cp_state = IPC_MEM_DEV_PM_ACTIVE;
++		ipc_pm->device_sleep_notification = IPC_MEM_DEV_PM_ACTIVE;
++		ipc_pm->pm_cond.link = IPC_PM_ACTIVE;
++	}
++}
++
++bool ipc_pm_dev_slp_notification(struct iosm_pm *ipc_pm, u32 cp_pm_req)
++{
++	if (cp_pm_req == ipc_pm->device_sleep_notification)
++		return false;
++
++	ipc_pm->device_sleep_notification = cp_pm_req;
++
++	/* Evaluate the PM request. */
++	switch (ipc_pm->cp_state) {
++	case IPC_MEM_DEV_PM_ACTIVE:
++		switch (cp_pm_req) {
++		case IPC_MEM_DEV_PM_ACTIVE:
++			break;
++
++		case IPC_MEM_DEV_PM_SLEEP:
++			/* Inform the PM that the device link can go down. */
++			ipc_pm_trigger(ipc_pm, IPC_PM_UNIT_LINK, false);
++			return true;
++
++		default:
++			dev_err(ipc_pm->dev,
++				"loc-pm=%d active: confused req-pm=%d",
++				ipc_pm->cp_state, cp_pm_req);
++			break;
++		}
++		break;
++
++	case IPC_MEM_DEV_PM_SLEEP:
++		switch (cp_pm_req) {
++		case IPC_MEM_DEV_PM_ACTIVE:
++			/* Inform the PM that the device link is active. */
++			ipc_pm_trigger(ipc_pm, IPC_PM_UNIT_LINK, true);
++			break;
++
++		case IPC_MEM_DEV_PM_SLEEP:
++			break;
++
++		default:
++			dev_err(ipc_pm->dev,
++				"loc-pm=%d sleep: confused req-pm=%d",
++				ipc_pm->cp_state, cp_pm_req);
++			break;
++		}
++		break;
++
++	default:
++		dev_err(ipc_pm->dev, "confused loc-pm=%d, req-pm=%d",
++			ipc_pm->cp_state, cp_pm_req);
++		break;
++	}
++
++	return false;
++}
++
++void ipc_pm_init(struct iosm_protocol *ipc_protocol)
++{
++	struct iosm_imem *ipc_imem = ipc_protocol->imem;
++	struct iosm_pm *ipc_pm = &ipc_protocol->pm;
++
++	ipc_pm->pcie = ipc_imem->pcie;
++	ipc_pm->dev = ipc_imem->dev;
++
++	ipc_pm->pm_cond.irq = IPC_PM_SLEEP;
++	ipc_pm->pm_cond.hs = IPC_PM_SLEEP;
++	ipc_pm->pm_cond.link = IPC_PM_ACTIVE;
++
++	ipc_pm->cp_state = IPC_MEM_DEV_PM_ACTIVE;
++	ipc_pm->ap_state = IPC_MEM_DEV_PM_ACTIVE;
++	ipc_pm->host_pm_state = IPC_MEM_HOST_PM_ACTIVE;
++
++	/* Create generic wait-for-completion handler for Host Sleep
++	 * and device sleep coordination.
++	 */
++	init_completion(&ipc_pm->host_sleep_complete);
++
++	/* Complete all memory stores before clearing bit */
++	smp_mb__before_atomic();
++
++	clear_bit(0, &ipc_pm->host_sleep_pend);
++
++	/* Complete all memory stores after clearing bit */
++	smp_mb__after_atomic();
++}
++
++void ipc_pm_deinit(struct iosm_protocol *proto)
++{
++	struct iosm_pm *ipc_pm = &proto->pm;
++
++	complete(&ipc_pm->host_sleep_complete);
++}
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_pm.h b/drivers/net/wwan/iosm/iosm_ipc_pm.h
 new file mode 100644
-index 000000000000..ddd2cd0bd911
+index 000000000000..e7c00f388cb0
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_mux.h
-@@ -0,0 +1,343 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_pm.h
+@@ -0,0 +1,207 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2020-21 Intel Corporation.
 + */
 +
-+#ifndef IOSM_IPC_MUX_H
-+#define IOSM_IPC_MUX_H
++#ifndef IOSM_IPC_PM_H
++#define IOSM_IPC_PM_H
 +
-+#include "iosm_ipc_protocol.h"
++/* Trigger the doorbell interrupt on cp to change the PM sleep/active status */
++#define ipc_cp_irq_sleep_control(ipc_pcie, data)                               \
++	ipc_doorbell_fire(ipc_pcie, IPC_DOORBELL_IRQ_SLEEP, data)
 +
-+/* Size of the buffer for the IP MUX data buffer. */
-+#define IPC_MEM_MAX_DL_MUX_BUF_SIZE (16 * 1024)
-+#define IPC_MEM_MAX_UL_ADB_BUF_SIZE IPC_MEM_MAX_DL_MUX_BUF_SIZE
++/* Trigger the doorbell interrupt on CP to do hpda update */
++#define ipc_cp_irq_hpda_update(ipc_pcie, data)                                 \
++	ipc_doorbell_fire(ipc_pcie, IPC_DOORBELL_IRQ_HPDA, 0xFF & (data))
 +
-+/* Size of the buffer for the IP MUX Lite data buffer. */
-+#define IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE (2 * 1024)
-+
-+/* TD counts for IP MUX Lite */
-+#define IPC_MEM_MAX_TDS_MUX_LITE_UL 800
-+#define IPC_MEM_MAX_TDS_MUX_LITE_DL 1200
-+
-+/* open session request (AP->CP) */
-+#define MUX_CMD_OPEN_SESSION 1
-+
-+/* response to open session request (CP->AP) */
-+#define MUX_CMD_OPEN_SESSION_RESP 2
-+
-+/* close session request (AP->CP) */
-+#define MUX_CMD_CLOSE_SESSION 3
-+
-+/* response to close session request (CP->AP) */
-+#define MUX_CMD_CLOSE_SESSION_RESP 4
-+
-+/* Flow control command with mask of the flow per queue/flow. */
-+#define MUX_LITE_CMD_FLOW_CTL 5
-+
-+/* ACK the flow control command. Shall have the same Transaction ID as the
-+ * matching FLOW_CTL command.
++/**
++ * union ipc_pm_cond - Conditions for D3 and the sleep message to CP.
++ * @raw:	raw/combined value for faster check
++ * @irq:	IRQ towards CP
++ * @hs:		Host Sleep
++ * @link:	Device link state.
 + */
-+#define MUX_LITE_CMD_FLOW_CTL_ACK 6
++union ipc_pm_cond {
++	unsigned int raw;
 +
-+/* Command for report packet indicating link quality metrics. */
-+#define MUX_LITE_CMD_LINK_STATUS_REPORT 7
-+
-+/* Response to a report packet */
-+#define MUX_LITE_CMD_LINK_STATUS_REPORT_RESP 8
-+
-+/* Used to reset a command/response state. */
-+#define MUX_CMD_INVALID 255
-+
-+/* command response : command processed successfully */
-+#define MUX_CMD_RESP_SUCCESS 0
-+
-+/* MUX for route link devices */
-+#define IPC_MEM_WWAN_MUX BIT(0)
-+
-+/* Initiated actions to change the state of the MUX object. */
-+enum mux_event {
-+	MUX_E_INACTIVE, /* No initiated actions. */
-+	MUX_E_MUX_SESSION_OPEN, /* Create the MUX channel and a session. */
-+	MUX_E_MUX_SESSION_CLOSE, /* Release a session. */
-+	MUX_E_MUX_CHANNEL_CLOSE, /* Release the MUX channel. */
-+	MUX_E_NO_ORDERS, /* No MUX order. */
-+	MUX_E_NOT_APPLICABLE, /* Defect IP MUX. */
-+};
-+
-+/* MUX session open command. */
-+struct mux_session_open {
-+	enum mux_event event;
-+	__le32 if_id;
-+};
-+
-+/* MUX session close command. */
-+struct mux_session_close {
-+	enum mux_event event;
-+	__le32 if_id;
-+};
-+
-+/* MUX channel close command. */
-+struct mux_channel_close {
-+	enum mux_event event;
-+};
-+
-+/* Default message type to find out the right message type. */
-+struct mux_common {
-+	enum mux_event event;
-+};
-+
-+/* List of ops in MUX mode. */
-+union mux_msg {
-+	struct mux_session_open session_open;
-+	struct mux_session_close session_close;
-+	struct mux_channel_close channel_close;
-+	struct mux_common common;
-+};
-+
-+/* Parameter definition of the open session command. */
-+struct mux_cmd_open_session {
-+	u8 flow_ctrl; /* 0: Flow control disabled (flow allowed). */
-+	/* 1: Flow control enabled (flow not allowed)*/
-+	u8 ipv4v6_hints; /* 0: IPv4/IPv6 hints not supported.*/
-+	/* 1: IPv4/IPv6 hints supported*/
-+	__le16 reserved2; /* Reserved. Set to zero. */
-+	__le32 dl_head_pad_len; /* Maximum length supported */
-+	/* for DL head padding on a datagram. */
-+};
-+
-+/* Parameter definition of the open session response. */
-+struct mux_cmd_open_session_resp {
-+	__le32 response; /* Response code */
-+	u8 flow_ctrl; /* 0: Flow control disabled (flow allowed). */
-+	/* 1: Flow control enabled (flow not allowed) */
-+	u8 ipv4v6_hints; /* 0: IPv4/IPv6 hints not supported */
-+	/* 1: IPv4/IPv6 hints supported */
-+	__le16 reserved2; /* Reserved. Set to zero. */
-+	__le32 ul_head_pad_len; /* Actual length supported for */
-+	/* UL head padding on adatagram.*/
-+};
-+
-+/* Parameter definition of the close session response code */
-+struct mux_cmd_close_session_resp {
-+	__le32 response;
-+};
-+
-+/* Parameter definition of the flow control command. */
-+struct mux_cmd_flow_ctl {
-+	__le32 mask; /* indicating the desired flow control */
-+	/* state for various flows/queues */
-+};
-+
-+/* Parameter definition of the link status report code*/
-+struct mux_cmd_link_status_report {
-+	u8 payload;
-+};
-+
-+/* Parameter definition of the link status report response code. */
-+struct mux_cmd_link_status_report_resp {
-+	__le32 response;
++	struct {
++		unsigned int irq:1,
++			     hs:1,
++			     link:1;
++	};
 +};
 +
 +/**
-+ * union mux_cmd_param - Union-definition of the command parameters.
-+ * @open_session:	Inband command for open session
-+ * @open_session_resp:	Inband command for open session response
-+ * @close_session_resp:	Inband command for close session response
-+ * @flow_ctl:		In-band flow control on the opened interfaces
-+ * @link_status:	In-band Link Status Report
-+ * @link_status_resp:	In-band command for link status report response
++ * enum ipc_mem_host_pm_state - Possible states of the HOST SLEEP finite state
++ *				machine.
++ * @IPC_MEM_HOST_PM_ACTIVE:		   Host is active
++ * @IPC_MEM_HOST_PM_ACTIVE_WAIT:	   Intermediate state before going to
++ *					   active
++ * @IPC_MEM_HOST_PM_SLEEP_WAIT_IDLE:	   Intermediate state to wait for idle
++ *					   before going into sleep
++ * @IPC_MEM_HOST_PM_SLEEP_WAIT_D3:	   Intermediate state to wait for D3
++ *					   before going to sleep
++ * @IPC_MEM_HOST_PM_SLEEP:		   after this state the interface is not
++ *					   accessible host is in suspend to RAM
++ * @IPC_MEM_HOST_PM_SLEEP_WAIT_EXIT_SLEEP: Intermediate state before exiting
++ *					   sleep
 + */
-+union mux_cmd_param {
-+	struct mux_cmd_open_session open_session;
-+	struct mux_cmd_open_session_resp open_session_resp;
-+	struct mux_cmd_close_session_resp close_session_resp;
-+	struct mux_cmd_flow_ctl flow_ctl;
-+	struct mux_cmd_link_status_report link_status;
-+	struct mux_cmd_link_status_report_resp link_status_resp;
-+};
-+
-+/* States of the MUX object.. */
-+enum mux_state {
-+	MUX_S_INACTIVE, /* IP MUX is unused. */
-+	MUX_S_ACTIVE, /* IP MUX channel is available. */
-+	MUX_S_ERROR, /* Defect IP MUX. */
-+};
-+
-+/* Supported MUX protocols. */
-+enum ipc_mux_protocol {
-+	MUX_UNKNOWN,
-+	MUX_LITE,
-+};
-+
-+/* Supported UL data transfer methods. */
-+enum ipc_mux_ul_flow {
-+	MUX_UL_UNKNOWN,
-+	MUX_UL, /* Normal UL data transfer */
-+	MUX_UL_ON_CREDITS, /* UL data transfer will be based on credits */
-+};
-+
-+/* List of the MUX session. */
-+struct mux_session {
-+	struct iosm_wwan *wwan; /*Network i/f used for communication*/
-+	int if_id; /* i/f id for session open message.*/
-+	u32 flags;
-+	u32 ul_head_pad_len; /* Nr of bytes for UL head padding. */
-+	u32 dl_head_pad_len; /* Nr of bytes for DL head padding. */
-+	struct sk_buff_head ul_list; /* skb entries for an ADT. */
-+	u32 flow_ctl_mask; /* UL flow control */
-+	u32 flow_ctl_en_cnt; /* Flow control Enable cmd count */
-+	u32 flow_ctl_dis_cnt; /* Flow Control Disable cmd count */
-+	int ul_flow_credits; /* UL flow credits */
-+	u8 net_tx_stop:1,
-+	   flush:1; /* flush net interface ? */
-+};
-+
-+/* State of a single UL data block. */
-+struct mux_adb {
-+	struct sk_buff *dest_skb; /* Current UL skb for the data block. */
-+	u8 *buf; /* ADB memory. */
-+	struct mux_adgh *adgh; /* ADGH pointer */
-+	struct sk_buff *qlth_skb; /* QLTH pointer */
-+	u32 *next_table_index; /* Pointer to next table index. */
-+	struct sk_buff_head free_list; /* List of alloc. ADB for the UL sess.*/
-+	int size; /* Size of the ADB memory. */
-+	u32 if_cnt; /* Statistic counter */
-+	u32 dg_cnt_total;
-+	u32 payload_size;
-+};
-+
-+/* Temporary ACB state. */
-+struct mux_acb {
-+	struct sk_buff *skb; /* Used UL skb. */
-+	int if_id; /* Session id. */
-+	u32 wanted_response;
-+	u32 got_response;
-+	u32 cmd;
-+	union mux_cmd_param got_param; /* Received command/response parameter */
++enum ipc_mem_host_pm_state {
++	IPC_MEM_HOST_PM_ACTIVE,
++	IPC_MEM_HOST_PM_ACTIVE_WAIT,
++	IPC_MEM_HOST_PM_SLEEP_WAIT_IDLE,
++	IPC_MEM_HOST_PM_SLEEP_WAIT_D3,
++	IPC_MEM_HOST_PM_SLEEP,
++	IPC_MEM_HOST_PM_SLEEP_WAIT_EXIT_SLEEP,
 +};
 +
 +/**
-+ * struct iosm_mux - Structure of the data multiplexing over an IP channel.
-+ * @dev:		Pointer to device structure
-+ * @session:		Array of the MUX sessions.
-+ * @channel:		Reference to the IP MUX channel
-+ * @pcie:		Pointer to iosm_pcie struct
-+ * @imem:		Pointer to iosm_imem
-+ * @wwan:		Poinetr to iosm_wwan
-+ * @ipc_protocol:	Pointer to iosm_protocol
-+ * @channel_id:		Channel ID for MUX
-+ * @protocol:		Type of the MUX protocol
-+ * @ul_flow:		UL Flow type
-+ * @nr_sessions:	Number of sessions
-+ * @instance_id:	Instance ID
-+ * @state:		States of the MUX object
-+ * @event:		Initiated actions to change the state of the MUX object
-+ * @tx_transaction_id:	Transaction id for the ACB command.
-+ * @rr_next_session:	Next session number for round robin.
-+ * @ul_adb:		State of the UL ADB/ADGH.
-+ * @size_needed:	Variable to store the size needed during ADB preparation
-+ * @ul_data_pend_bytes:	Pending UL data to be processed in bytes
-+ * @acb:		Temporary ACB state
-+ * @wwan_q_offset:	This will hold the offset of the given instance
-+ *			Useful while passing or receiving packets from
-+ *			wwan/imem layer.
-+ * @initialized:	MUX object is initialized
-+ * @ev_mux_net_transmit_pending:
-+ *			0 means inform the IPC tasklet to pass the
-+ *			accumulated uplink ADB to CP.
-+ * @adb_prep_ongoing:	Flag for ADB preparation status
++ * enum ipc_mem_dev_pm_state - Possible states of the DEVICE SLEEP finite state
++ *			       machine.
++ * @IPC_MEM_DEV_PM_ACTIVE:		IPC_MEM_DEV_PM_ACTIVE is the initial
++ *					power management state.
++ *					IRQ(struct ipc_mem_device_info:
++ *					device_sleep_notification)
++ *					and DOORBELL-IRQ-HPDA(data) values.
++ * @IPC_MEM_DEV_PM_SLEEP:		IPC_MEM_DEV_PM_SLEEP is PM state for
++ *					sleep.
++ * @IPC_MEM_DEV_PM_WAKEUP:		DOORBELL-IRQ-DEVICE_WAKE(data).
++ * @IPC_MEM_DEV_PM_HOST_SLEEP:		DOORBELL-IRQ-HOST_SLEEP(data).
++ * @IPC_MEM_DEV_PM_ACTIVE_WAIT:		Local intermediate states.
++ * @IPC_MEM_DEV_PM_FORCE_SLEEP:		DOORBELL-IRQ-FORCE_SLEEP.
++ * @IPC_MEM_DEV_PM_FORCE_ACTIVE:	DOORBELL-IRQ-FORCE_ACTIVE.
 + */
-+struct iosm_mux {
-+	struct device *dev;
-+	struct mux_session session[IPC_MEM_MUX_IP_SESSION_ENTRIES];
-+	struct ipc_mem_channel *channel;
++enum ipc_mem_dev_pm_state {
++	IPC_MEM_DEV_PM_ACTIVE,
++	IPC_MEM_DEV_PM_SLEEP,
++	IPC_MEM_DEV_PM_WAKEUP,
++	IPC_MEM_DEV_PM_HOST_SLEEP,
++	IPC_MEM_DEV_PM_ACTIVE_WAIT,
++	IPC_MEM_DEV_PM_FORCE_SLEEP = 7,
++	IPC_MEM_DEV_PM_FORCE_ACTIVE,
++};
++
++/**
++ * struct iosm_pm - Power management instance
++ * @pcie:			Pointer to iosm_pcie structure
++ * @dev:			Pointer to device structure
++ * @host_pm_state:		PM states for host
++ * @host_sleep_pend:		Variable to indicate Host Sleep Pending
++ * @host_sleep_complete:	Generic wait-for-completion used in
++ *				case of Host Sleep
++ * @pm_cond:			Conditions for power management
++ * @ap_state:			Current power management state, the
++ *				initial state is IPC_MEM_DEV_PM_ACTIVE eq. 0.
++ * @cp_state:			PM State of CP
++ * @device_sleep_notification:	last handled device_sleep_notfication
++ * @pending_hpda_update:	is a HPDA update pending?
++ */
++struct iosm_pm {
 +	struct iosm_pcie *pcie;
-+	struct iosm_imem *imem;
-+	struct iosm_wwan *wwan;
-+	struct iosm_protocol *ipc_protocol;
-+	int channel_id;
-+	enum ipc_mux_protocol protocol;
-+	enum ipc_mux_ul_flow ul_flow;
-+	int nr_sessions;
-+	int instance_id;
-+	enum mux_state state;
-+	enum mux_event event;
-+	u32 tx_transaction_id;
-+	int rr_next_session;
-+	struct mux_adb ul_adb;
-+	int size_needed;
-+	long long ul_data_pend_bytes;
-+	struct mux_acb acb;
-+	int wwan_q_offset;
-+	u8 initialized:1,
-+	   ev_mux_net_transmit_pending:1,
-+	   adb_prep_ongoing:1;
-+};
-+
-+/* MUX configuration structure */
-+struct ipc_mux_config {
-+	enum ipc_mux_protocol protocol;
-+	enum ipc_mux_ul_flow ul_flow;
-+	int nr_sessions;
-+	int instance_id;
++	struct device *dev;
++	enum ipc_mem_host_pm_state host_pm_state;
++	unsigned long host_sleep_pend;
++	struct completion host_sleep_complete;
++	union ipc_pm_cond pm_cond;
++	enum ipc_mem_dev_pm_state ap_state;
++	enum ipc_mem_dev_pm_state cp_state;
++	u32 device_sleep_notification;
++	u8 pending_hpda_update:1;
 +};
 +
 +/**
-+ * ipc_mux_init - Allocates and Init MUX instance
-+ * @mux_cfg:	Pointer to MUX configuration structure
-+ * @ipc_imem:	Pointer to imem data-struct
++ * enum ipc_pm_unit - Power management units.
++ * @IPC_PM_UNIT_IRQ:	IRQ towards CP
++ * @IPC_PM_UNIT_HS:	Host Sleep for converged protocol
++ * @IPC_PM_UNIT_LINK:	Link state controlled by CP.
++ */
++enum ipc_pm_unit {
++	IPC_PM_UNIT_IRQ,
++	IPC_PM_UNIT_HS,
++	IPC_PM_UNIT_LINK,
++};
++
++/**
++ * ipc_pm_init - Allocate power management component
++ * @ipc_protocol:	Pointer to iosm_protocol structure
++ */
++void ipc_pm_init(struct iosm_protocol *ipc_protocol);
++
++/**
++ * ipc_pm_deinit - Free power management component, invalidating its pointer.
++ * @ipc_protocol:	Pointer to iosm_protocol structure
++ */
++void ipc_pm_deinit(struct iosm_protocol *ipc_protocol);
++
++/**
++ * ipc_pm_dev_slp_notification - Handle a sleep notification message from the
++ *				 device. This can be called from interrupt state
++ *				 This function handles Host Sleep requests too
++ *				 if the Host Sleep protocol is register based.
++ * @ipc_pm:			Pointer to power management component
++ * @sleep_notification:		Actual notification from device
 + *
-+ * Returns: Initialized mux pointer on success else NULL
++ * Returns: true if dev sleep state has to be checked, false otherwise.
 + */
-+struct iosm_mux *ipc_mux_init(struct ipc_mux_config *mux_cfg,
-+			      struct iosm_imem *ipc_imem);
++bool ipc_pm_dev_slp_notification(struct iosm_pm *ipc_pm,
++				 u32 sleep_notification);
 +
 +/**
-+ * ipc_mux_deinit - Deallocates MUX instance
-+ * @ipc_mux:	Pointer to the MUX instance.
++ * ipc_pm_set_s2idle_sleep - Set PM variables to sleep/active
++ * @ipc_pm:	Pointer to power management component
++ * @sleep:	true to enter sleep/false to exit sleep
 + */
-+void ipc_mux_deinit(struct iosm_mux *ipc_mux);
++void ipc_pm_set_s2idle_sleep(struct iosm_pm *ipc_pm, bool sleep);
 +
 +/**
-+ * ipc_mux_check_n_restart_tx - Checks for pending UL date bytes and then
-+ *				it restarts the net interface tx queue if
-+ *				device has set flow control as off.
-+ * @ipc_mux:	Pointer to MUX data-struct
-+ */
-+void ipc_mux_check_n_restart_tx(struct iosm_mux *ipc_mux);
-+
-+/**
-+ * ipc_mux_get_active_protocol - Returns the active MUX protocol type.
-+ * @ipc_mux:	Pointer to MUX data-struct
++ * ipc_pm_prepare_host_sleep - Prepare the PM for sleep by entering
++ *			       IPC_MEM_HOST_PM_SLEEP_WAIT_D3 state.
++ * @ipc_pm:	Pointer to power management component
 + *
-+ * Returns: enum of type ipc_mux_protocol
++ * Returns: true on success, false if the host was not active.
 + */
-+enum ipc_mux_protocol ipc_mux_get_active_protocol(struct iosm_mux *ipc_mux);
++bool ipc_pm_prepare_host_sleep(struct iosm_pm *ipc_pm);
 +
 +/**
-+ * ipc_mux_open_session - Opens a MUX session for IP traffic.
-+ * @ipc_mux:	Pointer to MUX data-struct
-+ * @session_nr:	Interface ID or session number
++ * ipc_pm_prepare_host_active - Prepare the PM for wakeup by entering
++ *				IPC_MEM_HOST_PM_ACTIVE_WAIT state.
++ * @ipc_pm:	Pointer to power management component
 + *
-+ * Returns: channel id on success, failure value on error
++ * Returns: true on success, false if the host was not sleeping.
 + */
-+int ipc_mux_open_session(struct iosm_mux *ipc_mux, int session_nr);
++bool ipc_pm_prepare_host_active(struct iosm_pm *ipc_pm);
 +
 +/**
-+ * ipc_mux_close_session - Closes a MUX session.
-+ * @ipc_mux:	Pointer to MUX data-struct
-+ * @session_nr:	Interface ID or session number
++ * ipc_pm_wait_for_device_active - Wait upto IPC_PM_ACTIVE_TIMEOUT_MS ms
++ *				   for the device to reach active state
++ * @ipc_pm:	Pointer to power management component
 + *
-+ * Returns: channel id on success, failure value on error
++ * Returns: true if device is active, false on timeout
 + */
-+int ipc_mux_close_session(struct iosm_mux *ipc_mux, int session_nr);
++bool ipc_pm_wait_for_device_active(struct iosm_pm *ipc_pm);
 +
 +/**
-+ * ipc_mux_get_max_sessions - Retuns the maximum sessions supported on the
-+ *			      provided MUX instance..
-+ * @ipc_mux:	Pointer to MUX data-struct
-+ *
-+ * Returns: Number of sessions supported on Success and failure value on error
++ * ipc_pm_signal_hpda_doorbell - Wake up the device if it is in low power mode
++ *				 and trigger a head pointer update interrupt.
++ * @ipc_pm:		Pointer to power management component
++ * @identifier:		specifies what component triggered hpda update irq
++ * @host_slp_check:	if set to true then Host Sleep state machine check will
++ *			be performed. If Host Sleep state machine allows HP
++ *			update then only doorbell is triggered otherwise pending
++ *			flag will be set. If set to false then Host Sleep check
++ *			will not be performed. This is helpful for Host Sleep
++ *			negotiation through message ring.
 + */
-+int ipc_mux_get_max_sessions(struct iosm_mux *ipc_mux);
++void ipc_pm_signal_hpda_doorbell(struct iosm_pm *ipc_pm, u32 identifier,
++				 bool host_slp_check);
++/**
++ * ipc_pm_trigger - Update power manager and wake up the link if needed
++ * @ipc_pm:	Pointer to power management component
++ * @unit:	Power management units
++ * @active:	Device link state
++ *
++ * Returns: true if link is unchanged or active, false otherwise
++ */
++bool ipc_pm_trigger(struct iosm_pm *ipc_pm, enum ipc_pm_unit unit, bool active);
++
 +#endif
 -- 
 2.25.1
