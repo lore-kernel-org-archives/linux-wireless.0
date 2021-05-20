@@ -2,135 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9568C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 18:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6964C433B4
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 19:21:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE6C461006
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 18:17:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A75E96135A
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 19:21:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234793AbhETSS4 (ORCPT
+        id S239866AbhETTWj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 May 2021 14:18:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57622 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231848AbhETSSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 May 2021 14:18:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8C7DA60C3E;
-        Thu, 20 May 2021 18:17:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1621534654;
-        bh=wYrdjMb4Si9p5I1W2PD9OycnsQPlep2BsLRz4L9qzk8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BEYcKjfkk+oR+MUFf08Rl1U+1Vep+4KR+08EfCBK7fna6RK7jkwhPKm4WOG3/HHAa
-         eSwyEpc84AWXG76ds0dOffOPi7CCRK9ejkr3QCFytr8L2WaQ+ccIa2bnEQB1ZXH83D
-         S3z1K3m1aPYRVbYilFtHxfNdJCTNr5soJVbJw8gE=
-Date:   Thu, 20 May 2021 20:17:31 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Bhaumik Bhatt <bbhatt@codeaurora.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Loic Poulain <loic.poulain@linaro.org>,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        regressions@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: [regressions] ath11k: v5.12.3 mhi regression
-Message-ID: <YKanuzzvDhztYxm/@kroah.com>
-References: <87v97dhh2u.fsf@codeaurora.org>
- <YKYzwBJNTy4Czd1A@kroah.com>
- <20210520104313.GA128703@thinkpad>
- <87r1i1h9an.fsf@codeaurora.org>
- <3e8bac3b02e3549a55b7c9b78b699965@codeaurora.org>
- <YKajWVPUSTzNVVm8@kroah.com>
- <608474b9b9feae5bd0616ad16d6d6bbd@codeaurora.org>
+        Thu, 20 May 2021 15:22:39 -0400
+Received: from lpdvacalvio01.broadcom.com ([192.19.229.182]:43496 "EHLO
+        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236838AbhETTWi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 May 2021 15:22:38 -0400
+Received: from bld-lvn-bcawlan-34.lvn.broadcom.net (bld-lvn-bcawlan-34.lvn.broadcom.net [10.75.138.137])
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 1719A7A48;
+        Thu, 20 May 2021 12:21:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 1719A7A48
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1621538476;
+        bh=RFqdOk4DSTtGRGbSs3c5rcpwvzKFhaZflNSssSjb0UI=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=YKGlUr34zYFZA3mU6Jz57c6xjkzHSVZ39vyC0e/xT+rggTzyHTm6rGfBFVLjilW7+
+         nBOkHK3wQCjpfF7iMSNpo196MPe1iDI/9F0yzOK0D5xtiC831r2pMiBCY6im1HLcVu
+         +m3vqh83mlBVK+JLl4dJwyvpT3rBRdOP2w9HSw6k=
+Received: from [10.230.41.88] (unknown [10.230.41.88])
+        by bld-lvn-bcawlan-34.lvn.broadcom.net (Postfix) with ESMTPSA id 2D6B91874BE;
+        Thu, 20 May 2021 12:21:15 -0700 (PDT)
+Subject: Re: [PATCH] wireless: add check of field VHT Extended NSS BW Capable
+ for 160/80+80 MHz setting
+To:     Wen Gong <wgong@codeaurora.org>, johannes@sipsolutions.net,
+        ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+References: <20210520034021.14690-1-wgong@codeaurora.org>
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <fe1b7675-23ba-a86e-90db-de5803231e21@broadcom.com>
+Date:   Thu, 20 May 2021 21:21:13 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <608474b9b9feae5bd0616ad16d6d6bbd@codeaurora.org>
+In-Reply-To: <20210520034021.14690-1-wgong@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 20, 2021 at 11:04:05AM -0700, Bhaumik Bhatt wrote:
-> On 2021-05-20 10:58 AM, Greg KH wrote:
-> > On Thu, May 20, 2021 at 10:38:12AM -0700, Bhaumik Bhatt wrote:
-> > > On 2021-05-20 05:36 AM, Kalle Valo wrote:
-> > > > Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org> writes:
-> > > >
-> > > > > On Thu, May 20, 2021 at 12:02:40PM +0200, Greg KH wrote:
-> > > > > > On Thu, May 20, 2021 at 12:47:53PM +0300, Kalle Valo wrote:
-> > > > > > > Hi,
-> > > > > > >
-> > > > > > > I got several reports that this mhi commit broke ath11k in v5.12.3:
-> > > > > > >
-> > > > > > > commit 29b9829718c5e9bd68fc1c652f5e0ba9b9a64fed
-> > > > > > > Author: Bhaumik Bhatt <bbhatt@codeaurora.org>
-> > > > > > > Date:   Wed Feb 24 15:23:04 2021 -0800
-> > > > > > >
-> > > > > > >     bus: mhi: core: Process execution environment changes serially
-> > > > > > >
-> > > > > > >     [ Upstream commit ef2126c4e2ea2b92f543fae00a2a0332e4573c48 ]
-> > > > > > >
-> > > > > > > Here are the reports:
-> > > > > > >
-> > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=213055
-> > > > > > >
-> > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=212187
-> > > > > > >
-> > > > > > > https://bugs.archlinux.org/task/70849?project=1&string=linux
-> > > > > > >
-> > > > > > > Interestingly v5.13-rc1 seems to work fine, at least for me, though I
-> > > > > > > have not tested v5.12.3 myself. Can someone revert this commit in the
-> > > > > > > stable release so that people get their wifi working again, please?
-> > > > > >
-> > > > > > How does the mhi bus code relate to a ath11k driver?  What bus
-> > > > > > is that
-> > > > > > on?
-> > > > > >
-> > > > >
-> > > > > MHI is the transport used by the ath11k driver to work with the WLAN
-> > > > > devices
-> > > > > over PCIe.
-> > > > >
-> > > > > Regarding the bug, I'd suggest to wait for Bhaumik (the author of
-> > > > > 29b9829718c5)
-> > > > > to comment on the possible commit which needs backporting from
-> > > > > mainline.
-> > > >
-> > > > Ok, but if a quick fix is not available I think we should just revert
-> > > > this in the stable releases. I also got a report that v5.11.21 is
-> > > > broken:
-> > > >
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=213055#c11
-> > > 
-> > > Please pick [1] as the dependency to [ Upstream commit
-> > > ef2126c4e2ea2b92f543fae00a2a0332e4573c48 ].
-> > 
-> > what is [1]???
-> > 
-> > What commit do I need to backport, a commit id would be nice...
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> Sure Greg. Commit id is: 4884362f6977fc05cbec736625665241c0e0732f
+On 5/20/2021 5:40 AM, Wen Gong wrote:
+> Table 9-251—Supported VHT-MCS and NSS Set subfields, it has subfield VHT Extended
+> NSS BW Capable, its definition is:
+> Indicates whether the STA is capable of interpreting the Extended NSS BW
+> Support subfield of the VHT Capabilities Information field.
 > 
-> Title of patch:
-> bus: mhi: core: Download AMSS image from appropriate function
+> This patch is to add check for the subfield.
+
+Almost looks good to me, but...
+
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> ---
+>   net/wireless/chan.c | 8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
 > 
-> It was supposed to be a link but not sure why it's not seen.
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index 285b8076054b..f7f86bd75cc0 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
 
-Text email doesn't have links :)
+[...]
 
-Anyway, thanks, now queued up.
+> @@ -1037,7 +1039,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+>   		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
+>   		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ &&
+>   		    cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ &&
+> -		    !(vht_cap->cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK))
+> +		    !(ext_nss_cap && vht_cap->cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK))
 
-Also note, it's nice to write kernel commit ids as 4884362f6977 ("bus:
-mhi: core: Download AMSS image from appropriate function") which is the
-preferred way to reference them in a emails and commit logs.
+you should not mix logical and binary operators so add braces around the 
+binary operation here.
 
-thanks,
+Regards,
+Arend
 
-greg k-h
+>   			return false;
+>   		break;
+>   	default:
+> 
