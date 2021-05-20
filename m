@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D6A2C433ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:07:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B495C433ED
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59A1361057
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:07:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43AE561057
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 May 2021 14:08:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242377AbhETOIu (ORCPT
+        id S234390AbhETOKP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 May 2021 10:08:50 -0400
-Received: from mga11.intel.com ([192.55.52.93]:5047 "EHLO mga11.intel.com"
+        Thu, 20 May 2021 10:10:15 -0400
+Received: from mga11.intel.com ([192.55.52.93]:5246 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237114AbhETOHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 May 2021 10:07:40 -0400
-IronPort-SDR: xKmV4SGsBWMdJdcKzSp7NuzWs9NUsKlInHGY3u9tx4o3beq/IIyYi/qOQa6Q/wMrnIvF3OCOTO
- TWyikDbJzYag==
-X-IronPort-AV: E=McAfee;i="6200,9189,9989"; a="198144614"
+        id S240921AbhETOIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 May 2021 10:08:45 -0400
+IronPort-SDR: KnX9oHDngHhCTxjLWLXHC3CeZxq3RnwyHBBCiRpfWxxE+ftYD0boZdYd2ujqH7iRt2wH3eBAR+
+ +yBrtdGyVuEQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9989"; a="198144691"
 X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
-   d="scan'208";a="198144614"
+   d="scan'208";a="198144691"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2021 07:02:50 -0700
-IronPort-SDR: gebPyHwzbtJrhO5hWwEvK2q6/sbGgLubgRhG2fE1FElfDAbvhqzX4n1N8wE7G+l3NpqbJOZNc/
- 0E7xXTHIwCwA==
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2021 07:02:56 -0700
+IronPort-SDR: LANstTP0/QDdG9UnaHyPxv36CTDNlXaNfcr4QgHJZwA5wJ1cCzpYx3adFLgYvUIMfm3kFVCCwj
+ zhiky4fYZYhw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
-   d="scan'208";a="631407567"
+   d="scan'208";a="631407593"
 Received: from bgsxx0031.iind.intel.com ([10.106.222.40])
-  by fmsmga005.fm.intel.com with ESMTP; 20 May 2021 07:02:48 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 20 May 2021 07:02:54 -0700
 From:   M Chetan Kumar <m.chetan.kumar@intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, krishna.c.sudi@intel.com,
         linuxwwan@intel.com
-Subject: [PATCH V3 08/16] net: iosm: bottom half
-Date:   Thu, 20 May 2021 19:31:50 +0530
-Message-Id: <20210520140158.10132-9-m.chetan.kumar@intel.com>
+Subject: [PATCH V3 10/16] net: iosm: encode or decode datagram
+Date:   Thu, 20 May 2021 19:31:52 +0530
+Message-Id: <20210520140158.10132-11-m.chetan.kumar@intel.com>
 X-Mailer: git-send-email 2.12.3
 In-Reply-To: <20210520140158.10132-1-m.chetan.kumar@intel.com>
 References: <20210520140158.10132-1-m.chetan.kumar@intel.com>
@@ -48,331 +48,1138 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-1) Bottom half(tasklet) for IRQ and task processing.
-2) Tasks are processed asynchronous and synchronously.
+1) Encode UL packet into datagram.
+2) Decode DL datagram and route it to network layer.
+3) Supports credit based flow control.
 
 Signed-off-by: M Chetan Kumar <m.chetan.kumar@intel.com>
 ---
-v3: no change.
+v3: Aligned ipc_ prefix for function name to be consistent across file.
 v2:
-* Moved task queue struct to header file.
+* Endianness type correction for Host-Device protocol structure.
+* Function signature documentation correction.
 * Streamline multiple returns using goto.
+* Removed vlan tag id & replace with ip link interface id.
 ---
- drivers/net/wwan/iosm/iosm_ipc_task_queue.c | 202 ++++++++++++++++++++
- drivers/net/wwan/iosm/iosm_ipc_task_queue.h |  97 ++++++++++
- 2 files changed, 299 insertions(+)
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.c
- create mode 100644 drivers/net/wwan/iosm/iosm_ipc_task_queue.h
+ drivers/net/wwan/iosm/iosm_ipc_mux_codec.c | 910 +++++++++++++++++++++
+ drivers/net/wwan/iosm/iosm_ipc_mux_codec.h | 193 +++++
+ 2 files changed, 1103 insertions(+)
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux_codec.c
+ create mode 100644 drivers/net/wwan/iosm/iosm_ipc_mux_codec.h
 
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_task_queue.c b/drivers/net/wwan/iosm/iosm_ipc_task_queue.c
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux_codec.c b/drivers/net/wwan/iosm/iosm_ipc_mux_codec.c
 new file mode 100644
-index 000000000000..852a99166144
+index 000000000000..820af7cecbbc
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_task_queue.c
-@@ -0,0 +1,202 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_mux_codec.c
+@@ -0,0 +1,910 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2020-21 Intel Corporation.
 + */
 +
-+#include "iosm_ipc_imem.h"
++#include <linux/nospec.h>
++
++#include "iosm_ipc_imem_ops.h"
++#include "iosm_ipc_mux_codec.h"
 +#include "iosm_ipc_task_queue.h"
 +
-+/* Actual tasklet function, will be called whenever tasklet is scheduled.
-+ * Calls event handler involves callback for each element in the message queue
-+ */
-+static void ipc_task_queue_handler(unsigned long data)
++/* Test the link power state and send a MUX command in blocking mode. */
++static int ipc_mux_tq_cmd_send(struct iosm_imem *ipc_imem, int arg, void *msg,
++			       size_t size)
 +{
-+	struct ipc_task_queue *ipc_task = (struct ipc_task_queue *)data;
-+	unsigned int q_rpos = ipc_task->q_rpos;
++	struct iosm_mux *ipc_mux = ipc_imem->mux;
++	const struct mux_acb *acb = msg;
 +
-+	/* Loop over the input queue contents. */
-+	while (q_rpos != ipc_task->q_wpos) {
-+		/* Get the current first queue element. */
-+		struct ipc_task_queue_args *args = &ipc_task->args[q_rpos];
++	skb_queue_tail(&ipc_mux->channel->ul_list, acb->skb);
++	ipc_imem_ul_send(ipc_mux->imem);
 +
-+		/* Process the input message. */
-+		if (args->func)
-+			args->response = args->func(args->ipc_imem, args->arg,
-+						    args->msg, args->size);
-+
-+		/* Signal completion for synchronous calls */
-+		if (args->completion)
-+			complete(args->completion);
-+
-+		/* Free message if copy was allocated. */
-+		if (args->is_copy)
-+			kfree(args->msg);
-+
-+		/* Set invalid queue element. Technically
-+		 * spin_lock_irqsave is not required here as
-+		 * the array element has been processed already
-+		 * so we can assume that immediately after processing
-+		 * ipc_task element, queue will not rotate again to
-+		 * ipc_task same element within such short time.
-+		 */
-+		args->completion = NULL;
-+		args->func = NULL;
-+		args->msg = NULL;
-+		args->size = 0;
-+		args->is_copy = false;
-+
-+		/* calculate the new read ptr and update the volatile read
-+		 * ptr
-+		 */
-+		q_rpos = (q_rpos + 1) % IPC_THREAD_QUEUE_SIZE;
-+		ipc_task->q_rpos = q_rpos;
-+	}
++	return 0;
 +}
 +
-+/* Free memory alloc and trigger completions left in the queue during dealloc */
-+static void ipc_task_queue_cleanup(struct ipc_task_queue *ipc_task)
++static int ipc_mux_acb_send(struct iosm_mux *ipc_mux, bool blocking)
 +{
-+	unsigned int q_rpos = ipc_task->q_rpos;
-+
-+	while (q_rpos != ipc_task->q_wpos) {
-+		struct ipc_task_queue_args *args = &ipc_task->args[q_rpos];
-+
-+		if (args->completion)
-+			complete(args->completion);
-+
-+		if (args->is_copy)
-+			kfree(args->msg);
-+
-+		q_rpos = (q_rpos + 1) % IPC_THREAD_QUEUE_SIZE;
-+		ipc_task->q_rpos = q_rpos;
++	struct completion *completion = &ipc_mux->channel->ul_sem;
++	int ret = ipc_task_queue_send_task(ipc_mux->imem, ipc_mux_tq_cmd_send,
++					   0, &ipc_mux->acb,
++					   sizeof(ipc_mux->acb), false);
++	if (ret) {
++		dev_err(ipc_mux->dev, "unable to send mux command");
++		return ret;
 +	}
-+}
 +
-+/* Add a message to the queue and trigger the ipc_task. */
-+static int
-+ipc_task_queue_add_task(struct iosm_imem *ipc_imem,
-+			int arg, void *msg,
-+			int (*func)(struct iosm_imem *ipc_imem, int arg,
-+				    void *msg, size_t size),
-+			size_t size, bool is_copy, bool wait)
-+{
-+	struct tasklet_struct *ipc_tasklet = ipc_imem->ipc_task->ipc_tasklet;
-+	struct ipc_task_queue *ipc_task = &ipc_imem->ipc_task->ipc_queue;
-+	struct completion completion;
-+	unsigned int pos, nextpos;
-+	unsigned long flags;
-+	int result = -EIO;
-+
-+	init_completion(&completion);
-+
-+	/* tasklet send may be called from both interrupt or thread
-+	 * context, therefore protect queue operation by spinlock
++	/* if blocking, suspend the app and wait for irq in the flash or
++	 * crash phase. return false on timeout to indicate failure.
 +	 */
-+	spin_lock_irqsave(&ipc_task->q_lock, flags);
++	if (blocking) {
++		u32 wait_time_milliseconds = IPC_MUX_CMD_RUN_DEFAULT_TIMEOUT;
 +
-+	pos = ipc_task->q_wpos;
-+	nextpos = (pos + 1) % IPC_THREAD_QUEUE_SIZE;
++		reinit_completion(completion);
 +
-+	/* Get next queue position. */
-+	if (nextpos != ipc_task->q_rpos) {
-+		/* Get the reference to the queue element and save the passed
-+		 * values.
-+		 */
-+		ipc_task->args[pos].arg = arg;
-+		ipc_task->args[pos].msg = msg;
-+		ipc_task->args[pos].func = func;
-+		ipc_task->args[pos].ipc_imem = ipc_imem;
-+		ipc_task->args[pos].size = size;
-+		ipc_task->args[pos].is_copy = is_copy;
-+		ipc_task->args[pos].completion = wait ? &completion : NULL;
-+		ipc_task->args[pos].response = -1;
-+
-+		/* apply write barrier so that ipc_task->q_rpos elements
-+		 * are updated before ipc_task->q_wpos is being updated.
-+		 */
-+		smp_wmb();
-+
-+		/* Update the status of the free queue space. */
-+		ipc_task->q_wpos = nextpos;
-+		result = 0;
++		if (wait_for_completion_interruptible_timeout
++		   (completion, msecs_to_jiffies(wait_time_milliseconds)) ==
++		   0) {
++			dev_err(ipc_mux->dev, "ch[%d] timeout",
++				ipc_mux->channel_id);
++			ipc_uevent_send(ipc_mux->imem->dev, UEVENT_MDM_TIMEOUT);
++			return -ETIMEDOUT;
++		}
 +	}
 +
-+	spin_unlock_irqrestore(&ipc_task->q_lock, flags);
++	return 0;
++}
 +
-+	if (result == 0) {
-+		tasklet_schedule(ipc_tasklet);
++/* Prepare mux Command */
++static struct mux_lite_cmdh *ipc_mux_lite_add_cmd(struct iosm_mux *ipc_mux,
++						  u32 cmd, struct mux_acb *acb,
++						  void *param, u32 param_size)
++{
++	struct mux_lite_cmdh *cmdh = (struct mux_lite_cmdh *)acb->skb->data;
 +
-+		if (wait) {
-+			wait_for_completion(&completion);
-+			result = ipc_task->args[pos].response;
++	cmdh->signature = cpu_to_le32(MUX_SIG_CMDH);
++	cmdh->command_type = cpu_to_le32(cmd);
++	cmdh->if_id = acb->if_id;
++
++	acb->cmd = cmd;
++
++	cmdh->cmd_len = cpu_to_le16(offsetof(struct mux_lite_cmdh, param) +
++				    param_size);
++	cmdh->transaction_id = cpu_to_le32(ipc_mux->tx_transaction_id++);
++
++	if (param)
++		memcpy(&cmdh->param, param, param_size);
++
++	skb_put(acb->skb, le16_to_cpu(cmdh->cmd_len));
++
++	return cmdh;
++}
++
++static int ipc_mux_acb_alloc(struct iosm_mux *ipc_mux)
++{
++	struct mux_acb *acb = &ipc_mux->acb;
++	struct sk_buff *skb;
++	dma_addr_t mapping;
++
++	/* Allocate skb memory for the uplink buffer. */
++	skb = ipc_pcie_alloc_skb(ipc_mux->pcie, MUX_MAX_UL_ACB_BUF_SIZE,
++				 GFP_ATOMIC, &mapping, DMA_TO_DEVICE, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	/* Save the skb address. */
++	acb->skb = skb;
++
++	memset(skb->data, 0, MUX_MAX_UL_ACB_BUF_SIZE);
++
++	return 0;
++}
++
++int ipc_mux_dl_acb_send_cmds(struct iosm_mux *ipc_mux, u32 cmd_type, u8 if_id,
++			     u32 transaction_id, union mux_cmd_param *param,
++			     size_t res_size, bool blocking, bool respond)
++{
++	struct mux_acb *acb = &ipc_mux->acb;
++	struct mux_lite_cmdh *ack_lite;
++	int ret = 0;
++
++	acb->if_id = if_id;
++	ret = ipc_mux_acb_alloc(ipc_mux);
++	if (ret)
++		return ret;
++
++	ack_lite = ipc_mux_lite_add_cmd(ipc_mux, cmd_type, acb, param,
++					res_size);
++	if (respond)
++		ack_lite->transaction_id = cpu_to_le32(transaction_id);
++
++	ret = ipc_mux_acb_send(ipc_mux, blocking);
++
++	return ret;
++}
++
++void ipc_mux_netif_tx_flowctrl(struct mux_session *session, int idx, bool on)
++{
++	/* Inform the network interface to start/stop flow ctrl */
++	ipc_wwan_tx_flowctrl(session->wwan, idx, on);
++}
++
++static int ipc_mux_dl_cmdresps_decode_process(struct iosm_mux *ipc_mux,
++					      struct mux_lite_cmdh *cmdh)
++{
++	struct mux_acb *acb = &ipc_mux->acb;
++
++	switch (le32_to_cpu(cmdh->command_type)) {
++	case MUX_CMD_OPEN_SESSION_RESP:
++	case MUX_CMD_CLOSE_SESSION_RESP:
++		/* Resume the control application. */
++		acb->got_param = cmdh->param;
++		break;
++
++	case MUX_LITE_CMD_FLOW_CTL_ACK:
++		/* This command type is not expected as response for
++		 * Aggregation version of the protocol. So return non-zero.
++		 */
++		if (ipc_mux->protocol != MUX_LITE)
++			return -EINVAL;
++
++		dev_dbg(ipc_mux->dev, "if %u FLOW_CTL_ACK %u received",
++			cmdh->if_id, le32_to_cpu(cmdh->transaction_id));
++		break;
++
++	default:
++		return -EINVAL;
++	}
++
++	acb->wanted_response = MUX_CMD_INVALID;
++	acb->got_response = le32_to_cpu(cmdh->command_type);
++	complete(&ipc_mux->channel->ul_sem);
++
++	return 0;
++}
++
++static int ipc_mux_dl_dlcmds_decode_process(struct iosm_mux *ipc_mux,
++					    struct mux_lite_cmdh *cmdh)
++{
++	union mux_cmd_param *param = &cmdh->param;
++	struct mux_session *session;
++	int new_size;
++
++	dev_dbg(ipc_mux->dev, "if_id[%d]: dlcmds decode process %d",
++		cmdh->if_id, le32_to_cpu(cmdh->command_type));
++
++	switch (le32_to_cpu(cmdh->command_type)) {
++	case MUX_LITE_CMD_FLOW_CTL:
++
++		if (cmdh->if_id >= ipc_mux->nr_sessions) {
++			dev_err(ipc_mux->dev, "if_id [%d] not valid",
++				cmdh->if_id);
++			return -EINVAL; /* No session interface id. */
++		}
++
++		session = &ipc_mux->session[cmdh->if_id];
++
++		new_size = offsetof(struct mux_lite_cmdh, param) +
++			   sizeof(param->flow_ctl);
++		if (param->flow_ctl.mask == cpu_to_le32(0xFFFFFFFF)) {
++			/* Backward Compatibility */
++			if (cmdh->cmd_len == cpu_to_le16(new_size))
++				session->flow_ctl_mask =
++					le32_to_cpu(param->flow_ctl.mask);
++			else
++				session->flow_ctl_mask = ~0;
++			/* if CP asks for FLOW CTRL Enable
++			 * then set our internal flow control Tx flag
++			 * to limit uplink session queueing
++			 */
++			session->net_tx_stop = true;
++			/* Update the stats */
++			session->flow_ctl_en_cnt++;
++		} else if (param->flow_ctl.mask == 0) {
++			/* Just reset the Flow control mask and let
++			 * mux_flow_ctrl_low_thre_b take control on
++			 * our internal Tx flag and enabling kernel
++			 * flow control
++			 */
++			/* Backward Compatibility */
++			if (cmdh->cmd_len == cpu_to_le16(new_size))
++				session->flow_ctl_mask =
++					le32_to_cpu(param->flow_ctl.mask);
++			else
++				session->flow_ctl_mask = 0;
++			/* Update the stats */
++			session->flow_ctl_dis_cnt++;
++		} else {
++			break;
++		}
++
++		dev_dbg(ipc_mux->dev, "if[%u] FLOW CTRL 0x%08X", cmdh->if_id,
++			le32_to_cpu(param->flow_ctl.mask));
++		break;
++
++	case MUX_LITE_CMD_LINK_STATUS_REPORT:
++		break;
++
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++/* Decode and Send appropriate response to a command block. */
++static void ipc_mux_dl_cmd_decode(struct iosm_mux *ipc_mux, struct sk_buff *skb)
++{
++	struct mux_lite_cmdh *cmdh = (struct mux_lite_cmdh *)skb->data;
++	__le32 trans_id = cmdh->transaction_id;
++
++	if (ipc_mux_dl_cmdresps_decode_process(ipc_mux, cmdh)) {
++		/* Unable to decode command response indicates the cmd_type
++		 * may be a command instead of response. So try to decoding it.
++		 */
++		if (!ipc_mux_dl_dlcmds_decode_process(ipc_mux, cmdh)) {
++			/* Decoded command may need a response. Give the
++			 * response according to the command type.
++			 */
++			union mux_cmd_param *mux_cmd = NULL;
++			size_t size = 0;
++			u32 cmd = MUX_LITE_CMD_LINK_STATUS_REPORT_RESP;
++
++			if (cmdh->command_type ==
++			    cpu_to_le32(MUX_LITE_CMD_LINK_STATUS_REPORT)) {
++				mux_cmd = &cmdh->param;
++				mux_cmd->link_status_resp.response =
++					cpu_to_le32(MUX_CMD_RESP_SUCCESS);
++				/* response field is u32 */
++				size = sizeof(u32);
++			} else if (cmdh->command_type ==
++				   cpu_to_le32(MUX_LITE_CMD_FLOW_CTL)) {
++				cmd = MUX_LITE_CMD_FLOW_CTL_ACK;
++			} else {
++				return;
++			}
++
++			if (ipc_mux_dl_acb_send_cmds(ipc_mux, cmd, cmdh->if_id,
++						     le32_to_cpu(trans_id),
++						     mux_cmd, size, false,
++						     true))
++				dev_err(ipc_mux->dev,
++					"if_id %d: cmd send failed",
++					cmdh->if_id);
++		}
++	}
++}
++
++/* Pass the DL packet to the netif layer. */
++static int ipc_mux_net_receive(struct iosm_mux *ipc_mux, int if_id,
++			       struct iosm_wwan *wwan, u32 offset,
++			       u8 service_class, struct sk_buff *skb)
++{
++	struct sk_buff *dest_skb = skb_clone(skb, GFP_ATOMIC);
++
++	if (!dest_skb)
++		return -ENOMEM;
++
++	skb_pull(dest_skb, offset);
++	skb_set_tail_pointer(dest_skb, dest_skb->len);
++	/* Pass the packet to the netif layer. */
++	dest_skb->priority = service_class;
++
++	return ipc_wwan_receive(wwan, dest_skb, false, if_id);
++}
++
++/* Decode Flow Credit Table in the block */
++static void ipc_mux_dl_fcth_decode(struct iosm_mux *ipc_mux,
++				   unsigned char *block)
++{
++	struct ipc_mem_lite_gen_tbl *fct = (struct ipc_mem_lite_gen_tbl *)block;
++	struct iosm_wwan *wwan;
++	int ul_credits;
++	int if_id;
++
++	if (fct->vfl_length != sizeof(fct->vfl.nr_of_bytes)) {
++		dev_err(ipc_mux->dev, "unexpected FCT length: %d",
++			fct->vfl_length);
++		return;
++	}
++
++	if_id = fct->if_id;
++	if (if_id >= ipc_mux->nr_sessions) {
++		dev_err(ipc_mux->dev, "not supported if_id: %d", if_id);
++		return;
++	}
++
++	/* Is the session active ? */
++	if_id = array_index_nospec(if_id, ipc_mux->nr_sessions);
++	wwan = ipc_mux->session[if_id].wwan;
++	if (!wwan) {
++		dev_err(ipc_mux->dev, "session Net ID is NULL");
++		return;
++	}
++
++	ul_credits = fct->vfl.nr_of_bytes;
++
++	dev_dbg(ipc_mux->dev, "Flow_Credit:: if_id[%d] Old: %d Grants: %d",
++		if_id, ipc_mux->session[if_id].ul_flow_credits, ul_credits);
++
++	/* Update the Flow Credit information from ADB */
++	ipc_mux->session[if_id].ul_flow_credits += ul_credits;
++
++	/* Check whether the TX can be started */
++	if (ipc_mux->session[if_id].ul_flow_credits > 0) {
++		ipc_mux->session[if_id].net_tx_stop = false;
++		ipc_mux_netif_tx_flowctrl(&ipc_mux->session[if_id],
++					  ipc_mux->session[if_id].if_id, false);
++	}
++}
++
++/* Decode non-aggregated datagram */
++static void ipc_mux_dl_adgh_decode(struct iosm_mux *ipc_mux,
++				   struct sk_buff *skb)
++{
++	u32 pad_len, packet_offset;
++	struct iosm_wwan *wwan;
++	struct mux_adgh *adgh;
++	u8 *block = skb->data;
++	int rc = 0;
++	u8 if_id;
++
++	adgh = (struct mux_adgh *)block;
++
++	if (adgh->signature != cpu_to_le32(MUX_SIG_ADGH)) {
++		dev_err(ipc_mux->dev, "invalid ADGH signature received");
++		return;
++	}
++
++	if_id = adgh->if_id;
++	if (if_id >= ipc_mux->nr_sessions) {
++		dev_err(ipc_mux->dev, "invalid if_id while decoding %d", if_id);
++		return;
++	}
++
++	/* Is the session active ? */
++	if_id = array_index_nospec(if_id, ipc_mux->nr_sessions);
++	wwan = ipc_mux->session[if_id].wwan;
++	if (!wwan) {
++		dev_err(ipc_mux->dev, "session Net ID is NULL");
++		return;
++	}
++
++	/* Store the pad len for the corresponding session
++	 * Pad bytes as negotiated in the open session less the header size
++	 * (see session management chapter for details).
++	 * If resulting padding is zero or less, the additional head padding is
++	 * omitted. For e.g., if HEAD_PAD_LEN = 16 or less, this field is
++	 * omitted if HEAD_PAD_LEN = 20, then this field will have 4 bytes
++	 * set to zero
++	 */
++	pad_len =
++		ipc_mux->session[if_id].dl_head_pad_len - IPC_MEM_DL_ETH_OFFSET;
++	packet_offset = sizeof(*adgh) + pad_len;
++
++	if_id += ipc_mux->wwan_q_offset;
++
++	/* Pass the packet to the netif layer */
++	rc = ipc_mux_net_receive(ipc_mux, if_id, wwan, packet_offset,
++				 adgh->service_class, skb);
++	if (rc) {
++		dev_err(ipc_mux->dev, "mux adgh decoding error");
++		return;
++	}
++	ipc_mux->session[if_id].flush = 1;
++}
++
++void ipc_mux_dl_decode(struct iosm_mux *ipc_mux, struct sk_buff *skb)
++{
++	u32 signature;
++
++	if (!skb->data)
++		return;
++
++	/* Decode the MUX header type. */
++	signature = le32_to_cpup((__le32 *)skb->data);
++
++	switch (signature) {
++	case MUX_SIG_ADGH:
++		ipc_mux_dl_adgh_decode(ipc_mux, skb);
++		break;
++
++	case MUX_SIG_FCTH:
++		ipc_mux_dl_fcth_decode(ipc_mux, skb->data);
++		break;
++
++	case MUX_SIG_CMDH:
++		ipc_mux_dl_cmd_decode(ipc_mux, skb);
++		break;
++
++	default:
++		dev_err(ipc_mux->dev, "invalid ABH signature");
++	}
++
++	ipc_pcie_kfree_skb(ipc_mux->pcie, skb);
++}
++
++static int ipc_mux_ul_skb_alloc(struct iosm_mux *ipc_mux,
++				struct mux_adb *ul_adb, u32 type)
++{
++	/* Take the first element of the free list. */
++	struct sk_buff *skb = skb_dequeue(&ul_adb->free_list);
++	int qlt_size;
++
++	if (!skb)
++		return -EBUSY; /* Wait for a free ADB skb. */
++
++	/* Mark it as UL ADB to select the right free operation. */
++	IPC_CB(skb)->op_type = (u8)UL_MUX_OP_ADB;
++
++	switch (type) {
++	case MUX_SIG_ADGH:
++		/* Save the ADB memory settings. */
++		ul_adb->dest_skb = skb;
++		ul_adb->buf = skb->data;
++		ul_adb->size = IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE;
++		/* reset statistic counter */
++		ul_adb->if_cnt = 0;
++		ul_adb->payload_size = 0;
++		ul_adb->dg_cnt_total = 0;
++
++		ul_adb->adgh = (struct mux_adgh *)skb->data;
++		memset(ul_adb->adgh, 0, sizeof(struct mux_adgh));
++		break;
++
++	case MUX_SIG_QLTH:
++		qlt_size = offsetof(struct ipc_mem_lite_gen_tbl, vfl) +
++			   (MUX_QUEUE_LEVEL * sizeof(struct mux_lite_vfl));
++
++		if (qlt_size > IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE) {
++			dev_err(ipc_mux->dev,
++				"can't support. QLT size:%d SKB size: %d",
++				qlt_size, IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE);
++			return -ERANGE;
++		}
++
++		ul_adb->qlth_skb = skb;
++		memset((ul_adb->qlth_skb)->data, 0, qlt_size);
++		skb_put(skb, qlt_size);
++		break;
++	}
++
++	return 0;
++}
++
++static void ipc_mux_ul_adgh_finish(struct iosm_mux *ipc_mux)
++{
++	struct mux_adb *ul_adb = &ipc_mux->ul_adb;
++	u16 adgh_len;
++	long long bytes;
++	char *str;
++
++	if (!ul_adb || !ul_adb->dest_skb) {
++		dev_err(ipc_mux->dev, "no dest skb");
++		return;
++	}
++
++	adgh_len = le16_to_cpu(ul_adb->adgh->length);
++	skb_put(ul_adb->dest_skb, adgh_len);
++	skb_queue_tail(&ipc_mux->channel->ul_list, ul_adb->dest_skb);
++	ul_adb->dest_skb = NULL;
++
++	if (ipc_mux->ul_flow == MUX_UL_ON_CREDITS) {
++		struct mux_session *session;
++
++		session = &ipc_mux->session[ul_adb->adgh->if_id];
++		str = "available_credits";
++		bytes = (long long)session->ul_flow_credits;
++
++	} else {
++		str = "pend_bytes";
++		bytes = ipc_mux->ul_data_pend_bytes;
++		ipc_mux->ul_data_pend_bytes = ipc_mux->ul_data_pend_bytes +
++					      adgh_len;
++	}
++
++	dev_dbg(ipc_mux->dev, "UL ADGH: size=%u, if_id=%d, payload=%d, %s=%lld",
++		adgh_len, ul_adb->adgh->if_id, ul_adb->payload_size,
++		str, bytes);
++}
++
++/* Allocates an ADB from the free list and initializes it with ADBH  */
++static bool ipc_mux_ul_adb_allocate(struct iosm_mux *ipc_mux,
++				    struct mux_adb *adb, int *size_needed,
++				    u32 type)
++{
++	bool ret_val = false;
++	int status;
++
++	if (!adb->dest_skb) {
++		/* Allocate memory for the ADB including of the
++		 * datagram table header.
++		 */
++		status = ipc_mux_ul_skb_alloc(ipc_mux, adb, type);
++		if (status)
++			/* Is a pending ADB available ? */
++			ret_val = true; /* None. */
++
++		/* Update size need to zero only for new ADB memory */
++		*size_needed = 0;
++	}
++
++	return ret_val;
++}
++
++/* Informs the network stack to stop sending further packets for all opened
++ * sessions
++ */
++static void ipc_mux_stop_tx_for_all_sessions(struct iosm_mux *ipc_mux)
++{
++	struct mux_session *session;
++	int idx;
++
++	for (idx = 0; idx < ipc_mux->nr_sessions; idx++) {
++		session = &ipc_mux->session[idx];
++
++		if (!session->wwan)
++			continue;
++
++		session->net_tx_stop = true;
++	}
++}
++
++/* Sends Queue Level Table of all opened sessions */
++static bool ipc_mux_lite_send_qlt(struct iosm_mux *ipc_mux)
++{
++	struct ipc_mem_lite_gen_tbl *qlt;
++	struct mux_session *session;
++	bool qlt_updated = false;
++	int i;
++	int qlt_size;
++
++	if (!ipc_mux->initialized || ipc_mux->state != MUX_S_ACTIVE)
++		return qlt_updated;
++
++	qlt_size = offsetof(struct ipc_mem_lite_gen_tbl, vfl) +
++		   MUX_QUEUE_LEVEL * sizeof(struct mux_lite_vfl);
++
++	for (i = 0; i < ipc_mux->nr_sessions; i++) {
++		session = &ipc_mux->session[i];
++
++		if (!session->wwan || session->flow_ctl_mask)
++			continue;
++
++		if (ipc_mux_ul_skb_alloc(ipc_mux, &ipc_mux->ul_adb,
++					 MUX_SIG_QLTH)) {
++			dev_err(ipc_mux->dev,
++				"no reserved mem to send QLT of if_id: %d", i);
++			break;
++		}
++
++		/* Prepare QLT */
++		qlt = (struct ipc_mem_lite_gen_tbl *)(ipc_mux->ul_adb.qlth_skb)
++			      ->data;
++		qlt->signature = cpu_to_le32(MUX_SIG_QLTH);
++		qlt->length = cpu_to_le16(qlt_size);
++		qlt->if_id = i;
++		qlt->vfl_length = MUX_QUEUE_LEVEL * sizeof(struct mux_lite_vfl);
++		qlt->reserved[0] = 0;
++		qlt->reserved[1] = 0;
++
++		qlt->vfl.nr_of_bytes = session->ul_list.qlen;
++
++		/* Add QLT to the transfer list. */
++		skb_queue_tail(&ipc_mux->channel->ul_list,
++			       ipc_mux->ul_adb.qlth_skb);
++
++		qlt_updated = true;
++		ipc_mux->ul_adb.qlth_skb = NULL;
++	}
++
++	if (qlt_updated)
++		/* Updates the TDs with ul_list */
++		(void)ipc_imem_ul_write_td(ipc_mux->imem);
++
++	return qlt_updated;
++}
++
++/* Checks the available credits for the specified session and returns
++ * number of packets for which credits are available.
++ */
++static int ipc_mux_ul_bytes_credits_check(struct iosm_mux *ipc_mux,
++					  struct mux_session *session,
++					  struct sk_buff_head *ul_list,
++					  int max_nr_of_pkts)
++{
++	int pkts_to_send = 0;
++	struct sk_buff *skb;
++	int credits = 0;
++
++	if (ipc_mux->ul_flow == MUX_UL_ON_CREDITS) {
++		credits = session->ul_flow_credits;
++		if (credits <= 0) {
++			dev_dbg(ipc_mux->dev,
++				"FC::if_id[%d] Insuff.Credits/Qlen:%d/%u",
++				session->if_id, session->ul_flow_credits,
++				session->ul_list.qlen); /* nr_of_bytes */
++			return 0;
 +		}
 +	} else {
-+		dev_err(ipc_imem->ipc_task->dev, "queue is full");
++		credits = IPC_MEM_MUX_UL_FLOWCTRL_HIGH_B -
++			  ipc_mux->ul_data_pend_bytes;
++		if (credits <= 0) {
++			ipc_mux_stop_tx_for_all_sessions(ipc_mux);
++
++			dev_dbg(ipc_mux->dev,
++				"if_id[%d] encod. fail Bytes: %llu, thresh: %d",
++				session->if_id, ipc_mux->ul_data_pend_bytes,
++				IPC_MEM_MUX_UL_FLOWCTRL_HIGH_B);
++			return 0;
++		}
 +	}
 +
-+	return result;
++	/* Check if there are enough credits/bytes available to send the
++	 * requested max_nr_of_pkts. Otherwise restrict the nr_of_pkts
++	 * depending on available credits.
++	 */
++	skb_queue_walk(ul_list, skb)
++	{
++		if (!(credits >= skb->len && pkts_to_send < max_nr_of_pkts))
++			break;
++		credits -= skb->len;
++		pkts_to_send++;
++	}
++
++	return pkts_to_send;
 +}
 +
-+int ipc_task_queue_send_task(struct iosm_imem *imem,
-+			     int (*func)(struct iosm_imem *ipc_imem, int arg,
-+					 void *msg, size_t size),
-+			     int arg, void *msg, size_t size, bool wait)
++/* Encode the UL IP packet according to Lite spec. */
++static int ipc_mux_ul_adgh_encode(struct iosm_mux *ipc_mux, int session_id,
++				  struct mux_session *session,
++				  struct sk_buff_head *ul_list,
++				  struct mux_adb *adb, int nr_of_pkts)
 +{
-+	bool is_copy = false;
-+	void *copy = msg;
-+	int ret = -ENOMEM;
++	int offset = sizeof(struct mux_adgh);
++	int adb_updated = -EINVAL;
++	struct sk_buff *src_skb;
++	int aligned_size = 0;
++	int nr_of_skb = 0;
++	u32 pad_len = 0;
 +
-+	if (size > 0) {
-+		copy = kmemdup(msg, size, GFP_ATOMIC);
-+		if (!copy)
-+			goto out;
++	/* Re-calculate the number of packets depending on number of bytes to be
++	 * processed/available credits.
++	 */
++	nr_of_pkts = ipc_mux_ul_bytes_credits_check(ipc_mux, session, ul_list,
++						    nr_of_pkts);
 +
-+		is_copy = true;
++	/* If calculated nr_of_pkts from available credits is <= 0
++	 * then nothing to do.
++	 */
++	if (nr_of_pkts <= 0)
++		return 0;
++
++	/* Read configured UL head_pad_length for session.*/
++	if (session->ul_head_pad_len > IPC_MEM_DL_ETH_OFFSET)
++		pad_len = session->ul_head_pad_len - IPC_MEM_DL_ETH_OFFSET;
++
++	/* Process all pending UL packets for this session
++	 * depending on the allocated datagram table size.
++	 */
++	while (nr_of_pkts > 0) {
++		/* get destination skb allocated */
++		if (ipc_mux_ul_adb_allocate(ipc_mux, adb, &ipc_mux->size_needed,
++					    MUX_SIG_ADGH)) {
++			dev_err(ipc_mux->dev, "no reserved memory for ADGH");
++			return -ENOMEM;
++		}
++
++		/* Peek at the head of the list. */
++		src_skb = skb_peek(ul_list);
++		if (!src_skb) {
++			dev_err(ipc_mux->dev,
++				"skb peek return NULL with count : %d",
++				nr_of_pkts);
++			break;
++		}
++
++		/* Calculate the memory value. */
++		aligned_size = ALIGN((pad_len + src_skb->len), 4);
++
++		ipc_mux->size_needed = sizeof(struct mux_adgh) + aligned_size;
++
++		if (ipc_mux->size_needed > adb->size) {
++			dev_dbg(ipc_mux->dev, "size needed %d, adgh size %d",
++				ipc_mux->size_needed, adb->size);
++			/* Return 1 if any IP packet is added to the transfer
++			 * list.
++			 */
++			return nr_of_skb ? 1 : 0;
++		}
++
++		/* Add buffer (without head padding to next pending transfer) */
++		memcpy(adb->buf + offset + pad_len, src_skb->data,
++		       src_skb->len);
++
++		adb->adgh->signature = cpu_to_le32(MUX_SIG_ADGH);
++		adb->adgh->if_id = session_id;
++		adb->adgh->length =
++			cpu_to_le16(sizeof(struct mux_adgh) + pad_len +
++				    src_skb->len);
++		adb->adgh->service_class = src_skb->priority;
++		adb->adgh->next_count = --nr_of_pkts;
++		adb->dg_cnt_total++;
++		adb->payload_size += src_skb->len;
++
++		if (ipc_mux->ul_flow == MUX_UL_ON_CREDITS)
++			/* Decrement the credit value as we are processing the
++			 * datagram from the UL list.
++			 */
++			session->ul_flow_credits -= src_skb->len;
++
++		/* Remove the processed elements and free it. */
++		src_skb = skb_dequeue(ul_list);
++		dev_kfree_skb(src_skb);
++		nr_of_skb++;
++
++		ipc_mux_ul_adgh_finish(ipc_mux);
 +	}
 +
-+	ret = ipc_task_queue_add_task(imem, arg, copy, func,
-+				      size, is_copy, wait);
-+	if (ret < 0) {
-+		dev_err(imem->ipc_task->dev,
-+			"add task failed for %ps %d, %p, %zu, %d", func, arg,
-+			copy, size, is_copy);
-+		if (is_copy)
-+			kfree(copy);
++	if (nr_of_skb) {
++		/* Send QLT info to modem if pending bytes > high watermark
++		 * in case of mux lite
++		 */
++		if (ipc_mux->ul_flow == MUX_UL_ON_CREDITS ||
++		    ipc_mux->ul_data_pend_bytes >=
++			    IPC_MEM_MUX_UL_FLOWCTRL_LOW_B)
++			adb_updated = ipc_mux_lite_send_qlt(ipc_mux);
++		else
++			adb_updated = 1;
++
++		/* Updates the TDs with ul_list */
++		(void)ipc_imem_ul_write_td(ipc_mux->imem);
++	}
++
++	return adb_updated;
++}
++
++bool ipc_mux_ul_data_encode(struct iosm_mux *ipc_mux)
++{
++	struct sk_buff_head *ul_list;
++	struct mux_session *session;
++	int updated = 0;
++	int session_id;
++	int dg_n;
++	int i;
++
++	if (!ipc_mux || ipc_mux->state != MUX_S_ACTIVE ||
++	    ipc_mux->adb_prep_ongoing)
++		return false;
++
++	ipc_mux->adb_prep_ongoing = true;
++
++	for (i = 0; i < ipc_mux->nr_sessions; i++) {
++		session_id = ipc_mux->rr_next_session;
++		session = &ipc_mux->session[session_id];
++
++		/* Go to next handle rr_next_session overflow */
++		ipc_mux->rr_next_session++;
++		if (ipc_mux->rr_next_session >= ipc_mux->nr_sessions)
++			ipc_mux->rr_next_session = 0;
++
++		if (!session->wwan || session->flow_ctl_mask ||
++		    session->net_tx_stop)
++			continue;
++
++		ul_list = &session->ul_list;
++
++		/* Is something pending in UL and flow ctrl off */
++		dg_n = skb_queue_len(ul_list);
++		if (dg_n > MUX_MAX_UL_DG_ENTRIES)
++			dg_n = MUX_MAX_UL_DG_ENTRIES;
++
++		if (dg_n == 0)
++			/* Nothing to do for ipc_mux session
++			 * -> try next session id.
++			 */
++			continue;
++
++		updated = ipc_mux_ul_adgh_encode(ipc_mux, session_id, session,
++						 ul_list, &ipc_mux->ul_adb,
++						 dg_n);
++	}
++
++	ipc_mux->adb_prep_ongoing = false;
++	return updated == 1;
++}
++
++void ipc_mux_ul_encoded_process(struct iosm_mux *ipc_mux, struct sk_buff *skb)
++{
++	struct mux_adgh *adgh;
++	u16 adgh_len;
++
++	adgh = (struct mux_adgh *)skb->data;
++	adgh_len = le16_to_cpu(adgh->length);
++
++	if (adgh->signature == cpu_to_le32(MUX_SIG_ADGH) &&
++	    ipc_mux->ul_flow == MUX_UL)
++		ipc_mux->ul_data_pend_bytes = ipc_mux->ul_data_pend_bytes -
++					      adgh_len;
++
++	if (ipc_mux->ul_flow == MUX_UL)
++		dev_dbg(ipc_mux->dev, "ul_data_pend_bytes: %lld",
++			ipc_mux->ul_data_pend_bytes);
++
++	/* Reset the skb settings. */
++	skb->tail = 0;
++	skb->len = 0;
++
++	/* Add the consumed ADB to the free list. */
++	skb_queue_tail((&ipc_mux->ul_adb.free_list), skb);
++}
++
++/* Start the NETIF uplink send transfer in MUX mode. */
++static int ipc_mux_tq_ul_trigger_encode(struct iosm_imem *ipc_imem, int arg,
++					void *msg, size_t size)
++{
++	struct iosm_mux *ipc_mux = ipc_imem->mux;
++	bool ul_data_pend = false;
++
++	/* Add session UL data to a ADB and ADGH */
++	ul_data_pend = ipc_mux_ul_data_encode(ipc_mux);
++	if (ul_data_pend)
++		/* Delay the doorbell irq */
++		ipc_imem_td_update_timer_start(ipc_mux->imem);
++
++	/* reset the debounce flag */
++	ipc_mux->ev_mux_net_transmit_pending = false;
++
++	return 0;
++}
++
++int ipc_mux_ul_trigger_encode(struct iosm_mux *ipc_mux, int if_id,
++			      struct sk_buff *skb)
++{
++	struct mux_session *session = &ipc_mux->session[if_id];
++	int ret = -EINVAL;
++
++	if (ipc_mux->channel &&
++	    ipc_mux->channel->state != IMEM_CHANNEL_ACTIVE) {
++		dev_err(ipc_mux->dev,
++			"channel state is not IMEM_CHANNEL_ACTIVE");
 +		goto out;
 +	}
 +
++	if (!session->wwan) {
++		dev_err(ipc_mux->dev, "session net ID is NULL");
++		ret = -EFAULT;
++		goto out;
++	}
++
++	/* Session is under flow control.
++	 * Check if packet can be queued in session list, if not
++	 * suspend net tx
++	 */
++	if (skb_queue_len(&session->ul_list) >=
++	    (session->net_tx_stop ?
++		     IPC_MEM_MUX_UL_SESS_FCON_THRESHOLD :
++		     (IPC_MEM_MUX_UL_SESS_FCON_THRESHOLD *
++		      IPC_MEM_MUX_UL_SESS_FCOFF_THRESHOLD_FACTOR))) {
++		ipc_mux_netif_tx_flowctrl(session, session->if_id, true);
++		ret = -EBUSY;
++		goto out;
++	}
++
++	/* Add skb to the uplink skb accumulator. */
++	skb_queue_tail(&session->ul_list, skb);
++
++	/* Inform the IPC kthread to pass uplink IP packets to CP. */
++	if (!ipc_mux->ev_mux_net_transmit_pending) {
++		ipc_mux->ev_mux_net_transmit_pending = true;
++		ret = ipc_task_queue_send_task(ipc_mux->imem,
++					       ipc_mux_tq_ul_trigger_encode, 0,
++					       NULL, 0, false);
++		if (ret)
++			goto out;
++	}
++	dev_dbg(ipc_mux->dev, "mux ul if[%d] qlen=%d/%u, len=%d/%d, prio=%d",
++		if_id, skb_queue_len(&session->ul_list), session->ul_list.qlen,
++		skb->len, skb->truesize, skb->priority);
 +	ret = 0;
 +out:
 +	return ret;
 +}
-+
-+int ipc_task_init(struct ipc_task *ipc_task)
-+{
-+	struct ipc_task_queue *ipc_queue = &ipc_task->ipc_queue;
-+
-+	ipc_task->ipc_tasklet = kzalloc(sizeof(*ipc_task->ipc_tasklet),
-+					GFP_KERNEL);
-+
-+	if (!ipc_task->ipc_tasklet)
-+		return -ENOMEM;
-+
-+	/* Initialize the spinlock needed to protect the message queue of the
-+	 * ipc_task
-+	 */
-+	spin_lock_init(&ipc_queue->q_lock);
-+
-+	tasklet_init(ipc_task->ipc_tasklet, ipc_task_queue_handler,
-+		     (unsigned long)ipc_queue);
-+	return 0;
-+}
-+
-+void ipc_task_deinit(struct ipc_task *ipc_task)
-+{
-+	tasklet_kill(ipc_task->ipc_tasklet);
-+
-+	kfree(ipc_task->ipc_tasklet);
-+	/* This will free/complete any outstanding messages,
-+	 * without calling the actual handler
-+	 */
-+	ipc_task_queue_cleanup(&ipc_task->ipc_queue);
-+}
-diff --git a/drivers/net/wwan/iosm/iosm_ipc_task_queue.h b/drivers/net/wwan/iosm/iosm_ipc_task_queue.h
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_mux_codec.h b/drivers/net/wwan/iosm/iosm_ipc_mux_codec.h
 new file mode 100644
-index 000000000000..df6e9cd925a9
+index 000000000000..4a74e3c9457f
 --- /dev/null
-+++ b/drivers/net/wwan/iosm/iosm_ipc_task_queue.h
-@@ -0,0 +1,97 @@
++++ b/drivers/net/wwan/iosm/iosm_ipc_mux_codec.h
+@@ -0,0 +1,193 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2020-21 Intel Corporation.
 + */
 +
-+#ifndef IOSM_IPC_TASK_QUEUE_H
-+#define IOSM_IPC_TASK_QUEUE_H
++#ifndef IOSM_IPC_MUX_CODEC_H
++#define IOSM_IPC_MUX_CODEC_H
 +
-+/* Number of available element for the input message queue of the IPC
-+ * ipc_task
++#include "iosm_ipc_mux.h"
++
++/* Queue level size and reporting
++ * >1 is enable, 0 is disable
 + */
-+#define IPC_THREAD_QUEUE_SIZE 256
++#define MUX_QUEUE_LEVEL 1
++
++/* Size of the buffer for the IP MUX commands. */
++#define MUX_MAX_UL_ACB_BUF_SIZE 256
++
++/* Maximum number of packets in a go per session */
++#define MUX_MAX_UL_DG_ENTRIES 100
++
++/* ADGH: Signature of the Datagram Header. */
++#define MUX_SIG_ADGH 0x48474441
++
++/* CMDH: Signature of the Command Header. */
++#define MUX_SIG_CMDH 0x48444D43
++
++/* QLTH: Signature of the Queue Level Table */
++#define MUX_SIG_QLTH 0x48544C51
++
++/* FCTH: Signature of the Flow Credit Table */
++#define MUX_SIG_FCTH 0x48544346
++
++/* MUX UL session threshold factor */
++#define IPC_MEM_MUX_UL_SESS_FCOFF_THRESHOLD_FACTOR (4)
++
++/* Size of the buffer for the IP MUX Lite data buffer. */
++#define IPC_MEM_MAX_DL_MUX_LITE_BUF_SIZE (2 * 1024)
++
++/* MUX UL session threshold in number of packets */
++#define IPC_MEM_MUX_UL_SESS_FCON_THRESHOLD (64)
++
++/* Default time out for sending IPC session commands like
++ * open session, close session etc
++ * unit : milliseconds
++ */
++#define IPC_MUX_CMD_RUN_DEFAULT_TIMEOUT 1000 /* 1 second */
++
++/* MUX UL flow control lower threshold in bytes */
++#define IPC_MEM_MUX_UL_FLOWCTRL_LOW_B 10240 /* 10KB */
++
++/* MUX UL flow control higher threshold in bytes (5ms worth of data)*/
++#define IPC_MEM_MUX_UL_FLOWCTRL_HIGH_B (110 * 1024)
 +
 +/**
-+ * struct ipc_task_queue_args - Struct for Task queue elements
-+ * @ipc_imem:   Pointer to struct iosm_imem
-+ * @msg:        Message argument for tasklet function. (optional, can be NULL)
-+ * @completion: OS object used to wait for the tasklet function to finish for
-+ *              synchronous calls
-+ * @func:       Function to be called in tasklet (tl) context
-+ * @arg:        Generic integer argument for tasklet function (optional)
-+ * @size:       Message size argument for tasklet function (optional)
-+ * @response:   Return code of tasklet function for synchronous calls
-+ * @is_copy:    Is true if msg contains a pointer to a copy of the original msg
-+ *              for async. calls that needs to be freed once the tasklet returns
++ * struct mux_adgh - Aggregated Datagram Header.
++ * @signature:		Signature of the Aggregated Datagram Header(0x48474441)
++ * @length:		Length (in bytes) of the datagram header. This length
++ *			shall include the header size. Min value: 0x10
++ * @if_id:		ID of the interface the datagrams belong to
++ * @opt_ipv4v6:		Indicates IPv4(=0)/IPv6(=1), It is optional if not
++ *			used set it to zero.
++ * @reserved:		Reserved bits. Set to zero.
++ * @service_class:	Service class identifier for the datagram.
++ * @next_count:		Count of the datagrams that shall be following this
++ *			datagrams for this interface. A count of zero means
++ *			the next datagram may not belong to this interface.
++ * @reserved1:		Reserved bytes, Set to zero
 + */
-+struct ipc_task_queue_args {
-+	struct iosm_imem *ipc_imem;
-+	void *msg;
-+	struct completion *completion;
-+	int (*func)(struct iosm_imem *ipc_imem, int arg, void *msg,
-+		    size_t size);
-+	int arg;
-+	size_t size;
-+	int response;
-+	u8 is_copy:1;
++struct mux_adgh {
++	__le32 signature;
++	__le16 length;
++	u8 if_id;
++	u8 opt_ipv4v6;
++	u8 service_class;
++	u8 next_count;
++	u8 reserved1[6];
 +};
 +
 +/**
-+ * struct ipc_task_queue - Struct for Task queue
-+ * @q_lock:     Protect the message queue of the ipc ipc_task
-+ * @args:       Message queue of the IPC ipc_task
-+ * @q_rpos:     First queue element to process.
-+ * @q_wpos:     First free element of the input queue.
++ * struct mux_lite_cmdh - MUX Lite Command Header
++ * @signature:		Signature of the Command Header(0x48444D43)
++ * @cmd_len:		Length (in bytes) of the command. This length shall
++ *			include the header size. Minimum value: 0x10
++ * @if_id:		ID of the interface the commands in the table belong to.
++ * @reserved:		Reserved Set to zero.
++ * @command_type:	Command Enum.
++ * @transaction_id:	4 byte value shall be generated and sent along with a
++ *			command Responses and ACKs shall have the same
++ *			Transaction ID as their commands. It shall be unique to
++ *			the command transaction on the given interface.
++ * @param:		Optional parameters used with the command.
 + */
-+struct ipc_task_queue {
-+	spinlock_t q_lock; /* for atomic operation on queue */
-+	struct ipc_task_queue_args args[IPC_THREAD_QUEUE_SIZE];
-+	unsigned int q_rpos;
-+	unsigned int q_wpos;
++struct mux_lite_cmdh {
++	__le32 signature;
++	__le16 cmd_len;
++	u8 if_id;
++	u8 reserved;
++	__le32 command_type;
++	__le32 transaction_id;
++	union mux_cmd_param param;
 +};
 +
 +/**
-+ * struct ipc_task - Struct for Task
-+ * @dev:	 Pointer to device structure
-+ * @ipc_tasklet: Tasklet for serialized work offload
-+ *		 from interrupts and OS callbacks
-+ * @ipc_queue:	 Task for entry into ipc task queue
++ * struct mux_lite_vfl - value field in generic table
++ * @nr_of_bytes:	Number of bytes available to transmit in the queue.
 + */
-+struct ipc_task {
-+	struct device *dev;
-+	struct tasklet_struct *ipc_tasklet;
-+	struct ipc_task_queue ipc_queue;
++struct mux_lite_vfl {
++	u32 nr_of_bytes;
 +};
 +
 +/**
-+ * ipc_task_init - Allocate a tasklet
-+ * @ipc_task:	Pointer to ipc_task structure
-+ * Returns: 0 on success and failure value on error.
++ * struct ipc_mem_lite_gen_tbl - Generic table format for Queue Level
++ *				 and Flow Credit
++ * @signature:	Signature of the table
++ * @length:	Length of the table
++ * @if_id:	ID of the interface the table belongs to
++ * @vfl_length:	Value field length
++ * @reserved:	Reserved
++ * @vfl:	Value field of variable length
 + */
-+int ipc_task_init(struct ipc_task *ipc_task);
++struct ipc_mem_lite_gen_tbl {
++	__le32 signature;
++	__le16 length;
++	u8 if_id;
++	u8 vfl_length;
++	u32 reserved[2];
++	struct mux_lite_vfl vfl;
++};
 +
 +/**
-+ * ipc_task_deinit - Free a tasklet, invalidating its pointer.
-+ * @ipc_task:	Pointer to ipc_task structure
++ * ipc_mux_dl_decode -Route the DL packet through the IP MUX layer
++ *		      depending on Header.
++ * @ipc_mux:	Pointer to MUX data-struct
++ * @skb:	Pointer to ipc_skb.
 + */
-+void ipc_task_deinit(struct ipc_task *ipc_task);
++void ipc_mux_dl_decode(struct iosm_mux *ipc_mux, struct sk_buff *skb);
 +
 +/**
-+ * ipc_task_queue_send_task - Synchronously/Asynchronously call a function in
-+ *			      tasklet context.
-+ * @imem:		Pointer to iosm_imem struct
-+ * @func:		Function to be called in tasklet context
-+ * @arg:		Integer argument for func
-+ * @msg:		Message pointer argument for func
-+ * @size:		Size argument for func
-+ * @wait:		if true wait for result
++ * ipc_mux_dl_acb_send_cmds - Respond to the Command blocks.
++ * @ipc_mux:		Pointer to MUX data-struct
++ * @cmd_type:		Command
++ * @if_id:		Session interface id.
++ * @transaction_id:	Command transaction id.
++ * @param:		Pointer to command params.
++ * @res_size:		Response size
++ * @blocking:		True for blocking send
++ * @respond:		If true return transaction ID
 + *
-+ * Returns: Result value returned by func or failure value if func could not
-+ *	    be called.
++ * Returns: 0 in success and failure value on error
 + */
-+int ipc_task_queue_send_task(struct iosm_imem *imem,
-+			     int (*func)(struct iosm_imem *ipc_imem, int arg,
-+					 void *msg, size_t size),
-+			     int arg, void *msg, size_t size, bool wait);
++int ipc_mux_dl_acb_send_cmds(struct iosm_mux *ipc_mux, u32 cmd_type, u8 if_id,
++			     u32 transaction_id, union mux_cmd_param *param,
++			     size_t res_size, bool blocking, bool respond);
++
++/**
++ * ipc_mux_netif_tx_flowctrl - Enable/Disable TX flow control on MUX sessions.
++ * @session:	Pointer to mux_session struct
++ * @idx:	Session ID
++ * @on:		true for Enable and false for disable flow control
++ */
++void ipc_mux_netif_tx_flowctrl(struct mux_session *session, int idx, bool on);
++
++/**
++ * ipc_mux_ul_trigger_encode - Route the UL packet through the IP MUX layer
++ *			       for encoding.
++ * @ipc_mux:	Pointer to MUX data-struct
++ * @if_id:	Session ID.
++ * @skb:	Pointer to ipc_skb.
++ *
++ * Returns: 0 if successfully encoded
++ *	    failure value on error
++ *	    -EBUSY if packet has to be retransmitted.
++ */
++int ipc_mux_ul_trigger_encode(struct iosm_mux *ipc_mux, int if_id,
++			      struct sk_buff *skb);
++/**
++ * ipc_mux_ul_data_encode - UL encode function for calling from Tasklet context.
++ * @ipc_mux:	Pointer to MUX data-struct
++ *
++ * Returns: TRUE if any packet of any session is encoded FALSE otherwise.
++ */
++bool ipc_mux_ul_data_encode(struct iosm_mux *ipc_mux);
++
++/**
++ * ipc_mux_ul_encoded_process - Handles the Modem processed UL data by adding
++ *				the SKB to the UL free list.
++ * @ipc_mux:	Pointer to MUX data-struct
++ * @skb:	Pointer to ipc_skb.
++ */
++void ipc_mux_ul_encoded_process(struct iosm_mux *ipc_mux, struct sk_buff *skb);
 +
 +#endif
 -- 
