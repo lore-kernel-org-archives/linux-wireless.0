@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CACC43461
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 May 2021 13:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3184C43461
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 May 2021 13:38:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1E4561164
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 May 2021 13:38:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7586610CB
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 May 2021 13:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236355AbhEUNj0 (ORCPT
+        id S236123AbhEUNkA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 May 2021 09:39:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49018 "EHLO mail.kernel.org"
+        Fri, 21 May 2021 09:40:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236024AbhEUNjA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 May 2021 09:39:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 42CDE6109F;
-        Fri, 21 May 2021 13:37:32 +0000 (UTC)
-Date:   Fri, 21 May 2021 19:07:28 +0530
+        id S236157AbhEUNjq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 May 2021 09:39:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 962636109F;
+        Fri, 21 May 2021 13:38:17 +0000 (UTC)
+Date:   Fri, 21 May 2021 19:08:12 +0530
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     Bhaumik Bhatt <bbhatt@codeaurora.org>
 Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
         jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
         loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
         kvalo@codeaurora.org, ath11k@lists.infradead.org
-Subject: Re: [PATCH v4 2/6] bus: mhi: core: Set BHI and BHIe pointers to NULL
- in clean-up
-Message-ID: <20210521133728.GJ70095@thinkpad>
+Subject: Re: [PATCH v4 3/6] bus: mhi: Add MMIO region length to controller
+ structure
+Message-ID: <20210521133812.GK70095@thinkpad>
 References: <1620330705-40192-1-git-send-email-bbhatt@codeaurora.org>
- <1620330705-40192-3-git-send-email-bbhatt@codeaurora.org>
+ <1620330705-40192-4-git-send-email-bbhatt@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1620330705-40192-3-git-send-email-bbhatt@codeaurora.org>
+In-Reply-To: <1620330705-40192-4-git-send-email-bbhatt@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 06, 2021 at 12:51:41PM -0700, Bhaumik Bhatt wrote:
-> Set the BHI and BHIe pointers to NULL as part of clean-up. This
-> makes sure that stale pointers are not accessed after powering
-> MHI down.
+On Thu, May 06, 2021 at 12:51:42PM -0700, Bhaumik Bhatt wrote:
+> Make controller driver specify the MMIO register region length
+> for range checking of BHI or BHIe space. This can help validate
+> that offsets are in acceptable memory region or not and avoid any
+> boot-up issues due to BHI or BHIe memory accesses.
 > 
-> Suggested-by: Hemant Kumar <hemantk@codeaurora.org>
 > Signed-off-by: Bhaumik Bhatt <bbhatt@codeaurora.org>
 > Reviewed-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
 > Reviewed-by: Hemant Kumar <hemantk@codeaurora.org>
@@ -58,23 +58,29 @@ Thanks,
 Mani
 
 > ---
->  drivers/bus/mhi/core/init.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  include/linux/mhi.h | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/bus/mhi/core/init.c b/drivers/bus/mhi/core/init.c
-> index 11c7a3d..1cc2f22 100644
-> --- a/drivers/bus/mhi/core/init.c
-> +++ b/drivers/bus/mhi/core/init.c
-> @@ -1132,6 +1132,9 @@ void mhi_unprepare_after_power_down(struct mhi_controller *mhi_cntrl)
->  		mhi_cntrl->rddm_image = NULL;
->  	}
->  
-> +	mhi_cntrl->bhi = NULL;
-> +	mhi_cntrl->bhie = NULL;
-> +
->  	mhi_deinit_dev_ctxt(mhi_cntrl);
->  }
->  EXPORT_SYMBOL_GPL(mhi_unprepare_after_power_down);
+> diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+> index 944aa3a..9c347f5 100644
+> --- a/include/linux/mhi.h
+> +++ b/include/linux/mhi.h
+> @@ -303,6 +303,7 @@ struct mhi_controller_config {
+>   * @rddm_size: RAM dump size that host should allocate for debugging purpose
+>   * @sbl_size: SBL image size downloaded through BHIe (optional)
+>   * @seg_len: BHIe vector size (optional)
+> + * @reg_len: Length of the MHI MMIO region (required)
+>   * @fbc_image: Points to firmware image buffer
+>   * @rddm_image: Points to RAM dump buffer
+>   * @mhi_chan: Points to the channel configuration table
+> @@ -386,6 +387,7 @@ struct mhi_controller {
+>  	size_t rddm_size;
+>  	size_t sbl_size;
+>  	size_t seg_len;
+> +	size_t reg_len;
+>  	struct image_info *fbc_image;
+>  	struct image_info *rddm_image;
+>  	struct mhi_chan *mhi_chan;
 > -- 
 > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 > a Linux Foundation Collaborative Project
