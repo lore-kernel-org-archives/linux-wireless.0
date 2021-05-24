@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12EADC2B9F8
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9458AC47098
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A53F76100C
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F9C60698
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234862AbhEXPJU (ORCPT
+        id S233487AbhEXPLz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 May 2021 11:09:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37714 "EHLO mail.kernel.org"
+        Mon, 24 May 2021 11:11:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234665AbhEXPEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 May 2021 11:04:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD9166161E;
-        Mon, 24 May 2021 14:50:49 +0000 (UTC)
+        id S233998AbhEXPIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 May 2021 11:08:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E26F06100C;
+        Mon, 24 May 2021 14:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621867850;
-        bh=vRVKd8aP6MEZC8gUSh+RA2V/eOJAldxLD22c3ZLJy8Y=;
+        s=k20201202; t=1621867899;
+        bh=8RB/edLp0CagyS8uYUFUl2Od1LezECu91mxBItLXzBc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QSFRJJE3lcJjJnbY5V1F2okWnaXN8C+68HuDsEhgbb+7Kv8Mpzh290LtIG9d6Q5Df
-         R1swR6qlo3n02lyvQk2yHYf5M0R3KLeIQGrGIr1oZDa50vfWo+BLSUmxMBCyDuYB+o
-         qY7FH16w6b1bCzMWuQowU5dVhpjwQYpTqn/KWrCQn2Hl3bHCl0TT8SxbfOC5O3a8um
-         JdDO30pHxlI3ka1pxldXmHLXkGqDF8VaUvTJsa/2lOhjF4ThUER3n3xStEeVVqtaei
-         sU/XdgOQB2r7MDZJkKBS6Ti8w+ZBcDD6zxmzgH38mMXnM+XDXu+0emo2RDdJsmQUZJ
-         lxIgbpk1/OWyA==
+        b=K7z2232Zi+wBky5K9ApS1pYhwUw73GeyLYYC9DMpPdVrDiUsXPyWAAJnBtvPjpus8
+         fmiXICiuNlnD4y01GZCigfYGqUt65NtGAvKSzqQ8W0+IkdtmpKK/5fwkllLcsNL62Q
+         ECtuxdE6yIB5jfzdRZUjkuapKiJRB0rQ/Cyf0TxjMfZ4WT8V7Rk6OxYs/rfv+xHXZY
+         FBa2Rmgb1zB17mGkFPPuDl3icQiFcE4fnUj69VrQDyMUmpajqQyyVuXLpxtMI4JOMM
+         oGmuzP/Z3Ny5ZnB4MjgioJyJJHyNj50nHBGYpTXFC23EFm++Lf8eOBhKDXNtiVO2ln
+         50lpGFCurlk1g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Anirudh Rayabharam <mail@anirudhrb.com>, Kangjie Lu <kjlu@umn.edu>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/21] ath6kl: return error code in ath6kl_wmi_set_roam_lrssi_cmd()
-Date:   Mon, 24 May 2021 10:50:27 -0400
-Message-Id: <20210524145040.2499322-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 07/16] ath6kl: return error code in ath6kl_wmi_set_roam_lrssi_cmd()
+Date:   Mon, 24 May 2021 10:51:21 -0400
+Message-Id: <20210524145130.2499829-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210524145040.2499322-1-sashal@kernel.org>
-References: <20210524145040.2499322-1-sashal@kernel.org>
+In-Reply-To: <20210524145130.2499829-1-sashal@kernel.org>
+References: <20210524145130.2499829-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -67,7 +67,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 1eea6c23976f..19b005cc8b00 100644
+index e2b7809d7886..f3a786af7ece 100644
 --- a/drivers/net/wireless/ath/ath6kl/debug.c
 +++ b/drivers/net/wireless/ath/ath6kl/debug.c
 @@ -1027,14 +1027,17 @@ static ssize_t ath6kl_lrssi_roam_write(struct file *file,
@@ -90,7 +90,7 @@ index 1eea6c23976f..19b005cc8b00 100644
  }
  
 diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index f80f1757b58f..9deaeb72b2b4 100644
+index 7e1010475cfb..4aead53acf38 100644
 --- a/drivers/net/wireless/ath/ath6kl/wmi.c
 +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
 @@ -776,10 +776,8 @@ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi)
