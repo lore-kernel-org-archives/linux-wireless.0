@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E48CC47085
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C6EC2B9F7
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5BE46108D
+	by mail.kernel.org (Postfix) with ESMTP id 8DE3B61376
 	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234998AbhEXPJ1 (ORCPT
+        id S234331AbhEXPI5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 May 2021 11:09:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37846 "EHLO mail.kernel.org"
+        Mon, 24 May 2021 11:08:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37288 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234729AbhEXPEw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 May 2021 11:04:52 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5682061606;
-        Mon, 24 May 2021 14:50:52 +0000 (UTC)
+        id S234146AbhEXPCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 May 2021 11:02:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F55661574;
+        Mon, 24 May 2021 14:50:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621867853;
+        s=k20201202; t=1621867821;
         bh=GQydZjDT4wPdUn9WToJFxN5ZGS2Al09Z1XjGbD6BL0k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kujjdqiwzt0kqwiOctewb1+QiOgxWRz8ib3yn5pZCAJoJoHsCd4H9qVi7t5VFrq/j
-         uR6hfnG0Dh3d86Il2d6WAY5heiTx/SeRuCjPQBVBzYNoyhmkrL02pC7iuzaqraDDG9
-         NkvXvLBlBgmQRt0eqALjJuy0mZseBdKooyuq0pTmjGv6Ev/aWdOsB1xy6Uqp6G0b7P
-         6TqUfnWT3kNyFiOjnnfX4pKOUKlfSk8lWB12vzFcXxHotRRVwBuKQ7DEzFH+dE/wiT
-         v3Pxc01L64EIVlS18t1T5OHvw2UGvd8RYRkt0WnZxWvzf0FKtk5dNXskZ1uLGPZ8d1
-         XOC8lsIop3DCQ==
+        b=A1oNpLIeAnipjUYY8R0rAvMxawFoFtgrQEqw7aRrvLqiG/mKmXEkPljklHGePDY2J
+         fru6QQtDaEcejZIk5e6yRJ2Y5EF+20QyGAtvpG9evyYgouIYQ4wXvitPTnDFynsaLk
+         c6nW3FS9JAaPooCKJfJ8TaP4m8z3iRlTOxD1cS93T8NZzXb1lTjRnbz0UMOBPcpsOD
+         fLmAeRlkMGQs9uNmXxbF7QhSjCQfPZjMhBwoVMnvx6JVykXc169IGNYCjbZ9wKqLYE
+         3KgINuIon6yOWCVbRmuJv77kaEFojI8UDcGvCKfe5JAlSQyPKXW1jjYCnAz6qAjtZX
+         SKFQP30T0tITQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Sasha Levin <sashal@kernel.org>,
         libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 10/21] libertas: register sysfs groups properly
-Date:   Mon, 24 May 2021 10:50:29 -0400
-Message-Id: <20210524145040.2499322-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 10/25] libertas: register sysfs groups properly
+Date:   Mon, 24 May 2021 10:49:53 -0400
+Message-Id: <20210524145008.2499049-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210524145040.2499322-1-sashal@kernel.org>
-References: <20210524145040.2499322-1-sashal@kernel.org>
+In-Reply-To: <20210524145008.2499049-1-sashal@kernel.org>
+References: <20210524145008.2499049-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
