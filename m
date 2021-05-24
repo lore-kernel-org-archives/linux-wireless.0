@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D67DCC47087
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89922C4708E
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9E8060698
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59A7260698
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 May 2021 15:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233555AbhEXPL6 (ORCPT
+        id S233817AbhEXPMA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 May 2021 11:11:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40698 "EHLO mail.kernel.org"
+        Mon, 24 May 2021 11:12:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40894 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234725AbhEXPIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 May 2021 11:08:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 317E761933;
-        Mon, 24 May 2021 14:51:40 +0000 (UTC)
+        id S234234AbhEXPHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 May 2021 11:07:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 999B261864;
+        Mon, 24 May 2021 14:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621867901;
-        bh=Q4jNrlVbkxKBFuZfG5hlrOND6dyo+WOQlu/GAgl3Uec=;
+        s=k20201202; t=1621867879;
+        bh=RoB6vYWZYdd+NFdYaGdOcUCdT3LohU7v+XM3Bfae6t4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P3BI6ci3TU4iKDgLZn+6OHg2sJ1Qb/CbfYGjBojO6tzFPekf72xagA4FVPwuRNXdC
-         IqbLSAEkp76y9oOhAa1+sVn3lm9EoF1yufaRSir9aXmrDYF7dkcO756ZYeLQ9MbhuH
-         UlNKZBVtqKGztk86Y0cYE4icUGbMLIbbBDZbJhSCAbVAoqhIr3RYQ4I15b6UyFZPw1
-         tEFZ0QG7eNT67Pr2Aozg/hIE1xJI5XJwhX20r+0eAeoyTTpCjA9LEJsepN3pv2t8mJ
-         UQKzWcIlpYie6pmDCFY3Li68IDcIRglSAXdsO05IOqfyRUpjVFSxpPJYZGAA557S2j
-         9TcWEosxwEJvw==
+        b=gDRJ7iextn6tZPuw8yPUcphJkLikbMoo7OL9OO+sUygKxXLr/niUsYClX2NEF6Msi
+         pkxB5wbo23dxSn6aGljsdVeZa58ACvg9UUKtsR0enRKun6XAtvTB6uo9GB4UctRzaz
+         X0DUL+AVXDhC/Y0L3g7RSLb0if7hTxVtKD1dn7jzGi6/na/NFH20BdUwpJKvvCwtIt
+         GoeFytnffUfPaZlU3Veed37PJaWlGsSdQT5AXxDVGfJEiY23u6mKtHZea95cLN0BmJ
+         CL4dwJpMbxyb9aY5D52pUdDgNtZe+31seRvEh/x7ATfeThNYqsHdPG567aLQbzh9iC
+         ZJZpvwHP7FO4w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 08/16] libertas: register sysfs groups properly
-Date:   Mon, 24 May 2021 10:51:22 -0400
-Message-Id: <20210524145130.2499829-8-sashal@kernel.org>
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 10/19] libertas: register sysfs groups properly
+Date:   Mon, 24 May 2021 10:50:57 -0400
+Message-Id: <20210524145106.2499571-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210524145130.2499829-1-sashal@kernel.org>
-References: <20210524145130.2499829-1-sashal@kernel.org>
+In-Reply-To: <20210524145106.2499571-1-sashal@kernel.org>
+References: <20210524145106.2499571-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,13 +72,13 @@ Link: https://lore.kernel.org/r/20210503115736.2104747-54-gregkh@linuxfoundation
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/libertas/mesh.c | 28 ++++------------------------
+ drivers/net/wireless/marvell/libertas/mesh.c | 28 +++-----------------
  1 file changed, 4 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
 index d0c881dd5846..f1e9cbcfdc16 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
+--- a/drivers/net/wireless/marvell/libertas/mesh.c
++++ b/drivers/net/wireless/marvell/libertas/mesh.c
 @@ -797,19 +797,6 @@ static const struct attribute_group mesh_ie_group = {
  	.attrs = mesh_ie_attrs,
  };
