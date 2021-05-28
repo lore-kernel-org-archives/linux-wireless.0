@@ -5,34 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB73BC47087
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 06:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F1CC4708D
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 06:10:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE3D2613D4
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 06:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC9016135F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 06:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235494AbhE1GLN (ORCPT
+        id S235466AbhE1GLq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 May 2021 02:11:13 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:41210 "EHLO
+        Fri, 28 May 2021 02:11:46 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:41236 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234288AbhE1GLM (ORCPT
+        with ESMTP id S235511AbhE1GLO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 May 2021 02:11:12 -0400
-X-UUID: 0c4953406652420e82ff630c6757085e-20210528
-X-UUID: 0c4953406652420e82ff630c6757085e-20210528
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        Fri, 28 May 2021 02:11:14 -0400
+X-UUID: 3518f27438b048c9a96ead3faa541220-20210528
+X-UUID: 3518f27438b048c9a96ead3faa541220-20210528
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 307835176; Fri, 28 May 2021 14:09:36 +0800
+        with ESMTP id 898652684; Fri, 28 May 2021 14:09:38 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 28 May 2021 14:09:34 +0800
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 28 May 2021 14:09:37 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 28 May 2021 14:09:34 +0800
+ Transport; Fri, 28 May 2021 14:09:36 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes.berg@intel.com>
@@ -44,10 +44,12 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2 1/4] mac80211: call ieee80211_tx_h_rate_ctrl() when dequeue
-Date:   Fri, 28 May 2021 14:05:41 +0800
-Message-ID: <2176023d8f13d82d093452e1c105609396c30622.1622164961.git.ryder.lee@mediatek.com>
+Subject: [PATCH v2 3/4] mac80211: add rate control support for encap offload
+Date:   Fri, 28 May 2021 14:05:43 +0800
+Message-ID: <d447c18f07fe3dc7092f5502de3e35e6b7ae69e1.1622164961.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <2176023d8f13d82d093452e1c105609396c30622.1622164961.git.ryder.lee@mediatek.com>
+References: <2176023d8f13d82d093452e1c105609396c30622.1622164961.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -55,122 +57,133 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make ieee80211_tx_h_rate_ctrl() get called on dequeue to improve
-performance since it reduces the turnaround time for rate control.
+The software rate control cannot deal with encap offload, so fix it.
 
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
-change since v2 - roll ieee80211_tx_h_rate_ctrl checks into one condition
+change since v2 - none
 ---
- net/mac80211/tx.c | 52 ++++++++++++++++++++++++++---------------------
- 1 file changed, 29 insertions(+), 23 deletions(-)
+ net/mac80211/ieee80211_i.h |  9 +++++++++
+ net/mac80211/rate.c        |  9 ++-------
+ net/mac80211/tx.c          | 18 ++++++++++++++----
+ 3 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0b719f3d2dec..d3016c3a3069 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1768,8 +1768,6 @@ static int invoke_tx_handlers_early(struct ieee80211_tx_data *tx)
- 	CALL_TXH(ieee80211_tx_h_ps_buf);
- 	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
- 	CALL_TXH(ieee80211_tx_h_select_key);
--	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
--		CALL_TXH(ieee80211_tx_h_rate_ctrl);
- 
-  txh_done:
- 	if (unlikely(res == TX_DROP)) {
-@@ -1802,6 +1800,9 @@ static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx)
- 		goto txh_done;
- 	}
- 
-+	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
-+		CALL_TXH(ieee80211_tx_h_rate_ctrl);
-+
- 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
- 	CALL_TXH(ieee80211_tx_h_sequence);
- 	CALL_TXH(ieee80211_tx_h_fragment);
-@@ -3369,15 +3370,21 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
-  * Can be called while the sta lock is held. Anything that can cause packets to
-  * be generated will cause deadlock!
-  */
--static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
--				       struct sta_info *sta, u8 pn_offs,
--				       struct ieee80211_key *key,
--				       struct sk_buff *skb)
-+static ieee80211_tx_result
-+ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
-+			   struct sta_info *sta, u8 pn_offs,
-+			   struct ieee80211_key *key,
-+			   struct ieee80211_tx_data *tx)
- {
-+	struct sk_buff *skb = tx->skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	u8 tid = IEEE80211_NUM_TIDS;
- 
-+	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL) &&
-+	    ieee80211_tx_h_rate_ctrl(tx) != TX_CONTINUE)
-+		return TX_DROP;
-+
- 	if (key)
- 		info->control.hw_key = &key->conf;
- 
-@@ -3426,6 +3433,8 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
- 			break;
- 		}
- 	}
-+
-+	return TX_CONTINUE;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8fcbaa1eedf3..ba780c749e36 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2030,6 +2030,15 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb_tid(sdata, skb, 7);
  }
  
- static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
-@@ -3529,24 +3538,17 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 	tx.sta = sta;
- 	tx.key = fast_tx->key;
- 
--	if (!ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
--		tx.skb = skb;
--		r = ieee80211_tx_h_rate_ctrl(&tx);
--		skb = tx.skb;
--		tx.skb = NULL;
++static inline bool ieee80211_is_tx_data(struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	return info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP ||
++	       ieee80211_is_data(hdr->frame_control);
++}
++
+ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			       struct ieee802_11_elems *elems,
+ 			       u64 filter, u32 crc, u8 *transmitter_bssid,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 63652c39c8e0..8c6416129d5b 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -297,15 +297,11 @@ void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
+ static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct sk_buff *skb = txrc->skb;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	__le16 fc;
 -
--		if (r != TX_CONTINUE) {
--			if (r != TX_QUEUED)
--				kfree_skb(skb);
--			return true;
--		}
--	}
--
- 	if (ieee80211_queue_skb(local, sdata, sta, skb))
- 		return true;
+-	fc = hdr->frame_control;
  
--	ieee80211_xmit_fast_finish(sdata, sta, fast_tx->pn_offs,
--				   fast_tx->key, skb);
-+	tx.skb = skb;
-+	r = ieee80211_xmit_fast_finish(sdata, sta, fast_tx->pn_offs,
-+				       fast_tx->key, &tx);
-+	tx.skb = NULL;
-+	if (r == TX_DROP) {
-+		kfree_skb(skb);
-+		return true;
+ 	return (info->flags & (IEEE80211_TX_CTL_NO_ACK |
+ 			       IEEE80211_TX_CTL_USE_MINRATE)) ||
+-		!ieee80211_is_data(fc);
++		!ieee80211_is_tx_data(skb);
+ }
+ 
+ static void rc_send_low_basicrate(struct ieee80211_tx_rate *rate,
+@@ -870,7 +866,6 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
+ 			    int max_rates)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_supported_band *sband;
+ 
+@@ -882,7 +877,7 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
+ 	sdata = vif_to_sdata(vif);
+ 	sband = sdata->local->hw.wiphy->bands[info->band];
+ 
+-	if (ieee80211_is_data(hdr->frame_control))
++	if (ieee80211_is_tx_data(skb))
+ 		rate_control_apply_mask(sdata, sta, sband, dest, max_rates);
+ 
+ 	if (dest[0].idx < 0)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d3016c3a3069..0a4bc9e08637 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -666,6 +666,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	u32 len;
+ 	struct ieee80211_tx_rate_control txrc;
+ 	struct ieee80211_sta_rates *ratetbl = NULL;
++	bool encap = info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP;
+ 	bool assoc = false;
+ 
+ 	memset(&txrc, 0, sizeof(txrc));
+@@ -707,7 +708,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	 * just wants a probe response.
+ 	 */
+ 	if (tx->sdata->vif.bss_conf.use_short_preamble &&
+-	    (ieee80211_is_data(hdr->frame_control) ||
++	    (ieee80211_is_tx_data(tx->skb) ||
+ 	     (tx->sta && test_sta_flag(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
+ 		txrc.short_preamble = true;
+ 
+@@ -729,7 +730,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		 "%s: Dropped data frame as no usable bitrate found while "
+ 		 "scanning and associated. Target station: "
+ 		 "%pM on %d GHz band\n",
+-		 tx->sdata->name, hdr->addr1,
++		 tx->sdata->name,
++		 encap ? ((struct ethhdr *)hdr)->h_dest : hdr->addr1,
+ 		 info->band ? 5 : 2))
+ 		return TX_DROP;
+ 
+@@ -763,7 +765,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 
+ 	if (txrc.reported_rate.idx < 0) {
+ 		txrc.reported_rate = tx->rate;
+-		if (tx->sta && ieee80211_is_data(hdr->frame_control))
++		if (tx->sta && ieee80211_is_tx_data(tx->skb))
+ 			tx->sta->tx_stats.last_rate = txrc.reported_rate;
+ 	} else if (tx->sta)
+ 		tx->sta->tx_stats.last_rate = txrc.reported_rate;
+@@ -3653,8 +3655,16 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	else
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
++		if (!ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++			r = ieee80211_tx_h_rate_ctrl(&tx);
++			if (r != TX_CONTINUE) {
++				ieee80211_free_txskb(&local->hw, skb);
++				goto begin;
++			}
++		}
+ 		goto encap_out;
 +	}
  
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		sdata = container_of(sdata->bss,
-@@ -3663,8 +3665,12 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		    (tx.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV))
- 			pn_offs = ieee80211_hdrlen(hdr->frame_control);
- 
--		ieee80211_xmit_fast_finish(sta->sdata, sta, pn_offs,
--					   tx.key, skb);
-+		r = ieee80211_xmit_fast_finish(sta->sdata, sta, pn_offs,
-+					       tx.key, &tx);
-+		if (r != TX_CONTINUE) {
-+			ieee80211_free_txskb(&local->hw, skb);
-+			goto begin;
-+		}
- 	} else {
- 		if (invoke_tx_handlers_late(&tx))
- 			goto begin;
+ 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
+ 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
 -- 
 2.18.0
 
