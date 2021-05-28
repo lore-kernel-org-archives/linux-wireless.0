@@ -2,76 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AFDC4707F
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71AB5C4707F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 03:29:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25C9C61248
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:54:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4360961358
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 03:29:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235237AbhE1Bz7 (ORCPT
+        id S236267AbhE1Dav (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 May 2021 21:55:59 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:45382 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235016AbhE1Bz6 (ORCPT
+        Thu, 27 May 2021 23:30:51 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:39334 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229977AbhE1Dat (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 May 2021 21:55:58 -0400
-X-UUID: 788495487c0e4ec88cad316f4ff01855-20210528
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=oGHE8PMIoslcSlajowrXXBL8ZEp8fdbfLBIkED372ag=;
-        b=tEhF2RoOLtYrKh803zOIhsL0tBKt7zOeWAlWASXX3uqg1Ul/NYU+a0IZv2Hf1LFWktaBT4RxdE0uSYr0Ts4FmtO/gpYxLn2nLq3JSFoiV0D7tcTmXus9gFeAtyqMzTL4iAZ+C1m7S7mTNGEeHtPSjB/QNTSbqIT8f4u2tDaSi+A=;
-X-UUID: 788495487c0e4ec88cad316f4ff01855-20210528
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2021327913; Fri, 28 May 2021 09:54:21 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 28 May 2021 09:54:19 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 28 May 2021 09:54:19 +0800
-Message-ID: <1622166859.31294.2.camel@mtkswgap22>
-Subject: Re: [RFC PATCH 2/4] mac80211: minstrel_ht: fix minstrel_aggr_check
- for encap offload
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Bo Jiao <bo.jiao@mediatek.com>,
-        Sujuan Chen <sujuan.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Date:   Fri, 28 May 2021 09:54:19 +0800
-In-Reply-To: <47f9c5c2a9c5fd666751e01799a9a167d8776a49.camel@sipsolutions.net>
-References: <a959135d3fe21118f38c33fc9ffb18124c1ef7ce.1621453091.git.ryder.lee@mediatek.com>
-         <4e50d38c98c407825c6897a034fee3ba6366b0ad.1621453091.git.ryder.lee@mediatek.com>
-         (sfid-20210519_215642_904470_7AA3F138)
- <47f9c5c2a9c5fd666751e01799a9a167d8776a49.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        Thu, 27 May 2021 23:30:49 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 14S3T7oS4003303, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 14S3T7oS4003303
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 28 May 2021 11:29:07 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Fri, 28 May 2021 11:29:07 +0800
+Received: from localhost (172.16.16.242) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 28 May
+ 2021 11:29:06 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>,
+        <kevin_yang@realtek.com>
+Subject: [PATCH 0/2] rtw88: dump firmware log by devcoredump and refine unwanted H2C
+Date:   Fri, 28 May 2021 11:28:59 +0800
+Message-ID: <20210528032901.12927-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.16.242]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/28/2021 03:00:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzUvMjggpFekyCAwMjoxOTowMA==?=
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
+X-KSE-Antivirus-Attachment-Filter-Interceptor-Info: license violation
+X-KSE-AntiSpam-Interceptor-Info: bases corrupted
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gVHVlLCAyMDIxLTA1LTI1IGF0IDE1OjAwICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBUaHUsIDIwMjEtMDUtMjAgYXQgMDM6NTYgKzA4MDAsIFJ5ZGVyIExlZSB3cm90ZToNCj4g
-PiANCj4gPiArCWlmICghKGluZm8tPmZsYWdzICYgSUVFRTgwMjExX1RYX0NUTF9IV184MDIxMV9F
-TkNBUCkgJiYNCj4gPiArCSAgICB1bmxpa2VseSghaWVlZTgwMjExX2lzX2RhdGFfcW9zKGhkci0+
-ZnJhbWVfY29udHJvbCkpKQ0KPiA+ICAJCXJldHVybjsNCj4gDQo+IFRoYXQgdW5saWtlbHkoKSBw
-bGFjZW1lbnQgc2VlbXMgb2RkPw0KPiANCj4gam9oYW5uZXMNCj4gDQoNCg0KDQpJIHRob3VnaHQg
-YWJvdXQNCglpZiAodW5saWtlbHkoIShpbmZvLT5mbGFncyAmIElFRUU4MDIxMV9UWF9DVExfSFdf
-ODAyMTFfRU5DQVApICYmDQoJICAgICFpZWVlODAyMTFfaXNfZGF0YV9xb3MoaGRyLT5mcmFtZV9j
-b250cm9sKSkpDQoNCi4uLnVudGlsIEkgZm91bmQgYSBzaW1pbGlhciBjYXNlIGluIGllZWU4MDIx
-MV9nZXRfdHhxLCBzbyBJIGtlcHQgaXQgaW4NCnRoYXQgd2F5Lg0KDQpSeWRlcg0K
+This patchset depends on previous one; 
+"[PATCH 0/2] rtw88: add scan notify to firmware and refine fw_feature check".
+The content isn't highly related, but it leads conflict if the order is wrong.
+
+Po-Hao Huang (1):
+  rtw88: refine unwanted h2c command
+
+Zong-Zhe Yang (1):
+  rtw88: dump FW crash via devcoredump
+
+ drivers/net/wireless/realtek/rtw88/debug.c    |   7 +
+ drivers/net/wireless/realtek/rtw88/fw.c       |   7 +-
+ drivers/net/wireless/realtek/rtw88/main.c     | 170 ++++++++++++------
+ drivers/net/wireless/realtek/rtw88/main.h     |  37 +++-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  51 +++++-
+ 5 files changed, 203 insertions(+), 69 deletions(-)
+
+-- 
+2.25.1
 
