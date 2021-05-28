@@ -2,84 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B830AC4707F
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AFDC4707F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:54:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93D136100C
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:47:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25C9C61248
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 May 2021 01:54:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234398AbhE1Bse (ORCPT
+        id S235237AbhE1Bz7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 May 2021 21:48:34 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:5120 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229749AbhE1Bse (ORCPT
+        Thu, 27 May 2021 21:55:59 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:45382 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S235016AbhE1Bz6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 May 2021 21:48:34 -0400
-Received: from dggeml759-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4FrnXy3mlmzYnqS;
-        Fri, 28 May 2021 09:44:18 +0800 (CST)
-Received: from dggemi762-chm.china.huawei.com (10.1.198.148) by
- dggeml759-chm.china.huawei.com (10.1.199.138) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Fri, 28 May 2021 09:46:58 +0800
-Received: from linux-lmwb.huawei.com (10.175.103.112) by
- dggemi762-chm.china.huawei.com (10.1.198.148) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Fri, 28 May 2021 09:46:57 +0800
-From:   Zou Wei <zou_wei@huawei.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi83@gmail.com>,
-        <ryder.lee@mediatek.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <matthias.bgg@gmail.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Zou Wei <zou_wei@huawei.com>
-Subject: [PATCH -next] mt76: mt7915: Fix unsigned comparison to zero
-Date:   Fri, 28 May 2021 10:05:37 +0800
-Message-ID: <1622167537-74981-1-git-send-email-zou_wei@huawei.com>
-X-Mailer: git-send-email 2.6.2
+        Thu, 27 May 2021 21:55:58 -0400
+X-UUID: 788495487c0e4ec88cad316f4ff01855-20210528
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=oGHE8PMIoslcSlajowrXXBL8ZEp8fdbfLBIkED372ag=;
+        b=tEhF2RoOLtYrKh803zOIhsL0tBKt7zOeWAlWASXX3uqg1Ul/NYU+a0IZv2Hf1LFWktaBT4RxdE0uSYr0Ts4FmtO/gpYxLn2nLq3JSFoiV0D7tcTmXus9gFeAtyqMzTL4iAZ+C1m7S7mTNGEeHtPSjB/QNTSbqIT8f4u2tDaSi+A=;
+X-UUID: 788495487c0e4ec88cad316f4ff01855-20210528
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 2021327913; Fri, 28 May 2021 09:54:21 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 28 May 2021 09:54:19 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 28 May 2021 09:54:19 +0800
+Message-ID: <1622166859.31294.2.camel@mtkswgap22>
+Subject: Re: [RFC PATCH 2/4] mac80211: minstrel_ht: fix minstrel_aggr_check
+ for encap offload
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+CC:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Bo Jiao <bo.jiao@mediatek.com>,
+        Sujuan Chen <sujuan.chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Date:   Fri, 28 May 2021 09:54:19 +0800
+In-Reply-To: <47f9c5c2a9c5fd666751e01799a9a167d8776a49.camel@sipsolutions.net>
+References: <a959135d3fe21118f38c33fc9ffb18124c1ef7ce.1621453091.git.ryder.lee@mediatek.com>
+         <4e50d38c98c407825c6897a034fee3ba6366b0ad.1621453091.git.ryder.lee@mediatek.com>
+         (sfid-20210519_215642_904470_7AA3F138)
+ <47f9c5c2a9c5fd666751e01799a9a167d8776a49.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.103.112]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggemi762-chm.china.huawei.com (10.1.198.148)
-X-CFilter-Loop: Reflected
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes coccicheck warnings:
-
-./drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:3450:5-8: WARNING: Unsigned expression compared with zero: idx < 0
-
-Fixes: 495184ac91bb ("mt76: mt7915: add support for applying pre-calibration data")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Zou Wei <zou_wei@huawei.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index b3f14ff..764f25a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3440,8 +3440,9 @@ int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy)
- {
- 	struct mt7915_dev *dev = phy->dev;
- 	struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
--	u16 total = 2, idx, center_freq = chandef->center_freq1;
-+	u16 total = 2, center_freq = chandef->center_freq1;
- 	u8 *cal = dev->cal, *eep = dev->mt76.eeprom.data;
-+	int idx;
- 
- 	if (!(eep[MT_EE_DO_PRE_CAL] & MT_EE_WIFI_CAL_DPD))
- 		return 0;
--- 
-2.6.2
+T24gVHVlLCAyMDIxLTA1LTI1IGF0IDE1OjAwICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUaHUsIDIwMjEtMDUtMjAgYXQgMDM6NTYgKzA4MDAsIFJ5ZGVyIExlZSB3cm90ZToNCj4g
+PiANCj4gPiArCWlmICghKGluZm8tPmZsYWdzICYgSUVFRTgwMjExX1RYX0NUTF9IV184MDIxMV9F
+TkNBUCkgJiYNCj4gPiArCSAgICB1bmxpa2VseSghaWVlZTgwMjExX2lzX2RhdGFfcW9zKGhkci0+
+ZnJhbWVfY29udHJvbCkpKQ0KPiA+ICAJCXJldHVybjsNCj4gDQo+IFRoYXQgdW5saWtlbHkoKSBw
+bGFjZW1lbnQgc2VlbXMgb2RkPw0KPiANCj4gam9oYW5uZXMNCj4gDQoNCg0KDQpJIHRob3VnaHQg
+YWJvdXQNCglpZiAodW5saWtlbHkoIShpbmZvLT5mbGFncyAmIElFRUU4MDIxMV9UWF9DVExfSFdf
+ODAyMTFfRU5DQVApICYmDQoJICAgICFpZWVlODAyMTFfaXNfZGF0YV9xb3MoaGRyLT5mcmFtZV9j
+b250cm9sKSkpDQoNCi4uLnVudGlsIEkgZm91bmQgYSBzaW1pbGlhciBjYXNlIGluIGllZWU4MDIx
+MV9nZXRfdHhxLCBzbyBJIGtlcHQgaXQgaW4NCnRoYXQgd2F5Lg0KDQpSeWRlcg0K
 
