@@ -2,35 +2,36 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC9AC4708E
-	for <linux-wireless@archiver.kernel.org>; Sat, 29 May 2021 03:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B7FDC47090
+	for <linux-wireless@archiver.kernel.org>; Sat, 29 May 2021 03:38:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E09D613B4
+	by mail.kernel.org (Postfix) with ESMTP id DA75661413
 	for <linux-wireless@archiver.kernel.org>; Sat, 29 May 2021 03:38:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229697AbhE2DYL (ORCPT
+        id S229738AbhE2DYP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 May 2021 23:24:11 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:2343 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbhE2DYK (ORCPT
+        Fri, 28 May 2021 23:24:15 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:5137 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229650AbhE2DYL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 May 2021 23:24:10 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4FsRZX08fMz19VgW;
-        Sat, 29 May 2021 11:17:56 +0800 (CST)
+        Fri, 28 May 2021 23:24:11 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4FsRcm4ZxTzYmXt;
+        Sat, 29 May 2021 11:19:52 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.2176.2; Sat, 29 May 2021 11:22:33 +0800
 Received: from localhost.localdomain (10.69.192.56) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Sat, 29 May 2021 11:22:32 +0800
+ 15.1.2176.2; Sat, 29 May 2021 11:22:33 +0800
 From:   Huazhong Tan <tanhuazhong@huawei.com>
 To:     <davem@davemloft.net>, <kuba@kernel.org>
 CC:     <netdev@vger.kernel.org>, <salil.mehta@huawei.com>,
@@ -46,10 +47,12 @@ CC:     <netdev@vger.kernel.org>, <salil.mehta@huawei.com>,
         <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
         <merez@codeaurora.org>, <kvalo@codeaurora.org>,
         <linux-wireless@vger.kernel.org>
-Subject: [RFC V2 net-next 0/3] ethtool: extend coalesce uAPI
-Date:   Sat, 29 May 2021 11:22:13 +0800
-Message-ID: <1622258536-55776-1-git-send-email-tanhuazhong@huawei.com>
+Subject: [RFC V2 net-next 2/3] net: hns3: add support for EQE/CQE mode configuration
+Date:   Sat, 29 May 2021 11:22:15 +0800
+Message-ID: <1622258536-55776-3-git-send-email-tanhuazhong@huawei.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1622258536-55776-1-git-send-email-tanhuazhong@huawei.com>
+References: <1622258536-55776-1-git-send-email-tanhuazhong@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.56]
@@ -60,233 +63,165 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to support some configuration in coalesce uAPI, this RFC
-extends coalesce uAPI and add support for CQE mode.
+For device whose version is above V3(include V3), the GL can
+select EQE or CQE mode, so adds support for it.
 
-Below is some test result with HNS3 driver:
-1. old ethtool(ioctl) + new kernel:
-estuary:/$ ethtool -c eth0
-Coalesce parameters for eth0:
-Adaptive RX: on  TX: on
-stats-block-usecs: 0
-sample-interval: 0
-pkt-rate-low: 0
-pkt-rate-high: 0
+In CQE mode, the coalesced timer will restart when the first new
+completion occurs, while in EQE mode, the timer will not restart.
 
-rx-usecs: 20
-rx-frames: 0
-rx-usecs-irq: 0
-rx-frames-irq: 0
-
-tx-usecs: 20
-tx-frames: 0
-tx-usecs-irq: 0
-tx-frames-irq: 0
-
-rx-usecs-low: 0
-rx-frame-low: 0
-tx-usecs-low: 0
-tx-frame-low: 0
-
-rx-usecs-high: 0
-rx-frame-high: 0
-tx-usecs-high: 0
-tx-frame-high: 0
-
-2. ethtool(netlink with cqe mode) + kernel without cqe mode:
-estuary:/$ ethtool -c eth0
-Coalesce parameters for eth0:
-Adaptive RX: on  TX: on
-stats-block-usecs: n/a
-sample-interval: n/a
-pkt-rate-low: n/a
-pkt-rate-high: n/a
-
-rx-usecs: 20
-rx-frames: 0
-rx-usecs-irq: n/a
-rx-frames-irq: n/a
-
-tx-usecs: 20
-tx-frames: 0
-tx-usecs-irq: n/a
-tx-frames-irq: n/a
-
-rx-usecs-low: n/a
-rx-frame-low: n/a
-tx-usecs-low: n/a
-tx-frame-low: n/a
-
-rx-usecs-high: 0
-rx-frame-high: n/a
-tx-usecs-high: 0
-tx-frame-high: n/a
-
-CQE mode RX: n/a  TX: n/a
-
-3. ethool(netlink with cqe mode) + kernel with cqe mode:
-estuary:/$ ethtool -c eth0
-Coalesce parameters for eth0:
-Adaptive RX: on  TX: on
-stats-block-usecs: n/a
-sample-interval: n/a
-pkt-rate-low: n/a
-pkt-rate-high: n/a
-
-rx-usecs: 20
-rx-frames: 0
-rx-usecs-irq: n/a
-rx-frames-irq: n/a
-
-tx-usecs: 20
-tx-frames: 0
-tx-usecs-irq: n/a
-tx-frames-irq: n/a
-
-rx-usecs-low: n/a
-rx-frame-low: n/a
-tx-usecs-low: n/a
-tx-frame-low: n/a
-
-rx-usecs-high: 0
-rx-frame-high: n/a
-tx-usecs-high: 0
-tx-frame-high: n/a
-
-CQE mode RX: off  TX: off
-
-4. ethool(netlink without cqe mode) + kernel with cqe mode:
-estuary:/$ ethtool -c eth0
-Coalesce parameters for eth0:
-Adaptive RX: on  TX: on
-stats-block-usecs: n/a
-sample-interval: n/a
-pkt-rate-low: n/a
-pkt-rate-high: n/a
-
-rx-usecs: 20
-rx-frames: 0
-rx-usecs-irq: n/a
-rx-frames-irq: n/a
-
-tx-usecs: 20
-tx-frames: 0
-tx-usecs-irq: n/a
-tx-frames-irq: n/a
-
-rx-usecs-low: n/a
-rx-frame-low: n/a
-tx-usecs-low: n/a
-tx-frame-low: n/a
-
-rx-usecs-high: 0
-rx-frame-high: n/a
-tx-usecs-high: 0
-tx-frame-high: n/a
-
-Change log:
-V2: refactor #1&#2 in V1 suggestted by Jakub Kicinski.
-
-Huazhong Tan (3):
-  ethtool: extend coalesce setting uAPI with CQE mode
-  net: hns3: add support for EQE/CQE mode configuration
-  net: hns3: add ethtool support for CQE/EQE mode configuration
-
- Documentation/networking/ethtool-netlink.rst       |  4 ++
- drivers/infiniband/ulp/ipoib/ipoib_ethtool.c       |  8 +++-
- drivers/net/ethernet/amazon/ena/ena_ethtool.c      |  8 +++-
- drivers/net/ethernet/amd/xgbe/xgbe-ethtool.c       |  8 +++-
- .../net/ethernet/aquantia/atlantic/aq_ethtool.c    |  8 +++-
- drivers/net/ethernet/broadcom/bcmsysport.c         |  8 +++-
- drivers/net/ethernet/broadcom/bnx2.c               | 12 ++++--
- .../net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c    |  8 +++-
- drivers/net/ethernet/broadcom/bnxt/bnxt_ethtool.c  |  8 +++-
- drivers/net/ethernet/broadcom/genet/bcmgenet.c     |  8 +++-
- drivers/net/ethernet/broadcom/tg3.c                | 10 ++++-
- drivers/net/ethernet/brocade/bna/bnad_ethtool.c    | 12 ++++--
- drivers/net/ethernet/cavium/liquidio/lio_ethtool.c |  8 +++-
- .../net/ethernet/cavium/thunder/nicvf_ethtool.c    |  4 +-
- drivers/net/ethernet/chelsio/cxgb/cxgb2.c          |  8 +++-
- drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c    |  8 +++-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_ethtool.c |  8 +++-
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |  8 +++-
- drivers/net/ethernet/cisco/enic/enic_ethtool.c     |  8 +++-
- drivers/net/ethernet/cortina/gemini.c              |  8 +++-
- drivers/net/ethernet/emulex/benet/be_ethtool.c     |  8 +++-
- drivers/net/ethernet/freescale/dpaa/dpaa_ethtool.c |  8 +++-
- .../net/ethernet/freescale/enetc/enetc_ethtool.c   |  8 +++-
- drivers/net/ethernet/freescale/fec_main.c          | 14 ++++---
- drivers/net/ethernet/freescale/gianfar_ethtool.c   |  8 +++-
- drivers/net/ethernet/hisilicon/hip04_eth.c         |  8 +++-
- drivers/net/ethernet/hisilicon/hns/hns_ethtool.c   |  8 +++-
+Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
+---
  drivers/net/ethernet/hisilicon/hns3/hnae3.h        |  1 +
  drivers/net/ethernet/hisilicon/hns3/hns3_enet.c    | 49 +++++++++++++++++++++-
- drivers/net/ethernet/hisilicon/hns3/hns3_enet.h    | 11 +++++
- drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c | 26 ++++++++++--
+ drivers/net/ethernet/hisilicon/hns3/hns3_enet.h    |  8 ++++
  .../ethernet/hisilicon/hns3/hns3pf/hclge_main.c    |  1 +
  .../ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c  |  1 +
- drivers/net/ethernet/huawei/hinic/hinic_ethtool.c  |  8 +++-
- drivers/net/ethernet/intel/e1000/e1000_ethtool.c   |  8 +++-
- drivers/net/ethernet/intel/e1000e/ethtool.c        |  8 +++-
- drivers/net/ethernet/intel/fm10k/fm10k_ethtool.c   |  8 +++-
- drivers/net/ethernet/intel/i40e/i40e_ethtool.c     |  8 +++-
- drivers/net/ethernet/intel/iavf/iavf_ethtool.c     |  8 +++-
- drivers/net/ethernet/intel/ice/ice_ethtool.c       | 12 ++++--
- drivers/net/ethernet/intel/igb/igb_ethtool.c       |  8 +++-
- drivers/net/ethernet/intel/igbvf/ethtool.c         |  8 +++-
- drivers/net/ethernet/intel/igc/igc_ethtool.c       |  8 +++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c   |  8 +++-
- drivers/net/ethernet/intel/ixgbevf/ethtool.c       |  8 +++-
- drivers/net/ethernet/jme.c                         | 12 ++++--
- drivers/net/ethernet/marvell/mv643xx_eth.c         | 12 ++++--
- drivers/net/ethernet/marvell/mvneta.c              |  8 +++-
- drivers/net/ethernet/marvell/mvpp2/mvpp2_main.c    |  8 +++-
- .../ethernet/marvell/octeontx2/nic/otx2_ethtool.c  |  8 +++-
- drivers/net/ethernet/marvell/skge.c                |  8 +++-
- drivers/net/ethernet/marvell/sky2.c                |  8 +++-
- drivers/net/ethernet/mellanox/mlx4/en_ethtool.c    |  8 +++-
- .../net/ethernet/mellanox/mlx5/core/en_ethtool.c   |  8 +++-
- drivers/net/ethernet/mellanox/mlx5/core/en_rep.c   |  8 +++-
- .../ethernet/mellanox/mlx5/core/ipoib/ethtool.c    |  8 +++-
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c   | 12 ++++--
- .../net/ethernet/netronome/nfp/nfp_net_ethtool.c   |  8 +++-
- drivers/net/ethernet/ni/nixge.c                    |  8 +++-
- .../net/ethernet/pensando/ionic/ionic_ethtool.c    |  8 +++-
- .../ethernet/qlogic/netxen/netxen_nic_ethtool.c    |  8 +++-
- drivers/net/ethernet/qlogic/qede/qede.h            |  4 +-
- drivers/net/ethernet/qlogic/qede/qede_ethtool.c    |  8 +++-
- .../net/ethernet/qlogic/qlcnic/qlcnic_ethtool.c    |  8 +++-
- drivers/net/ethernet/realtek/r8169_main.c          | 10 ++++-
- drivers/net/ethernet/samsung/sxgbe/sxgbe_ethtool.c |  8 +++-
- drivers/net/ethernet/sfc/ethtool.c                 |  8 +++-
- drivers/net/ethernet/sfc/falcon/ethtool.c          |  8 +++-
- drivers/net/ethernet/socionext/netsec.c            | 10 +++--
- .../net/ethernet/stmicro/stmmac/stmmac_ethtool.c   |  8 +++-
- drivers/net/ethernet/synopsys/dwc-xlgmac-ethtool.c |  8 +++-
- drivers/net/ethernet/tehuti/tehuti.c               | 12 ++++--
- drivers/net/ethernet/ti/cpsw.c                     |  2 +-
- drivers/net/ethernet/ti/cpsw_ethtool.c             |  8 +++-
- drivers/net/ethernet/ti/cpsw_new.c                 |  2 +-
- drivers/net/ethernet/ti/cpsw_priv.h                |  8 +++-
- drivers/net/ethernet/ti/davinci_emac.c             |  8 +++-
- drivers/net/ethernet/via/via-velocity.c            |  8 +++-
- drivers/net/ethernet/xilinx/ll_temac_main.c        |  8 +++-
- drivers/net/ethernet/xilinx/xilinx_axienet_main.c  |  8 +++-
- drivers/net/netdevsim/ethtool.c                    |  8 +++-
- drivers/net/tun.c                                  |  8 +++-
- drivers/net/usb/r8152.c                            |  8 +++-
- drivers/net/virtio_net.c                           |  8 +++-
- drivers/net/vmxnet3/vmxnet3_ethtool.c              | 12 ++++--
- drivers/net/wireless/ath/wil6210/ethtool.c         |  8 +++-
- drivers/s390/net/qeth_ethtool.c                    |  4 +-
- drivers/staging/qlge/qlge_ethtool.c                | 10 ++++-
- include/linux/ethtool.h                            | 22 ++++++++--
- include/uapi/linux/ethtool_netlink.h               |  2 +
- net/ethtool/coalesce.c                             | 29 ++++++++++---
- net/ethtool/ioctl.c                                | 15 +++++--
- net/ethtool/netlink.h                              |  2 +-
- 93 files changed, 639 insertions(+), 194 deletions(-)
+ 5 files changed, 58 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hnae3.h b/drivers/net/ethernet/hisilicon/hns3/hnae3.h
+index 57fa7fc..46a52db 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hnae3.h
++++ b/drivers/net/ethernet/hisilicon/hns3/hnae3.h
+@@ -754,6 +754,7 @@ struct hnae3_knic_private_info {
+ 
+ 	u16 int_rl_setting;
+ 	enum pkt_hash_types rss_type;
++	void __iomem *io_base;
+ };
+ 
+ struct hnae3_roce_private_info {
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+index 43dcf3f..40e65c3 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+@@ -4010,9 +4010,7 @@ static void hns3_tx_dim_work(struct work_struct *work)
+ static void hns3_nic_init_dim(struct hns3_enet_tqp_vector *tqp_vector)
+ {
+ 	INIT_WORK(&tqp_vector->rx_group.dim.work, hns3_rx_dim_work);
+-	tqp_vector->rx_group.dim.mode = DIM_CQ_PERIOD_MODE_START_FROM_EQE;
+ 	INIT_WORK(&tqp_vector->tx_group.dim.work, hns3_tx_dim_work);
+-	tqp_vector->tx_group.dim.mode = DIM_CQ_PERIOD_MODE_START_FROM_EQE;
+ }
+ 
+ static int hns3_nic_init_vector_data(struct hns3_nic_priv *priv)
+@@ -4517,6 +4515,48 @@ static void hns3_info_show(struct hns3_nic_priv *priv)
+ 	dev_info(priv->dev, "Max mtu size: %u\n", priv->netdev->max_mtu);
+ }
+ 
++static void hns3_set_cq_period_mode(struct hns3_nic_priv *priv,
++				    enum dim_cq_period_mode mode, bool is_tx)
++{
++	struct hnae3_ae_dev *ae_dev = pci_get_drvdata(priv->ae_handle->pdev);
++	struct hnae3_handle *handle = priv->ae_handle;
++	int i;
++
++	if (is_tx) {
++		priv->tx_cqe_mode = mode;
++
++		for (i = 0; i < priv->vector_num; i++)
++			priv->tqp_vector[i].tx_group.dim.mode = mode;
++	} else {
++		priv->rx_cqe_mode = mode;
++
++		for (i = 0; i < priv->vector_num; i++)
++			priv->tqp_vector[i].rx_group.dim.mode = mode;
++	}
++
++	/* only device version above V3(include V3), GL can switch CQ/EQ
++	 * period mode.
++	 */
++	if (ae_dev->dev_version >= HNAE3_DEVICE_VERSION_V3) {
++		u32 new_mode;
++		u64 reg;
++
++		new_mode = (mode == DIM_CQ_PERIOD_MODE_START_FROM_CQE) ?
++			HNS3_CQ_MODE_CQE : HNS3_CQ_MODE_EQE;
++		reg = is_tx ? HNS3_GL1_CQ_MODE_REG : HNS3_GL0_CQ_MODE_REG;
++
++		writel(new_mode, handle->kinfo.io_base + reg);
++	}
++}
++
++static void hns3_cq_period_mode_init(struct hns3_nic_priv *priv,
++				     enum dim_cq_period_mode tx_mode,
++				     enum dim_cq_period_mode rx_mode)
++{
++	hns3_set_cq_period_mode(priv, tx_mode, true);
++	hns3_set_cq_period_mode(priv, rx_mode, false);
++}
++
+ static int hns3_client_init(struct hnae3_handle *handle)
+ {
+ 	struct pci_dev *pdev = handle->pdev;
+@@ -4584,6 +4624,9 @@ static int hns3_client_init(struct hnae3_handle *handle)
+ 		goto out_init_ring;
+ 	}
+ 
++	hns3_cq_period_mode_init(priv, DIM_CQ_PERIOD_MODE_START_FROM_EQE,
++				 DIM_CQ_PERIOD_MODE_START_FROM_EQE);
++
+ 	ret = hns3_init_phy(netdev);
+ 	if (ret)
+ 		goto out_init_phy;
+@@ -4916,6 +4959,8 @@ static int hns3_reset_notify_init_enet(struct hnae3_handle *handle)
+ 	if (ret)
+ 		goto err_uninit_vector;
+ 
++	hns3_cq_period_mode_init(priv, priv->tx_cqe_mode, priv->rx_cqe_mode);
++
+ 	/* the device can work without cpu rmap, only aRFS needs it */
+ 	ret = hns3_set_rx_cpu_rmap(netdev);
+ 	if (ret)
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+index b038441..8445596 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+@@ -200,6 +200,12 @@ enum hns3_nic_state {
+ 
+ #define HNS3_RING_EN_B				0
+ 
++#define HNS3_GL0_CQ_MODE_REG			0x20d00
++#define HNS3_GL1_CQ_MODE_REG			0x20d04
++#define HNS3_GL2_CQ_MODE_REG			0x20d08
++#define HNS3_CQ_MODE_EQE			1U
++#define HNS3_CQ_MODE_CQE			0U
++
+ enum hns3_pkt_l2t_type {
+ 	HNS3_L2_TYPE_UNICAST,
+ 	HNS3_L2_TYPE_MULTICAST,
+@@ -526,6 +532,8 @@ struct hns3_nic_priv {
+ 
+ 	unsigned long state;
+ 
++	enum dim_cq_period_mode tx_cqe_mode;
++	enum dim_cq_period_mode rx_cqe_mode;
+ 	struct hns3_enet_coalesce tx_coal;
+ 	struct hns3_enet_coalesce rx_coal;
+ };
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
+index 6addeb2..549a12c 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
+@@ -1794,6 +1794,7 @@ static int hclge_vport_setup(struct hclge_vport *vport, u16 num_tqps)
+ 	nic->pdev = hdev->pdev;
+ 	nic->ae_algo = &ae_algo;
+ 	nic->numa_node_mask = hdev->numa_node_mask;
++	nic->kinfo.io_base = hdev->hw.io_base;
+ 
+ 	ret = hclge_knic_setup(vport, num_tqps,
+ 			       hdev->num_tx_desc, hdev->num_rx_desc);
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c b/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
+index 7bef6b2..4b9460a 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
+@@ -530,6 +530,7 @@ static int hclgevf_set_handle_info(struct hclgevf_dev *hdev)
+ 	nic->pdev = hdev->pdev;
+ 	nic->numa_node_mask = hdev->numa_node_mask;
+ 	nic->flags |= HNAE3_SUPPORT_VF;
++	nic->kinfo.io_base = hdev->hw.io_base;
+ 
+ 	ret = hclgevf_knic_setup(hdev);
+ 	if (ret)
 -- 
 2.7.4
 
