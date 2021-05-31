@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9A0C47080
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:29:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E20C9C47080
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:29:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E46D161159
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:29:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4DE6611CB
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:29:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232244AbhEaUam (ORCPT
+        id S232117AbhEaUao (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 May 2021 16:30:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
+        Mon, 31 May 2021 16:30:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232131AbhEaUaV (ORCPT
+        with ESMTP id S232148AbhEaUaY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 May 2021 16:30:21 -0400
+        Mon, 31 May 2021 16:30:24 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEA54C061763;
-        Mon, 31 May 2021 13:28:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1785EC06138B;
+        Mon, 31 May 2021 13:28:43 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lnoWd-000F0y-Nt; Mon, 31 May 2021 22:28:39 +0200
+        id 1lnoWf-000F0y-5U; Mon, 31 May 2021 22:28:41 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v4.4 05/10] mac80211: drop A-MSDUs on old ciphers
-Date:   Mon, 31 May 2021 22:28:29 +0200
-Message-Id: <20210531202834.179810-6-johannes@sipsolutions.net>
+Cc:     stable@vger.kernel.org, Wen Gong <wgong@codeaurora.org>
+Subject: [PATCH v4.4 10/10] mac80211: extend protection against mixed key and fragment cache attacks
+Date:   Mon, 31 May 2021 22:28:34 +0200
+Message-Id: <20210531202834.179810-11-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210531202834.179810-1-johannes@sipsolutions.net>
 References: <20210531202834.179810-1-johannes@sipsolutions.net>
@@ -43,56 +43,79 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Wen Gong <wgong@codeaurora.org>
 
-commit 270032a2a9c4535799736142e1e7c413ca7b836e upstream.
+commit 3edc6b0d6c061a70d8ca3c3c72eb1f58ce29bfb1 upstream.
 
-With old ciphers (WEP and TKIP) we shouldn't be using A-MSDUs
-since A-MSDUs are only supported if we know that they are, and
-the only practical way for that is HT support which doesn't
-support old ciphers.
+For some chips/drivers, e.g., QCA6174 with ath10k, the decryption is
+done by the hardware, and the Protected bit in the Frame Control field
+is cleared in the lower level driver before the frame is passed to
+mac80211. In such cases, the condition for ieee80211_has_protected() is
+not met in ieee80211_rx_h_defragment() of mac80211 and the new security
+validation steps are not executed.
 
-However, we would normally accept them anyway. Since we check
-the MMIC before deaggregating A-MSDUs, and the A-MSDU bit in
-the QoS header is not protected in TKIP (or WEP), this enables
-attacks similar to CVE-2020-24588. To prevent that, drop A-MSDUs
-completely with old ciphers.
+Extend mac80211 to cover the case where the Protected bit has been
+cleared, but the frame is indicated as having been decrypted by the
+hardware. This extends protection against mixed key and fragment cache
+attack for additional drivers/chips. This fixes CVE-2020-24586 and
+CVE-2020-24587 for such cases.
+
+Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00110-QCARMSWP-1
 
 Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/r/20210511200110.076543300172.I548e6e71f1ee9cad4b9a37bf212ae7db723587aa@changeid
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+Link: https://lore.kernel.org/r/20210511200110.037aa5ca0390.I7bb888e2965a0db02a67075fcb5deb50eb7408aa@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/rx.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ net/mac80211/rx.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 85d7ac83d847..23c1e6529900 100644
+index 1a7267448dc8..ae0fba044cd0 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2264,6 +2264,23 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	if (skb_linearize(skb))
- 		return RX_DROP_UNUSABLE;
+@@ -1842,7 +1842,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	unsigned int frag, seq;
+ 	struct ieee80211_fragment_entry *entry;
+ 	struct sk_buff *skb;
+-	struct ieee80211_rx_status *status;
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
  
-+	if (rx->key) {
-+		/*
-+		 * We should not receive A-MSDUs on pre-HT connections,
-+		 * and HT connections cannot use old ciphers. Thus drop
-+		 * them, as in those cases we couldn't even have SPP
-+		 * A-MSDUs or such.
-+		 */
-+		switch (rx->key->conf.cipher) {
-+		case WLAN_CIPHER_SUITE_WEP40:
-+		case WLAN_CIPHER_SUITE_WEP104:
-+		case WLAN_CIPHER_SUITE_TKIP:
-+			return RX_DROP_UNUSABLE;
-+		default:
-+			break;
-+		}
-+	}
-+
- 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
- 				 rx->sdata->vif.type,
- 				 rx->local->hw.extra_tx_headroom, true);
+ 	hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	fc = hdr->frame_control;
+@@ -1901,7 +1901,9 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 				     sizeof(rx->key->u.gcmp.rx_pn[queue]));
+ 			BUILD_BUG_ON(IEEE80211_CCMP_PN_LEN !=
+ 				     IEEE80211_GCMP_PN_LEN);
+-		} else if (rx->key && ieee80211_has_protected(fc)) {
++		} else if (rx->key &&
++			   (ieee80211_has_protected(fc) ||
++			    (status->flag & RX_FLAG_DECRYPTED))) {
+ 			entry->is_protected = true;
+ 			entry->key_color = rx->key->color;
+ 		}
+@@ -1946,13 +1948,19 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 			return RX_DROP_UNUSABLE;
+ 		memcpy(entry->last_pn, pn, IEEE80211_CCMP_PN_LEN);
+ 	} else if (entry->is_protected &&
+-		   (!rx->key || !ieee80211_has_protected(fc) ||
++		   (!rx->key ||
++		    (!ieee80211_has_protected(fc) &&
++		     !(status->flag & RX_FLAG_DECRYPTED)) ||
+ 		    rx->key->color != entry->key_color)) {
+ 		/* Drop this as a mixed key or fragment cache attack, even
+ 		 * if for TKIP Michael MIC should protect us, and WEP is a
+ 		 * lost cause anyway.
+ 		 */
+ 		return RX_DROP_UNUSABLE;
++	} else if (entry->is_protected && rx->key &&
++		   entry->key_color != rx->key->color &&
++		   (status->flag & RX_FLAG_DECRYPTED)) {
++		return RX_DROP_UNUSABLE;
+ 	}
+ 
+ 	skb_pull(rx->skb, ieee80211_hdrlen(fc));
 -- 
 2.31.1
 
