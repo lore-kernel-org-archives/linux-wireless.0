@@ -2,92 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFFE0C47082
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CAB0C47080
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3AE2611CB
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 329D661159
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232365AbhEaUdD (ORCPT
+        id S232258AbhEaUdF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 May 2021 16:33:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38944 "EHLO
+        Mon, 31 May 2021 16:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232186AbhEaUcs (ORCPT
+        with ESMTP id S231889AbhEaUct (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 May 2021 16:32:48 -0400
+        Mon, 31 May 2021 16:32:49 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7DCEC061761;
-        Mon, 31 May 2021 13:30:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81F66C061574;
+        Mon, 31 May 2021 13:30:30 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lnoYP-000F87-Th; Mon, 31 May 2021 22:30:30 +0200
+        id 1lnoYO-000F87-M7; Mon, 31 May 2021 22:30:28 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     stable@vger.kernel.org, Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-Subject: [PATCH v4.9 04/10] cfg80211: mitigate A-MSDU aggregation attacks
-Date:   Mon, 31 May 2021 22:30:15 +0200
-Message-Id: <20210531203021.180010-5-johannes@sipsolutions.net>
+Cc:     stable@vger.kernel.org
+Subject: [PATCH v4.9 00/10] wireless security fixes backports
+Date:   Mon, 31 May 2021 22:30:11 +0200
+Message-Id: <20210531203021.180010-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210531203021.180010-1-johannes@sipsolutions.net>
-References: <20210531203021.180010-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
+One or two of the patches here were already applied since they
+applied cleanly, but I'm resending the whole set for review now
+anyway.
 
-commit 2b8a1fee3488c602aca8bea004a087e60806a5cf upstream.
+johannes
 
-Mitigate A-MSDU injection attacks (CVE-2020-24588) by detecting if the
-destination address of a subframe equals an RFC1042 (i.e., LLC/SNAP)
-header, and if so dropping the complete A-MSDU frame. This mitigates
-known attacks, although new (unknown) aggregation-based attacks may
-remain possible.
 
-This defense works because in A-MSDU aggregation injection attacks, a
-normal encrypted Wi-Fi frame is turned into an A-MSDU frame. This means
-the first 6 bytes of the first A-MSDU subframe correspond to an RFC1042
-header. In other words, the destination MAC address of the first A-MSDU
-subframe contains the start of an RFC1042 header during an aggregation
-attack. We can detect this and thereby prevent this specific attack.
-For details, see Section 7.2 of "Fragment and Forge: Breaking Wi-Fi
-Through Frame Aggregation and Fragmentation".
-
-Note that for kernel 4.9 and above this patch depends on "mac80211:
-properly handle A-MSDUs that start with a rfc1042 header". Otherwise
-this patch has no impact and attacks will remain possible.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@kuleuven.be>
-Link: https://lore.kernel.org/r/20210511200110.25d93176ddaf.I9e265b597f2cd23eb44573f35b625947b386a9de@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/util.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 8c67b7cf1def..939320571d71 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -769,6 +769,9 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 		remaining = skb->len - offset;
- 		if (subframe_len > remaining)
- 			goto purge;
-+		/* mitigate A-MSDU aggregation injection attacks */
-+		if (ether_addr_equal(eth.h_dest, rfc1042_header))
-+			goto purge;
- 
- 		offset += sizeof(struct ethhdr);
- 		last = remaining <= subframe_len + padding;
--- 
-2.31.1
 
