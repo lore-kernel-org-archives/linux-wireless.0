@@ -2,49 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CAB0C47080
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F18EC47082
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 329D661159
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83C34611CB
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 May 2021 20:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232258AbhEaUdF (ORCPT
+        id S232430AbhEaUdI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 May 2021 16:33:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38936 "EHLO
+        Mon, 31 May 2021 16:33:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231889AbhEaUct (ORCPT
+        with ESMTP id S232132AbhEaUcz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 May 2021 16:32:49 -0400
+        Mon, 31 May 2021 16:32:55 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81F66C061574;
-        Mon, 31 May 2021 13:30:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 220AFC061763;
+        Mon, 31 May 2021 13:30:32 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lnoYO-000F87-M7; Mon, 31 May 2021 22:30:28 +0200
+        id 1lnoYQ-000F87-6o; Mon, 31 May 2021 22:30:30 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     stable@vger.kernel.org
-Subject: [PATCH v4.9 00/10] wireless security fixes backports
-Date:   Mon, 31 May 2021 22:30:11 +0200
-Message-Id: <20210531203021.180010-1-johannes@sipsolutions.net>
+Cc:     stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v4.9 05/10] mac80211: drop A-MSDUs on old ciphers
+Date:   Mon, 31 May 2021 22:30:16 +0200
+Message-Id: <20210531203021.180010-6-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210531203021.180010-1-johannes@sipsolutions.net>
+References: <20210531203021.180010-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-One or two of the patches here were already applied since they
-applied cleanly, but I'm resending the whole set for review now
-anyway.
+From: Johannes Berg <johannes.berg@intel.com>
 
-johannes
+commit 270032a2a9c4535799736142e1e7c413ca7b836e upstream.
 
+With old ciphers (WEP and TKIP) we shouldn't be using A-MSDUs
+since A-MSDUs are only supported if we know that they are, and
+the only practical way for that is HT support which doesn't
+support old ciphers.
 
+However, we would normally accept them anyway. Since we check
+the MMIC before deaggregating A-MSDUs, and the A-MSDU bit in
+the QoS header is not protected in TKIP (or WEP), this enables
+attacks similar to CVE-2020-24588. To prevent that, drop A-MSDUs
+completely with old ciphers.
+
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/r/20210511200110.076543300172.I548e6e71f1ee9cad4b9a37bf212ae7db723587aa@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6c54941a3265..a10a54b75b69 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2432,6 +2432,23 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 					  true))
+ 		return RX_DROP_UNUSABLE;
+ 
++	if (rx->key) {
++		/*
++		 * We should not receive A-MSDUs on pre-HT connections,
++		 * and HT connections cannot use old ciphers. Thus drop
++		 * them, as in those cases we couldn't even have SPP
++		 * A-MSDUs or such.
++		 */
++		switch (rx->key->conf.cipher) {
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++		case WLAN_CIPHER_SUITE_TKIP:
++			return RX_DROP_UNUSABLE;
++		default:
++			break;
++		}
++	}
++
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+ 				 rx->sdata->vif.type,
+ 				 rx->local->hw.extra_tx_headroom,
+-- 
+2.31.1
 
