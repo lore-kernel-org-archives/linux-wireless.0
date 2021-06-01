@@ -2,114 +2,144 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA76C4708F
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Jun 2021 18:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2BCC47092
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Jun 2021 19:01:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52FE361376
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Jun 2021 18:17:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 612AB61005
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Jun 2021 19:01:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232490AbhFASSp (ORCPT
+        id S234695AbhFATDd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Jun 2021 14:18:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50290 "EHLO
+        Tue, 1 Jun 2021 15:03:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231331AbhFASSo (ORCPT
+        with ESMTP id S234684AbhFATDc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Jun 2021 14:18:44 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CE3C061574
-        for <linux-wireless@vger.kernel.org>; Tue,  1 Jun 2021 11:17:02 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id e7so5258850plj.7
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2021 11:17:02 -0700 (PDT)
+        Tue, 1 Jun 2021 15:03:32 -0400
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9ADC061760
+        for <linux-wireless@vger.kernel.org>; Tue,  1 Jun 2021 12:01:50 -0700 (PDT)
+Received: by mail-lj1-x231.google.com with SMTP id a4so13953051ljq.9
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2021 12:01:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LhC+qqznpymVevxrLR6Z+UkipRD5f1Y+ypPigsJs+ps=;
-        b=pp52p7GZmPLk18tOqXz0Hyyn0mz95r+LTehp27dnodD6eEII+fLuAJircbZj7J5ssr
-         XBzKw2ILQvLdAkjgFOr3IkC8ZslP/Ga645uIFXZ8g4IJmCCh8mJN5CO/ut6G5yTffEnz
-         OR0SMpgBdmKLr30NHxMwbE4WOFJ45e1bXquALQfBbkyE8317kacKNLBmUHO/IIbaorJy
-         VI9O20wQQi9AgG+0MfFAW8by/QGmTSSHl8vxC+pvpZ25T1v41SATxotO0qNdJvWtcB7N
-         XyJd3A+Xa9DIkQftM0L7r2sbrPDsg2ByxaquJAY7g2Squq6IxEeidW6xCzGzUNY4blq3
-         u9WQ==
+        d=rasmusvillemoes.dk; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=RAu0njSTC+kf8drexs7MaZKoE+RFr/l6rpBisM//YE8=;
+        b=Ubm1IKre509GEWJnIt1bo0fRJNfmHccoI20TkXQ9yfHdF/oebFoF8keJiNoiUOrs7X
+         VfT4DycS9NU6tC6PB5TL9w1v0tqnoJiSrlqYUM0sNWE2MwixNys6XjGaG7v6mpXb57b7
+         LWKaKfyXXz9TMrKN2/lbmduSACCMKLBdvT3SM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=LhC+qqznpymVevxrLR6Z+UkipRD5f1Y+ypPigsJs+ps=;
-        b=e4731lKXTmgByZoM3EPqz0iUZbx4DeEXSpFFe2yMIlhVIQxc2ANKgYH1l9//Q9eZC6
-         hIQm2rGcK7XMFqExi5aSCz+ZtTWXVV1SzA/1RZLh7QUntBxzKyQ2Nc0L8PbNrmN4FhVx
-         LhvgMKmmv9XvcqDD0ebcE6EZleAnMjlWdBW4t2JkouryHI7tRsmLQdAQWMb8z8nVdZxe
-         l4t1Evv4bx6yVARQ302z+w/Xvsd9ZBs0v8YoJyKIMsh18w0KKXbWkotvLe6AVebrv4EV
-         8qdhrMeNdSCAf/onuUbpVpwolExAXmp0Sa1DT9h9DYaPRlbwhqG3tlmTPV1J5MbQmgun
-         WC0w==
-X-Gm-Message-State: AOAM531WZLqeucmAsevD74Lv+JD2HTF8dC8riXikYYPn9hBuT0ssYNo7
-        TEZ8GcXRR4gs5K3kPz4CFVdoXIZ5KBwzwmIkWvQ6KA==
-X-Google-Smtp-Source: ABdhPJyRb4OruYjY14HMrzk3zjs0x1GZMf1Hf+F0AIg27mitO/hvsQ4WYq4Y7nc1SzEfN+ze/iVIovkvRBGszT+NkXE=
-X-Received: by 2002:a17:90a:d590:: with SMTP id v16mr25863805pju.205.1622571421462;
- Tue, 01 Jun 2021 11:17:01 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RAu0njSTC+kf8drexs7MaZKoE+RFr/l6rpBisM//YE8=;
+        b=hcpcAMs1lh1rCYIoBj+TEo2hiUjSCMhGaHwoQf6pE/O+7V5UpixVAzigaDWYWLub4Q
+         lCxNYtoAJeZdPrc09trJwkp300PuoUF3+xAcmTybUt4WFf7vt/xs/WqV5dWBQCXjlET7
+         T/uUyTUs3C3ldBO3+bhRFDU7sw8P9bZR6jNQVVWsr6NY4gan//0i79PazLyKxRV2GXld
+         vkZS9pJ+UFbmU1ib/Wun30eH8w8mBSAVAX4z2HCNilOuL42ktPPvn5EBpz+NcBYi+FMu
+         BSm0v9aG59Pn8n43rBJoX4rEyBslev4LQVfp2a5Gi4+Whcx/XjiFScIdeXyZOmaCUQR1
+         EvZQ==
+X-Gm-Message-State: AOAM532EfNrxBbfNd73DcJDNkZH6nlnDRtaHWRVYtW45ZQRMrVu2UcwU
+        aOjG/omprpJwbj08vDUds3mltQ==
+X-Google-Smtp-Source: ABdhPJw9s8bBsmzDHRpKgKg/J93DXW07RWbA/3WaPNRwJsVn9SJW571H6MDEnq3hSiz8E+K7r3/Pmg==
+X-Received: by 2002:a05:651c:2c7:: with SMTP id f7mr22407178ljo.255.1622574107996;
+        Tue, 01 Jun 2021 12:01:47 -0700 (PDT)
+Received: from [172.17.20.140] ([81.216.59.226])
+        by smtp.gmail.com with ESMTPSA id g2sm2103831ljn.35.2021.06.01.12.01.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Jun 2021 12:01:47 -0700 (PDT)
+Subject: Re: [PATCH RFCv2 2/3] lib/vsprintf.c: make %pD print full path for
+ file
+To:     Matthew Wilcox <willy@infradead.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     Justin He <Justin.He@arm.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Petr Mladek <pmladek@suse.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>
+References: <AM6PR08MB437691E7314C6B774EFED4BDF7229@AM6PR08MB4376.eurprd08.prod.outlook.com>
+ <YLEDwFCPcFx+qeul@casper.infradead.org>
+ <AM6PR08MB437615DB6A6DEC33223A3138F7229@AM6PR08MB4376.eurprd08.prod.outlook.com>
+ <YLEKqGkm8bX6LZfP@casper.infradead.org>
+ <AM6PR08MB43764764B52AAC7F05B71056F73E9@AM6PR08MB4376.eurprd08.prod.outlook.com>
+ <YLZSgZIcWyYTmqOT@casper.infradead.org>
+ <CAHp75VfYgEtJeiVp8b10Va54QShyg4DmWeufuB_WGC8C2SE2mQ@mail.gmail.com>
+ <YLZVwFh9MZJR3amM@casper.infradead.org> <YLZX9oicn8u4ZVCl@smile.fi.intel.com>
+ <YLZcAesVG1SYL5fp@smile.fi.intel.com> <YLZoyjSJyzU5w1qO@casper.infradead.org>
+From:   Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Message-ID: <39f599a7-9175-f220-3803-b1920ddb8d40@rasmusvillemoes.dk>
+Date:   Tue, 1 Jun 2021 21:01:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-References: <20210601151001.1450540-1-bryan.odonoghue@linaro.org>
-In-Reply-To: <20210601151001.1450540-1-bryan.odonoghue@linaro.org>
-From:   Loic Poulain <loic.poulain@linaro.org>
-Date:   Tue, 1 Jun 2021 20:16:25 +0200
-Message-ID: <CAMZdPi91uOZoJEEaa7xbO=kfAZdn7DoYpAUFuqPsAMY6Z_e-VQ@mail.gmail.com>
-Subject: Re: [PATCH v5 00/12] wcn36xx: Enable downstream consistent Wake on Lan
-To:     "Bryan O'Donoghue" <bryan.odonoghue@linaro.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Benjamin Li <benl@squareup.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <YLZoyjSJyzU5w1qO@casper.infradead.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 1 Jun 2021 at 17:08, Bryan O'Donoghue
-<bryan.odonoghue@linaro.org> wrote:
->
-> In both cases using Wireshark we see the target system receive an ARP or
-> NS6 lookup and respond, followed by the host sending a ping or ping6 and
-> the target system coming out of suspend.
->
-> Similarly watching GTK keying on the AP when the device is in suspend, we
-> see the firmware successfully rekey and when we resume, the host picking up
-> the rekey material with persistence of the WiFi link during suspend/resume.
->
-> commit 5336fad96e8f ("wcn36xx: Enable firmware offloaded keepalive")
-> ensures that the link is kept alive in suspend, this additional set gives
-> the ability to
->
-> - Resolve ARP/NS6 lookups without waking the system
-> - Rekeying in suspend
-> - Suspending and resuming based on received datagram
->
-> https://git.linaro.org/people/bryan.odonoghue/kernel.git/log/?h=ath.master-wcn36xx-fw-offload-suspend-resume
->
-> Bryan O'Donoghue (12):
->   wcn36xx: Return result of set_power_params in suspend
->   wcn36xx: Run suspend for the first ieee80211_vif
->   wcn36xx: Add ipv4 ARP offload support in suspend
->   wcn36xx: Do not flush indication queue on suspend/resume
->   wcn36xx: Add ipv6 address tracking
->   wcn36xx: Add ipv6 namespace offload in suspend
->   wcn36xx: Add set_rekey_data callback
->   wcn36xx: Add GTK offload to WoWLAN path
->   wcn36xx: Add GTK offload info to WoWLAN resume
->   wcn36xx: Add Host suspend indication support
->   wcn36xx: Add host resume request support
->   wcn36xx: Enable WOWLAN flags
->
->  drivers/net/wireless/ath/wcn36xx/hal.h     |  20 +-
->  drivers/net/wireless/ath/wcn36xx/main.c    | 110 ++++++++-
->  drivers/net/wireless/ath/wcn36xx/smd.c     | 265 +++++++++++++++++++++
->  drivers/net/wireless/ath/wcn36xx/smd.h     |  17 ++
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  14 ++
->  5 files changed, 412 insertions(+), 14 deletions(-)
+On 01/06/2021 19.05, Matthew Wilcox wrote:
 
-Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
+> Here's some examples, what do you think makes sense?
+> 
+> snprintf(buf, 16, "bad file '%pD'\n", q);
+> 
+> what content do you want buf to have when q is variously:
+> 
+> 1. /abcd/efgh
+> 2. /a/bcdefgh.iso
+> 3. /abcdef/gh
+> 
+> I would argue that
+> "bad file ''\n"
+> is actually a better string to have than any of (case 2)
+> "bad file '/a/bc"
+> "bad file 'bcdef"
+> "bad file 'h.iso"
+> 
+
+Whatever ends up being decided, _please_ document that in
+machine-readable and -verifiable form. I.e., update lib/test_printf.c
+accordingly.
+
+Currently (and originally) it only tests %pd because %pD is/was
+essentially just %pd with an indirection to get the struct dentry* from
+a struct file*.
+
+The existing framework is strongly centered around expecting '/a/bc (see
+all the logic where we do multiple checks with size 0, size random, size
+plenty, and for the random case check that the buffer contents match the
+complete output up till the randomly chosen size), so adding tests for
+some other semantics would require a bit more juggling.
+
+Not that that should be an argument in favor of that behaviour. But FWIW
+that would be my preference.
+
+Rasmus
+
+
