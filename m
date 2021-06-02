@@ -2,53 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BB4C47083
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jun 2021 08:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C0AFC47092
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jun 2021 08:28:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89401613AC
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jun 2021 08:28:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61324613AC
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Jun 2021 08:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232570AbhFBIa2 (ORCPT
+        id S232588AbhFBIaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Jun 2021 04:30:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41368 "EHLO
+        Wed, 2 Jun 2021 04:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230525AbhFBIa2 (ORCPT
+        with ESMTP id S232575AbhFBIa3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Jun 2021 04:30:28 -0400
+        Wed, 2 Jun 2021 04:30:29 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79FA5C061574;
-        Wed,  2 Jun 2021 01:28:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A22FC061574;
+        Wed,  2 Jun 2021 01:28:46 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1loMF1-000xxd-LP; Wed, 02 Jun 2021 10:28:43 +0200
+        id 1loMF2-000xxd-0U; Wed, 02 Jun 2021 10:28:44 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     m.chetan.kumar@intel.com, loic.poulain@linaro.org
-Subject: [RFC v2 0/5] generic WWAN framework interface creation
-Date:   Wed,  2 Jun 2021 10:28:35 +0200
-Message-Id: <20210602082840.85828-1-johannes@sipsolutions.net>
+Cc:     m.chetan.kumar@intel.com, loic.poulain@linaro.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 1/5] iosm: fix stats and RCU bugs in RX
+Date:   Wed,  2 Jun 2021 10:28:36 +0200
+Message-Id: <20210602102653.48d067d87f3e.I53608f5de5828db7066d29e5774bcf8a19e0f642@changeid>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210602082840.85828-1-johannes@sipsolutions.net>
+References: <20210602082840.85828-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Spin two, with a new patch (IFLA_PARENT_DEV_NAME) and reworked
-to use the existing struct wwan_device that I missed entirely.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wwan/iosm/iosm_ipc_wwan.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-Still includes the IOSM patches for reference, so the IOSM bits
-here apply only with this set also applied:
-https://lore.kernel.org/r/20210520140158.10132-1-m.chetan.kumar@intel.com
-
-johannes
-
+diff --git a/drivers/net/wwan/iosm/iosm_ipc_wwan.c b/drivers/net/wwan/iosm/iosm_ipc_wwan.c
+index 02c35bc86674..719c88d9b2e9 100644
+--- a/drivers/net/wwan/iosm/iosm_ipc_wwan.c
++++ b/drivers/net/wwan/iosm/iosm_ipc_wwan.c
+@@ -312,7 +312,8 @@ int ipc_wwan_receive(struct iosm_wwan *ipc_wwan, struct sk_buff *skb_arg,
+ 		     bool dss, int if_id)
+ {
+ 	struct sk_buff *skb = skb_arg;
+-	struct net_device_stats stats;
++	struct net_device_stats *stats;
++	struct iosm_net_link *priv;
+ 	int ret;
+ 
+ 	if ((skb->data[0] & IOSM_IP_TYPE_MASK) == IOSM_IP_TYPE_IPV4)
+@@ -325,19 +326,27 @@ int ipc_wwan_receive(struct iosm_wwan *ipc_wwan, struct sk_buff *skb_arg,
+ 
+ 	if (if_id < (IP_MUX_SESSION_START - 1) ||
+ 	    if_id > (IP_MUX_SESSION_END - 1)) {
+-		dev_kfree_skb(skb);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto free;
+ 	}
+ 
+ 	rcu_read_lock();
+-	skb->dev = rcu_dereference(ipc_wwan->sub_netlist[if_id])->netdev;
+-	stats = rcu_dereference(ipc_wwan->sub_netlist[if_id])->netdev->stats;
+-	stats.rx_packets++;
+-	stats.rx_bytes += skb->len;
++	priv = rcu_dereference(ipc_wwan->sub_netlist[if_id]);
++	if (!priv) {
++		ret = -EINVAL;
++		goto unlock;
++	}
++	skb->dev = priv->netdev;
++	stats = &priv->netdev->stats;
++	stats->rx_packets++;
++	stats->rx_bytes += skb->len;
+ 
+ 	ret = netif_rx(skb);
++	skb = NULL;
++unlock:
+ 	rcu_read_unlock();
+-
++free:
++	dev_kfree_skb(skb);
+ 	return ret;
+ }
+ 
+-- 
+2.31.1
 
