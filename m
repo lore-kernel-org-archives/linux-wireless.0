@@ -5,67 +5,67 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82ED9C47097
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D28C47096
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6479B60232
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FD24613EE
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229707AbhFCEvy (ORCPT
+        id S229786AbhFCEwE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Jun 2021 00:51:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58256 "EHLO
+        Thu, 3 Jun 2021 00:52:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhFCEvx (ORCPT
+        with ESMTP id S229758AbhFCEwD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Jun 2021 00:51:53 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 651D8C06175F;
-        Wed,  2 Jun 2021 21:50:09 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id p17so6087977lfc.6;
-        Wed, 02 Jun 2021 21:50:09 -0700 (PDT)
+        Thu, 3 Jun 2021 00:52:03 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49687C06174A;
+        Wed,  2 Jun 2021 21:50:07 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id a5so6899341lfm.0;
+        Wed, 02 Jun 2021 21:50:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fTdsf02HyDf/I+gguBoc3k+gpG0A/WMGol4iK1ZVOZc=;
-        b=DLfK+DCaDJmEF4dYS5CQKPrECP6jb1y+ZiBEhRRuerKfnChFMTjpVj24fSQcGDjRjR
-         uUeRleW0o+ZNI1GizFu5PKmdxWaqSFSgzwmtXDhXEg1pDV3BZJ/bXLmApFIVDhRDLte5
-         iMzJxNmJvxD+6DWwO25vNP+3Kg539DIP749NpajYAcsSbe4iU16Tj95Ap/wbneRahW68
-         Q5jkm/We+lkPKCehHWeXMr1BmB7V/fgC5UxBkmy/2GQ6GlP2arGXRMHjKwxr0P1NAO+i
-         Put0R5ox5lFtIpLYvkY4lN0OlyakvwykLCUqothg0pcOCeVUnBDH64rp/BvZ+uwIEIlv
-         /JcQ==
+        bh=zqKGPh2sFHvHDPUOdf/BuenLWamDTQPRfxgjQFjdLik=;
+        b=ICtBHhnlYLayEfFAoEECXkECT70TRWFmqt4dq4WM6UJl5dzo2g9YbRs/WmEtsrPcGQ
+         PwVkJpSRlwjO5Q6XtXpqGIP5Dnb5tTYxEAeY5lo78JTpO3qIBiUyqJSsFtN51RvZj/XG
+         CsNAw2Sq1F72HCZng8kueeQbflC/gdlpJAVtoKZifaJbOEF9S0Z/CsFH2sIpiZ6ZwHlm
+         xYVHYQs6dBUJZYC0I54ZCATW/YgkYFazxx7yqcEmN/WCWKgrldmBOqRLf5tuBacAyuGw
+         0Lfn1n6JjFG91s/CB9j1tlYUAVxKjl02MNc/rCjzS+1rcddp6p8fwzGSDZbfkLBo+2eo
+         Auuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=fTdsf02HyDf/I+gguBoc3k+gpG0A/WMGol4iK1ZVOZc=;
-        b=b9cTwqZEjJ3m0Sc8IVwcEyTQOD/7RtNrfSfkDNT4NFD4Z+c7voRGYCJvZjxG0Hn6Ao
-         keAO5MvoqjUDdXEXZIfanc54ILY7i2BtbnvCGx+VYZfhugUWLOs7xSoVsMqES4GFNDJM
-         kNbFlrFX/wrS7I9fuLk0Dg97gT0FQ+REEDPKG6QdBM4kmmb+8muEpC5OLVxzfLuYzQyY
-         Wo7IdOARrQ/0hzSsdDN4+9HgBd2dOej4e1VBTSI2wcD5FSu+u0TPdD7BM2da77IPp/4q
-         DwHBwlktNTbcwx1+WTjFXLVWWoIk9soy5Wwuh1lQ7XGkolVBYsL1wcDHI25s//6Gd6MH
-         3i1Q==
-X-Gm-Message-State: AOAM533UcVzkiEuO6j/NFQB6qMITsbh4rszBqZl9VmE/c7KOtTgg9aI8
-        OWOZ5k037H5VNvjER+mKSFA=
-X-Google-Smtp-Source: ABdhPJyg23KAcM5+N2uW9j16dVyl5nYDhlMNtIg5cotw10Lw+W6ozJ21KaN+DHANOCgmAODg4JQ60Q==
-X-Received: by 2002:a19:4086:: with SMTP id n128mr25173479lfa.464.1622695807834;
-        Wed, 02 Jun 2021 21:50:07 -0700 (PDT)
+        bh=zqKGPh2sFHvHDPUOdf/BuenLWamDTQPRfxgjQFjdLik=;
+        b=VzspNt1zwf2FjVww8xOQiJSCf2lk98yEceXok6MYzcaDoBlGeSQG3tbFEgQ4HOkrcZ
+         6TXXOvyrbmdVHoYJauxJwYmTwPK2bAqlxh49l6Mx/o38wPnQT/vDcO3AKhWaTe29vTB7
+         fkunKYojiBbW314OuJUUc8SLQLYY4XefT57D/4wcRcWFICTTBdyp3jQTQtSWHoi0PbN4
+         489OShVbUWTl2W3OPQMvJhZtdYhm/G1gK2MMXmvr0puaHOhGP+Yl15a2maF4NbdLWn7B
+         hyHuz1BYjrD26wsOZtD5MkWv9Pg/rFgS+W5UKL3m5ekPcAQmzgn7aavs2Tnk4skg1m0h
+         2QRg==
+X-Gm-Message-State: AOAM533+tiHEIvu0Q2KGurJRQkYWGmwz5UVrSxNS5GlaCYogx/LabcTX
+        nxzDWVBj/0ES0WCtqyDfYlk=
+X-Google-Smtp-Source: ABdhPJwsXeAq0PJAwgA4obBVAwF0dBlX+NCMXMD3eaPgjxfSZshNDR0/RADw7ee8kBDT8CC/jL/u1w==
+X-Received: by 2002:a05:6512:411:: with SMTP id u17mr11418179lfk.287.1622695804290;
+        Wed, 02 Jun 2021 21:50:04 -0700 (PDT)
 Received: from rsa-laptop.internal.lan ([217.25.229.52])
-        by smtp.gmail.com with ESMTPSA id z2sm191328lfe.229.2021.06.02.21.50.07
+        by smtp.gmail.com with ESMTPSA id z2sm191328lfe.229.2021.06.02.21.50.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Jun 2021 21:50:07 -0700 (PDT)
+        Wed, 02 Jun 2021 21:50:03 -0700 (PDT)
 From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To:     Johannes Berg <johannes@sipsolutions.net>,
         Loic Poulain <loic.poulain@linaro.org>
 Cc:     M Chetan Kumar <m.chetan.kumar@intel.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [RFC 5/6 iproute2] iplink: add support for parent device
-Date:   Thu,  3 Jun 2021 07:49:53 +0300
-Message-Id: <20210603044954.8091-6-ryazanov.s.a@gmail.com>
+Subject: [RFC 1/6] rtnetlink: fix alloc() method introduction
+Date:   Thu,  3 Jun 2021 07:49:49 +0300
+Message-Id: <20210603044954.8091-2-ryazanov.s.a@gmail.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210603044954.8091-1-ryazanov.s.a@gmail.com>
 References: <20210603044954.8091-1-ryazanov.s.a@gmail.com>
@@ -75,59 +75,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for specifying a parent device (struct device) by its name
-during the link creation and printing parent name in the links list.
-This option will be used to create WWAN links and possibly by other
-device classes that do not have a "natural parent netdev".
+RTNL checks for the setup() callback existing in a few place as a sanity
+check. The introduction of the alloc() method makes the setup() method
+optional. So allow RTNL families that define at least one alloc() or
+setup() method.
 
+Fixes: ???? ("rtnetlink: add alloc() method to rtnl_link_ops")
 Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- ip/ipaddress.c | 7 +++++++
- ip/iplink.c    | 6 +++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ net/core/rtnetlink.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/ip/ipaddress.c b/ip/ipaddress.c
-index cfb24f5c..98f25a5b 100644
---- a/ip/ipaddress.c
-+++ b/ip/ipaddress.c
-@@ -1176,6 +1176,13 @@ int print_linkinfo(struct nlmsghdr *n, void *arg)
- 						   RTA_PAYLOAD(tb[IFLA_PHYS_SWITCH_ID]),
- 						   b1, sizeof(b1)));
- 		}
-+
-+		if (tb[IFLA_PARENT_DEV_NAME]) {
-+			print_string(PRINT_ANY,
-+				     "parentdev_name",
-+				     "parentdev-name %s ",
-+				     rta_getattr_str(tb[IFLA_PARENT_DEV_NAME]));
-+		}
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 49a27bf6e4a7..56ac16abe0ba 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -376,12 +376,12 @@ int __rtnl_link_register(struct rtnl_link_ops *ops)
+ 	if (rtnl_link_ops_get(ops->kind))
+ 		return -EEXIST;
+ 
+-	/* The check for setup is here because if ops
++	/* The check for alloc/setup is here because if ops
+ 	 * does not have that filled up, it is not possible
+ 	 * to use the ops for creating device. So do not
+ 	 * fill up dellink as well. That disables rtnl_dellink.
+ 	 */
+-	if (ops->setup && !ops->dellink)
++	if ((ops->alloc || ops->setup) && !ops->dellink)
+ 		ops->dellink = unregister_netdevice_queue;
+ 
+ 	list_add_tail(&ops->list, &link_ops);
+@@ -3421,7 +3421,7 @@ static int __rtnl_newlink(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 		return -EOPNOTSUPP;
  	}
  
- 	if ((do_link || show_details) && tb[IFLA_IFALIAS]) {
-diff --git a/ip/iplink.c b/ip/iplink.c
-index faafd7e8..190ce7d9 100644
---- a/ip/iplink.c
-+++ b/ip/iplink.c
-@@ -63,7 +63,7 @@ void iplink_usage(void)
- {
- 	if (iplink_have_newlink()) {
- 		fprintf(stderr,
--			"Usage: ip link add [link DEV] [ name ] NAME\n"
-+			"Usage: ip link add [link DEV | parentdev-name NAME] [ name ] NAME\n"
- 			"		    [ txqueuelen PACKETS ]\n"
- 			"		    [ address LLADDR ]\n"
- 			"		    [ broadcast LLADDR ]\n"
-@@ -938,6 +938,10 @@ int iplink_parse(int argc, char **argv, struct iplink_req *req, char **type)
- 				       *argv);
- 			addattr32(&req->n, sizeof(*req),
- 				  IFLA_GSO_MAX_SEGS, max_segs);
-+		} else if (strcmp(*argv, "parentdev-name") == 0) {
-+			NEXT_ARG();
-+			addattr_l(&req->n, sizeof(*req), IFLA_PARENT_DEV_NAME,
-+				  *argv, strlen(*argv) + 1);
- 		} else {
- 			if (matches(*argv, "help") == 0)
- 				usage();
+-	if (!ops->setup)
++	if (!ops->alloc && !ops->setup)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!ifname[0]) {
 -- 
 2.26.3
 
