@@ -2,83 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FDB2C47096
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 06:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB24DC47096
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 06:52:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F453611BF
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 06:28:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85E3661360
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 06:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229734AbhFCGaD (ORCPT
+        id S229721AbhFCGxy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Jun 2021 02:30:03 -0400
-Received: from muru.com ([72.249.23.125]:35742 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229702AbhFCGaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Jun 2021 02:30:03 -0400
-Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 3473B8027;
-        Thu,  3 Jun 2021 06:28:25 +0000 (UTC)
-From:   Tony Lindgren <tony@atomide.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Raz Bouganim <r-bouganim@ti.com>,
-        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
-        Carl Philipp Klemm <philipp@uvos.xyz>
-Subject: [PATCH] wlcore/wl12xx: Fix wl12xx get_mac error if device is in ELP
-Date:   Thu,  3 Jun 2021 09:28:14 +0300
-Message-Id: <20210603062814.19464-1-tony@atomide.com>
-X-Mailer: git-send-email 2.31.1
+        Thu, 3 Jun 2021 02:53:54 -0400
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:37395 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229665AbhFCGxy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Jun 2021 02:53:54 -0400
+Received: by mail-pg1-f173.google.com with SMTP id t9so4406551pgn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2021 23:52:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9XycJN3Z2QtVixsKYzXsAVtV+JUFSqzqxdmsTE6pZCI=;
+        b=otXLMBqu9C8yMIXKbfphbBHyfaTFlz3vlpDEPayJFgkJUv9VNDa79NiokwsBSDf4fk
+         DPipM34ggkYjMNOtORMJH07mxBssA22x516QiVJYHCEBsBlWaBcEH/5hCGzJA6eKubYx
+         HFYImtha2nhYF3xMkdnvOc1nYnNHo/Z00E89AHVSmGhQjnkq66IhdO/k48dulhuCekqv
+         truftPEvH+JhXCBwdwbXY8sslu4nfJ/BlO0xtRpsptXgbjuJ1t0hlo103Yp0WAD2BKNQ
+         /l/7uUZKc6a9xQiYyb0FBwUz1+flkxsLa41mBcePBZ2Sd26/C3FfGzFy0FbIVGnZjlzS
+         aWmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9XycJN3Z2QtVixsKYzXsAVtV+JUFSqzqxdmsTE6pZCI=;
+        b=dDm8Pvk6HM1qCoiCeRS4X+t+PfmSUBpVRtgvUaPJTa2nrZEyt1qflarvM6EXPGYxu9
+         Q6J4B59DW2n+3Lwy88khBm5PFwcO2uU4qmn6pX++LHkcJ2aCwZIMX+VcdlDzUEwROhrq
+         Q1LIbwvM6gSvr61jWX0Nxk0PqcyK12ABGbkKc7ATXez4M2G5aGQhr2SUphgURLHWRFyo
+         Lt0srOFR28FReCr6zvlU6YnwRY8qzGwqtHbOCIu0xTXzMFpi9iS4TdcSOXs/QZKDje+P
+         v9tkVldur7x60Zo7E7taMamuVQNGoWQNJl39BDThW+OTwnZWi4b1ELLEyBwYiflgAjbl
+         lReg==
+X-Gm-Message-State: AOAM530Hn/WXF1X8kSLzDVrQInvt0tVNz5Q5ZKa4/bbs0JEDi+wCYMvJ
+        3vShMi/vGX5kfx/RIKpjMEBTSgAR/Qlv6OQAHjfOTR8TYTk2hw==
+X-Google-Smtp-Source: ABdhPJyVRv4/kE+k4Aslrczm9l9JWwwxVSFmtu93acoC82cCmhfKylDQuArKPQ0jhEspi/aURX7WZnwAkODihAfEXZw=
+X-Received: by 2002:a63:1906:: with SMTP id z6mr37475603pgl.173.1622703070195;
+ Wed, 02 Jun 2021 23:51:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210601080538.71036-1-johannes@sipsolutions.net>
+ <20210601100320.7d39e9c33a18.I0474861dad426152ac7e7afddfd7fe3ce70870e4@changeid>
+ <CAMZdPi-ZaH8WWKfhfKzy0OKpUtNAiCUfekh9R1de5awFP-ed=A@mail.gmail.com>
+ <0555025c6d7a88f4f3dcdd6704612ed8ba33b175.camel@sipsolutions.net>
+ <CAMZdPi8Ca3YRaVWGL6Fjd7yfowQcX2V2RYNDNm-2kQdEZ-Z1Bw@mail.gmail.com> <17fd0311eb8b51e6d23fce8b7eb23e3d2581cf54.camel@sipsolutions.net>
+In-Reply-To: <17fd0311eb8b51e6d23fce8b7eb23e3d2581cf54.camel@sipsolutions.net>
+From:   Loic Poulain <loic.poulain@linaro.org>
+Date:   Thu, 3 Jun 2021 09:00:27 +0200
+Message-ID: <CAMZdPi8RQ7580nTLHf+GYavU3CTME76P86haB8VCdVjXxrgqLA@mail.gmail.com>
+Subject: Re: [RFC 3/4] wwan: add interface creation support
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        M Chetan Kumar <m.chetan.kumar@intel.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-At least on wl12xx, reading the MAC after boot can fail with a warning
-at drivers/net/wireless/ti/wlcore/sdio.c:78 wl12xx_sdio_raw_read.
-The failed call comes from wl12xx_get_mac() that wlcore_nvs_cb() calls
-after request_firmware_work_func().
+On Wed, 2 Jun 2021 at 10:29, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Wed, 2021-06-02 at 08:52 +0200, Loic Poulain wrote:
+> >
+> > OK no prob ;-), are you going to resubmit something or do you want I
+> > take care of this?
+>
+> I just respun a v2, but I'm still not able to test any of this (I'm in a
+> completely different group than Chetan, just have been helping/advising
+> them, so I don't even have their HW).
+>
+> So if you want to take over at some point and are able to test it, I'd
+> much appreciate it.
 
-After the error, no wireless interface is created. Reloading the wl12xx
-module makes the interface work.
+Thanks for this work, yes I can try testing this with mhi_net.
 
-Turns out the wlan controller can be in a low-power ELP state after the
-boot from the bootloader or kexec, and needs to be woken up first.
+Chetan, would you be able to test that as well? basically with the two
+kernel series (Johannes, Sergey) applied on top of your IOSM one + the
+iproute2 changes for the userspace side (Sergey), that should work,
+but let us know if any issues.
 
-Let's wake the hardware and add a sleep after that similar to
-wl12xx_pre_boot() is already doing.
-
-Note that a similar issue could exist for wl18xx, but I have not seen it
-so far. And a search for wl18xx_get_mac and wl12xx_sdio_raw_read did not
-produce similar errors.
-
-Cc: Carl Philipp Klemm <philipp@uvos.xyz>
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wl12xx/main.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1503,6 +1503,13 @@ static int wl12xx_get_fuse_mac(struct wl1271 *wl)
- 	u32 mac1, mac2;
- 	int ret;
- 
-+	/* Device may be in ELP from the bootloader or kexec */
-+	ret = wlcore_write32(wl, WL12XX_WELP_ARM_COMMAND, WELP_ARM_COMMAND_VAL);
-+	if (ret < 0)
-+		goto out;
-+
-+	usleep_range(500000, 700000);
-+
- 	ret = wlcore_set_partition(wl, &wl->ptable[PART_DRPW]);
- 	if (ret < 0)
- 		goto out;
--- 
-2.31.1
+Regards,
+Loic
