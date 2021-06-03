@@ -2,245 +2,129 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5023C47083
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 03:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 421C2C47096
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA1E9613B8
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 03:08:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 192A9613D2
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Jun 2021 04:50:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229823AbhFCDKM (ORCPT
+        id S229626AbhFCEvx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Jun 2021 23:10:12 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:37499 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229541AbhFCDKM (ORCPT
+        Thu, 3 Jun 2021 00:51:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58254 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229479AbhFCEvw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Jun 2021 23:10:12 -0400
-X-UUID: 7d38d3194fbb46dcaa2ee9c08d871972-20210603
-X-UUID: 7d38d3194fbb46dcaa2ee9c08d871972-20210603
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 765599930; Thu, 03 Jun 2021 11:02:24 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 3 Jun 2021 11:02:22 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Jun 2021 11:02:22 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <jemele@google.com>, <yenlinlai@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v3 2/2] mt76: mt7921: fix sta_state incorrect implementation
-Date:   Thu, 3 Jun 2021 11:02:17 +0800
-Message-ID: <e0a33a31da8a69dcf13d30e2d2591329c8d33689.1622688431.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <eefc22e4c64c8605bcaf2aa0feae0ef3d4084ebf.1622688431.git.objelf@gmail.com>
-References: <eefc22e4c64c8605bcaf2aa0feae0ef3d4084ebf.1622688431.git.objelf@gmail.com>
+        Thu, 3 Jun 2021 00:51:52 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83FEEC06175F;
+        Wed,  2 Jun 2021 21:50:08 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id i9so6804205lfe.13;
+        Wed, 02 Jun 2021 21:50:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=x4E5XTU7wD0xWqzH6jn3ez00Wy8uYqD5Mj232oqDNsc=;
+        b=eSLOFmSpN0Bfsyg7YN/0klrX/bMhgfpC0raOfDEdildqldck+gVj30/hLvyhUWaaLA
+         OWqACChSQVNqKOb7qefVQmXZmg6C+f6/6zrdcUT427v05KeLUqo9Bx1JSHd6OQcrHIk/
+         DGMQahAUvbivHH1CQ/gtmrU5K1QbWSCk8TVkJ7tjkkJFx91uSjhClB8lWyBpq7Eno6WC
+         /ktbYcBZzZgobvyGUQN18u9om1hlAmL9lGIQORIEJGWtbvkC2Y9oeXqpKGgNTT1g3OGR
+         o7kCTHYyV9Z6RArcDfjoIlR6YSCcOauDa6KnlTCmdVk23htJn6pXyfwVYokToQZKruHN
+         O2rg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=x4E5XTU7wD0xWqzH6jn3ez00Wy8uYqD5Mj232oqDNsc=;
+        b=jLq0FjfiRL4eFp6fl5USSUdI2+VbigorO6xPbSi3U8qYO05igEUsO7s+v1BKwITTMz
+         KS6DmtJ7hkl79N/5q1ZFWODc/2A8ItjVtg8hAEOq9xhSoZOJYKTjC2R3sjsGDetnQCGG
+         UEWr2hZRPlOJ5F1NboBiZidovy1SRw13FniIG8lNnVFBJDMKhkfK9UyBQURvEDtCsCU8
+         e9ZLkkP8w5pJzQDHF6baFMt8lZuNtpwIkkgxv7ILsuv2y14y/NQKy4fMED3xKWjhyckl
+         6pY3o7+2rjT4QAI0W15iF8LReJ2LDId0wi+2x8Yd4Ncz0ockd2qn6NXZYZfzfSsttkBe
+         NFEw==
+X-Gm-Message-State: AOAM533ZO5RYcm0X7iBjbT45lpK0MKk/z/Lh71KrRIcdHvgok0W2L1Ka
+        zobq91zRC9Ff4aTBOABMeZWoGeomFE4=
+X-Google-Smtp-Source: ABdhPJw/S5Yo2Yo1LzYzIVt579lrIsi7FuNnPKhzsIni/2IlkV+ANwej29J/SFFYAkF750OJ8UvxHQ==
+X-Received: by 2002:ac2:560f:: with SMTP id v15mr14866462lfd.431.1622695806931;
+        Wed, 02 Jun 2021 21:50:06 -0700 (PDT)
+Received: from rsa-laptop.internal.lan ([217.25.229.52])
+        by smtp.gmail.com with ESMTPSA id z2sm191328lfe.229.2021.06.02.21.50.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Jun 2021 21:50:06 -0700 (PDT)
+From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Loic Poulain <loic.poulain@linaro.org>
+Cc:     M Chetan Kumar <m.chetan.kumar@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [RFC 4/6 iproute2] Update kernel headers
+Date:   Thu,  3 Jun 2021 07:49:52 +0300
+Message-Id: <20210603044954.8091-5-ryazanov.s.a@gmail.com>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210603044954.8091-1-ryazanov.s.a@gmail.com>
+References: <20210603044954.8091-1-ryazanov.s.a@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+A partial headers update that brings WWAN-related attributes. Included
+in the series mainly to make it possible to quickly compile and test the
+utility.
 
-When .sta_state is implemented, mac80211 assumes that the station entry is
-usable after the NOTEXIST->NONE transition.
-
-So we should create the sta entry as early as possible in order that
-mac80211 pass assoc/auth frames to mt76 with the newly created sta entry,
-and add .sta_assoc to mt76 core to refresh the sta entry again when sta is
-being associated.
-
-Fixes: 8aa5a9b7361c ("mt76: mt7921: enable deep sleep at runtime")
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
-v1->v2: Put back the careless change not belonged to the patch to keep
-	mt7921_mcu_sta_add for BC entry and mt76_connac_mcu_uni_add_bss
-	on the association.
-v2->v3: 1. rebase the latest mt76
-	2. squashing 2/3 to the one
-	3. add the proper lock in mt7921_mac_sta_assoc
----
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 55 ++++++++-----------
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 20 +++++++
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  4 ++
- .../net/wireless/mediatek/mt76/mt7921/pci.c   |  1 +
- 4 files changed, 49 insertions(+), 31 deletions(-)
+ include/uapi/linux/if_link.h |  6 ++++++
+ include/uapi/linux/wwan.h    | 16 ++++++++++++++++
+ 2 files changed, 22 insertions(+)
+ create mode 100644 include/uapi/linux/wwan.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index c641a92b140c..af98835b5134 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -618,18 +618,14 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
- 
--	if (vif->type == NL80211_IFTYPE_STATION) {
-+	if (vif->type == NL80211_IFTYPE_STATION)
- 		mvif->wep_sta = msta;
--		if (!sta->tdls)
--			mt76_connac_mcu_uni_add_bss(&dev->mphy, vif,
--						    &mvif->sta.wcid, true);
--	}
- 
- 	mt7921_mac_wtbl_update(dev, idx,
- 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
- 
- 	ret = mt7921_mcu_sta_add(dev, sta, vif, true,
--				 MT76_STA_INFO_STATE_ASSOC);
-+				 MT76_STA_INFO_STATE_NONE);
- 	if (ret)
- 		return ret;
- 
-@@ -638,6 +634,27 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	return 0;
- }
- 
-+void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta)
-+{
-+	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
-+	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
+diff --git a/include/uapi/linux/if_link.h b/include/uapi/linux/if_link.h
+index 50193377..1cf48416 100644
+--- a/include/uapi/linux/if_link.h
++++ b/include/uapi/linux/if_link.h
+@@ -341,6 +341,12 @@ enum {
+ 	IFLA_ALT_IFNAME, /* Alternative ifname */
+ 	IFLA_PERM_ADDRESS,
+ 	IFLA_PROTO_DOWN_REASON,
 +
-+	mt7921_mutex_acquire(dev);
++	/* device (sysfs) name as parent, used instead
++	 * of IFLA_LINK where there's no parent netdev
++	 */
++	IFLA_PARENT_DEV_NAME,
 +
-+	if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
-+		mt76_connac_mcu_uni_add_bss(&dev->mphy, vif, &mvif->sta.wcid,
-+					    true);
-+
-+	mt7921_mac_wtbl_update(dev, msta->wcid.idx,
-+			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
-+
-+	mt7921_mcu_sta_update(dev, sta, vif, MT76_STA_INFO_STATE_ASSOC);
-+
-+	mt7921_mutex_release(dev);
-+}
-+
- void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta)
- {
-@@ -793,22 +810,6 @@ mt7921_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return ret;
- }
+ 	__IFLA_MAX
+ };
  
--static int
--mt7921_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--	       struct ieee80211_sta *sta)
--{
--	return mt76_sta_state(hw, vif, sta, IEEE80211_STA_NOTEXIST,
--			      IEEE80211_STA_NONE);
--}
--
--static int
--mt7921_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		  struct ieee80211_sta *sta)
--{
--	return mt76_sta_state(hw, vif, sta, IEEE80211_STA_NONE,
--			      IEEE80211_STA_NOTEXIST);
--}
--
- static int mt7921_sta_state(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta,
-@@ -823,15 +824,7 @@ static int mt7921_sta_state(struct ieee80211_hw *hw,
- 		mt7921_mutex_release(dev);
- 	}
- 
--	if (old_state == IEEE80211_STA_AUTH &&
--	    new_state == IEEE80211_STA_ASSOC) {
--		return mt7921_sta_add(hw, vif, sta);
--	} else if (old_state == IEEE80211_STA_ASSOC &&
--		   new_state == IEEE80211_STA_AUTH) {
--		return mt7921_sta_remove(hw, vif, sta);
--	}
--
--	return 0;
-+	return mt76_sta_state(hw, vif, sta, old_state, new_state);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 4f0fd9674950..ab338bdf4f4a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -1289,6 +1289,26 @@ int mt7921_mcu_sta_add(struct mt7921_dev *dev, struct ieee80211_sta *sta,
- 	return mt76_connac_mcu_add_sta_cmd(&dev->mphy, &info);
- }
- 
-+int mt7921_mcu_sta_update(struct mt7921_dev *dev, struct ieee80211_sta *sta,
-+			  struct ieee80211_vif *vif, u8 state)
-+{
-+	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	int rssi = -ewma_rssi_read(&mvif->rssi);
-+	struct mt76_sta_cmd_info info = {
-+		.sta = sta,
-+		.vif = vif,
-+		.enable = true,
-+		.state = state,
-+		.cmd = MCU_UNI_CMD_STA_REC_UPDATE,
-+		.rcpi = to_rcpi(rssi),
-+	};
-+	struct mt7921_sta *msta;
+diff --git a/include/uapi/linux/wwan.h b/include/uapi/linux/wwan.h
+new file mode 100644
+index 00000000..32a2720b
+--- /dev/null
++++ b/include/uapi/linux/wwan.h
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note */
++/*
++ * Copyright (C) 2021 Intel Corporation.
++ */
++#ifndef _UAPI_WWAN_H_
++#define _UAPI_WWAN_H_
 +
-+	msta = sta ? (struct mt7921_sta *)sta->drv_priv : NULL;
-+	info.wcid = msta ? &msta->wcid : &mvif->sta.wcid;
-+	return mt76_connac_mcu_update_sta_cmd(&dev->mphy, &info);
-+}
++enum {
++	IFLA_WWAN_UNSPEC,
++	IFLA_WWAN_LINK_ID, /* u32 */
 +
- int __mt7921_mcu_drv_pmctrl(struct mt7921_dev *dev)
- {
- 	struct mt76_phy *mphy = &dev->mt76.phy;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index d4d84b898011..196e47f89fc1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -265,6 +265,8 @@ int mt7921_set_channel(struct mt7921_phy *phy);
- int mt7921_mcu_sta_add(struct mt7921_dev *dev, struct ieee80211_sta *sta,
- 		       struct ieee80211_vif *vif, bool enable,
- 		       enum mt76_sta_info_state state);
-+int mt7921_mcu_sta_update(struct mt7921_dev *dev, struct ieee80211_sta *sta,
-+			  struct ieee80211_vif *vif, u8 state);
- int mt7921_mcu_set_chan_info(struct mt7921_phy *phy, int cmd);
- int mt7921_mcu_set_tx(struct mt7921_dev *dev, struct ieee80211_vif *vif);
- int mt7921_mcu_set_eeprom(struct mt7921_dev *dev);
-@@ -336,6 +338,8 @@ void mt7921_mac_fill_rx_vector(struct mt7921_dev *dev, struct sk_buff *skb);
- void mt7921_mac_tx_free(struct mt7921_dev *dev, struct sk_buff *skb);
- int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
-+void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta);
- void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta);
- void mt7921_mac_work(struct work_struct *work);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 13263f50dc00..27906b2cd912 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -106,6 +106,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
- 		.rx_poll_complete = mt7921_rx_poll_complete,
- 		.sta_ps = mt7921_sta_ps,
- 		.sta_add = mt7921_mac_sta_add,
-+		.sta_assoc = mt7921_mac_sta_assoc,
- 		.sta_remove = mt7921_mac_sta_remove,
- 		.update_survey = mt7921_update_channel,
- 	};
++	__IFLA_WWAN_MAX
++};
++#define IFLA_WWAN_MAX (__IFLA_WWAN_MAX - 1)
++
++#endif /* _UAPI_WWAN_H_ */
 -- 
-2.25.1
+2.26.3
 
