@@ -2,210 +2,122 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1465C07E94
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 07:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E69CC07E94
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 13:23:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D64ED61417
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 07:39:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 545E9613F1
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 13:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229991AbhFDHk6 (ORCPT
+        id S230312AbhFDNZR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Jun 2021 03:40:58 -0400
-Received: from mga11.intel.com ([192.55.52.93]:56123 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229962AbhFDHk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Jun 2021 03:40:58 -0400
-IronPort-SDR: XUPqqJW0Zxe170bx9uwPHGSyJPOslqp1vdPMp8hpL4MhMQXlGi2ELW0XPjnVt2HGBITbW/WB4M
- kbM1Z2/AWlMw==
-X-IronPort-AV: E=McAfee;i="6200,9189,10004"; a="201223621"
-X-IronPort-AV: E=Sophos;i="5.83,247,1616482800"; 
-   d="scan'208";a="201223621"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 00:39:12 -0700
-IronPort-SDR: Rd62ihGq4feGjSrIS8kqZpWkOoABaSjcWyCR7yuIw+qAFtxsOwtiIA0QlXyOkwGvWTvC0B6+CK
- KGzoPj0l0XUw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,247,1616482800"; 
-   d="scan'208";a="618179264"
-Received: from lkp-server02.sh.intel.com (HELO 1ec8406c5392) ([10.239.97.151])
-  by orsmga005.jf.intel.com with ESMTP; 04 Jun 2021 00:39:11 -0700
-Received: from kbuild by 1ec8406c5392 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lp4QA-0006mm-Ez; Fri, 04 Jun 2021 07:39:10 +0000
-Date:   Fri, 04 Jun 2021 15:38:14 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211:master] BUILD SUCCESS
- bddc0c411a45d3718ac535a070f349be8eca8d48
-Message-ID: <60b9d866.heEt8N0yo5csS1tr%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Fri, 4 Jun 2021 09:25:17 -0400
+Received: from mail-io1-f72.google.com ([209.85.166.72]:48848 "EHLO
+        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230124AbhFDNZR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Jun 2021 09:25:17 -0400
+Received: by mail-io1-f72.google.com with SMTP id u19-20020a6be3130000b02904a77f550cbcso5097625ioc.15
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2021 06:23:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
+        bh=Fh24XHn46QTE70Fu59zKbxgTcJCyyRl/2Zjm/XtlHpE=;
+        b=olSaUaW1PjJfIlKuNYfY1pulydyN/2p3c3BeFRlHJsq+pE4gQRsBpBc0RIq0JnJEHm
+         gibZa1Qv5qNuc+xe+CuPDnlrPu7huzxEi2StHgr+olD9HSW0fWyIEg2iBNvjkMpb7cWg
+         kIJyg8/Ai4H3jRguIy325fz+cGAZkhUauUU9d3R9UtILxYkViGGzIfXRfT2reDTs+6vY
+         RFpL4nL2cGkG8Ip+VXhRzH8keMNGVhaXb/4tEFdpqDiEg9PVD5NSoBt2CxIy2wxJrCQ3
+         wGth+lfGN4lYfuQnrozly14M7XW9WtBPu4p+I6dNGvE73GyoJhpd7wooTjoWct7g8AF6
+         8fEw==
+X-Gm-Message-State: AOAM531Z/va5sNihPlFuMHq+BzRrVZ3pLQEoamv9IZICHlzZO3w4W36s
+        aT6CLDR7YuE0U+l6sOvOHe2SA1y9EFmBf04a6MDNyQCpxea1
+X-Google-Smtp-Source: ABdhPJxWXuAhWz8YN5zGxhVMy7R/J0EnN7+wawXQeUd+tZuHM5Xi61MX38v2juDYAsq9D4/IFOzNvIe4IXdEfR/XlXIxAxF8jD2b
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a5e:c708:: with SMTP id f8mr3818934iop.198.1622813010489;
+ Fri, 04 Jun 2021 06:23:30 -0700 (PDT)
+Date:   Fri, 04 Jun 2021 06:23:30 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000006f82905c3f099be@google.com>
+Subject: [syzbot] WARNING in ieee80211_vif_release_channel
+From:   syzbot <syzbot+c299bc8bf2c766623e9c@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git master
-branch HEAD: bddc0c411a45d3718ac535a070f349be8eca8d48  mac80211: Fix NULL ptr deref for injected rate info
+Hello,
 
-elapsed time: 4958m
+syzbot found the following issue on:
 
-configs tested: 139
-configs skipped: 2
+HEAD commit:    a729b8e6 Merge branch 'fixes-for-yt8511-phy-driver'
+git tree:       net-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=17bbd313d00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=52fb5f4163b9aa88
+dashboard link: https://syzkaller.appspot.com/bug?extid=c299bc8bf2c766623e9c
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-ia64                             allmodconfig
-sh                          rsk7203_defconfig
-powerpc                    adder875_defconfig
-m68k                        m5307c3_defconfig
-h8300                               defconfig
-arm                          collie_defconfig
-nds32                            alldefconfig
-mips                           ip27_defconfig
-arc                      axs103_smp_defconfig
-sparc                       sparc64_defconfig
-arm                         assabet_defconfig
-powerpc                        cell_defconfig
-arm                          pcm027_defconfig
-arm                         s5pv210_defconfig
-sh                  sh7785lcr_32bit_defconfig
-arm                         cm_x300_defconfig
-powerpc                     redwood_defconfig
-powerpc                 mpc8272_ads_defconfig
-sh                          r7780mp_defconfig
-arm                         nhk8815_defconfig
-m68k                            q40_defconfig
-m68k                        mvme16x_defconfig
-mips                            gpr_defconfig
-mips                   sb1250_swarm_defconfig
-nios2                               defconfig
-arc                        vdk_hs38_defconfig
-arm                          moxart_defconfig
-um                           x86_64_defconfig
-mips                       capcella_defconfig
-s390                          debug_defconfig
-sh                          rsk7269_defconfig
-powerpc                       ppc64_defconfig
-powerpc                      walnut_defconfig
-arm                        spear6xx_defconfig
-powerpc                 mpc8313_rdb_defconfig
-powerpc                     tqm8555_defconfig
-mips                         mpc30x_defconfig
-powerpc                 mpc836x_mds_defconfig
-sh                          sdk7786_defconfig
-mips                          malta_defconfig
-mips                           rs90_defconfig
-ia64                            zx1_defconfig
-xtensa                         virt_defconfig
-mips                     loongson2k_defconfig
-powerpc                          g5_defconfig
-i386                                defconfig
-x86_64                            allnoconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20210531
-x86_64               randconfig-a003-20210531
-x86_64               randconfig-a005-20210531
-x86_64               randconfig-a004-20210531
-x86_64               randconfig-a002-20210531
-x86_64               randconfig-a001-20210531
-i386                 randconfig-a002-20210531
-i386                 randconfig-a001-20210531
-i386                 randconfig-a005-20210531
-i386                 randconfig-a006-20210531
-i386                 randconfig-a004-20210531
-i386                 randconfig-a003-20210531
-i386                 randconfig-a003-20210601
-i386                 randconfig-a006-20210601
-i386                 randconfig-a004-20210601
-i386                 randconfig-a001-20210601
-i386                 randconfig-a002-20210601
-i386                 randconfig-a005-20210601
-x86_64               randconfig-a015-20210601
-x86_64               randconfig-a011-20210601
-x86_64               randconfig-a012-20210601
-x86_64               randconfig-a014-20210601
-x86_64               randconfig-a016-20210601
-x86_64               randconfig-a013-20210601
-i386                 randconfig-a015-20210601
-i386                 randconfig-a013-20210601
-i386                 randconfig-a011-20210601
-i386                 randconfig-a016-20210601
-i386                 randconfig-a014-20210601
-i386                 randconfig-a012-20210601
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-um                             i386_defconfig
-um                            kunit_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+c299bc8bf2c766623e9c@syzkaller.appspotmail.com
 
-clang tested configs:
-x86_64               randconfig-b001-20210531
-x86_64               randconfig-a002-20210601
-x86_64               randconfig-a004-20210601
-x86_64               randconfig-a003-20210601
-x86_64               randconfig-a006-20210601
-x86_64               randconfig-a005-20210601
-x86_64               randconfig-a001-20210601
-x86_64               randconfig-a014-20210531
-x86_64               randconfig-a012-20210531
-x86_64               randconfig-a013-20210531
-x86_64               randconfig-a016-20210531
-x86_64               randconfig-a015-20210531
-x86_64               randconfig-a011-20210531
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 22187 at net/mac80211/chan.c:1830 ieee80211_vif_release_channel+0x1ad/0x220 net/mac80211/chan.c:1830
+Modules linked in:
+CPU: 1 PID: 22187 Comm: syz-executor.4 Not tainted 5.13.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:ieee80211_vif_release_channel+0x1ad/0x220 net/mac80211/chan.c:1830
+Code: c1 ea 03 80 3c 02 00 0f 85 82 00 00 00 48 8b ab 48 06 00 00 e9 60 ff ff ff e8 6f b1 fa f8 0f 0b e9 e2 fe ff ff e8 63 b1 fa f8 <0f> 0b 48 b8 00 00 00 00 00 fc ff df 4c 89 e2 48 c1 ea 03 80 3c 02
+RSP: 0018:ffffc9000a837050 EFLAGS: 00010246
+RAX: 0000000000040000 RBX: ffff88802739cc00 RCX: ffffc90012325000
+RDX: 0000000000040000 RSI: ffffffff887a2b1d RDI: 0000000000000003
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+R10: ffffffff887a2adc R11: 0000000000000000 R12: ffff88802739d248
+R13: 0000000000000001 R14: 00000000fffffff4 R15: 0000000000000000
+FS:  00007fe9d16b1700(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f6c71cee000 CR3: 0000000077555000 CR4: 00000000001506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ ieee80211_start_ap+0x18ed/0x24e0 net/mac80211/cfg.c:1200
+ rdev_start_ap net/wireless/rdev-ops.h:158 [inline]
+ nl80211_start_ap+0x1c17/0x2920 net/wireless/nl80211.c:5515
+ genl_family_rcv_msg_doit+0x228/0x320 net/netlink/genetlink.c:739
+ genl_family_rcv_msg net/netlink/genetlink.c:783 [inline]
+ genl_rcv_msg+0x328/0x580 net/netlink/genetlink.c:800
+ netlink_rcv_skb+0x153/0x420 net/netlink/af_netlink.c:2504
+ genl_rcv+0x24/0x40 net/netlink/genetlink.c:811
+ netlink_unicast_kernel net/netlink/af_netlink.c:1314 [inline]
+ netlink_unicast+0x533/0x7d0 net/netlink/af_netlink.c:1340
+ netlink_sendmsg+0x856/0xd90 net/netlink/af_netlink.c:1929
+ sock_sendmsg_nosec net/socket.c:654 [inline]
+ sock_sendmsg+0xcf/0x120 net/socket.c:674
+ ____sys_sendmsg+0x6e8/0x810 net/socket.c:2350
+ ___sys_sendmsg+0xf3/0x170 net/socket.c:2404
+ __sys_sendmsg+0xe5/0x1b0 net/socket.c:2433
+ do_syscall_64+0x3a/0xb0 arch/x86/entry/common.c:47
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x4665d9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fe9d16b1188 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 000000000056c038 RCX: 00000000004665d9
+RDX: 0000000000000000 RSI: 00000000200001c0 RDI: 0000000000000003
+RBP: 00007fe9d16b11d0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 00007ffe90e7d1bf R14: 00007fe9d16b1300 R15: 0000000000022000
+
 
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
