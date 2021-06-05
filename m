@@ -2,121 +2,147 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A717AC4743E
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 21:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7AC3C4743C
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BDDA613EC
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Jun 2021 21:28:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B057613BF
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231336AbhFDV35 (ORCPT
+        id S230527AbhFEBLw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Jun 2021 17:29:57 -0400
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:42813 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231189AbhFDV34 (ORCPT
+        Fri, 4 Jun 2021 21:11:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47244 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230188AbhFEBLw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Jun 2021 17:29:56 -0400
-Received: by mail-pj1-f50.google.com with SMTP id l23-20020a17090a0717b029016ae774f973so5965287pjl.1;
-        Fri, 04 Jun 2021 14:28:09 -0700 (PDT)
+        Fri, 4 Jun 2021 21:11:52 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D531AC061768
+        for <linux-wireless@vger.kernel.org>; Fri,  4 Jun 2021 18:10:04 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id h8so10916329wrz.8
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2021 18:10:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=4UyrG9Z9DorUurxry+5VL+nEcP5Ybc7uiEG9qyPmX1Y=;
-        b=fWNPBRRDnEYp18yVR/nkNS+p/+5DWMyQHXNN7sp3So+WCCvaPgC1xAqotIrfTP5N8V
-         ZHu14j6sRYezqdTGaI2WYCj14wS3dKzwk3zMOJZTjZzgkfueePHpTIoLSt8aDSGQ5UjE
-         c1/XbGU0lHwGbymsMF1UAggKTNy1j2mwlJHmPoYPvzZFOL7aOO/NyRe2+PBW9FtYidIP
-         qN0IaamR2M+TJyMdPhonjPhar6AilQ487eHD9d19+0uVroaibZ4EOoLQxz49CFwMLJFi
-         ImHOLLPWdaHtiCJZIN+7G0RmcIjUOe+lRnxLtxSF/R5fv4wYE4ko0CxxbbGNeHVBi1D8
-         Z4eg==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=EqMw+TK1CU976V2wAL6yPr0zVt+M7GcrRHHt2Qzbk6I=;
+        b=jJQ6imj825D6p03IkWy1xIMM3GXOxVh+LjUX8KR9CO9GGi2ozPBa/Wo4wDaG2VeSeB
+         8qZCDStNYdeWpaInRoPPG9fljd5k86AZdizYg0MLslUdzTfytlPrWSPKwyT5PxJDAkls
+         dulGbJleJKi5IzImHBzSHBdw73nNNPo+y0e0PbAG9EbHeQUW9oT36cwIc6t8DMLwcFih
+         7UBNfhvIoTtrAA/9urfT5uATHztICVVXCiR9sSr6VO/f9Mqjs2XYUGtK+5NkdboWUySd
+         yCyncoIcRHeCrKr6g6+KOMsh/GPr/rCl1Sqhomp/uCInaxbK3W7tojV7JFEwkbuQlbn0
+         s2Aw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=4UyrG9Z9DorUurxry+5VL+nEcP5Ybc7uiEG9qyPmX1Y=;
-        b=Bf04aU1qyWhM7QSe60KEztBHc8tNabMLfTxi58FaoeH/TERJeJXyDoSEDKi8FQpt1/
-         RjA9kw1Q0u8DIjtfvuhtpsu250FeOk2TxlaXypxCYRDBQScGvm6v8Zk1OYShQnJbgs7P
-         uMq62H1yzuX4+kqHWNgRInFUfTYBWqoeDXo1jbKwSeMttaH0QPsOb5OpTgv9kIGH6OPa
-         3+ucyjZkiRue2lP7r1X2sVVEw8woQNy6oZzueGSTC56Bj/EqNSHxoUtonItlD+Q1iQFk
-         mDVQbYD5/2e3rCbmYaDoLwcCieT9sSDwylNmD6U9CVhU2lxcg6JG7F63vBckc2KPNARi
-         QWcQ==
-X-Gm-Message-State: AOAM533eeWnSLU50apomofrnP9IZp5xoNtYE14wz0tp7lfW8RgntdEvQ
-        ifXaZz0Pq/XatIRHff7dKszBgcjDGuYa3CEm7CkcXMrJXhFDEg==
-X-Google-Smtp-Source: ABdhPJygnp3hyB0sgLAeBeO8JnZmo+qjyOhjPPh4uxERbVKPOlgrdsPtC+Z0QkefLm5SPhoDEJhfIud6iFD0TEVe2yg=
-X-Received: by 2002:a17:90a:17ad:: with SMTP id q42mr19181275pja.181.1622842029398;
- Fri, 04 Jun 2021 14:27:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=EqMw+TK1CU976V2wAL6yPr0zVt+M7GcrRHHt2Qzbk6I=;
+        b=Ws9v+w+QKt6D52AAThYIgxvK3v5I/f/6pQmGhBjmknk9Ed7eVUMuN04mQQuO6WlKUO
+         zO7+rStlKdEMosCReEEikb+BNwoOqxphmY/gO+ZLzL/u3i3+JYSEheamfocJZFboocYo
+         8LeW76EkctsbRv1r/vUsrjufvSRHgSDyckORDABKjfZiauSa27V6uOOw9V8dIAvgIPAU
+         olxiHXELAzpUyi4ho/ZzSIEPW6VXTOhWVwMqGci44O37JiN8x0569uA052W/R6Rl8XdF
+         OA5CrHNEjOy5JAL4g2f7exUaMAkctJMxk/SISLN81nLoiZiUUSkKJB+PKUb1Ict8FNvz
+         BuFg==
+X-Gm-Message-State: AOAM531y/8AtavB9UIUPujFdwvqFV52a/eLH9tu+mj8/tL6fJQ8pe/ES
+        wkO5Rl0SsELNtZy/pK8Tt6e7MtlD0vbQoYYO
+X-Google-Smtp-Source: ABdhPJzdr6RnLT6fCRomQvYzmgxAIywVmhWPqbvYS0EEvMMQecGupaLHnK7sdOs26kUdE8NetHK9+Q==
+X-Received: by 2002:a5d:540b:: with SMTP id g11mr6550369wrv.390.1622855403483;
+        Fri, 04 Jun 2021 18:10:03 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id u8sm9594941wmq.29.2021.06.04.18.10.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Jun 2021 18:10:03 -0700 (PDT)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
+        benl@squareup.com, loic.poulain@linaro.org,
+        bjorn.andersson@linaro.org
+Subject: [PATCH v6 07/12] wcn36xx: Add set_rekey_data callback
+Date:   Sat,  5 Jun 2021 02:11:35 +0100
+Message-Id: <20210605011140.2004643-8-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210605011140.2004643-1-bryan.odonoghue@linaro.org>
+References: <20210605011140.2004643-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
-References: <20210522131827.67551-4-verdre@v0yd.nl> <20210604211447.GA2240001@bjorn-Precision-5520>
-In-Reply-To: <20210604211447.GA2240001@bjorn-Precision-5520>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Sat, 5 Jun 2021 00:26:52 +0300
-Message-ID: <CAHp75Vcab8COGmQdY7M0ag5qS0mTXpOmvbyP426aLJ=wNfM+0A@mail.gmail.com>
-Subject: Re: [RFC PATCH 3/3] mwifiex: pcie: add reset_wsid quirk for Surface 3
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     =?UTF-8?Q?Jonas_Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Jun 5, 2021 at 12:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sat, May 22, 2021 at 03:18:27PM +0200, Jonas Dre=C3=9Fler wrote:
-> > From: Tsuchiya Yuto <kitakar@gmail.com>
-> >
-> > This commit adds reset_wsid quirk and uses this quirk for Surface 3 on
-> > card reset.
-> >
-> > To reset mwifiex on Surface 3, it seems that calling the _DSM method
-> > exists in \_SB.WSID [1] device is required.
-> >
-> > On Surface 3, calling the _DSM method removes/re-probes the card by
-> > itself. So, need to place the reset function before performing FLR and
-> > skip performing any other reset-related works.
->
-> Maybe this is a nit-pick, but I understand "probing" to be something
-> the OS does, namely what we normally call "enumeration," i.e.,
-> discovering a device.
->
-> So it sounds like the _DSM causes a logical hot-removal of the card,
-> which the PCI hotplug driver should notice and it should remove the
-> driver and remove the pci_dev.
->
-> And the _DSM also causes a hot-add (reading the code below, it looks
-> like this is actually a second _DSM),
+Add a callback for Group Temporal Key tracking as provided by the standard
+WiFi ops structure.
 
-_DSM can be only one (single) per device node in ACPI.
-But _DSM may have "functions", that's what we see here.
+We track the key to integrate GTK offloading into the WoWLAN suspend path
+later on. Code comes from the Intel iwlwifi driver with minimal name
+changes.
 
-> which the PCI hotplug driver
-> should also notice and enumerate the bus (i.e., it reads config space
-> looking for a device).  This all would cause a new pci_dev to be
-> allocated, resources assigned for its BARs, and the driver .probe()
-> method to be called again?
->
-> That seems like a lot, so maybe I didn't understand what's actually
-> happening.
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Tested-by: Benjamin Li <benl@squareup.com>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
+ 2 files changed, 25 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 09e22f829682..ec32b8b0067d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -1147,6 +1147,24 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
++static void wcn36xx_set_rekey_data(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct cfg80211_gtk_rekey_data *data)
++{
++	struct wcn36xx *wcn = hw->priv;
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
++
++	mutex_lock(&wcn->conf_mutex);
++
++	memcpy(vif_priv->rekey_data.kek, data->kek, NL80211_KEK_LEN);
++	memcpy(vif_priv->rekey_data.kck, data->kck, NL80211_KCK_LEN);
++	vif_priv->rekey_data.replay_ctr =
++		cpu_to_le64(be64_to_cpup((__be64 *)data->replay_ctr));
++	vif_priv->rekey_data.valid = true;
++
++	mutex_unlock(&wcn->conf_mutex);
++}
++
+ #endif
+ 
+ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+@@ -1249,6 +1267,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ #ifdef CONFIG_PM
+ 	.suspend		= wcn36xx_suspend,
+ 	.resume			= wcn36xx_resume,
++	.set_rekey_data		= wcn36xx_set_rekey_data,
+ #endif
+ 	.config			= wcn36xx_config,
+ 	.prepare_multicast	= wcn36xx_prepare_multicast,
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 5a5114660b18..6121d8a5641a 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -143,6 +143,12 @@ struct wcn36xx_vif {
+ 	unsigned long tentative_addrs[BITS_TO_LONGS(WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX)];
+ 	int num_target_ipv6_addrs;
+ #endif
++	/* WoWLAN GTK rekey data */
++	struct {
++		u8 kck[NL80211_KCK_LEN], kek[NL80211_KEK_LEN];
++		__le64 replay_ctr;
++		bool valid;
++	} rekey_data;
+ 
+ 	struct list_head sta_list;
+ };
+-- 
+2.30.1
 
---=20
-With Best Regards,
-Andy Shevchenko
