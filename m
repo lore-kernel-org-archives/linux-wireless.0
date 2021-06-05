@@ -2,219 +2,185 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-23.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65045C4743F
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:11:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92B49C4743E
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:11:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CED1613BF
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:11:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B5B6613BF
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Jun 2021 01:11:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231328AbhFEBM5 (ORCPT
+        id S231346AbhFEBM6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Jun 2021 21:12:57 -0400
-Received: from mail-wm1-f53.google.com ([209.85.128.53]:52994 "EHLO
-        mail-wm1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231258AbhFEBM4 (ORCPT
+        Fri, 4 Jun 2021 21:12:58 -0400
+Received: from mail-wr1-f52.google.com ([209.85.221.52]:38813 "EHLO
+        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231258AbhFEBM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Jun 2021 21:12:56 -0400
-Received: by mail-wm1-f53.google.com with SMTP id f17so6328503wmf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2021 18:10:57 -0700 (PDT)
+        Fri, 4 Jun 2021 21:12:58 -0400
+Received: by mail-wr1-f52.google.com with SMTP id c9so2258361wrt.5
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2021 18:11:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=F3eE0YLemFVJ4BnfvSqKcBky+Ny7hEaiWR08mc6OFGI=;
-        b=BxMcXrLag2jZNJWrVqiYyRVGOtl++L6pNyBgG4nDyzFqb0/qkm0kU56mS0d2LV0jFk
-         pK2t53ssln+cXVm3JeKRS6ZsyAbKJei4fSHPIXN0A2EC0f0sXddluB7hIqfO6uwsdPye
-         9I6GSu9o7IaZz+MweGRmmiiIY/3qtxnN1RTVIu/mf8MjoIw79LiSFkEDrGn/drsv2met
-         ckYq3LztbNr0atNpsS3Gta/1zOSbZF2AZ0PYTwScjsrlbyb0iNOsjLoEt8ewnkEi+trx
-         GDhhOQfBC9Bqjoxrioqz7+RhihoWceeMEojWRm0/5r51t7kybdKvWtZBli6NjtfODwRz
-         8M5A==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=W+UYnqbXmGpOtA5im0JIGu1QFL9pMS49kWTkIpsAbWs=;
+        b=lUgZ2Vpj2Brda+FbmjtFIEK/xDixQFlAhPTT+q79g6THgG9XmVW2JvzXvkUAjpWhjV
+         8W7eyaN6HEt4dtnlnrLUL8vJlXMtjRFjRakC3TKCKcZjK5guSNSswUtOsDPWHPwd69dc
+         3sG+tARr6tN8MIsscUStJes5VOawpg0OGClJqU5W4TSwyHsaZdryF6f3KS74rqcR3aPJ
+         /vIwebWqstWuYFRCsp3PXbqjGf3jFLLvSpvxWwA4t/xrD66QNUycNMr1cOtbKakRGutp
+         ilJ9nQ+j5ImIWfZ832+ns3RBenKi5kX8tYew0yaDAodHM6cl+qRy3QxRlDdWmfBH0XEs
+         YIGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=F3eE0YLemFVJ4BnfvSqKcBky+Ny7hEaiWR08mc6OFGI=;
-        b=R2aNjCm53RrRR+Gzs0tbd2nUwoqJNoyMF9wwI2n5RaOW1HZLOjDTGlJtwORw7o9QtJ
-         heBZX+OzrRGKkxk9DKD3AAzJIHl/eZH0KSAD/auaZ9pBf1Kg+yzRpbSC2EJ/uEPBLXru
-         VtTKElpDgZBiXA62h5ebZZ982zHBZiinlmUqziFZOzygITJ0CNFBXKifcFW8mQW0IGQo
-         NQhKsqFKIB7fe94NNmxv+8QFPqqOk6Adw+sKgYFT23sJIH0Yocz1ASp7YqvHHgI+ghap
-         /hfVSk/uqZZVVtLZJa5Aktem7qrKQ/7tDt442H2GYWy3ln3gkl/f2ROliIdow1HSKVVE
-         ZSfw==
-X-Gm-Message-State: AOAM530BzW7wvTCndWdCiEQ9jAXfSadgNc6rUdYYn2jPI0fDyuJZk6Vj
-        NWAqS+q/XqPZAhHTZqdLTw/OCw==
-X-Google-Smtp-Source: ABdhPJzk2I1SuI1CbVsc4MjcodYkt1OvJxuhFjnHnqcPUw9RHjF7XBgmR6cUOymmt5uRPVnhXf7JRA==
-X-Received: by 2002:a7b:c10b:: with SMTP id w11mr6010402wmi.186.1622855396686;
-        Fri, 04 Jun 2021 18:09:56 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=W+UYnqbXmGpOtA5im0JIGu1QFL9pMS49kWTkIpsAbWs=;
+        b=gqJfd8gwrNccR7mL0IdaTplO8y/5w1j40wT0KotlfcFpMfc8AW6O1AjsD4jL/G3ern
+         wUcAHLIKfQgMVtRIy3M+CbxQtXKGD//vdw1ftD+ELzFE4/L39eAItwL9YCImhB/uh9+n
+         8iu7fhK4qEYd3BezpmBayZjuQiWEuvmVYuRInMTyFII8Q0QjrQrhnGuxmmkgbJeujYp6
+         w65gz+Ilg37+Wtq4mO5AN5UiW86hAp5ckhDlKQ2/gbaraVoz3wWnZ/KNyniva3o8qQP/
+         HV80EKvBCeALlSBtCMxZ7h8QK556pqOZbLkXkKVezpztz8S0x+CdEVfVoeJNSO0cmzlc
+         Gneg==
+X-Gm-Message-State: AOAM533zbGjrhJVRR9N0MRkKj+fcgINAW8KC4ZB8qJ7DZRjfNsuW9d2g
+        0nQPFzzHpBkhSlCUsLQYFHkCCA==
+X-Google-Smtp-Source: ABdhPJxAVFEBfMaWbclRmLcEd1vDaijbWt/QCIaaxyc5O142yT3RDHVZvJZvstMVtozLHx8ldK9jvw==
+X-Received: by 2002:a5d:58c8:: with SMTP id o8mr6192780wrf.299.1622855401481;
+        Fri, 04 Jun 2021 18:10:01 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id u8sm9594941wmq.29.2021.06.04.18.09.55
+        by smtp.gmail.com with ESMTPSA id u8sm9594941wmq.29.2021.06.04.18.10.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Jun 2021 18:09:56 -0700 (PDT)
+        Fri, 04 Jun 2021 18:10:01 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     bryan.odonoghue@linaro.org, shawn.guo@linaro.org,
         benl@squareup.com, loic.poulain@linaro.org,
         bjorn.andersson@linaro.org
-Subject: [PATCH v6 00/12] wcn36xx: Enable downstream consistent Wake on Lan
-Date:   Sat,  5 Jun 2021 02:11:28 +0100
-Message-Id: <20210605011140.2004643-1-bryan.odonoghue@linaro.org>
+Subject: [PATCH v6 05/12] wcn36xx: Add ipv6 address tracking
+Date:   Sat,  5 Jun 2021 02:11:33 +0100
+Message-Id: <20210605011140.2004643-6-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210605011140.2004643-1-bryan.odonoghue@linaro.org>
+References: <20210605011140.2004643-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-V6:
-- Fixes two sparse warnings - kernel test robot
+Taking code from iwlwifi this commit adds a standard callback for
+ipv6_addr_change().
 
-V5:
-- Fixes a git rebase/squash error. A mutex_unlock for patch #2 was contained in
-  patch #3 - Loic
+This callback allows wcn36xx to know the set of ipv6 addresses. Something
+we need to know in order to get wowlan working with ipv6.
 
-V4:
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Tested-by: Benjamin Li <benl@squareup.com>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h     |  1 +
+ drivers/net/wireless/ath/wcn36xx/main.c    | 32 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  8 ++++++
+ 3 files changed, 41 insertions(+)
 
-A few functions need to be declared static which were only flagged by the
-test robot when the V3 patches hit pending
-
-- get_first_vif - Kernel test robot 
-  Patch #2
-  https://www.mail-archive.com/ath10k@lists.infradead.org/msg13558.html
-
-- wcn36xx_ipv6_addr_change - Kernel test robot 
-  https://www.mail-archive.com/ath10k@lists.infradead.org/msg13571.html
-  Patch #5
-
-- wcn36xx_set_rekey_data - Kernel test robot 
-  Patch #7
-  https://www.mail-archive.com/ath10k@lists.infradead.org/msg13559.html
-
-Missed making this IPV6 only in the previous round
-
-- Fixed an IPV6 optional compliation missed in V3 - Kernel test robot 
-  https://www.mail-archive.com/ath10k@lists.infradead.org/msg13563.html
-  Patch #6
-
-Feedback from Ben and Loic
-
-- Streamlines the finding of the first associated VIF - Loic Poulain
-  Patch #2
-  https://www.spinics.net/lists/linux-wireless/msg209208.html
-
-- Adds Tested-by: Benjamin Li as indicated
-  Patch *
-
-I've verified this on Debian with 5.13.x and Android with 4.19.x where
-4.19.x contains an appropriate out-of-tree LPM patch, to verify
-suspend/resume with offloaded ARP in suspend for ipv4 and ipv6 still works.
-
-V3:
-- Ifdefs an IPV6 specific function which will not compile unless CONFIG_IPV6
-  is switched on - Kernel test robot
-
-V2:
-- Drops work-around for scan in progress
-  This is not required on a tip of tree kernel - Kalle
-- Churn out "this patch" form commit logs - Kalle
-- Adds comment about packing structures to commit log patch #8 - Kalle
-- Moves enablement of magic-packet and GTK rekey to last patch
-  This means that the functionality is only switched on when the full
-  series has been applied - Kalle
-
-https://www.spinics.net/lists/linux-wireless/msg206927.html
-
-V1:
-This series enables Wake on WLAN for the wcn36xx. Downstream implements two
-competing methods for WoWLAN, only one of which is used in practice.
-
-1. The downstream prima driver and firmware have a dedicated wowlan SMD
-   command set, however for whatever reason, the downstream driver doesn't
-   actually use that code path for suspend/resume.
-   Similarly the downstream kernel will mask out the SMD interrupt when
-   entering into suspend, so its clear the firmware assisted wowlan command
-   is not used at all.
-   In short, the code is implemented but not used.
-
-2. The alternative version of wake on wlan implemented downstream does
-   A. An RXP filter
-   B. Frimware ipv4 ARP offload
-   C. Frimware ipv6 namesapece offload
-   D. GTK replay counter save/update on suspend/resume
-
-This patchset replicates method #2 since it is the only method that
-actually works. When replicating the functionality from downstream to
-upsteam I found the RXP filter step to be redundant, so I skipped that.
-
-Verified on Android/4.19 with qcom out-of-tree low-power patch on wcn3680.
-Verified on Debian/kvalo/master on wcn3680 and wcn3620.
-
-The Debian/upstream test doesn't include the low-power patches from qcom so
-the time it takes the system to wake up when pinged is longer.
-
-Test method:
-
-1. Enable magic packet wakeup on target
-   iw phy0 wowlan enable magic-packet
-   iw phy0 wowlan show
-
-2. Flush arp tables on host
-   sudo ip -s -s neigh flush all
-   sudo ip -6 -s -s neigh flush all
-
-3. Suspend device
-   echo 1 > /sys/kernel/debug/clk/debug_suspend
-   echo mem > /sys/power/state ; cat /sys/kernel/debug/rpm_stats
-   echo 0 > /sys/module/wcn36xx/parameters/debug_mask
-   dmesg
-
-4. Ping either ipv4 or ipv6
-   ping 192.168.0.85
-   ping -6 fe80::6455:44ff:fe33:2211%wlo1
-
-In both cases using Wireshark we see the target system receive an ARP or
-NS6 lookup and respond, followed by the host sending a ping or ping6 and
-the target system coming out of suspend.
-
-Similarly watching GTK keying on the AP when the device is in suspend, we
-see the firmware successfully rekey and when we resume, the host picking up
-the rekey material with persistence of the WiFi link during suspend/resume.
-
-commit 5336fad96e8f ("wcn36xx: Enable firmware offloaded keepalive")
-ensures that the link is kept alive in suspend, this additional set gives
-the ability to 
-
-- Resolve ARP/NS6 lookups without waking the system
-- Rekeying in suspend
-- Suspending and resuming based on received datagram
-
-https://git.linaro.org/people/bryan.odonoghue/kernel.git/log/?h=ath.master-wcn36xx-fw-offload-suspend-resume
-
-Bryan O'Donoghue (12):
-  wcn36xx: Return result of set_power_params in suspend
-  wcn36xx: Run suspend for the first ieee80211_vif
-  wcn36xx: Add ipv4 ARP offload support in suspend
-  wcn36xx: Do not flush indication queue on suspend/resume
-  wcn36xx: Add ipv6 address tracking
-  wcn36xx: Add ipv6 namespace offload in suspend
-  wcn36xx: Add set_rekey_data callback
-  wcn36xx: Add GTK offload to WoWLAN path
-  wcn36xx: Add GTK offload info to WoWLAN resume
-  wcn36xx: Add Host suspend indication support
-  wcn36xx: Add host resume request support
-  wcn36xx: Enable WOWLAN flags
-
- drivers/net/wireless/ath/wcn36xx/hal.h     |  20 +-
- drivers/net/wireless/ath/wcn36xx/main.c    | 110 ++++++++-
- drivers/net/wireless/ath/wcn36xx/smd.c     | 267 +++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h     |  17 ++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  14 ++
- 5 files changed, 414 insertions(+), 14 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index b56c8292fa62..90333daed845 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -3466,6 +3466,7 @@ struct wcn36xx_hal_rem_bcn_filter_req {
+ #define WCN36XX_HAL_OFFLOAD_BCAST_FILTER_ENABLE             0x2
+ #define WCN36XX_HAL_OFFLOAD_ARP_AND_BCAST_FILTER_ENABLE	\
+ 	(WCN36XX_HAL_OFFLOAD_ENABLE | WCN36XX_HAL_OFFLOAD_BCAST_FILTER_ENABLE)
++#define WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX		0x02
+ 
+ struct wcn36xx_hal_ns_offload_params {
+ 	u8 src_ipv6_addr[WCN36XX_HAL_IPV6_ADDR_LEN];
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 9731fcbe2e7f..240ecdd52f81 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -25,6 +25,7 @@
+ #include <linux/rpmsg.h>
+ #include <linux/soc/qcom/smem_state.h>
+ #include <linux/soc/qcom/wcnss_ctrl.h>
++#include <net/ipv6.h>
+ #include "wcn36xx.h"
+ #include "testmode.h"
+ 
+@@ -1208,6 +1209,34 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
++#if IS_ENABLED(CONFIG_IPV6)
++static void wcn36xx_ipv6_addr_change(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct inet6_dev *idev)
++{
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
++	struct inet6_ifaddr *ifa;
++	int idx = 0;
++
++	memset(vif_priv->tentative_addrs, 0, sizeof(vif_priv->tentative_addrs));
++
++	read_lock_bh(&idev->lock);
++	list_for_each_entry(ifa, &idev->addr_list, if_list) {
++		vif_priv->target_ipv6_addrs[idx] = ifa->addr;
++		if (ifa->flags & IFA_F_TENTATIVE)
++			__set_bit(idx, vif_priv->tentative_addrs);
++		idx++;
++		if (idx >= WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX)
++			break;
++		wcn36xx_dbg(WCN36XX_DBG_MAC, "%pI6 %s\n", &ifa->addr,
++			    (ifa->flags & IFA_F_TENTATIVE) ? "tentative" : NULL);
++	}
++	read_unlock_bh(&idev->lock);
++
++	vif_priv->num_target_ipv6_addrs = idx;
++}
++#endif
++
+ static const struct ieee80211_ops wcn36xx_ops = {
+ 	.start			= wcn36xx_start,
+ 	.stop			= wcn36xx_stop,
+@@ -1231,6 +1260,9 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ 	.sta_add		= wcn36xx_sta_add,
+ 	.sta_remove		= wcn36xx_sta_remove,
+ 	.ampdu_action		= wcn36xx_ampdu_action,
++#if IS_ENABLED(CONFIG_IPV6)
++	.ipv6_addr_change	= wcn36xx_ipv6_addr_change,
++#endif
+ 
+ 	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
+ };
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 71fa9992b118..5a5114660b18 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -18,6 +18,7 @@
+ #define _WCN36XX_H_
+ 
+ #include <linux/completion.h>
++#include <linux/in6.h>
+ #include <linux/printk.h>
+ #include <linux/spinlock.h>
+ #include <net/mac80211.h>
+@@ -136,6 +137,13 @@ struct wcn36xx_vif {
+ 	u8 self_dpu_desc_index;
+ 	u8 self_ucast_dpu_sign;
+ 
++#if IS_ENABLED(CONFIG_IPV6)
++	/* IPv6 addresses for WoWLAN */
++	struct in6_addr target_ipv6_addrs[WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX];
++	unsigned long tentative_addrs[BITS_TO_LONGS(WCN36XX_HAL_IPV6_OFFLOAD_ADDR_MAX)];
++	int num_target_ipv6_addrs;
++#endif
++
+ 	struct list_head sta_list;
+ };
+ 
 -- 
 2.30.1
 
