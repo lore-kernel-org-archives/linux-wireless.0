@@ -2,195 +2,192 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE938C4CC65
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08656C47094
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jun 2021 15:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94C1761108
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E82A4611AD
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Jun 2021 15:33:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231391AbhFGOyk (ORCPT
+        id S230493AbhFGPft (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Jun 2021 10:54:40 -0400
-Received: from vulcan.natalenko.name ([104.207.131.136]:57020 "EHLO
-        vulcan.natalenko.name" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230395AbhFGOya (ORCPT
+        Mon, 7 Jun 2021 11:35:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50476 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230220AbhFGPft (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Jun 2021 10:54:30 -0400
-Received: from localhost (unknown [151.237.229.131])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by vulcan.natalenko.name (Postfix) with ESMTPSA id DBF62AC1E8A;
-        Mon,  7 Jun 2021 16:52:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=natalenko.name;
-        s=dkim-20170712; t=1623077544;
+        Mon, 7 Jun 2021 11:35:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623080037;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=1H+7Ck2Bcpux8ENLgMA7IprIPdwgQ1/191FjhNRfItU=;
-        b=J2XQ8L+BQLpu1BNxPxCrsw5GQ78wPxXhzmZvwbZe1XbEVYgZAP03xrFnhOT1x/cSDJvWb3
-        y4/Pn6UGYsomVYjPWlcebDqAg35XTXxKsfLHBLE1JRDhIPAHOEWC0zwgDlEoaOGvcaBtAb
-        +hSoOHWUoMFeRDvir0X+vmAg+vxXDWk=
-Date:   Mon, 7 Jun 2021 16:52:23 +0200
-From:   Oleksandr Natalenko <oleksandr@natalenko.name>
-To:     linux-kernel@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: Divide error in minstrel_ht_get_tp_avg()
-Message-ID: <20210607145223.tlxo5ge42mef44m5@spock.localdomain>
-References: <20210529165728.bskaozwtmwxnvucx@spock.localdomain>
+        bh=DankcACZXWslvex/hGCrRKXxxv4UiIym257Vx0lNYb4=;
+        b=gY48wKg8HE7Ya3PBUad8Wz0enAHJYtlMEkF+40qIcDYrGe5qvyWk18gm/XK4laomlQtxPI
+        VpLhCFELGifwJKttDnUi5DpcVwVGiyxu+0INlNdMSnik4qDtvJkP7oHVs2jXn7O33XTPL9
+        sRlDPAaVKhl/dnguZc5eGReUR3bJehc=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-297-fQ1HkIZ1NCWTdPi19cQhTw-1; Mon, 07 Jun 2021 11:33:55 -0400
+X-MC-Unique: fQ1HkIZ1NCWTdPi19cQhTw-1
+Received: by mail-ej1-f72.google.com with SMTP id ji22-20020a1709079816b0290414bdf5da11so1023376ejc.9
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2021 08:33:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=DankcACZXWslvex/hGCrRKXxxv4UiIym257Vx0lNYb4=;
+        b=O1yR28FTbCtayGYIyaQjrMslE/SuQMRASaiovN8HjoioG7X7HNrRbhsbAMPEDc7MK0
+         Vb2FT21a+aJPAc//66l2Pql61Tzw+xNoyLMOykUCFQ9n6qIaybhdnuzrRkiE4wNf7obA
+         /LW76Cpsmc+jEk9/t4nDxtpeXEbMSu2TarbfcsYO2/9eYQuVGvr+hTh9+1xcekuC45lA
+         YVPjV7yttQezbuCvyfxDo5SV0T1KFiiaAO186pr1yw7g64tycwwKlSssSkKiYXbpH/bO
+         Ml8WUWt/xf+bPcJaTk55RmVZy1mIXeeqPUopfQEku7H/uQHg4Yf/nLYN4Xwjvpke683V
+         6GNw==
+X-Gm-Message-State: AOAM530vcY0TN/UFwKHVQ7oTnJMBumZkN4I0ErGMxK2yfzn70eBaj8A3
+        S4wFFE99PcFdkW2KnQfPXvNrWoXOEWzdIQ0dVvO986hdwokpfrSq7PH5FqFXSMyXvRyCp9ArAFk
+        mMr0oenNKPz5Z9QlPF9F96V1zkac=
+X-Received: by 2002:a17:907:20da:: with SMTP id qq26mr17820562ejb.42.1623080033902;
+        Mon, 07 Jun 2021 08:33:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyI7KVwpREF18YgH/3bFCnlBjU/J/cfKvgYikWI+jCFkukPGJiLXyu+tjZ0OfcXFYMkBnvSKw==
+X-Received: by 2002:a17:907:20da:: with SMTP id qq26mr17820533ejb.42.1623080033736;
+        Mon, 07 Jun 2021 08:33:53 -0700 (PDT)
+Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
+        by smtp.gmail.com with ESMTPSA id s2sm7949873edu.89.2021.06.07.08.33.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Jun 2021 08:33:53 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: Add clm_blob firmware files to modinfo
+To:     matthias.bgg@kernel.org, Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        "David S . Miller" <davem@davemloft.net>
+Cc:     brcm80211-dev-list.pdl@broadcom.com,
+        Remi Depommier <rde@setrix.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        linux-wireless@vger.kernel.org, Amar Shankar <amsr@cypress.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org, Dmitry Osipenko <digetx@gmail.com>,
+        SHA-cyfmac-dev-list@infineon.com, rafal@milecki.pl,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Matthias Brugger <mbrugger@suse.com>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Wright Feng <wright.feng@infineon.com>
+References: <20210607103433.21022-1-matthias.bgg@kernel.org>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <b43c0fe0-0252-40f5-39f2-1c60905fd0ea@redhat.com>
+Date:   Mon, 7 Jun 2021 17:33:52 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
+In-Reply-To: <20210607103433.21022-1-matthias.bgg@kernel.org>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210529165728.bskaozwtmwxnvucx@spock.localdomain>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, May 29, 2021 at 06:57:29PM +0200, Oleksandr Natalenko wrote:
-> The following woe happened on my home router running as a Wi-Fi AP with
-> MT7612:
-> 
-> ```
-> [16592.157962] divide error: 0000 [#1] PREEMPT SMP PTI
-> [16592.163169] CPU: 2 PID: 683 Comm: mt76-tx phy0 Tainted: G         C        5.12.0-pf4 #1
-> [16592.171745] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./J3710-ITX, BIOS P1.50 04/16/2018
-> [16592.182155] RIP: 0010:minstrel_ht_get_tp_avg+0xb1/0x100 [mac80211]
-> [16592.188795] Code: 04 00 00 00 7f 1c 31 c9 81 fa f1 49 02 00 0f 9c c1 8d 0c cd 08 00 00 00 eb 08 8b 47 30 b9 01 00 00 00 69 c0 e8 03 00 00 31 d2 <f7> f1 ba 66 0e 00 00 39 d6 0f 4f f2 49 63 d1 48 8d 0c 52 48 8d 0c
-> [16592.208796] RSP: 0018:ffffb6a601293be8 EFLAGS: 00010246
-> [16592.214292] RAX: 000000000001a5e0 RBX: ffff9c658ee95170 RCX: 0000000000000000
-> [16592.222054] RDX: 0000000000000000 RSI: 0000000000000585 RDI: ffff9c658ee94000
-> [16592.229620] RBP: 0000000000000006 R08: 0000000000000006 R09: 0000000000000012
-> [16592.237254] R10: 0000000000000007 R11: 0000000000000000 R12: ffff9c658ee94000
-> [16592.244828] R13: 0000000000000012 R14: ffff9c658ee9534c R15: 0000000000000585
-> [16592.252635] FS:  0000000000000000(0000) GS:ffff9c66f8500000(0000) knlGS:0000000000000000
-> [16592.261086] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [16592.267326] CR2: 0000555d81abe7b8 CR3: 0000000116c10000 CR4: 00000000001006e0
-> [16592.274904] Call Trace:
-> [16592.277549]  minstrel_ht_update_stats+0x1fe/0x1320 [mac80211]
-> [16592.283730]  minstrel_ht_tx_status+0x67f/0x710 [mac80211]
-> [16592.289442]  rate_control_tx_status+0x6e/0xb0 [mac80211]
-> [16592.295267]  ieee80211_tx_status_ext+0x22e/0xb00 [mac80211]
-> [16592.311290]  ieee80211_tx_status+0x7d/0xa0 [mac80211]
-> [16592.316714]  mt76_tx_status_unlock+0x83/0xa0 [mt76]
-> [16592.321999]  mt76x02_send_tx_status+0x1b7/0x400 [mt76x02_lib]
-> [16592.334516]  mt76x02_tx_worker+0x8f/0xd0 [mt76x02_lib]
-> [16592.340091]  __mt76_worker_fn+0x78/0xb0 [mt76]
-> [16592.345067]  kthread+0x183/0x1b0
-> [16592.353378]  ret_from_fork+0x22/0x30
-> ```
-> 
-> `faddr2line` says it is this:
-> 
-> ```
->  430 int
->  431 minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate,
->  432                int prob_avg)
->  433 {
-> …
->  435     unsigned int ampdu_len = 1;
-> …
->  441     if (minstrel_ht_is_legacy_group(group))
-> …
->  443     else
->  444         ampdu_len = minstrel_ht_avg_ampdu_len(mi);
-> …
->  446     nsecs = 1000 * overhead / ampdu_len;
->          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> ```
-> 
-> So, it seems `minstrel_ht_avg_ampdu_len()` can return 0, which is not
-> really legitimate.
-> 
-> Looking at `minstrel_ht_avg_ampdu_len()`, I see the following:
-> 
-> ```
-> 16:#define MINSTREL_SCALE  12
-> …
-> 18:#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
-> ```
-> 
-> ```
->  401 static unsigned int
->  402 minstrel_ht_avg_ampdu_len(struct minstrel_ht_sta *mi)
->  403 {
-> …
->  406     if (mi->avg_ampdu_len)
->  407         return MINSTREL_TRUNC(mi->avg_ampdu_len);
-> ```
-> 
-> So, likely, `mi->avg_ampdu_len` is non-zero, but it's too small, hence
-> right bitshift makes it zero.
-> 
-> Should there be some protection against such a situation?
-> 
-> Felix, could you maybe check this? Looks like you were the last one to
-> overhaul that part of code.
+Hi,
 
-Quick hack from me:
+On 6/7/21 12:34 PM, matthias.bgg@kernel.org wrote:
+> From: Matthias Brugger <mbrugger@suse.com>
+> 
+> Cypress Wi-Fi chipsets include information regarding regulatory
+> constraints. These are provided to the driver through "Country Local
+> Matrix" (CLM) blobs. Files present in Linux firmware repository are
+> on a generic world-wide safe version with conservative power
+> settings which is designed to comply with regulatory but may not
+> provide best performance on all boards. Never the less, a better
+> functionality can be expected with the file present, so add it to the
+> modinfo of the driver.
+> 
+> Signed-off-by: Matthias Brugger <mbrugger@suse.com>
 
-commit a23d3f77658de968c5bb852ba478402c93958f7f
-Author: Oleksandr Natalenko <oleksandr@natalenko.name>
-Date:   Mon Jun 7 16:45:45 2021 +0200
+Thanks, patch looks good to me:
 
-    mac80211: minstrel_ht: force ampdu_len to be > 0
-    
-    This is a hack.
-    
-    Work around the following crash:
-    
-    ```
-    divide error: 0000 [#1] PREEMPT SMP PTI
-    CPU: 2 PID: 683 Comm: mt76-tx phy0 Tainted: G         C        5.12.0-pf4 #1
-    Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./J3710-ITX, BIOS P1.50 04/16/2018
-    RIP: 0010:minstrel_ht_get_tp_avg+0xb1/0x100 [mac80211]
-    …
-    Call Trace:
-     minstrel_ht_update_stats+0x1fe/0x1320 [mac80211]
-     minstrel_ht_tx_status+0x67f/0x710 [mac80211]
-     rate_control_tx_status+0x6e/0xb0 [mac80211]
-     ieee80211_tx_status_ext+0x22e/0xb00 [mac80211]
-     ieee80211_tx_status+0x7d/0xa0 [mac80211]
-     mt76_tx_status_unlock+0x83/0xa0 [mt76]
-     mt76x02_send_tx_status+0x1b7/0x400 [mt76x02_lib]
-     mt76x02_tx_worker+0x8f/0xd0 [mt76x02_lib]
-     __mt76_worker_fn+0x78/0xb0 [mt76]
-     kthread+0x183/0x1b0
-     ret_from_fork+0x22/0x30
-    ```
-    
-    Link: https://lore.kernel.org/lkml/20210529165728.bskaozwtmwxnvucx@spock.localdomain/
-    Signed-off-by: Oleksandr Natalenko <oleksandr@natalenko.name>
----
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ecad9b10984f..6ad188c4101e 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -440,8 +440,13 @@ minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate,
- 
- 	if (minstrel_ht_is_legacy_group(group))
- 		overhead = mi->overhead_legacy;
--	else
-+	else {
- 		ampdu_len = minstrel_ht_avg_ampdu_len(mi);
-+		if (unlikely(!ampdu_len)) {
-+			pr_err_once("minstrel_ht_get_tp_avg: ampdu_len == 0!");
-+			ampdu_len = 1;
-+		}
-+	}
- 
- 	nsecs = 1000 * overhead / ampdu_len;
- 	nsecs += minstrel_mcs_groups[group].duration[rate] <<
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
--- 
-  Oleksandr Natalenko (post-factum)
+Regards,
+
+Hans
+
+
+> 
+> ---
+> 
+>  .../wireless/broadcom/brcm80211/brcmfmac/firmware.h  |  7 +++++++
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c  |  4 ++--
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c  | 12 ++++++------
+>  3 files changed, 15 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+> index 46c66415b4a6..e290dec9c53d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+> @@ -32,6 +32,13 @@ static const char BRCM_ ## fw_name ## _FIRMWARE_BASENAME[] = \
+>  	BRCMF_FW_DEFAULT_PATH fw_base; \
+>  MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw_base ".bin")
+>  
+> +/* Firmware and Country Local Matrix files */
+> +#define BRCMF_FW_CLM_DEF(fw_name, fw_base) \
+> +static const char BRCM_ ## fw_name ## _FIRMWARE_BASENAME[] = \
+> +	BRCMF_FW_DEFAULT_PATH fw_base; \
+> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw_base ".bin"); \
+> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw_base ".clm_blob")
+> +
+>  #define BRCMF_FW_ENTRY(chipid, mask, name) \
+>  	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_BASENAME }
+>  
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index 143a705b5cb3..c49dd0c36ae4 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -48,8 +48,8 @@ enum brcmf_pcie_state {
+>  BRCMF_FW_DEF(43602, "brcmfmac43602-pcie");
+>  BRCMF_FW_DEF(4350, "brcmfmac4350-pcie");
+>  BRCMF_FW_DEF(4350C, "brcmfmac4350c2-pcie");
+> -BRCMF_FW_DEF(4356, "brcmfmac4356-pcie");
+> -BRCMF_FW_DEF(43570, "brcmfmac43570-pcie");
+> +BRCMF_FW_CLM_DEF(4356, "brcmfmac4356-pcie");
+> +BRCMF_FW_CLM_DEF(43570, "brcmfmac43570-pcie");
+>  BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
+>  BRCMF_FW_DEF(4359, "brcmfmac4359-pcie");
+>  BRCMF_FW_DEF(4364, "brcmfmac4364-pcie");
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index b8788d7090a4..69cbe38f05ce 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -616,14 +616,14 @@ BRCMF_FW_DEF(43362, "brcmfmac43362-sdio");
+>  BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
+>  BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
+>  /* Note the names are not postfixed with a1 for backward compatibility */
+> -BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
+> -BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
+> +BRCMF_FW_CLM_DEF(43430A1, "brcmfmac43430-sdio");
+> +BRCMF_FW_CLM_DEF(43455, "brcmfmac43455-sdio");
+>  BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
+> -BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
+> -BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
+> +BRCMF_FW_CLM_DEF(4354, "brcmfmac4354-sdio");
+> +BRCMF_FW_CLM_DEF(4356, "brcmfmac4356-sdio");
+>  BRCMF_FW_DEF(4359, "brcmfmac4359-sdio");
+> -BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
+> -BRCMF_FW_DEF(43012, "brcmfmac43012-sdio");
+> +BRCMF_FW_CLM_DEF(4373, "brcmfmac4373-sdio");
+> +BRCMF_FW_CLM_DEF(43012, "brcmfmac43012-sdio");
+>  
+>  /* firmware config files */
+>  MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.txt");
+> 
+
