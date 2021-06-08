@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8090C4743E
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5117C47082
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A17916120F
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F9DC6120F
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230452AbhFHEFr (ORCPT
+        id S230503AbhFHEFz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jun 2021 00:05:47 -0400
-Received: from mail-lf1-f51.google.com ([209.85.167.51]:45989 "EHLO
-        mail-lf1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230364AbhFHEFr (ORCPT
+        Tue, 8 Jun 2021 00:05:55 -0400
+Received: from mail-lf1-f45.google.com ([209.85.167.45]:37659 "EHLO
+        mail-lf1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230364AbhFHEFz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jun 2021 00:05:47 -0400
-Received: by mail-lf1-f51.google.com with SMTP id a1so20133886lfr.12;
-        Mon, 07 Jun 2021 21:03:54 -0700 (PDT)
+        Tue, 8 Jun 2021 00:05:55 -0400
+Received: by mail-lf1-f45.google.com with SMTP id f11so29739329lfq.4;
+        Mon, 07 Jun 2021 21:03:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1uFD2O0vKXy2Tb2HNN6E4vBvc6S9cY96zFOzzHgNrTM=;
-        b=ekFCy4rTrKxhkCHRrv+Kw1A0n6rHg7Q0KKykF1lDJFFGciPhqnC6b3DD8Fgb+Tx05j
-         jcSRzqSd1ysrJHvXBeBbXBXDwk+xilym3oUs0/8/BEFaXs4FRFGGIMl6o5bNvGXRCWav
-         R7H0EAF/K7lV5kbXx9l8hCNA5zcMdYHvyJS0vnk5JBiN6fMlsEwK3+44hYBKKgmYZ7ta
-         iuyLQ0dT6jLD7+86LLH+lrFFPGmVPJEWRlpaevFMX1dS46oWzIDgdXk/C3tmKn7NGKWn
-         2YcyyQL4TKH/rcDLbeWGudtNfsZ31ryErzwhagwywKXV2xpXyMfuehanT0n3xi76IAdr
-         nXog==
+        bh=2T7mIKspOgOa6iTte+bN4zWzDmpXAFYCXaoc2hPlut8=;
+        b=kTFV8DhKMJsh1Yus1Ow1Db/nNszmSRADk8rAAwc/E2XYFMMmZqRQ2AfF5e/VO8mwJY
+         GZkRjgfKv37q2f8BSobmwrTbWCHdIxBeB5dgUaKPMtQUqTUqO1RmtNI0QcRlguGz5EmW
+         Fd2GF+x0YI6miZQf+gCqc+AUQWhJwCJU6pmaW76DrRbTfhCAfSIP+R/1iiS6zHLq67km
+         PocKRfirjesACDsRD9bQnwZgJ/q8mRhBHv7akoOZMk0mH1HZgKgZ1iFg9VCGx4ITJHEW
+         8QKtPlZToaW92W4Yt8HRKcyaGJKCv10I7V92lustFmRVI0QifJFXLDZ8UvnmWBdSBQG9
+         N7rg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1uFD2O0vKXy2Tb2HNN6E4vBvc6S9cY96zFOzzHgNrTM=;
-        b=Fq5o+oE7CM2X+O+z/UQ/1VMv8YFuRpKy/fSgTkNLJT5OmTEwISC+brC09dwAZC8hXK
-         y6BAKBFvnK0eYDUqn9ouKwkPQJQ5kvKjHoPe5gNiE5KCMSwlw6Tb+GImZ70Fy8figPTd
-         yc+e9ruOebWtsvEghjW/rmD9UI9e7aEqTQPQ3ivAwqjKsf/U7rkhhxqNmm6go+DjCh+H
-         uyPeO/auUMmRyxaDSzp2pcdI2bh7DY8nWKu+ETjqhg2J87PsacqQzGhsDRV33wWhSxxm
-         uMSOpalDw8UYumNOZwe7PTVRdMr4PLNTB9IaXfydLuHPeJ7yu79UpakThMyCzOK+Doi+
-         DT4g==
-X-Gm-Message-State: AOAM532fftXA4DIDEcqOwhOQE6lCYXNh0xrbQPxxjkF+kH16u5twEom5
-        j2eDESKDGpU8akv25JZQqhc=
-X-Google-Smtp-Source: ABdhPJxocvEw+Mi3KJ9OSKPUilp799hP5e1cKMh5Y/I0m68CnqNuyvtmyHN7V924o7St9JnOz7eTXg==
-X-Received: by 2002:a19:4f1a:: with SMTP id d26mr14467136lfb.265.1623124973967;
-        Mon, 07 Jun 2021 21:02:53 -0700 (PDT)
+        bh=2T7mIKspOgOa6iTte+bN4zWzDmpXAFYCXaoc2hPlut8=;
+        b=O0k166V0nKBSxAfWdtoKp9bYWC93ufOALJVEq35iKxAo5sbhmy2sp98z/hq2Sy2OYO
+         fhsQTljUBsT8oxK6e4aYMEmfYTZHFnK9F0+gL5yonal84WSmlFnd5Mt4INhs0+6hlaxq
+         chn9wmmuly0btwr3byrafSbYyHxzSpP04WOzCd9+0dzbB/SmCG0Z+5+VZ+5bDp/SWeqV
+         CMa/TnvKhBGyDsvHx69ReG1JyWIWLBLEv7ndOjg/QiPhNnMw4SYXGOCbJ6atuF3ncB+8
+         5f9Ke0LXkkXV2+fpIP6Ymy4Cm/PkMRRkaH91zFwWg766A4waU1fKm6FQE6un7MfcfEJL
+         AgKQ==
+X-Gm-Message-State: AOAM5314uqq5er7AGRgHGCcVNfVlJmtXwEaIprwcQj3Ybx7SrDx4MBq5
+        CkKSQIw5QIhmq0m0161qVizNKPjeFHg=
+X-Google-Smtp-Source: ABdhPJzXt8hdW4gKAPUGP3uhN1h4UA2IIXI01v30gewJbphkSxI1315OBuOEUukvter7mU7Bi+3xBg==
+X-Received: by 2002:ac2:4c0a:: with SMTP id t10mr13415850lfq.401.1623124972121;
+        Mon, 07 Jun 2021 21:02:52 -0700 (PDT)
 Received: from rsa-laptop.internal.lan ([217.25.229.52])
-        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.53
+        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 21:02:53 -0700 (PDT)
+        Mon, 07 Jun 2021 21:02:51 -0700 (PDT)
 From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To:     Loic Poulain <loic.poulain@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/10] net: wwan: core: spell port device name in lowercase
-Date:   Tue,  8 Jun 2021 07:02:36 +0300
-Message-Id: <20210608040241.10658-6-ryazanov.s.a@gmail.com>
+Subject: [PATCH 03/10] net: wwan: make WWAN_PORT_MAX meaning less surprised
+Date:   Tue,  8 Jun 2021 07:02:34 +0300
+Message-Id: <20210608040241.10658-4-ryazanov.s.a@gmail.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
 References: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
@@ -72,79 +72,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Usually a device name is spelled in lowercase, let us follow this
-practice in the WWAN subsystem as well. The bottom line is that such
-name is easier to type.
-
-To keep the device type attribute contents more natural (i.e., spell
-abbreviations in uppercase), while making the device name lowercase,
-turn the port type strings array to an array of structure that contains
-both the port type name and the device name suffix.
+It is quite unusual when some value can not be equal to a defined range
+max value. Also most subsystems defines FOO_TYPE_MAX as a maximum valid
+value. So turn the WAN_PORT_MAX meaning from the number of supported
+port types to the maximum valid port type.
 
 Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- drivers/net/wwan/wwan_core.c | 34 ++++++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 8 deletions(-)
+ drivers/net/wwan/wwan_core.c |  2 +-
+ include/linux/wwan.h         | 12 +++++++++---
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wwan/wwan_core.c b/drivers/net/wwan/wwan_core.c
-index 97d77b06d222..ba4392d71b80 100644
+index 6e8f19c71a9e..632ff86398ac 100644
 --- a/drivers/net/wwan/wwan_core.c
 +++ b/drivers/net/wwan/wwan_core.c
-@@ -184,12 +184,30 @@ static void wwan_remove_dev(struct wwan_device *wwandev)
+@@ -250,7 +250,7 @@ struct wwan_port *wwan_create_port(struct device *parent,
+ 	struct wwan_port *port;
+ 	int minor, err = -ENOMEM;
  
- /* ------- WWAN port management ------- */
+-	if (type >= WWAN_PORT_MAX || !ops)
++	if (type > WWAN_PORT_MAX || !ops)
+ 		return ERR_PTR(-EINVAL);
  
--static const char * const wwan_port_type_str[WWAN_PORT_MAX + 1] = {
--	[WWAN_PORT_AT] = "AT",
--	[WWAN_PORT_MBIM] = "MBIM",
--	[WWAN_PORT_QMI] = "QMI",
--	[WWAN_PORT_QCDM] = "QCDM",
--	[WWAN_PORT_FIREHOSE] = "FIREHOSE",
-+static const struct {
-+	const char * const name;	/* Port type name */
-+	const char * const devsuf;	/* Port devce name suffix */
-+} wwan_port_types[WWAN_PORT_MAX + 1] = {
-+	[WWAN_PORT_AT] = {
-+		.name = "AT",
-+		.devsuf = "at",
-+	},
-+	[WWAN_PORT_MBIM] = {
-+		.name = "MBIM",
-+		.devsuf = "mbim",
-+	},
-+	[WWAN_PORT_QMI] = {
-+		.name = "QMI",
-+		.devsuf = "qmi",
-+	},
-+	[WWAN_PORT_QCDM] = {
-+		.name = "QCDM",
-+		.devsuf = "qcdm",
-+	},
-+	[WWAN_PORT_FIREHOSE] = {
-+		.name = "FIREHOSE",
-+		.devsuf = "firehose",
-+	},
+ 	/* A port is always a child of a WWAN device, retrieve (allocate or
+diff --git a/include/linux/wwan.h b/include/linux/wwan.h
+index 7216c114d758..fa33cc16d931 100644
+--- a/include/linux/wwan.h
++++ b/include/linux/wwan.h
+@@ -15,8 +15,10 @@
+  * @WWAN_PORT_QMI: Qcom modem/MSM interface for modem control
+  * @WWAN_PORT_QCDM: Qcom Modem diagnostic interface
+  * @WWAN_PORT_FIREHOSE: XML based command protocol
+- * @WWAN_PORT_UNKNOWN: Unknown port type
+- * @WWAN_PORT_MAX: Number of supported port types
++ *
++ * @WWAN_PORT_MAX: Highest supported port types
++ * @WWAN_PORT_UNKNOWN: Special value to indicate an unknown port type
++ * @__WWAN_PORT_MAX: Internal use
+  */
+ enum wwan_port_type {
+ 	WWAN_PORT_AT,
+@@ -24,8 +26,12 @@ enum wwan_port_type {
+ 	WWAN_PORT_QMI,
+ 	WWAN_PORT_QCDM,
+ 	WWAN_PORT_FIREHOSE,
++
++	/* Add new port types above this line */
++
++	__WWAN_PORT_MAX,
++	WWAN_PORT_MAX = __WWAN_PORT_MAX - 1,
+ 	WWAN_PORT_UNKNOWN,
+-	WWAN_PORT_MAX = WWAN_PORT_UNKNOWN,
  };
  
- static ssize_t type_show(struct device *dev, struct device_attribute *attr,
-@@ -197,7 +215,7 @@ static ssize_t type_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct wwan_port *port = to_wwan_port(dev);
- 
--	return sprintf(buf, "%s\n", wwan_port_type_str[port->type]);
-+	return sprintf(buf, "%s\n", wwan_port_types[port->type].name);
- }
- static DEVICE_ATTR_RO(type);
- 
-@@ -285,7 +303,7 @@ struct wwan_port *wwan_create_port(struct device *parent,
- 	/* create unique name based on wwan device id, port index and type */
- 	dev_set_name(&port->dev, "wwan%up%u%s", wwandev->id,
- 		     atomic_inc_return(&wwandev->port_id),
--		     wwan_port_type_str[port->type]);
-+		     wwan_port_types[port->type].devsuf);
- 
- 	err = device_register(&port->dev);
- 	if (err)
+ struct wwan_port;
 -- 
 2.26.3
 
