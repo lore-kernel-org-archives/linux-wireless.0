@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A250C4743F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCDE8C4743D
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24E7A60FE3
+	by mail.kernel.org (Postfix) with ESMTP id BAC9B60FE3
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230364AbhFHEGA (ORCPT
+        id S231217AbhFHEGA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 8 Jun 2021 00:06:00 -0400
-Received: from mail-lf1-f44.google.com ([209.85.167.44]:38411 "EHLO
+Received: from mail-lf1-f44.google.com ([209.85.167.44]:42556 "EHLO
         mail-lf1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230481AbhFHEF7 (ORCPT
+        with ESMTP id S230522AbhFHEF7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 8 Jun 2021 00:05:59 -0400
-Received: by mail-lf1-f44.google.com with SMTP id r5so29919923lfr.5;
-        Mon, 07 Jun 2021 21:03:56 -0700 (PDT)
+Received: by mail-lf1-f44.google.com with SMTP id j2so2243755lfg.9;
+        Mon, 07 Jun 2021 21:03:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=P49wBkaDkamht0wn8kZscQTKx/D9qYCGtYJXiHNCtDE=;
-        b=lcSN+Umc9GgwrvCbBZZQImUXPmJlL17VaxfHR4K0545GcFAqJqCZFOvx5NhwvpxPlB
-         7wLHuRgmXgHYuK13V9kBt8gBORJrfbb6fVD02PAUi3MgFbSYcATr2uIVlcE7EOB5nSSq
-         sKV/838A7Cr8au9l4K7i0rUGCKizvqcwRrERvZ1mC0vSSQ4MSWeB8zqywwooOLUWRzG/
-         jgHqEsMUhO6Wqwf4VB8T98nD8pMAfsjWsPcV+jl16MRWBBa45HcwhZH3jKUwOxHHseRr
-         5AEZHXTL+4U4l/K5cwBsPoOD9J7EIGUIFd3r1dfUtvSKL7EQLZv3iR3sGFLIN7OTPDqO
-         dWKg==
+        bh=eweejLmoSrLMGgxviVt5Oq8o8u/eXalaOHg4faHNMwQ=;
+        b=DEicVTJlL9BJlXrfsbLc8FfsrzgKQgxkUoQ5o1rbmVI3H5agGQujSv0jcl7ut64fJd
+         cv367FiRFk0s39P05eIUsVZTue7u0k9cmoLtsmVqp3zUq0Gi7+PaH9OSNOM1jy3WEVah
+         OgVySP537dX9jqq7DzBQWM6J/uaiKaHk0Qb9KBIWkxReQsLLVBhIOUOdQS/38BWPgXAS
+         D9by5jIy6im5w6CeaxjnQQ4EDteImBKa5Ec+l6nFQRP4FAlE4R+P76kcsFFdww7eSaEy
+         rG6GaS2Zt8Mctcp9AQox91F+Gx5Sf/DxgkJKy+TLBW8Ywu9pIbitj+PcuGodxR71CrZ/
+         pfiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=P49wBkaDkamht0wn8kZscQTKx/D9qYCGtYJXiHNCtDE=;
-        b=ZcR1iTarjLrpqlIHp5Vzqo36MkQDaV7YeuqR2hakRloOzM0YBsFTZEzAEO9jY43QBm
-         AZYrvgZesLHzY9AEJH0/GQjaQaBzhgtkD+g3Y3Ns5IwOi61FYqnh1tXbGWEnA+auVnnE
-         htlZVOgB3XCIPnEbgl368CgevCOyT8pHgA6V/HxWlUPM/Zy29AgxDU7RtDU9ZkbZ9FjU
-         aKzOdyzaQeKypMTH7fGsQOf41Voi5oh77WQevIOw2dvIM8GGNJW41IFiJuFeRJ12OEvQ
-         6Bg9oFbVddREzGdlvDefhVsIH0Mnl6tEW/n338X8JQoDB7u936TUwKTEFwlJwnQd6Q7n
-         UR9Q==
-X-Gm-Message-State: AOAM530iuzEQSiVp97v4Q8x1QR1aq68/dzKJiYRJr3kYnWbZSeTueYVf
-        r/2HAUp9WgXfQpeSAenUwko=
-X-Google-Smtp-Source: ABdhPJxliUFhZSLoP6zAle7JYsWSmZOfOptpPgsAFeL4YxUS0+fQmNmXUUije4EP8sSgCfUucEw7YQ==
-X-Received: by 2002:a05:6512:2186:: with SMTP id b6mr13480688lft.490.1623124975933;
-        Mon, 07 Jun 2021 21:02:55 -0700 (PDT)
+        bh=eweejLmoSrLMGgxviVt5Oq8o8u/eXalaOHg4faHNMwQ=;
+        b=TSvw63mmogpV6Z2vUXQYLuG7gY71dlYwds3lZH46TsTRkzAokSyMSG/Qs6ib+0+Jv5
+         wn1JPoR/RMhWqCECCQmDznjPWzUxb2WWT6JhCymBj7iHgbNfggDHNiEtCz6Ibhhsqm9J
+         QezDUiiHtSr++sdNtt+epGVzBNj3DQkIKECFNhz/gPr3EmSdzpqDUlErAXybfQHk5J3t
+         99wRhBLIomDYN8fuGfWIBCen1CclrKiZs0aq0um/LWEoRBhkvdy+3UdE/JxXMLBR3XgE
+         PdfwPYFJHNPLJN+QWQ9mmBWKFHbpLIbGH38WXwQZjh7apAH21KzuIRxPLcE2ZGSHjEmu
+         ImbQ==
+X-Gm-Message-State: AOAM530bpuZWJMbLC9vK8/5pmKuMGU5Pfe0RDRdrVEN8S03vssZxJiBu
+        HvR98umXrSIHhwmXBbZ0MSY=
+X-Google-Smtp-Source: ABdhPJwByhS19BKXJuwk46HkmvNENjteCYJTB4mxLWJk69lD07yMBvJbeiWohHjAmJI1DI/YGkEWow==
+X-Received: by 2002:a19:ec14:: with SMTP id b20mr14595414lfa.244.1623124977790;
+        Mon, 07 Jun 2021 21:02:57 -0700 (PDT)
 Received: from rsa-laptop.internal.lan ([217.25.229.52])
-        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.55
+        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 21:02:55 -0700 (PDT)
+        Mon, 07 Jun 2021 21:02:57 -0700 (PDT)
 From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To:     Loic Poulain <loic.poulain@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/10] net: wwan: core: expand ports number limit
-Date:   Tue,  8 Jun 2021 07:02:38 +0300
-Message-Id: <20210608040241.10658-8-ryazanov.s.a@gmail.com>
+Subject: [PATCH 09/10] net: wwan: core: implement terminal ioctls for AT port
+Date:   Tue,  8 Jun 2021 07:02:40 +0300
+Message-Id: <20210608040241.10658-10-ryazanov.s.a@gmail.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
 References: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
@@ -72,52 +72,164 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, we limit the total ports number to 256. It is quite common
-for PBX or SMS gateway to be equipped with a lot of modems. In now days,
-a modem could have 2-4 control ports or even more, what only accelerates
-the ports exhausing rate.
+It is not unreasonable to assume that users will use terminal emulation
+software to communicate directly with a WWAN device over the AT port.
+But terminal emulators  will refuse to work with a device that does not
+support terminal IOCTLs (e.g. TCGETS, TCSETS, TIOCMSET, etc.). To make
+it possible to interact with the WWAN AT port using a terminal emulator,
+implement a minimal set of terminal IOCTLs.
 
-To avoid facing the port number limitation issue reports, increase the
-limit up the maximum number of minors (i.e. up to 1 << MINORBITS).
+The implementation is rather stub, no passed data are actually used to
+control a port behaviour. An obtained configuration is kept inside the
+port structure and returned back by a request. The latter is done to
+fool a program that will test the configuration status by comparing the
+readed back data from the device with earlier configured ones.
+
+Tested with fresh versions of minicom and picocom terminal apps.
+
+MBIM, QMI and other ports for binary protocols can hardly be considered
+a terminal device, so terminal IOCTLs are only implemented for the AT
+port.
 
 Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- drivers/net/wwan/wwan_core.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wwan/wwan_core.c | 91 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
 
 diff --git a/drivers/net/wwan/wwan_core.c b/drivers/net/wwan/wwan_core.c
-index 2844b17a724c..9346b2661eb3 100644
+index d5a197da4a41..38da3124d81e 100644
 --- a/drivers/net/wwan/wwan_core.c
 +++ b/drivers/net/wwan/wwan_core.c
-@@ -14,7 +14,8 @@
- #include <linux/types.h>
- #include <linux/wwan.h>
+@@ -51,6 +51,8 @@ struct wwan_device {
+  * @dev: Underlying device
+  * @rxq: Buffer inbound queue
+  * @waitqueue: The waitqueue for port fops (read/write/poll)
++ * @data_lock: Port specific data access serialization
++ * @at_data: AT port specific data
+  */
+ struct wwan_port {
+ 	enum wwan_port_type type;
+@@ -61,6 +63,13 @@ struct wwan_port {
+ 	struct device dev;
+ 	struct sk_buff_head rxq;
+ 	wait_queue_head_t waitqueue;
++	struct mutex data_lock;	/* Port specific data access serialization */
++	union {
++		struct {
++			struct ktermios termios;
++			int mdmbits;
++		} at_data;
++	};
+ };
  
--#define WWAN_MAX_MINORS 256 /* 256 minors allowed with register_chrdev() */
-+/* Maximum number of minors in use */
-+#define WWAN_MAX_MINORS		(1 << MINORBITS)
+ static ssize_t index_show(struct device *dev, struct device_attribute *attr, char *buf)
+@@ -230,6 +239,7 @@ static void wwan_port_destroy(struct device *dev)
+ 	struct wwan_port *port = to_wwan_port(dev);
  
- static DEFINE_MUTEX(wwan_register_lock); /* WWAN device create|remove lock */
- static DEFINE_IDA(minors); /* minors for WWAN port chardevs */
-@@ -634,7 +635,8 @@ static int __init wwan_init(void)
- 		return PTR_ERR(wwan_class);
+ 	ida_free(&minors, MINOR(port->dev.devt));
++	mutex_destroy(&port->data_lock);
+ 	skb_queue_purge(&port->rxq);
+ 	mutex_destroy(&port->ops_lock);
+ 	kfree(port);
+@@ -344,6 +354,7 @@ struct wwan_port *wwan_create_port(struct device *parent,
+ 	mutex_init(&port->ops_lock);
+ 	skb_queue_head_init(&port->rxq);
+ 	init_waitqueue_head(&port->waitqueue);
++	mutex_init(&port->data_lock);
  
- 	/* chrdev used for wwan ports */
--	wwan_major = register_chrdev(0, "wwan_port", &wwan_port_fops);
-+	wwan_major = __register_chrdev(0, 0, WWAN_MAX_MINORS, "wwan_port",
-+				       &wwan_port_fops);
- 	if (wwan_major < 0) {
- 		class_destroy(wwan_class);
- 		return wwan_major;
-@@ -645,7 +647,7 @@ static int __init wwan_init(void)
- 
- static void __exit wwan_exit(void)
- {
--	unregister_chrdev(wwan_major, "wwan_port");
-+	__unregister_chrdev(wwan_major, 0, WWAN_MAX_MINORS, "wwan_port");
- 	class_destroy(wwan_class);
+ 	port->dev.parent = &wwandev->dev;
+ 	port->dev.class = wwan_class;
+@@ -619,10 +630,90 @@ static __poll_t wwan_port_fops_poll(struct file *filp, poll_table *wait)
+ 	return mask;
  }
  
++/* Implements minimalistic stub terminal IOCTLs support */
++static long wwan_port_fops_at_ioctl(struct wwan_port *port, unsigned int cmd,
++				    unsigned long arg)
++{
++	int ret = 0;
++
++	mutex_lock(&port->data_lock);
++
++	switch (cmd) {
++	case TCFLSH:
++		break;
++
++	case TCGETS:
++		if (copy_to_user((void __user *)arg, &port->at_data.termios,
++				 sizeof(struct termios)))
++			ret = -EFAULT;
++		break;
++
++	case TCSETS:
++	case TCSETSW:
++	case TCSETSF:
++		if (copy_from_user(&port->at_data.termios, (void __user *)arg,
++				   sizeof(struct termios)))
++			ret = -EFAULT;
++		break;
++
++#ifdef TCGETS2
++	case TCGETS2:
++		if (copy_to_user((void __user *)arg, &port->at_data.termios,
++				 sizeof(struct termios2)))
++			ret = -EFAULT;
++		break;
++
++	case TCSETS2:
++	case TCSETSW2:
++	case TCSETSF2:
++		if (copy_from_user(&port->at_data.termios, (void __user *)arg,
++				   sizeof(struct termios2)))
++			ret = -EFAULT;
++		break;
++#endif
++
++	case TIOCMGET:
++		ret = put_user(port->at_data.mdmbits, (int __user *)arg);
++		break;
++
++	case TIOCMSET:
++	case TIOCMBIC:
++	case TIOCMBIS: {
++		int mdmbits;
++
++		if (copy_from_user(&mdmbits, (int __user *)arg, sizeof(int))) {
++			ret = -EFAULT;
++			break;
++		}
++		if (cmd == TIOCMBIC)
++			port->at_data.mdmbits &= ~mdmbits;
++		else if (cmd == TIOCMBIS)
++			port->at_data.mdmbits |= mdmbits;
++		else
++			port->at_data.mdmbits = mdmbits;
++		break;
++	}
++
++	default:
++		ret = -ENOIOCTLCMD;
++	}
++
++	mutex_unlock(&port->data_lock);
++
++	return ret;
++}
++
+ static long wwan_port_fops_ioctl(struct file *filp, unsigned int cmd,
+ 				 unsigned long arg)
+ {
+ 	struct wwan_port *port = filp->private_data;
++	int res;
++
++	if (port->type == WWAN_PORT_AT) {	/* AT port specific IOCTLs */
++		res = wwan_port_fops_at_ioctl(port, cmd, arg);
++		if (res != -ENOIOCTLCMD)
++			return res;
++	}
+ 
+ 	switch (cmd) {
+ 	case TIOCINQ: {	/* aka SIOCINQ aka FIONREAD */
 -- 
 2.26.3
 
