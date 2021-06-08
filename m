@@ -2,89 +2,144 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 610D1C4743D
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 15:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE0DEC47082
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 15:47:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46528613AC
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 15:08:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0DF860FE8
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 15:47:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233740AbhFHPKg (ORCPT
+        id S231192AbhFHPtX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jun 2021 11:10:36 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:21708 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233538AbhFHPKf (ORCPT
+        Tue, 8 Jun 2021 11:49:23 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:39040 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231165AbhFHPtX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jun 2021 11:10:35 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623164922; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=UWLkaPrKFA8F7/WoE6f5oR9XDrZdHLYA2R4IpWdp0C8=; b=nUJ8YqV50gxugebI7tY9mE5F9RMJ6pWha6DGdHGc+kjDU+vdMllM6DY7vjiEuavAtlV2Vvvs
- 3GQVA8fTH/McIXjH9nEqgtDAEMnCtDLkI5MApMPlTcyavlSECj8j8gCk6Xv/eKAIdcXdovVE
- w50u6fDct6QUMsDKgjJgS7VY6YQ=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 60bf87c3f726fa4188011cb2 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 08 Jun 2021 15:07:47
- GMT
-Sender: mkenna=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id EF02EC4338A; Tue,  8 Jun 2021 15:07:46 +0000 (UTC)
-Received: from ppranees-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: mkenna)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6327BC433D3;
-        Tue,  8 Jun 2021 15:07:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6327BC433D3
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=mkenna@codeaurora.org
-From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc:     Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH v4 0/3] Add support to configure beacon tx mode
-Date:   Tue,  8 Jun 2021 20:37:32 +0530
-Message-Id: <1623164855-15910-1-git-send-email-mkenna@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 8 Jun 2021 11:49:23 -0400
+Received: from mail-ot1-f69.google.com ([209.85.210.69])
+        by youngberry.canonical.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1lqdwv-0007Sq-M9
+        for linux-wireless@vger.kernel.org; Tue, 08 Jun 2021 15:47:29 +0000
+Received: by mail-ot1-f69.google.com with SMTP id i25-20020a9d4a990000b0290304f00e3e3aso14188663otf.15
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jun 2021 08:47:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=TyScfg/oM8iD/sV5qeKxAbaE4446/B55bTHzQgvx9H4=;
+        b=PfELmBONavFcHXdB9HrXXpG2ofxAQ+PYU1QJ1JzQblJ0rqty2MQ7OwZoQ+ie9nmKR9
+         o4YwUZk4c/naWun3k4+9AiW2yBbpQyiHd4GPEMv4eRRYs5QW2OZcimy3n4eURB694h/Q
+         w1MSeGxbYavQIFXh0rLQnePdCaPtjV6fJ2DBNjerFn+MigSqNRUnTikD4mKQltscAPcP
+         f/73ZhxpVUBb80pyCgzSocdv/Yjz5DDHdjvM7V0oLQL15Cw4jvzePOe0s7n1Xvu89rpx
+         vIMZNZ+FCsGlQGjf6oSq5Zzkg9D3wrwVEEta8IU8aos08qK6HymCoDuQs3S4SEAT9/Vy
+         0Skw==
+X-Gm-Message-State: AOAM531SkEEyjCauE0N9uxnTZvFuBILEtMZ6nfXljSuklOjKN2DWBJIZ
+        L2ny5sJkMWm3UfR0qKRDDeKy6Lc4enzdHKPcyZbEF/AqwrW+3sMVbCEAVegglmmulIcJoBGF9hF
+        dAe/lHrkV9MCd2vht87XxsU1zm14NXi1jfvR5vyzm+Vng
+X-Received: by 2002:a05:6830:17c8:: with SMTP id p8mr3068452ota.167.1623167248667;
+        Tue, 08 Jun 2021 08:47:28 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJy08Y1s6n+YPatayBwJ6ghi+3uSsIqqc7hnXTW4ATJiB07Mh1fPFO1IwK1BUY8owR7MTKafOg==
+X-Received: by 2002:a05:6830:17c8:: with SMTP id p8mr3068431ota.167.1623167248366;
+        Tue, 08 Jun 2021 08:47:28 -0700 (PDT)
+Received: from localhost ([2605:a601:ac0f:820:7771:da70:ed55:6011])
+        by smtp.gmail.com with ESMTPSA id f7sm2885816oot.36.2021.06.08.08.47.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Jun 2021 08:47:27 -0700 (PDT)
+Date:   Tue, 8 Jun 2021 10:47:26 -0500
+From:   Seth Forshee <seth.forshee@canonical.com>
+To:     bkil <b.K.il.h.u+tigbuh@gmail.com>
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: recent FCC report and order allows
+ 5850-5895 immediately
+Message-ID: <YL+RDtGatz/ybG+M@ubuntu-x1>
+References: <a79286b90cdfdee3a83397008c0f7b6d67bc7f69.1607035229.git.b.K.il.h.u+tigbuh@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a79286b90cdfdee3a83397008c0f7b6d67bc7f69.1607035229.git.b.K.il.h.u+tigbuh@gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to configure the beacon tx mode as STAGGERED
-or BURST mode via hostapd configuration during the AP
-bring-up or via wpa_suppplicant configuration during MESH
-bring-up.
+On Thu, Dec 03, 2020 at 11:40:30PM +0100, bkil wrote:
+> The new band is called U-NII-4.
+> 
+> The report recommends combining it with 5725-5895 to allow 160 MHz
+> bandwidth, but that's technically not that easy with regdb due to the
+> differing restrictions of the two parts. Marking the line for U-NII-3
+> NO-OUTDOOR and PTMP-ONLY along with extending its range would be a
+> possible workaround, but this needs to be discussed.
+> 
+> I don't see a requirement for TPC, hence reducing EIRP by 3dB is not
+> needed. I've marked it 33dBm (minus 6dB for clients) to cope with 20MHz,
+> but the band can support higher power, though the logic is complicated.
+> 
+> The upper subband (5895-5925 MHz) of the new band is reserved for ITS.
+> 
+> "We limit unlicensed use to indoor operations in recognition of the
+> potential that ITS licensees may currently be operating"
+> 
+> "We also proposed that U-NII-4 devices be permitted to operate at the same
+> power levels as U-NII-3 devices."
+> 
+> "For the U-NII-4 band, indoor access point EIRP will be limited to
+> 33 dBm/20 MHz and 36 dBm/40 MHz. When combined with U-NII-3 band spectrum,
+> indoor access point EIRP can scale to 36 dBm for 80 and 160 megahertz
+> channels."
+> 
+> "Client devices would be limited to power levels 6 dB below the power
+> limits for access points."
+> 
+> "the First Report and Order prohibit U-NII-4 client-to-client
+> communications to protect co-channel incumbent ITS"
+> 
+> Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
 
-Beacons can be sent out in burst(continuously in a single shot
-one after another) or staggered (equally spread out over beacon
-interval) mode.
+I'm not sure why this was delayed, but it looks like it has finally gone
+into effect as of June 2:
 
-V4: Rebased on latest ath.git TOT.
+https://www.federalregister.gov/documents/2021/05/03/2021-08802/use-of-the-5850-5925-ghz-band
 
-V3: Addressed Johnson's comment on v2 patch.
+We discussed some of the details before. I'm reading over it again to
+refresh my memory, so let's revisit the changes I think are required,
+below.
 
-V2: Addressed Johannes's comment on v1 patch.
+> ---
+>  db.txt | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/db.txt b/db.txt
+> index c71a03a..e6dd063 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -1587,7 +1587,10 @@ country US: DFS-FCC
+>  	# requirements, we can extend the range by 5 MHz to make the kernel
+>  	# happy and be able to use channel 144.
+>  	(5470 - 5730 @ 160), (23), DFS
+> -	(5730 - 5850 @ 80), (30)
+> +	(5730 - 5850 @ 80), (30), AUTO-BW
+> +	# https://www.fcc.gov/document/fcc-modernizes-59-ghz-band-improve-wi-fi-and-automotive-safety-0
+> +	# max. 33 dBm AP @ 20MHz, 36 dBm AP @ 40Mhz+, 6 dB less for clients
+> +	(5850 - 5895 @ 40), (27), NO-OUTDOOR, PTMP-ONLY, AUTO-BW
 
-Maharaja Kennadyrajan (3):
-  nl80211: Add support for beacon tx mode
-  mac80211: Add support for beacon tx mode
-  ath11k: Add support for beacon tx mode
+I think we concluded previously that both 5730-5850 and 5850-5895 should
+have a max bandwidth of 160 MHz to permit use of 160 MHz across these
+channels.
 
- drivers/net/wireless/ath/ath11k/mac.c | 10 +++++++---
- include/net/cfg80211.h                |  4 ++++
- include/net/mac80211.h                |  2 ++
- include/uapi/linux/nl80211.h          | 16 ++++++++++++++++
- net/mac80211/cfg.c                    |  2 ++
- net/wireless/nl80211.c                |  9 +++++++++
- 6 files changed, 40 insertions(+), 3 deletions(-)
+We also discussed using NO-IR for 5850-5895. The regulations forbid
+active scans, and PMTP-ONLY does not prevent them. NO-IR appears to be
+the only option which conforms to this restriction, though that will
+also block running an AP in this range.
 
--- 
-2.7.4
+I also read the max EIRP for clients as 30 dBm without any TPC
+requirement. Did I overlook something which limits the EIRP to 27 dBm?
 
+Thanks,
+Seth
