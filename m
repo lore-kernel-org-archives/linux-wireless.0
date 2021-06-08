@@ -5,67 +5,67 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECCFC4743F
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4137EC47082
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E2BB6124B
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29BBC6120F
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Jun 2021 04:03:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230314AbhFHEFG (ORCPT
+        id S230365AbhFHEFK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Jun 2021 00:05:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34234 "EHLO
+        Tue, 8 Jun 2021 00:05:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230223AbhFHEFG (ORCPT
+        with ESMTP id S230361AbhFHEFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Jun 2021 00:05:06 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 458A1C06178B;
+        Tue, 8 Jun 2021 00:05:09 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E232C061795;
         Mon,  7 Jun 2021 21:03:00 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id bn21so25136922ljb.1;
+Received: by mail-lf1-x12f.google.com with SMTP id w33so29887881lfu.7;
         Mon, 07 Jun 2021 21:03:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=YmBtymAM7wgwIofW8yEeRoReg1tpJoUaeSkobDLn7ao=;
-        b=XOGTFK/tMSLZL6v16lZUIQSDZWe5b9M4sWftQVzagrB3DYWPYW/hQE5bDkd3KlyhBd
-         fSL10yZS2iw41aZ1Lot3KFmSN0bYCHIc+wh5+n5J6bBV+QgG2nAQrKkWrQtyM5omau+o
-         7XRPAarOMgGEVbfJFhMxtVWbCIYgKamkYnRnDxlBbuONeSGNhpulqmHqIXsJzwI2ezZg
-         HFD3cMnQYAg6bGDykUhPZuv+xqtxA9wGhJvtkVouccc62xm4K9SJcF5bUzxS/PaZ/6J8
-         t6LlPjtrn/Wf9E+8sWC4zb5qe69+vurBx6KNHLarAsQ4VGW/ZVe+sTrIE3DPlRZnE7Et
-         V/Sg==
+        bh=zdX62WlQ3p8rs50GDVVp4jfIL+laVX6G6USVtA2GR9M=;
+        b=g5pN/FchaU0RenbJFPXPQr4TpJMqLe+hFbEu9qXh/uAt5e+kClyVNjTVjWREYIPNTW
+         baPT1dcPq35GRbilSK+H0KT2JmNhDlJAwMrvDgUOJJKWC/ekJv0poNO411+jmOInCjsX
+         ZB6trJXyXofMmSqysjx7z6rtJUFukIu9f7LV7Zk8cqUw59+Yu870Dkc6D78/tBjozX6B
+         LUfPRt6Ue/Wf8jjTTjTX7w8236nLrAlfwsDvyvwQLwzmG1GY2fskV5lhDZuNMApRPOnR
+         L5HN2itKxwXgHjrMrbsmuh8xUbH8yS98FKjo0K/bQdWwHaCoZmFAcbxfzzNHPGqRvaVn
+         3y+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=YmBtymAM7wgwIofW8yEeRoReg1tpJoUaeSkobDLn7ao=;
-        b=eEZEbBP+V9TKAc3lGeDwKbxwW3e/Rh77gAfaXV74KK4ZquWr7FuC+VFF+oZaXduVJ0
-         JNU9WvqmuNySW71zpbtkje0GXoXF8i5xwxdWzwbOzLTarSf1E+AD1AtPwpaR+72HPqqi
-         wOFZwAdlrwh7A2URwVKgvnj9pi/8EoXq209lsjx2iFFMtdWBdFmD+PC7ncJrxxNGjLQL
-         eoBl+deUaFdGouNEttBQIGIEggG4BDAO3bpasMbIBlkARZ1camRAgvM7FyXY5jIXJec3
-         tRb0Lun/E5j2mrz1OGGObPN3z9axu39pyhWk1KXYkB98jxszh3tHCHTxDFZ2nOAqcRnY
-         FIVw==
-X-Gm-Message-State: AOAM5310UTLWWqcS2vFJk0K2U40sX8mhtNe1jBpINSLPRy6uYmoF5GIo
-        j59P+kIm6Y3jWVroZ8JEB+Q=
-X-Google-Smtp-Source: ABdhPJyBbKuxc9FAMrZ38/YD56E1BgF3YXX7mMQSK9xI+gisLAIjScf9eKU7LQrLeIcLW1CANS4gEQ==
-X-Received: by 2002:a2e:84cc:: with SMTP id q12mr6541116ljh.274.1623124976959;
-        Mon, 07 Jun 2021 21:02:56 -0700 (PDT)
+        bh=zdX62WlQ3p8rs50GDVVp4jfIL+laVX6G6USVtA2GR9M=;
+        b=ASErEg5s4z5q3WOCzufrR6d0vSnPfJpY0srHjc1i/R0xVhIzHJtTcJumEfQOT0ihux
+         FaBDuYvQLWkaXyiAWEPa72l9qTtJXQSnS8vPzugpGChTqv2gWnhrUfCVbOi/Z7TnTsRV
+         C7/luTcoVaU0Kdf6760zzgxuCR6U7K+FtHZQQ7+N6IcWr+pPvDu0nXYEbZ7/XLkhLloL
+         zLZNPytD2nQcJQWZ+IkO6DfBEbIpWUphTO+sSbfTAhQkEbwbWfhIpd7D1oZaqwJSc9LU
+         mPF3B5WmBENK4sXApuWVfQ5YkaNqnzB817Koax4Bag2FCUfqqTAMMQYB0xFRBcdUOJcO
+         AJqA==
+X-Gm-Message-State: AOAM531eH0UuIPj01N9OcZiqzmJFIkYBVIFKpSbk0jRQpiobSZ3kfMYh
+        ep7IM4UoQy6l8lPOfQZceh8=
+X-Google-Smtp-Source: ABdhPJw6NARPj59vStBB/DjqY4pVBcOetCaXqKqJozj4vaPv9wTVOhKCG9WnSAWBL4PXtRp00klsjg==
+X-Received: by 2002:a19:7909:: with SMTP id u9mr9815144lfc.13.1623124978631;
+        Mon, 07 Jun 2021 21:02:58 -0700 (PDT)
 Received: from rsa-laptop.internal.lan ([217.25.229.52])
-        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.56
+        by smtp.gmail.com with ESMTPSA id l23sm1729096lfj.26.2021.06.07.21.02.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 21:02:56 -0700 (PDT)
+        Mon, 07 Jun 2021 21:02:58 -0700 (PDT)
 From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To:     Loic Poulain <loic.poulain@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/10] net: wwan: core: implement TIOCINQ ioctl
-Date:   Tue,  8 Jun 2021 07:02:39 +0300
-Message-Id: <20210608040241.10658-9-ryazanov.s.a@gmail.com>
+Subject: [PATCH 10/10] net: wwan: core: purge rx queue on port close
+Date:   Tue,  8 Jun 2021 07:02:41 +0300
+Message-Id: <20210608040241.10658-11-ryazanov.s.a@gmail.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
 References: <20210608040241.10658-1-ryazanov.s.a@gmail.com>
@@ -75,74 +75,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It is quite common for a userpace program to fetch the buffered amount
-of data in the rx queue to avoid the read block. Implement the TIOCINQ
-ioctl to make the migration to the WWAN port usage smooth.
+Purge the rx queue as soon as a user closes the port, just after the
+port stop callback invocation. This is to prevent feeding a user that
+will open the port next time with outdated and possibly unrelated
+data.
 
-Despite the fact that the read call will return no more data than the
-size of a first skb in the queue, TIOCINQ returns the entire amount of
-buffered data (sum of all queued skbs). This is done to prevent the
-breaking of programs that optimize reading, avoiding it if the buffered
-amount of data is too small.
+While at it also remove the odd skb_queue_purge() call in the port
+device destroy callback. The queue will be purged just before the
+callback is ivoncated in the wwan_remove_port() function.
 
 Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- drivers/net/wwan/wwan_core.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ drivers/net/wwan/wwan_core.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wwan/wwan_core.c b/drivers/net/wwan/wwan_core.c
-index 9346b2661eb3..d5a197da4a41 100644
+index 38da3124d81e..45a41aee8958 100644
 --- a/drivers/net/wwan/wwan_core.c
 +++ b/drivers/net/wwan/wwan_core.c
-@@ -12,6 +12,7 @@
- #include <linux/skbuff.h>
- #include <linux/slab.h>
- #include <linux/types.h>
-+#include <linux/termios.h>
- #include <linux/wwan.h>
+@@ -240,7 +240,6 @@ static void wwan_port_destroy(struct device *dev)
  
- /* Maximum number of minors in use */
-@@ -618,6 +619,30 @@ static __poll_t wwan_port_fops_poll(struct file *filp, poll_table *wait)
- 	return mask;
+ 	ida_free(&minors, MINOR(port->dev.devt));
+ 	mutex_destroy(&port->data_lock);
+-	skb_queue_purge(&port->rxq);
+ 	mutex_destroy(&port->ops_lock);
+ 	kfree(port);
  }
- 
-+static long wwan_port_fops_ioctl(struct file *filp, unsigned int cmd,
-+				 unsigned long arg)
-+{
-+	struct wwan_port *port = filp->private_data;
-+
-+	switch (cmd) {
-+	case TIOCINQ: {	/* aka SIOCINQ aka FIONREAD */
-+		unsigned long flags;
-+		struct sk_buff *skb;
-+		int amount = 0;
-+
-+		spin_lock_irqsave(&port->rxq.lock, flags);
-+		skb_queue_walk(&port->rxq, skb)
-+			amount += skb->len;
-+		spin_unlock_irqrestore(&port->rxq.lock, flags);
-+
-+		return put_user(amount, (int __user *)arg);
+@@ -462,8 +461,11 @@ static void wwan_port_op_stop(struct wwan_port *port)
+ {
+ 	mutex_lock(&port->ops_lock);
+ 	port->start_count--;
+-	if (port->ops && !port->start_count)
+-		port->ops->stop(port);
++	if (!port->start_count) {
++		if (port->ops)
++			port->ops->stop(port);
++		skb_queue_purge(&port->rxq);
 +	}
-+
-+	default:
-+		return -ENOIOCTLCMD;
-+	}
-+}
-+
- static const struct file_operations wwan_port_fops = {
- 	.owner = THIS_MODULE,
- 	.open = wwan_port_fops_open,
-@@ -625,6 +650,10 @@ static const struct file_operations wwan_port_fops = {
- 	.read = wwan_port_fops_read,
- 	.write = wwan_port_fops_write,
- 	.poll = wwan_port_fops_poll,
-+	.unlocked_ioctl = wwan_port_fops_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = compat_ptr_ioctl,
-+#endif
- 	.llseek = noop_llseek,
- };
+ 	mutex_unlock(&port->ops_lock);
+ }
  
 -- 
 2.26.3
