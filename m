@@ -1,79 +1,72 @@
 Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.0 required=3.0 tests=BAYES_50,DKIMWL_BL,DKIM_SIGNED,
+X-Spam-Level: 
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC51FC48BCD
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:52:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51D3FC48BD1
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 15:01:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4ABE611CC
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:52:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A1D4613C7
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 15:01:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238337AbhFIOyh (ORCPT
+        id S238806AbhFIPDI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jun 2021 10:54:37 -0400
-Received: from flippie-beckerswealth-sa.xyz ([62.173.147.2]:47924 "EHLO
-        host.flippie-beckerswealth-sa.xyz" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237011AbhFIOyf (ORCPT
+        Wed, 9 Jun 2021 11:03:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45912 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238801AbhFIPDG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jun 2021 10:54:35 -0400
-X-Greylist: delayed 8154 seconds by postgrey-1.27 at vger.kernel.org; Wed, 09 Jun 2021 10:54:34 EDT
-Received: from flippie-beckerswealth-sa.xyz (ec2-3-131-99-163.us-east-2.compute.amazonaws.com [3.131.99.163])
-        by host.flippie-beckerswealth-sa.xyz (Postfix) with ESMTPA id 263A530C469E
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Jun 2021 15:10:30 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 host.flippie-beckerswealth-sa.xyz 263A530C469E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flippie-beckerswealth-sa.xyz; s=default; t=1623240630;
-        bh=h0ivQLrZuUWuyEKz/TWb+FP9AASpHhVqOsJtRcwKQV4=;
-        h=Reply-To:From:To:Subject:Date:From;
-        b=hpbdDhrcwjspBJnkVm0IDmGkV86PvJAtuLKA/bkGNW5eOS7DDbnLDQCkO6iURbPmY
-         374BjNCN4Gol4oOhuAz+PKpF0QjibrBo/OqN1GvRRuQVShlSJFo05lO7w94RtzkPOh
-         CT8K3Vz7hjOHFvyeCvQSSp3Vx8Uq5a9KBM5Ddvsw=
-DKIM-Filter: OpenDKIM Filter v2.11.0 host.flippie-beckerswealth-sa.xyz 263A530C469E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flippie-beckerswealth-sa.xyz; s=default; t=1623240630;
-        bh=h0ivQLrZuUWuyEKz/TWb+FP9AASpHhVqOsJtRcwKQV4=;
-        h=Reply-To:From:To:Subject:Date:From;
-        b=hpbdDhrcwjspBJnkVm0IDmGkV86PvJAtuLKA/bkGNW5eOS7DDbnLDQCkO6iURbPmY
-         374BjNCN4Gol4oOhuAz+PKpF0QjibrBo/OqN1GvRRuQVShlSJFo05lO7w94RtzkPOh
-         CT8K3Vz7hjOHFvyeCvQSSp3Vx8Uq5a9KBM5Ddvsw=
-Reply-To: jmasuku40@flippiebeckerwealthservices.com
-From:   Jotham Masuku <jmasuku40@flippie-beckerswealth-sa.xyz>
-To:     linux-wireless@vger.kernel.org
-Subject: Proposal
-Date:   09 Jun 2021 12:10:29 +0000
-Message-ID: <20210609121029.739DAE3D28EE038D@flippie-beckerswealth-sa.xyz>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        Wed, 9 Jun 2021 11:03:06 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16638C061574;
+        Wed,  9 Jun 2021 08:01:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description;
+        bh=ffjZdEaHfFJL2PlBT1Pi9QMrYzsEmrd1QXquQzBQ3MI=; b=agVhEldAJI80iEC/bn2apBj6dj
+        GShcrxSObtemYZVq7w0qS86pRLEuBNhoO6Lj0AIFSOBqjOP5Q++7p2bZOa2sYfhuYk4pqwcXP+30Y
+        hz/YOlzHP8iNOmzami6ODx0OZNVYgIWnBMkM0bOfOjqU9EOK234N6YvSufy4dSCSNEHNHAjG8eEre
+        ZgiRHunrZwOuijUfNJ6Bc0ljF7liAZsnmLAJq7da3ZYD4lPDEXrjFNxAxtNcWioFg1Y1NeTiVLYw7
+        uJpv3IMCtEuSgHzn1DCS3S1LLSL+jqHBYD8dEyZOENfT9QAJFxtJoBCLlH31VhB2ZpDgw+lq03XzA
+        ninwpdqg==;
+Received: from [2601:1c0:6280:3f0::bd57]
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1lqzhd-00ET7w-JV; Wed, 09 Jun 2021 15:01:09 +0000
+Subject: Re: [PATCH] nl80211: fix a mistake in grammar
+To:     Johannes Berg <johannes@sipsolutions.net>, 13145886936@163.com,
+        davem@davemloft.net, kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gushengxian <gushengxian@yulong.com>
+References: <20210609081556.19641-1-13145886936@163.com>
+ <d32bec575d204a17531f61c8d2f67443ffdaee6c.camel@sipsolutions.net>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <c4ab41c7-7230-2548-f7ab-1a0aa8d16e36@infradead.org>
+Date:   Wed, 9 Jun 2021 08:01:05 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
+MIME-Version: 1.0
+In-Reply-To: <d32bec575d204a17531f61c8d2f67443ffdaee6c.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello there,
+On 6/9/21 1:55 AM, Johannes Berg wrote:
+> On Wed, 2021-06-09 at 01:15 -0700, 13145886936@163.com wrote:
+>>
+>> -	/* don't allow or configure an mcast address */
+>> +	/* don't allow or configure a mcast address */
+> 
+> Arguable? I'd say "an M-cast" address, and I guess that's why it's
+> written that way. Not sure how else you'd say it, unless you always
+> expand it to "multicast" when reading.
 
-I hope this message finds you in good spirits especially during=20
-this challenging time of coronavirus pandemic. I hope you and=20
-your family are well and keeping safe. Anyway, I am Jotham=20
-Masuku, a broker working with Flippiebecker Wealth. I got your=20
-contact (along with few other contacts) through an online=20
-business directory and I thought I should contact you to see if=20
-you are interested in this opportunity. I am contacting you=20
-because one of my high profile clients is interested in investing=20
-abroad and has asked me to look for individuals and companies=20
-with interesting business ideas and projects that he can invest=20
-in. He wants to invest a substantial amount of asset abroad.
+Agreed, it's ok as is.
 
-Please kindly respond back to this email if you are interested in=20
-this opportunity. Once I receive your response, I will give you=20
-more details and we can plan a strategy that will be beneficial=20
-to all parties.
-
-Best regards
-
-J Masuku
-Flippiebecker Wealth
