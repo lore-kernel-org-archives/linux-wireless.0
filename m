@@ -2,57 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	FROM_LOCAL_DIGITS,FROM_LOCAL_HEX,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18192C47095
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 08:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D701BC47095
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 10:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0ED56101A
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 08:55:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC1E861029
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 10:08:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233026AbhFII5o (ORCPT
+        id S238579AbhFIKKD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jun 2021 04:57:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48780 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231485AbhFII5n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jun 2021 04:57:43 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3202EC061574;
-        Wed,  9 Jun 2021 01:55:49 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1lqtzw-0049sz-5l; Wed, 09 Jun 2021 10:55:40 +0200
-Message-ID: <d32bec575d204a17531f61c8d2f67443ffdaee6c.camel@sipsolutions.net>
-Subject: Re: [PATCH] nl80211: fix a mistake in grammar
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     13145886936@163.com, davem@davemloft.net, kuba@kernel.org
+        Wed, 9 Jun 2021 06:10:03 -0400
+Received: from m12-14.163.com ([220.181.12.14]:40393 "EHLO m12-14.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234249AbhFIKKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Jun 2021 06:10:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=CyN9y
+        auZ9A10j7+vRszAOPbzX0M3IqT0uJAzoEoUjPs=; b=SzDGISK4rr1bh3Vb9uCNM
+        LTso1KEBhdDNmM8KBcAHM74YHyybqAphNHh/ufM6vgcId5bpAwdx8nT6cvxYracp
+        zBsxSmlygYWFb8gywnu6M0gS3MjFu2+Jb3eBuCObPWOWMsoOocR9TzpiFtmGd5dd
+        3w70bL451kA8fc21w1pXDQ=
+Received: from ubuntu.localdomain (unknown [218.17.89.92])
+        by smtp10 (Coremail) with SMTP id DsCowAB3C2DiksBgXskzNw--.23263S2;
+        Wed, 09 Jun 2021 18:07:31 +0800 (CST)
+From:   13145886936@163.com
+To:     johannes@sipsolutions.net, davem@davemloft.net, kuba@kernel.org
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, gushengxian <gushengxian@yulong.com>
-Date:   Wed, 09 Jun 2021 10:55:38 +0200
-In-Reply-To: <20210609081556.19641-1-13145886936@163.com>
-References: <20210609081556.19641-1-13145886936@163.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+Subject: [PATCH] wext: fix a misspelling
+Date:   Wed,  9 Jun 2021 03:07:24 -0700
+Message-Id: <20210609100724.23376-1-13145886936@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: DsCowAB3C2DiksBgXskzNw--.23263S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtryrtw15trWkKw1rtr15twb_yoW3CrX_Gr
+        WxJw1kKFW8JrnavayUuw4xur4jy3y0qa1Fga9xtrySyw4DA3yDt3s5Cr4Utw429w4jyrWf
+        C3Z5Jr45tF4fZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUekgA3UUUUU==
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: 5zrdx5xxdq6xppld0qqrwthudrp/1tbiygOsg1QHMViXDgAAsF
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2021-06-09 at 01:15 -0700, 13145886936@163.com wrote:
-> 
-> -	/* don't allow or configure an mcast address */
-> +	/* don't allow or configure a mcast address */
+From: gushengxian <gushengxian@yulong.com>
 
-Arguable? I'd say "an M-cast" address, and I guess that's why it's
-written that way. Not sure how else you'd say it, unless you always
-expand it to "multicast" when reading.
+Fix a misspelling.
 
-johannes
+Signed-off-by: gushengxian <gushengxian@yulong.com>
+---
+ net/wireless/wext-compat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index a8320dc59af7..7ef6fd26450c 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1183,7 +1183,7 @@ static int cfg80211_wext_siwpower(struct net_device *dev,
+ 		switch (wrq->flags & IW_POWER_MODE) {
+ 		case IW_POWER_ON:       /* If not specified */
+ 		case IW_POWER_MODE:     /* If set all mask */
+-		case IW_POWER_ALL_R:    /* If explicitely state all */
++		case IW_POWER_ALL_R:    /* If explicitly state all */
+ 			ps = true;
+ 			break;
+ 		default:                /* Otherwise we ignore */
+-- 
+2.25.1
 
