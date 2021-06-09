@@ -2,60 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE4C5C48BCF
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 07:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 535DCC47095
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 08:00:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C070F60E0C
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 07:11:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 308E26100A
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 08:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237032AbhFIHNs (ORCPT
+        id S237372AbhFIIB6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jun 2021 03:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235286AbhFIHNp (ORCPT
+        Wed, 9 Jun 2021 04:01:58 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:57772 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237360AbhFIIB5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jun 2021 03:13:45 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22203C06175F;
-        Wed,  9 Jun 2021 00:11:50 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1lqsNO-0047ZF-NQ; Wed, 09 Jun 2021 09:11:46 +0200
-Message-ID: <3ec0432ac974be9d4d2e246fc22538b76854e9ec.camel@sipsolutions.net>
-Subject: Re: [PATCH V4 00/16] net: iosm: PCIe Driver for Intel M.2 Modem
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>, m.chetan.kumar@intel.com
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        krishna.c.sudi@intel.com, linuxwwan@intel.com
-Date:   Wed, 09 Jun 2021 09:11:45 +0200
-In-Reply-To: <20210608.160028.2094273846699936083.davem@davemloft.net>
-References: <20210608170449.28031-1-m.chetan.kumar@intel.com>
-         <20210608.160028.2094273846699936083.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+        Wed, 9 Jun 2021 04:01:57 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1597xmeT7019712, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1597xmeT7019712
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 9 Jun 2021 15:59:48 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 9 Jun 2021 15:59:48 +0800
+Received: from localhost (172.16.17.134) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 9 Jun 2021
+ 15:59:47 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: fix default HE tx bitrate mask in 2G band
+Date:   Wed, 9 Jun 2021 15:59:44 +0800
+Message-ID: <20210609075944.51130-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.17.134]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/09/2021 07:35:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzYvOSCkV6TIIDA2OjAwOjAw?=
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/09/2021 07:41:46
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 164203 [Jun 09 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 448 448 71fb1b37213ce9a885768d4012c46ac449c77b17
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;realtek.com:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/09/2021 07:45:00
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2021-06-08 at 16:00 -0700, David Miller wrote:
-> 
-> drivers/net/wwan/iosm/iosm_ipc_wwan.c: At top level:
-> drivers/net/wwan/iosm/iosm_ipc_wwan.c:231:30: error: storage size of
-> ‘iosm_wwan_ops’ isn’t known
->   231 | static const struct wwan_ops iosm_wwan_ops = {
->       |                              ^~~~~~~~~~~~~
-> cc1: some warnings being treated as errors
+In 2G band, a HE sta can only supports HT and HE, but not supports VHT.
+In this case, default HE tx bitrate mask isn't filled, when we use iw to
+set bitrates without any parameter.
 
-Yeah, that was expected - needs Loic's WWAN series applied first. :)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ net/wireless/nl80211.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fc9286afe3c9..912977bf3ec8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4781,11 +4781,10 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+ 		       sband->ht_cap.mcs.rx_mask,
+ 		       sizeof(mask->control[i].ht_mcs));
+ 
+-		if (!sband->vht_cap.vht_supported)
+-			continue;
+-
+-		vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
+-		vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
++		if (sband->vht_cap.vht_supported) {
++			vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
++			vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
++		}
+ 
+ 		he_cap = ieee80211_get_he_iftype_cap(sband, wdev->iftype);
+ 		if (!he_cap)
+-- 
+2.25.1
 
