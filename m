@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04863C48BCF
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:13:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442F3C48BCF
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E014661285
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:13:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C9B96139A
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Jun 2021 14:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234280AbhFIOPL (ORCPT
+        id S238151AbhFIOon (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Jun 2021 10:15:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35002 "EHLO
+        Wed, 9 Jun 2021 10:44:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237465AbhFIOPI (ORCPT
+        with ESMTP id S237065AbhFIOom (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Jun 2021 10:15:08 -0400
+        Wed, 9 Jun 2021 10:44:42 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 615DDC061574
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Jun 2021 07:13:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D91CC061574;
+        Wed,  9 Jun 2021 07:42:48 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1lqyxB-004HAv-Oa; Wed, 09 Jun 2021 16:13:09 +0200
+        id 1lqzPq-004Hl0-Ds; Wed, 09 Jun 2021 16:42:46 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: drop multicast fragments
-Date:   Wed,  9 Jun 2021 16:13:06 +0200
-Message-Id: <20210609161305.23def022b750.Ibd6dd3cdce573dae262fcdc47f8ac52b883a9c50@changeid>
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2021-06-09
+Date:   Wed,  9 Jun 2021 16:42:42 +0200
+Message-Id: <20210609144243.97486-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -41,48 +41,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-These are not permitted by the spec, just drop them.
+The last pull request I sent was coordinated with only
+those CVE fixes - now I have accumulated more fixes,
+many of them actually locking fixes for the RTNL redux.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+Please pull and let me know if there's any problem.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1bb43edd47b6..af0ef456eb0f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2240,17 +2240,15 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	frag = sc & IEEE80211_SCTL_FRAG;
- 
--	if (is_multicast_ether_addr(hdr->addr1)) {
--		I802_DEBUG_INC(rx->local->dot11MulticastReceivedFrameCount);
--		goto out_no_led;
--	}
--
- 	if (rx->sta)
- 		cache = &rx->sta->frags;
- 
- 	if (likely(!ieee80211_has_morefrags(fc) && frag == 0))
- 		goto out;
- 
-+	if (is_multicast_ether_addr(hdr->addr1))
-+		return RX_DROP_MONITOR;
-+
- 	I802_DEBUG_INC(rx->local->rx_handlers_fragments);
- 
- 	if (skb_linearize(rx->skb))
-@@ -2376,7 +2374,6 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 
-  out:
- 	ieee80211_led_rx(rx->local);
-- out_no_led:
- 	if (rx->sta)
- 		rx->sta->rx_stats.packets++;
- 	return RX_CONTINUE;
--- 
-2.31.1
+Thanks,
+johannes
+
+
+
+The following changes since commit 593f555fbc6091bbaec8dd2a38b47ee643412e61:
+
+  net: stmmac: fix kernel panic due to NULL pointer dereference of mdio_bus_data (2021-05-30 13:41:55 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2021-06-09
+
+for you to fetch changes up to a9799541ca34652d9996e45f80e8e03144c12949:
+
+  mac80211: drop multicast fragments (2021-06-09 16:17:45 +0200)
+
+----------------------------------------------------------------
+A fair number of fixes:
+ * fix more fallout from RTNL locking changes
+ * fixes for some of the bugs found by syzbot
+ * drop multicast fragments in mac80211 to align
+   with the spec and what drivers are doing now
+ * fix NULL-ptr deref in radiotap injection
+
+----------------------------------------------------------------
+Brian Norris (1):
+      mac80211: correct ieee80211_iterate_active_interfaces_mtx() locking comments
+
+Du Cheng (2):
+      cfg80211: call cfg80211_leave_ocb when switching away from OCB
+      mac80211: fix skb length check in ieee80211_scan_rx()
+
+Johannes Berg (9):
+      mac80211: remove warning in ieee80211_get_sband()
+      mac80211_hwsim: drop pending frames on stop
+      staging: rtl8723bs: fix monitor netdev register/unregister
+      mac80211: fix deadlock in AP/VLAN handling
+      mac80211: fix 'reset' debugfs locking
+      cfg80211: fix phy80211 symlink creation
+      cfg80211: shut down interfaces on failed resume
+      mac80211: move interface shutdown out of wiphy lock
+      mac80211: drop multicast fragments
+
+Mathy Vanhoef (1):
+      mac80211: Fix NULL ptr deref for injected rate info
+
+ drivers/net/wireless/mac80211_hwsim.c             |  5 +++
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c |  4 +-
+ include/net/mac80211.h                            |  9 +++-
+ net/mac80211/debugfs.c                            | 11 ++++-
+ net/mac80211/ieee80211_i.h                        |  2 +-
+ net/mac80211/iface.c                              | 19 ++++++---
+ net/mac80211/main.c                               |  7 ++-
+ net/mac80211/rx.c                                 |  9 ++--
+ net/mac80211/scan.c                               | 21 ++++++---
+ net/mac80211/tx.c                                 | 52 ++++++++++++++++-------
+ net/mac80211/util.c                               |  2 -
+ net/wireless/core.c                               | 13 +++---
+ net/wireless/sysfs.c                              |  4 ++
+ net/wireless/util.c                               |  3 ++
+ 14 files changed, 109 insertions(+), 52 deletions(-)
 
