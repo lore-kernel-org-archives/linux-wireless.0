@@ -7,85 +7,65 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D9DC49360
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jun 2021 11:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A39CC48BE5
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jun 2021 11:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E3426138C
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jun 2021 11:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0416D61376
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Jun 2021 11:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231245AbhFLLex (ORCPT
+        id S231262AbhFLLe5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Jun 2021 07:34:53 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:47582 "EHLO
+        Sat, 12 Jun 2021 07:34:57 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:47612 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231229AbhFLLew (ORCPT
+        with ESMTP id S231196AbhFLLez (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Jun 2021 07:34:52 -0400
+        Sat, 12 Jun 2021 07:34:55 -0400
 Received: from [192.130.48.226] (helo=kveik.superpark.guest)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1ls1sg-001V8i-BT; Sat, 12 Jun 2021 14:32:51 +0300
+        id 1ls1si-001V8i-QE; Sat, 12 Jun 2021 14:32:54 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sat, 12 Jun 2021 14:32:39 +0300
-Message-Id: <iwlwifi.20210612142637.9aa4f0e3574a.I458b283f203d5f927f00be1bfbd4b8ebf11c5ae4@changeid>
+Date:   Sat, 12 Jun 2021 14:32:42 +0300
+Message-Id: <iwlwifi.20210612142637.05bc5157e606.Ifb65b5ed2e5296fd8258c40c4287b5443b06d337@changeid>
 X-Mailer: git-send-email 2.32.0.rc2
 In-Reply-To: <20210612113245.691117-1-luca@coelho.fi>
 References: <20210612113245.691117-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: pcie: handle pcim_iomap_table() failures better
+Subject: [PATCH 09/12] iwlwifi: pcie: print interrupt number, not index
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-pcim_iomap_table() might return NULL, so we shouldn't unconditionally
-dereference the return value by taking the [0] entry.
-
-Handle this better by checking for NULL first, and then separately
-checking if the [0] entry is NULL.
+Printing the interrupt index in our local array isn't very
+useful in an error message, print the interrupt number (as
+also shown in e.g. /proc/interrupts) instead.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 228baf362474..2152ee95b19e 100644
+index 2152ee95b19e..7417df7669d6 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3425,6 +3425,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	struct iwl_trans *trans;
- 	int ret, addr_size;
- 	const struct iwl_trans_ops *ops = &trans_ops_pcie_gen2;
-+	void __iomem * const *table;
- 
- 	if (!cfg_trans->gen2)
- 		ops = &trans_ops_pcie;
-@@ -3497,9 +3498,16 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		goto out_no_pci;
+@@ -1660,7 +1660,7 @@ static void iwl_pcie_irq_set_affinity(struct iwl_trans *trans)
+ 		if (ret)
+ 			IWL_ERR(trans_pcie->trans,
+ 				"Failed to set affinity mask for IRQ %d\n",
+-				i);
++				trans_pcie->msix_entries[i].vector);
  	}
+ }
  
--	trans_pcie->hw_base = pcim_iomap_table(pdev)[0];
--	if (!trans_pcie->hw_base) {
-+	table = pcim_iomap_table(pdev);
-+	if (!table) {
- 		dev_err(&pdev->dev, "pcim_iomap_table failed\n");
-+		ret = -ENOMEM;
-+		goto out_no_pci;
-+	}
-+
-+	trans_pcie->hw_base = table[0];
-+	if (!trans_pcie->hw_base) {
-+		dev_err(&pdev->dev, "couldn't find IO mem in first BAR\n");
- 		ret = -ENODEV;
- 		goto out_no_pci;
- 	}
 -- 
 2.32.0.rc2
 
