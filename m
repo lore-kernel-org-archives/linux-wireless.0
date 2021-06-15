@@ -4,106 +4,86 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A968FC48BDF
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49763C48BE8
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 911FA61477
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 358DD61480
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231465AbhFONk3 (ORCPT
+        id S231772AbhFONlF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:40:29 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:61175 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231756AbhFONjv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:39:51 -0400
+        Tue, 15 Jun 2021 09:41:05 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:39379 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231743AbhFONkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:40:45 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623764266; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1623764321; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=szW6srT/39cPSMXdpvOef+pocfExlL+7PGkeOynLQn4=;
- b=cUVY3UZVUUlMAUjLA+hca7PBlCVF2GmcEtrekBXOGUsvy1plbgYmwCKfqj4n9XUa0B/i/v2R
- CL8qH6kH7IN81vcg2ZQSRa/HR3XBxTTI6w1BFjz1xaGY5eCQWng0Hx2v/F3KcVeaOL9qTH4w
- VKFUrBHOa+hEEt5BzwhKLZAe2WY=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ Content-Type: Sender; bh=sKsSOWucqGgH3ur3EcwsTOp/csCK6kROKn0ljqTvDh8=;
+ b=uuzvSMK6aHuMDjev2UP3WF+mw1pE4NG9+JqNZ10dJZyvkIjwfp/guJ3SSDEdu5R+oIr+qaqn
+ eET30yMV68bRRv30Z5SlPc62Bhs7OkIKjnHKRBPJRtJcUqCKequn/HRbcX53Ps52OfpEw8Yn
+ 5tpGgc0Rn0xYpz3/67Dndzy4Ln0=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 60c8ad1fe570c05619e17f41 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:37:35
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 60c8ad48e27c0cc77f21cff6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:38:16
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id F41ECC4338A; Tue, 15 Jun 2021 13:37:34 +0000 (UTC)
+        id 48CE4C433D3; Tue, 15 Jun 2021 13:38:15 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B7270C433D3;
-        Tue, 15 Jun 2021 13:37:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B7270C433D3
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 144CAC433F1;
+        Tue, 15 Jun 2021 13:38:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 144CAC433F1
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rsi: Assign beacon rate settings to the correct rate_info
- descriptor field
+Subject: Re: [PATCH 1/1] rtlwifi: btcoex: 21a 2ant: Delete several duplicate
+ condition branch codes
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210507213105.140138-1-marex@denx.de>
-References: <20210507213105.140138-1-marex@denx.de>
-To:     Marek Vasut <marex@denx.de>
-Cc:     linux-wireless@vger.kernel.org, Marek Vasut <marex@denx.de>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Angus Ainslie <angus@akkea.ca>,
+In-Reply-To: <20210510082237.3315-1-thunder.leizhen@huawei.com>
+References: <20210510082237.3315-1-thunder.leizhen@huawei.com>
+To:     Zhen Lei <thunder.leizhen@huawei.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
         "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Martin Kepplinger <martink@posteo.de>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
-        Siva Rebbagondla <siva8118@gmail.com>, netdev@vger.kernel.org,
-        stable@vger.kernel.org
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Zhen Lei <thunder.leizhen@huawei.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210615133734.F41ECC4338A@smtp.codeaurora.org>
-Date:   Tue, 15 Jun 2021 13:37:34 +0000 (UTC)
+Message-Id: <20210615133815.48CE4C433D3@smtp.codeaurora.org>
+Date:   Tue, 15 Jun 2021 13:38:15 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Marek Vasut <marex@denx.de> wrote:
+Zhen Lei <thunder.leizhen@huawei.com> wrote:
 
-> The RSI_RATE_x bits must be assigned to struct rsi_data_desc rate_info
-> field. The rest of the driver does it correctly, except this one place,
-> so fix it. This is also aligned with the RSI downstream vendor driver.
-> Without this patch, an AP operating at 5 GHz does not transmit any
-> beacons at all, this patch fixes that.
+> The statements of the "if (max_interval == 3)" branch are the same as
+> those of the "else" branch. Delete them to simplify the code.
 > 
-> Fixes: d26a9559403c ("rsi: add beacon changes for AP mode")
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> Cc: Angus Ainslie <angus@akkea.ca>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Karun Eagalapati <karun256@gmail.com>
-> Cc: Martin Kepplinger <martink@posteo.de>
-> Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
-> Cc: Siva Rebbagondla <siva8118@gmail.com>
-> Cc: netdev@vger.kernel.org
-> Cc: stable@vger.kernel.org
+> No functional change.
+> 
+> Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-b1c3a24897bd rsi: Assign beacon rate settings to the correct rate_info descriptor field
+d56b69c4fbc7 rtlwifi: btcoex: 21a 2ant: Delete several duplicate condition branch codes
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210507213105.140138-1-marex@denx.de/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210510082237.3315-1-thunder.leizhen@huawei.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
