@@ -7,82 +7,78 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD9EC48BE5
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 080C3C48BDF
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C670A6141D
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:36:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E769461433
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231491AbhFONix (ORCPT
+        id S231252AbhFONk1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:38:53 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:35585 "EHLO m43-7.mailgun.net"
+        Tue, 15 Jun 2021 09:40:27 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:13184 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231488AbhFONiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:38:51 -0400
+        id S231731AbhFONjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:39:23 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623764207; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1623764239; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=kV2lepU7YHg/oum/Kw/cNjNOenkSvJ/HBuc7TJLba64=;
- b=QuTFipdyftgzqn+UNemN3MsR0KlbU7pWRip19Rhp3BEVmeYVje/CrBKPI2li0syX4Ur9xIhP
- DeMNv4n7IJdu51p4S0glioKXR5FRzsr+ZFvZyOmGc8hXcPeKAdcbxStG6psPMJNuaeQllpRH
- XsfyAuea00LdSLmeoI/jlYfX83U=
+ Content-Type: Sender; bh=NRI2lSngvSXad61YyzZ7ljzijSbW4H1D1VGOsKwJUo0=;
+ b=OJzpOUCP8YGuv7yceYaapchMmy71zyIQN0oI1K4y9GA4L97tWjhenqSVvFip7Q1yqpISuKlc
+ jObCVx/PlDavQ3RiPyfZkcJkcQKTr529nqQIHqxCDzDmp1sPhQkvehhTAeP7NsmP7Rvia78s
+ AamDAno8SAbDTnZtps3tx32xs7Y=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 60c8acdeb6ccaab75326af4d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:36:30
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 60c8ad082eaeb98b5ef0e782 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:37:12
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5F7CFC4360C; Tue, 15 Jun 2021 13:36:30 +0000 (UTC)
+        id D450FC43145; Tue, 15 Jun 2021 13:37:12 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 43569C433F1;
-        Tue, 15 Jun 2021 13:36:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 43569C433F1
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2A01AC433D3;
+        Tue, 15 Jun 2021 13:37:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2A01AC433D3
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rt2x00: do not set timestamp for injected frames
+Subject: Re: zd1211rw: Prefer pr_err over printk error msg
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210504081220.666939-1-stf_xl@wp.pl>
-References: <20210504081220.666939-1-stf_xl@wp.pl>
-To:     stf_xl@wp.pl
-Cc:     linux-wireless@vger.kernel.org, n0w1re <n0w1re@protonmail.ch>,
-        ZeroBeat <ZeroBeat@gmx.de>
+In-Reply-To: <20210506044838.GA7260@user>
+References: <20210506044838.GA7260@user>
+To:     Saurav Girepunje <saurav.girepunje@gmail.com>
+Cc:     dsd@gentoo.org, kune@deine-taler.de, davem@davemloft.net,
+        kuba@kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saurav.girepunje@hotmail.com
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210615133630.5F7CFC4360C@smtp.codeaurora.org>
-Date:   Tue, 15 Jun 2021 13:36:30 +0000 (UTC)
+Message-Id: <20210615133712.D450FC43145@smtp.codeaurora.org>
+Date:   Tue, 15 Jun 2021 13:37:12 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-stf_xl@wp.pl wrote:
+Saurav Girepunje <saurav.girepunje@gmail.com> wrote:
 
-> From: Stanislaw Gruszka <stf_xl@wp.pl>
+> In zd_usb.c usb_init we can prefer pr_err() over printk KERN_ERR
+> log level.
 > 
-> We setup hardware to insert TSF timestamp for beacon and probe response
-> frames. This is undesired for injected frames, which might want to
-> set their own timestamp values, so disable this setting for injected
-> frames.
-> 
-> Tested-by: ZeroBeat <ZeroBeat@gmx.de>
-> Tested-by: n0w1re <n0w1re@protonmail.ch>
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-7af305a1245a rt2x00: do not set timestamp for injected frames
+29d97219f403 zd1211rw: Prefer pr_err over printk error msg
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210504081220.666939-1-stf_xl@wp.pl/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210506044838.GA7260@user/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
