@@ -7,82 +7,99 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02CF0C48BDF
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA99C48BE5
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:35:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E16726146D
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:31:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBCEE601FC
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231293AbhFONdm (ORCPT
+        id S231519AbhFONhV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:33:42 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:19849 "EHLO
+        Tue, 15 Jun 2021 09:37:21 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:12095 "EHLO
         so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231222AbhFONd2 (ORCPT
+        with ESMTP id S230469AbhFONhR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:33:28 -0400
+        Tue, 15 Jun 2021 09:37:17 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623763884; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1623764112; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=2vmjjCqYp2IGrZRLwLdGiKPr9RqLUKejyjM7y1Tka7A=;
- b=F7Fag+c1vnLBBam1h75kQFuIoHMRYSF7LCYLrnh8jLI/n60vQownCsbnt4XM0OQvpdn9zkJu
- Nt/LU+MLc2w0/b40UMT/pmUWEs/TPvG7jKi9A+dkN7g8pTCidzUT+z37Aj9ovhjbWoU2DOAd
- SFlgzdWPBvPKf6ca4XXTTc8e9Iw=
+ Content-Type: Sender; bh=UKtsXMpVK9SiGqVXzkLqYeEov0vtg1GMx8MgB0t1nN0=;
+ b=diI9Gt3KjcXC2gmqFiJyvzm4I1pw+O+G7JsRC46OMy1D0WAMNVKkOVIA9ussJphXU9qyv/sE
+ wf8X+kacCfnKl4D6Wmo6Ioerkn2wuknGwgXXy16qAAGsgtggsRxDXs+fMrjN00TfNyN6+OI1
+ RT7ZS0eO4HYfIrW/kPKXdaVHv2M=
 X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 60c8ab97e27c0cc77f14ed85 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:31:03
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 60c8ac88ed59bf69ccf64754 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:35:04
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7E774C43145; Tue, 15 Jun 2021 13:31:02 +0000 (UTC)
+        id 1900CC4314A; Tue, 15 Jun 2021 13:35:03 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4FF15C433D3;
-        Tue, 15 Jun 2021 13:30:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4FF15C433D3
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E82F4C43143;
+        Tue, 15 Jun 2021 13:34:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E82F4C43143
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] mwifiex: protect against divide by zero in
- mwifiex_set_ibss_params
+Subject: Re: [PATCH v2] ipw2x00: Minor documentation update
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210521024834.8354-1-yguoaz@cse.ust.hk>
-References: <20210521024834.8354-1-yguoaz@cse.ust.hk>
-To:     Yiyuan GUO <yguoaz@gmail.com>
-Cc:     briannorris@chromium.org, linux-wireless@vger.kernel.org,
-        amitkarwar@gmail.com, ganapathi017@gmail.com,
-        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
-        yguoaz@gmail.com, Yiyuan GUO <yguoaz@cse.ust.hk>
+In-Reply-To: <1619348088-6887-1-git-send-email-jrdr.linux@gmail.com>
+References: <1619348088-6887-1-git-send-email-jrdr.linux@gmail.com>
+To:     Souptick Joarder <jrdr.linux@gmail.com>
+Cc:     stas.yakovlev@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        Randy Dunlap <rdunlap@infradead.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210615133102.7E774C43145@smtp.codeaurora.org>
-Date:   Tue, 15 Jun 2021 13:31:02 +0000 (UTC)
+Message-Id: <20210615133504.1900CC4314A@smtp.codeaurora.org>
+Date:   Tue, 15 Jun 2021 13:35:03 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yiyuan GUO <yguoaz@gmail.com> wrote:
+Souptick Joarder <jrdr.linux@gmail.com> wrote:
 
-> In function mwifiex_set_ibss_params, the variable index may remain
-> zero if it is never altered inside the loop, leading to a potential
-> divide by zero problem.
+> Kernel test robot throws below warning ->
 > 
-> Signed-off-by: Yiyuan GUO <yguoaz@cse.ust.hk>
+> drivers/net/wireless/intel/ipw2x00/ipw2100.c:5359: warning: This comment
+> starts with '/**', but isn't a kernel-doc comment. Refer
+> Documentation/doc-guide/kernel-doc.rst
+> 
+> Minor update in documentation.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> Cc: Randy Dunlap <rdunlap@infradead.org>
+> Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
-Brian explains in the report why the code is ok:
-https://bugzilla.kernel.org/show_bug.cgi?id=212993#c1
+Fails to apply, please rebase.
 
-Patch set to Rejected.
+Recorded preimage for 'drivers/net/wireless/intel/ipw2x00/ipw2100.c'
+error: Failed to merge in the changes.
+hint: Use 'git am --show-current-patch' to see the failed patch
+Applying: ipw2x00: Minor documentation update
+Using index info to reconstruct a base tree...
+M	drivers/net/wireless/intel/ipw2x00/ipw2100.c
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/intel/ipw2x00/ipw2100.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/intel/ipw2x00/ipw2100.c
+Patch failed at 0001 ipw2x00: Minor documentation update
+
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210521024834.8354-1-yguoaz@cse.ust.hk/
+https://patchwork.kernel.org/project/linux-wireless/patch/1619348088-6887-1-git-send-email-jrdr.linux@gmail.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
