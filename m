@@ -4,91 +4,82 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 084DDC48BDF
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA170C48BE5
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBC7761433
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C142C61055
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 13:41:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231748AbhFONmq (ORCPT
+        id S231897AbhFONny (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:42:46 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:59875 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231716AbhFONm0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:42:26 -0400
+        Tue, 15 Jun 2021 09:43:54 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:34828 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231894AbhFONnT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:43:19 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623764422; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1623764474; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=a1WlzaO82iLMRE52JxldZdL+R8HjpJo5eZ9dZVqlH+E=;
- b=QvbI05QYUrgU8nznVG40csVd6hyFUCehJqPzuXWHRyEPoecapDAtEUhOTYHnIges2/PKN8yH
- NA1FJXnsANaSfEdE+8JWBym5INf6vFmx3UAHDI7/RfwcWPRyu+MLYadwZBqRoABBtgpy5h2X
- F1C8dA8BxX7vEbaQkUIrLkN1Fys=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ Content-Type: Sender; bh=DK3Tduj6WlNA4XTIQukfQbq6VdSpL/NzxsUFxSPPKBs=;
+ b=wr0hYaYEv2QLlziXrgWMkPWIjXIM4XPSLVFv5WAFwnQbDatiVmEcRf3qlsOmsvexcrs7bsXS
+ QN5Tt7GjKo52qupTBGn8fnvo/VM4L99JuX+x3EUeswjKX5kpqXHqmqvO2Uj7vSFY3B8eEsKT
+ H3JENeIXdmvzMW8LvJHel+lSDwI=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 60c8adb7e27c0cc77f2475be (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:40:07
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 60c8adf2abfd22a3dc94f807 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 13:41:06
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5EC85C43144; Tue, 15 Jun 2021 13:40:06 +0000 (UTC)
+        id DEE84C43147; Tue, 15 Jun 2021 13:41:04 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6BB2AC43460;
-        Tue, 15 Jun 2021 13:40:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6BB2AC43460
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2DE4DC43145;
+        Tue, 15 Jun 2021 13:41:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2DE4DC43145
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtlwifi: Remove redundant assignments to ul_enc_algo
+Subject: Re: rtlwifi: Fix spelling of 'download'
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1621303199-1542-1-git-send-email-yang.lee@linux.alibaba.com>
-References: <1621303199-1542-1-git-send-email-yang.lee@linux.alibaba.com>
-To:     Yang Li <yang.lee@linux.alibaba.com>
+In-Reply-To: <20210521062734.21284-1-dingsenjie@163.com>
+References: <20210521062734.21284-1-dingsenjie@163.com>
+To:     dingsenjie@163.com
 Cc:     pkshih@realtek.com, davem@davemloft.net, kuba@kernel.org,
-        nathan@kernel.org, ndesaulniers@google.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
-        Yang Li <yang.lee@linux.alibaba.com>
+        linux-kernel@vger.kernel.org, Ding Senjie <dingsenjie@yulong.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210615134006.5EC85C43144@smtp.codeaurora.org>
-Date:   Tue, 15 Jun 2021 13:40:06 +0000 (UTC)
+Message-Id: <20210615134104.DEE84C43147@smtp.codeaurora.org>
+Date:   Tue, 15 Jun 2021 13:41:04 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yang Li <yang.lee@linux.alibaba.com> wrote:
+dingsenjie@163.com wrote:
 
-> Variable ul_enc_algo is being initialized with a value that is never
-> read, it is being set again in the following switch statements in
-> all of the case and default paths. Hence the unitialization is
-> redundant and can be removed.
+> From: Ding Senjie <dingsenjie@yulong.com>
 > 
-> Clean up clang warning:
+> downlaod -> download
 > 
-> drivers/net/wireless/realtek/rtlwifi/cam.c:170:6: warning: Value stored
-> to 'ul_enc_algo' during its initialization is never read
-> [clang-analyzer-deadcode.DeadStores]
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+> Signed-off-by: Ding Senjie <dingsenjie@yulong.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-a99086057e03 rtlwifi: Remove redundant assignments to ul_enc_algo
+03611cc526f9 rtlwifi: Fix spelling of 'download'
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1621303199-1542-1-git-send-email-yang.lee@linux.alibaba.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210521062734.21284-1-dingsenjie@163.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
