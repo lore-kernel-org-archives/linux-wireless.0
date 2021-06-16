@@ -2,133 +2,196 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8241CC48BE5
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 22:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9D4C48BE5
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jun 2021 04:22:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60F8A61105
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Jun 2021 22:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A74F6128C
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Jun 2021 04:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbhFOW0q (ORCPT
+        id S229514AbhFPEYJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Jun 2021 18:26:46 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:42858 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229898AbhFOW0p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Jun 2021 18:26:45 -0400
-X-UUID: 25a20dba7bf94739b6d3332c9c16c212-20210616
-X-UUID: 25a20dba7bf94739b6d3332c9c16c212-20210616
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 954566564; Wed, 16 Jun 2021 06:24:38 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 16 Jun 2021 06:24:37 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 16 Jun 2021 06:24:37 +0800
-From:   <sean.wang@mediatek.com>
-To:     <lorenzo.bianconi@redhat.com>
-CC:     <nbd@nbd.name>, <sean.wang@mediatek.com>,
-        <Soul.Huang@mediatek.com>, <YN.Chen@mediatek.com>,
-        <Leon.Yen@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <jemele@google.com>, <yenlinlai@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH] mt76: mt7921: fix kernel warning when reset on vif is not sta
-Date:   Wed, 16 Jun 2021 06:24:36 +0800
-Message-ID: <1623795876-6290-1-git-send-email-sean.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <YMkdKFpia2XqdqrX@lore-desk--annotate>
-References: <YMkdKFpia2XqdqrX@lore-desk--annotate>
+        Wed, 16 Jun 2021 00:24:09 -0400
+Received: from mga11.intel.com ([192.55.52.93]:3668 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229456AbhFPEYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Jun 2021 00:24:09 -0400
+IronPort-SDR: WOG9aQtjff4rfevayNvp7Hqo5pIbZY/6PA0mnPuKgN5HCFW2tcjX4NaFa7ud60wcK6SRlUWR4F
+ dvGGaILmwDfg==
+X-IronPort-AV: E=McAfee;i="6200,9189,10016"; a="203089549"
+X-IronPort-AV: E=Sophos;i="5.83,277,1616482800"; 
+   d="scan'208";a="203089549"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2021 21:22:04 -0700
+IronPort-SDR: j1jVucghQ2/JBTYLGYT1RidnoyodTTGAlcJeGJZepHsJkL5MmXKMvzriDhDvRwTZbzyB/myd0e
+ XIwFUkQBqR1A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,277,1616482800"; 
+   d="scan'208";a="471878799"
+Received: from lkp-server01.sh.intel.com (HELO 4aae0cb4f5b5) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 15 Jun 2021 21:22:02 -0700
+Received: from kbuild by 4aae0cb4f5b5 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1ltN3y-0000qI-Ba; Wed, 16 Jun 2021 04:22:02 +0000
+Date:   Wed, 16 Jun 2021 12:21:49 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [wireless-drivers-next:master] BUILD SUCCESS
+ f39c2d1a188de8884d93229bbf1378ea1947a9c8
+Message-ID: <60c97c5d.suW9cz+Zd4afYsA+%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+branch HEAD: f39c2d1a188de8884d93229bbf1378ea1947a9c8  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
 
->> From: Sean Wang <sean.wang@mediatek.com>
->>
->> ieee80211_disconnect is only called for the staton mode.
->>
->> [  714.050429] WARNING: CPU: 1 PID: 382 at net/mac80211/mlme.c:2787
->> ieee80211_disconnect+0x108/0x118 [mac80211] [  714.116704] Hardware
->> name: MediaTek Asurada rev1 board (DT) [  714.122303] Workqueue: mt76
->> mt7921_mac_reset_work [mt7921e] [  714.127877] pstate: 20c00009 (nzCv
->> daif +PAN +UAO) [  714.132761] pc : ieee80211_disconnect+0x108/0x118
->> [mac80211] [  714.138430] lr : mt7921_vif_connect_iter+0x28/0x54
->> [mt7921e] [  714.144083] sp : ffffffc0107cbbd0 [  714.147394] x29:
->> ffffffc0107cbbd0 x28: ffffffb26c9cb928 [  714.152706] x27:
->> ffffffb26c9cbd98 x26: 0000000000000000 [  714.158017] x25:
->> 0000000000000003 x24: ffffffb26c9c9c38 [  714.163328] x23:
->> ffffffb26c9c9c38 x22: ffffffb26c9c8860 [  714.168639] x21:
->> ffffffb23b940000 x20: ffffffb26c9c8860 [  714.173950] x19:
->> 0000000000000001 x18: 000000000000b67e [  714.179261] x17:
->> 00000000064dd409 x16: ffffffd739cb28f0 [  714.184571] x15:
->> 0000000000000000 x14: 0000000000000227 [  714.189881] x13:
->> 0000000000000400 x12: ffffffd73a4eb060 [  714.195191] x11:
->> 0000000000000000 x10: 0000000000000000 [  714.200502] x9 :
->> ffffffd703a0a000 x8 : 0000000000000006 [  714.205812] x7 :
->> 2828282828282828 x6 : ffffffb200440396 [  714.211122] x5 :
->> 0000000000000000 x4 : 0000000000000004 [  714.216432] x3 :
->> 0000000000000000 x2 : ffffffb23b940c90 [  714.221743] x1 :
->> 0000000000000001 x0 : ffffffb23b940c90 [  714.227054] Call trace:
->> [  714.229594]  ieee80211_disconnect+0x108/0x118 [mac80211] [
->> 714.234913]  mt7921_vif_connect_iter+0x28/0x54 [mt7921e] [
->> 714.240313]  __iterate_interfaces+0xc4/0xdc [mac80211] [  714.245541]
->> ieee80211_iterate_interfaces+0x4c/0x68 [mac80211] [  714.251381]
->> mt7921_mac_reset_work+0x410/0x468 [mt7921e] [  714.256696]
->> process_one_work+0x208/0x3c8 [  714.260706]  worker_thread+0x23c/0x3e8
->> [  714.264456]  kthread+0x140/0x17c [  714.267685]
->> ret_from_fork+0x10/0x18
->>
->> Fixes: 0c1ce9884607 ("mt76: mt7921: add wifi reset support")
->> Signed-off-by: Sean Wang <sean.wang@mediatek.com>
->
->I am fine with this patch but I guess you are not using an update tree since
->mt7921 supports just sta mode so far.
->
+elapsed time: 720m
 
-mt7921 can support monitor mode too.
+configs tested: 126
+configs skipped: 2
 
-the kernel warning is reproduced when reset mt7921 running with active monitor mode.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
->Regards,
->Lorenzo
->
->> ---
->>  drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
->> b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
->> index fb4de73df701..0a2df295596a 100644
->> --- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
->> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
->> @@ -1269,7 +1269,8 @@ mt7921_vif_connect_iter(void *priv, u8 *mac,
->>	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
->>	struct mt7921_dev *dev = mvif->phy->dev;
->>
->> -	ieee80211_disconnect(vif, true);
->> +	if (vif->type == NL80211_IFTYPE_STATION)
->> +		ieee80211_disconnect(vif, true);
->>
->>	mt76_connac_mcu_uni_add_dev(&dev->mphy, vif, &mvif->sta.wcid, true);
->>	mt7921_mcu_set_tx(dev, vif);
->> --
->> 2.25.1
->>
->>
->
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         socfpga_defconfig
+powerpc                     sbc8548_defconfig
+arm                  colibri_pxa270_defconfig
+m68k                        stmark2_defconfig
+powerpc                        icon_defconfig
+powerpc                      chrp32_defconfig
+xtensa                    smp_lx200_defconfig
+mips                          ath79_defconfig
+powerpc                  iss476-smp_defconfig
+xtensa                generic_kc705_defconfig
+powerpc                 mpc8540_ads_defconfig
+arm                        oxnas_v6_defconfig
+s390                                defconfig
+arm                        multi_v7_defconfig
+sparc                       sparc32_defconfig
+powerpc64                        alldefconfig
+mips                 decstation_r4k_defconfig
+arm                            zeus_defconfig
+m68k                          atari_defconfig
+arm                        mvebu_v5_defconfig
+ia64                            zx1_defconfig
+powerpc                     ksi8560_defconfig
+ia64                             alldefconfig
+h8300                       h8s-sim_defconfig
+arm                           u8500_defconfig
+powerpc                       holly_defconfig
+sh                        sh7785lcr_defconfig
+powerpc                      ep88xc_defconfig
+um                           x86_64_defconfig
+arm64                            alldefconfig
+arc                    vdk_hs38_smp_defconfig
+m68k                         amcore_defconfig
+microblaze                      mmu_defconfig
+mips                     cu1000-neo_defconfig
+m68k                       m5275evb_defconfig
+arm                        keystone_defconfig
+arm                         palmz72_defconfig
+powerpc                mpc7448_hpc2_defconfig
+powerpc                        fsp2_defconfig
+s390                             alldefconfig
+riscv             nommu_k210_sdcard_defconfig
+m68k                          sun3x_defconfig
+arm                          exynos_defconfig
+sh                           se7343_defconfig
+arm                              alldefconfig
+s390                          debug_defconfig
+powerpc                 mpc832x_mds_defconfig
+sparc                       sparc64_defconfig
+riscv                          rv32_defconfig
+powerpc                 mpc85xx_cds_defconfig
+x86_64                            allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a002-20210615
+i386                 randconfig-a006-20210615
+i386                 randconfig-a004-20210615
+i386                 randconfig-a001-20210615
+i386                 randconfig-a005-20210615
+i386                 randconfig-a003-20210615
+i386                 randconfig-a015-20210615
+i386                 randconfig-a013-20210615
+i386                 randconfig-a016-20210615
+i386                 randconfig-a012-20210615
+i386                 randconfig-a014-20210615
+i386                 randconfig-a011-20210615
+x86_64               randconfig-a001-20210615
+x86_64               randconfig-a004-20210615
+x86_64               randconfig-a002-20210615
+x86_64               randconfig-a003-20210615
+x86_64               randconfig-a006-20210615
+x86_64               randconfig-a005-20210615
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                             i386_defconfig
+um                            kunit_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-b001-20210615
+x86_64               randconfig-a015-20210615
+x86_64               randconfig-a011-20210615
+x86_64               randconfig-a012-20210615
+x86_64               randconfig-a014-20210615
+x86_64               randconfig-a016-20210615
+x86_64               randconfig-a013-20210615
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
