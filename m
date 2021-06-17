@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB69FC49361
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B29F1C49EA5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B112661407
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F8EA61425
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230484AbhFQQK3 (ORCPT
+        id S231511AbhFQQKV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:10:29 -0400
-Received: from mail-eopbgr60069.outbound.protection.outlook.com ([40.107.6.69]:39392
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:10:21 -0400
+Received: from mail-vi1eur05on2059.outbound.protection.outlook.com ([40.107.21.59]:25895
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232129AbhFQQJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:28 -0400
+        id S231840AbhFQQJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:09:15 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=I35JLinInJI6HwWuigfNiZmx9SRcCGUnHI5AAaHSNYr4GwKpnbG6z4rAb+DkRrOqrM/8L0xR83qX42whHIhp2sezOOeYi86IEaYVjGiKxR+X57dq3/GMbuA55U0TKY5bJB9wqikAbE0erEEuYP4hleni661t6ST3xRsOu/UcCgCTd8bPLILPCMnz9Aj0OSyf+iD6xqMyLvH/QNSrJzC+Aa5bM07FlASsP30A4IV8FLCJx797y+wlr/D+h7ocrBENvT8YTjrA0VEu3KRDZAm8Cw90onNsfWPEV+xc6N1vnTr4tiRDh+RUcgYTEOAIcshONhfr4Lyw4YNwtASgtILPrQ==
+ b=lwsY0l9jnCoTiIUimOk/69UfFiRZIndT9kIP/axzscz3/MfM7C9xTLioVsuzCNVdgDpU1+Qp90gMMDd/6mJhxv/5bIxVd/TCbFU7u+FAlxXxrZhYPTICRCxVkS8yEcmFGs6JDhBb5A6w+dPkuiMBEYPdkmRVxPL0HDyKcUgkXSvNyK5+1K/p+rv/mjtKE01K8jwBABzzISrHyfXlyrUSQRr2fe80AJa+IteqO5rs4Ny2SZl09+/D64RUUZ/Zly1+jwCcwY5pQeFcCp+M/h18mZxcV5JsjYWBRgUjZfP3WdYR5hiNWuxYo4kyFvjAf1S47DhCy7eKu++DQ4UwoiLTUg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6XIyumR82qhtFj9BvtknjUUyZroz9IIZUbBqMfvME9E=;
- b=n4DFr3CMjbTus/1nt8HGBKnnafWWdIrZQWADylQQHu6APviZx6+7FD6Z3QIGWC7WyvmsmCPm3qzEiYD0VeAyJ9geloxuZMtudIWujLnLvKMNm4IHSI2vk2rUHPUPeZtshfqws/1nzLK0ZGBedUcgJX6/9NxJ2sITIxiC9TqiSKS9yb/CeEMqYv/1oS4zQczBZ7A5bYNaLdOR8h1X8EscNRQTtGL/T8kBFe+uDb5+VMJNrebtIpsPn5CGdH3CgZW/MbXaXz+S9shwn0xcnUbIOiG4YZSsMhI2VDZ7f7l/8Y6wq3LgLlDtQH7mZM7GQbkBxzxmxSG0M02TQEPjW+Sarw==
+ bh=DkmPKcbuwnXOuSHWk3+S7nCtesZrQ44UNqN0Yu9i/js=;
+ b=aq+2mC77w2AN3qV6OWb6T4yGe5tAeislalIFBpmMnIIgmg+bxtGORmv/XgopeFMkxKKE2MH/RgdObvx/oxofl9/BE5yiJP4FmjVE7ZmWOBfsPkCq4rZmwupr1ziEcyZ8icFS9PZYdgRcUsp3CpMwsNmoH+ozqqxeJepkI2mp6FtzYPHpSC8findOA0r2isyEjK4q9s1YyYmaf7bW+ENL30nfGoGO9H+IuT1YRtlJbsLOxxET6GiGhm8DlEXBH6E9pplr5wNRA2nB5XDV0wM65BPbKY21JZFMJ8IwJRNxzX+U8OAVK/7B4S1bKCHt4gkGdSqGAQeDUwuOKM32xnNuGQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6XIyumR82qhtFj9BvtknjUUyZroz9IIZUbBqMfvME9E=;
- b=x8g8d07uoipePM1gc9gbFmvVqZjsNz+FZV25cTsjR9ARZpYBTipLSLubHoFHbj3ogCZ1wG3QymHBnVy5hnTzZ/isveJSqnfjePgpiAtm2vVOgQgdSsE+iMf/XUOKWJEXLe7ecarGT0DYFGZYYfE38iOO6X2NApHkWTjhq2XorXQ=
+ bh=DkmPKcbuwnXOuSHWk3+S7nCtesZrQ44UNqN0Yu9i/js=;
+ b=hvkwlPkEgtNYgq9kWhOjvLv5H1rBULTB8pudCrcnjNJ4IuRhWl82lovRkHnc2pXPX0RxSLAAKcX6Vqc+Zb/DXk1MEokhLU9QneL5HVaO7Qg2oakA4IonZfqOLKra9XxbhF4aiK1uO2pEW79y49Qt3T3Qmf//jjZt5D+oSAlPZwU=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB1075.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1eb::20) with
+ by AM8P192MB1059.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e3::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
- 2021 16:07:13 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:05:52 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:07:13 +0000
+ 16:05:52 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 193/256] cl8k: add traffic.h
-Date:   Thu, 17 Jun 2021 16:01:20 +0000
-Message-Id: <20210617160223.160998-194-viktor.barna@celeno.com>
+Subject: [RFC v1 147/256] cl8k: add reg/ceva.h
+Date:   Thu, 17 Jun 2021 16:00:34 +0000
+Message-Id: <20210617160223.160998-148-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:07 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:15 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d558f8b1-dffa-49b9-182d-08d931a9d14b
-X-MS-TrafficTypeDiagnostic: AM8P192MB1075:
+X-MS-Office365-Filtering-Correlation-Id: a52fd2b7-583e-4069-41c0-08d931a9b253
+X-MS-TrafficTypeDiagnostic: AM8P192MB1059:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB10754D9EE0B3F044B8BC6F72F60E9@AM8P192MB1075.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM8P192MB1059916A107FCEEBB1169758F60E9@AM8P192MB1059.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Aey13Z4axxsJ2aFoEh5V6dSAl5hJWYEHX1lwX6VKLsKvz8g9TgjhODZokA3vtvt/54gIMKKcJD9dw3VTfHnjdH9+2QZCpa8bXJQZnWTvm6TQZu8a6G8lVSLJ8i+LQNwOL0Jx3dArlmEdDSCzsqdNnELUBnaBZ2n9NmSebYlYgaAtURjvzLy2oBLBXXhS+Z1LegyYt7IlHYh6B1LZQ6NqWN2YrYKSKrOEiT3xTWnR4+tWfgV81mtpMemk9wwCBzejPSRplHSXsLWasbZK2BBQ/X8f/HRo+Fs2N0zlTht6VsHLJkW/Y8rc2gn0GrEI0QvsRVA0KK2m1R2UedkkuQqGWAGQlbhgG3j6LaLqYrvWV+eHpXY8fnibBVmrbQQCE94DPuEtSWeY073VW3y2RowuQXb8PxHm/k2FcFeTbJAv4ZQn9rpbbTCh2BTCFnAEmbxsVH+NHHVPPOLcas8QtCmAHaztHzLCi3UMXiT5HbbmY58RVO9E01rTSp4L56AJ0xfumExWSCMBK2ZKN28LOnhRpdBHVVtIIH8iFBPpr5x8d/P8bvdURUKcnVFr0CWljMOVSWSQTCEzdIhcJCNmwT924lA0GvBuR4pnXD8cqrqbecv0grs2x6BoNYIYHrFG3BLA+t9SObAUtWTAfGMF8IBxuuCcoJ9ahBGhcrGKk40LXb7hTq17Bvv3v9v4W5PpwKX8UVhaRrzQKg+Ier8DpWKXVw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(66476007)(6512007)(8936002)(66556008)(38350700002)(6916009)(9686003)(66946007)(956004)(86362001)(26005)(5660300002)(2616005)(38100700002)(8676002)(6506007)(6666004)(4326008)(1076003)(55236004)(186003)(2906002)(83380400001)(498600001)(16526019)(54906003)(52116002)(36756003)(107886003)(6486002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: yS1W6SaudPC96kda708y5pfVAWqZKCL85MPtx83a+ldVn+ACumWAOHORIcUW8xaC7JinjXkU/dH26czL6lcnmZumoBBu5N/U03WK6qogO09/2JrJ2D8IaIhqji0II06w5faMQwGBwfwperF9Vw4+EhasBbWnx19qhKu3L4xNsM0yfZZghojt6C9BgOZ+5SYmAXI5HipxLHO9MAJttFA+Wul531JsfGfW4f4K7dF/lWsFGLT5D0uhjXqv+DWlPYhmtKULl87eeI4Q1YmwvcC3xlxuI5+FKNuAB8RCfIAv9MfMazN+zxEIUFldMAItg6xN4u29nR7JQmoenJIKzFx3/gtKyAw310ZOZiOrSa1c7XWxX7tFkKEgv7GfBr67ejSJhr9NJrX7Z4QiaRmKfa1Vzz6Pjpiew/rm+0D784pL0a3LYTve+zvEr3mN0zwa3R5mnvQmtJuwguytrbRp4S3u1yVpqCyi5gmPedWCklqTKcMh5+V0hsYjcqwy0lhLHyjAUsi9re467H370JZVWc8vBMQHyyyKYsrBeswbkqGiPRkxNl9QSWrm7k4+5t/Va/OXmB5/AZXYcLbu/XoDvkDFcuH2hcIP1E8F+e7KF35KNPdxPCJ2Ygp+3qDiX4fSX+qJi8VX6UsfysbjmG+Ko6fabJZzMMiKGX8TF2EjVET/brPnSw2F5JTSyuwhSONL9eQoaxjSj4TrYlEaYPGEzclHUw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(346002)(136003)(376002)(396003)(366004)(26005)(956004)(478600001)(186003)(66556008)(16526019)(107886003)(66946007)(66476007)(8936002)(6916009)(2616005)(1076003)(2906002)(54906003)(6506007)(6666004)(4326008)(38100700002)(38350700002)(83380400001)(9686003)(6512007)(5660300002)(6486002)(86362001)(316002)(55236004)(36756003)(52116002)(8676002)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?j+1opkwrmBF+lGwWNrMLC66+qlcSbN3q6kjgK4ks//BAbY1lMnNY4qbgsLd8?=
- =?us-ascii?Q?FwlGtogdImMjZLfpxk+MVgs/5jS3gPz+4c7GWV7OiBzCmKzRVq3hQ29dXAoM?=
- =?us-ascii?Q?iJ8oFDoGm1kWOc7aEUyWDuCibRWDV+4mEh1wJtRP7+QIMWQcX2SfswLyBT4l?=
- =?us-ascii?Q?dscCQvixSrx+6qE4Xro1VcEfRfxBN1MPnOzinEceFAQp5lTgtV50Wjy2OxKO?=
- =?us-ascii?Q?aa/6wMXIO9cyclglePXbJDq3sBZxqZXe4nVGZgIq+8SrRSOwv7jiFY5r9lCQ?=
- =?us-ascii?Q?WgEydL32QwJEri5vISdAaK2mnkDmeQIMZ8YCVVacFwLUOKOfx4RjkZSg8FZB?=
- =?us-ascii?Q?sfqW3pdLagwoMnmgb8qtX9r2HTZi66Tpx7/OHRDRTulQ2AMQUHaNGEj+Pj/h?=
- =?us-ascii?Q?4WcfqFa7heejB4AAKtYO2v2btB/rzVhFaFWp23Z+MV1EdO5CLonZ0eCR6XPh?=
- =?us-ascii?Q?4XnBNQ6UB94q4UCnkcF8kPzRQslzcUpTkwMwF1g482s+uy3LTGzqBuxcfyK2?=
- =?us-ascii?Q?bkq2Fl6c/JB91+3KOJglXtFOSwofbhJLbNZmoXwNAL1DA/NtEzQqr8z6wCU6?=
- =?us-ascii?Q?mGYlvgF8A8XOMxy+IJ+4d4BoKT/uTb1Bwy8uLLWBvalxcvnCxxVYIOknfwCG?=
- =?us-ascii?Q?mvT6TAEd1aU4KIQKKgY83yLjWh6BZ1kz9Iett9GRpLugagzu9XSCxFEiPgpw?=
- =?us-ascii?Q?MaDp71mefLsp1w7xSSd19TBWEBUjqn+Uiik0ZKUfSZwpQf+3vt7qLV+icbRS?=
- =?us-ascii?Q?XTG6DwiqFymYrQxZin7wcdyc8+RKrzVYunkqsapGsAJh/c3ptAr1SqJ2fFEc?=
- =?us-ascii?Q?mvqOM3Dv6cvrUo4b/o73YUI1MzrLSVJsS/rTRsOAdoQ+3o/a/6ncqEOTQ76m?=
- =?us-ascii?Q?6otUpaXEj5totmosvUrIkg9LlFiv6vjLn55Zn9ONBs0cbsuS0toSeFSLqFWB?=
- =?us-ascii?Q?bppO8/495b/ioT6d1INmU6ondQzBmCP+q5GxdpCjC1/Xv8mazbunbdQkuhfQ?=
- =?us-ascii?Q?X1WKOtouIJ+xa6Duy6pnUcTCrUNMdZ/55AJ2JoNdTU+SN2QApyjmR4DxsWAg?=
- =?us-ascii?Q?YbK4UwPe30wO+7vkqiRytDJu7ufU0gG/IVa8Nwj+0jkMO8krbhDBVwjygIV8?=
- =?us-ascii?Q?6RDldedB5zgjVwb1t/4XOocNWSK8qIccJHz1zTElrZHT7wuQjHunFqAV5/HM?=
- =?us-ascii?Q?mylaXvDcYrDIaa5jpN7PuMhG2RKE4LZwQP2TNK2Not0NLJqrGrVonnETI6c1?=
- =?us-ascii?Q?iT7vDg6M62kQI/RfrNlWc5GK+Ow0kqEDIPEcFwcDxprkQXRt7xKK1ClBO7jF?=
- =?us-ascii?Q?pTkjVIro447orZz94wgVkjVN?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?kFRm6RCvXk2knBLPSsEdfHD4OFcrPTzLy3rPWOdZLgQE7Awh3JVJeetLFgiq?=
+ =?us-ascii?Q?MKSWZrg40a0ZMUvo4MgAgikYSFa3wuRjigkXxcmtXJfH+2XPs/T5mN0SUT1K?=
+ =?us-ascii?Q?79pq6Yt7m0zkqPiEJy54yjTLd5MiUcFahtAhbZe90dVxvrARtXcvu+AksDrk?=
+ =?us-ascii?Q?mKiHxNwBSLuv7p6mtzzbI/1jCrG0Iu0zTi7MojehUHFATenfGWtifmeHv+7k?=
+ =?us-ascii?Q?XNqiadrQFTH/zm4nDDCdi6k5aT0Muk8DCwp/OqeJ/h3OLH6s6kTPBdmuRjCN?=
+ =?us-ascii?Q?i+xFcoYGnEe1WpdSuqUAEuB92VDHd3/KrJQwvN9AKXPsIWuEktVL7wNY7S6I?=
+ =?us-ascii?Q?NAkJ1mvaruHC9eDlsh1AF+MEGeXelXq7dhxOf7hBLw1Za5Y7Gu1XUpzSogyL?=
+ =?us-ascii?Q?xQ/nGmOEKaRvGtk7O0ExVtxZjIeD9SumDFcggoV/4C91ZnAr49/QFQZ03hn5?=
+ =?us-ascii?Q?/jj1smPUFN7dMM5ILdGso1S0b8ZZrLq42fpx3by545oSw2MYTgN9IW7YK4/G?=
+ =?us-ascii?Q?/AwbVNS/bP1WKvzJefUsnf95iCwhVHwtE8/98DhX0qFACwTyT7Y0n0CX83Mx?=
+ =?us-ascii?Q?H1LHAnl+1nwQo7pW1Bmp8Sd2d5Ltzbc+UXGPGB9QlreYY7rb3DXoyDe3jBr9?=
+ =?us-ascii?Q?2wxRHqb264ytlUCGKO4Bd9GBJ8uGfN8GMQy/hN+sZaZXcwDi8RdiUzuAF/ab?=
+ =?us-ascii?Q?hSqa/MDymSYi2Mhl9uMCN3CywXg1WVddU+QIakrtTVki19zVTIwyROAea4dC?=
+ =?us-ascii?Q?iigt7xGbU9kZDLhAeB4n3Z0atncIZpjKpnYIf63xjn/tjmEht/6/nitT92NM?=
+ =?us-ascii?Q?PQ3uRqiGu1nNf9/aBQGy64HW8Zab4gs9acYlxfkQ1B72j1JF+9ESMNA4eV9y?=
+ =?us-ascii?Q?a73Rr3TMtMqOMkey4vGvBJRn5WhNeD3JCkH/1KKNZZvAehwwr51e2DOinXm3?=
+ =?us-ascii?Q?TxPJkqLFLNcnFNxD7TzKp6STOV+fajxVlnnk+h9qc9J76PuHSVczMfo9V3LW?=
+ =?us-ascii?Q?sMt3C1LRxuQiK1tbzE7pk8joTaOskESePxYX2zCx2nZ+Q/CDOfc1oCCBwz3V?=
+ =?us-ascii?Q?Kzht87nsrMWkXDYO3pahN9vuwbMDv1Pb522dEkaEvB5hdIvDwGXMoUq4NkiH?=
+ =?us-ascii?Q?G3wwNw2haai9BTerXKC/jRVQyxZ4JflxVzbQuKmUmkIoAE/vgmVENZKA1QpO?=
+ =?us-ascii?Q?AbfAKfFin05hzjZCGe6DnRgmX79MDvekgZ2lWxbOgPA1+nEdqoD++hdP+hiX?=
+ =?us-ascii?Q?uTai4oL3JNngYxrpXCiQ6M0ZlcFpjr+O5+z/Yy3PSIWjed9RnwRGBrD/lFpd?=
+ =?us-ascii?Q?dw1V9RGWfFBN+zhXDIx6wuni?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d558f8b1-dffa-49b9-182d-08d931a9d14b
+X-MS-Exchange-CrossTenant-Network-Message-Id: a52fd2b7-583e-4069-41c0-08d931a9b253
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:08.1643
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:16.1974
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: d1/StEQw361vqB0oE6OT+MGzs5X8iWb3hPMpeN7bYVfTz0DDZB38M3kFt15TH4C6gKiSfI1K1zawUjU1XUxbyg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1075
+X-MS-Exchange-CrossTenant-UserPrincipalName: cgS0+6QRimHjYbykOyakNDs7mGTNw/MkDXfMvW0WAk2Q+7UB3C8baOln+IirUg+ulB/WVERSIlttX+Qh/xjFLQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1059
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,77 +128,61 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/traffic.h | 57 ++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/traffic.h
+ drivers/net/wireless/celeno/cl8k/reg/ceva.h | 44 +++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/ceva.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/traffic.h b/drivers/net/wirel=
-ess/celeno/cl8k/traffic.h
+diff --git a/drivers/net/wireless/celeno/cl8k/reg/ceva.h b/drivers/net/wire=
+less/celeno/cl8k/reg/ceva.h
 new file mode 100644
-index 000000000000..810bec60647d
+index 000000000000..3e5f79b0cc14
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/traffic.h
-@@ -0,0 +1,57 @@
++++ b/drivers/net/wireless/celeno/cl8k/reg/ceva.h
+@@ -0,0 +1,44 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_TRAFFIC_H
-+#define CL_TRAFFIC_H
++#ifndef CL_CEVA_H
++#define CL_CEVA_H
 +
-+#include "vendor_cmd.h"
++#define CEVA_MCCI_BASE_ADDR 0x004B0000
 +
-+enum cl_traffic_direction {
-+       TRAFFIC_DIRECTION_TX,
-+       TRAFFIC_DIRECTION_RX,
++#define CEVA_CORE_VERSION_ADDR (CEVA_MCCI_BASE_ADDR + 0x1000)
++#define CEVA_CORE_ID_ADDR (CEVA_MCCI_BASE_ADDR + 0x1004)
 +
-+       TRAFFIC_DIRECTION_MAX
-+};
++#define CEVA_CPM_BASE_ADDR (CEVA_MCCI_BASE_ADDR + 0x2000)
 +
-+enum cl_traffic_level {
-+       TRAFFIC_LEVEL_DRV,
-+       TRAFFIC_LEVEL_BF,
-+       TRAFFIC_LEVEL_EDCA,
-+       TRAFFIC_LEVEL_DFS,
++/* PDMA */
++#define CEVA_CPM_PDEA_REG (CEVA_CPM_BASE_ADDR + 0x0008) /* External */
++#define CEVA_CPM_PDIA_REG (CEVA_CPM_BASE_ADDR + 0x000C) /* Internal */
++#define CEVA_CPM_PDTC_REG (CEVA_CPM_BASE_ADDR + 0x0010) /* Control */
 +
-+       TRAFFIC_LEVEL_MAX
-+};
++/* DDMA */
++#define CEVA_CPM_DDEA_REG (CEVA_CPM_BASE_ADDR + 0x001c) /* External */
++#define CEVA_CPM_DDIA_REG (CEVA_CPM_BASE_ADDR + 0x0020) /* Internal */
++#define CEVA_CPM_DDTC_REG (CEVA_CPM_BASE_ADDR + 0x0024) /* Control */
 +
-+struct cl_traffic_activity {
-+       u8 cntr_active;
-+       u8 cntr_idle;
-+       bool is_active;
-+};
++#define CEVA_CPM_DDTC_WRITE_COMMAND 0x40000000
 +
-+struct cl_traffic_sta {
-+       struct cl_traffic_activity activity_db[TRAFFIC_LEVEL_MAX];
-+       u32 num_bytes;
-+};
++/* Translated internally to 0x60600000. */
++#define CEVA_SHARED_PMEM_BASE_ADDR_FROM_HOST 0x004C0000
 +
-+struct cl_traffic_main {
-+       u32 num_active_sta[TRAFFIC_LEVEL_MAX];
-+       u32 num_active_sta_dir[TRAFFIC_DIRECTION_MAX][TRAFFIC_LEVEL_MAX];
-+       u32 active_bytes_thr[TRAFFIC_LEVEL_MAX];
-+       bool dynamic_cts;
-+};
++/* Internal address to access Shared */
++#define CEVA_SHARED_PMEM_BASE_ADDR_INTERNAL 0x60600000 /* PMEM */
++#define CEVA_SHARED_XMEM_BASE_ADDR_INTERNAL 0x60900000 /* XMEM */
 +
-+struct cl_hw;
-+struct cl_sta;
++#define CEVA_DSP_DATA_SIZE 0x80000 /* 512kB. */
++#define CEVA_DSP_EXT_DATA_SIZE 0x60000 /* 384kB. */
 +
-+void cl_traffic_init(struct cl_hw *cl_hw);
-+void cl_traffic_tx_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u32=
- num_bytes);
-+void cl_traffic_rx_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u32=
- num_bytes);
-+void cl_traffic_maintenance(struct cl_hw *cl_hw);
-+void cl_traffic_sta_remove(struct cl_hw *cl_hw, struct cl_sta *cl_sta);
-+bool cl_traffic_is_sta_active(struct cl_hw *cl_hw, struct cl_sta *cl_sta);
-+bool cl_traffic_is_sta_active_tx(struct cl_hw *cl_hw, struct cl_sta *cl_st=
-a);
-+u32 cl_traffic_num_active_sta(struct cl_hw *cl_hw);
-+u32 cl_traffic_num_active_dfs(struct cl_hw *cl_hw);
-+int cl_traffic_cli(struct cl_hw *cl_hw, struct cli_params *cli_params);
++/* 512kb */
++#define CEVA_INTERNAL_PMEM_SIZE 0x80000
 +
-+#endif /* CL_TRAFFIC_H */
++#define CEVA_SHARED_PMEM_SIZE 0x20000 /* 128kb */
++#define CEVA_SHARED_XMEM_SIZE 0x60000 /* 384kB */
++
++#define CEVA_MAX_PAGES (CEVA_INTERNAL_PMEM_SIZE / CEVA_SHARED_PMEM_SIZE)
++
++#endif /* CL_CEVA_H */
 --
 2.30.0
 
