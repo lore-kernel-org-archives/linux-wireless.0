@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AE88C48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74638C48BE5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E45196141F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D1A161407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233984AbhFQQLa (ORCPT
+        id S233747AbhFQQLh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:11:30 -0400
-Received: from mail-eopbgr130083.outbound.protection.outlook.com ([40.107.13.83]:60643
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:37 -0400
+Received: from mail-eopbgr10042.outbound.protection.outlook.com ([40.107.1.42]:19479
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231955AbhFQQKM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:10:12 -0400
+        id S233773AbhFQQKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:10:16 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Usnny0jZgJ+2Jw+b8iQZk902sodwkhmPvLK7A2V2QyZwKqnNXykEBk6khvU94aCQ3mv3VVO5KzKiMJnju3+FKZ0sH5CBXWYELtPeq1BXqhQVelmvLGGtuYUtWzuEadTPp4Ya0jPo8vOVPM6DrOaCj0HXi8qfd31VwJfGFVh86N+V5ghLinRblwR33lxiZUDcj3iwQcNpL29bQPBW9E4J3Z5WT4l3y9eJVkJjrf6rrYhj81Tru56eHjOYSaHWaYSGmmn5KZjUV2EZfKgD76qtgGNsvzcSJQj13/BbE9YfBu3lyQM4mHmRsf+uJX+eCbsLn5bPIeggdms8xIOc4LmZcw==
+ b=RDEwCnJ2askiq7rKC6mTrnhxXsQxKCXT+wsuD8fyfULx0IwaAr4XWdYLWvSdMb3tkUKj4sjFyqnasYLSuS6c2XOp/8NqNKAd164inVl6mO+LoFZ95A+nIrJOhv1bjbWbFxogRIZj49dLFYUKsL9faWrKIBw43Yd/xk/XsYq9/IzJt3KvS2Awj3/x5BNBV/pgwTTN4sdkCRKrQbwofsc9a5CeXd7fOs77cIA8Ylj4sZ/xW0LURA4Qv6qZHULtuAZdYNI3KiFiUBDFndCxpwVZ1+zuT+a+7xQcKCwYEJsdIW6d9wnQqDptAydL4R/jLJAjwnUJVLu5MOoa19qbkjDnVQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SUnunK+aZeSmhy2EuP5BxB+z9b8cJoezc0c3ac/9XT4=;
- b=V3fEanBX9CV98CCao8cEowI/widctLJfX2KUHUbOWxQN6NyXAtrMgkmhSqhowgS+7Gj4SgvlDX9rsCvxb3Smvul10ox6LKvYokU1MxHvg3jY2PfhL7y3I1jbtgXqKzHlupl2IQX/pcDFpSLOkCmpIBX4rqhuMkECcL0X9FJ/k5HIv+rU+j6hPaLdKmSOLe2MTMMJcTEh+nkKmS6Fd7zuAFpsyliADhXeBY2GFFmljvVzdf2LsTOMOug+U36w0mfbj1/o014E3SWW0eyptiV6FEHcRMSLng1fApTw63uTLhdTh4abcfV6k8n74/UtA3Vkoiz9t6943DxDpJKgh/wVtg==
+ bh=YLhnEA4L5RlebqXIgs2oB4ZkahhKHLgyzP0HPMg3FKM=;
+ b=l2R5ddwQ+tD+HMVXoxI3PfY8N3WW2WHDIFtMQm5TWYNhNnHQQz3Htvo4GlPHvOpjjlfAlF4vAU2aUAvIiQCE9hLu88YE7yDPAiiOuqLkmXhE3oYDpzdro0YKAcDwRWcECV1cU1F21L7YvHPevhAWCVCWfOZBvyvafNUfial1t7T/kFIeECHWcCpFgGtfbPJovQbEtGXAxNYjVFY6HJYezXl8BYvZx3wJro8wKCh/EFesTPJdMaz7inw6hu3f443meTNEW8L78FnnxKF2hrV0UZRcQQ570tKCNgUK+vaqrEfeAXRSv2Oxys/YTYBin/NsAgNdmlFJBsg5tvVrD+3TeA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SUnunK+aZeSmhy2EuP5BxB+z9b8cJoezc0c3ac/9XT4=;
- b=q8se4VBCEWgoTwaQ7ygGNmp5QjZl+i4kzTzIvi7RvKPM3PgP+hpdnvv4+hygYz35R3TukFmD+cpIiI/bjSeaPtsVHLvdlJ0CkbNUOtxk5r2SP28z7Lr+B0hgZThjaCrPJeiHGVJH/ucLRlR5jLb+oF3yDgKRqyZzd7MuEGuFVQM=
+ bh=YLhnEA4L5RlebqXIgs2oB4ZkahhKHLgyzP0HPMg3FKM=;
+ b=O4MwLOIrQ2D2AOiuuUfEpHasRY2JcrE8w66c0VD3wecQfwwA/B2K+CQGwd+rHNomkWW1aY6imJLGwxhLi2knaqA5HGM9Zj6dmLqJZOYanEe4OaPmlQqQA8yunKvYenkJYK4atBfgqvSs2rOLPnvAJm8qlVKEiW5lfR1GcLkdDAE=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0452.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:4e::23) with
+ by AM0P192MB0515.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:45::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.23; Thu, 17 Jun
- 2021 16:07:54 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:07:57 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:07:54 +0000
+ 16:07:57 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 222/256] cl8k: add utils/ip.c
-Date:   Thu, 17 Jun 2021 16:01:49 +0000
-Message-Id: <20210617160223.160998-223-viktor.barna@celeno.com>
+Subject: [RFC v1 230/256] cl8k: add utils/utils.h
+Date:   Thu, 17 Jun 2021 16:01:57 +0000
+Message-Id: <20210617160223.160998-231-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:41 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:50 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cb7e5eda-488e-4516-0bbb-08d931a9e5b3
-X-MS-TrafficTypeDiagnostic: AM0P192MB0452:
+X-MS-Office365-Filtering-Correlation-Id: 25058e7f-a25f-45c4-712b-08d931a9eae3
+X-MS-TrafficTypeDiagnostic: AM0P192MB0515:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB04526BFF9BD7639CC627FA8FF60E9@AM0P192MB0452.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <AM0P192MB051572E7086D0AFEF39785F0F60E9@AM0P192MB0515.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:494;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: IHGY+JHie1g4qUxPDu8jo0gch6sM2a9UvCN9L7JzPO2hBYudQhyfYS66I90Rnt+cfFMo3bNYRZ9DQzolUQZpWf9aK3+opH++M5/+rgpTk6U2pQcXjv0Ah3sXW4qfhXS97tS+2fP9qtE/oCrTjKdI1dJyAqo3MGaYy7+gq1UJkYEWRt6r4BSzoFCzPQ7ZoxQFIspxmZmZzVQtaGEsfyV9MbrE+F8aRLafeo5mI1kB/xdBQ6lPLb+gBK5pQCiPAHYVOy2NtNstyvohEWf3Pk0Nm0eoMj46B+rHQhrUQ7mMkWCox3z9u2fKsoONuQ7tPo7KZOQV1WlB8lHVGaFGvzUjj5eSadcgGnz7+E11s3TTadY03m5sba7Sxr4atzp7S9oOFr41Uocybq4x+jqKdDdBCuMXVj7XQq2IC7krwQx7/ngiDnj7mVPYSN9q2R1BnUnk5jrU1tlx+VUBTnO2fX1xQGi8F14Fjws1FM5S0+pfIioC1nr5gyweLcocCjr6j7LNODwhun6l47GjuUyX4jTCWIoAjvWxdvhP0/ZUrkcgnVZB5Xto4rHwvnxUlyMbxzitUaWVf1WnKBtqvKW1503oKzpEOFgyCRIm55SSnGmVmv09Ew24W78qLYdkkHCyFZuJ35w4B4zkmvepN4aN7fWxnigUJ/XCnrdrlKD0SFFmJLAtF/m5cpB6+pa88KB/ZBGOzPMrY0qRj/fcjnKjD0VtWg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(366004)(346002)(136003)(396003)(39850400004)(66946007)(66556008)(54906003)(9686003)(6512007)(16526019)(36756003)(107886003)(8676002)(66476007)(4326008)(26005)(316002)(6486002)(8936002)(86362001)(186003)(1076003)(2906002)(2616005)(38100700002)(38350700002)(6916009)(956004)(55236004)(52116002)(508600001)(6506007)(5660300002)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: AXyv/Pb3G7QKXuilVTpjoxgMzeLJHCuhG8BbrtajN42k5iKJcvHMx4xYjaz9ELhKDCL663W7T1TCNwMvREc7KSbg7OCYZ6oATVL854TnmdJlVPXSF8Fe4pneiRBt166sRlYF58PvXWb4gv7j61GKe8stwDQBqVmV+T8fxC2Pe6MQ9p+S3qYg0O/n01tusn4JxHFBm4U3vosgfDWW03ObzI0zdb2fHmDcMY3fLGCfVH8WIPyTTpvBTMBCpYWsV5l9FrE9quJtxXwj4ZpHLS7htegVRc3ZINaBTn4JwoJalngOWQDzZNBlY/K7GCzHuptBaninlZ+bS2tv/GNdO5Tl6nFws1AkJ9xKBAtayXIWbuzSZeJ12XcdXit1epwET0HKRhgnRTp2ODmbctw/kZvJ1KuCZNVgZBNqQ9q1wjwd7Wl/MWJ8+udjUsHcCkjVt7c/WGJP9PP0o2fjNZLwsT9IoYq84Q96yotXufmI1Dux8QtnzOIXznc9QSbE9L6n74vzJLNbaNq118QqPWrfpl4F+GwaR5uoy+QBwJRz0MwqvUaQe3rFUZzH95r7cwdEnR6MX8BCRlFxq+/DsM+kHH9aYCi6/HAvCtJAHLdTqFrzg1w35Tu6DSasZMlAHNswsvE2Eav3owpiYyAQ+k5Gg6Z1t/q/Zo6CqdsqhMTbtmHzCNNzrihdCLF+23rnZToZtmiy7mTxDs9IL6SNdJUKsOUhKA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(376002)(39850400004)(136003)(366004)(346002)(4326008)(16526019)(83380400001)(1076003)(8676002)(9686003)(55236004)(36756003)(478600001)(8936002)(956004)(186003)(6486002)(38350700002)(6512007)(6916009)(52116002)(86362001)(5660300002)(2906002)(38100700002)(66946007)(2616005)(316002)(6506007)(26005)(54906003)(66476007)(107886003)(66556008)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?w86lOYrVOG/KIaTCGCUH6WmSbUe6E7ZZ403kpIiwrgs215hIcWfcpFU+8m8n?=
- =?us-ascii?Q?xDUh2U7kOspvB7ILrE/k3ZPdhPuT2ZoMN4suCH4rE7U9TMmXppb6AovsSzdr?=
- =?us-ascii?Q?QOPnsH/kK+HRjlzSzAYx7mgrtXGlm8C2Hl7CTA5ez+SF0cZnzdpL4xROSDJP?=
- =?us-ascii?Q?SU8F3CmTyieI5EwUwJMOy/nP7A87b3SjyUMRTamNB/jemDl/MqcpzGqEMxo7?=
- =?us-ascii?Q?LyNMmMvO0nugC6XQnRwqdvZAld4NdTJwFxJKAHT9r2OxxmSElKrQEMhZp5Xt?=
- =?us-ascii?Q?7tMm0jBu/JOdm9Gtv0vapuZjWOemVkxGqfp9FfccLi3MfqMRt0opElxjynQH?=
- =?us-ascii?Q?pkXF/0PA+E+HVnab/CyKPmW/QQQlmVD2rp6Gqmbl+puhx9Ir/WSSu+rEqybK?=
- =?us-ascii?Q?cFpy5HMcDSuNhtO2FR5Qug0cHbGUHnFV5o+ZPdRBMY7XFgHbYoV/vSxmhuDL?=
- =?us-ascii?Q?t0IICaNO4xcozsP7n6WY+Bbua8Uhoc1mcBpRbc4vglyH8lyQ8CJKZ++w48nG?=
- =?us-ascii?Q?D0ytPLT2WnMSDgBc8TImZZpYcTuqPpdRkDj5ubRsVPPGqlMLey0D32kGgYus?=
- =?us-ascii?Q?27yUBoORj72IoyDR+IU07ReC6SzFqLo77l0YdxnUBCwonpVVgPM9rnFlaJF9?=
- =?us-ascii?Q?6yu6AUBLoRa6Ohcltb16W/xH2yLzg+hMiflWOg184J4H9QES85T5en7eGV9i?=
- =?us-ascii?Q?2GnOePgtjX3pCWXTWWbx/WG+oOk6x+mDfBwzkeBJErdnnSPQUbwd/VEK7QIr?=
- =?us-ascii?Q?VdPL0fA73Z5ZwyXGNSJ1tXsS170Yr5rLvhQozysw+QwWE8czK+pVlWwLZsw+?=
- =?us-ascii?Q?3uvGyKbowkvMKSUkKtHnEAhuZkJ/2kJVb87haEuP764tU/Y9TxPaF2ZScDGt?=
- =?us-ascii?Q?nzmGNRhOSorpTAkWwSoQaNMjaB/KBpc/DKKJ1QrLB62oBzUXuJGEGGEv5qui?=
- =?us-ascii?Q?v1fA94QDz3rF1Rv5/i5wE/AyH7KYkj8Ksnm37sVfPhgjaUiGS+T1YFedT6yk?=
- =?us-ascii?Q?IxbZaeJ/OaNaSXl8KQIf1PQ7+8nUSiHc63qh0BTHcPVR/sU2SJinlnfyPd7N?=
- =?us-ascii?Q?6lcpe1KG1kL2ON8jnXREpL9LBLZR8eg0fL6XLKTUFpV/WK1GnQPNCySfSHKd?=
- =?us-ascii?Q?Em/4Rsfq3X5jzOGpr0+t6CH5jsKNQDi64hiwxxP6zM4Iycb8b+v/F9vlfMXU?=
- =?us-ascii?Q?Besu/QkNaKyXOfpZ0eh6DMfhzsehp7xQZbBhQxhSDHBSCrxLuUm6/Af7DaCZ?=
- =?us-ascii?Q?u/zn9hE7GdqvAk7ERLJKNBu6KqfINB0cAyoY25mXRHZ1E2tvvtGBs9KiA6RE?=
- =?us-ascii?Q?2hYETHoBKokfGJLpkzWPBDZp?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?bxjZGJl1sdNH0ZecczDb9NmQPBwNM3zO02RBTgTvLcVy3PyAWvANQPgt4Rrt?=
+ =?us-ascii?Q?+Qsy5Y905hgksBZl16ezhgeWXeOHNXThE+CZkpnnlXZEGMziaKpcLUwsuo27?=
+ =?us-ascii?Q?Ln0JAstGMNZm0SHgqMZ77GAHmmjEW2+Oklf+jRDwAeT2G42m07TwJgmUaYJ3?=
+ =?us-ascii?Q?vW4dwFgpExUmmWPNjKR6p9BVX3jHBEJ6yMyox99MFZij07oK+P2Pq4UXFFlG?=
+ =?us-ascii?Q?vdUJa+QZuQD8Ie4aBF/bJ/1wSAM52up96LQJ61OmfVT8vcZXleld1937s1Mb?=
+ =?us-ascii?Q?liWgtOMJ11BusVJ+nPV9Zo2J95PlfRoMlirNCB9TIElCbok34dbJyxkhbnB6?=
+ =?us-ascii?Q?Y5ABoF0NP3Uipi/cwBvWuuFcNo+WTLZbT84bgzDfqGxV92E3Zq2RbNzauwJ0?=
+ =?us-ascii?Q?UU2j4dWKfjwN8BQ086E8/IjRMC6LLBGrfT6r8nAjDqfkxJbff7N9bw6FlLdS?=
+ =?us-ascii?Q?ixzc1xkRaqf/6lCwacXLtB3CI4PolJgcDJgIR5ZHj9dw5Cy8zfocUllvFop3?=
+ =?us-ascii?Q?R8QQ7/bWa0FlOInUawK1iiYk405qd2LyIx9hHC3Lt2APyIrLuI9QTvIfG7zW?=
+ =?us-ascii?Q?1QMf9KRh5Kf89fK1/6gEI0/Uvy88OblSbW9jhmzdpnPrMQXmv49U8W8tMdZs?=
+ =?us-ascii?Q?1O7RceKNlv3V0IyRM/S3JE1IAiVYzEdUtrpC01XEr3GpcpaX07XAozfCbiBI?=
+ =?us-ascii?Q?CCyolovQb5FJDN6mlLQl1tl9cLQuqzzaRkbX67NTXVHoKosaKv50CoDi7eK9?=
+ =?us-ascii?Q?wZf/O1TheIOx0ovNePl+MmcHKSlHDiwTvP0s56Um6SYqs90OT5w461LCWOrj?=
+ =?us-ascii?Q?UMDxaWFIUUuMK+vk/YqrnmuPquHn3zqUPHPRC83GBdsQpRBG2Ig0j/S/s3VV?=
+ =?us-ascii?Q?LiOAFRtzgWy73Sq5cYedYAO9TxBL72ny7EaQPsPQWSpOXHSBWyhWP8xYi6uW?=
+ =?us-ascii?Q?a3swSkoBQBEbtmpG7KlH9i3/aqNozD6ex+X3JilIMzhdS2SY1rCRr/3gtPS+?=
+ =?us-ascii?Q?jYtSC2EBccBbjhqfDx3OvnwqoU+VBBAx55MXNNaFvQy86wIYLUUIy2L8Kdm7?=
+ =?us-ascii?Q?HfwyAJJWLqwQaJhAGKrGPZF11e47RaRaj+ic2uSFXjRRBeIyVyaT7iHTPcb1?=
+ =?us-ascii?Q?dDxxXJp84HyTtrAOxfnceSy0jOUKtahXPG5T7NHll2gFljDrxbICdAWFcQ6e?=
+ =?us-ascii?Q?WtiAbvVfBtBnrOG0xGTU3u1yoiQwmyGZWmgMPiC5d5HrM+vNpsKpC0vg86JY?=
+ =?us-ascii?Q?67GdTbsQuDpK6PGOOOQcAusz2SFWMFla0ZruoMSMlo5zHaNakVdeyIPnnwS/?=
+ =?us-ascii?Q?HsHMQ0t/4wARoyq/nbPx5o+n?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cb7e5eda-488e-4516-0bbb-08d931a9e5b3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 25058e7f-a25f-45c4-712b-08d931a9eae3
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:42.4059
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:51.0898
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TnkD3KVXUTx3h60/CA/3zV/Iwmr8Fov1odeRLU7DSYxwmZggo3OAUIHrSUw7bpVaW3A/ro9c7Nx6huXkIGicqA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0452
+X-MS-Exchange-CrossTenant-UserPrincipalName: CW8ZOaSiGSvnG5ts4c9+lBcMR2adl/N8Md+BcU1c2hhVUls/RvTda5OB7i7eHXS0q95rRC4AruhDnSq9bi+sFg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0515
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,171 +128,125 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/utils/ip.c | 140 ++++++++++++++++++++
- 1 file changed, 140 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/utils/ip.c
+ .../net/wireless/celeno/cl8k/utils/utils.h    | 104 ++++++++++++++++++
+ 1 file changed, 104 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/utils/utils.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/utils/ip.c b/drivers/net/wire=
-less/celeno/cl8k/utils/ip.c
+diff --git a/drivers/net/wireless/celeno/cl8k/utils/utils.h b/drivers/net/w=
+ireless/celeno/cl8k/utils/utils.h
 new file mode 100644
-index 000000000000..798119bca294
+index 000000000000..d08cb23513ef
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/utils/ip.c
-@@ -0,0 +1,140 @@
-+// SPDX-License-Identifier: MIT
++++ b/drivers/net/wireless/celeno/cl8k/utils/utils.h
+@@ -0,0 +1,104 @@
++/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "utils/ip.h"
++#ifndef CL_UTILS_H
++#define CL_UTILS_H
 +
-+/* Chromecast" 239.255.255.250 */
-+#define MCAST_CHROMECAST_ADDR htonl(0xEFFFFFFAL)
++#include "hw.h"
++#include "vendor_cmd.h"
++#include "vif.h"
++#include "ipc_shared.h"
++#include "ieee80211_i.h"
 +
-+/*
-+ * Local-group multicast address | internetwork multicast address =3D
-+ *   =3D 224.0.0.0/24 | 224.0.1.0/24 =3D 224.0.0.0/23
-+ */
-+#define MCAST_IP_SERVICE_MASK __constant_htonl(0xFFFFFE00UL)
++static const u8 tid_to_ac[] =3D {
++       AC_BE, AC_BK, AC_BK, AC_BE, AC_VI, AC_VI, AC_VO, AC_VO
++};
 +
-+static __be16 get_eth_proto(struct sk_buff *skb)
++static inline struct cl_vif *NETDEV_TO_CL_VIF(struct net_device *dev)
 +{
-+       if (!skb->mac_header)
-+               skb_reset_mac_header(skb);
++       struct ieee80211_sub_if_data *sdata =3D netdev_priv(dev);
 +
-+       if (eth_hdr(skb)->h_proto =3D=3D htons(ETH_P_8021Q))
-+               return vlan_eth_hdr(skb)->h_vlan_encapsulated_proto;
-+       else
-+               return eth_hdr(skb)->h_proto;
++       return (struct cl_vif *)(sdata->vif.drv_priv);
 +}
 +
-+bool set_network_header_if_proto(struct sk_buff *skb, u16 protocol)
++static inline struct cl_hw *NETDEV_TO_CL_HW(struct net_device *dev)
 +{
-+       if (get_eth_proto(skb) =3D=3D htons(protocol)) {
-+               const bool has_vlan_header =3D eth_hdr(skb)->h_proto =3D=3D=
- htons(ETH_P_8021Q);
-+               const size_t h_offset =3D
-+                       (eth_hdr(skb) =3D=3D (struct ethhdr *)(skb->data)) =
-? ETH_HLEN : 0;
++       struct ieee80211_sub_if_data *sdata =3D netdev_priv(dev);
 +
-+               skb_set_network_header(skb, h_offset + ((has_vlan_header) ?=
- VLAN_HLEN : 0));
++       return sdata->local->hw.priv;
++}
 +
-+               return true;
-+       }
++static inline struct cl_hw *WIPHY_TO_CL_HW(struct wiphy *wiphy)
++{
++       struct ieee80211_hw *hw =3D wiphy_to_ieee80211_hw(wiphy);
 +
++       return (struct cl_hw *)hw->priv;
++}
++
++void cl_hex_dump(char *caption, u8 *buffer, u32 length, u32 offset, bool i=
+s_byte);
++
++bool cl_is_valid_auth_mode(bool wpa_ie, u8 auth_mode);
++bool cl_is_open_auth_mode(u8 auth_mode);
++u8 convert_gi_format_wrs_to_fw(u8 wrs_mode, u8 gi);
++u8 convert_gi_format_fw_to_wrs(u8 format_mode, u8 gi);
++u8 cl_map_gi_to_ltf(u8 mode, u8 gi);
++
++s8 cl_calc_noise_floor(struct cl_hw *cl_hw, const s8 *reg_noise_floor);
++
++u8 cl_convert_signed_to_reg_value(s8 val);
++
++u8 width_to_bw(enum nl80211_chan_width width);
++enum nl80211_chan_width bw_to_width(u8 bw);
++u64 cl_get_tsf_u64(struct cl_hw *cl_hw);
++
++u8 cl_center_freq_offset(u8 bw);
++
++u8 max_bw_idx(u8 wrs_mode, bool is_24g);
++
++bool cl_hw_mode_is_b_or_bg(struct cl_hw *cl_hw);
++
++void cl_snprintf(char **buf, int *offset, size_t *size, const char *fmt, .=
+..);
++
++bool cl_is_eapol(struct sk_buff *skb);
++
++static inline bool cl_are_host_bytes_le(void)
++{
++#ifdef __LITTLE_ENDIAN
++       return true;
++#else
 +       return false;
++#endif /* __LITTLE_ENDIAN */
 +}
 +
-+bool is_ipv4_packet(struct sk_buff *skb)
++/* Most likely, bit endianess is the same as the byte endianess, but turn =
+on
++ * paranoid mode and check separately */
++static inline bool cl_are_host_bits_le(void)
 +{
-+       return set_network_header_if_proto(skb, ETH_P_IP) &&
-+              (ip_hdr(skb)->ihl >=3D 5) &&
-+              (ip_hdr(skb)->version =3D=3D IPVERSION);
-+}
-+
-+bool is_ipv6_packet(struct sk_buff *skb)
-+{
-+       return set_network_header_if_proto(skb, ETH_P_IPV6) &&
-+              (ipv6_hdr(skb)->version =3D=3D 6);
-+}
-+
-+bool is_ssdp_packet(struct sk_buff *skb)
-+{
-+       bool status =3D false;
-+
-+       if (get_unaligned((const u32 *)&ip_hdr(skb)->daddr) =3D=3D MCAST_CH=
-ROMECAST_ADDR)
-+               status =3D true;
-+
-+       return status;
-+}
-+
-+bool is_mdns_packet(const u8 *dest_mac)
-+{
-+       /*
-+        * Multicast DNS packets should be sent as multicast, since no IGMP
-+        * registration is performed on them
-+        */
-+       u8 mdns_mac[] =3D {0x01, 0x00, 0x5e, 0x00, 0x00};
-+
-+       if (!memcmp(dest_mac, mdns_mac, 5) && (dest_mac[5] =3D=3D 0xfb || d=
-est_mac[5] =3D=3D 0xfc))
-+               return true;
-+
++#ifdef __LITTLE_ENDIAN_BITFIELD
++       return true;
++#else
 +       return false;
++#endif /* __LITTLE_ENDIAN_BITFIELD */
 +}
 +
-+bool is_ipv4_service_multicast_packet(struct sk_buff *skb)
++/* We could inverse *_le checks here, but the motivation is the, as per bi=
+ts
++ * endianess - anyway, it is better to check */
++static inline bool cl_are_host_bytes_be(void)
 +{
-+       /* Check if sk_buff contains IGMP packet, addressed to 224.0.0.0/23=
- */
-+       return ((IGMP_LOCAL_GROUP =3D=3D (ip_hdr(skb)->daddr & MCAST_IP_SER=
-VICE_MASK)) &&
-+               (IPPROTO_IGMP !=3D ip_hdr(skb)->protocol || IGMP_ALL_HOSTS =
-=3D=3D ip_hdr(skb)->daddr));
-+}
-+
-+bool is_ipv6_service_multicast_packet(struct sk_buff *skb)
-+{
-+       /* Check if sk_buff contains ICMP packet, or addressed to ff02::/16=
- */
-+       const struct ipv6hdr *ip6h =3D ipv6_hdr(skb);
-+       u8 protocol =3D ip6h->nexthdr;
-+
-+       /* If hop-by-hop option header, get the first u8 field from this he=
-ader */
-+       if (protocol =3D=3D IPPROTO_HOPOPTS)
-+               protocol =3D ((const struct ipv6_hopopt_hdr *)(ip6h + 1))->=
-nexthdr;
-+
-+       return (((ip6h->daddr.s6_addr[0] =3D=3D 0xff) &&
-+                (ip6h->daddr.s6_addr[1] =3D=3D 0x02)) ||
-+               (protocol =3D=3D IPPROTO_ICMPV6));
-+}
-+
-+bool is_tcp_ack(struct sk_buff *skb, bool *syn_rst_push)
-+{
-+       if (skb->len > TCP_ACK_MAX_LEN)
-+               goto out;
-+
-+       if (is_ipv4_packet(skb)) {
-+               struct iphdr *iphdr =3D ip_hdr(skb);
-+
-+               if (iphdr->protocol =3D=3D IPPROTO_TCP) {
-+                       struct tcphdr *tcp_hdr =3D (struct tcphdr *)
-+                                                ((char *)iphdr +
-+                                                 IPV4_HDR_LEN(iphdr->ihl))=
-;
-+                       u16 data_size =3D ntohs(iphdr->tot_len) -
-+                                       IPV4_HDR_LEN(iphdr->ihl) -
-+                                       (tcp_hdr->doff * 4);
-+
-+                       *syn_rst_push =3D tcp_hdr->syn || tcp_hdr->rst || t=
-cp_hdr->psh;
-+
-+                       return (data_size =3D=3D 0);
-+               }
-+       } else if (is_ipv6_packet(skb)) {
-+               struct ipv6hdr *ipv6hdr =3D ipv6_hdr(skb);
-+
-+               if (ipv6hdr->nexthdr =3D=3D IPPROTO_TCP) {
-+                       struct tcphdr *tcp_hdr =3D (struct tcphdr *)
-+                                                ((char *)ipv6hdr +
-+                                                sizeof(struct ipv6hdr));
-+                       u16 data_size =3D ntohs(ipv6hdr->payload_len) -
-+                                       (tcp_hdr->doff * 4);
-+
-+                       *syn_rst_push =3D tcp_hdr->syn || tcp_hdr->rst || t=
-cp_hdr->psh;
-+
-+                       return (data_size =3D=3D 0);
-+               }
-+       }
-+
-+out:
-+       *syn_rst_push =3D false;
++#ifdef __BIG_ENDIAN
++       return true;
++#else
 +       return false;
++#endif /* __BIG_ENDIAN */
 +}
 +
++static inline bool cl_are_host_bits_be(void)
++{
++#ifdef __BIG_ENDIAN_BITFIELD
++       return true;
++#else
++       return false;
++#endif /* __BIG_ENDIAN_BITFIELD */
++}
++
++#endif /* CL_UTILS_H */
 --
 2.30.0
 
