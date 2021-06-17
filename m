@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD42C49EA5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56F9FC48BE5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0301561059
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4242B610A5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbhFQQNt (ORCPT
+        id S232397AbhFQQNs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:13:49 -0400
-Received: from mail-eopbgr130084.outbound.protection.outlook.com ([40.107.13.84]:35463
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:13:48 -0400
+Received: from mail-eopbgr140050.outbound.protection.outlook.com ([40.107.14.50]:15879
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231838AbhFQQMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:12:52 -0400
+        id S231892AbhFQQMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:12:48 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eboMSuXu2ZM1dpkMgcOj8KeEy2P65nryrirMpHUzBgGhVAkQ/2qu5dt74q4PUQ7cyh8CYrIh/XSyp9QhCT6mKdC0xgvWsdr6zOJ46LrwYSaK/6WA7P9FqzjW/ECpLlOM4U3XHQIWCVJVJL48DLuwKh0JfJ6N56HJ7C08fbxMwaCRZDbwYNwbKUp6CPEGfDeNw0te05aQK2L+NfuyU4ECw5u3sJTBIDlDZjy3rUYlF3s6oxTa1q8d3oMXxGuyXdwViUCXYjUhGxLqukHHrC1OlBLgzj0Usf0axxFAxfKxP0akOSGalPrT6M7vuLtbxmPPdYj7FusBZZhttoinA7172w==
+ b=k64f8oHv85pvRMBE8JPlW+y08M2A1pZ26KV13uGFiZJlBhZiT++SIpXNFcVGAFSbhiXc/96C7EyfqJK6epVXry4dqI4dKmRqbG/OOpv2Z/I5c7RMc3P1e7akgDkq/J6GuVQTksISBLI8jbrA0POGPxhx+XUIpXnSdUVQEWCZ6H+6h7pLKiQcoy6fiFjs7aa/ux5RncnV28j6mrlwEZ63Hkny2Ks9GkFwuTOtbIyvj7SnkL9saXB0C1rI/RXgyQsQi/r+UiIVjAsAOk/OiMkrh3EY9xTAzlHtOw/KAtRxPqqpnZo3Dwy9bf4koIYjQNnbqJSeiSukNy0eF/7edaIZJw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zByDGFWJ5V9DIHhWDRtB4UQ1ExDldqSVfc/iVEBBXOE=;
- b=YmDYpRBTbRlViQzemEm1ju+3LyHiiCT8SadhMqEiCqOgObXI8sX7kq12tmTFPUeWwGgL1CTya6Gdi/3Cj8vRIy4tGwjmBD6fQZ3WKzveU/24M7+VFi+0jYWLZCHEldOd7lryUl248fAzKn8HW0z3KdxyQenNhIidh16UxBNsJPVPOj++XFRa1i1BFdJPjuHPHXsDWkJMtKRS+VSlamWqSf4e05aqrvmfu2kHd4Nqn/vuiKTOLnyFN88y3xuks/G/o8hnaB6m+tX/owzijIFS9zHrTJqUC2jdL2n2bvo6AvtwJNjP+W8Z3N/HkD1Dhibgxf8TXd1dM4oEnLZEWuBrsw==
+ bh=62jMvmfm3/xoZkJF6DjJu54WfoYXM/TibLRDXCT6sLA=;
+ b=Z0UikkubVx59rCtxqgS5AncArygHWf3tIoTBK+FZfygYlXUnXhZIn5lR7eG4zXCQpHY4Dj4CR7YA82Dj8cTyxwVgdGMDWZLuiWrkNMv2WEiSxYZBSPjdkelnowYSRsGGGVHDj9Ldp4Ef5qid8H8b69DQJMK4crBGds1texU6NUVVDuvEGW7QycfDU60TMw9b7iRTdot1aJv6+cp6hu+4QyqFuIBRxi6i89H4jLmgTylcQrv3YjSMEj9qt5IytZHwUE+iP07Jl/sw4TmsC66piN8GGWkJtAFPpw4GMmrMXf0/W0sY5cpca9xkx1eKDsXHcooMYyBNmkSIPVX5VOilTA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zByDGFWJ5V9DIHhWDRtB4UQ1ExDldqSVfc/iVEBBXOE=;
- b=VKeQGsLm67NCeZdfYcn1lxRKyi3uxdU9KWZtxMvr5MhP4WE6gpnD1b3Kqv2D8Id2KQxnRWnGiKB8b3OmFcrxGg80q++Z31SV2e16sZNgvVhksb2HWPIaT+VFAWdfHAvrQgDboop1di6HU+S7v8dBT7/9oVwbtmTi4Hord9C5rkI=
+ bh=62jMvmfm3/xoZkJF6DjJu54WfoYXM/TibLRDXCT6sLA=;
+ b=n2nX6vNrzo94oiRN1sfjvD2lDRnaKeDTjwhGCX7HJ4DK2dTUFfKF4Wv33vieY1IK+3sAvE6EaPawxV1xUz85yYYB+kg6JNe0HjIzjAL6GooVgKhud0eAbwppOWAAkHYdCEqRn87Lh+XDixpmZHXoB6tU6PfJtSlhEPiPnz9XgxI=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB0978.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e9::10) with
+ by AM8P192MB1075.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1eb::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
- 2021 16:08:35 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:07:19 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:08:35 +0000
+ 16:07:19 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +58,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 249/256] cl8k: add wrs/wrs_rssi.h
-Date:   Thu, 17 Jun 2021 16:02:16 +0000
-Message-Id: <20210617160223.160998-250-viktor.barna@celeno.com>
+Subject: [RFC v1 208/256] cl8k: add tx/single_cfm.c
+Date:   Thu, 17 Jun 2021 16:01:35 +0000
+Message-Id: <20210617160223.160998-209-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +72,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:07:12 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:23 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ce069845-0b4e-4771-f34e-08d931a9f7d1
-X-MS-TrafficTypeDiagnostic: AM8P192MB0978:
+X-MS-Office365-Filtering-Correlation-Id: 1ab610b5-104b-4108-7764-08d931a9daec
+X-MS-TrafficTypeDiagnostic: AM8P192MB1075:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB0978E09D2C8847D0677B84BDF60E9@AM8P192MB0978.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM8P192MB1075AFCDC12958FAE2861E9FF60E9@AM8P192MB1075.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2399;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PHGzrlMaDFXTlyA+zgfigyPCmvc5n3YnJEkZVdCxmCwDfXELEjcK4jokea5ENYWfHAO0lPk5bkdB6ji7R5fvBUPzPXWMmw6ax0+dPH+K4YAslHLQhg17oTEnY9tPn3g1p3ljFshIM8x/jAcguMBVMLpsSKyopmueGMR4q4h4jZFxa+Wi3383JhS/Dc9wQnGaT3eH+lqEWi2eiqUTWUk5EhL1qxDExX/AbAzvPpSssdETC1ygtolOxPPhmmz/+AHbu8ie9FPOn6YE9o9XYlMmJzbWGt97tUNOrjqae4WNdtgRMqeYHM8hQcMtIC7s6BVB0hkRe4fjgVO9rK/16ZINlPRRLLRFaGcMx0ZudGTo3cPw2EDIGbpa4YW99LH2RvnaujqmI0nAU2pW8EQMQEVmxUydsKr8o7anFKEE0plI3j2dSHaezVpoTgsO+37llOfa/QPWOSkpiz0OqsB915L3hs5XwZC2K5dCqP9Pw8Zdqjkm6DSo3sts6rYuXkYAL/X5kR70d79dAHwDFXWr/qGqMgny3bTwB3+SUi/iFrCETvg2RM4RacUGtDYJjEX9KhZN/avJc1ha3u3iun7EeWC40vK3yhEKAXLiZXZmw9939inNcIh2eicwV4g+FHhMGHXGbRGrOyf3FOeY+a6pqrwiRjQo2UzQDZ5NlevqlhycwSub9rC7QgKXdHoTR2bNeYJMokWbANDOO0wiJe6juq3B+w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(136003)(396003)(376002)(39850400004)(366004)(16526019)(107886003)(5660300002)(66556008)(83380400001)(26005)(186003)(1076003)(2616005)(316002)(66476007)(66946007)(9686003)(2906002)(6512007)(8676002)(508600001)(52116002)(55236004)(6486002)(38350700002)(86362001)(38100700002)(6916009)(8936002)(6506007)(956004)(4326008)(54906003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: No/Uxin0tQPdeGlFOkJR+vYqdJdirGTICS5Gmu8FYM4FT6BAYJpZHSoNOH2lwHDLhdznWAu/xzJvDqhXIi3zk1B0379s4k79c8fbvHMxV7mM774lDmJgoq1xF4jJbdN2blR3utrK5l5hY1OMw0B85ICVdcqTYNYZ+u7g3HzQ779OGq7tgrdg+o6j+hUj7nV++aFrQ82ow9juLMLo0C5B2IfIm+nw5HPaaK/YiyxPKngKCMJXjrvsVA/BCEQwX9bTz0NsLQhlwA2zxcD4XSa/4p6GwDNeJUWjMy2/2cuOb1ufcv65pS87Z/wPOvnm1/REG2E+99zAjLUWdFZyQjcFL8nU+MrQ5evUY1gPFSCOXKtUYVTP26tgykapKn4arOqcMgopYW3ZklFdM+7zNu83t+uIRldD8WopAfc4VQ/5VukGBjnv+F18LMzK3I0ucx4vT7WVVAVegNqFq935AUsQ46ztlatYNqBin654JnoVPihAyHS+YFuWoZYhaIXRooNYySdq0tBIpUa4par2jaGtoA0+8K7jw/wnxQSGgpWOYmh9AC+N9L582g6KaT48abBfA1B79qSbKLlVaPK9E/ej0S9zfrT5HBEuZrM45+gl+3ytW8JkpsSlkNzCRASAFKF5c/E0MFI8CO9dNxtOiG00S3HpDQVhin5+RVHU4dZ/kE68koDQTZYV8NiyBDJ5NmHF1DT86OlrcFSjuQq7QI1ueQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(136003)(39850400004)(376002)(366004)(346002)(66476007)(6512007)(8936002)(66556008)(38350700002)(6916009)(9686003)(66946007)(956004)(86362001)(26005)(5660300002)(2616005)(38100700002)(478600001)(8676002)(6506007)(6666004)(4326008)(1076003)(55236004)(186003)(316002)(2906002)(83380400001)(16526019)(54906003)(52116002)(36756003)(107886003)(6486002)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?z0dkA0u2gl4X/xi8y0Y8wbMioNvqY1Oixz1yCgmQ9C52rfBVs2CSSIwFEvNO?=
- =?us-ascii?Q?d8xVpYR4mSpoIyad2v553uOyNvGYOShdcw0eDYjnNvkOOmWru8rl+eUbCl+r?=
- =?us-ascii?Q?bvRCk1NWu673PKtWgKFQeb/QX4T+z0xRynzNmGDk34SJQjJE2DlTUFJ0osxL?=
- =?us-ascii?Q?snHxTjkb6szWX7iY7E6E0oPFCGx9hm/+Rz7db8WP0EMMKc47htF8sTra1gsh?=
- =?us-ascii?Q?5fxFPB3+mRo3vnhmKUaIGjZoeXaef9AlWNfT1kq3SW7+nR5swEJdCI72RuNq?=
- =?us-ascii?Q?wLVqrF0ix1Yi214EvhoDNHRj1J8AbNj61xgkUusIwhVqcMKaDt8OqRtVbvAV?=
- =?us-ascii?Q?KoLznOfTD049VFnI+apUd5W0csLlna59XXeZjfeVKwdW7q1WlVDFIxPi9806?=
- =?us-ascii?Q?tU8aI1iMkIrxyKvnCkqk7sNEskXoxe/NdIuJNj728iksJKIqPcpbWb/l0IxT?=
- =?us-ascii?Q?bKsGw6kyIkb6s3efltIDYE7JQ0KDfnymYdNRn89a7/dZXkR7/4mkLa+krdTS?=
- =?us-ascii?Q?ElgIHWqW5SkDur2L+Dm6PrMS2lAhHdvQRSC3zfKwNqpWQaQ/4tSYpif/3w4p?=
- =?us-ascii?Q?hvdwSAc0j1aMFXC36NaHb4f2jQq7LQk5G+In4UEiBSgJsB6JIEhh2U6c9IKk?=
- =?us-ascii?Q?peWXXPLj25xt02JZ9gxLYYNBwdQ2PbCuj+y6NOOy3FqQMQwGAKgOWcvOkCzO?=
- =?us-ascii?Q?zbTGIukKX7KlVI7mlrU/h9H+IvhRD9Qp2IsNiRsf/cza1vCdI1cbMNn45XfQ?=
- =?us-ascii?Q?c2CerkSdgt/dSbgQXgeRnI8BNpr3DW69InWxTiL6i3eBxA0SMJUR74IRjWh0?=
- =?us-ascii?Q?+Syw3vRxKRJTPk91MXrUGMeJfhMgZP7D+G6oYw9BQ8Bryxbl2ZqwL25bn3BQ?=
- =?us-ascii?Q?+XzU1rhS+nPsQYBifhQpQm89Td/lCxhYV8OvGUwx7hzf8Imc6ZtrfcSiCD+n?=
- =?us-ascii?Q?Z6mTviUVm+KMNrRwYYAh8Eoe+v+IDj0GL7e71/jWvAdKlvt1ZWm+8ZtBmHZ4?=
- =?us-ascii?Q?p0yrvpyzBKO8E1Qvb3ozc/CWFerDGxRVXvJqcAiv1TcLyLhwhz3A4gAxdvd4?=
- =?us-ascii?Q?oZgCUaHb1F1osRR22fpDvgkvSNrozpzF3eQJWthOf8C2EK6uKcSeL/ofpupG?=
- =?us-ascii?Q?xQFKWMGCOoz6OI0e4G4icCjsfylfrQHz0zwRqSDV9WVJ7pSYj0zL1I1VJsXK?=
- =?us-ascii?Q?bksLJ2JiSXvNQppxXhHKX/D0nhevml1BBKmH1fCAeeUALRBVUgRzCqTWYirH?=
- =?us-ascii?Q?9R2LPo0rarph2xRqUoPB6aIYO54mcjcqNGQpmNZRp4Lmj8JlDvZtvdEcnak3?=
- =?us-ascii?Q?mKAV/xkqo2B9z+6c1TWoNXqi?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8iwoiNPo07C8RPTEF1VwSyjEzEBh5TBC5UCHxW12lXNTRSkxiL8kf7MLuZRo?=
+ =?us-ascii?Q?pC1lawG15ciPfEFns4ZuHez8Iu11BTtLLNLdGm1428HnfCp1VQ2NF1Go61Mx?=
+ =?us-ascii?Q?jkSpXDHUz9EX1Q6S8nx6MrUhS7tez9C54+SH0w8t7Ece5EsfkemvSCESRJsq?=
+ =?us-ascii?Q?Yens+NvEL5B55Zfob7/f9NekVmOOVgQJ+h3jsCgOtHkY9BRVFtJcbBxzlkGC?=
+ =?us-ascii?Q?wNaeHZqAjn2tLM2kW8Pk3cnFmMJZhEy4x06DftjWoKQY+f+dhxtwdj7/Hv+9?=
+ =?us-ascii?Q?xunyzDOHU+HiO2J4CYppAXCwUj9vqNDD5u2FClwmRPZV8PNzWQotncN5ox5C?=
+ =?us-ascii?Q?QRjjp4hY5YLTZDdzXTvFLHMxezuoNexga8gy9BhrEQPy8CR6zdiSWqS+2npD?=
+ =?us-ascii?Q?roxcFJY5oecWqgLrLI8rAXtxnbh33yBT5WyY5cLuHbzSAoj1v6YYcLfSU9MZ?=
+ =?us-ascii?Q?gqOtrfwBRy/peD0dQ5DaD+w9VQDUuy5ZqaqN8CDurO9jzxPRJHeQEIs7DP8G?=
+ =?us-ascii?Q?jKgdg7jltMx2x8DSqZEfHG4aHVGyLOCLylzOrf7slgQW6R0JzlXsIasCqFBZ?=
+ =?us-ascii?Q?qWWXys6v0ggHbSu1/Tmql37DUPMq6M8mCaVDkSb6SosMcUH4MM+xWjyxDAU8?=
+ =?us-ascii?Q?d0QpALeYMwf+cD43tG3j5W8/a/XJ/vGn7Z6fFgWsYdi6BfuVEx8PITkZyhKU?=
+ =?us-ascii?Q?HoEV74ww7Dc83UlZHZoXyFmn2z5BUbUbDzLLjd/UxGbXePHxQd0dG8ZDzi9A?=
+ =?us-ascii?Q?6Yh8Zz35tXtlWMT2jt6wGtUDyDd/zwOXXcoS2Zwpec3K5vzQ4ZCvGeYIKQpP?=
+ =?us-ascii?Q?LGF1oCWz8FWATiV1nQCvcLS6MpCkylSjfGS+z5Jnk8NFfm/GWLnWMgShviIS?=
+ =?us-ascii?Q?oKBkt3Z5fH/77vArRILOnKcF2tDh/PMB1RV871vb2Kv93Uer7hsvuORiemet?=
+ =?us-ascii?Q?cHjoQBGNkrs8+HBKN6OJQhhn8S4RIk/8ctjYV8VR0cW/X9aG9rBjDhZ5a0w4?=
+ =?us-ascii?Q?gPuqW1F4IRVEilUC9/uOuY2UkdBVIQ1u9dk74ASeM/vg6E7Iq3WzfItDs9wB?=
+ =?us-ascii?Q?WBotpt8Nxpdrs4nGuj3udZbBLVaGCLpvxgBZiwNt8SweuGgrUHIrtjFusGtm?=
+ =?us-ascii?Q?55qEBxsbp5nC2xnRQ0vs2ECqfKQXlrcd9Gu2vZZW3CT2eIbAClGVbexSu2Ej?=
+ =?us-ascii?Q?GUQ4X6obdcj83lpZLk3nLwIDgzrXfX/YaeXZx3QwSgqzg1O+5PTZW4Ayvg7K?=
+ =?us-ascii?Q?Xlt3a0RGopN7hDS1AM20FGFTVPZERTbhCOOR8xxM2rU6jTdeWX32HntAEXix?=
+ =?us-ascii?Q?XjTjmFwnS0XyGe+xlBHwyEQP?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce069845-0b4e-4771-f34e-08d931a9f7d1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1ab610b5-104b-4108-7764-08d931a9daec
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:07:12.8403
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:24.3562
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: AcCGh0CxYdxyXrEW223UohZxgVatE2t48TJN8fh/YvheA2FYANFl2+0eYWFnXY+Du74fNiAT0A7o1hXvN53v/Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB0978
+X-MS-Exchange-CrossTenant-UserPrincipalName: GroQceMcauKG/oPrZ2KvwQI0NHlv1Lo/5GKkjlK5qIVLzjrlygJpU83N5QBZiNmeNFjVzg/+gxz4EIxxs02ktg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1075
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,43 +129,249 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/wrs/wrs_rssi.h   | 22 +++++++++++++++++++
- 1 file changed, 22 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/wrs/wrs_rssi.h
+ .../net/wireless/celeno/cl8k/tx/single_cfm.c  | 214 ++++++++++++++++++
+ 1 file changed, 214 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx/single_cfm.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/wrs/wrs_rssi.h b/drivers/net/=
-wireless/celeno/cl8k/wrs/wrs_rssi.h
+diff --git a/drivers/net/wireless/celeno/cl8k/tx/single_cfm.c b/drivers/net=
+/wireless/celeno/cl8k/tx/single_cfm.c
 new file mode 100644
-index 000000000000..2a7f64c88aa5
+index 000000000000..d90148d3f9bf
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/wrs/wrs_rssi.h
-@@ -0,0 +1,22 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/tx/single_cfm.c
+@@ -0,0 +1,214 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_WRS_RSSI_H
-+#define CL_WRS_RSSI_H
++#include "tx/single_cfm.h"
++#include "tx/tx_queue.h"
++#include "tx/tx_inject.h"
++#include "chip.h"
++#include "tx/sw_txhdr.h"
++#include "enhanced_tim.h"
 +
-+#include "hw.h"
-+#include "wrs/wrs_db.h"
++/*
++ * cl_hw->single_cfm_queues:
++ * These queues are used to keep pointers to skb's sent
++ * as singles and waiting for confirmation.
++ */
 +
-+bool cl_wrs_rssi_set_rate(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
-+                         struct cl_wrs_sta *wrs_sta);
++#define SINGLE_POLL_TIMEOUT 50
 +
-+void cl_wrs_rssi_prot_start(struct cl_hw *cl_hw, struct cl_sta *cl_sta);
-+bool cl_wrs_rssi_prot_decision(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_=
-db,
-+                              struct cl_wrs_sta *wrs_sta, bool up_rate_val=
-id,
-+                              u8 up_rate_idx, u8 down_rate_idx);
-+void cl_wrs_rssi_prot_dbg(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
-+                         struct cl_wrs_sta *wrs_sta);
-+void cl_wrs_rssi_prot_config(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db=
-,
-+                            bool enable, bool mode, s32 rssi_up_thr, s32 r=
-ssi_dn_thr);
++void cl_single_cfm_init(struct cl_hw *cl_hw)
++{
++       int i =3D 0;
 +
-+#endif /* CL_WRS_RSSI_H */
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++)
++               INIT_LIST_HEAD(&cl_hw->single_cfm_queues[i].head);
++}
++
++void cl_single_cfm_add(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr, =
+u32 queue_idx)
++{
++       list_add_tail(&sw_txhdr->cfm_list, &cl_hw->single_cfm_queues[queue_=
+idx].head);
++}
++
++struct cl_sw_txhdr *cl_single_cfm_find(struct cl_hw *cl_hw, u32 queue_idx,
++                                      dma_addr_t dma_addr)
++{
++       struct cl_single_cfm_queue *cfm_queue =3D NULL;
++       struct cl_sw_txhdr *sw_txhdr =3D NULL;
++       struct cl_sw_txhdr *tmp =3D NULL;
++
++       if (queue_idx >=3D MAX_SINGLE_QUEUES)
++               return NULL;
++
++       cfm_queue =3D &cl_hw->single_cfm_queues[queue_idx];
++
++       list_for_each_entry_safe(sw_txhdr, tmp, &cfm_queue->head, cfm_list)
++               if (le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]) =
+=3D=3D dma_addr) {
++                       list_del(&sw_txhdr->cfm_list);
++
++                       return sw_txhdr;
++               }
++
++       return NULL;
++}
++
++static void cl_single_cfm_flush_queue(struct cl_hw *cl_hw, u32 queue_idx)
++{
++       struct cl_single_cfm_queue *cfm_queue =3D &cl_hw->single_cfm_queues=
+[queue_idx];
++       struct cl_tx_queue *tx_queue =3D NULL;
++       struct cl_sw_txhdr *sw_txhdr =3D NULL;
++       struct sk_buff *skb =3D NULL;
++       struct ieee80211_tx_info *tx_info =3D NULL;
++       dma_addr_t dma_addr;
++
++       if (list_empty(&cfm_queue->head))
++               return;
++
++       do {
++               sw_txhdr =3D list_first_entry(&cfm_queue->head, struct cl_s=
+w_txhdr, cfm_list);
++               dma_addr =3D le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_a=
+ddr[0]);
++               skb =3D sw_txhdr->skb;
++               tx_info =3D IEEE80211_SKB_CB(skb);
++
++               dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_=
+len, DMA_TO_DEVICE);
++
++               if (cl_tx_ctrl_is_inject(tx_info))
++                       cl_tx_inject_cfm(cl_hw);
++
++               cl_tx_single_free_skb(cl_hw, skb);
++               list_del(&sw_txhdr->cfm_list);
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++       } while (!list_empty(&cfm_queue->head));
++
++       /*
++        * Set fw_free_space back to maximum after flushing the queue
++        * and clear the enhanced TIM.
++        */
++       tx_queue =3D &cl_hw->tx_queues.single[queue_idx];
++       tx_queue->fw_free_space =3D tx_queue->fw_max_size;
++       cl_enhanced_tim_clear_tx_single(cl_hw, queue_idx, tx_queue->hw_inde=
+x,
++                                       false, tx_queue->cl_sta, tx_queue->=
+tid);
++}
++
++void cl_single_cfm_flush_all(struct cl_hw *cl_hw)
++{
++       u32 i =3D 0;
++
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++)
++               cl_single_cfm_flush_queue(cl_hw, i);
++}
++
++void cl_single_cfm_flush_sta(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       /* Flush all single confirmation queues of this sta, and reset writ=
+e index */
++       u8 ac;
++       u16 queue_idx;
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       for (ac =3D 0; ac < AC_MAX; ac++) {
++               queue_idx =3D QUEUE_IDX(sta_idx, ac);
++               cl_single_cfm_flush_queue(cl_hw, queue_idx);
++
++#ifdef CONFIG_CL_PCIE
++               cl_hw->ipc_env->ring_indices_elem->indices->txdesc_write_id=
+x.single[queue_idx] =3D 0;
++#endif
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++static void cl_single_cfm_poll_timeout(struct cl_hw *cl_hw, u32 queue_idx)
++{
++       /*
++        * When polling failed clear the enhanced TIM so that firmware will
++        * not try to transmit these packets.
++        */
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.single[queue_idx=
+];
++
++       cl_dbg_err(cl_hw, "Polling timeout (queue_idx =3D %u)\n", queue_idx=
+);
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++       cl_enhanced_tim_clear_tx_single(cl_hw, queue_idx, tx_queue->hw_inde=
+x,
++                                       false, tx_queue->cl_sta, tx_queue->=
+tid);
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++void cl_single_cfm_poll_empty(struct cl_hw *cl_hw, u32 queue_idx)
++{
++       struct cl_single_cfm_queue *cfm_queue =3D &cl_hw->single_cfm_queues=
+[queue_idx];
++       bool empty =3D false;
++       int i =3D 0;
++
++       if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
++               return;
++
++       while (true) {
++               spin_lock_bh(&cl_hw->tx_lock_single);
++               empty =3D list_empty(&cfm_queue->head);
++               spin_unlock_bh(&cl_hw->tx_lock_single);
++
++               if (empty)
++                       return;
++
++               if (++i =3D=3D SINGLE_POLL_TIMEOUT) {
++                       cl_single_cfm_poll_timeout(cl_hw, queue_idx);
++                       return;
++               }
++
++               msleep(20);
++       }
++}
++
++static bool list_hp_empty_sta(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       struct cl_single_cfm_queue *hp_cfm_queue =3D &cl_hw->single_cfm_que=
+ues[HIGH_PRIORITY_QUEUE];
++       struct cl_sw_txhdr *sw_txhdr =3D NULL;
++
++       list_for_each_entry(sw_txhdr, &hp_cfm_queue->head, cfm_list)
++               if (sw_txhdr->sta_idx =3D=3D sta_idx)
++                       return false;
++
++       return true;
++}
++
++static void cl_single_cfm_poll_empty_hp(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       bool empty =3D false;
++       int i =3D 0;
++
++       if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
++               return;
++
++       while (true) {
++               spin_lock_bh(&cl_hw->tx_lock_single);
++               empty =3D list_hp_empty_sta(cl_hw, sta_idx);
++               spin_unlock_bh(&cl_hw->tx_lock_single);
++
++               if (empty)
++                       return;
++
++               if (++i =3D=3D SINGLE_POLL_TIMEOUT) {
++                       cl_single_cfm_poll_timeout(cl_hw, HIGH_PRIORITY_QUE=
+UE);
++                       return;
++               }
++
++               msleep(20);
++       }
++}
++
++void cl_single_cfm_poll_empty_sta(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       /*
++        * Poll all single queues belonging to this station, and poll all
++        * packets belonging to this station in the high priority queue.
++        */
++       u8 ac;
++       u16 queue_idx;
++
++       for (ac =3D 0; ac < AC_MAX; ac++) {
++               queue_idx =3D QUEUE_IDX(sta_idx, ac);
++               cl_single_cfm_poll_empty(cl_hw, queue_idx);
++       }
++
++       cl_single_cfm_poll_empty_hp(cl_hw, sta_idx);
++}
 --
 2.30.0
 
