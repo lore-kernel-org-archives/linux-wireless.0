@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17530C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21E2CC49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E129761040
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E99B613F9
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233739AbhFQQJc (ORCPT
+        id S230340AbhFQQJg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:32 -0400
-Received: from mail-vi1eur05on2059.outbound.protection.outlook.com ([40.107.21.59]:25895
-        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:09:36 -0400
+Received: from mail-eopbgr80045.outbound.protection.outlook.com ([40.107.8.45]:44002
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232424AbhFQQIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S233686AbhFQQIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:08:16 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ih1rm9vhjBgVOFaVNK9OoUn4jd+Mn773zrfn1oFFPXCoV7ElrrhZ2g2a0gN4P+9xqtY3yD20bWo0P1Y6DAtoFYZH4ZmIuQvToTMid6mnChRybbvdAxxhz8N0fNBpGAFQ+i0jGQf3/LZGgOJoUslZ/WMKue5RofgnUWyNMOuJxGlyhNM2Eb7E6C7hyiHhPJQvvuZDqnV1faCHo5MYSp8hgbVqIWrBwREJZeKcXUhpA0UlIMoNYojXGqbiytKEqszUrxGMjKBMecwayC6kvh8h1fNX+AtKarnLvOU4O7DDTJXW+5j1vfdIFEdBFluyHXyBiN/0xCtc66Zeba2gznohdQ==
+ b=BQucnhrNSGAXhZmWa9QyMdAM2MrTq4VhqrT3f0/0nTeQ0vV5qGM2nr5pQBBwWdTTLUAMPqDXfEFBdqwVuTnnc2EVtgE89yBWiX+CiUWYJUacMJH25Jf/hULIvwljXOqywCXFMnUrZuVQhpkqwTNXXw2iAVt+jNIhrlXf1JQtnH70QbDyqAs88x11cpYEcfe2vfbKrHzgGLfrNsKweUsd+6tkMe07rpUKLI7NMiAPZCdOIohStINxymQxYd7++5uRXse5tYZAlvIeMAguHZr2ScRiaWK+sj3rCbDjAQ5YwhMEnVDT5bbZQaHvcaj5fVCKq8YZahLGRwIEte9kSFn9eQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oKuSGQxJMMYPVScMuTAb8ucsLD2TjiKrS19M/2OKwkY=;
- b=lOVDt7HqwyMLU4CG7EewQRrLX9WlzY4b2v/CLHYA2HSiWaTJOczU/kYVOorMblsEd7L0PoJinZ4zp7WyF1PjM6nPHZxSO0tqAAlSsVwLtF48QyGfBq//bD+LCSSLPEEMZs9YVOSLyYXiqYOcMxnhkTscSROeTg4p75DQUUx9I+CkBS49vVxqKNzn/Heh6aAXaPY9PnN7PDXXciFi+EMmqju672StiQbCwgsknuJgH+gDgtuI236tXDYZDmEQPlWvnIwf99mPxOfW0Y2SpBnDJgDJRdHBpdVZmRW9OW0qn6Z6OAa/9R3l/YMpOzJByBamiyIfpD1wkmH42aBubqn6Hg==
+ bh=3j+64rGqIDPP5xVEcWIBx5laxfKQaOAVamEzKbDvXV4=;
+ b=iw3DCTQZJZAYcpbX2KIY5OW+Nb7ZzMwKtnPauDe74I5vot50b1x4yFQRnhnEMGhqvCug+7UmVr38DIYaO4hWK/k73djX3Kwt747FvYxp7k2b9FQqmS/Z9B11foio1+nijC/ijfEKBRXD/9nuj40zyaoIRC+vIvpqTRd2rDuyUyBxcfx9grcJ3oKlJTLaCu9npvr94NbZVIJjpSY+R0kJqIXzDrQMOfk/BEcrAVwD5YLDrVxwUFbRAXrWRxtveN8WWAJEHSKQ4fkrC+yAg1Dj5v1BKdcIEJOiFE44wSPyhKvu2yjwZdOR0jSEKQefFe1Lzpo6h7Ib5RyjUpTyZ9Rggg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oKuSGQxJMMYPVScMuTAb8ucsLD2TjiKrS19M/2OKwkY=;
- b=BpjD43INCq0c3aHyD33AOiXfrwQzaw8GIAsqL62iw8m2MCDFWRWD73kiR5jftnXVC/l0Dd/xYFkCr5S7k9UaQYBdO8iPSp7NAZ8hON8wH437qzW+cVCJFmyuGT2TmytdT3Z6C9NtG8mhGA+Z3nW+BWTEB4cuYmqkb1ifm3NG3Ug=
+ bh=3j+64rGqIDPP5xVEcWIBx5laxfKQaOAVamEzKbDvXV4=;
+ b=oO+DL5vdBy2j50ALxlosfCY1BjilmIIlZ6/sHD7+q/9BSV15VbLj/zZYgajY5085EGGpNfHV3c/y0douSWNObtJJkKmyc29ts1/pqe4MPCyl4prtcegtqkQ6DIa1bHxkpLN6IFpF/9SIeujUMhiDVGEQ1dqqhnvXFoTn/fG80a8=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB1059.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e3::21) with
+ by AM9P192MB0887.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1f8::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:05:48 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:05:05 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:48 +0000
+ 16:05:05 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 135/256] cl8k: add power_cli.c
-Date:   Thu, 17 Jun 2021 16:00:22 +0000
-Message-Id: <20210617160223.160998-136-viktor.barna@celeno.com>
+Subject: [RFC v1 104/256] cl8k: add key.h
+Date:   Thu, 17 Jun 2021 15:59:51 +0000
+Message-Id: <20210617160223.160998-105-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:02 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:28 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0a556ba2-6b61-4872-029c-08d931a9aa57
-X-MS-TrafficTypeDiagnostic: AM8P192MB1059:
+X-MS-Office365-Filtering-Correlation-Id: 6b00ddd4-18ac-411c-56cb-08d931a99640
+X-MS-TrafficTypeDiagnostic: AM9P192MB0887:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB1059C4E0A264267865104735F60E9@AM8P192MB1059.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:146;
+X-Microsoft-Antispam-PRVS: <AM9P192MB0887224A2D6FE5D050A437B0F60E9@AM9P192MB0887.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 0JQJad6qQJlaSSqrJtjWJxiCLiY8a1hoDc3xFX4AqcOWqoLwIVxsdF35k02JbiyYnzOmpPXPg5sz8KSkJ08zhsTpwfLHAZy19rZxsaj4axWoWMszWJrINd88z6HQfYGB41eoWVgmB5ESxWQxS8pOEpM4eyD7ftDR3Qh2NFDs/pOdOAeC5rO3bdAlrdh9gNM6xq7JcF9a+v8G4p/mddRTh3cCLFo9EzK2yZjrA26fYs+A8APtnACXGWpjxgiltNm+ADVy7hEO5IC5nVX7N+hlWLr02Qx0FNtloyvD5U3fTa1q47o74seT17544hsr+/aVeFQWo/KtOtVlbwKh212H8WIuxeasyFKsxnx7N9BIAcXdzDdBqaH1RhD3H38jEvo1E0GKkoiF9XoWofNeG0GDab1nxoAUBKISzjhONFuUwG1KxtKKhe0UcDgsonWo/KhRCa5yv1VI1ybAOCkjpgPL5LKs5YU7r6ngmcC5NE2HwpHxQVd5My9JMva6MDTGMNPI8+gNF64NTuQqe1rg23WZpH0dMrGO2DjwoI7UvGJcnWp4HQTAJb5Zl6pmwknNZz5ycdjsxJa+2Pvqfy5thr6qO+Z1yNQuVyhH8BJHVEe7Q//AbzjAWKY25p5tyxjTt1J/a+Q2XoFYe3A92OaB9Jz5ncmFpXQPEEHqDYuI8o51DhOepohYyZnjdase0yXQQYMxwm9eOys1nU03+F6gGNDOyg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(26005)(956004)(498600001)(186003)(66556008)(16526019)(107886003)(66946007)(66476007)(8936002)(6916009)(2616005)(1076003)(2906002)(54906003)(6506007)(6666004)(4326008)(38100700002)(38350700002)(83380400001)(9686003)(6512007)(5660300002)(6486002)(86362001)(55236004)(36756003)(30864003)(52116002)(8676002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: zMbpuL42G1CEo1u3C4kBRLkvOKwQ14OEfg+EEvvgYbiPZM0SdMGHFktXKGkCC9pT+y4t/wvZsfDXHs3Qv2Rzv7BRMmmlib8Hjh37h4TcPoDW5iKHDOs8WSHnXcNPkEGUbZ8gQQGLl6OIxHBbpV4CuetVcsT0SAz33+OuFYBS/P/lVRQ5R+tejMkyTBCJU5VlqG2YDnkWVdONW0sByR5g7Sdf5nhaqgCq6dj1lU6A23CdzXVZCHpPFitkJydgIgeXTA+74+cacZqdc7dS/TQvr8SXZB8SPromOenCBZs2AwRRloGjWmQtjOuUL6TIi1cUQYXTuuSsEVCqx3XiTMmNxcQUVBG9ax8X5GGgDRR18/qii+SXj+cjIybDthVOXrIvc9rg7dKEem+BZ2jt4f1yUz8qmqZC3ew1WACIpH7SX7UetBJsatQsE5y/hYhOlt/gdfNGUYt3/5HwDY2wcRRbSWpbYtC/mkhyoBkF7u7jYmwGNJxWI3jIvJB+THxkOSx484SAidAgF3kNiTeLuVtJa+avB7brSQrqPjZnYMJ+6UPWTKJEasZiH7+15b9mCnPAFmpd4vLYKfhJxlgJIEIs+1CbXDrX07gao0lw7QDroWD0N9NvPvX2c9+ghv4KjZfCEmPd0pPG3IaTuXtq5Hs9ZW/kypuj1kpe8vYLzVDAPkmxL1Ft7Qr0m3CjCaxmPyjrv++jm8XhNModn0MSU1Pe8w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(396003)(366004)(39850400004)(136003)(346002)(83380400001)(6666004)(38350700002)(4326008)(186003)(16526019)(5660300002)(54906003)(6506007)(26005)(55236004)(38100700002)(316002)(1076003)(107886003)(52116002)(8936002)(508600001)(66476007)(66946007)(66556008)(36756003)(6916009)(6486002)(86362001)(2616005)(956004)(2906002)(8676002)(9686003)(6512007)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?mdr1p9OJuyalRrY8a2B1zetK71OJ9H6mpE41SvHy+FZUu13+YjBow3AHuKHV?=
- =?us-ascii?Q?mmdcV/KZaIU9DN7ZlcC6T28V0nEMltlhpxuAH50qjrLAIFvmpE26lrUYxr0I?=
- =?us-ascii?Q?ezU3tUuRwTUW7JEAG0HzwUGOlJNpe0g433G57PksjDhJhnT23XrSrRyuJxfX?=
- =?us-ascii?Q?hHAspdDjiZ1xJkjhSOFggcXnd7r7qDKkydMln3W1ipCwp45HwKgo4FvEh6km?=
- =?us-ascii?Q?ZrER2wyp+6+QOgi5cidwFc3rBUMBbaI8K2zyEln8E4kil3qnj4y6+PniOVmg?=
- =?us-ascii?Q?wSuKvlz9FrYsczz2TbWcELeqailHnagUsY1dp3dNPpHX4ajfZUzm2hDcNMNc?=
- =?us-ascii?Q?y1Qs9U4zkK+OPwUKiYDB+S7tWhaN/W57S+6DWp7RAmLMd5SXyyPYZ2VuKuRb?=
- =?us-ascii?Q?MYIbRc1hSqS6YBHfq4tmWd2nGSBIEAks04EVUBvVHX7hjwqxg5fwlnCPwxX7?=
- =?us-ascii?Q?L35uZo7QdOyK8GyTn+ezsxnY66vltwq/W0tp7Jgc+kplhz65JGQUJ2HyyNB0?=
- =?us-ascii?Q?oHhhQ2hUEjaALeTgS67g2Qh/ZznYZaAVErWEo/MEd7gtiZeDIezAVKwdmnpF?=
- =?us-ascii?Q?iqUwxSSU8aPEkGRDCqWa0ZzX+drTucdDA7TjtLodEoMqHscXoQCbiPEJrNud?=
- =?us-ascii?Q?dmo/t5sz2UqKQVXfyskezL1bF0L7Aj59b4z7cZo+vyOhLvd5nzBarY6W5rC0?=
- =?us-ascii?Q?quhg1h02EMZvqD8IW4eWMuhHjafTcP4M3PdxxjtB/YS1ytraNBLq2by6As2n?=
- =?us-ascii?Q?X6G0MPuDK8mNHOP/sp0Y5ba0ZFC32iLaeS72/dvbM0acWO6y8Z2tVHxVp8kP?=
- =?us-ascii?Q?3dxih7YOY30rkz1LhVknJgGpOX+6cBEjhzltMrT+38Q36DhtzbGl+8andCRf?=
- =?us-ascii?Q?HXlSnD3qLOG8waCixqcYRtCT7cbjvviQO6OxqRty3RQCkSqkTMCX3PEpqHeU?=
- =?us-ascii?Q?dcY9znc241HwUjJi4VObunPvfaUtwR6laKGBIxCWld0ZW7xhhoxGaqrBzgyy?=
- =?us-ascii?Q?KhwnZVZ0fZfABRFHTw0lw3tgE+wSpE8MHwu023TuoqpFiLe2EQid57WXsMAm?=
- =?us-ascii?Q?5sExZDqfiAD5RD6Hn899H0L7kFtNOwWgetYJk/Kkof8m8T/R3LzQNkQaApkw?=
- =?us-ascii?Q?X0pd5fAmVHY8qyKeMZbcsYOp4/VyNqC8gGf9vXxoRcLt9krXEey3TR1NgKjb?=
- =?us-ascii?Q?1mrf03brJYWZCB0Jwce4hGbdfoaRMXWWSexswmjuiCGmMa5QN1zuHYurJrIV?=
- =?us-ascii?Q?SKnHHRgnZRo7nPuh+7/YED3VCEbUGu1m+9373zupzlWKyBhrodE1eljnAgDI?=
- =?us-ascii?Q?5PGXHdLML4EtUolmG6N2gk9f?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HUfsLb+ABJ5RDbPV6pCQJhdc3JKaJ4DFiNYOYj9hMX67mf/jMCtO1/W2BtYt?=
+ =?us-ascii?Q?jig5tDhVj3aeNai22CjUjvdWeoA8DaIYONHk331X8XASmQ+kYliNAKIesbFj?=
+ =?us-ascii?Q?1CInrpqcMg8q1eL5EV5BRYvSYxkB2qs1wKLx65ldUWjyskYZva0IKD1q3oIj?=
+ =?us-ascii?Q?ojHxbk+KpIwVQT9YqvkQMbwEj1En3CPcJ/m2OTVKJMigzNSY8sELg/opWY5X?=
+ =?us-ascii?Q?PJn8YZUV2FdyAud1iXjoCx4y2kEhwQ8iDDsQEOYUyyTuBRPbxjLMA73u6MSA?=
+ =?us-ascii?Q?Wr8lD726LY8HWKtF1VIYBJ8mFYTBl1xoDKRN/bfSaY06aWn5/8Sk7NKPv9kg?=
+ =?us-ascii?Q?fNq5xZlIxlyHe9CGEpLJFxymfDd5g+mze8Xmr77h2DW5E0coqJre+LB24mQR?=
+ =?us-ascii?Q?iCfXDHYxry1U9hj17rBLU+aQgQkVMBKpD6px0J13B71qsQllAtI/FlOZlXV5?=
+ =?us-ascii?Q?zDh5xVvx7y/Ah3llLP3khBXugVfteEuBNWRslzQpzohw8YawUGBXbeTN+4Iv?=
+ =?us-ascii?Q?f/wZsNnPHT7Xnh+0qvkBa1GWYTiLij9Z04F7gJcEDWFjd4hB/YOXi2hkGA1D?=
+ =?us-ascii?Q?or8afG3ZBJFpoGG4m/ksZUkhssoh6tRTHkBOFw4PICQNA1DNZy+0fqgP73HB?=
+ =?us-ascii?Q?x7BC+kNI5myGzebx2spUvZASdJZ1/X8pvB2AgamVGtuvV7cryQIgDZr4bZ8W?=
+ =?us-ascii?Q?5dVV4QGlAaF3nv2U7/K2l8lnleFXDhAslYQJtfAQz+TNpj3fk4+fTE29TW4I?=
+ =?us-ascii?Q?vpXr1IrDB05TZVDh6k75sJchNvohYHh+9jCKWnAjyaUUO93fL9UIST0q0Y1D?=
+ =?us-ascii?Q?DwNDw1IbafpXLPc01e8+UwjxS0GzJGM4+Naj0cPY6fZiRsDFMAYMrk3iFTjl?=
+ =?us-ascii?Q?V0Vi6S3avuduYdCztLK3QF7/QYN2GTdYoFqmp4Zn5v3SavUSLemuJyD/RcT9?=
+ =?us-ascii?Q?bJxRsGu1K3AUzuAhTIHxvN4whvH7FKbLhHGNYPRJzgHdDXqpLH8srcbQqlop?=
+ =?us-ascii?Q?JNR4QMp6lw4AhTe9gkcOWJ3hy2a5fzbkPfxmlsiiul+ISS+Yi2LpVg5as6VB?=
+ =?us-ascii?Q?vf9mCeM3SRE3c+Ym20GFpyWzZw489m3lr9VrN6tIQit2VjOV4PiNyhqIVCfV?=
+ =?us-ascii?Q?J1HBt37gRDzbGXE5ikJnAme9J3Mir0lOGYcWpPqlDLOpjjxjYoWVTy/YXwwi?=
+ =?us-ascii?Q?XAxrPPUMDl0aMF51XyFKpnU1xhmLH69sdLCOJfxxJCK1a2FFDZZgWL3TUcIx?=
+ =?us-ascii?Q?5Yn+cQx2mBVGM86DZm0ZZqKhxvMyTbrJpwplGqisFmvvZEzhqGT+NEqDwJ8x?=
+ =?us-ascii?Q?oo5/ygKefuNQuea+JKHmnxQH?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0a556ba2-6b61-4872-029c-08d931a9aa57
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6b00ddd4-18ac-411c-56cb-08d931a99640
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:03.1836
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:29.2207
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Ahqtd9H4VAqRX1VWTl3VYEabUnhrdUHrQn3TrcXN41yxtiKo6Yn6aO5N/Df5uJGDc40fBWwErPgNt+hNUEc+kQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1059
+X-MS-Exchange-CrossTenant-UserPrincipalName: Wol6SIld8xDfqorQSqSCU7rZTyEx3csYnn7hR1qnSDyjhaYw5qHhstO3RGOr94tbpBbG70uuNXhbTEBTs6MXvw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0887
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,988 +128,36 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/power_cli.c | 878 +++++++++++++++++++
- 1 file changed, 878 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/power_cli.c
+ drivers/net/wireless/celeno/cl8k/key.h | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/key.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/power_cli.c b/drivers/net/wir=
-eless/celeno/cl8k/power_cli.c
+diff --git a/drivers/net/wireless/celeno/cl8k/key.h b/drivers/net/wireless/=
+celeno/cl8k/key.h
 new file mode 100644
-index 000000000000..7adcb93cbf9c
+index 000000000000..9c9b9fe122f0
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/power_cli.c
-@@ -0,0 +1,878 @@
-+// SPDX-License-Identifier: MIT
++++ b/drivers/net/wireless/celeno/cl8k/key.h
+@@ -0,0 +1,19 @@
++/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "power_cli.h"
-+#include "power.h"
-+#include "band.h"
-+#include "chip.h"
-+#include "utils/utils.h"
-+
-+static void cl_power_float_to_buf(char **buf, int *len, ssize_t *buf_size,
-+                                 s32 x, s32 y, bool zero_pad)
-+{
-+       bool sign =3D (x >=3D 0 && y > 0) || (x < 0 && y < 0);
-+       s32 absx =3D abs(x);
-+       s32 absy =3D abs(y);
-+       s32 abs_integer =3D 0;
-+       s32 fraction =3D 0;
-+       s32 signed_integer =3D 0;
-+
-+       if (x !=3D 0 && y !=3D 0) {
-+               abs_integer =3D (absx / absy);
-+               if (y =3D=3D 2)
-+                       fraction =3D (10 * (absx - absy * abs_integer) / ab=
-sy);
-+               else
-+                       fraction =3D (100 * (absx - absy * abs_integer) / a=
-bsy);
-+               signed_integer =3D sign ? abs_integer : -abs_integer;
-+       }
-+
-+       if (y =3D=3D 2) {
-+               if (signed_integer =3D=3D 0 && !sign)
-+                       cl_snprintf(buf, len, buf_size, "-0.%d", fraction);
-+               else if (zero_pad)
-+                       cl_snprintf(buf, len, buf_size, "%2d.%d", signed_in=
-teger, fraction);
-+               else
-+                       cl_snprintf(buf, len, buf_size, "%d.%d", signed_int=
-eger, fraction);
-+       } else {
-+               if (signed_integer =3D=3D 0 && !sign)
-+                       cl_snprintf(buf, len, buf_size, "-0.%02d", fraction=
-);
-+               else if (zero_pad)
-+                       cl_snprintf(buf, len, buf_size, "%2d.%02d", signed_=
-integer, fraction);
-+               else
-+                       cl_snprintf(buf, len, buf_size, "%d.%02d", signed_i=
-nteger, fraction);
-+       }
-+}
-+
-+static void cl_power_q1_to_buf(char **buf, int *len, ssize_t *buf_size, co=
-nst s8 *prefix, s32 x,
-+                              const s8 *suffix, bool zero_pad)
-+{
-+       cl_snprintf(buf, len, buf_size, "%s", prefix);
-+       cl_power_float_to_buf(buf, len, buf_size, x, 2, zero_pad);
-+       cl_snprintf(buf, len, buf_size, "%s", suffix);
-+}
-+
-+static void cl_power_q8_to_buf(char **buf, int *len, ssize_t *buf_size, co=
-nst s8 *prefix, s32 x,
-+                              const s8 *suffix, bool zero_pad)
-+{
-+       cl_snprintf(buf, len, buf_size, "%s", prefix);
-+       cl_power_float_to_buf(buf, len, buf_size, x, 256, zero_pad);
-+       cl_snprintf(buf, len, buf_size, "%s", suffix);
-+}
-+
-+static void multi_print(char **buf, int *len, ssize_t *buf_size, u8 num_pr=
-ints, const s8 *str)
-+{
-+       u8 i;
-+
-+       for (i =3D 0; i < num_prints; i++)
-+               cl_snprintf(buf, len, buf_size, "%s", str);
-+
-+       cl_snprintf(buf, len, buf_size, "\n");
-+}
-+
-+static void cl_power_offset_to_buf(struct cl_hw *cl_hw, char **buf,
-+                                  int *len, ssize_t *buf_size,
-+                                  u8 mode, u8 max_bw, u8 max_mcs)
-+{
-+       u8 bw, mcs;
-+       s8 offset_q1;
-+
-+       cl_snprintf(buf, len, buf_size, "\nPower Offset per BW & MCS\n");
-+
-+       cl_snprintf(buf, len, buf_size, "-----");
-+       multi_print(buf, len, buf_size, max_mcs, "-----");
-+
-+       cl_snprintf(buf, len, buf_size, "|   ");
-+       for (mcs =3D 0; mcs < max_mcs; mcs++)
-+               cl_snprintf(buf, len, buf_size, "|%4u", mcs);
-+
-+       cl_snprintf(buf, len, buf_size, "|\n");
-+
-+       cl_snprintf(buf, len, buf_size, "|---");
-+       for (mcs =3D 0; mcs < max_mcs - 1; mcs++)
-+               cl_snprintf(buf, len, buf_size, "+----");
-+
-+       cl_snprintf(buf, len, buf_size, "+----|\n");
-+
-+       for (bw =3D 0; bw < max_bw; bw++) {
-+               cl_snprintf(buf, len, buf_size, "|%3u", BW_TO_MHZ(bw));
-+
-+               for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+                       offset_q1 =3D cl_power_offset_q1(cl_hw, mode, bw, m=
-cs);
-+                       cl_power_q1_to_buf(buf, len, buf_size, "|", offset_=
-q1, "", true);
-+               }
-+
-+               cl_snprintf(buf, len, buf_size, "|\n");
-+       }
-+
-+       cl_snprintf(buf, len, buf_size, "-----");
-+       multi_print(buf, len, buf_size, max_mcs, "-----");
-+}
-+
-+static void cl_power_bf_gain_to_buf(char **buf, int *len, ssize_t *buf_siz=
-e,
-+                                   u8 max_nss, s32 *bf_gain_q1)
-+{
-+       u8 nss;
-+
-+       cl_snprintf(buf, len, buf_size, "BF gain per NSS =3D ");
-+
-+       for (nss =3D 0; nss < max_nss; nss++) {
-+               if (nss =3D=3D max_nss - 1)
-+                       cl_power_q1_to_buf(buf, len, buf_size, "", bf_gain_=
-q1[nss], "\n", false);
-+               else
-+                       cl_power_q1_to_buf(buf, len, buf_size, "", bf_gain_=
-q1[nss], ",", false);
-+       }
-+}
-+
-+static void cl_power_table_ht_vht_he_to_buf(struct cl_hw *cl_hw, char **bu=
-f, int *len,
-+                                           ssize_t *buf_size, u8 max_bw, u=
-8 max_nss,
-+                                           u8 max_mcs, u8 max_nss_arr,
-+                                           u8 max_mcs_arr, s8 *ant_pwr_q1,
-+                                           s32 *bf_gain_q1, s32 arr_gain_q=
-1,
-+                                           s32 ant_gain_q1)
-+{
-+       u8 bw, nss, mcs, one_d_idx;
-+       s32 conducted_q1, final_q1;
-+
-+       cl_snprintf(buf, len, buf_size, "\nPower Table\n");
-+
-+       cl_snprintf(buf, len, buf_size, "---------");
-+       multi_print(buf, len, buf_size, max_bw, "----------");
-+
-+       cl_snprintf(buf, len, buf_size, "|MCS|BF |");
-+       for (bw =3D 0; bw < max_bw; bw++)
-+               cl_snprintf(buf, len, buf_size, " %3uMHz  |", BW_TO_MHZ(bw)=
-);
-+
-+       cl_snprintf(buf, len, buf_size, "\n");
-+
-+       cl_snprintf(buf, len, buf_size, "|   |NSS|");
-+       multi_print(buf, len, buf_size, max_bw, "Cond|Finl|");
-+
-+       for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+               cl_snprintf(buf, len, buf_size, "|---+---|");
-+               multi_print(buf, len, buf_size, max_bw, "----+----|");
-+
-+               for (nss =3D 0; nss < max_nss; nss++) {
-+                       cl_snprintf(buf, len, buf_size, "|%3u|%3u|", mcs, n=
-ss);
-+
-+                       for (bw =3D 0; bw < max_bw; bw++) {
-+                               one_d_idx =3D (bw * max_mcs_arr + mcs) * ma=
-x_nss_arr + nss;
-+                               conducted_q1 =3D ant_pwr_q1[one_d_idx];
-+                               final_q1 =3D conducted_q1 + ant_gain_q1 +
-+                                       arr_gain_q1 + bf_gain_q1[nss];
-+
-+                               if (cl_hw->channel_info.standard =3D=3D CL_=
-STANDARD_FCC)
-+                                       final_q1 -=3D min(bf_gain_q1[nss] +=
- ant_gain_q1, 6 << 1);
-+
-+                               cl_power_q1_to_buf(buf, len, buf_size, "", =
-conducted_q1, "|", true);
-+                               cl_power_q1_to_buf(buf, len, buf_size, "", =
-final_q1, "|", true);
-+                       }
-+
-+                       cl_snprintf(buf, len, buf_size, "\n");
-+               }
-+       }
-+
-+       cl_snprintf(buf, len, buf_size, "---------");
-+       multi_print(buf, len, buf_size, max_bw, "----------");
-+
-+       cl_snprintf(buf, len, buf_size, "(*) BF disabled =3D BF NSS #%u", m=
-ax_nss - 1);
-+}
-+
-+static void cl_power_table_cck_ofdm_to_buf(struct cl_hw *cl_hw, char **buf=
-,
-+                                          int *len, ssize_t *buf_size,
-+                                          u8 max_mcs, s8 *ant_pwr_q1,
-+                                          s32 arr_gain_q1, s32 ant_gain_q1=
-)
-+{
-+       u8 mcs;
-+       s32 conducted_q1, final_q1;
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "\nPower Table\n"
-+                   "|-------------|\n"
-+                   "|MCS|Cond|Finl|\n"
-+                   "|---+----+----|\n");
-+
-+       for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+               conducted_q1 =3D ant_pwr_q1[mcs];
-+               final_q1 =3D conducted_q1 + ant_gain_q1 + arr_gain_q1;
-+
-+               if (cl_hw->channel_info.standard =3D=3D CL_STANDARD_FCC)
-+                       final_q1 -=3D min(ant_gain_q1, 6 << 1);
-+
-+               cl_snprintf(buf, len, buf_size, "|%3u|", mcs);
-+               cl_power_q1_to_buf(buf, len, buf_size, "", conducted_q1, "|=
-", true);
-+               cl_power_q1_to_buf(buf, len, buf_size, "",  final_q1, "|\n"=
-, true);
-+       }
-+
-+       cl_snprintf(buf, len, buf_size, "|-------------|\n");
-+}
-+
-+static void cl_power_trunc_ht_vht_he_to_buf(struct cl_hw *cl_hw, char **bu=
-f,
-+                                           int *len, ssize_t *buf_size,
-+                                           enum cl_wrs_mode mode, u8 max_b=
-w,
-+                                           u8 max_nss, u8 max_mcs,
-+                                           u8 max_nss_arr, u8 max_mcs_arr,
-+                                           u8 *trunc_pwr_q1)
-+{
-+       u8 bw, nss, mcs, one_d_idx;
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, mode);
-+       s8 pwr_offset_q1;
-+       s32 truncate_q1, total_q1;
-+
-+       cl_snprintf(buf, len, buf_size, "\nTruncate Table\n");
-+
-+       cl_snprintf(buf, len, buf_size, "---------");
-+       multi_print(buf, len, buf_size, max_bw, "----------");
-+
-+       cl_snprintf(buf, len, buf_size, "|MCS|BF |");
-+       for (bw =3D 0; bw < max_bw; bw++)
-+               cl_snprintf(buf, len, buf_size, " %3uMHz  |", BW_TO_MHZ(bw)=
-);
-+
-+       cl_snprintf(buf, len, buf_size, "\n");
-+
-+       cl_snprintf(buf, len, buf_size, "|   |NSS|");
-+       multi_print(buf, len, buf_size, max_bw, "Totl|Trnc|");
-+
-+       for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+               cl_snprintf(buf, len, buf_size, "|---+---|");
-+               multi_print(buf, len, buf_size, max_bw, "----+----|");
-+
-+               for (nss =3D 0; nss < max_nss; nss++) {
-+                       cl_snprintf(buf, len, buf_size, "|%3u|%3u|", mcs, n=
-ss);
-+
-+                       for (bw =3D 0; bw < max_bw; bw++) {
-+                               one_d_idx =3D (bw * max_mcs_arr + mcs) * ma=
-x_nss_arr + nss;
-+                               truncate_q1 =3D (s32)trunc_pwr_q1[one_d_idx=
-];
-+                               pwr_offset_q1 =3D cl_power_offset_q1(cl_hw,=
- mode, bw, mcs);
-+                               total_q1 =3D cl_power_total_q1(cl_hw, pwr_o=
-ffset_q1,
-+                                                            tx_ant, nss, m=
-ode, false);
-+
-+                               cl_power_q1_to_buf(buf, len, buf_size, "", =
-total_q1, "|", true);
-+                               cl_power_q1_to_buf(buf, len, buf_size, "", =
-truncate_q1, "|", true);
-+                       }
-+
-+                       cl_snprintf(buf, len, buf_size, "\n");
-+               }
-+       }
-+
-+       cl_snprintf(buf, len, buf_size, "---------");
-+       multi_print(buf, len, buf_size, max_bw, "----------");
-+}
-+
-+static void cl_power_trunc_cck_ofdm_to_buf(struct cl_hw *cl_hw, char **buf=
-,
-+                                          int *len, ssize_t *buf_size,
-+                                          enum cl_wrs_mode mode, u8 max_mc=
-s, u8 *trunc_pwr_q1)
-+{
-+       u8 mcs;
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, mode);
-+       s8 pwr_offset_q1;
-+       s32 truncate_q1, total_q1;
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "\nTruncate Table\n"
-+                   "|-------------|\n"
-+                   "|MCS|Totl|Trnc|\n"
-+                   "|---+----+----|\n");
-+
-+       for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+               truncate_q1 =3D (s32)trunc_pwr_q1[mcs];
-+               pwr_offset_q1 =3D cl_power_offset_q1(cl_hw, mode, CHNL_BW_2=
-0, mcs);
-+               total_q1 =3D cl_power_total_q1(cl_hw, pwr_offset_q1, tx_ant=
-, 0, mode, false);
-+
-+               cl_snprintf(buf, len, buf_size, "|%3u|", mcs);
-+               cl_power_q1_to_buf(buf, len, buf_size, "", total_q1, "|", t=
-rue);
-+               cl_power_q1_to_buf(buf, len, buf_size, "", truncate_q1, "|\=
-n", true);
-+       }
-+
-+       cl_snprintf(buf, len, buf_size, "|-------------|\n");
-+}
-+
-+static void cl_power_config_to_buf(char **buf, int *len,
-+                                  ssize_t *buf_size,
-+                                  char *mode,
-+                                  u8 tx_ant_num,
-+                                  s32 arr_gain_q1,
-+                                  s32 calib_power_q1,
-+                                  s8 ant_pwr_vns,
-+                                  s8 pwr_auto_resp_vns,
-+                                  s32 vns_actual_q1)
-+{
-+       cl_snprintf(buf, len, buf_size,
-+                   "%s power debug info\n", mode);
-+       cl_snprintf(buf, len, buf_size,
-+                   "-----------------------\n");
-+       cl_snprintf(buf, len, buf_size,
-+                   "Tx antenna =3D %u\n", tx_ant_num);
-+       cl_power_q1_to_buf(buf, len, buf_size, "Array gain =3D ",
-+                          arr_gain_q1, "\n", false);
-+       cl_power_q1_to_buf(buf, len, buf_size, "Calib power =3D ",
-+                          calib_power_q1, "\n", false);
-+       cl_power_q1_to_buf(buf, len, buf_size, "VNS power =3D ",
-+                          ant_pwr_vns, "\n", false);
-+       cl_power_q1_to_buf(buf, len, buf_size, "VNS auto resp power =3D ",
-+                          pwr_auto_resp_vns, "\n", false);
-+       cl_power_q1_to_buf(buf, len, buf_size, "VNS actual =3D ",
-+                          vns_actual_q1, "\n", false);
-+}
-+
-+static void _cl_power_table_print_he(struct cl_hw *cl_hw, char **buf, int =
-*len, ssize_t *buf_size)
-+{
-+       struct cl_pwr_tables *pwr_tables =3D &cl_hw->phy_data_info.data->pw=
-r_tables;
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, WRS_MODE_HE);
-+       u8 max_bw =3D max_bw_idx(WRS_MODE_HE, cl_band_is_24g(cl_hw));
-+       u8 max_nss =3D min_t(u8, tx_ant, PWR_TBL_HE_BF_SIZE);
-+       u8 nss;
-+       s32 ant_gain_q1 =3D cl_power_antenna_gain_q1(cl_hw);
-+       s32 arr_gain_q1 =3D cl_power_array_gain_q1(cl_hw, tx_ant);
-+       s32 calib_power_q1 =3D cl_power_average_calib_q1(cl_hw, tx_ant);
-+       s32 bf_gain_tbl_q1[PWR_TBL_HE_BF_SIZE] =3D {0};
-+       s32 vns_actual_q1 =3D pwr_tables->ant_pwr_vns_he + ant_gain_q1 + ar=
-r_gain_q1;
-+
-+       for (nss =3D 0; nss < max_nss; nss++)
-+               bf_gain_tbl_q1[nss] =3D cl_power_bf_gain_q1(cl_hw, tx_ant, =
-nss);
-+
-+       cl_power_config_to_buf(buf, len, buf_size, "HE", tx_ant, arr_gain_q=
-1,
-+                              calib_power_q1, pwr_tables->ant_pwr_vns_he,
-+                              pwr_tables->pwr_auto_resp_vns_he, vns_actual=
-_q1);
-+
-+       cl_power_bf_gain_to_buf(buf, len, buf_size, max_nss, bf_gain_tbl_q1=
-);
-+
-+       cl_power_offset_to_buf(cl_hw, buf, len, buf_size, WRS_MODE_HE,
-+                              CHNL_BW_MAX_HE, WRS_MCS_MAX_HE);
-+
-+       cl_power_table_ht_vht_he_to_buf(cl_hw, buf, len, buf_size,
-+                                       max_bw, max_nss, WRS_MCS_MAX_HE,
-+                                       PWR_TBL_HE_BF_SIZE, WRS_MCS_MAX_HE,
-+                                       &pwr_tables->ant_pwr_he[0][0][0],
-+                                       bf_gain_tbl_q1, arr_gain_q1, ant_ga=
-in_q1);
-+}
-+
-+static void _cl_power_table_print_ht_vht(struct cl_hw *cl_hw, char **buf,
-+                                        int *len, ssize_t *buf_size)
-+{
-+       struct cl_pwr_tables *pwr_tables =3D &cl_hw->phy_data_info.data->pw=
-r_tables;
-+       bool is_24g =3D cl_band_is_24g(cl_hw);
-+       bool is_5g =3D cl_band_is_5g(cl_hw);
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, WRS_MODE_VHT);
-+       u8 max_bw =3D max_bw_idx(WRS_MODE_VHT, is_24g);
-+       u8 max_nss =3D min_t(u8, tx_ant, PWR_TBL_VHT_BF_SIZE);
-+       u8 max_mcs =3D (is_5g || (is_24g && cl_hw->conf->ci_vht_cap_24g)) ?
-+               WRS_MCS_MAX_VHT : WRS_MCS_MAX_HT;
-+       u8 nss;
-+       s32 ant_gain_q1 =3D cl_power_antenna_gain_q1(cl_hw);
-+       s32 arr_gain_q1 =3D cl_power_array_gain_q1(cl_hw, tx_ant);
-+       s32 calib_power_q1 =3D cl_power_average_calib_q1(cl_hw, tx_ant);
-+       s32 bf_gain_tbl_q1[PWR_TBL_VHT_BF_SIZE] =3D {0};
-+       s32 vns_actual_q1 =3D pwr_tables->ant_pwr_vns_ht_vht + ant_gain_q1 =
-+ arr_gain_q1;
-+
-+       for (nss =3D 0; nss < max_nss; nss++)
-+               bf_gain_tbl_q1[nss] =3D cl_power_bf_gain_q1(cl_hw, tx_ant, =
-nss);
-+
-+       cl_power_config_to_buf(buf, len, buf_size, "HT/VHT", tx_ant, arr_ga=
-in_q1,
-+                              calib_power_q1, pwr_tables->ant_pwr_vns_ht_v=
-ht,
-+                              pwr_tables->pwr_auto_resp_vns_ht_vht, vns_ac=
-tual_q1);
-+
-+       cl_power_bf_gain_to_buf(buf, len, buf_size, max_nss, bf_gain_tbl_q1=
-);
-+
-+       cl_power_offset_to_buf(cl_hw, buf, len, buf_size,
-+                              WRS_MODE_VHT, CHNL_BW_MAX_VHT, WRS_MCS_MAX_V=
-HT);
-+
-+       cl_power_table_ht_vht_he_to_buf(cl_hw, buf, len, buf_size,
-+                                       max_bw, max_nss, max_mcs,
-+                                       PWR_TBL_VHT_BF_SIZE, WRS_MCS_MAX_VH=
-T,
-+                                       &pwr_tables->ant_pwr_ht_vht[0][0][0=
-],
-+                                       bf_gain_tbl_q1, arr_gain_q1, ant_ga=
-in_q1);
-+}
-+
-+static void _cl_power_table_print_ofdm(struct cl_hw *cl_hw, char **buf,
-+                                      int *len, ssize_t *buf_size)
-+{
-+       struct cl_pwr_tables *pwr_tables =3D &cl_hw->phy_data_info.data->pw=
-r_tables;
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, WRS_MODE_OFDM);
-+       s32 ant_gain_q1 =3D cl_power_antenna_gain_q1(cl_hw);
-+       s32 arr_gain_q1 =3D cl_power_array_gain_q1(cl_hw, tx_ant);
-+       s32 calib_power_q1 =3D cl_power_average_calib_q1(cl_hw, tx_ant);
-+       s32 vns_actual_q1 =3D pwr_tables->ant_pwr_vns_ofdm + ant_gain_q1 + =
-arr_gain_q1;
-+
-+       cl_power_config_to_buf(buf, len, buf_size, "OFDM", tx_ant, arr_gain=
-_q1,
-+                              calib_power_q1, pwr_tables->ant_pwr_vns_ofdm=
-,
-+                              pwr_tables->pwr_auto_resp_vns_ofdm, vns_actu=
-al_q1);
-+
-+       cl_power_offset_to_buf(cl_hw, buf, len, buf_size, WRS_MODE_OFDM,
-+                              CHNL_BW_MAX_OFDM, WRS_MCS_MAX_OFDM);
-+
-+       cl_power_table_cck_ofdm_to_buf(cl_hw, buf, len, buf_size, WRS_MCS_M=
-AX_OFDM,
-+                                      pwr_tables->ant_pwr_ofdm,
-+                                      arr_gain_q1, ant_gain_q1);
-+}
-+
-+static void _cl_power_table_print_cck(struct cl_hw *cl_hw, char **buf,
-+                                     int *len, ssize_t *buf_size)
-+{
-+       struct cl_pwr_tables *pwr_tables =3D &cl_hw->phy_data_info.data->pw=
-r_tables;
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, WRS_MODE_CCK);
-+       s32 ant_gain_q1 =3D cl_power_antenna_gain_q1(cl_hw);
-+       s32 arr_gain_q1 =3D cl_power_array_gain_q1(cl_hw, tx_ant);
-+       s32 calib_power_q1 =3D cl_power_average_calib_q1(cl_hw, tx_ant);
-+       s32 vns_actual_q1 =3D pwr_tables->ant_pwr_vns_cck + ant_gain_q1 + a=
-rr_gain_q1;
-+
-+       cl_power_config_to_buf(buf, len, buf_size, "CCK", tx_ant, arr_gain_=
-q1,
-+                              calib_power_q1, pwr_tables->ant_pwr_vns_cck,
-+                              pwr_tables->pwr_auto_resp_vns_cck,
-+                              vns_actual_q1);
-+
-+       cl_power_offset_to_buf(cl_hw, buf, len, buf_size, WRS_MODE_CCK,
-+                              CHNL_BW_MAX_CCK, WRS_MCS_MAX_CCK);
-+
-+       cl_power_table_cck_ofdm_to_buf(cl_hw, buf, len, buf_size, WRS_MCS_M=
-AX_CCK,
-+                                      pwr_tables->ant_pwr_cck,
-+                                      arr_gain_q1, ant_gain_q1);
-+}
-+
-+static void _cl_power_trunc_print_he(struct cl_hw *cl_hw, char **buf,
-+                                    int *len, ssize_t *buf_size)
-+{
-+       u8 tx_ant =3D cl_power_tx_ant(cl_hw, WRS_MODE_HE);
-+       u8 max_bw =3D max_bw_idx(WRS_MODE_HE, cl_band_is_24g(cl_hw));
-+       u8 max_nss =3D min_t(u8, tx_ant, PWR_TBL_HE_BF_SIZE);
-+
-+       cl_power_trunc_ht_vht_he_to_buf(cl_hw, buf, len, buf_size, WRS_MODE=
-_HE,
-+                                       max_bw, max_nss, WRS_MCS_MAX_HE,
-+                                       PWR_TBL_HE_BF_SIZE, WRS_MCS_MAX_HE,
-+                                       &cl_hw->pwr_trunc.he[0][0][0]);
-+}
-+
-+static void _cl_power_trunc_print_ht_vht(struct cl_hw *cl_hw, char **buf,
-+                                        int *len, ssize_t *buf_size)
-+{
-+       bool is_24g =3D cl_band_is_24g(cl_hw);
-+       bool is_5g =3D cl_band_is_5g(cl_hw);
-+       enum cl_wrs_mode mode;
-+       u8 tx_ant, max_bw, max_nss, max_mcs;
-+
-+       if (is_5g || (is_24g && cl_hw->conf->ci_vht_cap_24g)) {
-+               mode =3D WRS_MODE_VHT;
-+               max_bw =3D CHNL_BW_MAX_VHT;
-+               max_mcs =3D WRS_MCS_MAX_VHT;
-+       } else {
-+               mode =3D WRS_MODE_HT;
-+               max_bw =3D CHNL_BW_MAX_HT;
-+               max_mcs =3D WRS_MCS_MAX_HT;
-+       }
-+
-+       tx_ant =3D cl_power_tx_ant(cl_hw, mode);
-+       max_nss =3D min_t(u8, tx_ant, PWR_TBL_VHT_BF_SIZE);
-+
-+       cl_power_trunc_ht_vht_he_to_buf(cl_hw, buf, len, buf_size, mode,
-+                                       max_bw, max_nss, max_mcs,
-+                                       PWR_TBL_VHT_BF_SIZE, WRS_MCS_MAX_VH=
-T,
-+                                       &cl_hw->pwr_trunc.ht_vht[0][0][0]);
-+}
-+
-+static void _cl_power_trunc_print_ofdm(struct cl_hw *cl_hw, char **buf,
-+                                      int *len, ssize_t *buf_size)
-+{
-+       cl_power_trunc_cck_ofdm_to_buf(cl_hw, buf, len, buf_size,
-+                                      WRS_MODE_OFDM, WRS_MCS_MAX_OFDM,
-+                                      cl_hw->pwr_trunc.ofdm);
-+}
-+
-+static void _cl_power_trunc_print_cck(struct cl_hw *cl_hw, char **buf,
-+                                     int *len, ssize_t *buf_size)
-+{
-+       cl_power_trunc_cck_ofdm_to_buf(cl_hw, buf, len, buf_size,
-+                                      WRS_MODE_CCK, WRS_MCS_MAX_CCK,
-+                                      cl_hw->pwr_trunc.cck);
-+}
-+
-+static void cl_power_print_limits(struct cl_hw *cl_hw, char **buf,
-+                                 int *len, ssize_t *buf_size, u8 channel)
-+{
-+       bool is_24g =3D cl_band_is_24g(cl_hw);
-+       bool country_limit =3D cl_hw->channel_info.use_channel_info;
-+       bool hardware_limit =3D strlen(cl_hw->conf->ce_hardware_power_table=
-) > 0;
-+       bool eirp_limit =3D cl_hw->conf->ci_eirp_regulatory_en;
-+       u8 bw =3D 0;
-+       s16 country_val_q8 =3D 0;
-+       s16 hardware_val_q8 =3D 0;
-+       s16 eirp_val_q8 =3D 0;
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "\nPower regulation/limitations\n"
-+                   "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D\n");
-+       cl_snprintf(buf, len, buf_size,
-+                   "Country regulation  =3D %s\n", country_limit ?
-+                   "On" : "Off");
-+       cl_snprintf(buf, len, buf_size,
-+                   "Hardware limitation =3D %s\n", hardware_limit ?
-+                   "On" : "Off");
-+       cl_snprintf(buf, len, buf_size,
-+                   "EIRP enable         =3D %s\n\n", eirp_limit ?
-+                   "True" : "False");
-+
-+       if (!eirp_limit || (!country_limit && !hardware_limit))
-+               return;
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "|-----------------------------------|\n"
-+                   "| BW  | COUNTRY | HARDWARE |  EIRP  |\n"
-+                   "|-----------------------------------|\n");
-+
-+       for (bw =3D 0; bw < max_bw_idx(WRS_MODE_HE, is_24g); bw++) {
-+               country_val_q8 =3D cl_chan_info_get_country_limit_q8(cl_hw,=
- channel, bw);
-+               hardware_val_q8 =3D cl_chan_info_get_hardware_limit_q8(cl_h=
-w, channel, bw);
-+               eirp_val_q8 =3D cl_chan_info_get_eirp_limit_q8(cl_hw, bw);
-+
-+               cl_snprintf(buf, len, buf_size, "| %3u |", BW_TO_MHZ(bw));
-+
-+               if (country_limit)
-+                       cl_power_q8_to_buf(buf, len, buf_size, "   ",
-+                                          country_val_q8, " |", true);
-+               else
-+                       cl_snprintf(buf, len, buf_size, "    X    |");
-+
-+               if (hardware_limit)
-+                       cl_power_q8_to_buf(buf, len, buf_size, "    ",
-+                                          hardware_val_q8, " |", true);
-+               else
-+                       cl_snprintf(buf, len, buf_size, "    X     |");
-+
-+               cl_power_q8_to_buf(buf, len, buf_size, "  ", eirp_val_q8, "=
- |\n", true);
-+       }
-+       cl_snprintf(buf, len, buf_size,
-+                   "|-----------------------------------|\n"
-+                   "(*) EIRP =3D MIN(COUNTRY, HARDWARE)\n\n");
-+}
-+
-+static int cl_power_general_print(struct cl_hw *cl_hw)
-+{
-+       u8 channel =3D cl_hw->channel;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Power general information\n"
-+                   "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D\n");
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Channel               =3D %u\n", channel);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Standard              =3D %s\n",
-+                   (cl_hw->channel_info.standard =3D=3D CL_STANDARD_FCC) ?
-+                   "FCC" : "ETSI");
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Country code          =3D %s\n",
-+                   cl_hw->chip->conf->ce_country_code);
-+       cl_power_q8_to_buf(&buf, &len, &buf_size, "Antenna gain          =
-=3D ",
-+                          cl_power_antenna_gain_q8(cl_hw), "\n", false);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Power control percent =3D %u%%\n",
-+                   cl_hw->power_db.curr_percentage);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Power control offset  =3D %d\n",
-+                   cl_hw->power_db.curr_offset);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "VNS mode              =3D %u\n",
-+                   cl_hw->conf->ci_vns_pwr_mode);
-+
-+       if (cl_hw->conf->ci_vns_pwr_mode)
-+               cl_snprintf(&buf, &len, &buf_size,
-+                           "VNS limit             =3D %d\n",
-+                           cl_hw->conf->ci_vns_pwr_limit);
-+
-+       cl_power_print_limits(cl_hw, &buf, &len, &buf_size, channel);
-+
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "!!! Notice:\n"
-+                   "Conducted power =3D Calibrated power + PPMCS offset - =
-EIRP delta value\n"
-+                   "where EIRP delata value =3D Total - Truncated !!!\n");
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_table_print_he(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       _cl_power_table_print_he(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_table_print_ht_vht(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (cl_band_is_6g(cl_hw))
-+               return 0;
-+
-+       _cl_power_table_print_ht_vht(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_table_print_ofdm(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (cl_band_is_6g(cl_hw))
-+               return 0;
-+
-+       _cl_power_table_print_ofdm(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_table_print_cck(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (!cl_band_is_24g(cl_hw))
-+               return 0;
-+
-+       _cl_power_table_print_cck(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_trunc_print_he(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       _cl_power_trunc_print_he(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_trunc_print_ht_vht(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (cl_band_is_6g(cl_hw))
-+               return 0;
-+
-+       _cl_power_trunc_print_ht_vht(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_trunc_print_ofdm(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (cl_band_is_6g(cl_hw))
-+               return 0;
-+
-+       _cl_power_trunc_print_ofdm(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_trunc_print_cck(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       if (!cl_band_is_24g(cl_hw))
-+               return 0;
-+
-+       _cl_power_trunc_print_cck(cl_hw, &buf, &len, &buf_size);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static void cl_power_auto_resp_to_buf(struct cl_hw *cl_hw, char **buf,
-+                                     int *len, ssize_t *buf_size, u8 mode,
-+                                     u8 max_mcs, s8 *pwr_auto_resp, const =
-char *text)
-+{
-+       u8 mcs;
-+       u8 tx_ant_num =3D cl_power_tx_ant(cl_hw, mode);
-+       s32 ant_gain_q1 =3D cl_power_antenna_gain_q1(cl_hw);
-+       s32 arr_gain_q1 =3D cl_power_array_gain_q1(cl_hw, tx_ant_num);
-+       s32 conducted_q1, truncated_q1;
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "\n%s Auto response\n"
-+                   "|------------------|\n"
-+                   "|MCS|Cond|Tot |Tab |\n"
-+                   "|---+----+----+----|\n",
-+                   text);
-+
-+       for (mcs =3D 0; mcs < max_mcs; mcs++) {
-+               conducted_q1 =3D pwr_auto_resp[mcs] - arr_gain_q1;
-+               truncated_q1 =3D pwr_auto_resp[mcs] + ant_gain_q1;
-+
-+               cl_snprintf(buf, len, buf_size,
-+                           "|%3u|", mcs);
-+               cl_power_q1_to_buf(buf, len, buf_size, "",
-+                                  conducted_q1, "|", true);
-+               cl_power_q1_to_buf(buf, len, buf_size, "",
-+                                  truncated_q1, "|", true);
-+               cl_power_q1_to_buf(buf, len, buf_size, "",
-+                                  pwr_auto_resp[mcs], "|\n", true);
-+       }
-+
-+       cl_snprintf(buf, len, buf_size,
-+                   "|------------------|\n");
-+}
-+
-+static int cl_power_auto_response_print(struct cl_hw *cl_hw)
-+{
-+       struct cl_pwr_tables *pwr_tables =3D &cl_hw->phy_data_info.data->pw=
-r_tables;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int len =3D 0;
-+       int err =3D 0;
-+       bool is_24g =3D cl_band_is_24g(cl_hw);
-+       bool is_5g =3D cl_band_is_5g(cl_hw);
-+       bool is_6g =3D cl_band_is_6g(cl_hw);
-+
-+       cl_power_auto_resp_to_buf(cl_hw, &buf, &len, &buf_size, WRS_MODE_HE=
-, WRS_MCS_MAX_HE,
-+                                 pwr_tables->pwr_auto_resp_he, "HE");
-+
-+       if (is_6g)
-+               goto out;
-+
-+       if (is_5g || (is_24g && cl_hw->conf->ci_vht_cap_24g))
-+               cl_power_auto_resp_to_buf(cl_hw, &buf, &len, &buf_size,
-+                                         WRS_MODE_VHT, WRS_MCS_MAX_VHT,
-+                                         pwr_tables->pwr_auto_resp_ht_vht,=
- "VHT/HT");
-+       else
-+               cl_power_auto_resp_to_buf(cl_hw, &buf, &len, &buf_size,
-+                                         WRS_MODE_HT, WRS_MCS_MAX_HT,
-+                                         pwr_tables->pwr_auto_resp_ht_vht,=
- "HT");
-+
-+       cl_power_auto_resp_to_buf(cl_hw, &buf, &len, &buf_size,
-+                                 WRS_MODE_OFDM, WRS_MCS_MAX_OFDM,
-+                                 pwr_tables->pwr_auto_resp_ofdm, "OFDM");
-+
-+       if (is_24g)
-+               cl_power_auto_resp_to_buf(cl_hw, &buf, &len, &buf_size,
-+                                         WRS_MODE_CCK, WRS_MCS_MAX_CCK,
-+                                         pwr_tables->pwr_auto_resp_cck, "C=
-CK");
-+
-+out:
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+static int cl_power_cli_help(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
-+       int err =3D 0;
-+
-+       if (!buf)
-+               return -ENOMEM;
-+
-+       snprintf(buf, PAGE_SIZE,
-+                "usage:\n"
-+                "-a : General power information\n"
-+                "-b : HE power table\n"
-+                "-c : HT/VHT power table\n"
-+                "-d : OFDM power table\n"
-+                "-e : CCK power table\n"
-+                "-f : HE power truncate\n"
-+                "-g : HT/VHT power truncate\n"
-+                "-h : OFDM power truncate\n"
-+                "-i : CCK power truncate\n"
-+                "-j : Auto-response power tables\n");
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+int cl_power_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
-+{
-+       if (cli_params->num_params !=3D 0)
-+               goto err_num_params;
-+
-+       switch (cli_params->option) {
-+       case 'a':
-+               return cl_power_general_print(cl_hw);
-+       case 'b':
-+               return cl_power_table_print_he(cl_hw);
-+       case 'c':
-+               return cl_power_table_print_ht_vht(cl_hw);
-+       case 'd':
-+               return cl_power_table_print_ofdm(cl_hw);
-+       case 'e':
-+               return cl_power_table_print_cck(cl_hw);
-+       case 'f':
-+               return cl_power_trunc_print_he(cl_hw);
-+       case 'g':
-+               return cl_power_trunc_print_ht_vht(cl_hw);
-+       case 'h':
-+               return cl_power_trunc_print_ofdm(cl_hw);
-+       case 'i':
-+               return cl_power_trunc_print_cck(cl_hw);
-+       case 'j':
-+               return cl_power_auto_response_print(cl_hw);
-+       case '?':
-+               return cl_power_cli_help(cl_hw);
-+       default:
-+               cl_dbg_err(cl_hw, "Illegal option (%c) - try '?' for help\n=
-", cli_params->option);
-+               break;
-+       }
-+
-+       return 0;
-+
-+err_num_params:
-+       cl_dbg_err(cl_hw, "Wrong number of arguments\n");
-+
-+       return 0;
-+}
-+
++#ifndef CL_KEY_H
++#define CL_KEY_H
++
++#include "hw.h"
++
++int cl_key_set(struct cl_hw *cl_hw,
++              enum set_key_cmd cmd,
++              struct ieee80211_vif *vif,
++              struct ieee80211_sta *sta,
++              struct ieee80211_key_conf *key);
++struct ieee80211_key_conf *cl_key_get(struct cl_sta *cl_sta);
++bool cl_key_is_cipher_ccmp_gcmp(struct ieee80211_key_conf *keyconf);
++void cl_key_ccmp_gcmp_pn_to_hdr(u8 *hdr, u64 pn, int key_id);
++u8 cl_key_get_cipher_len(struct sk_buff *skb);
++
++#endif /* CL_KEY_H */
 --
 2.30.0
 
