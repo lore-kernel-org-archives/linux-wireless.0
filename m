@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BA12C49EA3
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F772C49EBF
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F114B61407
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73FD961407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233903AbhFQQLF (ORCPT
+        id S232620AbhFQQLH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:11:05 -0400
-Received: from mail-eopbgr70043.outbound.protection.outlook.com ([40.107.7.43]:64066
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:07 -0400
+Received: from mail-eopbgr80045.outbound.protection.outlook.com ([40.107.8.45]:58683
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233614AbhFQQJ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:57 -0400
+        id S232789AbhFQQKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:10:01 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ou5+3vB6fNV71v6rCkyqvJWYgvcuiHQt66ubvaMgx70+pGxqSbPnRxcYwQJQd5xM40/c/X3hBE/a+p+YLCNgX/ajnLkDyP19u7vtiHYOD3JEM6DTb8gJEG1uZw3pWZG3jiVLXFwsy0aju8//MSG02TosYdqHqM/VPpekNiXcOb2fPgzYXn5h7ulsj1kRiicuh2L9b+7Zotly9SIHVASu3hx2VSjKjUuEmQzis4RiOdBqxccdR5humO//Ruqrc8ox2e4mxqfROEs+GM1Wo1lP9BugknWLoj4e/tFG0CnVobbiHDBaeNLHrr4GLkqsslVzop8ZD9+srSv4riiqo48Ofw==
+ b=FpNo+qijVckv3WZn6MTurphDUQklCHAAc6Ifq0cC6fLNTiuP11o4hREJz07NAwrPIRObjSTcAx8qnqUZcuDXuzh7maF+6oEMkDWwebotHq+pC0pJ1ObPNgsedqfHPXfhSddAZd/NuiXLJpeCChUZpeige/fBVOAJYA8qm3k4yjcSklh1KaoIBy7S7R2tDtGjiOsatNJZiuTcPyJ2gWX4Hv/69uwROz2r+742M4I+htiv29iixLf9NVVMGz6MduVfrPuETl7TW/yU7RdZKRNLonMkDriIsH4DkiXBCoK4SvYb1ib/66Lz9hLUBBJVXCFxOhTAXWgl00S532kcqDcDog==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=10BMgkutdWr07lSYNJbOPiY7EwWERiqzztOipad4sP8=;
- b=Rs4g0y5id9wK1/EPNLG8OsltReoJUayBdXaSvLVFeczYEJkJxWsb1pcpWF4VQEq5Rg1U4n9rAs5cBsBUv9YfhL//kLAqHqL2fOhaAJkdKx4szVaYOOLvkgkAdKOe2L5FIyQaBRThjWLP24K+c43sn6lS5/bgsYJO+7O+lZoB3TWMZLVb1GD5NgL5U61PTZAG9UdJ/XqnsYqbWl/m88deLhTp2I6ehHbMdK3SwcKg+6d2XICFuDwfDxc+s9WLbgGxJPxnnVu4PYegpJOgi8WQg736Qbyfxa+W7yEQrU16OZKNRf7g6cdM20ir56zwxJOUChb/wls1b/2jHshhT58jMA==
+ bh=hznK1YfdOA925gaM2jpd/VA9ywYHDkkVXWjFdifa6YQ=;
+ b=KlHyz2At9m59ZO2S/1gJmwi9cLdkLRookGXkPZyKoUHHRdKRxN0dXpO54mfVOVc+PzB7jZsoqGMPsbBg4Uxq7mnERK0uI8y7EF47xzcY+nUeV0b3q4gPnrRcj4cSSej0DrtujfVSnyNv2siviMkETzr8ljpbXmMHqDEEMLpbUMcquHn5FXeBTEHZSHpN1VPDo+6Os63bpvZeZj8r+/9lXthMShYTUBPTba5h2cIwLDuJSn+Zzy/JKJw1TYMyoINwBrpVyAFNBq6K1tvVEE35qT93m95fw57NvdZgfQ3c5BnfUJkC55zgMp/Pm80S8dT8tn6HlfUFyN19khcUwJNKKw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=10BMgkutdWr07lSYNJbOPiY7EwWERiqzztOipad4sP8=;
- b=SgbNcLOHOtkRFZ8Btp/U29SqCnGxYGLHySyeNwKLwxTg7TP6e/7z+dSGbtvUMT4t1UZoonde+imjg1cOdakZjgFn0d67xYPW0rhDO5vRL5QNnQRzJtXvZ6kNAcWkyYqY5XglAEvoMJY1cebxQxdc8od9AugrwyO0brOsUA3/XLU=
+ bh=hznK1YfdOA925gaM2jpd/VA9ywYHDkkVXWjFdifa6YQ=;
+ b=OfhkUw7SiOFh+gytRK+ZMLnW8ZYN4xaW87dAa9OWkXIXGH56vwBPsjoQl5p6qG2MIXWC13Avc1IQWdt2iqQHUq8bel8zmlG819w2PQJnVfB+2Yvu0ooAlaS0eFYOY4deHPhXRDPRJupt0D1zkIIqp8q+WSNCcvw+dZ+4RZQwp7M=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
+ by AM9P192MB1329.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3ab::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:06:28 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
+ 2021 16:07:50 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:28 +0000
+ 16:07:50 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 162/256] cl8k: add reg/reg_otp_pvt.h
-Date:   Thu, 17 Jun 2021 16:00:49 +0000
-Message-Id: <20210617160223.160998-163-viktor.barna@celeno.com>
+Subject: [RFC v1 210/256] cl8k: add tx/sw_txhdr.c
+Date:   Thu, 17 Jun 2021 16:01:37 +0000
+Message-Id: <20210617160223.160998-211-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:30 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:25 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: bbd764e0-def6-441f-4b91-08d931a9bb83
-X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
+X-MS-Office365-Filtering-Correlation-Id: 48d0896d-3668-4561-69db-08d931a9dc38
+X-MS-TrafficTypeDiagnostic: AM9P192MB1329:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB118779B71C20041414B4239BF60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM9P192MB13297F7A259725E7BC66C9C7F60E9@AM9P192MB1329.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:213;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: mg1fei2DAIyXr26sJSTTphVuL460HnUnULVsgKPuWODrHzDQDZZ71+uTpcKLKUVi5Y7JDUnGUh5KWgmq1YKb/di1aLZYkeQXt7ZedIdhyrHEuZxBAztRZ31/BCzPrGAtTc8E5IGJLBPBYO1ym3k5WgkKvt2YUvFzDQcB2UTctyr2g+QdJSXrIuTjGPqIKwzBRXgcPnaWlgxd7fav/+CvSGEhLtfl5XZd92FWILa/53Rywc1UVztpwt6xpAHK7LSDNHuym272cf4Sr0BptSEHvQVzG3EqLJLzPLpeBRyCoLShgtuV9Bo3OqWjZ45UB77AKV5RUFwLa5usEnklgKrsHh5oOyMH5XOlUYvmi9hzGp763ASYZPfKbd1VmOYEnd5xi8su98NpgBE7DFoo058mMXw0UsEPm5KPDUgIzZzHegqZAf/GovU4bAH1t2T2gdQ/3v9zgisO/PstlQeK27H3NczME6i+QLuvJ/T/E4ocKuS+kXY3sgS75za+44viNqJ1WdftY8x1fGFGdZXLYGCldx02U7HthM1oooD3m2BW/P0lMuo0Avf6t3TGxJWpnGhRhXzs/qEekyyrEQUIE24TSuIQ4sZv6OFjAyUl2lkuqjMX0HWp/OGYyvweeICnla3adtROo+vHmmQcQZScBo52ulvWzyWOBRMENZmgH+Mtv5XDsG3Ivgf4Ws8APVYhgmqUlZn7kX28fzLclA0nNVOLNA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: bRw2JEhDD5D67Xo5E0y3+bvFws5n6agtZawyCVZYfZr0sZcNUF9mg9jQ/0ftBJqJScC3QdDH64P1KK/qJS5Mk/ZIcxyZjQxJ2ooxS8wVHhz3sgQE6i0uYMKZpnEIZ/hxF4pfl9mDjFDpIxYXvUi7VfZ8sqh5UGHgda8l5LR/O8JxWymfhtEO6C20HYKW1ijOdW0eh3vk7uI6eL8DAeoNga75lxk8v58fQsqVuC7Q97egRRbUjn57cp292OQ6PXw2LdqSGqNP4dCbLAx4d3tglV63AW0n42MMP2pCMtrH1/tjk6c/Rhg6LAwbC+X1T3n03/u99wnMs85GqtjH7VY6OcDeN/yd8nVjyjem41vOpC5JXG9NG1BEJWTx+ZQKbaLX8vuwuHklJPfWVSpdkLon54L/VmEiLnjsRC2b6mX40UcyxHCnOD9k2DuCItHvNRlgsxZYiWbzU63b/sRNhJqSYataIGykB/B/nGbU9iXDq1vI0pFJx778S/C7egsMUIy015bXMYFAPJsHfi6ZURY7dO+VnGnWh1udTyaotkZA5DbYeTUMw3mFsoBbrSmEx5yU7qESTxSu6ae0cAZzAC6ZViziHHBS0Ne0DIcnOxqR3xPZX7l4SaibVyTK5Xj8IdfhPahs+S0fND+XnL5fgMtWbP1Jlelv5FGhnLjhp1FeP2m/i22FMJ5lM4PQB2lWnnRFnsk6NXCs3R/nicCajkTJ9A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(39850400004)(376002)(136003)(346002)(396003)(86362001)(38350700002)(8936002)(38100700002)(6916009)(52116002)(6486002)(55236004)(54906003)(36756003)(6506007)(956004)(4326008)(186003)(2616005)(1076003)(478600001)(26005)(16526019)(107886003)(6666004)(66556008)(83380400001)(5660300002)(2906002)(6512007)(9686003)(8676002)(316002)(66476007)(66946007)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ss4TCfvhd8AyDFP2CeNlRr4rwIDK1v+wTOBsPkaDCVDIx3qiac4TEANfI47Y?=
- =?us-ascii?Q?Jl00XrSMKpkNc5Q5spBueQKEaBAhR0BHfGEQMTg0AV7jS+dV5EYhj5TcS7rq?=
- =?us-ascii?Q?JkK1L/DqPQnbJT14zGftXTHnVnhwDlqz4EhWbOFbtU1H/S400RBkjnEQyuoS?=
- =?us-ascii?Q?LfVQfIO+jU4WP8TZwEoL/BBAR/GD6qbYqk9jhzmfSdRpaT8AsZ2loU4veyuJ?=
- =?us-ascii?Q?XqBeXYFizgqaMuK71/555vUDRyS/5tNxHDgSgUEBHtFFxIGz1s0WtmxCTT4+?=
- =?us-ascii?Q?1vHJL9x1+OoQkO4MYWfhgTxxqJDatz1ZeZCWGwt/1Wy8k4rIye8WoMA6CD3l?=
- =?us-ascii?Q?m/DFJnRZ/wfyCod7IwKbBa/V0zCvJTOH7fZQUUWsCGwyhHIVBpfA3l2W5o9j?=
- =?us-ascii?Q?xy+bhdoI+c8xBa5wpCqnU9M2cD46AYdVeAjEOnA4PbBbnlpVg7CyLm1mfiE/?=
- =?us-ascii?Q?r1BfycP3aOnR9Q4x0nrGhfasIH9Q2MFJ4JXXgOjRcfZqY1yG8OCZ6Uwbz0KW?=
- =?us-ascii?Q?SHTi7V9IqEza3H/FHM+I86Vi60cm8AVGZrx1czcaWuEZQwGgXfjyC3XfgqN9?=
- =?us-ascii?Q?qgEEfQPMyX64tLXu2MGuAFoWk05ik3mWJsN7GAryDw3O51TYL2feqEvy0QNv?=
- =?us-ascii?Q?jn58ElznLm7z7F6vPXe7AAO1ayoKYkzEyFWfCwoMqfs8fYvIHCsPUUQSo94N?=
- =?us-ascii?Q?M4ZDpvcYXq9AIyOzyBPCuWiMthER1DFiKZ6LII9J6ggKbyRn7L9647w7h4rV?=
- =?us-ascii?Q?Qds5X/YSCw8+SrBgxuzSOzGdUmae7OD1LGF5f6vhSe3J9tv781z1MmWJx5zt?=
- =?us-ascii?Q?khUKm0x92CMV5DJpZZSzlW8t8VLzY8S07uvkhGygDtL//HW9A7pK3P7vaYys?=
- =?us-ascii?Q?ETyUb5+weBj4sUmzSlo2NgbvpvShMP2y/eW5nJ3OFQ+uh+1BPaciIklzQDD+?=
- =?us-ascii?Q?89C4szwZdsFwcpOjz3NSWD6J4f7v6Jp3tVGZi1XiVHUz0Poj1vQm94mzqU+F?=
- =?us-ascii?Q?nlRV3kGsn0Zt7kW339Lr+qT9bRqFQiEBRfbb/M8+3N54KLfdraBcQZxwQwIe?=
- =?us-ascii?Q?lPF8d1bsTFK7P72k18c7wciF61dYO1gmExpgFKCB340KNJKqvE0rHJYeaEum?=
- =?us-ascii?Q?Gdpl/w1hF0EkPgMRz2zIYotyaIFyyiIS5drME7lSlCuJYgYKtapRjOyidHzv?=
- =?us-ascii?Q?wy54/OSWEPft5UflCZJfILK2ba3tolpcJOeTxHBYGEu1kPg2kQTPKVXgJS4G?=
- =?us-ascii?Q?7nzY2afcXQE8DIncxurpX2743T6JE6sw8HKDHYkjY7Ntkebr6XnAi5nZ8vTG?=
- =?us-ascii?Q?4RGCwcYZm60l1Xi90m9Gc0PP?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?AR8K4vtLnL49NvJEuGnMcpFCFLhQppeBd8iQKcz0ppsEquilEiINLN3Ez6vn?=
+ =?us-ascii?Q?JGYACkn7US8BT1IUlbsAX9+V/Y77M7rZ+3fwe4MXsyPi4vIOwNPyEZCVI6gA?=
+ =?us-ascii?Q?bxIOC8Z3nWhVmqhh6PX7LUXlUdTYWAASZsy5nB+6F28ss4CavSo0JhKaEnb0?=
+ =?us-ascii?Q?T1VudPzIr03c/Z3kjK3A3K6JrSQys4ruz6rjMws65fllzrN9CCUuodEWV8xN?=
+ =?us-ascii?Q?z7rZSImkCoHtscO8QpU8Aj8cDmmVckL2d4nzWpxRmwnu6P8d9n5fkPzR7vvh?=
+ =?us-ascii?Q?eYjJs0/yjiLmT/V4l++TeKfMNzpcTebmyQKW1AAtgTZ34oBP3Vj3Nad11f8C?=
+ =?us-ascii?Q?XvFdJOhcB069KUaRKJVeW56IJvxDUFL51U+ylbnJsLKjguKBThjg/IJQpFKH?=
+ =?us-ascii?Q?N7KmcDaJPGvQHkOUnNLWEJMFu4pYyUusivg+qIHOovruT1jJiCaA8Zobh7aW?=
+ =?us-ascii?Q?qIVwoQP4iAmUnIj/7s3qOfyE94YQPQdlm+dxdneP0Ah573wFU8A5ztFiNqaA?=
+ =?us-ascii?Q?RFrVMXiWe+CeuamNg2XG0JrF2RjwrvKkU/ZMpA01iDicRjoFqhXhGeDoXOzV?=
+ =?us-ascii?Q?eLmEWX+nNIsqR5ml67gEGpscopSP2X/glVaKXJyNwLKLw6MGqvbKYop6mLex?=
+ =?us-ascii?Q?ay5V2dl4KGWCJqpHRGPa4DIKHEqd+P/NfvxWVwtzddGpnyXwE41+q+OHNdh4?=
+ =?us-ascii?Q?l4g+n/0v70KB8BYg4YmGj7gGGWCiEk9EHfAIRPn9dWdr0ggyw+NG8HjMnew/?=
+ =?us-ascii?Q?x6aA3LD+IDSQ8ZWShM7jVPHv9GmgDf0K5GJ2dYOFw0Lb6xVEMCOSy2y7jIAC?=
+ =?us-ascii?Q?YnbpBAK2wF/fZuKzM7UlDRt3F7u4qRCkS8henZXk1QlCEYVlcHQzxQMcosfP?=
+ =?us-ascii?Q?t7hlNLNSEfy3lBSDbwXLxKGh6VcEXW3MJZUl0FRArPJH9W/qZdiEYCj+Qmad?=
+ =?us-ascii?Q?F5tRZXYSEQ/UtiqcZMmTvji+8hKym1hbH8WvrVNY7SKZJK6R7XbKNyCLUXgC?=
+ =?us-ascii?Q?RtBTJhpFFzfaUars2fQueIWxhCCezq7QA0fcLRj0pgXNN8f/r5eVzUmQI/Xy?=
+ =?us-ascii?Q?euiLgvZENrHn5DxLVfK/1t7+WAgviFDFBpFX9Xfo/BNSWjhdzekt29ErjHVQ?=
+ =?us-ascii?Q?Ji9wN62onTrdnX1CSqHcfpGs0gWo3KpsdH2uJI4Gnjxa19Oiflb1yKWcTraA?=
+ =?us-ascii?Q?e9i8u9aMJ8F7abm69w0KT9B/I4YQ80HW5Vz/kuoItvm55Q7LR07jjSFdo0hq?=
+ =?us-ascii?Q?aRUDs7wFq9IJCmF0I4RCQ2QyaJm6p7OSo9MN8tktUwXl3s9o3R+9ZRfqPWhf?=
+ =?us-ascii?Q?yolrwrtoEYHpL3aJCVQFSIH7?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bbd764e0-def6-441f-4b91-08d931a9bb83
+X-MS-Exchange-CrossTenant-Network-Message-Id: 48d0896d-3668-4561-69db-08d931a9dc38
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:31.6247
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:26.4998
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: C84xIRO8DniN8PIzCqPAtnQbjo49raZLbmWZbky1geUXhCqQu0TiHvFmeWdbW1L+PiE4URrIzb7hiPPecbeHPQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
+X-MS-Exchange-CrossTenant-UserPrincipalName: nKUEL7b+thm5YKlG2WqyEPtbWzXk+1VNFX7zwTBDJT252uFEALTeI+Ei4olrwH07rcKC946HuAOBFmqcyaRSbA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1329
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,253 +128,59 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../wireless/celeno/cl8k/reg/reg_otp_pvt.h    | 219 ++++++++++++++++++
- 1 file changed, 219 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h
+ .../net/wireless/celeno/cl8k/tx/sw_txhdr.c    | 40 +++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx/sw_txhdr.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h b/drivers/n=
-et/wireless/celeno/cl8k/reg/reg_otp_pvt.h
+diff --git a/drivers/net/wireless/celeno/cl8k/tx/sw_txhdr.c b/drivers/net/w=
+ireless/celeno/cl8k/tx/sw_txhdr.c
 new file mode 100644
-index 000000000000..18866c1c3710
+index 000000000000..3ba63ab9a335
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h
-@@ -0,0 +1,219 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/tx/sw_txhdr.c
+@@ -0,0 +1,40 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_REG_OTP_PVT
-+#define CL_REG_OTP_PVT
++#include "tx/sw_txhdr.h"
 +
-+#include <linux/types.h>
-+#include "reg/reg_access.h"
-+#include "chip.h"
-+
-+#define REG_OTP_PVT_BASE_ADDR 0x007C9000
-+
-+/*
-+ * @brief OTP_CMD register definition
-+ *  OTP command register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    28    OTP_PR_ACC                0
-+ *    24    OTP_ABORT_CLR             0
-+ *    16    OTP_READY                 1
-+ *    12    OTP_WRITE_FAILED          0
-+ *    01:00 OTP_CMD                   0x0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_CMD_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000000)
-+#define OTP_PVT_OTP_CMD_OFFSET      0x00000000
-+#define OTP_PVT_OTP_CMD_INDEX       0x00000000
-+#define OTP_PVT_OTP_CMD_RESET       0x00010000
-+
-+static inline u8 otp_pvt_otp_cmd_otp_pr_acc_getf(struct cl_chip *chip)
++int cl_sw_txhdr_init(struct cl_hw *cl_hw)
 +{
-+       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
++       char sw_txhdr_cache_name[MODULE_NAME_LEN + 32] =3D {0};
 +
-+       return ((local_val & ((u32)0x10000000)) >> 28);
++       snprintf(sw_txhdr_cache_name, sizeof(sw_txhdr_cache_name),
++                "%s_sw_txhdr_cache", THIS_MODULE->name);
++
++       cl_hw->sw_txhdr_cache =3D kmem_cache_create(sw_txhdr_cache_name,
++                                                 sizeof(struct cl_sw_txhdr=
+),
++                                                 0,
++                                                 (SLAB_HWCACHE_ALIGN | SLA=
+B_PANIC),
++                                                 NULL);
++
++       if (!cl_hw->sw_txhdr_cache) {
++               cl_dbg_verbose(cl_hw, "sw_txhdr_cache NULL\n");
++               return -1;
++       }
++
++       return 0;
 +}
 +
-+static inline u8 otp_pvt_otp_cmd_otp_ready_getf(struct cl_chip *chip)
++void cl_sw_txhdr_deinit(struct cl_hw *cl_hw)
 +{
-+       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
-+
-+       return ((local_val & ((u32)0x00010000)) >> 16);
++       kmem_cache_destroy(cl_hw->sw_txhdr_cache);
 +}
 +
-+static inline u8 otp_pvt_otp_cmd_otp_write_failed_getf(struct cl_chip *chi=
-p)
++struct cl_sw_txhdr *cl_sw_txhdr_alloc(struct cl_hw *cl_hw)
 +{
-+       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
-+
-+       return ((local_val & ((u32)0x00001000)) >> 12);
++       return kmem_cache_alloc(cl_hw->sw_txhdr_cache, GFP_ATOMIC);
 +}
 +
-+static inline void otp_pvt_otp_cmd_otp_cmd_setf(struct cl_chip *chip, u8 o=
-tpcmd)
++void cl_sw_txhdr_free(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
 +{
-+       ASSERT_ERR_CHIP((((u32)otpcmd << 0) & ~((u32)0x00000003)) =3D=3D 0)=
-;
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_CMD_ADDR,
-+                         (cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR) & ~=
-((u32)0x00000003)) | ((u32)otpcmd << 0));
++       kmem_cache_free(cl_hw->sw_txhdr_cache, sw_txhdr);
 +}
-+
-+/*
-+ * @brief OTP_READ_VAL register definition
-+ *  OTP read value register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 OTP_READ_VAL              0x0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_READ_VAL_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x000000=
-04)
-+#define OTP_PVT_OTP_READ_VAL_OFFSET      0x00000004
-+#define OTP_PVT_OTP_READ_VAL_INDEX       0x00000001
-+#define OTP_PVT_OTP_READ_VAL_RESET       0x00000000
-+
-+static inline u32 otp_pvt_otp_read_val_get(struct cl_chip *chip)
-+{
-+       return cl_reg_read_chip(chip, OTP_PVT_OTP_READ_VAL_ADDR);
-+}
-+
-+/*
-+ * @brief OTP_ADDR register definition
-+ *  OTP address register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    12:00 OTP_ADDR                  0x0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_ADDR_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000008)
-+#define OTP_PVT_OTP_ADDR_OFFSET      0x00000008
-+#define OTP_PVT_OTP_ADDR_INDEX       0x00000002
-+#define OTP_PVT_OTP_ADDR_RESET       0x00000000
-+
-+static inline void otp_pvt_otp_addr_set(struct cl_chip *chip, u32 value)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_ADDR_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_TIMINGS_1 register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:25 otp_t_CPH                 0xa
-+ *    24:18 t_PES                     0xa
-+ *    17:16 t_UT                      0x0
-+ *    15:08 t_RW                      0x15
-+ *    07:00 t_CSRT                    0x29
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_TIMINGS_1_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
-00C)
-+#define OTP_PVT_OTP_TIMINGS_1_OFFSET      0x0000000C
-+#define OTP_PVT_OTP_TIMINGS_1_INDEX       0x00000003
-+#define OTP_PVT_OTP_TIMINGS_1_RESET       0x14281529
-+
-+static inline void otp_pvt_otp_timings_1_set(struct cl_chip *chip, u32 val=
-ue)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_TIMINGS_1_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_TIMINGS_2 register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    30:26 t_RD                      0x5
-+ *    25:16 t_PW                      0x50
-+ *    15:08 t_PEH                     0x20
-+ *    07:00 t_CPS                     0x20
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_TIMINGS_2_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
-010)
-+#define OTP_PVT_OTP_TIMINGS_2_OFFSET      0x00000010
-+#define OTP_PVT_OTP_TIMINGS_2_INDEX       0x00000004
-+#define OTP_PVT_OTP_TIMINGS_2_RESET       0x14502020
-+
-+static inline void otp_pvt_otp_timings_2_set(struct cl_chip *chip, u32 val=
-ue)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_TIMINGS_2_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_WRITE_VAL register definition
-+ *  OTP write value register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    00    OTP_WRITE_VAL             0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_WRITE_VAL_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
-014)
-+#define OTP_PVT_OTP_WRITE_VAL_OFFSET      0x00000014
-+#define OTP_PVT_OTP_WRITE_VAL_INDEX       0x00000005
-+#define OTP_PVT_OTP_WRITE_VAL_RESET       0x00000000
-+
-+static inline void otp_pvt_otp_write_val_set(struct cl_chip *chip, u32 val=
-ue)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_WRITE_VAL_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_KEY register definition
-+ *  OTP key register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 OTP_KEY                   0x0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_KEY_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000018)
-+#define OTP_PVT_OTP_KEY_OFFSET      0x00000018
-+#define OTP_PVT_OTP_KEY_INDEX       0x00000006
-+#define OTP_PVT_OTP_KEY_RESET       0x00000000
-+
-+static inline void otp_pvt_otp_key_set(struct cl_chip *chip, u32 value)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_KEY_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_CLK_DIV register definition
-+ *  OTP clock divisor register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    08:00 OTP_CLK_DIV               0x1
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_CLK_DIV_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x0000001=
-C)
-+#define OTP_PVT_OTP_CLK_DIV_OFFSET      0x0000001C
-+#define OTP_PVT_OTP_CLK_DIV_INDEX       0x00000007
-+#define OTP_PVT_OTP_CLK_DIV_RESET       0x00000001
-+
-+static inline void otp_pvt_otp_clk_div_set(struct cl_chip *chip, u32 value=
-)
-+{
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_CLK_DIV_ADDR, value);
-+}
-+
-+/*
-+ * @brief OTP_PROTECT register definition
-+ *  OTP address protection register description
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    01    OTP_PR_DIS                0
-+ *    00    OTP_PR_SEL                0
-+ * </pre>
-+ */
-+#define OTP_PVT_OTP_PROTECT_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x0000002=
-4)
-+#define OTP_PVT_OTP_PROTECT_OFFSET      0x00000024
-+#define OTP_PVT_OTP_PROTECT_INDEX       0x00000009
-+#define OTP_PVT_OTP_PROTECT_RESET       0x00000000
-+
-+static inline void otp_pvt_otp_protect_otp_pr_dis_setf(struct cl_chip *chi=
-p, u8 otpprdis)
-+{
-+       ASSERT_ERR_CHIP((((u32)otpprdis << 1) & ~((u32)0x00000002)) =3D=3D =
-0);
-+       cl_reg_write_chip(chip, OTP_PVT_OTP_PROTECT_ADDR,
-+                         (cl_reg_read_chip(chip, OTP_PVT_OTP_PROTECT_ADDR)=
- & ~((u32)0x00000002)) | ((u32)otpprdis << 1));
-+}
-+
-+#endif /* CL_REG_OTP_PVT */
 --
 2.30.0
 
