@@ -7,179 +7,181 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B7EC48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC161C49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62D8C613BA
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB60A613BA
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232384AbhFQQdf (ORCPT
+        id S231691AbhFQQdg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:33:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35618 "EHLO
+        Thu, 17 Jun 2021 12:33:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231479AbhFQQda (ORCPT
+        with ESMTP id S231591AbhFQQda (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:33:30 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C235EC061574
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23C1C06175F
         for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2021 09:31:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=XvMr0H3RGB9vZJafLSvf5+l1RbfM+u+O9kNIzRiUUDU=; b=OIXy/5W1r/ERwkkSkMdCI2Y/il
-        erbPL7ln/K8HFKVF6hu3isKnTgt4K+FLb7Kg7+K/ne76fLr/5OaJmnua97ut/RA4/m/FZ5ieEQwVj
-        NJXRdUoi2Q8Q9iM1KFiCvGcpOlJAd6cVcAuhNZpAKEWZQfEjXrzZOPVdQg0KjWQPN1T4=;
+        bh=DwKVfLU/7s2hNOm4YIymF2f2b7R0tcR6Ow3bXLKCryk=; b=ZHvBSRtkGjTspRzeME61ilXqiP
+        kHJSYAQ4WthgDMzZzswRZm+PB/3l8e1MqU2cnVPLpExQp62w3z9CdNwlCBv2zA6nJ+KuGcFMJE5Yl
+        gak5HIQWwRzgQ09G1arZDz2j/jsBaLEFfdBRpohO1U3crS9Y5P1yrAJvXnL+ez6AZM8c=;
 Received: from p54ae9ff2.dip0.t-ipconnect.de ([84.174.159.242] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ltuvE-0001vC-5P; Thu, 17 Jun 2021 18:31:16 +0200
+        id 1ltuvD-0001vC-NF; Thu, 17 Jun 2021 18:31:15 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     Ryder Lee <ryder.lee@mediatek.com>, johannes@sipsolutions.net
-Subject: [PATCH v3 3/3] mac80211: add rate control support for encap offload
-Date:   Thu, 17 Jun 2021 18:31:13 +0200
-Message-Id: <20210617163113.75815-3-nbd@nbd.name>
+Subject: [PATCH v3 1/3] mac80211: move A-MPDU session check from minstrel_ht to mac80211
+Date:   Thu, 17 Jun 2021 18:31:11 +0200
+Message-Id: <20210617163113.75815-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210617163113.75815-1-nbd@nbd.name>
-References: <20210617163113.75815-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+This avoids calling back into tx handlers from within the rate control module.
+Preparation for deferring rate control until tx dequeue
 
-The software rate control cannot deal with encap offload, so fix it.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/ieee80211_i.h |  9 +++++++++
- net/mac80211/rate.c        |  9 ++-------
- net/mac80211/tx.c          | 18 ++++++++++++++----
- 3 files changed, 25 insertions(+), 11 deletions(-)
+ include/net/mac80211.h             |  5 +++++
+ net/mac80211/rc80211_minstrel_ht.c | 28 +---------------------------
+ net/mac80211/tx.c                  | 27 +++++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 27 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8fcbaa1eedf3..ba780c749e36 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2030,6 +2030,15 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tx_skb_tid(sdata, skb, 7);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 445b66c6eb7e..e24ca8e7e8f9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -6184,6 +6184,11 @@ enum rate_control_capabilities {
+ 	 * otherwise the NSS difference doesn't bother us.
+ 	 */
+ 	RATE_CTRL_CAPA_VHT_EXT_NSS_BW = BIT(0),
++	/**
++	 * @RATE_CTRL_CAPA_AMPDU_TRIGGER:
++	 * mac80211 should start A-MPDU sessions on tx
++	 */
++	RATE_CTRL_CAPA_AMPDU_TRIGGER = BIT(1),
+ };
+ 
+ struct rate_control_ops {
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 6487b05da6fa..ed4b16f4f9d2 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1175,29 +1175,6 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
+ 	}
  }
  
-+static inline bool ieee80211_is_tx_data(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	return info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP ||
-+	       ieee80211_is_data(hdr->frame_control);
-+}
-+
- u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc, u8 *transmitter_bssid,
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 63652c39c8e0..8c6416129d5b 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -297,15 +297,11 @@ void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata)
- static bool rc_no_data_or_no_ack_use_min(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
+-static void
+-minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+-{
 -	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	__le16 fc;
+-	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+-	u16 tid;
 -
--	fc = hdr->frame_control;
+-	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
+-		return;
+-
+-	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
+-		return;
+-
+-	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
+-		return;
+-
+-	tid = ieee80211_get_tid(hdr);
+-	if (likely(sta->ampdu_mlme.tid_tx[tid]))
+-		return;
+-
+-	ieee80211_start_tx_ba_session(pubsta, tid, 0);
+-}
+-
+ static void
+ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+                       void *priv_sta, struct ieee80211_tx_status *st)
+@@ -1498,10 +1475,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct minstrel_priv *mp = priv;
+ 	u16 sample_idx;
  
- 	return (info->flags & (IEEE80211_TX_CTL_NO_ACK |
- 			       IEEE80211_TX_CTL_USE_MINRATE)) ||
--		!ieee80211_is_data(fc);
-+		!ieee80211_is_tx_data(skb);
- }
+-	if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-	    !minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_prob_rate)))
+-		minstrel_aggr_check(sta, txrc->skb);
+-
+ 	info->flags |= mi->tx_flags;
  
- static void rc_send_low_basicrate(struct ieee80211_tx_rate *rate,
-@@ -870,7 +866,6 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
- 			    int max_rates)
- {
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_supported_band *sband;
+ #ifdef CONFIG_MAC80211_DEBUGFS
+@@ -1907,6 +1880,7 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
  
-@@ -882,7 +877,7 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
- 	sdata = vif_to_sdata(vif);
- 	sband = sdata->local->hw.wiphy->bands[info->band];
- 
--	if (ieee80211_is_data(hdr->frame_control))
-+	if (ieee80211_is_tx_data(skb))
- 		rate_control_apply_mask(sdata, sta, sband, dest, max_rates);
- 
- 	if (dest[0].idx < 0)
+ static const struct rate_control_ops mac80211_minstrel_ht = {
+ 	.name = "minstrel_ht",
++	.capa = RATE_CTRL_CAPA_AMPDU_TRIGGER,
+ 	.tx_status_ext = minstrel_ht_tx_status,
+ 	.get_rate = minstrel_ht_get_rate,
+ 	.rate_init = minstrel_ht_rate_init,
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5cb4a5c9597e..b27fb9138c55 100644
+index 0b719f3d2dec..e6f7953db483 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -666,6 +666,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	u32 len;
- 	struct ieee80211_tx_rate_control txrc;
- 	struct ieee80211_sta_rates *ratetbl = NULL;
-+	bool encap = info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP;
- 	bool assoc = false;
+@@ -3929,6 +3929,29 @@ void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
+ }
+ EXPORT_SYMBOL(ieee80211_txq_schedule_start);
  
- 	memset(&txrc, 0, sizeof(txrc));
-@@ -707,7 +708,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	 * just wants a probe response.
- 	 */
- 	if (tx->sdata->vif.bss_conf.use_short_preamble &&
--	    (ieee80211_is_data(hdr->frame_control) ||
-+	    (ieee80211_is_tx_data(tx->skb) ||
- 	     (tx->sta && test_sta_flag(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
- 		txrc.short_preamble = true;
++static void
++ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
++		     struct sta_info *sta,
++		     struct sk_buff *skb)
++{
++	struct rate_control_ref *ref = sdata->local->rate_ctrl;
++	u16 tid;
++
++	if (!ref || !(ref->ops->capa & RATE_CTRL_CAPA_AMPDU_TRIGGER))
++		return;
++
++	if (!sta || !sta->sta.ht_cap.ht_supported ||
++	    !sta->sta.wme || skb_get_queue_mapping(skb) == IEEE80211_AC_VO ||
++	    skb->protocol == sdata->control_port_protocol)
++		return;
++
++	tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++	if (likely(sta->ampdu_mlme.tid_tx[tid]))
++		return;
++
++	ieee80211_start_tx_ba_session(&sta->sta, tid, 0);
++}
++
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags,
+@@ -3959,6 +3982,8 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		skb_get_hash(skb);
+ 	}
  
-@@ -729,7 +730,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 		 "%s: Dropped data frame as no usable bitrate found while "
- 		 "scanning and associated. Target station: "
- 		 "%pM on %d GHz band\n",
--		 tx->sdata->name, hdr->addr1,
-+		 tx->sdata->name,
-+		 encap ? ((struct ethhdr *)hdr)->h_dest : hdr->addr1,
- 		 info->band ? 5 : 2))
- 		return TX_DROP;
++	ieee80211_aggr_check(sdata, sta, skb);
++
+ 	if (sta) {
+ 		struct ieee80211_fast_tx *fast_tx;
  
-@@ -763,7 +765,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+@@ -4222,6 +4247,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
  
- 	if (txrc.reported_rate.idx < 0) {
- 		txrc.reported_rate = tx->rate;
--		if (tx->sta && ieee80211_is_data(hdr->frame_control))
-+		if (tx->sta && ieee80211_is_tx_data(tx->skb))
- 			tx->sta->tx_stats.last_rate = txrc.reported_rate;
- 	} else if (tx->sta)
- 		tx->sta->tx_stats.last_rate = txrc.reported_rate;
-@@ -3653,8 +3655,16 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	else
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 	memset(info, 0, sizeof(*info));
  
--	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP)
-+	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
-+		if (!ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
-+			r = ieee80211_tx_h_rate_ctrl(&tx);
-+			if (r != TX_CONTINUE) {
-+				ieee80211_free_txskb(&local->hw, skb);
-+				goto begin;
-+			}
-+		}
- 		goto encap_out;
-+	}
- 
- 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
- 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
++	ieee80211_aggr_check(sdata, sta, skb);
++
+ 	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+ 	if (tid_tx) {
 -- 
 2.30.1
 
