@@ -2,186 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC161C49EA2
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69774C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 17:11:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB60A613BA
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:31:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54B5A613E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 17:11:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231691AbhFQQdg (ORCPT
+        id S231892AbhFQRNL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:33:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35620 "EHLO
+        Thu, 17 Jun 2021 13:13:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231591AbhFQQda (ORCPT
+        with ESMTP id S231854AbhFQRNK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:33:30 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23C1C06175F
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2021 09:31:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=DwKVfLU/7s2hNOm4YIymF2f2b7R0tcR6Ow3bXLKCryk=; b=ZHvBSRtkGjTspRzeME61ilXqiP
-        kHJSYAQ4WthgDMzZzswRZm+PB/3l8e1MqU2cnVPLpExQp62w3z9CdNwlCBv2zA6nJ+KuGcFMJE5Yl
-        gak5HIQWwRzgQ09G1arZDz2j/jsBaLEFfdBRpohO1U3crS9Y5P1yrAJvXnL+ez6AZM8c=;
-Received: from p54ae9ff2.dip0.t-ipconnect.de ([84.174.159.242] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1ltuvD-0001vC-NF; Thu, 17 Jun 2021 18:31:15 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     Ryder Lee <ryder.lee@mediatek.com>, johannes@sipsolutions.net
-Subject: [PATCH v3 1/3] mac80211: move A-MPDU session check from minstrel_ht to mac80211
-Date:   Thu, 17 Jun 2021 18:31:11 +0200
-Message-Id: <20210617163113.75815-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.30.1
+        Thu, 17 Jun 2021 13:13:10 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63822C061767
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2021 10:11:01 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id bb10-20020a17090b008ab029016eef083425so6100516pjb.5
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2021 10:11:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=THyXgCl+/VLw3FN9PWQYnLIIdZwbsOot+/12m2pLZlY=;
+        b=g4EEdUPwW+b9mL8UNx5CjZq3x7m7HAxr1SW3Ic3Ug9BDb+d9X+IMGlRDY/tjrUxuWv
+         ztJVDHtsLiz0DGgc0POI6RnssCfMQJm+ebPeeSYbTlCHavvGZZRMPO3R413COkVGzo/7
+         WKFE6AVn8MHHgSWDZmm5a2TGF94dIHOPBd2ew=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=THyXgCl+/VLw3FN9PWQYnLIIdZwbsOot+/12m2pLZlY=;
+        b=J2Ch/D5qaeKr+HxwSq4sHYEEQinaZc1J+mvczqfof374lfrVrQBhvoqKfQyBXy8NYg
+         FSXV63E4MtFtMrgXlaurGuLED51I4NtveVVnuP8zYmGuKyYzg0HHnjhpxdRVwDkPd87p
+         6gNfd7sdhc6mRDUpiYIgBkjdqfm+XTKfM7v8ksc7Dq5Eg4xMP9GXzsI6C/A2FPCtcu1j
+         kvRQEk3MXr2OnHO9w1YRgRHHAzHuKcYsHiplRNcdQxoZ/LoPRCtOkt6ORbTZwJRVQS8s
+         qtQWzV36L4WnDGgggF0409TmmKA4v1Xi4DkBqzq4VqVPId7uBYxzS1ogrkvxE0q4+Pz4
+         obZQ==
+X-Gm-Message-State: AOAM532vYSFby4XhER6PENlm0qR5KlD0H+Hq7G1d1kgnD/sow6loNFMD
+        OVTS6EvS0b/E7A/GsEYmFR7Ylg==
+X-Google-Smtp-Source: ABdhPJzdACvbMXnVPGIrxxnbd5Bb/c0fcJX064+TUUdqkjoTucP5FHRvPftG7jPOe/HYsGERGOhLfg==
+X-Received: by 2002:a17:90a:c397:: with SMTP id h23mr17706498pjt.101.1623949861035;
+        Thu, 17 Jun 2021 10:11:01 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id ls13sm5631016pjb.23.2021.06.17.10.11.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Jun 2021 10:11:00 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Kees Cook <keescook@chromium.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: [PATCH] wcn36xx: Avoid memset() beyond end of struct field
+Date:   Thu, 17 Jun 2021 10:10:58 -0700
+Message-Id: <20210617171058.3410494-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+X-Patch-Hashes: v=1; h=sha256; g=d2dd7d45b161d7c8a9329c5a8b75525e820a8c46; i=Edz8jhuXuQ6wfwSNfGvEB9SGPd5eZN+nH8oppZ9YUF4=; m=dq0ACCynqzLx07HlxuFYrIrrlO3EnmhT1nG2nGfdDCE=; p=q86YgQ2o199u+8UL8Yc1oxLTwQpOhWxEuOiMHII0TtU=
+X-Patch-Sig: m=pgp; i=keescook@chromium.org; s=0x0x8972F4DFDC6DC026; b=iQIzBAABCgAdFiEEpcP2jyKd1g9yPm4TiXL039xtwCYFAmDLgiIACgkQiXL039xtwCYtvQ/8Cb0 sLxpN9+ykUVmXYnSytjXPDVjkMOo9ndEUnU4KeKEBe4LmSwyDPY7vKbBbhUopf09U0ljUORb06LqY OxRBirA0qa/RTthtpyQpd3yMRmPFCwQ/UdgtG4oeMORQWBihX4wyOlRtIvzhWUvgUN/VCaeGkBhbL /suFSGf/DzR85VaZWc2D+dFJSaLt5vr9953FYSlk/XuurO+OeAjLglCBWeun42tQJXBhaJaAsjBwl u345+rQJeewnJ8/sbmtfugefw37dzuudhlMGcNMKv1+77YVU7xDiGczsUAyGvZDDfibRCj8lQnDBv 1RH+pl9aTVmAtmjhjlWRIsypvVICupIWvJCIzgDMm/mqLd1CJctISDmK8x3Tt1EfPFJbOiDB4hLGz zuzY1C2r2BuHXlPf1uk+O4674PT/VWgsSXgVU1vW85flDexh+hmXIEyHr8ba/LnMN2wDI+VdcjtDl 7RAiqWOEZ9wy6UCazxPwJx+Crb3sOwhSvUkHa2k9Vmz/AW0VvjvwOXchXrTwox+lyFmjgAgpBCfyF /uuIrDL9wEf5e1jS93x0qWuwZ1mP5nYEbJDHrb6dilgrj+hM49XuZAadhOM/n9sgh6x/8viFc8gUK s1/xAfqaw/kZd5IWHQ1DxeQcKmdFzrFEaUgaeI2gDJ4kpA8L1QXCjt6HAifaD0NU=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This avoids calling back into tx handlers from within the rate control module.
-Preparation for deferring rate control until tx dequeue
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memset(), avoid intentionally writing across
+neighboring array fields.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Instead of writing past the end of the header to reach the rest of
+the body, replace the redundant function with existing macro to wipe
+struct contents and set field values. Additionally adjusts macro to add
+missing parens.
+
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/net/mac80211.h             |  5 +++++
- net/mac80211/rc80211_minstrel_ht.c | 28 +---------------------------
- net/mac80211/tx.c                  | 27 +++++++++++++++++++++++++++
- 3 files changed, 33 insertions(+), 27 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 21 +++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 445b66c6eb7e..e24ca8e7e8f9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6184,6 +6184,11 @@ enum rate_control_capabilities {
- 	 * otherwise the NSS difference doesn't bother us.
- 	 */
- 	RATE_CTRL_CAPA_VHT_EXT_NSS_BW = BIT(0),
-+	/**
-+	 * @RATE_CTRL_CAPA_AMPDU_TRIGGER:
-+	 * mac80211 should start A-MPDU sessions on tx
-+	 */
-+	RATE_CTRL_CAPA_AMPDU_TRIGGER = BIT(1),
- };
- 
- struct rate_control_ops {
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 6487b05da6fa..ed4b16f4f9d2 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1175,29 +1175,6 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- 	}
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index d0c3a1557e8d..b3bea07d0641 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -445,22 +445,12 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
+ 	return ret;
  }
  
--static void
--minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+-static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
+-			 enum wcn36xx_hal_host_msg_type msg_type,
+-			 size_t msg_size)
 -{
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
--	u16 tid;
--
--	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
--		return;
--
--	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
--		return;
--
--	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
--		return;
--
--	tid = ieee80211_get_tid(hdr);
--	if (likely(sta->ampdu_mlme.tid_tx[tid]))
--		return;
--
--	ieee80211_start_tx_ba_session(pubsta, tid, 0);
+-	memset(hdr, 0, msg_size + sizeof(*hdr));
+-	hdr->msg_type = msg_type;
+-	hdr->msg_version = WCN36XX_HAL_MSG_VERSION0;
+-	hdr->len = msg_size + sizeof(*hdr);
 -}
 -
- static void
- minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
-                       void *priv_sta, struct ieee80211_tx_status *st)
-@@ -1498,10 +1475,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct minstrel_priv *mp = priv;
- 	u16 sample_idx;
+ #define __INIT_HAL_MSG(msg_body, type, version) \
+ 	do {								\
+-		memset(&msg_body, 0, sizeof(msg_body));			\
+-		msg_body.header.msg_type = type;			\
+-		msg_body.header.msg_version = version;			\
+-		msg_body.header.len = sizeof(msg_body);			\
++		memset(&(msg_body), 0, sizeof(msg_body));		\
++		(msg_body).header.msg_type = type;			\
++		(msg_body).header.msg_version = version;		\
++		(msg_body).header.len = sizeof(msg_body);		\
+ 	} while (0)							\
  
--	if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
--	    !minstrel_ht_is_legacy_group(MI_RATE_GROUP(mi->max_prob_rate)))
--		minstrel_aggr_check(sta, txrc->skb);
--
- 	info->flags |= mi->tx_flags;
+ #define INIT_HAL_MSG(msg_body, type)	\
+@@ -2729,8 +2719,7 @@ int wcn36xx_smd_set_mc_list(struct wcn36xx *wcn,
  
- #ifdef CONFIG_MAC80211_DEBUGFS
-@@ -1907,6 +1880,7 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 	msg_body = (struct wcn36xx_hal_rcv_flt_pkt_set_mc_list_req_msg *)
+ 		   wcn->hal_buf;
+-	init_hal_msg(&msg_body->header, WCN36XX_HAL_8023_MULTICAST_LIST_REQ,
+-		     sizeof(msg_body->mc_addr_list));
++	INIT_HAL_MSG(*msg_body, WCN36XX_HAL_8023_MULTICAST_LIST_REQ);
  
- static const struct rate_control_ops mac80211_minstrel_ht = {
- 	.name = "minstrel_ht",
-+	.capa = RATE_CTRL_CAPA_AMPDU_TRIGGER,
- 	.tx_status_ext = minstrel_ht_tx_status,
- 	.get_rate = minstrel_ht_get_rate,
- 	.rate_init = minstrel_ht_rate_init,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0b719f3d2dec..e6f7953db483 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3929,6 +3929,29 @@ void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
- }
- EXPORT_SYMBOL(ieee80211_txq_schedule_start);
- 
-+static void
-+ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
-+		     struct sta_info *sta,
-+		     struct sk_buff *skb)
-+{
-+	struct rate_control_ref *ref = sdata->local->rate_ctrl;
-+	u16 tid;
-+
-+	if (!ref || !(ref->ops->capa & RATE_CTRL_CAPA_AMPDU_TRIGGER))
-+		return;
-+
-+	if (!sta || !sta->sta.ht_cap.ht_supported ||
-+	    !sta->sta.wme || skb_get_queue_mapping(skb) == IEEE80211_AC_VO ||
-+	    skb->protocol == sdata->control_port_protocol)
-+		return;
-+
-+	tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+	if (likely(sta->ampdu_mlme.tid_tx[tid]))
-+		return;
-+
-+	ieee80211_start_tx_ba_session(&sta->sta, tid, 0);
-+}
-+
- void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				  struct net_device *dev,
- 				  u32 info_flags,
-@@ -3959,6 +3982,8 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		skb_get_hash(skb);
- 	}
- 
-+	ieee80211_aggr_check(sdata, sta, skb);
-+
- 	if (sta) {
- 		struct ieee80211_fast_tx *fast_tx;
- 
-@@ -4222,6 +4247,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	memset(info, 0, sizeof(*info));
- 
-+	ieee80211_aggr_check(sdata, sta, skb);
-+
- 	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
- 	if (tid_tx) {
+ 	/* An empty list means all mc traffic will be received */
+ 	if (fp)
 -- 
-2.30.1
+2.25.1
 
