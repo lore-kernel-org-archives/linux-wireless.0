@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8ADC2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:04:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A37EC48BE5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:04:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C701161249
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:04:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 402CB61351
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233588AbhFQQGM (ORCPT
+        id S229673AbhFQQGN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:06:12 -0400
-Received: from mail-eopbgr140058.outbound.protection.outlook.com ([40.107.14.58]:8512
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:06:13 -0400
+Received: from mail-vi1eur05on2081.outbound.protection.outlook.com ([40.107.21.81]:58626
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233581AbhFQQF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S233642AbhFQQF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:05:58 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NiDj7NcJNl7pZasOz/Lm0yuIOEpZG9M2g4L2sslkVu0sITBKzp1BzLHY6AdQKw0+0R2pFoF7BnLIevUL5Azs0OIQakAopE8A4lQutKP+jMfwxUH6kLoSpe6hmrtHkgcyGONiRj7uLYO5TXIbngYxHOZb7w4a7c3wLh1gx7m5OkUqGp0+gIVIp+yI9vsaqUifJOdvTPCSH+iJ0w2MEdvexxCf+yeGfMTHg4WkEUbTyu0BJCAEgwUnsWKOrcpgmTNmc4G9q+JWoVXkqYj6nShP5iU/hz8BeybJPbX9rdvUusYVbkmzM4SW0v9TxmBcDpeeaT801gIG0eLYnUaqLw9EAA==
+ b=g4kY3X90oCTYrehGnLP3poI1oaiPNAbCiZtszK2yyzFIqF9EAI+LU2sV7yhcMy+g8u4Wv0fm6+oSdrkmIQcNGXYxWsvCxQeaofPKuYz2NiEwFPSSBVhj3uySnuW8grC6Jd3Zco4SpbgyxLB5FsJOR0Bs7TnLXuB/XGRJUQoZBwsZEAvMH+yJZutUo1gagY9QvEHIhHqIndDmEWUrC2KmyvXChkpB2OCA9/YCqUPGdESo32cbgT5OlCfea8aW15liAGcc/o2x5mgNj4NUW1VAVsk7yA37TT18CU3dRhO5fYz5OccMJuxnRkR8liADGlocqc22XW7DQiPls6fGG2xbdw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7x9EZCVOOPZFjOS+r8CXd6P0OHei2BLNzrogh8Bmv/k=;
- b=PrxNwYCpxxKHTMybV7BFFrYg9uQ9lZAdEI+QiFdkSR7akyfTDeUPWik0YQ/dlDkgidAGe1SNlsfkvK4h9IpIj+89XDOJQTYOWFf0dkMbP1I2OVmdnkrjjsY1ZfNF67jZyd55XZxnaG5RadGkUz/qmEFqF3+5owPpdHU3NeneuDJdEiizpP2kcPB4r45rAfxqTNHiozvQm14KJbDLCpXXrAeq4Z1PtMzKKM+7bmXKWReLB6CveVVd7+6tQgOYqQweWvu0odQZAItf5IZWhXS5pvDvK6Po1/1CzXbFo9xNfzSVpbsky+wfr8frr1uucfxFDlowF7bEQIhfWgNvYKgLoA==
+ bh=JjFgC45B9R8TkOP7PpbZinh56CrNG68HSy4ON8jZySE=;
+ b=Zv2oZ9B3rIsxnN29mRGepr1fBeZcITrlI82m1fCNfIkRSBncrubpoxQsHKg0O/m8PAXPhSrkb1hi31kj5BRktAGlYxwtaxqfZeEK+6P4EBdVx7rSMY+07mC2mtF52GJZPDSFzmZhsx9k9mjhnFuefcQdP7034Gz15EP0oGT0KuB8HpruIdnjKCM+bzj44rdFx/Rg1yDeRaPnZ1+us6OUWC9iq2o2+3A/HmbDlYItGpPhaPhb/8xXPzJ2qffjQ7fgo833HIsJqUqCDsjG3Ja8hW3NhK/o3j3kwG5UHMdAX3e6Jf8TaFlQhAJuViZ3Pxf2YH70QLTI/Nk/RgoVbt+IMw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7x9EZCVOOPZFjOS+r8CXd6P0OHei2BLNzrogh8Bmv/k=;
- b=FmNs7btRPbL8wFEowTgghURQTBLIFzQKH61bDgnlo4ffxZ+MvAH49GwJbspR693evXnem2Tp854uEuRoyzYYb7Hyi1wqnwxLy/brCfIDTjq8TJTAgF7cl9qsleg0/5qv+iaBpWMjjyYq6cfr62WLf5kSR2ehkylkTfD3seguVko=
+ bh=JjFgC45B9R8TkOP7PpbZinh56CrNG68HSy4ON8jZySE=;
+ b=NQJHMfrD0svJAf0jWbKX7Z8VwFdpowT55s6pinVCK91dNxqyBJIaUkJWwbj3kyeM5hA8VaIxhGhqhy/NCGHyBMZOQwMTScEJcL3WVxUo/0IL4NFBYcHfSJ3d+YRDCQnJ/W5c8vvxuOKVfIdCufXoduIx37eONPX4sQFUb0Yqc2M=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1234.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:388::18) with
+ by AM0P192MB0499.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:4e::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
- 2021 16:03:42 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:03:44 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:03:42 +0000
+ 16:03:44 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 043/256] cl8k: add chip.h
-Date:   Thu, 17 Jun 2021 15:58:50 +0000
-Message-Id: <20210617160223.160998-44-viktor.barna@celeno.com>
+Subject: [RFC v1 048/256] cl8k: add coredump.c
+Date:   Thu, 17 Jun 2021 15:58:55 +0000
+Message-Id: <20210617160223.160998-49-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:20 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:25 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4ab720e6-8f3b-427e-38d9-08d931a96de9
-X-MS-TrafficTypeDiagnostic: AM9P192MB1234:
+X-MS-Office365-Filtering-Correlation-Id: 2f70d0a6-4c6c-45a3-3b39-08d931a970e5
+X-MS-TrafficTypeDiagnostic: AM0P192MB0499:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB1234122B360D364A061E65F8F60E9@AM9P192MB1234.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-Microsoft-Antispam-PRVS: <AM0P192MB04999D7D92F5501812A2C703F60E9@AM0P192MB0499.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: t6FeUbDvKSrMlyTwRqm4Tr74z4JShEHyjySu6zSQL/9dHZ/Ki3ZG+LpI1/JOPINQDuGHCutdYLESYZhl0T39tEf0mAIQG9FIwHBTlayboq8ChJ8E0/0Wl4YFjcAfCFKI+yKpcGqhoXbjVx/a1DMvihncFeQYm5UCK9EpbO0z3K6jRoVeoptnWP6iN0oHr2prb56Ft+XNm1rIxtkr/unonVg7aw/GslFIM5b7qxIAQ/YPQWXNyfwjwYOwix6p9ZLMOdwRoeXpqv/CFGIAzEXNScOCRu37lZdVckgk8BQqM/6oyO5JKlFrYRPR10buTiqzGPBK4lcVvSgI9ys2wyAEzQQvOZN+F9Stc6YLlynX7gIcejBbZIVSbZkJnvkrLI/1RV1XZFyOMyKN2z0eTaOxeChV4/uLefTrHL2BC5tJhWbJlMc1WA0ztp5ID1/ez+Cm4WlInCUFSjxEuGhxGMs6wyQpt94p//twOtNxoVJCP52+twe/bnyGnixHlPUhJXirFsRhfepCaLAkRZRol7aOHagS1/XAdpL4lfBaRSnuuI7alovgqF/2bN4EwWtOnR6rv4bqvXtkaz2wAeM22gtKGcSsE8JrgG2u5a/9CdzjBsxrxqB9leqUtJWOK4hQRuxSXWPM+ExyRRaWAHT5hBLpoAtqEPULwU9EjHDKRxS9y17Nw8W1ep0HVzCaOR34LKHNI3juPRJYxq0C6yspZEz2EA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(366004)(136003)(346002)(396003)(39850400004)(6666004)(107886003)(36756003)(956004)(66476007)(66556008)(2616005)(66946007)(6916009)(2906002)(26005)(9686003)(1076003)(6512007)(6486002)(16526019)(6506007)(38100700002)(52116002)(86362001)(8936002)(316002)(38350700002)(186003)(55236004)(54906003)(8676002)(5660300002)(508600001)(83380400001)(4326008)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: uDsU2DsoUPgnTTfWPhRegFX26+XTZUzcR9iicxapvBCcba1crylMQf9RAi0WcKaaKo9LyCpYw8PM/XACnBnf0t6iS/zbNie0Of9BN5PmyXU+0ErmoXWVB9AZBpCkEwapw0ReWlqU4UTe0SwtUa7TtRPWP/xi14qEFWl8m3JzM87X4EVEVJ9r1IFSVG7q8Nstvy+XlmXyUtqHRkoNQpGcPgV9pXwip1GXtztUmWs5/OKJgvbnIVp0grfC0eKRJTb7EAuhfBTNcBflqqnJ4SydudGUuJdu1S9mkOrdZZ9RC+S5FMN6V70bacipBvo7zvsRrn3R0+sOKOwh+QmIphwO5s3rAsR2fp3aXbd6iuUE6mxiQRe6uyuEQGivU7ddTByFjJuHe041DfrXfbqjIbUEBqCKgp4QAX6b5x0ZVCzwBtXWxAGxi6F7XohTDzmvhUyWzF9tTTTsU5Q/4NZpeK6IjNfvS9a7hieYGCmld11VFUqm6zqUILHNS3FqRU50brGP5Wa1wC1j8eLAgWkBIFROyRPl97yRLbS2gSpjvUQyTVUyu+ihFSP629chJe8f9/I1OQTG6jg8tfljzYon/X9f4QzhXZjvjHhg67RVONHi7xvyqUUU+OU3ORm2JtpyPvAxX+buusGgtUcSsp8KiC+KeUQ3b/ENCcy1C0r1lW/gcmAezpS9gRVhkSUka3yzwFskW6Ore7rkbqd1JKPbBQ2Xpw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(39840400004)(396003)(376002)(366004)(346002)(86362001)(107886003)(66556008)(52116002)(83380400001)(55236004)(36756003)(4326008)(186003)(16526019)(956004)(316002)(6486002)(8676002)(54906003)(38100700002)(38350700002)(66476007)(6506007)(2906002)(26005)(9686003)(6512007)(66946007)(2616005)(5660300002)(478600001)(1076003)(6666004)(8936002)(6916009)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?CLaHKy4t0DbT67XuJ2TJpaZjpPbb8LVzn8TxxP0KgPyCFHO6mOIYXUsHubGP?=
- =?us-ascii?Q?udOw/42adyYd4RzVKDVqLaaiS/7osurqZGaSCC+TSJU9dlRwOBhYG8mMr83k?=
- =?us-ascii?Q?zBf1dRESwx245BzdRvTIDJJi9z7ZM2OYGwAIe4PyJWZ69MzhPa9jGw3qq9C3?=
- =?us-ascii?Q?176SvxJca/fj8EOP5H9H31Osb4aQm+u6xq0xkg8Ru7F2WklDYgC/g3IJGAOb?=
- =?us-ascii?Q?6Sy64Pt25YgSFQfR2UQEp+eQuwlkqdGh69O97wQY8NE0vzCQTiBHbzl1WbhH?=
- =?us-ascii?Q?zlh9aEScwm/R9xBZoSuKTJX9yeI6D89SOS3n2jREVoV577pUTOyrFF0D5uv0?=
- =?us-ascii?Q?w6fanEm2UjMdTZIc8TeKu2KQUlI47/pAdIccFBpjsSpchSGn0stW05ZzQp0P?=
- =?us-ascii?Q?LoukIF1yfdWsqzM21MgdtQR+iTSoM4U8QcZo9ZsdbsYRd2ue4N1u3D8G8g20?=
- =?us-ascii?Q?eSJqwLPCA6Vzq6BkDXn9THPH1KCgmQRZJqiJEdyl2IkgSX8AX1c46Q1HkE9F?=
- =?us-ascii?Q?8y4DhAOjnS7wECeQldgrSVxv0LQp4/yCD5lPI7OCVnmr494g8JVCqSAiqux+?=
- =?us-ascii?Q?+pffGzoZlcy4Ck+CcD2SzokDZM+knsmvf1BgRupiAbg2b0SxnEcWb1qqmYH4?=
- =?us-ascii?Q?YRJvFkEuecIjASnCKVq56S+Ifx0+jIbUP8muSEt/aZkixgjL9ACE6W7c/f9p?=
- =?us-ascii?Q?ortYwhFI0LSnVYOUEjNe/HtAdH4mDM3+puw8M7qEOG32hueO4pLRUMAf83xd?=
- =?us-ascii?Q?utRKHs+KTzQHQMnr/GRLlMls2XvkQ/doMOGm2No2uA7H8h28aCgOWsHJwKv9?=
- =?us-ascii?Q?5EE6sOiBxhdIkIGfeWhdP7jIunexPG3wGp2WOPAyYfQrcOk/CaXTJM4YSOr7?=
- =?us-ascii?Q?tLwqAOBeJtLI/IOZ+j3+Gy8kpRLnhVhnUP8JPF2SQnc2cH+67zwAxy++MwyT?=
- =?us-ascii?Q?OFSpK8OVzAIjCw3E1p7vynSaN1fX+VNrVPMFxUTN7LaF0VFmxJ7l72DtCggR?=
- =?us-ascii?Q?UXF+lQPqcox660w2q95//omherx/z4acu0gw3tnCFHp9mbALLSvkZZ5C3Mdp?=
- =?us-ascii?Q?4gRCSdF2kzj2FO8RnDTXybtCfV3xc19C0yAcfCeeIL6s3tbV2NFbcIfZbRwY?=
- =?us-ascii?Q?7MbELhtf/BmXDFgRUdRhTyqR/lw8bpArAfGhighnMKpyzxcYAA34AB4yo9RA?=
- =?us-ascii?Q?Z1Cz1C9gkoBAamgyXKp4QzWgD3KRc5j54Lgv1LCBebhdcy9uJ38lxG5S5t4e?=
- =?us-ascii?Q?humIxmFB4e/KG62qH/Uvw7rHJgY9f+KeEEpbjHVjZzvEljWYCG6ib40bkvJZ?=
- =?us-ascii?Q?QfndxAAFYReXvh1FJJSE/QmW?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1Tij3CB7quMuvUFGvWAJ+aSdPMqk6isZFGHGWcOhq/VVeH5M2XE5pEiMyX+K?=
+ =?us-ascii?Q?s9cXxTBfNd8C1IbDEHuvL4AJl7ixBI4RzsHD6iYS/35rBANW4O9Iv1rxHlr2?=
+ =?us-ascii?Q?FpyM47BDmH46R3QNjNZa2jYrbyjAE6s94ivuly8uh3K4NWkeTdIGnJjuYFFz?=
+ =?us-ascii?Q?BroTbZ06IXfR/k1Exm2+U6vqzVLUvGLmUl2MLwbMBnhL2GyFgqkZwnJNZD7N?=
+ =?us-ascii?Q?3qisnTcjK0fUA3cKmITqrNIAmTHQztUrlsPUtioHIrdcSZtjA68hVIpYuLuV?=
+ =?us-ascii?Q?kGpgIYTrb21Kxwuiv4t9+Al5ZqiXbqrA9ngqBjuMF5tAVk2xRpFTcypah+Au?=
+ =?us-ascii?Q?wh9zhxq4VmFxDNAwC2svtmL+zYHeQ6MU2GJKpsulnA8l+Z4QfKxv9rzkIFBX?=
+ =?us-ascii?Q?4Li1d+x34VFlFti/HWhpGl3mOkRxGOs6oou92OW8GITiavOoFdSKvXlWrYBg?=
+ =?us-ascii?Q?KINKwLCe0SGfslYyZP1VHkl4n5X57BCpthbXNBz0JDN3vzaI4o+LT+eJrnZL?=
+ =?us-ascii?Q?zScZrzOD1BwvtBrdFTjcWXHsgooBFhsUjQHKSCaqQOVk6Jrl3KSfrT/JyDG0?=
+ =?us-ascii?Q?kK8ujn0o+dIW64w/Y6+sbprXagaiz8fdYq9Gu1hIe0XM+dSkiv2IEuKY4tKJ?=
+ =?us-ascii?Q?giDDY8eAU8/6HdYlzPZKUdKtqaLVJueUzvDnXO7r43whFaN2y8hW+FnwrCIY?=
+ =?us-ascii?Q?itrEoFzs7N5f7XEH9++cvbiF9oWtw3qljRRoGH/rjF5/K0Vhfg4Tn2AZ4+Tr?=
+ =?us-ascii?Q?hY3e+vSJp0ecitILGR8S/eDxlUmJf79n7RajakZ6Zif/szpMsbkhAySJiLlx?=
+ =?us-ascii?Q?poSxUHS88vBQw9E2KoHg76ukxhR3JwCX8KmYGyBrtZ+AoIfYls2PAY+KRu/u?=
+ =?us-ascii?Q?CYLVkZcWi/nZ4ZFJmDGhvL2AZ0W0Kh429BlAKBhPon7HayF5OUOa+jqNGYFc?=
+ =?us-ascii?Q?XU8Od1K21pX0+OYJj3Ij7o611IV2laOgTN/n1oAVYDIcaxMuEOMN3QRbIc+c?=
+ =?us-ascii?Q?pQC+gcRAHDv6ErVoC2vjdFqhWotqjaKxKMlPrpspW/cKJk2FIQLWT/TJtLdL?=
+ =?us-ascii?Q?eF7KQJX+PX4p8MuSeWzla8AUxjhNzlwsoGGjPj6nNQ/kOcSaNQDaEQvIDvvA?=
+ =?us-ascii?Q?rDgi7OFe8tgzDeD0ZOx/v6PyhjyOtCm7TzMbG3DFufwz+ZOFrROD659Jjs5G?=
+ =?us-ascii?Q?zpIDCeIcHJzJcxewNASHpr5lOhac/wWtvZ1DlyUO7L6N59M4MfR90cvqmMaJ?=
+ =?us-ascii?Q?iRhl9X9B/GN4r1XsKnDgs4ulvnJPOuFfSZJMeRAp2WP0gUX5z57a2erF6BqQ?=
+ =?us-ascii?Q?5vGoYIb34Vz5pfVXpTtUoKXa?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4ab720e6-8f3b-427e-38d9-08d931a96de9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2f70d0a6-4c6c-45a3-3b39-08d931a970e5
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:21.4424
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:26.4384
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IhM0dJaOhzjNC4L2LAJQygDdM1+AnJ/YJ1Hg0p4izrX+S6YiZh2px8mO1OE27ClDc1d7XVx+785abL4f/n3/+w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1234
+X-MS-Exchange-CrossTenant-UserPrincipalName: J7sO13E117j22785IvH+3S/A+82cUGQcfHg23hwC0a4jLSqVi8c6XrnawgGqYnbRxgMFeV/ZDqsR/VKt3DiTmg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0499
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,174 +128,217 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/chip.h | 143 ++++++++++++++++++++++++
- 1 file changed, 143 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/chip.h
+ drivers/net/wireless/celeno/cl8k/coredump.c | 190 ++++++++++++++++++++
+ 1 file changed, 190 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/coredump.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/chip.h b/drivers/net/wireless=
-/celeno/cl8k/chip.h
+diff --git a/drivers/net/wireless/celeno/cl8k/coredump.c b/drivers/net/wire=
+less/celeno/cl8k/coredump.c
 new file mode 100644
-index 000000000000..c7548ca92e59
+index 000000000000..bf0313715f6f
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/chip.h
-@@ -0,0 +1,143 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/coredump.c
+@@ -0,0 +1,190 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_CHIP_H
-+#define CL_CHIP_H
-+
-+#include <linux/types.h>
-+#include <linux/spinlock.h>
++#include "coredump.h"
++#include "recovery.h"
++#include "mib.h"
++#include "ela.h"
 +#ifdef CONFIG_CL_PCIE
-+#include <linux/pci.h>
-+#endif
-+#include "calib.h"
-+#include "temperature.h"
 +#include "bus/pci/ipc.h"
-+#include "chip_config.h"
-+
-+/**
-+ * DOC: Chip basics
-+ *
-+ * Each physical device of ours is a separate chip, that is being describe=
-d by
-+ * %cl_chip structure. Each chip may be several (%TCV_MAX) transceivers (b=
-ands),
-+ * which are operating simultaneously and are described via own %ieee80211=
-_hw
-+ * unit (it refers to the private driver via specific pointer, described b=
-y
-+ * %cl_hw). Totally, 3 types of bands are supported - 2.4G/5.2G/6G. Driver
-+ * supports multiple chips (up to %CHIP_MAX). Since the driver can control=
- up
-+ * to %TCV_TOTAL entities, it is important to pass it's pointer to each
-+ * function, that operates somehow with specific band/transceiver.
-+ *
-+ * Chip instance is being created during bus probing procedure and is bein=
-g
-+ * destroyed during bus removal procedure.
-+ *
-+ * Physically, 80xx chips family may have different amount of antennas (4/=
-6/8),
-+ * each of which may not be hardly bounded to the specific band (both band=
-s are
-+ * sharing them and may change antenna combinations in specific circumstan=
-ces).
-+ *
-+ * Each band (transceiver) has own FW, that is being loaded by
-+ * request_firmware() call during chip structure initialization procedure.=
- At
-+ * lower layer each band is associated with own HW die by LMAC and SMAC na=
-mes
-+ * (e.g: 5.2G and 2.4G). Celeno is using XMAC naming when we are referring=
- to any
-+ * of LMAC/SMAC components.
-+ */
-+
-+enum cl_bus_type {
-+       CL_BUS_TYPE_PCI,
-+};
-+
-+struct cl_irq_stats {
-+       unsigned long last_rx;
-+       unsigned long last_tx;
-+       unsigned long last_isr;
-+       u32 last_isr_statuses;
-+       u32 count_irq;
-+       u32 ipc_success;
-+};
-+
-+struct cl_fem_params {
-+       u8 wiring_id;
-+       u16 lut[FEM_TYPE_MAX];
-+       u16 lut_registers[TCV_MAX][FEM_LUT_AMOUNT_PER_MAC];
-+       u16 lut_off_register[TCV_MAX];
-+       u16 lut_off_register_list[FEM_TYPE_MAX];
-+};
-+
-+struct cl_afe_reg {
-+       u32 ctrl36_phy0;
-+       u32 ctrl36_phy1;
-+       u32 ctrl37_phy0;
-+       u32 ctrl37_phy1;
-+};
-+
-+struct cl_ring_indices {
-+       struct cl_ipc_ring_indices *params;
-+       dma_addr_t dma_addr;
-+       struct dma_pool *pool;
-+};
-+
-+struct cl_xmem {
-+       u32 total_used;
-+       u32 size;
-+};
-+
-+struct cl_ela_db {
-+       char *raw_lcu_config;
-+       struct list_head cmd_head;
-+       struct {
-+               u32 adaptations_cnt;
-+               u32 applications_cnt;
-+       } stats;
-+       int error_state;
-+};
-+
-+struct cl_chip {
-+       u8 idx;
-+       enum cl_bus_type bus_type;
-+       bool temperature_configured;
-+       u8 max_antennas;
-+#ifdef CONFIG_CL_PCIE
-+       struct pci_driver pci_drv;
-+       struct pci_dev *pci_dev;
 +#endif
-+       void __iomem *pci_bar0_virt_addr;
-+       struct cl_irq_stats irq_stats;
-+       struct cl_temperature temperature;
-+       struct cl_chip_conf *conf;
-+       struct device *dev;
-+       struct cl_hw *cl_hw_lut[TCV_MAX];
-+       struct cl_hw *cl_hw_tcv0;
-+       struct cl_hw *cl_hw_tcv1;
-+       spinlock_t isr_lock;
-+       spinlock_t spi_lock;
-+       rwlock_t cl_hw_lock;
-+       bool fw_first_tcv;
-+       struct cl_fem_params fem;
-+       struct eeprom *eeprom_cache;
-+       int (*eeprom_read_block)(struct cl_chip *chip, u16 addr, u16 num_of=
-_byte, u8 *data);
-+       int (*eeprom_write_block)(struct cl_chip *chip, u16 addr, u16 num_o=
-f_byte, u8 *data);
-+       struct cl_afe_reg orig_afe_reg;
-+       u8 agc_table_entry;
-+       u8 lna_bypass_mode_set;
-+       struct cl_calib_db calib_db;
-+       struct cl_ela_db ela_db;
-+       struct cl_ring_indices ring_indices;
-+       u8 reg_dbg;
-+       struct cl_xmem xmem_db;
-+};
++#include "chip.h"
++#include "config.h"
 +
-+struct cl_chip *cl_chip_alloc(u8 idx);
-+void cl_chip_dealloc(struct cl_chip *chip);
-+int cl_chip_init(struct cl_chip *chip);
-+void cl_chip_deinit(struct cl_chip *chip);
-+bool cl_chip_is_enabled(struct cl_chip *chip);
-+bool cl_chip_is_both_enabled(struct cl_chip *chip);
-+bool cl_chip_is_tcv_enabled(struct cl_chip *chip, u8 tcv_idx);
-+bool cl_chip_is_tcv0_enabled(struct cl_chip *chip);
-+bool cl_chip_is_tcv1_enabled(struct cl_chip *chip);
-+void cl_chip_set_hw(struct cl_chip *chip, struct cl_hw *cl_hw);
-+void cl_chip_unset_hw(struct cl_chip *chip, struct cl_hw *cl_hw);
-+bool cl_chip_is_8ant(struct cl_chip *chip);
-+bool cl_chip_is_6ant(struct cl_chip *chip);
-+bool cl_chip_is_4ant(struct cl_chip *chip);
-+bool cl_chip_is_6g(struct cl_chip *chip);
++#include "fw/fw_dbg.h"
 +
-+#endif /* CL_CHIP_H */
++#include <linux/devcoredump.h>
++
++static int cl_coredump_generate(struct cl_hw *cl_hw)
++{
++       struct cl_coredump *dump;
++
++       dump =3D cl_fw_dbg_prepare_coredump(cl_hw);
++       if (!dump)
++               return -ENODATA;
++
++       dev_coredumpv(cl_hw->chip->dev, dump, le32_to_cpu(dump->len),
++                     GFP_KERNEL);
++
++       return 0;
++}
++
++static void cl_coredump_done(struct cl_hw *cl_hw)
++{
++       /*
++        * Print MIB counters only if watchdog is disabled,
++        * otherwise the dump of prints effects the recovery
++        */
++       if (cl_hw->conf->ce_fw_watchdog_mode =3D=3D FW_WD_DISABLE)
++               cl_mib_cntrs_dump(cl_hw);
++
++       if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags))
++               return;
++
++       /*
++        * Assuming firmware cannot request next dump before we release the=
+ host buffer
++        *  so no need to sync the following against error_ind()
++        */
++       cl_hw->debugfs.trace_prst =3D false;
++#ifdef CONFIG_CL_PCIE
++       cl_ipc_dbginfobuf_push(cl_hw->ipc_env, cl_hw->dbginfo.dma_addr);
++#endif
++       if (cl_hw->dbginfo.buf->u.dump.general_data.error_type =3D=3D DBG_E=
+RROR_FATAL ||
++           cl_hw->assert_info.restart_needed) {
++               cl_dbg_err(cl_hw, "Starting recovery due to unrecoverable a=
+ssert\n");
++               cl_recovery_start(cl_hw, RECOVERY_UNRECOVERABLE_ASSERT);
++       }
++}
++
++static void cl_coredump_work(struct work_struct *ws)
++{
++       struct cl_debugfs *debugfs =3D container_of(ws, struct cl_debugfs, =
+coredump_work);
++       struct cl_hw *cl_hw =3D container_of(debugfs, struct cl_hw, debugfs=
+);
++       unsigned long flags;
++
++       debugfs->coredump_call_tstamp =3D jiffies;
++
++       cl_coredump_generate(cl_hw);
++       if (cl_ela_is_on(cl_hw->chip)) {
++               cl_ela_lcu_reset(cl_hw->chip);
++               cl_ela_lcu_apply_config(cl_hw->chip);
++       }
++
++       spin_lock_irqsave(&debugfs->coredump_lock, flags);
++       if (!debugfs->unregistering)
++               cl_coredump_done(cl_hw);
++       debugfs->coredump_scheduled =3D false;
++       spin_unlock_irqrestore(&debugfs->coredump_lock, flags);
++}
++
++int cl_coredump_trigger(struct cl_hw *cl_hw)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++       unsigned long flags;
++       unsigned long curr_time =3D jiffies;
++       unsigned int diff_time =3D jiffies_to_msecs(curr_time - debugfs->co=
+redump_call_tstamp);
++
++       if (diff_time < cl_hw->conf->ci_coredump_diff_time_ms) {
++#ifdef CONFIG_CL_PCIE
++               cl_ipc_dbginfobuf_push(cl_hw->ipc_env, cl_hw->dbginfo.dma_a=
+ddr);
++#endif
++               cl_dbg_verbose(cl_hw,
++                              "Skip coredump - time from previous call=3D%=
+u m-sec\n",
++                              diff_time);
++               return -1;
++       }
++
++       spin_lock_irqsave(&debugfs->coredump_lock, flags);
++       if (debugfs->coredump_scheduled) {
++               spin_unlock_irqrestore(&debugfs->coredump_lock, flags);
++               cl_dbg_verbose(cl_hw, ": Already scheduled\n");
++               return -EBUSY;
++       }
++
++       if (debugfs->unregistering) {
++               spin_unlock_irqrestore(&debugfs->coredump_lock, flags);
++               cl_dbg_verbose(cl_hw, ": unregistering\n");
++               return -ENOENT;
++       }
++
++       debugfs->coredump_scheduled =3D true;
++       debugfs->trace_prst =3D true;
++       ktime_get_real_ts64(&cl_hw->dbginfo.trigger_tstamp);
++
++       schedule_work(&debugfs->coredump_work);
++       spin_unlock_irqrestore(&debugfs->coredump_lock, flags);
++
++       return 0;
++}
++
++bool cl_coredump_recovery(struct cl_hw *cl_hw, int reason)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++       unsigned long flags;
++       bool need_restart =3D false;
++
++       spin_lock_irqsave(&debugfs->coredump_lock, flags);
++
++       if (!debugfs->coredump_scheduled) {
++               cl_dbg_trace(cl_hw,
++                            "Starting recovery due to reason:%d\n",
++                            reason);
++               cl_recovery_start(cl_hw, reason);
++       } else {
++               need_restart =3D true;
++       }
++
++       spin_unlock_irqrestore(&debugfs->coredump_lock, flags);
++
++       return need_restart;
++}
++
++bool cl_coredump_is_scheduled(struct cl_hw *cl_hw)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++
++       return debugfs->coredump_scheduled;
++}
++
++void cl_coredump_reset_trace(struct cl_hw *cl_hw)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++
++       debugfs->trace_prst =3D false;
++}
++
++void cl_coredump_init(struct cl_hw *cl_hw, struct dentry *dir_drv)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++
++       debugfs->dir =3D dir_drv;
++       debugfs->unregistering =3D false;
++       debugfs->trace_prst =3D false;
++       debugfs->coredump_scheduled =3D false;
++
++       INIT_WORK(&debugfs->coredump_work, cl_coredump_work);
++
++       spin_lock_init(&debugfs->coredump_lock);
++
++       /*
++        * Initialize coredump_call_tstamp to current time minus
++        * (ci_coredump_diff_time_ms + 1), so that if assert happens immedi=
+ately
++        * coredump will be called.
++        */
++       debugfs->coredump_call_tstamp =3D jiffies -
++               msecs_to_jiffies(cl_hw->conf->ci_coredump_diff_time_ms + 1)=
+;
++}
++
++void cl_coredump_close(struct cl_hw *cl_hw)
++{
++       struct cl_debugfs *debugfs =3D &cl_hw->debugfs;
++
++       flush_work(&debugfs->coredump_work);
++
++       if (!debugfs->dir)
++               return;
++
++       debugfs->unregistering =3D true;
++       debugfs_remove_recursive(debugfs->dir);
++       debugfs->dir =3D NULL;
++}
 --
 2.30.0
 
