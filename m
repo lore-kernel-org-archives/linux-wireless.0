@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CB2EC48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCA1C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 143BB61003
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A24660FDB
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233621AbhFQQJo (ORCPT
+        id S232614AbhFQQJp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:44 -0400
-Received: from mail-eopbgr30089.outbound.protection.outlook.com ([40.107.3.89]:45023
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:09:45 -0400
+Received: from mail-eopbgr140087.outbound.protection.outlook.com ([40.107.14.87]:56046
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233709AbhFQQIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:08:22 -0400
+        id S231597AbhFQQIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:08:30 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=L+J6v5BZN6A4AHHuDk/4Z4d7MLPhizSA2UBMw0EypwE4R+TJFm31tP392Q2ZJ2jQlvBYvpbMOOTDA/iRbwbi2pC6ZJ75+6V4eR2mZ4l9wFNypv3TXV5jhY46RYQ6CVTynKDc9dFodvic7mOgvW+GD0defvQm+2BXobI+X8GaoTp6C8Tnj0Tplk0AlXUDF70JrQDJqIgILF6QMrcumeptvCex17Aa3Dxr6Qq//W7vYklZR5wI+8t3I9qmWUvgFh0FcQcFRi5igIw0h997IiltDLHjnimNpWQSzA5t0johN96pnjEv989L05Yd3ztov7JzWIwt3Mh9RPwY2EKP/5uzRQ==
+ b=jc9TPYgpl3U9ar8LbmmbfaB/FBB9q18DXlQBAYgKaa4x+6vFjoIxh+m3QOiiMtPZOOBcdpOITJsY6ZW1r0DGK5gqMmFLGw4N90RBv12DvYsFcoF/9kry5kyYorhux9+2kvyS4dbLPBJtpAQEeW+caFyRvbCHf6mHuM5jgCPFunO0ezgE9wzCy6aBDefC3Llh1t5fJWPdGDZnSq17U5hdzfvceOITg/S0E7hBuHZbVfwY0oHYfYGCIM7d34cSwFWHTUByLdEeW/MNGxyMIuyr77Iw8Mkm3NjYCGn5mlWzfa376cdDBJfk3H/O/eL7JgfmOXJ1n3gKs0ygvsOgvWiKwA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4RBTjo9b1dFWoy31sFg1UhmToQNnNfK/0WZk7INNUqs=;
- b=jyVOrRbCqQyRx/ZsA7+vEGr1U2r/0TQpkSS+ODtJg5TLnPy7cqDUtn/CQFVhPbdBELBIfeOSLP3UV+tiH17s8GZfpzq9yi0algzYdAiNFd9BsXLX4EkZAEIs6zPrV9dp23pJpbGS2aZz5AeFklRhWqJS3k/0esMdIDCMqKkZCz19EdLbTicoovsXeLe8IRy2KmaOqgxl4e3RiWGedov6B1cJHibBCR6nkQplHzujPMPtMmETVfrFlpQ+7svcJqpaGEZ6dqGi4lSAEDS3cdpDyR6X/ot7fB+2L8x83nMwoar7SjEibZuovU7m9XGh9LMwe6A4V0F1EaIMaBx7gCL89Q==
+ bh=H5rGKCTLV4IQb4W1VaMIuLYr3gioe+/21zdjrN8y1Uo=;
+ b=PpwZt9qVGEYsWW0I0Z0+VwQJM/pbt+E+ozQaBqB3fSk9wasGAWyOj50wDiuO1HhEPfTbnzp64vVJJt0JZnlz+BjsxU/uP3wf71T7+IyOUMidZsHDzZuwAO+sA5MEZYsx6nGoFSXd4u3sZsaTWvM6qO11VOEArB5WBIixVKBFq3zUSUQIPZEk4eCRVdPo/TMpntnhdcWEEl7XENeYauqzJsQTWz4USmCLATearBaAwFpQjkcESqUDL2FcMMn9qQbj/uRRogNpcQcY+HmuLWtV+GilZTuXOrwqwmIUoH2o9DcDzy8pnDWVECbYhnDJSl1g+XcGhQcE753cF97N/183Yg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4RBTjo9b1dFWoy31sFg1UhmToQNnNfK/0WZk7INNUqs=;
- b=ujqkM2wa85E0boeRM+EeIox6UI+3ykxstpBsGmgMmYQrJkjbzQv6eA+kDuSzr0/Y17n87TCWKrQPHoYelMvJz8DqMTMMiZTOYqiszT9YPf7B8MhgxEqlSzdk2DU+5AtcZDA1niDeRFWcyimXNzX7qyHX7pUwVQGn+YouQOZLey8=
+ bh=H5rGKCTLV4IQb4W1VaMIuLYr3gioe+/21zdjrN8y1Uo=;
+ b=bEVkF/iXiOiXa3AmphO0dwlnYDxXVgkM/836LETIwNjfR0C0ezc00JhGjwnw18aJkXV1MEI9yvcq1PHVFjASShA5y+BKAjFMExpZlzVY4jFxBNSdg9/foYxZAm0ieuJgutetAH+YfyG6K7rq3fFRlbVteeiMf0dGj1xkwWWdbpI=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0465.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:43::19) with
+ by AM8P192MB1059.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e3::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:05:50 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:05:49 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:50 +0000
+ 16:05:48 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 141/256] cl8k: add radio.c
-Date:   Thu, 17 Jun 2021 16:00:28 +0000
-Message-Id: <20210617160223.160998-142-viktor.barna@celeno.com>
+Subject: [RFC v1 137/256] cl8k: add power_table.c
+Date:   Thu, 17 Jun 2021 16:00:24 +0000
+Message-Id: <20210617160223.160998-138-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:09 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:04 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6d85a748-a1ac-4e62-51b4-08d931a9ae8f
-X-MS-TrafficTypeDiagnostic: AM0P192MB0465:
+X-MS-Office365-Filtering-Correlation-Id: 0fa7d554-ccc9-4d6f-6bf2-08d931a9abdf
+X-MS-TrafficTypeDiagnostic: AM8P192MB1059:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB0465BC6D3147D724730327DEF60E9@AM0P192MB0465.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:260;
+X-Microsoft-Antispam-PRVS: <AM8P192MB10593EC3DC6A3ED184CB27A8F60E9@AM8P192MB1059.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hM6dYaq60Pzc6u0DpReONe/k6iluASJTo2avTbwD4w6+4W1M5HaQ5ce2y2RXlxojzfe06ubNoYfBinAQwNnEK+tzrcqpMby4a1K1lKdgVSpwFkhxzDA3L0UEb7IqQgFnhCyUyEs9rak9rZAB76yWn1F9kmJs/DdzXL9zLKq0L5sLHF+aid3cPU03s0HPGlMhYRWMVmR+ExgTKxMODMxs02UK1Lh9cuWyaL7fwdpIRewMtD5zkDSrK2fOzS6zL5rN0lPTB3cMZRJ2xqga4WBRmHvp9RsrloKXmCXd1apo0YvZ8PZTBm0/sridSOCFYtjgCc2fRV3FyOWOjmcxjBalimIgu55mCDk15tuuEZRAsi/upJMGnPZK3s6ip7WPODs2Kg3VB0mP12oogCl9LqBWTfBmkmKxfZH29V6kn8chwhGBBTU8rDS9pKsTZfrP+9u78n1rocsTDB9XKxmCfuXVewVTGTBHhSTTedb3sqRd5+CQO8Fn5/vVPE7xbrI94JCYteQZoWOZu0+1/0bikOXQPhVXpX7UNDOxLxTSW3gersmwoBQMeVrZFI92U0chaViiGAVNnLIz+OWhHh5XLVNKvKkfSMFpfbpWz0Ze/HYAx85qN18ENszB4o8yLNTeALAJOagOrvMe387pPXKfxy6Q4RXbkDg6k6BWx/2h/WihBpY6Lz6FmyYEYm72EJrSivQifFIP/0D2/0A30437yAe6nw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(396003)(376002)(136003)(346002)(39850400004)(55236004)(6506007)(4326008)(5660300002)(54906003)(107886003)(8936002)(86362001)(36756003)(6486002)(38100700002)(38350700002)(26005)(8676002)(2906002)(6666004)(186003)(83380400001)(316002)(1076003)(6512007)(2616005)(66946007)(66556008)(52116002)(66476007)(956004)(6916009)(508600001)(16526019)(9686003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: nqiGI2ENGOgqTCzZUJ3UHitQJdi4LspUUXDXtVSSWKHvokNkn57BO/4aFilKtlGzLpKOdfWlzwbZUSIOSnoC1+UBjTH1+A7HWLbZk6rO9wCq8Y1zkjle51pEKjCAbk800Lb3VewcU4ZLtOG2jfWfmenncEk6RbVg7AExVI9OXwNNWlJwmfoEX99j/r6BWs6pXL68eFNIMMZyX0M/wADbRmR6dd9Ba3mCjMmVbIcs+255sJvH2RcOxCpceVCyhJBgAriqlkFAdf/d/GRtOf6QcsZKo9x9tci49iA0maHCsLKmPX9PXGSEBUW8AS+O2IAr+4EtkcCtjTbpmWogXF1viRsdsclh35raLRw7pvr6UAS9purwQne47i0vobbB/55FsofzxBmLkuF2PBghvZmfrhJ1TCvk+FhVPB6pChjuUQ6WLUT8UiNPRJ/iUXTjTb6GGJvHlg2XglSIBJlSmukUj7DEpjrfKgEMu+XOQFXfe4GFQ1wEe9cbpmfILWUCoAamGxffl3Bxj0jLFpUHHlEzkIkFsQbk1icOn8POUJE6Jwq/bDzPl4Jn7zIxTuySJgEXjF/oHkxAjcZ7keZcGou6puzGRv+bR7G8HYp8CWbNP1Yx4q81ZhRpsNvlR5TwPimGBVc04I0RbkjR+eS55kqggeUJ1SDf7How8tvTg53GL4QsVxXHZ52v65QE3UZMSV6Bnkf/PQ5f0ZXP2XY+iMteaA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(26005)(956004)(498600001)(186003)(66556008)(16526019)(107886003)(66946007)(66476007)(8936002)(6916009)(2616005)(1076003)(2906002)(54906003)(6506007)(6666004)(4326008)(38100700002)(38350700002)(83380400001)(9686003)(6512007)(5660300002)(6486002)(86362001)(55236004)(36756003)(30864003)(52116002)(8676002)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iy4wAfZh0RrbXlOXxStbfgyvMF3XGsfD55YX7++zLpGf7U84mimHctKCQAWP?=
- =?us-ascii?Q?1HKZ5Iobe/Y1vRbZzsSm3UUa+VH+jBRPK/DcmvMVrNdE43fzLGp7sLsdfzw6?=
- =?us-ascii?Q?oJvLCqBl3CWbti36fOghObTw4VzKKbgItM0ls35mDLeWBqlQFABADMZF2Tny?=
- =?us-ascii?Q?WOkd6G62K4BhfZ87ubIrEByZUxICKVAVsslFkwJGoCcnuhHCDzWy4EAzfTi6?=
- =?us-ascii?Q?7kyTyFU9Su87gXcbmh9Vg/BJtBOqBQ19SkejTBQLQ6Ku8wZ0seyvlX0MYD5C?=
- =?us-ascii?Q?/m9LDcXWKxda3NuEhlesTIzcDM4rnFiJYVfIgSCMz8RoPfxN1a0/i1mKKqBv?=
- =?us-ascii?Q?ctO/BRTv9VGpMLShgL9rV64KB0jH5hZz6kJqNZu/5fKf3As7SWNogFiabUtA?=
- =?us-ascii?Q?aQ3YcW8NGLLhkM3LBFsWS7Z158p89haQkaaWaKjPTts9ydy8tDdSbXOTHP8p?=
- =?us-ascii?Q?sCcneeIw6oe2gS6hUCC/OuhHkkkYqRfepFEgte2xeaDxLu5A3qfW0O7H4zW2?=
- =?us-ascii?Q?eAxTfG51Nl3SXvMd2bLKBItBIN4hPcs8xJevgQyJGNN19OFm3aANIS9bPdb8?=
- =?us-ascii?Q?ea33yZqObGYkrHSAL1Ypp+B6jax+u8dmu1GDUzvCUaj8d5dh7PDnJb7sjEnH?=
- =?us-ascii?Q?bSK1Cu0//EnSrjTaBVBbjTMUPdv6jIRIdRNuU1ketGU1LHC4GNjDR4UK0+FD?=
- =?us-ascii?Q?mJBMDiNG8PBw/2aI04ftshTZkPPBSzqWDDu7SWQ8V5lCY2fWDCJHdHQ1X7C5?=
- =?us-ascii?Q?LkM0CZF8mGqGitKFgoGUiCJ9E+BuGHIiTK7ASH46pXZbKR1lbo2aqVGd726C?=
- =?us-ascii?Q?gzr8/0EWhkD/mHpq1/4tLWWSbugd2SreK5ue/ENTriYIl9bTzbwh7jxEb5se?=
- =?us-ascii?Q?Vf58UlBDEyC7gxEPWixpTfRsMPlei4+aaq2X8FOpJ325Z+68idIsTaCbH/zf?=
- =?us-ascii?Q?V0aeO8b7CbEriLc9V9RLxuLt6smLCGAu99yKcSWnU9ueBKqqg5IwrmldJ26F?=
- =?us-ascii?Q?LTAohhX+RbHxrvILGJJ48wipJ4VifoCniYtdeZgPbqqFkXlympuMNbE2ss7s?=
- =?us-ascii?Q?5juoJdMbxuZEsQMIhQskcdA2r5iJf4kA+6mAtZxB0HKv3eXeYBLv09vq0toI?=
- =?us-ascii?Q?d5+j5u/Nrrq576pCpDyYRJo+RUeC8iYa/uI5m3VegWYuT/uiXBPQwX6eq3cU?=
- =?us-ascii?Q?4n0LVmAyMIkhT4uDNozRGcbbsRtLJ2keGEkEOekaTj8a/h4ov50d6ndz/+NB?=
- =?us-ascii?Q?ceoNLip5ApqM7GH+NVbDJfqn+90QxejTPTqGQ1q/7eXfnn4anbPrEWLBoEJB?=
- =?us-ascii?Q?V0FXz/nDv8DOBhBW0cvA1gIV?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?3LtRPNPUuTtzTWMBQ3eCs7PC1am8YtmZl72yQWLSIZQl4ZiiaO0wvds3a4rX?=
+ =?us-ascii?Q?gnlzsVF5H6TKr2ZKvXHWgAR8GGSnrUj1cWGyVgcUxy+q1tlw8iaPHn/7ZH6g?=
+ =?us-ascii?Q?O3c7sqHfLuMj4MuSvIvI/5mcKD42OcI297hscXMZhNETuZj/WyKqIQOralfC?=
+ =?us-ascii?Q?u1NQQ9ePT7iNbcmztia8hnvmBjxlum14zAHk08Uq/DtCeKoSnUH2Opdescfc?=
+ =?us-ascii?Q?bOeETvsmbZoYKkrziwsVAhWOCsXFzxm+wkP+jfTpVZCf5rXYLGRp37T2XzBI?=
+ =?us-ascii?Q?8W+2NV34rTEMTvHrEkicYl4X2W2lCtWZrLabNu6BaQD+oHKKPQSEF47sQed9?=
+ =?us-ascii?Q?72Ry4TKbLXmGqxAvcqzdPiR8J0vM1cNNmn/40rCzwQDALAW3fDv1/nlXQSFn?=
+ =?us-ascii?Q?taIE6OAo7/Quec/qALzZ0PI+lXbKdaAfBChGQYHRTIvfGnU8iUMU276j/c3P?=
+ =?us-ascii?Q?Vm1scqdo4fVYcCQhGMkzjzXRi+aayRLAz5FoywbKMcOghL4Cy9ezMAxnL2vg?=
+ =?us-ascii?Q?QX40OvrFpIlKLSGMQnVg/hf2rwzN4bZtlvZk9aAkh7BejPkFkfpyyVb9yD4B?=
+ =?us-ascii?Q?f0Vl10IHHTNJH+0la5ZiePYwfCUflYeuP/mqyKRV+ofbzJ0demP7F4qWyC9W?=
+ =?us-ascii?Q?ki7A4CPeNKz0ObXFgFGNrp6z7ivIIqOfr32KH2uTjyntJH0Fs7z3VcAQ18dh?=
+ =?us-ascii?Q?dYr1HsJ1kPrqoucCkYA7r7U7TiqWq9HzwFrgke4HpHQSzA8bfK4R8pHv89iF?=
+ =?us-ascii?Q?0uT6I9t/UJyK91vej6B3jDm6dk3ZOSVwGRfPnab/JW9pzTiHK0rCU7BvFG4R?=
+ =?us-ascii?Q?4g9sXr3kcJcP4MPuAd2jVPWYLI8QEmMLPH+vKvs9D7LKCbnJkGvdSK0DZdti?=
+ =?us-ascii?Q?0WpA/rGm75WVujLSFXtuLKDBj6U6svhSlBUuJdrUFi6PUOShe1Wq7SvOccGy?=
+ =?us-ascii?Q?DoKODh67kOcyz+9A/Thap033aBlM8MKwsZoQETELAq66fW+c47tmhX6ppSdz?=
+ =?us-ascii?Q?NONXGO30UwLRrPxxv93X9tB184atGjcO4dO7feVHNJkedCiAE9a6NRYcQRMi?=
+ =?us-ascii?Q?qKj4X+2fDpUyuElqDK/ww6fF/PAV0qYCtamIqN49K8tyviuBhGKO1AyWd139?=
+ =?us-ascii?Q?EJUgtx0JC+YFqNuOucptWM5ydA/wYZNm0eTKYimoEYjkWqjcZTUqV9zJnOJ3?=
+ =?us-ascii?Q?MyBgtcqs3F4KzLJg9Dwg1msdU+ERw2pXk1odmL9xZznRBoAXGuvo5mc/o47l?=
+ =?us-ascii?Q?vwstIDhyaam4m1Apk2Y9Qx0a+dFdA2ptuDDzWJCsnFyaxgVEISVXDCloTd3Q?=
+ =?us-ascii?Q?LUdvRSdgL9K8WNq7AJ2F+9VO?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6d85a748-a1ac-4e62-51b4-08d931a9ae8f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0fa7d554-ccc9-4d6f-6bf2-08d931a9abdf
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:09.9100
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:05.4168
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Ju3Souc8cH8v/t6ZxVM96/qTmKOUQ3AvYDS66iU7bwtsbC2Qyxtd+3fEZ5gIQnybPW7z7Wv8xBwYpIEVGitw9A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0465
+X-MS-Exchange-CrossTenant-UserPrincipalName: F4Af5ttZNCBdWi+tAEhzsY615OzuAQiVMscElAdQitkJ/6okeV6brx4n0z3P9O4ADnpyL3fcO67gJzyl7X2r5g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1059
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,192 +128,247 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/radio.c | 171 +++++++++++++++++++++++
- 1 file changed, 171 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/radio.c
+ .../net/wireless/celeno/cl8k/power_table.c    | 218 ++++++++++++++++++
+ 1 file changed, 218 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/power_table.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/radio.c b/drivers/net/wireles=
-s/celeno/cl8k/radio.c
+diff --git a/drivers/net/wireless/celeno/cl8k/power_table.c b/drivers/net/w=
+ireless/celeno/cl8k/power_table.c
 new file mode 100644
-index 000000000000..165d90332254
+index 000000000000..27cbe5596af0
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/radio.c
-@@ -0,0 +1,171 @@
++++ b/drivers/net/wireless/celeno/cl8k/power_table.c
+@@ -0,0 +1,218 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include <linux/kthread.h>
-+#include <linux/jiffies.h>
-+#include "radio.h"
-+#include "vendor_cmd.h"
-+#include "fw/msg_tx.h"
-+#include "vif.h"
-+#include "sta.h"
++#include "power_table.h"
 +#include "chip.h"
++#include "e2p.h"
++#include "debug.h"
++#include "band.h"
 +
-+static int cl_radio_off_kthread(void *arg)
++/*
++ * How to fill power table:
++ * Set 81 values in the range of 100 - 180 according to the Excel file.
++ * 100 corresponds to power of -10dBm (Pout Ant).
++ * 180 corresponds to power of +30dBm (Pout Ant).
++ * All values between 0 - 99 should be same as the value of 100.
++ * All values between 181 - 255 should be same as the value of 180.
++ */
++
++static const u8 power_to_powerword_conv_table_id_0[NUM_POWER_WORDS] =3D {
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 0 - 7 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 8 - 15 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 16 - 23 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 24 - 31 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 32 - 39 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 40 - 47 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 48 - 55 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 56 - 63 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 64 - 71 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 72 - 79 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 80 - 87 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 88 - 95 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0F, 0x10, 0x11, /* 96 - 103 */
++       0x12, 0x13, 0x14, 0x40, 0x41, 0x42, 0x43, 0x44, /* 104 - 111 */
++       0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, /* 112 - 119 */
++       0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, /* 120 - 127 */
++       0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, /* 128 - 135 */
++       0x5D, 0x5E, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, /* 136 - 143 */
++       0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, /* 144 - 151 */
++       0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, /* 152 - 159 */
++       0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, /* 160 - 167 */
++       0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xF9, 0xFA, 0xFB, /* 168 - 175 */
++       0xFC, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 176 - 183 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 184 - 191 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 192 - 199 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 200 - 207 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 208 - 215 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 216 - 223 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 224 - 231 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 232 - 239 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, /* 240 - 247 */
++       0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD, 0xFD  /* 248 - 255 */
++};
++
++static const u8 power_to_powerword_conv_table_id_1[NUM_POWER_WORDS] =3D {
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 0 - 7 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 8 - 15 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 16 - 23 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 24 - 31 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 32 - 39 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 40 - 47 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 48 - 55 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 56 - 63 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 64 - 71 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 72 - 79 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 80 - 87 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, /* 88 - 95 */
++       0x03, 0x03, 0x03, 0x03, 0x03, 0x04, 0x05, 0x06, /* 96 - 103 */
++       0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, /* 104 - 111 */
++       0x0F, 0x10, 0x11, 0x12, 0x40, 0x41, 0x42, 0x43, /* 112 - 119 */
++       0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, /* 120 - 127 */
++       0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, /* 128 - 135 */
++       0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x5B, /* 136 - 143 */
++       0x5C, 0x5D, 0x5E, 0x60, 0x61, 0x62, 0x63, 0x64, /* 144 - 151 */
++       0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, /* 152 - 159 */
++       0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, /* 160 - 167 */
++       0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, /* 168 - 175 */
++       0x7D, 0xB9, 0xBA, 0xBB, 0xBC, 0xBC, 0xBC, 0xBC, /* 176 - 183 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 184 - 191 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 192 - 199 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 200 - 207 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 208 - 215 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 216 - 223 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 224 - 231 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 232 - 239 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, /* 240 - 247 */
++       0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC, 0xBC  /* 248 - 255 */
++};
++
++static const u8 power_to_powerword_conv_table_id_2[NUM_POWER_WORDS] =3D {
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 0 - 7 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 8 - 15 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 16 - 23 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 24 - 31 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 32 - 39 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 40 - 47 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 48 - 55 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 56 - 63 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 64 - 71 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 72 - 79 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 80 - 87 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, /* 88 - 95 */
++       0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0F, 0x10, 0x11, /* 96 - 103 */
++       0x12, 0x13, 0x14, 0x40, 0x41, 0x42, 0x43, 0x44, /* 104 - 111 */
++       0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, /* 112 - 119 */
++       0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, /* 120 - 127 */
++       0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, /* 128 - 135 */
++       0x5D, 0x5E, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, /* 136 - 143 */
++       0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, /* 144 - 151 */
++       0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, /* 152 - 159 */
++       0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, /* 160 - 167 */
++       0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBD, 0xBD, 0xBD, /* 168 - 175 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 176 - 183 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 184 - 191 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 192 - 199 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 200 - 207 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 208 - 215 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 216 - 223 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 224 - 231 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 232 - 239 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, /* 240 - 247 */
++       0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD, 0xBD  /* 248 - 255 */
++};
++
++static u8 cl_power_table_read(struct cl_hw *cl_hw)
 +{
-+       struct cl_hw *cl_hw =3D (struct cl_hw *)arg;
-+       struct cl_vif *cl_vif;
++       u8 pwr_table_id =3D 0;
 +
-+       cl_sta_disassociate_all(cl_hw);
++       if (cl_e2p_read(cl_hw->chip, &pwr_table_id, 1, ADDR_GEN_PWR_TABLE_I=
+D + cl_hw->tcv_idx))
++               return U8_MAX;
 +
-+       cl_dbg_verbose(cl_hw, "Waiting for stations to disconnect\n");
-+
-+       if (wait_event_timeout(cl_hw->radio_wait_queue,
-+                              cl_sta_num_bh(cl_hw) =3D=3D 0,
-+                              msecs_to_jiffies(5000)) =3D=3D 0) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Failed to disconnect stations. %u stations =
-still remaining\n",
-+                              cl_sta_num_bh(cl_hw));
-+               return 1;
-+       }
-+
-+       cl_dbg_trace(cl_hw, "Stopping queues ...\n");
-+
-+       list_for_each_entry(cl_vif, &cl_hw->vif_db.head, list) {
-+               cl_vif->tx_en =3D false;
-+               cl_dbg_verbose(cl_hw, "Radio OFF vif_index =3D %u\n",
-+                              cl_vif->vif_index);
-+       }
-+
-+       cl_msg_tx_set_idle(cl_hw, MAC_IDLE_SYNC);
-+
-+       cl_dbg_trace(cl_hw, "Radio shut down successfully\n");
-+
-+       cl_hw->radio_status =3D RADIO_STATUS_OFF;
-+       atomic_set(&cl_hw->radio_lock, 0);
-+
-+       return 0;
++       return pwr_table_id;
 +}
 +
-+static int cl_radio_off(struct cl_hw *cl_hw)
++static int cl_power_table_fill(struct cl_hw *cl_hw)
 +{
-+       struct task_struct *k;
++       u8 pwr_table_id =3D cl_power_table_read(cl_hw);
 +
-+       if (cl_hw->radio_status !=3D RADIO_STATUS_ON ||
-+           atomic_xchg(&cl_hw->radio_lock, 1))
-+               return 1;
++       switch (pwr_table_id) {
++       case 0:
++               if (cl_band_is_5g(cl_hw)) {
++                       memcpy(cl_hw->power_table_info.data->conv_table,
++                              power_to_powerword_conv_table_id_0, NUM_POWE=
+R_WORDS);
++                       cl_hw->tx_power_version =3D 5;
++               } else {
++                       CL_DBG_ERROR(cl_hw, "Power table ID (%u) is valid f=
+or 5g only\n",
++                                    pwr_table_id);
 +
-+       cl_hw->radio_status =3D RADIO_STATUS_GOING_DOWN;
-+
-+       /* Relegate the job to a kthread to free the system call. */
-+       k =3D kthread_run(cl_radio_off_kthread, cl_hw, "cl_radio_off_kthrea=
-d");
-+       if (IS_ERR(k))
-+               cl_dbg_verbose(cl_hw,
-+                              "Error: failed to run cl_radio_off_kthread\n=
-");
-+       return 0;
-+}
-+
-+static void _cl_radio_on(struct cl_hw *cl_hw)
-+{
-+       struct cl_vif *cl_vif;
-+
-+       list_for_each_entry(cl_vif, &cl_hw->vif_db.head, list) {
-+               if (cl_vif->vif->type =3D=3D NL80211_IFTYPE_AP) {
-+                       if (cl_hw->iface_conf =3D=3D CL_IFCONF_REPEATER &&
-+                           !test_bit(CL_DEV_REPEATER, &cl_hw->drv_flags))
-+                               continue;
-+                       if (cl_hw->iface_conf =3D=3D CL_IFCONF_MESH_AP &&
-+                           !test_bit(CL_DEV_MESH_AP, &cl_hw->drv_flags))
-+                               continue;
++                       if (!cl_hw->chip->conf->ce_production_mode)
++                               return -1;
 +               }
++               break;
++       case 1:
++               if (cl_band_is_24g(cl_hw)) {
++                       memcpy(cl_hw->power_table_info.data->conv_table,
++                              power_to_powerword_conv_table_id_1, NUM_POWE=
+R_WORDS);
++                       cl_hw->tx_power_version =3D 25;
++               } else {
++                       CL_DBG_ERROR(cl_hw, "Power table ID (%u) is valid f=
+or 2.4g only\n",
++                                    pwr_table_id);
 +
-+               cl_vif->tx_en =3D true;
-+               cl_dbg_verbose(cl_hw, "Radio ON vif=3D%u\n", cl_vif->vif_in=
-dex);
++                       if (!cl_hw->chip->conf->ce_production_mode)
++                               return -1;
++               }
++               break;
++       case 2:
++               if (cl_band_is_6g(cl_hw)) {
++                       memcpy(cl_hw->power_table_info.data->conv_table,
++                              power_to_powerword_conv_table_id_2, NUM_POWE=
+R_WORDS);
++                       cl_hw->tx_power_version =3D 1;
++               } else {
++                       CL_DBG_ERROR(cl_hw, "Power table ID (%u) is valid f=
+or 6g only\n",
++                                    pwr_table_id);
++
++                       if (!cl_hw->chip->conf->ce_production_mode)
++                               return -1;
++               }
++               break;
++       default:
++               CL_DBG_ERROR(cl_hw, "Power table ID is not configured in EE=
+PROM\n");
++
++               if (!cl_hw->chip->conf->ce_production_mode)
++                       return -1;
 +       }
 +
-+       cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE);
-+
-+       cl_dbg_verbose(cl_hw, "Radio has been started\n");
-+
-+       cl_hw->radio_status =3D RADIO_STATUS_ON;
-+       atomic_set(&cl_hw->radio_lock, 0);
-+}
-+
-+int cl_radio_on(struct cl_hw *cl_hw)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       struct cl_hw *cl_hw_other =3D cl_hw_other_tcv(cl_hw);
-+       bool other_tcv_radio_on_needed =3D false;
-+
-+       if (cl_hw->radio_status !=3D RADIO_STATUS_OFF ||
-+           atomic_xchg(&cl_hw->radio_lock, 1))
-+               return 1;
-+
-+       cl_hw->calib_ready =3D true;
-+
-+       if (cl_chip_is_both_enabled(chip) && cl_hw_other->conf->ce_radio_on=
-) {
-+               if (cl_hw_other->calib_ready)
-+                       other_tcv_radio_on_needed =3D true;
-+               else
-+                       return 1;
-+       }
-+
-+       _cl_radio_on(cl_hw);
-+
-+       if (other_tcv_radio_on_needed)
-+               _cl_radio_on(cl_hw_other);
-+
-+       if (chip->conf->ce_calib_scan_en && !chip->calib_db.scan_complete)
-+               cl_calib_start_work(cl_hw);
++       cl_dbg_verbose(cl_hw, "Power table ID %u (V%u)\n", pwr_table_id, cl=
+_hw->tx_power_version);
 +
 +       return 0;
 +}
 +
-+void cl_radio_off_chip(struct cl_chip *chip)
++int cl_power_table_alloc(struct cl_hw *cl_hw)
 +{
-+       if (cl_chip_is_tcv0_enabled(chip))
-+               cl_radio_off(chip->cl_hw_tcv0);
++       struct cl_power_table_data *buf =3D NULL;
++       u32 len =3D sizeof(struct cl_power_table_data);
++       dma_addr_t phys_dma_addr;
 +
-+       if (cl_chip_is_tcv1_enabled(chip))
-+               cl_radio_off(chip->cl_hw_tcv1);
++       buf =3D dma_alloc_coherent(cl_hw->chip->dev, len, &phys_dma_addr, G=
+FP_KERNEL);
++
++       if (!buf)
++               return -1;
++
++       cl_hw->power_table_info.data =3D buf;
++       cl_hw->power_table_info.dma_addr =3D cpu_to_le32(phys_dma_addr);
++
++       return cl_power_table_fill(cl_hw);
 +}
 +
-+void cl_radio_on_chip(struct cl_chip *chip)
++void cl_power_table_free(struct cl_hw *cl_hw)
 +{
-+       if (cl_chip_is_tcv0_enabled(chip))
-+               cl_radio_on(chip->cl_hw_tcv0);
++       struct cl_power_table_info *power_table_info =3D &cl_hw->power_tabl=
+e_info;
++       u32 len =3D sizeof(struct cl_power_table_data);
++       dma_addr_t phys_dma_addr =3D le32_to_cpu(power_table_info->dma_addr=
+);
 +
-+       if (cl_chip_is_tcv1_enabled(chip))
-+               cl_radio_on(chip->cl_hw_tcv1);
-+}
++       if (!power_table_info->data)
++               return;
 +
-+bool cl_radio_is_off(struct cl_hw *cl_hw)
-+{
-+       return cl_hw->radio_status =3D=3D RADIO_STATUS_OFF;
-+}
-+
-+bool cl_radio_is_on(struct cl_hw *cl_hw)
-+{
-+       return cl_hw->radio_status =3D=3D RADIO_STATUS_ON;
-+}
-+
-+bool cl_radio_is_going_down(struct cl_hw *cl_hw)
-+{
-+       return cl_hw->radio_status =3D=3D RADIO_STATUS_GOING_DOWN;
-+}
-+
-+int cl_radio_cli(struct cl_hw *cl_hw, bool radio_on)
-+{
-+       cl_hw->conf->ce_radio_on =3D radio_on;
-+
-+       if (radio_on)
-+               cl_radio_on(cl_hw);
-+       else
-+               cl_radio_off(cl_hw);
-+
-+       return 0;
-+}
-+
-+void cl_radio_off_wake_up(struct cl_hw *cl_hw)
-+{
-+       wake_up(&cl_hw->radio_wait_queue);
++       dma_free_coherent(cl_hw->chip->dev, len, (void *)power_table_info->=
+data, phys_dma_addr);
++       power_table_info->data =3D NULL;
 +}
 --
 2.30.0
