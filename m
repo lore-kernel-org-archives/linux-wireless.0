@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C020AC2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F15C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB2A461407
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF0C61407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231572AbhFQQKo (ORCPT
+        id S232883AbhFQQKr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:10:44 -0400
-Received: from mail-eopbgr80055.outbound.protection.outlook.com ([40.107.8.55]:64930
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:10:47 -0400
+Received: from mail-eopbgr20072.outbound.protection.outlook.com ([40.107.2.72]:4749
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233819AbhFQQJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:48 -0400
+        id S232598AbhFQQJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:09:50 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mMu+cTVRku/H2hUwGQXV/6n06cZD2hz1tInl5SBbU05JPTcdGjg1gjw/PMZfUS3AOUlm0ueWtTtGqjWn+Hg/7U0dcwhwKB3+kbddpTnyfAW1MjeKQkkYW1txKKzaCRmL5yKZNVGksptzfy4qMm+aFWLL+Bgi5PzfdGdSx4xiWmT+LQVs47ZBcT1OLRlr6Zf8xaiHzh9X9Dy1Wp0Ajw8BpQHzKb+rTitDxZILFEqNuCX2DP2TtqL3mHm4w/YOvLKsOQiN/eoCbBFFbCqKRMnoBNglsVV37nIvUgvTPOFtq2BoY1ri56ulvzV1FRlczfse+id1j8W6dL6FEhBSJIISTw==
+ b=Z3ydCt97uywPWAG8yNkBDHw8V0XTxODXqgaIqw2tp9y876HKMYr23OlcYyioqxrZZxkBQxDbdmChixfqQGWiIycZ9/2UbSGLLXEnk7WFPB08sImqYJVB2WiV6KyQPZLY4cCS+aqjp149cbqVjTXuAgz+Gbd9LiMd9dtlXjUQK1eVm85+zdKmcX/ZdqTO9gQtBWsrJZuqnChOTbDag+Zg1T1lQnrIbbCPbAphymZU1NQY5fGNGD5FyfpaSgBp07e7lbPCij+imSioRXHM25sjZwbw87Q7jGOmaETDpdXxHz9run5I1dIAGkUs0PRqlccc1Mw0YSJtkgA8dKL8Cva0Zw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=haJcCw9+T4a0a03XVzIyVIsNfv/DEhVzPSNaMoxMSL8=;
- b=PoiNhjNnuuc4kFLvHhKTU9DuxhT7e5E02yNV5o7VGRSJxMZa9NZNuYCGw39p6CDtyqFsmi1J0QAU8zK2dI7qap+LkEmD6FxA3H8ZLQCqMrHo2YTX+qxINRLUA2nsfU4lLAkDDTAlHQo7Bc7Gz73LJ+TsjYbR0J914XdAdPCOrSSaPqKoafaOX/DywLcBQp7FVfeFQ1P4lWIm2FPPUOkDno0fIORzqfsZg4tXIdrO6qMNq5WqyOsZjJke/i88y7N/Z2AdmT4CN+hKLht5JmLCGgEBnyjoX4qgeKnRI2W0w/2FiOJaeb4ywLTkNwQuXAp37r/80on6OyDipOe4DFa8Ow==
+ bh=VnbiDJUrS0osfSRKsPpfFxKgFQHWSOksUpZOemyPrxc=;
+ b=KlZfyI7E6YyGhh8DRh/BPhMeOouJXpg/Ut1pfF9HX9PKQvNycM8H10SS/k8JildkdF0W54GMUQz5TntTJ+NksmMStItMXYwTokITZ8StO6eI7G7oFkIBzh5NKYAfprkEm2csa/TCL/UNsMvIMwY8YQZDJFXD3+jzwKNr4JqeiANgj0gAzun3+OzH2dbq6EOTvN6O24kV/ZdG8T6it5pi4tsQLp4SWUvQNm7jYbCz0jteaSsAlyOQzu3IQ4NERj/T9OmhIogF2vTmz4YJU2XgX+nNrlTGcgwObiYPKSVix7JeOBS2yN2gXPzS9s+JQRIGRHA5+kT99rZwX4kcKjxmjg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=haJcCw9+T4a0a03XVzIyVIsNfv/DEhVzPSNaMoxMSL8=;
- b=wS8ils0QwI8OOohkmTnqF2LUrzDx0spsuLfY7ygaJfgLFbmv6S+G80m1bNgBvMBjQ53LKlV0MqNMIQJCC1Ur+4M9ogvHtS3oBR+w+EIar2GIteq07w2h5rnIOOBf7ADpjbtNxthbWxJqN/e8sKuh8ZXrc+z1Darmor5iv5SHLqE=
+ bh=VnbiDJUrS0osfSRKsPpfFxKgFQHWSOksUpZOemyPrxc=;
+ b=uxtrQbcYQC4jfI/32fZ7l6RUEtCM1zj4ffah/fJdlmMSAURYZUKOV38TcTou/me28On8xhhkm/ylZMkkrCwjLlWOjKIIaNLLm3Mk1ZomMKKzUlnPcv426mDWgedw1bCoji1zEhWVRKhf85lr5MlcTC0Ar5V4mj/BPDbCzRdJbVg=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB0981.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1fb::24) with
+ by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:06:36 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:06:27 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:36 +0000
+ 16:06:27 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 177/256] cl8k: add rx/rx_filter.h
-Date:   Thu, 17 Jun 2021 16:01:04 +0000
-Message-Id: <20210617160223.160998-178-viktor.barna@celeno.com>
+Subject: [RFC v1 160/256] cl8k: add reg/reg_mac_hw_mu.h
+Date:   Thu, 17 Jun 2021 16:00:47 +0000
+Message-Id: <20210617160223.160998-161-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:48 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:28 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 53c0cea6-ed1a-4531-3ef2-08d931a9c614
-X-MS-TrafficTypeDiagnostic: AM9P192MB0981:
+X-MS-Office365-Filtering-Correlation-Id: 0ee6aa56-85e9-4722-1f6f-08d931a9ba49
+X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB0981E398CC2ABBCD50D2BD87F60E9@AM9P192MB0981.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM9P192MB11878A7BA36F78B949715B72F60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4125;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7UBnQFfrtdqSau0UwWKWVrw0mOQja8N3HrZc6a4iEe5udBIYMRogu4R2e420ZVhae7xlamnCzcWdB5mgfGKPXlSCPGE2DVVW5AwvJ6U8sKZMod6aE38CGd2I2Wo2LxNlvE7Mx4+NkQSNJaigEjf1aA4TCYXKtRkGWAGa/H4snT/5KoTMhoPogFhbhSmRR1zZQhjvCwvzsApKEezJ7vl74TD+/5L3FuXUdviRXTidB7AZvMUbqbvUmXngkD9NCiaJbbnTDyb+VCxtOa1OoSR7QhcYpkMFtNI+d3+bGREgCnvXI2mNYdYvd3Ps29ZP5PWr2qT8JrMZ52o3IPdDoGd3dYzg8CK9lkSbnT0aJksa7kjBaZdR12LLniZezZLBoHYSRhWZeIvWLHMH1s38Hz6rbLFOe4Rd07THULZYOlQaMaV+Wz1VHDZ83MWl5Dk77NdpmQlc7jGHV6RgedA77VQNPLOFw5T3TyVEqD798Y9DX5O30WaWTfy6UAgKP+ksNqWRLy6qHXOBCnVvhBa0mz4RRDitzUEr0BJbNeOKR0JpLRpr3yrXvvitVFEhqNHYyh2kWYJ19WnjM/0bN753k6AjpVBvCW1q5BhFM1W38/O0jwGKnpJPcaJWZDackVTKCslNDmwMi5oLEZWXwTT+e81C5/kCUTkOILxkSvi/+w6WG2oYm7Y83QCHopzXTYFLiWgTADa6O9V1Dg9QYOUFFFIJNw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(376002)(396003)(136003)(366004)(39850400004)(86362001)(5660300002)(9686003)(54906003)(107886003)(6666004)(1076003)(2906002)(478600001)(6512007)(26005)(2616005)(38350700002)(16526019)(55236004)(38100700002)(6506007)(4326008)(8676002)(66946007)(186003)(66476007)(66556008)(956004)(83380400001)(6916009)(8936002)(36756003)(52116002)(6486002)(316002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 019K4zjC3oRGCdXRQOKGUkMSMIlmjslVY27gHTd3yuR4zkmTEA91Z3dEmpyrHlXnJiNUo7L/hLg/TcUU0UwvKML6/3NkG4hZMNf2Y6cM9dfCHI4x/YDL9/lAmYJoBHYkGbeLNuvrNVCW6D+nTh2kaIkg9OGBDPp1Y5UeNJN5VMKPZr1B03xqJvV2eOMSxxrQiCkaBxX1aV0FIA5ETUc8Vh9XHkDXPQ0NCkNwCAv8jm0/8RJxHB5PeXEaQQsCyA9WjOI5BPvwf7opQjUBQ/bhvF7a5YFt+NxBtXf2VJp9nERwUYcdzbO74IusTOJ7fEg5jbcPPH8F4/ej8D9CBxJFA6mAs/i9OloIzYTyCIfYxMa/R2oqlf89wuv3ClBn+bvQNBsgcXfj0AXP5V4vpB9Guzmo1+If1BIyE9JAuZXNi+pyYzpOrPN5b2CJPJ560Wi8tRgk+7mYPi+R3viRBU3+rC0fCozvs6zZH+Ki2Fb38TB9tAewaLslBTeFGToa4DKMrSilEQ8RMGJJ4CUX6dm6hFqm5CEZyaBSp9FtdjdlgFeZHN09ohQbcR3L5jC3eFAj4I1LSFbLrK4A3EGYzvTNWNtXSgFEWhmxgBsfid51mtf0AZ83ph5kzZ5lcpHILoq3QHUB95dJYYQEC1c5nTjXf+kFzQNKmnkTg4AD68geX5YOeYCFn+U0qTq+kjJlPzKc7Vjw+jgB57hNsOo3c1P2mQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C0HMM4fXxoVGblFZiMLFfluVIUCaOnefMVUyxrPjxWwzx90M90OLddgd7mRN?=
- =?us-ascii?Q?RM3Md8s+97b1koPRFOsqPWcJ0K2L7OyPkPXC+4eWAd3o50G5CWlj2KWAkBWs?=
- =?us-ascii?Q?aI16IDrT0jVuSErBbvmqXTN2EkpUyhmPZAOJxW/iMwpGTlUVC4D8uqmmpTyx?=
- =?us-ascii?Q?Guc4gEbPHStb2OsjegMsJmG0lXRVy7QBbapc9pcvQSe3jLm1kWYcjFqHFpGF?=
- =?us-ascii?Q?2cstzaAoeGHcIqLkTQyG0C8O605AEBPV4994GSIwIi+2Cxft0dJ9cGTIVAFY?=
- =?us-ascii?Q?b2QPT5+APAGMsggYwOSGp74Ctv7DcrjkvrNowQUYe6tbhbNbHELIHe1XF4hq?=
- =?us-ascii?Q?dxqnbdX6mR+Tpt5fSNvfCP7PKM15nXqyc2jonNItMNudoeJPOnyLZsU2U/wg?=
- =?us-ascii?Q?f0F3Iz75TfxABJ2t8Z5u4MBfRGfTawe0v2HyoEYVPPWVZwD7DImICs+yLRIt?=
- =?us-ascii?Q?rVLl9LurjBJsfAeXugVp3ejcVpSFyDabhOBYy/L+1MFU7kRPS3Nk99+ahah9?=
- =?us-ascii?Q?w1RAfKli+8o3qYri+oMATm3/sp8USZdwNhQfCsfQhmryPQo/wnzOOHpuFRgH?=
- =?us-ascii?Q?5MqvGg3DLLtz2RHVIa8ecggv02iWznad+psmlnnk0HdgD8X7IapMsGAZr/80?=
- =?us-ascii?Q?pQkMHjvxlqH0ToeIXG12DelQl/9f+qdR0ZGZ1cEzw9MKQJdOTiAY7+fJzID1?=
- =?us-ascii?Q?ZDje5HbiCMirbYkn81g50jaDZh8gFc5/YSBDkFzyX2AVm47DXFNMqV9cneZK?=
- =?us-ascii?Q?nF+TF4hjQOVP2p1IzyJJ43HRMwNa67V9Aqmk4iV1Lt0Xts0XYlOkQ7KtyoJU?=
- =?us-ascii?Q?1vOR4MTiGoBIS5+0tYvZZseos39L1Pq3Wy3nELExQHuGOX75pKSnjdPggUl4?=
- =?us-ascii?Q?JXbIEJUuiFepMZi54RSDyW+2mt2GPP9EuMMNauxGS57yApPoTx65mTdk0BR1?=
- =?us-ascii?Q?w5TXVaRUcuFYGPVPS/9jVknNcEcyL/PdciqNpWNjcKmWi7AB61Lv2B1MNJI4?=
- =?us-ascii?Q?7Rc6cJnK93Do4tzbmWeRLXRrQ/1KJn8X23io3O3IubPO+tYMe9rFZPOfDssB?=
- =?us-ascii?Q?z1EoTUHWT3pYcdP5tQInXFYqinWAChghERKl7K2E33FdtCszb5efefym5srx?=
- =?us-ascii?Q?38fBHHSiP1/lSCLKgrAqh/+35gHiOtI97HOdWv729PK8QteILYdULhP3DWDo?=
- =?us-ascii?Q?6UqaRqgERkPPlJon1Zg2B62j0rn7xhFf5VprJX4uGjDtxbfne4AF3Rj2CeI7?=
- =?us-ascii?Q?pm/+uEhws8FeWqaF93bF1spfjlvEB1yaMfgoYIL73IYxQAnh3mFGRhZjGRqt?=
- =?us-ascii?Q?5VS3ePgfnAvN7Y0KPnDB6z2/?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jTriP1CHYTDtatq3d2+gSCYbeJfui6PEtY1seMBuzrpTIuVKKqc00oWcP+mB?=
+ =?us-ascii?Q?PmxNq6ywgYEM2OoKuewxn4osCOTpO0lGS2g4UJpWpTSK4ABEVoe2yzKEVZXz?=
+ =?us-ascii?Q?XfecQ/kDs7H1uglc6wNp0VcGI5mt8/Ri3WBIdnRcEjTksTIk0iIqkh09KrmW?=
+ =?us-ascii?Q?Ssb1ZJD8hXh0Zgc7tZdlQDdBeK93uF+UqWC7lWZjITOzTvE79J0ItLRMD325?=
+ =?us-ascii?Q?Gv06I+36Amme9Dxfw0V/ob9ofgcfm/dI+7Qi44xqWN2DNE+1EUl+Id11XzdG?=
+ =?us-ascii?Q?gzrlk5PavAtzjNYboFCCNBhw9WHDoNItLpKGwCdv636H3KYansoZ63VNiuPq?=
+ =?us-ascii?Q?jUgKhSXWUtW+TPnHkhaJ8JS/8FW1tK2WHbpp7RGTNpvPtfJVxbMt7558uq0/?=
+ =?us-ascii?Q?+JxEoVxX29OAKoL0/blr3uyjmcHpe+PwnUV8KxprYr7dU1YVYj1Kc0w8YaGA?=
+ =?us-ascii?Q?LQpHh/Wbfgliz82yGKXusF86bQlvJ87WdkAu7hI7wDv/QRZmmPjJ0tXTat/+?=
+ =?us-ascii?Q?kdTRUFsClfWMPpqKZYDzPcr0d2vLfNqgknydp6Ka+18RaeY3JfiRx7sCefHx?=
+ =?us-ascii?Q?qTQp7fAXuX9pytDxbQ0mPr7HDFveXod6N15fThOIR8JK6yJqnKRmVNpsZXXs?=
+ =?us-ascii?Q?YrqVuFXZnVpYKe3OhO0Sh498RcepHS7F+z1KaSTcupB3cLR/qrfKlmphN2sX?=
+ =?us-ascii?Q?L7hIgYKCTJB9zTbO+VAauyxygLkToeX/KIxOJVwyCBA5SBnGqfsCZq452dEq?=
+ =?us-ascii?Q?TYB8FcDsmTQbI9DAnaUYAtOsY7pwxMuBFcWpPdtMI9nF+DSwRdPrvYKtIc4P?=
+ =?us-ascii?Q?xeAPC54iOC6NPdgQzp7XRsyZGSwc2b2QlyeUy/0ra66Yp/jpDm3mtzXkr1N4?=
+ =?us-ascii?Q?unEnbn0Am+mWn8NL2JaAcIDEgJ6I78rNP3M4QxtlbckZOy1/aTJIkiCQ1SGY?=
+ =?us-ascii?Q?K2pdaDNSLhZH+TckkCHs/NbP5yO1BWuXQWPKG2SjwLR2/ClrJ66IsxpWiTmY?=
+ =?us-ascii?Q?Wl5wY/OlbyJiffnIgulHJbx5TKXFv4bXl4yM42XEM3GfXJobiknc9jHsEeaM?=
+ =?us-ascii?Q?a7GJ5Ryff1+75Q+dBT8Dp4oSK+04HdBke+7xobn9E/pO/Yl2p+9q1tNueteb?=
+ =?us-ascii?Q?S9sFbafznlDeNIM+l4MJ4hYKw72Bd3AxCUfY0z3Kdd12P5g1jbKmBtbDjYss?=
+ =?us-ascii?Q?Bs3xuX7n7BabNsq1vZ6uWpY0RFZ5P+ceWbgfNz93GeOKLGouJkwbUKUt0fvC?=
+ =?us-ascii?Q?2gDCDC6iXxh8jvA2Ew8F2tk8FumVhyACPaMwjp4uJWlgeA64Qaoon/nPP/En?=
+ =?us-ascii?Q?w5VQH2Op/+xvpW4yg+PTmUcf?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 53c0cea6-ed1a-4531-3ef2-08d931a9c614
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0ee6aa56-85e9-4722-1f6f-08d931a9ba49
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:49.3379
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:29.5518
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: bLLIhUQV5xNmJWoaI+kVBAIXVmI5V/K47+67uFeAtft9YNbIOXp3L1gtqFk2If5GgO5bsHvNuiiIDW/FddnmSw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0981
+X-MS-Exchange-CrossTenant-UserPrincipalName: xiSiAsrIzLdfQMWofCsdrDjaBEbiGErN9RotnUP9zN7sW5j86DlfianKMv/gEmZuM39AQW/93qwCvfhAsgasng==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,108 +128,54 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/rx/rx_filter.h   | 91 +++++++++++++++++++
- 1 file changed, 91 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/rx/rx_filter.h
+ .../wireless/celeno/cl8k/reg/reg_mac_hw_mu.h  | 33 +++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw_mu.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/rx/rx_filter.h b/drivers/net/=
-wireless/celeno/cl8k/rx/rx_filter.h
+diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw_mu.h b/drivers=
+/net/wireless/celeno/cl8k/reg/reg_mac_hw_mu.h
 new file mode 100644
-index 000000000000..a51f730019d3
+index 000000000000..45368cfc36d6
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/rx/rx_filter.h
-@@ -0,0 +1,91 @@
++++ b/drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw_mu.h
+@@ -0,0 +1,33 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_RX_FILTER_H
-+#define CL_RX_FILTER_H
++#ifndef CL_REG_MAC_HW_MU_H
++#define CL_REG_MAC_HW_MU_H
 +
++#include <linux/types.h>
++#include "reg/reg_access.h"
 +#include "hw.h"
-+#include "vendor_cmd.h"
 +
-+/* Field definitions */
-+#define RX_CNTRL_EN_DUPLICATE_DETECTION_BIT      ((u32)0x80000000)
-+#define RX_CNTRL_EN_DUPLICATE_DETECTION_POS      31
-+#define RX_CNTRL_ACCEPT_UNKNOWN_BIT              ((u32)0x40000000)
-+#define RX_CNTRL_ACCEPT_UNKNOWN_POS              30
-+#define RX_CNTRL_ACCEPT_OTHER_DATA_FRAMES_BIT    ((u32)0x20000000)
-+#define RX_CNTRL_ACCEPT_OTHER_DATA_FRAMES_POS    29
-+#define RX_CNTRL_ACCEPT_QO_S_NULL_BIT            ((u32)0x10000000)
-+#define RX_CNTRL_ACCEPT_QO_S_NULL_POS            28
-+#define RX_CNTRL_ACCEPT_QCFWO_DATA_BIT           ((u32)0x08000000)
-+#define RX_CNTRL_ACCEPT_QCFWO_DATA_POS           27
-+#define RX_CNTRL_ACCEPT_Q_DATA_BIT               ((u32)0x04000000)
-+#define RX_CNTRL_ACCEPT_Q_DATA_POS               26
-+#define RX_CNTRL_ACCEPT_CFWO_DATA_BIT            ((u32)0x02000000)
-+#define RX_CNTRL_ACCEPT_CFWO_DATA_POS            25
-+#define RX_CNTRL_ACCEPT_DATA_BIT                 ((u32)0x01000000)
-+#define RX_CNTRL_ACCEPT_DATA_POS                 24
-+#define RX_CNTRL_ACCEPT_OTHER_CNTRL_FRAMES_BIT   ((u32)0x00800000)
-+#define RX_CNTRL_ACCEPT_OTHER_CNTRL_FRAMES_POS   23
-+#define RX_CNTRL_ACCEPT_CF_END_BIT               ((u32)0x00400000)
-+#define RX_CNTRL_ACCEPT_CF_END_POS               22
-+#define RX_CNTRL_ACCEPT_ACK_BIT                  ((u32)0x00200000)
-+#define RX_CNTRL_ACCEPT_ACK_POS                  21
-+#define RX_CNTRL_ACCEPT_CTS_BIT                  ((u32)0x00100000)
-+#define RX_CNTRL_ACCEPT_CTS_POS                  20
-+#define RX_CNTRL_ACCEPT_RTS_BIT                  ((u32)0x00080000)
-+#define RX_CNTRL_ACCEPT_RTS_POS                  19
-+#define RX_CNTRL_ACCEPT_PS_POLL_BIT              ((u32)0x00040000)
-+#define RX_CNTRL_ACCEPT_PS_POLL_POS              18
-+#define RX_CNTRL_ACCEPT_BA_BIT                   ((u32)0x00020000)
-+#define RX_CNTRL_ACCEPT_BA_POS                   17
-+#define RX_CNTRL_ACCEPT_BAR_BIT                  ((u32)0x00010000)
-+#define RX_CNTRL_ACCEPT_BAR_POS                  16
-+#define RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_BIT    ((u32)0x00008000)
-+#define RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_POS    15
-+#define RX_CNTRL_ACCEPT_ALL_BEACON_BIT           ((u32)0x00002000)
-+#define RX_CNTRL_ACCEPT_ALL_BEACON_POS           13
-+#define RX_CNTRL_ACCEPT_NOT_EXPECTED_BA_BIT      ((u32)0x00001000)
-+#define RX_CNTRL_ACCEPT_NOT_EXPECTED_BA_POS      12
-+#define RX_CNTRL_ACCEPT_DECRYPT_ERROR_FRAMES_BIT ((u32)0x00000800)
-+#define RX_CNTRL_ACCEPT_DECRYPT_ERROR_FRAMES_POS 11
-+#define RX_CNTRL_ACCEPT_BEACON_BIT               ((u32)0x00000400)
-+#define RX_CNTRL_ACCEPT_BEACON_POS               10
-+#define RX_CNTRL_ACCEPT_PROBE_RESP_BIT           ((u32)0x00000200)
-+#define RX_CNTRL_ACCEPT_PROBE_RESP_POS           9
-+#define RX_CNTRL_ACCEPT_PROBE_REQ_BIT            ((u32)0x00000100)
-+#define RX_CNTRL_ACCEPT_PROBE_REQ_POS            8
-+#define RX_CNTRL_ACCEPT_MY_UNICAST_BIT           ((u32)0x00000080)
-+#define RX_CNTRL_ACCEPT_MY_UNICAST_POS           7
-+#define RX_CNTRL_ACCEPT_UNICAST_BIT              ((u32)0x00000040)
-+#define RX_CNTRL_ACCEPT_UNICAST_POS              6
-+#define RX_CNTRL_ACCEPT_ERROR_FRAMES_BIT         ((u32)0x00000020)
-+#define RX_CNTRL_ACCEPT_ERROR_FRAMES_POS         5
-+#define RX_CNTRL_ACCEPT_OTHER_BSSID_BIT          ((u32)0x00000010)
-+#define RX_CNTRL_ACCEPT_OTHER_BSSID_POS          4
-+#define RX_CNTRL_ACCEPT_BROADCAST_BIT            ((u32)0x00000008)
-+#define RX_CNTRL_ACCEPT_BROADCAST_POS            3
-+#define RX_CNTRL_ACCEPT_MULTICAST_BIT            ((u32)0x00000004)
-+#define RX_CNTRL_ACCEPT_MULTICAST_POS            2
-+#define RX_CNTRL_DONT_DECRYPT_BIT                ((u32)0x00000002)
-+#define RX_CNTRL_DONT_DECRYPT_POS                1
-+#define RX_CNTRL_EXC_UNENCRYPTED_BIT             ((u32)0x00000001)
-+#define RX_CNTRL_EXC_UNENCRYPTED_POS             0
++#define MU_ADDR_OFFSET(i) ((i) << 16)
 +
-+/* Default MAC Rx filters that cannot be changed by mac80211 */
-+#define CL_MAC80211_NOT_CHANGEABLE (            \
-+       RX_CNTRL_ACCEPT_QO_S_NULL_BIT         | \
-+       RX_CNTRL_ACCEPT_Q_DATA_BIT            | \
-+       RX_CNTRL_ACCEPT_DATA_BIT              | \
-+       RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_BIT | \
-+       RX_CNTRL_ACCEPT_MY_UNICAST_BIT        | \
-+       RX_CNTRL_ACCEPT_BROADCAST_BIT         | \
-+       RX_CNTRL_ACCEPT_BEACON_BIT            | \
-+       RX_CNTRL_ACCEPT_PROBE_RESP_BIT          \
-+       )
++/*
++ * @brief MAC_CNTRL_2 register definition
++ * Contains various settings for controlling the operation of the core. re=
+gister description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   00    SOFT_RESET                0
++ * </pre>
++ */
++#define MAC_HW_MU_MAC_CNTRL_2_ADDR        (REG_MAC_HW_BASE_ADDR + 0x000080=
+50)
++#define MAC_HW_MU_MAC_CNTRL_2_OFFSET      0x00008050
++#define MAC_HW_MU_MAC_CNTRL_2_INDEX       0x00002014
++#define MAC_HW_MU_MAC_CNTRL_2_RESET       0x00000000
 +
-+u32 cl_rx_filter_update_flags(struct cl_hw *cl_hw, u32 filter);
-+void cl_rx_filter_restore_flags(struct cl_hw *cl_hw);
-+void cl_rx_filter_set_promiscuous_off(unsigned long data);
-+void cl_rx_filter_set_promiscuous(struct cl_hw *cl_hw);
++static inline void  mac_hw_mu_mac_cntrl_2_set(struct cl_hw *cl_hw, u32 val=
+ue, u8 mu_idx)
++{
++       ASSERT_ERR(mu_idx < cl_hw->max_mu_cnt);
++       cl_reg_write(cl_hw, (MAC_HW_MU_MAC_CNTRL_2_ADDR + MU_ADDR_OFFSET(mu=
+_idx)), value);
++}
 +
-+#endif /* CL_RX_FILTER_H */
++#endif /* CL_REG_MAC_HW_MU_H */
 --
 2.30.0
 
