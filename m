@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C48CCC2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C020AC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFDF861426
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB2A461407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231526AbhFQQKl (ORCPT
+        id S231572AbhFQQKo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:10:41 -0400
-Received: from mail-eopbgr30061.outbound.protection.outlook.com ([40.107.3.61]:14471
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:10:44 -0400
+Received: from mail-eopbgr80055.outbound.protection.outlook.com ([40.107.8.55]:64930
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233806AbhFQQJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:43 -0400
+        id S233819AbhFQQJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:09:48 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Qqw2GBnKzNgLAIPU9EMoj2GsHVqhIjCk9Sn0NTPFFsMUZj0ZQy1NiOjKAkNCcJdiqRKZPYUSCXlSl7hdKOCRwvJzfDF0G+l++qrHeI8lHgy9INdY78tmKuEQcG5YDji4mFCpEq2EWV0Ol8Ubh3r3Ss/4OlTyYv1JObNjjxy3+RW+xhvl1wUKcA1Wa6zsnmaMCFBtDERxqnmP+5jB1d3ZDa5dN5rSFLJS4FAVIs8iruV55DPZyRymP4F4cKmhTV6ocS+Aly5XQIfYrFDEkf6RY7kF8ECQrg84diD6fc08ny3VDAbFQs3wJl5Bkb8OXsa6K3BrTI7kN0ciWYQZ/cQgbw==
+ b=mMu+cTVRku/H2hUwGQXV/6n06cZD2hz1tInl5SBbU05JPTcdGjg1gjw/PMZfUS3AOUlm0ueWtTtGqjWn+Hg/7U0dcwhwKB3+kbddpTnyfAW1MjeKQkkYW1txKKzaCRmL5yKZNVGksptzfy4qMm+aFWLL+Bgi5PzfdGdSx4xiWmT+LQVs47ZBcT1OLRlr6Zf8xaiHzh9X9Dy1Wp0Ajw8BpQHzKb+rTitDxZILFEqNuCX2DP2TtqL3mHm4w/YOvLKsOQiN/eoCbBFFbCqKRMnoBNglsVV37nIvUgvTPOFtq2BoY1ri56ulvzV1FRlczfse+id1j8W6dL6FEhBSJIISTw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OyKC5Neenhlm6pI75Yz87G8rumom7TZaTC46kjH8xrQ=;
- b=kAAPV9Kv5pRv/iPryu/MkLCHc9xOGgssFFBRwnDXtT1LPDtQfhyWaZv5BbqgMvAAugewSZaWxxY3+OaJZh/f+sr+Rj/VA5tb+gpfZn/SE9Z0/x1PT4WEMHq0xnIi8K/JK+Rsvr4sJum6CSFVHis3kP94zj/Vmv/Eg23ERVexOpKIULXvSidS5cs+q0vD4uor3jWADhQTJunhCZSULiXMBEbJB1QtkHwRl9pPJn22L6AzxnEzOSHzv+WXuN30RGb21X0yGlhVegWDz9t3fX18nOga3vktIMbvwA9tSi+XyQERC1lXX7juj98T5v/wD0LzC2y96WMYTtKfk1a27sCiEA==
+ bh=haJcCw9+T4a0a03XVzIyVIsNfv/DEhVzPSNaMoxMSL8=;
+ b=PoiNhjNnuuc4kFLvHhKTU9DuxhT7e5E02yNV5o7VGRSJxMZa9NZNuYCGw39p6CDtyqFsmi1J0QAU8zK2dI7qap+LkEmD6FxA3H8ZLQCqMrHo2YTX+qxINRLUA2nsfU4lLAkDDTAlHQo7Bc7Gz73LJ+TsjYbR0J914XdAdPCOrSSaPqKoafaOX/DywLcBQp7FVfeFQ1P4lWIm2FPPUOkDno0fIORzqfsZg4tXIdrO6qMNq5WqyOsZjJke/i88y7N/Z2AdmT4CN+hKLht5JmLCGgEBnyjoX4qgeKnRI2W0w/2FiOJaeb4ywLTkNwQuXAp37r/80on6OyDipOe4DFa8Ow==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OyKC5Neenhlm6pI75Yz87G8rumom7TZaTC46kjH8xrQ=;
- b=PqEHa3ZRYi493A+jV5/yTEp/t9V+O7Jlz+JETVVZHuilzJdG7XdYNqNm1tERBCrYTYMMT85YdNoK02nn60RcJiHkKYn/qwKD1AShHENtwCt5mK8GbCyX/GxYVNJYKaKGJ1xBqDlZWkcEhyo3N7HTZe55IxcOWlphMApR1zjVp+s=
+ bh=haJcCw9+T4a0a03XVzIyVIsNfv/DEhVzPSNaMoxMSL8=;
+ b=wS8ils0QwI8OOohkmTnqF2LUrzDx0spsuLfY7ygaJfgLFbmv6S+G80m1bNgBvMBjQ53LKlV0MqNMIQJCC1Ur+4M9ogvHtS3oBR+w+EIar2GIteq07w2h5rnIOOBf7ADpjbtNxthbWxJqN/e8sKuh8ZXrc+z1Darmor5iv5SHLqE=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
+ by AM9P192MB0981.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1fb::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:06:27 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:06:36 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:26 +0000
+ 16:06:36 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 158/256] cl8k: add reg/reg_macsys_gcu.h
-Date:   Thu, 17 Jun 2021 16:00:45 +0000
-Message-Id: <20210617160223.160998-159-viktor.barna@celeno.com>
+Subject: [RFC v1 177/256] cl8k: add rx/rx_filter.h
+Date:   Thu, 17 Jun 2021 16:01:04 +0000
+Message-Id: <20210617160223.160998-178-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:26 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:48 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1ea0da61-9612-4ca7-5e2f-08d931a9b90c
-X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
+X-MS-Office365-Filtering-Correlation-Id: 53c0cea6-ed1a-4531-3ef2-08d931a9c614
+X-MS-TrafficTypeDiagnostic: AM9P192MB0981:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB1187665595B2DF91F301B54DF60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-Microsoft-Antispam-PRVS: <AM9P192MB0981E398CC2ABBCD50D2BD87F60E9@AM9P192MB0981.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: lQXPgoX4WeKk550iMRD70aph0aQ41YBY3ZKIabj8gRI/QVkPNdKHp+c3z+55guinteTa5G6ZuDylx45HfljFeehyOLxmYjoW57YfQmDLtTVIXmSCu3yrf1d88/UEScWNXH1MWtW9tzEVh8jm58It7CAklSunuofMeKiLQXiGfR6fHbsSOwN3yGG3zbfpYdcr2RGJEIHHm1lwkmWy+rttP/40ArQGrB1VNDPYfCxQ+d9yuouOuwcomXE19ZW4gll6Va9wTBQTQwRj+0bPGCtOZc8GNIQhyuD2FKn3IsUVrxHIp93cGrDvbvlAdSC4oBDc9U6GxJn8S3vxsHyxFG1GXZVHttsJCLYvWjzVOp4AvYic1oMobEuPVZ3RBxlgz2fh3sWaZB4+w4XifQfSn2Jzeo+HGoeSo3iRW7h1baq0EZnfWIbxzl+PGBZdnZbdKt3Wxl3/xEQHfBpmMG+s3jid2EfKA2sq31no2nX9UBIGr+F3UecrycZGqruQuMiyTEMomF8LiPpUPIIdpbz6PaV/dI8+NA/ZDLkL0vbRJKHSeYtrzpqggxdv02IkMhwiUqGNfaqg7s8bmBR0Y0lfIKCF25V69xJpZdcBCLWSJMTPRsjAwTE3y88sNXDVE58o+I6ZoIp+5hl+Wxkp5pvdf8im3HJWG4VRnbcMmn64TzICEJAZHSWRf6F1iJjDIgasEKu9tRTiIBhuyePoABkzYoG/Mw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 7UBnQFfrtdqSau0UwWKWVrw0mOQja8N3HrZc6a4iEe5udBIYMRogu4R2e420ZVhae7xlamnCzcWdB5mgfGKPXlSCPGE2DVVW5AwvJ6U8sKZMod6aE38CGd2I2Wo2LxNlvE7Mx4+NkQSNJaigEjf1aA4TCYXKtRkGWAGa/H4snT/5KoTMhoPogFhbhSmRR1zZQhjvCwvzsApKEezJ7vl74TD+/5L3FuXUdviRXTidB7AZvMUbqbvUmXngkD9NCiaJbbnTDyb+VCxtOa1OoSR7QhcYpkMFtNI+d3+bGREgCnvXI2mNYdYvd3Ps29ZP5PWr2qT8JrMZ52o3IPdDoGd3dYzg8CK9lkSbnT0aJksa7kjBaZdR12LLniZezZLBoHYSRhWZeIvWLHMH1s38Hz6rbLFOe4Rd07THULZYOlQaMaV+Wz1VHDZ83MWl5Dk77NdpmQlc7jGHV6RgedA77VQNPLOFw5T3TyVEqD798Y9DX5O30WaWTfy6UAgKP+ksNqWRLy6qHXOBCnVvhBa0mz4RRDitzUEr0BJbNeOKR0JpLRpr3yrXvvitVFEhqNHYyh2kWYJ19WnjM/0bN753k6AjpVBvCW1q5BhFM1W38/O0jwGKnpJPcaJWZDackVTKCslNDmwMi5oLEZWXwTT+e81C5/kCUTkOILxkSvi/+w6WG2oYm7Y83QCHopzXTYFLiWgTADa6O9V1Dg9QYOUFFFIJNw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(376002)(396003)(136003)(366004)(39850400004)(86362001)(5660300002)(9686003)(54906003)(107886003)(6666004)(1076003)(2906002)(478600001)(6512007)(26005)(2616005)(38350700002)(16526019)(55236004)(38100700002)(6506007)(4326008)(8676002)(66946007)(186003)(66476007)(66556008)(956004)(83380400001)(6916009)(8936002)(36756003)(52116002)(6486002)(316002)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OXqJnNkXlw6yGiQQcSYzA5TU8J11VfLBkFJD3jWUvuEevAWVzQAm9yinb8ZN?=
- =?us-ascii?Q?YMREP651L7IJtcH1uBZ8sgsOZ9o652aThQ2/eH2CzLXKRbc/46mSckK78Efi?=
- =?us-ascii?Q?yKr26X6JAaKQ9iqy3U4vHLPtPQO+y12KW+I73bzhpKyp4HZ2+iE+hWmjn4vv?=
- =?us-ascii?Q?Az/OQNPmockYb2dkIml8bXCl2ne5BBdXs7GMb0McbgOj+hxr99MwY2EzfShY?=
- =?us-ascii?Q?GALGUAbIWA2ufWfQlcB3qW18+pSy8aC0p6XAudYmnn4LxL0GbDGztcZ4VP63?=
- =?us-ascii?Q?fpR17EEhvZW4qOwERVEMOmrwaTcJFbbLUPhFaimycdTIZ1DWdG/qALH6ga+s?=
- =?us-ascii?Q?RpqJ34+v7m07AMAl7gHPHvtoPErC/ZIOcinX+UKe2wwDcvqc+6Cs3UWp14e1?=
- =?us-ascii?Q?tn9CDNBDCYFco3lCZn0ran5/mzojBrEvmOGueLhFVLqKmVnUqt2/qgN8hWv9?=
- =?us-ascii?Q?DgXuLRJ91PtgMxvvRLdWxtMU2WL41ufa/gPQLVRI+bN5A4pimohHVcfOGv6Z?=
- =?us-ascii?Q?c3gQLE7mfYEqn3uH8i2LI+x1iCJ5uFxTKTotCIO9f5hlNXOYNzkliKDDJYPN?=
- =?us-ascii?Q?hg7sfnrCml9aWovKDvSUtZnIo2Kd84AiWp+pXeJWnpXNAxNLBamHzt5Lvmm3?=
- =?us-ascii?Q?nejB9VrgmlUYSDos5Be/AXa/cApA3TPkDSo1POQ3rPmt61ti9RTCanYQ/ZdU?=
- =?us-ascii?Q?jPo4Y8w0MF1HoIirG4qxAKoA8LHkVTTCp682hU5Xx0uMTQH2BTVW52Vc3MiM?=
- =?us-ascii?Q?8bxtY80MKaD4QUX0zBOoltFQuVjfASw78YTvi1/CZhKDHr8gbCfQbW1qL+TX?=
- =?us-ascii?Q?4OYF3ym87cduPwDNTWcs59vph4cmW5XejGpBaIktztvkC6k2jfIvW8AWEHp5?=
- =?us-ascii?Q?f5Vj+mQzHVXGxarxsywwsViTaFdXLgl54wu0j2/Hs2h4iuGhc++wht6J8ZtG?=
- =?us-ascii?Q?ioOVZIlzHJWnJ/B7qgEBwxgDsfj+x43C2pn4qwpVv4Y1h+Fw7gEXaSQYMwYL?=
- =?us-ascii?Q?7s8lF0CF9mnc6k/qgNd0KjhJZeSGmn8vuJom43bLBesERNRJp706Dgn7M7IA?=
- =?us-ascii?Q?5+AZTHvExyjIVKTcE4r1kVQLM11meQCh4PlJy9iYaUgGaHI9tCaWHyPXjtsC?=
- =?us-ascii?Q?Jr7b1IVP43yWGWil5nEC+5E4lTUwQPppFVUH6FZfbZXPB3Be3twp9nB/CbQH?=
- =?us-ascii?Q?jmxxOvltIeKkRbIiJuawB6OK6Fw2x9vql97M3/RlyOVMjjUm9TH6EDbyQPlc?=
- =?us-ascii?Q?R+Pw+h7S0jG3Homg/7NEVjVeyWPT2aUrrzs8qzjYF0mPh3bfulNlL+EmNej3?=
- =?us-ascii?Q?vTZyyUy5J9ttynZ5XZxASbqd?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C0HMM4fXxoVGblFZiMLFfluVIUCaOnefMVUyxrPjxWwzx90M90OLddgd7mRN?=
+ =?us-ascii?Q?RM3Md8s+97b1koPRFOsqPWcJ0K2L7OyPkPXC+4eWAd3o50G5CWlj2KWAkBWs?=
+ =?us-ascii?Q?aI16IDrT0jVuSErBbvmqXTN2EkpUyhmPZAOJxW/iMwpGTlUVC4D8uqmmpTyx?=
+ =?us-ascii?Q?Guc4gEbPHStb2OsjegMsJmG0lXRVy7QBbapc9pcvQSe3jLm1kWYcjFqHFpGF?=
+ =?us-ascii?Q?2cstzaAoeGHcIqLkTQyG0C8O605AEBPV4994GSIwIi+2Cxft0dJ9cGTIVAFY?=
+ =?us-ascii?Q?b2QPT5+APAGMsggYwOSGp74Ctv7DcrjkvrNowQUYe6tbhbNbHELIHe1XF4hq?=
+ =?us-ascii?Q?dxqnbdX6mR+Tpt5fSNvfCP7PKM15nXqyc2jonNItMNudoeJPOnyLZsU2U/wg?=
+ =?us-ascii?Q?f0F3Iz75TfxABJ2t8Z5u4MBfRGfTawe0v2HyoEYVPPWVZwD7DImICs+yLRIt?=
+ =?us-ascii?Q?rVLl9LurjBJsfAeXugVp3ejcVpSFyDabhOBYy/L+1MFU7kRPS3Nk99+ahah9?=
+ =?us-ascii?Q?w1RAfKli+8o3qYri+oMATm3/sp8USZdwNhQfCsfQhmryPQo/wnzOOHpuFRgH?=
+ =?us-ascii?Q?5MqvGg3DLLtz2RHVIa8ecggv02iWznad+psmlnnk0HdgD8X7IapMsGAZr/80?=
+ =?us-ascii?Q?pQkMHjvxlqH0ToeIXG12DelQl/9f+qdR0ZGZ1cEzw9MKQJdOTiAY7+fJzID1?=
+ =?us-ascii?Q?ZDje5HbiCMirbYkn81g50jaDZh8gFc5/YSBDkFzyX2AVm47DXFNMqV9cneZK?=
+ =?us-ascii?Q?nF+TF4hjQOVP2p1IzyJJ43HRMwNa67V9Aqmk4iV1Lt0Xts0XYlOkQ7KtyoJU?=
+ =?us-ascii?Q?1vOR4MTiGoBIS5+0tYvZZseos39L1Pq3Wy3nELExQHuGOX75pKSnjdPggUl4?=
+ =?us-ascii?Q?JXbIEJUuiFepMZi54RSDyW+2mt2GPP9EuMMNauxGS57yApPoTx65mTdk0BR1?=
+ =?us-ascii?Q?w5TXVaRUcuFYGPVPS/9jVknNcEcyL/PdciqNpWNjcKmWi7AB61Lv2B1MNJI4?=
+ =?us-ascii?Q?7Rc6cJnK93Do4tzbmWeRLXRrQ/1KJn8X23io3O3IubPO+tYMe9rFZPOfDssB?=
+ =?us-ascii?Q?z1EoTUHWT3pYcdP5tQInXFYqinWAChghERKl7K2E33FdtCszb5efefym5srx?=
+ =?us-ascii?Q?38fBHHSiP1/lSCLKgrAqh/+35gHiOtI97HOdWv729PK8QteILYdULhP3DWDo?=
+ =?us-ascii?Q?6UqaRqgERkPPlJon1Zg2B62j0rn7xhFf5VprJX4uGjDtxbfne4AF3Rj2CeI7?=
+ =?us-ascii?Q?pm/+uEhws8FeWqaF93bF1spfjlvEB1yaMfgoYIL73IYxQAnh3mFGRhZjGRqt?=
+ =?us-ascii?Q?5VS3ePgfnAvN7Y0KPnDB6z2/?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1ea0da61-9612-4ca7-5e2f-08d931a9b90c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 53c0cea6-ed1a-4531-3ef2-08d931a9c614
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:27.4829
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:49.3379
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2cv1PAcFKdOqkpE6vbcu7vTBWN2qEcf0fX9fAaJhiSlSGhMiD6VbcKcV0uTcbZhRnO0WGf1dBc9JHsa67VsnIA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
+X-MS-Exchange-CrossTenant-UserPrincipalName: bLLIhUQV5xNmJWoaI+kVBAIXVmI5V/K47+67uFeAtft9YNbIOXp3L1gtqFk2If5GgO5bsHvNuiiIDW/FddnmSw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0981
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,116 +128,108 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../wireless/celeno/cl8k/reg/reg_macsys_gcu.h | 94 +++++++++++++++++++
- 1 file changed, 94 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_macsys_gcu.h
+ .../net/wireless/celeno/cl8k/rx/rx_filter.h   | 91 +++++++++++++++++++
+ 1 file changed, 91 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rx/rx_filter.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_macsys_gcu.h b/driver=
-s/net/wireless/celeno/cl8k/reg/reg_macsys_gcu.h
+diff --git a/drivers/net/wireless/celeno/cl8k/rx/rx_filter.h b/drivers/net/=
+wireless/celeno/cl8k/rx/rx_filter.h
 new file mode 100644
-index 000000000000..41eb196f4b7c
+index 000000000000..a51f730019d3
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/reg/reg_macsys_gcu.h
-@@ -0,0 +1,94 @@
++++ b/drivers/net/wireless/celeno/cl8k/rx/rx_filter.h
+@@ -0,0 +1,91 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_REG_MACSYS_GCU_H
-+#define CL_REG_MACSYS_GCU_H
++#ifndef CL_RX_FILTER_H
++#define CL_RX_FILTER_H
 +
-+#include <linux/types.h>
-+#include "reg/reg_access.h"
-+#include "chip.h"
-+
-+#define REG_MACSYS_GCU_BASE_ADDR 0x007C5000
-+#define REG_MACSYS_GCU_COUNT 63
-+
-+/*
-+ * @brief CHIP_VERSION register definition
-+ * Chip Version 8000B0 register description
-+ * <pre>
-+ * Bits           Field Name   Reset Value
-+ * -----   ------------------   -----------
-+ *  23:08 PRODUCT_ID                0x8000
-+ *  07:04 STEP_ID                   0xB
-+ *  03:00 REV_ID                    0x0
-+ * </pre>
-+ */
-+#define MACSYS_GCU_CHIP_VERSION_ADDR        (REG_MACSYS_GCU_BASE_ADDR + 0x=
-00000050)
-+#define MACSYS_GCU_CHIP_VERSION_OFFSET      0x00000050
-+#define MACSYS_GCU_CHIP_VERSION_INDEX       0x00000014
-+#define MACSYS_GCU_CHIP_VERSION_RESET       0x008000B0
-+
-+static inline u32 macsys_gcu_chip_version_get(struct cl_chip *chip)
-+{
-+       return cl_reg_read_chip(chip, MACSYS_GCU_CHIP_VERSION_ADDR);
-+}
++#include "hw.h"
++#include "vendor_cmd.h"
 +
 +/* Field definitions */
-+#define MACSYS_GCU_CHIP_VERSION_PRODUCT_ID_MASK  ((u32)0x00FFFF00)
-+#define MACSYS_GCU_CHIP_VERSION_PRODUCT_ID_LSB   8
-+#define MACSYS_GCU_CHIP_VERSION_PRODUCT_ID_WIDTH ((u32)0x00000010)
-+#define MACSYS_GCU_CHIP_VERSION_STEP_ID_MASK     ((u32)0x000000F0)
-+#define MACSYS_GCU_CHIP_VERSION_STEP_ID_LSB      4
-+#define MACSYS_GCU_CHIP_VERSION_STEP_ID_WIDTH    ((u32)0x00000004)
-+#define MACSYS_GCU_CHIP_VERSION_REV_ID_MASK      ((u32)0x0000000F)
-+#define MACSYS_GCU_CHIP_VERSION_REV_ID_LSB       0
-+#define MACSYS_GCU_CHIP_VERSION_REV_ID_WIDTH     ((u32)0x00000004)
++#define RX_CNTRL_EN_DUPLICATE_DETECTION_BIT      ((u32)0x80000000)
++#define RX_CNTRL_EN_DUPLICATE_DETECTION_POS      31
++#define RX_CNTRL_ACCEPT_UNKNOWN_BIT              ((u32)0x40000000)
++#define RX_CNTRL_ACCEPT_UNKNOWN_POS              30
++#define RX_CNTRL_ACCEPT_OTHER_DATA_FRAMES_BIT    ((u32)0x20000000)
++#define RX_CNTRL_ACCEPT_OTHER_DATA_FRAMES_POS    29
++#define RX_CNTRL_ACCEPT_QO_S_NULL_BIT            ((u32)0x10000000)
++#define RX_CNTRL_ACCEPT_QO_S_NULL_POS            28
++#define RX_CNTRL_ACCEPT_QCFWO_DATA_BIT           ((u32)0x08000000)
++#define RX_CNTRL_ACCEPT_QCFWO_DATA_POS           27
++#define RX_CNTRL_ACCEPT_Q_DATA_BIT               ((u32)0x04000000)
++#define RX_CNTRL_ACCEPT_Q_DATA_POS               26
++#define RX_CNTRL_ACCEPT_CFWO_DATA_BIT            ((u32)0x02000000)
++#define RX_CNTRL_ACCEPT_CFWO_DATA_POS            25
++#define RX_CNTRL_ACCEPT_DATA_BIT                 ((u32)0x01000000)
++#define RX_CNTRL_ACCEPT_DATA_POS                 24
++#define RX_CNTRL_ACCEPT_OTHER_CNTRL_FRAMES_BIT   ((u32)0x00800000)
++#define RX_CNTRL_ACCEPT_OTHER_CNTRL_FRAMES_POS   23
++#define RX_CNTRL_ACCEPT_CF_END_BIT               ((u32)0x00400000)
++#define RX_CNTRL_ACCEPT_CF_END_POS               22
++#define RX_CNTRL_ACCEPT_ACK_BIT                  ((u32)0x00200000)
++#define RX_CNTRL_ACCEPT_ACK_POS                  21
++#define RX_CNTRL_ACCEPT_CTS_BIT                  ((u32)0x00100000)
++#define RX_CNTRL_ACCEPT_CTS_POS                  20
++#define RX_CNTRL_ACCEPT_RTS_BIT                  ((u32)0x00080000)
++#define RX_CNTRL_ACCEPT_RTS_POS                  19
++#define RX_CNTRL_ACCEPT_PS_POLL_BIT              ((u32)0x00040000)
++#define RX_CNTRL_ACCEPT_PS_POLL_POS              18
++#define RX_CNTRL_ACCEPT_BA_BIT                   ((u32)0x00020000)
++#define RX_CNTRL_ACCEPT_BA_POS                   17
++#define RX_CNTRL_ACCEPT_BAR_BIT                  ((u32)0x00010000)
++#define RX_CNTRL_ACCEPT_BAR_POS                  16
++#define RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_BIT    ((u32)0x00008000)
++#define RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_POS    15
++#define RX_CNTRL_ACCEPT_ALL_BEACON_BIT           ((u32)0x00002000)
++#define RX_CNTRL_ACCEPT_ALL_BEACON_POS           13
++#define RX_CNTRL_ACCEPT_NOT_EXPECTED_BA_BIT      ((u32)0x00001000)
++#define RX_CNTRL_ACCEPT_NOT_EXPECTED_BA_POS      12
++#define RX_CNTRL_ACCEPT_DECRYPT_ERROR_FRAMES_BIT ((u32)0x00000800)
++#define RX_CNTRL_ACCEPT_DECRYPT_ERROR_FRAMES_POS 11
++#define RX_CNTRL_ACCEPT_BEACON_BIT               ((u32)0x00000400)
++#define RX_CNTRL_ACCEPT_BEACON_POS               10
++#define RX_CNTRL_ACCEPT_PROBE_RESP_BIT           ((u32)0x00000200)
++#define RX_CNTRL_ACCEPT_PROBE_RESP_POS           9
++#define RX_CNTRL_ACCEPT_PROBE_REQ_BIT            ((u32)0x00000100)
++#define RX_CNTRL_ACCEPT_PROBE_REQ_POS            8
++#define RX_CNTRL_ACCEPT_MY_UNICAST_BIT           ((u32)0x00000080)
++#define RX_CNTRL_ACCEPT_MY_UNICAST_POS           7
++#define RX_CNTRL_ACCEPT_UNICAST_BIT              ((u32)0x00000040)
++#define RX_CNTRL_ACCEPT_UNICAST_POS              6
++#define RX_CNTRL_ACCEPT_ERROR_FRAMES_BIT         ((u32)0x00000020)
++#define RX_CNTRL_ACCEPT_ERROR_FRAMES_POS         5
++#define RX_CNTRL_ACCEPT_OTHER_BSSID_BIT          ((u32)0x00000010)
++#define RX_CNTRL_ACCEPT_OTHER_BSSID_POS          4
++#define RX_CNTRL_ACCEPT_BROADCAST_BIT            ((u32)0x00000008)
++#define RX_CNTRL_ACCEPT_BROADCAST_POS            3
++#define RX_CNTRL_ACCEPT_MULTICAST_BIT            ((u32)0x00000004)
++#define RX_CNTRL_ACCEPT_MULTICAST_POS            2
++#define RX_CNTRL_DONT_DECRYPT_BIT                ((u32)0x00000002)
++#define RX_CNTRL_DONT_DECRYPT_POS                1
++#define RX_CNTRL_EXC_UNENCRYPTED_BIT             ((u32)0x00000001)
++#define RX_CNTRL_EXC_UNENCRYPTED_POS             0
 +
-+static inline u8 macsys_gcu_chip_version_step_id_getf(struct cl_chip *chip=
-)
-+{
-+       u32 local_val =3D cl_reg_read_chip(chip, MACSYS_GCU_CHIP_VERSION_AD=
-DR);
++/* Default MAC Rx filters that cannot be changed by mac80211 */
++#define CL_MAC80211_NOT_CHANGEABLE (            \
++       RX_CNTRL_ACCEPT_QO_S_NULL_BIT         | \
++       RX_CNTRL_ACCEPT_Q_DATA_BIT            | \
++       RX_CNTRL_ACCEPT_DATA_BIT              | \
++       RX_CNTRL_ACCEPT_OTHER_MGMT_FRAMES_BIT | \
++       RX_CNTRL_ACCEPT_MY_UNICAST_BIT        | \
++       RX_CNTRL_ACCEPT_BROADCAST_BIT         | \
++       RX_CNTRL_ACCEPT_BEACON_BIT            | \
++       RX_CNTRL_ACCEPT_PROBE_RESP_BIT          \
++       )
 +
-+       return ((local_val & ((u32)0x000000F0)) >> 4);
-+}
++u32 cl_rx_filter_update_flags(struct cl_hw *cl_hw, u32 filter);
++void cl_rx_filter_restore_flags(struct cl_hw *cl_hw);
++void cl_rx_filter_set_promiscuous_off(unsigned long data);
++void cl_rx_filter_set_promiscuous(struct cl_hw *cl_hw);
 +
-+/*
-+ * @brief XT_CONTROL register definition
-+ * Tensilica control register description
-+ * <pre>
-+ *  Bits           Field Name   Reset Value
-+ * -----   ------------------   -----------
-+ *   21    smac_debug_en             0
-+ *   20    smac_break_in             0
-+ *   19    smac_ocd_halt_on_reset    1
-+ *   18    smac_run_stall            0
-+ *   17    smac_dreset_n             1
-+ *   16    smac_breset_n             0
-+ *   13    umac_debug_en             0
-+ *   12    umac_break_in             0
-+ *   11    umac_ocd_halt_on_reset    1
-+ *   10    umac_run_stall            0
-+ *   09    umac_dreset_n             1
-+ *   08    umac_breset_n             0
-+ *   05    lmac_debug_en             0
-+ *   04    lmac_break_in             0
-+ *   03    lmac_ocd_halt_on_reset    1
-+ *   02    lmac_run_stall            0
-+ *   01    lmac_dreset_n             1
-+ *   00    lmac_breset_n             0
-+ * </pre>
-+ */
-+#define MACSYS_GCU_XT_CONTROL_ADDR        (REG_MACSYS_GCU_BASE_ADDR + 0x00=
-0000F0)
-+#define MACSYS_GCU_XT_CONTROL_OFFSET      0x000000F0
-+#define MACSYS_GCU_XT_CONTROL_INDEX       0x0000003C
-+#define MACSYS_GCU_XT_CONTROL_RESET       0x000A0A0A
-+
-+static inline u32 macsys_gcu_xt_control_get(struct cl_chip *chip)
-+{
-+       return cl_reg_read_chip(chip, MACSYS_GCU_XT_CONTROL_ADDR);
-+}
-+
-+static inline void macsys_gcu_xt_control_set(struct cl_chip *chip, u32 val=
-ue)
-+{
-+       cl_reg_write_chip(chip, MACSYS_GCU_XT_CONTROL_ADDR, value);
-+}
-+
-+#endif /* CL_REG_MACSYS_GCU_H */
++#endif /* CL_RX_FILTER_H */
 --
 2.30.0
 
