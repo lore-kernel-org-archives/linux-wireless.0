@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A53C49361
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8DC6C49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C976F61425
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 951C361425
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232604AbhFQQMA (ORCPT
+        id S233668AbhFQQMD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:12:00 -0400
-Received: from mail-eopbgr70043.outbound.protection.outlook.com ([40.107.7.43]:64066
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:12:03 -0400
+Received: from mail-eopbgr10062.outbound.protection.outlook.com ([40.107.1.62]:13120
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231455AbhFQQKo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:10:44 -0400
+        id S232861AbhFQQKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:10:46 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=azRdw3RMpzE58/dMHOmaGXwN/LraPbVXVRUi6w/Shphn6MEueuGi75nevjYiCPIcPI+SMcMXj7tn0LN+7/JoYcvXjoZwa7FP7r8VGD3rRly3QRaVE+oj77qTnQuxeDh7jBhJjzVl3VkUkUeJXeBFZftSpBRbBNBXZe40J5hshF07jPDeJumIZ6+PqfFAxliooBgJhIUNDjwQW56Z/c1Y+ne/y/bBvmqKJOFnwQOKtpx+m+yXACR5ra2GX6OImFs8lIn09eKnEjvXj8FS6AhyvIDdU+RMLReFjND5I3caAnxXpzPLqeZLHL54lGJBCw/+HQUxEm3UfIgWH2yt9l3lLA==
+ b=Zy4vLUthMDAFbnc4n1QBDl1Ll9D3wmGa/8WQbKPOtcVnooMMgBcuD1/x4j/nu4XZpuaBbdKjBhXJI2Jc7LIPsj4TYgGWpD3LpQW4bZmR6gJZTbzTAvkm/VlH97UhSBxElX+BlEr6bi0BMBb2bzFIGj+L0xtOXIOOGxHg6Zoiwk7ZMDtNT8Al0MSe5ivZg8eau62zoJs5AN2QFHLQPj8aA0/yhTGQPtS3anGkxXQlLkP36xkh9Xqv0DRxilhWsbU8QlXHCdHw1o17bYG9XZUNd3EoRtpTZpBvHB6biWi/uKB/2Z2cSNcJ7RmeAJC9j8qfTpOTb0kSLQ61x/1XJqd6RA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=t+LFlL72JcIHEZRkNIRjT3aQzwUkQfeiHWGgMfpGTxA=;
- b=MnUTtgZUVJGsyhYSpu0/B85uPVxw6IaAlpRL7cov0nC3dGaKhHcvPrKTIlRCLKbHkLC4I2TQz8UNhhN+VBv2OUX9PkBZcV9ZfS46gjNANKgoqBcakO0cOIWnon0SNh6nT5ZGiaqSHss9CfnHtqdZHuquct0BtQVNLibrynXh2e9o4qhXmUjxrgxSLxfd8fnvTk9I4fzOAmFs739rkwTLCO/458BIzM6ML29hntG10PODBRXlPniX2hkp18agZtTLT6SYPbUT2d1L2E0rompS4SFVWZW7zoZ/jWK/LnFDM/dVJypBMhI3sFjxzNDWP4YoPYpGzkhL1ADCWfFaCjDfyA==
+ bh=jXZ9BiixqLezMieBNK9BC+oIhvaY2O2Hz7HGR/H/5ho=;
+ b=lVJx+Tw8Lb0OCbKgO6QDO+lLYkBxzb34MOUemxrtHYEgwdXXT6npLoVh3AMaMotZSiBlJGo/UDAoZ+/hNiFb8+66k3s6+WZwTslazuHzI1W7RITpE7KeeWdMv0QKKrwLvjmuqrrKCMaqxO7aBN2qpmLBbwuYLU4DHm3lpxxMBTo3Y0m9TkZhKn7z5pTcQXo9Q+5eIrSsNiJMXDNetpR+iOqHEJ7DJDKm482k2zHFxxUhFLk5viYB6TWCYCLKsdzWLkv9Nn8zSM6PKuFV31dlOgqjAHp+gsRpw7KJpCxXypmkyo4t0OV8AlczGyoxRWULHowzo+btC/2N/yWpBw0PNw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=t+LFlL72JcIHEZRkNIRjT3aQzwUkQfeiHWGgMfpGTxA=;
- b=qhVzsTsULf6E5gFwKTqyR6dTl7qC6ayD1OuBtqXanxWgm0aw9o29Q0sRiBsgMt/iuZMZgG+2AATXNRVareG3W9wXA2268Re0wKrPdGG9OBhzLu3Rt5JG8u4Qzh83t3AbJW/cERfD+Tk3bDB3jYDLgSyeTBY2r4KvxFW+UIY93+Q=
+ bh=jXZ9BiixqLezMieBNK9BC+oIhvaY2O2Hz7HGR/H/5ho=;
+ b=RKGp37y1yeZAJg5QaooIgxR7XlI+OVJx4aEIsnbi5mD08xWW+shZ2Bb/X7Aiyw14dJY3V2wwxegDDxc2QzSI3AMArLYP+Rs/pNJzRZOgU2F+F96gd9cvLDfyAynzQgoWf1Rgvy7MSiM3CJReQt/4L4+ieeBGdszHvOwsQLcXDcM=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
+ by AM0P192MB0515.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:45::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:06:30 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:07:58 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:30 +0000
+ 16:07:58 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +58,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 166/256] cl8k: add rf_boot.c
-Date:   Thu, 17 Jun 2021 16:00:53 +0000
-Message-Id: <20210617160223.160998-167-viktor.barna@celeno.com>
+Subject: [RFC v1 231/256] cl8k: add vendor_cmd.c
+Date:   Thu, 17 Jun 2021 16:01:58 +0000
+Message-Id: <20210617160223.160998-232-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +72,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:35 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:51 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7268f07c-aae8-4232-6be9-08d931a9be39
-X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
+X-MS-Office365-Filtering-Correlation-Id: bc26ba52-4fdf-4480-baee-08d931a9eb7c
+X-MS-TrafficTypeDiagnostic: AM0P192MB0515:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB118755A5F647BAC1B0C0D04FF60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <AM0P192MB0515B9B835A9E7507A9EDABFF60E9@AM0P192MB0515.EURP192.PROD.OUTLOOK.COM>
 X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: dqVFKQbLcOfT617yw/uW6LOF2N3eIoUYpxz3bx+VUkzMFNrJp+NSz5pwheBMaVkkWBC3RaG1Eq4f+8d6BdaDIzSEVExOEipGxKz7oNtYOOzhuse0Qtfx864UiRWODJ/3jmPH4mV1rny3U3boQ2xKigO6DKBe2WM/5EYflzeOHkTCvuFR1BZ4VB2Z0vb05fv22oVlEhvw+DGQiVw/B850SmNRczNuxtnyVccAoHSZmA9pb+QdkXlplkbBwJuB17V9yamWqD9lyynZMXaC3sfeBWwyiVK3wWfD6u2PeF8ER/7DbDLew8cCldrok/xls4mSp0IatnVrffihmIZhhP9vfC/RrbV0LClwJlZ4x+Q96cxhgAc+D/RS+qHbYPyakQFfUq/2apspC6nWVlddUc9RvygisiuQivIf2NeHhS8wSECDQI7hnUdtNusuRbaU661X2qwuEmYEFjcq5VJc0FIXnSWteNw4BURcQNOVO/xoscLLbkkCrzrv7L0cBpbO+yS6oVuu0RWr+n4YK80D5NwEIQbtQ5o/O/Rr/5UcjY65E7BUSKXeZtSZob6lru3Mjt3Zg7+x0KJc/1GhQ2JZ6K3rQgo/m2kRBSkAXBrqHx6UbKrvWoCnO7u9PmnKK3TO2ajxV2QZzzTOQutSRf7djg5mSMIv1ke+oo6TevJeJ39GddK8f6vBJezo9K2MWuYjd0ZZvkYMRyXfOXbjOpUbH1J1Rw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(30864003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: BKabLO0F+bJuN4n9dM6aHQvPjSBthBiSRq6iaGgrFfyDLHi9eXe9tmB+K8+kOK5KSqwYEQ4uG3aalC3FzYKtahf1MrUiBds+4N4ktAuT9AhJW2kAFOJ81ggi1yKJHtgGiCD9VXEtdoZVpoE9aAcqFpueSmDuz9nELD626CLp+exwjgh5zOKzsspt68iBmjcjWlxAbf3eQjVkFkVUVZE6unVH2vnwLnCS/xdDwdZx2JBi2cSlafZHPzsJYS6gg5RCa81sEGrokeUa28acW4+X/RlYGCknmNYhvF+ewxPQXRtpU+wOY2jFdTwLNj40yB25GLtvu7uZfKXgpdIgTxuYeWSVLVfDxbBY18CnL9DFjEwCsq7kWYnBt9aIZpv4lSbR5hP/FCOT2B7O6uzoUq153HAna1+OKFm2SqxSotp7nJXTAJARvh6EX6Mh/L78U6LWiNEiREAJMsJuouiXv2TJ1bYO2s4m82QBE6rxZjjtmz/l37ZK10k1SmwqY/sTcdw0pOBDfhk4SS5aiR0+r6s2FGPJHYMO3iEZOyKVo71rd1TwMYXs7lqTerQvdmz5n8xeDhi3iVUkIAwyY5apRSe4ppB+KrOAkKMnYvj5sb2GgQyxMMW3SNq1Jn4TKKgXb9wPvGT2ry7WhFrRjmJpAOqAM/JHz8i1/P6LRAVhk7Gw+wc+HRApCRYHnJg/z0Agq+uroVnjnZMRV/nOj/1ESavHwA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(376002)(39850400004)(136003)(366004)(346002)(4326008)(16526019)(83380400001)(1076003)(8676002)(9686003)(55236004)(36756003)(478600001)(8936002)(956004)(186003)(6486002)(38350700002)(6512007)(6916009)(52116002)(86362001)(5660300002)(2906002)(38100700002)(66946007)(2616005)(316002)(6506007)(30864003)(26005)(54906003)(66476007)(107886003)(66556008)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?p+hq8vmmeVXlH8sghDPRparkVdB8GZXcbnWOz3NPB0GbpzQtrvbuN3XQjHdE?=
- =?us-ascii?Q?Yc5OVmplVNa2uQ5oLDPADD3DBTA/nwSJKddFRRzMgt3bN6H7jsf08dOPaHi6?=
- =?us-ascii?Q?KAPrVCQT91Z2DorNc5xJWoeKwSoCUvOiGK0hsIjPc198TIZlqG9oMN189OT4?=
- =?us-ascii?Q?ZqpTpb7Z+mmXDQJWdqxKzlg1/mGhFI5WLtZFvSDLQDQc3RUdM6upeAnpWAJQ?=
- =?us-ascii?Q?sK5SwwkVx7tdMvEFAYCF9jDJ5v4dFdsoPB+IISImydq4VCpmAveH4ZqybqAG?=
- =?us-ascii?Q?qC5oRZ04KIv8PpJ1FP7wKmX60C27EtAaG+qGYD40nZm1KOxcXJNgNyafdXaO?=
- =?us-ascii?Q?zxt1pwAbyDkfNnP20mr5Z+zAJO9WmvLasUCOLVH1a9V5qbZ+VGsjOWtTgpsW?=
- =?us-ascii?Q?r2n3EO1I7E6iZv0DHQsSl0Mc9WyLD/91ua9vn6jQi57Zip7Djs5QyCVYwUav?=
- =?us-ascii?Q?bM6Ko/rfnbAhmf/wybS5t2GvNDw4ZuSMW/4RcKmIjAOG7+2h2AfbELsuai0h?=
- =?us-ascii?Q?VvrrGnwfxbDcAr6fK/8/U6yWl0badPMIBqGWCezKsb+rwkNaDBgIjVt9gba6?=
- =?us-ascii?Q?cQ9n5q+3aljGdEc5OeEvmdGr8cA9Tejy30x7Vo03UU0YJsl/YJeaCm37FJJm?=
- =?us-ascii?Q?/PPx9domaTmzXk/O+qMd/NXj6PhciZxUHM/rlTjX0Ox9c/SWXdeUE19GRqkO?=
- =?us-ascii?Q?qbBcvmMtCdSv5aXOvfvGo919mL87op+SLcQ+RKJ9lGjL765rZWNkROmU/XNs?=
- =?us-ascii?Q?pFD1qESykQGBCZ4du4HH9lnJxC4mERt33Zb/FAJ2sLfFwmKPA821NbHaTe22?=
- =?us-ascii?Q?PQnCoE7JLqtEj/SCkUnBbPvT17ZCqRnA5cDObzJBr+3//hjY8YjniQRTpbe3?=
- =?us-ascii?Q?r5fmdWbmC8KRzD4RmC6+68u/tWEMfqpc6ZX6oM/+YFFWYM7BSOBVU1tmzJdz?=
- =?us-ascii?Q?OoskuiQh3ZwOPiP4/GBZALwd1Ml6IL1PHifOn/REsZ7sLB1vshXLq+iid/VY?=
- =?us-ascii?Q?exq38AIGIftCkQ98lTsijGuu54hgD9+2QTALJT4Ja49YKcFPR0yOz1KG11ut?=
- =?us-ascii?Q?VvB5ujOlFXecocYnpv5Oxv4woE+e6HYtA3Fc3YUHxjoH5Qxm8Uu44WSx9Z9A?=
- =?us-ascii?Q?NxppiA8/nfyCsIhw32a77uU2jbu4rk9Epb5hLC55CoI2MncBUPmXLDZaN64v?=
- =?us-ascii?Q?Hyq1pSBuQNL2EV1IGpOqAdo/4P8OM8RAssXA20ZgK94s66oi2mPE2h5jhy3R?=
- =?us-ascii?Q?RA0L7SVS7Cp/z1BWh5xepE/T+PxH8pBVLgufKYel21Ptph5Sf7YZpQk+K4r2?=
- =?us-ascii?Q?jOIHQ2NivwOdC9QxwmmPxci4?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?K0tdOkZNcRVg62lXHLAD6jK35648/YXXuePlFLBkVtF53deimfu3eNsrW/Mg?=
+ =?us-ascii?Q?RHe5zDbMaALSjdZBVQTnB9iXSAb84IFfQ9UiP7CvZwaH/pKZQ/El+iIyojiy?=
+ =?us-ascii?Q?uj+v3kMwPSlbGztFgRjuuCr1cC0NV+mDIcUVf71gv6G+sDV2+eBviS62WrKH?=
+ =?us-ascii?Q?zcqEvPPkOP+jn3A374HqwTMiU7YscdE8nfnXrz8EAtVFNyn2LwRzXil19EZY?=
+ =?us-ascii?Q?2a3JoEGMAJWMrI9SgN/xa87Vqro+WheeOCp32SvQh/VYWACqBz6Y2YvJdkZc?=
+ =?us-ascii?Q?Yy4mGlQnhTBpoTJQV0OEUfBHTfLAdDKj19v2SkKkyjnWi5/sanrSQKMNvpWI?=
+ =?us-ascii?Q?hL3p7xvVT9I1J+s51WEAbmKDK2q1XJhzr5IuJCm8C1s0/FjSJS3yyyxLhosL?=
+ =?us-ascii?Q?/oMbMRNzd8fhxurI7sxIc2+MbwOQyolnTkQSw8zXP8kZEoA2fIsbu8zLjiXK?=
+ =?us-ascii?Q?9r7TurBdnpv/XwdFCxneQ2j5WJPHjBRtzytis79NXDW34C/F0P3p88V8Kbqv?=
+ =?us-ascii?Q?XCjuOMbA8icMRmeeRYrL7RL2eWzOPg+tmvsWwrK4+bSvRNuGquSc4Z0JtZ7S?=
+ =?us-ascii?Q?QIpnQp2LkTpMklGx6UeGxaVXp0zB1Q4GW3r3FefprDKXMfO4mVvA+QjjzsM/?=
+ =?us-ascii?Q?kW6JhJI4w+eeqQMCOm6N3RiYCiq0jkBjIMwjwReMbwg5hz+kaz37HhHqYZmg?=
+ =?us-ascii?Q?lRZAetxPyW7mkaJoXqffCYJllAEZQcpf0oGQ1BLSR+sI9FgBMSJDoJEZaoQw?=
+ =?us-ascii?Q?r7K64WdJO2fjuc6X2LhE4sPLNwFsoeCEYLyNjfQVSw8pmvHwpdumPi0Dpu3s?=
+ =?us-ascii?Q?ByLZlzslCvKfh9pmdrkDprNt29bP0t+NsPHgK7GUSLuMBwMjrdlMAqc2l2IC?=
+ =?us-ascii?Q?xzRU+m4UeGm8Ua/O99MuM5rriT83DcMtDgg86aZ1EHV+Dr9n410ys/ddyqNc?=
+ =?us-ascii?Q?kyY0QNS4TphA1TZzSGH84MrTbUPHHO++IuGKfDcQSPzbh975+HJBx5Hz/yS6?=
+ =?us-ascii?Q?utoYT03knosLd6JbyHgZTIMDChXe+5nHmfiZfw86ekpbGYuW8Ecg87O6mogx?=
+ =?us-ascii?Q?hDDhIs8mCJQSV9TrDwylCeTzehp7JpFT4pMPtLSF86x7VGRwMJfmAAW/M0Hc?=
+ =?us-ascii?Q?le1zhZayESdlkjF4AUCMcu6PMUXqxap+AuoDhvazgxins714rqt1HGLT25KL?=
+ =?us-ascii?Q?YFP/BREGUhfjuqrah2ZnFgNkRssconyEqdZLIolhmIYgwUqxj/I7Hbesr/As?=
+ =?us-ascii?Q?zURwfACfqe51EYWRZK10fDH2Y7juu8SAnNS8ZaqIfpfTy7jeWiLrmv/3ZOrU?=
+ =?us-ascii?Q?VdqhSPXh1T0hKfGbagSkEW9o?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7268f07c-aae8-4232-6be9-08d931a9be39
+X-MS-Exchange-CrossTenant-Network-Message-Id: bc26ba52-4fdf-4480-baee-08d931a9eb7c
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:36.1658
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:52.1442
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: K6E3nUFF1qxCMzNilP8xKO6XkZQ8RAtYvm5oW7+nSWNNpXF1LkXtmgC6ncyG7r3131eOmFXtiHUQlCz7joeHEw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
+X-MS-Exchange-CrossTenant-UserPrincipalName: TwBFkps6PjM0JChPIvSSXlGiUodx1TPVVCPdbsCgPHrMzg8ZyShBC4yR/mpl6o02lSsKFgvn7ReKrNrbwR1q4Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0515
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,396 +129,402 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/rf_boot.c | 354 +++++++++++++++++++++
- 1 file changed, 354 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/rf_boot.c
+ drivers/net/wireless/celeno/cl8k/vendor_cmd.c | 377 ++++++++++++++++++
+ 1 file changed, 377 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vendor_cmd.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/rf_boot.c b/drivers/net/wirel=
-ess/celeno/cl8k/rf_boot.c
+diff --git a/drivers/net/wireless/celeno/cl8k/vendor_cmd.c b/drivers/net/wi=
+reless/celeno/cl8k/vendor_cmd.c
 new file mode 100644
-index 000000000000..4202c153661b
+index 000000000000..812eebe72956
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/rf_boot.c
-@@ -0,0 +1,354 @@
++++ b/drivers/net/wireless/celeno/cl8k/vendor_cmd.c
+@@ -0,0 +1,377 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "rf_boot.h"
-+#include "hw.h"
-+#include "afe.h"
-+#include "utils/file.h"
-+#include "phy/phy.h"
-+#include "reg/reg_access.h"
-+#include "reg/reg_cmu.h"
-+#include "reg/reg_modem_gcu.h"
-+#include "reg/reg_ricu.h"
-+#include "reg/reg_riu.h"
-+#include "reg/reg_mac_hw.h"
-+#include "reg/reg_lcu_phy.h"
++#include <net/cfg80211.h>
++#include <net/mac80211.h>
++#include <linux/version.h>
++#include "vendor_cmd.h"
++#include "calib.h"
++#include "e2p.h"
++#include "ate.h"
++#include "cecli.h"
++#include "utils/utils.h"
 +
-+static void cl_clk_init(struct cl_chip *chip)
++static int vendor_reply(struct wiphy *wiphy, void *data, u16 len)
 +{
-+       cmu_clk_en_set(chip, CMU_MAC_ALL_CLK_EN);
++       /* Utility function to send reply message */
++       struct sk_buff *msg =3D cfg80211_vendor_cmd_alloc_reply_skb(wiphy, =
+len);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cl_msg_data *msg_data =3D (struct cl_msg_data *)data;
 +
-+       cmu_phy_0_clk_en_set(chip, CMU_PHY_0_APB_CLK_EN_BIT | CMU_PHY_0_MAI=
-N_CLK_EN_BIT);
-+       cmu_phy_1_clk_en_set(chip, CMU_PHY_1_APB_CLK_EN_BIT | CMU_PHY_1_MAI=
-N_CLK_EN_BIT);
++       if (!msg)
++               return -ENOMEM;
 +
-+       cmu_phy_0_rst_ceva_0_global_rst_n_setf(chip, 0);
-+       modem_gcu_ceva_ctrl_external_wait_setf(chip->cl_hw_tcv0, 1);
-+       cmu_phy_0_rst_ceva_0_global_rst_n_setf(chip, 1);
-+
-+       cmu_phy_1_rst_ceva_1_global_rst_n_setf(chip, 0);
-+       modem_gcu_ceva_ctrl_external_wait_setf(chip->cl_hw_tcv1, 1);
-+       cmu_phy_1_rst_ceva_1_global_rst_n_setf(chip, 1);
-+
-+       cmu_phy_0_clk_en_ceva_0_clk_en_setf(chip, 1);
-+       cmu_phy_1_clk_en_ceva_1_clk_en_setf(chip, 1);
-+}
-+
-+static int cl_pll1_init(struct cl_chip *chip)
-+{
-+       int retry =3D 0;
-+
-+       /* Verify pll is locked */
-+       while (!cmu_pll_1_stat_pll_lock_getf(chip) && (++retry < 10)) {
-+               cl_dbg_chip_verbose(chip, "retry=3D%d\n", retry);
-+               usleep_range(100, 200);
++       if (data) {
++               if (nla_put(msg, CL_VENDOR_ATTR_REPLY, len, (void *)msg_dat=
+a) < 0) {
++                       kfree_skb(msg);
++                       return -ENOBUFS;
++               }
 +       }
 +
-+       /* Pll is not locked - fatal error */
-+       if (retry =3D=3D 10) {
-+               cl_dbg_chip_err(chip, "retry limit reached - pll is not loc=
-ked !!!\n");
-+               return -1;
++       /* Start timer if we waiting for more msg's from userspace */
++       if (msg_data->more_data)
++               cl_timer_enable(&cl_hw->vendor_timer);
++
++       return cfg80211_vendor_cmd_reply(msg);
++}
++
++static int _cl_vendor_reply(struct cl_hw *cl_hw, void *data, u16 len, bool=
+ process_data)
++{
++       struct cl_vendor_msg *vendor_msg =3D &cl_hw->vendor_msg;
++       struct cl_msg_data *msg_data =3D NULL;
++       int ret =3D 0;
++       u16 curr_size;
++
++       if (!data || len =3D=3D 0)
++               return -EIO;
++
++       msg_data =3D kzalloc(sizeof(*msg_data), GFP_KERNEL);
++       if (!msg_data)
++               return -ENOMEM;
++
++       /* Messages 2..N */
++       if (process_data) {
++               curr_size =3D vendor_msg->len - vendor_msg->offset;
++               if (curr_size <=3D MSG_SIZE) {
++                       vendor_msg->in_process =3D false;
++               } else {
++                       curr_size =3D MSG_SIZE;
++                       msg_data->more_data =3D 1;
++               }
++
++               memcpy(msg_data->data, vendor_msg->buf + vendor_msg->offset=
+, curr_size);
++               vendor_msg->offset +=3D curr_size;
++               ret =3D vendor_reply(cl_hw->hw->wiphy, (void *)msg_data, si=
+zeof(*msg_data));
++
++               /* Last msg */
++               if (!vendor_msg->in_process)
++                       memset(vendor_msg, 0, sizeof(*vendor_msg));
++
++               goto out;
 +       }
 +
-+       return 0;
++       /* Single message */
++       if (len < MSG_SIZE) {
++               memcpy(msg_data->data, data, len);
++               ret =3D vendor_reply(cl_hw->hw->wiphy, (void *)msg_data, si=
+zeof(*msg_data));
++               goto out;
++       } else if (vendor_msg->in_process) {
++               goto out;
++       }
++
++       /* First message */
++       msg_data->more_data =3D 1;
++
++       /* Allocate buffer in driver */
++       vendor_msg->buf =3D data;
++
++       vendor_msg->in_process =3D true;
++       vendor_msg->len =3D len;
++
++       memcpy(msg_data->data, data, MSG_SIZE);
++       vendor_msg->offset +=3D MSG_SIZE;
++       ret =3D vendor_reply(cl_hw->hw->wiphy, (void *)msg_data, sizeof(*ms=
+g_data));
++
++out:
++       kfree(msg_data);
++       return ret;
 +}
 +
-+static int cl_cmu_init(struct cl_chip *chip)
++static int cl_vendor_cecli_handler(struct wiphy *wiphy,
++                                  struct wireless_dev *wdev,
++                                  const void *data, int len)
 +{
-+       if (cl_pll1_init(chip))
-+               return -1;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       u8 cecli_cmd_id =3D *(u8 *)data;
++       void *real_data =3D (u8 *)(data + 1);
 +
-+       /* Set gl_mux_sel bit to work with pll1 instead of crystal */
-+       cmu_control_gl_mux_sel_setf(chip, 1);
++       len--;
 +
-+       cmu_rst_n_ricurst_setf(chip, 1);
++       cl_timer_disable_sync(&cl_hw->vendor_timer);
++       if (cl_hw->vendor_msg.in_process &&
++           cecli_cmd_id =3D=3D CL_CECLI_MORE_DATA)
++               return _cl_vendor_reply(cl_hw, real_data, len, true);
 +
-+       cmu_phy_0_rst_set(chip, CMU_PHY0_RST_EN);
-+       cmu_phy_1_rst_set(chip, CMU_PHY1_RST_EN);
-+       cmu_phy_0_rst_set(chip, 0x0);
-+       cmu_phy_1_rst_set(chip, 0x0);
-+       cmu_rst_n_ricurst_setf(chip, 1);
-+       cmu_phy_0_rst_set(chip, CMU_PHY0_RST_EN);
-+       cmu_phy_1_rst_set(chip, CMU_PHY1_RST_EN);
-+
-+       return 0;
-+}
-+
-+static void cl_riu_clk_bw_init(struct cl_hw *cl_hw)
-+{
-+       u32 regval;
-+
-+       switch (cl_hw->conf->ce_channel_bandwidth) {
-+       case CHNL_BW_20:
-+               regval =3D 0x00000100;
-+               break;
-+       case CHNL_BW_40:
-+               regval =3D 0x00000555;
-+               break;
-+       case CHNL_BW_160:
-+               regval =3D 0x00000dff;
-+               break;
-+       case CHNL_BW_80:
++       switch (cecli_cmd_id) {
++       case CL_CECLI_AGC_PARAMS:
++               return cl_cecli_agc_params(wiphy, wdev, real_data, len);
++       case CL_CECLI_BF:
++               return cl_cecli_bf(wiphy, wdev, real_data, len);
++       case CL_CECLI_CALIB:
++               return cl_cecli_calib(wiphy, wdev, real_data, len);
++       case CL_CECLI_CCA:
++               return cl_cecli_cca(wiphy, wdev, real_data, len);
++       case CL_CECLI_CHIP:
++               return cl_cecli_chip(wiphy, wdev, real_data, len);
++       case CL_CECLI_CONFIG:
++               return cl_cecli_config(wiphy, wdev, real_data, len);
++       case CL_CECLI_DEBUG:
++               return cl_cecli_debug(wiphy, wdev, real_data, len);
++       case CL_CECLI_DFS:
++               return cl_cecli_dfs(wiphy, wdev, real_data, len);
++       case CL_CECLI_EDCA:
++               return cl_cecli_edca(wiphy, wdev, real_data, len);
++       case CL_CECLI_FW:
++               return cl_cecli_fw(wiphy, wdev, real_data, len);
++       case CL_CECLI_MOTION:
++               return cl_cecli_motion(wiphy, wdev, real_data, len);
++       case CL_CECLI_NOISE:
++               return cl_cecli_noise(wiphy, wdev, real_data, len);
++       case CL_CECLI_OMI:
++               return cl_cecli_omi(wiphy, wdev, real_data, len);
++       case CL_CECLI_POWER:
++               return cl_cecli_power(wiphy, wdev, real_data, len);
++       case CL_CECLI_QOS:
++               return cl_cecli_qos(wiphy, wdev, real_data, len);
++       case CL_CECLI_RADIO:
++               return cl_cecli_radio(wiphy, wdev, real_data, len);
++       case CL_CECLI_REG:
++               return cl_cecli_reg(wiphy, wdev, real_data, len);
++       case CL_CECLI_SOUNDING:
++               return cl_cecli_sounding(wiphy, wdev, real_data, len);
++       case CL_CECLI_STATS:
++               return cl_cecli_stats(wiphy, wdev, real_data, len);
++       case CL_CECLI_TCV:
++               return cl_cecli_tcv(wiphy, wdev, real_data, len);
++       case CL_CECLI_TEMP:
++               return cl_cecli_temp(wiphy, wdev, real_data, len);
++       case CL_CECLI_TRAFFIC:
++               return cl_cecli_traffic(wiphy, wdev, real_data, len);
++       case CL_CECLI_TWT:
++               return cl_cecli_twt(wiphy, wdev, real_data, len);
++       case CL_CECLI_TXQ:
++               return cl_cecli_txq(wiphy, wdev, real_data, len);
++       case CL_CECLI_VERSION:
++               return cl_cecli_version(wiphy, wdev, real_data, len);
++       case CL_CECLI_VNS:
++               return cl_cecli_vns(wiphy, wdev, real_data, len);
++       case CL_CECLI_WRS:
++               return cl_cecli_wrs(wiphy, wdev, real_data, len);
 +       default:
-+               regval =3D 0x000009aa;
-+               break;
++               return cl_cecli_help(wiphy, wdev, real_data, len);
 +       }
-+
-+       /* Set RIU modules clock BW */
-+       modem_gcu_riu_clk_bw_set(cl_hw, regval);
-+}
-+
-+static int cl_load_riu_rsf_memory(struct cl_chip *chip, const char *filena=
-me)
-+{
-+       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
-+       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
-+       char *buf =3D NULL;
-+       loff_t size, i =3D 0;
-+       int ret =3D 0;
-+
-+       size =3D cl_file_open_and_read(chip, filename, &buf);
-+
-+       if (!buf)
-+               return -ENOMEM;
-+
-+       if (size > RIU_RSF_FILE_SIZE) {
-+               ret =3D -EFBIG;
-+               goto out;
-+       }
-+
-+       /* Enable re-sampling filter init. */
-+       riu_rsf_control_rsf_init_en_setf(cl_hw_tcv0, 0x1);
-+       if (cl_hw_tcv1)
-+               riu_rsf_control_rsf_init_en_setf(cl_hw_tcv1, 0x1);
-+
-+       while (i < size) {
-+               riu_rsf_init_set(cl_hw_tcv0, *(u32 *)&buf[i]);
-+               if (cl_hw_tcv1)
-+                       riu_rsf_init_set(cl_hw_tcv1, *(u32 *)&buf[i]);
-+               i +=3D 4;
-+       }
-+
-+out:
-+       kfree(buf);
-+       return ret;
-+}
-+
-+static int cl_load_riu_rsf_memory_recovery(struct cl_hw *cl_hw, const char=
- *filename)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       char *buf =3D NULL;
-+       loff_t size, i =3D 0;
-+       int ret =3D 0;
-+
-+       size =3D cl_file_open_and_read(chip, filename, &buf);
-+
-+       if (!buf)
-+               return -ENOMEM;
-+
-+       if (size > RIU_RSF_FILE_SIZE) {
-+               ret =3D -EFBIG;
-+               goto out;
-+       }
-+
-+       /* Enable re-sampling filter init. */
-+       riu_rsf_control_rsf_init_en_setf(cl_hw, 0x1);
-+
-+       while (i < size) {
-+               riu_rsf_init_set(cl_hw, *(u32 *)&buf[i]);
-+               i +=3D 4;
-+       }
-+
-+out:
-+       kfree(buf);
-+       return ret;
-+}
-+
-+static int cl_load_agc_data(struct cl_hw *cl_hw, const char *filename)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       char *buf =3D NULL;
-+       loff_t size, i =3D 0;
-+
-+       size =3D cl_file_open_and_read(chip, filename, &buf);
-+
-+       if (!buf)
-+               return -ENOMEM;
-+
-+       /* Enable AGC FSM ram init state */
-+       riu_agcfsm_ram_init_1_agc_fsm_ram_init_en_setf(cl_hw, 0x1);
-+       /* Start writing the firmware from WPTR=3D0 */
-+       riu_agcfsm_ram_init_1_agc_fsm_ram_init_wptr_setf(cl_hw, 0x0);
-+       /* Allow WPTR register to be writable */
-+       riu_agcfsm_ram_init_1_agc_fsm_ram_init_wptr_set_setf(cl_hw, 0x1);
-+       /* Enable auto increment WPTR by 1 upon any write */
-+       riu_agcfsm_ram_init_1_agc_fsm_ram_init_ainc_1_setf(cl_hw, 0x1);
-+
-+       while (i < size) {
-+               riu_agcfsm_ram_init_2_set(cl_hw, *(u32 *)&buf[i]);
-+               i +=3D 4;
-+       }
-+
-+       /* Disable AGC FSM ram init state */
-+       riu_agcfsm_ram_init_1_agc_fsm_ram_init_en_setf(cl_hw, 0x0);
-+
-+       kfree(buf);
 +
 +       return 0;
 +}
 +
-+static int cl_load_agc_fw(struct cl_hw *cl_hw, const char *filename)
++static int cl_vendor_e2p_handler(struct wiphy *wiphy,
++                                struct wireless_dev *wdev,
++                                const void *data, int len)
 +{
-+       int ret =3D 0;
++       u8 e2p_cmd_id =3D *(u8 *)data;
++       void *real_data =3D (u8 *)(data + 1);
 +
-+       /* Switch AGC to programming mode */
++       len--;
 +
-+       /* Disable RIU Modules clocks (RC,LB,ModemB,FE,ADC,Regs,AGC,Radar) =
-*/
-+       modem_gcu_riu_clk_set(cl_hw, 0);
++       switch (e2p_cmd_id) {
++       case CL_E2P_GET_ADDR:
++       case CL_E2P_GET_MAC:
++       case CL_E2P_GET_SERIAL_NUMBER:
++       case CL_E2P_GET_PWR_TABLE_ID:
++       case CL_E2P_GET_FREQ_OFFSET:
++       case CL_E2P_GET_WIRING_ID:
++       case CL_E2P_GET_FEM_LUT:
++       case CL_E2P_GET_PLATFORM_ID:
++       case CL_E2P_GET_HEXDUMP:
++       case CL_E2P_GET_TABLE:
++               return cl_e2p_get_addr(wiphy, wdev, real_data, len);
++       case CL_E2P_GET_CALIB:
++               return cl_calib_get(wiphy, wdev, real_data, len);
++       case CL_E2P_SET_ADDR:
++       case CL_E2P_SET_MAC:
++       case CL_E2P_SET_SERIAL_NUMBER:
++       case CL_E2P_SET_PWR_TABLE_ID:
++       case CL_E2P_SET_FREQ_OFFSET:
++       case CL_E2P_SET_FEM_LUT:
++       case CL_E2P_SET_PLATFORM_ID:
++               return cl_e2p_set_addr(wiphy, wdev, real_data, len);
++       case CL_E2P_SET_WIRING_ID:
++               return cl_e2p_set_wiring_id(wiphy, wdev, real_data, len);
++       case CL_E2P_SET_CALIB:
++               return cl_calib_set(wiphy, wdev, real_data, len);
++       default:
++               return cl_e2p_help(wiphy, wdev, real_data, len);
++       }
 +
-+       /* Switch AGC MEM clock to 480MHz */
-+       modem_gcu_riu_clk_bw_agc_mem_clk_bw_setf(cl_hw, 3);
-+
-+       /* Enable RIU Modules clocks (RC,LB,ModemB,FE,ADC,Regs,AGC,Radar) *=
-/
-+       modem_gcu_riu_clk_set(cl_hw, 0xFFFFFFFF);
-+
-+       /* Assert AGC FSM reset */
-+       riu_rwnxagccntl_agcfsmreset_setf(cl_hw, 1);
-+
-+       /* Load AGC RAM data */
-+       ret =3D cl_load_agc_data(cl_hw, filename);
-+       if (ret)
-+               goto out;
-+
-+       /* Switch AGC back to operational mode */
-+
-+       /* Disable RIU Modules clocks (RC, LB, ModemB, FE, ADC, Regs, AGC, =
-Radar) */
-+       modem_gcu_riu_clk_set(cl_hw, 0);
-+       /* Switch AGC MEM clock back to 80M */
-+       modem_gcu_riu_clk_bw_agc_mem_clk_bw_setf(cl_hw, 1);
-+       /* Enable RIU Modules clocks (RC, LB, ModemB, FE, ADC, Regs, AGC, R=
-adar) */
-+       modem_gcu_riu_clk_set(cl_hw, 0xFFFFFFFF);
-+
-+       /* Release AGC FSM reset */
-+       riu_rwnxagccntl_agcfsmreset_setf(cl_hw, 0);
-+
-+out:
-+       return ret;
++       return 0;
 +}
 +
-+int cl_rf_boot(struct cl_chip *chip)
++static int cl_vendor_ate_handler(struct wiphy *wiphy,
++                                struct wireless_dev *wdev,
++                                const void *data, int len)
 +{
-+       int ret =3D 0;
-+       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
-+       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
++       u8 ate_cmd_id =3D *(u8 *)data;
++       void *real_data =3D (u8 *)(data + 1);
 +
-+       /* Call only once per chip after ASIC reset - configure both phys *=
-/
-+       ret =3D cl_cmu_init(chip);
-+       if (ret !=3D 0)
-+               goto out;
++       len--;
 +
-+       cl_clk_init(chip);
-+       cmu_phase_sel_set(chip, (CMU_GP_CLK_PHASE_SEL_BIT |
-+                                CMU_DAC_CDB_CLK_PHASE_SEL_BIT |
-+                                CMU_DAC_CLK_PHASE_SEL_BIT) &
-+                                ~(CMU_ADC_CDB_CLK_PHASE_SEL_BIT |
-+                                CMU_ADC_CLK_PHASE_SEL_BIT));
-+
-+       mac_hw_mac_cntrl_1_active_clk_gating_setf(cl_hw_tcv0, 1); /* Disabl=
-e MPIF clock */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw_tcv0, 2);        /* Move t=
-o doze */
-+
-+       mac_hw_mac_cntrl_1_active_clk_gating_setf(cl_hw_tcv1, 1); /* Disabl=
-e MPIF clock */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw_tcv1, 2);        /* Move t=
-o doze */
-+
-+       /* Enable all PHY modules */
-+       cl_phy_enable(cl_hw_tcv0);
-+       cl_phy_enable(cl_hw_tcv1);
-+
-+       mac_hw_doze_cntrl_2_wake_up_sw_setf(cl_hw_tcv0, 1); /* Exit from do=
-ze */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw_tcv0, 0);  /* Move to idle=
- */
-+
-+       mac_hw_doze_cntrl_2_wake_up_sw_setf(cl_hw_tcv1, 1); /* Exit from do=
-ze */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw_tcv1, 0);  /* Move to idle=
- */
-+
-+       cl_riu_clk_bw_init(cl_hw_tcv0);
-+       cl_riu_clk_bw_init(cl_hw_tcv1);
-+
-+       /* Load RIU re-sampling filter memory with coefficients */
-+       ret =3D cl_load_riu_rsf_memory(chip, "riu_rsf.bin");
-+       if (ret !=3D 0) {
-+               pr_err("cl_load_riu_rsf_memory failed with error code %d.\n=
-", ret);
-+               goto out;
++       switch (ate_cmd_id) {
++       case CL_ATE_RESET:
++               return cl_ate_reset(wiphy, wdev, real_data, len);
++       case CL_ATE_MODE:
++               return cl_ate_mode(wiphy, wdev, real_data, len);
++       case CL_ATE_BW:
++               return cl_ate_bw(wiphy, wdev, real_data, len);
++       case CL_ATE_MCS:
++               return cl_ate_mcs(wiphy, wdev, real_data, len);
++       case CL_ATE_NSS:
++               return cl_ate_nss(wiphy, wdev, real_data, len);
++       case CL_ATE_GI:
++               return cl_ate_gi(wiphy, wdev, real_data, len);
++       case CL_ATE_LTF:
++               return cl_ate_ltf(wiphy, wdev, real_data, len);
++       case CL_ATE_LDPC:
++               return cl_ate_ldpc(wiphy, wdev, real_data, len);
++       case CL_ATE_CHANNEL:
++               return cl_ate_channel(wiphy, wdev, real_data, len);
++       case CL_ATE_ANT:
++               return cl_ate_ant(wiphy, wdev, real_data, len);
++       case CL_ATE_MULTI_ANT:
++               return cl_ate_multi_ant(wiphy, wdev, real_data, len);
++       case CL_ATE_PACKET_LEN:
++               return cl_ate_packet_len(wiphy, wdev, real_data, len);
++       case CL_ATE_VECTOR_RESET:
++               return cl_ate_vector_reset(wiphy, wdev, real_data, len);
++       case CL_ATE_VECTOR:
++               return cl_ate_vector(wiphy, wdev, real_data, len);
++       case CL_ATE_FREQ_OFFSET:
++               return cl_ate_freq_offset(wiphy, wdev, real_data, len);
++       case CL_ATE_STAT_RESET:
++               return cl_ate_stat_reset(wiphy, wdev, real_data, len);
++       case CL_ATE_STAT:
++               return cl_ate_stat(wiphy, wdev, real_data, len);
++       case CL_ATE_POWER:
++               return cl_ate_power(wiphy, wdev, real_data, len);
++       case CL_ATE_POWER_OFFSET:
++               return cl_ate_power_offset(wiphy, wdev, real_data, len);
++       case CL_ATE_TX_START:
++               return cl_ate_tx_start(wiphy, wdev, real_data, len);
++       case CL_ATE_TX_CONTINUOUS:
++               return cl_ate_tx_continuous(wiphy, wdev, real_data, len);
++       case CL_ATE_STOP:
++               return cl_ate_stop(wiphy, wdev, real_data, len);
++       default:
++               return cl_ate_help(wiphy, wdev, real_data, len);
 +       }
 +
-+       /* Load AGC FW */
-+       ret =3D cl_load_agc_fw(cl_hw_tcv0, "agcram.bin");
-+       if (ret) {
-+               pr_err("cl_load_agc_fw failed for tcv0 with error code %d.\=
-n", ret);
-+               goto out;
-+       }
-+
-+       ret =3D cl_load_agc_fw(cl_hw_tcv1, "agcram.bin");
-+       if (ret) {
-+               pr_err("cl_load_agc_fw failed for tcv1 with error code %d.\=
-n", ret);
-+               goto out;
-+       }
-+
-+       /* AFE Registers configuration */
-+       ret =3D cl_afe_cfg(chip);
-+
-+out:
-+       return ret;
++       return 0;
 +}
 +
-+static void restore_ela_state(struct cl_hw *cl_hw)
++static int cl_vendor_help_handler(struct wiphy *wiphy,
++                                 struct wireless_dev *wdev,
++                                 const void *data, int len)
 +{
-+       struct cl_recovery_db *recovery_db =3D &cl_hw->recovery_db;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       char ret_buf[] =3D {
++               "usage:\n"
++               "cecli - Celeno driver related\n"
++               "e2p   - Celeno eeprom related\n"
++               "ATE   - Celeno production related\n"
++       };
 +
-+       /* Restore eLA state after MAC-HW reset */
-+       if (recovery_db->ela_en) {
-+               mac_hw_debug_port_sel_a_set(cl_hw, recovery_db->ela_sel_a);
-+               mac_hw_debug_port_sel_b_set(cl_hw, recovery_db->ela_sel_b);
-+               mac_hw_debug_port_sel_c_set(cl_hw, recovery_db->ela_sel_c);
-+       }
-+
-+       mac_hw_debug_port_en_set(cl_hw, recovery_db->ela_en);
++       return cl_vendor_reply(cl_hw, ret_buf, strlen(ret_buf));
 +}
 +
-+int cl_rf_boot_recovery(struct cl_hw *cl_hw)
++static void cl_vendor_handle_timeout(unsigned long data)
 +{
-+       int ret =3D 0;
++       struct cl_hw *cl_hw =3D (struct cl_hw *)data;
++       struct cl_vendor_msg *vendor_msg =3D &cl_hw->vendor_msg;
 +
-+       mac_hw_mac_cntrl_1_active_clk_gating_setf(cl_hw, 1); /* Disable MPI=
-F clock */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw, 2);        /* Move to doz=
-e */
-+
-+       /* Enable all PHY modules */
-+       cl_phy_enable(cl_hw);
-+
-+       /* Restart LCU recording */
-+       if (cl_hw_is_tcv0(cl_hw))
-+               lcu_phy_lcu_ch_0_stop_set(cl_hw, 0);
-+       else
-+               lcu_phy_lcu_ch_1_stop_set(cl_hw, 0);
-+
-+       restore_ela_state(cl_hw);
-+
-+       mac_hw_doze_cntrl_2_wake_up_sw_setf(cl_hw, 1); /* Exit from doze */
-+       mac_hw_state_cntrl_next_state_setf(cl_hw, 0);  /* Move to idle */
-+
-+       cl_riu_clk_bw_init(cl_hw);
-+
-+       /* Load RIU re-sampling filter memory with coefficients */
-+       ret =3D cl_load_riu_rsf_memory_recovery(cl_hw, "riu_rsf.bin");
-+       if (ret !=3D 0) {
-+               pr_err("cl_load_riu_rsf_memory failed with error code %d.\n=
-", ret);
-+               goto out;
-+       }
-+
-+       /* Load AGC FW */
-+       ret =3D cl_load_agc_fw(cl_hw, "agcram.bin");
-+       if (ret) {
-+               pr_err("cl_load_agc_fw failed for with error code %d.\n", r=
-et);
-+               goto out;
-+       }
-+
-+out:
-+       return ret;
++       memset(vendor_msg, 0, sizeof(*vendor_msg));
++       pr_warn("cl_vendor timer expired!\n");
 +}
++
++int cl_vendor_reply(struct cl_hw *cl_hw, void *data, u16 len)
++{
++       return _cl_vendor_reply(cl_hw, data, len, false);
++}
++
++void cl_vendor_timer_init(struct cl_hw *cl_hw)
++{
++       /* Init vendor_cmd timer */
++       cl_timer_init(&cl_hw->vendor_timer, cl_vendor_handle_timeout,
++                     (unsigned long)cl_hw, VENDOR_CMD_TIMER_PERIOD_MS, fal=
+se);
++}
++
++void cl_vendor_timer_close(struct cl_hw *cl_hw)
++{
++       cl_timer_disable_sync(&cl_hw->vendor_timer);
++}
++
++/* Vendor specific commands */
++const struct wiphy_vendor_command cl_vendor_cmds[] =3D {
++       {
++               .info.vendor_id =3D CELENO_OUI,
++               .info.subcmd =3D CL_VNDR_CMDS_CECLI,
++               .flags =3D WIPHY_VENDOR_CMD_NEED_WDEV |
++                       WIPHY_VENDOR_CMD_NEED_RUNNING |
++                       WIPHY_VENDOR_CMD_NEED_NETDEV,
++               .policy =3D VENDOR_CMD_RAW_DATA,
++               .doit =3D cl_vendor_cecli_handler
++       },
++       {
++               .info.vendor_id =3D CELENO_OUI,
++               .info.subcmd =3D CL_VNDR_CMDS_E2P,
++               .flags =3D WIPHY_VENDOR_CMD_NEED_WDEV |
++                       WIPHY_VENDOR_CMD_NEED_RUNNING |
++                       WIPHY_VENDOR_CMD_NEED_NETDEV,
++               .policy =3D VENDOR_CMD_RAW_DATA,
++               .doit =3D cl_vendor_e2p_handler
++       },
++       {
++               .info.vendor_id =3D CELENO_OUI,
++               .info.subcmd =3D CL_VNDR_CMDS_ATE,
++               .flags =3D WIPHY_VENDOR_CMD_NEED_WDEV |
++                       WIPHY_VENDOR_CMD_NEED_RUNNING |
++                       WIPHY_VENDOR_CMD_NEED_NETDEV,
++               .policy =3D VENDOR_CMD_RAW_DATA,
++               .doit =3D cl_vendor_ate_handler
++       },
++       {
++               .info.vendor_id =3D CELENO_OUI,
++               .info.subcmd =3D CL_VNDR_CMDS_HELP,
++               .flags =3D WIPHY_VENDOR_CMD_NEED_WDEV |
++                       WIPHY_VENDOR_CMD_NEED_RUNNING |
++                       WIPHY_VENDOR_CMD_NEED_NETDEV,
++               .policy =3D VENDOR_CMD_RAW_DATA,
++               .doit =3D cl_vendor_help_handler
++       },
++};
++
++/* Vendor specific events */
++const struct nl80211_vendor_cmd_info cl_vendor_events[] =3D {
++       {
++               .vendor_id =3D CELENO_OUI,
++               .subcmd =3D CL_VENDOR_EVENT_ASYNC,
++       }
++};
++
++void cl_vendor_cmds_init(struct wiphy *wiphy)
++{
++       /* Set celeno vendor commands used by nl80211 */
++       wiphy->vendor_commands =3D cl_vendor_cmds;
++       wiphy->n_vendor_commands =3D ARRAY_SIZE(cl_vendor_cmds);
++       wiphy->vendor_events =3D cl_vendor_events;
++       wiphy->n_vendor_events =3D ARRAY_SIZE(cl_vendor_events);
++}
++
 --
 2.30.0
 
