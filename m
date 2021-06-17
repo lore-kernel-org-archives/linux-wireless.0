@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF1C3C49361
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8436FC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93CF761003
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E7A76140B
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233672AbhFQQJ6 (ORCPT
+        id S233849AbhFQQKB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:58 -0400
-Received: from mail-eopbgr70043.outbound.protection.outlook.com ([40.107.7.43]:64066
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:10:01 -0400
+Received: from mail-vi1eur05on2083.outbound.protection.outlook.com ([40.107.21.83]:50945
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233602AbhFQQIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:08:47 -0400
+        id S233751AbhFQQIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:08:50 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GUO3xhDDpIffeOZicj8sDpQnZxTu9jKefv/O5eEaak9l7Knt+/OplDHa2UC4JqypfVp1eaGeZmfoBVX+VOyo5wHfVuwU85pcYuuvG87JYXw5sR9NlujOfUdHltEl8zIqGuPtY2TwxFJXdOx0pbVL/PN08f8PEibBnGttcCAhqgnl5Yw1FAZZBCV7r2c3NETyXSHLyOyVfjVDU2RN5TuZPvuEzWtqAHqyUT9QAZw+/aMZkwn7m+m4J/fUIjr8hya7BKYVSq/0T8nqnOqhwj8HM95vtNw09YNEEv6KmPjiTRcz3xWrQfE8jpwvrR96rVjHO61QSIWpsTYE7bQmNfPwDg==
+ b=nNGf49F671yo9aGlfjLG5AyqdvK+rpuQd07HTWAN+U22XyBQYnwEbK5GYTO0onByLxcdRwyYWV0MZkWxpcb6Sg9s0zGKIspMfurQ7XAs8LbnO95iLNZNgYrlCOjfg4O1wmFW98WeVXgJQdLZBwNFKCJVj4VTe4ueYHXzlqokT7D+QGWG/nodBbnQlbO1odI7m9sOGlapNjNkudC5poqX+KN1SOIWCS6blWj/vXAy9Gp/BcFKsqWaN5NmbnNnrj2Onb2mzg73vB/o6FWwN6FX8uq1Rh+APu0AM4WdDxWK1yhkg+XhAsc2ZDgEOST1/gRGjvPpvPWn2JKl5x8EDAGCJg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v9snMzudNiWm0TGNUhu4gEWEKzghH2YyfWybTUyg7bQ=;
- b=IxGdCR6VwyqaTIJix/MJuBqnds4i/W2m5jW+KWQmwrqnM/C83Duje39/zLYqeER7eSYiQz0eP4GYKPMG16BBh36xuJgtmU9ZDTl3YI0Pp/nNNs8OwZYgaGLIh+bx4hwcYuQTZPocQ2d3BIo5mJev12Q/3sy0bb/Cs06kmEB3j5kGa5DOwmGVGf7k6D/wOSHZXv0+PJyF+KRuORWNMmvyppuk1AX6NMiT/p7EScdnQGneIoTz4gGSeLjdo042E18J4hTk29OJ/PPJvEYYGakK8u14l3ayyG/dr8qLXpbd1s+e3ksSekJD4XtQd7AKPTS0u3VytwbSrmpEx7rK6cDvtQ==
+ bh=2ipDd6DCgmMgxcfWE2rZdnhtayBweSvsOLwoLZqdCpM=;
+ b=RBPg3JKQwaIDYn9xPGZt4niQZnpSH4TS1uuJiGw4uT2UDUwsmWvVTvjC16vmYS8jSBgxvvo1LicOQJYt137JxC/S08HYPv4iU6yBYOSquqNlXgCzstavlQ5y21KPT2gM+1h55ta6JHTWVO2PopokiM01zWAzLOmyfvb0UFjw+bt8JrQ1GeoQ5nAqOfxulqO9cWZ54RZspFf+Qny1yAnh5wtExJRZTm78TkyZOz3bH9s7Q+a9pVDmOtrfgHZLbDJUiCyY+GWNK+pS/dqYxxaUZaD7DSlB0xXEuO7BIaohGJMhbDSJmljclRB2wA22HnDTmg9DyJwYxK9CKtQHPlztYw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v9snMzudNiWm0TGNUhu4gEWEKzghH2YyfWybTUyg7bQ=;
- b=UARXMdv6I8XyOTkH48zH1D5CBPRPa1FMM8fKczyiAubjfgZafrJT4pOVpI2B0bVZ4v6TSsm/ZKTF0H6y76p+3nr5l/LTuQTJK7fothjh5UUYXspxS6ThqT2Nu/xLBeUFsg4OMUzzbS4JABlE9QOsQ8m/hkk+uM1x3Y1oks2+NLw=
+ bh=2ipDd6DCgmMgxcfWE2rZdnhtayBweSvsOLwoLZqdCpM=;
+ b=CtlxUEffOEV1KMvL1zBSRd4q287jUbmUXfzjkLhZD8ailYQv5xDCAaKeRR+j5b7D3M3gHcT0aZ8udTXlC97BpIA/NdTarp4V9/bme9jTBn+8Xep1oyQViJs+DH4SSEo/iNJClKta0on5snpyMJduE49jRabwLSZ7G3lcz2uOkXo=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
+ by AM9P192MB1314.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a6::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:06:25 +0000
+ 2021 16:05:44 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:25 +0000
+ 16:05:44 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 154/256] cl8k: add reg/reg_ipc.h
-Date:   Thu, 17 Jun 2021 16:00:41 +0000
-Message-Id: <20210617160223.160998-155-viktor.barna@celeno.com>
+Subject: [RFC v1 126/256] cl8k: add phy/phy.h
+Date:   Thu, 17 Jun 2021 16:00:13 +0000
+Message-Id: <20210617160223.160998-127-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:22 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:52 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d93760ba-c997-4718-36b1-08d931a9b69b
-X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
+X-MS-Office365-Filtering-Correlation-Id: 4dc8198a-9579-4055-e684-08d931a9a453
+X-MS-TrafficTypeDiagnostic: AM9P192MB1314:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB1187D6070FF5A66FA7DAE16AF60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <AM9P192MB1314AA2C65C2BB52D442E3D1F60E9@AM9P192MB1314.EURP192.PROD.OUTLOOK.COM>
 X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Hr5dcNZPuy6LOlwi8oP9uySZYUMtGL8clo1xhIJ9/PNjpaUbTAyLK6mHhtzHmcMQZG0CPUD/PvgU2DMyYb0J4QWVW+YPfW3j7XwFbZh5n+7/Z266V7Tm0k04U/XrPThZG9gmh23cLeq2hXzA5hwwKD4+uh7relff8SUDeq6y6rQx8QXSMM/4nof4IT+E/SF2Lz0AHn7/aJqeC+0fMDN49CQwfFnJokKLebotPL+uWyTUKK36x4dykp8C/wJbdeJhKeKKX4DuGpKx763jHIPB1rVWpk5YBESUGHvd8qhm2LN3eLB5ahsXx8AYquji8FQiD+EuzdSI/HvxBqsVes6XT7BAQaxOFzWrdWXmBxDkDcepRa1QJTJnlwsApUBu4ukaEaI8LKbUhYh05ixwREAlhWw1xtr7ExVRwGxXSUKkM5uL556/sONcVRb3bm0VgPp3r07QtSRLvufsQe8brdfTKyvRQKl7kY1clku24MGMhO6tF+ftg+I9/wrKQuhIr8uFnLzLcrXceqXLP4OikqilprnodZYzpEr2TxrQaJ5lRkabhqz9B+ooicSMnYyxzpDdjenkArHVTVFpVevPP8QUf/8bD7iwlwGjbcNSI+8Z4yZoiwE7Dv9zruAn0fEDTWHbyi7OtNv/ppzQ9wiuUuBWfQF82PMBwb0OUvSFj/Ys+RaY9/zcrfVRhs+JuNUJYTxZ6TxRUAn7BciCNWsuoriung==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(498600001)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 7UDPCl8fG56JMcNIlGLWX1ZV6oPDJviVJ3Q5WT0JZwJACUsKmux0Dc+lrMtc8CXzjxK69I1Z5lCpfR23OzSrEYZfOgnqUdbPLKt+l36gwDhcvxydggK4Pap8jo7lkq1Mmrxm9g42bV8jZLaThFuhjoqMoJFJX6/CXVF0pRZw//Xp7M6CdA6BfsXpHHZPIF6IO+JCpcuTnMJ5dt0NB0GG3Gmfr0ErNsMNi0xDMiJ3tSQ/5w3exdkxfQmiJ0pAwbF9Ufa8ozPBZeD3iofivuTJeGNxkBZMA2JQrIsi94qauAl8hlsLQM0ACwYE1KG9Oa9PaeVKmaYDDxctIWm1XwTqzWEELD1Io0eRhYh9D1bFd6NAlD2CrVSAPhyvH9+l2Wvc9jYUeUQlBfCl8RSe9egkjwNz4dqhBBIc6M9xfbk8U2trF6x55gOVmj65c1JTcFzxzxsQe1HvWAkqeXkbRef3hKye8vW5RGVkufVj40/sPAw9mzAPRgPao9L0GcvvdI+c5+J/xyLCojrYz7bgty+se2PUemPpN7Isqx3n74C7IVRxm5t6EPwS1PTtFUNBCMB0Bmp+JRxdzC1IoR/IzkC+zgDn7PgMvPkoH0fs5flfCqRdDyaLpM/5oziLYOJrbaEscPPIOi3cRvJ/iRhqUA2CScGAtZwfWWZOTg6jnKddfw8DSw5+rteUngk6BDPTgmfQDMo2zP+bq3B4ajdBpWq5Fw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(39840400004)(366004)(376002)(136003)(346002)(8936002)(66946007)(83380400001)(186003)(5660300002)(26005)(36756003)(86362001)(8676002)(55236004)(1076003)(6916009)(2906002)(6506007)(66476007)(478600001)(6666004)(38350700002)(52116002)(66556008)(956004)(4326008)(107886003)(54906003)(38100700002)(6486002)(2616005)(316002)(16526019)(6512007)(9686003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?XRMjLIUm/JnBzXhBJAZWTR4KwQcWjTg669o40jcgwSHx0Db/ruB8EMxQQcQk?=
- =?us-ascii?Q?F5uBxNvkBWFKHZoqTu91dN/wnzK62joavGwor1yRjA/eOJt+Dk00YoWy2uio?=
- =?us-ascii?Q?pcpBD2AHDRZL7I1TL3biYKbdzTJcvIsfrbiza0gSrz+tBZ9wAa0P2KsnO4b+?=
- =?us-ascii?Q?3clk8c8/bEorxr79Aduvndubys2FMbvF2MY2YlDeIUcO7M5jCNZ7jSqVwSf7?=
- =?us-ascii?Q?nx/qoPnyU2csEDwpZXsWkMhiUc0FaK7y0Es4oGjXzx+hOpQAgza6k0A/KxAr?=
- =?us-ascii?Q?YnNDlni9nk4sU32TmHtJZWusbzwei19WTY4FtmU8SAwQXZbNdkbSeXOtcuoD?=
- =?us-ascii?Q?EIOlFQ+FHNORPW82UKRP1Q5LhjQkO3ywW4wN4NHFFeELVLFqUwN3GtQ7Zb0C?=
- =?us-ascii?Q?DbANIdwPYOZ+N0rEaHdWnm8jMV5Eg5w3RbMLQjfbAIMBF1MnM4ME0KkA1ow2?=
- =?us-ascii?Q?3h252m4WU6md8LbV+ZCUM8bQKlTVIHDx6gmsU1o/zoj5f11iNiXCRGTNLpuh?=
- =?us-ascii?Q?cJLIlfFA08VvTrbqaZb6kGH3x6lou6IQzyu8hqIuajNw97OeeyOsj5GgqHuq?=
- =?us-ascii?Q?zsykGiWH5qJ8BUK2uXgnzsR6YK3dYyMwIBY/N3GUapshhUO+p9QlLKpepFAO?=
- =?us-ascii?Q?ppa5OWfz1aMODod/yi93Qe+zkL2VW7HQoTTqGNrC3rT16303CtF9vub02zq6?=
- =?us-ascii?Q?43rBsitDkfRe3khV1HhYUoGLXyJkyswDcZSboCYBQO09gMLAYck2xhqHYk7z?=
- =?us-ascii?Q?2RWw13sQKgEPDe+pjAE7QysDXCCWBaPUuzfX5pEzdW1zjoKAraMr+73gnc67?=
- =?us-ascii?Q?nV5b5SASFwOQUoY5Ie/aeKgMjt2wnmgVs6pCojZz97xUaZrBLnQaSixOFxTd?=
- =?us-ascii?Q?ev5EEM2R87k8RmEy0trW5S6ZB/vTBGKFZSy4eLlBPchzwd89xeheA0tv++UF?=
- =?us-ascii?Q?HYcVmXgwQjti2UszRqYRHEs+o1QDkmKWzWXaN04po5z76TohKmh1WOfkWlhh?=
- =?us-ascii?Q?TZ7wL0FCxwcjuP4psVllv4lE8EFP8QrHCd4beSJcSFscn5pYHcTsCw7WwwUr?=
- =?us-ascii?Q?wT2v3eUfLCAM34xY01PCWFM8Y9Cr32CkpMdyFHfhqz3dcxZMYFJP/i04CQey?=
- =?us-ascii?Q?M1Z0lf+76+qR8I5cEXfROVPxGKFYHpxR2jFGuUYY2WHxxJfG0TUUjoRxRYee?=
- =?us-ascii?Q?CJXBYUdEK54p0y4nZGKYc751Ky86UY/tQoiX09XEiG6zXtsDwy3/D24NhgRR?=
- =?us-ascii?Q?XWCutDPd3hEHKPzse3UPDVSIGeFkgkgqpm/gps4PXxOjexPPTBE9KDvVxYyT?=
- =?us-ascii?Q?D6rxgcywo/KeUTYvmIRtb3R5?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YCx+sg2hj/XH0pi4P57B58NpnQngvLHy8f76dNXZpb5DvTHf/eImqmCWJ11F?=
+ =?us-ascii?Q?QjEJM44xeQ8g/u/Gpf/J7s8bL3Oxr2WevNAkyQy4rb+UVCBd2u//pjdUb4fN?=
+ =?us-ascii?Q?ojlz5uFB8u8ZYtTeQm0cu2CMJdnQfPWCpFoeuP3P3OxptCqjnkxl//kRR/gd?=
+ =?us-ascii?Q?FDbk9f2WzKZaYwC7Nc4bVMu/3beHJoyoodu9NQHRZbPIukU5PaqP44tw+DKg?=
+ =?us-ascii?Q?Hvfzu06pxWH6poByn0BcHw0A81U1zTh5nicBS1FSqTTGAzRzErkBYd0WLc/L?=
+ =?us-ascii?Q?w/3/KLY9toEpLsVE8ybU3VxSe3R/w+cEyolywkeuft6uCBtFZsCqYnnzMvPS?=
+ =?us-ascii?Q?Xm3MfRq7yZlkd1QgtWZJgZzBdMNjnBtD/VpUTTJ+rqpUcMMryDzod4KxDldn?=
+ =?us-ascii?Q?6N3rhpMrTJ1udfmX1bnlKgcCCjr+eNl8Yk6O4uWuf4i+qOpYOs/Q5tdYXqJ1?=
+ =?us-ascii?Q?dVDSw6dBiZIsC00/qRb3aoggqSF2p1inDX5DWuIB3MikNMy8uSmvd05yESuO?=
+ =?us-ascii?Q?GAg4Gud+oIIITjfAWvaWXGttaeswl1DcI5ut1zM8wMT3T1Q7yKbN+DSSuZiK?=
+ =?us-ascii?Q?Vtor3DSFtLnl94f88ZCJA83XlwTwmq5nAdgq915LVRLCvl4u0R03+x2Xm7pU?=
+ =?us-ascii?Q?i+iLm/vbzaSviQB0dGwkNX5VNn+qcifjaY+c1W+YXbHu/mx1V1Bqfr5OD/9G?=
+ =?us-ascii?Q?R8xv6hzWMKZE5gP1gkefnes53d8nKU79RlvpnjkK2qAP4LX1+7Xxwxn/iQlX?=
+ =?us-ascii?Q?WCSxMrFJsQuabmpDnJc9Vheald9399oW/kivyV6pqFiozFib51Kp368BmQSD?=
+ =?us-ascii?Q?bsSat2VoiNTbnX+pdU5hdkROcClcNt5L7POzv4T+44Z9KKTcl9cNDuGa9D1Y?=
+ =?us-ascii?Q?hfRlZt6dj3q8+6DUkYaA40tvdMvQdNQvjWj9tygHMl+oZhymwQ9Dxq3wTvDC?=
+ =?us-ascii?Q?Rt1VO+K1USEeNaia7zJG7cMYzCE6z79rOhB/+psTnr/kT4G1Mq+U1TKgAvZi?=
+ =?us-ascii?Q?NYzhIJtktEe40FqWN18ihYZcG6h7e1HWoPfLDpS8lb3QhBegD0hjRHqao3qJ?=
+ =?us-ascii?Q?e8V7d9bPyDBwxYaTjUsSaLKbDOrxJ3Lgqxp+RPlflaVonV/NcJQHsME1t0nH?=
+ =?us-ascii?Q?l8TbQmG7BJHpHI/xXkKlWIqjeSgEaXJqsOO4vj3IPKfAzvgQY9juN1/WEnbZ?=
+ =?us-ascii?Q?Ekfyk4mdqm2c6m0nQfl1kPZeDBWM9ZaP+p48F/rRqWQbLxS4uoE7Ep+RvG1X?=
+ =?us-ascii?Q?6JzE/C5xZ+VxdAfPx0NDe+HFCByTh+SJGZlD12uSN/x2mSE/qzXzs1mpjgVY?=
+ =?us-ascii?Q?IDX1j/DqCUoqI0B7++5WtE/r?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d93760ba-c997-4718-36b1-08d931a9b69b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4dc8198a-9579-4055-e684-08d931a9a453
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:23.3899
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:52.7215
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7ZnC8UAQhsJ7RY5IVzGztAZ5Kf8r+4wpVQ1XWghTd7EuvRElxxqKgeNvQXY3Kmirk2TT0fsOxHDbgMt9NmYUEw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
+X-MS-Exchange-CrossTenant-UserPrincipalName: abX4lO6BGvLBl3ca1wKLNEuDI3p4l3hKB3LwUU4wQVGnOvNss0Z0ikD0qxtZJm0lFHW/56DLO0FalhSnabfTZA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1314
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,187 +128,34 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/reg/reg_ipc.h    | 157 ++++++++++++++++++
- 1 file changed, 157 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_ipc.h
+ drivers/net/wireless/celeno/cl8k/phy/phy.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/phy/phy.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_ipc.h b/drivers/net/w=
-ireless/celeno/cl8k/reg/reg_ipc.h
+diff --git a/drivers/net/wireless/celeno/cl8k/phy/phy.h b/drivers/net/wirel=
+ess/celeno/cl8k/phy/phy.h
 new file mode 100644
-index 000000000000..d825b8559aae
+index 000000000000..6a58faf2cfd8
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/reg/reg_ipc.h
-@@ -0,0 +1,157 @@
++++ b/drivers/net/wireless/celeno/cl8k/phy/phy.h
+@@ -0,0 +1,17 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_REG_IPC_H
-+#define CL_REG_IPC_H
++#ifndef CL_PHY_H
++#define CL_PHY_H
 +
-+#include <linux/types.h>
-+#include "reg/reg_access.h"
++#include "hw.h"
 +#include "chip.h"
 +
-+#define REG_IPC_BASE_ADDR 0x007C4000
++void cl_phy_reset(struct cl_hw *cl_hw);
++void cl_phy_off(struct cl_hw *cl_hw);
++int cl_phy_load_recovery(struct cl_hw *cl_hw);
++int cl_phy_data_alloc(struct cl_hw *cl_hw);
++void cl_phy_data_free(struct cl_hw *cl_hw);
++void cl_phy_enable(struct cl_hw *cl_hw);
 +
-+/*
-+ * @brief XMAC_2_HOST_RAW_STATUS register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 xmac2host_raw_status      0x0
-+ * </pre>
-+ */
-+#define IPC_XMAC_2_HOST_RAW_STATUS_ADDR        (REG_IPC_BASE_ADDR + 0x0000=
-0004)
-+#define IPC_XMAC_2_HOST_RAW_STATUS_OFFSET      0x00000004
-+#define IPC_XMAC_2_HOST_RAW_STATUS_INDEX       0x00000001
-+#define IPC_XMAC_2_HOST_RAW_STATUS_RESET       0x00000000
-+
-+static inline u32 ipc_xmac_2_host_raw_status_get(struct cl_chip *chip)
-+{
-+       return cl_reg_read_chip(chip, IPC_XMAC_2_HOST_RAW_STATUS_ADDR);
-+}
-+
-+/*
-+ * @brief XMAC_2_HOST_ACK register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 xmac2host_trigger_clr     0x0
-+ * </pre>
-+ */
-+#define IPC_XMAC_2_HOST_ACK_ADDR        (REG_IPC_BASE_ADDR + 0x00000008)
-+#define IPC_XMAC_2_HOST_ACK_OFFSET      0x00000008
-+#define IPC_XMAC_2_HOST_ACK_INDEX       0x00000002
-+#define IPC_XMAC_2_HOST_ACK_RESET       0x00000000
-+
-+static inline void ipc_xmac_2_host_ack_set(struct cl_chip *chip, u32 value=
-)
-+{
-+       cl_reg_write_chip(chip, IPC_XMAC_2_HOST_ACK_ADDR, value);
-+}
-+
-+/*
-+ * @brief XMAC_2_HOST_ENABLE_SET register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 xmac2host_enable_set      0x0
-+ * </pre>
-+ */
-+#define IPC_XMAC_2_HOST_ENABLE_SET_ADDR        (REG_IPC_BASE_ADDR + 0x0000=
-000C)
-+#define IPC_XMAC_2_HOST_ENABLE_SET_OFFSET      0x0000000C
-+#define IPC_XMAC_2_HOST_ENABLE_SET_INDEX       0x00000003
-+#define IPC_XMAC_2_HOST_ENABLE_SET_RESET       0x00000000
-+
-+static inline void ipc_xmac_2_host_enable_set_set(struct cl_chip *chip, u3=
-2 value)
-+{
-+       cl_reg_write_chip(chip, IPC_XMAC_2_HOST_ENABLE_SET_ADDR, value);
-+}
-+
-+/*
-+ * @brief XMAC_2_HOST_ENABLE_CLEAR register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 xmac2host_enable_clear    0x0
-+ * </pre>
-+ */
-+#define IPC_XMAC_2_HOST_ENABLE_CLEAR_ADDR        (REG_IPC_BASE_ADDR + 0x00=
-000010)
-+#define IPC_XMAC_2_HOST_ENABLE_CLEAR_OFFSET      0x00000010
-+#define IPC_XMAC_2_HOST_ENABLE_CLEAR_INDEX       0x00000004
-+#define IPC_XMAC_2_HOST_ENABLE_CLEAR_RESET       0x00000000
-+
-+static inline void ipc_xmac_2_host_enable_clear_set(struct cl_chip *chip, =
-u32 value)
-+{
-+       cl_reg_write_chip(chip, IPC_XMAC_2_HOST_ENABLE_CLEAR_ADDR, value);
-+}
-+
-+/*
-+ * @brief XMAC_2_HOST_STATUS register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 xmac2host_status          0x0
-+ * </pre>
-+ */
-+#define IPC_XMAC_2_HOST_STATUS_ADDR        (REG_IPC_BASE_ADDR + 0x00000014=
-)
-+#define IPC_XMAC_2_HOST_STATUS_OFFSET      0x00000014
-+#define IPC_XMAC_2_HOST_STATUS_INDEX       0x00000005
-+#define IPC_XMAC_2_HOST_STATUS_RESET       0x00000000
-+
-+static inline u32 ipc_xmac_2_host_status_get(struct cl_chip *chip)
-+{
-+       return cl_reg_read_chip(chip, IPC_XMAC_2_HOST_STATUS_ADDR);
-+}
-+
-+/*
-+ * @brief HOST_GLOBAL_INT_EN register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    00    master_int_enable         0
-+ * </pre>
-+ */
-+#define IPC_HOST_GLOBAL_INT_EN_ADDR        (REG_IPC_BASE_ADDR + 0x00000030=
-)
-+#define IPC_HOST_GLOBAL_INT_EN_OFFSET      0x00000030
-+#define IPC_HOST_GLOBAL_INT_EN_INDEX       0x0000000C
-+#define IPC_HOST_GLOBAL_INT_EN_RESET       0x00000000
-+
-+static inline void ipc_host_global_int_en_set(struct cl_chip *chip, u32 va=
-lue)
-+{
-+       cl_reg_write_chip(chip, IPC_HOST_GLOBAL_INT_EN_ADDR, value);
-+}
-+
-+/*
-+ * @brief HOST_2_LMAC_TRIGGER register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 host2lmac_trigger         0x0
-+ * </pre>
-+ */
-+#define IPC_HOST_2_LMAC_TRIGGER_ADDR        (REG_IPC_BASE_ADDR + 0x0000008=
-0)
-+#define IPC_HOST_2_LMAC_TRIGGER_OFFSET      0x00000080
-+#define IPC_HOST_2_LMAC_TRIGGER_INDEX       0x00000020
-+#define IPC_HOST_2_LMAC_TRIGGER_RESET       0x00000000
-+
-+static inline void ipc_host_2_lmac_trigger_set(struct cl_chip *chip, u32 v=
-alue)
-+{
-+       cl_reg_write_chip(chip, IPC_HOST_2_LMAC_TRIGGER_ADDR, value);
-+}
-+
-+/*
-+ * @brief HOST_2_SMAC_TRIGGER register definition
-+ * <pre>
-+ *   Bits           Field Name   Reset Value
-+ *  -----   ------------------   -----------
-+ *    31:00 host2smac_trigger         0x0
-+ * </pre>
-+ */
-+#define IPC_HOST_2_SMAC_TRIGGER_ADDR        (REG_IPC_BASE_ADDR + 0x0000008=
-8)
-+#define IPC_HOST_2_SMAC_TRIGGER_OFFSET      0x00000088
-+#define IPC_HOST_2_SMAC_TRIGGER_INDEX       0x00000022
-+#define IPC_HOST_2_SMAC_TRIGGER_RESET       0x00000000
-+
-+static inline void ipc_host_2_smac_trigger_set(struct cl_chip *chip, u32 v=
-alue)
-+{
-+       cl_reg_write_chip(chip, IPC_HOST_2_SMAC_TRIGGER_ADDR, value);
-+}
-+
-+#endif /* CL_REG_IPC_H */
++#endif /* CL_PHY_H */
 --
 2.30.0
 
