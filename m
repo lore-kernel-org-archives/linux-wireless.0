@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A67C49EA4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14BE2C49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87F9961059
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9F5C610A5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232798AbhFQQNq (ORCPT
+        id S232622AbhFQQNo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:13:46 -0400
-Received: from mail-eopbgr80051.outbound.protection.outlook.com ([40.107.8.51]:34016
+        Thu, 17 Jun 2021 12:13:44 -0400
+Received: from mail-eopbgr80072.outbound.protection.outlook.com ([40.107.8.72]:12391
         "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233755AbhFQQMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:12:48 -0400
+        id S229683AbhFQQMk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:12:40 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FB6DdIco7Z/HrWXs3J42DvDEYGaCuX99hw7NJwuAjek05eYTxPWyfzH+pqpNHoIyYJsJyamAAC8OwlofbfkXP5qFQS/zyLXxOUJmrYPMRGX8IQu94JKlITFB0P+AmKUjsamyvVy15TI7x4opuORBMHjZnkwzHqhp/87WP6O74kHy5VTZnCTkSfaVVii9iC3jWWRu9gCFreUo2m6zDHCl/LP0KdrkLjz70MpEyMUcRu0V9SJzFZOo/KdsxbO4IR6YCydRi/0u/kwHT5FdKscyMeghcKDdQDw9qWGtr1cnIT55owjBhJDEM1vM3uT83Z1jnXV+c4VNNs7clgLwLKPopA==
+ b=brmDKNI5M4ATNkJH1dSvZdPtM/gWh5nVsKdGxxR+YmvXHUXxHAn4uZf0yCL2eP7zqCWKlVMZq5T+2hDc8IEFjlptKBWdq5sn0xP7gyjeg0uD+ucBiXU+X58BIy2NQv0MsR/Wn9UbJwXJrwFrwjRUdc966zMHW+uNobyidhnQ139qTQ9cR02+PiuTFHqlwsqt+mGz/MkqrkDe1H0RMmJ28kvgLb5xH5Sd90UD+16ltAxfw+mHA+gWj4/0GeQqVXqGj1ns2xiPb/BIkDYoaLg41RzH17Mp5fc+C61Hg63JjO7g8AEtJMc6vpUqq2UNPxoW9zvmPRpWSZq8SW1ccpoJuQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9gA88ksg5zpDBRJILZfzWIP/l123al7qxPT+vhTmXLA=;
- b=HtdCdpF15WWGSyCNWrN2BTD0ecByemyViwcGMu2bCWdq+RwtOGbSTG/G9iQfHjxv1GEvEtIXQrRwC3Wm/dEkknRk9ys44gis9pbwYXqtMA6V46/L6d5CPuP5AEk16yCjX2favs8pALb0rdzPxWyIbcTsMY223mSBQZyRlciMlQJic5WFAJHDr4CbeSvuZC4jZXBiLPh8S5kENSLsC2n9wi/LaJ74BNZDYbsXk4n9H826oZ276lUhOdLxFjZtUmf9xWrJOzsMQNHuUmzdT2kcfSBvKNsxnjp3BcYn/x6IFqgB7dGxpxKYxeK3B9y+hPqSltWjWJw0Ge84lsGstUjEaQ==
+ bh=EZnVJoZ4fdt1b3qmWzL6CQjPkMFf+0TG6kRUZLbg6Bg=;
+ b=J4C4975tqBmbTUdFJC5riS7vze1Rr0SIoGJKgll8QnWkSFYzjw4xQ3splvKPOwG0UYSWVdY4o2h8MVIN+W4utALS7f7KW5jgWKu5K6USysPOlkcGPdKVPtOiiiXAL9VPwqUANKVxSxFuZeEiy1iQUHkB06OlYc5PWN72IVWO14tXOOgP1lhWVrgGIixcu5nmwJFF3SjhNzmwlDaTklyAtBvYNRlXjOvps5BrCAYo91Hz9fAfXkZSuD81N/Ehv5+k2GYcyM5PhYd9cJnoNb83u1Io0/BKqrz/XxzabUG0sTDgwYYjgJ/yh5a7q4cUEM87WVm9jYAM+5i1UsCWOolYmQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9gA88ksg5zpDBRJILZfzWIP/l123al7qxPT+vhTmXLA=;
- b=H9b8x/Iw33whv5Q6VUXRw603x7tG6RW5kzZK8e77o8rP9nop9qDR/PR5fTCpiUfu/v4og9DtmM3SP/PN3pfdo14a6SrhDr8oRtJNBW8XyLTtiNRZRwY7zoUoX3Pv7T1cmjaKVtxlA3CcOFPHt9hZ4joY2eLJgVkQUeTK3SidIkQ=
+ bh=EZnVJoZ4fdt1b3qmWzL6CQjPkMFf+0TG6kRUZLbg6Bg=;
+ b=Fdav82QX9KBcJ9izb0spw0NKqWbZ0DXXpiv03ep30Hq3QL0cYRb7vOmD7RmefAGUk4x1CpPnOj8ge+goRiFJU+/EBDGSAC10UH4lu1C1ZOBhk+tttulUh+WeJrVExQ13nh9OTWyhgTGU1y8KslIcZyUF15nzTnEMSG7Pnr1wPQc=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0260.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:47::23) with
+ by AM9P192MB1329.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3ab::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21; Thu, 17 Jun
- 2021 16:07:11 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
+ 2021 16:07:52 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:07:11 +0000
+ 16:07:52 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 188/256] cl8k: add temperature.c
-Date:   Thu, 17 Jun 2021 16:01:15 +0000
-Message-Id: <20210617160223.160998-189-viktor.barna@celeno.com>
+Subject: [RFC v1 218/256] cl8k: add tx/tx_queue.c
+Date:   Thu, 17 Jun 2021 16:01:45 +0000
+Message-Id: <20210617160223.160998-219-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:01 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:36 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b2b5efe1-93ef-4e46-65bb-08d931a9cde1
-X-MS-TrafficTypeDiagnostic: AM0P192MB0260:
+X-MS-Office365-Filtering-Correlation-Id: 10547838-7774-48b5-7c02-08d931a9e287
+X-MS-TrafficTypeDiagnostic: AM9P192MB1329:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB0260C92CE9256AAC8BF6DA12F60E9@AM0P192MB0260.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:605;
+X-Microsoft-Antispam-PRVS: <AM9P192MB1329DA877C37DAF992D30805F60E9@AM9P192MB1329.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 2+BuCR/DwDaz6Tv0BwjkQzB5uoXFhVn8WjcLjnjKxYPRyi6ry6unniawcV9VqFDaIi0nHeF5Nf9eMkxZZA3h3vjmX0kOp+ovrDM2egWQjxhru01XEuE8Y6nOwwsv6QCZkkBOHM8I212fy6++9HabtdWsbLSg8VwprMv9z06ITY78QFjaYmTmitFkz6Jcl/Jmn1l2/A1a7dqfgMVcjHZNwVPfmYhhrad+jEsjw45Oi2Rj+fW9sjB1XmfAQ4BiFBUBti1UQfH8ZejFs6iDzjHNB6Yx1nU9MRNOMyGgQ5ve0vtgAllHVN7d5Cb8M/fL2XWiqgdHCJBQS2BlKvJKVQewwncpeXFeFy12ldz8nAfpmbzwTGKCyYvQGD+5k1+Lh0vwzTqpnf8Ux/P/bF8AiQmsXN7/MPBAmEWFzKHpLwwgzE2mPeSpncWub6ZIz8SQpPPCxJCvhdEocivYTbFpqaY4fvPvOCIfZXlCzrABUqcOmQ6yk6FG/wWtDsY+IesYA52wWl3kW0Jrd7W1A1KmgBSXahKSpuDNn6qg1LjtFKpS3hoinK3pdYNPMLp3WYQ4ZgYznLQQV4TlRo5GXTCRJWqDWHDHSqBGNBA62BGxsuGmnKSyfG4YwjCvvF2RfvcyX8yIpSE0x9iMYF4nam6qQjVBkLIRUMYSkFR6FMxbsWg8Ll6dFi4WucTM3ziosbuTkgPfoSpnIGt9dcWTGK5NDkTOeQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(8936002)(86362001)(107886003)(4326008)(26005)(8676002)(956004)(45080400002)(186003)(6666004)(2906002)(6512007)(66556008)(2616005)(5660300002)(498600001)(38350700002)(54906003)(38100700002)(16526019)(66946007)(9686003)(83380400001)(55236004)(52116002)(66476007)(6486002)(6916009)(30864003)(6506007)(36756003)(1076003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: DaS20mFmAFQTMI0gRY9qOzYMnn9CjSFvgsqQdFbRYTzQxpCzxp49GZBJXml1B8omrisp1VV5pbxHoPDEDeE4zEiovofekt8NYJ8pa5NK4TlxfCoyDj+m3Rugvq3VIOmcWUGxoVQxh1Q16HmNfufZ464ElP+K3pokqA18Rrm1jf4CHRWN1e+1eJwatewwW/xZ06kolnzpJUBsTSbDI/GxpMBKDpwjaAjoUHlImFHni0KxCtki6PylOXFybb2xEdZKIYCupxVOadQgDgMS8gVUfUzO9isQ+sJUQVgVHMAun0KKlpHsPDJ7EEgKF0HxZbcMxfdpbcJUaN9EWqsIyEWGEvCu1EyiQmxdLax8uZM1bVaoHpJQFHfI6Gw/RFYwmgodV/8S0s5Ec3qD9qvpGfoxzyBcoTQ/7QbUfjJoXtIGuJGEA6YuaCozzMvRLUcs7YGUB58aAbGE8ED8j34uOeuRdkhTF9gGOgxWjeR5qCEzFnq/egj/UPBJqu28GC1huIGsQ10f18T2qB+tXulaOt6VCxPiJGt7gJmN/Z5DHqQVdwu311XTZa7xxBJ0liGdNUlMzVSh5+o2BiuvAEuCUsr762+rybDxd+W8o9NGDY/TvzXqw4pHBcHCHoYqifkbLBLd/1AkM6MVPuJFwBxZXY+yVeAokOkxLz4uDhsE/xI9NJ7rdC3o4oKZIAIlCSbF/Mwnp2nWQSzQ+UTNHVIB+Twmhw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(39850400004)(376002)(136003)(346002)(396003)(86362001)(38350700002)(8936002)(38100700002)(6916009)(52116002)(6486002)(55236004)(54906003)(36756003)(6506007)(956004)(4326008)(30864003)(186003)(2616005)(1076003)(478600001)(26005)(16526019)(107886003)(6666004)(66556008)(83380400001)(5660300002)(2906002)(6512007)(9686003)(8676002)(316002)(66476007)(66946007)(69590400013)(32563001)(559001)(579004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YWCoz/RgsqR0cbLbO++GkruD4H2dWdE2ZOH/P4LKs5qM79lyV7uLbFwniBFE?=
- =?us-ascii?Q?yY9RbXt6FPgaehAhj5Ero+a+kTZ7ZPDhMiuvnN00b40AQnHlSMOf0v3lL5eG?=
- =?us-ascii?Q?PZQITy2QaxpSpjco5P9jQSjzimWxf0zn7Z5SmPeuTcueob+agYHU2mLDrJJk?=
- =?us-ascii?Q?BsEjir8UmVloGiBvSr5YaeW9pe1hwIZO4t5lQ+YGAZ9QaAaLa/NKB665UnnW?=
- =?us-ascii?Q?iVNqWWuRRJ4LugDyQrDJJ6fqEDGkGfqu3/H8+UxxbCRsFc9qJeF7s0V0oOZa?=
- =?us-ascii?Q?xWkinUYzKIHyduLgNgmILas5YIO9XGeMFsQLY+OCdQAlTopw+bqYHrt/4TkG?=
- =?us-ascii?Q?WXkLT9wHJARuem5+7OqFVu2GUqh+T3WQg+xydhi9Kngmpg01XqlhY+6z7smF?=
- =?us-ascii?Q?Z83oFFI07k2U0lqX4O2hNZUXp0CnP5j5WgNfH60ku4uXrc1a7CpJACuTmoSG?=
- =?us-ascii?Q?d22x78h8Y8wbnyrFe5guB+uOqi6NNpFINuZLGtdbbZ6NsCQKUr7dNDspXleV?=
- =?us-ascii?Q?hzcQwRBpn2ahQQ0UfiLTCSfHMhInorWZE65AQYEThceAuyi2Epu3YNaS2iX7?=
- =?us-ascii?Q?LmTAG+E3kwRfMXzFYPsCuGjHSLm8CpbDNXnpF1ZvMWeCw7cF4zTBwvR6VDrr?=
- =?us-ascii?Q?wS/9RWnEdFfezZVcP8KCd/w8GsCAX39suplTGXJaWFyhue20s7rM36MtbG4M?=
- =?us-ascii?Q?zLq9WNRif2aLw2M0/6ZIuxTZ8nN0/5pPkKNpRyx/hilUDQzPYc8PP5dhG+ys?=
- =?us-ascii?Q?ZudyCjbXRUvUZG8bshZ6sEIs0IEkpfRfWeRBonTDvfLw5UuufPBcdwmSx3RU?=
- =?us-ascii?Q?TaiQxliP3wp4oR3v5XDKWKrxVuIs6Qz3qmE2d6GnVk8OO1F2IQZiNC+w5KQ0?=
- =?us-ascii?Q?kANjBmlnMTsp3A/fe4ZMesN2tu2i7ksu8nYdNKFVe7TEN9h9S0NI6RK9/PYv?=
- =?us-ascii?Q?xfOG8xnLBRzIun5XUsoDPL7vezlVR82aZ7QxM5ESEqyuEXPcTwknC2NW7pWd?=
- =?us-ascii?Q?qmFfDAKdwl+ZbLNJv5USsUMWDj232iHo1ruSH6XhOxAzDH0IoGmVl/6bgYWj?=
- =?us-ascii?Q?ob5XhogjQBQDb2TKjqtIO/3Yrn539SaKuEwphjHGB6yPE4AioZ3NSS0BCP6c?=
- =?us-ascii?Q?7b/wLO0GIJKAMI/kSDwdCKiXF3wwvJFENMy+x4su9IrFTQZkuuAX3ExlpusN?=
- =?us-ascii?Q?bKlZfQDqcwgvAHttZ3qd0mlEKwgDZznJiLIiBx11HEY0DtD4Ef1i2jONQ9WL?=
- =?us-ascii?Q?GVLa13GKWULghCQWTELsNj3C58+VclvxOpFKstVuSkNkKxyByall6A4pR6DV?=
- =?us-ascii?Q?+3UfUu1hquZ/KpVU3EnnJquK?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5cVPC7L9oe3+WYB+vpmuOhiZTZX+IUXr4tbCarpNrcLrGPzJ5sCvBPgk1aTJ?=
+ =?us-ascii?Q?7uA2+y3o5c60pjQd6zpFk3YeNhTHGlndasOJpHn391spd19Kikhtj58NSwSQ?=
+ =?us-ascii?Q?ePx8jqo0ahYxaQH5tXDPNnxvLTUg321dnOH1OSPk79zZAmleOrTVMrbWgFTa?=
+ =?us-ascii?Q?qU9vj7ROrA/PMfCuvg9b50jbI1kAD4VrqNKITJW8ET5IyQEBwXtHO1/onXec?=
+ =?us-ascii?Q?wknOtkYkE6OX6Sli0Ik5pyylCYGqQOw2LM9YEqKhdhOJbJGRxV+GVcmWXi5T?=
+ =?us-ascii?Q?T/pUa/ldfmwJmYXEdi7XOYXkQuXBo7W8/W1muj8vSNLt9pfQ6Hbt/12+v6cM?=
+ =?us-ascii?Q?tKrJ6G/VNppthcB7sazowagGBzAkDC5dVwqDNpObLth59hyPXz5rtlf3VSOk?=
+ =?us-ascii?Q?GDZiWOn29apDe9IsLdRJFycT52wHaXtJF8CfGJ382NhFegIFBBJwGDse8FRs?=
+ =?us-ascii?Q?ZTpgk3HDkbe/8bT56x7KgJrtLH2UWGqFXVCDYbj5cC/JFASzluBBAm0ZWCDU?=
+ =?us-ascii?Q?EiaLlpmHhohIxlmUtLEWAJo4P1YjC1/jBmc+F8OimqiA39GKrAZ8QMQqlEAS?=
+ =?us-ascii?Q?wB8j2U5frQLvokE2CvsMxsyEHUXKf1My+ZZQ4cpMcR6QvGsbvhvLpn9uMb79?=
+ =?us-ascii?Q?YYbwGUqBthOF8I3SvylyL3COdnXJkzDJVbVgxvpgciE75oTxhYmW/evKI4TR?=
+ =?us-ascii?Q?CT2tWzjbPGRe/x5MsxvPSXlFRN09oCHcsQbqkrULl2U4cXBKf8KhnxkK/zNN?=
+ =?us-ascii?Q?nyzYxbYCL8LRHG2IYqhS1bmNGRNdSzeB2rnhI1g8aN0sC/NR0Hyd03702w3d?=
+ =?us-ascii?Q?E4bl+dy4ITtD0AZPsTjRsQQppKxmsU9j16hwdrtFPL7CaJ/j1N156XN7A9Xp?=
+ =?us-ascii?Q?f/9Rm69w2nmHCn0CG0NaWvHx6BSobw5jt33Jk53kyklqGFXnwJLY0T+ski7v?=
+ =?us-ascii?Q?YDgpBpoNbmBHqZox2fM/PDVgh+ZyTUwC04sy9kontfV0qnA2RUyFXPiOKJ3s?=
+ =?us-ascii?Q?nPWJ63kKcfmJEBe8qciKC4k9s42QrNmqG2WJbxYhyBVpf3hvI9PesK/7GuLa?=
+ =?us-ascii?Q?T1HOuqL4knue65QK3Uq7h5UfX4fzyMsvYIIiaUHQGCsUB11FsqNoDuFHN0ER?=
+ =?us-ascii?Q?RIpqppOfgKVlvXHS5soj05pbVg6mo/NARvyJlF4DY+du8MhqT+uKbcZSqQZ3?=
+ =?us-ascii?Q?h/uuoNgo8fAP0U5k0pobvf3jGCin2ivmy6+Ry2nPgeWzhopXJSgImxOYMtC7?=
+ =?us-ascii?Q?vvs+eQNioQUMW74036OLjb6u0Agp64u4BVCX9RykNc6nWBJu84cAlu7xFECX?=
+ =?us-ascii?Q?XYZ6dNl/X0eXX0CO8gWnt5jp?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2b5efe1-93ef-4e46-65bb-08d931a9cde1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 10547838-7774-48b5-7c02-08d931a9e287
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:02.5131
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:37.6418
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TjhyGTIR+TDnLnebLZSWLf48ri3gPDrKE4br2lCjPmRXGkOlqgICm2JJNUbq8hn5mR7o/X7WZZPaEhPdbklRDg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0260
+X-MS-Exchange-CrossTenant-UserPrincipalName: xBEkYn8pakiTrGEA/zLDOt+COwgw4s1fdS5mTPOiHRr5t2EKnN4g5puvYV029xdNQpL8cANlKYJ21wD2MHlsCA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1329
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,420 +128,1071 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/temperature.c    | 858 ++++++++++++++++++
- 1 file changed, 858 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/temperature.c
+ .../net/wireless/celeno/cl8k/tx/tx_queue.c    | 1620 +++++++++++++++++
+ 1 file changed, 1620 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx/tx_queue.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/temperature.c b/drivers/net/w=
-ireless/celeno/cl8k/temperature.c
+diff --git a/drivers/net/wireless/celeno/cl8k/tx/tx_queue.c b/drivers/net/w=
+ireless/celeno/cl8k/tx/tx_queue.c
 new file mode 100644
-index 000000000000..1fde1acfe386
+index 000000000000..18c5bd2b81f7
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/temperature.c
-@@ -0,0 +1,858 @@
++++ b/drivers/net/wireless/celeno/cl8k/tx/tx_queue.c
+@@ -0,0 +1,1620 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include <linux/kthread.h>
-+#include "temperature.h"
-+#include "radio.h"
-+#include "utils/math.h"
-+#include "utils/utils.h"
-+#include "calib.h"
-+#include "chip.h"
-+#include "e2p.h"
-+#include "channel.h"
-+#include "power.h"
-+#include "fw/msg_tx.h"
++#include <net/cfg80211.h>
++#include <net/mac80211.h>
++#include <linux/ieee80211.h>
++#include <linux/types.h>
 +
-+#define TEMP_PROTECT_STATE_STR(delta) \
-+       ((delta) =3D=3D TEMP_PROTECT_OFF ? "DISABLE" : \
-+       ((delta) =3D=3D TEMP_PROTECT_INTERNAL ? "INTERNAL" : \
-+       ((delta) =3D=3D TEMP_PROTECT_EXTERNAL ? "EXTERNAL" : \
-+       ((delta) =3D=3D TEMP_PROTECT_DIFF ? "DIFF" : "UNKNOWN"))))
++#include "tx/tx_queue.h"
++#include "tx/tx.h"
++#include "tx/sw_txhdr.h"
++#include "tx/tx_amsdu.h"
++#include "tx/baw.h"
++#ifdef CONFIG_CL_PCIE
++#include "bus/pci/ipc.h"
++#endif
++#include "tx/agg_cfm.h"
 +
-+#define TEMP_DIFF_INVALID 0x7F
++const u8 cl_tid2hwq[IEEE80211_NUM_TIDS] =3D {
++       CL_HWQ_BE,
++       CL_HWQ_BK,
++       CL_HWQ_BK,
++       CL_HWQ_BE,
++       CL_HWQ_VI,
++       CL_HWQ_VI,
++       CL_HWQ_VO,
++       CL_HWQ_VO,
++       /* At the moment, all others TID are mapped to BE */
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++       CL_HWQ_BE,
++};
 +
-+#define TEMPERATURE_MIN 0
-+#define TEMPERATURE_MAX 127
-+
-+#define DUTY_CYCLE_MAX  100
-+#define DUTY_CYCLE_MIN  20
-+#define DUTY_CYCLE_STEP 20
-+
-+static int cl_temperature_read_fw(struct cl_hw *cl_hw, enum cl_temp_mode d=
-esired_temp_mode,
-+                                 u16 *raw_bits)
++static u32 cl_txq_total_dump_drv(struct cl_tx_queue *tx_queue)
 +{
-+       u8 retval =3D 0;
-+       struct mm_anamon_read_cfm *cfm;
++       return tx_queue->dump_queue_full + tx_queue->dump_dma_map_fail;
++}
 +
-+       if (cl_msg_tx_anamon_read(cl_hw, ANAMON_MODE_TEMPERATURE, desired_t=
-emp_mode, 0) !=3D 0) {
-+               cl_dbg_err(cl_hw, "cl_msg_tx_anamon_read failed\n");
-+               cl_msg_tx_free_cfm_params(cl_hw, MM_ANAMON_READ_CFM);
-+               return -ENODATA;
++static void cl_txq_sched_list_add(struct cl_tx_queue *tx_queue, struct cl_=
+hw *cl_hw)
++{
++       /* Add to schedule queue */
++       if (tx_queue->sched)
++               return;
++
++       tx_queue->sched =3D true;
++       if (tx_queue->type =3D=3D QUEUE_TYPE_AGG)
++               list_add_tail(&tx_queue->sched_list, &cl_hw->list_sched_q_a=
+gg);
++       else
++               list_add_tail(&tx_queue->sched_list, &cl_hw->list_sched_q_s=
+ingle);
++}
++
++static void cl_txq_sched_list_remove(struct cl_tx_queue *tx_queue)
++{
++       /* Remove from schedule queue */
++       if (tx_queue->sched) {
++               tx_queue->sched =3D false;
++               list_del(&tx_queue->sched_list);
 +       }
-+
-+       cfm =3D (struct mm_anamon_read_cfm *)(cl_hw->msg_cfm_params[MM_ANAM=
-ON_READ_CFM]);
-+
-+       if (!cfm)
-+               return -ENOMSG;
-+
-+       retval =3D cfm->retval;
-+       *raw_bits =3D ((le16_to_cpu(cfm->raw_bits_data_0) + le16_to_cpu(cfm=
-->raw_bits_data_1)) / 2);
-+       cl_msg_tx_free_cfm_params(cl_hw, MM_ANAMON_READ_CFM);
-+
-+       return retval ? 0 : -EILSEQ;
 +}
 +
-+static u16 cl_adc_to_mv(u16 adc)
++static void cl_txq_sched_list_remove_if_empty(struct cl_tx_queue *tx_queue=
+)
 +{
-+       return (adc * 1800) >> 12;
++       /* If queue is empty remove it from schedule list */
++       if (list_empty(&tx_queue->hdrs))
++               cl_txq_sched_list_remove(tx_queue);
 +}
 +
-+static s16 cl_raw_bits_to_temperature(u16 raw_bits, enum cl_temp_mode desi=
-red_temp_mode)
++static void cl_txq_transfer_single_to_agg(struct cl_hw *cl_hw,
++                                         struct cl_tx_queue *single_queue,
++                                         struct cl_tx_queue *agg_queue, u8=
+ tid)
 +{
-+       s16 adcmv =3D cl_adc_to_mv(raw_bits);
++       struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
++       struct ieee80211_tx_info *tx_info;
++       struct sk_buff *skb;
++       u8 hdr_pads;
 +
-+       /* Calculation of external thermistor */
-+       if (desired_temp_mode =3D=3D TEMP_MODE_EXTERNAL) {
++       spin_lock_bh(&cl_hw->tx_lock_single);
 +
-+               /*
-+                * External-temperature calculation:
-+                * Ext_tmp =3D -169 * adcv ^ 3 + 342 * adcv ^ 2 - 316 * adc=
-v + 139
-+                *
-+                * Ext_tmp =3D -169 * (adcmv / 1000) ^ 3 +
-+                *           342 * (adcmv / 1000) ^ 2 -
-+                *           316 * (adcmv / 1000) +
-+                *           139
-+                *
-+                * Ext_tmp =3D (-169 * adcmv ^ 3 +
-+                *            342000 * adcmv ^ 2 -
-+                *            316000000 * adcmv +
-+                *            139000000000) / 1000000000
-+                */
-+               return (s16)div_s64(-169UL * adcmv * adcmv * adcmv +
-+                                   342000UL * adcmv * adcmv -
-+                                   316000000UL * adcmv +
-+                                   139000000000UL,
-+                                   1000000000);
-+       }
-+
-+       /* Calculation of internal thermistor - ADCmv * slope - 163 (slope=
-=3D0.290) */
-+       if (desired_temp_mode =3D=3D TEMP_MODE_INTERNAL)
-+               return ((adcmv * 29) / 100) - 163;
-+
-+       return 0;
-+}
-+
-+void cl_temperature_set_power_offset(struct cl_hw *cl_hw, s8 power_offset)
-+{
-+       s8 total_pwr_offset[MAX_ANTENNAS] =3D {0};
-+       u8 chan_idx =3D cl_channel_to_index(cl_hw, cl_hw->channel);
-+       int i =3D 0;
-+
-+       cl_hw->temp_comp_db.power_offset =3D power_offset;
-+
-+       if (chan_idx =3D=3D INVALID_CHAN_IDX)
++       if (single_queue->num_packets =3D=3D 0)
 +               goto out;
 +
-+       for (i =3D 0; i < cl_hw->num_antennas; i++)
-+               total_pwr_offset[i] =3D
-+                       (cl_hw->tx_pow_info[chan_idx][i].offset + POWER_OFF=
-SET_RES * power_offset);
++       list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &single_queue->hdr=
+s, tx_queue_list) {
++               if (sw_txhdr->tid !=3D tid)
++                       continue;
++
++               if (!ieee80211_is_data_qos(sw_txhdr->fc))
++                       continue;
++
++               cl_hw->tx_packet_cntr.transfer.single_to_agg++;
++
++               /* Remove from single queue */
++               list_del(&sw_txhdr->tx_queue_list);
++
++               /* Update single queue counters */
++               single_queue->num_packets--;
++               single_queue->total_packets--;
++
++               /* Turn on AMPDU flag */
++               skb =3D sw_txhdr->skb;
++               tx_info =3D IEEE80211_SKB_CB(skb);
++               tx_info->flags |=3D IEEE80211_TX_CTL_AMPDU;
++
++               /* Push skb to agg queue */
++               hdr_pads =3D CL_SKB_DATA_ALIGN_PADS(skb->data);
++               cl_tx_agg_prep(cl_hw, sw_txhdr, skb->len, hdr_pads, false);
++               agg_queue->total_packets++;
++               sw_txhdr->tx_queue =3D agg_queue;
++               cl_txq_push(cl_hw, sw_txhdr);
++       }
++
++       /* If single queue is empty remove it from schedule list */
++       cl_txq_sched_list_remove_if_empty(single_queue);
 +
 +out:
-+       cl_msg_tx_set_ant_pwr_offset(cl_hw, total_pwr_offset);
++       spin_unlock_bh(&cl_hw->tx_lock_single);
 +}
 +
-+static void cl_temperature_comp_tcv(struct cl_chip *chip, struct cl_hw *cl=
-_hw, s16 temp_internal)
++static void cl_txq_delete_packets(struct cl_hw *cl_hw, struct cl_tx_queue =
+*tx_queue, u8 sta_idx)
 +{
-+       struct cl_temp_comp_db *temp_comp_db =3D &cl_hw->temp_comp_db;
-+       s8 new_power_offset =3D 0;
++       struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
 +
-+       /* Accumulate temperature delta */
-+       temp_comp_db->acc_temp_delta +=3D (temp_internal - temp_comp_db->ca=
-lib_temperature);
++       list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, t=
+x_queue_list) {
++               /*
++                * Brodcast frames do not have cl_sta and should not be
++                * deleted at station remove sequence.
++                */
++               if (!sw_txhdr->cl_sta)
++                       continue;
 +
-+       /* Check if it is time to make a new decision */
-+       if ((chip->temperature.comp_iterations % CL_TEMP_COMP_ITERATIONS) !=
-=3D 0)
-+               return;
++               if (sw_txhdr->sta_idx !=3D sta_idx)
++                       continue;
 +
-+       /* Average the temperature delta over the last CL_TEMP_COMP_ITERATI=
-ONS samples */
-+       temp_comp_db->avg_temp_delta =3D DIV_ROUND_CLOSEST(temp_comp_db->ac=
-c_temp_delta,
-+                                                        CL_TEMP_COMP_ITERA=
-TIONS);
++               list_del(&sw_txhdr->tx_queue_list);
++               tx_queue->num_packets--;
 +
-+       /* Reset accumulated temp delta */
-+       temp_comp_db->acc_temp_delta =3D 0;
-+
-+       new_power_offset =3D (s8)DIV_ROUND_CLOSEST(temp_comp_db->avg_temp_d=
-elta *
-+                                                cl_hw->conf->ce_temp_comp_=
-slope, 100);
-+
-+       if (temp_comp_db->power_offset =3D=3D new_power_offset)
-+               return;
-+
-+       cl_dbg_trace(cl_hw, "calib_temperature %d, avg_temp_delta %d, power=
-_offset %d\n",
-+                    temp_comp_db->calib_temperature,
-+                    temp_comp_db->avg_temp_delta,
-+                    new_power_offset);
-+
-+       cl_temperature_set_power_offset(cl_hw, new_power_offset);
-+}
-+
-+static void cl_temperature_comp(struct cl_chip *chip, struct cl_hw *cl_hw)
-+{
-+       struct cl_temperature *temperature =3D &chip->temperature;
-+       s16 temp_internal =3D 0;
-+
-+       if (!chip->conf->ce_temp_comp_en)
-+               return;
-+
-+       temp_internal =3D cl_temperature_read(cl_hw, TEMP_MODE_INTERNAL);
-+       temperature->comp_iterations++;
-+
-+       cl_dbg_chip_trace(chip, "comp_iterations =3D %u, temp_internal =3D =
-%d\n",
-+                         (temperature->comp_iterations % CL_TEMP_COMP_ITER=
-ATIONS), temp_internal);
-+
-+       if (cl_chip_is_tcv0_enabled(chip))
-+               cl_temperature_comp_tcv(chip, chip->cl_hw_tcv0, temp_intern=
-al);
-+
-+       if (cl_chip_is_tcv1_enabled(chip))
-+               cl_temperature_comp_tcv(chip, chip->cl_hw_tcv1, temp_intern=
-al);
-+}
-+
-+static void cl_temperature_tx_duty_cycle(struct cl_chip *chip, u8 duty_cyc=
-le)
-+{
-+       u16 periodic_tx_time_on =3D chip->conf->ce_temp_protect_tx_period_m=
-s * duty_cycle / 100;
-+       u16 periodic_tx_time_off =3D chip->conf->ce_temp_protect_tx_period_=
-ms - periodic_tx_time_on;
-+
-+       if (cl_chip_is_tcv0_enabled(chip))
-+               cl_msg_tx_start_periodic_tx_time(chip->cl_hw_tcv0,
-+                                                periodic_tx_time_off, peri=
-odic_tx_time_on);
-+
-+       if (cl_chip_is_tcv1_enabled(chip))
-+               cl_msg_tx_start_periodic_tx_time(chip->cl_hw_tcv1,
-+                                                periodic_tx_time_off, peri=
-odic_tx_time_on);
-+}
-+
-+static void cl_temperature_protect_radio_off(struct cl_chip *chip, s16 tem=
-p_avg)
-+{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       struct cl_chip_conf *conf =3D chip->conf;
-+
-+       if (temp_protect_db->force_radio_off)
-+               return;
-+
-+       cl_radio_off_chip(chip);
-+       temp_protect_db->force_radio_off =3D true;
-+       cl_dbg_chip_verbose(chip, "temperature [%d] >=3D radio off threshol=
-d [%d] --> radio off!\n",
-+                           temp_avg, conf->ce_temp_protect_radio_off_th);
-+}
-+
-+static void cl_temperature_protect_radio_on(struct cl_chip *chip, s16 temp=
-_avg)
-+{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       struct cl_chip_conf *conf =3D chip->conf;
-+       s16 temp_thr =3D conf->ce_temp_protect_radio_off_th - CL_TEMP_PROTE=
-CT_RADIO_OFF_HYST;
-+
-+       if (temp_avg >=3D temp_thr)
-+               return;
-+
-+       cl_radio_on_chip(chip);
-+       temp_protect_db->force_radio_off =3D false;
-+       cl_dbg_chip_verbose(chip, "temperature [%d] < radio off threshold -=
- hysteresis [%d] "
-+                                 "--> radio on!\n",
-+                           temp_avg, temp_thr);
-+}
-+
-+static void cl_temperature_protect_dec_duty_cycle(struct cl_chip *chip, s1=
-6 temp_avg)
-+{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       struct cl_chip_conf *conf =3D chip->conf;
-+
-+       if (temp_protect_db->duty_cycle =3D=3D DUTY_CYCLE_MIN)
-+               return;
-+
-+       temp_protect_db->duty_cycle -=3D DUTY_CYCLE_STEP;
-+       cl_temperature_tx_duty_cycle(chip, temp_protect_db->duty_cycle);
-+       cl_dbg_chip_warn(chip,
-+                        "temperature [%d] > protect_th_max [%d] --> decrea=
-se duty cycle [%u]!\n",
-+                        temp_avg, conf->ce_temp_protect_th_max, temp_prote=
-ct_db->duty_cycle);
-+}
-+
-+static void cl_temperature_protect_inc_duty_cycle(struct cl_chip *chip, s1=
-6 temp_avg)
-+{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       struct cl_chip_conf *conf =3D chip->conf;
-+
-+       if (temp_protect_db->duty_cycle =3D=3D DUTY_CYCLE_MAX)
-+               return;
-+
-+       temp_protect_db->duty_cycle +=3D DUTY_CYCLE_STEP;
-+       cl_temperature_tx_duty_cycle(chip, temp_protect_db->duty_cycle);
-+       cl_dbg_chip_warn(chip,
-+                        "temperature [%d] < protect_th_min [%d] --> increa=
-se duty cycle [%u]!\n",
-+                        temp_avg, conf->ce_temp_protect_th_min, temp_prote=
-ct_db->duty_cycle);
-+}
-+
-+static void cl_temperature_protect_decision(struct cl_chip *chip, s16 temp=
-_avg)
-+{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       struct cl_chip_conf *conf =3D chip->conf;
-+
-+       /* Test mode - force test_mode_duty_cycle */
-+       if (unlikely(temp_protect_db->test_mode_duty_cycle !=3D DUTY_CYCLE_=
-MAX)) {
-+               cl_temperature_tx_duty_cycle(chip, temp_protect_db->test_mo=
-de_duty_cycle);
-+               return;
++               cl_tx_single_free_skb(cl_hw, sw_txhdr->skb);
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
 +       }
 +
-+       /* Temperature protection logic:
-+        *
-+        * If the temperature is greater or equal to the radio off threshol=
-d
-+        * then set the radio off.
-+        * If the temperature is below the (radio off threshold - hysteresi=
-s [10])
-+        * then set the radio on again.
-+        *
-+        * Any time the temperature is greater than the max threshold then =
-we
-+        * decrease the duty cycle.
-+        * Any time the temperature is below the min threshold then we incr=
-ease
-+        * the duty cycle.
++       /* If queue is empty remove it from schedule list */
++       cl_txq_sched_list_remove_if_empty(tx_queue);
++}
++
++static void cl_txq_reset_counters(struct cl_tx_queue *tx_queue)
++{
++       tx_queue->total_fw_push_desc =3D 0;
++       tx_queue->total_fw_push_skb =3D 0;
++       tx_queue->total_fw_cfm =3D 0;
++       tx_queue->total_packets =3D 0;
++       tx_queue->dump_queue_full =3D 0;
++       tx_queue->dump_dma_map_fail =3D 0;
++
++       memset(tx_queue->stats_hw_amsdu_cnt, 0,
++              sizeof(tx_queue->stats_hw_amsdu_cnt));
++
++       memset(tx_queue->stats_sw_amsdu_cnt, 0,
++              sizeof(tx_queue->stats_sw_amsdu_cnt));
++}
++
++static u16 cl_txq_desc_in_fw(struct cl_tx_queue *tx_queue)
++{
++       return (tx_queue->fw_max_size - tx_queue->fw_free_space);
++}
++
++static void cl_txq_reset_counters_during_traffic(struct cl_tx_queue *tx_qu=
+eue)
++{
++       /*
++        * This function can be called during traffic, while descriptors
++        * are waiting in firmware. We set total_fw_cfm to minus the number
++        * of descriptors in firmware so that after confirmation arrives
++        * total_fw_cfm will be equal to total_fw_push_desc.
 +        */
-+       if (temp_avg >=3D conf->ce_temp_protect_radio_off_th) {
-+               cl_temperature_protect_radio_off(chip, temp_avg);
-+               return;
-+       }
++       u32 desc_in_fw =3D cl_txq_desc_in_fw(tx_queue);
 +
-+       if (temp_protect_db->force_radio_off) {
-+               cl_temperature_protect_radio_on(chip, temp_avg);
-+               return;
-+       }
-+
-+       if (temp_avg > conf->ce_temp_protect_th_max) {
-+               cl_temperature_protect_dec_duty_cycle(chip, temp_avg);
-+               return;
-+       }
-+
-+       if (temp_avg < chip->conf->ce_temp_protect_th_min) {
-+               cl_temperature_protect_inc_duty_cycle(chip, temp_avg);
-+               return;
-+       }
++       cl_txq_reset_counters(tx_queue);
++       tx_queue->total_fw_cfm =3D -desc_in_fw;
 +}
 +
-+static s16 cl_temperature_avg_protect(struct cl_temp_protect_db *temp_prot=
-ect_db)
++static void cl_txq_agg_size_set(struct cl_hw *cl_hw)
 +{
-+       /* Calculate average of last_samples */
-+       u8 i;
-+       s32 temp_avg =3D 0;
++       struct cl_tx_queue *tx_queue =3D NULL;
++       u16 new_size =3D 0;
++       u16 drv_max_size =3D 0;
++       int i =3D 0;
++       int j =3D 0;
 +
-+       for (i =3D 0; i < CL_TEMP_PROTECT_NUM_SAMPLES; i++)
-+               temp_avg +=3D temp_protect_db->last_samples[i];
++       if (!cl_hw->used_agg_queues || !cl_hw->conf->ci_tx_packet_limit)
++               return;
 +
-+       return (s16)(temp_avg / CL_TEMP_PROTECT_NUM_SAMPLES);
++       new_size =3D cl_hw->conf->ci_tx_packet_limit / cl_hw->used_agg_queu=
+es;
++       drv_max_size =3D max(new_size, cl_hw->conf->ci_tx_queue_size_agg);
++
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[i];
++
++               if (!tx_queue->cl_sta)
++                       continue;
++
++               tx_queue->max_packets =3D drv_max_size;
++
++               j++;
++               if (j =3D=3D cl_hw->used_agg_queues)
++                       break;
++       }
++
++       cl_dbg_trace(cl_hw, "drv_max_size =3D %u\n", drv_max_size);
 +}
 +
-+static void cl_temperature_protect_handle_read(struct cl_chip *chip, s16 t=
-emp)
++static int cl_txq_request_find(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
 +{
-+       struct cl_temp_protect_db *temp_protect_db =3D &chip->temperature.p=
-rotect_db;
-+       unsigned long curr_time =3D jiffies_to_msecs(jiffies);
-+       unsigned long delta_time =3D CL_TIME_DIFF(curr_time, temp_protect_d=
-b->last_timestamp);
++       int i =3D 0;
++       struct cl_req_agg_db *req_agg_db =3D NULL;
++       u8 req_agg_queues =3D 0;
 +
-+       /* Add current read */
-+       temp_protect_db->last_samples[temp_protect_db->curr_idx] =3D temp;
-+       temp_protect_db->curr_idx =3D (temp_protect_db->curr_idx + 1) % CL_=
-TEMP_PROTECT_NUM_SAMPLES;
++       for (i =3D 0; (i < IPC_MAX_BA_SESSIONS) && (req_agg_queues < cl_hw-=
+>req_agg_queues); i++) {
++               req_agg_db =3D &cl_hw->req_agg_db[i];
 +
-+       if (delta_time >=3D CL_TEMP_PROTECT_INTERVAL_MS) {
-+               s16 temp_avg =3D cl_temperature_avg_protect(temp_protect_db=
++               if (!req_agg_db->is_used)
++                       continue;
++
++               req_agg_queues++;
++
++               if (sta_idx =3D=3D req_agg_db->sta_idx && tid =3D=3D req_ag=
+g_db->tid)
++                       return i;
++       }
++
++       return -1;
++}
++
++static void cl_txq_traffic_counters_print_bcmc(struct cl_hw *cl_hw,
++                                              char **buf, int *len, ssize_=
+t *buf_size)
++{
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.bcmc;
++       unsigned long flags;
++       u8 hw_index;
++       u32 total_packets;
++       u16 fw_curr;
++       u32 total_push;
++       u32 total_cfm;
++       u32 dump;
++
++       spin_lock_irqsave(&cl_hw->tx_lock_bcmc, flags);
++
++       hw_index =3D tx_queue->hw_index;
++       total_packets =3D tx_queue->total_packets;
++       fw_curr =3D cl_txq_desc_in_fw(tx_queue);
++       total_push =3D tx_queue->total_fw_push_skb;
++       total_cfm =3D tx_queue->total_fw_cfm;
++       dump =3D cl_txq_total_dump_drv(tx_queue);
++
++       spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++
++       if (total_packets =3D=3D 0)
++               return;
++
++       cl_snprintf(buf, len, buf_size,
++                   "\nTX MULTICAST AND BOROADCAST QUEUE (MAX 1):\n"
++                   "|-----------------------------------------------------=
+------|\n"
++                   "| hw  | driver   | fw      | fw total | fw total | dum=
+p     |\n"
++                   "| idx | total    | current | push     | cfm      |    =
+      |\n"
++                   "|-----+----------+---------+----------+----------+----=
+------|\n"
++                   "| %3u |%10u|%9u|%10u|%10u|%10u|\n",
++                   hw_index, total_packets, fw_curr, total_push, total_cfm=
+, dump);
++       cl_snprintf(buf, len, buf_size,
++                   "|-----------------------------------------------------=
+------|\n");
++}
++
++static void cl_txq_traffic_counters_print_single(struct cl_hw *cl_hw,
++                                                char **buf, int *len, ssiz=
+e_t *buf_size)
++{
++       u16 queue_idx =3D 0;
++       u32 sta_idx =3D 0, ac =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       cl_snprintf(buf, len, buf_size,
++                   "\nTX SINGLE QUEUES (MAX %d):\n", MAX_SINGLE_QUEUES);
++       cl_snprintf(buf, len, buf_size,
++                   "|-----------------------------------------------------=
+-----------------"
++                   "----------|\n"
++                   "| idx | sta | ac | driver   | driver  | fw      | fw t=
+otal | fw total |"
++                   " dump     |\n"
++                   "|     |     |    | total    | current | current | push=
+     | cfm      |"
++                   "          |\n"
++                   "|-----+-----+----+----------+---------+---------+-----=
+-----+----------+"
++                   "----------|\n");
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       for (sta_idx =3D 0; sta_idx < FW_MAX_NUM_STA; sta_idx++) {
++               for (ac =3D 0; ac < AC_MAX; ac++) {
++                       queue_idx =3D QUEUE_IDX(sta_idx, ac);
++                       tx_queue =3D &cl_hw->tx_queues.single[queue_idx];
++
++                       if (tx_queue->total_packets =3D=3D 0)
++                               continue;
++
++                       if (tx_queue->index =3D=3D HIGH_PRIORITY_QUEUE)
++                               cl_snprintf(buf, len, buf_size,
++                                           "|-----+-----+----+----------+-=
+--------+---------+"
++                                           "----------+----------+--------=
+--|\n");
++
++                       cl_snprintf(buf, len, buf_size,
++                                   "| %3u | %3u | %2u |%10u|%9u|%9u|%10u|%=
+10u|%10u|\n",
++                                   tx_queue->index,
++                                   sta_idx,
++                                   tx_queue->hw_index,
++                                   tx_queue->total_packets,
++                                   tx_queue->num_packets,
++                                   cl_txq_desc_in_fw(tx_queue),
++                                   tx_queue->total_fw_push_skb,
++                                   tx_queue->total_fw_cfm,
++                                   cl_txq_total_dump_drv(tx_queue));
++               }
++       }
++
++       cl_snprintf(buf, len, buf_size,
++                   "|-----------------------------------------------------=
+-------------------"
++                   "--------|\n");
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++static void cl_txq_traffic_counters_print_agg(struct cl_hw *cl_hw,
++                                             char **buf, int *len, ssize_t=
+ *buf_size)
++{
++       u32 ba_idx =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       if (cl_hw->used_agg_queues =3D=3D 0)
++               goto out;
++
++       cl_snprintf(buf, len, buf_size,
++                   "\nTX AGGREGATION QUEUES (MAX %d):\n", IPC_MAX_BA_SESSI=
+ONS);
++       cl_snprintf(buf, len, buf_size,
++                   "|-----------------------------------------------------=
+------------------"
++                   "---------------------|\n"
++                   "| idx | sta | tid | driver   | driver  | fw      | fw =
+total | fw total |"
++                   " fw total | dump     |\n"
++                   "|     | idx |     | total    | current | current | pus=
+h skb | push desc|"
++                   " cfm      |          |\n"
++                   "|-----+-----+-----+----------+---------+---------+----=
+------+----------+"
++                   "----------+----------|\n");
++
++       for (ba_idx =3D 0; ba_idx < IPC_MAX_BA_SESSIONS; ba_idx++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[ba_idx];
++
++               if (!cl_hw->tx_queues.agg[ba_idx].cl_sta)
++                       continue;
++
++               if (tx_queue->total_packets =3D=3D 0)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size,
++                           "| %3u | %3u | %3u |%10u|%9u|%9u|%10u|%10u|%10u=
+|%10u|\n",
++                           tx_queue->index,
++                           tx_queue->cl_sta->sta_idx,
++                           tx_queue->tid,
++                           tx_queue->total_packets,
++                           tx_queue->num_packets,
++                           cl_txq_desc_in_fw(tx_queue),
++                           tx_queue->total_fw_push_skb,
++                           tx_queue->total_fw_push_desc,
++                           tx_queue->total_fw_cfm,
++                           cl_txq_total_dump_drv(tx_queue));
++       }
++
++       cl_snprintf(buf, len, buf_size,
++                   "|-----------------------------------------------------=
+-------------------"
++                   "--------------------|\n");
++
++out:
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++static void cl_txq_traffic_counters_print_mac(struct cl_hw *cl_hw,
++                                             char **buf, int *len, ssize_t=
+ *buf_size)
++{
++       struct ieee80211_local *local =3D hw_to_local(cl_hw->hw);
++       u32 i =3D 0, total_len =3D 0, q_len[IEEE80211_MAX_QUEUES] =3D {0};
++       unsigned long flags;
++
++       spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++       for (i =3D 0; i < IEEE80211_MAX_QUEUES; i++) {
++               q_len[i] =3D skb_queue_len(&local->pending[i]);
++               total_len +=3D q_len[i];
++       }
++
++       spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++       if (total_len =3D=3D 0)
++               return;
++
++       cl_snprintf(buf, len, buf_size,
++                   "\nMAC80211 PENDING QUEUES (MAX %d):\n", IEEE80211_MAX_=
+QUEUES);
++       cl_snprintf(buf, len, buf_size,
++                   "|--------------------|\n"
++                   "| queue |  current   |\n"
++                   "|-------+------------|\n");
++
++       for (i =3D 0; i < IEEE80211_MAX_QUEUES; i++)
++               if (q_len[i] > 0)
++                       cl_snprintf(buf, len, buf_size, "| %5u | %10u |\n",=
+ i, q_len[i]);
++
++       cl_snprintf(buf, len, buf_size, "|--------------------|\n");
++}
++
++static int cl_txq_traffic_counters_print(struct cl_hw *cl_hw)
++{
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_txq_traffic_counters_print_bcmc(cl_hw, &buf, &len, &buf_size);
++       cl_txq_traffic_counters_print_single(cl_hw, &buf, &len, &buf_size);
++       cl_txq_traffic_counters_print_agg(cl_hw, &buf, &len, &buf_size);
++       cl_txq_traffic_counters_print_mac(cl_hw, &buf, &len, &buf_size);
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static void cl_txq_drop_reasons_print_bcmc(struct cl_hw *cl_hw,
++                                          char **buf, int *len, ssize_t *b=
+uf_size)
++{
++       u32 total =3D 0;
++       u32 dump_queue_full =3D 0;
++       u32 dump_dma_map_fail =3D 0;
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.bcmc;
++       unsigned long flags;
++
++       spin_lock_irqsave(&cl_hw->tx_lock_bcmc, flags);
++
++       total =3D cl_txq_total_dump_drv(tx_queue);
++       dump_queue_full =3D tx_queue->dump_queue_full;
++       dump_dma_map_fail =3D tx_queue->dump_dma_map_fail;
++
++       spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++
++       if (total > 0)
++               cl_snprintf(buf, len, buf_size,
++                           "|bcmc  |     |%10u|%10u|%10u|\n",
++                           dump_queue_full, dump_dma_map_fail, total);
++}
++
++static void cl_txq_drop_reasons_print_single(struct cl_hw *cl_hw,
++                                            char **buf, int *len, ssize_t =
+*buf_size)
++{
++       u32 i =3D 0, total =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++) {
++               tx_queue =3D &cl_hw->tx_queues.single[i];
++               total =3D cl_txq_total_dump_drv(tx_queue);
++
++               if (total =3D=3D 0)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size,
++                           "|single|%5u|%10u|%10u|%10u|\n",
++                           tx_queue->index,
++                           tx_queue->dump_queue_full,
++                           tx_queue->dump_dma_map_fail,
++                           total);
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++static void cl_txq_drop_reasons_print_agg(struct cl_hw *cl_hw,
++                                         char **buf, int *len, ssize_t *bu=
+f_size)
++{
++       u32 i =3D 0, total =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[i];
++               total =3D cl_txq_total_dump_drv(tx_queue);
++
++               if (total =3D=3D 0)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size,
++                           "|agg   |%5u|%10u|%10u|%10u|\n",
++                           tx_queue->index,
++                           tx_queue->dump_queue_full,
++                           tx_queue->dump_dma_map_fail,
++                           total);
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++static int cl_txq_drop_reasons_print(struct cl_hw *cl_hw)
++{
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "-----------------------------------------------\n"
++                   "| type | idx | queue    | dma map  | total    |\n"
++                   "|      |     | full     | fail     | dump     |\n"
++                   "|------+-----+----------+----------+----------|\n");
++
++       cl_txq_drop_reasons_print_bcmc(cl_hw, &buf, &len, &buf_size);
++       cl_txq_drop_reasons_print_single(cl_hw, &buf, &len, &buf_size);
++       cl_txq_drop_reasons_print_agg(cl_hw, &buf, &len, &buf_size);
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "-----------------------------------------------\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_txq_global_counters_print(struct cl_hw *cl_hw)
++{
++       struct cl_tx_forward_cntr *forward =3D &cl_hw->tx_packet_cntr.forwa=
+rd;
++       struct cl_tx_drop_cntr *drop =3D &cl_hw->tx_packet_cntr.drop;
++       struct cl_tx_transfer_cntr *transfer =3D &cl_hw->tx_packet_cntr.tra=
+nsfer;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "FORWARD\n"
++                   "----------------------------\n"
++                   "tx_start          =3D %u\n", forward->tx_start);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "drv_fast_agg      =3D %u\n", forward->drv_fast_agg);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "drv_fast_single   =3D %u\n", forward->drv_fast_single)=
+;
++       cl_snprintf(&buf, &len, &buf_size,
++                   "to_mac            =3D %u\n", forward->to_mac);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "from_mac_single   =3D %u\n", forward->from_mac_single)=
+;
++       cl_snprintf(&buf, &len, &buf_size,
++                   "from_mac_agg      =3D %u\n", forward->from_mac_agg);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "DROP\n"
++                   "----------------------------\n"
++                   "wd_restart        =3D %u\n", drop->wd_restart);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "radio_off         =3D %u\n", drop->radio_off);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "in_recovery       =3D %u\n", drop->in_recovery);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "short_length      =3D %u\n", drop->short_length);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "pending_full      =3D %u\n", drop->pending_full);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "packet_limit      =3D %u\n", drop->packet_limit);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "dev_flags         =3D %u\n", drop->dev_flags);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "length_limit      =3D %u\n", drop->length_limit);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "txhdr_alloc_fail  =3D %u\n", drop->txhdr_alloc_fail);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "queue_null        =3D %u\n", drop->queue_null);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "amsdu_alloc_fail  =3D %u\n", drop->amsdu_alloc_fail);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "amsdu_dma_map_err =3D %u\n", drop->amsdu_dma_map_err);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "build_hdr_fail    =3D %u\n", drop->build_hdr_fail);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "key_disable       =3D %u\n", drop->key_disable);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "queue_flush       =3D %u\n", drop->queue_flush);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "sta_null_in_agg   =3D %u\n", drop->sta_null_in_agg);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "TRANSFER\n"
++                   "----------------------------\n"
++                   "single_to_agg     =3D %u\n", transfer->single_to_agg);
++       cl_snprintf(&buf, &len, &buf_size,
++                   "agg_to_single     =3D %u\n", transfer->agg_to_single);
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_txq_stop_reasons_print(struct cl_hw *cl_hw)
++{
++       struct ieee80211_local *local =3D hw_to_local(cl_hw->hw);
++       unsigned long queue_stop_reasons;
++       unsigned long flags;
++       u8 i =3D 0;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "|------------------------|\n"
++                   "|queue|queue_stop_reasons|\n"
++                   "|-----+------------------|\n");
++
++       for (i =3D 0; i < IEEE80211_MAX_QUEUES; i++) {
++               spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++               queue_stop_reasons =3D local->queue_stop_reasons[i];
++               spin_unlock_irqrestore(&local->queue_stop_reason_lock, flag=
+s);
++
++               if (queue_stop_reasons)
++                       cl_snprintf(&buf, &len, &buf_size, "|%5u|0x%-16lx|\=
+n",
++                                   i, queue_stop_reasons);
++       }
++
++       cl_snprintf(&buf, &len, &buf_size, "|------------------------|\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_txq_requested_agg_print(struct cl_hw *cl_hw)
++{
++       u8 i =3D 0;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "## used_agg_queues =3D %u\n", cl_hw->used_agg_queues);
++
++       if (cl_hw->used_agg_queues) {
++               for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++) {
++                       if (!cl_hw->tx_queues.agg[i].cl_sta)
++                               continue;
++
++                       cl_snprintf(&buf, &len, &buf_size,
++                                   "%u) sta_idx =3D %u, tid =3D %u\n", i +=
+ 1,
++                                   cl_hw->tx_queues.agg[i].cl_sta->sta_idx=
+,
++                                   cl_hw->tx_queues.agg[i].tid);
++               }
++       }
++
++       cl_snprintf(&buf, &len, &buf_size, "## req_agg_queues =3D %u\n", cl=
+_hw->req_agg_queues);
++
++       if (cl_hw->req_agg_queues) {
++               for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++) {
++                       if (!cl_hw->req_agg_db[i].is_used)
++                               continue;
++
++                       cl_snprintf(&buf, &len, &buf_size, "%u) sta_idx =3D=
+ %u, tid =3D %u\n",
++                                   i + 1, cl_hw->req_agg_db[i].sta_idx,
++                                   cl_hw->req_agg_db[i].tid);
++               }
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static void cl_txq_hw_amsdu_stats_print(struct cl_hw *cl_hw,
++                                       char **buf, int *len, ssize_t *buf_=
+size)
++{
++       u32 i, j;
++       struct cl_tx_queue *tx_queue;
++
++       cl_snprintf(buf, len, buf_size, "HW TX-AMSDU STATS:\n");
++
++       cl_snprintf(buf, len, buf_size, "|-----------");
++       for (i =3D 0; i < CL_AMSDU_TX_PAYLOAD_MAX; i++)
++               cl_snprintf(buf, len, buf_size, "-----------");
++
++       cl_snprintf(buf, len, buf_size, "|\n|agg|sta|tid");
++       for (i =3D 0; i < CL_AMSDU_TX_PAYLOAD_MAX; i++)
++               cl_snprintf(buf, len, buf_size, "| amsdu #%u ", i + 1);
++
++       cl_snprintf(buf, len, buf_size, "|\n|---+---+---");
++       for (i =3D 0; i < CL_AMSDU_TX_PAYLOAD_MAX; i++)
++               cl_snprintf(buf, len, buf_size, "+----------");
++
++       cl_snprintf(buf, len, buf_size, "|\n");
++
++       for (j =3D 0; j < IPC_MAX_BA_SESSIONS; j++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[j];
++
++               if (!tx_queue->cl_sta)
++                       continue;
++
++               if (tx_queue->total_packets =3D=3D 0)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size, "|%3u|%3u|%3u",
++                           tx_queue->index,
++                           tx_queue->cl_sta->sta_idx,
++                           tx_queue->tid);
++
++               for (i =3D 0; i < CL_AMSDU_TX_PAYLOAD_MAX; i++)
++                       cl_snprintf(buf, len, buf_size, "|%10u", tx_queue->=
+stats_hw_amsdu_cnt[i]);
++
++               cl_snprintf(buf, len, buf_size, "|\n");
++       }
++
++       cl_snprintf(buf, len, buf_size,  "|-----------");
++       for (i =3D 0; i < CL_AMSDU_TX_PAYLOAD_MAX; i++)
++               cl_snprintf(buf, len, buf_size, "-----------");
++
++       cl_snprintf(buf, len, buf_size, "|\n");
++}
++
++static void cl_txq_sw_amsdu_stats_print(struct cl_hw *cl_hw,
++                                       char **buf, int *len, ssize_t *buf_=
+size)
++{
++       u32 i, j;
++       struct cl_tx_queue *tx_queue;
++
++       if (cl_hw->conf->ci_tx_sw_amsdu_max_packets < 2)
++               return;
++
++       cl_snprintf(buf, len, buf_size, "SW TX-AMSDU STATS:\n");
++
++       for (j =3D 0; j < IPC_MAX_BA_SESSIONS; j++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[j];
++
++               if (!tx_queue->cl_sta)
++                       continue;
++
++               if (tx_queue->total_packets =3D=3D 0)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size,
++                           "\nagg idx %u, sta %u, tid %u :\n",
++                           tx_queue->index,
++                           tx_queue->cl_sta->sta_idx,
++                           tx_queue->tid);
++               cl_snprintf(buf, len, buf_size, "--------------------------=
+--\n");
++
++               for (i =3D 0; i < cl_hw->conf->ci_tx_sw_amsdu_max_packets; =
+i++)
++                       if (tx_queue->stats_sw_amsdu_cnt[i] > 0)
++                               cl_snprintf(buf, len, buf_size,
++                                           "amsdu #%u =3D %u\n", i + 1,
++                                           tx_queue->stats_sw_amsdu_cnt[i]=
 );
-+
-+               cl_dbg_chip_trace(chip, "temp_avg =3D %d, delta_time =3D %l=
-u\n", temp_avg, delta_time);
-+               cl_temperature_protect_decision(chip, temp_avg);
-+               temp_protect_db->last_timestamp =3D curr_time;
 +       }
 +}
 +
-+static void cl_temperature_protect(struct cl_chip *chip, struct cl_hw *cl_=
-hw)
++static int cl_txq_amsdu_stats_print(struct cl_hw *cl_hw)
 +{
-+       s16 protect_temp =3D 0;
-+       struct cl_chip_conf *conf =3D chip->conf;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
 +
-+       switch (conf->ce_temp_protect_en) {
-+       case TEMP_PROTECT_OFF:
-+               return;
-+       case TEMP_PROTECT_INTERNAL:
-+               protect_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_INTER=
-NAL) +
-+                       conf->ce_temp_protect_delta;
-+               break;
-+       case TEMP_PROTECT_EXTERNAL:
-+               protect_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_EXTER=
-NAL) +
-+                       conf->ce_temp_protect_delta;
-+               break;
-+       case TEMP_PROTECT_DIFF:
-+               protect_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_INTER=
-NAL) -
-+                       chip->temperature.diff_internal_external + conf->ce=
-_temp_protect_delta;
-+               break;
-+       }
++       spin_lock_bh(&cl_hw->tx_lock_agg);
 +
-+       cl_temperature_protect_handle_read(chip, protect_temp);
++       if (cl_hw->used_agg_queues =3D=3D 0)
++               goto out;
++
++       cl_txq_hw_amsdu_stats_print(cl_hw, &buf, &len, &buf_size);
++       cl_txq_sw_amsdu_stats_print(cl_hw, &buf, &len, &buf_size);
++out:
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
 +}
 +
-+static int cl_temperature_cli_help(struct cl_hw *cl_hw)
++static void cl_txq_max_size_print_single(struct cl_hw *cl_hw,
++                                        char **buf, int *len, ssize_t *buf=
+_size)
++{
++       u8 ac =3D 0;
++       u8 sta_idx =3D 0;
++       u16 queue_idx =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       cl_snprintf(buf, len, buf_size,
++                   "MAX SIZE SINGLE QUEUES:\n"
++                   "|----------------------|\n"
++                   "|idx|sta|ac| drv | fw  |\n"
++                   "|---+---+--+-----+-----|\n");
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       for (sta_idx =3D 0; sta_idx < FW_MAX_NUM_STA; sta_idx++) {
++               for (ac =3D 0; ac < AC_MAX; ac++) {
++                       queue_idx =3D QUEUE_IDX(sta_idx, ac);
++                       tx_queue =3D &cl_hw->tx_queues.single[queue_idx];
++
++                       if (tx_queue->total_fw_push_skb =3D=3D 0)
++                               continue;
++
++                       cl_snprintf(buf, len, buf_size,
++                                   "|%3u|%3u|%2u|%5u|%5u|\n",
++                                   tx_queue->index,
++                                   sta_idx,
++                                   tx_queue->hw_index,
++                                   tx_queue->max_packets,
++                                   tx_queue->fw_max_size);
++               }
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++
++       cl_snprintf(buf, len, buf_size, "|----------------------|\n");
++}
++
++static void cl_txq_max_size_print_agg(struct cl_hw *cl_hw,
++                                     char **buf, int *len, ssize_t *buf_si=
+ze)
++{
++       u8 agg_idx =3D 0;
++       struct cl_tx_queue *tx_queue;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       if (cl_hw->used_agg_queues =3D=3D 0)
++               goto out;
++
++       cl_snprintf(buf, len, buf_size,
++                   "MAX SIZE AGGREGATION QUEUES:\n"
++                   "|-----------------------|\n"
++                   "|idx|sta|tid| drv | fw  |\n"
++                   "|---+---+---+-----+-----|\n");
++
++       for (agg_idx =3D 0; agg_idx < IPC_MAX_BA_SESSIONS; agg_idx++) {
++               tx_queue =3D &cl_hw->tx_queues.agg[agg_idx];
++
++               if (!tx_queue->cl_sta)
++                       continue;
++
++               cl_snprintf(buf, len, buf_size,
++                           "|%3u|%3u|%3u|%5u|%5u|\n",
++                           tx_queue->index,
++                           tx_queue->cl_sta->sta_idx,
++                           tx_queue->tid,
++                           tx_queue->max_packets,
++                           tx_queue->fw_max_size);
++       }
++
++       cl_snprintf(buf, len, buf_size, "|----------------------|\n");
++
++out:
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++static int cl_txq_max_size_print(struct cl_hw *cl_hw)
++{
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_txq_max_size_print_single(cl_hw, &buf, &len, &buf_size);
++       cl_txq_max_size_print_agg(cl_hw, &buf, &len, &buf_size);
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static void cl_txq_stats_reset_bcmc(struct cl_hw *cl_hw)
++{
++       unsigned long flags;
++
++       spin_lock_irqsave(&cl_hw->tx_lock_bcmc, flags);
++       cl_txq_reset_counters_during_traffic(&cl_hw->tx_queues.bcmc);
++       spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++}
++
++static void cl_txq_stats_reset_single(struct cl_hw *cl_hw)
++{
++       u16 i =3D 0;
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++)
++               cl_txq_reset_counters_during_traffic(&cl_hw->tx_queues.sing=
+le[i]);
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++static void cl_txq_stats_reset_agg(struct cl_hw *cl_hw)
++{
++       u16 i =3D 0;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++)
++               cl_txq_reset_counters_during_traffic(&cl_hw->tx_queues.agg[=
+i]);
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++static void cl_txq_stats_reset(struct cl_hw *cl_hw)
++{
++       cl_txq_stats_reset_bcmc(cl_hw);
++       cl_txq_stats_reset_single(cl_hw);
++       cl_txq_stats_reset_agg(cl_hw);
++
++       memset(&cl_hw->tx_packet_cntr, 0, sizeof(struct cl_tx_packet_cntr))=
+;
++
++       pr_debug("Reset queue stats\n");
++}
++
++static void cl_txq_sched_list_print_single(struct cl_hw *cl_hw,
++                                          char **buf, int *len, ssize_t *b=
+uf_size)
++{
++       struct cl_tx_queue *tx_queue;
++       u32 num_queues =3D 0;
++
++       cl_snprintf(buf, len, buf_size, "TX single sched list:\n");
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       list_for_each_entry(tx_queue, &cl_hw->list_sched_q_single, sched_li=
+st) {
++               num_queues++;
++               cl_snprintf(buf, len, buf_size, "%u) Index =3D %u\n", num_q=
+ueues, tx_queue->index);
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++
++       if (num_queues =3D=3D 0)
++               cl_snprintf(buf, len, buf_size, "empty\n");
++}
++
++static void cl_txq_sched_list_print_agg(struct cl_hw *cl_hw,
++                                       char **buf, int *len, ssize_t *buf_=
+size)
++{
++       struct cl_tx_queue *tx_queue;
++       u32 num_queues =3D 0;
++
++       cl_snprintf(buf, len, buf_size, "\nTX agg sched list:\n");
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       list_for_each_entry(tx_queue, &cl_hw->list_sched_q_agg, sched_list)=
+ {
++               num_queues++;
++               cl_snprintf(buf, len, buf_size, "%u) Index =3D %u\n", num_q=
+ueues, tx_queue->index);
++       }
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++
++       if (num_queues =3D=3D 0)
++               cl_snprintf(buf, len, buf_size, "empty\n");
++}
++
++static int cl_txq_sched_list_print(struct cl_hw *cl_hw)
++{
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       cl_txq_sched_list_print_single(cl_hw, &buf, &len, &buf_size);
++       cl_txq_sched_list_print_agg(cl_hw, &buf, &len, &buf_size);
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_txq_cli_help(struct cl_hw *cl_hw)
 +{
 +       char *buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
 +       int err =3D 0;
@@ -550,22 +1201,16 @@ _temp_protect_delta;
 +               return -ENOMEM;
 +
 +       snprintf(buf, PAGE_SIZE,
-+                "temp usage:\n"
-+                "Temperature compensation:\n"
-+                "-a : Print the temperature compensation configuration\n"
-+                "-b : Set temperature compensation on/off [0:Dis,1:En]\n"
-+                "-c : Set temperature compensation slope "
-+                       "[3 digit number without a point] "
-+                       "example: '109'=3D>1.09, '76'=3D>0.76\n"
-+                "Temperature protect:\n"
-+                "-k : Print temperature protection configuration\n"
-+                "-l : Print temperature protect current status\n"
-+                "-m : Set test mode [0 - 100, 100 =3D disable]\n"
-+                "Temperature general:\n"
-+                "-u : Update temperature diff\n"
-+                "-v : Read temperature [0:internal, 1:external, "
-+                       "2:internal+delta, 3=3Dexternal+delta, "
-+                       "4=3Dinternal-diff+delta]\n");
++                "txq usage:\n"
++                "-a : Print traffic counters\n"
++                "-b : Print drop counters\n"
++                "-c : Print global counters\n"
++                "-d : Print stop reasons\n"
++                "-e : Print requested aggregations\n"
++                "-f : Print AMSDU statistics\n"
++                "-m : Print maximum queues size\n"
++                "-r : Reset queue stats\n"
++                "-s : Print schedule list\n");
 +
 +       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
 +       kfree(buf);
@@ -573,457 +1218,653 @@ _temp_protect_delta;
 +       return err;
 +}
 +
-+static int cl_temperature_protect_print_config(struct cl_hw *cl_hw)
++static void cl_txq_task_single(struct cl_hw *cl_hw)
 +{
-+       struct cl_chip_conf *conf =3D cl_hw->chip->conf;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
++       /* Schedule single queues */
++       struct cl_tx_queue *tx_queue, *tx_queue_tmp;
 +
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Temperature protect configuration:\n");
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_en           : %s\n",
-+                   TEMP_PROTECT_STATE_STR(conf->ce_temp_protect_en));
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_delta        : %3d [Celsius]\n",
-+                   conf->ce_temp_protect_delta);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_th_max       : %3d [Celsius]\n",
-+                   conf->ce_temp_protect_th_max);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_th_min       : %3d [Celsius]\n",
-+                   conf->ce_temp_protect_th_min);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_radio_off_th : %3d [Celsius]\n",
-+                   conf->ce_temp_protect_radio_off_th);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "ce_temp_protect_tx_period_ms : %5u [ms]\n",
-+                   conf->ce_temp_protect_tx_period_ms);
++       spin_lock(&cl_hw->tx_lock_single);
 +
-+       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
-+       kfree(buf);
++       list_for_each_entry_safe(tx_queue, tx_queue_tmp, &cl_hw->list_sched=
+_q_single, sched_list)
++               cl_txq_sched(cl_hw, tx_queue);
 +
-+       return err;
++       /* Rotate the queue so next schedule will start with a different qu=
+eue */
++       list_rotate_left(&cl_hw->list_sched_q_single);
++
++       spin_unlock(&cl_hw->tx_lock_single);
 +}
 +
-+static int cl_temperature_protect_print_status(struct cl_hw *cl_hw)
++static void cl_txq_task_agg(struct cl_hw *cl_hw)
 +{
-+       struct cl_temp_protect_db *protect_db =3D
-+                                       &cl_hw->chip->temperature.protect_d=
-b;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
++       /* Schedule agg queueus */
++       struct cl_tx_queue *tx_queue, *tx_queue_tmp;
 +
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Temperature protect status:\n"
-+                   "Force radio off      =3D %u\n",
-+                   protect_db->force_radio_off);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Duty cycle           =3D %u\n",
-+                   protect_db->duty_cycle);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Test mode duty cycle =3D %u\n",
-+                   protect_db->test_mode_duty_cycle);
++       spin_lock(&cl_hw->tx_lock_agg);
 +
-+       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
-+       kfree(buf);
++       list_for_each_entry_safe(tx_queue, tx_queue_tmp, &cl_hw->list_sched=
+_q_agg, sched_list)
++               cl_txq_sched(cl_hw, tx_queue);
 +
-+       return err;
++       /* Rotate the queue so next schedule will start with a different qu=
+eue */
++       list_rotate_left(&cl_hw->list_sched_q_agg);
++
++       spin_unlock(&cl_hw->tx_lock_agg);
 +}
 +
-+static void cl_temperature_protect_test_mode_set(struct cl_chip *chip, u8 =
-duty_cycle)
++static void cl_txq_task(unsigned long data)
 +{
-+       chip->temperature.protect_db.test_mode_duty_cycle =3D duty_cycle;
++       struct cl_hw *cl_hw =3D (struct cl_hw *)data;
 +
-+       if (duty_cycle =3D=3D DUTY_CYCLE_MAX)
-+               pr_debug("Disable temp protection test mode\n");
-+       else
-+               pr_debug("Enable temp protection test mode [%u]\n", duty_cy=
-cle);
++       cl_txq_task_single(cl_hw);
++       cl_txq_task_agg(cl_hw);
 +}
 +
-+static void cl_temperature_comp_comp_slope_set(struct cl_hw *cl_hw, s8 slo=
-pe)
++static void cl_txq_agg_inc_usage_cntr(struct cl_hw *cl_hw)
 +{
-+       cl_hw->conf->ce_temp_comp_slope =3D slope;
-+
-+       pr_debug("Temperature compensation slope: %d.%02d\n", slope / 100, =
-slope % 100);
++       /* Should be called in cl_hw->tx_lock_agg context */
++       cl_hw->used_agg_queues++;
++       cl_txq_agg_size_set(cl_hw);
 +}
 +
-+static int cl_e2p_read_temp_diff(struct cl_chip *chip, s8 *temp_diff)
++static void cl_txq_agg_dec_usage_cntr(struct cl_hw *cl_hw)
 +{
-+       /* Read temp_diff from eeprom */
-+       return cl_e2p_read(chip, temp_diff, SIZE_GEN_TEMP_DIFF, ADDR_GEN_TE=
-MP_DIFF);
++       /* Should be called in cl_hw->tx_lock_agg context */
++       WARN_ON_ONCE(cl_hw->used_agg_queues =3D=3D 0);
++
++       cl_hw->used_agg_queues--;
++       cl_txq_agg_size_set(cl_hw);
 +}
 +
-+static int cl_e2p_write_temp_diff(struct cl_chip *chip, s8 temp_diff)
++static void cl_txq_init_single(struct cl_hw *cl_hw)
 +{
-+       /* Writing temp_diff to eeprom */
-+       return cl_e2p_write(chip, (u8 *)&temp_diff, SIZE_GEN_TEMP_DIFF, ADD=
-R_GEN_TEMP_DIFF);
-+}
++       struct cl_tx_queue *tx_queue;
++       u32 i;
 +
-+static int cl_temperature_diff_update(struct cl_hw *cl_hw)
-+{
-+       s8 temp_diff =3D cl_temperature_read(cl_hw, TEMP_MODE_INTERNAL) -
-+               cl_temperature_read(cl_hw, TEMP_MODE_EXTERNAL);
++       spin_lock_bh(&cl_hw->tx_lock_single);
 +
-+       if (cl_e2p_write_temp_diff(cl_hw->chip, temp_diff)) {
-+               cl_dbg_err(cl_hw, "Error occurred while writing temperature=
- diff to EEPROM.\n");
-+               return -1;
++       INIT_LIST_HEAD(&cl_hw->list_sched_q_single);
++
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++) {
++               tx_queue =3D &cl_hw->tx_queues.single[i];
++               memset(tx_queue, 0, sizeof(struct cl_tx_queue));
++               INIT_LIST_HEAD(&tx_queue->hdrs);
++               tx_queue->hw_index =3D i / FW_MAX_NUM_STA;
++               tx_queue->fw_max_size =3D IPC_TXDESC_CNT_SINGLE;
++               tx_queue->fw_free_space =3D IPC_TXDESC_CNT_SINGLE;
++               tx_queue->index =3D i;
++               tx_queue->max_packets =3D cl_hw->conf->ci_tx_queue_size_sin=
+gle;
++               tx_queue->type =3D QUEUE_TYPE_SINGLE;
 +       }
 +
-+       cl_hw->chip->temperature.diff_internal_external =3D temp_diff;
-+       return 0;
++       spin_unlock_bh(&cl_hw->tx_lock_single);
 +}
 +
-+static void cl_temperature_comp_enable(struct cl_chip *chip, s32 enable)
++static void cl_txq_init_bcmc(struct cl_hw *cl_hw)
 +{
-+       if (enable) {
-+               cl_dbg_chip_verbose(chip, "enable\n");
-+               chip->conf->ce_temp_comp_en =3D true;
++       unsigned long flags;
++       struct cl_tx_queue *tx_queue;
++
++       spin_lock_irqsave(&cl_hw->tx_lock_bcmc, flags);
++
++       tx_queue =3D &cl_hw->tx_queues.bcmc;
++       memset(tx_queue, 0, sizeof(struct cl_tx_queue));
++       INIT_LIST_HEAD(&tx_queue->hdrs);
++       tx_queue->hw_index =3D CL_HWQ_BCN;
++       tx_queue->fw_max_size =3D IPC_TXDESC_CNT_BCMC;
++       tx_queue->fw_free_space =3D IPC_TXDESC_CNT_BCMC;
++       tx_queue->index =3D 0;
++       tx_queue->max_packets =3D 0;
++       tx_queue->type =3D QUEUE_TYPE_BCMC;
++
++       spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++}
++
++static void cl_txq_init_agg(struct cl_hw *cl_hw)
++{
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++       INIT_LIST_HEAD(&cl_hw->list_sched_q_agg);
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++static void cl_txq_agg_request_reset(struct cl_hw *cl_hw)
++{
++       cl_hw->req_agg_queues =3D 0;
++       memset(cl_hw->req_agg_db, 0, sizeof(cl_hw->req_agg_db));
++}
++
++void cl_txq_init(struct cl_hw *cl_hw)
++{
++       tasklet_init(&cl_hw->tx_task, cl_txq_task, (unsigned long)cl_hw);
++
++       cl_txq_agg_request_reset(cl_hw);
++       cl_txq_init_single(cl_hw);
++       cl_txq_init_bcmc(cl_hw);
++       cl_txq_init_agg(cl_hw);
++}
++
++void cl_txq_stop(struct cl_hw *cl_hw)
++{
++       tasklet_kill(&cl_hw->tx_task);
++}
++
++struct cl_tx_queue *cl_txq_get(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw=
+_txhdr)
++{
++       struct cl_sta *cl_sta =3D sw_txhdr->cl_sta;
++       struct ieee80211_tx_info *tx_info =3D IEEE80211_SKB_CB(sw_txhdr->sk=
+b);
++       u8 hw_queue =3D sw_txhdr->hw_queue;
++
++       if (!cl_sta &&
++           hw_queue =3D=3D CL_HWQ_VO &&
++           is_multicast_ether_addr(sw_txhdr->hdr80211->addr1)) {
++               /*
++                * If HW queue is VO and packet is multicast, it was not bu=
+ffered
++                * by mac80211, and it should be pushed to the high-priorit=
+y queue
++                * and not to the bcmc queue.
++                */
++               return &cl_hw->tx_queues.single[HIGH_PRIORITY_QUEUE];
++       } else if (!cl_sta &&
++                  (hw_queue !=3D CL_HWQ_BCN) &&
++                  !(tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)) {
++               /*
++                * If station is NULL, but HW queue is not BCN,
++                * it most go to the high-priority queue.
++                */
++               tx_info->flags |=3D IEEE80211_TX_CTL_NO_PS_BUFFER;
++               sw_txhdr->hw_queue =3D CL_HWQ_VO;
++               return &cl_hw->tx_queues.single[HIGH_PRIORITY_QUEUE];
++       } else if (cl_sta && (tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
++               /* Agg packet */
++               return cl_sta->agg_tx_queues[sw_txhdr->tid];
++       } else if (hw_queue =3D=3D CL_HWQ_BCN) {
++               return &cl_hw->tx_queues.bcmc;
++       } else if (tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
++               /*
++                * Only frames that are power save response or non-bufferab=
+le MMPDU
++                * will have this flag set our driver will push those frame=
+ to the
++                * highiest priority queue.
++                */
++               return &cl_hw->tx_queues.single[HIGH_PRIORITY_QUEUE];
++       }
++
++       return &cl_hw->tx_queues.single[QUEUE_IDX(sw_txhdr->sta_idx, hw_que=
+ue)];
++}
++
++void cl_txq_push(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
++{
++       struct cl_tx_queue *tx_queue =3D sw_txhdr->tx_queue;
++
++       if (tx_queue->num_packets < tx_queue->max_packets) {
++               tx_queue->num_packets++;
++
++               /*
++                * This prioritization of action frames helps Samsung Galax=
+y Note 8 to
++                * open BA session more easily, when phy dev is PHY_DEV_OLY=
+MPUS
++                */
++               if (ieee80211_is_action(sw_txhdr->fc))
++                       list_add(&sw_txhdr->tx_queue_list, &tx_queue->hdrs)=
+;
++               else
++                       list_add_tail(&sw_txhdr->tx_queue_list, &tx_queue->=
+hdrs);
++
++               /* If it is the first packet in the queue, add the queue to=
+ the sched list */
++               cl_txq_sched_list_add(tx_queue, cl_hw);
 +       } else {
-+               cl_dbg_chip_verbose(chip, "disable\n");
-+               chip->conf->ce_temp_comp_en =3D false;
++               struct cl_sta *cl_sta =3D sw_txhdr->cl_sta;
++               u8 tid =3D sw_txhdr->tid;
 +
-+               if (cl_chip_is_tcv0_enabled(chip))
-+                       cl_temperature_set_power_offset(chip->cl_hw_tcv0, 0=
-);
++               /* If the SW queue full, release the packet */
++               tx_queue->dump_queue_full++;
 +
-+               if (cl_chip_is_tcv1_enabled(chip))
-+                       cl_temperature_set_power_offset(chip->cl_hw_tcv1, 0=
-);
++               if (cl_sta && cl_sta->amsdu_anchor[tid].sw_txhdr) {
++                       if (cl_sta->amsdu_anchor[tid].sw_txhdr =3D=3D sw_tx=
+hdr) {
++                               cl_sta->amsdu_anchor[tid].sw_txhdr =3D NULL=
+;
++                               cl_sta->amsdu_anchor[tid].packet_cnt =3D 0;
++                       }
++               }
++
++               dev_kfree_skb_any(sw_txhdr->skb);
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++
++               /* Schedule tasklet to try and empty the queue */
++               tasklet_schedule(&cl_hw->tx_task);
 +       }
 +}
 +
-+static int cl_temperature_kthread(void *arg)
++void cl_txq_sched(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue)
 +{
-+       struct cl_chip *chip =3D (struct cl_chip *)arg;
-+       struct cl_hw *cl_hw =3D NULL;
-+       unsigned long timeout =3D msecs_to_jiffies(CL_TEMPERATURE_TIMER_INT=
-ERVAL_MS);
++       struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
 +
-+       while (true) {
-+               cl_hw =3D cl_chip_is_tcv0_enabled(chip) ? chip->cl_hw_tcv0 =
-: chip->cl_hw_tcv1;
-+
-+               if (cl_hw &&
-+                   !chip->conf->ce_production_mode &&
-+                   test_bit(CL_DEV_STARTED, &cl_hw->drv_flags)) {
-+                       cl_temperature_comp(chip, cl_hw);
-+                       cl_temperature_protect(chip, cl_hw);
-+               }
-+
-+               if (wait_event_timeout(chip->temperature.wait_q, kthread_sh=
-ould_stop(), timeout)) {
-+                       cl_dbg_chip_trace(chip, "exit temperature kthread\n=
-");
-+                       return 0;
-+               }
-+       }
-+}
-+
-+static void cl_temperature_recovery_protect(struct cl_hw *cl_hw)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+
-+       if (chip->conf->ce_temp_protect_en !=3D TEMP_PROTECT_OFF) {
-+               u8 duty_cycle =3D chip->temperature.protect_db.duty_cycle;
-+
-+               if (duty_cycle < DUTY_CYCLE_MAX) {
-+                       u16 periodic_tx_time_on =3D
-+                               chip->conf->ce_temp_protect_tx_period_ms * =
-duty_cycle / 100;
-+                       u16 periodic_tx_time_off =3D
-+                               chip->conf->ce_temp_protect_tx_period_ms - =
-periodic_tx_time_on;
-+
-+                       cl_msg_tx_start_periodic_tx_time(cl_hw, periodic_tx=
-_time_off,
-+                                                        periodic_tx_time_o=
-n);
-+               }
-+       }
-+}
-+
-+static void cl_temperature_recovery_comp(struct cl_hw *cl_hw)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       s8 power_offset =3D cl_hw->temp_comp_db.power_offset;
-+
-+       if (!chip->conf->ce_temp_comp_en)
++       if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
++           cl_hw->tx_disable_flags ||
++           cl_txq_is_fw_full(tx_queue))
 +               return;
 +
-+       if (power_offset)
-+               cl_temperature_set_power_offset(cl_hw, power_offset);
-+}
++       /* Go over all descriptors in queue */
++       list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, t=
+x_queue_list) {
++               list_del(&sw_txhdr->tx_queue_list);
++               tx_queue->num_packets--;
 +
-+void cl_temperature_init(struct cl_chip *chip)
-+{
-+       struct cl_temperature *temperature =3D &chip->temperature;
-+       struct cl_temp_protect_db *temp_protect_db =3D &temperature->protec=
-t_db;
-+       unsigned long curr_time_ms =3D jiffies_to_msecs(jiffies);
++               cl_tx_push(cl_hw, sw_txhdr, tx_queue);
 +
-+       temperature->kthread =3D kthread_run(cl_temperature_kthread,
-+                                          chip,
-+                                          "cl_temperature_kthread_%u",
-+                                          chip->idx);
-+       if (IS_ERR(temperature->kthread)) {
-+               cl_dbg_chip_err(chip, "Failed to create temperature kthread=
-\n");
-+               temperature->kthread =3D NULL;
++               if (cl_txq_is_fw_full(tx_queue))
++                       break;
 +       }
 +
-+       init_waitqueue_head(&temperature->wait_q);
-+
-+       mutex_init(&temperature->mutex);
-+       temperature->internal_last =3D UNCALIBRATED_TEMPERATURE;
-+       temperature->internal_read_timestamp =3D curr_time_ms;
-+       temperature->external_last =3D UNCALIBRATED_TEMPERATURE;
-+       temperature->external_read_timestamp =3D curr_time_ms;
-+
-+       /* Temp_protect_db init */
-+       temp_protect_db->duty_cycle =3D DUTY_CYCLE_MAX;
-+       temp_protect_db->test_mode_duty_cycle =3D DUTY_CYCLE_MAX;
-+       temp_protect_db->last_timestamp =3D curr_time_ms;
++       /* If queue is empty remove it from schedule list */
++       cl_txq_sched_list_remove_if_empty(tx_queue);
 +}
 +
-+void cl_temperature_close(struct cl_chip *chip)
++void cl_txq_agg_alloc(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++                     struct mm_ba_add_cfm *ba_add_cfm, u16 buf_size)
 +{
-+       struct cl_temperature *temperature =3D &chip->temperature;
++       u8 tid =3D ba_add_cfm->tid;
++       u8 fw_agg_idx =3D ba_add_cfm->agg_idx;
++       u8 sta_idx =3D cl_sta->sta_idx;
++       u8 ac =3D cl_tid2hwq[tid];
++       u16 single_queue_idx =3D QUEUE_IDX(sta_idx, ac);
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.agg[fw_agg_idx];
 +
-+       if (temperature->kthread) {
-+               cl_dbg_chip_trace(chip, "stopping temperature kthread\n");
-+               if (kthread_stop(temperature->kthread) !=3D -EINTR)
-+                       wake_up(&temperature->wait_q);
++       spin_lock_bh(&cl_hw->tx_lock_agg);
 +
-+               temperature->kthread =3D NULL;
++       /* Init aggregated queue struct */
++       memset(tx_queue, 0, sizeof(struct cl_tx_queue));
++       INIT_LIST_HEAD(&tx_queue->hdrs);
++
++       /*
++        * Firmware agg queues size is static and set to 512, so that for t=
+he worst
++        * case of HE stations,that support AMPDU of 256, it has room for t=
+wo full
++        * aggregation.
++        * To keep this logic, of room for two aggregations, for non-HE sta=
+tions, or
++        * for HE stations that do not support AMPDU of 256, we initialize =
+fw_max_size
++        to twice the buffer size supported by the station.
++        */
++       tx_queue->fw_max_size =3D min_t(u16, cl_hw->max_agg_tx_q_size, buf_=
+size * 2);
++       tx_queue->fw_free_space =3D tx_queue->fw_max_size;
++
++       tx_queue->max_packets =3D cl_hw->conf->ci_tx_queue_size_agg;
++       tx_queue->hw_index =3D ac;
++       tx_queue->cl_sta =3D cl_sta;
++       tx_queue->type =3D QUEUE_TYPE_AGG;
++       tx_queue->tid =3D tid;
++       tx_queue->index =3D fw_agg_idx;
++
++#ifdef CONFIG_CL_PCIE
++       /* Reset the synchronization counters between the fw and the IPC la=
+yer */
++       cl_hw->ipc_env->ring_indices_elem->indices->txdesc_write_idx.agg[fw=
+_agg_idx] =3D 0;
++#endif
++
++       /* Attach the cl_hw chosen queue to the station and agg queues DB *=
+/
++       cl_sta->agg_tx_queues[tid] =3D tx_queue;
++       cl_agg_cfm_set_tx_queue(cl_hw, tx_queue, fw_agg_idx);
++
++       /* Notify upper mac80211 layer of queues resources status */
++       cl_txq_agg_inc_usage_cntr(cl_hw);
++       cl_txq_agg_request_del(cl_hw, sta_idx, tid);
++
++       /*
++        * Move the qos descriptors to the new allocated aggregated queues,
++        * otherwise we might reorder packets)
++        */
++       cl_txq_transfer_single_to_agg(cl_hw, &cl_hw->tx_queues.single[singl=
+e_queue_idx],
++                                     tx_queue, tid);
++       /* Move the BA window pending packets to agg path */
++       cl_baw_pending_to_agg(cl_hw, cl_sta, tid);
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++
++       cl_dbg_trace(cl_hw, "Allocate queue [%u] to station [%u] tid [%u]\n=
+",
++                    fw_agg_idx, sta_idx, tid);
++}
++
++void cl_txq_agg_free(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue,
++                    struct cl_sta *cl_sta, u8 tid)
++{
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       cl_dbg_trace(cl_hw, "Free queue [%u] of station [%u] tid [%u]\n",
++                    tx_queue->index, cl_sta->sta_idx, tid);
++
++       memset(tx_queue, 0, sizeof(struct cl_tx_queue));
++
++       cl_txq_agg_dec_usage_cntr(cl_hw);
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++}
++
++void cl_txq_agg_stop(struct cl_sta *cl_sta, u8 tid)
++{
++       cl_sta->agg_tx_queues[tid] =3D NULL;
++}
++
++void cl_txq_sta_add(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++       /* Set cl_sta field for all single queues of this station */
++       u8 ac;
++       u16 queue_idx;
++
++       for (ac =3D 0; ac < AC_MAX; ac++) {
++               queue_idx =3D QUEUE_IDX(cl_sta->sta_idx, ac);
++               cl_hw->tx_queues.single[queue_idx].cl_sta =3D cl_sta;
++       }
++
++       /* Reset pointers to TX agg queues */
++       memset(cl_sta->agg_tx_queues, 0, sizeof(cl_sta->agg_tx_queues));
++}
++
++void cl_txq_sta_remove(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       /* Clear cl_sta field for all single queues of this station */
++       u8 ac;
++       u16 queue_idx;
++
++       for (ac =3D 0; ac < AC_MAX; ac++) {
++               queue_idx =3D QUEUE_IDX(sta_idx, ac);
++               cl_hw->tx_queues.single[queue_idx].cl_sta =3D NULL;
 +       }
 +}
 +
-+s16 cl_temperature_get_internal(struct cl_hw *cl_hw)
++void cl_txq_transfer_agg_to_single(struct cl_hw *cl_hw, struct cl_tx_queue=
+ *agg_queue)
 +{
-+       return cl_hw->chip->temperature.internal_last;
-+}
++       /*
++        * 1) Remove from aggregation queue
++        * 2) Free sw_txhdr
++        * 3) Push to single queue
++        */
++       struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
++       struct sk_buff *skb;
++       struct ieee80211_tx_info *tx_info;
++       struct cl_tx_queue *single_queue;
++       struct cl_sta *cl_sta =3D agg_queue->cl_sta;
++       u16 single_queue_idx =3D 0;
 +
-+s8 cl_temperature_read(struct cl_hw *cl_hw, enum cl_temp_mode mode)
-+{
-+       u16 raw_bits =3D 0;
-+       s16 temp_val =3D 0;
-+       unsigned long curr_time =3D jiffies_to_msecs(jiffies);
-+       unsigned long diff_time =3D 0;
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       struct cl_temperature *temperature =3D &chip->temperature;
++       if (agg_queue->num_packets =3D=3D 0)
++               return;
 +
-+       mutex_lock(&temperature->mutex);
++       single_queue_idx =3D QUEUE_IDX(cl_sta->sta_idx, agg_queue->hw_index=
+);
++       single_queue =3D &cl_hw->tx_queues.single[single_queue_idx];
 +
-+       switch (mode) {
-+       case TEMP_MODE_INTERNAL:
-+               diff_time =3D CL_TIME_DIFF(curr_time, temperature->internal=
-_read_timestamp);
-+               if (diff_time <=3D CL_TEMPERATURE_UPDATE_INTERVAL_MS) {
-+                       temp_val =3D temperature->internal_last;
-+                       cl_dbg_chip_trace(chip, "Return last internal tempe=
-rature %d\n", temp_val);
-+                       goto read_out;
++       list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &agg_queue->hdrs, =
+tx_queue_list) {
++               list_del(&sw_txhdr->tx_queue_list);
++               agg_queue->num_packets--;
++
++               skb =3D sw_txhdr->skb;
++               tx_info =3D IEEE80211_SKB_CB(skb);
++
++               if (cl_tx_ctrl_is_amsdu(tx_info)) {
++                       cl_tx_amsdu_transfer_single(cl_hw, sw_txhdr);
++               } else {
++                       tx_info->flags &=3D ~IEEE80211_TX_CTL_AMPDU;
++
++                       if (cl_tx_8023_to_wlan(cl_hw, skb, cl_sta, sw_txhdr=
+->tid) =3D=3D 0) {
++                               cl_hw->tx_packet_cntr.transfer.agg_to_singl=
+e++;
++                               cl_tx_single(cl_hw, cl_sta, skb, false, fal=
+se);
++                       }
 +               }
-+               break;
-+       case TEMP_MODE_EXTERNAL:
-+               diff_time =3D CL_TIME_DIFF(curr_time, temperature->external=
-_read_timestamp);
-+               if (diff_time <=3D CL_TEMPERATURE_UPDATE_INTERVAL_MS) {
-+                       temp_val =3D temperature->external_last;
-+                       cl_dbg_chip_trace(chip, "Return last external tempe=
-rature %d\n", temp_val);
-+                       goto read_out;
++
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++       }
++
++       /* If queue is empty remove it from schedule list */
++       cl_txq_sched_list_remove_if_empty(agg_queue);
++}
++
++void cl_txq_flush(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue)
++{
++       struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
++       struct ieee80211_tx_info *tx_info;
++
++       if (tx_queue->num_packets =3D=3D 0)
++               return;
++
++       list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, t=
+x_queue_list) {
++               list_del(&sw_txhdr->tx_queue_list);
++               tx_queue->num_packets--;
++
++               /* Can not send AMSDU frames as singles */
++               tx_info =3D IEEE80211_SKB_CB(sw_txhdr->skb);
++
++               /* Free mid & last AMSDU sub frames */
++               if (cl_tx_ctrl_is_amsdu(tx_info)) {
++                       cl_tx_amsdu_flush_sub_frames(cl_hw, sw_txhdr);
++               } else {
++                       if (tx_queue->type =3D=3D QUEUE_TYPE_SINGLE)
++                               cl_tx_single_free_skb(cl_hw, sw_txhdr->skb)=
+;
++                       else
++                               kfree_skb(sw_txhdr->skb);
++
++                       cl_sw_txhdr_free(cl_hw, sw_txhdr);
++                       cl_hw->tx_packet_cntr.drop.queue_flush++;
 +               }
-+               break;
-+       default:
-+               cl_dbg_chip_err(chip, "Invalid temperature mode %d\n", mode=
-);
-+               goto read_err;
 +       }
 +
-+       if (cl_temperature_read_fw(cl_hw, mode, &raw_bits)) {
-+               cl_dbg_chip_err(chip, "Temperature read failed\n");
-+               goto read_err;
-+       }
++       /* Remove from schedule queue */
++       cl_txq_sched_list_remove(tx_queue);
 +
-+       temp_val =3D cl_raw_bits_to_temperature(raw_bits, mode);
-+
-+       if (temp_val > TEMPERATURE_MAX || temp_val < TEMPERATURE_MIN) {
-+               cl_dbg_chip_err(chip, "Invalid temperature value %d\n", tem=
-p_val);
-+               goto read_err;
-+       }
-+
-+       /* Update temperature read db */
-+       if (mode =3D=3D TEMP_MODE_INTERNAL) {
-+               temperature->internal_last =3D temp_val;
-+               temperature->internal_read_timestamp =3D jiffies_to_msecs(j=
-iffies);
-+               cl_dbg_chip_trace(chip, "Read and save internal temperature=
- %d\n", temp_val);
-+       } else {
-+               temperature->external_last =3D temp_val;
-+               temperature->external_read_timestamp =3D jiffies_to_msecs(j=
-iffies);
-+               cl_dbg_chip_trace(chip, "Read and save external temperature=
- %d\n", temp_val);
-+       }
-+
-+read_out:
-+       mutex_unlock(&temperature->mutex);
-+       return temp_val;
-+
-+read_err:
-+       /* If temperature read failed return the last valid value */
-+       mutex_unlock(&temperature->mutex);
-+
-+       return (mode =3D=3D TEMP_MODE_INTERNAL) ?
-+               temperature->internal_last : temperature->external_last;
++       /* Sanity check that queue is empty */
++       WARN_ON(tx_queue->num_packets > 0);
 +}
 +
-+static int cl_temperature_comp_print_config(struct cl_hw *cl_hw)
++void cl_txq_flush_single(struct cl_hw *cl_hw, u16 idx)
 +{
-+       struct cl_temp_comp_db *temp_comp_db =3D &cl_hw->temp_comp_db;
-+       s8 temp_comp_slope =3D cl_hw->conf->ce_temp_comp_slope;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
-+
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Internal temperature: %d\n",
-+                   cl_hw->chip->temperature.internal_last);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Calib temperature:    %d\n",
-+                   temp_comp_db->calib_temperature);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Delta temperature:    %d\n",
-+                   temp_comp_db->avg_temp_delta);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Slope:                %d.%02d\n\n",
-+                   temp_comp_slope / 100, temp_comp_slope % 100);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "Power offset:         %d\n",
-+                   temp_comp_db->power_offset);
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
-+
-+       return err;
++       spin_lock_bh(&cl_hw->tx_lock_single);
++       cl_txq_flush(cl_hw, &cl_hw->tx_queues.single[idx]);
++       spin_unlock_bh(&cl_hw->tx_lock_single);
 +}
 +
-+static int cl_temperature_ret(struct cl_hw *cl_hw, u8 param)
++void cl_txq_flush_all_agg(struct cl_hw *cl_hw)
 +{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       s8 curr_temp =3D 0;
-+       char reply_str[5] =3D {0};
-+       u16 reply_strlen =3D 0;
++       int i =3D 0;
 +
-+       switch (param) {
-+       case 0: /* Internal temp only */
-+               curr_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_INTERNAL=
-);
-+               cl_dbg_chip_trace(chip, "%d\n", curr_temp);
-+               break;
-+       case 1: /* External temp only */
-+               curr_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_EXTERNAL=
-);
-+               cl_dbg_chip_trace(chip, "%d\n", curr_temp);
-+               break;
-+       case 2: /* Internal temp + delta */
-+               curr_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_INTERNAL=
-) +
-+                       chip->conf->ce_temp_protect_delta;
-+               cl_dbg_chip_trace(chip, "Internal + Delta =3D %d\n", curr_t=
-emp);
-+               break;
-+       case 3: /* External temp + delta */
-+               curr_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_EXTERNAL=
-) +
-+                       chip->conf->ce_temp_protect_delta;
-+               cl_dbg_chip_trace(chip, "External + Delta =3D %d\n", curr_t=
-emp);
-+               break;
-+       case 4: /* Internal temp - temp_diff + delta */
-+               curr_temp =3D cl_temperature_read(cl_hw, TEMP_MODE_INTERNAL=
-) -
-+                       chip->temperature.diff_internal_external +
-+                       chip->conf->ce_temp_protect_delta;
-+               cl_dbg_chip_trace(chip, "Actual temperature: Internal - Dif=
-f + Delta =3D %d\n",
-+                                 curr_temp);
-+               break;
-+       default:
-+               cl_dbg_chip_err(chip, "Invalid argument! must be between 0 =
-and 4.\n");
-+               return 0;
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++)
++               cl_txq_flush(cl_hw, &cl_hw->tx_queues.agg[i]);
++}
++
++void cl_txq_flush_all_single(struct cl_hw *cl_hw)
++{
++       int i =3D 0;
++
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++)
++               cl_txq_flush(cl_hw, &cl_hw->tx_queues.single[i]);
++}
++
++void cl_txq_flush_sta(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++       int i =3D 0;
++       u8 sta_idx =3D cl_sta->sta_idx;
++       u32 queue_idx =3D 0;
++       struct cl_tx_queue *tx_queue =3D NULL;
++
++       spin_lock_bh(&cl_hw->tx_lock_agg);
++
++       /* Flush all aggregation queues for this station */
++       for (i =3D 0; i < IEEE80211_NUM_TIDS; i++)
++               if (cl_sta->agg_tx_queues[i])
++                       cl_txq_flush(cl_hw, cl_sta->agg_tx_queues[i]);
++
++       spin_unlock_bh(&cl_hw->tx_lock_agg);
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++
++       /* Flush all single queues for this station */
++       for (i =3D 0; i < AC_MAX; i++) {
++               queue_idx =3D QUEUE_IDX(sta_idx, i);
++               tx_queue =3D &cl_hw->tx_queues.single[queue_idx];
++               cl_txq_flush(cl_hw, tx_queue);
++               cl_txq_reset_counters(tx_queue);
 +       }
 +
-+       reply_strlen =3D snprintf(&reply_str[0], sizeof(reply_str), "%d", c=
-urr_temp);
-+       return cl_vendor_reply(cl_hw, reply_str, reply_strlen);
++       /* Go over high prioirty queue and delete packets belonging to this=
+ station */
++       cl_txq_delete_packets(cl_hw, &cl_hw->tx_queues.single[HIGH_PRIORITY=
+_QUEUE], sta_idx);
++
++       spin_unlock_bh(&cl_hw->tx_lock_single);
 +}
 +
-+int cl_temperature_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
++void cl_txq_agg_request_add(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
 +{
-+       s32 *params =3D cli_params->params;
++       int i =3D cl_txq_request_find(cl_hw, sta_idx, tid);
++       struct cl_req_agg_db *req_agg_db =3D NULL;
 +
++       if (i !=3D -1) {
++               cl_dbg_trace(cl_hw, "ALREADY_ADDED - entry =3D %d, sta_idx =
+=3D %u, tid =3D %u\n",
++                            i, sta_idx, tid);
++               return;
++       }
++
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++) {
++               req_agg_db =3D &cl_hw->req_agg_db[i];
++
++               if (!req_agg_db->is_used) {
++                       cl_dbg_trace(cl_hw, "ADD - entry =3D %d, sta_idx =
+=3D %u, tid =3D %u\n",
++                                    i, sta_idx, tid);
++                       req_agg_db->is_used =3D true;
++                       req_agg_db->sta_idx =3D sta_idx;
++                       req_agg_db->tid =3D tid;
++                       cl_hw->req_agg_queues++;
++                       return;
++               }
++       }
++}
++
++void cl_txq_agg_request_del(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
++{
++       int i =3D cl_txq_request_find(cl_hw, sta_idx, tid);
++
++       if (i !=3D -1) {
++               cl_dbg_trace(cl_hw, "DEL - entry =3D %d, sta_idx =3D %u, ti=
+d =3D %u\n",
++                            i, sta_idx, tid);
++               cl_hw->req_agg_db[i].is_used =3D false;
++               cl_hw->req_agg_queues--;
++       }
++}
++
++bool cl_txq_is_agg_available(struct cl_hw *cl_hw)
++{
++       u8 total_agg_queues =3D cl_hw->used_agg_queues + cl_hw->req_agg_que=
+ues;
++
++       return (total_agg_queues < IPC_MAX_BA_SESSIONS);
++}
++
++bool cl_txq_single_is_full(struct cl_hw *cl_hw, u16 idx)
++{
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.single[idx];
++       bool is_full =3D 0;
++
++       spin_lock_bh(&cl_hw->tx_lock_single);
++       is_full =3D (tx_queue->max_packets =3D=3D tx_queue->num_packets);
++       spin_unlock_bh(&cl_hw->tx_lock_single);
++
++       return is_full;
++}
++
++void cl_txq_single_sched(struct cl_hw *cl_hw, u16 idx)
++{
++       /*
++        * Don't take lock because it is already taken by
++        * all functions that call cl_txq_single_sched().
++        */
++       struct cl_tx_queue *tx_queue =3D &cl_hw->tx_queues.single[idx];
++
++       if (tx_queue->num_packets)
++               cl_txq_sched(cl_hw, tx_queue);
++}
++
++bool cl_txq_is_fw_empty(struct cl_tx_queue *tx_queue)
++{
++       return (tx_queue->fw_free_space =3D=3D tx_queue->fw_max_size);
++}
++
++bool cl_txq_is_fw_full(struct cl_tx_queue *tx_queue)
++{
++       return (tx_queue->fw_free_space =3D=3D 0);
++}
++
++bool cl_txq_frames_pending(struct cl_hw *cl_hw)
++{
++       int i =3D 0;
++
++       /* Check if we have multicast/bradcast frame in FW queues */
++       if (!cl_txq_is_fw_empty(&cl_hw->tx_queues.bcmc))
++               return true;
++
++       /* Check if we have singles frame in FW queues */
++       for (i =3D 0; i < MAX_SINGLE_QUEUES; i++)
++               if (!cl_txq_is_fw_empty(&cl_hw->tx_queues.single[i]))
++                       return true;
++
++       /* Check if we have aggregation frame in FW queues */
++       for (i =3D 0; i < IPC_MAX_BA_SESSIONS; i++)
++               if (!cl_txq_is_fw_empty(&cl_hw->tx_queues.agg[i]))
++                       return true;
++
++       return false;
++}
++
++int cl_txq_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
++{
 +       switch (cli_params->option) {
-+               /* Temperature compenation */
 +       case 'a':
-+               if (cli_params->num_params !=3D 0)
-+                       goto err_num_params;
-+
-+               return cl_temperature_comp_print_config(cl_hw);
++               return cl_txq_traffic_counters_print(cl_hw);
 +       case 'b':
-+               if (cli_params->num_params !=3D 1)
-+                       goto err_num_params;
-+
-+               cl_temperature_comp_enable(cl_hw->chip, params[0]);
-+               break;
++               return cl_txq_drop_reasons_print(cl_hw);
 +       case 'c':
-+               if (cli_params->num_params !=3D 1)
-+                       goto err_num_params;
-+
-+               cl_temperature_comp_comp_slope_set(cl_hw, params[0]);
-+               break;
-+               /* Temperature protect */
-+       case 'k':
-+               return cl_temperature_protect_print_config(cl_hw);
-+       case 'l':
-+               return cl_temperature_protect_print_status(cl_hw);
++               return cl_txq_global_counters_print(cl_hw);
++       case 'd':
++               return cl_txq_stop_reasons_print(cl_hw);
++       case 'e':
++               return cl_txq_requested_agg_print(cl_hw);
++       case 'f':
++               return cl_txq_amsdu_stats_print(cl_hw);
 +       case 'm':
-+               if (cli_params->num_params !=3D 1)
-+                       goto err_num_params;
-+
-+               cl_temperature_protect_test_mode_set(cl_hw->chip, params[0]=
-);
++               return cl_txq_max_size_print(cl_hw);
++       case 'r':
++               cl_txq_stats_reset(cl_hw);
 +               break;
-+               /* Temperature general */
-+       case 'u':
-+               if (cl_temperature_diff_update(cl_hw))
-+                       return -1;
-+               break;
-+       case 'v':
-+               if (cli_params->num_params !=3D 1)
-+                       goto err_num_params;
-+               cl_temperature_ret(cl_hw, params[0]);
-+               break;
-+               /* Help */
++       case 's':
++               return cl_txq_sched_list_print(cl_hw);
 +       case '?':
-+               return cl_temperature_cli_help(cl_hw);
++               return cl_txq_cli_help(cl_hw);
 +       default:
 +               cl_dbg_err(cl_hw, "Illegal option (%c) - try '?' for help\n=
 ", cli_params->option);
@@ -1031,82 +1872,6 @@ urr_temp);
 +       }
 +
 +       return 0;
-+
-+err_num_params:
-+       cl_dbg_err(cl_hw, "Wrong number of arguments\n");
-+       return 0;
-+}
-+
-+void cl_temperature_recovery(struct cl_hw *cl_hw)
-+{
-+       cl_temperature_recovery_protect(cl_hw);
-+       cl_temperature_recovery_comp(cl_hw);
-+}
-+
-+bool cl_temperature_protect_did_reduce_duty_cycle(struct cl_hw *cl_hw)
-+{
-+       return cl_hw->chip->temperature.protect_db.duty_cycle < DUTY_CYCLE_=
-MAX;
-+}
-+
-+int cl_temperature_diff_e2p_read(struct cl_hw *cl_hw)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       struct cl_temperature *temperature =3D &chip->temperature;
-+
-+       if (cl_e2p_read_temp_diff(chip, &temperature->diff_internal_externa=
-l) ||
-+           temperature->diff_internal_external =3D=3D TEMP_DIFF_INVALID) {
-+               if (cl_temperature_diff_update(cl_hw))
-+                       return -1;
-+
-+               cl_dbg_chip_verbose(chip, "Temperature difference: Internal=
- - External =3D %d\n",
-+                                   temperature->diff_internal_external);
-+       }
-+
-+       return 0;
-+}
-+
-+s16 cl_temperature_calib_calc(struct cl_hw *cl_hw, u16 raw_bits)
-+{
-+       struct cl_chip *chip =3D cl_hw->chip;
-+       s16 temperature =3D cl_raw_bits_to_temperature(raw_bits, TEMP_MODE_=
-INTERNAL) +
-+               chip->conf->ce_temp_protect_delta;
-+
-+       if (temperature >=3D TEMPERATURE_MIN && temperature <=3D TEMPERATUR=
-E_MAX)
-+               return temperature;
-+
-+       cl_dbg_chip_err(chip, "Invalid temperature =3D %d\n", temperature);
-+
-+       return (chip->temperature.internal_last + chip->conf->ce_temp_prote=
-ct_delta);
-+}
-+
-+void cl_temperature_comp_update_calib(struct cl_hw *cl_hw)
-+{
-+       u8 chan_idx =3D cl_channel_to_index(cl_hw, cl_hw->channel);
-+       u8 ant;
-+       s16 total_temp =3D 0;
-+       struct cl_tx_power_info *info =3D NULL;
-+
-+       if (unlikely(chan_idx =3D=3D INVALID_CHAN_IDX)) {
-+               cl_dbg_err(cl_hw, "Unsupported frequency %u\n", cl_hw->cent=
-er_freq);
-+               return;
-+       }
-+
-+       info =3D &cl_hw->tx_pow_info[chan_idx][0];
-+
-+       /* Sum up the temperature of all phys */
-+       for (ant =3D 0; ant < cl_hw->num_antennas; ant++)
-+               total_temp +=3D info[ant].temperature;
-+
-+       /* Average the total temperature and update chan_params */
-+       cl_hw->temp_comp_db.calib_temperature =3D DIV_ROUND_CLOSEST(total_t=
-emp, cl_hw->num_antennas);
 +}
 --
 2.30.0
