@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2DABC49EA2
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA836C49EA4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEC4060FDB
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A10BF60FDB
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232761AbhFQQJw (ORCPT
+        id S233834AbhFQQJx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:52 -0400
-Received: from mail-eopbgr30064.outbound.protection.outlook.com ([40.107.3.64]:27105
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:09:53 -0400
+Received: from mail-am6eur05on2057.outbound.protection.outlook.com ([40.107.22.57]:62080
+        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229891AbhFQQIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S230292AbhFQQIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:08:38 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TfhDfLYm+1NYEsYV9xAzBQ9Zm+h75aFjIVTdcY41e2fCtQYZZH+kCXrT08p5+6sh+Ba/9AAMMW96xrCA9GTuAoZ7RV5+9c1yi1Ve+V9yTHlFdg2rx3bEsUMoTUbnVbBNJyP3jz9AKTVhARzNB4W1jC/v8JdY5L+RWfuc2OM6FevcabhzKSeW/OlL53Brqv4BDHKmNp1tVkqc0rt1pHH8rh6S7RJxjv2SChGGOhbArxn0CMdP77GCUDbErO/Iru1aSTYRMxn29dYseO+m5KIqRXhpWUK2rHZGNkhkroR44HqvgRWgJa/+wA/daz4JDzgnqupp3yCy9N/dOyVwDuzciw==
+ b=l0qKz1F5dFw683zn1h+gOVn780kC1lsGbWiEQNSDe9iMtLcnvzczWk8DzruiCzIX5zH+64C+kkyxRy+/2cBSAdkXIJsWXKquMXMk3vVlFAZykULg8KQ2EaU3UY/MSwcg5p4tNqMhuC8cBdO4fZHlarMvidxWXrJY0Kg9XHVcSLPrVakU5OOmquHcyvpi+4fOPIiUcY3Q+nU5ZJxYGE/t7t4nUOy3y8MsydFkXbFzhgZSZNMjJPQSlp0MI/0/XisCwp/XuDRlNS7cVX2+pieyBq6tFW7L11t9ivmTz92fXsBUDXSgCzPGqAVtmyrosCVNEG+eukiLGyuCOcskFNkXmA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jHN/fbXwqyht5PEO2exMtLT/LOU86QIydkBJ778ymbI=;
- b=JQ0BEmVsDECiSs4EpW/qXsotxCm0Zsz+fGmaIzbQLt0XBvUYCSn2eHS2UKL3gEsSES+fCzUsshSv1goVM15bVmogqtSpDRtVZTcAUq2Ess9jFXUw6q8azX2CihYS3lp04MICKwvfXt9/KjFf0oz8LEngFahYoQXadIJAY/CodG1DLxd9K91d9h4iQXTK4UVbjeolS9uuTqa6KBm5zLrfF9pux2dq5Ns9n/JeUb8qWkCcUUtjq/HfMVpwYpgtjw3i4rTpaBzDl3031bN8xd5I/tcR2uLN3ND9y8Sib49pxO0s7RN93dFX38IGMJKnwowN7Dpue9cSpYhYEajkh1MB6Q==
+ bh=JAG28DIo4QVVSDNtJ3nWkShyRvWvM2f8U3sApPWgAOg=;
+ b=MN4wRqFv40Ayxywfr3EtFFqXcC7xfJYS/O4l9xRpCgQWAKGeTtQfQXy08tOrEA0fWxd+pA8cWHdIqG+vlY+uLk2ppVOViOryhegIHORWUj9QSikt7h5p0epfXPBfDsX1a1aM4O4jIxIthVifNJZIEyT/b0khnSi57G1hT6euLNRKEJWfbBbFOqHl4zyyg0tTuy693DbbVl71yc7gdgiVitNNcRZ7f4neBCrgRTl1Zp37RnCu8JG4DlwuPvj5w2yj535Fwb4Cat3XEyuPnbKHAusfVcU0lWc8z0u0GAVUickZwU+zop4alUKyg/gcw/BC/ZSMlt7z+99i8KJNnFCSkw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jHN/fbXwqyht5PEO2exMtLT/LOU86QIydkBJ778ymbI=;
- b=mQ7avDqkrqZGQaquBLAsDc7605KuAEUmVsI7JL7JPrEvP5OThaamX/imN0fuukDfYAEnmjpIVyr/Z3yjtw5yFbD0MzW8+WhL0KOA3/dXep2rmS5kJicBR+E4oiTNPbJcBnjS/g/3mYG+d9WGl8dmZXr1NHZIgvF4nhXaDgDTZVA=
+ bh=JAG28DIo4QVVSDNtJ3nWkShyRvWvM2f8U3sApPWgAOg=;
+ b=m9mTLk3kw7c+c3fACaIaxPjnsTUamxR8eYcAMh3yls6oW6LveqyQkOygorEghDrgloJrL+SSVjHBcyNDZGBXVqVrzt4ny4kLfKiXmyVvp/OkVwZNJkCx1ufCq+77E1i9Hy7MtTCe40Boi5dBsE0/gUIijLRElRbxj5FTvUXBdts=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0465.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:43::19) with
+ by AM0P192MB0402.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:46::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:05:52 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:05:12 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:52 +0000
+ 16:05:12 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 145/256] cl8k: add recovery.c
-Date:   Thu, 17 Jun 2021 16:00:32 +0000
-Message-Id: <20210617160223.160998-146-viktor.barna@celeno.com>
+Subject: [RFC v1 119/256] cl8k: add noise.c
+Date:   Thu, 17 Jun 2021 16:00:06 +0000
+Message-Id: <20210617160223.160998-120-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:13 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:44 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 862639bf-3585-4cf7-86e4-08d931a9b114
-X-MS-TrafficTypeDiagnostic: AM0P192MB0465:
+X-MS-Office365-Filtering-Correlation-Id: ae1a978f-3db3-4e9b-804c-08d931a9a010
+X-MS-TrafficTypeDiagnostic: AM0P192MB0402:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB04654556D72AF0D2B0BD98C9F60E9@AM0P192MB0465.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-Microsoft-Antispam-PRVS: <AM0P192MB04021E27119F6BD3A61A74A3F60E9@AM0P192MB0402.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1728;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7NoKV2oD9FWRmB7fgWJYSaPIwodeVloK5+j3Xs6ZawosfCye6DcvF+mZJq4lW5sqiUYGSSxFCHxcoyLrS/Juls5I15qSbtAEhAsIpIYpEz+AE6fNYBGuMURgrjB7D9MfsiGfSkV2Yid9Sth1pkBD8H0xVUE/n+9alhpTZI6XX1M/N13RHzK/bUuta+XrrQRV/QdZm1kvM3mAmg4gFrjIWRjkAk7IkBipTBU77wf2dXQXuNrgxrzBft3vDYrhpll3c3RVDn+BOcG7z4M0QJpGfszU2Gd9KGjA8SQUy+tpbq4xWOjLoyiYFZaGQVAN6RKyENTDMp3SLETGxo+cbot5eYYwiWdsDar2Jv4SAE6DU9ezl23/Q2Ba+pIxe9epHe0rwPS6wYWaBgWn+qY8MKVXkTdQFGL7letJJe7N97eZ2pndflFaZNMGFFweMO1JAYf53Hk2V5awnYOSbhHOH82KV7S10IjG+zQopZO0CoBlA/Y+TLHi/FPZldNAKsE9ETwVxb3I3SpAEd76M9KlilV1ypRVCYu0bnUcBpY6UUR0Rxc6S4IFsolz2+12RJrqIFtdTUT/47+L997vQmPUVMCh+yOW8txZ5lo3ioVXjrvYtyF699Zl/JjOmawGxQD9uKAeVgjtR1VJG691SRgZv2c29BKxtC25scJZ5ROuSBK8Oy10qduUMtSC2O7X6+JfckwO2zCGnFKO6IxyBYASKvBo/w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(396003)(376002)(136003)(346002)(39850400004)(55236004)(6506007)(4326008)(5660300002)(54906003)(107886003)(8936002)(86362001)(36756003)(6486002)(38100700002)(38350700002)(26005)(8676002)(2906002)(6666004)(186003)(83380400001)(316002)(1076003)(6512007)(2616005)(66946007)(66556008)(52116002)(66476007)(956004)(6916009)(508600001)(16526019)(9686003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: npY8sgtAUnDfjeGyQ1GYPEazoO2eH9s/KNjZu7ZHpEEfT8x8OjtSSG3yqpNnJuTzP+wKcKwmQnp26qSEGj5NgJNpNa/7SCUNipmDo2+YdAGOuQqFfXirT8Ia5recdlUdhh/MjHEcsfdR72As43YX503xbDdKI97agtzLu+yNgX0lEQrw9tLPwS5Xd2R6394WAC8X0Fk3HSadTJv4RpZtsFp5v5+xI79Jp0fla/31/i5K3m9jsW1BnO6UyNVVtZet6NhttfSdwaC+CIwygCYsbdh5AG6hLW72C9d6JPbXK3lTHQpCIquS1TUZaWuj94tzOAClTkd/X76cKowSaAUZP5kngcCX5nDk8jb2PMZCCv2rjTj/Dbj7nAeCbmTDEVGcnN1nSik+iIxmP/aRWiBj+gaf7h+fNMINqYqU8Cn7dbTNQ2E+5QCEGlYVTovuxSJlnk9lfybymQNknyC0rFKi+s+qySwEp6jdeG85comoWY6x6OntmnhpZ8+09Xqm0MU2jOHpvK9aKReZQEda4Srdg0oSdrrKzJ4UAHJq6EyAZ5EV68IAGFnhQ0nSxIh8FHO2LBWCblK6G3IcPQ17cqpMAxFcadcCsGsoCZ9W4tHyeHyuFrinYOZxNeOPMVIfkPRlvQrUze7CVkZ2gbNb969gaKGI1YdmfZYfDK6B8NlntPa8C1fjC2g0CSCJK4Iwl+XfKLQdyWe9Fz7so6WndtyMwg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(376002)(396003)(366004)(346002)(6916009)(6512007)(9686003)(6666004)(52116002)(2616005)(186003)(16526019)(38100700002)(38350700002)(1076003)(6506007)(5660300002)(107886003)(55236004)(86362001)(6486002)(8936002)(956004)(26005)(8676002)(30864003)(508600001)(2906002)(36756003)(54906003)(316002)(66946007)(66556008)(4326008)(66476007)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/EjjTeLQcWZ+0JC3QBagICoBM/bOBm9zVJUSCBdoSkQc5/wkow1ki1gzLGTW?=
- =?us-ascii?Q?OHtRM8lSKJ9D+PccIwDdzKRZpTdzk9RLNubU6gom+//1XHZFNbIOJHXzcv0S?=
- =?us-ascii?Q?7cDfXby6DgWXjAy6m4N8HRhvSp1TuF11q6HCWriwzEVrJ4bpaS+VbhQNvj8I?=
- =?us-ascii?Q?enF0kbZN8bqwKgwQRFoLVt6l4O2xLAQFVVq5+0GYzopSDvttNIpvEymFzsh3?=
- =?us-ascii?Q?7Z2xWMwcFXhQHpnG59A9fb/mZic108FVXt8E17W1eY1UlmwzZGLrGK0NLvty?=
- =?us-ascii?Q?t8MoGwWAylc9MWAd33TrbrmraWoijrQu56FqDljvrFsV8QyrIUTs3tHDRiDA?=
- =?us-ascii?Q?7dZUYADbgokOFIHAh8Z1RuP6QM/fJ/SbCN8NbAzy17ZCz1AbgpOBnK5N/aia?=
- =?us-ascii?Q?N5xR2xgXZ3HdAUUVTcaZnUHTUkjsQaREqPcCY+muh/KndX22VEu/+VBuU5yb?=
- =?us-ascii?Q?fMpVHQMcZv8rJ5H0+WL7XtE/w5S3Re1p7JhCwohqjiYn95kMya1mubfIBvr8?=
- =?us-ascii?Q?EIp/mrua9oU/2KzZiWPMKJLNvgdJOHZx4pEZZ76nh4Rm7yHZJFUPxGqfU4xe?=
- =?us-ascii?Q?BV6zd4sgefOoKcRPgOHwVpwViib3+6y/vZuomVRxdlmAXOr+J74L6DdLN4t4?=
- =?us-ascii?Q?0U1hd8LIp231V/Z7+KE9prcZrKAfY10Lrjg4dzTKu+f4pfQIz4SaM5shtyaT?=
- =?us-ascii?Q?ZldqpL5a09XV3ZBcQkgEDx7hZYuFm+W9rWwsN1myQdGrCuSOvlBb02fkb4xI?=
- =?us-ascii?Q?tjiJODy97dxpC/z2B8IT+BXG62m5pkiXYcSUFKk/4uScRfTlHSZN0i6Zbi89?=
- =?us-ascii?Q?kA1+P5vkBzaxWGOpTRCpGjMZOi7UuPoNeRJ252xJnBz26L/+fNQmkQFHwxFJ?=
- =?us-ascii?Q?aTTRuBTcpwADlKb7yOXmSdUh82RQEZG6Lp8UhCZ4v3qZuuJCioXH0MFaeLn3?=
- =?us-ascii?Q?UjhSdbYaLRU8Lt7SQsDdhyg9cpX2FfP/nMdLMcvSROimdMDYXhsP2aEaiSpk?=
- =?us-ascii?Q?Kp2a0zEDzoYZcPwZ7Wl9g11x1A27vjWQxzIuzFnZMOdiEdo3wDBUDm/xc3Cl?=
- =?us-ascii?Q?rLyco0/iWsf+N7g+VLv72/VnrX2yyskXk73h7Kr5EMMbINV0y9lc1fIulDdJ?=
- =?us-ascii?Q?mqEOip4K960mFE7ERKSHgu0cvdtqYCsPDQ0sdoGzR6sp5rX8OW1GZ6Cyq0cS?=
- =?us-ascii?Q?n089FwZS63pDKmL9qVdZgzk/AIw3wc1cYbsQHgLoKyt7De3f9DyGl0T5CgDX?=
- =?us-ascii?Q?EWBIP9KPlgYzxb8Nbdv8piyyijE470WcouTzvhZeLR9v9bWeLJsBu3v65iIe?=
- =?us-ascii?Q?otfSOgiDmrPaOv0K2DJgCOzc?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?O4LKxvcLejaRCH/Nd1ClBNkMS7ldymbA3XIq/iDmMm46hD1Ljhqd8AHR5La5?=
+ =?us-ascii?Q?mDiZVihEpclRzfG0ZK0v6m+6RPO9AK+mUc0KJzYvAS8vxBhynXDPmW0tKzT3?=
+ =?us-ascii?Q?FdPvb3SGCR47XiQrP+ti0ta9RvT7vN8CBfL8BbUAUuyOWxQhYueSFQVLFtmB?=
+ =?us-ascii?Q?m5hMBognqWcqqCkX1GS9uZPnDg1cRjJivHzgDIOS/P4khSjrhSAmpYrriFs0?=
+ =?us-ascii?Q?HGOpaA4othN4wOBPLPfnmjomR8R2RVdEk1TwOKdQtY2WD/o1Pc15XtOqP12Y?=
+ =?us-ascii?Q?iiBx1QomJpYUG7HkvEPCjCUVx2HKrkrjV5HRjI24JI8g0ifNyv1SpbV5/sdW?=
+ =?us-ascii?Q?xCTa8CIpQ6NmK2eK7DwWEni+auPK17FOQmvxL37QBqCOq5WPz41hfrCZKBe9?=
+ =?us-ascii?Q?HC3ghwWS+j/+fveYKC+ivD1Sexq5xfWlQ8rBXN9VmVi/uhMhiov7Uru5xOlb?=
+ =?us-ascii?Q?lnn5fAG5ono+j6fJzOVVyOTZEs3GmPmIo3+jLCZnRJqWatj/SX/vJzu8424R?=
+ =?us-ascii?Q?JFa30zAViAQGrZS0kSMiX8WIgzf2RAjj/7c0YjONHsVefFi+i9Gq3tWt+fGN?=
+ =?us-ascii?Q?SQLdIPQE+qUN+KFUrcC6a8Cny/m447o1HbFIq4MAbLWjSj/sHhjCSdqz7YTr?=
+ =?us-ascii?Q?b66LhYJL0gejc0ZYDnwFSZhAi2NcMiwQQw+VDCK0B3jixKDtXmhjZqMLfJec?=
+ =?us-ascii?Q?fsKVUwO1N1LnXWiMLVqkMRJy/rzTvhshJs1NTRAu3jP7zguMymN0MZEkcqg4?=
+ =?us-ascii?Q?tJl4yAcqNpJKrmqzModvol2W64c1ymhmNN6cTFs8uKv1nQBDph8vF1WzCbah?=
+ =?us-ascii?Q?7L3PAlM2IKYqSMfSlFApeMgqTlaUgRxiynI87l/HYvXj+kOWABoij1Jb//aO?=
+ =?us-ascii?Q?n8qZH3wZ7PBnJaaVaOvSEnX1gC8lgbss7Xuy+E/drlhGe1dOfz3cnLC2E6a0?=
+ =?us-ascii?Q?RF3Nl0yPyv0fGHDDilSgtlj9KgTxTeSlxm9qzaVzSaXSlCPGrzo6dYz3bGF2?=
+ =?us-ascii?Q?d03dltZp/rcTRJaAxYHHCeW+EmSYgdmO8DVIgjRy1BJD2itd3NyaqgyqoD6a?=
+ =?us-ascii?Q?izEOKpygpmJ+9Vcw6uU04J3I24UKBOsQwkQVdkk8Gn+wgQOa8QQePV5QyOTe?=
+ =?us-ascii?Q?0rzhcVmRP+UZFyb/xPGvZzvT6JDTlDPlBLVXFyKmDzRvyIKV99UEl3o/RviF?=
+ =?us-ascii?Q?XTpuWzBhTCFBL+VEIDsYUkRWlA0rJglZgGpy+GtLU2TqJzM1srCgATrY0jy1?=
+ =?us-ascii?Q?WZ+FjsyU0iLC1urC+5wnnyfSsoeOL6kHVQi3fm9JDWxI60NJKGEFkjhVYU/u?=
+ =?us-ascii?Q?gLZafajFHoUfewf5c99WXJ63?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 862639bf-3585-4cf7-86e4-08d931a9b114
+X-MS-Exchange-CrossTenant-Network-Message-Id: ae1a978f-3db3-4e9b-804c-08d931a9a010
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:14.1584
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:45.6775
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fIejeZTTNXa0YCHEIG+hb9fmwDoFCTqAXXcBxtK/vyjh0c8aS0rYY3vydzPscTg2yp9KCxOpYgr7jhKk+9wCog==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0465
+X-MS-Exchange-CrossTenant-UserPrincipalName: BkvsIGkLwVBXYnh+hFJUvneVE/5oaamlotXyMYjN9yR+UFK3C6Zl6BoX2S0fk9Jg/w5fS7hYkONwwbx3ID0ekg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0402
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,292 +128,552 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/recovery.c | 264 ++++++++++++++++++++
- 1 file changed, 264 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/recovery.c
+ drivers/net/wireless/celeno/cl8k/noise.c | 499 +++++++++++++++++++++++
+ 1 file changed, 499 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/noise.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/recovery.c b/drivers/net/wire=
-less/celeno/cl8k/recovery.c
+diff --git a/drivers/net/wireless/celeno/cl8k/noise.c b/drivers/net/wireles=
+s/celeno/cl8k/noise.c
 new file mode 100644
-index 000000000000..1bba86ea4882
+index 000000000000..0bfd025196a6
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/recovery.c
-@@ -0,0 +1,264 @@
++++ b/drivers/net/wireless/celeno/cl8k/noise.c
+@@ -0,0 +1,499 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "recovery.h"
-+#include "rx/rx_amsdu.h"
-+#include "main.h"
-+#include "phy/phy.h"
-+#include "vif.h"
-+#include "dfs/dfs.h"
-+#include "maintenance.h"
-+#include "tx/tx_inject.h"
-+#include "ext/dyn_mcast_rate.h"
-+#include "ext/dyn_bcast_rate.h"
-+#include "vns.h"
-+#include "radio.h"
-+#include "wrs/wrs_api.h"
-+#include "config.h"
-+#include "fw/msg_tx.h"
-+#include "coredump.h"
-+#ifdef CONFIG_CL_PCIE
-+#include "bus/pci/irq.h"
-+#endif
++#include <linux/list.h>
++#include "hw.h"
++#include "noise.h"
++#include "reg/reg_riu.h"
++#include "utils/utils.h"
 +
-+struct cl_recovery_work {
-+       struct work_struct ws;
-+       struct cl_hw *cl_hw;
-+       int reason;
-+};
++#define NOISE_LOWER_LIMIT -100
++#define NOISE_UPPER_LIMIT -30
++/* Range is -100dBm to -30dBm */
++#define NOISE_SCALE_RANGE  (NOISE_UPPER_LIMIT - NOISE_LOWER_LIMIT + 1)
++#define NOISE_MAX_SAMPLES  U8_MAX
++#define MAX_20M_SUB_BAND   8
++#define MAX_SEC_BW_CNT     3
++#define MAX_ANT_PER_REG    4
 +
-+#define RECOVERY_POLL_TIMEOUT 6
-+
-+static void cl_recovery_poll_completion(struct cl_hw *cl_hw)
++static s8 cl_noise_process_sample(u32 sample, u8 cnt)
 +{
-+       u8 cntr =3D 0;
++       s8 val =3D (s8)((sample >> (8 * cnt)) & 0xff);
 +
-+       while (test_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags)) {
-+               msleep(1000);
++       if (val < NOISE_LOWER_LIMIT)
++               val =3D NOISE_LOWER_LIMIT;
++       else if (val > NOISE_UPPER_LIMIT)
++               val =3D NOISE_UPPER_LIMIT;
 +
-+               if (++cntr =3D=3D RECOVERY_POLL_TIMEOUT) {
-+                       cl_dbg_verbose(cl_hw, "\n");
-+                       cl_dbg_err(cl_hw, "Driver handgup was detected!..."=
-);
-+                       break;
++       return val;
++}
++
++static bool cl_noise_is_hist_line_empty(u8 *hist, u8 cnt)
++{
++       u8 i;
++
++       for (i =3D 0; i < cnt; i++)
++               if (hist[i] !=3D 0)
++                       return false;
++
++       return true;
++}
++
++static int cl_noise_print_hist(struct cl_hw *cl_hw, bool nasp_stats)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       struct cl_noise_reg *reg =3D NULL;
++       u8 hist[NOISE_SCALE_RANGE][MAX_ANTENNAS] =3D { { 0 } };
++       u8 num_antennas =3D cl_hw->num_antennas;
++       s8 val_stat;
++       u8 i =3D 0, j =3D 0;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       if (list_empty(&noise_db->reg_list))
++               return 0;
++
++       list_for_each_entry(reg, &noise_db->reg_list, list) {
++               for (i =3D 0; i < min_t(u8, num_antennas, MAX_ANT_PER_REG);=
+ i++) {
++                       if (nasp_stats)
++                               val_stat =3D cl_noise_process_sample(reg->n=
+asp_prim20_per_ant, i);
++                       else
++                               val_stat =3D cl_noise_process_sample(reg->n=
+p_prim20_per_ant, i);
++
++                       hist[(val_stat * -1) + NOISE_UPPER_LIMIT][i]++;
++               }
++
++               if (num_antennas <=3D MAX_ANT_PER_REG)
++                       continue;
++
++               for (i =3D 0; i < num_antennas - MAX_ANT_PER_REG; i++) {
++                       if (nasp_stats)
++                               val_stat =3D cl_noise_process_sample(reg->n=
+asp_prim20_per_ant2, i);
++                       else
++                               val_stat =3D cl_noise_process_sample(reg->n=
+p_prim20_per_ant2, i);
++
++                       hist[(val_stat * -1) + NOISE_UPPER_LIMIT][i + MAX_A=
+NT_PER_REG]++;
 +               }
 +       }
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "Noise %sstrength histogram (dBm):\n", nasp_stats ? "an=
+d signal " : "");
++
++       cl_snprintf(&buf, &len, &buf_size, "------------------");
++       for (j =3D 0; j < num_antennas; j++)
++               cl_snprintf(&buf, &len, &buf_size, "-------");
++
++       cl_snprintf(&buf, &len, &buf_size, "\n| Noise Strength ");
++
++       for (j =3D 0; j < num_antennas; j++)
++               cl_snprintf(&buf, &len, &buf_size, "| Ant%u ", j);
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n|----------------");
++
++       for (j =3D 0; j < num_antennas; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       for (i =3D 0; i < NOISE_SCALE_RANGE; i++) {
++               if (cl_noise_is_hist_line_empty(hist[i], num_antennas))
++                       continue;
++
++               cl_snprintf(&buf, &len, &buf_size, "|%9d       ", -i + NOIS=
+E_UPPER_LIMIT);
++               for (j =3D 0; j < num_antennas; j++)
++                       cl_snprintf(&buf, &len, &buf_size, "| %3u  ", hist[=
+i][j]);
++
++               cl_snprintf(&buf, &len, &buf_size, "|\n");
++       }
++
++       cl_snprintf(&buf, &len, &buf_size, "|----------------");
++       for (j =3D 0; j < num_antennas; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
 +}
 +
-+static void cl_recovery_start_hw(struct cl_hw *cl_hw)
++static int cl_noise_print_hist_per_channel(struct cl_hw *cl_hw,
++                                          bool nasp_stats)
 +{
-+       clear_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       struct cl_noise_reg *reg =3D NULL;
++       u8 ch_bw =3D cl_hw->conf->ce_channel_bandwidth;
++       u8 ch_cnt =3D 1 << ch_bw;
++       u8 hist[NOISE_SCALE_RANGE][MAX_20M_SUB_BAND] =3D { { 0 } };
++       s8 val1, val2;
++       u8 i =3D 0, j =3D 0;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
 +
-+       /* Restart MAC firmware... */
-+       if (cl_main_on(cl_hw)) {
-+               cl_dbg_err(cl_hw, "Couldn't turn platform on .. aborting\n"=
++       if (list_empty(&noise_db->reg_list))
++               return 0;
++
++       list_for_each_entry(reg, &noise_db->reg_list, list) {
++               for (i =3D 0; i < min_t(u8, ch_cnt, MAX_ANT_PER_REG); i++) =
+{
++                       if (nasp_stats) {
++                               val1 =3D cl_noise_process_sample(reg->nasp_=
+sub20_per_chn, i);
++
++                               if (ch_bw =3D=3D CHNL_BW_160)
++                                       val2 =3D cl_noise_process_sample(re=
+g->nasp_sub20_per_chn2, i);
++                       } else {
++                               val1 =3D cl_noise_process_sample(reg->np_su=
+b20_per_chn, i);
++
++                               if (ch_bw =3D=3D CHNL_BW_160)
++                                       val2 =3D cl_noise_process_sample(re=
+g->np_sub20_per_chn2, i);
++                       }
++
++                       hist[(val1 * -1) + NOISE_UPPER_LIMIT][i]++;
++                       if (ch_bw =3D=3D CHNL_BW_160)
++                               hist[(val2 * -1) + NOISE_UPPER_LIMIT][i + M=
+AX_ANT_PER_REG]++;
++               }
++       }
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "Noise %sstrength per 20 Mhz channel histogram ant %u (=
+dBm):\n"
++                   "------------------",
++                   nasp_stats ? "and signal " : "", noise_db->active_ant);
++
++       for (j =3D 0; j < ch_cnt; j++)
++               cl_snprintf(&buf, &len, &buf_size, "--------");
++
++       cl_snprintf(&buf, &len, &buf_size, "\n| Noise Strength ");
++       for (j =3D 0; j < ch_cnt; j++)
++               cl_snprintf(&buf, &len, &buf_size, "| Chan%u ", j);
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n|----------------");
++
++       for (j =3D 0; j < ch_cnt; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+-------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       for (i =3D 0; i < NOISE_SCALE_RANGE; i++) {
++               if (cl_noise_is_hist_line_empty(hist[i], ch_cnt))
++                       continue;
++
++               cl_snprintf(&buf, &len, &buf_size, "|%9d       ", -i + NOIS=
+E_UPPER_LIMIT);
++
++               for (j =3D 0; j < ch_cnt; j++)
++                       cl_snprintf(&buf, &len, &buf_size, "| %3u   ", hist=
+[i][j]);
++
++               cl_snprintf(&buf, &len, &buf_size, "|\n");
++       }
++
++       cl_snprintf(&buf, &len, &buf_size, "|----------------");
++
++       for (j =3D 0; j < ch_cnt; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+-------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_noise_print_hist_dens(struct cl_hw *cl_hw, bool nasp_stats)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       struct cl_noise_reg *reg =3D NULL;
++       u8 hist[NOISE_SCALE_RANGE][MAX_SEC_BW_CNT] =3D { { 0 } };
++       u8 ch_bw =3D cl_hw->conf->ce_channel_bandwidth;
++       s8 val;
++       u8 i =3D 0, j =3D 0;
++       char *buf =3D NULL;
++       ssize_t buf_size;
++       int err =3D 0;
++       int len =3D 0;
++
++       if (list_empty(&noise_db->reg_list) || ch_bw =3D=3D 0)
++               return 0;
++
++       list_for_each_entry(reg, &noise_db->reg_list, list) {
++               for (i =3D 0; i < ch_bw; i++) {
++                       if (nasp_stats)
++                               val =3D cl_noise_process_sample(reg->nasp_s=
+ec20_dens_per_ant, i);
++                       else
++                               val =3D cl_noise_process_sample(reg->np_sec=
+20_dens_per_ant, i);
++
++                       hist[(val * -1) + NOISE_UPPER_LIMIT][i]++;
++               }
++       }
++
++       cl_snprintf(&buf, &len, &buf_size,
++                   "Noise %spower density histogram ant %u (dBm/20Mhz):\n"=
+,
++                   nasp_stats ? "and signal " : "", noise_db->active_ant);
++
++       cl_snprintf(&buf, &len, &buf_size, "-----------------");
++
++       for (j =3D 0; j < ch_bw; j++)
++               cl_snprintf(&buf, &len, &buf_size, "--------");
++
++       cl_snprintf(&buf, &len, &buf_size, "\n| Noise Density ");
++
++       for (j =3D 0; j < ch_bw; j++)
++               cl_snprintf(&buf, &len, &buf_size, "| SEC%u ", 20 * (1 << j=
+));
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n|---------------");
++       for (j =3D 0; j < ch_bw; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+-------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       for (i =3D 0; i < NOISE_SCALE_RANGE; i++) {
++               if (cl_noise_is_hist_line_empty(hist[i], ch_bw))
++                       continue;
++
++               cl_snprintf(&buf, &len, &buf_size, "|%9d      ", -i + NOISE=
+_UPPER_LIMIT);
++               for (j =3D 0; j < ch_bw; j++)
++                       cl_snprintf(&buf, &len, &buf_size, "| %3u   ", hist=
+[i][j]);
++
++               cl_snprintf(&buf, &len, &buf_size, "|\n");
++       }
++
++       cl_snprintf(&buf, &len, &buf_size, "|---------------");
++       for (j =3D 0; j < ch_bw; j++)
++               cl_snprintf(&buf, &len, &buf_size, "+-------");
++
++       cl_snprintf(&buf, &len, &buf_size, "|\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, len);
++       kfree(buf);
++
++       return err;
++}
++
++static int cl_noise_cli_help(struct cl_hw *cl_hw)
++{
++       char *buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
++       int err =3D 0;
++
++       if (!buf)
++               return -ENOMEM;
++
++       snprintf(buf, PAGE_SIZE,
++                "stats usage:\n"
++                "-a : Set antenna\n"
++                "-b : En/Dis noise histogram [0-stop, max samples-255]\n"
++                "-c : Print 20Mhz channels noise power\n"
++                "-d : Print 20Mhz channels noise and signal power\n"
++                "-e : Print noise density histogram\n"
++                "-f : Print noise and signal density histogram\n"
++                "-g : Print noise power histogram\n"
++                "-h : Print noise and signal power histogram\n"
++                "-r : Reset histogram\n");
++
++       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
++       kfree(buf);
++
++       return err;
++}
++
++static void cl_noise_set_ant(struct cl_hw *cl_hw, u8 active_ant)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       u8 max_ant =3D cl_hw->num_antennas - 1;
++
++       if (noise_db->sample_cnt !=3D 0) {
++               pr_warn("Can't set antenna during statistics collection\n")=
+;
++               return;
++       }
++
++       if (active_ant > max_ant) {
++               pr_err("Invalid antennas configuration. Should be 0-%u!\n",=
+ max_ant);
++               return;
++       }
++
++       if (active_ant =3D=3D noise_db->active_ant) {
++               pr_warn("Ant %u already set!\n", active_ant);
++               return;
++       }
++
++       /* Antenna is different now so clear all stats */
++       cl_noise_close(cl_hw);
++
++       riu_rwnxagcccactrl_cca_main_ant_sel_setf(cl_hw, active_ant);
++
++       noise_db->active_ant =3D active_ant;
++
++       pr_debug("Antenna selected : %u\n", active_ant);
++}
++
++void cl_noise_init(struct cl_hw *cl_hw)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++
++       INIT_LIST_HEAD(&noise_db->reg_list);
++}
++
++void cl_noise_close(struct cl_hw *cl_hw)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       struct cl_noise_reg *elem =3D NULL;
++       struct cl_noise_reg *tmp =3D NULL;
++
++       list_for_each_entry_safe(elem, tmp, &noise_db->reg_list, list) {
++               list_del(&elem->list);
++               kfree(elem);
++       }
++}
++
++void cl_noise_maintenance(struct cl_hw *cl_hw)
++{
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       struct cl_noise_reg *reg =3D NULL;
++       u8 ch_bw =3D cl_hw->conf->ce_channel_bandwidth;
++
++       if (noise_db->sample_cnt =3D=3D 0)
++               return;
++
++       reg =3D kzalloc(sizeof(*reg), GFP_ATOMIC);
++
++       if (!reg)
++               return;
++
++       /*collect statistics */
++       reg->np_prim20_per_ant =3D riu_agcinbdpow_20_pnoisestat_get(cl_hw);
++       reg->np_sub20_per_chn =3D riu_agcinbdpownoiseper_20_stat_0_get(cl_h=
+w);
++       reg->np_sec20_dens_per_ant =3D riu_agcinbdpowsecnoisestat_get(cl_hw=
 );
-+               return;
++       reg->nasp_prim20_per_ant =3D riu_inbdpowformac_0_get(cl_hw);
++       reg->nasp_sub20_per_chn =3D riu_inbdpowformac_3_get(cl_hw);
++       reg->nasp_sec20_dens_per_ant =3D riu_inbdpowformac_2_get(cl_hw);
++
++       if (ch_bw =3D=3D CHNL_BW_160) {
++               reg->np_sub20_per_chn2 =3D riu_agcinbdpownoiseper_20_stat_1=
+_get(cl_hw);
++               reg->nasp_sub20_per_chn2 =3D riu_inbdpowformac_4_get(cl_hw)=
+;
 +       }
 +
-+       if (cl_msg_tx_reset(cl_hw)) {
-+               cl_dbg_err(cl_hw, "Failed to send firmware reset .. abortin=
-g\n");
-+               return;
++       if (cl_hw->num_antennas > MAX_ANT_PER_REG) {
++               reg->np_prim20_per_ant2 =3D riu_agcinbdpow_20_pnoisestat_2_=
+get(cl_hw);
++               reg->nasp_prim20_per_ant2 =3D riu_inbdpowformac_1_get(cl_hw=
+);
 +       }
 +
-+       set_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
-+       clear_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
++       list_add(&reg->list, &noise_db->reg_list);
 +
-+       /* Hand over to mac80211 from here */
-+       ieee80211_restart_hw(cl_hw->hw);
++       noise_db->sample_cnt--;
 +
-+       cl_recovery_poll_completion(cl_hw);
++       if (noise_db->sample_cnt =3D=3D 0)
++               pr_debug("record done\n");
 +}
 +
-+static void cl_recovery_stop_hw(struct cl_hw *cl_hw)
++int cl_noise_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
 +{
-+       /* Start recovery process */
-+       cl_hw->recovery_db.in_recovery =3D true;
++       struct cl_noise_db *noise_db =3D &cl_hw->noise_db;
++       bool set_ant =3D false;
++       bool hist_enable =3D false;
++       bool hist_per_channel =3D false;
++       bool hist_mac_per_channel =3D false;
++       bool hist_dens =3D false;
++       bool hist_mac_dens =3D false;
++       bool hist_pwr_print =3D false;
++       bool hist_mac_pwr_print =3D false;
++       bool hist_reset =3D false;
++       u32 param =3D (u32)cli_params->params[0];
++       u32 expected_params =3D -1;
 +
-+       clear_bit(CL_DEV_STARTED, &cl_hw->drv_flags);
-+       set_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
-+       set_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
-+#ifdef CONFIG_CL_PCIE
-+       /* Disable interrupts */
-+       cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.all);
-+#endif
-+       cl_tx_inject_stop_in_recovery(cl_hw);
-+       cl_maintenance_stop(cl_hw);
-+
-+       ieee80211_stop_queues(cl_hw->hw);
-+
-+       mutex_lock(&cl_hw->dbginfo.mutex);
-+
-+       cl_main_off(cl_hw);
-+
-+       cl_hw->fw_active =3D false;
-+       cl_hw->fw_send_start =3D false;
-+
-+       cl_coredump_reset_trace(cl_hw);
-+
-+       mutex_unlock(&cl_hw->dbginfo.mutex);
-+
-+       /* Reset it so MM_SET_FILTER_REQ will be called during the recovery=
- */
-+       cl_hw->rx_filter =3D 0;
-+
-+       /*
-+        * Reset channel/frequency parameters so that cl_msg_tx_set_channel=
-()
-+        * will not be skipped in cl_ops_config()
-+        */
-+       cl_hw->channel =3D 0;
-+       cl_hw->primary_freq =3D 0;
-+       cl_hw->center_freq =3D 0;
-+}
-+
-+static void cl_recovery_process(struct cl_hw *cl_hw)
-+{
-+       int ret;
-+
-+       cl_dbg_verbose(cl_hw, "Start\n");
-+
-+       cl_recovery_stop_hw(cl_hw);
-+       cl_phy_reset(cl_hw);
-+
-+       ret =3D cl_phy_load_recovery(cl_hw);
-+       if (ret) {
-+               cl_dbg_err(cl_hw, "cl_phy_load_recovery failed %d\n", ret);
-+               return;
-+       }
-+
-+       cl_recovery_start_hw(cl_hw);
-+}
-+
-+static void cl_recovery_handler(struct cl_hw *cl_hw, int reason)
-+{
-+       unsigned long recovery_diff =3D jiffies_to_msecs(jiffies - cl_hw->r=
-ecovery_db.last_restart);
-+
-+       cl_hw->recovery_db.restart_cnt++;
-+
-+       if (recovery_diff > cl_hw->conf->ce_fw_watchdog_limit_time) {
-+               cl_hw->recovery_db.restart_cnt =3D 1;
-+       } else if (cl_hw->recovery_db.restart_cnt > cl_hw->conf->ce_fw_watc=
-hdog_limit_count) {
-+               cl_dbg_verbose(cl_hw, "Too many failures... aborting\n");
-+               cl_hw->conf->ce_fw_watchdog_mode =3D FW_WD_DISABLE;
-+               return;
-+       }
-+
-+       cl_hw->recovery_db.last_restart =3D jiffies;
-+
-+       /* Count recovery attempts for statistics */
-+       cl_hw->fw_recovery_cntr++;
-+       cl_dbg_trace(cl_hw, "Recovering from firmware failure, attempt #%i\=
-n",
-+                    cl_hw->fw_recovery_cntr);
-+
-+       cl_recovery_process(cl_hw);
-+}
-+
-+static void cl_recovery_work_do(struct work_struct *ws)
-+{
-+       /* Worker for restarting hw. */
-+       struct cl_recovery_work *recovery_work =3D container_of(ws, struct =
-cl_recovery_work, ws);
-+
-+       recovery_work->cl_hw->assert_info.restart_sched =3D false;
-+       cl_recovery_handler(recovery_work->cl_hw, recovery_work->reason);
-+       kfree(recovery_work);
-+}
-+
-+static void cl_recovery_work_sched(struct cl_hw *cl_hw, int reason)
-+{
-+       /*
-+        * Schedule work to restart device and firmware
-+        * This is scheduled when driver detects hw assert storm.
-+        */
-+       struct cl_recovery_work *recovery_work;
-+
-+       if (!cl_hw->ipc_env || cl_hw->is_stop_context) {
-+               cl_dbg_warn(cl_hw, "Skip recovery - Running down!\n");
-+               return;
-+       }
-+
-+       /* If restart is already scheduled - exit */
-+       if (cl_hw->assert_info.restart_sched)
-+               return;
-+
-+       cl_hw->assert_info.restart_sched =3D true;
-+
-+       /* Recovery_work will be freed by cl_recovery_work_do */
-+       recovery_work =3D kzalloc(sizeof(*recovery_work), GFP_ATOMIC);
-+
-+       if (!recovery_work)
-+               return;
-+
-+       INIT_WORK(&recovery_work->ws, cl_recovery_work_do);
-+       recovery_work->cl_hw =3D cl_hw;
-+       recovery_work->reason =3D reason;
-+
-+       queue_work(cl_hw->drv_workqueue, &recovery_work->ws);
-+}
-+
-+bool cl_recovery_in_progress(struct cl_hw *cl_hw)
-+{
-+       return cl_hw->recovery_db.in_recovery;
-+}
-+
-+void cl_recovery_reconfig_complete(struct cl_hw *cl_hw)
-+{
-+       clear_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
-+
-+       /* Multicast/Broadcast rate recovery */
-+       cl_dyn_mcast_rate_recovery(cl_hw);
-+       cl_dyn_bcast_rate_recovery(cl_hw);
-+
-+       /* DFS recovery */
-+       cl_dfs_recovery(cl_hw);
-+
-+       /* VNS recovery */
-+       cl_vns_recovery(cl_hw);
-+
-+       /* Restore EDCA configuration */
-+       cl_edca_recovery(cl_hw);
-+
-+       /* Temperature  recovery */
-+       cl_temperature_recovery(cl_hw);
-+
-+       /* Sounding recovery */
-+       cl_sounding_recovery(cl_hw);
-+
-+       /*
-+        * Update Tx params for all connected stations to sync firmware aft=
-er the
-+        * recovery process.
-+        */
-+       cl_wrs_api_recovery(cl_hw);
-+
-+       /* Enable maintenance timers back */
-+       cl_maintenance_start(cl_hw);
-+
-+       if (cl_radio_is_on(cl_hw))
-+               cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE);
-+
-+       cl_hw->recovery_db.in_recovery =3D false;
-+
-+       pr_debug("cl_recovery: complete\n");
-+
-+       cl_rx_post_recovery(cl_hw);
-+}
-+
-+void cl_recovery_start(struct cl_hw *cl_hw, int reason)
-+{
-+       /* Prevent new messages to be sent until firmware has recovered */
-+       set_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags);
-+
-+       switch (cl_hw->conf->ce_fw_watchdog_mode) {
-+       case FW_WD_DISABLE:
-+               cl_dbg_info(cl_hw, "Skip recovery - Watchdog is off!\n");
++       switch (cli_params->option) {
++       case 'a':
++               set_ant =3D true;
++               expected_params =3D 1;
 +               break;
-+
-+       case FW_WD_INTERNAL_RECOVERY:
-+               cl_recovery_work_sched(cl_hw, reason);
++       case 'b':
++               hist_enable =3D true;
++               expected_params =3D 1;
 +               break;
-+
-+       case FW_WD_DRV_RELOAD:
-+               /* TODO: Implement netlink hint to the userspace */
-+               cl_dbg_info(cl_hw, "RELOAD handler is absent, doing nothing=
-");
++       case 'c':
++               hist_per_channel =3D true;
++               expected_params =3D 0;
 +               break;
-+
++       case 'd':
++               hist_mac_per_channel =3D true;
++               expected_params =3D 0;
++               break;
++       case 'e':
++               hist_dens =3D true;
++               expected_params =3D 0;
++               break;
++       case 'f':
++               hist_mac_dens =3D true;
++               expected_params =3D 0;
++               break;
++       case 'g':
++               hist_pwr_print =3D true;
++               expected_params =3D 0;
++               break;
++       case 'h':
++               hist_mac_pwr_print =3D true;
++               expected_params =3D 0;
++               break;
++       case 'r':
++               hist_reset =3D true;
++               expected_params =3D 0;
++               break;
++       case '?':
++               return cl_noise_cli_help(cl_hw);
 +       default:
-+               break;
++               cl_dbg_err(cl_hw, "Illegal option (%c) - try '?' for help\n=
+", cli_params->option);
++               goto out_err;
 +       }
++
++       if (expected_params !=3D cli_params->num_params) {
++               cl_dbg_err(cl_hw, "Wrong number of arguments (expected %u) =
+(actual %u)\n",
++                          expected_params, cli_params->num_params);
++               goto out_err;
++       }
++
++       if (set_ant) {
++               cl_noise_set_ant(cl_hw, (u8)param);
++
++               return 0;
++       }
++
++       if (hist_enable) {
++               if (param > NOISE_MAX_SAMPLES) {
++                       pr_err("Error! Max samples should be < %u\n", NOISE=
+_MAX_SAMPLES);
++               } else {
++                       pr_debug("%s record histogram\n", param ? "Start" :=
+ "Stop");
++                       noise_db->sample_cnt =3D param;
++               }
++
++               return 0;
++       }
++
++       if (hist_per_channel)
++               return cl_noise_print_hist_per_channel(cl_hw, false);
++
++       if (hist_mac_per_channel)
++               return cl_noise_print_hist_per_channel(cl_hw, true);
++
++       if (hist_dens)
++               return cl_noise_print_hist_dens(cl_hw, false);
++
++       if (hist_mac_dens)
++               return cl_noise_print_hist_dens(cl_hw, true);
++
++       if (hist_pwr_print)
++               return cl_noise_print_hist(cl_hw, false);
++
++       if (hist_mac_pwr_print)
++               return cl_noise_print_hist(cl_hw, true);
++
++       if (hist_reset) {
++               pr_debug("Clear histogram\n");
++               cl_noise_close(cl_hw);
++               return 0;
++       }
++
++out_err:
++       return -EIO;
 +}
++
 --
 2.30.0
 
