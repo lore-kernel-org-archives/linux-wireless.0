@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3857BC49EB7
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ECF3C48BE5
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1776061408
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47C3761410
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232657AbhFQQKG (ORCPT
+        id S233734AbhFQQKJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:10:06 -0400
-Received: from mail-eopbgr140087.outbound.protection.outlook.com ([40.107.14.87]:56046
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:10:09 -0400
+Received: from mail-vi1eur05on2070.outbound.protection.outlook.com ([40.107.21.70]:44832
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231560AbhFQQJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S231181AbhFQQJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:09:04 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DAwKzYiUSZ64HahSEKz4fFuk9S6tl2E6cqgF5kUeRDHwHUi4OmbSk17cfLPsttVdcpF2OfTq0a6+psCaC15RxzRwWgWvnKlsObrIRBdbUOJ7u/Xuc+NbEGUGHqGng7yFYDK/NShc+R86EFBkyVUvPyCYEYHf5tsjKhRA0nkgUQ44EIFSiY/Kpykw/iHjhGdoE2TPppvi+hFXqbMqkJqCF+t09W2AvkvfULgeBvOvKWNbLAuhFvNusSta8+LDxcxAznNr+h4KE8pbpXi2FrvMY+WHntBoCuvFCT+TQm2OEUtVEzB6LOb8t6ausn0kYHAkmOIuZxsVPgW9gwGeY30nRA==
+ b=QgEOyTlukYxkYLK0+6U4p70AVqZCQJ8GUN4R8+kmHSNPZlRTsviKxAlQTDzVHiCJXI8RMcTiZQvOnBUgHg0Pn6NNM+XbJsgYFRu8E94Y59yMJkeiUvdJDublwKSlIFvjVeS8/IWRP6NnCX1DT/3K9ae+CHJihYbYKTRz94t6jTmdeuOjX5UMPcJIAy3/pRXpn5bx/Z7QYBXqWVrmV9eWQBI5a/j+IeXMmDJg/I8GyT29FW82qTUsfrXT4lNCABjCMP1dEu+9/klIdhDUP34K22dwgJckN48wbVkno/905SqwtHFPsN9WUKZZgeHadWM1NCtvu6iPhmMn6bH6FXBuBw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tDCgxlAHrdIZjNA6d4trn0H2uoexJBlJTlkBnIjgOko=;
- b=UA3afv5fr5a6afBDeUZ/g2Tb412ysg8aXGbA5H9QH//hvj3dmq6zXF4rMl8Sx4CO5a56Fq/L6n/f3djVlKJvpDu64zKquHD1KUOLOx5LgUuZ0RhGq+D3M7dLcM53iI1SaThr5dxaFFw9fY48uu6HzmYagXvX0J9QbpOEb4QTZJpvasqZFTYKZLKp/uOWx5vBPYlgMAhghcngSJhNZb4XgEHXexbX51wFj2vPOmGgjNxoRnHlwJv25lpuP1umRn884Y9QWhNKTSsS0PG/7O09W7pxQywbew7o+JFdxUcu3ycTKfprzgJib16X7NldPDZel3EsVieL06weAxQCqUcQlQ==
+ bh=qUjOIkRXqBIxQPjljie43tBZM5yMmGpXVxDU+1jaUDg=;
+ b=W53F/QisAlfddw7BJUKRxpegzUOJYwrozjeaHRcjfvj/R4PCqA2UNFD0Nb1EMZnPQaBUGy5EosEqJYKq7j5MU2PsnnBDWUDQZWNs0VNBvU589f+mZ3Sb9g3x0JcUJCq+Kcjpf87Kt13USSdnZpFRGu6we9PrGkOBc52Kty9Tkav9mDg1ySKUbRSXVqlEMV62suCGPkSkAuAVHkSWdkUm8p4e4hMHk9sLlZAyPXzNWjpUD/vTpws+aizf12j2U0hUe6TYLJ6rHZunBnQt1+NKf89IsEHXbIOd6h/JVxTAkCaBJ0asmI+KIof+sVbJpDH3KJD6EzP+DZlIpXIqrwO5rw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tDCgxlAHrdIZjNA6d4trn0H2uoexJBlJTlkBnIjgOko=;
- b=0kjs7A0/pQO2E8drE95XV3ttQTBYDJpcID6d1xUHaXaZMJKxJPIXCAmOvofFVC8t+hywfwcy6NMMPlxl5EApvcjKUNseWwvCzj8TrFJ+O0qUjlE8PLjgMUV8J/S1QqMoUZ9wMlgulYKeWrys7gnhm81aOvtnwWqFbdIo60Gqsc4=
+ bh=qUjOIkRXqBIxQPjljie43tBZM5yMmGpXVxDU+1jaUDg=;
+ b=V5nIhoKkz4zNEYHCSWeWid+THqnED9ofEIxaORgJX1YXWud6sV+pmLBKjQ1tARHb8nOxLVNEixlpLXHwUM3569CxxAlay/tPrvqGYJpR42uBWoMGseVZAaw4+gFWbEfBYavXn0Le6sr4DqRtUCTxi5suFqfeg6w1U2C0NXGjjcQ=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB1059.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e3::21) with
+ by AM9P192MB1314.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a6::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:05:51 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:05:47 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:51 +0000
+ 16:05:47 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 144/256] cl8k: add rate_ctrl.h
-Date:   Thu, 17 Jun 2021 16:00:31 +0000
-Message-Id: <20210617160223.160998-145-viktor.barna@celeno.com>
+Subject: [RFC v1 134/256] cl8k: add power.h
+Date:   Thu, 17 Jun 2021 16:00:21 +0000
+Message-Id: <20210617160223.160998-135-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:12 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:01 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9002c221-fa6e-4717-66f8-08d931a9b074
-X-MS-TrafficTypeDiagnostic: AM8P192MB1059:
+X-MS-Office365-Filtering-Correlation-Id: 62fb9a7e-b1ae-4fba-0334-08d931a9a9b9
+X-MS-TrafficTypeDiagnostic: AM9P192MB1314:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB10590DB4A1F87D8944A167FCF60E9@AM8P192MB1059.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2089;
+X-Microsoft-Antispam-PRVS: <AM9P192MB1314A1937435FE5E3967497AF60E9@AM9P192MB1314.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: eTcUQNCO/2T1lefR+4NIjVIWUCt6kxvN0yh3t5EhvMDrsN9hRrK/5f2CQ8uZ77LzbzsbJ8fR1Sw1Z4MvnzF8SMAq6v4Lwkk+jW5pZph//qnOTXQ0chaDOnSxYInpHbMvFzb1SRnarG7z84h6dR9hpSe6HOmjNsDoTCNL5Bx/DEc+te/Od1XamXxiFk4hfzrCH0Qq0Ws5Gn/f8LtTS4i/MmfaDNXUYb+ZfKJLRyHkpb0n7uH25fmb0BjPBa4tGhvBS1IBSst3iZOhpkGAxCMgQZ+uNjqOhfppfsD+qsgKycmvpJGBKx0/t0Evn7IQaXew2O1AK8stZrMkmo30S2Q/CXpQgW8aXqQoWMqKimPcf617kVfVDpclG+XsGAM3rl16CrJNTJme2UmwQ1VrI7ry/7cT65cFBp5aWM8fZr6zqXAtsdXexP7klkDFXIIayrdUm2WoJQ0j+lwhdCdQuXhnHTW3cyYRvwQxRXVdsIlns3musCyjZcPSJtbQpXk6kjigInuHB0y6gghrxm3naXFcASNeQWexzz34ukWeB25ieH2wPrUv04hRvds15T8YE/x2UpI4hnYY537gfnTI+W+Cpalw0s8HnjQ/usLF636JP/xilP2zPNqLkKwPNxqyIvjVL0v4CTn6APBE2DQLAUIK8hv2FYEjxh6sTTSHHPtOTPIBzWct7/w5e5jJXt10SExZBHFf64btKIW7pGQEvKid2w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(346002)(136003)(376002)(396003)(366004)(26005)(956004)(478600001)(186003)(66556008)(16526019)(107886003)(66946007)(66476007)(8936002)(6916009)(2616005)(1076003)(2906002)(54906003)(6506007)(6666004)(4326008)(38100700002)(38350700002)(83380400001)(9686003)(6512007)(5660300002)(6486002)(86362001)(316002)(55236004)(36756003)(52116002)(8676002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 8PGKR0R1VqCcQoiS+N/O8TnEkY1c/G2ZC0e2S2/+DaMRR2C4SRM0MR0naTRt/HMjUt5gNIL/wUzM6aE7TKf57AfC9wavPey0VnfgrUlo9Rk8Dkny/r6udQgLteN0DfmsoM1Ae326sJH3CZrvveeKQrqnPmabdVV3Z4Df6ki71guFLW5FLduAmbfAryGATYBcKdjTBMd5U2Eis/3pdSMgXde+i28p2N6trhZDrU/Rwv1l9jAF6fTDe/N1hzMl8qgI3e2zWxAzv22AsN6+uIEUW9NkVtMruMxIo7xs96yYu1HZPxiEkujnaXjBcqbEiAFMeccUYoQ1MClCLzbRKglC6OaEtkKOa417yDToL1nbQqZ2e9aVZ9dh/Vwg3MbNILCazPdBbBTilmhAYv+TamAl4n+3UfDFOWdp1S1nfEJTPVKEfkeag2h7nU0Iwzt7iFe+tA/9SxlIhHc1CmnaiKLGxEcY/eK2MCYvw6P5evNEdr30uJsJHm48pqDgjyHi734BDW54rJVxnZocO4SC4CQRTm5uWZdjvUMnrIyqZoGUuSiGd2Ra9c0vf/px7xKpzKjnPPZcVtrtXbQl39t9i/dkNshdTMtIkLyhS0bHHSNt98WlNMWsxI/vZgsd12yelyrg2j8N/L1Zy8TvwJgNHuVFauuS8BhjBQcVepHbKFF2aKWTsSCJgMv0ShW4H1TgJw5naNRnhGwBVV/d5NlABkqSfQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(39840400004)(366004)(376002)(136003)(346002)(8936002)(66946007)(83380400001)(186003)(5660300002)(26005)(36756003)(86362001)(8676002)(55236004)(1076003)(6916009)(2906002)(6506007)(66476007)(478600001)(6666004)(38350700002)(52116002)(66556008)(956004)(4326008)(107886003)(54906003)(38100700002)(6486002)(2616005)(316002)(16526019)(6512007)(9686003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?I/k3RROWX/P9DbTp/qlIMbdU1x+KFjCVuC8FRobLokfrdsBXa5n7PsEy5ZbM?=
- =?us-ascii?Q?FGVdFeRa+wgNcyP48vnZtjKBlUPNhwhiVNl+YjKpKZX8cdJai05I0YYU9P8h?=
- =?us-ascii?Q?AmJg6Bk9v41v8VEIs5ozx2nNhtZDUwk1ExBcGDhuC4kGWg1gbKGm5M+9iDrv?=
- =?us-ascii?Q?U3CLXN/Xg/d8PfXYaf9FLiLuaSlDEY+eRd/wBrfojECPS0imlcZnl5G2qi9x?=
- =?us-ascii?Q?9PDAGsDjlaq5GO/rjtG8nGTNolc00mLNFG7nqtqK8r378oC/wK1nyHEw5QHE?=
- =?us-ascii?Q?mkCULYCH7YRNPNo45kIBCmhLHWebzp9H+YhSrxox2XTVU5aI2gKUBB1MCLek?=
- =?us-ascii?Q?+9CsMAkBA3LhnzuYSOtKtE7VSvvuSGvww6UBISp8FCe3DxX6HwXjPsumcmVb?=
- =?us-ascii?Q?o+1HjSow4LhQSUnoVguG2A2zZMrCyQDKTIT5B3Terv1DljdV5rGGYp3eMJQo?=
- =?us-ascii?Q?6Wude5y4Yzbh+PWfNzVm/afjfztr+vgowvOpsWyFJWBBrRVlGYNwqqNLKytn?=
- =?us-ascii?Q?g5qttxKc41HBhMLAlhC4TkV9PV+JdXPzA6036TLjqrj4qSYjvMyqxS2T6er3?=
- =?us-ascii?Q?lRoYtglUAkXwbQJAlcxzwmqz3o2fcflFyPGQNd5pIoQniaEEeFLCxLn9+AXO?=
- =?us-ascii?Q?Q/rkpu4fXbeHAAt1uIaXiDyoVamDwrmkWVaZV9wu+wkwS07WzhQSZAb/QlRn?=
- =?us-ascii?Q?ELfQbHEsKNMttB0cD7106ySbsZvhlZxLVE5VfTv/C6vs4KCauPGzPQLmIaAo?=
- =?us-ascii?Q?U2cc/N9DLmumcif/hU/x69cfbdxl7gAageyZpEykvyb+xiHj7mzcsgPYdVhS?=
- =?us-ascii?Q?iDKt/73xJ7/etMm2BpKdzeLwhVH0MOscCz5dMRM3KUY20oTfpsYkUkb2scqz?=
- =?us-ascii?Q?w0BQQyo3dgEiJbYJxAD5fm3XZItw/moYtygC2YVES7uQh7drjI01gx0pPm42?=
- =?us-ascii?Q?GUMVvhpPukQ5GQECVc3VGe26sTzIlGeRQnpnJzTx7Go/DoPP7h4KWRZOvTBJ?=
- =?us-ascii?Q?sjZcYIEd8Ry58nOfcY6YCCNAajJxk5OI1Mvj4I/qI0tjugdbDEHCXI8kgBv/?=
- =?us-ascii?Q?ubjvTcLrCsxJci/AI/bucKStIXV6VSHml3s6fVkl6/yAVHyYdjhujKV5QjnV?=
- =?us-ascii?Q?ksohVRxGLQKOu4vDyXLIEB862ROKiw7bJ/gWnkeMArqLwGJ7WrkjgkZtSXXF?=
- =?us-ascii?Q?VSCCxEew9T257csOn/ubBFvmp2ClTBqDJtnFpv+22b2+OLII0onkO/Bk/gbD?=
- =?us-ascii?Q?jAqLRPEgVVLEExPN3szdtBvMtI8/QXB1AAqxXKbB3e0+LsQcFWG+wowHSors?=
- =?us-ascii?Q?41oUJWZ/8GGs/DvuV8CPjK2R?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?dWZd6VBFLPIYFchKsYv7mV3Xb7QwtFJmmG/yRCyboQcIQ2p6Cx7lOLbX/YGW?=
+ =?us-ascii?Q?SIY6HR8BTZDDWnaT7mwqhl2QaL2JgR93xjKjvIVbx1vm80A5dPrNhHTeeoxO?=
+ =?us-ascii?Q?5gWVHX8njp1Wmb3SK33o8cgi4qou1ZDhrGvOQ64UdI7pSwEv8mRWKTZKAL5h?=
+ =?us-ascii?Q?gyLVg5y+ZFQtOAjo/YlaDOpFLnspVWkOri1AN9dNzKtVwjqVQ0gSGN5pq8qy?=
+ =?us-ascii?Q?0/SidZaHMA8ghYzmaOkq5sCgMVwR1eAOXmmuT0L6lmWALcoB5NzjVEdDbHhT?=
+ =?us-ascii?Q?jNJIu6GZ+snY0b4+MXsBesVWm3pW+XiyJMcA9UKhqvSDxBMr6p4jwq0PqRB7?=
+ =?us-ascii?Q?9FMQ8sxtoQuV3OfoSFi7DLFjkveYKVaaI/a/ofvdlKCF0+x/qWcriNeKjoo4?=
+ =?us-ascii?Q?wWZe/gTUdZeY9OgUe+nETT77B+p+xmd8J/PZtq63JugQnRh2HhvphmSN8T7s?=
+ =?us-ascii?Q?AgPE3VtXyCX93qJhQlpn+2Uu7McxQMl/HrryFZfgEcQdQdbA+TqezW6U07EM?=
+ =?us-ascii?Q?hH+tGekzKG1+fjAzZBCZ7v8+v0KRUc5HudMhj5ZtcKHOmiXhlL/JuiQMUpzM?=
+ =?us-ascii?Q?YUMKvRB28A5++kXMdp0/+Sfsggv0JC6n24DbKuyTdeQYBF8d00OwYS0INOFs?=
+ =?us-ascii?Q?0n/J2/AHitcbcgeTQjw4rKEw2lA4h9jxF69AHxe1DnJGEmLV7XrrW4/0jeZq?=
+ =?us-ascii?Q?m8w5Aw9uDic+coWbmqZhPAl7ZrJhmsZown0//6PPc1Ls7qswDnfLO9hGn6KN?=
+ =?us-ascii?Q?dfikUNK797dy15BZMhscHaMufKqav0qRq+yrGbCh/1v3ysptj78MRf9dDCeR?=
+ =?us-ascii?Q?LJUF7V5i4dNfM7ErJafbJzCLhZTxzD5rHtE/Rm0PXa+gwSP6UTqXSuGjiI1m?=
+ =?us-ascii?Q?IxDXcsF4kkKnPzjyNETpE/M1bDutQNuZUfzhHKtTsJTEjjL8og1xqYhaS7/8?=
+ =?us-ascii?Q?Faqgt/8eDK8M8eee2LF4eEeZUdpTrdW6gxbf+Hd2b/6GljWQbbK6elieF673?=
+ =?us-ascii?Q?bRA2YlVbbGj7Kq86nvqIYPCtsnD/FAfA1VCOAZvd/jmi8uXlAygxU2PkUAm8?=
+ =?us-ascii?Q?2kG7ZWYVZZiK8PhyTZGxkIGGO3NL1+0weWemwmQ4iKVxWjkBZGwFkJx8qRZ8?=
+ =?us-ascii?Q?dvTiG7REfxij+GCQRM3l9dlITobBmWBb7r86rEjAKVwz1KuskPC0bFTN2tan?=
+ =?us-ascii?Q?I9E2ElWp5I1HyV0zHJbJ8CUrGc5kcUQZTfFWzmDpu/9zPIIQep2dWqeJMddS?=
+ =?us-ascii?Q?kFtKehX621lnGkg5f6I02ZuV2YStExeTjMj5Wi3pQ5PRx01g+Ud6NA4cbTiN?=
+ =?us-ascii?Q?8hBQmbb1ylHJ89Vr7lhuRHQB?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9002c221-fa6e-4717-66f8-08d931a9b074
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62fb9a7e-b1ae-4fba-0334-08d931a9a9b9
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:13.1080
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:01.7778
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QjhtBBgECnR81xc5wmO2Zfx2/9B+sPM3p7BikxlxhsBYcJzlkWOGkSYIPa/BlBEZonNx3sCF0i3Dl1/jrU7aSg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1059
+X-MS-Exchange-CrossTenant-UserPrincipalName: FiyeVKAChSxAXwfAo16wMI574V/dTMZVYwvInRcGAgq8n7nUVj+RDJo4PLmmLgLMQbN5IIDyZzCxpibtFHwFuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1314
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,128 +128,57 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/rate_ctrl.h | 106 +++++++++++++++++++
- 1 file changed, 106 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/rate_ctrl.h
+ drivers/net/wireless/celeno/cl8k/power.h | 37 ++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/power.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/rate_ctrl.h b/drivers/net/wir=
-eless/celeno/cl8k/rate_ctrl.h
+diff --git a/drivers/net/wireless/celeno/cl8k/power.h b/drivers/net/wireles=
+s/celeno/cl8k/power.h
 new file mode 100644
-index 000000000000..181f6e31ca00
+index 000000000000..3dc12d618c7c
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/rate_ctrl.h
-@@ -0,0 +1,106 @@
++++ b/drivers/net/wireless/celeno/cl8k/power.h
+@@ -0,0 +1,37 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_RATE_CTRL_H
-+#define CL_RATE_CTRL_H
++#ifndef CL_POWER_H
++#define CL_POWER_H
 +
-+#include <linux/types.h>
-+#include "ipc_shared.h"
++#include "hw.h"
 +
-+#define RATE_CTRL_OFFSET_OFDM          4
-+#define RATE_CNTRL_HE_SPATIAL_CONF_DEF 0xF
++#define POWER_MAX_DB 30
++#define POWER_MIN_DB -10
 +
-+/* Op_mode field in mm_update_rate_dl_req structure */
-+enum cl_op_mode {
-+       RATE_OP_MODE_FIXED,
-+       RATE_OP_MODE_DEFAULT_HE,
-+       RATE_OP_MODE_DEFAULT_OFDM,
-+       RATE_OP_MODE_DEFAULT_CCK,
-+       RATE_OP_MODE_STA_SU,
-+       RATE_OP_MODE_STA_MU,
-+       RATE_OP_MODE_MCAST,
-+       RATE_OP_MODE_BCAST
-+};
++#define POWER_MIN_DB_Q1 (POWER_MIN_DB << 1)
++#define POWER_MIN_DB_Q8 (POWER_MIN_DB << 8)
 +
-+/* Value to be set in tx_host_info */
-+enum cl_rate_ctrl_entry {
-+       RATE_CTRL_ENTRY_NA =3D 0,
++#define POWER_OFFSET_RES 4
 +
-+       RATE_CTRL_ENTRY_STA,
-+       RATE_CTRL_ENTRY_FIXED_RATE,
-+       RATE_CTRL_ENTRY_MIN_HE,
-+       RATE_CTRL_ENTRY_MIN_OFDM,
-+       RATE_CTRL_ENTRY_MIN_CCK,
-+       RATE_CTRL_ENTRY_MCAST,
-+       RATE_CTRL_ENTRY_BCAST,
++#define POWER_OFFSET_MAX_Q2 (16 << 2)  /* +16dB * 4 */
++#define POWER_OFFSET_MIN_Q2 (-16 << 2) /* -16dB * 4 */
 +
-+       /* Entry size in firmware is represented by 3 bits */
-+       RATE_CTRL_ENTRY_MAX =3D 8
-+};
++u8 cl_power_tx_ant(struct cl_hw *cl_hw, enum cl_wrs_mode mode);
++s32 cl_power_antenna_gain_q8(struct cl_hw *cl_hw);
++s32 cl_power_antenna_gain_q1(struct cl_hw *cl_hw);
++s32 cl_power_array_gain_q8(struct cl_hw *cl_hw, u8 tx_ant);
++s8 cl_power_array_gain_q2(struct cl_hw *cl_hw, u8 tx_ant);
++s32 cl_power_array_gain_q1(struct cl_hw *cl_hw, u8 tx_ant);
++s32 cl_power_bf_gain_q1(struct cl_hw *cl_hw, u8 tx_ant, u8 nss);
++s32 cl_power_min_ant_q1(struct cl_hw *cl_hw);
++s8 cl_power_bw_factor_q2(struct cl_hw *cl_hw, u8 bw);
++s32 cl_power_average_calib_q1(struct cl_hw *cl_hw, u8 ant_num);
++s32 cl_power_total_q1(struct cl_hw *cl_hw, s8 pwr_offset_q1, u8 tx_ant, u8=
+ nss,
++                     enum cl_wrs_mode mode, bool is_auto_resp);
++s8 cl_power_offset_q1(struct cl_hw *cl_hw, u8 mode, u8 bw, u8 mcs);
++s8 cl_power_offset_check_margin(struct cl_hw *cl_hw, u8 bw, u8 ant_idx, s8=
+ offset_q2);
++void cl_power_tables_update(struct cl_hw *cl_hw, struct cl_pwr_tables *pwr=
+_tables);
++s32 cl_power_get_max(struct cl_hw *cl_hw);
 +
-+/*
-+ * sw_ctrl includes eights bits (16 - 23) to be used by software.
-+ * Bit 16 is used by driver to indicate tx_bf.
-+ * Bit 17 is used by driver to indicate fallback.
-+ * Bit 18 - 23 are still free.
-+ */
-+struct cl_rate_ctrl_info_fields {
-+       u32 mcs_index        : 7;   /* [6:0] */
-+       u32 bw               : 2;   /* [8:7] */
-+       u32 gi               : 2;   /* [10:9] */
-+       u32 pre_type_or_stbc : 1;   /* [11] */
-+       u32 format_mod       : 4;   /* [15:12] */
-+       u32 tx_bf            : 1;   /* [16] */
-+       u32 fallback         : 1;   /* [17] */
-+       u32 sw_ctrl          : 6;   /* [23:18] */
-+       u32 tx_chains        : 8;   /* [31:24] */
-+};
-+
-+union cl_rate_ctrl_info {
-+       struct cl_rate_ctrl_info_fields field;
-+       u32 word;
-+};
-+
-+struct cl_rate_ctrl_info_he_fields {
-+       u32 spatial_conf    : 4;   /* [3:0] */
-+       u32 starting_sts    : 3;   /* [6:4] */
-+       u32 ru_index        : 6;   /* [12:7] */
-+       u32 ru_type         : 3;   /* [15:13] */
-+       u32 ru_band         : 1;   /* [16] */
-+       u32 mu_usr_pos      : 2;   /* [18:17] */
-+       u32 dcm_data        : 1;   /* [19] */
-+       u32 num_usrs_mu_dl  : 4;   /* [23:20] */
-+       u32 ru_alloc        : 8;   /* [31:24] */
-+};
-+
-+union cl_rate_ctrl_info_he {
-+       struct cl_rate_ctrl_info_he_fields field;
-+       u32 word;
-+};
-+
-+struct cl_hw;
-+struct cl_sta;
-+struct cl_sw_txhdr;
-+
-+u32 cl_rate_ctrl_generate(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+                         u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi,
-+                         bool fallback_en);
-+void cl_rate_ctrl_convert(union cl_rate_ctrl_info *rate_ctrl_info);
-+void cl_rate_ctrl_parse(union cl_rate_ctrl_info *rate_ctrl_info, u8 *nss, =
-u8 *mcs);
-+
-+void cl_rate_ctrl_set_default(struct cl_hw *cl_hw);
-+
-+void cl_rate_ctrl_set_default_per_he_minrate(struct cl_hw *cl_hw, u8 bw,
-+                                            u8 nss, u8 mcs, u8 gi);
-+bool cl_rate_ctrl_set_mcast(struct cl_hw *cl_hw, u8 mode, u8 mcs);
-+bool cl_rate_ctrl_set_fixed(struct cl_hw *cl_hw, u32 rate_ctrl_he, u8 mode=
-, u8 mcs, u8 nss,
-+                           u8 bw, u8 gi, u8 ltf_field);
-+bool cl_rate_ctrl_set_dbgfs(struct cl_hw *cl_hw, u8 sta_idx, u32 rate_ctrl=
-, u32 rate_ctrl_he,
-+                           u8 op_mode, u8 bw, u8 ltf_field);
-+void cl_rate_ctrl_set_ate_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta);
-+
-+void cl_rate_ctrl_update_desc_single(struct cl_hw *cl_hw, struct tx_host_i=
-nfo *info,
-+                                    struct cl_sw_txhdr *sw_txhdr);
-+void cl_rate_ctrl_update_desc_agg(struct cl_hw *cl_hw, struct tx_host_info=
- *info);
-+
-+#endif /* CL_RATE_CTRL_H */
++#endif /* CL_POWER_H */
 --
 2.30.0
 
