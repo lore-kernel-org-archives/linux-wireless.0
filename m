@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D659EC49361
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F17B9C49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C07E261407
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8F6061407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232891AbhFQQLt (ORCPT
+        id S231722AbhFQQLv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:11:49 -0400
-Received: from mail-eopbgr60058.outbound.protection.outlook.com ([40.107.6.58]:26086
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:51 -0400
+Received: from mail-eopbgr80075.outbound.protection.outlook.com ([40.107.8.75]:12246
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232582AbhFQQKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:10:31 -0400
+        id S233693AbhFQQKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:10:38 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JRENXgjrJt7sCsqpo3K8MhOS6Hir+K2see5DwFS0TyYbFxdW1fXvO3d8z3Pyq2+dh5yCwShNjUeq0zV9smHrXpFfGWRR+9GWyH/i2sIdQ6lClvc8SZmSqfe+Q5bZgbz0LIAQQM4ZwFNtvWOpQpXmjMPULUjAkl061zc0VSey1IrlLMuWex4k0bUTuzA6muAAIjrvcFYCaA24s3jo5tcseiQpQNlrZUhTYDAb9nFA515BjYSf580Pb5jHxU/d/e6JQpJEwX8isJVlGvAR8wPm7N3CyPbRHLnmSnDI2TLxiUAE5/fFxKTgHB5fOJ1VWu8OThByKBeD0UT/U6fAXpyWZg==
+ b=ZDa69X/BskKt9ajDvLWOhTgE3p+hfzK9CMTHJoTG2w+m630gqj2tZ93rU52277A+fqxwUqQGYsVxcX6jkpoScWhtgaosMu6I1kNVj+JKCp8QsahRz2tlpC8XNsqyILuNvJ5XabdUXEoJbeU1FTTvdGiKJQcN9/xUj5jXGq9/Y7foOPB0QwcuoAEwHX+cfRPn7UBjI0TBkwlnrMYo8xj9H1TxEkuJ+hjwnexvjta2KllF13xpKaQkG4OJtx+9c0WyQBVdzFFhieHhbP0DBgpsIOvbuX/e2aOME7SZzdwfS9u1X52LbHjI+hs7Sk3QjITDIFwl7HA9zCnFpgZuYKvFkw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sPKFeQmNIHHClTPZiud1aPccgjYignzkGrl90UCOtqs=;
- b=XGq5B3e8gagCmOUmIXTUs7K6xlrJOk3R6JdKWmpUcmi3LpBp2wCATlss+oJyf8sUldZv/zALEHa/a1MUn2RltQly8aANNF3oWb91sXgaUp/lTF/r9lwnUp1HKxzhWa9jmfm3CRtHwiw5ALfAX6pVawKyXF7OHVb/2iDhW6JiK03BVJVznUF9hsvHVqQzu0xEVxZqp+TkQ1l3IPTK1Ctznx+tFaNuSTgAsvgKRymOquR/Rl4cldyXSv6FAntIrGDc6Pk9YtQHSZ6gLX8FoKq/0wX6TJKiqcY9Q1CEbPBcxvRZu+R9/+bpAi1p9ihfkxP92J1/iMbTklcqcSjiFE1SVw==
+ bh=2lwdLNRvWM3kAyUq5X1YtLAmnp83t+vlx+y+v53DzZY=;
+ b=mqpd48co+3V5/o2c18/Dq19frTKuUBs30K4yc7ShHURrCJJolm2apCinD4/ALu/QO7HWaOve12HNNwS921S7riYhfxovNh/JlilkNDJyRYdnFltkJiLfesNGwegOFc6Ede1DvCC3UnwZB2uKJBJUlpTFdt9dVIv/c+SRL7Ul5sI8WFr/No8S/qzMnD3EUhvVoDD9h6UPAdvdGohmbLog5IbHH77jWCBkOJRnEMONRHaXnZngee4AJmk3tauM0Kwj1AxYeJ1HrDNp6Pw1b3e9cxkHnOU4n0wwjxEN0IIkaAcJ6T80hteyqmO/6Qq1F+d4CkEV2lqbRwY5Qs8LSW8ynA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sPKFeQmNIHHClTPZiud1aPccgjYignzkGrl90UCOtqs=;
- b=fFkNa45o6U7li5QIREJXSD12LrcsEXUBgK0WK0HPbCFfua1xukZK7VHDprr1aqj2ExJ+2AOA1bXEqwLbepbqo/+eeVxO4BYPdMd7W7GAIYbARHMRXcCwqj63w8CEfcHBMtGvnHx/009udqLOlTgLtixa1opC/4pY+dFqwrvcA2M=
+ bh=2lwdLNRvWM3kAyUq5X1YtLAmnp83t+vlx+y+v53DzZY=;
+ b=ewQgG8FM/GpNN3J4LHM5vtYnqBOR26pweVH5kKt3IQofNqVvx9elijx6Q3KIuExpV4tjGeYQaY0OfGgag2Ioa4CdEFsD4Of0TNfS+e1JdFJmM3dvVzgo8TYc/fi2a8ebeuXZQgXFPNPy/DLwfPNheG2XEACaU15XWaX1bSfgwcs=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0260.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:47::23) with
+ by AM9P192MB1329.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3ab::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21; Thu, 17 Jun
- 2021 16:07:09 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
+ 2021 16:07:51 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:07:09 +0000
+ 16:07:51 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 183/256] cl8k: add sta.h
-Date:   Thu, 17 Jun 2021 16:01:10 +0000
-Message-Id: <20210617160223.160998-184-viktor.barna@celeno.com>
+Subject: [RFC v1 213/256] cl8k: add tx/tx.h
+Date:   Thu, 17 Jun 2021 16:01:40 +0000
+Message-Id: <20210617160223.160998-214-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:56 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:30 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: da940bb8-7116-49bd-5fa1-08d931a9ca85
-X-MS-TrafficTypeDiagnostic: AM0P192MB0260:
+X-MS-Office365-Filtering-Correlation-Id: bd792b73-a0c7-436f-3c73-08d931a9deee
+X-MS-TrafficTypeDiagnostic: AM9P192MB1329:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB02609B4A42E80BA392D23E21F60E9@AM0P192MB0260.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <AM9P192MB1329E074AD664A1008ACC60DF60E9@AM9P192MB1329.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: HJjNRbcdJ+hS8N89w9lV89+14d68hkQeKW/lnoQPXLOUL/Gdjs/T1Uji+tqRG97JemkantHtrtiv57fa3pRZNswZMApuYuZnP5o7HFUdUDFO+IGQjU5gBrMN8Hcmg+SLsM3BPTF4eRB4jhlQm5Lz6RQ/rsceI756epXzhnOZrEywsdpPcCOvNGvJ0M7kjjPsnrU4tYLYey1K5QjEMEuGf8AGe02++f3LyLauNbCl9CkYqSAV5lzK38IXPa8Z0zG/h2W9gKvz7sn2kDvQBGqAmb9o0SGLQCnKOErQGiWIkgyBOpMjlb55SFU+sSK0IfGOmMDNDHiI9mowI7QdY3AMM9ggQsJz5aoD82n/CtV0Pp0/KSJXwrY58pF424Smw4tdPi6yvWOUnORrF8qMhtD8+Aqg0Fj+jpRmfXfbVHX1oykGgaZCsvERz/42Rr1s4JSsi1Knv6RQjI9UrKDwrSWcTrraqp4ypJgrW8PyK79ZH0IUwh5EjOhWIercjJJ3/cJAKnKaVeF59VtMx26YuMfISpyukw6V6/B52PqHUaUOlUdxF2DO4/9V3DF8VlCuz6wmPmZpERhNR/UjL+1Af9YUcU62lfBYZL5Dd7r9+x3cWQQSMhe37LUjMD88e3AMT76+7Nvttio3Fs2qZD8ccZF5LJgdNLc4aEgICdwmY6LtYiZfvgE+3yaUmaSmpls8Z+zEd3Ou5TvYBHtcrfI9nfBhxA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(8936002)(86362001)(107886003)(4326008)(26005)(8676002)(956004)(186003)(6666004)(2906002)(6512007)(66556008)(2616005)(5660300002)(498600001)(38350700002)(54906003)(38100700002)(16526019)(66946007)(9686003)(83380400001)(55236004)(52116002)(66476007)(6486002)(6916009)(6506007)(36756003)(1076003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: AqlVzG1Sgd4wAZqiZ44VQk9kWtkAaN9t788feP2MK49IkrszfIkvh2PAIj3u1w6CK93yUyzKr13ctG8Obi+b/5udsd7WOdCqgfiNrT0R0mEaoxZT6N3Wil5D+jiQH8pE80JFmb3nOCdZNoe90Y4Sc3xV7s3E7ZruU5Mwz8oiTFOJgFbcqowE+deAaIgb/RCxTdL+geQ566gBi71lWcsItsVivQ3uGjrvuADzucrPW8zsQ1qQtMeH36sm0UGR7SD4Q5Za5QZXdA70SFtq/ajG7cAPBJo6ipHhARqgWsFhVcNVYvwi/oXGYtNJjc8sM0CZGo6ijCg0Ho+LmDlP/3+1AE2+sXFkxeApOsW0E7jAZowfJ3IubEmWjiDSlLpohJPICPP/Yf2TnY09kpJ5FULJKwft12RtxQf79g+czDbNHf7p5ELGAqrKgf2ldoMtmbssNM+N/ureLr1HMbeVa68IgxEK20A5BOsj9CF5UXCTBM3dZiGPJ/CG9huB1/LgDAWabGNZ5qPM3ekNBdEwwBEDLOSxvw004hPa/m8cdBWXOMZjBH2V0Z6OIKFmlUuuISqbUUkYd2mWzBf0X13MIM/z9s0Hnc2s4HGplnJ2MbluIaBGGA+TQO/0xSdAI5dYJujXVB0otr9ZudPYbWtc1HIaPylx1/Z13O14C6wUwmCC6/xoXs6vP5GnVw/AqO0FkjDwJiRg8sg//ASZy4M2cBx8Ng==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(39850400004)(376002)(136003)(346002)(396003)(86362001)(38350700002)(8936002)(38100700002)(6916009)(52116002)(6486002)(55236004)(54906003)(36756003)(6506007)(956004)(4326008)(186003)(2616005)(1076003)(478600001)(26005)(16526019)(107886003)(6666004)(66556008)(83380400001)(5660300002)(2906002)(6512007)(9686003)(8676002)(316002)(66476007)(66946007)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?IQJfDEmCtrzJJrFYWaP6p/wKqVugak26SBzI61xaxs1iZs7wjFybHLE19Q9A?=
- =?us-ascii?Q?K0kMynQ83UB4fvzjHF+7b9bc5/sI2d1YY71rsPxSQN92qh8ayDTTcQnsRX4g?=
- =?us-ascii?Q?B+tRoJpOt4X0UnLQl9T8cyU3LM49LI0yzF0QDKUMeTWtdFKd3oBbpKtqF28a?=
- =?us-ascii?Q?RJWP/icoEGKWPGIRJz55d5JTUteUbbYFH6j3+IoB9sbOofSRA+hqCwYUNgQC?=
- =?us-ascii?Q?7Nprp0oZBTnIk9szAC94caHVpAYRTHkjmFFhal2RG1Lejfzh3XHOOiVfblY0?=
- =?us-ascii?Q?hItdqRTrmPbeEaGeb2wtrmxShYhAIIi2wlxo++ywGPiopROra1ML3Psa4IvM?=
- =?us-ascii?Q?XjtFr7K87CXUXtSHgLAQZklAFOf6m4CkVBO5N7sGXvTMlHFQ3b5e+b/ma9Uj?=
- =?us-ascii?Q?UuxyOP8FAabqJ31zguuCR6/hckQ6Sml3hWNVBmoP9M9bXB0hVO7Ks+7E5XGV?=
- =?us-ascii?Q?UkOPQIACtHZ6NWIPF1WGPFHchELW/nJGhLRUIIbDPsUoKyTQZe7+mEHCJHaw?=
- =?us-ascii?Q?QfcE4EGsSERDM1yQRdqXMODIdpXwPU9d+onyiarc3RTuyfkhrDONkh7/D6/I?=
- =?us-ascii?Q?Ay3pfYXLuuzAiO7xIr7b/p/QDC73rVrbluAU+W4UBwSo7+15+a/hG1yINm02?=
- =?us-ascii?Q?FQLrutF6qebgRJLTawufKs40wCXV7kENcsji5CHkuInY97Pva8owkJM6x7RW?=
- =?us-ascii?Q?lTmasCwIaXx2jff9HXFQ/KSnZ4OTcxdd3JeOM54+vOBVqr22+dccX9ZYAhfK?=
- =?us-ascii?Q?pKUdPemhI+NFcDSIjwrmAt19oVjYAuydsKqjfZ03vRLDWHkHg+tkTkxFrylL?=
- =?us-ascii?Q?FafqCtuJkLnxU1oZoRUxPrD+cRRQ5/3zGBvUAPkjMiXjwKU2fzW5Fv3IZs/+?=
- =?us-ascii?Q?b0d9PC6geBSZAU120DskmlBqWYaUwzcZ/BbkiKhjDh2d1F47vgPllanyGIWj?=
- =?us-ascii?Q?NBC9J2IBTNjfC30DQQyWJcIeWItqi9FmpFjCs1OnQ3TVqipTklfTM+FdDI2o?=
- =?us-ascii?Q?l+gioYFNlfdkle6uhNibnXzluGWldYPmwrJXFpqOhx43V3NqhXPC5Qwj1DJ3?=
- =?us-ascii?Q?zEvg3ATgi7qhIsOjGQnkzQLEDI14hU6PpNZs0d/cwSErUHygcK/lwdNwy+K/?=
- =?us-ascii?Q?E8lQwyXEvC1s4jWdFjQgdo0SgdPrdWZx+msXjGrtCTLFfW2f76x3JjTC/Ox+?=
- =?us-ascii?Q?4YAPw4yOShXeCPHoPHtuIiyTOOJGBWbcLDAGLw2TeyCEY1wvH3aWT6HjM2K0?=
- =?us-ascii?Q?01SQTCGkF3Lf1Z33NRoQTdLOpykDyygt0JbX+tv7eo7fTCZ4EEBMfDcRYspz?=
- =?us-ascii?Q?cL4nNCA372UOZL/NfrxhXADb?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LQYneKUGoFGpL095ciM5qc8CAxnvQd+rusMhZY8NPyMKKK0Za+rb1OTz8Hho?=
+ =?us-ascii?Q?auvc7NapFVd+fzfAUWizbNqz8J/r6TrkXJxbp97KrZO3mJP5y5eSENxx3cgG?=
+ =?us-ascii?Q?Myvu7J7lnex+G6gw3tpwZtvTrH4qS8AOpgVPq+5MoaCkP3oUpH0LtpOGjSSY?=
+ =?us-ascii?Q?smer4IaT7Z9JH9qVq0ISAvBy+dYRodQL9kCHn0uKTmDdg/N769migBxz/MAB?=
+ =?us-ascii?Q?lNxLQBoYE0Ym1JAfoi8ugicUHyX14mFNXCFCoTxMintp/L6igvGRMKGzJKDi?=
+ =?us-ascii?Q?1h2AGow7fDuTO/+zleLvi0fNrrdGOk451X/xHDrQxc9qcWplXgzYCNgQQfC5?=
+ =?us-ascii?Q?sptTKitSMdeuuPwtqxvuWoncDr9c8SqaXOiQiTgUneE8gf032/HkSreOjxJU?=
+ =?us-ascii?Q?RUEdBWWseB0ACmKrlVewRAFNkkfkuuNaomLkqdwtJ954tWOwC3TmuS63Ozrj?=
+ =?us-ascii?Q?PHdIhP1+hzfr2rt1Vg/VNyz92QcttXd4XGM7HoxW3xEREEvmgROIe8vNFLsJ?=
+ =?us-ascii?Q?aWKFYkg/bA1rwCM5TtOsGvAIIQPE1sj7rRvMw3U6q1HG3HEKuH8TAiUwrlNJ?=
+ =?us-ascii?Q?yIOxeBbVAX00+NekhR6fXWfjcfIlMKUAPdHXbsdOG0hy8wHCPQyA5rrsx1DZ?=
+ =?us-ascii?Q?PZ+Ja4ZqriD3FviiUytQ3pzPAjDmdDcwtHxS8nULxTqCF7gvo0mqzk71aN3E?=
+ =?us-ascii?Q?aPmZ5z4pxjGSxcpaxdUmwFbUL70rSSjV+5QKk6G7dhhmju/p5/qEtAJZkzCV?=
+ =?us-ascii?Q?PjL5hxhVTh6omhH8Hay2fBWMkew/Dr9t7YdtkFRv/qRehcutUuCZGjaDB/4h?=
+ =?us-ascii?Q?PdLonS8RBdtFhghKv6pdnAsnL4ZVIgXlIamwGNs+1RoBMvYpRDBXZQz39brY?=
+ =?us-ascii?Q?2VIQizvmmiQt6tTXdfWD7h6zwfJcTRWqJaApA36V9S9+hFdapJQW2vQSkxu9?=
+ =?us-ascii?Q?PSpkOaXEtLQJjxFAbEr6F4Yle/C30KL0sfyasCHVPQolzZBJb2puRKJAqZyq?=
+ =?us-ascii?Q?9SsLun9ie8rcw23bAS/vljA3Z/QYKiJ11foFon2gNxWmzKP7JWhOqTICJV+/?=
+ =?us-ascii?Q?a53jB0YooLRfsO66kjfYMNxj34AIqSPJkyuMH6Ss58gzgPHlSODTn67Bb3Fh?=
+ =?us-ascii?Q?1MLMj76rl17+DcY3QrGd+JFmbIf7QMn6HVeaae1KWzHG24KKbsNDYxOFLEB5?=
+ =?us-ascii?Q?MQmIturW0Sc9OavWoolC2eY0aSc1PChrcJc+Wy8HMlFNFmOFnPYHBvnW0GAl?=
+ =?us-ascii?Q?nyhpnaRF4VypjJ4TkbfAP9AuJCIZa4k1w8hEMum1hw4dczZMt34rFTGCEGcR?=
+ =?us-ascii?Q?qu/rKoF9E9y6IQ/cxV5Bjs/v?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: da940bb8-7116-49bd-5fa1-08d931a9ca85
+X-MS-Exchange-CrossTenant-Network-Message-Id: bd792b73-a0c7-436f-3c73-08d931a9deee
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:56.8400
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:31.0677
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LMDGXnQh3DSXDmFQG7reDfcLQpKD6Oclzu5JPI5iFle6NSW8+qbmuHwsXe7rXbjxc9YsmDzgXOhjYpZ8iWijdQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0260
+X-MS-Exchange-CrossTenant-UserPrincipalName: rcBrEQOte5K3QgHRpTHUVOh3q/qZleRzwF4jcJgnCVGgTVp6zc9uIfGbXnC+Fx0whp6Sx3CTvvZj1/UaV8OmYg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1329
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,267 +128,135 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/sta.h | 241 +++++++++++++++++++++++++
- 1 file changed, 241 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/sta.h
+ drivers/net/wireless/celeno/cl8k/tx/tx.h | 109 +++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx/tx.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/sta.h b/drivers/net/wireless/=
-celeno/cl8k/sta.h
+diff --git a/drivers/net/wireless/celeno/cl8k/tx/tx.h b/drivers/net/wireles=
+s/celeno/cl8k/tx/tx.h
 new file mode 100644
-index 000000000000..8e1e47316cf8
+index 000000000000..01c8f6b6306f
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/sta.h
-@@ -0,0 +1,241 @@
++++ b/drivers/net/wireless/celeno/cl8k/tx/tx.h
+@@ -0,0 +1,109 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_STA_H
-+#define CL_STA_H
++#ifndef CL_TX_H
++#define CL_TX_H
 +
-+#include "sta_info.h"
-+#include "utils/timer.h"
-+#include "rate_ctrl.h"
-+#include "motion_sense.h"
++#include "hw.h"
++#include "sta.h"
++#include "vif.h"
++#include "debugfs.h"
++#include "ipc_shared.h"
++#include "tx/sw_txhdr.h"
 +
-+#define IEEE80211_STA_TO_CL_STA(sta) ((struct cl_sta *)(sta)->drv_priv)
-+#define STA_INFO_TO_CL_STA(sta_info) ((struct cl_sta *)(sta_info)->sta.drv=
-_priv)
++#define INC_SN(sn) (((sn) + 0x10) & IEEE80211_SCTL_SEQ)
++#define DEC_SN(sn) (((sn) - 0x10) & IEEE80211_SCTL_SEQ)
 +
-+#define STA_IDX_INVALID U8_MAX
++#define CL_TX_LIFETIME_MS 4000
 +
-+struct cl_wrs_info {
-+       u64 epr_acc;
-+       u32 tx_success;
-+       u32 tx_fail;
-+       u32 tx_fail_prev;
-+       u32 ba_not_rcv;
-+       u8 ba_not_rcv_consecutive;
-+       u8 ba_not_rcv_consecutive_max;
-+       bool synced;
-+       u32 sync_attempts;
-+       u8 quick_rate_agg_cntr;
-+       u16 quick_rate_pkt_cntr;
-+       bool quick_rate_check;
++#define CL_SKB_DATA_ALIGN_SZ      4
++#define CL_SKB_DATA_ALIGN_MSK     (CL_SKB_DATA_ALIGN_SZ - 1)
++#define CL_SKB_DATA_ALIGN_PADS(x) \
++       ((CL_SKB_DATA_ALIGN_SZ - ((ptrdiff_t)(x) & CL_SKB_DATA_ALIGN_MSK)) =
+& CL_SKB_DATA_ALIGN_MSK)
++
++#define CL_TX_MAX_FRAME_LEN_SINGLE 4096
++#define CL_TX_MAX_FRAME_LEN_AGG 2000
++
++struct cl_hw_tx_status {
++       u32 mcs_index          : 7; /* [6:0] */
++       u32 is_bcmc            : 1; /* [7] */
++       u32 num_mpdu_retries   : 4; /* [11:8] */
++       u32 rsv                : 4; /* [15:12] */
++       u32 format_mod         : 4; /* [19:16] */
++       u32 bw_requested       : 2; /* [21:20] */
++       u32 bf                 : 1; /* [22] */
++       u32 frm_successful     : 1; /* [23] */
++       u32 bw_transmitted     : 2; /* [25:24] */
++       u32 freespace_inc_skip : 1; /* [26] */
++       u32 keep_skb           : 1; /* [27] */
++       u32 gi                 : 2; /* [29:28] */
++       u32 descriptor_done_sw : 1; /* [30] */
++       u32 descriptor_done_hw : 1; /* [31] */
 +};
 +
-+struct cl_wrs_rssi {
-+       s32 sum[MAX_ANTENNAS];
-+       s32 cnt;
++enum cl_tx_flags {
++       CL_TX_EN_DFS,
++       CL_TX_EN_ACS,
 +};
 +
-+struct cl_amsdu_ctrl {
-+       struct cl_sw_txhdr *sw_txhdr;
-+       u16 rem_len;
-+       u16 max_len;
-+       u16 hdrlen;
-+       u8 packet_cnt;
-+       bool is_sw_amsdu;
++enum cl_tx_single_frame_type {
++       CL_TX_SINGLE_FRAME_TYPE_QOS_DATA,
++       CL_TX_SINGLE_FRAME_TYPE_QOS_NULL,
++       CL_TX_SINGLE_FRAME_TYPE_MANAGEMENT,
++       CL_TX_SINGLE_FRAME_TYPE_OTHER
 +};
 +
-+struct cl_bf_sta_db {
-+       bool traffic_active;
-+       bool sounding_start;
-+       bool sounding_remove_required;
-+       bool indication_timeout;
-+       bool synced;
-+       bool is_on;
-+       bool is_on_fallback;
-+       u8 num_ss;
-+       u8 num_ss_fallback;
-+       u8 beamformee_sts;
-+       u8 nc;
-+       u32 sounding_indications;
-+       struct cl_timer timer;
-+};
++void cl_tx_init(struct cl_hw *cl_hw);
++void cl_tx_check_start_ba_session(struct cl_hw *cl_hw,
++                                 struct sta_info *stainfo,
++                                 struct sk_buff *skb);
++void cl_tx_bcns(struct cl_hw *cl_hw);
++void cl_tx_single_free_skb(struct cl_hw *cl_hw, struct sk_buff *skb);
++void cl_tx_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++                 struct sk_buff *skb, bool is_vns, bool lock);
++void cl_tx_fast_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++                      struct sk_buff *skb, bool lock);
++void cl_tx_agg_prep(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
++                   u16 frame_len, u8 hdr_pads, bool hdr_conv);
++void cl_tx_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++              struct sk_buff *skb, bool hdr_conv, bool lock);
++void cl_tx_fast_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++                   struct sk_buff *skb, bool lock);
++u16 cl_tx_prepare_wlan_hdr(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++                          struct sk_buff *skb, struct ieee80211_hdr *hdr);
++void cl_tx_wlan_to_8023(struct sk_buff *skb);
++int cl_tx_8023_to_wlan(struct cl_hw *cl_hw, struct sk_buff *skb, struct cl=
+_sta *cl_sta, u8 tid);
++void cl_tx_push(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr, struct =
+cl_tx_queue *tx_queue);
++void cl_tx_bcn_mesh_task(unsigned long data);
++void cl_tx_en(struct cl_hw *cl_hw, u8 reason, bool enable);
++void cl_tx_off(struct cl_hw *cl_hw);
++void cl_tx_drop_dkb(struct sk_buff *skb);
++netdev_tx_t ____cl_tx_start(struct cl_hw *cl_hw, struct sk_buff *skb, stru=
+ct net_device *dev);
++netdev_tx_t ___cl_tx_start(struct cl_hw *cl_hw, struct sk_buff *skb, struc=
+t net_device *dev);
++netdev_tx_t __cl_tx_start(struct cl_hw *cl_hw, struct sk_buff *skb, struct=
+ net_device *dev);
++netdev_tx_t _cl_tx_start(struct cl_hw *cl_hw, struct sk_buff *skb, struct =
+net_device *dev);
++netdev_tx_t cl_tx_start(struct sk_buff *skb, struct net_device *dev);
 +
-+#define RSSI_ARR_SIZE 128
-+#define BF_IDX_MAX 2
-+
-+struct cl_tx_cntrs {
-+       u32 success;
-+       u32 fail;
-+};
-+
-+struct cl_tx_stats {
-+       struct cl_tx_cntrs he[CHNL_BW_MAX][WRS_SS_MAX][WRS_MCS_MAX][WRS_GI_=
-MAX][BF_IDX_MAX];
-+       struct cl_tx_cntrs
-+               vht[CHNL_BW_MAX_VHT][WRS_SS_MAX][WRS_MCS_MAX_VHT][WRS_GI_MA=
-X_VHT][BF_IDX_MAX];
-+       struct cl_tx_cntrs ht[CHNL_BW_MAX_HT][WRS_SS_MAX][WRS_MCS_MAX_HT][W=
-RS_GI_MAX_HT];
-+       struct cl_tx_cntrs ofdm[WRS_MCS_MAX_OFDM];
-+       struct cl_tx_cntrs cck[WRS_MCS_MAX_CCK];
-+       u32 agg_cntr;
-+       u32 fail_cntr;
-+};
-+
-+enum cl_ps_period {
-+       PS_PERIOD_50MS,
-+       PS_PERIOD_100MS,
-+       PS_PERIOD_250MS,
-+       PS_PERIOD_500MS,
-+       PS_PERIOD_750MS,
-+       PS_PERIOD_1000MS,
-+       PS_PERIOD_2000MS,
-+       PS_PERIOD_5000MS,
-+       PS_PERIOD_10000MS,
-+       PS_PERIOD_ABOVE,
-+
-+       PS_PERIOD_MAX
-+};
-+
-+struct cl_ps_stats {
-+       bool is_ps;
-+       unsigned long timestamp_sleep;
-+       u32 period[PS_PERIOD_MAX];
-+};
-+
-+enum cl_fec_coding {
-+       CL_FEC_CODING_BCC,
-+       CL_FEC_CODING_LDPC,
-+       CL_FEC_CODING_MAX
-+};
-+
-+struct cl_stats {
-+       struct cl_tx_stats tx;
-+       struct cl_rx_stats rx;
-+       u32 rssi[RSSI_ARR_SIZE][MAX_ANTENNAS];
-+       u32 fec_coding[CL_FEC_CODING_MAX];
-+       struct cl_ps_stats ps;
-+};
-+
-+/* Per RA/TID Data for AMPDU TX */
-+struct cl_baw {
-+       u8 fw_agg_idx;
-+       bool amsdu;
-+       bool action_start;
-+       u16 ssn;
-+       u16 tid_seq;
-+       struct sk_buff_head pending;
-+};
-+
-+struct cl_vns_sta_db {
-+       bool is_very_near;
-+       bool prev_decision;
-+       s32 rssi_sum[MAX_ANTENNAS];
-+       s32 rssi_samples;
-+};
-+
-+struct cl_agc_cd_rssi {
-+       s32 samples;
-+       s32 sum[MAX_ANTENNAS];
-+       s8 prev;
-+};
-+
-+struct cl_tid_ampdu_rx {
-+       spinlock_t reorder_lock;
-+       u64 reorder_buf_filtered;
-+       struct sk_buff_head *reorder_buf;
-+       unsigned long *reorder_time;
-+       struct ieee80211_sta *sta;
-+       struct cl_timer reorder_timer;
-+       struct cl_hw *cl_hw;
-+       u16 head_seq_num;
-+       u16 stored_mpdu_num;
-+       u16 ssn;
-+       u16 buf_size;
-+       u16 timeout;
-+       u8 tid;
-+       u8 auto_seq:1,
-+          removed:1,
-+          started:1;
-+};
-+
-+/*
-+ * Structure used to save information relative to the managed stations.
-+ * Will be used as the 'drv_priv' field of the "struct ieee80211_sta" stru=
-cture.
-+ */
-+struct cl_sta {
-+       struct list_head list;
-+       struct list_head list_hash;
-+       u8 sta_idx;
-+       u8 su_sid;
-+       bool key_disable;
-+       u8 addr[ETH_ALEN];
-+       struct cl_baw baws[IEEE80211_NUM_TIDS];
-+       struct cl_amsdu_ctrl amsdu_anchor[IEEE80211_NUM_TIDS];
-+       struct cl_tx_queue *agg_tx_queues[IEEE80211_NUM_TIDS];
-+       struct cl_vif *cl_vif;
-+       struct sta_info *stainfo;
-+       struct ieee80211_key_conf *key_conf;
-+       struct cl_bf_sta_db bf_db;
-+       struct cl_stats *stats;
-+       s32 alpha_rssi;
-+       bool manual_alpha_rssi;
-+       s8 last_rssi[MAX_ANTENNAS];
-+       u8 ampdu_min_spacing;
-+       struct cl_traffic_sta traffic_db[TRAFFIC_DIRECTION_MAX];
-+       struct cl_vns_sta_db vns_db;
-+       struct cl_agc_cd_rssi agc_cd_rssi;
-+       u32 retry_count;
-+       u32 data_pending[AC_MAX];
-+       struct cl_wrs_info wrs_info;
-+       struct cl_wrs_rssi wrs_rssi;
-+       bool add_complete;
-+       struct cl_wrs_sta wrs_sta;
-+       struct cl_motion_sense motion_sense;
-+       union cl_rate_ctrl_info_he rate_ctrl_he;
-+       struct cl_tid_ampdu_rx *tid_agg_rx[IEEE80211_NUM_TIDS];
-+};
-+
-+typedef void (*sta_callback)(struct cl_hw *, struct cl_sta *);
-+
-+void cl_sta_init(struct cl_hw *cl_hw);
-+
-+/* These functions take the lock inside */
-+u32 cl_sta_num(struct cl_hw *cl_hw);
-+u32 cl_sta_num_bh(struct cl_hw *cl_hw);
-+bool cl_sta_is_assoc(struct cl_hw *cl_hw, u8 sta_idx);
-+
-+/* Must take lock before calling these functions */
-+struct cl_sta *cl_sta_get(struct cl_hw *cl_hw, u8 sta_idx);
-+struct cl_sta *cl_sta_get_by_addr(struct cl_hw *cl_hw, u8 *addr);
-+
-+/* Loop over list of stations and run the callback for each station */
-+void cl_sta_loop(struct cl_hw *cl_hw, sta_callback callback);
-+void cl_sta_loop_bh(struct cl_hw *cl_hw, sta_callback callback);
-+void cl_sta_loop_safe(struct cl_hw *cl_hw, sta_callback callback);
-+
-+void cl_sta_init_stainfo(struct cl_hw *cl_hw, struct sta_info *stainfo);
-+int cl_sta_add(struct cl_hw *cl_hw, struct ieee80211_vif *vif, struct ieee=
-80211_sta *sta);
-+void cl_sta_mgd_add(struct cl_hw *cl_hw, struct cl_vif *cl_vif, struct iee=
-e80211_sta *sta);
-+void cl_sta_remove(struct cl_hw *cl_hw, struct ieee80211_vif *vif, struct =
-ieee80211_sta *sta);
-+void cl_sta_disassociate_all(struct cl_hw *cl_hw);
-+void cl_sta_disassociate_ap_iface(struct cl_hw *cl_hw);
-+void cl_sta_ps_notify(struct cl_hw *cl_hw, struct cl_sta *cl_sta, bool is_=
-ps);
-+
-+static inline void cl_sta_lock_bh(struct cl_hw *cl_hw)
++static inline bool cl_tx_ctrl_is_amsdu(struct ieee80211_tx_info *tx_info)
 +{
-+       read_lock_bh(&cl_hw->cl_sta_db.lock);
++       return !!(tx_info->control.flags & IEEE80211_TX_CTRL_AMSDU);
 +}
 +
-+static inline void cl_sta_unlock_bh(struct cl_hw *cl_hw)
++static inline bool cl_tx_ctrl_is_eapol(struct ieee80211_tx_info *tx_info)
 +{
-+       read_unlock_bh(&cl_hw->cl_sta_db.lock);
++       return !!(tx_info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROT=
+O);
 +}
 +
-+static inline void cl_sta_lock(struct cl_hw *cl_hw)
++static inline bool cl_tx_ctrl_is_inject(struct ieee80211_tx_info *tx_info)
 +{
-+       read_lock(&cl_hw->cl_sta_db.lock);
++       /*
++        * Check that IEEE80211_TX_CTL_INJECTED is set and that
++        * IEEE80211_TX_INTFL_NL80211_FRAME_TX isn't to distinguish between
++        * TX-inject packets that Celeno driver generates and TX-inject pac=
+kets
++        * that mac80211 generates in ieee80211_tx_control_port().
++        */
++       return ((tx_info->flags & IEEE80211_TX_CTL_INJECTED) &&
++               !(tx_info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX));
 +}
 +
-+static inline void cl_sta_unlock(struct cl_hw *cl_hw)
-+{
-+       read_unlock(&cl_hw->cl_sta_db.lock);
-+}
-+
-+#endif /* CL_STA_H */
++#endif /* CL_TX_H */
 --
 2.30.0
 
