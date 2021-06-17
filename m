@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
-	UPPERCASE_50_75,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BE0C49EA3
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D22CC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8088561003
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F40F60FDB
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233766AbhFQQIy (ORCPT
+        id S231389AbhFQQI7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:08:54 -0400
-Received: from mail-am6eur05on2057.outbound.protection.outlook.com ([40.107.22.57]:62080
-        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:08:59 -0400
+Received: from mail-db8eur05on2082.outbound.protection.outlook.com ([40.107.20.82]:7360
+        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231919AbhFQQH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:07:59 -0400
+        id S233607AbhFQQIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:08:01 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aqf5Odcfa2zWVlQCco6lcPi4WYQwBYccZN1I0brwuVd21kaOmb5yOpTIyeoEW7lgenC33NCod1Hp7gipYaiQoWJ2GPsg8Lk2ylNtXP7r/4aWthQ/ylDhNM+jyAgn6wlfo55lUSKqD3TESd8W6Fw14qE3L7hLIUhwYDBaTt8PmOt6jRs9wc5CKDMXwOnIu3UvVeo09MyJUeD9qswrD0OE72HlWoXgwuqK/SQ+i4tenKvK/NJmVsn94mH5R4damYKZsllGDfliI/GfEc6A+t6TR82s5IAc2VF+ne/sOmGihRSrFZY0rn+i6lfKgrG0GMZwDWE3xt71k7UQ1Xe7wXAkoQ==
+ b=lByKSEzocAjV8L0TLbTvJyOpDqkVePrkRqEgXq5AFRDeWdJbfXPkeVrluphadqxyGIOQooNk2GLq/fCTP59cYdo51akbQGv0L/RRhPipiqEuSdzUMSGVJNjToXeKf6RlfqsmNGU0rWNZAEalX/nMKStX2WKr5Tt1bOn9AQ/PFGb86/PItJbIHTTEQs8q4amBrJI4RAqGODyRNJitTi9I9Qup1SO/cu4g1jKVdIEyS9EyOt5xxTB/OWAweO4HDB/xeO9Bb2JAUk6rb1ivIi8SHifpxXFvvVo6vOO81NQygYRcZExz9PIPj9E4rXrYmUistz+R2Y5rbg9gGjXLD7rtmw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E5etvoYGEP+gmqfS9Sw5wGHruOc/4k/sI4PLCjaJoo0=;
- b=LY+tQxVuiT3ybJ4QYM/Yyf4v6K8/F0ADlIuQaqNET82CiOIPc1QXugTidT43iTdlrbrXV820Q9EOCVNZ7vAAp7UAEzmLRm/RMc03TFF0crJ9g3SgI//91M5OicFaQFgMrB3ifk4d7QWuJ8BV+KA0kymYKY48M3mE+pEwcLERhW0X7bhCUqcdkhEqhKr4GwmWHsJEEoXkaoy5kf8W1Xn1RlKPN0LSChY+9beM6aHsICJFKA/pc52iTcnSH9Mo7Bpj1Srr3emm/4Hq6i+W+J4FxR5H9jwi2ai28FzXXAt1ZezcMnEaSYCgxZQ77kZ2GO4G04qZ8ieilnR8mh6zK632fg==
+ bh=IpCijZ28gADPwHG3G7BXjmNM+GD3YYnARVLWvgW6GgU=;
+ b=Vfns1hZJ8Ht3IwtgCHJWKDkOwcnr04s4Z1o+tGozPyN2WNIc6q47OUhDHlFlu6ozpeNgNK7AVWgP361bS/KEVI3ojwzsSrpkH3LooBpA7MwWHdM3eYQ2Ofof+BEUFq6riPAAxQkkicTtVx9swbEtNwuy5sLGi40KMi17Nx5nRGabPWM4iOPZfrSZexNktN+kFdMidbtE69hIzYRI1z3ICt50XSq/TrUbB3LgaopfvfJS82l5OOG7tl7QemK49Lt+kx08zV4Eds9Zs4FjRjLaf+1H9+CYRIpHW0yj3KzreCM0HOHs7/CiLozOtA2Y42IUXF/xaamTAV07ZAztsYVTdA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E5etvoYGEP+gmqfS9Sw5wGHruOc/4k/sI4PLCjaJoo0=;
- b=M2AtGAZNtkLfHkdx+hQlTAmkjBfywxfa0K/JC6dm4iSKF54kH+bCT4qgikRQRvnI25znrFP1O60eUKdPMS8IlGcW9SXDzgkNNbrdDqPtjHBf5Ev0++WKdU3a0VMY1MMx/5ojI6oHJsZw3j5JtoaAGsQx4+vwXohj1iEjz6j/uWM=
+ bh=IpCijZ28gADPwHG3G7BXjmNM+GD3YYnARVLWvgW6GgU=;
+ b=RsS/75S1VkmgGDdOPfJvOf8iz/VGKZ+tLwVkBNSS67xdUa1MiT1sZAoxtv5aqJuNnQZi38CwfgC739bG2z+lLymNDHuewC4mT54Cjqtd2sxws7N9o91yr5YxTIH7DPxQD6rKBYpMb+3dVeN8K8z+0RUlsnPWRke6Hyuo0Jz1CwA=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0402.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:46::24) with
+ by AM9P192MB0871.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1fb::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:05:10 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.21; Thu, 17 Jun
+ 2021 16:04:29 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:10 +0000
+ 16:04:29 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 114/256] cl8k: add mib.h
-Date:   Thu, 17 Jun 2021 16:00:01 +0000
-Message-Id: <20210617160223.160998-115-viktor.barna@celeno.com>
+Subject: [RFC v1 089/256] cl8k: add fw/fw_file.h
+Date:   Thu, 17 Jun 2021 15:59:36 +0000
+Message-Id: <20210617160223.160998-90-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:39 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:11 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c214607a-267b-49ae-ecdc-08d931a99cd3
-X-MS-TrafficTypeDiagnostic: AM0P192MB0402:
+X-MS-Office365-Filtering-Correlation-Id: f71efbff-f7b4-4f7e-ec31-08d931a98c10
+X-MS-TrafficTypeDiagnostic: AM9P192MB0871:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB0402193B29F2D3686B8DAB89F60E9@AM0P192MB0402.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:330;
+X-Microsoft-Antispam-PRVS: <AM9P192MB087160B2DF638DC59C5EEFB6F60E9@AM9P192MB0871.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: mnt+REfmM4aWX6yySsPm/rAjEqL0H+RI47dZh9cNP/JYdDBpp75swwmcY9uAqPvmgqcz0ZcqIwVQE7BVzUaYRDPSS4Q/RILbUhpJXoo3fj1OdBqyJmPBf5SAPyFFFxuUdzoG/aLoasNyg2IWGePwxqvcFh4i+7+rxFP3gGYvneAmMdBbhV5krvxfxz3ScToDw60SMDujWAGWMR0VsiylBPt6l1vjemEU95DlBAEtF3D+m2wzxw55rFVoTqLqMqpa1QHASE5eCaSY8UA+Uhc5pn+2llk6V2eliGY3EuWZ0g+CBiN0aZLTI5dP+a8ChZOBatcuLKmfvAJiGGKgwZVUd5hkmBxOl4XRpqtkbNnIYsdze5f1LKGNIIVnZ4y7ZvA1t9Ai5dt+PI3Soym7bHIArBhbcxu9Rnp7LVQ2e1CbjvF43prr3srsuYhtQ7+x8MVGkaMjckOmjbRPWrINKX1IWQ6gg6GaltEfnAQa0OIkl/mNpLZGaL+1+ciesSo4jlTFwQWGsENhsMezAg/95AuhtnOvkxM1/kanIyj3YUfMakwJXOsWHZVgULzMu0PQfeR8MtABpMjFLlOBX8/uaPdBPvjR+yuGphHos3F4X0b6g0wCYZmlFT/EuHbw8GcIA6cSEppFUG5+M/j5gyzkUfun/j3eet1vWaFLDafNxXsF/QkhDn7elDSrEQN0J3D0vslQP7fVKkgYR4OSgkyxOaBSnQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(376002)(396003)(366004)(346002)(6916009)(6512007)(9686003)(6666004)(52116002)(2616005)(186003)(16526019)(38100700002)(38350700002)(1076003)(6506007)(5660300002)(107886003)(55236004)(86362001)(6486002)(8936002)(956004)(26005)(8676002)(30864003)(508600001)(2906002)(36756003)(54906003)(316002)(66946007)(66556008)(4326008)(66476007)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Nko/JA4DtW4ZslUHTETSJlF652RTgNL2FcnLPtowVdwZ3KPLH/8zOcGyCR6Yo0DO3l2F/werp6LMsvNslLJV0tPqguga7HIKwBwQCc+kr3h8wtTnzwn4N/T8NpbXnDEFUdhpZvtCUdQE7tlchM+ATGpWbSzPaf0cUoo3+gD2O6h83lEmKkAg7Tg3R/W4GJgRMWwIq9AnzTS2ils8Xk5iU9tB8Ia58KILp64+Z56O0E/2uOgA9EqjQmgh7OfKm8N8TAnpi8vc6HHQQqK5FqZHIax/FeoYPCGmL3E8wv5R0KxLxcgDkG+hsxHlnCqL/W4p3hSfNpRWlBHbIHsN+qNu+ix2jZubKIKR8P+PqH1XK2z8gmrSE8U6guMgqEmvDtm+69bMKV2Jd4b8atzxNeoaa4yrtKWa6n0sWkpxQgPV4LW5EbblfkgsXCV9K8nUS37bV78F4DnpHBr2HmK9ty6WJJoJmvYvgslm2/LoVyQU41z1wXkqf3W5PyhV+MTWKdigKedI0DeGL4cCRSCUG6m/mkiQG1fMxF/ZoAoHV4TZnZwUlTwZKv9av6U0qU7CwccW3AhSXvdWJ1ZpVUxW2qvaqfONNiDtCr9MUU/c9Tk4fZMNXyRgBgj30KHlGXft3AFPW95z734PRrc2PsmShHBUziSYsZva70SIXFCy56jw+A7zdXxF3hNDhsPSJu0vv2czESyBUGcV0fyI1WUwnvJ6nQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(366004)(376002)(346002)(396003)(39840400004)(16526019)(66946007)(478600001)(26005)(66476007)(6486002)(186003)(66556008)(9686003)(316002)(86362001)(6506007)(6666004)(6512007)(55236004)(38350700002)(1076003)(38100700002)(4326008)(8676002)(83380400001)(5660300002)(52116002)(2616005)(2906002)(6916009)(956004)(8936002)(107886003)(54906003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ncmPVHgr8I+oqbEbtdvPdnGFQ/Q0wwa7hO0rNuz99CVwpfAyMxgGDb0bdVPH?=
- =?us-ascii?Q?t9hbZ13kLkTCx2Z3mLmFs8fiuXZoYEHpWEudjquy+/nmyaJYMmkiM0Y9b+3M?=
- =?us-ascii?Q?fSxL5sbertFFf3TmXmARyAby78WVxkG3e0HmBJeoI1ohBDMLN+WmfvOoKHNw?=
- =?us-ascii?Q?xpSzlKz98VeN8m1G+WD5lQQqeNx5aHDBDHhQ5oRpupMoyT70Gdtd1E2uxxIg?=
- =?us-ascii?Q?q73web/G3rpO0vgMzlpGnTa4PrNEquYoVBax11GGfQNG2wTHdfwhS7s9ADWz?=
- =?us-ascii?Q?XcE48ivl9e7f7QHy3CCh7O3inCD57G2KZ5oq+CZl75HH3IQ0np7hpu9qol9D?=
- =?us-ascii?Q?cELsfvaws0jG0OmE6DzPeqXchy1rZQd8HE6loxPLjrbqxyno/tfXE1TLZeEL?=
- =?us-ascii?Q?h+88XCe9srMyzNw+wIpIkbMwxw/mCX2uVfv6YYjEEk/FIrJZxnVc8voZ7bwg?=
- =?us-ascii?Q?uuQ+zobICtRTTZpItCJ+tPIKglQjuUKr8MI4K9JwXyvhn+YRKeOklqdMDOYq?=
- =?us-ascii?Q?6hl9DYybXvi6LyKtzm7vbF9dtFoLNxHYhu1TlKAq80QZb4oLd5MjgPHsZB0t?=
- =?us-ascii?Q?HJ9X5Ds5f5DdRXp1HMHytTsVvJzoqfeGwJp1K/7marfJaFa9k6PPuPPwOTKG?=
- =?us-ascii?Q?LY82nmSmGoanH2DnPrrQMHz0SRo/iJ9UUQFYaf961rnDnOXlSkNFJXuVyoX2?=
- =?us-ascii?Q?qjKKkYEEirXXZT9OKoLLOsP4lqFF6Gpk5xuW1dFPj0K3dbN4krUdHsLq6ul4?=
- =?us-ascii?Q?59oQzx0us2DEHQ8BYgq8jCbj6OyUgzXj2EWxFXIVJDz1OYESLBClzHErfBoV?=
- =?us-ascii?Q?P13fbtSI3UJQkSP6DAYW40xNbQDXwg2K53nEkhCaOE5w7x0iEGI6ifHUWR07?=
- =?us-ascii?Q?FDAsZIG2WjGHTEKn6TC/4OK1loMxu5Zm+tMParVrogAA50upfqvUXom+Pb9J?=
- =?us-ascii?Q?ovBVUAnHGYhRaU4k/zuuCsGVyd4LaPGLyhx8QMb4MZ6Eei6sZT0ijGLlLYEl?=
- =?us-ascii?Q?zZjWI3J3Q5K1EBUO87ffauQ99g84eEyU9UhX4FczXs8+ei0DtYfEGkqrY2ne?=
- =?us-ascii?Q?8XP38JyZTKrzotiuyX3z1cg8QK3hm2GAQbAlqenn4YxzH2opZ22JR3cEVC4A?=
- =?us-ascii?Q?OQAJ4FEs17G/YUUzLxLSvarhA9IoJGqYriQmQawAclrAI5N5t+Moz8ILVRkM?=
- =?us-ascii?Q?3clK8N7B8tMDmt3oq0OEqUIBbZLblDZrOQWOJRtdnCJ2qoO4AI8coV73l7mp?=
- =?us-ascii?Q?c+/oVLAjkfGN1tufO9pj6wYEHgExLTfiXhoIB39hDeeYvAw+gLVfNX1iGr4N?=
- =?us-ascii?Q?/6d0VvXwbh3PLVrQnvqyhYuh?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?DsNDLcu0ISgvMI2aC36hmW8ZqmGdCKahrWBYS6KtM7IKqOCgRGVlcUKrczlH?=
+ =?us-ascii?Q?lhG2SuulH4C64PVAVM4THxWFehZp+CcIZKGaS24HCDXIXK9hUl7xin2CzWU6?=
+ =?us-ascii?Q?d9ll9N9SwlYYkfK97fINCrlkLZNpO+A6At/NJej2GKCpKssUHPag74geyxd8?=
+ =?us-ascii?Q?FAmUX7EEY1s8EP1CjP7jgsf2QbeGwcFyolgrGrzGPck84vuMo/gaZ2j63vcr?=
+ =?us-ascii?Q?1CmqsSMRDbnGRgqNhOsYyOvfsgIH4igk6zDCYygxzmeyseMXqsqYp0lqiXDi?=
+ =?us-ascii?Q?VYOwRGeRI8+PZj7nh/hW8jjUZh/dQGELAIOSKreiRv/+awqOyua7+zPG9kOq?=
+ =?us-ascii?Q?P5+W47ucZiEHHX90x5KKCYPqLki785DIN9I73jT1+CTdjrttkUxbA3XdKiHm?=
+ =?us-ascii?Q?0E2pPNSQyqkjYmBUFnhswi2RPwtgYwfn6YL3zC8c/v6p3Kjc9Q8jrm2jH5Hn?=
+ =?us-ascii?Q?4hR6t03bYDlnTIkZR4uCnUvZrQqb5GAAWGvdvRDYngzDpzrZGMXFUx5PkDqo?=
+ =?us-ascii?Q?f/tcn2sebSHzlFXHhz2tgjsYgPbd28Cw7aW3rO75uC5i0WRGAIsVLrJ9laBG?=
+ =?us-ascii?Q?/s8Duh44cbcFtuKa57bAc/CoqosNnBuPjpd+9mCWX8xmkaYsylm8nCIpOXcZ?=
+ =?us-ascii?Q?/RyQI6S8wERVn9YvJzbHzjqb6bG8KIeuhBS3/foCZdTE3pq6g5gf7yBORcuz?=
+ =?us-ascii?Q?TzGluUzd167FvzNvzzJuY8txY9Q4QkTgaxKKmQXgL36Yezq+lv3bax/1F69U?=
+ =?us-ascii?Q?QyVCPCyj9JUBt6p3/QKLcih3VnnEQdd+KePmi9arjkUmnwAFQkaNCS8+3Uo9?=
+ =?us-ascii?Q?zLVAF7kM7m06ewehEtyhgQI1TtNvbNpaL2aOz1iH//WLKgPE2T2DahA1Glwo?=
+ =?us-ascii?Q?vLMI/90ZK9fmy25IbTepyVmmaYSnqtyZuiz5Plg84U3v5ScKYmRIIxd1Bczd?=
+ =?us-ascii?Q?HDgIRKAHdqSN1rbUcNtXz2dwgRPrFdeigJZfd+Qx5kbOARJoGZeZfkqPu4xd?=
+ =?us-ascii?Q?+/EtH75f1/Dw/SiXOpQDBcvff0nwUYyaJCmdIQeR5cY/CxkFW1hlVdsp9S1X?=
+ =?us-ascii?Q?+g18M1idh5uJhV9RdMhA4f2ifBZknXlb7ka3qdg8RcgmuG44I+ExSnV0qh2A?=
+ =?us-ascii?Q?YQWqvLo/LDC9exnfIlyi6nxkijhxtrvr/wQB8RLlN5zXSjZPt4thIAVKchaz?=
+ =?us-ascii?Q?eu1Z3Wu47n/ATKxnVDg9NJ23oDGh0VzE1oKy5mkhg0ZWK0vgLyQj4J/9aD8l?=
+ =?us-ascii?Q?AGON3wbwjto8xDfQ8CdY92Z6hKUdVtD3hU1RIPNKM83SzTSeLeXmgKvgE3SK?=
+ =?us-ascii?Q?1V4ZqTS7MZ/ZVbq1494pAQl9?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c214607a-267b-49ae-ecdc-08d931a99cd3
+X-MS-Exchange-CrossTenant-Network-Message-Id: f71efbff-f7b4-4f7e-ec31-08d931a98c10
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:40.2055
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:12.0143
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uP/raYIMVn6Acnk8jEVC2YFu0GqRKgmQ5iNKT15tJh5AcvJJZBAVR6QtCz7eROdLZTK8PK2I1DbbDJg7fND79g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0402
+X-MS-Exchange-CrossTenant-UserPrincipalName: rytB1jvM7CIAoATvi3HtKteqfGk4Iu4/34+OMwn7iBYQunD1YODXJ+uQ0pL/S8LOoic7yL5VX5lSXeGppqtHwA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0871
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,303 +128,30 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/mib.h | 286 +++++++++++++++++++++++++
- 1 file changed, 286 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/mib.h
+ drivers/net/wireless/celeno/cl8k/fw/fw_file.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/fw/fw_file.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/mib.h b/drivers/net/wireless/=
-celeno/cl8k/mib.h
+diff --git a/drivers/net/wireless/celeno/cl8k/fw/fw_file.h b/drivers/net/wi=
+reless/celeno/cl8k/fw/fw_file.h
 new file mode 100644
-index 000000000000..7089ecf3c374
+index 000000000000..a9a861a615a1
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/mib.h
-@@ -0,0 +1,286 @@
++++ b/drivers/net/wireless/celeno/cl8k/fw/fw_file.h
+@@ -0,0 +1,13 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_MIB_H
-+#define CL_MIB_H
++#ifndef CL_FW_FILE_H
++#define CL_FW_FILE_H
 +
 +#include "hw.h"
 +
-+/**
-+ * MIB (=3DManagaement Information Database, 802.11)
-+ */
++int cl_fw_file_load(struct cl_hw *cl_hw);
++void cl_fw_file_cleanup(struct cl_hw *cl_hw);
++void cl_fw_file_release(struct cl_hw *cl_hw);
 +
-+/*
-+ * MIB counters RW
-+ */
-+#define MIB_DOT11_WEP_EXCLUDED_COUNT 0x800
-+#define MIB_DOT11_FCS_ERROR_COUNT 0x804
-+#define MIB_DOT11_RX_PHY_ERROR_COUNT 0x808
-+#define MIB_DOT11_RX_FIFO_OVERFLOW_COUNT 0x80C
-+#define MIB_DOT11_TX_UNDERRUN_COUNT 0x810
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID0 0x814
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID1 0x818
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID2 0x81C
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID3 0x820
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID4 0x824
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID5 0x828
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID6 0x82C
-+#define MIB_RW_QOS_U_TRANSMITTED_MPDU_COUNT_TID7 0x830
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID0 0x834
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID1 0x838
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID2 0x83C
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID3 0x840
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID4 0x844
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID5 0x848
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID6 0x84C
-+#define MIB_RW_QOS_G_TRANSMITTED_MPDU_COUNT_TID7 0x850
-+#define MIB_DOT11_QOS_FAILED_COUNT0 0x854
-+#define MIB_DOT11_QOS_FAILED_COUNT1 0x858
-+#define MIB_DOT11_QOS_FAILED_COUNT2 0x85C
-+#define MIB_DOT11_QOS_FAILED_COUNT3 0x860
-+#define MIB_DOT11_QOS_FAILED_COUNT4 0x864
-+#define MIB_DOT11_QOS_FAILED_COUNT5 0x868
-+#define MIB_DOT11_QOS_FAILED_COUNT6 0x86C
-+#define MIB_DOT11_QOS_FAILED_COUNT7 0x870
-+#define MIB_DOT11_QOS_RETRY_COUNT0 0x874
-+#define MIB_DOT11_QOS_RETRY_COUNT1 0x878
-+#define MIB_DOT11_QOS_RETRY_COUNT2 0x87C
-+#define MIB_DOT11_QOS_RETRY_COUNT3 0x880
-+#define MIB_DOT11_QOS_RETRY_COUNT4 0x884
-+#define MIB_DOT11_QOS_RETRY_COUNT5 0x888
-+#define MIB_DOT11_QOS_RETRY_COUNT6 0x88C
-+#define MIB_DOT11_QOS_RETRY_COUNT7 0x890
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT0 0x894
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT1 0x898
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT2 0x89C
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT3 0x8A0
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT4 0x8A4
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT5 0x8A8
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT6 0x8AC
-+#define MIB_DOT11_QOS_RTS_SUCCESS_COUNT7 0x8B0
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT0 0x8B4
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT1 0x8B8
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT2 0x8BC
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT3 0x8C0
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT4 0x8C4
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT5 0x8C8
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT6 0x8CC
-+#define MIB_DOT11_QOS_RTS_FAILURE_COUNT7 0x8D0
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT0 0x8D4
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT1 0x8D8
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT2 0x8DC
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT3 0x8E0
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT4 0x8E4
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT5 0x8E8
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT6 0x8EC
-+#define MIB_RW_QOS_ACK_FAILURE_COUNT7 0x8F0
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT0 0x8F4
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT1 0x8F8
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT2 0x8FC
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT3 0x900
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT4 0x904
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT5 0x908
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT6 0x90C
-+#define MIB_RW_QOS_U_RECEIVED_MPDU_COUNT7 0x910
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT0 0x914
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT1 0x918
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT2 0x91C
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT3 0x920
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT4 0x924
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT5 0x928
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT6 0x92C
-+#define MIB_RW_QOS_G_RECEIVED_MPDU_COUNT7 0x930
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU0 0x934
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU1 0x938
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU2 0x93C
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU3 0x940
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU4 0x944
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU5 0x948
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU6 0x94C
-+#define MIB_RW_QOS_U_RECEIVED_OTHER_MPDU7 0x950
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT0 0x954
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT1 0x958
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT2 0x95C
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT3 0x960
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT4 0x964
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT5 0x968
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT6 0x96C
-+#define MIB_DOT11_QOS_RETRIES_RECEIVED_COUNT7 0x970
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT0 0x974
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT1 0x978
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT2 0x97C
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT3 0x980
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT4 0x984
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT5 0x988
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT6 0x98C
-+#define MIB_RW_U_TRANSMITTED_AMSDU_COUNT7 0x990
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT0 0x994
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT1 0x998
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT2 0x99C
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT3 0x9A0
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT4 0x9A4
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT5 0x9A8
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT6 0x9AC
-+#define MIB_RW_G_TRANSMITTED_AMSDU_COUNT7 0x9B0
-+#define MIB_DOT11_FAILED_AMSDU_COUNT0 0x9B4
-+#define MIB_DOT11_FAILED_AMSDU_COUNT1 0x9B8
-+#define MIB_DOT11_FAILED_AMSDU_COUNT2 0x9BC
-+#define MIB_DOT11_FAILED_AMSDU_COUNT3 0x9C0
-+#define MIB_DOT11_FAILED_AMSDU_COUNT4 0x9C4
-+#define MIB_DOT11_FAILED_AMSDU_COUNT5 0x9C8
-+#define MIB_DOT11_FAILED_AMSDU_COUNT6 0x9CC
-+#define MIB_DOT11_FAILED_AMSDU_COUNT7 0x9D0
-+#define MIB_DOT11_RETRY_AMSDU_COUNT0 0x9D4
-+#define MIB_DOT11_RETRY_AMSDU_COUNT1 0x9D8
-+#define MIB_DOT11_RETRY_AMSDU_COUNT2 0x9DC
-+#define MIB_DOT11_RETRY_AMSDU_COUNT3 0x9E0
-+#define MIB_DOT11_RETRY_AMSDU_COUNT4 0x9E4
-+#define MIB_DOT11_RETRY_AMSDU_COUNT5 0x9E8
-+#define MIB_DOT11_RETRY_AMSDU_COUNT6 0x9EC
-+#define MIB_DOT11_RETRY_AMSDU_COUNT7 0x9F0
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU0 0x9F4
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU1 0x9F8
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU2 0x9FC
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU3 0xA00
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU4 0xA04
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU5 0xA08
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU6 0xA0C
-+#define MIB_DOT11_TRANSMITTED_OCTETS_IN_AMSDU7 0xA10
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT0 0xA14
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT1 0xA18
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT2 0xA1C
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT3 0xA20
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT4 0xA24
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT5 0xA28
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT6 0xA2C
-+#define MIB_DOT11_AMSDU_ACK_FAILURE_COUNT7 0xA30
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT0 0xA34
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT1 0xA38
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT2 0xA3C
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT3 0xA40
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT4 0xA44
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT5 0xA48
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT6 0xA4C
-+#define MIB_RW_U_RECEIVED_AMSDU_COUNT7 0xA50
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT0 0xA54
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT1 0xA58
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT2 0xA5C
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT3 0xA60
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT4 0xA64
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT5 0xA68
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT6 0xA6C
-+#define MIB_RW_G_RECEIVED_AMSDU_COUNT7 0xA70
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT0 0xA74
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT1 0xA78
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT2 0xA7C
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT3 0xA80
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT4 0xA84
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT5 0xA88
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT6 0xA8C
-+#define MIB_RW_U_RECEIVED_OTHER_COUNT7 0xA90
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT0 0xA94
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT1 0xA98
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT2 0xA9C
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT3 0xAA0
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT4 0xAA4
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT5 0xAA8
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT6 0xAAC
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMSDU_COUNT7 0xAB0
-+
-+/* RESERVED 173 - 176 */
-+
-+#define MIB_DOT11_BEAMFORMING_FRAME_COUNT 0xAC0
-+#define BEAMFORMING_RECEIVED_FRAME_COUNT 0xAC4
-+#define MIB_RW_SU_BFR_TRANSMITTED_COUNT 0xAC8
-+#define MIB_RW_MU_BFR_TRANSMITTED_COUNT 0xACC
-+#define MIB_RW_BFR_RECEIVED_COUNT 0xAD0
-+#define MIB_RW_MU_RECEIVED_FRAME_COUNT 0xAD4
-+
-+/* RESERVED 182 - 203 */
-+
-+#define MIB_DOT11_TRANSMITTED_AMPDU_COUNT 0xB30
-+#define MIB_DOT11_TRANSMITTED_MPDUIN_AMPDU_COUNT 0xB34
-+#define MIB_DOT11_TRANSMITTED_OCTESTS_IN_AMPDU_COUNT 0xB38
-+#define MIB_RW_U_AMPDU_RECEIVED_COUNT 0xB3C
-+#define MIB_RW_G_AMPDU_RECEIVED_COUNT 0xB40
-+#define MIB_RW_OTHER_AMPDU_RECEIVED_COUNT 0xB44
-+#define MIB_DOT11_MPDU_IN_RECEIVED_AMPDU_COUNT 0xB48
-+#define MIB_DOT11_RECEIVED_OCTETS_IN_AMPDU_COUNT 0xB4C
-+#define MIB_DOT11_AMPDU_DELIMITER_CRC_ERROR_COUNT 0xB50
-+#define MIB_DOT11_IMPLICIT_BAR_FAILURE_COUNT 0xB54
-+#define MIB_DOT11_EXPLICIT_BAR_FAILURE_COUNT 0xB58
-+
-+/* RESERVED  215-219 */
-+
-+#define MIB_DOT11_20MHZ_FRAME_TRANSMITTED_COUNT 0xB70
-+#define MIB_DOT11_40MHZ_FRAME_TRANSMITTED_COUNT 0xB74
-+#define MIB_DOT11_80MHZ_FRAME_TRANSMITTED_COUNT 0xB78
-+#define MIB_DOT11_160MHZ_FRAME_TRANSMITTED_COUNT 0xB7C
-+#define MIB_DOT11_20MHZ_FRAME_RECEIVED_COUNT 0xB80
-+#define MIB_DOT11_40MHZ_FRAME_RECEIVED_COUNT 0xB84
-+#define MIB_DOT11_80MHZ_FRAME_RECEIVED_COUNT 0xB88
-+#define MIB_DOT11_160MHZ_FRAME_RECEIVED_COUNT 0xB8C
-+#define MIB_RW_20MHZ_FAILED_TXOP_COUNT 0xB90
-+#define MIB_RW_20MHZ_SUCCESSFUL_TXOP_COUNT 0xB94
-+#define MIB_RW_40MHZ_FAILED_TXOP_COUNT 0xB98
-+#define MIB_RW_40MHZ_SUCCESSFUL_TXOP_COUNT 0xB9C
-+#define MIB_RW_80MHZ_FAILED_TXOP_COUNT 0xBA0
-+#define MIB_RW_80MHZ_SUCCESSFUL_TXOP_COUNT 0xBA4
-+#define MIB_RW_160MHZ_FAILED_TXOP_COUNT 0xBA8
-+#define MIB_RW_160MHZ_SUCCESSFUL_TXOP_COUNT 0xBAC
-+#define MIB_RW_DYN_BW_DROP_COUNT 0xBB0
-+#define MIB_RW_STA_BW_FAILED_COUNT 0xBB4
-+
-+/* RESERVED 238-239 */
-+
-+#define MIB_DOT11_DUAL_CTS_SUCCESS_COUNT 0xBC0
-+#define MIB_DOT11_STBC_CTS_SUCCESS_COUNT 0xBC4
-+#define MIB_DOT11_STBC_CTS_FAILURE_COUNT 0xBC8
-+#define MIB_DOT11_NON_STBC_CTS_SUCCESS_COUNT 0xBCC
-+#define MIB_DOT11_NON_STBC_CTS_FAILURE_COUNT 0xBD0
-+
-+/*
-+ * MIB counters Celeno
-+ */
-+#define MIB_TX_UND_DISCARD_FCS_COUNT 0xBD4
-+#define MIB_AMPDU_INCORRECT_RCVED_COUNT 0xBD8
-+#define MIB_CL_RX_CLASS0_MATCH_COUNT 0xBDC
-+#define MIB_CL_RX_CLASS1_MATCH_COUNT 0xBE0
-+#define MIB_CL_RX_CLASS2_MATCH_COUNT 0xBE4
-+#define MIB_CL_RX_CLASS3_MATCH_COUNT 0xBE8
-+#define MIB_CL_RX_CLASS4_MATCH_COUNT 0xBEC
-+#define MIB_CL_RX_CLASS5_MATCH_COUNT 0xBF0
-+#define MIB_RW_RX_MPIF_OVERFLOW_COUNT 0xBF4
-+
-+#define MIB_RESP_SET_BY_FW 0xAD8
-+#define MIB_RESP_FORCE_BY_FW 0xADC
-+#define MIB_RESP_SET_BY_HW 0xAE0
-+#define MIB_RESP_FORCED_BY_HW 0xAE4
-+#define MIB_RX_UNEXPECTED_FRAME_TYPE_IN_AMPDU 0xAE8
-+#define MIB_RX_MILTI_TID 0xAEC
-+#define MIB_KSR_MISS_QOS_DATA_IN_AMPDU 0xAF0
-+#define MIB_KSR_MISS_MULTI_TID 0xAF4
-+#define MIB_KSR_MISS_QOS_DATA_IN_AMPDUHE_TB 0xAF8
-+#define MIB_RX_UNASSOCIATED_MGMT_IN_HE_TB 0xAFC
-+#define MIB_HTP_FAILED_MEDIUM_CHECK_COUNT 0xB00
-+#define MIB_RX_ERROR_VECTOR0 0xB04
-+#define MIB_RX_ERROR_VECTOR1 0xB08
-+#define MIB_RX_ERROR_VECTOR2 0xB0C
-+#define MIB_RX_ERROR_VECTOR3 0xB10
-+#define MIB_RX_ERROR_VECTOR4 0xB14
-+#define MIB_RX_ERROR_VECTOR5 0xB18
-+#define MIB_RX_ERROR_VECTOR6 0xB1C
-+#define MIB_RX_ERROR_VECTOR7 0xB20
-+#define MIB_RX_ERROR_VECTOR8 0xB24
-+#define MIB_RX_ERROR_VECTOR9 0xB28
-+#define MIB_RX_ERROR_VECTOR10 0xB2C
-+#define MIB_RX_ERROR_VECTOR11 0xB5C
-+#define MIB_RX_ERROR_VECTOR12 0xB60
-+#define MIB_RX_ERROR_VECTOR13 0xB64
-+#define MIB_RX_ERROR_VECTOR14 0xB68
-+#define MIB_RX_ERROR_VECTOR15 0xB6C
-+
-+void cl_mib_cntrs_dump(struct cl_hw *cl_hw);
-+u32 cl_mib_cntr_read(struct cl_hw *cl_hw, u32 addr);
-+
-+#endif /* CL_MIB_H */
++#endif /* CL_FW_FILE_H */
 --
 2.30.0
 
