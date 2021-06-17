@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30175C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC10C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16F5561249
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 716356120A
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233605AbhFQQF2 (ORCPT
+        id S233604AbhFQQF3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:05:28 -0400
-Received: from mail-eopbgr20046.outbound.protection.outlook.com ([40.107.2.46]:17541
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:05:29 -0400
+Received: from mail-vi1eur05on2073.outbound.protection.outlook.com ([40.107.21.73]:38880
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233545AbhFQQFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:05:16 -0400
+        id S233543AbhFQQFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:05:17 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=icA2HvkJG2LMZDx9/g8zLni8PHLyy3JmjQSWec2awyFryygicXjIn52XRwRE8uUtONNsB2Mt4Pn7SPTIk/UDsX1oSe9tKXxQtS48zIKMezCvEw8rtgJDeoIq0k9CNWQ4xx9jwM5AkhwLuBauHYQrtCNfGv4qfhpiWjiQwwYv6MKrXBcp3EQmWxl2NLF3TqGGdrMZdTifsexbbsbZ4V0bL5gWZNnJmMEaZy0qk+KdMcYKMmjCNb5bySj90Yklh8Ua+ueY7WRhrw3NyfPAtkzUbzAQoN2FaCAGRKUyzTwfaZonF3kWf9fu5Nak2Niu4R8c+VDWCCd9dDzJCB0gIFemZQ==
+ b=Noo9wRAQi+uKNt+YByopryEpJHhSvK3EpQBdH7gAqFhliQ2ASInnUtgwFBr+OFLBiPRV6r6ApdoeILrhCt9ZZ0El15vOr6q1oIMEeq9sVoECpn11n8jSHDh/qsQSSV5RhyhG6h9RhbjQU67FYBcLUPHyeRV9MGA/t/+iUvb7l975fvhdhKyO4luJoPHy5+LldwvujNso7ZE+LDC5yDvksZ4EJOFuvjZ6bAfDezX9YRAp4lKrEJWD+NZKpKJv+gxNNpqTIxc4NQu6X/8z9Olb4yHsK6+LkjNdqmGArOCSlMIedCo1YbJxkY7xqxn8A5S/SxVdCA+KrkKqFTdmpyWgOA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hpgGfur+Y29XqMxHXzqyJkY/N9ZRGcI/ttuaiPsRbE4=;
- b=VgHfOYfBbjVVeYesAtzjQbVW7Vl9hYU4ceYRCV7GOTWeDGZHMhGJ6xHI74MZGA/bdZv60gaLtJmeliKUZF/DOzUQgfuNPe4HWj4TkbmOrwudc4kGSsDzwfJRpJ6lSAt2dd5pshBF2K9evKWkLo+5wIdS7DzV3uRaimr6LmQTgODrNRzEIqmQBNfPsiF/8mE7oLtGB/WO6yxLo+kuV2KmYO6cMQdZ5CP+/+D/zUbV5R5jxPQO2Xng8r8AL+w06Xhitxg9dqssyDLV5aISGB2ArHeOTILwzX7NF2S0+EfuYZsJgnfFvV5FPT32XBHBm29ywWFu7Yarr+1kq5SLSVZCCw==
+ bh=iD/41sEriRtup+4fF6oWf/011z9oOz3y+id2pp+iDXU=;
+ b=BvAurTV5v5nlLbnkAoa+F083pb7pUpATaucMCirPwcx1LRudO/t+FGEzm+J4tKFrAur799YueG5tTJ5CKD+rrAVAdPC3jBEqA8mqcHA3XOcTY9jMk//q97nYDu7pCPONt9ZDD8Li2UzEOlJViIboP1oZfsl53sdQOPSFPwYU9y8CGyyywYAx+lCKXp7Lf9Q/4FwGHHiyj12r93k4KRdRBXrhCIyJFQIFcZQLHEH6eKOEemm+elR16s0w9m9ruEvVZL4K51rCYEZrZGQRijntOYgKmESmL35csbtzW47rrS60rar+VVMvJVtVwMlFKsdSPyw7zctLElkctrhps5ijOg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hpgGfur+Y29XqMxHXzqyJkY/N9ZRGcI/ttuaiPsRbE4=;
- b=JomavYZbkpOgIXy1wvjGz8sPpUN12EfZJKp0iDW2TyQ6SyWPrq0Kao0fmH9U73IVfEoSQs1T/Oc1onLlgtSp6qP7ZAMlfrzSLT9zHVTr+wq3DQr28j74ZFZQuvsZaunOXqh7tD4eqsZ4LV+Ei453tLR+bgPYQ7LsgZyZRiTTq6I=
+ bh=iD/41sEriRtup+4fF6oWf/011z9oOz3y+id2pp+iDXU=;
+ b=XcJHrTCwOWj52AOhemfOhHXvLnU9pHGqtPcetxTMGRFpepKT+2m+58YPcxJcuveJSDNG//eN3nO/Odyor9hx7p4+yL24sQYiJO4j6PXhLE4wWXV19Uiy2EU1GnkGlOFMhu86dLufQ8ci/fJXCoiner4RlO2ouh5raVHH74kAMZ8=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1188.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a6::11) with
+ by AM0P192MB0499.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:4e::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.21; Thu, 17 Jun
- 2021 16:03:06 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:03:02 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:03:06 +0000
+ 16:03:02 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 029/256] cl8k: add calib.h
-Date:   Thu, 17 Jun 2021 15:58:36 +0000
-Message-Id: <20210617160223.160998-30-viktor.barna@celeno.com>
+Subject: [RFC v1 026/256] cl8k: add bus/pci/tx_pci.c
+Date:   Thu, 17 Jun 2021 15:58:33 +0000
+Message-Id: <20210617160223.160998-27-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:05 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:01 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 17db4ace-0cf0-4526-82d9-08d931a9649f
-X-MS-TrafficTypeDiagnostic: AM9P192MB1188:
+X-MS-Office365-Filtering-Correlation-Id: 5a8b3a71-8792-45c4-6066-08d931a962b2
+X-MS-TrafficTypeDiagnostic: AM0P192MB0499:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB11884C125729E1660DDF4C5AF60E9@AM9P192MB1188.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM0P192MB0499C1BA6666407B9C549C3EF60E9@AM0P192MB0499.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2887;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5Z3SsKgFFHsI5q/RdexghEjch4zsXi5/L5wxxase13Wv36bNC4VnRAhaD61CeMts6SeHIeRDSq0aP9DpCxnv/0J+BkdpkRagjMxmiKcDmEJDA7g/ZIumIbZgfJKGa+PRfsFv8klv+ooXq0f8pTounGzk5QW4myB7ou4CtcZ88ACBrsB65bh67mcSitX+Gs0jCIH08yb7oOB3tgnOIU8l+iBKdgcUA7CPDJvMnSAjd6jMjwT5uR5RKsdLSfFGgz10PA3QIrzOAnqDgpxFhoculOAn2avBhUIUsgLxTVbGLPeCrgtPvbD0oXRDzEun/jHz91Jw+r0pzxH7KiCBDX1xk+7Bj7qQFDjf2d4ZrWl6X3AoBCur3xdBSx1P3yDt//k6sHs3m1XjQaoHEt73wsAllgTjLM9wn3vCnWFTqKEZRo2/MMVkxWn1H/FNvPx1tvyOFjyUc1cUbEXjkmUQimKUkznuPo48LepREpUOAUFdl/4xpkr7Cya2FCk4pIv1HbOJgLSTdgFXUnBDgQxg+hpcfXFdT2zvfI9K625IAepeOU2cjTo/fuKCPVpw1PouKsG7G7WKhSNM+T4U7nU9+4j+it2/3EWCbcb2SiGox+4qSJey9UwIJyq6K219Wu7JiIjZ6gf+7er8uYR63e5Z2GvXWQf2DVolTRZxKg3J0mCuBDHfrx2LI+hfiTFMH5y/36AEZLXiOzSZsHjtdfU8Z7uezw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(346002)(396003)(376002)(366004)(16526019)(66946007)(26005)(66476007)(6486002)(186003)(66556008)(9686003)(316002)(86362001)(508600001)(8676002)(6506007)(6666004)(6512007)(55236004)(38350700002)(1076003)(38100700002)(4326008)(83380400001)(52116002)(2616005)(5660300002)(2906002)(6916009)(956004)(8936002)(107886003)(54906003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: cy2zA+p1JFQhpk9byWFstmicGB536LdvixeN0cHy8aEpj8Wd3t6qaWDQ+AJzDe/AGuTnY13hvknyzAEowDVEuEt4tUvZGTJUWAUPWgnFmYpZMzPGEwXwsn3MPJdIwrlAgd7TJs5mo//bXHAsWwDTJl//EOfol/06xcgED6nm1LUvhBeATW8fttLY9lhv2c9V4n/Ts2F/hkaNhVGnv22B2J0lPHeQdAYk6byGa9zCMCZYq7MlPvo/RLeKFmcQBN5hTa3PdA+RB8cpJAFvaBAZtqRsut3i078C02zi7K3x1o1ErvgwcXkP8BzlBgF0HK1nsLqLW7qGsMe2PNNIQyl0zBG9C+i6IJzZymqfeuGfGWcT/I+UvuAXDZDKZdgHMwmxHvmRIFuLw0AZQwEl/KWitHU8BYPKHW9er80sxfwFzys+btolmmCqnMhd9fErJQKMpcufuSzL9DCcZYYZjmaeLpYUOIxIcAQYAnqTOYhZrt2rluUX0bUAj5qjzzA91Hd22aLyj0LTVO+z/uUxpYp8kOf8UmRWkU35ok3X8cskoXyk8yT5OOCKxPpxefFhm6ZT15pfkG/vEM3v6sA0iUFzHlDIEpez3VaGPP1U+2hJuqnDzm6Zxe1hJH1cQUDa9oa0H+aHgS1W7XWCiOUB0gzAbUGxKpHjTkDOKGU3nzTQI9YBWpb/Moqiz8Qs5urNtWhyJKvHiGpr+0liy9TOgHQCNw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(39840400004)(396003)(376002)(366004)(346002)(86362001)(107886003)(66556008)(52116002)(83380400001)(55236004)(36756003)(4326008)(186003)(16526019)(956004)(316002)(6486002)(8676002)(54906003)(38100700002)(38350700002)(66476007)(6506007)(2906002)(26005)(9686003)(6512007)(66946007)(2616005)(5660300002)(478600001)(30864003)(1076003)(6666004)(8936002)(6916009)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?sGR+9EApt3wIUaoiJvUYi+Kfi17ZmYUDx0S0CXCPI2IEBLyGbPL/v72/8upv?=
- =?us-ascii?Q?2agdxuQmzuhpYSqA6uOPPxVoI0lHV0+f3YxKRfDVIk4ReHPM6H6gmFjuzKAj?=
- =?us-ascii?Q?XfE2vVFqaukctwI1VQkeAFaOD79ahph6OME+3fTHJ7oDe9QecI23tEQ780dw?=
- =?us-ascii?Q?PZJoamBCKFAIhMAZ3SE0//owP9v5njl9u/N48+tHRwU9pDcB64jvEOd53a3v?=
- =?us-ascii?Q?WU8PaMUaCecuu0ma4/zITYja/kKNs3r1YeR10xjVtrl2phQA9pBe0l8eysdm?=
- =?us-ascii?Q?qPGbvxUNPD4M1L4QHUxlEmo5QZfsNvCb1Jib1Se5MCoryGmUyq1vne/jS0Yq?=
- =?us-ascii?Q?Q6yYv1QsdE59ryCRn5ex3nv139zXnPUIYsUbQ7rmCOVY1b3xbD+tWMqmBt82?=
- =?us-ascii?Q?me4chw4Bup02MI6/h8FpBeR8nJF64p273HfMWBMgq/TRXNCN0Nhn+OkG4D8e?=
- =?us-ascii?Q?ZIE/lYkRlSEDROJ+Y5eeaGbit1OwerGDPN/7/R9lJVdmTDmMdoYF4TDlIF9n?=
- =?us-ascii?Q?Wjwhy3p30MOp/wN9IdpIUpoTGDURQ9aL/DGOBPtJyRegpURPCrY9Zub2tUbd?=
- =?us-ascii?Q?cxAeAtu5rtyIBRhjdnzLN7CM//KdbIVZYwQt9tj0uZa8Rg9oFKB4/crhWpnb?=
- =?us-ascii?Q?e2cP82PuHwJ1RRQknmqNESyiyxFwe8ouJkQJpzpPQDGgTgI29baKWOTegbhN?=
- =?us-ascii?Q?wnZfNpMLZL4k3dWY3tLgybwE+eNm3aizctBVaeTC2gxwUhojFlKtJU1aJPk0?=
- =?us-ascii?Q?PatOWAxYobTjo+mX9laEtFMy0IVqihtUShKKuDsDzQfYW7wi6Dv8frAhsNUb?=
- =?us-ascii?Q?p1IFHa+uI9f4re3ns31HyVwfY+z/zzyt+E9Bl81i+BGPaUj+CU0DigC0P2yc?=
- =?us-ascii?Q?IVejM2ISx8Y3smDNd17uHYqDJXHOZPb4g25nK83m86u7JbvYLC2znUsHELM7?=
- =?us-ascii?Q?xlFfHVdW1bICJxRIJ+12gOsgChODYFCUGXiMiZ+uQrZItdjJo486Tb9Aoh2Y?=
- =?us-ascii?Q?3fN3J6+qblpnvoQdyigWLTL1MWj7m7X682vr6To3iyiQKw+pMlrCRzUn+X6a?=
- =?us-ascii?Q?iMI6V/M8/HvB749UJZ4ddUfQ9f6dPcWOxdD/arP5IPhybHIuacKB16zgWToe?=
- =?us-ascii?Q?qaz7Kgsl0kCDqkUduFEugPC7sdQi7Y6eMQtQQ4ep4JP39HPkBbFrGM0C1NRA?=
- =?us-ascii?Q?gAMhH4cgx1zIwmA1wPSTOkWxDjmHaHGbHVLtgYiPJ//tb75rYkQeejFXfWkr?=
- =?us-ascii?Q?2X4QALtwtdi9ewx7l6AtWN1+IA8wCyTAAriLtBezYUsd4XPR85/7S9EnHAbs?=
- =?us-ascii?Q?FfrSkz4yNclDw6McWAVsF0cA?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YYXjy5PV1H2Sbg0m2m9KHXdkyTvu4fjjBjVyQy0x5b3bYL0TKnyXn9p/f858?=
+ =?us-ascii?Q?hGHIFIDpyOE42FvwJdlg4BcUj2R7cfXFifpvFD3bd2YnHX7d0SiWOsmlPJMn?=
+ =?us-ascii?Q?v8g2Ze1pNrUbCsnnAaSPNVmq5MdoZbKFdTQECkFCVpMv4mhsrHCms8m3Aci2?=
+ =?us-ascii?Q?zVJfuQl+sWbDT1x7D3zZORls5K7rBeBKqgF0cUF55ALzuHPUNQ/a2xNgNv3G?=
+ =?us-ascii?Q?/d1PEf8dzzBn11B7LxV3nQ/8a1nas1rf3fT7zkIsFd9Y0u/vBtaFhlinItsi?=
+ =?us-ascii?Q?Tko+ssaLJxMeXkVLtp4+HEITZaN4cvkKqMiIjSF6kqBT4z4bNmIXixW9WdXS?=
+ =?us-ascii?Q?75Ttg6b1tkiumHpi+Jx9nLop87k9WMY077kXGaa7HOlrdBaZ6kecaVdtKX3i?=
+ =?us-ascii?Q?dOVxO01GbyZxQzZR5lNYqLhbAPoSSRXKBS//kgTg4nn9E/wbKeQn+vbolehl?=
+ =?us-ascii?Q?65A8ZXGujHBzdpPDnp7txNaCggVE8aZ1tvHIwNv8DDm70U9qh2FSdJbxaNtc?=
+ =?us-ascii?Q?yT3DT45PGrqO7H5H/GwlfOxR1ouHaSQI46bEqrz0Owepm8Pz1asrcmTzY82C?=
+ =?us-ascii?Q?IIE/kuyd0vEq06I9+/CcfyQmB8yPbSNTQu6kXs9x4S1r0GfndIO9Le1znwsR?=
+ =?us-ascii?Q?Ok9BKTs4WMRUam9n8WyuVLZ0c1bqqbCEC1sdYiHw26U3WIlg/xLVLVZOs/Vd?=
+ =?us-ascii?Q?y8loudU6P4XFwduuef93sjolhRB3MTiu6ex6k9x2XaG2ELKnJ7qUNjr/QMBv?=
+ =?us-ascii?Q?z1i8WzYIWeLzJte+z+kQeloy4GJwva02Q4+vpMNH1mDLohrWPeRPfejX/quN?=
+ =?us-ascii?Q?IeSEwEtbijKwIFEfF5mQZ3SKPrcadJXlrWod6ll7ME/K20zdyeS9ATJ0mtp9?=
+ =?us-ascii?Q?A2CZbFNXq/8pO6j593bcV8PLDgCZNpIbP54+kUGUGa0X0VnzpxKX4pjCoVuq?=
+ =?us-ascii?Q?8l+lhAdgpCjUqia17hwOwHdwxAbzKeq4V2/3FaLxKErXSw7CFPPdFy5q7ziE?=
+ =?us-ascii?Q?2ZYqNsaoKANZTlq7RboGxpjUlPE1kxw28Y6lHmTP66br02zJcd0tYdrFCLOC?=
+ =?us-ascii?Q?b+n5OX1AWMovyY/dWpp4iojtekyjMSx/Ow2jVFgyjZpe2zeb+5ayjRUULaIq?=
+ =?us-ascii?Q?Ithy8Sun5SlgWak6Gqew8dOrF5mAoChgGLAFKZ7gnwV0Y7Y5x7krGu3Z0wTq?=
+ =?us-ascii?Q?l2l2QK3i6zQHyh3wI2husylZpRx5yxxzr9NgeS0VilDYaSbfizt4+8pIvtnm?=
+ =?us-ascii?Q?BQmcPMYF3z16RxVwNY2jAsNhQtGzddizV9tT2tS2qkWwG6jSxBYJAMPxF5zm?=
+ =?us-ascii?Q?4cQ9kirOQEJAfD9Uf6AMnA7O?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 17db4ace-0cf0-4526-82d9-08d931a9649f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a8b3a71-8792-45c4-6066-08d931a962b2
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:05.8678
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:02.5981
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hIQ/2Cam70fzwRrFzdgh3pK94QMEg0DzClamVevFDgqyHj5OnIUGPH3QbVt3TBsAxZkmtuRMfxju0w/x1ha2KA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1188
+X-MS-Exchange-CrossTenant-UserPrincipalName: NnDbyZWVlmMt8CG3z85O5diYt+x3t26SGqSB8YfxXYmkQZQ82tlV7Dt8nMIg99gd59DBM7G482YtUMkZ85u4wA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0499
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,267 +128,515 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/calib.h | 237 +++++++++++++++++++++++
- 1 file changed, 237 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/calib.h
+ .../net/wireless/celeno/cl8k/bus/pci/tx_pci.c | 434 ++++++++++++++++++
+ 1 file changed, 434 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/bus/pci/tx_pci.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/calib.h b/drivers/net/wireles=
-s/celeno/cl8k/calib.h
+diff --git a/drivers/net/wireless/celeno/cl8k/bus/pci/tx_pci.c b/drivers/ne=
+t/wireless/celeno/cl8k/bus/pci/tx_pci.c
 new file mode 100644
-index 000000000000..3282b8fc4efd
+index 000000000000..4aeaa6a74777
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/calib.h
-@@ -0,0 +1,237 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/bus/pci/tx_pci.c
+@@ -0,0 +1,434 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_CALIB_H
-+#define CL_CALIB_H
++#include <net/mac80211.h>
++#include "bus/pci/tx_pci.h"
++#include "bus/pci/ipc.h"
++#include "ipc_shared.h"
++#include "chip.h"
++#include "tx/tx.h"
++#include "sta.h"
++#include "enhanced_tim.h"
++#include "tx/bcmc_cfm.h"
++#include "tx/single_cfm.h"
++#include "tx/agg_cfm.h"
++#include "tx/tx_queue.h"
++#include "tx/agg_tx_report.h"
++#include "tx/sw_txhdr.h"
++#include "tx/tx_inject.h"
++#include "bus/pci/irq.h"
++#ifdef TRACE_SUPPORT
++#include "trace.h"
++#endif
 +
-+#include <net/cfg80211.h>
++static void cl_tx_ipc_txdesc_populate(struct cl_hw *cl_hw, struct txdesc *=
+txdesc,
++                                     u8 queue_type, u32 ipc_queue_idx)
++{
++       /*
++        * 1) Request allocation of txdesc associated with queue type and i=
+ndex from the ipc layer.
++        * 2) Populate ipc-txdesc with the received txdesc.
++        * 3) Increase write index - (must be last action since FW fetch WR=
+ idx first).
++        */
++       u32 *write_idx_ptr =3D NULL;
++       struct txdesc *ipc_txdesc =3D NULL;
++       struct cl_ipc_ring_indices *indices =3D cl_hw->ipc_env->ring_indice=
+s_elem->indices;
++       struct cl_ipc_txdesc_write_idx *txdesc_write_idx =3D
++               (struct cl_ipc_txdesc_write_idx *)&indices->txdesc_write_id=
+x;
++       u32 write_idx =3D 0;
++       u32 masked_write_idx =3D 0;
 +
-+#include "def.h"
-+#include "vendor_cmd.h"
++       switch (queue_type) {
++       case QUEUE_TYPE_AGG:
++               ipc_txdesc =3D cl_hw->ipc_env->tx_queues.ipc_txdesc_agg[ipc=
+_queue_idx];
++               write_idx =3D le32_to_cpu(txdesc_write_idx->agg[ipc_queue_i=
+dx]);
++               write_idx_ptr =3D &txdesc_write_idx->agg[ipc_queue_idx];
++               masked_write_idx =3D write_idx & (cl_hw->max_agg_tx_q_size =
+- 1);
++               break;
++       case QUEUE_TYPE_SINGLE:
++               ipc_txdesc =3D cl_hw->ipc_env->tx_queues.ipc_txdesc_single[=
+ipc_queue_idx];
++               write_idx =3D le32_to_cpu(txdesc_write_idx->single[ipc_queu=
+e_idx]);
++               write_idx_ptr =3D &txdesc_write_idx->single[ipc_queue_idx];
++               masked_write_idx =3D write_idx & (IPC_TXDESC_CNT_SINGLE - 1=
+);
++               break;
++       case QUEUE_TYPE_BCMC:
++               ipc_txdesc =3D cl_hw->ipc_env->tx_queues.ipc_txdesc_bcmc;
++               write_idx =3D le32_to_cpu(txdesc_write_idx->bcmc);
++               write_idx_ptr =3D &txdesc_write_idx->bcmc;
++               masked_write_idx =3D write_idx & (IPC_TXDESC_CNT_BCMC - 1);
++               break;
++       default:
++               cl_dbg_verbose(cl_hw, "undefined queue type %u\n", queue_ty=
+pe);
++               WARN_ON(true);
++       }
 +
-+#define UNCALIBRATED_POWER        15
-+#define UNCALIBRATED_POWER_OFFSET 0
-+#define UNCALIBRATED_TEMPERATURE  35
++       ipc_txdesc +=3D masked_write_idx;
 +
-+#define DCOC_LNA_GAIN_NUM  8
-+#define MAX_SX             2
-+#define IQ_NUM_TONES_REQ   8
-+#define IQ_NUM_TONES_CFM   (2 * IQ_NUM_TONES_REQ)
-+#define SINGLETONS_MAX_NUM 1
-+#define LOOPS_MAX_NUM      (2 + SINGLETONS_MAX_NUM) /* 1: pre,2-11:singlet=
-one,12:post */
-+#define SX_FREQ_OFFSET_Q2  5
++       memcpy(ipc_txdesc, txdesc, sizeof(struct txdesc));
 +
-+/* Calibration constants */
-+#define CALIB_RX_GAIN_DEFAULT        0x83
-+#define CALIB_TX_GAIN_DEFAULT        0x75
-+#define GAIN_SLEEVE_TRSHLD_DEFAULT   2
-+#define CALIB_NCO_AMP_DEFAULT        -10
-+#define CALIB_NCO_FREQ_DEFAULT       16 /* 5M/312.5K */
-+#define LO_P_THRESH                  1000000
-+#define N_SAMPLES_EXP_LOLC           13
-+#define N_SAMPLES_EXP_IQC            13
-+#define N_BIT_FIR_SCALE              11
-+#define N_BIT_AMP_SCALE              10
-+#define N_BIT_PHASE_SCALE            10
-+#define GP_RAD_TRSHLD_DEFAULT        1144 /* Represents 1 degree in Q(16,1=
-6): 1*(pi/180) */
-+#define GA_LIN_UPPER_TRSHLD_DEFAULT  66295 /* Represents 0.1 db in Q(16,16=
-): 10^( 0.1/20)*2^16 */
-+#define GA_LIN_LOWER_TRSHLD_DEFAULT  64786 /* Represents -0.1 db in Q(16,1=
-6): 10^(-0.1/20)*2^16 */
-+#define COMP_FILTER_LEN_DEFAULT      9
-+#define SINGLETONS_NUM_DEFAULT       10 /* Set to SINGLETONS_MAX_NUM for n=
-ow*/
-+#define RAMPUP_TIME                  50
-+#define LO_COARSE_STEP               20
-+#define LO_FINE_STEP                 1
++       /*
++        * Update write pointer only after new txdesc copy is done since FW
++        * fetch WR pointer first, if not, FW might read and old txdesc sin=
+ce
++        * WR index indicate txdesc is valid.
++        */
++       *write_idx_ptr =3D cpu_to_le32(write_idx + 1);
++}
 +
-+#define DCOC_MAX_VGA                     0x14
-+#define CALIB_RX_GAIN_UPPER_LIMIT        0x0
-+#define CALIB_RX_GAIN_LOWER_LIMIT        0x14
-+#define DCOC_MAX_VGA_ATHOS               0x1E
-+#define CALIB_RX_GAIN_DEFAULT_ATHOS      0x8D
-+#define CALIB_RX_GAIN_UPPER_LIMIT_ATHOS  0x0A
-+#define CALIB_RX_GAIN_LOWER_LIMIT_ATHOS  0x14
++static int cl_tx_pci_agg_cfm_handler(struct cl_hw *cl_hw)
++{
++       struct cl_agg_cfm_queue *cfm_queue =3D NULL;
++       struct cl_tx_queue *tx_queue =3D NULL;
++       struct cl_ipc_ring_indices *indices =3D cl_hw->ipc_env->ring_indice=
+s_elem->indices;
++       int total_cfm_handled =3D 0;
++       int free_space_add =3D 0;
++       u16 new_ssn =3D 0;
++       u16 prev_ssn =3D 0;
++       u8 used_cntr =3D 0;
++       u8 ba_queue_idx =3D 0;
 +
-+#define SET_PHY_DATA_FLAGS_NONE       0x0
-+#define SET_PHY_DATA_FLAGS_DCOC       0x1 /* Set DCOC calibration data.*/
-+#define SET_PHY_DATA_FLAGS_IQ_TX      0x2 /* Set IQ Tx calibration data.*/
-+#define SET_PHY_DATA_FLAGS_IQ_RX      0x4 /* Set IQ Rx calibration data.*/
-+#define SET_PHY_DATA_FLAGS_IQ_TX_LOLC 0x8 /* Set IQ Tx LOLC calibration da=
-ta.*/
-+#define SET_PHY_DATA_FLAGS_ALL   ( \
-+       SET_PHY_DATA_FLAGS_DCOC  | \
-+       SET_PHY_DATA_FLAGS_IQ_TX | \
-+       SET_PHY_DATA_FLAGS_IQ_RX | \
-+       SET_PHY_DATA_FLAGS_IQ_TX_LOLC)
++       for (ba_queue_idx =3D 0; ba_queue_idx < IPC_MAX_BA_SESSIONS; ba_que=
+ue_idx++) {
 +
-+enum calib_cfm_id_type {
-+       CALIB_CFM_DCOC,
-+       CALIB_CFM_IQ,
-+       CALIB_CFM_MAX
-+};
++               spin_lock(&cl_hw->tx_lock_cfm_agg);
 +
-+enum calib_channel_idx_24g {
-+       CALIB_CHAN_24G_1,
-+       CALIB_CHAN_24G_6,
-+       CALIB_CHAN_24G_11,
-+       CALIB_CHAN_24G_MAX,
-+};
++               cfm_queue =3D &cl_hw->agg_cfm_queues[ba_queue_idx];
++               if (list_empty(&cfm_queue->head)) {
++                       spin_unlock(&cl_hw->tx_lock_cfm_agg);
++                       continue;
++               }
 +
-+enum calib_channel_idx_5g {
-+       CALIB_CHAN_5G_36,
-+       CALIB_CHAN_5G_52,
-+       CALIB_CHAN_5G_100,
-+       CALIB_CHAN_5G_116,
-+       CALIB_CHAN_5G_132,
-+       CALIB_CHAN_5G_149,
-+       CALIB_CHAN_5G_MAX
-+};
++               tx_queue =3D cfm_queue->tx_queue;
++               free_space_add =3D 0;
++               prev_ssn =3D cfm_queue->ssn;
++               new_ssn =3D le16_to_cpu(indices->new_ssn_idx[ba_queue_idx])=
+;
 +
-+enum calib_channel_idx_6g {
-+       CALIB_CHAN_6G_1,
-+       CALIB_CHAN_6G_17,
-+       CALIB_CHAN_6G_33,
-+       CALIB_CHAN_6G_49,
-+       CALIB_CHAN_6G_65,
-+       CALIB_CHAN_6G_81,
-+       CALIB_CHAN_6G_97,
-+       CALIB_CHAN_6G_113,
-+       CALIB_CHAN_6G_129,
-+       CALIB_CHAN_6G_145,
-+       CALIB_CHAN_6G_161,
-+       CALIB_CHAN_6G_177,
-+       CALIB_CHAN_6G_193,
-+       CALIB_CHAN_6G_209,
-+       CALIB_CHAN_6G_225,
-+       CALIB_CHAN_6G_MAX,
-+};
++               /*
++                * Continue to free skb's until:
++                * 1. list is empty.
++                * 2. agg ssn is equal to new ssn received from ssn.
++                */
++               while (!list_empty(&cfm_queue->head) && (cfm_queue->ssn !=
+=3D new_ssn)) {
++                       cl_agg_cfm_free_head_skb(cl_hw, cfm_queue, ba_queue=
+_idx);
++                       free_space_add++;
++                       cfm_queue->ssn =3D ((cfm_queue->ssn + 1) & 0xFFF);
++               }
 +
-+/* MAX(CALIB_CHAN_24G_MAX, CALIB_CHAN_5G_MAX, CALIB_CHAN_6G_MAX) */
-+#define CALIB_CHAN_MAX CALIB_CHAN_6G_MAX
++               /* Sanity check. test if all skb's marked to be free. */
++               if (unlikely(cfm_queue->ssn !=3D new_ssn))
++                       cl_dbg_err(cl_hw,
++                                  "ssn diff - queue idx=3D%u, new ssn=3D%u=
+, prev ssn=3D%u, cfm ssn=3D%u\n",
++                                  ba_queue_idx, new_ssn, prev_ssn, cfm_que=
+ue->ssn);
 +
-+struct cl_dcoc_calib {
-+       s8 i;
-+       s8 q;
-+};
++               spin_unlock(&cl_hw->tx_lock_cfm_agg);
 +
-+struct cl_dcoc_report {
-+       __le16 i_dc;
-+       __le16 i_iterations;
-+       __le16 q_dc;
-+       __le16 q_iterations;
-+};
++               if (free_space_add > 0) {
++                       spin_lock(&cl_hw->tx_lock_agg);
 +
-+struct cl_iq_report {
-+       u8 status;
-+       s8 ir_db[LOOPS_MAX_NUM][IQ_NUM_TONES_CFM];
-+       s8 ir_db_avg_post;
-+};
++                       if (tx_queue) {
++                               tx_queue->fw_free_space +=3D free_space_add=
+;
++                               tx_queue->total_fw_cfm +=3D free_space_add;
 +
-+struct cl_iq_calib {
-+       __le32 coef0;
-+       __le32 coef1;
-+       __le32 coef2;
-+       __le32 gain;
-+};
++                               /*
++                                * If FW used all packets that driver pushe=
+d to him,
++                                * clear the enhanced TIM bit.
++                                */
++                               if (cl_txq_is_fw_empty(tx_queue))
++                                       cl_enhanced_tim_clear_tx_agg(cl_hw,
++                                                                    ba_que=
+ue_idx,
++                                                                    tx_que=
+ue->hw_index,
++                                                                    tx_que=
+ue->cl_sta,
++                                                                    tx_que=
+ue->tid);
++                       }
 +
-+struct cl_calib_errors {
-+       u16 dcoc;
-+       u16 lolc;
-+       u16 iq_tx;
-+       u16 iq_rx;
-+};
++                       spin_unlock(&cl_hw->tx_lock_agg);
 +
-+struct cl_calib_db {
-+       struct cl_dcoc_calib
-+               dcoc[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_ANTE=
-NNAS][DCOC_LNA_GAIN_NUM];
-+       u32 iq_tx_lolc[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_AN=
-TENNAS];
-+       struct cl_iq_calib iq_tx[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_=
-SX][MAX_ANTENNAS];
-+       struct cl_iq_calib iq_rx[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_=
-SX][MAX_ANTENNAS];
-+       struct cl_calib_errors errors[TCV_MAX];
-+       bool scan_complete;
-+};
++                       total_cfm_handled +=3D free_space_add;
++               }
 +
++               /* Optimization - avoid running the for loop IPC_MAX_BA_SES=
+SIONS times */
++               used_cntr++;
++               if (used_cntr =3D=3D cl_hw->used_agg_queues)
++                       break;
++       }
 +
-+struct cl_lolc_report {
-+       u8 status;
-+       u8 n_iter;
-+       __le16 lolc_qual;
-+};
++       return total_cfm_handled;
++}
 +
-+struct cl_gain_report {
-+       u8 status;
-+       u8 rx_gain;
-+       u8 tx_gain;
-+       u8 gain_quality;
-+       __le16 final_p2p;
-+       __le16 initial_p2p;
-+};
++void cl_tx_pci_agg_cfm_tasklet(unsigned long data)
++{
++       struct cl_hw *cl_hw =3D (struct cl_hw *)data;
++       int cfm_handled;
 +
-+struct cl_iq_dcoc_info {
-+       struct cl_dcoc_calib dcoc[DCOC_LNA_GAIN_NUM][MAX_ANTENNAS];
-+       struct cl_iq_calib iq_tx[MAX_ANTENNAS];
-+       __le32 iq_tx_lolc[MAX_ANTENNAS];
-+       struct cl_iq_calib iq_rx[MAX_ANTENNAS];
-+};
++#ifdef TRACE_SUPPORT
++       trace_cl_trace_tx_agg_cfm_tasklet_start(cl_hw->idx);
++#endif
 +
-+struct cl_iq_dcoc_report {
-+       struct cl_dcoc_report dcoc[DCOC_LNA_GAIN_NUM][MAX_ANTENNAS];
-+       struct cl_gain_report gain_tx[MAX_ANTENNAS];
-+       struct cl_gain_report gain_rx[MAX_ANTENNAS];
-+       struct cl_lolc_report lolc_report[MAX_ANTENNAS];
-+       struct cl_iq_report iq_tx[MAX_ANTENNAS];
-+       struct cl_iq_report iq_rx[MAX_ANTENNAS];
-+};
++       cfm_handled =3D cl_tx_pci_agg_cfm_handler(cl_hw);
 +
-+struct calib_cfm {
-+       u8 status;
-+       __le16 raw_bits_data_0;
-+       __le16 raw_bits_data_1;
-+};
++       if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
++               cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.txdesc_ind);
 +
-+struct cl_iq_dcoc_data {
-+       struct cl_iq_dcoc_info iq_dcoc_db;
-+       struct cl_iq_dcoc_report report;
-+       struct calib_cfm dcoc_iq_cfm[CALIB_CFM_MAX];
-+};
++#ifdef TRACE_SUPPORT
++       trace_cl_trace_tx_agg_cfm_tasklet_end(cl_hw->idx, cfm_handled);
++#endif
++}
 +
-+struct cl_iq_dcoc_data_info {
-+       struct cl_iq_dcoc_data *iq_dcoc_data;
-+       u32 dma_addr;
-+};
++static void cl_tx_pci_single_cfm_handler(struct cl_hw *cl_hw, u32 cfm_stat=
+us,
++                                        u32 dma_addr, u32 single_queue_idx=
+)
++{
++       struct sk_buff *skb =3D NULL;
++       struct ieee80211_tx_info *tx_info =3D NULL;
++       struct cl_hw_tx_status *status =3D (struct cl_hw_tx_status *)&cfm_s=
+tatus;
++       struct cl_sw_txhdr *sw_txhdr =3D NULL;
++       struct cl_tx_queue *tx_queue =3D NULL;
++       struct cl_sta *cl_sta =3D NULL;
++       unsigned long flags =3D 0;
++       u8 hw_queue;
++       bool is_bcn;
 +
-+struct cl_calib_restore {
-+       u8 bw;
-+       u32 primary;
-+       u32 center;
-+       u8 channel;
-+};
++       if (status->is_bcmc) {
++               spin_lock_irqsave(&cl_hw->tx_lock_bcmc, flags);
++               sw_txhdr =3D cl_bcmc_cfm_find(cl_hw, dma_addr, status->keep=
+_skb);
++               tx_queue =3D &cl_hw->tx_queues.bcmc;
++       } else {
++               spin_lock_bh(&cl_hw->tx_lock_single);
++               sw_txhdr =3D cl_single_cfm_find(cl_hw, single_queue_idx, dm=
+a_addr);
++               tx_queue =3D &cl_hw->tx_queues.single[single_queue_idx];
++       }
 +
-+struct cl_hw;
-+struct cl_calib_work {
-+       struct work_struct ws;
-+       struct cl_hw *cl_hw;
-+};
++       if (!sw_txhdr) {
++               cl_dbg_err(cl_hw, "Failed to find single cfm [single_queue_=
+idx %u] status 0x%x\n",
++                          single_queue_idx, cfm_status);
++               goto out;
++       }
 +
-+int cl_calib_get(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                            const void *data, int data_len);
-+int cl_calib_set(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                            const void *data, int data_len);
++       skb =3D sw_txhdr->skb;
++       tx_info =3D IEEE80211_SKB_CB(skb);
++       hw_queue =3D sw_txhdr->hw_queue;
++       is_bcn =3D sw_txhdr->is_bcn;
 +
-+void cl_calib_power_read(struct cl_hw *cl_hw);
-+void cl_calib_power_offset_fill(struct cl_hw *cl_hw, u8 channel,
-+                                     u8 bw, u8 offset[MAX_ANTENNAS]);
++       /*
++        * Used for beacon frames only !!
++        * if skb was already confirmed we do not need to inc FwFreeSpace c=
+ounter
++        */
++       if (likely(!status->freespace_inc_skip)) {
++               tx_queue->total_fw_cfm++;
++               tx_queue->fw_free_space++;
 +
-+int cl_calib_pivot_channels_set(struct cl_hw *cl_hw, const void *chan_list=
-, u32 size);
-+int cl_calib_pivot_channels_reset(struct cl_hw *cl_hw);
++               /* Clear the TIM element if assoicated IPC queue is empty *=
+/
++               if (!is_bcn && cl_txq_is_fw_empty(tx_queue)) {
++                       bool no_ps_buffer =3D
++                               (tx_info->flags & IEEE80211_TX_CTL_NO_PS_BU=
+FFER) ? true : false;
 +
-+int cl_calib_start(struct cl_hw *cl_hw);
-+void cl_calib_fill_phy_data(struct cl_hw *cl_hw, struct cl_iq_dcoc_info *i=
-q_dcoc_db, u8 flags);
-+int cl_calib_tables_alloc(struct cl_hw *cl_hw);
-+void cl_calib_tables_free(struct cl_hw *cl_hw);
-+bool cl_calib_is_needed(struct cl_hw *cl_hw, u8 channel, u8 bw);
-+int cl_calib_set_channel(struct cl_hw *cl_hw, u8 channel, u8 bw, u32 prima=
-ry, u32 center);
-+void cl_calib_start_work(struct cl_hw *cl_hw);
-+int cl_calib_handle_cfm(struct cl_hw *cl_hw, u8 mode);
-+int cl_calib_validate_ants(struct cl_hw *cl_hw);
-+void cl_calib_iq_get_tone_vector(u8 bw, u16 *tone_vector);
-+int cl_calib_cli(struct cl_hw *cl_hw, struct cli_params *cli_params);
++                       cl_sta_lock(cl_hw);
++                       cl_sta =3D cl_sta_get(cl_hw, sw_txhdr->sta_idx);
++                       cl_enhanced_tim_clear_tx_single(cl_hw, single_queue=
+_idx, hw_queue,
++                                                       no_ps_buffer, cl_st=
+a, sw_txhdr->tid);
++                       cl_sta_unlock(cl_hw);
++               }
++       } else  if (!is_bcn) {
++               cl_dbg_verbose(cl_hw, "should no be here - is_bcn=3D%d hw_q=
+ueue=3D%d\n",
++                              is_bcn, hw_queue);
++       }
 +
-+#endif /* CL_CALIB_H */
++       /*
++        * Used for beacon frames only !!
++        * if this flag is set, it means FW still need this beacon skb, the=
+refore
++        * we do not free this skb.
++        */
++       if (unlikely(status->keep_skb)) {
++               if (!is_bcn)
++                       cl_dbg_verbose(cl_hw, "should not be here - is_bcn=
+=3D%d hw_queue=3D%d\n",
++                                      is_bcn, hw_queue);
++               goto out;
++       }
++
++       dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA=
+_TO_DEVICE);
++
++       /*
++        * If queue is not empty call cl_txq_sched() to
++        * transfer packets from the queue to firmware
++        */
++       if (!list_empty(&tx_queue->hdrs))
++               cl_txq_sched(cl_hw, tx_queue);
++
++       /* Cl_tx_inject_cfm() must be called inside the lock */
++       if (cl_tx_ctrl_is_inject(tx_info)) {
++               cl_sta_lock(cl_hw);
++               cl_sta =3D cl_sta_get(cl_hw, sw_txhdr->sta_idx);
++               if (cl_sta)
++                       cl_agg_tx_report_simulate_for_single(cl_hw, cl_sta,=
+ status);
++               cl_sta_unlock(cl_hw);
++
++               cl_tx_inject_cfm(cl_hw);
++               dev_kfree_skb_any(skb);
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++               goto out;
++       }
++
++       if (status->is_bcmc)
++               spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++       else
++               spin_unlock_bh(&cl_hw->tx_lock_single);
++
++       if (is_bcn) {
++               struct ieee80211_vif *vif =3D sw_txhdr->cl_vif->vif;
++
++               if (vif) {
++                       if (vif->csa_active &&
++                           ieee80211_beacon_cntdwn_is_complete(vif))
++                               ieee80211_csa_finish(vif);
++               }
++
++               consume_skb(skb);
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++               return;
++       }
++
++       if (status->frm_successful && !(tx_info->flags & IEEE80211_TX_CTL_N=
+O_ACK))
++               tx_info->flags |=3D IEEE80211_TX_STAT_ACK;
++
++       cl_sta_lock(cl_hw);
++       cl_sta =3D cl_sta_get(cl_hw, sw_txhdr->sta_idx);
++
++       if (cl_sta) {
++               if (tx_queue->type !=3D QUEUE_TYPE_BCMC &&
++                   ieee80211_is_data(sw_txhdr->fc) &&
++                   !cl_tx_ctrl_is_eapol(tx_info))
++                       cl_agg_tx_report_simulate_for_single(cl_hw, cl_sta,=
+ status);
++
++               cl_tx_check_start_ba_session(cl_hw, cl_sta->stainfo, skb);
++       }
++
++       cl_sta_unlock(cl_hw);
++
++       if (tx_info->ack_frame_id)
++               ieee80211_tx_status(cl_hw->hw, skb);
++       else
++               consume_skb(skb);
++
++       cl_sw_txhdr_free(cl_hw, sw_txhdr);
++       return;
++
++out:
++       if (status->is_bcmc)
++               spin_unlock_irqrestore(&cl_hw->tx_lock_bcmc, flags);
++       else
++               spin_unlock_bh(&cl_hw->tx_lock_single);
++}
++
++void cl_tx_pci_single_cfm_tasklet(unsigned long data)
++{
++       struct cl_hw *cl_hw =3D (struct cl_hw *)data;
++       struct cl_ipc_host_env *ipc_env =3D cl_hw->ipc_env;
++       struct cl_ipc_cfm_msg *msg =3D NULL;
++
++#ifdef TRACE_SUPPORT
++       trace_cl_trace_tx_pci_single_cfm_tasklet_start(cl_hw->idx, ipc_env-=
+>cfm_used_idx);
++#endif
++
++       msg =3D (struct cl_ipc_cfm_msg *)(ipc_env->cfm_virt_base_addr) +
++               (ipc_env->cfm_used_idx % IPC_CFM_CNT);
++
++       while (msg && msg->dma_addr) {
++               u32 cfm_used_idx =3D ipc_env->cfm_used_idx++;
++
++               cl_tx_pci_single_cfm_handler(cl_hw,
++                                            le32_to_cpu(msg->status),
++                                            le32_to_cpu(msg->dma_addr),
++                                            le32_to_cpu(msg->single_queue_=
+idx));
++               msg->dma_addr =3D 0;
++               ipc_env->shared->cfm_read_pointer =3D cpu_to_le32(cfm_used_=
+idx);
++               msg =3D (struct cl_ipc_cfm_msg *)(ipc_env->cfm_virt_base_ad=
+dr) +
++                       (ipc_env->cfm_used_idx % IPC_CFM_CNT);
++       }
++
++       /* Enable the Tx CFM interrupt bit */
++       if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
++               cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.txcfm);
++
++#ifdef TRACE_SUPPORT
++       trace_cl_trace_tx_pci_single_cfm_tasklet_end(cl_hw->idx, ipc_env->c=
+fm_used_idx);
++#endif
++}
++
++void cl_tx_pci_pkt_fw_send(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txh=
+dr,
++                          struct cl_tx_queue *tx_queue)
++{
++       struct ieee80211_tx_info *tx_info =3D IEEE80211_SKB_CB(sw_txhdr->sk=
+b);
++       struct txdesc *txdesc =3D &sw_txhdr->txdesc;
++       struct tx_host_info *host_info =3D &txdesc->host_info;
++       struct cl_sta *cl_sta =3D sw_txhdr->cl_sta;
++       struct cl_vif *cl_vif =3D sw_txhdr->cl_vif;
++       u8 hw_queue =3D sw_txhdr->hw_queue;
++       u16 a2e_trigger_bit_pos;
++       u8 tid =3D sw_txhdr->tid;
++       u8 queue_type =3D tx_queue->type;
++       bool no_ps_buffer =3D !!(tx_info->flags & IEEE80211_TX_CTL_NO_PS_BU=
+FFER);
++       u16 ipc_queue_idx =3D tx_queue->index;
++       bool is_mgmt =3D ieee80211_is_mgmt(sw_txhdr->fc);
++       u8 *cpu_addr =3D (u8 *)sw_txhdr->skb->data -
++                      ((host_info->host_padding & 1) * 2);
++       dma_addr_t dma_addr =3D dma_map_single(cl_hw->chip->dev, cpu_addr,
++                                            sw_txhdr->map_len, DMA_TO_DEVI=
+CE);
++
++       if (WARN_ON(dma_mapping_error(cl_hw->chip->dev, dma_addr))) {
++               tx_queue->dump_dma_map_fail++;
++
++               if (queue_type =3D=3D QUEUE_TYPE_SINGLE) {
++                       if (!is_mgmt)
++                               cl_vif->sequence_number =3D DEC_SN(cl_vif->=
+sequence_number);
++
++                       cl_tx_single_free_skb(cl_hw, sw_txhdr->skb);
++               } else {
++                       if (queue_type =3D=3D QUEUE_TYPE_AGG) {
++                               struct cl_baw *baw =3D &cl_sta->baws[tid];
++
++                               baw->tid_seq =3D DEC_SN(baw->tid_seq);
++                       }
++
++                       dev_kfree_skb_any(sw_txhdr->skb);
++               }
++
++               cl_sw_txhdr_free(cl_hw, sw_txhdr);
++               return;
++       }
++
++       txdesc->umacdesc.packet_addr[0] =3D cpu_to_le32(dma_addr);
++
++       cl_tx_ipc_txdesc_populate(cl_hw, txdesc, queue_type, ipc_queue_idx)=
+;
++
++       /* make sure memory is written before push to HW */
++       wmb();
++
++       /*
++        * 1) Notify firmware on new buffered traffic by updating the enhan=
+ced tim.
++        * 2) Push sw_txhdr to confirmation list
++        */
++       if (queue_type =3D=3D QUEUE_TYPE_AGG) {
++               a2e_trigger_bit_pos =3D IPC_IRQ_A2E_TXDESC_AGG_MAP(hw_queue=
+);
++               cl_agg_cfm_add(cl_hw, sw_txhdr, ipc_queue_idx);
++               cl_enhanced_tim_set_tx_agg(cl_hw, ipc_queue_idx, hw_queue,
++                                          no_ps_buffer, cl_sta, tid);
++       } else if (queue_type =3D=3D QUEUE_TYPE_SINGLE) {
++               a2e_trigger_bit_pos =3D IPC_IRQ_A2E_TXDESC_SINGLE_MAP(hw_qu=
+eue);
++               cl_single_cfm_add(cl_hw, sw_txhdr, ipc_queue_idx);
++               cl_enhanced_tim_set_tx_single(cl_hw, ipc_queue_idx, hw_queu=
+e,
++                                             no_ps_buffer, cl_sta, tid);
++       } else {
++               a2e_trigger_bit_pos =3D IPC_IRQ_A2E_TXDESC_SINGLE_MAP(hw_qu=
+eue);
++               cl_bcmc_cfm_add(cl_hw, sw_txhdr);
++       }
++
++       /* Tx_queue counters */
++       tx_queue->fw_free_space--;
++       tx_queue->total_fw_push_desc++;
++       tx_queue->total_fw_push_skb +=3D host_info->packet_cnt;
++
++#ifdef TRACE_SUPPORT
++       trace_cl_trace_tx_push(cl_hw->idx, sw_txhdr->skb, host_info->packet=
+_cnt,
++                              txdesc->e2w_txhdr_param.seq_ctrl, tid);
++#endif
++
++       /* Trigger interrupt to firmware so that it will know that a new de=
+scriptor is ready */
++       cl_hw->ipc_host2xmac_trigger_set(cl_hw->chip, BIT(a2e_trigger_bit_p=
+os));
++}
++
 --
 2.30.0
 
