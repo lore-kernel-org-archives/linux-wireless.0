@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B059C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CDE0C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2100D613EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 539F3613E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232077AbhFQQH5 (ORCPT
+        id S232645AbhFQQH7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:07:57 -0400
-Received: from mail-eopbgr60055.outbound.protection.outlook.com ([40.107.6.55]:9431
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:07:59 -0400
+Received: from mail-am6eur05on2057.outbound.protection.outlook.com ([40.107.22.57]:62080
+        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231186AbhFQQHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S231559AbhFQQHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:07:23 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D9WWGz3d+W8WFF4F7ox4XoVkAF91x2AhSzbXfiwyWtqHjX4C3h/gAZF9wTPdC5OWfVgoLrVmYxAFnoZ62wgU589doAoJ69fdTM8n9r54R9MqhZHdtSbtODjX22f17MBKpTfXOzNthz6pHeP3/xic6ZYwSorV4r7z2LmOupZgi8P92/liy4a/FG4rEmiBDQP8NZKEp8GGmcD9tbLu04PUE76hQzk7KropjOLhKIDF7qffq2vM3LWdfPqSmVS9AVgjyT1vpHkcY4pUSRLl0O1FpP+fi4RdyPeu4VtxIgi3IVE1nZK81jyvy/eAdE5hwvczVrF/V7zYHhq7TZKXMctexA==
+ b=k+BceLuENAo34FcbcLoTUlxXN2pSBsYUswtIj5F3BdHRGz4R7DhJ20vAeM8xolUQYDEozqGX8FtKRxNWTNGotjQ46PN4gtHB/pqQuFC+knrp/XOUYCa/rfxUaKDdsBT8jTyqzdhD+xyjEReVaTBGDz1ZETHKpVo99VtjPNJfzzGq2XKyQO83pr+VYxCIt0NgX9UWYeFMtzlbBiMC1fdGLrN8+8EEy1f4bRt9W8jWGuhS35mY9PJP+l5BUVaVLKYcQmgZ35t7EEkBEetdS7e+WQ5sqt5z81MZl4+a4jSEWA405SR9cMyMpeszJ5/c2yHNQIbvLw3TIGc/MMcRMGuS6A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yUZ7YNDxKkI5Fuw+DtAIVYn2pxe+z2R8vJZTxIAUf+w=;
- b=dsDiyhCQ9IdYnYQRCze7rZQUCy+++JmBfyWPIOGQJoNdTq18DAl/WPd61/D8DxhW3A8/OWNScDC4YWI7z3MHd8D6P67FTA1YorRtuxd7SF77ufXtCJCuRsh+KvxJ18za6pb2KFt1U1gapDaQQdMfqEF6583J7qmYi98FgaJA4dC8NqkosaLtc5L2UkYf5veyUNLTAx1l+TbvCUCLeHJHdQHasOn76HXOQhZLoI8DkqeYROvWYKhdXEPqcDv4uZBon02un9Tj35KoYaWI0azyzvY3quiwHPVdKZlmN+jylfs1JHVj8ahTWx99fe+vSqhjYKsQlVbDpWiM0MW3FYH4Mw==
+ bh=jl6JxYhmqbp3u5CCWpGW+uUeAQzKLLI1FyiAFS27b6Y=;
+ b=B/ntojuf6MYk2ZajsWc4TKMkQd0GKdBUhAWrKjySNVElk2mKpjSyV7JuFApphK5N12Rlke/9qdTDOL+ags+vlEBn7UtwwzlEenCsPW2zIzw+CSSH/F6KTtuSKPcLdI8JXwEVwBk6QXINgKrZ9dq7Qy9sRAhFL9bdf7ZfBzKcaA7B+OdOCR8pfgV3puO7w3U1agsauB6uj/xiG89nJGisBbXpE/LWslSg2vbzScbDOOBr0isuJ4Qlj/HX3dKBQkHoDaf0TbTugdc/TEbOfoEZF2FYv2Ue6IGAfDKRCX5pFRCwNJ9Qn/y5NtM9XpQIeSi3ti6Xj2Vu2rc2vDz0FXFf8w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yUZ7YNDxKkI5Fuw+DtAIVYn2pxe+z2R8vJZTxIAUf+w=;
- b=sWvNEmYS10qHGGhBH9hInt9Hs3K2aE0tTSBt3VkAWQ0fqFET1fEFBo9Y4UYaag0sQYYgTPt2nBG/A4w/6RfA9xPi5VBNmp0mFhUMytxfgWeO7VsJCoaqFxO7+CVUIZRLG62+8SFHGYoRvQznriP+fbCqvHZyL0vedOnwqNGzEgo=
+ bh=jl6JxYhmqbp3u5CCWpGW+uUeAQzKLLI1FyiAFS27b6Y=;
+ b=w4sEFBdQRzTPiiYroxY9cLBnN/Ric+69rr3nf3aslkIJK8P/L6UqdQOqlZNoOUkI5Kq8nE9dFw5WdZmTd5RFsqjnsH1eGXD5y4VREuJJmnSaURK6D6PhGffGphqXvKuJOki3EG9KPJyekaWdarPJZncaghWr1H3EhC4/E4YpmWQ=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1268.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a9::6) with
+ by AM0P192MB0402.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:46::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
- 2021 16:04:21 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:05:07 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:04:21 +0000
+ 16:05:07 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 068/256] cl8k: add e2p.h
-Date:   Thu, 17 Jun 2021 15:59:15 +0000
-Message-Id: <20210617160223.160998-69-viktor.barna@celeno.com>
+Subject: [RFC v1 107/256] cl8k: add mac_addr.c
+Date:   Thu, 17 Jun 2021 15:59:54 +0000
+Message-Id: <20210617160223.160998-108-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:48 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:31 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d3441ff2-7d93-4848-fd37-08d931a97e81
-X-MS-TrafficTypeDiagnostic: AM9P192MB1268:
+X-MS-Office365-Filtering-Correlation-Id: 772691f1-2c04-4729-8623-08d931a99829
+X-MS-TrafficTypeDiagnostic: AM0P192MB0402:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB1268496128B6A33444ECF3A0F60E9@AM9P192MB1268.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2582;
+X-Microsoft-Antispam-PRVS: <AM0P192MB040269D72DCC29FD4B5069E0F60E9@AM0P192MB0402.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2958;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: M5ZYE/b+g1pl56Xlv/NsdIc2QC7aNq3aBbovKasX2uKvR5dDAh0VSPZNPxHhlbOPfZ1rS3tU57LuvgiX2JUKE9wRSL4G3Zyj7X5uRIMonGq/75czQb1w2IeshVX2z9cj5AmS7KtN688xu85rRl7ukJgJWbJQeEy4aL2qmn5v625KaFotw86EmGj4b0kx621/riHekKH7UjlCw78dOcJdGAocZTtT7izFrY+0IJky41QuUA7Wx4KwUZapH2Ua3AbjEkrfX90jiC+1TsFEqJamPJW0Tx3mwu84a7PU9iaeuvqLEBnGfVxgKt8kXtzAREEAHjzKmlVBYa628sTUU43snJtWEk9tR3pfzKWtaZ9e0ar69hz1iOccWsqF0APxzpYv3+XNb4tahNUk6wIWuSVZtOZJbfWs5ZiegTuZaG3Z1hFuIbVPxoHYh7/1yNZ9ClIv5TI5rv62jLIrFTyt11ZFGZU3YtqUe+Jt1j9wz/buoVlRXMYqPtwI8AWc0F2qTbTGTHVniCX4J4sZkoQSI4NbTE8U/eWgIvBPY6UIOVKfUY9W/+PniiGyjqQVVqDo+odbcbkshDC8UqVRAjculaD8PU2GyH8QMq31L97bB/HKvjwNES/ezhIoTeh0nodhIaeItDkCl80HOUs165zPq+QpwJDWdynf/NpEW6XYPjgM0FXLvtV+9vTlNf1FToBg0B7j8RgG3gD7eq9Do+m1tD8mEw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(6486002)(956004)(54906003)(4326008)(2616005)(186003)(38100700002)(16526019)(8676002)(5660300002)(38350700002)(8936002)(26005)(2906002)(6512007)(9686003)(52116002)(83380400001)(6916009)(66946007)(66556008)(66476007)(86362001)(55236004)(498600001)(6666004)(6506007)(1076003)(107886003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: ifSzfGMHI0YO8Jp4chRo0xFsXex6Cwu4lp9MH/zkMe8InvwWOWYxPYrjjUGOeWRwYZ7nz8LIg2mfn4OPt7drRwMiMisgVQyTN0KGj1Zf0DkBG0Ouf0O+Ix0mnWiAUwaLXD0lIelJVOmP0Y5LWUBPRFl8ZGAWSKhmUQBfeAl9zL/BeIWz7L37Q3NvNWoo25WwGLRajxLCkHDWMhe/lLLKPkppJ12XO70rxz89NDdmBMTflT1TfD6vaTMUYkd4r8/ebw6UVFjKFsltfKH/zOW7LV+/9wQiq4L9C9nJ+9E5MGS2zedWLm6QbH6HeqhOVpsT3zx6rNt6TAes3z7v3LXx4xNzBpPYJs1gT+1o4I0kVMPEXc3q9sSGJreZgfaQ3vRtfk/Pe2rLjDV5wmErdjCXa1IGX9Eu3Mw8HtOofn0iev9KaZbGN8Wtj1ux0XPxwcfeg91V7hKceX1yEL4z9/HxSnmCSIT/xjgWp/GH3ntcJKDye84C/IYDJuu9SlO/1hRGtEBtIKwjiZjemb0NPJGWQEFu57LYpgFpnsTFqWBNIPK3M9BgUdjPYuehuI9IDH4wIUGte4BtqdZ5QUQNzEouAMjRXFf+yj2tndT7ieo2ia5bLT3CejTYHyLV3p3yulnmKDt0P4ONGuVLuEvQqQJA98029nf3x3wgm80/x3h9lw9dMExhuvMCuT2r6pXHTjTshVOrflxLsEXNOSa7DXCx4A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(376002)(396003)(366004)(346002)(6916009)(6512007)(9686003)(6666004)(52116002)(2616005)(186003)(16526019)(38100700002)(38350700002)(1076003)(6506007)(5660300002)(107886003)(55236004)(86362001)(6486002)(8936002)(956004)(26005)(8676002)(30864003)(508600001)(2906002)(36756003)(54906003)(316002)(66946007)(66556008)(4326008)(66476007)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?KzwIXorVf+JK9vtE1rpupZEjmFCAu7k2JYHxqMTp0JW6TjvefITHLVMfe9HO?=
- =?us-ascii?Q?s1JUysESIltmoImB0OqTEm1hf1NvomiwQXwyR9YPYWifi8RkEgajO5qo/+iT?=
- =?us-ascii?Q?1ERhmNSvz+J+lf08c4fm0Mv5sdKZiA1kBhBcuYgqCxXYLGtmax5BsFZrZsv5?=
- =?us-ascii?Q?6ex7kC82qcZDex6HwvqR/fTmHzVlSjT0ed6g4MLTc/v31JhNtxlT4pwYA1zK?=
- =?us-ascii?Q?fk0Zhwjg6rllGwTyrv0ineTA/jwLNcYUtgcNroejjXS0k723fErUlD1EMpLO?=
- =?us-ascii?Q?4gXlX4P5aY0FHD33dRD974t3CNZ3BgIlgN0wJwLRYex1JUgzCdcWNnBUGsKp?=
- =?us-ascii?Q?aUrNom4KbwJDXqPC24l6KGweAlvd4KfFjUChGAE/tL5hjUb0wRsrJZTRArYA?=
- =?us-ascii?Q?K+aAecs657e51dK1MW1585sALsf+jVq/TrdD2kNVfdjDBIl1/LPGU97+p71g?=
- =?us-ascii?Q?8ET5ZU/RjBFkMDpOW2lWspzQZzdVNE5iaiypyfM5AQDdYFFhs1lvYguZmS/X?=
- =?us-ascii?Q?YTQkJlMfHgQtFIf+rmDnYfIsxRpm7yG8w1nEKwqZg5uXFV05YSFZadw2mehd?=
- =?us-ascii?Q?lPtUsqmNLUHmf2vrWy1Kk2UDMtERZac/GCpG8Af+XJQNE71AFw2p08Uh/Iz9?=
- =?us-ascii?Q?gKSXJ6HhUj/alyClF+LOmvRYtO4iNaUdTzrdp33vzTYIH2z6SeRL1C5SjjWI?=
- =?us-ascii?Q?lp7hsVt6Lrj8mgICjh+nti0aFk/FAHryAWLW6fVrrhD2gW+A8EN+gCddTYvp?=
- =?us-ascii?Q?gooExMeY34latNjOJL6Knn6DJkqPS5poEH4MPbb2GHvMq0Kf1s45Y5RFgo6h?=
- =?us-ascii?Q?JBdjMPQmM+RfGOvzHoLYRLKa2MY3TSlhlHw5+v7gqXuwbb92uelQi7RTjR3Y?=
- =?us-ascii?Q?9RmlgbHY0C2mAcqxgvlQENZRYrsghRM2aStUMK/P/oYO/nRUuzIdGhsMl4R9?=
- =?us-ascii?Q?cZYD/pnPDcY3Sg/zX/q+YM9+RAZprCJTxOan/z81hDlBCAlRjjOfaKzUDERb?=
- =?us-ascii?Q?Vrn/9y0vWOFQtWSt2PrPtLsZRdQPus2TZE0cCIGiA4UOQwD88JcgCu61iKlo?=
- =?us-ascii?Q?UC0AoTnk4WSK2UdPumsVaD0TggJAJf6eJmE8mIvjEicRbfRyvNOTyPJ/yNzS?=
- =?us-ascii?Q?Si9byeS1P5sYeg1UT1CArZ69c5D+Sm0Ckfpou2RMTldTYFFf+t4h4aQUg2yU?=
- =?us-ascii?Q?SLSRg5F+hPCNlI7mcsrDE1EiSLanr0rdP5AyjBsOqc1lmiuvOcuVGToD78qR?=
- =?us-ascii?Q?CUqvXRGmIUh3c3cKeIqvzXPg92XSJrvol5DAaLHRWh7auWnvn6BnJHEiTW1u?=
- =?us-ascii?Q?ID+GDPKG9jazObXaDhrIiiYx?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?dcqA/cDDiOyJl3Dzsi7VD5FOYIMaf4lm7jf5ioTkr6cZ4cr2ttY4TjDSux7M?=
+ =?us-ascii?Q?jG0ChufHPpIJfdfQdO1Yvj0oWGqsPdUV1dpOAiDTZgxd0+ImnYkcwHDauZYR?=
+ =?us-ascii?Q?sBgPLFajDbVjOMtti1aMAZT1qTE9GSK8lg+ZEuGby+4+tN9ClMXgl4uXxYvL?=
+ =?us-ascii?Q?g9CdA0Q+1nz2yzJZBS/WCkX+1aIN7lM4VhVdQPoI/WebjAo2w/RKmjc0BQJP?=
+ =?us-ascii?Q?B4QyVnVohNTVxd1S4Qi5jLMlOmjEycAlOmsQMDJlvUIhypG6l9iPSWc2h7Xu?=
+ =?us-ascii?Q?lkOj1XZJHiB23+7gcyhsL8yXGahVYxFVc3q628lEtLO58+nboiw9PssSHzG7?=
+ =?us-ascii?Q?f69h6Wq9gzZDfyo2MTX1VLHBI09n3Z6XRKXizp9zG+PPhabT9uThtOK/1S4B?=
+ =?us-ascii?Q?aqxJMbs7kKzfECFo3cHJT/OXQgO9fx+BQtp9Bu4I+EzkHecg+LAdPjzlPq18?=
+ =?us-ascii?Q?WyS51q58/zPNtHHflTb32z0p2Hu++pQJJTZEp6H3jyd95Ppgbbj/uKxCSVkF?=
+ =?us-ascii?Q?C0iRXnfV2OirdO5pxPnF2S46DSkUliBIS1YVDtfwTQUXXxZcf2iMyXCqCMA5?=
+ =?us-ascii?Q?vqwguBoRuenw7HmocycR5TBTJqSMQMnC9nqIAbJtPWr+mw9nClD3gp+W3QOL?=
+ =?us-ascii?Q?i3SCfySWLT4DOAh7WdhD1cUK4jDDwCYcrZB2tBiDCpw/07xCideIlLDH5VYN?=
+ =?us-ascii?Q?f9N9TC3A2x2/bpAS3pCRHB3+KCRIM8584qT3sZp4POzNc0SpGv44aI0b3WSH?=
+ =?us-ascii?Q?D8hKVQh+aNkb8bZdeh3xWu5oxAFyD0qB8VVRaLYExOrzD9NoinSqc0wehevv?=
+ =?us-ascii?Q?GtcZoGV+cw7Gx/18MbgeMeu+ZyaAzpaf5msatD0BK+G+vc/BUl2QvYJFrTlW?=
+ =?us-ascii?Q?D8XK6vfkrGRduflzdZqeZFYGgzvdf4j9zKNlPPwKUJmGleldTN5pRqloNvP6?=
+ =?us-ascii?Q?Q6HdEaj4CKM4BUPqC1DFt3eyqBrYOhPDW9hQRACYoG3aon4SPBWK7N3HnlCx?=
+ =?us-ascii?Q?0sP2yyqQuvl/ELLh3n+2MmcFquTix6ss3nxQ2nhHFZJBdQVuKmmmgnXNh7NT?=
+ =?us-ascii?Q?ZPfun66r5aSoMg4QY2nPAUaQ8imRqS+Zi2nMQY/X3tzxLAwKy0IVDxQ4TS3s?=
+ =?us-ascii?Q?CJO9pmqlqusepR9Xwlxjgdy2pyF9XbLZvjeNOp5cmW5SIFNGUnVBywgb0lNA?=
+ =?us-ascii?Q?5+K638HQcyaniVTbZqz17Ukeg+BP7NHM0Fgxh+RxDW2Lm05m+/BvjsHIYG52?=
+ =?us-ascii?Q?Mi7VvFkXulZm663p7NlOUY323p+LemletJtmpmam59DZvJ+4gtjUTOnPNdDz?=
+ =?us-ascii?Q?iHb+gBIFbETDNknOn10jrOfY?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d3441ff2-7d93-4848-fd37-08d931a97e81
+X-MS-Exchange-CrossTenant-Network-Message-Id: 772691f1-2c04-4729-8623-08d931a99829
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:49.3498
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:32.3669
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iQ33KfODvwLHodw9Zll8BJRYDqm1D0kduz4+PZWL3+19D2E64OeFsQGGSX7bVFew6SI9JUSrBFJDZzl2yG7CcA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1268
+X-MS-Exchange-CrossTenant-UserPrincipalName: QW7HelxPmMD4scFUYh7W1P2wl91MnzTx4l8xemi2poarB6IgJImPkX1sPRqC31yNYglcZBxNqjomTM6vSfBcUg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0402
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,201 +128,397 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/e2p.h | 166 +++++++++++++++++++++++++
- 1 file changed, 166 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/e2p.h
+ drivers/net/wireless/celeno/cl8k/mac_addr.c | 331 ++++++++++++++++++++
+ 1 file changed, 331 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac_addr.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/e2p.h b/drivers/net/wireless/=
-celeno/cl8k/e2p.h
+diff --git a/drivers/net/wireless/celeno/cl8k/mac_addr.c b/drivers/net/wire=
+less/celeno/cl8k/mac_addr.c
 new file mode 100644
-index 000000000000..74ec66dfe277
+index 000000000000..eeb3ce294111
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/e2p.h
-@@ -0,0 +1,166 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/mac_addr.c
+@@ -0,0 +1,331 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_E2P_H
-+#define CL_E2P_H
++#include "mac_addr.h"
++#include "utils/utils.h"
++#include "chip.h"
 +
-+#include <linux/types.h>
-+#include <net/cfg80211.h>
++static int set_mask_addr_without_zeroing_bits(struct cl_hw *cl_hw, u64 mac=
+64, u8 bss_num,
++                                             u8 first_mask_bit, u8 *mask_a=
+ddr)
++{
++       u64 mask =3D mac64;
++       s8 idx =3D 0;
 +
++       mask >>=3D first_mask_bit;
++       mask +=3D (bss_num - 1);
 +
-+#include "def.h"
-+#include "fem_common.h"
++       /*
++        * After the following line the mask will contain the changed
++        * bits between the first BSS MAC and the last BSS MAC
++        */
++       mask ^=3D (mac64 >> first_mask_bit);
 +
-+/**
-+ * EEPROM abstraction layer
-+ */
++       /* Find leftmost set bit */
++       for (idx =3D 47 - first_mask_bit; (idx >=3D 0) && (!(mask & (1ULL <=
+< idx))); idx--)
++               ;
 +
-+#define SERIAL_NUMBER_SIZE 32
++       if (idx < 0) {
++               cl_dbg_err(cl_hw, "Invalid mask (mac=3D0x%02llx, first_mask=
+_bit=3D%u, bss_num=3D%u)\n",
++                          mac64, first_mask_bit, bss_num);
++               mask =3D 0;
++               eth_zero_addr(mask_addr);
 +
-+enum eeprom_flavor {
-+       EEPROM_FLAVOR_CL80X0,
-+       EEPROM_FLAVOR_CL80X6,
-+};
++               return -1;
++       }
 +
-+struct eeprom_hw {
-+       u8 reserved[96];
-+} __packed;
++       mask =3D (1ULL << idx);
++       mask |=3D (mask - 1);
++       mask <<=3D first_mask_bit;
 +
-+struct eeprom_general {
-+       u8 version;
-+       u8 flavor;
-+       u8 mac_address[6];
-+       u8 temp_diff; /* Default value TEMP_DIFF_INVALID =3D 0x7F */
-+       u8 serial_number[SERIAL_NUMBER_SIZE];
-+       u8 pwr_table_id[2];
-+       u8 reserved[53];
-+} __attribute__((__packed__));
++       for (idx =3D 0; idx < ETH_ALEN; idx++) {
++               u8 shift =3D (8 * (ETH_ALEN - 1 - idx));
 +
-+struct eeprom_fem {
-+       u8 wiring_id;
-+       u16 fem_lut[FEM_TYPE_MAX];
-+       u32 platform_id;
-+       u8 reserved[19];
-+} __packed;
++               mask_addr[idx] =3D (mask & ((u64)0xff << shift)) >> shift;
++       }
 +
-+struct eeprom_phy_calib {
-+       s8 pow;
-+       s8 offset;
-+       s8 tmp;
-+} __packed;
++       return 0;
++}
 +
-+#define BIT_MAP_SIZE   20
-+#define NUM_OF_PIVOTS  20
-+#define NUM_PIVOT_PHYS (MAX_ANTENNAS * NUM_OF_PIVOTS)
++static int mask_mac_by_bss_num(struct cl_hw *cl_hw, u8 *mac_addr, u8 *mask=
+_addr,
++                              bool use_lam, bool random_mac)
++{
++       u8 bss_num =3D cl_hw->conf->ce_bss_num;
++       u8 first_mask_bit =3D cl_hw->chip->conf->ce_first_mask_bit;
++       u8 i;
++       /* Determine the bits necessary to cover the number of BSSIDs. */
++       u8 num_bits_to_mask[MAX_BSS_NUM * 2 + 1] =3D {
++               0, 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4
++       };
++       u8 mask_size =3D 0;
++       u8 byte_num =3D ETH_ALEN - 1 - (first_mask_bit / 8);
++       u8 bit_in_byte =3D first_mask_bit % 8; /* Referring to the index of=
+ the bit */
 +
-+struct eeprom_calib {
-+       u16 freq_offset;
-+       u8 chan_bmp[BIT_MAP_SIZE];
-+       struct eeprom_phy_calib phy_calib[NUM_PIVOT_PHYS];
-+} __packed;
++       if ((first_mask_bit + num_bits_to_mask[bss_num]) > (ETH_ALEN * 8)) =
+{
++               pr_err("Invalid combination of first_mask_bit + bss_num. "
++                      "must be lower than 48 bit in total\n");
++               return -1;
++       }
 +
-+struct eeprom {
-+       struct eeprom_hw hw;
-+       struct eeprom_general general;
-+       struct eeprom_fem fem;
-+       struct eeprom_calib calib;
-+} __packed;
++       if (cl_hw_is_tcv0(cl_hw)) {
++               mask_size =3D num_bits_to_mask[bss_num - 1];
++       } else {
++               u64 mac64 =3D ether_addr_to_u64(mac_addr);
++               u8 tcv0_bss_num =3D cl_hw->chip->cl_hw_tcv0->conf->ce_bss_n=
+um;
++               u8 bit_mask =3D (1 << num_bits_to_mask[bss_num + tcv0_bss_n=
+um - 1]) - 1;
 +
-+enum {
-+       ADDR_HW =3D offsetof(struct eeprom, hw),
-+       ADDR_HW_RESERVED =3D ADDR_HW + offsetof(struct eeprom_hw, reserved)=
-,
++               /*
++                * If we need to zero bits due to lack of room for the MAC =
+addresses
++                * of all BSSs of TCV1, then the mask is the number of zero=
+ed bits
++                */
++               if (((u64)bit_mask - ((mac64 >> first_mask_bit) & (u64)bit_=
+mask) + 1) < bss_num) {
++                       mask_size =3D num_bits_to_mask[bss_num + tcv0_bss_n=
+um - 1];
++               } else {
++                       /*
++                        * Otherwise the mask is the different bits between=
+ the
++                        * addresses of the first and the last BSSs
++                        */
++                       set_mask_addr_without_zeroing_bits(cl_hw, mac64, bs=
+s_num,
++                                                          first_mask_bit, =
+mask_addr);
++                       return 0;
++               }
++       }
 +
-+       ADDR_GEN =3D offsetof(struct eeprom, general),
-+       ADDR_GEN_VERSION =3D ADDR_GEN + offsetof(struct eeprom_general, ver=
-sion),
-+       ADDR_GEN_FLAVOR =3D ADDR_GEN + offsetof(struct eeprom_general, flav=
-or),
-+       ADDR_GEN_MAC_ADDR =3D ADDR_GEN + offsetof(struct eeprom_general, ma=
-c_address),
-+       ADDR_GEN_TEMP_DIFF =3D ADDR_GEN + offsetof(struct eeprom_general, t=
-emp_diff),
-+       ADDR_GEN_SERIAL_NUMBER =3D ADDR_GEN + offsetof(struct eeprom_genera=
-l, serial_number),
-+       ADDR_GEN_PWR_TABLE_ID =3D ADDR_GEN + offsetof(struct eeprom_general=
-, pwr_table_id),
-+       ADDR_GEN_RESERVED =3D ADDR_GEN + offsetof(struct eeprom_general, re=
-served),
++       /* Build mac and mask addr */
++       for (i =3D 0; i < mask_size; i++) {
++               /*
++                * Build mask - Convert to "1" the relevant bits in the mas=
+k
++                * addr in order to support the desired number of BSSIDs
++                */
++               mask_addr[byte_num] |=3D (0x01 << bit_in_byte);
 +
-+       ADDR_FEM =3D offsetof(struct eeprom, fem),
-+       ADDR_FEM_WIRING_ID =3D ADDR_FEM + offsetof(struct eeprom_fem, wirin=
-g_id),
-+       ADDR_FEM_LUT =3D ADDR_FEM + offsetof(struct eeprom_fem, fem_lut),
-+       ADDR_FEM_PLATFORM_ID =3D ADDR_FEM + offsetof(struct eeprom_fem, pla=
-tform_id),
-+       ADDR_FEM_RESERVED =3D ADDR_FEM + offsetof(struct eeprom_fem, reserv=
-ed),
++               /*
++                * Build mac -convert to "0" the relevant bits in the mac a=
+ddr
++                * in order to support the desired number of BSSIDs
++                */
++               if (random_mac && !use_lam)
++                       mac_addr[byte_num] &=3D ~(0x01 << bit_in_byte);
 +
-+       ADDR_CALIB =3D offsetof(struct eeprom, calib),
-+       ADDR_CALIB_FREQ_OFFSET =3D ADDR_CALIB + offsetof(struct eeprom_cali=
-b, freq_offset),
-+       ADDR_CALIB_CHAN_BMP =3D ADDR_CALIB + offsetof(struct eeprom_calib, =
-chan_bmp),
-+       ADDR_CALIB_PHY =3D ADDR_CALIB + offsetof(struct eeprom_calib, phy_c=
-alib),
++               bit_in_byte++;
 +
-+       SIZE_HW =3D sizeof(struct eeprom_hw),
-+       SIZE_HW_RESERVED =3D ADDR_GEN - ADDR_HW_RESERVED,
++               /* Support cases where the mask bits are not at the same by=
+te. */
++               if (bit_in_byte =3D=3D 8) {
++                       byte_num--;
++                       bit_in_byte =3D 0;
++               }
++       }
 +
-+       SIZE_GEN =3D sizeof(struct eeprom_general),
-+       SIZE_GEN_VERSION =3D ADDR_GEN_FLAVOR - ADDR_GEN_VERSION,
-+       SIZE_GEN_FLAVOR =3D ADDR_GEN_MAC_ADDR - ADDR_GEN_FLAVOR,
-+       SIZE_GEN_MAC_ADDR =3D ADDR_GEN_TEMP_DIFF - ADDR_GEN_MAC_ADDR,
-+       SIZE_GEN_TEMP_DIFF =3D ADDR_GEN_SERIAL_NUMBER - ADDR_GEN_TEMP_DIFF,
-+       SIZE_GEN_SERIAL_NUMBER =3D ADDR_GEN_PWR_TABLE_ID - ADDR_GEN_SERIAL_=
-NUMBER,
-+       SIZE_GEN_PWR_TABLE_ID =3D ADDR_GEN_RESERVED - ADDR_GEN_PWR_TABLE_ID=
-,
-+       SIZE_GEN_RESERVED =3D ADDR_FEM - ADDR_GEN_RESERVED,
++       if (use_lam) {
++               /* Mask LAM bit (Locally Administered Mac) */
++               if (cl_hw_is_tcv0(cl_hw))
++                       mask_addr[0] |=3D 0x02;
++       } else {
++               /*
++                * When not using LAM we do not zero the MAC address of the=
+ second BSS,
++                * so the mask (the modified bits between the first and las=
+t BSS) depends
++                * on initial MAC
++                */
++               u64 mac64 =3D ether_addr_to_u64(mac_addr);
 +
-+       SIZE_FEM =3D sizeof(struct eeprom_fem),
-+       SIZE_FEM_WIRING_ID =3D ADDR_FEM_LUT - ADDR_FEM_WIRING_ID,
-+       SIZE_FEM_LUT =3D ADDR_FEM_PLATFORM_ID - ADDR_FEM_LUT,
-+       SIZE_FEM_PLATFORM_ID =3D ADDR_FEM_RESERVED - ADDR_FEM_PLATFORM_ID,
++               set_mask_addr_without_zeroing_bits(cl_hw, mac64, bss_num,
++                                                  first_mask_bit, mask_add=
+r);
++       }
 +
-+       SIZE_CALIB =3D sizeof(struct eeprom_calib),
-+       SIZE_CALIB_FREQ_OFFSET =3D ADDR_CALIB_CHAN_BMP - ADDR_CALIB_FREQ_OF=
-FSET,
-+       SIZE_CALIB_CHAN_BMP =3D ADDR_CALIB_PHY - ADDR_CALIB_CHAN_BMP,
-+       SIZE_CALIB_PHY =3D sizeof(struct eeprom_phy_calib) * NUM_PIVOT_PHYS=
-,
++       return 0;
++}
 +
-+       EEPROM_NUM_BYTES =3D sizeof(struct eeprom),
-+       EEPROM_LAST_BYTE =3D EEPROM_NUM_BYTES - 1,
-+};
++#define MAC_FILTER_BITS 4
++#define MAC_FILTER_MASK ((1 << MAC_FILTER_BITS) - 1)
 +
-+struct cl_e2p_get_reply {
-+       u8 e2p_mode;
-+       u8 e2p_data[];
-+};
++static bool is_valid_mac_addr(u64 mac64, u8 first_mask_bit, u8 bss_num)
++{
++       u8 mac_bits =3D (mac64 >> first_mask_bit) & MAC_FILTER_MASK;
++       u8 mac_diff =3D 0;
++       u8 i;
 +
-+struct cl_chip;
++       for (i =3D 0; i < bss_num; i++) {
++               mac_diff |=3D mac_bits;
++               mac_bits++;
++       }
 +
-+int cl_e2p_init(struct cl_chip *chip);
-+void cl_e2p_close(struct cl_chip *chip);
-+int cl_e2p_write(struct cl_chip *chip, u8 *data, u16 size, u16 addr);
-+int cl_e2p_read(struct cl_chip *chip, u8 *data, u16 size, u16 addr);
-+int cl_e2p_write_version(struct cl_chip *chip);
-+int cl_e2p_get_addr(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                   void *data, int data_len);
-+int cl_e2p_set_addr(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                   const void *data, int data_len);
-+int cl_e2p_set_wiring_id(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                        const void *data, int data_len);
-+int cl_e2p_help(struct wiphy *wiphy, struct wireless_dev *wdev,
-+               void *data, int data_len);
++       return hweight8(mac_diff) <=3D MAC_FILTER_BITS;
++}
 +
-+enum cl_e2p_cmd {
-+       CL_E2P_GET_ADDR,
-+       CL_E2P_GET_MAC,
-+       CL_E2P_GET_SERIAL_NUMBER,
-+       CL_E2P_GET_PWR_TABLE_ID,
-+       CL_E2P_GET_FREQ_OFFSET,
-+       CL_E2P_GET_WIRING_ID,
-+       CL_E2P_GET_FEM_LUT,
-+       CL_E2P_GET_PLATFORM_ID,
-+       CL_E2P_GET_CALIB,
-+       CL_E2P_GET_HEXDUMP,
-+       CL_E2P_GET_TABLE,
++static int cl_mac_addr_set_addresses(struct cl_hw *cl_hw, bool use_lam,
++                                    u8 *mask_addr)
++{
++       u8 first_mask_bit =3D cl_hw->chip->conf->ce_first_mask_bit;
++       int i =3D 0;
++       u8 bss_num =3D cl_hw->conf->ce_bss_num;
++       u64 mac64 =3D ether_addr_to_u64(cl_hw->hw->wiphy->perm_addr);
++       u64 mask64 =3D 0;
++       u8 new_addr[ETH_ALEN] =3D {0};
 +
-+       CL_E2P_SET_ADDR,
-+       CL_E2P_SET_MAC,
-+       CL_E2P_SET_SERIAL_NUMBER,
-+       CL_E2P_SET_PWR_TABLE_ID,
-+       CL_E2P_SET_FREQ_OFFSET,
-+       CL_E2P_SET_WIRING_ID,
-+       CL_E2P_SET_FEM_LUT,
-+       CL_E2P_SET_PLATFORM_ID,
-+       CL_E2P_SET_CALIB,
++       if (!use_lam && !is_valid_mac_addr(mac64, first_mask_bit, bss_num))=
+ {
++               cl_dbg_err(cl_hw,
++                          "perm_addr %pM is invalid for bss_num %d without=
+ LAM\n",
++                          cl_hw->hw->wiphy->perm_addr, bss_num);
++               return -1;
++       }
 +
-+       CL_E2P_MAX
-+};
++       cl_mac_addr_copy(cl_hw->addresses[i].addr,
++                        cl_hw->hw->wiphy->perm_addr);
++       for (i =3D 1; i < bss_num; i++) {
++               u8 *prev_addr =3D cl_hw->addresses[i - 1].addr;
 +
-+#endif /* CL_E2P_H */
++               if (use_lam) {
++                       mac64 =3D ether_addr_to_u64(prev_addr);
++                       mask64 =3D ether_addr_to_u64(mask_addr);
++                       if (cl_hw_is_tcv0(cl_hw)) {
++                               if (i =3D=3D 1)
++                                       mac64 &=3D ~mask64;
++                               else
++                                       mac64 +=3D 1 << first_mask_bit;
++                               u64_to_ether_addr(mac64, new_addr);
++                               new_addr[0] |=3D 0x02;
++                       } else {
++                               if ((mac64 & mask64) =3D=3D mask64)
++                                       mac64 &=3D ~mask64;
++                               else
++                                       mac64 +=3D 1 << first_mask_bit;
++                               u64_to_ether_addr(mac64, new_addr);
++                       }
++                       cl_mac_addr_copy(cl_hw->addresses[i].addr, new_addr=
+);
++               } else {
++                       mac64 =3D ether_addr_to_u64(prev_addr);
++                       mac64 +=3D 1 << first_mask_bit;
++                       u64_to_ether_addr(mac64, cl_hw->addresses[i].addr);
++               }
++       }
++       cl_hw->n_addresses =3D bss_num;
++
++       return 0;
++}
++
++int cl_mac_addr_set_tcv0(struct cl_hw *cl_hw, u8 *dflt_mac, u8 *dflt_mask,=
+ bool *random_mac)
++{
++       struct cl_chip *chip =3D cl_hw->chip;
++
++       if (!cl_mac_addr_is_zero(chip->conf->ce_phys_mac_addr)) {
++               /* Read MAC from NVRAM file */
++               cl_mac_addr_copy(dflt_mac, chip->conf->ce_phys_mac_addr);
++               cl_dbg_verbose(cl_hw, "Read MAC address from NVRAM [%pM]\n"=
+, dflt_mac);
++       } else {
++               /* Read MAC from EEPROM */
++               if (chip->eeprom_read_block(chip, ADDR_GEN_MAC_ADDR,
++                                           ETH_ALEN, dflt_mac) !=3D ETH_AL=
+EN) {
++                       CL_DBG_ERROR(cl_hw, "Error reading MAC address from=
+ EEPROM\n");
++                       return -1;
++               }
++
++               cl_dbg_verbose(cl_hw, "Read MAC address from EEPROM [%pM]\n=
+", dflt_mac);
++       }
++
++       /* Test if the new mac address is 00:00:00:00:00:00 or ff:ff:ff:ff:=
+ff:ff */
++       if (cl_mac_addr_is_zero(dflt_mac) || cl_mac_addr_is_broadcast(dflt_=
+mac)) {
++               /* Set celeno oui */
++               dflt_mac[0] =3D 0x00;
++               dflt_mac[1] =3D 0x1c;
++               dflt_mac[2] =3D 0x51;
++               get_random_bytes(&dflt_mac[3], 3);
++               cl_dbg_verbose(cl_hw, "Random MAC address [%pM]\n", dflt_ma=
+c);
++               *random_mac =3D true;
++       }
++
++       return 0;
++}
++
++void cl_mac_addr_set_tcv1(struct cl_hw *cl_hw, u8 *dflt_mac, u8 *dflt_mask=
+)
++{
++       struct cl_chip *chip =3D cl_hw->chip;
++       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
++       u8 tcv0_bss_num =3D cl_hw_tcv0->conf->ce_bss_num;
++       u8 first_mask_bit =3D chip->conf->ce_first_mask_bit;
++       u64 mac64;
++       u8 idx;
++       u8 bss_num =3D cl_hw->conf->ce_bss_num;
++       u8 bit_mask[MAX_BSS_NUM + 1] =3D {0x0, 0x0, 0x1, 0x3, 0x3, 0x7, 0x7=
+, 0x7, 0x7};
++
++       mac64 =3D ether_addr_to_u64(cl_hw_tcv0->hw->wiphy->perm_addr);
++
++       if (chip->conf->ce_lam_enable) {
++               /* Find the first address of TCV1 */
++               if (tcv0_bss_num =3D=3D 1) {
++                       /*
++                        * For tcv0 bss num =3D 1, we have to zero the nece=
+ssary bits
++                        * since it hasn't been done in TCV0
++                        */
++                       mac64 &=3D ~((u64)bit_mask[bss_num] << first_mask_b=
+it);
++               } else {
++                       u8 total_bss_to_mask =3D bss_num + tcv0_bss_num - 1=
+;
++
++                       mac64 &=3D ~((u64)bit_mask[tcv0_bss_num - 1] << fir=
+st_mask_bit);
++                       /*
++                        * Get the first MAC address of TCV1 by incrementin=
+g the MAC
++                        * address of the last BSS of TCV0.
++                        * After the instruction below mac64 will hold the =
+MAC of TCV0's
++                        * last BSS.
++                        */
++                       mac64 +=3D ((u64)(tcv0_bss_num - 2) << first_mask_b=
+it);
++                       /*
++                        * If there is no more room for another address in =
+TCV0's mask
++                        * address then we have to zero bits else increment=
+ the last
++                        * address of TCV0
++                        */
++                       if (((mac64 >> first_mask_bit) & (u64)bit_mask[tota=
+l_bss_to_mask]) =3D=3D
++                           (u64)bit_mask[total_bss_to_mask])
++                               mac64 &=3D ~((u64)bit_mask[total_bss_to_mas=
+k] << first_mask_bit);
++                       else
++                               mac64 +=3D (1ULL << first_mask_bit);
++               }
++
++               /* Enable LAM bit */
++               mac64 +=3D (0x2ULL << 40);
++       } else {
++               mac64 +=3D ((u64)tcv0_bss_num << first_mask_bit);
++       }
++
++       for (idx =3D 0; idx < ETH_ALEN; idx++) {
++               u8 shift =3D (8 * (ETH_ALEN - 1 - idx));
++
++               dflt_mac[idx] =3D (mac64 & ((u64)0xFF << shift)) >> shift;
++       }
++}
++
++int cl_mac_addr_set(struct cl_hw *cl_hw)
++{
++       bool random_mac =3D false;
++       u8 dflt_mac[ETH_ALEN] =3D {0, 28, 81, 81, 81, 81};
++       u8 dflt_mask[ETH_ALEN] =3D {0};
++       bool use_lam =3D cl_hw->chip->conf->ce_lam_enable;
++       struct wiphy *wiphy =3D cl_hw->hw->wiphy;
++
++       if (cl_hw_is_tcv0(cl_hw)) {
++               if (cl_mac_addr_set_tcv0(cl_hw, dflt_mac, dflt_mask, &rando=
+m_mac))
++                       return -1;
++       } else {
++               cl_mac_addr_set_tcv1(cl_hw, dflt_mac, dflt_mask);
++       }
++
++       /* For single BSS mask should be 0 */
++       if (cl_hw->conf->ce_bss_num > 1)
++               if (mask_mac_by_bss_num(cl_hw, dflt_mac, dflt_mask, use_lam=
+, random_mac))
++                       return -1;
++
++       /* Permanent address MAC (the MAC of the first BSS) */
++       SET_IEEE80211_PERM_ADDR(cl_hw->hw, dflt_mac);
++
++       /*
++        * MAX_BSS_NUM must be power of 2
++        * mac80211 doesn't handle non-contiguous masks
++        */
++       if (!WARN_ON(MAX_BSS_NUM & (MAX_BSS_NUM - 1)))
++               cl_mac_addr_array_to_nxmac(dflt_mask, &cl_hw->mask_low, &cl=
+_hw->mask_hi);
++
++       if (cl_mac_addr_set_addresses(cl_hw, use_lam, dflt_mask))
++               return -1;
++
++       wiphy->addresses =3D cl_hw->addresses;
++       wiphy->n_addresses =3D cl_hw->n_addresses;
++
++       return 0;
++}
 --
 2.30.0
 
