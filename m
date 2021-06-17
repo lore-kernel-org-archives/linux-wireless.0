@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08AD1C49EA4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C202FC49EA2
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E947861003
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A80F261003
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233769AbhFQQJi (ORCPT
+        id S233790AbhFQQJj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:38 -0400
-Received: from mail-eopbgr80074.outbound.protection.outlook.com ([40.107.8.74]:59110
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:09:39 -0400
+Received: from mail-eopbgr70049.outbound.protection.outlook.com ([40.107.7.49]:64480
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233619AbhFQQIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:08:16 -0400
+        id S233693AbhFQQIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:08:17 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bn9yyYyZB33OwI6a+y8DX6/jMvUuzKkdR27HcJHOl5WZbfrQjy+QsIaggXpPeHrr2rZWRNv1266QWkSoyAEsY8BIpMJTLhU+RqwClEfLqZtQbNia5ZqHhPb4jyZPsJZGYagaj6PHb3SoKD7mbVgieEh4lQ4eH4cd58wvQo1FinVcCZcDiVLRQkbT3Ylnhji4bSMgezNXvBN0jefvGdN9eGAGVoythd2eofRyuZ4W2FXVZLMFlHYddSjPGkNu3x3jQ7UmLseuQyEnQlqZrsdaO/Sur1MTvSEWPR8dONgfmQwoWrYlepHNQ+iPeJdIaXAHZHumks8dC4WlhabU4V9IQg==
+ b=XvxMR8gno+NjHnZyWRvEkY1LfUM28PiXa5vyuQmH59wyryqOCaHBtSer6w3X0mYKmE77+gl8gVHZwAamaDWfi2xVxqPwLt3I42fXjSe+KJ1SsCdaiMsRm801SGDiUXaex2Hp8d2yNnoc+JhXVVkLAzPzgehx9hV2kjL+yuxbHul3UAIlk8lfqECfiF8XBHKcCuw9MmswkDJsLgQcymMcsJAqbyl3aJeP23Mnw2ba9+T3AdV7jt+JRn41EEowa4z3Ydlkne8ADFk4gn8MfG95ObhX6X0LWLigahSYYfPZcE22k5LBlMQNR1GyvJFm4s6djHOfzvLO9VnE7ZuLuxsjgA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=axFvcZdm1TQFW66FrDnuuqQTNlt7wEuVFd4M+CfkqxQ=;
- b=YPx5eGdPUeXd2OowtFSu5toLMd3sG5cmJ0kQdBKLXIT4sQul+WI615JPvrZgj5V6yQlehIL1vxHX3p69ed/vpVjKuRr+b/kJpvriF2OcmCpPtS9Lr3TQIJhHsHEx8DiyIjrFQ1J2oqH+PH+UDTG+RYymnV5i/sKVp1xCesLP694ynlYb+Hze21yuaLgfzHueqcJfyfoJkQuTqSYcDS2glCmdDbLFvaMprmgoYE62Q9bkAS7nG96WTZUoQ3UZS2rDzgKgYe98Ssw4pP29yDzdL0Q5HIC/UWZmshuaYR4dua1j47PEgWW8lL7vyDJC0olEaN8uF1wqEzf5laSFQNJvZg==
+ bh=YLyCqNwjjtwWE+MCOtIKts16DbZ/1faEJES+NF8QPHw=;
+ b=CJrDFCxI/Bo3VRvpYeTc3K2tg0QkZSt415awQPW8aVKOMdeAe4h9uVtcbfeVzs1b7VRMpUURI8Ov0U7IS/EyD3paIEFyBvmkKpY0b8jaDtaYKrM9vi3HRsFJnxbK1+rcKYt1zkPh1UBWMhX64NS3TN86FcbS1z99xAVbYQTLvH4E4D6XA47hcZYnSKgr5U2+7mqcNtSCE1gcjMxPUsaIDuCYobiuzHcBGUsdEG+f5fv5dyXph7JdKTRFYSeoTBbPR5m2D+vDT5IaacqEZXd/ufql6L56tK6rQVpGC3wsZarJQTZ/eg6cZYWmq10Ws9bFfHWY+hLIs6V64/oTzVDimQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=axFvcZdm1TQFW66FrDnuuqQTNlt7wEuVFd4M+CfkqxQ=;
- b=s2UuffiOxkthYL+thkQQhlgDOhckMQYFoBr+83wZI2IkHtE684sSrJEMoNwwsRPZ3UUVip/yeNtP/hsI2XsMhbZ958hV7RyH2E5Ij+pFLTZBCiLZngNKcajTNsaqT5FyQO0qFwgbgZ+XMZ9Zx/kMwPimHr3ofynYiNb3TmCC0TU=
+ bh=YLyCqNwjjtwWE+MCOtIKts16DbZ/1faEJES+NF8QPHw=;
+ b=wN2ftwuwlXjyCgduoIsukhNkuY+h4YT1obSY/lZrmSDPU9283Y6gIHZfpuh7ccWNSYOF5RYRqJMpUrpAZLtktYOmzMQXj7rxx/8PUtql5TMJ+g0Qgca+dpFjLh0mLzuMlZhnHu4n/W/xkoADwWwS1neJwBS8uKrcxA5Bb46Bew8=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB0887.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1f8::17) with
+ by AM0P192MB0402.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:46::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:05:05 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
+ 2021 16:05:11 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:05 +0000
+ 16:05:11 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 103/256] cl8k: add key.c
-Date:   Thu, 17 Jun 2021 15:59:50 +0000
-Message-Id: <20210617160223.160998-104-viktor.barna@celeno.com>
+Subject: [RFC v1 117/256] cl8k: add netlink.c
+Date:   Thu, 17 Jun 2021 16:00:04 +0000
+Message-Id: <20210617160223.160998-118-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:27 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:42 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d50d0b62-c35e-47d5-c5ac-08d931a995a4
-X-MS-TrafficTypeDiagnostic: AM9P192MB0887:
+X-MS-Office365-Filtering-Correlation-Id: c1a81f10-205d-4f5d-8867-08d931a99ede
+X-MS-TrafficTypeDiagnostic: AM0P192MB0402:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB0887B754A06EEC8950A396ADF60E9@AM9P192MB0887.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-Microsoft-Antispam-PRVS: <AM0P192MB04028AE621FAE68F05C6B537F60E9@AM0P192MB0402.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3276;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: LGvNm/dr9L5qccGwiUqVsPvdRCPKp4x4ASjPCOfFTJg6dwtMXpYZ+yJ0BMUxSl+C3UY4JLWPBsswXZE2DWj+pKqjd96uEr1xoZRRk9j6KSbi65SR5W7RQhnbWfvdpiVMDOLUbUT8ZGGXd8G3LFh7DZCy9UO2ZN+HHol4OLNSbN0D1FiQYIGVp0yu4xxGPbDawDMzpkW5I5SCBEJtxfXq2vb/s+ybpGlfJxh6fKMykbVPLQrHvI8NFBbaxn7GVwWyd/rJ3BP3/yBu3oE+4ZF2A4kUxZKurnu+8E28EmD+FDnP0bojbeXpFa2Ej7EaFModHkyBDxDHwYthk9WqH1/4bCPxdncWkZNrdC+sGUMoWB8MwDD26saC1CnzFOyogne014tAw6r1pAKRl5wMI4YrCj0liTfLVLz8ANMDWtxBjiLGfDkUg016ThbpmLXefjrHWnvFarqwnASoDGJ92HIn16HIkFym7ADycLAes+fApTICfPVorHjx1QX64lJ6LYvXk3p0erYg7B+nMoseyFBqs66HW6F13hGazQz8o1v2vtIExOYEFepoSfDGYlpTyMpFCbUfteszybfa3S+XnV5lABAJHM6eonR1Xs/aOP+av2+crJ2d22AaVRiiegfUKndYzXSNwBSBFWXTkaRu1t+2R2GTzIt7c4SsuNlu1n2Nk4wowsvcjULs6P0CFfcVpJ6ogYleSDy0XTc8xNwkOawDpg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(396003)(366004)(39850400004)(136003)(346002)(83380400001)(6666004)(38350700002)(4326008)(186003)(16526019)(5660300002)(54906003)(6506007)(26005)(55236004)(38100700002)(316002)(1076003)(107886003)(52116002)(8936002)(508600001)(66476007)(66946007)(66556008)(36756003)(6916009)(6486002)(86362001)(2616005)(956004)(2906002)(8676002)(9686003)(6512007)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: DiNXSbxUV5EySboW2fT7K84OsM0C2i6WBOFcyRfeVFr4d3wHr/Evv0/Z9n+FSUd9APIHkNu/OJIx8eMYfk1mO2wlz3r7cxGEEUgMn2QWpZL8vXSxjoSYZL24DJDAM15xmc1P1agXpJxswb4EDI262tk8fIShsbCtgqy5bMweoW+NB2NRqzvIr2KSJL6C+JyT4cqubSnlaeF9ku60gFxW3YBlZnlOoJeJ4Wc4ZgIgGbl8hn3C6SBKJIZUFq8q8u9ipHe0dX4skiI3laK6w4adC2i5NRxoPW0HPqhFgOZhsIZ4JsR351mk6ZVjduVBj8D+EtrupXkFB7/61y0XJSjE94aF+XGbDgIoGaq/25Eb1cIBKERDYIPKlaOhYruTGJgSfB2UY/c7fEsH5uDRMrP3U6wHSQcFrWOLwaT/PpOawG+SpHwO8WZVLJtbUnaXEflCxgE0Nd34xRUPox+MbjG+JYP/1pL/F5hSlu03iZjcIZb5oVqtMTDDYb8MtV6zXqn4avqK+HGS3zUTlHj4qbD0x7ht2ZsmaqEsNvJKYs94NHpEcXy8qKPMfbnHPNNYB/CGSv055soi0w/ItZqL4KIbDVIinrpKJkdGSHRDHWXMIxZFiNDgbvMUTzIINxcGi06DgA2y1A/utzz3GXuOjVhLVnHkO/3mvPvK74Q8OfBI2lvkylrSjkSVsiNPau/RNGGcWeVynRbIecqf96zLH370Vw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(376002)(396003)(366004)(346002)(6916009)(6512007)(9686003)(6666004)(52116002)(2616005)(186003)(16526019)(38100700002)(38350700002)(1076003)(6506007)(5660300002)(107886003)(55236004)(86362001)(6486002)(8936002)(956004)(26005)(8676002)(508600001)(2906002)(36756003)(54906003)(316002)(66946007)(66556008)(4326008)(66476007)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?h//KKRFudclNsPTFZcTVuOeH0MsjAyXinfZsw544vDopgT6eTGBg+Vho4UbW?=
- =?us-ascii?Q?masR3LlSX/wza/PP3Z7skJxjbcEdPm3YA9GzrYPJdvqdKQY/U68anOlXyUi3?=
- =?us-ascii?Q?83olqE+RDGTFGxDZ4Id7z70NOfHqz7ae1qPPZiLGtrp9scBf7mmXFaDP9/Nv?=
- =?us-ascii?Q?WIi4ZWg8GwoVD47fyErsZIUbwPgkx8Owk2ntGMwUToLavQJ2p3QgeRAyYuN0?=
- =?us-ascii?Q?GjFnLp+IRjBLWxP4khGp6qOXQ/HbRRQFzXaNDXuGQSlCcBc/JUyw4Swl1yZf?=
- =?us-ascii?Q?KX8uf6Hr3V44Cc748XvabeNPFJ+HvUk3rUKmXbILG8k4MX0uOEW60dmM3Pmm?=
- =?us-ascii?Q?yGm7HjKsjpX4LCC47Eg5KDJi2JenUWLUaAtUDah9FnsyUi7JUDdcWQSXqAU0?=
- =?us-ascii?Q?aOeCLn+vccALB2rkYHaZhdmhLPi6CyjgVZodZ4gVRvQhSAZtigKBElYg1hnK?=
- =?us-ascii?Q?RIZoN5c9XQljUk5S91FIsaEU01/js6Kwo++HjFnPJqsS/QJKnNW4lfJ79BM8?=
- =?us-ascii?Q?+dJLIYMTZXJ4QPooAKphVXT+Bbkqv0XPhgYDHtgzwGMtCulv4IyKOJrywqYg?=
- =?us-ascii?Q?WuUkwcb01AfcZWj6oYDgGyXGQ9vzuo+TSC7jghedRg/3OCpTesbXnp55BaJK?=
- =?us-ascii?Q?ffu09AfVVBZTPSG/2MOHjA2Z+x5ACfpbcNRgJcVtwrq1EGJH70oYMVb2+aH8?=
- =?us-ascii?Q?ogwAKEl1AXw+lp5l4JU7KRVg5r0eviORCetfzu3gOyMudtYhdAtFyYkpA5++?=
- =?us-ascii?Q?TSaYBh+NZ7uVk7XeZ+HkKPEqzFDmDxwNE+Aj5+m/9hVsHBpcmymxTxIGbVvS?=
- =?us-ascii?Q?sdOptMNoN0LYy5nF4hTtYUG72ifOxgpLkXhMzuVEKqXnKvaJ2JBrWY+/4GOK?=
- =?us-ascii?Q?zKnGdmsAxboUnl5pEgtWwvaADNHRlFTDf5uD97UTaya2bXQsDo2ECP8CYwm/?=
- =?us-ascii?Q?7XaSoSTjglSQiGTLmJQmv2eJ0LZ+gqwLyfksJVD8XRpbsXCKvxdrUXZPOHYd?=
- =?us-ascii?Q?exWwfaLeiMs2p75vHnd7JYDwufh1brKjEzHsN3q3/9NxR21BOsZdPUzV3nPF?=
- =?us-ascii?Q?Pi/VQKDZAHQMvdVCyrNSuXeTNQJ5tV5VlL+EW8X9exfPRGkupEtskTxqpatM?=
- =?us-ascii?Q?R36ekztY4dYUJtjMfKWN7mGvLuVcm4NeCPGrvhamcUKg6DkynqiIrCNeWJ/4?=
- =?us-ascii?Q?UClexA5cObdgpzpey3XhUs/F6ZAZCCnjWsUVFL3PNb8GiDENjkYExJ4P2so2?=
- =?us-ascii?Q?Mo2DdJRXsbdUZlIQRrPvwILS53fx5KyxfTSaNv/+Ii82XixZp1Y34vBZ04Sa?=
- =?us-ascii?Q?lZyKI5V52nIKwOAJFEW9oUp/?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?GyfaJYKHDZRyYr7RVD98pZyq1KGREQRe6f+Hv9pVrcVnv2nq2M4qjN7Kp20v?=
+ =?us-ascii?Q?ZsKoQD2jliuA3lwG+yxqPx/+dTS0dNgMtzZSU2/O+qV7w5KdUXzdvVs9UCPq?=
+ =?us-ascii?Q?cj7I46NoaBrMhLuwjxNHV/L5FY7duGOyyMNUXPbB8HxY9F1i/lJMKlLETVAn?=
+ =?us-ascii?Q?cgKkI72nOQzf/GkYDLVgKj3tIOiniPEWnNMdKPS6As0TOtkElDm3B/kK88N5?=
+ =?us-ascii?Q?xU4b3uP8qWFB/Fsy7C+t8ygww3loiIwcPHylKyyW8UbKZkAjx560WZ82YMRU?=
+ =?us-ascii?Q?bTd9XnubZ8FSACKFTeDw+z8EHRAGs8HetD677PxkBEzQ5ok7WX/AjaD9RKD4?=
+ =?us-ascii?Q?xnGwxzK75FOVyD7bO8JNY/E3Z4sFTVsvy9ngwFEXvp3bIHLA9hgSoIH2STnM?=
+ =?us-ascii?Q?I6s+Cc1C+USp5cxS0eAN3uZ1qUNtTLbEIJF4mBhRnSZOppyWfimbpoZ/kxw+?=
+ =?us-ascii?Q?Ve/AmdtRgyomp58b3FNX8XvaxJEUQV38LJp7yQG6FSGqURb+SmzlhCO65LWT?=
+ =?us-ascii?Q?2BSfBZMTEwBARu+lIPJ1GwIE4tt0uPQ0but+z5/Nr0CeqR2EeQ9FhXFARRz+?=
+ =?us-ascii?Q?UDuqsBFTHWAmcjek41sxMYMfB1uP/+B58d0TrSyenUCJF5iyUN5PsIpqrBef?=
+ =?us-ascii?Q?C8sJJ8xOwRKh/Y0RaQOLItRL1+exd+Y1YMuLkx+7oZKIsS+beXiR3wd1kquf?=
+ =?us-ascii?Q?Jboj3tWRyn5g5zS7QR5Vmdh/ie4BzghVqkYXfkklrqEjOjSo3RtLpUVnf4Y/?=
+ =?us-ascii?Q?3gS2/jDmwQ6I7pUDwv+CITSokSKcnfEcuoESkpyUo2sQOG6XDtswrr3G5IFF?=
+ =?us-ascii?Q?kPY4Ex6HKMOMOGKbb8vfTLFVer83O3bIJHkzcvcRP/kDQNmvUe+RVNZe48LQ?=
+ =?us-ascii?Q?6PzyLNxpzIqP0CwCmqiQOlTO2FeLwpzKFuI2MxMFQUJKI6tSUtcuS2BzYNhb?=
+ =?us-ascii?Q?vkDC03yz9Om1oEpvL4fxA8ouj3Y+n6FC7UybEqR/rRpr/lk1cmXomk+myxCi?=
+ =?us-ascii?Q?4qcqBlR3z3ubxNhf54U+YsIqX0zdlP8GWOxYRYfEyiwToSJ23+QINiSqZySa?=
+ =?us-ascii?Q?0l4DgopMK0QIpiyyiukdQfelQz5nw1LeMvQUixli8pPzhmksukPnNUY8kpkz?=
+ =?us-ascii?Q?fhYBgAH89KORp/z5P+3XrZGnaRkd1KBYud20BO0TSJyaDGx0qANIOUFLLsW+?=
+ =?us-ascii?Q?Hc0bhXRyXfUvW14ZWfcO4e63P9/4xq5gEd/7FcYlWSniE5oKN7W5+Qlc6hB/?=
+ =?us-ascii?Q?LLX6N34btXpSizWtM7a9AObpoHTlpfe2HGnxAtuPyjPUDo/FSu20L3PYaMKo?=
+ =?us-ascii?Q?IuP9Vsk4+fh67HIL0IO/Yctt?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d50d0b62-c35e-47d5-c5ac-08d931a995a4
+X-MS-Exchange-CrossTenant-Network-Message-Id: c1a81f10-205d-4f5d-8867-08d931a99ede
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:28.1006
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:43.5558
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: an8Van5D0PXptXOce+1UFGmOU3VUJwxYGI4WN+vv79pb/7rDJucCpx2vSEJsl+9eJBSlCg5ePhVtNwzj0QUR+Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0887
+X-MS-Exchange-CrossTenant-UserPrincipalName: oefHAztGFUzH1kXC1pojK3/eYU658wV6V3ZcyHxUiRSjF8E2BME4r9jLAV8Rs1h//ssaHbqc+sL9rFZLzRBVFw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0402
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,217 +128,60 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/key.c | 197 +++++++++++++++++++++++++
- 1 file changed, 197 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/key.c
+ drivers/net/wireless/celeno/cl8k/netlink.c | 41 ++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/netlink.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/key.c b/drivers/net/wireless/=
-celeno/cl8k/key.c
+diff --git a/drivers/net/wireless/celeno/cl8k/netlink.c b/drivers/net/wirel=
+ess/celeno/cl8k/netlink.c
 new file mode 100644
-index 000000000000..276c2e76e126
+index 000000000000..cc03575704ad
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/key.c
-@@ -0,0 +1,197 @@
++++ b/drivers/net/wireless/celeno/cl8k/netlink.c
+@@ -0,0 +1,41 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "key.h"
-+#include "fw/msg_tx.h"
-+#include "fw/fw_msg.h"
-+#include "sta.h"
-+#include "tx/single_cfm.h"
-+#include "tx/agg_cfm.h"
-+#include "tx/tx_queue.h"
++#include <linux/kernel.h>
++#include <linux/version.h>
++#include <linux/socket.h>
++#include <linux/rtnetlink.h>
++#include <net/cfg80211.h>
 +
-+static int cmd_set_key(struct cl_hw *cl_hw,
-+                      struct ieee80211_vif *vif,
-+                      struct ieee80211_sta *sta,
-+                      struct ieee80211_key_conf *key)
++#include "netlink.h"
++
++void cl_netlink_send_async(struct cl_hw *cl_hw, struct cl_nl_event *event)
 +{
-+       int error =3D 0;
-+       struct mm_key_add_cfm *key_add_cfm;
-+       u8 cipher_suite =3D 0;
++       struct sk_buff *skb =3D NULL;
++       int msg_len;
 +
-+       /* Retrieve the cipher suite selector */
-+       switch (key->cipher) {
-+       case WLAN_CIPHER_SUITE_WEP40:
-+               cipher_suite =3D MAC_CIPHER_SUITE_WEP40;
-+               break;
-+       case WLAN_CIPHER_SUITE_WEP104:
-+               cipher_suite =3D MAC_CIPHER_SUITE_WEP104;
-+               break;
-+       case WLAN_CIPHER_SUITE_TKIP:
-+               cipher_suite =3D MAC_CIPHER_SUITE_TKIP;
-+               break;
-+       case WLAN_CIPHER_SUITE_CCMP:
-+               cipher_suite =3D MAC_CIPHER_SUITE_CCMP;
-+               break;
-+       case WLAN_CIPHER_SUITE_GCMP:
-+       case WLAN_CIPHER_SUITE_GCMP_256:
-+               cipher_suite =3D MAC_CIPHER_SUITE_GCMP;
-+               break;
-+       case WLAN_CIPHER_SUITE_AES_CMAC:
-+               return -EOPNOTSUPP;
-+       default:
-+               return -EINVAL;
++       msg_len =3D sizeof(*event);
++       skb =3D cfg80211_vendor_event_alloc(cl_hw->hw->wiphy, NULL, msg_len=
+,
++                                         CL_VENDOR_EVENT_ASYNC, GFP_ATOMIC=
+);
++       if (!skb) {
++               cl_dbg_err(cl_hw, "vendor_event_alloc(len:%u) failed\n", ms=
+g_len);
++               return;
 +       }
 +
-+       error =3D cl_msg_tx_key_add(cl_hw, vif, sta, key, cipher_suite);
-+       if (error)
-+               return error;
-+
-+       key_add_cfm =3D (struct mm_key_add_cfm *)(cl_hw->msg_cfm_params[MM_=
-KEY_ADD_CFM]);
-+       if (!key_add_cfm)
-+               return -ENOMSG;
-+
-+       if (key_add_cfm->status !=3D 0) {
-+               cl_dbg_verbose(cl_hw, "Status Error (%u)\n", key_add_cfm->s=
-tatus);
-+               cl_msg_tx_free_cfm_params(cl_hw, MM_KEY_ADD_CFM);
-+               return -EIO;
++       if (nla_put(skb, CL_VENDOR_ATTR_DATA, msg_len, event)) {
++               kfree_skb(skb);
++               return;
 +       }
 +
-+       /* Save the index retrieved from firmware */
-+       key->hw_key_idx =3D key_add_cfm->hw_key_idx;
-+
-+       cl_msg_tx_free_cfm_params(cl_hw, MM_KEY_ADD_CFM);
-+
-+       /*
-+        * Now inform mac80211 about our choices regarding header fields ge=
-neration:
-+        * we let mac80211 take care of all generations
-+        */
-+       key->flags |=3D IEEE80211_KEY_FLAG_GENERATE_IV;
-+       if (key->cipher =3D=3D WLAN_CIPHER_SUITE_TKIP)
-+               key->flags |=3D IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+
-+       if (sta) {
-+               struct cl_sta *cl_sta =3D (struct cl_sta *)sta->drv_priv;
-+
-+               cl_sta->key_conf =3D key;
-+       } else {
-+               struct cl_vif *cl_vif =3D (struct cl_vif *)vif->drv_priv;
-+
-+               cl_vif->key_conf =3D key;
-+       }
-+
-+       return error;
++       cfg80211_vendor_event(skb, GFP_ATOMIC);
 +}
 +
-+static int cmd_disable_key(struct cl_hw *cl_hw,
-+                          struct ieee80211_vif *vif,
-+                          struct ieee80211_sta *sta,
-+                          struct ieee80211_key_conf *key)
++void cl_netlink_send_event_co_locate_update(struct cl_hw *cl_hw)
 +{
-+       if (sta) {
-+               struct cl_sta *cl_sta =3D (struct cl_sta *)sta->drv_priv;
++       struct cl_nl_event event =3D {0};
 +
-+               cl_sta->key_conf =3D NULL;
-+               cl_sta->key_disable =3D true;
++       event.tcv_idx =3D cl_hw->idx;
++       event.event_id =3D CL_NL_EVENT_ID_CO_LOCATE_UPDATE;
 +
-+               /*
-+                * Make sure there aren't any packets in firmware before de=
-leting the key,
-+                * otherwise they will be transmitted without encryption.
-+                */
-+               cl_txq_flush_sta(cl_hw, cl_sta);
-+               cl_single_cfm_poll_empty_sta(cl_hw, cl_sta->sta_idx);
-+               cl_agg_cfm_poll_empty_sta(cl_hw, cl_sta);
-+       } else {
-+               struct cl_vif *cl_vif =3D (struct cl_vif *)vif->drv_priv;
-+
-+               cl_vif->key_conf =3D NULL;
-+       }
-+
-+       return cl_msg_tx_key_del(cl_hw, key->hw_key_idx);
-+}
-+
-+int cl_key_set(struct cl_hw *cl_hw,
-+              enum set_key_cmd cmd,
-+              struct ieee80211_vif *vif,
-+              struct ieee80211_sta *sta,
-+              struct ieee80211_key_conf *key)
-+{
-+       int error =3D 0;
-+
-+       switch (cmd) {
-+       case SET_KEY:
-+               error =3D cmd_set_key(cl_hw, vif, sta, key);
-+               break;
-+
-+       case DISABLE_KEY:
-+               error =3D cmd_disable_key(cl_hw, vif, sta, key);
-+               break;
-+
-+       default:
-+               error =3D -EINVAL;
-+               break;
-+       }
-+
-+       return error;
-+}
-+
-+struct ieee80211_key_conf *cl_key_get(struct cl_sta *cl_sta)
-+{
-+       if (cl_sta->key_conf)
-+               return cl_sta->key_conf;
-+
-+       if (cl_sta->cl_vif->key_conf)
-+               return cl_sta->cl_vif->key_conf;
-+
-+       return NULL;
-+}
-+
-+bool cl_key_is_cipher_ccmp_gcmp(struct ieee80211_key_conf *keyconf)
-+{
-+       u32 cipher;
-+
-+       if (!keyconf)
-+               return false;
-+
-+       cipher =3D keyconf->cipher;
-+
-+       return ((cipher =3D=3D WLAN_CIPHER_SUITE_CCMP) ||
-+               (cipher =3D=3D WLAN_CIPHER_SUITE_GCMP) ||
-+               (cipher =3D=3D WLAN_CIPHER_SUITE_GCMP_256));
-+}
-+
-+void cl_key_ccmp_gcmp_pn_to_hdr(u8 *hdr, u64 pn, int key_id)
-+{
-+       hdr[0] =3D pn;
-+       hdr[1] =3D pn >> 8;
-+       hdr[2] =3D 0;
-+       hdr[3] =3D 0x20 | (key_id << 6);
-+       hdr[4] =3D pn >> 16;
-+       hdr[5] =3D pn >> 24;
-+       hdr[6] =3D pn >> 32;
-+       hdr[7] =3D pn >> 40;
-+}
-+
-+u8 cl_key_get_cipher_len(struct sk_buff *skb)
-+{
-+       struct ieee80211_tx_info *tx_info =3D IEEE80211_SKB_CB(skb);
-+       struct ieee80211_key_conf *key_conf =3D tx_info->control.hw_key;
-+
-+       if (key_conf) {
-+               switch (key_conf->cipher) {
-+               case WLAN_CIPHER_SUITE_WEP40:
-+               case WLAN_CIPHER_SUITE_WEP104:
-+                       return IEEE80211_WEP_IV_LEN;
-+               case WLAN_CIPHER_SUITE_TKIP:
-+                       return  IEEE80211_TKIP_IV_LEN;
-+               case WLAN_CIPHER_SUITE_CCMP:
-+                       return  IEEE80211_CCMP_HDR_LEN;
-+               case WLAN_CIPHER_SUITE_CCMP_256:
-+                       return  IEEE80211_CCMP_256_HDR_LEN;
-+               case WLAN_CIPHER_SUITE_GCMP:
-+               case WLAN_CIPHER_SUITE_GCMP_256:
-+                       return  IEEE80211_GCMP_HDR_LEN;
-+               }
-+       }
-+
-+       return 0;
++       cl_netlink_send_async(cl_hw, &event);
 +}
 --
 2.30.0
