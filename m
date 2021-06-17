@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 706EAC49EA6
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2DABC49EA2
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 555CE60FDB
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEC4060FDB
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233841AbhFQQJz (ORCPT
+        id S232761AbhFQQJw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:09:55 -0400
-Received: from mail-eopbgr70045.outbound.protection.outlook.com ([40.107.7.45]:47334
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:09:52 -0400
+Received: from mail-eopbgr30064.outbound.protection.outlook.com ([40.107.3.64]:27105
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231680AbhFQQIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:08:43 -0400
+        id S229891AbhFQQIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:08:38 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FJLgkJLmW9dGhh0BelISJtmUkKngzwLDvkInVNizaQk3Bt03A4sjTplNrcLJLZAoZeMrFyTQm90Rk6NGKy968Bls61+jNrouKaEuwZBZzoXkfRsoElEeGBdt0coisPMDT6v4U4L7WkRNb4eTlhQuTOQcUU3s+PKjBOneNjCyg9K6PA42yUzreMggaQg+fOfY28s8c9C1KFX0j5Qjn9Ov9Q1/L5H5MOMUdHJhatNauTr5RmWVgIatcJ1No3KmAneavX+CFc4J1d2KeNCDTzLewkyUrA2yFv5NsYOMnmLc/M0sOkK/SB7keecOm/fOzih446utf/TqIQcbUgSVzwjLbA==
+ b=TfhDfLYm+1NYEsYV9xAzBQ9Zm+h75aFjIVTdcY41e2fCtQYZZH+kCXrT08p5+6sh+Ba/9AAMMW96xrCA9GTuAoZ7RV5+9c1yi1Ve+V9yTHlFdg2rx3bEsUMoTUbnVbBNJyP3jz9AKTVhARzNB4W1jC/v8JdY5L+RWfuc2OM6FevcabhzKSeW/OlL53Brqv4BDHKmNp1tVkqc0rt1pHH8rh6S7RJxjv2SChGGOhbArxn0CMdP77GCUDbErO/Iru1aSTYRMxn29dYseO+m5KIqRXhpWUK2rHZGNkhkroR44HqvgRWgJa/+wA/daz4JDzgnqupp3yCy9N/dOyVwDuzciw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vLSPt3m06p/sjN8PHT1jUWE6Ub/8dxzjcRSpRilUfEo=;
- b=a56jddtu4edGtpOgZ5IrAypZP+nSB1VTF0acNyjU5q6SsyKltOHeAOfefOae+QJmq+CfO3UGK/sK358Jpt7cJC1FfQ5adSliNo34pG/YBYQBFY6+F4pqk6ps0Upw+26BW53xtTIoLcgmOF5uOYV/jBPEf4EiPh+m6C8PUh1y2aFGJUqj2/2Rpr8m7O8+ssCL02BWIipkwQonSApmn5t67psDui5B1PqOVEw3sTvLmmfylMFji5lntwZbP77sWVliv9S4llkb3Egpx8Q6sRkHPIvGLjjxCYFXT64AcBFb71fK1/LBio4XjQkaW95Y41MskNyWw9ESCUUFppmtKhlrhA==
+ bh=jHN/fbXwqyht5PEO2exMtLT/LOU86QIydkBJ778ymbI=;
+ b=JQ0BEmVsDECiSs4EpW/qXsotxCm0Zsz+fGmaIzbQLt0XBvUYCSn2eHS2UKL3gEsSES+fCzUsshSv1goVM15bVmogqtSpDRtVZTcAUq2Ess9jFXUw6q8azX2CihYS3lp04MICKwvfXt9/KjFf0oz8LEngFahYoQXadIJAY/CodG1DLxd9K91d9h4iQXTK4UVbjeolS9uuTqa6KBm5zLrfF9pux2dq5Ns9n/JeUb8qWkCcUUtjq/HfMVpwYpgtjw3i4rTpaBzDl3031bN8xd5I/tcR2uLN3ND9y8Sib49pxO0s7RN93dFX38IGMJKnwowN7Dpue9cSpYhYEajkh1MB6Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vLSPt3m06p/sjN8PHT1jUWE6Ub/8dxzjcRSpRilUfEo=;
- b=wqpzIyt2ur9fvWrnlerTEKgAy1EJ6/SaFlFsShZPn3xFmDxhm+KVB6Kf+GeR2QrjZ3d7nelpdhl68Wi3IXrZqUu0EXQpdiwUFBFSo2uZrJnBaOLCkHRlXyGJzJChTiOzx90GPw4uCfzJvCISMDcitWqKK7TOsKKdeQVLWoMbdfY=
+ bh=jHN/fbXwqyht5PEO2exMtLT/LOU86QIydkBJ778ymbI=;
+ b=mQ7avDqkrqZGQaquBLAsDc7605KuAEUmVsI7JL7JPrEvP5OThaamX/imN0fuukDfYAEnmjpIVyr/Z3yjtw5yFbD0MzW8+WhL0KOA3/dXep2rmS5kJicBR+E4oiTNPbJcBnjS/g/3mYG+d9WGl8dmZXr1NHZIgvF4nhXaDgDTZVA=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
+ by AM0P192MB0465.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:43::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
- 2021 16:06:24 +0000
+ 2021 16:05:52 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:24 +0000
+ 16:05:52 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 152/256] cl8k: add reg/reg_fem.h
-Date:   Thu, 17 Jun 2021 16:00:39 +0000
-Message-Id: <20210617160223.160998-153-viktor.barna@celeno.com>
+Subject: [RFC v1 145/256] cl8k: add recovery.c
+Date:   Thu, 17 Jun 2021 16:00:32 +0000
+Message-Id: <20210617160223.160998-146-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:20 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:13 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7cf14df8-3c60-495a-cc9b-08d931a9b555
-X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
+X-MS-Office365-Filtering-Correlation-Id: 862639bf-3585-4cf7-86e4-08d931a9b114
+X-MS-TrafficTypeDiagnostic: AM0P192MB0465:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB1187BB8A9A80E1DB38B6EC54F60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:660;
+X-Microsoft-Antispam-PRVS: <AM0P192MB04654556D72AF0D2B0BD98C9F60E9@AM0P192MB0465.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Gu0ZfOVZrVV5AjVzrRl8c/769W05vYJQmOBK9+EQLgfLD3sUrn3i+x1Pm73mDM3DC1YKl5z25iwGB1we/ztqpHdS/Pso7hnl5q1wprkK7J7tStuoex+j2l0NwMYpMbyo2H1XOMCle0JhNRIVnQ/vW8eknNdAocVd9V1nWndwxApkRI/+lDPBAB/XKDIhl6N5OT19dsJGmDMrtU6nTIGORhITcjFNKrIwcpkT0uO8o4dzETGKt4pa1pYeH1BP4egZ4G0PXMjKy4KT2LbmsbXBl0hOjzJs4qoV54rh96+swEr1lqyiO05G0TW25EHbNOJLW9x0rAtOCFaJwL6Nin+b1to2fId0cjk1FM22f+fZRdPbF5JT3MEyRDqQJjiUlX9xnB56IwE2+vyI5zbZnuKqse4WsZWaMhk5ytLIRO2G7eyItW4+rLFU9HrLPDYF4Vyu1VlJ19A3zmXLo9SoqB5I1Abo2+MAB7Ip90E4IpMtqkLi4dcG6iDhE97BJdtOy0VWakpwhnVydtAwvQ9ajSigIj6Q9rGrZJNPLlgPBW/3d7qLhF8vv8/twTO2B5MTGU1S/WYzRg57IgICK8cs2+aDourqZuzS0Yc7Us8piV4EF2nHrPV8fDwbSxYc141C5CmE4EWUQ87mukqkAVkfHCer9IEPMa20xYCrwKItZZQ99nNMqWegeDjVSYIlShCC9khiwd4GQJIegezshOn/JqOu8g==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(498600001)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 7NoKV2oD9FWRmB7fgWJYSaPIwodeVloK5+j3Xs6ZawosfCye6DcvF+mZJq4lW5sqiUYGSSxFCHxcoyLrS/Juls5I15qSbtAEhAsIpIYpEz+AE6fNYBGuMURgrjB7D9MfsiGfSkV2Yid9Sth1pkBD8H0xVUE/n+9alhpTZI6XX1M/N13RHzK/bUuta+XrrQRV/QdZm1kvM3mAmg4gFrjIWRjkAk7IkBipTBU77wf2dXQXuNrgxrzBft3vDYrhpll3c3RVDn+BOcG7z4M0QJpGfszU2Gd9KGjA8SQUy+tpbq4xWOjLoyiYFZaGQVAN6RKyENTDMp3SLETGxo+cbot5eYYwiWdsDar2Jv4SAE6DU9ezl23/Q2Ba+pIxe9epHe0rwPS6wYWaBgWn+qY8MKVXkTdQFGL7letJJe7N97eZ2pndflFaZNMGFFweMO1JAYf53Hk2V5awnYOSbhHOH82KV7S10IjG+zQopZO0CoBlA/Y+TLHi/FPZldNAKsE9ETwVxb3I3SpAEd76M9KlilV1ypRVCYu0bnUcBpY6UUR0Rxc6S4IFsolz2+12RJrqIFtdTUT/47+L997vQmPUVMCh+yOW8txZ5lo3ioVXjrvYtyF699Zl/JjOmawGxQD9uKAeVgjtR1VJG691SRgZv2c29BKxtC25scJZ5ROuSBK8Oy10qduUMtSC2O7X6+JfckwO2zCGnFKO6IxyBYASKvBo/w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(396003)(376002)(136003)(346002)(39850400004)(55236004)(6506007)(4326008)(5660300002)(54906003)(107886003)(8936002)(86362001)(36756003)(6486002)(38100700002)(38350700002)(26005)(8676002)(2906002)(6666004)(186003)(83380400001)(316002)(1076003)(6512007)(2616005)(66946007)(66556008)(52116002)(66476007)(956004)(6916009)(508600001)(16526019)(9686003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?85sHjb0/k+mCFYng0LsRDBkLfQqt0gX2gt7cM4UzVmu1S70ZhKXR5dtaYvGA?=
- =?us-ascii?Q?h8lMHVRiWxSy7u7Jpaetn7QVw8Qei5wvDkFKCsp5AqADwq0MtNyDdVbY2AwC?=
- =?us-ascii?Q?r5WvkhNFA8Ko4DDhM3qq1CIfdlMNmSWAKX7mv+MUMDfoRjylnqJHyflO/jCi?=
- =?us-ascii?Q?NqrwrIHKQyVxSCmTpRqRxDPF7dMl6Tf/gWpCjLc3Yxpeb0V2zGHSIzJa1FV3?=
- =?us-ascii?Q?VvJVjhYHpfq5kD7E+/zSnsOt+mK/FJtQeWiVLjJABD1CJNUTbLvpF6GsLOLK?=
- =?us-ascii?Q?B9lFoLgUD/mjCaarQOkBHk2QAoLSfK20Oc/5Y4qnXwztZdb8II+P/RCx+Jv2?=
- =?us-ascii?Q?JqumRjpDoUKwhnB3kR3voxxKR+Kpwj8TugcLAKdqgykZU81M+5myG9JZ6sSy?=
- =?us-ascii?Q?kBSb0bWdMnLD7fwfDKjEgd65cEjDu41ABDri+8sNVYlOFti8qOfysIZ62KTb?=
- =?us-ascii?Q?adwS2wRMTJ/rBB9qRjE0bDclFSDWj/KCqK0+VLhQlQvQM4Qp5Bo7zrbppEKi?=
- =?us-ascii?Q?FIshbpM438tXIMQqkKrTlKyjx1WECOD8Swn3kUCr5ZaR/QfhLLyfrwoCV5Ao?=
- =?us-ascii?Q?E1wFP3hQ+aGu13TjooeRrAB5rLtw0/ei9/NFqZyvXXVVuHFgp6VkSMGkZ5LB?=
- =?us-ascii?Q?+QmSui8ZpiUoM05AKW+2+K+BCfYh6sUhydrshxGgjraRNz2VmueeLJQjeC8U?=
- =?us-ascii?Q?FNZcYvrXL1/GpI4SHzaCYQvfntJVy6ruivOrcb1IGfS/l5gHqYRscqR5cdk7?=
- =?us-ascii?Q?HT1OFRxSkWVod3NNdlPb6mjyang5FS59puOdf/ETMSOow+ApBjQJRDZ3PLf7?=
- =?us-ascii?Q?HBX/nYlq1Ivl0Z2bdYYy/s9bnYBSa1FDnK0UaNp3MwgEOzlGX0WJDWvT9snK?=
- =?us-ascii?Q?MbZldwkZ96CxRmZWDT6oxl0DiLT0ut2XlH9ZbR4v+aGuwGBVw6KMAXxZ5y03?=
- =?us-ascii?Q?Q8WbW2mM3o14hwKHuxAbYnfaCnQUFTab3NyWUaF1Nw/zkuDOeuyq7I10b1GN?=
- =?us-ascii?Q?aPXt/oi6FozUBg1LCwLYCKSIjt9nGUF1oboyl4tU9d7ocEi7PAETSmKfMA/B?=
- =?us-ascii?Q?blf1+N04kMwz7S6T2gFidvsb/2hEPme3eLSMn1OoGR/9Cn4FKOgiSmdO+qfk?=
- =?us-ascii?Q?2acTMWWVxs43gbuWQwhXVLhza9S5btA1LuJcJV9V62gAN5z66AtqQV3/Q4p0?=
- =?us-ascii?Q?PtgpUR9ZzbF//+uYK9k5JlguVbqFfxGKtc/fKCPURPni+cS4h+RJ4cWztBb1?=
- =?us-ascii?Q?8nS/dq71F8qRuCZ+kHCkO97R6nPldFZyqY9SQu9AaeCgkKLaBjWTS2VmrWjk?=
- =?us-ascii?Q?Hg/eprsSBjyQAt3Y2ElVcWC4?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/EjjTeLQcWZ+0JC3QBagICoBM/bOBm9zVJUSCBdoSkQc5/wkow1ki1gzLGTW?=
+ =?us-ascii?Q?OHtRM8lSKJ9D+PccIwDdzKRZpTdzk9RLNubU6gom+//1XHZFNbIOJHXzcv0S?=
+ =?us-ascii?Q?7cDfXby6DgWXjAy6m4N8HRhvSp1TuF11q6HCWriwzEVrJ4bpaS+VbhQNvj8I?=
+ =?us-ascii?Q?enF0kbZN8bqwKgwQRFoLVt6l4O2xLAQFVVq5+0GYzopSDvttNIpvEymFzsh3?=
+ =?us-ascii?Q?7Z2xWMwcFXhQHpnG59A9fb/mZic108FVXt8E17W1eY1UlmwzZGLrGK0NLvty?=
+ =?us-ascii?Q?t8MoGwWAylc9MWAd33TrbrmraWoijrQu56FqDljvrFsV8QyrIUTs3tHDRiDA?=
+ =?us-ascii?Q?7dZUYADbgokOFIHAh8Z1RuP6QM/fJ/SbCN8NbAzy17ZCz1AbgpOBnK5N/aia?=
+ =?us-ascii?Q?N5xR2xgXZ3HdAUUVTcaZnUHTUkjsQaREqPcCY+muh/KndX22VEu/+VBuU5yb?=
+ =?us-ascii?Q?fMpVHQMcZv8rJ5H0+WL7XtE/w5S3Re1p7JhCwohqjiYn95kMya1mubfIBvr8?=
+ =?us-ascii?Q?EIp/mrua9oU/2KzZiWPMKJLNvgdJOHZx4pEZZ76nh4Rm7yHZJFUPxGqfU4xe?=
+ =?us-ascii?Q?BV6zd4sgefOoKcRPgOHwVpwViib3+6y/vZuomVRxdlmAXOr+J74L6DdLN4t4?=
+ =?us-ascii?Q?0U1hd8LIp231V/Z7+KE9prcZrKAfY10Lrjg4dzTKu+f4pfQIz4SaM5shtyaT?=
+ =?us-ascii?Q?ZldqpL5a09XV3ZBcQkgEDx7hZYuFm+W9rWwsN1myQdGrCuSOvlBb02fkb4xI?=
+ =?us-ascii?Q?tjiJODy97dxpC/z2B8IT+BXG62m5pkiXYcSUFKk/4uScRfTlHSZN0i6Zbi89?=
+ =?us-ascii?Q?kA1+P5vkBzaxWGOpTRCpGjMZOi7UuPoNeRJ252xJnBz26L/+fNQmkQFHwxFJ?=
+ =?us-ascii?Q?aTTRuBTcpwADlKb7yOXmSdUh82RQEZG6Lp8UhCZ4v3qZuuJCioXH0MFaeLn3?=
+ =?us-ascii?Q?UjhSdbYaLRU8Lt7SQsDdhyg9cpX2FfP/nMdLMcvSROimdMDYXhsP2aEaiSpk?=
+ =?us-ascii?Q?Kp2a0zEDzoYZcPwZ7Wl9g11x1A27vjWQxzIuzFnZMOdiEdo3wDBUDm/xc3Cl?=
+ =?us-ascii?Q?rLyco0/iWsf+N7g+VLv72/VnrX2yyskXk73h7Kr5EMMbINV0y9lc1fIulDdJ?=
+ =?us-ascii?Q?mqEOip4K960mFE7ERKSHgu0cvdtqYCsPDQ0sdoGzR6sp5rX8OW1GZ6Cyq0cS?=
+ =?us-ascii?Q?n089FwZS63pDKmL9qVdZgzk/AIw3wc1cYbsQHgLoKyt7De3f9DyGl0T5CgDX?=
+ =?us-ascii?Q?EWBIP9KPlgYzxb8Nbdv8piyyijE470WcouTzvhZeLR9v9bWeLJsBu3v65iIe?=
+ =?us-ascii?Q?otfSOgiDmrPaOv0K2DJgCOzc?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7cf14df8-3c60-495a-cc9b-08d931a9b555
+X-MS-Exchange-CrossTenant-Network-Message-Id: 862639bf-3585-4cf7-86e4-08d931a9b114
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:21.2552
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:14.1584
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xaBd7JZ9/FT6t73BfG/OMu+FHxEm7mXWnZjxyoIMiOt6Fuu9AlGW1Vn1UwVNDq9mJc/Xwr1sjOTd+tuoNG4qRw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
+X-MS-Exchange-CrossTenant-UserPrincipalName: fIejeZTTNXa0YCHEIG+hb9fmwDoFCTqAXXcBxtK/vyjh0c8aS0rYY3vydzPscTg2yp9KCxOpYgr7jhKk+9wCog==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0465
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,128 +128,292 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/reg/reg_fem.h    | 102 ++++++++++++++++++
- 1 file changed, 102 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_fem.h
+ drivers/net/wireless/celeno/cl8k/recovery.c | 264 ++++++++++++++++++++
+ 1 file changed, 264 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/recovery.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_fem.h b/drivers/net/w=
-ireless/celeno/cl8k/reg/reg_fem.h
+diff --git a/drivers/net/wireless/celeno/cl8k/recovery.c b/drivers/net/wire=
+less/celeno/cl8k/recovery.c
 new file mode 100644
-index 000000000000..ab1aaae23782
+index 000000000000..1bba86ea4882
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/reg/reg_fem.h
-@@ -0,0 +1,102 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/recovery.c
+@@ -0,0 +1,264 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_REG_FEM_H
-+#define CL_REG_FEM_H
++#include "recovery.h"
++#include "rx/rx_amsdu.h"
++#include "main.h"
++#include "phy/phy.h"
++#include "vif.h"
++#include "dfs/dfs.h"
++#include "maintenance.h"
++#include "tx/tx_inject.h"
++#include "ext/dyn_mcast_rate.h"
++#include "ext/dyn_bcast_rate.h"
++#include "vns.h"
++#include "radio.h"
++#include "wrs/wrs_api.h"
++#include "config.h"
++#include "fw/msg_tx.h"
++#include "coredump.h"
++#ifdef CONFIG_CL_PCIE
++#include "bus/pci/irq.h"
++#endif
 +
-+#include "reg/reg_io_ctrl.h"
-+
-+struct cl_fem_lna_enable_gpio {
-+       union {
-+               u16 b0 : 1,
-+                   b1 : 1,
-+                   b2 : 1,
-+                   b3 : 1,
-+                   b4 : 1,
-+                   b5 : 1,
-+                   b6 : 1,
-+                   b7 : 1,
-+                   b8 : 1,
-+                   b9 : 1,
-+                   b10 : 1,
-+                   b11 : 1,
-+                   rsv : 4;
-+               u16 val;
-+       };
++struct cl_recovery_work {
++       struct work_struct ws;
++       struct cl_hw *cl_hw;
++       int reason;
 +};
 +
-+struct cl_fem_pa_enable_gpio {
-+       union {
-+               u16 b0 : 1,
-+                   b1 : 1,
-+                   b2 : 1,
-+                   b3 : 1,
-+                   b4 : 1,
-+                   b5 : 1,
-+                   b6 : 1,
-+                   b7 : 1,
-+                   b8 : 1,
-+                   b9 : 1,
-+                   b10 : 1,
-+                   b11 : 1,
-+                   rsv : 4;
-+               u16 val;
-+       };
-+};
++#define RECOVERY_POLL_TIMEOUT 6
 +
-+struct cl_fem_rx_active_gpio {
-+       union {
-+               u8 b0 : 1,
-+                  b1 : 1,
-+                  b2 : 1,
-+                  b3 : 1,
-+                  b4 : 1,
-+                  b5 : 1,
-+                  b6 : 1,
-+                  b7 : 1;
-+               u8 val;
-+       };
-+};
++static void cl_recovery_poll_completion(struct cl_hw *cl_hw)
++{
++       u8 cntr =3D 0;
 +
-+#define EXTRACT_OFF_LUT(lut) (((lut) >> 12) & 0x7)
-+#define FEM_LUT_MASK         0x0777
++       while (test_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags)) {
++               msleep(1000);
 +
-+#define PA_ENABLE_POS  0
-+#define LNA_ENABLE_POS 1
-+#define RX_ACTIVE_POS  2
-+#define GET_BIT(reg, pos) (((reg) >> (pos)) & 0x1)
++               if (++cntr =3D=3D RECOVERY_POLL_TIMEOUT) {
++                       cl_dbg_verbose(cl_hw, "\n");
++                       cl_dbg_err(cl_hw, "Driver handgup was detected!..."=
+);
++                       break;
++               }
++       }
++}
 +
-+/*
-+ * LNA_ENABLE
-+ * IO_CTRL_LNA_ENABLE_0_GPIO_ENABLE_POS is used for all ioctl APIs -
-+ * io_ctrl_lna_enable_0_set() ... io_ctrl_lna_enable_11_set()
-+ * because all have the same value
-+ */
-+#define LNA_ENABLE_GPIO_VAL(val) \
-+       (((u32)(val) << IO_CTRL_LNA_ENABLE_0_GPIO_ENABLE_POS) & \
-+        IO_CTRL_LNA_ENABLE_0_GPIO_ENABLE_BIT)
++static void cl_recovery_start_hw(struct cl_hw *cl_hw)
++{
++       clear_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
 +
-+/* PA_ENABLE */
-+#define PA_ENABLE_GPIO_VAL(val) \
-+       (((u32)(val) << IO_CTRL_PA_ENABLE_0_GPIO_ENABLE_POS) & \
-+        IO_CTRL_PA_ENABLE_0_GPIO_ENABLE_BIT)
++       /* Restart MAC firmware... */
++       if (cl_main_on(cl_hw)) {
++               cl_dbg_err(cl_hw, "Couldn't turn platform on .. aborting\n"=
+);
++               return;
++       }
 +
-+/* RX_ACTIVE */
-+#define RX_ACTIVE_GPIO_VAL(val) \
-+       (((u32)(val) << IO_CTRL_RX_ACTIVE_0_GPIO_ENABLE_POS) & \
-+        IO_CTRL_RX_ACTIVE_0_GPIO_ENABLE_BIT)
++       if (cl_msg_tx_reset(cl_hw)) {
++               cl_dbg_err(cl_hw, "Failed to send firmware reset .. abortin=
+g\n");
++               return;
++       }
 +
-+#define LNA_ENABLE_GPIO_OUT_CFG(val) \
-+       (((1 << IO_CTRL_LNA_ENABLE_0_GPIO_ENABLE_POS) & IO_CTRL_LNA_ENABLE_=
-0_GPIO_ENABLE_BIT) | \
-+        ((1 << IO_CTRL_LNA_ENABLE_0_GPIO_OE_POS) & IO_CTRL_LNA_ENABLE_0_GP=
-IO_OE_BIT) | \
-+        (((u32)(val) << IO_CTRL_LNA_ENABLE_0_GPIO_OUT_POS) & IO_CTRL_LNA_E=
-NABLE_0_GPIO_OUT_BIT))
-+#define PA_ENABLE_GPIO_OUT_CFG(val) \
-+        (((1 << IO_CTRL_PA_ENABLE_0_GPIO_ENABLE_POS) & IO_CTRL_PA_ENABLE_0=
-_GPIO_ENABLE_BIT) | \
-+         ((1 << IO_CTRL_PA_ENABLE_0_GPIO_OE_POS) & IO_CTRL_PA_ENABLE_0_GPI=
-O_OE_BIT) | \
-+         (((u32)(val) << IO_CTRL_PA_ENABLE_0_GPIO_OUT_POS) & IO_CTRL_PA_EN=
-ABLE_0_GPIO_OUT_BIT))
-+#define RX_ACTIVE_GPIO_OUT_CFG(val) \
-+         (((1 << IO_CTRL_RX_ACTIVE_0_GPIO_ENABLE_POS) & IO_CTRL_RX_ACTIVE_=
-0_GPIO_ENABLE_BIT) | \
-+          ((1 << IO_CTRL_RX_ACTIVE_0_GPIO_OE_POS) & IO_CTRL_RX_ACTIVE_0_GP=
-IO_OE_BIT) | \
-+          (((u32)(val) << IO_CTRL_RX_ACTIVE_0_GPIO_OUT_POS) & IO_CTRL_RX_A=
-CTIVE_0_GPIO_OUT_BIT))
++       set_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
++       clear_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
 +
-+#endif /* CL_REG_FEM_H */
++       /* Hand over to mac80211 from here */
++       ieee80211_restart_hw(cl_hw->hw);
++
++       cl_recovery_poll_completion(cl_hw);
++}
++
++static void cl_recovery_stop_hw(struct cl_hw *cl_hw)
++{
++       /* Start recovery process */
++       cl_hw->recovery_db.in_recovery =3D true;
++
++       clear_bit(CL_DEV_STARTED, &cl_hw->drv_flags);
++       set_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
++       set_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
++#ifdef CONFIG_CL_PCIE
++       /* Disable interrupts */
++       cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.all);
++#endif
++       cl_tx_inject_stop_in_recovery(cl_hw);
++       cl_maintenance_stop(cl_hw);
++
++       ieee80211_stop_queues(cl_hw->hw);
++
++       mutex_lock(&cl_hw->dbginfo.mutex);
++
++       cl_main_off(cl_hw);
++
++       cl_hw->fw_active =3D false;
++       cl_hw->fw_send_start =3D false;
++
++       cl_coredump_reset_trace(cl_hw);
++
++       mutex_unlock(&cl_hw->dbginfo.mutex);
++
++       /* Reset it so MM_SET_FILTER_REQ will be called during the recovery=
+ */
++       cl_hw->rx_filter =3D 0;
++
++       /*
++        * Reset channel/frequency parameters so that cl_msg_tx_set_channel=
+()
++        * will not be skipped in cl_ops_config()
++        */
++       cl_hw->channel =3D 0;
++       cl_hw->primary_freq =3D 0;
++       cl_hw->center_freq =3D 0;
++}
++
++static void cl_recovery_process(struct cl_hw *cl_hw)
++{
++       int ret;
++
++       cl_dbg_verbose(cl_hw, "Start\n");
++
++       cl_recovery_stop_hw(cl_hw);
++       cl_phy_reset(cl_hw);
++
++       ret =3D cl_phy_load_recovery(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "cl_phy_load_recovery failed %d\n", ret);
++               return;
++       }
++
++       cl_recovery_start_hw(cl_hw);
++}
++
++static void cl_recovery_handler(struct cl_hw *cl_hw, int reason)
++{
++       unsigned long recovery_diff =3D jiffies_to_msecs(jiffies - cl_hw->r=
+ecovery_db.last_restart);
++
++       cl_hw->recovery_db.restart_cnt++;
++
++       if (recovery_diff > cl_hw->conf->ce_fw_watchdog_limit_time) {
++               cl_hw->recovery_db.restart_cnt =3D 1;
++       } else if (cl_hw->recovery_db.restart_cnt > cl_hw->conf->ce_fw_watc=
+hdog_limit_count) {
++               cl_dbg_verbose(cl_hw, "Too many failures... aborting\n");
++               cl_hw->conf->ce_fw_watchdog_mode =3D FW_WD_DISABLE;
++               return;
++       }
++
++       cl_hw->recovery_db.last_restart =3D jiffies;
++
++       /* Count recovery attempts for statistics */
++       cl_hw->fw_recovery_cntr++;
++       cl_dbg_trace(cl_hw, "Recovering from firmware failure, attempt #%i\=
+n",
++                    cl_hw->fw_recovery_cntr);
++
++       cl_recovery_process(cl_hw);
++}
++
++static void cl_recovery_work_do(struct work_struct *ws)
++{
++       /* Worker for restarting hw. */
++       struct cl_recovery_work *recovery_work =3D container_of(ws, struct =
+cl_recovery_work, ws);
++
++       recovery_work->cl_hw->assert_info.restart_sched =3D false;
++       cl_recovery_handler(recovery_work->cl_hw, recovery_work->reason);
++       kfree(recovery_work);
++}
++
++static void cl_recovery_work_sched(struct cl_hw *cl_hw, int reason)
++{
++       /*
++        * Schedule work to restart device and firmware
++        * This is scheduled when driver detects hw assert storm.
++        */
++       struct cl_recovery_work *recovery_work;
++
++       if (!cl_hw->ipc_env || cl_hw->is_stop_context) {
++               cl_dbg_warn(cl_hw, "Skip recovery - Running down!\n");
++               return;
++       }
++
++       /* If restart is already scheduled - exit */
++       if (cl_hw->assert_info.restart_sched)
++               return;
++
++       cl_hw->assert_info.restart_sched =3D true;
++
++       /* Recovery_work will be freed by cl_recovery_work_do */
++       recovery_work =3D kzalloc(sizeof(*recovery_work), GFP_ATOMIC);
++
++       if (!recovery_work)
++               return;
++
++       INIT_WORK(&recovery_work->ws, cl_recovery_work_do);
++       recovery_work->cl_hw =3D cl_hw;
++       recovery_work->reason =3D reason;
++
++       queue_work(cl_hw->drv_workqueue, &recovery_work->ws);
++}
++
++bool cl_recovery_in_progress(struct cl_hw *cl_hw)
++{
++       return cl_hw->recovery_db.in_recovery;
++}
++
++void cl_recovery_reconfig_complete(struct cl_hw *cl_hw)
++{
++       clear_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
++
++       /* Multicast/Broadcast rate recovery */
++       cl_dyn_mcast_rate_recovery(cl_hw);
++       cl_dyn_bcast_rate_recovery(cl_hw);
++
++       /* DFS recovery */
++       cl_dfs_recovery(cl_hw);
++
++       /* VNS recovery */
++       cl_vns_recovery(cl_hw);
++
++       /* Restore EDCA configuration */
++       cl_edca_recovery(cl_hw);
++
++       /* Temperature  recovery */
++       cl_temperature_recovery(cl_hw);
++
++       /* Sounding recovery */
++       cl_sounding_recovery(cl_hw);
++
++       /*
++        * Update Tx params for all connected stations to sync firmware aft=
+er the
++        * recovery process.
++        */
++       cl_wrs_api_recovery(cl_hw);
++
++       /* Enable maintenance timers back */
++       cl_maintenance_start(cl_hw);
++
++       if (cl_radio_is_on(cl_hw))
++               cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE);
++
++       cl_hw->recovery_db.in_recovery =3D false;
++
++       pr_debug("cl_recovery: complete\n");
++
++       cl_rx_post_recovery(cl_hw);
++}
++
++void cl_recovery_start(struct cl_hw *cl_hw, int reason)
++{
++       /* Prevent new messages to be sent until firmware has recovered */
++       set_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags);
++
++       switch (cl_hw->conf->ce_fw_watchdog_mode) {
++       case FW_WD_DISABLE:
++               cl_dbg_info(cl_hw, "Skip recovery - Watchdog is off!\n");
++               break;
++
++       case FW_WD_INTERNAL_RECOVERY:
++               cl_recovery_work_sched(cl_hw, reason);
++               break;
++
++       case FW_WD_DRV_RELOAD:
++               /* TODO: Implement netlink hint to the userspace */
++               cl_dbg_info(cl_hw, "RELOAD handler is absent, doing nothing=
+");
++               break;
++
++       default:
++               break;
++       }
++}
 --
 2.30.0
 
