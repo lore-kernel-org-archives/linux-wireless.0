@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FB1C49EA2
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA11C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 586F561249
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D75C5613CE
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233618AbhFQQFu (ORCPT
+        id S233626AbhFQQFw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:05:50 -0400
-Received: from mail-eopbgr80052.outbound.protection.outlook.com ([40.107.8.52]:15895
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:05:52 -0400
+Received: from mail-eopbgr140042.outbound.protection.outlook.com ([40.107.14.42]:47438
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232689AbhFQQFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:05:48 -0400
+        id S233606AbhFQQFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:05:49 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LAwLi2WcGFr2ubLd3VKBmadjM/fYm5+xuNowp1f+B+Agpny2CFLxVDFBgrIrquADa3awGmd8Yz7PSaOCJzsF/9DcYubQTPhYd2oXmm2A4DTlH32FTJQydm7cYJVNDcAyCvlEGbW1NAI1eJKEnfdm3KmdiVuBTpSdOfV0ezv4i58K2KK90chJZkBeBrZWuRKIjVJGXR42R9DhVz7beyWfjmhmP5L/30klQxQBxziMWqYW42rkleLbl+ZlsX+3q7dus1AQEpGv0BIxCdnbuM8BQ23t25k/luu79DeHHB6Onxk9BdvClBedbLk4EnFZpX2tSE+1u3kvNDhEGrrmBnm5aA==
+ b=iIfnE897GJXiji1z7C6dFY7vgZX9aIdfe+t4w47Zpiq2KAH942lvgzRb0QtHTK91WuJZnqDK0I89OKGzO7cZLcdZPGRVlqbUKjimDW7DjPGlUoIQbw4l0r2QSL9CTSNm28JHAEubKRezrb8r2poezu2LkzQIh5lI7RGIM0SqjepQeJDPVOgK/2li9Wg0wu1Gqo4zKMPQABnxb8AGXtY1ux0lXynTIJ0Dr8nDVB8GDGGQknUAHshREOzCACUEatlh+sOJWuNuG+Pu9CSJmK+dBguGNgPAofEwGKW6s95YBGqr2mY1E4UCC2A0clJQDh3UQ0mcxlguoy/9DIKPCInFnA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0KATMfPmJp/KJWKiWZBc3jTXXdjpmP3/fPJ14IpM31M=;
- b=D8LDzp/VOD7s/aa8lu1hULX4ccFdXmFN4iSBgCnnvo4pjlTbNvT6mN26uKR5fYlXUSWJ8MWeN2EyJYBuRn7e3YhpuqaBrcaOIpoMnyrGwXvCR4lVi6a7lZWjKioERzwPuQBNw633eHrQmXM94CnS3ts+GsyYIjStt30czNAoD1Heb5CPjlU5xF34kY9xdKh+FGHu67vKcjayl6yEAfJ5xfGH8XckKjSt9Y7ZjA1J/i0683pSQu+EJ2Vmk4eIyjYvuFVCVtGSYyNvni9FAHBthevChHoOEzLdDL0Aq+rGUfk8GeqQN9bO8ZLsqhyBYt8DuBosQmJegr+ZYROHKxoVLg==
+ bh=WNiyw4dsG6t2BFz/CZL4f6zdXLNqfpeCCo/bI/KyTQk=;
+ b=IUJTRzt9UBV5ix9b3TS3aZMVc5YIWUtIAXiHTx7m0vZCqiIChClNQPtzaUO+kUMn9uQyAI4T6z9KxpHo7qeY7pw+sMNQKO3mZMzXFmnaGdiujC0ipDcUfj2mnebRD2J3m88vMQ+GX0M6st45QypFxXEcEMDv9CH2yL65Qy/BuF/fYHS0TP+50zUhjeqwX2WKrY8AnnAkCWW4krlIGqr7EFLDNuRKCWhttryJyA6esD0o+silyiL76ZCSIork0h18JBoLGPOFEWHhPon3eb9nhRAiTVeP1+ZGpUBy971qceDt7dAJQVfOAUcm1/Vc71sUb39iiJKSIsXf46wZGCR2zA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0KATMfPmJp/KJWKiWZBc3jTXXdjpmP3/fPJ14IpM31M=;
- b=DxW7QestOKeCeitcd7TWHE/norc9cRVTdM9CSBHESliTkLPukFZGAH/fvwTPd18NgGsdcke/771O5Z2SWrGx+T0l/0sK8l51MD9PCZloDntr4XqVLpFuVQgzP0AZKsXSyRRhLeApYxy/WiFMhugJiHQGZdb9kfzq6gJx6JvO/iY=
+ bh=WNiyw4dsG6t2BFz/CZL4f6zdXLNqfpeCCo/bI/KyTQk=;
+ b=ntNgmwjmbW8mlNzvBDgA5TZmarZ0h7dZoGx0E1a2OZYamq5XwzbWCpngO+STzRzNunjFdD/DG67Wat7v4jJ7ux6X7xxoQH/rFE1+VGjOLICL91lRis3EwxQCFv7DkTQ+HOtL5U2FZMiy6IjDMB6IaL7eoeR3xp1juxPNVKzfSa0=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB0966.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1ce::6) with
+ by AM9P192MB1234.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:388::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.25; Thu, 17 Jun
- 2021 16:03:37 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
+ 2021 16:03:38 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:03:37 +0000
+ 16:03:38 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +58,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 032/256] cl8k: add cca.c
-Date:   Thu, 17 Jun 2021 15:58:39 +0000
-Message-Id: <20210617160223.160998-33-viktor.barna@celeno.com>
+Subject: [RFC v1 034/256] cl8k: add cecli.c
+Date:   Thu, 17 Jun 2021 15:58:41 +0000
+Message-Id: <20210617160223.160998-35-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +72,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:08 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:11 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e45f85f9-2070-4250-4ead-08d931a966fc
-X-MS-TrafficTypeDiagnostic: AM9P192MB0966:
+X-MS-Office365-Filtering-Correlation-Id: cace090d-a9da-40e9-fa23-08d931a96851
+X-MS-TrafficTypeDiagnostic: AM9P192MB1234:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB09662F9E50CA2DE85A4C9F47F60E9@AM9P192MB0966.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:454;
+X-Microsoft-Antispam-PRVS: <AM9P192MB123488A6BF2533FD782E435EF60E9@AM9P192MB1234.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7b6qT2wJhaSNv5IgmUhSbfcZyG0+2TSuK/R1xGbCqjE35jXb5iPfcg+fVNZjCPts9HpgcKcu7BW7FEoST1h8KZPniK+1Ap5ZmBQkX07WazPF1Oz8nUJb6TYCmdyfpg5LFQKNp/0EhVMdhRTCr3zH6yxybz/z8gH2a+b3DeKXppr7U1fO0Z89aD6doTcGW+A22gNqHd0hBtM46Fe1qBTc9BmF/ywbtaMmQyVW/EnpBhz8kDJ23/ms/QQq9NK2n8qkSdu0viSZ3CvB+GwGGYeVftvS9nYCd5bbhewGuOJ42rgOhmgQGjr0MhD+vX3uqORdP4bGZ3Z/G1I+uJrky6w1W84sobO4qSMl81IiGSzxMxHOztYWz9Ytc7q/bjUjSsLAt9ekj/AKdODHHHa4ar1Veq6KaFMYwz8iuWR3jaE/Lok/XEhotqCxRgVUqutqle+WlG2Nus6jTar516YvtSmyySU5/yA2YUqLpFpbRsYvkL+HVHm1j2Yae3HmFMfOYbIoG/qmGRrib6riSV2WOrHGolJAwDkoZLxkyQ2r+vne2OQH88MrntM1GTtrgZEivUOMxYd6rkVaCsYq9DlNi8qzeek5GR2KBekwUH9LnZSOdfNkWG8WIQ5J2YFYe1HHyVm2kt14UINUKYM8775MbyPkYc29UnGj1geYNmESXfMB2bgCjOcaZqS5BRip3YF20RV9tVyPe7P1VoTEvHltU1EAJw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(366004)(346002)(39850400004)(376002)(396003)(30864003)(4326008)(1076003)(2616005)(8676002)(186003)(6512007)(6486002)(107886003)(83380400001)(6916009)(38100700002)(55236004)(316002)(16526019)(6506007)(38350700002)(6666004)(54906003)(8936002)(26005)(508600001)(36756003)(2906002)(9686003)(52116002)(956004)(5660300002)(66946007)(66556008)(66476007)(86362001)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: QXDSsTwAOOzK/dZ6surdMkMl+wS5gDneiM3+IXtKXUtntiTTI3rodNQwEo6WjSwl9FaxVo0/wfQ8Em5VZ/SGZbecFEpH7nMiyNhRG3mkDvV41eV4yxsqTsWZrNMmg32Eh2wJ1lHrIsLTjIVOgC/PxdTvoaGTNbjm0ATewPEmpS7nsB19H3CNCjo8U8P27jSH1o2s+Io9OGtizfxTdDwdKnUh5kSZAM4gOAMSo4LrAk2Ue7CnhFJGHsddRbGGbximBajLYZuYu2+cC1LFPhC68H/sv//hga8S3FGDZQjrxxR0aLjj2UdSTu5Y3Eo/g2Vpe477O5Uzgs81s7MebGTU1d0/SSgBOcTi3Sh2Ks5m+39LQEvYp8lam87xjAyos0Ggi6SN511wYrqchxCi15BtUxLUJiU8ms8GnqPhbi5L5nH8F7eiGAcd2OIBNRXVsrP6GNa/w8UMybkHqBIigkuTiovsdXmJb4c+i4tRLWRaerieUYrUbRl9f+0vyFlpBAIOrC1tAN+KAqDseK+4DIkASHwvdULIVhN9U9lk6SG1I1f+zdNILn96NmFvK2YcacH8WuRhHroF5Lq94SHstOpdcKLXGS9oCsNVAz6Lk0Xm8n+9rGlANBxZbFcQFqApH8DEuxlVua/N6UIVjtRcycaKXFw/5JVGcP/dNjh4WC1LiL94vGqmHTqVBx4Q3vGVfIpAMYYvQNZSXsC/o2lABBAOIA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(366004)(136003)(346002)(396003)(39850400004)(6666004)(107886003)(36756003)(956004)(66476007)(66556008)(2616005)(66946007)(30864003)(6916009)(2906002)(26005)(9686003)(1076003)(6512007)(6486002)(16526019)(6506007)(38100700002)(52116002)(86362001)(8936002)(316002)(38350700002)(186003)(55236004)(54906003)(8676002)(5660300002)(508600001)(83380400001)(4326008)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NokdRWNpvhupUv3FrAqZOm97MGD7flL46TDaotAHlnTJJZNZKU8yCHEq8FdD?=
- =?us-ascii?Q?nU1kvLKuWoyrsQK3ReE1Xv8fxG8BUYxFrjoXqhl8KfkaghqwNZB71wejE6PT?=
- =?us-ascii?Q?m9qegfVGk6a/moz4gxRlRIlSvCO0bqpGa6IVjisWrzrrFKue6jBnA3+nPwAY?=
- =?us-ascii?Q?1nCM+M6tq+f4mAGcq9LTCi9s1BuI0qYucQh4SctdmE8TkMt2cFd3epCETe3K?=
- =?us-ascii?Q?bxggDKXvg3wcpEXkUbkaCYVTg9g4tBVi5ESDRpVyHLpBhSu7pgxlGqvEN6fe?=
- =?us-ascii?Q?2ErQZ98XUbKaUXMRzgsc0iIsfsDpEPEAuI7pzm0BFwa/17PFg26Nx1qhxAo1?=
- =?us-ascii?Q?ZjfP7FRlDsvTnYKWmPAJTcz4I2sTQZS3CEVjQ7veBYwVCJsBHqOWE9XVAc+i?=
- =?us-ascii?Q?/U/oVUq6RE5hmt4EzzrXjRCzjlj7nxIuh2mW6N5D8zN4oLYQE22DmJ2KVy/S?=
- =?us-ascii?Q?Sqv6jlW5oRh/PDNs9R44TA2Oo9KJ8GTjvy1ZHKc8vp+tV1BdZHZe790ccTBc?=
- =?us-ascii?Q?4ewNBZDEXlhic52xgK67Lky4I7AUv2IjrviSaqRXKNPRxztVCcduI9A8aZ/6?=
- =?us-ascii?Q?UdPGeuTLbVzxJdiB7mjOUvG9YFaFrWnH48UlqzqEO5w53Mr28iP2f5BZyRCN?=
- =?us-ascii?Q?day27ItptDfL40Idfw8mJROE9Rpen0R7H29U+hB49jXC0A34iUTZyCGWvcSY?=
- =?us-ascii?Q?1e/8IUmenwavf7tsjCG43mCbwxPw1Ao/YguGsbZkOxbGP3YkOSQ7PACjBNGs?=
- =?us-ascii?Q?T8xM/UFWXwytMBKgluichM9fvY4QY1950nbfnaYX9uRjD/EGOLIYfNRH9GM0?=
- =?us-ascii?Q?epN6Yop8VNRXfpLx5fld1D2DM4LLiW3yIKEXHSH59YNwz5w72Od2OMkh3TP/?=
- =?us-ascii?Q?kix4y/B93UbHRLDMEnqq9j3l80mTPF1MPPJjIC+9rCcPZ0VW9d9nhHhimxtz?=
- =?us-ascii?Q?Ri0EakxuZGGP55np0//eH8zw7iloYUyIUqcEIwlUPcn9dme/fnCxQdWTzKXQ?=
- =?us-ascii?Q?bKcrRcbjkQs1rUYMlg0UIBF5DIwwXLhgdYokSMJRcP7FP1Umd/4j54rJXXQi?=
- =?us-ascii?Q?r+R/rURVF9dD+TYjxet/NvcF1TEdAtyL5abiO9cMiVIzks7psqueeyAlMZ4g?=
- =?us-ascii?Q?1UxZ9Ht9Nw/doM+4SrFhyRig9G6tD8eueO4mwr66KR6dakm7jNE8lSncPxDD?=
- =?us-ascii?Q?R/u/cFHR9mRIsjl+UwW/pSxxbYtKLnIh7BA96n5nVEOIpHaLN1co1zRcnRET?=
- =?us-ascii?Q?omn9uYlvNv1uAC/QqQk5zSPKumLZ+C9b8SvG1xyrSXB2O9SMpi2ntJywl0rm?=
- =?us-ascii?Q?aHq4VRxEARvRe+IPOFrGQ1s3?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?7fVteBx+Hiqo3+Chceuy9Fk+LGtbfT29tKiCxfaVq3pFQjWqL4NHrum7Lr40?=
+ =?us-ascii?Q?9z+2wVVZvG2WawQ96h7fwzoWgsoLO8FTQvJ0D1NMIa2Zx+WJz1l88J7k23Cu?=
+ =?us-ascii?Q?Bd4CeabDzQezRBr61fhbO7O05CSpRxVVUlXeeN/tbIAWjJA2Uwl2bMDSkaVP?=
+ =?us-ascii?Q?J5LX1qHAjNT5ZV4ZkcaMLR/Vn72DZcbyr6nuumO7A1EwAErnHUvbhR1yVCVv?=
+ =?us-ascii?Q?e29C4k4ySmVHGEkFyoeHPKbceJOCWvHPc83yDV0XMNG1lAYY0tgzu9B61Shd?=
+ =?us-ascii?Q?hQuknr1YNBOtTAfFJiNpvgQ7c2FSHmacDG2uW6uv9QDbxDxzHzqYioh1YyR9?=
+ =?us-ascii?Q?lquk8UwKx2QIhWxhllZuJdrCYieRlZmBPf0Vz9TpffZGdYvQJ4aTIHZnSi5G?=
+ =?us-ascii?Q?5E4CXaxUwq3dTtURWs6KTX4JxIcS9Dg8XkpcuI2xGx92ut7WRiIsZGSt6JB/?=
+ =?us-ascii?Q?OPUe7b0sFzk3NFJL8SAqAbG36Gmo1ycYVThUL0o8qo0P07ePpq5p08pzllJB?=
+ =?us-ascii?Q?OR5sXBz1GpMGiaBuD7XBNQT3eaUpNCfl6lzAtOmIDrwBiUAXfILoJnBHRuvb?=
+ =?us-ascii?Q?D6WBJM7DRwog4WeBRrdNyntdMUI3k5SlsUcqirA0f8fB5OSrvXOWdGC7yiIQ?=
+ =?us-ascii?Q?Z2W23sRyUADABbWrTKQnvExzrQ5dMJGg40a+k/P9Jz5qmFPJCBHDXxXSNWWZ?=
+ =?us-ascii?Q?YV0mbgfh37SMaR+Vp2nh2SG0RMDgqP6DH68ElV1/plgnAggn1QXVyPZ5KU8B?=
+ =?us-ascii?Q?JIBwHFiCKhzyi8Xt7yQz+LSqNB6LZH4S31n5YAaCT7wo13Es1LemDfqOgyOK?=
+ =?us-ascii?Q?J0bH4rYQQjH2bwNoLJAIfegZ89BLy6ARYd0xYLkIKB+MIEofXRbOiktm8DfM?=
+ =?us-ascii?Q?NCWCdB/765etGz+JdXX6JoAtKZBYWRCgtfmoHIiP+aRLDsrgFqwg7mJeQFBJ?=
+ =?us-ascii?Q?ruU6LnoT35PvMgyoQVSyc1blhdUHu3RHtVuek1XDRO3J0mXsGFMkUtRZUDf4?=
+ =?us-ascii?Q?M/B8AEAxjFjxQPxAJNAXrUKnZhumeImPcJeKxSFmdpC8PKehAgz1t2GLWXPY?=
+ =?us-ascii?Q?+1+T+SJKemRbTTysbm0BKBvHwS4glw9efVkpX50KIm5QM2wQ26T7JB1/ItbT?=
+ =?us-ascii?Q?UqHe1HPV3tn8siwpwSPDGvKx6dpIf/RWbXo3D+LsrahnMWHn15zWxjjTPSux?=
+ =?us-ascii?Q?hpfjFbzqp7WIR8Jv0P/nPgEG1IF0QIcZzcKioWL18bSZjEDLL5YFcnYoA7kN?=
+ =?us-ascii?Q?yBKHxoj/HFXIXVpyjUHOSmzl8OnMPF1NvRdP+13Gk1VwmtstubXEmV2MdpO4?=
+ =?us-ascii?Q?mXSGOkSTlJsJp8hGQhmxAPsO?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e45f85f9-2070-4250-4ead-08d931a966fc
+X-MS-Exchange-CrossTenant-Network-Message-Id: cace090d-a9da-40e9-fa23-08d931a96851
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:10.0126
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:12.1034
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PEpiHuLBL/mERpamn3qEGvJCJIXAl2X6Xu/19Yo+5RkbhqJLZAPdCq5hZQ5iuE6Ue1QLrQ5VXrlsMaOCxk5xxg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0966
+X-MS-Exchange-CrossTenant-UserPrincipalName: m6FoX2MgQNzBTrikB8mEHtUWtuXNwLWZoH8FwQ/RSzeGAiXsJiTQWH8AOSLIMKEkcYOpKIHZzvpc+aqU1Bxgew==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1234
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,615 +129,373 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/cca.c | 518 +++++++++++++++++++++++++
- 1 file changed, 518 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/cca.c
+ drivers/net/wireless/celeno/cl8k/cecli.c | 354 +++++++++++++++++++++++
+ 1 file changed, 354 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/cecli.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/cca.c b/drivers/net/wireless/=
-celeno/cl8k/cca.c
+diff --git a/drivers/net/wireless/celeno/cl8k/cecli.c b/drivers/net/wireles=
+s/celeno/cl8k/cecli.c
 new file mode 100644
-index 000000000000..70f1d54b771b
+index 000000000000..abe5d4a06f48
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/cca.c
-@@ -0,0 +1,518 @@
++++ b/drivers/net/wireless/celeno/cl8k/cecli.c
+@@ -0,0 +1,354 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "cca.h"
-+#include "reg/reg_mac_hw.h"
-+#include "reg/reg_riu.h"
-+#include "band.h"
 +#include "hw.h"
++#include "vif.h"
++#include "cecli.h"
++#include "vendor_cmd.h"
++#include "wrs/wrs_api.h"
++#include "chip.h"
++#include "fw/msg_tx.h"
++#include "channel.h"
++#include "calib.h"
++#include "tx/tx_queue.h"
++#include "tx/tx.h"
++#include "stats.h"
++#include "power_cli.h"
++#include "bf.h"
++#include "edca.h"
++#include "traffic.h"
++#include "reg/reg_cli.h"
++#include "radio.h"
++#include "temperature.h"
++#include "rx/rx_filter.h"
++#include "dfs/dfs.h"
++#include "utils/math.h"
++#include "cecli.h"
++#include "utils/utils.h"
++#include "fw/fw_dbg.h"
++#include "ext/vlan_dscp.h"
++#include "vns.h"
++#include "motion_sense.h"
++#include "version.h"
++#include "enhanced_tim.h"
++#include "rssi.h"
++#include "cca.h"
++#include "noise.h"
++#include "twt_cli.h"
++#include "omi.h"
++#include "config.h"
 +
-+#define TO_PERCENT(val, interval) (100 * (val) / (interval))
-+#define SET_CCA_OPT(en, a, b) ((en) ? ((a) |=3D (b)) : ((a) &=3D ~(b)))
-+#define MDM_AFTER_L_SIG  0x3F0
-+#define MDM_BEFORE_L_SIG 0x3F8
-+#define SAMPLE_RES       5
-+
-+static void cl_cca_print_cs(struct cl_hw *cl_hw, unsigned long time)
++int cl_cecli_agc_params(struct wiphy *wiphy, struct wireless_dev *wdev,
++                       const void *data, int data_len)
 +{
-+       u8 cca_cs =3D TO_PERCENT(riu_cca_cnt_cs_get(cl_hw), time);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
 +
-+       pr_debug("cca_cs =3D %u%%\n", cca_cs);
++       return cl_agc_params_cli(cl_hw, cli_params);
 +}
 +
-+static void cl_cca_print_mdm_state(struct cl_hw *cl_hw, unsigned long time=
-)
++int cl_cecli_bf(struct wiphy *wiphy, struct wireless_dev *wdev,
++               const void *data, int data_len)
 +{
-+       u32 cca_mdm_state_p =3D TO_PERCENT(riu_cca_cnt_modem_state_p_get(cl=
-_hw), time);
-+       u32 cca_mdm_state_20s =3D TO_PERCENT(riu_cca_cnt_modem_state_20_s_g=
-et(cl_hw), time);
-+       u32 cca_mdm_state_40s =3D TO_PERCENT(riu_cca_cnt_modem_state_40_s_g=
-et(cl_hw), time);
-+       u32 cca_mdm_state_80s =3D TO_PERCENT(riu_cca_cnt_modem_state_80_s_g=
-et(cl_hw), time);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
 +
-+       pr_debug("cca_mdm_state: primary =3D %u%%, sec20 =3D %u%%, sec40 =
-=3D %u%%, sec80 =3D %u%%\n",
-+                cca_mdm_state_p, cca_mdm_state_20s, cca_mdm_state_40s, cca=
-_mdm_state_80s);
++       return cl_bf_cli(cl_hw, cli_params);
 +}
 +
-+static void cl_cca_print_mp(struct cl_hw *cl_hw, unsigned long time)
++int cl_cecli_calib(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
 +{
-+       u32 cca_mp_20p =3D TO_PERCENT(riu_cca_cnt_gi_20_p_get(cl_hw), time)=
-;
-+       u32 cca_mp_20s =3D TO_PERCENT(riu_cca_cnt_gi_20_s_get(cl_hw), time)=
-;
-+       u32 cca_mp_40s =3D TO_PERCENT(riu_cca_cnt_gi_40_s_get(cl_hw), time)=
-;
-+       u32 cca_mp_80s =3D TO_PERCENT(riu_cca_cnt_gi_80_s_get(cl_hw), time)=
-;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
 +
-+       pr_debug("cca_mp: primary =3D %u%%, sec20 =3D %u%%, sec40 =3D %u, s=
-ec80 =3D %u%%\n",
-+                cca_mp_20p, cca_mp_20s, cca_mp_40s, cca_mp_80s);
++       return cl_calib_cli(cl_hw, cli_params);
 +}
 +
-+static void cl_cca_print_energy(struct cl_hw *cl_hw, unsigned long time)
++int cl_cecli_cca(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
 +{
-+       u32 cca_energy_thr_p =3D TO_PERCENT(riu_cca_cnt_energy_thr_p_get(cl=
-_hw), time);
-+       u32 cca_energy_thr_20s =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_s_g=
-et(cl_hw), time);
-+       u32 cca_energy_thr_40s =3D TO_PERCENT(riu_cca_cnt_energy_thr_40_s_g=
-et(cl_hw), time);
-+       u32 cca_energy_thr_80s =3D TO_PERCENT(riu_cca_cnt_energy_thr_80_s_g=
-et(cl_hw), time);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
 +
-+       pr_debug("cca_energy_thr: primary =3D %u%%, sec20 =3D %u%%, sec40 =
-=3D (%u%%), sec80 =3D %u%%\n",
-+                cca_energy_thr_p, cca_energy_thr_20s, cca_energy_thr_40s, =
-cca_energy_thr_80s);
++       return cl_cca_cli(cl_hw, cli_params);
 +}
 +
-+static void cl_cca_print_energy_band(struct cl_hw *cl_hw, unsigned long ti=
-me)
++int cl_cecli_chip(struct wiphy *wiphy, struct wireless_dev *wdev,
++                 const void *data, int data_len)
 +{
-+       u32 cca_energy_20_band0 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_0_get(cl_hw), time);
-+       u32 cca_energy_20_band1 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_1_get(cl_hw), time);
-+       u32 cca_energy_20_band2 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_2_get(cl_hw), time);
-+       u32 cca_energy_20_band3 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_3_get(cl_hw), time);
-+       u32 cca_energy_20_band4 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_4_get(cl_hw), time);
-+       u32 cca_energy_20_band5 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_5_get(cl_hw), time);
-+       u32 cca_energy_20_band6 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_6_get(cl_hw), time);
-+       u32 cca_energy_20_band7 =3D TO_PERCENT(riu_cca_cnt_energy_thr_20_ba=
-nd_7_get(cl_hw), time);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
 +
-+       pr_debug("cca_energy_20: band0 =3D %u%%, band1 =3D %u%%, band2 =3D =
-%u%%, band3 =3D %u%%, "
-+                "band4 =3D %u%%, band5 =3D %u%%, band6 =3D %u%%, band7 =3D=
- %u%%\n",
-+                cca_energy_20_band0, cca_energy_20_band1, cca_energy_20_ba=
-nd2,
-+                cca_energy_20_band3, cca_energy_20_band4, cca_energy_20_ba=
-nd5,
-+                cca_energy_20_band6, cca_energy_20_band7);
-+}
++       if (data) {
++               char *str =3D (char *)data;
 +
-+static void cl_cca_update_counters(u16 *hist, u32 counter)
-+{
-+       if (counter =3D=3D 0)
-+               hist[0]++;
-+       else if (counter > 100)
-+               hist[CCA_MAX_SAMPLE - 1]++;
-+       else
-+               hist[((counter - 1) / SAMPLE_RES) + 1]++;
-+}
-+
-+static void cl_cca_print_utility(struct cl_hw *cl_hw, unsigned long time)
-+{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
-+       struct cl_edca_hist_db *hist_db =3D &cca_db->edca_hist;
-+       u32 cca_cs =3D riu_cca_cnt_cs_get(cl_hw);
-+       u32 edca_busy =3D mac_hw_edca_cca_busy_get(cl_hw);
-+       u32 cca_mdm_state_p =3D riu_cca_cnt_modem_state_p_get(cl_hw);
-+       u32 tx_mine =3D mac_hw_tx_mine_busy_get(cl_hw);
-+       u32 rx_mine =3D mac_hw_rx_mine_busy_get(cl_hw);
-+       u32 sample_cnt =3D hist_db->sample_cnt;
-+       u32 edca_busy_diff =3D edca_busy - cca_db->edca_busy;
-+       u32 tx_mine_diff =3D tx_mine - cca_db->tx_mine;
-+       u32 rx_mine_diff =3D rx_mine - cca_db->rx_mine;
-+
-+       /* Cca utility formulas */
-+       u32 air_util =3D cca_cs + tx_mine_diff;
-+       u32 wifi_air_util =3D cca_mdm_state_p + tx_mine_diff;
-+       u32 not_mine_rx_wifi =3D cca_mdm_state_p - rx_mine_diff;
-+       u32 mine_util =3D tx_mine_diff + rx_mine_diff;
-+       u32 non_wifi_util =3D edca_busy_diff - cca_mdm_state_p;
-+       u32 not_mine_util =3D edca_busy_diff - rx_mine_diff;
-+       u32 not_mine_time =3D time - mine_util;
-+
-+       u32 air_util_percent =3D TO_PERCENT(air_util, time);
-+       u32 wifi_air_util_percent =3D TO_PERCENT(wifi_air_util, time);
-+       u32 not_mine_rx_wifi_percent =3D TO_PERCENT(not_mine_rx_wifi, time)=
-;
-+       u32 mine_util_percent =3D TO_PERCENT(mine_util, time);
-+       u32 non_wifi_util_percent =3D TO_PERCENT(non_wifi_util, time);
-+       u32 not_mine_util_percent =3D TO_PERCENT(not_mine_util, time);
-+       u32 not_mine_busy_util_percent =3D
-+               (not_mine_time > 0) ? TO_PERCENT(not_mine_util, not_mine_ti=
-me) : 0;
-+
-+       cca_db->edca_busy =3D edca_busy;
-+       cca_db->tx_mine =3D tx_mine;
-+       cca_db->rx_mine =3D rx_mine;
-+
-+       if (sample_cnt > 0) {
-+               cl_cca_update_counters(hist_db->air_util, air_util_percent)=
-;
-+               cl_cca_update_counters(hist_db->wifi_air_util, wifi_air_uti=
-l_percent);
-+               cl_cca_update_counters(hist_db->not_mine_rx_wifi, not_mine_=
-rx_wifi_percent);
-+               cl_cca_update_counters(hist_db->mine, mine_util_percent);
-+               cl_cca_update_counters(hist_db->non_wifi_util, non_wifi_uti=
-l_percent);
-+               cl_cca_update_counters(hist_db->not_mine, not_mine_util_per=
-cent);
-+               cl_cca_update_counters(hist_db->not_mine_busy, not_mine_bus=
-y_util_percent);
-+
-+               hist_db->sample_cnt--;
-+
-+               /* Stop sampling */
-+               if (hist_db->sample_cnt =3D=3D 0) {
-+                       SET_CCA_OPT(0, cca_db->cca_opt, CCA_OPT_REC_HIST);
-+                       pr_debug("Record is done\n");
-+               }
++               return cl_chip_config_set(cl_hw->chip, str, strlen(str) + 1=
+);
 +       }
 +
-+       if (cca_db->cca_opt & CCA_OPT_UTIL)
-+               pr_debug("air_util =3D %u%%, wifi_air_util =3D %u%%, not_mi=
-ne_rx_wifi =3D %u%%, "
-+                        "mine_util =3D %u%%, non_wifi_util =3D %u%%, not_m=
-ine_util =3D %u%%, "
-+                        "not_mine_busy_util =3D %u%%\n",
-+                        air_util_percent, wifi_air_util_percent, not_mine_=
-rx_wifi,
-+                        mine_util_percent, non_wifi_util_percent, not_mine=
-_util_percent,
-+                        not_mine_busy_util_percent);
++       return -1;
 +}
 +
-+static void cl_cca_print_tx_rx_mine(struct cl_hw *cl_hw, unsigned long tim=
-e)
++int cl_cecli_config(struct wiphy *wiphy, struct wireless_dev *wdev,
++                   const void *data, int data_len)
 +{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
 +
-+       u32 tx_mine =3D mac_hw_tx_mine_busy_get(cl_hw);
-+       u32 rx_mine =3D mac_hw_rx_mine_busy_get(cl_hw);
-+
-+       u32 diff_tx_mine =3D tx_mine - cca_db->print_tx_mine;
-+       u32 diff_rx_mine =3D rx_mine - cca_db->print_rx_mine;
-+
-+       cca_db->print_tx_mine =3D tx_mine;
-+       cca_db->print_rx_mine =3D rx_mine;
-+
-+       pr_debug("tx_mine =3D %u (%lu%%), rx_mine =3D %u (%lu%%)\n",
-+                diff_tx_mine,
-+                TO_PERCENT(diff_tx_mine, time),
-+                diff_rx_mine,
-+                TO_PERCENT(diff_rx_mine, time));
++       return cl_config_cli(cl_hw, cli_params);
 +}
 +
-+static void cl_cca_edca(struct cl_hw *cl_hw, unsigned long time)
++int cl_cecli_debug(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
 +{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
-+       bool is_24g =3D cl_band_is_24g(cl_hw);
-+       bool sec80 =3D !is_24g;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
 +
-+       u32 new_edca_busy =3D mac_hw_edca_cca_busy_get(cl_hw);
-+       u32 new_edca_busy_sec20 =3D mac_hw_add_cca_busy_sec_20_get(cl_hw);
-+       u32 new_edca_busy_sec40 =3D is_24g ? 0 : mac_hw_add_cca_busy_sec_40=
-_get(cl_hw);
-+       u32 new_edca_busy_sec80 =3D sec80 ? mac_hw_add_cca_busy_sec_80_get(=
-cl_hw) : 0;
++       cl_hw->conf->ce_debug_level =3D *(s8 *)data;
++       cl_hw->chip->conf->ce_debug_level =3D *(s8 *)data;
 +
-+       u32 diff_edca_busy =3D new_edca_busy - cca_db->edca_busy;
-+       u32 diff_edca_busy_sec20 =3D new_edca_busy_sec20 - cca_db->edca_bus=
-y_sec20;
-+       u32 diff_edca_busy_sec40 =3D new_edca_busy_sec40 - cca_db->edca_bus=
-y_sec40;
-+       u32 diff_edca_busy_sec80 =3D new_edca_busy_sec80 - cca_db->edca_bus=
-y_sec80;
-+
-+       u32 percent_edca_busy =3D TO_PERCENT(diff_edca_busy, time);
-+       u32 percent_edca_busy_sec20 =3D TO_PERCENT(diff_edca_busy_sec20, ti=
-me);
-+       u32 percent_edca_busy_sec40 =3D TO_PERCENT(diff_edca_busy_sec40, ti=
-me);
-+       u32 percent_edca_busy_sec80 =3D TO_PERCENT(diff_edca_busy_sec80, ti=
-me);
-+
-+       cca_db->edca_busy =3D new_edca_busy;
-+       cca_db->edca_busy_sec20 =3D new_edca_busy_sec20;
-+       cca_db->edca_busy_sec40 =3D new_edca_busy_sec40;
-+       cca_db->edca_busy_sec80 =3D new_edca_busy_sec80;
-+
-+       pr_debug("edca_busy: primary =3D %u (%u%%), sec20 =3D %u (%u%%), "
-+                "sec40 =3D %u (%u%%), sec80 =3D %u (%u%%)\n",
-+                diff_edca_busy, percent_edca_busy,
-+                diff_edca_busy_sec20, percent_edca_busy_sec20,
-+                diff_edca_busy_sec40, percent_edca_busy_sec40,
-+                diff_edca_busy_sec80, percent_edca_busy_sec80);
++       return 0;
 +}
 +
-+static void cl_cca_print_edca_nav(struct cl_hw *cl_hw, unsigned long time)
++int cl_cecli_dfs(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
 +{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       u16 ret_buf_len =3D PAGE_SIZE;
++       char *ret_buf =3D kzalloc(ret_buf_len, GFP_KERNEL);
 +
-+       u32 new_cca_busy_nav =3D mac_hw_edca_nav_busy_get(cl_hw);
-+       u32 new_cca_intra_bss_nav =3D mac_hw_intra_bss_nav_busy_get(cl_hw);
-+       u32 new_cca_inter_bss_nav =3D mac_hw_inter_bss_nav_busy_get(cl_hw);
++       if (ret_buf) {
++               struct cli_params *cli_params =3D (struct cli_params *)data=
+;
 +
-+       u32 diff_cca_busy_nav =3D new_cca_busy_nav - cca_db->cca_busy_nav;
-+       u32 diff_cca_intra_bss_nav =3D new_cca_intra_bss_nav - cca_db->cca_=
-intra_bss_nav;
-+       u32 diff_cca_inter_bss_nav =3D new_cca_inter_bss_nav - cca_db->cca_=
-inter_bss_nav;
++               if (cl_dfs_cli(cl_hw, cli_params, ret_buf, &ret_buf_len))
++                       cl_vendor_reply(cl_hw, ret_buf, (int)ret_buf_len);
 +
-+       u32 percent_cca_busy_nav =3D TO_PERCENT(diff_cca_busy_nav, time);
-+       u32 percent_cca_intra_bss_nav =3D TO_PERCENT(diff_cca_intra_bss_nav=
-, time);
-+       u32 percent_cca_inter_bss_nav =3D TO_PERCENT(diff_cca_inter_bss_nav=
-, time);
++               kfree(ret_buf);
++       } else {
++               return -ENOMEM;
++       }
 +
-+       cca_db->cca_busy_nav =3D new_cca_busy_nav;
-+       cca_db->cca_intra_bss_nav =3D new_cca_intra_bss_nav;
-+       cca_db->cca_inter_bss_nav =3D new_cca_inter_bss_nav;
-+
-+       pr_debug("cca_busy_nav =3D %u%%, cca_intra_bass_nav =3D %u%%, cca_i=
-nter_bass_nav =3D %u%%\n",
-+                percent_cca_busy_nav, percent_cca_intra_bss_nav, percent_c=
-ca_inter_bss_nav);
++       return 0;
 +}
 +
-+static int cl_cca_cli_help(struct cl_hw *cl_hw)
++int cl_cecli_edca(struct wiphy *wiphy, struct wireless_dev *wdev,
++                 const void *data, int data_len)
 +{
-+       char *buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++
++       return cl_edca_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_fw(struct wiphy *wiphy, struct wireless_dev *wdev,
++               const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_fw_dbg_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_motion(struct wiphy *wiphy, struct wireless_dev *wdev,
++                   const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_motion_sense_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_noise(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++
++       return cl_noise_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_omi(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_omi_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_power(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++
++       return cl_power_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_qos(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cl_vif *cl_vif =3D NETDEV_TO_CL_VIF(wdev->netdev);
++
++       return data ? cl_vlan_dscp_cli(cl_hw, cl_vif, (char *)data) : -1;
++}
++
++int cl_cecli_radio(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       bool radio_on =3D *(bool *)data;
++
++       return cl_radio_cli(cl_hw, radio_on);
++}
++
++int cl_cecli_reg(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_reg_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_sounding(struct wiphy *wiphy, struct wireless_dev *wdev,
++                     const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_sounding_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_stats(struct wiphy *wiphy, struct wireless_dev *wdev,
++                  const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cl_vif *cl_vif =3D NETDEV_TO_CL_VIF(wdev->netdev);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++
++       return cl_stats_cli(cl_hw, cl_vif, cli_params);
++}
++
++int cl_cecli_tcv(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       if (data) {
++               char *str =3D (char *)data;
++
++               return cl_tcv_config_set(cl_hw, str, strlen(str) + 1);
++       }
++
++       return -1;
++}
++
++int cl_cecli_temp(struct wiphy *wiphy, struct wireless_dev *wdev,
++                 const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++
++       cl_temperature_cli(cl_hw, cli_params);
++       return 0;
++}
++
++int cl_cecli_traffic(struct wiphy *wiphy, struct wireless_dev *wdev,
++                    const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_traffic_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_twt(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_twt_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_txq(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_txq_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_version(struct wiphy *wiphy, struct wireless_dev *wdev,
++                    const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       cl_version_cli(cl_hw);
++       return 0;
++}
++
++int cl_cecli_vns(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_vns_cli(cl_hw, cli_params);
++}
++
++int cl_cecli_wrs(struct wiphy *wiphy, struct wireless_dev *wdev,
++                const void *data, int data_len)
++{
++       struct cli_params *cli_params =3D (struct cli_params *)data;
++       struct cl_vif *cl_vif =3D NETDEV_TO_CL_VIF(wdev->netdev);
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++
++       return cl_wrs_api_cli(cl_hw, cl_vif, cli_params);
++}
++
++int cl_cecli_help(struct wiphy *wiphy, struct wireless_dev *wdev,
++                 const void *data, int data_len)
++{
++       struct cl_hw *cl_hw =3D WIPHY_TO_CL_HW(wiphy);
++       char *ret_buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
 +       int err =3D 0;
 +
-+       if (!buf)
++       if (!ret_buf)
 +               return -ENOMEM;
 +
-+       snprintf(buf, PAGE_SIZE,
-+                "cca usage:\n"
-+                "-a : Print TX mine and RX mine [0-dis, 1-en]\n"
-+                "-b : Print energy detect registers per20 [0-dis, 1-en]\n"
-+                "-c : Print EDCA registers [0-dis, 1-en]\n"
-+                "-d : Enable/Disable CCA statistics - [0-dis, 0xff-en all]=
-\n"
-+                "-e : Print energy detect registers [0-dis, 1-en]\n"
-+                "-g : Print mid-packet registers [0-dis, 1-en]\n"
-+                "-h : Print histogram [0-reset, 1-print]\n"
-+                "-i : Print NAV busy registers [0-dis, 1-en]\n"
-+                "-m : Print modem-state registers [0-dis, 1-en]\n"
-+                "-n : Set modem-state registers [0-before L-SIG, 1-after L=
--SIG]\n"
-+                "-r : Record histogram [samples #]\n"
-+                "-s : Print carrier-sense register [0-dis, 1-en]\n"
-+                "-u : Print CCA utility [0-dis, 1-en]\n");
++       snprintf(ret_buf, PAGE_SIZE,
++                "usage:\n"
++                "agc_params -    AGC params\n"
++                "bf -            Beem Forming\n"
++                "cca -           CCA related\n"
++                "chip -          Set nvram per chip\n"
++                "config -        Debug configuration\n"
++                "debug -         Set Debug level\n"
++                "dfs -           Dynamic Frequency Selection\n"
++                "edca -          Enhanced Distributed Channel Access\n"
++                "fw -            Firmware related\n"
++                "motion -        Motion feature\n"
++                "noise -         Noise related\n"
++                "omi -           OM infrastructure\n"
++                "power -         Power related\n"
++                "qos -           Quality Of Service\n"
++                "radio -         Set radio on/off\n"
++                "reg -           Register related\n"
++                "sounding -      Sounding related\n"
++                "stats -         Statistics related\n"
++                "tcv -           Set nvram per tcv\n"
++                "temp -          Temperature related\n"
++                "traffic -       Traffic related\n"
++                "twt -           Target Wake Time\n"
++                "txq -           TX queue\n"
++                "version -       Read Version\n"
++                "vns -           Very Near Station\n"
++                "wrs -           Weighted Rate Selection\n");
 +
-+       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
-+       kfree(buf);
++       err =3D cl_vendor_reply(cl_hw, ret_buf, strlen(ret_buf));
++       kfree(ret_buf);
 +
 +       return err;
 +}
-+
-+static bool cl_cca_is_hist_empty(struct cl_edca_hist_db *hist_db, u8 cnt)
-+{
-+       if (!hist_db->air_util[cnt] &&
-+           !hist_db->mine[cnt] &&
-+           !hist_db->non_wifi_util[cnt] &&
-+           !hist_db->not_mine[cnt] &&
-+           !hist_db->not_mine_busy[cnt] &&
-+           !hist_db->not_mine_rx_wifi[cnt] &&
-+           !hist_db->wifi_air_util[cnt])
-+               return true;
-+
-+       return false;
-+}
-+
-+static void cl_cca_print_histogram(struct cl_hw *cl_hw)
-+{
-+       struct cl_edca_hist_db *hist_db =3D &cl_hw->cca_db.edca_hist;
-+       u8 i =3D 0;
-+       u8 range =3D 1;
-+
-+       pr_debug("|--------------------------------------------------------=
--------|\n");
-+       pr_debug("|Samples|AirUtil|WifiAir|NonWifi|Mine   |NotMine|NotMine|=
-NotMine|\n");
-+       pr_debug("|       |       |Util   |Util   |       |       |Busy   |=
-RxWifi |\n");
-+       pr_debug("|-------+-------+-------+-------+-------+-------+-------+=
--------|\n");
-+
-+       for (i =3D 0; i < CCA_MAX_SAMPLE; i++) {
-+               if (cl_cca_is_hist_empty(hist_db, i))
-+                       continue;
-+
-+               if (i > 1)
-+                       range =3D ((i - 1) * SAMPLE_RES) + 1;
-+
-+               if (i !=3D 0)
-+                       pr_debug("|%3u-%-3u| %5u | %5u | %5u | %5u | %5u | =
-%5u | %5u |\n",
-+                                range, range + SAMPLE_RES - 1, hist_db->ai=
-r_util[i],
-+                                hist_db->wifi_air_util[i], hist_db->non_wi=
-fi_util[i],
-+                                hist_db->mine[i], hist_db->not_mine[i],
-+                                hist_db->not_mine_busy[i], hist_db->not_mi=
-ne_rx_wifi[i]);
-+               else
-+                       pr_debug("|0      | %5u | %5u | %5u | %5u | %5u | %=
-5u | %5u |\n",
-+                                hist_db->air_util[i], hist_db->wifi_air_ut=
-il[i],
-+                                hist_db->non_wifi_util[i], hist_db->mine[i=
-],
-+                                hist_db->not_mine[i], hist_db->not_mine_bu=
-sy[i],
-+                                hist_db->not_mine_rx_wifi[i]);
-+       }
-+
-+       pr_debug("|--------------------------------------------------------=
--------|\n");
-+}
-+
-+static void cl_cca_opt_update(struct cl_hw *cl_hw, u32 cca_opt_prev)
-+{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
-+       u32 cca_opt_new =3D cca_db->cca_opt;
-+
-+       if (cca_opt_prev =3D=3D 0 && cca_opt_new !=3D 0) {
-+               cca_db->time =3D jiffies_to_usecs(jiffies);
-+               riu_rwnxagccca_1_cca_cnt_clear_setf(cl_hw, 0);
-+       }
-+
-+       if (((cca_opt_prev & CCA_OPT_TX_RX_MINE) !=3D CCA_OPT_TX_RX_MINE) &=
-&
-+           (cca_opt_new & CCA_OPT_TX_RX_MINE)) {
-+               cca_db->print_tx_mine =3D mac_hw_tx_mine_busy_get(cl_hw);
-+               cca_db->print_rx_mine =3D mac_hw_rx_mine_busy_get(cl_hw);
-+       }
-+
-+       if (((cca_opt_prev & CCA_OPT_UTIL) !=3D CCA_OPT_UTIL) &&
-+           (cca_opt_new & CCA_OPT_UTIL)) {
-+               cca_db->tx_mine =3D mac_hw_tx_mine_busy_get(cl_hw);
-+               cca_db->rx_mine =3D mac_hw_rx_mine_busy_get(cl_hw);
-+               cca_db->edca_busy =3D mac_hw_edca_cca_busy_get(cl_hw);
-+       }
-+}
-+
-+int cl_cca_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
-+{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
-+       u32 cca_opt_prev =3D cca_db->cca_opt;
-+       u32 expected_params =3D -1;
-+       u32 param =3D (u32)cli_params->params[0];
-+       bool print_tx_rx_mine =3D false;
-+       bool print_energy_band =3D false;
-+       bool print_edca =3D false;
-+       bool print_all =3D false;
-+       bool print_energy =3D false;
-+       bool print_mp =3D false;
-+       bool print_histogram =3D false;
-+       bool print_nav_edca =3D false;
-+       bool print_mdm =3D false;
-+       bool set_mdm =3D false;
-+       bool record_histogram =3D false;
-+       bool print_cs =3D false;
-+       bool print_util =3D false;
-+
-+       switch (cli_params->option) {
-+       case 'a':
-+               print_tx_rx_mine =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'b':
-+               print_energy_band =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'c':
-+               print_edca =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'd':
-+               print_all =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'e':
-+               print_energy =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'g':
-+               print_mp =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'h':
-+               print_histogram =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'i':
-+               print_nav_edca =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'm':
-+               print_mdm =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'n':
-+               set_mdm =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'r':
-+               record_histogram =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 's':
-+               print_cs =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'u':
-+               print_util =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case '?':
-+               return cl_cca_cli_help(cl_hw);
-+       default:
-+               cl_dbg_err(cl_hw, "Illegal option (%c) - try '?' for help\n=
-", cli_params->option);
-+               goto out_err;
-+       }
-+
-+       if (expected_params !=3D cli_params->num_params) {
-+               cl_dbg_err(cl_hw, "Wrong number of arguments (expected %u) =
-(actual %u)\n",
-+                          expected_params, cli_params->num_params);
-+               goto out_err;
-+       }
-+
-+       if (print_tx_rx_mine)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_TX_RX_MINE);
-+
-+       if (print_energy_band)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_CNT_ENERGY_BAND=
-);
-+
-+       if (print_all)
-+               cca_db->cca_opt =3D param;
-+
-+       if (print_edca)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_EDCA);
-+
-+       if (print_energy)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_CNT_ENERGY);
-+
-+       if (print_mp)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_CNT_MP);
-+
-+       if (print_histogram) {
-+               if (param)
-+                       cl_cca_print_histogram(cl_hw);
-+               else
-+                       memset(&cca_db->edca_hist, 0, sizeof(struct cl_edca=
-_hist_db));
-+
-+               return 0;
-+       }
-+
-+       if (print_nav_edca)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_EDCA_NAV);
-+
-+       if (print_mdm)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_CNT_MDM_STATE);
-+
-+       if (set_mdm) {
-+               u16 psel =3D param ? MDM_AFTER_L_SIG : MDM_BEFORE_L_SIG;
-+
-+               pr_debug("Modem state register set to : %s L-SIG detection!=
-\n",
-+                        param ? "after" : "before");
-+               riu_rwnxagcccastate_0_rxstatecca_20_psel_setf(cl_hw, psel);
-+
-+               return 0;
-+       }
-+
-+       if (record_histogram) {
-+               pr_debug("%s recording samples\n", param ? "Start" : "Stop"=
-);
-+               cca_db->edca_hist.sample_cnt =3D param;
-+               SET_CCA_OPT(!!param, cca_db->cca_opt, CCA_OPT_REC_HIST);
-+       }
-+
-+       if (print_cs)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_CNT_CS);
-+
-+       if (print_util)
-+               SET_CCA_OPT(param, cca_db->cca_opt, CCA_OPT_UTIL);
-+
-+       cl_cca_opt_update(cl_hw, cca_opt_prev);
-+       return 0;
-+
-+out_err:
-+       return -EIO;
-+}
-+
-+void cl_cca_maintenance(struct cl_hw *cl_hw)
-+{
-+       struct cl_cca_db *cca_db =3D &cl_hw->cca_db;
-+       unsigned long time =3D jiffies_to_usecs(jiffies);
-+       unsigned long diff_time =3D time - cca_db->time;
-+       u32 cca_opt =3D cca_db->cca_opt;
-+
-+       cca_db->time =3D time;
-+
-+       if (!diff_time || !cca_opt)
-+               return;
-+
-+       if (cca_opt & CCA_OPT_CNT_CS)
-+               cl_cca_print_cs(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_CNT_MDM_STATE)
-+               cl_cca_print_mdm_state(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_CNT_MP)
-+               cl_cca_print_mp(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_CNT_ENERGY)
-+               cl_cca_print_energy(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_CNT_ENERGY_BAND)
-+               cl_cca_print_energy_band(cl_hw, diff_time);
-+
-+       if (cca_opt & (CCA_OPT_UTIL | CCA_OPT_REC_HIST))
-+               cl_cca_print_utility(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_TX_RX_MINE)
-+               cl_cca_print_tx_rx_mine(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_EDCA)
-+               cl_cca_edca(cl_hw, diff_time);
-+
-+       if (cca_opt & CCA_OPT_EDCA_NAV)
-+               cl_cca_print_edca_nav(cl_hw, diff_time);
-+
-+       /* Rest CCA counters */
-+       riu_rwnxagccca_1_cca_cnt_clear_setf(cl_hw, 0);
-+}
-+
 --
 2.30.0
 
