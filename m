@@ -2,41 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,UPPERCASE_75_100,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F4FC2B9F4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7007C49361
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E11F613E9
+	by mail.kernel.org (Postfix) with ESMTP id A9F9F613E1
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232710AbhFQQHi (ORCPT
+        id S232419AbhFQQHj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:07:38 -0400
-Received: from mail-eopbgr80074.outbound.protection.outlook.com ([40.107.8.74]:59110
+        Thu, 17 Jun 2021 12:07:39 -0400
+Received: from mail-eopbgr80045.outbound.protection.outlook.com ([40.107.8.45]:44002
         "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231955AbhFQQHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:07:10 -0400
+        id S231877AbhFQQHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:07:14 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=c1Nkzh+W8EzFun11XBcKDnYKGHDHpcrnCSwt6me1GQGcOKmu7b5ywsdudlMYpNv2fnLCr6Y2HJOokwo3GtIhrMlaUKnnEpuDjrMfJPSU+GIiOmlJPixCpsabv1caKsbzXh+bgQndVluG8OyEJGp7EezWTs8OjQAokXtbA0yigC1fzautlXS0dSR+Rqn/YKmQAKNQrGEls2dzc5NMzzcHGM0OaWTTxAai2G7ci0en/dNLKyf0jM/MlCtDpB2Y6sOFK9rK+9UC7aiJbBMwlTSl3sOmp8GIXz9l+xJQpEEMz/q/huepo0HmZYWm3mx7VMiQz/NT5AIIxBeMojfeJ1RoFg==
+ b=A49NijcjGZhIpQ044Zuk1L3Dvtog79usnZGxUUm5IkaBjc0QOrLrUCeaZiq4MJf4g/2wUOdTPYJyrSEkBLzdw2pdUG/47wyp9PEuog95i2sGgUMFNvGTMKoFXjyCdi/+1f7gOES4qOYySOAkVSTuA1w4fmJDs3SCGkL67gmsRQ6/0n3MwUYR+GAGFfjpLjQQLjOFutYzGS8Usa3B00U5nII7cvnoYUManFdK6ax3VtKpK4Fpi7tQpasitzGif7NEeFFPzyJaWB+K1Ow94ciHIRCdpIwTyuSKyjRPwOpNR1f10uveavz1bk7AIMBzwo0xQyMwUrnBjpAfM2cyMNXIaQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jrv3iuaP852mOWsYC0loc/ZVaVrv5W+Ynsl/vmTTY80=;
- b=Qt3JsNBE71QA858Ls3cBD/S8glGxBNngBnxS+Z8ewDuk41Jqk9tram+m4M2QogXz+z6CjAsgVVFg+1OMU/4KCN6+GzWs8cKLh89gWMWsyKfZIZFOHFQtkEUq5SdUWZi7JRAkTtO/7V3kBANvXuQEcZ6PV8PyzDHPAX0+e48O5gWZcSA+/MByfhu/WjcC2NHfJTZCn74iU7Joizm0b5nMqAWk3CtaK/OMtYbO6uWuSyVbGjLnntShPUZ/KkyVi9QVlKE1YNPShUBMkxgeEr7jxf+4AqotXe+0uqjS7BL2Z7JDtI/ODxm834RehCzWNdMlXM6NOs4BNcnf1JwXKP5RIQ==
+ bh=E0/MfBa4fi/a0mfwach0iLt6iWcZUZYTXh+mnovlmbA=;
+ b=CX5HLB/S4sb+Xvjq8Q2kPSF7j6nDorQKxUSVoFMELMYl8VrxUJUtnlANmPKTN7CRphUySinKXJS5ePs194cPm0hSa+pWlOJHi5Ow1m45eU44GPzPbexCE5DAB862jtEFBLlXB40FmtYxObdhTSzKVzzw3Ymg5RWFCR5q8UAC3vWpXDMNXJP370g5hrbRYlhezX9bJydHHcUxu4t+W5gVEcurSHk1aqQateimO42icysFdxhNJEJi3pGlOteORWl5namsZSGFmWJEfpPqJoObdtWBG7o+Np7/IVr//75nrMj3YkBhM3OGQqFc8XH3kG2FUQEHULcBpwl3WO8lQgvKCg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jrv3iuaP852mOWsYC0loc/ZVaVrv5W+Ynsl/vmTTY80=;
- b=UkvI4r10z2PbIAimouBm3I8iiuyTBu9qzrsOHjTMm/iuQjwiFy4BZCUoEGGesda1TIrmxf+yb+BRCgK9btwkebsFo1r702wgTRd5sfmp0Xny2OyIC1ZxtWLcLZukppY7F8dDox6yNhr22kfid5XL4PBs9uXrLvOJHqZ5teLQY/o=
+ bh=E0/MfBa4fi/a0mfwach0iLt6iWcZUZYTXh+mnovlmbA=;
+ b=iKIRyaKN8AGY+2EqK05KC7JB6LbU5aRtyFVUXaELl1VCdOgI9vK37ZvxIz0bu8zpQVea/Uf7zmTRI4k4couEmIeV1GUMXTODIxMYOOcUO8I+BOQ1/ngHi/9XfL/jROf8cUj3gdyWqQAJ8LbTbf0qujZRymZf1WsS32XLCXQMBfg=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
@@ -58,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 090/256] cl8k: add fw/fw_msg.c
-Date:   Thu, 17 Jun 2021 15:59:37 +0000
-Message-Id: <20210617160223.160998-91-viktor.barna@celeno.com>
+Subject: [RFC v1 092/256] cl8k: add fw/msg_cfm.c
+Date:   Thu, 17 Jun 2021 15:59:39 +0000
+Message-Id: <20210617160223.160998-93-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -72,51 +71,51 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:12 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:14 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 82ef4259-40b4-40e4-42c5-08d931a98ca6
+X-MS-Office365-Filtering-Correlation-Id: ff93d86e-9b38-4fc0-b505-08d931a98e19
 X-MS-TrafficTypeDiagnostic: AM9P192MB0887:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB088707062B962DBB8A81CF2DF60E9@AM9P192MB0887.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3383;
+X-Microsoft-Antispam-PRVS: <AM9P192MB0887FD4FEE3D51639E3A4B24F60E9@AM9P192MB0887.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 0CsGaR2OX9IvoTleaA1hgr6pnOSTd3v3HgUFeDBQDhX3Bf8PnBxini5R3U3z4pSdQ0QQ/ovGNs6IvoUpuNSUIhUZqyBzSXo1tTNuT5gKYhYRszI7yEwr8aDb3b28bWDJJsdFO7o4yaqH1S+VB2EqSPKZQF/1N2uDrZIE6V1ChUnice2BWZgmeVCUYkaKAJ1OTPokONdZ03U30ZgA2ntpNOcp79vr6zC2DmiPUf6jfziORKylUTtHzO+rfGZgQQ9pj/NIEq4fhtrIRzkzlHfN1mSoRMzKlopk0R66+JREZip+aeb1PedMY74SEoGDEMiV1oX27WsOsyiSfGGnQYUQyhy12shsTaDdxyfRJVe1g8slRdsgPv455YHwujpfKyuP+tp0rPQnqkeMOSkMyWn3dJh/IuKPDA36ORXNeDOHCYpnS5gtf/ofo1W6eJhADNuOXglEXQrqvIRb0TDDXW4ikTzoi+JU1hcnfjyMtdRlZPTaHxNCmEawEzzEQYtkTadbfN8609Td7nChwJfdHNexh0ySfmzf1hS/gU7JtE1eeWs380JnVKeAL8fJD3ynWvKYQUmXfYSxUgzGl8rg+2l6pA52CoTeSl6gnsz3aDCgb7KLukCBmlx7x0P7cts6wFfB2+oVeHwOFbRfqTe4vKbDNl7mQ29e2XTsgvimrAz65SkDsFPsbZ/N9o8RVbJnzjbWxdllD7zlYE/4EykDTlwngg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(396003)(366004)(39850400004)(136003)(346002)(83380400001)(6666004)(38350700002)(4326008)(186003)(16526019)(5660300002)(54906003)(6506007)(26005)(55236004)(38100700002)(316002)(1076003)(107886003)(52116002)(8936002)(508600001)(66476007)(66946007)(66556008)(36756003)(6916009)(6486002)(86362001)(2616005)(956004)(2906002)(8676002)(9686003)(6512007)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: JStIhaW3iWTxKMmw2Vx/PDfb/4689W2v9fEpujWHQrP1/2pIaMCpnWo9cAd3t2FxmBoWE175lCuUJGIVOiVcuGechYEWCdMGYXZnK2bFzeH6aEFRIGIqlJ5xtvfNpb1APwjsIVTFMHwaKUbQjCdGXBqGcdeWW5u5OzCtKqS9EGI6H2OfZyENV0Q+MbSaZtglpFbxAQRHL6uRWxvqbgkFS/um6wq8a6pYH8Ge37r5mzRPVfuzRtTl/WLifqU1mex54YpDeFj5QfEwMYcnmMC2ksks1a33hRxUjPI2sgrEzkKQLR2rG24QzyVgdPB7CpnQ5MzMRk4LQyejsojyTRE+Bycl3qI9uN176VjtDgZCUBjey9V+gT4OeHv5Dgv61qhyQy7B6BowFNvUuvO+GdfKb8K9L687bXhEl7UWx8e3k5u12fkUCHzhxgyE5QLFc/GFtM8Q05ett5fU8nZ/Q1iNjmhSzyT/qWvDGMKqo9WietvPmduoUJxukmOvS23k2LIwwz2Z7VsOY3Vxi3OOTFzhJmoCkDIURH3pxF2g84tRq/Gthh7Q1Ly2AEhGPCPDrofFv9oqWEQeT5DAqNCxfFaj5Ysmc225ig3Dvgego4s+9WTMLE5SvnmcjjgN7bT/I59dEBXC8ztpxlrJf1SwRZNbRs3SFwnm8NCTEesYAHsy8HZEPx4cw8i3hA7JkTsnoz0LgvGguNgyKXD4hJpRsc7xoQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(396003)(366004)(39850400004)(136003)(346002)(83380400001)(6666004)(38350700002)(4326008)(186003)(16526019)(5660300002)(54906003)(6506007)(26005)(55236004)(38100700002)(316002)(1076003)(107886003)(30864003)(52116002)(8936002)(508600001)(66476007)(66946007)(66556008)(36756003)(6916009)(6486002)(86362001)(2616005)(956004)(2906002)(8676002)(9686003)(6512007)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C3i0Nto5GLQDa6tpkkF1Agjb6prbTcGQMf2A8mqktUP5vZpc/ShER3ew5bEO?=
- =?us-ascii?Q?FrFcxa9+1SEzKFTICy8gPrMZTpSkb4Hej/88vh4WppJS32T0l4cALGwReKxE?=
- =?us-ascii?Q?5HVH+mlBNTQovARXIcaFkqAiiAITDow6RJwpryjLZCw4jpmB2NC3SAvd6OLp?=
- =?us-ascii?Q?6uj6qJ4YA4eEA/gGdMLyVPC3MR/FJxU9vrKWgXCllydBvWKCfbObTcVvXnCS?=
- =?us-ascii?Q?Ziibq9CfpCAx6IUrv8X3EoqtLN0hmkHi2Ept3Vi1GYpadV+nsXGjZuNILXXk?=
- =?us-ascii?Q?DzGT1fiv/OZUB/TBsqjNc+eM4N8jw0jHUgTjuUFsx5W/Ck8fZN5R0aV+LA72?=
- =?us-ascii?Q?XQ9cNjCVKX9DNEaVUdBq+ngpoNh2xy6+KougWkDk+J/yHxFpY/GJ+CRdx4ou?=
- =?us-ascii?Q?0TxT+cBDtwcVHHRqbe6vRNa2JbkSfbLQCFCU/IdLi7AK0B3EVUYyuFHKJHlo?=
- =?us-ascii?Q?PqaPUHYEaKld8W79Z/K98O4s0B60nImOmHXHiwtyn8vfMsVmdq4sJveMwzdj?=
- =?us-ascii?Q?9femyBApsOWsSGUN1HrBarO4u9GJaWcx92x3ts9Gy5nzjM8VsnFQMgJtcAHV?=
- =?us-ascii?Q?/pvccZOgf1X+pvtpY0VXSMaVVlQIjAC0S7vMxiN6bwGNYtowJ4rBR/nthFt5?=
- =?us-ascii?Q?s2MCAIk5FVsDCwuoT5t8phVvmoTZVAZFqrCzFa+HD0KpwrB+dr57M+oYfeBO?=
- =?us-ascii?Q?yZpYqZbkUKoHpLwIhL8GLGRTQiUPRdSXk3fOoIttthtTbdzG9N52AULkmzkp?=
- =?us-ascii?Q?WrFu/qliHFJ713iJY1zPEgXsXqa+3InzKU8bdAhjK9V3wjLpXc2KmxpmrKY1?=
- =?us-ascii?Q?B9Gl2acgN0H0XMYfo+Jsd2VUOLiCZorKNmceNEny8NaaeJ1LKJmAYtTQE80c?=
- =?us-ascii?Q?Z+3LfUOsJqOGOyW5R2GXnwWuN0Y4o6NBlaS/Abq/zGX/iYwaQWfDCgVYjzR5?=
- =?us-ascii?Q?tJPNAp5AZUh93JO/12TgSJAE+t7dRqAARge1SoSparRqw6ggCBc3TXHpn1E4?=
- =?us-ascii?Q?e9b06LV5yCs4w1wKg24AP9DG7Nth4l9YuSTOvb9SSPa966dR7NX4Wv6vPveI?=
- =?us-ascii?Q?ukxXZ2Bmo0otK0qx4ATicOYSD7D6TtsQsfQqHonZJ6EuySdkoA277093usrW?=
- =?us-ascii?Q?YV2wgVj9W7TpcGcQPCUnD2nZhgDW93Lnne6YdftcM+0A7nV8OBtTS3XZnbso?=
- =?us-ascii?Q?nRVh0UjiQRp3RvyefU3SQ3CmNhhqGZ5PpdJTnHMP5ZxycsyisTBGyM20P77+?=
- =?us-ascii?Q?ghSYfKwIn2nfsXK0BHLRd9uV+fl94kiL8McnKZLS7bdF+/iEcPitU51T/rat?=
- =?us-ascii?Q?JMpRY1KzgI1dzLGe5jJl6dG/?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wObvT5nW2Sr8hpg9gc1A8NjzfkCBKJbPpnCN3DI+cvVvlYTR/jIzLtYbBFQM?=
+ =?us-ascii?Q?k3uMM+DoqHyJ33ZU5zoz4VDrokGXunZgPWuNBmPmzfXJm20puPutWxRi4td8?=
+ =?us-ascii?Q?JVAgRangAhDmXjHmC5VESdCrooqShYP7bivpGTvAzBYEdikxLOqECeONMlwe?=
+ =?us-ascii?Q?Y6nwvEwjJ/LEDKZrEmC4JZZaW9R9ZrNLT1yOklrCCJ6665kn9IRcg14/3AvX?=
+ =?us-ascii?Q?AmBztyCNKP1ivahURozP3OszeLvDGyLdrlGyHoOWKV85ApozyysUnN2OQmMx?=
+ =?us-ascii?Q?CM/obiiE3b0HImKiNTCGPcCmrpopXCzwoXUVV0fZ9obUv8LSlGUksyFfQKJd?=
+ =?us-ascii?Q?ux4BK9moJOYUShJb1LFdNDDEhh2uB/6dcyTDWmFLiip6M5cmJ7d2MGgkVN7S?=
+ =?us-ascii?Q?62+2qu9QCdwBJQ1wIVDSyzLTl6BauW6YAhn2Rh9U/fe+qJzEPXTginV5uhc3?=
+ =?us-ascii?Q?msGBReb9/4wKlcEGSGd0YJHmh2D0EPlydrGaxdVg8TsQ2l589awktNNMcqeI?=
+ =?us-ascii?Q?rs0iTQ3QfQCFhz5maad4z0azwkSrDe5X+DePeLVhXs1Sa8nQMX/yY15haeXC?=
+ =?us-ascii?Q?/13EjgCmF/7IrnaYryIoLMsz5God6gC8rze4pZzfGR2+n/pf2A/9VlMfsopN?=
+ =?us-ascii?Q?Gznw3iVQW78LWoI3dGWomDyq7VhneZ+vt+Kt2m6tZ1kmMd5nMsTwFc6/em75?=
+ =?us-ascii?Q?BxPpff2JjsaTtMkGfTQiyQqRqXawE7XMiMrpIizpDsjlN3OmZMukLpn3r86p?=
+ =?us-ascii?Q?YHhMeyumcTtlw3pEG5Yq1wK99ztUU8FmYKvp1tT5VPv2SEeVlQwG19RvqCfI?=
+ =?us-ascii?Q?TTuIRCHtBqwClXqOv8+ALCEeOmpG00mtBMoytnIvlPgnl81pIgKKrvo3TadT?=
+ =?us-ascii?Q?OBIPf3dFNnAqdoJUDwWUaJnwVl8/DOtpY93Gl2KT8UOGREsoZ2Wa7QXTEycK?=
+ =?us-ascii?Q?STWrgP5GFxjvQhGw7Tug+XCt/eWZe/dpzm/LSMhBYHt5SHnpPJDCaxR/NbvO?=
+ =?us-ascii?Q?e/C1YrBaPGm6RjKl2gIzG+TqDJjHGdnhtLdv1/6UCNCYUpfsoxSADf63AE0p?=
+ =?us-ascii?Q?3/xxl8zhr0ux9sfP2P7qt6fWtIfzJ/CI1ftdRmWdRJ4xGFC5yJ0pp+TiFJR1?=
+ =?us-ascii?Q?UMVL2MmPWeXAp3Ecb5/tYSLKoAbHfS3j8nAkptIUkT6lKDaYDydHhK4asQDq?=
+ =?us-ascii?Q?d3vKEkVXUzdKcmPND6j4fVkY8iZUEShz1ZxeIl/mYOaFCBn6ZbJDyMC4IMZ6?=
+ =?us-ascii?Q?5R6RxmGDH1N7HIFW09W94D/BJC0R6r+RbwS/0M0r2BfblRxrRv/9NtCsLX9y?=
+ =?us-ascii?Q?9ha2tHTe1jJriAAx0LTQGSEA?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82ef4259-40b4-40e4-42c5-08d931a98ca6
+X-MS-Exchange-CrossTenant-Network-Message-Id: ff93d86e-9b38-4fc0-b505-08d931a98e19
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:12.9940
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:15.4721
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gtbVf95s3hUFqMqTvwTBAc9V1wjS+atn2Pd8PifY6f/7Bb9bkhO2iJvDf/O5iBbT8QAY12lcOSDwQAFcN45OFA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Grvn952/+6RSkge5zKzLOodbnOTim6nSw/7yjgfmdGpNLWZULHh0Htx9utAzd9/vySIFL2ZFOqah/yqNJ8MEXw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0887
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -129,172 +128,375 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/fw/fw_msg.c | 135 +++++++++++++++++++
- 1 file changed, 135 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/fw/fw_msg.c
+ drivers/net/wireless/celeno/cl8k/fw/msg_cfm.c | 316 ++++++++++++++++++
+ 1 file changed, 316 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/fw/msg_cfm.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/fw/fw_msg.c b/drivers/net/wir=
-eless/celeno/cl8k/fw/fw_msg.c
+diff --git a/drivers/net/wireless/celeno/cl8k/fw/msg_cfm.c b/drivers/net/wi=
+reless/celeno/cl8k/fw/msg_cfm.c
 new file mode 100644
-index 000000000000..ea59bf57fa97
+index 000000000000..a63751d0804e
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/fw/fw_msg.c
-@@ -0,0 +1,135 @@
++++ b/drivers/net/wireless/celeno/cl8k/fw/msg_cfm.c
+@@ -0,0 +1,316 @@
 +// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "fw/fw_msg.h"
++#include "fw/msg_cfm.h"
++#include "fw/msg_rx.h"
++#include "recovery.h"
++#include "reg/reg_ipc.h"
++#include "chip.h"
++#include "hw_assert.h"
++#include "config.h"
++#include "coredump.h"
 +
-+/* Should be used for REQ and CFM only */
-+const char *const msg2str[MSG_TOTAL_REQ_CFM] =3D {
-+       /* MM messages */
-+       [MM_RESET_REQ] =3D "MM_RESET_REQ",
-+       [MM_RESET_CFM] =3D "MM_RESET_CFM",
-+       [MM_START_REQ] =3D "MM_START_REQ",
-+       [MM_START_CFM] =3D "MM_START_CFM",
-+       [MM_VERSION_REQ] =3D "MM_VERSION_REQ",
-+       [MM_VERSION_CFM] =3D "MM_VERSION_CFM",
-+       [MM_ADD_IF_REQ] =3D "MM_ADD_IF_REQ",
-+       [MM_ADD_IF_CFM] =3D "MM_ADD_IF_CFM",
-+       [MM_REMOVE_IF_REQ] =3D "MM_REMOVE_IF_REQ",
-+       [MM_REMOVE_IF_CFM] =3D "MM_REMOVE_IF_CFM",
-+       [MM_STA_ADD_REQ] =3D "MM_STA_ADD_REQ",
-+       [MM_STA_ADD_CFM] =3D "MM_STA_ADD_CFM",
-+       [MM_STA_DEL_REQ] =3D "MM_STA_DEL_REQ",
-+       [MM_STA_DEL_CFM] =3D "MM_STA_DEL_CFM",
-+       [MM_SET_FILTER_REQ] =3D "MM_SET_FILTER_REQ",
-+       [MM_SET_FILTER_CFM] =3D "MM_SET_FILTER_CFM",
-+       [MM_SET_CHANNEL_REQ] =3D "MM_SET_CHANNEL_REQ",
-+       [MM_SET_CHANNEL_CFM] =3D "MM_SET_CHANNEL_CFM",
-+       [MM_SET_DTIM_REQ] =3D "MM_SET_DTIM_REQ",
-+       [MM_SET_DTIM_CFM] =3D "MM_SET_DTIM_CFM",
-+       [MM_SET_BEACON_INT_REQ] =3D "MM_SET_BEACON_INT_REQ",
-+       [MM_SET_BEACON_INT_CFM] =3D "MM_SET_BEACON_INT_CFM",
-+       [MM_SET_BASIC_RATES_REQ] =3D "MM_SET_BASIC_RATES_REQ",
-+       [MM_SET_BASIC_RATES_CFM] =3D "MM_SET_BASIC_RATES_CFM",
-+       [MM_SET_BSSID_REQ] =3D "MM_SET_BSSID_REQ",
-+       [MM_SET_BSSID_CFM] =3D "MM_SET_BSSID_CFM",
-+       [MM_SET_EDCA_REQ] =3D "MM_SET_EDCA_REQ",
-+       [MM_SET_EDCA_CFM] =3D "MM_SET_EDCA_CFM",
-+       [MM_SET_ASSOCIATED_REQ] =3D "MM_SET_ASSOCIATED_REQ",
-+       [MM_SET_ASSOCIATED_CFM] =3D "MM_SET_ASSOCIATED_CFM",
-+       [MM_SET_SLOTTIME_REQ] =3D "MM_SET_SLOTTIME_REQ",
-+       [MM_SET_SLOTTIME_CFM] =3D "MM_SET_SLOTTIME_CFM",
-+       [MM_SET_IDLE_REQ] =3D "MM_SET_IDLE_REQ",
-+       [MM_SET_IDLE_CFM] =3D "MM_SET_IDLE_CFM",
-+       [MM_KEY_ADD_REQ] =3D "MM_KEY_ADD_REQ",
-+       [MM_KEY_ADD_CFM] =3D "MM_KEY_ADD_CFM",
-+       [MM_KEY_DEL_REQ] =3D "MM_KEY_DEL_REQ",
-+       [MM_KEY_DEL_CFM] =3D "MM_KEY_DEL_CFM",
-+       [MM_BA_ADD_TX_REQ] =3D "MM_BA_ADD_TX_REQ",
-+       [MM_BA_ADD_TX_CFM] =3D "MM_BA_ADD_TX_CFM",
-+       [MM_BA_ADD_RX_REQ] =3D "MM_BA_ADD_RX_REQ",
-+       [MM_BA_ADD_RX_CFM] =3D "MM_BA_ADD_RX_CFM",
-+       [MM_BA_DEL_REQ] =3D "MM_BA_DEL_REQ",
-+       [MM_BA_DEL_CFM] =3D "MM_BA_DEL_CFM",
-+       [MM_PHY_RESET_REQ] =3D "MM_PHY_RESET_REQ",
-+       [MM_PHY_RESET_CFM] =3D "MM_PHY_RESET_CFM",
-+       [MM_AVAILABLE_BA_TXQ_REQ] =3D "MM_AVAILABLE_BA_TXQ_REQ",
-+       [MM_AVAILABLE_BA_TXQ_CFM] =3D "MM_AVAILABLE_BA_TXQ_CFM",
-+       [MM_UPDATE_RATE_DL_REQ] =3D "MM_UPDATE_RATE_DL_REQ",
-+       [MM_UPDATE_RATE_DL_CFM] =3D "MM_UPDATE_RATE_DL_CFM",
-+       [MM_SET_VNS_REQ] =3D "MM_SET_VNS_REQ",
-+       [MM_SET_VNS_CFM] =3D "MM_SET_VNS_CFM",
-+       [MM_SET_TX_BF_REQ] =3D "MM_SET_TX_BF_REQ",
-+       [MM_SET_TX_BF_CFM] =3D "MM_SET_TX_BF_CFM",
-+       [MM_SOUNDING_REQ] =3D "MM_SOUNDING_REQ",
-+       [MM_SOUNDING_CFM] =3D "MM_SOUNDING_CFM",
-+       [MM_SOUNDING_PAIRING_REQ] =3D "MM_SOUNDING_PAIRING_REQ",
-+       [MM_SOUNDING_PAIRING_CFM] =3D "MM_SOUNDING_PAIRING_CFM",
-+       [MM_SOUNDING_INTERVAL_REQ] =3D "MM_SOUNDING_INTERVAL_REQ",
-+       [MM_SOUNDING_INTERVAL_CFM] =3D "MM_SOUNDING_INTERVAL_CFM",
-+       [MM_SOUNDING_STA_SWITCH_REQ] =3D "MM_SOUNDING_STA_SWITCH_REQ",
-+       [MM_SOUNDING_STA_SWITCH_CFM] =3D "MM_SOUNDING_STA_SWITCH_CFM",
-+       [MM_CONFIG_CCA_REQ] =3D "MM_CONFIG_CCA_REQ",
-+       [MM_CONFIG_CCA_CFM] =3D "MM_CONFIG_CCA_CFM",
-+       [MM_SET_DFS_REQ] =3D "MM_SET_DFS_REQ",
-+       [MM_SET_DFS_CFM] =3D "MM_SET_DFS_CFM",
-+       [MM_SET_ANT_BITMAP_REQ] =3D "MM_SET_ANT_BITMAP_REQ",
-+       [MM_SET_ANT_BITMAP_CFM] =3D "MM_SET_ANT_BITMAP_CFM",
-+       [MM_NDP_TX_CONTROL_REQ] =3D "MM_NDP_TX_CONTROL_REQ",
-+       [MM_NDP_TX_CONTROL_CFM] =3D "MM_NDP_TX_CONTROL_CFM",
-+       [MM_REG_WRITE_REQ] =3D "MM_REG_WRITE_REQ",
-+       [MM_REG_WRITE_CFM] =3D "MM_REG_WRITE_CFM",
-+       [MM_PROT_MODE_REQ] =3D "MM_PROT_MODE_REQ",
-+       [MM_PROT_MODE_CFM] =3D "MM_PROT_MODE_CFM",
-+       [MM_GOTO_POWER_REDUCTION_REQ] =3D "MM_GOTO_POWER_REDUCTION_REQ",
-+       [MM_GOTO_POWER_REDUCTION_CFM] =3D "MM_GOTO_POWER_REDUCTION_CFM",
-+       [MM_BACKUP_BCN_EN_REQ] =3D "MM_BACKUP_BCN_EN_REQ",
-+       [MM_BACKUP_BCN_EN_CFM] =3D "MM_BACKUP_BCN_EN_CFM",
-+       [MM_START_PERIODIC_TX_TIME_REQ] =3D "MM_START_PERIODIC_TX_TIME_REQ"=
-,
-+       [MM_START_PERIODIC_TX_TIME_CFM] =3D "MM_START_PERIODIC_TX_TIME_CFM"=
-,
-+       [MM_ANAMON_READ_REQ] =3D "MM_ANAMON_READ_REQ",
-+       [MM_ANAMON_READ_CFM] =3D "MM_ANAMON_READ_CFM",
-+       [MM_REFRESH_PWR_REQ] =3D "MM_REFRESH_PWR_REQ",
-+       [MM_REFRESH_PWR_CFM] =3D "MM_REFRESH_PWR_CFM",
-+       [MM_SET_ANT_PWR_OFFSET_REQ] =3D "MM_SET_ANT_PWR_OFFSET_REQ",
-+       [MM_SET_ANT_PWR_OFFSET_CFM] =3D "MM_SET_ANT_PWR_OFFSET_CFM",
-+       [MM_SET_RATE_FALLBACK_REQ] =3D "MM_SET_RATE_FALLBACK_REQ",
-+       [MM_SET_RATE_FALLBACK_CFM] =3D "MM_SET_RATE_FALLBACK_CFM",
-+       [MM_TWT_SETUP_REQ] =3D "MM_TWT_SETUP_REQ",
-+       [MM_TWT_SETUP_CFM] =3D "MM_TWT_SETUP_CFM",
-+       [MM_TWT_TEARDOWN_REQ] =3D "MM_TWT_TEARDOWN_REQ",
-+       [MM_TWT_TEARDOWN_CFM] =3D "MM_TWT_TEARDOWN_CFM",
-+       [MM_RSRC_MGMT_REQ] =3D "MM_RSRC_MGMT_REQ",
-+       [MM_RSRC_MGMT_CFM] =3D "MM_RSRC_MGMT_CFM",
-+       [MM_SET_FREQ_OFFSET_REQ] =3D "MM_SET_FREQ_OFFSET_REQ",
-+       [MM_SET_FREQ_OFFSET_CFM] =3D "MM_SET_FREQ_OFFSET_CFM",
++static void cl_check_exception(struct cl_hw *cl_hw)
++{
++       /* Check if Tensilica exception occurred */
++       int i;
++       struct cl_ipc_exception_struct *data =3D
++               (struct cl_ipc_exception_struct *)cl_hw->ipc_env->shared;
 +
-+       /* DBG messages */
-+       [DBG_STR_SHIFT(DBG_SET_MOD_FILTER_REQ)] =3D "DBG_SET_MOD_FILTER_REQ=
-",
-+       [DBG_STR_SHIFT(DBG_SET_MOD_FILTER_CFM)] =3D "DBG_SET_MOD_FILTER_CFM=
-",
-+       [DBG_STR_SHIFT(DBG_CE_SET_MOD_FILTER_REQ)] =3D "DBG_CE_SET_MOD_FILT=
-ER_REQ",
-+       [DBG_STR_SHIFT(DBG_CE_SET_MOD_FILTER_CFM)] =3D "DBG_CE_SET_MOD_FILT=
-ER_CFM",
-+       [DBG_STR_SHIFT(DBG_SET_SEV_FILTER_REQ)] =3D "DBG_SET_SEV_FILTER_REQ=
-",
-+       [DBG_STR_SHIFT(DBG_SET_SEV_FILTER_CFM)] =3D "DBG_SET_SEV_FILTER_CFM=
-",
-+       [DBG_STR_SHIFT(DBG_BEAMFORMING_TX_REQ)] =3D "DBG_BEAMFORMING_TX_REQ=
-",
-+       [DBG_STR_SHIFT(DBG_BEAMFORMING_TX_CFM)] =3D "DBG_BEAMFORMING_TX_CFM=
-",
-+       [DBG_STR_SHIFT(DBG_GET_E2W_STATS_REQ)] =3D "DBG_GET_E2W_STATS_REQ",
-+       [DBG_STR_SHIFT(DBG_GET_E2W_STATS_CFM)] =3D "DBG_GET_E2W_STATS_CFM",
-+       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_MASK_REQ)] =3D "DBG_SET_LA_MPIF_MASK=
-_REQ",
-+       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_MASK_CFM)] =3D "DBG_SET_LA_MPIF_MASK=
-_CFM",
-+       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_POINT_REQ)] =3D "DBG_SET_LA_TRIG_POI=
-NT_REQ",
-+       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_POINT_CFM)] =3D "DBG_SET_LA_TRIG_POI=
-NT_CFM",
-+       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_DEBUG_MODE_REQ)] =3D "DBG_SET_LA_MPI=
-F_DEBUG_MODE_REQ",
-+       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_DEBUG_MODE_CFM)] =3D "DBG_SET_LA_MPI=
-F_DEBUG_MODE_CFM",
-+       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_RULE_REQ)] =3D "DBG_SET_LA_TRIG_RULE=
-_REQ",
-+       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_RULE_CFM)] =3D "DBG_SET_LA_TRIG_RULE=
-_CFM",
-+       [DBG_STR_SHIFT(DBG_TX_TRACE_DEBUG_FLAG_REQ)] =3D "DBG_TX_TRACE_DEBU=
-G_FLAG_REQ",
-+       [DBG_STR_SHIFT(DBG_TX_TRACE_DEBUG_FLAG_CFM)] =3D "DBG_TX_TRACE_DEBU=
-G_FLAG_CFM",
-+       [DBG_STR_SHIFT(DBG_PRINT_STATS_REQ)] =3D "DBG_PRINT_STATS_REQ",
-+       [DBG_STR_SHIFT(DBG_PRINT_STATS_CFM)] =3D "DBG_PRINT_STATS_CFM",
-+       [DBG_STR_SHIFT(DBG_TRIGGER_REQ)] =3D "DBG_TRIGGER_REQ",
-+       [DBG_STR_SHIFT(DBG_TRIGGER_CFM)] =3D "DBG_TRIGGER_CFM",
-+       [DBG_STR_SHIFT(DBG_TEST_MODE_REQ)] =3D "DBG_TEST_MODE_REQ",
-+       [DBG_STR_SHIFT(DBG_TEST_MODE_CFM)] =3D "DBG_TEST_MODE_CFM",
-+       [DBG_STR_SHIFT(DBG_SOUNDING_CMD_REQ)] =3D "DBG_SOUNDING_CMD_REQ",
-+       [DBG_STR_SHIFT(DBG_SOUNDING_CMD_CFM)] =3D "DBG_SOUNDING_CMD_CFM",
-+};
++       if (data->pattern !=3D IPC_EXCEPTION_PATTERN)
++               return;
++
++       cl_dbg_err(cl_hw, "######################### firmware tensilica exc=
+eption:\n");
++       cl_dbg_err(cl_hw, "................................. type: ");
++
++       switch (data->type) {
++       case 0:
++               cl_dbg_err(cl_hw, "EXCEPTION_ILLEGALINSTRUCTION\n");
++               break;
++       case 2:
++               cl_dbg_err(cl_hw, "EXCEPTION_INSTRUCTIONFETCHERROR\n");
++               break;
++       case 3:
++               cl_dbg_err(cl_hw, "EXCEPTION_LOADSTOREERROR\n");
++               break;
++       case 6:
++               cl_dbg_err(cl_hw, "EXCEPTION_INTEGERDIVIDEBYZERO\n");
++               break;
++       case 7:
++               cl_dbg_err(cl_hw, "EXCEPTION_SPECULATION\n");
++               break;
++       case 8:
++               cl_dbg_err(cl_hw, "EXCEPTION_PRIVILEGED\n");
++               break;
++       case 9:
++               cl_dbg_err(cl_hw, "EXCEPTION_UNALIGNED\n");
++               break;
++       case 16:
++               cl_dbg_err(cl_hw, "EXCEPTION_INSTTLBMISS\n");
++               break;
++       case 17:
++               cl_dbg_err(cl_hw, "EXCEPTION_INSTTLBMULTIHIT\n");
++               break;
++       case 18:
++               cl_dbg_err(cl_hw, "EXCEPTION_INSTFETCHPRIVILEGE\n");
++               break;
++       case 20:
++               cl_dbg_err(cl_hw, "EXCEPTION_INSTFETCHPROHIBITED\n");
++               break;
++       case 24:
++               cl_dbg_err(cl_hw, "EXCEPTION_LOADSTORETLBMISS\n");
++               break;
++       case 25:
++               cl_dbg_err(cl_hw, "EXCEPTION_LOADSTORETLBMULTIHIT\n");
++               break;
++       case 26:
++               cl_dbg_err(cl_hw, "EXCEPTION_LOADSTOREPRIVILEGE\n");
++               break;
++       case 28:
++               cl_dbg_err(cl_hw, "EXCEPTION_LOADPROHIBITED\n");
++               break;
++       default:
++               cl_dbg_err(cl_hw, "unknown\n");
++               break;
++       }
++
++       cl_dbg_err(cl_hw, "................................. EPC: %08X\n", =
+data->epc);
++       cl_dbg_err(cl_hw, "................................. EXCSAVE: %08X\=
+n", data->excsave);
++       cl_dbg_err(cl_hw, "..........................BACKTRACE-PC..........=
+...............\n");
++
++       for (i =3D 0; i < IPC_BACKTRACT_DEPTH; i++)
++               cl_dbg_err(cl_hw, "PC#%d: 0x%08X\n", i, data->backtrace.pc[=
+i]);
++}
++
++static u16 cl_msg_cfm_clear_bit(u16 cfm)
++{
++       if (cfm < MM_REQ_CFM_MAX)
++               return ((cfm - 1) >> 1);
++
++       return ((cfm - 1 - FIRST_MSG(TASK_DBG) + MM_REQ_CFM_MAX) >> 1);
++}
++
++u16 cl_msg_cfm_set_bit(u16 req)
++{
++       if (req < MM_REQ_CFM_MAX)
++               return (req >> 1);
++
++       return ((req - FIRST_MSG(TASK_DBG) + MM_REQ_CFM_MAX) >> 1);
++}
++
++int cl_msg_cfm_wait(struct cl_hw *cl_hw, u16 bit, u16 req_id)
++{
++       /*
++        * Start a timeout to stop on the main waiting queue,
++        * and then check the result.
++        */
++       struct cl_chip *chip =3D cl_hw->chip;
++       int timeout =3D 0, error =3D 0;
++       int max_timeout =3D 0;
++
++       if (!cl_hw->msg_calib_timeout)
++               max_timeout =3D CL_MSG_CFM_TIMEOUT_JIFFIES;
++       else
++               max_timeout =3D CL_MSG_CFM_TIMEOUT_CALIB_JIFFIES;
++
++       /* Wait for confirmation message */
++       timeout =3D wait_event_timeout(cl_hw->wait_queue,
++                                    !CFM_TEST_BIT(bit, &cl_hw->cfm_flags),
++                                    max_timeout);
++
++       if (timeout =3D=3D 0) {
++               /*
++                * Timeout occurred!
++                * Make sure that confirmation wasn't received after the ti=
+meout.
++                */
++               if (CFM_TEST_BIT(bit, &cl_hw->cfm_flags)) {
++                       cl_dbg_verbose(cl_hw, "[WARN] Timeout occurred - %s=
+\n",
++                                      MSG_ID_STR(req_id));
++                       error =3D -ETIMEDOUT;
++               }
++       }
++
++       if (error) {
++               struct cl_irq_stats *irq_stats =3D &chip->irq_stats;
++               unsigned long now =3D jiffies, flags;
++               u32 status, raw_status;
++
++               /*
++                * The interrupt was not handled in time, lets try to handl=
+e it safely.
++                * The spin lock protects us from the following race scenar=
+ios:
++                * 1) atomic read of the IPC status register,
++                * 2) execution on the msg handler twice from different con=
+text.
++                * 3) disable context switch from the same core.
++                */
++               spin_lock_irqsave(&chip->isr_lock, flags);
++
++               status =3D ipc_xmac_2_host_status_get(chip);
++               raw_status =3D ipc_xmac_2_host_raw_status_get(chip);
++
++               cl_dbg_verbose(cl_hw,
++                              "[INFO] status=3D0x%x, raw_status=3D0x%x, la=
+st_isr_statuses=3D0x%x, "
++                              "last_rx=3D%ums, last_tx=3D%ums, last_isr=3D=
+%ums\n",
++                              status,
++                              raw_status,
++                              irq_stats->last_isr_statuses,
++                              jiffies_to_msecs(now - irq_stats->last_rx),
++                              jiffies_to_msecs(now - irq_stats->last_tx),
++                              jiffies_to_msecs(now - irq_stats->last_isr))=
+;
++
++               if (status & cl_hw->ipc_e2a_irq.msg) {
++                       /*
++                        * WORKAROUND #1: In some cases the kernel is losin=
+g sync with the
++                        * interrupt handler and the reason is still unknow=
+n.
++                        * It seems that disabling master interrupt for a c=
+ouple of cycles and
++                        * then re-enabling it restores the sync with the c=
+l interrupt handler.
++                        */
++                       ipc_host_global_int_en_set(chip, 0);
++
++                       /* Acknowledge the MSG interrupt */
++                       ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a=
+_irq.msg);
++
++                       /*
++                        * Unlock before calling cl_msg_rx_tasklet() becaus=
+e
++                        * spin_unlock_irqrestore() disables interrupts, bu=
+t in
++                        * cl_msg_rx_tasklet() there might be several place=
+s that
++                        * use spin_unlock_bh() which enables soft-irqs.
++                        */
++                       spin_unlock_irqrestore(&chip->isr_lock, flags);
++
++                       /*
++                        * Call the tasklet handler (it also gives the CPU =
+that
++                        * is mapped to the cl_interrupt few cycle to recov=
+er)
++                        */
++                       cl_msg_rx_tasklet((unsigned long)cl_hw);
++
++                       /* Re-enable master interrupts */
++                       ipc_host_global_int_en_set(chip, 1);
++               } else {
++                       /*
++                        * WORKAROUND #2: Try to call the handler unconditi=
+oanly.
++                        * Maybe we cleared the "cl_hw->ipc_e2a_irq.msg" wi=
+thout handling it.
++                        */
++
++                       /*
++                        * Unlock before calling cl_msg_rx_tasklet() becaus=
+e
++                        * spin_unlock_irqrestore() disables interrupts, bu=
+t in
++                        * cl_msg_rx_tasklet() there might be several place=
+s
++                        * that use spin_unlock_bh() which enables soft-irq=
+s.
++                        */
++                       spin_unlock_irqrestore(&chip->isr_lock, flags);
++
++                       /* Call the tasklet handler */
++                       cl_msg_rx_tasklet((unsigned long)cl_hw);
++               }
++
++               /* Did the workarounds work? */
++               if (CFM_TEST_BIT(bit, &cl_hw->cfm_flags)) {
++                       cl_dbg_verbose(cl_hw, "[ERR] Failed to recover from=
+ timeout\n");
++               } else {
++                       cl_dbg_verbose(cl_hw, "[INFO] Managed to recover fr=
+om timeout\n");
++                       error =3D 0;
++                       goto exit;
++               }
++
++               /* Failed handling the message */
++               CFM_CLEAR_BIT(bit, &cl_hw->cfm_flags);
++
++               cl_check_exception(cl_hw);
++
++               cl_hw_assert_check(cl_hw);
++
++               if (!strcmp(chip->conf->ce_ela_mode, "XTDEBUG") ||
++                   !strcmp(chip->conf->ce_ela_mode, "XTDEBUG_STD")) {
++                       /*
++                        * TODO: Special debug hack: collect debug info & s=
+kip restart
++                        * "wait4cfm" string is expected by debug functiona=
+lity
++                        */
++                       goto exit;
++               }
++
++               if (!test_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags) &&
++                   !test_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags) &&
++                   test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) &&
++                   !cl_hw->is_stop_context) {
++                       /* Unlock msg mutex before restarting */
++                       mutex_unlock(&cl_hw->msg_tx_mutex);
++
++                       if (cl_coredump_is_scheduled(cl_hw))
++                               set_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags)=
+;
++                       else
++                               cl_recovery_start(cl_hw, RECOVERY_WAIT4CFM)=
+;
++
++                       return error;
++               }
++       }
++
++exit:
++       /* Unlock msg mutex */
++       mutex_unlock(&cl_hw->msg_tx_mutex);
++
++       return error;
++}
++
++static void cl_msg_cfm_assign_params(struct cl_hw *cl_hw, struct cl_ipc_e2=
+a_msg *msg)
++{
++       u32 *param;
++       u16 msg_id =3D le16_to_cpu(msg->id);
++       u16 msg_len =3D le16_to_cpu(msg->param_len);
++
++       /* A message sent in background is not allowed to assign confirmati=
+on parameters */
++       if (cl_hw->msg_background) {
++               cl_dbg_verbose(cl_hw,
++                              "Background message can't assign confirmatio=
+n parameters (%s)\n",
++                              MSG_ID_STR(msg_id));
++               return;
++       }
++
++       if (msg->param_len) {
++               param =3D kzalloc(msg_len, GFP_ATOMIC);
++               if (param) {
++                       memcpy(param, msg->param, msg_len);
++                       if (cl_hw->msg_cfm_params[msg_id])
++                               cl_dbg_err(cl_hw, "msg_cfm_params is not NU=
+LL for %s\n",
++                                          MSG_ID_STR(msg_id));
++                       cl_hw->msg_cfm_params[msg_id] =3D param;
++               } else {
++                       cl_dbg_err(cl_hw, "param allocation failed\n");
++               }
++       } else {
++               u16 dummy_dest_id =3D le16_to_cpu(msg->dummy_dest_id);
++               u16 dummy_src_id =3D le16_to_cpu(msg->dummy_src_id);
++
++               cl_dbg_err(cl_hw, "msg->param_len is 0 [%u,%u,%u]\n",
++                          msg_id, dummy_dest_id, dummy_src_id);
++       }
++}
++
++void cl_msg_cfm_assign_and_clear(struct cl_hw *cl_hw, struct cl_ipc_e2a_ms=
+g *msg)
++{
++       u16 bit =3D cl_msg_cfm_clear_bit(msg->id);
++
++       if (CFM_TEST_BIT(bit, &cl_hw->cfm_flags)) {
++               cl_msg_cfm_assign_params(cl_hw, msg);
++               CFM_CLEAR_BIT(bit, &cl_hw->cfm_flags);
++       } else {
++               cl_dbg_verbose(cl_hw, "Msg ID not set in cfm_flags (%s)\n",=
+ MSG_ID_STR(msg->id));
++       }
++}
++
++void cl_msg_cfm_clear(struct cl_hw *cl_hw, struct cl_ipc_e2a_msg *msg)
++{
++       u16 bit =3D cl_msg_cfm_clear_bit(msg->id);
++
++       if (!CFM_TEST_AND_CLEAR_BIT(bit, &cl_hw->cfm_flags))
++               cl_dbg_verbose(cl_hw, "Msg ID not set in cfm_flags (%s)\n",=
+ MSG_ID_STR(msg->id));
++}
++
++void cl_msg_cfm_simulate_timeout(struct cl_hw *cl_hw)
++{
++       u16 bit =3D cl_msg_cfm_set_bit(DBG_SET_MOD_FILTER_REQ);
++
++       mutex_lock(&cl_hw->msg_tx_mutex);
++       CFM_SET_BIT(bit, &cl_hw->cfm_flags);
++       cl_msg_cfm_wait(cl_hw, bit, DBG_STR_SHIFT(DBG_SET_MOD_FILTER_REQ));
++}
++
 --
 2.30.0
 
