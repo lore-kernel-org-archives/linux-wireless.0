@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D208C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F161BC49EAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37FF66141F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE1F561425
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230225AbhFQQKy (ORCPT
+        id S233842AbhFQQLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:10:54 -0400
-Received: from mail-eopbgr60058.outbound.protection.outlook.com ([40.107.6.58]:26086
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:01 -0400
+Received: from mail-eopbgr70045.outbound.protection.outlook.com ([40.107.7.45]:47334
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233825AbhFQQJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:52 -0400
+        id S232530AbhFQQJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:09:53 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jdoZBs2T2RZ6OgpTB/UR+cIB6QRT3l98Yy9Kon3nB3A2PLzeRdGtTKLb4w76YvGpnZ2z/JZPPJkj6As0Rb6HwkRxbfedLcyAl0PF67jgAToLAls4T2R/kSHdNegDYolHA7nON7H1nw4/fKhbAc/K/Fz6gvQvZjKzBUSE2cIrfVJ9AIBwYJiquR0h/q2tuZevRQwwJDznXOC9qR6iBJOq7kJIsB1T0+6OGvP4i9gI0xJROOrrLE2chghxb3CfeTXp4jF8Z0WHh5gFW+2tFGhN1QwUi9W7xxOPCv9YOZkO4FXdZEGKpVV7C08XGxMUSFVMy87ceQrCmqPvob/EtPnCyg==
+ b=O5RVp74fuxAKTHJaqNx7tX74SXxss2K4URu/fIxkdj0KQHryEjQiMf940x2tPzBtpwqDl2b9vt9A6C2gF4cyLv74UVRUsR0guEYsdwOzK4flNBLp0qDC6EnZUC8hPJVVpTnHbJYJIBN2P0OfOZocRawId3AqhRcOBnvGp90fGrOaJj7yJbM9th4QU//L5nInkqv9oBP4CuQHMIfBB8Yu5987sLiAa9eWuVwgZaIJ5e8/18t+P3zYn5PaAIpYrzaIib/LI1r0rnwqqsg9Lx69zsxPCIIfHaYuRTe+W5yXO1owYoBZ+9wYL4i857dVoU04n8WRJ8pEmnaD4lNqIJ2Ftw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ytjRZzelfhv2J/aregWW4yKvd5+G/N203pf/9zA65GU=;
- b=UNbGnOndrpkFcanSFxPvwGsuJk+75otnH5qAG2SrFClC/FfwS2LD7i3/CvBmyroMnHPVCq2ygvKLsL8amKREwMmVkHck16a7iaZWGMYxtJmwFQJuwLOL8AwcTVNQmhokD4ZWnnjKsyJk0HoNjRNvwR/PgY15qOP7XpjmiM7wpdZ67vv72j81C3tOXzbB4oocqmAoA09Y+UA9vjUgXbrylcBNkdcJlhG31IznDrfVGzsLSkmzz5dQAp5iHCpcY5oQDLupU+jRo2qfh0H/wxcFSGHkDYWBDG7d+iOuoE9a+wTse1+uTCl9n/MFlOqntB/Z62npe1RDkslN0BMGRTGGgw==
+ bh=dTo6SbFv8Wp0G5khxnuSq5LelCyAqljcWREnXvbK0lo=;
+ b=Xa5Q/OJku624argakzsPcipsLSvGryoxkEBWNdZEo8PyAaTjCqDFLsQwPqSekVnQifqQqBkEZvqVwau++VMr4yY0jstnkMiCTo4IjFFWBjl8buIw61Ut4GREdOSOY2Y+hGm8VR8wKwdL4DefX63adPPWUSI3Wv1TvqS12u8Lo6TiDdBCZOYixtzt/WelhHkZXDkf5iKGOYrx4m1kNH0GtdXfrLoGAR6Vas44OXRW5oibsNonax8mfUjKs8cF8xQldHKFB1D/WYEoZ5/LCO+ScaO1INtozA6Xzs7wXbWr9Jf/PQWZrjRm7xIpThuuOr0fsSJy0X0Z6a6ykiPJuHNEXQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ytjRZzelfhv2J/aregWW4yKvd5+G/N203pf/9zA65GU=;
- b=fy+4ZPLZGNnNjkCjXIz76zm+p8wGbOSJMALA9DTmrW/sXSw7HqlBViXc7wMcYruMkT/CLl3gkAOOn1r/d3IsYudzkK1JT+Vbdasa4IC9jnJ01zBJYoaY/czw4UNZdxFffjlBQbgd9RdpbrzvPtrUuMDFIaOCYuxcSRAAMSSF8xY=
+ bh=dTo6SbFv8Wp0G5khxnuSq5LelCyAqljcWREnXvbK0lo=;
+ b=EIDdYMy9tmleBbIvBMU+hDZgTPLzPFXpd078XQXhXzA2rbTNQamPoL/siSFp1KZvIk5WJhuF0uV7ddHaqn/yUEWw9NWh7CQxhxwnQENVD2MpxG1TONpC2BThzcMo4nC5MKsW2DU57ckKAa8cZZZmBfFM1cMXGfEfW3HMjVJ52QE=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0260.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:47::23) with
+ by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21; Thu, 17 Jun
- 2021 16:06:34 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:06:27 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:34 +0000
+ 16:06:27 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 174/256] cl8k: add rx/rx_amsdu.c
-Date:   Thu, 17 Jun 2021 16:01:01 +0000
-Message-Id: <20210617160223.160998-175-viktor.barna@celeno.com>
+Subject: [RFC v1 159/256] cl8k: add reg/reg_mac_hw.h
+Date:   Thu, 17 Jun 2021 16:00:46 +0000
+Message-Id: <20210617160223.160998-160-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:44 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:27 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3c9f6085-69d5-4e20-92f1-08d931a9c3ad
-X-MS-TrafficTypeDiagnostic: AM0P192MB0260:
+X-MS-Office365-Filtering-Correlation-Id: ed37ae2e-d6b3-4f4a-5d96-08d931a9b9aa
+X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB02603D513C61448AC942089EF60E9@AM0P192MB0260.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4714;
+X-Microsoft-Antispam-PRVS: <AM9P192MB11875D4265B9498354D82258F60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:551;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: EOZVqqJmeKgo7oMgBduyH5MQreyDe7DPBz6f98GBz8LsA5e/YJabPREkllSeOalAvrCMxXaEPuOwyal7aKbfkROOQYrB4gfUh/vzutK0AIzlQ9cdA5zOst0WuQdvNkAgKpfDE+JwtYeXx/KHB/CYL7meiZGz7XivKqcD0qR2H2tl7zt/ALHlZv/XNp5HncpoGelWUdJKGADOicabV/9EUrBbLtdXoVF7OHwhTQUW754BQqkU8exBbXIV7vISVrCoKWXKEGsHApMgm8Cp50UfIBxRNvLDVPjheXgNvDGRDEXbrRxiTHkRKnQGCU3JSPw+8hllekvcum+lugGgu7bTCU17Pt2ls546QDndc1GXUUS0PlDIAfkWW2KlZu3YD1FZh2oGMlJ/2H9U3V0vJtjbINvz1Fo2iUEyCPPkoRY606PzNCZ/tC6xIBpGtqaW9lbJnQuRGsQCdjoiGM3RcPRO/8KvzU2sh/JQI3r7ZLYB/+ANdju4vOecDKq7IMM8RnE/qXh/kpFiEd9Ms/I8xeoL0W06Vlt+1w5rnfL+ik5S5qPVCYYfwWpgo5czbuqV2HZ5fobYs+mi/cAWNIHnAIEglnHOBOEWdOiq4UN+darbmwkIdQt6IVXtOAdLkwwfwr17GRweauvgpSue+DR0c9RTaOEaWFoXnA4PZFvFtKE/iCO/Ojl3jth6+m/T8x6XcdbgB+zacOMxuGnVYLxylcuGYg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(366004)(376002)(136003)(39850400004)(396003)(508600001)(8936002)(86362001)(107886003)(4326008)(316002)(26005)(8676002)(956004)(186003)(6666004)(2906002)(6512007)(66556008)(2616005)(5660300002)(38350700002)(54906003)(38100700002)(16526019)(66946007)(9686003)(83380400001)(55236004)(52116002)(66476007)(6486002)(6916009)(6506007)(36756003)(1076003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: gcwxiFa6l6SlBPK/KENEA+/VozlxA8W4BkSsLMzN3sn3JO6wit7jcniF2hrawYK4xZYltVRjwL0mPQ7gEUCFQcP046D8wFrwNqCZ9/KbnvA7jfCdkzxHSNbW40PW/ZOSf+zq5WvPItRj8BwL+IOjjOxQkZQulXil+hi/gqvznwF5EJSpyUBb/1rPQJcloak6g87LTC9Vxo+F6Rb7lQ0+d0WCxAX15Ru6XlQGZ5p66kBOjLcDV+JRa643ho/+VB8x+fZp+wY0uAgX8WQfWumdZB7idMSFOy0B205A3UlifE5kE9dUIqmyduXT3cmSHzpNonVYUq2k9HkQ6CYQ5+I76KmpZeUNqMM7FJJCEcv0qFNOWUtEbr2P7YhV5R8p5VjQ0aBtG6eMocruhrpZc0yWUfuRpwRNpw8DKCJMAxuXLN1YeskJTWDHfY329hXisE/uP+qsfNf+lz/vltlYP5wkQWT2yVXAwbiCuTYX/icYOP2hoHo9Kxm1eROsUG0yzyZdnVlc+NuXhPeY+Obf5G0IPKctiL8hKjXis+BsUrJ2vAF5B7ZOpWBOXSYZIKTIoDGj4BBpLOxDxsb58DrkpIs8fV5RciT/rREejyYVco50C0wemH1xvz7GnhIUcjJPh9mx8Z0iMSvM5Eilx8/T1h/U0UveB5sx3xz/eMzJTPfX97WRUM9Kll9G92EYZDYC9mZ3JLCs8bEo4/w+HMYEEOTD7g==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(30864003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?3p70nzQTUF6Ulo9lgR7DZ5t0FrAi5hJK7gsxHcAyqY5+FnDeK4fTQRaDHhhQ?=
- =?us-ascii?Q?mUuSpBBmqgg6uroxGAoOEN0E0pnfv0f9H5i0U+txjvFsRjlWgkCqREXak7ma?=
- =?us-ascii?Q?S+eHSumMGWiZG0SIrFRnvbOELYfZ08Mv9win8Ig2/QNr/GrkTXDD4XWL0Bg3?=
- =?us-ascii?Q?iP2omeoIfg+naMyLBuFRgOPHjxvtqM5brpW523Vugu31ZrRUc+PPxXcamo6i?=
- =?us-ascii?Q?traLTSE1tU1TIM7pXQTd3+2eFDFLXDXx6A7d46wzW2c/6a5uHNpWQdyb1zGq?=
- =?us-ascii?Q?XYYUlPPGcYvst+2a+q6NliIiH22wGqWDFZ0bHrf9B2LSzk8RlmbwaBOIvus6?=
- =?us-ascii?Q?qb997RGJkazGDe2GytTj971sYsMTNLScsqFTYf4jEgI3K/7cNmoFNL+j0nyf?=
- =?us-ascii?Q?Qv52mg3KLJ1z/dPVhAd63oRuFfDCL6taMyev/KV7h1u+5bSVgPJgljD7fgTd?=
- =?us-ascii?Q?TgkQXvXzKF+rbbsxaTdJRDnq8KTXORWfMnVFwSWTmtPBATafI10cJ+kH9PcK?=
- =?us-ascii?Q?I7JvbQD5k2gtJXII6tlSsM381eJldSmEWxpsWFQZ1+vDmrBY0Q5SuFvUas+G?=
- =?us-ascii?Q?Ays+yUmdBfBgL7kzhyxVnAentraJp9ecBVKRFS6A5iKBjxUZNpe+NZsTd2U6?=
- =?us-ascii?Q?8MCk0gPR55ZGPtTnJE+KtFDkBWBfzVmz2muT040FX4enlcSe1Szv3OriHEas?=
- =?us-ascii?Q?P2N915CcJEVXQcXU1VMMhwBFzMpFIqQVAK6xx++GGPc42iNVG5+p2vaWmVSt?=
- =?us-ascii?Q?XFikD2MsqMhWtay0n1ieYQwq/qpJcX+vkQpgBK/aTTca7XRBtsgbdP8aoLLV?=
- =?us-ascii?Q?slRqVormmQqNBzctPc1DqL9mPfamloN7YbIL7a4koSSPBi7BCSKeTajwwhCJ?=
- =?us-ascii?Q?pCPfNwhAv7WodZ/pvVCZtRC+RuiTkOZBiQNKHv2+TZvQloEl4IgewINXg+bO?=
- =?us-ascii?Q?I6n0p5VmlSPmfd5KhOr95NjsHgSyXmAbSS0cA2psVF1h7Jy6pl3yZEyfkWB3?=
- =?us-ascii?Q?4nzPay0qeigEHIbDQ1mEHg2WZTqr6f9b4V3A6IcOiJDHqDxNXWPTRNnCdmT8?=
- =?us-ascii?Q?yjaCuebj+tp8q1+y/SqzlviVXFpoGI0KaZuKBurt47NsXe6vCrDHejp48OjS?=
- =?us-ascii?Q?z1jIwbXtLk2n23nlyBWactq0mw1qiR6ayUfbc7AHlFApRlrXyQvKBcecD2LX?=
- =?us-ascii?Q?BBEtOELkeLPXK7lUpkS3Ld7nIH6AhlcJagm3mYk5geEmfZhJV6KGuHyAMhH+?=
- =?us-ascii?Q?mTlshqcJPN45pDoB0WB9cYsM2yrE8UCluuV+UvfUPpbzpXnuxijS5cBDxrmH?=
- =?us-ascii?Q?/leacb+vct7t2d0tp5Qpvn1M?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?SMT7HLvYooZwA8O8kEHvCwO0+wgDszqyd1W/P8n/wqWDYA1RkPKwcv5cnuLS?=
+ =?us-ascii?Q?SAa27EObf9ePd964hK35x/obAg/LJiUVXzFW4jxarB3KUrIZZM9D0foDXCw+?=
+ =?us-ascii?Q?hgaWx1hUGaIyDm1jOpmu2glEZPoKy0N3IIh2WWIwtdwhyYAVUBpR2Wj2bnSM?=
+ =?us-ascii?Q?c9E7n2Re2TAcW4n6t5UDC7NNitojsWUqB8FJqpfyTvbhRHEGB/XBruWWyQ02?=
+ =?us-ascii?Q?N3BO/G7ot/17039RioZbEk8hMkvWPFYDtFnaOqRCPymNrMwbgSuo9nxNKD8+?=
+ =?us-ascii?Q?pobDnBI3M9Euc24C774NucT6eBCcxCFc81MtnHo1cE+JKIjZ86y31K33AKXa?=
+ =?us-ascii?Q?/v+CafnveYBmwuJym4279dInWyHR7ccrBdKjlutioF+u4tY5LnL4IQUaT5Yl?=
+ =?us-ascii?Q?yOTwVfJK2XtVrHqkab+Q9bsTm1tmWmwL/8GH7c2FH2vf4eILhVtx1syNiDKc?=
+ =?us-ascii?Q?cfK1FOCCEOKj2r6wmckOX3zjn0gi+U1qltK+U/NyGAMMGJnwoctdSsUPLrjN?=
+ =?us-ascii?Q?2TdHUu3BVcEwXVlodH3FeyCAV+LdPhYwFQJGdmpWpHkWwgfmwe5t7dgPIum5?=
+ =?us-ascii?Q?tc4JMetyXGTqGeuI+yWrkDzQatwdtKULy0Zbd5AMMOZWLDDKGheW4aT6GLHB?=
+ =?us-ascii?Q?c/7PguUDhDuyGKqn87Owvsz/CROINtu96i/JURZzJcGyOG9fbovuq9NjFMSg?=
+ =?us-ascii?Q?3vILTATRpncYstOJT5P9TEpvg8wLm+5IHgyh1achlQjtdGEF2eW0Locj+EPw?=
+ =?us-ascii?Q?stWazBjddUE4C22BnXQp5H4qkkrh0YfudTKZn2ZWVfkdI5KSwbpe90Lp3iE2?=
+ =?us-ascii?Q?vEimN0DJ2Dv394OyCi2thmqg1UnGVmxicwMyIXDmoH4o8TQxXq4UQ1fCjgnz?=
+ =?us-ascii?Q?xA81IhuZf6R+JV5zo1WXc0kJ6p/CpGysWwAoQnp4mZuAw8Qu4nK0tGkG2/Lw?=
+ =?us-ascii?Q?1fXyf4tgXpesC14vwFkcYTRqGozpbM8Id74II/wlMkPbfbpmY67egyrws5nG?=
+ =?us-ascii?Q?57LHp3zsboM+xxcBfjHV8cMxGnnmJDTqpMmRMXUw9e9N4Qb+x29l0oxSKCP2?=
+ =?us-ascii?Q?oN9kdu0gqBhF75tqr5POVfRFd7g+O+p3ChXkwvEoCLyEWh4tezELH1oJqdsx?=
+ =?us-ascii?Q?0hAuqI3PQ87+I2TxVAt94MMlsaYOec+06VpurhAswK7oizKPQ7rjZAIpVgTD?=
+ =?us-ascii?Q?V64vNTdsfIGkAUFzIt1tS0gfuoH+0vWdXpvD3YBqa37RI6YIMKk1vZ2XSAWk?=
+ =?us-ascii?Q?0hSCmssKJRF5pm9+L3fFiC97JylFdxteqlFnHS5xM/qtP2shUzUaA8vsT0mb?=
+ =?us-ascii?Q?+2Itv0YN3wVmhbkL2cK4T2q+?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3c9f6085-69d5-4e20-92f1-08d931a9c3ad
+X-MS-Exchange-CrossTenant-Network-Message-Id: ed37ae2e-d6b3-4f4a-5d96-08d931a9b9aa
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:45.7178
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:28.5442
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: C/IhqbOk/2kIN8rU1etbE4adMliwIsVLbNaNS0Nq/WV9Iv6j8mddysJV+TvMxBteNq7+N/TCY9hgfdWzkgE2Ug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0260
+X-MS-Exchange-CrossTenant-UserPrincipalName: Xdj3mPWA7aEviMN6CSySp6iH+uK9aKbBlEzSC3Va2EdAx+13twm+KkR9TC2GUnUhbt/j7yzytQiFB3V5dCZxmg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,302 +128,565 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/rx/rx_amsdu.c    | 257 ++++++++++++++++++
- 1 file changed, 257 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/rx/rx_amsdu.c
+ .../net/wireless/celeno/cl8k/reg/reg_mac_hw.h | 490 ++++++++++++++++++
+ 1 file changed, 490 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/rx/rx_amsdu.c b/drivers/net/w=
-ireless/celeno/cl8k/rx/rx_amsdu.c
+diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw.h b/drivers/ne=
+t/wireless/celeno/cl8k/reg/reg_mac_hw.h
 new file mode 100644
-index 000000000000..512a317227a1
+index 000000000000..50ee26b2c5fa
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/rx/rx_amsdu.c
-@@ -0,0 +1,257 @@
-+// SPDX-License-Identifier: MIT
++++ b/drivers/net/wireless/celeno/cl8k/reg/reg_mac_hw.h
+@@ -0,0 +1,490 @@
++/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "rx/rx_amsdu.h"
++#ifndef CL_REG_MAC_HW_H
++#define CL_REG_MAC_HW_H
 +
-+struct msduhdr {
-+       u8 dest[ETH_ALEN];
-+       u8 source[ETH_ALEN];
-+       __be16 len;
-+} __packed;
++#include <linux/types.h>
++#include "reg/reg_access.h"
++#include "hw.h"
 +
-+enum rx_amsdu_error {
-+       RX_AMSDU_ERR_CORRUPTED =3D 0x1,
-+       RX_AMSDU_ERR_LENGTH =3D 0x2,
-+};
++/*
++ * @brief STATE_CNTRL register definition
++ * This register controls the core's state transitions. register descripti=
+on
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   07:04 NEXT_STATE                0x0
++ *   03:00 CURRENT_STATE             0x0
++ * </pre>
++ */
++#define MAC_HW_STATE_CNTRL_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00000038)
++#define MAC_HW_STATE_CNTRL_OFFSET      0x00000038
++#define MAC_HW_STATE_CNTRL_INDEX       0x0000000E
++#define MAC_HW_STATE_CNTRL_RESET       0x00000000
 +
-+static void set_flag_amsdu_more(struct sk_buff *skb)
++/* Field definitions */
++#define MAC_HW_STATE_CNTRL_NEXT_STATE_MASK     ((u32)0x000000F0)
++#define MAC_HW_STATE_CNTRL_NEXT_STATE_LSB      4
++#define MAC_HW_STATE_CNTRL_NEXT_STATE_WIDTH    ((u32)0x00000004)
++#define MAC_HW_STATE_CNTRL_CURRENT_STATE_MASK  ((u32)0x0000000F)
++#define MAC_HW_STATE_CNTRL_CURRENT_STATE_LSB   0
++#define MAC_HW_STATE_CNTRL_CURRENT_STATE_WIDTH ((u32)0x00000004)
++
++static inline void mac_hw_state_cntrl_next_state_setf(struct cl_hw *cl_hw,=
+ u8 nextstate)
 +{
-+       struct ieee80211_rx_status *rx_status =3D IEEE80211_SKB_RXCB(skb);
-+
-+       rx_status->flag |=3D RX_FLAG_AMSDU_MORE;
++       ASSERT_ERR((((u32)nextstate << 4) & ~((u32)0x000000F0)) =3D=3D 0);
++       cl_reg_write(cl_hw, MAC_HW_STATE_CNTRL_ADDR,
++                    (cl_reg_read(cl_hw, MAC_HW_STATE_CNTRL_ADDR) & ~((u32)=
+0x000000F0)) | ((u32)nextstate << 4));
 +}
 +
-+static void clear_flag_amsdu_more(struct sk_buff *skb)
-+{
-+       struct ieee80211_rx_status *rx_status =3D IEEE80211_SKB_RXCB(skb);
++/*
++ * @brief MAC_CNTRL_1 register definition
++ * Contains various settings for controlling the operation of the core. re=
+gister description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31    EOF_PAD_FOR_HE            1
++ *   30    EOF_PAD_FOR_VHT           0
++ *   29:28 IMPLICIT_BF_INT_CONF      0x0
++ *   27    DISABLE_BFR_RESP          0
++ *   26    RX_RIFS_EN                0
++ *   25    TSF_MGT_DISABLE           0
++ *   24    TSF_UPDATED_BY_SW         0
++ *   22    MAC_DETECT_UNDERRUN_EN    0
++ *   21    DISABLE_MU_CTS_RESP       0
++ *   20    BQRP_RESP_BY_FW           0
++ *   19    BSRP_RESP_BY_FW           0
++ *   18    ENABLE_NORMAL_ACK_RESP_IN_HE_MU_W_TRIG 0
++ *   17    DISABLE_NORMAL_ACK_RESP_IN_HE_MU_WO_TRIG 0
++ *   16:14 ABGN_MODE                 0x3
++ *   13    KEY_STO_RAM_RESET         0
++ *   12    MIB_TABLE_RESET           0
++ *   11    RATE_CONTROLLER_MPIF      1
++ *   10    DISABLE_BA_RESP           0
++ *   09    DISABLE_CTS_RESP          0
++ *   08    DISABLE_ACK_RESP          0
++ *   07    ACTIVE_CLK_GATING         1
++ *   06    ENABLE_LP_CLK_SWITCH      0
++ *   05    FORCE_MSTA_BA             0
++ *   04    DISABLE_FAST_COMPARE      0
++ *   03    CFP_AWARE                 0
++ *   02    PWR_MGT                   0
++ *   01    AP                        0
++ *   00    BSS_TYPE                  1
++ * </pre>
++ */
++#define MAC_HW_MAC_CNTRL_1_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000004C)
++#define MAC_HW_MAC_CNTRL_1_OFFSET      0x0000004C
++#define MAC_HW_MAC_CNTRL_1_INDEX       0x00000013
++#define MAC_HW_MAC_CNTRL_1_RESET       0x8000C881
 +
-+       rx_status->flag &=3D ~RX_FLAG_AMSDU_MORE;
++/* Field definitions */
++#define MAC_HW_MAC_CNTRL_1_EOF_PAD_FOR_HE_BIT                           ((=
+u32)0x80000000)
++#define MAC_HW_MAC_CNTRL_1_EOF_PAD_FOR_HE_POS                           31
++#define MAC_HW_MAC_CNTRL_1_EOF_PAD_FOR_VHT_BIT                          ((=
+u32)0x40000000)
++#define MAC_HW_MAC_CNTRL_1_EOF_PAD_FOR_VHT_POS                          30
++#define MAC_HW_MAC_CNTRL_1_IMPLICIT_BF_INT_CONF_MASK                    ((=
+u32)0x30000000)
++#define MAC_HW_MAC_CNTRL_1_IMPLICIT_BF_INT_CONF_LSB                     28
++#define MAC_HW_MAC_CNTRL_1_IMPLICIT_BF_INT_CONF_WIDTH                   ((=
+u32)0x00000002)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_BFR_RESP_BIT                         ((=
+u32)0x08000000)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_BFR_RESP_POS                         27
++#define MAC_HW_MAC_CNTRL_1_RX_RIFS_EN_BIT                               ((=
+u32)0x04000000)
++#define MAC_HW_MAC_CNTRL_1_RX_RIFS_EN_POS                               26
++#define MAC_HW_MAC_CNTRL_1_TSF_MGT_DISABLE_BIT                          ((=
+u32)0x02000000)
++#define MAC_HW_MAC_CNTRL_1_TSF_MGT_DISABLE_POS                          25
++#define MAC_HW_MAC_CNTRL_1_TSF_UPDATED_BY_SW_BIT                        ((=
+u32)0x01000000)
++#define MAC_HW_MAC_CNTRL_1_TSF_UPDATED_BY_SW_POS                        24
++#define MAC_HW_MAC_CNTRL_1_MAC_DETECT_UNDERRUN_EN_BIT                   ((=
+u32)0x00400000)
++#define MAC_HW_MAC_CNTRL_1_MAC_DETECT_UNDERRUN_EN_POS                   22
++#define MAC_HW_MAC_CNTRL_1_DISABLE_MU_CTS_RESP_BIT                      ((=
+u32)0x00200000)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_MU_CTS_RESP_POS                      21
++#define MAC_HW_MAC_CNTRL_1_BQRP_RESP_BY_FW_BIT                          ((=
+u32)0x00100000)
++#define MAC_HW_MAC_CNTRL_1_BQRP_RESP_BY_FW_POS                          20
++#define MAC_HW_MAC_CNTRL_1_BSRP_RESP_BY_FW_BIT                          ((=
+u32)0x00080000)
++#define MAC_HW_MAC_CNTRL_1_BSRP_RESP_BY_FW_POS                          19
++#define MAC_HW_MAC_CNTRL_1_ENABLE_NORMAL_ACK_RESP_IN_HE_MU_W_TRIG_BIT   ((=
+u32)0x00040000)
++#define MAC_HW_MAC_CNTRL_1_ENABLE_NORMAL_ACK_RESP_IN_HE_MU_W_TRIG_POS   18
++#define MAC_HW_MAC_CNTRL_1_DISABLE_NORMAL_ACK_RESP_IN_HE_MU_WO_TRIG_BIT ((=
+u32)0x00020000)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_NORMAL_ACK_RESP_IN_HE_MU_WO_TRIG_POS 17
++#define MAC_HW_MAC_CNTRL_1_ABGN_MODE_MASK                               ((=
+u32)0x0001C000)
++#define MAC_HW_MAC_CNTRL_1_ABGN_MODE_LSB                                14
++#define MAC_HW_MAC_CNTRL_1_ABGN_MODE_WIDTH                              ((=
+u32)0x00000003)
++#define MAC_HW_MAC_CNTRL_1_KEY_STO_RAM_RESET_BIT                        ((=
+u32)0x00002000)
++#define MAC_HW_MAC_CNTRL_1_KEY_STO_RAM_RESET_POS                        13
++#define MAC_HW_MAC_CNTRL_1_MIB_TABLE_RESET_BIT                          ((=
+u32)0x00001000)
++#define MAC_HW_MAC_CNTRL_1_MIB_TABLE_RESET_POS                          12
++#define MAC_HW_MAC_CNTRL_1_RATE_CONTROLLER_MPIF_BIT                     ((=
+u32)0x00000800)
++#define MAC_HW_MAC_CNTRL_1_RATE_CONTROLLER_MPIF_POS                     11
++#define MAC_HW_MAC_CNTRL_1_DISABLE_BA_RESP_BIT                          ((=
+u32)0x00000400)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_BA_RESP_POS                          10
++#define MAC_HW_MAC_CNTRL_1_DISABLE_CTS_RESP_BIT                         ((=
+u32)0x00000200)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_CTS_RESP_POS                         9
++#define MAC_HW_MAC_CNTRL_1_DISABLE_ACK_RESP_BIT                         ((=
+u32)0x00000100)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_ACK_RESP_POS                         8
++#define MAC_HW_MAC_CNTRL_1_ACTIVE_CLK_GATING_BIT                        ((=
+u32)0x00000080)
++#define MAC_HW_MAC_CNTRL_1_ACTIVE_CLK_GATING_POS                        7
++#define MAC_HW_MAC_CNTRL_1_ENABLE_LP_CLK_SWITCH_BIT                     ((=
+u32)0x00000040)
++#define MAC_HW_MAC_CNTRL_1_ENABLE_LP_CLK_SWITCH_POS                     6
++#define MAC_HW_MAC_CNTRL_1_FORCE_MSTA_BA_BIT                            ((=
+u32)0x00000020)
++#define MAC_HW_MAC_CNTRL_1_FORCE_MSTA_BA_POS                            5
++#define MAC_HW_MAC_CNTRL_1_DISABLE_FAST_COMPARE_BIT                     ((=
+u32)0x00000010)
++#define MAC_HW_MAC_CNTRL_1_DISABLE_FAST_COMPARE_POS                     4
++#define MAC_HW_MAC_CNTRL_1_CFP_AWARE_BIT                                ((=
+u32)0x00000008)
++#define MAC_HW_MAC_CNTRL_1_CFP_AWARE_POS                                3
++#define MAC_HW_MAC_CNTRL_1_PWR_MGT_BIT                                  ((=
+u32)0x00000004)
++#define MAC_HW_MAC_CNTRL_1_PWR_MGT_POS                                  2
++#define MAC_HW_MAC_CNTRL_1_AP_BIT                                       ((=
+u32)0x00000002)
++#define MAC_HW_MAC_CNTRL_1_AP_POS                                       1
++#define MAC_HW_MAC_CNTRL_1_BSS_TYPE_BIT                                 ((=
+u32)0x00000001)
++#define MAC_HW_MAC_CNTRL_1_BSS_TYPE_POS                                 0
++
++static inline void mac_hw_mac_cntrl_1_active_clk_gating_setf(struct cl_hw =
+*cl_hw, u8 activeclkgating)
++{
++       ASSERT_ERR((((u32)activeclkgating << 7) & ~((u32)0x00000080)) =3D=
+=3D 0);
++       cl_reg_write(cl_hw, MAC_HW_MAC_CNTRL_1_ADDR,
++                    (cl_reg_read(cl_hw, MAC_HW_MAC_CNTRL_1_ADDR) & ~((u32)=
+0x00000080)) | ((u32)activeclkgating << 7));
 +}
 +
-+static void add_80211_hdr(struct cl_amsdu_rx_state *amsdu_rx_state,
-+                         struct sk_buff *skb, struct sk_buff *first_skb)
-+{
-+       /* Copy the 802.11 header of the first skb */
-+       struct ieee80211_hdr *hdr_first =3D (struct ieee80211_hdr *)(first_=
-skb->data);
-+       u32 hdrlen_first =3D ieee80211_hdrlen(hdr_first->frame_control);
-+       u32 total_bytes =3D hdrlen_first + amsdu_rx_state->encrypt_len;
++/*
++ * @brief EDCA_CCA_BUSY register definition
++ * Indicates the CCA busy time. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 CCA_BUSY_DUR              0x0
++ * </pre>
++ */
++#define MAC_HW_EDCA_CCA_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000022=
+0)
++#define MAC_HW_EDCA_CCA_BUSY_OFFSET      0x00000220
++#define MAC_HW_EDCA_CCA_BUSY_INDEX       0x00000088
++#define MAC_HW_EDCA_CCA_BUSY_RESET       0x00000000
 +
-+       /* Total_bytes must be smaller than IPC_RXBUF_EXTRA_HEADROOM */
-+       skb_push(skb, total_bytes);
-+       memcpy(skb->data, first_skb->data, total_bytes);
++static inline u32 mac_hw_edca_cca_busy_get(struct cl_hw *cl_hw)
++{
++       return cl_reg_read(cl_hw, MAC_HW_EDCA_CCA_BUSY_ADDR);
 +}
 +
-+static void copy_status(struct cl_amsdu_rx_state *amsdu_rx_state,
-+                       struct sk_buff *skb, struct sk_buff *first_skb)
++/*
++ * @brief RX_MINE_BUSY register definition
++ * RX Busy time by my frames counter register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 rx_mine_time              0x0
++ * </pre>
++ */
++#define MAC_HW_RX_MINE_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00000234=
+)
++#define MAC_HW_RX_MINE_BUSY_OFFSET      0x00000234
++#define MAC_HW_RX_MINE_BUSY_INDEX       0x0000008D
++#define MAC_HW_RX_MINE_BUSY_RESET       0x00000000
++
++static inline u32 mac_hw_rx_mine_busy_get(struct cl_hw *cl_hw)
 +{
-+       struct ieee80211_rx_status *rx_status =3D IEEE80211_SKB_RXCB(skb);
-+       struct ieee80211_rx_status *rx_status_first =3D IEEE80211_SKB_RXCB(=
-first_skb);
-+
-+       /* Copy rx_status from the first skb */
-+       memcpy(rx_status, rx_status_first, sizeof(struct ieee80211_rx_statu=
-s));
-+
-+       /* If it is the last sub-frame clear RX_FLAG_AMSDU_MORE */
-+       if (amsdu_rx_state->msdu_remaining_cnt =3D=3D 0)
-+               rx_status->flag &=3D ~RX_FLAG_AMSDU_MORE;
++       return cl_reg_read(cl_hw, MAC_HW_RX_MINE_BUSY_ADDR);
 +}
 +
-+static void cl_rx_amsdu_set_state(struct cl_hw *cl_hw, struct sk_buff *skb=
-, struct hw_rxhdr *rxhdr,
-+                                 u8 sta_idx, u8 tid, u32 packet_len, u8 en=
-crypt_len)
++/*
++ * @brief TX_MINE_BUSY register definition
++ * TX BUSY time by my TX frames register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 TX_MINE_TIME              0x0
++ * </pre>
++ */
++#define MAC_HW_TX_MINE_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00000238=
+)
++#define MAC_HW_TX_MINE_BUSY_OFFSET      0x00000238
++#define MAC_HW_TX_MINE_BUSY_INDEX       0x0000008E
++#define MAC_HW_TX_MINE_BUSY_RESET       0x00000000
++
++static inline u32 mac_hw_tx_mine_busy_get(struct cl_hw *cl_hw)
 +{
-+       struct cl_amsdu_rx_state *amsdu_rx_state =3D &cl_hw->amsdu_rx_state=
-;
-+
-+       amsdu_rx_state->msdu_cnt =3D rxhdr->msdu_cnt;
-+       amsdu_rx_state->msdu_remaining_cnt =3D rxhdr->msdu_cnt - 1;
-+       amsdu_rx_state->msdu_dma_align =3D rxhdr->msdu_dma_align;
-+       amsdu_rx_state->amsdu_error =3D 0;
-+       amsdu_rx_state->encrypt_len =3D encrypt_len;
-+       amsdu_rx_state->packet_len =3D packet_len;
-+       amsdu_rx_state->rxhdr =3D rxhdr;
-+       amsdu_rx_state->first_skb =3D skb;
-+       amsdu_rx_state->sta_idx =3D sta_idx;
-+       amsdu_rx_state->tid =3D tid;
-+
-+       __skb_queue_head(&cl_hw->amsdu_rx_state.frames, skb);
++       return cl_reg_read(cl_hw, MAC_HW_TX_MINE_BUSY_ADDR);
 +}
 +
-+static void cl_rx_amsdu_set_state_error(struct cl_hw *cl_hw,
-+                                       struct hw_rxhdr *rxhdr,
-+                                       enum rx_amsdu_error err)
-+{
-+       struct cl_amsdu_rx_state *amsdu_rx_state =3D &cl_hw->amsdu_rx_state=
-;
++/*
++ * @brief EDCA_NAV_BUSY register definition
++ * Indicates the NAV busy time register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 NAV_BUSY_DUR              0x0
++ * </pre>
++ */
++#define MAC_HW_EDCA_NAV_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000024=
+8)
++#define MAC_HW_EDCA_NAV_BUSY_OFFSET      0x00000248
++#define MAC_HW_EDCA_NAV_BUSY_INDEX       0x00000092
++#define MAC_HW_EDCA_NAV_BUSY_RESET       0x00000000
 +
-+       amsdu_rx_state->msdu_cnt =3D rxhdr->msdu_cnt;
-+       amsdu_rx_state->msdu_remaining_cnt =3D rxhdr->msdu_cnt - 1;
-+       amsdu_rx_state->amsdu_error =3D err;
++static inline u32 mac_hw_edca_nav_busy_get(struct cl_hw *cl_hw)
++{
++       return cl_reg_read(cl_hw, MAC_HW_EDCA_NAV_BUSY_ADDR);
 +}
 +
-+static void cl_rx_amsdu_first_length_error(struct cl_hw *cl_hw, struct sk_=
-buff *skb,
-+                                          struct hw_rxhdr *rxhdr, u32 len)
++/*
++ * @brief ADD_CCA_BUSY_SEC_20 register definition
++ * Indicates the CCA on Secondary 20MHz busy time. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 CCA_BUSY_DUR_SEC_20       0x0
++ * </pre>
++ */
++#define MAC_HW_ADD_CCA_BUSY_SEC_20_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0=
+0000290)
++#define MAC_HW_ADD_CCA_BUSY_SEC_20_OFFSET      0x00000290
++#define MAC_HW_ADD_CCA_BUSY_SEC_20_INDEX       0x000000A4
++#define MAC_HW_ADD_CCA_BUSY_SEC_20_RESET       0x00000000
++
++static inline u32 mac_hw_add_cca_busy_sec_20_get(struct cl_hw *cl_hw)
 +{
-+       cl_dbg_err(cl_hw, "RX-AMSDU length error (1/%u) - tailroom=3D%d, le=
-n=3D%u\n",
-+                  rxhdr->msdu_cnt, skb_tailroom(skb), len);
-+
-+       cl_rx_amsdu_set_state_error(cl_hw, rxhdr, RX_AMSDU_ERR_LENGTH);
-+
-+       cl_hw->rx_info.pkt_drop_amsdu_len_error++;
-+       kfree_skb(skb);
++       return cl_reg_read(cl_hw, MAC_HW_ADD_CCA_BUSY_SEC_20_ADDR);
 +}
 +
-+static void cl_rx_amsdu_sub_length_error(struct cl_hw *cl_hw, struct sk_bu=
-ff *skb, u32 len)
++/*
++ * @brief ADD_CCA_BUSY_SEC_40 register definition
++ * Indicates the CCA on Secondary 40MHz busy time. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 CCA_BUSY_DUR_SEC_40       0x0
++ * </pre>
++ */
++#define MAC_HW_ADD_CCA_BUSY_SEC_40_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0=
+0000294)
++#define MAC_HW_ADD_CCA_BUSY_SEC_40_OFFSET      0x00000294
++#define MAC_HW_ADD_CCA_BUSY_SEC_40_INDEX       0x000000A5
++#define MAC_HW_ADD_CCA_BUSY_SEC_40_RESET       0x00000000
++
++static inline u32 mac_hw_add_cca_busy_sec_40_get(struct cl_hw *cl_hw)
 +{
-+       struct cl_amsdu_rx_state *amsdu_rx_state =3D &cl_hw->amsdu_rx_state=
-;
-+       struct sk_buff *skb_tail;
-+       u8 sub_cnt =3D amsdu_rx_state->msdu_cnt - amsdu_rx_state->msdu_rema=
-ining_cnt;
-+
-+       cl_dbg_err(cl_hw, "RX-AMSDU length error (%u/%u) - tailroom=3D%d, l=
-en=3D%u\n",
-+                  sub_cnt, amsdu_rx_state->msdu_cnt, skb_tailroom(skb), le=
-n);
-+
-+       /* All remaining skbs in the AMSDU will be treated as errors */
-+       amsdu_rx_state->amsdu_error =3D RX_AMSDU_ERR_LENGTH;
-+
-+       /* Clear RX_FLAG_AMSDU_MORE in the last success skb that was receiv=
-ed */
-+       skb_tail =3D skb_peek_tail(&amsdu_rx_state->frames);
-+       clear_flag_amsdu_more(skb_tail);
-+
-+       cl_hw->rx_info.pkt_drop_sub_amsdu_len_error++;
-+       kfree_skb(skb);
++       return cl_reg_read(cl_hw, MAC_HW_ADD_CCA_BUSY_SEC_40_ADDR);
 +}
 +
-+void cl_rx_amsdu_first(struct cl_hw *cl_hw, struct sk_buff *skb,
-+                      struct hw_rxhdr *rxhdr, u8 sta_idx, u8 tid, u8 encry=
-pt_len)
++/*
++ * @brief ADD_CCA_BUSY_SEC_80 register definition
++ * Indicates the CCA on Secondary 80MHz busy time. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 CCA_BUSY_DUR_SEC_80       0x0
++ * </pre>
++ */
++#define MAC_HW_ADD_CCA_BUSY_SEC_80_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0=
+0000298)
++#define MAC_HW_ADD_CCA_BUSY_SEC_80_OFFSET      0x00000298
++#define MAC_HW_ADD_CCA_BUSY_SEC_80_INDEX       0x000000A6
++#define MAC_HW_ADD_CCA_BUSY_SEC_80_RESET       0x00000000
++
++static inline u32 mac_hw_add_cca_busy_sec_80_get(struct cl_hw *cl_hw)
 +{
-+       struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *)(skb->data);
-+       u32 hdr_len =3D ieee80211_hdrlen(hdr->frame_control);
-+       struct msduhdr *msdu_hdr =3D (struct msduhdr *)(skb->data + hdr_len=
- + encrypt_len);
-+       u32 packet_len =3D hdr_len + encrypt_len + sizeof(struct msduhdr) +=
- ntohs(msdu_hdr->len);
-+
-+       if (skb_tailroom(skb) < packet_len) {
-+               cl_rx_amsdu_first_length_error(cl_hw, skb, rxhdr, packet_le=
-n);
-+               return;
-+       }
-+
-+       /* Put the WLAN header + MSDU header + payload in the skb data */
-+       skb_put(skb, packet_len);
-+
-+       cl_rx_amsdu_set_state(cl_hw, skb, rxhdr, sta_idx, tid, packet_len, =
-encrypt_len);
-+
-+       /* Must be called after cl_rx_amsdu_set_state() */
-+       if (cl_hw->amsdu_rx_state.msdu_remaining_cnt > 0)
-+               set_flag_amsdu_more(skb);
++       return cl_reg_read(cl_hw, MAC_HW_ADD_CCA_BUSY_SEC_80_ADDR);
 +}
 +
-+bool cl_rx_amsdu_sub(struct cl_hw *cl_hw, struct sk_buff *skb)
++/*
++ * @brief INTRA_BSS_NAV_BUSY register definition
++ * Count intra BSS NAV busy period register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 INTRA_BSS_NAV_BUSY_DUR    0x0
++ * </pre>
++ */
++#define MAC_HW_INTRA_BSS_NAV_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00=
+000408)
++#define MAC_HW_INTRA_BSS_NAV_BUSY_OFFSET      0x00000408
++#define MAC_HW_INTRA_BSS_NAV_BUSY_INDEX       0x00000102
++#define MAC_HW_INTRA_BSS_NAV_BUSY_RESET       0x00000000
++
++static inline u32 mac_hw_intra_bss_nav_busy_get(struct cl_hw *cl_hw)
 +{
-+       /*
-+        * ----------------------------------------------------------
-+        * | DMA padding 4 byte alignment | MSDU HDR | MSDU PAYLOAD |
-+        *  ---------------------------------------------------------
-+        */
-+       struct cl_amsdu_rx_state *amsdu_rx_state =3D &cl_hw->amsdu_rx_state=
-;
-+       struct sk_buff *first_skb =3D amsdu_rx_state->first_skb;
-+       struct msduhdr *msdu_hdr;
-+       u32 packet_len;
-+
-+       /*
-+        * Push the dma alignment to the reserved area, so that skb->data w=
-ill
-+        * point to the MSDU header
-+        */
-+       skb_reserve(skb, amsdu_rx_state->msdu_dma_align);
-+
-+       msdu_hdr =3D (struct msduhdr *)(skb->data);
-+       packet_len =3D sizeof(struct msduhdr) + ntohs(msdu_hdr->len);
-+
-+       if (skb_tailroom(skb) < packet_len) {
-+               cl_rx_amsdu_sub_length_error(cl_hw, skb, packet_len);
-+               return false;
-+       }
-+
-+       /* Put the MSDU HDR + MSDU PAYLOAD into the skb data area */
-+       skb_put(skb, packet_len);
-+
-+       amsdu_rx_state->packet_len +=3D packet_len;
-+
-+       add_80211_hdr(amsdu_rx_state, skb, first_skb);
-+       copy_status(amsdu_rx_state, skb, first_skb);
-+
-+       /* Store the pointer to sta in the skb->sk field */
-+       skb->sk =3D first_skb->sk;
-+
-+       __skb_queue_tail(&amsdu_rx_state->frames, skb);
-+
-+       return true;
++       return cl_reg_read(cl_hw, MAC_HW_INTRA_BSS_NAV_BUSY_ADDR);
 +}
 +
-+void cl_rx_amsdu_first_corrupted(struct cl_hw *cl_hw, struct sk_buff *skb,
-+                                struct hw_rxhdr *rxhdr)
++/*
++ * @brief INTER_BSS_NAV_BUSY register definition
++ * Count inter BSS NAV busy period register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 INTER_BSS_NAV_BUSY_DUR    0x0
++ * </pre>
++ */
++#define MAC_HW_INTER_BSS_NAV_BUSY_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00=
+00040C)
++#define MAC_HW_INTER_BSS_NAV_BUSY_OFFSET      0x0000040C
++#define MAC_HW_INTER_BSS_NAV_BUSY_INDEX       0x00000103
++#define MAC_HW_INTER_BSS_NAV_BUSY_RESET       0x00000000
++
++static inline u32 mac_hw_inter_bss_nav_busy_get(struct cl_hw *cl_hw)
 +{
-+       struct ieee80211_hdr *mac_hdr =3D (struct ieee80211_hdr *)(skb->dat=
-a);
-+
-+       cl_dbg_verbose(cl_hw, "Corrupted RX-AMSDU (1/%u), dest_addr=3D%pM\n=
-",
-+                      rxhdr->msdu_cnt, mac_hdr->addr1);
-+
-+       cl_rx_amsdu_set_state_error(cl_hw, rxhdr, RX_AMSDU_ERR_CORRUPTED);
-+
-+       cl_hw->rx_info.pkt_drop_amsdu_corrupted++;
-+       kfree_skb(skb);
++       return cl_reg_read(cl_hw, MAC_HW_INTER_BSS_NAV_BUSY_ADDR);
 +}
 +
-+void cl_rx_amsdu_sub_error(struct cl_hw *cl_hw, struct sk_buff *skb)
++/*
++ * @brief DEBUG_PORT_SEL_A register definition
++ * Used to multiplex different sets of signals on the debug pins. register=
+ description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   15:08 DEBUG_PORT_SEL_1          0x0
++ *   07:00 DEBUG_PORT_SEL_0          0x0
++ * </pre>
++ */
++#define MAC_HW_DEBUG_PORT_SEL_A_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000=
+0510)
++#define MAC_HW_DEBUG_PORT_SEL_A_OFFSET      0x00000510
++#define MAC_HW_DEBUG_PORT_SEL_A_INDEX       0x00000144
++#define MAC_HW_DEBUG_PORT_SEL_A_RESET       0x00000000
++
++static inline u32 mac_hw_debug_port_sel_a_get(struct cl_hw *cl_hw)
 +{
-+       struct cl_amsdu_rx_state *amsdu_rx_state =3D &cl_hw->amsdu_rx_state=
-;
-+       u8 sub_cnt =3D amsdu_rx_state->msdu_cnt - amsdu_rx_state->msdu_rema=
-ining_cnt;
-+
-+       if (amsdu_rx_state->amsdu_error & RX_AMSDU_ERR_CORRUPTED) {
-+               cl_hw->rx_info.pkt_drop_sub_amsdu_corrupted++;
-+
-+               cl_dbg_verbose(cl_hw, "Corrupted RX-AMSDU (%u/%u)\n",
-+                              sub_cnt, amsdu_rx_state->msdu_cnt);
-+       } else if (amsdu_rx_state->amsdu_error & RX_AMSDU_ERR_LENGTH) {
-+               cl_hw->rx_info.pkt_drop_sub_amsdu_len_error++;
-+
-+               cl_dbg_verbose(cl_hw, "RX-AMSDU length error (%u/%u)\n",
-+                              sub_cnt, amsdu_rx_state->msdu_cnt);
-+       }
-+
-+       kfree_skb(skb);
++       return cl_reg_read(cl_hw, MAC_HW_DEBUG_PORT_SEL_A_ADDR);
 +}
 +
-+void cl_rx_amsdu_reset(struct cl_hw *cl_hw)
++static inline void mac_hw_debug_port_sel_a_set(struct cl_hw *cl_hw, u32 va=
+lue)
 +{
-+       /* Free pending frames */
-+       __skb_queue_purge(&cl_hw->amsdu_rx_state.frames);
-+
-+       /* Reset RX A-MSDU state */
-+       memset(&cl_hw->amsdu_rx_state, 0, sizeof(struct cl_amsdu_rx_state))=
-;
-+
-+       __skb_queue_head_init(&cl_hw->amsdu_rx_state.frames);
++       cl_reg_write(cl_hw, MAC_HW_DEBUG_PORT_SEL_A_ADDR, value);
 +}
 +
-+void cl_rx_amsdu_stats(struct cl_hw *cl_hw, u8 msdu_cnt)
++/*
++ * @brief DEBUG_PORT_SEL_B register definition
++ * Used to multiplex different sets of signals on the register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   15:08 DEBUG_PORT_SEL_3          0x0
++ *   07:00 DEBUG_PORT_SEL_2          0x0
++ * </pre>
++ */
++#define MAC_HW_DEBUG_PORT_SEL_B_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000=
+0530)
++#define MAC_HW_DEBUG_PORT_SEL_B_OFFSET      0x00000530
++#define MAC_HW_DEBUG_PORT_SEL_B_INDEX       0x0000014C
++#define MAC_HW_DEBUG_PORT_SEL_B_RESET       0x00000000
++
++static inline u32 mac_hw_debug_port_sel_b_get(struct cl_hw *cl_hw)
 +{
-+       /*
-+        * Update A-MSDU statistics
-+        * msdu_cnt 1 - 128 is mapped to 0 - 127.
-+        */
-+       if (msdu_cnt <=3D RX_MAX_MSDU_IN_AMSDU)
-+               cl_hw->rx_info.amsdu_cnt[msdu_cnt - 1]++;
-+       else
-+               cl_dbg_err(cl_hw, "Invalid msdu_cnt [%u]\n", msdu_cnt);
++       return cl_reg_read(cl_hw, MAC_HW_DEBUG_PORT_SEL_B_ADDR);
 +}
 +
-+/* Only ieee80211_hw_set() is defined in mac80211.h */
-+static inline void _ieee80211_hw_clear(struct ieee80211_hw *hw,
-+                                      enum ieee80211_hw_flags flg)
++static inline void mac_hw_debug_port_sel_b_set(struct cl_hw *cl_hw, u32 va=
+lue)
 +{
-+       return __clear_bit(flg, hw->flags);
++       cl_reg_write(cl_hw, MAC_HW_DEBUG_PORT_SEL_B_ADDR, value);
 +}
 +
-+#define ieee80211_hw_clear(hw, flg) _ieee80211_hw_clear(hw, IEEE80211_HW_#=
-#flg)
++/*
++ * @brief DEBUG_PORT_SEL_C register definition
++ * Used to multiplex different sets of signals on the register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   15:08 DEBUG_PORT_SEL_5          0x0
++ *   07:00 DEBUG_PORT_SEL_4          0x0
++ * </pre>
++ */
++#define MAC_HW_DEBUG_PORT_SEL_C_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000=
+0534)
++#define MAC_HW_DEBUG_PORT_SEL_C_OFFSET      0x00000534
++#define MAC_HW_DEBUG_PORT_SEL_C_INDEX       0x0000014D
++#define MAC_HW_DEBUG_PORT_SEL_C_RESET       0x00000000
 +
-+void cl_rx_amsdu_hw_en(struct ieee80211_hw *hw, bool rxamsdu_en)
++static inline u32 mac_hw_debug_port_sel_c_get(struct cl_hw *cl_hw)
 +{
-+       if (rxamsdu_en)
-+               ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
-+       else
-+               ieee80211_hw_clear(hw, SUPPORTS_AMSDU_IN_AMPDU);
++       return cl_reg_read(cl_hw, MAC_HW_DEBUG_PORT_SEL_C_ADDR);
 +}
++
++static inline void mac_hw_debug_port_sel_c_set(struct cl_hw *cl_hw, u32 va=
+lue)
++{
++       cl_reg_write(cl_hw, MAC_HW_DEBUG_PORT_SEL_C_ADDR, value);
++}
++
++/*
++ * @brief DEBUG_PORT_EN register definition
++ * Used to determine which debug ports are enabled register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   05    EN5                       0
++ *   04    EN4                       0
++ *   03    EN3                       0
++ *   02    EN2                       0
++ *   01    EN1                       0
++ *   00    EN0                       0
++ * </pre>
++ */
++#define MAC_HW_DEBUG_PORT_EN_ADDR        (REG_MAC_HW_BASE_ADDR + 0x0000053=
+8)
++#define MAC_HW_DEBUG_PORT_EN_OFFSET      0x00000538
++#define MAC_HW_DEBUG_PORT_EN_INDEX       0x0000014E
++#define MAC_HW_DEBUG_PORT_EN_RESET       0x00000000
++
++static inline u32 mac_hw_debug_port_en_get(struct cl_hw *cl_hw)
++{
++       return cl_reg_read(cl_hw, MAC_HW_DEBUG_PORT_EN_ADDR);
++}
++
++static inline void mac_hw_debug_port_en_set(struct cl_hw *cl_hw, u32 value=
+)
++{
++       cl_reg_write(cl_hw, MAC_HW_DEBUG_PORT_EN_ADDR, value);
++}
++
++/*
++ * @brief DOZE_CNTRL_2 register definition
++ * Contains settings for controlling DOZE state. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31    WAKE_UP_FROM_DOZE         0
++ *   00    WAKE_UP_SW                1
++ * </pre>
++ */
++#define MAC_HW_DOZE_CNTRL_2_ADDR        (REG_MAC_HW_BASE_ADDR + 0x00008048=
+)
++#define MAC_HW_DOZE_CNTRL_2_OFFSET      0x00008048
++#define MAC_HW_DOZE_CNTRL_2_INDEX       0x00002012
++#define MAC_HW_DOZE_CNTRL_2_RESET       0x00000001
++
++/* Field definitions */
++#define MAC_HW_DOZE_CNTRL_2_WAKE_UP_FROM_DOZE_BIT ((u32)0x80000000)
++#define MAC_HW_DOZE_CNTRL_2_WAKE_UP_FROM_DOZE_POS 31
++#define MAC_HW_DOZE_CNTRL_2_WAKE_UP_SW_BIT        ((u32)0x00000001)
++#define MAC_HW_DOZE_CNTRL_2_WAKE_UP_SW_POS        0
++
++static inline void mac_hw_doze_cntrl_2_wake_up_sw_setf(struct cl_hw *cl_hw=
+, u8 wakeupsw)
++{
++       ASSERT_ERR((((u32)wakeupsw << 0) & ~((u32)0x00000001)) =3D=3D 0);
++       cl_reg_write(cl_hw, MAC_HW_DOZE_CNTRL_2_ADDR,
++                    (cl_reg_read(cl_hw, MAC_HW_DOZE_CNTRL_2_ADDR) & ~((u32=
+)0x00000001)) | ((u32)wakeupsw << 0));
++}
++
++/*
++ * @brief TSF_LO register definition
++ * Contains the TSF bits. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 TSF_TIMER_LOW             0x0
++ * </pre>
++ */
++#define MAC_HW_TSF_LO_ADDR        (REG_MAC_HW_BASE_ADDR + 0x000080A4)
++#define MAC_HW_TSF_LO_OFFSET      0x000080A4
++#define MAC_HW_TSF_LO_INDEX       0x00002029
++#define MAC_HW_TSF_LO_RESET       0x00000000
++
++static inline u32 mac_hw_tsf_lo_get(struct cl_hw *cl_hw)
++{
++       return cl_reg_read(cl_hw, MAC_HW_TSF_LO_ADDR);
++}
++
++/*
++ * @brief TSF_HI register definition
++ * Contains the TSF bits. register description
++ * <pre>
++ *  Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *   31:00 TSF_TIMER_HIGH            0x0
++ * </pre>
++ */
++#define MAC_HW_TSF_HI_ADDR        (REG_MAC_HW_BASE_ADDR + 0x000080A8)
++#define MAC_HW_TSF_HI_OFFSET      0x000080A8
++#define MAC_HW_TSF_HI_INDEX       0x0000202A
++#define MAC_HW_TSF_HI_RESET       0x00000000
++
++static inline u32 mac_hw_tsf_hi_get(struct cl_hw *cl_hw)
++{
++       return cl_reg_read(cl_hw, MAC_HW_TSF_HI_ADDR);
++}
++
++#endif /*CL_REG_MAC_HW_H */
 --
 2.30.0
 
