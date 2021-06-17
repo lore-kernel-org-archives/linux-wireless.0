@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9725BC49EBA
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BA12C49EA3
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7529061407
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:08:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F114B61407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233884AbhFQQLE (ORCPT
+        id S233903AbhFQQLF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:11:04 -0400
-Received: from mail-eopbgr80075.outbound.protection.outlook.com ([40.107.8.75]:14478
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:05 -0400
+Received: from mail-eopbgr70043.outbound.protection.outlook.com ([40.107.7.43]:64066
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232277AbhFQQJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:09:55 -0400
+        id S233614AbhFQQJ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:09:57 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AfHZk0t3nJRcgSvkXOpQC5ptmxkOxrogR9VyvsWq48nIzznQ6fTl7iCRk3BUQomHgCwPCo51/4AsQzuBgnHC/z8SI5lndIevp+HdXNILCFEI4cy+1WSbtwyKd+7fv6E49lF34H5roxZwZlBQxqA2iSa5nJxfQWlwu1KHuUSA0pqVGghVJwpNi1tsvt8sW8tJ8PVRo51+OngN2uVG5uFQuy/qeTKjAj/3XatS7ZAAOVp22A0vsQ9nozsG47SLMy0ia2DOfWTW+uEiAOitY2Ts0o7S1q7rlxIb++Tr7w6EZoLPfVx84jeBYLAZOK0Kr4qvMK9lc+DTiIFSOCCu5XeYiw==
+ b=Ou5+3vB6fNV71v6rCkyqvJWYgvcuiHQt66ubvaMgx70+pGxqSbPnRxcYwQJQd5xM40/c/X3hBE/a+p+YLCNgX/ajnLkDyP19u7vtiHYOD3JEM6DTb8gJEG1uZw3pWZG3jiVLXFwsy0aju8//MSG02TosYdqHqM/VPpekNiXcOb2fPgzYXn5h7ulsj1kRiicuh2L9b+7Zotly9SIHVASu3hx2VSjKjUuEmQzis4RiOdBqxccdR5humO//Ruqrc8ox2e4mxqfROEs+GM1Wo1lP9BugknWLoj4e/tFG0CnVobbiHDBaeNLHrr4GLkqsslVzop8ZD9+srSv4riiqo48Ofw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Lbijr2SNhKnpiKxFoFFjnmUZGOdPNBWFAJz3s7O+Gno=;
- b=CKJrXLsFRSgS6rFwtrfxww4Ff4apSWU6+xjv9TgGjTLAiUQhzcJnknrV6+logfiMZsD5YhJDaqGTlpVw1t5lHfsXNShyZNYcJxVqKVDCa8FUNXfLBAjQdnqrOKv24ZI0onH+uc7etEE/o7rmqZucpeg2UlSOBYqsCvFja3S/CamqAu5/K6grdSjrPBartbq05V4tBVVPY9O39iCKPh5g5MOL7McuxZlHlI0tcaITibXXrZ2z+Z9RoEj+VKYgX68hlCyqz14aBUeApuAbEOzDj9gxikXGcNjNL+cxsyPPhOcPdUhBUq8/1ibxoLIWG1BjNBu8lSW17j1IKwXNCjX+nw==
+ bh=10BMgkutdWr07lSYNJbOPiY7EwWERiqzztOipad4sP8=;
+ b=Rs4g0y5id9wK1/EPNLG8OsltReoJUayBdXaSvLVFeczYEJkJxWsb1pcpWF4VQEq5Rg1U4n9rAs5cBsBUv9YfhL//kLAqHqL2fOhaAJkdKx4szVaYOOLvkgkAdKOe2L5FIyQaBRThjWLP24K+c43sn6lS5/bgsYJO+7O+lZoB3TWMZLVb1GD5NgL5U61PTZAG9UdJ/XqnsYqbWl/m88deLhTp2I6ehHbMdK3SwcKg+6d2XICFuDwfDxc+s9WLbgGxJPxnnVu4PYegpJOgi8WQg736Qbyfxa+W7yEQrU16OZKNRf7g6cdM20ir56zwxJOUChb/wls1b/2jHshhT58jMA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Lbijr2SNhKnpiKxFoFFjnmUZGOdPNBWFAJz3s7O+Gno=;
- b=zR5XBUaZUEsOGVinsUw2Exx96ye3LQULeM/ZPS1yMg6VmHDHI4CreanggzwZ10RTWIOLoKN2Q0u0Iixx1weZiwD6ygSrJ9443c99vRu7pWTcIO/16eS0J7r7x8KdCEvAdOMk0jNGLez5z1scjmYi2J/VOS4Ht8mje0gkCitntE0=
+ bh=10BMgkutdWr07lSYNJbOPiY7EwWERiqzztOipad4sP8=;
+ b=SgbNcLOHOtkRFZ8Btp/U29SqCnGxYGLHySyeNwKLwxTg7TP6e/7z+dSGbtvUMT4t1UZoonde+imjg1cOdakZjgFn0d67xYPW0rhDO5vRL5QNnQRzJtXvZ6kNAcWkyYqY5XglAEvoMJY1cebxQxdc8od9AugrwyO0brOsUA3/XLU=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB0981.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1fb::24) with
+ by AM9P192MB1187.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3af::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:06:37 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:06:28 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:06:37 +0000
+ 16:06:28 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 178/256] cl8k: add rx/rx_reorder.c
-Date:   Thu, 17 Jun 2021 16:01:05 +0000
-Message-Id: <20210617160223.160998-179-viktor.barna@celeno.com>
+Subject: [RFC v1 162/256] cl8k: add reg/reg_otp_pvt.h
+Date:   Thu, 17 Jun 2021 16:00:49 +0000
+Message-Id: <20210617160223.160998-163-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:49 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:05:30 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 00f46c62-c867-4858-4831-08d931a9c6b5
-X-MS-TrafficTypeDiagnostic: AM9P192MB0981:
+X-MS-Office365-Filtering-Correlation-Id: bbd764e0-def6-441f-4b91-08d931a9bb83
+X-MS-TrafficTypeDiagnostic: AM9P192MB1187:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB09818E786BE6BA44870876CCF60E9@AM9P192MB0981.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2657;
+X-Microsoft-Antispam-PRVS: <AM9P192MB118779B71C20041414B4239BF60E9@AM9P192MB1187.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rdZ6VDAtBsHi0L9FGbQwJU0xvF5563OztXIbknxQFAPGaoe4U+hOTxkQSILI7MoozaQdxHmtOSAb9r5RdSJ+7rewqdhSf87oU4F+GPWMjO7/vKK2kSVU+0FNlMYixa5CXtjzl0PZ45ZdkCYtB9GcRgWgb7YfA2oGCV4wvmWrcy7e8tigi1xpkIX2BQVxw6okX5TaKQr5pQMl71XCySUjgNpAmj0QCJKhdHgMSfcfR+Eo8qgMMbzf4jYwj1EBlfYZOoUUDIrKw1cxf95PTCki+4SBocglaMr9cLl79eCOfTOzPefrn8I/HExSZEryk6Zlwe0TwHHokfaQQuRQRCW7nR7nWRsn7BoqELM4mMJau/2n++ZNacwXHYiclOSWw5p2xnOdL9dUnB8ljY5fHxEunLYMItPXb4EXT7eFk9r/cnevsDs147In4Fe01HYrVNEZKu5FAzIrXRjbVs7+Wmk7/JqA1CdVOc0XeJREZT9MMmuhXclxUxtw5GPOdwNUuKqy/QDzbO3El7dckQKTRhjPDhJzTMQRj0NKJmvI2PLHQ9J8s9KUAI6GWacnbqaF+iwySor7vZhB1W1Y6BqKg+xJ+YfjGp80n/SEUaoGjJ83hOaNwFbl8wrHRX/2WttYAADS6ts6Him31x9BXwVmfYcwgSoONJWjyLQbBthn41nG2uNTiemgjKueylyEMfZEjEyjYeMIqq1YJ6JIwjyKY/e0Dw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(376002)(396003)(136003)(366004)(39850400004)(86362001)(5660300002)(9686003)(54906003)(107886003)(6666004)(1076003)(2906002)(478600001)(6512007)(26005)(2616005)(38350700002)(16526019)(55236004)(38100700002)(6506007)(4326008)(8676002)(66946007)(30864003)(186003)(66476007)(66556008)(956004)(83380400001)(6916009)(8936002)(36756003)(52116002)(6486002)(316002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: mg1fei2DAIyXr26sJSTTphVuL460HnUnULVsgKPuWODrHzDQDZZ71+uTpcKLKUVi5Y7JDUnGUh5KWgmq1YKb/di1aLZYkeQXt7ZedIdhyrHEuZxBAztRZ31/BCzPrGAtTc8E5IGJLBPBYO1ym3k5WgkKvt2YUvFzDQcB2UTctyr2g+QdJSXrIuTjGPqIKwzBRXgcPnaWlgxd7fav/+CvSGEhLtfl5XZd92FWILa/53Rywc1UVztpwt6xpAHK7LSDNHuym272cf4Sr0BptSEHvQVzG3EqLJLzPLpeBRyCoLShgtuV9Bo3OqWjZ45UB77AKV5RUFwLa5usEnklgKrsHh5oOyMH5XOlUYvmi9hzGp763ASYZPfKbd1VmOYEnd5xi8su98NpgBE7DFoo058mMXw0UsEPm5KPDUgIzZzHegqZAf/GovU4bAH1t2T2gdQ/3v9zgisO/PstlQeK27H3NczME6i+QLuvJ/T/E4ocKuS+kXY3sgS75za+44viNqJ1WdftY8x1fGFGdZXLYGCldx02U7HthM1oooD3m2BW/P0lMuo0Avf6t3TGxJWpnGhRhXzs/qEekyyrEQUIE24TSuIQ4sZv6OFjAyUl2lkuqjMX0HWp/OGYyvweeICnla3adtROo+vHmmQcQZScBo52ulvWzyWOBRMENZmgH+Mtv5XDsG3Ivgf4Ws8APVYhgmqUlZn7kX28fzLclA0nNVOLNA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39840400004)(376002)(396003)(136003)(366004)(346002)(6512007)(66946007)(55236004)(66556008)(6506007)(54906003)(8676002)(4326008)(186003)(316002)(66476007)(6486002)(26005)(6916009)(86362001)(36756003)(9686003)(8936002)(6666004)(5660300002)(2616005)(956004)(2906002)(478600001)(52116002)(83380400001)(38350700002)(16526019)(1076003)(38100700002)(107886003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EHHVTem1f7AMISVv2lT/jJneTrAVx91GtnEabBl9dAwtN7+Qjr4VbquHzBm0?=
- =?us-ascii?Q?lvvNctvSHeSoS1xjDaqoVzASQw2xLi6n52C8JHwtws6klsNzsYUvXV7lRTD+?=
- =?us-ascii?Q?eveR8bXva6KCKO08FU+ywg5ePEupfugHGQq/oYFWpACD0kiCnH5uZEfy3giJ?=
- =?us-ascii?Q?RFJSTvx42ZlCqks+v/HQ+54u41b5uwO9HnH6YeLjt42Q8AVCw3rR0L66C0KG?=
- =?us-ascii?Q?6gstKOYuRNfHR5DUEDfN3nPOows+kNTYQEnr45CCs7eiZgZqoF8myuWnhI8h?=
- =?us-ascii?Q?piT8ygbI0p0dAnwgXEEd31CTVSAOE3zKwf4BMfoB0ZJUiJXucFcd0Hy+oJBW?=
- =?us-ascii?Q?0+bgHFLwz9yYzyeCxj5dSXHU8veL/N92MOmz3K10UY6xzBlBRtnp6APvtsrL?=
- =?us-ascii?Q?TQF4vql5itD3RPrx+YL/aiGiYTN8mG7Jv2gPgcY3yFa/lZVj2881oRPGN9JQ?=
- =?us-ascii?Q?byNmAFi0xtetULQruYslDACiWTXstg787Aw1rNAGB6NQTDsUBLqGKbRSZvA2?=
- =?us-ascii?Q?F8d+bQAhxZKJnup99j+Ymh+xcnanD6usLzr0IQBYgE6oIoNmooeVO3bjDuzx?=
- =?us-ascii?Q?K7ifRK443tJMoslZWh1c5mrPA0imp5TA8quqxz8zcr1I7C9KlwBTnnuMI2HD?=
- =?us-ascii?Q?4VK+qizszAwa9pkWzUDw6eeq/g7C2gXr1O6CwpfashnjgrH+co5GLqCXJQyr?=
- =?us-ascii?Q?wt3U3Elxmi7qR6jq118frOP8kNiaHtoXR3xOYRlLGoOUZVTnO0WEaxY1LCE+?=
- =?us-ascii?Q?vKZM/RF1ULSQDppP37mZpjJhIJ1/12icCUZ9nuNfmlw6ufpYGhWB3EBvQdP4?=
- =?us-ascii?Q?TeeilKWLUxz74CvYSyRB127CerkVpJMZ1uuzrLK+Hsp4dE67ow/6aiXHtNhH?=
- =?us-ascii?Q?AbMicVExpAUd9VvXjFWwU1/F7xcmzlNoakU0Q9RwhvLWKg9WOMLCKZW+cH3l?=
- =?us-ascii?Q?aVk1agzJDnMNgr9rohiI4e3NOyTZcT3Ha4wwlpsUWx7eyh1izrkm6jAaWHR7?=
- =?us-ascii?Q?SIFLUuuDdYyf1uX8gp97Nb9pToYsILjvWv0XAfNSjRtQ9fjF9f98aDdT6+EP?=
- =?us-ascii?Q?LtXNBlqTdczg3MWOyuqQcBOvDvz+JyelmuIeXK3pOoSSX6YBpvtTCwK8gv0q?=
- =?us-ascii?Q?eB0vyebHdQBeukH6txmL4AVufQwuUgPEkrY2i0ZsgZEbtTXamzXnwQ6KQj94?=
- =?us-ascii?Q?m1WjPKt7wx0IwvubgSX/7b4UruwXY1O2ylOG+e1vUWFmjkdfahuvM/Klncrx?=
- =?us-ascii?Q?iZc89Y7S/LIOf/mghF75vYMXVnrzuwbfusAnsyofZehLyi0Yl+XxBu0HDBOP?=
- =?us-ascii?Q?8svMitItxF8jxDeOQlbQinWr?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ss4TCfvhd8AyDFP2CeNlRr4rwIDK1v+wTOBsPkaDCVDIx3qiac4TEANfI47Y?=
+ =?us-ascii?Q?Jl00XrSMKpkNc5Q5spBueQKEaBAhR0BHfGEQMTg0AV7jS+dV5EYhj5TcS7rq?=
+ =?us-ascii?Q?JkK1L/DqPQnbJT14zGftXTHnVnhwDlqz4EhWbOFbtU1H/S400RBkjnEQyuoS?=
+ =?us-ascii?Q?LfVQfIO+jU4WP8TZwEoL/BBAR/GD6qbYqk9jhzmfSdRpaT8AsZ2loU4veyuJ?=
+ =?us-ascii?Q?XqBeXYFizgqaMuK71/555vUDRyS/5tNxHDgSgUEBHtFFxIGz1s0WtmxCTT4+?=
+ =?us-ascii?Q?1vHJL9x1+OoQkO4MYWfhgTxxqJDatz1ZeZCWGwt/1Wy8k4rIye8WoMA6CD3l?=
+ =?us-ascii?Q?m/DFJnRZ/wfyCod7IwKbBa/V0zCvJTOH7fZQUUWsCGwyhHIVBpfA3l2W5o9j?=
+ =?us-ascii?Q?xy+bhdoI+c8xBa5wpCqnU9M2cD46AYdVeAjEOnA4PbBbnlpVg7CyLm1mfiE/?=
+ =?us-ascii?Q?r1BfycP3aOnR9Q4x0nrGhfasIH9Q2MFJ4JXXgOjRcfZqY1yG8OCZ6Uwbz0KW?=
+ =?us-ascii?Q?SHTi7V9IqEza3H/FHM+I86Vi60cm8AVGZrx1czcaWuEZQwGgXfjyC3XfgqN9?=
+ =?us-ascii?Q?qgEEfQPMyX64tLXu2MGuAFoWk05ik3mWJsN7GAryDw3O51TYL2feqEvy0QNv?=
+ =?us-ascii?Q?jn58ElznLm7z7F6vPXe7AAO1ayoKYkzEyFWfCwoMqfs8fYvIHCsPUUQSo94N?=
+ =?us-ascii?Q?M4ZDpvcYXq9AIyOzyBPCuWiMthER1DFiKZ6LII9J6ggKbyRn7L9647w7h4rV?=
+ =?us-ascii?Q?Qds5X/YSCw8+SrBgxuzSOzGdUmae7OD1LGF5f6vhSe3J9tv781z1MmWJx5zt?=
+ =?us-ascii?Q?khUKm0x92CMV5DJpZZSzlW8t8VLzY8S07uvkhGygDtL//HW9A7pK3P7vaYys?=
+ =?us-ascii?Q?ETyUb5+weBj4sUmzSlo2NgbvpvShMP2y/eW5nJ3OFQ+uh+1BPaciIklzQDD+?=
+ =?us-ascii?Q?89C4szwZdsFwcpOjz3NSWD6J4f7v6Jp3tVGZi1XiVHUz0Poj1vQm94mzqU+F?=
+ =?us-ascii?Q?nlRV3kGsn0Zt7kW339Lr+qT9bRqFQiEBRfbb/M8+3N54KLfdraBcQZxwQwIe?=
+ =?us-ascii?Q?lPF8d1bsTFK7P72k18c7wciF61dYO1gmExpgFKCB340KNJKqvE0rHJYeaEum?=
+ =?us-ascii?Q?Gdpl/w1hF0EkPgMRz2zIYotyaIFyyiIS5drME7lSlCuJYgYKtapRjOyidHzv?=
+ =?us-ascii?Q?wy54/OSWEPft5UflCZJfILK2ba3tolpcJOeTxHBYGEu1kPg2kQTPKVXgJS4G?=
+ =?us-ascii?Q?7nzY2afcXQE8DIncxurpX2743T6JE6sw8HKDHYkjY7Ntkebr6XnAi5nZ8vTG?=
+ =?us-ascii?Q?4RGCwcYZm60l1Xi90m9Gc0PP?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 00f46c62-c867-4858-4831-08d931a9c6b5
+X-MS-Exchange-CrossTenant-Network-Message-Id: bbd764e0-def6-441f-4b91-08d931a9bb83
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:50.4680
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:05:31.6247
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8LXqATJcV5C1gwgc1iqePsTtIrM1+3MiJmUcfff5QoMzFGgfDgco5SdLoz6EJnSrxZhXORVXg8eTlIeUlp3n3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0981
+X-MS-Exchange-CrossTenant-UserPrincipalName: C84xIRO8DniN8PIzCqPAtnQbjo49raZLbmWZbky1geUXhCqQu0TiHvFmeWdbW1L+PiE4URrIzb7hiPPecbeHPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1187
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,372 +128,253 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/rx/rx_reorder.c  | 335 ++++++++++++++++++
- 1 file changed, 335 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/rx/rx_reorder.c
+ .../wireless/celeno/cl8k/reg/reg_otp_pvt.h    | 219 ++++++++++++++++++
+ 1 file changed, 219 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/rx/rx_reorder.c b/drivers/net=
-/wireless/celeno/cl8k/rx/rx_reorder.c
+diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h b/drivers/n=
+et/wireless/celeno/cl8k/reg/reg_otp_pvt.h
 new file mode 100644
-index 000000000000..7a5c38369d2e
+index 000000000000..18866c1c3710
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/rx/rx_reorder.c
-@@ -0,0 +1,335 @@
-+// SPDX-License-Identifier: MIT
++++ b/drivers/net/wireless/celeno/cl8k/reg/reg_otp_pvt.h
+@@ -0,0 +1,219 @@
++/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "rx_reorder.h"
-+#include "sta.h"
-+#include "utils/utils.h"
++#ifndef CL_REG_OTP_PVT
++#define CL_REG_OTP_PVT
 +
-+#define REORDER_BUF_TIMEOUT (HZ / 10)
++#include <linux/types.h>
++#include "reg/reg_access.h"
++#include "chip.h"
 +
-+static bool cl_rx_reorder_ready(struct cl_tid_ampdu_rx *tid_agg_rx, u8 ind=
-ex)
++#define REG_OTP_PVT_BASE_ADDR 0x007C9000
++
++/*
++ * @brief OTP_CMD register definition
++ *  OTP command register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    28    OTP_PR_ACC                0
++ *    24    OTP_ABORT_CLR             0
++ *    16    OTP_READY                 1
++ *    12    OTP_WRITE_FAILED          0
++ *    01:00 OTP_CMD                   0x0
++ * </pre>
++ */
++#define OTP_PVT_OTP_CMD_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000000)
++#define OTP_PVT_OTP_CMD_OFFSET      0x00000000
++#define OTP_PVT_OTP_CMD_INDEX       0x00000000
++#define OTP_PVT_OTP_CMD_RESET       0x00010000
++
++static inline u8 otp_pvt_otp_cmd_otp_pr_acc_getf(struct cl_chip *chip)
 +{
-+       struct sk_buff_head *frames =3D &tid_agg_rx->reorder_buf[index];
-+       struct sk_buff *tail =3D skb_peek_tail(frames);
-+       struct ieee80211_rx_status *status;
++       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
 +
-+       if (tid_agg_rx->reorder_buf_filtered & BIT_ULL(index))
-+               return true;
-+
-+       if (!tail)
-+               return false;
-+
-+       status =3D IEEE80211_SKB_RXCB(tail);
-+
-+       if (status->flag & RX_FLAG_AMSDU_MORE)
-+               return false;
-+
-+       return true;
++       return ((local_val & ((u32)0x10000000)) >> 28);
 +}
 +
-+static void cl_rx_release_reorder_frame(struct cl_tid_ampdu_rx *tid_agg_rx=
-, int index,
-+                                       struct sk_buff_head *frames)
++static inline u8 otp_pvt_otp_cmd_otp_ready_getf(struct cl_chip *chip)
 +{
-+       struct sk_buff_head *skb_list =3D &tid_agg_rx->reorder_buf[index];
-+       struct sk_buff *skb;
++       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
 +
-+       lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
-+       if (skb_queue_empty(skb_list))
-+               goto no_frame;
-+
-+       if (!cl_rx_reorder_ready(tid_agg_rx, index)) {
-+               __skb_queue_purge(skb_list);
-+               goto no_frame;
-+       }
-+
-+       tid_agg_rx->stored_mpdu_num--;
-+
-+       while ((skb =3D __skb_dequeue(skb_list)))
-+               __skb_queue_tail(frames, skb);
-+
-+no_frame:
-+       tid_agg_rx->reorder_buf_filtered &=3D ~BIT_ULL(index);
-+       tid_agg_rx->head_seq_num =3D ieee80211_sn_inc(tid_agg_rx->head_seq_=
-num);
++       return ((local_val & ((u32)0x00010000)) >> 16);
 +}
 +
-+static void cl_rx_release_reorder_frames(struct cl_tid_ampdu_rx *tid_agg_r=
-x,
-+                                        u16 head_seq_num,
-+                                        struct sk_buff_head *frames)
++static inline u8 otp_pvt_otp_cmd_otp_write_failed_getf(struct cl_chip *chi=
+p)
 +{
-+       int index;
++       u32 local_val =3D cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR);
 +
-+       lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
-+       while (ieee80211_sn_less(tid_agg_rx->head_seq_num, head_seq_num)) {
-+               index =3D tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
-+               cl_rx_release_reorder_frame(tid_agg_rx, index, frames);
-+       }
++       return ((local_val & ((u32)0x00001000)) >> 12);
 +}
 +
-+static void cl_reorder_release(struct cl_tid_ampdu_rx *tid_agg_rx, struct =
-sk_buff_head *frames)
++static inline void otp_pvt_otp_cmd_otp_cmd_setf(struct cl_chip *chip, u8 o=
+tpcmd)
 +{
-+       u8 index, i, j;
-+
-+       lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
-+       /* Release buffer until next hole */
-+       index =3D tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
-+       if (!cl_rx_reorder_ready(tid_agg_rx, index) && tid_agg_rx->stored_m=
-pdu_num) {
-+               u8 skipped =3D 1;
-+
-+               for (j =3D (index + 1) % tid_agg_rx->buf_size; j !=3D index=
++       ASSERT_ERR_CHIP((((u32)otpcmd << 0) & ~((u32)0x00000003)) =3D=3D 0)=
 ;
-+                    j =3D (j + 1) % tid_agg_rx->buf_size) {
-+                       if (!cl_rx_reorder_ready(tid_agg_rx, j)) {
-+                               skipped++;
-+                               continue;
-+                       }
-+                       if (skipped &&
-+                           !time_after(jiffies, tid_agg_rx->reorder_time[j=
-] +
-+                                       REORDER_BUF_TIMEOUT))
-+                               goto set_release_timer;
-+
-+                       /* Incomplete A-MSDUs */
-+                       for (i =3D (index + 1) % tid_agg_rx->buf_size; i !=
-=3D j;
-+                            i =3D (i + 1) % tid_agg_rx->buf_size) {
-+                               __skb_queue_purge(&tid_agg_rx->reorder_buf[=
-i]);
-+                       }
-+
-+                       cl_rx_release_reorder_frame(tid_agg_rx, j, frames);
-+
-+                       tid_agg_rx->head_seq_num =3D
-+                               (tid_agg_rx->head_seq_num +
-+                                skipped) & IEEE80211_SN_MASK;
-+                       skipped =3D 0;
-+               }
-+       } else {
-+               while (cl_rx_reorder_ready(tid_agg_rx, index)) {
-+                       cl_rx_release_reorder_frame(tid_agg_rx, index, fram=
-es);
-+                       index =3D tid_agg_rx->head_seq_num % tid_agg_rx->bu=
-f_size;
-+               }
-+       }
-+
-+       if (tid_agg_rx->stored_mpdu_num) {
-+               j =3D tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
-+               index =3D j;
-+               for (; j !=3D (index - 1) % tid_agg_rx->buf_size;
-+                    j =3D (j + 1) % tid_agg_rx->buf_size) {
-+                       if (cl_rx_reorder_ready(tid_agg_rx, j))
-+                               break;
-+               }
-+
-+ set_release_timer:
-+               if (!tid_agg_rx->removed)
-+                       cl_timer_rearm_offset(&tid_agg_rx->reorder_timer,
-+                                             tid_agg_rx->reorder_time[j]);
-+       } else {
-+               cl_timer_disable(&tid_agg_rx->reorder_timer);
-+       }
++       cl_reg_write_chip(chip, OTP_PVT_OTP_CMD_ADDR,
++                         (cl_reg_read_chip(chip, OTP_PVT_OTP_CMD_ADDR) & ~=
+((u32)0x00000003)) | ((u32)otpcmd << 0));
 +}
 +
-+static void cl_rx_reorder_release_timeout(unsigned long data)
++/*
++ * @brief OTP_READ_VAL register definition
++ *  OTP read value register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    31:00 OTP_READ_VAL              0x0
++ * </pre>
++ */
++#define OTP_PVT_OTP_READ_VAL_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x000000=
+04)
++#define OTP_PVT_OTP_READ_VAL_OFFSET      0x00000004
++#define OTP_PVT_OTP_READ_VAL_INDEX       0x00000001
++#define OTP_PVT_OTP_READ_VAL_RESET       0x00000000
++
++static inline u32 otp_pvt_otp_read_val_get(struct cl_chip *chip)
 +{
-+       struct cl_tid_ampdu_rx *tid_agg_rx =3D (struct cl_tid_ampdu_rx *)da=
-ta;
-+       struct sk_buff *skb =3D NULL;
-+       struct cl_hw *cl_hw =3D NULL;
-+       struct ieee80211_sta *sta =3D NULL;
-+       struct sk_buff_head buffer;
-+
-+       if (!tid_agg_rx)
-+               return;
-+
-+       __skb_queue_head_init(&buffer);
-+
-+       spin_lock(&tid_agg_rx->reorder_lock);
-+
-+       cl_hw =3D tid_agg_rx->cl_hw;
-+       sta =3D tid_agg_rx->sta;
-+       cl_reorder_release(tid_agg_rx, &buffer);
-+
-+       spin_unlock(&tid_agg_rx->reorder_lock);
-+
-+       while (!skb_queue_empty(&buffer)) {
-+               skb =3D __skb_dequeue(&buffer);
-+               ieee80211_rx_napi(cl_hw->hw, sta, skb, NULL);
-+       }
++       return cl_reg_read_chip(chip, OTP_PVT_OTP_READ_VAL_ADDR);
 +}
 +
-+static bool cl_rx_manage_reorder_buf(struct cl_tid_ampdu_rx *tid_agg_rx,
-+                                    struct sk_buff *skb,
-+                                    struct sk_buff_head *ordered_mpdu)
++/*
++ * @brief OTP_ADDR register definition
++ *  OTP address register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    12:00 OTP_ADDR                  0x0
++ * </pre>
++ */
++#define OTP_PVT_OTP_ADDR_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000008)
++#define OTP_PVT_OTP_ADDR_OFFSET      0x00000008
++#define OTP_PVT_OTP_ADDR_INDEX       0x00000002
++#define OTP_PVT_OTP_ADDR_RESET       0x00000000
++
++static inline void otp_pvt_otp_addr_set(struct cl_chip *chip, u32 value)
 +{
-+       struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *)skb->data;
-+       struct ieee80211_rx_status *status =3D IEEE80211_SKB_RXCB(skb);
-+       u16 sc =3D le16_to_cpu(hdr->seq_ctrl);
-+       u16 mpdu_seq_num =3D (sc & IEEE80211_SCTL_SEQ) >> 4;
-+       u16 head_seq_num, buf_size;
-+       u8 index;
-+       bool ret =3D true;
-+
-+       if (unlikely(tid_agg_rx->auto_seq)) {
-+               tid_agg_rx->auto_seq =3D false;
-+               tid_agg_rx->ssn =3D mpdu_seq_num;
-+               tid_agg_rx->head_seq_num =3D mpdu_seq_num;
-+       }
-+
-+       buf_size =3D tid_agg_rx->buf_size;
-+       head_seq_num =3D tid_agg_rx->head_seq_num;
-+
-+       /* Current SN is smaller than the SSN */
-+       if (unlikely(!tid_agg_rx->started)) {
-+               if (ieee80211_sn_less(mpdu_seq_num, head_seq_num)) {
-+                       ret =3D false;
-+                       goto out;
-+               }
-+               tid_agg_rx->started =3D true;
-+       }
-+
-+       /* Out of date sequence number */
-+       if (ieee80211_sn_less(mpdu_seq_num, head_seq_num)) {
-+               dev_kfree_skb(skb);
-+               goto out;
-+       }
-+
-+       /* SN exceeds buffer window */
-+       if (!ieee80211_sn_less(mpdu_seq_num, head_seq_num + buf_size)) {
-+               head_seq_num =3D ieee80211_sn_inc(ieee80211_sn_sub(mpdu_seq=
-_num, buf_size));
-+               cl_rx_release_reorder_frames(tid_agg_rx, head_seq_num, orde=
-red_mpdu);
-+       }
-+
-+       index =3D mpdu_seq_num % tid_agg_rx->buf_size;
-+
-+       /* Frame already stored */
-+       if (cl_rx_reorder_ready(tid_agg_rx, index)) {
-+               dev_kfree_skb(skb);
-+               goto out;
-+       }
-+
-+       if (mpdu_seq_num =3D=3D tid_agg_rx->head_seq_num &&
-+           tid_agg_rx->stored_mpdu_num =3D=3D 0) {
-+               if (!(status->flag & RX_FLAG_AMSDU_MORE)) {
-+                       tid_agg_rx->head_seq_num =3D
-+                               ieee80211_sn_inc(tid_agg_rx->head_seq_num);
-+               }
-+               ret =3D false;
-+               goto out;
-+       }
-+
-+       /* Insert frame into reorder buffer */
-+       __skb_queue_tail(&tid_agg_rx->reorder_buf[index], skb);
-+       if (!(status->flag & RX_FLAG_AMSDU_MORE)) {
-+               tid_agg_rx->reorder_time[index] =3D jiffies;
-+               tid_agg_rx->stored_mpdu_num++;
-+               cl_reorder_release(tid_agg_rx, ordered_mpdu);
-+       }
-+
-+ out:
-+       return ret;
++       cl_reg_write_chip(chip, OTP_PVT_OTP_ADDR_ADDR, value);
 +}
 +
-+void cl_rx_reorder_ampdu(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+                        struct sk_buff *skb, struct sk_buff_head *ordered_=
-mpdu)
++/*
++ * @brief OTP_TIMINGS_1 register definition
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    31:25 otp_t_CPH                 0xa
++ *    24:18 t_PES                     0xa
++ *    17:16 t_UT                      0x0
++ *    15:08 t_RW                      0x15
++ *    07:00 t_CSRT                    0x29
++ * </pre>
++ */
++#define OTP_PVT_OTP_TIMINGS_1_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
+00C)
++#define OTP_PVT_OTP_TIMINGS_1_OFFSET      0x0000000C
++#define OTP_PVT_OTP_TIMINGS_1_INDEX       0x00000003
++#define OTP_PVT_OTP_TIMINGS_1_RESET       0x14281529
++
++static inline void otp_pvt_otp_timings_1_set(struct cl_chip *chip, u32 val=
+ue)
 +{
-+       struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *)skb->data;
-+       struct cl_tid_ampdu_rx *tid_agg_rx;
-+       u8 tid, ack_policy;
-+
-+       if (!cl_sta)
-+               return;
-+
-+       ack_policy =3D *ieee80211_get_qos_ctl(hdr) &
-+                    IEEE80211_QOS_CTL_ACK_POLICY_MASK;
-+       tid =3D ieee80211_get_tid(hdr);
-+
-+       tid_agg_rx =3D cl_sta->tid_agg_rx[tid];
-+       if (!tid_agg_rx)
-+               return;
-+
-+       spin_lock(&tid_agg_rx->reorder_lock);
-+       if (!ieee80211_is_data_qos(hdr->frame_control) ||
-+           is_multicast_ether_addr(hdr->addr1))
-+               goto dont_reorder;
-+
-+       if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLF=
-UNC)))
-+               goto dont_reorder;
-+
-+       if (ack_policy !=3D IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
-+           ack_policy !=3D IEEE80211_QOS_CTL_ACK_POLICY_NORMAL)
-+               goto dont_reorder;
-+
-+       /* Ignore EAPOL frames */
-+       if (cl_is_eapol(skb))
-+               goto dont_reorder;
-+
-+       if (cl_rx_manage_reorder_buf(tid_agg_rx, skb, ordered_mpdu)) {
-+               spin_unlock(&tid_agg_rx->reorder_lock);
-+               return;
-+       }
-+
-+ dont_reorder:
-+       spin_unlock(&tid_agg_rx->reorder_lock);
-+       __skb_queue_tail(ordered_mpdu, skb);
++       cl_reg_write_chip(chip, OTP_PVT_OTP_TIMINGS_1_ADDR, value);
 +}
 +
-+void cl_rx_reorder_close(struct cl_sta *cl_sta, u8 tid)
++/*
++ * @brief OTP_TIMINGS_2 register definition
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    30:26 t_RD                      0x5
++ *    25:16 t_PW                      0x50
++ *    15:08 t_PEH                     0x20
++ *    07:00 t_CPS                     0x20
++ * </pre>
++ */
++#define OTP_PVT_OTP_TIMINGS_2_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
+010)
++#define OTP_PVT_OTP_TIMINGS_2_OFFSET      0x00000010
++#define OTP_PVT_OTP_TIMINGS_2_INDEX       0x00000004
++#define OTP_PVT_OTP_TIMINGS_2_RESET       0x14502020
++
++static inline void otp_pvt_otp_timings_2_set(struct cl_chip *chip, u32 val=
+ue)
 +{
-+       struct cl_tid_ampdu_rx *tid_agg_rx =3D cl_sta->tid_agg_rx[tid];
-+       u16 i;
-+
-+       spin_lock_bh(&tid_agg_rx->reorder_lock);
-+       tid_agg_rx->removed =3D true;
-+       spin_unlock_bh(&tid_agg_rx->reorder_lock);
-+
-+       cl_timer_disable_sync(&tid_agg_rx->reorder_timer);
-+
-+       spin_lock_bh(&tid_agg_rx->reorder_lock);
-+       for (i =3D 0; i < tid_agg_rx->buf_size; i++)
-+               __skb_queue_purge(&tid_agg_rx->reorder_buf[i]);
-+
-+       kfree(tid_agg_rx->reorder_buf);
-+       kfree(tid_agg_rx->reorder_time);
-+       cl_sta->tid_agg_rx[tid] =3D NULL;
-+
-+       spin_unlock_bh(&tid_agg_rx->reorder_lock);
-+       kfree(tid_agg_rx);
++       cl_reg_write_chip(chip, OTP_PVT_OTP_TIMINGS_2_ADDR, value);
 +}
 +
-+void cl_rx_reorder_init(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u8 tid=
-, u16 buf_size)
++/*
++ * @brief OTP_WRITE_VAL register definition
++ *  OTP write value register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    00    OTP_WRITE_VAL             0
++ * </pre>
++ */
++#define OTP_PVT_OTP_WRITE_VAL_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000=
+014)
++#define OTP_PVT_OTP_WRITE_VAL_OFFSET      0x00000014
++#define OTP_PVT_OTP_WRITE_VAL_INDEX       0x00000005
++#define OTP_PVT_OTP_WRITE_VAL_RESET       0x00000000
++
++static inline void otp_pvt_otp_write_val_set(struct cl_chip *chip, u32 val=
+ue)
 +{
-+       struct cl_tid_ampdu_rx *tid_agg_rx;
-+       u16 i;
-+
-+       tid_agg_rx =3D kzalloc(sizeof(*tid_agg_rx), GFP_KERNEL);
-+       if (!tid_agg_rx)
-+               return;
-+
-+       spin_lock_init(&tid_agg_rx->reorder_lock);
-+
-+       cl_timer_init(&tid_agg_rx->reorder_timer, cl_rx_reorder_release_tim=
-eout,
-+                     (unsigned long)tid_agg_rx, REORDER_BUF_TIMEOUT + 1, f=
-alse);
-+
-+       tid_agg_rx->reorder_buf =3D
-+               kcalloc(buf_size, sizeof(struct sk_buff_head), GFP_KERNEL);
-+       tid_agg_rx->reorder_time =3D
-+               kcalloc(buf_size, sizeof(unsigned long), GFP_KERNEL);
-+       if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
-+               pr_err("Allocation failed!\n");
-+               kfree(tid_agg_rx->reorder_buf);
-+               kfree(tid_agg_rx->reorder_time);
-+               return;
-+       }
-+
-+       for (i =3D 0; i < buf_size; i++)
-+               __skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
-+
-+       tid_agg_rx->ssn =3D 0;
-+       tid_agg_rx->head_seq_num =3D 0;
-+       tid_agg_rx->buf_size =3D buf_size;
-+       tid_agg_rx->stored_mpdu_num =3D 0;
-+       tid_agg_rx->auto_seq =3D 0;
-+       tid_agg_rx->started =3D false;
-+       tid_agg_rx->reorder_buf_filtered =3D 0;
-+       tid_agg_rx->tid =3D tid;
-+       tid_agg_rx->sta =3D &cl_sta->stainfo->sta;
-+       tid_agg_rx->cl_hw =3D cl_hw;
-+       cl_sta->tid_agg_rx[tid] =3D tid_agg_rx;
++       cl_reg_write_chip(chip, OTP_PVT_OTP_WRITE_VAL_ADDR, value);
 +}
++
++/*
++ * @brief OTP_KEY register definition
++ *  OTP key register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    31:00 OTP_KEY                   0x0
++ * </pre>
++ */
++#define OTP_PVT_OTP_KEY_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x00000018)
++#define OTP_PVT_OTP_KEY_OFFSET      0x00000018
++#define OTP_PVT_OTP_KEY_INDEX       0x00000006
++#define OTP_PVT_OTP_KEY_RESET       0x00000000
++
++static inline void otp_pvt_otp_key_set(struct cl_chip *chip, u32 value)
++{
++       cl_reg_write_chip(chip, OTP_PVT_OTP_KEY_ADDR, value);
++}
++
++/*
++ * @brief OTP_CLK_DIV register definition
++ *  OTP clock divisor register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    08:00 OTP_CLK_DIV               0x1
++ * </pre>
++ */
++#define OTP_PVT_OTP_CLK_DIV_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x0000001=
+C)
++#define OTP_PVT_OTP_CLK_DIV_OFFSET      0x0000001C
++#define OTP_PVT_OTP_CLK_DIV_INDEX       0x00000007
++#define OTP_PVT_OTP_CLK_DIV_RESET       0x00000001
++
++static inline void otp_pvt_otp_clk_div_set(struct cl_chip *chip, u32 value=
+)
++{
++       cl_reg_write_chip(chip, OTP_PVT_OTP_CLK_DIV_ADDR, value);
++}
++
++/*
++ * @brief OTP_PROTECT register definition
++ *  OTP address protection register description
++ * <pre>
++ *   Bits           Field Name   Reset Value
++ *  -----   ------------------   -----------
++ *    01    OTP_PR_DIS                0
++ *    00    OTP_PR_SEL                0
++ * </pre>
++ */
++#define OTP_PVT_OTP_PROTECT_ADDR        (REG_OTP_PVT_BASE_ADDR + 0x0000002=
+4)
++#define OTP_PVT_OTP_PROTECT_OFFSET      0x00000024
++#define OTP_PVT_OTP_PROTECT_INDEX       0x00000009
++#define OTP_PVT_OTP_PROTECT_RESET       0x00000000
++
++static inline void otp_pvt_otp_protect_otp_pr_dis_setf(struct cl_chip *chi=
+p, u8 otpprdis)
++{
++       ASSERT_ERR_CHIP((((u32)otpprdis << 1) & ~((u32)0x00000002)) =3D=3D =
+0);
++       cl_reg_write_chip(chip, OTP_PVT_OTP_PROTECT_ADDR,
++                         (cl_reg_read_chip(chip, OTP_PVT_OTP_PROTECT_ADDR)=
+ & ~((u32)0x00000002)) | ((u32)otpprdis << 1));
++}
++
++#endif /* CL_REG_OTP_PVT */
 --
 2.30.0
 
