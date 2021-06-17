@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6DD3C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5CDC49361
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 941D1613EE
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F36613EC
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233219AbhFQQHv (ORCPT
+        id S230321AbhFQQH4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:07:51 -0400
-Received: from mail-eopbgr70075.outbound.protection.outlook.com ([40.107.7.75]:41442
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:07:56 -0400
+Received: from mail-eopbgr60088.outbound.protection.outlook.com ([40.107.6.88]:43502
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230167AbhFQQHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:07:19 -0400
+        id S230343AbhFQQHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:07:21 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TjHj7RjCrjRL4FodG73KhUAmtmP3Of4L2BEpwWdpxb/wt0Q5Gh359cumJZ16lwXsYuCy53aG7CfGH5Q9SOV2n9GWE8/bYF8FpKQqOR354ToR7aDUdtGwYgW+KNcPp06M6YEjVuOYKK+l0UT+fOpzEoDMlzqV7IXDAvi0sDeageoW3WUfRpYG3o5GLgnUoZJ2UQfLwWBX1/26irs/NatRLSX8MeYEStPmq/FwUyOphcIwuPY6i8K71bMKlBwWczi7kqse53E60bG/aaeIID4I6xxL4/C6xbeIeD8YkmOGh0okHmGQ+dit8G17bbpRh7fXomwZpiNJjJklhgSvbh75iQ==
+ b=Uj1FxXuvWALUPEaVeJqNDG0lwLnyuYNmiN7Ikq/WM1Ac9wCANb6+k24Ej3nlHwYls00uJVCfj364obslAYKWHUEs+3oErIi0LM5LfYWcH+eS+RC2kXJP1+E9YWcftwPEzqyCBCbu/F04ASpsQBW2pxnz0B3J2TADTeqqXyjKJxQhdwxt0TvdtQf4WfmH66E8HN/cjd+2OlqDn36OgiEBDoiRF7Sdf2qVVz/HidWWtXoihqjdK2MroEvCHoh5AmRYMF5U619bBBOQN2II4GJM24qkHIem9oLjaVnOWYvG5fljGdVVGIsZeJJwfAQW4P/CDaVk2p0VZYeIaVFx5Bb5Aw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=knDtX294vQYSjbFyLfKqP4nnUWeJm6eVXe5Lg9jYR+U=;
- b=e+riFRbyb4EAdh4EV/715qseloGCRNpXSJQOAwwW/jCChWYJKPAkEK4N3AavzA97vf9rBxlC0hwjL4JLknbIonBO1BYpYXxP7X6y9fXIu0Vv8AGlxUO6EpZdLlgaSA8A0dlgDzKU/Yl7ZXBVGoGT9k+KoqaZ7XqAkx9E9/Jj9DvbzBJYFNcZwM6mh8xc9TP++r/zIBSpiJHWIdEWsHPVXb4iI9cmjIetbhTskqpIpvWReSLkUpkiYfNPSAYhRDJoHGq94+tM8Yz0x0mzY9wsu/nm8MOAXCZhtJJG5uGnjM91BLqv4kbnPWcOQaregHkrtyIB6T5EbfTiffuE10r8TA==
+ bh=4cjOdv6YHHTrKvwUsD3mkmqmLXnaW2KBGs6NgRsjjgU=;
+ b=GsePQ2c8jpT9LRwfk2vhwSRhpA/WIqMZ6ECEYYfaAAn0H02vI6TD4HuV/ZQ15t3rUwozNBSAC2KDcly1VoTsMtow0ph/flr6G1C3j69yu/B7rD1jcpwwqLgS+5MiyatE3gcNJYbIqjLvfiIN6rrpIdCH/7m6Htn08jEEbcceItrBpZ06yKscHicsyQZzy4Uw21dPma1K/Yv4MnBmvQkL9Feq3+b2RXislPvJopgn45jKpirtzR+oibBT+NJ4rY3P/2WBBitloe/SHojQC9rXRAM8F4vZ56AaOkFErL4SB83QpMdeOt4j6W6yv2nQ3actuOa1MJ/uaXLGbcPPQsl7Cw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=knDtX294vQYSjbFyLfKqP4nnUWeJm6eVXe5Lg9jYR+U=;
- b=2OvPSwQFk5i6sc2hS6/8hjPhXGh2vNtuWtEoHUyRJZUg+KGGIc+kcyakUgLcCn3ZxwccSkPUHY2O5tsL0F4xKb7RUKaAcMDgMz4W9w/m8z5QMQEE0rC7Xy2r5LdzyYoq84Od5asCEov2vBW/dvgVt2X1xhulOaTIKR+AqvlQDgU=
+ bh=4cjOdv6YHHTrKvwUsD3mkmqmLXnaW2KBGs6NgRsjjgU=;
+ b=nkRxHzBDLtwbanPJsf28aiKoxY5XmUle1nyDYoMsGV15WYR/FUpS3so+BdArvAqMf4U1Xpyaog/mT/1PfRwfQuOaGA9AeY3j6sYcv13kMGKqNkdItgDdV26338hIp3wGwGu78TY6Qk2Da+t3qrrQ51LzVNzQ9mhlesbotrk+Zwo=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0402.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:46::24) with
+ by AM9P192MB1268.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a9::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:05:06 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:04:20 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:06 +0000
+ 16:04:20 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 106/256] cl8k: add mac80211.h
-Date:   Thu, 17 Jun 2021 15:59:53 +0000
-Message-Id: <20210617160223.160998-107-viktor.barna@celeno.com>
+Subject: [RFC v1 065/256] cl8k: add dsp.c
+Date:   Thu, 17 Jun 2021 15:59:12 +0000
+Message-Id: <20210617160223.160998-66-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:30 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:44 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c080d996-01b8-4a50-4c33-08d931a99785
-X-MS-TrafficTypeDiagnostic: AM0P192MB0402:
+X-MS-Office365-Filtering-Correlation-Id: 4f010e6b-10e5-4f3a-665c-08d931a97c45
+X-MS-TrafficTypeDiagnostic: AM9P192MB1268:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM0P192MB04021ED51A0A1ADA2122E64FF60E9@AM0P192MB0402.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:773;
+X-Microsoft-Antispam-PRVS: <AM9P192MB12685C865C534BEA1635065AF60E9@AM9P192MB1268.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1417;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 9vDuC2Rh5O7lfrfMrlFU1az2euLKIIgxkkB+sWDQ8DsvKw/IslweynE4RMf21PW8/JaIVarCfutaWCAo9OY66i+ESF2QQ2wqV5XKY6U9KkollJNroCK3pyILwKey+svfD9ZuU1PLfcBCL1V5W6ofO9pPwUPXJX1SwfEVX7RhjDHehvq9/ZKzo7KIOIrIGf7S/JXtlBUETfTxINB53Rr3aG5d3LY8fmMepMFeDJDIwzM7IcL3zzLdbdJ8Ss7LiUFetNUFo2rC2w1pehqqMt8pXDnyxlRrd+US/Gg+P4/M7oGKOkvZD0bYVee5UIRt40RVwwcB9C0CcebRStDZD0fhxYK1QVzdKtvXgeztZILCi1+RVmi8MtKh4hWnPbRFQT+sOy4E8DAHFpO6XPG7tNNekywlUn8wHLNzgNbDBIKbgMKmvWXWmQX05u2PyufQw12IV2KVk5OzJEXDw82MUtoL/TecPdwQGsDeJJEiv/3IOG2e87vlgdr0OfQvxWbh6RLTpqdz3ya2z9XsiIrHrtdqbHeX/gfQImCy5rKcXR7slu9Yq6NpoGUJaKDZQJz+yvA6XxXZIXaiJ3GrHD+yv3yLWLVSUHmmamg6IEhYUxNDQjK0aL2Jn82NkZpWIhA5e1N3HDrEWN/5bjmBdM1Zbyrr33OT98v0it8usXtYJPdAHFcPvED4kz0pFMCZo5qBhbtw6iNAYpdPLqVSHJpw4amxBg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(39850400004)(136003)(376002)(396003)(366004)(346002)(6916009)(6512007)(9686003)(6666004)(52116002)(2616005)(186003)(16526019)(38100700002)(38350700002)(1076003)(6506007)(5660300002)(107886003)(55236004)(86362001)(6486002)(8936002)(956004)(26005)(8676002)(508600001)(2906002)(36756003)(54906003)(316002)(66946007)(66556008)(4326008)(66476007)(83380400001)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: rqucWJ69504ceQ5GtI2SBTklHgqgHkVdcoZxi6HMRDsbIOjYxBV8DmLWs01gRXdS5OZlmlyflmBULHi3kh2eJG9JxxHxRQYoMJzQ1WLNEq3Vmfck1aAE50eMKMfplAY8ZRHioUs1I6R8EmvVPCUmj4PPLknkkMWbZbUntnIK14ZHwjMN2+ON6x8sWiAG2TsKac+dzyJC4FqCneCap3/BPu8rCD9RUBXVQXaaSGRtMukfiNUnH5PeCgCjcAR+jBrCQ9HxQOoNgrNLCSUFMm4ituCZUK57P+Ds/ZYBKGTGYR686U4pdCNv5R6HldMtujdCFmlpA1McPA+t9UzMDyKCVbGGvkMPfhoNw/Y4DJiJg31c0kJWXj0MLgYGWJSZnYLZ/gDNJK4oz6OTJHT8n7569VPByyD2jlRDyllIIqcUc3czePt2NouxPo7nIyNT5QQgc36nZvy+sHYJfLuqq7yVoqSTDnZqpC94b522deWFJF6LyZch9Dqh+yXuajWssiFdn/qst+VGHwY9KK37vQwZm7axwaCCgopf3xin6PCPqXStlZ/tBMm9zPiYHAAscJuCAwRqW7vciSrEKEaty7pA5RvQrC/izr70KKlkBN6vIqUGTnaV/S2G2D1/l4AiDZPk2penyzMVrX/xVQsGl5TIGTHXeNReCBKGJ7KXmEf81DSkAG9Vz4YmsnZfl+FuuMkaLZN0mBIKPf46dgzQmpUMNw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(6486002)(956004)(54906003)(4326008)(2616005)(186003)(38100700002)(16526019)(8676002)(5660300002)(38350700002)(8936002)(26005)(2906002)(6512007)(9686003)(52116002)(83380400001)(6916009)(66946007)(66556008)(66476007)(86362001)(55236004)(498600001)(6666004)(6506007)(1076003)(30864003)(107886003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9zmi1Qp0FYOfWwi3otmrqQ0I650og7wAxLfofO01XL6ejd4bLWHy7s7iLOVi?=
- =?us-ascii?Q?7IwyzbWJQCOnMvfWvA7KVr8IMJ0jIZPZQLZDnbwUWu0Nz/+c1HSFt4a4dIKf?=
- =?us-ascii?Q?PJd6bfMV/t82l/DLXYBL1G0haM7M9J+Wznkw82dYorO31hzXU64kr+BeTUBj?=
- =?us-ascii?Q?H3WXwncruvOsp6mb+4BUA/NGhRnGTv4Fe2Bt7XS13whHCQ5lEHSDHOS26KfQ?=
- =?us-ascii?Q?JCC1mp31m8hUaf+B/5A/PGgUlG73Ofz6WOBy+DBk4RtDbbQ39TvlISKfUku2?=
- =?us-ascii?Q?jljJiPcbKBeNyGLGaRuDuvyTRmXPH1kHvHJ+6Xl/xyBPeyAq5rHDav+3lHEx?=
- =?us-ascii?Q?yH1KobTlBdXWTeLyh0zEjOCPwVkzwoJuvTK25Z50c8euR81yASuJR18kMAsQ?=
- =?us-ascii?Q?so2XmPvxrxuO/fq6TwSvk/xegLp8ZT6aHsvhrMPykjTC3j7TceDiwcaeFbIh?=
- =?us-ascii?Q?9juSyVZI5WQVGTnvRp3xL+w9IzFXRDc6isuESnUi0STIvpKel0H8eoTVpwoh?=
- =?us-ascii?Q?cncx2vDZgwptjfT1vQbRt+hMU+py/yU3guj3hBEIzEjvJhxz3y8udHGVfMle?=
- =?us-ascii?Q?UiWFDMcc6QCxnZSoeopPRWUuI8yh4lBg7+7vVeNOJt7m/Qxtj8GGdZ6PiuOg?=
- =?us-ascii?Q?4HSb/2CHT71+0UZEKceBKa9Rj/0NmijIxJ9+UqiB/Ds80n9Xj1abwUT5mMuU?=
- =?us-ascii?Q?YNZ51xgyajgVh2v6mL2DCmy2UFihjcJRDfpImWOpwSAbrpDflXtEeOAChJnN?=
- =?us-ascii?Q?nQTZ3HCw4fp3cpZz2cuiGBY9LQX7ewEi1/nCPtccWPxa33buZbtN098V3emj?=
- =?us-ascii?Q?hTWzN3PDtyRaBSMVPAyEKWSWYZ9EGYCHWLi3h/38GAmsPg8WeBDwGYB0+wnz?=
- =?us-ascii?Q?Xcx0IsXl6/3Q80uvgkfmcEZsCkqQbQ26J5fQAtJ8FTknWVm30LCZ8HvM8ZZe?=
- =?us-ascii?Q?Fd2FjUywpKYci8XvPNoiRrokHIvsbBv6u3ZegDudaYLSi9Vn0P6eqYrEmq89?=
- =?us-ascii?Q?F4cH1/M9aP7bPjHFKtZxpqUcEm071GUvpx+iVwJYYYZqTdyxNqa8IzV+Zk6C?=
- =?us-ascii?Q?lgYzfMn3+wb703Mun7Fj3gfUs1z8e46Ldn1LZ9A/5pChdoCVhaIlDqE986xE?=
- =?us-ascii?Q?+Uf/MK09p80jF9fyL8Iax83l2hTUWTh/yD8mBrQR62KtyuRa/SDDh6MNDjEP?=
- =?us-ascii?Q?ztVoe8ZRZsZO9/xvM6aZq2T21ZTQDbtI7lrG0Y10vZyljFMXXuxJlGRRCY2z?=
- =?us-ascii?Q?dIJn6YFcGSt7kdeZSQlzQbYvwLPRdDcA/CUl74eHAEFrvEXfezffPaZYMkTY?=
- =?us-ascii?Q?yp6tYGDAq8X4hIInbiPWbQYd?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VbT2p9ZAe/wdRN6EGJTK5KigPyIbK3djF2YPCrSBk/bO3OEUkfEDMzj98lDg?=
+ =?us-ascii?Q?pKUdd0TTHgYZeBtS5WYJEvk/Xlh9zHh6yVTEkn8BprJrkDoeltxV+OH3Fijv?=
+ =?us-ascii?Q?d1qvmzQv3XdNXuH/lBwEYflN8F6WhPsi3rHX3bCExl4phFCryjdAnASLi9FH?=
+ =?us-ascii?Q?CY8F1UlWk9h199B5fTSy83SqivMomVWvarzX0uwgHqWF1zrBt+zovm2uvPMx?=
+ =?us-ascii?Q?T9jb9QDdV0y7+e2gNMc18wuo1RRlY15r+pnNRuCQ6jXUxLQKEa1fTetv/S79?=
+ =?us-ascii?Q?DgiPGOAMcDOcHwmRyDf+r7ygZpD6DrEbUL7LPVScIPXPV7elvAWtvHagyyCT?=
+ =?us-ascii?Q?qzknxIT/A5UZqXGtwJgJ3wFvxXGIe8U6Q1y/yesELRTIFTHniowM5dGbkDyq?=
+ =?us-ascii?Q?YCnReTdvyt/pxKivkK1v/SdefMVuU7dunihjSZd7QLcy9pVCptru6/E/d6dS?=
+ =?us-ascii?Q?0ve5A5W54nyOUbNnUdCb4d4ijolPDDur5E/rU1O5ozJ+YGimTEU2Z4sA4Ud4?=
+ =?us-ascii?Q?7uV6X0X9QojJ4f6xVL6+r8fx1biTo0efZdQP3psl1qcHMLqdVfTCZ8TztREM?=
+ =?us-ascii?Q?QiWwuXIg0mwT1okLK+GwgbDho9XJglz06Zm1x0V1lSOzu9ezfXTGoSULtcRj?=
+ =?us-ascii?Q?QMleyySb4zzysvb9K25jfAnV7Mz87/wVqShvRieRrLrmwF/uf/ViQV3M38Dm?=
+ =?us-ascii?Q?lBL1AZ5rxymj8xxxl3GDTHvPJiUMkRCg1PRbHfx5YHQwI44vpaFl1J+N64DO?=
+ =?us-ascii?Q?wEPwn6SjibLyumCTBN+5Sg2SzURxGI/nJul/r7p0N68Wfxfi6olbNEz2TEwx?=
+ =?us-ascii?Q?+USBtmkjgkORPyG7PLhfh9ydVR8ze519Papw/KTkJuJFAAFNyddCksw/ig4d?=
+ =?us-ascii?Q?AB7zLzJtEDAwbxscG5yzga+tceOSdrUu0eRdJ1/F2vncmlvMWuVsGnTy/F2Y?=
+ =?us-ascii?Q?2iqL3tJM3ya4q4XfBw5jzduvOd33aJlyHC0xm6rX9LigfVigN8YjvdzxaBbA?=
+ =?us-ascii?Q?GBBYjUxKetfrjoiNcHwSAA++l+TVLXFINeSOOlAy+x5a1ufM9EKc9b/HfeWA?=
+ =?us-ascii?Q?eY3Eht3swaYz8xlUQ/PtLyJ+1ebTzGdYfOydti5/x+81gRJdKiJgNJ7xgV3j?=
+ =?us-ascii?Q?cJxwk7dRFSYiym5LI2CLDPzdLLUyYBgW6EZKZFmpk5CsQvEXk+50G8103Cgk?=
+ =?us-ascii?Q?ecAc/Tbxkg9Hz2hoXyfhAsN8w00T1QMfBQTWzpLXifn50A9jKbKzPHTraks7?=
+ =?us-ascii?Q?aoP5/seleL5doPuKESAHkRSmC5Yqq1s7ChuJAbudxjYKzlfW4hd3b1t7+qrJ?=
+ =?us-ascii?Q?cIu5OKOUuBaq4kt0P4sDy3VN?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c080d996-01b8-4a50-4c33-08d931a99785
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4f010e6b-10e5-4f3a-665c-08d931a97c45
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:31.3175
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:45.6819
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FkOn0DvRVSAD5RPVtkwIUfLrnzKTj95+lbapZNfrFGWCvwQuiDBAmemeicSjdZkhH6BHg0CM+nMoLqSWScYu6Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0402
+X-MS-Exchange-CrossTenant-UserPrincipalName: PUXhGISd/kF68uUMeAiFNLXP0SBXX34N/Uwa5MjUetSnHl/9Z4uJeUzj2gYTX/vHe+Jqg7LFDPTUYVDmJqV9uw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1268
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,340 +128,657 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/mac80211.h | 310 ++++++++++++++++++++
- 1 file changed, 310 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/mac80211.h
+ drivers/net/wireless/celeno/cl8k/dsp.c | 611 +++++++++++++++++++++++++
+ 1 file changed, 611 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dsp.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/mac80211.h b/drivers/net/wire=
-less/celeno/cl8k/mac80211.h
+diff --git a/drivers/net/wireless/celeno/cl8k/dsp.c b/drivers/net/wireless/=
+celeno/cl8k/dsp.c
 new file mode 100644
-index 000000000000..57bd08d5a730
+index 000000000000..cf9646cd1ed4
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/mac80211.h
-@@ -0,0 +1,310 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/dsp.c
+@@ -0,0 +1,611 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_MAC80211_H
-+#define CL_MAC80211_H
++#include "reg/reg_modem_gcu.h"
++#include "reg/reg_macdsp_api.h"
++#include "reg/reg_cmu.h"
++#include "reg/reg_access.h"
++#include "reg/ceva.h"
++#include "dsp.h"
++#include "hw.h"
++#include <linux/firmware.h>
 +
-+#include <linux/types.h>
-+#include <linux/if_ether.h>
++#define BUSY_WAIT_LIMIT 10000
 +
-+extern const int ieee802_1d_to_ac[8];
-+
-+#define IEEE80211_CTRL_A_CTRL_MASK  0x3
-+
-+#define IEEE80211_CTRL_A_CTRL_ID_OM  0x1
-+#define IEEE80211_CTRL_A_CTRL_ID_UPH 0x4
-+
-+#define IEEE80211_CTRL_UPH_OFFSET 6
-+
-+static inline bool ieee80211_has_a_ctrl(u32 val)
++static int dsp_busy_wait(struct cl_hw *cl_hw, u32 control_reg)
 +{
-+       return ((val & IEEE80211_CTRL_A_CTRL_MASK) =3D=3D IEEE80211_CTRL_A_=
-CTRL_MASK);
++       int i;
++
++       for (i =3D 0; i < BUSY_WAIT_LIMIT; i++) {
++               /* Poll Bit29 to verify DMA transfer has ended. */
++               if ((cl_reg_read(cl_hw, control_reg) & 0x20000000) =3D=3D 0=
+)
++                       return 0;
++
++               cpu_relax();
++       }
++
++       return -EIO;
 +}
 +
-+struct ieee80211_a_control {
-+       union {
-+               struct {
-+                       u32 b0 : 1,
-+                          b1 : 1,
-+                          control_id : 4,
-+                          control_info : 26;
-+               } __packed fields;
-+               u32 value;
-+       } u;
-+} __packed;
++static void cl_dsp_boot(struct cl_hw *cl_hw)
++{
++       struct cl_chip *chip =3D cl_hw->chip;
 +
-+struct ieee80211_uph_ctrl {
-+       union {
-+               struct {
-+                       u8 pwr_headroom : 5,
-+                          min_pwr      : 1,
-+                          reserved     : 2;
-+               } __packed fields;
-+               u8 value;
-+       } u;
-+} __packed;
++       if (cl_hw_is_tcv0(cl_hw)) {
++               /* Disable ceva_free_clk */
++               cmu_phy_0_clk_en_ceva_0_clk_en_setf(chip, 0);
++               /* Assert Ceva reset */
++               cmu_phy_0_rst_ceva_0_global_rst_n_setf(chip, 0);
++       } else {
++               /* Disable ceva_free_clk */
++               cmu_phy_1_clk_en_ceva_1_clk_en_setf(chip, 0);
++               /* Assert Ceva reset */
++               cmu_phy_1_rst_ceva_1_global_rst_n_setf(chip, 0);
++       }
 +
-+/* HTC header might includes HT/VHT/HE variant */
-+/* This struct implements only HE variant type */
-+struct ieee80211_qos_htc_hdr {
-+       __le16 frame_control;
-+       __le16 duration_id;
-+       u8 addr1[ETH_ALEN];
-+       u8 addr2[ETH_ALEN];
-+       u8 addr3[ETH_ALEN];
-+       __le16 seq_ctrl;
-+       __le16 qos_ctrl;
-+       struct ieee80211_a_control a_ctrl;
-+} __packed __aligned(2);
++       /* Set Ceva boot=3D1 */
++       modem_gcu_ceva_ctrl_boot_setf(cl_hw, 1);
++       /* Set Ceva vector */
++       modem_gcu_ceva_vec_set(cl_hw, 0);
 +
-+/* WLAN_EID_BSS_COEX_2040 =3D 72 */
-+/* 802.11n 7.3.2.61 */
-+struct ieee80211_bss_coex_20_40_ie {
-+       u8 element_id;
-+       u8 len;
-+       u8 info_req : 1;
-+       /* Inter-BSS set 1 when prohibits a receiving BSS from operating as=
- a 20/40 Mhz BSS */
-+       u8 intolerant40 : 1;
-+       /* Intra-BSS set 1 when prohibits a receiving AP from operating its=
- BSS as a 20/40MHz BSS */
-+       u8 bss20_width_req : 1;
-+       u8 obss_scan_exemp_req : 1;
-+       u8 obss_scan_exemp_grant : 1;
-+       u8 rsv : 3;
-+} __packed;
++       if (cl_hw_is_tcv0(cl_hw)) {
++               /* Enable ceva_clk */
++               cmu_phy_0_clk_en_ceva_0_clk_en_setf(chip, 1);
++               /* Disabel ceva_clk */
++               cmu_phy_0_clk_en_ceva_0_clk_en_setf(chip, 0);
++               /* De-Assert Ceva reset - Reset Release */
++               cmu_phy_0_rst_ceva_0_global_rst_n_setf(chip, 1);
++               /* Enable ceva_clk */
++               cmu_phy_0_clk_en_ceva_0_clk_en_setf(chip, 1);
++       } else {
++               /* Enable ceva_clk */
++               cmu_phy_1_clk_en_ceva_1_clk_en_setf(chip, 1);
++               /* Disabel ceva_clk */
++               cmu_phy_1_clk_en_ceva_1_clk_en_setf(chip, 0);
++               /* De-Assert Ceva reset - Reset Release */
++               cmu_phy_1_rst_ceva_1_global_rst_n_setf(chip, 1);
++               /* Enable ceva_clk */
++               cmu_phy_1_clk_en_ceva_1_clk_en_setf(chip, 1);
++       }
 +
-+/* WLAN_EID_BSS_INTOLERANT_CHL_REPORT =3D 73 */
-+/*802.11n 7.3.2.59 */
-+struct ieee80211_bss_intolerant_chl_report_ie {
-+       u8 element_id;
-+       u8 len;
-+       u8 regulatory_class;
-+       u8 ch_list[0];
-+} __packed;
++       /* Release Ceva external_wait */
++       modem_gcu_ceva_ctrl_external_wait_setf(cl_hw, 0);
++       /* Set Ceva boot=3D0 */
++       modem_gcu_ceva_ctrl_boot_setf(cl_hw, 0);
++}
 +
-+enum ieee80211_twt_setup_command {
-+       IEEE80211_TWT_SETUP_COMMAND_REQUEST =3D 0,
-+       IEEE80211_TWT_SETUP_COMMAND_SUGGEST =3D 1,
-+       IEEE80211_TWT_SETUP_COMMAND_DEMAND =3D 2,
-+       IEEE80211_TWT_SETUP_COMMAND_GROUPING =3D 3,
-+       IEEE80211_TWT_SETUP_COMMAND_ACCEPT =3D 4,
-+       IEEE80211_TWT_SETUP_COMMAND_ALTERNATE =3D 5,
-+       IEEE80211_TWT_SETUP_COMMAND_DICTATE =3D 6,
-+       IEEE80211_TWT_SETUP_COMMAND_REJECT =3D 7
-+};
++static void config_dma_for_code_copy(struct cl_hw *cl_hw, u32 page)
++{
++       /* Configure Program DMA to copy FW code from Shared PMEM to intern=
+al PMEM. */
 +
-+union ieee80211_twt_control_field {
-+       struct {
-+               u8 ndp_paging_indicator:1,
-+                  responder_pm_mode:1,
-+                  negotiation_type:2,
-+                  twt_info_frame_disabled:1,
-+                  wake_duration_unit:1, /* 0 - 256us, 1 - 1024us */
-+                  reserved:2;
-+       } __packed fields;
-+       u8 value;
-+} __packed;
++       /* External address to read from. */
++       cl_reg_write(cl_hw, CEVA_CPM_PDEA_REG, CEVA_SHARED_PMEM_BASE_ADDR_I=
+NTERNAL);
++       /* Internal address to write to. */
++       cl_reg_write(cl_hw, CEVA_CPM_PDIA_REG, CEVA_SHARED_PMEM_SIZE * page=
+);
++       /* Page size */
++       cl_reg_write(cl_hw, CEVA_CPM_PDTC_REG, CEVA_SHARED_PMEM_SIZE);
++}
 +
-+struct ieee80211_twt_individual_elem {
-+       union ieee80211_twt_control_field control;
-+       union {
-+               struct {
-+                       u16 request               :1,
-+                           setup_cmd             :3,
-+                           trigger               :1,
-+                           implicit              :1,
-+                           flow_type             :1,
-+                           flow_id               :3,
-+                           wake_interval_exponent:5,
-+                           protection            :1;
-+               } __packed fields;
-+               u16 value;
-+       } req_type;
-+       u64 target_wake_time;
-+       u8 min_wake_duration;
-+       u16 wake_interval_mantissa;
-+       u8 channel;
-+} __packed;
++static void config_dma_for_external_data_copy(struct cl_hw *cl_hw)
++{
++       /* Configure Program DMA to copy FW code from Shared XMEM to intern=
+al XMEM. */
 +
-+struct ieee80211_twt_broadcast_elem {
-+       union ieee80211_twt_control_field control;
-+       union {
-+               struct {
-+                       u16 request                 :1,
-+                           setup_cmd               :3,
-+                           trigger                 :1,
-+                           last_broadcast_param_set:1,
-+                           flow_type               :1,
-+                           recommendation          :3,
-+                           wake_interval_exponent  :5,
-+                           reserved                :1;
-+               } __packed fields;
-+               u16 value;
-+       } req_type;
-+       u16 target_wake_time;
-+       u8 min_wake_duration;
-+       u16 wake_interval_mantissa;
-+       union {
-+               struct {
-+                       u16 reserved   :3,
-+                           id         :5,
-+                           persistence:8;
-+               } __packed fields;
-+               u16 value;
-+       } broadcast_twt_info;
-+} __packed;
++       /* External address to read from. */
++       cl_reg_write(cl_hw, CEVA_CPM_DDEA_REG, CEVA_SHARED_XMEM_BASE_ADDR_I=
+NTERNAL);
++       /* Internal address to write to. */
++       cl_reg_write(cl_hw, CEVA_CPM_DDIA_REG, 0);
++       /* Page size + DMA direction is write */
++       cl_reg_write(cl_hw, CEVA_CPM_DDTC_REG,
++                    CEVA_SHARED_XMEM_SIZE | CEVA_CPM_DDTC_WRITE_COMMAND);
++}
 +
-+/* Union options that are not included in 'struct ieee80211_mgmt' */
-+struct cl_ieee80211_mgmt {
-+       __le16 frame_control;
-+       __le16 duration;
-+       u8 da[ETH_ALEN];
-+       u8 sa[ETH_ALEN];
-+       u8 bssid[ETH_ALEN];
-+       __le16 seq_ctrl;
-+       union {
-+               struct {
-+                       __le16 auth_alg;
-+                       __le16 auth_transaction;
-+                       __le16 status_code;
-+                       /* Possibly followed by Challenge text */
-+                       u8 variable[0];
-+               } __packed auth;
-+               struct {
-+                       __le16 reason_code;
-+               } __packed deauth;
-+               struct {
-+                       __le16 capab_info;
-+                       __le16 listen_interval;
-+                       /* Followed by SSID and Supported rates */
-+                       u8 variable[0];
-+               } __packed assoc_req;
-+               struct {
-+                       __le16 capab_info;
-+                       __le16 status_code;
-+                       __le16 aid;
-+                       /* Followed by Supported rates */
-+                       u8 variable[0];
-+               } __packed assoc_resp, reassoc_resp;
-+               struct {
-+                       __le16 capab_info;
-+                       __le16 listen_interval;
-+                       u8 current_ap[ETH_ALEN];
-+                       /* Followed by SSID and Supported rates */
-+                       u8 variable[0];
-+               } __packed reassoc_req;
-+               struct {
-+                       __le16 reason_code;
-+               } __packed disassoc;
-+               struct {
-+                       __le64 timestamp;
-+                       __le16 beacon_int;
-+                       __le16 capab_info;
-+                       /*
-+                        * Followed by some of SSID, Supported rates,
-+                        * FH Params, DS Params, CF Params, IBSS Params, TI=
-M
-+                        */
-+                       u8 variable[0];
-+               } __packed beacon;
-+               struct {
-+                       /* Only variable items: SSID, Supported rates */
-+                       u8 variable[0];
-+               } __packed probe_req;
-+               struct {
-+                       __le64 timestamp;
-+                       __le16 beacon_int;
-+                       __le16 capab_info;
-+                       /*
-+                        * Followed by some of SSID, Supported rates,
-+                        * FH Params, DS Params, CF Params, IBSS Params
-+                        */
-+                       u8 variable[0];
-+               } __packed probe_resp;
-+               struct {
-+                       u8 category;
-+                       union {
-+                               struct {
-+                                       u8 action_code;
-+                                       struct ieee80211_bss_coex_20_40_ie =
-bss_coex_20_40_ie;
-+                                       /*
-+                                        * This IE May appear zero or more =
-times,
-+                                        * that situation wasn't handled he=
-re.
-+                                        */
-+                                       struct ieee80211_bss_intolerant_chl=
-_report_ie
-+                                               bss_intolerant_chl_report_i=
-e;
-+                               } __packed coex_2040_mgmt;
-+                               struct {
-+                                       u8 action_code;
-+                                       u8 dialog_token;
-+                                       u8 twt_elem_id;
-+                                       u8 twt_elem_length;
-+                                       struct ieee80211_twt_individual_ele=
-m twt_elem;
-+                               } __packed twt_individual_setup;
-+                               struct {
-+                                       u8 action_code;
-+                                       u8 dialog_token;
-+                                       u8 twt_elem_id;
-+                                       u8 twt_elem_length;
-+                                       struct ieee80211_twt_broadcast_elem=
- twt_elem;
-+                               } __packed twt_broadcast_setup;
-+                               struct {
-+                                       u8 action_code;
-+                                       /*
-+                                        * reserved bits can be combined wi=
-th flow_id to
-+                                        * form broadcast TWT id of 5 bits =
-in case that
-+                                        * negotiation_type =3D 3
-+                                        */
-+                                       u8 flow_id :3,
-+                                          reserved:2,
-+                                          negotiation_type:2,
-+                                          teardown_all_twt:1;
-+                               } __packed twt_individual_teardown;
-+                               struct {
-+                                       u8 action_code;
-+                                       u8 flow_id:3,
-+                                          response_requested:1,
-+                                          next_twt_request:1,
-+                                          next_twt_subfield_size:2,
-+                                          all_twt:1;
-+                                       u8 next_twt[64];
-+                               } __packed twt_information;
-+                       } u;
-+               } __packed action;
-+       } u;
-+} __packed __aligned(2);
++static int cl_dsp_hex_load(struct cl_hw *cl_hw, const u8 *buf,
++                          off_t offset, size_t size, size_t buf_size)
++{
++       u8 single_buf[4] =3D {0};
++       u32 bin_data =3D 0;
++       u8 next_byte;
++       u8 byte_num =3D 0;
++       int ret =3D 0;
++       ssize_t oft =3D 0;
++       size_t real_size =3D min(size * 3, buf_size);
++       /*
++        * CEVA_SHARED_PMEM_BASE_ADDR_FROM_HOST is global and we don't
++        * want to add TCV reg offset.
++        */
++       bool chip_reg =3D (offset =3D=3D CEVA_SHARED_PMEM_BASE_ADDR_FROM_HO=
+ST);
 +
-+/*
-+ * Information Element IDs
-+ * Should be part of 'enum ieee80211_eid'
-+ */
-+#define WLAN_EID_TWT 216
++       if (buf_size % 3) {
++               cl_dbg_err(cl_hw, "DSP size %zu must be divided by 3 !!!\n"=
+,
++                          buf_size);
++               return -EINVAL;
++       }
 +
-+/*
-+ * Action category code
-+ * Should be part of 'enum ieee80211_category'
-+ */
-+#define WLAN_CATEGORY_UNPROTECTED_S1G 22
-+#define WLAN_CATEGORY_S1G 23
++       while (oft < real_size) {
++               memcpy(single_buf, buf + oft, 3);
++               /* Each line contains 2 hex digits + a line feed, i.e. 3 by=
+tes */
++               ret =3D kstrtou8(single_buf, 16, &next_byte);
++               if (ret < 0) {
++                       cl_dbg_err(cl_hw,
++                                  "ret =3D %d, oft =3D %zu,"
++                                  "single_buf =3D 0x%x 0x%x 0x%x 0x%x\n",
++                                  ret, oft, single_buf[0], single_buf[1],
++                                  single_buf[2], single_buf[3]);
++                       return ret;
++               }
 +
-+enum ieee80211_unprotected_s1g_actioncode {
-+       WLAN_UNPROT_S1G_ACTION_AID_SWITCH_REQUEST =3D 0,
-+       WLAN_UNPROT_S1G_ACTION_AID_SWITCH_RESPONSE =3D 1,
-+       WLAN_UNPROT_S1G_ACTION_SYNC_CONTROL =3D 2,
-+       WLAN_UNPROT_S1G_ACTION_STA_INFO_ANNOUNCEMENT =3D 3,
-+       WLAN_UNPROT_S1G_ACTION_EDCA_PARAMETER_SET =3D 4,
-+       WLAN_UNPROT_S1G_ACTION_EL_OPERATION =3D 5,
-+       WLAN_UNPROT_S1G_ACTION_TWT_SETUP =3D 6,
-+       WLAN_UNPROT_S1G_ACTION_TWT_TEARDOWN =3D 7,
-+       WLAN_UNPROT_S1G_ACTION_SECTORIZED_GROUP_ID_LIST =3D 8,
-+       WLAN_UNPROT_S1G_ACTION_SECTOR_ID_FEEDBACK =3D 9,
-+       WLAN_UNPROT_S1G_ACTION_RESERVED =3D 10,
-+       WLAN_UNPROT_S1G_ACTION_TWT_INFORMATION =3D 11,
-+};
++               /* Little-endian order. */
++               bin_data +=3D next_byte << (8 * byte_num);
++               byte_num =3D (byte_num + 1) % 4;
 +
-+/*
-+ * Extended Channel Switching capability to be set in the 1st byte of
-+ * the @WLAN_EID_EXT_CAPABILITY information element
-+ */
-+#define WLAN_EXT_CAPA1_2040_BSS_COEX_MGMT_ENABLED BIT(0)
-+#define WLAN_EXT_CAPA11_COMPLETE_LIST_OF_NONTXBSSID_PROFILES BIT(0)
++               /* Read 4 lines from the file, and then write. */
++               if (byte_num =3D=3D 0) {
++                       if (chip_reg)
++                               cl_reg_write_chip(cl_hw->chip, offset, bin_=
+data);
++                       else
++                               cl_reg_write_direct(cl_hw, offset, bin_data=
+);
++                       offset +=3D 4;
++                       bin_data =3D 0;
++               }
 +
-+#endif /* CL_MAC80211_H */
++               memset(&single_buf, 0, sizeof(single_buf));
++               oft +=3D 3;
++       }
++
++       return 0;
++}
++
++static int load_dsp_code(struct cl_hw *cl_hw)
++{
++       struct cl_chip *chip =3D cl_hw->chip;
++       u32 real_size;
++       u32 page;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       u8 *buf =3D NULL;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s",
++                cl_hw->conf->ce_dsp_code);
++
++       cl_dbg_verbose(cl_hw, "from %s\n", cl_hw->conf->ce_dsp_code);
++
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to get %s, with error: %x!\n",
++                          path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++       buf =3D (u8 *)fw->data;
++
++       for (page =3D 0; page < CEVA_MAX_PAGES; page++) {
++               /* Copy DSP code (one page each time) */
++               ret =3D  cl_dsp_hex_load(cl_hw, buf,
++                                      CEVA_SHARED_PMEM_BASE_ADDR_FROM_HOST=
+,
++                                      CEVA_SHARED_PMEM_SIZE, size);
++               if (ret !=3D 0) {
++                       cl_dbg_err(cl_hw, "Failed to load pmem page 0x%x!\n=
+", page);
++                       break;
++               }
++
++               config_dma_for_code_copy(cl_hw, page);
++               ret =3D dsp_busy_wait(cl_hw, CEVA_CPM_PDTC_REG);
++
++               if (ret) {
++                       cl_dbg_err(cl_hw, "dsp_busy_wait failed!\n");
++                       goto out;
++               }
++
++               real_size =3D min_t(u32, CEVA_SHARED_PMEM_SIZE * 3, size);
++               buf +=3D real_size;
++               size -=3D real_size;
++       }
++
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static int load_dsp_data(struct cl_hw *cl_hw)
++{
++       struct cl_chip *chip =3D cl_hw->chip;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s",
++                cl_hw->conf->ce_dsp_data);
++
++       cl_dbg_verbose(cl_hw, "from %s\n", cl_hw->conf->ce_dsp_data);
++
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to get %s, with error: %x!\n",
++                          path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++
++       ret =3D cl_dsp_hex_load(cl_hw, fw->data, REG_MACDSP_API_BASE_ADDR,
++                             CEVA_DSP_DATA_SIZE, size);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load HEX file\n");
++               goto out;
++       }
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static int load_dsp_external_data(struct cl_hw *cl_hw)
++{
++       /*
++        * Shared XMEM is not accessible by host.
++        * Copy the XMEM section to DRAM first and then use CEVA internal D=
+MA to copy to
++        * SHARED XMEM.
++        */
++       struct cl_chip *chip =3D cl_hw->chip;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s",
++                cl_hw->conf->ce_dsp_external_data);
++
++       cl_dbg_verbose(cl_hw, "from %s\n", cl_hw->conf->ce_dsp_external_dat=
+a);
++
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to get %s, with error: %x!\n",
++                          path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++
++       ret =3D cl_dsp_hex_load(cl_hw, fw->data, REG_MACDSP_API_BASE_ADDR,
++                             CEVA_DSP_EXT_DATA_SIZE, size);
++
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load HEX file\n");
++               goto out;
++       }
++
++       config_dma_for_external_data_copy(cl_hw);
++       ret =3D dsp_busy_wait(cl_hw, CEVA_CPM_DDTC_REG);
++
++       if (ret) {
++               cl_dbg_err(cl_hw, "dsp_busy_wait failed!\n");
++               goto out;
++       }
++
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static bool cl_dsp_is_universal_file(struct cl_chip *chip)
++{
++       return (cl_chip_is_tcv0_enabled(chip) &&
++               cl_chip_is_tcv1_enabled(chip) &&
++               !strcmp(chip->cl_hw_tcv0->conf->ce_dsp_code,
++                       chip->cl_hw_tcv1->conf->ce_dsp_code));
++}
++
++static int load_dsp_code_dual(struct cl_chip *chip, const char *filename)
++{
++       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
++       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
++       u32 real_size;
++       u32 page;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       u8 *buf =3D NULL;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s", filename);
++       cl_dbg_chip_verbose(chip, "from %s\n", filename);
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++
++       if (ret) {
++               cl_dbg_chip_err(chip, "Failed to get %s, with error: %x!\n"=
+,
++                               path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++       buf =3D (u8 *)fw->data;
++
++       for (page =3D 0; page < CEVA_MAX_PAGES; page++) {
++               /* Copy DSP code (one page each time) */
++               ret =3D cl_dsp_hex_load(chip->cl_hw_tcv0, buf,
++                                     CEVA_SHARED_PMEM_BASE_ADDR_FROM_HOST,
++                                     CEVA_SHARED_PMEM_SIZE, size);
++               if (ret) {
++                       cl_dbg_chip_err(chip, "Failed to load pmem page 0x%=
+x!\n", page);
++                       break;
++               }
++
++               config_dma_for_code_copy(cl_hw_tcv0, page);
++               ret =3D dsp_busy_wait(cl_hw_tcv0, CEVA_CPM_PDTC_REG);
++
++               if (ret) {
++                       cl_dbg_err(cl_hw_tcv0, "dsp_busy_wait failed\n");
++                       goto out;
++               }
++
++               config_dma_for_code_copy(cl_hw_tcv1, page);
++               ret =3D dsp_busy_wait(cl_hw_tcv1, CEVA_CPM_PDTC_REG);
++
++               if (ret) {
++                       cl_dbg_err(cl_hw_tcv1, "dsp_busy_wait failed\n");
++                       goto out;
++               }
++
++               real_size =3D min_t(u32, CEVA_SHARED_PMEM_SIZE * 3, size);
++               buf +=3D real_size;
++               size -=3D real_size;
++       }
++
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static int load_dsp_external_data_dual(struct cl_chip *chip, const char *f=
+ilename)
++{
++       /*
++        * Shared XMEM is not accessible by host.
++        * Copy the XMEM section to DRAM first and then use CEVA internal D=
+MA to copy to
++        * SHARED XMEM.
++        */
++       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
++       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s", filename);
++       cl_dbg_chip_verbose(chip, "from %s\n", filename);
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++
++       if (ret) {
++               cl_dbg_chip_err(chip, "Failed to get %s, with error: %x!\n"=
+,
++                               path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++
++       /* TCV0 */
++       ret =3D cl_dsp_hex_load(cl_hw_tcv0, fw->data, REG_MACDSP_API_BASE_A=
+DDR,
++                             CEVA_DSP_EXT_DATA_SIZE, size);
++
++       if (ret) {
++               cl_dbg_err(cl_hw_tcv0, "Failed to load HEX file\n");
++               goto out;
++       }
++
++       config_dma_for_external_data_copy(cl_hw_tcv0);
++       ret =3D dsp_busy_wait(cl_hw_tcv0, CEVA_CPM_DDTC_REG);
++
++       if (ret) {
++               cl_dbg_err(cl_hw_tcv0, "dsp_busy_wait failed!\n");
++               goto out;
++       }
++
++       /* TCV1 */
++       ret =3D cl_dsp_hex_load(cl_hw_tcv1, fw->data, REG_MACDSP_API_BASE_A=
+DDR,
++                             CEVA_DSP_EXT_DATA_SIZE, size);
++
++       if (ret) {
++               cl_dbg_err(cl_hw_tcv1, "Failed to load HEX file\n");
++               goto out;
++       }
++
++       config_dma_for_external_data_copy(cl_hw_tcv1);
++       ret =3D dsp_busy_wait(cl_hw_tcv1, CEVA_CPM_DDTC_REG);
++
++       if (ret) {
++               cl_dbg_err(cl_hw_tcv1, "dsp_busy_wait failed!\n");
++               goto out;
++       }
++
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static int load_dsp_data_dual(struct cl_chip *chip, const char *filename)
++{
++       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
++       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
++       const struct firmware *fw;
++       size_t size =3D 0;
++       char path_name[CL_PATH_MAX] =3D {0};
++       int ret;
++
++       snprintf(path_name, sizeof(path_name), "cl8k/%s", filename);
++       cl_dbg_chip_verbose(chip, "from %s\n", filename);
++       ret =3D request_firmware(&fw, path_name, chip->dev);
++
++       if (ret) {
++               cl_dbg_chip_err(chip, "Failed to get %s, with error: %x!\n"=
+,
++                               path_name, ret);
++               goto out;
++       }
++
++       size =3D fw->size;
++
++       ret =3D cl_dsp_hex_load(cl_hw_tcv0, fw->data,
++                             REG_MACDSP_API_BASE_ADDR,
++                             CEVA_DSP_DATA_SIZE, size);
++
++       if (ret !=3D 0) {
++               cl_dbg_err(cl_hw_tcv0, "Failed to load HEX file\n");
++               goto out;
++       }
++
++       ret =3D cl_dsp_hex_load(cl_hw_tcv1, fw->data,
++                             REG_MACDSP_API_BASE_ADDR,
++                             CEVA_DSP_DATA_SIZE, size);
++
++       if (ret !=3D 0) {
++               cl_dbg_err(cl_hw_tcv1, "Failed to load HEX file\n");
++               goto out;
++       }
++
++out:
++       release_firmware(fw);
++
++       return ret;
++}
++
++static void print_ceva_core_info(struct cl_hw *cl_hw)
++{
++       cl_dbg_trace(cl_hw, "CEVA_CORE_VERSION_ADDR=3D0x%X.\n",
++                    cl_reg_read(cl_hw, CEVA_CORE_VERSION_ADDR));
++       cl_dbg_trace(cl_hw, "CEVA_CORE_ID_ADDR=3D0x%X.\n",
++                    cl_reg_read(cl_hw, CEVA_CORE_ID_ADDR));
++}
++
++static int cl_dsp_load_dual(struct cl_chip *chip)
++{
++       int ret =3D 0;
++       struct cl_hw *cl_hw_tcv0 =3D chip->cl_hw_tcv0;
++       struct cl_hw *cl_hw_tcv1 =3D chip->cl_hw_tcv1;
++       struct cl_tcv_conf *tcv0_conf =3D cl_hw_tcv0->conf;
++
++       modem_gcu_ceva_ctrl_external_wait_setf(cl_hw_tcv0, 0x1);
++       modem_gcu_ceva_ctrl_external_wait_setf(cl_hw_tcv1, 0x1);
++
++       print_ceva_core_info(cl_hw_tcv0);
++       print_ceva_core_info(cl_hw_tcv1);
++
++       ret =3D load_dsp_code_dual(chip, tcv0_conf->ce_dsp_code);
++       if (ret !=3D 0) {
++               cl_dbg_chip_err(chip,
++                               "Failed to load DSP code. Error code %d.\n"=
+,
++                               ret);
++               return ret;
++       }
++
++       ret =3D load_dsp_external_data_dual(chip, tcv0_conf->ce_dsp_externa=
+l_data);
++       if (ret !=3D 0) {
++               cl_dbg_chip_err(chip,
++                               "Failed to load DSP external data. Error co=
+de %d.\n",
++                               ret);
++               return ret;
++       }
++
++       ret =3D load_dsp_data_dual(chip, tcv0_conf->ce_dsp_data);
++       if (ret !=3D 0) {
++               cl_dbg_chip_err(chip,
++                               "Failed to load DSP data. Error code %d.\n"=
+,
++                               ret);
++               return ret;
++       }
++
++       macdsp_api_config_space_set(cl_hw_tcv0, 0);
++       /* Release DSP wait. */
++       cl_dsp_boot(cl_hw_tcv0);
++
++       macdsp_api_config_space_set(cl_hw_tcv1, 0);
++       /* Release DSP wait. */
++       cl_dsp_boot(cl_hw_tcv1);
++
++       return ret;
++}
++
++static int _cl_dsp_load(struct cl_hw *cl_hw)
++{
++       int ret =3D 0;
++
++       modem_gcu_ceva_ctrl_external_wait_setf(cl_hw, 0x1);
++       print_ceva_core_info(cl_hw);
++
++       ret =3D load_dsp_code(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load DSP code %d\n", ret);
++               return ret;
++       }
++
++       ret =3D load_dsp_external_data(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load DSP external data %d\n", =
+ret);
++               return ret;
++       }
++
++       ret =3D load_dsp_data(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load DSP data %d\n", ret);
++               return ret;
++       }
++
++       macdsp_api_config_space_set(cl_hw, 0);
++       /* Release DSP wait */
++       cl_dsp_boot(cl_hw);
++
++       return ret;
++}
++
++int cl_dsp_load_regular(struct cl_chip *chip)
++{
++       int ret =3D 0;
++
++       if (cl_dsp_is_universal_file(chip))
++               return cl_dsp_load_dual(chip);
++
++       if (cl_chip_is_tcv0_enabled(chip)) {
++               ret =3D _cl_dsp_load(chip->cl_hw_tcv0);
++               if (ret)
++                       return ret;
++       }
++
++       if (cl_chip_is_tcv1_enabled(chip)) {
++               ret =3D _cl_dsp_load(chip->cl_hw_tcv1);
++               if (ret)
++                       return ret;
++       }
++
++       return ret;
++}
++
++int cl_dsp_load_recovery(struct cl_hw *cl_hw)
++{
++       int ret =3D 0;
++
++       modem_gcu_ceva_ctrl_external_wait_setf(cl_hw, 0x1);
++
++       ret =3D load_dsp_external_data(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load DSP external data %d\n", =
+ret);
++               return ret;
++       }
++
++       ret =3D load_dsp_data(cl_hw);
++       if (ret) {
++               cl_dbg_err(cl_hw, "Failed to load DSP data %d\n", ret);
++               return ret;
++       }
++
++       macdsp_api_config_space_set(cl_hw, 0);
++       /* Release DSP wait. */
++       cl_dsp_boot(cl_hw);
++
++       return ret;
++}
 --
 2.30.0
 
