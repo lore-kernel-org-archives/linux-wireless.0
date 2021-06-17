@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C433C49EA7
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A68BC49EA3
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A70E6141F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F25D161407
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:09:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229784AbhFQQLQ (ORCPT
+        id S233858AbhFQQLR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:11:16 -0400
-Received: from mail-eopbgr60069.outbound.protection.outlook.com ([40.107.6.69]:39392
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:11:17 -0400
+Received: from mail-he1eur02hn2203.outbound.protection.outlook.com ([52.100.9.203]:12679
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233518AbhFQQKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:10:09 -0400
+        id S233731AbhFQQKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:10:08 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=O5mg//bJcEdZCJREYSsWoWVSq9alaN/kosL8YuC51uogv3HFcD/mln5FvGo2cfs/t9c4UlG5im5CLR2YBzgwkGr5h1amGNn5Elxys2IVgOS2lvsGOrHXEiisPP2NOU3FxbeISvH7SkWSU5nIQFdiJq1AIssY43ljPECypOZ3hykg//ReU5t0ilWW3YsjnXQ6dgP2yFJ28JUyKun7JzQARvS9324H9n+Xq+yRqT2tjf3aao3qcz+QlMRbhDFYPMzOfk+rLuLEwlSwcWbv/qUYjUsjCNYHIhq8AhAvl9Z/2GTTj89+dvErqBD76m5DzZZV91Y8Dyqx4Ar9VGbPizAt7w==
+ b=ULu+eTiadmI5I2rLB0b01pIL4yE1X8gkJNIWWjRGYPUWaCa9mPGEdJwPENwfCO/9wbdFVYLx7fmkdCtwxDQ9rKHKmQ/uDtsjoUDh8UVDQhlSvPGxr4VAZC4GQcURxzvDwrX8id67eV+O3yuQHrCOukcmC5ZSxw+S3tQlkN162q/oPiJXDS0OJQwWSrR+LoMJkmROalR7McKyxry5IKbioN1vapCGuCqvWhJupLlZ88CC12dMz0g4MLpOpyrmmYbvexEHeQNVE/VMb+vPmmiZz6b9XvIRvAFtpUgkgl1TyrheJny7z+qQ9geiCta2y5HVWyKmEkt3ZQsMBAcOv0dmXA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=s0mtNDgIIa7mlN7m24ajN9C4usaMGv70GrroYgZWgHo=;
- b=dVArjbFUllwC2PYUaEmCHY2fAlZnHobIV2OfllKa4ZADhk4bhNegKpn0VKAh5E48kZLzeW2+OIUwy3LdF4feoC2c1D+AkaAi6Qc7DIqwQy8Rep+fBctobXBZV8mjpfkbD4S2MnqazyHfugNCysMi6iV+ay0vMaxxrTfkKd28S/Hww2rcpKRSNpu71bZciRyJKxTs1m7bbMYbPpmocMOvm0p12DvzfJniKRVNB3THxhgOmo/ahTooP7u/4igbI80mZThiTOaEeFv0ctpcGxQd6ik9Qn5om8If/mePeL907QPeDPHzdq2zeuAZl8sbMiWqbgAff6I/5iUb7cl+sarang==
+ bh=tS7/QuK0GerwrgKnSPVurn1AWgNx0k/26BHgb2KnYWA=;
+ b=DLjOZ0qljIfBdzg1ebrjj5D/xtqPanh9BVbfMTv3jT7NgevFAa5ZbGziz8k+GX9WFoLiS6CnyWfLWsbao3q1or3W9hNC7OL1qt8madYl8bNovAf4Wp4VDVahabZRSrPrJ6pl0rM8DWjg/MIYPPR3qhmQzeGOSn3b49TIAGs2Z+l8QQH9+Ig5FAsYOuAtNRTVaJOUthsENqH4oajvc+3VDnjeOKnT5d685Vdniep+ccO1S0rxXu7dGr0eUjuSTXw1djSS+DY95HDz7vMXDJDkxC6YizXaBK5wpxYKV1Fm66tvbb8zVSL44AJapAiIYs1scZsSfWuS+toXTCMEaaC6Lw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=s0mtNDgIIa7mlN7m24ajN9C4usaMGv70GrroYgZWgHo=;
- b=3gx0DMhdXDcBXtStNxFEXWpmjq+n8oJhG4UCKzPefEZpZ0Tii5qmI66gKzCY8BUhKGFUhfTjFMctQcVfKeJLju/AOLk41ucgJPccwUBIY7d/M98ytJggpEsNpPWUzdNwn890Z5hI/puJgGaj2qM9G1PPpk5v2o24jWIBVBZ2u2o=
+ bh=tS7/QuK0GerwrgKnSPVurn1AWgNx0k/26BHgb2KnYWA=;
+ b=TKCxCq9xkm8NAkhNITAlE2iKii5jW+2KRJ6Kp4n7vR8VBPPMK2ZkCTUu7ZWL3BVmveHk4FWa42oZBuDtCMhaIq2irjFWDHxyxkI9G5P9UuIppAqDkSsHIDR42xO4yk2KNXyOC0Hg6cvY/AEJQ4Npdndwh9WoutTbgX28EbxnXMY=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB1075.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1eb::20) with
+ by AM0P192MB0515.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:45::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
- 2021 16:07:14 +0000
+ 2021 16:07:58 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:07:14 +0000
+ 16:07:58 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 196/256] cl8k: add twt_cli.c
-Date:   Thu, 17 Jun 2021 16:01:23 +0000
-Message-Id: <20210617160223.160998-197-viktor.barna@celeno.com>
+Subject: [RFC v1 232/256] cl8k: add vendor_cmd.h
+Date:   Thu, 17 Jun 2021 16:01:59 +0000
+Message-Id: <20210617160223.160998-233-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,70 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:10 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:52 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 2cdf8d0b-3578-4184-36e3-08d931a9d327
-X-MS-TrafficTypeDiagnostic: AM8P192MB1075:
+X-MS-Office365-Filtering-Correlation-Id: 38eb6453-98a3-4758-0824-08d931a9ec1b
+X-MS-TrafficTypeDiagnostic: AM0P192MB0515:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB1075F178C5ADD281B44FC55BF60E9@AM8P192MB1075.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:510;
+X-Microsoft-Antispam-PRVS: <AM0P192MB051554192B9BC68867F6979EF60E9@AM0P192MB0515.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: u+E5Qijf6MS+qZvHFIDL7uVBfzYcebi9tqQM/blaTjH2AsZz/XYi41gx/4JzeBImdNi4AXyU2t99FQghMP5u3EM44ZYODk7291UR/O8z/7bZP9xBIxpSSd4OCBn28Eb4f/ueFMY0Z9z2z1WTRmZLzSqGGoyLz5zLeEvyJFGystLtS27Hgd7yK2FeonxTrIUghDcLPAGkgo5BoJbEUFRED2VKwQznLKHdSGne+rgUeD1HwaU25hl1w/6XMUVbLWpz3QA2+0/I0xJMvNHe2YYogvFFxs/b0VkmKgCjmszLRx2dfAEqEH7xN/uu143tqcyrqWHzAWTN2jcQbnvr79GXwPCk3HkTxTp5YZrz7geEsZs9K8d304d/LHlhisfUqKvMzATx6UiDsLoFdx0qqdMKZRxMzwxThkM+UJ4q8PCD+CAvrWlwEhAxuD8n3+6vxneIGhZLQUgY0kp9jBJ/PoejK0KqeByWqaejJSg3+rX6BSuGJskBKgQHtue/1kbN1r0tMfQZODzqnSgocvK5IFHyo2qyKL8ClUEXtk/KjiH52/qv/qD68CujjvhMg6/QEFG4Ljse3noJk9ePq/XEEQx/z+jRSeKyXO75CSTT6iXzmjDjhPXapcMM0PLMRDvc2RPEAzYIyNPCtzUI+auFxXQYWIlDGR9/zAaq1/PwHqr9WaGjRQoYwNdNYrxkr9oGoT+VipPd26gir057X9QNRBX1zw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(66476007)(6512007)(8936002)(66556008)(38350700002)(6916009)(9686003)(66946007)(956004)(86362001)(26005)(5660300002)(2616005)(38100700002)(8676002)(6506007)(6666004)(4326008)(1076003)(55236004)(186003)(30864003)(2906002)(83380400001)(498600001)(16526019)(54906003)(52116002)(36756003)(107886003)(6486002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?tRs90N4Nvo6ZQrCI01Z4lSmq9y4SYF3OTKnAX73unYqsco5aRgd0B+wDo9zp?=
+ =?us-ascii?Q?fW7lNTDgFFSS7K7uXiU/rgwDqhAwIIc0guyQEBbMgw7nW6QWuy8awhCO6dAY?=
+ =?us-ascii?Q?q0OIYR5om83Udhy+D4Pp7Qra0ZoPaMqCzGqTNry4TaeyIuTP7SIHu74wxbij?=
+ =?us-ascii?Q?cNy2ZjkzXrMGcYXsGTy4lfUNr1i29BXqBKbvuKSDuflK1hEhlKZBGUA4vIK9?=
+ =?us-ascii?Q?PTXgoYcGbj1LipIk6H6pvo1LgFBW5a8z2z0AiqluRDqmfiszR+MwWCDAnwQb?=
+ =?us-ascii?Q?LSOa0wXpCrJWplSr/luXetgHfSfqu2Ch9Dq/Nc4Dg1xvrNc3vwqQQihKgl9n?=
+ =?us-ascii?Q?rzzeDbud8Bl1ruhNo+hLImd9Tq4d9OBvpE6Oy1/XTHp6t7fsuD+QOCHkusWa?=
+ =?us-ascii?Q?ywufxsyL+nGjXOQoXzfy7EBrB37tMzVqert1tuLIej1mXtywkQGnknuMlouD?=
+ =?us-ascii?Q?yKWOmI/XJTDnFLzpSGCPvXQy+DwwNKs4Qq3tqW6OYHeK5sKvP+YBJIAExyDH?=
+ =?us-ascii?Q?4XH6GzlYjHP14V/yp7EQTXYkAPqoB94QSJO2vLWRAJkq2V0Vmr64jMK1JO/9?=
+ =?us-ascii?Q?j+snD60r2TjXO8Xf2TJYbESX97VHDszzQKYQXRpmH4pR83Em6xEc/4K/6ZPy?=
+ =?us-ascii?Q?GTHv2WXNCZ/gOrgEkTrzPZBAp8ESrpH7yOALuUsQnE79G8wRJSvlQvY/YkWO?=
+ =?us-ascii?Q?MTT1ythGajELUlTvHeQwfyDHKeflqAWwn8KlMvFDoGkZeoT/doebfzRPKpQo?=
+ =?us-ascii?Q?7S042KKXYqJenxi13SFjBsflFzUTG3qUQwCa6wsr7wm1SufKQc2UpEWFzRCv?=
+ =?us-ascii?Q?17uWOQwJUbBLc+Uyup7y+zuNO0ycwCIb4ZPAAz5yZbpPzDrGYZjHNxQidHoN?=
+ =?us-ascii?Q?S/FznXD2kjFfJ9TkBfk5anMm7JoVpLetLt6N1yDfhbq/DqksoI9ORPk4zLfg?=
+ =?us-ascii?Q?FRV8HB7UeLHcjTVgAN64KBPHYTq4U+wZ6lQALC2F8b/QPLSpPlY2c7XAsdeD?=
+ =?us-ascii?Q?Iifwer9ia1sHR3oMhVUxv2r9w2a2RLASjlzs62ydRWnjw4+3vk31cIIyh/gN?=
+ =?us-ascii?Q?ElHIfH+BkMOuep55J+IHg7CGxQoCjA=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:5;SRV:;IPV:NLI;SFV:SPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:OSPM;SFS:(396003)(376002)(39850400004)(136003)(366004)(346002)(4326008)(16526019)(83380400001)(1076003)(8676002)(9686003)(55236004)(36756003)(478600001)(8936002)(956004)(186003)(6486002)(38350700002)(6512007)(6916009)(52116002)(86362001)(5660300002)(2906002)(38100700002)(66946007)(2616005)(316002)(6506007)(26005)(54906003)(66476007)(107886003)(66556008)(966005)(140170200002);DIR:OUT;SFP:1501;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EVgcpVC8R8djx2PuVtb2gdtbBvAAIssT9yDZwE9wsT1kAuj/EEiGi6ulbqTK?=
- =?us-ascii?Q?cITI6+v9P5eGv/Sk4VQfQD3srFvGTe7rbskJc/MGDuontd7hALx2Av93ghV/?=
- =?us-ascii?Q?fijUfZkkm2+GiC5TFtjpzv2UNL6ih3F+E0QV7srOrolflmN3Yzpzq1T4bMzG?=
- =?us-ascii?Q?tQNU0RGlBdv4zKWV04G8XZW/y4LlVRGs//APx0dQ6Xtlt6qGiywerUvRKSZe?=
- =?us-ascii?Q?60iCffsYb4LfmLCtIgmo2CWAubWSw/8LDA63OGU+WyB/0v9fRlyfoQwdygtK?=
- =?us-ascii?Q?m6+L+wK+ikCRDsNNtygQvfZ/pt5c5Pk/+6sE1HfzDZyrpAdEvypQ52YUIj22?=
- =?us-ascii?Q?Q1IH8kFIPKlfZ53mj3rbFTaVxQL8htNXAcfxnBB+Ac8XlvPvPvg4PsSdmuBK?=
- =?us-ascii?Q?eLkuwNM5GDU5H2JnqaZsan0aGcG9aJyV7gXM7G6ic9USk/M1N+DdFQltkbto?=
- =?us-ascii?Q?c1zWVom16Tkf9Lm5xVKt2G+2ktu1Yqp96QUBrcz3ks3fsPcvZUsvuhxnFmSV?=
- =?us-ascii?Q?QH7XuaxQcxSgtKIWrS2Iml91MYf9DJBjsf/juSb4TyX7imdY2vQajHmq0QGM?=
- =?us-ascii?Q?kMcpS7uFCcdWTv3Ni9zBX5271j1LyMK3w4ZVv9zWa7KckDwZbHfCU/ar1U7x?=
- =?us-ascii?Q?IvFm43+5RIeRJUSDYiJ8744Ee96qLRr9xizSYC3xFNKBaDXxL9g7j2tVff9y?=
- =?us-ascii?Q?Gv4w8nJF2s80+fQTqv0PkVC9vCUEKsazD/9gnNZw4VvUnt+m5TRxOcdF70C4?=
- =?us-ascii?Q?2rbRmrP4vrgJQJe4rojAqf3NAVdhNSHuUvfQw6l78SPkPyqGJ61H/ML5v73t?=
- =?us-ascii?Q?H/YqRE4ISS6QheZsVcLMty7V1lbPqB0gnGAmyzfNxFdYMZCTBKpZqYCatigW?=
- =?us-ascii?Q?62l+LcvcKwJ2kLa3Nf7txrigg472musUOSEFH3fgYS3V5rEwxly8QJw3Es4a?=
- =?us-ascii?Q?4Uel3mrSgUWIhpSDd3IssT7yKjJQQGgXzNyqwlFsB5HeZ1k1T6jsn0ofu9Fy?=
- =?us-ascii?Q?ZXkg7xhyYMBZtrt/1rTWdMLWiQA5nnBOUunldN3Kd+os2UgtscQkSSLpj96O?=
- =?us-ascii?Q?QOScAsAg6w7oDtt75C7ShFX7nxKLQW7gcwMiJ/8USYTOP4KqbQzCPc8mmeLW?=
- =?us-ascii?Q?PInkjDVGCz9LsqbTMi4NrG8xiLEWXZLzxMm1zCGWymLc6sSsmpGbjVFzgI6K?=
- =?us-ascii?Q?fdvDcDYxyQtMBuxVusQoVoa4OgryU/u9lFEEr6pUPqcn1uznoSzJUMpbPVbI?=
- =?us-ascii?Q?NKO/2F2gccnDd5zZiCaauznRHXdUPTct64XFsIGqJYYAlc9WrLVm0I5o9pYW?=
- =?us-ascii?Q?B8GXc63sf/2sanfgDepc/rbj?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8Ix/0VX9PVeyjHFZ29ZL8Df0VcabdV+65IBXOSrHgmp/kuoVxWvQPQQ7Rq1A?=
+ =?us-ascii?Q?ZS2rMQhCNFs6nPuxBxpfO86JpE+A4ZmRlvlo2gA+qLoAXML6fzyZzYqZ1NoR?=
+ =?us-ascii?Q?eRpzgDoxHBPdvNXDlcIlw0L8DfADxC9kTbJAna6rkggsi47Gqf1x0PiXik9E?=
+ =?us-ascii?Q?i9LQLxZsMKGQCLQdm07C6CjeKAIQweGbngjV5rlgg2Ckm4Zb7DKSHh9SW1Vn?=
+ =?us-ascii?Q?xYirKIL6k5XID3rAyZOD4wtfbhP97sxxOmbEaDcLNt+ceastfIeJrTG9CFSB?=
+ =?us-ascii?Q?4HpmVZQDlBZAl/2W24cSGQD5a1VirHUWrP3PadB2t5B89us8ol71dL3nkJyN?=
+ =?us-ascii?Q?5QnVRHWWDrbnwi5qJ4IU0Vioj7qcgWOBgFllvZROQYdLcnYKbw1Yzu97aEPs?=
+ =?us-ascii?Q?tDJF0Ury3U2sk+E5A70GLsa9PADUBXQ2upe/0aR39e8JsENt0PXA1hYduL9H?=
+ =?us-ascii?Q?S2Nn6giUjIvqLBATYkimXi2uOCDmx1mhL6ZBjARY24L6wCB7vxcHPNoOadsR?=
+ =?us-ascii?Q?nVf0frNmdXUzEaT6KlbO+1G6V6nPoE1YVRcP0p1IY/bZLkb0n6vjwD8lp5OZ?=
+ =?us-ascii?Q?0vbVfkQDFgzB1LZWocFNxtAr06QL7VfVrL2x+gkDRo6EPFIp2Lw5eH+Uv5do?=
+ =?us-ascii?Q?EYL+wPZYvYmGXyuDLFy6AVbmh1yOBOMAKKH44YMcRzcLN4dqJ8tUBkAvyE14?=
+ =?us-ascii?Q?Gb1vzIlb2hSlVbZlN6V8w5eWWmUalCXdGdEVlWP7pvJNl+6cEHw8KTkqiTHM?=
+ =?us-ascii?Q?a7bfUCN25AFfNvXM2T3pscrgDgVN0PfxZGnuYoIjRfFg07fEU9liTq/Nv/bH?=
+ =?us-ascii?Q?5+LkuSlnb9geKLG0R/GoUleXDJZis6D5Hang9a0y9tc66LlgQN3gDHQMeu6z?=
+ =?us-ascii?Q?oh4mVf/TV6/i8nSIodGimXuiPP+KKtDDqv4XP/rX4lVfZeriVAcmncwM2V+x?=
+ =?us-ascii?Q?xP8yuqv4oG7wA+Hp82iL8NQ7bbBIL/TEag0dvrn7l2Pm/K9SEbBqUKVPQ8bJ?=
+ =?us-ascii?Q?z7+k1XsZPY/jL7B1bLWTix+ad7mKcx2gsvN7cr21PVMdLGWR/3Fci1KXSoAi?=
+ =?us-ascii?Q?+dHTGchH14u6iZkNL1UZWpV9i1sTvw0zESsU9j1kb+dK0rMoXmlGoIPYukQ9?=
+ =?us-ascii?Q?TuLC7QjOQkd3vOUDbFTB/QRF1o6igOlBH5k9SpTBuiuq8Jtz8zESL22HP3Jp?=
+ =?us-ascii?Q?cOPLGB9sEj/qwkQkPQZ08Uvsrwx7o5DHWTKAd7PTMtiFV7JVBL2TIbjcQEp+?=
+ =?us-ascii?Q?lfgFJcCiY2G1F6LdRlSJzRJFyov0e0hlanoo/QINML4k8ftffClUIShTw197?=
+ =?us-ascii?Q?0X+3czGievEOnQLrblOf/fVG?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2cdf8d0b-3578-4184-36e3-08d931a9d327
+X-MS-Exchange-CrossTenant-Network-Message-Id: 38eb6453-98a3-4758-0824-08d931a9ec1b
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:11.3802
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:53.1378
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1SNgtpKFH8GpnXzNFlYmAMwIX1VQNdm6ME/0sTWnu89nzYqdbc8t4kqyQxw28O/whh9t63iEn6doFfhjPqm9hg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1075
+X-MS-Exchange-CrossTenant-UserPrincipalName: HRaEPyVMc87z2x5PmB7IfQmcBg53+lpcxuZZvJ/ljRuxapeGrhrVvxsLGlkBmsbgiRWpdUNuUqofn0P/2FDLXg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0515
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,415 +146,133 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/twt_cli.c | 359 +++++++++++++++++++++
- 1 file changed, 359 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/twt_cli.c
+ drivers/net/wireless/celeno/cl8k/vendor_cmd.h | 116 ++++++++++++++++++
+ 1 file changed, 116 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vendor_cmd.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/twt_cli.c b/drivers/net/wirel=
-ess/celeno/cl8k/twt_cli.c
+diff --git a/drivers/net/wireless/celeno/cl8k/vendor_cmd.h b/drivers/net/wi=
+reless/celeno/cl8k/vendor_cmd.h
 new file mode 100644
-index 000000000000..258df0c83c48
+index 000000000000..9c7c3fe571be
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/twt_cli.c
-@@ -0,0 +1,359 @@
-+// SPDX-License-Identifier: MIT
++++ b/drivers/net/wireless/celeno/cl8k/vendor_cmd.h
+@@ -0,0 +1,116 @@
++/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#include "twt_cli.h"
-+#include "twt.h"
-+#include "twt_frame.h"
-+#include "sta.h"
-+#include "utils/utils.h"
++#ifndef CL_VENDOR_CMD_H
++#define CL_VENDOR_CMD_H
 +
-+#define CL_TWT_MIN_WAKE_DURATION_MAX_VAL_US (0xFFU << 10)
++/*
++ * DOC: Vendor commands
++ *
++ * A driver supporting vendor commands must register them as an array
++ * in struct wiphy, with handlers for each one, each command has an
++ * OUI and sub command ID to identify it.
++ *
++ * Note that this feature should not be (ab)used to implement protocol
++ * features that could openly be shared across drivers. In particular,
++ * it must never be required to use vendor commands to implement any
++ * "normal" functionality that higher-level userspace like connection
++ * managers etc. need.
++ */
 +
-+static int cl_twt_cli_configuration_print(struct cl_hw *cl_hw)
-+{
-+       struct cl_tcv_conf *conf =3D cl_hw->conf;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
++#include "def.h"
++#include "e2p.h"
 +
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT configuration:\n");
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT enabled:                   %u\n",
-+                   conf->ce_twt_en);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT default interval:          %u\n",
-+                   conf->ce_twt_default_interval);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT default min wake duration: %u\n",
-+                   conf->ce_twt_default_min_wake_duration);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT num of sessions:           %u\n",
-+                   cl_hw->twt_db.num_sessions);
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "TWT max sessions:              %u\n",
-+                   conf->ce_twt_max_sessions);
++#define VENDOR_CMD_TIMER_PERIOD_MS 5000
 +
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
++/* Celeno OUI - see http://www.my-ip.club/oui-info/00-1C-51 */
++#define CELENO_OUI 0x001c51
 +
-+       return err;
-+}
++struct cl_hw;
 +
-+static int cl_twt_cli_sessions_print(struct cl_hw *cl_hw)
-+{
-+       u8 i, handled_sessions =3D 0, num_sessions =3D cl_hw->twt_db.num_se=
-ssions;
-+       u8 max_sessions =3D cl_hw->conf->ce_twt_max_sessions;
-+       struct cl_twt_session_db *session;
-+       char *buf =3D NULL;
-+       ssize_t buf_size;
-+       int err =3D 0;
-+       int len =3D 0;
++enum cl_vndr_cmds {
++       CL_VNDR_CMDS_UNSPEC,
++       CL_VNDR_CMDS_CECLI,
++       CL_VNDR_CMDS_E2P,
++       CL_VNDR_CMDS_ATE,
++       CL_VNDR_CMDS_HELP,
++       CL_VNDR_CMDS_LAST
++};
 +
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "-----------------------------------------------------"
-+                   "---------------------------------\n"
-+                   "| STA idx | Flow id | Announced | Triggered | "
-+                   "Interval us | Min wake    | Start time |\n"
-+                   "|         |         |           |           |        "
-+                   "     | duration us |            |\n");
-+       for (i =3D 0, session =3D &cl_hw->twt_db.cl_twt_sessions[0];
-+            (i < max_sessions) && (handled_sessions < num_sessions);
-+            i++, session++) {
-+               if (!session->cl_sta)
-+                       continue;
++enum cl_vndr_events {
++       CL_VENDOR_EVENT_ASYNC,
 +
-+               cl_snprintf(&buf, &len, &buf_size,
-+                           "+---------+---------+-----------+-----------+"
-+                           "-------------+-------------+------------+\n"
-+                           "|   %3u   |    %1u    |     %1u     |     %1u"
-+                           "     | %10llu  |   %6u    | %10llu |\n",
-+                           session->cl_sta->sta_idx,
-+                           session->twt_setup.req_type.fields.flow_id,
-+                           !(session->twt_setup.req_type.fields.flow_type)=
-,
-+                           session->twt_setup.req_type.fields.trigger,
-+                           cl_twt_get_wake_interval_us(&session->twt_setup=
-),
-+                           cl_twt_get_min_wake_time_us(&session->twt_setup=
-),
-+                           session->twt_setup.target_wake_time);
-+               handled_sessions++;
-+       }
++       CL_VENDOR_EVENT_LAST
++};
 +
-+       cl_snprintf(&buf, &len, &buf_size,
-+                   "-----------------------------------------------------"
-+                   "---------------------------------\n");
++/* Enum cl_vndr_nlattrs - nl80211 message attributes */
++enum cl_vndr_nlattrs {
++       CL_VENDOR_ATTR_UNSPEC,
++       CL_VENDOR_ATTR_REPLY,
++       CL_VENDOR_ATTR_DATA,
++       CL_VENDOR_ATTR_LEN,
 +
-+       err =3D cl_vendor_reply(cl_hw, buf, len);
-+       kfree(buf);
++       NUM_CL_VENDOR_ATTR,
++       MAX_CL_VENDOR_ATTR =3D NUM_CL_VENDOR_ATTR - 1
++};
 +
-+       return err;
-+}
++struct point {
++       u8 chan;
++       u8 phy;
++       u8 idx;
++       u16 addr;
++       struct eeprom_phy_calib calib;
++} __packed;
 +
-+static int cl_twt_cli_send_individual_setup_request(struct cl_hw *cl_hw,
-+                                                   struct cli_params *cli_=
-params,
-+                                                   bool simulate)
-+{
-+       u8 sta_idx =3D (u8)cli_params->params[0];
-+       u8 setup_cmd =3D (u8)cli_params->params[1];
-+       u8 flow_id =3D (u8)cli_params->params[2];
-+       bool announced =3D (bool)cli_params->params[3];
-+       bool triggered =3D (bool)cli_params->params[4];
-+       u32 interval =3D (u32)cli_params->params[5];
-+       u32 min_wake_dur =3D (u32)cli_params->params[6];
-+       struct cl_sta *cl_sta;
-+       int res =3D -1;
++#define CLI_MAX_PARAMS 32
 +
-+       if (!cl_twt_is_enabled(cl_hw)) {
-+               cl_dbg_verbose(cl_hw, "Please enable TWT first\n");
-+               return -1;
-+       }
++enum {
++       E2P_MODE_BIN,
++       E2P_MODE_EEPROM,
 +
-+       cl_sta_lock_bh(cl_hw);
-+       cl_sta =3D cl_sta_get(cl_hw, sta_idx);
++       E2P_MODE_MAX
++};
 +
-+       if (!cl_sta) {
-+               cl_dbg_err(cl_hw, "Invalid sta idx %u\n", sta_idx);
-+               goto out;
-+       }
++struct wiphy;
++void cl_vendor_cmds_init(struct wiphy *wiphy);
 +
-+       if (setup_cmd > IEEE80211_TWT_SETUP_COMMAND_DEMAND) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Invalid setup cmd %u. Must be lower than %u=
-\n",
-+                              setup_cmd, IEEE80211_TWT_SETUP_COMMAND_DEMAN=
-D);
-+               goto out;
-+       }
++/* Note: data structures used by kernel and by userspace */
++struct ate_stats {
++       u32 tx_bw20;
++       u32 tx_bw40;
++       u32 tx_bw80;
++       u32 tx_bw160;
++       u32 rx_bw20;
++       u32 rx_bw40;
++       u32 rx_bw80;
++       u32 rx_bw160;
++       u32 fcs_err;
++       u32 phy_err;
++       u32 delimiter_err;
++       u32 rx_success;
++       s8 rssi0;
++       s8 rssi1;
++       s8 rssi2;
++       s8 rssi3;
++       s8 rssi4;
++       s8 rssi5;
++};
 +
-+       if (flow_id > CL_TWT_FLOW_ID_MAX) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Invalid flow id %u. Must be lower than %u\n=
-",
-+                              flow_id, CL_TWT_FLOW_ID_MAX);
-+               goto out;
-+       }
++struct cli_params {
++       u32 num_params;
++       char option;
++       s32 params[CLI_MAX_PARAMS];
++};
 +
-+       if (min_wake_dur > CL_TWT_MIN_WAKE_DURATION_MAX_VAL_US) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Invalid min wake duration (%u). Must be no =
-greater than %u\n",
-+                              min_wake_dur, CL_TWT_MIN_WAKE_DURATION_MAX_V=
-AL_US);
-+               goto out;
-+       }
++#define MSG_SIZE 4095
 +
-+       if (min_wake_dur > interval) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Min wake duration (%u) cannot be greater th=
-an interval (%u)\n",
-+                              min_wake_dur, interval);
-+               goto out;
-+       }
++struct cl_msg_data {
++       char more_data;
++       char data[MSG_SIZE];
++} __attribute__((__packed__));
 +
-+       cl_dbg_info(cl_hw,
-+                   "sta_idx %u, setup_cmd %u, flow_id %u, announced %u, "
-+                   "triggered %u, interval %u, min wake duration %u\n",
-+                   sta_idx, setup_cmd, flow_id, announced, triggered, inte=
-rval, min_wake_dur);
++int cl_vendor_reply(struct cl_hw *cl_hw, void *data, u16 len);
++void cl_vendor_timer_init(struct cl_hw *cl_hw);
++void cl_vendor_timer_close(struct cl_hw *cl_hw);
 +
-+       if (simulate)
-+               res =3D cl_twt_frame_simulate_individual_setup_request(cl_h=
-w, cl_sta,
-+                                                                    setup_=
-cmd, flow_id,
-+                                                                    announ=
-ced, triggered,
-+                                                                    (u64)i=
-nterval, min_wake_dur);
-+       else
-+               res =3D cl_twt_frame_send_individual_setup_request(cl_hw, c=
-l_sta, setup_cmd,
-+                                                                flow_id, a=
-nnounced, triggered,
-+                                                                (u64)inter=
-val, min_wake_dur);
-+
-+out:
-+       cl_sta_unlock_bh(cl_hw);
-+
-+       return res;
-+}
-+
-+static int cl_twt_cli_send_individual_teardown_request(struct cl_hw *cl_hw=
-,
-+                                                      struct cli_params *c=
-li_params,
-+                                                      bool simulate)
-+{
-+       u8 sta_idx =3D (u8)cli_params->params[0];
-+       u8 flow_id =3D (u8)cli_params->params[1];
-+       struct cl_sta *cl_sta;
-+       int res =3D 0;
-+
-+       if (!cl_twt_is_enabled(cl_hw)) {
-+               cl_dbg_verbose(cl_hw, "Please enable TWT first\n");
-+               return -1;
-+       }
-+
-+       cl_sta_lock_bh(cl_hw);
-+       cl_sta =3D cl_sta_get(cl_hw, sta_idx);
-+
-+       if (!cl_sta) {
-+               cl_dbg_err(cl_hw, "Invalid sta idx %u\n", sta_idx);
-+               res =3D -1;
-+               goto out;
-+       }
-+
-+       if (flow_id > CL_TWT_FLOW_ID_MAX && flow_id !=3D CL_TWT_FLOW_ID_ALL=
-) {
-+               cl_dbg_verbose(cl_hw,
-+                              "Invalid flow id %u. Must be lower than %u o=
-r %u\n",
-+                              flow_id, CL_TWT_FLOW_ID_MAX, CL_TWT_FLOW_ID_=
-ALL);
-+               res =3D -1;
-+               goto out;
-+       }
-+
-+       if (simulate) {
-+               res =3D cl_twt_frame_simulate_individual_teardown_request(c=
-l_hw, cl_sta, flow_id);
-+       } else {
-+               /*
-+                * If the session doesn't exist or couldn't be removed -
-+                * send a teardown request anyway
-+                */
-+               if (cl_twt_teardown_individual_sesseion(cl_hw, cl_sta, flow=
-_id, true))
-+                       cl_twt_frame_send_individual_teardown_request(cl_hw=
-, cl_sta, flow_id);
-+       }
-+
-+out:
-+       cl_sta_unlock_bh(cl_hw);
-+
-+       return res;
-+}
-+
-+static void cl_twt_cli_enable(struct cl_hw *cl_hw, bool enable)
-+{
-+       if (cl_hw->conf->ce_twt_en =3D=3D enable) {
-+               pr_debug("TWT is already %s\n", enable ? "enabled" : "disab=
-led");
-+               return;
-+       }
-+
-+       cl_hw->conf->ce_twt_en =3D enable;
-+
-+       if (enable)
-+               cl_twt_init(cl_hw);
-+       else
-+               cl_twt_close(cl_hw);
-+
-+       pr_debug("TWT has been %s\n", (enable ? "enabled" : "disabled"));
-+}
-+
-+static int cl_twt_cli_help(struct cl_hw *cl_hw)
-+{
-+       char *buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
-+       int err =3D 0;
-+
-+       if (!buf)
-+               return -ENOMEM;
-+
-+       snprintf(buf, PAGE_SIZE,
-+                "twt usage\n"
-+                "-c: Print configuration\n"
-+                "-e: Enable/Disable TWT [0 - disable, 1 - enable]\n"
-+                "-m: Simulate a reception of a TWT individual request:\n"
-+                       "\t[sta_idx].[setup_cmd (0:request, 1:suggest, "
-+                       "2:demand)].[flow_id (0-7))].[announced].[triggered=
-]."
-+                       "[interval].[min_wake_duration]\n"
-+                "-n: Simulate a reception of a TWT individual teardown "
-+                       "request:\n\t[sta_idx].[flow_id (0-7; 255 all_twt)]=
-\n"
-+                "-p: Print sessions\n"
-+                "-s: Send a TWT individual setup request:\n"
-+                       "\t[sta_idx].[setup_cmd (0:request, 1:suggest, "
-+                       "2:demand)].[flow_id (0-7))].[announced].[triggered=
-]."
-+                       "[interval].[min_wake_duration]\n"
-+                "-t: Send a TWT individual teardown request:\n"
-+                       "\t[sta_idx].[flow_id (0-7; 255 for all_twt)]\n");
-+
-+       err =3D cl_vendor_reply(cl_hw, buf, strlen(buf));
-+       kfree(buf);
-+
-+       return err;
-+}
-+
-+int cl_twt_cli(struct cl_hw *cl_hw, struct cli_params *cli_params)
-+{
-+       u32 expected_params =3D 0;
-+       bool print_conf =3D false;
-+       bool enable =3D false;
-+       bool simulate_req =3D false;
-+       bool simulate_teardown =3D false;
-+       bool print_sessions =3D false;
-+       bool send_req =3D false;
-+       bool send_teardown =3D false;
-+
-+       switch (cli_params->option) {
-+       case 'c':
-+               print_conf =3D true;
-+               expected_params =3D 0;
-+               break;
-+       case 'e':
-+               enable =3D true;
-+               expected_params =3D 1;
-+               break;
-+       case 'm':
-+               simulate_req =3D true;
-+               expected_params =3D 7;
-+               break;
-+       case 'n':
-+               simulate_teardown =3D true;
-+               expected_params =3D 2;
-+               break;
-+       case 'p':
-+               print_sessions =3D true;
-+               expected_params =3D 0;
-+               break;
-+       case 's':
-+               send_req =3D true;
-+               expected_params =3D 7;
-+               break;
-+       case 't':
-+               send_teardown =3D true;
-+               expected_params =3D 2;
-+               break;
-+       case '?':
-+               return cl_twt_cli_help(cl_hw);
-+       default:
-+               cl_dbg_err(cl_hw, "Illegal option (%c) - try '?' for help\n=
-", cli_params->option);
-+               goto out_err;
-+       }
-+
-+       if (expected_params !=3D cli_params->num_params) {
-+               cl_dbg_err(cl_hw, "Wrong number of arguments (expected %u) =
-(actual %u)\n",
-+                          expected_params, cli_params->num_params);
-+               goto out_err;
-+       }
-+
-+       if (print_conf)
-+               return cl_twt_cli_configuration_print(cl_hw);
-+
-+       if (enable) {
-+               cl_twt_cli_enable(cl_hw, (bool)cli_params->params[0]);
-+               return 0;
-+       }
-+
-+       if (simulate_req) {
-+               int res =3D cl_twt_cli_send_individual_setup_request(cl_hw,=
- cli_params, true);
-+
-+               if (res)
-+                       cl_dbg_verbose(cl_hw, "Error %d trying to simulate =
-TWT request\n", res);
-+
-+               return 0;
-+       }
-+
-+       if (simulate_teardown) {
-+               cl_twt_cli_send_individual_teardown_request(cl_hw, cli_para=
-ms, true);
-+               return 0;
-+       }
-+
-+       if (print_sessions)
-+               return cl_twt_cli_sessions_print(cl_hw);
-+
-+       if (send_req) {
-+               int res =3D cl_twt_cli_send_individual_setup_request(cl_hw,=
- cli_params, false);
-+
-+               if (res)
-+                       cl_dbg_verbose(cl_hw, "Error %d trying to send TWT =
-request\n", res);
-+
-+               return 0;
-+       }
-+
-+       if (send_teardown) {
-+               cl_twt_cli_send_individual_teardown_request(cl_hw, cli_para=
-ms, false);
-+               return 0;
-+       }
-+
-+out_err:
-+       return -EIO;
-+}
++#endif /* CL_VENDOR_CMD_H */
 --
 2.30.0
 
