@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACC41C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B0E3C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95E5F6141F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 305B56141F
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:11:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232180AbhFQQNM (ORCPT
+        id S233872AbhFQQNP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:13:12 -0400
-Received: from mail-db8eur05on2058.outbound.protection.outlook.com ([40.107.20.58]:36864
-        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:13:15 -0400
+Received: from mail-eopbgr60078.outbound.protection.outlook.com ([40.107.6.78]:25569
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233781AbhFQQL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S232281AbhFQQL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:11:59 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kt1FSoY7daiI6LKREicrclJVQtOKphK38yBIAQMnZaGGhnNJRg8k8BHIHFzkwAixmw2ylGhFh6bbh5m8SX4viDswWMYk74dwSLVUaD9hebdaQPnie9+FGjYjahNleqmNYMFjgMICu4iI2OaRZhTUkqU/KGY0W8h0n9rtMnoZda6uFr9UF7KraGv/AJqgI13PhIaJRaFSJYUx9jPvnwb6pHwGba51whZIl3BmipThWtwx0XSdPvwmT6aD9kvGMzWdN2AP/8mUAlrYMT/b1rBGNgimOvk1bzzC3I8s56S2e9J/bxza0mGg8Uw+fNxDcEx5reUStZENs92FLQN3mMWseg==
+ b=aBbzDRqhX/XMgOq9+faZoZgm7ZPnyzW1GOYXNlzykP+g5DuBYWptUYXbdk9wGP7rbh7rWYpXOEEkO9/uIEEKCnfvY1OgQ9czd+ip0BVzaUVBsy2CoqBXVSsZMaIsXY1RWlqlrEYp4L8BuZhUgO3L+8S0m8HJRPA2Ch7jHqB54yjfwiXOgnkcVot4ese9bOe/0TZoahPbHUw67RmLwUgD0+fZ9jL/GPNlMy++WMEeCsEIvtXBhSREoCHW98hBIzHVaKoeYXb75Atkhuq8/IS2YIHNC2ZvU9Lccu4S7zPLbTUWwBIX+YFw8QpwD4uJYKkqB/qNH3LBhasYVWejFOLMkA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EvTMS/5/SxHTkFZ93yvrieO7ZTesUdv0to0lY4ZohGs=;
- b=W2unwqNqx+PzGhHdFZLrBWBRnh+dFsZ+3nJjVnfPq7xPkZkDF9+30pMP6Vy6dqDCX1uYvD/wschoogPAvBqYugrXZ4vfn5zMiXIsHBtlpbFec7Lo0FyvKZnFgHSF5vruNrz4HKS7lyAL2t/G2lAYhV2E+5urwnk9/F19bHEM9a86Mj24KjWuVT6QePy+p/j4F1LZOqx2YPpWVP/bUT7ZkTxc8DWQqsP8z6OWOhQJpiNaNe7GVTQ/herwBEE0RdXfvPf3sIhApLuZEyoA1cekvMc6N+Hy7q3riH6tzKBFt5Oy+87MKC1a2rVygazuXIWGN1om10vuW12HkcSzB2cEgw==
+ bh=6NWNTt/igRJOGuAtNuHSM033NB+Q4h9wgUa4jCP9XZM=;
+ b=nyaxGEoH49QSeRaJuUFxrgQ2mrqu5HaUKenr1PF6bSna3PEAYn3g3J5/YpJlWouHgXScrxZDg/iJZYhEFdVejiSu/LhIImWK5YqUvMD31fDOQOLjW7vInW36WReWr/mp7SU466p9kG160YoT9GMWH+7PcBuMt0ldC17fO3bV/q/5J7xCQu6NyvkoZWFxzk8c5q7AWp0YYfnsKhKXnf7mjZrjWiELUVUaVCbf8BjbuI+oq6DPBn4/MlDU1eRKDPsvzx1rpWGiMB2yIUyX8yAJ2FJptMWXhzHoqKNVrN2Fru53WJFGabHR54L9iPbnixgi3XdFuK2RRLBZWUhJLUPuOA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EvTMS/5/SxHTkFZ93yvrieO7ZTesUdv0to0lY4ZohGs=;
- b=kV836SW4LDA9kL7mA7u4ltvJh1wtTt+px8nx2ubUONUSi3KUGbd5MNjQOFw4jY+jHfGwxYf9j9Ps7sjW7ETTDXNwkWpUGc5eKGNl+SeHTDIXA99YjvbtGoZWGNZeANHZr8fqnm+h24CwURXlMe2z2xr7besFDZ7tmHSaqrCihKk=
+ bh=6NWNTt/igRJOGuAtNuHSM033NB+Q4h9wgUa4jCP9XZM=;
+ b=0PTy3d5wod9x29M6zbA8c9iHnsIZ5RtTIINIMWS0K6GyOHVKctStFEt6jSuP+cdreIM7kbktnq26sF+Gv8iSgwVDHuTTs/G4VJ8mnk073Eo74ZISCrRLvklC4bQyVL0glCpNZfaV2ejiA3LRrizxEvUdRjcDiMPaNjwRialCMjU=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB0978.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e9::10) with
+ by AM8P192MB1075.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1eb::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
- 2021 16:08:34 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:07:17 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:08:34 +0000
+ 16:07:17 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 247/256] cl8k: add wrs/wrs_db.h
-Date:   Thu, 17 Jun 2021 16:02:14 +0000
-Message-Id: <20210617160223.160998-248-viktor.barna@celeno.com>
+Subject: [RFC v1 204/256] cl8k: add tx/baw.c
+Date:   Thu, 17 Jun 2021 16:01:31 +0000
+Message-Id: <20210617160223.160998-205-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:07:09 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:06:19 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 2d863a3e-0c77-45e0-286c-08d931a9f643
-X-MS-TrafficTypeDiagnostic: AM8P192MB0978:
+X-MS-Office365-Filtering-Correlation-Id: 70c0309c-908a-4c08-db9e-08d931a9d886
+X-MS-TrafficTypeDiagnostic: AM8P192MB1075:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB09783737DFC2B28B626B7494F60E9@AM8P192MB0978.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:140;
+X-Microsoft-Antispam-PRVS: <AM8P192MB1075D041ABEE82FE02218F4DF60E9@AM8P192MB1075.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3631;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: JmVgIzI3rAFaIRgD9QCHKrMQow/Imvd91B8fBRhU4lc7hsUYx7ah2yd0vp4EAS8z9OfEwwXU2EWAgTAdSssoni1Kx3m/pFb+AHaA6c5a4qbWCgqtDX0gRKLuuEm7oN3hMAGxjdemB8icndKFatVa3p5QUZPtBCkwsZGW3W94Y6j64UruuvYcUUs4xzk5iaukWQLwn9CMOjx0cYQo9Agge6iVk13n1wfsZPAyPaWhd9WEQl3CbVVBkA/4syeRG+jC3IsU0iGvR/E2CzUGzWSLlpZi/WntuS2NtFoYzgNH30b6QjIkgysNxFhmBZLq14JBrmZFPvjQCv4VE0+5IpLAd+STnpoYZ6DW/N6pVxEVt8aRunFY+m4a1nS1FdkJmZXO03yz/D0mdRHO8LFOD8lqPukzr7gnp9Ty0+W6QGeJ5nDqpWCgUdNbFg+KDXncIdQpNYW+mR0WMDo/DW1+Nj5KdHKT/TZqtvoNQf01wrSbZ9nVFpF7c6stBI6PnQNNaWE8WdyLgfeRhAw9Csf9TddhjVOU1YjyS21LOEi1ktFYKiLJ0ViZ72BzMvvQTevdcDdfFJOzQsHHN62zWX0OshBhPTsEJVe0pCEf+m3vPnd8ix9GDbnbK5t3fPlq99O8wouiHoMlkISR/hZni4lPYmMOGW1pNHOnFNkwnUY0IPWR06RS+RYzWSQnpusHtCicO+TXhS8O1cNSuF8GOX9uQIuzQw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(136003)(396003)(376002)(39850400004)(366004)(16526019)(107886003)(6666004)(5660300002)(66556008)(83380400001)(26005)(30864003)(186003)(1076003)(2616005)(316002)(66476007)(66946007)(9686003)(2906002)(6512007)(8676002)(508600001)(52116002)(55236004)(6486002)(38350700002)(86362001)(38100700002)(6916009)(8936002)(6506007)(956004)(4326008)(54906003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: toqKNEbelIWfeKcVDFp18LSwfcpQCu32IwCS6/hCV6p+dirHhkvoHck9cp1RFFt1MRpj2vkuQcJOq7zibjiWDQ1UBwU9v0VyXdiISLUrR0b9ObJu0gKv2pdzRy+ONnncYQg1CZ3LrL00DudTB4mIIWY5NGDJs8ZuiOEOANdQr2+osqw2rycJm4QDD6BjpnG7HTNsX+YkWnieqZVzD5n0WTRvxcODQwa8TTumMCJEMjEr1h/Hetcn4AHxPZhogO0j45i6Wm++TCSrAteBQNdFPMB+ONjDDLthpd4230VsyVJQirUOgzNo1pr/ePo58ySWaNVL+zwPypJ1m7E8y2jLAwm1p9fwZHt1XO4dr1lh38cwKUo6gRcemvFNdSrhM/DRvLP3QGT8gE5IgUwLURD8kGUJZBBzWJhBtm5ch4zeg7HpXVyuQPhLaG/2Yy10CaZTQIaJuM7MEFzAuIOVmrEHWdv77FrMkRTNGeb8AYBGwwfTlGsLjzTDNcHE00qi37hxfIVOrdca+QdtfxTcc0Dgi0cSCbqOy6e9U/8J15zdvaEAR8kcEmmY1EY7QQZ4dvbxAJ7WfgIHdfiXzm7/AMZ+SHYSS9QZqWlX3pVpot9XwCJ1mmh8MYqnpfQVapMB8PXfcpc2X2cRtrqmquP+bH5l83R8MHZ5/cg5bwK+klhFm7dTFHsu95B9uQnCDNHrncBkcrrCSKHCmGr6y3ZGPxg1Ow==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(136003)(39850400004)(376002)(366004)(346002)(66476007)(6512007)(8936002)(66556008)(38350700002)(6916009)(9686003)(66946007)(956004)(86362001)(26005)(5660300002)(2616005)(38100700002)(478600001)(8676002)(6506007)(6666004)(4326008)(1076003)(55236004)(186003)(316002)(2906002)(83380400001)(16526019)(54906003)(52116002)(36756003)(107886003)(6486002)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xx/HlWGElsuOLeRtttX4J6q4Re0TRp5ZxjWCVK8nQV4RmtjvHqeCil/zqn35?=
- =?us-ascii?Q?xdkARF5xldH4A/gkiUUCYKNbNG8lHMdLbP5CbTZSl4j92ao/2vrMso3lmMD9?=
- =?us-ascii?Q?Q4MOqefT42YYIlMMjLhDlgxZrNoAmIYkFRsgb3z0ouaEc9tlZ+QA5GppdrOm?=
- =?us-ascii?Q?MipYgppM8pu0o0EbZEy9dEcWmnsFWFk83zvHSzFcyfdRQaLZMP7vF2CQGqC8?=
- =?us-ascii?Q?jQbvHN/DISaejQPX/RZ6lPK/VRfFuBSYU2tZzQkC3iM+oSONkVYcAOt/7URF?=
- =?us-ascii?Q?rQMvUayFtsWjt+OZu9m0Re7QRP8Nq7YfoMO00bx9HuB2S3UjtZE7hXd0p7+h?=
- =?us-ascii?Q?dT4XS/tc2kFODDVnoeHD1X+siJ3ZMZekuUPUR7Nh559xhOVXS/STN8+w2EAT?=
- =?us-ascii?Q?Q1VDK30l2uIG3zOXaKggg1GqCwyQdBEyZrWEmDNqnDvRH8hm6GiuAiobyDCn?=
- =?us-ascii?Q?7csimcnWtK/O5oS4a4HhvKqSVr2CHq6vP1Due7tXrGdibGhCvT1Cz7csM3MU?=
- =?us-ascii?Q?Ycmb1uw/bdsgMZKdxOaG6SbYQr8NjDYoqwz/M0+q8K6p8aYCCWsRpbksLKPg?=
- =?us-ascii?Q?UzTGNHEX3Ox4T9TuPxkswx3o/Zk4Pyn4TMETeKPy3qMFRuFqPyPWiI5iFkaR?=
- =?us-ascii?Q?TNkO+1I3rSjWKE+8r9lWqcgf4JCRGNl3O6i3nhlsVx1Aa4snLajAywxyS6cx?=
- =?us-ascii?Q?tKLhwuHiwf5OyCGL2sOqcu9xXxRMJ5AeynlpKgxUyS9D7QjT5BE9WdoN+GQV?=
- =?us-ascii?Q?Cq3XX+T5FlpIV1HcUxu2VL74j71UwcQMgrf7uTDdV2AxRcxX2SkmMGa8mANO?=
- =?us-ascii?Q?3QJ1PTAzLGq8+0QhOzOcDOE61kRqtilBhb4dNYoJ6HiQo456rYs3IHs83ZLr?=
- =?us-ascii?Q?vn3T2HzWvNyBT596dTY/ntUDTphun5Dv9+v9p8lxAFvWroBpZkvlpgNw7yjl?=
- =?us-ascii?Q?aiiuzU7wImWZoC3Fqf2lDlyhrqzEjfsZQMHFCWn3U+6g7jb6tmFwcSDvWGnS?=
- =?us-ascii?Q?kaXV+a9JnCfxhnrgdLBZM4ZfTYI01oztzy+u5iKXs+rllF3yNihIiAKxE2hz?=
- =?us-ascii?Q?/gIFr+qH4FNu3RctKcdGm70fQOz9Ik1+/5l6VhJzbQj4cnTsPLN+0g2jS/aC?=
- =?us-ascii?Q?pe4AdJAKFiNQFsYkrIRlvrqFvgjFSPCJuubiyYrU0ZZzOXEc0G0TUL6ohFmO?=
- =?us-ascii?Q?iLDyv87yKY7fk85KwLm3JlfRSFKq+oKzi+1s+NCiv936Kpv1ndGug9nwhnT6?=
- =?us-ascii?Q?nl6u4fQvG6713FLk3H0NntHhAR3vcczwuoDCcLKSHb/P1bFfGwLspb5GT9UH?=
- =?us-ascii?Q?QPgtofng3ivQKRQxUq2jD/3f?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5vBgokjE2vlMopiLp5t+A+Izg+65wIP0iCd/R+Z9lIBME+KtZZoLd5Q+34Gs?=
+ =?us-ascii?Q?iby2kJ5qt7vxUIDu5z3epCr8td3UzrAIDEsFFktxSiaM2NDc7l1DprCvB7d8?=
+ =?us-ascii?Q?vMLCpOnF01zL8MuifgV1WhBcv+VPLiC9OlxLcW+BLCAeC1LesYDOjZBfJcGU?=
+ =?us-ascii?Q?6lo5w8GMLF3gY9V34lLiKNzz7gjIE04SR2yQfays7sAOtERKK6TN8PlGmSfQ?=
+ =?us-ascii?Q?aDFLbXBndWzIvGR7/n1AseOh8FMXXc1a+xdVaSETt7PAeAPAdCkXW1byfIi5?=
+ =?us-ascii?Q?aPM3qUReX+0n+AAdQsJrFMCxjlrG5QE+YTK6TeDumP0csNbEmYeYZejSUH8P?=
+ =?us-ascii?Q?fTjo1MB0+ok3yKTC3wTfbjqBTO8+tB8M1FS34MIdP7+jU1MO5Z6n4RNEqf50?=
+ =?us-ascii?Q?YQDfkbzAKkB52BlYUS8I8VV1rQAK6i320tJfvOuS3snHfwanXnGiyxRfLXrT?=
+ =?us-ascii?Q?E/5/1UpZm/ne7PPOY1ld9sIDNFcmBKLyHoSFRqSeZu6IvjCJUDm5lHDzQwb2?=
+ =?us-ascii?Q?MG7SnZwrP10CptCW2AC4cOHuBu5nIx5js0yrZtwHLfaHBAE+V3SiYmvn+l65?=
+ =?us-ascii?Q?Sri9l+6ShYaL8R5wH/bzu9vm/+yOdb1xSZARQfOHtl+oYpJTkyfiSftpjF66?=
+ =?us-ascii?Q?bOwcsB6BndRLinpamFDCtkQq26tWh0fV7c2YgHSwga1kDpldTZupYgDjCaTM?=
+ =?us-ascii?Q?upGn2EGdVUDY/MVyQdf8iJb8hl0W7A64bt94AxWqZg10Lk1KpOqxereEhHXz?=
+ =?us-ascii?Q?D0frn8Ij5mYD8s0/MikrLZNw4BDJKy+golCqO6iE6eUUlBF14pWMRBXNdOFJ?=
+ =?us-ascii?Q?p9Sky1gbNPlZMCf1dn1xN7Y9AApeg6rUR76wfuSDHT6Lg5sLZVMdTbA3ASAn?=
+ =?us-ascii?Q?HPmRpVsLEoqbZAAGhjlKqO80lta+oC1Ojd9y63D8H9M9wKgzZtkIEh4NuN+x?=
+ =?us-ascii?Q?K/a/9PBisaMq4xNsAA5eG0EU4SLAaKG2KnmDZ7QaIKZdOns/RPS+aVeZ5FnX?=
+ =?us-ascii?Q?wlFJCx4orXeM03Ds4k6V8OkTQuEiyJ9KVRlp/yEKIi+tiSgqJtOg2bCR0raD?=
+ =?us-ascii?Q?iyT7daLBqfAWjXeuBok5+G8CoWlBSdimdcbJagOf3m0VR/elSRTfY8/QGwAS?=
+ =?us-ascii?Q?KtB0Vk+YLBD6kMKQcCYdkLaq57tICTQQuga7B6ucyK0dOmpm0d5AcVjbpmDV?=
+ =?us-ascii?Q?NoZd1mspn//jp9MBxgTKwY97+a/i/RLOn58o4QVL0rJ9ALJl9w4qJ9BFOc7U?=
+ =?us-ascii?Q?W3sexM3BZXrhQeLQW3Vq2uA2lMRvZjr3LBfPb4XPam0KpRdk2UAxN0/edGYz?=
+ =?us-ascii?Q?Y1Ngp47x45G5Gz7inFBAr+6j?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d863a3e-0c77-45e0-286c-08d931a9f643
+X-MS-Exchange-CrossTenant-Network-Message-Id: 70c0309c-908a-4c08-db9e-08d931a9d886
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:07:10.2786
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:06:20.3050
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GN2CpBD3guNB+9T272m8h7aDnpKF08YX8pI8O3kJo5BK/tQKq0Wqsthw9jXruSm1eFrJbFlEqCa0s4svRerS3w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB0978
+X-MS-Exchange-CrossTenant-UserPrincipalName: +VU+J6SNlYQ3tI7q7HLzNomXo/3mqjUQq7a9xb/BknzU3Epr5M2qAG9IcCYLVCtFWEvqSMPnK54+qjaBderOmA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1075
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,430 +128,91 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/wrs/wrs_db.h | 386 ++++++++++++++++++
- 1 file changed, 386 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/wrs/wrs_db.h
+ drivers/net/wireless/celeno/cl8k/tx/baw.c | 74 +++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx/baw.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/wrs/wrs_db.h b/drivers/net/wi=
-reless/celeno/cl8k/wrs/wrs_db.h
+diff --git a/drivers/net/wireless/celeno/cl8k/tx/baw.c b/drivers/net/wirele=
+ss/celeno/cl8k/tx/baw.c
 new file mode 100644
-index 000000000000..2eefa0abaf8d
+index 000000000000..d6c11db6c1e9
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/wrs/wrs_db.h
-@@ -0,0 +1,386 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/tx/baw.c
+@@ -0,0 +1,74 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_WRS_DB_H
-+#define CL_WRS_DB_H
++#include "tx/baw.h"
++#include "tx/tx.h"
 +
-+#include "debug.h"
-+#include "utils/timer.h"
-+#include "def.h"
-+#include "wrs/wrs_tables.h"
++void cl_baw_init(struct cl_sta *cl_sta)
++{
++       u8 tid;
 +
-+#define WRS_MAINTENANCE_PERIOD_MS         40
-+#define WRS_DATA_RATE_FACTOR              10
-+#define WRS_RSSI_PROTECT_UP_THR           10
-+#define WRS_RSSI_PROTECT_DN_THR           10
-+#define WRS_MIN_FRAMES_FOR_DECISION       15
-+#define WRS_EPR_FACTOR                    105
-+#define WRS_CONVERGE_IDLE_PACKET_TH       5
-+#define WRS_CONVERGE_IDLE_INTERVAL_RESET  6000  /* 6 sec */
-+#define WRS_CONVERGE_IDLE_INTERVAL_RSSI   2000  /* 2 sec */
-+#define WRS_CONVERGE_TRFC_INTERVAL_STATIC 30000 /* 30 sec */
-+#define WRS_CONVERGE_TRFC_INTERVAL_MOTION 1000  /* 1 sec */
-+#define WRS_IMMEDIATE_DROP_EPR_FACTOR     70    /* 70% */
-+#define WRS_IMMEDIATE_DROP_MAX_IN_ROW     U32_MAX
-+#define WRS_SYNC_MIN_ATTEMPTS             4
-+#define WRS_SYNC_TIMEOUT                  1000  /* 1 sec */
-+#define WRS_QUICK_UP_BA_THR               5
-+#define WRS_QUICK_UP_INTERVAL_MS          1000
-+#define WRS_QUICK_DOWN_EPR_FACTOR         85
-+#define WRS_QUICK_DOWN_AGG_THR            3
-+#define WRS_QUICK_DOWN_PKT_THR            60
-+#define WRS_RSSI_PROTECT_SHIFT            7
-+#define WRS_RSSI_PROTECT_BUF_SZ_OLD       BIT(WRS_RSSI_PROTECT_SHIFT) /* 2=
- ^ 7 =3D 128 */
-+#define WRS_RSSI_PROTECT_BUF_SZ_NEW       3
-+#define WRS_BA_NOT_RCV_TIME_SINCE_SYNC    1000
-+#define WRS_CCA_PERIOD_MS                 1000
-+#define WRS_CCA_PRIMARY_SHIFT             7
-+#define WRS_CCA_PRIMARY_FACTOR            160 /* 160 / 2^7 =3D 1.25 =3D 25=
-% */
++       for (tid =3D 0; tid < IEEE80211_NUM_TIDS; tid++)
++               __skb_queue_head_init(&cl_sta->baws[tid].pending);
++}
 +
-+enum cl_wrs_rssi_prot_mode {
-+       WRS_RSSI_PROT_MODE_RSSI,     /* Up/down based on rssi */
-+       WRS_RSSI_PROT_MODE_NEIGHBOR, /* Up/down based on neighbors */
++void cl_baw_start(struct cl_baw *baw, u16 ssn)
++{
++       baw->ssn =3D ssn;
++       baw->action_start =3D true;
++}
 +
-+       WRS_RSSI_PROTECT_MODE_MAX
-+};
++void cl_baw_operational(struct cl_hw *cl_hw, struct cl_baw *baw,
++                       u8 fw_agg_idx, bool amsdu_supported)
++{
++       baw->fw_agg_idx =3D fw_agg_idx;
++       baw->tid_seq =3D IEEE80211_SN_TO_SEQ(baw->ssn);
++       baw->action_start =3D false;
++       baw->amsdu =3D (cl_hw->txamsdu_en && amsdu_supported);
++}
 +
-+enum cl_wrs_fixed_rate {
-+       WRS_AUTO_RATE,
-+       WRS_FIXED_FALLBACK_EN,
-+       WRS_FIXED_FALLBACK_DIS,
++void cl_baw_stop(struct cl_baw *baw)
++{
++       baw->action_start =3D false;
++}
 +
-+       WRS_FIXED_RATE_MAX
-+};
++void cl_baw_tx_inject(struct cl_hw *cl_hw,
++                     struct cl_baw *baw,
++                     u8 fw_agg_idx)
++{
++       baw->ssn =3D 0;
++       baw->fw_agg_idx =3D fw_agg_idx;
++       baw->tid_seq =3D IEEE80211_SN_TO_SEQ(0);
++       baw->amsdu =3D cl_hw->txamsdu_en;
++}
 +
-+enum cl_wrs_fixed_param {
-+       WRS_FIXED_PARAM_MODE,
-+       WRS_FIXED_PARAM_BW,
-+       WRS_FIXED_PARAM_NSS,
-+       WRS_FIXED_PARAM_MCS,
-+       WRS_FIXED_PARAM_GI,
++void cl_baw_pending_to_agg(struct cl_hw *cl_hw,
++                          struct cl_sta *cl_sta,
++                          u8 tid)
++{
++       struct cl_baw *baw =3D &cl_sta->baws[tid];
++       struct sk_buff *skb;
 +
-+       WRS_FIXED_PARAM_MAX
-+};
++       while (!skb_queue_empty(&baw->pending)) {
++               skb =3D __skb_dequeue(&baw->pending);
++               cl_tx_fast_agg(cl_hw, cl_sta, skb, false);
++       }
++}
 +
-+#define FIXED_RATE_STR(x) \
-+       (((x) =3D=3D WRS_AUTO_RATE) ? "auto rate" : \
-+       (((x) =3D=3D WRS_FIXED_FALLBACK_EN) ? "fixed rate (fallbacks enable=
-d)" : \
-+       "fixed rate (fallbacks disabled)"))
++void cl_baw_pending_to_single(struct cl_hw *cl_hw,
++                             struct cl_sta *cl_sta,
++                             struct cl_baw *baw)
++{
++       struct sk_buff *skb;
 +
-+enum cl_wrs_decision {
-+       WRS_DECISION_NONE,
-+       WRS_DECISION_SAME,
-+       WRS_DECISION_UP,
-+       WRS_DECISION_UP_QUICK,
-+       WRS_DECISION_UP_RSSI,
-+       WRS_DECISION_UP_MCS1,
-+       WRS_DECISION_DOWN,
-+       WRS_DECISION_DOWN_RSSI,
-+       WRS_DECISION_DOWN_IMMEDIATE,
-+       WRS_DECISION_DOWN_QUICK,
-+       WRS_DECISION_DOWN_NO_SYNC,
-+       WRS_DECISION_RSSI_MGMT,
++       while (!skb_queue_empty(&baw->pending)) {
++               skb =3D __skb_dequeue(&baw->pending);
++               cl_tx_fast_single(cl_hw, cl_sta, skb, false);
++       }
++}
 +
-+       WRS_DECISION_MAX,
-+};
-+
-+enum cl_wrs_mcs {
-+       WRS_MCS_0,
-+       WRS_MCS_1,
-+       WRS_MCS_2,
-+       WRS_MCS_3,
-+       WRS_MCS_4,
-+       WRS_MCS_5,
-+       WRS_MCS_6,
-+       WRS_MCS_7,
-+       WRS_MCS_8,
-+       WRS_MCS_9,
-+       WRS_MCS_10,
-+       WRS_MCS_11,
-+       WRS_MCS_MAX,
-+};
-+
-+#define WRS_MCS_MAX_CCK  WRS_MCS_4
-+#define WRS_MCS_MAX_OFDM WRS_MCS_8
-+#define WRS_MCS_MAX_HT   WRS_MCS_8
-+#define WRS_MCS_MAX_VHT  WRS_MCS_10
-+#define WRS_MCS_MAX_HE   WRS_MCS_MAX
-+
-+enum cl_wrs_ss {
-+       WRS_SS_1,
-+       WRS_SS_2,
-+       WRS_SS_3,
-+       WRS_SS_4,
-+
-+       WRS_SS_MAX
-+};
-+
-+enum cl_wrs_gi {
-+       WRS_GI_LONG,
-+       WRS_GI_SHORT,
-+       WRS_GI_VSHORT,
-+
-+       WRS_GI_MAX
-+};
-+
-+#define WRS_GI_MAX_HT  WRS_GI_VSHORT
-+#define WRS_GI_MAX_VHT WRS_GI_VSHORT
-+#define WRS_GI_MAX_HE  WRS_GI_MAX
-+
-+enum cl_wrs_ltf {
-+       LTF_X1,
-+       LTF_X2,
-+       LTF_X4,
-+       LTF_MAX
-+};
-+
-+enum cl_wrs_converge_mode {
-+       WRS_CONVERGE_MODE_RESET,
-+       WRS_CONVERGE_MODE_RSSI,
-+
-+       WRS_CONVERGE_MODE_MAX,
-+};
-+
-+enum cl_wrs_mode {
-+       WRS_MODE_CCK,
-+       WRS_MODE_OFDM,
-+       WRS_MODE_HT,
-+       WRS_MODE_VHT,
-+       WRS_MODE_HE,
-+
-+       WRS_MODE_MAX,
-+};
-+
-+#define wrs_pr(wrs_db, level, ...) \
-+       do { \
-+               if ((level) <=3D (wrs_db)->debug_level) \
-+                       pr_debug(__VA_ARGS__); \
-+       } while (0)
-+
-+#define wrs_pr_verbose(wrs_db, ...) wrs_pr(wrs_db, DBG_LVL_VERBOSE, ##__VA=
-_ARGS__)
-+#define wrs_pr_err(wrs_db, ...)     wrs_pr(wrs_db, DBG_LVL_ERROR, ##__VA_A=
-RGS__)
-+#define wrs_pr_warn(wrs_db, ...)    wrs_pr(wrs_db, DBG_LVL_WARNING, ##__VA=
-_ARGS__)
-+#define wrs_pr_trace(wrs_db, ...)   wrs_pr(wrs_db, DBG_LVL_TRACE, ##__VA_A=
-RGS__)
-+#define wrs_pr_info(wrs_db, ...)    wrs_pr(wrs_db, DBG_LVL_INFO, ##__VA_AR=
-GS__)
-+
-+/* m MUST be power of 2 ! */
-+#define WRS_INC_POW2(c, m) (((c) + 1) & ((m) - 1))
-+
-+#define WRS_INC(c, m) \
-+       do { \
-+               (c)++; \
-+               if ((c) =3D=3D (m)) \
-+                       (c) =3D 0; \
-+       } while (0)
-+
-+#define WRS_IS_DECISION_UP(decision) \
-+       (((decision) >=3D WRS_DECISION_UP) && ((decision) <=3D WRS_DECISION=
-_UP_MCS1))
-+#define WRS_IS_DECISION_DOWN(decision) \
-+       (((decision) >=3D WRS_DECISION_DOWN) && ((decision) <=3D WRS_DECISI=
-ON_DOWN_NO_SYNC))
-+
-+#define WRS_DECISION_STR(decision) (                                   \
-+       (decision) =3D=3D WRS_DECISION_NONE           ? "NONE"           : =
-\
-+       (decision) =3D=3D WRS_DECISION_SAME           ? "SAME"           : =
-\
-+       (decision) =3D=3D WRS_DECISION_UP             ? "UP"             : =
-\
-+       (decision) =3D=3D WRS_DECISION_UP_QUICK       ? "UP QUICK"       : =
-\
-+       (decision) =3D=3D WRS_DECISION_UP_RSSI        ? "UP RSSI"        : =
-\
-+       (decision) =3D=3D WRS_DECISION_UP_MCS1        ? "UP MCS1"        : =
-\
-+       (decision) =3D=3D WRS_DECISION_DOWN           ? "DOWN"           : =
-\
-+       (decision) =3D=3D WRS_DECISION_DOWN_RSSI      ? "DOWN RSSI"      : =
-\
-+       (decision) =3D=3D WRS_DECISION_DOWN_IMMEDIATE ? "DOWN IMMEDIATE" : =
-\
-+       (decision) =3D=3D WRS_DECISION_DOWN_QUICK     ? "DOWN QUICK"     : =
-\
-+       (decision) =3D=3D WRS_DECISION_DOWN_NO_SYNC   ? "DOWN NO_SYNC"   : =
-\
-+       (decision) =3D=3D WRS_DECISION_RSSI_MGMT      ? "RSSI MGMT"      : =
-\
-+       "ERROR")
-+
-+#define WRS_MODE_STR(mode) (               \
-+       (mode) =3D=3D WRS_MODE_CCK  ? "CCK"  : \
-+       (mode) =3D=3D WRS_MODE_OFDM ? "OFDM" : \
-+       (mode) =3D=3D WRS_MODE_HT   ? "HT"   : \
-+       (mode) =3D=3D WRS_MODE_VHT  ? "VHT"  : \
-+       (mode) =3D=3D WRS_MODE_HE   ? "HE"   : \
-+       "ERR")
-+
-+#define WRS_CONVERGE_MODE_STR(mode) \
-+       ((mode) =3D=3D WRS_CONVERGE_MODE_RESET ? "RESET" : "RSSI")
-+
-+#define WRS_BW_STR(bw) (                  \
-+       (bw) =3D=3D CHNL_BW_20  ? "20"  : \
-+       (bw) =3D=3D CHNL_BW_40  ? "40"  : \
-+       (bw) =3D=3D CHNL_BW_80  ? "80"  : \
-+       (bw) =3D=3D CHNL_BW_160 ? "160" : \
-+       "ERR")
-+
-+#define WRS_GI_STR(gi) (                       \
-+       (gi) =3D=3D WRS_GI_LONG   ? "Long"       : \
-+       (gi) =3D=3D WRS_GI_SHORT  ? "Short"      : \
-+       (gi) =3D=3D WRS_GI_VSHORT ? "VeryShort" :  \
-+       "ERROR")
-+
-+struct cl_wrs_tx_cntrs {
-+       u64 epr_acc;
-+       u32 total;
-+       u32 fail;
-+       u32 ba_not_rcv;
-+       u32 ba_not_rcv_consecutive;
-+};
-+
-+struct cl_wrs_tx_params {
-+       u16 mode        : 3, /* Mode - 0 =3D CCK, 1 =3D OFDM, 2 =3D HT, 3 =
-=3D VHT, 4 =3D HE. */
-+           gi          : 2, /* GI - O =3D Long, 1 =3D Short, 2 =3D Very sh=
-ort. */
-+           bw          : 2, /* Bandwidth - 0 =3D 20M, 1 =3D 40M, 2 =3D 80M=
-, 3 =3D 160M. */
-+           nss         : 3, /* Spatial Streams - 0 =3D 1SS, 1 =3D 2SS, .. =
-7 =3D 8SS. */
-+           mcs         : 4, /* MCS - CCK (0 - 3), OFDM/HT (0 - 7), VHT (0 =
-- 9), HE (0 - 11). */
-+           fallback_en : 1,
-+           is_fixed    : 1;
-+};
-+
-+struct cl_wrs_logger {
-+       unsigned long timestamp;
-+       u16 rate_idx;
-+       u32 success;
-+       u32 fail;
-+       u32 ba_not_rcv;
-+       u16 down_rate_idx;
-+       u16 up_rate_idx;
-+       u16 curr_epr;
-+       u16 down_epr;
-+       u16 down_epr_factorized;
-+       u16 penalty;
-+       u16 up_time;
-+       enum cl_wrs_decision decision;
-+       u16 new_rate_idx;
-+};
-+
-+struct cl_wrs_per_stats {
-+       struct list_head list;
-+       u8 mcs;
-+       u8 bw;
-+       u8 nss;
-+       u8 gi;
-+       u32 frames_total;
-+       u32 frames_failed;
-+       u64 epr_acc;
-+};
-+
-+struct cl_wrs_rssi_prot_db {
-+       s8 samples_old[WRS_RSSI_PROTECT_BUF_SZ_OLD];
-+       s8 samples_new[WRS_RSSI_PROTECT_BUF_SZ_NEW];
-+       u8 curr_idx_old;
-+       u8 curr_idx_new;
-+       s32 sum;
-+};
-+
-+struct cl_wrs_params {
-+       u8 is_fixed_rate  : 2,
-+          quick_up_check : 1,
-+          rsv            : 5;
-+       u32 up_same_time_cnt;
-+       u32 down_time_cnt;
-+       enum cl_wrs_converge_mode converge_mode;
-+       u32 converge_time_idle;
-+       u32 converge_time_trfc;
-+       u16 data_rate;
-+       u16 rate_idx;
-+       struct cl_wrs_table *table;
-+       u16 table_size;
-+       u16 penalty_decision_dn;
-+       struct cl_wrs_tx_params tx_params;
-+       enum cl_wrs_decision last_decision;
-+       u32 decision_cnt[WRS_DECISION_MAX];
-+       struct list_head list_rates;
-+       u32 frames_total;
-+       u32 fail_total;
-+       u32 ba_not_rcv_total;
-+       u64 epr_acc;
-+       bool calc_ba_not_rcv;
-+       bool sync;
-+       unsigned long sync_timestamp;
-+       unsigned long no_sync_timestamp;
-+       u32 immediate_drop_cntr;
-+       u32 immediate_drop_ignore;
-+};
-+
-+struct cl_wrs_sta {
-+       u8 sta_idx;
-+       bool smps_enable;
-+       u8 assoc_bw;
-+       u8 gi_cap[CHNL_BW_MAX];
-+       u64 supported_rates[CHNL_BW_MAX];
-+       enum cl_wrs_mode mode;
-+       struct cl_wrs_rate max_rate_cap;
-+       struct cl_wrs_rssi_prot_db rssi_prot_db;
-+       struct cl_wrs_params su_params;
-+};
-+
-+struct cl_wrs_db {
-+       /* General */
-+       spinlock_t lock;
-+       enum cl_dbg_level debug_level;
-+       /* Timer */
-+       struct cl_timer timer_maintenance;
-+       u32 interval;
-+       /* Fixed rate */
-+       u8 is_fixed_rate;
-+       /* Conservative initial rate */
-+       bool conservative_mcs_noisy_env;
-+       bool conservative_nss_noisy_env;
-+       /* Immediate drop */
-+       bool immediate_drop_en;
-+       u8 immediate_drop_epr_factor;
-+       u32 immediate_drop_max_in_row;
-+       /* Converge idle */
-+       bool converge_idle_en;
-+       u32 converge_idle_interval_reset;
-+       u32 converge_idle_interval_rssi;
-+       u32 converge_idle_packet_th;
-+       /* Converge traffic */
-+       bool converge_trfc_en;
-+       u32 converge_trfc_interval_static;
-+       u32 converge_trfc_interval_motion;
-+       /* Supported rates */
-+       u8 mode;
-+       u64 ap_supported_rates[CHNL_BW_MAX]; /* Bit array for each bw */
-+       struct cl_wrs_rate max_cap;
-+       /* RSSI protect */
-+       bool rssi_protect_en;
-+       u8 rssi_protect_mode;
-+       s8 rssi_protect_up_thr;
-+       s8 rssi_protect_dn_thr;
-+       /* Time + step thresholds */
-+       u16 time_th_min;
-+       u16 time_th_max_up;
-+       u16 time_th_max_down;
-+       u16 step_down;
-+       u16 step_up_same;
-+       /* Quick up */
-+       bool quick_up_en;
-+       u8 quick_up_ba_thr;
-+       u16 quick_up_interval;
-+       /* Quick down */
-+       bool quick_down_en;
-+       u8 quick_down_epr_factor;
-+       u8 quick_down_agg_thr;
-+       u16 quick_down_pkt_thr;
-+       /* BA not received */
-+       bool ba_not_rcv_collision_filter;
-+       bool ba_not_rcv_force;
-+       u32 ba_not_rcv_time_since_sync;
-+       /* Sync */
-+       u16 sync_timeout;
-+       u8 sync_min_attempts;
-+       /* CCA counters */
-+       unsigned long cca_timestamp;
-+       u32 cca_primary;
-+       u32 cca_sec80;
-+       u32 cca_sec40;
-+       u32 cca_sec20;
-+       bool adjacent_interference20;
-+       bool adjacent_interference40;
-+       bool adjacent_interference80;
-+       /* All the rest */
-+       u32 min_frames_for_decision;
-+       u8 epr_factor;
-+};
-+
-+#endif /* CL_WRS_DB_H */
++void cl_baw_pending_purge(struct cl_baw *baw)
++{
++       if (!skb_queue_empty(&baw->pending))
++               __skb_queue_purge(&baw->pending);
++}
 --
 2.30.0
 
