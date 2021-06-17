@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,UPPERCASE_75_100,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0B03C48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F4FC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC23D613E9
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E11F613E9
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232554AbhFQQHh (ORCPT
+        id S232710AbhFQQHi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:07:37 -0400
-Received: from mail-db8eur05on2048.outbound.protection.outlook.com ([40.107.20.48]:5985
-        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:07:38 -0400
+Received: from mail-eopbgr80074.outbound.protection.outlook.com ([40.107.8.74]:59110
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232781AbhFQQHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:07:09 -0400
+        id S231955AbhFQQHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:07:10 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a/z/9LKNIZ1EG2zRMh4GlFGA2kG4Tdi7GMl5OUWxIftGRIvSEqLSlW3O33m4NWD6EUf1ttfwc7TqbklnVJWM1BTIPSo/UaxYnciWFQS5GZ0duBrvHvuESI/f1BXK9elaboi3dQiri/6f/PAAABz/K22cyQbJRidCKWqwaIvszPAKbzs/B2J5Tpekx+GV3K8Ax2zSXYk9A5JpNOXAREZczxImSp3n8uTmtcArRn5Gxb1sSoqNFMsS+cVUbVJYPJBujPxMuwzkEXclqPHoJq6nyF62L8c7XPQPtnnd+sIeQPWPYdq8LwdQfIqqelfFN07T+DF+wrLIgOUbM3xB+0I7nw==
+ b=c1Nkzh+W8EzFun11XBcKDnYKGHDHpcrnCSwt6me1GQGcOKmu7b5ywsdudlMYpNv2fnLCr6Y2HJOokwo3GtIhrMlaUKnnEpuDjrMfJPSU+GIiOmlJPixCpsabv1caKsbzXh+bgQndVluG8OyEJGp7EezWTs8OjQAokXtbA0yigC1fzautlXS0dSR+Rqn/YKmQAKNQrGEls2dzc5NMzzcHGM0OaWTTxAai2G7ci0en/dNLKyf0jM/MlCtDpB2Y6sOFK9rK+9UC7aiJbBMwlTSl3sOmp8GIXz9l+xJQpEEMz/q/huepo0HmZYWm3mx7VMiQz/NT5AIIxBeMojfeJ1RoFg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OAtcNY2+S3+ov/x9Pol1hGpCwjMyE3oUWWeweTwilQA=;
- b=V/XUbM5dpl6rp+G3qq/BNLO0mU61RzyKMhjhbWHQuM75GMBe+EEUq/U2t4VcUltAxJ3z4I6ekjPXEKZ7wyjnOex2q85zt6EuxqI2wOfJzCQMDZRUbaI4IjY2q0LfodebKqmsS89TBW6X9OKXhsk2z1ndKCO/b+gB046uMgFCPtpyTwp9CVpla8r+yekvY0yj3xtug1veFYk77wfUk5inYUoXkNwhStWIQVRP9Ri6MSoq51gp4qP9taEDHGXzadPoVw6Hzd2FokFU6c/PXrbsyHNN8Xg7hyS+wp/p4K+s3CLOL7P6jSyLLqfsrLjGcpTXC1+shL9PyqhtBGfAbwMOFw==
+ bh=jrv3iuaP852mOWsYC0loc/ZVaVrv5W+Ynsl/vmTTY80=;
+ b=Qt3JsNBE71QA858Ls3cBD/S8glGxBNngBnxS+Z8ewDuk41Jqk9tram+m4M2QogXz+z6CjAsgVVFg+1OMU/4KCN6+GzWs8cKLh89gWMWsyKfZIZFOHFQtkEUq5SdUWZi7JRAkTtO/7V3kBANvXuQEcZ6PV8PyzDHPAX0+e48O5gWZcSA+/MByfhu/WjcC2NHfJTZCn74iU7Joizm0b5nMqAWk3CtaK/OMtYbO6uWuSyVbGjLnntShPUZ/KkyVi9QVlKE1YNPShUBMkxgeEr7jxf+4AqotXe+0uqjS7BL2Z7JDtI/ODxm834RehCzWNdMlXM6NOs4BNcnf1JwXKP5RIQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OAtcNY2+S3+ov/x9Pol1hGpCwjMyE3oUWWeweTwilQA=;
- b=Yg3pcPYQD9PicSJHFRqEatd5ZHQAi/roxSgV6av3P9B6JAikPLbCiGk0frzn2kJ/pU2nCHrvn9A3XS+DNteVWo3KB3/S+JK3MmrAE/AsRtjxeRdCYGWFSEIbOlex1YCYH5rOxEdhrFBAcCcQqkgTUD1YApQGA2/Vp7+m6zJl7+8=
+ bh=jrv3iuaP852mOWsYC0loc/ZVaVrv5W+Ynsl/vmTTY80=;
+ b=UkvI4r10z2PbIAimouBm3I8iiuyTBu9qzrsOHjTMm/iuQjwiFy4BZCUoEGGesda1TIrmxf+yb+BRCgK9btwkebsFo1r702wgTRd5sfmp0Xny2OyIC1ZxtWLcLZukppY7F8dDox6yNhr22kfid5XL4PBs9uXrLvOJHqZ5teLQY/o=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB0871.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1fb::6) with
+ by AM9P192MB0887.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1f8::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.21; Thu, 17 Jun
- 2021 16:04:26 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Thu, 17 Jun
+ 2021 16:05:00 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:04:26 +0000
+ 16:05:00 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +58,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 080/256] cl8k: add ext/dyn_mcast_rate.h
-Date:   Thu, 17 Jun 2021 15:59:27 +0000
-Message-Id: <20210617160223.160998-81-viktor.barna@celeno.com>
+Subject: [RFC v1 090/256] cl8k: add fw/fw_msg.c
+Date:   Thu, 17 Jun 2021 15:59:37 +0000
+Message-Id: <20210617160223.160998-91-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +72,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:00 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:12 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 2ed1e280-961d-44d3-5ed1-08d931a985b7
-X-MS-TrafficTypeDiagnostic: AM9P192MB0871:
+X-MS-Office365-Filtering-Correlation-Id: 82ef4259-40b4-40e4-42c5-08d931a98ca6
+X-MS-TrafficTypeDiagnostic: AM9P192MB0887:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB0871E5FE99CEFF72DD12124FF60E9@AM9P192MB0871.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM9P192MB088707062B962DBB8A81CF2DF60E9@AM9P192MB0887.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3383;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rwdVm/M1qBSPvUDFr0wBQ6i28J8MWgG3pgc2ImvKHkm/c7kzrFvGErzGqqIIR4sGdYrV4N5EuaZ/HaOuMxR1VgmV3e4B3GSkm9tIB5l6WvMbgnQUVhrIkgs9MhJcCkeAdG7xJpHW0noaOIPgWwP9ooYzgn1sqdYV5ZzbbB0jg+Yl/k82Mk5l5tuKpzjRwBbhaOwIAWEatY45uwTkTzo9TQ0SxFB3aTog2Hoz+0l8XziY21zNF99Aaw/T5To3nDX8/KooCyXZ4sul2C2cJS8yuSTyjlgCwHzd/ZZHdfiV6w7Z176Tp+gVRy5vB8v2fJGJqWxlesxZjINcgfAqVkL+wa2OtYbeP3hCNHqpxOEqxE+T5SMpjzjbPUjsji65m3MqJ3aYdpthkKZN7XUCaAjlACTsMviHo0I4hTt6pi/xzev+XPTXoj+IA++nhht1wYrT4h2SKGPFBTLRfNoA8w7hW20IeFam30Fopezurs+zkKUQMYRSr7h5RyWuBNpqP+e1zNaYB2qAWTggJ/hcLZfVUMchK4XON7QIfTtE+FZX8cLELM/970tiuHmp5/e8Ocnbk3dCCl0gf6lMaRUF8YtF5Q0fATpD6LM55ZgyBeFaVg7EEW6I4zBD0ZsWmP9lq+VX9cl08Mowb67/PrIR2yJiogaVNnhZ+rEnTuT6JtYpOfSSrVhTyPQ2NGw+keUVbIxlIi6JGekptxROVfTCZ3G3ww==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(366004)(376002)(346002)(396003)(39840400004)(16526019)(66946007)(478600001)(26005)(66476007)(6486002)(186003)(66556008)(9686003)(316002)(86362001)(6506007)(6666004)(6512007)(55236004)(38350700002)(1076003)(38100700002)(4326008)(8676002)(83380400001)(5660300002)(52116002)(2616005)(2906002)(6916009)(956004)(8936002)(107886003)(54906003)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 0CsGaR2OX9IvoTleaA1hgr6pnOSTd3v3HgUFeDBQDhX3Bf8PnBxini5R3U3z4pSdQ0QQ/ovGNs6IvoUpuNSUIhUZqyBzSXo1tTNuT5gKYhYRszI7yEwr8aDb3b28bWDJJsdFO7o4yaqH1S+VB2EqSPKZQF/1N2uDrZIE6V1ChUnice2BWZgmeVCUYkaKAJ1OTPokONdZ03U30ZgA2ntpNOcp79vr6zC2DmiPUf6jfziORKylUTtHzO+rfGZgQQ9pj/NIEq4fhtrIRzkzlHfN1mSoRMzKlopk0R66+JREZip+aeb1PedMY74SEoGDEMiV1oX27WsOsyiSfGGnQYUQyhy12shsTaDdxyfRJVe1g8slRdsgPv455YHwujpfKyuP+tp0rPQnqkeMOSkMyWn3dJh/IuKPDA36ORXNeDOHCYpnS5gtf/ofo1W6eJhADNuOXglEXQrqvIRb0TDDXW4ikTzoi+JU1hcnfjyMtdRlZPTaHxNCmEawEzzEQYtkTadbfN8609Td7nChwJfdHNexh0ySfmzf1hS/gU7JtE1eeWs380JnVKeAL8fJD3ynWvKYQUmXfYSxUgzGl8rg+2l6pA52CoTeSl6gnsz3aDCgb7KLukCBmlx7x0P7cts6wFfB2+oVeHwOFbRfqTe4vKbDNl7mQ29e2XTsgvimrAz65SkDsFPsbZ/N9o8RVbJnzjbWxdllD7zlYE/4EykDTlwngg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(396003)(366004)(39850400004)(136003)(346002)(83380400001)(6666004)(38350700002)(4326008)(186003)(16526019)(5660300002)(54906003)(6506007)(26005)(55236004)(38100700002)(316002)(1076003)(107886003)(52116002)(8936002)(508600001)(66476007)(66946007)(66556008)(36756003)(6916009)(6486002)(86362001)(2616005)(956004)(2906002)(8676002)(9686003)(6512007)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NwyvqEOX8GSgIoQtaVTJcrLDA8qOLLv+wGFA2WKsq8Wq9ZxjP1SZ4F9neOa/?=
- =?us-ascii?Q?wKAeaGlGEyTEMrZlyQ0vAD4qSUnSqzAqet1biUU2ZY8++T6nMJIXUh2bNydN?=
- =?us-ascii?Q?cBB3tH3k4QkzR08rfeCRcmVpOHhxAH48ix5quEz59Fyv3cHvJWfMPPvKsAqH?=
- =?us-ascii?Q?OfonsFKa9NbK3EG0uhWLNmozYY3FEr9sLDjUGYFwUxTKf5RcHrzayQJu790E?=
- =?us-ascii?Q?rFKWgAOwd2AIbyV1kpA/W2cK0XFbfX9O+J75bJMCVvEdOmpoNP3TtDB+PQBX?=
- =?us-ascii?Q?26s1AnccvQ4eTh+yOzOxOkIR7gxLlfKD3ByKjxn0anC0y5u6iy4OhtG/BLQR?=
- =?us-ascii?Q?fF8BkJkqXPOnTI6z0BUr8+5oDOhXzghIwT3VBPoChZI4M5YiWLzRJyBQ+hM3?=
- =?us-ascii?Q?gTt1yxOgEGgdKc5i8LrHsUqe6PdAQhZisidxpLYmNYE3cNBXe1uaxsXAgqhs?=
- =?us-ascii?Q?FQqEcq1RBXOknCVSdhs/DlpxARVTV0G18ijAdNdlrK3T9zTxpaUE0FM34tiy?=
- =?us-ascii?Q?qsL5Kzwync9s3Y4u2sRfmKiWYbtTDcaFEliS+YsrNdNiiQIzfk00q2CofEqm?=
- =?us-ascii?Q?AQCzV/Uq7FYwG8qywMnAu3DJzgHEPk0CVLHc4NWH8AVsAxlgJXG1WTFaXzPL?=
- =?us-ascii?Q?wry1a5lbIt6LGz9JI16/0aYmLEuqeKu1UyzNerUGEjTbFZTDvvogUu+o5RpO?=
- =?us-ascii?Q?CncPrFln0iwQwDmR9CWRSRbGM2IW3g7Zz4QhTigYohvBmp5Ke3LzJwE9RCvb?=
- =?us-ascii?Q?SIUavBaDWjAhNUuCrYtHWCyO1p+bhl7eRFNQhrD++179dEBiXRKeJLxZB7RW?=
- =?us-ascii?Q?WIq+gQxYrj9fp8tq1kB/QmJm0wutIYgvKushlZr64WHTSQpZAJHj2piErgrR?=
- =?us-ascii?Q?syRJ19owzvrhCJn52PB0qGBcFlZcoF7/MoZChTmUXiMG4QSn+m3eCYzlYzqJ?=
- =?us-ascii?Q?+UvBC+xx1hGC8EykVFck+9Jsx25uUeERu6aA+dHguGImTJhInZyUpHEy1zdQ?=
- =?us-ascii?Q?POJuLIwVUTCg366jMAKWcFHIyVHyKeL3QkavQoIDmIgPAHAiQeLX6z/WbGUm?=
- =?us-ascii?Q?QNhicOdr2OlfBoQlxOCwPt43HoQ16zSsxEsGRK+y2uDn5Be6eE8ZYyf8IYgR?=
- =?us-ascii?Q?gpVzOilC9l7EADh6oePh8ImYpe+1P5Bn24/hOpxuerV5dHgQ19aVxxPnGdOA?=
- =?us-ascii?Q?IncNnSlQVBxy6bZlLNMGXCFxscSzm+xHUEJcOltFjdOQg694kxKFcTh1igBw?=
- =?us-ascii?Q?W12ABLYsD2ObezJzwiEBtn+QOvRGWEUCsPA1fzSC/LM4LyRoqvTsHtChLZVG?=
- =?us-ascii?Q?nbSfMKUzsD7xyaCrnZbdoCAk?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C3i0Nto5GLQDa6tpkkF1Agjb6prbTcGQMf2A8mqktUP5vZpc/ShER3ew5bEO?=
+ =?us-ascii?Q?FrFcxa9+1SEzKFTICy8gPrMZTpSkb4Hej/88vh4WppJS32T0l4cALGwReKxE?=
+ =?us-ascii?Q?5HVH+mlBNTQovARXIcaFkqAiiAITDow6RJwpryjLZCw4jpmB2NC3SAvd6OLp?=
+ =?us-ascii?Q?6uj6qJ4YA4eEA/gGdMLyVPC3MR/FJxU9vrKWgXCllydBvWKCfbObTcVvXnCS?=
+ =?us-ascii?Q?Ziibq9CfpCAx6IUrv8X3EoqtLN0hmkHi2Ept3Vi1GYpadV+nsXGjZuNILXXk?=
+ =?us-ascii?Q?DzGT1fiv/OZUB/TBsqjNc+eM4N8jw0jHUgTjuUFsx5W/Ck8fZN5R0aV+LA72?=
+ =?us-ascii?Q?XQ9cNjCVKX9DNEaVUdBq+ngpoNh2xy6+KougWkDk+J/yHxFpY/GJ+CRdx4ou?=
+ =?us-ascii?Q?0TxT+cBDtwcVHHRqbe6vRNa2JbkSfbLQCFCU/IdLi7AK0B3EVUYyuFHKJHlo?=
+ =?us-ascii?Q?PqaPUHYEaKld8W79Z/K98O4s0B60nImOmHXHiwtyn8vfMsVmdq4sJveMwzdj?=
+ =?us-ascii?Q?9femyBApsOWsSGUN1HrBarO4u9GJaWcx92x3ts9Gy5nzjM8VsnFQMgJtcAHV?=
+ =?us-ascii?Q?/pvccZOgf1X+pvtpY0VXSMaVVlQIjAC0S7vMxiN6bwGNYtowJ4rBR/nthFt5?=
+ =?us-ascii?Q?s2MCAIk5FVsDCwuoT5t8phVvmoTZVAZFqrCzFa+HD0KpwrB+dr57M+oYfeBO?=
+ =?us-ascii?Q?yZpYqZbkUKoHpLwIhL8GLGRTQiUPRdSXk3fOoIttthtTbdzG9N52AULkmzkp?=
+ =?us-ascii?Q?WrFu/qliHFJ713iJY1zPEgXsXqa+3InzKU8bdAhjK9V3wjLpXc2KmxpmrKY1?=
+ =?us-ascii?Q?B9Gl2acgN0H0XMYfo+Jsd2VUOLiCZorKNmceNEny8NaaeJ1LKJmAYtTQE80c?=
+ =?us-ascii?Q?Z+3LfUOsJqOGOyW5R2GXnwWuN0Y4o6NBlaS/Abq/zGX/iYwaQWfDCgVYjzR5?=
+ =?us-ascii?Q?tJPNAp5AZUh93JO/12TgSJAE+t7dRqAARge1SoSparRqw6ggCBc3TXHpn1E4?=
+ =?us-ascii?Q?e9b06LV5yCs4w1wKg24AP9DG7Nth4l9YuSTOvb9SSPa966dR7NX4Wv6vPveI?=
+ =?us-ascii?Q?ukxXZ2Bmo0otK0qx4ATicOYSD7D6TtsQsfQqHonZJ6EuySdkoA277093usrW?=
+ =?us-ascii?Q?YV2wgVj9W7TpcGcQPCUnD2nZhgDW93Lnne6YdftcM+0A7nV8OBtTS3XZnbso?=
+ =?us-ascii?Q?nRVh0UjiQRp3RvyefU3SQ3CmNhhqGZ5PpdJTnHMP5ZxycsyisTBGyM20P77+?=
+ =?us-ascii?Q?ghSYfKwIn2nfsXK0BHLRd9uV+fl94kiL8McnKZLS7bdF+/iEcPitU51T/rat?=
+ =?us-ascii?Q?JMpRY1KzgI1dzLGe5jJl6dG/?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2ed1e280-961d-44d3-5ed1-08d931a985b7
+X-MS-Exchange-CrossTenant-Network-Message-Id: 82ef4259-40b4-40e4-42c5-08d931a98ca6
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:01.3571
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:12.9940
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IHN5EvXivvvnaVBLUmoM4USKm7jm1Ipfs0p7+D9n22vGRXI4vvQyJFlwEhtjhgf7oYkEb64nmUyL6ZbWMJwU5A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0871
+X-MS-Exchange-CrossTenant-UserPrincipalName: gtbVf95s3hUFqMqTvwTBAc9V1wjS+atn2Pd8PifY6f/7Bb9bkhO2iJvDf/O5iBbT8QAY12lcOSDwQAFcN45OFA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0887
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,33 +129,172 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/ext/dyn_mcast_rate.h  | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/ext/dyn_mcast_rate.h
+ drivers/net/wireless/celeno/cl8k/fw/fw_msg.c | 135 +++++++++++++++++++
+ 1 file changed, 135 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/fw/fw_msg.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/ext/dyn_mcast_rate.h b/driver=
-s/net/wireless/celeno/cl8k/ext/dyn_mcast_rate.h
+diff --git a/drivers/net/wireless/celeno/cl8k/fw/fw_msg.c b/drivers/net/wir=
+eless/celeno/cl8k/fw/fw_msg.c
 new file mode 100644
-index 000000000000..dac8c816c5a4
+index 000000000000..ea59bf57fa97
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/ext/dyn_mcast_rate.h
-@@ -0,0 +1,14 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/fw/fw_msg.c
+@@ -0,0 +1,135 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_DYN_MCAST_RATE_H
-+#define CL_DYN_MCAST_RATE_H
++#include "fw/fw_msg.h"
 +
-+void cl_dyn_mcast_rate_init(struct cl_hw *cl_hw);
-+void cl_dyn_mcast_rate_set(struct cl_hw *cl_hw);
-+u16 cl_dyn_mcast_rate_get(struct cl_hw *cl_hw);
-+void cl_dyn_mcast_rate_recovery(struct cl_hw *cl_hw);
-+void cl_dyn_mcast_rate_update_upon_assoc(struct cl_hw *cl_hw, u8 wrs_mode,=
- u8 num_sta);
-+void cl_dyn_mcast_rate_update_upon_disassoc(struct cl_hw *cl_hw, u8 wrs_mo=
-de, u8 num_sta);
++/* Should be used for REQ and CFM only */
++const char *const msg2str[MSG_TOTAL_REQ_CFM] =3D {
++       /* MM messages */
++       [MM_RESET_REQ] =3D "MM_RESET_REQ",
++       [MM_RESET_CFM] =3D "MM_RESET_CFM",
++       [MM_START_REQ] =3D "MM_START_REQ",
++       [MM_START_CFM] =3D "MM_START_CFM",
++       [MM_VERSION_REQ] =3D "MM_VERSION_REQ",
++       [MM_VERSION_CFM] =3D "MM_VERSION_CFM",
++       [MM_ADD_IF_REQ] =3D "MM_ADD_IF_REQ",
++       [MM_ADD_IF_CFM] =3D "MM_ADD_IF_CFM",
++       [MM_REMOVE_IF_REQ] =3D "MM_REMOVE_IF_REQ",
++       [MM_REMOVE_IF_CFM] =3D "MM_REMOVE_IF_CFM",
++       [MM_STA_ADD_REQ] =3D "MM_STA_ADD_REQ",
++       [MM_STA_ADD_CFM] =3D "MM_STA_ADD_CFM",
++       [MM_STA_DEL_REQ] =3D "MM_STA_DEL_REQ",
++       [MM_STA_DEL_CFM] =3D "MM_STA_DEL_CFM",
++       [MM_SET_FILTER_REQ] =3D "MM_SET_FILTER_REQ",
++       [MM_SET_FILTER_CFM] =3D "MM_SET_FILTER_CFM",
++       [MM_SET_CHANNEL_REQ] =3D "MM_SET_CHANNEL_REQ",
++       [MM_SET_CHANNEL_CFM] =3D "MM_SET_CHANNEL_CFM",
++       [MM_SET_DTIM_REQ] =3D "MM_SET_DTIM_REQ",
++       [MM_SET_DTIM_CFM] =3D "MM_SET_DTIM_CFM",
++       [MM_SET_BEACON_INT_REQ] =3D "MM_SET_BEACON_INT_REQ",
++       [MM_SET_BEACON_INT_CFM] =3D "MM_SET_BEACON_INT_CFM",
++       [MM_SET_BASIC_RATES_REQ] =3D "MM_SET_BASIC_RATES_REQ",
++       [MM_SET_BASIC_RATES_CFM] =3D "MM_SET_BASIC_RATES_CFM",
++       [MM_SET_BSSID_REQ] =3D "MM_SET_BSSID_REQ",
++       [MM_SET_BSSID_CFM] =3D "MM_SET_BSSID_CFM",
++       [MM_SET_EDCA_REQ] =3D "MM_SET_EDCA_REQ",
++       [MM_SET_EDCA_CFM] =3D "MM_SET_EDCA_CFM",
++       [MM_SET_ASSOCIATED_REQ] =3D "MM_SET_ASSOCIATED_REQ",
++       [MM_SET_ASSOCIATED_CFM] =3D "MM_SET_ASSOCIATED_CFM",
++       [MM_SET_SLOTTIME_REQ] =3D "MM_SET_SLOTTIME_REQ",
++       [MM_SET_SLOTTIME_CFM] =3D "MM_SET_SLOTTIME_CFM",
++       [MM_SET_IDLE_REQ] =3D "MM_SET_IDLE_REQ",
++       [MM_SET_IDLE_CFM] =3D "MM_SET_IDLE_CFM",
++       [MM_KEY_ADD_REQ] =3D "MM_KEY_ADD_REQ",
++       [MM_KEY_ADD_CFM] =3D "MM_KEY_ADD_CFM",
++       [MM_KEY_DEL_REQ] =3D "MM_KEY_DEL_REQ",
++       [MM_KEY_DEL_CFM] =3D "MM_KEY_DEL_CFM",
++       [MM_BA_ADD_TX_REQ] =3D "MM_BA_ADD_TX_REQ",
++       [MM_BA_ADD_TX_CFM] =3D "MM_BA_ADD_TX_CFM",
++       [MM_BA_ADD_RX_REQ] =3D "MM_BA_ADD_RX_REQ",
++       [MM_BA_ADD_RX_CFM] =3D "MM_BA_ADD_RX_CFM",
++       [MM_BA_DEL_REQ] =3D "MM_BA_DEL_REQ",
++       [MM_BA_DEL_CFM] =3D "MM_BA_DEL_CFM",
++       [MM_PHY_RESET_REQ] =3D "MM_PHY_RESET_REQ",
++       [MM_PHY_RESET_CFM] =3D "MM_PHY_RESET_CFM",
++       [MM_AVAILABLE_BA_TXQ_REQ] =3D "MM_AVAILABLE_BA_TXQ_REQ",
++       [MM_AVAILABLE_BA_TXQ_CFM] =3D "MM_AVAILABLE_BA_TXQ_CFM",
++       [MM_UPDATE_RATE_DL_REQ] =3D "MM_UPDATE_RATE_DL_REQ",
++       [MM_UPDATE_RATE_DL_CFM] =3D "MM_UPDATE_RATE_DL_CFM",
++       [MM_SET_VNS_REQ] =3D "MM_SET_VNS_REQ",
++       [MM_SET_VNS_CFM] =3D "MM_SET_VNS_CFM",
++       [MM_SET_TX_BF_REQ] =3D "MM_SET_TX_BF_REQ",
++       [MM_SET_TX_BF_CFM] =3D "MM_SET_TX_BF_CFM",
++       [MM_SOUNDING_REQ] =3D "MM_SOUNDING_REQ",
++       [MM_SOUNDING_CFM] =3D "MM_SOUNDING_CFM",
++       [MM_SOUNDING_PAIRING_REQ] =3D "MM_SOUNDING_PAIRING_REQ",
++       [MM_SOUNDING_PAIRING_CFM] =3D "MM_SOUNDING_PAIRING_CFM",
++       [MM_SOUNDING_INTERVAL_REQ] =3D "MM_SOUNDING_INTERVAL_REQ",
++       [MM_SOUNDING_INTERVAL_CFM] =3D "MM_SOUNDING_INTERVAL_CFM",
++       [MM_SOUNDING_STA_SWITCH_REQ] =3D "MM_SOUNDING_STA_SWITCH_REQ",
++       [MM_SOUNDING_STA_SWITCH_CFM] =3D "MM_SOUNDING_STA_SWITCH_CFM",
++       [MM_CONFIG_CCA_REQ] =3D "MM_CONFIG_CCA_REQ",
++       [MM_CONFIG_CCA_CFM] =3D "MM_CONFIG_CCA_CFM",
++       [MM_SET_DFS_REQ] =3D "MM_SET_DFS_REQ",
++       [MM_SET_DFS_CFM] =3D "MM_SET_DFS_CFM",
++       [MM_SET_ANT_BITMAP_REQ] =3D "MM_SET_ANT_BITMAP_REQ",
++       [MM_SET_ANT_BITMAP_CFM] =3D "MM_SET_ANT_BITMAP_CFM",
++       [MM_NDP_TX_CONTROL_REQ] =3D "MM_NDP_TX_CONTROL_REQ",
++       [MM_NDP_TX_CONTROL_CFM] =3D "MM_NDP_TX_CONTROL_CFM",
++       [MM_REG_WRITE_REQ] =3D "MM_REG_WRITE_REQ",
++       [MM_REG_WRITE_CFM] =3D "MM_REG_WRITE_CFM",
++       [MM_PROT_MODE_REQ] =3D "MM_PROT_MODE_REQ",
++       [MM_PROT_MODE_CFM] =3D "MM_PROT_MODE_CFM",
++       [MM_GOTO_POWER_REDUCTION_REQ] =3D "MM_GOTO_POWER_REDUCTION_REQ",
++       [MM_GOTO_POWER_REDUCTION_CFM] =3D "MM_GOTO_POWER_REDUCTION_CFM",
++       [MM_BACKUP_BCN_EN_REQ] =3D "MM_BACKUP_BCN_EN_REQ",
++       [MM_BACKUP_BCN_EN_CFM] =3D "MM_BACKUP_BCN_EN_CFM",
++       [MM_START_PERIODIC_TX_TIME_REQ] =3D "MM_START_PERIODIC_TX_TIME_REQ"=
+,
++       [MM_START_PERIODIC_TX_TIME_CFM] =3D "MM_START_PERIODIC_TX_TIME_CFM"=
+,
++       [MM_ANAMON_READ_REQ] =3D "MM_ANAMON_READ_REQ",
++       [MM_ANAMON_READ_CFM] =3D "MM_ANAMON_READ_CFM",
++       [MM_REFRESH_PWR_REQ] =3D "MM_REFRESH_PWR_REQ",
++       [MM_REFRESH_PWR_CFM] =3D "MM_REFRESH_PWR_CFM",
++       [MM_SET_ANT_PWR_OFFSET_REQ] =3D "MM_SET_ANT_PWR_OFFSET_REQ",
++       [MM_SET_ANT_PWR_OFFSET_CFM] =3D "MM_SET_ANT_PWR_OFFSET_CFM",
++       [MM_SET_RATE_FALLBACK_REQ] =3D "MM_SET_RATE_FALLBACK_REQ",
++       [MM_SET_RATE_FALLBACK_CFM] =3D "MM_SET_RATE_FALLBACK_CFM",
++       [MM_TWT_SETUP_REQ] =3D "MM_TWT_SETUP_REQ",
++       [MM_TWT_SETUP_CFM] =3D "MM_TWT_SETUP_CFM",
++       [MM_TWT_TEARDOWN_REQ] =3D "MM_TWT_TEARDOWN_REQ",
++       [MM_TWT_TEARDOWN_CFM] =3D "MM_TWT_TEARDOWN_CFM",
++       [MM_RSRC_MGMT_REQ] =3D "MM_RSRC_MGMT_REQ",
++       [MM_RSRC_MGMT_CFM] =3D "MM_RSRC_MGMT_CFM",
++       [MM_SET_FREQ_OFFSET_REQ] =3D "MM_SET_FREQ_OFFSET_REQ",
++       [MM_SET_FREQ_OFFSET_CFM] =3D "MM_SET_FREQ_OFFSET_CFM",
 +
-+#endif /* CL_DYN_MCAST_RATE_H */
++       /* DBG messages */
++       [DBG_STR_SHIFT(DBG_SET_MOD_FILTER_REQ)] =3D "DBG_SET_MOD_FILTER_REQ=
+",
++       [DBG_STR_SHIFT(DBG_SET_MOD_FILTER_CFM)] =3D "DBG_SET_MOD_FILTER_CFM=
+",
++       [DBG_STR_SHIFT(DBG_CE_SET_MOD_FILTER_REQ)] =3D "DBG_CE_SET_MOD_FILT=
+ER_REQ",
++       [DBG_STR_SHIFT(DBG_CE_SET_MOD_FILTER_CFM)] =3D "DBG_CE_SET_MOD_FILT=
+ER_CFM",
++       [DBG_STR_SHIFT(DBG_SET_SEV_FILTER_REQ)] =3D "DBG_SET_SEV_FILTER_REQ=
+",
++       [DBG_STR_SHIFT(DBG_SET_SEV_FILTER_CFM)] =3D "DBG_SET_SEV_FILTER_CFM=
+",
++       [DBG_STR_SHIFT(DBG_BEAMFORMING_TX_REQ)] =3D "DBG_BEAMFORMING_TX_REQ=
+",
++       [DBG_STR_SHIFT(DBG_BEAMFORMING_TX_CFM)] =3D "DBG_BEAMFORMING_TX_CFM=
+",
++       [DBG_STR_SHIFT(DBG_GET_E2W_STATS_REQ)] =3D "DBG_GET_E2W_STATS_REQ",
++       [DBG_STR_SHIFT(DBG_GET_E2W_STATS_CFM)] =3D "DBG_GET_E2W_STATS_CFM",
++       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_MASK_REQ)] =3D "DBG_SET_LA_MPIF_MASK=
+_REQ",
++       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_MASK_CFM)] =3D "DBG_SET_LA_MPIF_MASK=
+_CFM",
++       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_POINT_REQ)] =3D "DBG_SET_LA_TRIG_POI=
+NT_REQ",
++       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_POINT_CFM)] =3D "DBG_SET_LA_TRIG_POI=
+NT_CFM",
++       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_DEBUG_MODE_REQ)] =3D "DBG_SET_LA_MPI=
+F_DEBUG_MODE_REQ",
++       [DBG_STR_SHIFT(DBG_SET_LA_MPIF_DEBUG_MODE_CFM)] =3D "DBG_SET_LA_MPI=
+F_DEBUG_MODE_CFM",
++       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_RULE_REQ)] =3D "DBG_SET_LA_TRIG_RULE=
+_REQ",
++       [DBG_STR_SHIFT(DBG_SET_LA_TRIG_RULE_CFM)] =3D "DBG_SET_LA_TRIG_RULE=
+_CFM",
++       [DBG_STR_SHIFT(DBG_TX_TRACE_DEBUG_FLAG_REQ)] =3D "DBG_TX_TRACE_DEBU=
+G_FLAG_REQ",
++       [DBG_STR_SHIFT(DBG_TX_TRACE_DEBUG_FLAG_CFM)] =3D "DBG_TX_TRACE_DEBU=
+G_FLAG_CFM",
++       [DBG_STR_SHIFT(DBG_PRINT_STATS_REQ)] =3D "DBG_PRINT_STATS_REQ",
++       [DBG_STR_SHIFT(DBG_PRINT_STATS_CFM)] =3D "DBG_PRINT_STATS_CFM",
++       [DBG_STR_SHIFT(DBG_TRIGGER_REQ)] =3D "DBG_TRIGGER_REQ",
++       [DBG_STR_SHIFT(DBG_TRIGGER_CFM)] =3D "DBG_TRIGGER_CFM",
++       [DBG_STR_SHIFT(DBG_TEST_MODE_REQ)] =3D "DBG_TEST_MODE_REQ",
++       [DBG_STR_SHIFT(DBG_TEST_MODE_CFM)] =3D "DBG_TEST_MODE_CFM",
++       [DBG_STR_SHIFT(DBG_SOUNDING_CMD_REQ)] =3D "DBG_SOUNDING_CMD_REQ",
++       [DBG_STR_SHIFT(DBG_SOUNDING_CMD_CFM)] =3D "DBG_SOUNDING_CMD_CFM",
++};
 --
 2.30.0
 
