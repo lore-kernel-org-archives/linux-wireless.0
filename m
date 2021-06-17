@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD772C48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9A31C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4BC96120A
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5BFE61351
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233620AbhFQQF6 (ORCPT
+        id S233645AbhFQQF7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:05:58 -0400
-Received: from mail-eopbgr140042.outbound.protection.outlook.com ([40.107.14.42]:47438
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:05:59 -0400
+Received: from mail-eopbgr80052.outbound.protection.outlook.com ([40.107.8.52]:15895
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231726AbhFQQFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S233570AbhFQQFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Jun 2021 12:05:50 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LkYVmAWwdjHchwLx9zWJKXREahP2QfWkaUltvpZNo4B3ASHa8eAeD7HJRmlrx3EIOLPViIboKGtoFUZRvVbbC8706iJBgnF5waTL/LF93J+skOoJWpvCn66IrScfcmhv885Nbc+wylaLH25khG5rXbFVQQHX9Jmdl6UBjeuD8J3EyxjSDNFAfsaa0chzM7AOCZx+BOqILI1mK+QjNpiB1HNDACwr4JpRlZlBNw0jZonlbJfKcbxbmRtWZt1Q4f+MM3Tz3xbiel+btMG/lItzNvl/4dr0ttSms6DyaX7gVc5H9zSyscgOFKOXAWGoeRmedo5wc1If19Cbuobom1Wgnw==
+ b=bWJ0VWEjIpyVt4GmdycpxqHnfIHMvJJXllpr4czC40V3D2bXLOq0BjHpCxLMP9mbr0ZZgkWe32u9ym52wpBw26NDHus3cvDKVWocurq/ny25WdYKh4QstZdzYihhWQzgNTJb722XzNAChWrOcR8Jh5MiAN+nB/jJa0n7/gwyAF5PSeUFK7g0K8BVhxu86PdwdyFNUqlEs74IhDY9FWIKHPNEyHHCzuIJgmKSTmfzxbqrOdTuXlXXk4cJmKxou+OfSQhxccQwFykEVl8tNeSDHbBcXWei5NXYB6vN/1SixKdCZBtFAcDtbcUiy+cdK+rvUimvEF4GfLR369iFWwkSCQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hgAfUqD9ZOtTiZ9LDMyvS4w82hpKXAJHSsnsxevXwLE=;
- b=dtf42fpkkEdsjP83JATNHJA1C72EK9L+F+bdCHS7o7HkEQbzDKjCli3RbRMQwRjNKn0IG1RrJBNzQ8XVrxmIVzbZBoa5x0msH08pa90JqnwftVhImg/H4VyKywKTpZKhpADO1/Fj41TR2byG1gXXg6nu7QBLdJMCKZgvJVxSRc1e6RrjsrTZ4JdFlVWkXVy9dU3oPjQXVTytPICTNwUpnROUDhetCdhnkS2qNCQFY8QLkbMxBg2pFGYu7TNui2ButgdYGrF5mcgSzvpJoSDCu1NijsTH0XWr4nBJAPM2gPEUIkQablQTlNZ63LDtV3yIKTsZJUu7Hoi+6iuQ3024nw==
+ bh=kYwYPaZsms30XYnxyCOgd3OmpGbPP4OJEjBxzEb2S3Q=;
+ b=fFYcMHwGLLfnCq2xyd3OhmDkmyK8osRpGzTmVJ0ek+qrUPRx4ZrcuShyvl5lQJ+StRQ0u2kYPpK+JLF56s1qYi6cX2LPlSsK8QgxmIk5+q1Pwbcpp4q/fxe2lwngGkHoUOcE76cpqai60681Z+pjQE1YPFUuhB8vQScbBO+VgsSHz8brMQTbh7UcEebaGDSlfxsELEz4Y7QdTtxC7eSzUhnZPf8mjP12cOzN+H0IJgO/afSt7p4G7biNgDAJTcmmhM2AlU7fzf8awK1W3VDqbKg0OyaoshbuirJMdFREzksWZDkLMMXWt9Y7I1h9buSZxJTN9qpWRVo+tsEaWDS3qA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hgAfUqD9ZOtTiZ9LDMyvS4w82hpKXAJHSsnsxevXwLE=;
- b=ByNwkoXpg5iA3uxsTR9OiuIDEl0GN5vtmwM0SH+lULoaUT/HpVu7IxbLxSDS3G8DZm31CwcQuv33/Hm8ABiSobqnFEvTOVB6J24VVdk7m7jCT9HWJQvM95OQU4NxIHsUdvi6/6Kg1wCMzPfLYeydITR97tRZgFX/ersmE7YJEjE=
+ bh=kYwYPaZsms30XYnxyCOgd3OmpGbPP4OJEjBxzEb2S3Q=;
+ b=mk3cK/AzJJhaLZ/ga9hAblQz2ru7keq+xOO+Sw5nSEXkRGx2TyL3LGUTOAOVcy7IkJeJqsa/w1X9Y1OT0WG/jmmjzfSDVIhKNLZk6mL0JRvHde+cYcd7czHuI5Dd3eIjfPi30ZngJ9tb4i1wo0jZPC2pX7pNERODlkwCPrJuMcg=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM9P192MB1234.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:388::18) with
+ by AM9P192MB0966.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1ce::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
- 2021 16:03:39 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.25; Thu, 17 Jun
+ 2021 16:03:40 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:03:39 +0000
+ 16:03:40 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 035/256] cl8k: add cecli.h
-Date:   Thu, 17 Jun 2021 15:58:42 +0000
-Message-Id: <20210617160223.160998-36-viktor.barna@celeno.com>
+Subject: [RFC v1 039/256] cl8k: add channel.h
+Date:   Thu, 17 Jun 2021 15:58:46 +0000
+Message-Id: <20210617160223.160998-40-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:12 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:16 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a652ed22-9916-4d7a-0358-08d931a968f3
-X-MS-TrafficTypeDiagnostic: AM9P192MB1234:
+X-MS-Office365-Filtering-Correlation-Id: 079f2c37-778c-420a-7b78-08d931a96b5d
+X-MS-TrafficTypeDiagnostic: AM9P192MB0966:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM9P192MB123459EA442E3FF7ADA4B3B4F60E9@AM9P192MB1234.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
+X-Microsoft-Antispam-PRVS: <AM9P192MB0966E4FA807F4C3F5D730AEAF60E9@AM9P192MB0966.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5v9CXDsjHnxKQb0Q+V6HUJ74h4uSKXzy8lv26obS6boGfNdqYpwgS93+SUKK3YLwaeP8RlnME0WddbrFOuxvNkKCi1cx5WJc8htfITPVHdTjzSFnpUGHMY+rsP8q3nS87c/v1yiTtcgd0xXKURSB0h8XjJzj3Wxie9/4fHfxv4gACj2eSUOExJ9sYKEXqWIxVWCF9q5TAzIigTJkAuZBJ1slghYnZ46YcmEbclQK/tLe+uvzQxOrIHs1HCy92vo7GPDxjJuyEeLJbPWRG8beZTJ6+uy8KVeVVWb6dAgqZ2gudTlAub4uPvWJVK8Pu9gxgR1c/LFBTHO//A+acONGEAQpGqGVP/m41ReMRg7MEDV7hzaS69SH3JNU/dbWetueFs2W2zqBrcSQlxAthgUWpUD3BOfjbyq+4t5fcRvxSuNwLNZ4YcdotKSWiqs/0+WPqURid3i4oGjHpHi9b7uE3Ks24cwUey6F1SY+Byb4lRpxT2LCXMFRi7ash9347Nyn2+hLi9JqfYErDoIsWDu/Dh2V6B33tY8QFn0m43fhu3iRj4p3NbTZGEIcDftyF8eaihiLGyXhFqgfrxS/dgzYph6WZbfc2pnkfr3ptT59+QAxgY2WL+mDVeAKSDtdopZe7znGorCcOubCRPRpCIsL6D5Kry7/KyPBpi95/NyrfHzbAy9+ZmX37kD88dwlHmqRm+Xsnpskurjzg3xxqSC1fg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(376002)(366004)(136003)(346002)(396003)(39850400004)(6666004)(107886003)(36756003)(956004)(66476007)(66556008)(2616005)(66946007)(6916009)(2906002)(26005)(9686003)(1076003)(6512007)(6486002)(16526019)(6506007)(38100700002)(52116002)(86362001)(8936002)(316002)(38350700002)(186003)(55236004)(54906003)(8676002)(5660300002)(508600001)(83380400001)(4326008)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Gw/Juut75SNV0sgZblh/VraCeD1eB0AXrAgzSW2YqM6ph5ceqbdCmfEkUqMruhNkWSp+SgtEDEtz4vB82f2bUbxIi5t51PSvaPyPDrryQcnFhCw3wfer0lEI5a+ixotoxjThQSJgcJe+zPUdsBqUVX9UsfKAvmBOof4T6BfB72djAmflkpx3VJnr6X9KrrctSlWX3l+gXgtYQxQ6564azly/tCdnz7lX9CIe0ZiBJ4XROgPtJ9sLKcPbjdRfZt7YmBM2jIojONHR2Wk6CDcUHe/diQr+TYnCEkfj8Psetaq97NVnEjHoHskXrf0XQpFDApFsXmWKrxU9tv7cF9sKT6UkVOqKXDyB9Byfl0mEYAkzOz+Ismc3pEZb8iFnUNQeSDhBaI+5JeAruKN8Xu5ofSP7DCJCjrlhvhiJAFZYFQ20DrWCxmXs4/g86xNrtI4OBI4lqxZtHTDJy8BlPKy4L13ZWrwu30+nSXPisfSn9XkVn8Q51w+4t0+8OvT5qPXe++wTVJUMrlpLbMtvzDsyRSamu1S5mci/qUdM2j0YOiB1fqxjBnkHM5BUcwmd/XILc5NtMC69CU1KLGRDvTe0yRvxGAM+sGjsAh5Ytr+u8dJgehEVNnyhMy1eOluWB6jeY43ythDIb9pLLA3ReMJJnjqDJ76OsmwFUBzGshtGOCud01e6dyKYC9FQ7YM3m9mWaBPtnKQwbLcilWvhSY6cBw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(136003)(366004)(346002)(39850400004)(376002)(396003)(4326008)(1076003)(2616005)(8676002)(186003)(6512007)(6486002)(107886003)(83380400001)(6916009)(38100700002)(55236004)(316002)(16526019)(6506007)(38350700002)(6666004)(54906003)(8936002)(26005)(508600001)(36756003)(2906002)(9686003)(52116002)(956004)(5660300002)(66946007)(66556008)(66476007)(86362001)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?y+EZUkXSdK0d/BwhGblAgMMShGnjW1+bvdaOWf1tpF1efQR+c7jei5YZrZAf?=
- =?us-ascii?Q?mG0nivbSLws91Ac0vF0jwuDKTfmzkF20vqVNFonPZ9YjoZnL9OWUUw/4L9Bi?=
- =?us-ascii?Q?p9nuLKyRG6XYVSUYc154G9iECJs5a/2bZUX6J1lJau7huCxeD34a8F0OAIBd?=
- =?us-ascii?Q?E5HCG+VkTvs9zlOswnNW0gpmO+135nlhdTTc2FdrWIJoS0Q2ccfzKixdZjn1?=
- =?us-ascii?Q?X3/N/kib+2GegOq+hKSICOhm+m6KOImPMCIiPHLIulGxMDhWsdcf9kNwZvDB?=
- =?us-ascii?Q?2Lq1tgySoOueMdyo3C3PKyOThBap8ygZymhOPN7bs97cIOwDm1//f7dap/xK?=
- =?us-ascii?Q?VELGEtBE8ECVgzvEtEDkRWGls6Du8HXGw/2eGvJwfMA8jqJx/PSJgNAa4zcL?=
- =?us-ascii?Q?ANH8+bd0wmG4DfgPkldbVtEBwXNs/jHe99aBVjxTPZwJvBjSpZdVrYtfgoxA?=
- =?us-ascii?Q?YeccqSKLpG4lQo1FEEd/ZgCfmtN9EKikZq24MBSwiSKEqeILrcN1N1xYUgyk?=
- =?us-ascii?Q?NGIVe0aQH0FfF62b1UbjWZ/vfg6mA4mgrotKXD3sk4YXqKI82g3llUjGdVPo?=
- =?us-ascii?Q?XjHVTfFWnZbG27VMreLdVyf2mAfQIlbYuTy7jZxocwg9xNAMUkW+i33rtZ8z?=
- =?us-ascii?Q?xN6yot4cKnibs4xmvBtoCL+0v6dzIUHASrZTCMOmGDLdGEujfgWxS8T1Xf3O?=
- =?us-ascii?Q?/xS3ttIicHEZ8cZffqEcB1vxRF6NGJaTdm0jRkiXxPnMMjRIzJRJ5+G3v9fu?=
- =?us-ascii?Q?c5StIuADHMfO+2sNY8WaCJQ3B7mHGOYyrulBTdnMLny/wlrR5rhVAK+8Z7hz?=
- =?us-ascii?Q?s6UGfuWhznrNjzgArMFP0vD7pEfigDGHZ7USjr/fG0UgCEJFK2q+DH2if1cM?=
- =?us-ascii?Q?aiJTf/NEPsuyI65laeTEdIfuxjYusSueopaF5tQqbDBVVx4Hw9pBkACQE9N4?=
- =?us-ascii?Q?AmrEi6Yxw8JJLJ9qC3OUJxWok2htFbbZQBV7HDFGGT9Jtv7KKIb9Y/b779I2?=
- =?us-ascii?Q?ON+uvZPA2KbVLS6RXUNSclgJlATo1WPXECbTfH9wTaoZaWWYgcMBG0Fh8rZZ?=
- =?us-ascii?Q?Oh+8PKqPAoaUKlUId2Cuk5NtzC3e7lILQe9x6Hlg8rUYDEAKYXWR0+wf466m?=
- =?us-ascii?Q?Y3Ipu+fYTODtq+WqEPfTRvKCGYAlje3oQ+L/bfx6QGiSp1yIlSFH6nxSZORJ?=
- =?us-ascii?Q?gElphirBj0Ad+mP1jaE76ODdtoosi51XloRaMlUw4fNjaM96/h72Mj5ge/xU?=
- =?us-ascii?Q?/S/BTc+uhd2zK6mEDXTMA7bdn74ghlzGERYKd5t8n6NhSmw5Qqy8IWUB7maX?=
- =?us-ascii?Q?tLvjunOaTLurlqG3dw8qm3SN?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?bUfvF3fQvdX9Q359M14MSs3Q4UqwQvN0BzlFJ0c2po/dqzjBLSt0ROHbWfmX?=
+ =?us-ascii?Q?jVcphxL9pQsDuEA8xqv1kRy+lAetr//MsYNCRqzFsPKsuL0lI3KGywRF7QPk?=
+ =?us-ascii?Q?FdZ9D9RNgIjI2AlNovC0nzPDSRaHiCT3eJYL/J72nj7Dxm5aU0e5JuwmAPE8?=
+ =?us-ascii?Q?iv2heCfPt8MGQCGl1Q3GYOsWnR1wXzMd9Yp9SMj2Fb80WME1aQwFLIPQtcZX?=
+ =?us-ascii?Q?uZKUUYLWeiVUpvsriGwGCKg58oVJKjlP42pN/3TwWRF/slEoeq3eoEYUOaFb?=
+ =?us-ascii?Q?wdGmJW/J+AVrZUevLp2gLlygLZYruUherDAp2tZWZbVLZtDA0NmDuci00Xpd?=
+ =?us-ascii?Q?TAMIPD9ONFR/PV40iZFZh4YXmic9S3jTYYdBEGDiMImo3o2KQxmrzdEyG1jJ?=
+ =?us-ascii?Q?Bk+a/tHMUAdBPKMGUwEc3fR9tDZWmGovOo2q6XLoV8ZzDUt5iErHxoS4jZK9?=
+ =?us-ascii?Q?/hQTqg1MWjIh9T+928/p6454rvks7bjTHxbO4lJuGlQ80qZWrPhDzdCYtGdN?=
+ =?us-ascii?Q?S5W1qb9dhbtQA+gCccp+voQpGAyZKc9FeykKDaf5Nql4ZQX6kpvuitn2+MtK?=
+ =?us-ascii?Q?SPBdKHQDnJMUh12R+vimVi/DVMsXiMPLa6BW6q3CXkaoYQv0PfJHHXXwhLf7?=
+ =?us-ascii?Q?O3u4tMgQ0HDBo9cwAVR1T80YyKY/9YpPVMNG79wu7ov2fZjqly3mIcFgDDEf?=
+ =?us-ascii?Q?keWz2JZMfAAJNlJHH1Z1z1G9Awy26GJXAkDLw910MyiLkYfki2y34qMebDH8?=
+ =?us-ascii?Q?CgsvwKn8uWNnwLvM7Yv53yEFhha50O7A3fJ1xFpQT5hX0eSVsgHvZHDtopSJ?=
+ =?us-ascii?Q?JFfKKjzmGjib1KWA87F7RU4TQmiFwiyK4FkyHucNOpr5Ui+oliPuJMzdOnex?=
+ =?us-ascii?Q?F6mIc6oQJ5QDaLGFrag/NpNnm/cTDuWdC82JK++sVsBFi4UfzVzhK7mm4LFV?=
+ =?us-ascii?Q?NHADI4Qaw6Sorpp2lVR9tw3+4MKciedI4zgPDrn+L5gKrYmstkIKPL83NoRt?=
+ =?us-ascii?Q?kBU3mEhRr1RMDO4dXS+/wdfrzGXnkzBUGEV62bi2r86s0WQ+djvbmD08AH92?=
+ =?us-ascii?Q?7/iFi22xvIA7XS2lU05O60Bi8YfM5dEL2VVUB0Lu/5a1LEJnKwSx25RYqqoh?=
+ =?us-ascii?Q?qQmpGXrE0mtjeMHTUY+gIhubTy9/ibSZWHrfU4nSJfj+VXOBxnSwrRSzLmZy?=
+ =?us-ascii?Q?0mRABjliyRdw7R9Ewj2FskUX11+sunoZkMkLXbQXZjIHnvw4qJKVUsKkdVVE?=
+ =?us-ascii?Q?7lvjL/U8LV2Hk7sqaWdHWDc3shdFi7t12RhJik4ZSq5l36iij84JrkL4GKTA?=
+ =?us-ascii?Q?81s/Ggxgq1IcnloyHq0kqBJm?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a652ed22-9916-4d7a-0358-08d931a968f3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 079f2c37-778c-420a-7b78-08d931a96b5d
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:13.0990
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:17.1492
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Z72z//KULYgV+om2J7z99X92NDt/dCbwApj+Ae+UL/Bbv6ys3VYKDqfTB3En/bsJzyVfmhQRT1IWun+P395mHA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1234
+X-MS-Exchange-CrossTenant-UserPrincipalName: t9njhoGB4NVelM1Q1RqU9lZPL/PJdN6UQYppzwFkL/Aio3hn+UsCfEAAUyImOKfhhTmKKefUDYlXcdkHHWnBug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB0966
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,129 +128,204 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/cecli.h | 112 +++++++++++++++++++++++
- 1 file changed, 112 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/cecli.h
+ drivers/net/wireless/celeno/cl8k/channel.h | 187 +++++++++++++++++++++
+ 1 file changed, 187 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/channel.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/cecli.h b/drivers/net/wireles=
-s/celeno/cl8k/cecli.h
+diff --git a/drivers/net/wireless/celeno/cl8k/channel.h b/drivers/net/wirel=
+ess/celeno/cl8k/channel.h
 new file mode 100644
-index 000000000000..3260ca56e563
+index 000000000000..c31cb4f69f2a
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/cecli.h
-@@ -0,0 +1,112 @@
++++ b/drivers/net/wireless/celeno/cl8k/channel.h
+@@ -0,0 +1,187 @@
 +/* SPDX-License-Identifier: MIT */
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_CECLI_H
-+#define CL_CECLI_H
++#ifndef CL_CHANNEL_H
++#define CL_CHANNEL_H
 +
-+#include <net/cfg80211.h>
-+#include <net/mac80211.h>
-+#include <linux/version.h>
++#include <linux/types.h>
++#include <linux/errno.h>
 +
-+/**
-+ * DOC: Cecli - command line interface wrapper
-+ *
-+ * Allows to control the driver behavior and inspect statistics, utilizes
-+ * vendor specific commands and events from the nl80211 layer.
-+ */
++enum chan_idx_6g {
++       b6g_ch1,
++       b6g_ch2,
++       b6g_ch5,
++       b6g_ch9,
++       b6g_ch13,
++       b6g_ch17,
++       b6g_ch21,
++       b6g_ch25,
++       b6g_ch29,
++       b6g_ch33,
++       b6g_ch37,
++       b6g_ch41,
++       b6g_ch45,
++       b6g_ch49,
++       b6g_ch53,
++       b6g_ch57,
++       b6g_ch61,
++       b6g_ch65,
++       b6g_ch69,
++       b6g_ch73,
++       b6g_ch77,
++       b6g_ch81,
++       b6g_ch85,
++       b6g_ch89,
++       b6g_ch93,
++       b6g_ch97,
++       b6g_ch101,
++       b6g_ch105,
++       b6g_ch109,
++       b6g_ch113,
++       b6g_ch117,
++       b6g_ch121,
++       b6g_ch125,
++       b6g_ch129,
++       b6g_ch133,
++       b6g_ch137,
++       b6g_ch141,
++       b6g_ch145,
++       b6g_ch149,
++       b6g_ch153,
++       b6g_ch157,
++       b6g_ch161,
++       b6g_ch165,
++       b6g_ch169,
++       b6g_ch173,
++       b6g_ch177,
++       b6g_ch181,
++       b6g_ch185,
++       b6g_ch189,
++       b6g_ch193,
++       b6g_ch197,
++       b6g_ch201,
++       b6g_ch205,
++       b6g_ch209,
++       b6g_ch213,
++       b6g_ch217,
++       b6g_ch221,
++       b6g_ch225,
++       b6g_ch229,
++       b6g_ch233,
 +
-+int cl_cecli_acs(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_agc_params(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                       const void *data, int data_len);
-+int cl_cecli_bf(struct wiphy *wiphy, struct wireless_dev *wdev,
-+               const void *data, int data_len);
-+int cl_cecli_bss_color(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                      const void *data, int data_len);
-+int cl_cecli_calib(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_cca(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_chip(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                 const void *data, int data_len);
-+int cl_cecli_config(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                   const void *data, int data_len);
-+int cl_cecli_debug(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_dfs(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_edca(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                 const void *data, int data_len);
-+int cl_cecli_fw(struct wiphy *wiphy, struct wireless_dev *wdev,
-+               const void *data, int data_len);
-+int cl_cecli_motion(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                   const void *data, int data_len);
-+int cl_cecli_noise(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_omi(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_power(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_qos(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_radio(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_reg(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_sounding(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                     const void *data, int data_len);
-+int cl_cecli_stats(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                  const void *data, int data_len);
-+int cl_cecli_tcv(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_temp(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                 const void *data, int data_len);
-+int cl_cecli_traffic(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                    const void *data, int data_len);
-+int cl_cecli_twt(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_txq(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_version(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                    const void *data, int data_len);
-+int cl_cecli_vns(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_wrs(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                const void *data, int data_len);
-+int cl_cecli_help(struct wiphy *wiphy, struct wireless_dev *wdev,
-+                 const void *data, int data_len);
-+
-+enum cl_cecli_cmd {
-+       CL_CECLI_AGC_PARAMS,
-+       CL_CECLI_BF,
-+       CL_CECLI_CALIB,
-+       CL_CECLI_CCA,
-+       CL_CECLI_CHIP,
-+       CL_CECLI_CONFIG,
-+       CL_CECLI_DEBUG,
-+       CL_CECLI_DFS,
-+       CL_CECLI_EDCA,
-+       CL_CECLI_FW,
-+       CL_CECLI_MORE_DATA,
-+       CL_CECLI_MOTION,
-+       CL_CECLI_NOISE,
-+       CL_CECLI_OMI,
-+       CL_CECLI_POWER,
-+       CL_CECLI_QOS,
-+       CL_CECLI_RADIO,
-+       CL_CECLI_REG,
-+       CL_CECLI_SOUNDING,
-+       CL_CECLI_STATS,
-+       CL_CECLI_TCV,
-+       CL_CECLI_TEMP,
-+       CL_CECLI_TRAFFIC,
-+       CL_CECLI_TWT,
-+       CL_CECLI_TXQ,
-+       CL_CECLI_VERSION,
-+       CL_CECLI_VNS,
-+       CL_CECLI_WRS,
-+
-+       CL_CECLI_MAX
++       NUM_CHANNELS_6G
 +};
 +
-+#endif /* CL_CECLI_H */
++enum chan_idx_5g {
++       b5g_ch36,
++       b5g_ch38,
++       b5g_ch40,
++       b5g_ch42,
++       b5g_ch44,
++       b5g_ch46,
++       b5g_ch48,
++       b5g_ch50,
++       b5g_ch52,
++       b5g_ch54,
++       b5g_ch56,
++       b5g_ch58,
++       b5g_ch60,
++       b5g_ch62,
++       b5g_ch64,
++       b5g_ch100,
++       b5g_ch102,
++       b5g_ch104,
++       b5g_ch106,
++       b5g_ch108,
++       b5g_ch110,
++       b5g_ch112,
++       b5g_ch114,
++       b5g_ch116,
++       b5g_ch118,
++       b5g_ch120,
++       b5g_ch122,
++       b5g_ch124,
++       b5g_ch126,
++       b5g_ch128,
++       b5g_ch132,
++       b5g_ch134,
++       b5g_ch136,
++       b5g_ch138,
++       b5g_ch140,
++       b5g_ch142,
++       b5g_ch144,
++       b5g_ch149,
++       b5g_ch151,
++       b5g_ch153,
++       b5g_ch155,
++       b5g_ch157,
++       b5g_ch159,
++       b5g_ch161,
++       b5g_ch165,
++
++       NUM_CHANNELS_5G
++};
++
++enum chan_idx_24g {
++       b24g_ch1,
++       b24g_ch2,
++       b24g_ch3,
++       b24g_ch4,
++       b24g_ch5,
++       b24g_ch6,
++       b24g_ch7,
++       b24g_ch8,
++       b24g_ch9,
++       b24g_ch10,
++       b24g_ch11,
++       b24g_ch12,
++       b24g_ch13,
++       b24g_ch14,
++
++       NUM_CHANNELS_24G
++};
++
++enum cl_ch_status {
++       CH_STATUS_SUCCESS,
++       CH_STATUS_ALREADY_ON_CHANNEL,
++       CH_STATUS_INVALID_PARAM =3D -EINVAL,
++
++       CH_STATUS_MAX
++};
++
++/* 6g band has the largest list */
++#define MAX_CHANNELS NUM_CHANNELS_6G
++
++#define START_CHAN_IDX_6G 1
++
++/* 1 =3D=3D> 5955 */
++#define FREQ6G(_chan) ((_chan) =3D=3D 2 ? 5935 : 5950 + 5 * (_chan))
++/* 36 =3D=3D> 5180 */
++#define FREQ5G(_chan) (5000 + 5 * (_chan))
++/* 1 =3D=3D> 2412 */
++#define FREQ2G(_chan) ((_chan) =3D=3D 14 ? 2484 : 2407 + (_chan) *  5)
++
++/* 6G channels - UNII-5 */
++#define START_CHAN_IDX_UNII5 1
++#define END_CHAN_IDX_UNII5   85
++/* 6G channels - UNII-6 */
++#define START_CHAN_IDX_UNII6 89
++#define END_CHAN_IDX_UNII6   109
++/* 6G channels - UNII-7 */
++#define START_CHAN_IDX_UNII7 113
++#define END_CHAN_IDX_UNII7   165
++/* 6G channels - UNII-8 */
++#define START_CHAN_IDX_UNII8 169
++#define END_CHAN_IDX_UNII8   233
++
++#define INVALID_CHAN_IDX 0xff
++
++struct cl_hw;
++
++u8 cl_channel_to_index(struct cl_hw *cl_hw, u32 channel);
++u16 cl_channel_idx_to_freq(struct cl_hw *cl_hw, u8 index);
++bool cl_channel_is_valid(struct cl_hw *cl_hw, u8 channel);
++u32 cl_channel_num(struct cl_hw *cl_hw);
++bool __must_check cl_channel_is_scan_active(struct cl_hw *cl_hw);
++
++#endif /* CL_CHANNEL_H */
 --
 2.30.0
 
