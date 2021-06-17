@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C7DC48BE5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F730C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6D7E61040
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68D4261040
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Jun 2021 16:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233671AbhFQQIr (ORCPT
+        id S233740AbhFQQIs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:08:47 -0400
-Received: from mail-eopbgr140087.outbound.protection.outlook.com ([40.107.14.87]:56046
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        Thu, 17 Jun 2021 12:08:48 -0400
+Received: from mail-eopbgr60055.outbound.protection.outlook.com ([40.107.6.55]:9431
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233594AbhFQQH4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:07:56 -0400
+        id S232040AbhFQQH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:07:57 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hBPZ+B2kxOli98wsXj2hFuasc7567mvkfDMiJu3NL0T3MOo8Iog6PDdlp8RNkhr6YJ75BNNNlpe5a3yk8ZgttoDKWUhwee5AfEAda27eRhJNPh4BF3qSDm56LTMhvMVWkK6wQAKoCpwIt1FsoQIrv88dqp8jy4hcBpazeK4lcAAWD7e05qfMfA2h9Yzo+yN2xMyKu2Pr7eF3Q2zZ6NAfCwKtHh6CrNTEnoFRrGBD0DWQnkNOs65ZsyIU0wIQl/joHQeoo4PEr1bLKPS2odKlfAuUwCOPodw08cmhcMkvtjF30A3J119e3STWsVuQhmEkJCfzsitOvKI/CmUnt1cw2w==
+ b=A7zjIfno8eUDccTCFnd8DwQqsPVFf/hbKQMQGYd0VIj6uzJFzKnC0wDxkQlwGkdTENwpMHH6GeuM5iAyUbczCvL3a8mXIlhMgmdilfnoMoeQatoSnInySTjT4pM/j+/438SpgPNG6aKnzHW0gV0IEM1z1i/YWKTJaOzIQKMFZ09QnrFq0nWo321PLDD7dovuGkLY208kN6vCYRjX4h5H6MBcdUAnx7PB5aUBi2cimBqHmd2wOCP3bOuvqg7XMl82rk+7fultYfpVfIqiYRqGCRoQc+1Ft+f411zaSXX/5OoRsZcTunAjCdqUtyuJS/GOQRaAqdPswtzuNwW+WhiZjA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q/JHCUo0hG3CkBa0l2f+0xMSw0iNO7fN4ibITJQe68s=;
- b=fCNcP2y73Oi+4S2y7GxQNzXaL5XKebGZUonHzALLwKAKbeX8Ls4MGpu10uP829VtcoLgvLhm9WLslaYcARab6QnqTwRGwPC3hCqUGfhx5z6uzbgU/cHhy72bDhfYrgAnQhbZVI4P/DdXke6HT+xltvpoUFCTDOqA1hbid4Cs2Vz4JXAToMpG60XBxgZkFe4wOlLiKmga1zm8/l9PM3iUEJ3esnIoNatOW0Nkn+qX2SSBN8jRM1IA1HiOAhGp3mSl6xtVy/yQw2jhT99xp0cJZu0g/Cx45QozOU7E7BUiYSIC+HezzhQLiZ+mAIm04mp85lWClK4Gp7zsO495/C29Lg==
+ bh=1vatMcND/6pybaSlyoMoDi1hFmhpz0aoBNc7436a25s=;
+ b=m8/ieLw/499X6mUW12dYh6j/cVWMR+ve3zbxXR89eZoXWkp9VgVfBRDJrLNMCgZdEKuSTAzLJNHRkYowkuxbGDRRdgnsxIKOZSFKdJiiLAOLGKiiSKaTGXbqrgIhL1SXlKwy5eoA1BckMdoM0J3T1Mdqs+zc0D8FL5HaoLvZ1yt5kFAGG8jX3VFq4ZZNwugX62OVMx1jXRnMMg8x0Zun+dc+jgm+dWZmIKvKP9DxK32RJLtKzHuYfrmIP7KXOxaLcWhxPkV9/80ThoA/f2GvThs+Bd95wKvoCt3fpMRQQ5X8MZTKjTMtlAHJx4s3liBt5yuu4wLfUNXXYnC8giTZOg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q/JHCUo0hG3CkBa0l2f+0xMSw0iNO7fN4ibITJQe68s=;
- b=2imFV2vhGeKINk66y+u6L81ddvo92awouGjyc0TuijfEN7PpdN+pzNTCZtuJd1WI5g0DFj+OWGV1ePCdScJovQTGjfGTYdXCENqMNi1eG3UCliprlUwcTQQvAKmFOrT0eBv8Rz513tWD4inZqOZOu1pHeqO5r8NrQyf3JiuD1Js=
+ bh=1vatMcND/6pybaSlyoMoDi1hFmhpz0aoBNc7436a25s=;
+ b=x2lCcZHGWD/+3dkJK2kjNuvmDzAPABhuQYAQwblTQ85Jyl0nPA0T74iSWucxbOQ8yDncDHGxwnsUunio8cysryHbdrgSVypC81umF03aYp0UGW0Hr5qhqRZ6Kl14pUGVrgakd7RoVwuvVRTgyo3L+zPkfE8DL4lTFE3Oqa0vpHA=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB1059.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1e3::21) with
+ by AM9P192MB1268.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:3a9::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18; Thu, 17 Jun
- 2021 16:05:46 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Thu, 17 Jun
+ 2021 16:04:23 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::1847:5583:4db7:102f%4]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
- 16:05:46 +0000
+ 16:04:23 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -57,9 +57,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v1 130/256] cl8k: add phy/phy_common_lut.h
-Date:   Thu, 17 Jun 2021 16:00:17 +0000
-Message-Id: <20210617160223.160998-131-viktor.barna@celeno.com>
+Subject: [RFC v1 073/256] cl8k: add enhanced_tim.c
+Date:   Thu, 17 Jun 2021 15:59:20 +0000
+Message-Id: <20210617160223.160998-74-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210617160223.160998-1-viktor.barna@celeno.com>
 References: <20210617160223.160998-1-viktor.barna@celeno.com>
@@ -71,52 +71,52 @@ X-ClientProxiedBy: PR3PR09CA0018.eurprd09.prod.outlook.com
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:04:56 +0000
+Received: from localhost.localdomain (62.216.42.54) by PR3PR09CA0018.eurprd09.prod.outlook.com (2603:10a6:102:b7::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.18 via Frontend Transport; Thu, 17 Jun 2021 16:03:53 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 14ecee24-fb28-45d1-b22b-08d931a9a6ff
-X-MS-TrafficTypeDiagnostic: AM8P192MB1059:
+X-MS-Office365-Filtering-Correlation-Id: 2212fda1-ef4e-4008-a5ed-08d931a98199
+X-MS-TrafficTypeDiagnostic: AM9P192MB1268:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <AM8P192MB1059CB31E2D8238C28CF86AFF60E9@AM8P192MB1059.EURP192.PROD.OUTLOOK.COM>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-Microsoft-Antispam-PRVS: <AM9P192MB1268CAE162FE9770EC6B5988F60E9@AM9P192MB1268.EURP192.PROD.OUTLOOK.COM>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fnl8kjZzBniTsW3lro06G4/jNKs0Xn5LQ9qSg8JRbrPIc0cCnV7mHr+giJFj6Rvdmy5n0YWNTxJG9B5bw/YjGZgr6Vf1xJ7+Rp34PKWW7ynSNWuDiYA6PNAm7vh1TrRIZfaEtPnvxZ8V83EaEC8dIxGHwz5k79yma+WTF1OVz+/NKQsQ7hskS9s7XnMqHwjLi3Q0ZiIWxLZt64PtjnIKIq70vgczWYRTBQPDgloMzhdDBrg3efp5WRZvElk1bsb/CZrT1r5AJyjc0Codf5yQXkJdOzRE95qqlssUZOq366uGr5kbFSiKMhF3mxHmb9dloBKMGemJXHzS1yYPhDX3cDPW0V74zxxH008M8p0G5A0zx84NmxQqma/VneGfYwh2AFc7clPWjUV8DYBO5XwJhR/kQb2Ib2QrpAGenwE6NUR8kjS1PQ47EAC3oFDDy+CsBGpj8h8S68fCnFNnPPraxAQzYjbDVnyYH61b1Df7VbToDXaVgBncnky9pp/mJdB7xhBrH8AO6M3miwvT/gCURdzi2nGdR82Fdi6ZziJr390BLTzzSXsOmFgh8NqG2iAlYdGjmqkgCw3H4UhIjmxOiAzG3r1DvCx/0q/LBXzh2eKX3XgYOPWSbGTwHQGnoAuH8LmCiuqofKbpbhYoK544z/FLgk1F0V5U2OmIhe9TOn0dV3i1cveNq6gpNYUNR/T3HxWyShj83xvDsulLWMnRAQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(366004)(26005)(956004)(498600001)(186003)(66556008)(16526019)(107886003)(66946007)(66476007)(8936002)(6916009)(2616005)(1076003)(2906002)(54906003)(6506007)(6666004)(4326008)(38100700002)(38350700002)(83380400001)(9686003)(6512007)(5660300002)(6486002)(86362001)(55236004)(36756003)(52116002)(8676002)(69590400013)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 4ptJxmvKUYYapQSj3UxGEwpApjTVMzXwFySda59jueaZMQhZfuHxHPWo7nK/bae/xjpu1R6YxIm+7kFtsRBGIs6XtlJvZ7GvbtjBEeb1DhfGf8LAyLTR9CvXi4BgoN6lF2Rg1BRanicCROMnb/NNSmPYpkWlmD9xxXdS3Lxf4HHEMbMIKJXuBKOTwiS4/XYyr5bisElE4bNRyoNedYh1QRY4+HXdikRNlYSrcgEaentPSyF3B53zP7zmgZ25ndHbivJvSfDO4Pan5d0+gCEb7Z4RP3XRnDa7PjQqKvVydetNnDfLGEEW5VL2eNHBQz/hrfZn/Puv3OxDTBUrIAN4ug1MxM3RxdK225+klc6dgi1G+FtNrWrq38NzdBg9c/jECzThvJzB4ptFRGVnL+H2gW6E0QRJU2NmJYsRiJ37FwM5uTGw1TFl93NAGvCyoXbwnFNX7ap2DhCYg0NA2gIiIN9jsPYMC7kQjUaHtzS5ZiuES1/34smAlALrwknmcYkPz7nO53U9B3OZofu680OqPebZN/6ob6/1D6zdw3OkjUfA53wgMLY/TEtVQKmSU/Bibedicd54U2MrKZvcJUDIuNPXyN6ZnnIFRDyZiWgkOUh4tfCJF78lb+BmDZs400eKbBs8slbfoRW0WRLjCQsfWRlRnKHCc2XaJx5CaC+4Nu7a/3h0IBDEOy9MsluTBqt440cJI3twMfm7S5pOJa6TsA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(346002)(366004)(396003)(39850400004)(136003)(376002)(6486002)(956004)(54906003)(4326008)(2616005)(186003)(38100700002)(16526019)(8676002)(5660300002)(38350700002)(8936002)(26005)(2906002)(6512007)(9686003)(52116002)(83380400001)(6916009)(66946007)(66556008)(66476007)(86362001)(55236004)(6666004)(6506007)(1076003)(107886003)(508600001)(316002)(36756003)(69590400013)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EawNoORgwlYHjMzLv39nDVHoiEstrmkKXcA4gdkmZcMgY6jmGVVx+0dnc8gS?=
- =?us-ascii?Q?sfaxNAdv84gFvo4vK55LoJ3Hlw0MRlnuMUPUoS0ZxDvzKBq/vgdOU8R7GA4u?=
- =?us-ascii?Q?PXLt3cCBzusIn+Tx5+sM0SztePKwAlkLqAXCmUvlCXD+tVTI0MysR9TnPvRA?=
- =?us-ascii?Q?2ofZ5mYg23xp3Qk3YAE8BpG4v79R0rokTGqckiLHGtPqPNhp3cBgo4dCWlS6?=
- =?us-ascii?Q?1J9FVbRDL268hOWJOKsDuZLWVIvlTACceN6k92ZkN2C4qT4PZx39MJqhSyZa?=
- =?us-ascii?Q?8nKmRsH49vJUsM81DFvi1p+ACmWfuAjwGxKImWOkNHmGkjsk7BAzyhMO2JTP?=
- =?us-ascii?Q?uA7OzeawlMjtDHl61i/0YNqYhXJ5Chsg/U5u3ciB/1UEwiHZjuMEl6uRRURY?=
- =?us-ascii?Q?dhd//NSANAanbcZHIoXusn8cMe6qzy8H51EVIQMY0+T1xqdDCSvHJap3xMqK?=
- =?us-ascii?Q?miQFJREX0Bu++5P7DOuNeK0Zz111sR0TWZmsxpQCoJ+2P6N2nK7b5p1Es/3Q?=
- =?us-ascii?Q?oozqftgTgxDRGpdSj+yhlV6+acoxMpYBwcIOlc3vWpMihpIbhLY7bf2bKAQ4?=
- =?us-ascii?Q?opOblmPKS6uUcoS2zXtHEaPxTFn97lRLyoyP7D4JIeCvvdknNvrjtnxZwClZ?=
- =?us-ascii?Q?Z+ho39hnUCUaChBkNkVuowEchKuM9PbmfY2xve+5+WwvxhQgEBPtyP2S/qhD?=
- =?us-ascii?Q?whfthyU2BzKdRdnDTnXjSNzjHbDYvRg2dEgX3H0tdWNGRMc+dLOyE62yCLyj?=
- =?us-ascii?Q?st7OjjAlazjROF2y5fKF7AbTT5Ryk5xZW47To6r3TkKjRSP4nbtQzLLIJgjn?=
- =?us-ascii?Q?+QlFfJxOETAAmosNV6nrukW2Kndp6oQfvRxdiM9PMAXjMW1vHKxRz/mZZ0q+?=
- =?us-ascii?Q?r0YOP3rQ5Xxd1faE25Z6jSx4wb00Kax5QCutAx0oy1lRsfOCQieiG3Gd80Yw?=
- =?us-ascii?Q?ok8GIOeSaOQFR+Xw3zsVgYm4Maf0CCVTp9yvnKt3SAYA0KdgSU7iVmXOv9Hy?=
- =?us-ascii?Q?BX99cEPPe3VCVCC/JZPlRDOMJ5YcRrlMpPxA8l/l6D51Itjg0gO1Rz5txrge?=
- =?us-ascii?Q?4gmxOwFZz1NCELLJEiMOV8HiouVcInOiPnltaJ6WZ/sBLK9hX16HiCsRX8Dv?=
- =?us-ascii?Q?UyRTRF4anWkM8JegCYpWMXxBzQ+rHafyumcCQiXzClJcdjocGPP4C8yXea0L?=
- =?us-ascii?Q?QLvJ+xKrgSEcd37z7LC2wnZaHZAOq021XWECdsYoJ1uC4U3hjhfMH25A5MPe?=
- =?us-ascii?Q?2uVq7wq7Jg8z4Wu/O6Vfp9wprU8fDIuurOUIyjnmfH/3YRbbLvBqJreI9TSw?=
- =?us-ascii?Q?Jjw/vHHJHn2HC0/uj2BrSP37?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?y55SR2EHxFmbWTK1dnronUv0pDHGSbtCSN9q1o2LYoth4v2Nzw0axlgD1UPQ?=
+ =?us-ascii?Q?10QZcLHRKKFOK2DO0UcARirYYxMWnVBhhmCQ59GBiSFvEOkGbr/B2ClMCPIe?=
+ =?us-ascii?Q?vgNd0qCag3sOU86GRbipGm5IGK09E2qNJhkIHpkFIxl11rN2Oj02Wt5NPt6S?=
+ =?us-ascii?Q?PxVZqU/nHAe7O0Nn7xenxticJtPbKcW1gdFQemar8W4GndpVVV5O8uyj1N5d?=
+ =?us-ascii?Q?21eJAdNh7l/pQf2d96a+NouL2kCACpHbhPutP8pGYxkXHtEGS4wQ4nL0GDCD?=
+ =?us-ascii?Q?KlyvdAQEjFE6Sr2CKMdJBSopHJjeRtLNfw2GNjCD0vYiCqhzEeuMBkMEpmqe?=
+ =?us-ascii?Q?U56JbsTPRRKl2L4sH7n9yNak63I8j91+AGRxDt/tv6YxHf0/kontMkEZUGZz?=
+ =?us-ascii?Q?z+3UH/x3v0AdspeqJ8dESf7PJSr+CsRP1cSIwC36TOdeJxgC2MnoFv/VbajV?=
+ =?us-ascii?Q?iUkf8pTofYFZUQVsEK9FLyq1gOAQadpV2fh8nPPvce8OEXdYyHUkm9ZyGMy3?=
+ =?us-ascii?Q?Og1kNwwvL8xAK8/e0tstCzvrEXffFWtIt96qFHh2f5qGli26uLywv06NHrtx?=
+ =?us-ascii?Q?U44E1j/krWoCCQJYWTAzJSn3nO5ZfjyIwPTqP2m+D3+25e1PeFVKNVsWJVE8?=
+ =?us-ascii?Q?tuDxr+kCRkBnINt0feLL4Dz2J0EKZUIkt0Oj01vkNvVJKJYKHl/2iMtuknxG?=
+ =?us-ascii?Q?qkyNXTngs7d6uaMC/rCT+cgLfHK7Tu2h8jocqwyB6JuzH3EJkRJbiMsGBuJ6?=
+ =?us-ascii?Q?m6/GF72iVFnuBUJlyB50b2o8/tOsD1BK93Ar8iY8w8LwgOwRnp92Gt0DvAYi?=
+ =?us-ascii?Q?Mufz9XMsmlR1ywi7/fDhOzzstCFTk5+MlDZo3ScrVG+X4HdhFNP7L3Kh6Gyg?=
+ =?us-ascii?Q?ZtyUU6gixaJuuaXC5K5EEBh2fp5Fun9up1aV0eliyF+y+hYav65hHJ567uu1?=
+ =?us-ascii?Q?ZxuKcTSR5+H4mnd0+1Ua+csS19nnGxlOO7bMl4hD4jh+w3/qio6cLmnJgyfn?=
+ =?us-ascii?Q?oQRxQG48RbEMe7d1N1Q6a3vTv6DJaPdZGG2HIpE6A/r5LG7mHrFkVZXRzqFx?=
+ =?us-ascii?Q?iSeH2iHXhfoAdMM1erLjeLvd3oZHr1NeFiWPg3fZcUgOZTg6OwL3KXWpm1b6?=
+ =?us-ascii?Q?VTWc8koxaBgzMrYe3cuoEYi4kxr64THVWElLYcrd6WY/d4ATo7wfaLedjU55?=
+ =?us-ascii?Q?KOSJ2h9NVDhQPuJpf3cz6IWBcY+rjCeCQA3lnvYfT5+1c48z7Q15whWwwLPV?=
+ =?us-ascii?Q?CKuvZoEec8eyK4uK43/1wu41YOcWWFRo7YSLIG7FGtchnjTiJi2S6aNTQrya?=
+ =?us-ascii?Q?VNWplvHv3TdoedS5WEgZDXZz?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 14ecee24-fb28-45d1-b22b-08d931a9a6ff
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2212fda1-ef4e-4008-a5ed-08d931a98199
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:04:57.2009
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 16:03:54.4574
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HREsLu/OE4k8PmspLrfeWflv2zcFT4fXTfuB7ie8MtvJxdMXNmgPgf882kPVLekB/JJ4/xg5y+4588oF21+Ykw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB1059
+X-MS-Exchange-CrossTenant-UserPrincipalName: W93P5DoIAymy/R9Tzz4i6iJPkcPY0VfjsME5DwoYyrRWbufdlKjC4Y2vDF8QzWiwPgkFZ1Y10aC6JYI1CntT/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9P192MB1268
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,38 +128,274 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../wireless/celeno/cl8k/phy/phy_common_lut.h | 21 +++++++++++++++++++
- 1 file changed, 21 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/phy/phy_common_lut.h
+ .../net/wireless/celeno/cl8k/enhanced_tim.c   | 216 ++++++++++++++++++
+ 1 file changed, 216 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/enhanced_tim.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/phy/phy_common_lut.h b/driver=
-s/net/wireless/celeno/cl8k/phy/phy_common_lut.h
+diff --git a/drivers/net/wireless/celeno/cl8k/enhanced_tim.c b/drivers/net/=
+wireless/celeno/cl8k/enhanced_tim.c
 new file mode 100644
-index 000000000000..7ff17cb81ca3
+index 000000000000..da2a0cf547fc
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/phy/phy_common_lut.h
-@@ -0,0 +1,21 @@
-+/* SPDX-License-Identifier: MIT */
++++ b/drivers/net/wireless/celeno/cl8k/enhanced_tim.c
+@@ -0,0 +1,216 @@
++// SPDX-License-Identifier: MIT
 +/* Copyright(c) 2019-2021, Celeno Communications Ltd. */
 +
-+#ifndef CL_PHY_COMMON_LUT_H
-+#define CL_PHY_COMMON_LUT_H
++#include "enhanced_tim.h"
++#include "bus/pci/ipc.h"
++#include "utils/utils.h"
 +
-+#include <linux/types.h>
-+#include "fw/fw_msg.h"
++/*
++ * The kernel's test_and_set_bit() gets unsigned long * as an argument, bu=
+t we actually
++ * pass a pointer to u32, what cause to alignment fault in 64bit platforms=
+.
++ * This function gets a pointer to u32 to prevent this alignment fault.
++ * Notice that the kernel's function sets the bit as an atomic operation,
++ * and our function doesn't. Vut it's not an issue since we set the bit fr=
+om one context only.
++ */
++static int cl_test_and_set_bit(unsigned long nr, u32 *addr)
++{
++       u32 *new_addr, mask, old;
 +
-+struct common_lut_line {
-+       u16 frequency_q2;
-+       u8 vcocalsel;
-+       u8 nint;
-+       u32 nfrac;
-+       u32 freqmeastarg;
-+};
++       new_addr =3D ((u32 *)addr) + (nr >> 5);
++       mask =3D 1 << (nr & 31);
++       old =3D *new_addr & mask;
++       *new_addr |=3D mask;
 +
-+void cl_phy_oly_lut_update(u8 nl_band, u16 freq,
-+                          struct mm_mac_api_lut_line *api_lut_line);
++       return (old !=3D 0);
++}
 +
-+#endif /* CL_PHY_COMMON_LUT_H */
++static int CFM_TEST_AND_CLEAR_BIT(unsigned long nr, u32 *addr)
++{
++       u32 *new_addr, mask, old;
++
++       new_addr =3D ((u32 *)addr) + (nr >> 5);
++       mask =3D 1 << (nr & 31);
++       old =3D *new_addr & mask;
++       *new_addr &=3D ~mask;
++
++       return (old !=3D 0);
++}
++
++void cl_enhanced_tim_reset(struct cl_hw *cl_hw)
++{
++       /*
++        * There is no need to reset cl_hw->ipc_env->shared->enhanced_tim.
++        * It is done as part of ipc_shared_env_init()
++        */
++       memset(&cl_hw->ipc_env->enhanced_tim, 0, sizeof(struct cl_ipc_enhan=
+ced_tim));
++}
++
++/*
++ * NOTE: the UMAC DRAM starts with the enhanced TIM elements stractures.
++ * This is hard coded in the FW, this memory allocation should be changed =
+in
++ * the driver module .ELF file.
++ */
++
++void cl_enhanced_tim_clear_tx_agg(struct cl_hw *cl_hw, u32 ipc_queue_idx,
++                                 u8 ac, struct cl_sta *cl_sta, u8 tid)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
++       u32 ipc_queue_idx_common =3D IPC_TX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(i=
+pc_queue_idx);
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is set then clear it and update the UMAC TIM =
+element
++        */
++       if (CFM_TEST_AND_CLEAR_BIT(ipc_queue_idx_common, source)) {
++               /* Pointer to UMAC enhanced TIM */
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_rx_agg[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 agg_offset =3D ipc_queue_idx_common / (BITS_PER_BYTE * =
+sizeof(u32));
++
++               /* Update tim element */
++               if (cl_sta && test_sta_flag(cl_sta->stainfo, WLAN_STA_PS_ST=
+A))
++                       ieee80211_sta_set_buffered(&cl_sta->stainfo->sta, t=
+id,
++                                                  false);
++
++               target[agg_offset] =3D cpu_to_le32(source[agg_offset]);
++       }
++}
++
++void cl_enhanced_tim_clear_tx_single(struct cl_hw *cl_hw, u32 ipc_queue_id=
+x, u8 ac,
++                                    bool no_ps_buffer, struct cl_sta *cl_s=
+ta, u8 tid)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_single[ac];
++       /* Staton index: 0 - 128 (do not use cl_sta->sta_idx which is 0 -12=
+7) */
++       u32 sta_idx =3D ipc_queue_idx % FW_MAX_NUM_STA;
++
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is set then clear it and update the UMAC TIM =
+element
++        */
++       if (CFM_TEST_AND_CLEAR_BIT(sta_idx, source)) {
++               /* Pointer to UMAC enhanced TIM for singles or aggregation =
+*/
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_single[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 sta_offset =3D sta_idx / (BITS_PER_BYTE * sizeof(u32));
++
++               /* Update tim element */
++               if (!no_ps_buffer && cl_sta &&
++                   test_sta_flag(cl_sta->stainfo, WLAN_STA_PS_STA))
++                       ieee80211_sta_set_buffered(&cl_sta->stainfo->sta, t=
+id,
++                                                  false);
++
++               target[sta_offset] =3D cpu_to_le32(source[sta_offset]);
++       }
++}
++
++void cl_enhanced_tim_set_tx_agg(struct cl_hw *cl_hw, u32 ipc_queue_idx, u8=
+ ac,
++                               bool no_ps_buffer, struct cl_sta *cl_sta, u=
+8 tid)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
++       u32 ipc_queue_idx_common =3D IPC_TX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(i=
+pc_queue_idx);
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is cleared then set it and update the UMAC TI=
+M element
++        */
++       if (!cl_test_and_set_bit(ipc_queue_idx_common, source)) {
++               /* Pointer to UMAC enhanced TIM */
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_rx_agg[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 agg_offset =3D ipc_queue_idx_common / (BITS_PER_BYTE * =
+sizeof(u32));
++
++               /* Update tim element */
++               if (!no_ps_buffer && cl_sta &&
++                   test_sta_flag(cl_sta->stainfo, WLAN_STA_PS_STA))
++                       ieee80211_sta_set_buffered(&cl_sta->stainfo->sta, t=
+id,
++                                                  true);
++
++               target[agg_offset] =3D cpu_to_le32(source[agg_offset]);
++       }
++}
++
++void cl_enhanced_tim_set_tx_single(struct cl_hw *cl_hw, u32 ipc_queue_idx,=
+ u8 ac,
++                                  bool no_ps_buffer, struct cl_sta *cl_sta=
+, u8 tid)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_single[ac];
++       /* Staton index: 0 - 128 (do not use cl_sta->sta_idx which is 0 -12=
+7) */
++       u32 sta_idx =3D ipc_queue_idx % FW_MAX_NUM_STA;
++
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is cleared then set it and update the UMAC TI=
+M element
++        */
++       if (!cl_test_and_set_bit(sta_idx, source)) {
++               /* Pointer to UMAC enhanced TIM */
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_single[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 sta_offset =3D sta_idx / (BITS_PER_BYTE * sizeof(u32));
++
++               /* Update tim element */
++               if (!no_ps_buffer && cl_sta &&
++                   test_sta_flag(cl_sta->stainfo, WLAN_STA_PS_STA))
++                       ieee80211_sta_set_buffered(&cl_sta->stainfo->sta, t=
+id,
++                                                  true);
++
++               target[sta_offset] =3D cpu_to_le32(source[sta_offset]);
++       }
++}
++
++void cl_enhanced_tim_clear_rx(struct cl_hw *cl_hw, u8 ac, u8 sta_idx)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
++       u32 ipc_queue_idx_common =3D IPC_RX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(s=
+ta_idx);
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is set then clear it and update the UMAC TIM =
+element
++        */
++       if (CFM_TEST_AND_CLEAR_BIT(ipc_queue_idx_common, source)) {
++               /* Pointer to UMAC enhanced TIM for singles or aggregation =
+*/
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_rx_agg[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 sta_offset =3D ipc_queue_idx_common / (BITS_PER_BYTE * =
+sizeof(u32));
++
++               target[sta_offset] =3D cpu_to_le32(source[sta_offset]);
++       }
++}
++
++void cl_enhanced_tim_set_rx(struct cl_hw *cl_hw, u8 ac, u8 sta_idx)
++{
++       /* Pointer to HOST enhanced TIM */
++       u32 *source =3D cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
++       u32 ipc_queue_idx_common =3D IPC_RX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(s=
+ta_idx);
++       /*
++        * Does the UMAC enhanced TIM need update?
++        * If the TIM element is cleared then set it and update the UMAC TI=
+M element
++        */
++       if (!cl_test_and_set_bit(ipc_queue_idx_common, source)) {
++               /* Pointer to UMAC enhanced TIM */
++               u32 *target =3D (u32 *)cl_hw->ipc_env->shared->enhanced_tim=
+.tx_rx_agg[ac];
++               /* Offset to UMAC encahned TIM array position */
++               u32 sta_offset =3D ipc_queue_idx_common / (BITS_PER_BYTE * =
+sizeof(u32));
++
++               target[sta_offset] =3D cpu_to_le32(source[sta_offset]);
++
++               cl_hw->ipc_host2xmac_trigger_set(cl_hw->chip, BIT(IPC_IRQ_A=
+2E_RX_STA_MAP(ac)));
++       }
++}
++
++void cl_enhanced_tim_clear_rx_sta(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       u8 ac;
++
++       for (ac =3D 0; ac < AC_MAX; ac++)
++               cl_enhanced_tim_clear_rx(cl_hw, ac, sta_idx);
++}
++
++void cl_enhanced_tim_set_rx_sta(struct cl_hw *cl_hw, u8 sta_idx)
++{
++       u8 ac;
++
++       for (ac =3D 0; ac < AC_MAX; ac++)
++               cl_enhanced_tim_set_rx(cl_hw, ac, sta_idx);
++}
++
 --
 2.30.0
 
