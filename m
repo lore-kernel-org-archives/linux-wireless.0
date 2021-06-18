@@ -2,79 +2,123 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C292AC48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:17:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59823C48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:36:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA854610A7
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:17:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 389DE613C2
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:36:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232630AbhFRUTw (ORCPT
+        id S233807AbhFRUiZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 16:19:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48322 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230136AbhFRUTv (ORCPT
+        Fri, 18 Jun 2021 16:38:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43746 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233702AbhFRUiY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 16:19:51 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=[192.168.100.150])
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <luca@coelho.fi>)
-        id 1luKvn-001Ypc-Jl; Fri, 18 Jun 2021 23:17:37 +0300
-Message-ID: <f0b8bcb1e90c4e805db974674e07f55e2ee38c14.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Florian Fainelli <f.fainelli@gmail.com>, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 23:17:35 +0300
-In-Reply-To: <db8585de-f1a2-b40c-0e4d-30dc5ad1d6ae@gmail.com>
-References: <20210618104156.747775-1-luca@coelho.fi>
-         <iwlwifi.20210618133832.5b2063dea3b3.I56248f2ce2e22a5c0cf797378726f6904b5de5e2@changeid>
-         <db8585de-f1a2-b40c-0e4d-30dc5ad1d6ae@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.3-1 
+        Fri, 18 Jun 2021 16:38:24 -0400
+Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0C06C06175F;
+        Fri, 18 Jun 2021 13:36:14 -0700 (PDT)
+Received: by mail-lj1-x22b.google.com with SMTP id 131so15696709ljj.3;
+        Fri, 18 Jun 2021 13:36:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=3HTz9I8D+4N2bV9p3EcdNQ0xs4XLEY9cd73dl9RCW88=;
+        b=HCz+lQdSM4QIoO3BnGk9Y8f/RrX5xiv5npcGdeZtcK6VKTy0bKGVWn8+abUPN+B9S4
+         I1jWU/0KYekEtFbhOk87rL5PHaNQ8tbdSdPX778Ba7kPRVpmxL+YAYWMrsUdiCwbDbAK
+         o4duwp1MkAyRdA1+bU4dBHEzR8ezHZRHmUDnkFnI2FMA/cw+i1iseNr1KwEprSHBFRJW
+         DRy6HMbNZqfEWCfZflu5NDjFqsbWGfL11A+UaPWA5tHMI7jiT7LeljONQzVC9fTL3AR4
+         Q68BB/z+WQAIprKMFijHYkJzc9hZGqf5/MQuILUtzrnZyBREoVv2MVfz31Zn6PGGjA3F
+         axDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=3HTz9I8D+4N2bV9p3EcdNQ0xs4XLEY9cd73dl9RCW88=;
+        b=pJSG9Vhd/h1oWopyzvd+U1CN9b3LnTa7Sugaod3Zt8k+GhJnI4H4h765UuVquvXVzs
+         Kyxl7bj6LRb5olubZKkaJBV3IArxv00alfKAVxcHCy1Y6bInMVt04bK/t4aSzi0LGnfX
+         DACmxnHpSCJWB0SeRQb+l8A0AI2MnQHEML6Hq6N1bpA/LO68EwxiQ99WvYx1bEKVyRBO
+         +kpHSbst203RZDmO64iyo+nBLLvUfY1bbnYk8GM1fQlkPb4VQCIPrnw5MnLq1iQPDujG
+         2JGwXCknMQTb/x4e98Uw0hUmd6YtYMCdGqZttdfhRwu9Fc9Zrlrzvk5Lwlhp+tE9L55B
+         E0xg==
+X-Gm-Message-State: AOAM530dAwjbBJUA2eo4lYzXOPPGzOf31PqdKKfcFxDrviFa20w6hFPi
+        xo6BVml9VUJzxaL5rMNFNP5Yd5eIaIo=
+X-Google-Smtp-Source: ABdhPJywh+CbFNaUvchQtHi/+J6K5vOEJjGumLQ2mp3r+jzSl6C/FA8oUj9kqvp3jahsIv7AyFwWmQ==
+X-Received: by 2002:a2e:3209:: with SMTP id y9mr10842654ljy.254.1624048572954;
+        Fri, 18 Jun 2021 13:36:12 -0700 (PDT)
+Received: from [192.168.2.145] (94-29-29-31.dynamic.spd-mgts.ru. [94.29.29.31])
+        by smtp.googlemail.com with ESMTPSA id w22sm1179618ljg.115.2021.06.18.13.36.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Jun 2021 13:36:12 -0700 (PDT)
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
+        netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From:   Dmitry Osipenko <digetx@gmail.com>
+Subject: [BUG] brcmfmac locks up on resume from suspend
+Message-ID: <b853d145-0edf-db0a-ff42-065011f7a149@gmail.com>
+Date:   Fri, 18 Jun 2021 23:36:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 02/31] mac80211: do not add twice the HE 6GHz cap IE
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2021-06-18 at 10:14 -0700, Florian Fainelli wrote:
-> 
-> On 6/18/2021 3:41 AM, Luca Coelho wrote:
-> > From: Shaul Triebitz <shaul.triebitz@intel.com>
-> > 
-> > The HE 6GHz capability IE is already added before:
-> > ieee80211_add_he_ie -> ieee80211_ie_build_he_6ghz_cap
-> > 
-> > Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> > ---
-> >  net/mac80211/mlme.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > index 2480bd0577bb..310cfd02fda4 100644
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -8,7 +8,7 @@
-> >   * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-> >   * Copyright 2013-2014  Intel Mobile Communications GmbH
-> >   * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-> > - * Copyright (C) 2018 - 2020 Intel Corporation
-> > + * Copyright (C) 2018 - 2021 Intel Corporation
-> 
-> This change only bumps the copyright year...
+Hi,
 
-Oops, something went wrong when I applied it.  I'll check and either
-resend or drop it.
+I'm getting a hang on resume from suspend using today's next-20210618.
+It's tested on Tegra20 Acer A500 that has older BCM4329, but seems the
+problem is generic.
 
---
-Cheers,
-Luca.
+There is this line in pstore log:
 
+  ieee80211 phy0: brcmf_netdev_start_xmit: xmit rejected state=0
+
+Steps to reproduce:
+
+1. Boot system
+2. Connect WiFi
+3. Run "rtcwake -s10 -mmem"
+
+What's interesting is that turning WiFi off/on before suspending makes
+resume to work and there are no suspicious messages in KMSG, all further
+resumes work too.
+
+This change fixes the hang:
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index db5f8535fdb5..06d16f7776c7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -301,7 +301,6 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct
+sk_buff *skb,
+ 	/* Can the device send data? */
+ 	if (drvr->bus_if->state != BRCMF_BUS_UP) {
+ 		bphy_err(drvr, "xmit rejected state=%d\n", drvr->bus_if->state);
+-		netif_stop_queue(ndev);
+ 		dev_kfree_skb(skb);
+ 		ret = -ENODEV;
+ 		goto done;
+8<---
+
+Comments? Suggestions? Thanks in advance.
