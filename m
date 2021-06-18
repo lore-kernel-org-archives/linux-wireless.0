@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B195C49361
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 06:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A3AC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 06:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D98F261164
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 06:47:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52B8061164
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 06:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231270AbhFRGtv (ORCPT
+        id S232159AbhFRGuB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 02:49:51 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:38907 "EHLO
+        Fri, 18 Jun 2021 02:50:01 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:38922 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231203AbhFRGtt (ORCPT
+        with ESMTP id S231203AbhFRGuA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 02:49:49 -0400
+        Fri, 18 Jun 2021 02:50:00 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 15I6lawhF011130, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 15I6lljsF011172, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 15I6lawhF011130
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 15I6lljsF011172
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 18 Jun 2021 14:47:36 +0800
+        Fri, 18 Jun 2021 14:47:47 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Fri, 18 Jun 2021 14:47:36 +0800
+ 15.1.2106.2; Fri, 18 Jun 2021 14:47:46 +0800
 Received: from localhost (172.16.16.17) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Fri, 18 Jun
- 2021 14:47:35 +0800
+ 2021 14:47:45 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/24] rtw89: define register names
-Date:   Fri, 18 Jun 2021 14:46:12 +0800
-Message-ID: <20210618064625.14131-12-pkshih@realtek.com>
+Subject: [PATCH 13/24] rtw89: 8852a: add 8852a specific files
+Date:   Fri, 18 Jun 2021 14:46:14 +0800
+Message-ID: <20210618064625.14131-14-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210618064625.14131-1-pkshih@realtek.com>
 References: <20210618064625.14131-1-pkshih@realtek.com>
@@ -74,6 +74,7 @@ X-KSE-AntiSpam-Info: Lua profiles 164465 [Jun 18 2021]
 X-KSE-AntiSpam-Info: Version: 5.9.20.0
 X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
 X-KSE-AntiSpam-Info: LuaCore: 448 448 71fb1b37213ce9a885768d4012c46ac449c77b17
+X-KSE-AntiSpam-Info: {Tracking_all_Bitcoin, bb}
 X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
 X-KSE-AntiSpam-Info: realtek.com:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
 X-KSE-AntiSpam-Info: Rate: 0
@@ -88,2140 +89,2222 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are three register domains -- MAC, PHY and RF whose ranges are
-0x0000~0xFFFF, 0x10000~0x1FFFF and 0x00~0xFF respectively.
-
-Since we access PHY register via a set of PHY access interfaces which do
-0x10000 offset by themselves, so PHY registers are listed in range of
-0x0000~0xFFFF.
+The 8852A specific chip info and ops are written in this file. The chip
+info describes the chip specific capabilities, and chip ops are specific
+efuse parser, FEM setup, set channel, RFK trigger, set TX power, and
+WL/BT grant controlled by coex.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/reg.h | 2116 ++++++++++++++++++++++
- 1 file changed, 2116 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw89/reg.h
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 2083 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852a.h |  109 +
+ 2 files changed, 2192 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852a.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852a.h
 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
 new file mode 100644
-index 000000000000..51b59691b586
+index 000000000000..7769e8b52361
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -0,0 +1,2116 @@
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -0,0 +1,2083 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright(c) 2019-2020  Realtek Corporation
++ */
++
++#include "coex.h"
++#include "mac.h"
++#include "phy.h"
++#include "reg.h"
++#include "rtw8852a.h"
++#include "rtw8852a_rfk.h"
++#include "rtw8852a_table.h"
++#include "txrx.h"
++
++static struct rtw89_hfc_ch_cfg rtw8852a_hfc_chcfg_pcie_sutp[] = {
++	{128, 256, grp_0}, /* ACH 0 */
++	{0, 0, grp_1}, /* ACH 1 */
++	{0, 0, grp_1}, /* ACH 2 */
++	{0, 0, grp_1}, /* ACH 3 */
++	{0, 0, grp_1}, /* ACH 4 */
++	{0, 0, grp_1}, /* ACH 5 */
++	{0, 0, grp_1}, /* ACH 6 */
++	{0, 0, grp_1}, /* ACH 7 */
++	{0, 0, grp_1}, /* B0MGQ */
++	{0, 0, grp_1}, /* B0HIQ */
++	{0, 0, grp_1}, /* B1MGQ */
++	{0, 0, grp_1}, /* B1HIQ */
++	{40, 0, 0} /* FWCMDQ */
++};
++
++static struct rtw89_hfc_ch_cfg rtw8852a_hfc_chcfg_pcie_stf[] = {
++	{8, 256, grp_0}, /* ACH 0 */
++	{8, 256, grp_0}, /* ACH 1 */
++	{8, 256, grp_0}, /* ACH 2 */
++	{8, 256, grp_0}, /* ACH 3 */
++	{8, 256, grp_1}, /* ACH 4 */
++	{8, 256, grp_1}, /* ACH 5 */
++	{8, 256, grp_1}, /* ACH 6 */
++	{8, 256, grp_1}, /* ACH 7 */
++	{8, 256, grp_0}, /* B0MGQ */
++	{8, 256, grp_0}, /* B0HIQ */
++	{8, 256, grp_1}, /* B1MGQ */
++	{8, 256, grp_1}, /* B1HIQ */
++	{40, 0, 0} /* FWCMDQ */
++};
++
++static struct rtw89_hfc_ch_cfg rtw8852a_hfc_chcfg_pcie[] = {
++	{128, 1896, grp_0}, /* ACH 0 */
++	{128, 1896, grp_0}, /* ACH 1 */
++	{128, 1896, grp_0}, /* ACH 2 */
++	{128, 1896, grp_0}, /* ACH 3 */
++	{128, 1896, grp_1}, /* ACH 4 */
++	{128, 1896, grp_1}, /* ACH 5 */
++	{128, 1896, grp_1}, /* ACH 6 */
++	{128, 1896, grp_1}, /* ACH 7 */
++	{32, 1896, grp_0}, /* B0MGQ */
++	{128, 1896, grp_0}, /* B0HIQ */
++	{32, 1896, grp_1}, /* B1MGQ */
++	{128, 1896, grp_1}, /* B1HIQ */
++	{40, 0, 0} /* FWCMDQ */
++};
++
++static struct rtw89_hfc_ch_cfg rtw8852a_hfc_chcfg_pcie_la[] = {
++	{64, 586, grp_0}, /* ACH 0 */
++	{64, 586, grp_0}, /* ACH 1 */
++	{64, 586, grp_0}, /* ACH 2 */
++	{64, 586, grp_0}, /* ACH 3 */
++	{64, 586, grp_1}, /* ACH 4 */
++	{64, 586, grp_1}, /* ACH 5 */
++	{64, 586, grp_1}, /* ACH 6 */
++	{64, 586, grp_1}, /* ACH 7 */
++	{32, 586, grp_0}, /* B0MGQ */
++	{64, 586, grp_0}, /* B0HIQ */
++	{32, 586, grp_1}, /* B1MGQ */
++	{64, 586, grp_1}, /* B1HIQ */
++	{40, 0, 0} /* FWCMDQ */
++};
++
++static struct rtw89_hfc_pub_cfg rtw8852a_hfc_pubcfg_pcie = {
++	1896, /* Group 0 */
++	1896, /* Group 1 */
++	3792, /* Public Max */
++	0 /* WP threshold */
++};
++
++static struct rtw89_hfc_pub_cfg rtw8852a_hfc_pubcfg_pcie_stf = {
++	256, /* Group 0 */
++	256, /* Group 1 */
++	512, /* Public Max */
++	104 /* WP threshold */
++};
++
++static struct rtw89_hfc_pub_cfg rtw8852a_hfc_pubcfg_pcie_sutp = {
++	256, /* Group 0 */
++	0, /* Group 1 */
++	256, /* Public Max */
++	0 /* WP threshold */
++};
++
++static struct rtw89_hfc_pub_cfg rtw8852a_hfc_pubcfg_pcie_la = {
++	586, /* Group 0 */
++	586, /* Group 1 */
++	1172, /* Public Max */
++	0 /* WP threshold */
++};
++
++static struct rtw89_hfc_param_ini rtw8852a_hfc_param_ini_pcie[] = {
++	[RTW89_QTA_SCC] = {rtw8852a_hfc_chcfg_pcie, &rtw8852a_hfc_pubcfg_pcie,
++			   &rtw_hfc_preccfg_pcie, RTW89_HCIFC_POH},
++	[RTW89_QTA_DBCC] = {rtw8852a_hfc_chcfg_pcie, &rtw8852a_hfc_pubcfg_pcie,
++			    &rtw_hfc_preccfg_pcie, RTW89_HCIFC_POH},
++	[RTW89_QTA_SCC_STF] = {rtw8852a_hfc_chcfg_pcie_stf,
++			       &rtw8852a_hfc_pubcfg_pcie_stf,
++			       &rtw_hfc_preccfg_pcie_stf, RTW89_HCIFC_STF},
++	[RTW89_QTA_DBCC_STF] = {rtw8852a_hfc_chcfg_pcie_stf,
++				&rtw8852a_hfc_pubcfg_pcie_stf,
++				&rtw_hfc_preccfg_pcie_stf, RTW89_HCIFC_STF},
++	[RTW89_QTA_SU_TP] = {rtw8852a_hfc_chcfg_pcie_sutp,
++			     &rtw8852a_hfc_pubcfg_pcie_sutp,
++			     &rtw_hfc_preccfg_pcie, RTW89_HCIFC_POH},
++	[RTW89_QTA_DLFW] = {NULL, NULL, &rtw_hfc_preccfg_pcie, RTW89_HCIFC_POH},
++	[RTW89_QTA_LAMODE] = {rtw8852a_hfc_chcfg_pcie_la,
++			      &rtw8852a_hfc_pubcfg_pcie_la,
++			      &rtw_hfc_preccfg_pcie, RTW89_HCIFC_POH},
++	[RTW89_QTA_INVALID] = {NULL},
++};
++
++static struct rtw89_dle_mem rtw8852a_dle_mem_pcie[] = {
++	[RTW89_QTA_SCC] = {RTW89_QTA_SCC, &wde_size0, &ple_size0, &wde_qt0,
++			    &wde_qt0, &ple_qt4, &ple_qt5},
++	[RTW89_QTA_DBCC] = {RTW89_QTA_DBCC, &wde_size0, &ple_size0, &wde_qt0,
++			    &wde_qt0, &ple_qt0, &ple_qt1},
++	[RTW89_QTA_SCC_STF] = {RTW89_QTA_SCC_STF, &wde_size1, &ple_size2,
++			       &wde_qt1, &wde_qt1, &ple_qt8, &ple_qt9},
++	[RTW89_QTA_DBCC_STF] = {RTW89_QTA_DBCC_STF, &wde_size1, &ple_size2,
++				&wde_qt1, &wde_qt1, &ple_qt10, &ple_qt11},
++	[RTW89_QTA_SU_TP] = {RTW89_QTA_SU_TP, &wde_size3, &ple_size3,
++			     &wde_qt3, &wde_qt3, &ple_qt12, &ple_qt12},
++	[RTW89_QTA_DLFW] = {RTW89_QTA_DLFW, &wde_size4, &ple_size4,
++			    &wde_qt4, &wde_qt4, &ple_qt13, &ple_qt13},
++	[RTW89_QTA_LAMODE] = {RTW89_QTA_LAMODE, &wde_size10, &ple_size10,
++			      &wde_qt9, &wde_qt9, &ple_qt23, &ple_qt24},
++	[RTW89_QTA_INVALID] = {RTW89_QTA_INVALID, NULL, NULL, NULL, NULL, NULL,
++			       NULL},
++};
++
++static const struct rtw89_reg2_def  rtw8852a_pmac_ht20_mcs7_tbl[] = {
++	{0x44AC, 0x00000000},
++	{0x44B0, 0x00000000},
++	{0x44B4, 0x00000000},
++	{0x44B8, 0x00000000},
++	{0x44BC, 0x00000000},
++	{0x44C0, 0x00000000},
++	{0x44C4, 0x00000000},
++	{0x44C8, 0x00000000},
++	{0x44CC, 0x00000000},
++	{0x44D0, 0x00000000},
++	{0x44D4, 0x00000000},
++	{0x44D8, 0x00000000},
++	{0x44DC, 0x00000000},
++	{0x44E0, 0x00000000},
++	{0x44E4, 0x00000000},
++	{0x44E8, 0x00000000},
++	{0x44EC, 0x00000000},
++	{0x44F0, 0x00000000},
++	{0x44F4, 0x00000000},
++	{0x44F8, 0x00000000},
++	{0x44FC, 0x00000000},
++	{0x4500, 0x00000000},
++	{0x4504, 0x00000000},
++	{0x4508, 0x00000000},
++	{0x450C, 0x00000000},
++	{0x4510, 0x00000000},
++	{0x4514, 0x00000000},
++	{0x4518, 0x00000000},
++	{0x451C, 0x00000000},
++	{0x4520, 0x00000000},
++	{0x4524, 0x00000000},
++	{0x4528, 0x00000000},
++	{0x452C, 0x00000000},
++	{0x4530, 0x4E1F3E81},
++	{0x4534, 0x00000000},
++	{0x4538, 0x0000005A},
++	{0x453C, 0x00000000},
++	{0x4540, 0x00000000},
++	{0x4544, 0x00000000},
++	{0x4548, 0x00000000},
++	{0x454C, 0x00000000},
++	{0x4550, 0x00000000},
++	{0x4554, 0x00000000},
++	{0x4558, 0x00000000},
++	{0x455C, 0x00000000},
++	{0x4560, 0x4060001A},
++	{0x4564, 0x40000000},
++	{0x4568, 0x00000000},
++	{0x456C, 0x00000000},
++	{0x4570, 0x04000007},
++	{0x4574, 0x0000DC87},
++	{0x4578, 0x00000BAB},
++	{0x457C, 0x03E00000},
++	{0x4580, 0x00000048},
++	{0x4584, 0x00000000},
++	{0x4588, 0x000003E8},
++	{0x458C, 0x30000000},
++	{0x4590, 0x00000000},
++	{0x4594, 0x10000000},
++	{0x4598, 0x00000001},
++	{0x459C, 0x00030000},
++	{0x45A0, 0x01000000},
++	{0x45A4, 0x03000200},
++	{0x45A8, 0xC00001C0},
++	{0x45AC, 0x78018000},
++	{0x45B0, 0x80000000},
++	{0x45B4, 0x01C80600},
++	{0x45B8, 0x00000002},
++	{0x4594, 0x10000000}
++};
++
++static const struct rtw89_reg3_def rtw8852a_btc_preagc_en_defs[] = {
++	{0x4624, GENMASK(20, 14), 0x40},
++	{0x46f8, GENMASK(20, 14), 0x40},
++	{0x4674, GENMASK(20, 19), 0x2},
++	{0x4748, GENMASK(20, 19), 0x2},
++	{0x4650, GENMASK(14, 10), 0x18},
++	{0x4724, GENMASK(14, 10), 0x18},
++	{0x4688, GENMASK(1, 0), 0x3},
++	{0x475c, GENMASK(1, 0), 0x3},
++};
++
++static DECLARE_PHY_REG3_TBL(rtw8852a_btc_preagc_en_defs);
++
++static const struct rtw89_reg3_def rtw8852a_btc_preagc_dis_defs[] = {
++	{0x4624, GENMASK(20, 14), 0x1a},
++	{0x46f8, GENMASK(20, 14), 0x1a},
++	{0x4674, GENMASK(20, 19), 0x1},
++	{0x4748, GENMASK(20, 19), 0x1},
++	{0x4650, GENMASK(14, 10), 0x12},
++	{0x4724, GENMASK(14, 10), 0x12},
++	{0x4688, GENMASK(1, 0), 0x0},
++	{0x475c, GENMASK(1, 0), 0x0},
++};
++
++static DECLARE_PHY_REG3_TBL(rtw8852a_btc_preagc_dis_defs);
++
++static const struct rtw89_pwr_cfg rtw8852a_pwron[] = {
++	{0x00C6,
++	 PWR_CV_MSK_B,
++	 PWR_INTF_MSK_PCIE,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(6), BIT(6)},
++	{0x1086,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), 0},
++	{0x1086,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_POLL, BIT(1), BIT(1)},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4) | BIT(3), 0},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(7), 0},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(2), 0},
++	{0x0006,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_POLL, BIT(1), BIT(1)},
++	{0x0006,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_POLL, BIT(0), 0},
++	{0x106D,
++	 PWR_CV_MSK_B | PWR_CV_MSK_C,
++	 PWR_INTF_MSK_USB,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(6), 0},
++	{0x0088,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0088,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), 0},
++	{0x0088,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0088,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), 0},
++	{0x0088,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0083,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(6), 0},
++	{0x0080,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(5), BIT(5)},
++	{0x0024,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4) | BIT(3) | BIT(2) | BIT(1) | BIT(0), 0},
++	{0x02A0,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(1), BIT(1)},
++	{0x02A2,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(7) | BIT(6) | BIT(5), 0},
++	{0x0071,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_PCIE,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4), 0},
++	{0x0010,
++	 PWR_CV_MSK_A,
++	 PWR_INTF_MSK_PCIE,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(2), BIT(2)},
++	{0x02A0,
++	 PWR_CV_MSK_A,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(7) | BIT(6), 0},
++	{0xFFFF,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 0,
++	 PWR_CMD_END, 0, 0},
++};
++
++static const struct rtw89_pwr_cfg rtw8852a_pwroff[] = {
++	{0x02F0,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, 0xFF, 0},
++	{0x02F1,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, 0xFF, 0},
++	{0x0006,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x0002,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(1) | BIT(0), 0},
++	{0x0082,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(1) | BIT(0), 0},
++	{0x106D,
++	 PWR_CV_MSK_B | PWR_CV_MSK_C,
++	 PWR_INTF_MSK_USB,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(6), BIT(6)},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(1), BIT(1)},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 PWR_BASE_MAC,
++	 PWR_CMD_POLL, BIT(1), 0},
++	{0x0091,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_PCIE,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), 0},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_PCIE,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(2), BIT(2)},
++	{0x0007,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_USB,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4), 0},
++	{0x0007,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(6) | BIT(4), 0},
++	{0x0005,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4) | BIT(3), BIT(3)},
++	{0x0005,
++	 PWR_CV_MSK_C | PWR_CV_MSK_D | PWR_CV_MSK_E | PWR_CV_MSK_F |
++	 PWR_CV_MSK_G,
++	 PWR_INTF_MSK_USB,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(4) | BIT(3), BIT(3)},
++	{0x1086,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_WRITE, BIT(0), BIT(0)},
++	{0x1086,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_SDIO,
++	 PWR_BASE_MAC,
++	 PWR_CMD_POLL, BIT(1), 0},
++	{0xFFFF,
++	 PWR_CV_MSK_ALL,
++	 PWR_INTF_MSK_ALL,
++	 0,
++	 PWR_CMD_END, 0, 0},
++};
++
++static const struct rtw89_pwr_cfg * const pwr_on_seq_8852a[] = {
++	rtw8852a_pwron, NULL
++};
++
++static const struct rtw89_pwr_cfg * const pwr_off_seq_8852a[] = {
++	rtw8852a_pwroff, NULL
++};
++
++static void rtw8852ae_efuse_parsing(struct rtw89_efuse *efuse,
++				    struct rtw8852a_efuse *map)
++{
++	ether_addr_copy(efuse->addr, map->e.mac_addr);
++	efuse->rfe_type = map->rfe_type;
++	efuse->xtal_cap = map->xtal_k;
++}
++
++static void rtw8852a_efuse_parsing_tssi(struct rtw89_dev *rtwdev,
++					struct rtw8852a_efuse *map)
++{
++	struct rtw89_tssi_info *tssi = &rtwdev->tssi;
++	struct rtw8852a_tssi_offset *ofst[] = {&map->path_a_tssi, &map->path_b_tssi};
++	u8 i, j;
++
++	tssi->thermal[RF_PATH_A] = map->path_a_therm;
++	tssi->thermal[RF_PATH_B] = map->path_b_therm;
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		memcpy(tssi->tssi_cck[i], ofst[i]->cck_tssi,
++		       sizeof(ofst[i]->cck_tssi));
++
++		for (j = 0; j < TSSI_CCK_CH_GROUP_NUM; j++)
++			rtw89_debug(rtwdev, RTW89_DBG_TSSI,
++				    "[TSSI][EFUSE] path=%d cck[%d]=0x%x\n",
++				    i, j, tssi->tssi_cck[i][j]);
++
++		memcpy(tssi->tssi_mcs[i], ofst[i]->bw40_tssi,
++		       sizeof(ofst[i]->bw40_tssi));
++		memcpy(tssi->tssi_mcs[i] + TSSI_MCS_2G_CH_GROUP_NUM,
++		       ofst[i]->bw40_1s_tssi_5g, sizeof(ofst[i]->bw40_1s_tssi_5g));
++
++		for (j = 0; j < TSSI_MCS_CH_GROUP_NUM; j++)
++			rtw89_debug(rtwdev, RTW89_DBG_TSSI,
++				    "[TSSI][EFUSE] path=%d mcs[%d]=0x%x\n",
++				    i, j, tssi->tssi_mcs[i][j]);
++	}
++}
++
++static int rtw8852a_read_efuse(struct rtw89_dev *rtwdev, u8 *log_map)
++{
++	struct rtw89_efuse *efuse = &rtwdev->efuse;
++	struct rtw8852a_efuse *map;
++
++	map = (struct rtw8852a_efuse *)log_map;
++
++	efuse->country_code[0] = map->country_code[0];
++	efuse->country_code[1] = map->country_code[1];
++	rtw8852a_efuse_parsing_tssi(rtwdev, map);
++
++	switch (rtwdev->hci.type) {
++	case RTW89_HCI_TYPE_PCIE:
++		rtw8852ae_efuse_parsing(efuse, map);
++		break;
++	default:
++		return -ENOTSUPP;
++	}
++
++	rtw89_info(rtwdev, "chip rfe_type is %d\n", efuse->rfe_type);
++
++	return 0;
++}
++
++static void rtw8852a_phycap_parsing_tssi(struct rtw89_dev *rtwdev, u8 *phycap_map)
++{
++	struct rtw89_tssi_info *tssi = &rtwdev->tssi;
++	static const u32 tssi_trim_addr[RF_PATH_NUM_8852A] = {0x5D6, 0x5AB};
++	u32 addr = rtwdev->chip->phycap_addr;
++	bool pg = false;
++	u32 ofst;
++	u8 i, j;
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		for (j = 0; j < TSSI_TRIM_CH_GROUP_NUM; j++) {
++			/* addrs are in decreasing order */
++			ofst = tssi_trim_addr[i] - addr - j;
++			tssi->tssi_trim[i][j] = phycap_map[ofst];
++
++			if (phycap_map[ofst] != 0xff)
++				pg = true;
++		}
++	}
++
++	if (!pg) {
++		memset(tssi->tssi_trim, 0, sizeof(tssi->tssi_trim));
++		rtw89_debug(rtwdev, RTW89_DBG_TSSI,
++			    "[TSSI][TRIM] no PG, set all trim info to 0\n");
++	}
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++)
++		for (j = 0; j < TSSI_TRIM_CH_GROUP_NUM; j++)
++			rtw89_debug(rtwdev, RTW89_DBG_TSSI,
++				    "[TSSI] path=%d idx=%d trim=0x%x addr=0x%x\n",
++				    i, j, tssi->tssi_trim[i][j],
++				    tssi_trim_addr[i] - j);
++}
++
++static void rtw8852a_phycap_parsing_thermal_trim(struct rtw89_dev *rtwdev,
++						 u8 *phycap_map)
++{
++	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
++	static const u32 thm_trim_addr[RF_PATH_NUM_8852A] = {0x5DF, 0x5DC};
++	u32 addr = rtwdev->chip->phycap_addr;
++	u8 i;
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		info->thermal_trim[i] = phycap_map[thm_trim_addr[i] - addr];
++
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[THERMAL][TRIM] path=%d thermal_trim=0x%x\n",
++			    i, info->thermal_trim[i]);
++
++		if (info->thermal_trim[i] != 0xff)
++			info->pg_thermal_trim = true;
++	}
++}
++
++static void rtw8852a_thermal_trim(struct rtw89_dev *rtwdev)
++{
++#define __thm_setting(raw)				\
++({							\
++	u8 __v = (raw);					\
++	((__v & 0x1) << 3) | ((__v & 0x1f) >> 1);	\
++})
++	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
++	u8 i, val;
++
++	if (!info->pg_thermal_trim) {
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[THERMAL][TRIM] no PG, do nothing\n");
++
++		return;
++	}
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		val = __thm_setting(info->thermal_trim[i]);
++		rtw89_write_rf(rtwdev, i, RR_TM2, RR_TM2_OFF, val);
++
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[THERMAL][TRIM] path=%d thermal_setting=0x%x\n",
++			    i, val);
++	}
++#undef __thm_setting
++}
++
++static void rtw8852a_phycap_parsing_pa_bias_trim(struct rtw89_dev *rtwdev,
++						 u8 *phycap_map)
++{
++	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
++	static const u32 pabias_trim_addr[RF_PATH_NUM_8852A] = {0x5DE, 0x5DB};
++	u32 addr = rtwdev->chip->phycap_addr;
++	u8 i;
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		info->pa_bias_trim[i] = phycap_map[pabias_trim_addr[i] - addr];
++
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[PA_BIAS][TRIM] path=%d pa_bias_trim=0x%x\n",
++			    i, info->pa_bias_trim[i]);
++
++		if (info->pa_bias_trim[i] != 0xff)
++			info->pg_pa_bias_trim = true;
++	}
++}
++
++static void rtw8852a_pa_bias_trim(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
++	u8 pabias_2g, pabias_5g;
++	u8 i;
++
++	if (!info->pg_pa_bias_trim) {
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[PA_BIAS][TRIM] no PG, do nothing\n");
++
++		return;
++	}
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++) {
++		pabias_2g = FIELD_GET(GENMASK(3, 0), info->pa_bias_trim[i]);
++		pabias_5g = FIELD_GET(GENMASK(7, 4), info->pa_bias_trim[i]);
++
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[PA_BIAS][TRIM] path=%d 2G=0x%x 5G=0x%x\n",
++			    i, pabias_2g, pabias_5g);
++
++		rtw89_write_rf(rtwdev, i, RR_BIASA, RR_BIASA_TXG, pabias_2g);
++		rtw89_write_rf(rtwdev, i, RR_BIASA, RR_BIASA_TXA, pabias_5g);
++	}
++}
++
++static int rtw8852a_read_phycap(struct rtw89_dev *rtwdev, u8 *phycap_map)
++{
++	rtw8852a_phycap_parsing_tssi(rtwdev, phycap_map);
++	rtw8852a_phycap_parsing_thermal_trim(rtwdev, phycap_map);
++	rtw8852a_phycap_parsing_pa_bias_trim(rtwdev, phycap_map);
++
++	return 0;
++}
++
++static void rtw8852a_power_trim(struct rtw89_dev *rtwdev)
++{
++	rtw8852a_thermal_trim(rtwdev);
++	rtw8852a_pa_bias_trim(rtwdev);
++}
++
++static void rtw8852a_set_channel_mac(struct rtw89_dev *rtwdev,
++				     struct rtw89_channel_params *param,
++				     u8 mac_idx)
++{
++	u32 rf_mod = rtw89_mac_reg_by_idx(R_AX_WMAC_RFMOD, mac_idx);
++	u32 sub_carr = rtw89_mac_reg_by_idx(R_AX_TX_SUB_CARRIER_VALUE,
++					     mac_idx);
++	u32 chk_rate = rtw89_mac_reg_by_idx(R_AX_TXRATE_CHK, mac_idx);
++	u8 txsc20 = 0, txsc40 = 0;
++
++	switch (param->bandwidth) {
++	case RTW89_CHANNEL_WIDTH_80:
++		txsc40 = rtw89_phy_get_txsc(rtwdev, param,
++					    RTW89_CHANNEL_WIDTH_40);
++		fallthrough;
++	case RTW89_CHANNEL_WIDTH_40:
++		txsc20 = rtw89_phy_get_txsc(rtwdev, param,
++					    RTW89_CHANNEL_WIDTH_20);
++		break;
++	default:
++		break;
++	}
++
++	switch (param->bandwidth) {
++	case RTW89_CHANNEL_WIDTH_80:
++		rtw89_write8_mask(rtwdev, rf_mod, B_AX_WMAC_RFMOD_MASK, BIT(1));
++		rtw89_write32(rtwdev, sub_carr, txsc20 | (txsc40 << 4));
++		break;
++	case RTW89_CHANNEL_WIDTH_40:
++		rtw89_write8_mask(rtwdev, rf_mod, B_AX_WMAC_RFMOD_MASK, BIT(0));
++		rtw89_write32(rtwdev, sub_carr, txsc20);
++		break;
++	case RTW89_CHANNEL_WIDTH_20:
++		rtw89_write8_clr(rtwdev, rf_mod, B_AX_WMAC_RFMOD_MASK);
++		rtw89_write32(rtwdev, sub_carr, 0);
++		break;
++	default:
++		break;
++	}
++
++	if (param->center_chan > 14)
++		rtw89_write8_set(rtwdev, chk_rate,
++				 B_AX_CHECK_CCK_EN | B_AX_RTS_LIMIT_IN_OFDM6);
++	else
++		rtw89_write8_clr(rtwdev, chk_rate,
++				 B_AX_CHECK_CCK_EN | B_AX_RTS_LIMIT_IN_OFDM6);
++}
++
++static const u32 rtw8852a_sco_barker_threshold[14] = {
++	0x1cfea, 0x1d0e1, 0x1d1d7, 0x1d2cd, 0x1d3c3, 0x1d4b9, 0x1d5b0, 0x1d6a6,
++	0x1d79c, 0x1d892, 0x1d988, 0x1da7f, 0x1db75, 0x1ddc4
++};
++
++static const u32 rtw8852a_sco_cck_threshold[14] = {
++	0x27de3, 0x27f35, 0x28088, 0x281da, 0x2832d, 0x2847f, 0x285d2, 0x28724,
++	0x28877, 0x289c9, 0x28b1c, 0x28c6e, 0x28dc1, 0x290ed
++};
++
++static int rtw8852a_ctrl_sco_cck(struct rtw89_dev *rtwdev, u8 central_ch,
++				 u8 primary_ch, enum rtw89_bandwidth bw)
++{
++	u8 ch_element;
++
++	if (bw == RTW89_CHANNEL_WIDTH_20) {
++		ch_element = central_ch - 1;
++	} else if (bw == RTW89_CHANNEL_WIDTH_40) {
++		if (primary_ch == 1)
++			ch_element = central_ch - 1 + 2;
++		else
++			ch_element = central_ch - 1 - 2;
++	} else {
++		rtw89_warn(rtwdev, "Invalid BW:%d for CCK\n", bw);
++		return -EINVAL;
++	}
++	rtw89_phy_write32_mask(rtwdev, R_RXSCOBC, B_RXSCOBC_TH,
++			       rtw8852a_sco_barker_threshold[ch_element]);
++	rtw89_phy_write32_mask(rtwdev, R_RXSCOCCK, B_RXSCOCCK_TH,
++			       rtw8852a_sco_cck_threshold[ch_element]);
++
++	return 0;
++}
++
++static void rtw8852a_ch_setting(struct rtw89_dev *rtwdev, u8 central_ch,
++				u8 path)
++{
++	u32 val;
++
++	val = rtw89_read_rf(rtwdev, path, RR_CFGCH, RFREG_MASK);
++	if (val == INV_RF_DATA) {
++		rtw89_warn(rtwdev, "Invalid RF_0x18 for Path-%d\n", path);
++		return;
++	}
++	val &= ~0x303ff;
++	val |= central_ch;
++	if (central_ch > 14)
++		val |= (BIT(16) | BIT(8));
++	rtw89_write_rf(rtwdev, path, RR_CFGCH, RFREG_MASK, val);
++}
++
++static u8 rtw8852a_sco_mapping(u8 central_ch)
++{
++	if (central_ch == 1)
++		return 109;
++	else if (central_ch >= 2 && central_ch <= 6)
++		return 108;
++	else if (central_ch >= 7 && central_ch <= 10)
++		return 107;
++	else if (central_ch >= 11 && central_ch <= 14)
++		return 106;
++	else if (central_ch == 36 || central_ch == 38)
++		return 51;
++	else if (central_ch >= 40 && central_ch <= 58)
++		return 50;
++	else if (central_ch >= 60 && central_ch <= 64)
++		return 49;
++	else if (central_ch == 100 || central_ch == 102)
++		return 48;
++	else if (central_ch >= 104 && central_ch <= 126)
++		return 47;
++	else if (central_ch >= 128 && central_ch <= 151)
++		return 46;
++	else if (central_ch >= 153 && central_ch <= 177)
++		return 45;
++	else
++		return 0;
++}
++
++static void rtw8852a_ctrl_ch(struct rtw89_dev *rtwdev, u8 central_ch,
++			     enum rtw89_phy_idx phy_idx)
++{
++	u8 sco_comp;
++	bool is_2g = central_ch <= 14;
++
++	if (phy_idx == RTW89_PHY_0) {
++		/* Path A */
++		rtw8852a_ch_setting(rtwdev, central_ch, RF_PATH_A);
++		if (is_2g)
++			rtw89_phy_write32_idx(rtwdev, R_PATH0_TIA_ERR_G1,
++					      B_PATH0_TIA_ERR_G1_SEL, 1,
++					      phy_idx);
++		else
++			rtw89_phy_write32_idx(rtwdev, R_PATH0_TIA_ERR_G1,
++					      B_PATH0_TIA_ERR_G1_SEL, 0,
++					      phy_idx);
++
++		/* Path B */
++		if (!rtwdev->dbcc_en) {
++			rtw8852a_ch_setting(rtwdev, central_ch, RF_PATH_B);
++			if (is_2g)
++				rtw89_phy_write32_idx(rtwdev, R_P1_MODE,
++						      B_P1_MODE_SEL,
++						      1, phy_idx);
++			else
++				rtw89_phy_write32_idx(rtwdev, R_P1_MODE,
++						      B_P1_MODE_SEL,
++						      0, phy_idx);
++		} else {
++			if (is_2g)
++				rtw89_phy_write32_clr(rtwdev, R_2P4G_BAND,
++						      B_2P4G_BAND_SEL);
++			else
++				rtw89_phy_write32_set(rtwdev, R_2P4G_BAND,
++						      B_2P4G_BAND_SEL);
++		}
++		/* SCO compensate FC setting */
++		sco_comp = rtw8852a_sco_mapping(central_ch);
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_INV,
++				      sco_comp, phy_idx);
++	} else {
++		/* Path B */
++		rtw8852a_ch_setting(rtwdev, central_ch, RF_PATH_B);
++		if (is_2g)
++			rtw89_phy_write32_idx(rtwdev, R_P1_MODE,
++					      B_P1_MODE_SEL,
++					      1, phy_idx);
++		else
++			rtw89_phy_write32_idx(rtwdev, R_P1_MODE,
++					      B_P1_MODE_SEL,
++					      1, phy_idx);
++		/* SCO compensate FC setting */
++		sco_comp = rtw8852a_sco_mapping(central_ch);
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_INV,
++				      sco_comp, phy_idx);
++	}
++
++	/* Band edge */
++	if (is_2g)
++		rtw89_phy_write32_idx(rtwdev, R_BANDEDGE, B_BANDEDGE_EN, 1,
++				      phy_idx);
++	else
++		rtw89_phy_write32_idx(rtwdev, R_BANDEDGE, B_BANDEDGE_EN, 0,
++				      phy_idx);
++
++	/* CCK parameters */
++	if (central_ch == 14) {
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR0, B_TXFIR_C01,
++				       0x3b13ff);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR2, B_TXFIR_C23,
++				       0x1c42de);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR4, B_TXFIR_C45,
++				       0xfdb0ad);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR6, B_TXFIR_C67,
++				       0xf60f6e);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR8, B_TXFIR_C89,
++				       0xfd8f92);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRA, B_TXFIR_CAB, 0x2d011);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRC, B_TXFIR_CCD, 0x1c02c);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRE, B_TXFIR_CEF,
++				       0xfff00a);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR0, B_TXFIR_C01,
++				       0x3d23ff);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR2, B_TXFIR_C23,
++				       0x29b354);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR4, B_TXFIR_C45, 0xfc1c8);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR6, B_TXFIR_C67,
++				       0xfdb053);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIR8, B_TXFIR_C89,
++				       0xf86f9a);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRA, B_TXFIR_CAB,
++				       0xfaef92);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRC, B_TXFIR_CCD,
++				       0xfe5fcc);
++		rtw89_phy_write32_mask(rtwdev, R_TXFIRE, B_TXFIR_CEF,
++				       0xffdff5);
++	}
++}
++
++static void rtw8852a_bw_setting(struct rtw89_dev *rtwdev, u8 bw, u8 path)
++{
++	u32 val = 0;
++	u32 adc_sel[2] = {0x12d0, 0x32d0};
++	u32 wbadc_sel[2] = {0x12ec, 0x32ec};
++
++	val = rtw89_read_rf(rtwdev, path, RR_CFGCH, RFREG_MASK);
++	if (val == INV_RF_DATA) {
++		rtw89_warn(rtwdev, "Invalid RF_0x18 for Path-%d\n", path);
++		return;
++	}
++	val &= ~(BIT(11) | BIT(10));
++	switch (bw) {
++	case RTW89_CHANNEL_WIDTH_5:
++		rtw89_phy_write32_mask(rtwdev, adc_sel[path], 0x6000, 0x1);
++		rtw89_phy_write32_mask(rtwdev, wbadc_sel[path], 0x30, 0x0);
++		val |= (BIT(11) | BIT(10));
++		break;
++	case RTW89_CHANNEL_WIDTH_10:
++		rtw89_phy_write32_mask(rtwdev, adc_sel[path], 0x6000, 0x2);
++		rtw89_phy_write32_mask(rtwdev, wbadc_sel[path], 0x30, 0x1);
++		val |= (BIT(11) | BIT(10));
++		break;
++	case RTW89_CHANNEL_WIDTH_20:
++		rtw89_phy_write32_mask(rtwdev, adc_sel[path], 0x6000, 0x0);
++		rtw89_phy_write32_mask(rtwdev, wbadc_sel[path], 0x30, 0x2);
++		val |= (BIT(11) | BIT(10));
++		break;
++	case RTW89_CHANNEL_WIDTH_40:
++		rtw89_phy_write32_mask(rtwdev, adc_sel[path], 0x6000, 0x0);
++		rtw89_phy_write32_mask(rtwdev, wbadc_sel[path], 0x30, 0x2);
++		val |= BIT(11);
++		break;
++	case RTW89_CHANNEL_WIDTH_80:
++		rtw89_phy_write32_mask(rtwdev, adc_sel[path], 0x6000, 0x0);
++		rtw89_phy_write32_mask(rtwdev, wbadc_sel[path], 0x30, 0x2);
++		val |= BIT(10);
++		break;
++	default:
++		rtw89_warn(rtwdev, "Fail to set ADC\n");
++	}
++
++	rtw89_write_rf(rtwdev, path, RR_CFGCH, RFREG_MASK, val);
++}
++
++static void
++rtw8852a_ctrl_bw(struct rtw89_dev *rtwdev, u8 pri_ch, u8 bw,
++		 enum rtw89_phy_idx phy_idx)
++{
++	/* Switch bandwidth */
++	switch (bw) {
++	case RTW89_CHANNEL_WIDTH_5:
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_SET, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_SBW, 0x1,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_PRICH,
++				      0x0, phy_idx);
++		break;
++	case RTW89_CHANNEL_WIDTH_10:
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_SET, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_SBW, 0x2,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_PRICH,
++				      0x0, phy_idx);
++		break;
++	case RTW89_CHANNEL_WIDTH_20:
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_SET, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_SBW, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_PRICH,
++				      0x0, phy_idx);
++		break;
++	case RTW89_CHANNEL_WIDTH_40:
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_SET, 0x1,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_SBW, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_PRICH,
++				      pri_ch,
++				      phy_idx);
++		if (pri_ch == RTW89_SC_20_UPPER)
++			rtw89_phy_write32_mask(rtwdev, R_RXSC, B_RXSC_EN, 1);
++		else
++			rtw89_phy_write32_mask(rtwdev, R_RXSC, B_RXSC_EN, 0);
++		break;
++	case RTW89_CHANNEL_WIDTH_80:
++		rtw89_phy_write32_idx(rtwdev, R_FC0_BW, B_FC0_BW_SET, 0x2,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_SBW, 0x0,
++				      phy_idx);
++		rtw89_phy_write32_idx(rtwdev, R_CHBW_MOD, B_CHBW_MOD_PRICH,
++				      pri_ch,
++				      phy_idx);
++		break;
++	default:
++		rtw89_warn(rtwdev, "Fail to switch bw (bw:%d, pri ch:%d)\n", bw,
++			   pri_ch);
++	}
++
++	if (phy_idx == RTW89_PHY_0) {
++		rtw8852a_bw_setting(rtwdev, bw, RF_PATH_A);
++		if (!rtwdev->dbcc_en)
++			rtw8852a_bw_setting(rtwdev, bw, RF_PATH_B);
++	} else {
++		rtw8852a_bw_setting(rtwdev, bw, RF_PATH_B);
++	}
++}
++
++static void rtw8852a_spur_elimination(struct rtw89_dev *rtwdev, u8 central_ch)
++{
++	if (central_ch == 153) {
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX, B_P0_NBIIDX_VAL,
++				       0x210);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX, B_P1_NBIIDX_VAL,
++				       0x210);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI, 0xfff, 0x7c0);
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX,
++				       B_P0_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX,
++				       B_P1_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI_EN, B_SEG0CSI_EN,
++				       0x1);
++	} else if (central_ch == 151) {
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX, B_P0_NBIIDX_VAL,
++				       0x210);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX, B_P1_NBIIDX_VAL,
++				       0x210);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI, 0xfff, 0x40);
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX,
++				       B_P0_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX,
++				       B_P1_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI_EN, B_SEG0CSI_EN,
++				       0x1);
++	} else if (central_ch == 155) {
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX, B_P0_NBIIDX_VAL,
++				       0x2d0);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX, B_P1_NBIIDX_VAL,
++				       0x2d0);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI, 0xfff, 0x740);
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX,
++				       B_P0_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX,
++				       B_P1_NBIIDX_NOTCH_EN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI_EN, B_SEG0CSI_EN,
++				       0x1);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_P0_NBIIDX,
++				       B_P0_NBIIDX_NOTCH_EN, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_P1_NBIIDX,
++				       B_P1_NBIIDX_NOTCH_EN, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_SEG0CSI_EN, B_SEG0CSI_EN,
++				       0x0);
++	}
++}
++
++static void rtw8852a_bb_reset_all(struct rtw89_dev *rtwdev,
++				  enum rtw89_phy_idx phy_idx)
++{
++	rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 1,
++			      phy_idx);
++	rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 0,
++			      phy_idx);
++	rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 1,
++			      phy_idx);
++}
++
++static void rtw8852a_bb_reset_en(struct rtw89_dev *rtwdev,
++				 enum rtw89_phy_idx phy_idx, bool en)
++{
++	if (en)
++		rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL,
++				      1,
++				      phy_idx);
++	else
++		rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL,
++				      0,
++				      phy_idx);
++}
++
++static void rtw8852a_bb_reset(struct rtw89_dev *rtwdev,
++			      enum rtw89_phy_idx phy_idx)
++{
++	rtw89_phy_write32_set(rtwdev, R_P0_TXPW_RSTB, B_P0_TXPW_RSTB_MANON);
++	rtw89_phy_write32_set(rtwdev, R_P0_TSSI_TRK, B_P0_TSSI_TRK_EN);
++	rtw89_phy_write32_set(rtwdev, R_P1_TXPW_RSTB, B_P1_TXPW_RSTB_MANON);
++	rtw89_phy_write32_set(rtwdev, R_P1_TSSI_TRK, B_P1_TSSI_TRK_EN);
++	rtw8852a_bb_reset_all(rtwdev, phy_idx);
++	rtw89_phy_write32_clr(rtwdev, R_P0_TXPW_RSTB, B_P0_TXPW_RSTB_MANON);
++	rtw89_phy_write32_clr(rtwdev, R_P0_TSSI_TRK, B_P0_TSSI_TRK_EN);
++	rtw89_phy_write32_clr(rtwdev, R_P1_TXPW_RSTB, B_P1_TXPW_RSTB_MANON);
++	rtw89_phy_write32_clr(rtwdev, R_P1_TSSI_TRK, B_P1_TSSI_TRK_EN);
++}
++
++static void rtw8852a_bb_sethw(struct rtw89_dev *rtwdev)
++{
++	rtw89_phy_write32_clr(rtwdev, R_P0_EN_SOUND_WO_NDP, B_P0_EN_SOUND_WO_NDP);
++	rtw89_phy_write32_clr(rtwdev, R_P1_EN_SOUND_WO_NDP, B_P1_EN_SOUND_WO_NDP);
++
++	if (rtwdev->hal.cv <= CHIP_CCV) {
++		rtw89_phy_write32_set(rtwdev, R_RSTB_WATCH_DOG, B_P0_RSTB_WATCH_DOG);
++		rtw89_phy_write32(rtwdev, R_BRK_ASYNC_RST_EN_1, 0x864FA000);
++		rtw89_phy_write32(rtwdev, R_BRK_ASYNC_RST_EN_2, 0x3F);
++		rtw89_phy_write32(rtwdev, R_BRK_ASYNC_RST_EN_3, 0x7FFF);
++		rtw89_phy_write32_set(rtwdev, R_SPOOF_ASYNC_RST, B_SPOOF_ASYNC_RST);
++		rtw89_phy_write32_set(rtwdev, R_P0_TXPW_RSTB, B_P0_TXPW_RSTB_MANON);
++		rtw89_phy_write32_set(rtwdev, R_P1_TXPW_RSTB, B_P1_TXPW_RSTB_MANON);
++	}
++	rtw89_phy_write32_mask(rtwdev, R_CFO_TRK0, B_CFO_TRK_MSK, 0x1f);
++	rtw89_phy_write32_mask(rtwdev, R_CFO_TRK1, B_CFO_TRK_MSK, 0x0c);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_MOD, 0x0, RTW89_PHY_0);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_MOD, 0x0, RTW89_PHY_1);
++	rtw89_phy_write32_clr(rtwdev, R_NDP_BRK0, B_NDP_RU_BRK);
++	rtw89_phy_write32_set(rtwdev, R_NDP_BRK1, B_NDP_RU_BRK);
++}
++
++static void rtw8852a_bbrst_for_rfk(struct rtw89_dev *rtwdev,
++				   enum rtw89_phy_idx phy_idx)
++{
++	rtw89_phy_write32_set(rtwdev, R_P0_TSSI_TRK, B_P0_TSSI_TRK_EN);
++	rtw89_phy_write32_set(rtwdev, R_P1_TSSI_TRK, B_P1_TSSI_TRK_EN);
++	rtw8852a_bb_reset_all(rtwdev, phy_idx);
++	rtw89_phy_write32_clr(rtwdev, R_P0_TSSI_TRK, B_P0_TSSI_TRK_EN);
++	rtw89_phy_write32_clr(rtwdev, R_P1_TSSI_TRK, B_P1_TSSI_TRK_EN);
++	udelay(1);
++}
++
++static void rtw8852a_set_channel_bb(struct rtw89_dev *rtwdev,
++				    struct rtw89_channel_params *param,
++				    enum rtw89_phy_idx phy_idx)
++{
++	bool cck_en = param->center_chan > 14 ? false : true;
++	u8 pri_ch_idx = param->pri_ch_idx;
++
++	if (param->center_chan <= 14)
++		rtw8852a_ctrl_sco_cck(rtwdev, param->center_chan,
++				      param->primary_chan, param->bandwidth);
++
++	rtw8852a_ctrl_ch(rtwdev, param->center_chan, phy_idx);
++	rtw8852a_ctrl_bw(rtwdev, pri_ch_idx, param->bandwidth, phy_idx);
++	if (cck_en) {
++		rtw89_phy_write32_mask(rtwdev, R_RXCCA, B_RXCCA_DIS, 0);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_RXCCA, B_RXCCA_DIS, 1);
++		rtw8852a_bbrst_for_rfk(rtwdev, phy_idx);
++	}
++	rtw8852a_spur_elimination(rtwdev, param->center_chan);
++	rtw8852a_bb_reset_all(rtwdev, phy_idx);
++}
++
++static void rtw8852a_set_channel(struct rtw89_dev *rtwdev,
++				 struct rtw89_channel_params *params)
++{
++	rtw8852a_set_channel_mac(rtwdev, params, RTW89_MAC_0);
++	rtw8852a_set_channel_bb(rtwdev, params, RTW89_PHY_0);
++}
++
++static void rtw8852a_dfs_en(struct rtw89_dev *rtwdev, bool en)
++{
++	if (en)
++		rtw89_phy_write32_mask(rtwdev, R_UPD_P0, B_UPD_P0_EN, 1);
++	else
++		rtw89_phy_write32_mask(rtwdev, R_UPD_P0, B_UPD_P0_EN, 0);
++}
++
++static void rtw8852a_tssi_cont_en(struct rtw89_dev *rtwdev, bool en,
++				  enum rtw89_rf_path path)
++{
++	static const u32 tssi_trk[2] = {0x5818, 0x7818};
++	static const u32 ctrl_bbrst[2] = {0x58dc, 0x78dc};
++
++	if (en) {
++		rtw89_phy_write32_mask(rtwdev, ctrl_bbrst[path], BIT(30), 0x0);
++		rtw89_phy_write32_mask(rtwdev, tssi_trk[path], BIT(30), 0x0);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, ctrl_bbrst[path], BIT(30), 0x1);
++		rtw89_phy_write32_mask(rtwdev, tssi_trk[path], BIT(30), 0x1);
++	}
++}
++
++static void rtw8852a_tssi_cont_en_phyidx(struct rtw89_dev *rtwdev, bool en,
++					 u8 phy_idx)
++{
++	if (!rtwdev->dbcc_en) {
++		rtw8852a_tssi_cont_en(rtwdev, en, RF_PATH_A);
++		rtw8852a_tssi_cont_en(rtwdev, en, RF_PATH_B);
++	} else {
++		if (phy_idx == RTW89_PHY_0)
++			rtw8852a_tssi_cont_en(rtwdev, en, RF_PATH_A);
++		else
++			rtw8852a_tssi_cont_en(rtwdev, en, RF_PATH_B);
++	}
++}
++
++static void rtw8852a_adc_en(struct rtw89_dev *rtwdev, bool en)
++{
++	if (en)
++		rtw89_phy_write32_mask(rtwdev, R_ADC_FIFO, B_ADC_FIFO_RST,
++				       0x0);
++	else
++		rtw89_phy_write32_mask(rtwdev, R_ADC_FIFO, B_ADC_FIFO_RST,
++				       0xf);
++}
++
++static void rtw8852a_set_channel_help(struct rtw89_dev *rtwdev, bool enter,
++				      struct rtw89_channel_help_params *p)
++{
++	u8 phy_idx = RTW89_PHY_0;
++
++	if (enter) {
++		rtw89_mac_stop_sch_tx(rtwdev, RTW89_MAC_0, &p->tx_en, RTW89_SCH_TX_SEL_ALL);
++		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, false);
++		rtw8852a_dfs_en(rtwdev, false);
++		rtw8852a_tssi_cont_en_phyidx(rtwdev, false, RTW89_PHY_0);
++		rtw8852a_adc_en(rtwdev, false);
++		fsleep(40);
++		rtw8852a_bb_reset_en(rtwdev, phy_idx, false);
++	} else {
++		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, true);
++		rtw8852a_adc_en(rtwdev, true);
++		rtw8852a_dfs_en(rtwdev, true);
++		rtw8852a_tssi_cont_en_phyidx(rtwdev, true, RTW89_PHY_0);
++		rtw8852a_bb_reset_en(rtwdev, phy_idx, true);
++		rtw89_mac_resume_sch_tx(rtwdev, RTW89_MAC_0, p->tx_en);
++	}
++}
++
++static void rtw8852a_fem_setup(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_efuse *efuse = &rtwdev->efuse;
++
++	switch (efuse->rfe_type) {
++	case 11:
++	case 12:
++	case 17:
++	case 18:
++	case 51:
++	case 53:
++		rtwdev->fem.epa_2g = true;
++		rtwdev->fem.elna_2g = true;
++		fallthrough;
++	case 9:
++	case 10:
++	case 15:
++	case 16:
++		rtwdev->fem.epa_5g = true;
++		rtwdev->fem.elna_5g = true;
++		break;
++	default:
++		break;
++	}
++}
++
++static void rtw8852a_rfk_init(struct rtw89_dev *rtwdev)
++{
++	rtwdev->is_tssi_mode[RF_PATH_A] = false;
++	rtwdev->is_tssi_mode[RF_PATH_B] = false;
++
++	rtw8852a_rck(rtwdev);
++	rtw8852a_dack(rtwdev);
++	rtw8852a_rx_dck(rtwdev, RTW89_PHY_0, true);
++}
++
++static void rtw8852a_rfk_channel(struct rtw89_dev *rtwdev)
++{
++	enum rtw89_phy_idx phy_idx = RTW89_PHY_0;
++
++	rtw8852a_rx_dck(rtwdev, phy_idx, true);
++	rtw8852a_iqk(rtwdev, phy_idx);
++	rtw8852a_tssi(rtwdev, phy_idx);
++	rtw8852a_dpk(rtwdev, phy_idx);
++}
++
++static void rtw8852a_rfk_band_changed(struct rtw89_dev *rtwdev)
++{
++	rtw8852a_tssi_scan(rtwdev, RTW89_PHY_0);
++}
++
++static void rtw8852a_rfk_track(struct rtw89_dev *rtwdev)
++{
++	rtw8852a_dpk_track(rtwdev);
++	rtw8852a_iqk_track(rtwdev);
++}
++
++static u32 rtw8852a_bb_cal_txpwr_ref(struct rtw89_dev *rtwdev,
++				     enum rtw89_phy_idx phy_idx, s16 ref)
++{
++	s8 ofst_int = 0;
++	u8 base_cw_0db = 0x27;
++	u16 tssi_16dbm_cw = 0x12c;
++	s16 pwr_s10_3 = 0;
++	s16 rf_pwr_cw = 0;
++	u16 bb_pwr_cw = 0;
++	u32 pwr_cw = 0;
++	u32 tssi_ofst_cw = 0;
++
++	pwr_s10_3 = (ref << 1) + (s16)(ofst_int) + (s16)(base_cw_0db << 3);
++	bb_pwr_cw = FIELD_GET(GENMASK(2, 0), pwr_s10_3);
++	rf_pwr_cw = FIELD_GET(GENMASK(8, 3), pwr_s10_3);
++	rf_pwr_cw = clamp_t(s16, rf_pwr_cw, 15, 63);
++	pwr_cw = (rf_pwr_cw << 3) | bb_pwr_cw;
++
++	tssi_ofst_cw = (u32)((s16)tssi_16dbm_cw + (ref << 1) - (16 << 3));
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR,
++		    "[TXPWR] tssi_ofst_cw=%d rf_cw=0x%x bb_cw=0x%x\n",
++		    tssi_ofst_cw, rf_pwr_cw, bb_pwr_cw);
++
++	return (tssi_ofst_cw << 18) | (pwr_cw << 9) | (ref & GENMASK(8, 0));
++}
++
++static
++void rtw8852a_set_txpwr_ul_tb_offset(struct rtw89_dev *rtwdev,
++				     s16 pw_ofst, enum rtw89_mac_idx mac_idx)
++{
++	s32 val_1t = 0;
++	s32 val_2t = 0;
++	u32 reg;
++
++	if (pw_ofst < -16 || pw_ofst > 15) {
++		rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[ULTB] Err pwr_offset=%d\n",
++			    pw_ofst);
++		return;
++	}
++	reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_CTRL, mac_idx);
++	rtw89_write32_set(rtwdev, reg, B_AX_PWR_UL_TB_CTRL_EN);
++	val_1t = (s32)pw_ofst;
++	reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_1T, mac_idx);
++	rtw89_write32_mask(rtwdev, reg, B_AX_PWR_UL_TB_1T_MSK, val_1t);
++	val_2t = max(val_1t - 3, -16);
++	reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_2T, mac_idx);
++	rtw89_write32_mask(rtwdev, reg, B_AX_PWR_UL_TB_2T_MSK, val_2t);
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[ULTB] Set TB pwr_offset=(%d, %d)\n",
++		    val_1t, val_2t);
++}
++
++static void rtw8852a_set_txpwr_ref(struct rtw89_dev *rtwdev,
++				   enum rtw89_phy_idx phy_idx)
++{
++	static const u32 addr[RF_PATH_NUM_8852A] = {0x5800, 0x7800};
++	const u32 mask = 0x7FFFFFF;
++	const u8 ofst_ofdm = 0x4;
++	const u8 ofst_cck = 0x8;
++	s16 ref_ofdm = 0;
++	s16 ref_cck = 0;
++	u32 val;
++	u8 i;
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[TXPWR] set txpwr reference\n");
++
++	rtw89_mac_txpwr_write32_mask(rtwdev, phy_idx, R_AX_PWR_RATE_CTRL,
++				     GENMASK(27, 10), 0x0);
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[TXPWR] set bb ofdm txpwr ref\n");
++	val = rtw8852a_bb_cal_txpwr_ref(rtwdev, phy_idx, ref_ofdm);
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++)
++		rtw89_phy_write32_idx(rtwdev, addr[i] + ofst_ofdm, mask, val,
++				      phy_idx);
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[TXPWR] set bb cck txpwr ref\n");
++	val = rtw8852a_bb_cal_txpwr_ref(rtwdev, phy_idx, ref_cck);
++
++	for (i = 0; i < RF_PATH_NUM_8852A; i++)
++		rtw89_phy_write32_idx(rtwdev, addr[i] + ofst_cck, mask, val,
++				      phy_idx);
++}
++
++static void rtw8852a_set_txpwr_byrate(struct rtw89_dev *rtwdev,
++				      enum rtw89_phy_idx phy_idx)
++{
++	u8 ch = rtwdev->hal.current_channel;
++	static const u8 rs[] = {
++		RTW89_RS_CCK,
++		RTW89_RS_OFDM,
++		RTW89_RS_MCS,
++		RTW89_RS_HEDCM,
++	};
++	s8 tmp;
++	u8 i, j;
++	u32 val, shf, addr = R_AX_PWR_BY_RATE;
++	struct rtw89_rate_desc cur;
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR,
++		    "[TXPWR] set txpwr byrate with ch=%d\n", ch);
++
++	for (cur.nss = 0; cur.nss <= RTW89_NSS_2; cur.nss++) {
++		for (i = 0; i < ARRAY_SIZE(rs); i++) {
++			if (cur.nss >= rtw89_rs_nss_max[rs[i]])
++				continue;
++
++			val = 0;
++			cur.rs = rs[i];
++
++			for (j = 0; j < rtw89_rs_idx_max[rs[i]]; j++) {
++				cur.idx = j;
++				shf = (j % 4) * 8;
++				tmp = rtw89_phy_read_txpwr_byrate(rtwdev, &cur);
++				val |= (tmp << shf);
++
++				if ((j + 1) % 4)
++					continue;
++
++				rtw89_mac_txpwr_write32(rtwdev, phy_idx, addr, val);
++				val = 0;
++				addr += 4;
++			}
++		}
++	}
++}
++
++static void rtw8852a_set_txpwr_offset(struct rtw89_dev *rtwdev,
++				      enum rtw89_phy_idx phy_idx)
++{
++	struct rtw89_rate_desc desc = {
++		.nss = RTW89_NSS_1,
++		.rs = RTW89_RS_OFFSET,
++	};
++	u32 val = 0;
++	s8 v;
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[TXPWR] set txpwr offset\n");
++
++	for (desc.idx = 0; desc.idx < RTW89_RATE_OFFSET_MAX; desc.idx++) {
++		v = rtw89_phy_read_txpwr_byrate(rtwdev, &desc);
++		val |= ((v & 0xf) << (4 * desc.idx));
++	}
++
++	rtw89_mac_txpwr_write32_mask(rtwdev, phy_idx, R_AX_PWR_RATE_OFST_CTRL,
++				     GENMASK(19, 0), val);
++}
++
++static void rtw8852a_set_txpwr_limit(struct rtw89_dev *rtwdev,
++				     enum rtw89_phy_idx phy_idx)
++{
++#define __MAC_TXPWR_LMT_PAGE_SIZE 40
++	u8 ch = rtwdev->hal.current_channel;
++	u8 bw = rtwdev->hal.current_band_width;
++	struct rtw89_txpwr_limit lmt[NTX_NUM_8852A];
++	u32 addr, val;
++	const s8 *ptr;
++	u8 i, j, k;
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR,
++		    "[TXPWR] set txpwr limit with ch=%d bw=%d\n", ch, bw);
++
++	for (i = 0; i < NTX_NUM_8852A; i++) {
++		rtw89_phy_fill_txpwr_limit(rtwdev, &lmt[i], i);
++
++		for (j = 0; j < __MAC_TXPWR_LMT_PAGE_SIZE; j += 4) {
++			addr = R_AX_PWR_LMT + j + __MAC_TXPWR_LMT_PAGE_SIZE * i;
++			ptr = (s8 *)&lmt[i] + j;
++			val = 0;
++
++			for (k = 0; k < 4; k++)
++				val |= (ptr[k] << (8 * k));
++
++			rtw89_mac_txpwr_write32(rtwdev, phy_idx, addr, val);
++		}
++	}
++#undef __MAC_TXPWR_LMT_PAGE_SIZE
++}
++
++static void rtw8852a_set_txpwr_limit_ru(struct rtw89_dev *rtwdev,
++					enum rtw89_phy_idx phy_idx)
++{
++#define __MAC_TXPWR_LMT_RU_PAGE_SIZE 24
++	u8 ch = rtwdev->hal.current_channel;
++	u8 bw = rtwdev->hal.current_band_width;
++	struct rtw89_txpwr_limit_ru lmt_ru[NTX_NUM_8852A];
++	u32 addr, val;
++	const s8 *ptr;
++	u8 i, j, k;
++
++	rtw89_debug(rtwdev, RTW89_DBG_TXPWR,
++		    "[TXPWR] set txpwr limit ru with ch=%d bw=%d\n", ch, bw);
++
++	for (i = 0; i < NTX_NUM_8852A; i++) {
++		rtw89_phy_fill_txpwr_limit_ru(rtwdev, &lmt_ru[i], i);
++
++		for (j = 0; j < __MAC_TXPWR_LMT_RU_PAGE_SIZE; j += 4) {
++			addr = R_AX_PWR_RU_LMT + j +
++			       __MAC_TXPWR_LMT_RU_PAGE_SIZE * i;
++			ptr = (s8 *)&lmt_ru[i] + j;
++			val = 0;
++
++			for (k = 0; k < 4; k++)
++				val |= (ptr[k] << (8 * k));
++
++			rtw89_mac_txpwr_write32(rtwdev, phy_idx, addr, val);
++		}
++	}
++
++#undef __MAC_TXPWR_LMT_RU_PAGE_SIZE
++}
++
++static void rtw8852a_set_txpwr(struct rtw89_dev *rtwdev)
++{
++	rtw8852a_set_txpwr_byrate(rtwdev, RTW89_PHY_0);
++	rtw8852a_set_txpwr_limit(rtwdev, RTW89_PHY_0);
++	rtw8852a_set_txpwr_limit_ru(rtwdev, RTW89_PHY_0);
++}
++
++static void rtw8852a_set_txpwr_ctrl(struct rtw89_dev *rtwdev)
++{
++	rtw8852a_set_txpwr_ref(rtwdev, RTW89_PHY_0);
++	rtw8852a_set_txpwr_offset(rtwdev, RTW89_PHY_0);
++}
++
++static int
++rtw8852a_init_txpwr_unit(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
++{
++	int ret;
++
++	ret = rtw89_mac_txpwr_write32(rtwdev, phy_idx, R_AX_PWR_UL_CTRL2, 0x07763333);
++	if (ret)
++		return ret;
++
++	ret = rtw89_mac_txpwr_write32(rtwdev, phy_idx, R_AX_PWR_COEXT_CTRL, 0x01ebf004);
++	if (ret)
++		return ret;
++
++	ret = rtw89_mac_txpwr_write32(rtwdev, phy_idx, R_AX_PWR_UL_CTRL0, 0x0002f8ff);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++void rtw8852a_bb_set_plcp_tx(struct rtw89_dev *rtwdev)
++{
++	u8 i = 0;
++	u32 addr, val;
++
++	for (i = 0; i < ARRAY_SIZE(rtw8852a_pmac_ht20_mcs7_tbl); i++) {
++		addr = rtw8852a_pmac_ht20_mcs7_tbl[i].addr;
++		val = rtw8852a_pmac_ht20_mcs7_tbl[i].data;
++		rtw89_phy_write32(rtwdev, addr, val);
++	}
++}
++
++static void rtw8852a_stop_pmac_tx(struct rtw89_dev *rtwdev,
++				  struct rtw8852a_bb_pmac_info *tx_info,
++				  enum rtw89_phy_idx idx)
++{
++	rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC Stop Tx");
++	if (tx_info->mode == CONT_TX)
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_PRD, B_PMAC_CTX_EN, 0,
++				      idx);
++	else if (tx_info->mode == PKTS_TX)
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_PRD, B_PMAC_PTX_EN, 0,
++				      idx);
++}
++
++static void rtw8852a_start_pmac_tx(struct rtw89_dev *rtwdev,
++				   struct rtw8852a_bb_pmac_info *tx_info,
++				   enum rtw89_phy_idx idx)
++{
++	enum rtw8852a_pmac_mode mode = tx_info->mode;
++	u32 pkt_cnt = tx_info->tx_cnt;
++	u16 period = tx_info->period;
++
++	if (mode == CONT_TX && !tx_info->is_cck) {
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_PRD, B_PMAC_CTX_EN, 1,
++				      idx);
++		rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC CTx Start");
++	} else if (mode == PKTS_TX) {
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_PRD, B_PMAC_PTX_EN, 1,
++				      idx);
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_PRD,
++				      B_PMAC_TX_PRD_MSK, period, idx);
++		rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_CNT, B_PMAC_TX_CNT_MSK,
++				      pkt_cnt, idx);
++		rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC PTx Start");
++	}
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_CTRL, B_PMAC_TXEN_DIS, 1, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_TX_CTRL, B_PMAC_TXEN_DIS, 0, idx);
++}
++
++void rtw8852a_bb_set_pmac_tx(struct rtw89_dev *rtwdev,
++			     struct rtw8852a_bb_pmac_info *tx_info,
++			     enum rtw89_phy_idx idx)
++{
++	if (!tx_info->en_pmac_tx) {
++		rtw8852a_stop_pmac_tx(rtwdev, tx_info, idx);
++		rtw89_phy_write32_idx(rtwdev, R_PD_CTRL, B_PD_HIT_DIS, 0, idx);
++		if (rtwdev->hal.current_band_type == RTW89_BAND_2G)
++			rtw89_phy_write32_clr(rtwdev, R_RXCCA, B_RXCCA_DIS);
++		return;
++	}
++	rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC Tx Enable");
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_GNT, B_PMAC_GNT_TXEN, 1, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_GNT, B_PMAC_GNT_RXEN, 1, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_RX_CFG1, B_PMAC_OPT1_MSK, 0x3f,
++			      idx);
++	rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PD_CTRL, B_PD_HIT_DIS, 1, idx);
++	rtw89_phy_write32_set(rtwdev, R_RXCCA, B_RXCCA_DIS);
++	rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 1, idx);
++	rtw8852a_start_pmac_tx(rtwdev, tx_info, idx);
++}
++
++void rtw8852a_bb_set_pmac_pkt_tx(struct rtw89_dev *rtwdev, u8 enable,
++				 u16 tx_cnt, u16 period, u16 tx_time,
++				 enum rtw89_phy_idx idx)
++{
++	struct rtw8852a_bb_pmac_info tx_info = {0};
++
++	tx_info.en_pmac_tx = enable;
++	tx_info.is_cck = 0;
++	tx_info.mode = PKTS_TX;
++	tx_info.tx_cnt = tx_cnt;
++	tx_info.period = period;
++	tx_info.tx_time = tx_time;
++	rtw8852a_bb_set_pmac_tx(rtwdev, &tx_info, idx);
++}
++
++void rtw8852a_bb_set_power(struct rtw89_dev *rtwdev, s16 pwr_dbm,
++			   enum rtw89_phy_idx idx)
++{
++	rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC CFG Tx PWR = %d", pwr_dbm);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_PWR_EN, 1, idx);
++	rtw89_phy_write32_idx(rtwdev, R_TXPWR, B_TXPWR_MSK, pwr_dbm, idx);
++}
++
++void rtw8852a_bb_cfg_tx_path(struct rtw89_dev *rtwdev, u8 tx_path)
++{
++	u32 rst_mask0 = 0;
++	u32 rst_mask1 = 0;
++
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_MOD, 7, RTW89_PHY_0);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_MOD, 7, RTW89_PHY_1);
++	rtw89_debug(rtwdev, RTW89_DBG_TSSI, "PMAC CFG Tx Path = %d", tx_path);
++	if (!rtwdev->dbcc_en) {
++		if (tx_path == RF_PATH_A) {
++			rtw89_phy_write32_mask(rtwdev, R_TXPATH_SEL,
++					       B_TXPATH_SEL_MSK, 1);
++			rtw89_phy_write32_mask(rtwdev, R_TXNSS_MAP,
++					       B_TXNSS_MAP_MSK, 0);
++		} else if (tx_path == RF_PATH_B) {
++			rtw89_phy_write32_mask(rtwdev, R_TXPATH_SEL,
++					       B_TXPATH_SEL_MSK, 2);
++			rtw89_phy_write32_mask(rtwdev, R_TXNSS_MAP,
++					       B_TXNSS_MAP_MSK, 0);
++		} else if (tx_path == RF_PATH_AB) {
++			rtw89_phy_write32_mask(rtwdev, R_TXPATH_SEL,
++					       B_TXPATH_SEL_MSK, 3);
++			rtw89_phy_write32_mask(rtwdev, R_TXNSS_MAP,
++					       B_TXNSS_MAP_MSK, 4);
++		} else {
++			rtw89_debug(rtwdev, RTW89_DBG_TSSI, "Error Tx Path");
++		}
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_TXPATH_SEL, B_TXPATH_SEL_MSK,
++				       1);
++		rtw89_phy_write32_idx(rtwdev, R_TXPATH_SEL, B_TXPATH_SEL_MSK, 2,
++				      RTW89_PHY_1);
++		rtw89_phy_write32_mask(rtwdev, R_TXNSS_MAP, B_TXNSS_MAP_MSK,
++				       0);
++		rtw89_phy_write32_idx(rtwdev, R_TXNSS_MAP, B_TXNSS_MAP_MSK, 4,
++				      RTW89_PHY_1);
++	}
++	rst_mask0 = B_P0_TXPW_RSTB_MANON | B_P0_TXPW_RSTB_TSSI;
++	rst_mask1 = B_P1_TXPW_RSTB_MANON | B_P1_TXPW_RSTB_TSSI;
++	if (tx_path == RF_PATH_A) {
++		rtw89_phy_write32_mask(rtwdev, R_P0_TXPW_RSTB, rst_mask0, 1);
++		rtw89_phy_write32_mask(rtwdev, R_P0_TXPW_RSTB, rst_mask0, 3);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_P1_TXPW_RSTB, rst_mask1, 1);
++		rtw89_phy_write32_mask(rtwdev, R_P1_TXPW_RSTB, rst_mask1, 3);
++	}
++}
++
++void rtw8852a_bb_tx_mode_switch(struct rtw89_dev *rtwdev,
++				enum rtw89_phy_idx idx, u8 mode)
++{
++	if (mode != 0)
++		return;
++	rtw89_debug(rtwdev, RTW89_DBG_TSSI, "Tx mode switch");
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_GNT, B_PMAC_GNT_TXEN, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_GNT, B_PMAC_GNT_RXEN, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_RX_CFG1, B_PMAC_OPT1_MSK, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_PMAC_RXMOD, B_PMAC_RXMOD_MSK, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_DPD_EN, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_MOD, 0, idx);
++	rtw89_phy_write32_idx(rtwdev, R_MAC_SEL, B_MAC_SEL_PWR_EN, 0, idx);
++}
++
++static void rtw8852a_bb_ctrl_btc_preagc(struct rtw89_dev *rtwdev, bool bt_en)
++{
++	rtw89_phy_write_reg3_tbl(rtwdev, bt_en ? &rtw8852a_btc_preagc_en_defs_tbl :
++						 &rtw8852a_btc_preagc_dis_defs_tbl);
++}
++
++static u8 rtw8852a_get_thermal(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path)
++{
++	if (rtwdev->is_tssi_mode[rf_path]) {
++		u32 addr = 0x1c10 + (rf_path << 13);
++
++		return (u8)rtw89_phy_read32_mask(rtwdev, addr, 0x3F000000);
++	}
++
++	rtw89_write_rf(rtwdev, rf_path, RR_TM, RR_TM_TRI, 0x1);
++	rtw89_write_rf(rtwdev, rf_path, RR_TM, RR_TM_TRI, 0x0);
++	rtw89_write_rf(rtwdev, rf_path, RR_TM, RR_TM_TRI, 0x1);
++
++	fsleep(200);
++
++	return (u8)rtw89_read_rf(rtwdev, rf_path, RR_TM, RR_TM_VAL);
++}
++
++static void rtw8852a_btc_set_rfe(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_module *module = &btc->mdinfo;
++
++	module->rfe_type = rtwdev->efuse.rfe_type;
++	module->cv = rtwdev->hal.cv;
++	module->bt_solo = 0;
++	module->switch_type = BTC_SWITCH_INTERNAL;
++
++	if (module->rfe_type > 0)
++		module->ant.num = (module->rfe_type % 2 ? 2 : 3);
++	else
++		module->ant.num = 2;
++
++	module->ant.diversity = 0;
++	module->ant.isolation = 10;
++
++	if (module->ant.num == 3) {
++		module->ant.type = BTC_ANT_DEDICATED;
++		module->bt_pos = BTC_BT_ALONE;
++	} else {
++		module->ant.type = BTC_ANT_SHARED;
++		module->bt_pos = BTC_BT_BTG;
++	}
++}
++
++static
++void rtw8852a_set_trx_mask(struct rtw89_dev *rtwdev, u8 path, u8 group, u32 val)
++{
++	rtw89_write_rf(rtwdev, path, RR_LUTWE, 0xfffff, 0x20000);
++	rtw89_write_rf(rtwdev, path, RR_LUTWA, 0xfffff, group);
++	rtw89_write_rf(rtwdev, path, RR_LUTWD0, 0xfffff, val);
++	rtw89_write_rf(rtwdev, path, RR_LUTWE, 0xfffff, 0x0);
++}
++
++static void rtw8852a_ctrl_btg(struct rtw89_dev *rtwdev, bool btg)
++{
++	if (btg) {
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_BTG, B_PATH0_BTG_SHEN, 0x1);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_BTG, B_PATH1_BTG_SHEN, 0x3);
++		rtw89_phy_write32_mask(rtwdev, R_PMAC_GNT, B_PMAC_GNT_P1, 0x0);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_BTG, B_PATH0_BTG_SHEN, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_BTG, B_PATH1_BTG_SHEN, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_PMAC_GNT, B_PMAC_GNT_P1, 0xf);
++		rtw89_phy_write32_mask(rtwdev, R_PMAC_GNT, B_PMAC_GNT_P2, 0x4);
++	}
++}
++
++static void rtw8852a_btc_init_cfg(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_module *module = &btc->mdinfo;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_mac_ax_coex coex_params = {
++		.pta_mode = RTW89_MAC_AX_COEX_RTK_MODE,
++		.direction = RTW89_MAC_AX_COEX_INNER,
++	};
++
++	/* PTA init  */
++	rtw89_mac_coex_init(rtwdev, &coex_params);
++
++	/* set WL Tx response = Hi-Pri */
++	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_TX_RESP, true);
++	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_BEACON, true);
++
++	/* set rf gnt debug off */
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_WLSEL, 0xfffff, 0x0);
++	rtw89_write_rf(rtwdev, RF_PATH_B, RR_WLSEL, 0xfffff, 0x0);
++
++	/* set WL Tx thru in TRX mask table if GNT_WL = 0 && BT_S1 = ss group */
++	if (module->ant.type == BTC_ANT_SHARED) {
++		rtw8852a_set_trx_mask(rtwdev,
++				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5ff);
++		rtw8852a_set_trx_mask(rtwdev,
++				      RF_PATH_B, BTC_BT_SS_GROUP, 0x5ff);
++	} else { /* set WL Tx stb if GNT_WL = 0 && BT_S1 = ss group for 3-ant */
++		rtw8852a_set_trx_mask(rtwdev,
++				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5df);
++		rtw8852a_set_trx_mask(rtwdev,
++				      RF_PATH_B, BTC_BT_SS_GROUP, 0x5df);
++	}
++
++	/* set PTA break table */
++	rtw89_write32(rtwdev, R_BTC_BREAK_TABLE, BTC_BREAK_PARAM);
++
++	 /* enable BT counter 0xda40[16,2] = 2b'11 */
++	rtw89_write32_set(rtwdev,
++			  R_AX_CSR_MODE, B_AX_BT_CNT_REST | B_AX_STATIS_BT_EN);
++	btc->cx.wl.status.map.init_ok = true;
++}
++
++static
++void rtw8852a_btc_set_wl_pri(struct rtw89_dev *rtwdev, u8 map, bool state)
++{
++	u32 bitmap = 0;
++	u32 reg = 0;
++
++	switch (map) {
++	case BTC_PRI_MASK_TX_RESP:
++		reg = R_BTC_BT_COEX_MSK_TABLE;
++		bitmap = B_BTC_PRI_MASK_TX_RESP_V1;
++		break;
++	case BTC_PRI_MASK_BEACON:
++		reg = R_AX_BTC_WL_PRI_MSK;
++		bitmap = B_AX_BTC_PTA_WL_PRI_MASK_BCNQ;
++		break;
++	default:
++		return;
++	}
++
++	if (state)
++		rtw89_write32_set(rtwdev, reg, bitmap);
++	else
++		rtw89_write32_clr(rtwdev, reg, bitmap);
++}
++
++static inline u32 __btc_ctrl_val_all_time(u32 ctrl)
++{
++	return FIELD_GET(GENMASK(15, 0), ctrl);
++}
++
++static inline u32 __btc_ctrl_rst_all_time(u32 cur)
++{
++	return cur & ~B_AX_FORCE_PWR_BY_RATE_EN;
++}
++
++static inline u32 __btc_ctrl_gen_all_time(u32 cur, u32 val)
++{
++	u32 hv = cur & ~B_AX_FORCE_PWR_BY_RATE_VALUE_MSK;
++	u32 lv = val & B_AX_FORCE_PWR_BY_RATE_VALUE_MSK;
++
++	return hv | lv | B_AX_FORCE_PWR_BY_RATE_EN;
++}
++
++static inline u32 __btc_ctrl_val_gnt_bt(u32 ctrl)
++{
++	return FIELD_GET(GENMASK(31, 16), ctrl);
++}
++
++static inline u32 __btc_ctrl_rst_gnt_bt(u32 cur)
++{
++	return cur & ~B_AX_TXAGC_BT_EN;
++}
++
++static inline u32 __btc_ctrl_gen_gnt_bt(u32 cur, u32 val)
++{
++	u32 ov = cur & ~B_AX_TXAGC_BT_MSK;
++	u32 iv = FIELD_PREP(B_AX_TXAGC_BT_MSK, val);
++
++	return ov | iv | B_AX_TXAGC_BT_EN;
++}
++
++static void
++rtw8852a_btc_set_wl_txpwr_ctrl(struct rtw89_dev *rtwdev, u32 txpwr_val)
++{
++	const u32 __btc_cr_all_time = R_AX_PWR_RATE_CTRL;
++	const u32 __btc_cr_gnt_bt = R_AX_PWR_COEXT_CTRL;
++
++#define __do_clr(_chk) ((_chk) == GENMASK(15, 0))
++#define __handle(_case)							\
++	do {								\
++		const u32 _reg = __btc_cr_ ## _case;			\
++		u32 _val = __btc_ctrl_val_ ## _case(txpwr_val);		\
++		u32 _cur, _wrt;						\
++		rtw89_debug(rtwdev, RTW89_DBG_TXPWR,			\
++			    "btc ctrl %s: 0x%x\n", #_case, _val);	\
++		rtw89_mac_txpwr_read32(rtwdev, RTW89_PHY_0, _reg, &_cur);\
++		rtw89_debug(rtwdev, RTW89_DBG_TXPWR,			\
++			    "btc ctrl ori 0x%x: 0x%x\n", _reg, _cur);	\
++		_wrt = __do_clr(_val) ?					\
++			__btc_ctrl_rst_ ## _case(_cur) :		\
++			__btc_ctrl_gen_ ## _case(_cur, _val);		\
++		rtw89_mac_txpwr_write32(rtwdev, RTW89_PHY_0, _reg, _wrt);\
++		rtw89_debug(rtwdev, RTW89_DBG_TXPWR,			\
++			    "btc ctrl set 0x%x: 0x%x\n", _reg, _wrt);	\
++	} while (0)
++
++	__handle(all_time);
++	__handle(gnt_bt);
++
++#undef __handle
++#undef __do_clr
++}
++
++static
++s8 rtw8852a_btc_get_bt_rssi(struct rtw89_dev *rtwdev, s8 val)
++{
++	return clamp_t(s8, val, -100, 0) + 100;
++}
++
++static struct rtw89_btc_rf_trx_para rtw89_btc_8852a_rf_ul[] = {
++	{255, 0, 0, 7}, /* 0 -> original */
++	{255, 2, 0, 7}, /* 1 -> for BT-connected ACI issue && BTG co-rx */
++	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
++	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
++	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
++	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
++	{6, 1, 0, 7},
++	{13, 1, 0, 7},
++	{13, 1, 0, 7}
++};
++
++static struct rtw89_btc_rf_trx_para rtw89_btc_8852a_rf_dl[] = {
++	{255, 0, 0, 7}, /* 0 -> original */
++	{255, 2, 0, 7}, /* 1 -> reserved for shared-antenna */
++	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
++	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
++	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
++	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
++	{255, 1, 0, 7},
++	{255, 1, 0, 7},
++	{255, 1, 0, 7}
++};
++
++static struct rtw89_btc_fbtc_mreg rtw89_btc_8852a_mon_reg[] = {
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda24),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda28),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda2c),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda30),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda4c),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda10),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda20),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda34),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xcef4),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0x8424),
++	RTW89_DEF_FBTC_MREG(REG_BB, 4, 0x980),
++	RTW89_DEF_FBTC_MREG(REG_BT_MODEM, 4, 0x178),
++};
++
++static
++void rtw8852a_btc_bt_aci_imp(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_dm *dm = &btc->dm;
++	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
++	struct rtw89_btc_bt_link_info *b = &bt->link_info;
++
++	/* fix LNA2 = level-5 for BT ACI issue at BTG */
++	if (btc->dm.wl_btg_rx && b->profile_cnt.now != 0)
++		dm->trx_para_level = 1;
++}
++
++static
++void rtw8852a_btc_update_bt_cnt(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_cx *cx = &btc->cx;
++	u32 val;
++
++	val = rtw89_read32(rtwdev, R_AX_BTC_BT_STAST_HIGH);
++	cx->cnt_bt[BTC_BCNT_HIPRI_TX] = FIELD_GET(B_AX_BTC_BCNT_HIPRI_TX, val);
++	cx->cnt_bt[BTC_BCNT_HIPRI_RX] = FIELD_GET(B_AX_BTC_BCNT_HIPRI_RX, val);
++
++	val = rtw89_read32(rtwdev, R_AX_BTC_BT_STAST_LOW);
++	cx->cnt_bt[BTC_BCNT_LOPRI_TX] = FIELD_GET(B_AX_BTC_BCNT_LOWPRI_TX, val);
++	cx->cnt_bt[BTC_BCNT_LOPRI_RX] = FIELD_GET(B_AX_BTC_BCNT_LOWPRI_RX, val);
++
++	/* clock-gate off before reset counter*/
++	rtw89_write32_set(rtwdev, R_AX_BTC_CFG, B_AX_BTC_DIS_BTC_CLK_G);
++	rtw89_write32_clr(rtwdev, R_AX_CSR_MODE, B_AX_BTC_BT_CNT_REST);
++	rtw89_write32_set(rtwdev, R_AX_CSR_MODE, B_AX_BTC_BT_CNT_REST);
++	rtw89_write32_clr(rtwdev, R_AX_BTC_CFG, B_AX_BTC_DIS_BTC_CLK_G);
++}
++
++static void rtw8852a_query_ppdu(struct rtw89_dev *rtwdev,
++				struct rtw89_rx_phy_ppdu *phy_ppdu,
++				struct ieee80211_rx_status *status)
++{
++	u8 path;
++	s8 *rx_power = phy_ppdu->rssi;
++
++	status->signal = max_t(s8, rx_power[RF_PATH_A], rx_power[RF_PATH_B]);
++	for (path = 0; path < rtwdev->chip->rf_path_num; path++) {
++		status->chains |= BIT(path);
++		status->chain_signal[path] = rx_power[path];
++	}
++}
++
++static const struct rtw89_chip_ops rtw8852a_chip_ops = {
++	.bb_reset		= rtw8852a_bb_reset,
++	.bb_sethw		= rtw8852a_bb_sethw,
++	.read_rf		= rtw89_phy_read_rf,
++	.write_rf		= rtw89_phy_write_rf,
++	.set_channel		= rtw8852a_set_channel,
++	.set_channel_help	= rtw8852a_set_channel_help,
++	.read_efuse		= rtw8852a_read_efuse,
++	.read_phycap		= rtw8852a_read_phycap,
++	.fem_setup		= rtw8852a_fem_setup,
++	.rfk_init		= rtw8852a_rfk_init,
++	.rfk_channel		= rtw8852a_rfk_channel,
++	.rfk_band_changed	= rtw8852a_rfk_band_changed,
++	.rfk_track		= rtw8852a_rfk_track,
++	.power_trim		= rtw8852a_power_trim,
++	.set_txpwr		= rtw8852a_set_txpwr,
++	.set_txpwr_ctrl		= rtw8852a_set_txpwr_ctrl,
++	.init_txpwr_unit	= rtw8852a_init_txpwr_unit,
++	.get_thermal		= rtw8852a_get_thermal,
++	.ctrl_btg		= rtw8852a_ctrl_btg,
++	.query_ppdu		= rtw8852a_query_ppdu,
++	.bb_ctrl_btc_preagc	= rtw8852a_bb_ctrl_btc_preagc,
++	.set_txpwr_ul_tb_offset	= rtw8852a_set_txpwr_ul_tb_offset,
++
++	.btc_set_rfe		= rtw8852a_btc_set_rfe,
++	.btc_init_cfg		= rtw8852a_btc_init_cfg,
++	.btc_set_wl_pri		= rtw8852a_btc_set_wl_pri,
++	.btc_set_wl_txpwr_ctrl	= rtw8852a_btc_set_wl_txpwr_ctrl,
++	.btc_get_bt_rssi	= rtw8852a_btc_get_bt_rssi,
++	.btc_bt_aci_imp		= rtw8852a_btc_bt_aci_imp,
++	.btc_update_bt_cnt	= rtw8852a_btc_update_bt_cnt,
++};
++
++const struct rtw89_chip_info rtw8852a_chip_info = {
++	.chip_id		= RTL8852A,
++	.ops			= &rtw8852a_chip_ops,
++	.fw_name		= "rtw89/rtw8852a_fw.bin",
++	.fifo_size		= 458752,
++	.dle_lamode_size	= 262144,
++	.max_amsdu_limit	= 3500,
++	.hfc_param_ini		= rtw8852a_hfc_param_ini_pcie,
++	.dle_mem		= rtw8852a_dle_mem_pcie,
++	.rf_base_addr		= {0xc000, 0xd000},
++	.pwr_on_seq		= pwr_on_seq_8852a,
++	.pwr_off_seq		= pwr_off_seq_8852a,
++	.bb_table		= &rtw89_8852a_phy_bb_table,
++	.rf_table		= {&rtw89_8852a_phy_radioa_table,
++				   &rtw89_8852a_phy_radiob_table,},
++	.nctl_table		= &rtw89_8852a_phy_nctl_table,
++	.byr_table		= &rtw89_8852a_byr_table,
++	.txpwr_lmt_2g		= &rtw89_8852a_txpwr_lmt_2g,
++	.txpwr_lmt_5g		= &rtw89_8852a_txpwr_lmt_5g,
++	.txpwr_lmt_ru_2g	= &rtw89_8852a_txpwr_lmt_ru_2g,
++	.txpwr_lmt_ru_5g	= &rtw89_8852a_txpwr_lmt_ru_5g,
++	.txpwr_factor_rf	= 2,
++	.txpwr_factor_mac	= 1,
++	.dig_table		= &rtw89_8852a_phy_dig_table,
++	.rf_path_num		= 2,
++	.tx_nss			= 2,
++	.rx_nss			= 2,
++	.acam_num		= 128,
++	.bcam_num		= 10,
++	.scam_num		= 128,
++	.sec_ctrl_efuse_size	= 4,
++	.physical_efuse_size	= 1216,
++	.logical_efuse_size	= 1536,
++	.limit_efuse_size	= 1152,
++	.phycap_addr		= 0x580,
++	.phycap_size		= 128,
++	.para_ver		= 0x05050300,
++	.wlcx_desired		= 0x05050000,
++	.btcx_desired		= 0x5,
++	.scbd			= 0x1,
++	.mailbox		= 0x1,
++	.afh_guard_ch		= 6,
++	.mon_reg_num		= ARRAY_SIZE(rtw89_btc_8852a_mon_reg),
++	.mon_reg		= rtw89_btc_8852a_mon_reg,
++	.rf_para_ulink_num	= ARRAY_SIZE(rtw89_btc_8852a_rf_ul),
++	.rf_para_ulink		= rtw89_btc_8852a_rf_ul,
++	.rf_para_dlink_num	= ARRAY_SIZE(rtw89_btc_8852a_rf_dl),
++	.rf_para_dlink		= rtw89_btc_8852a_rf_dl,
++	.ps_mode_supported	= BIT(RTW89_PS_MODE_RFOFF) |
++				  BIT(RTW89_PS_MODE_CLK_GATED) |
++				  BIT(RTW89_PS_MODE_PWR_GATED),
++};
++EXPORT_SYMBOL(rtw8852a_chip_info);
++
++MODULE_FIRMWARE("rtw89/rtw8852a_fw.bin");
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.h b/drivers/net/wireless/realtek/rtw89/rtw8852a.h
+new file mode 100644
+index 000000000000..633384374de0
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.h
+@@ -0,0 +1,109 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2019-2020  Realtek Corporation
 + */
 +
-+#ifndef __RTW89_REG_H__
-+#define __RTW89_REG_H__
++#ifndef __RTW89_8852A_H__
++#define __RTW89_8852A_H__
++
++#include "core.h"
++
++#define RF_PATH_NUM_8852A 2
++#define NTX_NUM_8852A 2
++
++enum rtw8852a_pmac_mode {
++	NONE_TEST,
++	PKTS_TX,
++	PKTS_RX,
++	CONT_TX
++};
++
++struct rtw8852au_efuse {
++	u8 rsvd[0x38];
++	u8 mac_addr[ETH_ALEN];
++};
++
++struct rtw8852ae_efuse {
++	u8 mac_addr[ETH_ALEN];
++};
++
++struct rtw8852a_tssi_offset {
++	u8 cck_tssi[TSSI_CCK_CH_GROUP_NUM];
++	u8 bw40_tssi[TSSI_MCS_2G_CH_GROUP_NUM];
++	u8 rsvd[7];
++	u8 bw40_1s_tssi_5g[TSSI_MCS_5G_CH_GROUP_NUM];
++} __packed;
++
++struct rtw8852a_efuse {
++	u8 rsvd[0x210];
++	struct rtw8852a_tssi_offset path_a_tssi;
++	u8 rsvd1[10];
++	struct rtw8852a_tssi_offset path_b_tssi;
++	u8 rsvd2[94];
++	u8 channel_plan;
++	u8 xtal_k;
++	u8 rsvd3;
++	u8 iqk_lck;
++	u8 rsvd4[5];
++	u8 reg_setting:2;
++	u8 tx_diversity:1;
++	u8 rx_diversity:2;
++	u8 ac_mode:1;
++	u8 module_type:2;
++	u8 rsvd5;
++	u8 shared_ant:1;
++	u8 coex_type:3;
++	u8 ant_iso:1;
++	u8 radio_on_off:1;
++	u8 rsvd6:2;
++	u8 eeprom_version;
++	u8 customer_id;
++	u8 tx_bb_swing_2g;
++	u8 tx_bb_swing_5g;
++	u8 tx_cali_pwr_trk_mode;
++	u8 trx_path_selection;
++	u8 rfe_type;
++	u8 country_code[2];
++	u8 rsvd7[3];
++	u8 path_a_therm;
++	u8 path_b_therm;
++	u8 rsvd8[46];
++	u8 path_a_cck_pwr_idx[6];
++	u8 path_a_bw40_1tx_pwr_idx[5];
++	u8 path_a_ofdm_1tx_pwr_idx_diff:4;
++	u8 path_a_bw20_1tx_pwr_idx_diff:4;
++	u8 path_a_bw20_2tx_pwr_idx_diff:4;
++	u8 path_a_bw40_2tx_pwr_idx_diff:4;
++	u8 path_a_cck_2tx_pwr_idx_diff:4;
++	u8 path_a_ofdm_2tx_pwr_idx_diff:4;
++	u8 rsvd9[0xf2];
++	union {
++		struct rtw8852au_efuse u;
++		struct rtw8852ae_efuse e;
++	};
++} __packed;
++
++struct rtw8852a_bb_pmac_info {
++	u8 en_pmac_tx:1;
++	u8 is_cck:1;
++	u8 mode:3;
++	u8 rsvd:3;
++	u16 tx_cnt;
++	u16 period;
++	u16 tx_time;
++	u8 duty_cycle;
++};
++
++void rtw8852a_bb_set_plcp_tx(struct rtw89_dev *rtwdev);
++void rtw8852a_bb_set_pmac_tx(struct rtw89_dev *rtwdev,
++			     struct rtw8852a_bb_pmac_info *tx_info,
++			     enum rtw89_phy_idx idx);
++void rtw8852a_bb_set_pmac_pkt_tx(struct rtw89_dev *rtwdev, u8 enable,
++				 u16 tx_cnt, u16 period, u16 tx_time,
++				 enum rtw89_phy_idx idx);
++void rtw8852a_bb_set_power(struct rtw89_dev *rtwdev, s16 pwr_dbm,
++			   enum rtw89_phy_idx idx);
++void rtw8852a_bb_cfg_tx_path(struct rtw89_dev *rtwdev, u8 tx_path);
++void rtw8852a_bb_tx_mode_switch(struct rtw89_dev *rtwdev,
++				enum rtw89_phy_idx idx, u8 mode);
 +
-+#define R_AX_SYS_EEPROM_CTRL 0x000A
-+#define B_AX_AUTOLOAD_SUS BIT(5)
-+
-+#define R_AX_SYS_FUNC_EN 0x0002
-+#define B_AX_FEN_BB_GLB_RSTN BIT(1)
-+#define B_AX_FEN_BBRSTB BIT(0)
-+
-+#define R_AX_SYS_PW_CTRL 0x0004
-+#define B_AX_PSUS_OFF_CAPC_EN BIT(14)
-+
-+#define R_AX_SYS_CLK_CTRL 0x0008
-+#define B_AX_CPU_CLK_EN BIT(14)
-+
-+#define R_AX_RSV_CTRL 0x001C
-+#define B_AX_R_DIS_PRST BIT(6)
-+#define B_AX_WLOCK_1C_B6 BIT(5)
-+
-+#define R_AX_EFUSE_CTRL_1 0x0038
-+#define B_AX_EF_PGPD_MASK GENMASK(30, 28)
-+#define B_AX_EF_RDT BIT(27)
-+#define B_AX_EF_VDDQST_MASK GENMASK(26, 24)
-+#define B_AX_EF_PGTS_MASK GENMASK(23, 20)
-+#define B_AX_EF_PD_DIS BIT(11)
-+#define B_AX_EF_POR BIT(10)
-+#define B_AX_EF_CELL_SEL_MASK GENMASK(9, 8)
-+
-+#define R_AX_SPSLDO_ON_CTRL0 0x0200
-+#define B_AX_OCP_L1_MASK GENMASK(15, 13)
-+
-+#define R_AX_EFUSE_CTRL 0x0030
-+#define B_AX_EF_MODE_SEL_MASK GENMASK(31, 30)
-+#define B_AX_EF_RDY BIT(29)
-+#define B_AX_EF_COMP_RESULT BIT(28)
-+#define B_AX_EF_ADDR_MASK GENMASK(26, 16)
-+#define B_AX_EF_DATA_MASK GENMASK(15, 0)
-+
-+#define R_AX_GPIO_MUXCFG 0x0040
-+#define B_AX_BOOT_MODE BIT(19)
-+#define B_AX_WL_EECS_EXT_32K_SEL BIT(18)
-+#define B_AX_WL_SEC_BONDING_OPT_STS BIT(17)
-+#define B_AX_SECSIC_SEL BIT(16)
-+#define B_AX_ENHTP BIT(14)
-+#define B_AX_BT_AOD_GPIO3 BIT(13)
-+#define B_AX_ENSIC BIT(12)
-+#define B_AX_SIC_SWRST BIT(11)
-+#define B_AX_PO_WIFI_PTA_PINS BIT(10)
-+#define B_AX_PO_BT_PTA_PINS BIT(9)
-+#define B_AX_ENUARTTX BIT(8)
-+#define B_AX_BTMODE_MASK GENMASK(7, 6)
-+#define MAC_AX_BT_MODE_0_3 0
-+#define MAC_AX_BT_MODE_2 2
-+#define B_AX_ENBT BIT(5)
-+#define B_AX_EROM_EN BIT(4)
-+#define B_AX_ENUARTRX BIT(2)
-+#define B_AX_GPIOSEL_MASK GENMASK(1, 0)
-+
-+#define R_AX_DBG_CTRL 0x0058
-+#define B_AX_DBG_SEL1_4BIT GENMASK(31, 30)
-+#define B_AX_DBG_SEL1_16BIT BIT(27)
-+#define B_AX_DBG_SEL1 GENMASK(23, 16)
-+#define B_AX_DBG_SEL0_4BIT GENMASK(15, 14)
-+#define B_AX_DBG_SEL0_16BIT BIT(11)
-+#define B_AX_DBG_SEL0 GENMASK(7, 0)
-+
-+#define R_AX_SYS_SDIO_CTRL 0x0070
-+#define B_AX_PCIE_DIS_L2_CTRL_LDO_HCI BIT(15)
-+#define B_AX_PCIE_DIS_WLSUS_AFT_PDN BIT(14)
-+#define B_AX_PCIE_AUXCLK_GATE BIT(11)
-+#define B_AX_PTA_MUX_CTRL_PATH BIT(26)
-+
-+#define R_AX_PLATFORM_ENABLE 0x0088
-+#define B_AX_WCPU_EN BIT(1)
-+
-+#define R_AX_SCOREBOARD  0x00AC
-+#define B_AX_TOGGLE BIT(31)
-+#define B_MAC_AX_SB_FW_MASK GENMASK(30, 24)
-+#define B_MAC_AX_SB_DRV_MASK GENMASK(23, 0)
-+#define B_MAC_AX_BTGS1_NOTIFY BIT(0)
-+#define MAC_AX_NOTIFY_TP_MAJOR 0x81
-+#define MAC_AX_NOTIFY_PWR_MAJOR 0x80
-+
-+#define R_AX_DBG_PORT_SEL 0x00C0
-+#define B_AX_DEBUG_ST_MSK GENMASK(31, 0)
-+
-+#define R_AX_SYS_CFG1 0x00F0
-+#define B_AX_CHIP_VER_MSK GENMASK(15, 12)
-+
-+#define R_AX_SYS_STATUS1 0x00F4
-+#define B_AX_SEL_0XC0 GENMASK(17, 16)
-+
-+#define R_AX_HALT_H2C_CTRL 0x0160
-+#define R_AX_HALT_H2C 0x0168
-+#define B_AX_HALT_H2C_TRIGGER BIT(0)
-+#define R_AX_HALT_C2H_CTRL 0x0164
-+#define R_AX_HALT_C2H 0x016C
-+
-+#define R_AX_WCPU_FW_CTRL 0x01E0
-+#define B_AX_WCPU_FWDL_STS_MASK GENMASK(7, 5)
-+#define B_AX_FWDL_PATH_RDY BIT(2)
-+#define B_AX_H2C_PATH_RDY BIT(1)
-+#define B_AX_WCPU_FWDL_EN BIT(0)
-+
-+#define R_AX_RPWM 0x01E4
-+#define R_AX_PCIE_HRPWM 0x10C0
-+#define PS_RPWM_TOGGLE BIT(15)
-+#define PS_RPWM_ACK BIT(14)
-+#define PS_RPWM_SEQ_NUM GENMASK(13, 12)
-+#define PS_RPWM_STATE 0x7
-+#define RPWM_SEQ_NUM_MAX 3
-+#define PS_CPWM_SEQ_NUM GENMASK(13, 12)
-+#define PS_CPWM_RSP_SEQ_NUM GENMASK(9, 8)
-+#define PS_CPWM_STATE GENMASK(2, 0)
-+#define CPWM_SEQ_NUM_MAX 3
-+
-+#define R_AX_BOOT_REASON 0x01E6
-+#define B_AX_BOOT_REASON_MASK GENMASK(2, 0)
-+
-+#define R_AX_LDM 0x01E8
-+#define B_AX_LDM_32K_EN BIT(31)
-+
-+#define R_AX_UDM0 0x01F0
-+#define R_AX_UDM1 0x01F4
-+#define R_AX_UDM2 0x01F8
-+#define R_AX_UDM3 0x01FC
-+
-+#define R_AX_XTAL_ON_CTRL0 0x0280
-+#define B_AX_XTAL_SC_LPS BIT(31)
-+#define B_AX_XTAL_SC_XO_MSK GENMASK(23, 17)
-+#define B_AX_XTAL_SC_XI_MSK GENMASK(16, 10)
-+#define B_AX_XTAL_SC_MSK GENMASK(6, 0)
-+
-+#define R_AX_GPIO0_7_FUNC_SEL 0x02D0
-+
-+#define R_AX_WLRF_CTRL 0x02F0
-+#define B_AX_WLRF1_CTRL_7 BIT(15)
-+#define B_AX_WLRF1_CTRL_1 BIT(9)
-+#define B_AX_WLRF_CTRL_7 BIT(7)
-+#define B_AX_WLRF_CTRL_1 BIT(1)
-+
-+#define R_AX_FILTER_MODEL_ADDR 0x0C04
-+
-+#define R_AX_PCIE_DBG_CTRL 0x11C0
-+#define B_AX_DBG_SEL GENMASK(23, 16)
-+#define B_AX_LOOPBACK_DBG_SEL GENMASK(15, 13)
-+#define B_AX_PCIE_DBG_SEL BIT(12)
-+#define B_AX_MRD_TIMEOUT_EN BIT(10)
-+#define B_AX_ASFF_FULL_NO_STK BIT(1)
-+#define B_AX_EN_STUCK_DBG BIT(0)
-+
-+#define R_AX_PHYREG_SET 0x8040
-+#define PHYREG_SET_ALL_CYCLE 0x8
-+
-+#define R_AX_HD0IMR 0x8110
-+#define B_AX_WDT_PTFM_INT_EN BIT(5)
-+#define B_AX_CPWM_INT_EN BIT(2)
-+#define B_AX_GT3_INT_EN BIT(1)
-+#define B_AX_C2H_INT_EN BIT(0)
-+#define R_AX_HD0ISR 0x8114
-+#define B_AX_C2H_INT BIT(0)
-+
-+#define R_AX_H2CREG_DATA0 0x8140
-+#define R_AX_H2CREG_DATA1 0x8144
-+#define R_AX_H2CREG_DATA2 0x8148
-+#define R_AX_H2CREG_DATA3 0x814C
-+#define R_AX_C2HREG_DATA0 0x8150
-+#define R_AX_C2HREG_DATA1 0x8154
-+#define R_AX_C2HREG_DATA2 0x8158
-+#define R_AX_C2HREG_DATA3 0x815C
-+#define R_AX_H2CREG_CTRL 0x8160
-+#define B_AX_H2CREG_TRIGGER BIT(0)
-+#define R_AX_C2HREG_CTRL 0x8164
-+#define B_AX_C2HREG_TRIGGER BIT(0)
-+#define R_AX_CPWM 0x8170
-+
-+#define R_AX_HCI_FUNC_EN 0x8380
-+#define B_AX_HCI_RXDMA_EN BIT(1)
-+#define B_AX_HCI_TXDMA_EN BIT(0)
-+
-+#define R_AX_BOOT_DBG 0x83F0
-+
-+#define R_AX_DMAC_FUNC_EN 0x8400
-+#define B_AX_MAC_FUNC_EN BIT(30)
-+#define B_AX_DMAC_FUNC_EN BIT(29)
-+#define B_AX_MPDU_PROC_EN BIT(28)
-+#define B_AX_WD_RLS_EN BIT(27)
-+#define B_AX_DLE_WDE_EN BIT(26)
-+#define B_AX_TXPKT_CTRL_EN BIT(25)
-+#define B_AX_STA_SCH_EN BIT(24)
-+#define B_AX_DLE_PLE_EN BIT(23)
-+#define B_AX_PKT_BUF_EN BIT(22)
-+#define B_AX_DMAC_TBL_EN BIT(21)
-+#define B_AX_PKT_IN_EN BIT(20)
-+#define B_AX_DLE_CPUIO_EN BIT(19)
-+#define B_AX_DISPATCHER_EN BIT(18)
-+#define B_AX_MAC_SEC_EN BIT(16)
-+
-+#define R_AX_DMAC_CLK_EN 0x8404
-+#define B_AX_WD_RLS_CLK_EN BIT(27)
-+#define B_AX_DLE_WDE_CLK_EN BIT(26)
-+#define B_AX_TXPKT_CTRL_CLK_EN BIT(25)
-+#define B_AX_STA_SCH_CLK_EN BIT(24)
-+#define B_AX_DLE_PLE_CLK_EN BIT(23)
-+#define B_AX_PKT_IN_CLK_EN BIT(20)
-+#define B_AX_DLE_CPUIO_CLK_EN BIT(19)
-+#define B_AX_DISPATCHER_CLK_EN BIT(18)
-+#define B_AX_MAC_SEC_CLK_EN BIT(16)
-+
-+#define PCI_LTR_IDLE_TIMER_1US 0
-+#define PCI_LTR_IDLE_TIMER_10US 1
-+#define PCI_LTR_IDLE_TIMER_100US 2
-+#define PCI_LTR_IDLE_TIMER_200US 3
-+#define PCI_LTR_IDLE_TIMER_400US 4
-+#define PCI_LTR_IDLE_TIMER_800US 5
-+#define PCI_LTR_IDLE_TIMER_1_6MS 6
-+#define PCI_LTR_IDLE_TIMER_3_2MS 7
-+#define PCI_LTR_IDLE_TIMER_R_ERR 0xFD
-+#define PCI_LTR_IDLE_TIMER_DEF 0xFE
-+#define PCI_LTR_IDLE_TIMER_IGNORE 0xFF
-+
-+#define PCI_LTR_SPC_10US 0
-+#define PCI_LTR_SPC_100US 1
-+#define PCI_LTR_SPC_500US 2
-+#define PCI_LTR_SPC_1MS 3
-+#define PCI_LTR_SPC_R_ERR 0xFD
-+#define PCI_LTR_SPC_DEF 0xFE
-+#define PCI_LTR_SPC_IGNORE 0xFF
-+
-+#define R_AX_LTR_CTRL_0 0x8410
-+#define B_AX_LTR_SPACE_IDX_MASK GENMASK(13, 12)
-+#define B_AX_LTR_IDLE_TIMER_IDX_MASK GENMASK(10, 8)
-+#define B_AX_APP_LTR_ACT BIT(5)
-+#define B_AX_APP_LTR_IDLE BIT(4)
-+#define B_AX_LTR_EN BIT(1)
-+#define B_AX_LTR_HW_EN BIT(0)
-+
-+#define R_AX_LTR_CTRL_1 0x8414
-+#define B_AX_LTR_RX0_TH_MASK GENMASK(27, 16)
-+#define B_AX_LTR_RX1_TH_MASK GENMASK(11, 0)
-+
-+#define R_AX_LTR_IDLE_LATENCY 0x8418
-+
-+#define R_AX_LTR_ACTIVE_LATENCY 0x841C
-+
-+#define R_AX_SER_DBG_INFO 0x8424
-+#define B_AX_L0_TO_L1_EVENT_MASK GENMASK(31, 28)
-+
-+#define R_AX_DLE_EMPTY0 0x8430
-+#define B_AX_PLE_EMPTY_QTA_DMAC_CPUIO BIT(26)
-+#define B_AX_PLE_EMPTY_QTA_DMAC_MPDU_TX BIT(25)
-+#define B_AX_PLE_EMPTY_QTA_DMAC_WLAN_CPU BIT(24)
-+#define B_AX_PLE_EMPTY_QTA_DMAC_H2C BIT(23)
-+#define B_AX_PLE_EMPTY_QTA_DMAC_B1_TXPL BIT(22)
-+#define B_AX_PLE_EMPTY_QTA_DMAC_B0_TXPL BIT(21)
-+#define B_AX_WDE_EMPTY_QTA_DMAC_CPUIO BIT(20)
-+#define B_AX_WDE_EMPTY_QTA_DMAC_PKTIN BIT(19)
-+#define B_AX_WDE_EMPTY_QTA_DMAC_DATA_CPU BIT(18)
-+#define B_AX_WDE_EMPTY_QTA_DMAC_WLAN_CPU BIT(17)
-+#define B_AX_WDE_EMPTY_QTA_DMAC_HIF BIT(16)
-+#define B_AX_WDE_EMPTY_QUE_DMAC_PKTIN BIT(10)
-+#define B_AX_PLE_EMPTY_QUE_DMAC_SEC_TX BIT(9)
-+#define B_AX_PLE_EMPTY_QUE_DMAC_MPDU_TX BIT(8)
-+#define B_AX_WDE_EMPTY_QUE_OTHERS BIT(7)
-+#define B_AX_WDE_EMPTY_QUE_CMAC0_WMM1 BIT(4)
-+#define B_AX_WDE_EMPTY_QUE_CMAC0_WMM0 BIT(3)
-+#define B_AX_WDE_EMPTY_QUE_CMAC1_MBH BIT(2)
-+#define B_AX_WDE_EMPTY_QUE_CMAC0_MBH BIT(1)
-+#define B_AX_WDE_EMPTY_QUE_CMAC0_ALL_AC BIT(0)
-+
-+#define R_AX_DMAC_ERR_ISR 0x8524
-+#define B_AX_DLE_CPUIO_ERR_FLAG BIT(10)
-+#define B_AX_APB_BRIDGE_ERR_FLAG BIT(9)
-+#define B_AX_DISPATCH_ERR_FLAG BIT(8)
-+#define B_AX_PKTIN_ERR_FLAG BIT(7)
-+#define B_AX_PLE_DLE_ERR_FLAG BIT(6)
-+#define B_AX_TXPKTCTRL_ERR_FLAG BIT(5)
-+#define B_AX_WDE_DLE_ERR_FLAG BIT(4)
-+#define B_AX_STA_SCHEDULER_ERR_FLAG BIT(3)
-+#define B_AX_MPDU_ERR_FLAG BIT(2)
-+#define B_AX_WSEC_ERR_FLAG BIT(1)
-+#define B_AX_WDRLS_ERR_FLAG BIT(0)
-+
-+#define R_AX_DISPATCHER_GLOBAL_SETTING_0 0x8800
-+#define B_AX_PL_PAGE_128B_SEL BIT(9)
-+#define B_AX_WD_PAGE_64B_SEL BIT(8)
-+#define R_AX_OTHER_DISPATCHER_ERR_ISR 0x8804
-+#define R_AX_HOST_DISPATCHER_ERR_ISR 0x8808
-+#define R_AX_CPU_DISPATCHER_ERR_ISR 0x880C
-+#define R_AX_TX_ADDRESS_INFO_MODE_SETTING 0x8810
-+#define B_AX_HOST_ADDR_INFO_8B_SEL BIT(0)
-+
-+#define R_AX_HOST_DISPATCHER_ERR_IMR 0x8850
-+#define B_AX_HDT_OFFSET_UNMATCH_INT_EN BIT(7)
-+#define B_AX_HDT_PKT_FAIL_DBG_INT_EN BIT(2)
-+
-+#define R_AX_CPU_DISPATCHER_ERR_IMR 0x8854
-+#define B_AX_CPU_SHIFT_EN_ERR_INT_EN BIT(25)
-+
-+#define R_AX_OTHER_DISPATCHER_ERR_IMR 0x8858
-+
-+#define R_AX_HCI_FC_CTRL 0x8A00
-+#define B_AX_HCI_FC_CH12_FULL_COND_MASK GENMASK(11, 10)
-+#define B_AX_HCI_FC_WP_CH811_FULL_COND_MASK GENMASK(9, 8)
-+#define B_AX_HCI_FC_WP_CH07_FULL_COND_MASK GENMASK(7, 6)
-+#define B_AX_HCI_FC_WD_FULL_COND_MASK GENMASK(5, 4)
-+#define B_AX_HCI_FC_CH12_EN BIT(3)
-+#define B_AX_HCI_FC_MODE_MASK GENMASK(2, 1)
-+#define B_AX_HCI_FC_EN BIT(0)
-+
-+#define R_AX_CH_PAGE_CTRL 0x8A04
-+#define B_AX_PREC_PAGE_CH12_MASK GENMASK(23, 16)
-+#define B_AX_PREC_PAGE_CH011_MASK GENMASK(7, 0)
-+
-+#define B_AX_MAX_PG_MASK GENMASK(27, 16)
-+#define B_AX_MIN_PG_MASK GENMASK(11, 0)
-+#define B_AX_GRP BIT(31)
-+#define R_AX_ACH0_PAGE_CTRL 0x8A10
-+#define R_AX_ACH1_PAGE_CTRL 0x8A14
-+#define R_AX_ACH2_PAGE_CTRL 0x8A18
-+#define R_AX_ACH3_PAGE_CTRL 0x8A1C
-+#define R_AX_ACH4_PAGE_CTRL 0x8A20
-+#define R_AX_ACH5_PAGE_CTRL 0x8A24
-+#define R_AX_ACH6_PAGE_CTRL 0x8A28
-+#define R_AX_ACH7_PAGE_CTRL 0x8A2C
-+#define R_AX_CH8_PAGE_CTRL 0x8A30
-+#define R_AX_CH9_PAGE_CTRL 0x8A34
-+#define R_AX_CH10_PAGE_CTRL 0x8A38
-+#define R_AX_CH11_PAGE_CTRL 0x8A3C
-+
-+#define B_AX_AVAL_PG_MASK GENMASK(27, 16)
-+#define B_AX_USE_PG_MASK GENMASK(11, 0)
-+#define R_AX_ACH0_PAGE_INFO 0x8A50
-+#define R_AX_ACH1_PAGE_INFO 0x8A54
-+#define R_AX_ACH2_PAGE_INFO 0x8A58
-+#define R_AX_ACH3_PAGE_INFO 0x8A5C
-+#define R_AX_ACH4_PAGE_INFO 0x8A60
-+#define R_AX_ACH5_PAGE_INFO 0x8A64
-+#define R_AX_ACH6_PAGE_INFO 0x8A68
-+#define R_AX_ACH7_PAGE_INFO 0x8A6C
-+#define R_AX_CH8_PAGE_INFO 0x8A70
-+#define R_AX_CH9_PAGE_INFO 0x8A74
-+#define R_AX_CH10_PAGE_INFO 0x8A78
-+#define R_AX_CH11_PAGE_INFO 0x8A7C
-+#define R_AX_CH12_PAGE_INFO 0x8A80
-+
-+#define R_AX_PUB_PAGE_INFO3 0x8A8C
-+#define B_AX_G1_AVAL_PG_MASK GENMASK(28, 16)
-+#define B_AX_G0_AVAL_PG_MASK GENMASK(12, 0)
-+
-+#define R_AX_PUB_PAGE_CTRL1 0x8A90
-+#define B_AX_PUBPG_G1_MASK GENMASK(28, 16)
-+#define B_AX_PUBPG_G0_MASK GENMASK(12, 0)
-+
-+#define R_AX_PUB_PAGE_CTRL2 0x8A94
-+#define B_AX_PUBPG_ALL_MASK GENMASK(12, 0)
-+
-+#define R_AX_PUB_PAGE_INFO1 0x8A98
-+#define B_AX_G1_USE_PG_MASK GENMASK(28, 16)
-+#define B_AX_G0_USE_PG_MASK GENMASK(12, 0)
-+
-+#define R_AX_PUB_PAGE_INFO2 0x8A9C
-+#define B_AX_PUB_AVAL_PG_MASK GENMASK(12, 0)
-+
-+#define R_AX_WP_PAGE_CTRL1 0x8AA0
-+#define B_AX_PREC_PAGE_WP_CH811_MASK GENMASK(24, 16)
-+#define B_AX_PREC_PAGE_WP_CH07_MASK GENMASK(8, 0)
-+
-+#define R_AX_WP_PAGE_CTRL2 0x8AA4
-+#define B_AX_WP_THRD_MASK GENMASK(12, 0)
-+
-+#define R_AX_WP_PAGE_INFO1 0x8AA8
-+#define B_AX_WP_AVAL_PG_MASK GENMASK(28, 16)
-+
-+#define R_AX_WDE_PKTBUF_CFG 0x8C08
-+#define B_AX_WDE_START_BOUND_MASK GENMASK(13, 8)
-+#define B_AX_WDE_PAGE_SEL_MASK 0x3
-+#define B_AX_WDE_FREE_PAGE_NUM_MASK GENMASK(28, 16)
-+#define R_AX_WDE_ERR_FLAG_CFG 0x8C34
-+#define R_AX_WDE_ERR_IMR 0x8C38
-+#define R_AX_WDE_ERR_ISR 0x8C3C
-+
-+#define B_AX_WDE_MAX_SIZE_MASK GENMASK(27, 16)
-+#define B_AX_WDE_MIN_SIZE_MASK GENMASK(11, 0)
-+#define R_AX_WDE_QTA0_CFG 0x8C40
-+#define R_AX_WDE_QTA1_CFG 0x8C44
-+#define R_AX_WDE_QTA2_CFG 0x8C48
-+#define R_AX_WDE_QTA3_CFG 0x8C4C
-+#define R_AX_WDE_QTA4_CFG 0x8C50
-+
-+#define B_AX_DLE_PUB_PGNUM GENMASK(12, 0)
-+#define B_AX_DLE_FREE_HEADPG GENMASK(11, 0)
-+#define B_AX_DLE_FREE_TAILPG GENMASK(27, 16)
-+#define B_AX_DLE_USE_PGNUM GENMASK(27, 16)
-+#define B_AX_DLE_RSV_PGNUM GENMASK(11, 0)
-+#define B_AX_DLE_QEMPTY_GRP GENMASK(31, 0)
-+
-+#define R_AX_WDE_INI_STATUS 0x8D00
-+#define B_AX_WDE_Q_MGN_INI_RDY BIT(1)
-+#define B_AX_WDE_BUF_MGN_INI_RDY BIT(0)
-+#define WDE_MGN_INI_RDY (B_AX_WDE_Q_MGN_INI_RDY | B_AX_WDE_BUF_MGN_INI_RDY)
-+#define R_AX_WDE_DBG_FUN_INTF_CTL 0x8D10
-+#define B_AX_WDE_DFI_ACTIVE BIT(31)
-+#define B_AX_WDE_DFI_TRGSEL GENMASK(19, 16)
-+#define B_AX_WDE_DFI_ADDR GENMASK(15, 0)
-+#define R_AX_WDE_DBG_FUN_INTF_DATA 0x8D14
-+#define B_AX_WDE_DFI_DATA_MSK GENMASK(31, 0)
-+
-+#define R_AX_PLE_PKTBUF_CFG 0x9008
-+#define B_AX_PLE_START_BOUND_MASK GENMASK(13, 8)
-+#define B_AX_PLE_PAGE_SEL_MASK 0x3
-+#define B_AX_PLE_FREE_PAGE_NUM_MASK GENMASK(28, 16)
-+#define R_AX_PLE_ERR_FLAG_CFG 0x9034
-+
-+#define R_AX_PLE_ERR_IMR 0x9038
-+#define B_AX_PLE_GETNPG_STRPG_ERR_INT_EN BIT(5)
-+
-+#define R_AX_PLE_ERR_FLAG_ISR 0x903C
-+#define B_AX_PLE_MAX_SIZE_MASK GENMASK(27, 16)
-+#define B_AX_PLE_MIN_SIZE_MASK GENMASK(11, 0)
-+#define R_AX_PLE_QTA0_CFG 0x9040
-+#define R_AX_PLE_QTA1_CFG 0x9044
-+#define R_AX_PLE_QTA2_CFG 0x9048
-+#define R_AX_PLE_QTA3_CFG 0x904C
-+#define R_AX_PLE_QTA4_CFG 0x9050
-+#define R_AX_PLE_QTA5_CFG 0x9054
-+#define R_AX_PLE_QTA6_CFG 0x9058
-+#define B_AX_PLE_Q6_MAX_SIZE_MASK GENMASK(27, 16)
-+#define B_AX_PLE_Q6_MIN_SIZE_MASK GENMASK(11, 0)
-+#define R_AX_PLE_QTA7_CFG 0x905C
-+#define R_AX_PLE_QTA8_CFG 0x9060
-+#define R_AX_PLE_QTA9_CFG 0x9064
-+#define R_AX_PLE_QTA10_CFG 0x9068
-+
-+#define R_AX_PLE_INI_STATUS 0x9100
-+#define B_AX_PLE_Q_MGN_INI_RDY BIT(1)
-+#define B_AX_PLE_BUF_MGN_INI_RDY BIT(0)
-+#define PLE_MGN_INI_RDY (B_AX_PLE_Q_MGN_INI_RDY | B_AX_PLE_BUF_MGN_INI_RDY)
-+#define R_AX_PLE_DBG_FUN_INTF_CTL 0x9110
-+#define B_AX_PLE_DFI_ACTIVE BIT(31)
-+#define B_AX_PLE_DFI_TRGSEL GENMASK(19, 16)
-+#define B_AX_PLE_DFI_ADDR GENMASK(15, 0)
-+#define R_AX_PLE_DBG_FUN_INTF_DATA 0x9114
-+#define B_AX_PLE_DFI_DATA_MSK GENMASK(31, 0)
-+
-+#define R_AX_WDRLS_CFG 0x9408
-+#define B_AX_RLSRPT_BUFREQ_TO_MASK GENMASK(15, 8)
-+#define B_AX_WDRLS_MODE_MASK GENMASK(1, 0)
-+
-+#define R_AX_RLSRPT0_CFG0 0x9410
-+#define B_AX_RLSRPT0_FLTR_MAP_MASK GENMASK(27, 24)
-+#define B_AX_RLSRPT0_PKTTYPE_MASK GENMASK(19, 16)
-+#define B_AX_RLSRPT0_PID_MASK GENMASK(10, 8)
-+#define B_AX_RLSRPT0_QID_MASK GENMASK(5, 0)
-+
-+#define R_AX_RLSRPT0_CFG1 0x9414
-+#define B_AX_RLSRPT0_TO_MASK GENMASK(23, 16)
-+#define B_AX_RLSRPT0_AGGNUM_MASK GENMASK(7, 0)
-+
-+#define R_AX_WDRLS_ERR_IMR 0x9430
-+#define B_AX_WDRLS_RPT1_FRZTO_ERR_INT_EN BIT(13)
-+#define B_AX_WDRLS_RPT1_AGGNUM0_ERR_INT_EN BIT(12)
-+#define B_AX_WDRLS_RPT0_FRZTO_ERR_INT_EN BIT(9)
-+#define B_AX_WDRLS_RPT0_AGGNUM0_ERR_INT_EN BIT(8)
-+#define B_AX_WDRLS_PLEBREQ_PKTID_ISNULL_ERR_INT_EN BIT(5)
-+#define B_AX_WDRLS_PLEBREQ_TO_ERR_INT_EN BIT(4)
-+#define B_AX_WDRLS_CTL_FRZTO_ERR_INT_EN BIT(2)
-+#define B_AX_WDRLS_CTL_PLPKTID_ISNULL_ERR_INT_EN BIT(1)
-+#define B_AX_WDRLS_CTL_WDPKTID_ISNULL_ERR_INT_EN BIT(0)
-+#define R_AX_WDRLS_ERR_ISR 0x9434
-+
-+#define R_AX_BBRPT_COM_ERR_IMR_ISR 0x960C
-+#define R_AX_BBRPT_CHINFO_ERR_IMR_ISR 0x962C
-+#define R_AX_BBRPT_DFS_ERR_IMR_ISR 0x963C
-+#define R_AX_LA_ERRFLAG 0x966C
-+
-+#define R_AX_WD_BUF_REQ 0x9800
-+#define R_AX_PL_BUF_REQ 0x9820
-+#define B_AX_BUF_REQ_EXEC BIT(31)
-+#define B_AX_BUF_REQ_QUOTA_ID_MASK GENMASK(23, 16)
-+#define B_AX_BUF_REQ_LEN_MASK GENMASK(15, 0)
-+
-+#define R_AX_WD_BUF_STATUS 0x9804
-+#define R_AX_PL_BUF_STATUS 0x9804
-+#define B_AX_BUF_STAT_DONE BIT(31)
-+#define B_AX_BUF_STAT_PKTID_MASK GENMASK(11, 0)
-+
-+#define R_AX_WD_CPUQ_OP_0 0x9810
-+#define R_AX_PL_CPUQ_OP_0 0x9830
-+#define B_AX_CPUQ_OP_EXEC BIT(31)
-+#define B_AX_CPUQ_OP_CMD_TYPE_MASK GENMASK(27, 24)
-+#define B_AX_CPUQ_OP_MACID_MASK GENMASK(23, 16)
-+#define B_AX_CPUQ_OP_PKTNUM_MASK GENMASK(7, 0)
-+
-+#define R_AX_WD_CPUQ_OP_1 0x9814
-+#define R_AX_PL_CPUQ_OP_1 0x9834
-+#define B_AX_CPUQ_OP_SRC_PID_MASK GENMASK(24, 22)
-+#define B_AX_CPUQ_OP_SRC_QID_MASK GENMASK(21, 16)
-+#define B_AX_CPUQ_OP_DST_PID_MASK GENMASK(8, 6)
-+#define B_AX_CPUQ_OP_DST_QID_MASK GENMASK(5, 0)
-+
-+#define R_AX_WD_CPUQ_OP_2 0x9818
-+#define R_AX_PL_CPUQ_OP_2 0x9838
-+#define B_AX_CPUQ_OP_STRT_PKTID_MASK GENMASK(27, 15)
-+#define B_AX_CPUQ_OP_END_PKTID_MASK GENMASK(11, 0)
-+
-+#define R_AX_WD_CPUQ_OP_STATUS 0x981C
-+#define R_AX_PL_CPUQ_OP_STATUS 0x983C
-+#define B_AX_CPUQ_OP_STAT_DONE BIT(31)
-+#define B_AX_CPUQ_OP_PKTID_MASK GENMASK(11, 0)
-+#define R_AX_CPUIO_ERR_IMR 0x9840
-+#define R_AX_CPUIO_ERR_ISR 0x9844
-+
-+#define R_AX_SEC_ERR_IMR_ISR 0x991C
-+
-+#define R_AX_PKTIN_SETTING 0x9A00
-+#define B_AX_WD_ADDR_INFO_LENGTH BIT(1)
-+#define R_AX_PKTIN_ERR_IMR 0x9A20
-+#define R_AX_PKTIN_ERR_ISR 0x9A24
-+
-+#define R_AX_MPDU_TX_ERR_ISR 0x9BF0
-+#define R_AX_MPDU_TX_ERR_IMR 0x9BF4
-+
-+#define R_AX_MPDU_PROC 0x9C00
-+#define B_AX_A_ICV_ERR BIT(1)
-+#define B_AX_APPEND_FCS BIT(0)
-+
-+#define R_AX_ACTION_FWD0 0x9C04
-+#define TRXCFG_MPDU_PROC_ACT_FRWD 0x02A95A95
-+
-+#define R_AX_TF_FWD 0x9C14
-+#define TRXCFG_MPDU_PROC_TF_FRWD 0x0000AA55
-+
-+#define R_AX_HW_RPT_FWD 0x9C18
-+#define B_AX_FWD_PPDU_STAT_MASK GENMASK(1, 0)
-+#define RTW89_PRPT_DEST_HOST 1
-+#define RTW89_PRPT_DEST_WLCPU 2
-+
-+#define R_AX_CUT_AMSDU_CTRL 0x9C40
-+#define TRXCFG_MPDU_PROC_CUT_CTRL	0x010E05F0
-+
-+#define R_AX_MPDU_RX_ERR_ISR 0x9CF0
-+#define R_AX_MPDU_RX_ERR_IMR 0x9CF4
-+
-+#define R_AX_SEC_ENG_CTRL 0x9D00
-+#define B_AX_TX_PARTIAL_MODE BIT(11)
-+#define B_AX_CLK_EN_CGCMP BIT(10)
-+#define B_AX_CLK_EN_WAPI BIT(9)
-+#define B_AX_CLK_EN_WEP_TKIP BIT(8)
-+#define B_AX_BMC_MGNT_DEC BIT(5)
-+#define B_AX_UC_MGNT_DEC BIT(4)
-+#define B_AX_MC_DEC BIT(3)
-+#define B_AX_BC_DEC BIT(2)
-+#define B_AX_SEC_RX_DEC BIT(1)
-+#define B_AX_SEC_TX_ENC BIT(0)
-+
-+#define R_AX_SEC_MPDU_PROC 0x9D04
-+#define B_AX_APPEND_ICV BIT(1)
-+#define B_AX_APPEND_MIC BIT(0)
-+
-+#define R_AX_SEC_CAM_ACCESS 0x9D10
-+#define R_AX_SEC_CAM_RDATA 0x9D14
-+#define R_AX_SEC_CAM_WDATA 0x9D18
-+#define R_AX_SEC_DEBUG 0x9D1C
-+#define R_AX_SEC_TX_DEBUG 0x9D20
-+#define R_AX_SEC_RX_DEBUG 0x9D24
-+#define R_AX_SEC_TRX_PKT_CNT 0x9D28
-+#define R_AX_SEC_TRX_BLK_CNT 0x9D2C
-+
-+#define R_AX_SS_CTRL 0x9E10
-+#define B_AX_SS_INIT_DONE_1 BIT(31)
-+#define B_AX_SS_WARM_INIT_FLG BIT(29)
-+#define B_AX_SS_EN BIT(0)
-+
-+#define R_AX_SS_MACID_PAUSE_0 0x9EB0
-+#define B_AX_SS_MACID31_0_PAUSE_SH 0
-+#define B_AX_SS_MACID31_0_PAUSE_MSK 0xffffffffL
-+
-+#define R_AX_SS_MACID_PAUSE_1 0x9EB4
-+#define B_AX_SS_MACID63_32_PAUSE_SH 0
-+#define B_AX_SS_MACID63_32_PAUSE_MSK 0xffffffffL
-+
-+#define R_AX_SS_MACID_PAUSE_2 0x9EB8
-+#define B_AX_SS_MACID95_64_PAUSE_SH 0
-+#define B_AX_SS_MACID95_64_PAUSE_MSK 0xffffffffL
-+
-+#define R_AX_SS_MACID_PAUSE_3 0x9EBC
-+#define B_AX_SS_MACID127_96_PAUSE_SH 0
-+#define B_AX_SS_MACID127_96_PAUSE_MSK 0xffffffffL
-+
-+#define R_AX_STA_SCHEDULER_ERR_IMR 0x9EF0
-+#define R_AX_STA_SCHEDULER_ERR_ISR 0x9EF4
-+
-+#define R_AX_TXPKTCTL_ERR_IMR_ISR 0x9F1C
-+#define R_AX_TXPKTCTL_ERR_IMR_ISR_B1 0x9F2C
-+#define B_AX_TXPKTCTL_CMDPSR_FRZTO_ERR_INT_EN BIT(9)
-+#define B_AX_TXPKTCTL_USRCTL_RLSBMPLEN_ERR_INT_EN BIT(3)
-+#define B_AX_TXPKTCTL_USRCTL_RDNRLSCMD_ERR_INT_EN BIT(2)
-+#define B_AX_TXPKTCTL_USRCTL_NOINIT_ERR_INT_EN BIT(1)
-+
-+#define R_AX_DBG_FUN_INTF_CTL 0x9F30
-+#define B_AX_DFI_ACTIVE BIT(31)
-+#define B_AX_DFI_TRGSEL GENMASK(19, 16)
-+#define B_AX_DFI_ADDR GENMASK(15, 0)
-+#define R_AX_DBG_FUN_INTF_DATA 0x9F34
-+#define B_AX_DFI_DATA_MSK GENMASK(31, 0)
-+
-+#define R_AX_AFE_CTRL1 0x0024
-+
-+#define B_AX_R_SYM_WLCMAC1_P4_PC_EN BIT(4)
-+#define B_AX_R_SYM_WLCMAC1_P3_PC_EN BIT(3)
-+#define B_AX_R_SYM_WLCMAC1_P2_PC_EN BIT(2)
-+#define B_AX_R_SYM_WLCMAC1_P1_PC_EN BIT(1)
-+#define B_AX_R_SYM_WLCMAC1_PC_EN BIT(0)
-+
-+#define R_AX_SYS_ISO_CTRL_EXTEND 0x0080
-+#define B_AX_CMAC1_FEN BIT(30)
-+#define B_AX_R_SYM_FEN_WLPHYGLB_1 BIT(17)
-+#define B_AX_R_SYM_FEN_WLPHYFUN_1 BIT(16)
-+#define B_AX_R_SYM_ISO_CMAC12PP BIT(5)
-+
-+#define R_AX_CMAC_REG_START 0xC000
-+
-+#define R_AX_CMAC_FUNC_EN 0xC000
-+#define R_AX_CMAC_FUNC_EN_C1 0xE000
-+#define B_AX_CMAC_CRPRT BIT(31)
-+#define B_AX_CMAC_EN BIT(30)
-+#define B_AX_CMAC_TXEN BIT(29)
-+#define B_AX_CMAC_RXEN BIT(28)
-+#define B_AX_FORCE_CMACREG_GCKEN BIT(15)
-+#define B_AX_PHYINTF_EN BIT(5)
-+#define B_AX_CMAC_DMA_EN BIT(4)
-+#define B_AX_PTCLTOP_EN BIT(3)
-+#define B_AX_SCHEDULER_EN BIT(2)
-+#define B_AX_TMAC_EN BIT(1)
-+#define B_AX_RMAC_EN BIT(0)
-+
-+#define R_AX_CK_EN 0xC004
-+#define R_AX_CK_EN_C1 0xE004
-+#define B_AX_CMAC_ALLCKEN GENMASK(31, 0)
-+#define B_AX_CMAC_CKEN BIT(30)
-+#define B_AX_PHYINTF_CKEN BIT(5)
-+#define B_AX_CMAC_DMA_CKEN BIT(4)
-+#define B_AX_PTCLTOP_CKEN BIT(3)
-+#define B_AX_SCHEDULER_CKEN BIT(2)
-+#define B_AX_TMAC_CKEN BIT(1)
-+#define B_AX_RMAC_CKEN BIT(0)
-+
-+#define R_AX_WMAC_RFMOD 0xC010
-+#define R_AX_WMAC_RFMOD_C1 0xE010
-+#define B_AX_WMAC_RFMOD_MASK 0x3
-+
-+#define R_AX_GID_POSITION0 0xC070
-+#define R_AX_GID_POSITION0_C1 0xE070
-+#define R_AX_GID_POSITION1 0xC074
-+#define R_AX_GID_POSITION1_C1 0xE074
-+#define R_AX_GID_POSITION2 0xC078
-+#define R_AX_GID_POSITION2_C1 0xE078
-+#define R_AX_GID_POSITION3 0xC07C
-+#define R_AX_GID_POSITION3_C1 0xE07C
-+#define R_AX_GID_POSITION_EN0 0xC080
-+#define R_AX_GID_POSITION_EN0_C1 0xE080
-+#define R_AX_GID_POSITION_EN1 0xC084
-+#define R_AX_GID_POSITION_EN1_C1 0xE084
-+
-+#define R_AX_TX_SUB_CARRIER_VALUE 0xC088
-+#define R_AX_TX_SUB_CARRIER_VALUE_C1 0xE088
-+#define B_AX_TXSC_80M_MASK GENMASK(11, 8)
-+#define B_AX_TXSC_40M_MASK GENMASK(7, 4)
-+#define B_AX_TXSC_20M_MASK GENMASK(3, 0)
-+
-+#define R_AX_CMAC_ERR_ISR 0xC164
-+#define R_AX_CMAC_ERR_ISR_C1 0xE164
-+#define B_AX_WMAC_TX_ERR_IND BIT(7)
-+#define B_AX_WMAC_RX_ERR_IND BIT(6)
-+#define B_AX_TXPWR_CTRL_ERR_IND BIT(5)
-+#define B_AX_PHYINTF_ERR_IND BIT(4)
-+#define B_AX_DMA_TOP_ERR_IND BIT(3)
-+#define B_AX_PTCL_TOP_ERR_IND BIT(1)
-+#define B_AX_SCHEDULE_TOP_ERR_IND BIT(0)
-+
-+#define R_AX_MACID_SLEEP_0 0xC2C0
-+#define R_AX_MACID_SLEEP_0_C1 0xE2C0
-+#define B_AX_MACID31_0_SLEEP_SH 0
-+#define B_AX_MACID31_0_SLEEP_MSK 0xffffffffL
-+
-+#define R_AX_MACID_SLEEP_1 0xC2C4
-+#define R_AX_MACID_SLEEP_1_C1 0xE2C4
-+#define B_AX_MACID63_32_SLEEP_SH 0
-+#define B_AX_MACID63_32_SLEEP_MSK 0xffffffffL
-+
-+#define R_AX_MACID_SLEEP_2 0xC2C8
-+#define R_AX_MACID_SLEEP_2_C1 0xE2C8
-+#define B_AX_MACID95_64_SLEEP_SH 0
-+#define B_AX_MACID95_64_SLEEP_MSK 0xffffffffL
-+
-+#define R_AX_MACID_SLEEP_3 0xC2CC
-+#define R_AX_MACID_SLEEP_3_C1 0xE2CC
-+#define B_AX_MACID127_96_SLEEP_SH 0
-+#define B_AX_MACID127_96_SLEEP_MSK 0xffffffffL
-+
-+#define SCH_PREBKF_24US 0x18
-+#define R_AX_PREBKF_CFG_0 0xC338
-+#define R_AX_PREBKF_CFG_0_C1 0xE338
-+#define B_AX_PREBKF_TIME_MASK GENMASK(7, 0)
-+
-+#define R_AX_CCA_CFG_0 0xC340
-+#define R_AX_CCA_CFG_0_C1 0xE340
-+#define B_AX_BTCCA_BRK_TXOP_EN BIT(9)
-+#define B_AX_BTCCA_EN BIT(5)
-+#define B_AX_EDCCA_EN BIT(4)
-+#define B_AX_SEC80_EN BIT(3)
-+#define B_AX_SEC40_EN BIT(2)
-+#define B_AX_SEC20_EN BIT(1)
-+#define B_AX_CCA_EN BIT(0)
-+
-+#define R_AX_CTN_TXEN 0xC348
-+#define R_AX_CTN_TXEN_C1 0xE348
-+#define B_AX_CTN_TXEN_TWT_1 BIT(15)
-+#define B_AX_CTN_TXEN_TWT_0 BIT(14)
-+#define B_AX_CTN_TXEN_ULQ BIT(13)
-+#define B_AX_CTN_TXEN_BCNQ BIT(12)
-+#define B_AX_CTN_TXEN_HGQ BIT(11)
-+#define B_AX_CTN_TXEN_CPUMGQ BIT(10)
-+#define B_AX_CTN_TXEN_MGQ1 BIT(9)
-+#define B_AX_CTN_TXEN_MGQ BIT(8)
-+#define B_AX_CTN_TXEN_VO_1 BIT(7)
-+#define B_AX_CTN_TXEN_VI_1 BIT(6)
-+#define B_AX_CTN_TXEN_BK_1 BIT(5)
-+#define B_AX_CTN_TXEN_BE_1 BIT(4)
-+#define B_AX_CTN_TXEN_VO_0 BIT(3)
-+#define B_AX_CTN_TXEN_VI_0 BIT(2)
-+#define B_AX_CTN_TXEN_BK_0 BIT(1)
-+#define B_AX_CTN_TXEN_BE_0 BIT(0)
-+
-+#define R_AX_MUEDCA_BE_PARAM_0 0xC350
-+#define R_AX_MUEDCA_BE_PARAM_0_C1 0xE350
-+#define B_AX_MUEDCA_BE_PARAM_0_TIMER_MASK GENMASK(31, 16)
-+#define B_AX_MUEDCA_BE_PARAM_0_CW_MASK GENMASK(15, 8)
-+#define B_AX_MUEDCA_BE_PARAM_0_AIFS_MASK GENMASK(7, 0)
-+
-+#define R_AX_MUEDCA_BK_PARAM_0 0xC354
-+#define R_AX_MUEDCA_BK_PARAM_0_C1 0xE354
-+#define R_AX_MUEDCA_VI_PARAM_0 0xC358
-+#define R_AX_MUEDCA_VI_PARAM_0_C1 0xE358
-+#define R_AX_MUEDCA_VO_PARAM_0 0xC35C
-+#define R_AX_MUEDCA_VO_PARAM_0_C1 0xE35C
-+
-+#define R_AX_MUEDCA_EN 0xC370
-+#define R_AX_MUEDCA_EN_C1 0xE370
-+#define B_AX_MUEDCA_WMM_SEL BIT(8)
-+#define B_AX_SET_MUEDCATIMER_TF_0 BIT(4)
-+#define B_AX_MUEDCA_EN_0 BIT(0)
-+
-+#define R_AX_CCA_CONTROL 0xC390
-+#define R_AX_CCA_CONTROL_C1 0xE390
-+#define B_AX_TB_CHK_TX_NAV BIT(31)
-+#define B_AX_TB_CHK_BASIC_NAV BIT(30)
-+#define B_AX_TB_CHK_BTCCA BIT(29)
-+#define B_AX_TB_CHK_EDCCA BIT(28)
-+#define B_AX_TB_CHK_CCA_S80 BIT(27)
-+#define B_AX_TB_CHK_CCA_S40 BIT(26)
-+#define B_AX_TB_CHK_CCA_S20 BIT(25)
-+#define B_AX_TB_CHK_CCA_P20 BIT(24)
-+#define B_AX_SIFS_CHK_BTCCA BIT(21)
-+#define B_AX_SIFS_CHK_EDCCA BIT(20)
-+#define B_AX_SIFS_CHK_CCA_S80 BIT(19)
-+#define B_AX_SIFS_CHK_CCA_S40 BIT(18)
-+#define B_AX_SIFS_CHK_CCA_S20 BIT(17)
-+#define B_AX_SIFS_CHK_CCA_P20 BIT(16)
-+#define B_AX_CTN_CHK_TXNAV BIT(8)
-+#define B_AX_CTN_CHK_INTRA_NAV BIT(7)
-+#define B_AX_CTN_CHK_BASIC_NAV BIT(6)
-+#define B_AX_CTN_CHK_BTCCA BIT(5)
-+#define B_AX_CTN_CHK_EDCCA BIT(4)
-+#define B_AX_CTN_CHK_CCA_S80 BIT(3)
-+#define B_AX_CTN_CHK_CCA_S40 BIT(2)
-+#define B_AX_CTN_CHK_CCA_S20 BIT(1)
-+#define B_AX_CTN_CHK_CCA_P20 BIT(0)
-+
-+#define R_AX_SCHEDULE_ERR_IMR 0xC3E8
-+#define R_AX_SCHEDULE_ERR_IMR_C1 0xE3E8
-+#define B_AX_SORT_NON_IDLE_ERR_INT_EN BIT(1)
-+#define B_AX_FSM_TIMEOUT_ERR_INT_EN BIT(0)
-+
-+#define R_AX_SCHEDULE_ERR_ISR 0xC3EC
-+#define R_AX_SCHEDULE_ERR_ISR_C1 0xE3EC
-+
-+#define R_AX_SCH_DBG_SEL 0xC3F4
-+#define R_AX_SCH_DBG_SEL_C1 0xE3F4
-+#define B_AX_SCH_DBG_EN BIT(16)
-+#define B_AX_SCH_CFG_CMD_SEL GENMASK(15, 8)
-+#define B_AX_SCH_DBG_SEL_MSK GENMASK(7, 0)
-+
-+#define R_AX_SCH_DBG 0xC3F8
-+#define R_AX_SCH_DBG_C1 0xE3F8
-+#define B_AX_SCHEDULER_DBG_MSK GENMASK(31, 0)
-+
-+#define R_AX_PORT_CFG_P0 0xC400
-+#define R_AX_PORT_CFG_P1 0xC440
-+#define R_AX_PORT_CFG_P2 0xC480
-+#define R_AX_PORT_CFG_P3 0xC4C0
-+#define R_AX_PORT_CFG_P4 0xC500
-+#define B_AX_BRK_SETUP BIT(16)
-+#define B_AX_TBTT_UPD_SHIFT_SEL BIT(15)
-+#define B_AX_BCN_DROP_ALLOW BIT(14)
-+#define B_AX_TBTT_PROHIB_EN BIT(13)
-+#define B_AX_BCNTX_EN BIT(12)
-+#define B_AX_NET_TYPE_MASK GENMASK(11, 10)
-+#define B_AX_BCN_FORCETX_EN BIT(9)
-+#define B_AX_TXBCN_BTCCA_EN BIT(8)
-+#define B_AX_BCNERR_CNT_EN BIT(7)
-+#define B_AX_BCN_AGRES BIT(6)
-+#define B_AX_TSFTR_RST BIT(5)
-+#define B_AX_RX_BSSID_FIT_EN BIT(4)
-+#define B_AX_TSF_UDT_EN BIT(3)
-+#define B_AX_PORT_FUNC_EN BIT(2)
-+#define B_AX_TXBCN_RPT_EN BIT(1)
-+#define B_AX_RXBCN_RPT_EN BIT(0)
-+
-+#define R_AX_TBTT_PROHIB_P0 0xC404
-+#define R_AX_TBTT_PROHIB_P1 0xC448
-+#define R_AX_TBTT_PROHIB_P2 0xC484
-+#define R_AX_TBTT_PROHIB_P3 0xC4C4
-+#define R_AX_TBTT_PROHIB_P4 0xC504
-+#define B_AX_TBTT_HOLD_MASK GENMASK(27, 16)
-+#define B_AX_TBTT_SETUP_MASK GENMASK(7, 0)
-+
-+#define R_AX_BCN_AREA_P0 0xC408
-+#define R_AX_BCN_AREA_P1 0xC448
-+#define R_AX_BCN_AREA_P2 0xC488
-+#define R_AX_BCN_AREA_P3 0xC4C8
-+#define R_AX_BCN_AREA_P4 0xC508
-+#define B_AX_BCN_MSK_AREA_MASK GENMASK(27, 16)
-+#define B_AX_BCN_CTN_AREA_MASK GENMASK(11, 0)
-+
-+#define R_AX_BCNERLYINT_CFG_P0 0xC40C
-+#define R_AX_BCNERLYINT_CFG_P1 0xC44C
-+#define R_AX_BCNERLYINT_CFG_P2 0xC48C
-+#define R_AX_BCNERLYINT_CFG_P3 0xC4CC
-+#define R_AX_BCNERLYINT_CFG_P4 0xC45C
-+#define B_AX_BCNERLY_MASK GENMASK(11, 0)
-+
-+#define R_AX_TBTTERLYINT_CFG_P0 0xC40E
-+#define R_AX_TBTTERLYINT_CFG_P1 0xC44E
-+#define R_AX_TBTTERLYINT_CFG_P2 0xC48E
-+#define R_AX_TBTTERLYINT_CFG_P3 0xC4CE
-+#define R_AX_TBTTERLYINT_CFG_P4 0xC50E
-+#define B_AX_TBTTERLY_MASK GENMASK(11, 0)
-+
-+#define R_AX_TBTT_AGG_P0 0xC412
-+#define R_AX_TBTT_AGG_P1 0xC452
-+#define R_AX_TBTT_AGG_P2 0xC492
-+#define R_AX_TBTT_AGG_P3 0xC4D2
-+#define R_AX_TBTT_AGG_P4 0xC512
-+#define B_AX_TBTT_AGG_NUM_MASK GENMASK(15, 8)
-+
-+#define R_AX_BCN_SPACE_CFG_P0 0xC414
-+#define R_AX_BCN_SPACE_CFG_P1 0xC454
-+#define R_AX_BCN_SPACE_CFG_P2 0xC494
-+#define R_AX_BCN_SPACE_CFG_P3 0xC4D4
-+#define R_AX_BCN_SPACE_CFG_P4 0xC514
-+#define B_AX_SUB_BCN_SPACE_MASK GENMASK(23, 16)
-+#define B_AX_BCN_SPACE_MASK GENMASK(15, 0)
-+
-+#define R_AX_BCN_FORCETX_P0 0xC418
-+#define R_AX_BCN_FORCETX_P1 0xC458
-+#define R_AX_BCN_FORCETX_P2 0xC498
-+#define R_AX_BCN_FORCETX_P3 0xC4D8
-+#define R_AX_BCN_FORCETX_P4 0xC518
-+#define B_AX_FORCE_BCN_CURRCNT_MASK GENMASK(23, 16)
-+#define B_AX_FORCE_BCN_NUM_MASK GENMASK(15, 0)
-+#define B_AX_BCN_MAX_ERR_MASK GENMASK(7, 0)
-+
-+#define R_AX_BCN_ERR_CNT_P0 0xC420
-+#define R_AX_BCN_ERR_CNT_P1 0xC460
-+#define R_AX_BCN_ERR_CNT_P2 0xC4A0
-+#define R_AX_BCN_ERR_CNT_P3 0xC4E0
-+#define R_AX_BCN_ERR_CNT_P4 0xC520
-+#define B_AX_BCN_ERR_CNT_SUM_MASK GENMASK(31, 24)
-+#define B_AX_BCN_ERR_CNT_NAV_MASK GENMASK(23, 16)
-+#define B_AX_BCN_ERR_CNT_EDCCA_MASK GENMASK(15, 0)
-+#define B_AX_BCN_ERR_CNT_CCA_MASK GENMASK(7, 0)
-+
-+#define R_AX_BCN_ERR_FLAG_P0 0xC424
-+#define R_AX_BCN_ERR_FLAG_P1 0xC464
-+#define R_AX_BCN_ERR_FLAG_P2 0xC4A4
-+#define R_AX_BCN_ERR_FLAG_P3 0xC4E4
-+#define R_AX_BCN_ERR_FLAG_P4 0xC524
-+#define B_AX_BCN_ERR_FLAG_OTHERS BIT(6)
-+#define B_AX_BCN_ERR_FLAG_MAC BIT(5)
-+#define B_AX_BCN_ERR_FLAG_TXON BIT(4)
-+#define B_AX_BCN_ERR_FLAG_SRCHEND BIT(3)
-+#define B_AX_BCN_ERR_FLAG_INVALID BIT(2)
-+#define B_AX_BCN_ERR_FLAG_CMP BIT(1)
-+#define B_AX_BCN_ERR_FLAG_LOCK BIT(0)
-+
-+#define R_AX_DTIM_CTRL_P0 0xC426
-+#define R_AX_DTIM_CTRL_P1 0xC466
-+#define R_AX_DTIM_CTRL_P2 0xC4A6
-+#define R_AX_DTIM_CTRL_P3 0xC4E6
-+#define R_AX_DTIM_CTRL_P4 0xC526
-+#define B_AX_DTIM_NUM_MASK GENMASK(15, 0)
-+#define B_AX_DTIM_CURRCNT_MASK GENMASK(7, 0)
-+
-+#define R_AX_TBTT_SHIFT_P0 0xC428
-+#define R_AX_TBTT_SHIFT_P1 0xC468
-+#define R_AX_TBTT_SHIFT_P2 0xC4A8
-+#define R_AX_TBTT_SHIFT_P3 0xC4E8
-+#define R_AX_TBTT_SHIFT_P4 0xC528
-+#define B_AX_TBTT_SHIFT_OFST_MASK GENMASK(11, 0)
-+
-+#define R_AX_BCN_CNT_TMR_P0 0xC434
-+#define R_AX_BCN_CNT_TMR_P1 0xC474
-+#define R_AX_BCN_CNT_TMR_P2 0xC4B4
-+#define R_AX_BCN_CNT_TMR_P3 0xC4F4
-+#define R_AX_BCN_CNT_TMR_P4 0xC534
-+#define B_AX_BCN_CNT_TMR_MASK 0xffffffffL
-+
-+#define R_AX_TSFTR_LOW_P0 0xC438
-+#define R_AX_TSFTR_LOW_P1 0xC478
-+#define R_AX_TSFTR_LOW_P2 0xC4B8
-+#define R_AX_TSFTR_LOW_P3 0xC4F8
-+#define R_AX_TSFTR_LOW_P4 0xC538
-+#define B_AX_TSFTR_LOW_MASK 0xffffffffL
-+
-+#define R_AX_TSFTR_HIGH_P0 0xC43C
-+#define R_AX_TSFTR_HIGH_P1 0xC47C
-+#define R_AX_TSFTR_HIGH_P2 0xC4BC
-+#define R_AX_TSFTR_HIGH_P3 0xC4FC
-+#define R_AX_TSFTR_HIGH_P4 0xC53C
-+#define B_AX_TSFTR_HIGH_MASK 0xffffffffL
-+
-+#define R_AX_MBSSID_CTRL 0xC568
-+#define R_AX_MBSSID_CTRL_C1 0xE568
-+#define B_AX_P0MB_ALL_MASK GENMASK(23, 1)
-+#define B_AX_P0MB_NUM_MASK GENMASK(23, 16)
-+#define B_AX_P0MB15_EN BIT(15)
-+#define B_AX_P0MB14_EN BIT(14)
-+#define B_AX_P0MB13_EN BIT(13)
-+#define B_AX_P0MB12_EN BIT(12)
-+#define B_AX_P0MB11_EN BIT(11)
-+#define B_AX_P0MB10_EN BIT(10)
-+#define B_AX_P0MB9_EN BIT(9)
-+#define B_AX_P0MB8_EN BIT(8)
-+#define B_AX_P0MB7_EN BIT(7)
-+#define B_AX_P0MB6_EN BIT(6)
-+#define B_AX_P0MB5_EN BIT(5)
-+#define B_AX_P0MB4_EN BIT(4)
-+#define B_AX_P0MB3_EN BIT(3)
-+#define B_AX_P0MB2_EN BIT(2)
-+#define B_AX_P0MB1_EN BIT(1)
-+
-+#define R_AX_AMPDU_AGG_LIMIT 0xC610
-+#define B_AX_AMPDU_MAX_TIME_MASK GENMASK(31, 24)
-+#define B_AX_RA_TRY_RATE_AGG_LMT_MASK GENMASK(23, 16)
-+#define B_AX_RTS_MAX_AGG_NUM_MASK GENMASK(15, 8)
-+#define B_AX_MAX_AGG_NUM_MASK GENMASK(7, 0)
-+
-+#define R_AX_AGG_LEN_HT_0 0xC614
-+#define R_AX_AGG_LEN_HT_0_C1 0xE614
-+#define B_AX_AMPDU_MAX_LEN_HT_MASK GENMASK(31, 16)
-+#define B_AX_RTS_TXTIME_TH_MASK GENMASK(15, 8)
-+#define B_AX_RTS_LEN_TH_MASK GENMASK(7, 0)
-+
-+#define S_AX_CTS2S_TH_SEC_256B 1
-+#define R_AX_SIFS_SETTING 0xC624
-+#define R_AX_SIFS_SETTING_C1 0xE624
-+#define B_AX_HW_CTS2SELF_PKT_LEN_TH_MASK GENMASK(31, 24)
-+#define B_AX_HW_CTS2SELF_PKT_LEN_TH_TWW_MASK GENMASK(23, 18)
-+#define B_AX_HW_CTS2SELF_EN BIT(16)
-+#define B_AX_SPEC_SIFS_OFDM_PTCL_SH 8
-+#define B_AX_SPEC_SIFS_OFDM_PTCL_MASK GENMASK(15, 8)
-+#define B_AX_SPEC_SIFS_CCK_PTCL_MASK GENMASK(7, 0)
-+#define S_AX_CTS2S_TH_1K 4
-+
-+#define R_AX_TXRATE_CHK 0xC628
-+#define R_AX_TXRATE_CHK_C1 0xE628
-+#define B_AX_DEFT_RATE_MASK GENMASK(15, 7)
-+#define B_AX_BAND_MODE BIT(4)
-+#define B_AX_MAX_TXNSS_MSK GENMASK(3, 2)
-+#define B_AX_RTS_LIMIT_IN_OFDM6 BIT(1)
-+#define B_AX_CHECK_CCK_EN BIT(0)
-+
-+#define R_AX_TXCNT 0xC62C
-+#define R_AX_TXCNT_C1 0xE62C
-+#define B_AX_ADD_TXCNT_BY BIT(31)
-+#define B_AX_S_TXCNT_LMT_MASK GENMASK(29, 24)
-+#define B_AX_L_TXCNT_LMT_MASK GENMASK(21, 16)
-+
-+#define R_AX_MBSSID_DROP_0 0xC63C
-+#define R_AX_MBSSID_DROP_0_C1 0xE63C
-+#define B_AX_GI_LTF_FB_SEL BIT(30)
-+#define B_AX_RATE_SEL_MASK GENMASK(29, 24)
-+#define B_AX_PORT_DROP_4_0_MSK GENMASK(20, 16)
-+#define B_AX_MBSSID_DROP_15_0_MSK GENMASK(15, 0)
-+
-+#define R_AX_BT_PLT 0xC67C
-+#define R_AX_BT_PLT_C1 0xE67C
-+#define B_AX_BT_PLT_PKT_CNT_MASK GENMASK(31, 16)
-+#define B_AX_BT_PLT_RST BIT(8)
-+#define B_AX_RX_PLT_GNT_LTE_RX BIT(7)
-+#define B_AX_RX_PLT_GNT_BT_RX BIT(6)
-+#define B_AX_RX_PLT_GNT_BT_TX BIT(5)
-+#define B_AX_RX_PLT_GNT_WL BIT(4)
-+#define B_AX_TX_PLT_GNT_LTE_RX BIT(3)
-+#define B_AX_TX_PLT_GNT_BT_RX BIT(2)
-+#define B_AX_TX_PLT_GNT_BT_TX BIT(1)
-+#define B_AX_TX_PLT_GNT_WL BIT(0)
-+
-+#define R_AX_PTCL_BSS_COLOR_0 0xC6A0
-+#define R_AX_PTCL_BSS_COLOR_0_C1 0xE6A0
-+#define B_AX_BSS_COLOB_AX_PORT_3_MASK GENMASK(30, 24)
-+#define B_AX_BSS_COLOB_AX_PORT_2_MASK GENMASK(22, 16)
-+#define B_AX_BSS_COLOB_AX_PORT_1_MASK GENMASK(14, 8)
-+#define B_AX_BSS_COLOB_AX_PORT_0_MASK GENMASK(6, 0)
-+
-+#define R_AX_PTCL_BSS_COLOR_1 0xC6A4
-+#define R_AX_PTCL_BSS_COLOR_1_C1 0xE6A4
-+#define B_AX_BSS_COLOB_AX_PORT_4_MASK GENMASK(6, 0)
-+
-+#define R_AX_PTCL_IMR0 0xC6C0
-+#define R_AX_PTCL_IMR0_C1 0xE6C0
-+#define B_AX_F2PCMD_USER_ALLC_ERR_INT_EN BIT(28)
-+#define B_AX_TX_RECORD_PKTID_ERR_INT_EN BIT(23)
-+
-+#define R_AX_PTCL_ISR0 0xC6C4
-+#define R_AX_PTCL_ISR0_C1 0xE6C4
-+
-+#define S_AX_PTCL_TO_2MS 0x3F
-+#define R_AX_PTCL_FSM_MON 0xC6E8
-+#define R_AX_PTCL_FSM_MON_C1 0xE6E8
-+#define B_AX_PTCL_TX_ARB_TO_MODE BIT(6)
-+#define B_AX_PTCL_TX_ARB_TO_THR_MASK GENMASK(5, 0)
-+
-+#define R_AX_PTCL_TX_CTN_SEL 0xC6EC
-+#define R_AX_PTCL_TX_CTN_SEL_C1 0xE6EC
-+#define B_AX_PTCL_TX_ON_STAT BIT(7)
-+
-+#define R_AX_PTCL_DBG_INFO 0xC6F0
-+#define R_AX_PTCL_DBG_INFO_C1 0xE6F0
-+#define B_AX_PTCL_DBG_INFO_MSK GENMASK(31, 0)
-+#define R_AX_PTCL_DBG 0xC6F4
-+#define R_AX_PTCL_DBG_C1 0xE6F4
-+#define B_AX_PTCL_DBG_EN BIT(8)
-+#define B_AX_PTCL_DBG_SEL GENMASK(7, 0)
-+
-+#define R_AX_DLE_CTRL 0xC800
-+#define R_AX_DLE_CTRL_C1 0xE800
-+#define B_AX_NO_RESERVE_PAGE_ERR_IMR BIT(23)
-+#define B_AX_RXDATA_FSM_HANG_ERROR_IMR BIT(15)
-+#define R_AX_RXDMA_PKT_INFO_0 0xC814
-+#define R_AX_RXDMA_PKT_INFO_1 0xC818
-+#define R_AX_RXDMA_PKT_INFO_2 0xC81C
-+
-+#define R_AX_TCR1 0xCA04
-+#define R_AX_TCR1_C1 0xEA04
-+#define B_AX_TXDFIFO_THRESHOLD GENMASK(31, 28)
-+#define B_AX_TCR_CCK_LOCK_CLK BIT(27)
-+#define B_AX_TCR_FORCE_READ_TXDFIFO BIT(26)
-+#define B_AX_TCR_USTIME GENMASK(23, 16)
-+#define B_AX_TCR_SMOOTH_VAL BIT(15)
-+#define B_AX_TCR_SMOOTH_CTRL BIT(14)
-+#define B_AX_CS_REQ_VAL BIT(13)
-+#define B_AX_CS_REQ_SEL BIT(12)
-+#define B_AX_TCR_ZLD_USTIME_AFTERPHYTXON GENMASK(11, 8)
-+#define B_AX_TCR_TXTIMEOUT GENMASK(7, 0)
-+
-+#define R_AX_PPWRBIT_SETTING 0xCA0C
-+#define R_AX_PPWRBIT_SETTING_C1 0xEA0C
-+
-+#define R_AX_MACTX_DBG_SEL_CNT 0xCA20
-+#define R_AX_MACTX_DBG_SEL_CNT_C1 0xEA20
-+#define B_AX_MACTX_MPDU_CNT GENMASK(31, 24)
-+#define B_AX_MACTX_DMA_CNT GENMASK(23, 16)
-+#define B_AX_LENGTH_ERR_FLAG_U3 BIT(11)
-+#define B_AX_LENGTH_ERR_FLAG_U2 BIT(10)
-+#define B_AX_LENGTH_ERR_FLAG_U1 BIT(9)
-+#define B_AX_LENGTH_ERR_FLAG_U0 BIT(8)
-+#define B_AX_DBGSEL_MACTX GENMASK(5, 0)
-+
-+#define R_AX_WMAC_TX_CTRL_DEBUG 0xCAE4
-+#define R_AX_WMAC_TX_CTRL_DEBUG_C1 0xEAE4
-+#define B_AX_TX_CTRL_DEBUG_SEL GENMASK(3, 0)
-+
-+#define R_AX_WMAC_TX_INFO0_DEBUG 0xCAE8
-+#define R_AX_WMAC_TX_INFO0_DEBUG_C1 0xEAE8
-+#define B_AX_TX_CTRL_INFO_P0_MSK GENMASK(31, 0)
-+
-+#define R_AX_WMAC_TX_INFO1_DEBUG 0xCAEC
-+#define R_AX_WMAC_TX_INFO1_DEBUG_C1 0xEAEC
-+#define B_AX_TX_CTRL_INFO_P1_MSK GENMASK(31, 0)
-+
-+#define R_AX_RSP_CHK_SIG 0xCC00
-+#define R_AX_RSP_CHK_SIG_C1 0xEC00
-+#define B_AX_RSP_CHK_TX_NAV BIT(27)
-+#define B_AX_RSP_CHK_INTRA_NAV BIT(26)
-+#define B_AX_RSP_CHK_BASIC_NAV BIT(25)
-+#define B_AX_RSP_CHK_SEC_CCA_80 BIT(24)
-+#define B_AX_RSP_CHK_SEC_CCA_40 BIT(23)
-+#define B_AX_RSP_CHK_SEC_CCA_20 BIT(22)
-+#define B_AX_RSP_CHK_BTCCA BIT(21)
-+#define B_AX_RSP_CHK_EDCCA BIT(20)
-+#define B_AX_RSP_CHK_CCA BIT(19)
-+
-+#define R_AX_TRXPTCL_RESP_0 0xCC04
-+#define R_AX_TRXPTCL_RESP_0_C1 0xEC04
-+#define B_AX_WMAC_RESP_STBC_EN BIT(31)
-+#define B_AX_WMAC_RXFTM_TXACK_SC BIT(30)
-+#define B_AX_WMAC_RXFTM_TXACKBWEQ BIT(29)
-+#define B_AX_WMAC_DIS_RESP_CTSINCCA BIT(24)
-+#define B_AX_WMAC_DIS_RESP_ACKINCCA BIT(23)
-+#define B_AX_WMAC_LDPC_EN BIT(22)
-+#define B_AX_WMAC_SGIEN BIT(21)
-+#define B_AX_WMAC_SPLCPEN BIT(20)
-+#define B_AX_WMAC_BESP_CHNBUSY_MASK GENMASK(19, 18)
-+#define B_AX_WMAC_BESP_EABLY_TXBA BIT(17)
-+#define B_AX_WMAC_EN_TXACKBA_INTXOP BIT(16)
-+#define B_AX_WMAC_SPEC_SIFS_OFDM_MASK GENMASK(15, 8)
-+#define B_AX_WMAC_SPEC_SIFS_CCK_MASK GENMASK(7, 0)
-+#define WMAC_SPEC_SIFS_OFDM_52A 0x15
-+#define WMAC_SPEC_SIFS_OFDM_52B 0x11
-+#define WMAC_SPEC_SIFS_OFDM_52C 0x11
-+#define WMAC_SPEC_SIFS_CCK	 0xA
-+
-+#define R_AX_MAC_LOOPBACK 0xCC20
-+#define R_AX_MAC_LOOPBACK_C1 0xEC20
-+#define B_AX_MACLBK_EN BIT(0)
-+
-+#define R_AX_RXTRIG_TEST_USER_2 0xCCB0
-+#define R_AX_RXTRIG_TEST_USER_2_C1 0xECB0
-+#define B_AX_RXTRIG_MACID_MASK GENMASK(31, 24)
-+#define B_AX_RXTRIG_RU26_DIS BIT(21)
-+#define B_AX_RXTRIG_FCSCHK_EN BIT(20)
-+#define B_AX_RXTRIG_PORT_SEL_MASK GENMASK(19, 17)
-+#define B_AX_RXTRIG_EN BIT(16)
-+#define B_AX_RXTRIG_USERINFO_2_MASK GENMASK(15, 0)
-+
-+#define R_AX_WMAC_TX_TF_INFO_0 0xCCD0
-+#define R_AX_WMAC_TX_TF_INFO_0_C1 0xECD0
-+#define B_AX_WMAC_TX_TF_INFO_SEL GENMASK(2, 0)
-+
-+#define R_AX_WMAC_TX_TF_INFO_1 0xCCD4
-+#define R_AX_WMAC_TX_TF_INFO_1_C1 0xECD4
-+#define B_AX_WMAC_TX_TF_INFO_P0 GENMASK(31, 0)
-+
-+#define R_AX_WMAC_TX_TF_INFO_2 0xCCD8
-+#define R_AX_WMAC_TX_TF_INFO_2_C1 0xECD8
-+#define B_AX_WMAC_TX_TF_INFO_P1 GENMASK(31, 0)
-+
-+#define R_AX_TMAC_ERR_IMR_ISR 0xCCEC
-+#define R_AX_TMAC_ERR_IMR_ISR_C1 0xECEC
-+
-+#define R_AX_DBGSEL_TRXPTCL 0xCCF4
-+#define R_AX_DBGSEL_TRXPTCL_C1 0xECF4
-+#define B_AX_DBGSEL_TRXPTCL_MSK GENMASK(5, 0)
-+
-+#define R_AX_PHYINFO_ERR_IMR 0xCCFE
-+#define R_AX_PHYINFO_ERR_IMR_C1 0xECFE
-+#define B_AX_CSI_ON_TIMEOUT_INT_EN BIT(5)
-+#define B_AX_STS_ON_TIMEOUT_INT_EN BIT(4)
-+#define B_AX_DATA_ON_TIMEOUT_INT_EN BIT(3)
-+#define B_AX_OFDM_CCA_TIMEOUT_INT_EN BIT(2)
-+#define B_AX_CCK_CCA_TIMEOUT_INT_EN BIT(1)
-+#define B_AXC_PHY_TXON_TIMEOUT_INT_EN BIT(0)
-+
-+#define R_AX_PHYINFO_ERR_ISR 0xCCFF
-+#define R_AX_PHYINFO_ERR_ISR_C1 0xECFF
-+#define CSI_RRSC_BMAP 0x29292911
-+
-+#define R_AX_BFMER_CTRL_0 0xCD78
-+#define R_AX_BFMER_CTRL_0_C1 0xED78
-+#define B_AX_BFMER_HE_CSI_OFFSET_MASK GENMASK(31, 24)
-+#define B_AX_BFMER_VHT_CSI_OFFSET_MASK GENMASK(23, 16)
-+#define B_AX_BFMER_HT_CSI_OFFSET_MASK GENMASK(15, 8)
-+#define B_AX_BFMER_NDP_BFEN BIT(2)
-+#define B_AX_BFMER_VHT_BFPRT_CHK BIT(0)
-+
-+#define R_AX_BFMEE_RESP_OPTION 0xCD80
-+#define R_AX_BFMEE_RESP_OPTION_C1 0xED80
-+#define B_AX_BFMEE_NDP_RX_STANDBY_TIMER_MASK GENMASK(31, 24)
-+#define B_AX_BFMEE_BFRP_RX_STANDBY_TIMER_MASK GENMASK(23, 20)
-+#define B_AX_MU_BFRPTSEG_SEL_MASK GENMASK(18, 17)
-+#define B_AX_BFMEE_NDP_RXSTDBY_SEL BIT(16)
-+#define BFRP_RX_STANDBY_TIMER		0x0
-+#define NDP_RX_STANDBY_TIMER		0xFF
-+#define B_AX_BFMEE_HE_NDPA_EN BIT(2)
-+#define B_AX_BFMEE_VHT_NDPA_EN BIT(1)
-+#define B_AX_BFMEE_HT_NDPA_EN BIT(0)
-+
-+#define R_AX_TRXPTCL_RESP_CSI_CTRL_0 0xCD88
-+#define R_AX_TRXPTCL_RESP_CSI_CTRL_0_C1 0xED88
-+#define R_AX_TRXPTCL_RESP_CSI_CTRL_1 0xCD94
-+#define R_AX_TRXPTCL_RESP_CSI_CTRL_1_C1 0xED94
-+#define B_AX_BFMEE_CSISEQ_SEL BIT(29)
-+#define B_AX_BFMEE_BFPARAM_SEL BIT(28)
-+#define B_AX_BFMEE_OFDM_LEN_TH_MASK GENMASK(27, 24)
-+#define B_AX_BFMEE_BF_PORT_SEL BIT(23)
-+#define B_AX_BFMEE_USE_NSTS BIT(22)
-+#define B_AX_BFMEE_CSI_RATE_FB_EN BIT(21)
-+#define B_AX_BFMEE_CSI_GID_SEL BIT(20)
-+#define B_AX_BFMEE_CSI_RSC_MASK GENMASK(19, 18)
-+#define B_AX_BFMEE_CSI_FORCE_RETE_EN BIT(17)
-+#define B_AX_BFMEE_CSI_USE_NDPARATE BIT(16)
-+#define B_AX_BFMEE_CSI_WITHHTC_EN BIT(15)
-+#define B_AX_BFMEE_CSIINFO0_BF_EN BIT(14)
-+#define B_AX_BFMEE_CSIINFO0_STBC_EN BIT(13)
-+#define B_AX_BFMEE_CSIINFO0_LDPC_EN BIT(12)
-+#define B_AX_BFMEE_CSIINFO0_CS_MASK GENMASK(11, 10)
-+#define B_AX_BFMEE_CSIINFO0_CB_MASK GENMASK(9, 8)
-+#define B_AX_BFMEE_CSIINFO0_NG_MASK GENMASK(7, 6)
-+#define B_AX_BFMEE_CSIINFO0_NR_MASK GENMASK(5, 3)
-+#define B_AX_BFMEE_CSIINFO0_NC_MASK GENMASK(2, 0)
-+
-+#define R_AX_TRXPTCL_RESP_CSI_RRSC 0xCD8C
-+#define R_AX_TRXPTCL_RESP_CSI_RRSC_C1 0xED8C
-+
-+#define R_AX_TRXPTCL_RESP_CSI_RATE 0xCD90
-+#define R_AX_TRXPTCL_RESP_CSI_RATE_C1 0xED90
-+#define B_AX_BFMEE_HE_CSI_RATE_MASK GENMASK(22, 16)
-+#define B_AX_BFMEE_VHT_CSI_RATE_MASK GENMASK(14, 8)
-+#define B_AX_BFMEE_HT_CSI_RATE_MASK GENMASK(6, 0)
-+#define CSI_INIT_RATE_HE		0x3
-+#define CSI_INIT_RATE_VHT		0x3
-+#define CSI_INIT_RATE_HT		0x3
-+
-+#define R_AX_RCR 0xCE00
-+#define R_AX_RCR_C1 0xEE00
-+#define B_AX_STOP_RX_IN BIT(11)
-+#define B_AX_DRV_INFO_SIZE_MASK GENMASK(10, 8)
-+#define B_AX_CH_EN_MASK GENMASK(3, 0)
-+
-+#define R_AX_DLK_PROTECT_CTL 0xCE02
-+#define R_AX_DLK_PROTECT_CTL_C1 0xEE02
-+#define B_AX_RX_DLK_CCA_TIME_MASK GENMASK(15, 8)
-+#define B_AX_RX_DLK_DATA_TIME_MASK GENMASK(7, 4)
-+
-+#define R_AX_PLCP_HDR_FLTR 0xCE04
-+#define R_AX_PLCP_HDR_FLTR_C1 0xEE04
-+#define B_AX_DIS_CHK_MIN_LEN BIT(8)
-+#define B_AX_HE_SIGB_CRC_CHK BIT(6)
-+#define B_AX_VHT_MU_SIGB_CRC_CHK BIT(5)
-+#define B_AX_VHT_SU_SIGB_CRC_CHK BIT(4)
-+#define B_AX_SIGA_CRC_CHK BIT(3)
-+#define B_AX_LSIG_PARITY_CHK BIT(2)
-+#define B_AX_CCK_SIG_CHK BIT(1)
-+#define B_AX_CCK_CRC_CHK BIT(0)
-+
-+#define R_AX_RX_FLTR_OPT 0xCE20
-+#define R_AX_RX_FLTR_OPT_C1 0xEE20
-+#define B_AX_UID_FILTER_MASK GENMASK(31, 24)
-+#define B_AX_UNSPT_FILTER_SH 22
-+#define B_AX_UNSPT_FILTER_MASK GENMASK(23, 22)
-+#define B_AX_RX_MPDU_MAX_LEN_MASK GENMASK(21, 16)
-+#define B_AX_RX_MPDU_MAX_LEN_SIZE 0x3f
-+#define B_AX_A_FTM_REQ BIT(14)
-+#define B_AX_A_ERR_PKT BIT(13)
-+#define B_AX_A_UNSUP_PKT BIT(12)
-+#define B_AX_A_CRC32_ERR BIT(11)
-+#define B_AX_A_PWR_MGNT BIT(10)
-+#define B_AX_A_BCN_CHK_RULE_MASK GENMASK(9, 8)
-+#define B_AX_A_BCN_CHK_EN BIT(7)
-+#define B_AX_A_MC_LIST_CAM_MATCH BIT(6)
-+#define B_AX_A_BC_CAM_MATCH BIT(5)
-+#define B_AX_A_UC_CAM_MATCH BIT(4)
-+#define B_AX_A_MC BIT(3)
-+#define B_AX_A_BC BIT(2)
-+#define B_AX_A_A1_MATCH BIT(1)
-+#define B_AX_SNIFFER_MODE BIT(0)
-+#define DEFAULT_AX_RX_FLTR (B_AX_A_A1_MATCH | B_AX_A_BC | B_AX_A_MC |	       \
-+			    B_AX_A_UC_CAM_MATCH | B_AX_A_BC_CAM_MATCH |	       \
-+			    B_AX_A_MC_LIST_CAM_MATCH |			       \
-+			    u32_encode_bits(3, B_AX_UID_FILTER_MASK) |	       \
-+			    B_AX_A_BCN_CHK_EN)
-+
-+#define R_AX_CTRL_FLTR 0xCE24
-+#define R_AX_CTRL_FLTR_C1 0xEE24
-+#define R_AX_MGNT_FLTR 0xCE28
-+#define R_AX_MGNT_FLTR_C1 0xEE28
-+#define R_AX_DATA_FLTR 0xCE2C
-+#define R_AX_DATA_FLTR_C1 0xEE2C
-+#define RX_FLTR_FRAME_DROP	0x00000000
-+#define RX_FLTR_FRAME_TO_HOST	0x55555555
-+#define RX_FLTR_FRAME_TO_WLCPU	0xAAAAAAAA
-+
-+#define R_AX_ADDR_CAM_CTRL 0xCE34
-+#define R_AX_ADDR_CAM_CTRL_C1 0xEE34
-+#define B_AX_ADDR_CAM_RANGE_MASK GENMASK(23, 16)
-+#define B_AX_ADDR_CAM_CMPLIMT_MASK GENMASK(15, 12)
-+#define B_AX_ADDR_CAM_CLR BIT(8)
-+#define B_AX_ADDR_CAM_A2_B0_CHK BIT(2)
-+#define B_AX_ADDR_CAM_SRCH_PERPKT BIT(1)
-+#define B_AX_ADDR_CAM_EN BIT(0)
-+
-+#define R_AX_RESPBA_CAM_CTRL 0xCE3C
-+#define R_AX_RESPBA_CAM_CTRL_C1 0xEE3C
-+#define B_AX_SSN_SEL BIT(2)
-+
-+#define R_AX_PPDU_STAT 0xCE40
-+#define R_AX_PPDU_STAT_C1 0xEE40
-+#define B_AX_PPDU_STAT_RPT_TRIG BIT(8)
-+#define B_AX_PPDU_STAT_RPT_CRC32 BIT(5)
-+#define B_AX_PPDU_STAT_RPT_A1M BIT(4)
-+#define B_AX_APP_PLCP_HDR_RPT BIT(3)
-+#define B_AX_APP_RX_CNT_RPT BIT(2)
-+#define B_AX_APP_MAC_INFO_RPT BIT(1)
-+#define B_AX_PPDU_STAT_RPT_EN BIT(0)
-+
-+#define R_AX_RX_SR_CTRL 0xCE4A
-+#define R_AX_RX_SR_CTRL_C1 0xEE4A
-+#define B_AX_SR_EN BIT(0)
-+
-+#define R_AX_RX_STATE_MONITOR 0xCEF0
-+#define R_AX_RX_STATE_MONITOR_C1 0xEEF0
-+#define R_AX_RX_STATE_MONITOR_MSK GENMASK(31, 0)
-+#define B_AX_STATE_CUR GENMASK(31, 16)
-+#define B_AX_STATE_NXT GENMASK(13, 8)
-+#define B_AX_STATE_UPD BIT(7)
-+#define B_AX_STATE_SEL GENMASK(4, 0)
-+
-+#define R_AX_RMAC_ERR_ISR 0xCEF4
-+#define R_AX_RMAC_ERR_ISR_C1 0xEEF4
-+#define B_AX_RXERR_INTPS_EN BIT(31)
-+#define B_AX_RMAC_RX_CSI_TIMEOUT_INT_EN BIT(19)
-+#define B_AX_RMAC_RX_TIMEOUT_INT_EN BIT(18)
-+#define B_AX_RMAC_CSI_TIMEOUT_INT_EN (17)
-+#define B_AX_RMAC_DATA_ON_TIMEOUT_INT_EN BIT(16)
-+#define B_AX_RMAC_CCA_TIMEOUT_INT_EN BIT(15)
-+#define B_AX_RMAC_DMA_TIMEOUT_INT_EN BIT(14)
-+#define B_AX_RMAC_DATA_ON_TO_IDLE_TIMEOUT_INT_EN BIT(13)
-+#define B_AX_RMAC_CCA_TO_IDLE_TIMEOUT_INT_EN BIT(12)
-+#define B_AX_RMAC_RX_CSI_TIMEOUT_FLAG BIT(7)
-+#define B_AX_RMAC_RX_TIMEOUT_FLAG BIT(6)
-+#define B_AX_BMAC_CSI_TIMEOUT_FLAG BIT(5)
-+#define B_AX_BMAC_DATA_ON_TIMEOUT_FLAG BIT(4)
-+#define B_AX_BMAC_CCA_TIMEOUT_FLAG BIT(3)
-+#define B_AX_BMAC_DMA_TIMEOUT_FLAG BIT(2)
-+#define B_AX_BMAC_DATA_ON_TO_IDLE_TIMEOUT_FLAG BIT(1)
-+#define B_AX_BMAC_CCA_TO_IDLE_TIMEOUT_FLAG BIT(0)
-+
-+#define R_AX_RMAC_PLCP_MON 0xCEF8
-+#define R_AX_RMAC_PLCP_MON_C1 0xEEF8
-+#define R_AX_RMAC_PLCP_MON_MSK GENMASK(31, 0)
-+#define B_AX_PCLP_MON_SEL GENMASK(31, 28)
-+#define B_AX_PCLP_MON_CONT GENMASK(27, 0)
-+
-+#define R_AX_RX_DEBUG_SELECT 0xCEFC
-+#define R_AX_RX_DEBUG_SELECT_C1 0xEEFC
-+#define B_AX_DEBUG_SEL GENMASK(7, 0)
-+
-+#define R_AX_PWR_RATE_CTRL 0xD200
-+#define R_AX_PWR_RATE_CTRL_C1 0xF200
-+#define B_AX_FORCE_PWR_BY_RATE_EN BIT(9)
-+#define B_AX_FORCE_PWR_BY_RATE_VALUE_MSK GENMASK(8, 0)
-+
-+#define R_AX_PWR_RATE_OFST_CTRL 0xD204
-+#define R_AX_PWR_COEXT_CTRL 0xD220
-+#define B_AX_TXAGC_BT_EN BIT(1)
-+#define B_AX_TXAGC_BT_MSK GENMASK(11, 3)
-+
-+#define R_AX_PWR_UL_CTRL0 0xD240
-+#define R_AX_PWR_UL_CTRL2 0xD248
-+#define B_AX_PWR_UL_CFO_MSK GENMASK(2, 0)
-+#define B_AX_PWR_UL_CTRL2_MSK 0x07700007
-+#define R_AX_PWR_UL_TB_CTRL 0xD288
-+#define B_AX_PWR_UL_TB_CTRL_EN BIT(31)
-+#define R_AX_PWR_UL_TB_1T 0xD28C
-+#define B_AX_PWR_UL_TB_1T_MSK GENMASK(4, 0)
-+#define R_AX_PWR_UL_TB_2T 0xD290
-+#define B_AX_PWR_UL_TB_2T_MSK GENMASK(4, 0)
-+#define R_AX_PWR_BY_RATE 0xD2C0
-+#define R_AX_PWR_BY_RATE_MAX 0xD2E8
-+#define R_AX_PWR_LMT 0xD2EC
-+#define R_AX_PWR_LMT_MAX 0xD338
-+#define R_AX_PWR_RU_LMT 0xD33C
-+#define R_AX_PWR_RU_LMT_MAX 0xD368
-+
-+#define R_AX_TXPWR_IMR 0xD9E0
-+#define R_AX_TXPWR_IMR_C1 0xF9E0
-+#define R_AX_TXPWR_ISR 0xD9E4
-+#define R_AX_TXPWR_ISR_C1 0xF9E4
-+
-+#define R_AX_BTC_CFG 0xDA00
-+#define B_AX_BTC_DIS_BTC_CLK_G BIT(2)
-+
-+#define R_AX_BTC_WL_PRI_MSK 0xDA10
-+#define B_AX_BTC_PTA_WL_PRI_MASK_BCNQ BIT(8)
-+
-+#define R_AX_BTC_FUNC_EN 0xDA20
-+#define R_AX_BTC_FUNC_EN_C1 0xFA20
-+#define B_AX_PTA_EDCCA_EN BIT(1)
-+#define B_AX_PTA_WL_TX_EN BIT(0)
-+
-+#define R_BTC_BREAK_TABLE 0xDA2C
-+#define BTC_BREAK_PARAM 0xf0ffffff
-+
-+#define R_BTC_BT_COEX_MSK_TABLE 0xDA30
-+#define B_BTC_PRI_MASK_TX_RESP_V1 BIT(3)
-+
-+#define R_AX_BT_COEX_CFG_2 0xDA34
-+#define R_AX_BT_COEX_CFG_2_C1 0xFA34
-+#define B_AX_GNT_BT_POLARITY BIT(12)
-+#define B_AX_GNT_BT_BYPASS_PRIORITY BIT(8)
-+#define B_AX_TIMER_MASK GENMASK(7, 0)
-+#define MAC_AX_CSR_RATE 80
-+
-+#define R_AX_CSR_MODE 0xDA40
-+#define B_AX_BTC_BT_CNT_REST BIT(16)
-+#define R_AX_CSR_MODE_C1 0xFA40
-+#define B_AX_BT_CNT_REST BIT(16)
-+#define B_AX_BT_STAT_DELAY_MASK GENMASK(15, 12)
-+#define MAC_AX_CSR_DELAY 0
-+#define B_AX_BT_TRX_INIT_DETECT_MASK GENMASK(11, 8)
-+#define MAC_AX_CSR_TRX_TO 4
-+#define B_AX_BT_PRI_DETECT_TO_MASK GENMASK(7, 4)
-+#define MAC_AX_CSR_PRI_TO 5
-+#define B_AX_WL_ACT_MSK BIT(3)
-+#define B_AX_STATIS_BT_EN BIT(2)
-+#define B_AX_WL_ACT_MASK_ENABLE BIT(1)
-+#define B_AX_ENHANCED_BT BIT(0)
-+
-+#define R_AX_BTC_BT_STAST_HIGH 0xDA44
-+#define B_AX_BTC_BCNT_HIPRI_TX GENMASK(15, 0)
-+#define B_AX_BTC_BCNT_HIPRI_RX GENMASK(31, 16)
-+#define R_AX_BTC_BT_STAST_LOW 0xDA48
-+#define B_AX_BTC_BCNT_LOWPRI_TX GENMASK(15, 0)
-+#define B_AX_BTC_BCNT_LOWPRI_RX GENMASK(31, 16)
-+
-+#define R_AX_TDMA_MODE 0xDA4C
-+#define R_AX_TDMA_MODE_C1 0xFA4C
-+#define B_AX_R_BT_CMD_RPT_MASK GENMASK(31, 16)
-+#define B_AX_R_RPT_FROM_BT_MASK GENMASK(15, 8)
-+#define B_AX_BT_HID_ISR_SET_MASK GENMASK(7, 6)
-+#define B_AX_TDMA_BT_START_NOTIFY BIT(5)
-+#define B_AX_ENABLE_TDMA_FW_MODE BIT(4)
-+#define B_AX_ENABLE_PTA_TDMA_MODE BIT(3)
-+#define B_AX_ENABLE_COEXIST_TAB_IN_TDMA BIT(2)
-+#define B_AX_GPIO2_GPIO3_EXANGE_OR_NO_BT_CCA BIT(1)
-+#define B_AX_RTK_BT_ENABLE BIT(0)
-+
-+#define R_AX_BT_COEX_CFG_5 0xDA6C
-+#define R_AX_BT_COEX_CFG_5_C1 0xFA6C
-+#define B_AX_BT_TIME_MASK GENMASK(31, 6)
-+#define B_AX_BT_RPT_SAMPLE_RATE_MASK GENMASK(5, 0)
-+#define MAC_AX_RTK_RATE 5
-+
-+#define R_AX_LTE_CTRL 0xDAF0
-+#define R_AX_LTE_WDATA 0xDAF4
-+#define R_AX_LTE_RDATA 0xDAF8
-+
-+#define CMAC1_START_ADDR 0xE000
-+#define CMAC1_END_ADDR 0xFFFF
-+#define R_AX_CMAC_REG_END 0xFFFF
-+
-+#define R_AX_LTE_SW_CFG_1 0x0038
-+#define R_AX_LTE_SW_CFG_1_C1 0x2038
-+#define B_AX_GNT_BT_RFC_S1_SW_VAL BIT(31)
-+#define B_AX_GNT_BT_RFC_S1_SW_CTRL BIT(30)
-+#define B_AX_GNT_WL_RFC_S1_SW_VAL BIT(29)
-+#define B_AX_GNT_WL_RFC_S1_SW_CTRL BIT(28)
-+#define B_AX_GNT_BT_BB_S1_SW_VAL BIT(27)
-+#define B_AX_GNT_BT_BB_S1_SW_CTRL BIT(26)
-+#define B_AX_GNT_WL_BB_S1_SW_VAL BIT(25)
-+#define B_AX_GNT_WL_BB_S1_SW_CTRL BIT(24)
-+#define B_AX_BT_SW_CTRL_WL_PRIORITY BIT(19)
-+#define B_AX_WL_SW_CTRL_WL_PRIORITY BIT(18)
-+#define B_AX_LTE_PATTERN_2_EN BIT(17)
-+#define B_AX_LTE_PATTERN_1_EN BIT(16)
-+#define B_AX_GNT_BT_RFC_S0_SW_VAL BIT(15)
-+#define B_AX_GNT_BT_RFC_S0_SW_CTRL BIT(14)
-+#define B_AX_GNT_WL_RFC_S0_SW_VAL BIT(13)
-+#define B_AX_GNT_WL_RFC_S0_SW_CTRL BIT(12)
-+#define B_AX_GNT_BT_BB_S0_SW_VAL BIT(11)
-+#define B_AX_GNT_BT_BB_S0_SW_CTRL BIT(10)
-+#define B_AX_GNT_WL_BB_S0_SW_VAL BIT(9)
-+#define B_AX_GNT_WL_BB_S0_SW_CTRL BIT(8)
-+#define B_AX_LTECOEX_FUN_EN BIT(7)
-+#define B_AX_LTECOEX_3WIRE_CTRL_MUX BIT(6)
-+#define B_AX_LTECOEX_OP_MODE_SEL_MASK GENMASK(5, 4)
-+#define B_AX_LTECOEX_UART_MUX BIT(3)
-+#define B_AX_LTECOEX_UART_MODE_SEL_MASK GENMASK(3, 0)
-+
-+#define R_AX_LTE_SW_CFG_2 0x003C
-+#define R_AX_LTE_SW_CFG_2_C1 0x203C
-+#define B_AX_WL_RX_CTRL BIT(8)
-+#define B_AX_GNT_WL_RX_SW_VAL BIT(7)
-+#define B_AX_GNT_WL_RX_SW_CTRL BIT(6)
-+#define B_AX_GNT_WL_TX_SW_VAL BIT(5)
-+#define B_AX_GNT_WL_TX_SW_CTRL BIT(4)
-+#define B_AX_GNT_BT_RX_SW_VAL BIT(3)
-+#define B_AX_GNT_BT_RX_SW_CTRL BIT(2)
-+#define B_AX_GNT_BT_TX_SW_VAL BIT(1)
-+#define B_AX_GNT_BT_TX_SW_CTRL BIT(0)
-+
-+#define RR_MOD 0x00
-+#define RR_MOD_IQK GENMASK(19, 4)
-+#define RR_MOD_DPK GENMASK(19, 5)
-+#define RR_MOD_MASK GENMASK(19, 16)
-+#define RR_MOD_V_DOWN 0x0
-+#define RR_MOD_V_STANDBY 0x1
-+#define RR_MOD_V_TX 0x2
-+#define RR_MOD_V_RX 0x3
-+#define RR_MOD_V_TXIQK 0x4
-+#define RR_MOD_V_DPK 0x5
-+#define RR_MOD_V_RXK1 0x6
-+#define RR_MOD_V_RXK2 0x7
-+#define RR_MOD_M_RXG GENMASK(13, 4)
-+#define RR_MOD_M_RXBB GENMASK(9, 5)
-+#define RR_MODOPT 0x01
-+#define RR_MODOPT_M_TXPWR GENMASK(5, 0)
-+#define RR_WLSEL 0x02
-+#define RR_WLSEL_AG GENMASK(18, 16)
-+#define RR_RSV1 0x05
-+#define RR_RSV1_RST BIT(0)
-+#define RR_DTXLOK 0x08
-+#define RR_RSV2 0x09
-+#define RR_CFGCH 0x18
-+#define RR_BTC 0x1a
-+#define RR_BTC_TXBB GENMASK(14, 12)
-+#define RR_BTC_RXBB GENMASK(11, 10)
-+#define RR_RCKC 0x1b
-+#define RR_RCKC_CA GENMASK(14, 10)
-+#define RR_RCKS 0x1c
-+#define RR_RCKO 0x1d
-+#define RR_RCKO_OFF GENMASK(13, 9)
-+#define RR_RXKPLL 0x1e
-+#define RR_RXKPLL_OFF GENMASK(5, 0)
-+#define RR_RXKPLL_POW BIT(19)
-+#define RR_RSV4 0x1f
-+#define RR_RXK 0x20
-+#define RR_RXK_PLLEN BIT(5)
-+#define RR_RXK_SEL5G BIT(7)
-+#define RR_RXK_SEL2G BIT(8)
-+#define RR_LUTWA 0x33
-+#define RR_LUTWA_MASK GENMASK(9, 0)
-+#define RR_LUTWD1 0x3e
-+#define RR_LUTWD0 0x3f
-+#define RR_TM 0x42
-+#define RR_TM_TRI BIT(19)
-+#define RR_TM_VAL GENMASK(6, 1)
-+#define RR_TM2 0x43
-+#define RR_TM2_OFF GENMASK(19, 16)
-+#define RR_TXG1 0x51
-+#define RR_TXG1_ATT2 BIT(19)
-+#define RR_TXG1_ATT1 BIT(11)
-+#define RR_TXG2 0x52
-+#define RR_TXG2_ATT0 BIT(11)
-+#define RR_BSPAD 0x54
-+#define RR_TXGA 0x55
-+#define RR_TXGA_LOK_EN BIT(0)
-+#define RR_TXGA_TRK_EN BIT(7)
-+#define RR_GAINTX 0x56
-+#define RR_GAINTX_ALL GENMASK(15, 0)
-+#define RR_GAINTX_PAD GENMASK(9, 5)
-+#define RR_GAINTX_BB GENMASK(4, 0)
-+#define RR_TXMO 0x58
-+#define RR_TXMO_COI GENMASK(19, 15)
-+#define RR_TXMO_COQ GENMASK(14, 10)
-+#define RR_TXMO_FII GENMASK(9, 6)
-+#define RR_TXMO_FIQ GENMASK(5, 2)
-+#define RR_TXA 0x5d
-+#define RR_TXA_TRK GENMASK(19, 14)
-+#define RR_TXRSV 0x5c
-+#define RR_TXRSV_GAPK BIT(19)
-+#define RR_BIAS 0x5e
-+#define RR_BIAS_GAPK BIT(19)
-+#define RR_BIASA 0x60
-+#define RR_BIASA_TXG GENMASK(15, 12)
-+#define RR_BIASA_TXA GENMASK(19, 16)
-+#define RR_BIASA_A GENMASK(2, 0)
-+#define RR_BIASA2 0x63
-+#define RR_BIASA2_LB GENMASK(4, 2)
-+#define RR_TXATANK 0x64
-+#define RR_TXATANK_LBSW GENMASK(16, 15)
-+#define RR_TRXIQ 0x66
-+#define RR_RSV6 0x6d
-+#define RR_TXPOW 0x7f
-+#define RR_TXPOW_TXG BIT(1)
-+#define RR_TXPOW_TXA BIT(8)
-+#define RR_RXPOW 0x80
-+#define RR_RXPOW_IQK GENMASK(17, 16)
-+#define RR_RXBB 0x83
-+#define RR_RXBB_C2G GENMASK(16, 10)
-+#define RR_RXBB_C1G GENMASK(9, 8)
-+#define RR_RXBB_ATTR GENMASK(7, 4)
-+#define RR_RXBB_ATTC GENMASK(2, 0)
-+#define RR_XGLNA2 0x85
-+#define RR_XGLNA2_SW GENMASK(1, 0)
-+#define RR_RXA 0x8a
-+#define RR_RXA_DPK GENMASK(9, 8)
-+#define RR_RXA2 0x8c
-+#define RR_RXA2_C2 GENMASK(9, 3)
-+#define RR_RXA2_C1 GENMASK(12, 10)
-+#define RR_RXIQGEN 0x8d
-+#define RR_RXIQGEN_ATTL GENMASK(12, 8)
-+#define RR_RXIQGEN_ATTH GENMASK(14, 13)
-+#define RR_RXBB2 0x8f
-+#define RR_EN_TIA_IDA GENMASK(11, 10)
-+#define RR_RXBB2_DAC_EN BIT(13)
-+#define RR_XALNA2 0x90
-+#define RR_XALNA2_SW GENMASK(1, 0)
-+#define RR_DCK 0x92
-+#define RR_DCK_FINE BIT(1)
-+#define RR_DCK_LV BIT(0)
-+#define RR_DCK1 0x93
-+#define RR_DCK1_SEL BIT(3)
-+#define RR_DCK2 0x94
-+#define RR_DCK2_CYCLE GENMASK(7, 2)
-+#define RR_MIXER 0x9f
-+#define RR_MIXER_GN GENMASK(4, 3)
-+#define RR_XTALX2 0xb8
-+#define RR_MALSEL 0xbe
-+#define RR_RCKD 0xde
-+#define RR_RCKD_POW GENMASK(19, 13)
-+#define RR_RCKD_BW BIT(2)
-+#define RR_TXADBG 0xde
-+#define RR_LUTDBG 0xdf
-+#define RR_LUTDBG_LOK BIT(2)
-+#define RR_LUTWE2 0xee
-+#define RR_LUTWE 0xef
-+#define RR_LUTWE_LOK BIT(2)
-+#define RR_RFC 0xf0
-+#define RR_RFC_CKEN BIT(1)
-+
-+#define R_UPD_P0 0x0000
-+#define R_RSTB_WATCH_DOG 0x000C
-+#define B_P0_RSTB_WATCH_DOG BIT(0)
-+#define B_P1_RSTB_WATCH_DOG BIT(1)
-+#define B_UPD_P0_EN BIT(30)
-+#define R_ANAPAR_PW15 0x030C
-+#define B_ANAPAR_PW15 GENMASK(31, 24)
-+#define B_ANAPAR_PW15_H GENMASK(27, 24)
-+#define B_ANAPAR_PW15_H2 GENMASK(27, 26)
-+#define R_ANAPAR 0x032C
-+#define B_ANAPAR_15 GENMASK(31, 16)
-+#define B_ANAPAR_ADCCLK BIT(30)
-+#define B_ANAPAR_FLTRST BIT(22)
-+#define B_ANAPAR_CRXBB GENMASK(18, 16)
-+#define B_ANAPAR_14 GENMASK(15, 0)
-+#define R_UPD_CLK_ADC 0x0700
-+#define B_UPD_CLK_ADC_ON BIT(24)
-+#define B_UPD_CLK_ADC_VAL GENMASK(26, 25)
-+#define R_RSTB_ASYNC 0x0704
-+#define B_RSTB_ASYNC_ALL BIT(1)
-+#define R_PMAC_GNT 0x0980
-+#define B_PMAC_GNT_TXEN BIT(0)
-+#define B_PMAC_GNT_RXEN BIT(16)
-+#define B_PMAC_GNT_P1 GENMASK(20, 17)
-+#define B_PMAC_GNT_P2 GENMASK(29, 26)
-+#define R_PMAC_RX_CFG1 0x0988
-+#define B_PMAC_OPT1_MSK GENMASK(11, 0)
-+#define R_PMAC_RXMOD 0x0994
-+#define B_PMAC_RXMOD_MSK GENMASK(7, 4)
-+#define R_MAC_SEL 0x09A4
-+#define B_MAC_SEL_MOD GENMASK(4, 2)
-+#define B_MAC_SEL_DPD_EN BIT(10)
-+#define B_MAC_SEL_PWR_EN BIT(16)
-+#define R_PMAC_TX_CTRL 0x09C0
-+#define B_PMAC_TXEN_DIS BIT(0)
-+#define R_PMAC_TX_PRD 0x09C4
-+#define B_PMAC_TX_PRD_MSK GENMASK(31, 8)
-+#define B_PMAC_CTX_EN BIT(0)
-+#define B_PMAC_PTX_EN BIT(4)
-+#define R_PMAC_TX_CNT 0x09C8
-+#define B_PMAC_TX_CNT_MSK GENMASK(31, 0)
-+#define R_CCX 0x0C00
-+#define B_CCX_EDCCA_OPT_MSK GENMASK(6, 4)
-+#define B_MEASUREMENT_TRIG_MSK BIT(2)
-+#define B_CCX_TRIG_OPT_MSK BIT(1)
-+#define B_CCX_EN_MSK BIT(0)
-+#define R_IFS_COUNTER 0x0C28
-+#define B_IFS_CLM_PERIOD_MSK GENMASK(31, 16)
-+#define B_IFS_CLM_COUNTER_UNIT_MSK GENMASK(15, 14)
-+#define B_IFS_COUNTER_CLR_MSK BIT(13)
-+#define B_IFS_COLLECT_EN BIT(12)
-+#define R_IFS_T1 0x0C2C
-+#define B_IFS_T1_TH_HIGH_MSK GENMASK(31, 16)
-+#define B_IFS_T1_EN_MSK BIT(15)
-+#define B_IFS_T1_TH_LOW_MSK GENMASK(14, 0)
-+#define R_IFS_T2 0x0C30
-+#define B_IFS_T2_TH_HIGH_MSK GENMASK(31, 16)
-+#define B_IFS_T2_EN_MSK BIT(15)
-+#define B_IFS_T2_TH_LOW_MSK GENMASK(14, 0)
-+#define R_IFS_T3 0x0C34
-+#define B_IFS_T3_TH_HIGH_MSK GENMASK(31, 16)
-+#define B_IFS_T3_EN_MSK BIT(15)
-+#define B_IFS_T3_TH_LOW_MSK GENMASK(14, 0)
-+#define R_IFS_T4 0x0C38
-+#define B_IFS_T4_TH_HIGH_MSK GENMASK(31, 16)
-+#define B_IFS_T4_EN_MSK BIT(15)
-+#define B_IFS_T4_TH_LOW_MSK GENMASK(14, 0)
-+#define R_PD_CTRL 0x0C3C
-+#define B_PD_HIT_DIS BIT(9)
-+#define R_IOQ_IQK_DPK 0x0C60
-+#define B_IOQ_IQK_DPK_EN BIT(1)
-+#define R_P0_EN_SOUND_WO_NDP 0x0D7C
-+#define B_P0_EN_SOUND_WO_NDP BIT(1)
-+#define R_SPOOF_ASYNC_RST 0x0D84
-+#define B_SPOOF_ASYNC_RST BIT(15)
-+#define R_NDP_BRK0 0xDA0
-+#define R_NDP_BRK1 0xDA4
-+#define B_NDP_RU_BRK BIT(0)
-+#define R_BRK_ASYNC_RST_EN_1 0x0DC0
-+#define R_BRK_ASYNC_RST_EN_2 0x0DC4
-+#define R_BRK_ASYNC_RST_EN_3 0x0DC8
-+#define R_P0_RXCK 0x12A0
-+#define B_P0_RXCK_VAL GENMASK(18, 16)
-+#define B_P0_RXCK_ON BIT(19)
-+#define B_P0_RXCK_BW3 BIT(30)
-+#define R_P0_NRBW 0x12B8
-+#define B_P0_NRBW_DBG BIT(30)
-+#define R_S0_RXDC 0x12D4
-+#define B_S0_RXDC_I GENMASK(25, 16)
-+#define B_S0_RXDC_Q GENMASK(31, 26)
-+#define R_S0_RXDC2 0x12D8
-+#define B_S0_RXDC2_SEL GENMASK(9, 8)
-+#define B_S0_RXDC2_AVG GENMASK(7, 6)
-+#define B_S0_RXDC2_MEN GENMASK(5, 4)
-+#define B_S0_RXDC2_Q2 GENMASK(3, 0)
-+#define R_CFO_COMP_SEG0_L 0x1384
-+#define R_CFO_COMP_SEG0_H 0x1388
-+#define R_CFO_COMP_SEG0_CTRL 0x138C
-+#define R_DBG32_D 0x1730
-+#define R_TX_COUNTER 0x1A40
-+#define R_IFS_CLM_TX_CNT 0x1ACC
-+#define B_IFS_CLM_EDCCA_EXCLUDE_CCA_FA_MSK GENMASK(31, 16)
-+#define B_IFS_CLM_TX_CNT_MSK GENMASK(15, 0)
-+#define R_IFS_CLM_CCA 0x1AD0
-+#define B_IFS_CLM_OFDMCCA_EXCLUDE_FA_MSK GENMASK(31, 16)
-+#define B_IFS_CLM_CCKCCA_EXCLUDE_FA_MSK GENMASK(15, 0)
-+#define R_IFS_CLM_FA 0x1AD4
-+#define B_IFS_CLM_OFDM_FA_MSK GENMASK(31, 16)
-+#define B_IFS_CLM_CCK_FA_MSK GENMASK(15, 0)
-+#define R_IFS_HIS 0x1AD8
-+#define B_IFS_T4_HIS_MSK GENMASK(31, 24)
-+#define B_IFS_T3_HIS_MSK GENMASK(23, 16)
-+#define B_IFS_T2_HIS_MSK GENMASK(15, 8)
-+#define B_IFS_T1_HIS_MSK GENMASK(7, 0)
-+#define R_IFS_AVG_L 0x1ADC
-+#define B_IFS_T2_AVG_MSK GENMASK(31, 16)
-+#define B_IFS_T1_AVG_MSK GENMASK(15, 0)
-+#define R_IFS_AVG_H 0x1AE0
-+#define B_IFS_T4_AVG_MSK GENMASK(31, 16)
-+#define B_IFS_T3_AVG_MSK GENMASK(15, 0)
-+#define R_IFS_CCA_L 0x1AE4
-+#define B_IFS_T2_CCA_MSK GENMASK(31, 16)
-+#define B_IFS_T1_CCA_MSK GENMASK(15, 0)
-+#define R_IFS_CCA_H 0x1AE8
-+#define B_IFS_T4_CCA_MSK GENMASK(31, 16)
-+#define B_IFS_T3_CCA_MSK GENMASK(15, 0)
-+#define R_IFSCNT 0x1AEC
-+#define B_IFSCNT_DONE_MSK BIT(16)
-+#define B_IFSCNT_TOTAL_CNT_MSK GENMASK(15, 0)
-+#define R_TXAGC_TP 0x1C04
-+#define B_TXAGC_TP GENMASK(2, 0)
-+#define R_TSSI_THER 0x1C10
-+#define B_TSSI_THER GENMASK(29, 24)
-+#define R_TXAGC_BB 0x1C60
-+#define R_S0_ADDCK 0x1E00
-+#define B_S0_ADDCK_I GENMASK(9, 0)
-+#define B_S0_ADDCK_Q GENMASK(19, 10)
-+#define R_ADC_FIFO 0x20fc
-+#define B_ADC_FIFO_RST GENMASK(31, 24)
-+#define R_TXFIR0 0x2300
-+#define B_TXFIR_C01 GENMASK(23, 0)
-+#define R_TXFIR2 0x2304
-+#define B_TXFIR_C23 GENMASK(23, 0)
-+#define R_TXFIR4 0x2308
-+#define B_TXFIR_C45 GENMASK(23, 0)
-+#define R_TXFIR6 0x230c
-+#define B_TXFIR_C67 GENMASK(23, 0)
-+#define R_TXFIR8 0x2310
-+#define B_TXFIR_C89 GENMASK(23, 0)
-+#define R_TXFIRA 0x2314
-+#define B_TXFIR_CAB GENMASK(23, 0)
-+#define R_TXFIRC 0x2318
-+#define B_TXFIR_CCD GENMASK(23, 0)
-+#define R_TXFIRE 0x231c
-+#define B_TXFIR_CEF GENMASK(23, 0)
-+#define R_RXCCA 0x2344
-+#define B_RXCCA_DIS BIT(31)
-+#define R_RXSC 0x237C
-+#define B_RXSC_EN BIT(0)
-+#define R_RXSCOBC 0x23B0
-+#define B_RXSCOBC_TH GENMASK(18, 0)
-+#define R_RXSCOCCK 0x23B4
-+#define B_RXSCOCCK_TH GENMASK(18, 0)
-+#define R_P1_EN_SOUND_WO_NDP 0x2D7C
-+#define B_P1_EN_SOUND_WO_NDP BIT(1)
-+#define R_P1_DBGMOD 0x32B8
-+#define B_P1_DBGMOD_ON BIT(30)
-+#define R_S1_RXDC 0x32D4
-+#define B_S1_RXDC_I GENMASK(25, 16)
-+#define B_S1_RXDC_Q GENMASK(31, 26)
-+#define R_S1_RXDC2 0x32D8
-+#define B_S1_RXDC2_EN GENMASK(5, 4)
-+#define B_S1_RXDC2_SEL GENMASK(9, 8)
-+#define B_S1_RXDC2_Q2 GENMASK(3, 0)
-+#define R_TXAGC_BB_S1 0x3C60
-+#define R_S1_ADDCK 0x3E00
-+#define B_S1_ADDCK_I GENMASK(9, 0)
-+#define B_S1_ADDCK_Q GENMASK(19, 10)
-+#define R_DCFO 0x4264
-+#define B_DCFO GENMASK(1, 0)
-+#define R_SEG0CSI 0x42AC
-+#define B_SEG0CSI_IDX GENMASK(10, 0)
-+#define R_SEG0CSI_EN 0x42C4
-+#define B_SEG0CSI_EN BIT(23)
-+#define R_BSS_CLR_MAP 0x43ac
-+#define B_BSS_CLR_MAP_VLD0 BIT(28)
-+#define B_BSS_CLR_MAP_TGT GENMASK(27, 22)
-+#define B_BSS_CLR_MAP_STAID GENMASK(21, 11)
-+#define R_CFO_TRK0 0x4404
-+#define R_CFO_TRK1 0x440C
-+#define B_CFO_TRK_MSK GENMASK(14, 10)
-+#define R_DCFO_COMP_S0 0x448C
-+#define B_DCFO_COMP_S0_MSK GENMASK(11, 0)
-+#define R_DCFO_WEIGHT 0x4490
-+#define B_DCFO_WEIGHT_MSK GENMASK(27, 24)
-+#define R_DCFO_OPT 0x4494
-+#define B_DCFO_OPT_EN BIT(29)
-+#define R_BANDEDGE 0x4498
-+#define B_BANDEDGE_EN BIT(30)
-+#define R_TXPATH_SEL 0x458C
-+#define B_TXPATH_SEL_MSK GENMASK(31, 28)
-+#define R_TXPWR 0x4594
-+#define B_TXPWR_MSK GENMASK(30, 22)
-+#define R_TXNSS_MAP 0x45B4
-+#define B_TXNSS_MAP_MSK GENMASK(20, 17)
-+#define R_PATH0_IB_PKPW 0x4628
-+#define B_PATH0_IB_PKPW_MSK GENMASK(11, 6)
-+#define R_PATH0_LNA_ERR1 0x462C
-+#define B_PATH0_LNA_ERR_G1_A_MSK GENMASK(29, 24)
-+#define B_PATH0_LNA_ERR_G0_G_MSK GENMASK(17, 12)
-+#define B_PATH0_LNA_ERR_G0_A_MSK GENMASK(11, 6)
-+#define R_PATH0_LNA_ERR2 0x4630
-+#define B_PATH0_LNA_ERR_G2_G_MSK GENMASK(23, 18)
-+#define B_PATH0_LNA_ERR_G2_A_MSK GENMASK(17, 12)
-+#define B_PATH0_LNA_ERR_G1_G_MSK GENMASK(5, 0)
-+#define R_PATH0_LNA_ERR3 0x4634
-+#define B_PATH0_LNA_ERR_G4_G_MSK GENMASK(29, 24)
-+#define B_PATH0_LNA_ERR_G4_A_MSK GENMASK(23, 18)
-+#define B_PATH0_LNA_ERR_G3_G_MSK GENMASK(11, 6)
-+#define B_PATH0_LNA_ERR_G3_A_MSK GENMASK(5, 0)
-+#define R_PATH0_LNA_ERR4 0x4638
-+#define B_PATH0_LNA_ERR_G6_A_MSK GENMASK(29, 24)
-+#define B_PATH0_LNA_ERR_G5_G_MSK GENMASK(17, 12)
-+#define B_PATH0_LNA_ERR_G5_A_MSK GENMASK(11, 6)
-+#define R_PATH0_LNA_ERR5 0x463C
-+#define B_PATH0_LNA_ERR_G6_G_MSK GENMASK(5, 0)
-+#define R_PATH0_TIA_ERR_G0 0x4640
-+#define B_PATH0_TIA_ERR_G0_G_MSK GENMASK(23, 18)
-+#define B_PATH0_TIA_ERR_G0_A_MSK GENMASK(17, 12)
-+#define R_PATH0_TIA_ERR_G1 0x4644
-+#define B_PATH0_TIA_ERR_G1_SEL GENMASK(31, 30)
-+#define B_PATH0_TIA_ERR_G1_G_MSK GENMASK(11, 6)
-+#define B_PATH0_TIA_ERR_G1_A_MSK GENMASK(5, 0)
-+#define R_PATH0_IB_PBK 0x4650
-+#define B_PATH0_IB_PBK_MSK GENMASK(14, 10)
-+#define R_PATH0_RXB_INIT 0x4658
-+#define B_PATH0_RXB_INIT_IDX_MSK GENMASK(9, 5)
-+#define R_PATH0_LNA_INIT 0x4668
-+#define B_PATH0_LNA_INIT_IDX_MSK GENMASK(26, 24)
-+#define R_PATH0_BTG 0x466C
-+#define B_PATH0_BTG_SHEN GENMASK(18, 17)
-+#define R_PATH0_TIA_INIT 0x4674
-+#define B_PATH0_TIA_INIT_IDX_MSK BIT(17)
-+#define R_PATH0_P20_FOLLOW_BY_PAGCUGC 0x46A0
-+#define B_PATH0_P20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
-+#define R_PATH0_S20_FOLLOW_BY_PAGCUGC 0x46A4
-+#define B_PATH0_S20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
-+#define R_P0_NBIIDX 0x469C
-+#define B_P0_NBIIDX_VAL GENMASK(11, 0)
-+#define B_P0_NBIIDX_NOTCH_EN BIT(12)
-+#define R_P1_MODE 0x4718
-+#define B_P1_MODE_SEL GENMASK(31, 30)
-+#define R_PATH1_LNA_INIT 0x473C
-+#define B_PATH1_LNA_INIT_IDX_MSK GENMASK(26, 24)
-+#define R_PATH1_TIA_INIT 0x4748
-+#define B_PATH1_TIA_INIT_IDX_MSK BIT(17)
-+#define R_PATH1_BTG 0x4740
-+#define B_PATH1_BTG_SHEN GENMASK(18, 17)
-+#define R_PATH1_RXB_INIT 0x472C
-+#define B_PATH1_RXB_INIT_IDX_MSK GENMASK(9, 5)
-+#define R_PATH1_P20_FOLLOW_BY_PAGCUGC 0x4774
-+#define B_PATH1_P20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
-+#define R_PATH1_S20_FOLLOW_BY_PAGCUGC 0x4778
-+#define B_PATH1_S20_FOLLOW_BY_PAGCUGC_EN_MSK BIT(5)
-+#define R_P1_NBIIDX 0x4770
-+#define B_P1_NBIIDX_VAL GENMASK(11, 0)
-+#define B_P1_NBIIDX_NOTCH_EN BIT(12)
-+#define R_SEG0R_PD 0x481C
-+#define B_SEG0R_PD_SPATIAL_REUSE_EN_MSK BIT(29)
-+#define B_SEG0R_PD_LOWER_BOUND_MSK GENMASK(10, 6)
-+#define R_2P4G_BAND 0x4970
-+#define B_2P4G_BAND_SEL BIT(1)
-+#define R_FC0_BW 0x4974
-+#define B_FC0_BW_INV GENMASK(6, 0)
-+#define B_FC0_BW_SET GENMASK(31, 30)
-+#define R_CHBW_MOD 0x4978
-+#define B_CHBW_MOD_PRICH GENMASK(11, 8)
-+#define B_CHBW_MOD_SBW GENMASK(13, 12)
-+#define R_CFO_COMP_SEG1_L 0x5384
-+#define R_CFO_COMP_SEG1_H 0x5388
-+#define R_CFO_COMP_SEG1_CTRL 0x538C
-+#define B_CFO_COMP_VALID_BIT BIT(29)
-+#define B_CFO_COMP_WEIGHT_MSK GENMASK(27, 24)
-+#define B_CFO_COMP_VAL_MSK GENMASK(11, 0)
-+#define R_DPD_OFT_EN 0x5800
-+#define B_DPD_OFT_EN BIT(28)
-+#define R_DPD_OFT_ADDR 0x5804
-+#define B_DPD_OFT_ADDR GENMASK(31, 27)
-+#define R_P0_TMETER 0x5810
-+#define B_P0_TMETER GENMASK(15, 10)
-+#define B_P0_TMETER_DIS BIT(16)
-+#define B_P0_TMETER_TRK BIT(24)
-+#define R_P0_TSSI_TRK 0x5818
-+#define B_P0_TSSI_TRK_EN BIT(30)
-+#define R_P0_RFCTM 0x5864
-+#define B_P0_RFCTM_VAL GENMASK(25, 20)
-+#define R_P0_RFCTM_RDY BIT(26)
-+#define R_P0_TXDPD 0x58D4
-+#define B_P0_TXDPD GENMASK(31, 28)
-+#define R_P0_TXPW_RSTB 0x58DC
-+#define B_P0_TXPW_RSTB_MANON BIT(30)
-+#define B_P0_TXPW_RSTB_TSSI BIT(31)
-+#define R_TXGAIN_SCALE 0x58F0
-+#define B_TXGAIN_SCALE_EN BIT(19)
-+#define B_TXGAIN_SCALE_OFT GENMASK(31, 24)
-+#define R_P0_TSSI_BASE 0x5C00
-+#define R_S0_DACKI 0x5E00
-+#define B_S0_DACKI_AR GENMASK(31, 28)
-+#define B_S0_DACKI_EN BIT(3)
-+#define R_S0_DACKI2 0x5E30
-+#define B_S0_DACKI2_K GENMASK(21, 12)
-+#define R_S0_DACKI7 0x5E44
-+#define B_S0_DACKI7_K GENMASK(15, 8)
-+#define R_S0_DACKI8 0x5E48
-+#define B_S0_DACKI8_K GENMASK(15, 8)
-+#define R_S0_DACKQ 0x5E50
-+#define B_S0_DACKQ_AR GENMASK(31, 28)
-+#define B_S0_DACKQ_EN BIT(3)
-+#define R_S0_DACKQ2 0x5E80
-+#define B_S0_DACKQ2_K GENMASK(21, 12)
-+#define R_S0_DACKQ7 0x5E94
-+#define B_S0_DACKQ7_K GENMASK(15, 8)
-+#define R_S0_DACKQ8 0x5E98
-+#define B_S0_DACKQ8_K GENMASK(15, 8)
-+#define R_P1_TMETER 0x7810
-+#define B_P1_TMETER GENMASK(15, 10)
-+#define B_P1_TMETER_DIS BIT(16)
-+#define B_P1_TMETER_TRK BIT(24)
-+#define R_P1_TSSI_TRK 0x7818
-+#define B_P1_TSSI_TRK_EN BIT(30)
-+#define R_P1_RFCTM 0x7864
-+#define R_P1_RFCTM_RDY BIT(26)
-+#define B_P1_RFCTM_VAL GENMASK(25, 20)
-+#define R_P1_TXPW_RSTB 0x78DC
-+#define B_P1_TXPW_RSTB_MANON BIT(30)
-+#define B_P1_TXPW_RSTB_TSSI BIT(31)
-+#define R_TSSI_THOF 0x7C00
-+#define R_S1_DACKI 0x7E00
-+#define B_S1_DACKI_AR GENMASK(31, 28)
-+#define B_S1_DACKI_EN BIT(3)
-+#define R_S1_DACKI2 0x7E30
-+#define B_S1_DACKI2_K GENMASK(21, 12)
-+#define R_S1_DACKI7 0x7E44
-+#define B_S1_DACKI_K GENMASK(15, 8)
-+#define R_S1_DACKI8 0x7E48
-+#define B_S1_DACKI8_K GENMASK(15, 8)
-+#define R_S1_DACKQ 0x7E50
-+#define B_S1_DACKQ_AR GENMASK(31, 28)
-+#define B_S1_DACKQ_EN BIT(3)
-+#define R_S1_DACKQ2 0x7E80
-+#define B_S1_DACKQ2_K GENMASK(21, 12)
-+#define R_S1_DACKQ7 0x7E94
-+#define B_S1_DACKQ7_K GENMASK(15, 8)
-+#define R_S1_DACKQ8 0x7E98
-+#define B_S1_DACKQ8_K GENMASK(15, 8)
-+#define R_NCTL_CFG 0x8000
-+#define B_NCTL_CFG_SPAGE GENMASK(2, 1)
-+#define R_NCTL_RPT 0x8008
-+#define B_NCTL_RPT_FLG BIT(26)
-+#define R_NCTL_N1 0x8010
-+#define B_NCTL_N1_CIP GENMASK(7, 0)
-+#define R_NCTL_N2 0x8014
-+#define R_IQK_COM 0x8018
-+#define R_IQK_DIF 0x801C
-+#define B_IQK_DIF_TRX GENMASK(1, 0)
-+#define R_IQK_DIF1 0x8020
-+#define B_IQK_DIF1_TXPI GENMASK(19, 0)
-+#define R_IQK_DIF2 0x8024
-+#define B_IQK_DIF2_RXPI GENMASK(19, 0)
-+#define R_IQK_DIF4 0x802C
-+#define B_IQK_DIF4_TXT GENMASK(11, 0)
-+#define B_IQK_DIF4_RXT GENMASK(27, 16)
-+#define R_IQK_CFG 0x8034
-+#define B_IQK_CFG_SET GENMASK(5, 4)
-+#define R_TPG_MOD 0x806C
-+#define B_TPG_MOD_F GENMASK(2, 1)
-+#define R_MDPK_SYNC 0x8070
-+#define B_MDPK_SYNC_SEL BIT(31)
-+#define B_MDPK_SYNC_MAN GENMASK(31, 28)
-+#define R_MDPK_RX_DCK 0x8074
-+#define R_NCTL_RW 0x8080
-+#define R_KIP_SYSCFG 0x8088
-+#define R_KIP_CLK 0x808C
-+#define R_LDL_NORM 0x80A0
-+#define B_LDL_NORM_PN GENMASK(12, 8)
-+#define B_LDL_NORM_OP GENMASK(1, 0)
-+#define R_DPK_CTL 0x80B0
-+#define B_DPK_CTL_EN BIT(28)
-+#define R_DPK_CFG 0x80B8
-+#define B_DPK_CFG_IDX GENMASK(14, 12)
-+#define R_DPK_CFG2 0x80BC
-+#define B_DPK_CFG2_ST BIT(14)
-+#define R_DPK_CFG3 0x80C0
-+#define R_KPATH_CFG 0x80D0
-+#define R_KIP_RPT1 0x80D4
-+#define B_KIP_RPT1_SEL GENMASK(21, 16)
-+#define R_SRAM_IQRX 0x80D8
-+#define R_GAPK 0x80E0
-+#define B_GAPK_ADR BIT(0)
-+#define R_SRAM_IQRX2 0x80E8
-+#define R_DPK_TRK 0x80f0
-+#define B_DPK_TRK_DIS BIT(31)
-+#define R_RPT_COM 0x80FC
-+#define B_PRT_COM_SYNERR BIT(30)
-+#define B_PRT_COM_DCI GENMASK(27, 16)
-+#define B_PRT_COM_CORV GENMASK(15, 8)
-+#define B_PRT_COM_DCQ GENMASK(11, 0)
-+#define B_PRT_COM_GL GENMASK(7, 4)
-+#define B_PRT_COM_CORI GENMASK(7, 0)
-+#define R_COEF_SEL 0x8104
-+#define B_COEF_SEL_IQC BIT(0)
-+#define B_COEF_SEL_MDPD BIT(8)
-+#define R_CFIR_SYS 0x8120
-+#define R_IQK_RES 0x8124
-+#define B_IQK_RES_TXCFIR GENMASK(11, 8)
-+#define B_IQK_RES_RXCFIR GENMASK(3, 0)
-+#define R_TXIQC 0x8138
-+#define R_RXIQC 0x813c
-+#define B_RXIQC_BYPASS BIT(0)
-+#define B_RXIQC_BYPASS2 BIT(2)
-+#define B_RXIQC_NEWP GENMASK(19, 8)
-+#define B_RXIQC_NEWX GENMASK(31, 20)
-+#define R_KIP 0x8140
-+#define B_KIP_DBCC BIT(0)
-+#define B_KIP_RFGAIN BIT(8)
-+#define R_RFGAIN 0x8144
-+#define B_RFGAIN_PAD GENMASK(4, 0)
-+#define B_RFGAIN_TXBB GENMASK(12, 8)
-+#define R_RFGAIN_BND 0x8148
-+#define B_RFGAIN_BND GENMASK(4, 0)
-+#define R_CFIR_MAP 0x8150
-+#define R_CFIR_LUT 0x8154
-+#define B_CFIR_LUT_SEL BIT(8)
-+#define B_CFIR_LUT_G3 BIT(3)
-+#define B_CFIR_LUT_G2 BIT(2)
-+#define B_CFIR_LUT_GP GENMASK(1, 0)
-+#define R_DPD_V1 0x81a0
-+#define R_DPD_CH0 0x81AC
-+#define R_DPD_BND 0x81B4
-+#define R_DPD_CH0A 0x81BC
-+#define R_TXAGC_RFK 0x81C4
-+#define B_TXAGC_RFK_CH0 GENMASK(5, 0)
-+#define R_DPD_COM 0x81C8
-+#define R_KIP_IQP 0x81CC
-+#define B_KIP_IQP_IQSW GENMASK(5, 0)
-+#define R_KIP_RPT 0x81D4
-+#define B_KIP_RPT_SEL GENMASK(21, 16)
-+#define R_W_COEF 0x81D8
-+#define R_LOAD_COEF 0x81DC
-+#define B_LOAD_COEF_MDPD BIT(16)
-+#define B_LOAD_COEF_CFIR GENMASK(1, 0)
-+#define B_LOAD_COEF_AUTO BIT(0)
-+#define R_RPT_PER 0x81FC
-+#define R_RXCFIR_P0C0 0x8D40
-+#define R_RXCFIR_P0C1 0x8D84
-+#define R_RXCFIR_P0C2 0x8DC8
-+#define R_RXCFIR_P0C3 0x8E0C
-+#define R_TXCFIR_P0C0 0x8F50
-+#define R_TXCFIR_P0C1 0x8F84
-+#define R_TXCFIR_P0C2 0x8FB8
-+#define R_TXCFIR_P0C3 0x8FEC
-+#define R_RXCFIR_P1C0 0x9140
-+#define R_RXCFIR_P1C1 0x9184
-+#define R_RXCFIR_P1C2 0x91C8
-+#define R_RXCFIR_P1C3 0x920C
-+#define R_TXCFIR_P1C0 0x9350
-+#define R_TXCFIR_P1C1 0x9384
-+#define R_TXCFIR_P1C2 0x93B8
-+#define R_TXCFIR_P1C3 0x93EC
-+#define R_IQKINF 0x9FE0
-+#define B_IQKINF_VER GENMASK(31, 24)
-+#define B_IQKINF_FAIL_RXGRP GENMASK(23, 16)
-+#define B_IQKINF_FAIL_TXGRP GENMASK(15, 8)
-+#define B_IQKINF_FAIL GENMASK(3, 0)
-+#define B_IQKINF_F_RX BIT(3)
-+#define B_IQKINF_FTX BIT(2)
-+#define B_IQKINF_FFIN BIT(1)
-+#define B_IQKINF_FCOR BIT(0)
-+#define R_IQKCH 0x9FE4
-+#define B_IQKCH_CH GENMASK(15, 8)
-+#define B_IQKCH_BW GENMASK(7, 4)
-+#define B_IQKCH_BAND GENMASK(3, 0)
-+#define R_IQKINF2 0x9FE8
-+#define B_IQKINF2_FCNT GENMASK(23, 16)
-+#define B_IQKINF2_KCNT GENMASK(15, 8)
-+#define B_IQKINF2_NCTLV GENMAKS(7, 0)
 +#endif
 -- 
 2.25.1
