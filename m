@@ -7,123 +7,68 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD920C48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:59:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FCAFC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:01:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F66961261
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:59:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7146D61154
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233887AbhFRLCC (ORCPT
+        id S229816AbhFRLDn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 07:02:02 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48256 "EHLO
+        Fri, 18 Jun 2021 07:03:43 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48260 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229550AbhFRLCC (ORCPT
+        with ESMTP id S229550AbhFRLDm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 07:02:02 -0400
+        Fri, 18 Jun 2021 07:03:42 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBwy-001YXx-7E; Fri, 18 Jun 2021 13:42:13 +0300
+        id 1luBx4-001YXx-UW; Fri, 18 Jun 2021 13:42:20 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:39 +0300
-Message-Id: <iwlwifi.20210618133832.2b613addaa85.Idaf8b859089490537878a7de5c7453a873a3f638@changeid>
+Date:   Fri, 18 Jun 2021 13:41:47 +0300
+Message-Id: <iwlwifi.20210618133832.dc22c48985fa.I4bf5fbc17ec783c21d4b50c8c35b1de390896ccd@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/31] cfg80211: add cfg80211_any_usable_channels()
+Subject: [PATCH 22/31] mac80211: improve AP disconnect message
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This helper function checks if there are any usable channels on
-any of the given bands with the given properties (as expressed
-by disallowed channel flags).
+If the AP changes capability/bandwidth in some fashion, the
+message might be somewhat misleading and we don't know what
+really changed. Modify the message to speak about "caps/bw"
+instead of just "bandwidth", and print out the flags.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h | 11 +++++++++++
- net/wireless/chan.c    | 33 ++++++++++++++++++++++++++++++++-
- 2 files changed, 43 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6a54caa6fa16..5a0c4fd2ec5a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -905,6 +905,17 @@ ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
- 	return chandef->chan->max_power;
- }
- 
-+/**
-+ * cfg80211_any_usable_channels - check for usable channels
-+ * @wiphy: the wiphy to check for
-+ * @band_mask: which bands to check on
-+ * @prohibited_flags: which channels to not consider usable,
-+ *	%IEEE80211_CHAN_DISABLED is always taken into account
-+ */
-+bool cfg80211_any_usable_channels(struct wiphy *wiphy,
-+				  unsigned long band_mask,
-+				  u32 prohibited_flags);
-+
- /**
-  * enum survey_info_flags - survey information flags
-  *
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 285b8076054b..0c349c7819dc 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -6,7 +6,7 @@
-  *
-  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright 2018-2020	Intel Corporation
-+ * Copyright 2018-2021	Intel Corporation
-  */
- 
- #include <linux/export.h>
-@@ -1335,3 +1335,34 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
- 		WARN_ON(1);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5c58eae7ef4b..3eee75571650 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -444,8 +444,8 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 				      IEEE80211_STA_DISABLE_160MHZ)) ||
+ 	    !cfg80211_chandef_valid(&chandef)) {
+ 		sdata_info(sdata,
+-			   "AP %pM changed bandwidth in a way we can't support - disconnect\n",
+-			   ifmgd->bssid);
++			   "AP %pM changed caps/bw in a way we can't support (0x%x/0x%x) - disconnect\n",
++			   ifmgd->bssid, flags, ifmgd->flags);
+ 		return -EINVAL;
  	}
- }
-+
-+bool cfg80211_any_usable_channels(struct wiphy *wiphy,
-+				  unsigned long sband_mask,
-+				  u32 prohibited_flags)
-+{
-+	int idx;
-+
-+	prohibited_flags |= IEEE80211_CHAN_DISABLED;
-+
-+	for_each_set_bit(idx, &sband_mask, NUM_NL80211_BANDS) {
-+		struct ieee80211_supported_band *sband = wiphy->bands[idx];
-+		int chanidx;
-+
-+		if (!sband)
-+			continue;
-+
-+		for (chanidx = 0; chanidx < sband->n_channels; chanidx++) {
-+			struct ieee80211_channel *chan;
-+
-+			chan = &sband->channels[chanidx];
-+
-+			if (chan->flags & prohibited_flags)
-+				continue;
-+
-+			return true;
-+		}
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(cfg80211_any_usable_channels);
+ 
 -- 
 2.32.0
 
