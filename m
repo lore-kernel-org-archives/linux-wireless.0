@@ -7,79 +7,88 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE41C48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 186A8C48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:05:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E0016120D
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:05:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 054826120D
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233942AbhFRLHM (ORCPT
+        id S233947AbhFRLHN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 07:07:12 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48272 "EHLO
+        Fri, 18 Jun 2021 07:07:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48276 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233964AbhFRLHG (ORCPT
+        with ESMTP id S233950AbhFRLHJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 07:07:06 -0400
+        Fri, 18 Jun 2021 07:07:09 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBx2-001YXx-D1; Fri, 18 Jun 2021 13:42:17 +0300
+        id 1luBx6-001YXx-HU; Fri, 18 Jun 2021 13:42:22 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:44 +0300
-Message-Id: <iwlwifi.20210618133832.1bf019a1fe2e.Ib54622b8d6dc1a9a7dc484e573c073119450538b@changeid>
+Date:   Fri, 18 Jun 2021 13:41:49 +0300
+Message-Id: <iwlwifi.20210618133832.316e32d136a9.I2a12e51814258e1e1b526103894f4b9f19a91c8d@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 19/31] mac80211: rearrange struct txq_info for fewer holes
+Subject: [PATCH 24/31] mac80211: reset profile_periodicity/ema_ap
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We can slightly decrease the size of struct txq_info by
-rearranging some fields for fewer holes, so do that.
+Apparently we never clear these values, so they'll remain set
+since the setting of them is conditional. Clear the values in
+the relevant other cases.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/ieee80211_i.h | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ net/mac80211/mlme.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8fcbaa1eedf3..0553e68b2047 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -5,7 +5,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-- * Copyright (C) 2018-2020 Intel Corporation
-+ * Copyright (C) 2018-2021 Intel Corporation
-  */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3eee75571650..a0d77539d1d9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3993,10 +3993,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		if (elems.mbssid_config_ie)
+ 			bss_conf->profile_periodicity =
+ 				elems.mbssid_config_ie->profile_periodicity;
++		else
++			bss_conf->profile_periodicity = 0;
  
- #ifndef IEEE80211_I_H
-@@ -850,9 +850,12 @@ struct txq_info {
- 	struct fq_tin tin;
- 	struct codel_vars def_cvars;
- 	struct codel_stats cstats;
--	struct sk_buff_head frags;
--	struct list_head schedule_order;
-+
- 	u16 schedule_round;
-+	struct list_head schedule_order;
-+
-+	struct sk_buff_head frags;
-+
- 	unsigned long flags;
+ 		if (elems.ext_capab_len >= 11 &&
+ 		    (elems.ext_capab[10] & WLAN_EXT_CAPA11_EMA_SUPPORT))
+ 			bss_conf->ema_ap = true;
++		else
++			bss_conf->ema_ap = false;
  
- 	/* keep last! */
+ 		/* continue assoc process */
+ 		ifmgd->assoc_data->timeout = jiffies;
+@@ -5734,12 +5738,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 					      beacon_ies->data, beacon_ies->len);
+ 		if (elem && elem->datalen >= 3)
+ 			sdata->vif.bss_conf.profile_periodicity = elem->data[2];
++		else
++			sdata->vif.bss_conf.profile_periodicity = 0;
+ 
+ 		elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY,
+ 					  beacon_ies->data, beacon_ies->len);
+ 		if (elem && elem->datalen >= 11 &&
+ 		    (elem->data[10] & WLAN_EXT_CAPA11_EMA_SUPPORT))
+ 			sdata->vif.bss_conf.ema_ap = true;
++		else
++			sdata->vif.bss_conf.ema_ap = false;
+ 	} else {
+ 		assoc_data->timeout = jiffies;
+ 		assoc_data->timeout_started = true;
 -- 
 2.32.0
 
