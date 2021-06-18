@@ -2,63 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A09C48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0195C48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6643560FD8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 933426109E
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 20:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234004AbhFRUpC (ORCPT
+        id S234006AbhFRUrE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 16:45:02 -0400
-Received: from mx4.wp.pl ([212.77.101.12]:37639 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233973AbhFRUpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 16:45:00 -0400
-X-Greylist: delayed 401 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Jun 2021 16:45:00 EDT
-Received: (wp-smtpd smtp.wp.pl 1651 invoked from network); 18 Jun 2021 22:36:06 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
-          t=1624048566; bh=+T2bcNC2sHv5Q9iE59Xr1PSmlQKpTEY5+sa+qobzycw=;
-          h=From:To:Cc:Subject;
-          b=iTOJJf9fUeROTjRNWRZ3n2W1HNDuKCswwPfIsbedBObs/qoFDNXFdejAdoli5mfo2
-           f9yQ/O201owv5rCglHhXy2sEcXFr3QGezP+/PqKq9vPzGtsuxDf6/+QX3+p1uZdS19
-           TPqBDN6kI21sqYGxaeU9UtthBJXkSVStcwzmXwIU=
-Received: from unknown (HELO kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com) (kubakici@wp.pl@[163.114.132.3])
-          (envelope-sender <kubakici@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <whistler@member.fsf.org>; 18 Jun 2021 22:36:06 +0200
-Date:   Fri, 18 Jun 2021 13:35:54 -0700
-From:   Jakub Kicinski <kubakici@wp.pl>
-To:     Wei Mingzhi <whistler@member.fsf.org>
-Cc:     kvalo@codeaurora.org, davem@davemloft.net, matthias.bgg@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: add USB device ID for some versions of XiaoDu
- WiFi Dongle.
-Message-ID: <20210618133554.7d5c8e3d@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <20210618160840.305024-1-whistler@member.fsf.org>
-References: <20210618160840.305024-1-whistler@member.fsf.org>
+        Fri, 18 Jun 2021 16:47:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45730 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232041AbhFRUrE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Jun 2021 16:47:04 -0400
+Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50992C061574;
+        Fri, 18 Jun 2021 13:44:53 -0700 (PDT)
+Received: by mail-lj1-x235.google.com with SMTP id d13so15638468ljg.12;
+        Fri, 18 Jun 2021 13:44:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=G7kQ9Jg07LG2cipeMCkOjvLhXj1OqGqGhs6/niYo2sE=;
+        b=rUPPbiE83cwd7tTiSehNqA8CI2sNrxBpHQFuswK+VRov1p+eg+CJ5DnUrmOArgyl6Y
+         5TcXAuUihn+CfqtvXXQieviRDakTtmGde7nj2ZhKkp4fV2PExBsceL04XleuowQGSHiH
+         ZN3w29CtIRvh9s/9DDV9p05iU+QZLNBhytEu9YHovAH03WCM7F5hrApj/E/WE07ObOdF
+         KtgrdcQzdQ0pWCydZic+JxJZJNvQ35fpGQ8JwU1Qru5485eItbzv7fJ7wTUvr6uBzWfY
+         RenlY2do9iScQmSNoqcgnZy+iznZ+nK2ARfYY1ZyIY4DrmbZy95bXmzc/26K1MDBair3
+         yNKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=G7kQ9Jg07LG2cipeMCkOjvLhXj1OqGqGhs6/niYo2sE=;
+        b=Kg5KcwplHzUSzhU1sD5aXUsYqEZ+TbNEqYE0SPCvxXOP2HL1JsntPv2KaLkrde001I
+         I/WoJ17r63TlRm+gNZnPmGu1kbW1BEmc19b1c10VbrQtcVkDGznIjPQ+jo68yWZO4nn2
+         JuRB7FmGT+XZrjNT5Wdra1LYdGz64Aw0zQvkoNECJ8xejwDsx3TZ+YYtN/l7+IgJ7XMl
+         dOCqafWBj2jgdE8OURv1pSHKWTJ7Nb1V2aECxyDrZQeW85QrbNbXG1dwo/VT3W3MedCH
+         cTPsXr0KJo976bjTIlIjEbFH8+kAKWw6WWe1ThcnqH0dkYQD11HErC8oYq1A5f65h/EP
+         zTGA==
+X-Gm-Message-State: AOAM532oJKBDkYvR/QuWlL84mhfbzluvmovtPgbdtKn7X12+DuJEyJ+j
+        qVMDlZo4ga//63h3VNf3Vbg=
+X-Google-Smtp-Source: ABdhPJwGezIn9r9dCJJ9XwZgoUH6axsl+RAoLTHwj8WdM/zJVRxrCkq3KnAu/MX33paSLKIbH3r7Ig==
+X-Received: by 2002:a2e:7a16:: with SMTP id v22mr11062453ljc.101.1624049091690;
+        Fri, 18 Jun 2021 13:44:51 -0700 (PDT)
+Received: from [192.168.2.145] (94-29-29-31.dynamic.spd-mgts.ru. [94.29.29.31])
+        by smtp.googlemail.com with ESMTPSA id z8sm1008690lfg.243.2021.06.18.13.44.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Jun 2021 13:44:51 -0700 (PDT)
+Subject: Re: [PATCH v2 1/2] cfg80211: Add wiphy_info_once()
+From:   Dmitry Osipenko <digetx@gmail.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <20210511211549.30571-1-digetx@gmail.com>
+Message-ID: <e7495304-d62c-fd20-fab3-3930735f2076@gmail.com>
+Date:   Fri, 18 Jun 2021 23:44:50 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-WP-MailID: 056658d67fe8a0af829ae53f4852c704
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000001 [8UKz]                               
+In-Reply-To: <20210511211549.30571-1-digetx@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 19 Jun 2021 00:08:40 +0800 Wei Mingzhi wrote:
-> USB device ID of some versions of XiaoDu WiFi Dongle is 2955:1003
-> instead of 2955:1001. Both are the same mt7601u hardware.
+12.05.2021 00:15, Dmitry Osipenko пишет:
+> Add wiphy_info_once() helper that prints info message only once.
 > 
-> Signed-off-by: Wei Mingzhi <whistler@member.fsf.org>
+> Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+> ---
+> 
+> Changelog:
+> 
+> v2: - New patch added in v2.
+> 
+>  include/net/cfg80211.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 5224f885a99a..3b19e03509b3 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -8154,6 +8154,8 @@ bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
+>  	dev_notice(&(wiphy)->dev, format, ##args)
+>  #define wiphy_info(wiphy, format, args...)			\
+>  	dev_info(&(wiphy)->dev, format, ##args)
+> +#define wiphy_info_once(wiphy, format, args...)			\
+> +	dev_info_once(&(wiphy)->dev, format, ##args)
+>  
+>  #define wiphy_err_ratelimited(wiphy, format, args...)		\
+>  	dev_err_ratelimited(&(wiphy)->dev, format, ##args)
+> 
 
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
+Ping?
+
+Arend, is this series good to you? I assume Kalle could pick it up if
+you'll give ack. Thanks in advance.
