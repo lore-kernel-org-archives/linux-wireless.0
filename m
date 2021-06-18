@@ -2,131 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF7CC48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27870C48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9410861220
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DA826120D
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232653AbhFRIKz (ORCPT
+        id S233875AbhFRIob convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 04:10:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37584 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232671AbhFRIKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 04:10:52 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 989F26128C;
-        Fri, 18 Jun 2021 08:08:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624003721;
-        bh=G4rN1UkIqSWKx3WVJNhpoCePTaju9czyLNMc01eK5XE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FPQfUuvie8S7aKQzS/8p1bgvVtDPpyhQ4u4xq7wOjfHMbUMMKliZUDoSgadOEpa/y
-         9xUFsD6d+Dvi81NT7zIsKk66TgFhOH68AtHEVgS5bu8ImpA4LctjKNb4WKYOsLZdAL
-         jZhWuq5AhaDSz49idvNA8tW0JOJzroDvqbD1f3FIwWyBAMiOEZJvK3Xl8J0E0AQ0BL
-         lXkzsL5WWLWJqPd9C0dxBUjO/azj1zVW8ZiBdaXLgtRm9xXGvVNaERp3BM6KVxgugF
-         KGP8+MKyIo23q5WpWJNacVrgVlUTC+9/XfbQBWv1oJSvJfEoEnGxTF6lsFkDUoFxAb
-         FlGdztW67TOAw==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sean.wang@mediatek.com
-Subject: [PATCH v2 4/5] mt76: mt7663s: enable runtime-pm
-Date:   Fri, 18 Jun 2021 10:08:23 +0200
-Message-Id: <784173403172cdf5d4cc1d1f33f98fbd5fe3c0a4.1624003282.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1624003282.git.lorenzo@kernel.org>
-References: <cover.1624003282.git.lorenzo@kernel.org>
+        Fri, 18 Jun 2021 04:44:31 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:36420 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233775AbhFRIoa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Jun 2021 04:44:30 -0400
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mtapsc-8-S_lREQziMlqph1PADEonZw-1; Fri, 18 Jun 2021 09:42:17 +0100
+X-MC-Unique: S_lREQziMlqph1PADEonZw-1
+Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
+ (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Fri, 18 Jun
+ 2021 09:42:16 +0100
+Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
+ AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
+ 15.00.1497.018; Fri, 18 Jun 2021 09:42:16 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Kees Cook' <keescook@chromium.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC:     Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Recast pointer for trailing memcpy()
+Thread-Topic: [PATCH] mac80211: Recast pointer for trailing memcpy()
+Thread-Index: AQHXYzENJy6TjXiKVkqMQny50fQUFqsZdDaA
+Date:   Fri, 18 Jun 2021 08:42:16 +0000
+Message-ID: <1bd7df33fd484d1da656238f792bd6f7@AcuMS.aculab.com>
+References: <20210617042709.2170111-1-keescook@chromium.org>
+In-Reply-To: <20210617042709.2170111-1-keescook@chromium.org>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow the user to enable runtime-pm for mt7663s driver
+From: Kees Cook
+> Sent: 17 June 2021 05:27
+> 
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memcpy(), memmove(), and memset(), avoid
+> intentionally writing across neighboring array fields.
+> 
+> Give memcpy() a specific source pointer type so it can correctly
+> calculate the bounds of the copy.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c |  2 +-
- .../net/wireless/mediatek/mt76/mt7615/sdio_mcu.c    | 13 ++++++++++---
- .../net/wireless/mediatek/mt76/mt76_connac_mac.c    |  4 ++--
- 3 files changed, 13 insertions(+), 6 deletions(-)
+Doesn't the necessity of this sort of patch just sidestep the
+run-time checking and really indicate that it is just a complete
+waste of cpu resources?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-index 8cb4426e757c..cb4659771fd9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
-@@ -75,7 +75,7 @@ mt7615_pm_set(void *data, u64 val)
- 	if (!mt7615_wait_for_mcu_init(dev))
- 		return 0;
- 
--	if (!mt7615_firmware_offload(dev) || !mt76_is_mmio(&dev->mt76))
-+	if (!mt7615_firmware_offload(dev) || mt76_is_usb(&dev->mt76))
- 		return -EOPNOTSUPP;
- 
- 	if (val == pm->enable)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-index 6c23c6dbf1c6..45c1cd3b9f49 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
-@@ -65,13 +65,16 @@ static int __mt7663s_mcu_drv_pmctrl(struct mt7615_dev *dev)
- 
- 	ret = readx_poll_timeout(mt7663s_read_pcr, dev, status,
- 				 status & WHLPCR_IS_DRIVER_OWN, 2000, 1000000);
--	if (ret < 0)
-+	if (ret < 0) {
- 		dev_err(dev->mt76.dev, "Cannot get ownership from device");
--	else
-+	} else {
- 		clear_bit(MT76_STATE_PM, &mphy->state);
- 
-+		pm->stats.last_wake_event = jiffies;
-+		pm->stats.doze_time += pm->stats.last_wake_event -
-+				       pm->stats.last_doze_event;
-+	}
- 	sdio_release_host(func);
--	pm->last_activity = jiffies;
- 
- 	return ret;
- }
-@@ -113,6 +116,10 @@ static int mt7663s_mcu_fw_pmctrl(struct mt7615_dev *dev)
- 	if (ret < 0) {
- 		dev_err(dev->mt76.dev, "Cannot set ownership to device");
- 		clear_bit(MT76_STATE_PM, &mphy->state);
-+	} else {
-+		pm->stats.last_doze_event = jiffies;
-+		pm->stats.awake_time += pm->stats.last_doze_event -
-+					pm->stats.last_wake_event;
- 	}
- 
- 	sdio_release_host(func);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index 5f2705fbd680..af43bcb54578 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -10,7 +10,7 @@ int mt76_connac_pm_wake(struct mt76_phy *phy, struct mt76_connac_pm *pm)
- 	if (!pm->enable)
- 		return 0;
- 
--	if (!mt76_is_mmio(dev))
-+	if (mt76_is_usb(dev))
- 		return 0;
- 
- 	cancel_delayed_work_sync(&pm->ps_work);
-@@ -37,7 +37,7 @@ void mt76_connac_power_save_sched(struct mt76_phy *phy,
- {
- 	struct mt76_dev *dev = phy->dev;
- 
--	if (!mt76_is_mmio(dev))
-+	if (mt76_is_usb(dev))
- 		return;
- 
- 	if (!pm->enable)
--- 
-2.31.1
+I bet code changes to avoid/fix the reported errors will
+introduce more bugs than the test itself will really find.
+
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
