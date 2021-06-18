@@ -7,155 +7,77 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A390CC48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:09:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E91A3C48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:10:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7396F6128C
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:09:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B440461351
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231695AbhFRLMH (ORCPT
+        id S232766AbhFRLMN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 07:12:07 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48296 "EHLO
+        Fri, 18 Jun 2021 07:12:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48300 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229848AbhFRLMG (ORCPT
+        with ESMTP id S229848AbhFRLML (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 07:12:06 -0400
+        Fri, 18 Jun 2021 07:12:11 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBx3-001YXx-5h; Fri, 18 Jun 2021 13:42:18 +0300
+        id 1luBx1-001YXx-JK; Fri, 18 Jun 2021 13:42:17 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:45 +0300
-Message-Id: <iwlwifi.20210618133832.cd101f8040a4.Iadf0e9b37b100c6c6e79c7b298cc657c2be9151a@changeid>
+Date:   Fri, 18 Jun 2021 13:41:43 +0300
+Message-Id: <iwlwifi.20210618133832.05e935e8dd98.I83ff7eb2ae8ebdf2e30c4fa2461344d9e569f599@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 20/31] mac80211: handle various extensible elements correctly
+Subject: [PATCH 18/31] mac80211: always include HE 6GHz capability in assoc request
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Various elements are parsed with a requirement to have an
-exact size, when really we should only check that they have
-the minimum size that we need. Check only that and therefore
-ignore any additional data that they might carry.
+If HE/6GHz is available (thus we consider dot11HE6GOptionImplemented
+to be true), then always include the corresponding capability in the
+association request as required by the spec.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/util.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ net/mac80211/util.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 08530da5ac05..c4aff6743552 100644
+index fb3b7bbfb1dc..08530da5ac05 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -947,7 +947,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
+@@ -2960,15 +2960,15 @@ void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
+ 	u8 *pos;
+ 	u16 cap;
  
- 	switch (elem->data[0]) {
- 	case WLAN_EID_EXT_HE_MU_EDCA:
--		if (len == sizeof(*elems->mu_edca_param_set)) {
-+		if (len >= sizeof(*elems->mu_edca_param_set)) {
- 			elems->mu_edca_param_set = data;
- 			if (crc)
- 				*crc = crc32_be(*crc, (void *)elem,
-@@ -968,7 +968,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 		}
- 		break;
- 	case WLAN_EID_EXT_UORA:
--		if (len == 1)
-+		if (len >= 1)
- 			elems->uora_element = data;
- 		break;
- 	case WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME:
-@@ -976,7 +976,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 			elems->max_channel_switch_time = data;
- 		break;
- 	case WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION:
--		if (len == sizeof(*elems->mbssid_config_ie))
-+		if (len >= sizeof(*elems->mbssid_config_ie))
- 			elems->mbssid_config_ie = data;
- 		break;
- 	case WLAN_EID_EXT_HE_SPR:
-@@ -985,7 +985,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 			elems->he_spr = data;
- 		break;
- 	case WLAN_EID_EXT_HE_6GHZ_CAPA:
--		if (len == sizeof(*elems->he_6ghz_capa))
-+		if (len >= sizeof(*elems->he_6ghz_capa))
- 			elems->he_6ghz_capa = data;
- 		break;
- 	}
-@@ -1074,14 +1074,14 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+-	sband = ieee80211_get_sband(sdata);
+-	if (!sband)
++	if (!cfg80211_any_usable_channels(sdata->local->hw.wiphy,
++					  BIT(NL80211_BAND_6GHZ),
++					  IEEE80211_CHAN_NO_HE))
+ 		return;
  
- 		switch (id) {
- 		case WLAN_EID_LINK_ID:
--			if (elen + 2 != sizeof(struct ieee80211_tdls_lnkie)) {
-+			if (elen + 2 < sizeof(struct ieee80211_tdls_lnkie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
- 			elems->lnk_id = (void *)(pos - 2);
- 			break;
- 		case WLAN_EID_CHAN_SWITCH_TIMING:
--			if (elen != sizeof(struct ieee80211_ch_switch_timing)) {
-+			if (elen < sizeof(struct ieee80211_ch_switch_timing)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1244,7 +1244,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			elems->sec_chan_offs = (void *)pos;
- 			break;
- 		case WLAN_EID_CHAN_SWITCH_PARAM:
--			if (elen !=
-+			if (elen <
- 			    sizeof(*elems->mesh_chansw_params_ie)) {
- 				elem_parse_failed = true;
- 				break;
-@@ -1253,7 +1253,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			break;
- 		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
- 			if (!action ||
--			    elen != sizeof(*elems->wide_bw_chansw_ie)) {
-+			    elen < sizeof(*elems->wide_bw_chansw_ie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1272,7 +1272,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			ie = cfg80211_find_ie(WLAN_EID_WIDE_BW_CHANNEL_SWITCH,
- 					      pos, elen);
- 			if (ie) {
--				if (ie[1] == sizeof(*elems->wide_bw_chansw_ie))
-+				if (ie[1] >= sizeof(*elems->wide_bw_chansw_ie))
- 					elems->wide_bw_chansw_ie =
- 						(void *)(ie + 2);
- 				else
-@@ -1316,7 +1316,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			elems->cisco_dtpc_elem = pos;
- 			break;
- 		case WLAN_EID_ADDBA_EXT:
--			if (elen != sizeof(struct ieee80211_addba_ext_ie)) {
-+			if (elen < sizeof(struct ieee80211_addba_ext_ie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1342,7 +1342,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 							  elem, elems);
- 			break;
- 		case WLAN_EID_S1G_CAPABILITIES:
--			if (elen == sizeof(*elems->s1g_capab))
-+			if (elen >= sizeof(*elems->s1g_capab))
- 				elems->s1g_capab = (void *)pos;
- 			else
- 				elem_parse_failed = true;
+-	if (sband->band != NL80211_BAND_6GHZ)
+-		return;
++	sband = sdata->local->hw.wiphy->bands[NL80211_BAND_6GHZ];
+ 
+ 	iftd = ieee80211_get_sband_iftype_data(sband, iftype);
+-	if (WARN_ON(!iftd))
++	if (!iftd)
+ 		return;
+ 
+ 	/* Check for device HE 6 GHz capability before adding element */
 -- 
 2.32.0
 
