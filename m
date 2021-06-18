@@ -7,75 +7,90 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86128C48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F65C48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A8B561184
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3954B61396
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232046AbhFRIFj (ORCPT
+        id S232215AbhFRIFp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 04:05:39 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48072 "EHLO
+        Fri, 18 Jun 2021 04:05:45 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48090 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232808AbhFRID7 (ORCPT
+        with ESMTP id S233009AbhFRIEC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 04:03:59 -0400
+        Fri, 18 Jun 2021 04:04:02 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lu9RO-001YIf-3f; Fri, 18 Jun 2021 11:01:27 +0300
+        id 1lu9RQ-001YIf-Ln; Fri, 18 Jun 2021 11:01:30 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 11:01:15 +0300
-Message-Id: <iwlwifi.20210618105614.cd6f4e421430.Iec07c746c8e65bc267e4750f38e4f74f2010ca45@changeid>
+Date:   Fri, 18 Jun 2021 11:01:18 +0300
+Message-Id: <iwlwifi.20210618105614.3d488885f77c.Ib97a2bc57c1e9fb98927dc6f802568db313abe3b@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618080121.588233-1-luca@coelho.fi>
 References: <20210618080121.588233-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/10] iwlwifi: mvm: support LONG_GROUP for WOWLAN_GET_STATUSES version
+Subject: [PATCH 07/10] iwlwifi: mvm: fill phy_data.d1 for no-data RX
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's been a while that the firmware uses LONG_GROUP by default
-and not LEGACY_GROUP.
-Until now the firmware wrongly advertise the WOWLAN_GET_STATUS
-command's version with LEGACY_GROUP, but it is now being fixed.
-In order to support both firmwares, first try to get the version
-number of the command with the LONG_GROUP and if the firmware
-didn't advertise the command version with LONG_GROUP, try to get
-the command version with LEGACY_GROUP.
+We don't fill in phy_data.d1 in no-data RX, and thus we
+pretend some data is actually filled in radiotap when it
+isn't or has default (zero) values.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fill in phy_data.d1 appropriately, and while at it also
+move the info_type initialization into the initializer.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index e86f0e949b86..6617fe5a7ece 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1614,8 +1614,11 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 8e26422ca326..c0babb8d5b5c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+@@ -2001,8 +2001,10 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct sk_buff *skb;
+ 	u8 channel, energy_a, energy_b;
+ 	struct iwl_mvm_rx_phy_data phy_data = {
++		.info_type = le32_get_bits(desc->phy_info[1],
++					   IWL_RX_PHY_DATA1_INFO_TYPE_MASK),
+ 		.d0 = desc->phy_info[0],
+-		.info_type = IWL_RX_PHY_INFO_TYPE_NONE,
++		.d1 = desc->phy_info[1],
+ 	};
  
- 	/* default to 7 (when we have IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL) */
--	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
--					    WOWLAN_GET_STATUSES, 7);
-+	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP,
-+					    WOWLAN_GET_STATUSES, 0);
-+	if (!notif_ver)
-+		notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
-+						    WOWLAN_GET_STATUSES, 7);
+ 	if (unlikely(iwl_rx_packet_payload_len(pkt) < sizeof(*desc)))
+@@ -2015,10 +2017,6 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	energy_b = (rssi & RX_NO_DATA_CHAIN_B_MSK) >> RX_NO_DATA_CHAIN_B_POS;
+ 	channel = (rssi & RX_NO_DATA_CHANNEL_MSK) >> RX_NO_DATA_CHANNEL_POS;
  
- 	if (!fw_has_api(&mvm->fw->ucode_capa,
- 			IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL)) {
+-	phy_data.info_type =
+-		le32_get_bits(desc->phy_info[1],
+-			      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
+-
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	 * ieee80211_hdr pulled.
+ 	 */
 -- 
 2.32.0
 
