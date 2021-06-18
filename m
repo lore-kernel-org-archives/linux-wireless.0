@@ -7,68 +7,137 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E648BC48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:56:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A21C5C48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:58:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C195E60FF0
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:56:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ECE161154
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:58:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230107AbhFRK6l (ORCPT
+        id S233346AbhFRLAW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 06:58:41 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48248 "EHLO
+        Fri, 18 Jun 2021 07:00:22 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48252 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229550AbhFRK6k (ORCPT
+        with ESMTP id S229550AbhFRLAV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 06:58:40 -0400
+        Fri, 18 Jun 2021 07:00:21 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBxC-001YXx-VN; Fri, 18 Jun 2021 13:42:28 +0300
+        id 1luBx5-001YXx-MA; Fri, 18 Jun 2021 13:42:21 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:56 +0300
-Message-Id: <iwlwifi.20210618133832.853ffdd6c62b.I63e37b2ab184ee3653686e4df4dd23eb303687d2@changeid>
+Date:   Fri, 18 Jun 2021 13:41:48 +0300
+Message-Id: <iwlwifi.20210618133832.86c58fca486d.Iabd8f036d2ef1d770fd20ed3ccd149f32154f430@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 31/31] cfg80211: reg: improve bad regulatory warning
+Subject: [PATCH 23/31] cfg80211: trace more information in assoc trace event
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's a WARN_ON here but it says nothing, and the later
-dump of the regdomain aren't usually printed. As a first
-step, include the regdomain code in the WARN_ON message,
-just like in other similar instances.
+Add more information to the assoc trace event so we can see
+more precisely what's going on and what options were used.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/reg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/wireless/rdev-ops.h | 12 +++++++++++-
+ net/wireless/trace.h    | 36 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 45 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0df048bd4b84..c2d0ff7f089f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3975,7 +3975,9 @@ static int __regulatory_set_wiphy_regd(struct wiphy *wiphy,
- 		 "wiphy should have REGULATORY_WIPHY_SELF_MANAGED\n"))
- 		return -EPERM;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 8b1358d04ca2..b1d37f582dc6 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -464,8 +464,18 @@ static inline int rdev_assoc(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *dev,
+ 			     struct cfg80211_assoc_request *req)
+ {
++	const struct cfg80211_bss_ies *bss_ies;
+ 	int ret;
+-	trace_rdev_assoc(&rdev->wiphy, dev, req);
++
++	/*
++	 * Note: we might trace not exactly the data that's processed,
++	 * due to races and the driver/mac80211 getting a newer copy.
++	 */
++	rcu_read_lock();
++	bss_ies = rcu_dereference(req->bss->ies);
++	trace_rdev_assoc(&rdev->wiphy, dev, req, bss_ies);
++	rcu_read_unlock();
++
+ 	ret = rdev->ops->assoc(&rdev->wiphy, dev, req);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 76b777d5903f..440bce5f0274 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1195,8 +1195,9 @@ TRACE_EVENT(rdev_auth,
  
--	if (WARN(!is_valid_rd(rd), "Invalid regulatory domain detected\n")) {
-+	if (WARN(!is_valid_rd(rd),
-+		 "Invalid regulatory domain detected: %c%c\n",
-+		 rd->alpha2[0], rd->alpha2[1])) {
- 		print_regdomain_info(rd);
- 		return -EINVAL;
- 	}
+ TRACE_EVENT(rdev_assoc,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+-		 struct cfg80211_assoc_request *req),
+-	TP_ARGS(wiphy, netdev, req),
++		 struct cfg80211_assoc_request *req,
++		 const struct cfg80211_bss_ies *bss_ies),
++	TP_ARGS(wiphy, netdev, req, bss_ies),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+@@ -1204,6 +1205,17 @@ TRACE_EVENT(rdev_assoc,
+ 		MAC_ENTRY(prev_bssid)
+ 		__field(bool, use_mfp)
+ 		__field(u32, flags)
++		__dynamic_array(u8, bss_elements, bss_ies->len)
++		__field(bool, bss_elements_bcon)
++		__field(u64, bss_elements_tsf)
++		__dynamic_array(u8, elements, req->ie_len)
++		__array(u8, ht_capa, sizeof(struct ieee80211_ht_cap))
++		__array(u8, ht_capa_mask, sizeof(struct ieee80211_ht_cap))
++		__array(u8, vht_capa, sizeof(struct ieee80211_vht_cap))
++		__array(u8, vht_capa_mask, sizeof(struct ieee80211_vht_cap))
++		__dynamic_array(u8, fils_kek, req->fils_kek_len)
++		__dynamic_array(u8, fils_nonces,
++				req->fils_nonces ? 2 * FILS_NONCE_LEN : 0)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+@@ -1215,6 +1227,26 @@ TRACE_EVENT(rdev_assoc,
+ 		MAC_ASSIGN(prev_bssid, req->prev_bssid);
+ 		__entry->use_mfp = req->use_mfp;
+ 		__entry->flags = req->flags;
++		if (bss_ies->len)
++			memcpy(__get_dynamic_array(bss_elements),
++			       bss_ies->data, bss_ies->len);
++		__entry->bss_elements_bcon = bss_ies->from_beacon;
++		__entry->bss_elements_tsf = bss_ies->tsf;
++		if (req->ie)
++			memcpy(__get_dynamic_array(elements),
++			       req->ie, req->ie_len);
++		memcpy(__entry->ht_capa, &req->ht_capa, sizeof(req->ht_capa));
++		memcpy(__entry->ht_capa_mask, &req->ht_capa_mask,
++		       sizeof(req->ht_capa_mask));
++		memcpy(__entry->vht_capa, &req->vht_capa, sizeof(req->vht_capa));
++		memcpy(__entry->vht_capa_mask, &req->vht_capa_mask,
++		       sizeof(req->vht_capa_mask));
++		if (req->fils_kek)
++			memcpy(__get_dynamic_array(fils_kek),
++			       req->fils_kek, req->fils_kek_len);
++		if (req->fils_nonces)
++			memcpy(__get_dynamic_array(fils_nonces),
++			       req->fils_nonces, 2 * FILS_NONCE_LEN);
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", bssid: " MAC_PR_FMT
+ 		  ", previous bssid: " MAC_PR_FMT ", use mfp: %s, flags: %u",
 -- 
 2.32.0
 
