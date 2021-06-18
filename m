@@ -2,76 +2,74 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1083AC48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0056FC48BE8
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:49:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA53F61003
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D253861003
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233301AbhFRKuR (ORCPT
+        id S233740AbhFRKvQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 06:50:17 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48228 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233147AbhFRKuP (ORCPT
+        Fri, 18 Jun 2021 06:51:16 -0400
+Received: from mail-io1-f72.google.com ([209.85.166.72]:55164 "EHLO
+        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233668AbhFRKvP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 06:50:15 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <luca@coelho.fi>)
-        id 1luBwz-001YXx-2Z; Fri, 18 Jun 2021 13:42:14 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
-Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:40 +0300
-Message-Id: <iwlwifi.20210618133832.b5513f2af335.Ic01862678712ae4238cea43ad2185928865efad2@changeid>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
-References: <20210618104156.747775-1-luca@coelho.fi>
+        Fri, 18 Jun 2021 06:51:15 -0400
+Received: by mail-io1-f72.google.com with SMTP id s14-20020a5eaa0e0000b02904abce57cb24so3837928ioe.21
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jun 2021 03:49:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
+         :from:to;
+        bh=HrK3zoZ7mBoYxTNh9K06ogvFxCCPaWcCp7U6uUfuszg=;
+        b=DkoRhymp/lGkWSFtdK3GoXdNQm9ranlWiaYj/SU6XoGB/OXK2DmE3LDnxc2r1pU1I8
+         rZqmth27+X9YTWJHj/x+W5tW/FsySXSj48VyMjO//sz41/9yYai0uqlIw6gJCCCObLco
+         3ufFKzDtCL1VOijmmila6cIx+ecdagw4uRf+VZXEBUNTrq8Hc0+7RlVGQAVIbW4Xjt2k
+         D7AcbB66H61sqmie3rRFgvmQrmEPUWoABEuYRbZZzaFQvG5K3rRK8aQQxNQpu8t8Rkqg
+         Yz9OTtTmYInQmMPDHJzzWWGw75DtrCEse7RR6MN6+YLkR2SMXd9XEz1Qn565xl+xeaQd
+         jvQA==
+X-Gm-Message-State: AOAM530+M0i6Kb4nYE3dmAmlDrTpeYGLIy4nyL5n1eJwz4IK4bJZvazT
+        WxjvUYDljlwx+kd9IemCOHUX6XNyHvEIo98E1KlCU0i5PScM
+X-Google-Smtp-Source: ABdhPJzCs/4OA4IQ6EdpX5w7LDi1TyMBN9jVHynWWJ1IIwL1ilVww+diOFD/9gDfLlvjM0MAPMOEjUjnAUdQpIPV/79GfMvNceNj
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 15/31] mac80211: conditionally advertise HE in probe requests
+X-Received: by 2002:a05:6602:38d:: with SMTP id f13mr7558181iov.109.1624013345667;
+ Fri, 18 Jun 2021 03:49:05 -0700 (PDT)
+Date:   Fri, 18 Jun 2021 03:49:05 -0700
+In-Reply-To: <20210618133112.596c60d8@gmail.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000943f6e05c50812c3@google.com>
+Subject: Re: [syzbot] divide error in ath9k_htc_swba
+From:   syzbot <syzbot+90d241d7661ca2493f0b@syzkaller.appspotmail.com>
+To:     ath9k-devel@qca.qualcomm.com, davem@davemloft.net, kuba@kernel.org,
+        kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, paskripkin@gmail.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello,
 
-While building probe requests, only enable HE capability if
-there are actually any channels in the band with HE enabled,
-otherwise we're not really capable. We're doing the same in
-association requests, so doing it here makes it consistent.
+syzbot has tested the proposed patch and the reproducer did not trigger any issue:
 
-This also makes HE not appear available if it isn't due to
-regulatory constraints.
+Reported-and-tested-by: syzbot+90d241d7661ca2493f0b@syzkaller.appspotmail.com
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/util.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Tested on:
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 0f6fd90f6696..22cab76a9c2f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1938,7 +1938,9 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	he_cap = ieee80211_get_he_sta_cap(sband);
--	if (he_cap) {
-+	if (he_cap &&
-+	    cfg80211_any_usable_channels(local->hw.wiphy, BIT(sband->band),
-+					 IEEE80211_CHAN_NO_HE)) {
- 		pos = ieee80211_ie_build_he_cap(pos, he_cap, end);
- 		if (!pos)
- 			goto out_err;
--- 
-2.32.0
+commit:         fd0aa1a4 Merge tag 'for-linus' of git://git.kernel.org/pub..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5a4fe6d9e0a3e71f
+dashboard link: https://syzkaller.appspot.com/bug?extid=90d241d7661ca2493f0b
+compiler:       
+patch:          https://syzkaller.appspot.com/x/patch.diff?x=14f9aff0300000
 
+Note: testing is done by a robot and is best-effort only.
