@@ -7,64 +7,76 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7610C49EA2
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CED4DC49361
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D24EC61003
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8E26613BD
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233684AbhFRKoO (ORCPT
+        id S233705AbhFRKoP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 06:44:14 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48126 "EHLO
+        Fri, 18 Jun 2021 06:44:15 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48132 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233704AbhFRKoN (ORCPT
+        with ESMTP id S233678AbhFRKoO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 06:44:13 -0400
+        Fri, 18 Jun 2021 06:44:14 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBwn-001YXx-O4; Fri, 18 Jun 2021 13:42:03 +0300
+        id 1luBwo-001YXx-JI; Fri, 18 Jun 2021 13:42:04 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:27 +0300
-Message-Id: <iwlwifi.20210618133832.5b2063dea3b3.I56248f2ce2e22a5c0cf797378726f6904b5de5e2@changeid>
+Date:   Fri, 18 Jun 2021 13:41:28 +0300
+Message-Id: <iwlwifi.20210618133832.b75f40765538.I92b50e43e29272c97d17ed5f37f216f4caf0f205@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/31] mac80211: do not add twice the HE 6GHz cap IE
+Subject: [PATCH 03/31] ieee80211: define timing measurement in extended capabilities IE
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Krishnanand Prabhu <krishnanand.prabhu@intel.com>
 
-The HE 6GHz capability IE is already added before:
-ieee80211_add_he_ie -> ieee80211_ie_build_he_6ghz_cap
+Define the bit used for timing measurement support in extended
+capabilities IE, used for time synchronization.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Krishnanand Prabhu <krishnanand.prabhu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/ieee80211.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2480bd0577bb..310cfd02fda4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -8,7 +8,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2020 Intel Corporation
-+ * Copyright (C) 2018 - 2021 Intel Corporation
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 2967437f1b11..16a3a133cd20 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -9,7 +9,7 @@
+  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
+  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright (c) 2018 - 2020 Intel Corporation
++ * Copyright (c) 2018 - 2021 Intel Corporation
   */
  
- #include <linux/delay.h>
+ #ifndef LINUX_IEEE80211_H
+@@ -3110,6 +3110,11 @@ enum ieee80211_tdls_actioncode {
+  */
+ #define WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT	BIT(6)
+ 
++/* Timing Measurement protocol for time sync is set in the 7th bit of 3rd byte
++ * of the @WLAN_EID_EXT_CAPABILITY information element
++ */
++#define WLAN_EXT_CAPA3_TIMING_MEASUREMENT_SUPPORT	BIT(7)
++
+ /* TDLS capabilities in the 4th byte of @WLAN_EID_EXT_CAPABILITY */
+ #define WLAN_EXT_CAPA4_TDLS_BUFFER_STA		BIT(4)
+ #define WLAN_EXT_CAPA4_TDLS_PEER_PSM		BIT(5)
 -- 
 2.32.0
 
