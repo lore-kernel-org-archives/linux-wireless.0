@@ -7,84 +7,75 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EB3C48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A19BC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9AF16128C
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:06:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EA0A6102A
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 11:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231838AbhFRLIp (ORCPT
+        id S232250AbhFRLIu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 07:08:45 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48280 "EHLO
+        Fri, 18 Jun 2021 07:08:50 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48284 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231810AbhFRLIp (ORCPT
+        with ESMTP id S231810AbhFRLIu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 07:08:45 -0400
+        Fri, 18 Jun 2021 07:08:50 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBww-001YXx-Kd; Fri, 18 Jun 2021 13:42:12 +0300
+        id 1luBx8-001YXx-8q; Fri, 18 Jun 2021 13:42:23 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:37 +0300
-Message-Id: <iwlwifi.20210618133832.8238ab3e19ab.I2693c581c70251472b4f9089e37e06fb2c18268f@changeid>
+Date:   Fri, 18 Jun 2021 13:41:51 +0300
+Message-Id: <iwlwifi.20210618133832.8c9c72f914b0.I68e9c0626dc77a0f67f238a05ae16a0b77b09895@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/31] mac80211: Properly WARN on HW scan before restart
+Subject: [PATCH 26/31] cfg80211: remove ieee80211_get_he_sta_cap()
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The following race was possible:
+This function turned out to be too easy to misuse since it
+doesn't consider the interface type. Remove it now that we
+no longer use it in mac80211.
 
-1. The device driver requests HW restart.
-2. A scan is requested from user space and is propagated
-   to the driver. During this flow HW_SCANNING flag is set.
-3. The thread that handles the HW restart is scheduled,
-   and before starting the actual reconfiguration it
-   checks that HW_SCANNING is not set. The flow does so
-   without acquiring any lock, and thus the WARN fires.
-
-Fix this by checking that HW_SCANNING is on only after RTNL is
-acquired, i.e., user space scan request handling is no longer
-in transit.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 62145e5f9628..da3e0ca6aa31 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -256,14 +256,13 @@ static void ieee80211_restart_work(struct work_struct *work)
- 	/* wait for scan work complete */
- 	flush_workqueue(local->workqueue);
- 	flush_work(&local->sched_scan_stopped_work);
-+	flush_work(&local->radar_detected_work);
-+
-+	rtnl_lock();
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5a0c4fd2ec5a..6c851fa312ac 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -533,18 +533,6 @@ ieee80211_get_he_iftype_cap(const struct ieee80211_supported_band *sband,
+ 	return NULL;
+ }
  
- 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
- 	     "%s called with hardware scan in progress\n", __func__);
- 
--	flush_work(&local->radar_detected_work);
--	/* we might do interface manipulations, so need both */
--	rtnl_lock();
--	wiphy_lock(local->hw.wiphy);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		/*
- 		 * XXX: there may be more work for other vif types and even
+-/**
+- * ieee80211_get_he_sta_cap - return HE capabilities for an sband's STA
+- * @sband: the sband to search for the STA on
+- *
+- * Return: pointer to the struct ieee80211_sta_he_cap, or NULL is none found
+- */
+-static inline const struct ieee80211_sta_he_cap *
+-ieee80211_get_he_sta_cap(const struct ieee80211_supported_band *sband)
+-{
+-	return ieee80211_get_he_iftype_cap(sband, NL80211_IFTYPE_STATION);
+-}
+-
+ /**
+  * ieee80211_get_he_6ghz_capa - return HE 6 GHz capabilities
+  * @sband: the sband to search for the STA on
 -- 
 2.32.0
 
