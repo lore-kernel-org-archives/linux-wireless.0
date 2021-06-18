@@ -7,65 +7,71 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C296EC48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1083AC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:48:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2D4F61003
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:46:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA53F61003
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 10:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233024AbhFRKsf (ORCPT
+        id S233301AbhFRKuR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 06:48:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48224 "EHLO
+        Fri, 18 Jun 2021 06:50:17 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48228 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231403AbhFRKse (ORCPT
+        with ESMTP id S233147AbhFRKuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 06:48:34 -0400
+        Fri, 18 Jun 2021 06:50:15 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1luBwx-001YXx-ES; Fri, 18 Jun 2021 13:42:12 +0300
+        id 1luBwz-001YXx-2Z; Fri, 18 Jun 2021 13:42:14 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 13:41:38 +0300
-Message-Id: <iwlwifi.20210618133832.c026feb3873d.I380f52a05ddb4153bc77ff7f276a3484819f69b2@changeid>
+Date:   Fri, 18 Jun 2021 13:41:40 +0300
+Message-Id: <iwlwifi.20210618133832.b5513f2af335.Ic01862678712ae4238cea43ad2185928865efad2@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618104156.747775-1-luca@coelho.fi>
 References: <20210618104156.747775-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/31] ieee80211: add defines for HE PHY cap byte 10
+Subject: [PATCH 15/31] mac80211: conditionally advertise HE in probe requests
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-One bit out of the previously completely reserved byte 10 in
-the PHY capabilities is used since 802.11ax D7.0, add a new
-define for it.
+While building probe requests, only enable HE capability if
+there are actually any channels in the band with HE enabled,
+otherwise we're not really capable. We're doing the same in
+association requests, so doing it here makes it consistent.
+
+This also makes HE not appear available if it isn't due to
+regulatory constraints.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/util.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 16a3a133cd20..ab6bc225cf5d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2179,6 +2179,8 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
- #define IEEE80211_HE_PHY_CAP9_NOMIMAL_PKT_PADDING_RESERVED		0xc0
- #define IEEE80211_HE_PHY_CAP9_NOMIMAL_PKT_PADDING_MASK			0xc0
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0f6fd90f6696..22cab76a9c2f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1938,7 +1938,9 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_sub_if_data *sdata,
+ 	}
  
-+#define IEEE80211_HE_PHY_CAP10_HE_MU_M1RU_MAX_LTF			0x01
-+
- /* 802.11ax HE TX/RX MCS NSS Support  */
- #define IEEE80211_TX_RX_MCS_NSS_SUPP_HIGHEST_MCS_POS			(3)
- #define IEEE80211_TX_RX_MCS_NSS_SUPP_TX_BITMAP_POS			(6)
+ 	he_cap = ieee80211_get_he_sta_cap(sband);
+-	if (he_cap) {
++	if (he_cap &&
++	    cfg80211_any_usable_channels(local->hw.wiphy, BIT(sband->band),
++					 IEEE80211_CHAN_NO_HE)) {
+ 		pos = ieee80211_ie_build_he_cap(pos, he_cap, end);
+ 		if (!pos)
+ 			goto out_err;
 -- 
 2.32.0
 
