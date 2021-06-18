@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98684C48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E480EC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7824E61351
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3A99613BA
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232315AbhFRIKt (ORCPT
+        id S232746AbhFRIKx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 04:10:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37574 "EHLO mail.kernel.org"
+        Fri, 18 Jun 2021 04:10:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232415AbhFRIKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 04:10:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EB8ED61220;
-        Fri, 18 Jun 2021 08:08:38 +0000 (UTC)
+        id S232701AbhFRIKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Jun 2021 04:10:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 40B3A61220;
+        Fri, 18 Jun 2021 08:08:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624003719;
-        bh=9WCO6/MR1Ez57HmPy07vbtOld8l0CPLCT/ty0hfzClc=;
+        s=k20201202; t=1624003723;
+        bh=kxe2EcZKIkZ8wqEzQvGFAfT1e8OUBHdS4BMNcuk4znQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=W9QS4BCe18lKZW5+rMdMaqYYl8zy+nMRcAOuGA2zlb5+wFpScL5Frawr0YV1ckU7a
-         IP+xR3eYvzkxJyjBzn7achj/1YzQludzn4F+v/zwBLbNhpJh6wqYXiRyxdKUY3ZUzX
-         Bwn8qh7VEQxbgCY6zBgWfI+rITz+NvHaYzVEmBzI/sEssWnBJGxtneYIYxAPQEOylJ
-         mfWQUk/Cti1mLJ/nHyuoXX9b7KkqRl1O0dGUlfflO+z7wkyTvMsh3VHHtbW3QepI6A
-         0qcqNQEv9OERldZLcv3BDjYqwtRddMQE2/Zm6ElpD/RszjBsTWE6GKxJ1Qh4TLQz26
-         pNnnBXnsFq5MQ==
+        b=FBHcazgOGDDri5bcESND52vxMLQ5VMasMMqSNUJi3gTKEaoqu1ptQeWnmic9KarDw
+         HgZg3W+/dWiB7eRVBhPpysnQCg8kGojR9D43W73kPKWi6u5jUtZjIagPUDRmIhJE4n
+         G051YiDuO4T4KUGcaOt36snc/inUE8sSToTTPGwNhRItDAFoic+s+o4WEunvZM6+aY
+         xrsbAZqeyqtdwGIK5PAoJWiaraZA1tt0zctKz25FTloHOz91T32hD78YuJcqG1g1Wr
+         sqds5YS1gBKa8nPd1myC3ibNSmOmncfoGIffXROzZdgFwBI9RAFb40uYxxG/Kchk7X
+         fQU468PWGRGQA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         sean.wang@mediatek.com
-Subject: [PATCH v2 3/5] mt76: mt7663s: rely on mt76_connac_pm_ref/mt76_connac_pm_unref in tx path
-Date:   Fri, 18 Jun 2021 10:08:22 +0200
-Message-Id: <b65e861da1a54871c6358766edc81e2f3d9d8233.1624003282.git.lorenzo@kernel.org>
+Subject: [PATCH v2 5/5] mt76: mt7615: set macwork timeout according to runtime-pm
+Date:   Fri, 18 Jun 2021 10:08:24 +0200
+Message-Id: <a1a0c353000789e2d17433a6131268b107fe2229.1624003282.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1624003282.git.lorenzo@kernel.org>
 References: <cover.1624003282.git.lorenzo@kernel.org>
@@ -48,92 +48,168 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Similar to mt7663e, rely on mt76_connac_pm_ref/mt76_connac_pm_unref to
-check PM state and increment/decrement wake counter
+Set macwork timeout value according to runtime-pm in order to reduce
+power consumption
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c  | 14 ++++++++++----
- .../wireless/mediatek/mt76/mt7615/sdio_txrx.c    | 16 ++++++++++++----
- 2 files changed, 22 insertions(+), 8 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7615/mac.c    | 15 +++++++++++----
+ .../net/wireless/mediatek/mt76/mt7615/main.c   | 18 +++++++++++-------
+ .../net/wireless/mediatek/mt76/mt7615/mt7615.h |  7 ++++++-
+ .../wireless/mediatek/mt76/mt7615/pci_mac.c    |  7 ++++---
+ 4 files changed, 32 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index f540b6188ba1..c7d0b2e52d60 100644
+index c7d0b2e52d60..840268d15bb1 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1904,12 +1904,18 @@ void mt7615_pm_wake_work(struct work_struct *work)
- 	mphy = dev->phy.mt76;
- 
- 	if (!mt7615_mcu_set_drv_ctrl(dev)) {
-+		struct mt76_dev *mdev = &dev->mt76;
- 		int i;
- 
--		mt76_for_each_q_rx(&dev->mt76, i)
--			napi_schedule(&dev->mt76.napi[i]);
--		mt76_connac_pm_dequeue_skbs(mphy, &dev->pm);
--		mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
-+		if (mt76_is_sdio(mdev)) {
-+			mt76_worker_schedule(&mdev->sdio.txrx_worker);
-+		} else {
-+			mt76_for_each_q_rx(mdev, i)
-+				napi_schedule(&mdev->napi[i]);
-+			mt76_connac_pm_dequeue_skbs(mphy, &dev->pm);
-+			mt76_queue_tx_cleanup(dev, mdev->q_mcu[MT_MCUQ_WM],
-+					      false);
-+		}
- 		if (test_bit(MT76_STATE_RUNNING, &mphy->state))
- 			ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
- 						     MT7615_WATCHDOG_TIME);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-index 4393dd21ebbb..04f4c89b7499 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_txrx.c
-@@ -283,9 +283,15 @@ void mt7663s_txrx_worker(struct mt76_worker *w)
- {
- 	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
- 					      txrx_worker);
--	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
-+	struct mt76_dev *mdev = container_of(sdio, struct mt76_dev, sdio);
-+	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
- 	int i, nframes, ret;
- 
-+	if (!mt76_connac_pm_ref(&dev->mphy, &dev->pm)) {
-+		queue_work(mdev->wq, &dev->pm.wake_work);
-+		return;
-+	}
-+
- 	/* disable interrupt */
- 	sdio_claim_host(sdio->func);
- 	sdio_writel(sdio->func, WHLPCR_INT_EN_CLR, MCR_WHLPCR, NULL);
-@@ -295,16 +301,16 @@ void mt7663s_txrx_worker(struct mt76_worker *w)
- 
- 		/* tx */
- 		for (i = 0; i <= MT_TXQ_PSD; i++) {
--			ret = mt7663s_tx_run_queue(dev, dev->phy.q_tx[i]);
-+			ret = mt7663s_tx_run_queue(mdev, mdev->phy.q_tx[i]);
- 			if (ret > 0)
- 				nframes += ret;
+@@ -1916,9 +1916,14 @@ void mt7615_pm_wake_work(struct work_struct *work)
+ 			mt76_queue_tx_cleanup(dev, mdev->q_mcu[MT_MCUQ_WM],
+ 					      false);
  		}
--		ret = mt7663s_tx_run_queue(dev, dev->q_mcu[MT_MCUQ_WM]);
-+		ret = mt7663s_tx_run_queue(mdev, mdev->q_mcu[MT_MCUQ_WM]);
- 		if (ret > 0)
- 			nframes += ret;
- 
- 		/* rx */
--		ret = mt7663s_rx_handler(dev);
-+		ret = mt7663s_rx_handler(mdev);
- 		if (ret > 0)
- 			nframes += ret;
- 	} while (nframes > 0);
-@@ -312,6 +318,8 @@ void mt7663s_txrx_worker(struct mt76_worker *w)
- 	/* enable interrupt */
- 	sdio_writel(sdio->func, WHLPCR_INT_EN_SET, MCR_WHLPCR, NULL);
- 	sdio_release_host(sdio->func);
+-		if (test_bit(MT76_STATE_RUNNING, &mphy->state))
 +
-+	mt76_connac_pm_unref(&dev->mphy, &dev->pm);
++		if (test_bit(MT76_STATE_RUNNING, &mphy->state)) {
++			unsigned long timeout;
++
++			timeout = mt7615_get_macwork_timeout(dev);
+ 			ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
+-						     MT7615_WATCHDOG_TIME);
++						     timeout);
++		}
+ 	}
+ 
+ 	ieee80211_wake_queues(mphy->hw);
+@@ -1953,6 +1958,7 @@ void mt7615_mac_work(struct work_struct *work)
+ {
+ 	struct mt7615_phy *phy;
+ 	struct mt76_phy *mphy;
++	unsigned long timeout;
+ 
+ 	mphy = (struct mt76_phy *)container_of(work, struct mt76_phy,
+ 					       mac_work.work);
+@@ -1971,8 +1977,9 @@ void mt7615_mac_work(struct work_struct *work)
+ 	mt7615_mutex_release(phy->dev);
+ 
+ 	mt76_tx_status_check(mphy->dev, NULL, false);
+-	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
+-				     MT7615_WATCHDOG_TIME);
++
++	timeout = mt7615_get_macwork_timeout(phy->dev);
++	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work, timeout);
  }
  
- void mt7663s_sdio_irq(struct sdio_func *func)
+ void mt7615_tx_token_put(struct mt7615_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index bd2f42ef5ad7..dada43d6d879 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -28,6 +28,7 @@ static int mt7615_start(struct ieee80211_hw *hw)
+ {
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
++	unsigned long timeout;
+ 	bool running;
+ 	int ret;
+ 
+@@ -78,8 +79,8 @@ static int mt7615_start(struct ieee80211_hw *hw)
+ 
+ 	set_bit(MT76_STATE_RUNNING, &phy->mt76->state);
+ 
+-	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
+-				     MT7615_WATCHDOG_TIME);
++	timeout = mt7615_get_macwork_timeout(dev);
++	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work, timeout);
+ 
+ 	if (!running)
+ 		mt7615_mac_reset_counters(dev);
+@@ -350,10 +351,12 @@ int mt7615_set_channel(struct mt7615_phy *phy)
+ 	mt7615_mutex_release(dev);
+ 
+ 	mt76_worker_schedule(&dev->mt76.tx_worker);
+-	if (!mt76_testmode_enabled(phy->mt76))
++	if (!mt76_testmode_enabled(phy->mt76)) {
++		unsigned long timeout = mt7615_get_macwork_timeout(dev);
++
+ 		ieee80211_queue_delayed_work(phy->mt76->hw,
+-					     &phy->mt76->mac_work,
+-					     MT7615_WATCHDOG_TIME);
++					     &phy->mt76->mac_work, timeout);
++	}
+ 
+ 	return ret;
+ }
+@@ -1225,6 +1228,7 @@ static int mt7615_resume(struct ieee80211_hw *hw)
+ {
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
++	unsigned long timeout;
+ 	bool running;
+ 
+ 	mt7615_mutex_acquire(dev);
+@@ -1248,8 +1252,8 @@ static int mt7615_resume(struct ieee80211_hw *hw)
+ 					    mt76_connac_mcu_set_suspend_iter,
+ 					    phy->mt76);
+ 
+-	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
+-				     MT7615_WATCHDOG_TIME);
++	timeout = mt7615_get_macwork_timeout(dev);
++	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work, timeout);
+ 
+ 	mt7615_mutex_release(dev);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 8f03dddba8cf..4ac65f20e0cc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -20,7 +20,6 @@
+ 					 MT7615_MAX_INTERFACES)
+ 
+ #define MT7615_PM_TIMEOUT		(HZ / 12)
+-#define MT7615_WATCHDOG_TIME		(HZ / 10)
+ #define MT7615_HW_SCAN_TIMEOUT		(HZ / 10)
+ #define MT7615_RESET_TIMEOUT		(30 * HZ)
+ #define MT7615_RATE_RETRY		2
+@@ -461,6 +460,12 @@ static inline u32 mt7615_tx_mcu_int_mask(struct mt7615_dev *dev)
+ 	return MT_INT_TX_DONE(dev->mt76.q_mcu[MT_MCUQ_WM]->hw_idx);
+ }
+ 
++static inline unsigned long
++mt7615_get_macwork_timeout(struct mt7615_dev *dev)
++{
++	return dev->pm.enable ? HZ / 3 : HZ / 10;
++}
++
+ void mt7615_dma_reset(struct mt7615_dev *dev);
+ void mt7615_scan_work(struct work_struct *work);
+ void mt7615_roc_work(struct work_struct *work);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+index cc278d8cb888..da87c02a73eb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+@@ -268,6 +268,7 @@ void mt7615_mac_reset_work(struct work_struct *work)
+ 	struct mt7615_phy *phy2;
+ 	struct mt76_phy *ext_phy;
+ 	struct mt7615_dev *dev;
++	unsigned long timeout;
+ 
+ 	dev = container_of(work, struct mt7615_dev, reset_work);
+ 	ext_phy = dev->mt76.phy2;
+@@ -345,11 +346,11 @@ void mt7615_mac_reset_work(struct work_struct *work)
+ 
+ 	mt7615_mutex_release(dev);
+ 
++	timeout = mt7615_get_macwork_timeout(dev);
+ 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mphy.mac_work,
+-				     MT7615_WATCHDOG_TIME);
++				     timeout);
+ 	if (phy2)
+ 		ieee80211_queue_delayed_work(ext_phy->hw,
+-					     &phy2->mt76->mac_work,
+-					     MT7615_WATCHDOG_TIME);
++					     &phy2->mt76->mac_work, timeout);
+ 
+ }
 -- 
 2.31.1
 
