@@ -7,70 +7,158 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B190C48BE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF34C48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05EE361184
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 597E761164
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232089AbhFRIFX (ORCPT
+        id S232052AbhFRIF3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 04:05:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48084 "EHLO
+        Fri, 18 Jun 2021 04:05:29 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48066 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232926AbhFRIDy (ORCPT
+        with ESMTP id S232801AbhFRIDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 18 Jun 2021 04:03:54 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lu9RP-001YIf-Sz; Fri, 18 Jun 2021 11:01:29 +0300
+        id 1lu9RN-001YIf-65; Fri, 18 Jun 2021 11:01:26 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 11:01:17 +0300
-Message-Id: <iwlwifi.20210618105614.afb63fb8cbc1.If4968db8e09f4ce2a1d27a6d750bca3d132d7d70@changeid>
+Date:   Fri, 18 Jun 2021 11:01:14 +0300
+Message-Id: <iwlwifi.20210618105614.dd25dd667798.I8db9adcdbb133304b58cf417f8698611138c83b4@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210618080121.588233-1-luca@coelho.fi>
 References: <20210618080121.588233-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/10] iwlwifi: pcie: fix context info freeing
+Subject: [PATCH 03/10] iwlwifi: support ver 6 of WOWLAN_CONFIGURATION and ver 10 of WOWLAN_GET_STATUSES
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-After firmware alive, iwl_trans_pcie_gen2_fw_alive() is called
-to free the context info. However, on gen3 that will then free
-the context info with the wrong size.
+These two version updates deprecate the need to set/get the nonqos sequence
+counter during suspend/resume flow respectively; NICs supporting this
+version maintain this counter internally and don't lose it during the
+suspend/resume flow.
 
-Since we free this allocation later, let it stick around until
-the device is stopped for now, freeing some of it earlier is a
-separate change.
+Note that this means that for such NICs the NON_QOS_TX_COUNTER_CMD is no
+longer ever sent.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/fw/api/d3.h    | 12 +++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 26 ++++++++++++-------
+ 2 files changed, 23 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 56162c4500d7..93b957866beb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -323,7 +323,8 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- 	/* now that we got alive we can free the fw image & the context info.
- 	 * paging memory cannot be freed included since FW will still use it
- 	 */
--	iwl_pcie_ctxt_info_free(trans);
-+	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
-+		iwl_pcie_ctxt_info_free(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+index 6488c0f8b471..5373182c1364 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+@@ -339,9 +339,10 @@ enum iwl_wowlan_flags {
+ };
  
- 	/*
- 	 * Re-enable all the interrupts, including the RF-Kill one, now that
+ /**
+- * struct iwl_wowlan_config_cmd - WoWLAN configuration
++ * struct iwl_wowlan_config_cmd - WoWLAN configuration (versions 5 and 6)
+  * @wakeup_filter: filter from &enum iwl_wowlan_wakeup_filters
+- * @non_qos_seq: non-QoS sequence counter to use next
++ * @non_qos_seq: non-QoS sequence counter to use next.
++ *               Reserved if the struct has version >= 6.
+  * @qos_seq: QoS sequence counters to use next
+  * @wowlan_ba_teardown_tids: bitmap of BA sessions to tear down
+  * @is_11n_connection: indicates HT connection
+@@ -604,12 +605,13 @@ struct iwl_wowlan_status_v7 {
+ } __packed; /* WOWLAN_STATUSES_API_S_VER_7 */
+ 
+ /**
+- * struct iwl_wowlan_status_v9 - WoWLAN status (version 9)
++ * struct iwl_wowlan_status_v9 - WoWLAN status (versions 9 and 10)
+  * @gtk: GTK data
+  * @igtk: IGTK data
+  * @replay_ctr: GTK rekey replay counter
+  * @pattern_number: number of the matched pattern
+- * @non_qos_seq_ctr: non-QoS sequence counter to use next
++ * @non_qos_seq_ctr: non-QoS sequence counter to use next.
++ *                   Reserved if the struct has version >= 10.
+  * @qos_seq_ctr: QoS sequence counters to use next
+  * @wakeup_reasons: wakeup reasons, see &enum iwl_wowlan_wakeup_reason
+  * @num_of_gtk_rekeys: number of GTK rekeys
+@@ -638,7 +640,7 @@ struct iwl_wowlan_status_v9 {
+ 	u8 tid_tear_down;
+ 	u8 reserved[3];
+ 	u8 wake_packet[]; /* can be truncated from _length to _bufsize */
+-} __packed; /* WOWLAN_STATUSES_API_S_VER_9 */
++} __packed; /* WOWLAN_STATUSES_RSP_API_S_VER_9 */
+ 
+ /**
+  * struct iwl_wowlan_status - WoWLAN status
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 2e28cf299ef4..e86f0e949b86 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -636,7 +636,6 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 			  struct ieee80211_vif *vif, struct iwl_mvm_vif *mvmvif,
+ 			  struct ieee80211_sta *ap_sta)
+ {
+-	int ret;
+ 	struct iwl_mvm_sta *mvm_ap_sta = iwl_mvm_sta_from_mac80211(ap_sta);
+ 
+ 	/* TODO: wowlan_config_cmd->wowlan_ba_teardown_tids */
+@@ -646,12 +645,16 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 	wowlan_config_cmd->flags = ENABLE_L3_FILTERING |
+ 		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING;
+ 
+-	/* Query the last used seqno and set it */
+-	ret = iwl_mvm_get_last_nonqos_seq(mvm, vif);
+-	if (ret < 0)
+-		return ret;
++	if (iwl_fw_lookup_cmd_ver(mvm->fw, LONG_GROUP,
++				  WOWLAN_CONFIGURATION, 0) < 6) {
++		/* Query the last used seqno and set it */
++		int ret = iwl_mvm_get_last_nonqos_seq(mvm, vif);
++
++		if (ret < 0)
++			return ret;
+ 
+-	wowlan_config_cmd->non_qos_seq = cpu_to_le16(ret);
++		wowlan_config_cmd->non_qos_seq = cpu_to_le16(ret);
++	}
+ 
+ 	iwl_mvm_set_wowlan_qos_seq(mvm_ap_sta, wowlan_config_cmd);
+ 
+@@ -1534,9 +1537,12 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
+ 	}
+ 
+ out:
+-	mvmvif->seqno_valid = true;
+-	/* +0x10 because the set API expects next-to-use, not last-used */
+-	mvmvif->seqno = le16_to_cpu(status->non_qos_seq_ctr) + 0x10;
++	if (iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP,
++				    WOWLAN_GET_STATUSES, 0) < 10) {
++		mvmvif->seqno_valid = true;
++		/* +0x10 because the set API expects next-to-use, not last-used */
++		mvmvif->seqno = le16_to_cpu(status->non_qos_seq_ctr) + 0x10;
++	}
+ 
+ 	return true;
+ }
+@@ -1654,7 +1660,7 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
+ 
+ 		status->gtk[0] = v7->gtk[0];
+ 		status->igtk[0] = v7->igtk[0];
+-	} else if (notif_ver == 9) {
++	} else if (notif_ver == 9 || notif_ver == 10) {
+ 		struct iwl_wowlan_status_v9 *v9 = (void *)cmd.resp_pkt->data;
+ 
+ 		status = iwl_mvm_parse_wowlan_status_common_v9(mvm,
 -- 
 2.32.0
 
