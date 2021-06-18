@@ -2,101 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9A7C48BDF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3FFC48BDF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E696961164
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EEE361351
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Jun 2021 08:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232638AbhFRIFD (ORCPT
+        id S232702AbhFRIFG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Jun 2021 04:05:03 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48048 "EHLO
+        Fri, 18 Jun 2021 04:05:06 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48060 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232749AbhFRIDm (ORCPT
+        with ESMTP id S232782AbhFRIDq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Jun 2021 04:03:42 -0400
+        Fri, 18 Jun 2021 04:03:46 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lu9RJ-001YIf-Vl; Fri, 18 Jun 2021 11:01:23 +0300
+        id 1lu9RM-001YIf-Dn; Fri, 18 Jun 2021 11:01:25 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 18 Jun 2021 11:01:11 +0300
-Message-Id: <20210618080121.588233-1-luca@coelho.fi>
+Date:   Fri, 18 Jun 2021 11:01:13 +0300
+Message-Id: <iwlwifi.20210618105614.64df994c8fbb.I0fa5cda3a5f893a396eef30a01522422be359e69@changeid>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210618080121.588233-1-luca@coelho.fi>
+References: <20210618080121.588233-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/10] iwlwifi: updates intended for v5.14 2021-06-18
+Subject: [PATCH 02/10] iwlwifi: mvm: don't request mac80211 to disable/enable sta's queues
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-Hi,
+When operating in AP mode with NICs supporting the AP_LINK_PS hw flag,
+mac80211 doesn't need to start/stop queueing tx for connected stations
+because the FW already handles that.
 
-Here's the thjird set of patches intended for v5.14.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-The changes are:
-
-* Some fixes in IML (image loader) DMA handling;
-* Fixes in WoWLAN;
-* Some other small fixes, clean-ups and improvements.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: support LONG_GROUP for WOWLAN_GET_STATUSES version
-  iwlwifi: mvm: introduce iwl_proto_offload_cmd_v4
-
-Ilan Peer (1):
-  iwlwifi: mvm: Explicitly stop session protection before unbinding
-
-Johannes Berg (4):
-  iwlwifi: pcie: free IML DMA memory allocation
-  iwlwifi: pcie: fix context info freeing
-  iwlwifi: mvm: fill phy_data.d1 for no-data RX
-  iwlwifi: pcie: free some DMA memory earlier
-
-Luca Coelho (1):
-  iwlwifi: fix NUM_IWL_UCODE_TLV_* definitions to avoid sparse errors
-
-Naftali Goldstein (2):
-  iwlwifi: mvm: don't request mac80211 to disable/enable sta's queues
-  iwlwifi: support ver 6 of WOWLAN_CONFIGURATION and ver 10 of
-    WOWLAN_GET_STATUSES
-
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    | 28 +++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/file.h  | 14 +++---
- .../intel/iwlwifi/iwl-context-info-gen3.h     |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 44 ++++++++++++-------
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  1 -
- .../wireless/intel/iwlwifi/mvm/offloading.c   | 26 ++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 10 ++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  8 +++-
- .../wireless/intel/iwlwifi/mvm/time-event.c   | 41 ++++++++++++-----
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 28 ++++++++----
- .../wireless/intel/iwlwifi/pcie/internal.h    |  3 ++
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  7 ++-
- 12 files changed, 148 insertions(+), 66 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index f618368eda83..9c45a64c5009 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -3794,8 +3794,12 @@ void iwl_mvm_sta_modify_disable_tx_ap(struct iwl_mvm *mvm,
+ 
+ 	mvm_sta->disable_tx = disable;
+ 
+-	/* Tell mac80211 to start/stop queuing tx for this station */
+-	ieee80211_sta_block_awake(mvm->hw, sta, disable);
++	/*
++	 * If sta PS state is handled by mac80211, tell it to start/stop
++	 * queuing tx for this station.
++	 */
++	if (!ieee80211_hw_check(mvm->hw, AP_LINK_PS))
++		ieee80211_sta_block_awake(mvm->hw, sta, disable);
+ 
+ 	iwl_mvm_sta_modify_disable_tx(mvm, mvm_sta, disable);
+ 
 -- 
 2.32.0
 
