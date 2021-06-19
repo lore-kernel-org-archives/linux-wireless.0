@@ -2,149 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E0E6C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 05:50:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12681C48BE5
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 06:27:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5B53610A7
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 05:50:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E561E60FEA
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 06:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233602AbhFSFuK (ORCPT
+        id S232897AbhFSG3z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Jun 2021 01:50:10 -0400
-Received: from mga01.intel.com ([192.55.52.88]:65144 "EHLO mga01.intel.com"
+        Sat, 19 Jun 2021 02:29:55 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:56133 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233574AbhFSFuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Jun 2021 01:50:10 -0400
-IronPort-SDR: euFyfXH1NsnBQskysJha45jfWPmfih/2jKrnrNrNK32Wm7XU5kBKcEEcKq/Ijqg9eCQjfVwLOQ
- bje8mcJ6wrYg==
-X-IronPort-AV: E=McAfee;i="6200,9189,10019"; a="228188474"
-X-IronPort-AV: E=Sophos;i="5.83,285,1616482800"; 
-   d="scan'208";a="228188474"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2021 22:47:59 -0700
-IronPort-SDR: TQveOa4J3+g5/G8+VZmTwR55HkGeyr2kPWlKQ2hmLU+VwLxryT7i7VTVedZMQiyKU6YtNbZL4N
- IX6+Ft5XExrA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,285,1616482800"; 
-   d="scan'208";a="453371225"
-Received: from lkp-server01.sh.intel.com (HELO 4aae0cb4f5b5) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 18 Jun 2021 22:47:58 -0700
-Received: from kbuild by 4aae0cb4f5b5 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1luTpm-0003Ms-6B; Sat, 19 Jun 2021 05:47:58 +0000
-Date:   Sat, 19 Jun 2021 13:47:11 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:pending] BUILD SUCCESS
- 3d94ccca3e601e28d8b7e78f02b5d7907e178898
-Message-ID: <60cd84df.H5bxPNGqsDwaUk6Z%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S232605AbhFSG3x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Jun 2021 02:29:53 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1624084059; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
+ To: From: Sender; bh=ReeHdDtZ1CGVXKaLf4XclDol0SUyu66O157eCXFCbig=; b=EqXe0fnU8UOq8QafoXMtwhVDPo+jhXzycMY+W8eiNKmjEr4Ivq8RQOGpgFxa7MMIP2VR5IBV
+ 2n4SE9sp8nDk4Kk3jADDYSVMo9NEcsT/Bnf73uF6odKrHrpiV9rKOV1KK9DKb/1V0Rbdqvo1
+ uFw528SqEJqpCie+70Eov6GmPFU=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 60cd8e42e27c0cc77fa6dbc4 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 19 Jun 2021 06:27:14
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 9E741C43460; Sat, 19 Jun 2021 06:27:13 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B6D88C433F1;
+        Sat, 19 Jun 2021 06:27:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B6D88C433F1
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Dmitry Osipenko <digetx@gmail.com>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 1/2] cfg80211: Add wiphy_info_once()
+References: <20210511211549.30571-1-digetx@gmail.com>
+        <e7495304-d62c-fd20-fab3-3930735f2076@gmail.com>
+Date:   Sat, 19 Jun 2021 09:27:06 +0300
+In-Reply-To: <e7495304-d62c-fd20-fab3-3930735f2076@gmail.com> (Dmitry
+        Osipenko's message of "Fri, 18 Jun 2021 23:44:50 +0300")
+Message-ID: <87r1gyid39.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git pending
-branch HEAD: 3d94ccca3e601e28d8b7e78f02b5d7907e178898  Merge tag 'mt76-for-kvalo-2021-06-18' of https://github.com/nbd168/wireless into pending
+Dmitry Osipenko <digetx@gmail.com> writes:
 
-elapsed time: 726m
+> 12.05.2021 00:15, Dmitry Osipenko =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+>> Add wiphy_info_once() helper that prints info message only once.
+>>=20
+>> Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+>> ---
+>>=20
+>> Changelog:
+>>=20
+>> v2: - New patch added in v2.
+>>=20
+>>  include/net/cfg80211.h | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>=20
+>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+>> index 5224f885a99a..3b19e03509b3 100644
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -8154,6 +8154,8 @@ bool cfg80211_iftype_allowed(struct wiphy *wiphy, =
+enum nl80211_iftype iftype,
+>>  	dev_notice(&(wiphy)->dev, format, ##args)
+>>  #define wiphy_info(wiphy, format, args...)			\
+>>  	dev_info(&(wiphy)->dev, format, ##args)
+>> +#define wiphy_info_once(wiphy, format, args...)			\
+>> +	dev_info_once(&(wiphy)->dev, format, ##args)
+>>=20=20
+>>  #define wiphy_err_ratelimited(wiphy, format, args...)		\
+>>  	dev_err_ratelimited(&(wiphy)->dev, format, ##args)
+>>=20
+>
+> Ping?
+>
+> Arend, is this series good to you? I assume Kalle could pick it up if
+> you'll give ack. Thanks in advance.
 
-configs tested: 79
-configs skipped: 2
+Normally cfg80211 changes go via Johannes' tree though I guess small
+changes I could take it via my tree, but then I need an ack from
+Johannes.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-x86_64                            allnoconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a002-20210618
-i386                 randconfig-a006-20210618
-i386                 randconfig-a004-20210618
-i386                 randconfig-a001-20210618
-i386                 randconfig-a005-20210618
-i386                 randconfig-a003-20210618
-x86_64               randconfig-a015-20210618
-x86_64               randconfig-a011-20210618
-x86_64               randconfig-a012-20210618
-x86_64               randconfig-a014-20210618
-x86_64               randconfig-a016-20210618
-x86_64               randconfig-a013-20210618
-i386                 randconfig-a015-20210618
-i386                 randconfig-a016-20210618
-i386                 randconfig-a013-20210618
-i386                 randconfig-a014-20210618
-i386                 randconfig-a012-20210618
-i386                 randconfig-a011-20210618
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-um                            kunit_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-b001-20210618
-x86_64               randconfig-a002-20210618
-x86_64               randconfig-a001-20210618
-x86_64               randconfig-a004-20210618
-x86_64               randconfig-a003-20210618
-x86_64               randconfig-a006-20210618
-x86_64               randconfig-a005-20210618
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
