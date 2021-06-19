@@ -4,92 +4,107 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E3BFC2B9F4
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 08:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE6AC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:06:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09E5C60FF4
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 08:48:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB2946112D
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:06:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233336AbhFSIvG (ORCPT
+        id S230175AbhFSJIg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Jun 2021 04:51:06 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:48356 "EHLO
+        Sat, 19 Jun 2021 05:08:36 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:24731 "EHLO
         so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230225AbhFSIvF (ORCPT
+        with ESMTP id S229475AbhFSJId (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Jun 2021 04:51:05 -0400
+        Sat, 19 Jun 2021 05:08:33 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624092535; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=ihDIZulanQz94DPDBMQtNnxkLQ2Co8HobZZ7B68JgRc=; b=XiuTsF6DlPezIHkQUBnkZj3/GfmJbaiY8EcF+JPDMSrDZ1OEGQ0WOoiGLeqh6U/KXYu8KuXI
- OkyV/kEBNa5xPDSWCKuQVnYLdRxW2aXzRlk5eydkQCqTl8O+L0qfqfHTwyc6q0XyHaGLH1Nd
- vZGmaDnNTMrN8arJAC5FTU986YY=
+ s=smtp; t=1624093582; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=JExdWib+2vNvSJ1ZeWNdFikcr81uBm3qt2YwfkU3z68=;
+ b=pEqqmxqLZXL3KxxzeKAup8xqxjNN/sxwdM6huv0HMddJThfsNh0/QayPS0Q94s8+p4+SX6q8
+ a5YmMd4ZQi+wmq0xHRbeeu1KNPhiqN912/w6GZbZZcafIzS11bBa4Ynk5nWBAWsnKpm8N5OC
+ xqtPT3Lv1RNNbBQ0+lXYVfz0WOs=
 X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 60cdaf63e570c0561945e994 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 19 Jun 2021 08:48:35
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 60cdb38ce570c056194f6450 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 19 Jun 2021 09:06:20
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0F19CC433D3; Sat, 19 Jun 2021 08:48:35 +0000 (UTC)
-Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        id D786BC43460; Sat, 19 Jun 2021 09:06:19 +0000 (UTC)
+Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D5511C433F1;
-        Sat, 19 Jun 2021 08:48:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D5511C433F1
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9C290C433D3;
+        Sat, 19 Jun 2021 09:06:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9C290C433D3
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Zekun Shen <bruceshenzk@gmail.com>
-Cc:     ath9k-devel@qca.qualcomm.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: fix OOB read ar9300_eeprom_restore_internal
-References: <YM1ajkPk+7ve4Ls9@Zekuns-MBP-16.fios-router.home>
-Date:   Sat, 19 Jun 2021 11:48:27 +0300
-In-Reply-To: <YM1ajkPk+7ve4Ls9@Zekuns-MBP-16.fios-router.home> (Zekun Shen's
-        message of "Fri, 18 Jun 2021 22:46:38 -0400")
-Message-ID: <87a6nmi6jo.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] rtl8xxxu: avoid parsing short RX packet
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210511071926.8951-1-ihuguet@redhat.com>
+References: <20210511071926.8951-1-ihuguet@redhat.com>
+To:     =?utf-8?b?w43DsWlnbyBIdWd1ZXQ=?= <ihuguet@redhat.com>
+Cc:     Jes.Sorensen@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        ihuguet@redhat.com
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-Id: <20210619090619.D786BC43460@smtp.codeaurora.org>
+Date:   Sat, 19 Jun 2021 09:06:19 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ linux-wireless
+Íñigo Huguet <ihuguet@redhat.com> wrote:
 
-Zekun Shen <bruceshenzk@gmail.com> writes:
+> One USB data buffer can contain multiple received network
+> packets. If that's the case, they're processed this way:
+> 1. Original buffer is cloned
+> 2. Original buffer is trimmed to contain only the first
+>    network packet
+> 3. This first network packet is passed to network stack
+> 4. Cloned buffer is trimmed to eliminate the first network
+>    packet
+> 5. Repeat with the cloned buffer until there are no more
+>    network packets inside
+> 
+> However, if the space remaining in original buffer after
+> the first network packet is not enough to contain at least
+> another network packet descriptor, it is not cloned.
+> 
+> The loop parsing this packets ended if remaining space == 0.
+> But if the remaining space was > 0 but < packet descriptor
+> size, another iteration of the loop was done, processing again
+> the previous packet because cloning didn't happen. Moreover,
+> the ownership of this packet had been passed to network
+> stack in the previous iteration.
+> 
+> This patch ensures that no extra iteration is done if the
+> remaining size is not enough for one packet, and also avoid
+> the first iteration for the same reason.
+> 
+> Probably this doesn't happen in practice, but can happen
+> theoretically.
+> 
+> Signed-off-by: Íñigo Huguet <ihuguet@redhat.com>
 
-> Bad header can have large length field which can cause OOB.
-> cptr is the last bytes for read, and the eeprom is parsed
-> from high to low address. The OOB, triggered by the condition
-> length > cptr could cause memory error with a read on
-> negative index.
->
-> There are some sanity check around length, but it is not
-> compared with cptr (the remaining bytes). Here, the
-> corrupted/bad EEPROM can cause panic.
->
-> I was able to reproduce the crash, but I cannot find the
-> log and the reproducer now. After I applied the patch, the
-> bug is no longer reproducible.
->
-> Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Patch applied to wireless-drivers-next.git, thanks.
 
-Please resubmit and cc linux-wireless list, otherwise patchwork won't
-see the patch and then it will be out of my radar.
+adf6a0f8c0a6 rtl8xxxu: avoid parsing short RX packet
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210511071926.8951-1-ihuguet@redhat.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
