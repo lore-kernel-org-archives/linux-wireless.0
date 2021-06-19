@@ -4,101 +4,100 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C5E4C49361
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:06:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE017C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:13:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDFF6611AC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:06:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2286611AC
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 09:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229591AbhFSJIh (ORCPT
+        id S231781AbhFSJPh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Jun 2021 05:08:37 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:42543 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbhFSJIf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Jun 2021 05:08:35 -0400
+        Sat, 19 Jun 2021 05:15:37 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:46651 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230318AbhFSJPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Jun 2021 05:15:37 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624093585; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1624094006; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=mH+qv9WCwRFtGepgrLgmaZiRBlcWLKrRo52cPCcVzxM=;
- b=urmnAM6TPNgeiOtfLbE8Xite/hzRqdaGKIIAu9/EAWkE8U8CHx0/iyiFkbBcnME8mz8yHhup
- xDw7qJHkg5CmHCs8oL/TpmF5nJCkfT9WgIq5yPandNjklgXr+lg9RbHxURmJaLsIzIMcgS8o
- 9+fpR2CBelbhPqm9OIIUx3f44QY=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ Content-Type: Sender; bh=H0sbWODlKoSLIOSfRR0sPPZJCVLCPWUz5A6uE/iTadY=;
+ b=LTmPwYykkzATrXY7i3mziZHMk+Vf+tUsPvZA7krsI627g88ryaDP6FmJ77/LHhJjBfCqMZEm
+ Mrle6CyZTA5136kycTsizvOKHWulwAiJY5XUGIxAQKDCCp3OOyANhed+VzwsFaTqfEp/d5Mm
+ WN+MmJ2orKw/DCTD73Yf3n509tE=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 60cdb3705eaa81cb1edddc41 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 19 Jun 2021 09:05:52
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 60cdb5202eaeb98b5e8cc93c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 19 Jun 2021 09:13:04
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4D6B1C4338A; Sat, 19 Jun 2021 09:05:51 +0000 (UTC)
+        id 24FCBC4338A; Sat, 19 Jun 2021 09:13:04 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D3B7EC433F1;
-        Sat, 19 Jun 2021 09:05:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D3B7EC433F1
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 83CA3C433F1;
+        Sat, 19 Jun 2021 09:13:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 83CA3C433F1
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] rtl8xxxu: Fix device info for RTL8192EU devices
+Subject: Re: [PATCH] ath10k: demote chan info without scan request warning
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210424172959.1559890-1-pterjan@google.com>
-References: <20210424172959.1559890-1-pterjan@google.com>
-To:     Pascal Terjan <pterjan@google.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Jes Sorensen <jes.sorensen@gmail.com>,
-        Pascal Terjan <pterjan@google.com>
+In-Reply-To: <20210522171609.299611-1-caleb@connolly.tech>
+References: <20210522171609.299611-1-caleb@connolly.tech>
+To:     Caleb Connolly <caleb@connolly.tech>
+Cc:     caleb@connolly.tech, "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210619090551.4D6B1C4338A@smtp.codeaurora.org>
-Date:   Sat, 19 Jun 2021 09:05:51 +0000 (UTC)
+Message-Id: <20210619091304.24FCBC4338A@smtp.codeaurora.org>
+Date:   Sat, 19 Jun 2021 09:13:04 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pascal Terjan <pterjan@google.com> wrote:
+Caleb Connolly <caleb@connolly.tech> wrote:
 
-> Based on 2001:3319 and 2357:0109 which I used to test the fix and
-> 0bda:818b and 2357:0108 for which I found efuse dumps online.
+> Some devices/firmwares cause this to be printed every 5-15 seconds,
+> though it has no impact on functionality. Demote this to a debug
+> message.
 > 
-> == 2357:0109 ==
-> === Before ===
-> Vendor: Realtek
-> Product: \x03802.11n NI
-> Serial:
-> === After ===
-> Vendor: Realtek
-> Product: 802.11n NIC
-> Serial not available.
+> I see this on SDM845 and MSM8998 platforms, specifically the OnePlus 6 devices,
+> PocoPhone F1 and OnePlus 5.  On the OnePlus 6 (SDM845) we are stuck with the
+> following signed vendor fw:
 > 
-> == 2001:3319 ==
-> === Before ===
-> Vendor: Realtek
-> Product: Wireless N
-> Serial: no USB Adap
-> === After ===
-> Vendor: Realtek
-> Product: Wireless N Nano USB Adapter
-> Serial not available.
+> [    9.339873] ath10k_snoc 18800000.wifi: qmi chip_id 0x30214 chip_family 0x4001 board_id 0xff soc_id 0x40030001
+> [    9.339897] ath10k_snoc 18800000.wifi: qmi fw_version 0x20060029 fw_build_timestamp 2019-07-12 02:14 fw_build_id QC_IMAGE_VERSION_STRING=WLAN.HL.2.0.c8-00041-QCAHLSWMTPLZ-1
 > 
-> Signed-off-by: Pascal Terjan <pterjan@google.com>
+> The OnePlus 5 (MSM8998) is using firmware:
+> 
+> [ 6096.956799] ath10k_snoc 18800000.wifi: qmi chip_id 0x30214 chip_family 0x4001 board_id 0xff soc_id 0x40010002
+> [ 6096.956824] ath10k_snoc 18800000.wifi: qmi fw_version 0x1007007e fw_build_timestamp 2020-04-14 22:45 fw_build_id QC_IMAGE_VERSION_STRING=WLAN.HL.1.0.c6-00126-QCAHLSWMTPLZ-1.211883.1.278648.
+> 
+> Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.2.0.c8-00041-QCAHLSWMTPLZ-1
+> Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.1.0.c6-00126-QCAHLSWMTPLZ-1.211883.1.278648
+> 
+> Signed-off-by: Caleb Connolly <caleb@connolly.tech>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-c240b044edef rtl8xxxu: Fix device info for RTL8192EU devices
+8a952a955de7 ath10k: demote chan info without scan request warning
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210424172959.1559890-1-pterjan@google.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210522171609.299611-1-caleb@connolly.tech/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
