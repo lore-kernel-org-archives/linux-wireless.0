@@ -2,105 +2,187 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 744B6C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 18:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5792CC2B9F4
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 20:58:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55180611AC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 18:20:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 333D8611B0
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Jun 2021 20:58:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234935AbhFSSUi (ORCPT
+        id S229538AbhFSVAk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Jun 2021 14:20:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37066 "EHLO mail.kernel.org"
+        Sat, 19 Jun 2021 17:00:40 -0400
+Received: from mga07.intel.com ([134.134.136.100]:6007 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234084AbhFSSUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Jun 2021 14:20:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 51CB6610CD;
-        Sat, 19 Jun 2021 18:18:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624126706;
-        bh=sHJ5jxGRoxIVeEewlhvtETKOo2nJHVNCWuXeraCxlrY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=VkxtyIIXw8TCKdZfzQbNrO5bBGVwLvuJPG+G5OJIwu5m1Ng7Z/l9JRUqk9jOG11kJ
-         3VprDVy92Xb7+9MzQa84tQv5Rn4BUREj0wZUahWcrqbxgB4s4eNs50RHVjAvA37w8o
-         sHTdvJ+I2SGsfwPDz3cDlO0D2EGK3GnaasyHpRy0QbQx+UI2PE4TaVYcre2xQIlNwu
-         eUUADOJQl47ak4Lm/2hfrDG4oi8goqRmPPpMzLnrimO2uY2E3sBNmQCzXirlwAgeVN
-         wkX5wm1AlapwGxDfPD8uTMpe6UxXuMsFqif19vKrxPwiQz4Fg2d1Iza9m3B2ksXcuE
-         pRu9FQvUeV+4Q==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sean.wang@mediatek.com, deren.wu@mediatek.com
-Subject: [PATCH] mt76: mt7921: fix endianness in mt7921_mcu_tx_done_event
-Date:   Sat, 19 Jun 2021 20:18:19 +0200
-Message-Id: <948d3572e324c82c80259279264651998da56232.1624126593.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        id S229475AbhFSVAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Jun 2021 17:00:40 -0400
+IronPort-SDR: uQHH/fpi/DvmwmDExPytHxpZxOyNVZvkhtVVS7mqSvuIXe5L/CanO2XEb8/pQXPWv74hyftN0S
+ 8YRv+a4pKTDw==
+X-IronPort-AV: E=McAfee;i="6200,9189,10020"; a="270536930"
+X-IronPort-AV: E=Sophos;i="5.83,285,1616482800"; 
+   d="scan'208";a="270536930"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jun 2021 13:58:28 -0700
+IronPort-SDR: QRzThaIV/KZt5dsI03+3RlVcmgrRWqVzLgv5qtXWzTOgf3Wm7ua+PWCcM+RApsbGmaV/KHDKEg
+ C7cIHzNAfq5A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,285,1616482800"; 
+   d="scan'208";a="451772311"
+Received: from lkp-server01.sh.intel.com (HELO 4aae0cb4f5b5) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 19 Jun 2021 13:58:27 -0700
+Received: from kbuild by 4aae0cb4f5b5 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lui2s-0003m8-Dh; Sat, 19 Jun 2021 20:58:26 +0000
+Date:   Sun, 20 Jun 2021 04:57:48 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: [wireless-drivers-next:pending] BUILD SUCCESS
+ b566b2e82ffa95f64d1c367d3098adbd2af11561
+Message-ID: <60ce5a4c.rpxosxt4p7PLQ/7u%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix endianness in mt7921_mcu_tx_done_event event reported by the
-firmware.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git pending
+branch HEAD: b566b2e82ffa95f64d1c367d3098adbd2af11561  Merge tag 'mt76-for-kvalo-2021-06-18' of https://github.com/nbd168/wireless into pending
 
-Fixes: 3cce2b98e0241 ("mt76: mt7921: introduce mac tx done handling")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+elapsed time: 724m
+
+configs tested: 117
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+powerpc                 mpc834x_itx_defconfig
+sh                          polaris_defconfig
+x86_64                            allnoconfig
+xtensa                       common_defconfig
+arm                          pxa168_defconfig
+powerpc                     tqm8555_defconfig
+arm                     am200epdkit_defconfig
+ia64                             allyesconfig
+um                            kunit_defconfig
+arm                         orion5x_defconfig
+sh                        edosk7705_defconfig
+sh                   sh7724_generic_defconfig
+sh                        sh7763rdp_defconfig
+mips                    maltaup_xpa_defconfig
+arm                         palmz72_defconfig
+sh                            hp6xx_defconfig
+mips                     loongson2k_defconfig
+mips                malta_qemu_32r6_defconfig
+sh                   secureedge5410_defconfig
+csky                                defconfig
+powerpc                        cell_defconfig
+arm                         axm55xx_defconfig
+powerpc                    mvme5100_defconfig
+openrisc                            defconfig
+arm                            hisi_defconfig
+arm                      jornada720_defconfig
+arm                          pxa3xx_defconfig
+powerpc                     tqm5200_defconfig
+arm                           sunxi_defconfig
+powerpc                           allnoconfig
+sh                          urquell_defconfig
+x86_64                           allyesconfig
+arm                       imx_v6_v7_defconfig
+mips                 decstation_r4k_defconfig
+powerpc                       maple_defconfig
+powerpc                      ep88xc_defconfig
+sparc                            alldefconfig
+sh                           sh2007_defconfig
+arm                        realview_defconfig
+ia64                             alldefconfig
+s390                                defconfig
+mips                         db1xxx_defconfig
+powerpc                          g5_defconfig
+mips                        nlm_xlr_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+i386                 randconfig-a002-20210618
+i386                 randconfig-a006-20210618
+i386                 randconfig-a004-20210618
+i386                 randconfig-a001-20210618
+i386                 randconfig-a005-20210618
+i386                 randconfig-a003-20210618
+x86_64               randconfig-a015-20210618
+x86_64               randconfig-a011-20210618
+x86_64               randconfig-a012-20210618
+x86_64               randconfig-a014-20210618
+x86_64               randconfig-a016-20210618
+x86_64               randconfig-a013-20210618
+i386                 randconfig-a015-20210618
+i386                 randconfig-a016-20210618
+i386                 randconfig-a013-20210618
+i386                 randconfig-a014-20210618
+i386                 randconfig-a012-20210618
+i386                 randconfig-a011-20210618
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-b001-20210620
+x86_64               randconfig-b001-20210618
+x86_64               randconfig-a002-20210618
+x86_64               randconfig-a001-20210618
+x86_64               randconfig-a004-20210618
+x86_64               randconfig-a003-20210618
+x86_64               randconfig-a006-20210618
+x86_64               randconfig-a005-20210618
+
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c |  3 ++-
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.h | 10 +++++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index c2c4dc196802..1819de869fdf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -532,7 +532,8 @@ mt7921_mcu_tx_done_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 		peer.g8 = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_80);
- 		peer.g16 = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_160);
- 		mt7921_mcu_tx_rate_parse(mphy->mt76, &peer,
--					 &msta->stats.tx_rate, event->tx_rate);
-+					 &msta->stats.tx_rate,
-+					 le16_to_cpu(event->tx_rate));
- 
- 		spin_lock_bh(&dev->sta_poll_lock);
- 		break;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index d76cf8f8dfdf..d142c50c1a3d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -295,11 +295,11 @@ struct mt7921_txpwr_event {
- struct mt7921_mcu_tx_done_event {
- 	u8 pid;
- 	u8 status;
--	u16 seq;
-+	__le16 seq;
- 
- 	u8 wlan_idx;
- 	u8 tx_cnt;
--	u16 tx_rate;
-+	__le16 tx_rate;
- 
- 	u8 flag;
- 	u8 tid;
-@@ -311,9 +311,9 @@ struct mt7921_mcu_tx_done_event {
- 	u8 reason;
- 	u8 rsv0[1];
- 
--	u32 delay;
--	u32 timestamp;
--	u32 applied_flag;
-+	__le32 delay;
-+	__le32 timestamp;
-+	__le32 applied_flag;
- 
- 	u8 txs[28];
- 
--- 
-2.31.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
