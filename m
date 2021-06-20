@@ -2,156 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7283C49361
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 07:48:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88747C48BDF
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 08:46:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2E82610A3
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 07:48:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A4B761078
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 08:46:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbhFTHua (ORCPT
+        id S229579AbhFTIqo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Jun 2021 03:50:30 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:38844 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229558AbhFTHu3 (ORCPT
+        Sun, 20 Jun 2021 04:46:44 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:31005 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229524AbhFTIqo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Jun 2021 03:50:29 -0400
-X-UUID: 478acd45b79046d68dd1c9989ffb2965-20210620
-X-UUID: 478acd45b79046d68dd1c9989ffb2965-20210620
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1459100602; Sun, 20 Jun 2021 15:48:12 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sun, 20 Jun 2021 15:48:10 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 20 Jun 2021 15:48:10 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <jemele@google.com>, <yenlinlai@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 2/2] mt76: fix build error implicit enumeration conversion
-Date:   Sun, 20 Jun 2021 15:48:07 +0800
-Message-ID: <62c5ed786f81ddea6d3587647520e9e4254c8612.1624174954.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <9b704807383f3048898944d2b9cb74e6b4e8d83d.1624174954.git.objelf@gmail.com>
-References: <9b704807383f3048898944d2b9cb74e6b4e8d83d.1624174954.git.objelf@gmail.com>
+        Sun, 20 Jun 2021 04:46:44 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1624178671; h=Content-Type: MIME-Version: Message-ID: Date:
+ References: In-Reply-To: Subject: Cc: To: From: Sender;
+ bh=ZlYN9ZqbA4FlSNCaICJ89aee7UP/9hKbVoA3Ymp9Y+I=; b=N2QO8Jq1KvfhMUc1TC5LU5Tu0qqHzGf+Ke4sZTBUGThHlgAq/D/57YTICOdiX7WW86fjvoui
+ KyHHbd+FytbNUDvaRiC68VHLq/jrBlqQ5X6y/w91nSYF5S91ZC281YrmFyLAtjNhPuQsSTnt
+ tkZ0W81Zo5E47LkNqrfgPrw6GLY=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 60ceffee5eaa81cb1e174bb2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 20 Jun 2021 08:44:30
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1DFF1C433F1; Sun, 20 Jun 2021 08:44:30 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 48E5DC433F1;
+        Sun, 20 Jun 2021 08:44:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 48E5DC433F1
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org, sean.wang@mediatek.com
+Subject: Re: [PATCH] mt76: mt7921: allow chip reset during device restart
+In-Reply-To: <YM3k2dm2HcW/J+FJ@lore-desk> (Lorenzo Bianconi's message of "Sat,
+        19 Jun 2021 14:36:41 +0200")
+References: <96d84ef577cb558969a56ed42e68769eac0d3a1c.1624012209.git.lorenzo@kernel.org>
+        <874kduktao.fsf@tynnyri.adurom.net> <YM3k2dm2HcW/J+FJ@lore-desk>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Date:   Sun, 20 Jun 2021 11:44:23 +0300
+Message-ID: <87zgvlgc2g.fsf@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:114:10: error: implicit
-conversion from enumeration type 'enum mt76_cipher_type' to different
-enumeration type 'enum mcu_cipher_type' [-Werror,-Wenum-conversion]
-                return MT_CIPHER_NONE;
-                ~~~~~~ ^~~~~~~~~~~~~~
+>> Lorenzo Bianconi <lorenzo@kernel.org> writes:
+>> 
+>> > Disable chip full reset just during device probing but allow
+>> > it during hw restart.
+>> >
+>> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+>> 
+>> [...]
+>> 
+>> > --- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+>> > +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+>> > @@ -160,7 +160,8 @@ struct mt7921_dev {
+>> >  	u16 chainmask;
+>> >  
+>> >  	struct work_struct reset_work;
+>> > -	bool hw_full_reset;
+>> > +	bool hw_full_reset:1;
+>> > +	bool hw_init_done:1;
+>> 
+>> Is there a specific reason why you use bitfields in a boolean? Looks
+>> strange to me.
+>
+> Hi Kalle,
+>
+> nope, there is no specific reason, I have just reused the same approach used in
+> mt76_queue_entry for skip_buf{0,1}.
 
-drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:114:10: error: implicit
-conversion from enumeration type 'enum mt76_cipher_type' to different
-enumeration type 'enum mcu_cipher_type' [-Werror,-Wenum-conversion]
-                return MT_CIPHER_NONE;
-                ~~~~~~ ^~~~~~~~~~~~~~
+Ah, I checked now and saw other uses of boolean bitfields elsewhere in
+kernel as well, but this is the first time I saw about this. So I guess
+this is then ok and saves few bytes. Learned something new again :)
 
-Fixes: c368362c36d3 ("mt76: fix iv and CCMP header insertion")
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.h | 3 ++-
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.h | 3 ++-
- 4 files changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 863aa18b3024..c2e537a9c1dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -111,7 +111,7 @@ mt7915_mcu_get_cipher(int cipher)
- 	case WLAN_CIPHER_SUITE_SMS4:
- 		return MCU_CIPHER_WAPI;
- 	default:
--		return MT_CIPHER_NONE;
-+		return MCU_CIPHER_NONE;
- 	}
- }
- 
-@@ -1201,7 +1201,7 @@ mt7915_mcu_sta_key_tlv(struct mt7915_sta *msta, struct sk_buff *skb,
- 		u8 cipher;
- 
- 		cipher = mt7915_mcu_get_cipher(key->cipher);
--		if (cipher == MT_CIPHER_NONE)
-+		if (cipher == MCU_CIPHER_NONE)
- 			return -EOPNOTSUPP;
- 
- 		sec_key = &sec->key[0];
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index edd3ba3a0c2d..5b9b425bd836 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -1073,7 +1073,8 @@ enum {
- };
- 
- enum mcu_cipher_type {
--	MCU_CIPHER_WEP40 = 1,
-+	MCU_CIPHER_NONE,
-+	MCU_CIPHER_WEP40,
- 	MCU_CIPHER_WEP104,
- 	MCU_CIPHER_WEP128,
- 	MCU_CIPHER_TKIP,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index c2c4dc196802..81633be09e90 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -111,7 +111,7 @@ mt7921_mcu_get_cipher(int cipher)
- 	case WLAN_CIPHER_SUITE_SMS4:
- 		return MCU_CIPHER_WAPI;
- 	default:
--		return MT_CIPHER_NONE;
-+		return MCU_CIPHER_NONE;
- 	}
- }
- 
-@@ -619,7 +619,7 @@ mt7921_mcu_sta_key_tlv(struct mt7921_sta *msta, struct sk_buff *skb,
- 		u8 cipher;
- 
- 		cipher = mt7921_mcu_get_cipher(key->cipher);
--		if (cipher == MT_CIPHER_NONE)
-+		if (cipher == MCU_CIPHER_NONE)
- 			return -EOPNOTSUPP;
- 
- 		sec_key = &sec->key[0];
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index d76cf8f8dfdf..3334afd8aea9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -199,7 +199,8 @@ struct sta_rec_sec {
- } __packed;
- 
- enum mcu_cipher_type {
--	MCU_CIPHER_WEP40 = 1,
-+	MCU_CIPHER_NONE,
-+	MCU_CIPHER_WEP40,
- 	MCU_CIPHER_WEP104,
- 	MCU_CIPHER_WEP128,
- 	MCU_CIPHER_TKIP,
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
