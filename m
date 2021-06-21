@@ -4,43 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 617B0C49EA5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 478CDC48BE5
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:52:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D6076115B
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:52:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 326BF61357
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231693AbhFURy1 (ORCPT
+        id S232164AbhFURyz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jun 2021 13:54:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38388 "EHLO mail.kernel.org"
+        Mon, 21 Jun 2021 13:54:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38788 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231736AbhFURyW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jun 2021 13:54:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 83E9061026;
-        Mon, 21 Jun 2021 17:52:07 +0000 (UTC)
+        id S231961AbhFURyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jun 2021 13:54:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A48F76128A;
+        Mon, 21 Jun 2021 17:52:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624297928;
-        bh=1sHIQdPRn/XYTHYJ7Gb5M0sxtlirFmYni9xPyfy/yw8=;
+        s=k20201202; t=1624297941;
+        bh=ZKOlOQEc0Zv2X+bJq4CpdNmLnkZxsej9vDF0pPBnW4s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a++x/0Th+JrA4jsQRiWWUhX7BldLGaQMOP0ZX0+zYzGG7EN6ep0xL+jdZ87prR6mX
-         yfwPJfqXWJyq5ICbZFwKWltZNCpeaGAI15OAClJmV70XYQSNLSMRddUzDJ1rIsSi76
-         6xQuNGRsR5SU1y7RzgpkoekwkwdFPkmjTU+bWPbVVI7Z4djtu2+xUJJyZc47UsfjK5
-         jSJu68aY0lHKa2QptD3QO6gdOv/54Ti4SLHKe+i4wyMYD2gNY8n2RrK1vNEvknPZ7z
-         Aww3+8f6Kow5jBHoyypqUC7wEbtZlIKLa31WeVQyDtYYijaut3alhWSauo+Ov1lX+S
-         wyw7bL1rb986g==
+        b=gPRyRiTTkkL/yKhTPhyj7vkwGpxs+x/mfNDWmofz9xDrxfTHasuPYtjtrHK5dPKNe
+         l0Vv7Ysys/fachIQ3vRJoHL7Ep9tsJ3ua8MApJ6H38FsXUzUQW67pd46orUqbrfEc5
+         HvLqdQpTQbKr+JSlU7ezx+sN6rKNG7b0oXMBGItyqB4R3J+9Bcw0S7sLG1JKWUt3Jm
+         82LveauQHAvg0CHZ1w32TA+3zyWHfZOsiiejxWD3LEmdy+TlOoLZwpDiMqRKA//i5E
+         VMTj2PCMm+92Iim8pRF0oe7pndurQ6yDXsa0hopzenc/38ir/CFmxh7RZ1esvUKWlM
+         xC1PjfggtZfig==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+a063bbf0b15737362592@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 06/39] mac80211_hwsim: drop pending frames on stop
-Date:   Mon, 21 Jun 2021 13:51:22 -0400
-Message-Id: <20210621175156.735062-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 14/39] mac80211: drop multicast fragments
+Date:   Mon, 21 Jun 2021 13:51:30 -0400
+Message-Id: <20210621175156.735062-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210621175156.735062-1-sashal@kernel.org>
 References: <20210621175156.735062-1-sashal@kernel.org>
@@ -54,43 +53,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit bd18de517923903a177508fc8813f44e717b1c00 ]
+[ Upstream commit a9799541ca34652d9996e45f80e8e03144c12949 ]
 
-Syzbot reports that we may be able to get into a situation where
-mac80211 has pending ACK frames on shutdown with hwsim. It appears
-that the reason for this is that syzbot uses the wmediumd hooks to
-intercept/injection frames, and may shut down hwsim, removing the
-radio(s), while frames are pending in the air simulation.
+These are not permitted by the spec, just drop them.
 
-Clean out the pending queue when the interface is stopped, after
-this the frames can't be reported back to mac80211 properly anyway.
-
-Reported-by: syzbot+a063bbf0b15737362592@syzkaller.appspotmail.com
-Link: https://lore.kernel.org/r/20210517170429.b0f85ab0eda1.Ie42a6ec6b940c971f3441286aeaaae2fe368e29a@changeid
+Link: https://lore.kernel.org/r/20210609161305.23def022b750.Ibd6dd3cdce573dae262fcdc47f8ac52b883a9c50@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ net/mac80211/rx.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index fa7d4c20dc13..30b39cb4056a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1693,8 +1693,13 @@ static int mac80211_hwsim_start(struct ieee80211_hw *hw)
- static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
-+
- 	data->started = false;
- 	hrtimer_cancel(&data->beacon_timer);
-+
-+	while (!skb_queue_empty(&data->pending))
-+		ieee80211_free_txskb(hw, skb_dequeue(&data->pending));
-+
- 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 59de7a86599d..cb5cbf02dbac 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2239,17 +2239,15 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+ 	frag = sc & IEEE80211_SCTL_FRAG;
  
+-	if (is_multicast_ether_addr(hdr->addr1)) {
+-		I802_DEBUG_INC(rx->local->dot11MulticastReceivedFrameCount);
+-		goto out_no_led;
+-	}
+-
+ 	if (rx->sta)
+ 		cache = &rx->sta->frags;
+ 
+ 	if (likely(!ieee80211_has_morefrags(fc) && frag == 0))
+ 		goto out;
+ 
++	if (is_multicast_ether_addr(hdr->addr1))
++		return RX_DROP_MONITOR;
++
+ 	I802_DEBUG_INC(rx->local->rx_handlers_fragments);
+ 
+ 	if (skb_linearize(rx->skb))
+@@ -2375,7 +2373,6 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 
+  out:
+ 	ieee80211_led_rx(rx->local);
+- out_no_led:
+ 	if (rx->sta)
+ 		rx->sta->rx_stats.packets++;
+ 	return RX_CONTINUE;
 -- 
 2.30.2
 
