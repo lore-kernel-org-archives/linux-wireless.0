@@ -2,123 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D94C49EA2
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 19:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6971C48BE5
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C17E9611AC
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Jun 2021 19:41:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADD2160FDC
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbhFTTnc (ORCPT
+        id S229804AbhFUHkC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Jun 2021 15:43:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34568 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229872AbhFTTnc (ORCPT
+        Mon, 21 Jun 2021 03:40:02 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48406 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229618AbhFUHkC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Jun 2021 15:43:32 -0400
-Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C08D8C061574;
-        Sun, 20 Jun 2021 12:41:16 -0700 (PDT)
-Received: by mail-oi1-x22a.google.com with SMTP id w1so4400212oie.13;
-        Sun, 20 Jun 2021 12:41:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=C4t4/34qAmUK0cRQooLZaxuJ5+txKPG78U0BIO+ntvs=;
-        b=BjIvQneEAf4otCGhlWYEZYxsFRfVv1Hga/+/oA/FVpSmRzf74o62w/mUL/hMZ0Omyn
-         A7lm7OkoT22oprSv4Rq7hvEsvb4wFOmK4pYvuZZ3aCo0mq6Hn8X3ANQCQ/S8k/uNiGR8
-         k1y80xtJqMwnY4g6xE9MZO2jI4OHSd5ImR8vXMRTtTPgUvKTY6AHRZIrfG8PlQGWqfFK
-         4GrUVy653w2F9vLT2W2KFMOuZaWXc8bGYVSTc22nX9dFtAkiOYP9UTlrx5wtQ9quEmCa
-         lyZu1cnTB6toh8KxhyM1xNIYMraj8odzQuJi9bmeWsxHEDJIFgesYJq6hLpTDVdYt/sH
-         ISUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :mime-version:content-transfer-encoding;
-        bh=C4t4/34qAmUK0cRQooLZaxuJ5+txKPG78U0BIO+ntvs=;
-        b=JinfBAkBO7RL2t+YYOW449Tp0OhOTMh1dYFcPngHRHsZLfY3P7VDJMLqWENKEnqIX5
-         k30qwtHb2/3quS4jp3W8/YvOjVQ4BctggDnPO+5tvnU8lerCwXP9d+o642EZQ8RsiLcs
-         24lW5527FP9UGi9b1ZfkKPkPOLwkdhPMhZcNnm8P+IKYQ97lOKOazEihqyeEHYJL6xu6
-         i9s4CkDzejd653MxWQVuR/GqwPxof10sFMAOIYs11jg7PK94A6D+w+Nf0NObe7L/T3bz
-         O7ULqU0Ka/BdOZjZqoysFBwy8Txs9szLizzLaNnDhvK9Gkkgecobu8jrml4vZng+nyDm
-         zl7Q==
-X-Gm-Message-State: AOAM532UFZgeHhwbJwtcUkNMOQLGRVCfVD4lux6nx7QvlJJ82adR6v8Q
-        hELIIA5SzMqUy1jchypqF8xELplQdBs=
-X-Google-Smtp-Source: ABdhPJy4X+Kax8uZoAsyjF8W/5ZEL5REl+VlVfDhdvvW80U7mnDHzKic466Bpcj7EHxTqjRbvosovg==
-X-Received: by 2002:a05:6808:a05:: with SMTP id n5mr22059942oij.93.1624218076216;
-        Sun, 20 Jun 2021 12:41:16 -0700 (PDT)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id 26sm3295893ooy.46.2021.06.20.12.41.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Jun 2021 12:41:15 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
+        Mon, 21 Jun 2021 03:40:02 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <luca@coelho.fi>)
+        id 1lvEV5-001aFa-SK; Mon, 21 Jun 2021 10:37:46 +0300
+From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH v2] rtw88: Fix some memory leaks
-Date:   Sun, 20 Jun 2021 14:41:10 -0500
-Message-Id: <20210620194110.7520-1-Larry.Finger@lwfinger.net>
+Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
+Date:   Mon, 21 Jun 2021 10:37:32 +0300
+Message-Id: <iwlwifi.20210621103449.73eceb822890.I37347afbc01497a8a9e4d4afe4fa9a965abd31ac@changeid>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210621073740.1105911-1-luca@coelho.fi>
+References: <20210621073740.1105911-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: [PATCH 1/9] iwlwifi: mvm: update iwl_wowlan_patterns_cmd
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are memory leaks of skb's from routines rtw_fw_c2h_cmd_rx_irqsafe()
-and rtw_coex_info_response(), both arising from C2H operations. There are
-no leaks from the buffers sent to mac80211.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+We need to pass the station id to tell the firmware
+on which station we want to configure the patterns.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2 - add the missinf changelog.
+ drivers/net/wireless/intel/iwlwifi/fw/api/d3.h | 14 ++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c    | 13 ++++++++++---
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
----
- drivers/net/wireless/realtek/rtw88/coex.c | 4 +++-
- drivers/net/wireless/realtek/rtw88/fw.c   | 2 ++
- 2 files changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index cedbf3825848..e81bf5070183 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -591,8 +591,10 @@ void rtw_coex_info_response(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	u8 *payload = get_payload_from_coex_resp(skb);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+index a9e8f30ef91d..4dbf24128a98 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+@@ -318,13 +318,23 @@ struct iwl_wowlan_patterns_cmd {
+ 	/**
+ 	 * @n_patterns: number of patterns
+ 	 */
+-	__le32 n_patterns;
++	u8 n_patterns;
++
++	/**
++	 * @n_patterns: sta_id
++	 */
++	u8 sta_id;
++
++	/**
++	 * @reserved: reserved for alignment
++	 */
++	__le16 reserved;
  
--	if (payload[0] != COEX_RESP_ACK_BY_WL_FW)
-+	if (payload[0] != COEX_RESP_ACK_BY_WL_FW) {
-+		dev_kfree_skb_any(skb);
- 		return;
-+	}
+ 	/**
+ 	 * @patterns: the patterns, array length in @n_patterns
+ 	 */
+ 	struct iwl_wowlan_pattern_v2 patterns[];
+-} __packed; /* WOWLAN_PATTERN_ARRAY_API_S_VER_2 */
++} __packed; /* WOWLAN_PATTERN_ARRAY_API_S_VER_3 */
  
- 	skb_queue_tail(&coex->queue, skb);
- 	wake_up(&coex->wait);
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 797b08b2a494..43525ad8543f 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -231,9 +231,11 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
- 	switch (c2h->id) {
- 	case C2H_BT_MP_INFO:
- 		rtw_coex_info_response(rtwdev, skb);
-+		dev_kfree_skb_any(skb);
- 		break;
- 	case C2H_WLAN_RFON:
- 		complete(&rtwdev->lps_leave_check);
-+		dev_kfree_skb_any(skb);
- 		break;
- 	default:
- 		/* pass offset for further operation */
+ enum iwl_wowlan_wakeup_filters {
+ 	IWL_WOWLAN_WAKEUP_MAGIC_PACKET			= BIT(0),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 7b13c4fc1b58..8e5814a3b178 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -393,14 +393,19 @@ static int iwl_mvm_send_patterns_v1(struct iwl_mvm *mvm,
+ }
+ 
+ static int iwl_mvm_send_patterns(struct iwl_mvm *mvm,
++				 struct ieee80211_vif *vif,
+ 				 struct cfg80211_wowlan *wowlan)
+ {
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_wowlan_patterns_cmd *pattern_cmd;
+ 	struct iwl_host_cmd cmd = {
+ 		.id = WOWLAN_PATTERNS,
+ 		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
+ 	};
+ 	int i, err;
++	int ver = iwl_fw_lookup_cmd_ver(mvm->fw, LONG_GROUP,
++					WOWLAN_PATTERNS,
++					IWL_FW_CMD_VER_UNKNOWN);
+ 
+ 	if (!wowlan->n_patterns)
+ 		return 0;
+@@ -408,11 +413,13 @@ static int iwl_mvm_send_patterns(struct iwl_mvm *mvm,
+ 	cmd.len[0] = sizeof(*pattern_cmd) +
+ 		wowlan->n_patterns * sizeof(struct iwl_wowlan_pattern_v2);
+ 
+-	pattern_cmd = kmalloc(cmd.len[0], GFP_KERNEL);
++	pattern_cmd = kzalloc(cmd.len[0], GFP_KERNEL);
+ 	if (!pattern_cmd)
+ 		return -ENOMEM;
+ 
+-	pattern_cmd->n_patterns = cpu_to_le32(wowlan->n_patterns);
++	pattern_cmd->n_patterns = wowlan->n_patterns;
++	if (ver >= 3)
++		pattern_cmd->sta_id = mvmvif->ap_sta_id;
+ 
+ 	for (i = 0; i < wowlan->n_patterns; i++) {
+ 		int mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
+@@ -887,7 +894,7 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 
+ 	if (fw_has_api(&mvm->fw->ucode_capa,
+ 		       IWL_UCODE_TLV_API_WOWLAN_TCP_SYN_WAKE))
+-		ret = iwl_mvm_send_patterns(mvm, wowlan);
++		ret = iwl_mvm_send_patterns(mvm, vif, wowlan);
+ 	else
+ 		ret = iwl_mvm_send_patterns_v1(mvm, wowlan);
+ 	if (ret)
 -- 
 2.32.0
 
