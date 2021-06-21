@@ -4,43 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F36C4743C
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 318EBC48BC2
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:59:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32C2561026
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B60C6124B
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:59:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233045AbhFUSAn (ORCPT
+        id S232797AbhFUSBl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jun 2021 14:00:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39666 "EHLO mail.kernel.org"
+        Mon, 21 Jun 2021 14:01:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40210 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233350AbhFUR6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jun 2021 13:58:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 52F8A611CE;
-        Mon, 21 Jun 2021 17:54:03 +0000 (UTC)
+        id S233096AbhFUR73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jun 2021 13:59:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 28C2861369;
+        Mon, 21 Jun 2021 17:54:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624298044;
-        bh=eM2rhk2kL5c6dVU2ybax6brBIgOwt4Ta8MvU1pHwI5E=;
+        s=k20201202; t=1624298058;
+        bh=ir0KLhiqvktH0GnMorBcezemvMBe7ObkYrYYx55eF2k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ChBCb8+KxgYRvCavrY7mJuxc30+VGg/F6oj756FXBQbUBhlShfxd0GbxwOcPeFs8q
-         eS5aWxovPy4+wCb9kteuDEDVvTyZruaBSmWiGEBGvETybCaIjgwXWYFYO0GpzoshR5
-         7OiUjdgnZAZ+zZ2kShAbDqoplRr6WKzsDlmzNjB2D76hVIAKWOcD1u90rUdB5CkKwL
-         s4IUyRckaTLgi9awgXBR1DSa4Jo6Pu+p1VQjrx+cme3Bo/rUh4J7Ro8gADNhkpIu5B
-         bvGmro7jwIxTqjbI/cZin2KdRTxy0wi98Gp2CEh3pHklF9XmBZ+PAySzZMYPmQJWjJ
-         vbUeLbMOM+ejQ==
+        b=f7AXkOEUn5m/HexYpXsp1+xkaOHiWf5t0j3qnvF0z+yDKwlSKadlQ3g5121Ygp3GG
+         KAnW/+SAmZD9vxzCCwQFcLrmk8KQNjgXdVcC6Ji0vUfB8R3eZ2xdQfh3CbZDmTFnZb
+         Zx7sOy6kxlRfrfjJia/VX2o273INoEZifXDg0ZhjPLOFg+ckz55KLuMW71osogji25
+         OsX5QmkBTk0fAx8wIDV4BVzBmxDhCvwv0xAUkW8jVyZ56/TrixUxLk+gGNuPIWT+yl
+         VZXy2GCF//BixwQmdJCti6xgUHcbyN02+CEuJJlr386beO8SvDQEeCSdnALNBatUuS
+         3V2fFl0z4qlVw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+7716dbc401d9a437890d@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 02/26] mac80211: remove warning in ieee80211_get_sband()
-Date:   Mon, 21 Jun 2021 13:53:35 -0400
-Message-Id: <20210621175400.735800-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 10/26] mac80211: drop multicast fragments
+Date:   Mon, 21 Jun 2021 13:53:43 -0400
+Message-Id: <20210621175400.735800-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210621175400.735800-1-sashal@kernel.org>
 References: <20210621175400.735800-1-sashal@kernel.org>
@@ -54,35 +53,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 0ee4d55534f82a0624701d0bb9fc2304d4529086 ]
+[ Upstream commit a9799541ca34652d9996e45f80e8e03144c12949 ]
 
-Syzbot reports that it's possible to hit this from userspace,
-by trying to add a station before any other connection setup
-has been done. Instead of trying to catch this in some other
-way simply remove the warning, that will appropriately reject
-the call from userspace.
+These are not permitted by the spec, just drop them.
 
-Reported-by: syzbot+7716dbc401d9a437890d@syzkaller.appspotmail.com
-Link: https://lore.kernel.org/r/20210517164715.f537da276d17.Id05f40ec8761d6a8cc2df87f1aa09c651988a586@changeid
+Link: https://lore.kernel.org/r/20210609161305.23def022b750.Ibd6dd3cdce573dae262fcdc47f8ac52b883a9c50@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/ieee80211_i.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rx.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a7933279a80b..e574fbf6745a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1420,7 +1420,7 @@ ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
- 	rcu_read_lock();
- 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3d7a5c5e586a..670d84e54db7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2200,17 +2200,15 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+ 	frag = sc & IEEE80211_SCTL_FRAG;
  
--	if (WARN_ON_ONCE(!chanctx_conf)) {
-+	if (!chanctx_conf) {
- 		rcu_read_unlock();
- 		return NULL;
- 	}
+-	if (is_multicast_ether_addr(hdr->addr1)) {
+-		I802_DEBUG_INC(rx->local->dot11MulticastReceivedFrameCount);
+-		goto out_no_led;
+-	}
+-
+ 	if (rx->sta)
+ 		cache = &rx->sta->frags;
+ 
+ 	if (likely(!ieee80211_has_morefrags(fc) && frag == 0))
+ 		goto out;
+ 
++	if (is_multicast_ether_addr(hdr->addr1))
++		return RX_DROP_MONITOR;
++
+ 	I802_DEBUG_INC(rx->local->rx_handlers_fragments);
+ 
+ 	if (skb_linearize(rx->skb))
+@@ -2336,7 +2334,6 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 
+  out:
+ 	ieee80211_led_rx(rx->local);
+- out_no_led:
+ 	if (rx->sta)
+ 		rx->sta->rx_stats.packets++;
+ 	return RX_CONTINUE;
 -- 
 2.30.2
 
