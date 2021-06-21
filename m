@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81676C49EA4
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10540C48BC2
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F31461026
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0FBD61026
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 17:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233639AbhFUSAV (ORCPT
+        id S233648AbhFUSAY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jun 2021 14:00:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39060 "EHLO mail.kernel.org"
+        Mon, 21 Jun 2021 14:00:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232776AbhFUR6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jun 2021 13:58:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED912613BD;
-        Mon, 21 Jun 2021 17:53:47 +0000 (UTC)
+        id S232564AbhFUR6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Jun 2021 13:58:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 371F961357;
+        Mon, 21 Jun 2021 17:54:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624298028;
-        bh=R+P/fmAqPBWiOGyyElPymleMNovTkWNa6HaTdgpPwzw=;
+        s=k20201202; t=1624298045;
+        bh=55DVHUlb33fLzBbcpDnb2kMvPyNHKRg6I8U85tlirjg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jxswKvmKTHZ2S1Rya0Fsr5O3NUd+ngQXhQIEb+hikVbmP5VouNB/jbhfpxSuUK3GH
-         psK7aFrfldxhAXh/yTMOqmJxfgtTu4W54XZgDNZEQlicXzK9og6z5P6RgSloMyQNcJ
-         CIoPPdKYC0RQ1qxiEtUt9vIz7Xa5Rbupn4cAFmo5cU9QQdCp3E57XqrsiixIXQRKCt
-         wGiyftfNupwq0WKQaE9z8CAV1V/AH8ZXZGae+yT4SF8XPtj0TgUqAUyxPkk8Pigv5W
-         jz/BZLy7vDn3+ta2Fez/5Zw+yhwCkwkb3H2eB42B3EPqQG8gzkCkPC3A5G/mKuGmwm
-         q/cVJqbZN5Q8w==
+        b=uk2/YT7nXSeHfLsOAazeRcd2xLxF+02mGaiOrZen7Dggser3zoDtq6eu8epnVzrUW
+         dw2Y0N7y7hFCtWu+KOH/UXeYHvp6cRZ7kGRoaygagUqCR57ZtDPev98fISalgyfRvP
+         IyksNGExlJOUM+fxXr3zX0wGjUFnAnTgTw3Sp3qmoTU1WguNugBv3nWtpAEVlEOP7R
+         Oa61Rzu5G5BkRfl9z0sWBaY9CmvD0Z647lBsW+WdzG3gtKWcc9Qc0a69oFJefaWYLC
+         kvTlv/bPCSw7LmjNIRU3Zl82D3LjxjcvDMCop0g+t3UaXhu+nnzL3yNNMFFChVUHy4
+         qSrh0XAcY5Reg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+        syzbot+a063bbf0b15737362592@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 31/35] mac80211: handle various extensible elements correctly
-Date:   Mon, 21 Jun 2021 13:52:56 -0400
-Message-Id: <20210621175300.735437-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 03/26] mac80211_hwsim: drop pending frames on stop
+Date:   Mon, 21 Jun 2021 13:53:36 -0400
+Message-Id: <20210621175400.735800-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210621175300.735437-1-sashal@kernel.org>
-References: <20210621175300.735437-1-sashal@kernel.org>
+In-Reply-To: <20210621175400.735800-1-sashal@kernel.org>
+References: <20210621175400.735800-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,124 +54,43 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 652e8363bbc7d149fa194a5cbf30b1001c0274b0 ]
+[ Upstream commit bd18de517923903a177508fc8813f44e717b1c00 ]
 
-Various elements are parsed with a requirement to have an
-exact size, when really we should only check that they have
-the minimum size that we need. Check only that and therefore
-ignore any additional data that they might carry.
+Syzbot reports that we may be able to get into a situation where
+mac80211 has pending ACK frames on shutdown with hwsim. It appears
+that the reason for this is that syzbot uses the wmediumd hooks to
+intercept/injection frames, and may shut down hwsim, removing the
+radio(s), while frames are pending in the air simulation.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210618133832.cd101f8040a4.Iadf0e9b37b100c6c6e79c7b298cc657c2be9151a@changeid
+Clean out the pending queue when the interface is stopped, after
+this the frames can't be reported back to mac80211 properly anyway.
+
+Reported-by: syzbot+a063bbf0b15737362592@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/r/20210517170429.b0f85ab0eda1.Ie42a6ec6b940c971f3441286aeaaae2fe368e29a@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/util.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d8f9fb0646a4..fbf56a203c0e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -954,7 +954,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index c48c68090d76..1033513d3d9d 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1458,8 +1458,13 @@ static int mac80211_hwsim_start(struct ieee80211_hw *hw)
+ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
++
+ 	data->started = false;
+ 	hrtimer_cancel(&data->beacon_timer);
++
++	while (!skb_queue_empty(&data->pending))
++		ieee80211_free_txskb(hw, skb_dequeue(&data->pending));
++
+ 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
+ }
  
- 	switch (elem->data[0]) {
- 	case WLAN_EID_EXT_HE_MU_EDCA:
--		if (len == sizeof(*elems->mu_edca_param_set)) {
-+		if (len >= sizeof(*elems->mu_edca_param_set)) {
- 			elems->mu_edca_param_set = data;
- 			if (crc)
- 				*crc = crc32_be(*crc, (void *)elem,
-@@ -975,7 +975,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 		}
- 		break;
- 	case WLAN_EID_EXT_UORA:
--		if (len == 1)
-+		if (len >= 1)
- 			elems->uora_element = data;
- 		break;
- 	case WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME:
-@@ -983,7 +983,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 			elems->max_channel_switch_time = data;
- 		break;
- 	case WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION:
--		if (len == sizeof(*elems->mbssid_config_ie))
-+		if (len >= sizeof(*elems->mbssid_config_ie))
- 			elems->mbssid_config_ie = data;
- 		break;
- 	case WLAN_EID_EXT_HE_SPR:
-@@ -992,7 +992,7 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 			elems->he_spr = data;
- 		break;
- 	case WLAN_EID_EXT_HE_6GHZ_CAPA:
--		if (len == sizeof(*elems->he_6ghz_capa))
-+		if (len >= sizeof(*elems->he_6ghz_capa))
- 			elems->he_6ghz_capa = data;
- 		break;
- 	}
-@@ -1081,14 +1081,14 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 
- 		switch (id) {
- 		case WLAN_EID_LINK_ID:
--			if (elen + 2 != sizeof(struct ieee80211_tdls_lnkie)) {
-+			if (elen + 2 < sizeof(struct ieee80211_tdls_lnkie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
- 			elems->lnk_id = (void *)(pos - 2);
- 			break;
- 		case WLAN_EID_CHAN_SWITCH_TIMING:
--			if (elen != sizeof(struct ieee80211_ch_switch_timing)) {
-+			if (elen < sizeof(struct ieee80211_ch_switch_timing)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1251,7 +1251,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			elems->sec_chan_offs = (void *)pos;
- 			break;
- 		case WLAN_EID_CHAN_SWITCH_PARAM:
--			if (elen !=
-+			if (elen <
- 			    sizeof(*elems->mesh_chansw_params_ie)) {
- 				elem_parse_failed = true;
- 				break;
-@@ -1260,7 +1260,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			break;
- 		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
- 			if (!action ||
--			    elen != sizeof(*elems->wide_bw_chansw_ie)) {
-+			    elen < sizeof(*elems->wide_bw_chansw_ie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1279,7 +1279,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			ie = cfg80211_find_ie(WLAN_EID_WIDE_BW_CHANNEL_SWITCH,
- 					      pos, elen);
- 			if (ie) {
--				if (ie[1] == sizeof(*elems->wide_bw_chansw_ie))
-+				if (ie[1] >= sizeof(*elems->wide_bw_chansw_ie))
- 					elems->wide_bw_chansw_ie =
- 						(void *)(ie + 2);
- 				else
-@@ -1323,7 +1323,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			elems->cisco_dtpc_elem = pos;
- 			break;
- 		case WLAN_EID_ADDBA_EXT:
--			if (elen != sizeof(struct ieee80211_addba_ext_ie)) {
-+			if (elen < sizeof(struct ieee80211_addba_ext_ie)) {
- 				elem_parse_failed = true;
- 				break;
- 			}
-@@ -1349,7 +1349,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 							  elem, elems);
- 			break;
- 		case WLAN_EID_S1G_CAPABILITIES:
--			if (elen == sizeof(*elems->s1g_capab))
-+			if (elen >= sizeof(*elems->s1g_capab))
- 				elems->s1g_capab = (void *)pos;
- 			else
- 				elem_parse_failed = true;
 -- 
 2.30.2
 
