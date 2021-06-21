@@ -7,44 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3B8C48BE5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB8EC4743C
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF0B8611C1
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C6CA611C1
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234012AbhFUSGT (ORCPT
+        id S234398AbhFUSGY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jun 2021 14:06:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47246 "EHLO mail.kernel.org"
+        Mon, 21 Jun 2021 14:06:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45242 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232008AbhFUSEA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S232009AbhFUSEA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 21 Jun 2021 14:04:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1ABF861418;
-        Mon, 21 Jun 2021 17:55:47 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9FA7861414;
+        Mon, 21 Jun 2021 17:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624298147;
-        bh=YjMQQNSfaScEzvJu+y3rMQN1J8VxpsR+ojdXx1M6n7o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eYjClSltFUUtxRPoLl67dYkZs2XIKJmsML+sBgGaovd4Qfe/3THg+zOlHJnd/TVWN
-         gbXS1pal728fticNSD4MjUo687X5LcIxHZqATVHq8tkmhsFFqYbiT5E74VJFyyTgSa
-         J5R8H5orY9LoP5Jpx8RggbwVHCCOKwREAwdLUOYynj2FUFH3H56gailSWx7JDVUr9P
-         1JUpoe/1zQgKF1SsTKzIHmGBahTavI8VFTWmi0Ec/Q6L+j/x3AAH9L3GYYHfxv+hAf
-         dZnY0ZUAI8YcWLpxE/asrxWaNuatIcjmCCr/2dhIqCsjqzF881V2hEmvWl6DVVtYbG
-         21ouWjPTGuPsw==
+        s=k20201202; t=1624298146;
+        bh=RpX+WGxLTHL19BXdL9ZW8S463Uw+Gr86xTRwIYqWZKo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=o1BnRXJTb6F3PDrmGHq6W4O3IUOOXEukiQjvcK3I4AzymaTLUcqyoRWlfUzeUIYY6
+         wW29cY6wwJfJIM35Q52ddLK/H4nGiJ8lqBJ6KKJmJQsXZlbKE1W2HyD/TgnUak0ppY
+         hoS9cwl11+mHweXt14T+rKGF3qYqPZU/tqtYkPvacMW0HbAXfboWl27+wHYKgLKAiB
+         N/uYC6CK16RTP49Y+Wkgz4NkjLLwJ2zwmjkS9BVVppUP97S3eQmPUrGo1Es/3LawEg
+         DXcVxceWb0a8M8BgbBZgOHDtqh/t+D2j5Ddr5AfGpeKm5XL72evUL7tIsr3e51SQMc
+         zX98iHB8k2BFQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Du Cheng <ducheng2@gmail.com>,
-        syzbot+105896fac213f26056f9@syzkaller.appspotmail.com,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+7716dbc401d9a437890d@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 02/13] cfg80211: call cfg80211_leave_ocb when switching away from OCB
-Date:   Mon, 21 Jun 2021 13:55:32 -0400
-Message-Id: <20210621175544.736421-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 01/13] mac80211: remove warning in ieee80211_get_sband()
+Date:   Mon, 21 Jun 2021 13:55:31 -0400
+Message-Id: <20210621175544.736421-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210621175544.736421-1-sashal@kernel.org>
-References: <20210621175544.736421-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,60 +50,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Du Cheng <ducheng2@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit a64b6a25dd9f984ed05fade603a00e2eae787d2f ]
+[ Upstream commit 0ee4d55534f82a0624701d0bb9fc2304d4529086 ]
 
-If the userland switches back-and-forth between NL80211_IFTYPE_OCB and
-NL80211_IFTYPE_ADHOC via send_msg(NL80211_CMD_SET_INTERFACE), there is a
-chance where the cleanup cfg80211_leave_ocb() is not called. This leads
-to initialization of in-use memory (e.g. init u.ibss while in-use by
-u.ocb) due to a shared struct/union within ieee80211_sub_if_data:
+Syzbot reports that it's possible to hit this from userspace,
+by trying to add a station before any other connection setup
+has been done. Instead of trying to catch this in some other
+way simply remove the warning, that will appropriately reject
+the call from userspace.
 
-struct ieee80211_sub_if_data {
-    ...
-    union {
-        struct ieee80211_if_ap ap;
-        struct ieee80211_if_vlan vlan;
-        struct ieee80211_if_managed mgd;
-        struct ieee80211_if_ibss ibss; // <- shares address
-        struct ieee80211_if_mesh mesh;
-        struct ieee80211_if_ocb ocb; // <- shares address
-        struct ieee80211_if_mntr mntr;
-        struct ieee80211_if_nan nan;
-    } u;
-    ...
-}
-
-Therefore add handling of otype == NL80211_IFTYPE_OCB, during
-cfg80211_change_iface() to perform cleanup when leaving OCB mode.
-
-link to syzkaller bug:
-https://syzkaller.appspot.com/bug?id=0612dbfa595bf4b9b680ff7b4948257b8e3732d5
-
-Reported-by: syzbot+105896fac213f26056f9@syzkaller.appspotmail.com
-Signed-off-by: Du Cheng <ducheng2@gmail.com>
-Link: https://lore.kernel.org/r/20210428063941.105161-1-ducheng2@gmail.com
+Reported-by: syzbot+7716dbc401d9a437890d@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/r/20210517164715.f537da276d17.Id05f40ec8761d6a8cc2df87f1aa09c651988a586@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/util.c | 3 +++
- 1 file changed, 3 insertions(+)
+ net/mac80211/ieee80211_i.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 939320571d71..a16e805c4857 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1050,6 +1050,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		case NL80211_IFTYPE_MESH_POINT:
- 			/* mesh should be handled? */
- 			break;
-+		case NL80211_IFTYPE_OCB:
-+			cfg80211_leave_ocb(rdev, dev);
-+			break;
- 		default:
- 			break;
- 		}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 21b35255ecc2..f5532a3ce72e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1391,7 +1391,7 @@ ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
+ 	rcu_read_lock();
+ 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 
+-	if (WARN_ON_ONCE(!chanctx_conf)) {
++	if (!chanctx_conf) {
+ 		rcu_read_unlock();
+ 		return NULL;
+ 	}
 -- 
 2.30.2
 
