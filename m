@@ -7,165 +7,104 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0000DC48BE5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FBAC49EA6
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D30ED60FDC
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1951F60FDC
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Jun 2021 07:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbhFUHkE (ORCPT
+        id S230061AbhFUHkJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Jun 2021 03:40:04 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48418 "EHLO
+        Mon, 21 Jun 2021 03:40:09 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48442 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229641AbhFUHkD (ORCPT
+        with ESMTP id S230075AbhFUHkI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Jun 2021 03:40:03 -0400
+        Mon, 21 Jun 2021 03:40:08 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lvEV8-001aFa-U2; Mon, 21 Jun 2021 10:37:48 +0300
+        id 1lvEVD-001aFa-Uz; Mon, 21 Jun 2021 10:37:53 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon, 21 Jun 2021 10:37:34 +0300
-Message-Id: <iwlwifi.20210621103449.45218d913d07.I61a086936508230d86b454636945ceb0b9ea09fd@changeid>
+Date:   Mon, 21 Jun 2021 10:37:38 +0300
+Message-Id: <iwlwifi.20210621103449.4179f7191531.I3d5ed6b2b39fcd42863a679e21bda23a6c14253e@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210621073740.1105911-1-luca@coelho.fi>
 References: <20210621073740.1105911-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/9] iwlwifi: mvm: introduce iwl_wowlan_get_status_cmd
+Subject: [PATCH 7/9] iwlwifi: add 9560 killer device
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: ybaruch <yaara.baruch@intel.com>
 
-We need to pass the station id to teach the firmware on which
-station id we want to get the status.
+add new killer devices configurations.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: ybaruch <yaara.baruch@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  4 +++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 31 ++++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- 3 files changed, 28 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c   | 6 +++++-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 2 ++
+ 3 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-index ea2bd34e32a3..b2e7ef3ddc88 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
-@@ -496,6 +496,10 @@ struct iwl_wowlan_kek_kck_material_cmd_v4 {
- 	__le32  bigtk_cipher;
- } __packed; /* KEK_KCK_MATERIAL_API_S_VER_4 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index df1297358379..871533beff30 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2020 Intel Corporation
++ * Copyright (C) 2018-2021 Intel Corporation
+  */
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+@@ -171,8 +171,12 @@ const char iwl9260_killer_1550_name[] =
+ 	"Killer (R) Wireless-AC 1550 Wireless Network Adapter (9260NGW) 160MHz";
+ const char iwl9560_killer_1550i_name[] =
+ 	"Killer (R) Wireless-AC 1550i Wireless Network Adapter (9560NGW)";
++const char iwl9560_killer_1550i_160_name[] =
++	"Killer(R) Wireless-AC 1550i Wireless Network Adapter (9560NGW) 160MHz";
+ const char iwl9560_killer_1550s_name[] =
+ 	"Killer (R) Wireless-AC 1550s Wireless Network Adapter (9560NGW)";
++const char iwl9560_killer_1550s_160_name[] =
++	"Killer(R) Wireless-AC 1550s Wireless Network Adapter (9560D2W) 160MHz";
  
-+struct iwl_wowlan_get_status_cmd {
-+	__le32  sta_id;
-+} __packed; /* WOWLAN_GET_STATUSES_CMD_API_S_VER_1 */
-+
- #define RF_KILL_INDICATOR_FOR_WOWLAN	0x87
+ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 	.fw_name_pre = IWL9260_FW_PRE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 3e4c6a809595..bf6ee56d4d96 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -506,6 +506,8 @@ extern const char iwl_ax201_killer_1650s_name[];
+ extern const char iwl_ax201_killer_1650i_name[];
+ extern const char iwl_ax210_killer_1675w_name[];
+ extern const char iwl_ax210_killer_1675x_name[];
++extern const char iwl9560_killer_1550i_160_name[];
++extern const char iwl9560_killer_1550s_160_name[];
+ extern const char iwl_ax211_name[];
+ extern const char iwl_ax221_name[];
+ extern const char iwl_ax231_name[];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index d7106a51e8bf..863c10e602d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -532,6 +532,8 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x31DC, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
+ 	IWL_DEV_INFO(0xA370, 0x1551, iwl9560_2ac_cfg_soc, iwl9560_killer_1550s_name),
+ 	IWL_DEV_INFO(0xA370, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
++	IWL_DEV_INFO(0x51F0, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550s_160_name),
++	IWL_DEV_INFO(0x51F0, 0x1551, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_160_name),
  
- enum iwl_wowlan_rekey_status {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 0777a709740b..6a259d867d90 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1612,15 +1612,27 @@ iwl_mvm_parse_wowlan_status_common(v6)
- iwl_mvm_parse_wowlan_status_common(v7)
- iwl_mvm_parse_wowlan_status_common(v9)
+ 	IWL_DEV_INFO(0x271C, 0x0214, iwl9260_2ac_cfg, iwl9260_1_name),
  
--struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
-+static struct iwl_wowlan_status *
-+iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
- {
- 	struct iwl_wowlan_status *status;
-+	struct iwl_wowlan_get_status_cmd get_status_cmd = {
-+		.sta_id = cpu_to_le32(sta_id),
-+	};
- 	struct iwl_host_cmd cmd = {
- 		.id = WOWLAN_GET_STATUSES,
- 		.flags = CMD_WANT_SKB,
-+		.data = { &get_status_cmd, },
-+		.len = { sizeof(get_status_cmd), },
- 	};
- 	int ret, len;
- 	u8 notif_ver;
-+	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mvm->fw, LONG_GROUP,
-+					   WOWLAN_GET_STATUSES,
-+					   IWL_FW_CMD_VER_UNKNOWN);
-+
-+	if (cmd_ver == IWL_FW_CMD_VER_UNKNOWN)
-+		cmd.len[0] = 0;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1708,32 +1720,37 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
- }
- 
- static struct iwl_wowlan_status *
--iwl_mvm_get_wakeup_status(struct iwl_mvm *mvm)
-+iwl_mvm_get_wakeup_status(struct iwl_mvm *mvm, u8 sta_id)
- {
--	int ret;
-+	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mvm->fw, LONG_GROUP,
-+					   OFFLOADS_QUERY_CMD,
-+					   IWL_FW_CMD_VER_UNKNOWN);
-+	__le32 station_id = cpu_to_le32(sta_id);
-+	u32 cmd_size = cmd_ver != IWL_FW_CMD_VER_UNKNOWN ? sizeof(station_id) : 0;
- 
- 	if (!mvm->net_detect) {
- 		/* only for tracing for now */
- 		int ret = iwl_mvm_send_cmd_pdu(mvm, OFFLOADS_QUERY_CMD, 0,
--					       0, NULL);
-+					       cmd_size, &station_id);
- 		if (ret)
- 			IWL_ERR(mvm, "failed to query offload statistics (%d)\n", ret);
- 	}
- 
--	return iwl_mvm_send_wowlan_get_status(mvm);
-+	return iwl_mvm_send_wowlan_get_status(mvm, sta_id);
- }
- 
- /* releases the MVM mutex */
- static bool iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
- 					 struct ieee80211_vif *vif)
- {
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_wowlan_status_data status;
- 	struct iwl_wowlan_status *fw_status;
- 	int i;
- 	bool keep;
- 	struct iwl_mvm_sta *mvm_ap_sta;
- 
--	fw_status = iwl_mvm_get_wakeup_status(mvm);
-+	fw_status = iwl_mvm_get_wakeup_status(mvm, mvmvif->ap_sta_id);
- 	if (IS_ERR_OR_NULL(fw_status))
- 		goto out_unlock;
- 
-@@ -1911,7 +1928,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
- 	u32 reasons = 0;
- 	int i, n_matches, ret;
- 
--	fw_status = iwl_mvm_get_wakeup_status(mvm);
-+	fw_status = iwl_mvm_get_wakeup_status(mvm, IWL_MVM_INVALID_STA);
- 	if (!IS_ERR_OR_NULL(fw_status)) {
- 		reasons = le32_to_cpu(fw_status->wakeup_reasons);
- 		kfree(fw_status);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index b0223f1c52f2..7be747738016 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1795,7 +1795,6 @@ void iwl_mvm_ipv6_addr_change(struct ieee80211_hw *hw,
- void iwl_mvm_set_default_unicast_key(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif, int idx);
- extern const struct file_operations iwl_dbgfs_d3_test_ops;
--struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm);
- #ifdef CONFIG_PM
- void iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif);
 -- 
 2.32.0
 
