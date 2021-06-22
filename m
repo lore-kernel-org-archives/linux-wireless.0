@@ -7,53 +7,66 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AD22C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jun 2021 12:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDCDC48BDF
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jun 2021 12:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 616E860FD8
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jun 2021 12:19:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80EEC611CE
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Jun 2021 12:21:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230397AbhFVMVk (ORCPT
+        id S231181AbhFVMXQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Jun 2021 08:21:40 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48520 "EHLO
+        Tue, 22 Jun 2021 08:23:16 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48528 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229912AbhFVMVj (ORCPT
+        with ESMTP id S229912AbhFVMXP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Jun 2021 08:21:39 -0400
+        Tue, 22 Jun 2021 08:23:15 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1lvfNA-001aw0-Np; Tue, 22 Jun 2021 15:19:22 +0300
+        id 1lvfOf-001awB-EH; Tue, 22 Jun 2021 15:20:54 +0300
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 From:   Luca Coelho <luca@coelho.fi>
-In-Reply-To: <iwlwifi.20210617100544.80fee3171b53.Idfb69643f4044ec26865d023d0c2a1d6466694aa@changeid>
-References: <iwlwifi.20210617100544.80fee3171b53.Idfb69643f4044ec26865d023d0c2a1d6466694aa@changeid>
+In-Reply-To: <iwlwifi.20210617110647.5f5764e04c46.I4d5de1929be048085767f1234a1e07b517ab6a2d@changeid>
+References: <iwlwifi.20210617110647.5f5764e04c46.I4d5de1929be048085767f1234a1e07b517ab6a2d@changeid>
 To:     Luca Coelho <luca@coelho.fi>
-Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.9.2
-Message-Id: <E1lvfNA-001aw0-Np@farmhouse.coelho.fi>
-Date:   Tue, 22 Jun 2021 15:19:21 +0300
-Subject: Re: [PATCH 09/12] iwlwifi: advertise broadcast TWT support
+Message-Id: <E1lvfOf-001awB-EH@farmhouse.coelho.fi>
+Date:   Tue, 22 Jun 2021 15:20:54 +0300
+Subject: Re: [PATCH v2 11/12] iwlwifi: pcie: remove TR/CR tail allocations
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Luca Coelho <luca@coelho.fi> wrote:
 
-> From: Shaul Triebitz <shaul.triebitz@intel.com>
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> If the firmware supports broadcast TWT (know by TLV),
-> add the broadcast TWT HE MAC capability.
+> The TR/CR tail data are meant to be per-queue-arrays, however,
+> we allocate them completely wrong (we have a separate allocation
+> per queue).
 > 
-> Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+> Looking at this more closely, it turns out that the hardware
+> never uses these - we have a separate free list per RX queue
+> and maintain a write pointer for that in a register, and the
+> RX itself is indicated in the RB status (rb_stts) DMA region.
+> 
+> Despite nothing using the tail pointers, the hardware will
+> unconditionally access them to write updates, even when we aren't
+> using CRs/TRs.
+> 
+> Give it dummy values that we never use/update so it can do that
+> without causing trouble.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-2 patches applied to iwlwifi-next.git, thanks.
+Patch applied to iwlwifi-next.git, thanks.
 
-aa66e4a781e0 iwlwifi: advertise broadcast TWT support
-3eaad5e670b2 iwlwifi: pcie: fix some kernel-doc comments
+a5575a54df00 iwlwifi: pcie: remove TR/CR tail allocations
 
