@@ -2,86 +2,123 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2365C49EA6
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jun 2021 16:23:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56B3AC49EA5
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jun 2021 16:42:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA832613C1
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jun 2021 16:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D3DD613CA
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Jun 2021 16:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229831AbhFXQZp (ORCPT
+        id S229772AbhFXQob (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Jun 2021 12:25:45 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:29442 "EHLO m43-7.mailgun.net"
+        Thu, 24 Jun 2021 12:44:31 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:11593 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231321AbhFXQZo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Jun 2021 12:25:44 -0400
+        id S229721AbhFXQoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Jun 2021 12:44:30 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624551805; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=R0lETgBdGcijzvZsCQBUp+QN1WHLCayTzZXt/0GElcM=;
- b=d8RAd+EyQ7MbNPm4qRpBl0mdaCKkzeAK90tKxKrXdnlckmybPuNFdTbOJY85ppmYq+kH1y80
- R6+QYkSXS/CYIw16fARsL6FS+V9koine93Xa6tnlB2YKSmc6vYLLuLckt+vu/OJqMq3MeKQE
- yfe/BX5i1ZmvuCX4JwfyQatHR9s=
+ s=smtp; t=1624552931; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=p4AyN0IckVIgEF0pepUMRnDVIZkiIMMxD6qEertwOF4=; b=B1oQpI5kRJjKt+GV2XBMMnhxsG0xtHbw7x/FAgXk9nVI6Mlu86qYyeGNtv32+EaMv4jrcWNZ
+ PIAAXdcptlFTpe0a3KalP8l518jYbG52qxrcWQCfsRvUtB4VDGT3qahacc2mpYMnQSA3K9hX
+ 1Ur9wjOmnL4VvuTCchjrw8Dez6U=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 60d4b105dc4628fe7ec079bf (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Jun 2021 16:21:25
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 60d4b54c0090905e166fdc9d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Jun 2021 16:39:40
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8E898C433F1; Thu, 24 Jun 2021 16:21:24 +0000 (UTC)
-Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        id 3F4A6C43146; Thu, 24 Jun 2021 16:39:39 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 83769C433D3;
-        Thu, 24 Jun 2021 16:21:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 83769C433D3
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19ED2C433D3;
+        Thu, 24 Jun 2021 16:39:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 19ED2C433D3
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] rtw88: fix c2h memory leak
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210624023459.10294-1-pkshih@realtek.com>
-References: <20210624023459.10294-1-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <tony0620emma@gmail.com>, <linux-wireless@vger.kernel.org>,
-        <phhuang@realtek.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210624162124.8E898C433F1@smtp.codeaurora.org>
-Date:   Thu, 24 Jun 2021 16:21:24 +0000 (UTC)
+To:     Mikhail Rudenko <mike.rudenko@gmail.com>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Dmitry Osipenko <digetx@gmail.com>,
+        Double Lo <double.lo@cypress.com>,
+        Remi Depommier <rde@setrix.com>,
+        Amar Shankar <amsr@cypress.com>,
+        Saravanan Shanmugham <saravanan.shanmugham@cypress.com>,
+        Frank Kao <frank.kao@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: use separate firmware for 43430 revision 2
+References: <20210509233010.2477973-1-mike.rudenko@gmail.com>
+        <d1bac6c3-aa52-5d76-1f2a-4af9edef71c5@broadcom.com>
+        <87a6oxpsn8.fsf@gmail.com>
+Date:   Thu, 24 Jun 2021 19:39:31 +0300
+In-Reply-To: <87a6oxpsn8.fsf@gmail.com> (Mikhail Rudenko's message of "Fri, 14
+        May 2021 12:41:08 +0300")
+Message-ID: <87o8bvgqt8.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Mikhail Rudenko <mike.rudenko@gmail.com> writes:
 
-> From: Po-Hao Huang <phhuang@realtek.com>
-> 
-> Fix erroneous code that leads to unreferenced objects. During H2C
-> operations, some functions returned without freeing the memory that only
-> the function have access to. Release these objects when they're no longer
-> needed to avoid potentially memory leaks.
-> 
-> Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> On 2021-05-10 at 11:06 MSK, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> On 5/10/2021 1:30 AM, Mikhail Rudenko wrote:
+>>> A separate firmware is needed for Broadcom 43430 revision 2.  This
+>>> chip can be found in e.g. certain revisions of Ampak AP6212 wireless
+>>> IC. Original firmware file from IC vendor is named
+>>> 'fw_bcm43436b0.bin', but brcmfmac and also btbcm drivers report chip
+>>
+>> That is bad naming. There already is a 43436 USB device.
+>>
+>>> id 43430, so requested firmware file name is
+>>> 'brcmfmac43430b0-sdio.bin' in line with other 43430 revisions.
+>>
+>> As always there is the question about who will be publishing this
+>> particular firmware file to linux-firmware.
+>
+> The above mentioned file can be easily found by web search. Also, the
+> corresponding patch for the bluetooth part has just been accepted
+> [1]. Is it strictly necessary to have firmware file in linux-firmware in
+> order to have this patch accepted?
 
-Patch applied to wireless-drivers-next.git, thanks.
+This patch is a bit in the gray area. We have a rule that firmware
+images should be in linux-firmware, but as the vendor won't submit one
+and I assume the license doesn't approve the community submit it either,
+there is not really any solution for the firmware problem.
 
-1d8820d5462d rtw88: fix c2h memory leak
+On the other hand some community members have access to the firmware
+somehow so this patch is useful to the community, and I think taking an
+exception to the rule in this case is justified. So I am inclined
+towards applying the patch.
+
+Thoughts? I also have another similar patch in the queue:
+
+https://patchwork.kernel.org/project/linux-wireless/patch/20210307113550.7720-1-konrad.dybcio@somainline.org/
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210624023459.10294-1-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/list/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
