@@ -2,127 +2,228 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2033FC48BC2
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jun 2021 05:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BD4C2B9F4
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jun 2021 08:17:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0481261423
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jun 2021 05:28:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D94761425
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Jun 2021 08:17:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233062AbhFYFbR (ORCPT
+        id S230091AbhFYITx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Jun 2021 01:31:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48294 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230192AbhFYFbR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Jun 2021 01:31:17 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D4C3C06175F
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2021 22:28:56 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id t9so6657758pgn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2021 22:28:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=uH4YEvmp5g7u93n9Dq2yTIhMcUrniJ3GekoEltOXyi0=;
-        b=BWh1AVeR7HY31dhsptuFMdXnjvMV7kDmH0Lm8NCVFqXNGL+U+OAstSLqLf0vzL5TjU
-         kHw58AdDMDAB7aSROhCCVa/+zIfRC38hzdVbOGxcpuv+bn/EK0EM2v5yqM6nRlzAmWyt
-         NPis4x1Gr58EuzqIeu467LxXh9f4xHabKX7auC1na/14Fk35yLXT2h+CPe4qfeWtuEtB
-         w+WgYiN6z+euS54vuxzJvB1bIIjDDjFHSd1bEWy4R3bNzG1d5sSy2uqkHte5/OHwJtZe
-         K7WO0jDr5hvADqUqxSZPHEGmW/UF2Su1D3czDqjWIMJ6DfjUSZWqOYsMaQLyYd2+ifcG
-         FAEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=uH4YEvmp5g7u93n9Dq2yTIhMcUrniJ3GekoEltOXyi0=;
-        b=fFKt7sgJJr4f24B8VSOBqi2fKiTR8e0LIztqR1wChCbHHz53vjioeyasDg+AgiJ9yU
-         4VOZfXSGoqOHzPjqfB+TT4sHWphy8BWRZqVL/HlzcoqpWLtRpZmBdjKI5ODcoteCFga6
-         Xi4lWRAbmrk6u1x7g24PkoFZLLsJv1xHKVAQYZS+14dpdAN4QlwGvx/Ggu+kC6K2zBcm
-         ry7JJMQ808BymODG9I2r2A69vLOxfWCqU5N0Z3wLv/XcoWqFOX0GlHQ7iTiKJrR21qRv
-         qQia6fwYyTtHgV/cxXUBq7vEa3G5CxvaWLThGBwFuiF05hgJo5NScNH2ygeqfl5gbjWZ
-         wRYw==
-X-Gm-Message-State: AOAM531oIgQKxBiXnMTStgm9AUpDiN5c0X322je/p0BWNU+CU5C4hXIa
-        vXWj9QlSzs5sRVGrWmZYqxNQ
-X-Google-Smtp-Source: ABdhPJxP31Y8odt9uYHFYA5YARCzn1gDkW177thP7cFAk7Q1JIRMzZxVqmXOzD51LDnm/kp0w86Vew==
-X-Received: by 2002:aa7:8684:0:b029:305:9474:6934 with SMTP id d4-20020aa786840000b029030594746934mr8533191pfo.45.1624598935313;
-        Thu, 24 Jun 2021 22:28:55 -0700 (PDT)
-Received: from workstation ([120.138.13.204])
-        by smtp.gmail.com with ESMTPSA id g17sm4186329pfv.62.2021.06.24.22.28.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 24 Jun 2021 22:28:54 -0700 (PDT)
-Date:   Fri, 25 Jun 2021 10:58:51 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bhaumik Bhatt <bbhatt@codeaurora.org>
-Cc:     linux-arm-msm@vger.kernel.org, hemantk@codeaurora.org,
-        jhugo@codeaurora.org, linux-kernel@vger.kernel.org,
-        loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, ath11k@lists.infradead.org
-Subject: Re: [PATCH v4 0/6] BHI/BHIe improvements for MHI power purposes
-Message-ID: <20210625052851.GF4974@workstation>
-References: <1620330705-40192-1-git-send-email-bbhatt@codeaurora.org>
+        Fri, 25 Jun 2021 04:19:53 -0400
+Received: from mga06.intel.com ([134.134.136.31]:61745 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230083AbhFYITv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Jun 2021 04:19:51 -0400
+IronPort-SDR: S1lWgWz9EyofeJZbSo0YtURX4h1uP2vCP+Yn2JTp++Bp736xgtN2KDjVm1J4yGBZyxCncOiPbX
+ eDXax6hojncA==
+X-IronPort-AV: E=McAfee;i="6200,9189,10025"; a="268762085"
+X-IronPort-AV: E=Sophos;i="5.83,298,1616482800"; 
+   d="scan'208";a="268762085"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2021 01:17:30 -0700
+IronPort-SDR: wfbAJu1gPZJRpYOajeDgVSffzKBSrbM0Xx76GSqVw5sj/yX5Jq4tVURrTaxBmW0yDSqUfSPJ67
+ 5T+ZG6utlC1Q==
+X-IronPort-AV: E=Sophos;i="5.83,298,1616482800"; 
+   d="scan'208";a="488095767"
+Received: from nambar-mobl1.ger.corp.intel.com (HELO egrumbac-mobl1.intel.com) ([10.255.196.185])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2021 01:17:28 -0700
+From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To:     luciano.coelho@intel.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org
+Cc:     egrumbach@gmail.com,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v4 2/5] iwlwifi: mei: add debugfs hooks
+Date:   Fri, 25 Jun 2021 11:17:14 +0300
+Message-Id: <20210625081717.7680-2-emmanuel.grumbach@intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210625081717.7680-1-emmanuel.grumbach@intel.com>
+References: <20210625081717.7680-1-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1620330705-40192-1-git-send-email-bbhatt@codeaurora.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 06, 2021 at 12:51:39PM -0700, Bhaumik Bhatt wrote:
-> This patch series improves the power up behavior by allowing MHI host driver to
-> set BHI and/or BHIe offsets early on in the preparation phase and fail pre-power
-> up if offsets are not found or not within a limited MMIO region. This also
-> allows MHI host to clean up the offsets in the unprepare after power down phase.
-> 
-> Going forward, controllers will be required to specify a reg_len field which
-> will be used to check whether the BHI/BHIe offsets are in range or not.
-> 
-> This series has been tested on X86_64 architecture with the PCI generic driver
-> as controller and an SDX55 device.
-> 
+Add three debugfs hooks:
+* status: Check if we have a connection with the CSME
+  firwmare. This hook is a read only.
 
-Since there is a chance to send this series for 5.14, I've applied it
-now to mhi-next!
+* req_ownership: Send a SAP command to request ownership. This
+  flow should be triggered by iwlwifi (from user space through
+  vendor commands really), but being able to trigger an ownership
+  request from debugfs allows us to request ownership without
+  connecting afterwards. This is an "error" flow that the CSME
+  firmware is designed to handle this way:
+  + Grant ownership since the host asked for it
+  + Wait 3 seconds to let the host connect
+  + If the host didn't connect, take the device back (forcefully).
+  + Don't grant any new ownership request in the following 30
+  seconds.
+  This debugfs hook allows us to test this flow.
 
-Thanks,
-Mani
+* send_start_message: Restart the communication with the CSME
+  firmware from the very beginning. At the very beginning (upon
+  iwlwifi start), iwlmei send a special message: SAP_ME_MSG_START.
+  This hook allows to send it again and this will retrigger the
+  whole flow. It is important to test this restart in the middle
+  of normal operation since it can happen (in case the CSME
+  firmware decided to reset for example).
 
-> v4:
-> -Added reviewed-by tags
-> -Updated range check patch to include BHI/e offsets in the error message
-> 
-> v3:
-> -Added reviewed-by tags
-> -Updated order of reg_len in mhi_controller structure documentation
-> 
-> v2:
-> -Added reviewed-by tags
-> -Moved reg_len entry in mhi_controller structure to allow for a packed struct
-> 
-> Bhaumik Bhatt (6):
->   bus: mhi: core: Set BHI/BHIe offsets on power up preparation
->   bus: mhi: core: Set BHI and BHIe pointers to NULL in clean-up
->   bus: mhi: Add MMIO region length to controller structure
->   ath11k: set register access length for MHI driver
->   bus: mhi: pci_generic: Set register access length for MHI driver
->   bus: mhi: core: Add range checks for BHI and BHIe
-> 
->  drivers/bus/mhi/core/init.c           | 61 ++++++++++++++++++++++++-----------
->  drivers/bus/mhi/core/pm.c             | 28 +++-------------
->  drivers/bus/mhi/pci_generic.c         |  1 +
->  drivers/net/wireless/ath/ath11k/mhi.c |  1 +
->  include/linux/mhi.h                   |  2 ++
->  5 files changed, 50 insertions(+), 43 deletions(-)
-> 
-> -- 
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
-> 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 85 ++++++++++++++++++-
+ 1 file changed, 83 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+index 469f1387f2b3..16983c7a061a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+@@ -10,6 +10,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/mei_cl_bus.h>
+ #include <linux/rcupdate.h>
++#include <linux/debugfs.h>
+ #include <linux/skbuff.h>
+ #include <linux/wait.h>
+ #include <linux/slab.h>
+@@ -144,6 +145,7 @@ struct iwl_mei_filters {
+  *	accessed without the mutex.
+  * @sap_seq_no: the sequence number for the SAP messages
+  * @seq_no: the sequence number for the SAP messages
++ * @dbgfs_dir: the debugfs dir entry
+  */
+ struct iwl_mei {
+ 	wait_queue_head_t get_nvm_wq;
+@@ -162,6 +164,8 @@ struct iwl_mei {
+ 
+ 	atomic_t sap_seq_no;
+ 	atomic_t seq_no;
++
++	struct dentry *dbgfs_dir;
+ };
+ 
+ /**
+@@ -1690,6 +1694,78 @@ void iwl_mei_unregister_complete(void)
+ }
+ EXPORT_SYMBOL_GPL(iwl_mei_unregister_complete);
+ 
++#if IS_ENABLED(CONFIG_DEBUG_FS)
++
++static ssize_t
++iwl_mei_dbgfs_send_start_message_write(struct file *file,
++				       const char __user *user_buf,
++				       size_t count, loff_t *ppos)
++{
++	int ret;
++
++	mutex_lock(&iwl_mei_mutex);
++
++	if (!iwl_mei_global_cldev) {
++		ret = -ENODEV;
++		goto out;
++	}
++
++	ret = iwl_mei_send_start(iwl_mei_global_cldev);
++
++out:
++	mutex_unlock(&iwl_mei_mutex);
++	return ret ?: count;
++}
++
++static const struct file_operations iwl_mei_dbgfs_send_start_message_ops = {
++	.write = iwl_mei_dbgfs_send_start_message_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
++static ssize_t iwl_mei_dbgfs_req_ownership_write(struct file *file,
++						 const char __user *user_buf,
++						 size_t count, loff_t *ppos)
++{
++	iwl_mei_get_ownership();
++
++	return count;
++}
++
++static const struct file_operations iwl_mei_dbgfs_req_ownership_ops = {
++	.write = iwl_mei_dbgfs_req_ownership_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
++static void iwl_mei_dbgfs_register(struct iwl_mei *mei)
++{
++	mei->dbgfs_dir = debugfs_create_dir(KBUILD_MODNAME, NULL);
++
++	if (!mei->dbgfs_dir)
++		return;
++
++	debugfs_create_ulong("status", S_IRUSR,
++			     mei->dbgfs_dir, &iwl_mei_status);
++	debugfs_create_file("send_start_message", S_IWUSR, mei->dbgfs_dir,
++			    mei, &iwl_mei_dbgfs_send_start_message_ops);
++	debugfs_create_file("req_ownserhip", S_IWUSR, mei->dbgfs_dir,
++			    mei, &iwl_mei_dbgfs_req_ownership_ops);
++}
++
++static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei)
++{
++	debugfs_remove_recursive(mei->dbgfs_dir);
++	mei->dbgfs_dir = NULL;
++}
++
++#else
++
++static void iwl_mei_dbgfs_register(struct iwl_mei *mei) {}
++static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei) {}
++
++#endif /* CONFIG_DEBUG_FS */
++
+ /**
+  * iwl_mei_probe - the probe function called by the mei bus enumeration
+  *
+@@ -1728,6 +1804,8 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 	if (ret)
+ 		goto free_shared_mem;
+ 
++	iwl_mei_dbgfs_register(mei);
++
+ 	/*
+ 	 * We now have a Rx function in place, start the SAP procotol
+ 	 * we expect to get the SAP_ME_MSG_START_OK response later on.
+@@ -1736,14 +1814,15 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 	ret = iwl_mei_send_start(cldev);
+ 	mutex_unlock(&iwl_mei_mutex);
+ 	if (ret)
+-		goto disable;
++		goto debugfs_unregister;
+ 
+ 	/* must be last */
+ 	iwl_mei_global_cldev = cldev;
+ 
+ 	return 0;
+ 
+-disable:
++debugfs_unregister:
++	iwl_mei_dbgfs_unregister(mei);
+ 	mei_cldev_disable(cldev);
+ free_shared_mem:
+ 	iwl_mei_free_shared_mem(cldev);
+@@ -1854,6 +1933,8 @@ static void iwl_mei_remove(struct mei_cl_device *cldev)
+ 
+ 	iwl_mei_free_shared_mem(cldev);
+ 
++	iwl_mei_dbgfs_unregister(mei);
++
+ 	mei_cldev_set_drvdata(cldev, NULL);
+ 
+ 	kfree(mei->nvm);
+-- 
+2.25.1
+
