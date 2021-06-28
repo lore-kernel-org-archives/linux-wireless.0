@@ -2,135 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B00F0C2B9F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jun 2021 17:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE1CC11F64
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jun 2021 19:17:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8707561C43
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jun 2021 17:17:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC6E36187E
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Jun 2021 19:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232868AbhF1RTZ (ORCPT
+        id S236293AbhF1TUJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Jun 2021 13:19:25 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:41100 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232601AbhF1RTY (ORCPT
+        Mon, 28 Jun 2021 15:20:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44610 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235667AbhF1TUJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Jun 2021 13:19:24 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624900619; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=0HxhNAhRliCFF+rvuk/wLzlKMmnUBHAvobMK4tGIuJc=;
- b=gkuqq9ByWCiTjidd05z3a6RTAYXPtJLEekcusLqMBW8SbxQAxO+OIsSOeOJRkWt4kHpcEFWS
- 9z9bxo6mi1G7lnAjwFvm65x36ybrEDMRWaa2fjbay+d8oQ+0iphkzc6l4WRH5poIjxm0wxKF
- Rg0yTx/yP7n9gFQsZ2ElUv25y7A=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 60da03ed4ca9face349832a3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 28 Jun 2021 17:16:29
- GMT
-Sender: alokad=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8C469C433D3; Mon, 28 Jun 2021 17:16:28 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DC195C433F1;
-        Mon, 28 Jun 2021 17:16:26 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Mon, 28 Jun 2021 10:16:26 -0700
-From:   Aloka Dixit <alokad@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>
+        Mon, 28 Jun 2021 15:20:09 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03E46C061574
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2021 12:17:42 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lxwlI-00D0zx-21; Mon, 28 Jun 2021 21:17:40 +0200
+Message-ID: <d21f4ecd99f46cbc2b0229309a4627c2a338b87b.camel@sipsolutions.net>
 Subject: Re: [PATCH v10 2/4] mac80211: multiple bssid support in interface
  handling
-In-Reply-To: <6dc09b7dcfef37a703e95e264e6ab64738560160.camel@sipsolutions.net>
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Aloka Dixit <alokad@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>
+Date:   Mon, 28 Jun 2021 21:17:39 +0200
+In-Reply-To: <9451f0db49f603d7e9a00d172ab341e2@codeaurora.org>
 References: <20210426190534.12667-1-alokad@codeaurora.org>
- <20210426190534.12667-3-alokad@codeaurora.org>
- <6dc09b7dcfef37a703e95e264e6ab64738560160.camel@sipsolutions.net>
-Message-ID: <9451f0db49f603d7e9a00d172ab341e2@codeaurora.org>
-X-Sender: alokad@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+         <20210426190534.12667-3-alokad@codeaurora.org>
+         <6dc09b7dcfef37a703e95e264e6ab64738560160.camel@sipsolutions.net>
+         <9451f0db49f603d7e9a00d172ab341e2@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-06-23 08:57, Johannes Berg wrote:
-> On Mon, 2021-04-26 at 12:05 -0700, Aloka Dixit wrote:
->> 
+Hi Aloka,
 
-> Hm wait, didn't I see the same code in cfg80211 - maybe cfg80211 should
-> just pass the pointer?
->> 
->>  static int ieee80211_del_iface(struct wiphy *wiphy, struct 
->> wireless_dev *wdev)
->>  {
->> +	struct ieee80211_sub_if_data *sdata = 
->> IEEE80211_WDEV_TO_SUB_IF(wdev);
->> +	struct ieee80211_local *local;
->> +	struct ieee80211_vif *vif;
->> +
->> +	if (!sdata)
->> +		return 0;
->> +
->> +	local = sdata->local;
->> +	vif = &sdata->vif;
->> +	if (vif->type == NL80211_IFTYPE_AP &&
->> +	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP)) {
->> +		if (vif->mbssid.flags & IEEE80211_VIF_MBSSID_TX) {
->> +			struct ieee80211_sub_if_data *child, *tmpsdata;
->> +
->> +			wiphy_unlock(local->hw.wiphy);
->> +			mutex_lock(&local->iflist_mtx);
+> > >  static int ieee80211_del_iface(struct wiphy *wiphy, struct 
+> > > wireless_dev *wdev)
+> > >  {
+> > > +	struct ieee80211_sub_if_data *sdata = 
+> > > IEEE80211_WDEV_TO_SUB_IF(wdev);
+> > > +	struct ieee80211_local *local;
+> > > +	struct ieee80211_vif *vif;
+> > > +
+> > > +	if (!sdata)
+> > > +		return 0;
+> > > +
+> > > +	local = sdata->local;
+> > > +	vif = &sdata->vif;
+> > > +	if (vif->type == NL80211_IFTYPE_AP &&
+> > > +	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP)) {
+> > > +		if (vif->mbssid.flags & IEEE80211_VIF_MBSSID_TX) {
+> > > +			struct ieee80211_sub_if_data *child, *tmpsdata;
+> > > +
+> > > +			wiphy_unlock(local->hw.wiphy);
+> > > +			mutex_lock(&local->iflist_mtx);
+> > 
+> > I really don't think you can drop the locking like that in the middle 
+> > of something. That's almost always a recipe for disaster.
+
+[...]
+
 > 
-> I really don't think you can drop the locking like that in the middle 
-> of
-> something. That's almost always a recipe for disaster.
+> I'm not able to come up with a different solution which does not cause a 
+> deadlock by continuing to hold wiphy_lock() as we discussed last time 
+> that dev_close() will in turn call into cfg80211.
 > 
->> @@ -375,6 +375,18 @@ static void ieee80211_do_stop(struct 
->> ieee80211_sub_if_data *sdata, bool going_do
->>  	struct cfg80211_chan_def chandef;
->>  	bool cancel_scan;
->>  	struct cfg80211_nan_func *func;
->> +	struct ieee80211_sub_if_data *parent;
->> +
->> +	if (sdata->vif.type == NL80211_IFTYPE_AP &&
->> +	    ieee80211_hw_check(&local->hw, SUPPORTS_MBSSID_AP) &&
->> +	    sdata->vif.mbssid.flags & IEEE80211_VIF_MBSSID_NON_TX) {
->> +		parent = vif_to_sdata(sdata->vif.mbssid.parent);
->> +		if (parent && ieee80211_sdata_running(parent)) {
->> +			wiphy_unlock(local->hw.wiphy);
->> +			dev_close(parent->wdev.netdev);
->> +			wiphy_lock(local->hw.wiphy);
+> You had suggested looking at dev_close() for VLAN, that code also 
+> doesn't lock wiphy_lock hence I did same here but locked 
+> 'local->iflist_mtx'. Dropping both won't be good for sure.
 > 
-> Same here.
-> 
-> johannes
+> Can you please suggest a better way? I'm really not able to come up with 
+> one.
 
-Hi Johannes,
+Yeah, it's a tricky one for sure, especially with the locking changes.
 
-Thanks for the comments, will go through all, but need your help with 
-this particular one -
+Now that I look at this more closely - the code in ieee80211_del_iface()
+must be redundant since the interface has to go through
+ieee80211_do_stop() (perhaps during this) if it's actually up?
 
-I'm not able to come up with a different solution which does not cause a 
-deadlock by continuing to hold wiphy_lock() as we discussed last time 
-that dev_close() will in turn call into cfg80211.
 
-You had suggested looking at dev_close() for VLAN, that code also 
-doesn't lock wiphy_lock hence I did same here but locked 
-'local->iflist_mtx'. Dropping both won't be good for sure.
+However, I'm hnsure why you don't understand the VLAN code - see what I
+did in commit d5befb224edb ("mac80211: fix deadlock in AP/VLAN
+handling")?
 
-Can you please suggest a better way? I'm really not able to come up with 
-one.
+johannes
 
-Thanks.
