@@ -2,169 +2,67 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1116DC11F64
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jul 2021 12:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF2ECC11F64
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jul 2021 16:10:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0550613F8
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jul 2021 12:33:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAD9B61416
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jul 2021 16:10:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236406AbhGAMgK (ORCPT
+        id S232323AbhGAQMb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 1 Jul 2021 08:36:10 -0400
-Received: from mout.web.de ([212.227.17.11]:36811 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236361AbhGAMgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jul 2021 08:36:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1625142818;
-        bh=SbrldS2/0f5Tx1CKcyEieSdq+bVT5SR4tDAyrjbCm/w=;
-        h=X-UI-Sender-Class:Date:From:To:Subject;
-        b=JMUjiAynexchL/kUWGb81j0bdKbQb3evtE+g3qrJNPLEGsgnMcKMd8EZ8ovYyRpUk
-         OudtqiSoUENrxdvje1kDvNQ/xWf/OLQydKnYRrExzNmUdpvW73rlvIgHYnbOwTMp24
-         UxeWJuhufwvXNL+f7ozWe51SfZt1FCykz7y+EgdY=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from schienar ([128.141.229.4]) by smtp.web.de (mrweb101
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0LgpVS-1lTODc0XPa-00oH7P for
- <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2021 14:33:38 +0200
-Date:   Thu, 1 Jul 2021 14:33:36 +0200
-From:   Julian Wollrath <jwollrath@web.de>
+        Thu, 1 Jul 2021 12:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56002 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231698AbhGAQMa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Jul 2021 12:12:30 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2E58C061762
+        for <linux-wireless@vger.kernel.org>; Thu,  1 Jul 2021 09:09:59 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1lyzGG-00EI4p-V0; Thu, 01 Jul 2021 18:09:57 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Subject: iwlwifi: AX200 wrong regulatory settings not changeable
-Message-ID: <20210701143336.45cd5a40@schienar>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iw: ps: fix "get power_save" documentation
+Date:   Thu,  1 Jul 2021 18:09:45 +0200
+Message-Id: <20210701180945.45abdb0d4f52.Ifdc6ce8fdbf252019c080f609b6d95cec23d84ee@changeid>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:zv2+nSNYjMJq5G1/D/sziEh84MDwpoFvXtsapY0HVHe1Y0/bsbm
- DNpSLfIlDDbVmqPzOyW9mdtL/asyc1naD4fjKopBvKDWdSLV4GAevnmK8+Dlq9oGf+JGUY2
- m1SjrEJzXrw4f//c/ySheKVja6v62HZdgkQCLbiHHRrM5ZEibX4xHkPnoUfna4O7W3s2Iox
- 74veSszcRyG1Gqg4tRcSw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:HV9uMNPWRgU=:Vi0anfvNWXQctkVqK/l07H
- 8myh4RykYWEgCgRjmd3lLs0/63jFmBVHHlACWGxSYmXGToVbPb0fnR862KSOs6lnJdc1cW+v0
- essksUSt3IyKp0vhSunt0gZd2YFmm+jyGB1otzen0M5e76GYTzGdse+X9HW5um51dvl+6RRZJ
- uUvETukqDoI8GP6K/zymKOe/R/g60fkFAUqhDmGue0MnEBmByDNXju6JBnhJjJ1grJlXvUJfT
- agQKDhsHsObzjSXnPU3w69u38jucDrqHGQYThGiFKJzmTH5a2BFGRUApOAqc3vEkSfWtJZxbo
- iTbFnsImtxflUOvXQQt94b90nLlX2/LiQNopUqu3ns7p2Ojl0/wQclW+BI6+8PSuAVnigtkxc
- KzXLomzeyWaULsXALQ+w1Xhl++NFvlRq/+cZpdavXAVV/WKwNcgbCNXXMIsPCQkk9Qcmf2oRb
- j1eZjbUmO3qu66Dn6SNDivTcUwQpt0CzCtcUX3fUiVgpz+FEEPaCfSHhoiyWATkMFST/NTKly
- P94XO3ir+Wz/WKyzrkprUlfwG4h1i/+e9YurivaGLpZ/GKfiyqPv/KYQkTXaUguvaEx0ZC5dX
- TkvFABNLJGm1fRUk2FJNrM6+R9pUGN4UYRlyz0LLgOUYuTg8d7qDT3+ZntT/TEwnec+QK9nat
- uHFjF6Np8mjhhD+A+SdMhdKy3Iw6lZTUuyT2rzIwtfTmHuVXMlUqgp3K51nXGp1NAkLiSsJxP
- E48UW0j88ruGXlje6+SrcTmfND5yinl6k4oKlW5I1uctDZH6ghGR+tHxySV57HKVNHK/C3+ie
- zID5UE6NacFZkJgwdVwD0hadsQU+cMRuTpUUWLcfizildPhfCPpadcKM7j/fuUdiceX1wB2Du
- Nqpv4Pvavwpgxmm/gBzES08dvKXQXiSGKq9zV9jareYxjXZaucQHYetknDO+Do97yY9ArJzWY
- RbS9oNx8LGPj/RrVygLio5dW7RcXFTQZl6nV8Tusz2pW1WP828g6OYBtaf3Jcjkh954MFMcCP
- nVSiQtvARNs6tMSgLKmTRUmQrVn80eIguNDFN/g15rpkak136VjzNBVeoSbkAKjLmNpZTq6k2
- rommGLgaOALOQT/vSe1yqjwOcYRljDR2gWk
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I am on kernel version 5.13 with a Intel AX200 (8086:2723) WLAN
-adapter. I am in Switzerland, so the regulations as e.g. detailed in
-[1] apply. I am trying to set the correct regulatory limits via
+This doesn't take any arguments, remove the "<param>"
+string from the help.
 
-$ iw reg set CH
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ ps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-but apparently the device is self-managed and does not take these
-settings into account:
+diff --git a/ps.c b/ps.c
+index de36d2b4b4a8..124bf75ccc1d 100644
+--- a/ps.c
++++ b/ps.c
+@@ -75,6 +75,6 @@ static int get_power_save(struct nl80211_state *state,
+ 	return 0;
+ }
+ 
+-COMMAND(get, power_save, "<param>",
++COMMAND(get, power_save, "",
+ 	NL80211_CMD_GET_POWER_SAVE, 0, CIB_NETDEV, get_power_save,
+ 	"Retrieve power save state.");
+-- 
+2.31.1
 
-$ iw reg get
-global
-country CH: DFS-ETSI
-	(2400 - 2483 @ 40), (N/A, 20), (N/A)
-	(5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
-	(5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
-	(5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
-	(5725 - 5875 @ 80), (N/A, 13), (N/A)
-	(57000 - 66000 @ 2160), (N/A, 40), (N/A)
-
-phy#0 (self-managed)
-country 00: DFS-UNSET
-	(2402 - 2437 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS,
-NO-80MHZ, NO-160MHZ
-	(2422 - 2462 @ 40), (6, 22), (N/A), AUTO-BW, NO-80MHZ, NO-160MHZ
-	(2447 - 2482 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS,
-NO-80MHZ, NO-160MHZ
-	(5170 - 5190 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW,
-IR-CONCURRENT, NO-HT40MINUS, PASSIVE-SCAN
-	(5190 - 5210 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW,
-IR-CONCURRENT, NO-HT40PLUS, PASSIVE-SCAN
-	(5210 - 5230 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW,
-IR-CONCURRENT, NO-HT40MINUS, PASSIVE-SCAN
-	(5230 - 5250 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW,
-IR-CONCURRENT, NO-HT40PLUS, PASSIVE-SCAN
-	(5250 - 5270 @ 160), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5270 - 5290 @ 160), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5290 - 5310 @ 160), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5310 - 5330 @ 160), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5490 - 5510 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5510 - 5530 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5530 - 5550 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5550 - 5570 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5570 - 5590 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5590 - 5610 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5610 - 5630 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, PASSIVE-SCAN
-	(5630 - 5650 @ 240), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40PLUS, PASSIVE-SCAN
-	(5650 - 5670 @ 80), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
-	(5670 - 5690 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS,
-NO-160MHZ, PASSIVE-SCAN
-	(5690 - 5710 @ 80), (6, 22), (0 ms), DFS, AUTO-BW,
-NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
-	(5710 - 5730 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS,
-NO-160MHZ, PASSIVE-SCAN
-	(5735 - 5755 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT,
-NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
-	(5755 - 5775 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT,
-NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
-	(5775 - 5795 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT,
-NO-HT40MINUS, NO-160MHZ, PASSIVE-SCAN
-	(5795 - 5815 @ 80), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT,
-NO-HT40PLUS, NO-160MHZ, PASSIVE-SCAN
-	(5815 - 5835 @ 20), (6, 22), (N/A), AUTO-BW, IR-CONCURRENT,
-	NO-HT40MINUS, NO-HT40PLUS, NO-80MHZ, NO-160MHZ, PASSIVE-SCAN
-
-Unfortunately, the self-managed settings seem incorrect to me, e.g. the
-full range from 5150-5350 MHz should be limited to NO-OUTDOOR use (see
-the above settings listed under country CH and [2] for the official
-text) but this is not the case for the self-managed part, so what the
-device is actually using. Also the transmission power limits are not
-always correct, e.g. 5725 MHz should be limited to 25mW (compare with
-above, [1] or [3]) and not to 22dBm. Is it possible to change the
-device to not being self-managed and to set the regulatory limits to
-the one of the country I am using it in (as was possible with older
-Intel devices as e.g. Intel Centrino Advanced-N 6205 which is using
-iwldvm as driver).
-
-Best regards,
-Julian Wollrath
-
-
-[1]
-https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.gi=
-t/tree/db.txt#n317
-[2] https://www.ofcomnet.ch/api/rir/1010/05
-[3] https://www.ofcomnet.ch/api/rir/1008/12
-
-=2D-
- ()  ascii ribbon campaign - against html e-mail
- /\                        - against proprietary attachments
