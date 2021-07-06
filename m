@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5800C07E9B
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 748D2C11F73
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF592608FC
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6093661396
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235433AbhGFLeN (ORCPT
+        id S235359AbhGFLeI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42564 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:34:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42562 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235530AbhGFLaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1DF6B61DB2;
-        Tue,  6 Jul 2021 11:21:19 +0000 (UTC)
+        id S235526AbhGFLaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:30:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ED47661CDF;
+        Tue,  6 Jul 2021 11:21:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570479;
-        bh=u8Ivap6Yz4KRmQsyQWImKIcEhtJI8QScwssbNbl8UkA=;
+        s=k20201202; t=1625570476;
+        bh=I3lYcrAzjWWwNNTQYpDEKai+YMoJnJOzHKEKOlEwnFU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JroNzpBZ1oPrWm28ZHgYoJ1yZ/fyreohwh6IuDxSxRVqDa0YRpLxU44b5lj6yOZqJ
-         Sepw+Y6jQyvxFQx7aoiGo3Qnq3t1lG6FmqVFpprRhzjQQsLQd3XDXqV2gzyZyx2cVH
-         9dahBzRZLOmKGSS4LeAhjUYW5xrApotpaTeq/Vk8xdShusvK/UclNaWK91wk51wiK4
-         YpIZxGSZfA7cS1HJkRWnZzRYrOSKjdwgLCYvaUuOWyxWQYO54HUBYolN+fsgzK+oAJ
-         rGi8Og/sJA4WdTEyaq1pztx+D12xrrKCm6Wct8KCxYTluCXzwo27HMrpgLY7wxI9Uk
-         C2wBy/evEMwvw==
+        b=V/Pjmy/HM7GGntaSZSZMC5D4fsfiZFoBtmS7ZFaBpuje2z0fDJfPSCVY+TJOmMCyi
+         AstdP53LrpINroI0HDExRvS4y6d1f0GJrbtLNy6+t+Qdhh4i6Do7ZmUcxPTZSnkFYG
+         4gKex4GVhSzuCv5L6pDJggP4uGeF2ZkOdf6nSqeOaS50WdzUjtyV8T/nw/L8KuyOiJ
+         I8bVczdTEfqlH7vFfg5gyflXmtb7eTTBjA0XlkufsirA8gRfCComEN0UTafVn1/Yxw
+         yBK0LJk7optk9oRg/lDw0BfyV9VBPGDDhbvLyEFt5Pu1xAzpW3z/khHmPe1cEE0pny
+         QK0pnCIoUZGmA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>, Paul Szabo <psz2036@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 128/160] rtw88: add quirks to disable pci capabilities
-Date:   Tue,  6 Jul 2021 07:17:54 -0400
-Message-Id: <20210706111827.2060499-128-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 126/160] iwlwifi: pcie: fix context info freeing
+Date:   Tue,  6 Jul 2021 07:17:52 -0400
+Message-Id: <20210706111827.2060499-126-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -52,85 +52,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 956c6d4f20c5446727e0c912dd8f527f2dc7b779 ]
+[ Upstream commit 26d18c75a7496c4c52b0b6789e713dc76ebfbc87 ]
 
-8821CE with ASPM cannot work properly on Protempo Ltd L116HTN6SPW. Add a
-quirk to disable the cap.
+After firmware alive, iwl_trans_pcie_gen2_fw_alive() is called
+to free the context info. However, on gen3 that will then free
+the context info with the wrong size.
 
-The reporter describes the symptom is that this module (driver) causes
-frequent freezes, randomly but usually within a few minutes of running
-(thus very soon after boot): screen display remains frozen, no response
-to either keyboard or mouse input. All I can do is to hold the power
-button to power off, then reboot.
+Since we free this allocation later, let it stick around until
+the device is stopped for now, freeing some of it earlier is a
+separate change.
 
-Reported-by: Paul Szabo <psz2036@gmail.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210607012254.6306-1-pkshih@realtek.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210618105614.afb63fb8cbc1.If4968db8e09f4ce2a1d27a6d750bca3d132d7d70@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 32 ++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 6b5c885798a4..e5110d2cbc1d 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
-  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index af9412bd697e..7996b05a51c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -254,7 +254,8 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
+ 	/* now that we got alive we can free the fw image & the context info.
+ 	 * paging memory cannot be freed included since FW will still use it
+ 	 */
+-	iwl_pcie_ctxt_info_free(trans);
++	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
++		iwl_pcie_ctxt_info_free(trans);
  
-+#include <linux/dmi.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include "main.h"
-@@ -1598,6 +1599,36 @@ static void rtw_pci_napi_deinit(struct rtw_dev *rtwdev)
- 	netif_napi_del(&rtwpci->napi);
- }
- 
-+enum rtw88_quirk_dis_pci_caps {
-+	QUIRK_DIS_PCI_CAP_MSI,
-+	QUIRK_DIS_PCI_CAP_ASPM,
-+};
-+
-+static int disable_pci_caps(const struct dmi_system_id *dmi)
-+{
-+	uintptr_t dis_caps = (uintptr_t)dmi->driver_data;
-+
-+	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_MSI))
-+		rtw_disable_msi = true;
-+	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_ASPM))
-+		rtw_pci_disable_aspm = true;
-+
-+	return 1;
-+}
-+
-+static const struct dmi_system_id rtw88_pci_quirks[] = {
-+	{
-+		.callback = disable_pci_caps,
-+		.ident = "Protempo Ltd L116HTN6SPW",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Protempo Ltd"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "L116HTN6SPW"),
-+		},
-+		.driver_data = (void *)BIT(QUIRK_DIS_PCI_CAP_ASPM),
-+	},
-+	{}
-+};
-+
- int rtw_pci_probe(struct pci_dev *pdev,
- 		  const struct pci_device_id *id)
- {
-@@ -1648,6 +1679,7 @@ int rtw_pci_probe(struct pci_dev *pdev,
- 		goto err_destroy_pci;
- 	}
- 
-+	dmi_check_system(rtw88_pci_quirks);
- 	rtw_pci_phy_cfg(rtwdev);
- 
- 	ret = rtw_register_hw(rtwdev, hw);
+ 	/*
+ 	 * Re-enable all the interrupts, including the RF-Kill one, now that
 -- 
 2.30.2
 
