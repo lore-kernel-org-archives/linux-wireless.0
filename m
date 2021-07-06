@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52D31C07E96
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C88CC07E96
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D93F62319
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB58E62319
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236624AbhGFMbq (ORCPT
+        id S237705AbhGFMbu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:31:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47600 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 08:31:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47596 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236647AbhGFLfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B26B761DF6;
-        Tue,  6 Jul 2021 11:23:59 +0000 (UTC)
+        id S236802AbhGFLfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:35:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0748F61E4C;
+        Tue,  6 Jul 2021 11:24:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570640;
-        bh=2yH1Q5BU3iPSLHbfiFuatKCYie8JbZm55iV0HyO/LBg=;
+        s=k20201202; t=1625570662;
+        bh=4EUy9s6jiLazO1muKr06cQhG00kLjfMPslB3+SH/BBs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=D5/PdCuozualgorYr393IMyewjkADtaJRcwYP4EfSWUbFHKafXX06ZfQwVGRh9cDG
-         tTqSuVIxtzHr5y/pSE85VC5bf6fkA4KzCD6jcISe4i3XKawqhi7D5nvkZyUjGr+FzS
-         K9qf53cKOlbsrjscmwRlLVDGKknIm0M1u/PzplJ0CBLuB+9ZkAGkc50akY5uvzPZK7
-         Rfb2guTwtJB+qfduKFAvD0NNpvE1q7PpHzamJHyWtGSjWyZBHWaFSe41WsCkFRnpcA
-         Cel6lQk0EHSvTYsxK06LlK6vdeeUkp6uU8PM9PX8tU/dM7g0kxhiik4AcCQqWKeKrN
-         zyRyLgf0KucZw==
+        b=J4uDoKmAZuZKPvhikmTk6rIGdGi23RMIjYpU+o4rd6aRk0XVUEth2dMEFDbDbI5Dy
+         hK/BUHds1MH/L3JO/uKU7WgNgS91VF4QNlxF4saNSvRJ3RszQ0clzNl/vqfkyA0zyO
+         UZlrmi1lDIcjGMwk2HR7A/8xFnRFg2vJbODSIAokK+HpihDhJcFbNZmWfwYyXNDo4p
+         ol0LyOinCNkHxKiAHrf75nW4oycC9xAxND58ti+mbJVU+jQVHLeYU+fpPMZMhgICi0
+         F2xGF4MBedDHhpNYJIa4bMdz5D6yjauEjYkKf3A3dcQMXat4Yx/ofB5EBdlXGosCRI
+         qYvGYbGag9G7w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 090/137] mt76: mt7615: fix fixed-rate tx status reporting
-Date:   Tue,  6 Jul 2021 07:21:16 -0400
-Message-Id: <20210706112203.2062605-90-sashal@kernel.org>
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 107/137] iwlwifi: mvm: support LONG_GROUP for WOWLAN_GET_STATUSES version
+Date:   Tue,  6 Jul 2021 07:21:33 -0400
+Message-Id: <20210706112203.2062605-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
 References: <20210706112203.2062605-1-sashal@kernel.org>
@@ -52,57 +52,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit ec8f1a90d006f7cedcf86ef19fd034a406a213d6 ]
+[ Upstream commit d65ab7c0e0b92056754185d3f6925d7318730e94 ]
 
-Rely on the txs fixed-rate bit instead of info->control.rates
+It's been a while that the firmware uses LONG_GROUP by default
+and not LEGACY_GROUP.
+Until now the firmware wrongly advertise the WOWLAN_GET_STATUS
+command's version with LEGACY_GROUP, but it is now being fixed.
+In order to support both firmwares, first try to get the version
+number of the command with the LONG_GROUP and if the firmware
+didn't advertise the command version with LONG_GROUP, try to get
+the command version with LEGACY_GROUP.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210618105614.cd6f4e421430.Iec07c746c8e65bc267e4750f38e4f74f2010ca45@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 5795e44f8a52..f44f478bb970 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1177,22 +1177,20 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 	int first_idx = 0, last_idx;
- 	int i, idx, count;
- 	bool fixed_rate, ack_timeout;
--	bool probe, ampdu, cck = false;
-+	bool ampdu, cck = false;
- 	bool rs_idx;
- 	u32 rate_set_tsf;
- 	u32 final_rate, final_rate_flags, final_nss, txs;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index d21143495e70..2a53792a69f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1682,8 +1682,11 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
+ 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
  
--	fixed_rate = info->status.rates[0].count;
--	probe = !!(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
--
- 	txs = le32_to_cpu(txs_data[1]);
--	ampdu = !fixed_rate && (txs & MT_TXS1_AMPDU);
-+	ampdu = txs & MT_TXS1_AMPDU;
+ 	/* default to 7 (when we have IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL) */
+-	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
+-					    WOWLAN_GET_STATUSES, 7);
++	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP,
++					    WOWLAN_GET_STATUSES, 0);
++	if (!notif_ver)
++		notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
++						    WOWLAN_GET_STATUSES, 7);
  
- 	txs = le32_to_cpu(txs_data[3]);
- 	count = FIELD_GET(MT_TXS3_TX_COUNT, txs);
- 	last_idx = FIELD_GET(MT_TXS3_LAST_TX_RATE, txs);
- 
- 	txs = le32_to_cpu(txs_data[0]);
-+	fixed_rate = txs & MT_TXS0_FIXED_RATE;
- 	final_rate = FIELD_GET(MT_TXS0_TX_RATE, txs);
- 	ack_timeout = txs & MT_TXS0_ACK_TIMEOUT;
- 
-@@ -1214,7 +1212,7 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 
- 	first_idx = max_t(int, 0, last_idx - (count - 1) / MT7615_RATE_RETRY);
- 
--	if (fixed_rate && !probe) {
-+	if (fixed_rate) {
- 		info->status.rates[0].count = count;
- 		i = 0;
- 		goto out;
+ 	if (!fw_has_api(&mvm->fw->ucode_capa,
+ 			IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL)) {
 -- 
 2.30.2
 
