@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9573C11F67
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08783C07E9C
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACF5161C66
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E054D61396
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235053AbhGFLd4 (ORCPT
+        id S235119AbhGFLd5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:33:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42622 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:33:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42510 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235349AbhGFL34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:29:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1591661CD0;
-        Tue,  6 Jul 2021 11:20:56 +0000 (UTC)
+        id S235490AbhGFLaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:30:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 296C361DB5;
+        Tue,  6 Jul 2021 11:21:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570457;
-        bh=QbvqrwZ8Q+2vTBa77tk8Y5TR2OyEQmbz1WcUaRkJ+aE=;
+        s=k20201202; t=1625570472;
+        bh=r8kwZdWEjeJQgavL3sZHDfFvoV3qOI6K31qBnTF5WkQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NQsH9JbWGxN0vrFsd7SN9sTAqNV4kyZIfyQtxMQYXjuSUv2nx7HW+cKHyZpKO0Xrf
-         xzbFOBPEu1U4BhHGPdmoOfEZ9RYTYAvV6jNH0K2jTj0XObyAD0j45zDuipe9oWmuKc
-         MDCnFHheT12TX1unIAn7CbJepf1Gd/FYIOh0wAHOJ9wvMv8gmhB7zPPDhLbTXSYbb8
-         U9E0SOGV87SXuY03TMqKswAHy9Yh1zSYaKN1wAZqYNRxdOb5QkI551v52mWE9NCkPt
-         c54fpViL0VhLw2kdLV86IEaL16XkZRHZFxtHDldBwhnJppqma7r0WdbEA6Gbv2TzHj
-         RfaIWQLt9pjZQ==
+        b=pOQeOgeVLP7TLPfCeVmWYetDyDhSVu0g/jSWFGYyyUVsknNTrFafhn8rWgdvEGiS5
+         oEG0kaHMCtlMN4deVg8k5+CdLSimpZpWSv9tm0inMMglHe9ZZnmp8CW0SfTSA1FLVO
+         7eIlqXffrBe6idb7rYBA2JEXfqKj20hPJPW/5GGIhxdj1HBnsBjxRPFLDXkiXPISVQ
+         l83JNSA+O4Fc3QYhLPglDSdbn4ZYereKEQ7YAmMjqo/Y5xwDR++14eYjmIVtiVmAt+
+         UuSsbNTglzd4BWcsboXUpKiD1kxXvFcE4INXCoI+Gjd01E0Zp4HvvtBzfWNLAz4en8
+         qwEAb/Eqi42hA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pascal Terjan <pterjan@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 112/160] rtl8xxxu: Fix device info for RTL8192EU devices
-Date:   Tue,  6 Jul 2021 07:17:38 -0400
-Message-Id: <20210706111827.2060499-112-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 123/160] iwlwifi: mvm: fix error print when session protection ends
+Date:   Tue,  6 Jul 2021 07:17:49 -0400
+Message-Id: <20210706111827.2060499-123-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -52,145 +52,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pascal Terjan <pterjan@google.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-[ Upstream commit c240b044edefa3c3af4014a4030e017dd95b59a1 ]
+[ Upstream commit 976ac0af7ba2c5424bc305b926c0807d96fdcc83 ]
 
-Based on 2001:3319 and 2357:0109 which I used to test the fix and
-0bda:818b and 2357:0108 for which I found efuse dumps online.
+When the session protection ends and the Driver is not
+associated or a beacon was not heard, the Driver
+prints "No beacons heard...".
+That's confusing for the case where not associated.
+Change the print when not associated to "Not associated...".
 
-== 2357:0109 ==
-=== Before ===
-Vendor: Realtek
-Product: \x03802.11n NI
-Serial:
-=== After ===
-Vendor: Realtek
-Product: 802.11n NIC
-Serial not available.
-
-== 2001:3319 ==
-=== Before ===
-Vendor: Realtek
-Product: Wireless N
-Serial: no USB Adap
-=== After ===
-Vendor: Realtek
-Product: Wireless N Nano USB Adapter
-Serial not available.
-
-Signed-off-by: Pascal Terjan <pterjan@google.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210424172959.1559890-1-pterjan@google.com
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210617100544.41a5a5a894fa.I9eabb76e7a3a7f4abbed8f2ef918f1df8e825726@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  | 11 +---
- .../realtek/rtl8xxxu/rtl8xxxu_8192e.c         | 59 +++++++++++++++++--
- 2 files changed, 56 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index d6d1be4169e5..acb6b0cd3667 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -853,15 +853,10 @@ struct rtl8192eu_efuse {
- 	u8 usb_optional_function;
- 	u8 res9[2];
- 	u8 mac_addr[ETH_ALEN];		/* 0xd7 */
--	u8 res10[2];
--	u8 vendor_name[7];
--	u8 res11[2];
--	u8 device_name[0x0b];		/* 0xe8 */
--	u8 res12[2];
--	u8 serial[0x0b];		/* 0xf5 */
--	u8 res13[0x30];
-+	u8 device_info[80];
-+	u8 res11[3];
- 	u8 unknown[0x0d];		/* 0x130 */
--	u8 res14[0xc3];
-+	u8 res12[0xc3];
- };
- 
- struct rtl8xxxu_reg8val {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index cfe2dfdae928..b06508d0cdf8 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -554,9 +554,43 @@ rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	}
- }
- 
-+static void rtl8192eu_log_next_device_info(struct rtl8xxxu_priv *priv,
-+					   char *record_name,
-+					   char *device_info,
-+					   unsigned int *record_offset)
-+{
-+	char *record = device_info + *record_offset;
-+
-+	/* A record is [ total length | 0x03 | value ] */
-+	unsigned char l = record[0];
-+
-+	/*
-+	 * The whole device info section seems to be 80 characters, make sure
-+	 * we don't read further.
-+	 */
-+	if (*record_offset + l > 80) {
-+		dev_warn(&priv->udev->dev,
-+			 "invalid record length %d while parsing \"%s\" at offset %u.\n",
-+			 l, record_name, *record_offset);
-+		return;
-+	}
-+
-+	if (l >= 2) {
-+		char value[80];
-+
-+		memcpy(value, &record[2], l - 2);
-+		value[l - 2] = '\0';
-+		dev_info(&priv->udev->dev, "%s: %s\n", record_name, value);
-+		*record_offset = *record_offset + l;
-+	} else {
-+		dev_info(&priv->udev->dev, "%s not available.\n", record_name);
-+	}
-+}
-+
- static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8192eu_efuse *efuse = &priv->efuse_wifi.efuse8192eu;
-+	unsigned int record_offset;
- 	int i;
- 
- 	if (efuse->rtl_id != cpu_to_le16(0x8129))
-@@ -604,12 +638,25 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- 	priv->has_xtalk = 1;
- 	priv->xtalk = priv->efuse_wifi.efuse8192eu.xtal_k & 0x3f;
- 
--	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
--	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
--	if (memchr_inv(efuse->serial, 0xff, 11))
--		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
--	else
--		dev_info(&priv->udev->dev, "Serial not available.\n");
-+	/*
-+	 * device_info section seems to be laid out as records
-+	 * [ total length | 0x03 | value ] so:
-+	 * - vendor length + 2
-+	 * - 0x03
-+	 * - vendor string (not null terminated)
-+	 * - product length + 2
-+	 * - 0x03
-+	 * - product string (not null terminated)
-+	 * Then there is one or 2 0x00 on all the 4 devices I own or found
-+	 * dumped online.
-+	 * As previous version of the code handled an optional serial
-+	 * string, I now assume there may be a third record if the
-+	 * length is not 0.
-+	 */
-+	record_offset = 0;
-+	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
-+	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
-+	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
- 
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
- 		unsigned char *raw = priv->efuse_wifi.raw;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 0b012f8c9eb2..9a4a1b363254 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -289,6 +289,8 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
+ 			 * and know the dtim period.
+ 			 */
+ 			iwl_mvm_te_check_disconnect(mvm, te_data->vif,
++				!te_data->vif->bss_conf.assoc ?
++				"Not associated and the time event is over already..." :
+ 				"No beacon heard and the time event is over already...");
+ 			break;
+ 		default:
+@@ -787,6 +789,8 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
+ 			 * and know the dtim period.
+ 			 */
+ 			iwl_mvm_te_check_disconnect(mvm, vif,
++						    !vif->bss_conf.assoc ?
++						    "Not associated and the session protection is over already..." :
+ 						    "No beacon heard and the session protection is over already...");
+ 			spin_lock_bh(&mvm->time_event_lock);
+ 			iwl_mvm_te_clear_data(mvm, te_data);
 -- 
 2.30.2
 
