@@ -7,40 +7,41 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A869C11F68
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEDEEC07E96
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4235E61DB8
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAB6461DBF
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232620AbhGFLXo (ORCPT
+        id S234174AbhGFLXy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:23:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56584 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:23:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233100AbhGFLVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:21:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7D90F61CDA;
-        Tue,  6 Jul 2021 11:17:45 +0000 (UTC)
+        id S232853AbhGFLVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:21:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2659C61CDF;
+        Tue,  6 Jul 2021 11:17:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570266;
-        bh=AEFMNni0q72L8/+5niW7zEZN13RimeOt/iWZevfRFVg=;
+        s=k20201202; t=1625570269;
+        bh=eGCsxFpG369ra2/yp5FBcSX3MxKYhKaMSefN2aQyDZU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o/CvIf0IaYzNfLyqT+gzRIUDQhMrmAcvIna9w2vhKnBM7x3wl1RwF4j/vUy90taj7
-         CkPbwAUMlv62PcUbvByfs8U2HF2t+EI30OPCbiGZu9C1cluksPdQGB/dy9+Pzqg/zO
-         6+tB4Ur5DnXVdK4sYRKoLyBz4kz2TGK87cXGtrzyqFgfkNWzWw30W3/zEYw4CDx2rm
-         ZYHMczJO2mC28BSdGVURpzje7IoEupfBDbH69kE5TKRR9tzhUD3fGmyEci7A21BBx8
-         ase+kNo1WnynltLqKjAotYh3HQFtk1vezNALpjOaSHBT4nt5hZE5D3/pP0oqxt25fo
-         corgHEur1eJdQ==
+        b=LhB5E9RTSLQofNUxO4kKtdvmkHYR85AuE4GynmnDfi54DVweg1tyMGBRmT07/o+x+
+         e0xhQXPISPnN3twyeWntsIjlRFbHbSSRtvYNyh5nLxUaqgtbJ5+Rg9+uoCo7g9r38S
+         4nVdASDdDF7x7HspFYCDf+X7nWiZF+4JWx7t5tOwUQRnZ8Np1NBiU5Gg6Rw+Qpb//r
+         FBRIjNRq/wtGy2k5FOY3sw7w+rPTVSysOa80PXojApNSqf8Ok0fpnMYlEx+ocBiX4T
+         KW+TVMzsAz4NNrB3OzKfmwB/pAkSj6MVNyB/ZmEgSrR97xuhyMgHNaeBjY5rHf8+5F
+         aclpQ8lA4Pt7Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 161/189] cfg80211: fix default HE tx bitrate mask in 2G band
-Date:   Tue,  6 Jul 2021 07:13:41 -0400
-Message-Id: <20210706111409.2058071-161-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 164/189] mac80211: Properly WARN on HW scan before restart
+Date:   Tue,  6 Jul 2021 07:13:44 -0400
+Message-Id: <20210706111409.2058071-164-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
 References: <20210706111409.2058071-1-sashal@kernel.org>
@@ -52,42 +53,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 9df66d5b9f45c39b3925d16e8947cc10009b186d ]
+[ Upstream commit 45daaa1318410794de956fb8e9d06aed2dbb23d0 ]
 
-In 2G band, a HE sta can only supports HT and HE, but not supports VHT.
-In this case, default HE tx bitrate mask isn't filled, when we use iw to
-set bitrates without any parameter.
+The following race was possible:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://lore.kernel.org/r/20210609075944.51130-1-pkshih@realtek.com
+1. The device driver requests HW restart.
+2. A scan is requested from user space and is propagated
+   to the driver. During this flow HW_SCANNING flag is set.
+3. The thread that handles the HW restart is scheduled,
+   and before starting the actual reconfiguration it
+   checks that HW_SCANNING is not set. The flow does so
+   without acquiring any lock, and thus the WARN fires.
+
+Fix this by checking that HW_SCANNING is on only after RTNL is
+acquired, i.e., user space scan request handling is no longer
+in transit.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210618133832.8238ab3e19ab.I2693c581c70251472b4f9089e37e06fb2c18268f@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ net/mac80211/main.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fc9286afe3c9..912977bf3ec8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4781,11 +4781,10 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
- 		       sband->ht_cap.mcs.rx_mask,
- 		       sizeof(mask->control[i].ht_mcs));
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f33a3acd7f96..2481bfdfafd0 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -257,14 +257,13 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 	/* wait for scan work complete */
+ 	flush_workqueue(local->workqueue);
+ 	flush_work(&local->sched_scan_stopped_work);
++	flush_work(&local->radar_detected_work);
++
++	rtnl_lock();
  
--		if (!sband->vht_cap.vht_supported)
--			continue;
--
--		vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
--		vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
-+		if (sband->vht_cap.vht_supported) {
-+			vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
-+			vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
-+		}
+ 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
+ 	     "%s called with hardware scan in progress\n", __func__);
  
- 		he_cap = ieee80211_get_he_iftype_cap(sband, wdev->iftype);
- 		if (!he_cap)
+-	flush_work(&local->radar_detected_work);
+-	/* we might do interface manipulations, so need both */
+-	rtnl_lock();
+-	wiphy_lock(local->hw.wiphy);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		/*
+ 		 * XXX: there may be more work for other vif types and even
 -- 
 2.30.2
 
