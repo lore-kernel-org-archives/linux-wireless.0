@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DEDC07E96
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E63A8C11F67
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9277D61C65
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D09A361CBB
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234721AbhGFLdk (ORCPT
+        id S234808AbhGFLdn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:33:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35636 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:33:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42502 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235016AbhGFL3d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:29:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3B95A61CD6;
-        Tue,  6 Jul 2021 11:20:31 +0000 (UTC)
+        id S235201AbhGFL3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:29:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 85C9E61D9E;
+        Tue,  6 Jul 2021 11:20:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570432;
-        bh=6rF2GL9WIIQWkZO/BED3ShKt4VEZx8DQg4Uu0Zr1E20=;
+        s=k20201202; t=1625570443;
+        bh=2jATZ63rO3C43mSyubCECRk6B6rF9AcE4slxIXNEiWM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Tdpboa9M8ysKmMAKfkG2FLYyn5K6YrtbAMw6/tJ2ykDX9N/wlRHp0uHxZYFS5q/Cq
-         +Jz+X+ZeZR//FCv2x+L7FiqZGBw17SYXmD2jY3rJ2khWmOpB+7I1jixEqxYIfxrF7E
-         qqSvhmCrJFyxHoi2wI3tsFMZDka9DB2B/bR97OuQYNOY5nTwVQLwZXvJ8uhsGxDH9K
-         /JMC+rZw+tg9r1n+/HYXVGMz6Ya5IEdT97UY13mR3Q+eBLVZO/uE6t4LdGsnY26jKp
-         o3yuPovD9gvkW8+MPFO5gvXug8A7CbXoOiyyYPlamPwJKNfIKZvh8IL3PaJ0DIwmct
-         eTJWloLtHpmHA==
+        b=MvjHEY+KLUznkvGm6NfRTnuh7X1jxePBNbIuXFBNG4KXfhjSrnS48Y7jRxw2q/Ogf
+         YNkVnLoMoEE/eIJ5/AGGdD5176RtqdqHRuGlt+YtyxK/RmKqk2owXv4UyoI3ffHXzQ
+         RVQkNkHFWdM4EqNFrXYa5kl72g+pdTA8c/BtbdbjvZnWKssuiASdUgxB9ht3MLRh5y
+         z+S5huHAjIF2O/zD3x1Br67xLo9+HiZ79GdnIdM7WjpvorGyzGuoDdLUVn3hdtL6Uf
+         2TGji/e1eBzh8Qvf+0/gcpbrSgMFYmCs6vG4tjyGyCbiQdhwzCl0I1J+bdK1FTiSTx
+         QRNWEFdkZd1UA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zou Wei <zou_wei@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 094/160] cw1200: add missing MODULE_DEVICE_TABLE
-Date:   Tue,  6 Jul 2021 07:17:20 -0400
-Message-Id: <20210706111827.2060499-94-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.12 102/160] mt76: dma: use ieee80211_tx_status_ext to free packets when tx fails
+Date:   Tue,  6 Jul 2021 07:17:28 -0400
+Message-Id: <20210706111827.2060499-102-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -52,34 +52,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zou Wei <zou_wei@huawei.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit dd778f89225cd258e8f0fed2b7256124982c8bb5 ]
+[ Upstream commit 94e4f5794627a80ce036c35b32a9900daeb31be3 ]
 
-This patch adds missing MODULE_DEVICE_TABLE definition which generates
-correct modalias for automatic loading of this driver when it is built
-as an external module.
+Fixes AQL issues on full queues, especially with 802.3 encap offload
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Zou Wei <zou_wei@huawei.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1620788714-14300-1-git-send-email-zou_wei@huawei.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/cw1200_sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/dma.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/cw1200_sdio.c b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-index b65ec14136c7..4c30b5772ce0 100644
---- a/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-+++ b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-@@ -53,6 +53,7 @@ static const struct sdio_device_id cw1200_sdio_ids[] = {
- 	{ SDIO_DEVICE(SDIO_VENDOR_ID_STE, SDIO_DEVICE_ID_STE_CW1200) },
- 	{ /* end: all zeroes */			},
- };
-+MODULE_DEVICE_TABLE(sdio, cw1200_sdio_ids);
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 7196fa9047e6..87ee1b305a93 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -340,6 +340,9 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 		      struct sk_buff *skb, struct mt76_wcid *wcid,
+ 		      struct ieee80211_sta *sta)
+ {
++	struct ieee80211_tx_status status = {
++		.sta = sta,
++	};
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -351,11 +354,9 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 	u8 *txwi;
  
- /* hwbus_ops implemetation */
+ 	t = mt76_get_txwi(dev);
+-	if (!t) {
+-		hw = mt76_tx_status_get_hw(dev, skb);
+-		ieee80211_free_txskb(hw, skb);
+-		return -ENOMEM;
+-	}
++	if (!t)
++		goto free_skb;
++
+ 	txwi = mt76_get_txwi_ptr(dev, t);
+ 
+ 	skb->prev = skb->next = NULL;
+@@ -418,8 +419,13 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 	}
+ #endif
+ 
+-	dev_kfree_skb(tx_info.skb);
+ 	mt76_put_txwi(dev, t);
++
++free_skb:
++	status.skb = tx_info.skb;
++	hw = mt76_tx_status_get_hw(dev, tx_info.skb);
++	ieee80211_tx_status_ext(hw, &status);
++
+ 	return ret;
+ }
  
 -- 
 2.30.2
