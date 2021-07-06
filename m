@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD95C11F68
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 295E5C07E96
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A98D661D73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F68361DAC
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234003AbhGFLXW (ORCPT
+        id S233558AbhGFLXg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:23:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55702 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:23:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54822 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233483AbhGFLVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:21:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E4A561C6E;
-        Tue,  6 Jul 2021 11:17:39 +0000 (UTC)
+        id S233378AbhGFLUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:20:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DDD4B61C75;
+        Tue,  6 Jul 2021 11:17:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570260;
-        bh=LrqA3Q5ctTV6K0harTnES9skPEHmU3d24hQ7WI8iNiA=;
+        s=k20201202; t=1625570250;
+        bh=N+NjFiyd8DvIA9L1V+wHXA3UPj7jZ0d5f+aLc2aQ30I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MYhFxY9DVn/reLKyjtV91/729pQYaYHeTW41OpBnfXdArJgTq86Ae9MmdjKQur0Cq
-         oJ0kgU9erUMrA+msD/FeQHeXCs9S9SYHypIiHxV5f0dRULncJtwSdsd+IG859JzKyi
-         BWLP+uKKoTb3UE9M3zpoT3mfjiK7QDJCUD5VP5fBZarb0VkFR5Ru7r5eL43La2DK8h
-         PYlH9ycpXsqmyRBlqpO6vdo4VJbIsdsy6OvIzNlXsLYBb4ZQdqd62DWbmY1W+KCfx/
-         FFy6Ze0PDLpg8Su2ByWNMCAz3CWhBUUKjfkj3Dvu5I3Zrc3nlyGJWvfj/LlvuK8Tsy
-         TeC78sOVrhC8Q==
+        b=JLzBQJdZWVtdfQh+79CuP7/GRpwwyont8rj/7sOUypQxNdZUJcyWTn/b9yWqrV08L
+         G6exk9Tz2N5ME6L9jrdg7dy+YJ0rPyxiohoz8UUGRgquSc5h2mqVZNosPywJ1XQsFw
+         FnoW/2aSLfB8nDp5gnsZrweU4AU+dgXxvJaDNzprrs0HL/4UGPevq3azznUkMxNIIh
+         QQc/lfl34s0drIVhOd2CEzg+MryWzLh58E5swl41ug9+DEf6TIleSPgq6JEfcEi0LE
+         xp5uAFb2UhYW6fdCdkjuO6ItmYAP9AvDvq0dExH9GsI8h75Le86eIq11vQYaD1mBnV
+         qDtBOv/l0tkjQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>, Paul Szabo <psz2036@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 156/189] rtw88: add quirks to disable pci capabilities
-Date:   Tue,  6 Jul 2021 07:13:36 -0400
-Message-Id: <20210706111409.2058071-156-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 149/189] iwlwifi: mvm: don't change band on bound PHY contexts
+Date:   Tue,  6 Jul 2021 07:13:29 -0400
+Message-Id: <20210706111409.2058071-149-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
 References: <20210706111409.2058071-1-sashal@kernel.org>
@@ -52,85 +52,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 956c6d4f20c5446727e0c912dd8f527f2dc7b779 ]
+[ Upstream commit 8835a64f74c46baebfc946cd5a2c861b866ebcee ]
 
-8821CE with ASPM cannot work properly on Protempo Ltd L116HTN6SPW. Add a
-quirk to disable the cap.
+When we have a P2P Device active, we attempt to only change the
+PHY context it uses when we get a new remain-on-channel, if the
+P2P Device is the only user of the PHY context.
 
-The reporter describes the symptom is that this module (driver) causes
-frequent freezes, randomly but usually within a few minutes of running
-(thus very soon after boot): screen display remains frozen, no response
-to either keyboard or mouse input. All I can do is to hold the power
-button to power off, then reboot.
+This is fine if we're switching within a band, but if we're
+switching bands then the switch implies a removal and re-add
+of the PHY context, which isn't permitted by the firmware while
+it's bound to an interface.
 
-Reported-by: Paul Szabo <psz2036@gmail.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210607012254.6306-1-pkshih@realtek.com
+Fix the code to skip the unbind/release/... cycle only if the
+band doesn't change (or we have old devices that can switch the
+band on the fly as well.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210612142637.e9ac313f70f3.I713b9d109957df7e7d9ed0861d5377ce3f8fccd3@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 32 ++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 24 ++++++++++++++-----
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index f59a4c462e3b..e7d17ab8f113 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
-  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 607d5d564928..141d9fc299b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3800,6 +3800,7 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct cfg80211_chan_def chandef;
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt;
++	bool band_change_removal;
+ 	int ret, i;
  
-+#include <linux/dmi.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include "main.h"
-@@ -1673,6 +1674,36 @@ static void rtw_pci_napi_deinit(struct rtw_dev *rtwdev)
- 	netif_napi_del(&rtwpci->napi);
- }
+ 	IWL_DEBUG_MAC80211(mvm, "enter (%d, %d, %d)\n", channel->hw_value,
+@@ -3880,19 +3881,30 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
+ 	cfg80211_chandef_create(&chandef, channel, NL80211_CHAN_NO_HT);
  
-+enum rtw88_quirk_dis_pci_caps {
-+	QUIRK_DIS_PCI_CAP_MSI,
-+	QUIRK_DIS_PCI_CAP_ASPM,
-+};
+ 	/*
+-	 * Change the PHY context configuration as it is currently referenced
+-	 * only by the P2P Device MAC
++	 * Check if the remain-on-channel is on a different band and that
++	 * requires context removal, see iwl_mvm_phy_ctxt_changed(). If
++	 * so, we'll need to release and then re-configure here, since we
++	 * must not remove a PHY context that's part of a binding.
+ 	 */
+-	if (mvmvif->phy_ctxt->ref == 1) {
++	band_change_removal =
++		fw_has_capa(&mvm->fw->ucode_capa,
++			    IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT) &&
++		mvmvif->phy_ctxt->channel->band != chandef.chan->band;
 +
-+static int disable_pci_caps(const struct dmi_system_id *dmi)
-+{
-+	uintptr_t dis_caps = (uintptr_t)dmi->driver_data;
-+
-+	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_MSI))
-+		rtw_disable_msi = true;
-+	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_ASPM))
-+		rtw_pci_disable_aspm = true;
-+
-+	return 1;
-+}
-+
-+static const struct dmi_system_id rtw88_pci_quirks[] = {
-+	{
-+		.callback = disable_pci_caps,
-+		.ident = "Protempo Ltd L116HTN6SPW",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Protempo Ltd"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "L116HTN6SPW"),
-+		},
-+		.driver_data = (void *)BIT(QUIRK_DIS_PCI_CAP_ASPM),
-+	},
-+	{}
-+};
-+
- int rtw_pci_probe(struct pci_dev *pdev,
- 		  const struct pci_device_id *id)
- {
-@@ -1723,6 +1754,7 @@ int rtw_pci_probe(struct pci_dev *pdev,
- 		goto err_destroy_pci;
- 	}
- 
-+	dmi_check_system(rtw88_pci_quirks);
- 	rtw_pci_phy_cfg(rtwdev);
- 
- 	ret = rtw_register_hw(rtwdev, hw);
++	if (mvmvif->phy_ctxt->ref == 1 && !band_change_removal) {
++		/*
++		 * Change the PHY context configuration as it is currently
++		 * referenced only by the P2P Device MAC (and we can modify it)
++		 */
+ 		ret = iwl_mvm_phy_ctxt_changed(mvm, mvmvif->phy_ctxt,
+ 					       &chandef, 1, 1);
+ 		if (ret)
+ 			goto out_unlock;
+ 	} else {
+ 		/*
+-		 * The PHY context is shared with other MACs. Need to remove the
+-		 * P2P Device from the binding, allocate an new PHY context and
+-		 * create a new binding
++		 * The PHY context is shared with other MACs (or we're trying to
++		 * switch bands), so remove the P2P Device from the binding,
++		 * allocate an new PHY context and create a new binding.
+ 		 */
+ 		phy_ctxt = iwl_mvm_get_free_phy_ctxt(mvm);
+ 		if (!phy_ctxt) {
 -- 
 2.30.2
 
