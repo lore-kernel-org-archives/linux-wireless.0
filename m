@@ -2,48 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-25.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0357C11F73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA484C11FED
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD83661D74
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8AEF61D68
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234172AbhGFLhD (ORCPT
+        id S233126AbhGFLg6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:37:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47552 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:36:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47572 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236753AbhGFLfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 117B061E49;
-        Tue,  6 Jul 2021 11:24:09 +0000 (UTC)
+        id S237556AbhGFLgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:36:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F218761F74;
+        Tue,  6 Jul 2021 11:28:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570650;
-        bh=c7U7K21MSxuI/vvEFYnXwHORNGAgLho1Vrngve241q8=;
+        s=k20201202; t=1625570918;
+        bh=q40AHm9I5Lk5DXFmVPqQqxkyiDbwGY8e1r7ys0fjt1E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QdEl/q11qZohbv3Rg+Anp/67RtG7sV2Y5ngzOowXHctKwTvxG+0BISpdZciSMsJQg
-         CASF3Zq9d1g9C1uJyi9gRlixwz1+LDn2TcMDCNZ7tqyfeRuHQj07tjhw/WMpwdht/A
-         33u/CbTELROUiZYjgfgzZGC4FAaejNzBgE/crFDjntQzFfn9YlR1GFJa0MLHSVm3Rf
-         sapP3GWP6IX2dnUzijNSySE0Oj5gJFphWZs8QRIw3DG8hG+PNhyrw4b9SUml0KNFd2
-         PmODMs694G4gh52/0trERJrA/b/KduZA3FATgjO7GL07l2Tbn1nS2uW3fRQu9ZP0rr
-         JaMpOabhbGRkA==
+        b=YbpmzBiHorE7XIKRDfgtDu1WYSdNeZhrMWBIR+dt13IU2j7XBOVcxNAnHiPago4/t
+         G3dnzo6HHkONgwA/v5COUt1hfOeMY14El7+C7kpRCO6YsEYJpt9dS7l3QCaP/Jp5o7
+         Y0PhXGJIOqLlJKFad1SSAazw8Lj0aN0ykA8caOuRAGmzL9WFeqhK98/z4ylVRZbqr2
+         CS2XX75cJzu0Feo/fw7MgQmWEBS2OcLmQpqvjmqZiSjqX6AEcBmiHz3ensIEyOR5jN
+         UBXoT3Il8gg/6dK8yRw24sXxzECpUQEekV0MldvLBIbAvftsoOhu4vfDAxqFILZYw8
+         IeXjIPf/0/qgg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pascal Terjan <pterjan@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        kernel test robot <lkp@intel.com>,
+        Kees Cook <keescook@chromium.org>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 098/137] rtl8xxxu: Fix device info for RTL8192EU devices
-Date:   Tue,  6 Jul 2021 07:21:24 -0400
-Message-Id: <20210706112203.2062605-98-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 39/45] wireless: wext-spy: Fix out-of-bounds warning
+Date:   Tue,  6 Jul 2021 07:27:43 -0400
+Message-Id: <20210706112749.2065541-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
-References: <20210706112203.2062605-1-sashal@kernel.org>
+In-Reply-To: <20210706112749.2065541-1-sashal@kernel.org>
+References: <20210706112749.2065541-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,145 +54,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pascal Terjan <pterjan@google.com>
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-[ Upstream commit c240b044edefa3c3af4014a4030e017dd95b59a1 ]
+[ Upstream commit e93bdd78406da9ed01554c51e38b2a02c8ef8025 ]
 
-Based on 2001:3319 and 2357:0109 which I used to test the fix and
-0bda:818b and 2357:0108 for which I found efuse dumps online.
+Fix the following out-of-bounds warning:
 
-== 2357:0109 ==
-=== Before ===
-Vendor: Realtek
-Product: \x03802.11n NI
-Serial:
-=== After ===
-Vendor: Realtek
-Product: 802.11n NIC
-Serial not available.
+net/wireless/wext-spy.c:178:2: warning: 'memcpy' offset [25, 28] from the object at 'threshold' is out of the bounds of referenced subobject 'low' with type 'struct iw_quality' at offset 20 [-Warray-bounds]
 
-== 2001:3319 ==
-=== Before ===
-Vendor: Realtek
-Product: Wireless N
-Serial: no USB Adap
-=== After ===
-Vendor: Realtek
-Product: Wireless N Nano USB Adapter
-Serial not available.
+The problem is that the original code is trying to copy data into a
+couple of struct members adjacent to each other in a single call to
+memcpy(). This causes a legitimate compiler warning because memcpy()
+overruns the length of &threshold.low and &spydata->spy_thr_low. As
+these are just a couple of struct members, fix this by using direct
+assignments, instead of memcpy().
 
-Signed-off-by: Pascal Terjan <pterjan@google.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210424172959.1559890-1-pterjan@google.com
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
+
+Link: https://github.com/KSPP/linux/issues/109
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Link: https://lore.kernel.org/r/20210422200032.GA168995@embeddedor
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  | 11 +---
- .../realtek/rtl8xxxu/rtl8xxxu_8192e.c         | 59 +++++++++++++++++--
- 2 files changed, 56 insertions(+), 14 deletions(-)
+ net/wireless/wext-spy.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index d6d1be4169e5..acb6b0cd3667 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -853,15 +853,10 @@ struct rtl8192eu_efuse {
- 	u8 usb_optional_function;
- 	u8 res9[2];
- 	u8 mac_addr[ETH_ALEN];		/* 0xd7 */
--	u8 res10[2];
--	u8 vendor_name[7];
--	u8 res11[2];
--	u8 device_name[0x0b];		/* 0xe8 */
--	u8 res12[2];
--	u8 serial[0x0b];		/* 0xf5 */
--	u8 res13[0x30];
-+	u8 device_info[80];
-+	u8 res11[3];
- 	u8 unknown[0x0d];		/* 0x130 */
--	u8 res14[0xc3];
-+	u8 res12[0xc3];
- };
+diff --git a/net/wireless/wext-spy.c b/net/wireless/wext-spy.c
+index 33bef22e44e9..b379a0371653 100644
+--- a/net/wireless/wext-spy.c
++++ b/net/wireless/wext-spy.c
+@@ -120,8 +120,8 @@ int iw_handler_set_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
  
- struct rtl8xxxu_reg8val {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index 9f1f93d04145..199e7e031d7d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -554,9 +554,43 @@ rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	}
+ 	/* Just do it */
+-	memcpy(&(spydata->spy_thr_low), &(threshold->low),
+-	       2 * sizeof(struct iw_quality));
++	spydata->spy_thr_low = threshold->low;
++	spydata->spy_thr_high = threshold->high;
+ 
+ 	/* Clear flag */
+ 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
+@@ -147,8 +147,8 @@ int iw_handler_get_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Just do it */
+-	memcpy(&(threshold->low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold->low = spydata->spy_thr_low;
++	threshold->high = spydata->spy_thr_high;
+ 
+ 	return 0;
  }
+@@ -173,10 +173,10 @@ static void iw_send_thrspy_event(struct net_device *	dev,
+ 	memcpy(threshold.addr.sa_data, address, ETH_ALEN);
+ 	threshold.addr.sa_family = ARPHRD_ETHER;
+ 	/* Copy stats */
+-	memcpy(&(threshold.qual), wstats, sizeof(struct iw_quality));
++	threshold.qual = *wstats;
+ 	/* Copy also thresholds */
+-	memcpy(&(threshold.low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold.low = spydata->spy_thr_low;
++	threshold.high = spydata->spy_thr_high;
  
-+static void rtl8192eu_log_next_device_info(struct rtl8xxxu_priv *priv,
-+					   char *record_name,
-+					   char *device_info,
-+					   unsigned int *record_offset)
-+{
-+	char *record = device_info + *record_offset;
-+
-+	/* A record is [ total length | 0x03 | value ] */
-+	unsigned char l = record[0];
-+
-+	/*
-+	 * The whole device info section seems to be 80 characters, make sure
-+	 * we don't read further.
-+	 */
-+	if (*record_offset + l > 80) {
-+		dev_warn(&priv->udev->dev,
-+			 "invalid record length %d while parsing \"%s\" at offset %u.\n",
-+			 l, record_name, *record_offset);
-+		return;
-+	}
-+
-+	if (l >= 2) {
-+		char value[80];
-+
-+		memcpy(value, &record[2], l - 2);
-+		value[l - 2] = '\0';
-+		dev_info(&priv->udev->dev, "%s: %s\n", record_name, value);
-+		*record_offset = *record_offset + l;
-+	} else {
-+		dev_info(&priv->udev->dev, "%s not available.\n", record_name);
-+	}
-+}
-+
- static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8192eu_efuse *efuse = &priv->efuse_wifi.efuse8192eu;
-+	unsigned int record_offset;
- 	int i;
- 
- 	if (efuse->rtl_id != cpu_to_le16(0x8129))
-@@ -604,12 +638,25 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- 	priv->has_xtalk = 1;
- 	priv->xtalk = priv->efuse_wifi.efuse8192eu.xtal_k & 0x3f;
- 
--	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
--	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
--	if (memchr_inv(efuse->serial, 0xff, 11))
--		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
--	else
--		dev_info(&priv->udev->dev, "Serial not available.\n");
-+	/*
-+	 * device_info section seems to be laid out as records
-+	 * [ total length | 0x03 | value ] so:
-+	 * - vendor length + 2
-+	 * - 0x03
-+	 * - vendor string (not null terminated)
-+	 * - product length + 2
-+	 * - 0x03
-+	 * - product string (not null terminated)
-+	 * Then there is one or 2 0x00 on all the 4 devices I own or found
-+	 * dumped online.
-+	 * As previous version of the code handled an optional serial
-+	 * string, I now assume there may be a third record if the
-+	 * length is not 0.
-+	 */
-+	record_offset = 0;
-+	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
-+	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
-+	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
- 
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
- 		unsigned char *raw = priv->efuse_wifi.raw;
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
 -- 
 2.30.2
 
