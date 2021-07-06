@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D38BEC11F6D
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA78DC11F79
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B818261CD1
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B06CC61E3D
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237739AbhGFLhP (ORCPT
+        id S235918AbhGFLhU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:37:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47546 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:37:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236874AbhGFLfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0713361C28;
-        Tue,  6 Jul 2021 11:24:32 +0000 (UTC)
+        id S237229AbhGFLgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:36:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 62B2061EE3;
+        Tue,  6 Jul 2021 11:26:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570673;
-        bh=2kCKErc38NTQbqB0bO4t+VYeF1YoP9Ch4Nzc989A6jw=;
+        s=k20201202; t=1625570778;
+        bh=4LmJWgL/muoqZnm+hiqG7C9JHTI+SucHZIlgDvXTwww=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iLlmq7BX3/woDJUqhCMLd+JsaUSkIsLOFqMR1A1nwS7F1NhKlC3ZcAiwnJO+D/wCi
-         iGMk69JQLySWcpkFX71kcB0XUKo7xz91AVDPNcXFVnk6VPRUjrM9o3e97EEoI36eJs
-         SKcRsYfnTvxS82w2c7WNzg8YgKMIC1xhVQUWfrv0Z+lhSO6Mu2E/EbhuEGBoU/mK4z
-         UhAVphf8E50DldZue/FyKw3H25onEmjn1+Q/sSmXsHpzpLh90Ge0hY9hivHftehBSp
-         wG2k/WPPTvqCf2lpAKyyyuHGCTCloGRX/lcN+7+IXH1TQOwxGrEW8JtkHVD1Sx/IGN
-         GOsO4oiISB72Q==
+        b=nVyyIVBxzj6nDLblIgSFEcCUssABPPs+bfTt/cgxCxIchs9cuUc0mPxDkQFMoabVi
+         UFVJWj0c9cdvppfNiTX9EsWsbbGZjuP9gz5gZg297UynvSFuQxDDH0k1O74W8LstMF
+         PLiJKbgNwjhZQ7YzX5mdLwtetUDvdDNerlXB0tn78oBSBgp3+NkEY3GYXIMoljJh5O
+         6Ghfn3gL9qqc8N1ldweDm84WZ3pWtY0+cKYoYnjkCYupXnSsxzYUNQAVG40mOgXpwP
+         eBGIs/kF0UMTfDejwZlbZHVOIA7wa3ZLuoshoQ2XVNjHBR3GkFoW1nPdxVGmAAaF9F
+         U+mw1RhWlpVGw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Weilun Du <wdu@google.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 116/137] mac80211_hwsim: add concurrent channels scanning support over virtio
-Date:   Tue,  6 Jul 2021 07:21:42 -0400
-Message-Id: <20210706112203.2062605-116-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 59/74] iwlwifi: pcie: free IML DMA memory allocation
+Date:   Tue,  6 Jul 2021 07:24:47 -0400
+Message-Id: <20210706112502.2064236-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
-References: <20210706112203.2062605-1-sashal@kernel.org>
+In-Reply-To: <20210706112502.2064236-1-sashal@kernel.org>
+References: <20210706112502.2064236-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,171 +52,89 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Weilun Du <wdu@google.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 626c30f9e77354301ff9162c3bdddaf92d9b5cf3 ]
+[ Upstream commit 310f60f53a86eba680d9bc20a371e13b06a5f903 ]
 
-This fixed the crash when setting channels to 2 or more when
-communicating over virtio.
+In the case of gen3 devices with image loader (IML) support,
+we were leaking the IML DMA allocation and never freeing it.
+Fix that.
 
-Signed-off-by: Weilun Du <wdu@google.com>
-Link: https://lore.kernel.org/r/20210506180530.3418576-1-wdu@google.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210618105614.07e117dbedb7.I7bb9ebbe0617656986c2a598ea5e827b533bd3b9@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 48 +++++++++++++++++++++------
- 1 file changed, 38 insertions(+), 10 deletions(-)
+ .../wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 15 ++++++++++-----
+ .../net/wireless/intel/iwlwifi/pcie/internal.h    |  3 +++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index f147d4feedb9..4ca0b06d09ad 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -557,6 +557,7 @@ struct mac80211_hwsim_data {
- 	u32 ciphers[ARRAY_SIZE(hwsim_ciphers)];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index eab159205e48..f6b43cd87d5d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -63,7 +63,6 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	struct iwl_prph_scratch *prph_scratch;
+ 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl;
+ 	struct iwl_prph_info *prph_info;
+-	void *iml_img;
+ 	u32 control_flags = 0;
+ 	int ret;
+ 	int cmdq_size = max_t(u32, IWL_CMD_QUEUE_SIZE,
+@@ -162,14 +161,15 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	trans_pcie->prph_scratch = prph_scratch;
  
- 	struct mac_address addresses[2];
-+	struct ieee80211_chanctx_conf *chanctx;
- 	int channels, idx;
- 	bool use_chanctx;
- 	bool destroy_on_close;
-@@ -1187,7 +1188,8 @@ static inline u16 trans_tx_rate_flags_ieee2hwsim(struct ieee80211_tx_rate *rate)
- 
- static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 				       struct sk_buff *my_skb,
--				       int dst_portid)
-+				       int dst_portid,
-+				       struct ieee80211_channel *channel)
- {
- 	struct sk_buff *skb;
- 	struct mac80211_hwsim_data *data = hw->priv;
-@@ -1242,7 +1244,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	if (nla_put_u32(skb, HWSIM_ATTR_FLAGS, hwsim_flags))
- 		goto nla_put_failure;
- 
--	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, data->channel->center_freq))
-+	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, channel->center_freq))
- 		goto nla_put_failure;
- 
- 	/* We get the tx control (rate and retries) info*/
-@@ -1589,7 +1591,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	_portid = READ_ONCE(data->wmediumd);
- 
- 	if (_portid || hwsim_virtio_enabled)
--		return mac80211_hwsim_tx_frame_nl(hw, skb, _portid);
-+		return mac80211_hwsim_tx_frame_nl(hw, skb, _portid, channel);
- 
- 	/* NO wmediumd detected, perfect medium simulation */
- 	data->tx_pkts++;
-@@ -1705,7 +1707,7 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- 	mac80211_hwsim_monitor_rx(hw, skb, chan);
- 
- 	if (_pid || hwsim_virtio_enabled)
--		return mac80211_hwsim_tx_frame_nl(hw, skb, _pid);
-+		return mac80211_hwsim_tx_frame_nl(hw, skb, _pid, chan);
- 
- 	mac80211_hwsim_tx_frame_no_nl(hw, skb, chan);
- 	dev_kfree_skb(skb);
-@@ -2444,6 +2446,11 @@ static int mac80211_hwsim_croc(struct ieee80211_hw *hw,
- static int mac80211_hwsim_add_chanctx(struct ieee80211_hw *hw,
- 				      struct ieee80211_chanctx_conf *ctx)
- {
-+	struct mac80211_hwsim_data *hwsim = hw->priv;
-+
-+	mutex_lock(&hwsim->mutex);
-+	hwsim->chanctx = ctx;
-+	mutex_unlock(&hwsim->mutex);
- 	hwsim_set_chanctx_magic(ctx);
- 	wiphy_dbg(hw->wiphy,
- 		  "add channel context control: %d MHz/width: %d/cfreqs:%d/%d MHz\n",
-@@ -2455,6 +2462,11 @@ static int mac80211_hwsim_add_chanctx(struct ieee80211_hw *hw,
- static void mac80211_hwsim_remove_chanctx(struct ieee80211_hw *hw,
- 					  struct ieee80211_chanctx_conf *ctx)
- {
-+	struct mac80211_hwsim_data *hwsim = hw->priv;
-+
-+	mutex_lock(&hwsim->mutex);
-+	hwsim->chanctx = NULL;
-+	mutex_unlock(&hwsim->mutex);
- 	wiphy_dbg(hw->wiphy,
- 		  "remove channel context control: %d MHz/width: %d/cfreqs:%d/%d MHz\n",
- 		  ctx->def.chan->center_freq, ctx->def.width,
-@@ -2467,6 +2479,11 @@ static void mac80211_hwsim_change_chanctx(struct ieee80211_hw *hw,
- 					  struct ieee80211_chanctx_conf *ctx,
- 					  u32 changed)
- {
-+	struct mac80211_hwsim_data *hwsim = hw->priv;
-+
-+	mutex_lock(&hwsim->mutex);
-+	hwsim->chanctx = ctx;
-+	mutex_unlock(&hwsim->mutex);
- 	hwsim_check_chanctx_magic(ctx);
- 	wiphy_dbg(hw->wiphy,
- 		  "change channel context control: %d MHz/width: %d/cfreqs:%d/%d MHz\n",
-@@ -3059,6 +3076,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		hw->wiphy->max_remain_on_channel_duration = 1000;
- 		data->if_combination.radar_detect_widths = 0;
- 		data->if_combination.num_different_channels = data->channels;
-+		data->chanctx = NULL;
- 	} else {
- 		data->if_combination.num_different_channels = 1;
- 		data->if_combination.radar_detect_widths =
-@@ -3566,6 +3584,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	int frame_data_len;
- 	void *frame_data;
- 	struct sk_buff *skb = NULL;
-+	struct ieee80211_channel *channel = NULL;
- 
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
-@@ -3592,6 +3611,17 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	if (!data2)
- 		goto out;
- 
-+	if (data2->use_chanctx) {
-+		if (data2->tmp_chan)
-+			channel = data2->tmp_chan;
-+		else if (data2->chanctx)
-+			channel = data2->chanctx->def.chan;
-+	} else {
-+		channel = data2->channel;
-+	}
-+	if (!channel)
-+		goto out;
-+
- 	if (!hwsim_virtio_enabled) {
- 		if (hwsim_net_get_netgroup(genl_info_net(info)) !=
- 		    data2->netgroup)
-@@ -3603,7 +3633,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* check if radio is configured properly */
- 
--	if (data2->idle || !data2->started)
-+	if ((data2->idle && !data2->tmp_chan) || !data2->started)
- 		goto out;
- 
- 	/* A frame is received from user space */
-@@ -3616,18 +3646,16 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 		mutex_lock(&data2->mutex);
- 		rx_status.freq = nla_get_u32(info->attrs[HWSIM_ATTR_FREQ]);
- 
--		if (rx_status.freq != data2->channel->center_freq &&
--		    (!data2->tmp_chan ||
--		     rx_status.freq != data2->tmp_chan->center_freq)) {
-+		if (rx_status.freq != channel->center_freq) {
- 			mutex_unlock(&data2->mutex);
- 			goto out;
- 		}
- 		mutex_unlock(&data2->mutex);
- 	} else {
--		rx_status.freq = data2->channel->center_freq;
-+		rx_status.freq = channel->center_freq;
+ 	/* Allocate IML */
+-	iml_img = dma_alloc_coherent(trans->dev, trans->iml_len,
+-				     &trans_pcie->iml_dma_addr, GFP_KERNEL);
+-	if (!iml_img) {
++	trans_pcie->iml = dma_alloc_coherent(trans->dev, trans->iml_len,
++					     &trans_pcie->iml_dma_addr,
++					     GFP_KERNEL);
++	if (!trans_pcie->iml) {
+ 		ret = -ENOMEM;
+ 		goto err_free_ctxt_info;
  	}
  
--	rx_status.band = data2->channel->band;
-+	rx_status.band = channel->band;
- 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
- 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+-	memcpy(iml_img, trans->iml, trans->iml_len);
++	memcpy(trans_pcie->iml, trans->iml, trans->iml_len);
  
+ 	iwl_enable_fw_load_int_ctx_info(trans);
+ 
+@@ -242,6 +242,11 @@ void iwl_pcie_ctxt_info_gen3_free(struct iwl_trans *trans)
+ 	trans_pcie->ctxt_info_dma_addr = 0;
+ 	trans_pcie->ctxt_info_gen3 = NULL;
+ 
++	dma_free_coherent(trans->dev, trans->iml_len, trans_pcie->iml,
++			  trans_pcie->iml_dma_addr);
++	trans_pcie->iml_dma_addr = 0;
++	trans_pcie->iml = NULL;
++
+ 	iwl_pcie_ctxt_info_free_fw_img(trans);
+ 
+ 	dma_free_coherent(trans->dev, sizeof(*trans_pcie->prph_scratch),
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 9b5b96e34456..553164f06a6b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -475,6 +475,8 @@ struct cont_rec {
+  *	Context information addresses will be taken from here.
+  *	This is driver's local copy for keeping track of size and
+  *	count for allocating and freeing the memory.
++ * @iml: image loader image virtual address
++ * @iml_dma_addr: image loader image DMA address
+  * @trans: pointer to the generic transport area
+  * @scd_base_addr: scheduler sram base address in SRAM
+  * @scd_bc_tbls: pointer to the byte count table of the scheduler
+@@ -522,6 +524,7 @@ struct iwl_trans_pcie {
+ 	};
+ 	struct iwl_prph_info *prph_info;
+ 	struct iwl_prph_scratch *prph_scratch;
++	void *iml;
+ 	dma_addr_t ctxt_info_dma_addr;
+ 	dma_addr_t prph_info_dma_addr;
+ 	dma_addr_t prph_scratch_dma_addr;
 -- 
 2.30.2
 
