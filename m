@@ -2,45 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-25.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 748D2C11F73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC275C11F76
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6093661396
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD0961396
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235359AbhGFLeI (ORCPT
+        id S235559AbhGFLeT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42562 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:34:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42622 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235526AbhGFLaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED47661CDF;
-        Tue,  6 Jul 2021 11:21:15 +0000 (UTC)
+        id S235579AbhGFLaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:30:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E912C61DBF;
+        Tue,  6 Jul 2021 11:21:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570476;
-        bh=I3lYcrAzjWWwNNTQYpDEKai+YMoJnJOzHKEKOlEwnFU=;
+        s=k20201202; t=1625570484;
+        bh=q40AHm9I5Lk5DXFmVPqQqxkyiDbwGY8e1r7ys0fjt1E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V/Pjmy/HM7GGntaSZSZMC5D4fsfiZFoBtmS7ZFaBpuje2z0fDJfPSCVY+TJOmMCyi
-         AstdP53LrpINroI0HDExRvS4y6d1f0GJrbtLNy6+t+Qdhh4i6Do7ZmUcxPTZSnkFYG
-         4gKex4GVhSzuCv5L6pDJggP4uGeF2ZkOdf6nSqeOaS50WdzUjtyV8T/nw/L8KuyOiJ
-         I8bVczdTEfqlH7vFfg5gyflXmtb7eTTBjA0XlkufsirA8gRfCComEN0UTafVn1/Yxw
-         yBK0LJk7optk9oRg/lDw0BfyV9VBPGDDhbvLyEFt5Pu1xAzpW3z/khHmPe1cEE0pny
-         QK0pnCIoUZGmA==
+        b=d9nZtprVTL3drRMXgDsbYZFeaPFz+xRdOg9Wd/OLvKHifcTJlflDhsluKuB4sCzRM
+         qn9dTK1BPoAGtwaVqCD8Hu9cuCf9Tl0MyqDHplVgQgC7RGoCENRHfnMZYexjFWKpLh
+         pOkDXwLjNukulQvV+qkuEJvrtA6rzN61GMB2rnVaWmtBJgunliFguWL1ok4jV9/eFP
+         CAWrAYqUm90o1NTY4sLIOKjyAtTgYg+SR0M5DM/x96bT60BF63FIqdVvPGsTgjEqE+
+         PVAMBT4lGRfQ31bOcaRBA1sCXe8wTI3n3k1fDsk9zOfuTj40dM64fYRvmeX595MKT2
+         KVKtLs8WN19xA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        kernel test robot <lkp@intel.com>,
+        Kees Cook <keescook@chromium.org>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 126/160] iwlwifi: pcie: fix context info freeing
-Date:   Tue,  6 Jul 2021 07:17:52 -0400
-Message-Id: <20210706111827.2060499-126-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 132/160] wireless: wext-spy: Fix out-of-bounds warning
+Date:   Tue,  6 Jul 2021 07:17:58 -0400
+Message-Id: <20210706111827.2060499-132-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -52,41 +54,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-[ Upstream commit 26d18c75a7496c4c52b0b6789e713dc76ebfbc87 ]
+[ Upstream commit e93bdd78406da9ed01554c51e38b2a02c8ef8025 ]
 
-After firmware alive, iwl_trans_pcie_gen2_fw_alive() is called
-to free the context info. However, on gen3 that will then free
-the context info with the wrong size.
+Fix the following out-of-bounds warning:
 
-Since we free this allocation later, let it stick around until
-the device is stopped for now, freeing some of it earlier is a
-separate change.
+net/wireless/wext-spy.c:178:2: warning: 'memcpy' offset [25, 28] from the object at 'threshold' is out of the bounds of referenced subobject 'low' with type 'struct iw_quality' at offset 20 [-Warray-bounds]
 
+The problem is that the original code is trying to copy data into a
+couple of struct members adjacent to each other in a single call to
+memcpy(). This causes a legitimate compiler warning because memcpy()
+overruns the length of &threshold.low and &spydata->spy_thr_low. As
+these are just a couple of struct members, fix this by using direct
+assignments, instead of memcpy().
+
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
+
+Link: https://github.com/KSPP/linux/issues/109
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Link: https://lore.kernel.org/r/20210422200032.GA168995@embeddedor
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210618105614.afb63fb8cbc1.If4968db8e09f4ce2a1d27a6d750bca3d132d7d70@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/wireless/wext-spy.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index af9412bd697e..7996b05a51c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -254,7 +254,8 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- 	/* now that we got alive we can free the fw image & the context info.
- 	 * paging memory cannot be freed included since FW will still use it
- 	 */
--	iwl_pcie_ctxt_info_free(trans);
-+	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
-+		iwl_pcie_ctxt_info_free(trans);
+diff --git a/net/wireless/wext-spy.c b/net/wireless/wext-spy.c
+index 33bef22e44e9..b379a0371653 100644
+--- a/net/wireless/wext-spy.c
++++ b/net/wireless/wext-spy.c
+@@ -120,8 +120,8 @@ int iw_handler_set_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
  
- 	/*
- 	 * Re-enable all the interrupts, including the RF-Kill one, now that
+ 	/* Just do it */
+-	memcpy(&(spydata->spy_thr_low), &(threshold->low),
+-	       2 * sizeof(struct iw_quality));
++	spydata->spy_thr_low = threshold->low;
++	spydata->spy_thr_high = threshold->high;
+ 
+ 	/* Clear flag */
+ 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
+@@ -147,8 +147,8 @@ int iw_handler_get_thrspy(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Just do it */
+-	memcpy(&(threshold->low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold->low = spydata->spy_thr_low;
++	threshold->high = spydata->spy_thr_high;
+ 
+ 	return 0;
+ }
+@@ -173,10 +173,10 @@ static void iw_send_thrspy_event(struct net_device *	dev,
+ 	memcpy(threshold.addr.sa_data, address, ETH_ALEN);
+ 	threshold.addr.sa_family = ARPHRD_ETHER;
+ 	/* Copy stats */
+-	memcpy(&(threshold.qual), wstats, sizeof(struct iw_quality));
++	threshold.qual = *wstats;
+ 	/* Copy also thresholds */
+-	memcpy(&(threshold.low), &(spydata->spy_thr_low),
+-	       2 * sizeof(struct iw_quality));
++	threshold.low = spydata->spy_thr_low;
++	threshold.high = spydata->spy_thr_high;
+ 
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
 -- 
 2.30.2
 
