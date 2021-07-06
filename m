@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5736C11F66
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9AA9C07E9E
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B262161C50
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9581961DC5
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235689AbhGFLhG (ORCPT
+        id S235808AbhGFLhH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:37:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47594 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:37:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47624 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236800AbhGFLfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CB99561E44;
-        Tue,  6 Jul 2021 11:24:20 +0000 (UTC)
+        id S236865AbhGFLfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:35:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B9A6561C2C;
+        Tue,  6 Jul 2021 11:24:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570661;
-        bh=3Fs+gAv7AGiLCzxSOVAnIumXX4vXQB1F0+AeoQ2SAyc=;
+        s=k20201202; t=1625570672;
+        bh=27ckhIJ+8VfQFzQBVnCXaH3uoS+MBZVLK9NoxWmglxk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H2GRe4xg/tQZkvfxWOrEMhPAd3vN4UDEXNHWTRAYL52DiZL6KeJtQwJ564msuglYp
-         J4YJmvYrXZpxYE2m61Fw2uFuAZEheh3ExVhctEE9QE5yuGGcKO+P/SOvtqd/B0X40L
-         8iaYhuUSZagGeT2PpXPchVScztJrFrB/PhuJg4mDtPjFsdgkSnNd5+Eax6QSo0xC8I
-         pUVXu1/QLux4eWwo1EVuiLC/QnprlpktAJiWx+ei9uZ7HOpG7zuYXk9G/7Nzt3lzou
-         dm6mNT/JuxMAawFCcE3JCbohXzEPpKS5mTBCYx/Mf+algFlNm/5qtloOZvh1fDHQFE
-         tqvaL95DWClEw==
+        b=X6hREYqFfai/2u7pTWeVIg+Hi99aKfPTvnvgNuy7lR1Gv1tCqBipMFJ410Ch488SV
+         WZSCpCfXHDwR9haDhWhC2gQ91hXdK84xIvhnDfQb8LlJRIEzz2eoc47/ddaOUfgHWV
+         1OO3Zeqh1YxtUKMbJHA/GZTPBq6BlDaHefdd6CuLSpuVeSDW9reaO48zRJdJWQ4Zu5
+         svCPzMyCSiR4B6LsNNR/EvhNxQ+kepyRL1gly6SSSbqh8d76aG+IL/crgtvq/fI8h9
+         PWgWXKPeyCmQhD1N2nNhIghrdPjYjzuzsNFY1w02hHs2YvMsyY42zbieira2f6Tei+
+         r4MIevixJJmwg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Thiraviyam Mariyappan <tmariyap@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 106/137] iwlwifi: mvm: fix error print when session protection ends
-Date:   Tue,  6 Jul 2021 07:21:32 -0400
-Message-Id: <20210706112203.2062605-106-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 115/137] mac80211: consider per-CPU statistics if present
+Date:   Tue,  6 Jul 2021 07:21:41 -0400
+Message-Id: <20210706112203.2062605-115-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
 References: <20210706112203.2062605-1-sashal@kernel.org>
@@ -52,47 +52,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 976ac0af7ba2c5424bc305b926c0807d96fdcc83 ]
+[ Upstream commit d656a4c6ead6c3f252b2f2532bc9735598f7e317 ]
 
-When the session protection ends and the Driver is not
-associated or a beacon was not heard, the Driver
-prints "No beacons heard...".
-That's confusing for the case where not associated.
-Change the print when not associated to "Not associated...".
+If we have been keeping per-CPU statistics, consider them
+regardless of USES_RSS, because we may not actually fill
+those, for example in non-fast-RX cases when the connection
+is not compatible with fast-RX. If we didn't fill them, the
+additional data will be zero and not affect anything, and
+if we did fill them then it's more correct to consider them.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210617100544.41a5a5a894fa.I9eabb76e7a3a7f4abbed8f2ef918f1df8e825726@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This fixes an issue in mesh mode where some statistics are
+not updated due to USES_RSS being set, but fast-RX isn't
+used.
+
+Reported-by: Thiraviyam Mariyappan <tmariyap@codeaurora.org>
+Link: https://lore.kernel.org/r/20210610220814.13b35f5797c5.I511e9b33c5694e0d6cef4b6ae755c873d7c22124@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/sta_info.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 3939eccd3d5a..394598b14a17 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -345,6 +345,8 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
- 			 * and know the dtim period.
- 			 */
- 			iwl_mvm_te_check_disconnect(mvm, te_data->vif,
-+				!te_data->vif->bss_conf.assoc ?
-+				"Not associated and the time event is over already..." :
- 				"No beacon heard and the time event is over already...");
- 			break;
- 		default:
-@@ -843,6 +845,8 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
- 			 * and know the dtim period.
- 			 */
- 			iwl_mvm_te_check_disconnect(mvm, vif,
-+						    !vif->bss_conf.assoc ?
-+						    "Not associated and the session protection is over already..." :
- 						    "No beacon heard and the session protection is over already...");
- 			spin_lock_bh(&mvm->time_event_lock);
- 			iwl_mvm_te_clear_data(mvm, te_data);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f2fb69da9b6e..641a6657d0c9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2093,10 +2093,9 @@ static struct ieee80211_sta_rx_stats *
+ sta_get_last_rx_stats(struct sta_info *sta)
+ {
+ 	struct ieee80211_sta_rx_stats *stats = &sta->rx_stats;
+-	struct ieee80211_local *local = sta->local;
+ 	int cpu;
+ 
+-	if (!ieee80211_hw_check(&local->hw, USES_RSS))
++	if (!sta->pcpu_rx_stats)
+ 		return stats;
+ 
+ 	for_each_possible_cpu(cpu) {
+@@ -2196,9 +2195,7 @@ static void sta_set_tidstats(struct sta_info *sta,
+ 	int cpu;
+ 
+ 	if (!(tidstats->filled & BIT(NL80211_TID_STATS_RX_MSDU))) {
+-		if (!ieee80211_hw_check(&local->hw, USES_RSS))
+-			tidstats->rx_msdu +=
+-				sta_get_tidstats_msdu(&sta->rx_stats, tid);
++		tidstats->rx_msdu += sta_get_tidstats_msdu(&sta->rx_stats, tid);
+ 
+ 		if (sta->pcpu_rx_stats) {
+ 			for_each_possible_cpu(cpu) {
+@@ -2277,7 +2274,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		sinfo->rx_beacon = sdata->u.mgd.count_beacon_signal;
+ 
+ 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
+-
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
+ 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
+ 			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
+@@ -2312,8 +2308,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 
+ 	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES64) |
+ 			       BIT_ULL(NL80211_STA_INFO_RX_BYTES)))) {
+-		if (!ieee80211_hw_check(&local->hw, USES_RSS))
+-			sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
++		sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
+ 
+ 		if (sta->pcpu_rx_stats) {
+ 			for_each_possible_cpu(cpu) {
 -- 
 2.30.2
 
