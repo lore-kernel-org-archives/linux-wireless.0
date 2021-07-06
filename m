@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07260C11F6B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD80C11F6C
 	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 005E061C27
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ED1061396
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235230AbhGFLeD (ORCPT
+        id S235297AbhGFLeE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42502 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:34:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235481AbhGFLaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:07 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 82C4861DB1;
-        Tue,  6 Jul 2021 11:21:09 +0000 (UTC)
+        id S235496AbhGFLaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:30:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B6D7761DB8;
+        Tue,  6 Jul 2021 11:21:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570470;
-        bh=l4ACLrGt1wwBOJQDNWPWmPdBam83QwemWDD03QhpA30=;
+        s=k20201202; t=1625570475;
+        bh=m/uSeaYwYSy3F559zEKb0I+NuHdp+bdo7Pc8iYTmtEc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eeQ/Ck9hQBKi+hazMb6TiI8bTdejRUYcIO+FzKaEEv2PF42gPH1DVWQJ96oUjcPud
-         c94OR4zObrrz7KzPvZR8iBppQPQ9iHko28WPOddFVKxXq08AAbZ06Pf4B+ElHtkJBt
-         +Frcc6a/DJJ1D0TOwWS6SKV7fGUrdh0OsDvoEoVsNTos2KzwIsktM14snw3PqbEexp
-         TOiObI/7mCReOcczWvhSbKCZQHFggTndb7TK2Tc2Yzp/ugh/de9qgztSphieDr/d2u
-         +OIvt/VaXL7KBFHs7QtZoN7P2wkPJSBRV3HqmIKs7cVbTLSRWXDaKhCCVzOZst/BQ0
-         e6fdJK88ezReQ==
+        b=Qon9gLfFS7l/2NpZgNmVYu+OhtFqxlKVgo5IESkAyDUqRFVHYGiAHzeIT1yd6kTNz
+         ztmDI6fT99xx5yMdU0xMl83bhtClHdaemWpx1zfIg7oGaDCrKmnirUsoZwiCXwh7VF
+         4R/j+rNLkyyxf0Go4LU2Ixv4WJBPPO+3d1NHZ4pCOhbv0X/QP4IsOuCGUBvAQG8t5D
+         LrhyRz7PvbhDsdaAGIv8SVVmoksoA7NPREza9uPrJT83jbUmM+XN9L0AAcPCd5VJCD
+         pHfUi8xMzNZNHNSohOEmfOYTEVLjqqzKgUjMvFl2bN0fUMtWz+k6cmS0fFLhSDF3Vr
+         vEnjwgcLpRU4Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 121/160] iwlwifi: mvm: don't change band on bound PHY contexts
-Date:   Tue,  6 Jul 2021 07:17:47 -0400
-Message-Id: <20210706111827.2060499-121-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 125/160] iwlwifi: pcie: free IML DMA memory allocation
+Date:   Tue,  6 Jul 2021 07:17:51 -0400
+Message-Id: <20210706111827.2060499-125-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -54,79 +54,87 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 8835a64f74c46baebfc946cd5a2c861b866ebcee ]
+[ Upstream commit 310f60f53a86eba680d9bc20a371e13b06a5f903 ]
 
-When we have a P2P Device active, we attempt to only change the
-PHY context it uses when we get a new remain-on-channel, if the
-P2P Device is the only user of the PHY context.
-
-This is fine if we're switching within a band, but if we're
-switching bands then the switch implies a removal and re-add
-of the PHY context, which isn't permitted by the firmware while
-it's bound to an interface.
-
-Fix the code to skip the unbind/release/... cycle only if the
-band doesn't change (or we have old devices that can switch the
-band on the fly as well.)
+In the case of gen3 devices with image loader (IML) support,
+we were leaking the IML DMA allocation and never freeing it.
+Fix that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210612142637.e9ac313f70f3.I713b9d109957df7e7d9ed0861d5377ce3f8fccd3@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210618105614.07e117dbedb7.I7bb9ebbe0617656986c2a598ea5e827b533bd3b9@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 24 ++++++++++++++-----
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ .../wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 15 ++++++++++-----
+ .../net/wireless/intel/iwlwifi/pcie/internal.h    |  3 +++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index baf7404c137d..873d41c21a77 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3798,6 +3798,7 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct cfg80211_chan_def chandef;
- 	struct iwl_mvm_phy_ctxt *phy_ctxt;
-+	bool band_change_removal;
- 	int ret, i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index cecc32e7dbe8..2dbc51daa2f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -79,7 +79,6 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	struct iwl_prph_scratch *prph_scratch;
+ 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl;
+ 	struct iwl_prph_info *prph_info;
+-	void *iml_img;
+ 	u32 control_flags = 0;
+ 	int ret;
+ 	int cmdq_size = max_t(u32, IWL_CMD_QUEUE_SIZE,
+@@ -187,14 +186,15 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	trans_pcie->prph_scratch = prph_scratch;
  
- 	IWL_DEBUG_MAC80211(mvm, "enter (%d, %d, %d)\n", channel->hw_value,
-@@ -3878,19 +3879,30 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
- 	cfg80211_chandef_create(&chandef, channel, NL80211_CHAN_NO_HT);
+ 	/* Allocate IML */
+-	iml_img = dma_alloc_coherent(trans->dev, trans->iml_len,
+-				     &trans_pcie->iml_dma_addr, GFP_KERNEL);
+-	if (!iml_img) {
++	trans_pcie->iml = dma_alloc_coherent(trans->dev, trans->iml_len,
++					     &trans_pcie->iml_dma_addr,
++					     GFP_KERNEL);
++	if (!trans_pcie->iml) {
+ 		ret = -ENOMEM;
+ 		goto err_free_ctxt_info;
+ 	}
  
- 	/*
--	 * Change the PHY context configuration as it is currently referenced
--	 * only by the P2P Device MAC
-+	 * Check if the remain-on-channel is on a different band and that
-+	 * requires context removal, see iwl_mvm_phy_ctxt_changed(). If
-+	 * so, we'll need to release and then re-configure here, since we
-+	 * must not remove a PHY context that's part of a binding.
- 	 */
--	if (mvmvif->phy_ctxt->ref == 1) {
-+	band_change_removal =
-+		fw_has_capa(&mvm->fw->ucode_capa,
-+			    IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT) &&
-+		mvmvif->phy_ctxt->channel->band != chandef.chan->band;
+-	memcpy(iml_img, trans->iml, trans->iml_len);
++	memcpy(trans_pcie->iml, trans->iml, trans->iml_len);
+ 
+ 	iwl_enable_fw_load_int_ctx_info(trans);
+ 
+@@ -243,6 +243,11 @@ void iwl_pcie_ctxt_info_gen3_free(struct iwl_trans *trans)
+ 	trans_pcie->ctxt_info_dma_addr = 0;
+ 	trans_pcie->ctxt_info_gen3 = NULL;
+ 
++	dma_free_coherent(trans->dev, trans->iml_len, trans_pcie->iml,
++			  trans_pcie->iml_dma_addr);
++	trans_pcie->iml_dma_addr = 0;
++	trans_pcie->iml = NULL;
 +
-+	if (mvmvif->phy_ctxt->ref == 1 && !band_change_removal) {
-+		/*
-+		 * Change the PHY context configuration as it is currently
-+		 * referenced only by the P2P Device MAC (and we can modify it)
-+		 */
- 		ret = iwl_mvm_phy_ctxt_changed(mvm, mvmvif->phy_ctxt,
- 					       &chandef, 1, 1);
- 		if (ret)
- 			goto out_unlock;
- 	} else {
- 		/*
--		 * The PHY context is shared with other MACs. Need to remove the
--		 * P2P Device from the binding, allocate an new PHY context and
--		 * create a new binding
-+		 * The PHY context is shared with other MACs (or we're trying to
-+		 * switch bands), so remove the P2P Device from the binding,
-+		 * allocate an new PHY context and create a new binding.
- 		 */
- 		phy_ctxt = iwl_mvm_get_free_phy_ctxt(mvm);
- 		if (!phy_ctxt) {
+ 	iwl_pcie_ctxt_info_free_fw_img(trans);
+ 
+ 	dma_free_coherent(trans->dev, sizeof(*trans_pcie->prph_scratch),
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index d9688c7bed07..53af3f29eab8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -279,6 +279,8 @@ struct cont_rec {
+  *	Context information addresses will be taken from here.
+  *	This is driver's local copy for keeping track of size and
+  *	count for allocating and freeing the memory.
++ * @iml: image loader image virtual address
++ * @iml_dma_addr: image loader image DMA address
+  * @trans: pointer to the generic transport area
+  * @scd_base_addr: scheduler sram base address in SRAM
+  * @kw: keep warm address
+@@ -329,6 +331,7 @@ struct iwl_trans_pcie {
+ 	};
+ 	struct iwl_prph_info *prph_info;
+ 	struct iwl_prph_scratch *prph_scratch;
++	void *iml;
+ 	dma_addr_t ctxt_info_dma_addr;
+ 	dma_addr_t prph_info_dma_addr;
+ 	dma_addr_t prph_scratch_dma_addr;
 -- 
 2.30.2
 
