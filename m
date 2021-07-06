@@ -5,45 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 060BBC07E96
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDF86C11F69
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E769961E1D
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:23:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A95BB61C65
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233468AbhGFLZv (ORCPT
+        id S234594AbhGFLdh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:25:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55152 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:33:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233201AbhGFLVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:21:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A3A4D61CE0;
-        Tue,  6 Jul 2021 11:17:46 +0000 (UTC)
+        id S234885AbhGFL3W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:29:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C5E2061C6E;
+        Tue,  6 Jul 2021 11:20:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570267;
-        bh=27ckhIJ+8VfQFzQBVnCXaH3uoS+MBZVLK9NoxWmglxk=;
+        s=k20201202; t=1625570429;
+        bh=NQy8nTnLvXU/vhv4B5FMdCwgkqRgd+S+GC6IS4N4NfY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eC+WWMPv2ANx4NL+chkDoNhOHoMSZMUeDdO0S1gcKwCZiU1NHyw4jAexGcMV7iPvn
-         XzpwnelI7+ekk+n0CSg/jgiXDwUuUMXKEmlSnwkK29I8wHkEt/+3cZMOQNVisGnNWx
-         6FZIo8zFsxSXObx0YyuKtbs/C4AdGT5s+dERA7dWXFZOfzxCqng2Qq+M4gVbVVrbyU
-         SrRYNDGh6TpFqHfHpsbQkGeoJT3vSTM2cIixP1kBHdxZGQdtjcdbjThrWHiO5Bhuy/
-         5evucbzgvdjCf8erleWalct9i2XR78s/yXpdqHO34J96hFRHQtmPs7gFBexsWOspKI
-         0fMiyFMxsUqGg==
+        b=oZCUtU7hbTAZnfCHnp6Dn+Ugg5FaaFH8eyCMWZkUmc7bDiC0WlqDFo4uHQ6rnjn5m
+         llGLJd8WO6DXM8pLgvM1FKAzwsLSAt6aKeEOUTBucwgamTTk80AassSMAPZvTkcAPV
+         lUyJrUPrnmDTiCro55praPTSq25No28UF5oVztkaDejrS1OLckGsz1xwCpJznOCeM+
+         qMYbdkXuSHlnksc8cAZgcU4PmkMhM6WibY9p0bwgpija/2gBy4xFQALHhtK0AVJ2fV
+         6hj9eweMgOpaq7brFKLYwJb68M63zvCjCpgr2KBUDlLao3Ms/jITXsHai4R9+JCu1R
+         Jga5UIhWrr2VA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Thiraviyam Mariyappan <tmariyap@codeaurora.org>,
+Cc:     Tony Lindgren <tony@atomide.com>,
+        Carl Philipp Klemm <philipp@uvos.xyz>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 162/189] mac80211: consider per-CPU statistics if present
-Date:   Tue,  6 Jul 2021 07:13:42 -0400
-Message-Id: <20210706111409.2058071-162-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 092/160] wlcore/wl12xx: Fix wl12xx get_mac error if device is in ELP
+Date:   Tue,  6 Jul 2021 07:17:18 -0400
+Message-Id: <20210706111827.2060499-92-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
-References: <20210706111409.2058071-1-sashal@kernel.org>
+In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
+References: <20210706111827.2060499-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,74 +53,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Tony Lindgren <tony@atomide.com>
 
-[ Upstream commit d656a4c6ead6c3f252b2f2532bc9735598f7e317 ]
+[ Upstream commit 11ef6bc846dcdce838f0b00c5f6a562c57e5d43b ]
 
-If we have been keeping per-CPU statistics, consider them
-regardless of USES_RSS, because we may not actually fill
-those, for example in non-fast-RX cases when the connection
-is not compatible with fast-RX. If we didn't fill them, the
-additional data will be zero and not affect anything, and
-if we did fill them then it's more correct to consider them.
+At least on wl12xx, reading the MAC after boot can fail with a warning
+at drivers/net/wireless/ti/wlcore/sdio.c:78 wl12xx_sdio_raw_read.
+The failed call comes from wl12xx_get_mac() that wlcore_nvs_cb() calls
+after request_firmware_work_func().
 
-This fixes an issue in mesh mode where some statistics are
-not updated due to USES_RSS being set, but fast-RX isn't
-used.
+After the error, no wireless interface is created. Reloading the wl12xx
+module makes the interface work.
 
-Reported-by: Thiraviyam Mariyappan <tmariyap@codeaurora.org>
-Link: https://lore.kernel.org/r/20210610220814.13b35f5797c5.I511e9b33c5694e0d6cef4b6ae755c873d7c22124@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Turns out the wlan controller can be in a low-power ELP state after the
+boot from the bootloader or kexec, and needs to be woken up first.
+
+Let's wake the hardware and add a sleep after that similar to
+wl12xx_pre_boot() is already doing.
+
+Note that a similar issue could exist for wl18xx, but I have not seen it
+so far. And a search for wl18xx_get_mac and wl12xx_sdio_raw_read did not
+produce similar errors.
+
+Cc: Carl Philipp Klemm <philipp@uvos.xyz>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210603062814.19464-1-tony@atomide.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/sta_info.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f2fb69da9b6e..641a6657d0c9 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2093,10 +2093,9 @@ static struct ieee80211_sta_rx_stats *
- sta_get_last_rx_stats(struct sta_info *sta)
- {
- 	struct ieee80211_sta_rx_stats *stats = &sta->rx_stats;
--	struct ieee80211_local *local = sta->local;
- 	int cpu;
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 9d7dbfe7fe0c..c6da0cfb4afb 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1503,6 +1503,13 @@ static int wl12xx_get_fuse_mac(struct wl1271 *wl)
+ 	u32 mac1, mac2;
+ 	int ret;
  
--	if (!ieee80211_hw_check(&local->hw, USES_RSS))
-+	if (!sta->pcpu_rx_stats)
- 		return stats;
- 
- 	for_each_possible_cpu(cpu) {
-@@ -2196,9 +2195,7 @@ static void sta_set_tidstats(struct sta_info *sta,
- 	int cpu;
- 
- 	if (!(tidstats->filled & BIT(NL80211_TID_STATS_RX_MSDU))) {
--		if (!ieee80211_hw_check(&local->hw, USES_RSS))
--			tidstats->rx_msdu +=
--				sta_get_tidstats_msdu(&sta->rx_stats, tid);
-+		tidstats->rx_msdu += sta_get_tidstats_msdu(&sta->rx_stats, tid);
- 
- 		if (sta->pcpu_rx_stats) {
- 			for_each_possible_cpu(cpu) {
-@@ -2277,7 +2274,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		sinfo->rx_beacon = sdata->u.mgd.count_beacon_signal;
- 
- 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
--
- 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
- 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
- 			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
-@@ -2312,8 +2308,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 
- 	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES64) |
- 			       BIT_ULL(NL80211_STA_INFO_RX_BYTES)))) {
--		if (!ieee80211_hw_check(&local->hw, USES_RSS))
--			sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
-+		sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
- 
- 		if (sta->pcpu_rx_stats) {
- 			for_each_possible_cpu(cpu) {
++	/* Device may be in ELP from the bootloader or kexec */
++	ret = wlcore_write32(wl, WL12XX_WELP_ARM_COMMAND, WELP_ARM_COMMAND_VAL);
++	if (ret < 0)
++		goto out;
++
++	usleep_range(500000, 700000);
++
+ 	ret = wlcore_set_partition(wl, &wl->ptable[PART_DRPW]);
+ 	if (ret < 0)
+ 		goto out;
 -- 
 2.30.2
 
