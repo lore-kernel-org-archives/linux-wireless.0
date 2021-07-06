@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC54C11F6E
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0357C11F73
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D72E361C2C
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD83661D74
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234206AbhGFLgb (ORCPT
+        id S234172AbhGFLhD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:36:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47600 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:37:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47552 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236822AbhGFLfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7BEC261A1D;
-        Tue,  6 Jul 2021 11:24:24 +0000 (UTC)
+        id S236753AbhGFLfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:35:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 117B061E49;
+        Tue,  6 Jul 2021 11:24:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570665;
-        bh=Jt/aDsq1Stl07LbDBGnFnJezfY3j/6id96MaEfUjrqY=;
+        s=k20201202; t=1625570650;
+        bh=c7U7K21MSxuI/vvEFYnXwHORNGAgLho1Vrngve241q8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ty+vuhmWnq/dHVGQcXdOqXwwzM2BJJsoN3ban708yNym9tRTRAji2Nw7Z80MHxvtu
-         CWrvA3a/Ct4hpT+75XoUAGrhMp/u69acEQ4nCPiyM4eoCwkpmk+e2WV2gUjtrY95Qv
-         e1DI43AzrRHql4vjw76Ka+u3q+BphQImN2TXz5PhrvUGqPmx87Toy4iTNdTlCwDJOv
-         q+j06TSozz0Y/+wAZzNnQrMx9Qqg/Shb69H4UWP5Mz/aqSvIaLe8zYeiytcL7GYr/3
-         9OkBjXDfBZW64VtuXEyIW2IJJpun7agOfcWafTPpEWZDmVwtJ02trpH1XPzoaWrFGw
-         sB0TxEqReSKhw==
+        b=QdEl/q11qZohbv3Rg+Anp/67RtG7sV2Y5ngzOowXHctKwTvxG+0BISpdZciSMsJQg
+         CASF3Zq9d1g9C1uJyi9gRlixwz1+LDn2TcMDCNZ7tqyfeRuHQj07tjhw/WMpwdht/A
+         33u/CbTELROUiZYjgfgzZGC4FAaejNzBgE/crFDjntQzFfn9YlR1GFJa0MLHSVm3Rf
+         sapP3GWP6IX2dnUzijNSySE0Oj5gJFphWZs8QRIw3DG8hG+PNhyrw4b9SUml0KNFd2
+         PmODMs694G4gh52/0trERJrA/b/KduZA3FATgjO7GL07l2Tbn1nS2uW3fRQu9ZP0rr
+         JaMpOabhbGRkA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Pascal Terjan <pterjan@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 109/137] iwlwifi: pcie: fix context info freeing
-Date:   Tue,  6 Jul 2021 07:21:35 -0400
-Message-Id: <20210706112203.2062605-109-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 098/137] rtl8xxxu: Fix device info for RTL8192EU devices
+Date:   Tue,  6 Jul 2021 07:21:24 -0400
+Message-Id: <20210706112203.2062605-98-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
 References: <20210706112203.2062605-1-sashal@kernel.org>
@@ -52,41 +52,145 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Pascal Terjan <pterjan@google.com>
 
-[ Upstream commit 26d18c75a7496c4c52b0b6789e713dc76ebfbc87 ]
+[ Upstream commit c240b044edefa3c3af4014a4030e017dd95b59a1 ]
 
-After firmware alive, iwl_trans_pcie_gen2_fw_alive() is called
-to free the context info. However, on gen3 that will then free
-the context info with the wrong size.
+Based on 2001:3319 and 2357:0109 which I used to test the fix and
+0bda:818b and 2357:0108 for which I found efuse dumps online.
 
-Since we free this allocation later, let it stick around until
-the device is stopped for now, freeing some of it earlier is a
-separate change.
+== 2357:0109 ==
+=== Before ===
+Vendor: Realtek
+Product: \x03802.11n NI
+Serial:
+=== After ===
+Vendor: Realtek
+Product: 802.11n NIC
+Serial not available.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210618105614.afb63fb8cbc1.If4968db8e09f4ce2a1d27a6d750bca3d132d7d70@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+== 2001:3319 ==
+=== Before ===
+Vendor: Realtek
+Product: Wireless N
+Serial: no USB Adap
+=== After ===
+Vendor: Realtek
+Product: Wireless N Nano USB Adapter
+Serial not available.
+
+Signed-off-by: Pascal Terjan <pterjan@google.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210424172959.1559890-1-pterjan@google.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  | 11 +---
+ .../realtek/rtl8xxxu/rtl8xxxu_8192e.c         | 59 +++++++++++++++++--
+ 2 files changed, 56 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 4c3ca2a37696..b031e9304983 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -269,7 +269,8 @@ void iwl_trans_pcie_gen2_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- 	/* now that we got alive we can free the fw image & the context info.
- 	 * paging memory cannot be freed included since FW will still use it
- 	 */
--	iwl_pcie_ctxt_info_free(trans);
-+	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
-+		iwl_pcie_ctxt_info_free(trans);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index d6d1be4169e5..acb6b0cd3667 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -853,15 +853,10 @@ struct rtl8192eu_efuse {
+ 	u8 usb_optional_function;
+ 	u8 res9[2];
+ 	u8 mac_addr[ETH_ALEN];		/* 0xd7 */
+-	u8 res10[2];
+-	u8 vendor_name[7];
+-	u8 res11[2];
+-	u8 device_name[0x0b];		/* 0xe8 */
+-	u8 res12[2];
+-	u8 serial[0x0b];		/* 0xf5 */
+-	u8 res13[0x30];
++	u8 device_info[80];
++	u8 res11[3];
+ 	u8 unknown[0x0d];		/* 0x130 */
+-	u8 res14[0xc3];
++	u8 res12[0xc3];
+ };
  
- 	/*
- 	 * Re-enable all the interrupts, including the RF-Kill one, now that
+ struct rtl8xxxu_reg8val {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 9f1f93d04145..199e7e031d7d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -554,9 +554,43 @@ rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ 	}
+ }
+ 
++static void rtl8192eu_log_next_device_info(struct rtl8xxxu_priv *priv,
++					   char *record_name,
++					   char *device_info,
++					   unsigned int *record_offset)
++{
++	char *record = device_info + *record_offset;
++
++	/* A record is [ total length | 0x03 | value ] */
++	unsigned char l = record[0];
++
++	/*
++	 * The whole device info section seems to be 80 characters, make sure
++	 * we don't read further.
++	 */
++	if (*record_offset + l > 80) {
++		dev_warn(&priv->udev->dev,
++			 "invalid record length %d while parsing \"%s\" at offset %u.\n",
++			 l, record_name, *record_offset);
++		return;
++	}
++
++	if (l >= 2) {
++		char value[80];
++
++		memcpy(value, &record[2], l - 2);
++		value[l - 2] = '\0';
++		dev_info(&priv->udev->dev, "%s: %s\n", record_name, value);
++		*record_offset = *record_offset + l;
++	} else {
++		dev_info(&priv->udev->dev, "%s not available.\n", record_name);
++	}
++}
++
+ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+ 	struct rtl8192eu_efuse *efuse = &priv->efuse_wifi.efuse8192eu;
++	unsigned int record_offset;
+ 	int i;
+ 
+ 	if (efuse->rtl_id != cpu_to_le16(0x8129))
+@@ -604,12 +638,25 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	priv->has_xtalk = 1;
+ 	priv->xtalk = priv->efuse_wifi.efuse8192eu.xtal_k & 0x3f;
+ 
+-	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
+-	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
+-	if (memchr_inv(efuse->serial, 0xff, 11))
+-		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
+-	else
+-		dev_info(&priv->udev->dev, "Serial not available.\n");
++	/*
++	 * device_info section seems to be laid out as records
++	 * [ total length | 0x03 | value ] so:
++	 * - vendor length + 2
++	 * - 0x03
++	 * - vendor string (not null terminated)
++	 * - product length + 2
++	 * - 0x03
++	 * - product string (not null terminated)
++	 * Then there is one or 2 0x00 on all the 4 devices I own or found
++	 * dumped online.
++	 * As previous version of the code handled an optional serial
++	 * string, I now assume there may be a third record if the
++	 * length is not 0.
++	 */
++	record_offset = 0;
++	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
++	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
++	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
+ 
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
+ 		unsigned char *raw = priv->efuse_wifi.raw;
 -- 
 2.30.2
 
