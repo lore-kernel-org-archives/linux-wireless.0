@@ -7,40 +7,42 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39E80C07E96
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C56C11F67
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20B8661C65
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFDC761C81
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:31:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234847AbhGFLdo (ORCPT
+        id S234884AbhGFLdq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:33:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42496 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:33:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42574 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235197AbhGFL3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:29:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F0AF561D74;
-        Tue,  6 Jul 2021 11:20:40 +0000 (UTC)
+        id S235274AbhGFL3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:29:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3019C61D9A;
+        Tue,  6 Jul 2021 11:20:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570441;
-        bh=RPRNZmvuVCB5xcnAbD+p7zyjY3mC4jznPrHztNSsvbg=;
+        s=k20201202; t=1625570452;
+        bh=0Em+bgYmrDU1JOZhftUS5xrrOixdfruBKkFRuFCROBE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rwLM+VYWcfX66hlLYujZLzI55HgE16ltHHg7soUqI+AmQZTJRqJsgm7wu3E3KKWKa
-         IJTwdFOFv4Z4o5Cj9cfn/mUgastRW0lIvqsVoCTVUYzQ0NRuVtnwtR4gRrmT2SZ9OB
-         6p8/5oTTnUoCFpt/wuWEJ3D06e1zVbPBknYzMjsmsSetZe17rho76IAzrLI2Us7tSk
-         sJb02XweYrNoqHKxKzwQ6teDaeByfR+PwlNbmXJaaKyxQRGz8y8CZIjMMQFZSUm9hu
-         Iih/rpAGmaH3Up9WZPE3HioEq+pnHmRVraiBSQ4Jzc21ZxMAIRPo0LAiPjTlCZHOiG
-         pFZ7xzZ0zVZzA==
+        b=ezmbkfPPBgn08cZzpOT0MzDt+NOvKBVcgESV38rpBroP97DOkBn7PAp5A02Xco46X
+         0Zzo3D8qE1a4bQ42deg9m3BPmAvQTXiQwtyFh6/QVsn0iX/WtlN0MR94Z9dBQ95ka0
+         +DbKICXP1viYQKd+eyYW9MbnnWA7Fuk3bO9fC6KYfO9fn9Enyo0kP7VgvHewhDPZX7
+         KYvsR0fjXOo6m4U/Pz/d9Dpu80DggStMO+11x5bADN6A1H77DnudWEMW+H18NWwmoX
+         jzgKBU+bo75DoSQv7wPJA5XsWG4s/D36cfRerGsieBOihTsseY53DZLijy8m6Gha4v
+         BbAwz06HDyXpg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+Cc:     Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.12 101/160] mt76: mt7615: fix fixed-rate tx status reporting
-Date:   Tue,  6 Jul 2021 07:17:27 -0400
-Message-Id: <20210706111827.2060499-101-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 109/160] mt76: mt7915: fix tssi indication field of DBDC NICs
+Date:   Tue,  6 Jul 2021 07:17:35 -0400
+Message-Id: <20210706111827.2060499-109-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -52,57 +54,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Evelyn Tsai <evelyn.tsai@mediatek.com>
 
-[ Upstream commit ec8f1a90d006f7cedcf86ef19fd034a406a213d6 ]
+[ Upstream commit 64cf5ad3c2fa841e4b416343a7ea69c63d60fa4e ]
 
-Rely on the txs fixed-rate bit instead of info->control.rates
+Correct the bitfield which indicates TSSI on/off for MT7915D NIC.
 
+Signed-off-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 8dccb589b756..5a63869193f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1194,22 +1194,20 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 	int first_idx = 0, last_idx;
- 	int i, idx, count;
- 	bool fixed_rate, ack_timeout;
--	bool probe, ampdu, cck = false;
-+	bool ampdu, cck = false;
- 	bool rs_idx;
- 	u32 rate_set_tsf;
- 	u32 final_rate, final_rate_flags, final_nss, txs;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
+index 3ee8c27bb61b..40a51d99a781 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
+@@ -116,12 +116,15 @@ static inline bool
+ mt7915_tssi_enabled(struct mt7915_dev *dev, enum nl80211_band band)
+ {
+ 	u8 *eep = dev->mt76.eeprom.data;
++	u8 val = eep[MT_EE_WIFI_CONF + 7];
  
--	fixed_rate = info->status.rates[0].count;
--	probe = !!(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
--
- 	txs = le32_to_cpu(txs_data[1]);
--	ampdu = !fixed_rate && (txs & MT_TXS1_AMPDU);
-+	ampdu = txs & MT_TXS1_AMPDU;
+-	/* TODO: DBDC */
+-	if (band == NL80211_BAND_5GHZ)
+-		return eep[MT_EE_WIFI_CONF + 7] & MT_EE_WIFI_CONF7_TSSI0_5G;
++	if (band == NL80211_BAND_2GHZ)
++		return val & MT_EE_WIFI_CONF7_TSSI0_2G;
++
++	if (dev->dbdc_support)
++		return val & MT_EE_WIFI_CONF7_TSSI1_5G;
+ 	else
+-		return eep[MT_EE_WIFI_CONF + 7] & MT_EE_WIFI_CONF7_TSSI0_2G;
++		return val & MT_EE_WIFI_CONF7_TSSI0_5G;
+ }
  
- 	txs = le32_to_cpu(txs_data[3]);
- 	count = FIELD_GET(MT_TXS3_TX_COUNT, txs);
- 	last_idx = FIELD_GET(MT_TXS3_LAST_TX_RATE, txs);
- 
- 	txs = le32_to_cpu(txs_data[0]);
-+	fixed_rate = txs & MT_TXS0_FIXED_RATE;
- 	final_rate = FIELD_GET(MT_TXS0_TX_RATE, txs);
- 	ack_timeout = txs & MT_TXS0_ACK_TIMEOUT;
- 
-@@ -1231,7 +1229,7 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 
- 	first_idx = max_t(int, 0, last_idx - (count - 1) / MT7615_RATE_RETRY);
- 
--	if (fixed_rate && !probe) {
-+	if (fixed_rate) {
- 		info->status.rates[0].count = count;
- 		i = 0;
- 		goto out;
+ extern const struct sku_group mt7915_sku_groups[];
 -- 
 2.30.2
 
