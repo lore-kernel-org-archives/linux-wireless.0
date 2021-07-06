@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43EFFC11F69
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 725CDC07E96
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33AE061995
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E80061995
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239545AbhGFMcG (ORCPT
+        id S240457AbhGFMcH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:32:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47558 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 08:32:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47606 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237179AbhGFLf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:35:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CC33761D4B;
-        Tue,  6 Jul 2021 11:25:58 +0000 (UTC)
+        id S237206AbhGFLgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:36:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1819C61ECB;
+        Tue,  6 Jul 2021 11:26:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570759;
-        bh=DLMSh4j0AnmTMlzgxM/VboZ7+8wm4ULFHQ39d2I+ppE=;
+        s=k20201202; t=1625570768;
+        bh=tsPb32ARJozu/hTrt59qu3MZJzQHq/kMfPIqu/rn/oc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lJEgyIACwITXpHtemLa5ae9tQYZ2skKml7ezIecBBY1M/Cm8bPq7Y4svu31MLo657
-         B8cSPT7npdTWLH6H2H4+NVt6Rqqq9phhLgWLQXpYWR+oiMd8apoEkw8QdqSTrlk6IK
-         YYUFXTnW3Vh+r+8gPkB+kYYzF5vWTSfrKV0emuRi+OlNhJeC3vLPNtusCRuSi7sSLm
-         J/YtQdp/YKrXXWZ60Z3JxEleKJNbYTyxvjPoCvjFwc/RHIkLR4qnE2ju6ej9ACUIjz
-         iJVTx2AFqmajxJsPtG8hYrAHqSj4ppkIwkEc4ZqmOcmNNb8jLO8oZYyMC3hWGFLRUF
-         Dr2FzOzQJ6rvw==
+        b=NG7h3kiSzs7qq9CWAXtmEobq7L8Nevpf7mUFFkt+jg3R23rKaRFvVbhysK9gtpA4K
+         iC/bQNzDbV/aUZU0G91jMw27y0Fr4efcFDbksMNQaTlILOEvsiAz9PUPFschxq0LK9
+         oktZKKRT6xMmha1d1ghAWdWc7YwuWUTCGVsbT+oy33Ve5LMOswbHK0khKEWqREYd+S
+         E8YWxnTH/Etg/1a5w+UR97qoIah2Mpv5M7yMbeoJCd8UJEKW1jneltZLe2vPiTj9Gu
+         VJRORIKtYFAopFs2uwnJur+UHJ0EfbTB7Eeh2GpXFeacfvPnqpSVfk7NH1P3EflCT4
+         VeSjkCmkrdS2w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lee Gibson <leegib@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Pascal Terjan <pterjan@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 45/74] wl1251: Fix possible buffer overflow in wl1251_cmd_scan
-Date:   Tue,  6 Jul 2021 07:24:33 -0400
-Message-Id: <20210706112502.2064236-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 52/74] rtl8xxxu: Fix device info for RTL8192EU devices
+Date:   Tue,  6 Jul 2021 07:24:40 -0400
+Message-Id: <20210706112502.2064236-52-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706112502.2064236-1-sashal@kernel.org>
 References: <20210706112502.2064236-1-sashal@kernel.org>
@@ -51,41 +52,145 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lee Gibson <leegib@gmail.com>
+From: Pascal Terjan <pterjan@google.com>
 
-[ Upstream commit d10a87a3535cce2b890897914f5d0d83df669c63 ]
+[ Upstream commit c240b044edefa3c3af4014a4030e017dd95b59a1 ]
 
-Function wl1251_cmd_scan calls memcpy without checking the length.
-Harden by checking the length is within the maximum allowed size.
+Based on 2001:3319 and 2357:0109 which I used to test the fix and
+0bda:818b and 2357:0108 for which I found efuse dumps online.
 
-Signed-off-by: Lee Gibson <leegib@gmail.com>
+== 2357:0109 ==
+=== Before ===
+Vendor: Realtek
+Product: \x03802.11n NI
+Serial:
+=== After ===
+Vendor: Realtek
+Product: 802.11n NIC
+Serial not available.
+
+== 2001:3319 ==
+=== Before ===
+Vendor: Realtek
+Product: Wireless N
+Serial: no USB Adap
+=== After ===
+Vendor: Realtek
+Product: Wireless N Nano USB Adapter
+Serial not available.
+
+Signed-off-by: Pascal Terjan <pterjan@google.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210428115508.25624-1-leegib@gmail.com
+Link: https://lore.kernel.org/r/20210424172959.1559890-1-pterjan@google.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ti/wl1251/cmd.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  | 11 +---
+ .../realtek/rtl8xxxu/rtl8xxxu_8192e.c         | 59 +++++++++++++++++--
+ 2 files changed, 56 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-index 9547aea01b0f..ea0215246c5c 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.c
-+++ b/drivers/net/wireless/ti/wl1251/cmd.c
-@@ -466,9 +466,12 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
- 		cmd->channels[i].channel = channels[i]->hw_value;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 5e9ce03067de..6858f7de0915 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -853,15 +853,10 @@ struct rtl8192eu_efuse {
+ 	u8 usb_optional_function;
+ 	u8 res9[2];
+ 	u8 mac_addr[ETH_ALEN];		/* 0xd7 */
+-	u8 res10[2];
+-	u8 vendor_name[7];
+-	u8 res11[2];
+-	u8 device_name[0x0b];		/* 0xe8 */
+-	u8 res12[2];
+-	u8 serial[0x0b];		/* 0xf5 */
+-	u8 res13[0x30];
++	u8 device_info[80];
++	u8 res11[3];
+ 	u8 unknown[0x0d];		/* 0x130 */
+-	u8 res14[0xc3];
++	u8 res12[0xc3];
+ };
+ 
+ struct rtl8xxxu_reg8val {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index c747f6a1922d..02ca80501c3a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -554,9 +554,43 @@ rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
  	}
+ }
  
--	cmd->params.ssid_len = ssid_len;
--	if (ssid)
--		memcpy(cmd->params.ssid, ssid, ssid_len);
-+	if (ssid) {
-+		int len = clamp_val(ssid_len, 0, IEEE80211_MAX_SSID_LEN);
++static void rtl8192eu_log_next_device_info(struct rtl8xxxu_priv *priv,
++					   char *record_name,
++					   char *device_info,
++					   unsigned int *record_offset)
++{
++	char *record = device_info + *record_offset;
 +
-+		cmd->params.ssid_len = len;
-+		memcpy(cmd->params.ssid, ssid, len);
++	/* A record is [ total length | 0x03 | value ] */
++	unsigned char l = record[0];
++
++	/*
++	 * The whole device info section seems to be 80 characters, make sure
++	 * we don't read further.
++	 */
++	if (*record_offset + l > 80) {
++		dev_warn(&priv->udev->dev,
++			 "invalid record length %d while parsing \"%s\" at offset %u.\n",
++			 l, record_name, *record_offset);
++		return;
 +	}
++
++	if (l >= 2) {
++		char value[80];
++
++		memcpy(value, &record[2], l - 2);
++		value[l - 2] = '\0';
++		dev_info(&priv->udev->dev, "%s: %s\n", record_name, value);
++		*record_offset = *record_offset + l;
++	} else {
++		dev_info(&priv->udev->dev, "%s not available.\n", record_name);
++	}
++}
++
+ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+ 	struct rtl8192eu_efuse *efuse = &priv->efuse_wifi.efuse8192eu;
++	unsigned int record_offset;
+ 	int i;
  
- 	ret = wl1251_cmd_send(wl, CMD_SCAN, cmd, sizeof(*cmd));
- 	if (ret < 0) {
+ 	if (efuse->rtl_id != cpu_to_le16(0x8129))
+@@ -604,12 +638,25 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 	priv->has_xtalk = 1;
+ 	priv->xtalk = priv->efuse_wifi.efuse8192eu.xtal_k & 0x3f;
+ 
+-	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
+-	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
+-	if (memchr_inv(efuse->serial, 0xff, 11))
+-		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
+-	else
+-		dev_info(&priv->udev->dev, "Serial not available.\n");
++	/*
++	 * device_info section seems to be laid out as records
++	 * [ total length | 0x03 | value ] so:
++	 * - vendor length + 2
++	 * - 0x03
++	 * - vendor string (not null terminated)
++	 * - product length + 2
++	 * - 0x03
++	 * - product string (not null terminated)
++	 * Then there is one or 2 0x00 on all the 4 devices I own or found
++	 * dumped online.
++	 * As previous version of the code handled an optional serial
++	 * string, I now assume there may be a third record if the
++	 * length is not 0.
++	 */
++	record_offset = 0;
++	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
++	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
++	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
+ 
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
+ 		unsigned char *raw = priv->efuse_wifi.raw;
 -- 
 2.30.2
 
