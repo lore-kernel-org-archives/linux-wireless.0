@@ -2,47 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-25.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC275C11F76
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C201C11F7F
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DD0961396
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C1A3608FC
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235559AbhGFLeT (ORCPT
+        id S235676AbhGFLeX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42622 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:34:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42666 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235579AbhGFLaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E912C61DBF;
-        Tue,  6 Jul 2021 11:21:23 +0000 (UTC)
+        id S235623AbhGFLaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:30:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A864761DA8;
+        Tue,  6 Jul 2021 11:21:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570484;
-        bh=q40AHm9I5Lk5DXFmVPqQqxkyiDbwGY8e1r7ys0fjt1E=;
+        s=k20201202; t=1625570487;
+        bh=27ckhIJ+8VfQFzQBVnCXaH3uoS+MBZVLK9NoxWmglxk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d9nZtprVTL3drRMXgDsbYZFeaPFz+xRdOg9Wd/OLvKHifcTJlflDhsluKuB4sCzRM
-         qn9dTK1BPoAGtwaVqCD8Hu9cuCf9Tl0MyqDHplVgQgC7RGoCENRHfnMZYexjFWKpLh
-         pOkDXwLjNukulQvV+qkuEJvrtA6rzN61GMB2rnVaWmtBJgunliFguWL1ok4jV9/eFP
-         CAWrAYqUm90o1NTY4sLIOKjyAtTgYg+SR0M5DM/x96bT60BF63FIqdVvPGsTgjEqE+
-         PVAMBT4lGRfQ31bOcaRBA1sCXe8wTI3n3k1fDsk9zOfuTj40dM64fYRvmeX595MKT2
-         KVKtLs8WN19xA==
+        b=IV/kibGRcE0DZ05d00Lf0ZzJR1U844m8+FJ+OIOP68CDTu9+52nWt/UO9bTN9n6Mq
+         ELEUoui71sTNEmDwW0QT7OLLksRHwZ91PSRQRIYvv4xkQOY2Cd+3Ux/QtoWUXaUDO8
+         sF9/Fys8QzkNtYVt32MmWnFrIOOgbRj6T7hklN4cQGkr0hhtR1+OKuQ/rQUJ8RcFqi
+         FPlPL3llw9ebEE1yKVEFW7/eIxePQtOZDSZ4pQ9TmzYED2sABBTU4cCGnLsGzRobbx
+         xx4iI8HfT3vsEs1dCtVGRU+c9X6Q+xB+W1ogRr6ClBuPW5/1X8Sb09og0MSY0jf02q
+         XJvKeoEM+xE1w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        kernel test robot <lkp@intel.com>,
-        Kees Cook <keescook@chromium.org>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Thiraviyam Mariyappan <tmariyap@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 132/160] wireless: wext-spy: Fix out-of-bounds warning
-Date:   Tue,  6 Jul 2021 07:17:58 -0400
-Message-Id: <20210706111827.2060499-132-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 134/160] mac80211: consider per-CPU statistics if present
+Date:   Tue,  6 Jul 2021 07:18:00 -0400
+Message-Id: <20210706111827.2060499-134-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
 References: <20210706111827.2060499-1-sashal@kernel.org>
@@ -54,76 +52,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit e93bdd78406da9ed01554c51e38b2a02c8ef8025 ]
+[ Upstream commit d656a4c6ead6c3f252b2f2532bc9735598f7e317 ]
 
-Fix the following out-of-bounds warning:
+If we have been keeping per-CPU statistics, consider them
+regardless of USES_RSS, because we may not actually fill
+those, for example in non-fast-RX cases when the connection
+is not compatible with fast-RX. If we didn't fill them, the
+additional data will be zero and not affect anything, and
+if we did fill them then it's more correct to consider them.
 
-net/wireless/wext-spy.c:178:2: warning: 'memcpy' offset [25, 28] from the object at 'threshold' is out of the bounds of referenced subobject 'low' with type 'struct iw_quality' at offset 20 [-Warray-bounds]
+This fixes an issue in mesh mode where some statistics are
+not updated due to USES_RSS being set, but fast-RX isn't
+used.
 
-The problem is that the original code is trying to copy data into a
-couple of struct members adjacent to each other in a single call to
-memcpy(). This causes a legitimate compiler warning because memcpy()
-overruns the length of &threshold.low and &spydata->spy_thr_low. As
-these are just a couple of struct members, fix this by using direct
-assignments, instead of memcpy().
-
-This helps with the ongoing efforts to globally enable -Warray-bounds
-and get us closer to being able to tighten the FORTIFY_SOURCE routines
-on memcpy().
-
-Link: https://github.com/KSPP/linux/issues/109
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Link: https://lore.kernel.org/r/20210422200032.GA168995@embeddedor
+Reported-by: Thiraviyam Mariyappan <tmariyap@codeaurora.org>
+Link: https://lore.kernel.org/r/20210610220814.13b35f5797c5.I511e9b33c5694e0d6cef4b6ae755c873d7c22124@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/wext-spy.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ net/mac80211/sta_info.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/wext-spy.c b/net/wireless/wext-spy.c
-index 33bef22e44e9..b379a0371653 100644
---- a/net/wireless/wext-spy.c
-+++ b/net/wireless/wext-spy.c
-@@ -120,8 +120,8 @@ int iw_handler_set_thrspy(struct net_device *	dev,
- 		return -EOPNOTSUPP;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f2fb69da9b6e..641a6657d0c9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2093,10 +2093,9 @@ static struct ieee80211_sta_rx_stats *
+ sta_get_last_rx_stats(struct sta_info *sta)
+ {
+ 	struct ieee80211_sta_rx_stats *stats = &sta->rx_stats;
+-	struct ieee80211_local *local = sta->local;
+ 	int cpu;
  
- 	/* Just do it */
--	memcpy(&(spydata->spy_thr_low), &(threshold->low),
--	       2 * sizeof(struct iw_quality));
-+	spydata->spy_thr_low = threshold->low;
-+	spydata->spy_thr_high = threshold->high;
+-	if (!ieee80211_hw_check(&local->hw, USES_RSS))
++	if (!sta->pcpu_rx_stats)
+ 		return stats;
  
- 	/* Clear flag */
- 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
-@@ -147,8 +147,8 @@ int iw_handler_get_thrspy(struct net_device *	dev,
- 		return -EOPNOTSUPP;
+ 	for_each_possible_cpu(cpu) {
+@@ -2196,9 +2195,7 @@ static void sta_set_tidstats(struct sta_info *sta,
+ 	int cpu;
  
- 	/* Just do it */
--	memcpy(&(threshold->low), &(spydata->spy_thr_low),
--	       2 * sizeof(struct iw_quality));
-+	threshold->low = spydata->spy_thr_low;
-+	threshold->high = spydata->spy_thr_high;
+ 	if (!(tidstats->filled & BIT(NL80211_TID_STATS_RX_MSDU))) {
+-		if (!ieee80211_hw_check(&local->hw, USES_RSS))
+-			tidstats->rx_msdu +=
+-				sta_get_tidstats_msdu(&sta->rx_stats, tid);
++		tidstats->rx_msdu += sta_get_tidstats_msdu(&sta->rx_stats, tid);
  
- 	return 0;
- }
-@@ -173,10 +173,10 @@ static void iw_send_thrspy_event(struct net_device *	dev,
- 	memcpy(threshold.addr.sa_data, address, ETH_ALEN);
- 	threshold.addr.sa_family = ARPHRD_ETHER;
- 	/* Copy stats */
--	memcpy(&(threshold.qual), wstats, sizeof(struct iw_quality));
-+	threshold.qual = *wstats;
- 	/* Copy also thresholds */
--	memcpy(&(threshold.low), &(spydata->spy_thr_low),
--	       2 * sizeof(struct iw_quality));
-+	threshold.low = spydata->spy_thr_low;
-+	threshold.high = spydata->spy_thr_high;
+ 		if (sta->pcpu_rx_stats) {
+ 			for_each_possible_cpu(cpu) {
+@@ -2277,7 +2274,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		sinfo->rx_beacon = sdata->u.mgd.count_beacon_signal;
  
- 	/* Send event to user space */
- 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
+ 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
+-
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
+ 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
+ 			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
+@@ -2312,8 +2308,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 
+ 	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES64) |
+ 			       BIT_ULL(NL80211_STA_INFO_RX_BYTES)))) {
+-		if (!ieee80211_hw_check(&local->hw, USES_RSS))
+-			sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
++		sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
+ 
+ 		if (sta->pcpu_rx_stats) {
+ 			for_each_possible_cpu(cpu) {
 -- 
 2.30.2
 
