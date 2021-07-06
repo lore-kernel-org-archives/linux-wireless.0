@@ -5,45 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF79C11F7B
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4018C11F6D
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01A7461363
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 936ED61396
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235605AbhGFLeV (ORCPT
+        id S233333AbhGFLg3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42644 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:36:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47548 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235597AbhGFLaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 65D6B61DC5;
-        Tue,  6 Jul 2021 11:21:25 +0000 (UTC)
+        id S236744AbhGFLfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:35:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 92DDA61E1A;
+        Tue,  6 Jul 2021 11:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570486;
-        bh=V+HbKc4x6+LAJEgQTouvuy37V+Np+L0h/aB3oMk1irI=;
+        s=k20201202; t=1625570649;
+        bh=ZxhQ/s8KZpLwV9wFhgLlnsSd4+04GTiheMdXUWADhsk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TaMWEnGr3DByHkZbmep9X0shCHn41AW7WYgIuJZC0A0zHFzO92Ld1wQKf63Ua/EL3
-         CTFKHZuyZ3ZkhsPEtVFfMdGISv3AJohwJYSAT5wseIVxVNdHyMxl+GyINfAspVtSoc
-         1UwLTL0jyQLf3Mi/9uJnBzqgmL5GBd60v7BgtlpkrMZxfqcxQPB0C/YBg+rxVbRwGb
-         snuzSZr3sNnRz3QAUD0wTtoWVoMXWWDwF//e/SUdn+Z2mVJ1cQ2jIFzvEI0EYd/rGc
-         2p/l+Hqt7ldBLb9xbqilwp+xIoAOrgOPwbDwfdvEKp5L7zOx4CzvjECURG8fKwtS1u
-         uKW4m/3ON+LyA==
+        b=vOQVM3nrbqpkXwyxTrR7xomE7wnW1DTa7CqC2OnX7HY/jyLa4ezfbeiG5bW5GTBAj
+         ZA4H+GuFZRZAP/8kQNNz/bHtbyNVZlp9K3P0ya8lq+liTcyPBuOzsRfo4eR2O+rMA0
+         2M21KAab8ifZRPm/P60CA5vShO2WjdFr3jP9hJb2EUlNqDzPZi/JBGaVEfZjfePJ8Q
+         E8DJguI3AyA3+Id4mr4f4eqqbR1a6tZcXaycQrjyI1NpxWwfGk/oKznKwdl9ImuBJ+
+         w2i5smrIn0+V60zi+80JzJzyaV7TejFpZE6PJ8kw+AayREL8gqCwTIVvO6z8a7nR7O
+         +UHCI/XdHBPvg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 133/160] cfg80211: fix default HE tx bitrate mask in 2G band
-Date:   Tue,  6 Jul 2021 07:17:59 -0400
-Message-Id: <20210706111827.2060499-133-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.10 097/137] mt76: mt7915: fix IEEE80211_HE_PHY_CAP7_MAX_NC for station mode
+Date:   Tue,  6 Jul 2021 07:21:23 -0400
+Message-Id: <20210706112203.2062605-97-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
-References: <20210706111827.2060499-1-sashal@kernel.org>
+In-Reply-To: <20210706112203.2062605-1-sashal@kernel.org>
+References: <20210706112203.2062605-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,42 +53,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-[ Upstream commit 9df66d5b9f45c39b3925d16e8947cc10009b186d ]
+[ Upstream commit 2707ff4dd7b1479dbd44ebb3c74788084cc95245 ]
 
-In 2G band, a HE sta can only supports HT and HE, but not supports VHT.
-In this case, default HE tx bitrate mask isn't filled, when we use iw to
-set bitrates without any parameter.
+The value of station mode is always 0.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://lore.kernel.org/r/20210609075944.51130-1-pkshih@realtek.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixed: 00b2e16e0063 ("mt76: mt7915: add TxBF capabilities")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a5224da63832..be0f616f85d3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4779,11 +4779,10 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
- 		       sband->ht_cap.mcs.rx_mask,
- 		       sizeof(mask->control[i].ht_mcs));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 0232b66acb4f..8f01ca1694bc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -335,6 +335,9 @@ mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
+ 	if (nss < 2)
+ 		return;
  
--		if (!sband->vht_cap.vht_supported)
--			continue;
++	/* the maximum cap is 4 x 3, (Nr, Nc) = (3, 2) */
++	elem->phy_cap_info[7] |= min_t(int, nss - 1, 2) << 3;
++
+ 	if (vif != NL80211_IFTYPE_AP)
+ 		return;
+ 
+@@ -348,9 +351,6 @@ mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
+ 	c = IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMER_FB |
+ 	    IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMER_FB;
+ 	elem->phy_cap_info[6] |= c;
 -
--		vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
--		vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
-+		if (sband->vht_cap.vht_supported) {
-+			vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
-+			vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
-+		}
+-	/* the maximum cap is 4 x 3, (Nr, Nc) = (3, 2) */
+-	elem->phy_cap_info[7] |= min_t(int, nss - 1, 2) << 3;
+ }
  
- 		he_cap = ieee80211_get_he_iftype_cap(sband, wdev->iftype);
- 		if (!he_cap)
+ static void
 -- 
 2.30.2
 
