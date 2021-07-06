@@ -5,46 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B97C11F99
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61230C11FE6
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A560161C28
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FFAB61D68
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235701AbhGFLeZ (ORCPT
+        id S235233AbhGFLg4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:34:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42402 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:36:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47606 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235654AbhGFLaR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:30:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3147F61DCA;
-        Tue,  6 Jul 2021 11:21:29 +0000 (UTC)
+        id S237539AbhGFLgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:36:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C70261F41;
+        Tue,  6 Jul 2021 11:28:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570489;
-        bh=i9LbO88BQlRz9UewtnHD4ToRZXkZ1jIba8GKpBuY0pk=;
+        s=k20201202; t=1625570907;
+        bh=aGOBuTpCyBT/9YPbAH2QN7D0OjQUj74F9IAvV0an/SQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CMfhmf3hyheNyBMalAWHPOQ71uzZ2nMMIEeNbf/AKjkiDJrlglW+LkQNHjHaIxB7/
-         C7zZE+VG82+9Y9WWcElBg/H6Nbvk563y0/uHe7DEYREjDgAL9noOWdXE4YzaNLc1hz
-         XWSehGflOAyEyg5/K9r7+THkx28ySD638JXiSduOhPC3N7syxGf0AHWzF0z/lzsMsw
-         dlk6m9wdu1/UBnJlJva0Hoi3ksO0huCUGmRhjnYq5Bf+BwyUpz2U5OlGFIH6lgAnuj
-         O6uBkKkCNszqgvNkOZ7R3E6MnmdsLASbYwlIC23RWPWEURbZfVpri5PW7nrunfZXz1
-         MB9+5yvIXSFyA==
+        b=UJxdOUql0UnpnscwWbxFhVnMsRu+mmTXIp+IYcgE75aBDLoSJ1TxBXJcFYPEvGXUs
+         m2gAlf0eF+Z6b5ZjM+BMlqtgJN8v0Mg0ByBZqdM5f6KlJgGSkauNUbFcVCAEj9RGUh
+         xqOb+BNeaYzTsTm/L040YJggj8ZlW2Jtuw0ES3Wp8rl8oBnhuY9hV5GXpk4cVso5y6
+         dxMzywAzwPKBFLJBBo93KHHbYnJw7+cQAax1fZUpRVyyFEoW8y7aq4rga9fNAPYz64
+         nMpMg+A5gioKDrLmezJu1psD66WIzrkaTi+j0g83Xkx1neEIYf51T+igX2d6jHsM72
+         ztiKxGjdUL9dw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Zou Wei <zou_wei@huawei.com>, Hulk Robot <hulkci@huawei.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 136/160] mac80211: Properly WARN on HW scan before restart
-Date:   Tue,  6 Jul 2021 07:18:02 -0400
-Message-Id: <20210706111827.2060499-136-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 30/45] cw1200: add missing MODULE_DEVICE_TABLE
+Date:   Tue,  6 Jul 2021 07:27:34 -0400
+Message-Id: <20210706112749.2065541-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706111827.2060499-1-sashal@kernel.org>
-References: <20210706111827.2060499-1-sashal@kernel.org>
+In-Reply-To: <20210706112749.2065541-1-sashal@kernel.org>
+References: <20210706112749.2065541-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,55 +52,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Zou Wei <zou_wei@huawei.com>
 
-[ Upstream commit 45daaa1318410794de956fb8e9d06aed2dbb23d0 ]
+[ Upstream commit dd778f89225cd258e8f0fed2b7256124982c8bb5 ]
 
-The following race was possible:
+This patch adds missing MODULE_DEVICE_TABLE definition which generates
+correct modalias for automatic loading of this driver when it is built
+as an external module.
 
-1. The device driver requests HW restart.
-2. A scan is requested from user space and is propagated
-   to the driver. During this flow HW_SCANNING flag is set.
-3. The thread that handles the HW restart is scheduled,
-   and before starting the actual reconfiguration it
-   checks that HW_SCANNING is not set. The flow does so
-   without acquiring any lock, and thus the WARN fires.
-
-Fix this by checking that HW_SCANNING is on only after RTNL is
-acquired, i.e., user space scan request handling is no longer
-in transit.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210618133832.8238ab3e19ab.I2693c581c70251472b4f9089e37e06fb2c18268f@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Zou Wei <zou_wei@huawei.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1620788714-14300-1-git-send-email-zou_wei@huawei.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/st/cw1200/cw1200_sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 9dd741b68f26..937a024a13e2 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -257,14 +257,13 @@ static void ieee80211_restart_work(struct work_struct *work)
- 	/* wait for scan work complete */
- 	flush_workqueue(local->workqueue);
- 	flush_work(&local->sched_scan_stopped_work);
-+	flush_work(&local->radar_detected_work);
-+
-+	rtnl_lock();
+diff --git a/drivers/net/wireless/st/cw1200/cw1200_sdio.c b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
+index 1037ec62659d..ee86436bf152 100644
+--- a/drivers/net/wireless/st/cw1200/cw1200_sdio.c
++++ b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
+@@ -63,6 +63,7 @@ static const struct sdio_device_id cw1200_sdio_ids[] = {
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_STE, SDIO_DEVICE_ID_STE_CW1200) },
+ 	{ /* end: all zeroes */			},
+ };
++MODULE_DEVICE_TABLE(sdio, cw1200_sdio_ids);
  
- 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
- 	     "%s called with hardware scan in progress\n", __func__);
+ /* hwbus_ops implemetation */
  
--	flush_work(&local->radar_detected_work);
--	/* we might do interface manipulations, so need both */
--	rtnl_lock();
--	wiphy_lock(local->hw.wiphy);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		/*
- 		 * XXX: there may be more work for other vif types and even
 -- 
 2.30.2
 
