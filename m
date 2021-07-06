@@ -5,43 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B832C11F67
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B506C11F66
 	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0896661D10
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E783461D05
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232867AbhGFLVQ (ORCPT
+        id S233542AbhGFLVR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:21:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56324 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:21:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55498 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233127AbhGFLUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:20:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BEF1E61CD2;
-        Tue,  6 Jul 2021 11:17:10 +0000 (UTC)
+        id S233104AbhGFLUD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:20:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 880EB61C50;
+        Tue,  6 Jul 2021 11:17:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570231;
-        bh=zPynrgZnUW8h799GItUXt5kPDHnjShwvL0DdzVFIHdg=;
+        s=k20201202; t=1625570228;
+        bh=K4AOJIFpRTGYyamlo1wY6uqNsUfHfvpWx9teuCvboKA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fTmqegFjk1BEMjFEykmDd9VRxIp/w50CNl11EWRnKVDc3BzyuqryXtNNEkvW2fQj6
-         nHaN6k7cCPQDg27b58Wdu5VWX15kWycZTDUBLezuj7HlfRWvGmonXjvLoidOt5ChsB
-         7ANbelK3D+Hd1s4rm6ntEX8/slCOLYRxBwo4mHuWyjf/EaeNEVVAlb+iQjLeb1Kc+v
-         Vys7XWr4GrOmkuVsuZXm40il0cL7HWXGP4ewHM59iSW8+HEUVIvKiYzNU3Ub8bfYR7
-         MIXSa3u3yU8iE0RlTQG2sJNMWsmT02Efsh0ZzRVx1+6qRsZSNOPx1hYnXOJw5xjG/1
-         SOK5OpbaXo0Pg==
+        b=tDrWBi3dkkH8hBdjLQULNh8+TNmAf3nSMA3Lwu/9GqIHd0OzZQnHnqOnMWqsuMIWG
+         A4HeIXEnCVaKx/pNwz9zBo0lnSPGa26DHDW9RGTO5f7Bs6eSvURCKDF5tQc2FBw31M
+         LQMwRV3DgY1/iOrlWiL9p7UE0UCnQa+Pz28mtS6sFWwfXskdbM/FbhOfIWKM7ik9hM
+         BBRkpUfjF4Ks/r4vwlBwb7aAsYo4eNpmub49dW0TGRLft1H50DDPVzFXpW21/CcLje
+         XXF7DhgO6wr5UhFCc/zEA7erk6TpXh0dZ0hnLVB8/zxD09PGuhl/3no/l/Rkc+Zi2d
+         Zv2ga9gCQf9nw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sean Wang <sean.wang@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        "Deren . Wu" <deren.wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.13 135/189] mt76: connac: fix the maximum interval schedule scan can support
-Date:   Tue,  6 Jul 2021 07:13:15 -0400
-Message-Id: <20210706111409.2058071-135-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 133/189] mt76: mt7921: enable hw offloading for wep keys
+Date:   Tue,  6 Jul 2021 07:13:13 -0400
+Message-Id: <20210706111409.2058071-133-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
 References: <20210706111409.2058071-1-sashal@kernel.org>
@@ -53,76 +54,96 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit abded041a07467c2f3dfe10afd9ea10572c63cc9 ]
+[ Upstream commit a60951d4faa0ef2e475797dd217c2eaee32ed1c2 ]
 
-Maximum interval (in seconds) for schedule scan plan supported by
-the offload firmware can be U16_MAX.
+Enable wep key hw offloading for sta mode. This patch fixes
+WoW support for wep connections.
 
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Tested-by: Deren.Wu <deren.wu@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/init.c     | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76_connac.h     | 3 ++-
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h | 2 +-
- drivers/net/wireless/mediatek/mt76/mt7921/init.c     | 2 +-
- 4 files changed, 5 insertions(+), 4 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 22 ++++++++++++++-----
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  2 ++
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index d20f05a7717d..0d01fd3c77b5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -362,7 +362,7 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
- 	wiphy->reg_notifier = mt7615_regd_notifier;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 97a0ef331ac3..032122317855 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -429,6 +429,10 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
+ 		wcid_keyidx = &wcid->hw_key_idx2;
+ 		break;
++	case WLAN_CIPHER_SUITE_WEP40:
++	case WLAN_CIPHER_SUITE_WEP104:
++		if (!mvif->wep_sta)
++			return -EOPNOTSUPP;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 	case WLAN_CIPHER_SUITE_CCMP_256:
+@@ -436,8 +440,6 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+ 	case WLAN_CIPHER_SUITE_SMS4:
+ 		break;
+-	case WLAN_CIPHER_SUITE_WEP40:
+-	case WLAN_CIPHER_SUITE_WEP104:
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -455,6 +457,12 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			    cmd == SET_KEY ? key : NULL);
  
- 	wiphy->max_sched_scan_plan_interval =
--		MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL;
-+		MT76_CONNAC_MAX_TIME_SCHED_SCAN_INTERVAL;
- 	wiphy->max_sched_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 	wiphy->max_scan_ie_len = MT76_CONNAC_SCAN_IE_LEN;
- 	wiphy->max_sched_scan_ssids = MT76_CONNAC_MAX_SCHED_SCAN_SSID;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-index 6c889b90fd12..5b50d29c1cb6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-@@ -7,7 +7,8 @@
- #include "mt76.h"
+ 	err = mt7921_mcu_add_key(dev, vif, msta, key, cmd);
++	if (err)
++		goto out;
++
++	if (key->cipher == WLAN_CIPHER_SUITE_WEP104 ||
++	    key->cipher == WLAN_CIPHER_SUITE_WEP40)
++		err = mt7921_mcu_add_key(dev, vif, mvif->wep_sta, key, cmd);
+ out:
+ 	mt7921_mutex_release(dev);
  
- #define MT76_CONNAC_SCAN_IE_LEN			600
--#define MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL	10
-+#define MT76_CONNAC_MAX_NUM_SCHED_SCAN_INTERVAL	 10
-+#define MT76_CONNAC_MAX_TIME_SCHED_SCAN_INTERVAL U16_MAX
- #define MT76_CONNAC_MAX_SCHED_SCAN_SSID		10
- #define MT76_CONNAC_MAX_SCAN_MATCH		16
+@@ -661,9 +669,12 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 61bed6e89427..6093f39ea1dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -762,7 +762,7 @@ struct mt76_connac_sched_scan_req {
- 	u8 intervals_num;
- 	u8 scan_func; /* MT7663: BIT(0) eable random mac address */
- 	struct mt76_connac_mcu_scan_channel channels[64];
--	__le16 intervals[MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL];
-+	__le16 intervals[MT76_CONNAC_MAX_NUM_SCHED_SCAN_INTERVAL];
- 	union {
- 		struct {
- 			u8 random_mac[ETH_ALEN];
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 1763ea0614ce..bd002b4247c7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -92,7 +92,7 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	wiphy->max_scan_ie_len = MT76_CONNAC_SCAN_IE_LEN;
- 	wiphy->max_scan_ssids = 4;
- 	wiphy->max_sched_scan_plan_interval =
--		MT76_CONNAC_MAX_SCHED_SCAN_INTERVAL;
-+		MT76_CONNAC_MAX_TIME_SCHED_SCAN_INTERVAL;
- 	wiphy->max_sched_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 	wiphy->max_sched_scan_ssids = MT76_CONNAC_MAX_SCHED_SCAN_SSID;
- 	wiphy->max_match_sets = MT76_CONNAC_MAX_SCAN_MATCH;
+-	if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
+-		mt76_connac_mcu_uni_add_bss(&dev->mphy, vif, &mvif->sta.wcid,
+-					    true);
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		mvif->wep_sta = msta;
++		if (!sta->tdls)
++			mt76_connac_mcu_uni_add_bss(&dev->mphy, vif,
++						    &mvif->sta.wcid, true);
++	}
+ 
+ 	mt7921_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+@@ -693,6 +704,7 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	if (vif->type == NL80211_IFTYPE_STATION) {
+ 		struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
+ 
++		mvif->wep_sta = NULL;
+ 		ewma_rssi_init(&mvif->rssi);
+ 		if (!sta->tdls)
+ 			mt76_connac_mcu_uni_add_bss(&dev->mphy, vif,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 03bcb210c357..434601388a6c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -100,6 +100,8 @@ struct mt7921_vif {
+ 	struct mt76_vif mt76; /* must be first */
+ 
+ 	struct mt7921_sta sta;
++	struct mt7921_sta *wep_sta;
++
+ 	struct mt7921_phy *phy;
+ 
+ 	struct ewma_rssi rssi;
 -- 
 2.30.2
 
