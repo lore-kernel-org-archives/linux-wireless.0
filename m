@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DAE5C07E9C
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43EFFC11F69
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46D5161995
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33AE061995
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 12:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237944AbhGFMcF (ORCPT
+        id S239545AbhGFMcG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:32:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47578 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 08:32:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237181AbhGFLf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S237179AbhGFLf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 6 Jul 2021 07:35:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED72061EC7;
-        Tue,  6 Jul 2021 11:25:59 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CC33761D4B;
+        Tue,  6 Jul 2021 11:25:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570760;
-        bh=DdPk/MsJeKkckAWJafmlHALQxb/7go6/3Zrr+A6+BBo=;
+        s=k20201202; t=1625570759;
+        bh=DLMSh4j0AnmTMlzgxM/VboZ7+8wm4ULFHQ39d2I+ppE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ah+8KGaFAjyOGWZWW5VAagjgeEO9l065JZjby7ezBUzUJXt/ut5KTrMGReBJ+s1nS
-         FlJyo3bs9ZRX8hlO2Nc+edODWbMTlyob4izBKkpuAd3I9tHDXx79hVRpWyT81c5deN
-         y7zBl5cCm6tD2cMjfe4FzedrXT312Is5B7Toq0NeFmeFILQvYqUWkU3VmAVq1Q2eNF
-         vj2Ae4zGQhlI4q3OiKq5i/UCqal6VtqxChaTiXvQUaPupVjRWVAu9sa/aPRmMNMUp2
-         XcEb8qPQSrZh+UjHhKZb7b0fHdVw+2TzpV/kePsLwSfpRG5AIbzaj43WoCj32ztnrS
-         1l0gE7hIu3BVg==
+        b=lJEgyIACwITXpHtemLa5ae9tQYZ2skKml7ezIecBBY1M/Cm8bPq7Y4svu31MLo657
+         B8cSPT7npdTWLH6H2H4+NVt6Rqqq9phhLgWLQXpYWR+oiMd8apoEkw8QdqSTrlk6IK
+         YYUFXTnW3Vh+r+8gPkB+kYYzF5vWTSfrKV0emuRi+OlNhJeC3vLPNtusCRuSi7sSLm
+         J/YtQdp/YKrXXWZ60Z3JxEleKJNbYTyxvjPoCvjFwc/RHIkLR4qnE2ju6ej9ACUIjz
+         iJVTx2AFqmajxJsPtG8hYrAHqSj4ppkIwkEc4ZqmOcmNNb8jLO8oZYyMC3hWGFLRUF
+         Dr2FzOzQJ6rvw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zou Wei <zou_wei@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Lee Gibson <leegib@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 46/74] cw1200: add missing MODULE_DEVICE_TABLE
-Date:   Tue,  6 Jul 2021 07:24:34 -0400
-Message-Id: <20210706112502.2064236-46-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 45/74] wl1251: Fix possible buffer overflow in wl1251_cmd_scan
+Date:   Tue,  6 Jul 2021 07:24:33 -0400
+Message-Id: <20210706112502.2064236-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706112502.2064236-1-sashal@kernel.org>
 References: <20210706112502.2064236-1-sashal@kernel.org>
@@ -52,35 +51,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zou Wei <zou_wei@huawei.com>
+From: Lee Gibson <leegib@gmail.com>
 
-[ Upstream commit dd778f89225cd258e8f0fed2b7256124982c8bb5 ]
+[ Upstream commit d10a87a3535cce2b890897914f5d0d83df669c63 ]
 
-This patch adds missing MODULE_DEVICE_TABLE definition which generates
-correct modalias for automatic loading of this driver when it is built
-as an external module.
+Function wl1251_cmd_scan calls memcpy without checking the length.
+Harden by checking the length is within the maximum allowed size.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Zou Wei <zou_wei@huawei.com>
+Signed-off-by: Lee Gibson <leegib@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1620788714-14300-1-git-send-email-zou_wei@huawei.com
+Link: https://lore.kernel.org/r/20210428115508.25624-1-leegib@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/cw1200_sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ti/wl1251/cmd.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/cw1200_sdio.c b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-index 43e012073dbf..5ac06d672fc6 100644
---- a/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-+++ b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-@@ -60,6 +60,7 @@ static const struct sdio_device_id cw1200_sdio_ids[] = {
- 	{ SDIO_DEVICE(SDIO_VENDOR_ID_STE, SDIO_DEVICE_ID_STE_CW1200) },
- 	{ /* end: all zeroes */			},
- };
-+MODULE_DEVICE_TABLE(sdio, cw1200_sdio_ids);
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
+index 9547aea01b0f..ea0215246c5c 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.c
++++ b/drivers/net/wireless/ti/wl1251/cmd.c
+@@ -466,9 +466,12 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
+ 		cmd->channels[i].channel = channels[i]->hw_value;
+ 	}
  
- /* hwbus_ops implemetation */
+-	cmd->params.ssid_len = ssid_len;
+-	if (ssid)
+-		memcpy(cmd->params.ssid, ssid, ssid_len);
++	if (ssid) {
++		int len = clamp_val(ssid_len, 0, IEEE80211_MAX_SSID_LEN);
++
++		cmd->params.ssid_len = len;
++		memcpy(cmd->params.ssid, ssid, len);
++	}
  
+ 	ret = wl1251_cmd_send(wl, CMD_SCAN, cmd, sizeof(*cmd));
+ 	if (ret < 0) {
 -- 
 2.30.2
 
