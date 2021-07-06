@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A73C11F6A
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD95C11F68
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAAD061D73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A98D661D73
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233893AbhGFLXF (ORCPT
+        id S234003AbhGFLXW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:23:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55302 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:23:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55702 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233396AbhGFLUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jul 2021 07:20:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A8F3A61C4E;
-        Tue,  6 Jul 2021 11:17:33 +0000 (UTC)
+        id S233483AbhGFLVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Jul 2021 07:21:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E4A561C6E;
+        Tue,  6 Jul 2021 11:17:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570254;
-        bh=4/UGIXHeqNO/CAu3MEvIYQWo3NnFXubu4BWke+DacxU=;
+        s=k20201202; t=1625570260;
+        bh=LrqA3Q5ctTV6K0harTnES9skPEHmU3d24hQ7WI8iNiA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tyCsY9aCXz1YvhQvAZYqqvYYaL6Vi/DaUA+u1U1zOu2O1OkWOudPD9VWXcQdoLw45
-         3Ssr03tsiqVsEptvSQ6hgkV7Yl8HvCY4KUY4LDnNOl4p2WZ2kQwtO1wBBhVWo0Cts+
-         MoEQmv2kUTl83PfWO+6CC6cLECymxisyoYu9gxJBD/CsNrCeRJpeSEdv2goNvc+Pxs
-         sPedvemSvX+5hw4qD4MxWg9ZX8+ojeobtAojZme3V3+89wLMYLGqZInA/jwoZFAPgX
-         HoJ2Ow9jOnAKBrB431z6fqS0wYcZkPufUa5LfUws9u9giuqZsF7UqUADrMRzBaKsQr
-         o4ZYvnbKNZJqA==
+        b=MYhFxY9DVn/reLKyjtV91/729pQYaYHeTW41OpBnfXdArJgTq86Ae9MmdjKQur0Cq
+         oJ0kgU9erUMrA+msD/FeQHeXCs9S9SYHypIiHxV5f0dRULncJtwSdsd+IG859JzKyi
+         BWLP+uKKoTb3UE9M3zpoT3mfjiK7QDJCUD5VP5fBZarb0VkFR5Ru7r5eL43La2DK8h
+         PYlH9ycpXsqmyRBlqpO6vdo4VJbIsdsy6OvIzNlXsLYBb4ZQdqd62DWbmY1W+KCfx/
+         FFy6Ze0PDLpg8Su2ByWNMCAz3CWhBUUKjfkj3Dvu5I3Zrc3nlyGJWvfj/LlvuK8Tsy
+         TeC78sOVrhC8Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>, Paul Szabo <psz2036@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 152/189] iwlwifi: mvm: support LONG_GROUP for WOWLAN_GET_STATUSES version
-Date:   Tue,  6 Jul 2021 07:13:32 -0400
-Message-Id: <20210706111409.2058071-152-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 156/189] rtw88: add quirks to disable pci capabilities
+Date:   Tue,  6 Jul 2021 07:13:36 -0400
+Message-Id: <20210706111409.2058071-156-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
 References: <20210706111409.2058071-1-sashal@kernel.org>
@@ -52,46 +52,85 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit d65ab7c0e0b92056754185d3f6925d7318730e94 ]
+[ Upstream commit 956c6d4f20c5446727e0c912dd8f527f2dc7b779 ]
 
-It's been a while that the firmware uses LONG_GROUP by default
-and not LEGACY_GROUP.
-Until now the firmware wrongly advertise the WOWLAN_GET_STATUS
-command's version with LEGACY_GROUP, but it is now being fixed.
-In order to support both firmwares, first try to get the version
-number of the command with the LONG_GROUP and if the firmware
-didn't advertise the command version with LONG_GROUP, try to get
-the command version with LEGACY_GROUP.
+8821CE with ASPM cannot work properly on Protempo Ltd L116HTN6SPW. Add a
+quirk to disable the cap.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210618105614.cd6f4e421430.Iec07c746c8e65bc267e4750f38e4f74f2010ca45@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+The reporter describes the symptom is that this module (driver) causes
+frequent freezes, randomly but usually within a few minutes of running
+(thus very soon after boot): screen display remains frozen, no response
+to either keyboard or mouse input. All I can do is to hold the power
+button to power off, then reboot.
+
+Reported-by: Paul Szabo <psz2036@gmail.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210607012254.6306-1-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 32 ++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 2e28cf299ef4..9c16303e58a9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1608,8 +1608,11 @@ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm)
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index f59a4c462e3b..e7d17ab8f113 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -2,6 +2,7 @@
+ /* Copyright(c) 2018-2019  Realtek Corporation
+  */
  
- 	/* default to 7 (when we have IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL) */
--	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
--					    WOWLAN_GET_STATUSES, 7);
-+	notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP,
-+					    WOWLAN_GET_STATUSES, 0);
-+	if (!notif_ver)
-+		notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
-+						    WOWLAN_GET_STATUSES, 7);
++#include <linux/dmi.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include "main.h"
+@@ -1673,6 +1674,36 @@ static void rtw_pci_napi_deinit(struct rtw_dev *rtwdev)
+ 	netif_napi_del(&rtwpci->napi);
+ }
  
- 	if (!fw_has_api(&mvm->fw->ucode_capa,
- 			IWL_UCODE_TLV_API_WOWLAN_KEY_MATERIAL)) {
++enum rtw88_quirk_dis_pci_caps {
++	QUIRK_DIS_PCI_CAP_MSI,
++	QUIRK_DIS_PCI_CAP_ASPM,
++};
++
++static int disable_pci_caps(const struct dmi_system_id *dmi)
++{
++	uintptr_t dis_caps = (uintptr_t)dmi->driver_data;
++
++	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_MSI))
++		rtw_disable_msi = true;
++	if (dis_caps & BIT(QUIRK_DIS_PCI_CAP_ASPM))
++		rtw_pci_disable_aspm = true;
++
++	return 1;
++}
++
++static const struct dmi_system_id rtw88_pci_quirks[] = {
++	{
++		.callback = disable_pci_caps,
++		.ident = "Protempo Ltd L116HTN6SPW",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Protempo Ltd"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "L116HTN6SPW"),
++		},
++		.driver_data = (void *)BIT(QUIRK_DIS_PCI_CAP_ASPM),
++	},
++	{}
++};
++
+ int rtw_pci_probe(struct pci_dev *pdev,
+ 		  const struct pci_device_id *id)
+ {
+@@ -1723,6 +1754,7 @@ int rtw_pci_probe(struct pci_dev *pdev,
+ 		goto err_destroy_pci;
+ 	}
+ 
++	dmi_check_system(rtw88_pci_quirks);
+ 	rtw_pci_phy_cfg(rtwdev);
+ 
+ 	ret = rtw_register_hw(rtwdev, hw);
 -- 
 2.30.2
 
