@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DAD4C07E9C
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74698C11F69
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F78461D00
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60B7961CFE
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jul 2021 11:18:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232570AbhGFLVA (ORCPT
+        id S233071AbhGFLVL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jul 2021 07:21:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55612 "EHLO mail.kernel.org"
+        Tue, 6 Jul 2021 07:21:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55702 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232129AbhGFLUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S233130AbhGFLUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 6 Jul 2021 07:20:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2528F61C99;
-        Tue,  6 Jul 2021 11:17:09 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 254B561C8B;
+        Tue,  6 Jul 2021 11:17:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625570230;
-        bh=5dUHdsNsgzfUJUdOFrKUl9DLlmlD94Tqy77aqB7y6vg=;
+        s=k20201202; t=1625570233;
+        bh=SKgrW86FCTuQ2U8shcCjpqm/B2ijXEQ1rAZcVr4+KE0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gWIlMCzJ5pbINXQZDF5YyCOr8vHvQjuXIKQljAJutV1EUg9zihYS6PUhGY961pykd
-         JRG4CgKbSIt+Ygr3JPGZGZMbeuBVzgC2YjuB2ZjfXVugm0v6I9jnuMEedVDnQc6qFu
-         hmyAruN3+HUiyPh/SqX5Caxw7JPJlD2D2qjB+4+688iv8GsNm94xS61BerTHJr5NBK
-         D06YV19LGNU7PhqDilhn7ILUla15t9opiRJ2qgA328rR+4H8ReF7P61UVLVUX8vMmn
-         ijosBCtYwqUc913f+krtZ3L7DTxGjGILQZOmrco4RVJgKJ4+MAJO9dLg9nQZwuZPOO
-         zxIbWUPywdadA==
+        b=LuuEtTu4j6OS0eitfqCe+5BHCWJqS0HSOy97ejbjBJOiFi71vL6aJ4RnHAvMIasyK
+         +mdA2/zqti2lvrxlJaiqm7ycJSelfBQ1v06NkNnXI65MmWuplKTEFvlFQ/B1MJHHWd
+         y4kAJFnbfH0r5JKQ814eeSP403jklk/bqBpo4jH9JVOuyGFc23Ct8LxEl9qCeEOpVS
+         xJ6hWERP4NCDQNPTzY4GrFHVke5ZMfgMgrzPO8wx4Rk7OPot7PmkE5Tecgs/xHo3Cm
+         zAsPZI+lUTX3aQRAuavT6LfJX0dAmXNKW2JB8022S90R22Uv+b3XqxCAkwzgdbE/+o
+         XKTAuHHSKb8sg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Deren Wu <deren.wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
+Cc:     Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.13 134/189] mt76: connac: fix UC entry is being overwritten
-Date:   Tue,  6 Jul 2021 07:13:14 -0400
-Message-Id: <20210706111409.2058071-134-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 136/189] mt76: mt7915: fix IEEE80211_HE_PHY_CAP7_MAX_NC for station mode
+Date:   Tue,  6 Jul 2021 07:13:16 -0400
+Message-Id: <20210706111409.2058071-136-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210706111409.2058071-1-sashal@kernel.org>
 References: <20210706111409.2058071-1-sashal@kernel.org>
@@ -54,108 +53,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-[ Upstream commit 82453b1cbf9ef166364c12b5464251f16bac5f51 ]
+[ Upstream commit 2707ff4dd7b1479dbd44ebb3c74788084cc95245 ]
 
-Fix UC entry is being overwritten by BC entry
+The value of station mode is always 0.
 
-Tested-by: Deren Wu <deren.wu@mediatek.com>
-Co-developed-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Fixed: 00b2e16e0063 ("mt76: mt7915: add TxBF capabilities")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c      |  8 +++++---
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 10 ++++++----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h |  1 +
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c      |  1 +
- 4 files changed, 13 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index aa42af9ebfd6..de7126d45aa6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -1120,12 +1120,14 @@ mt7615_mcu_sta_rx_ba(struct mt7615_dev *dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 822f3aa6bb8b..feb2aa57ef22 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -480,6 +480,9 @@ mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
+ 	if (nss < 2)
+ 		return;
  
- static int
- __mt7615_mcu_add_sta(struct mt76_phy *phy, struct ieee80211_vif *vif,
--		     struct ieee80211_sta *sta, bool enable, int cmd)
-+		     struct ieee80211_sta *sta, bool enable, int cmd,
-+		     bool offload_fw)
- {
- 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
- 	struct mt76_sta_cmd_info info = {
- 		.sta = sta,
- 		.vif = vif,
-+		.offload_fw = offload_fw,
- 		.enable = enable,
- 		.cmd = cmd,
- 	};
-@@ -1139,7 +1141,7 @@ mt7615_mcu_add_sta(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta, bool enable)
- {
- 	return __mt7615_mcu_add_sta(phy->mt76, vif, sta, enable,
--				    MCU_EXT_CMD_STA_REC_UPDATE);
-+				    MCU_EXT_CMD_STA_REC_UPDATE, false);
++	/* the maximum cap is 4 x 3, (Nr, Nc) = (3, 2) */
++	elem->phy_cap_info[7] |= min_t(int, nss - 1, 2) << 3;
++
+ 	if (vif != NL80211_IFTYPE_AP)
+ 		return;
+ 
+@@ -493,9 +496,6 @@ mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
+ 	c = IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB |
+ 	    IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMING_PARTIAL_BW_FB;
+ 	elem->phy_cap_info[6] |= c;
+-
+-	/* the maximum cap is 4 x 3, (Nr, Nc) = (3, 2) */
+-	elem->phy_cap_info[7] |= min_t(int, nss - 1, 2) << 3;
  }
  
- static const struct mt7615_mcu_ops sta_update_ops = {
-@@ -1280,7 +1282,7 @@ mt7615_mcu_uni_add_sta(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta, bool enable)
- {
- 	return __mt7615_mcu_add_sta(phy->mt76, vif, sta, enable,
--				    MCU_UNI_CMD_STA_REC_UPDATE);
-+				    MCU_UNI_CMD_STA_REC_UPDATE, true);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 619561606f96..f975f6d98a98 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -841,10 +841,12 @@ int mt76_connac_mcu_add_sta_cmd(struct mt76_phy *phy,
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
--	mt76_connac_mcu_sta_basic_tlv(skb, info->vif, info->sta, info->enable);
--	if (info->enable && info->sta)
--		mt76_connac_mcu_sta_tlv(phy, skb, info->sta, info->vif,
--					info->rcpi);
-+	if (info->sta || !info->offload_fw)
-+		mt76_connac_mcu_sta_basic_tlv(skb, info->vif, info->sta,
-+					      info->enable);
-+	if (info->sta && info->enable)
-+		mt76_connac_mcu_sta_tlv(phy, skb, info->sta,
-+					info->vif, info->rcpi);
- 
- 	sta_wtbl = mt76_connac_mcu_add_tlv(skb, STA_REC_WTBL,
- 					   sizeof(struct tlv));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index a1096861d04a..61bed6e89427 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -891,6 +891,7 @@ struct mt76_sta_cmd_info {
- 
- 	struct ieee80211_vif *vif;
- 
-+	bool offload_fw;
- 	bool enable;
- 	int cmd;
- 	u8 rcpi;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index ef3e454862ad..23b337b43874 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -1278,6 +1278,7 @@ int mt7921_mcu_sta_add(struct mt7921_dev *dev, struct ieee80211_sta *sta,
- 		.vif = vif,
- 		.enable = enable,
- 		.cmd = MCU_UNI_CMD_STA_REC_UPDATE,
-+		.offload_fw = true,
- 		.rcpi = to_rcpi(rssi),
- 	};
- 	struct mt7921_sta *msta;
+ static void
 -- 
 2.30.2
 
