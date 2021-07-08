@@ -2,92 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F78C07E96
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jul 2021 13:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 310B7C07E96
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jul 2021 15:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7412161483
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jul 2021 13:24:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 130AF61622
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jul 2021 15:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231612AbhGHN1U (ORCPT
+        id S231857AbhGHPLZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Jul 2021 09:27:20 -0400
-Received: from 185-125-188-181.canonical.com ([185.125.188.181]:51514 "EHLO
-        smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229901AbhGHN1U (ORCPT
+        Thu, 8 Jul 2021 11:11:25 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:42674 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229592AbhGHPLY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jul 2021 09:27:20 -0400
-X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Thu, 08 Jul 2021 09:27:19 EDT
-Received: from localhost.localdomain (unknown [222.129.38.167])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id F2B09401BE;
-        Thu,  8 Jul 2021 13:17:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1625750250;
-        bh=MZaGHZileR4ok+NZSlM+m9Pz61MDdpoPPs63678sG9k=;
-        h=From:To:Subject:Date:Message-Id:MIME-Version;
-        b=wMlumXYlpN0n/yclDWu8glv34+OE5e0kLicAgCmYuQYhooP++yNldYLDdRuvlfmMQ
-         BqdNhedF+Mfuhy2JwCRXw32TA6a60kOOjQZvu9oMvJfCmrJtfLzJin2ofDqxvARj2T
-         cRI5yhvpa9IfaHbXJcRelXo99qJhAyPaepiAE5Ct149Qnwga5x635TBdgb/12ufHLk
-         Qer4qH9flcYO5EAVOSfiNgEcy3VUjw3fCFJh+FHBFjlj3QRQtDIK41O/RRsY/9el0H
-         N+XkWQGk7lO0M1Ho1AnJetVAyLs949u51jOeyn5mQ9qXWsLl2UZmFXFwjhzWtPuzhR
-         OV/hhV6yQUJjA==
-From:   Aaron Ma <aaron.ma@canonical.com>
-To:     aaron.ma@canonical.com, nbd@nbd.name, lorenzo.bianconi83@gmail.com,
-        ryder.lee@mediatek.com, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, matthias.bgg@gmail.com, sean.wang@mediatek.com,
-        Soul.Huang@mediatek.com, deren.wu@mediatek.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] mt76: mt7921: continue to probe driver when fw already downloaded
-Date:   Thu,  8 Jul 2021 21:17:10 +0800
-Message-Id: <20210708131710.695595-1-aaron.ma@canonical.com>
-X-Mailer: git-send-email 2.32.0
+        Thu, 8 Jul 2021 11:11:24 -0400
+X-UUID: 3c85a5a83be84b6ea866ee9c0a6f44be-20210708
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID; bh=rmy3vTKrj+13anpiQhZfLEyONls/y6wLF5zWGoxVdF8=;
+        b=hD+qqujji0r8m3P9PDI2pnMaDxCMqpZ2iA7j9kUXLS7Bm41FTMOTTzpROgvrgPodbTxI7zxg2oo1FOLcMcwYXhexU7yj6uPtnpQSDxCXNRy2sadtBPP35cEdUTZFQrUfRZond4eqtm9BT5pLUTEbCse8EbAIynqlYzbCZn3SOTA=;
+X-UUID: 3c85a5a83be84b6ea866ee9c0a6f44be-20210708
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1688495760; Thu, 08 Jul 2021 23:08:36 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 8 Jul 2021 23:08:30 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 8 Jul 2021 23:08:30 +0800
+Message-ID: <1eaab818ef2478b115e1387dcca7427f633cc217.camel@mediatek.com>
+Subject: Re: [PATCH] mt76: mt7921: continue to probe driver when fw already
+ downloaded
+From:   Deren Wu <deren.wu@mediatek.com>
+To:     Aaron Ma <aaron.ma@canonical.com>, <nbd@nbd.name>,
+        <lorenzo.bianconi83@gmail.com>, <ryder.lee@mediatek.com>,
+        <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>,
+        <matthias.bgg@gmail.com>, <sean.wang@mediatek.com>,
+        <Soul.Huang@mediatek.com>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Date:   Thu, 8 Jul 2021 23:08:30 +0800
+In-Reply-To: <20210708131710.695595-1-aaron.ma@canonical.com>
+References: <20210708131710.695595-1-aaron.ma@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When reboot system, no power cycles, firmware is already downloaded,
-return -EIO will break driver as error:
-mt7921e: probe of 0000:03:00.0 failed with error -5
-
-Skip firmware download and continue to probe.
-
-Signed-off-by: Aaron Ma <aaron.ma@canonical.com>
----
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index c2c4dc196802..cd690c64f65b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -931,7 +931,7 @@ static int mt7921_load_firmware(struct mt7921_dev *dev)
- 	ret = mt76_get_field(dev, MT_CONN_ON_MISC, MT_TOP_MISC2_FW_N9_RDY);
- 	if (ret) {
- 		dev_dbg(dev->mt76.dev, "Firmware is already download\n");
--		return -EIO;
-+		goto fw_loaded;
- 	}
- 
- 	ret = mt7921_load_patch(dev);
-@@ -949,6 +949,7 @@ static int mt7921_load_firmware(struct mt7921_dev *dev)
- 		return -EIO;
- 	}
- 
-+fw_loaded:
- 	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
- 
- #ifdef CONFIG_PM
--- 
-2.32.0
+SGkgQWFyb24sDQoNClRoYW5rcyBmb3IgdGhpcyBwYXRjaC4gV2UgdmVyaWZpZWQgdGhpcyBpcyBn
+b29kIGhlcmUuDQoNCkNvdWxkIHlvdSBwbGVhc2UgYWRkIGZpeCB0YWcgYXMgd2VsbD8gSXQncyBi
+ZXR0ZXIgdG8gYmFja3BvcnQgdGhpcw0KcGF0Y2guDQoNCkZpeGVzOiAxYzA5OWFiNDQ3MjdjICgi
+bXQ3NjogbXQ3OTIxOiBhZGQgTUNVIHN1cHBvcnQiKQ0KDQoNClRoYW5rcywNCkRlcmVuDQoNCg0K
+T24gVGh1LCAyMDIxLTA3LTA4IGF0IDIxOjE3ICswODAwLCBBYXJvbiBNYSB3cm90ZToNCj4gV2hl
+biByZWJvb3Qgc3lzdGVtLCBubyBwb3dlciBjeWNsZXMsIGZpcm13YXJlIGlzIGFscmVhZHkgZG93
+bmxvYWRlZCwNCj4gcmV0dXJuIC1FSU8gd2lsbCBicmVhayBkcml2ZXIgYXMgZXJyb3I6DQo+IG10
+NzkyMWU6IHByb2JlIG9mIDAwMDA6MDM6MDAuMCBmYWlsZWQgd2l0aCBlcnJvciAtNQ0KPiANCj4g
+U2tpcCBmaXJtd2FyZSBkb3dubG9hZCBhbmQgY29udGludWUgdG8gcHJvYmUuDQo+IA0KPiBTaWdu
+ZWQtb2ZmLWJ5OiBBYXJvbiBNYSA8YWFyb24ubWFAY2Fub25pY2FsLmNvbT4NCj4gLS0tDQo+ICBk
+cml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyMS9tY3UuYyB8IDMgKystDQo+
+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjEvbWN1
+LmMNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkyMS9tY3UuYw0K
+PiBpbmRleCBjMmM0ZGMxOTY4MDIuLmNkNjkwYzY0ZjY1YiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjEvbWN1LmMNCj4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MjEvbWN1LmMNCj4gQEAgLTkzMSw3ICs5
+MzEsNyBAQCBzdGF0aWMgaW50IG10NzkyMV9sb2FkX2Zpcm13YXJlKHN0cnVjdCBtdDc5MjFfZGV2
+DQo+ICpkZXYpDQo+ICAJcmV0ID0gbXQ3Nl9nZXRfZmllbGQoZGV2LCBNVF9DT05OX09OX01JU0Ms
+DQo+IE1UX1RPUF9NSVNDMl9GV19OOV9SRFkpOw0KPiAgCWlmIChyZXQpIHsNCj4gIAkJZGV2X2Ri
+ZyhkZXYtPm10NzYuZGV2LCAiRmlybXdhcmUgaXMgYWxyZWFkeQ0KPiBkb3dubG9hZFxuIik7DQo+
+IC0JCXJldHVybiAtRUlPOw0KPiArCQlnb3RvIGZ3X2xvYWRlZDsNCj4gIAl9DQo+ICANCj4gIAly
+ZXQgPSBtdDc5MjFfbG9hZF9wYXRjaChkZXYpOw0KPiBAQCAtOTQ5LDYgKzk0OSw3IEBAIHN0YXRp
+YyBpbnQgbXQ3OTIxX2xvYWRfZmlybXdhcmUoc3RydWN0IG10NzkyMV9kZXYNCj4gKmRldikNCj4g
+IAkJcmV0dXJuIC1FSU87DQo+ICAJfQ0KPiAgDQo+ICtmd19sb2FkZWQ6DQo+ICAJbXQ3Nl9xdWV1
+ZV90eF9jbGVhbnVwKGRldiwgZGV2LT5tdDc2LnFfbWN1W01UX01DVVFfRldETF0sDQo+IGZhbHNl
+KTsNCj4gIA0KPiAgI2lmZGVmIENPTkZJR19QTQ0K
 
