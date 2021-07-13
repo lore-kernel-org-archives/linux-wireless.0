@@ -2,123 +2,130 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 741B4C07E95
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jul 2021 16:07:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25DBCC11F67
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jul 2021 16:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5769861183
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jul 2021 16:07:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1078611C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jul 2021 16:07:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229670AbhGMQKm (ORCPT
+        id S229771AbhGMQKn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Jul 2021 12:10:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38408 "EHLO
+        Tue, 13 Jul 2021 12:10:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbhGMQKm (ORCPT
+        with ESMTP id S229437AbhGMQKm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 13 Jul 2021 12:10:42 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14A4C0613DD;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DD0C0613E9;
         Tue, 13 Jul 2021 09:07:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=x2Sy3YhydFPX1Q2Umb3BUnJX0kadND+lgagPMkUjMfo=; b=klbQOeKNCYGbm3zi1+R4/C+YAo
-        XPVDCEAfGBg9ua0mSE5b7R0kQzHvMppwRq0VmrsrvimJNjOcqewOWYKCoS5J1DzdlNSa4ZTWuF2hN
-        X+jyyVQPBk4II1mr1rYRxcNLlnjl0CWfm4eFoVvwy0EYQv/CdoQBScU76oeXWQm4vybg=;
+        bh=AdrJCYtnw/cIlb0o00U3MkZlWlJ5tSgHOHXdIcxONhs=; b=j/b1T3CdFPMK2xsbs5/1md+78s
+        e/e5X2jWg0dXxZI5CgvlaEj8qElOQy7tFWP60zGncg4wtpQtmyO5cmvnaaZvC3Ar8h8fDXhuOzmjD
+        hxBhHS8ahSD8NxBuDivB2LbTidLqP0RAJd8fc+qY1sbpOitEVTfnccBdCpFZik76PJhY=;
 Received: from p54ae93f7.dip0.t-ipconnect.de ([84.174.147.247] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1m3Kwl-0008TX-SE; Tue, 13 Jul 2021 18:07:47 +0200
+        id 1m3Kwn-0008TX-5I; Tue, 13 Jul 2021 18:07:49 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     netdev@vger.kernel.org, pablo@netfilter.org, ryder.lee@mediatek.com
-Subject: [RFC 0/7] Ethernet->WLAN hardware flow offloading support on MT7622
-Date:   Tue, 13 Jul 2021 18:07:38 +0200
-Message-Id: <20210713160745.59707-1-nbd@nbd.name>
+Subject: [RFC 4/7] mt76: dma: add wrapper macro for accessing queue registers
+Date:   Tue, 13 Jul 2021 18:07:42 +0200
+Message-Id: <20210713160745.59707-5-nbd@nbd.name>
 X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210713160745.59707-1-nbd@nbd.name>
+References: <20210713160745.59707-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch series adds hardware flow offloading for routing/NAT packets from
-ethernet to WLAN on MT7622 SoC, in combination with MT7915 WLAN devices
-This only offloads one direction, WLAN->Ethernet offload is not supported by
-MT7622 (but will be in newer SoC designs).
+Preparation for adding indirection used for Wireless Ethernet Dispatch support
 
-In order to make this work, the SoC contains a subsystem named Wireless
-Ethernet Dispatch. It intercepts access to the WLAN DMA register space and
-controls the DMA queues in order to be able to inject packets coming in from
-the packet processing engine (PPE). It also intercepts IRQs from PCIe.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-
-Felix Fietkau (7):
-  mac80211: add support for .ndo_fill_forward_path
-  net: ethernet: mtk_eth_soc: add support for Wireless Ethernet Dispatch
-    (WED)
-  net: ethernet: mtk_eth_soc: implement flow offloading to WED devices
-  mt76: dma: add wrapper macro for accessing queue registers
-  mt76: make number of tokens configurable dynamically
-  mt76: mt7915: remove irq parameter from mt7915_mmio_init
-  mt76: mt7915: add Wireless Ethernet Dispatch support
-
- arch/arm64/boot/dts/mediatek/mt7622.dtsi      |  22 +
- drivers/net/ethernet/mediatek/Kconfig         |   4 +
- drivers/net/ethernet/mediatek/Makefile        |   5 +
- drivers/net/ethernet/mediatek/mtk_eth_soc.c   |  23 +
- drivers/net/ethernet/mediatek/mtk_eth_soc.h   |   3 +
- drivers/net/ethernet/mediatek/mtk_ppe.c       |  18 +
- drivers/net/ethernet/mediatek/mtk_ppe.h       |  14 +-
- .../net/ethernet/mediatek/mtk_ppe_offload.c   |  67 +-
- drivers/net/ethernet/mediatek/mtk_wed.c       | 837 ++++++++++++++++++
- drivers/net/ethernet/mediatek/mtk_wed.h       | 123 +++
- .../net/ethernet/mediatek/mtk_wed_debugfs.c   | 175 ++++
- drivers/net/ethernet/mediatek/mtk_wed_ops.c   |   8 +
- drivers/net/ethernet/mediatek/mtk_wed_regs.h  | 248 ++++++
- drivers/net/wireless/mediatek/mt76/dma.c      | 111 ++-
- drivers/net/wireless/mediatek/mt76/mac80211.c |   5 +-
- drivers/net/wireless/mediatek/mt76/mmio.c     |   9 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  36 +-
- .../net/wireless/mediatek/mt76/mt7603/dma.c   |   8 +-
- .../net/wireless/mediatek/mt76/mt7615/dma.c   |   6 +-
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |   4 +-
- .../net/wireless/mediatek/mt76/mt7915/dma.c   |  38 +-
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 123 ++-
- .../net/wireless/mediatek/mt76/mt7915/mac.h   |   2 +
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  32 +
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   |   4 +
- .../net/wireless/mediatek/mt76/mt7915/mmio.c  |   2 +-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   3 +-
- .../net/wireless/mediatek/mt76/mt7915/pci.c   |  98 +-
- .../net/wireless/mediatek/mt76/mt7915/regs.h  |  19 +-
- .../net/wireless/mediatek/mt76/mt7921/dma.c   |   2 +-
- drivers/net/wireless/mediatek/mt76/tx.c       |  21 +-
- include/linux/netdevice.h                     |   7 +
- include/linux/soc/mediatek/mtk_wed.h          | 127 +++
- include/net/mac80211.h                        |   5 +
- net/core/dev.c                                |   4 +
- net/mac80211/driver-ops.h                     |  22 +
- net/mac80211/ieee80211_i.h                    |   2 +-
- net/mac80211/iface.c                          |  58 ++
- net/mac80211/trace.h                          |   7 +
- 39 files changed, 2187 insertions(+), 115 deletions(-)
- create mode 100644 drivers/net/ethernet/mediatek/mtk_wed.c
- create mode 100644 drivers/net/ethernet/mediatek/mtk_wed.h
- create mode 100644 drivers/net/ethernet/mediatek/mtk_wed_debugfs.c
- create mode 100644 drivers/net/ethernet/mediatek/mtk_wed_ops.c
- create mode 100644 drivers/net/ethernet/mediatek/mtk_wed_regs.h
- create mode 100644 include/linux/soc/mediatek/mtk_wed.h
-
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 5e1c1506a4c6..ccdc020f72e5 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -7,6 +7,10 @@
+ #include "mt76.h"
+ #include "dma.h"
+ 
++#define Q_READ(_dev, _q, _field)		readl(&(_q)->regs->_field)
++#define Q_WRITE(_dev, _q, _field, _val)		writel(_val, &(_q)->regs->_field)
++
++
+ static struct mt76_txwi_cache *
+ mt76_alloc_txwi(struct mt76_dev *dev)
+ {
+@@ -82,9 +86,9 @@ mt76_free_pending_txwi(struct mt76_dev *dev)
+ static void
+ mt76_dma_sync_idx(struct mt76_dev *dev, struct mt76_queue *q)
+ {
+-	writel(q->desc_dma, &q->regs->desc_base);
+-	writel(q->ndesc, &q->regs->ring_size);
+-	q->head = readl(&q->regs->dma_idx);
++	Q_WRITE(dev, q, desc_base, q->desc_dma);
++	Q_WRITE(dev, q, ring_size, q->ndesc);
++	q->head = Q_READ(dev, q, dma_idx);
+ 	q->tail = q->head;
+ }
+ 
+@@ -100,8 +104,8 @@ mt76_dma_queue_reset(struct mt76_dev *dev, struct mt76_queue *q)
+ 	for (i = 0; i < q->ndesc; i++)
+ 		q->desc[i].ctrl = cpu_to_le32(MT_DMA_CTL_DMA_DONE);
+ 
+-	writel(0, &q->regs->cpu_idx);
+-	writel(0, &q->regs->dma_idx);
++	Q_WRITE(dev, q, cpu_idx, 0);
++	Q_WRITE(dev, q, dma_idx, 0);
+ 	mt76_dma_sync_idx(dev, q);
+ }
+ 
+@@ -224,7 +228,7 @@ static void
+ mt76_dma_kick_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ {
+ 	wmb();
+-	writel(q->head, &q->regs->cpu_idx);
++	Q_WRITE(dev, q, cpu_idx, q->head);
+ }
+ 
+ static void
+@@ -240,7 +244,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, struct mt76_queue *q, bool flush)
+ 	if (flush)
+ 		last = -1;
+ 	else
+-		last = readl(&q->regs->dma_idx);
++		last = Q_READ(dev, q, dma_idx);
+ 
+ 	while (q->queued > 0 && q->tail != last) {
+ 		mt76_dma_tx_cleanup_idx(dev, q, q->tail, &entry);
+@@ -252,7 +256,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, struct mt76_queue *q, bool flush)
+ 		}
+ 
+ 		if (!flush && q->tail == last)
+-			last = readl(&q->regs->dma_idx);
++			last = Q_READ(dev, q, dma_idx);
+ 
+ 	}
+ 	spin_unlock_bh(&q->cleanup_lock);
 -- 
 2.30.1
 
