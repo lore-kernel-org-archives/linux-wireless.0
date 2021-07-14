@@ -2,180 +2,131 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A10A9C12002
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 21:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21DA6C12002
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 22:47:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81DC560C3D
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 21:44:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFDEE613C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 22:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235344AbhGNVrh (ORCPT
+        id S235200AbhGNWu3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jul 2021 17:47:37 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:54606 "EHLO
-        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235751AbhGNVrf (ORCPT
+        Wed, 14 Jul 2021 18:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37166 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230507AbhGNWu3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jul 2021 17:47:35 -0400
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.132])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 9EA4E1C0063
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:41 +0000 (UTC)
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 74AA350006F
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:41 +0000 (UTC)
-Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 1ECC413C2B4;
-        Wed, 14 Jul 2021 14:44:41 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 1ECC413C2B4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1626299081;
-        bh=F30BImeR7ukAL+oTq6u9X/tYKI7TYptYVx6Izz71yMo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FY4jOAmo3CnPMcNSxFz1FUcaQzsWQVLS4z3v3xZyHT3mr4T5V0oYLUKMNAFA7cLhE
-         h0wI6OzN/nYaPLBmVi2bArquEvj1h6MeNnL45qsbvF4h+s4imeco7B8CyFmVfKzqqg
-         aYINQ8q+e80+opdyDebbIEr6TXlyoGr4YjvdegSY=
-From:   greearb@candelatech.com
-To:     linux-wireless@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 4/8] mt76 - mt7915: Add tx mu/su counters to mib
-Date:   Wed, 14 Jul 2021 14:44:28 -0700
-Message-Id: <20210714214432.15162-4-greearb@candelatech.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210714214432.15162-1-greearb@candelatech.com>
-References: <20210714214432.15162-1-greearb@candelatech.com>
+        Wed, 14 Jul 2021 18:50:29 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 551A9C06175F;
+        Wed, 14 Jul 2021 15:47:36 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id w14so5342694edc.8;
+        Wed, 14 Jul 2021 15:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uob5Zh3jNRgLuAYF2DKZCcuatsHYABlaKh+1oYXiYkI=;
+        b=rAkmZn6YBFlnXA01SUW2mp+V1H+5gpr51nSikR8quwD18KOKcSi0+P4MqsuCbneaKG
+         8cgTLJo+5JBKf0B4+AKf21D7YZd0UIbn8s/7k6Irkw7X7nd2QHYsYhQBqc+kmo8NZZqp
+         TacrBUck4BpSvy8dp9tiqq+94KFsP+OeWyatUBfpl4ZEjfeOcxn2Qht92IO+NKepNTv+
+         F7w914SmZgPO87iq0sj4Kvkp4jHujCP1k9txotaLizvqefKTf4cEF5fMB1M2PMPzREY0
+         rLwhXsTXBGjz3paSS/BiLJ3oGqkb70eWuRNBVmmgqnCanlfwHajIzcpOX9fn36dn18CG
+         tcRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uob5Zh3jNRgLuAYF2DKZCcuatsHYABlaKh+1oYXiYkI=;
+        b=TnalzniiTlOcJznul5ao9pbKaxq/3Bx2GouW8wvTYuDbBsq7tXCIqVwk29OTpAn2Mc
+         g6p+WwGeNGZE68Xkxa230CQQy54JiMNLrv1BKPRYYijRa/WdAQXlBn3WD/thtqBd+vXl
+         NrA9BIf4emmfd2uK0HcL4S+YYssNVAHazQV5P6/t9jmizHueF0v/cDgnPzCplkkD/Vva
+         ce2ZD6H8EmGS/VfhSyITZg0ED9aFFb6QKYrgxzEpg66onQ7NoLoj6zxcqeSwBKVZXLY0
+         Vi5u3vqQzSYnu539bGAIVQNpuAvmZJNMNcYcputkQx+im89K0Wy6YkXtR+1vDtyEcUk1
+         WJNg==
+X-Gm-Message-State: AOAM532fqLj//a6x/1+9XdIY6X1nbOO87NGRPm3I00iKZqPwSbFPlXLF
+        b7I07MQlNBcSTkkeV6R/yAfcIQ0zngnlaBtF2/w=
+X-Google-Smtp-Source: ABdhPJy+l2f+5bel/MMnQUAKGmO48ypfU23MAAwxj349SBMRbCGQ6VIuf/sQFdE0/Vr3bjGhzGXotIwlHGZEmUknuVs=
+X-Received: by 2002:a50:9554:: with SMTP id v20mr881082eda.179.1626302854946;
+ Wed, 14 Jul 2021 15:47:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-MDID: 1626299082-0eMNTSyycaVk
+References: <CAFBinCDMPPJ7qW7xTkep1Trg+zP0B9Jxei6sgjqmF4NDA1JAhQ@mail.gmail.com>
+ <3c61fae611294e5098e6e0044a7a4199@realtek.com>
+In-Reply-To: <3c61fae611294e5098e6e0044a7a4199@realtek.com>
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date:   Thu, 15 Jul 2021 00:47:23 +0200
+Message-ID: <CAFBinCA4mDrBCjcNazW_mUW9NkC9sq-AULFJEh7z3Aj5oCyrxQ@mail.gmail.com>
+Subject: Re: rtw88: rtw_{read,write}_rf locking questions
+To:     Pkshih <pkshih@realtek.com>
+Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Neo Jou <neojou@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+Hello Ping-Ke,
 
-These counters are clear-on-read, so we need to accumulate
-them in the update_stats poll logic, and read the accumulated
-values instead of directly doing register reads when reporting
-to debugfs and ethtool stats.
+On Wed, Jul 14, 2021 at 3:48 AM Pkshih <pkshih@realtek.com> wrote:
+>
+>
+> > -----Original Message-----
+> > From: Martin Blumenstingl [mailto:martin.blumenstingl@googlemail.com]
+> > Sent: Wednesday, July 14, 2021 12:51 AM
+> > To: Yan-Hsuan Chuang; Pkshih; Tzu-En Huang
+> > Cc: linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; Neo Jou;
+> > Jernej Skrabec
+> > Subject: rtw88: rtw_{read,write}_rf locking questions
+> >
+> > Hello rtw88 maintainers and contributors,
+> >
+> > there is an ongoing effort where Jernej and I are working on adding
+> > SDIO support to the rtw88 driver.
+> > The hardware we use at the moment is RTL8822BS and RTL8822CS.
+> > Work-in-progress code can be found in Jernej's repo (note: this may be
+> > rebased): [0]
+>
+> Thanks for your nice work!
+A quick update: we got scanning and authentication to work.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 33 ++++++++-----------
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 13 +++++++-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  4 +++
- 3 files changed, 29 insertions(+), 21 deletions(-)
+> > We are at a point where we can communicate with the SDIO card and
+> > successfully upload the firmware to it.
+> > Right now I have two questions about the locking in
+> > rtw_{read,write}_rf from hci.h:
+> > 1) A spinlock is used to protect RF register access. This is
+> > problematic for SDIO, more information below. Would you accept a patch
+> > to convert this into a mutex? I don't have any rtw88 PCIe card for
+> > testing any regressions there myself.
+>
+> I think it's okay.
+Great, thanks for confirming this!
+I'll send a series of patches with locking preparations (patches which
+add SDIO support will come later as we're still trying to narrow down
+a few issues).
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 61a57c86cbdb..9dce4a0e7a5c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -152,6 +152,7 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
- 		"BW20", "BW40", "BW80", "BW160"
- 	};
- 	int cnt;
-+	struct mib_stats *mib = &phy->mib;
- 
- 	if (!phy)
- 		return;
-@@ -187,15 +188,13 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
- 		   FIELD_GET(MT_ETBF_TX_FB_TRI, cnt));
- 
- 	/* Tx SU & MU counters */
--	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
--	seq_printf(s, "Tx multi-user Beamforming counts: %ld\n",
--		   FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt));
--	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
--	seq_printf(s, "Tx multi-user MPDU counts: %d\n", cnt);
--	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
--	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n", cnt);
--	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
--	seq_printf(s, "Tx single-user successful MPDU counts: %d\n", cnt);
-+	seq_printf(s, "Tx multi-user Beamforming counts: %d\n",
-+		   mib->tx_bf_cnt);
-+	seq_printf(s, "Tx multi-user MPDU counts: %d\n", mib->tx_mu_mpdu_cnt);
-+	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n",
-+		   mib->tx_mu_successful_mpdu_cnt);
-+	seq_printf(s, "Tx single-user successful MPDU counts: %d\n",
-+		   mib->tx_su_successful_mpdu_cnt);
- 
- 	seq_puts(s, "\n");
- }
-@@ -488,6 +487,7 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
- 	struct mt7915_sta *msta;
- 	struct mt7915_sta_stats *mstats;
- 	bool found_sta = false;
-+	struct mib_stats *mib = &phy->mib;
- 
- 	/* See mt7915_ampdu_stat_read_phy, etc */
- 	bool ext_phy = phy != &dev->phy;
-@@ -527,17 +527,10 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
- 	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
- 
- 	/* Tx SU & MU counters */
--	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
--	data[ei++] = FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
--
--	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
--	data[ei++] = cnt;
--
--	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
--	data[ei++] = cnt; /* MU MPDU SUccessful */
--
--	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
--	data[ei++] = cnt; /* SU MPDU successful */
-+	data[ei++] = mib->tx_bf_cnt;
-+	data[ei++] = mib->tx_mu_mpdu_cnt;
-+	data[ei++] = mib->tx_mu_successful_mpdu_cnt;
-+	data[ei++] = mib->tx_su_successful_mpdu_cnt;
- 
- 	/* TODO:  External phy too?? */
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 585f67daec8e..53e8347ef75b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1880,10 +1880,21 @@ mt7915_mac_update_stats(struct mt7915_phy *phy)
- 	struct mt7915_dev *dev = phy->dev;
- 	struct mib_stats *mib = &phy->mib;
- 	bool ext_phy = phy != &dev->phy;
--	int i, aggr0, aggr1;
-+	int i, aggr0, aggr1, cnt;
- 
- 	mib->fcs_err_cnt += mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
- 					   MT_MIB_SDR3_FCS_ERR_MASK);
-+	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
-+	mib->tx_bf_cnt += FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
-+	mib->tx_mu_mpdu_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
-+	mib->tx_mu_successful_mpdu_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
-+	mib->tx_su_successful_mpdu_cnt += cnt;
- 
- 	aggr0 = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
- 	for (i = 0, aggr1 = aggr0 + 4; i < 4; i++) {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index ff944d1cf527..c5d0f2331b6f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -116,6 +116,10 @@ struct mib_stats {
- 	u32 rts_cnt;
- 	u32 rts_retries_cnt;
- 	u32 ba_miss_cnt;
-+	u32 tx_bf_cnt;
-+	u32 tx_mu_mpdu_cnt;
-+	u32 tx_mu_successful_mpdu_cnt;
-+	u32 tx_su_successful_mpdu_cnt;
- 	/* Add more stats here, updated from mac_update_stats */
- };
- 
--- 
-2.20.1
+> > 2) I would like to understand why the RF register access needs to be
+> > protected by a lock. From what I can tell RF register access doesn't
+> > seem to be used from IRQ handlers.
+>
+> The use of lock isn't because we want to access the RF register in IRQ
+> handlers. The reasons are
+> 1. The ieee80211 iterative vif function we use is atomic type, so we can't
+>    use mutex.
+>    Do you change the type of iterative function?
+yes, that is part of the "locking preparation" patches I mentioned above
 
+> 2. RF register access isn't an atomic. If more than one threads access the
+>    register at the same time, the value will be wrong.
+Understood, thanks for pointing this out.
+
+
+Best regards,
+Martin
