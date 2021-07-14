@@ -7,150 +7,175 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22449C47E4D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A10A9C12002
 	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 21:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0463860C3D
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 21:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81DC560C3D
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jul 2021 21:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235972AbhGNVrh (ORCPT
+        id S235344AbhGNVrh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 14 Jul 2021 17:47:37 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:34712 "EHLO
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:54606 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235344AbhGNVrf (ORCPT
+        by vger.kernel.org with ESMTP id S235751AbhGNVrf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 14 Jul 2021 17:47:35 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.177])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 67AF3A006D
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:42 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.132])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 9EA4E1C0063
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:41 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 23A1068007F
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:42 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 74AA350006F
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2021 21:44:41 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id CEF5613C2BB;
+        by mail3.candelatech.com (Postfix) with ESMTP id 1ECC413C2B4;
         Wed, 14 Jul 2021 14:44:41 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com CEF5613C2BB
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 1ECC413C2B4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1626299081;
-        bh=TkF2zHCIj8ioMNhOnPEoWBKHi7KvrJ1pDfD/lHlEYgw=;
+        bh=F30BImeR7ukAL+oTq6u9X/tYKI7TYptYVx6Izz71yMo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LQqZ6GVDA5cw94DZjNaxETwONnhR5DuyVYmxVzUdHd6YKDoESo6/1dRKwkoIdwBT/
-         2jk710K/dkzV+X0/l2+6IOl8dg4acyZoMHXIUVW1A1vi9LMkvsdIE/0XW8AezLFMJH
-         cg/c9R8qlHZLp0Cw+mWQsczXQ69sC80FSv49PWvA=
+        b=FY4jOAmo3CnPMcNSxFz1FUcaQzsWQVLS4z3v3xZyHT3mr4T5V0oYLUKMNAFA7cLhE
+         h0wI6OzN/nYaPLBmVi2bArquEvj1h6MeNnL45qsbvF4h+s4imeco7B8CyFmVfKzqqg
+         aYINQ8q+e80+opdyDebbIEr6TXlyoGr4YjvdegSY=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 8/8] mt76 - mt7915:  Add mib counters to ethtool stats.
-Date:   Wed, 14 Jul 2021 14:44:32 -0700
-Message-Id: <20210714214432.15162-8-greearb@candelatech.com>
+Subject: [PATCH v2 4/8] mt76 - mt7915: Add tx mu/su counters to mib
+Date:   Wed, 14 Jul 2021 14:44:28 -0700
+Message-Id: <20210714214432.15162-4-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210714214432.15162-1-greearb@candelatech.com>
 References: <20210714214432.15162-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1626299082-hfptsgmxxgut
+X-MDID: 1626299082-0eMNTSyycaVk
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This adds the new mib counters from last patch into ethtool
-stats.
+These counters are clear-on-read, so we need to accumulate
+them in the update_stats poll logic, and read the accumulated
+values instead of directly doing register reads when reporting
+to debugfs and ethtool stats.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 50 ++++++++++++++++++-
- 1 file changed, 48 insertions(+), 2 deletions(-)
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 33 ++++++++-----------
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 13 +++++++-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  4 +++
+ 3 files changed, 29 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 1d2b7d116659..d98c6425108b 100644
+index 61a57c86cbdb..9dce4a0e7a5c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -381,6 +381,14 @@ void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- #endif
+@@ -152,6 +152,7 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
+ 		"BW20", "BW40", "BW80", "BW160"
+ 	};
+ 	int cnt;
++	struct mib_stats *mib = &phy->mib;
  
- static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_ampdu_cnt",
-+	"tx_stop_q_empty_cnt",
-+	"tx_mpdu_attempts",
-+	"tx_mpdu_success",
-+	"tx_rwp_fail_cnt",
-+	"tx_rwp_need_cnt",
-+	"tx_pkt_ebf_cnt",
-+	"tx_pkt_ibf_cnt",
- 	"tx_ampdu_len:0-1",
- 	"tx_ampdu_len:2-10",
- 	"tx_ampdu_len:11-19",
-@@ -420,6 +428,22 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	"tx_msdu_pack_6",
- 	"tx_msdu_pack_7",
- 	"tx_msdu_pack_8",
-+
-+	/* rx counters */
-+	"rx_fifo_full_cnt",
-+	"rx_mpdu_cnt",
-+	"channel_idle_cnt",
-+	"rx_vector_mismatch_cnt",
-+	"rx_delimiter_fail_cnt",
-+	"rx_len_mismatch_cnt",
-+	"rx_ampdu_cnt",
-+	"rx_ampdu_bytes_cnt",
-+	"rx_ampdu_valid_subframe_cnt",
-+	"rx_ampdu_valid_subframe_b_cnt",
-+	"rx_pfdrop_cnt",
-+	"rx_vec_queue_overflow_drop_cnt",
-+	"rx_ba_cnt",
-+	
- 	/* per vif counters */
- 	"v_tx_mpdu_attempts",
- 	"v_tx_mpdu_fail",
-@@ -493,6 +517,15 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
  	if (!phy)
  		return;
+@@ -187,15 +188,13 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
+ 		   FIELD_GET(MT_ETBF_TX_FB_TRI, cnt));
  
-+	data[ei++] = mib->tx_ampdu_cnt;
-+	data[ei++] = mib->tx_stop_q_empty_cnt;
-+	data[ei++] = mib->tx_mpdu_attempts_cnt;
-+	data[ei++] = mib->tx_mpdu_success_cnt;
-+	data[ei++] = mib->tx_rwp_fail_cnt;
-+	data[ei++] = mib->tx_rwp_need_cnt;
-+	data[ei++] = mib->tx_pkt_ebf_cnt;
-+	data[ei++] = mib->tx_pkt_ibf_cnt;
-+
- 	/* Tx ampdu stat */
- 	n = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
- 	for (i = 0; i < 15 /*ARRAY_SIZE(bound)*/; i++)
-@@ -524,12 +557,25 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
- 	data[ei++] = mib->tx_mu_successful_mpdu_cnt;
- 	data[ei++] = mib->tx_su_successful_mpdu_cnt;
+ 	/* Tx SU & MU counters */
+-	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
+-	seq_printf(s, "Tx multi-user Beamforming counts: %ld\n",
+-		   FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt));
+-	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
+-	seq_printf(s, "Tx multi-user MPDU counts: %d\n", cnt);
+-	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
+-	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n", cnt);
+-	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
+-	seq_printf(s, "Tx single-user successful MPDU counts: %d\n", cnt);
++	seq_printf(s, "Tx multi-user Beamforming counts: %d\n",
++		   mib->tx_bf_cnt);
++	seq_printf(s, "Tx multi-user MPDU counts: %d\n", mib->tx_mu_mpdu_cnt);
++	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n",
++		   mib->tx_mu_successful_mpdu_cnt);
++	seq_printf(s, "Tx single-user successful MPDU counts: %d\n",
++		   mib->tx_su_successful_mpdu_cnt);
  
--	/* TODO:  External phy too?? */
+ 	seq_puts(s, "\n");
+ }
+@@ -488,6 +487,7 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	struct mt7915_sta *msta;
+ 	struct mt7915_sta_stats *mstats;
+ 	bool found_sta = false;
++	struct mib_stats *mib = &phy->mib;
+ 
+ 	/* See mt7915_ampdu_stat_read_phy, etc */
+ 	bool ext_phy = phy != &dev->phy;
+@@ -527,17 +527,10 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
+ 
+ 	/* Tx SU & MU counters */
+-	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
+-	data[ei++] = FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
 -
- 	/* Tx amsdu info (pack-count histogram) */
- 	for (i = 0; i < 8; i++)
- 		data[ei++] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
+-	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
+-	data[ei++] = cnt;
+-
+-	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
+-	data[ei++] = cnt; /* MU MPDU SUccessful */
+-
+-	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
+-	data[ei++] = cnt; /* SU MPDU successful */
++	data[ei++] = mib->tx_bf_cnt;
++	data[ei++] = mib->tx_mu_mpdu_cnt;
++	data[ei++] = mib->tx_mu_successful_mpdu_cnt;
++	data[ei++] = mib->tx_su_successful_mpdu_cnt;
  
-+	/* rx counters */
-+	data[ei++] = mib->rx_fifo_full_cnt;
-+	data[ei++] = mib->rx_mpdu_cnt;
-+	data[ei++] = mib->channel_idle_cnt;
-+	data[ei++] = mib->rx_vector_mismatch_cnt;
-+	data[ei++] = mib->rx_delimiter_fail_cnt;
-+	data[ei++] = mib->rx_len_mismatch_cnt;
-+	data[ei++] = mib->rx_ampdu_cnt;
-+	data[ei++] = mib->rx_ampdu_bytes_cnt;
-+	data[ei++] = mib->rx_ampdu_valid_subframe_cnt;
-+	data[ei++] = mib->rx_ampdu_valid_subframe_bytes_cnt;
-+	data[ei++] = mib->rx_pfdrop_cnt;
-+	data[ei++] = mib->rx_vec_queue_overflow_drop_cnt;
-+	data[ei++] = mib->rx_ba_cnt;
+ 	/* TODO:  External phy too?? */
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 585f67daec8e..53e8347ef75b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1880,10 +1880,21 @@ mt7915_mac_update_stats(struct mt7915_phy *phy)
+ 	struct mt7915_dev *dev = phy->dev;
+ 	struct mib_stats *mib = &phy->mib;
+ 	bool ext_phy = phy != &dev->phy;
+-	int i, aggr0, aggr1;
++	int i, aggr0, aggr1, cnt;
+ 
+ 	mib->fcs_err_cnt += mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
+ 					   MT_MIB_SDR3_FCS_ERR_MASK);
++	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
++	mib->tx_bf_cnt += FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
 +
- 	/* Add values for all stations owned by this vif */
++	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
++	mib->tx_mu_mpdu_cnt += cnt;
++
++	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
++	mib->tx_mu_successful_mpdu_cnt += cnt;
++
++	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
++	mib->tx_su_successful_mpdu_cnt += cnt;
  
- 	/* See mt76_get_min_avr_rssi for example of how to find all sta
+ 	aggr0 = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
+ 	for (i = 0, aggr1 = aggr0 + 4; i < 4; i++) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index ff944d1cf527..c5d0f2331b6f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -116,6 +116,10 @@ struct mib_stats {
+ 	u32 rts_cnt;
+ 	u32 rts_retries_cnt;
+ 	u32 ba_miss_cnt;
++	u32 tx_bf_cnt;
++	u32 tx_mu_mpdu_cnt;
++	u32 tx_mu_successful_mpdu_cnt;
++	u32 tx_su_successful_mpdu_cnt;
+ 	/* Add more stats here, updated from mac_update_stats */
+ };
+ 
 -- 
 2.20.1
 
