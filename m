@@ -2,103 +2,154 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 499B2C636C9
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 20:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C61EC636C8
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 21:36:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B6EE613BB
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 20:03:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B67B61374
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 21:36:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346700AbhGOUGk (ORCPT
+        id S230339AbhGOVjY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Jul 2021 16:06:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44654 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241055AbhGOUGc (ORCPT
+        Thu, 15 Jul 2021 17:39:24 -0400
+Received: from mail.netfilter.org ([217.70.188.207]:43466 "EHLO
+        mail.netfilter.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229794AbhGOVjX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jul 2021 16:06:32 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D4EC08EE76
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2021 12:54:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=OK+MoTyZsq17izadFHbsWJ086j0/zznA0Pv7m3goF2U=; b=n0LTqFGyldprZYDzp4AYeyG04B
-        SgErPCYkoq5smhXDZz0vkJuVUUkZoKs/JO3gsHpEfGKFt4yyLYfnTt+Xxh1b1ct4aOay6Oaey/t6W
-        3DlK4JaU2tiNW7KG4gl43k2Gst+HDgprPCHzgXYXGz0XnCzfGHDjyb2OmHI0GL2J8cPY=;
-Received: from p54ae93f7.dip0.t-ipconnect.de ([84.174.147.247] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1m47Rh-00046W-4e; Thu, 15 Jul 2021 21:54:57 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     Sean Wang <sean.wang@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v4 1/3] mt76: add mt76_default_basic_rate more devices can rely on
-Date:   Thu, 15 Jul 2021 21:54:52 +0200
-Message-Id: <20210715195454.12370-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.30.1
+        Thu, 15 Jul 2021 17:39:23 -0400
+Received: from netfilter.org (unknown [90.77.255.23])
+        by mail.netfilter.org (Postfix) with ESMTPSA id 2584664228;
+        Thu, 15 Jul 2021 23:36:09 +0200 (CEST)
+Date:   Thu, 15 Jul 2021 23:36:26 +0200
+From:   Pablo Neira Ayuso <pablo@netfilter.org>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        ryder.lee@mediatek.com
+Subject: Re: [RFC 3/7] net: ethernet: mtk_eth_soc: implement flow offloading
+ to WED devices
+Message-ID: <20210715213626.GA19271@salvia>
+References: <20210713160745.59707-1-nbd@nbd.name>
+ <20210713160745.59707-4-nbd@nbd.name>
+ <20210713185641.GB26070@salvia>
+ <ceee6c30-adc1-3a79-31c3-983fe848699c@nbd.name>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <ceee6c30-adc1-3a79-31c3-983fe848699c@nbd.name>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+On Wed, Jul 14, 2021 at 10:26:08AM +0200, Felix Fietkau wrote:
+> On 2021-07-13 20:56, Pablo Neira Ayuso wrote:
+[...]
+> >> --- a/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
+> >> +++ b/drivers/net/ethernet/mediatek/mtk_ppe_offload.c
+> >> @@ -10,6 +10,7 @@
+> >>  #include <net/pkt_cls.h>
+> >>  #include <net/dsa.h>
+> >>  #include "mtk_eth_soc.h"
+> >> +#include "mtk_wed.h"
+> >>  
+> >>  struct mtk_flow_data {
+> >>  	struct ethhdr eth;
+> >> @@ -39,6 +40,7 @@ struct mtk_flow_entry {
+> >>  	struct rhash_head node;
+> >>  	unsigned long cookie;
+> >>  	u16 hash;
+> >> +	s8 wed_index;
+> >>  };
+> >>  
+> >>  static const struct rhashtable_params mtk_flow_ht_params = {
+> >> @@ -127,35 +129,38 @@ mtk_flow_mangle_ipv4(const struct flow_action_entry *act,
+> >>  }
+> >>  
+> >>  static int
+> >> -mtk_flow_get_dsa_port(struct net_device **dev)
+> >> +mtk_flow_set_output_device(struct mtk_eth *eth, struct mtk_foe_entry *foe,
+> >> +			   struct net_device *dev, const u8 *dest_mac,
+> >> +			   int *wed_index)
+> >>  {
+> >> -#if IS_ENABLED(CONFIG_NET_DSA)
+> >> -	struct dsa_port *dp;
+> >> -
+> >> -	dp = dsa_port_from_netdev(*dev);
+> >> -	if (IS_ERR(dp))
+> >> -		return -ENODEV;
+> >> -
+> >> -	if (dp->cpu_dp->tag_ops->proto != DSA_TAG_PROTO_MTK)
+> >> -		return -ENODEV;
+> >> +	struct net_device_path_ctx ctx = {
+> >> +		.dev    = dev,
+> >> +		.daddr  = dest_mac,
+> >> +	};
+> >> +	struct net_device_path path = {};
+> >> +	int pse_port;
+> >>  
+> >> -	*dev = dp->cpu_dp->master;
+> >> +	if (!dev->netdev_ops->ndo_fill_forward_path ||
+> >> +	    dev->netdev_ops->ndo_fill_forward_path(&ctx, &path) < 0)
+> >> +		path.type = DEV_PATH_ETHERNET;
+> > 
+> > Maybe expose this through flow offload API so there is no need to call
+> > ndo_fill_forward_path again from the driver?
+>
+> Can you give me a pseudo-code example? I'm not sure how you want it to
+> be exposed through the flow offload API.
 
-add mt76_default_basic_rate to mt76 core more devices can rely on
-to send frames which require the rate in the basic rates.
+in a few steps:
 
-Suggested-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 14 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
- 2 files changed, 15 insertions(+)
+1) Extend nft_dev_path_info() to deal with DEV_PATH_WDMA, it will
+   just actually fetch a pointer to structure that is allocated
+   by the driver.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index ee3a5b8d62d2..7403a012ceed 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -1351,3 +1351,17 @@ mt76_init_queue(struct mt76_dev *dev, int qid, int idx, int n_desc,
- 	return hwq;
- }
- EXPORT_SYMBOL_GPL(mt76_init_queue);
-+
-+u16 mt76_default_basic_rate(struct mt76_phy *phy, struct ieee80211_vif *vif)
-+{
-+	int i = ffs(vif->bss_conf.basic_rates) - 1, offset = 0;
-+	struct ieee80211_rate *rate;
-+
-+	if (phy->chandef.chan->band == NL80211_BAND_5GHZ)
-+		offset = 4;
-+
-+	rate = &mt76_rates[offset + i];
-+
-+	return rate->hw_value;
-+}
-+EXPORT_SYMBOL_GPL(mt76_default_basic_rate);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 0516d3afe262..bf36f9227713 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -891,6 +891,7 @@ int mt76_get_of_eeprom(struct mt76_dev *dev, void *data, int offset, int len);
- struct mt76_queue *
- mt76_init_queue(struct mt76_dev *dev, int qid, int idx, int n_desc,
- 		int ring_base);
-+u16 mt76_default_basic_rate(struct mt76_phy *phy, struct ieee80211_vif *vif);
- static inline int mt76_init_tx_queue(struct mt76_phy *phy, int qid, int idx,
- 				     int n_desc, int ring_base)
- {
--- 
-2.30.1
+- Update the net_device_path structure with this layout:
 
+        struct flow_action_wdma {
+                enum wdma_type type;    // MTK_WDMA goes here
+                union {
+                        struct {
+                                ...;
+                        } mtk;
+                };
+        } wdma;
+
+Add:
+        struct flow_action_wdma         *wdma;
+
+to net_device_path.
+
+2) Pass on this pointer to structure to the nf_flow_route
+   wheelbarrow.
+
+3) Store this information in the struct flow_offload_tuple,
+   in a new struct flow_offload_hw *field to store all hardware
+   offload specific information (not needed by software path). There
+   is already hw_outdev that can be placed there.
+
+4) Add a FLOW_ACTION_WDMA action to the flow offload API to
+   pass on the flow_action_wdma structure.
+
+It's a bit of work the first time to accomodate the requirements of
+new API, but then all drivers will benefit from this.
+
+It's also a bit of layering, but with more drivers in the tree, this
+API can be simplified incrementally.
+
+I can take a stab at it and send you a patch.
+
+> To me it seems easier and cleaner to just have a single
+> ndo_fill_forward_path call for the final output device to check the
+> device types that don't have any corresponding sw offload.
+
+It's simpler yes, but this results in two calls for
+ndo_fill_forward_path, one from the core and another from the driver.
+I think it's better there's a single point to call to
+ndo_fill_forward_path for consolidation.
+
+My proposal requires a bit more plumbing, but all drivers will
+get the information that represents the offload in the same way.
