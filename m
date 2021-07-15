@@ -2,95 +2,116 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41843C636CA
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 18:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAE8C636C9
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 20:03:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E459613DC
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 18:58:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFC7C613BB
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jul 2021 20:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242241AbhGOTBu (ORCPT
+        id S1346814AbhGOUGh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Jul 2021 15:01:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59432 "EHLO
+        Thu, 15 Jul 2021 16:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241874AbhGOTA5 (ORCPT
+        with ESMTP id S1346701AbhGOUGd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jul 2021 15:00:57 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B95C06175F
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2021 11:57:08 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id cu14so4773619pjb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2021 11:57:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=LpqK/+JnT/yu+43Wp/CTAn4yU0zaOH0GM3Vf86wiOOg=;
-        b=B6T3ffeP6Gfm1546QQw/hH4JWosP8ijd1SUp9Gzpol1VC9nyyxAzy5gJEIX9GB+L53
-         9j9szL8+00cJbXC4ibOub3nxCUd7MSJ0AYVRVIjLa2c8iCF7K3PAH99bLMJmd/YALcFA
-         JSiP0nMuKurGshm7n60hzbG934RLGoH6DzOCE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=LpqK/+JnT/yu+43Wp/CTAn4yU0zaOH0GM3Vf86wiOOg=;
-        b=VOE+Jg4OGP262huMo9KyqnzD7z9fmp+gxpelhpmJddYPbJHqLlcKEtiiUs5KPOSDJL
-         540faQDy8uxCiDenUyhjiFI20z6440v+JPBN56F8AoemaRtGnu3yawgvRtoy7ao0adhP
-         kT5PY61IY2Zepz0jqUjnqO74OJVrSTIZ4uqcL9Bko4Z1TeQ5w0cXWZZLWcJ/MQ8ZE1KN
-         K+OxgbP+4jsPBovvi8doBFGfof8rSTO0luSjJrjjt+235FxX9zEW0YU93lnklV9yXcd2
-         pYfa8rMezX196Cs5YItTiKY5Qd+/poPMCIu+zrM0gL06GFNRIIz1d+FwLJqKKNR+lQit
-         aobw==
-X-Gm-Message-State: AOAM533nEW2tRwm1ZR/TISgwLhVqlpaXYvu9OvZoOLEEPTvu1RBsUST5
-        BbV9OiarFAkVAjbeMFfb1hNLGg==
-X-Google-Smtp-Source: ABdhPJxA6CkuT2I4U6XIvHhxltf1pE+P+YvTq2Efk8xWVgyogQShVA1GFQfapGoXHqoSxo9UN4Dnbw==
-X-Received: by 2002:a17:902:6bc7:b029:129:20c4:1c33 with SMTP id m7-20020a1709026bc7b029012920c41c33mr4671212plt.52.1626375427690;
-        Thu, 15 Jul 2021 11:57:07 -0700 (PDT)
-Received: from google.com ([2620:15c:202:201:3f42:6b4d:93b8:910b])
-        by smtp.gmail.com with ESMTPSA id w69sm7501651pfc.58.2021.07.15.11.57.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Jul 2021 11:57:06 -0700 (PDT)
-Date:   Thu, 15 Jul 2021 11:57:04 -0700
-From:   Brian Norris <briannorris@chromium.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/24] rtw89: add core and trx files
-Message-ID: <YPCFABiygQbiMqcB@google.com>
-References: <20210618064625.14131-1-pkshih@realtek.com>
- <20210618064625.14131-4-pkshih@realtek.com>
+        Thu, 15 Jul 2021 16:06:33 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8AE8C031301
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2021 12:54:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=iudH1YAT7f0+lOEkPWKwG3ic/2yRE6NbKK1GPmo+Ov8=; b=uTSlMxU2hkRhrMSwI0u2H3FzZb
+        ZOt4PWZScQNV3HNaWputLmRFKgyKHK/5AtcXXRnlQ/hQsO7fF0Xlrq0myo6Jp9zFRUyMe7xP2ru7A
+        ycHcl7C/YMRbQJzn9KYVRzaWBmh9E7+QljnkQKOyZc6O0G8M8wg6bij12MriF8pladcQ=;
+Received: from p54ae93f7.dip0.t-ipconnect.de ([84.174.147.247] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1m47Rh-00046W-Jd; Thu, 15 Jul 2021 21:54:57 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     Sean Wang <sean.wang@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v4 3/3] mt76: mt7915: fix mgmt frame using unexpected bitrate
+Date:   Thu, 15 Jul 2021 21:54:54 +0200
+Message-Id: <20210715195454.12370-3-nbd@nbd.name>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210715195454.12370-1-nbd@nbd.name>
+References: <20210715195454.12370-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210618064625.14131-4-pkshih@realtek.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Sean Wang <sean.wang@mediatek.com>
 
-On Fri, Jun 18, 2021 at 02:46:04PM +0800, Ping-Ke Shih wrote:
-> --- /dev/null
-> +++ b/drivers/net/wireless/realtek/rtw89/core.c
-> @@ -0,0 +1,2359 @@
-> +static void rtw89_traffic_stats_calc(struct rtw89_dev *rtwdev,
-> +				     struct rtw89_traffic_stats *stats)
-> +{
-...
-> +	stats->tx_avg_len = (u32)(stats->tx_cnt ? stats->tx_unicast / stats->tx_cnt : 0);
-> +	stats->rx_avg_len = (u32)(stats->rx_cnt ? stats->rx_unicast / stats->rx_cnt : 0);
+Fix the current driver mgmt frame is not respecting the basic rates field
+provided by the AP and then unconditionally is using the lowest (1 or 6
+Mbps) rate.
 
-You're doing 64-bit division which isn't supported on all architectures.
-You need a do_div()-based solution here, like:
+For example, if the AP only supported basic rate {24, 36, 48, 54} Mbps,
+mt7921 cannot send mgmt frame with the rate not in the group. So,
+instead, we pick up the lowest basic rate the AP can support to send.
 
-	stats->tx_avg_len = stats->tx_cnt
-			    ? DIV_ROUND_DOWN_ULL(stats->tx_unicast, stats->tx_cnt)
-			    : 0;
-	stats->rx_avg_len = stats->rx_cnt
-			    ? DIV_ROUND_DOWN_ULL(stats->rx_unicast, stats->rx_cnt)
-			    : 0;
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
+Suggested-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+v4: do not rely on rate->hw_value having the proper shift for phy mode
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c    | 10 +++++-----
+ drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h |  2 --
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-Brian
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index f1574538315d..b5a3fd96360c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1055,15 +1055,15 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
+ 		mt7915_mac_write_txwi_80211(dev, txwi, skb, key);
+ 
+ 	if (txwi[2] & cpu_to_le32(MT_TXD2_FIX_RATE)) {
+-		u16 rate;
++		u16 rate, mode;
+ 
+ 		/* hardware won't add HTC for mgmt/ctrl frame */
+ 		txwi[2] |= cpu_to_le32(MT_TXD2_HTC_VLD);
+ 
+-		if (mphy->chandef.chan->band == NL80211_BAND_5GHZ)
+-			rate = MT7915_5G_RATE_DEFAULT;
+-		else
+-			rate = MT7915_2G_RATE_DEFAULT;
++		rate = mt76_default_basic_rate(mphy, vif);
++		mode = rate >> 8;
++		rate &= GENMASK(7, 0);
++		rate |= FIELD_PREP(MT_TX_RATE_MODE, mode);
+ 
+ 		val = MT_TXD6_FIXED_BW |
+ 		      FIELD_PREP(MT_TXD6_TX_RATE, rate);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 33be449309e0..a6b5b300d415 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -36,8 +36,6 @@
+ 
+ #define MT7915_CFEND_RATE_DEFAULT	0x49	/* OFDM 24M */
+ #define MT7915_CFEND_RATE_11B		0x03	/* 11B LP, 11M */
+-#define MT7915_5G_RATE_DEFAULT		0x4b	/* OFDM 6M */
+-#define MT7915_2G_RATE_DEFAULT		0x0	/* CCK 1M */
+ 
+ #define MT7915_THERMAL_THROTTLE_MAX	100
+ 
+-- 
+2.30.1
+
