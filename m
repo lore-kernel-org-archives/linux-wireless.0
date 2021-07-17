@@ -2,61 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1236CC636CD
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB992C636C9
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD4BC61164
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9B1D60E0B
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235663AbhGQUoW (ORCPT
+        id S235678AbhGQUo3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Jul 2021 16:44:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
+        Sat, 17 Jul 2021 16:44:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235549AbhGQUoL (ORCPT
+        with ESMTP id S235603AbhGQUoM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Jul 2021 16:44:11 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8005C061762;
-        Sat, 17 Jul 2021 13:41:12 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id l6so7879130wmq.0;
-        Sat, 17 Jul 2021 13:41:12 -0700 (PDT)
+        Sat, 17 Jul 2021 16:44:12 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28AF2C061764;
+        Sat, 17 Jul 2021 13:41:14 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id u1so16232326wrs.1;
+        Sat, 17 Jul 2021 13:41:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vG0sIpzBhVt6BJJBVFqkVBxLXJrhZTlu49Bhd8MJC9A=;
-        b=Wnq6ro1U/OswcapqBzqmYALTMTKdw6WDZvEECOJkaSDjpRjhdnJP+K6G3a3oTgOM+k
-         0ggOU8DnTqCrOJSUShMhlF5RJ+yI7XVIS+R+TzPADvWeJIPghPUcJd1B0BXm18wvDRqD
-         yYBZxHCOHvF4MaDwaa6sCpCudz0FQxupbVoxmk49WA7ct0wlTvik0bvg9i1/LhytnRVP
-         EiGh5fy1EHu13SbK8XXK8hcww6Junmcdvt9Q4YbyBtro6MJEU0tq9JutvIW45DiZ9KZZ
-         wyH3KS3D4/B8Sn/iXfCPhsBmW9YohXoSjRMwIpYXTY6Q6YdL/8rNJGNQdR0hqzH7DVVq
-         OeQw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=tPr7LAmpU6jyv73PvT3aqNoJ9gxeSNay3lgZkX9Owew=;
+        b=oqR3B2p7Dz3pZE49V3HySWH7R69B2m6be3Y7fHHrUoKKK1ns82+VxxGcuyzN3eFi6Z
+         tZ+ZJED62OWpAo/Tc3p6XtOMFc7Yf25JtDE4E7kqBLu4/HZDCJD3dwtUkRwaG4odV3pu
+         53o3Gfc7kUeXov30zckdSSpWAdJ8meNFjKVH1sDaPg988qtQc9X41w427u6fNp/RDQZE
+         9w3h2Pyv2huCn6kkkTREpygwfN3lrMsFEiyzeX1eRydSWqZa//njqdZlXThLl7u2Zq+A
+         GJumDOyDl240Ps8J23hFyi3qN58mMLVYAN7ipOaUX5siIJ/lMDeY6xclqPm/ocl+WcwD
+         rfgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vG0sIpzBhVt6BJJBVFqkVBxLXJrhZTlu49Bhd8MJC9A=;
-        b=AZ+JITg9ihBlcMj90EzOXv6I2yLZGQkl/R6HggN/Yvjbr2Vv2g0GZMZA1BsxaOBihc
-         zi8R3E3vGugUYvcfVz6ZS6nJ0m4G+ShfX+oMcFgVuz5hqx4MCwwhPBMg837toXxza9LS
-         OrKhW9vY3flKmyoz48HMGKzAE0p08K34gK8syseCmuCfUcoW1K0qZfzhuiBXVYeU/wmq
-         Mc8B4Q2NAUmzAMLgw7rnIstzCTT0Rgchuh4axC4Cf+m8f/925Fcpr9A3Ukl3R5Sxsldy
-         sBNPBCqVueYSJP+TGiSdakj3RwQGPsP31n17BDawVdiaKi0gwEi2R7UNKARPpkWcam7n
-         vctg==
-X-Gm-Message-State: AOAM53183/uiyR5sQpSUeNyNW8Q3OjYhgD4pcNU5gG/lZBZOTUaVJqwh
-        UfGm0DycmnaoeqpeEp0gPoNbRw7UUbQ=
-X-Google-Smtp-Source: ABdhPJxSwo07uM+I2ABeTgC9BqzvwaJO2QywvsOnBJomSwkoIjSWMfav00r8wbzEtfYKrtvH1uBNbg==
-X-Received: by 2002:a7b:c1cd:: with SMTP id a13mr23607010wmj.75.1626554470334;
-        Sat, 17 Jul 2021 13:41:10 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=tPr7LAmpU6jyv73PvT3aqNoJ9gxeSNay3lgZkX9Owew=;
+        b=JCvifR9yMc6r7uSP2cIQAPeSHpcDJg5Mf/wzPyB/Syh/De12k+cIHma07No4T2Wrqj
+         +x0uyWHnl7FvvR5XbbkDC5HdKYis8Vbt3ycM8dBNgQXOkdJ5EhkzEOKhc5/KseInYo8p
+         /F73povOq62YYZb/Dy44HgqXqyIO9NmSoA43IIKEVX0zVl1yH4Aeiz8As45RbTPbk4Us
+         bpsrh44x1lDuElvMJYXvP+9VYkKDjFR+DUaN2KSJ/vxEPJkS4lioRejuEnOg4peISkw7
+         4KJAuFewlFINFrbSMs+K+dyz+fcemjmB7G5iQEIFXaW/LRYWgRTMMRl17qlt+swBVWt/
+         qaOg==
+X-Gm-Message-State: AOAM5308D7wk323lOHCRY+1B6UWv3PDufYFIaoK7b8OFKgyT+XOQTtFA
+        5uuUw0gcLavvlXX9foaGY9aunhLwIBs=
+X-Google-Smtp-Source: ABdhPJxUfvevUhOuI0hyiP84rLEwP67gmLb8dOHuZtzP8MUM/lM252U2vJjrz+G8/mWB6mDjlWdFbw==
+X-Received: by 2002:a5d:5987:: with SMTP id n7mr20756010wri.263.1626554472448;
+        Sat, 17 Jul 2021 13:41:12 -0700 (PDT)
 Received: from localhost.localdomain (dynamic-2a01-0c22-7602-4e00-f22f-74ff-fe21-0725.c22.pool.telefonica.de. [2a01:c22:7602:4e00:f22f:74ff:fe21:725])
-        by smtp.googlemail.com with ESMTPSA id n7sm14078357wmq.37.2021.07.17.13.41.09
+        by smtp.googlemail.com with ESMTPSA id n7sm14078357wmq.37.2021.07.17.13.41.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Jul 2021 13:41:09 -0700 (PDT)
+        Sat, 17 Jul 2021 13:41:11 -0700 (PDT)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
@@ -64,86 +65,65 @@ Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
         linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH RFC v1 0/7] rtw88: prepare locking for SDIO support
-Date:   Sat, 17 Jul 2021 22:40:50 +0200
-Message-Id: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
+Subject: [PATCH RFC v1 2/7] rtw88: Use rtw_iterate_vifs where the iterator reads or writes registers
+Date:   Sat, 17 Jul 2021 22:40:52 +0200
+Message-Id: <20210717204057.67495-3-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
+References: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello rtw88 and mac80211 maintainers/contributors,
+Upcoming SDIO support may sleep in the read/write handlers. Switch
+all users of rtw_iterate_vifs_atomic() which are either reading or
+writing a register to rtw_iterate_vifs().
 
-there is an ongoing effort where Jernej and I are working on adding
-SDIO support to the rtw88 driver.
-The hardware we use at the moment is RTL8822BS and RTL8822CS.
-We are at a point where scanning, assoc etc. works (though it's not
-fast yet, in my tests I got ~6Mbit/s in either direction).
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.c | 6 +++---
+ drivers/net/wireless/realtek/rtw88/ps.c   | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-This series contains some preparation work for adding SDIO support.
-While testing our changes we found that there are some "scheduling
-while atomic" errors in the kernel log. These are due to the fact
-that the SDIO accessors (sdio_readb, sdio_writeb and friends) may
-sleep internally.
-
-Some background on why SDIO access (for example: sdio_writeb) cannot
-be done with a spinlock held (this is a copy from my previous mail,
-see [0]):
-- when using for example sdio_writeb the MMC subsystem in Linux
-  prepares a so-called MMC request
-- this request is submitted to the MMC host controller hardware
-- the host controller hardware forwards the MMC request to the card
-- the card signals when it's done processing the request
-- the MMC subsystem in Linux waits for the card to signal that it's
-done processing the request in mmc_wait_for_req_done() -> this uses
-wait_for_completion() internally, which might sleep (which is not
-allowed while a spinlock is held)
-
-Based on Ping-Ke's suggestion I came up with the code in this series.
-The goal is to use non-atomic locking for all register access in the
-rtw88 driver. One patch adds a new function to mac80211 which did not
-have a "non-atomic" version of it's "atomic" counterpart yet.
-
-As mentioned before I don't have any rtw88 PCIe device so I am unable
-to test on that hardware.
-I am sending this as an RFC series since I am new to the mac80211
-subsystem as well as the rtw88 driver. So any kind of feedback is
-very welcome!
-The actual changes for adding SDIO support will be sent separately in
-the future.
-
-
-[0] https://lore.kernel.org/linux-wireless/CAFBinCDMPPJ7qW7xTkep1Trg+zP0B9Jxei6sgjqmF4NDA1JAhQ@mail.gmail.com/
-
-
-Martin Blumenstingl (7):
-  mac80211: Add stations iterator where the iterator function may sleep
-  rtw88: Use rtw_iterate_vifs where the iterator reads or writes
-    registers
-  rtw88: Use rtw_iterate_stas where the iterator reads or writes
-    registers
-  rtw88: Replace usage of rtw_iterate_keys_rcu() with rtw_iterate_keys()
-  rtw88: Configure the registers from rtw_bf_assoc() outside the RCU
-    lock
-  rtw88: hci: Convert rf_lock from a spinlock to a mutex
-  rtw88: fw: Convert h2c.lock from a spinlock to a mutex
-
- drivers/net/wireless/realtek/rtw88/bf.c       |  8 ++++++--
- drivers/net/wireless/realtek/rtw88/fw.c       | 14 +++++++-------
- drivers/net/wireless/realtek/rtw88/hci.h      | 11 ++++-------
- drivers/net/wireless/realtek/rtw88/mac80211.c |  2 +-
- drivers/net/wireless/realtek/rtw88/main.c     | 16 +++++++---------
- drivers/net/wireless/realtek/rtw88/main.h     |  4 ++--
- drivers/net/wireless/realtek/rtw88/phy.c      |  4 ++--
- drivers/net/wireless/realtek/rtw88/ps.c       |  2 +-
- drivers/net/wireless/realtek/rtw88/util.h     |  4 ++--
- drivers/net/wireless/realtek/rtw88/wow.c      |  2 +-
- include/net/mac80211.h                        | 18 ++++++++++++++++++
- net/mac80211/util.c                           | 13 +++++++++++++
- 12 files changed, 64 insertions(+), 34 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index c6364837e83b..207161a8f5bd 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -229,8 +229,8 @@ static void rtw_watch_dog_work(struct work_struct *work)
+ 	rtw_phy_dynamic_mechanism(rtwdev);
+ 
+ 	data.rtwdev = rtwdev;
+-	/* use atomic version to avoid taking local->iflist_mtx mutex */
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_vif_watch_dog_iter, &data);
++
++	rtw_iterate_vifs(rtwdev, rtw_vif_watch_dog_iter, &data);
+ 
+ 	/* fw supports only one station associated to enter lps, if there are
+ 	 * more than two stations associated to the AP, then we can not enter
+@@ -578,7 +578,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
+ 	rtw_iterate_keys_rcu(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
+ 	rcu_read_unlock();
+ 	rtw_iterate_stas_atomic(rtwdev, rtw_reset_sta_iter, rtwdev);
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_reset_vif_iter, rtwdev);
++	rtw_iterate_vifs(rtwdev, rtw_reset_vif_iter, rtwdev);
+ 	rtw_enter_ips(rtwdev);
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index 3f0ac33156d6..95f9060b083f 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -58,7 +58,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+ 		return ret;
+ 	}
+ 
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
++	rtw_iterate_vifs(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
+ 
+ 	rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
+ 
 -- 
 2.32.0
 
