@@ -2,112 +2,150 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 830ACC636CA
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 17:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD96AC636C9
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72D9A61151
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 17:33:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA00061103
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233441AbhGQRgy (ORCPT
+        id S235499AbhGQUoK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Jul 2021 13:36:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232828AbhGQRgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Jul 2021 13:36:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2761360FE9;
-        Sat, 17 Jul 2021 17:33:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1626543236;
-        bh=GDqTCOO4uFGwemmRAEP2WS2n7BZO4bDcvurji9/tB1g=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lBbpu4nsV39zDRohQAu43Y327W1pCIkBvQrXND3O1vZP3qSqvDY+SOe5O+rOxL1tn
-         3wvZK+CjfK8Hg5EShc+7YSXxgSHT8qFPXAXs6wD/0El/TMcpcx9ZMil5go+I9AKXk6
-         dQKb9NBQ2MWsHcjBchVILzoX3mE7Q0oYVfWfSUcc=
-Date:   Sat, 17 Jul 2021 19:33:49 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Len Baker <len.baker@gmx.com>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Pkshih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v2] rtw88: Fix out-of-bounds write
-Message-ID: <YPMUfbDh3jnV8hRZ@kroah.com>
-References: <20210716155311.5570-1-len.baker@gmx.com>
- <YPG/8F7yYLm3vAlG@kroah.com>
- <20210717133343.GA2009@titan>
+        Sat, 17 Jul 2021 16:44:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46072 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235304AbhGQUoK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Jul 2021 16:44:10 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2803C061764;
+        Sat, 17 Jul 2021 13:41:12 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id m11-20020a05600c3b0bb0290228f19cb433so10284515wms.0;
+        Sat, 17 Jul 2021 13:41:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=ub1HsGiuNnybNJs5WdbxXtwzsH2TKD1etrBmG16trf8=;
+        b=CiZLuaEdJVvFa3WM66L6CR/35+LZUZSrfCevHyRoEkFnH4KdzSFrXdeZME8n1yc+hV
+         RWZOVc4gC05SyYNN2QbkyjWayfDHAs5wSEeoiq+GFrXEz/RvNyTqtSoLC92y5m77nmcA
+         7nxU2jrSov5688YJpZN82LlneC+NJZT59kD5dQs5mHMeV2abb2WGsPEm1cCAdhUzKqKA
+         Tee1TBflos3ZLu5nZ4NBrYLHkxyAWtVUfJgqTSNmD3/EeDB3o6pCQoPaYs21udFGpqYF
+         vshwB300xpelsyW+Cd3Ovusvt7YsE51YJd3HC71a8L1IaqncV/X0PUNr/nH3rxYBaiY/
+         U43w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ub1HsGiuNnybNJs5WdbxXtwzsH2TKD1etrBmG16trf8=;
+        b=cSlShcee4xS7M/O7m/thg9WyfjOPsuogCfaMxxGpuRKhssBibNBBojoIQN7tUGoz0D
+         s05POUaBmmYWqJzLiw3AMIn1P5Aq/FP6kpdmRfKQkZ9K2aFn3G7G+rlhM+A3lBgplTNt
+         QCubH8HfOFWLFQu9GO0t9wgfmWWc3OUfGDhEtG3OWrKXaHGxZi1lbdWtByVCnGyptF4H
+         QyZ3vRACAO9L6LRxV4nO8s12EKaxR7Ru2jJOZdvu9DrIRM1a5lOKNsUxHMqbzsrK6SrH
+         vs36gQG7N+5XZSK7fztLtK4MCtgmrlq7RWjQvFYZCDcBq9iv5tGN+7jxFwZIZsqMNFV3
+         tDCA==
+X-Gm-Message-State: AOAM532Y33T4Ly657F2/hxSC5Emm1WxjbB//HbN+CKdz9n7d9r7J3lY2
+        kZTFKRAZcUrPmX4MuGNPhon/LheKydw=
+X-Google-Smtp-Source: ABdhPJwuLk7/VOAal/tp1Jo2xRjrL13P75si/BZkcu4Ws2qee0BmuGxZO349GBQxWxVvwWo1HMC66A==
+X-Received: by 2002:a05:600c:246:: with SMTP id 6mr21335374wmj.143.1626554471334;
+        Sat, 17 Jul 2021 13:41:11 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-2a01-0c22-7602-4e00-f22f-74ff-fe21-0725.c22.pool.telefonica.de. [2a01:c22:7602:4e00:f22f:74ff:fe21:725])
+        by smtp.googlemail.com with ESMTPSA id n7sm14078357wmq.37.2021.07.17.13.41.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 17 Jul 2021 13:41:10 -0700 (PDT)
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
+        johannes@sipsolutions.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH RFC v1 1/7] mac80211: Add stations iterator where the iterator function may sleep
+Date:   Sat, 17 Jul 2021 22:40:51 +0200
+Message-Id: <20210717204057.67495-2-martin.blumenstingl@googlemail.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
+References: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210717133343.GA2009@titan>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Jul 17, 2021 at 03:33:43PM +0200, Len Baker wrote:
-> On Fri, Jul 16, 2021 at 07:20:48PM +0200, Greg KH wrote:
-> > On Fri, Jul 16, 2021 at 05:53:11PM +0200, Len Baker wrote:
-> > > In the rtw_pci_init_rx_ring function the "if (len > TRX_BD_IDX_MASK)"
-> > > statement guarantees that len is less than or equal to GENMASK(11, 0) or
-> > > in other words that len is less than or equal to 4095. However the
-> > > rx_ring->buf has a size of RTK_MAX_RX_DESC_NUM (defined as 512). This
-> > > way it is possible an out-of-bounds write in the for statement due to
-> > > the i variable can exceed the rx_ring->buff size.
-> > >
-> > > However, this overflow never happens due to the rtw_pci_init_rx_ring is
-> > > only ever called with a fixed constant of RTK_MAX_RX_DESC_NUM. But it is
-> > > better to be defensive in this case and add a new check to avoid
-> > > overflows if this function is called in a future with a value greater
-> > > than 512.
-> >
-> > If this can never happen, then no, this is not needed.
-> 
-> Then, if this can never happen, the current check would not be necessary
-> either.
-> 
-> > Why would you check twice for the same thing?
-> 
-> Ok, it makes no sense to double check the "len" variable twice. So, I
-> propose to modify the current check as follows:
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-> index e7d17ab8f113..0fd140523868 100644
-> --- a/drivers/net/wireless/realtek/rtw88/pci.c
-> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> @@ -268,8 +268,8 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwdev,
->         int i, allocated;
->         int ret = 0;
-> 
-> -       if (len > TRX_BD_IDX_MASK) {
-> -               rtw_err(rtwdev, "len %d exceeds maximum RX entries\n", len);
-> +       if (len > ARRAY_SIZE(rx_ring->buf)) {
-> +               rtw_err(rtwdev, "len %d exceeds maximum RX ring buffer\n", len);
->                 return -EINVAL;
->         }
-> 
-> This way the overflow can never happen with the current call to
-> rtw_pci_init_rx_ring function or with a future call with a "len" parameter
-> greater than 512. What do you think?
-> 
-> If there are no objections I will send a v3 for review.
-> 
-> Another question: If this can never happen should I include the "Fixes" tag,
-> "Addresses-Coverity-ID" tag and Cc to stable?
+ieee80211_iterate_active_interfaces() and
+ieee80211_iterate_active_interfaces_atomic() already exist, where the
+former allows the iterator function to sleep. Add
+ieee80211_iterate_stations() which is similar to
+ieee80211_iterate_stations_atomic() but allows the iterator to sleep.
+This is needed for adding SDIO support to the rtw88 driver. Some
+interators there are reading or writing registers. With the SDIO ops
+(sdio_readb, sdio_writeb and friends) this means that the iterator
+function may sleep.
 
-If it can never happen, why have this check at all?
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ include/net/mac80211.h | 18 ++++++++++++++++++
+ net/mac80211/util.c    | 13 +++++++++++++
+ 2 files changed, 31 insertions(+)
 
-Looks like a Coverity false positive?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d8a1d09a2141..77de89690008 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5575,6 +5575,24 @@ void ieee80211_iterate_active_interfaces_mtx(struct ieee80211_hw *hw,
+ 						struct ieee80211_vif *vif),
+ 					     void *data);
+ 
++/**
++ * ieee80211_iterate_stations_atomic - iterate stations
++ *
++ * This function iterates over all stations associated with a given
++ * hardware that are currently uploaded to the driver and calls the callback
++ * function for them.
++ * This function allows the iterator function to sleep, when the iterator
++ * function is atomic @ieee80211_iterate_stations_atomic can be used.
++ *
++ * @hw: the hardware struct of which the interfaces should be iterated over
++ * @iterator: the iterator function to call, cannot sleep
++ * @data: first argument of the iterator function
++ */
++void ieee80211_iterate_stations(struct ieee80211_hw *hw,
++				void (*iterator)(void *data,
++						 struct ieee80211_sta *sta),
++				void *data);
++
+ /**
+  * ieee80211_iterate_stations_atomic - iterate stations
+  *
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 05e96212b104..c6984d0464f2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -862,6 +862,19 @@ static void __iterate_stations(struct ieee80211_local *local,
+ 	}
+ }
+ 
++void ieee80211_iterate_stations(struct ieee80211_hw *hw,
++				void (*iterator)(void *data,
++						 struct ieee80211_sta *sta),
++				void *data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	mutex_lock(&local->sta_mtx);
++	__iterate_stations(local, iterator, data);
++	mutex_unlock(&local->sta_mtx);
++}
++EXPORT_SYMBOL_GPL(ieee80211_iterate_stations);
++
+ void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
+ 			void (*iterator)(void *data,
+ 					 struct ieee80211_sta *sta),
+-- 
+2.32.0
 
-thanks,
-
-greg k-h
