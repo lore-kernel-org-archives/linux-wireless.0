@@ -2,109 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC79C12002
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 01:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A0FC636CA
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 05:06:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6667613CF
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 01:40:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48A7561164
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 05:06:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238347AbhGQBnx (ORCPT
+        id S229998AbhGQFIy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Jul 2021 21:43:53 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:49901 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232010AbhGQBnx (ORCPT
+        Sat, 17 Jul 2021 01:08:54 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:57584 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229778AbhGQFIy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jul 2021 21:43:53 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 16H1enyQ7017818, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 16H1enyQ7017818
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Sat, 17 Jul 2021 09:40:49 +0800
-Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
- RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Sat, 17 Jul 2021 09:40:47 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Sat, 17 Jul 2021 09:40:47 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::5bd:6f71:b434:7c91]) by
- RTEXMBS04.realtek.com.tw ([fe80::5bd:6f71:b434:7c91%5]) with mapi id
- 15.01.2106.013; Sat, 17 Jul 2021 09:40:47 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: Difficulty connecting to AP using rtw89
-Thread-Topic: Difficulty connecting to AP using rtw89
-Thread-Index: AQHXedzEvSHwSXSC2EGxNTyUmGxj/atE4CcwgABoiACAARvNsA==
-Date:   Sat, 17 Jul 2021 01:40:47 +0000
-Message-ID: <04a1e9643c09406697b48f5f781a3e2d@realtek.com>
-References: <f2ee1dbd-28b5-a1e6-8f41-e7ed8dfc2521@lwfinger.net>
- <d74a6a489b2f466eb66df3f5f965a1fa@realtek.com>
- <28f2a476-b690-24dd-df7e-f88f45b9292d@lwfinger.net>
-In-Reply-To: <28f2a476-b690-24dd-df7e-f88f45b9292d@lwfinger.net>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.146]
-x-kse-serverinfo: RTEXDAG01.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzcvMTYg5LiL5Y2IIDEwOjAwOjAw?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Sat, 17 Jul 2021 01:08:54 -0400
+X-UUID: a9e856aee7ed4097a738b911c1719cb7-20210717
+X-UUID: a9e856aee7ed4097a738b911c1719cb7-20210717
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 791011969; Sat, 17 Jul 2021 13:05:54 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 17 Jul 2021 13:05:53 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 17 Jul 2021 13:05:53 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7921: send EAPOL frames at lowest rate
+Date:   Sat, 17 Jul 2021 13:05:49 +0800
+Message-ID: <089a52032471c2f058e0837582b21f6e9b039fba.1626498075.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <aea4d98082bea79c7e116fc56d2b0e0c1442deae.1626498075.git.ryder.lee@mediatek.com>
+References: <aea4d98082bea79c7e116fc56d2b0e0c1442deae.1626498075.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 07/17/2021 01:27:44
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 165065 [Jul 17 2021]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
-X-KSE-AntiSpam-Info: LuaCore: 448 448 71fb1b37213ce9a885768d4012c46ac449c77b17
-X-KSE-AntiSpam-Info: {Tracking_from_exist}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;realtek.com:7.1.1
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 07/17/2021 01:30:00
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTGFycnkgRmluZ2VyIFtt
-YWlsdG86bGFycnkuZmluZ2VyQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mIExhcnJ5IEZpbmdlcg0K
-PiBTZW50OiBTYXR1cmRheSwgSnVseSAxNywgMjAyMSAxMjo0MCBBTQ0KPiBUbzogUGtzaGloOyBs
-aW51eC13aXJlbGVzcw0KPiBTdWJqZWN0OiBSZTogRGlmZmljdWx0eSBjb25uZWN0aW5nIHRvIEFQ
-IHVzaW5nIHJ0dzg5DQo+IA0KPiBPbiA3LzE1LzIxIDEwOjE3IFBNLCBQa3NoaWggd3JvdGU6DQo+
-ID4gSGkgTGFycnksDQo+ID4NCj4gPiBJJ20gbm90IHN1cmUgaWYgdGhlIHByb2JsZW0gdGhlIHVz
-ZXJzIG1ldCBpcyByZWxhdGVkIHRvIHNlY3VyaXR5IG9yIG5vdC4NCj4gPiBCdXQsIHdlIGhhdmUg
-YSBzb2x1dGlvbiB0byBkZWFsIHdpdGggc2ltaWxhciBzeW1wdG9tLg0KPiA+IFBsZWFzZSBhcHBs
-eSBhbmQgdHJ5IGF0dGFjaGVkIHBhdGNoIHRvIHNlZSBpZiBpdCBpcyBoZWxwZnVsLg0KPiANCj4g
-UGluZy1rZSwNCj4gDQo+IFR3byBvZiB0aGUgNCB1c2VycyB3aXRoIHRoZSBwcm9ibGVtIGhhdmUg
-cmVwb3J0ZWQgYmFjayB0aGF0IHRoZWlyIGRldmljZSBub3cNCj4gd29ya3MuIFRoYW5rcyBmb3Ig
-dGhlIHBhdGNoLg0KDQpUaGFua3MgZm9yIHRoZSBoZWxwLg0KDQo+IA0KPiBJbiBhIHNlcGFyYXRl
-IHF1ZXN0aW9uLCB3aWxsIHY2IGhhdmUgcHJvdmlzaW9ucyBmb3IgSVB2Nj8NCj4gDQoNClRoZSBk
-cml2ZXIgaGFuZGxlcyBMMiB0aGluZ3Mgb25seSwgYnV0IElQdjYgdGhhdCBpcyBMMyB0aGF0IHdl
-IGRvbid0IGhhdmUgc3BlY2lhbCBkZWFsLg0KQ291bGQgSSBrbm93IHRoZSBwcm9ibGVtIHlvdSBt
-ZXQ/DQoNCi0tDQpQaW5nLUtlDQoNCg0K
+The firmware rate control may choose the high rate for EAPOL frames,
+so checking IEEE80211_TX_CTL_USE_MINRATE to use the lowest TX rate.
+
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 7fe2e3a50428..eb0d98c8d5d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -702,7 +702,8 @@ mt7921_mac_write_txwi_80211(struct mt7921_dev *dev, __le32 *txwi,
+ 		txwi[3] &= ~cpu_to_le32(MT_TXD3_PROTECT_FRAME);
+ 	}
+ 
+-	if (!ieee80211_is_data(fc) || multicast)
++	if (!ieee80211_is_data(fc) || multicast ||
++	    info->flags & IEEE80211_TX_CTL_USE_MINRATE)
+ 		val |= MT_TXD2_FIX_RATE;
+ 
+ 	txwi[2] |= cpu_to_le32(val);
+-- 
+2.18.0
+
