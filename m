@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB5FC636CD
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C67C636C9
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D680B61103
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A7161103
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Jul 2021 20:41:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235953AbhGQUof (ORCPT
+        id S236053AbhGQUoj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Jul 2021 16:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46110 "EHLO
+        Sat, 17 Jul 2021 16:44:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235646AbhGQUoS (ORCPT
+        with ESMTP id S235625AbhGQUoS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 17 Jul 2021 16:44:18 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6F49C061767;
-        Sat, 17 Jul 2021 13:41:18 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id d12so16136396wre.13;
-        Sat, 17 Jul 2021 13:41:18 -0700 (PDT)
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BF85C061765;
+        Sat, 17 Jul 2021 13:41:17 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id l6so7879182wmq.0;
+        Sat, 17 Jul 2021 13:41:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=mj2H3msC6oyhKz7UwATyKp0y5VOYMGrKZ8Me0MwbHlo=;
-        b=RRfAQgvDxFkq9BTwC4WA0SaA78PX1voZJS9zeepKtWYEbDR7nr9+rou4xCBIF8M6GZ
-         8YT9n90qbhBNfZtQOLcri2UJPCLvJClXTYirrgpEldvIw8WpJT9lTZRWZuokpQ/P3JAG
-         6gttyHWXP+AQD86M64TZnJhuDXcihS4GrpvpJ/su4a8Ylq9ZGbt6orqtgwu1DFEYcQSc
-         qlPjPxa4JPihb4jfmEOHhXgFJDVT1yfX8OITd++TIw6lhN5yOpjHywNnjeLr95p47kfY
-         zRVl8w9eCaxZFOm//QViM7+Mro0o0vA5KPLiKhWu0xv81AWzjZkSCNbDwHf7C7pxCgwQ
-         +RrA==
+        bh=x+Od9A6k+Mx3oOsy+sHLyJqYPR0woYwsH4hDTgPiCu4=;
+        b=ixN4prt3eNJpDmPoxtWXzP5O/6zEOsVyObd2lNpRe21XGp2P2g9HFHzGghz2jAzQrD
+         zAHG/n0DHWHi4u2hUTQorjYgtSCG8H8E0JMpt14c6NC6wt1gQLzwSp/nb/OqlTsycxlw
+         ZOFOVH/zsuzdmu/M0U/EHzbi6eQJ/Yz4MR1XaW8qv9j2F8jjt3FlOqYHGSvpnReJwt8p
+         BlfRGk+8fhjwmoVqfVpYhXWElJSkAaQdJLw/Y2SXiIiptUprqXLWK08tigzIokT3VUDU
+         PJACRweHK4Q1KXbTW44ZLzKMgDX2l9QLRqw2e8hxUitft9lkRgEhNqjn4MoYhm3mSxQ2
+         DHKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=mj2H3msC6oyhKz7UwATyKp0y5VOYMGrKZ8Me0MwbHlo=;
-        b=biTY/PeHTrM9uodFMeDeSyn0B10qFYcyGNlnmifvD5IDgMiyZuubW39YgdDrFTGlol
-         ovKwai0Be0cg19FCkcNori2eIOtypxfKqMjCw25WabRk+MR/65gaGZ+UQiZ5xMMVBywG
-         gCVL77n6zBAyb9u6tTNnN1X32NG02bHbQX9mC0yIAHSo03f26epbMblSYkRhw0U2zvVT
-         uTZz8Im5TJy9gQNta3HWNT79ayIXw/WSHYjz4qb4Bxh3TypwGDXImclVqC5AXN5kK4uC
-         y2D70yJNhPm/iXuJw9LwdYWH/OFioc1zng3U/Ylzm5CeaGh3w2FOUryl+58S9Cd9ZCd6
-         gVyA==
-X-Gm-Message-State: AOAM531BHylmLXq+WR0724K5+KaEb695Ty30iKEGbkczy5dnsS0s4Muc
-        AMDEU+3P7JobUXqXMvqDUY40KPUWwoc=
-X-Google-Smtp-Source: ABdhPJx0xizcRHPfUYgxXxQWN7LnGYOrn+BzTXtExqnxUqjICf37qSmxBsOHt8Cihcae+Jh+qsuysA==
-X-Received: by 2002:adf:edd1:: with SMTP id v17mr19892978wro.276.1626554477229;
-        Sat, 17 Jul 2021 13:41:17 -0700 (PDT)
+        bh=x+Od9A6k+Mx3oOsy+sHLyJqYPR0woYwsH4hDTgPiCu4=;
+        b=gJp/zpdDxF9gR8zg4qfQtzYxbYUq7K1W8hrZ6XhzkCXNGsjr5b0xkTNbaM3TCAUxkm
+         l/34m932nKVEK1CAiIXu59MciEgq2BMu0OdhUAWM+Y9Q4K8NWUQj2sf2UiuGNbZ5YMpd
+         UoDUm1Z0SOsS45y0jEecPHcUTKxZm7y2sIKMKo2Dd4P6MwpMI+Wv74WGi3OjauvO5GqD
+         7GqTGLCkLHpNZWTZEFzvOzLUcp4KkrBxrj1cBpayHNmt0aPlfgGBKoboWqPBnVGBX7vc
+         NkoRLQCNGecUSjfq//MuPv8a/kmBCkOAMKl9v8AJDwgK1F4D4ULfv93dI39Jmucfhalq
+         4w7A==
+X-Gm-Message-State: AOAM530fUDNfsnPA2rERlxPxAdX5tgM9/P1NmpE5rc+lv25Ylgmi+a9Q
+        WCw+75jide1CtgP5l6Vh/xdjUXEDalc=
+X-Google-Smtp-Source: ABdhPJzueVEA9BIVnzs7TNWEnkDDpPoK5NYiOKp4BBh+CURWQw6f+dQ2x8Lp+wiXIMfRN4/1y6vjeQ==
+X-Received: by 2002:a05:600c:214a:: with SMTP id v10mr22951878wml.17.1626554475512;
+        Sat, 17 Jul 2021 13:41:15 -0700 (PDT)
 Received: from localhost.localdomain (dynamic-2a01-0c22-7602-4e00-f22f-74ff-fe21-0725.c22.pool.telefonica.de. [2a01:c22:7602:4e00:f22f:74ff:fe21:725])
-        by smtp.googlemail.com with ESMTPSA id n7sm14078357wmq.37.2021.07.17.13.41.16
+        by smtp.googlemail.com with ESMTPSA id n7sm14078357wmq.37.2021.07.17.13.41.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Jul 2021 13:41:16 -0700 (PDT)
+        Sat, 17 Jul 2021 13:41:15 -0700 (PDT)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
@@ -65,9 +65,9 @@ Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
         linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH RFC v1 7/7] rtw88: fw: Convert h2c.lock from a spinlock to a mutex
-Date:   Sat, 17 Jul 2021 22:40:57 +0200
-Message-Id: <20210717204057.67495-8-martin.blumenstingl@googlemail.com>
+Subject: [PATCH RFC v1 5/7] rtw88: Configure the registers from rtw_bf_assoc() outside the RCU lock
+Date:   Sat, 17 Jul 2021 22:40:55 +0200
+Message-Id: <20210717204057.67495-6-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
 References: <20210717204057.67495-1-martin.blumenstingl@googlemail.com>
@@ -77,100 +77,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Upcoming SDIO support may sleep in the read/write handlers. Switch
-the h2c.lock from a spinlock to a mutex to allow for this behavior.
+Upcoming SDIO support may sleep in the read/write handlers. Configure
+the chip's BFEE configuration set from rtw_bf_assoc() outside the
+rcu_read_lock section to prevent a "scheduling while atomic" issue.
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c   | 14 +++++++-------
- drivers/net/wireless/realtek/rtw88/main.c |  2 +-
- drivers/net/wireless/realtek/rtw88/main.h |  2 +-
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw88/bf.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 3bfa5ecc0053..5acc798299e5 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -285,7 +285,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		h2c[3], h2c[2], h2c[1], h2c[0],
- 		h2c[7], h2c[6], h2c[5], h2c[4]);
+diff --git a/drivers/net/wireless/realtek/rtw88/bf.c b/drivers/net/wireless/realtek/rtw88/bf.c
+index aff70e4ae028..06034d5d6f6c 100644
+--- a/drivers/net/wireless/realtek/rtw88/bf.c
++++ b/drivers/net/wireless/realtek/rtw88/bf.c
+@@ -39,6 +39,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	struct ieee80211_sta_vht_cap *vht_cap;
+ 	struct ieee80211_sta_vht_cap *ic_vht_cap;
+ 	const u8 *bssid = bss_conf->bssid;
++	bool config_bfee = false;
+ 	u32 sound_dim;
+ 	u8 i;
  
--	spin_lock(&rtwdev->h2c.lock);
-+	mutex_lock(&rtwdev->h2c.lock);
+@@ -70,7 +71,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		bfee->aid = bss_conf->aid;
+ 		bfinfo->bfer_mu_cnt++;
  
- 	box = rtwdev->h2c.last_box_num;
- 	switch (box) {
-@@ -310,9 +310,9 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		goto out;
+-		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
++		config_bfee = true;
+ 	} else if ((ic_vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) &&
+ 		   (vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)) {
+ 		if (bfinfo->bfer_su_cnt >= chip->bfer_su_max_num) {
+@@ -96,11 +97,14 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 			}
+ 		}
+ 
+-		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
++		config_bfee = true;
  	}
  
--	ret = read_poll_timeout_atomic(rtw_read8, box_state,
--				       !((box_state >> box) & 0x1), 100, 3000,
--				       false, rtwdev, REG_HMETFR);
-+	ret = read_poll_timeout(rtw_read8, box_state,
-+				!((box_state >> box) & 0x1), 100, 3000, false,
-+				rtwdev, REG_HMETFR);
- 
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
-@@ -328,7 +328,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		rtwdev->h2c.last_box_num = 0;
- 
- out:
--	spin_unlock(&rtwdev->h2c.lock);
-+	mutex_unlock(&rtwdev->h2c.lock);
+ out_unlock:
+ 	rcu_read_unlock();
++
++	if (config_bfee)
++		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
  }
  
- void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-@@ -340,7 +340,7 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- {
- 	int ret;
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	mutex_lock(&rtwdev->h2c.lock);
- 
- 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
- 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
-@@ -348,7 +348,7 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- 		rtw_err(rtwdev, "failed to send h2c packet\n");
- 	rtwdev->h2c.seq++;
- 
--	spin_unlock(&rtwdev->h2c.lock);
-+	mutex_unlock(&rtwdev->h2c.lock);
- }
- 
- void
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 5ebc4c0b4ccc..34e5bc97d9f4 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1834,12 +1834,12 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	skb_queue_head_init(&rtwdev->coex.queue);
- 	skb_queue_head_init(&rtwdev->tx_report.queue);
- 
--	spin_lock_init(&rtwdev->h2c.lock);
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
- 
- 	mutex_init(&rtwdev->mutex);
- 	mutex_init(&rtwdev->rf_lock);
-+	mutex_init(&rtwdev->h2c.lock);
- 	mutex_init(&rtwdev->coex.mutex);
- 	mutex_init(&rtwdev->hal.tx_power_mutex);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index fd213252fbe2..1788fc339afb 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1868,7 +1868,7 @@ struct rtw_dev {
- 		/* incicate the mail box to use with fw */
- 		u8 last_box_num;
- 		/* protect to send h2c to fw */
--		spinlock_t lock;
-+		struct mutex lock;
- 		u32 seq;
- 	} h2c;
- 
+ void rtw_bf_init_bfer_entry_mu(struct rtw_dev *rtwdev,
 -- 
 2.32.0
 
