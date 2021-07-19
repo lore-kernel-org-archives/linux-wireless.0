@@ -2,50 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-23.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A455C07E9D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 11:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60FD1C07E9B
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:02:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58A84610D0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 11:26:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42AC06112D
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:02:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236218AbhGSKpw (ORCPT
+        id S236396AbhGSLVX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Jul 2021 06:45:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35900 "EHLO
+        Mon, 19 Jul 2021 07:21:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235440AbhGSKpv (ORCPT
+        with ESMTP id S230493AbhGSLVW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jul 2021 06:45:51 -0400
+        Mon, 19 Jul 2021 07:21:22 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7CCBC061574
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2021 03:37:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9917C061574
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2021 04:16:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
         Resent-Message-ID:In-Reply-To:References;
-        bh=7u2HT3nzPqHbcqMVAGgjDMbCpopCzodFtnUMUYY7Me8=; t=1626693991; x=1627903591; 
-        b=o8LXh8bR3brWaB7E531KFpI3G0d2uwgaoNItVON9AF0dPwhQo0DRtgPDSx9bJ7YkDIBEn24zrwy
-        xeEyGaUgzS+LTLrDYAKI7Fvbc4tVg+ZSqGw0tEXHctg1AYmYSEhxfOGMeG0Qro19F0nongHYcEHJp
-        SXxFiTNkyvUSapk92ctuP6TY9HQ3bUohaPoUddD4ksO9xUGmCjkUq1xhiP0DyqoPNBA45bVK+ZiX5
-        E4O6mmLl8gDUgzCg0rNWjf3fMmmF0id+KWcG8vntbFhto554PDG83WkKc0xnORnC2qX7+LRlv+stn
-        qmdIq22a0WLxX4UrVpwjAF1YWnwS8o3f5GQA==;
+        bh=7+LS3y5wbzz6LyqpW5/kCC11RLc/TklJi8Xzn16wtwY=; t=1626696122; x=1627905722; 
+        b=K9URTtWGL35vqzKDrZFddCMUECQFoY6rRPcALBrjoBb6gp1rIuwYQYRRI5hNswl2hjO30sBOFbk
+        s7KRsqe3/cmGa4Fp8lq1w2Rt9QEqLA6SUXRLREnKnOoHZ6dbbXQQzBMNxapspLiEWyBzSi6nsP93i
+        2CRfYNtynKSuz/CmfWbCDI1MlGzWJ7uAxn9tWdevWtGVi1wBP6N31QMciBAthq6hvyF4pJQGaLpLK
+        ajpCjNqLUMlwQ+3UP7ljoF55RpuhcjClQCenSt8nhzJ3Q2hzKgg5y9r+Kpak85lmN6Nr/HQ1zeB5k
+        0OwCRHOTyvJVnd8cgogFM0wx+fbrUb23qqZQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1m5RPp-004L70-4L; Mon, 19 Jul 2021 13:26:29 +0200
+        id 1m5RyC-004Lkt-1X; Mon, 19 Jul 2021 14:02:00 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
-List-Id: <linux-firmware.lore.kernel.org>
-To:     linux-firmware@kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: iwlwifi-fw-2021-07-19
-Date:   Mon, 19 Jul 2021 13:26:20 +0200
-Message-Id: <20210719112621.21043-1-johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5.14] iwlwifi: pnvm: accept multiple HW-type TLVs
+Date:   Mon, 19 Jul 2021 14:01:56 +0200
+Message-Id: <20210719140154.a6a86e903035.Ic0b1b75c45d386698859f251518e8a5144431938@changeid>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -53,41 +52,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-We've got a new Ty device firmware image, along with an
-updated PNVM data file.
+Some products (So) may have two different types of products
+with different mac-type that are otherwise equivalent, and
+have the same PNVM data, so the PNVM file will contain two
+(or perhaps later more) HW-type TLVs. Accept the file and
+use the data section that contains any matching entry.
 
-Please pull and let me know if there's any problem.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 25 +++++++++++++-------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-Thanks,
-johannes
-
-
-
-The following changes since commit b7c134f0d3491113958276d631b4e69771a6c5be:
-
-  linux-firmware: update NXP 8897/8997 firmware images (2021-07-16 07:55:21 -0400)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2021-07-19
-
-for you to fetch changes up to 5de082d4d0f2db7722c9e6f5c9cff1fefd8073be:
-
-  iwlwifi: add ty firmware from Core63-43 (2021-07-19 13:12:20 +0200)
-
-----------------------------------------------------------------
-iwlwifi: add ty firmware from Core63-43
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      iwlwifi: add ty firmware from Core63-43
-
- LICENCE.iwlwifi_firmware     |   2 +-
- WHENCE                       |   3 +++
- iwlwifi-ty-a0-gf-a0-66.ucode | Bin 0 -> 1477864 bytes
- iwlwifi-ty-a0-gf-a0.pnvm     | Bin 27456 -> 27480 bytes
- 4 files changed, 4 insertions(+), 1 deletion(-)
- create mode 100644 iwlwifi-ty-a0-gf-a0-66.ucode
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
+index 2403490cbc26..b4b1f75b9c2a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
+@@ -37,6 +37,7 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
+ 	u32 sha1 = 0;
+ 	u16 mac_type = 0, rf_id = 0;
+ 	u8 *pnvm_data = NULL, *tmp;
++	bool hw_match = false;
+ 	u32 size = 0;
+ 	int ret;
+ 
+@@ -83,6 +84,9 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
+ 				break;
+ 			}
+ 
++			if (hw_match)
++				break;
++
+ 			mac_type = le16_to_cpup((__le16 *)data);
+ 			rf_id = le16_to_cpup((__le16 *)(data + sizeof(__le16)));
+ 
+@@ -90,15 +94,9 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
+ 				     "Got IWL_UCODE_TLV_HW_TYPE mac_type 0x%0x rf_id 0x%0x\n",
+ 				     mac_type, rf_id);
+ 
+-			if (mac_type != CSR_HW_REV_TYPE(trans->hw_rev) ||
+-			    rf_id != CSR_HW_RFID_TYPE(trans->hw_rf_id)) {
+-				IWL_DEBUG_FW(trans,
+-					     "HW mismatch, skipping PNVM section, mac_type 0x%0x, rf_id 0x%0x.\n",
+-					     CSR_HW_REV_TYPE(trans->hw_rev), trans->hw_rf_id);
+-				ret = -ENOENT;
+-				goto out;
+-			}
+-
++			if (mac_type == CSR_HW_REV_TYPE(trans->hw_rev) &&
++			    rf_id == CSR_HW_RFID_TYPE(trans->hw_rf_id))
++				hw_match = true;
+ 			break;
+ 		case IWL_UCODE_TLV_SEC_RT: {
+ 			struct iwl_pnvm_section *section = (void *)data;
+@@ -149,6 +147,15 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
+ 	}
+ 
+ done:
++	if (!hw_match) {
++		IWL_DEBUG_FW(trans,
++			     "HW mismatch, skipping PNVM section (need mac_type 0x%x rf_id 0x%x)\n",
++			     CSR_HW_REV_TYPE(trans->hw_rev),
++			     CSR_HW_RFID_TYPE(trans->hw_rf_id));
++		ret = -ENOENT;
++		goto out;
++	}
++
+ 	if (!size) {
+ 		IWL_DEBUG_FW(trans, "Empty PNVM, skipping.\n");
+ 		ret = -ENOENT;
+-- 
+2.31.1
 
