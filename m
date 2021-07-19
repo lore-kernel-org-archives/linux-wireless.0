@@ -5,30 +5,30 @@ X-Spam-Level:
 X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97841C07E9D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41325C07E9D
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:36:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8510561285
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:22:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 277EE610A5
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:36:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244377AbhGSOlY (ORCPT
+        id S243716AbhGSOz4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Jul 2021 10:41:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54628 "EHLO mail.kernel.org"
+        Mon, 19 Jul 2021 10:55:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244518AbhGSOjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jul 2021 10:39:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E89516121E;
-        Mon, 19 Jul 2021 15:18:23 +0000 (UTC)
+        id S238780AbhGSOxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jul 2021 10:53:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7BDC861279;
+        Mon, 19 Jul 2021 15:32:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1626707904;
+        s=korg; t=1626708780;
         bh=tbjK3+KGzetC/M7kPMYQUIaqwKGcQVs9fdQyCa8T6zI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ymjka9p+pP17TAeGMXy07Zec98JbS6vqe6MMW9r5IcAVvHQbUnxOqxMPELzq/q/OP
-         0WsNYNTXfqc2swscRMmVGwqp+JclZlhnIkANslQQUhbJmUWuQ3dHrkYeLvy0UJjMjK
-         9EG2sE7lX8uqw4csGtZU+tMfaWcccOnW9MB2eQOk=
+        b=I16PYZj+ZLsaGPfLxdfgu8IooPv44LoN04SyeAu/ARezFjnwZ1XWPHM1edWEBCoIW
+         AXSS7d81ENyM3G8Lmzfky9PakEtLoLCvvq4gJmn1+9X3cTkrs2RCHq5cEgZ7Usx8t+
+         zxs1/9tPo4/Bk64kmv77KhLyOlpeSgIsuizB3FZo=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
         Christian Lamparter <chunkeey@gmail.com>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 4.14 101/315] wireless: carl9170: fix LEDS build errors & warnings
-Date:   Mon, 19 Jul 2021 16:49:50 +0200
-Message-Id: <20210719144946.200492982@linuxfoundation.org>
+Subject: [PATCH 4.19 127/421] wireless: carl9170: fix LEDS build errors & warnings
+Date:   Mon, 19 Jul 2021 16:48:58 +0200
+Message-Id: <20210719144950.941193151@linuxfoundation.org>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210719144942.861561397@linuxfoundation.org>
-References: <20210719144942.861561397@linuxfoundation.org>
+In-Reply-To: <20210719144946.310399455@linuxfoundation.org>
+References: <20210719144946.310399455@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
