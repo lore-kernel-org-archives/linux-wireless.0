@@ -2,112 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C7EC07E9D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B98FC636C9
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E2856113B
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:40:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E2EE6113E
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 12:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237052AbhGSL7n (ORCPT
+        id S236899AbhGSMFK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Jul 2021 07:59:43 -0400
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:56513 "EHLO
-        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236571AbhGSL7n (ORCPT
+        Mon, 19 Jul 2021 08:05:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55230 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237057AbhGSMFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jul 2021 07:59:43 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 514473200949;
-        Mon, 19 Jul 2021 08:40:22 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute1.internal (MEProxy); Mon, 19 Jul 2021 08:40:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm1; bh=5kfSZnZyxCfOqkxjBhPjwhVzpil
-        rAJAJf8pdfSBPjjs=; b=ZcGTp3w9ldiAlFTNXD5ABqqIQ4MOpFcaNMrvL8oNUZz
-        jFzh8ftxItpqNAuhQjcwhJwi1oHlwxHYZ1jPLhY4iVpQn7HWxODZn33HmzYeMgFd
-        fc+Zq7AUCDBeM9GUEN7pEYPA6U9O6KdEORITXWxQ1MxdjzIH/lteht8l8id/AmJH
-        ioMMtlbv+WlNwnMTBWp4oUoYbosYAPxK/Yk7hz98kqthFqUo7Yd0B/+6LMmN2ysj
-        agarMnivyeT7xAHYPnrdHT+/woQBUJDIFdWMh925GJ2D3/qTdskwH0nCbSEOwliG
-        THrMuLAeeKJrY997+u+34YAx+antwjsttd6A5qF7khA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=5kfSZn
-        ZyxCfOqkxjBhPjwhVzpilrAJAJf8pdfSBPjjs=; b=l+L7wtwKaDRLzXIv/V4dca
-        9dDreQus2B7zcizkt5CftfAOQznQ4XGDw5ejuWz+BViYsfpNcyMhapLXPv6PHm9i
-        wAkzgN+w6BcWRTPi9vTEDqJufTyFtPYPdaxADO1Xgp6t9gfvGOO5hZN33k0LfHU9
-        AHW8yWSq8LuQi5oTb994IauMkushy/YIga9R65U+RR3fgSy1ST5J85ZGoGLJOLhv
-        r+MdSdY2LsMr4iify1nDIkdBBxc65UPrj28NBLLYcAB/GIjxABi2xgSKDOPqHwxo
-        5Kbz9gVLU5VtIlgn9bPzDy+4xWSa6sTvAo3JRJBpm3J0V4aKDcQ+s4DipCAavn0A
-        ==
-X-ME-Sender: <xms:tXL1YCRUTvIGxOj4uefHygZYhQayWqNu4wEADS_EktClNPE3aom2yQ>
-    <xme:tXL1YHxHGJwC1LEy_7FMw0a15fvufUrPAt51QZ0wkMRr2VRvi3aId8kXHgIdQpYu2
-    vYSqRlu912ogw>
-X-ME-Received: <xmr:tXL1YP0vQKzebnQIxJaLVztXieiKMVhm918KbRjXUjABUFTOWI2qGrQo58MG3DBKQrHj2yBjjcwOdG0d_b_GWzsyVNTB1iA2>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrfedtgdehfecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvuffkfhggtggujgesthdtrodttddtvdenucfhrhhomhepifhrvghgucfm
-    jfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepuddtiedvje
-    egudffgfdvhfdtjeeugffhhedvjeehgffgleduuefgfeekgedvlefhnecuffhomhgrihhn
-    pehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmh
-    grihhlfhhrohhmpehgrhgvgheskhhrohgrhhdrtghomh
-X-ME-Proxy: <xmx:tXL1YOAokeop6T_usNe4jvKGRpU_Np4SGj5twfOQqzk20JAhnDSnsg>
-    <xmx:tXL1YLhrS3UzBULRXIt6ctnntKqjgy9UVArp5WW40JGl8VlCrAEImg>
-    <xmx:tXL1YKrJahLiGNcbrHesosRyD8xQ8-utKsL2IFai-dletS_P0IML0Q>
-    <xmx:tXL1YGUKSW6e6_YxOO5buWUdWHF4qgzE62C-w7kM7U9x3ouAR3H5Eg>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 19 Jul 2021 08:40:20 -0400 (EDT)
-Date:   Mon, 19 Jul 2021 14:40:15 +0200
-From:   Greg KH <greg@kroah.com>
-To:     Davis <davis@mosenkovs.lv>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 4.4] mac80211: fix memory corruption in EAPOL handling
-Message-ID: <YPVyrwvNnTGkZTdm@kroah.com>
-References: <20210710183710.5687-1-davis@mosenkovs.lv>
- <YPAiFsEncZ95Oomx@kroah.com>
- <CAHQn7p+dA3-FS+DGPqCvXJGtTZfWqg9hy1GUbtWFwtQFvKcnfg@mail.gmail.com>
+        Mon, 19 Jul 2021 08:05:09 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1296CC061574
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2021 05:03:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=pSvskRo7NNg80ze/Ja2Ys5FnFRsSinipmYhKGPOHkUg=;
+        t=1626698749; x=1627908349; b=GuT8GmM3yGBsH6T5JMTwow6sZ2yIAckh8e24O5+XyzJgghm
+        B+MpDZUgGC6NlCq7PgKJnKVIv1d3sKuyfbnXHcuq+3YjDgDVOl3UFMwmvGtwuxq6Bu2icHygaG8D0
+        e88VtFxxsUbNe9mpbU/+FlyZim8K0NIKMmd+m1IHh/DsfqjSKFQU2x0qtSO5Vmfcr6/nTR7Nr7/+t
+        gm6O+6dNttZtHPZnE+tIqU9Cmf+jA1JeA4XBWs0cWgnUMK3xpTliMhgTJO0m65WZ9PnJtIv+h7y51
+        HOOBFfudIvJoQZ2wR891plypcnHv7Xw/WKCEvVhz77YXqSadbKZtt1odFtYv7qbg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1m5SeZ-004MeZ-3V; Mon, 19 Jul 2021 14:45:47 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Yaara Baruch <yaara.baruch@intel.com>
+Subject: [PATCH 5.14 2/2] iwlwifi: add new so-jf devices
+Date:   Mon, 19 Jul 2021 14:45:39 +0200
+Message-Id: <20210719144523.1c9a59fd2760.If5aef1942007828210f0f2c4a17985f63050bb45@changeid>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210719144523.0545d8964ff2.I3498879d8c184e42b1578a64aa7b7c99a18b75fb@changeid>
+References: <20210719144523.0545d8964ff2.I3498879d8c184e42b1578a64aa7b7c99a18b75fb@changeid>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHQn7p+dA3-FS+DGPqCvXJGtTZfWqg9hy1GUbtWFwtQFvKcnfg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jul 16, 2021 at 01:02:06AM +0300, Davis wrote:
-> On 2021-07-15 at 15:36 Greg KH (<greg@kroah.com>) wrote:
-> >
-> > On Sat, Jul 10, 2021 at 09:37:10PM +0300, Davis Mosenkovs wrote:
-> > > Commit e3d4030498c3 ("mac80211: do not accept/forward invalid EAPOL
-> > > frames") uses skb_mac_header() before eth_type_trans() is called
-> > > leading to incorrect pointer, the pointer gets written to. This issue
-> > > has appeared during backporting to 4.4, 4.9 and 4.14.
-> >
-> > So this is also needed in 4.9 and 4.14, right?  If so, now queued up
-> > everywhere.  If not, please let me know so I can drop it from the other
-> > trees.
-> >
-> > thanks,
-> >
-> > greg k-h
-> 
-> Thank you! Yes - this is needed in 4.4, 4.9 and 4.14.
-> Only line offsets and commit messages (they contain references to
-> backport commits introducing the issue) differ between kernel versions
-> and I see the patches are queued with correct line offsets.
-> Patches for 4.9
-> (https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/tree/queue-4.9/mac80211-fix-memory-corruption-in-eapol-handling.patch)
-> and 4.14 (https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/tree/queue-4.14/mac80211-fix-memory-corruption-in-eapol-handling.patch)
-> still contain 4.4 in the cc line in sign-off section. Also these
-> patches contain reference to commit e3d4030498c3 that is from 4.4
-> branch. Is this OK?
+From: Yaara Baruch <yaara.baruch@intel.com>
 
-It's fine :)
+Add new so-jf devices to the driver.
+
+Signed-off-by: Yaara Baruch <yaara.baruch@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 36 ++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index e8693be51fb1..0b8a0cd3b652 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1149,7 +1149,41 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
+ 		      IWL_CFG_RF_TYPE_GF, IWL_CFG_ANY,
+ 		      IWL_CFG_160, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_name)
++		      iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_name),
++
++/* So with JF2 */
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
++		      IWL_CFG_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9560_160_name),
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9560_name),
++
++/* So with JF */
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1,
++		      IWL_CFG_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9461_160_name),
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1_DIV,
++		      IWL_CFG_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9462_160_name),
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9461_name),
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_SO, IWL_CFG_ANY,
++		      IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1_DIV,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB,
++		      iwlax210_2ax_cfg_so_jf_b0, iwl9462_name)
+ 
+ #endif /* CONFIG_IWLMVM */
+ };
+-- 
+2.31.1
+
