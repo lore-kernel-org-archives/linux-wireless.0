@@ -7,28 +7,28 @@ X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71889C07E95
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 14:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C07C07E95
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:09:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BE8861002
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 14:59:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB2AE61279
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:09:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241908AbhGSOSU (ORCPT
+        id S243352AbhGSO2S (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Jul 2021 10:18:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52510 "EHLO mail.kernel.org"
+        Mon, 19 Jul 2021 10:28:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38648 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242090AbhGSORx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jul 2021 10:17:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EBAA7610F7;
-        Mon, 19 Jul 2021 14:58:31 +0000 (UTC)
+        id S242220AbhGSO0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jul 2021 10:26:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C41C61181;
+        Mon, 19 Jul 2021 15:07:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1626706712;
-        bh=sdkExXGi2cZP0AY/16vUdPaM5q+1HH1jiwH7rVVcx64=;
+        s=korg; t=1626707230;
+        bh=tbjK3+KGzetC/M7kPMYQUIaqwKGcQVs9fdQyCa8T6zI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mvLk0a4bvfAthEk926PqISpkd+aynLd7srNmyfA0mt20t8ac2/JZ8EmWuOFK2h+9D
-         8jbfQvQlPvVVJnx7T+2TdUaNO42tuD3w4Gop88ICOxQUTKIU1IPoVv3xH4656fmCXE
-         z1gDKP1Md4whyiwv3Yl29+wcR+fowudn3Dp1QkSk=
+        b=vleaCHPj0YHH5ulxRRt2RgIBoppJkuZF4Y0m1KD6CqcLzzaNx2GHObnQu/esmRE8P
+         7La8OfE19rq2SdOtOVaCkKeQHzmVF2zM0yTZDa9ddEBCGoS/N30E9m09WZKaFRWFf0
+         C3XYOH0wVtfX6XN8buDo02f32FhK4rImCokN1bcQ=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
         Christian Lamparter <chunkeey@gmail.com>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 4.4 065/188] wireless: carl9170: fix LEDS build errors & warnings
-Date:   Mon, 19 Jul 2021 16:50:49 +0200
-Message-Id: <20210719144928.088208532@linuxfoundation.org>
+Subject: [PATCH 4.9 079/245] wireless: carl9170: fix LEDS build errors & warnings
+Date:   Mon, 19 Jul 2021 16:50:21 +0200
+Message-Id: <20210719144942.959449221@linuxfoundation.org>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210719144913.076563739@linuxfoundation.org>
-References: <20210719144913.076563739@linuxfoundation.org>
+In-Reply-To: <20210719144940.288257948@linuxfoundation.org>
+References: <20210719144940.288257948@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -91,10 +91,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 1a796e5f69ec..3fc87997fcb3 100644
+index 2e34baeaf764..2b782db20fde 100644
 --- a/drivers/net/wireless/ath/carl9170/Kconfig
 +++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -17,13 +17,11 @@ config CARL9170
+@@ -15,13 +15,11 @@ config CARL9170
  
  config CARL9170_LEDS
  	bool "SoftLED Support"
