@@ -8,40 +8,40 @@ X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C303DC07E9D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87395C12002
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:32:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACEBC61221
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:12:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7409660241
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Jul 2021 15:32:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245241AbhGSOb2 (ORCPT
+        id S243726AbhGSOv5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Jul 2021 10:31:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38762 "EHLO mail.kernel.org"
+        Mon, 19 Jul 2021 10:51:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60798 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244639AbhGSO3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jul 2021 10:29:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 486CF6113B;
-        Mon, 19 Jul 2021 15:10:28 +0000 (UTC)
+        id S237769AbhGSOoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jul 2021 10:44:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AD20C61351;
+        Mon, 19 Jul 2021 15:22:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1626707428;
-        bh=IcrrfMENSAMzCA8Bq393mwfNqrFuA/ur07uvUXWQVF4=;
+        s=korg; t=1626708163;
+        bh=Zcos7YUKack1/HCELWL80ho/jZyblcu6oGVU/TBX8y4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lsapD+dQZQDy9v5wGXnYqaBvN4pNvO4LTYL9F5//4w//fACLOdBzgBvk6aTFev07F
-         lkO5JcfozesrcM423mWqVz9lP+2CwAlRqTkI+bjSxxSOm+U3GAcYBoNXEG+FZI6MZJ
-         SgAx3I1UelNLjvI7wKGtZz/yCZxoRocaQANqF/F4=
+        b=aqJ5hxyC0+KfYsbvEJTUiq23+MpvlnFlxTmBUQy0dpH6+wI8iS+QJidAX2N5uPno+
+         /UyyogTumhDZcls0mL6aWBDSurCnfwnLIrKieAaVbbAwv2st937zAE4komhgqfhGXQ
+         jcWUTkJwDUsldjrcnqDHJdIRZdRF8gc6qtrJjFaQ=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org, johannes@sipsolutions.net
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         stable@vger.kernel.org,
         "linux-wireless@vger.kernel.org, stable@vger.kernel.org, Davis Mosenkovs" 
         <davis@mosenkovs.lv>, Davis Mosenkovs <davis@mosenkovs.lv>
-Subject: [PATCH 4.9 160/245] mac80211: fix memory corruption in EAPOL handling
-Date:   Mon, 19 Jul 2021 16:51:42 +0200
-Message-Id: <20210719144945.576632083@linuxfoundation.org>
+Subject: [PATCH 4.14 205/315] mac80211: fix memory corruption in EAPOL handling
+Date:   Mon, 19 Jul 2021 16:51:34 +0200
+Message-Id: <20210719144950.170089499@linuxfoundation.org>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210719144940.288257948@linuxfoundation.org>
-References: <20210719144940.288257948@linuxfoundation.org>
+In-Reply-To: <20210719144942.861561397@linuxfoundation.org>
+References: <20210719144942.861561397@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -69,7 +69,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2380,7 +2380,7 @@ ieee80211_deliver_skb(struct ieee80211_r
+@@ -2404,7 +2404,7 @@ ieee80211_deliver_skb(struct ieee80211_r
  #endif
  
  	if (skb) {
