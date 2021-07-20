@@ -7,85 +7,85 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 941FCC07E95
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jul 2021 18:24:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 016A7C07E95
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jul 2021 18:26:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78FF660FF4
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jul 2021 18:24:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE356610A7
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jul 2021 18:26:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232555AbhGTRnh (ORCPT
+        id S232354AbhGTRo0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Jul 2021 13:43:37 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:49658 "EHLO
+        Tue, 20 Jul 2021 13:44:26 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.49]:46654 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234850AbhGTRmf (ORCPT
+        by vger.kernel.org with ESMTP id S234889AbhGTRmj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jul 2021 13:42:35 -0400
+        Tue, 20 Jul 2021 13:42:39 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.172])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id F1CE4A0075
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2021 18:23:00 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.64.218])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id D4FA61A006D
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2021 18:23:01 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C4C6114007E
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2021 18:23:00 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id B1D4B84007F
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2021 18:23:01 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 4F0C813C2B3;
-        Tue, 20 Jul 2021 11:23:00 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 4F0C813C2B3
+        by mail3.candelatech.com (Postfix) with ESMTP id 43EC513C2BC;
+        Tue, 20 Jul 2021 11:23:01 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 43EC513C2BC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1626805380;
-        bh=WMYkJ3alIxDDY4APHAc4Y7K299HxyU/pxpWbGtRC3xg=;
+        s=default; t=1626805381;
+        bh=sC1ZykBZsD2llde5jpRnLZivLxQGRyAKPBLpsb2LwFM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=g7D2Iis3UJt4CuPwC5sW5Thhy9+sPXhQAmfNapAEsUo8M3FkrRBtUlPJRg5rWTU9g
-         H59s7J7A6Kxvmm9H7WEtqUMFx1qAcZqFOn4Xyx/SVd7GMrnWWkToM4lDeiUbwIJUIN
-         oMve2kdy/VEGKCLNy0jG0++bxBgbRR1nAR3qp6Es=
+        b=TwwLhFszbVq5vDmVAcMQ165lwuG67YT52pelvZ719te1zKqiuaJ2u5jby6SsZZf3I
+         QDOnZKCqATgZlLdAt90aGi5XhlGZmNNvoq7EaRNwN8k04jKELPHLlH15/dPvJxmeCc
+         5w+s/Rbk1o+5/xdXHGalli6IYE7OvCgb4pRh3N24=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 02/11] mt76 - mt7915:  Fix potential NPE in TXS processing.
-Date:   Tue, 20 Jul 2021 11:22:46 -0700
-Message-Id: <20210720182256.30536-2-greearb@candelatech.com>
+Subject: [PATCH 08/11] mt76: mt7915:  Fix SGI reporting when using tx-overrides.
+Date:   Tue, 20 Jul 2021 11:22:52 -0700
+Message-Id: <20210720182256.30536-8-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210720182256.30536-1-greearb@candelatech.com>
 References: <20210720182256.30536-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1626805381-y-D30EVUkUmc
+X-MDID: 1626805382-nG3T9cp8Tm2I
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-If skb is null, then don't try to dereference it.
+The station wtbl logic to read rate-ctrl settings does not work when
+fixed rates are used.  So, read sgi settings from the txo configuration
+in this case.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 9b3637c4cb12..1f644c4f3686 100644
+index 121a3cd33d70..0cacfdf91a11 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1321,7 +1321,7 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+@@ -176,6 +176,15 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 						       rx_cur);
+ 		}
  
- 	/* TODO:  Gather stats anyway, even if we are not matching on an skb. */
- 	if (!skb)
--		goto out;
-+		goto out_no_skb;
- 
- 	txs = le32_to_cpu(txs_data[0]);
- 	txs5 = le32_to_cpu(txs_data[5]);
-@@ -1427,6 +1427,8 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
- 
- out:
- 	mt76_tx_status_skb_done(mdev, skb, &list, wcid);
++		/* If we are in tx-override mode, then wtbl doesn't provide useful report
++		 * for the SGI/LGI stuff, so just get it from the override struct.
++		 */
++		if (msta->test.txo_active) {
++			msta->wcid.rate_he_gi = msta->test.tx_rate_sgi;
++			msta->wcid.rate_short_gi = msta->test.tx_rate_sgi;
++			continue;
++		}
 +
-+out_no_skb:
- 	mt76_tx_status_unlock(mdev, &list);
- 
- 	return !!skb;
+ 		/*
+ 		 * We don't support reading GI info from txs packets.
+ 		 * For accurate tx status reporting and AQL improvement,
 -- 
 2.20.1
 
