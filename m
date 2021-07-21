@@ -2,165 +2,452 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 335BDC12002
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 15:52:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53CF0C12002
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 16:21:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11EDC60725
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 15:52:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3979A60FE9
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 16:21:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238832AbhGUPL3 (ORCPT
+        id S234127AbhGUPkp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jul 2021 11:11:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46904 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbhGUPL3 (ORCPT
+        Wed, 21 Jul 2021 11:40:45 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:57889 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232126AbhGUPko (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jul 2021 11:11:29 -0400
-Received: from mail-yb1-xb32.google.com (mail-yb1-xb32.google.com [IPv6:2607:f8b0:4864:20::b32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E3E6C061575
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2021 08:52:04 -0700 (PDT)
-Received: by mail-yb1-xb32.google.com with SMTP id y38so998612ybi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2021 08:52:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=0NSzMCBViK9VUo/AWDOH1q3+m7aEVw5xrnW3zvr8/+s=;
-        b=n7/LVlsVJN1GGJYlq3BdudFCk5VTojoAOPQe2ye5NOML7DWYH53PqmPIVfBl1Hu9eJ
-         D/XqhKXLY4YLSpGVM2l+Bs4m07Eoa0r/uJS5HYl6htzZRbt8z4gCkFJoxwQI1xlTCsBj
-         zIoKe7eNktwD2N0YaEv8Hwa6yBySnItD2AlqelkoiZ/zAcyGl+YkkPSZXXaXulXYprbR
-         UdRW+GRXrnsVoYDkwomxZ+iJwZSQS6E4oCpPMgiIIZHBVBr4FurTpmM3ETajvlboAymY
-         GrVZzzpgzEdA/8X0fVgw94j4aC0PKIymB7AIilQIpZoaPc26WOzpJIE5oRdJFTJ7VdOb
-         Y2pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=0NSzMCBViK9VUo/AWDOH1q3+m7aEVw5xrnW3zvr8/+s=;
-        b=UheaPp7nH0PcHOKjZjfgBJ5Z/Ez29l+hbJO86ed8i7gqZwCfuxqbz4TesW6AU6xFX3
-         MseRre33zvxDkAc571BGpMXh6FfDgkRvk93mpFVrzlHQEEnvDJg3ped5HAOIMZEku/xi
-         jODU3qbZb7Z0O0/EYygPqH4+mHHhMM0jY/fxibiVVkyy/Yjaca7UQtwm3p/MX2DoU8Bz
-         NeqC7ynP3YLxAmpTFP2LFRc5FhwvJq0ledLeb29CcF8co2a/tald3OH6mpc6rWQ7vsxx
-         26N7ynuDCi6gyNINl8wXwIEGpoYTo5PZRL/iGhB0KfmCI3dsyjCHifNWYTWGgRQpp0OR
-         kviw==
-X-Gm-Message-State: AOAM530BlO+1/F/OKY95fWAaqdcD8H40Fzb/vENIOzahDsMUWHCFjdpr
-        Hf7no+wlK6GFJmPUtfi3r7QX11z8rbAAtTkVJ+0=
-X-Google-Smtp-Source: ABdhPJwaFGTpOC8t7SF4mUbd+mBqsaZJkntj6RcSGRXZXVhOSFcCDgxezjJplzic6Kp4yFfQ8QuhgNnf47nixmzNb0k=
-X-Received: by 2002:a25:b3c9:: with SMTP id x9mr45681434ybf.514.1626882723690;
- Wed, 21 Jul 2021 08:52:03 -0700 (PDT)
+        Wed, 21 Jul 2021 11:40:44 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1626884481; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=xivyOk+hKKSvQ+Ksp85zN3EOG+/H1Vfn01O+OUvP2XA=; b=tyjXQoH4+2ei8eKT9z6XZLqp7OSTMUhMfFQGsORH3ik8pbj37H2COMJG9bk5vtXjrGwtF5IQ
+ /AEPf6CMZYZky1yiVlO7/3RrbwcT+u8z1codOKfE6gcxhMh1s5zGS/7Ap5dHzraqZWZXIc3u
+ 3v+6rgkXUkX0KSDPvXGd8seAa2o=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 60f84980e81205dd0a5b99b6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 21 Jul 2021 16:21:20
+ GMT
+Sender: jouni=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 609A2C433D3; Wed, 21 Jul 2021 16:21:20 +0000 (UTC)
+Received: from jouni.codeaurora.org (85-76-67-217-nat.elisa-mobile.fi [85.76.67.217])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: jouni)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7C46AC433F1;
+        Wed, 21 Jul 2021 16:21:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7C46AC433F1
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=jouni@codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Seevalamuthu Mariappan <seevalam@codeaurora.org>,
+        Miles Hu <milehu@codeaurora.org>,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 2/3] ath11k: add separate APIs for monitor mode
+Date:   Wed, 21 Jul 2021 19:20:52 +0300
+Message-Id: <20210721162053.46290-3-jouni@codeaurora.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210721162053.46290-1-jouni@codeaurora.org>
+References: <20210721162053.46290-1-jouni@codeaurora.org>
 MIME-Version: 1.0
-References: <CANB4YXTf0DhJfL6kPa26ZCzj8FRwwdw_enGROzL-zXuWGyrwOQ@mail.gmail.com>
- <CANB4YXRtyvgu946rL=gxaRqhXja1qfBQ+DSYfiMvYcax7o45EQ@mail.gmail.com>
- <YPgvMph+3vRbrol3@ubuntu-x1> <CANB4YXSDuYndC26KPkV+XqPkowbN54MMceuj7MNaxh+EwLN4kw@mail.gmail.com>
- <YPg83HXFIXDAEFx1@ubuntu-x1>
-In-Reply-To: <YPg83HXFIXDAEFx1@ubuntu-x1>
-From:   Timo Witte <timo.witte@gmail.com>
-Date:   Wed, 21 Jul 2021 17:51:53 +0200
-Message-ID: <CANB4YXS64QtxsgY0bx_Ri7bWfTY_5Ry7PbGwaGT3QVZb380vgQ@mail.gmail.com>
-Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 6GHz
-To:     Seth Forshee <sforshee@kernel.org>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ok then let's just remove the 25mW line.
-Here is the new patch:
+From: Seevalamuthu Mariappan <seevalam@codeaurora.org>
 
-diff --git a/db.txt b/db.txt
-index 1e5ed03..debd878 100644
---- a/db.txt
-+++ b/db.txt
-@@ -448,6 +448,12 @@ country CZ: DFS-ETSI
- # Bereich 57 GHz - 66 GHz f=C3=BCr Funkanwendungen f=C3=BCr weitbandige
- # Daten=C3=BCbertragungssysteme; =E2=80=9EMultiple Gigabit WAS/RLAN System=
-s (MGWS)=E2=80=9C).
- # https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Tel=
-ekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/20=
-11_08_MGWS_pdf.pdf
-+#
-+# Allocation for the WiFi 6E Band (Allgemeinzuteilung von Frequenzen im
-+# Bereich 5945 MHz - 6425 MHz f=C3=BCr drahtlose Zugangssysteme,
-+# einschlie=C3=9Flich lokaler Funknetze WAS/WLAN (=E2=80=9EWireless Access=
- Systems
-+# including Wireless Local Area Networks=E2=80=9C))
-+# https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Tel=
-ekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/Mo=
-bilfunkDectWlanCBFunk/vfg552021WLAN6GHz.pdf
- country DE: DFS-ETSI
-  (2400 - 2483.5 @ 40), (100 mW)
-  (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
-@@ -455,6 +461,8 @@ country DE: DFS-ETSI
-  (5470 - 5725 @ 160), (500 mW), DFS, wmmrule=3DETSI
-  # short range devices (ETSI EN 300 440-1)
-  (5725 - 5875 @ 80), (25 mW)
-+ # WiFi 6E
-+ (5945 - 6425 @ 160), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
-  # 60 GHz band channels 1-4 (ETSI EN 302 567)
-  (57000 - 66000 @ 2160), (40)
+Add separate APIs for monitor_vdev_create/monitor_vdev_delete
+and monitor_vdev_start/monitor_vdev_stop.
 
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01725-QCAHKSWPL_SILICONZ-1
 
-On Wed, Jul 21, 2021 at 5:27 PM Seth Forshee <sforshee@kernel.org> wrote:
->
-> On Wed, Jul 21, 2021 at 04:57:03PM +0200, Timo Witte wrote:
-> > From f9a99269b00f961e40024632c7b831c615bfa392 Mon Sep 17 00:00:00 2001
-> > From: Timo Witte <timo.witte@gmail.com>
-> > Date: Wed, 21 Jul 2021 16:51:40 +0200
-> > Subject: [PATCH] add wifi6e for germany
-> >
-> > Signed-off-by: Timo Witte <timo.witte@gmail.com>
-> > ---
-> >  db.txt | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/db.txt b/db.txt
-> > index 1e5ed03..411b7ac 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -448,6 +448,12 @@ country CZ: DFS-ETSI
-> >  # Bereich 57 GHz - 66 GHz f=C3=BCr Funkanwendungen f=C3=BCr weitbandig=
-e
-> >  # Daten=C3=BCbertragungssysteme; =E2=80=9EMultiple Gigabit WAS/RLAN Sy=
-stems (MGWS)=E2=80=9C).
-> >  # https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete=
-/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilunge=
-n/2011_08_MGWS_pdf.pdf
-> > +#
-> > +# Allocation for the WiFi 6E Band (Allgemeinzuteilung von Frequenzen i=
-m
-> > +# Bereich 5945 MHz - 6425 MHz f=C3=BCr drahtlose Zugangssysteme,
-> > +# einschlie=C3=9Flich lokaler Funknetze WAS/WLAN (=E2=80=9EWireless Ac=
-cess Systems
-> > +# including Wireless Local Area Networks=E2=80=9C))
-> > +# https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete=
-/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilunge=
-n/MobilfunkDectWlanCBFunk/vfg552021WLAN6GHz.pdf
-> >  country DE: DFS-ETSI
-> >         (2400 - 2483.5 @ 40), (100 mW)
-> >         (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DET=
-SI
-> > @@ -455,6 +461,10 @@ country DE: DFS-ETSI
-> >         (5470 - 5725 @ 160), (500 mW), DFS, wmmrule=3DETSI
-> >         # short range devices (ETSI EN 300 440-1)
-> >         (5725 - 5875 @ 80), (25 mW)
-> > +       # WiFi 6E
-> > +       (5945 - 6425 @ 160), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DE=
-TSI
-> > +       # WiFi 6E Short range (Outdoor allowed)
-> > +       (5945 - 6425 @ 160), (25 mW), AUTO-BW, wmmrule=3DETSI
->
-> Unfortunately the kernel doesn't support multiple rules for a given
-> range with differing flags. Currently it is necessary to specify either
-> the indoor power limit with NO-OUTDOOR or the outdoor power limit, but
-> not both.
->
-> Thanks,
-> Seth
+Co-developed-by: Miles Hu <milehu@codeaurora.org>
+Signed-off-by: Miles Hu <milehu@codeaurora.org>
+Co-developed-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Signed-off-by: Seevalamuthu Mariappan <seevalam@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/core.h |   5 +-
+ drivers/net/wireless/ath/ath11k/mac.c  | 313 ++++++++++++++++++++++++-
+ 2 files changed, 312 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 6a6cabdd3e30..3cddab695031 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -488,7 +488,8 @@ struct ath11k {
+ 	u32 chan_tx_pwr;
+ 	u32 num_stations;
+ 	u32 max_num_stations;
+-	bool monitor_present;
++	bool monitor_conf_enabled;
++	bool monitor_started;
+ 	/* To synchronize concurrent synchronous mac80211 callback operations,
+ 	 * concurrent debugfs configuration and concurrent FW statistics events.
+ 	 */
+@@ -563,6 +564,7 @@ struct ath11k {
+ 	struct ath11k_per_peer_tx_stats cached_stats;
+ 	u32 last_ppdu_id;
+ 	u32 cached_ppdu_id;
++	int monitor_vdev_id;
+ #ifdef CONFIG_ATH11K_DEBUGFS
+ 	struct ath11k_debug debug;
+ #endif
+@@ -571,6 +573,7 @@ struct ath11k {
+ #endif
+ 	bool dfs_block_radar_events;
+ 	struct ath11k_thermal thermal;
++	bool monitor_vdev_created;
+ };
+ 
+ struct ath11k_band_cap {
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 3fd9a79801cb..e446817ac8b0 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -745,14 +745,314 @@ static inline int ath11k_mac_vdev_setup_sync(struct ath11k *ar)
+ 	return ar->last_wmi_vdev_start_status ? -EINVAL : 0;
+ }
+ 
+-static int ath11k_mac_op_config(struct ieee80211_hw *hw, u32 changed)
++static void
++ath11k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
++				struct ieee80211_chanctx_conf *conf,
++				void *data)
+ {
+-	/* mac80211 requires this op to be present and that's why
+-	 * there's an empty function, this can be extended when
+-	 * required.
+-	 */
++	struct cfg80211_chan_def **def = data;
++
++	*def = &conf->def;
++}
++
++static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
++					 struct cfg80211_chan_def *chandef)
++{
++	struct ieee80211_channel *channel;
++	struct wmi_vdev_start_req_arg arg = {};
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	channel = chandef->chan;
++
++	arg.vdev_id = vdev_id;
++	arg.channel.freq = channel->center_freq;
++	arg.channel.band_center_freq1 = chandef->center_freq1;
++	arg.channel.band_center_freq2 = chandef->center_freq2;
++
++	arg.channel.mode = ath11k_phymodes[chandef->chan->band][chandef->width];
++	arg.channel.chan_radar =
++			!!(channel->flags & IEEE80211_CHAN_RADAR);
++
++	arg.channel.min_power = 0;
++	arg.channel.max_power = channel->max_power * 2;
++	arg.channel.max_reg_power = channel->max_reg_power * 2;
++	arg.channel.max_antenna_gain = channel->max_antenna_gain * 2;
++
++	arg.pref_tx_streams = ar->num_tx_chains;
++	arg.pref_rx_streams = ar->num_rx_chains;
++
++	arg.channel.passive = !!(chandef->chan->flags & IEEE80211_CHAN_NO_IR);
++
++	reinit_completion(&ar->vdev_setup_done);
++	reinit_completion(&ar->vdev_delete_done);
+ 
++	ret = ath11k_wmi_vdev_start(ar, &arg, false);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to request monitor vdev %i start: %d\n",
++			    vdev_id, ret);
++		return ret;
++	}
++	ret = ath11k_mac_vdev_setup_sync(ar);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to synchronize setup for monitor vdev %i start: %d\n",
++			    vdev_id, ret);
++		return ret;
++	}
++	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
++			    vdev_id, ret);
++		goto vdev_stop;
++	}
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor vdev %i started\n",
++		   vdev_id);
+ 	return 0;
++
++vdev_stop:
++	reinit_completion(&ar->vdev_setup_done);
++
++	ret = ath11k_wmi_vdev_stop(ar, vdev_id);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to stop monitor vdev %i after start failure: %d\n",
++			    vdev_id, ret);
++		return ret;
++	}
++
++	ret = ath11k_mac_vdev_setup_sync(ar);
++	if (ret)
++		ath11k_warn(ar->ab, "failed to synchronize setup for vdev %i stop: %d\n",
++			    vdev_id, ret);
++	return ret;
++}
++
++static int ath11k_mac_monitor_vdev_stop(struct ath11k *ar)
++{
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	reinit_completion(&ar->vdev_setup_done);
++
++	ret = ath11k_wmi_vdev_stop(ar, ar->monitor_vdev_id);
++	if (ret)
++		ath11k_warn(ar->ab, "failed to request monitor vdev %i stop: %d\n",
++			    ar->monitor_vdev_id, ret);
++
++	ret = ath11k_mac_vdev_setup_sync(ar);
++	if (ret)
++		ath11k_warn(ar->ab, "failed to synchronize monitor vdev %i stop: %d\n",
++			    ar->monitor_vdev_id, ret);
++
++	ret = ath11k_wmi_vdev_down(ar, ar->monitor_vdev_id);
++	if (ret)
++		ath11k_warn(ar->ab, "failed to put down monitor vdev %i: %d\n",
++			    ar->monitor_vdev_id, ret);
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor vdev %i stopped\n",
++		   ar->monitor_vdev_id);
++	return ret;
++}
++
++static int ath11k_mac_monitor_vdev_create(struct ath11k *ar)
++{
++	struct ath11k_pdev *pdev = ar->pdev;
++	struct vdev_create_params param = {};
++	int bit, ret;
++	u8 tmp_addr[6] = {0};
++	u16 nss;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	if (ar->monitor_vdev_created)
++		return 0;
++
++	if (ar->ab->free_vdev_map == 0) {
++		ath11k_warn(ar->ab, "failed to find free vdev id for monitor vdev\n");
++		return -ENOMEM;
++	}
++
++	bit = __ffs64(ar->ab->free_vdev_map);
++
++	ar->monitor_vdev_id = bit;
++
++	param.if_id = ar->monitor_vdev_id;
++	param.type = WMI_VDEV_TYPE_MONITOR;
++	param.subtype = WMI_VDEV_SUBTYPE_NONE;
++	param.pdev_id = pdev->pdev_id;
++
++	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
++		param.chains[NL80211_BAND_2GHZ].tx = ar->num_tx_chains;
++		param.chains[NL80211_BAND_2GHZ].rx = ar->num_rx_chains;
++	}
++	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) {
++		param.chains[NL80211_BAND_5GHZ].tx = ar->num_tx_chains;
++		param.chains[NL80211_BAND_5GHZ].rx = ar->num_rx_chains;
++	}
++
++	ret = ath11k_wmi_vdev_create(ar, tmp_addr, &param);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to request monitor vdev %i creation: %d\n",
++			    ar->monitor_vdev_id, ret);
++		ar->monitor_vdev_id = -1;
++		return ret;
++	}
++
++	nss = get_num_chains(ar->cfg_tx_chainmask) ? : 1;
++	ret = ath11k_wmi_vdev_set_param_cmd(ar, ar->monitor_vdev_id,
++					    WMI_VDEV_PARAM_NSS, nss);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to set vdev %d chainmask 0x%x, nss %d :%d\n",
++			    ar->monitor_vdev_id, ar->cfg_tx_chainmask, nss, ret);
++		goto err_vdev_del;
++	}
++
++	ret = ath11k_mac_txpower_recalc(ar);
++	if (ret)
++		goto err_vdev_del;
++
++	ar->allocated_vdev_map |= 1LL << ar->monitor_vdev_id;
++	ar->ab->free_vdev_map &= ~(1LL << ar->monitor_vdev_id);
++	ar->num_created_vdevs++;
++	ar->monitor_vdev_created = true;
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor vdev %d created\n",
++		   ar->monitor_vdev_id);
++
++	return 0;
++
++err_vdev_del:
++	ath11k_wmi_vdev_delete(ar, ar->monitor_vdev_id);
++	ar->monitor_vdev_id = -1;
++	return ret;
++}
++
++static int ath11k_mac_monitor_vdev_delete(struct ath11k *ar)
++{
++	int ret;
++	unsigned long time_left;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	if (!ar->monitor_vdev_created)
++		return 0;
++
++	reinit_completion(&ar->vdev_delete_done);
++
++	ret = ath11k_wmi_vdev_delete(ar, ar->monitor_vdev_id);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to request wmi monitor vdev %i removal: %d\n",
++			    ar->monitor_vdev_id, ret);
++		return ret;
++	}
++
++	time_left = wait_for_completion_timeout(&ar->vdev_delete_done,
++						ATH11K_VDEV_DELETE_TIMEOUT_HZ);
++	if (time_left == 0) {
++		ath11k_warn(ar->ab, "Timeout in receiving vdev delete response\n");
++	} else {
++		ar->allocated_vdev_map &= ~(1LL << ar->monitor_vdev_id);
++		ar->ab->free_vdev_map |= 1LL << (ar->monitor_vdev_id);
++		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor vdev %d deleted\n",
++			   ar->monitor_vdev_id);
++		ar->num_created_vdevs--;
++		ar->monitor_vdev_id = -1;
++		ar->monitor_vdev_created = false;
++	}
++
++	return ret;
++}
++
++static int ath11k_mac_monitor_start(struct ath11k *ar)
++{
++	struct cfg80211_chan_def *chandef = NULL;
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	if (ar->monitor_started)
++		return 0;
++
++	ieee80211_iter_chan_contexts_atomic(ar->hw,
++					    ath11k_mac_get_any_chandef_iter,
++					    &chandef);
++	if (!chandef)
++		return 0;
++
++	ret = ath11k_mac_monitor_vdev_start(ar, ar->monitor_vdev_id, chandef);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to start monitor vdev: %d\n", ret);
++		ath11k_mac_monitor_vdev_delete(ar);
++		return ret;
++	}
++
++	ar->monitor_started = true;
++	ar->num_started_vdevs++;
++	ret = ath11k_dp_tx_htt_monitor_mode_ring_config(ar, false);
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor started ret %d\n", ret);
++
++	return ret;
++}
++
++static int ath11k_mac_monitor_stop(struct ath11k *ar)
++{
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	if (!ar->monitor_started)
++		return 0;
++
++	ret = ath11k_mac_monitor_vdev_stop(ar);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to stop monitor vdev: %d\n", ret);
++		return ret;
++	}
++
++	ar->monitor_started = false;
++	ar->num_started_vdevs--;
++	ret = ath11k_dp_tx_htt_monitor_mode_ring_config(ar, true);
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor stopped ret %d\n", ret);
++	return ret;
++}
++
++static int ath11k_mac_op_config(struct ieee80211_hw *hw, u32 changed)
++{
++	struct ath11k *ar = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++	int ret = 0;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
++		ar->monitor_conf_enabled = conf->flags & IEEE80211_CONF_MONITOR;
++		if (ar->monitor_conf_enabled) {
++			if (ar->monitor_vdev_created)
++				goto exit;
++			ret = ath11k_mac_monitor_vdev_create(ar);
++			if (ret)
++				goto exit;
++			ret = ath11k_mac_monitor_start(ar);
++			if (ret)
++				goto err_mon_del;
++		} else {
++			if (!ar->monitor_vdev_created)
++				goto exit;
++			ret = ath11k_mac_monitor_stop(ar);
++			if (ret)
++				goto exit;
++			ath11k_mac_monitor_vdev_delete(ar);
++		}
++	}
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++
++err_mon_del:
++	ath11k_mac_monitor_vdev_delete(ar);
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
+ }
+ 
+ static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
+@@ -6772,6 +7072,9 @@ int ath11k_mac_allocate(struct ath11k_base *ab)
+ 		INIT_WORK(&ar->wmi_mgmt_tx_work, ath11k_mgmt_over_wmi_tx_work);
+ 		skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+ 		clear_bit(ATH11K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
++		ar->monitor_vdev_id = -1;
++		ar->monitor_vdev_created = false;
++		ar->monitor_started = false;
+ 	}
+ 
+ 	return 0;
+-- 
+2.25.1
+
