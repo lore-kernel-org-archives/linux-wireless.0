@@ -2,175 +2,230 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7566CC07E9B
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 03:20:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9396C636C9
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 11:23:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 561FD611CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 03:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A631260FF3
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jul 2021 11:23:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231781AbhGUCjf (ORCPT
+        id S235319AbhGUKnN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Jul 2021 22:39:35 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36886 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231404AbhGUCjf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jul 2021 22:39:35 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 16L3K57q8012246, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 16L3K57q8012246
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 21 Jul 2021 11:20:05 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Wed, 21 Jul 2021 11:20:04 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Wed, 21 Jul 2021 11:20:03 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::5bd:6f71:b434:7c91]) by
- RTEXMBS04.realtek.com.tw ([fe80::5bd:6f71:b434:7c91%5]) with mapi id
- 15.01.2106.013; Wed, 21 Jul 2021 11:20:03 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>
-CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v4 09/19] rtw89: add pci files
-Thread-Topic: [PATCH v4 09/19] rtw89: add pci files
-Thread-Index: AQHXPM4t4237yjXWkE2au/031Uoa26sMOfeAgAJeNoCAC1QVAIAK1bHggAjpL6CAHPMoAIABA19g
-Date:   Wed, 21 Jul 2021 03:20:03 +0000
-Message-ID: <bc549c7ad1a3475fbae814a2efb9ca7d@realtek.com>
-References: <20210429080149.7068-1-pkshih@realtek.com>
- <20210429080149.7068-10-pkshih@realtek.com> <YMFzAZUysQ5HxZlK@google.com>
- <45dd7da687a444d5acbc13eb67dcee97@realtek.com>
- <CA+ASDXP1aY5Mm14GDA_qPK7+7Jri2xAMZ3fYiVrhur7N5EO0mQ@mail.gmail.com>
- <db26751dfb02499093829a6aeecadb61@realtek.com>
- <CA+ASDXO7SfuAsLhLU9hn4bANL5oTizwoYh5ifi2Wi-Mr-7zMDQ@mail.gmail.com>
-In-Reply-To: <CA+ASDXO7SfuAsLhLU9hn4bANL5oTizwoYh5ifi2Wi-Mr-7zMDQ@mail.gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.146]
-x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzcvMjEg5LiK5Y2IIDAxOjA3OjAw?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Wed, 21 Jul 2021 06:43:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47472 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238695AbhGUJ3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jul 2021 05:29:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0BAC960FE7;
+        Wed, 21 Jul 2021 10:09:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1626862185;
+        bh=AkCAzoeKK4dm3J0IYr3eqKdLUog3VqnY+aXSEhth1R0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=c1tD+1+8N7ya+U+R4FoCk5r1AY0+njsEQDtKrpnu5fKg2Nsyw8ad0RAbDRa8LMlYN
+         kIGK/SB0S4EC/Bt9LoElGD8+QX12QgKfoR1683w3NYrmezl45haNH7nWDa/e7NVumf
+         ZIzS+wQ0FwO2WzFS4jJEXOjj+Re557OYzd+zf9Xc=
+Date:   Wed, 21 Jul 2021 12:09:41 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     kernel@pengutronix.de,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Alexandre Bounine <alex.bou9@gmail.com>,
+        Alex Dubov <oakad@yahoo.com>, Alex Elder <elder@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Ben Widawsky <ben.widawsky@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bodo Stroesser <bostroesser@gmail.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Cristian Marussi <cristian.marussi@arm.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Dexuan Cui <decui@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Eric Farman <farman@linux.ibm.com>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Frank Li <lznuaa@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Geoff Levand <geoff@infradead.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Harald Freudenberger <freude@linux.ibm.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Helge Deller <deller@gmx.de>, Ira Weiny <ira.weiny@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Wang <jasowang@redhat.com>,
+        Jens Taprogge <jens.taprogge@taprogge.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Jiri Kosina <jikos@kernel.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Joey Pabalan <jpabalanb@gmail.com>,
+        Johan Hovold <johan@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Johannes Thumshirn <morbidrsa@gmail.com>,
+        Jon Mason <jdmason@kudzu.us>, Juergen Gross <jgross@suse.com>,
+        Julien Grall <jgrall@amazon.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Lee Jones <lee.jones@linaro.org>, Len Brown <lenb@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manohar Vanga <manohar.vanga@gmail.com>,
+        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
+        Mark Gross <mgross@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martyn Welch <martyn@welchs.me.uk>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Michael Buesch <m@bues.ch>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Jamet <michael.jamet@intel.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Moritz Fischer <mdf@kernel.org>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Rich Felker <dalias@libc.org>,
+        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+        Samuel Holland <samuel@sholland.org>,
+        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
+        SeongJae Park <sjpark@amazon.de>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Sven Van Asbroeck <TheSven73@gmail.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Thorsten Scherer <t.scherer@eckelmann.de>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Tom Rix <trix@redhat.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Vineeth Vijayan <vneethv@linux.ibm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        Wolfram Sang <wsa@kernel.org>, Wu Hao <hao.wu@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        YueHaibing <yuehaibing@huawei.com>,
+        Yufen Yu <yuyufen@huawei.com>, alsa-devel@alsa-project.org,
+        dmaengine@vger.kernel.org, greybus-dev@lists.linaro.org,
+        industrypack-devel@lists.sourceforge.net, kvm@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-fpga@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
+        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-ntb@googlegroups.com, linux-parisc@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-staging@lists.linux.dev, linux-sunxi@lists.linux.dev,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, nvdimm@lists.linux.dev,
+        platform-driver-x86@vger.kernel.org, sparclinux@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v4 0/5] bus: Make remove callback return void
+Message-ID: <YPfyZen4Y0uDKqDT@kroah.com>
+References: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 07/21/2021 02:54:37
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 165154 [Jul 21 2021]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
-X-KSE-AntiSpam-Info: LuaCore: 448 448 71fb1b37213ce9a885768d4012c46ac449c77b17
-X-KSE-AntiSpam-Info: {Tracking_from_exist}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;realtek.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 07/21/2021 02:56:00
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJyaWFuIE5vcnJpcyBbbWFp
-bHRvOmJyaWFubm9ycmlzQGNocm9taXVtLm9yZ10NCj4gU2VudDogVHVlc2RheSwgSnVseSAyMCwg
-MjAyMSAyOjUxIEFNDQo+IFRvOiBQa3NoaWgNCj4gQ2M6IGt2YWxvQGNvZGVhdXJvcmEub3JnOyBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCAw
-OS8xOV0gcnR3ODk6IGFkZCBwY2kgZmlsZXMNCj4gDQo+IChMYXRlIHJlc3BvbnNlKQ0KPiANCj4g
-T24gV2VkLCBKdW4gMzAsIDIwMjEgYXQgNTo0NyBQTSBQa3NoaWggPHBrc2hpaEByZWFsdGVrLmNv
-bT4gd3JvdGU6DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTog
-UGtzaGloDQo+IA0KPiA+ID4gSSByZWFkIElSUSBoYW5kbGVyIG9mIHJ0dzg4IHRoYXQgbG9va3Mg
-bXVjaCBzaW1wbGVyLCBhbmQgSSBwaWN0dXJlIHRoZQ0KPiA+ID4gbmV3IGZsb3c6DQo+ID4gPg0K
-PiA+ID4gaW50X2hhbmRsZXIgICAgICAgICAgICAgaW50X3RocmVhZGZuICAgICAgICAgICAgICBu
-YXBpX3BvbGwNCj4gPiA+IC0tLS0tLS0tLS0tICAgICAgICAgICAgIC0tLS0tLS0tLS0tLSAgICAg
-ICAgICAgICAgLS0tLS0tLS0tDQo+ID4gPiAgICAgfA0KPiA+ID4gICAgIHwNCj4gPiA+ICAgICB8
-IDEpIGRpcy4gaW50cg0KPiA+ID4gICAgIG8gICAgICAgICAgICAgICAgICAgICAgfA0KPiA+ID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAyKSByZWFkIGludGVycnVwdCBzdGF0dXMgbG9j
-YWxseQ0KPiA+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAzKSBkbyBUWCByZWNsYWlt
-DQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICB8IDQpIGNoZWNrIGlmIFJYPw0KPiA+
-ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgfCA1KSByZS1lbmFibGUgaW50cg0KPiA+ID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAoUlggaXMgb3B0aW9uYWwpDQo+ID4gPiAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICB8IDYpIHNjaGVkdWxlX25hcGkNCj4gPiA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIHwgICAgKGlmIFJYKQ0KPiA+ID4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgOiA+Pj4tLS0tLS0tLS0tLS0tLS0tLS0tKyA3KSAodGFza2xldCBzdGFydCBp
-bW1lZGlhdGVseSkNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogICAgICAgICAg
-ICAgICAgICAgICAgIHwNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogICAgICAg
-ICAgICAgICAgICAgICAgIHwgOCkgc2V0ICdkb2luZyBSWCcgZmxhZw0KPiA+ID4gICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgOiAgICAgICAgICAgICAgICAgICAgICAgfCA5KSBkbyBSWCB0aGlu
-Z3MNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogICAgICAgICAgICAgICAgICAg
-ICAgIHwgMTApIGNsZWFyICdkb2luZyBSWCcgZmxhZw0KPiA+ID4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgOiAgICAgICAgICAgICAgICAgICAgICAgfCAxMSkgcmUtZW5hYmxlIGludHIgb2Yg
-UlgNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogICAgICAgICAgICAgICAgICAg
-ICAgIHwNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDogPDw8LS0tLS0tLS0tLS0t
-LS0tLS0tLW8NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIDoNCj4gPiA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIG8NCj4gPiA+DQo+ID4gPiBTdGVwIDIpIHJlYWQgYW5kIGNs
-ZWFyIGludGVycnVwdCBzdGF0dXMgd2l0aCBzcGluX2xvY2tfaXJxc2F2ZSwgYW5kIHVzZSBsb2Nh
-bA0KPiA+ID4gdmFyaWFibGVzIHRvIHNhdmUgdGhlIHN0YXR1cy4gVGhlbiwgdGhlIHN0YXR1cyB3
-aWxsIGJlIGNvcnJlY3QsIGV2ZW4gbW9yZQ0KPiA+ID4gaW50ZXJydXB0cyBhcmUgdHJpZ2dlcmVk
-Lg0KPiA+ID4NCj4gPiA+IFN0ZXAgOCkvMTApIGFkZCBhICdkb2luZyBSWCcgZmxhZyB3ZSBkb24n
-dCBlbmFibGUgUlggaW50ZXJydXB0IGluIHRoaXMgcGVyaW9kLCBzbw0KPiA+ID4gc3RlcCA1KSB3
-aWxsIG5vdCBtYWtlIGEgbWlzdGFrZSB0byBlbmFibGUgUlggaW50ZXJydXB0IGltcHJvcGVybHku
-DQo+IA0KPiBCVFcsIEkgdGhpbmsgeW91IG1pZ2h0IGJlIHBvaW50aW5nIG91dCBhIHNvcnQgb2Yg
-YnVnIHdpdGggcnR3ODggLS0gYQ0KPiBub24tUlggaW50ZXJydXB0IG1pZ2h0IGNhdXNlIFJYIGlu
-dGVycnVwdHMgdG8gZ2V0IHJlLWVuYWJsZWQgaW4gdGhlDQo+IG1pZHN0IG9mIHdoYXQncyAqc3Vw
-cG9zZWQqIHRvIGJlIGEgTkFQSSBwb2xsLiBJdCdzIG5vdCBhIGZhdGFsDQo+IGZ1bmN0aW9uYWwg
-cHJvYmxlbSBvciBhbnl0aGluZywgYnV0IGl0IGRvZXMgbWVhbiB3ZSBtaWdodCBnZXQgZXhjZXNz
-DQo+IFJYIGludGVycnVwdHMsIHdoaWNoIGNhbiBkZWZlYXQgdGhlIHB1cnBvc2Ugb2YgcG9sbGlu
-Zy4gSSBzdXBwb3NlIHRoZQ0KPiBpbXBhY3Qgb2Ygc3VjaCBhIGJ1ZyBkZXBlbmRzIG9uIGhvdyBm
-cmVxdWVudGx5IHdlJ3JlIHJlY2VpdmluZyBvdGhlcg0KPiBpbnRlcnJ1cHRzIChzYXksIEgyQz8p
-Lg0KDQpJbmRlZWQuIFdlIG5lZWQgdG8gYWRkIGEgJ2RvaW5nIFJYJyBmbGFnIHRvIHJ0dzg4LiBJ
-IGhhdmUgYW5vdGhlciB0aGlua2luZywNCndoaWNoIGRvZXNuJ3QgdXNlIHRoaXMgZmxhZywgdG8g
-cmVmaW5lIHJ0dzg5LCBhbmQgSSdtIHdvcmtpbmcgb24gaXQuDQpJZiBpdCB3b3JrcyB3ZWxsLCBJ
-IGNhbiBhcHBseSBpdCB0byBydHc4OC4NCg0KaW50X2hhbmRsZXIgICAgICAgICAgICAgaW50X3Ro
-cmVhZGZuICAgICAgICAgICAgICBuYXBpX3BvbGwNCi0tLS0tLS0tLS0tICAgICAgICAgICAgIC0t
-LS0tLS0tLS0tLSAgICAgICAgICAgICAgLS0tLS0tLS0tDQogICAgfA0KICAgIHwNCiAgICB8IDEp
-IGRpcy4gaW50cg0KICAgIG8gICAgICAgICAgICAgICAgICAgICAgfA0KICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgfCAyKSByZWFkIGludGVycnVwdCBzdGF0dXMgbG9jYWxseQ0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfCAzKSBkbyB1bmxpa2VseSB0aGluZ3MNCiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHwgNCkgc2NoZWR1bGVfbmFwaQ0KICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgfA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgOiA+Pj4tLS0tLS0tLS0tLS0tLS0tLS0t
-KyA1KSAodGFza2xldCBzdGFydCBpbW1lZGlhdGVseSkNCiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIDogICAgICAgICAgICAgICAgICAgICAgIHwNCiAgICAgICAgICAgICAgICAgICAgICAgICAg
-IDogICAgICAgICAgICAgICAgICAgICAgIHwgNikgZG8gVFggY29tcGxldGlvbiB0aGluZ3MNCiAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIDogICAgICAgICAgICAgICAgICAgICAgIHwgNykgZG8g
-UlggdGhpbmdzDQogICAgICAgICAgICAgICAgICAgICAgICAgICA6ICAgICAgICAgICAgICAgICAg
-ICAgICB8IA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgOiAgICAgICAgICAgICAgICAgICAg
-ICAgfCA4KSByZS1lbmFibGUgaW50cg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgOiAgICAg
-ICAgICAgICAgICAgICAgICAgfA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgOiA8PDwtLS0t
-LS0tLS0tLS0tLS0tLS0tbw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgOg0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgbw0KDQpJIGRvbid0IGNoYW5nZSB0aGUgam9icyBvZiB0aGUgaW50
-X2hhbmRsZXIuIFRoZSBpbnRfdGhyZWFkIHJlYWRzIGludGVycnVwdCBzdGF0dXMNCmFuZCBzY2hl
-ZHVsZXMgTkFQSSB1bmNvbmRpdGlvbmFsbHksIGJlY2F1c2Ugb25seSB1bmxpa2VseSB0aGluZ3Mg
-cmVzaWRlIGluIHRoaXMNCmZ1bmN0aW9uLCBhbmQgdGhlIFRYIGNvbXBsZXRpb24gYW5kIFJYIHRo
-aW5ncyBhcmUgZG9uZSBieSBuYXBpX3BvbGwuDQpGaW5hbGx5LCB0aGUgbmFwaV9wb2xsIHJlLWVu
-YWJsZSBpbnRlcnJ1cHQgYWZ0ZXIgaXQgZG9lcyBhbGwgdGhpbmdzLg0KDQpUaGluZ3MgSSdtIHdv
-cnJpZWQgYXJlIHRoZSBsYXRlbmN5IG9mIFJYIGFuZCBUWCBjb21wbGV0aW9uLCBhbmQgZXh0cmEg
-cG9sbGluZyBJTy4NClRoZSBsYXRlbmN5IGFmZmVjdHMgcGVyZm9ybWFuY2UsIHNvIEknbGwgbWVh
-c3VyZSBpdC4gQWxzbywgSSdsbCBleGFtaW5lIHRpbWUgY29zdA0Kb2YgcG9sbGluZyBJTywgYW5k
-IGNvbXBhcmUgdGhlIGNvdW50IG9mIHBvbGxpbmcgSU8gYmVmb3JlL2FmdGVyIHRoaXMgY2hhbmdl
-Lg0KDQpJIGhvcGUgSSBjYW4gZmluaXNoIHRoaXMgd29yayBiZWZvcmUgdjYuDQoNCi0tDQpQaW5n
-LUtlDQoNCg==
+On Tue, Jul 13, 2021 at 09:35:17PM +0200, Uwe Kleine-König wrote:
+> Hello,
+> 
+> this is v4 of the final patch set for my effort to make struct
+> bus_type::remove return void.
+> 
+> The first four patches contain cleanups that make some of these
+> callbacks (more obviously) always return 0. They are acked by the
+> respective maintainers. Bjorn Helgaas explicitly asked to include the
+> pci patch (#1) into this series, so Greg taking this is fine. I assume
+> the s390 people are fine with Greg taking patches #2 to #4, too, they
+> didn't explicitly said so though.
+> 
+> The last patch actually changes the prototype and so touches quite some
+> drivers and has the potential to conflict with future developments, so I
+> consider it beneficial to put these patches into next soon. I expect
+> that it will be Greg who takes the complete series, he already confirmed
+> via irc (for v2) to look into this series.
+> 
+> The only change compared to v3 is in the fourth patch where I modified a
+> few more drivers to fix build failures. Some of them were found by build
+> bots (thanks!), some of them I found myself using a regular expression
+> search. The newly modified files are:
+> 
+>  arch/sparc/kernel/vio.c
+>  drivers/nubus/bus.c
+>  drivers/sh/superhyway/superhyway.c
+>  drivers/vlynq/vlynq.c
+>  drivers/zorro/zorro-driver.c
+>  sound/ac97/bus.c
+> 
+> Best regards
+> Uwe
+
+Now queued up.  I can go make a git tag that people can pull from after
+0-day is finished testing this to verify all is good, if others need it.
+
+thanks,
+
+greg k-h
