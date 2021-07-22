@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27022C6377D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE498C63793
 	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 10:21:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F41DC61287
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 10:21:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92C0F61289
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 10:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbhGVJkd (ORCPT
+        id S231582AbhGVJke (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Jul 2021 05:40:33 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:38344 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230367AbhGVJkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jul 2021 05:40:34 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:20867 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231571AbhGVJkd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 22 Jul 2021 05:40:33 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
  s=smtp; t=1626949268; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=8LtPGJGunu592abx+3Vdgj3yMYEyAgHRF3rksHbKtnM=; b=qKilSXd2vV8G0vH80e66vSZ/k3XXsf4N+2Qc+3MdGRuRtFwpHwqmd1u0we69TAfwZWA7VFn6
- 6wWv8TxkBpDiu3/q+E00fD7Y0+1uV56JvJoixAUBR4yCx7DFPWqe/TpLhgfrDtUFj52Q3B9Z
- nLtK8LypxZ7GvJBiShmKOGRSrhc=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=sEI8O3MRZYX32rujGHdALGWFcR20l7QSJ0dWH7WlTls=; b=FCVgh1MrjdLdpFRHbZWeGg4/zPwiuoIsZYSjg8ppEmEOxbcSnyhTn8k9WQExwntYf1C3IerN
+ 1MlntG7f+CXyDWMJJlEU3zBrh4ImXnNBstPeCdeOuKptdYQ/AlMbX2WG2v/H06jwaQWFB/MS
+ W4R0dxx/tOKZ08epDCoqSkJz5xE=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 60f9468e96a66e66b2df2866 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 22 Jul 2021 10:21:02
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 60f946934815712f3a2f8d9d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 22 Jul 2021 10:21:07
  GMT
 Sender: jouni=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 142AFC4338A; Thu, 22 Jul 2021 10:21:02 +0000 (UTC)
+        id 2A2B9C43460; Thu, 22 Jul 2021 10:21:07 +0000 (UTC)
 Received: from jouni.codeaurora.org (85-76-67-217-nat.elisa-mobile.fi [85.76.67.217])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: jouni)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0A9F9C4338A;
-        Thu, 22 Jul 2021 10:20:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0A9F9C4338A
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 730A5C433D3;
+        Thu, 22 Jul 2021 10:21:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 730A5C433D3
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=jouni@codeaurora.org
 From:   Jouni Malinen <jouni@codeaurora.org>
@@ -51,10 +52,12 @@ To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 1/3] ath11k: add channel 2 into 6 GHz channel list
-Date:   Thu, 22 Jul 2021 13:20:52 +0300
-Message-Id: <20210722102054.43419-1-jouni@codeaurora.org>
+Subject: [PATCH 3/3] ath11k: fix survey dump collection in 6 GHz
+Date:   Thu, 22 Jul 2021 13:20:54 +0300
+Message-Id: <20210722102054.43419-3-jouni@codeaurora.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210722102054.43419-1-jouni@codeaurora.org>
+References: <20210722102054.43419-1-jouni@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -63,46 +66,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 
-Add support for the 6 GHz channel 2 with center frequency 5935 MHz and
-operating class 136 per IEEE Std 802.11ax-2021, Table E-4.
+When ath11k receives survey request, choose the 6 GHz band when enabled.
+Without this, survey request does not include any 6 GHz band results,
+thereby causing auto channel selection to fail.
+
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01386-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/core.h | 4 ++--
- drivers/net/wireless/ath/ath11k/mac.c  | 3 +++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 79c52d28a3a2..d58ca38d78c7 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -381,9 +381,9 @@ struct ath11k_sta {
- };
- 
- #define ATH11K_MIN_5G_FREQ 4150
--#define ATH11K_MIN_6G_FREQ 5945
-+#define ATH11K_MIN_6G_FREQ 5925
- #define ATH11K_MAX_6G_FREQ 7115
--#define ATH11K_NUM_CHANS 100
-+#define ATH11K_NUM_CHANS 101
- #define ATH11K_MAX_5G_CHAN 173
- 
- enum ath11k_state {
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 10a838563683..56120407bfdd 100644
+index 56120407bfdd..133ecb351365 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -150,6 +150,9 @@ static const struct ieee80211_channel ath11k_6ghz_channels[] = {
- 	CHAN6G(225, 7075, 0),
- 	CHAN6G(229, 7095, 0),
- 	CHAN6G(233, 7115, 0),
-+
-+	/* new addition in IEEE Std 802.11ax-2021 */
-+	CHAN6G(2, 5935, 0),
- };
+@@ -7073,7 +7073,13 @@ static int ath11k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
  
- static struct ieee80211_rate ath11k_legacy_rates[] = {
+ 	if (!sband)
+ 		sband = hw->wiphy->bands[NL80211_BAND_5GHZ];
++	if (sband && idx >= sband->n_channels) {
++		idx -= sband->n_channels;
++		sband = NULL;
++	}
+ 
++	if (!sband)
++		sband = hw->wiphy->bands[NL80211_BAND_6GHZ];
+ 	if (!sband || idx >= sband->n_channels) {
+ 		ret = -ENOENT;
+ 		goto exit;
 -- 
 2.25.1
 
