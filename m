@@ -7,103 +7,174 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA579C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E95BC43216
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B910F60EB2
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22D9D60EB1
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231128AbhGVTok (ORCPT
+        id S231131AbhGVTok (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 22 Jul 2021 15:44:40 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:33274 "EHLO
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.49]:56428 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230437AbhGVToh (ORCPT
+        by vger.kernel.org with ESMTP id S230455AbhGVToh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 22 Jul 2021 15:44:37 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.50.13])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 21740A0072
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 20:25:11 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.123])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id BC18420066
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 20:25:10 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id EED48440074
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 905684C0069
         for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 20:25:10 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 8498413C2B8;
+        by mail3.candelatech.com (Postfix) with ESMTP id 3CD0413C2B5;
         Thu, 22 Jul 2021 13:25:10 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 8498413C2B8
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3CD0413C2B5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1626985510;
-        bh=ebvdbEp3CyND0tTAllOpxo6ClqpSZni8qJjvW6vcvPM=;
+        bh=tKCATEbClBwtjCzXp6ytqzGphdlBfwy1DZGDqDCqmPA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QNtvqqLMbhRP+IMbag4POP00p0UMSDKOgnBrs4sSEbDbjaSk7z8JvitUivCc4Sp05
-         HJmlwxuRlPrrg8CoNt+CPPxof0RojtdItb1AMrgiPzaSzRusMqv2s2WUVwId7v720w
-         Iacfejsg4/UOEIOKA4ZscYQ/Y60FNx2foJYT1jaM=
+        b=h3Xsy8uXD/060WhAwC6didWqBNnDgPxKUostR5U8i4S46qzpzrZQk+JxvpXeVUmuI
+         jKA73fH7/sZV0dKnVg6NCjfigrpT9BZ+oQMSOgj/7yztt2VIidOeYh7BXfhTmBF9mg
+         miXUyCV+Q8Z7BqxmTAdIbLto93UjfHUhGkcAFHO0=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 6/8] mt76 - mt7915: Fix he_mcs capabilities for 160mhz.
-Date:   Thu, 22 Jul 2021 13:25:02 -0700
-Message-Id: <20210722202504.6180-6-greearb@candelatech.com>
+Subject: [PATCH v3 4/8] mt76 - mt7915: Add tx mu/su counters to mib
+Date:   Thu, 22 Jul 2021 13:25:00 -0700
+Message-Id: <20210722202504.6180-4-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210722202504.6180-1-greearb@candelatech.com>
 References: <20210722202504.6180-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1626985511-RIaQuOYeFZiy
+X-MDID: 1626985511-bztV0viMAiwS
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-At 160, this chip can only do 2x2 NSS.  Fix the features
-accordingly, verified it shows up properly in iw phy foo info
-now.
+These counters are clear-on-read, so we need to accumulate
+them in the update_stats poll logic, and read the accumulated
+values instead of directly doing register reads when reporting
+to debugfs and ethtool stats.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 33 ++++++++-----------
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 13 +++++++-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  4 +++
+ 3 files changed, 29 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 08fa918c310b..f174cf219724 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -614,12 +614,19 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- {
- 	int i, idx = 0, nss = hweight8(phy->mt76->chainmask);
- 	u16 mcs_map = 0;
-+	u16 mcs_map_160 = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index ad400ddf36c3..759899c44583 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -152,6 +152,7 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
+ 		"BW20", "BW40", "BW80", "BW160"
+ 	};
+ 	int cnt;
++	struct mib_stats *mib = &phy->mib;
  
- 	for (i = 0; i < 8; i++) {
- 		if (i < nss)
- 			mcs_map |= (IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2));
- 		else
- 			mcs_map |= (IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
+ 	if (!phy)
+ 		return;
+@@ -187,15 +188,13 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
+ 		   FIELD_GET(MT_ETBF_TX_FB_TRI, cnt));
+ 
+ 	/* Tx SU & MU counters */
+-	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
+-	seq_printf(s, "Tx multi-user Beamforming counts: %ld\n",
+-		   FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt));
+-	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
+-	seq_printf(s, "Tx multi-user MPDU counts: %d\n", cnt);
+-	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
+-	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n", cnt);
+-	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
+-	seq_printf(s, "Tx single-user successful MPDU counts: %d\n", cnt);
++	seq_printf(s, "Tx multi-user Beamforming counts: %d\n",
++		   mib->tx_bf_cnt);
++	seq_printf(s, "Tx multi-user MPDU counts: %d\n", mib->tx_mu_mpdu_cnt);
++	seq_printf(s, "Tx multi-user successful MPDU counts: %d\n",
++		   mib->tx_mu_successful_mpdu_cnt);
++	seq_printf(s, "Tx single-user successful MPDU counts: %d\n",
++		   mib->tx_su_successful_mpdu_cnt);
+ 
+ 	seq_puts(s, "\n");
+ }
+@@ -488,6 +487,7 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	struct mt7915_sta *msta;
+ 	struct mt7915_sta_stats *mstats;
+ 	bool found_sta = false;
++	struct mib_stats *mib = &phy->mib;
+ 
+ 	/* See mt7915_ampdu_stat_read_phy, etc */
+ 	bool ext_phy = phy != &dev->phy;
+@@ -527,17 +527,10 @@ void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
+ 
+ 	/* Tx SU & MU counters */
+-	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
+-	data[ei++] = FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
+-
+-	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
+-	data[ei++] = cnt;
+-
+-	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
+-	data[ei++] = cnt; /* MU MPDU SUccessful */
+-
+-	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
+-	data[ei++] = cnt; /* SU MPDU successful */
++	data[ei++] = mib->tx_bf_cnt;
++	data[ei++] = mib->tx_mu_mpdu_cnt;
++	data[ei++] = mib->tx_mu_successful_mpdu_cnt;
++	data[ei++] = mib->tx_su_successful_mpdu_cnt;
+ 
+ 	/* TODO:  External phy too?? */
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 3a10e14fbd50..23540ba5da97 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1880,10 +1880,21 @@ mt7915_mac_update_stats(struct mt7915_phy *phy)
+ 	struct mt7915_dev *dev = phy->dev;
+ 	struct mib_stats *mib = &phy->mib;
+ 	bool ext_phy = phy != &dev->phy;
+-	int i, aggr0, aggr1;
++	int i, aggr0, aggr1, cnt;
+ 
+ 	mib->fcs_err_cnt += mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
+ 					   MT_MIB_SDR3_FCS_ERR_MASK);
++	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
++	mib->tx_bf_cnt += FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
 +
-+		/* Can do 1/2 of NSS streams in 160Mhz mode. */
-+		if (i < nss / 2)
-+			mcs_map_160 |= (IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2));
-+		else
-+			mcs_map_160 |= (IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
- 	}
++	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
++	mib->tx_mu_mpdu_cnt += cnt;
++
++	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
++	mib->tx_mu_successful_mpdu_cnt += cnt;
++
++	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
++	mib->tx_su_successful_mpdu_cnt += cnt;
  
- 	for (i = 0; i < NUM_NL80211_IFTYPES; i++) {
-@@ -721,10 +728,10 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- 
- 		he_mcs->rx_mcs_80 = cpu_to_le16(mcs_map);
- 		he_mcs->tx_mcs_80 = cpu_to_le16(mcs_map);
--		he_mcs->rx_mcs_160 = cpu_to_le16(mcs_map);
--		he_mcs->tx_mcs_160 = cpu_to_le16(mcs_map);
--		he_mcs->rx_mcs_80p80 = cpu_to_le16(mcs_map);
--		he_mcs->tx_mcs_80p80 = cpu_to_le16(mcs_map);
-+		he_mcs->rx_mcs_160 = cpu_to_le16(mcs_map_160);
-+		he_mcs->tx_mcs_160 = cpu_to_le16(mcs_map_160);
-+		he_mcs->rx_mcs_80p80 = cpu_to_le16(mcs_map_160);
-+		he_mcs->tx_mcs_80p80 = cpu_to_le16(mcs_map_160);
- 
- 		mt7915_set_stream_he_txbf_caps(he_cap, i, nss);
+ 	aggr0 = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
+ 	for (i = 0, aggr1 = aggr0 + 4; i < 4; i++) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index ff944d1cf527..c5d0f2331b6f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -116,6 +116,10 @@ struct mib_stats {
+ 	u32 rts_cnt;
+ 	u32 rts_retries_cnt;
+ 	u32 ba_miss_cnt;
++	u32 tx_bf_cnt;
++	u32 tx_mu_mpdu_cnt;
++	u32 tx_mu_successful_mpdu_cnt;
++	u32 tx_su_successful_mpdu_cnt;
+ 	/* Add more stats here, updated from mac_update_stats */
+ };
  
 -- 
 2.20.1
