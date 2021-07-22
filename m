@@ -2,138 +2,250 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4868AC4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 19:42:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E2BC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B01E60EB5
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 19:42:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20F6160EB1
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jul 2021 20:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230079AbhGVTCB (ORCPT
+        id S230479AbhGVToh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Jul 2021 15:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34068 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbhGVTCA (ORCPT
+        Thu, 22 Jul 2021 15:44:37 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.183]:33248 "EHLO
+        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230266AbhGVTog (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jul 2021 15:02:00 -0400
-Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AE57C061757
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 12:42:35 -0700 (PDT)
-Received: by mail-il1-x12b.google.com with SMTP id j5so6473464ilk.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 12:42:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ojab.ru; s=ojab;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bEuCuHt84F523pMpVlgmLvJ4UIBF4EoLTs4dbDpATW8=;
-        b=mKU59JZsPpk4Uwrh9veqroWHFfmAS+JdwuvxLQdk+8vF9zAFjuiNoiHEI24a2DukKo
-         5MhOTtxunUNS4hbaqrDkjLwYr76tA5g73A4+lczu0NSSiOmMb+UKUc6r6h99MW6A5+b9
-         Q7bvYpxu1Mon2J4EnpLpVzxK+RGPMCxddZpU/EWqjSdsZnK8PKC4m/3T/xuu5KrT1ASi
-         wyy/tEO03vbX5aFkjMVtqkhVlsb6N31yshFICDUkrcKUmWz8qhBs0tytE1iqSKSKgECD
-         tpPtwFrUdXvO7VCKWdKQKxmu2xurNAK46JCBbIFn7O5l/cT9FyPL2gorlJMGX2WfLV2Q
-         qnEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bEuCuHt84F523pMpVlgmLvJ4UIBF4EoLTs4dbDpATW8=;
-        b=mtWyI7/ImPiMMn2Dn0pBgL4h5NthwNLC7mmjq2y1aOGIRlUiSOKAzC6CG5/LgNhpOJ
-         j96FjhJB/TPhZWI1wQv8sFN28xLwJkiZPLEegtHGscw+i+AGAcaedYEaHA/TrTkWlHQF
-         OoLxu2i5JVww0E4L9mGGhrVFY4ppeMpS5h42+kEPNijvfzGd1CUBj4XgP8xMnue12ZAL
-         y6mVtJLvJaCmYG1OCsFSRuVrnrh45ACNz/gND7DfvlsZTc4YfACl2+Kx+OChRIB9CFAZ
-         SMBC5h//BTZmp78R0RD7RyUqxCHItgQFSxl1OGei/mSmHqIvXVWF0w9YUp4/x/cXvTIK
-         lTMg==
-X-Gm-Message-State: AOAM531zaFYbmljK8MRdb5UWQrnOClwa6PVSmLHeDpyVpoirQYx/YLJJ
-        8obe+6z6dvcl8fUp3sUG6jzTm8I0mrBUJHtkbB0cqw==
-X-Google-Smtp-Source: ABdhPJyMABrkiHTJMS9LZm/CFEJBy6P8UgBeaGafeRs22DUJ5aaCx9PBDCrxo0HZCPVZx1y0wGfrIk1R5ZHDwpeYc/o=
-X-Received: by 2002:a05:6e02:1d0f:: with SMTP id i15mr893058ila.199.1626982954711;
- Thu, 22 Jul 2021 12:42:34 -0700 (PDT)
+        Thu, 22 Jul 2021 15:44:36 -0400
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.48.61])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 8B6AC2A0074
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 20:25:10 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 50398C006B
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2021 20:25:10 +0000 (UTC)
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id BD1A213C2B1;
+        Thu, 22 Jul 2021 13:25:09 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com BD1A213C2B1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1626985509;
+        bh=sVcP3IlbGVGWLpVxdz+XP558W+I4gqwdFd+KVtLiP34=;
+        h=From:To:Cc:Subject:Date:From;
+        b=YFpl3X3Q00/19c5okZ8koifyYHy71pipMFNn1sZsCwbJ09JgHTFU5MJNYzNaT8kA0
+         /boGXSh1/+PsssIXgytHu2qTKHf0mCkDx71aXPNgZz5B00tYsldBs6DR63subiZ59a
+         OEW+ayePqPNZIawpdeR8+uJkiDhAH7uC9G++Rgcs=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 1/8] mt76 - mt7915: Add ethtool stats support.
+Date:   Thu, 22 Jul 2021 13:24:57 -0700
+Message-Id: <20210722202504.6180-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <20210722193459.7474-1-ojab@ojab.ru>
-In-Reply-To: <20210722193459.7474-1-ojab@ojab.ru>
-From:   "ojab //" <ojab@ojab.ru>
-Date:   Thu, 22 Jul 2021 22:42:23 +0300
-Message-ID: <CAKzrAgRvOLX6rcKKz=8ghD+QLyMu-1KEPm5HkkLEAzuE1MQpDA@mail.gmail.com>
-Subject: Re: [PATCH V2] ath10k: don't fail if IRAM write fails
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, axel.rasmussen1@gmail.com
-Cc:     ath10k@lists.infradead.org,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-MDID: 1626985511-NWA2AM1zgRda
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-See also: https://lists.infradead.org/pipermail/ath10k/2021-May/012626.html
+From: Ben Greear <greearb@candelatech.com>
 
-On Thu, 22 Jul 2021 at 22:36, ojab <ojab@ojab.ru> wrote:
->
-> After reboot with kernel & firmware updates I found `failed to copy
-> target iram contents:` in dmesg and missing wlan interfaces for both
-> of my QCA9984 compex cards. Rolling back kernel/firmware didn't fixed
-> it, so while I have no idea what's actually happening, I don't see why
-> we should fail in this case, looks like some optional firmware ability
-> that could be skipped.
->
-> Also with additional logging there is
-> ```
-> [    6.839858] ath10k_pci 0000:04:00.0: No hardware memory
-> [    6.841205] ath10k_pci 0000:04:00.0: failed to copy target iram contents: -12
-> [    6.873578] ath10k_pci 0000:07:00.0: No hardware memory
-> [    6.875052] ath10k_pci 0000:07:00.0: failed to copy target iram contents: -12
-> ```
-> so exact branch could be seen.
->
-> Signed-off-by: Slava Kardakov <ojab@ojab.ru>
-> ---
->  Of course I forgot to sing off, since I don't use it by default because I
->  hate my real name and kernel requires it
->
->  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 2f9be182fbfb..d9fd5294e142 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -2691,8 +2691,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
->         u32 len, remaining_len;
->
->         hw_mem = ath10k_coredump_get_mem_layout(ar);
-> -       if (!hw_mem)
-> +       if (!hw_mem) {
-> +               ath10k_warn(ar, "No hardware memory");
->                 return -ENOMEM;
-> +       }
->
->         for (i = 0; i < hw_mem->region_table.size; i++) {
->                 tmp = &hw_mem->region_table.regions[i];
-> @@ -2702,8 +2704,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
->                 }
->         }
->
-> -       if (!mem_region)
-> +       if (!mem_region) {
-> +               ath10k_warn(ar, "No memory region");
->                 return -ENOMEM;
-> +       }
->
->         for (i = 0; i < ar->wmi.num_mem_chunks; i++) {
->                 if (ar->wmi.mem_chunks[i].req_id ==
-> @@ -2917,7 +2921,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
->                 if (status) {
->                         ath10k_warn(ar, "failed to copy target iram contents: %d",
->                                     status);
-> -                       goto err_hif_stop;
->                 }
->         }
->
-> --
-> 2.32.0
+This exposes some tx-path stats to the ethtool API, so that
+ethtool -S wlanX provides some more useful info.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v3:  Clean up checkpatch warnings.
+
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 135 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |   3 +
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  12 ++
+ 3 files changed, 150 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index 1a48b09d0cb7..469028d641c7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -382,4 +382,139 @@ void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	debugfs_create_file("fixed_rate", 0600, dir, sta, &fops_fixed_rate);
+ }
++
+ #endif
++
++static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_ampdu_len:0-1",
++	"tx_ampdu_len:2-10",
++	"tx_ampdu_len:11-19",
++	"tx_ampdu_len:20-28",
++	"tx_ampdu_len:29-37",
++	"tx_ampdu_len:38-46",
++	"tx_ampdu_len:47-55",
++	"tx_ampdu_len:56-79",
++	"tx_ampdu_len:80-103",
++	"tx_ampdu_len:104-127",
++	"tx_ampdu_len:128-151",
++	"tx_ampdu_len:152-175",
++	"tx_ampdu_len:176-199",
++	"tx_ampdu_len:200-223",
++	"tx_ampdu_len:224-247",
++	"ba_miss_count",
++	"tx_beamformer_ppdu_iBF",
++	"tx_beamformer_ppdu_eBF",
++	"tx_beamformer_rx_feedback_all",
++	"tx_beamformer_rx_feedback_he",
++	"tx_beamformer_rx_feedback_vht",
++	"tx_beamformer_rx_feedback_ht",
++	"tx_beamformer_rx_feedback_bw", /* zero based idx: 20, 40, 80, 160 */
++	"tx_beamformer_rx_feedback_nc",
++	"tx_beamformer_rx_feedback_nr",
++	"tx_beamformee_ok_feedback_pkts",
++	"tx_beamformee_feedback_trig",
++	"tx_mu_beamforming",
++	"tx_mu_mpdu",
++	"tx_mu_successful_mpdu",
++	"tx_su_successful_mpdu",
++	"tx_msdu_pack_1",
++	"tx_msdu_pack_2",
++	"tx_msdu_pack_3",
++	"tx_msdu_pack_4",
++	"tx_msdu_pack_5",
++	"tx_msdu_pack_6",
++	"tx_msdu_pack_7",
++	"tx_msdu_pack_8",
++};
++
++#define MT7915_SSTATS_LEN ARRAY_SIZE(mt7915_gstrings_stats)
++
++/* Ethtool related API */
++void mt7915_debug_get_et_strings(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS)
++		memcpy(data, *mt7915_gstrings_stats,
++		       sizeof(mt7915_gstrings_stats));
++}
++
++int mt7915_debug_get_et_sset_count(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return MT7915_SSTATS_LEN;
++
++	return 0;
++}
++
++void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct mt7915_dev *dev = mt7915_hw_dev(hw);
++	struct mt7915_phy *phy = mt7915_hw_phy(hw);
++
++	/* TODO:  These are mostly dev-wide stats at this point.
++	 *  Get some per-vif stats?
++	 */
++
++	/* See mt7915_ampdu_stat_read_phy, etc */
++	bool ext_phy = phy != &dev->phy;
++	int i, n, cnt;
++	int ei = 0;
++
++	if (!phy)
++		return;
++
++	/* Tx ampdu stat */
++	n = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
++	for (i = 0; i < 15 /*ARRAY_SIZE(bound)*/; i++)
++		data[ei++] = dev->mt76.aggr_stats[i + n];
++
++	data[ei++] = phy->mib.ba_miss_cnt;
++
++	/* Tx Beamformer monitor */
++	cnt = mt76_rr(dev, MT_ETBF_TX_APP_CNT(ext_phy));
++	data[ei++] = FIELD_GET(MT_ETBF_TX_IBF_CNT, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_TX_EBF_CNT, cnt);
++
++	/* Tx Beamformer Rx feedback monitor */
++	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CNT(ext_phy));
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_ALL, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_HE, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_VHT, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_HT, cnt);
++
++	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CONT(ext_phy));
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_BW, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_NC, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_NR, cnt);
++
++	/* Tx Beamformee Rx NDPA & Tx feedback report */
++	cnt = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP(ext_phy));
++	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_CPL, cnt);
++	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
++
++	/* Tx SU & MU counters */
++	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
++	data[ei++] = FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
++
++	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
++	data[ei++] = cnt;
++
++	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
++	data[ei++] = cnt; /* MU MPDU SUccessful */
++
++	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
++	data[ei++] = cnt; /* SU MPDU successful */
++
++	/* TODO:  External phy too?? */
++
++	/* Tx amsdu info (pack-count histogram) */
++	for (i = 0; i < 8; i++)
++		data[ei++] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
++
++	WARN_ON(ei != MT7915_SSTATS_LEN);
++}
++
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 48b5e2051bad..ed94e3c3c51d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1052,6 +1052,9 @@ const struct ieee80211_ops mt7915_ops = {
+ 	.get_txpower = mt76_get_txpower,
+ 	.channel_switch_beacon = mt7915_channel_switch_beacon,
+ 	.get_stats = mt7915_get_stats,
++	.get_et_sset_count = mt7915_debug_get_et_sset_count,
++	.get_et_stats = mt7915_debug_get_et_stats,
++	.get_et_strings = mt7915_debug_get_et_strings,
+ 	.get_tsf = mt7915_get_tsf,
+ 	.set_tsf = mt7915_set_tsf,
+ 	.offset_tsf = mt7915_offset_tsf,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 33be449309e0..a3c78365db23 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -419,4 +419,16 @@ void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir);
+ #endif
+ 
++/* Ethtool API, implementation found in debugfs.c */
++void mt7915_debug_get_et_strings(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 u32 sset, u8 *data);
++
++int mt7915_debug_get_et_sset_count(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, int sset);
++
++void mt7915_debug_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data);
++
+ #endif
+-- 
+2.20.1
+
