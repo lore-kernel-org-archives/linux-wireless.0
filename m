@@ -7,310 +7,299 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 244E2C4320E
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5613C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 132C860E8F
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9182D60EB5
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235657AbhGWPGM (ORCPT
+        id S229852AbhGWP0O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Jul 2021 11:06:12 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:60830 "EHLO
+        Fri, 23 Jul 2021 11:26:14 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.48]:37516 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235619AbhGWPGG (ORCPT
+        by vger.kernel.org with ESMTP id S229655AbhGWP0N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jul 2021 11:06:06 -0400
+        Fri, 23 Jul 2021 11:26:13 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.23])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 3231F2005E
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:38 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.123])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 94E482006C
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:45 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id ECB6590007F
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:37 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 69C004C0084
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:45 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 851A613C2BB;
-        Fri, 23 Jul 2021 08:46:37 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 851A613C2BB
+        by mail3.candelatech.com (Postfix) with ESMTP id AE79113C2B4;
+        Fri, 23 Jul 2021 09:06:32 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com AE79113C2B4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1627055197;
-        bh=LTbRz2gx5YE9z92urc9sb8llrQk01MkHzsvPE1zk/hc=;
+        s=default; t=1627056392;
+        bh=IiWccNRDtM7UeatSqd8opsuCkpIb+uXREjHwP6xyBT0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MVmgiuQLwD9L3qx8vQ+WZ3k0692sGaXLXrvMXc479kNnk/m0GFO7p5KDoPjN8CScT
-         PlJ9Tg4XFem5AZBEOWwdmRI+xPaYPzzkyBKJaryE4PRo93+EHLKfzS3bqSbtFJ4UtH
-         a1pACCwWLIv1zGK/FmHP3THQjIZHlKeFcRD37NSQ=
+        b=GIVvf7NaiU5spWW2JQuxBEu1Bf7bHNKCwAO5Q0WRXzaLtQj9Hk6dCuCaJC8ttX4Th
+         kny2S4bGR1Ito9eGrzNgc15tFKSZhn8et9vAE/rijQPb1nPjv/dztsGq47MM4C0G2H
+         jZ4fqGSEIm4T/uUmyTwdwtIBezTFtZmDUosrFUbs=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4 7/8] mt76 - mt7915: Add more MIB registers.
-Date:   Fri, 23 Jul 2021 08:46:26 -0700
-Message-Id: <20210723154627.10078-7-greearb@candelatech.com>
+Subject: [PATCH v3 03/11] mt76 - mt7915:  Move TXS parsing to its own method.
+Date:   Fri, 23 Jul 2021 09:06:15 -0700
+Message-Id: <20210723160623.14709-3-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210723154627.10078-1-greearb@candelatech.com>
-References: <20210723154627.10078-1-greearb@candelatech.com>
+In-Reply-To: <20210723160623.14709-1-greearb@candelatech.com>
+References: <20210723160623.14709-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1627055198-fqEg81LcbKYm
+X-MDID: 1627056406-9sE2lfyj-S7I
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Add register definitions and read & accumulate them in
-the mib polling logic.  Note that some registers should not
-be read since firmware is already reading them.  If driver
-reads those, they will be cleared-on-read, and so the firmware
-stats will be incorrect.
+This will allow us to also parse TXS when we have no skb on
+the status callback list in future patches.
 
-For these 'do-not-read' stats, add them to the registers definition
-so that other developers can be aware of these constraints, but do
-not actually read them in the driver.
+Explicitly cache short_gi and he_gi in wcid, don't try to store
+it in the wcid.rate object.  Slightly less confusing and less fragile
+when TXS starts parsing lots of frames.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  65 +++++++++++
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  25 ++++-
- .../net/wireless/mediatek/mt76/mt7915/regs.h  | 105 ++++++++++++++++++
- 3 files changed, 194 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h     |   5 +
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 122 ++++++++++--------
+ 2 files changed, 74 insertions(+), 53 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 1e6b8b072aec..c06dc77a0895 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -252,7 +252,12 @@ struct mt76_wcid {
+ 	struct ewma_signal rssi;
+ 	int inactive_count;
+ 
++	/* cached rate, updated from mac_sta_poll() and from TXS callback logic, in 7915
++	 * at least.
++	 */
+ 	struct rate_info rate;
++	bool rate_short_gi; /* cached HT/VHT short_gi, from mac_sta_poll() */
++	u8 rate_he_gi; /* cached HE GI, from mac_sta_poll() */
+ 
+ 	struct sk_buff *skb_status_array[MT_PACKET_ID_MAX + 1];
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index c395600b378a..1b0a44884569 100644
+index 3f4e19358d5b..b1384e02e707 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1894,6 +1894,71 @@ mt7915_mac_update_stats(struct mt7915_phy *phy)
+@@ -205,12 +205,17 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 			u8 offs = 24 + 2 * bw;
  
- 	mib->fcs_err_cnt += mt76_get_field(dev, MT_MIB_SDR3(ext_phy),
- 					   MT_MIB_SDR3_FCS_ERR_MASK);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR4(ext_phy));
-+	mib->rx_fifo_full_cnt += FIELD_GET(MT_MIB_SDR4_RX_FIFO_FULL_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR5(ext_phy));
-+	mib->rx_mpdu_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR6(ext_phy));
-+	mib->channel_idle_cnt += FIELD_GET(MT_MIB_SDR6_CHANNEL_IDL_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR7(ext_phy));
-+	mib->rx_vector_mismatch_cnt += FIELD_GET(MT_MIB_SDR7_RX_VECTOR_MISMATCH_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR8(ext_phy));
-+	mib->rx_delimiter_fail_cnt += FIELD_GET(MT_MIB_SDR8_RX_DELIMITER_FAIL_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR11(ext_phy));
-+	mib->rx_len_mismatch_cnt += FIELD_GET(MT_MIB_SDR11_RX_LEN_MISMATCH_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR12(ext_phy));
-+	mib->tx_ampdu_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR13(ext_phy));
-+	mib->tx_stop_q_empty_cnt += FIELD_GET(MT_MIB_SDR13_TX_STOP_Q_EMPTY_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR14(ext_phy));
-+	mib->tx_mpdu_attempts_cnt += FIELD_GET(MT_MIB_SDR14_TX_MPDU_ATTEMPTS_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR15(ext_phy));
-+	mib->tx_mpdu_success_cnt += FIELD_GET(MT_MIB_SDR15_TX_MPDU_SUCCESS_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR22(ext_phy));
-+	mib->rx_ampdu_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR23(ext_phy));
-+	mib->rx_ampdu_bytes_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR24(ext_phy));
-+	mib->rx_ampdu_valid_subframe_cnt += FIELD_GET(MT_MIB_SDR24_RX_AMPDU_SF_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR25(ext_phy));
-+	mib->rx_ampdu_valid_subframe_bytes_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR27(ext_phy));
-+	mib->tx_rwp_fail_cnt += FIELD_GET(MT_MIB_SDR27_TX_RWP_FAIL_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR28(ext_phy));
-+	mib->tx_rwp_need_cnt += FIELD_GET(MT_MIB_SDR28_TX_RWP_NEED_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR29(ext_phy));
-+	mib->rx_pfdrop_cnt += FIELD_GET(MT_MIB_SDR29_RX_PFDROP_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR30(ext_phy));
-+	mib->rx_vec_queue_overflow_drop_cnt +=
-+		FIELD_GET(MT_MIB_SDR30_RX_VEC_QUEUE_OVERFLOW_DROP_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR31(ext_phy));
-+	mib->rx_ba_cnt += cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR32(ext_phy));
-+	mib->tx_pkt_ebf_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_EBF_CNT_MASK, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_SDR33(ext_phy));
-+	mib->tx_pkt_ibf_cnt += FIELD_GET(MT_MIB_SDR33_TX_PKT_IBF_CNT_MASK, cnt);
-+
- 	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
- 	mib->tx_bf_cnt += FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
+ 			rate->he_gi = (val & (0x3 << offs)) >> offs;
++			msta->wcid.rate_he_gi = rate->he_gi; /* cache for later */
+ 		} else if (rate->flags & RATE_INFO_FLAGS_VHT_MCS) {
+-			if (val & BIT(12 + bw))
++			if (val & BIT(12 + bw)) {
+ 				rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+-			else
++				msta->wcid.rate_short_gi = 1;
++			} else {
+ 				rate->flags &= ~RATE_INFO_FLAGS_SHORT_GI;
++				msta->wcid.rate_short_gi = 0;
++			}
+ 		}
++		/* TODO:  Deal with HT_MCS */
+ 	}
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 565766debb5e..8c494be272c5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -135,7 +135,30 @@ struct mib_stats {
- 	u32 tx_bf_fb_cpl_cnt;
- 	u32 tx_bf_fb_trig_cnt;
+ 	rcu_read_unlock();
+@@ -1302,33 +1307,22 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	}
+ }
  
--	/* Add more stats here, updated from mac_update_stats */
-+	u32 tx_ampdu_cnt;
-+	u32 tx_stop_q_empty_cnt;
-+	u32 tx_mpdu_attempts_cnt;
-+	u32 tx_mpdu_success_cnt;
-+	u32 tx_pkt_ebf_cnt;
-+	u32 tx_pkt_ibf_cnt;
-+
-+	u32 tx_rwp_fail_cnt;
-+	u32 tx_rwp_need_cnt;
-+
-+	/* rx stats */
-+	u32 rx_fifo_full_cnt;
-+	u32 channel_idle_cnt;
-+	u32 rx_vector_mismatch_cnt;
-+	u32 rx_delimiter_fail_cnt;
-+	u32 rx_len_mismatch_cnt;
-+	u32 rx_mpdu_cnt;
-+	u32 rx_ampdu_cnt;
-+	u32 rx_ampdu_bytes_cnt;
-+	u32 rx_ampdu_valid_subframe_cnt;
-+	u32 rx_ampdu_valid_subframe_bytes_cnt;
-+	u32 rx_pfdrop_cnt;
-+	u32 rx_vec_queue_overflow_drop_cnt;
-+	u32 rx_ba_cnt;
- };
+-static bool
+-mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+-		       __le32 *txs_data, struct mt7915_sta_stats *stats)
++static void
++mt7915_mac_parse_txs(struct mt7915_dev *dev, struct mt76_wcid *wcid,
++		     __le32 *txs_data, struct mt7915_sta_stats *stats,
++		     struct rate_info *rate,
++		     struct ieee80211_tx_info *info)
+ {
+ 	struct ieee80211_supported_band *sband;
+-	struct mt76_dev *mdev = &dev->mt76;
+ 	struct mt76_phy *mphy;
+-	struct ieee80211_tx_info *info;
+-	struct sk_buff_head list;
+-	struct rate_info rate = {};
+-	struct sk_buff *skb;
+-	bool cck = false;
+ 	u32 txrate, txs, txs5, txs6, txs7, mode;
+-
+-	mt76_tx_status_lock(mdev, &list);
+-	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
+-
+-	/* TODO:  Gather stats anyway, even if we are not matching on an skb. */
+-	if (!skb)
+-		goto out_no_skb;
++	bool cck = false;
  
- struct mt7915_hif {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index a213b5cb82f8..62cc32a098fc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -128,15 +128,120 @@
- #define MT_LPON_TCR_SW_READ		GENMASK(1, 0)
+ 	txs = le32_to_cpu(txs_data[0]);
+ 	txs5 = le32_to_cpu(txs_data[5]);
+ 	txs6 = le32_to_cpu(txs_data[6]);
+ 	txs7 = le32_to_cpu(txs_data[7]);
  
- /* MIB: band 0(0x24800), band 1(0xa4800) */
-+/* These counters are (mostly?) clear-on-read.  So, some should not
-+ * be read at all in case firmware is already reading them.  These
-+ * are commented with 'DNR' below.  The DNR stats will be read by querying
-+ * the firmware API for the appropriate message.  For counters the driver
-+ * does read, the driver should accumulate the counters.
-+ */
- #define MT_WF_MIB_BASE(_band)		((_band) ? 0xa4800 : 0x24800)
- #define MT_WF_MIB(_band, ofs)		(MT_WF_MIB_BASE(_band) + (ofs))
+-	info = IEEE80211_SKB_CB(skb);
+ 	if (!(txs & MT_TXS0_ACK_ERROR_MASK))
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
  
-+#define MT_MIB_SDR0(_band)		MT_WF_MIB(_band, 0x010)
-+#define MT_MIB_SDR0_BERACON_TX_CNT_MASK	GENMASK(15, 0)
-+
- #define MT_MIB_SDR3(_band)		MT_WF_MIB(_band, 0x014)
- #define MT_MIB_SDR3_FCS_ERR_MASK	GENMASK(15, 0)
+@@ -1344,18 +1338,18 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
  
-+#define MT_MIB_SDR4(_band)		MT_WF_MIB(_band, 0x018)
-+#define MT_MIB_SDR4_RX_FIFO_FULL_MASK	GENMASK(15, 0)
-+
-+/* rx mpdu counter, full 32 bits */
-+#define MT_MIB_SDR5(_band)		MT_WF_MIB(_band, 0x01c)
-+
-+#define MT_MIB_SDR6(_band)		MT_WF_MIB(_band, 0x020)
-+#define MT_MIB_SDR6_CHANNEL_IDL_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR7(_band)		MT_WF_MIB(_band, 0x024)
-+#define MT_MIB_SDR7_RX_VECTOR_MISMATCH_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR8(_band)		MT_WF_MIB(_band, 0x028)
-+#define MT_MIB_SDR8_RX_DELIMITER_FAIL_CNT_MASK	GENMASK(15, 0)
-+
-+/* aka CCA_NAV_TX_TIME */
-+#define MT_MIB_SDR9_DNR(_band)		MT_WF_MIB(_band, 0x02c)
-+#define MT_MIB_SDR9_CCA_BUSY_TIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_SDR10_DNR(_band)		MT_WF_MIB(_band, 0x030)
-+#define MT_MIB_SDR10_MRDY_COUNT_MASK	GENMASK(25, 0)
-+
-+#define MT_MIB_SDR11(_band)		MT_WF_MIB(_band, 0x034)
-+#define MT_MIB_SDR11_RX_LEN_MISMATCH_CNT_MASK	GENMASK(15, 0)
-+
-+/* tx ampdu cnt, full 32 bits */
-+#define MT_MIB_SDR12(_band)		MT_WF_MIB(_band, 0x038)
-+
-+#define MT_MIB_SDR13(_band)		MT_WF_MIB(_band, 0x03c)
-+#define MT_MIB_SDR13_TX_STOP_Q_EMPTY_CNT_MASK	GENMASK(15, 0)
-+
-+/* counts all mpdus in ampdu, regardless of success */
-+#define MT_MIB_SDR14(_band)		MT_WF_MIB(_band, 0x040)
-+#define MT_MIB_SDR14_TX_MPDU_ATTEMPTS_CNT_MASK	GENMASK(23, 0)
-+
-+/* counts all successfully tx'd mpdus in ampdu */
-+#define MT_MIB_SDR15(_band)		MT_WF_MIB(_band, 0x044)
-+#define MT_MIB_SDR15_TX_MPDU_SUCCESS_CNT_MASK	GENMASK(23, 0)
-+
-+/* in units of 'us' */
-+#define MT_MIB_SDR16_DNR(_band)		MT_WF_MIB(_band, 0x048)
-+#define MT_MIB_SDR16_PRIMARY_CCA_BUSY_TIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_SDR17_DNR(_band)		MT_WF_MIB(_band, 0x04c)
-+#define MT_MIB_SDR17_SECONDARY_CCA_BUSY_TIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_SDR18(_band)		MT_WF_MIB(_band, 0x050)
-+#define MT_MIB_SDR18_PRIMARY_ENERGY_DETECT_TIME_MASK	GENMASK(23, 0)
-+
-+/* units are us */
-+#define MT_MIB_SDR19_DNR(_band)		MT_WF_MIB(_band, 0x054)
-+#define MT_MIB_SDR19_CCK_MDRDY_TIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_SDR20_DNR(_band)		MT_WF_MIB(_band, 0x058)
-+#define MT_MIB_SDR20_OFDM_VHT_MDRDY_TIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_SDR21_DNR(_band)		MT_WF_MIB(_band, 0x05c)
-+#define MT_MIB_SDR20_GREEN_MDRDY_TIME_MASK	GENMASK(23, 0)
-+
-+/* rx ampdu count, 32-bit */
-+#define MT_MIB_SDR22(_band)		MT_WF_MIB(_band, 0x060)
-+
-+/* rx ampdu bytes count, 32-bit */
-+#define MT_MIB_SDR23(_band)		MT_WF_MIB(_band, 0x064)
-+
-+/* rx ampdu valid subframe count */
-+#define MT_MIB_SDR24(_band)		MT_WF_MIB(_band, 0x068)
-+#define MT_MIB_SDR24_RX_AMPDU_SF_CNT_MASK	GENMASK(23, 0)
-+
-+/* rx ampdu valid subframe bytes count, 32bits */
-+#define MT_MIB_SDR25(_band)		MT_WF_MIB(_band, 0x06c)
-+
-+/* remaining windows protected stats */
-+#define MT_MIB_SDR27(_band)		MT_WF_MIB(_band, 0x074)
-+#define MT_MIB_SDR27_TX_RWP_FAIL_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR28(_band)		MT_WF_MIB(_band, 0x078)
-+#define MT_MIB_SDR28_TX_RWP_NEED_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR29(_band)		MT_WF_MIB(_band, 0x07c)
-+#define MT_MIB_SDR29_RX_PFDROP_CNT_MASK	GENMASK(7, 0)
-+
-+#define MT_MIB_SDR30(_band)		MT_WF_MIB(_band, 0x080)
-+#define MT_MIB_SDR30_RX_VEC_QUEUE_OVERFLOW_DROP_CNT_MASK	GENMASK(15, 0)
-+
-+/* rx blockack count, 32 bits */
-+#define MT_MIB_SDR31(_band)		MT_WF_MIB(_band, 0x084)
-+
-+#define MT_MIB_SDR32(_band)		MT_WF_MIB(_band, 0x088)
-+#define MT_MIB_SDR32_TX_PKT_EBF_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR33(_band)		MT_WF_MIB(_band, 0x08c)
-+#define MT_MIB_SDR33_TX_PKT_IBF_CNT_MASK	GENMASK(15, 0)
-+
- #define MT_MIB_SDR34(_band)		MT_WF_MIB(_band, 0x090)
- #define MT_MIB_MU_BF_TX_CNT		GENMASK(15, 0)
+ 	txrate = FIELD_GET(MT_TXS0_TX_RATE, txs);
  
-+/* 36, 37 both DNR */
+-	rate.mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
+-	rate.nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
++	rate->mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
++	rate->nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
+ 
+-	stats->tx_nss[rate.nss - 1]++;
++	stats->tx_nss[rate->nss - 1]++;
+ 	/* It appears that rate.mcs even for HT may be small, considering in HT
+ 	 * code below it is multiplied... but not certain on that,
+ 	 * so code safely.
+ 	 */
+-	if (rate.mcs >= ARRAY_SIZE(stats->tx_mcs))
++	if (rate->mcs >= ARRAY_SIZE(stats->tx_mcs))
+ 		stats->tx_mcs[ARRAY_SIZE(stats->tx_mcs) - 1]++;
+ 	else
+-		stats->tx_mcs[rate.mcs]++;
++		stats->tx_mcs[rate->mcs]++;
+ 
+ 	mode = FIELD_GET(MT_TX_RATE_MODE, txrate);
+ 	switch (mode) {
+@@ -1372,73 +1366,95 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 		else
+ 			sband = &mphy->sband_2g.sband;
+ 
+-		rate.mcs = mt76_get_rate(mphy->dev, sband, rate.mcs, cck);
+-		rate.legacy = sband->bitrates[rate.mcs].bitrate;
++		rate->mcs = mt76_get_rate(mphy->dev, sband, rate->mcs, cck);
++		rate->legacy = sband->bitrates[rate->mcs].bitrate;
+ 		break;
+ 	case MT_PHY_TYPE_HT:
+ 	case MT_PHY_TYPE_HT_GF:
+-		rate.mcs += (rate.nss - 1) * 8;
+-		if (rate.mcs > 31)
+-			goto out;
++		rate->mcs += (rate->nss - 1) * 8;
++		if (rate->mcs > 31)
++			break;
+ 
+-		rate.flags = RATE_INFO_FLAGS_MCS;
+-		if (wcid->rate.flags & RATE_INFO_FLAGS_SHORT_GI)
+-			rate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++		rate->flags = RATE_INFO_FLAGS_MCS;
++		if (wcid->rate_short_gi)
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_VHT:
+-		if (rate.mcs > 9)
+-			goto out;
++		if (rate->mcs > 9)
++			break;
+ 
+-		rate.flags = RATE_INFO_FLAGS_VHT_MCS;
++		rate->flags = RATE_INFO_FLAGS_VHT_MCS;
++		if (wcid->rate_short_gi)
++			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 		break;
+ 	case MT_PHY_TYPE_HE_SU:
+ 	case MT_PHY_TYPE_HE_EXT_SU:
+ 	case MT_PHY_TYPE_HE_TB:
+ 	case MT_PHY_TYPE_HE_MU:
+-		if (rate.mcs > 11)
+-			goto out;
++		if (rate->mcs > 11)
++			break;
+ 
+-		rate.he_gi = wcid->rate.he_gi;
+-		rate.he_dcm = FIELD_GET(MT_TX_RATE_DCM, txrate);
+-		rate.flags = RATE_INFO_FLAGS_HE_MCS;
++		rate->he_gi = wcid->rate_he_gi;
++		rate->he_dcm = FIELD_GET(MT_TX_RATE_DCM, txrate);
++		rate->flags = RATE_INFO_FLAGS_HE_MCS;
+ 		break;
+ 	default:
+-		goto out;
++		WARN_ON_ONCE(true);
++		mode = 0;
+ 	}
+ 
+ 	stats->tx_mode[mode]++;
+ 
+ 	switch (FIELD_GET(MT_TXS0_BW, txs)) {
+ 	case IEEE80211_STA_RX_BW_160:
+-		rate.bw = RATE_INFO_BW_160;
++		rate->bw = RATE_INFO_BW_160;
+ 		stats->tx_bw[3]++;
+ 		break;
+ 	case IEEE80211_STA_RX_BW_80:
+-		rate.bw = RATE_INFO_BW_80;
++		rate->bw = RATE_INFO_BW_80;
+ 		stats->tx_bw[2]++;
+ 		break;
+ 	case IEEE80211_STA_RX_BW_40:
+-		rate.bw = RATE_INFO_BW_40;
++		rate->bw = RATE_INFO_BW_40;
+ 		stats->tx_bw[1]++;
+ 		break;
+ 	default:
+-		rate.bw = RATE_INFO_BW_20;
++		rate->bw = RATE_INFO_BW_20;
+ 		stats->tx_bw[0]++;
+ 		break;
+ 	}
++}
+ 
+-	/* Cache rate for packets that don't get a TXS callback for some
+-	 * reason.
++static void
++mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
++		       __le32 *txs_data, struct mt7915_sta_stats *stats)
++{
++	struct mt76_dev *mdev = &dev->mt76;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_tx_info info_stack;
++	struct sk_buff_head list;
++	/* rate is cached in wcid->rate for skbs that do not request to be
++	 * paired with TXS data.  This is normal datapath.
+ 	 */
+-	wcid->rate = rate;
++	struct rate_info *rate = &wcid->rate;
++	struct sk_buff *skb;
+ 
+-out:
+-	mt76_tx_status_skb_done(mdev, skb, &list, wcid);
++	mt76_tx_status_lock(mdev, &list);
++	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
+ 
+-out_no_skb:
+-	mt76_tx_status_unlock(mdev, &list);
++	memset(rate, 0, sizeof(*rate));
+ 
+-	return !!skb;
++	if (skb)
++		info = IEEE80211_SKB_CB(skb);
++	else
++		info = &info_stack;
 +
- #define MT_MIB_DR8(_band)		MT_WF_MIB(_band, 0x0c0)
- #define MT_MIB_DR9(_band)		MT_WF_MIB(_band, 0x0c4)
- #define MT_MIB_DR11(_band)		MT_WF_MIB(_band, 0x0cc)
++	mt7915_mac_parse_txs(dev, wcid, txs_data, stats, rate, info);
++
++	if (skb)
++		mt76_tx_status_skb_done(mdev, skb, &list, wcid);
++
++	mt76_tx_status_unlock(mdev, &list);
+ }
+ 
+ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
 -- 
 2.20.1
 
