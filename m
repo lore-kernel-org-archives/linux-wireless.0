@@ -7,138 +7,118 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E80BEC4338F
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F782C432BE
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D127D60E0C
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8818360E0C
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 16:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230367AbhGWP0T (ORCPT
+        id S230412AbhGWP0V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Jul 2021 11:26:19 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.183]:58805 "EHLO
+        Fri, 23 Jul 2021 11:26:21 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:38840 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229655AbhGWP0S (ORCPT
+        by vger.kernel.org with ESMTP id S229655AbhGWP0V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jul 2021 11:26:18 -0400
+        Fri, 23 Jul 2021 11:26:21 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.27])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id D6302A007B
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:50 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.50.13])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 524DAA006D
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:53 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 986BC60006F
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:50 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 2614E440078
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 16:06:53 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 7D16713C2B8;
-        Fri, 23 Jul 2021 09:06:33 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7D16713C2B8
+        by mail3.candelatech.com (Postfix) with ESMTP id E2AD513C2B5;
+        Fri, 23 Jul 2021 09:06:32 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E2AD513C2B5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1627056393;
-        bh=2yION9utzsWOrixr1s4WbP7MXMWnYIUoMuy9J0qBbhk=;
+        bh=216cxkfAnyP/OzDyDJqdvGQ8S/YaNDUUw/drdxBlVmo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lkJmQTHim9qRUBXJhIOX8U6bwgP3qvWTOSmXLskjnzdZr9/wwKLdpJFti7NHMvMWH
-         h7M/RrFP3gfaLHGUFlb3Y+CySMyNQ6EGtBKmaeIU7Mmn4bxB+u16trECPMJG9yNP5D
-         ki7yZz2kc8rNpeHJPj/pYOG15pFbsU3AK7RSsSbs=
+        b=dgcY/ysykfI8tvxRXEQ8tmNLglZsSHvTwqQsRUpKqk37L619KqCY3qJqd4b+u9o8a
+         fmTALhhu4P8rsluruB9jR9R0EyrYg+LcH9flkhg7LiRcihECyRqqAV37Ix/vTkVBUZ
+         STfLGpktYBa7lEp1JXBeVc4Z4N9BbMR1eoctR144=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 06/11] mt76: mt7915:  Support parsing TXSFM 0x2.
-Date:   Fri, 23 Jul 2021 09:06:18 -0700
-Message-Id: <20210723160623.14709-6-greearb@candelatech.com>
+Subject: [PATCH v3 04/11] mt76 - mt7915:  Allow processing TXS for 'NO_SKB' pkt-ids.
+Date:   Fri, 23 Jul 2021 09:06:16 -0700
+Message-Id: <20210723160623.14709-4-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210723160623.14709-1-greearb@candelatech.com>
 References: <20210723160623.14709-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1627056411-ryhl9yyA9rKQ
+X-MDID: 1627056413-cBUf4XzlgYn7
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Add code to support this format, but I don't actually
-see any of these TXS format frames on my test system.
+This will let us update stats and wcid.rate for every TXS
+callback we receive for a particular wcid.
+
+For now, the TXS is not requested for NO_SKB frames, however.
+That will be allowed in next patch.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 24 +++++++++++--------
- .../net/wireless/mediatek/mt76/mt7915/mac.h   |  3 +++
- 2 files changed, 17 insertions(+), 10 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mac.c    | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index d81e3cbe1aad..03c85bd0750e 100644
+index b1384e02e707..cf2c97bc251d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1317,13 +1317,10 @@ mt7915_mac_parse_txs(struct mt7915_dev *dev, struct mt76_wcid *wcid,
- {
- 	struct ieee80211_supported_band *sband;
- 	struct mt76_phy *mphy;
--	u32 txrate, txs, txs5, txs6, txs7, mode;
-+	u32 txrate, txs, mode;
- 	bool cck = false;
+@@ -1047,6 +1047,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
+ 	txwi[4] = 0;
  
- 	txs = le32_to_cpu(txs_data[0]);
--	txs5 = le32_to_cpu(txs_data[5]);
--	txs6 = le32_to_cpu(txs_data[6]);
--	txs7 = le32_to_cpu(txs_data[7]);
+ 	val = FIELD_PREP(MT_TXD5_PID, pid);
++	/* NOTE:  mt7916 does NOT request TXS for 'NO_SKB' frames by default. */
+ 	if (pid >= MT_PACKET_ID_FIRST)
+ 		val |= MT_TXD5_TX_STATUS_HOST;
+ 	txwi[5] = cpu_to_le32(val);
+@@ -1437,10 +1438,16 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 	 * paired with TXS data.  This is normal datapath.
+ 	 */
+ 	struct rate_info *rate = &wcid->rate;
+-	struct sk_buff *skb;
++	struct sk_buff *skb = NULL;
++	bool check_status;
  
- 	if (!(txs & MT_TXS0_ACK_ERROR_MASK))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
-@@ -1334,10 +1331,6 @@ mt7915_mac_parse_txs(struct mt7915_dev *dev, struct mt76_wcid *wcid,
- 
- 	info->status.rates[0].idx = -1;
- 
--	stats->tx_mpdu_attempts += FIELD_GET(MT_TXS5_F1_MPDU_TX_COUNT, txs5);
--	stats->tx_mpdu_fail += FIELD_GET(MT_TXS6_F1_MPDU_FAIL_COUNT, txs6);
--	stats->tx_mpdu_retry += FIELD_GET(MT_TXS7_F1_MPDU_RETRY_COUNT, txs7);
--
- 	txrate = FIELD_GET(MT_TXS0_TX_RATE, txs);
- 
- 	rate->mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
-@@ -1425,6 +1418,19 @@ mt7915_mac_parse_txs(struct mt7915_dev *dev, struct mt76_wcid *wcid,
- 		stats->tx_bw[0]++;
- 		break;
- 	}
+-	mt76_tx_status_lock(mdev, &list);
+-	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
++	check_status = ((pid >= MT_PACKET_ID_FIRST) ||
++			time_after(jiffies, mdev->next_status_jiffies));
 +
-+	if (FIELD_GET(MT_TXS0_TXS_FORMAT, txs) == 2) {
-+		/* TXSFM == 10 */
-+		u32 txs5, txs6, txs7;
-+
-+		txs5 = le32_to_cpu(txs_data[5]);
-+		txs6 = le32_to_cpu(txs_data[6]);
-+		txs7 = le32_to_cpu(txs_data[7]);
-+
-+		stats->tx_mpdu_attempts += FIELD_GET(MT_TXS5_F1_MPDU_TX_COUNT, txs5);
-+		stats->tx_mpdu_fail += FIELD_GET(MT_TXS6_F1_MPDU_FAIL_COUNT, txs6);
-+		stats->tx_mpdu_retry += FIELD_GET(MT_TXS7_F1_MPDU_RETRY_COUNT, txs7);
++	if (check_status) {
++		mt76_tx_status_lock(mdev, &list);
++		skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
 +	}
+ 
+ 	memset(rate, 0, sizeof(*rate));
+ 
+@@ -1454,7 +1461,8 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 	if (skb)
+ 		mt76_tx_status_skb_done(mdev, skb, &list, wcid);
+ 
+-	mt76_tx_status_unlock(mdev, &list);
++	if (check_status)
++		mt76_tx_status_unlock(mdev, &list);
  }
  
- static void
-@@ -1476,8 +1482,6 @@ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
- 	u8 pid;
+ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
+@@ -1476,7 +1484,7 @@ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
+ 	txs = le32_to_cpu(txs_data[3]);
+ 	pid = FIELD_GET(MT_TXS3_PID, txs);
  
- 	txs = le32_to_cpu(txs_data[0]);
--	if (FIELD_GET(MT_TXS0_TXS_FORMAT, txs) > 1)
--		return;
+-	if (pid < MT_PACKET_ID_FIRST)
++	if (pid < MT_PACKET_ID_NO_SKB)
+ 		return;
  
- 	txs = le32_to_cpu(txs_data[2]);
- 	wcidx = FIELD_GET(MT_TXS2_WCID, txs);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-index ccce994dc07a..986a65badd1b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-@@ -347,6 +347,9 @@ struct mt7915_tx_free {
- 
- #define MT_TXS4_TIMESTAMP		GENMASK(31, 0)
- 
-+/* The F0 variables are for TXSFM 0x0 and 0x1.  The F1 variables
-+ * are for TXSFM 0x2 aka PPDU format.
-+ */
- #define MT_TXS5_F0_FINAL_MPDU		BIT(31)
- #define MT_TXS5_F0_QOS			BIT(30)
- #define MT_TXS5_F0_TX_COUNT		GENMASK(29, 25)
+ 	if (wcidx >= MT7915_WTBL_SIZE)
 -- 
 2.20.1
 
