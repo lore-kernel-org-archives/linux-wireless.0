@@ -7,104 +7,150 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 686EAC432BE
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1E6C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 553D160E8B
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20D5360E8B
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235658AbhGWPGK (ORCPT
+        id S235661AbhGWPGL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Jul 2021 11:06:10 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:41684 "EHLO
+        Fri, 23 Jul 2021 11:06:11 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.48]:42026 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235611AbhGWPGF (ORCPT
+        by vger.kernel.org with ESMTP id S235624AbhGWPGG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jul 2021 11:06:05 -0400
+        Fri, 23 Jul 2021 11:06:06 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.177])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id F41231A006C
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:37 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.124])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 31D2E1A006D
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:38 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CB4CD680073
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0751B940071
         for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:37 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 5F01613C2B8;
+        by mail3.candelatech.com (Postfix) with ESMTP id AA36F13C2BC;
         Fri, 23 Jul 2021 08:46:37 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 5F01613C2B8
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com AA36F13C2BC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1627055197;
-        bh=ebvdbEp3CyND0tTAllOpxo6ClqpSZni8qJjvW6vcvPM=;
+        bh=ODLp5mAsnNDa0xTeBReKHJ1OaY5mbRoDZieesb5iBzE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=n+8hIfV3JOhCkS2H+jvKClY8lQxWPumKSxnxAikW5qQ1IHWg5u9GnFA/phv3SnAoZ
-         yT532nWRmKWLwwTL9arSIvR1z3GziiMdBr8r2pt9pE/dRyxcRL5fYc9vi+kyqOMUYq
-         2o3GPL5HAO6BC71qZ9W479LN6H+SAk9w0KAdiBCE=
+        b=i8NUnZi+feZFwpiN1zZingnpuj9GxXayWfwrX4wq4HpnjeJOSf78R+fQfBWxqBsIO
+         ojVwe+3MvOuT1iu6Zx3IrIcEiACoJlqcqerBxPZ8R2carusJJPSFulthLA7QKYAe6a
+         gSsdSMkpwZb9v+idOcArTF2NcSM2gfrPuq3tN250=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4 6/8] mt76 - mt7915: Fix he_mcs capabilities for 160mhz.
-Date:   Fri, 23 Jul 2021 08:46:25 -0700
-Message-Id: <20210723154627.10078-6-greearb@candelatech.com>
+Subject: [PATCH v4 8/8] mt76 - mt7915:  Add mib counters to ethtool stats.
+Date:   Fri, 23 Jul 2021 08:46:27 -0700
+Message-Id: <20210723154627.10078-8-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210723154627.10078-1-greearb@candelatech.com>
 References: <20210723154627.10078-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1627055198-2eNTDb6R_A-m
+X-MDID: 1627055198-ZjSjiAswBslx
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-At 160, this chip can only do 2x2 NSS.  Fix the features
-accordingly, verified it shows up properly in iw phy foo info
-now.
+This adds the new mib counters from last patch into ethtool
+stats.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 49 ++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 08fa918c310b..f174cf219724 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -614,12 +614,19 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- {
- 	int i, idx = 0, nss = hweight8(phy->mt76->chainmask);
- 	u16 mcs_map = 0;
-+	u16 mcs_map_160 = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 885e35bf0fe8..49af7f4d56ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1029,6 +1029,14 @@ static void mt7915_sta_set_decap_offload(struct ieee80211_hw *hw,
+ }
  
- 	for (i = 0; i < 8; i++) {
- 		if (i < nss)
- 			mcs_map |= (IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2));
- 		else
- 			mcs_map |= (IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
+ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_ampdu_cnt",
++	"tx_stop_q_empty_cnt",
++	"tx_mpdu_attempts",
++	"tx_mpdu_success",
++	"tx_rwp_fail_cnt",
++	"tx_rwp_need_cnt",
++	"tx_pkt_ebf_cnt",
++	"tx_pkt_ibf_cnt",
+ 	"tx_ampdu_len:0-1",
+ 	"tx_ampdu_len:2-10",
+ 	"tx_ampdu_len:11-19",
+@@ -1068,6 +1076,22 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	"tx_msdu_pack_6",
+ 	"tx_msdu_pack_7",
+ 	"tx_msdu_pack_8",
 +
-+		/* Can do 1/2 of NSS streams in 160Mhz mode. */
-+		if (i < nss / 2)
-+			mcs_map_160 |= (IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2));
-+		else
-+			mcs_map_160 |= (IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
- 	}
++	/* rx counters */
++	"rx_fifo_full_cnt",
++	"rx_mpdu_cnt",
++	"channel_idle_cnt",
++	"rx_vector_mismatch_cnt",
++	"rx_delimiter_fail_cnt",
++	"rx_len_mismatch_cnt",
++	"rx_ampdu_cnt",
++	"rx_ampdu_bytes_cnt",
++	"rx_ampdu_valid_subframe_cnt",
++	"rx_ampdu_valid_subframe_b_cnt",
++	"rx_pfdrop_cnt",
++	"rx_vec_queue_overflow_drop_cnt",
++	"rx_ba_cnt",
++
+ 	/* per vif counters */
+ 	"v_tx_mpdu_attempts",
+ 	"v_tx_mpdu_fail",
+@@ -1141,6 +1165,15 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 	if (!phy)
+ 		return;
  
- 	for (i = 0; i < NUM_NL80211_IFTYPES; i++) {
-@@ -721,10 +728,10 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
++	data[ei++] = mib->tx_ampdu_cnt;
++	data[ei++] = mib->tx_stop_q_empty_cnt;
++	data[ei++] = mib->tx_mpdu_attempts_cnt;
++	data[ei++] = mib->tx_mpdu_success_cnt;
++	data[ei++] = mib->tx_rwp_fail_cnt;
++	data[ei++] = mib->tx_rwp_need_cnt;
++	data[ei++] = mib->tx_pkt_ebf_cnt;
++	data[ei++] = mib->tx_pkt_ibf_cnt;
++
+ 	/* Tx ampdu stat */
+ 	n = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
+ 	for (i = 0; i < 15 /*ARRAY_SIZE(bound)*/; i++)
+@@ -1172,12 +1205,26 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 	data[ei++] = mib->tx_mu_acked_mpdu_cnt;
+ 	data[ei++] = mib->tx_su_acked_mpdu_cnt;
  
- 		he_mcs->rx_mcs_80 = cpu_to_le16(mcs_map);
- 		he_mcs->tx_mcs_80 = cpu_to_le16(mcs_map);
--		he_mcs->rx_mcs_160 = cpu_to_le16(mcs_map);
--		he_mcs->tx_mcs_160 = cpu_to_le16(mcs_map);
--		he_mcs->rx_mcs_80p80 = cpu_to_le16(mcs_map);
--		he_mcs->tx_mcs_80p80 = cpu_to_le16(mcs_map);
-+		he_mcs->rx_mcs_160 = cpu_to_le16(mcs_map_160);
-+		he_mcs->tx_mcs_160 = cpu_to_le16(mcs_map_160);
-+		he_mcs->rx_mcs_80p80 = cpu_to_le16(mcs_map_160);
-+		he_mcs->tx_mcs_80p80 = cpu_to_le16(mcs_map_160);
+-	/* TODO:  External phy too?? */
  
- 		mt7915_set_stream_he_txbf_caps(he_cap, i, nss);
+ 	/* Tx amsdu info (pack-count histogram) */
+ 	for (i = 0; i < 8; i++)
+ 		data[ei++] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
  
++	/* rx counters */
++	data[ei++] = mib->rx_fifo_full_cnt;
++	data[ei++] = mib->rx_mpdu_cnt;
++	data[ei++] = mib->channel_idle_cnt;
++	data[ei++] = mib->rx_vector_mismatch_cnt;
++	data[ei++] = mib->rx_delimiter_fail_cnt;
++	data[ei++] = mib->rx_len_mismatch_cnt;
++	data[ei++] = mib->rx_ampdu_cnt;
++	data[ei++] = mib->rx_ampdu_bytes_cnt;
++	data[ei++] = mib->rx_ampdu_valid_subframe_cnt;
++	data[ei++] = mib->rx_ampdu_valid_subframe_bytes_cnt;
++	data[ei++] = mib->rx_pfdrop_cnt;
++	data[ei++] = mib->rx_vec_queue_overflow_drop_cnt;
++	data[ei++] = mib->rx_ba_cnt;
++
+ 	/* Add values for all stations owned by this vif */
+ 
+ 	/* See mt76_get_min_avr_rssi for example of how to find all sta
 -- 
 2.20.1
 
