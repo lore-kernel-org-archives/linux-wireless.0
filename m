@@ -2,113 +2,231 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 509C5C4338F
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 14:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE01C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 306AC60EB6
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 14:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C307060E8F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Jul 2021 15:46:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235372AbhGWOCB (ORCPT
+        id S235622AbhGWPGF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Jul 2021 10:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38104 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235467AbhGWOBz (ORCPT
+        Fri, 23 Jul 2021 11:06:05 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.183]:60808 "EHLO
+        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235470AbhGWPGF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jul 2021 10:01:55 -0400
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19A5FC061760
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 07:42:28 -0700 (PDT)
-Received: by mail-wr1-x42c.google.com with SMTP id j2so2598890wrx.9
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 07:42:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=W2/BoceWOJN+lUxPj8MwZIqnVeL+AJsUYJ9PcLxlffM=;
-        b=vAj5Q4pwIcQKnRafBiJStGzfWUAcSIDU2wC1hUVB0ShM3wzSygn6woSaFXrhBkbsiK
-         oYe4X+laDAlwIR56DKKRF8Qzs0/W1U3su/pmTf7HW2JMK82KW0A/wFxMUtOmXlG3qJhr
-         Kp7MWX3kflQvMvRR2zBG721KTd0iTbQUapDhkklmMCcBgYWVqZt2KcfX6v7ictwYjq41
-         Ve11hqBhjehccANqQayLs5sHlwPak6sCPrCfdbi8JGnBw3wAYqalFSeK9hecXX4h0kOR
-         4W6qrqIyZi50aaUZJ9gelPMroLC3u7Pwq5HINPHBL8iMZRb4FsbxT8RQC0Vf8fuFe1t+
-         yY3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=W2/BoceWOJN+lUxPj8MwZIqnVeL+AJsUYJ9PcLxlffM=;
-        b=C5zljt3di2JUK5beFSFRf/hCjQuABp+MQjDcdF8brelRifcuHFhcNtUbsuOOhOhBDd
-         92RQSnvjTRFLV44HL4k7z1+Dv1QXvsuvFzG87fpe1eid708nbMM6ksj41ajfoYZcKHQG
-         0DNl8ZLnCgckwUdKY6Taq+YsFoZ75tLnl0c2as/Om9IsshhwhlPBRNhsJoFPjeIYBxmH
-         FPLxpjbsJzxrmyMfZ3puIwNy9YZ/UCH8KeU4cILMkPX3qK2sfE1EpTEFDyD/WXyUyTMo
-         5sLgdpGwbqAez9OQIjiGyLfRXa2LGkKaQ7s2nFtpB+jfs5tK3gw4QxjdzAkh8tTdpGkx
-         pPpQ==
-X-Gm-Message-State: AOAM5338M2i7+3vwx+ffnN7k4qYBtYmpKfZLirMKkxFUxup2t0z1sHqJ
-        jBc9NuXz8d4nLdSpSxMY5+c=
-X-Google-Smtp-Source: ABdhPJxpL2ORe752Oe8CpZbuWXy3pLN7zzfpQpXmVKc97ccxpb/MS/DarebSn4pG5TMhNp/QxGch9A==
-X-Received: by 2002:a05:6000:104a:: with SMTP id c10mr5777206wrx.368.1627051346690;
-        Fri, 23 Jul 2021 07:42:26 -0700 (PDT)
-Received: from ?IPv6:2a02:8084:26e0:1c70:df03:b65e:11f3:a5a4? ([2a02:8084:26e0:1c70:df03:b65e:11f3:a5a4])
-        by smtp.gmail.com with ESMTPSA id v30sm35848086wrv.85.2021.07.23.07.42.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Jul 2021 07:42:26 -0700 (PDT)
+        Fri, 23 Jul 2021 11:06:05 -0400
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.175])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 6DC52A0074
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:37 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 31CCC8C0083
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2021 15:46:37 +0000 (UTC)
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id A139213C2B3;
+        Fri, 23 Jul 2021 08:46:36 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A139213C2B3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1627055196;
+        bh=2Gnqxo4Ws9RusvXsjO+S0AGrgZmuNSggb2Z/+9aLzhs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=T9jA0jfV87BRfrL92nx3QTxS47eKGm+FizUVjzKS7tXRCWOqa1rOHnPIMnAtQ2Q+R
+         ZYWh5C3mjrmjpRMvx+uqETqv0PHrs5yXuPbuJZq1HL1vlC7rl12qZLp36IgdSsTUaA
+         huW0+oBA2LvZWrWaxdOlL7CV9+TEVaVzIkfSxfkI=
+From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
-Cc:     brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>
-From:   =?UTF-8?Q?Pawe=c5=82_Drewniak?= <czajernia@gmail.com>
-Subject: [PATCH] brcmfmac: Add WPA3 Personal with FT to supported cipher
- suites
-Message-ID: <d676c466-fb2f-2301-ff5a-9b90141b6df1@gmail.com>
-Date:   Fri, 23 Jul 2021 15:42:25 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4 2/8] mt76 - mt7915: Add tx stats gathered from tx-status callbacks.
+Date:   Fri, 23 Jul 2021 08:46:21 -0700
+Message-Id: <20210723154627.10078-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210723154627.10078-1-greearb@candelatech.com>
+References: <20210723154627.10078-1-greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-MDID: 1627055197-L3tFtOeOrAQG
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This allows the driver to connect to BSSIDs supporting SAE with 802.11r.
-Tested on Raspberry Pi 4 Model B (STA) and UniFi 6LR/OpenWRT 21.02.0-rc2.
-AP was set to 'sae-mixed' (WPA2/3 Personal).
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Paweł Drewniak <czajernia@gmail.com>
+Add tx-mode (ofdma, ht, vht, HE) histogram,
+tx-ru-idx histogram, and tx-bandwidth histogram.
+Also add tx attempts and tx success counters.
+
+All of this is per-station.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 36 +++++++++++++++----
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    | 14 ++++++++
+ 3 files changed, 44 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cedba56fc448..f7b96cd69242 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1829,6 +1829,14 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
-                                profile->use_fwsup = BRCMF_PROFILE_FWSUP_SAE;
-                        }
-                        break;
-+               case WLAN_AKM_SUITE_FT_OVER_SAE:
-+                       val = WPA3_AUTH_SAE_PSK | WPA2_AUTH_FT;
-+                       profile->is_ft = true;
-+                       if (sme->crypto.sae_pwd) {
-+                               brcmf_dbg(INFO, "using SAE offload\n");
-+                               profile->use_fwsup = BRCMF_PROFILE_FWSUP_SAE;
-+                       }
-+                       break;
-                default:
-                        bphy_err(drvr, "invalid cipher group (%d)\n",
-                                 sme->crypto.cipher_group);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index b41faedee001..436bf2b8e2cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -755,6 +755,7 @@ enum mt76_phy_type {
+ 	MT_PHY_TYPE_HE_EXT_SU,
+ 	MT_PHY_TYPE_HE_TB,
+ 	MT_PHY_TYPE_HE_MU,
++	MT_PHY_TYPE_HE_LAST, /* keep last */
+ };
+ 
+ #define CCK_RATE(_idx, _rate) {					\
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index f1574538315d..6f445999e516 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1304,7 +1304,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
+ 
+ static bool
+ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+-		       __le32 *txs_data)
++		       __le32 *txs_data, struct mt7915_sta_stats *stats)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	struct mt76_dev *mdev = &dev->mt76;
+@@ -1314,7 +1314,7 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 	struct rate_info rate = {};
+ 	struct sk_buff *skb;
+ 	bool cck = false;
+-	u32 txrate, txs;
++	u32 txrate, txs, txs5, txs6, txs7, mode;
+ 
+ 	mt76_tx_status_lock(mdev, &list);
+ 	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
+@@ -1322,6 +1322,9 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 		goto out;
+ 
+ 	txs = le32_to_cpu(txs_data[0]);
++	txs5 = le32_to_cpu(txs_data[5]);
++	txs6 = le32_to_cpu(txs_data[6]);
++	txs7 = le32_to_cpu(txs_data[7]);
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 	if (!(txs & MT_TXS0_ACK_ERROR_MASK))
+@@ -1333,15 +1336,27 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 
+ 	info->status.rates[0].idx = -1;
+ 
+-	if (!wcid->sta)
+-		goto out;
++	stats->tx_mpdu_attempts += FIELD_GET(MT_TXS5_F1_MPDU_TX_COUNT, txs5);
++	stats->tx_mpdu_fail += FIELD_GET(MT_TXS6_F1_MPDU_FAIL_COUNT, txs6);
++	stats->tx_mpdu_retry += FIELD_GET(MT_TXS7_F1_MPDU_RETRY_COUNT, txs7);
+ 
+ 	txrate = FIELD_GET(MT_TXS0_TX_RATE, txs);
+ 
+ 	rate.mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
+ 	rate.nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
+ 
+-	switch (FIELD_GET(MT_TX_RATE_MODE, txrate)) {
++	stats->tx_nss[rate.nss - 1]++;
++	/* It appears that rate.mcs even for HT may be small, considering in HT
++	 * code below it is multiplied... but not certain on that,
++	 * so code safely.
++	 */
++	if (rate.mcs >= ARRAY_SIZE(stats->tx_mcs))
++		stats->tx_mcs[ARRAY_SIZE(stats->tx_mcs) - 1]++;
++	else
++		stats->tx_mcs[rate.mcs]++;
++
++	mode = FIELD_GET(MT_TX_RATE_MODE, txrate);
++	switch (mode) {
+ 	case MT_PHY_TYPE_CCK:
+ 		cck = true;
+ 		fallthrough;
+@@ -1389,18 +1404,24 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 		goto out;
+ 	}
+ 
++	stats->tx_mode[mode]++;
++
+ 	switch (FIELD_GET(MT_TXS0_BW, txs)) {
+ 	case IEEE80211_STA_RX_BW_160:
+ 		rate.bw = RATE_INFO_BW_160;
++		stats->tx_bw[3]++;
+ 		break;
+ 	case IEEE80211_STA_RX_BW_80:
+ 		rate.bw = RATE_INFO_BW_80;
++		stats->tx_bw[2]++;
+ 		break;
+ 	case IEEE80211_STA_RX_BW_40:
+ 		rate.bw = RATE_INFO_BW_40;
++		stats->tx_bw[1]++;
+ 		break;
+ 	default:
+ 		rate.bw = RATE_INFO_BW_20;
++		stats->tx_bw[0]++;
+ 		break;
+ 	}
+ 	wcid->rate = rate;
+@@ -1443,12 +1464,13 @@ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
+ 	if (!wcid)
+ 		goto out;
+ 
+-	mt7915_mac_add_txs_skb(dev, wcid, pid, txs_data);
++	msta = container_of(wcid, struct mt7915_sta, wcid);
++
++	mt7915_mac_add_txs_skb(dev, wcid, pid, txs_data, &msta->stats);
+ 
+ 	if (!wcid->sta)
+ 		goto out;
+ 
+-	msta = container_of(wcid, struct mt7915_sta, wcid);
+ 	spin_lock_bh(&dev->sta_poll_lock);
+ 	if (list_empty(&msta->poll_list))
+ 		list_add_tail(&msta->poll_list, &dev->sta_poll_list);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 33be449309e0..a8617ba69a21 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -64,6 +64,16 @@ enum mt7915_rxq_id {
+ 	MT7915_RXQ_MCU_WA_EXT,
+ };
+ 
++struct mt7915_sta_stats {
++	unsigned long tx_mpdu_attempts;
++	unsigned long tx_mpdu_fail;
++	unsigned long tx_mpdu_retry;
++	unsigned long tx_mode[MT_PHY_TYPE_HE_LAST]; /* See mt76_phy_type */
++	unsigned long tx_bw[4]; /* 20, 40, 80, 160 */
++	unsigned long tx_nss[4]; /* 1, 2, 3, 4 */
++	unsigned long tx_mcs[16]; /* mcs idx */
++};
++
+ struct mt7915_sta_key_conf {
+ 	s8 keyidx;
+ 	u8 key[16];
+@@ -82,8 +92,11 @@ struct mt7915_sta {
+ 	unsigned long jiffies;
+ 	unsigned long ampdu_state;
+ 
++	struct mt7915_sta_stats stats;
++
+ 	struct mt7915_sta_key_conf bip;
+ };
++
+ struct mt7915_vif {
+ 	u16 idx;
+ 	u8 omac_idx;
+@@ -103,6 +116,7 @@ struct mib_stats {
+ 	u32 rts_cnt;
+ 	u32 rts_retries_cnt;
+ 	u32 ba_miss_cnt;
++	/* Add more stats here, updated from mac_update_stats */
+ };
+ 
+ struct mt7915_hif {
 -- 
-2.30.2
+2.20.1
+
