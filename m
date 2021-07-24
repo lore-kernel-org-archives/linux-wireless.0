@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99632C4338F
-	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A1EC4338F
+	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:48:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 859A960E0C
-	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:48:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEA0D60E92
+	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:48:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230361AbhGXVIL (ORCPT
+        id S230328AbhGXVIJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 24 Jul 2021 17:08:11 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:43824
+        Sat, 24 Jul 2021 17:08:09 -0400
+Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:43820
         "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230021AbhGXVHn (ORCPT
+        by vger.kernel.org with ESMTP id S230010AbhGXVHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 24 Jul 2021 17:07:43 -0400
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com [209.85.208.71])
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id 2786A3F359
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 21:48:13 +0000 (UTC)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id EFCE33F349
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 21:48:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1627163293;
-        bh=UnOWzB6PFujT/DWlS5nVosxLJqokbjOw4vZz2zLdo+w=;
+        s=20210705; t=1627163291;
+        bh=ov7yn4H0ornXwxrX1ZBFt/XnbBsClxe6Xsh+B5h5Cag=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=qXJ8r3xxM1+s/NnrNkC51L8YBOq1NF1HGPkzjHxG8FVxQ+FKW0JhEuFF/SEXfIZDp
-         5OFKL12bkxnmMR0nUxzZetMWgZEk9aKmE7W4f5R1QEyYx73vzVYYGtA38wJRpARfDl
-         F21OKIQCy4tyfta56eqVzdbjo+onXzpAXlAO2yQ4ijIPKqF581LvoN3PPbsoySlKCe
-         vl6TOfQivgiW8LxPcmra0/bINoJb5oayf7coWW4L0eBSOrjiYF/Iq6jK2CmE40xfHz
-         pTOYECFdO+YY6H3RMNYUHHZ8JLSCc3mOyRgFmPpYLvQNmWpb8k+/jsXIYrqOyRGqW4
-         t3PkfKlYAQB5g==
-Received: by mail-ed1-f71.google.com with SMTP id a23-20020a50ff170000b02903b85a16b672so2815104edu.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 14:48:13 -0700 (PDT)
+        b=BjN0/bNBaiaHopwYXYLf3BdjG40rIjk9OiBA7Am9VklfQ3JD2ee+x5ZgiGtm9KM4e
+         ZGr56xLuygUtRzN0watEHfSjmWidd6bhi1OjPqrmaXrrFP6bLoCoY3aNLxbR0FWolR
+         URPbx4ZSC6BfpiKJ+F5RjeMzt77v2q0Z68WUhR2bwXHCSgcqenbPm8BodLx5iU2xwZ
+         iKxO3SeO6tuBN9TDHlX9GTtFq48aF8RTCJX3qBepy+BsFOvqsyOmUNMHl79PWrFBAX
+         U3iaQKDuB3HOUnsJ2v5ziIEoGGHBZ/pzFEk8pWMu9gehaodnm7OTYnEjXOsI0Ds/en
+         6+WTOrTwW5a8A==
+Received: by mail-ed1-f69.google.com with SMTP id dn8-20020a05640222e8b029039ef9536577so2803561edb.5
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 14:48:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UnOWzB6PFujT/DWlS5nVosxLJqokbjOw4vZz2zLdo+w=;
-        b=dT4BHA9g4n2bSYqoPRiarHyUfqbFb8pdNdCVt2mn2589jYuABcCRAOAOtx7KU+3gS+
-         +pgldvg6FngQRWWLrpkyClH2uf8fvBGX9RP6zIBr1qfS3RC1700STV6KPGKYKCE61hTE
-         J1+bBDJ1wcMA0hmvZd3xF9qbwO0uRg4wTOwLZJgLmZpe8YBt8403NNFe9FMNfuzJKXZJ
-         Lso6yCvFuQqyJGtTsQjFSF903rwmYliAHM4S/As2Stc4P0lWaK2m/rLzCZowH7d9E1gx
-         qQTYlmK+eQzB/7XOLs+bOs6d6NAajiB2D74DAQanKuBwN1uhrjoMnUHlI10gocqCdFGz
-         nKPA==
-X-Gm-Message-State: AOAM530CyIs5k43wCdb6jDx7+lx++sCWmVv0/y42MG4IvI7b0ACPg669
-        kF1lgxfou6FpPRwsz7/PPh8pjZdJhNsL3uAzT9OhiW1geYhM5SSCEhEwH3DlWlpFr6AlUZoItz5
-        NeWphwp504ngdxNNZ3F4JBbVwdRjSJh4PqGmvqbM9ecrP
-X-Received: by 2002:a17:906:f15:: with SMTP id z21mr10466736eji.177.1627163292621;
-        Sat, 24 Jul 2021 14:48:12 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwcC7JbUplW/EECe6Pj5DymoKEbtDHlyJUdE09NwDpBM4vPpQiH5q7A9qSREZv1RYkK2nQ3Kg==
-X-Received: by 2002:a17:906:f15:: with SMTP id z21mr10466728eji.177.1627163292493;
-        Sat, 24 Jul 2021 14:48:12 -0700 (PDT)
+        bh=ov7yn4H0ornXwxrX1ZBFt/XnbBsClxe6Xsh+B5h5Cag=;
+        b=MznPSI2hxZqsLkjj3cDoBsINSqFYZgQNH6X7GeWXkPWjUaRtrwMz7sVmT0bgC5CCh3
+         TpBE1ImKsQCd4kdoKK19HFkDTW5+Guc/xhOQlCNhOG1K31i3O1Z4rKkO2g8snbrlo6x2
+         qpnVGssTbs2nYstn1HcN39hJrl31KU73k1faoUca7uFMoQZlmPW+zscworTy9kVvxwUI
+         b9fvOg4X4RN8YSyffWR2vIYnImQLIwCAvwkjT7A965Jo0mj5Wd9twGNOZuXx09mwQdRv
+         acB5B4594wDdDebAMnlz47uhhEX9gwJKM6huc07LdPpi+gpP2iXC442ksF9YA19EaDNF
+         kgXw==
+X-Gm-Message-State: AOAM530VFr7s2ZEBY8+ebAPz4YlpGz1aBjZdG3dhal/9QqkOKbCWBxPG
+        leag1RQDFwiv7qV8086y8tk2UuMQhnWtyyMyGUoFVSPg53BlVTUbO1/P0WRJfwKYRIgcSahu+ky
+        oO6ydEBj++n7m5pavACy9IJBC1ZuZYNuqbwcClS73+IdY
+X-Received: by 2002:a17:906:5e4c:: with SMTP id b12mr10085428eju.230.1627163288267;
+        Sat, 24 Jul 2021 14:48:08 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw4DjgiuYIHPq50fWezEY5ArO3iNlytrDP/udlFADjFqzzpxgUDWdNRebg5J3N9yopeTwgO0Q==
+X-Received: by 2002:a17:906:5e4c:: with SMTP id b12mr10085415eju.230.1627163288139;
+        Sat, 24 Jul 2021 14:48:08 -0700 (PDT)
 Received: from localhost.localdomain ([86.32.47.9])
-        by smtp.gmail.com with ESMTPSA id j5sm8383005edv.10.2021.07.24.14.48.11
+        by smtp.gmail.com with ESMTPSA id j5sm8383005edv.10.2021.07.24.14.48.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Jul 2021 14:48:12 -0700 (PDT)
+        Sat, 24 Jul 2021 14:48:07 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Charles Gorand <charles.gorand@effinnov.com>,
@@ -73,9 +73,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 04/12] nfc: constify nci_driver_ops (prop_ops and core_ops)
-Date:   Sat, 24 Jul 2021 23:47:35 +0200
-Message-Id: <20210724214743.121884-5-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 01/12] nfc: constify payload argument in nci_send_cmd()
+Date:   Sat, 24 Jul 2021 23:47:32 +0200
+Message-Id: <20210724214743.121884-2-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210724214743.121884-1-krzysztof.kozlowski@canonical.com>
 References: <20210724214743.121884-1-krzysztof.kozlowski@canonical.com>
@@ -85,145 +85,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Neither the core nor the drivers modify the passed pointer to struct
-nci_driver_ops (consisting of function pointers), so make it a pointer
-to const for correctness and safety.
+The nci_send_cmd() payload argument is passed directly to skb_put_data()
+which already accepts a pointer to const, so make it const as well for
+correctness and safety.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/fdp/fdp.c      |  4 ++--
- drivers/nfc/s3fwrn5/nci.c  |  2 +-
- drivers/nfc/s3fwrn5/nci.h  |  2 +-
- drivers/nfc/st-nci/core.c  |  2 +-
- include/net/nfc/nci_core.h |  4 ++--
- net/nfc/nci/core.c         | 16 ++++++++--------
- 6 files changed, 15 insertions(+), 15 deletions(-)
+ include/net/nfc/nci_core.h | 2 +-
+ net/nfc/nci/core.c         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-index 73f51848a693..4d88a617d0e8 100644
---- a/drivers/nfc/fdp/fdp.c
-+++ b/drivers/nfc/fdp/fdp.c
-@@ -651,7 +651,7 @@ static int fdp_nci_core_get_config_rsp_packet(struct nci_dev *ndev,
- 	return 0;
- }
- 
--static struct nci_driver_ops fdp_core_ops[] = {
-+static const struct nci_driver_ops fdp_core_ops[] = {
- 	{
- 		.opcode = NCI_OP_CORE_GET_CONFIG_RSP,
- 		.rsp = fdp_nci_core_get_config_rsp_packet,
-@@ -662,7 +662,7 @@ static struct nci_driver_ops fdp_core_ops[] = {
- 	},
- };
- 
--static struct nci_driver_ops fdp_prop_ops[] = {
-+static const struct nci_driver_ops fdp_prop_ops[] = {
- 	{
- 		.opcode = nci_opcode_pack(NCI_GID_PROP, NCI_OP_PROP_PATCH_OID),
- 		.rsp = fdp_nci_prop_patch_rsp_packet,
-diff --git a/drivers/nfc/s3fwrn5/nci.c b/drivers/nfc/s3fwrn5/nci.c
-index 819e3474a437..e374e670b36b 100644
---- a/drivers/nfc/s3fwrn5/nci.c
-+++ b/drivers/nfc/s3fwrn5/nci.c
-@@ -20,7 +20,7 @@ static int s3fwrn5_nci_prop_rsp(struct nci_dev *ndev, struct sk_buff *skb)
- 	return 0;
- }
- 
--struct nci_driver_ops s3fwrn5_nci_prop_ops[4] = {
-+const struct nci_driver_ops s3fwrn5_nci_prop_ops[4] = {
- 	{
- 		.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY,
- 				NCI_PROP_SET_RFREG),
-diff --git a/drivers/nfc/s3fwrn5/nci.h b/drivers/nfc/s3fwrn5/nci.h
-index 5c22c5315f79..c2d906591e9e 100644
---- a/drivers/nfc/s3fwrn5/nci.h
-+++ b/drivers/nfc/s3fwrn5/nci.h
-@@ -50,7 +50,7 @@ struct nci_prop_fw_cfg_rsp {
- 	__u8 status;
- };
- 
--extern struct nci_driver_ops s3fwrn5_nci_prop_ops[4];
-+extern const struct nci_driver_ops s3fwrn5_nci_prop_ops[4];
- int s3fwrn5_nci_rf_configure(struct s3fwrn5_info *info, const char *fw_name);
- 
- #endif /* __LOCAL_S3FWRN5_NCI_H_ */
-diff --git a/drivers/nfc/st-nci/core.c b/drivers/nfc/st-nci/core.c
-index f6fce34a77da..72bb51efdf9c 100644
---- a/drivers/nfc/st-nci/core.c
-+++ b/drivers/nfc/st-nci/core.c
-@@ -86,7 +86,7 @@ static int st_nci_prop_rsp_packet(struct nci_dev *ndev,
- 	return 0;
- }
- 
--static struct nci_driver_ops st_nci_prop_ops[] = {
-+static const struct nci_driver_ops st_nci_prop_ops[] = {
- 	{
- 		.opcode = nci_opcode_pack(NCI_GID_PROPRIETARY,
- 					  ST_NCI_CORE_PROP),
 diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 5dae7e2cbc49..e7118e0cc3b1 100644
+index 1df0f8074c9d..bf573eca07ca 100644
 --- a/include/net/nfc/nci_core.h
 +++ b/include/net/nfc/nci_core.h
-@@ -82,10 +82,10 @@ struct nci_ops {
- 	void  (*hci_cmd_received)(struct nci_dev *ndev, u8 pipe, u8 cmd,
- 				  struct sk_buff *skb);
- 
--	struct nci_driver_ops *prop_ops;
-+	const struct nci_driver_ops *prop_ops;
- 	size_t n_prop_ops;
- 
--	struct nci_driver_ops *core_ops;
-+	const struct nci_driver_ops *core_ops;
- 	size_t n_core_ops;
- };
- 
+@@ -360,7 +360,7 @@ int nci_core_rsp_packet(struct nci_dev *ndev, __u16 opcode,
+ int nci_core_ntf_packet(struct nci_dev *ndev, __u16 opcode,
+ 			struct sk_buff *skb);
+ void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
+-int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
++int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, const void *payload);
+ int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb);
+ int nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id);
+ void nci_data_exchange_complete(struct nci_dev *ndev, struct sk_buff *skb,
 diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index a7d26f2791b0..50c625940fa3 100644
+index da7fe9db1b00..09967b836361 100644
 --- a/net/nfc/nci/core.c
 +++ b/net/nfc/nci/core.c
-@@ -1363,12 +1363,12 @@ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, const void *payl
- EXPORT_SYMBOL(nci_send_cmd);
+@@ -1332,7 +1332,7 @@ int nci_send_frame(struct nci_dev *ndev, struct sk_buff *skb)
+ EXPORT_SYMBOL(nci_send_frame);
  
- /* Proprietary commands API */
--static struct nci_driver_ops *ops_cmd_lookup(struct nci_driver_ops *ops,
--					     size_t n_ops,
--					     __u16 opcode)
-+static const struct nci_driver_ops *ops_cmd_lookup(const struct nci_driver_ops *ops,
-+						   size_t n_ops,
-+						   __u16 opcode)
+ /* Send NCI command */
+-int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
++int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, const void *payload)
  {
- 	size_t i;
--	struct nci_driver_ops *op;
-+	const struct nci_driver_ops *op;
- 
- 	if (!ops || !n_ops)
- 		return NULL;
-@@ -1383,10 +1383,10 @@ static struct nci_driver_ops *ops_cmd_lookup(struct nci_driver_ops *ops,
- }
- 
- static int nci_op_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
--			     struct sk_buff *skb, struct nci_driver_ops *ops,
-+			     struct sk_buff *skb, const struct nci_driver_ops *ops,
- 			     size_t n_ops)
- {
--	struct nci_driver_ops *op;
-+	const struct nci_driver_ops *op;
- 
- 	op = ops_cmd_lookup(ops, n_ops, rsp_opcode);
- 	if (!op || !op->rsp)
-@@ -1396,10 +1396,10 @@ static int nci_op_rsp_packet(struct nci_dev *ndev, __u16 rsp_opcode,
- }
- 
- static int nci_op_ntf_packet(struct nci_dev *ndev, __u16 ntf_opcode,
--			     struct sk_buff *skb, struct nci_driver_ops *ops,
-+			     struct sk_buff *skb, const struct nci_driver_ops *ops,
- 			     size_t n_ops)
- {
--	struct nci_driver_ops *op;
-+	const struct nci_driver_ops *op;
- 
- 	op = ops_cmd_lookup(ops, n_ops, ntf_opcode);
- 	if (!op || !op->ntf)
+ 	struct nci_ctrl_hdr *hdr;
+ 	struct sk_buff *skb;
 -- 
 2.27.0
 
