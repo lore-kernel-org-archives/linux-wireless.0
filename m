@@ -2,188 +2,318 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	FREEMAIL_REPLYTO_END_DIGIT,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2456C4338F
-	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C838C4338F
+	for <linux-wireless@archiver.kernel.org>; Sun, 25 Jul 2021 04:57:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC9FF60E98
-	for <linux-wireless@archiver.kernel.org>; Sat, 24 Jul 2021 21:50:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E157A6069E
+	for <linux-wireless@archiver.kernel.org>; Sun, 25 Jul 2021 04:57:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230383AbhGXVJv (ORCPT
+        id S229522AbhGYERO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 24 Jul 2021 17:09:51 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:44010
-        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230381AbhGXVJX (ORCPT
+        Sun, 25 Jul 2021 00:17:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35728 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229460AbhGYERO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Jul 2021 17:09:23 -0400
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id 2E71E3F354
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 21:49:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1627163394;
-        bh=6J2lTgqHYzy3l3MCZfIFQGtEtcoxxKRMkHa94SdSjak=;
-        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version;
-        b=oxxq32fMc1jNKi74pppMBFxHvuaO0hhEpw4xqzFYJ98sfrw+tI63lg0MXwbgcDxMy
-         d28eHS84Rx1oI6YCYlt1NhMqLrHqPjHnLnXtARM2oN+sCvQWY9+Zz03kUhuHFmYXxr
-         +YCBFaiPQsyzck8oheoQ7QSLSeUM8IX3YjU2aN/bHf3ZZe7AqYEmrYcjbYau3+TTir
-         xVSkPOmU1WzKgUKeiO0O7miSjhufSoVn8LLz1Qg+kHlo4AgWlXQsOwg6mbJh0U2Rk/
-         qLveoA0lZLAdHAphXsVF9erHA5L5VC29C3rBiY0IhaZaBLZEZKcKIsLaxYJOqFpci7
-         9NpKslG5nqWZg==
-Received: by mail-ed1-f72.google.com with SMTP id p2-20020a50c9420000b02903a12bbba1ebso2786350edh.6
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 14:49:54 -0700 (PDT)
+        Sun, 25 Jul 2021 00:17:14 -0400
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8DA2C061757
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 21:57:43 -0700 (PDT)
+Received: by mail-lj1-x234.google.com with SMTP id l4so6999911ljq.4
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2021 21:57:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:reply-to:to:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=YwAcIVvAWaPcL9/vyFnFzDc4uDEvVEQ9znWV0dXgl84=;
+        b=sWEO1/tY/9DTgOs2MbguqQQ85LHooZwrvlqK0AgpilOM1Qyn2aCbw5xSH3FhSgHPu3
+         bZjtUn/25kP5VohPqSj5TQ7vIe4vzJJe1zKDoaQQ7xTxmuFVSHKZsPwk4AKpiq/d58pz
+         IpStIBav0klNwjryT0MH/zCpm3vy16bD16RG0ohuHKWAIQKhcS9Jd+NlehbIjLoVVOQ+
+         vAAo6lefUC5hnUwkFRa6MJkspaUe59EQhM5wHrEJ+xlSYR4MocaeSxBzC1MUl77PKR2c
+         4R1iZKLS3PQyE4NGX+HVHnWAkzf+6Z/WqQ5XK4a8mjU6Pki/nf5dFpmN3W/VH9vzRAf2
+         /tMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6J2lTgqHYzy3l3MCZfIFQGtEtcoxxKRMkHa94SdSjak=;
-        b=th97uElFWF0WLe8J3Sl0abGc/x1W6FNNYBa5+EQ40jw+T9ehx7ug1XTdlEp7kAgzUJ
-         pdxe+RCUmrJCLr43ao0lD3nLeXL32aq0pQ8Ne4uhDROr6XDhCtoj/LicwEwMJimKQS44
-         OCYCUsDN8zVTN2MXSFzfrGsHFl/AGQG4fNhlhF0ogekbtxBA6MG6KLXdpJYHxUTnxO6+
-         erRtAoAmh4a6XUf4y5VPlPAoRBs9Tv6riMuIU6q3xltwZpCgg0LUFs55TRWPq7a/QMi/
-         iGC3TGvz7I1qPY1vdt5ikp5cg7dhoW9dWNyc4UIqZ8XZCHfq7OGtCrLpVLfrpNYoqZlN
-         QXpA==
-X-Gm-Message-State: AOAM532UOVjfaTsWgWv/qcYspk1TlVfZ7W3J6j7k7qxoNkhD4wrCxdcN
-        cdrNB2bVSk/d/RlKnIGIgfjC+g6ypDd4i+8emzfnySbJZrzYc87PIiU0rfjYzHsGdAjXer3WElV
-        KsN9xqyns/a2sUgxd360PcUlMTDFJFozSGYGdTTV/+z5A
-X-Received: by 2002:aa7:d143:: with SMTP id r3mr13186660edo.110.1627163392075;
-        Sat, 24 Jul 2021 14:49:52 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJynYqsTng3py05vnEd/zOimw7GtW4mRC4/+/JHfPY2EnELDBn9UeX+yaAenZaRxe7Mt5Rc8fA==
-X-Received: by 2002:aa7:d143:: with SMTP id r3mr13186647edo.110.1627163391958;
-        Sat, 24 Jul 2021 14:49:51 -0700 (PDT)
-Received: from localhost.localdomain ([86.32.47.9])
-        by smtp.gmail.com with ESMTPSA id s10sm12821908ejc.39.2021.07.24.14.49.50
+        h=x-gm-message-state:message-id:subject:from:reply-to:to:date
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=YwAcIVvAWaPcL9/vyFnFzDc4uDEvVEQ9znWV0dXgl84=;
+        b=WoGTxrVQRBuFW6DqxZWgDhc8Ecu0+WzCCzIUuhufgRyH50ptxBlsm5xpAsuLLxQt3g
+         TdxQQQGdNvvrbgDywvE5cESLDkJYpZ9wcar+j0Ek1T+sn1FxsxE874K1Q2tOXrXMSbPt
+         hvFX4l2xQa4whI3KS6DoiLkemcBCvJUNQeUjZgzemzwWes34AXMm++ZfaD3QSCs298h3
+         mq+aP7Fr1Yh8m5vBF8zV208Em3ENffXG3Qt0If6sx+7fU0pKhXrbSVSmPvgOTKvgKzNs
+         Xi+1oJgf3F4zb7Nms0PMSX8AXrDngdWKVbvLYYToZJXICI/U4dktyo92p8w/gyvDYwLR
+         Qx0Q==
+X-Gm-Message-State: AOAM531hBnAdVyAaoZPcy2uWK+68XNHXazrOeGKSrMzGEnLrcnooqKsq
+        VVObyIvr6UOv0DD7V43SflJeZd08MxY9kA==
+X-Google-Smtp-Source: ABdhPJwmFXQSWjhh9A4NZI6RPLzt5//0rjwFYWQchYv6dO3T+L6RPvKQzx52qlYqqZ+NFolBiE2BWw==
+X-Received: by 2002:a05:651c:906:: with SMTP id e6mr8050992ljq.385.1627189061572;
+        Sat, 24 Jul 2021 21:57:41 -0700 (PDT)
+Received: from [192.168.0.106] (93-75-145-125.dne.volia.net. [93.75.145.125])
+        by smtp.gmail.com with ESMTPSA id f6sm2663359lfu.273.2021.07.24.21.57.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Jul 2021 14:49:51 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Charles Gorand <charles.gorand@effinnov.com>,
-        Krzysztof Opasiak <k.opasiak@samsung.com>,
-        Mark Greer <mgreer@animalcreek.com>,
-        Bongsu Jeon <bongsu.jeon@samsung.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 09/12] nfc: constify nfc_ops
-Date:   Sat, 24 Jul 2021 23:49:25 +0200
-Message-Id: <20210724214928.122096-4-krzysztof.kozlowski@canonical.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210724214743.121884-1-krzysztof.kozlowski@canonical.com>
-References: <20210724214743.121884-1-krzysztof.kozlowski@canonical.com>
+        Sat, 24 Jul 2021 21:57:40 -0700 (PDT)
+Message-ID: <1148e7c5bb3191e43f965c54d508db575124a990.camel@gmail.com>
+Subject: [feature request] set regulatory domain per device and some other
+ fixes
+From:   Bogdan <bogdan.pylypenko107@gmail.com>
+Reply-To: bogdan.pylypenko107@gmail.com
+To:     linux-wireless@vger.kernel.org, zerochaos@gentoo.org
+Date:   Sun, 25 Jul 2021 07:57:33 +0300
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.3 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Neither the core nor the drivers modify the passed pointer to struct
-nfc_ops, so make it a pointer to const for correctness and safety.
+Hi!
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
----
- drivers/nfc/pn533/pn533.c | 2 +-
- include/net/nfc/nfc.h     | 4 ++--
- net/nfc/core.c            | 2 +-
- net/nfc/digital_core.c    | 2 +-
- net/nfc/hci/core.c        | 2 +-
- net/nfc/nci/core.c        | 2 +-
- 6 files changed, 7 insertions(+), 7 deletions(-)
+This document more pretty in markup viewer.
 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index cd64bfe20402..2f3f3fe9a0ba 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -2623,7 +2623,7 @@ static int pn533_dev_down(struct nfc_dev *nfc_dev)
- 	return ret;
- }
- 
--static struct nfc_ops pn533_nfc_ops = {
-+static const struct nfc_ops pn533_nfc_ops = {
- 	.dev_up = pn533_dev_up,
- 	.dev_down = pn533_dev_down,
- 	.dep_link_up = pn533_dep_link_up,
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 31672021d071..85b698794b14 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -191,14 +191,14 @@ struct nfc_dev {
- 	const struct nfc_vendor_cmd *vendor_cmds;
- 	int n_vendor_cmds;
- 
--	struct nfc_ops *ops;
-+	const struct nfc_ops *ops;
- 	struct genl_info *cur_cmd_info;
- };
- #define to_nfc_dev(_dev) container_of(_dev, struct nfc_dev, dev)
- 
- extern struct class nfc_class;
- 
--struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-+struct nfc_dev *nfc_allocate_device(const struct nfc_ops *ops,
- 				    u32 supported_protocols,
- 				    int tx_headroom,
- 				    int tx_tailroom);
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 573c80c6ff7a..6ade54149b73 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -1048,7 +1048,7 @@ struct nfc_dev *nfc_get_device(unsigned int idx)
-  * @tx_headroom: reserved space at beginning of skb
-  * @tx_tailroom: reserved space at end of skb
-  */
--struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-+struct nfc_dev *nfc_allocate_device(const struct nfc_ops *ops,
- 				    u32 supported_protocols,
- 				    int tx_headroom, int tx_tailroom)
- {
-diff --git a/net/nfc/digital_core.c b/net/nfc/digital_core.c
-index 5044c7db577e..8f2572decccd 100644
---- a/net/nfc/digital_core.c
-+++ b/net/nfc/digital_core.c
-@@ -732,7 +732,7 @@ static int digital_in_send(struct nfc_dev *nfc_dev, struct nfc_target *target,
- 	return rc;
- }
- 
--static struct nfc_ops digital_nfc_ops = {
-+static const struct nfc_ops digital_nfc_ops = {
- 	.dev_up = digital_dev_up,
- 	.dev_down = digital_dev_down,
- 	.start_poll = digital_start_poll,
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index e37d30302b06..b33fe4ee1581 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -928,7 +928,7 @@ static int hci_fw_download(struct nfc_dev *nfc_dev, const char *firmware_name)
- 	return hdev->ops->fw_download(hdev, firmware_name);
- }
- 
--static struct nfc_ops hci_nfc_ops = {
-+static const struct nfc_ops hci_nfc_ops = {
- 	.dev_up = hci_dev_up,
- 	.dev_down = hci_dev_down,
- 	.start_poll = hci_start_poll,
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 50c625940fa3..400d66c4e210 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -1102,7 +1102,7 @@ static int nci_fw_download(struct nfc_dev *nfc_dev, const char *firmware_name)
- 	return ndev->ops->fw_download(ndev, firmware_name);
- }
- 
--static struct nfc_ops nci_nfc_ops = {
-+static const struct nfc_ops nci_nfc_ops = {
- 	.dev_up = nci_dev_up,
- 	.dev_down = nci_dev_down,
- 	.start_poll = nci_start_poll,
--- 
-2.27.0
+email linux-wireless@vger.kernel.org finded at https://wireless.wiki.kernel.org/en/developers/mailinglists
+email zerochaos@gentoo.org finded in iw package metadata
+
+## My system:
+
+```
+$ cat /etc/os-release | grep PRETTY_NAME=
+PRETTY_NAME="Gentoo/Linux"
+
+$ uname -r
+5.13.3-gentoo-x86_64
+
+$ eix net-wireless/iw -Ic --format '<installedversions:EQNAMEVERSION>'
+=net-wireless/iw-5.9
+
+$ equery m iw | grep Maintainer
+Maintainer:  zerochaos@gentoo.org
+```
+
+### My devices:
+```
+$ lspci -k | grep -A2 Wireless
+03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8822CE 802.11ac PCIe Wireless Network Adapter
+ DeviceName: Realtek Wireless LAN + BT
+ Subsystem: Hewlett-Packard Company RTL8822CE 802.11ac PCIe Wireless Network Adapter
+ Kernel driver in use: rtw_8822ce
+ Kernel modules: rtw88_8822ce
+
+$ lsusb | grep Wireless
+Bus 003 Device 012: ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+$ lsusb -s 03.012 -t | grep -i "Dev 12"
+ |__ Port 1: Dev 12, If 0, Class=Vendor Specific Class, Driver=mt7601u, 480M
+```
+
+### Kernel drivers:
+```
+$ zgrep -i rtw88 /proc/config.gz
+CONFIG_RTW88=m
+CONFIG_RTW88_CORE=m
+CONFIG_RTW88_PCI=m
+CONFIG_RTW88_8822C=m
+# CONFIG_RTW88_8822BE is not set
+CONFIG_RTW88_8822CE=m
+# CONFIG_RTW88_8723DE is not set
+# CONFIG_RTW88_8821CE is not set
+# CONFIG_RTW88_DEBUG is not set
+# CONFIG_RTW88_DEBUGFS is not set
+
+$ zgrep 7601 /proc/config.gz
+CONFIG_MT7601U=m
+```
+
+### Device names:
+```
+$ iw dev | grep -A1 phy
+phy#1
+        Interface wlan1
+--
+phy#0
+        Interface wlan0
+
+$ iw list | grep Wiphy
+Wiphy phy1
+Wiphy phy0
+```
+
+### Quick resolution:
+```
+<dev>   <phy>  <driver>     <type>
+wlan0 - phy0 - rtw_8822ce - M.2 (PCIe) adapter
+wlan1 - phy1 - mt7601u    - USB dongle
+```
+
+## Problem #1 - iw tool has no commands to set regulatory domain per device
+I want to set regulatory domain (CRDA) only for device wlan1, not globally for all devices wlan0 & wlan1, but iw support configuring regulatory domain only globally:
+```
+$ iw | grep reg
+ reg reload
+ phy <phyname> reg get
+ reg get
+ reg set <ISO/IEC 3166-1 alpha2>
+```
+
+## Problem #2 - iw tool output incorrectly list of devices
+iw lists only global section and section for inbound wlan0 (phy#0) device.
+Device wlan1 (phy1) not listed in second command.
+```
+$ iw list | grep Wiphy
+Wiphy phy1
+Wiphy phy0
+$ iw reg get | grep phy
+phy#0
+```
+
+## Problem #3 - iw tool say phy names in two different forms
+This command input phy name in "phy0" form, but output in "phy#0" form.
+```
+$ iw list | grep Wiphy
+Wiphy phy1
+Wiphy phy0
+$ iw dev | grep "^phy"
+phy#1
+phy#0
+$ iw phy phy0 reg get | grep phy
+phy#0
+```
+
+## Problem #4 - iw tool set globally configured regulatory domain only for external adapter
+
+### Unset regulatroy domain globally:
+```
+$ sudo iw reg set 00
+
+$ iw reg get
+global
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+
+phy#0
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+
+$ iw phy phy0 reg get
+phy#0
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A
+
+$ iw phy phy1 reg get
+phy#1
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+```
+
+
+### Set regulatroy domain for country BR:
+```
+$ sudo iw reg set BR
+
+$ iw reg get
+global
+country BR: DFS-FCC
+ (2402 - 2482 @ 40), (N/A, 20), (N/A)
+ (5170 - 5250 @ 80), (N/A, 17), (N/A), AUTO-BW
+ (5250 - 5330 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
+ (5490 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+ (5735 - 5835 @ 80), (N/A, 30), (N/A)
+
+phy#0
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+
+$ iw phy phy0 reg get
+phy#0
+country 00: DFS-UNSET
+ (2402 - 2472 @ 40), (N/A, 20), (N/A)
+ (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+ (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+ (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+ (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
+ (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
+ (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+
+$ iw phy phy1 reg get
+global
+country BR: DFS-FCC
+ (2402 - 2482 @ 40), (N/A, 20), (N/A)
+ (5170 - 5250 @ 80), (N/A, 17), (N/A), AUTO-BW
+ (5250 - 5330 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
+ (5490 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+ (5735 - 5835 @ 80), (N/A, 30), (N/A)
+```
+
+## Feature requests
+### 1) Normalize phy names format
+I want to see phy names in "iw reg get" outputs in form, correct as phy name for iw input.
+E.g.: if I see "phy#0" string as physical interface name in "iw reg get" output, then iw must accept "phy#0" string as correct physical interface name in "iw phy <phyname> reg get" input:
+```
+$ iw phy phy0 reg get | grep phy
+phy#0
+$ iw phy phy#0 reg get
+command failed: No such file or directory (-2)
+```
+I prefer to use phy names without "#" prefix for phy number - in unique form with 'iw list | grep Wiphy' command.
+
+### 2) Fix "iw reg" command to show all devices
+"iw reg" command must show all devices, listed in "iw list".
+
+### 3) Fix "iw reg" command to set regulatory domain really for all devices
+Global variant of "iw reg set <COUNTRY>" command must set regulatory domain really for all devices.
+
+### 4) Add command to set regulatory domain per phy by phy name
+Example:
+```
+iw phy0 reg set BR
+```
+
+### 4) Add command to set regulatory domain per phy by device name
+Example:
+```
+iw dev wlan0 reg set BR
+```
+Inside iw, device name "wlan0" transformed to his phy name "phy0", and regulatory domain configured to those "phy0" physical interface.
+
+
 
