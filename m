@@ -2,62 +2,63 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-24.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA37C4320A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 160AFC4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 561986101D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2C5760F6D
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234327AbhG0VAW (ORCPT
+        id S234474AbhG0VAa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:00:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
+        Tue, 27 Jul 2021 17:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232698AbhG0U7L (ORCPT
+        with ESMTP id S233086AbhG0U7g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:11 -0400
+        Tue, 27 Jul 2021 16:59:36 -0400
 Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE880C0617A4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id m1so1827714pjv.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB53C0617A1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id k4-20020a17090a5144b02901731c776526so6580117pjm.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=bokzvyrG/U6aqJMcplPprkAXMLOtluQLvxu28yduQ3I=;
-        b=BRJ6YXZFlzjubx3iY+P/cRdBsRsX9+VYLhU8PHg2kq/i8EQRUyFiRWx/kjBN2fHZ57
-         Rbvn2BG0HVn8p+mlpPeMBNL1FomMRZkRcy6dAl/Lz52OpvlFYUdeYvXs1q7RrMdf5wMe
-         Wym2Ven54uHKxbOOcmPeVL9UTM7qkeunpAHmw=
+        bh=VM7uWZbkUfYnHDd5ZNIAVnDbZvywZy43PN6h2gF7C7c=;
+        b=oBkhd6x8PpRaO8QoO+UEqARpklYQ85EbQwaaqZSpUTzsIkrs1pGiuH526VcUurLUkS
+         +gkvSbxFz3vGB1BF1YQeauyWi9ev8hnzhng3t5uiTcBEZberDOU2lSJPBM+aa6yDkfTe
+         HmjxMNfk6GT/foIn5FNaX7+ENNmF5UhcQ22mM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bokzvyrG/U6aqJMcplPprkAXMLOtluQLvxu28yduQ3I=;
-        b=jbnf092MTTUduaOc3JSAEfl2CeJ4OtCequuE8JHpAi7DPn5jEhoABhxiLcN6075cD9
-         7Uj+HFFZWTS4oq4FvNLBT7qKoX75dJ3CF8bM0w4w5cJ+MZIevrbTOWWJyYulpsO1NPFL
-         Npu/rLS3+TZzsD3SDH0/z2P/qvjCqq0f7d09hv0MRZx/J8ArpG7zhkByvyercsX0884P
-         1blsLcnDcfEXRmqOdS+CkyBi+Zpctv054g3Agm5ZW91f/DA8vvCTtlQQ+rpxD2kAWWg9
-         Qcn2Vf/eHNbcBGTXbAZ6/pjMkt1av41YQuV5hEwId5YvpPKMseJBdL/hfOMiJlsBR+K2
-         DCvQ==
-X-Gm-Message-State: AOAM532McUq/05yQ4isJ4vAfggisZJER8k6tMdAGeWCKAdoRm04Amhzg
-        CQN0Vc36P+GP+BsBzbZC82PapA==
-X-Google-Smtp-Source: ABdhPJxFkKX2Cb+2kct+lBvPCB88+g8EFFUo2+jlZ/mx9XAKU9M3E91dz4xBGj+tCH29yt2HnGdwfQ==
-X-Received: by 2002:aa7:80d3:0:b029:347:820c:fbf with SMTP id a19-20020aa780d30000b0290347820c0fbfmr25091421pfn.73.1627419549404;
-        Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
+        bh=VM7uWZbkUfYnHDd5ZNIAVnDbZvywZy43PN6h2gF7C7c=;
+        b=XqXhOWFMLcZyZh1SsWFGpEq8QpTEdveuaQibF44yl2d6OUV/R1dGZ284F0ym/9Y9NW
+         d9ZhcSBUyo30A7APrvPws+fIiISYFwUAUuFF00RMYXhtfa6FLtUt8wqOqpirv/f6u07E
+         xk9w8F00YPpjtp9xiR09aYh88xKTVCD1jxg4tGonJP9b8Wca4Oi8h+RAxlz7IcqDM/h3
+         2+GT2GofKb+kGVtojdYW7gkN1qqWYagemgH/gL9shg+pBttpRaHLsbSH6zSMygnnT6dG
+         PLCDwP/nAkrG+7U4GnnfTvL9Faajp76l7Zvy90xr9qvxc17NjtobtMIkEFlcEsgBNPT6
+         hE7w==
+X-Gm-Message-State: AOAM531GnaO8qmJ04PZQdc3t0JNYrKTuzA9rszU99RCd9jz2N7nJCuhL
+        TnJKqrt9k2FIX67w1xKRghU7mA==
+X-Google-Smtp-Source: ABdhPJzvwIujwX2h82eYkbdvoMbJ+ZJVnzoCXczVsCM4H67j0yiuDjVnUU+OKLLA11yr/7OVmcSq6g==
+X-Received: by 2002:a63:b4d:: with SMTP id a13mr22272005pgl.404.1627419552873;
+        Tue, 27 Jul 2021 13:59:12 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id b7sm4526752pfl.195.2021.07.27.13.59.08
+        by smtp.gmail.com with ESMTPSA id e23sm3796816pjt.8.2021.07.27.13.59.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Keith Packard <keithpac@amazon.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -66,109 +67,74 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 22/64] bnx2x: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:13 -0700
-Message-Id: <20210727205855.411487-23-keescook@chromium.org>
+Subject: [PATCH 28/64] compiler_types.h: Remove __compiletime_object_size()
+Date:   Tue, 27 Jul 2021 13:58:19 -0700
+Message-Id: <20210727205855.411487-29-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3598; h=from:subject; bh=A1ElP4tjKK6Dp0sFHqCrYLWenZcmBSW5YxsW0evE5y8=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOFm863HXtOc8ZeFmq+4wnVfKZlM+JRATLTvRzZ tF2gptuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhQAKCRCJcvTf3G3AJg5IEA CxuS8kVvtGTeWwaE8ktJ8PBB1PQTvGy+LqQckpDdbfcwdWpfpfUaRcWDUYeyxQViauxQkjKX+WtpGq hyus00PTGVEQ+WIyIaFXYIjua1ivJAE+8+FSub7TLXSsMnwjQ+LHHUYqIonTydXZVNbnI26vGNsNW7 ZiV9OdkeutbHuBOgoqWEev1HlbW4+SZ11/dsn9f2pkkzB8YIhMzFPMi81NohsNTWNaJi74eoKX6qCr e5hNPHv43bf04K61+a0YVVBBpstRQLsnB1CKmBSNAfoc0edgbIAlA0OMq9CdvWO82lwYn6tk73H1Th 7fuTfssESoKBnqznYLIApEuQg37xDIDAdFz4SIssl7up5lwyunQcndQRrMZj1Y0tXkcj5w6CCUCWPw lmJrQWyWwVSqc682o6B1DYKJ4oZqFDaiMvdanoCeHEjy6x8afQF7duJMQRMS14TygWN8NoWnEQuqEI a0XvMB5J/4Z8eLg8jRrtFzwMiR9aIWjrHcHSQ+Co9sVbkxRgedeTJXK3HctCj2xHW68hdTNWPREow9 XuwAmRn6yMPi0xBwSZ1DDYkz8HIa5o6cUScE4nvrwcxz17OQhpwTybWpV3OxK3O2n9Oi/oLBwMKtNZ ogeLRK3dAHlvMOQzHJDjzkWma5VuOaPCqM5XgIHjiRuhS4PU0czJaG8Sd63Q==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2278; h=from:subject; bh=26+UkQF9u4QR73rE2ugmnkAtGgRJVqdRH0gVQ+miGJI=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOGx79zwuZNTkBGJbxUTLtc6LvVjffViSXdghqh ZCh8w1mJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhgAKCRCJcvTf3G3AJoOuD/ 9QhIBj8Ac1dYCQqsKDnl8+GV1Fmwz5NE+vrrmgysyx4iAIh5Hi9gSJVcciJHuWfxsYbsfjbgYy0kX1 fb3zQvUIkMQIB2igKikLexaw/u/aMZvCk9Z5omDCckYav5xDMDxop57SAnRwDmI5ma37g307rYAPXK 3MKhIW4uQWUEg9VD//gprsbS2OpIiwxkghySrauZU6lUWDXOFDxi3e7AnfeRnLBMm5P9R7uYb1c63i CCLVixc36sEWt5n1A3nVhugbXoR7XhzcCKsn6dHqVUwhOr0WC1NiDHg09PcpuJ/iyIKZftDHqUPqg6 5qiwdJ4fNBuagx0+hD1UYhVyC4D8uCcU5JbpSaMhqA5ruisKG07SgLC2mW64QD5KC1l5vxwssi27Ef 7z6+Z9XE9eAIUfHNMPoPePEDUngERmhsvmWGVOt9xejvTsuIr7a0dLku55mNRDgPOr3kKzwatg+19w b9l9CzMUNItXijvnyBQc/Vqy1SAb0lYpmUGz8MBzs95DcaaAGbaZmpWiUWaHQ5s823F8qG3r/1SSM/ zjI2/ycPgCzFufboCXRAyrLfLL7g8dxi7bDg8lAiPKcigIIGX0UbyaLeH8fulCViw1XPIwojOh5Gqh 6Oqz9uM0LoNmL8ecwuaSepH7hTO/bHW05UdooSY1mofMkUQTUBDoMmiCWncw==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+Since all compilers support __builtin_object_size(), and there is only
+one user of __compiletime_object_size, remove it to avoid the needless
+indirection. This lets Clang reason about check_copy_size() correctly.
 
-Use struct_group() in struct nig_stats around members egress_mac_pkt0_lo,
-egress_mac_pkt0_hi, egress_mac_pkt1_lo, and egress_mac_pkt1_hi (and the
-respective members in struct bnx2x_eth_stats), so they can be referenced
-together. This will allow memcpy() and sizeof() to more easily reason
-about sizes, improve readability, and avoid future warnings about writing
-beyond the end of struct bnx2x_eth_stats's rx_stat_ifhcinbadoctets_hi.
-
-"pahole" shows no size nor member offset changes to either struct.
-"objdump -d" shows no meaningful object code changes (i.e. only source
-line number induced differences and optimizations).
-
-Additionally adds BUILD_BUG_ON() to compare the separate struct group
-sizes.
-
+Link: https://github.com/ClangBuiltLinux/linux/issues/1179
+Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c |  7 ++++---
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h | 14 ++++++++++----
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ include/linux/compiler-gcc.h   | 2 --
+ include/linux/compiler_types.h | 4 ----
+ include/linux/thread_info.h    | 2 +-
+ 3 files changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
-index 0b193edb73b8..2bb133ae61c3 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
-@@ -849,7 +849,8 @@ static int bnx2x_hw_stats_update(struct bnx2x *bp)
+diff --git a/include/linux/compiler-gcc.h b/include/linux/compiler-gcc.h
+index cb9217fc60af..01985821944b 100644
+--- a/include/linux/compiler-gcc.h
++++ b/include/linux/compiler-gcc.h
+@@ -41,8 +41,6 @@
  
- 	memcpy(old, new, sizeof(struct nig_stats));
+ #define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __COUNTER__)
  
--	memcpy(&(estats->rx_stat_ifhcinbadoctets_hi), &(pstats->mac_stx[1]),
-+	BUILD_BUG_ON(sizeof(estats->shared) != sizeof(pstats->mac_stx[1]));
-+	memcpy(&(estats->shared), &(pstats->mac_stx[1]),
- 	       sizeof(struct mac_stx));
- 	estats->brb_drop_hi = pstats->brb_drop_hi;
- 	estats->brb_drop_lo = pstats->brb_drop_lo;
-@@ -1634,9 +1635,9 @@ void bnx2x_stats_init(struct bnx2x *bp)
- 			REG_RD(bp, NIG_REG_STAT0_BRB_TRUNCATE + port*0x38);
- 	if (!CHIP_IS_E3(bp)) {
- 		REG_RD_DMAE(bp, NIG_REG_STAT0_EGRESS_MAC_PKT0 + port*0x50,
--			    &(bp->port.old_nig_stats.egress_mac_pkt0_lo), 2);
-+			    &(bp->port.old_nig_stats.egress_mac_pkt0), 2);
- 		REG_RD_DMAE(bp, NIG_REG_STAT0_EGRESS_MAC_PKT1 + port*0x50,
--			    &(bp->port.old_nig_stats.egress_mac_pkt1_lo), 2);
-+			    &(bp->port.old_nig_stats.egress_mac_pkt1), 2);
- 	}
+-#define __compiletime_object_size(obj) __builtin_object_size(obj, 0)
+-
+ #define __compiletime_warning(message) __attribute__((__warning__(message)))
+ #define __compiletime_error(message) __attribute__((__error__(message)))
  
- 	/* Prepare statistics ramrod data */
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
-index d55e63692cf3..ae93c078707b 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
-@@ -36,10 +36,14 @@ struct nig_stats {
- 	u32 pbf_octets;
- 	u32 pbf_packet;
- 	u32 safc_inp;
--	u32 egress_mac_pkt0_lo;
--	u32 egress_mac_pkt0_hi;
--	u32 egress_mac_pkt1_lo;
--	u32 egress_mac_pkt1_hi;
-+	struct_group(egress_mac_pkt0,
-+		u32 egress_mac_pkt0_lo;
-+		u32 egress_mac_pkt0_hi;
-+	);
-+	struct_group(egress_mac_pkt1,
-+		u32 egress_mac_pkt1_lo;
-+		u32 egress_mac_pkt1_hi;
-+	);
- };
+diff --git a/include/linux/compiler_types.h b/include/linux/compiler_types.h
+index e4ea86fc584d..c43308b0a9a9 100644
+--- a/include/linux/compiler_types.h
++++ b/include/linux/compiler_types.h
+@@ -290,10 +290,6 @@ struct ftrace_likely_data {
+ 	(sizeof(t) == sizeof(char) || sizeof(t) == sizeof(short) || \
+ 	 sizeof(t) == sizeof(int) || sizeof(t) == sizeof(long))
  
- enum bnx2x_stats_event {
-@@ -83,6 +87,7 @@ struct bnx2x_eth_stats {
- 	u32 no_buff_discard_hi;
- 	u32 no_buff_discard_lo;
- 
-+	struct_group(shared,
- 	u32 rx_stat_ifhcinbadoctets_hi;
- 	u32 rx_stat_ifhcinbadoctets_lo;
- 	u32 tx_stat_ifhcoutbadoctets_hi;
-@@ -159,6 +164,7 @@ struct bnx2x_eth_stats {
- 	u32 tx_stat_dot3statsinternalmactransmiterrors_lo;
- 	u32 tx_stat_bmac_ufl_hi;
- 	u32 tx_stat_bmac_ufl_lo;
-+	);
- 
- 	u32 pause_frames_received_hi;
- 	u32 pause_frames_received_lo;
+-/* Compile time object size, -1 for unknown */
+-#ifndef __compiletime_object_size
+-# define __compiletime_object_size(obj) -1
+-#endif
+ #ifndef __compiletime_warning
+ # define __compiletime_warning(message)
+ #endif
+diff --git a/include/linux/thread_info.h b/include/linux/thread_info.h
+index 0999f6317978..ad0c4e041030 100644
+--- a/include/linux/thread_info.h
++++ b/include/linux/thread_info.h
+@@ -203,7 +203,7 @@ static inline void copy_overflow(int size, unsigned long count)
+ static __always_inline __must_check bool
+ check_copy_size(const void *addr, size_t bytes, bool is_source)
+ {
+-	int sz = __compiletime_object_size(addr);
++	int sz = __builtin_object_size(addr, 0);
+ 	if (unlikely(sz >= 0 && sz < bytes)) {
+ 		if (!__builtin_constant_p(bytes))
+ 			copy_overflow(sz, bytes);
 -- 
 2.30.2
 
