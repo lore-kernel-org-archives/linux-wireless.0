@@ -8,249 +8,216 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D4C3C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84992C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:01:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7350260F6D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:01:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C86660FDB
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232589AbhG0VBQ (ORCPT
+        id S234366AbhG0VBW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:01:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54056 "EHLO
+        Tue, 27 Jul 2021 17:01:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232311AbhG0U7G (ORCPT
+        with ESMTP id S234438AbhG0VA0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:06 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C956AC06179C
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id q17-20020a17090a2e11b02901757deaf2c8so1188593pjd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+        Tue, 27 Jul 2021 17:00:26 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45C88C061798
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:14 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso6643864pjb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=m9/SLyzkm5b4YgLSzID8XtRK8GIPppWgZQKzDtYl0cY=;
-        b=Q6r3JVenAALSlwAfyXn9c9rdA4TUAUv+3EIc2wTPETOe8m8gbk9+wqvXOiPL1oUvnH
-         ghkLdmrKLyR4I8vbN9OzUB9eFxc3TXAFvoPqhq1nLVTJTeUO4JgZrxR7Jn6GTmnnQyus
-         6EOqFEJs4cs2fjjy5HiOhsgCbIpL8hnk9RHbk=
+        bh=5dgtbc2dgc03WrB3zCW8xCKeemPdJxAysWeYGPrb2AU=;
+        b=F8BhKjlELwZQZC/NHilmj8UHyJiciojqkD21zu2phAh9IjoM/fxQim890WscudGWkn
+         ITiddmP/I7AMAah42EqEpj+RLkluZCVZ837vhUSZ98pD/iRc3avt5dWcp6Jyky58KYKr
+         5cCh2GoKzu208b1IjBoT3Lt5g7EZOYb86oyL0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=m9/SLyzkm5b4YgLSzID8XtRK8GIPppWgZQKzDtYl0cY=;
-        b=BtNPcjjOjU8Osl6VSbMtJwbf0KG/ehPTaFoKe1Dnh6YnIJRJ6q39jkS6fTyaSs7n+f
-         kKhFperdZKlKsWX9K8Xv/HmKogbFFHKHnggN63Cq7KpoTB8b6ayiiI1Y6c3xIfgWY9qg
-         w/pqHlz3LESm1HsXmyQLLE46dgx5sL8JyRu6DIB8bwFf/WIRhysBlR+vpqHgxQmz1GCG
-         i7U0EOUS6IckhtpFl+RNO2VtiskxVI5rZvvXQ88IDbtZorYTk1tRKI7DfHQKGWptT0cY
-         5oVH3N8q2EuoNvRWmk0ZAhctgbvSTphPlUWJ6f/+Y3WtnjvZfUJl9kdJ/EYUzjXIDIRw
-         iQOQ==
-X-Gm-Message-State: AOAM533p6oo0xdPFXPCRlKJZTzu+yJq55zM6LLmrQw6civxm6og4Wx7P
-        fTtNLBN7JvPVxYPTZ/QoEAgSGw==
-X-Google-Smtp-Source: ABdhPJyHLrx2rOyZ+72UCSjITxuxc5Fx4+n8MmagGGchue3NLbPGkODQaUC1y1IyFCIXLG8+7pEjjg==
-X-Received: by 2002:a17:90a:aa92:: with SMTP id l18mr6315143pjq.20.1627419543327;
-        Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+        bh=5dgtbc2dgc03WrB3zCW8xCKeemPdJxAysWeYGPrb2AU=;
+        b=bUGJlxA+0seo9ehOrZ4uZL9skczBgbmoiozxysY9GMBV+9F2tAC7viduB3pDUCOZDm
+         8xygSOfU5OfTyA2sJYO4DLtOj/Tnf+JlKpJcymFlkDV1BHhZRdKiGgEFoaC9UJ4FqnPF
+         8L4iZ3qlbESOI/qPFnBSmmu8i6C7FqSqsvcvYoydkL/HGY2IABvmqqmzLje6Qc7PYJ8Y
+         7GKnM7vHFqJucXLez8L80RegCbwzD2Aj1T5dDwfuQfIjxIO/E65kF2pgs+g/3SWNHk7E
+         3w4xgiHWUr1asu2fDNn9iHY/0oMN3rSwgGrFRVSJ+hbU6uAalQ2CJOC5QgZkCdyadcQf
+         FNYw==
+X-Gm-Message-State: AOAM532ovbw5tC9f5iqGtt8hCyd+0m5tR17sSYW6eEuSfTYrwd9FTtAC
+        xfPpZm0/llbpe37u6QuuN0z5BA==
+X-Google-Smtp-Source: ABdhPJzHaCRGy5F+C/0IwVa3T6DxyU5SU0Rk1IFN+C3HrONrQCAZIHyVl0Jwr71UKmZc4kOAdrOx9Q==
+X-Received: by 2002:a17:90a:9511:: with SMTP id t17mr6099598pjo.194.1627419553892;
+        Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id r10sm4606873pff.7.2021.07.27.13.59.02
+        by smtp.gmail.com with ESMTPSA id j185sm977660pfb.86.2021.07.27.13.59.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 13:59:02 -0700 (PDT)
+        Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Keith Packard <keithpac@amazon.com>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Keith Packard <keithpac@amazon.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 04/64] stddef: Introduce struct_group() helper macro
-Date:   Tue, 27 Jul 2021 13:57:55 -0700
-Message-Id: <20210727205855.411487-5-keescook@chromium.org>
+Subject: [PATCH 25/64] drm/mga/mga_ioc32: Use struct_group() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:58:16 -0700
+Message-Id: <20210727205855.411487-26-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6059; h=from:subject; bh=3LEAbTxg4aXTCBqMfEtpBsDoqguT4nwPgyzTbu35rzM=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOB6fBnqoQEU0SOfpxJjjk2PGndGpdft7092EvT pn5C4GCJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgQAKCRCJcvTf3G3AJjaKD/ 9Hy5ufgc4XqQ2z3z9FPvEU6kxJGQmWPS7Xcj/+0+Tt0ThcqyqNxB3pfnhNZY5oFVzFQAasxaE+uUMy w8l50dffII86GVzwgMHpVSOHfyKxD0+bVjHS1hMO0YxtoyYtE05wk1gZb0O3VCFvNI8kbknhLy9Uck SYOfNHqSctMehBN0ekYquyX+Sxta/bDS1L6zhOi7GKz1zqmata8K3Ru/ejXddx/tfY4Od9cnavr31N xw2Thp2oXNUsvJOPNbEvrB9M+WNLj3Jkh79uKUxA2pScrBaJuJyDc0eb75fwJObkRIzkHNc5UF68RQ 3sm3i/QfPCS0rVeZ3hKhcTFLjC3MZufvXgQPFR7BfYuYWBJojZhnwQdeoicgqEYtr8XHy8GgHXRxFT pHAAkO2PCn68C5FfPyf8+UKcLaAMIm3YG+MYg5c8HZrCT92UTJKR8kNFF5UhnMDqJdNE0LLWwmqQjD pee4CTHVdCAU/kDqXg2TD7dmrqC2bgT4icDvzkqIMtb10+q6UqF4VahbBVQrDLI3Y8Zcj+H+cdlb2F 0D5duiiZ6PW+dqS/zKFRLxwzmSl45QsWX4lUz1Wqs23RyLSPhcYSYz1PQjMeqiAlmp/hRAs8uiSw0q nFEKGgK/WMDmBCTVW0TdgnP5Vt5h5HAjsZEr+BMIwSeSu+7fa8Z0zUCwBT+w==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4623; h=from:subject; bh=k+K5bstPCbcyrh+sSnGNbOYkreiUUA/e+oUv7j7SsRI=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOF7lb8jaGmB5ldx4AxyJ1hPHdl4meiY4XD8VCT /iMBLayJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhQAKCRCJcvTf3G3AJvoJD/ 92twoEjqLmo87BW6EPdn7+I36/Lfz4+EvdPI46UzDmOPeZZUdda/FVtlnjMfEf8Q7C65xjksxGuB11 ICT3mXYX/OI+OAHyDSDJYypVceEdn64IHFBqpq/oGwo5Yb3yImt3/puNdHix7T+reDMD9k3/10f1ea 64Pu/new1rtTnvCeLNrJVYFxo0r1FdR5tKQNjHTB90tHMLn2iIIKqbGXb20uLxtV+x7a+H7Us4Yvg3 jBkDEA9pd2OgCVOKGOgKUslD+d3uAxjiRTujQwyQFyuAcD0eO5bQmNCY2KVkY+N60I7KJX/+7VpO5f qXqg2QaavL2tumHBfYyNzwOsb6LN7zfwVX0ckRUzhnavSPV/D+qSZF3dIhW70wEeMyjzR0utNMhCoC xrhy6krEgk3kh6c5GIkeWWNBw1+HaHq84ZW7T0ZralGra2hddUdIcxJyigKD3DhXNPHoV1jCEMnjsR j27XJySoAwc8IRtRRcu1+lBrjuaYvhUsBhqRGiDppkxlrH8BYE9FWSEkYmo2/nR/nqvaO5kWIGopgr mtojfttWXR/DK1oruTB5GXelPdoUZCcw1LKaQBQtAAO+8wvNFMXwZCmCS87o/0cJrigkN+rbxsB6Fr kAar1dAvIQiU7igsE6A2DuLJrW43uIMso5wzoAuX6TFDDP3PcPS65gbtCqYg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kernel code has a regular need to describe groups of members within a
-structure usually when they need to be copied or initialized separately
-from the rest of the surrounding structure. The generally accepted design
-pattern in C is to use a named sub-struct:
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-	struct foo {
-		int one;
-		struct {
-			int two;
-			int three;
-		} thing;
-		int four;
-	};
+Use struct_group() in struct drm32_mga_init around members chipset, sgram,
+maccess, fb_cpp, front_offset, front_pitch, back_offset, back_pitch,
+depth_cpp, depth_offset, depth_pitch, texture_offset, and texture_size,
+so they can be referenced together. This will allow memcpy() and sizeof()
+to more easily reason about sizes, improve readability, and avoid future
+warnings about writing beyond the end of chipset.
 
-This would allow for traditional references and sizing:
+"pahole" shows no size nor member offset changes to struct drm32_mga_init.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences and optimizations).
 
-	memcpy(&dst.thing, &src.thing, sizeof(dst.thing));
+Note that since this includes a UAPI header, struct_group() has been
+explicitly redefined local to the header.
 
-However, doing this would mean that referencing struct members enclosed
-by such named structs would always require including the sub-struct name
-in identifiers:
-
-	do_something(dst.thing.three);
-
-This has tended to be quite inflexible, especially when such groupings
-need to be added to established code which causes huge naming churn.
-Three workarounds exist in the kernel for this problem, and each have
-other negative properties.
-
-To avoid the naming churn, there is a design pattern of adding macro
-aliases for the named struct:
-
-	#define f_three thing.three
-
-This ends up polluting the global namespace, and makes it difficult to
-search for identifiers.
-
-Another common work-around in kernel code avoids the pollution by avoiding
-the named struct entirely, instead identifying the group's boundaries using
-either a pair of empty anonymous structs of a pair of zero-element arrays:
-
-	struct foo {
-		int one;
-		struct { } start;
-		int two;
-		int three;
-		struct { } finish;
-		int four;
-	};
-
-	struct foo {
-		int one;
-		int start[0];
-		int two;
-		int three;
-		int finish[0];
-		int four;
-	};
-
-This allows code to avoid needing to use a sub-struct name for member
-references within the surrounding structure, but loses the benefits of
-being able to actually use such a struct, making it rather fragile. Using
-these requires open-coded calculation of sizes and offsets. The efforts
-made to avoid common mistakes include lots of comments, or adding various
-BUILD_BUG_ON()s. Such code is left with no way for the compiler to reason
-about the boundaries (e.g. the "start" object looks like it's 0 bytes
-in length and is not structurally associated with "finish"), making bounds
-checking depend on open-coded calculations:
-
-	if (length > offsetof(struct foo, finish) -
-		     offsetof(struct foo, start))
-		return -EINVAL;
-	memcpy(&dst.start, &src.start, length);
-
-However, the vast majority of places in the kernel that operate on
-groups of members do so without any identification of the grouping,
-relying either on comments or implicit knowledge of the struct contents,
-which is even harder for the compiler to reason about, and results in
-even more fragile manual sizing, usually depending on member locations
-outside of the region (e.g. to copy "two" and "three", use the start of
-"four" to find the size):
-
-	BUILD_BUG_ON((offsetof(struct foo, four) <
-		      offsetof(struct foo, two)) ||
-		     (offsetof(struct foo, four) <
-		      offsetof(struct foo, three));
-	if (length > offsetof(struct foo, four) -
-		     offsetof(struct foo, two))
-		return -EINVAL;
-	memcpy(&dst.two, &src.two, length);
-
-And both of the prior two idioms additionally appear to write beyond the
-end of the referenced struct member, forcing the compiler to ignore any
-attempt to perform bounds checking.
-
-In order to have a regular programmatic way to describe a struct
-region that can be used for references and sizing, can be examined for
-bounds checking, avoids forcing the use of intermediate identifiers,
-and avoids polluting the global namespace, introduce the struct_group()
-macro. This macro wraps the member declarations to create an anonymous
-union of an anonymous struct (no intermediate name) and a named struct
-(for references and sizing):
-
-	struct foo {
-		int one;
-		struct_group(thing,
-			int two,
-			int three,
-		);
-		int four;
-	};
-
-	if (length > sizeof(src.thing))
-		return -EINVAL;
-	memcpy(&dst.thing, &src.thing, length);
-	do_something(dst.three);
-
-There are some rare cases where the resulting struct_group() needs
-attributes added, so struct_group_attr() is also introduced to allow
-for specifying struct attributes (e.g. __align(x) or __packed).
-
-Co-developed-by: Keith Packard <keithpac@amazon.com>
-Signed-off-by: Keith Packard <keithpac@amazon.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/stddef.h | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/gpu/drm/mga/mga_ioc32.c | 30 ++++++++++++++------------
+ include/uapi/drm/mga_drm.h      | 37 ++++++++++++++++++++++++---------
+ 2 files changed, 44 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/stddef.h b/include/linux/stddef.h
-index 998a4ba28eba..cf7f866944f9 100644
---- a/include/linux/stddef.h
-+++ b/include/linux/stddef.h
-@@ -36,4 +36,38 @@ enum {
- #define offsetofend(TYPE, MEMBER) \
- 	(offsetof(TYPE, MEMBER)	+ sizeof_field(TYPE, MEMBER))
+diff --git a/drivers/gpu/drm/mga/mga_ioc32.c b/drivers/gpu/drm/mga/mga_ioc32.c
+index 4fd4de16cd32..fbd0329dbd4f 100644
+--- a/drivers/gpu/drm/mga/mga_ioc32.c
++++ b/drivers/gpu/drm/mga/mga_ioc32.c
+@@ -38,16 +38,21 @@
+ typedef struct drm32_mga_init {
+ 	int func;
+ 	u32 sarea_priv_offset;
+-	int chipset;
+-	int sgram;
+-	unsigned int maccess;
+-	unsigned int fb_cpp;
+-	unsigned int front_offset, front_pitch;
+-	unsigned int back_offset, back_pitch;
+-	unsigned int depth_cpp;
+-	unsigned int depth_offset, depth_pitch;
+-	unsigned int texture_offset[MGA_NR_TEX_HEAPS];
+-	unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	struct_group(always32bit,
++		int chipset;
++		int sgram;
++		unsigned int maccess;
++		unsigned int fb_cpp;
++		unsigned int front_offset;
++		unsigned int front_pitch;
++		unsigned int back_offset;
++		unsigned int back_pitch;
++		unsigned int depth_cpp;
++		unsigned int depth_offset;
++		unsigned int depth_pitch;
++		unsigned int texture_offset[MGA_NR_TEX_HEAPS];
++		unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	);
+ 	u32 fb_offset;
+ 	u32 mmio_offset;
+ 	u32 status_offset;
+@@ -67,9 +72,8 @@ static int compat_mga_init(struct file *file, unsigned int cmd,
  
-+/**
-+ * struct_group_attr(NAME, ATTRS, MEMBERS)
-+ *
-+ * Used to create an anonymous union of two structs with identical
-+ * layout and size: one anonymous and one named. The former can be
-+ * used normally without sub-struct naming, and the latter can be
-+ * used to reason about the start, end, and size of the group of
-+ * struct members. Includes structure attributes argument.
-+ *
-+ * @NAME: The name of the mirrored sub-struct
-+ * @ATTRS: Any struct attributes (normally empty)
-+ * @MEMBERS: The member declarations for the mirrored structs
-+ */
-+#define struct_group_attr(NAME, ATTRS, MEMBERS) \
+ 	init.func = init32.func;
+ 	init.sarea_priv_offset = init32.sarea_priv_offset;
+-	memcpy(&init.chipset, &init32.chipset,
+-		offsetof(drm_mga_init_t, fb_offset) -
+-		offsetof(drm_mga_init_t, chipset));
++	memcpy(&init.always32bit, &init32.always32bit,
++	       sizeof(init32.always32bit));
+ 	init.fb_offset = init32.fb_offset;
+ 	init.mmio_offset = init32.mmio_offset;
+ 	init.status_offset = init32.status_offset;
+diff --git a/include/uapi/drm/mga_drm.h b/include/uapi/drm/mga_drm.h
+index 8c4337548ab5..61612e5ecab2 100644
+--- a/include/uapi/drm/mga_drm.h
++++ b/include/uapi/drm/mga_drm.h
+@@ -265,6 +265,16 @@ typedef struct _drm_mga_sarea {
+ #define DRM_IOCTL_MGA_WAIT_FENCE    DRM_IOWR(DRM_COMMAND_BASE + DRM_MGA_WAIT_FENCE, __u32)
+ #define DRM_IOCTL_MGA_DMA_BOOTSTRAP DRM_IOWR(DRM_COMMAND_BASE + DRM_MGA_DMA_BOOTSTRAP, drm_mga_dma_bootstrap_t)
+ 
++#define __struct_group(name, fields) \
 +	union { \
-+		struct { MEMBERS } ATTRS; \
-+		struct { MEMBERS } ATTRS NAME; \
++		struct { \
++			fields \
++		}; \
++		struct { \
++			fields \
++		} name; \
 +	}
 +
-+/**
-+ * struct_group(NAME, MEMBERS)
-+ *
-+ * Used to create an anonymous union of two structs with identical
-+ * layout and size: one anonymous and one named. The former can be
-+ * used normally without sub-struct naming, and the latter can be
-+ * used to reason about the start, end, and size of the group of
-+ * struct members.
-+ *
-+ * @NAME: The name of the mirrored sub-struct
-+ * @MEMBERS: The member declarations for the mirrored structs
-+ */
-+#define struct_group(NAME, MEMBERS)	\
-+	struct_group_attr(NAME, /* no attrs */, MEMBERS)
+ typedef struct _drm_mga_warp_index {
+ 	int installed;
+ 	unsigned long phys_addr;
+@@ -279,20 +289,25 @@ typedef struct drm_mga_init {
+ 
+ 	unsigned long sarea_priv_offset;
+ 
+-	int chipset;
+-	int sgram;
++	__struct_group(always32bit,
++		int chipset;
++		int sgram;
+ 
+-	unsigned int maccess;
++		unsigned int maccess;
+ 
+-	unsigned int fb_cpp;
+-	unsigned int front_offset, front_pitch;
+-	unsigned int back_offset, back_pitch;
++		unsigned int fb_cpp;
++		unsigned int front_offset;
++		unsigned int front_pitch;
++		unsigned int back_offset;
++		unsigned int back_pitch;
+ 
+-	unsigned int depth_cpp;
+-	unsigned int depth_offset, depth_pitch;
++		unsigned int depth_cpp;
++		unsigned int depth_offset;
++		unsigned int depth_pitch;
+ 
+-	unsigned int texture_offset[MGA_NR_TEX_HEAPS];
+-	unsigned int texture_size[MGA_NR_TEX_HEAPS];
++		unsigned int texture_offset[MGA_NR_TEX_HEAPS];
++		unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	);
+ 
+ 	unsigned long fb_offset;
+ 	unsigned long mmio_offset;
+@@ -302,6 +317,8 @@ typedef struct drm_mga_init {
+ 	unsigned long buffers_offset;
+ } drm_mga_init_t;
+ 
++#undef __struct_group
 +
- #endif
+ typedef struct drm_mga_dma_bootstrap {
+ 	/**
+ 	 * \name AGP texture region
 -- 
 2.30.2
 
