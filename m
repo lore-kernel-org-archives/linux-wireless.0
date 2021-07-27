@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4A8C4320A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF4FC4320A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9CFD60FC4
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D0F360F94
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233330AbhG0VHB (ORCPT
+        id S233009AbhG0VHJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:07:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55840 "EHLO
+        Tue, 27 Jul 2021 17:07:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232726AbhG0VGx (ORCPT
+        with ESMTP id S233113AbhG0VG7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:06:53 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43882C061798
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:52 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id i10so37043pla.3
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:52 -0700 (PDT)
+        Tue, 27 Jul 2021 17:06:59 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00BAC0613CF
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:57 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id e14so10669plh.8
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=leSZ4+6fTtz64GnNlapLSf4V7UaFGM0yCohcXILoKXc=;
-        b=jd9XYMPnsO+0X0kRowZ86N9zacfPb8mbO0Mn11eVzxLjdNoE9ys47yWbs+jxtnOSfW
-         fuHAIdDcVF88EwmnaD7IGAE5UOXEErobQB9V1J7X9Y9Cwvb1H6gIsxo5YFlkxZL7XwB5
-         SoHqQezU4kIahHRz1ABzKHP3/DNG2Cq1Aor0Q=
+        bh=eOeu4d7QLTPBu6QYYoqWVSDz/qzrHDToqQYaK/VYhSM=;
+        b=nmClRthMB6NUA8m9k5ViyzIj9tZSLtz+W7Y/dUJqpsE4Ra7JIpNa/jk5t7+u9guaKS
+         rD4SN4syDHrUBQt/o8lo3la5Br4kga0btCULhIMfCaHEe3PG6RzT3IeGYfyUKyEfoq3Z
+         2Fz2wu2iQF1vNyl73FIcK6AVJYeThxSfaojvI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=leSZ4+6fTtz64GnNlapLSf4V7UaFGM0yCohcXILoKXc=;
-        b=UxhpkrSPbrnjqSoNdqYiMAPGJPVR34QTRuPpYdCUm4sq8vFLEgMroP51LeiEaBWRM0
-         3onnttS6udqNtkVCh0n46L1d4U5CuttaD7DgUUjZKyZ06ir0dnjqyKee98Q1uJCi69Mn
-         t9A7+hzN+s8EXEjMpwbK7D8Zej4EEBsXwmm98RQWPNZGyoP0GN9zBNt8x6zCD++rwEFk
-         O3UF9lL8/pwD51RegdU+xuoCbhJdZucoSd/t/bsS62dOI5LOEVwtdHmXwbygeLJtYDek
-         a9Kuuk5KH0j7mSxOQaARwa0wD4yxF6VDVDm2DunauvuPH1+nXj+r9G5RO2qFT/TDQBAa
-         6+nA==
-X-Gm-Message-State: AOAM531bZkQu0ofhJ1fsbUL3sVfjb4CJR7RiJ68hoTL7+bQuu6f2eKWE
-        qM2Ff9RbgUa5ckGHkGy7XiujWw==
-X-Google-Smtp-Source: ABdhPJwEVYSPNBSiESL402T+It80ZBI73Q1poC5hUVPNhWmUhVwPrv3z7S2LNSMZUqAote5dC8pGCg==
-X-Received: by 2002:a17:90a:4417:: with SMTP id s23mr6057606pjg.228.1627420011821;
-        Tue, 27 Jul 2021 14:06:51 -0700 (PDT)
+        bh=eOeu4d7QLTPBu6QYYoqWVSDz/qzrHDToqQYaK/VYhSM=;
+        b=kENoqWPJ4XFvwmb5YmjlVX8/5VhLvFICPK+Ydvr884MMFux8OnXS5Qk5n06i6jxz4R
+         mFJhLToHLHT3RSQX8xQH1POAwQp+cPRR5ylEw6uQM08Tn9zMCWKurahwiX1KdwTNv6j7
+         nnkuuxuij+G9xts1OraV/aeLB95el3u100G/g4g+6XI7DNxYYLYSO5I1tfxaaayZl9yQ
+         GorChVIKMfnsPFR5pjNttDO53Z939X17SxPoF9ok4DDAJnUew/O82uLwDlAdkcYyyNbO
+         ExL8pTxEjkhh3SbZxce3DNcKkH72PXLJe6jUqvdkhtPTHRX8nAWSVvCBgGLynPbX2G+8
+         rS+w==
+X-Gm-Message-State: AOAM532paFcTKeH9CfZt/nriXxgnag4ka8kXnpWQCxVwd1Kl0kcPQ1rM
+        mWc95MUaYjJvl7hMqYyP/FMZRQ==
+X-Google-Smtp-Source: ABdhPJynj7Mxd5dzejb/chP88BPdMVTyDp7rQutQlvaypR/9xo8DyQW71dEyKFZ3FwRUaCTEut3Rdg==
+X-Received: by 2002:a17:902:7884:b029:12a:efa7:18d8 with SMTP id q4-20020a1709027884b029012aefa718d8mr20498548pll.85.1627420017391;
+        Tue, 27 Jul 2021 14:06:57 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y23sm4655958pgf.38.2021.07.27.14.06.50
+        by smtp.gmail.com with ESMTPSA id e12sm3784712pjh.33.2021.07.27.14.06.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:06:50 -0700 (PDT)
+        Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 19/64] ip: Use struct_group() for memcpy() regions
-Date:   Tue, 27 Jul 2021 13:58:10 -0700
-Message-Id: <20210727205855.411487-20-keescook@chromium.org>
+Subject: [PATCH 43/64] ath11k: Use memset_after() for clearing queue descriptors
+Date:   Tue, 27 Jul 2021 13:58:34 -0700
+Message-Id: <20210727205855.411487-44-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5544; h=from:subject; bh=EW2OlP80ZbFYA2et85VLFWinFxHDZ/JfYcx96uwve2A=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOE1QionXEAsnSiPxVw5wfkIt8+He7UKLQGrMmI c3kN8gqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhAAKCRCJcvTf3G3AJgwWD/ sH6JiJOlqMdZB/DaJUVswYUCsszxQOHKvFJps95qmqpJBMRDsH2lLBKm2a6gmCHlmLHrpZE35CObwM nj+RWt9ixoNH4L81O+98xW2w1VPy57Ri6Pf6Yvn44gHEPmKAxV7pdf/rNyEVZZ+t4EbwjFrLIOF9Cu cXpnowGMFNqPdKCrUf/0aeZoSOJ/IGRJtmxUClP9U/1zfg/R1in74Yi149wzVruBUBUSTvsQc4SA0s QQYq5W7ixXMQ8l0YTWGa8ymTzcKK7P60aP4vm7HBJJCHyQR/BwdRDvijeZ1qYLlddgvFs0UULN0oQe vVd8qbWGt4gKDPylfKfgz6uaNSz+jJ43ZF5fCDL1Jt0BrSc+Cx63VBDSBSytHoarJkaqTtC3GRNWES xTVy3dTnpag/Lj92bhpS2+EWrLsiDNWEeuOb1Er5+25XBNHz+Y8frHGoRemgsL3Qs1EVYOTdxlFHG3 V6rjjqoRPfWMWpN0e7jogaTYc3cRUXBSen9HIsPGXHu3xrGH+bvNJ3uQ1VOdugyYnP+7PFkJ7FwuPS RBc5nf5hj3ojUnMeyIYKt1IK14Do/EQKUtgRpkmkN7YhsN1/yquUdxgGZ8x/Zi1LZI/UZ6FLaxcXVK Fc7a3ewBBcn4SXZY0R5FI5JHXF0Ahz8hNwHzp01WiTwpznvQKOKE/eRBuuoQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3116; h=from:subject; bh=j3LfXLw0C1RpC2nAiDmR2FV9ppMLr+xX2/Byaw0lUBI=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOJQjRIUTQLa3kW6JEv7dcnm26TeZbOKFOYV9Uy JUsIKlSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziQAKCRCJcvTf3G3AJv7OD/ wOv9NnzO8vnuCd1yLn28Uh20ipd4blI/H+kMp3Wx9VsXqAUniUau5o4ju7EMl4saOmJ/ltHPdb99Yn /TXqBvuvm/fcFKOY1q7nIR/AaYPJW7LhNkRTXplMqKXe+3Qnnu8FBSAw2DUq1zXDmuYemIlXptx4ne Bmu+McSU4fRhGXiPWsd07ziif5KbBqSw6Xksw8nxp+XBVcxJX8et8bdwHVvJj0saggDJ1aJ4HQ1mF9 4HllmEQZL+wN8MhR+vknVrUK52Mj7rfxI7dwb4lSH2MhOUDYqcIIacwA5QxlhlqjlKy6/FQBNGIoBY ryzx8o2IbdOCSNbzQwAASqLiVYlD6HbVddTDKOJUZ+x++HGUnv9Ns/IgQDKGBNyhoj/ri9ybH6GklO voujRz697QTfjIL/VjnyvyF+xPaJEI8Wohz7g53gpHyYojdV+zinQHZWRwFAMHSly548C+mHC2LU2f E4CcST932vQu8ftiiXm818XOydMxX00CvzoOdlcSm4NgFL87y5zloqO76ihmGAN/LUl+GulYt7gpaN 6tsAlGYd0W8yUr7UrJaRl6QTkAffrdEJCc47+DqZK4QRdgofQHTqb0FpwfJ1WH7QWGQzpFXEyUW2Se Px6rDcKN7HvstRyGsxqRWPFEVU0eQ/A1CMhA1WHwshXb3mfP/uaPnWfv3RBw==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,170 +81,72 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct flowi4, struct ipv4hdr, and struct ipv6hdr
-around members saddr and daddr, so they can be referenced together. This
-will allow memcpy() and sizeof() to more easily reason about sizes,
-improve readability, and avoid future warnings about writing beyond the
-end of saddr.
-
-"pahole" shows no size nor member offset changes to struct flowi4.
-"objdump -d" shows no meaningful object code changes (i.e. only source
-line number induced differences.)
-
-Note that since this is a UAPI header, struct_group() has been open
-coded.
+Use memset_after() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct. Additionally split up a later
+field-spanning memset() so that memset() can reason about the size.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/net/flow.h            |  6 ++++--
- include/uapi/linux/if_ether.h | 12 ++++++++++--
- include/uapi/linux/ip.h       | 12 ++++++++++--
- include/uapi/linux/ipv6.h     | 12 ++++++++++--
- net/core/flow_dissector.c     | 10 ++++++----
- net/ipv4/ip_output.c          |  6 ++----
- 6 files changed, 42 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath11k/hal_rx.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/include/net/flow.h b/include/net/flow.h
-index 6f5e70240071..f1a3b6c8eae2 100644
---- a/include/net/flow.h
-+++ b/include/net/flow.h
-@@ -81,8 +81,10 @@ struct flowi4 {
- #define flowi4_multipath_hash	__fl_common.flowic_multipath_hash
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.c b/drivers/net/wireless/ath/ath11k/hal_rx.c
+index 325055ca41ab..c72b6b45b3ba 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.c
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.c
+@@ -29,8 +29,7 @@ static int ath11k_hal_reo_cmd_queue_stats(struct hal_tlv_hdr *tlv,
+ 		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
  
- 	/* (saddr,daddr) must be grouped, same order as in IP header */
--	__be32			saddr;
--	__be32			daddr;
-+	struct_group(addrs,
-+		__be32			saddr;
-+		__be32			daddr;
-+	);
+ 	desc = (struct hal_reo_get_queue_stats *)tlv->value;
+-	memset(&desc->queue_addr_lo, 0,
+-	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
++	memset_after(desc, 0, cmd);
  
- 	union flowi_uli		uli;
- #define fl4_sport		uli.ports.sport
-diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
-index a0b637911d3c..8f5667b2ea92 100644
---- a/include/uapi/linux/if_ether.h
-+++ b/include/uapi/linux/if_ether.h
-@@ -163,8 +163,16 @@
+ 	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
+ 	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
+@@ -62,8 +61,7 @@ static int ath11k_hal_reo_cmd_flush_cache(struct ath11k_hal *hal, struct hal_tlv
+ 		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
  
- #if __UAPI_DEF_ETHHDR
- struct ethhdr {
--	unsigned char	h_dest[ETH_ALEN];	/* destination eth addr	*/
--	unsigned char	h_source[ETH_ALEN];	/* source ether addr	*/
-+	union {
-+		struct {
-+			unsigned char h_dest[ETH_ALEN];	  /* destination eth addr */
-+			unsigned char h_source[ETH_ALEN]; /* source ether addr	  */
-+		};
-+		struct {
-+			unsigned char h_dest[ETH_ALEN];	  /* destination eth addr */
-+			unsigned char h_source[ETH_ALEN]; /* source ether addr	  */
-+		} addrs;
-+	};
- 	__be16		h_proto;		/* packet type ID field	*/
- } __attribute__((packed));
- #endif
-diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
-index e42d13b55cf3..33647a37e56b 100644
---- a/include/uapi/linux/ip.h
-+++ b/include/uapi/linux/ip.h
-@@ -100,8 +100,16 @@ struct iphdr {
- 	__u8	ttl;
- 	__u8	protocol;
- 	__sum16	check;
--	__be32	saddr;
--	__be32	daddr;
-+	union {
-+		struct {
-+			__be32	saddr;
-+			__be32	daddr;
-+		} addrs;
-+		struct {
-+			__be32	saddr;
-+			__be32	daddr;
-+		};
-+	};
- 	/*The options start here. */
- };
+ 	desc = (struct hal_reo_flush_cache *)tlv->value;
+-	memset(&desc->cache_addr_lo, 0,
+-	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
++	memset_after(desc, 0, cmd);
  
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index b243a53fa985..1c26d32e733b 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -130,8 +130,16 @@ struct ipv6hdr {
- 	__u8			nexthdr;
- 	__u8			hop_limit;
+ 	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
+ 	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
+@@ -101,8 +99,7 @@ static int ath11k_hal_reo_cmd_update_rx_queue(struct hal_tlv_hdr *tlv,
+ 		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
  
--	struct	in6_addr	saddr;
--	struct	in6_addr	daddr;
-+	union {
-+		struct {
-+			struct	in6_addr	saddr;
-+			struct	in6_addr	daddr;
-+		} addrs;
-+		struct {
-+			struct	in6_addr	saddr;
-+			struct	in6_addr	daddr;
-+		};
-+	};
- };
+ 	desc = (struct hal_reo_update_rx_queue *)tlv->value;
+-	memset(&desc->queue_addr_lo, 0,
+-	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
++	memset_after(desc, 0, cmd);
  
- 
-diff --git a/net/core/flow_dissector.c b/net/core/flow_dissector.c
-index 2aadbfc5193b..87655a2ac200 100644
---- a/net/core/flow_dissector.c
-+++ b/net/core/flow_dissector.c
-@@ -1029,7 +1029,8 @@ bool __skb_flow_dissect(const struct net *net,
- 		key_eth_addrs = skb_flow_dissector_target(flow_dissector,
- 							  FLOW_DISSECTOR_KEY_ETH_ADDRS,
- 							  target_container);
--		memcpy(key_eth_addrs, &eth->h_dest, sizeof(*key_eth_addrs));
-+		BUILD_BUG_ON(sizeof(*key_eth_addrs) != sizeof(eth->addrs));
-+		memcpy(key_eth_addrs, &eth->addrs, sizeof(*key_eth_addrs));
- 	}
- 
- proto_again:
-@@ -1056,8 +1057,8 @@ bool __skb_flow_dissect(const struct net *net,
- 							      FLOW_DISSECTOR_KEY_IPV4_ADDRS,
- 							      target_container);
- 
--			memcpy(&key_addrs->v4addrs, &iph->saddr,
--			       sizeof(key_addrs->v4addrs));
-+			BUILD_BUG_ON(sizeof(key_addrs->v4addrs) != sizeof(iph->addrs));
-+			memcpy(&key_addrs->v4addrs, &iph->addrs, sizeof(iph->addrs));
- 			key_control->addr_type = FLOW_DISSECTOR_KEY_IPV4_ADDRS;
- 		}
- 
-@@ -1101,7 +1102,8 @@ bool __skb_flow_dissect(const struct net *net,
- 							      FLOW_DISSECTOR_KEY_IPV6_ADDRS,
- 							      target_container);
- 
--			memcpy(&key_addrs->v6addrs, &iph->saddr,
-+			BUILD_BUG_ON(sizeof(iph->addrs) != sizeof(key_addrs->v6addrs));
-+			memcpy(&key_addrs->v6addrs, &iph->addrs,
- 			       sizeof(key_addrs->v6addrs));
- 			key_control->addr_type = FLOW_DISSECTOR_KEY_IPV6_ADDRS;
- 		}
-diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
-index 8d8a8da3ae7e..58603995d889 100644
---- a/net/ipv4/ip_output.c
-+++ b/net/ipv4/ip_output.c
-@@ -444,10 +444,8 @@ EXPORT_SYMBOL(ip_output);
-  */
- static void ip_copy_addrs(struct iphdr *iph, const struct flowi4 *fl4)
- {
--	BUILD_BUG_ON(offsetof(typeof(*fl4), daddr) !=
--		     offsetof(typeof(*fl4), saddr) + sizeof(fl4->saddr));
--	memcpy(&iph->saddr, &fl4->saddr,
--	       sizeof(fl4->saddr) + sizeof(fl4->daddr));
-+	BUILD_BUG_ON(sizeof(iph->addrs) != sizeof(fl4->addrs));
-+	memcpy(&iph->addrs, &fl4->addrs, sizeof(fl4->addrs));
- }
- 
- /* Note: skb->sk can be different from sk, in case of tunnels */
+ 	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
+ 	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
+@@ -762,15 +759,17 @@ void ath11k_hal_reo_qdesc_setup(void *vaddr, int tid, u32 ba_window_size,
+ 	 * size changes and also send WMI message to FW to change the REO
+ 	 * queue descriptor in Rx peer entry as part of dp_rx_tid_update.
+ 	 */
+-	memset(ext_desc, 0, 3 * sizeof(*ext_desc));
++	memset(ext_desc, 0, sizeof(*ext_desc));
+ 	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
+ 				    HAL_DESC_REO_QUEUE_EXT_DESC,
+ 				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_1);
+ 	ext_desc++;
++	memset(ext_desc, 0, sizeof(*ext_desc));
+ 	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
+ 				    HAL_DESC_REO_QUEUE_EXT_DESC,
+ 				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_2);
+ 	ext_desc++;
++	memset(ext_desc, 0, sizeof(*ext_desc));
+ 	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
+ 				    HAL_DESC_REO_QUEUE_EXT_DESC,
+ 				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_3);
 -- 
 2.30.2
 
