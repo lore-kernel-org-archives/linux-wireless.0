@@ -2,108 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC1EC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07142C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 05:03:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65E7F60F37
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:53:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D156361058
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 05:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234684AbhG0CMc (ORCPT
+        id S234905AbhG0FC7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Jul 2021 22:12:32 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7431 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234624AbhG0CMb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jul 2021 22:12:31 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GYh895wQtz80fF;
-        Tue, 27 Jul 2021 10:49:13 +0800 (CST)
-Received: from dggema764-chm.china.huawei.com (10.1.198.206) by
- dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Tue, 27 Jul 2021 10:52:53 +0800
-Received: from DESKTOP-8RFUVS3.china.huawei.com (10.174.185.179) by
- dggema764-chm.china.huawei.com (10.1.198.206) with Microsoft SMTP Server
+        Tue, 27 Jul 2021 01:02:59 -0400
+Received: from mx21.baidu.com ([220.181.3.85]:42734 "EHLO baidu.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234867AbhG0FC7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 01:02:59 -0400
+Received: from BJHW-Mail-Ex02.internal.baidu.com (unknown [10.127.64.12])
+        by Forcepoint Email with ESMTPS id B2F71E783FFD8FFD276F;
+        Tue, 27 Jul 2021 13:02:54 +0800 (CST)
+Received: from BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) by
+ BJHW-Mail-Ex02.internal.baidu.com (10.127.64.12) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Tue, 27 Jul 2021 10:52:52 +0800
-From:   Zenghui Yu <yuzenghui@huawei.com>
-To:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <zajec5@gmail.com>, <kvalo@codeaurora.org>, <hauke@hauke-m.de>,
-        <linville@tuxdriver.com>, <wanghaibin.wang@huawei.com>,
-        Zenghui Yu <yuzenghui@huawei.com>
-Subject: [PATCH 1/2] bcma: Fix memory leak for internally-handled cores
-Date:   Tue, 27 Jul 2021 10:52:31 +0800
-Message-ID: <20210727025232.663-2-yuzenghui@huawei.com>
-X-Mailer: git-send-email 2.23.0.windows.1
-In-Reply-To: <20210727025232.663-1-yuzenghui@huawei.com>
-References: <20210727025232.663-1-yuzenghui@huawei.com>
+ 15.1.2308.14; Tue, 27 Jul 2021 13:02:54 +0800
+Received: from LAPTOP-UKSR4ENP.internal.baidu.com (172.31.63.8) by
+ BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.14; Tue, 27 Jul 2021 13:02:53 +0800
+From:   Cai Huoqing <caihuoqing@baidu.com>
+To:     <luciano.coelho@intel.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <kuba@kernel.org>,
+        <johannes.berg@intel.com>, <nathan.errera@intel.com>,
+        <avraham.stern@intel.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Cai Huoqing <caihuoqing@baidu.com>
+Subject: [PATCH] iwlwifi: mvm: Change "ERR_PTR(EINVAL)" to "ERR_PTR(-EINVAL)"
+Date:   Tue, 27 Jul 2021 13:02:47 +0800
+Message-ID: <20210727050247.610-1-caihuoqing@baidu.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.174.185.179]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggema764-chm.china.huawei.com (10.1.198.206)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [172.31.63.8]
+X-ClientProxiedBy: BC-Mail-Ex12.internal.baidu.com (172.31.51.52) To
+ BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-kmemleak reported that dev_name() of internally-handled cores were leaked
-on driver unbinding. Let's use device_initialize() to take refcounts for
-them and put_device() to properly free the related stuff.
+Use "ERR_PTR(-EINVAL)" instead of "ERR_PTR(EINVAL)"
 
-While looking at it, there's another potential issue for those which should
-be *registered* into driver core. If device_register() failed, we put
-device once and freed bcma_device structures. In bcma_unregister_cores(),
-they're treated as unregistered and we hit both UAF and double-free. That
-smells not good and has also been fixed now.
-
-Fixes: ab54bc8460b5 ("bcma: fill core details for every device")
-Signed-off-by: Zenghui Yu <yuzenghui@huawei.com>
+Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
 ---
- drivers/bcma/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 6535614a7dc1..1df2b5801c3b 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -236,6 +236,7 @@ EXPORT_SYMBOL(bcma_core_irq);
- 
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- {
-+	device_initialize(&core->dev);
- 	core->dev.release = bcma_release_core_dev;
- 	core->dev.bus = &bcma_bus_type;
- 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
-@@ -277,11 +278,10 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
- 
--	err = device_register(&core->dev);
-+	err = device_add(&core->dev);
- 	if (err) {
- 		bcma_err(bus, "Could not register dev for core 0x%03X\n",
- 			 core->id.id);
--		put_device(&core->dev);
- 		return;
- 	}
- 	core->dev_registered = true;
-@@ -372,7 +372,7 @@ void bcma_unregister_cores(struct bcma_bus *bus)
- 	/* Now noone uses internally-handled cores, we can free them */
- 	list_for_each_entry_safe(core, tmp, &bus->cores, list) {
- 		list_del(&core->list);
--		kfree(core);
-+		put_device(&core->dev);
- 	}
- }
- 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 32b4d1935788..4d9952e3343f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -133,7 +133,7 @@ struct iwl_mvm_vif;
+  * and no TID data as this is also not needed.
+  * One thing to note, is that these stations have an ID in the fw, but not
+  * in mac80211. In order to "reserve" them a sta_id in %fw_id_to_mac_id
+- * we fill ERR_PTR(EINVAL) in this mapping and all other dereferencing of
++ * we fill ERR_PTR(-EINVAL) in this mapping and all other dereferencing of
+  * pointers from this mapping need to check that the value is not error
+  * or NULL.
+  *
 -- 
-2.19.1
+2.25.1
 
