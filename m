@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42741C4320E
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC5CC43214
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2436B60BD3
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63F7E60FF1
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234893AbhG0VR7 (ORCPT
+        id S233724AbhG0VSH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:17:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58330 "EHLO
+        Tue, 27 Jul 2021 17:18:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234083AbhG0VRF (ORCPT
+        with ESMTP id S233731AbhG0VQ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:17:05 -0400
+        Tue, 27 Jul 2021 17:16:59 -0400
 Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA939C0617A2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:01 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id ca5so1833901pjb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B7A1C0613C1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:59 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id b6so1849599pji.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=pTss2I65Q2CWQl0zMLaa8H82eOPPoCY8oMnTRENSqR4=;
-        b=YAUu+p5PRv4m9It5HWgaxQc7eZqBkPBSZLDjvBQJVq7VcgxFhGvoVLyoLJ8N4i8Jfl
-         V1tiBwQXzIjaRpT/6KU3bsvSRWIl+Ed1WJZU8t8lYPaguXMnM+sHAZ9PNM1FRuzeOZ6x
-         1w/S3Lji8xVrapNny1sSSoyKLZ2A+Kc5xxrVc=
+        bh=db8CMs13sEHX1QrEwLyB80i98nPNa1sx0I+0vCyGors=;
+        b=GWOY5bNN2CYuRWq0nDk3v8n5cQ2YUiqY5XDlZOPEfI39J/ywTay9f3iHysNx2fWQdy
+         zqT86UEKHG+I7P6vcxs8NsLuEZO32JeDh3YEB1VC1clApxF/IgDgUW1mT7APjJS6y9ti
+         ibvhpmNjVFtbWbV705O3Ucg2loDxWrMRa+bQ8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pTss2I65Q2CWQl0zMLaa8H82eOPPoCY8oMnTRENSqR4=;
-        b=muEsNCvGFNb4a26LLnkcGLLLfBsoMs11LwX4XEQ5JhFUs9dA7eMcnTR+fvqA9ZAHMu
-         +ce0kUPxik5o8hoxX79aIajFiGNopR+gNvOb1RNWoN0Lk7uZ6DLcFtwwEbqcouSsc7uc
-         jKdtYhY2Vjr8hCAipuGCe5+nPj8svFvkR20xlAb1kzsC+yOWU0IqZhSWxh/5auof7a2k
-         hP3TuV+A0OCVkgBUUnqasvjD3pSLSlYfTTivcbhxTCoD2f0Xfk+lXiAtqBEWN7KFRyQ8
-         5yAZzDxmRNrkAd+DwuwQoBBK+xF6FwjMx3qp2ElY3nRlyo1mM5iYVGgN6kqOJFUMmePD
-         aa6A==
-X-Gm-Message-State: AOAM5323X3swUHN1uwHeeo2bHOb/VCjcvapEruuNd4eQl1OBTM5onMGj
-        Yq1185nsDwsN2rz5MlUf+Kv7fg==
-X-Google-Smtp-Source: ABdhPJzbDPYt/21lhtnaWr0tImee3BF99wlkjaOxZG/zklC2IjLrFJ3c7AoHcvzezPw5M6d3+zm/bg==
-X-Received: by 2002:a17:90a:d301:: with SMTP id p1mr5932205pju.220.1627420621296;
-        Tue, 27 Jul 2021 14:17:01 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id z124sm5174413pgb.6.2021.07.27.14.16.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=db8CMs13sEHX1QrEwLyB80i98nPNa1sx0I+0vCyGors=;
+        b=cVo0V1N7Rbprs6yNTullusLJnkiVMlw0ajGrCJPaYhBZBm9W59YwNYGzQIhBIj8pEd
+         unFBn8qBgiZEwVwyIk0ad60BD8GdKOBE4THOk2GkF+AOAdu+CJEYzowh6yNkkPkOVVku
+         Si+83u7v6/slWNKwoozQQ/aQE0ROZrS4xI8X8KOepgnxkmKwAvTl7D7cQqTIJfl9E/Qm
+         Dmkwz5OQy3plCtZ6xyRFbIueMC/4dVb8riDYkQgarVjgf7QurbnUu7+B09l0MD/JrFuJ
+         +MqWkbibFPX0GcFLN1P/hA1O5X4ThDHuretW4klJ7BFkM0FXoZUyCZfYYgL/AHwKG/o0
+         Uu1A==
+X-Gm-Message-State: AOAM532pqjAFbCAFyUAf0pQNVQVn/jYCTfPk5L7Bv9Tto3oO9afOlysA
+        Ezc/Gh+a9Rn8BENSjl/XZxccJQ==
+X-Google-Smtp-Source: ABdhPJynuJ3TvAm0Wd5cbNmdXEieC82pehh6dYyZToK5xONKi9T1JAddthF14F/cuU0HoDy1XIjotg==
+X-Received: by 2002:a17:90a:d305:: with SMTP id p5mr5977952pju.96.1627420618747;
         Tue, 27 Jul 2021 14:16:58 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id k11sm5469795pgg.25.2021.07.27.14.16.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,348 +66,254 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 33/64] lib: Introduce CONFIG_TEST_MEMCPY
-Date:   Tue, 27 Jul 2021 13:58:24 -0700
-Message-Id: <20210727205855.411487-34-keescook@chromium.org>
+Subject: [PATCH 23/64] drm/amd/pm: Use struct_group() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:58:14 -0700
+Message-Id: <20210727205855.411487-24-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9613; h=from:subject; bh=vMvyiyYe9K9D2gND/ltuxCZWuPzQBox4RoUvXlZiiJg=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOHMVso80UVr0RhQnwYElca8D+4vYHNyJyis1bc atW3oFGJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhwAKCRCJcvTf3G3AJjllD/ 9XMGR1In5NUDFOfmtBe5obH+PZnVXYS7aCsaC9BBl36zVbpB9g3hy9o9954IL44Q2M2X8l/iP0Mdt9 Fprd6vbL7wO+hDD4ywgbQtQaW4EbO1b99AS/E4opV8walRqK+MZ1ssZ9th1mYU1Yryl3nNwXH80K5z cHnVH/c6qUM1l7u4iPrktSMcqi0uxY+WT4tJT2QpEzBS2uA2Z++Pg0QAuabvzcMJLD36XlzH1dMGHF QsjWHoq3OpB7JI9BFoibODlYeQfe0vH+O4ZMR0CdC9+uqqaXOGvYga3tfXZzEFjKmWYLSbRiO/mRRb CiyxwZtmj156O9vH2uplTEipL2Mfks1IS1tv2wMc6e1Uc36ZTXbZ+ZDpYJHijeW4Kff8vdOt/zCO6H muSBMvvv8ZNOdnqmeHtRo5TJNWctfJSbnn4+sNRiDBQn7X6UuwmNmMhxRUt+l9Pjt5J1qx0T9lAmLn 0YWwa+kC7zviH7HJgzmVAbq7+flzYb9RAM0a927c5isRD+tKPj1F6yCfYw+B22p8x1p/BgLIibuR8G 83lZvdFsnQZvJgeK1txkG4sB66fQousphoaJGgD4py+IHG1KtnDuFiq/fwlscSFVTgiEGImI+xoQCE yfbM7YDkZxoxwyj7Q+KKDvxwFASZkIBYQ4AxZh75JAJqW2RHNpzsVKTFNVHw==
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9262; h=from:subject; bh=ELu/4WSY3rbbc3e6mnbh27qh1PLcuIwUnaACOi4RQcY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOFJv5WnR7sn1mtFkKeG0XEr7rFPErTrPNncdI8 nbLR12KJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhQAKCRCJcvTf3G3AJsR8D/ 9wZ161Upx2yiLo9WehBNhdepCoZIfK0ycr+o+YhGbFvIGHLX2Z/6CVTnO6oGmJhsrVbt+2nrrheUTv 8j7E+ffPwgNTUcJd8NXpFT9iui/NcLA8Yykf7B68HUXIlmENHMzE7OS29F6gOvqpuAocWp2XWkcFiL otEujZfJsmIdWxZhrOSSm850OaA3vK59G4R6x/nQbmZcTEuIsmnLAoSu6mxNQN8qfCo5+sTSnF3v2R JF91oAQ2cCf5Z2zYOFs/fY6mGfUVCy0oO/l4oZvnjGjWbHkr8bCYaQoMKAFt+gt7iCU/OQTfLYPVa2 62ogAYAXdveR8zzIITEVXrNMgpDA0PITtHEc3kSIq3iBDlCEKukUEznhPLc9L/KjJW4PDa8fphg2Yh Gekz7vZ+GJglawP6/OVsDHYjB+sVivtpueU6OrZQwDrIvls+2tBdhvYA2okrLoYv5QVghtQ5MteFgB QkVkfYyxoLj7VK3aJ9d3T602EK7C0ydm4p600HlPmh4c2j/2hlxA0edgA+/VxOFg8egmS6zr2IfSBD Eq4LZV5dvDAu9vqC6ypQ1LW/66+iw/9YGt0GJiJCY+arODnVFg6+4d9Q4V19RVMN/Hh+K9bnt0M/+J H7XpAuvLYZW1lukZMvCpZapOsvBI4BUSGa3FwriGOeJJSW/+YzrhY/tlrGCA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Before changing anything about memcpy(), memmove(), and memset(), add
-run-time tests to check basic behaviors for any regressions.
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
+
+Use struct_group() in structs:
+	struct atom_smc_dpm_info_v4_5
+	struct atom_smc_dpm_info_v4_6
+	struct atom_smc_dpm_info_v4_7
+	struct atom_smc_dpm_info_v4_10
+	PPTable_t
+so the grouped members can be referenced together. This will allow
+memcpy() and sizeof() to more easily reason about sizes, improve
+readability, and avoid future warnings about writing beyond the end of
+the first member.
+
+"pahole" shows no size nor member offset changes to any structs.
+"objdump -d" shows no object code changes.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- lib/Kconfig.debug |   3 +
- lib/Makefile      |   1 +
- lib/test_memcpy.c | 285 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 289 insertions(+)
- create mode 100644 lib/test_memcpy.c
+ drivers/gpu/drm/amd/include/atomfirmware.h           |  9 ++++++++-
+ .../gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h    |  3 ++-
+ drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h  |  3 ++-
+ .../gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h   |  3 ++-
+ drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c    |  6 +++---
+ drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c      | 12 ++++++++----
+ drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c   |  6 +++---
+ 7 files changed, 28 insertions(+), 14 deletions(-)
 
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 4654e838d68b..d315db9702de 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -2220,6 +2220,9 @@ config TEST_XARRAY
- config TEST_OVERFLOW
- 	tristate "Test check_*_overflow() functions at runtime"
+diff --git a/drivers/gpu/drm/amd/include/atomfirmware.h b/drivers/gpu/drm/amd/include/atomfirmware.h
+index 3811e58dd857..694dee9d2691 100644
+--- a/drivers/gpu/drm/amd/include/atomfirmware.h
++++ b/drivers/gpu/drm/amd/include/atomfirmware.h
+@@ -2081,6 +2081,7 @@ struct atom_smc_dpm_info_v4_5
+ {
+   struct   atom_common_table_header  table_header;
+     // SECTION: BOARD PARAMETERS
++  struct_group(dpm_info,
+     // I2C Control
+   struct smudpm_i2c_controller_config_v2  I2cControllers[8];
  
-+config TEST_MEMCPY
-+	tristate "Test memcpy*(), memmove*(), and memset*() functions at runtime"
-+
- config TEST_RHASHTABLE
- 	tristate "Perform selftest on resizable hash table"
- 	help
-diff --git a/lib/Makefile b/lib/Makefile
-index 40b4bf0bc847..083a19336e20 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -77,6 +77,7 @@ obj-$(CONFIG_TEST_MIN_HEAP) += test_min_heap.o
- obj-$(CONFIG_TEST_LKM) += test_module.o
- obj-$(CONFIG_TEST_VMALLOC) += test_vmalloc.o
- obj-$(CONFIG_TEST_OVERFLOW) += test_overflow.o
-+obj-$(CONFIG_TEST_MEMCPY) += test_memcpy.o
- obj-$(CONFIG_TEST_RHASHTABLE) += test_rhashtable.o
- obj-$(CONFIG_TEST_SORT) += test_sort.o
- obj-$(CONFIG_TEST_USER_COPY) += test_user_copy.o
-diff --git a/lib/test_memcpy.c b/lib/test_memcpy.c
-new file mode 100644
-index 000000000000..7c64120a68a9
---- /dev/null
-+++ b/lib/test_memcpy.c
-@@ -0,0 +1,285 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Test cases for memcpy(), memmove(), and memset().
-+ */
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
-+#include <linux/device.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/mm.h>
-+#include <linux/module.h>
-+#include <linux/overflow.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+#include <linux/vmalloc.h>
-+
-+struct some_bytes {
-+	union {
-+		u8 data[32];
-+		struct {
-+			u32 one;
-+			u16 two;
-+			u8  three;
-+			/* 1 byte hole */
-+			u32 four[4];
-+		};
-+	};
-+};
-+
-+#define check(instance, v) do {	\
-+	int i;	\
-+	BUILD_BUG_ON(sizeof(instance.data) != 32);	\
-+	for (i = 0; i < sizeof(instance.data); i++) {	\
-+		if (instance.data[i] != v) {	\
-+			pr_err("line %d: '%s' not initialized to 0x%02x @ %d (saw 0x%02x)\n", \
-+				__LINE__, #instance, v, i, instance.data[i]);	\
-+			return 1;	\
-+		}	\
-+	}	\
-+} while (0)
-+
-+#define compare(name, one, two) do { \
-+	int i; \
-+	BUILD_BUG_ON(sizeof(one) != sizeof(two)); \
-+	for (i = 0; i < sizeof(one); i++) {	\
-+		if (one.data[i] != two.data[i]) {	\
-+			pr_err("line %d: %s.data[%d] (0x%02x) != %s.data[%d] (0x%02x)\n", \
-+				__LINE__, #one, i, one.data[i], \
-+				#two, i, two.data[i]);	\
-+			return 1;	\
-+		}	\
-+	}	\
-+	pr_info("ok: " TEST_OP "() " name "\n");	\
-+} while (0)
-+
-+static int __init test_memcpy(void)
-+{
-+#define TEST_OP "memcpy"
-+	struct some_bytes control = {
-+		.data = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			},
-+	};
-+	struct some_bytes zero = { };
-+	struct some_bytes middle = {
-+		.data = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00,
-+			  0x00, 0x00, 0x00, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			},
-+	};
-+	struct some_bytes three = {
-+		.data = { 0x00, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x00, 0x00, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+			},
-+	};
-+	struct some_bytes dest = { };
-+	int count;
-+	u8 *ptr;
-+
-+	/* Verify static initializers. */
-+	check(control, 0x20);
-+	check(zero, 0);
-+	compare("static initializers", dest, zero);
-+
-+	/* Verify assignment. */
-+	dest = control;
-+	compare("direct assignment", dest, control);
-+
-+	/* Verify complete overwrite. */
-+	memcpy(dest.data, zero.data, sizeof(dest.data));
-+	compare("complete overwrite", dest, zero);
-+
-+	/* Verify middle overwrite. */
-+	dest = control;
-+	memcpy(dest.data + 12, zero.data, 7);
-+	compare("middle overwrite", dest, middle);
-+
-+	/* Verify argument side-effects aren't repeated. */
-+	dest = control;
-+	ptr = dest.data;
-+	count = 1;
-+	memcpy(ptr++, zero.data, count++);
-+	ptr += 8;
-+	memcpy(ptr++, zero.data, count++);
-+	compare("argument side-effects", dest, three);
-+
-+	return 0;
-+#undef TEST_OP
-+}
-+
-+static int __init test_memmove(void)
-+{
-+#define TEST_OP "memmove"
-+	struct some_bytes control = {
-+		.data = { 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			},
-+	};
-+	struct some_bytes zero = { };
-+	struct some_bytes middle = {
-+		.data = { 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x00, 0x00, 0x00, 0x00,
-+			  0x00, 0x00, 0x00, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			},
-+	};
-+	struct some_bytes five = {
-+		.data = { 0x00, 0x00, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x00, 0x00, 0x00, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			},
-+	};
-+	struct some_bytes overlap = {
-+		.data = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-+			  0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			},
-+	};
-+	struct some_bytes overlap_expected = {
-+		.data = { 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x07,
-+			  0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
-+			},
-+	};
-+	struct some_bytes dest = { };
-+	int count;
-+	u8 *ptr;
-+
-+	/* Verify static initializers. */
-+	check(control, 0x99);
-+	check(zero, 0);
-+	compare("static initializers", zero, dest);
-+
-+	/* Verify assignment. */
-+	dest = control;
-+	compare("direct assignment", dest, control);
-+
-+	/* Verify complete overwrite. */
-+	memmove(dest.data, zero.data, sizeof(dest.data));
-+	compare("complete overwrite", dest, zero);
-+
-+	/* Verify middle overwrite. */
-+	dest = control;
-+	memmove(dest.data + 12, zero.data, 7);
-+	compare("middle overwrite", dest, middle);
-+
-+	/* Verify argument side-effects aren't repeated. */
-+	dest = control;
-+	ptr = dest.data;
-+	count = 2;
-+	memmove(ptr++, zero.data, count++);
-+	ptr += 9;
-+	memmove(ptr++, zero.data, count++);
-+	compare("argument side-effects", dest, five);
-+
-+	/* Verify overlapping overwrite is correct. */
-+	ptr = &overlap.data[2];
-+	memmove(ptr, overlap.data, 5);
-+	compare("overlapping write", overlap, overlap_expected);
-+
-+	return 0;
-+#undef TEST_OP
-+}
-+
-+static int __init test_memset(void)
-+{
-+#define TEST_OP "memset"
-+	struct some_bytes control = {
-+		.data = { 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			},
-+	};
-+	struct some_bytes complete = {
-+		.data = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-+			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-+			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-+			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-+			},
-+	};
-+	struct some_bytes middle = {
-+		.data = { 0x30, 0x30, 0x30, 0x30, 0x31, 0x31, 0x31, 0x31,
-+			  0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
-+			  0x31, 0x31, 0x31, 0x31, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			},
-+	};
-+	struct some_bytes three = {
-+		.data = { 0x60, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x61, 0x61, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-+			},
-+	};
-+	struct some_bytes dest = { };
-+	int count, value;
-+	u8 *ptr;
-+
-+	/* Verify static initializers. */
-+	check(control, 0x30);
-+	check(dest, 0);
-+
-+	/* Verify assignment. */
-+	dest = control;
-+	compare("direct assignment", dest, control);
-+
-+	/* Verify complete overwrite. */
-+	memset(dest.data, 0xff, sizeof(dest.data));
-+	compare("complete overwrite", dest, complete);
-+
-+	/* Verify middle overwrite. */
-+	dest = control;
-+	memset(dest.data + 4, 0x31, 16);
-+	compare("middle overwrite", dest, middle);
-+
-+	/* Verify argument side-effects aren't repeated. */
-+	dest = control;
-+	ptr = dest.data;
-+	value = 0x60;
-+	count = 1;
-+	memset(ptr++, value++, count++);
-+	ptr += 8;
-+	memset(ptr++, value++, count++);
-+	compare("argument side-effects", dest, three);
-+
-+	return 0;
-+#undef TEST_OP
-+}
-+
-+
-+static int __init test_memcpy_init(void)
-+{
-+	int err = 0;
-+
-+	err |= test_memcpy();
-+	err |= test_memmove();
-+	err |= test_memset();
-+
-+	if (err) {
-+		pr_warn("FAIL!\n");
-+		err = -EINVAL;
-+	} else {
-+		pr_info("all tests passed\n");
-+	}
-+
-+	return err;
-+}
-+
-+static void __exit test_memcpy_exit(void)
-+{ }
-+
-+module_init(test_memcpy_init);
-+module_exit(test_memcpy_exit);
-+MODULE_LICENSE("GPL");
+@@ -2159,7 +2160,7 @@ struct atom_smc_dpm_info_v4_5
+   uint32_t MvddRatio; // This is used for MVDD Vid workaround. It has 16 fractional bits (Q16.16)
+   
+   uint32_t     BoardReserved[9];
+-
++  );
+ };
+ 
+ struct atom_smc_dpm_info_v4_6
+@@ -2168,6 +2169,7 @@ struct atom_smc_dpm_info_v4_6
+   // section: board parameters
+   uint32_t     i2c_padding[3];   // old i2c control are moved to new area
+ 
++  struct_group(dpm_info,
+   uint16_t     maxvoltagestepgfx; // in mv(q2) max voltage step that smu will request. multiple steps are taken if voltage change exceeds this value.
+   uint16_t     maxvoltagestepsoc; // in mv(q2) max voltage step that smu will request. multiple steps are taken if voltage change exceeds this value.
+ 
+@@ -2246,12 +2248,14 @@ struct atom_smc_dpm_info_v4_6
+ 
+   // reserved
+   uint32_t   boardreserved[10];
++  );
+ };
+ 
+ struct atom_smc_dpm_info_v4_7
+ {
+   struct   atom_common_table_header  table_header;
+     // SECTION: BOARD PARAMETERS
++  struct_group(dpm_info,
+     // I2C Control
+   struct smudpm_i2c_controller_config_v2  I2cControllers[8];
+ 
+@@ -2348,6 +2352,7 @@ struct atom_smc_dpm_info_v4_7
+   uint8_t      Padding8_Psi2;
+ 
+   uint32_t     BoardReserved[5];
++  );
+ };
+ 
+ struct smudpm_i2c_controller_config_v3
+@@ -2478,6 +2483,7 @@ struct atom_smc_dpm_info_v4_10
+   struct   atom_common_table_header  table_header;
+ 
+   // SECTION: BOARD PARAMETERS
++  struct_group(dpm_info,
+   // Telemetry Settings
+   uint16_t GfxMaxCurrent; // in Amps
+   uint8_t   GfxOffset;     // in Amps
+@@ -2524,6 +2530,7 @@ struct atom_smc_dpm_info_v4_10
+   uint16_t spare5;
+ 
+   uint32_t reserved[16];
++  );
+ };
+ 
+ /* 
+diff --git a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
+index 43d43d6addc0..8093a98800c3 100644
+--- a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
++++ b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
+@@ -643,6 +643,7 @@ typedef struct {
+   // SECTION: BOARD PARAMETERS
+ 
+   // SVI2 Board Parameters
++  struct_group(v4_6,
+   uint16_t     MaxVoltageStepGfx; // In mV(Q2) Max voltage step that SMU will request. Multiple steps are taken if voltage change exceeds this value.
+   uint16_t     MaxVoltageStepSoc; // In mV(Q2) Max voltage step that SMU will request. Multiple steps are taken if voltage change exceeds this value.
+ 
+@@ -728,10 +729,10 @@ typedef struct {
+   uint32_t     BoardVoltageCoeffB;    // decode by /1000
+ 
+   uint32_t     BoardReserved[7];
++  );
+ 
+   // Padding for MMHUB - do not modify this
+   uint32_t     MmHubPadding[8]; // SMU internal use
+-
+ } PPTable_t;
+ 
+ typedef struct {
+diff --git a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
+index 04752ade1016..0b4e6e907e95 100644
+--- a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
++++ b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
+@@ -725,6 +725,7 @@ typedef struct {
+   uint32_t     Reserved[8];
+ 
+   // SECTION: BOARD PARAMETERS
++  struct_group(v4,
+   // I2C Control
+   I2cControllerConfig_t  I2cControllers[NUM_I2C_CONTROLLERS];     
+ 
+@@ -809,10 +810,10 @@ typedef struct {
+   uint8_t      Padding8_Loadline;
+ 
+   uint32_t     BoardReserved[8];
++  );
+ 
+   // Padding for MMHUB - do not modify this
+   uint32_t     MmHubPadding[8]; // SMU internal use
+-
+ } PPTable_t;
+ 
+ typedef struct {
+diff --git a/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h b/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
+index a017983ff1fa..5056d3728da8 100644
+--- a/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
++++ b/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
+@@ -390,6 +390,7 @@ typedef struct {
+   uint32_t spare3[14];
+ 
+   // SECTION: BOARD PARAMETERS
++  struct_group(v4_10,
+   // Telemetry Settings
+   uint16_t GfxMaxCurrent; // in Amps
+   int8_t   GfxOffset;     // in Amps
+@@ -444,7 +445,7 @@ typedef struct {
+ 
+   //reserved
+   uint32_t reserved[14];
+-
++  );
+ } PPTable_t;
+ 
+ typedef struct {
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
+index 6ec8492f71f5..19951399cb33 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
+@@ -463,11 +463,11 @@ static int arcturus_append_powerplay_table(struct smu_context *smu)
+ 			smc_dpm_table->table_header.format_revision,
+ 			smc_dpm_table->table_header.content_revision);
+ 
++	BUILD_BUG_ON(sizeof(smc_pptable->v4_6) != sizeof(smc_dpm_table->dpm_info));
+ 	if ((smc_dpm_table->table_header.format_revision == 4) &&
+ 	    (smc_dpm_table->table_header.content_revision == 6))
+-		memcpy(&smc_pptable->MaxVoltageStepGfx,
+-		       &smc_dpm_table->maxvoltagestepgfx,
+-		       sizeof(*smc_dpm_table) - offsetof(struct atom_smc_dpm_info_v4_6, maxvoltagestepgfx));
++		memcpy(&smc_pptable->v4_6, &smc_dpm_table->dpm_info,
++		       sizeof(smc_dpm_table->dpm_info));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
+index 59ea59acfb00..cb6665fbe319 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
+@@ -431,16 +431,20 @@ static int navi10_append_powerplay_table(struct smu_context *smu)
+ 
+ 	switch (smc_dpm_table->table_header.content_revision) {
+ 	case 5: /* nv10 and nv14 */
+-		memcpy(smc_pptable->I2cControllers, smc_dpm_table->I2cControllers,
+-			sizeof(*smc_dpm_table) - sizeof(smc_dpm_table->table_header));
++		BUILD_BUG_ON(sizeof(smc_pptable->v4) !=
++			     sizeof(smc_dpm_table->dpm_info));
++		memcpy(&smc_pptable->v4, &smc_dpm_table->dpm_info,
++		       sizeof(smc_dpm_table->dpm_info));
+ 		break;
+ 	case 7: /* nv12 */
+ 		ret = amdgpu_atombios_get_data_table(adev, index, NULL, NULL, NULL,
+ 					      (uint8_t **)&smc_dpm_table_v4_7);
+ 		if (ret)
+ 			return ret;
+-		memcpy(smc_pptable->I2cControllers, smc_dpm_table_v4_7->I2cControllers,
+-			sizeof(*smc_dpm_table_v4_7) - sizeof(smc_dpm_table_v4_7->table_header));
++		BUILD_BUG_ON(sizeof(smc_pptable->v4) !=
++			     sizeof(smc_dpm_table_v4_7->dpm_info));
++		memcpy(&smc_pptable->v4, &smc_dpm_table_v4_7->dpm_info,
++		       sizeof(smc_dpm_table_v4_7->dpm_info));
+ 		break;
+ 	default:
+ 		dev_err(smu->adev->dev, "smc_dpm_info with unsupported content revision %d!\n",
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
+index 856eeaf293b8..c0645302fa50 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
+@@ -407,11 +407,11 @@ static int aldebaran_append_powerplay_table(struct smu_context *smu)
+ 			smc_dpm_table->table_header.format_revision,
+ 			smc_dpm_table->table_header.content_revision);
+ 
++	BUILD_BUG_ON(sizeof(smc_pptable->v4_10) != sizeof(smc_dpm_table->dpm_info));
+ 	if ((smc_dpm_table->table_header.format_revision == 4) &&
+ 	    (smc_dpm_table->table_header.content_revision == 10))
+-		memcpy(&smc_pptable->GfxMaxCurrent,
+-		       &smc_dpm_table->GfxMaxCurrent,
+-		       sizeof(*smc_dpm_table) - offsetof(struct atom_smc_dpm_info_v4_10, GfxMaxCurrent));
++		memcpy(&smc_pptable->v4_10, &smc_dpm_table->dpm_info,
++		       sizeof(smc_dpm_table->dpm_info));
+ 	return 0;
+ }
+ 
 -- 
 2.30.2
 
