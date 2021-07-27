@@ -5,53 +5,54 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CFE0C432BE
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B3EC43216
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 182CD60FC0
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A733560FC4
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231961AbhG0U7E (ORCPT
+        id S232361AbhG0U7G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 16:59:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54040 "EHLO
+        Tue, 27 Jul 2021 16:59:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231432AbhG0U7D (ORCPT
+        with ESMTP id S231368AbhG0U7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:03 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 828A9C0613D3
+        Tue, 27 Jul 2021 16:59:04 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36200C061760
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d1so24324pll.1
+Received: by mail-pj1-x102f.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso6642790pjb.1
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7nuFdIglNEHNCZJ4OURvNLaS8oKexf2Xbsw8tAobRMI=;
-        b=fXdIa5xzPdxqW9JkE+8PrL7R3HOjzt/uPGhXwllYH14fLZCAy6MK5N+Aom2hlW1RLu
-         LzaLP/I2bdBUasKo/LWt7kuMLca0bx1GK2a8LA0g1v3rpw0p8gJnsxnOKfkunXhaof5t
-         +9cGUtaq4+nJifYIALqVfSUNMPZBcUPcyBLJc=
+        bh=c3ykowIwDTRKsInbKYf/ek7DP95JkPgh9oE6DtLLi+A=;
+        b=Kp+U9AytVp9BwbsLQj5AYOpg8DezjsG5/creX/t5fYRDEs7tszMAJwrDdgQwhZq/SR
+         pfMuBhqfFlPx2fMK05Ry9tqtfPSV8v4DUZPulqrs+9s8Twz/vFSkAn2NBw8N2WvhGIZs
+         I5L0NhknTsbo7S17qVe98S4vL28QINN1K21ew=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7nuFdIglNEHNCZJ4OURvNLaS8oKexf2Xbsw8tAobRMI=;
-        b=qQDbQKL+XLHMJcZVn1hW7IERVhNXSwxeslv9tMvvLDLzzuq8MzNraMyPl7muPCg079
-         WUz5dMAfZmRaK8gURcYYt0y/QIR0FTvkvjo1+lcTjYB/x8HdnR6noc4xQo++pd4+g5I9
-         cym/hX/7tD/5VqF0xd1FtdQj8HVcLwmOG/9H78/QHPPCJ5cdImgfzG/eMhKaQZASCtH6
-         6OlOY/QNgsDrdR91ZENBVTJkj3sU5UdW9D/hUoH1akecj/GOI4zxu7discxa/yYWjnZB
-         KtvGc+mzFIyG1nfz1ZJkvr9LdfOl3hubmQS5CcY0h5HE880sKCOqPhk9jZFgmukHmUAX
-         gutA==
-X-Gm-Message-State: AOAM53143lKJdJbnVjzTrVZScUdfN9DKGnRndsyavxAFVzSreU0dcMS+
-        PwKzeaTrMhcYybKprTVae6BsUw==
-X-Google-Smtp-Source: ABdhPJxucZUfEOCwFmOc5wsWAybtREO6GX9yQ3Vd7QeNwkxYfGm08yYOn/RWC1L2rMGwaMab2R+i4g==
-X-Received: by 2002:a17:90a:af8c:: with SMTP id w12mr12989398pjq.109.1627419543028;
-        Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+        bh=c3ykowIwDTRKsInbKYf/ek7DP95JkPgh9oE6DtLLi+A=;
+        b=Tdc8D6KZxrkavFUc2OAy+xM9zeFkeMeXIbQpGeSm91Twe5SVXy6dtkYU+3XuN7LL+e
+         MRfGG/7gyxTXQeDCi3bXP9htVY2Wh1/y0N3GloPxZg5TmnIBuaeG8a4iPJ0bPDdN8vHb
+         SDget1YTOUUTG/ACUlSLpLUCEdaCJ1ijmG6kLVVdrrYn8zMXjHKALODt58jtTs5UUyY5
+         veqEfunCfBiM5ChzWpc6BQzR7OotvOr36565n9/dYar9dbQq3wi2UGhxtNSeQlZtM1zC
+         ayUhupKWDGex9pm3hxbb3atpjtMLF2D0yUlnYL1CvMs4c4XMqST+RKkojJwpJ6x9ZPqk
+         5yAw==
+X-Gm-Message-State: AOAM5307cIMBr+V6hodwRCNOg1U7mPrDNri82xiIxAP5YGhYY7OZZLLl
+        JCdkV6GSQt5pPjoi/sDCHhLjfA==
+X-Google-Smtp-Source: ABdhPJwNHFDf+F+gUxt2yA1m1JnQqLEbNlnBfRoIoqlBir+Zo4XdTRlv/GVLC3WzAXlOzz8ixT2dzQ==
+X-Received: by 2002:a65:4508:: with SMTP id n8mr25560399pgq.407.1627419542777;
+        Tue, 27 Jul 2021 13:59:02 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id i1sm3849350pjs.31.2021.07.27.13.59.02
+        by smtp.gmail.com with ESMTPSA id g3sm4480039pfi.197.2021.07.27.13.59.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 13:59:02 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -65,161 +66,57 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 01/64] media: omap3isp: Extract struct group for memcpy() region
-Date:   Tue, 27 Jul 2021 13:57:52 -0700
-Message-Id: <20210727205855.411487-2-keescook@chromium.org>
+Subject: [PATCH 03/64] rpmsg: glink: Replace strncpy() with strscpy_pad()
+Date:   Tue, 27 Jul 2021 13:57:54 -0700
+Message-Id: <20210727205855.411487-4-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4703; h=from:subject; bh=LCf4h7e2PK4sOgvQBd73gWCkmhRKJC4tH4kH78fVevA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOAJSAPyozNrKWpqJWAzYod2fmvBM+4l2MwYKWh O4ocQxiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgAAKCRCJcvTf3G3AJoP0D/ 9KTuhNSJSjVRPOJFWeuepSlknmUmM/K2t4MDDXqOX/kDkR2wcXh6ttU5lVNW0YgBjHXAF5eWLYpPt5 XHm/KeoOX2MLhuXazp4Ti4YBKlziUsZTs5O6dl8oGQF8vvSOgQVD4x549qIJAaUMy/Q9HqWzVqq85p yP3Plkr/yT7Fr9RDFQxzPqOdsDFBoD1ZLcppau6vdTB0PZWIhyCpFYq2uKiDluWvj75Xhxrp9micdg U2R1bGYEEaNcOOSkguLQYe0+7XbhyY11oRTvhbZEZRUrrqPf99XF/yF1XvvLi6e8z/hVvbVGsEd8Mv Qiu6hKrvxmLG/6Gu1PUewl4RyNN90iXJ3Rh3zLatEPwPBHAFaGnBpr5RP4Ntn7iSsskKZBwlebvul7 dZxKtji4NE+xbeZup0zNKAjAcLeI8QVdmPiAbeqCybdrJc75zf4LhhuDwRXTdbrsXCooEGGuiMw3/v x+EUAxYAP0mwGpMCMNzDB9dpyGAKbRXmGfGhZu9JSilm3k8JsxQ47nQ3+PU4JxTEAGP/RA6CAwR6zV 7KB5mLzU0yyN2b7Az2uKl0RkeneD9qcEy0xqorM/qFH7O+d020ljiEXSwPXdgJdOF7fiAdpmoeK2uM 3RKFyedkYhLmnhtvfdEg6qb1tMNiC33AbBzVnm8LJMBkL2upkdQjzlsDvzsA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1814; h=from:subject; bh=CGejJDIBWoCTMrdLfdYOlKTt2khst8/bmsGsqzGrjiA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOAj+vEe7YcbCfgSji3keoTaHrI/ZHofnZ1HVRt kwNnps2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgAAKCRCJcvTf3G3AJqZUEA CIcBP+l3BbFi7alvKzzPClmhyUHq9Qrd5uMRNKMY9XyV0NR/jnI8CoYhga76FZhbT+mDmv6EqlY2QS rhhfJ44Nv7YuNm8ADcxv6ICsgHYc6ExgMQ4gO83JrsqVUuNebi/HDrFNw7T4Z5c1/UUTlWpIwnqxs7 zwuIgbFRNhuxTlpAncpl+dPIlkv40KWXaiqTIR/FuXteCb0rHpAWPYMrJ3tXcDqBwzHtpYfAYbneQq NIhvmdPjcFi5GnKQBm9eTRP7/Xcjg+8Ve3GeZadiIqC14fSgnMgtIahIDXLyAD4WuxdSRQwG+lbGXR 16M20bodkEsvyiJfNZJQdqgyHsVt/eXqpuH1om13iF7+wTit6p8gEUfPMy/V38FyOTgjikr8am4k7A 23f/4W0+nt6mLLlDMXQtGC7TmA97UCqRJ+dNmiQMLuRljr6uD1DWUTS75HLcUjcWkIU1fBUYUi0DWk P/zazmIkeRAnFcJGwZf3zUXOErBqGPmnAav3Bok+zgtGP6JjxVaiFcJN+Dq/iIMuZ8gp1+kmma1GMv m/hLrzzRYpUJQyo2xNUAyVn6zzmEqA+jINb6SqBOUVg3sNfzZTRQkVA7NvmZp+LplR7Jw/n/+91q/6 pIUu/YH+PA+X/eemAshAw2isLrLbFZdRioKXBvLqtjcD2yGkNeO8ROQmebfA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.  Wrap the target region
-in a common named structure. This additionally fixes a theoretical
-misalignment of the copy (since the size of "buf" changes between 64-bit
-and 32-bit, but this is likely never built for 64-bit).
+The use of strncpy() is considered deprecated for NUL-terminated
+strings[1]. Replace strncpy() with strscpy_pad() (as it seems this case
+expects the NUL padding to fill the allocation following the flexible
+array). This additionally silences a warning seen when building under
+-Warray-bounds:
 
-FWIW, I think this code is totally broken on 64-bit (which appears to
-not be a "real" build configuration): it would either always fail (with
-an uninitialized data->buf_size) or would cause corruption in userspace
-due to the copy_to_user() in the call path against an uninitialized
-data->buf value:
+./include/linux/fortify-string.h:38:30: warning: '__builtin_strncpy' offset 24 from the object at '__mptr' is out of the bounds of referenced subobject 'data' with type 'u8[]' {aka 'unsigned char[]'} at offset 24 [-Warray-bounds]
+   38 | #define __underlying_strncpy __builtin_strncpy
+      |                              ^
+./include/linux/fortify-string.h:50:9: note: in expansion of macro '__underlying_strncpy'
+   50 |  return __underlying_strncpy(p, q, size);
+      |         ^~~~~~~~~~~~~~~~~~~~
+drivers/rpmsg/qcom_glink_native.c: In function 'qcom_glink_work':
+drivers/rpmsg/qcom_glink_native.c:36:5: note: subobject 'data' declared here
+   36 |  u8 data[];
+      |     ^~~~
 
-omap3isp_stat_request_statistics_time32(...)
-    struct omap3isp_stat_data data64;
-    ...
-    omap3isp_stat_request_statistics(stat, &data64);
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings
 
-int omap3isp_stat_request_statistics(struct ispstat *stat,
-                                     struct omap3isp_stat_data *data)
-    ...
-    buf = isp_stat_buf_get(stat, data);
-
-static struct ispstat_buffer *isp_stat_buf_get(struct ispstat *stat,
-                                               struct omap3isp_stat_data *data)
-...
-    if (buf->buf_size > data->buf_size) {
-            ...
-            return ERR_PTR(-EINVAL);
-    }
-    ...
-    rval = copy_to_user(data->buf,
-                        buf->virt_addr,
-                        buf->buf_size);
-
-Regardless, additionally initialize data64 to be zero-filled to avoid
-undefined behavior.
-
-Fixes: 378e3f81cb56 ("media: omap3isp: support 64-bit version of omap3isp_stat_data")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/media/platform/omap3isp/ispstat.c |  5 +--
- include/uapi/linux/omap3isp.h             | 44 +++++++++++++++++------
- 2 files changed, 36 insertions(+), 13 deletions(-)
+ drivers/rpmsg/qcom_glink_native.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/media/platform/omap3isp/ispstat.c b/drivers/media/platform/omap3isp/ispstat.c
-index 5b9b57f4d9bf..ea8222fed38e 100644
---- a/drivers/media/platform/omap3isp/ispstat.c
-+++ b/drivers/media/platform/omap3isp/ispstat.c
-@@ -512,7 +512,7 @@ int omap3isp_stat_request_statistics(struct ispstat *stat,
- int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
- 					struct omap3isp_stat_data_time32 *data)
- {
--	struct omap3isp_stat_data data64;
-+	struct omap3isp_stat_data data64 = { };
- 	int ret;
+diff --git a/drivers/rpmsg/qcom_glink_native.c b/drivers/rpmsg/qcom_glink_native.c
+index 05533c71b10e..c7b9de655080 100644
+--- a/drivers/rpmsg/qcom_glink_native.c
++++ b/drivers/rpmsg/qcom_glink_native.c
+@@ -1440,7 +1440,7 @@ static int qcom_glink_rx_open(struct qcom_glink *glink, unsigned int rcid,
+ 		}
  
- 	ret = omap3isp_stat_request_statistics(stat, &data64);
-@@ -521,7 +521,8 @@ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
- 
- 	data->ts.tv_sec = data64.ts.tv_sec;
- 	data->ts.tv_usec = data64.ts.tv_usec;
--	memcpy(&data->buf, &data64.buf, sizeof(*data) - sizeof(data->ts));
-+	data->buf = (uintptr_t)data64.buf;
-+	memcpy(&data->frame, &data64.buf, sizeof(data->frame));
- 
- 	return 0;
- }
-diff --git a/include/uapi/linux/omap3isp.h b/include/uapi/linux/omap3isp.h
-index 87b55755f4ff..0a16af91621f 100644
---- a/include/uapi/linux/omap3isp.h
-+++ b/include/uapi/linux/omap3isp.h
-@@ -159,13 +159,25 @@ struct omap3isp_h3a_aewb_config {
- };
- 
- /**
-- * struct omap3isp_stat_data - Statistic data sent to or received from user
-- * @ts: Timestamp of returned framestats.
-- * @buf: Pointer to pass to user.
-+ * struct omap3isp_stat_frame - Statistic data without timestamp nor pointer.
-+ * @buf_size: Size of buffer.
-  * @frame_number: Frame number of requested stats.
-  * @cur_frame: Current frame number being processed.
-  * @config_counter: Number of the configuration associated with the data.
-  */
-+struct omap3isp_stat_frame {
-+	__u32 buf_size;
-+	__u16 frame_number;
-+	__u16 cur_frame;
-+	__u16 config_counter;
-+};
-+
-+/**
-+ * struct omap3isp_stat_data - Statistic data sent to or received from user
-+ * @ts: Timestamp of returned framestats.
-+ * @buf: Pointer to pass to user.
-+ * @frame: Statistic data for frame.
-+ */
- struct omap3isp_stat_data {
- #ifdef __KERNEL__
- 	struct {
-@@ -176,10 +188,15 @@ struct omap3isp_stat_data {
- 	struct timeval ts;
- #endif
- 	void __user *buf;
--	__u32 buf_size;
--	__u16 frame_number;
--	__u16 cur_frame;
--	__u16 config_counter;
-+	union {
-+		struct {
-+			__u32 buf_size;
-+			__u16 frame_number;
-+			__u16 cur_frame;
-+			__u16 config_counter;
-+		};
-+		struct omap3isp_stat_frame frame;
-+	};
- };
- 
- #ifdef __KERNEL__
-@@ -189,10 +206,15 @@ struct omap3isp_stat_data_time32 {
- 		__s32	tv_usec;
- 	} ts;
- 	__u32 buf;
--	__u32 buf_size;
--	__u16 frame_number;
--	__u16 cur_frame;
--	__u16 config_counter;
-+	union {
-+		struct {
-+			__u32 buf_size;
-+			__u16 frame_number;
-+			__u16 cur_frame;
-+			__u16 config_counter;
-+		};
-+		struct omap3isp_stat_frame frame;
-+	};
- };
- #endif
- 
+ 		rpdev->ept = &channel->ept;
+-		strncpy(rpdev->id.name, name, RPMSG_NAME_SIZE);
++		strscpy_pad(rpdev->id.name, name, RPMSG_NAME_SIZE);
+ 		rpdev->src = RPMSG_ADDR_ANY;
+ 		rpdev->dst = RPMSG_ADDR_ANY;
+ 		rpdev->ops = &glink_device_ops;
 -- 
 2.30.2
 
