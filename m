@@ -5,53 +5,54 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28EDAC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0552C4320A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14CB760BD3
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEB8560F9C
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233990AbhG0VRW (ORCPT
+        id S234851AbhG0VR0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:17:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58282 "EHLO
+        Tue, 27 Jul 2021 17:17:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232888AbhG0VRC (ORCPT
+        with ESMTP id S233904AbhG0VRB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:17:02 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6033C0617BD
+        Tue, 27 Jul 2021 17:17:01 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A4EC0617A4
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:00 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id t21so9034plr.13
+Received: by mail-pj1-x1032.google.com with SMTP id a4-20020a17090aa504b0290176a0d2b67aso6729677pjq.2
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Y9wMesWb3kMvGhORYmMr8FR6o9+jwEvZSo1EsZxY8W0=;
-        b=BN7P01Ur0nT1MgFEaFehSRb7jJppIMvpuqQP+s+oBiWS7VXbf/RvYexr0Hx4+J+tRF
-         ub6d2NuQ/h6uhZ5C5OC3+rwkID8I367GLLdmYSUSQoeXhXVWNYV2m0sd3TTyLfRvYZRi
-         tIFkyuHmHnqC70kWh05pztablIQYnYXX+GWGQ=
+        bh=+X6IZihoLyfy0Wiif0jTU6fGkcegk1/ptK7zaE9ExOM=;
+        b=C4eYS/6TxLrtnqsan6/J7Zca8RC2bv+OkK1KmEC0TiMGMWF147lSswQVfXydxoonCd
+         zUdwx1Va4ndolescW59fUk3TLT83BFmUXVeMdetdNsqEz8mVXPv0ewYiE5zskXAgGk4G
+         Q7ZCHD74HyxqBUrj3K+I9j5R8mEVX54Z8kNjE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Y9wMesWb3kMvGhORYmMr8FR6o9+jwEvZSo1EsZxY8W0=;
-        b=HiB/mZy/UChCAmdzkZItjPBGe1f3qhA/YE6yI2UbUIZKvjgntXfWltQ3fCOtu7CgZ7
-         4av2YNPsEieafq5Glfdszl9pDUVocV/yqGWuV5GjPrciDe7u5UPD9vB7CAot0FBETAEG
-         59x7hNkQ7NnYFXLbElNupsyjMA4F/qhSz2CXPxzSACIsd1Zb3e7Z2SNzoLilD81xAAMs
-         H4CxZlsXqE4aGJIq1xIqgfe5mRq1JP3EvGKtzIJeEvu/onTJGfIMXAw3P3vdHG2vofA6
-         P/oCDqX0bLl6qrGZujlHQl0HLuKICADLELR6w4W+fyPypXj0Wa1Yrj1+V5Rk5mbLrllR
-         Ydzw==
-X-Gm-Message-State: AOAM531tvtVmbKnALJUpyz8m6WY6+7VVyYiLnUL6KmdXiA8KavoC9/Ca
-        q2PtLKW/NrMKKEg/6Ysu5+iDCQ==
-X-Google-Smtp-Source: ABdhPJwBzhqNz9CV9N0TSyJ7ZTBhPPhkncXxe8pHuZBIHnuiml3joPIijrND7KmjOEKulsBBdR6JNQ==
-X-Received: by 2002:a62:584:0:b029:32e:3b57:a1c6 with SMTP id 126-20020a6205840000b029032e3b57a1c6mr24589168pff.13.1627420620372;
+        bh=+X6IZihoLyfy0Wiif0jTU6fGkcegk1/ptK7zaE9ExOM=;
+        b=sr7i2zNxMVJmKUEMj9WwuoSRhYZde/VtaX3GNnmNs1hYtxU0zEexhVg7nAOQRiawiv
+         48DfgHSOlOAO4UD+PJcjHA1sVRbT2njmaiEtjAzh7GW8f653ZOZgOp78yVUw/EzCdC3m
+         MXZiLk440kHU75ZI6cam3XtHD4GVNcATr5lB+1hno5eO/ZiTOYQmGvPNmw3kMZqF1hlJ
+         3Ykwise/ImY5hxU2noeJWlcZy07fXiUcZIM19uKo/kIoeytxSO4j+mlHeqn6yyOfSucS
+         Os9BP8fzu+HzLmgBsvEryl8VhGBqJjPkQivJJ/C/ZV06b3Deckown1Vt99kIqQmJ5nXd
+         3SAg==
+X-Gm-Message-State: AOAM531XfwyUIpSxWAqGhr3f9f+xh94x1A6a6cqGKBUgT0/UcFmqv9Ud
+        itYsda7RL+4C5jRuX5wxebPFqg==
+X-Google-Smtp-Source: ABdhPJyZAfGbEamLyC4c8LmiX8ynap4BNwnOsYzL7JJhP9bqJWc1REFfqqEuGbkWyeEogyJh4AGqqw==
+X-Received: by 2002:a62:804b:0:b029:328:db41:1f47 with SMTP id j72-20020a62804b0000b0290328db411f47mr25007825pfd.43.1627420620114;
         Tue, 27 Jul 2021 14:17:00 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id lk5sm3712997pjb.53.2021.07.27.14.16.55
+        by smtp.gmail.com with ESMTPSA id z124sm5174411pgb.6.2021.07.27.14.16.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 14:16:58 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -65,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 58/64] powerpc: Split memset() to avoid multi-field overflow
-Date:   Tue, 27 Jul 2021 13:58:49 -0700
-Message-Id: <20210727205855.411487-59-keescook@chromium.org>
+Subject: [PATCH 52/64] dm integrity: Use struct_group() to zero struct journal_sector
+Date:   Tue, 27 Jul 2021 13:58:43 -0700
+Message-Id: <20210727205855.411487-53-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=970; h=from:subject; bh=EqAYyR61If64Fj2IYKFg3jD8wd3YsI3R0DZAgupjjpE=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHON8m2NPAIDr9Q/N7SXLMGlDKKJPMFM5SUAuhto 7+vlDg+JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjQAKCRCJcvTf3G3AJq+CEA Ca4qR9dFfukeDpwBivSWmdN4IXrLxxds4i79tyF2RZ1NetlF3zQFjf0dOJJ6NfqCZjinnNwHjnPaFi 9x4UwneOOuPj/4rf8k7cSpmM2UreUaAAA8VP/jFKg8vdwSBqelmbZjm8ng/qha6pxe9jqRvhE2RWKP qnrUYIUXlqe7N3FgL/8eOB67y/Un3Rfqu05z/doNPDcGWYTfIhpaZu3n+amLx44YduL03EwcMECH/l NDarqGZ78zXiW9XBAw38H8M3+unTerG5RPPulpFMa3XJ+hy0ln0RAD/CKthoOCrGmjVHEls689FYmk 47Xi02bCJdYfIgjqNVNZcc95yunNV29nLCcUCjqRA9qZpvkMrJWQANAATLtxAcI+/txMZUwS94jUFC otBX6K+dP0tshHI5p9QXMMjeOFJUZsvIm5n+eNLtqZADzbxH5992mbjlaJZzSynXuRU7LnKYFwp99u ACzU3xk+GoPHSQbfn0SU7L/H8QNlNuzxIiWmgfUKY2AXa7GfFeO+JPWTK/H/PczC9Or0vmzcwp+j06 gmLqgbtlJS5EyLTqxwdJDfRPF9CCi/hV2nu4l+oo6Pue1qSXQEmcxzqGPzn+HR7xkb5suJeevW+l7Z gDF++XCKaI8rWqYNDAdfLYj6eQLBZMJ8AM/75DxdC9t3gUyhjbCYaLueTqow==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1561; h=from:subject; bh=06AwgDhDm5rfSJczNzpy0ALLnPqFifOqpq/XiymXeZw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOLkvi4WP3nwdDAQoa1QSWSWWQpEaKPsLt1Yrm3 8FcNJeSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziwAKCRCJcvTf3G3AJtOGD/ 4oB/qnnjc336AyH1K6CiqoIGRiODxOG/34zhnJ2L3+mEclURUs4GXvEBs+ynT4uxsaY9QUrjZhpqCp cdyjZJptJPu5bTduPuT/zB8wtiA1nclT/0pnTgoVaFym7lXLnek6LJsOD0RkPwz3jefg96VcdXLn6T TubbzJ4g0ejSYk50gFY2qrA/M/tOBn/OnNwc05C5P9FMHi9s6oV0SFXBMrqdxQCBjmbWQ6Efr9RdXD anks+/yMI/Ww+Lmq1IKQ+10f86r0m2ii3mT6s7tkBApimQWsrgRRguCOY8Ik4wqIaIQQ8IskbwjfRQ zAvsH8PTdNbFjoqR3LIZWIALOtNDkrAIG3wYkJUVq8qBNCH0Gbs5b+3ICmwcEGk1rjYJtGD1JttHO1 8dhqMnihZZQgW2QTqO9UALTRvnmppmvMGXI9t1RSj32G71bLR37OvLf8RYbb5U/ZwW1mG1NdfR18IT +53ZFRG56YQXa/CvxD25rnfVEjsakHncwqKoh+QE/qcQ0lrgJ4wN1lAf0tGqQ4EFaPskxJVADlbjmN 32hM7hI6LNVfSBDdz70anPmudlxiL2l4IWNCgn2CQFA4uwHDgkkIs+OhSEEXPGp8z4obbVQoaGhoG3 canI+R37hvHDQXuDDJFTaj6vFfN8KFalRxYZp56Y89KxykB44tLc2SwCNSPQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -83,28 +84,41 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Instead of writing across a field boundary with memset(), move the call
-to just the array, and an explicit zeroing of the prior field.
+Add struct_group() to mark region of struct journal_sector that should be
+initialized to zero.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/macintosh/smu.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/dm-integrity.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/macintosh/smu.c b/drivers/macintosh/smu.c
-index 94fb63a7b357..59ce431da7ef 100644
---- a/drivers/macintosh/smu.c
-+++ b/drivers/macintosh/smu.c
-@@ -848,7 +848,8 @@ int smu_queue_i2c(struct smu_i2c_cmd *cmd)
- 	cmd->read = cmd->info.devaddr & 0x01;
- 	switch(cmd->info.type) {
- 	case SMU_I2C_TRANSFER_SIMPLE:
--		memset(&cmd->info.sublen, 0, 4);
-+		cmd->info.sublen = 0;
-+		memset(&cmd->info.subaddr, 0, 3);
- 		break;
- 	case SMU_I2C_TRANSFER_COMBINED:
- 		cmd->info.devaddr &= 0xfe;
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 40f8116c8e44..59deea0dd305 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -119,8 +119,10 @@ struct journal_entry {
+ #define JOURNAL_MAC_SIZE		(JOURNAL_MAC_PER_SECTOR * JOURNAL_BLOCK_SECTORS)
+ 
+ struct journal_sector {
+-	__u8 entries[JOURNAL_SECTOR_DATA - JOURNAL_MAC_PER_SECTOR];
+-	__u8 mac[JOURNAL_MAC_PER_SECTOR];
++	struct_group(sectors,
++		__u8 entries[JOURNAL_SECTOR_DATA - JOURNAL_MAC_PER_SECTOR];
++		__u8 mac[JOURNAL_MAC_PER_SECTOR];
++	);
+ 	commit_id_t commit_id;
+ };
+ 
+@@ -2856,7 +2858,8 @@ static void init_journal(struct dm_integrity_c *ic, unsigned start_section,
+ 		wraparound_section(ic, &i);
+ 		for (j = 0; j < ic->journal_section_sectors; j++) {
+ 			struct journal_sector *js = access_journal(ic, i, j);
+-			memset(&js->entries, 0, JOURNAL_SECTOR_DATA);
++			BUILD_BUG_ON(sizeof(js->sectors) != JOURNAL_SECTOR_DATA);
++			memset(&js->sectors, 0, sizeof(js->sectors));
+ 			js->commit_id = dm_integrity_commit_id(ic, i, j, commit_seq);
+ 		}
+ 		for (j = 0; j < ic->journal_section_entries; j++) {
 -- 
 2.30.2
 
