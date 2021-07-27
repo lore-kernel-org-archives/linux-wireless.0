@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F66DC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CC8C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76F7260F90
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22EA460F90
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234385AbhG0VHb (ORCPT
+        id S234463AbhG0VHi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:07:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
+        Tue, 27 Jul 2021 17:07:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232986AbhG0VG6 (ORCPT
+        with ESMTP id S232999AbhG0VG6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 27 Jul 2021 17:06:58 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1550AC0617A1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id c16so15238plh.7
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E41F5C061765
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:53 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id l19so1923021pjz.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=KNJkxRbTZjBfSAYGR3816TShm8Emkoyf8ZdfkqPS+FQ=;
-        b=TTGjFuoejzZ4UcURjJ4pPdNPDe9Jn5SyFBfglcq90IykesIiOVEkCdbcD/m3+qhdva
-         slQ4ePKQ6iwR++JiczF3JHBNNuTp4LyRmWMRuqTcdz+fw6qszodvFvFG5Ibp5X/LllWc
-         +fRyxKvk7rn5leQezWTlqBpgyuWYKt8lRuKMI=
+        bh=clRlkcTWzJOWdb6SjT1HZu+AyElzVwLtoYPXziOiXRE=;
+        b=MBUIR3iBfXKxxQGTkwEdR+msAp6pxmWHaDphvmnJvT1Zw3YRPe0XXCC1E1e0Bq7P9v
+         PHNDTqIkm/jI1FEa26EuyG+8VRkITbDssqS0hfWFfeIsKVWMxs6NsU4giYYW+nhBICQ9
+         RxMzcJq+3X+F/NXCQU0H77itPS7DDeCUh+z/o=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KNJkxRbTZjBfSAYGR3816TShm8Emkoyf8ZdfkqPS+FQ=;
-        b=gJO3MxL89flTYaXEu8SY1psJXGOVE5TZRiA0UA//0Hi+WVlerDswdbHT0MSwQcbbhK
-         9T86DP1yr1BZ/LhNere1gfT9ypsm1MdvV2BaIlIubXMSLY6ztuvCov1jkbjETWe0SYka
-         6tJwoL4U0WUQRN8UH1I6zCZ9YTDuGPkDAK6FpbNQWdoSyJKrpwbUXuQGReL03Q5l99a0
-         V3vXjjVU1VRkGZUCA1riZCuJeLW49iZAnqrxxVXIzuejP31rSctE9mcalwdvaGHL5PCG
-         +B/Ce6NI8iBrKj0cPyFXi08fNdQn3cx9lXm7f4ZHWwJNxpt8iAXL36D9vEAQb+Me28XM
-         kkRQ==
-X-Gm-Message-State: AOAM532Y9MgoKbcsXwu4MVfKjKVMNxq9GiHVjy0xt/7LoLn2hZveWD/z
-        9ObJ4Yzuz2+dysSGeAWvCDDNYg==
-X-Google-Smtp-Source: ABdhPJz8+E+SDb3LoAbaQEcUj/nENGUTPsEXTKFEfKJ+U87AixQ7X8CbyjH9KY5gO+50OJnIiipy2w==
-X-Received: by 2002:a17:90a:5a4c:: with SMTP id m12mr6207285pji.15.1627420014655;
-        Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
+        bh=clRlkcTWzJOWdb6SjT1HZu+AyElzVwLtoYPXziOiXRE=;
+        b=r/C/pOSmcfzgKXATReu70JleHUnoqUjGbSuHiiD7Fdfin08yYE9M0J4TK1l5hWQphQ
+         dbjOyVWnWw7xGexO9czLfounrig4b+eMaSnuQk/Y/rSyZKJE+1yYg7xlopYEuaSF6J83
+         ZPR4ipuZ/R7+YtbiF1lDzgXXHRGaEvCNvWAVPslIIUc07xvc7DfeUqpmGFGKQJMU8PdK
+         bFeiYz5/yeGk6yUOQu6KGOZWb2a+mk3ZuBcQpTkV7zj/ysdY1d+sqtVjvvq9v3Tbkbec
+         zguH+cLReSJuyRCDZCjqojX9qiWcPrXSwhTHTqFFJ7i0J1qeEvKJ43PCMK7nXpzxW6UU
+         oCOQ==
+X-Gm-Message-State: AOAM532p5vP8baXhdkVR/QIz9G8ATTEfAFhXpjVajxEg+jawh7AM96lm
+        Cp2qp6dWlIbbnn0nZHBOoD6Fug==
+X-Google-Smtp-Source: ABdhPJyQWD89modfR5XqhD/BrBVi4uhzmxv+/WY0dPBKz1b0mLB8ON+0pnmzIlozqgKLDJGyoixVLw==
+X-Received: by 2002:a65:420d:: with SMTP id c13mr9244079pgq.123.1627420013548;
+        Tue, 27 Jul 2021 14:06:53 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id g8sm4556875pfu.30.2021.07.27.14.06.50
+        by smtp.gmail.com with ESMTPSA id l1sm3813994pjq.1.2021.07.27.14.06.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 14:06:50 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 44/64] iw_cxgb4: Use memset_after() for cpl_t5_pass_accept_rpl
-Date:   Tue, 27 Jul 2021 13:58:35 -0700
-Message-Id: <20210727205855.411487-45-keescook@chromium.org>
+Subject: [PATCH 16/64] thermal: intel: int340x_thermal: Use struct_group() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:58:07 -0700
+Message-Id: <20210727205855.411487-17-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2100; h=from:subject; bh=gV9IZTM5qU7jcRGph/XDG3+fKRJKxoN9HOMcsfOyL0A=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOK/UN78x/osAzwgMKupSwSrhwjEeLTXqK++CZi 7CH6/zyJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzigAKCRCJcvTf3G3AJi+aD/ 9wSoxGLjbf3nMxhdx0FTNoLb7tUlFlGp+wsA1eq4h8eLG5OlOTzsA8IwsIgBPWp2/c4lh/3h8Wej9u tFFoUjbe3EwfDLU01dywIYam3R6J6s+TD7jpKeWz0MWD2NFKTvNmK/r5nlDA+crVlsHLnuBl7ozHdp Uoh/Bz4xC9nN82aPUAif26+yocqytHa2sw58nHCezNegk9sqBcHUCoNnFodMubFs/UgzD7hGOsd+1B aOhnYDdb2QaqaHaKTplZpcofR90e0xKWhk0CRSg83IE3RApySZo8s2Q4xTS1Ma3eB82/7z+gvwQXWY hia/xw+mpgLBcAZ0jCu/itWg4QCogWD2bkotmQJEfjL9TXjZCGUa2NGLC/CnEfFKcyutnljBecv1EH 0Q9xXQNOo4tw2JZcb6z7NV4dR0L+tjj3BeFNlPgNbG4VgwmG7uKubRriMRe5NSZBE38cW0fSq5rQ3Y T/5J6pZ+p6FMSSVheYF8tjScBuAHu1NRrxeGGj9Wx4M222kdbmFmeXqMdbCPWOgSfuuCWozDcs7p7z +9BLk6YAP2L0i/Fh9KBLAPtQ43onOWXv77p4r/RE/gXudIT6F++lAYSdbKOI9/3skSabDHdxRbQYhk 1gswdeOGaLRaDVm2CSKXSrfli04Bjbp+JUMycYvzS0p20FUxvYZuh3eQYepg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3277; h=from:subject; bh=FXb9nQQ+9raXNRheCnPL/rsMtfpVZSmOVeEiPUzBx+k=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOD97boEQtghYWjunVAHXryqRBeKslQ/U0/9Z2K SuHsN8WJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgwAKCRCJcvTf3G3AJs4JD/ 4t9krlI0msPh0DWMgqWRsM+X+y+HiMVgVUi7JkKAiBNJZoty9G4c1eS7yLV6TgLer2yFH8Ds58wUxF O6n5C18sFXheNiEEW+6vqVVeyQpO6nOPUonTlA8hTYBZp6CBNW7L7fqFalI7RlROQmukoEwMQZpWKx EuiGE22FT/3gJFEHq6KV61yPGYruCiyqaRADMcMMvyaJddy1qUkMgv0+9MsD6Pk/GN14+iLJT/WvX/ +Ncg6xMtv77TZnfLggNoIAXvzxqKTuj4YKPXx37SB2DDRCzdDh7R0hdU6WnJYEDwR5nd28AxRY9pW0 3/vFBrVdXmb5M1ePJqtCrbIM24arQveQJ0OFOeHTeWVNTcpF2rYY6HkYdqN5OgBXbagUUrHLo5sTJT oCoXT0USJzevlZoW3hXd+qGHUmuaA7+oUpf8ERJftB1gtBZ5+mAE3oNp6XoGlqZWXKaZOqEXohtJdE JKAKoqmW3JI+EQI+YUWLhorOoexqDCL3tG1VxN6M8wVEznEOVlCPdgcKjMwd4TvvKajC88ejnODvYX Yx+uFlSgaEFH992Tzy+Sem73iwT45T1pxFzlgXi6UKZ/H5V8dY1HWDHhQdWkFNrA7YldsHu5LMPO23 EVZMhiu2pPLzAvDWB389kz3t6FqAo/HGYnm8kfHnyCibi/cFhsXVyBwQujpg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,58 +81,106 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
+field bounds checking for memcpy(), avoid intentionally writing across
 neighboring fields.
 
-Use memset_after() so memset() doesn't get confused about writing
-beyond the destination member that is intended to be the starting point
-of zeroing through the end of the struct. Additionally, since everything
-appears to perform a roundup (including allocation), just change the
-size of the struct itself and add a build-time check to validate the
-expected size.
+Use struct_group() in struct art around members weight, and ac[0-9]_max,
+so they can be referenced together. This will allow memcpy() and sizeof()
+to more easily reason about sizes, improve readability, and avoid future
+warnings about writing beyond the end of weight.
+
+"pahole" shows no size nor member offset changes to struct art.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences).
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/infiniband/hw/cxgb4/cm.c            | 5 +++--
- drivers/net/ethernet/chelsio/cxgb4/t4_msg.h | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ .../intel/int340x_thermal/acpi_thermal_rel.c  |  5 +-
+ .../intel/int340x_thermal/acpi_thermal_rel.h  | 48 ++++++++++---------
+ 2 files changed, 29 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
-index 291471d12197..7129ae025b2d 100644
---- a/drivers/infiniband/hw/cxgb4/cm.c
-+++ b/drivers/infiniband/hw/cxgb4/cm.c
-@@ -2471,7 +2471,8 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
- 	skb_get(skb);
- 	rpl = cplhdr(skb);
- 	if (!is_t4(adapter_type)) {
--		skb_trim(skb, roundup(sizeof(*rpl5), 16));
-+		BUILD_BUG_ON(sizeof(*rpl5) != roundup(sizeof(*rpl5), 16));
-+		skb_trim(skb, sizeof(*rpl5));
- 		rpl5 = (void *)rpl;
- 		INIT_TP_WR(rpl5, ep->hwtid);
- 	} else {
-@@ -2487,7 +2488,7 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
- 		opt2 |= CONG_CNTRL_V(CONG_ALG_TAHOE);
- 		opt2 |= T5_ISS_F;
- 		rpl5 = (void *)rpl;
--		memset(&rpl5->iss, 0, roundup(sizeof(*rpl5)-sizeof(*rpl), 16));
-+		memset_after(rpl5, 0, opt0);
- 		if (peer2peer)
- 			isn += 4;
- 		rpl5->iss = cpu_to_be32(isn);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-index fed5f93bf620..26433a62d7f0 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-@@ -497,7 +497,7 @@ struct cpl_t5_pass_accept_rpl {
- 	__be32 opt2;
- 	__be64 opt0;
- 	__be32 iss;
--	__be32 rsvd;
-+	__be32 rsvd[3];
- };
+diff --git a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
+index a478cff8162a..e90690a234c4 100644
+--- a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
++++ b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
+@@ -250,8 +250,9 @@ static int fill_art(char __user *ubuf)
+ 		get_single_name(arts[i].source, art_user[i].source_device);
+ 		get_single_name(arts[i].target, art_user[i].target_device);
+ 		/* copy the rest int data in addition to source and target */
+-		memcpy(&art_user[i].weight, &arts[i].weight,
+-			sizeof(u64) * (ACPI_NR_ART_ELEMENTS - 2));
++		BUILD_BUG_ON(sizeof(art_user[i].data) !=
++			     sizeof(u64) * (ACPI_NR_ART_ELEMENTS - 2));
++		memcpy(&art_user[i].data, &arts[i].data, sizeof(art_user[i].data));
+ 	}
  
- struct cpl_act_open_req {
+ 	if (copy_to_user(ubuf, art_user, art_len))
+diff --git a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
+index 58822575fd54..78d942477035 100644
+--- a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
++++ b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
+@@ -17,17 +17,19 @@
+ struct art {
+ 	acpi_handle source;
+ 	acpi_handle target;
+-	u64 weight;
+-	u64 ac0_max;
+-	u64 ac1_max;
+-	u64 ac2_max;
+-	u64 ac3_max;
+-	u64 ac4_max;
+-	u64 ac5_max;
+-	u64 ac6_max;
+-	u64 ac7_max;
+-	u64 ac8_max;
+-	u64 ac9_max;
++	struct_group(data,
++		u64 weight;
++		u64 ac0_max;
++		u64 ac1_max;
++		u64 ac2_max;
++		u64 ac3_max;
++		u64 ac4_max;
++		u64 ac5_max;
++		u64 ac6_max;
++		u64 ac7_max;
++		u64 ac8_max;
++		u64 ac9_max;
++	);
+ } __packed;
+ 
+ struct trt {
+@@ -47,17 +49,19 @@ union art_object {
+ 	struct {
+ 		char source_device[8]; /* ACPI single name */
+ 		char target_device[8]; /* ACPI single name */
+-		u64 weight;
+-		u64 ac0_max_level;
+-		u64 ac1_max_level;
+-		u64 ac2_max_level;
+-		u64 ac3_max_level;
+-		u64 ac4_max_level;
+-		u64 ac5_max_level;
+-		u64 ac6_max_level;
+-		u64 ac7_max_level;
+-		u64 ac8_max_level;
+-		u64 ac9_max_level;
++		struct_group(data,
++			u64 weight;
++			u64 ac0_max_level;
++			u64 ac1_max_level;
++			u64 ac2_max_level;
++			u64 ac3_max_level;
++			u64 ac4_max_level;
++			u64 ac5_max_level;
++			u64 ac6_max_level;
++			u64 ac7_max_level;
++			u64 ac8_max_level;
++			u64 ac9_max_level;
++		);
+ 	};
+ 	u64 __data[ACPI_NR_ART_ELEMENTS];
+ };
 -- 
 2.30.2
 
