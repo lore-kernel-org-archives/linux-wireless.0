@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 925DEC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA42C43214
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 744B760F6D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2652960FE7
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232793AbhG0VAf (ORCPT
+        id S234652AbhG0VAg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:00:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54088 "EHLO
+        Tue, 27 Jul 2021 17:00:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232810AbhG0U7N (ORCPT
+        with ESMTP id S232492AbhG0U7H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:13 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63C7CC061383
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:10 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id b6so1772520pji.4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:10 -0700 (PDT)
+        Tue, 27 Jul 2021 16:59:07 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CB7EC061764
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:07 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id ca5so1755720pjb.5
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RCqXotzAIvnXgOqstJDis4roVpoLDPnfq3WqfZlD8nw=;
-        b=IsnPTTOIgdGKCXuW3XQ+MT6hIlhVYI7Io0wctUxwqvbJIIvtSltHPjtWeHzLWKF+kA
-         CQvAxohJQYoF71joFX6v/3Z6eoC2GSqaTNcLccBsOh5LMFueIVes2gOSJpZyft2tneFd
-         eIMQ6OLOd1lFb131IMCikGtxTAI11b8IFNErI=
+        bh=2339k4b0c5OWODNkIvToUoNb0tla173APtop2g87yK0=;
+        b=iEi8m5VvnHSI7PFGMBkWP99DR9/hasEmGaHMmQ/hAQvXWolvYn1ZqWUISR9yx86HKe
+         271G4W/Ncz7bw1+gj01x3c+6WGGDOH9Vwl/Z+aiHCXNR+A9GI+MIw4zbZztpHvcFA5pK
+         3bJY25UolqjG5yrPadDsyTKAutRNBCjMgVGtE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RCqXotzAIvnXgOqstJDis4roVpoLDPnfq3WqfZlD8nw=;
-        b=YVNSMK1y0NrVkBp1eIUMtChNjKM5zab8F9s31uwo2kyQ/N8/gvYyygrJWUAd6sBnkO
-         4luRjuZjMTpV/O6e5DqoC/jsSj40EcX2THfCM7jXF2yr4sSvjWYmhW1peCktLoWhsoz6
-         iN5kE7Kv/+hhhIhlf+3C+0bUot7yKn9o39F9f/usWel73sWvwFHV84n+D2zt2IypaPlj
-         /C+Solu9aJxWDx4NT+zLo4slwMWxL/oZCFk7WTcUJVpLDYZMtzVJ93j5d6ydlvCaG4P5
-         +lkMYWHmk0c/Hk/x9x8KLjhdx56NatpWFXMElAIsqfRsxZQ4gmJL9rVQC5X0JAd7ubcc
-         WXqg==
-X-Gm-Message-State: AOAM532zBjNaCnaivpfyeW+2ji9j73ZVbmQx85k75Ta8CAoBOMb+uhBh
-        zZfB6ZkNSGVkxIKduaz/Q0q9qw==
-X-Google-Smtp-Source: ABdhPJzspBBQMDyvDf6TBVh0kJFHAIruWS/HtAlIq0eRpPNOGgO/FodQZJlNxuLaUl6IYFezsXLBRA==
-X-Received: by 2002:a05:6a00:1c6d:b029:338:322:137d with SMTP id s45-20020a056a001c6db02903380322137dmr25076229pfw.38.1627419549870;
-        Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
+        bh=2339k4b0c5OWODNkIvToUoNb0tla173APtop2g87yK0=;
+        b=oMQvR+QYXm0RiD/6mDIjA6elYUD2p70tPp+DzU4u8uiSykQHdU6kBTpKbeh7skBcLg
+         +HkvYQdG2qKncnwAhIreXYslvcy/wzha8V5kWtIN2e6TOWOBy6OnHtuFtMjF+SGRWKiO
+         3z8WD08i37of8iUP22t1t9zS/ac5J+A/RXpFqtIWKBLML/ZlUnniHC0VmoZlmVMkbp5r
+         etHytQN8pzfMy/6VF0WW+ek+DAvsjpSUTHhosoNivvaE4LHh9TvGSj+N7AL7zPzS6IR7
+         Ere0rVXUijUGsb5QSOnTgp0DFEkVX24iSbJEw1jjtAU7BD/rDiR45yfpEzbgUB0WuR8m
+         ZVQA==
+X-Gm-Message-State: AOAM533YovleMevtDJ0LklDvM05c4r769x/Qa+Yop+zbAul1ybprCwmL
+        aWsB5FXk3ydyooM2KV2Da55mdQ==
+X-Google-Smtp-Source: ABdhPJyJWxUGA3LrJs4BG51/vLWpJYAHbkWL9HNsMr9tG1fy6upd+bj3BEBNQksVHaNDSvFaiNMgng==
+X-Received: by 2002:a63:5610:: with SMTP id k16mr25193869pgb.439.1627419546981;
+        Tue, 27 Jul 2021 13:59:06 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id h20sm4771196pfn.173.2021.07.27.13.59.05
+        by smtp.gmail.com with ESMTPSA id j20sm4672710pfc.203.2021.07.27.13.59.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 13:59:08 -0700 (PDT)
+        Tue, 27 Jul 2021 13:59:05 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 11/64] net/mlx5e: Avoid field-overflowing memcpy()
-Date:   Tue, 27 Jul 2021 13:58:02 -0700
-Message-Id: <20210727205855.411487-12-keescook@chromium.org>
+Subject: [PATCH 06/64] bnxt_en: Use struct_group_attr() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:57:57 -0700
+Message-Id: <20210727205855.411487-7-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2638; h=from:subject; bh=QKALqwrqhLc+7tVP8mb7u9vJwM2ktK3XL7hcr7RjisE=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOCimDJCcehKBIQzI/fV1vkomdBEz58Sp357Acw ashx10aJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzggAKCRCJcvTf3G3AJowOD/ 0cV2/gWpM3tzSGeDnd+48FkILInBduxYU7T8eAce0pFHdDWK3Xdzt0Rz/8KSK9g9qHiPAoTtE1ZDZs IdycA5PGwVU7OoMo9y8rxip+T0x8+0FTjiK0eEeADuraWJtuRkY7rqUv3anZB+7aFcy23HLSzsokDy v3K2NShHDdMr6+BTxCwT82oNKp7sflOMI9zqU65OfotImRrxPDAWNMY94XTaiIiAAWhAiHJTCCBy8a ww4ATYSVeRhj5CuJno8eppzIfgRbYoroFPSEqjpMIcR8XWfhMi3nGrZH+yIEDKzj93dnynMtjdt29m NwgegnkyruD3AJAJMQlWpROj7wM6tRwt/RQHzXD7ude5mYXinSx6o7qjeEh5KvtVaWGZNIyNH7QX03 PtXqkYsIh8qzepHC9wr8mH6qkkUO1tkoy2yiGAA+MawqqegNs1HUQyC90hWs+rYewPsWZdHCusZQgh ZwPEDFuZ5NwYCIx582KcOGBtSe8ERTdcCF8QAsSe7eA8uVzZh7NgAKPp9Qv5ldepnhjwjiXDlXn1kl c6aG7NcBdLnGZLaWPMWbzyie+xLb3X42bGBryj5ZyD+7tJuSeBWhYRQ4Vf3KftFyOoXMrhYgc97usd VBN5UHc/ZqYheG58Rq9zQ6wjzNvKBzLmALvQsvOQLX+K6SPP+pWWlQKN4+LA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2358; h=from:subject; bh=urnr1c0HuSr0zcemksTCEth1t70QAfbHaEcP+c1mXUA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOBqioJQ+1gy1GQQan/jf7RJ1/WXH5A0qXVd7xV vq5+5hOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgQAKCRCJcvTf3G3AJiWREA CNm4WJeCn47J5obmfhInAVhQHs+WaRodzYXqYlwhYZwqztfgNWLmnuTFB7WixSIet+ogzFMJ1r7fzU QnWXAsLuJ3BX98gUGzvKpmV42J3D2bYmtlrZs7Eyhzqsf8YU/1DgzM/cyzoMB1MkY7QVnFyA9ECldc n4XuqAu3QiaIe+5lzEXU3cW0wy5VDaO3U89VhsX3c6FWjMhQ0FF71U5yZVlZ7s8QMcwjgGQ/rSZ5HS tHMaYMmuprGsc0WRWDxssLMce4AZIdKRwnQBGxYX56oM9u/26JaL77KjZeahVv+n4nC+KkXfWFoSls jO+qT1zevLJBtQfWAqBgbtl6mxUkW3D/0aBPlL7o63ss885dcW9pWjj8sVkqG2AOPVUcl+mMOp+VQm 5qmqUeZbnxJVtXjSRXpvzpBMjNj47QiFJaRRu++FQ9+TJ9TwFws9C31mCXsNjIBK/xzNCc0OuY/J2T Fuuz5AL5SsvRzztZGGQvpjWG2xGgfilhJucEqfeyaJrFQIvjGMIAVFYzMGX4dwwIpBMhxVU4spof3f TLNENoSRR30/sOaQWASgjwj8RqwZ3WioWr4/ALRyqYdHD8j5usq3wgrSpYlAC1AQpefx1uLVDOyes3 1j+4vL+JqxKC93LWdqu/2gVD/VBJnBjDTcrSW3GQTmYSKuzKxca2WKziYSew==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -84,59 +84,64 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memcpy(), memmove(), and memset(), avoid
 intentionally writing across neighboring fields.
 
-Use flexible arrays instead of zero-element arrays (which look like they
-are always overflowing) and split the cross-field memcpy() into two halves
-that can be appropriately bounds-checked by the compiler.
+Use struct_group() around members queue_id, min_bw, max_bw, tsa, pri_lvl,
+and bw_weight so they can be referenced together. This will allow memcpy()
+and sizeof() to more easily reason about sizes, improve readability,
+and avoid future warnings about writing beyond the end of queue_id.
 
-"pahole" shows no size nor member offset changes to struct mlx5e_tx_wqe
-nor struct mlx5e_umr_wqe. "objdump -d" shows no meaningful object
-code changes (i.e. only source line number induced differences and
-optimizations).
+"pahole" shows no size nor member offset changes to struct bnxt_cos2bw_cfg.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences and optimizations).
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/en.h     | 4 ++--
- drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c |  4 ++--
+ drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h | 14 ++++++++------
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en.h b/drivers/net/ethernet/mellanox/mlx5/core/en.h
-index b1b51bbba054..54c014d97db7 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en.h
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en.h
-@@ -204,7 +204,7 @@ static inline int mlx5e_get_max_num_channels(struct mlx5_core_dev *mdev)
- struct mlx5e_tx_wqe {
- 	struct mlx5_wqe_ctrl_seg ctrl;
- 	struct mlx5_wqe_eth_seg  eth;
--	struct mlx5_wqe_data_seg data[0];
-+	struct mlx5_wqe_data_seg data[];
+diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
+index 8a68df4d9e59..95c636f89329 100644
+--- a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
++++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
+@@ -148,10 +148,10 @@ static int bnxt_hwrm_queue_cos2bw_qcfg(struct bnxt *bp, struct ieee_ets *ets)
+ 	}
+ 
+ 	data = &resp->queue_id0 + offsetof(struct bnxt_cos2bw_cfg, queue_id);
+-	for (i = 0; i < bp->max_tc; i++, data += sizeof(cos2bw) - 4) {
++	for (i = 0; i < bp->max_tc; i++, data += sizeof(cos2bw.cfg)) {
+ 		int tc;
+ 
+-		memcpy(&cos2bw.queue_id, data, sizeof(cos2bw) - 4);
++		memcpy(&cos2bw.cfg, data, sizeof(cos2bw.cfg));
+ 		if (i == 0)
+ 			cos2bw.queue_id = resp->queue_id0;
+ 
+diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
+index 6eed231de565..716742522161 100644
+--- a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
++++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
+@@ -23,13 +23,15 @@ struct bnxt_dcb {
+ 
+ struct bnxt_cos2bw_cfg {
+ 	u8			pad[3];
+-	u8			queue_id;
+-	__le32			min_bw;
+-	__le32			max_bw;
++	struct_group_attr(cfg, __packed,
++		u8		queue_id;
++		__le32		min_bw;
++		__le32		max_bw;
+ #define BW_VALUE_UNIT_PERCENT1_100		(0x1UL << 29)
+-	u8			tsa;
+-	u8			pri_lvl;
+-	u8			bw_weight;
++		u8		tsa;
++		u8		pri_lvl;
++		u8		bw_weight;
++	);
+ 	u8			unused;
  };
  
- struct mlx5e_rx_wqe_ll {
-@@ -220,7 +220,7 @@ struct mlx5e_umr_wqe {
- 	struct mlx5_wqe_ctrl_seg       ctrl;
- 	struct mlx5_wqe_umr_ctrl_seg   uctrl;
- 	struct mlx5_mkey_seg           mkc;
--	struct mlx5_mtt                inline_mtts[0];
-+	struct mlx5_mtt                inline_mtts[];
- };
- 
- extern const char mlx5e_self_tests[][ETH_GSTRING_LEN];
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c b/drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c
-index 2f0df5cc1a2d..2d2364ea13cf 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c
-@@ -341,8 +341,10 @@ mlx5e_xmit_xdp_frame(struct mlx5e_xdpsq *sq, struct mlx5e_xmit_data *xdptxd,
- 
- 	/* copy the inline part if required */
- 	if (sq->min_inline_mode != MLX5_INLINE_MODE_NONE) {
--		memcpy(eseg->inline_hdr.start, xdptxd->data, MLX5E_XDP_MIN_INLINE);
-+		memcpy(eseg->inline_hdr.start, xdptxd->data, sizeof(eseg->inline_hdr.start));
- 		eseg->inline_hdr.sz = cpu_to_be16(MLX5E_XDP_MIN_INLINE);
-+		memcpy(dseg, xdptxd->data + sizeof(eseg->inline_hdr.start),
-+				MLX5E_XDP_MIN_INLINE - sizeof(eseg->inline_hdr.start));
- 		dma_len  -= MLX5E_XDP_MIN_INLINE;
- 		dma_addr += MLX5E_XDP_MIN_INLINE;
- 		dseg++;
 -- 
 2.30.2
 
