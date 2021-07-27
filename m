@@ -2,143 +2,129 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0F9C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:37:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98ED3C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:44:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77BC860EB2
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:37:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79AC760F9B
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232715AbhG0Vgx (ORCPT
+        id S232206AbhG0Vol (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:36:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34618 "EHLO
+        Tue, 27 Jul 2021 17:44:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232511AbhG0Vgw (ORCPT
+        with ESMTP id S231364AbhG0Vok (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:36:52 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BAEBC061760
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:36:51 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id o44-20020a17090a0a2fb0290176ca3e5a2fso1201894pjo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:36:51 -0700 (PDT)
+        Tue, 27 Jul 2021 17:44:40 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15B2C061757;
+        Tue, 27 Jul 2021 14:44:39 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id c16so122430plh.7;
+        Tue, 27 Jul 2021 14:44:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=4BnfRKheoEyJ1stoqG1udFT4VTgOpqL9vmyJJWgrwhQ=;
-        b=NTFTSGnaaL1PjdfbInP9wW4+rEyfYbhJ/keeV1wnvEThtRN2gdcrpRCZ7hd1LSPL/w
-         gpm7aIDUJ/FjLYIardaQXcuOjI/ZjGwWIdtBU8XtYG2CMUC8Us1z4TA/eJ27DZ+AF+dn
-         3omle6d7QFY3/lutHZTQhs0+KkQrfijMwyIfQ=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3KPt1GPvL5XMf6x4iIuebcXLQlUcJ+y0yMw39x8Q0fQ=;
+        b=g7mWBdVfo+GwkuKargaV3o0+CVAKth30tV1+fjXJIq1FAk00Mv/x3s62arsMKSunRR
+         Ymz3s25Y1zRTtlGF1yM4fEiQiOB7GF6HJaB7YydQLwMLPcLe5qyVMAZhMyzFEFynuebZ
+         v4pKkwwBxZij5hnNarVy8zFaXQQdc/eN5focZ59lDpFlYEIx/wyWCRmPFsLiccqmUvWY
+         dO5xwuAEi1KSGlhLid4nEIGi/8fWEL7xY53NTZf5yAjWYoNO51iRMwSsjby/FxMeL2Wx
+         qIfCmdTUc7RtRNwcIdEuhSRaoWhXaeoGuZd/TfQGR4/HrCqMfTbP1Nw0oNe3fmkY7ivt
+         zcgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=4BnfRKheoEyJ1stoqG1udFT4VTgOpqL9vmyJJWgrwhQ=;
-        b=DX4fbZartgNzBfxucLr9pYe0M6pynJBLUJzgrKx5pW8EijjK6ABNk+ObgbAM+AbD4h
-         l+/gspe+BAEUSuXzSCOw1uAQht5L7/FXL1hI4NKaJH6HWwhoUKOa0qJhpZ8y7TBqRvy/
-         wRXcjahOSLWuqOxvrFvoTojHbY5HCsYmJZflv8lIz7sUcyaobulK2kdOesE6kNFyozQ7
-         wbMD6OJtUXrMoSpIQ4t+lxDv9j+KYrgttAj4KpzSLGm2yR1Uvs/ITyPv6Rj80jPEE1WW
-         OvYdZKFlhfrZ5nD6gIh3Ogu0qdmWmlja7ViiCZaOlIxKxayytrFpZxk7d3PziNNu4H+t
-         R1vw==
-X-Gm-Message-State: AOAM531Z45rmO6oDEvZNOHcDNnXsI/BvAxdnTc9YU3II2Pbfms5nv0M7
-        GH3nQl7rrUB7KsSNDq8qLSuR+w==
-X-Google-Smtp-Source: ABdhPJywXHABddj5YKILKb1GKuMRYeJ3OumAxfDVgtAesPzGrRwd3W2ViDD691FQDqn6Bsbeqru0EA==
-X-Received: by 2002:a63:154d:: with SMTP id 13mr214806pgv.116.1627421811222;
-        Tue, 27 Jul 2021 14:36:51 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id z9sm4890526pfa.2.2021.07.27.14.36.49
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3KPt1GPvL5XMf6x4iIuebcXLQlUcJ+y0yMw39x8Q0fQ=;
+        b=dpj7GmuSGhtUUETsTvnaa6/vnar8CSYE9fo+kzaw6uYXxF6Y5ggHVoY7UO6SkyKu3w
+         vGGRC4sBfLdjv9hnZI0ugCVUaHaPzaJnUTq4+leU2lB6XetRJ0SAob0KcuQcrD6to0EV
+         MlB2pXpyHfh9muN4GMVp25suQrBtajxBDelULHy8DQtyzg1i6lwzkw4UB8pUkQMiXBnx
+         kXBaaMdeCQ7ozj7C50KZljih1pe5sbGXm9tZj/6jpSNchpZYuo31kDIm8/UyjfTOOrnU
+         Wyy0DLjAN3BJhsASy4FpMZLsBb0BoqK/fPRfJe28JKpwCcm6nbESqRG5DV6fyf7Ven/e
+         rfrA==
+X-Gm-Message-State: AOAM533+Qas/qeIcgJRHgAYvzOPitr34i4JBqqVA20IANqn/6euWxwXM
+        7g2puQwpKWWzA6ZGL1HxSD4=
+X-Google-Smtp-Source: ABdhPJxO0mk/xwRIo1yOKogLvCnVLCqPH0q6qWqEkuQyJqLFtFTvYGjUZ2rRdA9lT413gBZVGLabHg==
+X-Received: by 2002:a17:90b:4d8a:: with SMTP id oj10mr6217722pjb.235.1627422279483;
+        Tue, 27 Jul 2021 14:44:39 -0700 (PDT)
+Received: from novachrono.domain.name ([122.163.131.208])
+        by smtp.gmail.com with ESMTPSA id z9sm4899543pfa.2.2021.07.27.14.44.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:36:50 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     linux-hardening@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Keith Packard <keithpac@amazon.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 48/64] drbd: Use struct_group() to zero algs
-Date:   Tue, 27 Jul 2021 13:58:39 -0700
-Message-Id: <20210727205855.411487-49-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
-References: <20210727205855.411487-1-keescook@chromium.org>
+        Tue, 27 Jul 2021 14:44:39 -0700 (PDT)
+From:   Rajat Asthana <rajatasthana4@gmail.com>
+To:     ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Rajat Asthana <rajatasthana4@gmail.com>
+Subject: [PATCH] ath9k_htc: Add a missing spin_lock_init()
+Date:   Wed, 28 Jul 2021 03:13:58 +0530
+Message-Id: <20210727214358.466397-1-rajatasthana4@gmail.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2322; h=from:subject; bh=1syui6IaJX/LeKhpA35yXKLKiDQJbdN3KjOA72sb0yw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOL7jOa6t9HnTRkat/yBLQ7dAwkDK4D28V8dSKs BckHWDOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziwAKCRCJcvTf3G3AJjzYD/ 4zCOLV8aaPBAT/bUiOjvDCTgLgraBRaR3pGWcZHMGJANYM2EkJwwuDhYBGkXFsg/LT9+C0FBP8Y/Zc 5zPMr5Ck8KK1vkPuvxC1XxLeWJhbO7Z9IV0T96RT6vedIbwG/X0HJaMaOlT+1avad2HTRLXhAUzKf9 gxK4g4ZAvz/FXSOFqfOu4JDUZkbvgdqXKTRl1Ks3V/KGyA9ON1fkJKujv9YXdTGyFFudWFZewLc3BP DZPR81LSq8W/amm31XbR+stxT3RkRdzalx01+vXbX9LJoiC0gu7l/6U4b5J/VpCStcDJGVQl8FIhTi V+1401vurSluzntSGK22z+Cm1SERyXlJmS441MJeAecPsqSCnwghfDjdjciI3UKJWO/K9Qg++zKSTX Xg46C2C1CDENzVc/BEXLX4bRTM4AwyujZVJ2hRQ7bxl9SnluGtBytRpsMg8Msnryyvs3X8cmlQ9bUl XRrL69gqQC1H0bptqlRAOSNMxXAHdZVeI6VwFfJlkcw9nlt77JLmR4IN0CztbMsOydMgnp7kFIyOow V3/czlAK48y8FIgtBvWH5SaTNQHjO8KDpB/sU7DTiAlRVmRb+H9uM3KcdDUwf+cI08Yry5bLkSot5g ggAqgBoLiqeU0j1EpwD4W48NHRYgozq2B6FyI6ymPjBsMY1DKp1cRWhDZRww==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+Syzkaller reported a lockdep warning on non-initialized spinlock:
 
-Add a struct_group() for the algs so that memset() can correctly reason
-about the size.
+INFO: trying to register non-static key.
+The code is fine but needs lockdep annotation, or maybe
+you didn't initialize this object before use?
+turning off the locking correctness validator.
+CPU: 0 PID: 10 Comm: ksoftirqd/0 Not tainted 5.13.0-rc4-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Call Trace:
+ __dump_stack lib/dump_stack.c:79 [inline]
+ dump_stack+0x143/0x1db lib/dump_stack.c:120
+ assign_lock_key kernel/locking/lockdep.c:937 [inline]
+ register_lock_class+0x1077/0x1180 kernel/locking/lockdep.c:1249
+ __lock_acquire+0x102/0x5230 kernel/locking/lockdep.c:4781
+ lock_acquire kernel/locking/lockdep.c:5512 [inline]
+ lock_acquire+0x19d/0x700 kernel/locking/lockdep.c:5477
+ __raw_spin_lock_bh include/linux/spinlock_api_smp.h:135 [inline]
+ _raw_spin_lock_bh+0x2f/0x40 kernel/locking/spinlock.c:175
+ spin_lock_bh include/linux/spinlock.h:359 [inline]
+ ath9k_wmi_event_tasklet+0x231/0x3f0 drivers/net/wireless/ath/ath9k/wmi.c:172
+ tasklet_action_common.constprop.0+0x201/0x2e0 kernel/softirq.c:784
+ __do_softirq+0x1b0/0x944 kernel/softirq.c:559
+ run_ksoftirqd kernel/softirq.c:921 [inline]
+ run_ksoftirqd+0x21/0x50 kernel/softirq.c:913
+ smpboot_thread_fn+0x3ec/0x870 kernel/smpboot.c:165
+ kthread+0x38c/0x460 kernel/kthread.c:313
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+We missed a spin_lock_init() in ath9k_wmi_event_tasklet() when the wmi
+event is WMI_TXSTATUS_EVENTID. Placing this init here instead of
+ath9k_init_wmi() is fine mainly because we need this spinlock when the
+event is WMI_TXSTATUS_EVENTID and hence it should be initialized when it
+is needed.
+
+Signed-off-by: Rajat Asthana <rajatasthana4@gmail.com>
 ---
- drivers/block/drbd/drbd_main.c     | 3 ++-
- drivers/block/drbd/drbd_protocol.h | 6 ++++--
- drivers/block/drbd/drbd_receiver.c | 3 ++-
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/wmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index 55234a558e98..b824679cfcb2 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -729,7 +729,8 @@ int drbd_send_sync_param(struct drbd_peer_device *peer_device)
- 	cmd = apv >= 89 ? P_SYNC_PARAM89 : P_SYNC_PARAM;
- 
- 	/* initialize verify_alg and csums_alg */
--	memset(p->verify_alg, 0, 2 * SHARED_SECRET_MAX);
-+	BUILD_BUG_ON(sizeof(p->algs) != 2 * SHARED_SECRET_MAX);
-+	memset(&p->algs, 0, sizeof(p->algs));
- 
- 	if (get_ldev(peer_device->device)) {
- 		dc = rcu_dereference(peer_device->device->ldev->disk_conf);
-diff --git a/drivers/block/drbd/drbd_protocol.h b/drivers/block/drbd/drbd_protocol.h
-index dea59c92ecc1..a882b65ab5d2 100644
---- a/drivers/block/drbd/drbd_protocol.h
-+++ b/drivers/block/drbd/drbd_protocol.h
-@@ -283,8 +283,10 @@ struct p_rs_param_89 {
- 
- struct p_rs_param_95 {
- 	u32 resync_rate;
--	char verify_alg[SHARED_SECRET_MAX];
--	char csums_alg[SHARED_SECRET_MAX];
-+	struct_group(algs,
-+		char verify_alg[SHARED_SECRET_MAX];
-+		char csums_alg[SHARED_SECRET_MAX];
-+	);
- 	u32 c_plan_ahead;
- 	u32 c_delay_target;
- 	u32 c_fill_target;
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index 1f740e42e457..6df2539e215b 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -3921,7 +3921,8 @@ static int receive_SyncParam(struct drbd_connection *connection, struct packet_i
- 
- 	/* initialize verify_alg and csums_alg */
- 	p = pi->data;
--	memset(p->verify_alg, 0, 2 * SHARED_SECRET_MAX);
-+	BUILD_BUG_ON(sizeof(p->algs) != 2 * SHARED_SECRET_MAX);
-+	memset(&p->algs, 0, sizeof(p->algs));
- 
- 	err = drbd_recv_all(peer_device->connection, p, header_size);
- 	if (err)
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index fe29ad4b9023..446b7ca459df 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -169,6 +169,7 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+ 					     &wmi->drv_priv->fatal_work);
+ 			break;
+ 		case WMI_TXSTATUS_EVENTID:
++			spin_lock_init(&priv->tx.tx_lock);
+ 			spin_lock_bh(&priv->tx.tx_lock);
+ 			if (priv->tx.flags & ATH9K_HTC_OP_TX_DRAIN) {
+ 				spin_unlock_bh(&priv->tx.tx_lock);
 -- 
-2.30.2
+2.32.0
 
