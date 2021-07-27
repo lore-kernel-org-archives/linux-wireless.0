@@ -2,39 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C004C432BE
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:20:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 677D3C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:36:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4981A60F90
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:20:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52E9760F6E
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234997AbhG0VUJ (ORCPT
+        id S232532AbhG0Vgy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:20:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37744 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234113AbhG0VT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:19:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C5BA60FA0;
-        Tue, 27 Jul 2021 21:18:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627420740;
-        bh=WmBPx1Yv944WSgHzak0rUdbiFwHmXA9AEErppz095mw=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=Yhxrd8TFAkXrlR9r4ZRtp1p0sOIsB3ZuHtZ7oYU4pXZvEaqyymH79DJSjO7iRK0si
-         GSkXTTyUofgJqP034jp+1ZTvpxMOzmU1ZGhjE0qTg4I6idDUP9ThURBnvBclsuNBhC
-         u1tZ6C5YrfZBbxqk5ahpRO+VLSzVj3IEDOAgpOob/SggphKjlTaaTST/9JYGw9qJid
-         8957SpfZCeNiETD/zLB4cNWxzBDrGN9HQH+PNdMkwgJzIdpYFU/NFrV7mI6t8oFQsi
-         iwRWwF/foCBjtefKMixR8I7lM2u4IUX+zsUkg8iCrC0hdyyEJdWn/XDDKg0i/Pt6xD
-         FkiBVpBB37WQw==
-Subject: Re: [PATCH 31/64] fortify: Explicitly disable Clang support
-To:     Kees Cook <keescook@chromium.org>, linux-hardening@vger.kernel.org
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tue, 27 Jul 2021 17:36:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34612 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232662AbhG0Vgw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 17:36:52 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56EB3C0613C1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:36:51 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so6735205pja.5
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:36:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Gc78Dn8NNh7IeWRGDgsdS+K6425aXZKh7I0yDMS23WM=;
+        b=jixat3RPLLPRbxs71hxd4oCBxkRZeah1sKJ5Pxm3GeOwwF7vY8kGW67oHrU0zefouy
+         WyLqJsPaUgzcAvxbVMTSI4TeMD/Mao7JC2nnG0LeGyA5Q5WHwJ59RQtcTz5z+y6+jj80
+         TGrP2rH2/sRn/VHF7ByJT/X89kG7wOH3TvXzM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Gc78Dn8NNh7IeWRGDgsdS+K6425aXZKh7I0yDMS23WM=;
+        b=GfLJ0K1TjHt6u4NXhr0y+JbFjBjT1szKD7l97oJ3Z4m5tIhpeamyswdAcvVqUUc4NW
+         znOkSUhM+yFNMZLmUBH51QGJbY26dZ5wXWF0CGJY8j/Hms6z2W/wnvPULZRMqRoZMsHj
+         eG8mnoq6V2JjxYPRVMoFZPcMvcRyxn7xwuIt5KsxZ9fGwv7LZllOIVso8TI2vS7ybU59
+         GbpNfd9hMMa7dJMHFLxk9ejwnnjyHa33aLdbQ8pzoRue2hvRBBwC3o7n62Y+ST5KG2Iw
+         TITsAc9yrQHrPkb5VIkkaNT4X5H253BLqztUUnmeDdODPRJzK693jGYpa6st8HocqCes
+         2Jkw==
+X-Gm-Message-State: AOAM533en58zpQrQnt9VAhgpf/1+EU4b61JVLRt3VFP4wIUfw+0smTCO
+        cpRdt2pv08h5NCLi97Kxh2jAPA==
+X-Google-Smtp-Source: ABdhPJwzcm70LUJEYs4pukHqyokiwz2n0LXQBkV6ywdO41+JEjDUGqpk/L4ZHO751w6AfRr8f6jppA==
+X-Received: by 2002:a63:4c53:: with SMTP id m19mr707522pgl.226.1627421810804;
+        Tue, 27 Jul 2021 14:36:50 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id k1sm5323404pga.70.2021.07.27.14.36.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jul 2021 14:36:50 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     linux-hardening@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Keith Packard <keithpac@amazon.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -42,63 +65,117 @@ Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
+Subject: [PATCH 59/64] fortify: Detect struct member overflows in memset() at compile-time
+Date:   Tue, 27 Jul 2021 13:58:50 -0700
+Message-Id: <20210727205855.411487-60-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
- <20210727205855.411487-32-keescook@chromium.org>
-From:   Nathan Chancellor <nathan@kernel.org>
-Message-ID: <da989ffc-da64-33a2-581e-6920eb7ebd2d@kernel.org>
-Date:   Tue, 27 Jul 2021 14:18:58 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210727205855.411487-32-keescook@chromium.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3639; h=from:subject; bh=8zP6zQoAqqqGG8HMfjFP4w1KGnbp2hqGXaP0Hbd76y4=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHON3fO1CHh8uvdaQO6AN9FBZe6nYDGm5e9VLXU1 qyRUNQmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjQAKCRCJcvTf3G3AJqP1EA CVSH0wpqbxZ3IE5MoFsr86U7Yah0Hg+0c1Z0WseIk4zQvGBt5+jFc3XcFlXK0ePD9t1SEiUdtsmdTk f1ieawudX3fOXtTF+cENRebLnsBwHqJvcXhqWYybCiJZ5svrL/RhkKPjsZTl6p5Z09OONrfhkbCqOY ay2thxGsYWVYDMmGGQNm6DiY+eqdfIMpHIvddl9XbfH5zi6U1bthLezg2Y4qm0wOu/5ef45dfAvYyF oCnwD8HMnm/UEESuw5A1lfsDFrsjRjZvhke7e0iXTG1/CdsxQCbJdTGbmj/FbSwwxOIKvnAolZyJ1N Ytjm2RsjqaNYCBv3huLAScFJY0tonJLIjHFH/qNLF8HruT9cRTzhO1gRYqgMQ+klJaTJpljcvscTr/ V2vtj25ws/lTocXKXlKMHBDJvSYFfmuK5cOpt0DBPuNPdLyfE/QNCMFYDuE3D84/ghfuxMdMhh5IAD jcvjTg10ak7Kw9gd5dxLgqM3Jh3xlYuwUJ3NGRv3QnXsSMvCWQ4AA0SOp+ObPI+gAm9AdLedDedwyU jEhSXCZOIlnkATKds9+upOvmJWe7tDk7TJC9vK3pRhO7XoQV9FTH569mha1nU31WBCq88G6VlP5pfR MVMjAFcoVy2UbuarVe6jUsybzWsznx5I5wLnLraRpEfhYsvyhOtL0DVWQmVQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 7/27/2021 1:58 PM, Kees Cook wrote:
-> Clang has never correctly compiled the FORTIFY_SOURCE defenses due to
-> a couple bugs:
-> 
-> 	Eliding inlines with matching __builtin_* names
-> 	https://bugs.llvm.org/show_bug.cgi?id=50322
-> 
-> 	Incorrect __builtin_constant_p() of some globals
-> 	https://bugs.llvm.org/show_bug.cgi?id=41459
-> 
-> In the process of making improvements to the FORTIFY_SOURCE defenses, the
-> first (silent) bug (coincidentally) becomes worked around, but exposes
-> the latter which breaks the build. As such, Clang must not be used with
-> CONFIG_FORTIFY_SOURCE until at least latter bug is fixed (in Clang 13),
-> and the fortify routines have been rearranged.
-> 
-> Update the Kconfig to reflect the reality of the current situation.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->   security/Kconfig | 3 +++
->   1 file changed, 3 insertions(+)
-> 
-> diff --git a/security/Kconfig b/security/Kconfig
-> index 0ced7fd33e4d..8f0e675e70a4 100644
-> --- a/security/Kconfig
-> +++ b/security/Kconfig
-> @@ -191,6 +191,9 @@ config HARDENED_USERCOPY_PAGESPAN
->   config FORTIFY_SOURCE
->   	bool "Harden common str/mem functions against buffer overflows"
->   	depends on ARCH_HAS_FORTIFY_SOURCE
-> +	# https://bugs.llvm.org/show_bug.cgi?id=50322
-> +	# https://bugs.llvm.org/show_bug.cgi?id=41459
-> +	depends on !CONFIG_CC_IS_CLANG
+As done for memcpy(), also update memset() to use the same tightened
+compile-time bounds checking under CONFIG_FORTIFY_SOURCE.
 
-Should be !CC_IS_CLANG, Kconfig is hard :)
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ include/linux/fortify-string.h                | 54 ++++++++++++++++---
+ .../write_overflow_field-memset.c             |  5 ++
+ 2 files changed, 51 insertions(+), 8 deletions(-)
+ create mode 100644 lib/test_fortify/write_overflow_field-memset.c
 
->   	help
->   	  Detect overflows of buffers in common string and memory functions
->   	  where the compiler can determine and validate the buffer sizes.
-> 
+diff --git a/include/linux/fortify-string.h b/include/linux/fortify-string.h
+index 2ffa5224aaac..718325331021 100644
+--- a/include/linux/fortify-string.h
++++ b/include/linux/fortify-string.h
+@@ -175,17 +175,56 @@ __FORTIFY_INLINE char *strncat(char *p, const char *q, __kernel_size_t count)
+ 	return p;
+ }
+ 
+-__FORTIFY_INLINE void *memset(void *p, int c, __kernel_size_t size)
++__FORTIFY_INLINE void fortify_memset_chk(__kernel_size_t size,
++					 const size_t p_size,
++					 const size_t p_size_field)
+ {
+-	size_t p_size = __builtin_object_size(p, 0);
++	if (__builtin_constant_p(size)) {
++		/*
++		 * Length argument is a constant expression, so we
++		 * can perform compile-time bounds checking where
++		 * buffer sizes are known.
++		 */
+ 
+-	if (__builtin_constant_p(size) && p_size < size)
+-		__write_overflow();
+-	if (p_size < size)
+-		fortify_panic(__func__);
+-	return __underlying_memset(p, c, size);
++		/* Error when size is larger than enclosing struct. */
++		if (p_size > p_size_field && p_size < size)
++			__write_overflow();
++
++		/* Warn when write size is larger than dest field. */
++		if (p_size_field < size)
++			__write_overflow_field();
++	}
++	/*
++	 * At this point, length argument may not be a constant expression,
++	 * so run-time bounds checking can be done where buffer sizes are
++	 * known. (This is not an "else" because the above checks may only
++	 * be compile-time warnings, and we want to still warn for run-time
++	 * overflows.)
++	 */
++
++	/*
++	 * Always stop accesses beyond the struct that contains the
++	 * field, when the buffer's remaining size is known.
++	 * (The -1 test is to optimize away checks where the buffer
++	 * lengths are unknown.)
++	 */
++	if (p_size != (size_t)(-1) && p_size < size)
++		fortify_panic("memset");
+ }
+ 
++#define __fortify_memset_chk(p, c, size, p_size, p_size_field) ({	\
++	size_t __fortify_size = (size_t)(size);				\
++	fortify_memset_chk(__fortify_size, p_size, p_size_field),	\
++	__underlying_memset(p, c, __fortify_size);			\
++})
++
++/*
++ * __builtin_object_size() must be captured here to avoid evaluating argument
++ * side-effects further into the macro layers.
++ */
++#define memset(p, c, s) __fortify_memset_chk(p, c, s,			\
++		__builtin_object_size(p, 0), __builtin_object_size(p, 1))
++
+ /*
+  * To make sure the compiler can enforce protection against buffer overflows,
+  * memcpy(), memmove(), and memset() must not be used beyond individual
+@@ -373,7 +412,6 @@ __FORTIFY_INLINE char *strcpy(char *p, const char *q)
+ /* Don't use these outside the FORITFY_SOURCE implementation */
+ #undef __underlying_memchr
+ #undef __underlying_memcmp
+-#undef __underlying_memset
+ #undef __underlying_strcat
+ #undef __underlying_strcpy
+ #undef __underlying_strlen
+diff --git a/lib/test_fortify/write_overflow_field-memset.c b/lib/test_fortify/write_overflow_field-memset.c
+new file mode 100644
+index 000000000000..2331da26909e
+--- /dev/null
++++ b/lib/test_fortify/write_overflow_field-memset.c
+@@ -0,0 +1,5 @@
++// SPDX-License-Identifier: GPL-2.0-only
++#define TEST	\
++	memset(instance.buf, 0x42, sizeof(instance.buf) + 1)
++
++#include "test_fortify.h"
+-- 
+2.30.2
 
-Cheers,
-Nathan
