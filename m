@@ -2,44 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DFFC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EDE0C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:52:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6FFF60FED
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:52:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1700C60F37
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 02:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234533AbhG0CMY (ORCPT
+        id S234513AbhG0CM3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Jul 2021 22:12:24 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:12408 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230163AbhG0CMY (ORCPT
+        Mon, 26 Jul 2021 22:12:29 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:7061 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234624AbhG0CM3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jul 2021 22:12:24 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GYh8M0WXqzcgjf;
-        Tue, 27 Jul 2021 10:49:23 +0800 (CST)
+        Mon, 26 Jul 2021 22:12:29 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GYh5c5NPJzYcmn;
+        Tue, 27 Jul 2021 10:47:00 +0800 (CST)
 Received: from dggema764-chm.china.huawei.com (10.1.198.206) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Tue, 27 Jul 2021 10:52:50 +0800
+ 15.1.2176.2; Tue, 27 Jul 2021 10:52:55 +0800
 Received: from DESKTOP-8RFUVS3.china.huawei.com (10.174.185.179) by
  dggema764-chm.china.huawei.com (10.1.198.206) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Tue, 27 Jul 2021 10:52:49 +0800
+ 15.1.2176.2; Tue, 27 Jul 2021 10:52:54 +0800
 From:   Zenghui Yu <yuzenghui@huawei.com>
 To:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     <zajec5@gmail.com>, <kvalo@codeaurora.org>, <hauke@hauke-m.de>,
         <linville@tuxdriver.com>, <wanghaibin.wang@huawei.com>,
         Zenghui Yu <yuzenghui@huawei.com>
-Subject: two small bcma patches
-Date:   Tue, 27 Jul 2021 10:52:30 +0800
-Message-ID: <20210727025232.663-1-yuzenghui@huawei.com>
+Subject: [PATCH 2/2] bcma: Drop the unused parameter of bcma_scan_read32()
+Date:   Tue, 27 Jul 2021 10:52:32 +0800
+Message-ID: <20210727025232.663-3-yuzenghui@huawei.com>
 X-Mailer: git-send-email 2.23.0.windows.1
+In-Reply-To: <20210727025232.663-1-yuzenghui@huawei.com>
+References: <20210727025232.663-1-yuzenghui@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -51,11 +54,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+As it had never been used since the initial commit 8369ae33b705 ("bcma: add
+Broadcom specific AMBA bus driver").
 
-two small bcma patches -- one to fix memory leakage for internally-handled
-cores, and the other one to remove the never used parameter.
+Signed-off-by: Zenghui Yu <yuzenghui@huawei.com>
+---
+ drivers/bcma/scan.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index d49e7c0de2b6..26d12a7e6ca0 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -141,8 +141,7 @@ static const char *bcma_device_name(const struct bcma_device_id *id)
+ 	return "UNKNOWN";
+ }
+ 
+-static u32 bcma_scan_read32(struct bcma_bus *bus, u8 current_coreidx,
+-		       u16 offset)
++static u32 bcma_scan_read32(struct bcma_bus *bus, u16 offset)
+ {
+ 	return readl(bus->mmio + offset);
+ }
+@@ -443,7 +442,7 @@ void bcma_detect_chip(struct bcma_bus *bus)
+ 
+ 	bcma_scan_switch_core(bus, BCMA_ADDR_BASE);
+ 
+-	tmp = bcma_scan_read32(bus, 0, BCMA_CC_ID);
++	tmp = bcma_scan_read32(bus, BCMA_CC_ID);
+ 	chipinfo->id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
+ 	chipinfo->rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
+ 	chipinfo->pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
+@@ -465,7 +464,7 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	if (bus->nr_cores)
+ 		return 0;
+ 
+-	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
++	erombase = bcma_scan_read32(bus, BCMA_CC_EROM);
+ 	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
+ 		eromptr = ioremap(erombase, BCMA_CORE_SIZE);
+ 		if (!eromptr)
 -- 
 2.19.1
 
