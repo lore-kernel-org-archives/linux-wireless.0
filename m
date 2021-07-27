@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D52C4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC14C4320A
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D57960FF1
+	by mail.kernel.org (Postfix) with ESMTP id C4E8860FE4
 	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232356AbhG0VQz (ORCPT
+        id S235386AbhG0VTH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:16:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58284 "EHLO
+        Tue, 27 Jul 2021 17:19:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232359AbhG0VQw (ORCPT
+        with ESMTP id S233132AbhG0VQ4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:52 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D802C061757
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id o44-20020a17090a0a2fb0290176ca3e5a2fso1132596pjo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
+        Tue, 27 Jul 2021 17:16:56 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFED2C06179F
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so6661247pja.5
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=w4Fdwl9HiFMZ+llOdhUBfZSYAz9VTvRZ/zqP2rqnbdI=;
-        b=OubzHKZ8rQkxISQj3tvDfVhvRaRW388it7d5HkY7TCu/bBaa8Pr8HfYZFrPrOiunFF
-         6bCQMEiL+lVzAM6jCwQcLzTiImmq8ntJYj7aynk5kXTfEehuycCEDZIeJcO5eJpfZQKn
-         hq2FyEBWz+GBZM7N+a3OD/2asYrrsHtNzmSN0=
+        bh=DGTay7iAWSyVSQKDJdUkixgvUstnCPUf4gCx6hmeZFg=;
+        b=dNYQWvNnvzIA2X1XyugwcYlkkWjvJM3Vr3U1hCAtNIdHPOPlyGNYt6+nUriTVJE1MY
+         iZgmYH0qJz+aQ+mXI12gMaGW3TxvwmtxZIYqXUw/22X3My9fPAG+Pxwau+0K9PSBrncN
+         iFPA2Fm2fkDwZ73RqhbPCUL3LZE0YvDxxcwSY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=w4Fdwl9HiFMZ+llOdhUBfZSYAz9VTvRZ/zqP2rqnbdI=;
-        b=WYE965z0MZsDswgzw171BT0sVhvRX2FU7TO4vJG2MGE7rJrRMIOh6c+P/iP+1dBTp2
-         HK+FCC8VK/ozMaSrS8PTlIG24JyNqzf/vTOX85SXxZBZq4xk0Hw3DFrYlmVDmvyarM6K
-         FCPqQUDk7YM6tdsVFVO1RJcH9E4I+Oe13ZumTn8TrbIH2jE16RyhPwIEo9gmatCRhhvB
-         N5ZJbB8njFs+Sj1Wc1y7iH2F6eukbRlCw1rR8zI3SvSqFh/3czJ+fIhl1mI42urd84l3
-         reNDQrq2yggKx9m6+bAbHqc0xjMxfqItbeLcmlghKhoqBwiwvRUzOrgtaQGuDD2KZK9t
-         9jPg==
-X-Gm-Message-State: AOAM531+nHmPrzXYqfN6chq/DdbuifoIjhkxJ6byttMMuEFLE0MZ1vpC
-        IkmaQsGs4oF8IPsp+dY/U+e1WQ==
-X-Google-Smtp-Source: ABdhPJzBdsmV+2iswoqD8g+SAJNwVreAx8UwnGfV68SrU1eBmBrhzMiv9tA9zD/XN/ReoAPLtd1HsQ==
-X-Received: by 2002:aa7:9a07:0:b029:329:46d2:c6e4 with SMTP id w7-20020aa79a070000b029032946d2c6e4mr25255299pfj.81.1627420610912;
-        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
+        bh=DGTay7iAWSyVSQKDJdUkixgvUstnCPUf4gCx6hmeZFg=;
+        b=LZuwlAuvMxPaCzRTm3Nx3n+N6T4pK9FtuQcqKGtgNvfv6NOOImpj6QZeKSFg+fZc26
+         6SMF5Gf5tlTKaGsyufCUWUFpteP7g9mYromXJPtyk/ttyYl2Hmp9ohIOf0nJOla77rog
+         nsZBf6+uikuLL4TLD/Ct/hnA2FTyP6XCG1Y9b9XbwA8mmxMK2pTfr8RrMS4n5hZovU6p
+         tBnzot/JTWqAclsUufsPS0UnPQx9ElqHh+UN70/fhUdbhpjSAEQtYBuCj3qbOEksQ4m/
+         6fbcqgpZf0Z1hdLiabYfkwwYL9de8uP5XEipluyCK95U5hvFc2hTfOtCs3RiZHZcWo5E
+         WJVw==
+X-Gm-Message-State: AOAM533jjREYPH0jsSGxW0BIA67d7DTmDEuKnx8SHR2jmBTqug+4UHPo
+        9S4H0YuVtsuXhXAaK45oxmr3Vw==
+X-Google-Smtp-Source: ABdhPJy6DyjMlXCxT3T2XebScQyyxEXTMu8TCjUAq1vEYKkzbYwWyNRsUTrVbClktjUGmOBVunhffg==
+X-Received: by 2002:a65:64c4:: with SMTP id t4mr25559293pgv.222.1627420615303;
+        Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id m11sm1742495pgn.56.2021.07.27.14.16.49
+        by smtp.gmail.com with ESMTPSA id j187sm4758930pfb.132.2021.07.27.14.16.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
+        Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,85 +66,51 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 37/64] string.h: Introduce memset_after() for wiping trailing members/padding
-Date:   Tue, 27 Jul 2021 13:58:28 -0700
-Message-Id: <20210727205855.411487-38-keescook@chromium.org>
+Subject: [PATCH 45/64] intel_th: msu: Use memset_after() for clearing hw header
+Date:   Tue, 27 Jul 2021 13:58:36 -0700
+Message-Id: <20210727205855.411487-46-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2359; h=from:subject; bh=b9cZC+rDD66z1p4TxzACgUY06GpnBkPGzRd2vUJnnzo=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOIfqyzMaVVJ7fOFmkjuM928F3ZrP6Vj5vJQu9j TGA+E1GJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziAAKCRCJcvTf3G3AJvL4D/ 432CWZcCqOkVhZ6rWzVtqmSaSBdcUlSVZvNTubv+qk3MAjGXh0WePvQ/w470x2ODfGCERhFWEDFlQj 68DffRJeemD9mQNtxja/G+yKlfKQtqj2GsW7tkAYMYGdzk44ucXmoA6jnRW6vcayOBno0Ak7JtF4lG m7CwO3b7xHmECqmbPERBBHV/EFy/4S7JgLqoPni03PW1KgZDyCWqbwmB04HSW1ssZRyLMd4s3QMY1T +9uiq7oHu8jR42VT7YaiZc18izUh7AQddCZBlvqcHK6sPbsh+klX5zZS9n02ODAklfDkBGB2gb1tzk qTxXC88avclTCkPd2GBEUQEctsttYoNcK4xZ3zRj+wlfk6n2j/Aj/ysxug7cILnKKFV1GD6Yf8nsLg 2k2xEUpWUhhQ6fcZqBd7cBs5gIDYK2zreDrTKcqVFSQ0lX6w9ZyGULXQjv3ILYDHDHvd1PewBgByhA 8aurJtfihL4zDAjHyVugkZ+nfaAmQVaovogYrWCCXoxbMKSIxExx4nWszpvOPpR1mX+l7gYP24rMp1 l768YtsiX/jU5xOMRn5iJGLFogebnye0HYfk45A60bKdiGZmynlnz5gGZL9zYD/aSJOhSfF3kz5hcE XG0Q1qnKtvYm975U6RI0dZPUWK34kAgIzA9fINgzTL6Q+FxQr5sF43MKxRyQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1172; h=from:subject; bh=4YDV077FmH9lemmMexWp8eMo9bjnp2d96nCsgVn4crc=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOK9ttF+ksljVKBeZVm/usaI00laWjD4Unf8h1d eoh1+beJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzigAKCRCJcvTf3G3AJhvxD/ 0XZptAWWII5Sd1eI6hMq+jc4oUfLp5M5OPVb2emcgAAU0hAdSFxWDSUreT7263Ke3iOrhK498DJ36F DFKeXG2Kgg+H8VsBs/8iBRv3fcGi9/Ws4R5EVR3wO8T1tGxps7guCF9Qt6VBQ1s4MJ6uP1WduVwPNZ ZlByIdd7bbTAOVP0DQkaoixkgPdZnttNUp6Rr9N82rM1ej3G08+KapIFaiYMmhQSc7X5eCVxNKiziy OaiXcQBIN39iFbSTkPqmGWB/O8O9gN3mx3NTI/59TdmWDsSIEA0nZvbfdngpv2IWvghbSAnYrPfRoP PgSUX4wsUmyVbVKlsPRTFFnPc//4u4ziXfaO+NBESwrPcAmCy46pnKciUhYP1HH9VEi+ZCFb+SruMD MadjaGn2+3NdXFhWFV8895TTZ9u2+OKWtOQfqo11ynnlTm/DCGHvWB/AFn/6JdmHikaEpmcDR35+C+ Egf9o3kqDZ/B2qBqmcNmBMEV+0x48LZBOC/a5eqPn2bWsV9AJA1QV8ZZ/okfq56/5BwWZsW3rb5Jgy w2lr+ZeijJNIcye0PRUUdx3g1rzpx5+DXlN5Ntxi5rE5nrCFrcdyM6t9z+TbSBsR3Gd5kdMjV62eDG arvpuLcVrVwUegzp+aFtKOIzZCN084P4qbo3Isqj7ayth3CARHq/kmH7pGPQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A common idiom in kernel code is to wipe the contents of a structure
-after a given member. This includes places where there is trailing
-struct padding. These open-coded cases are usually difficult to read and
-very sensitive to struct layout changes. Introduce a new helper,
-memset_after() that takes the target struct instance, the byte to
-write, and the member name after which the zeroing should start.
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
+
+Use memset_after() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/string.h | 12 ++++++++++++
- lib/test_memcpy.c      | 12 ++++++++++++
- 2 files changed, 24 insertions(+)
+ drivers/hwtracing/intel_th/msu.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/include/linux/string.h b/include/linux/string.h
-index cbe889e404e2..4f9f67505f70 100644
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -272,6 +272,18 @@ static __always_inline void memcpy_and_pad(void *dest, size_t dest_len,
- 		memcpy(dest, src, dest_len);
- }
+diff --git a/drivers/hwtracing/intel_th/msu.c b/drivers/hwtracing/intel_th/msu.c
+index 432ade0842f6..f3e266b0756c 100644
+--- a/drivers/hwtracing/intel_th/msu.c
++++ b/drivers/hwtracing/intel_th/msu.c
+@@ -658,13 +658,11 @@ static void msc_buffer_clear_hw_header(struct msc *msc)
  
-+/**
-+ * memset_after - Set a value after a struct member to the end of a struct
-+ *
-+ * @obj: Address of target struct instance
-+ * @v: Byte value to repeatedly write
-+ * @member: after which struct member to start writing bytes
-+ */
-+#define memset_after(obj, v, member) do {				\
-+	memset((u8 *)(obj) + offsetofend(typeof(*(obj)), member), v,	\
-+	       sizeof(*(obj)) - offsetofend(typeof(*(obj)), member));	\
-+} while (0)
-+
- /**
-  * str_has_prefix - Test if a string has a given prefix
-  * @str: The string to test
-diff --git a/lib/test_memcpy.c b/lib/test_memcpy.c
-index 7c64120a68a9..f52b284f4410 100644
---- a/lib/test_memcpy.c
-+++ b/lib/test_memcpy.c
-@@ -223,6 +223,13 @@ static int __init test_memset(void)
- 			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
- 			},
- 	};
-+	struct some_bytes after = {
-+		.data = { 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x72,
-+			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
-+			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
-+			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
-+			},
-+	};
- 	struct some_bytes dest = { };
- 	int count, value;
- 	u8 *ptr;
-@@ -254,6 +261,11 @@ static int __init test_memset(void)
- 	memset(ptr++, value++, count++);
- 	compare("argument side-effects", dest, three);
+ 	list_for_each_entry(win, &msc->win_list, entry) {
+ 		unsigned int blk;
+-		size_t hw_sz = sizeof(struct msc_block_desc) -
+-			offsetof(struct msc_block_desc, hw_tag);
  
-+	/* Verify memset_after() */
-+	dest = control;
-+	memset_after(&dest, 0x72, three);
-+	compare("memset_after()", dest, after);
-+
- 	return 0;
- #undef TEST_OP
+ 		for_each_sg(win->sgt->sgl, sg, win->nr_segs, blk) {
+ 			struct msc_block_desc *bdesc = sg_virt(sg);
+ 
+-			memset(&bdesc->hw_tag, 0, hw_sz);
++			memset_after(bdesc, 0, res0);
+ 		}
+ 	}
  }
 -- 
 2.30.2
