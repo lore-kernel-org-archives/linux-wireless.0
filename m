@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DD4C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F66DC4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0489A60F90
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76F7260F90
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234196AbhG0VH0 (ORCPT
+        id S234385AbhG0VHb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:07:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55882 "EHLO
+        Tue, 27 Jul 2021 17:07:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233379AbhG0VHC (ORCPT
+        with ESMTP id S232986AbhG0VG6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:07:02 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2471C0617B0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:59 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id f13so42937plj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:59 -0700 (PDT)
+        Tue, 27 Jul 2021 17:06:58 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1550AC0617A1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id c16so15238plh.7
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=BAjc7jN8mF2lxOocjxYUs8uk4UIdg9BIVyN6yKZHmUw=;
-        b=Ik3f6gOvQpeLuCM/En5JJmwMGhnVmhecqCsKjDJ2odwR3b/OtNzLiyoeOTeu9TpBj2
-         /OaEnt7Z40ngSvFECb51CKe1Mrq/TscdrX+6sxtX8ZJ679XmXcxAcgkm85bGnl2v4XsX
-         BNB53x5u/LQy29sMxiNlUWB84NzJJ44Lw+SoQ=
+        bh=KNJkxRbTZjBfSAYGR3816TShm8Emkoyf8ZdfkqPS+FQ=;
+        b=TTGjFuoejzZ4UcURjJ4pPdNPDe9Jn5SyFBfglcq90IykesIiOVEkCdbcD/m3+qhdva
+         slQ4ePKQ6iwR++JiczF3JHBNNuTp4LyRmWMRuqTcdz+fw6qszodvFvFG5Ibp5X/LllWc
+         +fRyxKvk7rn5leQezWTlqBpgyuWYKt8lRuKMI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BAjc7jN8mF2lxOocjxYUs8uk4UIdg9BIVyN6yKZHmUw=;
-        b=DAfIUe3tnhzmtAz23bqh73ztKz9D55RBAFdg5CG6R3cFPDTUl5IQuFOlUqF+uVNTTp
-         lFOcWkC4vxYmfcF6gA8EosMwn4LAh6JGyHFOrIwGc77CevIno3x2rLSheb609j1F5+Wd
-         r9Xk8Ni3mlbdUwRfcdaYy5BzRNd/PaVn6c266nJ4V83YiF9aC72AsU7M/InO/XRZ+54o
-         k5XFe0C5anL//UJDWdlLlZeRP8nJ7BbJqLu5plQw1DdGWQWlbSZqy8y1bZkES02T2QvT
-         GkBdVTUM9cZ11MjJIfpp7oYyn24BbDTlJqgncYyBYsFCHOOHDG7Gb+3VK1QGg4efe9wu
-         fMog==
-X-Gm-Message-State: AOAM5314emAI8zrw8I4jtr43MpBHTX8ME1zxt+mTsq7nqiluxYqf825k
-        ampxnMVkMeBGgOfZbRqlt2D0uA==
-X-Google-Smtp-Source: ABdhPJzTyWnyJkM2fI4o+nQh75gG0gKQnAIhyupMsjyxw0lo+I3SNPw8cSYvp7EuMi65u5YL90cSkg==
-X-Received: by 2002:a63:190b:: with SMTP id z11mr25001094pgl.320.1627420019329;
-        Tue, 27 Jul 2021 14:06:59 -0700 (PDT)
+        bh=KNJkxRbTZjBfSAYGR3816TShm8Emkoyf8ZdfkqPS+FQ=;
+        b=gJO3MxL89flTYaXEu8SY1psJXGOVE5TZRiA0UA//0Hi+WVlerDswdbHT0MSwQcbbhK
+         9T86DP1yr1BZ/LhNere1gfT9ypsm1MdvV2BaIlIubXMSLY6ztuvCov1jkbjETWe0SYka
+         6tJwoL4U0WUQRN8UH1I6zCZ9YTDuGPkDAK6FpbNQWdoSyJKrpwbUXuQGReL03Q5l99a0
+         V3vXjjVU1VRkGZUCA1riZCuJeLW49iZAnqrxxVXIzuejP31rSctE9mcalwdvaGHL5PCG
+         +B/Ce6NI8iBrKj0cPyFXi08fNdQn3cx9lXm7f4ZHWwJNxpt8iAXL36D9vEAQb+Me28XM
+         kkRQ==
+X-Gm-Message-State: AOAM532Y9MgoKbcsXwu4MVfKjKVMNxq9GiHVjy0xt/7LoLn2hZveWD/z
+        9ObJ4Yzuz2+dysSGeAWvCDDNYg==
+X-Google-Smtp-Source: ABdhPJz8+E+SDb3LoAbaQEcUj/nENGUTPsEXTKFEfKJ+U87AixQ7X8CbyjH9KY5gO+50OJnIiipy2w==
+X-Received: by 2002:a17:90a:5a4c:: with SMTP id m12mr6207285pji.15.1627420014655;
+        Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id i1sm4395555pfo.37.2021.07.27.14.06.54
+        by smtp.gmail.com with ESMTPSA id g8sm4556875pfu.30.2021.07.27.14.06.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
+        Tue, 27 Jul 2021 14:06:50 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 38/64] xfrm: Use memset_after() to clear padding
-Date:   Tue, 27 Jul 2021 13:58:29 -0700
-Message-Id: <20210727205855.411487-39-keescook@chromium.org>
+Subject: [PATCH 44/64] iw_cxgb4: Use memset_after() for cpl_t5_pass_accept_rpl
+Date:   Tue, 27 Jul 2021 13:58:35 -0700
+Message-Id: <20210727205855.411487-45-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1608; h=from:subject; bh=g0VWO37QK3XIcvkgv5p13lDa7YD+Jvxsuneh5al+DKo=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOIQmnrWwAaxPVdj8lblXkb8ZdEI/mjJwkI9weg Jb9tdxuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziAAKCRCJcvTf3G3AJkUiD/ 9GVAFoJywTVZLGJMfv82icJWJQRMDO1fnyc7Vo6lQ1D7/W+Dagrov588jsfphYxw9bCcMrBW5+ML39 Nlw0d86SRJKsp9W1D/uWpxT7B+ZifwMCrBQiW/QQdugvpBK16DiM/nuIxmvvNngfCD7TZeYhnxyJCN Q8sbUMZx2T8aExzVPglAhsAqyZAACXNIyRAkJJKyEFCtk5DV7xNyz4H7EIco1PaNQ6CPSvz3qtegIn nv2P2319IG2VLE3I2NZVINSDUfhFT63odWJElKoysAbPDvrq3781fUtYESiohGHqBR8FD3BGT+O8y5 9KD6fIZ0TSLsD63axSBtgp5OUer7kr086Bp7sU1ndEXv436bquzOxnCxGOOZ82tsCGeW/VxkIdKzGd IqrtSepbn6JZoMYp10wQJpM6ZcvscK8K2zcp2RMRpDMku/9dFd2GQ45TO3uUh94594qJDdQG0ecNlA NIP+5MnO4vD6X6sONnGwoom7JbHdfvLOAg4vRaXZ2jfmckTzxmeUil4NB16b45RGMUUNbmfDrGgLJc 0oHx1OYHLUpyYpWBvqH49SivknOgZOZzXIyabXPipERmCdfnqRmLJeBYq67aP5IvRZgUVF848zQS1a wYduCIDFnUzR+Pq8e8OGT0DcZ9ZGKEr3Av8YeNoVe5GpEviziiQ3/Fj3WyIg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2100; h=from:subject; bh=gV9IZTM5qU7jcRGph/XDG3+fKRJKxoN9HOMcsfOyL0A=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOK/UN78x/osAzwgMKupSwSrhwjEeLTXqK++CZi 7CH6/zyJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzigAKCRCJcvTf3G3AJi+aD/ 9wSoxGLjbf3nMxhdx0FTNoLb7tUlFlGp+wsA1eq4h8eLG5OlOTzsA8IwsIgBPWp2/c4lh/3h8Wej9u tFFoUjbe3EwfDLU01dywIYam3R6J6s+TD7jpKeWz0MWD2NFKTvNmK/r5nlDA+crVlsHLnuBl7ozHdp Uoh/Bz4xC9nN82aPUAif26+yocqytHa2sw58nHCezNegk9sqBcHUCoNnFodMubFs/UgzD7hGOsd+1B aOhnYDdb2QaqaHaKTplZpcofR90e0xKWhk0CRSg83IE3RApySZo8s2Q4xTS1Ma3eB82/7z+gvwQXWY hia/xw+mpgLBcAZ0jCu/itWg4QCogWD2bkotmQJEfjL9TXjZCGUa2NGLC/CnEfFKcyutnljBecv1EH 0Q9xXQNOo4tw2JZcb6z7NV4dR0L+tjj3BeFNlPgNbG4VgwmG7uKubRriMRe5NSZBE38cW0fSq5rQ3Y T/5J6pZ+p6FMSSVheYF8tjScBuAHu1NRrxeGGj9Wx4M222kdbmFmeXqMdbCPWOgSfuuCWozDcs7p7z +9BLk6YAP2L0i/Fh9KBLAPtQ43onOWXv77p4r/RE/gXudIT6F++lAYSdbKOI9/3skSabDHdxRbQYhk 1gswdeOGaLRaDVm2CSKXSrfli04Bjbp+JUMycYvzS0p20FUxvYZuh3eQYepg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -84,44 +84,55 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Clear trailing padding bytes using the new helper so that memset()
-doesn't get confused about writing "past the end" of the last struct
-member. There is no change to the resulting machine code.
+Use memset_after() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct. Additionally, since everything
+appears to perform a roundup (including allocation), just change the
+size of the struct itself and add a build-time check to validate the
+expected size.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/xfrm/xfrm_policy.c | 4 +---
- net/xfrm/xfrm_user.c   | 2 +-
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/infiniband/hw/cxgb4/cm.c            | 5 +++--
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/xfrm/xfrm_policy.c b/net/xfrm/xfrm_policy.c
-index 37d17a79617c..1a06585022ab 100644
---- a/net/xfrm/xfrm_policy.c
-+++ b/net/xfrm/xfrm_policy.c
-@@ -2486,9 +2486,7 @@ static inline struct xfrm_dst *xfrm_alloc_dst(struct net *net, int family)
- 	xdst = dst_alloc(dst_ops, NULL, 1, DST_OBSOLETE_NONE, 0);
+diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
+index 291471d12197..7129ae025b2d 100644
+--- a/drivers/infiniband/hw/cxgb4/cm.c
++++ b/drivers/infiniband/hw/cxgb4/cm.c
+@@ -2471,7 +2471,8 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
+ 	skb_get(skb);
+ 	rpl = cplhdr(skb);
+ 	if (!is_t4(adapter_type)) {
+-		skb_trim(skb, roundup(sizeof(*rpl5), 16));
++		BUILD_BUG_ON(sizeof(*rpl5) != roundup(sizeof(*rpl5), 16));
++		skb_trim(skb, sizeof(*rpl5));
+ 		rpl5 = (void *)rpl;
+ 		INIT_TP_WR(rpl5, ep->hwtid);
+ 	} else {
+@@ -2487,7 +2488,7 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
+ 		opt2 |= CONG_CNTRL_V(CONG_ALG_TAHOE);
+ 		opt2 |= T5_ISS_F;
+ 		rpl5 = (void *)rpl;
+-		memset(&rpl5->iss, 0, roundup(sizeof(*rpl5)-sizeof(*rpl), 16));
++		memset_after(rpl5, 0, opt0);
+ 		if (peer2peer)
+ 			isn += 4;
+ 		rpl5->iss = cpu_to_be32(isn);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
+index fed5f93bf620..26433a62d7f0 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
+@@ -497,7 +497,7 @@ struct cpl_t5_pass_accept_rpl {
+ 	__be32 opt2;
+ 	__be64 opt0;
+ 	__be32 iss;
+-	__be32 rsvd;
++	__be32 rsvd[3];
+ };
  
- 	if (likely(xdst)) {
--		struct dst_entry *dst = &xdst->u.dst;
--
--		memset(dst + 1, 0, sizeof(*xdst) - sizeof(*dst));
-+		memset_after(xdst, 0, u.dst);
- 	} else
- 		xdst = ERR_PTR(-ENOBUFS);
- 
-diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c
-index acc3a0dab331..0bf8fec3fd97 100644
---- a/net/xfrm/xfrm_user.c
-+++ b/net/xfrm/xfrm_user.c
-@@ -2907,7 +2907,7 @@ static int build_expire(struct sk_buff *skb, struct xfrm_state *x, const struct
- 	copy_to_user_state(x, &ue->state);
- 	ue->hard = (c->data.hard != 0) ? 1 : 0;
- 	/* clear the padding bytes */
--	memset(&ue->hard + 1, 0, sizeof(*ue) - offsetofend(typeof(*ue), hard));
-+	memset_after(ue, 0, hard);
- 
- 	err = xfrm_mark_put(skb, &x->mark);
- 	if (err)
+ struct cpl_act_open_req {
 -- 
 2.30.2
 
