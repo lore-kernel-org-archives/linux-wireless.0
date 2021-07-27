@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 101B6C43214
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77094C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E759160FA0
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57E0A60F9D
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234257AbhG0VIA (ORCPT
+        id S234404AbhG0VIN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:08:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55890 "EHLO
+        Tue, 27 Jul 2021 17:08:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232867AbhG0VG5 (ORCPT
+        with ESMTP id S233476AbhG0VHg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:06:57 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54069C061760
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:56 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id l19so1923247pjz.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:56 -0700 (PDT)
+        Tue, 27 Jul 2021 17:07:36 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28148C061367
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:07:03 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id i10so37627pla.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:07:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UPGlu1gG6API/iCexVdVFLvP4yi8HHonlHYke9K7UR0=;
-        b=m3xmCqlfQQl6y88gzGHqm2N3UvKEnCdok/BJyDNoduQEklW/A7rLG1ArcEbIa4sNpg
-         gyE4VCnVWyScIlaG1xhcD8qrQj5NdPxQkhHLzIIQou5A0leQoAsnAyLU3S12xLMU/Hpr
-         6bYRGbAjxTPd/EtMM4GpfIh0ws6if/8UYqIYg=
+        bh=fCr6M9WVbBxoz5xSZDTLYQZUaixoNhvM1z4ft4/JiWU=;
+        b=CkfvuUYgjXUdgM1i87D/akGLRkQBlDepGvReTODAXjxv3JZLUxpr2SeqRCtggSb1NQ
+         0eO++6VjfUhMdNdLL9RotuOnb/CQ5ydWv+gSz7/hzqH6ipBx2LTuhN83Pi+6+jPneDFl
+         4XWuDGX42ek2Bg7lAzXWOFRnumRXJltjgh5Ik=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UPGlu1gG6API/iCexVdVFLvP4yi8HHonlHYke9K7UR0=;
-        b=srxU4MFlDH0nrsVaWRg07/dU1BX0VJyZOsTO8ElHICGEfL/xAxW5KpQJR/vfkIgMRe
-         R4YLcVbHVASJFPi9UWjrsqe3dUDRIC4fTohzbj5DU473tSD9xfXkG2SE6fc48utCJ6UN
-         NlFA3+01u3TZmWctP/PsHsxy7i8LYAgbCGM5AcmT3+n7FdMkeZW4n3VxaHJrIuh0N66d
-         MAdyzJAaGn8pULnd+hugnQSOtdojOWoPgBhsA+aJikE85tRcaWbYTt7Ynpm0IbdS72P4
-         Ks1G1ZAFXJhSq3K1FUFKD6w4/Jejzt9HeL4pQaWJFwyoHgTbnM0aXIo2Kje86Q2FFCxv
-         WamA==
-X-Gm-Message-State: AOAM531xfS1xz1HJxRA5zdnDxZeeYbh1CVFh2doLzyNEMUoxPfL/Orcf
-        m2WzzZUHXKgm8Rq6AJSNzfJ1ug==
-X-Google-Smtp-Source: ABdhPJyRr41WjbyJq9nCLCxMpkCCFYsX51CfWKd4/S2P+UzJSAsEt1kW141ndTqkUOB7pGW66MCilA==
-X-Received: by 2002:aa7:9546:0:b029:32e:5fdf:9576 with SMTP id w6-20020aa795460000b029032e5fdf9576mr25063139pfq.5.1627420015943;
-        Tue, 27 Jul 2021 14:06:55 -0700 (PDT)
+        bh=fCr6M9WVbBxoz5xSZDTLYQZUaixoNhvM1z4ft4/JiWU=;
+        b=TIz8tNQYRKJmZ0CQmYMma92z3y6S7NNBkV3lMaMs3qha4Snj7TfFV6HDDr8IP0acYt
+         +E2vmaz1EIF9MhPSb5XY4G7ONmRRvYJpnmwI7nk/M7mVnTgBT1BL5BjN//6BhJ4swng7
+         TjzOQ4yvF9hMOrogBIICr2AbGlGZctLhlszRYID8AUEa/xkjAO2fpq1ZKVjuQycKVs51
+         g5VRtQpDYUZYq1RDaPgPgNwTcBifv7RgSheHGQZYm2+F9aSLXvTsZsQdftZK+dKQbj7a
+         jdfQTTANTLLC4fd9R0Vg/eWUJxHQ+AfYoEuUE6CfEMQHdfcaltZbI5Rli60ylwOqRj38
+         B3pw==
+X-Gm-Message-State: AOAM532pezZjTTabDcA/I4K+yKG1+kXdm+ndlfISC0qIKxqy+vEVH9Jc
+        Y42WqGSFZN6NKf/k1uyhbPb0hg==
+X-Google-Smtp-Source: ABdhPJxSxBiTE9j5dpguWlnBff2W6XOxanMIjLBz3KD/2jrAfNakkqqBYOlfrkNXGZusO3mgNbH5WQ==
+X-Received: by 2002:a17:902:b711:b029:11e:6480:258a with SMTP id d17-20020a170902b711b029011e6480258amr20741066pls.41.1627420022747;
+        Tue, 27 Jul 2021 14:07:02 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id d29sm4704061pfq.193.2021.07.27.14.06.52
+        by smtp.gmail.com with ESMTPSA id i24sm3255991pfr.207.2021.07.27.14.06.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
+        Tue, 27 Jul 2021 14:07:01 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 17/64] iommu/amd: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:08 -0700
-Message-Id: <20210727205855.411487-18-keescook@chromium.org>
+Subject: [PATCH 54/64] ipv6: Use struct_group() to zero rt6_info
+Date:   Tue, 27 Jul 2021 13:58:45 -0700
+Message-Id: <20210727205855.411487-55-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1451; h=from:subject; bh=3pnVXRScRiXcKlAzWmxtHjgtqdCSr5x9f+6aO5KQ5qc=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHODYV9h07PQ3v5RAvzij9k85T7DPu/8sNSs65Q4 0y0UliiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgwAKCRCJcvTf3G3AJiW2D/ 4nEDA70nGUYhVyf7oYOlQgzyry3f6d0tKPbEYWNkte1rIRW3O2InK76AVJyf0Q/BtnVYPXNStIrzaO SUDw2yOwXO4oq2+xlKHbSpDQcYZna36Xqovo10kVGY112L7kOGbUfQZZPm+9ZCxh9fprwP+ezpdrPw 5RhPSv0UwMiQYY/cih9csRF3Y0cUslbWzBAlMAKY4vV665FdBYm4Cd1UbBRiX7n5X6rkASp/R5KUJO gT9lqJlutTZcY84HhE2e7nVfUM1tK/zoQ1ZeRZ2l14KFhykcFSW9gTHS3VJa2Fr3ta26jaAzpIQzRI I1VZSdlxpEUPAljbEi8ms11eBPC5N8+yPox2bH9yz8bPLwwHOwyP+yRXagJSrsB0JY9elrri4Jr0d4 L0spfyNNFhXi1pYLN/VwHLWk0qCJ6U6H1/1yJ5fkSANbabpn+M+34UuJ87NhDZnoboRjX68s2N9xUp Ztc8gb6cNuq1OK7yjw+/s+IPxRe2Xrjyj6xMHQ75Nmq+kDqedEV8h/okfZHv9FN6eZGw8+d+79qrHr /MdSe/HI+xPECZcwJiIqojDU9hyrQ75Slj1hn65lXR2jBuZkuxOB9VWtjVZyPGXbccWBvdccl0Sthp x+6FisSerA0XyrnefqEYTnx+5XYfaYWhfusWvoUDsVRDlD5XjnXe/NKxjhWQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2014; h=from:subject; bh=9FxEXENVJNuB45fHUbaxMj4hb424u+KXBOvcDXadQUU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOMr1s7rjBnwnV0YvEmCppP2KjiI7qwbNhC0tnR LR54sH2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjAAKCRCJcvTf3G3AJvB1D/ 9HyBVTCMQFZVnce4Q7z9RSSZaLEhmwSMwOLxk45KjDsJAOP3HcDjbkcb2t+AmQxHosaQzMYzJBsPLM fI6MGo8d7iglJul2X+wgatbPcEehYNvmi9N2hSNViixrkSMFXRYD9gNgZxmurHn3poTaQBFJeH/CMt i0K0Mf9xJLh09ZTUaBEMkeBp92msj4wB0UzT2YgQVbRBg/2h2H9tSdBS7ou3xC8W1K4gsOB+p8y9Z9 E6xK8yOM9010RaqlQJ7Xwiw/qBjEzM4v6/BvFKOfF7nbprnDsEcm1n3uqkj3PJ0XdUXpvHAc5ObsoB KO/0wpq+dvC4caLYvsafIZqOaz3hLgcDlRNbqQtK2sC08guGWc1MHoTfZoyOpPcsvKpv6Ez1ugjb2i pyJ0WkxY6xI4NtO334xyOlpSXADvHv+yqhiucaHger+9V1z3cVGZWQJMnpNFHTjqetSkyOaPhGCfT6 eygtBdkni37ipeLcPOAVtXgZH4iuKxdilblIEAG1YqFqpciOhCgtYiCt3itR4hpyhJp61nLn2XSysU lMIbYdUyBQlmwsWY79F0ezh83tePY6wggdyAujypUrGKiYTgTpH817kU7KBH2AB7YhuYQevj9FEHhD B/H1yY45d73/j38Hw4+briFVcL4khdU1nni0efnXIAMBNb0nJPEsOcf21O/g==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,49 +81,74 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct ivhd_entry around members ext and hidh, so
-they can be referenced together. This will allow memcpy() and sizeof()
-to more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of ext.
-
-"pahole" shows no size nor member offset changes to struct ivhd_entry.
-"objdump -d" shows no object code changes.
+Add struct_group() to mark region of struct rt6_info that should be
+initialized to zero.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/iommu/amd/init.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ include/net/ip6_fib.h | 30 ++++++++++++++++--------------
+ net/ipv6/route.c      |  4 +---
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/iommu/amd/init.c b/drivers/iommu/amd/init.c
-index 46280e6e1535..2df84737417b 100644
---- a/drivers/iommu/amd/init.c
-+++ b/drivers/iommu/amd/init.c
-@@ -121,8 +121,10 @@ struct ivhd_entry {
- 	u8 type;
- 	u16 devid;
- 	u8 flags;
--	u32 ext;
--	u32 hidh;
-+	struct_group(ext_hid,
-+		u32 ext;
-+		u32 hidh;
+diff --git a/include/net/ip6_fib.h b/include/net/ip6_fib.h
+index 15b7fbe6b15c..9816e7444918 100644
+--- a/include/net/ip6_fib.h
++++ b/include/net/ip6_fib.h
+@@ -205,20 +205,22 @@ struct fib6_info {
+ 
+ struct rt6_info {
+ 	struct dst_entry		dst;
+-	struct fib6_info __rcu		*from;
+-	int				sernum;
+-
+-	struct rt6key			rt6i_dst;
+-	struct rt6key			rt6i_src;
+-	struct in6_addr			rt6i_gateway;
+-	struct inet6_dev		*rt6i_idev;
+-	u32				rt6i_flags;
+-
+-	struct list_head		rt6i_uncached;
+-	struct uncached_list		*rt6i_uncached_list;
+-
+-	/* more non-fragment space at head required */
+-	unsigned short			rt6i_nfheader_len;
++	struct_group(init,
++		struct fib6_info __rcu		*from;
++		int				sernum;
++
++		struct rt6key			rt6i_dst;
++		struct rt6key			rt6i_src;
++		struct in6_addr			rt6i_gateway;
++		struct inet6_dev		*rt6i_idev;
++		u32				rt6i_flags;
++
++		struct list_head		rt6i_uncached;
++		struct uncached_list		*rt6i_uncached_list;
++
++		/* more non-fragment space at head required */
++		unsigned short			rt6i_nfheader_len;
 +	);
- 	u64 cid;
- 	u8 uidf;
- 	u8 uidl;
-@@ -1378,7 +1380,8 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 				break;
- 			}
+ };
  
--			memcpy(hid, (u8 *)(&e->ext), ACPIHID_HID_LEN - 1);
-+			BUILD_BUG_ON(sizeof(e->ext_hid) != ACPIHID_HID_LEN - 1);
-+			memcpy(hid, &e->ext_hid, ACPIHID_HID_LEN - 1);
- 			hid[ACPIHID_HID_LEN - 1] = '\0';
+ struct fib6_result {
+diff --git a/net/ipv6/route.c b/net/ipv6/route.c
+index 6b8051106aba..bbcc605bab57 100644
+--- a/net/ipv6/route.c
++++ b/net/ipv6/route.c
+@@ -327,9 +327,7 @@ static const struct rt6_info ip6_blk_hole_entry_template = {
  
- 			if (!(*hid)) {
+ static void rt6_info_init(struct rt6_info *rt)
+ {
+-	struct dst_entry *dst = &rt->dst;
+-
+-	memset(dst + 1, 0, sizeof(*rt) - sizeof(*dst));
++	memset(&rt->init, 0, sizeof(rt->init));
+ 	INIT_LIST_HEAD(&rt->rt6i_uncached);
+ }
+ 
 -- 
 2.30.2
 
