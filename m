@@ -2,207 +2,224 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1311C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 06:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34017C4320A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 06:51:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AAD460F41
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 06:51:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13117610A7
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 06:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235258AbhG0Gvn (ORCPT
+        id S235293AbhG0Gvs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 02:51:43 -0400
-Received: from mga14.intel.com ([192.55.52.115]:21751 "EHLO mga14.intel.com"
+        Tue, 27 Jul 2021 02:51:48 -0400
+Received: from mga14.intel.com ([192.55.52.115]:21759 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234349AbhG0Gvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 02:51:42 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10057"; a="212104819"
+        id S235327AbhG0Gvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 02:51:46 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10057"; a="212104832"
 X-IronPort-AV: E=Sophos;i="5.84,272,1620716400"; 
-   d="scan'208";a="212104819"
+   d="scan'208";a="212104832"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2021 23:51:42 -0700
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2021 23:51:47 -0700
 X-IronPort-AV: E=Sophos;i="5.84,272,1620716400"; 
-   d="scan'208";a="505368794"
+   d="scan'208";a="505368811"
 Received: from lgeva1-mobl1.ger.corp.intel.com (HELO egrumbac-mobl1.lan) ([10.255.198.250])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2021 23:51:40 -0700
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2021 23:51:45 -0700
 From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To:     luciano.coelho@intel.com, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org
 Cc:     egrumbach@gmail.com,
-        Alexander Usyskin <alexander.usyskin@intel.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v5 1/7] mei: bus: add client dma interface
-Date:   Tue, 27 Jul 2021 09:51:28 +0300
-Message-Id: <20210727065134.3902-1-emmanuel.grumbach@intel.com>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v5 3/7] iwlwifi: mei: add debugfs hooks
+Date:   Tue, 27 Jul 2021 09:51:30 +0300
+Message-Id: <20210727065134.3902-3-emmanuel.grumbach@intel.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210727065134.3902-1-emmanuel.grumbach@intel.com>
+References: <20210727065134.3902-1-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alexander Usyskin <alexander.usyskin@intel.com>
+Add three debugfs hooks:
+* status: Check if we have a connection with the CSME
+  firwmare. This hook is a read only.
 
-Expose the client dma mapping via mei client bus interface.
-The client dma has to be mapped before the device is enabled,
-therefore we need to create device linking already during mapping
-and we need to unmap after the client is disable hence we need to
-postpone the unlink and flush till unmapping or when
-destroying the device.
+* req_ownership: Send a SAP command to request ownership. This
+  flow should be triggered by iwlwifi (from user space through
+  vendor commands really), but being able to trigger an ownership
+  request from debugfs allows us to request ownership without
+  connecting afterwards. This is an "error" flow that the CSME
+  firmware is designed to handle this way:
+  + Grant ownership since the host asked for it
+  + Wait 3 seconds to let the host connect
+  + If the host didn't connect, take the device back (forcefully).
+  + Don't grant any new ownership request in the following 30
+  seconds.
+  This debugfs hook allows us to test this flow.
 
-Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
-Co-developed-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+* send_start_message: Restart the communication with the CSME
+  firmware from the very beginning. At the very beginning (upon
+  iwlwifi start), iwlmei send a special message: SAP_ME_MSG_START.
+  This hook allows to send it again and this will retrigger the
+  whole flow. It is important to test this restart in the middle
+  of normal operation since it can happen (in case the CSME
+  firmware decided to reset for example).
+
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Link: https://lore.kernel.org/r/20210420172755.12178-1-emmanuel.grumbach@intel.com
 ---
- drivers/misc/mei/bus.c     | 67 ++++++++++++++++++++++++++++++++++++--
- drivers/misc/mei/client.c  |  3 ++
- drivers/misc/mei/hw.h      |  5 +++
- include/linux/mei_cl_bus.h |  3 ++
- 4 files changed, 75 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 85 ++++++++++++++++++-
+ 1 file changed, 83 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
-index 935acc6bbf3c..7a325572ad1d 100644
---- a/drivers/misc/mei/bus.c
-+++ b/drivers/misc/mei/bus.c
-@@ -643,6 +643,64 @@ static void mei_cl_bus_vtag_free(struct mei_cl_device *cldev)
- 	kfree(cl_vtag);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+index d0ddb707d4da..101ff7533af3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+@@ -10,6 +10,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/mei_cl_bus.h>
+ #include <linux/rcupdate.h>
++#include <linux/debugfs.h>
+ #include <linux/skbuff.h>
+ #include <linux/wait.h>
+ #include <linux/slab.h>
+@@ -144,6 +145,7 @@ struct iwl_mei_filters {
+  *	accessed without the mutex.
+  * @sap_seq_no: the sequence number for the SAP messages
+  * @seq_no: the sequence number for the SAP messages
++ * @dbgfs_dir: the debugfs dir entry
+  */
+ struct iwl_mei {
+ 	wait_queue_head_t get_nvm_wq;
+@@ -162,6 +164,8 @@ struct iwl_mei {
  
-+void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size)
+ 	atomic_t sap_seq_no;
+ 	atomic_t seq_no;
++
++	struct dentry *dbgfs_dir;
+ };
+ 
+ /**
+@@ -1693,6 +1697,78 @@ void iwl_mei_unregister_complete(void)
+ }
+ EXPORT_SYMBOL_GPL(iwl_mei_unregister_complete);
+ 
++#if IS_ENABLED(CONFIG_DEBUG_FS)
++
++static ssize_t
++iwl_mei_dbgfs_send_start_message_write(struct file *file,
++				       const char __user *user_buf,
++				       size_t count, loff_t *ppos)
 +{
-+	struct mei_device *bus;
-+	struct mei_cl *cl;
 +	int ret;
 +
-+	if (!cldev || !buffer_id || !size)
-+		return ERR_PTR(-EINVAL);
++	mutex_lock(&iwl_mei_mutex);
 +
-+	if (!IS_ALIGNED(size, MEI_FW_PAGE_SIZE)) {
-+		dev_err(&cldev->dev, "Map size should be aligned to %lu\n",
-+			MEI_FW_PAGE_SIZE);
-+		return ERR_PTR(-EINVAL);
++	if (!iwl_mei_global_cldev) {
++		ret = -ENODEV;
++		goto out;
 +	}
 +
-+	cl = cldev->cl;
-+	bus = cldev->bus;
++	ret = iwl_mei_send_start(iwl_mei_global_cldev);
 +
-+	mutex_lock(&bus->device_lock);
-+	if (cl->state == MEI_FILE_UNINITIALIZED) {
-+		ret = mei_cl_link(cl);
-+		if (ret)
-+			goto out;
-+		/* update pointers */
-+		cl->cldev = cldev;
-+	}
-+
-+	ret = mei_cl_dma_alloc_and_map(cl, NULL, buffer_id, size);
 +out:
-+	mutex_unlock(&bus->device_lock);
-+	if (ret)
-+		return ERR_PTR(ret);
-+	return cl->dma.vaddr;
++	mutex_unlock(&iwl_mei_mutex);
++	return ret ?: count;
 +}
-+EXPORT_SYMBOL_GPL(mei_cldev_dma_map);
 +
-+int mei_cldev_dma_unmap(struct mei_cl_device *cldev)
++static const struct file_operations iwl_mei_dbgfs_send_start_message_ops = {
++	.write = iwl_mei_dbgfs_send_start_message_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
++static ssize_t iwl_mei_dbgfs_req_ownership_write(struct file *file,
++						 const char __user *user_buf,
++						 size_t count, loff_t *ppos)
 +{
-+	struct mei_device *bus;
-+	struct mei_cl *cl;
-+	int ret;
++	iwl_mei_get_ownership();
 +
-+	if (!cldev)
-+		return -EINVAL;
-+
-+	cl = cldev->cl;
-+	bus = cldev->bus;
-+
-+	mutex_lock(&bus->device_lock);
-+	ret = mei_cl_dma_unmap(cl, NULL);
-+
-+	mei_cl_flush_queues(cl, NULL);
-+	mei_cl_unlink(cl);
-+	mutex_unlock(&bus->device_lock);
-+	return ret;
++	return count;
 +}
-+EXPORT_SYMBOL_GPL(mei_cldev_dma_unmap);
++
++static const struct file_operations iwl_mei_dbgfs_req_ownership_ops = {
++	.write = iwl_mei_dbgfs_req_ownership_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
++static void iwl_mei_dbgfs_register(struct iwl_mei *mei)
++{
++	mei->dbgfs_dir = debugfs_create_dir(KBUILD_MODNAME, NULL);
++
++	if (!mei->dbgfs_dir)
++		return;
++
++	debugfs_create_ulong("status", S_IRUSR,
++			     mei->dbgfs_dir, &iwl_mei_status);
++	debugfs_create_file("send_start_message", S_IWUSR, mei->dbgfs_dir,
++			    mei, &iwl_mei_dbgfs_send_start_message_ops);
++	debugfs_create_file("req_ownserhip", S_IWUSR, mei->dbgfs_dir,
++			    mei, &iwl_mei_dbgfs_req_ownership_ops);
++}
++
++static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei)
++{
++	debugfs_remove_recursive(mei->dbgfs_dir);
++	mei->dbgfs_dir = NULL;
++}
++
++#else
++
++static void iwl_mei_dbgfs_register(struct iwl_mei *mei) {}
++static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei) {}
++
++#endif /* CONFIG_DEBUG_FS */
 +
  /**
-  * mei_cldev_enable - enable me client device
-  *     create connection with me client
-@@ -753,9 +811,11 @@ int mei_cldev_disable(struct mei_cl_device *cldev)
- 		dev_err(bus->dev, "Could not disconnect from the ME client\n");
+  * iwl_mei_probe - the probe function called by the mei bus enumeration
+  *
+@@ -1731,6 +1807,8 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 	if (ret)
+ 		goto free_shared_mem;
  
- out:
--	/* Flush queues and remove any pending read */
--	mei_cl_flush_queues(cl, NULL);
--	mei_cl_unlink(cl);
-+	/* Flush queues and remove any pending read unless we have mapped DMA */
-+	if (!cl->dma_mapped) {
-+		mei_cl_flush_queues(cl, NULL);
-+		mei_cl_unlink(cl);
-+	}
- 
- 	mutex_unlock(&bus->device_lock);
- 	return err;
-@@ -1054,6 +1114,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
- 	if (!cldev)
- 		return;
- 
-+	mei_cl_flush_queues(cldev->cl, NULL);
- 	mei_me_cl_put(cldev->me_cl);
- 	mei_dev_bus_put(cldev->bus);
- 	mei_cl_unlink(cldev->cl);
-diff --git a/drivers/misc/mei/client.c b/drivers/misc/mei/client.c
-index 96f4e59c32a5..0e90591235a6 100644
---- a/drivers/misc/mei/client.c
-+++ b/drivers/misc/mei/client.c
-@@ -700,6 +700,9 @@ int mei_cl_unlink(struct mei_cl *cl)
- 
- 	cl_dbg(dev, cl, "unlink client");
- 
-+	if (cl->state == MEI_FILE_UNINITIALIZED)
-+		return 0;
++	iwl_mei_dbgfs_register(mei);
 +
- 	if (dev->open_handle_count > 0)
- 		dev->open_handle_count--;
+ 	/*
+ 	 * We now have a Rx function in place, start the SAP procotol
+ 	 * we expect to get the SAP_ME_MSG_START_OK response later on.
+@@ -1739,14 +1817,15 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 	ret = iwl_mei_send_start(cldev);
+ 	mutex_unlock(&iwl_mei_mutex);
+ 	if (ret)
+-		goto disable;
++		goto debugfs_unregister;
  
-diff --git a/drivers/misc/mei/hw.h b/drivers/misc/mei/hw.h
-index dfd60c916da0..b46077b17114 100644
---- a/drivers/misc/mei/hw.h
-+++ b/drivers/misc/mei/hw.h
-@@ -22,6 +22,11 @@
- #define MEI_D0I3_TIMEOUT            5  /* D0i3 set/unset max response time */
- #define MEI_HBM_TIMEOUT             1  /* 1 second */
+ 	/* must be last */
+ 	iwl_mei_global_cldev = cldev;
  
-+/*
-+ * FW page size for DMA allocations
-+ */
-+#define MEI_FW_PAGE_SIZE 4096UL
+ 	return 0;
+ 
+-disable:
++debugfs_unregister:
++	iwl_mei_dbgfs_unregister(mei);
+ 	mei_cldev_disable(cldev);
+ free_shared_mem:
+ 	iwl_mei_free_shared_mem(cldev);
+@@ -1857,6 +1936,8 @@ static void iwl_mei_remove(struct mei_cl_device *cldev)
+ 
+ 	iwl_mei_free_shared_mem(cldev);
+ 
++	iwl_mei_dbgfs_unregister(mei);
 +
- /*
-  * MEI Version
-  */
-diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
-index 07f5ef8fc456..8c8d46ba33bf 100644
---- a/include/linux/mei_cl_bus.h
-+++ b/include/linux/mei_cl_bus.h
-@@ -116,4 +116,7 @@ int mei_cldev_enable(struct mei_cl_device *cldev);
- int mei_cldev_disable(struct mei_cl_device *cldev);
- bool mei_cldev_enabled(struct mei_cl_device *cldev);
+ 	mei_cldev_set_drvdata(cldev, NULL);
  
-+void *mei_cldev_dma_map(struct mei_cl_device *cldev, u8 buffer_id, size_t size);
-+int mei_cldev_dma_unmap(struct mei_cl_device *cldev);
-+
- #endif /* _LINUX_MEI_CL_BUS_H */
+ 	kfree(mei->nvm);
 -- 
 2.25.1
 
