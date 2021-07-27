@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E41C19F33
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4A8C4320A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAE9860FF4
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9CFD60FC4
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233184AbhG0VHA (ORCPT
+        id S233330AbhG0VHB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:07:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
+        Tue, 27 Jul 2021 17:07:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232822AbhG0VG5 (ORCPT
+        with ESMTP id S232726AbhG0VGx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:06:57 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EFABC061796
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id k4-20020a17090a5144b02901731c776526so6629512pjm.4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
+        Tue, 27 Jul 2021 17:06:53 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43882C061798
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:52 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id i10so37043pla.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:06:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=O5PVCm4vbOkHTdhySLNgX8cYsmk07det2tWYYr+tRf4=;
-        b=gxKAidxHtXkH57cdgTrBRW+Iu6kBJm2gLTc/ZhTreM4nUhVINAm9hnCEsll5JLIeuv
-         GXDrZXo19JKoLdUCWqYws3d6+nRR58XFL0Nk9+2Zzh54A6uGcEngTnaAEe4kkqqnI2fB
-         ruSx/lD+GWJQolLfAMVF9OQXx6F28ZgkVPYx0=
+        bh=leSZ4+6fTtz64GnNlapLSf4V7UaFGM0yCohcXILoKXc=;
+        b=jd9XYMPnsO+0X0kRowZ86N9zacfPb8mbO0Mn11eVzxLjdNoE9ys47yWbs+jxtnOSfW
+         fuHAIdDcVF88EwmnaD7IGAE5UOXEErobQB9V1J7X9Y9Cwvb1H6gIsxo5YFlkxZL7XwB5
+         SoHqQezU4kIahHRz1ABzKHP3/DNG2Cq1Aor0Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=O5PVCm4vbOkHTdhySLNgX8cYsmk07det2tWYYr+tRf4=;
-        b=RWfEhVfVqjhBdCnhFXkh/esB1u7fMMic3wzACxk2K0X4eVXyuD8DzGP//Ghb3JWhje
-         mkfV+HZAEy2/D9DNOlo+SxU20hes4mOkAP3CclYuZhLiyPo3SCXnCh9KtHqN33461uqt
-         Km8pebx/dexKuy+ddmnNFPCmQDQwGdKXnthCLpko4zrTunY0v6DIGOPcB3SeoHxeqN2a
-         DXtL72ZOODPOX3x62ynWQkO4bD/4b0x/sqeNR7l4UcE/Wvs8Pc00BFm4lyNphpQzWSxR
-         Pz9dyRrfACgibElmdNBJYA9ymXrNbXQcYXX7sIUirNGRxSfAuMs/Qt3bCBr/C/HvTIK1
-         dhqQ==
-X-Gm-Message-State: AOAM531TC/4glEAJWeg+c50O6kHqxgqpZ9mkCIO69eD/lGDhFWmPsIH9
-        e3tYYbE9c7yC02NPYUwoky1pRA==
-X-Google-Smtp-Source: ABdhPJzlXy/VcX23c9PQ65+XqlmSvwlYyjvPZKBc9QGkV1GFAs820b6KtM3ET4HtRC/ZSXPL17y+Jg==
-X-Received: by 2002:a17:90a:c003:: with SMTP id p3mr23960881pjt.14.1627420014073;
-        Tue, 27 Jul 2021 14:06:54 -0700 (PDT)
+        bh=leSZ4+6fTtz64GnNlapLSf4V7UaFGM0yCohcXILoKXc=;
+        b=UxhpkrSPbrnjqSoNdqYiMAPGJPVR34QTRuPpYdCUm4sq8vFLEgMroP51LeiEaBWRM0
+         3onnttS6udqNtkVCh0n46L1d4U5CuttaD7DgUUjZKyZ06ir0dnjqyKee98Q1uJCi69Mn
+         t9A7+hzN+s8EXEjMpwbK7D8Zej4EEBsXwmm98RQWPNZGyoP0GN9zBNt8x6zCD++rwEFk
+         O3UF9lL8/pwD51RegdU+xuoCbhJdZucoSd/t/bsS62dOI5LOEVwtdHmXwbygeLJtYDek
+         a9Kuuk5KH0j7mSxOQaARwa0wD4yxF6VDVDm2DunauvuPH1+nXj+r9G5RO2qFT/TDQBAa
+         6+nA==
+X-Gm-Message-State: AOAM531bZkQu0ofhJ1fsbUL3sVfjb4CJR7RiJ68hoTL7+bQuu6f2eKWE
+        qM2Ff9RbgUa5ckGHkGy7XiujWw==
+X-Google-Smtp-Source: ABdhPJwEVYSPNBSiESL402T+It80ZBI73Q1poC5hUVPNhWmUhVwPrv3z7S2LNSMZUqAote5dC8pGCg==
+X-Received: by 2002:a17:90a:4417:: with SMTP id s23mr6057606pjg.228.1627420011821;
+        Tue, 27 Jul 2021 14:06:51 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id q14sm4721670pfn.73.2021.07.27.14.06.50
+        by smtp.gmail.com with ESMTPSA id y23sm4655958pgf.38.2021.07.27.14.06.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 14:06:50 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 55/64] RDMA/mlx5: Use struct_group() to zero struct mlx5_ib_mr
-Date:   Tue, 27 Jul 2021 13:58:46 -0700
-Message-Id: <20210727205855.411487-56-keescook@chromium.org>
+Subject: [PATCH 19/64] ip: Use struct_group() for memcpy() regions
+Date:   Tue, 27 Jul 2021 13:58:10 -0700
+Message-Id: <20210727205855.411487-20-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1274; h=from:subject; bh=oY909dEANo6V3IFn0noc67FV5hBK8uceU7oGCjc7zOw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOMh317iG5OLcRV6f6KOkZ9q+C2N36hwkRl8LQQ C7eGawSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjAAKCRCJcvTf3G3AJg4UD/ 9BnzAT1Z7CsW+TRX8tpO/bHWsp1ALKoQrreRJNLcuwaofCAjFi8BnU29qFDffCG8DWqAC3Pmtj4p39 RskVkYUAy5axxifQzhefjhk7tLjvkw2mmeV+0QGdeg2rbLL5Dpmmav2A7WaFsWyg7W74/0ud+a6Hbc M4RLDpYX0mM68jox12+Syr653lTWFNFS86gcN1Q975/PUD2xYk3dY3H3s2zF7i9XFyEP2N2G5zErPl ED8ZrAbuSSNxMO5rke2YVbiw/FbKveB5UCkCgtjoT7lSW9mZYdr144xmSl8iaDmr3LYdfAxQG6WpF1 N2W+2K9FRkZT0VZd9PdKAMbV3Ofm9qyfYEnpmGGs0y4uhKJtYKpv60s7YXeG+eQtwR/bCFvecfShz5 rvqvYF46IrMS8jbLeJHjqvjyd1hw+zCAJKd2c4R2LPUZ7WDVjRNGtq82PEZ2Tr725JvJTSLKrGx8YA tWmn4rCBBSu/PqTl3206VAZLiP+HeqZxC26TE27C7IcR67ONOX3U06CdJRm2X3VkQMJVPvT0OYPmRr DH5V/sNlfiZe0r9fNcKAYsCQaHKXs6D2jYAWqxqm2msNETdd60wrVAfUL77zKIV9hqqj6sRIXPhZ8R +len0ulP7Zp0NQRxZYGLikaPmhWeDXiQR88kCVUq6p0rdBPBuFSFYAGLjJSQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5544; h=from:subject; bh=EW2OlP80ZbFYA2et85VLFWinFxHDZ/JfYcx96uwve2A=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOE1QionXEAsnSiPxVw5wfkIt8+He7UKLQGrMmI c3kN8gqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhAAKCRCJcvTf3G3AJgwWD/ sH6JiJOlqMdZB/DaJUVswYUCsszxQOHKvFJps95qmqpJBMRDsH2lLBKm2a6gmCHlmLHrpZE35CObwM nj+RWt9ixoNH4L81O+98xW2w1VPy57Ri6Pf6Yvn44gHEPmKAxV7pdf/rNyEVZZ+t4EbwjFrLIOF9Cu cXpnowGMFNqPdKCrUf/0aeZoSOJ/IGRJtmxUClP9U/1zfg/R1in74Yi149wzVruBUBUSTvsQc4SA0s QQYq5W7ixXMQ8l0YTWGa8ymTzcKK7P60aP4vm7HBJJCHyQR/BwdRDvijeZ1qYLlddgvFs0UULN0oQe vVd8qbWGt4gKDPylfKfgz6uaNSz+jJ43ZF5fCDL1Jt0BrSc+Cx63VBDSBSytHoarJkaqTtC3GRNWES xTVy3dTnpag/Lj92bhpS2+EWrLsiDNWEeuOb1Er5+25XBNHz+Y8frHGoRemgsL3Qs1EVYOTdxlFHG3 V6rjjqoRPfWMWpN0e7jogaTYc3cRUXBSen9HIsPGXHu3xrGH+bvNJ3uQ1VOdugyYnP+7PFkJ7FwuPS RBc5nf5hj3ojUnMeyIYKt1IK14Do/EQKUtgRpkmkN7YhsN1/yquUdxgGZ8x/Zi1LZI/UZ6FLaxcXVK Fc7a3ewBBcn4SXZY0R5FI5JHXF0Ahz8hNwHzp01WiTwpznvQKOKE/eRBuuoQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,44 +81,170 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-Add struct_group() to mark region of struct mlx5_ib_mr that should be
-initialized to zero.
+Use struct_group() in struct flowi4, struct ipv4hdr, and struct ipv6hdr
+around members saddr and daddr, so they can be referenced together. This
+will allow memcpy() and sizeof() to more easily reason about sizes,
+improve readability, and avoid future warnings about writing beyond the
+end of saddr.
+
+"pahole" shows no size nor member offset changes to struct flowi4.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences.)
+
+Note that since this is a UAPI header, struct_group() has been open
+coded.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/infiniband/hw/mlx5/mlx5_ib.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ include/net/flow.h            |  6 ++++--
+ include/uapi/linux/if_ether.h | 12 ++++++++++--
+ include/uapi/linux/ip.h       | 12 ++++++++++--
+ include/uapi/linux/ipv6.h     | 12 ++++++++++--
+ net/core/flow_dissector.c     | 10 ++++++----
+ net/ipv4/ip_output.c          |  6 ++----
+ 6 files changed, 42 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/infiniband/hw/mlx5/mlx5_ib.h b/drivers/infiniband/hw/mlx5/mlx5_ib.h
-index 585fb00bdce8..830066e95260 100644
---- a/drivers/infiniband/hw/mlx5/mlx5_ib.h
-+++ b/drivers/infiniband/hw/mlx5/mlx5_ib.h
-@@ -644,6 +644,7 @@ struct mlx5_ib_mr {
- 	struct ib_umem *umem;
+diff --git a/include/net/flow.h b/include/net/flow.h
+index 6f5e70240071..f1a3b6c8eae2 100644
+--- a/include/net/flow.h
++++ b/include/net/flow.h
+@@ -81,8 +81,10 @@ struct flowi4 {
+ #define flowi4_multipath_hash	__fl_common.flowic_multipath_hash
  
- 	/* This is zero'd when the MR is allocated */
-+	struct_group(cleared,
- 	union {
- 		/* Used only while the MR is in the cache */
- 		struct {
-@@ -691,12 +692,13 @@ struct mlx5_ib_mr {
- 			bool is_odp_implicit;
- 		};
- 	};
+ 	/* (saddr,daddr) must be grouped, same order as in IP header */
+-	__be32			saddr;
+-	__be32			daddr;
++	struct_group(addrs,
++		__be32			saddr;
++		__be32			daddr;
 +	);
+ 
+ 	union flowi_uli		uli;
+ #define fl4_sport		uli.ports.sport
+diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
+index a0b637911d3c..8f5667b2ea92 100644
+--- a/include/uapi/linux/if_ether.h
++++ b/include/uapi/linux/if_ether.h
+@@ -163,8 +163,16 @@
+ 
+ #if __UAPI_DEF_ETHHDR
+ struct ethhdr {
+-	unsigned char	h_dest[ETH_ALEN];	/* destination eth addr	*/
+-	unsigned char	h_source[ETH_ALEN];	/* source ether addr	*/
++	union {
++		struct {
++			unsigned char h_dest[ETH_ALEN];	  /* destination eth addr */
++			unsigned char h_source[ETH_ALEN]; /* source ether addr	  */
++		};
++		struct {
++			unsigned char h_dest[ETH_ALEN];	  /* destination eth addr */
++			unsigned char h_source[ETH_ALEN]; /* source ether addr	  */
++		} addrs;
++	};
+ 	__be16		h_proto;		/* packet type ID field	*/
+ } __attribute__((packed));
+ #endif
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index e42d13b55cf3..33647a37e56b 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -100,8 +100,16 @@ struct iphdr {
+ 	__u8	ttl;
+ 	__u8	protocol;
+ 	__sum16	check;
+-	__be32	saddr;
+-	__be32	daddr;
++	union {
++		struct {
++			__be32	saddr;
++			__be32	daddr;
++		} addrs;
++		struct {
++			__be32	saddr;
++			__be32	daddr;
++		};
++	};
+ 	/*The options start here. */
  };
  
- /* Zero the fields in the mr that are variant depending on usage */
- static inline void mlx5_clear_mr(struct mlx5_ib_mr *mr)
+diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
+index b243a53fa985..1c26d32e733b 100644
+--- a/include/uapi/linux/ipv6.h
++++ b/include/uapi/linux/ipv6.h
+@@ -130,8 +130,16 @@ struct ipv6hdr {
+ 	__u8			nexthdr;
+ 	__u8			hop_limit;
+ 
+-	struct	in6_addr	saddr;
+-	struct	in6_addr	daddr;
++	union {
++		struct {
++			struct	in6_addr	saddr;
++			struct	in6_addr	daddr;
++		} addrs;
++		struct {
++			struct	in6_addr	saddr;
++			struct	in6_addr	daddr;
++		};
++	};
+ };
+ 
+ 
+diff --git a/net/core/flow_dissector.c b/net/core/flow_dissector.c
+index 2aadbfc5193b..87655a2ac200 100644
+--- a/net/core/flow_dissector.c
++++ b/net/core/flow_dissector.c
+@@ -1029,7 +1029,8 @@ bool __skb_flow_dissect(const struct net *net,
+ 		key_eth_addrs = skb_flow_dissector_target(flow_dissector,
+ 							  FLOW_DISSECTOR_KEY_ETH_ADDRS,
+ 							  target_container);
+-		memcpy(key_eth_addrs, &eth->h_dest, sizeof(*key_eth_addrs));
++		BUILD_BUG_ON(sizeof(*key_eth_addrs) != sizeof(eth->addrs));
++		memcpy(key_eth_addrs, &eth->addrs, sizeof(*key_eth_addrs));
+ 	}
+ 
+ proto_again:
+@@ -1056,8 +1057,8 @@ bool __skb_flow_dissect(const struct net *net,
+ 							      FLOW_DISSECTOR_KEY_IPV4_ADDRS,
+ 							      target_container);
+ 
+-			memcpy(&key_addrs->v4addrs, &iph->saddr,
+-			       sizeof(key_addrs->v4addrs));
++			BUILD_BUG_ON(sizeof(key_addrs->v4addrs) != sizeof(iph->addrs));
++			memcpy(&key_addrs->v4addrs, &iph->addrs, sizeof(iph->addrs));
+ 			key_control->addr_type = FLOW_DISSECTOR_KEY_IPV4_ADDRS;
+ 		}
+ 
+@@ -1101,7 +1102,8 @@ bool __skb_flow_dissect(const struct net *net,
+ 							      FLOW_DISSECTOR_KEY_IPV6_ADDRS,
+ 							      target_container);
+ 
+-			memcpy(&key_addrs->v6addrs, &iph->saddr,
++			BUILD_BUG_ON(sizeof(iph->addrs) != sizeof(key_addrs->v6addrs));
++			memcpy(&key_addrs->v6addrs, &iph->addrs,
+ 			       sizeof(key_addrs->v6addrs));
+ 			key_control->addr_type = FLOW_DISSECTOR_KEY_IPV6_ADDRS;
+ 		}
+diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
+index 8d8a8da3ae7e..58603995d889 100644
+--- a/net/ipv4/ip_output.c
++++ b/net/ipv4/ip_output.c
+@@ -444,10 +444,8 @@ EXPORT_SYMBOL(ip_output);
+  */
+ static void ip_copy_addrs(struct iphdr *iph, const struct flowi4 *fl4)
  {
--	memset(mr->out, 0, sizeof(*mr) - offsetof(struct mlx5_ib_mr, out));
-+	memset(&mr->cleared, 0, sizeof(mr->cleared));
+-	BUILD_BUG_ON(offsetof(typeof(*fl4), daddr) !=
+-		     offsetof(typeof(*fl4), saddr) + sizeof(fl4->saddr));
+-	memcpy(&iph->saddr, &fl4->saddr,
+-	       sizeof(fl4->saddr) + sizeof(fl4->daddr));
++	BUILD_BUG_ON(sizeof(iph->addrs) != sizeof(fl4->addrs));
++	memcpy(&iph->addrs, &fl4->addrs, sizeof(fl4->addrs));
  }
  
- static inline bool is_odp_mr(struct mlx5_ib_mr *mr)
+ /* Note: skb->sk can be different from sk, in case of tunnels */
 -- 
 2.30.2
 
