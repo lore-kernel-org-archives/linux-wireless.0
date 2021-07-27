@@ -2,63 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C14C43214
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C004C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 927C660F90
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4981A60F90
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233011AbhG0VTZ (ORCPT
+        id S234997AbhG0VUJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:19:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58274 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232831AbhG0VQx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:53 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC363C0613C1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:52 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id f13so73679plj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=QuYl5+rTP/+R/3rDjAm0Jnl1lTT65zBH39RH5WLEAR0=;
-        b=bRfqHarnmPtbXc99uxZdsY9MdvKd7uoSqaqt1wLCu/SnB5hUsRQWrev8b/IdeSWVBf
-         zS4Zn6K2vFy+movGd0fhaQNE+NIQdFZmFCDXR3gze9QBxEp0uVz4CDxUCOwITpRdomYG
-         6sypVj5k4QzD9dhhAk7Jvl/jrcTzj2mToflF0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=QuYl5+rTP/+R/3rDjAm0Jnl1lTT65zBH39RH5WLEAR0=;
-        b=DHMjWyt3aXZnWnIyj+4k1hnovpF7+SIwoLcXGVFsqRQc608uUApZbIhySSF7XH0AhI
-         6JDX6dPZQqIy1OlUNsUhbzB/LD+CZJBj8+IWGMy1we//mdd7wcBdsDh6RBnMpC+coziP
-         +U8Wa4Q8gd4juJX3lySe6SuzR/ODTUgHV8RbfpCEz/OsPVno0YZF+a/jLs55xrU8Oi8J
-         Ovih64CvsfeGQ7xek24fuEOgMEVkubV2VQ0WENZVPTLktoOv0KGQ2p6/Y9tujXd9Ycac
-         +LVJULqwAIEyInWbVsmqDTRZPsKH2upcw4PxxtISNibM16cgZ9aX3p754zaUAVXf59f7
-         Sj8Q==
-X-Gm-Message-State: AOAM530O4YwgpyTubMKPWnPY80B+mHyCerN4IxB3rmlab4FPADPHmwPL
-        WVpxiaXGqtH0KxiFGLdvV1qVfg==
-X-Google-Smtp-Source: ABdhPJwEiKDql2p5UPYuPWyvuzD1+aLXfJp0O+mcTJHzcnlDiJH7IYgZlBI2bLoSa3DFZocqXKWiZA==
-X-Received: by 2002:a63:134e:: with SMTP id 14mr25120786pgt.312.1627420612398;
-        Tue, 27 Jul 2021 14:16:52 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y9sm5034698pgr.10.2021.07.27.14.16.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     linux-hardening@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tue, 27 Jul 2021 17:20:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37744 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234113AbhG0VT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 17:19:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C5BA60FA0;
+        Tue, 27 Jul 2021 21:18:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627420740;
+        bh=WmBPx1Yv944WSgHzak0rUdbiFwHmXA9AEErppz095mw=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Yhxrd8TFAkXrlR9r4ZRtp1p0sOIsB3ZuHtZ7oYU4pXZvEaqyymH79DJSjO7iRK0si
+         GSkXTTyUofgJqP034jp+1ZTvpxMOzmU1ZGhjE0qTg4I6idDUP9ThURBnvBclsuNBhC
+         u1tZ6C5YrfZBbxqk5ahpRO+VLSzVj3IEDOAgpOob/SggphKjlTaaTST/9JYGw9qJid
+         8957SpfZCeNiETD/zLB4cNWxzBDrGN9HQH+PNdMkwgJzIdpYFU/NFrV7mI6t8oFQsi
+         iwRWwF/foCBjtefKMixR8I7lM2u4IUX+zsUkg8iCrC0hdyyEJdWn/XDDKg0i/Pt6xD
+         FkiBVpBB37WQw==
+Subject: Re: [PATCH 31/64] fortify: Explicitly disable Clang support
+To:     Kees Cook <keescook@chromium.org>, linux-hardening@vger.kernel.org
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Keith Packard <keithpac@amazon.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -66,46 +42,63 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 36/64] scsi: ibmvscsi: Avoid multi-field memset() overflow by aiming at srp
-Date:   Tue, 27 Jul 2021 13:58:27 -0700
-Message-Id: <20210727205855.411487-37-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
+ <20210727205855.411487-32-keescook@chromium.org>
+From:   Nathan Chancellor <nathan@kernel.org>
+Message-ID: <da989ffc-da64-33a2-581e-6920eb7ebd2d@kernel.org>
+Date:   Tue, 27 Jul 2021 14:18:58 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1097; h=from:subject; bh=Nq1NUVDlF5HB2sL3wLI4PgmWfjw6IdyQL7mY1ITGnck=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOI21reOQg8BrkfHddEuElFGDIapR2heYw3xo22 cpdsHDuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziAAKCRCJcvTf3G3AJvhsD/ 9f+BKlmaFnyRZQcn1rlNDY2vh+rNTRxOLWqPkDfUPDZZ97wHv4DBEpdLaXiuhCZf608S+816myOXX+ nT5UFOcdgLS8KSNQsCYAiZ8y6i6Tg4+eSRQunUnuVzVL3O98L0xqB46WaeeYx70RA6j5DnKbLOchNN AjaSeeQx0pnsg9cSycqn8lvZyqETRhU90TKbfnJtqIX4NEONgrTzdm8ZKbhe4RYUabvOxhjbiw7+j9 yYitnuR8to7ti1pifqARyJJrmpvyFicfspMm+frwRLM1W6LA/s7nG8iAQ5sTn/uzoB9cCj+SweTPkR m+AsViv0F1qTlCBahXchUqn2qo8JD0BZvitJ3EW1JR1OuFzTXkm4GT0+sh7Nv+hcTpQyriLzuTKuzz 4K32VkFr/Ngh4JofcvGrq47NeW+rPy+OefZwviXvKsNZmypkxuWROPihUMZHdjHbE7DCVwLoKFC64l rmccyM+XL5CwKYV01CmnjIZnKBVjuCh5PKcGpt7afr5ogG6tc2TUnvcY8lifwBGzsgS0nVOPT47wjG me8YQ4+eL1qJGzSl6NZ2krfvFMNxWRLa1UuLhO6PDmXxr8+1VYVWWQltkkcbKYEWarHuOvOxN+DOaB KeSbdbqc2xxk6w2cz+t6Eez7On01QP+vgWhE9arlnKCLSEH75mw7tmX/ZlrA==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210727205855.411487-32-keescook@chromium.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+On 7/27/2021 1:58 PM, Kees Cook wrote:
+> Clang has never correctly compiled the FORTIFY_SOURCE defenses due to
+> a couple bugs:
+> 
+> 	Eliding inlines with matching __builtin_* names
+> 	https://bugs.llvm.org/show_bug.cgi?id=50322
+> 
+> 	Incorrect __builtin_constant_p() of some globals
+> 	https://bugs.llvm.org/show_bug.cgi?id=41459
+> 
+> In the process of making improvements to the FORTIFY_SOURCE defenses, the
+> first (silent) bug (coincidentally) becomes worked around, but exposes
+> the latter which breaks the build. As such, Clang must not be used with
+> CONFIG_FORTIFY_SOURCE until at least latter bug is fixed (in Clang 13),
+> and the fortify routines have been rearranged.
+> 
+> Update the Kconfig to reflect the reality of the current situation.
+> 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>   security/Kconfig | 3 +++
+>   1 file changed, 3 insertions(+)
+> 
+> diff --git a/security/Kconfig b/security/Kconfig
+> index 0ced7fd33e4d..8f0e675e70a4 100644
+> --- a/security/Kconfig
+> +++ b/security/Kconfig
+> @@ -191,6 +191,9 @@ config HARDENED_USERCOPY_PAGESPAN
+>   config FORTIFY_SOURCE
+>   	bool "Harden common str/mem functions against buffer overflows"
+>   	depends on ARCH_HAS_FORTIFY_SOURCE
+> +	# https://bugs.llvm.org/show_bug.cgi?id=50322
+> +	# https://bugs.llvm.org/show_bug.cgi?id=41459
+> +	depends on !CONFIG_CC_IS_CLANG
 
-Instead of writing beyond the end of evt_struct->iu.srp.cmd, target the
-upper union (evt_struct->iu.srp) instead, as that's what is being wiped.
+Should be !CC_IS_CLANG, Kconfig is hard :)
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>   	help
+>   	  Detect overflows of buffers in common string and memory functions
+>   	  where the compiler can determine and validate the buffer sizes.
+> 
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index e6a3eaaa57d9..7e8beb42d2d3 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1055,8 +1055,8 @@ static int ibmvscsi_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
- 	/* Set up the actual SRP IU */
-+	memset(&evt_struct->iu.srp, 0x00, SRP_MAX_IU_LEN);
- 	srp_cmd = &evt_struct->iu.srp.cmd;
--	memset(srp_cmd, 0x00, SRP_MAX_IU_LEN);
- 	srp_cmd->opcode = SRP_CMD;
- 	memcpy(srp_cmd->cdb, cmnd->cmnd, sizeof(srp_cmd->cdb));
- 	int_to_scsilun(lun, &srp_cmd->lun);
--- 
-2.30.2
-
+Cheers,
+Nathan
