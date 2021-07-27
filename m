@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47067C4320A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89E1C3F6A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3077E60FE4
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D17CF60FEE
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234711AbhG0VST (ORCPT
+        id S235306AbhG0VSr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:18:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58272 "EHLO
+        Tue, 27 Jul 2021 17:18:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233522AbhG0VQ6 (ORCPT
+        with ESMTP id S233360AbhG0VQ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:58 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF66FC06179E
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id q2so20505plr.11
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
+        Tue, 27 Jul 2021 17:16:57 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54486C0617A2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id c16so45769plh.7
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=as474LhSy42cHKge7Gy2Fn1oqutkW78m6VkSl3HByJE=;
-        b=lSOk/hBBmMlB1rYWTRaPXPIkKi/CxdsLOHI3vbEi2GSoFn58wsWtYlaoOfqvPj59dt
-         ooaVxGQyHEHZnH0A70oChu8vvpJt9DQZz91T5V7lJ7/jvA+gX2vgTxoF4L8nNLo3A1bm
-         hHNtGTPTcV/mXDEkppwsVuEpgI+3vO6Y1uBxk=
+        bh=vvD4cE9CC0UwuFk0tFrxkl0FdzddHJztTx+G0lXko2o=;
+        b=X2kAI6271c2kBTWRkNK+SRyUD05VC55sahGiHWkGhtgogxcqv13k4bEJx1CzoRkXNa
+         NYhpiT00hyKycZt5MZCqoJys0Vj8ijuU6JI/ftE4rUt3HcwgYje+gBJFSIJVGEF29R+B
+         1p8D2+Q//lxigAx/4Pqgw4xuPqYVkWyNr336o=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=as474LhSy42cHKge7Gy2Fn1oqutkW78m6VkSl3HByJE=;
-        b=FqWIElLR/BcH8wEr8CeJyqILQMLGnit1LKbpgn1yNbRL7LpqUjVtv0ZA2iqrJZCYY3
-         YIuxAMcb/GU4ZvBvFVd/FhzHa+dWrZsYLcSsh9YUEEM4ieYrNlbMRkBLKID2sozHwrBi
-         ocJpkHLQnWjwYYgtkzbOG7olRvvcLREzPtJNGStx4QE/cMwlTfgB824OJKUG3DDir1Zv
-         TXYU+qHL7oGWdJZXo7HwgJCs8WZf/eEwHJ/x0SAvDifj+ARScQlAflsaO+3UVOwsy08D
-         2RWCz6lp3mvOJUMvLhfu1ivrsofR3B47mvufaUy/9ejsFoM2Y3aOck6ymCQ2JW1eKoPd
-         ApIw==
-X-Gm-Message-State: AOAM530XrgVCcJ3hRZYsmFhERrGEFpbp+M9Q/9nSoGjcI/cPF6e1T75S
-        V7EqazZhH9YTTNR7zp+6h/1vdA==
-X-Google-Smtp-Source: ABdhPJxGaEK/7GM0+vAKulISQNQ8zNmBoY4IggEYKPysQEG+1vegv9sBaDZhhkPzUiJxyIhOdVgTMQ==
-X-Received: by 2002:a17:90b:4a4d:: with SMTP id lb13mr6031654pjb.221.1627420617450;
-        Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
+        bh=vvD4cE9CC0UwuFk0tFrxkl0FdzddHJztTx+G0lXko2o=;
+        b=r2sMe76b4PjG2CpzFvulF8ltfuj2Pezvo1SAA/ZXZ0qljbNzMA5re/fD6vSA7YB98A
+         kdBOsPseUD1V3vedlrIv0JkX/vvFZAkbTCchmOPPgwhFXwt4t75COz/bLIZ5YEY1hXvS
+         aYma1L41WQ4olNL7v8twU0ePZKFOvBjc9dZy7IcZuPNj5C19DJ/na1o7pBc0UXY7pLfB
+         nElUrUvN1OWA7sOGtj5en8ZDE0y0Zrguw4HR2O1Hh/RUxEOFW5FZh2Bz05oGml9NF3tV
+         rbgEuLfPWFyaUHafLlCiSs2I2XntmUHGaJ9y6xbTiilGdPPHuncbwHljtxI9LLxnxlGi
+         ekbQ==
+X-Gm-Message-State: AOAM533XCz3QQ7pe4Yc9yJmt5oVykkr9xU5IPB9B0e0hXPZYBWA0lT55
+        Oao6l7IQo+dZcO8i3KcjMU+EYg==
+X-Google-Smtp-Source: ABdhPJzx5uKJYYGIQeb6ncc39fFtWiuuJzbqS3/tvESRfbaEkAgXMJJefnvqpPoyIhq8uFbnDuQ/Yw==
+X-Received: by 2002:a17:90a:3fc6:: with SMTP id u6mr9309818pjm.146.1627420615860;
+        Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id q19sm5028194pgj.17.2021.07.27.14.16.53
+        by smtp.gmail.com with ESMTPSA id t9sm5079279pgc.81.2021.07.27.14.16.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 46/64] IB/mthca: Use memset_after() for clearing mpt_entry
-Date:   Tue, 27 Jul 2021 13:58:37 -0700
-Message-Id: <20210727205855.411487-47-keescook@chromium.org>
+Subject: [PATCH 21/64] cxgb4: Use struct_group() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:58:12 -0700
+Message-Id: <20210727205855.411487-22-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1125; h=from:subject; bh=EIIm+0VdwQ9IH2XMV6ts5pIWwaxyRwboIG5815tF7+o=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOKarr4bIPgvwWH2qKkwLe6/q8cDAlBzD3bLA24 ll85FGeJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzigAKCRCJcvTf3G3AJvwwEA ChEYdVEvOlY6ZSSDwSK+GqTMcoJtHYXIXerlg3cv7Z5B/nj+4tsVkjpbbg6qYJ7G6Wn5LCRzlLTF/B JEQNK1K018MnLFUCnQdrWeHhqOML4Z+QY9330qvih8kbryLwUmmPm8tMDr8k7xeqODqXV0ysJUPb2N xVAh/ldKgMIWN0SIEK4b/AeC9lC2gYUHs0M9ufsvUwE/w7u4/dJRXGEtfOnpjbz9EiJRevDyOxG/L7 5kQTjyY65fkZSD9d3DQYA0of/YGF5vIAzSb90hB4BR+6elYWhMJodLf6s9scmQdVrWhXQ4dVg6J+8M ycSHtAUfvV0kejqMCcI904M9g4jJuniybmlBLuzSIsi21ELju85L/7B9KiYaqlPgChXogQSPXNk5Kd 54beIYuu1Fd49rYR1R8WtEoklJaIrmJSkYaEDaYgFR3e7sXiui1Lo6/7QEjLjklWuNupXgY7d+KgBw oCFrVzGvwPnUGDQnGEfR2OxN6HzTznt5SuyVEVOZkOSmgu5uS6ad9csIugS5srvBjmEQQuXMfiCcAe FRY7ypPn9oUPWMah/ykVuPdD7cmvKT/OghOEHP/qza9WeqolkQBPyj4t9m6qBq2lsFMVjj3xVeXXM2 +eC9JXnzHZx87wkFYpcVJstfzhif8T3qljrVvmM3fY2NknXhqRg98uBOWpsQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3924; h=from:subject; bh=y2sMUjTim/gIwxveSmmQhx7NYTt7b1pVbIiPi7Evl4M=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOEnE25c6OQAZUZh7are7MybFphgO5c0XjmqaoM cypZk3uJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhAAKCRCJcvTf3G3AJrVgD/ 9EUipW/aGz8pZZO+KYM/hHRGzHn3eJ8lr6sIZd2kwgY/YenMRyXcbyazHaKtq9k4qFGDfasF7ov858 QgSo0FLS6kKdp77nml8K4O9E8I7ayBPKVtULTSDvCMtWKEqBcfC6Q7M0Nb1UixUrR2Z1JhZZK9WtWH ID8omgKPI4LnnaYo4ycEAVB9pzBuOp2dw3mX8jThZiOXisc1A8O6CIE/RAKv1Fno46ecBIpYI58Lfj Q2dLClrapmNlYoUxj2kteXxZy308YbZng7p0daoSE68G8Dm0g06bXBLPRLc/bImHPgA3klYnSoixgZ RMD6kvFN+5q7n8MnIJdaq7gJBYyPBy/9C6wwG2lmKxvmgPKgNj1zDkyb7ttS5FAEi0kc+f+uE/Qvc6 LxFFznj1facXXLvYjxYdFVv9TF/b9/6/BBeUCOHLnyB4kGzOqlN4zBCzSlX25q7Qr8HnPEr34tJ/mP 3QyTlF29k5BfJetxRga3bVSYt4eLe0vVj8bLZug1htSckQNfV4X1STPomfizJ8F8ssl8VR+AZqcEPZ ru/Rhw2gsydUoGnN1DHmcUDJjNa8iHRdhVeY0MaxkmG0p3DjmhYkpj3nmosca/JbyjnMdcrVrIyErT CYzNTxmbAjdwEJnwSyRPybVcS5R4LwUCJqb30qR0qVGXDBcsbP8DrEjKddqA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,32 +81,97 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-Use memset_after() so memset() doesn't get confused about writing
-beyond the destination member that is intended to be the starting point
-of zeroing through the end of the struct.
+Use struct_group() in struct fw_eth_tx_pkt_vm_wr around members ethmacdst,
+ethmacsrc, ethtype, and vlantci, so they can be referenced together. This
+will allow memcpy() and sizeof() to more easily reason about sizes,
+improve readability, and avoid future warnings about writing beyond the
+end of ethmacdst.
+
+"pahole" shows no size nor member offset changes to struct
+fw_eth_tx_pkt_vm_wr. "objdump -d" shows no object code changes.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/infiniband/hw/mthca/mthca_mr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb4/sge.c      |  8 +++++---
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h | 10 ++++++----
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c    |  7 ++-----
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/infiniband/hw/mthca/mthca_mr.c b/drivers/infiniband/hw/mthca/mthca_mr.c
-index ce0e0867e488..64adba5c067d 100644
---- a/drivers/infiniband/hw/mthca/mthca_mr.c
-+++ b/drivers/infiniband/hw/mthca/mthca_mr.c
-@@ -469,8 +469,7 @@ int mthca_mr_alloc(struct mthca_dev *dev, u32 pd, int buffer_size_shift,
- 	mpt_entry->start     = cpu_to_be64(iova);
- 	mpt_entry->length    = cpu_to_be64(total_size);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+index 6a099cb34b12..9080b2c5ffe8 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -1842,8 +1842,10 @@ static netdev_tx_t cxgb4_vf_eth_xmit(struct sk_buff *skb,
+ 	 * (including the VLAN tag) into the header so we reject anything
+ 	 * smaller than that ...
+ 	 */
+-	fw_hdr_copy_len = sizeof(wr->ethmacdst) + sizeof(wr->ethmacsrc) +
+-			  sizeof(wr->ethtype) + sizeof(wr->vlantci);
++	BUILD_BUG_ON(sizeof(wr->firmware) !=
++		     (sizeof(wr->ethmacdst) + sizeof(wr->ethmacsrc) +
++		      sizeof(wr->ethtype) + sizeof(wr->vlantci)));
++	fw_hdr_copy_len = sizeof(wr->firmware);
+ 	ret = cxgb4_validate_skb(skb, dev, fw_hdr_copy_len);
+ 	if (ret)
+ 		goto out_free;
+@@ -1924,7 +1926,7 @@ static netdev_tx_t cxgb4_vf_eth_xmit(struct sk_buff *skb,
+ 	wr->equiq_to_len16 = cpu_to_be32(wr_mid);
+ 	wr->r3[0] = cpu_to_be32(0);
+ 	wr->r3[1] = cpu_to_be32(0);
+-	skb_copy_from_linear_data(skb, (void *)wr->ethmacdst, fw_hdr_copy_len);
++	skb_copy_from_linear_data(skb, &wr->firmware, fw_hdr_copy_len);
+ 	end = (u64 *)wr + flits;
  
--	memset(&mpt_entry->lkey, 0,
--	       sizeof *mpt_entry - offsetof(struct mthca_mpt_entry, lkey));
-+	memset_after(mpt_entry, 0, length);
+ 	/* If this is a Large Send Offload packet we'll put in an LSO CPL
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+index 0a326c054707..2419459a0b85 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+@@ -794,10 +794,12 @@ struct fw_eth_tx_pkt_vm_wr {
+ 	__be32 op_immdlen;
+ 	__be32 equiq_to_len16;
+ 	__be32 r3[2];
+-	u8 ethmacdst[6];
+-	u8 ethmacsrc[6];
+-	__be16 ethtype;
+-	__be16 vlantci;
++	struct_group(firmware,
++		u8 ethmacdst[ETH_ALEN];
++		u8 ethmacsrc[ETH_ALEN];
++		__be16 ethtype;
++		__be16 vlantci;
++	);
+ };
  
- 	if (mr->mtt)
- 		mpt_entry->mtt_seg =
+ #define FW_CMD_MAX_TIMEOUT 10000
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
+index 7bc80eeb2c21..671ca93e64ab 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
+@@ -1167,10 +1167,7 @@ netdev_tx_t t4vf_eth_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	struct cpl_tx_pkt_core *cpl;
+ 	const struct skb_shared_info *ssi;
+ 	dma_addr_t addr[MAX_SKB_FRAGS + 1];
+-	const size_t fw_hdr_copy_len = (sizeof(wr->ethmacdst) +
+-					sizeof(wr->ethmacsrc) +
+-					sizeof(wr->ethtype) +
+-					sizeof(wr->vlantci));
++	const size_t fw_hdr_copy_len = sizeof(wr->firmware);
+ 
+ 	/*
+ 	 * The chip minimum packet length is 10 octets but the firmware
+@@ -1267,7 +1264,7 @@ netdev_tx_t t4vf_eth_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	wr->equiq_to_len16 = cpu_to_be32(wr_mid);
+ 	wr->r3[0] = cpu_to_be32(0);
+ 	wr->r3[1] = cpu_to_be32(0);
+-	skb_copy_from_linear_data(skb, (void *)wr->ethmacdst, fw_hdr_copy_len);
++	skb_copy_from_linear_data(skb, &wr->firmware, fw_hdr_copy_len);
+ 	end = (u64 *)wr + flits;
+ 
+ 	/*
 -- 
 2.30.2
 
