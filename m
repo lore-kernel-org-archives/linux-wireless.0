@@ -5,55 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 630F3C4320E
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11810C19F3B
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C1D160FA0
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06EC461038
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232873AbhG0U7Q (ORCPT
+        id S233004AbhG0U7U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 16:59:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54072 "EHLO
+        Tue, 27 Jul 2021 16:59:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232586AbhG0U7J (ORCPT
+        with ESMTP id S232760AbhG0U7N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:09 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A21ECC0617A1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:08 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id e5so15693024pld.6
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:08 -0700 (PDT)
+        Tue, 27 Jul 2021 16:59:13 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE18BC0617B9
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id b6so1772507pji.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hAtUXOqdIbIKgIXF67i6edRxNnI31C05ADltnD47YVA=;
-        b=KjyaAeWacqkMvH9zZm+BBzMkjACC5HUxdXv9tgcqmihQriCrMtd/DFnnW7F/YrD/ZY
-         Ukevt5iMkwkus4GIj0BPscD7xfNb9o1NPLdX8zvYUy6Vws2evRXwUJ9SqM3iq4seKTMQ
-         0scT3SXeeEgeJXutbDZfzTUKfHAc3euSilyDg=
+        bh=RbUTIPyfuQU3KvEwbLJbeU9iwD29PEErUjBhpe3f1nk=;
+        b=GtYyBBbtPxLFI/WfuLaMvDoXxWyPmC0zNQzNuCkFG4NF0Vg9BHEps6UBdbqkXeNeF3
+         TCLGbDASIg/2n9k5Rj/pRUe4EsWyA1ECIuxw4qfKiy8940LxdncMbz9exdPrnZjqZaTH
+         WwI9EGrUEd5BHZVFi1kSv8N0o7CeawloSKwTs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hAtUXOqdIbIKgIXF67i6edRxNnI31C05ADltnD47YVA=;
-        b=kNcmSKHpyp62r5leH/kFnjV2+XhbHSo48zaHhgY5eW1K17I57Lqlq9WIrekSOoY9ak
-         Zkm8ooZ1+izeafeLQyP/FU/nbPUyKE4hNQb9a0bl86hdsBofrxiX4anYmSMwXGHYeVDr
-         HvIekbQNQX90MsemaRQDDroHkDzSWmOemZGmwDKTuvdAfO2eBoMBhx3LaWfb+d4pit8a
-         xcAjiqJ5G2B2RsWHMr5h2clcF3WAnnwjoLzrA7mlca9tHHZhB7YWjivg+fNdBsSPn/Y2
-         udfhjAD9g9F4B9hEusrFy1dicCiw+J7ikuluCroq7k/i2OMvToySgmjiYC9rrTN4jGE0
-         IMxQ==
-X-Gm-Message-State: AOAM533eQ5j8UtTpVzXZRM1ZhZYbAaNZsZc0uEKafIbbzpjRYGzGt0u8
-        UZUI0Dnd1uraxupEp5170buvmg==
-X-Google-Smtp-Source: ABdhPJwKVVacR07W565BalKjkQLpWp2QT/TsDZexTOWZktzaVimKCn1vRk5Czb/MD//fHQXIbyCEWw==
-X-Received: by 2002:a17:90b:3581:: with SMTP id mm1mr5913025pjb.98.1627419548265;
-        Tue, 27 Jul 2021 13:59:08 -0700 (PDT)
+        bh=RbUTIPyfuQU3KvEwbLJbeU9iwD29PEErUjBhpe3f1nk=;
+        b=Imw6YFzFcXSZujKeZXyk+D69TMdZrWktQKMGwQrpoTYYrBfanR3DWr3zNa/Sdd6qnY
+         2ayIzViyCNJI+f8y1iaZLJGOna/17jkQqAvmxQ/Dd/klsXuIxshUAdFrr9OlP+fA8pPG
+         fDcDt5q/T1mzhiSnictIgkuPvIoOsQdv2K4Cqk2qA7jFdB+W652CU7E8TZaicYQvWIGW
+         8if8MgqrAXDVCp1ugFR3HbDLTU45m2DbyQeD9WMCG7BkDiOJ+sj9eqqE2Op7Et7sLx+j
+         tAl5LcgEp6hwTIHp2AA7zcaGUJipxhIY3vlYIxUTxDtB6ZzLGEPVK+ooqyvt3Hy1SBKM
+         TXJg==
+X-Gm-Message-State: AOAM533njaUd23kqQSh57htGmase0R/broeqaxQJiEjljvs7NHxZCHMf
+        vHQGwQdGm3QGhc95bioz6XHXxQ==
+X-Google-Smtp-Source: ABdhPJy7+ciBuOtNN7d83O4Zu0WNd8ovLzhIYFckNLYZmMMBqTt0NJ7ydcv6U7b3s5X1OqBXomDXgw==
+X-Received: by 2002:a63:4b20:: with SMTP id y32mr25282843pga.382.1627419549553;
+        Tue, 27 Jul 2021 13:59:09 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a23sm4591110pff.43.2021.07.27.13.59.03
+        by smtp.gmail.com with ESMTPSA id n12sm5264202pgr.2.2021.07.27.13.59.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 13:59:05 -0700 (PDT)
+        Tue, 27 Jul 2021 13:59:08 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -65,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 10/64] lib80211: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:01 -0700
-Message-Id: <20210727205855.411487-11-keescook@chromium.org>
+Subject: [PATCH 14/64] libertas_tf: Use struct_group() for memcpy() region
+Date:   Tue, 27 Jul 2021 13:58:05 -0700
+Message-Id: <20210727205855.411487-15-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3842; h=from:subject; bh=LxMwWIiVXxCqRjC5BkCQhCAsNp5uK9myZ2a4Qy1ipzQ=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOCS1cmBCRtXI7M3opQcsNvUfw7QHdDVtTF33mg z+crDrWJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzggAKCRCJcvTf3G3AJn8DD/ 0T8GLHAQTW4lQjhfBYcVN4KkQX84OyCKR/kM+6CyPh6kkSz3omcb5syI1kQjZZfi9AQMmXGm27pqXs Pfzoata/9c4TApOgEv263SYMjRV3AKeFaFCN+M+Tbki7UCpUotJm9dnRg/YZOUqcEJ2jnQpyukE/h5 WjTdoxGr75vnhyjqxtCW3aafwRG0iXBck5QQofWTgn8C998AMoFRs6Tj6WLGt00Byih284TbE5zULP NoahBowuHSS4qSopyrtMF5eCvftM06BTwO2pAHfSDoGwCRneDXaPTK82hxwFjKQowdrTh4iICk8J6z Jh8Cy9g9/qrCwlclWJxjLE11hOD2f4KFeZpANKSuUdLgh2gQH0XSCj9eew20UORocfAqHkT/RzbRTF SJY0WkjJuqFW0W0eO4eaZyUsWJHuNBEL3OEenTA/cKGL5oil0bnf+evfjR6n7xJYUez++9bbUL8NyK mwpGoz6NjtaMd6T6SdpdeK3SjBHnQVR7cnuN787a4kSO0UGQ/qiXd510dvC35+ROc9KccdBJQ9O8UG j59WtvEuYIf3wGvX7Gxat7V2DjodwzEvDiy+CyhMLXhp2kdRYaftK+hlMfdh3hvdX9HK1wsHqnZZNW 2jIB6Lm8e5R4+zKVC9MC8ZxvWDlXi8uYXm03gL2lKA5E1/cQXWrwqyFnfZrw==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2474; h=from:subject; bh=aN5SRWSO0jhRLPZQ+xEXk4KxeSHDMCg25qp77Fv8hh8=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHODeg0TURmPLYxq0mwE2hFWy/0AYNHuIKbeAQlp DWoEAlmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgwAKCRCJcvTf3G3AJjDjEA CAOGWMwUe/TqhcNNpZ+tmgfq8Zfq/oBEgyGg6BbrnIuZqsMJLAnXFi1FFsi5XiWdBd9wW2z+pWLDsZ Qk5cK3uqkczBfKd+ThpeYFCNe/sGC223YyA78nUC5LdHCnah148wC6VuU4iYiPf187zVu1aljWgPkP QgNCXG2oB9NqtBh3pf0JmaHSqgeAqqpxLaVaFEmJDH7QkNmA17wGfU899KFpdb3HVZ8CkncDMoZhn1 DPXzHpS9vXg9vY+WPSF5Taeau8VEyUmFL+4Pc4A2M2LVWkpNBJCyJaADuQQg6QJdEmd9Qr6GMczp8B kuQcY9rOtl7uJhxsUbV+WyMYzIHXeJTGYueZa//yzwGhHGliQt3xlVGVyKk9A3pnvgh3jDJN8uYVaj b/rYpFLFcaBGhaT1yXcgkFAyKZpXO8Vh/Pi/2cwO1Z5UW4BAcnj54ZvKyiY4BZaN4jeZ47sDe9ccuy Y2ISwX8AwsLUH5I50e1AM5SHgOwd6aFVQVGJ0mAJspEUB2gl2BWkH9f+9sQ4HHmBKVKFcOmb1P4Ax/ PyqbaIoRlAj521CKzVKPR5wMiaW+0R2VneaPhPljqaAoY8fgIovvOjTe7GjzsFwSiv1CtakSIvU3Td UV1MTQ9MpUR6nFelPgLKjEpZMPkFtJ/MjnG8kchV6cXWqyz8+t5IN5yp45VQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -80,91 +81,59 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field array bounds checking for memcpy(), memmove(), and memset(),
+avoid intentionally writing across neighboring fields.
 
-Use struct_group() around members addr1, addr2, and addr3 in struct
-ieee80211_hdr so they can be referenced together. This will allow memcpy()
-and sizeof() to more easily reason about sizes, improve readability,
-and avoid future warnings about writing beyond the end of addr1.
+Use struct_group() in struct txpd around members tx_dest_addr_high
+and tx_dest_addr_low so they can be referenced together. This will
+allow memcpy() and sizeof() to more easily reason about sizes, improve
+readability, and avoid future warnings about writing beyond the end
+of tx_dest_addr_high.
 
-"pahole" shows no size nor member offset changes to struct ieee80211_hdr.
-"objdump -d" shows no meaningful object code changes (i.e. only source
-line number induced differences and optimizations).
+"pahole" shows no size nor member offset changes to struct txpd.
+"objdump -d" shows no object code changes.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/staging/rtl8723bs/core/rtw_security.c | 5 +++--
- drivers/staging/rtl8723bs/core/rtw_xmit.c     | 5 +++--
- include/linux/ieee80211.h                     | 8 +++++---
- net/wireless/lib80211_crypt_ccmp.c            | 3 ++-
- 4 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/libertas_tf/libertas_tf.h | 10 ++++++----
+ drivers/net/wireless/marvell/libertas_tf/main.c        |  3 ++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/rtl8723bs/core/rtw_security.c b/drivers/staging/rtl8723bs/core/rtw_security.c
-index a99f439328f1..be7cf42855a1 100644
---- a/drivers/staging/rtl8723bs/core/rtw_security.c
-+++ b/drivers/staging/rtl8723bs/core/rtw_security.c
-@@ -1421,8 +1421,9 @@ u32 rtw_BIP_verify(struct adapter *padapter, u8 *precvframe)
- 		ClearRetry(BIP_AAD);
- 		ClearPwrMgt(BIP_AAD);
- 		ClearMData(BIP_AAD);
--		/* conscruct AAD, copy address 1 to address 3 */
--		memcpy(BIP_AAD+2, pwlanhdr->addr1, 18);
-+		/* conscruct AAD, copy address 1 through address 3 */
-+		BUILD_BUG_ON(sizeof(pwlanhdr->addrs) != 3 * ETH_ALEN);
-+		memcpy(BIP_AAD + 2, &pwlanhdr->addrs, 3 * ETH_ALEN);
- 
- 		if (omac1_aes_128(padapter->securitypriv.dot11wBIPKey[padapter->securitypriv.dot11wBIPKeyid].skey
- 			, BIP_AAD, ori_len, mic))
-diff --git a/drivers/staging/rtl8723bs/core/rtw_xmit.c b/drivers/staging/rtl8723bs/core/rtw_xmit.c
-index 79e4d7df1ef5..cb47db784130 100644
---- a/drivers/staging/rtl8723bs/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723bs/core/rtw_xmit.c
-@@ -1198,8 +1198,9 @@ s32 rtw_mgmt_xmitframe_coalesce(struct adapter *padapter, struct sk_buff *pkt, s
- 		ClearRetry(BIP_AAD);
- 		ClearPwrMgt(BIP_AAD);
- 		ClearMData(BIP_AAD);
--		/* conscruct AAD, copy address 1 to address 3 */
--		memcpy(BIP_AAD+2, pwlanhdr->addr1, 18);
-+		/* conscruct AAD, copy address 1 through address 3 */
-+		BUILD_BUG_ON(sizeof(pwlanhdr->addrs) != 3 * ETH_ALEN);
-+		memcpy(BIP_AAD + 2, &pwlanhdr->addrs, 3 * ETH_ALEN);
- 		/* copy management fram body */
- 		memcpy(BIP_AAD+BIP_AAD_SIZE, MGMT_body, frame_body_len);
- 		/* calculate mic */
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a6730072d13a..d7932b520aaf 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -297,9 +297,11 @@ static inline u16 ieee80211_sn_sub(u16 sn1, u16 sn2)
- struct ieee80211_hdr {
- 	__le16 frame_control;
- 	__le16 duration_id;
--	u8 addr1[ETH_ALEN];
--	u8 addr2[ETH_ALEN];
--	u8 addr3[ETH_ALEN];
-+	struct_group(addrs,
-+		u8 addr1[ETH_ALEN];
-+		u8 addr2[ETH_ALEN];
-+		u8 addr3[ETH_ALEN];
+diff --git a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
+index 5d726545d987..b2af2ddb6bc4 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
++++ b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
+@@ -268,10 +268,12 @@ struct txpd {
+ 	__le32 tx_packet_location;
+ 	/* Tx packet length */
+ 	__le16 tx_packet_length;
+-	/* First 2 byte of destination MAC address */
+-	u8 tx_dest_addr_high[2];
+-	/* Last 4 byte of destination MAC address */
+-	u8 tx_dest_addr_low[4];
++	struct_group(tx_dest_addr,
++		/* First 2 byte of destination MAC address */
++		u8 tx_dest_addr_high[2];
++		/* Last 4 byte of destination MAC address */
++		u8 tx_dest_addr_low[4];
 +	);
- 	__le16 seq_ctrl;
- 	u8 addr4[ETH_ALEN];
- } __packed __aligned(2);
-diff --git a/net/wireless/lib80211_crypt_ccmp.c b/net/wireless/lib80211_crypt_ccmp.c
-index 6a5f08f7491e..21d7c39bb394 100644
---- a/net/wireless/lib80211_crypt_ccmp.c
-+++ b/net/wireless/lib80211_crypt_ccmp.c
-@@ -136,7 +136,8 @@ static int ccmp_init_iv_and_aad(const struct ieee80211_hdr *hdr,
- 	pos = (u8 *) hdr;
- 	aad[0] = pos[0] & 0x8f;
- 	aad[1] = pos[1] & 0xc7;
--	memcpy(aad + 2, hdr->addr1, 3 * ETH_ALEN);
-+	BUILD_BUG_ON(sizeof(hdr->addrs) != 3 * ETH_ALEN);
-+	memcpy(aad + 2, &hdr->addrs, ETH_ALEN);
- 	pos = (u8 *) & hdr->seq_ctrl;
- 	aad[20] = pos[0] & 0x0f;
- 	aad[21] = 0;		/* all bits masked */
+ 	/* Pkt Priority */
+ 	u8 priority;
+ 	/* Pkt Trasnit Power control */
+diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
+index 71492211904b..02a1e1f547d8 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/main.c
++++ b/drivers/net/wireless/marvell/libertas_tf/main.c
+@@ -232,7 +232,8 @@ static void lbtf_tx_work(struct work_struct *work)
+ 			     ieee80211_get_tx_rate(priv->hw, info)->hw_value);
+ 
+ 	/* copy destination address from 802.11 header */
+-	memcpy(txpd->tx_dest_addr_high, skb->data + sizeof(struct txpd) + 4,
++	BUILD_BUG_ON(sizeof(txpd->tx_dest_addr) != ETH_ALEN);
++	memcpy(&txpd->tx_dest_addr, skb->data + sizeof(struct txpd) + 4,
+ 		ETH_ALEN);
+ 	txpd->tx_packet_length = cpu_to_le16(len);
+ 	txpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
 -- 
 2.30.2
 
