@@ -2,151 +2,224 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC8C5C4320A
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:00:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CFE0C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D59F060F9C
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:00:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 182CD60FC0
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 20:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232067AbhG0UAV (ORCPT
+        id S231961AbhG0U7E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 16:00:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40750 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231204AbhG0UAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:00:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id ED0CF60FA0;
-        Tue, 27 Jul 2021 20:00:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627416014;
-        bh=7gbluUXqRRDrRRn0YT85HoIea0afHl4fXkBq3wS8myc=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=ZuKh0QZIr0bo4IkkVxJ+KGIS7CN6C3qN0vMjFXehfb5lPWADe0PwPwsnk1qMM5vvO
-         HlWCTVM4ZzSaJEPtmoNUa1vsliz463WcrdCQN1lkHHswUKgaNNtq29styVqu3BjN7r
-         JYjOpWXSrkVvfQxj9Ek6rU+aJOXdBkncGx3bb9Y1mzLSX2u2tkkakG1hfNRYcUUq4e
-         inTy+HHa8/MPQbmrfH3/IPLKgDL9lIMIjHc7+pUM2DHjS9wtjN7iT01LHakbA2lpny
-         sQF0HUZcKsDMvVwqgSaSNCqv1JR5iOvrYNY91Aq7W+oxmNXRaUF211VLnU6VOI+NyL
-         UUZx8tXVJZbzw==
-Content-Type: text/plain; charset="utf-8"
+        Tue, 27 Jul 2021 16:59:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54040 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231432AbhG0U7D (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 16:59:03 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 828A9C0613D3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d1so24324pll.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7nuFdIglNEHNCZJ4OURvNLaS8oKexf2Xbsw8tAobRMI=;
+        b=fXdIa5xzPdxqW9JkE+8PrL7R3HOjzt/uPGhXwllYH14fLZCAy6MK5N+Aom2hlW1RLu
+         LzaLP/I2bdBUasKo/LWt7kuMLca0bx1GK2a8LA0g1v3rpw0p8gJnsxnOKfkunXhaof5t
+         +9cGUtaq4+nJifYIALqVfSUNMPZBcUPcyBLJc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7nuFdIglNEHNCZJ4OURvNLaS8oKexf2Xbsw8tAobRMI=;
+        b=qQDbQKL+XLHMJcZVn1hW7IERVhNXSwxeslv9tMvvLDLzzuq8MzNraMyPl7muPCg079
+         WUz5dMAfZmRaK8gURcYYt0y/QIR0FTvkvjo1+lcTjYB/x8HdnR6noc4xQo++pd4+g5I9
+         cym/hX/7tD/5VqF0xd1FtdQj8HVcLwmOG/9H78/QHPPCJ5cdImgfzG/eMhKaQZASCtH6
+         6OlOY/QNgsDrdR91ZENBVTJkj3sU5UdW9D/hUoH1akecj/GOI4zxu7discxa/yYWjnZB
+         KtvGc+mzFIyG1nfz1ZJkvr9LdfOl3hubmQS5CcY0h5HE880sKCOqPhk9jZFgmukHmUAX
+         gutA==
+X-Gm-Message-State: AOAM53143lKJdJbnVjzTrVZScUdfN9DKGnRndsyavxAFVzSreU0dcMS+
+        PwKzeaTrMhcYybKprTVae6BsUw==
+X-Google-Smtp-Source: ABdhPJxucZUfEOCwFmOc5wsWAybtREO6GX9yQ3Vd7QeNwkxYfGm08yYOn/RWC1L2rMGwaMab2R+i4g==
+X-Received: by 2002:a17:90a:af8c:: with SMTP id w12mr12989398pjq.109.1627419543028;
+        Tue, 27 Jul 2021 13:59:03 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id i1sm3849350pjs.31.2021.07.27.13.59.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jul 2021 13:59:02 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     linux-hardening@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Keith Packard <keithpac@amazon.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
+Subject: [PATCH 01/64] media: omap3isp: Extract struct group for memcpy() region
+Date:   Tue, 27 Jul 2021 13:57:52 -0700
+Message-Id: <20210727205855.411487-2-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
+References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4703; h=from:subject; bh=LCf4h7e2PK4sOgvQBd73gWCkmhRKJC4tH4kH78fVevA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOAJSAPyozNrKWpqJWAzYod2fmvBM+4l2MwYKWh O4ocQxiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgAAKCRCJcvTf3G3AJoP0D/ 9KTuhNSJSjVRPOJFWeuepSlknmUmM/K2t4MDDXqOX/kDkR2wcXh6ttU5lVNW0YgBjHXAF5eWLYpPt5 XHm/KeoOX2MLhuXazp4Ti4YBKlziUsZTs5O6dl8oGQF8vvSOgQVD4x549qIJAaUMy/Q9HqWzVqq85p yP3Plkr/yT7Fr9RDFQxzPqOdsDFBoD1ZLcppau6vdTB0PZWIhyCpFYq2uKiDluWvj75Xhxrp9micdg U2R1bGYEEaNcOOSkguLQYe0+7XbhyY11oRTvhbZEZRUrrqPf99XF/yF1XvvLi6e8z/hVvbVGsEd8Mv Qiu6hKrvxmLG/6Gu1PUewl4RyNN90iXJ3Rh3zLatEPwPBHAFaGnBpr5RP4Ntn7iSsskKZBwlebvul7 dZxKtji4NE+xbeZup0zNKAjAcLeI8QVdmPiAbeqCybdrJc75zf4LhhuDwRXTdbrsXCooEGGuiMw3/v x+EUAxYAP0mwGpMCMNzDB9dpyGAKbRXmGfGhZu9JSilm3k8JsxQ47nQ3+PU4JxTEAGP/RA6CAwR6zV 7KB5mLzU0yyN2b7Az2uKl0RkeneD9qcEy0xqorM/qFH7O+d020ljiEXSwPXdgJdOF7fiAdpmoeK2uM 3RKFyedkYhLmnhtvfdEg6qb1tMNiC33AbBzVnm8LJMBkL2upkdQjzlsDvzsA==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net-next v3 00/31] ndo_ioctl rework
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <162741601391.17427.11630081272562695042.git-patchwork-notify@kernel.org>
-Date:   Tue, 27 Jul 2021 20:00:13 +0000
-References: <20210727134517.1384504-1-arnd@kernel.org>
-In-Reply-To: <20210727134517.1384504-1-arnd@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kuba@kernel.org, davem@davemloft.net, arnd@arndb.de,
-        j.vosburgh@gmail.com, vfalico@gmail.com, andy@greyhouse.net,
-        rajur@chelsio.com, t.sailer@alumni.ethz.ch, jreuter@yaina.de,
-        jpr@f6fbb.org, jes@trained-monkey.org, khc@pm.waw.pl,
-        kevin.curtis@farsite.co.uk, qiang.zhao@nxp.com, ms@dev.tdt.de,
-        kvalo@codeaurora.org, j@w1.fi, jwi@linux.ibm.com,
-        kgraul@linux.ibm.com, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
-        roopa@nvidia.com, nikolay@nvidia.com, steffen.klassert@secunet.com,
-        herbert@gondor.apana.org.au, courmisch@gmail.com, andrew@lunn.ch,
-        hch@lst.de, linux-parisc@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-hippi@sunsite.dk,
-        linux-ppp@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-x25@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-s390@vger.kernel.org, bridge@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.  Wrap the target region
+in a common named structure. This additionally fixes a theoretical
+misalignment of the copy (since the size of "buf" changes between 64-bit
+and 32-bit, but this is likely never built for 64-bit).
 
-This series was applied to netdev/net-next.git (refs/heads/master):
+FWIW, I think this code is totally broken on 64-bit (which appears to
+not be a "real" build configuration): it would either always fail (with
+an uninitialized data->buf_size) or would cause corruption in userspace
+due to the copy_to_user() in the call path against an uninitialized
+data->buf value:
 
-On Tue, 27 Jul 2021 15:44:46 +0200 you wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> This series is a follow-up to the series for removing
-> compat_alloc_user_space() and copy_in_user() that has now
-> been merged.
-> 
-> I wanted to be sure I address all the ways that 'struct ifreq' is used
-> in device drivers through .ndo_do_ioctl, originally to prove that
-> my approach of changing the struct definition was correct, but then
-> I discarded that approach and went on anyway.
-> 
-> [...]
+omap3isp_stat_request_statistics_time32(...)
+    struct omap3isp_stat_data data64;
+    ...
+    omap3isp_stat_request_statistics(stat, &data64);
 
-Here is the summary with links:
-  - [net-next,v3,01/31] net: split out SIOCDEVPRIVATE handling from dev_ioctl
-    https://git.kernel.org/netdev/net-next/c/b9067f5dc4a0
-  - [net-next,v3,02/31] staging: rtlwifi: use siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/89939e890605
-  - [net-next,v3,03/31] staging: wlan-ng: use siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/3343c49a959d
-  - [net-next,v3,04/31] hostap: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/3f3fa5340745
-  - [net-next,v3,05/31] bridge: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/561d8352818f
-  - [net-next,v3,06/31] phonet: use siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/4747c1a8bc50
-  - [net-next,v3,07/31] tulip: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/029a4fef6b22
-  - [net-next,v3,08/31] bonding: use siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/232ec98ec35d
-  - [net-next,v3,09/31] appletalk: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/dbecb011eb78
-  - [net-next,v3,10/31] hamachi: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/99b78a37a371
-  - [net-next,v3,11/31] tehuti: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/32d05468c462
-  - [net-next,v3,12/31] eql: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/d92f7b59d32b
-  - [net-next,v3,13/31] fddi: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/043393d8b478
-  - [net-next,v3,14/31] net: usb: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/ef1b5b0c30bc
-  - [net-next,v3,15/31] slip/plip: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/76b5878cffab
-  - [net-next,v3,16/31] qeth: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/18787eeebd71
-  - [net-next,v3,17/31] cxgb3: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/ebb4a911e09a
-  - [net-next,v3,18/31] hamradio: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/25ec92fbdd23
-  - [net-next,v3,19/31] airo: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/ae6af0120dda
-  - [net-next,v3,20/31] ip_tunnel: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/3e7a1c7c561e
-  - [net-next,v3,21/31] hippi: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/81a68110a22a
-  - [net-next,v3,22/31] sb1000: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/cc0aa831a0d9
-  - [net-next,v3,23/31] ppp: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/34f7cac07c4e
-  - [net-next,v3,24/31] wan: use ndo_siocdevprivate
-    https://git.kernel.org/netdev/net-next/c/73d74f61a559
-  - [net-next,v3,25/31] wan: cosa: remove dead cosa_net_ioctl() function
-    https://git.kernel.org/netdev/net-next/c/8fb75b79cd98
-  - [net-next,v3,26/31] dev_ioctl: pass SIOCDEVPRIVATE data separately
-    https://git.kernel.org/netdev/net-next/c/a554bf96b49d
-  - [net-next,v3,27/31] dev_ioctl: split out ndo_eth_ioctl
-    https://git.kernel.org/netdev/net-next/c/a76053707dbf
-  - [net-next,v3,28/31] net: split out ndo_siowandev ioctl
-    https://git.kernel.org/netdev/net-next/c/ad7eab2ab014
-  - [net-next,v3,29/31] net: socket: return changed ifreq from SIOCDEVPRIVATE
-    https://git.kernel.org/netdev/net-next/c/88fc023f7de2
-  - [net-next,v3,30/31] net: bridge: move bridge ioctls out of .ndo_do_ioctl
-    https://git.kernel.org/netdev/net-next/c/ad2f99aedf8f
-  - [net-next,v3,31/31] net: bonding: move ioctl handling to private ndo operation
-    https://git.kernel.org/netdev/net-next/c/3d9d00bd1885
+int omap3isp_stat_request_statistics(struct ispstat *stat,
+                                     struct omap3isp_stat_data *data)
+    ...
+    buf = isp_stat_buf_get(stat, data);
 
-You are awesome, thank you!
---
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+static struct ispstat_buffer *isp_stat_buf_get(struct ispstat *stat,
+                                               struct omap3isp_stat_data *data)
+...
+    if (buf->buf_size > data->buf_size) {
+            ...
+            return ERR_PTR(-EINVAL);
+    }
+    ...
+    rval = copy_to_user(data->buf,
+                        buf->virt_addr,
+                        buf->buf_size);
 
+Regardless, additionally initialize data64 to be zero-filled to avoid
+undefined behavior.
+
+Fixes: 378e3f81cb56 ("media: omap3isp: support 64-bit version of omap3isp_stat_data")
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/media/platform/omap3isp/ispstat.c |  5 +--
+ include/uapi/linux/omap3isp.h             | 44 +++++++++++++++++------
+ 2 files changed, 36 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/media/platform/omap3isp/ispstat.c b/drivers/media/platform/omap3isp/ispstat.c
+index 5b9b57f4d9bf..ea8222fed38e 100644
+--- a/drivers/media/platform/omap3isp/ispstat.c
++++ b/drivers/media/platform/omap3isp/ispstat.c
+@@ -512,7 +512,7 @@ int omap3isp_stat_request_statistics(struct ispstat *stat,
+ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+ 					struct omap3isp_stat_data_time32 *data)
+ {
+-	struct omap3isp_stat_data data64;
++	struct omap3isp_stat_data data64 = { };
+ 	int ret;
+ 
+ 	ret = omap3isp_stat_request_statistics(stat, &data64);
+@@ -521,7 +521,8 @@ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+ 
+ 	data->ts.tv_sec = data64.ts.tv_sec;
+ 	data->ts.tv_usec = data64.ts.tv_usec;
+-	memcpy(&data->buf, &data64.buf, sizeof(*data) - sizeof(data->ts));
++	data->buf = (uintptr_t)data64.buf;
++	memcpy(&data->frame, &data64.buf, sizeof(data->frame));
+ 
+ 	return 0;
+ }
+diff --git a/include/uapi/linux/omap3isp.h b/include/uapi/linux/omap3isp.h
+index 87b55755f4ff..0a16af91621f 100644
+--- a/include/uapi/linux/omap3isp.h
++++ b/include/uapi/linux/omap3isp.h
+@@ -159,13 +159,25 @@ struct omap3isp_h3a_aewb_config {
+ };
+ 
+ /**
+- * struct omap3isp_stat_data - Statistic data sent to or received from user
+- * @ts: Timestamp of returned framestats.
+- * @buf: Pointer to pass to user.
++ * struct omap3isp_stat_frame - Statistic data without timestamp nor pointer.
++ * @buf_size: Size of buffer.
+  * @frame_number: Frame number of requested stats.
+  * @cur_frame: Current frame number being processed.
+  * @config_counter: Number of the configuration associated with the data.
+  */
++struct omap3isp_stat_frame {
++	__u32 buf_size;
++	__u16 frame_number;
++	__u16 cur_frame;
++	__u16 config_counter;
++};
++
++/**
++ * struct omap3isp_stat_data - Statistic data sent to or received from user
++ * @ts: Timestamp of returned framestats.
++ * @buf: Pointer to pass to user.
++ * @frame: Statistic data for frame.
++ */
+ struct omap3isp_stat_data {
+ #ifdef __KERNEL__
+ 	struct {
+@@ -176,10 +188,15 @@ struct omap3isp_stat_data {
+ 	struct timeval ts;
+ #endif
+ 	void __user *buf;
+-	__u32 buf_size;
+-	__u16 frame_number;
+-	__u16 cur_frame;
+-	__u16 config_counter;
++	union {
++		struct {
++			__u32 buf_size;
++			__u16 frame_number;
++			__u16 cur_frame;
++			__u16 config_counter;
++		};
++		struct omap3isp_stat_frame frame;
++	};
+ };
+ 
+ #ifdef __KERNEL__
+@@ -189,10 +206,15 @@ struct omap3isp_stat_data_time32 {
+ 		__s32	tv_usec;
+ 	} ts;
+ 	__u32 buf;
+-	__u32 buf_size;
+-	__u16 frame_number;
+-	__u16 cur_frame;
+-	__u16 config_counter;
++	union {
++		struct {
++			__u32 buf_size;
++			__u16 frame_number;
++			__u16 cur_frame;
++			__u16 config_counter;
++		};
++		struct omap3isp_stat_frame frame;
++	};
+ };
+ #endif
+ 
+-- 
+2.30.2
 
