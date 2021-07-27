@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA42C43214
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84FDEC432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2652960FE7
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71B4060FA0
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:00:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234652AbhG0VAg (ORCPT
+        id S232746AbhG0VAq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:00:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54046 "EHLO
+        Tue, 27 Jul 2021 17:00:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232492AbhG0U7H (ORCPT
+        with ESMTP id S232929AbhG0U7p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 16:59:07 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CB7EC061764
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:07 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id ca5so1755720pjb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:07 -0700 (PDT)
+        Tue, 27 Jul 2021 16:59:45 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D22CC0619D8
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id l19so1888428pjz.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2339k4b0c5OWODNkIvToUoNb0tla173APtop2g87yK0=;
-        b=iEi8m5VvnHSI7PFGMBkWP99DR9/hasEmGaHMmQ/hAQvXWolvYn1ZqWUISR9yx86HKe
-         271G4W/Ncz7bw1+gj01x3c+6WGGDOH9Vwl/Z+aiHCXNR+A9GI+MIw4zbZztpHvcFA5pK
-         3bJY25UolqjG5yrPadDsyTKAutRNBCjMgVGtE=
+        bh=vRBStJlDhZm0d9eTtG5cRn3WlrdJwJNmuGhxV2K5EZo=;
+        b=Nsz8DWljVaxUV6IjBgBUCk1PKkbZhxU5GBCfudGyn6bedsv1Ex+WBSMOLSEz7G7MgN
+         WAOh3b8WcpvZHC/rIjR95hnJWlWBQ/sOSeDYDJSdrWGDY1nyNgJogzpPcbea8ng/yF2+
+         b7TY+b4L/qmqRTkRVDoo5D5RnEKDBdQLyajYo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2339k4b0c5OWODNkIvToUoNb0tla173APtop2g87yK0=;
-        b=oMQvR+QYXm0RiD/6mDIjA6elYUD2p70tPp+DzU4u8uiSykQHdU6kBTpKbeh7skBcLg
-         +HkvYQdG2qKncnwAhIreXYslvcy/wzha8V5kWtIN2e6TOWOBy6OnHtuFtMjF+SGRWKiO
-         3z8WD08i37of8iUP22t1t9zS/ac5J+A/RXpFqtIWKBLML/ZlUnniHC0VmoZlmVMkbp5r
-         etHytQN8pzfMy/6VF0WW+ek+DAvsjpSUTHhosoNivvaE4LHh9TvGSj+N7AL7zPzS6IR7
-         Ere0rVXUijUGsb5QSOnTgp0DFEkVX24iSbJEw1jjtAU7BD/rDiR45yfpEzbgUB0WuR8m
-         ZVQA==
-X-Gm-Message-State: AOAM533YovleMevtDJ0LklDvM05c4r769x/Qa+Yop+zbAul1ybprCwmL
-        aWsB5FXk3ydyooM2KV2Da55mdQ==
-X-Google-Smtp-Source: ABdhPJyJWxUGA3LrJs4BG51/vLWpJYAHbkWL9HNsMr9tG1fy6upd+bj3BEBNQksVHaNDSvFaiNMgng==
-X-Received: by 2002:a63:5610:: with SMTP id k16mr25193869pgb.439.1627419546981;
-        Tue, 27 Jul 2021 13:59:06 -0700 (PDT)
+        bh=vRBStJlDhZm0d9eTtG5cRn3WlrdJwJNmuGhxV2K5EZo=;
+        b=fq/Tizrnmbra3Q8RSLQ0eZStaKU07kC+Zz8ymX5DgRlu0Yl7cKs3nYLQO7cL/8rwEr
+         Dcn9uw/PoHqi2wNHpFlH4EWB0b1lI4GADpw5VciIyIes5nXLh1C2N37e0lPq/+zQ5J59
+         oPbX1Gx47ND9hh9nHlPMf1AI+PXdYP+YkHpXtx7WBuxmeuB4WK+73oU3dy1ruIuIiVyI
+         vXZTd2FegsPLP1IMRlo1p02W9BPw0cvlDc2ap8Bo5aLeCi5GTx52+69LYJG2bjB7SC42
+         xbcRF+y3ZhUyDZGFB9C+zOnheSO/2XrI9jD/InxXG2jy7pKLAZlHsKUQDdX602NJ2L56
+         bQWA==
+X-Gm-Message-State: AOAM533QbzXTj9mIpdEK4kM6xx5xM6pwD995YUaEch1JO1rHd+ZfxJIB
+        naAJEICYiWp9X6YGmUqDOucrmg==
+X-Google-Smtp-Source: ABdhPJyhWTh26zwaflmu8tgo3ARiqPdvOo/hYrckDCizLtD3AW+7DzGVFSehDuB/fG3mAAGw3NVedw==
+X-Received: by 2002:a63:67c5:: with SMTP id b188mr25442155pgc.333.1627419553101;
+        Tue, 27 Jul 2021 13:59:13 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id j20sm4672710pfc.203.2021.07.27.13.59.03
+        by smtp.gmail.com with ESMTPSA id f4sm5114945pgi.68.2021.07.27.13.59.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 13:59:05 -0700 (PDT)
+        Tue, 27 Jul 2021 13:59:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,82 +66,56 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 06/64] bnxt_en: Use struct_group_attr() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:57:57 -0700
-Message-Id: <20210727205855.411487-7-keescook@chromium.org>
+Subject: [PATCH 31/64] fortify: Explicitly disable Clang support
+Date:   Tue, 27 Jul 2021 13:58:22 -0700
+Message-Id: <20210727205855.411487-32-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2358; h=from:subject; bh=urnr1c0HuSr0zcemksTCEth1t70QAfbHaEcP+c1mXUA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOBqioJQ+1gy1GQQan/jf7RJ1/WXH5A0qXVd7xV vq5+5hOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzgQAKCRCJcvTf3G3AJiWREA CNm4WJeCn47J5obmfhInAVhQHs+WaRodzYXqYlwhYZwqztfgNWLmnuTFB7WixSIet+ogzFMJ1r7fzU QnWXAsLuJ3BX98gUGzvKpmV42J3D2bYmtlrZs7Eyhzqsf8YU/1DgzM/cyzoMB1MkY7QVnFyA9ECldc n4XuqAu3QiaIe+5lzEXU3cW0wy5VDaO3U89VhsX3c6FWjMhQ0FF71U5yZVlZ7s8QMcwjgGQ/rSZ5HS tHMaYMmuprGsc0WRWDxssLMce4AZIdKRwnQBGxYX56oM9u/26JaL77KjZeahVv+n4nC+KkXfWFoSls jO+qT1zevLJBtQfWAqBgbtl6mxUkW3D/0aBPlL7o63ss885dcW9pWjj8sVkqG2AOPVUcl+mMOp+VQm 5qmqUeZbnxJVtXjSRXpvzpBMjNj47QiFJaRRu++FQ9+TJ9TwFws9C31mCXsNjIBK/xzNCc0OuY/J2T Fuuz5AL5SsvRzztZGGQvpjWG2xGgfilhJucEqfeyaJrFQIvjGMIAVFYzMGX4dwwIpBMhxVU4spof3f TLNENoSRR30/sOaQWASgjwj8RqwZ3WioWr4/ALRyqYdHD8j5usq3wgrSpYlAC1AQpefx1uLVDOyes3 1j+4vL+JqxKC93LWdqu/2gVD/VBJnBjDTcrSW3GQTmYSKuzKxca2WKziYSew==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1434; h=from:subject; bh=OZRSNCCQRK4SI9xKythqbv7zK3vuXtwb3QhiwmK2e2s=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOHwCOrXdjKPaQWQTp+uW9oUvftBkVWr8r2JNok P/qAaYqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhwAKCRCJcvTf3G3AJoCzD/ 4rXCWl0wg4txaWiFFhdg/2zB4GZpYJQfc3gKG+4JFGMNSSyMqsjR7wvIcQ9gEw3+cnobZIiaO8b8Ts 4y0sNy+ntUvilrHAnRZtWZQVZ7Z0bphyaYuQgnGELUkyMmslVUhPTzSDaughNmfUsvkEFM+na0EDon 9JJonN1vAou+/HN62VbGE5PteJlTDw2ARwNaB/UDzOa8CrMfLABC2YCMWBQuW/UqXG+bpRn/qLi5tt MCnGh7OYAK68OrH12PTZeNI0ZH3K0pon9xoKCGRcbv4RNDpmHve1klM4hflJJRVdZs1aIaNJguaJTr 6HzvMH1IlLaBIYA4lMHcv39fbSr1Z24Y78ZwSdi26YFWkGiIV/xASK0JKJFtw2FqAGh322XFPKawrG jQORn0cKmpkW9asI32mQRS70BV/yIqqzFwVau7oE8B1pGVFNOb3v7tHQ1pe2FZlG3aDgzaXiZQvgvE BV8eE10/S2h2Ma/rMjBUEOjYcpqfCji2YQ9KXUQ9H8bATOOhL+MA0kKSq2drNbUrOiob2qLfmjcBrM 9FB51isfS+QH+Q88vYo6UjSXdNUljwv7UMKGBHm5ndrT3nefrnbGQCZFQt+GVMpwNv9zz9cx59pBu/ EGTrabicSmfTon6Nxko75RGn3EwP6RSQtf7jrirENHsTFm5z7IgfJKZI28iQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+Clang has never correctly compiled the FORTIFY_SOURCE defenses due to
+a couple bugs:
 
-Use struct_group() around members queue_id, min_bw, max_bw, tsa, pri_lvl,
-and bw_weight so they can be referenced together. This will allow memcpy()
-and sizeof() to more easily reason about sizes, improve readability,
-and avoid future warnings about writing beyond the end of queue_id.
+	Eliding inlines with matching __builtin_* names
+	https://bugs.llvm.org/show_bug.cgi?id=50322
 
-"pahole" shows no size nor member offset changes to struct bnxt_cos2bw_cfg.
-"objdump -d" shows no meaningful object code changes (i.e. only source
-line number induced differences and optimizations).
+	Incorrect __builtin_constant_p() of some globals
+	https://bugs.llvm.org/show_bug.cgi?id=41459
+
+In the process of making improvements to the FORTIFY_SOURCE defenses, the
+first (silent) bug (coincidentally) becomes worked around, but exposes
+the latter which breaks the build. As such, Clang must not be used with
+CONFIG_FORTIFY_SOURCE until at least latter bug is fixed (in Clang 13),
+and the fortify routines have been rearranged.
+
+Update the Kconfig to reflect the reality of the current situation.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c |  4 ++--
- drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h | 14 ++++++++------
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ security/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
-index 8a68df4d9e59..95c636f89329 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
-@@ -148,10 +148,10 @@ static int bnxt_hwrm_queue_cos2bw_qcfg(struct bnxt *bp, struct ieee_ets *ets)
- 	}
- 
- 	data = &resp->queue_id0 + offsetof(struct bnxt_cos2bw_cfg, queue_id);
--	for (i = 0; i < bp->max_tc; i++, data += sizeof(cos2bw) - 4) {
-+	for (i = 0; i < bp->max_tc; i++, data += sizeof(cos2bw.cfg)) {
- 		int tc;
- 
--		memcpy(&cos2bw.queue_id, data, sizeof(cos2bw) - 4);
-+		memcpy(&cos2bw.cfg, data, sizeof(cos2bw.cfg));
- 		if (i == 0)
- 			cos2bw.queue_id = resp->queue_id0;
- 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
-index 6eed231de565..716742522161 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.h
-@@ -23,13 +23,15 @@ struct bnxt_dcb {
- 
- struct bnxt_cos2bw_cfg {
- 	u8			pad[3];
--	u8			queue_id;
--	__le32			min_bw;
--	__le32			max_bw;
-+	struct_group_attr(cfg, __packed,
-+		u8		queue_id;
-+		__le32		min_bw;
-+		__le32		max_bw;
- #define BW_VALUE_UNIT_PERCENT1_100		(0x1UL << 29)
--	u8			tsa;
--	u8			pri_lvl;
--	u8			bw_weight;
-+		u8		tsa;
-+		u8		pri_lvl;
-+		u8		bw_weight;
-+	);
- 	u8			unused;
- };
- 
+diff --git a/security/Kconfig b/security/Kconfig
+index 0ced7fd33e4d..8f0e675e70a4 100644
+--- a/security/Kconfig
++++ b/security/Kconfig
+@@ -191,6 +191,9 @@ config HARDENED_USERCOPY_PAGESPAN
+ config FORTIFY_SOURCE
+ 	bool "Harden common str/mem functions against buffer overflows"
+ 	depends on ARCH_HAS_FORTIFY_SOURCE
++	# https://bugs.llvm.org/show_bug.cgi?id=50322
++	# https://bugs.llvm.org/show_bug.cgi?id=41459
++	depends on !CONFIG_CC_IS_CLANG
+ 	help
+ 	  Detect overflows of buffers in common string and memory functions
+ 	  where the compiler can determine and validate the buffer sizes.
 -- 
 2.30.2
 
