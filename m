@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CC8C19F31
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4D8C41537
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 447EE60FF3
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 430A360F90
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235431AbhG0VTI (ORCPT
+        id S232661AbhG0VQw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:19:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58292 "EHLO
+        Tue, 27 Jul 2021 17:16:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233113AbhG0VQz (ORCPT
+        with ESMTP id S232289AbhG0VQv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:55 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBE3C0613CF
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id q17-20020a17090a2e11b02901757deaf2c8so1268637pjd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
+        Tue, 27 Jul 2021 17:16:51 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26B71C0613C1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id i1so32603plr.9
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XdwAH1wi5GybK4WACckEvbqqM0uNwW2ti2D4UdHSPZY=;
-        b=Ok0JMPyOntA2/shXMQ9U1we++nT0qhfqh/2CJDQ7K4u1UjNQxoXnu4xajkK85E02cp
-         OtK4XcDGy3wt7Tpk39IjjY6WKVrrLzGuvSAivYryWC7kRY63lA/xKQX2Vbk2E2Uavoj/
-         TmQhzEwGrkAcpR2gJlO/FcTIp5gwC+F1KR0zE=
+        bh=SpZy1pS0Gg8JkmXUmGaVpmtafp37Y0lKYW1g3lNxRk4=;
+        b=A77Hsrv/P1e/41H8BKtZ/n0QSSgOO6Ga9sE1GvbFMi+bKpQp87VSkYvioAmaQfpcBq
+         eFv2yBCpv4YJQqBwgjjL2xdq+4FEL936SYjayprWVPJRoYxxFAc4biq4dgch9TexI5GE
+         mBiaRsvTzv7gcKjwpSanM5FnLNXazFefox4os=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XdwAH1wi5GybK4WACckEvbqqM0uNwW2ti2D4UdHSPZY=;
-        b=goPndBbbM95FXe3L3po6qHO48G24/J4OeP5/C7EypmM65GfdMkqUPhy2QyRMMau2rT
-         7gqHcdiXlf9eMwP/CVeIAVfRZJaX46BohMgx8Fx1T/543aS5xXGPa1UebV5RVzD6Dr8m
-         CQyq4q3qn/qHmu/5iV+uDxDULyQOBKJGchE2OrYAB8hW3RzpipYDhmwhGp5BL+jfrH8t
-         5ah8LkR/Tc7MS+OlYqj8dSQVAx11ZG9zRIsybdxsOJ147ItfTdAuOa/OVw0ZzZeh9JOw
-         Gi62oQ6U+/y5aTWdwZ5smjGfS5crOliSNK/udJBoVAcUCppm200jcv4DaMrzYeU1BuUJ
-         w+Hg==
-X-Gm-Message-State: AOAM5333QjqvDwVdBwcgyFMmhQA3shHoims8iaebdN/l9UIpR3Ys6wAs
-        bHJMaZ6t73L4zI2MX0gJ8NACVA==
-X-Google-Smtp-Source: ABdhPJzNDR76qJ9OM5+z4CUAyTRDn6tOs0lDe4jIL47eptis/B+O9LnGDX5Q+EGMdPEud5CnEN4QqQ==
-X-Received: by 2002:a17:902:c950:b029:12b:6dff:737e with SMTP id i16-20020a170902c950b029012b6dff737emr20365641pla.23.1627420614916;
-        Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
+        bh=SpZy1pS0Gg8JkmXUmGaVpmtafp37Y0lKYW1g3lNxRk4=;
+        b=rySExsZppczMxmGxN6TdZhbUaoTPgDmNEuRQvTGDna9LU1IoHPH0mTQIt38vzw20Pz
+         qPOo15w3e1RNcP1eWQ/zCDs9dCWqBT/WJJLZnY87eSa9mYJboXaXgB7e9rjBqIacKi+I
+         /xQ4I+P4t3X8rJXjb6Nwm7RAsZss4zxQAgAJsa0H1NZfXT+ZlPX00pN2uN6EEtY294tZ
+         iu4cM740liqMg0eUH0imO4neOOKQZ+LkoNAv1IhbBqWX2LsVPFM3DBtJ5o+ETjp1q067
+         FUMSaw8HmdCAQ0p6axlJP5UqpQJT5A2Z1eo2syNdSl1tzH31bXLb8RVSNmeYALurtgM0
+         rvTA==
+X-Gm-Message-State: AOAM532SCjzuZ3KR+PVvBNKUBy7T+WnuBeq9SHP9GdAvmN/SYIM36OtG
+        Pm5+aK05W/9Fn5m7y8T8xCVCKNnvj5yNxRd5
+X-Google-Smtp-Source: ABdhPJwJ5EsyyNwvu2BT/c057PIAzBypfNfC2iNOI+D8sMRvi2xP5fAmx2yzmyvWvNgjy2aoBfHqEw==
+X-Received: by 2002:a63:cd4b:: with SMTP id a11mr25635035pgj.273.1627420610673;
+        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y9sm1353654pfq.199.2021.07.27.14.16.51
+        by smtp.gmail.com with ESMTPSA id q5sm3971112pjo.7.2021.07.27.14.16.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:53 -0700 (PDT)
+        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 20/64] intersil: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:11 -0700
-Message-Id: <20210727205855.411487-21-keescook@chromium.org>
+Subject: [PATCH 57/64] netfilter: conntrack: Use struct_group() to zero struct nf_conn
+Date:   Tue, 27 Jul 2021 13:58:48 -0700
+Message-Id: <20210727205855.411487-58-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2591; h=from:subject; bh=XN4EcfAHOcyqzqxgubXwSLF7jbqQXUd6RGr4EKrJNsA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOEPEvZgYdYMavqPMgeDE6afWty3UdJd13OmXSL GPE0C+OJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhAAKCRCJcvTf3G3AJr8VD/ 9xVNxDN0+Jpu0O3w+sAgW+rnCimDM7o6SG5YedgqLo9ucHl7vx4cyG9meVQGqMt9RqIGfOuGWKUhx8 evPPkXhtqKEjLE9v6VbPKbcPAdcxh53eNx6j/QQCiD3ESy8EJWHhyi/1KC67cB50MeFLrW1O9lRLib KKuFycwhUjoh/Yf8VpDYUfNnYsn14knw+crJhaBTBggW55XmcO40aq/5WJYXp6vMSfcz6ZP2EWHk7X A7aNdVQ0uGEpCjRX0mqgIVDJeNnFivh2USUz4PVh6dZvVtegtUZ2Er0Oci5RoOwxWyXq/b6Erf0u4T twTqUdOnuOxP4/90seGDGkAX57dqITIzgJL0r9ENwWqSQqsPbLiKa1/asyzzEkUno7IAG5XBysCpu6 /UTarLm65AFjDrqgWfoh5tW46HI6qD+TBBvzHaKyX7X+LpVAnSVr3JjkdVO8P6H8yhL0opZP0C0HrZ EM6Th8xtyqMF0uHuhxj+93uIAvn5I7EZMEpFO/cLBzH04SfZZHCiywH1/jb/LjBKyf0zPQJQ1Vzpq1 TjAcn1pDlmxmr8t8QsbsbCjiwVyi9itWGM7tEeZ6WberH/QZcolHGoIakzm3k6rcGS90K3xsGVrVNR iuzAs+ECABSmTkuBrwO8EFf2/FSBUsGUtUvVELOjF7CEOssim03OhfpzKyzA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2310; h=from:subject; bh=s7DyCBPDaCq4d9JSsWLJ8+EongifST6biZFyx2UX6q8=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHONWBiPiNzo/t8OW3Ns6kZ2l8riv+DL/V9XSJtK Xd5HzDuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjQAKCRCJcvTf3G3AJsz7D/ 42pKBLJYcyHNJwO4YohbAAmhcoXAY8bmybN4HQPzp0zeFLNZqc2Mjb4rl3swZnOVaOVIL3tdvOiDgh i8NP+ht5TIItplmx8kwQTDPnNvvzlkJ82eWDHbvlZo9L/KkG3tB6q0ZoB5wyDwJ/WtKkX+tNlUGMRP OkokNS0HmTNz9ICaj7b7j9osXWGi57NUaXBtDDH/qH8MsT0lOJRU2Z4gVtlmQ4R2LKaBHTKEt6BHyM 60WMlTbzjKwmlSHB2aAoSUxJeN+xflQRuXnp9Z6gejpjykNWv/FHyosJTO5fvOqyY7fnbG5IP18fDs 13RH/EqMrXXtaC08nbTDiHc7xZZd07xjYusHaAykXGZ1M93N5Yyv4Ki7pupKpuLMhmBe3mMJ6R9V/9 uGqhRuL79KG+FrjRZBGe6WhgC/PPRmNIQiKGNNqoLP4kHNzZGslITSZJ/dhW1VxfIJC4CSyVjW5cgL prwEVJwtrbEMjXtHxTTF6YTc9ktMv2sS2o53nA9MrdPsxA9UV/yGCIxScUw8rTkzsu8Mk49on1WZf9 QEGh/Zy6T4S+lmbbiyXk3M1IAIDUYvs9WGAIYNlGzCMyk8XCDW9FUvuYcOQEU7XduJJ/wAhIG6MGew +7Dpxb4bbGybSLftmpNT3cPqKZ0HD+6F3Nbr82t0S06MwdOE0b2kHOrmjCYg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,64 +81,72 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct hfa384x_tx_frame around members
-frame_control, duration_id, addr1, addr2, addr3, and seq_ctrl, so they
-can be referenced together. This will allow memcpy() and sizeof() to
-more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of frame_control.
-
-"pahole" shows no size nor member offset changes to struct
-hfa384x_tx_frame. "objdump -d" shows no object code changes.
+Replace the empty __nfct_init_offset member with a struct_group() to
+mark the region of struct nf_conn that should be initialized to zero,
+allowing memset() to correctly reason about the size of the write.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_hw.c   |  5 +++--
- drivers/net/wireless/intersil/hostap/hostap_wlan.h | 14 ++++++++------
- 2 files changed, 11 insertions(+), 8 deletions(-)
+ include/net/netfilter/nf_conntrack.h | 20 ++++++++++----------
+ net/netfilter/nf_conntrack_core.c    |  4 +---
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 9a19046217df..cea8a9ddc4da 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -1812,8 +1812,9 @@ static int prism2_tx_80211(struct sk_buff *skb, struct net_device *dev)
- 	memset(&txdesc, 0, sizeof(txdesc));
+diff --git a/include/net/netfilter/nf_conntrack.h b/include/net/netfilter/nf_conntrack.h
+index cc663c68ddc4..51004fce2937 100644
+--- a/include/net/netfilter/nf_conntrack.h
++++ b/include/net/netfilter/nf_conntrack.h
+@@ -101,24 +101,24 @@ struct nf_conn {
+ 	struct hlist_node	nat_bysource;
+ #endif
+ 	/* all members below initialized via memset */
+-	struct { } __nfct_init_offset;
+-
+-	/* If we were expected by an expectation, this will be it */
+-	struct nf_conn *master;
++	struct_group(init,
++		/* If we were expected by an expectation, this will be it */
++		struct nf_conn *master;
  
- 	/* skb->data starts with txdesc->frame_control */
--	hdr_len = 24;
--	skb_copy_from_linear_data(skb, &txdesc.frame_control, hdr_len);
-+	hdr_len = sizeof(txdesc.frame);
-+	BUILD_BUG_ON(hdr_len != 24);
-+	skb_copy_from_linear_data(skb, &txdesc.frame, hdr_len);
- 	if (ieee80211_is_data(txdesc.frame_control) &&
- 	    ieee80211_has_a4(txdesc.frame_control) &&
- 	    skb->len >= 30) {
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_wlan.h b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-index dd2603d9b5d3..174735a137c5 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-+++ b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-@@ -115,12 +115,14 @@ struct hfa384x_tx_frame {
- 	__le16 tx_control; /* HFA384X_TX_CTRL_ flags */
+ #if defined(CONFIG_NF_CONNTRACK_MARK)
+-	u_int32_t mark;
++		u_int32_t mark;
+ #endif
  
- 	/* 802.11 */
--	__le16 frame_control; /* parts not used */
--	__le16 duration_id;
--	u8 addr1[ETH_ALEN];
--	u8 addr2[ETH_ALEN]; /* filled by firmware */
--	u8 addr3[ETH_ALEN];
--	__le16 seq_ctrl; /* filled by firmware */
-+	struct_group(frame,
-+		__le16 frame_control; /* parts not used */
-+		__le16 duration_id;
-+		u8 addr1[ETH_ALEN];
-+		u8 addr2[ETH_ALEN]; /* filled by firmware */
-+		u8 addr3[ETH_ALEN];
-+		__le16 seq_ctrl; /* filled by firmware */
+ #ifdef CONFIG_NF_CONNTRACK_SECMARK
+-	u_int32_t secmark;
++		u_int32_t secmark;
+ #endif
+ 
+-	/* Extensions */
+-	struct nf_ct_ext *ext;
++		/* Extensions */
++		struct nf_ct_ext *ext;
+ 
+-	/* Storage reserved for other modules, must be the last member */
+-	union nf_conntrack_proto proto;
++		/* Storage reserved for other modules, must be the last member */
++		union nf_conntrack_proto proto;
 +	);
- 	u8 addr4[ETH_ALEN];
- 	__le16 data_len;
+ };
+ 
+ static inline struct nf_conn *
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index 5c03e5106751..b05eb64ec788 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1527,9 +1527,7 @@ __nf_conntrack_alloc(struct net *net,
+ 	ct->status = 0;
+ 	ct->timeout = 0;
+ 	write_pnet(&ct->ct_net, net);
+-	memset(&ct->__nfct_init_offset, 0,
+-	       offsetof(struct nf_conn, proto) -
+-	       offsetof(struct nf_conn, __nfct_init_offset));
++	memset(&ct->init, 0, sizeof(ct->init));
+ 
+ 	nf_ct_zone_add(ct, zone);
  
 -- 
 2.30.2
