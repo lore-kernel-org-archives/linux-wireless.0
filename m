@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E89E1C3F6A3
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D52C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D17CF60FEE
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D57960FF1
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235306AbhG0VSr (ORCPT
+        id S232356AbhG0VQz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:18:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
+        Tue, 27 Jul 2021 17:16:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233360AbhG0VQ5 (ORCPT
+        with ESMTP id S232359AbhG0VQw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:57 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54486C0617A2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id c16so45769plh.7
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
+        Tue, 27 Jul 2021 17:16:52 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D802C061757
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id o44-20020a17090a0a2fb0290176ca3e5a2fso1132596pjo.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vvD4cE9CC0UwuFk0tFrxkl0FdzddHJztTx+G0lXko2o=;
-        b=X2kAI6271c2kBTWRkNK+SRyUD05VC55sahGiHWkGhtgogxcqv13k4bEJx1CzoRkXNa
-         NYhpiT00hyKycZt5MZCqoJys0Vj8ijuU6JI/ftE4rUt3HcwgYje+gBJFSIJVGEF29R+B
-         1p8D2+Q//lxigAx/4Pqgw4xuPqYVkWyNr336o=
+        bh=w4Fdwl9HiFMZ+llOdhUBfZSYAz9VTvRZ/zqP2rqnbdI=;
+        b=OubzHKZ8rQkxISQj3tvDfVhvRaRW388it7d5HkY7TCu/bBaa8Pr8HfYZFrPrOiunFF
+         6bCQMEiL+lVzAM6jCwQcLzTiImmq8ntJYj7aynk5kXTfEehuycCEDZIeJcO5eJpfZQKn
+         hq2FyEBWz+GBZM7N+a3OD/2asYrrsHtNzmSN0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vvD4cE9CC0UwuFk0tFrxkl0FdzddHJztTx+G0lXko2o=;
-        b=r2sMe76b4PjG2CpzFvulF8ltfuj2Pezvo1SAA/ZXZ0qljbNzMA5re/fD6vSA7YB98A
-         kdBOsPseUD1V3vedlrIv0JkX/vvFZAkbTCchmOPPgwhFXwt4t75COz/bLIZ5YEY1hXvS
-         aYma1L41WQ4olNL7v8twU0ePZKFOvBjc9dZy7IcZuPNj5C19DJ/na1o7pBc0UXY7pLfB
-         nElUrUvN1OWA7sOGtj5en8ZDE0y0Zrguw4HR2O1Hh/RUxEOFW5FZh2Bz05oGml9NF3tV
-         rbgEuLfPWFyaUHafLlCiSs2I2XntmUHGaJ9y6xbTiilGdPPHuncbwHljtxI9LLxnxlGi
-         ekbQ==
-X-Gm-Message-State: AOAM533XCz3QQ7pe4Yc9yJmt5oVykkr9xU5IPB9B0e0hXPZYBWA0lT55
-        Oao6l7IQo+dZcO8i3KcjMU+EYg==
-X-Google-Smtp-Source: ABdhPJzx5uKJYYGIQeb6ncc39fFtWiuuJzbqS3/tvESRfbaEkAgXMJJefnvqpPoyIhq8uFbnDuQ/Yw==
-X-Received: by 2002:a17:90a:3fc6:: with SMTP id u6mr9309818pjm.146.1627420615860;
-        Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
+        bh=w4Fdwl9HiFMZ+llOdhUBfZSYAz9VTvRZ/zqP2rqnbdI=;
+        b=WYE965z0MZsDswgzw171BT0sVhvRX2FU7TO4vJG2MGE7rJrRMIOh6c+P/iP+1dBTp2
+         HK+FCC8VK/ozMaSrS8PTlIG24JyNqzf/vTOX85SXxZBZq4xk0Hw3DFrYlmVDmvyarM6K
+         FCPqQUDk7YM6tdsVFVO1RJcH9E4I+Oe13ZumTn8TrbIH2jE16RyhPwIEo9gmatCRhhvB
+         N5ZJbB8njFs+Sj1Wc1y7iH2F6eukbRlCw1rR8zI3SvSqFh/3czJ+fIhl1mI42urd84l3
+         reNDQrq2yggKx9m6+bAbHqc0xjMxfqItbeLcmlghKhoqBwiwvRUzOrgtaQGuDD2KZK9t
+         9jPg==
+X-Gm-Message-State: AOAM531+nHmPrzXYqfN6chq/DdbuifoIjhkxJ6byttMMuEFLE0MZ1vpC
+        IkmaQsGs4oF8IPsp+dY/U+e1WQ==
+X-Google-Smtp-Source: ABdhPJzBdsmV+2iswoqD8g+SAJNwVreAx8UwnGfV68SrU1eBmBrhzMiv9tA9zD/XN/ReoAPLtd1HsQ==
+X-Received: by 2002:aa7:9a07:0:b029:329:46d2:c6e4 with SMTP id w7-20020aa79a070000b029032946d2c6e4mr25255299pfj.81.1627420610912;
+        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id t9sm5079279pgc.81.2021.07.27.14.16.51
+        by smtp.gmail.com with ESMTPSA id m11sm1742495pgn.56.2021.07.27.14.16.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
+        Tue, 27 Jul 2021 14:16:50 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,112 +66,86 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 21/64] cxgb4: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:12 -0700
-Message-Id: <20210727205855.411487-22-keescook@chromium.org>
+Subject: [PATCH 37/64] string.h: Introduce memset_after() for wiping trailing members/padding
+Date:   Tue, 27 Jul 2021 13:58:28 -0700
+Message-Id: <20210727205855.411487-38-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3924; h=from:subject; bh=y2sMUjTim/gIwxveSmmQhx7NYTt7b1pVbIiPi7Evl4M=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOEnE25c6OQAZUZh7are7MybFphgO5c0XjmqaoM cypZk3uJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhAAKCRCJcvTf3G3AJrVgD/ 9EUipW/aGz8pZZO+KYM/hHRGzHn3eJ8lr6sIZd2kwgY/YenMRyXcbyazHaKtq9k4qFGDfasF7ov858 QgSo0FLS6kKdp77nml8K4O9E8I7ayBPKVtULTSDvCMtWKEqBcfC6Q7M0Nb1UixUrR2Z1JhZZK9WtWH ID8omgKPI4LnnaYo4ycEAVB9pzBuOp2dw3mX8jThZiOXisc1A8O6CIE/RAKv1Fno46ecBIpYI58Lfj Q2dLClrapmNlYoUxj2kteXxZy308YbZng7p0daoSE68G8Dm0g06bXBLPRLc/bImHPgA3klYnSoixgZ RMD6kvFN+5q7n8MnIJdaq7gJBYyPBy/9C6wwG2lmKxvmgPKgNj1zDkyb7ttS5FAEi0kc+f+uE/Qvc6 LxFFznj1facXXLvYjxYdFVv9TF/b9/6/BBeUCOHLnyB4kGzOqlN4zBCzSlX25q7Qr8HnPEr34tJ/mP 3QyTlF29k5BfJetxRga3bVSYt4eLe0vVj8bLZug1htSckQNfV4X1STPomfizJ8F8ssl8VR+AZqcEPZ ru/Rhw2gsydUoGnN1DHmcUDJjNa8iHRdhVeY0MaxkmG0p3DjmhYkpj3nmosca/JbyjnMdcrVrIyErT CYzNTxmbAjdwEJnwSyRPybVcS5R4LwUCJqb30qR0qVGXDBcsbP8DrEjKddqA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2359; h=from:subject; bh=b9cZC+rDD66z1p4TxzACgUY06GpnBkPGzRd2vUJnnzo=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOIfqyzMaVVJ7fOFmkjuM928F3ZrP6Vj5vJQu9j TGA+E1GJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziAAKCRCJcvTf3G3AJvL4D/ 432CWZcCqOkVhZ6rWzVtqmSaSBdcUlSVZvNTubv+qk3MAjGXh0WePvQ/w470x2ODfGCERhFWEDFlQj 68DffRJeemD9mQNtxja/G+yKlfKQtqj2GsW7tkAYMYGdzk44ucXmoA6jnRW6vcayOBno0Ak7JtF4lG m7CwO3b7xHmECqmbPERBBHV/EFy/4S7JgLqoPni03PW1KgZDyCWqbwmB04HSW1ssZRyLMd4s3QMY1T +9uiq7oHu8jR42VT7YaiZc18izUh7AQddCZBlvqcHK6sPbsh+klX5zZS9n02ODAklfDkBGB2gb1tzk qTxXC88avclTCkPd2GBEUQEctsttYoNcK4xZ3zRj+wlfk6n2j/Aj/ysxug7cILnKKFV1GD6Yf8nsLg 2k2xEUpWUhhQ6fcZqBd7cBs5gIDYK2zreDrTKcqVFSQ0lX6w9ZyGULXQjv3ILYDHDHvd1PewBgByhA 8aurJtfihL4zDAjHyVugkZ+nfaAmQVaovogYrWCCXoxbMKSIxExx4nWszpvOPpR1mX+l7gYP24rMp1 l768YtsiX/jU5xOMRn5iJGLFogebnye0HYfk45A60bKdiGZmynlnz5gGZL9zYD/aSJOhSfF3kz5hcE XG0Q1qnKtvYm975U6RI0dZPUWK34kAgIzA9fINgzTL6Q+FxQr5sF43MKxRyQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
-
-Use struct_group() in struct fw_eth_tx_pkt_vm_wr around members ethmacdst,
-ethmacsrc, ethtype, and vlantci, so they can be referenced together. This
-will allow memcpy() and sizeof() to more easily reason about sizes,
-improve readability, and avoid future warnings about writing beyond the
-end of ethmacdst.
-
-"pahole" shows no size nor member offset changes to struct
-fw_eth_tx_pkt_vm_wr. "objdump -d" shows no object code changes.
+A common idiom in kernel code is to wipe the contents of a structure
+after a given member. This includes places where there is trailing
+struct padding. These open-coded cases are usually difficult to read and
+very sensitive to struct layout changes. Introduce a new helper,
+memset_after() that takes the target struct instance, the byte to
+write, and the member name after which the zeroing should start.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/ethernet/chelsio/cxgb4/sge.c      |  8 +++++---
- drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h | 10 ++++++----
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c    |  7 ++-----
- 3 files changed, 13 insertions(+), 12 deletions(-)
+ include/linux/string.h | 12 ++++++++++++
+ lib/test_memcpy.c      | 12 ++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index 6a099cb34b12..9080b2c5ffe8 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -1842,8 +1842,10 @@ static netdev_tx_t cxgb4_vf_eth_xmit(struct sk_buff *skb,
- 	 * (including the VLAN tag) into the header so we reject anything
- 	 * smaller than that ...
- 	 */
--	fw_hdr_copy_len = sizeof(wr->ethmacdst) + sizeof(wr->ethmacsrc) +
--			  sizeof(wr->ethtype) + sizeof(wr->vlantci);
-+	BUILD_BUG_ON(sizeof(wr->firmware) !=
-+		     (sizeof(wr->ethmacdst) + sizeof(wr->ethmacsrc) +
-+		      sizeof(wr->ethtype) + sizeof(wr->vlantci)));
-+	fw_hdr_copy_len = sizeof(wr->firmware);
- 	ret = cxgb4_validate_skb(skb, dev, fw_hdr_copy_len);
- 	if (ret)
- 		goto out_free;
-@@ -1924,7 +1926,7 @@ static netdev_tx_t cxgb4_vf_eth_xmit(struct sk_buff *skb,
- 	wr->equiq_to_len16 = cpu_to_be32(wr_mid);
- 	wr->r3[0] = cpu_to_be32(0);
- 	wr->r3[1] = cpu_to_be32(0);
--	skb_copy_from_linear_data(skb, (void *)wr->ethmacdst, fw_hdr_copy_len);
-+	skb_copy_from_linear_data(skb, &wr->firmware, fw_hdr_copy_len);
- 	end = (u64 *)wr + flits;
+diff --git a/include/linux/string.h b/include/linux/string.h
+index cbe889e404e2..4f9f67505f70 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -272,6 +272,18 @@ static __always_inline void memcpy_and_pad(void *dest, size_t dest_len,
+ 		memcpy(dest, src, dest_len);
+ }
  
- 	/* If this is a Large Send Offload packet we'll put in an LSO CPL
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
-index 0a326c054707..2419459a0b85 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
-@@ -794,10 +794,12 @@ struct fw_eth_tx_pkt_vm_wr {
- 	__be32 op_immdlen;
- 	__be32 equiq_to_len16;
- 	__be32 r3[2];
--	u8 ethmacdst[6];
--	u8 ethmacsrc[6];
--	__be16 ethtype;
--	__be16 vlantci;
-+	struct_group(firmware,
-+		u8 ethmacdst[ETH_ALEN];
-+		u8 ethmacsrc[ETH_ALEN];
-+		__be16 ethtype;
-+		__be16 vlantci;
-+	);
- };
++/**
++ * memset_after - Set a value after a struct member to the end of a struct
++ *
++ * @obj: Address of target struct instance
++ * @v: Byte value to repeatedly write
++ * @member: after which struct member to start writing bytes
++ */
++#define memset_after(obj, v, member) do {				\
++	memset((u8 *)(obj) + offsetofend(typeof(*(obj)), member), v,	\
++	       sizeof(*(obj)) - offsetofend(typeof(*(obj)), member));	\
++} while (0)
++
+ /**
+  * str_has_prefix - Test if a string has a given prefix
+  * @str: The string to test
+diff --git a/lib/test_memcpy.c b/lib/test_memcpy.c
+index 7c64120a68a9..f52b284f4410 100644
+--- a/lib/test_memcpy.c
++++ b/lib/test_memcpy.c
+@@ -223,6 +223,13 @@ static int __init test_memset(void)
+ 			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+ 			},
+ 	};
++	struct some_bytes after = {
++		.data = { 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x72,
++			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
++			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
++			  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
++			},
++	};
+ 	struct some_bytes dest = { };
+ 	int count, value;
+ 	u8 *ptr;
+@@ -254,6 +261,11 @@ static int __init test_memset(void)
+ 	memset(ptr++, value++, count++);
+ 	compare("argument side-effects", dest, three);
  
- #define FW_CMD_MAX_TIMEOUT 10000
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-index 7bc80eeb2c21..671ca93e64ab 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-@@ -1167,10 +1167,7 @@ netdev_tx_t t4vf_eth_xmit(struct sk_buff *skb, struct net_device *dev)
- 	struct cpl_tx_pkt_core *cpl;
- 	const struct skb_shared_info *ssi;
- 	dma_addr_t addr[MAX_SKB_FRAGS + 1];
--	const size_t fw_hdr_copy_len = (sizeof(wr->ethmacdst) +
--					sizeof(wr->ethmacsrc) +
--					sizeof(wr->ethtype) +
--					sizeof(wr->vlantci));
-+	const size_t fw_hdr_copy_len = sizeof(wr->firmware);
- 
- 	/*
- 	 * The chip minimum packet length is 10 octets but the firmware
-@@ -1267,7 +1264,7 @@ netdev_tx_t t4vf_eth_xmit(struct sk_buff *skb, struct net_device *dev)
- 	wr->equiq_to_len16 = cpu_to_be32(wr_mid);
- 	wr->r3[0] = cpu_to_be32(0);
- 	wr->r3[1] = cpu_to_be32(0);
--	skb_copy_from_linear_data(skb, (void *)wr->ethmacdst, fw_hdr_copy_len);
-+	skb_copy_from_linear_data(skb, &wr->firmware, fw_hdr_copy_len);
- 	end = (u64 *)wr + flits;
- 
- 	/*
++	/* Verify memset_after() */
++	dest = control;
++	memset_after(&dest, 0x72, three);
++	compare("memset_after()", dest, after);
++
+ 	return 0;
+ #undef TEST_OP
+ }
 -- 
 2.30.2
 
