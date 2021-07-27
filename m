@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77094C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EC3C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57E0A60F9D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E56660FC2
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234404AbhG0VIN (ORCPT
+        id S234890AbhG0VIP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:08:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55884 "EHLO
+        Tue, 27 Jul 2021 17:08:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233476AbhG0VHg (ORCPT
+        with ESMTP id S232923AbhG0VHj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:07:36 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28148C061367
+        Tue, 27 Jul 2021 17:07:39 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8F9C06136E
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:07:03 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id i10so37627pla.3
+Received: by mail-pj1-x1033.google.com with SMTP id mt6so1868309pjb.1
         for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:07:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fCr6M9WVbBxoz5xSZDTLYQZUaixoNhvM1z4ft4/JiWU=;
-        b=CkfvuUYgjXUdgM1i87D/akGLRkQBlDepGvReTODAXjxv3JZLUxpr2SeqRCtggSb1NQ
-         0eO++6VjfUhMdNdLL9RotuOnb/CQ5ydWv+gSz7/hzqH6ipBx2LTuhN83Pi+6+jPneDFl
-         4XWuDGX42ek2Bg7lAzXWOFRnumRXJltjgh5Ik=
+        bh=9rtpQJfi9BLLOweU32TBsHXrBE4rsqDcc6NfaxawLSk=;
+        b=RtzRv2Hcall8Q6XauG9EQPn8i+Z+6koyHdHqSdWr1lBpyDmTL2zq8f4/gYexNOgk1T
+         WXmsT0CdeWzWqKO4r48fClVJNDtqn6UozibeVLNy9JNbVg75bxoYY9Ruld+9teuS9TwN
+         pO5fWj3PBxdOW6auqhJTHSBpj70tfZtzUkWjM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=fCr6M9WVbBxoz5xSZDTLYQZUaixoNhvM1z4ft4/JiWU=;
-        b=TIz8tNQYRKJmZ0CQmYMma92z3y6S7NNBkV3lMaMs3qha4Snj7TfFV6HDDr8IP0acYt
-         +E2vmaz1EIF9MhPSb5XY4G7ONmRRvYJpnmwI7nk/M7mVnTgBT1BL5BjN//6BhJ4swng7
-         TjzOQ4yvF9hMOrogBIICr2AbGlGZctLhlszRYID8AUEa/xkjAO2fpq1ZKVjuQycKVs51
-         g5VRtQpDYUZYq1RDaPgPgNwTcBifv7RgSheHGQZYm2+F9aSLXvTsZsQdftZK+dKQbj7a
-         jdfQTTANTLLC4fd9R0Vg/eWUJxHQ+AfYoEuUE6CfEMQHdfcaltZbI5Rli60ylwOqRj38
-         B3pw==
-X-Gm-Message-State: AOAM532pezZjTTabDcA/I4K+yKG1+kXdm+ndlfISC0qIKxqy+vEVH9Jc
-        Y42WqGSFZN6NKf/k1uyhbPb0hg==
-X-Google-Smtp-Source: ABdhPJxSxBiTE9j5dpguWlnBff2W6XOxanMIjLBz3KD/2jrAfNakkqqBYOlfrkNXGZusO3mgNbH5WQ==
-X-Received: by 2002:a17:902:b711:b029:11e:6480:258a with SMTP id d17-20020a170902b711b029011e6480258amr20741066pls.41.1627420022747;
-        Tue, 27 Jul 2021 14:07:02 -0700 (PDT)
+        bh=9rtpQJfi9BLLOweU32TBsHXrBE4rsqDcc6NfaxawLSk=;
+        b=c1e55bY7bX79XsU3P5XGMJfAlFY+KIOMRIJbn8uYjc0w8iDwsYRiYXxEUlGwKo+Ric
+         s8FeKWr4TMdyI7PvSl+fCGsOBTJ7YrKEhixOj8VAL8S5BiEjT+B3N6Qi3ISnDAGbygSh
+         OlsrsAdnUUkyjGu82T1eSE+fXEnGHHZKMthXZZ37a8Z8gYQVfRIq9xdHf4116Xwshn7Z
+         SsDUNib6BuajHJxaHZgkqaXwsADtMWQTA9vkfn8I2Ljku08q2+Xs0DP+1L/9oLF5C76z
+         Ut4mFNbVpzZjunKoBZh0YldxkPqIGe8Jmwua00coM129F8NAyhNX/oJkFjUes7mhZmqp
+         PjpQ==
+X-Gm-Message-State: AOAM530D12CTRY4MERimI3VfvdnPm8nS6yRrYHvGK5VaMJ7euiDnrAc4
+        UhfcxwD86dwOdGRCbRB1imQdaw==
+X-Google-Smtp-Source: ABdhPJwtY/96GtTJvQKRxUE9f4XM5WO13IhPiZmvG1Gx9it1XsiDWBqLh+O5ytTK4J0lAw6QIUM9HA==
+X-Received: by 2002:a62:3852:0:b029:32e:50d4:6ee5 with SMTP id f79-20020a6238520000b029032e50d46ee5mr24697953pfa.3.1627420023128;
+        Tue, 27 Jul 2021 14:07:03 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id i24sm3255991pfr.207.2021.07.27.14.06.55
+        by smtp.gmail.com with ESMTPSA id 19sm5414686pgg.36.2021.07.27.14.06.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 27 Jul 2021 14:07:01 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 54/64] ipv6: Use struct_group() to zero rt6_info
-Date:   Tue, 27 Jul 2021 13:58:45 -0700
-Message-Id: <20210727205855.411487-55-keescook@chromium.org>
+Subject: [PATCH 50/64] KVM: x86: Use struct_group() to zero decode cache
+Date:   Tue, 27 Jul 2021 13:58:41 -0700
+Message-Id: <20210727205855.411487-51-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2014; h=from:subject; bh=9FxEXENVJNuB45fHUbaxMj4hb424u+KXBOvcDXadQUU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOMr1s7rjBnwnV0YvEmCppP2KjiI7qwbNhC0tnR LR54sH2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjAAKCRCJcvTf3G3AJvB1D/ 9HyBVTCMQFZVnce4Q7z9RSSZaLEhmwSMwOLxk45KjDsJAOP3HcDjbkcb2t+AmQxHosaQzMYzJBsPLM fI6MGo8d7iglJul2X+wgatbPcEehYNvmi9N2hSNViixrkSMFXRYD9gNgZxmurHn3poTaQBFJeH/CMt i0K0Mf9xJLh09ZTUaBEMkeBp92msj4wB0UzT2YgQVbRBg/2h2H9tSdBS7ou3xC8W1K4gsOB+p8y9Z9 E6xK8yOM9010RaqlQJ7Xwiw/qBjEzM4v6/BvFKOfF7nbprnDsEcm1n3uqkj3PJ0XdUXpvHAc5ObsoB KO/0wpq+dvC4caLYvsafIZqOaz3hLgcDlRNbqQtK2sC08guGWc1MHoTfZoyOpPcsvKpv6Ez1ugjb2i pyJ0WkxY6xI4NtO334xyOlpSXADvHv+yqhiucaHger+9V1z3cVGZWQJMnpNFHTjqetSkyOaPhGCfT6 eygtBdkni37ipeLcPOAVtXgZH4iuKxdilblIEAG1YqFqpciOhCgtYiCt3itR4hpyhJp61nLn2XSysU lMIbYdUyBQlmwsWY79F0ezh83tePY6wggdyAujypUrGKiYTgTpH817kU7KBH2AB7YhuYQevj9FEHhD B/H1yY45d73/j38Hw4+briFVcL4khdU1nni0efnXIAMBNb0nJPEsOcf21O/g==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1896; h=from:subject; bh=Yy2yFM1urtqhL7n0r4aqd2cxgBZVMAyveJbcFvHLMlI=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOLO3D9COdGLWOeR85zbaklAzObwkj15dNUWB7V d7VJAUWJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziwAKCRCJcvTf3G3AJlCqD/ 9cyHvgurMj0+H5UBZbi3PT0Pbs8SRpr/t0XADG40BpZ+yVAAnrqFDSkxMwCaBqoxRSLdmcDqy3b5SU c20S1Aw1siyqHiVEI4mnsKY6Jgrwx/SMBp2bYIVeZru9HNSXKKx57kdf2tIrViE9LYxYJFaHrBwPb9 o5tiJQmaA6MIjjExAe20o1QhTaI/E8sNfmlXtKaS0+XA7Rm8s+Qw65FVDyLqzv2BWb50Hdr4cMYh1X MTXkpiMZrMaPEQ3Wa2TwW0eAlAoWXXUXCLZ9VWJ5QlWKljXrylcdoLAikqEE7v2J5Rlr6FXOAMs3tZ d2CLoMo36Px3zBdTlu90/UlVPgO3P/Uk2ZhkN4uzHd4n/DIvanRvGewXH4liErXPixMmOgnLGLl+5d dVxT4PdjmU6shd83BEuZ8GZH4T6M9tygTNcERhWYIFMPXxYO5sgBrAlOJPmGkJC7hJD/RcfcYrBrpN UanrlQrhn6AYQGnmxcAQjc9dQQiRJO+jcDS4dRElaZb2OkRAD8J6+dNCu3El0L2RSWF1CiAbnwjwZi vxQaozruf1DsPdfg+Bv8JNonOrCpc7rnWMUbZIM6n0KMZJB+puj15D3L2N22fwOUi7MkF9cUWlAzlk H8X7oTv0jAj5RR0KuG/re2JSTLAEqtF1EBsbI72rE8m6mO5OjrH8edIe/qDg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -84,71 +84,59 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Add struct_group() to mark region of struct rt6_info that should be
-initialized to zero.
+Add struct_group() to mark region of struct x86_emulate_ctxt that should
+be initialized to zero.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/net/ip6_fib.h | 30 ++++++++++++++++--------------
- net/ipv6/route.c      |  4 +---
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ arch/x86/kvm/emulate.c     |  3 +--
+ arch/x86/kvm/kvm_emulate.h | 19 +++++++++++--------
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/include/net/ip6_fib.h b/include/net/ip6_fib.h
-index 15b7fbe6b15c..9816e7444918 100644
---- a/include/net/ip6_fib.h
-+++ b/include/net/ip6_fib.h
-@@ -205,20 +205,22 @@ struct fib6_info {
+diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
+index 2837110e66ed..2608a047e769 100644
+--- a/arch/x86/kvm/emulate.c
++++ b/arch/x86/kvm/emulate.c
+@@ -5377,8 +5377,7 @@ static int fastop(struct x86_emulate_ctxt *ctxt, fastop_t fop)
  
- struct rt6_info {
- 	struct dst_entry		dst;
--	struct fib6_info __rcu		*from;
--	int				sernum;
--
--	struct rt6key			rt6i_dst;
--	struct rt6key			rt6i_src;
--	struct in6_addr			rt6i_gateway;
--	struct inet6_dev		*rt6i_idev;
--	u32				rt6i_flags;
--
--	struct list_head		rt6i_uncached;
--	struct uncached_list		*rt6i_uncached_list;
--
--	/* more non-fragment space at head required */
--	unsigned short			rt6i_nfheader_len;
-+	struct_group(init,
-+		struct fib6_info __rcu		*from;
-+		int				sernum;
-+
-+		struct rt6key			rt6i_dst;
-+		struct rt6key			rt6i_src;
-+		struct in6_addr			rt6i_gateway;
-+		struct inet6_dev		*rt6i_idev;
-+		u32				rt6i_flags;
-+
-+		struct list_head		rt6i_uncached;
-+		struct uncached_list		*rt6i_uncached_list;
-+
-+		/* more non-fragment space at head required */
-+		unsigned short			rt6i_nfheader_len;
-+	);
- };
- 
- struct fib6_result {
-diff --git a/net/ipv6/route.c b/net/ipv6/route.c
-index 6b8051106aba..bbcc605bab57 100644
---- a/net/ipv6/route.c
-+++ b/net/ipv6/route.c
-@@ -327,9 +327,7 @@ static const struct rt6_info ip6_blk_hole_entry_template = {
- 
- static void rt6_info_init(struct rt6_info *rt)
+ void init_decode_cache(struct x86_emulate_ctxt *ctxt)
  {
--	struct dst_entry *dst = &rt->dst;
--
--	memset(dst + 1, 0, sizeof(*rt) - sizeof(*dst));
-+	memset(&rt->init, 0, sizeof(rt->init));
- 	INIT_LIST_HEAD(&rt->rt6i_uncached);
- }
+-	memset(&ctxt->rip_relative, 0,
+-	       (void *)&ctxt->modrm - (void *)&ctxt->rip_relative);
++	memset(&ctxt->decode_cache, 0, sizeof(ctxt->decode_cache));
  
+ 	ctxt->io_read.pos = 0;
+ 	ctxt->io_read.end = 0;
+diff --git a/arch/x86/kvm/kvm_emulate.h b/arch/x86/kvm/kvm_emulate.h
+index 68b420289d7e..9b8afcb8ad39 100644
+--- a/arch/x86/kvm/kvm_emulate.h
++++ b/arch/x86/kvm/kvm_emulate.h
+@@ -341,14 +341,17 @@ struct x86_emulate_ctxt {
+ 	 * the rest are initialized unconditionally in x86_decode_insn
+ 	 * or elsewhere
+ 	 */
+-	bool rip_relative;
+-	u8 rex_prefix;
+-	u8 lock_prefix;
+-	u8 rep_prefix;
+-	/* bitmaps of registers in _regs[] that can be read */
+-	u32 regs_valid;
+-	/* bitmaps of registers in _regs[] that have been written */
+-	u32 regs_dirty;
++	struct_group(decode_cache,
++		bool rip_relative;
++		u8 rex_prefix;
++		u8 lock_prefix;
++		u8 rep_prefix;
++		/* bitmaps of registers in _regs[] that can be read */
++		u32 regs_valid;
++		/* bitmaps of registers in _regs[] that have been written */
++		u32 regs_dirty;
++	);
++
+ 	/* modrm */
+ 	u8 modrm;
+ 	u8 modrm_mod;
 -- 
 2.30.2
 
