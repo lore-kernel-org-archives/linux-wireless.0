@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC89AC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47067C4320A
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4C5A60FE4
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3077E60FE4
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233630AbhG0VSJ (ORCPT
+        id S234711AbhG0VST (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:18:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58326 "EHLO
+        Tue, 27 Jul 2021 17:18:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233634AbhG0VQ7 (ORCPT
+        with ESMTP id S233522AbhG0VQ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:59 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9E6FC0617A2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:58 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id f13so73945plj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:58 -0700 (PDT)
+        Tue, 27 Jul 2021 17:16:58 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF66FC06179E
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id q2so20505plr.11
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vvNgpOkYohlzmozRH90jT3va3z9rMWChvsz40h8+RkY=;
-        b=cI7pDAEV+fAYh/9IrkMcLzlca5EW1ooun6AivPtj97ng/WaVF+mQDkhXwA/1Z2+AJr
-         4Nn77aehsUrpK6SIapNlZq0hcL6Ffryk3x8aHwWk5fGDWlq2H7uxwsPJ/4q0+5tNCXsZ
-         hD+zPYAIV3KQDQDjzvXrg9fukVcidGdotaa4I=
+        bh=as474LhSy42cHKge7Gy2Fn1oqutkW78m6VkSl3HByJE=;
+        b=lSOk/hBBmMlB1rYWTRaPXPIkKi/CxdsLOHI3vbEi2GSoFn58wsWtYlaoOfqvPj59dt
+         ooaVxGQyHEHZnH0A70oChu8vvpJt9DQZz91T5V7lJ7/jvA+gX2vgTxoF4L8nNLo3A1bm
+         hHNtGTPTcV/mXDEkppwsVuEpgI+3vO6Y1uBxk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vvNgpOkYohlzmozRH90jT3va3z9rMWChvsz40h8+RkY=;
-        b=M5wVSgweVX2bxtYpe8cL8mkud+CDz/30cMHASLXDDf57ntg7nk3VL2/UJTbjdDUDNu
-         DFqFORnYoiuC1CoBvu3PMRo265Da7Yn0vCp+LWk4pyR99tthdNpzgnxG8T53G++n/MSx
-         phOCQcHl/heBFUFXGKZsBoHefbjWDmz56y2scGUuoqEt5CDjV1ywgmVHOb0gLdyJnlyY
-         QgbstykYU7VMDay3Z9ry8lHDVkB98kDsWaUkHKkJv/WaU9tJhpfPL7GoGw0Y35xO6LR5
-         p1ITdc1BCTdjVj598CKPCaCZQs0tinqf+FKrDiofATO1HRk4aUsG8vQz0UIts10/RV6/
-         d9dg==
-X-Gm-Message-State: AOAM531VSBUSt03iWw8UwQ2tdalQAAwFaCVaYza8Hlkr41c9Msnwg81D
-        JEdTSu3TLGaySqlrE7L1V0AG8Q==
-X-Google-Smtp-Source: ABdhPJzE9AoOQUL4/giBdYIFX1uIcw2uVNeNuZFEGRMkEqN+EwkPLwt/9C4Lcpy6fWzjXCsTHLO9Mg==
-X-Received: by 2002:a17:90a:5201:: with SMTP id v1mr23545012pjh.46.1627420618454;
-        Tue, 27 Jul 2021 14:16:58 -0700 (PDT)
+        bh=as474LhSy42cHKge7Gy2Fn1oqutkW78m6VkSl3HByJE=;
+        b=FqWIElLR/BcH8wEr8CeJyqILQMLGnit1LKbpgn1yNbRL7LpqUjVtv0ZA2iqrJZCYY3
+         YIuxAMcb/GU4ZvBvFVd/FhzHa+dWrZsYLcSsh9YUEEM4ieYrNlbMRkBLKID2sozHwrBi
+         ocJpkHLQnWjwYYgtkzbOG7olRvvcLREzPtJNGStx4QE/cMwlTfgB824OJKUG3DDir1Zv
+         TXYU+qHL7oGWdJZXo7HwgJCs8WZf/eEwHJ/x0SAvDifj+ARScQlAflsaO+3UVOwsy08D
+         2RWCz6lp3mvOJUMvLhfu1ivrsofR3B47mvufaUy/9ejsFoM2Y3aOck6ymCQ2JW1eKoPd
+         ApIw==
+X-Gm-Message-State: AOAM530XrgVCcJ3hRZYsmFhERrGEFpbp+M9Q/9nSoGjcI/cPF6e1T75S
+        V7EqazZhH9YTTNR7zp+6h/1vdA==
+X-Google-Smtp-Source: ABdhPJxGaEK/7GM0+vAKulISQNQ8zNmBoY4IggEYKPysQEG+1vegv9sBaDZhhkPzUiJxyIhOdVgTMQ==
+X-Received: by 2002:a17:90b:4a4d:: with SMTP id lb13mr6031654pjb.221.1627420617450;
+        Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 19sm5431637pgg.36.2021.07.27.14.16.54
+        by smtp.gmail.com with ESMTPSA id q19sm5028194pgj.17.2021.07.27.14.16.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:55 -0700 (PDT)
+        Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,14 +66,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 24/64] staging: wlan-ng: Use struct_group() for memcpy() region
-Date:   Tue, 27 Jul 2021 13:58:15 -0700
-Message-Id: <20210727205855.411487-25-keescook@chromium.org>
+Subject: [PATCH 46/64] IB/mthca: Use memset_after() for clearing mpt_entry
+Date:   Tue, 27 Jul 2021 13:58:37 -0700
+Message-Id: <20210727205855.411487-47-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2375; h=from:subject; bh=c/SxbSrw72JMwWGBAhjNbuucRJa6d830VHNx2pfQMmY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOF2QDCtL/erQWj7ox+a3ncXLGvlzCwDIvWXZkH qHjzBFyJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzhQAKCRCJcvTf3G3AJtV+D/ 0fO+YtYcaNoJFtJLfaoehtt1+wVJemFnhzXbO8zron27IVuMZAcUQZRTvfedVY+1vq9YmKpR1jLhu6 TonAYm/QSoolsRdIvr0usi+NR+eRkXR1ZnyvV5rnOc9YaBWbZRrQq3ZcX6YCjqPkK8p8WRxt9Bj0Sg q5zK3/CNl56vrOTzTCCoxMsajE9vAxySqiSXHSeiMfp2xd3+QR3kRFCFU0ZSA0xfMcnR2JvGQBggJS RkdJjwLCK+kENWJtvHtlX4elSv2P/OtT8hnnPRvud1yeMq+QpTzPeNdW7PxhWE2RwZNA2NugGVRSlX 3jR4hhDV+6JtngiZjWbObIbIUZuegWEMH0zZW7dNgjbeuJq60bTRCUm4kANVmgMnCpvv/gmJ/eOGF+ Cy3TIZB46rpL4aRD/GZgx7Z3LlwLOdMudLK7tK9BsLfb7ORVmmEeOisNmyspYO6/AqlMjaI1/ZZlV3 812R76a18N3vOrFFTOfbqpkITezkVwlqkVE+0wU0/No7R2jwKaEwkopqHCE2H8k4ufJ2CY+2fLArN9 RN/NT2xb7COyOrwRuX1S423r0L/eefO2fysMApU+RwzbiD/oDAlU7jx19jPFBWMojjzIhrQhJlkdja x1kg9JKYzfTYl3DgElyjMkkBql860vUUs21cPgyOy5TcZ8V0tBlTLOvGWnpg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1125; h=from:subject; bh=EIIm+0VdwQ9IH2XMV6ts5pIWwaxyRwboIG5815tF7+o=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOKarr4bIPgvwWH2qKkwLe6/q8cDAlBzD3bLA24 ll85FGeJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzigAKCRCJcvTf3G3AJvwwEA ChEYdVEvOlY6ZSSDwSK+GqTMcoJtHYXIXerlg3cv7Z5B/nj+4tsVkjpbbg6qYJ7G6Wn5LCRzlLTF/B JEQNK1K018MnLFUCnQdrWeHhqOML4Z+QY9330qvih8kbryLwUmmPm8tMDr8k7xeqODqXV0ysJUPb2N xVAh/ldKgMIWN0SIEK4b/AeC9lC2gYUHs0M9ufsvUwE/w7u4/dJRXGEtfOnpjbz9EiJRevDyOxG/L7 5kQTjyY65fkZSD9d3DQYA0of/YGF5vIAzSb90hB4BR+6elYWhMJodLf6s9scmQdVrWhXQ4dVg6J+8M ycSHtAUfvV0kejqMCcI904M9g4jJuniybmlBLuzSIsi21ELju85L/7B9KiYaqlPgChXogQSPXNk5Kd 54beIYuu1Fd49rYR1R8WtEoklJaIrmJSkYaEDaYgFR3e7sXiui1Lo6/7QEjLjklWuNupXgY7d+KgBw oCFrVzGvwPnUGDQnGEfR2OxN6HzTznt5SuyVEVOZkOSmgu5uS6ad9csIugS5srvBjmEQQuXMfiCcAe FRY7ypPn9oUPWMah/ykVuPdD7cmvKT/OghOEHP/qza9WeqolkQBPyj4t9m6qBq2lsFMVjj3xVeXXM2 +eC9JXnzHZx87wkFYpcVJstfzhif8T3qljrVvmM3fY2NknXhqRg98uBOWpsQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,67 +81,32 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct hfa384x_tx_frame around members
-frame_control, duration_id, address[1-4], and sequence_control, so they
-can be referenced together. This will allow memcpy() and sizeof() to
-more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of frame_control.
-
-"pahole" shows no size nor member offset changes to struct
-hfa384x_tx_frame. "objdump -d" shows no meaningful object code changes
-(i.e. only source line number induced differences.)
+Use memset_after() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/staging/wlan-ng/hfa384x.h     | 16 +++++++++-------
- drivers/staging/wlan-ng/hfa384x_usb.c |  4 +++-
- 2 files changed, 12 insertions(+), 8 deletions(-)
+ drivers/infiniband/hw/mthca/mthca_mr.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wlan-ng/hfa384x.h b/drivers/staging/wlan-ng/hfa384x.h
-index 88e894dd3568..87eb87e3beab 100644
---- a/drivers/staging/wlan-ng/hfa384x.h
-+++ b/drivers/staging/wlan-ng/hfa384x.h
-@@ -476,13 +476,15 @@ struct hfa384x_tx_frame {
+diff --git a/drivers/infiniband/hw/mthca/mthca_mr.c b/drivers/infiniband/hw/mthca/mthca_mr.c
+index ce0e0867e488..64adba5c067d 100644
+--- a/drivers/infiniband/hw/mthca/mthca_mr.c
++++ b/drivers/infiniband/hw/mthca/mthca_mr.c
+@@ -469,8 +469,7 @@ int mthca_mr_alloc(struct mthca_dev *dev, u32 pd, int buffer_size_shift,
+ 	mpt_entry->start     = cpu_to_be64(iova);
+ 	mpt_entry->length    = cpu_to_be64(total_size);
  
- 	/*-- 802.11 Header Information --*/
+-	memset(&mpt_entry->lkey, 0,
+-	       sizeof *mpt_entry - offsetof(struct mthca_mpt_entry, lkey));
++	memset_after(mpt_entry, 0, length);
  
--	u16 frame_control;
--	u16 duration_id;
--	u8 address1[6];
--	u8 address2[6];
--	u8 address3[6];
--	u16 sequence_control;
--	u8 address4[6];
-+	struct_group(p80211,
-+		u16 frame_control;
-+		u16 duration_id;
-+		u8 address1[6];
-+		u8 address2[6];
-+		u8 address3[6];
-+		u16 sequence_control;
-+		u8 address4[6];
-+	);
- 	__le16 data_len;		/* little endian format */
- 
- 	/*-- 802.3 Header Information --*/
-diff --git a/drivers/staging/wlan-ng/hfa384x_usb.c b/drivers/staging/wlan-ng/hfa384x_usb.c
-index f2a0e16b0318..38aaae7a2d69 100644
---- a/drivers/staging/wlan-ng/hfa384x_usb.c
-+++ b/drivers/staging/wlan-ng/hfa384x_usb.c
-@@ -2516,7 +2516,9 @@ int hfa384x_drvr_txframe(struct hfa384x *hw, struct sk_buff *skb,
- 	cpu_to_le16s(&hw->txbuff.txfrm.desc.tx_control);
- 
- 	/* copy the header over to the txdesc */
--	memcpy(&hw->txbuff.txfrm.desc.frame_control, p80211_hdr,
-+	BUILD_BUG_ON(sizeof(hw->txbuff.txfrm.desc.p80211) !=
-+		     sizeof(union p80211_hdr));
-+	memcpy(&hw->txbuff.txfrm.desc.p80211, p80211_hdr,
- 	       sizeof(union p80211_hdr));
- 
- 	/* if we're using host WEP, increase size by IV+ICV */
+ 	if (mr->mtt)
+ 		mpt_entry->mtt_seg =
 -- 
 2.30.2
 
