@@ -2,59 +2,59 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-24.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB91BC43214
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91966C4320E
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7D1260FEB
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6000160F9C
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 21:17:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233809AbhG0VRA (ORCPT
+        id S233735AbhG0VRI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:17:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58326 "EHLO
+        Tue, 27 Jul 2021 17:17:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233434AbhG0VQ5 (ORCPT
+        with ESMTP id S233774AbhG0VRA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:16:57 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1D23C06179B
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id g23-20020a17090a5797b02901765d605e14so1077508pji.5
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
+        Tue, 27 Jul 2021 17:17:00 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FA16C061796
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:00 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id e2-20020a17090a4a02b029016f3020d867so1115551pjh.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2021 14:17:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=/OVgTbTtEQVoBvCYg6jSmmU2Jgo9MSvA0i/isq2f++M=;
-        b=Wm+Rznum7P688B/j40t8dWZbI3yL279fIwcyE8kRrWHtUSw2wnQuFT9lnz2fc4+43S
-         VfkMQShGeL8RgeifHwa+1Gb4HuwEbMHW1NdNSoXO6NwhzZS18EWYDI2Rgakw6baZcLDS
-         jAADfGvlUDiysfwlDOKPNJGXo8MmEW8NRVWiA=
+        bh=vRgb1VJvkR4TxUQ9j5wT6NQOJVualZe/N5ucmrpwcpM=;
+        b=Urt716jbz8XdyF5XY5KmZM6capTDsG++7NWnKWGXa8A82gOnBVfVmzBVpmjGHy1J4E
+         Ae0oY6icZsuXtD/nJ3EHWKWtJRkbNQuHNTS22y5t0/gFqDYoj2X9jMSktKlfLPXE1X8w
+         GZLII5xANVEeoTTYkjVLPXyHbZ6nhUyQoz/jc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/OVgTbTtEQVoBvCYg6jSmmU2Jgo9MSvA0i/isq2f++M=;
-        b=EdRsCFdFQsemC5nqRD14TF62xeUFvCDyTPW/zJJn0tzl4IU91xer3doNxzK/qll2HV
-         ilZTnaZ6YnZbSLNDSFJWbgyWYbHJSYVOTGUe3zfJuBp1fdgrbM6R2cuJU+PQJ0JAEJAS
-         XiEP0SKIHGq6OPttfOGoGLMltOec+zmLnhmDC1R5YsQozXCuJJMCJ0vAKfcc2F6AeWdZ
-         t/wKjcpD7XzO16sTY+cdT8ftsl3DQCq17w/8m5WTHpXmGIr77mUglbZl9KwfSMKH/lHS
-         uBzU59mtwW1HxxaNaOmsYOPtReEw0l3a9nvQ7uD30jwY2DJqjNl25yF0eKpKPoQMxaXI
-         m+OA==
-X-Gm-Message-State: AOAM532I3EQGLzy0CobmlEI2xCQ+6YzqNFgBo5ept2v4hl6SwCyltmVP
-        c37nJ2auq59rwTXD3fbwzVa5Ow==
-X-Google-Smtp-Source: ABdhPJzGt/TIZEMxb0jzYjcSPNZqHmgh+Y9I/xLu9VXGsQFFdjJSOJYeTkh6wOBuz86gO+ElXByK/Q==
-X-Received: by 2002:aa7:88d3:0:b029:32b:75d0:fa92 with SMTP id k19-20020aa788d30000b029032b75d0fa92mr25046135pff.23.1627420616406;
-        Tue, 27 Jul 2021 14:16:56 -0700 (PDT)
+        bh=vRgb1VJvkR4TxUQ9j5wT6NQOJVualZe/N5ucmrpwcpM=;
+        b=NRuRBhXPxE7qksa4P5n6zKRLtJERTzzjeUrGlbxrl7Crg6viozOS6H7nnkhIl8H1sq
+         p4bc+1KIzK3CDtzfOQ+E4uOJSjZCiSruv/aCmB05MvyI0ypyu2HvklUHFBx/bErjaqYi
+         mi3+/YWkutVZoZtEca6Q9GOcYiJMXwvOAiQAboq4UhVpLeUX9gdn77Bcdq7z/J6B26lE
+         IozEpV9sP6EYgQBdS6C/dK+PlTOjqRFCGMMZLxyZ08e4Z8RIzTEph5u6xayJyJVq/b1+
+         zLUhvnIc3IpHtgqhMlJfrPp+5ikE/AFir+ORUOFcYUeKU4NlBk5TD8EVKOvua9PnokpK
+         I2Ig==
+X-Gm-Message-State: AOAM5331zQTQNDkwO0m7XQTNCRV9bdj8nNXICVZZ+LIY817e4MJoJVGI
+        2Uv6plFUMg/1ijHZ+CV4S8Tltw==
+X-Google-Smtp-Source: ABdhPJyL6XeGJmKfKYoPIwSnVfrJu9DIh6q4pNy4qcyzmKIcgSJdIeoB0sfhxYXoqkr/188RbhWTVQ==
+X-Received: by 2002:a05:6a00:1913:b029:32b:cec0:77e5 with SMTP id y19-20020a056a001913b029032bcec077e5mr24883708pfi.76.1627420619841;
+        Tue, 27 Jul 2021 14:16:59 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 16sm4884267pfu.109.2021.07.27.14.16.51
+        by smtp.gmail.com with ESMTPSA id w15sm3794043pjc.45.2021.07.27.14.16.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jul 2021 14:16:54 -0700 (PDT)
+        Tue, 27 Jul 2021 14:16:57 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-hardening@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -66,148 +66,85 @@ Cc:     Kees Cook <keescook@chromium.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 60/64] fortify: Work around Clang inlining bugs
-Date:   Tue, 27 Jul 2021 13:58:51 -0700
-Message-Id: <20210727205855.411487-61-keescook@chromium.org>
+Subject: [PATCH 51/64] tracing: Use struct_group() to zero struct trace_iterator
+Date:   Tue, 27 Jul 2021 13:58:42 -0700
+Message-Id: <20210727205855.411487-52-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210727205855.411487-1-keescook@chromium.org>
 References: <20210727205855.411487-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5531; h=from:subject; bh=ngORCtAEDkc0H50xemEev9lyKw3n/iy6PZa3T6iXU20=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHONyzkRh/fY4SBFQw0UvjjNrDOdvLbPeIhyRa2i rGIomkmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBzjQAKCRCJcvTf3G3AJvcJD/ 9ExL37cKA3LzSQ4zLIwXWTofeLwiWaiJD2+4i6tZEdnlJ8ccIL6btbcA2/oKfwlt1Q/3aES1AfKvIp jX6QjMKLDVKoWDUwiV9cOfOSRNzlAJh+OWfd2UXFfAdjQ1Z+kurhqEfopYDzlXfZM/8Ll43JIXMy41 vRqzlXgxfU15MNxESA/2XVgVEq3AvADRrvMCLGF5sHXCGgcveDW73AuUPS9mFcuZNUwF4gXoC4tYAe iEknP/dsD2B1XUNWe6UXbC/nVA5fKWvikUxIgbeQvEJhFaAhEzz12AGCMWmYr5bBsiq4nE6SDMBRoB NxxYclKyhzZsf8NgLPDl1jnyOm5aK7+ppgvnl8/juecTXhoAeF5t4LcfgM9j6/nf6smMrbxkzvh8Hu kSMfLMSRbarT8DEYRsB4cOqvhtdunaoyyYS/iYbqXjCi/CBVLwAMrtD4Vm2UbWbz6opAzxWpLDHNIC NMoz0rNe69d8YBgNkUvq2oy1LcwrK/wAqTye/+4JUEY8Z7oz3apJZXgKntDIsiLVEafejl1w23aM9S qSKmhPAxUfHYW+msCimLNAvgWiEwVFHUIXg7Xo7PaOutDbMyl60C4HlzrSbkkF0HfkVZ7GF2sc+Kme /Kcbctx//Q2WSaC6OpP3OUv2AZUQXGVOv3FbJkiHhmwXwhzfjA6IB+t2CxqA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1917; h=from:subject; bh=x33Bs21uGrD+N+Lns8bFSqK7vUUUNaNSw4EtFfeCu58=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhAHOLu8z/bdU1zMaKndqRyKLCCkXgpWttZKN9yc8w d3BxuKSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYQBziwAKCRCJcvTf3G3AJgHsD/ 98DZD+ecFAqbOjuzLoGxIi4OSnpxnTAcnT2/ZfVnIlEZyXBS+jkr8lU+k0GXpQG2scT/z3KyhdrOJp E60WG63kSFNFWzdWBZZyb0Rf9XVDGHksNfg81VOrWxyCFWrib/BFkg1uKQ3XHny7kvC0saWxsJLOvP PMmBG3p0AzH/bcHeY8JCSe1JqVGWLz4Wdiqq+a1FX3oATkVH4X6hjEPQSu7K5W5gsu8y3sWyfaJ/21 OTekfh+08tGzJUz0x5qwW+mEDgtAt0LEEHLhnIpkUCLiYWmDJzWKF5CUljC6wN4V/uNZBOMTukJCz8 F9nA0W1W0nXeWdz0Z6mMUksqNHOYIhyE52fHArE2U0l0tdWYgbUybcSQsrFUzJ1QxTx6KXNTmHAdC8 g1F37UY/3wzrelPZKNjO7Q2mpX8Q0hoRoR0IePaxvGxraMIKoteVOWP+yTjyheOHuIRmmwFS+m4zl0 xz0ti0B1g1MqQBahH7M3aZtJg/kgJEHRJTpe8g68atzyvYwY8rGNnEiemCygZ2liwL0XGVd/tcrTlJ KkliSKYsXdS6eykIau3c0P0wmRt7ydb/oQgVBcA744nu/6TZH0x0ehC/RmIZ3f0pnMMvLuX81V1dQy aaHLtNUQtk1I2pKRDzLqOWe+HldXvpA+eH/7VFXxng+zPZzpvdu07VGean9Q==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To enable FORTIFY_SOURCE support for Clang, the kernel must work around
-a pair of bugs, related to Clang's inlining.
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Change all the fortified APIs into macros with different inline names to
-bypass Clang's broken inline-of-a-builtin detection:
-https://bugs.llvm.org/show_bug.cgi?id=50322
-
-Lift all misbehaving __builtin_object_size() calls into the macros to
-bypass Clang's broken __builtin_object_size() arguments-of-an-inline
-visibility:
-https://github.com/ClangBuiltLinux/linux/issues/1401
-
-Thankfully, due to how the inlining already behaves in GCC, this change
-has no effect on GCC builds, but allows Clang to finally gain full
-FORTIFY coverage.
-
-However, because of a third bug which had no work-arounds, FORTIFY_SOURCE
-will only work with Clang version 13 and later. Update the Kconfig to
-reflect the new requirements.
+Add struct_group() to mark region of struct trace_iterator that should
+be initialized to zero.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/linux/fortify-string.h | 33 +++++++++++++++++++++------------
- security/Kconfig               |  2 +-
- 2 files changed, 22 insertions(+), 13 deletions(-)
+ include/linux/trace_events.h | 26 ++++++++++++++------------
+ kernel/trace/trace.c         |  4 +---
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/fortify-string.h b/include/linux/fortify-string.h
-index 718325331021..4afd42079d3b 100644
---- a/include/linux/fortify-string.h
-+++ b/include/linux/fortify-string.h
-@@ -38,10 +38,11 @@ extern char *__underlying_strncpy(char *p, const char *q, __kernel_size_t size)
- #define __underlying_strncpy	__builtin_strncpy
- #endif
+diff --git a/include/linux/trace_events.h b/include/linux/trace_events.h
+index ad413b382a3c..cadad77fe524 100644
+--- a/include/linux/trace_events.h
++++ b/include/linux/trace_events.h
+@@ -101,18 +101,20 @@ struct trace_iterator {
+ 	bool			snapshot;
  
--__FORTIFY_INLINE char *strncpy(char *p, const char *q, __kernel_size_t size)
-+#define strncpy(p, q, s) __fortify_strncpy(p, q, s, __builtin_object_size(p, 1))
-+__FORTIFY_INLINE char *__fortify_strncpy(char *p, const char *q,
-+					 __kernel_size_t size,
-+					 const size_t p_size)
- {
--	size_t p_size = __builtin_object_size(p, 1);
+ 	/* The below is zeroed out in pipe_read */
+-	struct trace_seq	seq;
+-	struct trace_entry	*ent;
+-	unsigned long		lost_events;
+-	int			leftover;
+-	int			ent_size;
+-	int			cpu;
+-	u64			ts;
 -
- 	if (__builtin_constant_p(size) && p_size < size)
- 		__write_overflow();
- 	if (p_size < size)
-@@ -112,12 +113,15 @@ __FORTIFY_INLINE size_t strlcpy(char *p, const char *q, size_t size)
+-	loff_t			pos;
+-	long			idx;
+-
+-	/* All new field here will be zeroed out in pipe_read */
++	struct_group(init,
++		struct trace_seq	seq;
++		struct trace_entry	*ent;
++		unsigned long		lost_events;
++		int			leftover;
++		int			ent_size;
++		int			cpu;
++		u64			ts;
++
++		loff_t			pos;
++		long			idx;
++
++		/* All new field here will be zeroed out in pipe_read */
++	);
+ };
  
- /* defined after fortified strnlen to reuse it */
- extern ssize_t __real_strscpy(char *, const char *, size_t) __RENAME(strscpy);
--__FORTIFY_INLINE ssize_t strscpy(char *p, const char *q, size_t size)
-+#define strscpy(p, q, s) __fortify_strscpy(p, q, s,			\
-+					   __builtin_object_size(p, 1),	\
-+					   __builtin_object_size(q, 1))
-+__FORTIFY_INLINE ssize_t __fortify_strscpy(char *p, const char *q,
-+					   size_t size,
-+					   const size_t p_size,
-+					   const size_t q_size)
- {
- 	size_t len;
--	/* Use string size rather than possible enclosing struct size. */
--	size_t p_size = __builtin_object_size(p, 1);
--	size_t q_size = __builtin_object_size(q, 1);
+ enum trace_iter_flags {
+diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+index c59dd35a6da5..9f83864b0be6 100644
+--- a/kernel/trace/trace.c
++++ b/kernel/trace/trace.c
+@@ -6691,9 +6691,7 @@ tracing_read_pipe(struct file *filp, char __user *ubuf,
+ 		cnt = PAGE_SIZE - 1;
  
- 	/* If we cannot get size of p and q default to call strscpy. */
- 	if (p_size == (size_t) -1 && q_size == (size_t) -1)
-@@ -329,7 +333,8 @@ __FORTIFY_INLINE void fortify_memcpy_chk(__kernel_size_t size,
- 		memmove)
- 
- extern void *__real_memscan(void *, int, __kernel_size_t) __RENAME(memscan);
--__FORTIFY_INLINE void *memscan(void *p, int c, __kernel_size_t size)
-+#define memscan(p, c, s) __fortify_memscan(p, c, s)
-+__FORTIFY_INLINE void *__fortify_memscan(void *p, int c, __kernel_size_t size)
- {
- 	size_t p_size = __builtin_object_size(p, 0);
- 
-@@ -340,7 +345,8 @@ __FORTIFY_INLINE void *memscan(void *p, int c, __kernel_size_t size)
- 	return __real_memscan(p, c, size);
- }
- 
--__FORTIFY_INLINE int memcmp(const void *p, const void *q, __kernel_size_t size)
-+#define memcmp(p, q, s) __fortify_memcmp(p, q, s)
-+__FORTIFY_INLINE int __fortify_memcmp(const void *p, const void *q, __kernel_size_t size)
- {
- 	size_t p_size = __builtin_object_size(p, 0);
- 	size_t q_size = __builtin_object_size(q, 0);
-@@ -356,7 +362,8 @@ __FORTIFY_INLINE int memcmp(const void *p, const void *q, __kernel_size_t size)
- 	return __underlying_memcmp(p, q, size);
- }
- 
--__FORTIFY_INLINE void *memchr(const void *p, int c, __kernel_size_t size)
-+#define memchr(p, c, s) __fortify_memchr(p, c, s)
-+__FORTIFY_INLINE void *__fortify_memchr(const void *p, int c, __kernel_size_t size)
- {
- 	size_t p_size = __builtin_object_size(p, 0);
- 
-@@ -368,7 +375,8 @@ __FORTIFY_INLINE void *memchr(const void *p, int c, __kernel_size_t size)
- }
- 
- void *__real_memchr_inv(const void *s, int c, size_t n) __RENAME(memchr_inv);
--__FORTIFY_INLINE void *memchr_inv(const void *p, int c, size_t size)
-+#define memchr_inv(p, c, s) __fortify_memchr_inv(p, c, s)
-+__FORTIFY_INLINE void *__fortify_memchr_inv(const void *p, int c, size_t size)
- {
- 	size_t p_size = __builtin_object_size(p, 0);
- 
-@@ -392,7 +400,8 @@ __FORTIFY_INLINE void *kmemdup(const void *p, size_t size, gfp_t gfp)
- }
- 
- /* Defined after fortified strlen to reuse it. */
--__FORTIFY_INLINE char *strcpy(char *p, const char *q)
-+#define strcpy(p, q) __fortify_strcpy(p, q)
-+__FORTIFY_INLINE char *__fortify_strcpy(char *p, const char *q)
- {
- 	size_t p_size = __builtin_object_size(p, 1);
- 	size_t q_size = __builtin_object_size(q, 1);
-diff --git a/security/Kconfig b/security/Kconfig
-index 8f0e675e70a4..509ec61bc54b 100644
---- a/security/Kconfig
-+++ b/security/Kconfig
-@@ -193,7 +193,7 @@ config FORTIFY_SOURCE
- 	depends on ARCH_HAS_FORTIFY_SOURCE
- 	# https://bugs.llvm.org/show_bug.cgi?id=50322
- 	# https://bugs.llvm.org/show_bug.cgi?id=41459
--	depends on !CONFIG_CC_IS_CLANG
-+	depends on !CONFIG_CC_IS_CLANG || CLANG_VERSION >= 130000
- 	help
- 	  Detect overflows of buffers in common string and memory functions
- 	  where the compiler can determine and validate the buffer sizes.
+ 	/* reset all but tr, trace, and overruns */
+-	memset(&iter->seq, 0,
+-	       sizeof(struct trace_iterator) -
+-	       offsetof(struct trace_iterator, seq));
++	memset(&iter->init, 0, sizeof(iter->init));
+ 	cpumask_clear(iter->started);
+ 	trace_seq_init(&iter->seq);
+ 	iter->pos = -1;
 -- 
 2.30.2
 
