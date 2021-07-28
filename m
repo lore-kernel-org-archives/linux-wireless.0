@@ -2,46 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9217C43214
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 23:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1910C43214
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jul 2021 00:53:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9032960F6C
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jul 2021 23:33:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7F6D60F9D
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jul 2021 00:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232992AbhG0Xdf (ORCPT
+        id S233099AbhG1AxS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jul 2021 19:33:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33136 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232735AbhG0Xdf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jul 2021 19:33:35 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD32CC061757;
-        Tue, 27 Jul 2021 16:33:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=41wpVpavNVm7pF419ATH4r8xqqa08ERgI3LuOyPcGto=; b=St1ko82YVev0bfzCo8YlqcAWmW
-        hr8hpuUOKsdzCrcPuwVnS3q/Plii2gc2y72mvnUDrd88/Ee0aMlJrGenY9KK6SsdfJ3AA1toKsYMh
-        zWwqjDGuGBo4Z30xOkTfYdv/BnreryNqQQEFvin7dexkAmnM8HWqpKvanzLPvj+aU7s//28WihHVX
-        iiDLgdbEzCA8X3hMEzwVO3pKRPyqjgtZl55Nh+PvITALYCI+P53/qr04qmgR7KSo3DxPciVbaldwk
-        CsOn5fnegZ7k6rRT8CPrLJ3DUBN40ij+32GWkm5Pwn9WlS7icC6Wy+eNCSjkPj/X0wETRQqjdkJvv
-        tTxLVPQw==;
-Received: from [2601:1c0:6280:3f0::aefb]
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m8WZn-00GfWY-Tk; Tue, 27 Jul 2021 23:33:32 +0000
-Subject: Re: [PATCH 33/64] lib: Introduce CONFIG_TEST_MEMCPY
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Kees Cook <keescook@chromium.org>,
-        linux-hardening@vger.kernel.org
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Tue, 27 Jul 2021 20:53:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36318 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232883AbhG1AxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jul 2021 20:53:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 871DE60F9D;
+        Wed, 28 Jul 2021 00:53:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627433597;
+        bh=V7BMF/FvyWPzFRxxOCJEliV/8jG21FrrgDKLm323gMc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=E95F9MNM8J/ruiWgqyL/OWAja7QE9lwWMH1hn56E1drKRJHzRI71JR4r7Q1k8mdzZ
+         THWkufcNZzoKNvRSMagzkbUm27LRKFtlehEUMH4pc70s3QrW6G3K+Za3ex2enBCoxi
+         RxhJ9V6QnTgQHZb3fPI3lSYsKzdqo6n8/Tgv0EC3YiuNFdbETPAJSI9xdS+/M7M93Z
+         TIznOV5w1BAv74+8tyDs6nkDSQPXknW0EwQBtxRDhtH80R5NW6BJOxUkiqCx19Jyg4
+         CTZaFhhXp8bu5AnQZCfWe6BVJR4do/lHoLrJuxUaJIaQms4USCSRZmPotcjAMpAHYG
+         buZPMn28624/A==
+Date:   Tue, 27 Jul 2021 19:55:46 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     linux-hardening@vger.kernel.org,
         Keith Packard <keithpac@amazon.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -49,56 +43,171 @@ Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
+Subject: Re: [PATCH 01/64] media: omap3isp: Extract struct group for memcpy()
+ region
+Message-ID: <20210728005546.GA35706@embeddedor>
 References: <20210727205855.411487-1-keescook@chromium.org>
- <20210727205855.411487-34-keescook@chromium.org>
- <9827144a-dacf-61dc-d554-6c69434708de@acm.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <afa92312-a667-3597-d937-7e09bac2bb29@infradead.org>
-Date:   Tue, 27 Jul 2021 16:33:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+ <20210727205855.411487-2-keescook@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <9827144a-dacf-61dc-d554-6c69434708de@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210727205855.411487-2-keescook@chromium.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 7/27/21 4:31 PM, Bart Van Assche wrote:
-> On 7/27/21 1:58 PM, Kees Cook wrote:
->> +static int __init test_memcpy_init(void)
->> +{
->> +    int err = 0;
->> +
->> +    err |= test_memcpy();
->> +    err |= test_memmove();
->> +    err |= test_memset();
->> +
->> +    if (err) {
->> +        pr_warn("FAIL!\n");
->> +        err = -EINVAL;
->> +    } else {
->> +        pr_info("all tests passed\n");
->> +    }
->> +
->> +    return err;
->> +}
->> +
->> +static void __exit test_memcpy_exit(void)
->> +{ }
->> +
->> +module_init(test_memcpy_init);
->> +module_exit(test_memcpy_exit);
->> +MODULE_LICENSE("GPL");
+On Tue, Jul 27, 2021 at 01:57:52PM -0700, Kees Cook wrote:
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memcpy(), memmove(), and memset(), avoid
+> intentionally writing across neighboring fields.  Wrap the target region
+> in a common named structure. This additionally fixes a theoretical
+> misalignment of the copy (since the size of "buf" changes between 64-bit
+> and 32-bit, but this is likely never built for 64-bit).
 > 
-> Has it been considered to implement this test using the Kunit framework?
+> FWIW, I think this code is totally broken on 64-bit (which appears to
+> not be a "real" build configuration): it would either always fail (with
+> an uninitialized data->buf_size) or would cause corruption in userspace
+> due to the copy_to_user() in the call path against an uninitialized
+> data->buf value:
+> 
+> omap3isp_stat_request_statistics_time32(...)
+>     struct omap3isp_stat_data data64;
+>     ...
+>     omap3isp_stat_request_statistics(stat, &data64);
+> 
+> int omap3isp_stat_request_statistics(struct ispstat *stat,
+>                                      struct omap3isp_stat_data *data)
+>     ...
+>     buf = isp_stat_buf_get(stat, data);
+> 
+> static struct ispstat_buffer *isp_stat_buf_get(struct ispstat *stat,
+>                                                struct omap3isp_stat_data *data)
+> ...
+>     if (buf->buf_size > data->buf_size) {
+>             ...
+>             return ERR_PTR(-EINVAL);
+>     }
+>     ...
+>     rval = copy_to_user(data->buf,
+>                         buf->virt_addr,
+>                         buf->buf_size);
+> 
+> Regardless, additionally initialize data64 to be zero-filled to avoid
+> undefined behavior.
+> 
+> Fixes: 378e3f81cb56 ("media: omap3isp: support 64-bit version of omap3isp_stat_data")
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/media/platform/omap3isp/ispstat.c |  5 +--
+>  include/uapi/linux/omap3isp.h             | 44 +++++++++++++++++------
+>  2 files changed, 36 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/media/platform/omap3isp/ispstat.c b/drivers/media/platform/omap3isp/ispstat.c
+> index 5b9b57f4d9bf..ea8222fed38e 100644
+> --- a/drivers/media/platform/omap3isp/ispstat.c
+> +++ b/drivers/media/platform/omap3isp/ispstat.c
+> @@ -512,7 +512,7 @@ int omap3isp_stat_request_statistics(struct ispstat *stat,
+>  int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+>  					struct omap3isp_stat_data_time32 *data)
+>  {
+> -	struct omap3isp_stat_data data64;
+> +	struct omap3isp_stat_data data64 = { };
+>  	int ret;
+>  
+>  	ret = omap3isp_stat_request_statistics(stat, &data64);
+> @@ -521,7 +521,8 @@ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+>  
+>  	data->ts.tv_sec = data64.ts.tv_sec;
+>  	data->ts.tv_usec = data64.ts.tv_usec;
+> -	memcpy(&data->buf, &data64.buf, sizeof(*data) - sizeof(data->ts));
+> +	data->buf = (uintptr_t)data64.buf;
+> +	memcpy(&data->frame, &data64.buf, sizeof(data->frame));
 
-and do we want everything converted to use the Kunit test framework?
+I think this should be:
 
-My answer is No, we don't, but I could easily be in the minority.
+	memcpy(..., &data64.frame, ...);
 
--- 
-~Randy
+instead.
 
+--
+Gustavo
+
+>  
+>  	return 0;
+>  }
+> diff --git a/include/uapi/linux/omap3isp.h b/include/uapi/linux/omap3isp.h
+> index 87b55755f4ff..0a16af91621f 100644
+> --- a/include/uapi/linux/omap3isp.h
+> +++ b/include/uapi/linux/omap3isp.h
+> @@ -159,13 +159,25 @@ struct omap3isp_h3a_aewb_config {
+>  };
+>  
+>  /**
+> - * struct omap3isp_stat_data - Statistic data sent to or received from user
+> - * @ts: Timestamp of returned framestats.
+> - * @buf: Pointer to pass to user.
+> + * struct omap3isp_stat_frame - Statistic data without timestamp nor pointer.
+> + * @buf_size: Size of buffer.
+>   * @frame_number: Frame number of requested stats.
+>   * @cur_frame: Current frame number being processed.
+>   * @config_counter: Number of the configuration associated with the data.
+>   */
+> +struct omap3isp_stat_frame {
+> +	__u32 buf_size;
+> +	__u16 frame_number;
+> +	__u16 cur_frame;
+> +	__u16 config_counter;
+> +};
+> +
+> +/**
+> + * struct omap3isp_stat_data - Statistic data sent to or received from user
+> + * @ts: Timestamp of returned framestats.
+> + * @buf: Pointer to pass to user.
+> + * @frame: Statistic data for frame.
+> + */
+>  struct omap3isp_stat_data {
+>  #ifdef __KERNEL__
+>  	struct {
+> @@ -176,10 +188,15 @@ struct omap3isp_stat_data {
+>  	struct timeval ts;
+>  #endif
+>  	void __user *buf;
+> -	__u32 buf_size;
+> -	__u16 frame_number;
+> -	__u16 cur_frame;
+> -	__u16 config_counter;
+> +	union {
+> +		struct {
+> +			__u32 buf_size;
+> +			__u16 frame_number;
+> +			__u16 cur_frame;
+> +			__u16 config_counter;
+> +		};
+> +		struct omap3isp_stat_frame frame;
+> +	};
+>  };
+>  
+>  #ifdef __KERNEL__
+> @@ -189,10 +206,15 @@ struct omap3isp_stat_data_time32 {
+>  		__s32	tv_usec;
+>  	} ts;
+>  	__u32 buf;
+> -	__u32 buf_size;
+> -	__u16 frame_number;
+> -	__u16 cur_frame;
+> -	__u16 config_counter;
+> +	union {
+> +		struct {
+> +			__u32 buf_size;
+> +			__u16 frame_number;
+> +			__u16 cur_frame;
+> +			__u16 config_counter;
+> +		};
+> +		struct omap3isp_stat_frame frame;
+> +	};
+>  };
+>  #endif
+>  
+> -- 
+> 2.30.2
+> 
