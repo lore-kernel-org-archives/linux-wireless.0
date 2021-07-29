@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72479C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:41:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEFDC432BE
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CAEB6069E
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:41:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993C260C51
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236559AbhG2KlR (ORCPT
+        id S236676AbhG2KlT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Jul 2021 06:41:17 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:47840
+        Thu, 29 Jul 2021 06:41:19 -0400
+Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:47800
         "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236430AbhG2Kkr (ORCPT
+        by vger.kernel.org with ESMTP id S236285AbhG2Kkp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jul 2021 06:40:47 -0400
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
+        Thu, 29 Jul 2021 06:40:45 -0400
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id DD1CE3F114
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 10:40:43 +0000 (UTC)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id 72D4B3F110
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 10:40:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1627555243;
-        bh=vQB6RRzmQQRlWh6S5blKR75hWps+lidsZcEbJz9OF3k=;
+        s=20210705; t=1627555241;
+        bh=Cti8DGqbNI8YPSuGsMvGoiLdXe5FLuXImkkJsU3HkS0=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=nml0jDSXVy3lXLhxTJ8QN4KV0wYeNSWSr68dcZw6YBXHAj3kOn5Wdr7b2OBtWDLhZ
-         4CmrfjLIEmWIF0CDcXcU2pqGh87u0rIhe9+fDPv0J5OUdZNra7JuYnr0+FFqHHK2Yn
-         l4Z6sZp3SvVsi5BYE0/GPZQjjriuj2nY+zETK8CNo0GlqEx1uBfwAT1MhH3899+cyQ
-         fnqJs5qMwxPnj0tVkXnSqAADuzI/aTemgJaJJkK+utVvbUT46CPwEQIooZNGe6LgF0
-         7mfdfd5stXg/O5HnVDsmz0q51+j1sXhjV7qVE7wgMl3Lfmvg1uogOVwW94LiEsE5tQ
-         yOEMgSm/rfMhQ==
-Received: by mail-ej1-f69.google.com with SMTP id qf6-20020a1709077f06b029057e66b6665aso1840958ejc.18
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 03:40:43 -0700 (PDT)
+        b=f5A+RajiHfLk8wB2DyLPhBFhc9RkwBvXKx/WWTqFq5DD0TpG5TO/5JATW0U6TrlAs
+         VuJAHlSB/36DAUBtsLmGmCSvilO5mvu/KYBwZRwj5Bw9fCeI5Zlm41niNssE0insmk
+         9u7akXzfUgCvB7qNSz/sN6BVXpkddyNK13irLfKaA57Moch5+Z9ZflH5b75RM9z3K1
+         1dFn+t6+ZHVhJ/wVTACcziT/pNXgV2VoJZhOR4KyodfZf/Kiy/snG0SHfpZccc7fsA
+         /i6opkVnifNa8GH/0YjGBlZbndhSczJ0BzxLhvOG4CWGIkFz5aROslMJkFQ3uRGUJR
+         mWH43JvF656xA==
+Received: by mail-ed1-f69.google.com with SMTP id n24-20020aa7c7980000b02903bb4e1d45aaso2724995eds.15
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 03:40:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vQB6RRzmQQRlWh6S5blKR75hWps+lidsZcEbJz9OF3k=;
-        b=Fm5n/NiJjHets3nrqh/V4nSoC04vrUWxLuAnXIET3FjO60cLXvUXhjNDCOuI9XwWns
-         Gj3BnBjo6SDsYtq+ywcOTaI9WOwmc20mAX5KHi3WhlDXHOXYw5JZaKaV3TdmLMeQ7OSg
-         ci4MtAkzuycmOmgz9Cuoah+nNhOI5CEqArGgV+yabWu90rFMUthC2CJTpjEoQDIxRy12
-         fQn0pxQSWegDcQOE0x7dgiTuNw2xEY76a0g4AHq4KKF5XfEuvBRr1IDY6xIJYOFek4Z4
-         d/00oWaPISXmTKmOrvqsCvT9WqqnQNwgDxJWJHynTQAVxQ3D7L7V05XLw/V3dFD3Gx5B
-         jQFg==
-X-Gm-Message-State: AOAM530E+YGAryUs4kve55jSaGSgashw3JPvtFd236uj2v4HHuRDdJpw
-        DII1NM7cAcLj8cqEfl8gTVVr0ISLka+fcxm33VHQLkcRsyXDEABlsdk+2SGgSzfsRWOL2gJdGt/
-        V8ZYZfdjYiKluXzbQyOdM9siJoDjTDiA4786AxbcFjEUl
-X-Received: by 2002:a50:da0e:: with SMTP id z14mr5301144edj.73.1627555243684;
-        Thu, 29 Jul 2021 03:40:43 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwijoO/q/+k8GRTBBEBcEUFMonWljYAnQQgqcZHQasMq3+MlfMPzmN1xs3UX4P2zxHnMrP0CQ==
-X-Received: by 2002:a50:da0e:: with SMTP id z14mr5301127edj.73.1627555243524;
-        Thu, 29 Jul 2021 03:40:43 -0700 (PDT)
+        bh=Cti8DGqbNI8YPSuGsMvGoiLdXe5FLuXImkkJsU3HkS0=;
+        b=lWd8HtthgE4YZxxfFSlSYuk/7Lc8NQ1tWNsKu5P+H692O31GS6dD3Ag7KdxcR4MGay
+         9BLeOe+XeVP9CFwbTNoP52as1XcqfTSNf/Z0JFCoy6QJLMcRamMnC6S3rVf4Uxotgd0q
+         e/eFjKpO/K8GyYFmZjQEPiNjHgnW1V+tfUNh8p7Fw1cAOE1uTtolW5/Xtmni+d4BL4xM
+         3xTUPT+J8TdJmmwzo514hwTp7ANHgpEtKknyP8IHEKR9tiLtoLZNYrU2yhjvrSU1DydP
+         Z4S6LLI4tYt2XXA4BdgvsaKewsJacewVoNPPJ1QrPfsdwblrTC3MClGMISt15IWQO9OS
+         ax5g==
+X-Gm-Message-State: AOAM532IHwgkaBD7kT3KQfEYLr1iaPqTmkgwoqGTRFcocBswOr3bCdGO
+        es8okWPmu3bG5VB3pViL9sq7u/TnG8zEe/dTbR/rDOJtkCfCBQtHxCwQHMC5hg31tgUfXmM4GGe
+        I3I+t1ACAiM/Qe7eJKL3cjnwvL3QJ+u54GqpLTpe+Q4vv
+X-Received: by 2002:aa7:d342:: with SMTP id m2mr5302488edr.40.1627555241274;
+        Thu, 29 Jul 2021 03:40:41 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwjxgKl6WmnwX+WqFoKb6oCeo3LEsCBOoKuWEW0W2jjhEWMO4WBVPwCw/S6BOn4eM0m2lGmgg==
+X-Received: by 2002:aa7:d342:: with SMTP id m2mr5302475edr.40.1627555241166;
+        Thu, 29 Jul 2021 03:40:41 -0700 (PDT)
 Received: from localhost.localdomain ([86.32.47.9])
-        by smtp.gmail.com with ESMTPSA id c14sm824475ejb.78.2021.07.29.03.40.42
+        by smtp.gmail.com with ESMTPSA id c14sm824475ejb.78.2021.07.29.03.40.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jul 2021 03:40:43 -0700 (PDT)
+        Thu, 29 Jul 2021 03:40:40 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Mark Greer <mgreer@animalcreek.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 08/12] nfc: fdp: use unsigned int as loop iterator
-Date:   Thu, 29 Jul 2021 12:40:18 +0200
-Message-Id: <20210729104022.47761-9-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 06/12] nfc: nfcsim: constify drvdata (struct nfcsim)
+Date:   Thu, 29 Jul 2021 12:40:16 +0200
+Message-Id: <20210729104022.47761-7-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210729104022.47761-1-krzysztof.kozlowski@canonical.com>
 References: <20210729104022.47761-1-krzysztof.kozlowski@canonical.com>
@@ -83,29 +83,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Loop iterators are simple integers, no point to optimize the size and
-use u8.  It only raises the question whether the variable is used in
-some other context.
+nfcsim_abort_cmd() does not modify struct nfcsim, so local variable
+can be a pointer to const.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/fdp/fdp.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/nfc/nfcsim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-index 650a140bea46..3f5fba922c4d 100644
---- a/drivers/nfc/fdp/fdp.c
-+++ b/drivers/nfc/fdp/fdp.c
-@@ -611,7 +611,8 @@ static int fdp_nci_core_get_config_rsp_packet(struct nci_dev *ndev,
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 	struct nci_core_get_config_rsp *rsp = (void *) skb->data;
--	u8 i, *p;
-+	unsigned int i;
-+	u8 *p;
+diff --git a/drivers/nfc/nfcsim.c b/drivers/nfc/nfcsim.c
+index 143dc49b815b..15754671eb4d 100644
+--- a/drivers/nfc/nfcsim.c
++++ b/drivers/nfc/nfcsim.c
+@@ -240,7 +240,7 @@ static int nfcsim_send(struct nfc_digital_dev *ddev, struct sk_buff *skb,
  
- 	if (rsp->status == NCI_STATUS_OK) {
+ static void nfcsim_abort_cmd(struct nfc_digital_dev *ddev)
+ {
+-	struct nfcsim *dev = nfc_digital_get_drvdata(ddev);
++	const struct nfcsim *dev = nfc_digital_get_drvdata(ddev);
  
+ 	nfcsim_link_recv_cancel(dev->link_in);
+ }
 -- 
 2.27.0
 
