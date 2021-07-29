@@ -2,127 +2,129 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC0BC4320E
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 360CBC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02D3C60C41
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:36:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12DDB60C41
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235710AbhG2Kg2 (ORCPT
+        id S235796AbhG2Kki (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Jul 2021 06:36:28 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:40160 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233273AbhG2Kg1 (ORCPT
+        Thu, 29 Jul 2021 06:40:38 -0400
+Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:47684
+        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233273AbhG2Kkh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jul 2021 06:36:27 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 508A0223DB;
-        Thu, 29 Jul 2021 10:36:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1627554983;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UkKnqVbw14P1zZ1afK/03fijXFZbWicFe7fyoa6bfnY=;
-        b=pwTsly5mnrizCEq06N5ukXErKPn6Gc1C4FWAemD4tE4rdrKSAD7WEsJBIsy8JMWoICKPro
-        YUD+rdsGqthszKzibpdDw9PZmLm6K7z+/nJcnH3/9RbXzkKL1yBN2iLF4qJdxbzSEE22IX
-        Yy8hsiRj4qt+y/wj0C71RSUrfiRJOCs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1627554983;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UkKnqVbw14P1zZ1afK/03fijXFZbWicFe7fyoa6bfnY=;
-        b=oD2Z+sefoAAeNVxRJnEQBL4v50NCmrVZt9d8xH9i0feek4vyCIM8VXMg7aRjFLf8nzGBrz
-        j9JufWGGGCZMyACA==
-Received: from ds.suse.cz (ds.suse.cz [10.100.12.205])
-        by relay2.suse.de (Postfix) with ESMTP id 36ED5A3B8C;
-        Thu, 29 Jul 2021 10:36:23 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id D7134DA7AF; Thu, 29 Jul 2021 12:33:37 +0200 (CEST)
-Date:   Thu, 29 Jul 2021 12:33:37 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-hardening@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Keith Packard <keithpac@amazon.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: Re: [PATCH 47/64] btrfs: Use memset_after() to clear end of struct
-Message-ID: <20210729103337.GS5047@suse.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Kees Cook <keescook@chromium.org>,
-        linux-hardening@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Keith Packard <keithpac@amazon.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com
-References: <20210727205855.411487-1-keescook@chromium.org>
- <20210727205855.411487-48-keescook@chromium.org>
- <20210728094215.GX5047@twin.jikos.cz>
- <202107281455.2A0753F5@keescook>
+        Thu, 29 Jul 2021 06:40:37 -0400
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPS id E28013F110
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 10:40:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1627555233;
+        bh=U5ZMYZkwqc8RmbQysqq1OTMd/Wgw4WsrTPEA4vYur0c=;
+        h=From:To:Subject:Date:Message-Id:MIME-Version;
+        b=a3YPY3vYsKli7a7OqllP817DBrBPZwa7ng3bBFMBl/U1emu09C+a4XJ+/FUjGz2bw
+         nsdLbmSUgTohopPTT2wajAk1iatWcBwh/vEJUvhSFu9JcAWg6DpxMs04OHnYrKsvhH
+         zGHgBkXT8S6Z3Ed5w0uljGUcqVRPynivowlaNFRdOFTpudkyjtQF8zMdz5w3lfC1Ga
+         sk6xKE4XLH2jYdIKfFBJitYPFovJcUWyl8IDxMslxe1INiMQ9sVv4XHG7rBDOpXe1q
+         Eh/Iqk3wv9g7cjLWOcDWc7rz7NjO4ezhp3t7ohEh2vb/DWT+z3U5kALlnbw0ieV0t1
+         n5Zorq4HVyjTw==
+Received: by mail-ed1-f72.google.com with SMTP id cm18-20020a0564020c92b02903bc7f21d540so1303212edb.13
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 03:40:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=U5ZMYZkwqc8RmbQysqq1OTMd/Wgw4WsrTPEA4vYur0c=;
+        b=iNqbPtwxKm4krXQZmpLVm5m8llZg/WHAn8TA0ruWGE5iPMuk185a+HJUJp36FSgK59
+         fLYfyTbugaIpyIA+GvnBv9Pwh33NMbkYQCmnUg/a3JTq72ic5E4tf3QgpJ0OKum+WXbd
+         /+WRSlRuXBdZRfe4JnG2OuuKWLh1Z8YALZVlHKC2MOvb70ms/TqRIT5veqMNm+MWI6tK
+         eViYZq3E5JfjH2PwSgncGlqTtKaUExzYAMkWQYtW0DwdrrUOv6WYA0INS1cTSpwxNC3b
+         YxOCl8f2UONLJqh6xrzpwOqUdGtruJbhmFOeydEFmDHYDreyJ8hkLKLsgpHZ/zZ5n8Tt
+         xkhA==
+X-Gm-Message-State: AOAM532QfAy306K1IEfcjWYhkbiftnMXVlatgCFV5Gx+a9JLqx15P2LH
+        k1r+bMVpIyNksx57gdDR0MnXmaEh2xAqt4MG831hovZURS5ZgYJKZw620EHx/CmIvvJAMbkHOex
+        E5Gc5LwMJEsjCn+7f0K3DEuY0eAgqAookgdMYBWVmnFjr
+X-Received: by 2002:a05:6402:278e:: with SMTP id b14mr5191729ede.277.1627555233654;
+        Thu, 29 Jul 2021 03:40:33 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw0zzZMt4FRxj6/pkKudrZrKtAC8UcrWt1V+5uDuEVakkenlwbpg5EabX2DWunH4RtcpYeAvw==
+X-Received: by 2002:a05:6402:278e:: with SMTP id b14mr5191710ede.277.1627555233472;
+        Thu, 29 Jul 2021 03:40:33 -0700 (PDT)
+Received: from localhost.localdomain ([86.32.47.9])
+        by smtp.gmail.com with ESMTPSA id c14sm824475ejb.78.2021.07.29.03.40.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Jul 2021 03:40:32 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Mark Greer <mgreer@animalcreek.com>,
+        Bongsu Jeon <bongsu.jeon@samsung.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 00/12] nfc: constify, continued (part 2)
+Date:   Thu, 29 Jul 2021 12:40:10 +0200
+Message-Id: <20210729104022.47761-1-krzysztof.kozlowski@canonical.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202107281455.2A0753F5@keescook>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jul 28, 2021 at 02:56:31PM -0700, Kees Cook wrote:
-> On Wed, Jul 28, 2021 at 11:42:15AM +0200, David Sterba wrote:
-> > On Tue, Jul 27, 2021 at 01:58:38PM -0700, Kees Cook wrote:
-> > > In preparation for FORTIFY_SOURCE performing compile-time and run-time
-> > > field bounds checking for memset(), avoid intentionally writing across
-> > > neighboring fields.
-> > > 
-> > > Use memset_after() so memset() doesn't get confused about writing
-> > > beyond the destination member that is intended to be the starting point
-> > > of zeroing through the end of the struct.
-> > > 
-> > > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > > ---
-> > >  fs/btrfs/root-tree.c | 5 +----
-> > >  1 file changed, 1 insertion(+), 4 deletions(-)
-> > > 
-> > > diff --git a/fs/btrfs/root-tree.c b/fs/btrfs/root-tree.c
-> > > index 702dc5441f03..ec9e78f65fca 100644
-> > > --- a/fs/btrfs/root-tree.c
-> > > +++ b/fs/btrfs/root-tree.c
-> > > @@ -39,10 +39,7 @@ static void btrfs_read_root_item(struct extent_buffer *eb, int slot,
-> > >  		need_reset = 1;
-> > >  	}
-> > >  	if (need_reset) {
-> > > -		memset(&item->generation_v2, 0,
-> > > -			sizeof(*item) - offsetof(struct btrfs_root_item,
-> > > -					generation_v2));
-> > > -
-> > 
-> > Please add
-> > 		/* Clear all members from generation_v2 onwards */
-> > 
-> > > +		memset_after(item, 0, level);
-> 
-> Perhaps there should be another helper memset_starting()? That would
-> make these cases a bit more self-documenting.
+Hi,
 
-That would be better, yes.
+On top of:
+nfc: constify pointed data
+https://lore.kernel.org/lkml/20210726145224.146006-1-krzysztof.kozlowski@canonical.com/
 
-> +		memset_starting(item, 0, generation_v2);
+Best regards,
+Krzysztof
 
-memset_from?
+
+Krzysztof Kozlowski (12):
+  nfc: constify passed nfc_dev
+  nfc: mei_phy: constify buffer passed to mei_nfc_send()
+  nfc: port100: constify several pointers
+  nfc: trf7970a: constify several pointers
+  nfc: virtual_ncidev: constify pointer to nfc_dev
+  nfc: nfcsim: constify drvdata (struct nfcsim)
+  nfc: fdp: drop unneeded cast for printing firmware size in dev_dbg()
+  nfc: fdp: use unsigned int as loop iterator
+  nfc: fdp: constify several pointers
+  nfc: microread: constify several pointers
+  nfc: mrvl: constify several pointers
+  nfc: mrvl: constify static nfcmrvl_if_ops
+
+ drivers/nfc/fdp/fdp.c             | 27 +++++++++++-----------
+ drivers/nfc/fdp/fdp.h             |  2 +-
+ drivers/nfc/fdp/i2c.c             |  6 ++---
+ drivers/nfc/mei_phy.c             |  2 +-
+ drivers/nfc/microread/i2c.c       |  2 +-
+ drivers/nfc/microread/microread.c |  4 ++--
+ drivers/nfc/microread/microread.h |  2 +-
+ drivers/nfc/nfcmrvl/fw_dnld.c     | 16 +++++++------
+ drivers/nfc/nfcmrvl/i2c.c         |  4 ++--
+ drivers/nfc/nfcmrvl/main.c        |  4 ++--
+ drivers/nfc/nfcmrvl/nfcmrvl.h     |  6 ++---
+ drivers/nfc/nfcmrvl/spi.c         |  6 ++---
+ drivers/nfc/nfcmrvl/uart.c        |  4 ++--
+ drivers/nfc/nfcmrvl/usb.c         |  2 +-
+ drivers/nfc/nfcsim.c              |  2 +-
+ drivers/nfc/port100.c             | 37 +++++++++++++++++--------------
+ drivers/nfc/trf7970a.c            | 17 +++++++-------
+ drivers/nfc/virtual_ncidev.c      |  2 +-
+ include/net/nfc/nfc.h             |  4 ++--
+ 19 files changed, 78 insertions(+), 71 deletions(-)
+
+-- 
+2.27.0
+
