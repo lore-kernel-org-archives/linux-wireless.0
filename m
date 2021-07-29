@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E20C432BE
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B3BC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E3AE60720
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A61060720
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 10:40:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236369AbhG2Kkp (ORCPT
+        id S236140AbhG2Kks (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Jul 2021 06:40:45 -0400
-Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:34466
+        Thu, 29 Jul 2021 06:40:48 -0400
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:34508
         "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235880AbhG2Kkl (ORCPT
+        by vger.kernel.org with ESMTP id S236323AbhG2Kkq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jul 2021 06:40:41 -0400
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
+        Thu, 29 Jul 2021 06:40:46 -0400
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPS id 068993F114
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 10:40:38 +0000 (UTC)
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPS id 584083F226
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 10:40:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1627555238;
-        bh=a08v9hxy0zgk30tu0EPhwU1/dVMKGIwopyByTRLQTW8=;
+        s=20210705; t=1627555242;
+        bh=So1uUDkE721+BEqMeRM8NOIaRYftuFanUkfPQdOA99A=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=JSE+sse5AK/JvJNGhV7vdPnzd3eYs2rDC75u6Mf29C2lO9rRofDhpS6NoU33uy36T
-         ZZ2l7whi5jMpSpt7BwwsFxnnEDsIXDG6zEuAXeOayLqgORFACY2d8kBO8PMt2aPMml
-         5sZBI/qgy4KuXo6oYUufe04N+ny4SKUfDdcEx7qL7WVblBARU4WY9MFvOK9rJBYlMF
-         aDM2xlNid8niIGQWJy8cHOZqORnkxdtr4JNppnzARupATcD1anmF7BNg2s641fbA1q
-         /Z+74eihU+KJ1RFEllS6pL+4hVba1RXmIfiFqlKAZyjmpqoEsE7poabPuNGcQ/qInZ
-         V7sYFKbLGSfJQ==
-Received: by mail-ed1-f69.google.com with SMTP id j22-20020a50ed160000b02903ab03a06e86so2728021eds.14
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 03:40:38 -0700 (PDT)
+        b=DbF2ZXKWL2ZjowC+P+66F0i9AmExNlu4XnN2YRnEGYtKi+1nRR4PtnWKxVrHnqOi7
+         2WWd0yKlmMWk5PsguM/zKjGrG17IXiPskbQMT6zh0cIXYS72pYFBHTVxtcOtjFxUDc
+         vG6dRhUGxyM+f7OaIpWcGrK16y7a6ukjfZoULdpHZy4oyEYKwdOl/tmNZH/zSyH6LV
+         Lwe8a/6D2W4rc/DrR100WCuNQ7Z/WttHFAQPdAd17W3iEmsemRIiRdoXVhpvF8NKWH
+         CHLkR00QIl83Bs9yR7loGcM9v2qZMqLOSkvTurKooZfV6DGcrtXbMwlJn86TiWZr3D
+         HAWb3OBg5PbSQ==
+Received: by mail-ed1-f72.google.com with SMTP id c20-20020a0564021014b029039994f9cab9so1286997edu.22
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 03:40:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=a08v9hxy0zgk30tu0EPhwU1/dVMKGIwopyByTRLQTW8=;
-        b=O61Wzozoqgz1ZWvrHyZTgXF/xkEA1i/Ma5peSEBkRGS7LV9gQZ2jWUvLfZLfAswAX7
-         nDuEtaQP0fhKSMGupSlHOQOc1uDybwBtgRjqW3Tw3WqUMJ/HoHdi3qYmEmb+96VrwJOw
-         jTfjgrnEnrlAlimOWwsOKpFGBAfIzHzb3w7gRh8gKRQMdtlqILJmyd5FLT1PTjWNclPZ
-         WKPFz8Iag+zH6oJfE2WBei5yoorHisW4MWZ9BTElwOLlFF8t1LTHzmrEffM9VE1N/3kS
-         gb/o1l3uBVy6Lpk6oSFqnY7FETYk4G3+1Hz5zo/HPsMjsd6GuUd+fNFWqEIZlyRkHpeu
-         pT8A==
-X-Gm-Message-State: AOAM530fo1OgqLIwVVb/LK6WlVSM+hXQOHisReDZee0QA92Sayo5LjWU
-        f2kBCZatAMpO5FgaeorQpumQsHH58hWAK2bNHW8K1LAFmX81P7nLIx3VU3wXrcqAtYJ34bEVf2q
-        47AXnAhdc40GQHPLRpCDvKwwWs9jPLILjDUrSCXBs0eIl
-X-Received: by 2002:a17:906:94cd:: with SMTP id d13mr4063280ejy.158.1627555237728;
-        Thu, 29 Jul 2021 03:40:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxpcC8Z7IC55TpoG5cbgBRsSSS6C555lTVpoloQhomyURPjel7+zQOzWNYTmYIp//p8tRPZ1g==
-X-Received: by 2002:a17:906:94cd:: with SMTP id d13mr4063260ejy.158.1627555237495;
-        Thu, 29 Jul 2021 03:40:37 -0700 (PDT)
+        bh=So1uUDkE721+BEqMeRM8NOIaRYftuFanUkfPQdOA99A=;
+        b=S23q8wbWK2vKYWsvp/LTCMXs2buyh3g4iSWAsOOQSjDlQV8gO4BUneFzyfQWp9loPi
+         FumDfKCJluhc/Vzc4oyYk7adDRjN13b0gflOUs1SI9yAGNe/EYZmR2bpwaeUf34WmG32
+         /OiCk6e/RCy3SgN2AwaQZT+FvnUN3guT4FLVXLtLxQFnQhg2W7UwoZ1QE4naySFgwJay
+         m82NVkiXjg6BCJId479zbmsZGk9YweEA8oYhPuTu5Vh5Tfa0Xjjf7A68EsjQiG2n7Bw1
+         vlXFuRCuO2kJhWpkXejhshI0TyE5yYFItOScQ/wF4zpstOx3uSmIUNSlAqcs45BqaylB
+         zfmA==
+X-Gm-Message-State: AOAM532KM45OyZKvIM3FQ+byAa8la7fCOdtQmtDuMAJ4FBOjrARPU3Y4
+        zph+tSTvLQOQiEb4YAJlpD0E4kd/TLDGJSpAdUIzurLtQi59nMw+GbjjzSAUnq8ATgxMeLC5We/
+        G0V6/mu3M02pfc22Rclo961iiKoM7RTC3Eec7K7ek3hBP
+X-Received: by 2002:a05:6402:cb9:: with SMTP id cn25mr4576416edb.271.1627555240172;
+        Thu, 29 Jul 2021 03:40:40 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwg8gQFeBPTWOxeoK6KYjuQRUdToXFwmH6p9ZgcYdRRS/mw4BXtIUndBzQfGalBkLacI2jz9A==
+X-Received: by 2002:a05:6402:cb9:: with SMTP id cn25mr4576407edb.271.1627555240070;
+        Thu, 29 Jul 2021 03:40:40 -0700 (PDT)
 Received: from localhost.localdomain ([86.32.47.9])
-        by smtp.gmail.com with ESMTPSA id c14sm824475ejb.78.2021.07.29.03.40.36
+        by smtp.gmail.com with ESMTPSA id c14sm824475ejb.78.2021.07.29.03.40.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jul 2021 03:40:37 -0700 (PDT)
+        Thu, 29 Jul 2021 03:40:39 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Mark Greer <mgreer@animalcreek.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 03/12] nfc: port100: constify several pointers
-Date:   Thu, 29 Jul 2021 12:40:13 +0200
-Message-Id: <20210729104022.47761-4-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 05/12] nfc: virtual_ncidev: constify pointer to nfc_dev
+Date:   Thu, 29 Jul 2021 12:40:15 +0200
+Message-Id: <20210729104022.47761-6-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210729104022.47761-1-krzysztof.kozlowski@canonical.com>
 References: <20210729104022.47761-1-krzysztof.kozlowski@canonical.com>
@@ -83,146 +83,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Several functions do not modify pointed data so arguments and local
-variables can be const for correctness and safety.
+virtual_ncidev_ioctl() does not modify struct nfc_dev, so local variable
+can be a pointer to const.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/port100.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/nfc/virtual_ncidev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
-index ccb5c5fab905..517376c43b86 100644
---- a/drivers/nfc/port100.c
-+++ b/drivers/nfc/port100.c
-@@ -526,7 +526,7 @@ static inline u8 port100_checksum(u16 value)
- }
- 
- /* The rule: sum(data elements) + checksum = 0 */
--static u8 port100_data_checksum(u8 *data, int datalen)
-+static u8 port100_data_checksum(const u8 *data, int datalen)
+diff --git a/drivers/nfc/virtual_ncidev.c b/drivers/nfc/virtual_ncidev.c
+index b914ab2c2109..2ee0ec4bb739 100644
+--- a/drivers/nfc/virtual_ncidev.c
++++ b/drivers/nfc/virtual_ncidev.c
+@@ -170,7 +170,7 @@ static int virtual_ncidev_close(struct inode *inode, struct file *file)
+ static long virtual_ncidev_ioctl(struct file *flip, unsigned int cmd,
+ 				 unsigned long arg)
  {
- 	u8 sum = 0;
- 	int i;
-@@ -568,10 +568,10 @@ static void port100_tx_update_payload_len(void *_frame, int len)
- 	le16_add_cpu(&frame->datalen, len);
- }
+-	struct nfc_dev *nfc_dev = ndev->nfc_dev;
++	const struct nfc_dev *nfc_dev = ndev->nfc_dev;
+ 	void __user *p = (void __user *)arg;
  
--static bool port100_rx_frame_is_valid(void *_frame)
-+static bool port100_rx_frame_is_valid(const void *_frame)
- {
- 	u8 checksum;
--	struct port100_frame *frame = _frame;
-+	const struct port100_frame *frame = _frame;
- 
- 	if (frame->start_frame != cpu_to_be16(PORT100_FRAME_SOF) ||
- 	    frame->extended_frame != cpu_to_be16(PORT100_FRAME_EXT))
-@@ -589,23 +589,24 @@ static bool port100_rx_frame_is_valid(void *_frame)
- 	return true;
- }
- 
--static bool port100_rx_frame_is_ack(struct port100_ack_frame *frame)
-+static bool port100_rx_frame_is_ack(const struct port100_ack_frame *frame)
- {
- 	return (frame->start_frame == cpu_to_be16(PORT100_FRAME_SOF) &&
- 		frame->ack_frame == cpu_to_be16(PORT100_FRAME_ACK));
- }
- 
--static inline int port100_rx_frame_size(void *frame)
-+static inline int port100_rx_frame_size(const void *frame)
- {
--	struct port100_frame *f = frame;
-+	const struct port100_frame *f = frame;
- 
- 	return sizeof(struct port100_frame) + le16_to_cpu(f->datalen) +
- 	       PORT100_FRAME_TAIL_LEN;
- }
- 
--static bool port100_rx_frame_is_cmd_response(struct port100 *dev, void *frame)
-+static bool port100_rx_frame_is_cmd_response(const struct port100 *dev,
-+					     const void *frame)
- {
--	struct port100_frame *f = frame;
-+	const struct port100_frame *f = frame;
- 
- 	return (PORT100_FRAME_CMD(f) == PORT100_CMD_RESPONSE(dev->cmd->code));
- }
-@@ -655,7 +656,8 @@ static void port100_recv_response(struct urb *urb)
- 	schedule_work(&dev->cmd_complete_work);
- }
- 
--static int port100_submit_urb_for_response(struct port100 *dev, gfp_t flags)
-+static int port100_submit_urb_for_response(const struct port100 *dev,
-+					   gfp_t flags)
- {
- 	dev->in_urb->complete = port100_recv_response;
- 
-@@ -666,7 +668,7 @@ static void port100_recv_ack(struct urb *urb)
- {
- 	struct port100 *dev = urb->context;
- 	struct port100_cmd *cmd = dev->cmd;
--	struct port100_ack_frame *in_frame;
-+	const struct port100_ack_frame *in_frame;
- 	int rc;
- 
- 	cmd->status = urb->status;
-@@ -708,7 +710,7 @@ static void port100_recv_ack(struct urb *urb)
- 	schedule_work(&dev->cmd_complete_work);
- }
- 
--static int port100_submit_urb_for_ack(struct port100 *dev, gfp_t flags)
-+static int port100_submit_urb_for_ack(const struct port100 *dev, gfp_t flags)
- {
- 	dev->in_urb->complete = port100_recv_ack;
- 
-@@ -753,8 +755,9 @@ static int port100_send_ack(struct port100 *dev)
- 	return rc;
- }
- 
--static int port100_send_frame_async(struct port100 *dev, struct sk_buff *out,
--				    struct sk_buff *in, int in_len)
-+static int port100_send_frame_async(struct port100 *dev,
-+				    const struct sk_buff *out,
-+				    const struct sk_buff *in, int in_len)
- {
- 	int rc;
- 
-@@ -960,7 +963,7 @@ static void port100_abort_cmd(struct nfc_digital_dev *ddev)
- 	usb_kill_urb(dev->in_urb);
- }
- 
--static struct sk_buff *port100_alloc_skb(struct port100 *dev, unsigned int size)
-+static struct sk_buff *port100_alloc_skb(const struct port100 *dev, unsigned int size)
- {
- 	struct sk_buff *skb;
- 
-@@ -1152,7 +1155,7 @@ static int port100_in_configure_hw(struct nfc_digital_dev *ddev, int type,
- static void port100_in_comm_rf_complete(struct port100 *dev, void *arg,
- 				       struct sk_buff *resp)
- {
--	struct port100_cb_arg *cb_arg = arg;
-+	const struct port100_cb_arg *cb_arg = arg;
- 	nfc_digital_cmd_complete_t cb = cb_arg->complete_cb;
- 	u32 status;
- 	int rc;
-@@ -1330,7 +1333,7 @@ static void port100_tg_comm_rf_complete(struct port100 *dev, void *arg,
- 					struct sk_buff *resp)
- {
- 	u32 status;
--	struct port100_cb_arg *cb_arg = arg;
-+	const struct port100_cb_arg *cb_arg = arg;
- 	nfc_digital_cmd_complete_t cb = cb_arg->complete_cb;
- 	struct port100_tg_comm_rf_res *hdr;
- 
-@@ -1453,7 +1456,7 @@ static int port100_listen_mdaa(struct nfc_digital_dev *ddev,
- static int port100_listen(struct nfc_digital_dev *ddev, u16 timeout,
- 			  nfc_digital_cmd_complete_t cb, void *arg)
- {
--	struct port100 *dev = nfc_digital_get_drvdata(ddev);
-+	const struct port100 *dev = nfc_digital_get_drvdata(ddev);
- 	struct sk_buff *skb;
- 
- 	skb = port100_alloc_skb(dev, 0);
+ 	if (cmd != IOCTL_GET_NCIDEV_IDX)
 -- 
 2.27.0
 
