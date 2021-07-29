@@ -2,164 +2,231 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7379BC19F33
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 20:39:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A31CC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 22:26:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B1FD60F4B
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 20:39:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D03E60F46
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Jul 2021 22:26:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233555AbhG2Ujl (ORCPT
+        id S230039AbhG2W01 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Jul 2021 16:39:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39288 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233254AbhG2Ujc (ORCPT
+        Thu, 29 Jul 2021 18:26:27 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:19931 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229510AbhG2W00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jul 2021 16:39:32 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FF3FC06179B
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2021 13:39:28 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9Cmx-0000F8-Gi; Thu, 29 Jul 2021 22:37:55 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9Cml-0003d6-RY; Thu, 29 Jul 2021 22:37:43 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9Cml-0004Ht-Nr; Thu, 29 Jul 2021 22:37:43 +0200
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>, kernel@pengutronix.de,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Russell Currey <ruscur@russell.cc>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Jiri Olsa <jolsa@redhat.com>,
-        Namhyung Kim <namhyung@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Vadym Kochan <vkochan@marvell.com>,
-        Taras Chornyi <tchornyi@marvell.com>,
-        Jiri Pirko <jiri@nvidia.com>, Ido Schimmel <idosch@nvidia.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Michael Buesch <m@bues.ch>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        Alexander Duyck <alexanderduyck@fb.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-crypto@vger.kernel.org, qat-linux@intel.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, oss-drivers@corigine.com,
-        xen-devel@lists.xenproject.org, linux-usb@vger.kernel.org
-Subject: [PATCH v1 0/5] PCI: Drop duplicated tracking of a pci_dev's bound driver
-Date:   Thu, 29 Jul 2021 22:37:35 +0200
-Message-Id: <20210729203740.1377045-1-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.30.2
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+        Thu, 29 Jul 2021 18:26:26 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1627597582; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=HkCvaMrGnSzCF4urr4g5xdMktrSk3shrrWsCei9ytdA=; b=URm8DOd+u+rklWeNHA9qCfonk3U42xz5VqVzOQ133TUq43akwnQe9XGT5ctG5LAXOLpBsxOB
+ 52VGeNcbJGhTIClU0/VmlW505UE3Au9RJyn8aYZsBRhC/Wh6fYRYaosjvfa+02JNVM+qTHZP
+ lVHidYIvtFC3r3Vpbv9tRdguK9M=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 61032afee31d882d18794a94 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 29 Jul 2021 22:26:06
+ GMT
+Sender: msinada=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 10046C43217; Thu, 29 Jul 2021 22:26:06 +0000 (UTC)
+Received: from msinada-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: msinada)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AEBA1C433F1;
+        Thu, 29 Jul 2021 22:26:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AEBA1C433F1
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=msinada@codeaurora.org
+From:   Muna Sinada <msinada@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Muna Sinada <msinada@codeaurora.org>
+Subject: [PATCH] ath11k: Add HE UL MU fixed rate setting
+Date:   Thu, 29 Jul 2021 15:25:58 -0700
+Message-Id: <1627597558-25144-1-git-send-email-msinada@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+This patch adds ath11k support for setting HE UL MU fixed rate.
+HE UL MU fixed rate is informed to HE STA by HE Basic Trigger frame.
+The added code is reusing parts of the existing code path used for
+HE fixed rate.
 
-struct pci_dev tracks the bound pci driver twice. This series is about
-removing this duplication.
+Utilizing iw command, HE UL MU fixed rate can be set:
+	iw dev wlanX set bitrates he-ul-mcs-<5/2.4> <NSS:MCS>
 
-The first two patches are just cleanups. The third patch introduces a
-wrapper that abstracts access to struct pci_dev->driver. In the next
-patch (hopefully) all users are converted to use the new wrapper and
-finally the fifth patch removes the duplication.
+	Example: iw dev wlan0 set bitrates he-ul-mcs-5 2:5
 
-Note this series is only build tested (allmodconfig on several
-architectures).
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00356-QCAHKSWPL_SILICONZ-1
 
-I'm open to restructure this series if this simplifies things. E.g. the
-use of the new wrapper in drivers/pci could be squashed into the patch
-introducing the wrapper. Patch 4 could be split by maintainer tree or
-squashed into patch 3 completely.
+Signed-off-by: Muna Sinada <msinada@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 74 ++++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath11k/wmi.h |  1 +
+ 2 files changed, 69 insertions(+), 6 deletions(-)
 
-Best regards
-Uwe
-
-Uwe Kleine-König (5):
-  PCI: Simplify pci_device_remove()
-  PCI: Drop useless check from pci_device_probe()
-  PCI: Provide wrapper to access a pci_dev's bound driver
-  PCI: Adapt all code locations to not use struct pci_dev::driver
-    directly
-  PCI: Drop duplicated tracking of a pci_dev's bound driver
-
- arch/powerpc/include/asm/ppc-pci.h            |  3 +-
- arch/powerpc/kernel/eeh_driver.c              | 12 +++--
- arch/x86/events/intel/uncore.c                |  2 +-
- arch/x86/kernel/probe_roms.c                  |  2 +-
- drivers/bcma/host_pci.c                       |  6 ++-
- drivers/crypto/hisilicon/qm.c                 |  2 +-
- drivers/crypto/qat/qat_common/adf_aer.c       |  2 +-
- drivers/message/fusion/mptbase.c              |  4 +-
- drivers/misc/cxl/guest.c                      | 21 ++++----
- drivers/misc/cxl/pci.c                        | 25 ++++++----
- .../ethernet/hisilicon/hns3/hns3_ethtool.c    |  3 +-
- .../ethernet/marvell/prestera/prestera_pci.c  |  2 +-
- drivers/net/ethernet/mellanox/mlxsw/pci.c     |  2 +-
- .../ethernet/netronome/nfp/nfp_net_ethtool.c  |  2 +-
- drivers/pci/iov.c                             | 23 +++++----
- drivers/pci/pci-driver.c                      | 48 +++++++++----------
- drivers/pci/pci.c                             | 10 ++--
- drivers/pci/pcie/err.c                        | 35 +++++++-------
- drivers/pci/xen-pcifront.c                    |  4 +-
- drivers/ssb/pcihost_wrapper.c                 |  7 ++-
- drivers/usb/host/xhci-pci.c                   |  3 +-
- include/linux/pci.h                           |  2 +-
- 22 files changed, 121 insertions(+), 99 deletions(-)
-
-
-base-commit: 2734d6c1b1a089fb593ef6a23d4b70903526fe0c
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 0a65ff4e9091..8651dcff0a25 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3021,6 +3021,20 @@ ath11k_mac_bitrate_mask_num_he_rates(struct ath11k *ar,
+ }
+ 
+ static int
++ath11k_mac_bitrate_mask_num_he_ul_rates(struct ath11k *ar,
++					enum nl80211_band band,
++				       const struct cfg80211_bitrate_mask *mask)
++{
++	int num_rates = 0;
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(mask->control[band].he_ul_mcs); i++)
++		num_rates += hweight16(mask->control[band].he_ul_mcs[i]);
++
++	return num_rates;
++}
++
++static int
+ ath11k_mac_set_peer_vht_fixed_rate(struct ath11k_vif *arvif,
+ 				   struct ieee80211_sta *sta,
+ 				   const struct cfg80211_bitrate_mask *mask,
+@@ -6029,10 +6043,11 @@ ath11k_mac_get_single_legacy_rate(struct ath11k *ar,
+ 
+ static int ath11k_mac_set_fixed_rate_params(struct ath11k_vif *arvif,
+ 					    u32 rate, u8 nss, u8 sgi, u8 ldpc,
+-					    u8 he_gi, u8 he_ltf)
++					    u8 he_gi, u8 he_ltf, u32 he_ul_rate,
++					    u8 he_ul_nss)
+ {
+ 	struct ath11k *ar = arvif->ar;
+-	u32 vdev_param;
++	u32 vdev_param, rate_code;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+@@ -6105,6 +6120,17 @@ static int ath11k_mac_set_fixed_rate_params(struct ath11k_vif *arvif,
+ 		}
+ 	}
+ 
++	rate_code = ATH11K_HW_RATE_CODE(he_ul_rate, he_ul_nss - 1,
++					WMI_RATE_PREAMBLE_HE);
++	vdev_param = WMI_VDEV_PARAM_UL_FIXED_RATE;
++	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, vdev_param,
++					    rate_code);
++
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to set HE UL fixed rate %d: %d\n",
++			    rate_code, ret);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -6158,6 +6184,22 @@ ath11k_mac_he_mcs_range_present(struct ath11k *ar,
+ 	return true;
+ }
+ 
++static bool
++ath11k_mac_he_ul_mcs_present(struct ath11k *ar,
++			     enum nl80211_band band,
++			     const struct cfg80211_bitrate_mask *mask)
++{
++	int i;
++
++	for (i = 0; i < NL80211_HE_NSS_MAX; i++) {
++		if (mask->control[band].he_ul_mcs[i])
++			return true;
++	}
++
++	return false;
++}
++
++
+ static void ath11k_mac_set_bitrate_mask_iter(void *data,
+ 					     struct ieee80211_sta *sta)
+ {
+@@ -6203,12 +6245,12 @@ ath11k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	const u16 *he_mcs_mask;
+ 	u8 he_ltf = 0;
+ 	u8 he_gi = 0;
+-	u32 rate;
+-	u8 nss;
++	u32 rate, he_ul_rate;
++	u8 nss, he_ul_nss;
+ 	u8 sgi;
+ 	u8 ldpc;
+ 	int single_nss;
+-	int ret;
++	int ret, i;
+ 	int num_rates;
+ 
+ 	if (ath11k_mac_vif_chan(vif, &def))
+@@ -6227,6 +6269,15 @@ ath11k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	he_gi = mask->control[band].he_gi;
+ 	he_ltf = mask->control[band].he_ltf;
+ 
++	for (i = 0; i < ARRAY_SIZE(mask->control[band].he_ul_mcs); i++) {
++		if (hweight16(mask->control[band].he_ul_mcs[i]) == 1) {
++			he_ul_nss = i + 1;
++			he_ul_rate = ffs((int)
++					 mask->control[band].he_ul_mcs[i]) - 1;
++			break;
++		}
++	}
++
+ 	/* mac80211 doesn't support sending a fixed HT/VHT MCS alone, rather it
+ 	 * requires passing atleast one of used basic rates along with them.
+ 	 * Fixed rate setting across different preambles(legacy, HT, VHT) is
+@@ -6300,6 +6351,16 @@ ath11k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 			return -EINVAL;
+ 		}
+ 
++		num_rates = ath11k_mac_bitrate_mask_num_he_ul_rates(ar, band,
++								    mask);
++
++		if (ath11k_mac_he_ul_mcs_present(ar, band, mask) &&
++		    num_rates != 1) {
++			ath11k_warn(ar->ab,
++				    "Setting HE UL MCS Fixed Rate range is not supported in fw.\n");
++			return -EINVAL;
++		}
++
+ 		ieee80211_iterate_stations_atomic(ar->hw,
+ 						  ath11k_mac_disable_peer_fixed_rate,
+ 						  arvif);
+@@ -6317,7 +6378,8 @@ ath11k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	ret = ath11k_mac_set_fixed_rate_params(arvif, rate, nss, sgi, ldpc,
+-					       he_gi, he_ltf);
++					       he_gi, he_ltf, he_ul_rate,
++					       he_ul_nss);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to set fixed rate params on vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 5ff52f5649da..98e7ef7e6459 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -1047,6 +1047,7 @@ enum wmi_tlv_vdev_param {
+ 	WMI_VDEV_PARAM_HE_LTF = 0x74,
+ 	WMI_VDEV_PARAM_BA_MODE = 0x7e,
+ 	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
++	WMI_VDEV_PARAM_UL_FIXED_RATE,
+ 	WMI_VDEV_PARAM_6GHZ_PARAMS = 0x99,
+ 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
+ 	WMI_VDEV_PARAM_BSS_COLOR,
 -- 
-2.30.2
+2.7.4
 
