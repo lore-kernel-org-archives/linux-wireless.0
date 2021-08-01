@@ -2,137 +2,177 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1612C4338F
-	for <linux-wireless@archiver.kernel.org>; Sat, 31 Jul 2021 16:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D43C8C4338F
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Aug 2021 01:42:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9293D60E09
-	for <linux-wireless@archiver.kernel.org>; Sat, 31 Jul 2021 16:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A496F60F5A
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Aug 2021 01:42:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbhGaQgg (ORCPT
+        id S230260AbhHABnC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 31 Jul 2021 12:36:36 -0400
-Received: from mout.gmx.net ([212.227.15.19]:33449 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229449AbhGaQgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Jul 2021 12:36:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1627749368;
-        bh=xJvnrqgnd9oF7uVLB3WIMKssaszgPE/iFBWc4v5eLAQ=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=Alsr1hoWR+49KAmUuhQ2HqyZWAGoejfLJAJMiEmnlXSgw2GXOanitvygzLWJD/7Oi
-         wXUA4KVUwtGE8HBdXH3J37WAVBEj+/XCaf/xjJlYGP/4QIEevEe6U/scIjpIWBp2ia
-         gTEjmnDSics9ZvasAOJbEgSEyZqijBV1CBc4EQx8=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from localhost.localdomain ([79.150.72.99]) by mail.gmx.net
- (mrgmx005 [212.227.17.184]) with ESMTPSA (Nemesis) id
- 1MYeMj-1meoo72hv9-00Vjup; Sat, 31 Jul 2021 18:36:08 +0200
-From:   Len Baker <len.baker@gmx.com>
-To:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     Len Baker <len.baker@gmx.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Pkshih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4] rtw88: Remove unnecessary check code
-Date:   Sat, 31 Jul 2021 18:35:46 +0200
-Message-Id: <20210731163546.10753-1-len.baker@gmx.com>
-X-Mailer: git-send-email 2.25.1
+        Sat, 31 Jul 2021 21:43:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58910 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229467AbhHABnC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 31 Jul 2021 21:43:02 -0400
+Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 274BBC06175F
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jul 2021 18:42:54 -0700 (PDT)
+Received: by mail-yb1-xb2c.google.com with SMTP id a201so6313448ybg.12
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jul 2021 18:42:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=bPt1wuf08rGseocxIrquG5W562ANFATDjSxGwwlidFs=;
+        b=JuF4paeQHZ0xEXz8T53uvP+m6zteB9CdLOQgm+20cZ51nlTbY38BNWVJwX7714Mk8S
+         Yqg8aur2v1BCbsJXw+NUBv5r1yLt8EnhSwYIEirf+OxPj6RqVAEtUjK5UhhEE7W9FQm+
+         TnQkxgBj6lTlty7NNZD5U+RSnV4GIFwbqri8x8icsw4+KJ7l0gZjxkyOpr2ghGsp0Sts
+         6K2K4UxPhe7cXIFJEnNjDYQ/o7HAKaEDxk1SiVjb4Ap3oXHcWko9kkVpwtXuTH4eY0cy
+         AN4/6mnY4mCnYEEwQAsrUqS3tlhTuRMrDo1zhbW/9UvntWDdP9UEvicjKNdn8SYV+oWw
+         +E9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=bPt1wuf08rGseocxIrquG5W562ANFATDjSxGwwlidFs=;
+        b=K0/5u1Xgua6wdlNBrMaxjJZf7LfAgfWlocfLv7jclJ1aOPYTSu9nUmOADvHRWuZfN8
+         r0dJjyKsTRPsBToiG799zjCAet7/i7iHpEETNJXpNEoGOxy3EEYHcrpypFHjeNuaadyE
+         vrxzOKMa0MADYIC2xQmJMkoZ2+3AWFQ725p7IDtE9528IEbBWpc9BOChIAB0LC5dS8X+
+         V4ms6dhvT1yCYKzovTmlZpwkDje6DX2+pbRIMJmeDCLbsbJbo8rig7XAlDYt1VXV7dLL
+         5j0WkXWUGETq7rilVF2mp4sF6LbGJt62jw+iIbW0SwHeF8dygzvlhWOwQXrgmMohej5x
+         hvWg==
+X-Gm-Message-State: AOAM531yhKvnZj8Y1o0EcEYCSTeYasfJcSTtqeVyClDIVhpGqp9XxhYP
+        +tPvqDrTSscRqilftxkYg23ISKxcJumoKA9dM4M=
+X-Google-Smtp-Source: ABdhPJyB+GG6x8/xMo1Eb4pxrCFzydKfXBGOI50PXIYH2s0fiZecSPMkpOezvudY8Rlse4PdmkCbIf2Q2y/RH/S4ggg=
+X-Received: by 2002:a25:b3c9:: with SMTP id x9mr12114917ybf.514.1627782173316;
+ Sat, 31 Jul 2021 18:42:53 -0700 (PDT)
 MIME-Version: 1.0
+References: <CANB4YXTf0DhJfL6kPa26ZCzj8FRwwdw_enGROzL-zXuWGyrwOQ@mail.gmail.com>
+ <CANB4YXRtyvgu946rL=gxaRqhXja1qfBQ+DSYfiMvYcax7o45EQ@mail.gmail.com>
+ <YPgvMph+3vRbrol3@ubuntu-x1> <CANB4YXSDuYndC26KPkV+XqPkowbN54MMceuj7MNaxh+EwLN4kw@mail.gmail.com>
+ <YPg83HXFIXDAEFx1@ubuntu-x1> <CANB4YXS64QtxsgY0bx_Ri7bWfTY_5Ry7PbGwaGT3QVZb380vgQ@mail.gmail.com>
+In-Reply-To: <CANB4YXS64QtxsgY0bx_Ri7bWfTY_5Ry7PbGwaGT3QVZb380vgQ@mail.gmail.com>
+From:   Timo Witte <timo.witte@gmail.com>
+Date:   Sun, 1 Aug 2021 03:42:42 +0200
+Message-ID: <CANB4YXTKpu3gOJ4om8yo6ZSvnS497tk1cU-=56TGaktY2QBV-g@mail.gmail.com>
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 6GHz
+To:     Seth Forshee <sforshee@kernel.org>
+Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:Jtwz9aBwHctj85q8uhjC+MnBU57LqajgZpmCGu0RbG4Govyh8YW
- kvAS04XqEtEnO0qARUfbKOLjOKqRMsve59DPCLrFV+22e/85q12rF6rZpZVJHtV3uy2cU0i
- amzAzeQSE48PPyGmX6eYg2xZDwXzKRsPl+pmQxBWh7dndgQu4C4or3Venups3tVXeU+GtJu
- lgqEXiAkuzDC50+920W3Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:eP0mDLW+2jk=:/6Smk11weOco+P2vV8ia6z
- fls3CdyeTl8+RYmU17Vy3MeHm18/NonuyGAR+e7fdXFl4Ht4hwQkKt0pWBuKsRJ8LGFHjfVyk
- RQJWjM3gkt5+oPjfT1uOQ4nC0Ct8zFH/vrTZ7U4t2P0Xe7iJvbz+V2mldkYbZo/S81cHk4w7D
- b9SARSQ9Gp9D0ZWqmnDkLIY6KKj6GCHbU/b6fjgvcwyVjPmGm5W2pex0CcYEuAkkxXzmGuSGm
- GJFosOpSNj4Atn0uNEKlJFVd6Mj49s4Zs4/Z0hA6iO57iSId3pR8g6xwv7C91mUo3sCX6xHBc
- rf3x5hMh+bqTEN7tbaLFu9E1NuAvqaWyYnJgyY52KLCFjCzOVCH+0EBhFTFPuiIuePqqd6LlF
- g0XxZYMZc+JmPaFFQdwvtF8EcD7kL1JtwaOnlujs2mCrPhFMZLq2/iMKTmrUgQMZk+f7Iqt9B
- m0n00ZjsXAr6GeffdDHEWFroRx9f5X4vZxYCV5vaEcL2HDl5ecDBtAz//i7dBjy46tGCedijL
- Lnpi0SZm31mh8Z8Hbr1cXTFZ95C8Ru+msdI2lVmWlgI7HZUEx2RjJq/VZSaxjMzF+MGEXlmCe
- lQdPOENHQBUq8W0Sn9moT5aHibJtYZX64p2XAuHU9DFrXo6vw4lpk/ISiZ5Y5FZ+NDV5DQgJS
- xNF4NDNC9kmAwr8n2L5rM0N4P7Vg+KRHlVZitJMkd7ZyGUQTFLWpmAOXgg0hq9CfJX7fbwsHW
- pfVUZp7/IP2VgRuN8ra25Q4teePeI4zDUXI9wTVnxomp4ORjZQIybEDqMtt/9D5I5O2vsZ104
- dAWVhZv2Y37CAiyWKYohHn7smoKmf/fKtzr84q4tkGCXob+gP8IdbvmNwk4KerhF0NFRv4+5n
- NsEq8KY1z/8A0u40szauyPBtB6fN0ZaA3DR6j+3g2M9AVUc8sqHjeJqcaI96xkh6Fde/wgaLE
- XTIDpv73RpOBqnmQ7l8+5V4FKZmpfUBLwADDAKtHzEr2eNHosRaOjCH1DChn100PNMDOgXSII
- TYrYKHXJ7xsmD03n5a27X8DZ15o9zyBAOhFJ96j6CH+uM/QrO3NmhXsMRcrOyY+khLjSEy/g/
- 5507y1N9j+PEttzZT1D2kbKsDqINne36eEQ
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The rtw_pci_init_rx_ring function is only ever called with a fixed
-constant or RTK_MAX_RX_DESC_NUM for the "len" argument. Since this
-constant is defined as 512, the "if (len > TRX_BD_IDX_MASK)" check
-can never happen (TRX_BD_IDX_MASK is defined as GENMASK(11, 0) or in
-other words as 4095).
+Any updates on this Seth?
+can we just add the "NO-OUTDOOR" line then as i did in my updated
+patch, if the kernel does not support overlapping / identical
+frequency ranges with different power limits?
 
-So, remove this check.
+Best regards,
+Timo
 
-The true motivation for this patch is to silence a false Coverity
-warning.
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Len Baker <len.baker@gmx.com>
-=2D--
-Changelog v1 -> v2
-- Remove the macro ARRAY_SIZE from the for loop (Pkshih, Brian Norris).
-- Add a new check for the len variable (Pkshih, Brian Norris).
-
-Changelog v2 -> v3
-- Change the subject of the patch.
-- Remove the "if" check statement (Greg KH)
-- Remove the "Fixes" tag, "Addresses-Coverity-ID" tag and Cc to stable.
-
-Changelog v3 -> v4
-- Add the "Reviewed-by: Brian Norris" tag.
-- Update the commit changelog to include the true motivation for the
-  patch (Brian Norris).
-
-The previous versions can be found at:
-
-v1
-https://lore.kernel.org/lkml/20210711141634.6133-1-len.baker@gmx.com/
-
-v2
-https://lore.kernel.org/lkml/20210716155311.5570-1-len.baker@gmx.com/
-
-v3
-https://lore.kernel.org/lkml/20210718084202.5118-1-len.baker@gmx.com/
-
- drivers/net/wireless/realtek/rtw88/pci.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wirele=
-ss/realtek/rtw88/pci.c
-index e7d17ab8f113..f17e7146f20f 100644
-=2D-- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -268,11 +268,6 @@ static int rtw_pci_init_rx_ring(struct rtw_dev *rtwde=
-v,
- 	int i, allocated;
- 	int ret =3D 0;
-
--	if (len > TRX_BD_IDX_MASK) {
--		rtw_err(rtwdev, "len %d exceeds maximum RX entries\n", len);
--		return -EINVAL;
--	}
--
- 	head =3D dma_alloc_coherent(&pdev->dev, ring_sz, &dma, GFP_KERNEL);
- 	if (!head) {
- 		rtw_err(rtwdev, "failed to allocate rx ring\n");
-=2D-
-2.25.1
-
+On Wed, Jul 21, 2021 at 5:51 PM Timo Witte <timo.witte@gmail.com> wrote:
+>
+> Ok then let's just remove the 25mW line.
+> Here is the new patch:
+>
+> diff --git a/db.txt b/db.txt
+> index 1e5ed03..debd878 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -448,6 +448,12 @@ country CZ: DFS-ETSI
+>  # Bereich 57 GHz - 66 GHz f=C3=BCr Funkanwendungen f=C3=BCr weitbandige
+>  # Daten=C3=BCbertragungssysteme; =E2=80=9EMultiple Gigabit WAS/RLAN Syst=
+ems (MGWS)=E2=80=9C).
+>  # https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/T=
+elekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/=
+2011_08_MGWS_pdf.pdf
+> +#
+> +# Allocation for the WiFi 6E Band (Allgemeinzuteilung von Frequenzen im
+> +# Bereich 5945 MHz - 6425 MHz f=C3=BCr drahtlose Zugangssysteme,
+> +# einschlie=C3=9Flich lokaler Funknetze WAS/WLAN (=E2=80=9EWireless Acce=
+ss Systems
+> +# including Wireless Local Area Networks=E2=80=9C))
+> +# https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/T=
+elekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/=
+MobilfunkDectWlanCBFunk/vfg552021WLAN6GHz.pdf
+>  country DE: DFS-ETSI
+>   (2400 - 2483.5 @ 40), (100 mW)
+>   (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
+> @@ -455,6 +461,8 @@ country DE: DFS-ETSI
+>   (5470 - 5725 @ 160), (500 mW), DFS, wmmrule=3DETSI
+>   # short range devices (ETSI EN 300 440-1)
+>   (5725 - 5875 @ 80), (25 mW)
+> + # WiFi 6E
+> + (5945 - 6425 @ 160), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
+>   # 60 GHz band channels 1-4 (ETSI EN 302 567)
+>   (57000 - 66000 @ 2160), (40)
+>
+>
+> On Wed, Jul 21, 2021 at 5:27 PM Seth Forshee <sforshee@kernel.org> wrote:
+> >
+> > On Wed, Jul 21, 2021 at 04:57:03PM +0200, Timo Witte wrote:
+> > > From f9a99269b00f961e40024632c7b831c615bfa392 Mon Sep 17 00:00:00 200=
+1
+> > > From: Timo Witte <timo.witte@gmail.com>
+> > > Date: Wed, 21 Jul 2021 16:51:40 +0200
+> > > Subject: [PATCH] add wifi6e for germany
+> > >
+> > > Signed-off-by: Timo Witte <timo.witte@gmail.com>
+> > > ---
+> > >  db.txt | 10 ++++++++++
+> > >  1 file changed, 10 insertions(+)
+> > >
+> > > diff --git a/db.txt b/db.txt
+> > > index 1e5ed03..411b7ac 100644
+> > > --- a/db.txt
+> > > +++ b/db.txt
+> > > @@ -448,6 +448,12 @@ country CZ: DFS-ETSI
+> > >  # Bereich 57 GHz - 66 GHz f=C3=BCr Funkanwendungen f=C3=BCr weitband=
+ige
+> > >  # Daten=C3=BCbertragungssysteme; =E2=80=9EMultiple Gigabit WAS/RLAN =
+Systems (MGWS)=E2=80=9C).
+> > >  # https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebie=
+te/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilun=
+gen/2011_08_MGWS_pdf.pdf
+> > > +#
+> > > +# Allocation for the WiFi 6E Band (Allgemeinzuteilung von Frequenzen=
+ im
+> > > +# Bereich 5945 MHz - 6425 MHz f=C3=BCr drahtlose Zugangssysteme,
+> > > +# einschlie=C3=9Flich lokaler Funknetze WAS/WLAN (=E2=80=9EWireless =
+Access Systems
+> > > +# including Wireless Local Area Networks=E2=80=9C))
+> > > +# https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebie=
+te/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilun=
+gen/MobilfunkDectWlanCBFunk/vfg552021WLAN6GHz.pdf
+> > >  country DE: DFS-ETSI
+> > >         (2400 - 2483.5 @ 40), (100 mW)
+> > >         (5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=3D=
+ETSI
+> > > @@ -455,6 +461,10 @@ country DE: DFS-ETSI
+> > >         (5470 - 5725 @ 160), (500 mW), DFS, wmmrule=3DETSI
+> > >         # short range devices (ETSI EN 300 440-1)
+> > >         (5725 - 5875 @ 80), (25 mW)
+> > > +       # WiFi 6E
+> > > +       (5945 - 6425 @ 160), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=
+=3DETSI
+> > > +       # WiFi 6E Short range (Outdoor allowed)
+> > > +       (5945 - 6425 @ 160), (25 mW), AUTO-BW, wmmrule=3DETSI
+> >
+> > Unfortunately the kernel doesn't support multiple rules for a given
+> > range with differing flags. Currently it is necessary to specify either
+> > the indoor power limit with NO-OUTDOOR or the outdoor power limit, but
+> > not both.
+> >
+> > Thanks,
+> > Seth
