@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC2FC4338F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFECC4320A
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3F3661050
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04AD561050
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232276AbhHBGcf (ORCPT
+        id S232334AbhHBGch (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 02:32:35 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:40030 "EHLO
+        Mon, 2 Aug 2021 02:32:37 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:40036 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231410AbhHBGce (ORCPT
+        with ESMTP id S232322AbhHBGch (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Aug 2021 02:32:34 -0400
+        Mon, 2 Aug 2021 02:32:37 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1726WH7Q0014984, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1726WM3H0015014, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1726WH7Q0014984
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1726WM3H0015014
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 2 Aug 2021 14:32:17 +0800
+        Mon, 2 Aug 2021 14:32:22 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 2 Aug 2021 14:32:17 +0800
+ 15.1.2106.2; Mon, 2 Aug 2021 14:32:21 +0800
 Received: from localhost (172.16.21.121) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 2 Aug 2021
- 14:32:16 +0800
+ 14:32:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <timlee@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [PATCH 1/4] rtw88: upgrade rtw_regulatory mechanism and mapping
-Date:   Mon, 2 Aug 2021 14:31:37 +0800
-Message-ID: <20210802063140.25670-2-pkshih@realtek.com>
+Subject: [PATCH 3/4] rtw88: support adaptivity for ETSI/JP DFS region
+Date:   Mon, 2 Aug 2021 14:31:39 +0800
+Message-ID: <20210802063140.25670-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210802063140.25670-1-pkshih@realtek.com>
 References: <20210802063140.25670-1-pkshih@realtek.com>
@@ -91,857 +91,557 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Mapping table from country code to rtw_regulatory, which manages tx power
-limit according to countries, is updated. And mapping architecture is also
-upgraded. For more precise control on tx power limit, it allows different
-rtw_regulatory for different bands logically. Besides, a helper function
-to query rtw_regulatory for current band under current country is provided.
+Add Energy Detected CCA (EDCCA) mechanism to detect energy on the channel.
+And EDCCA support adaptivity mode now. From MIC Ordinance Regulating Radio
+Equipment article 49.20, ETSI EN-300-328 and EN-301-893, the device should
+be able to dynamically pause TX activity when energy detected on the air.
+According to ETSI/JP DFS region, driver will set corresponding threshold
+and stop TX activity if the detected energy exceeds the threshold. For now,
+we support it on 8822b and 8822c first.
 
-For older chips, some newly added rtw_regulatory may not be configured.
-To avoid that those chips have no limit on some countries mapping to a
-newer rtw_regulatory after table update, a backward selection mechanism
-of rtw_regulatory is introduced. It can help chips use a rtw_regulatory
-which has been configured as an alternative of a newer one which is not
-configured.
-
-In addition, rtw88 actually doesn't manage channel plans by itself.
-Instead, it follows them from stack. So, correct some naming about
-chplan with regd, and remove the unnecessary channel control for now.
+By default, EDCCA mechanism is turned on. For ETSI/JP DFS region, it will
+turn to adaptivity mode. However, with adaptivity, if environment is too
+nosiy, TX may often be halted. So, a debugfs for EDCCA is added. It can
+show what EDCCA mode is used currently. And EDCCA mechanism can be turned
+on/off through the debugfs while debugging.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c    |   3 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   4 +-
- drivers/net/wireless/realtek/rtw88/phy.c      |  56 +-
- drivers/net/wireless/realtek/rtw88/regd.c     | 595 +++++++++---------
- drivers/net/wireless/realtek/rtw88/regd.h     |   2 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |   3 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |   3 +-
- 7 files changed, 371 insertions(+), 295 deletions(-)
+ drivers/net/wireless/realtek/rtw88/debug.c    | 38 ++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.c     |  1 +
+ drivers/net/wireless/realtek/rtw88/main.h     | 29 +++++++++
+ drivers/net/wireless/realtek/rtw88/phy.c      | 59 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/phy.h      |  2 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |  2 +
+ drivers/net/wireless/realtek/rtw88/regd.c     |  8 ++-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 43 ++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h |  8 +++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 47 +++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |  3 +
+ 11 files changed, 238 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index dfd52cff5d02..df0740e84f04 100644
+index df0740e84f04..babf7fb238cc 100644
 --- a/drivers/net/wireless/realtek/rtw88/debug.c
 +++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -12,6 +12,7 @@
- #include "phy.h"
- #include "reg.h"
- #include "ps.h"
-+#include "regd.h"
+@@ -829,6 +829,38 @@ static int rtw_debugfs_get_coex_enable(struct seq_file *m, void *v)
+ 	return 0;
+ }
  
- #ifdef CONFIG_RTW88_DEBUGFS
++static ssize_t rtw_debugfs_set_edcca_enable(struct file *filp,
++					    const char __user *buffer,
++					    size_t count, loff_t *loff)
++{
++	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
++	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	bool input;
++	int err;
++
++	err = kstrtobool_from_user(buffer, count, &input);
++	if (err)
++		return err;
++
++	rtw_edcca_enabled = input;
++	rtw_phy_adaptivity_set_mode(rtwdev);
++
++	return count;
++}
++
++static int rtw_debugfs_get_edcca_enable(struct seq_file *m, void *v)
++{
++	struct rtw_debugfs_priv *debugfs_priv = m->private;
++	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	seq_printf(m, "EDCCA %s: EDCCA mode %d\n",
++		   rtw_edcca_enabled ? "enabled" : "disabled",
++		   dm_info->edcca_mode);
++	return 0;
++}
++
+ static ssize_t rtw_debugfs_set_fw_crash(struct file *filp,
+ 					const char __user *buffer,
+ 					size_t count, loff_t *loff)
+@@ -1049,6 +1081,11 @@ static struct rtw_debugfs_priv rtw_debug_priv_coex_info = {
+ 	.cb_read = rtw_debugfs_get_coex_info,
+ };
  
-@@ -587,7 +588,7 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
- 	struct rtw_power_params pwr_param = {0};
- 	u8 bw = hal->current_band_width;
- 	u8 ch = hal->current_channel;
--	u8 regd = rtwdev->regd.txpwr_regd;
-+	u8 regd = rtw_regd_get(rtwdev);
++static struct rtw_debugfs_priv rtw_debug_priv_edcca_enable = {
++	.cb_write = rtw_debugfs_set_edcca_enable,
++	.cb_read = rtw_debugfs_get_edcca_enable,
++};
++
+ static struct rtw_debugfs_priv rtw_debug_priv_fw_crash = {
+ 	.cb_write = rtw_debugfs_set_fw_crash,
+ 	.cb_read = rtw_debugfs_get_fw_crash,
+@@ -1132,6 +1169,7 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
+ 	}
+ 	rtw_debugfs_add_r(rf_dump);
+ 	rtw_debugfs_add_r(tx_pwr_tbl);
++	rtw_debugfs_add_rw(edcca_enable);
+ 	rtw_debugfs_add_rw(fw_crash);
+ 	rtw_debugfs_add_rw(dm_cap);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index f458496bddd5..c06f22d20b20 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -23,6 +23,7 @@ EXPORT_SYMBOL(rtw_disable_lps_deep_mode);
+ bool rtw_bf_support = true;
+ unsigned int rtw_debug_mask;
+ EXPORT_SYMBOL(rtw_debug_mask);
++bool rtw_edcca_enabled = true;
  
- 	seq_printf(m, "regulatory: %s\n", rtw_get_regd_string(regd));
- 	seq_printf(m, "%-4s %-10s %-3s%6s %-4s %4s (%-4s %-4s) %-4s\n",
+ module_param_named(disable_lps_deep, rtw_disable_lps_deep_mode, bool, 0644);
+ module_param_named(support_bf, rtw_bf_support, bool, 0644);
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 56812127a053..0d1bbc7e34a8 100644
+index 2e5cebba1f21..723316347876 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -800,8 +800,8 @@ struct rtw_vif {
+@@ -41,6 +41,7 @@
+ extern bool rtw_bf_support;
+ extern bool rtw_disable_lps_deep_mode;
+ extern unsigned int rtw_debug_mask;
++extern bool rtw_edcca_enabled;
+ extern const struct ieee80211_ops rtw_ops;
  
- struct rtw_regulatory {
- 	char alpha2[2];
--	u8 chplan;
--	u8 txpwr_regd;
-+	u8 txpwr_regd_2g;
-+	u8 txpwr_regd_5g;
+ #define RTW_MAX_CHANNEL_NUM_2G 14
+@@ -545,6 +546,11 @@ struct rtw_rf_sipi_addr {
+ 	u32 lssi_read_pi;
+ };
+ 
++struct rtw_hw_reg_offset {
++	struct rtw_hw_reg hw_reg;
++	u8 offset;
++};
++
+ struct rtw_backup_info {
+ 	u8 len;
+ 	u32 reg;
+@@ -815,6 +821,7 @@ enum rtw_regd_state {
+ struct rtw_regd {
+ 	enum rtw_regd_state state;
+ 	const struct rtw_regulatory *regulatory;
++	enum nl80211_dfs_regions dfs_region;
  };
  
  struct rtw_chip_ops {
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 569dd3cfde35..df4ca915228c 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -9,6 +9,7 @@
- #include "fw.h"
- #include "phy.h"
- #include "debug.h"
-+#include "regd.h"
+@@ -852,6 +859,8 @@ struct rtw_chip_ops {
+ 			      struct ieee80211_bss_conf *conf);
+ 	void (*cfg_csi_rate)(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
+ 			     u8 fixrate_en, u8 *new_rate);
++	void (*adaptivity_init)(struct rtw_dev *rtwdev);
++	void (*adaptivity)(struct rtw_dev *rtwdev);
+ 	void (*cfo_init)(struct rtw_dev *rtwdev);
+ 	void (*cfo_track)(struct rtw_dev *rtwdev);
+ 	void (*config_tx_path)(struct rtw_dev *rtwdev, u8 tx_path,
+@@ -1207,6 +1216,10 @@ struct rtw_chip_info {
+ 	u8 bfer_su_max_num;
+ 	u8 bfer_mu_max_num;
  
- struct phy_cfg_pair {
- 	u32 addr;
-@@ -1564,17 +1565,70 @@ static void rtw_xref_txpwr_lmt(struct rtw_dev *rtwdev)
- 		rtw_xref_txpwr_lmt_by_bw(rtwdev, regd);
- }
- 
-+static void
-+__cfg_txpwr_lmt_by_alt(struct rtw_hal *hal, u8 regd, u8 regd_alt, u8 bw, u8 rs)
-+{
-+	u8 ch;
++	struct rtw_hw_reg_offset *edcca_th;
++	s8 l2h_th_ini_cs;
++	s8 l2h_th_ini_ad;
 +
-+	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++)
-+		hal->tx_pwr_limit_2g[regd][bw][rs][ch] =
-+			hal->tx_pwr_limit_2g[regd_alt][bw][rs][ch];
-+
-+	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++)
-+		hal->tx_pwr_limit_5g[regd][bw][rs][ch] =
-+			hal->tx_pwr_limit_5g[regd_alt][bw][rs][ch];
-+}
-+
-+static void
-+rtw_cfg_txpwr_lmt_by_alt(struct rtw_dev *rtwdev, u8 regd, u8 regd_alt)
-+{
-+	u8 bw, rs;
-+
-+	for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
-+		for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
-+			__cfg_txpwr_lmt_by_alt(&rtwdev->hal, regd, regd_alt,
-+					       bw, rs);
-+}
-+
- void rtw_parse_tbl_txpwr_lmt(struct rtw_dev *rtwdev,
- 			     const struct rtw_table *tbl)
- {
- 	const struct rtw_txpwr_lmt_cfg_pair *p = tbl->data;
- 	const struct rtw_txpwr_lmt_cfg_pair *end = p + tbl->size;
-+	u32 regd_cfg_flag = 0;
-+	u8 regd_alt;
-+	u8 i;
- 
- 	for (; p < end; p++) {
-+		regd_cfg_flag |= BIT(p->regd);
- 		rtw_phy_set_tx_power_limit(rtwdev, p->regd, p->band,
- 					   p->bw, p->rs, p->ch, p->txpwr_lmt);
- 	}
- 
-+	for (i = 0; i < RTW_REGD_MAX; i++) {
-+		if (i == RTW_REGD_WW)
-+			continue;
-+
-+		if (regd_cfg_flag & BIT(i))
-+			continue;
-+
-+		rtw_dbg(rtwdev, RTW_DBG_REGD,
-+			"txpwr regd %d does not be configured\n", i);
-+
-+		if (rtw_regd_has_alt(i, &regd_alt) &&
-+		    regd_cfg_flag & BIT(regd_alt)) {
-+			rtw_dbg(rtwdev, RTW_DBG_REGD,
-+				"cfg txpwr regd %d by regd %d as alternative\n",
-+				i, regd_alt);
-+
-+			rtw_cfg_txpwr_lmt_by_alt(rtwdev, i, regd_alt);
-+			continue;
-+		}
-+
-+		rtw_dbg(rtwdev, RTW_DBG_REGD, "cfg txpwr regd %d by WW\n", i);
-+		rtw_cfg_txpwr_lmt_by_alt(rtwdev, i, RTW_REGD_WW);
-+	}
-+
- 	rtw_xref_txpwr_lmt(rtwdev);
- }
- EXPORT_SYMBOL(rtw_parse_tbl_txpwr_lmt);
-@@ -2014,7 +2068,7 @@ static void rtw_phy_set_tx_power_index_by_rs(struct rtw_dev *rtwdev,
- 					     u8 ch, u8 path, u8 rs)
- {
- 	struct rtw_hal *hal = &rtwdev->hal;
--	u8 regd = rtwdev->regd.txpwr_regd;
-+	u8 regd = rtw_regd_get(rtwdev);
- 	u8 *rates;
- 	u8 size;
- 	u8 rate;
-diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
-index 69744dd65968..a00ac08acf28 100644
---- a/drivers/net/wireless/realtek/rtw88/regd.c
-+++ b/drivers/net/wireless/realtek/rtw88/regd.c
-@@ -7,288 +7,273 @@
- #include "debug.h"
- #include "phy.h"
- 
--#define COUNTRY_CHPLAN_ENT(_alpha2, _chplan, _txpwr_regd) \
-+#define COUNTRY_REGD_ENT(_alpha2, _regd_2g, _regd_5g) \
- 	{.alpha2 = (_alpha2), \
--	 .chplan = (_chplan), \
--	 .txpwr_regd = (_txpwr_regd) \
-+	 .txpwr_regd_2g = (_regd_2g), \
-+	 .txpwr_regd_5g = (_regd_5g), \
- 	}
- 
-+#define rtw_dbg_regd_dump(_dev, _msg, _args...)			\
-+do {								\
-+	struct rtw_dev *__d = (_dev);				\
-+	const struct rtw_regulatory *__r =  &__d->regd;		\
-+	rtw_dbg(__d, RTW_DBG_REGD, _msg				\
-+		"apply alpha2 %c%c, regd {%d, %d}\n",		\
-+		##_args,					\
-+		__r->alpha2[0],					\
-+		__r->alpha2[1],					\
-+		__r->txpwr_regd_2g,				\
-+		__r->txpwr_regd_5g);				\
-+} while (0)
-+
- /* If country code is not correctly defined in efuse,
-  * use worldwide country code and txpwr regd.
-  */
--static const struct rtw_regulatory rtw_defined_chplan =
--	COUNTRY_CHPLAN_ENT("00", RTW_CHPLAN_REALTEK_DEFINE, RTW_REGD_WW);
--
--static const struct rtw_regulatory all_chplan_map[] = {
--	COUNTRY_CHPLAN_ENT("AD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AE", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AF", RTW_CHPLAN_ETSI1_ETSI4, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AG", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("AI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AN", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("AO", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AR", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("AS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("AT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("AU", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("AW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("AZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BB", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("BD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BH", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BM", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("BN", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BO", RTW_CHPLAN_WORLD_FCC7, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("BR", RTW_CHPLAN_FCC2_FCC1, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("BS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("BT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BV", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BW", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("BZ", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("CA", RTW_CHPLAN_IC1_IC2, RTW_REGD_IC),
--	COUNTRY_CHPLAN_ENT("CC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CI", RTW_CHPLAN_ETSI1_ETSI4, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CL", RTW_CHPLAN_WORLD_CHILE1, RTW_REGD_CHILE),
--	COUNTRY_CHPLAN_ENT("CM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CN", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CO", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("CR", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("CV", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CX", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("CY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("CZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("DE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("DJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("DK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("DM", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("DO", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("DZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("EC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("EE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("EG", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("EH", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ER", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ES", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ET", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("FI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("FJ", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("FK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("FM", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("FO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("FR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GD", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("GE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GP", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GT", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("GU", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("GW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("GY", RTW_CHPLAN_FCC1_NCC3, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("HK", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("HM", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("HN", RTW_CHPLAN_WORLD_FCC5, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("HR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("HT", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("HU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ID", RTW_CHPLAN_ETSI1_ETSI12, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IL", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IN", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("IT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("JE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("JM", RTW_CHPLAN_WORLD_FCC5, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("JO", RTW_CHPLAN_WORLD_ETSI8, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("JP", RTW_CHPLAN_MKK1_MKK1, RTW_REGD_MKK),
--	COUNTRY_CHPLAN_ENT("KE", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KN", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("KR", RTW_CHPLAN_KCC1_KCC3, RTW_REGD_KCC),
--	COUNTRY_CHPLAN_ENT("KW", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("KY", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("KZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("LI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LV", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("LY", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MA", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ME", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MF", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("MG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MH", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("MK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ML", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MO", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MP", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("MQ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MV", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MX", RTW_CHPLAN_FCC2_FCC7, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("MY", RTW_CHPLAN_WORLD_ETSI15, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("MZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NF", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("NG", RTW_CHPLAN_WORLD_ETSI20, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NI", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("NL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NP", RTW_CHPLAN_WORLD_ETSI7, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("NU", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("NZ", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("OM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PA", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("PE", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("PF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PG", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PH", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PK", RTW_CHPLAN_WORLD_ETSI10, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PR", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("PT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("PW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("PY", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("QA", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("RE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("RO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("RS", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("RU", RTW_CHPLAN_WORLD_ETSI14, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("RW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SA", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SB", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("SE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SG", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SH", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SI", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SK", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SL", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SN", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("SR", RTW_CHPLAN_FCC2_FCC17, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("ST", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("SV", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("SX", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("SZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TC", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TD", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TH", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TJ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TK", RTW_CHPLAN_WORLD_ACMA1, RTW_REGD_ACMA),
--	COUNTRY_CHPLAN_ENT("TM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TN", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TO", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TR", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TT", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("TV", RTW_CHPLAN_ETSI1_NULL, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("TW", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("TZ", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("UA", RTW_CHPLAN_WORLD_ETSI3, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("UG", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("US", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("UY", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("UZ", RTW_CHPLAN_WORLD_ETSI6, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("VA", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("VC", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("VE", RTW_CHPLAN_WORLD_FCC3, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("VG", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("VI", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("VN", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("VU", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("WF", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("WS", RTW_CHPLAN_FCC2_FCC11, RTW_REGD_FCC),
--	COUNTRY_CHPLAN_ENT("YE", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("YT", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ZA", RTW_CHPLAN_WORLD_ETSI2, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ZM", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
--	COUNTRY_CHPLAN_ENT("ZW", RTW_CHPLAN_WORLD_ETSI1, RTW_REGD_ETSI),
-+static const struct rtw_regulatory rtw_reg_ww =
-+	COUNTRY_REGD_ENT("00", RTW_REGD_WW, RTW_REGD_WW);
-+
-+static const struct rtw_regulatory rtw_reg_map[] = {
-+	COUNTRY_REGD_ENT("AD", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AG", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("AI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AN", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("AO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AQ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AR", RTW_REGD_MEXICO, RTW_REGD_MEXICO),
-+	COUNTRY_REGD_ENT("AS", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("AT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("AU", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("AW", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("AZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BB", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("BD", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BJ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BM", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("BN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BO", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("BR", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("BS", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("BT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BV", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BW", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BY", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("BZ", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("CA", RTW_REGD_IC, RTW_REGD_IC),
-+	COUNTRY_REGD_ENT("CC", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CD", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CL", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("CM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CO", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("CR", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("CV", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CX", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("CY", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("DE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("DJ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("DK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("DM", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("DO", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("DZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("EC", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("EE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("EG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("EH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ER", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ES", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ET", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("FI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("FJ", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("FK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("FM", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("FO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("FR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GB", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GD", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("GE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GP", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GQ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GT", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("GU", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("GW", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GY", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("HK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("HM", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("HN", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("HR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("HT", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("HU", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ID", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IQ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("IT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("JE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("JM", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("JO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("JP", RTW_REGD_MKK, RTW_REGD_MKK),
-+	COUNTRY_REGD_ENT("KE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KN", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("KR", RTW_REGD_KCC, RTW_REGD_KCC),
-+	COUNTRY_REGD_ENT("KW", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("KY", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("KZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LB", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LC", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("LI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LU", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LV", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("LY", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MC", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MD", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ME", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MF", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("MG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MH", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("MK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ML", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MP", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("MQ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MU", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MV", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MW", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MX", RTW_REGD_MEXICO, RTW_REGD_MEXICO),
-+	COUNTRY_REGD_ENT("MY", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("MZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NC", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NF", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("NG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NI", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("NL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NP", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("NU", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("NZ", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("OM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PA", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("PE", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("PF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PR", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("PS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("PW", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("PY", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("QA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("RE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("RO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("RS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("RU", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("RW", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SB", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SC", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("SE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SI", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SJ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SL", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("SR", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("ST", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("SV", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("SX", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("SZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TC", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TD", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TH", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TJ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TK", RTW_REGD_ACMA, RTW_REGD_ACMA),
-+	COUNTRY_REGD_ENT("TM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TO", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TR", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("TT", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("TV", RTW_REGD_ETSI, RTW_REGD_WW),
-+	COUNTRY_REGD_ENT("TW", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("TZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("UA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("UG", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("US", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("UY", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("UZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("VA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("VC", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("VE", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("VG", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("VI", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("VN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("VU", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("WF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("WS", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("XK", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("YE", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("YT", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ZA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ZM", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("ZW", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	const char *wow_fw_name;
+ 	const struct wiphy_wowlan_support *wowlan_stub;
+ 	const u8 max_sched_scan_ssids;
+@@ -1555,6 +1568,20 @@ struct rtw_gapk_info {
+ 	u8 channel;
  };
  
--static void rtw_regd_apply_beaconing_flags(struct wiphy *wiphy,
--					   enum nl80211_reg_initiator initiator)
--{
--	enum nl80211_band band;
--	struct ieee80211_supported_band *sband;
--	const struct ieee80211_reg_rule *reg_rule;
--	struct ieee80211_channel *ch;
--	unsigned int i;
--
--	for (band = 0; band < NUM_NL80211_BANDS; band++) {
--		if (!wiphy->bands[band])
--			continue;
--
--		sband = wiphy->bands[band];
--		for (i = 0; i < sband->n_channels; i++) {
--			ch = &sband->channels[i];
--
--			reg_rule = freq_reg_info(wiphy,
--						 MHZ_TO_KHZ(ch->center_freq));
--			if (IS_ERR(reg_rule))
--				continue;
--
--			ch->flags &= ~IEEE80211_CHAN_DISABLED;
--
--			if (!(reg_rule->flags & NL80211_RRF_NO_IR))
--				ch->flags &= ~IEEE80211_CHAN_NO_IR;
--		}
--	}
--}
--
- static void rtw_regd_apply_hw_cap_flags(struct wiphy *wiphy)
++#define EDCCA_TH_L2H_IDX 0
++#define EDCCA_TH_H2L_IDX 1
++#define EDCCA_TH_L2H_LB 48
++#define EDCCA_ADC_BACKOFF 12
++#define EDCCA_IGI_BASE 50
++#define EDCCA_IGI_L2H_DIFF 8
++#define EDCCA_L2H_H2L_DIFF 7
++#define EDCCA_L2H_H2L_DIFF_NORMAL 8
++
++enum rtw_edcca_mode {
++	RTW_EDCCA_NORMAL	= 0,
++	RTW_EDCCA_ADAPTIVITY	= 1,
++};
++
+ struct rtw_cfo_track {
+ 	bool is_adjust;
+ 	u8 crystal_cap;
+@@ -1646,6 +1673,8 @@ struct rtw_dm_info {
+ 	struct rtw_gapk_info gapk;
+ 	bool is_bt_iqk_timeout;
+ 
++	s8 l2h_th_ini;
++	enum rtw_edcca_mode edcca_mode;
+ 	u8 scan_density;
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index df4ca915228c..e0daf12d2484 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -120,6 +120,63 @@ static void rtw_phy_cck_pd_init(struct rtw_dev *rtwdev)
+ 	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
+ }
+ 
++void rtw_phy_set_edcca_th(struct rtw_dev *rtwdev, u8 l2h, u8 h2l)
++{
++	struct rtw_hw_reg_offset *edcca_th = rtwdev->chip->edcca_th;
++
++	rtw_write32_mask(rtwdev,
++			 edcca_th[EDCCA_TH_L2H_IDX].hw_reg.addr,
++			 edcca_th[EDCCA_TH_L2H_IDX].hw_reg.mask,
++			 l2h + edcca_th[EDCCA_TH_L2H_IDX].offset);
++	rtw_write32_mask(rtwdev,
++			 edcca_th[EDCCA_TH_H2L_IDX].hw_reg.addr,
++			 edcca_th[EDCCA_TH_H2L_IDX].hw_reg.mask,
++			 h2l + edcca_th[EDCCA_TH_H2L_IDX].offset);
++}
++EXPORT_SYMBOL(rtw_phy_set_edcca_th);
++
++void rtw_phy_adaptivity_set_mode(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	/* turn off in debugfs for debug usage */
++	if (!rtw_edcca_enabled) {
++		dm_info->edcca_mode = RTW_EDCCA_NORMAL;
++		rtw_dbg(rtwdev, RTW_DBG_PHY, "EDCCA disabled, cannot be set\n");
++		return;
++	}
++
++	switch (rtwdev->regd.dfs_region) {
++	case NL80211_DFS_ETSI:
++		dm_info->edcca_mode = RTW_EDCCA_ADAPTIVITY;
++		dm_info->l2h_th_ini = chip->l2h_th_ini_ad;
++		break;
++	case NL80211_DFS_JP:
++		dm_info->edcca_mode = RTW_EDCCA_ADAPTIVITY;
++		dm_info->l2h_th_ini = chip->l2h_th_ini_cs;
++		break;
++	default:
++		dm_info->edcca_mode = RTW_EDCCA_NORMAL;
++		break;
++	}
++}
++
++static void rtw_phy_adaptivity_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	rtw_phy_adaptivity_set_mode(rtwdev);
++	if (chip->ops->adaptivity_init)
++		chip->ops->adaptivity_init(rtwdev);
++}
++
++static void rtw_phy_adaptivity(struct rtw_dev *rtwdev)
++{
++	if (rtwdev->chip->ops->adaptivity)
++		rtwdev->chip->ops->adaptivity(rtwdev);
++}
++
+ static void rtw_phy_cfo_init(struct rtw_dev *rtwdev)
  {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-@@ -321,22 +306,16 @@ static void rtw_regd_apply_hw_cap_flags(struct wiphy *wiphy)
- 	}
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+@@ -160,6 +217,7 @@ void rtw_phy_init(struct rtw_dev *rtwdev)
+ 	rtw_phy_cck_pd_init(rtwdev);
+ 
+ 	dm_info->iqk.done = false;
++	rtw_phy_adaptivity_init(rtwdev);
+ 	rtw_phy_cfo_init(rtwdev);
+ 	rtw_phy_tx_path_div_init(rtwdev);
+ }
+@@ -712,6 +770,7 @@ void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
+ 	rtw_phy_cfo_track(rtwdev);
+ 	rtw_phy_dpk_track(rtwdev);
+ 	rtw_phy_pwr_track(rtwdev);
++	rtw_phy_adaptivity(rtwdev);
  }
  
--static void rtw_regd_apply_world_flags(struct wiphy *wiphy,
--				       enum nl80211_reg_initiator initiator)
--{
--	rtw_regd_apply_beaconing_flags(wiphy, initiator);
--}
--
- static struct rtw_regulatory rtw_regd_find_reg_by_name(char *alpha2)
+ #define FRAC_BITS 3
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index 112ed125970a..02d1ec47ffb1 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -59,6 +59,8 @@ bool rtw_phy_pwrtrack_need_lck(struct rtw_dev *rtwdev);
+ bool rtw_phy_pwrtrack_need_iqk(struct rtw_dev *rtwdev);
+ void rtw_phy_config_swing_table(struct rtw_dev *rtwdev,
+ 				struct rtw_swing_table *swing_table);
++void rtw_phy_set_edcca_th(struct rtw_dev *rtwdev, u8 l2h, u8 h2l);
++void rtw_phy_adaptivity_set_mode(struct rtw_dev *rtwdev);
+ void rtw_phy_parsing_cfo(struct rtw_dev *rtwdev,
+ 			 struct rtw_rx_pkt_stat *pkt_stat);
+ void rtw_phy_tx_path_diversity(struct rtw_dev *rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index f5ce75095e90..8adac30ee08e 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -361,10 +361,12 @@
+ #define REG_AGGR_BREAK_TIME	0x051A
+ #define REG_SLOT		0x051B
+ #define REG_TX_PTCL_CTRL	0x0520
++#define BIT_DIS_EDCCA		BIT(15)
+ #define BIT_SIFS_BK_EN		BIT(12)
+ #define REG_TXPAUSE		0x0522
+ #define BIT_AC_QUEUE		GENMASK(7, 0)
+ #define REG_RD_CTRL		0x0524
++#define BIT_EDCCA_MSK_CNTDOWN_EN BIT(11)
+ #define BIT_DIS_TXOP_CFE	BIT(10)
+ #define BIT_DIS_LSIG_CFE	BIT(9)
+ #define BIT_DIS_STBC_CFE	BIT(8)
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
+index cd50f419f85d..315c2b193e92 100644
+--- a/drivers/net/wireless/realtek/rtw88/regd.c
++++ b/drivers/net/wireless/realtek/rtw88/regd.c
+@@ -18,12 +18,13 @@ do {								\
+ 	struct rtw_dev *__d = (_dev);				\
+ 	const struct rtw_regd *__r =  &__d->regd;		\
+ 	rtw_dbg(__d, RTW_DBG_REGD, _msg				\
+-		"apply alpha2 %c%c, regd {%d, %d}\n",		\
++		"apply alpha2 %c%c, regd {%d, %d}, dfs_region %d\n",\
+ 		##_args,					\
+ 		__r->regulatory->alpha2[0],			\
+ 		__r->regulatory->alpha2[1],			\
+ 		__r->regulatory->txpwr_regd_2g,			\
+-		__r->regulatory->txpwr_regd_5g);		\
++		__r->regulatory->txpwr_regd_5g,			\
++		__r->dfs_region);				\
+ } while (0)
+ 
+ /* If country code is not correctly defined in efuse,
+@@ -357,6 +358,7 @@ int rtw_regd_init(struct rtw_dev *rtwdev)
+ 	}
+ 
+ 	rtwdev->regd.regulatory = &rtw_reg_ww;
++	rtwdev->regd.dfs_region = NL80211_DFS_UNSET;
+ 	rtw_dbg_regd_dump(rtwdev, "regd init state %d: ", rtwdev->regd.state);
+ 
+ 	rtw_regd_apply_hw_cap_flags(wiphy);
+@@ -450,6 +452,7 @@ static bool rtw_regd_state_hdl(struct rtw_dev *rtwdev,
+ 			       struct regulatory_request *request)
  {
- 	unsigned int i;
- 
--	for (i = 0; i < ARRAY_SIZE(all_chplan_map); i++) {
--		if (!memcmp(all_chplan_map[i].alpha2, alpha2, 2))
--			return all_chplan_map[i];
-+	for (i = 0; i < ARRAY_SIZE(rtw_reg_map); i++) {
-+		if (!memcmp(rtw_reg_map[i].alpha2, alpha2, 2))
-+			return rtw_reg_map[i];
- 	}
- 
--	return rtw_defined_chplan;
-+	return rtw_reg_ww;
+ 	next_regd->regulatory = rtw_reg_find_by_name(request->alpha2);
++	next_regd->dfs_region = request->dfs_region;
+ 	return rtw_regd_handler[rtwdev->regd.state](rtwdev, next_regd, request);
  }
  
- static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
-@@ -346,7 +325,6 @@ static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
- 	if (request->initiator == NL80211_REGDOM_SET_BY_USER)
- 		return 0;
- 	rtwdev->regd = rtw_regd_find_reg_by_name(request->alpha2);
--	rtw_regd_apply_world_flags(wiphy, request->initiator);
+@@ -482,6 +485,7 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 			  request->alpha2[1],
+ 			  request->initiator);
  
- 	return 0;
- }
-@@ -389,10 +367,49 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	struct rtw_hal *hal = &rtwdev->hal;
- 
- 	rtw_regd_notifier_apply(rtwdev, wiphy, request);
--	rtw_dbg(rtwdev, RTW_DBG_REGD,
--		"get alpha2 %c%c from initiator %d, mapping to chplan 0x%x, txregd %d\n",
--		request->alpha2[0], request->alpha2[1], request->initiator,
--		rtwdev->regd.chplan, rtwdev->regd.txpwr_regd);
-+	rtw_dbg_regd_dump(rtwdev, "get alpha2 %c%c from initiator %d: ",
-+			  request->alpha2[0],
-+			  request->alpha2[1],
-+			  request->initiator);
- 
++	rtw_phy_adaptivity_set_mode(rtwdev);
  	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
  }
-+
-+u8 rtw_regd_get(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u8 band = hal->current_band_type;
-+
-+	return band == RTW_BAND_2G ?
-+	       rtwdev->regd.txpwr_regd_2g :
-+	       rtwdev->regd.txpwr_regd_5g;
-+}
-+EXPORT_SYMBOL(rtw_regd_get);
-+
-+struct rtw_regd_alternative_t {
-+	bool set;
-+	u8 alt;
-+};
-+
-+#define DECL_REGD_ALT(_regd, _regd_alt) \
-+	[(_regd)] = {.set = true, .alt = (_regd_alt)}
-+
-+static const struct rtw_regd_alternative_t
-+rtw_regd_alt[RTW_REGD_MAX] = {
-+	DECL_REGD_ALT(RTW_REGD_IC, RTW_REGD_FCC),
-+	DECL_REGD_ALT(RTW_REGD_KCC, RTW_REGD_ETSI),
-+	DECL_REGD_ALT(RTW_REGD_ACMA, RTW_REGD_ETSI),
-+	DECL_REGD_ALT(RTW_REGD_CHILE, RTW_REGD_FCC),
-+	DECL_REGD_ALT(RTW_REGD_UKRAINE, RTW_REGD_ETSI),
-+	DECL_REGD_ALT(RTW_REGD_MEXICO, RTW_REGD_FCC),
-+	DECL_REGD_ALT(RTW_REGD_CN, RTW_REGD_ETSI),
-+};
-+
-+bool rtw_regd_has_alt(u8 regd, u8 *regd_alt)
-+{
-+	if (!rtw_regd_alt[regd].set)
-+		return false;
-+
-+	*regd_alt = rtw_regd_alt[regd].alt;
-+	return true;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/regd.h b/drivers/net/wireless/realtek/rtw88/regd.h
-index 5d4578331788..18b54ac65a2d 100644
---- a/drivers/net/wireless/realtek/rtw88/regd.h
-+++ b/drivers/net/wireless/realtek/rtw88/regd.h
-@@ -68,4 +68,6 @@ int rtw_regd_init(struct rtw_dev *rtwdev,
- 		  void (*reg_notifier)(struct wiphy *wiphy,
- 				       struct regulatory_request *request));
- void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request);
-+u8 rtw_regd_get(struct rtw_dev *rtwdev);
-+bool rtw_regd_has_alt(u8 regd, u8 *regd_alt);
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index 785b8181513f..349eef1a0ff2 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -14,6 +14,7 @@
- #include "reg.h"
- #include "debug.h"
- #include "bf.h"
-+#include "regd.h"
- 
- static const s8 lna_gain_table_0[8] = {22, 8, -6, -22, -31, -40, -46, -52};
- static const s8 lna_gain_table_1[16] = {10, 6, 2, -2, -6, -10, -14, -17,
-@@ -993,7 +994,7 @@ static void rtw8821c_pwrtrack_set(struct rtw_dev *rtwdev)
- 	s8 pwr_idx_offset_lower;
- 	u8 channel = rtwdev->hal.current_channel;
- 	u8 band_width = rtwdev->hal.current_band_width;
--	u8 regd = rtwdev->regd.txpwr_regd;
-+	u8 regd = rtw_regd_get(rtwdev);
- 	u8 tx_rate = dm_info->tx_rate;
- 	u8 max_pwr_idx = rtwdev->chip->max_power_index;
  
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index f1789155e901..49e8420ab33e 100644
+index 49e8420ab33e..c409c8c29ec8 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -15,6 +15,7 @@
- #include "reg.h"
- #include "debug.h"
- #include "bf.h"
-+#include "regd.h"
+@@ -1553,6 +1553,39 @@ static void rtw8822b_bf_config_bfee(struct rtw_dev *rtwdev, struct rtw_vif *vif,
+ 		rtw_warn(rtwdev, "wrong bfee role\n");
+ }
  
- static void rtw8822b_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
- 				     u8 rx_path, bool is_tx2_path);
-@@ -1436,7 +1437,7 @@ static void rtw8822b_pwrtrack_set(struct rtw_dev *rtwdev, u8 path)
- 	u8 pwr_idx_offset, tx_pwr_idx;
- 	u8 channel = rtwdev->hal.current_channel;
- 	u8 band_width = rtwdev->hal.current_band_width;
--	u8 regd = rtwdev->regd.txpwr_regd;
-+	u8 regd = rtw_regd_get(rtwdev);
- 	u8 tx_rate = dm_info->tx_rate;
- 	u8 max_pwr_idx = rtwdev->chip->max_power_index;
++static void rtw8822b_adaptivity_init(struct rtw_dev *rtwdev)
++{
++	rtw_phy_set_edcca_th(rtwdev, RTW8822B_EDCCA_MAX, RTW8822B_EDCCA_MAX);
++
++	/* mac edcca state setting */
++	rtw_write32_clr(rtwdev, REG_TX_PTCL_CTRL, BIT_DIS_EDCCA);
++	rtw_write32_set(rtwdev, REG_RD_CTRL, BIT_EDCCA_MSK_CNTDOWN_EN);
++	rtw_write32_mask(rtwdev, REG_EDCCA_SOURCE, BIT_SOURCE_OPTION,
++			 RTW8822B_EDCCA_SRC_DEF);
++	rtw_write32_mask(rtwdev, REG_EDCCA_POW_MA, BIT_MA_LEVEL, 0);
++
++	/* edcca decision opt */
++	rtw_write32_set(rtwdev, REG_EDCCA_DECISION, BIT_EDCCA_OPTION);
++}
++
++static void rtw8822b_adaptivity(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s8 l2h, h2l;
++	u8 igi;
++
++	igi = dm_info->igi_history[0];
++	if (dm_info->edcca_mode == RTW_EDCCA_NORMAL) {
++		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
++		h2l = l2h - EDCCA_L2H_H2L_DIFF_NORMAL;
++	} else {
++		l2h = min_t(s8, igi, dm_info->l2h_th_ini);
++		h2l = l2h - EDCCA_L2H_H2L_DIFF;
++	}
++
++	rtw_phy_set_edcca_th(rtwdev, l2h, h2l);
++}
++
+ static const struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8822b[] = {
+ 	{0x0086,
+ 	 RTW_PWR_CUT_ALL_MSK,
+@@ -2126,6 +2159,8 @@ static struct rtw_chip_ops rtw8822b_ops = {
+ 	.config_bfee		= rtw8822b_bf_config_bfee,
+ 	.set_gid_table		= rtw_bf_set_gid_table,
+ 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
++	.adaptivity_init	= rtw8822b_adaptivity_init,
++	.adaptivity		= rtw8822b_adaptivity,
  
+ 	.coex_set_init		= rtw8822b_coex_cfg_init,
+ 	.coex_set_ant_switch	= rtw8822b_coex_cfg_ant_switch,
+@@ -2455,6 +2490,11 @@ static const struct rtw_reg_domain coex_info_hw_regs_8822b[] = {
+ 	{0xc50,  MASKBYTE0, RTW_REG_DOMAIN_MAC8},
+ };
+ 
++static struct rtw_hw_reg_offset rtw8822b_edcca_th[] = {
++	[EDCCA_TH_L2H_IDX] = {{.addr = 0x8a4, .mask = MASKBYTE0}, .offset = 0},
++	[EDCCA_TH_H2L_IDX] = {{.addr = 0x8a4, .mask = MASKBYTE1}, .offset = 0},
++};
++
+ struct rtw_chip_info rtw8822b_hw_spec = {
+ 	.ops = &rtw8822b_ops,
+ 	.id = RTW_CHIP_TYPE_8822B,
+@@ -2503,6 +2543,9 @@ struct rtw_chip_info rtw8822b_hw_spec = {
+ 	.bfer_su_max_num = 2,
+ 	.bfer_mu_max_num = 1,
+ 	.rx_ldpc = true,
++	.edcca_th = rtw8822b_edcca_th,
++	.l2h_th_ini_cs = 10 + EDCCA_IGI_BASE,
++	.l2h_th_ini_ad = -14 + EDCCA_IGI_BASE,
+ 
+ 	.coex_para_ver = 0x20070206,
+ 	.bt_desired_ver = 0x6,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+index 6211f4b547b9..3fff8b881854 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+@@ -140,6 +140,8 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define GET_PHY_STAT_P1_RXSNR_B(phy_stat)                                      \
+ 	le32_get_bits(*((__le32 *)(phy_stat) + 0x06), GENMASK(15, 8))
+ 
++#define RTW8822B_EDCCA_MAX	0x7f
++#define RTW8822B_EDCCA_SRC_DEF	1
+ #define REG_HTSTFWT	0x800
+ #define REG_RXPSEL	0x808
+ #define BIT_RX_PSEL_RST		(BIT(28) | BIT(29))
+@@ -152,11 +154,17 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define REG_L1PKWT	0x840
+ #define REG_MRC		0x850
+ #define REG_CLKTRK	0x860
++#define REG_EDCCA_POW_MA	0x8a0
++#define BIT_MA_LEVEL	GENMASK(1, 0)
+ #define REG_ADCCLK	0x8ac
+ #define REG_ADC160	0x8c4
+ #define REG_ADC40	0x8c8
++#define REG_EDCCA_DECISION	0x8dc
++#define BIT_EDCCA_OPTION	BIT(5)
+ #define REG_CDDTXP	0x93c
+ #define REG_TXPSEL1	0x940
++#define REG_EDCCA_SOURCE	0x944
++#define BIT_SOURCE_OPTION	GENMASK(29, 28)
+ #define REG_ACBB0	0x948
+ #define REG_ACBBRXFIR	0x94c
+ #define REG_ACGG2TBL	0x958
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index f3ad079967a6..46b881e8e4fe 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -4497,6 +4497,39 @@ static void rtw8822c_pwr_track(struct rtw_dev *rtwdev)
+ 	dm_info->pwr_trk_triggered = false;
+ }
+ 
++static void rtw8822c_adaptivity_init(struct rtw_dev *rtwdev)
++{
++	rtw_phy_set_edcca_th(rtwdev, RTW8822C_EDCCA_MAX, RTW8822C_EDCCA_MAX);
++
++	/* mac edcca state setting */
++	rtw_write32_clr(rtwdev, REG_TX_PTCL_CTRL, BIT_DIS_EDCCA);
++	rtw_write32_set(rtwdev, REG_RD_CTRL, BIT_EDCCA_MSK_CNTDOWN_EN);
++
++	/* edcca decistion opt */
++	rtw_write32_clr(rtwdev, REG_EDCCA_DECISION, BIT_EDCCA_OPTION);
++}
++
++static void rtw8822c_adaptivity(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s8 l2h, h2l;
++	u8 igi;
++
++	igi = dm_info->igi_history[0];
++	if (dm_info->edcca_mode == RTW_EDCCA_NORMAL) {
++		l2h = max_t(s8, igi + EDCCA_IGI_L2H_DIFF, EDCCA_TH_L2H_LB);
++		h2l = l2h - EDCCA_L2H_H2L_DIFF_NORMAL;
++	} else {
++		if (igi < dm_info->l2h_th_ini - EDCCA_ADC_BACKOFF)
++			l2h = igi + EDCCA_ADC_BACKOFF;
++		else
++			l2h = dm_info->l2h_th_ini;
++		h2l = l2h - EDCCA_L2H_H2L_DIFF;
++	}
++
++	rtw_phy_set_edcca_th(rtwdev, l2h, h2l);
++}
++
+ static const struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8822c[] = {
+ 	{0x0086,
+ 	 RTW_PWR_CUT_ALL_MSK,
+@@ -4912,6 +4945,8 @@ static struct rtw_chip_ops rtw8822c_ops = {
+ 	.config_bfee		= rtw8822c_bf_config_bfee,
+ 	.set_gid_table		= rtw_bf_set_gid_table,
+ 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
++	.adaptivity_init	= rtw8822c_adaptivity_init,
++	.adaptivity		= rtw8822c_adaptivity,
+ 	.cfo_init		= rtw8822c_cfo_init,
+ 	.cfo_track		= rtw8822c_cfo_track,
+ 	.config_tx_path		= rtw8822c_config_tx_path,
+@@ -5197,6 +5232,15 @@ static const struct rtw_pwr_track_tbl rtw8822c_rtw_pwr_track_tbl = {
+ 	.pwrtrk_2g_ccka_p = rtw8822c_pwrtrk_2g_cck_a_p,
+ };
+ 
++static struct rtw_hw_reg_offset rtw8822c_edcca_th[] = {
++	[EDCCA_TH_L2H_IDX] = {
++		{.addr = 0x84c, .mask = MASKBYTE2}, .offset = 0x80
++	},
++	[EDCCA_TH_H2L_IDX] = {
++		{.addr = 0x84c, .mask = MASKBYTE3}, .offset = 0x80
++	},
++};
++
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support rtw_wowlan_stub_8822c = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_GTK_REKEY_FAILURE |
+@@ -5289,6 +5333,9 @@ struct rtw_chip_info rtw8822c_hw_spec = {
+ 	.bfer_mu_max_num = 1,
+ 	.rx_ldpc = true,
+ 	.tx_stbc = true,
++	.edcca_th = rtw8822c_edcca_th,
++	.l2h_th_ini_cs = 60,
++	.l2h_th_ini_ad = 45,
+ 
+ #ifdef CONFIG_PM
+ 	.wow_fw_name = "rtw88/rtw8822c_wow_fw.bin",
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index 364afc6d851b..3df627419d81 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -162,6 +162,7 @@ const struct rtw_table name ## _tbl = {			\
+ #define GET_PHY_STAT_P1_RXSNR_B(phy_stat)                                      \
+ 	le32_get_bits(*((__le32 *)(phy_stat) + 0x06), GENMASK(15, 8))
+ 
++#define RTW8822C_EDCCA_MAX	0x7f
+ #define REG_ANAPARLDO_POW_MAC	0x0029
+ #define BIT_LDOE25_PON		BIT(0)
+ #define XCAP_MASK		GENMASK(6, 0)
+@@ -174,6 +175,8 @@ const struct rtw_table name ## _tbl = {			\
+ #define REG_ANTMAP0		0x820
+ #define BIT_ANT_PATH		GENMASK(1, 0)
+ #define REG_ANTMAP		0x824
++#define REG_EDCCA_DECISION	0x844
++#define BIT_EDCCA_OPTION	GENMASK(30, 29)
+ #define REG_DYMPRITH		0x86c
+ #define REG_DYMENTH0		0x870
+ #define REG_DYMENTH		0x874
 -- 
 2.25.1
 
