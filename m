@@ -7,299 +7,140 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF090C432BE
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:16:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9866C43214
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:16:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 934D960FD8
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:16:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87CA860FF2
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:16:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234688AbhHBPRG (ORCPT
+        id S235044AbhHBPRI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 11:17:06 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:56206 "EHLO
+        Mon, 2 Aug 2021 11:17:08 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:34834 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234789AbhHBPRF (ORCPT
+        by vger.kernel.org with ESMTP id S234835AbhHBPRF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 2 Aug 2021 11:17:05 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.66.137])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id AF4C92006C
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2021 15:16:54 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.27])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 32A9E1A006F
+        for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2021 15:16:55 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 842C814007F
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id EC7C460007A
         for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2021 15:16:54 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 2B48A13C2B4;
+        by mail3.candelatech.com (Postfix) with ESMTP id 7F46D13C2B7;
         Mon,  2 Aug 2021 08:16:54 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 2B48A13C2B4
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7F46D13C2B7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1627917414;
-        bh=s68cUBjK8BNuAXsswR6ZKg5mDA7xUWKMCBBaaH8Xz4M=;
+        bh=xick/PZUOClaevgg8YT1qKj41eXUfZQh5uTmH8MOJPc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NGecDOdygDvgjwDlUSe44Qa9OEF0I7lMLr5qedbrPxyYCWmUSUw0MWXpxXh40jTGA
-         OnFOkowNsx3b7JLbGXhuKNOy9Md3P+tm8W4du6ApWkKD+ibR4Haiv90Q8Be4MPByXb
-         W6Oj3J+NljV2SIN8cQQ3kmTSWj/lEZW8CaPz0fwo=
+        b=Khppd78EqkqDUbyEZkEom5j1av7H170nG7QZRrl3JC0trUIhsirqilVXqxycSPZ8I
+         4wDSGi11gHTk/jlKLu6f3Uf75/LVgN+6LmyJkiYB18+bGFE9X7fKY0A3vm1+WAj4Ac
+         Z7KZicx9ULsqtrxkv6WR/itmQRGAtT/HTKE5DIRs=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4 03/11] mt76: mt7915:  move TXS parsing to its own method
-Date:   Mon,  2 Aug 2021 08:16:35 -0700
-Message-Id: <20210802151643.32394-3-greearb@candelatech.com>
+Subject: [PATCH v4 05/11] mt76: mt7915:  debugfs hook to enable TXS for NO_SKB pkt-ids
+Date:   Mon,  2 Aug 2021 08:16:37 -0700
+Message-Id: <20210802151643.32394-5-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210802151643.32394-1-greearb@candelatech.com>
 References: <20210802151643.32394-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1627917415-jgXSraGfvOAS
+X-MDID: 1627917415-MnzABL3Y5AIz
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This will allow us to also parse TXS when we have no skb on
-the status callback list in future patches.
-
-Explicitly cache short_gi and he_gi in wcid, don't try to store
-it in the wcid.rate object.  Slightly less confusing and less fragile
-when TXS starts parsing lots of frames.
+This lets user turn on/off this feature.  Enabling gives better
+tx-rate related stats, but will cause extra driver and (maybe)
+firmware work.  Not sure if it actually affects performance or
+not.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h     |   5 +
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 122 ++++++++++--------
- 2 files changed, 74 insertions(+), 53 deletions(-)
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 24 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   |  3 ++-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  5 ++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 016f563fec39..0cbb4940f590 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -252,7 +252,12 @@ struct mt76_wcid {
- 	struct ewma_signal rssi;
- 	int inactive_count;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index 91664ac63a8d..6be194f16548 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -109,6 +109,29 @@ mt7915_fw_debug_get(void *data, u64 *val)
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_fw_debug, mt7915_fw_debug_get,
+ 			 mt7915_fw_debug_set, "%lld\n");
  
-+	/* cached rate, updated from mac_sta_poll() and from TXS callback logic, in 7915
-+	 * at least.
-+	 */
- 	struct rate_info rate;
-+	bool rate_short_gi; /* cached HT/VHT short_gi, from mac_sta_poll() */
-+	u8 rate_he_gi; /* cached HE GI, from mac_sta_poll() */
- 
- 	struct sk_buff *skb_status_array[MT_PACKET_ID_MAX + 1];
- 
++static int
++mt7915_txs_for_no_skb_set(void *data, u64 val)
++{
++	struct mt7915_dev *dev = data;
++
++	dev->txs_for_no_skb_enabled = !!val;
++
++	return 0;
++}
++
++static int
++mt7915_txs_for_no_skb_get(void *data, u64 *val)
++{
++	struct mt7915_dev *dev = data;
++
++	*val = dev->txs_for_no_skb_enabled;
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(fops_txs_for_no_skb, mt7915_txs_for_no_skb_get,
++			 mt7915_txs_for_no_skb_set, "%lld\n");
++
+ static void
+ mt7915_ampdu_stat_read_phy(struct mt7915_phy *phy,
+ 			   struct seq_file *file)
+@@ -344,6 +367,7 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
+ 				    mt7915_queues_acq);
+ 	debugfs_create_file("tx_stats", 0400, dir, dev, &mt7915_tx_stats_fops);
+ 	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
++	debugfs_create_file("txs_for_no_skb", 0600, dir, dev, &fops_txs_for_no_skb);
+ 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
+ 			    &fops_implicit_txbf);
+ 	debugfs_create_u32("dfs_hw_pattern", 0400, dir, &dev->hw_pattern);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 3f4e19358d5b..b1384e02e707 100644
+index cf2c97bc251d..d81e3cbe1aad 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -205,12 +205,17 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 			u8 offs = 24 + 2 * bw;
+@@ -1048,7 +1048,8 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
  
- 			rate->he_gi = (val & (0x3 << offs)) >> offs;
-+			msta->wcid.rate_he_gi = rate->he_gi; /* cache for later */
- 		} else if (rate->flags & RATE_INFO_FLAGS_VHT_MCS) {
--			if (val & BIT(12 + bw))
-+			if (val & BIT(12 + bw)) {
- 				rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
--			else
-+				msta->wcid.rate_short_gi = 1;
-+			} else {
- 				rate->flags &= ~RATE_INFO_FLAGS_SHORT_GI;
-+				msta->wcid.rate_short_gi = 0;
-+			}
- 		}
-+		/* TODO:  Deal with HT_MCS */
- 	}
+ 	val = FIELD_PREP(MT_TXD5_PID, pid);
+ 	/* NOTE:  mt7916 does NOT request TXS for 'NO_SKB' frames by default. */
+-	if (pid >= MT_PACKET_ID_FIRST)
++	if (pid >= MT_PACKET_ID_FIRST ||
++	    (pid == MT_PACKET_ID_NO_SKB && dev->txs_for_no_skb_enabled))
+ 		val |= MT_TXD5_TX_STATUS_HOST;
+ 	txwi[5] = cpu_to_le32(val);
  
- 	rcu_read_unlock();
-@@ -1302,33 +1307,22 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
- 	}
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 8c494be272c5..cd5954de1686 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -226,6 +226,11 @@ struct mt7915_dev {
  
--static bool
--mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
--		       __le32 *txs_data, struct mt7915_sta_stats *stats)
-+static void
-+mt7915_mac_parse_txs(struct mt7915_dev *dev, struct mt76_wcid *wcid,
-+		     __le32 *txs_data, struct mt7915_sta_stats *stats,
-+		     struct rate_info *rate,
-+		     struct ieee80211_tx_info *info)
- {
- 	struct ieee80211_supported_band *sband;
--	struct mt76_dev *mdev = &dev->mt76;
- 	struct mt76_phy *mphy;
--	struct ieee80211_tx_info *info;
--	struct sk_buff_head list;
--	struct rate_info rate = {};
--	struct sk_buff *skb;
--	bool cck = false;
- 	u32 txrate, txs, txs5, txs6, txs7, mode;
--
--	mt76_tx_status_lock(mdev, &list);
--	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
--
--	/* TODO:  Gather stats anyway, even if we are not matching on an skb. */
--	if (!skb)
--		goto out_no_skb;
-+	bool cck = false;
+ 	u16 chainmask;
+ 	u32 hif_idx;
++	/* Should we request TXS for MT_PACKET_ID_NO_SKB?  Doing so gives better
++	 * costs but causes a great deal more TXS packet processing by driver and
++	 * creation by firmware, so may be a performance drag.
++	 */
++	bool txs_for_no_skb_enabled;
  
- 	txs = le32_to_cpu(txs_data[0]);
- 	txs5 = le32_to_cpu(txs_data[5]);
- 	txs6 = le32_to_cpu(txs_data[6]);
- 	txs7 = le32_to_cpu(txs_data[7]);
- 
--	info = IEEE80211_SKB_CB(skb);
- 	if (!(txs & MT_TXS0_ACK_ERROR_MASK))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 
-@@ -1344,18 +1338,18 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
- 
- 	txrate = FIELD_GET(MT_TXS0_TX_RATE, txs);
- 
--	rate.mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
--	rate.nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
-+	rate->mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
-+	rate->nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
- 
--	stats->tx_nss[rate.nss - 1]++;
-+	stats->tx_nss[rate->nss - 1]++;
- 	/* It appears that rate.mcs even for HT may be small, considering in HT
- 	 * code below it is multiplied... but not certain on that,
- 	 * so code safely.
- 	 */
--	if (rate.mcs >= ARRAY_SIZE(stats->tx_mcs))
-+	if (rate->mcs >= ARRAY_SIZE(stats->tx_mcs))
- 		stats->tx_mcs[ARRAY_SIZE(stats->tx_mcs) - 1]++;
- 	else
--		stats->tx_mcs[rate.mcs]++;
-+		stats->tx_mcs[rate->mcs]++;
- 
- 	mode = FIELD_GET(MT_TX_RATE_MODE, txrate);
- 	switch (mode) {
-@@ -1372,73 +1366,95 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
- 		else
- 			sband = &mphy->sband_2g.sband;
- 
--		rate.mcs = mt76_get_rate(mphy->dev, sband, rate.mcs, cck);
--		rate.legacy = sband->bitrates[rate.mcs].bitrate;
-+		rate->mcs = mt76_get_rate(mphy->dev, sband, rate->mcs, cck);
-+		rate->legacy = sband->bitrates[rate->mcs].bitrate;
- 		break;
- 	case MT_PHY_TYPE_HT:
- 	case MT_PHY_TYPE_HT_GF:
--		rate.mcs += (rate.nss - 1) * 8;
--		if (rate.mcs > 31)
--			goto out;
-+		rate->mcs += (rate->nss - 1) * 8;
-+		if (rate->mcs > 31)
-+			break;
- 
--		rate.flags = RATE_INFO_FLAGS_MCS;
--		if (wcid->rate.flags & RATE_INFO_FLAGS_SHORT_GI)
--			rate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+		rate->flags = RATE_INFO_FLAGS_MCS;
-+		if (wcid->rate_short_gi)
-+			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
- 		break;
- 	case MT_PHY_TYPE_VHT:
--		if (rate.mcs > 9)
--			goto out;
-+		if (rate->mcs > 9)
-+			break;
- 
--		rate.flags = RATE_INFO_FLAGS_VHT_MCS;
-+		rate->flags = RATE_INFO_FLAGS_VHT_MCS;
-+		if (wcid->rate_short_gi)
-+			rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
- 		break;
- 	case MT_PHY_TYPE_HE_SU:
- 	case MT_PHY_TYPE_HE_EXT_SU:
- 	case MT_PHY_TYPE_HE_TB:
- 	case MT_PHY_TYPE_HE_MU:
--		if (rate.mcs > 11)
--			goto out;
-+		if (rate->mcs > 11)
-+			break;
- 
--		rate.he_gi = wcid->rate.he_gi;
--		rate.he_dcm = FIELD_GET(MT_TX_RATE_DCM, txrate);
--		rate.flags = RATE_INFO_FLAGS_HE_MCS;
-+		rate->he_gi = wcid->rate_he_gi;
-+		rate->he_dcm = FIELD_GET(MT_TX_RATE_DCM, txrate);
-+		rate->flags = RATE_INFO_FLAGS_HE_MCS;
- 		break;
- 	default:
--		goto out;
-+		WARN_ON_ONCE(true);
-+		mode = 0;
- 	}
- 
- 	stats->tx_mode[mode]++;
- 
- 	switch (FIELD_GET(MT_TXS0_BW, txs)) {
- 	case IEEE80211_STA_RX_BW_160:
--		rate.bw = RATE_INFO_BW_160;
-+		rate->bw = RATE_INFO_BW_160;
- 		stats->tx_bw[3]++;
- 		break;
- 	case IEEE80211_STA_RX_BW_80:
--		rate.bw = RATE_INFO_BW_80;
-+		rate->bw = RATE_INFO_BW_80;
- 		stats->tx_bw[2]++;
- 		break;
- 	case IEEE80211_STA_RX_BW_40:
--		rate.bw = RATE_INFO_BW_40;
-+		rate->bw = RATE_INFO_BW_40;
- 		stats->tx_bw[1]++;
- 		break;
- 	default:
--		rate.bw = RATE_INFO_BW_20;
-+		rate->bw = RATE_INFO_BW_20;
- 		stats->tx_bw[0]++;
- 		break;
- 	}
-+}
- 
--	/* Cache rate for packets that don't get a TXS callback for some
--	 * reason.
-+static void
-+mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
-+		       __le32 *txs_data, struct mt7915_sta_stats *stats)
-+{
-+	struct mt76_dev *mdev = &dev->mt76;
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_tx_info info_stack;
-+	struct sk_buff_head list;
-+	/* rate is cached in wcid->rate for skbs that do not request to be
-+	 * paired with TXS data.  This is normal datapath.
- 	 */
--	wcid->rate = rate;
-+	struct rate_info *rate = &wcid->rate;
-+	struct sk_buff *skb;
- 
--out:
--	mt76_tx_status_skb_done(mdev, skb, &list, wcid);
-+	mt76_tx_status_lock(mdev, &list);
-+	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
- 
--out_no_skb:
--	mt76_tx_status_unlock(mdev, &list);
-+	memset(rate, 0, sizeof(*rate));
- 
--	return !!skb;
-+	if (skb)
-+		info = IEEE80211_SKB_CB(skb);
-+	else
-+		info = &info_stack;
-+
-+	mt7915_mac_parse_txs(dev, wcid, txs_data, stats, rate, info);
-+
-+	if (skb)
-+		mt76_tx_status_skb_done(mdev, skb, &list, wcid);
-+
-+	mt76_tx_status_unlock(mdev, &list);
- }
- 
- static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
+ 	struct work_struct init_work;
+ 	struct work_struct rc_work;
 -- 
 2.20.1
 
