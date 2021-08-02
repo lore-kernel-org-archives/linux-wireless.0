@@ -7,95 +7,72 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EBB2C4338F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBF6C4338F
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34E2260F58
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9328F60F41
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235612AbhHBOUU (ORCPT
+        id S235862AbhHBOUe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 10:20:20 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50876 "EHLO
+        Mon, 2 Aug 2021 10:20:34 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50880 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234727AbhHBOUH (ORCPT
+        with ESMTP id S234025AbhHBOUV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Aug 2021 10:20:07 -0400
+        Mon, 2 Aug 2021 10:20:21 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mAYdZ-001xoA-EN; Mon, 02 Aug 2021 17:09:51 +0300
+        id 1mAYde-001xoA-U4; Mon, 02 Aug 2021 17:09:56 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon,  2 Aug 2021 17:09:38 +0300
-Message-Id: <iwlwifi.20210802170640.42d7c93279c4.I07f74e65aab0e3d965a81206fcb289dc92d74878@changeid>
+Date:   Mon,  2 Aug 2021 17:09:44 +0300
+Message-Id: <iwlwifi.20210802170640.98980f8bd17f.Ifcedf415a545a87cb341a4142085b5723d8cac4d@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210802140944.90143-1-luca@coelho.fi>
 References: <20210802140944.90143-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: pcie: free RBs during configure
+Subject: [PATCH 12/12] iwlwifi: iwl-dbg-tlv: add info about loading external dbg bin
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-When switching op-modes, or more generally when reconfiguring,
-we might switch the RB size. In _iwl_pcie_rx_init() we have a
-comment saying we must free all RBs since we might switch the
-size, but this is actually too late: the switch has been done
-and we'll free the buffers with the wrong size.
+This helps understand why and what debug capabilities are running.
 
-Fix this by always freeing the buffers, if any, at the start
-of configure, instead of only after the size may have changed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 +++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 4f6f4b2720f0..ff7ca3c57f34 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -487,6 +487,9 @@ void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int i;
- 
-+	if (!trans_pcie->rx_pool)
-+		return;
-+
- 	for (i = 0; i < RX_POOL_SIZE(trans_pcie->num_rx_bufs); i++) {
- 		if (!trans_pcie->rx_pool[i].page)
- 			continue;
-@@ -1062,7 +1065,7 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
- 	INIT_LIST_HEAD(&rba->rbd_empty);
- 	spin_unlock_bh(&rba->lock);
- 
--	/* free all first - we might be reconfigured for a different size */
-+	/* free all first - we overwrite everything here */
- 	iwl_pcie_free_rbs_pool(trans);
- 
- 	for (i = 0; i < RX_QUEUE_SIZE; i++)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index bee6b4574226..65cc25cbb9ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1866,6 +1866,9 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index cc78fd23c922..c89db7b9585a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -435,13 +435,16 @@ static int iwl_dbg_tlv_parse_bin(struct iwl_trans *trans, const u8 *data,
+ void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans)
  {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	const struct firmware *fw;
++	const char *yoyo_bin = "iwl-debug-yoyo.bin";
+ 	int res;
  
-+	/* free all first - we might be reconfigured for a different size */
-+	iwl_pcie_free_rbs_pool(trans);
+ 	if (!iwlwifi_mod_params.enable_ini ||
+ 	    trans->trans_cfg->device_family <= IWL_DEVICE_FAMILY_9000)
+ 		return;
+ 
+-	res = firmware_request_nowarn(&fw, "iwl-debug-yoyo.bin", dev);
++	res = firmware_request_nowarn(&fw, yoyo_bin, dev);
++	IWL_DEBUG_FW(trans, "%s %s\n", res ? "didn't load" : "loaded", yoyo_bin);
 +
- 	trans->txqs.cmd.q_id = trans_cfg->cmd_queue;
- 	trans->txqs.cmd.fifo = trans_cfg->cmd_fifo;
- 	trans->txqs.cmd.wdg_timeout = trans_cfg->cmd_q_wdg_timeout;
+ 	if (res)
+ 		return;
+ 
 -- 
 2.32.0
 
