@@ -7,85 +7,83 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47512C4320A
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 18:59:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5EDC4338F
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 18:59:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30959610FC
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 18:59:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EAC7610FC
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 18:59:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231315AbhHBS7S (ORCPT
+        id S230459AbhHBS7V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 14:59:18 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:51030 "EHLO
+        Mon, 2 Aug 2021 14:59:21 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:51042 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230486AbhHBS7Q (ORCPT
+        with ESMTP id S230420AbhHBS7S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Aug 2021 14:59:16 -0400
+        Mon, 2 Aug 2021 14:59:18 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mAd9T-001ySl-RK; Mon, 02 Aug 2021 21:59:05 +0300
+        id 1mAd9V-001ySl-AT; Mon, 02 Aug 2021 21:59:06 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon,  2 Aug 2021 21:58:52 +0300
-Message-Id: <iwlwifi.20210802215208.c9bd2034dc05.I983c25caa09c3776c7640fff73fe739362ecc5b6@changeid>
+Date:   Mon,  2 Aug 2021 21:58:54 +0300
+Message-Id: <iwlwifi.20210802215208.04146f24794f.I90726440ddff75013e9fecbe9fa1a05c69e3f17b@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210802185856.175567-1-luca@coelho.fi>
 References: <20210802185856.175567-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/10] iwlwifi: implement Bz NMI behaviour
+Subject: [PATCH 08/10] iwlwifi: mvm: Fix umac scan request probe parameters
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-The method to NMI the firmware also changed in Bz devices,
-implement the new logic.
+Both 'iwl_scan_probe_params_v3' and 'iwl_scan_probe_params_v4'
+wrongly addressed the 'bssid_array' field which should supposed
+to be any array of BSSIDs each of size ETH_ALEN and not the
+opposite. Fix it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h | 4 ++++
- drivers/net/wireless/intel/iwlwifi/iwl-io.c  | 5 ++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 704ff2ada122..cf796403c45c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -104,6 +104,10 @@
- /* GIO Chicken Bits (PCI Express bus link power management) */
- #define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index b2605aefc290..8b200379f7c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -874,7 +874,7 @@ struct iwl_scan_probe_params_v3 {
+ 	u8 reserved;
+ 	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX];
+ 	__le32 short_ssid[SCAN_SHORT_SSID_MAX_SIZE];
+-	u8 bssid_array[ETH_ALEN][SCAN_BSSID_MAX_SIZE];
++	u8 bssid_array[SCAN_BSSID_MAX_SIZE][ETH_ALEN];
+ } __packed; /* SCAN_PROBE_PARAMS_API_S_VER_3 */
  
-+/* Doorbell NMI (since Bz) */
-+#define CSR_DOORBELL_VECTOR	(CSR_BASE + 0x130)
-+#define CSR_DOORBELL_VECTOR_NMI	BIT(1)
-+
- /* host chicken bits */
- #define CSR_HOST_CHICKEN	(CSR_BASE + 0x204)
- #define CSR_HOST_CHICKEN_PM_IDLE_SRC_DIS_SB_PME	BIT(19)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index dba54b3297d1..2517c4ae07ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -213,9 +213,12 @@ void iwl_force_nmi(struct iwl_trans *trans)
- 	else if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
- 				UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER);
--	else
-+	else if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_BZ)
- 		iwl_write_umac_prph(trans, UREG_DOORBELL_TO_ISR6,
- 				    UREG_DOORBELL_TO_ISR6_NMI_BIT);
-+	else
-+		iwl_write32(trans, CSR_DOORBELL_VECTOR,
-+			    CSR_DOORBELL_VECTOR_NMI);
- }
- IWL_EXPORT_SYMBOL(iwl_force_nmi);
+ /**
+@@ -894,7 +894,7 @@ struct iwl_scan_probe_params_v4 {
+ 	__le16 reserved;
+ 	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX];
+ 	__le32 short_ssid[SCAN_SHORT_SSID_MAX_SIZE];
+-	u8 bssid_array[ETH_ALEN][SCAN_BSSID_MAX_SIZE];
++	u8 bssid_array[SCAN_BSSID_MAX_SIZE][ETH_ALEN];
+ } __packed; /* SCAN_PROBE_PARAMS_API_S_VER_4 */
  
+ #define SCAN_MAX_NUM_CHANS_V3 67
 -- 
 2.32.0
 
