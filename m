@@ -7,222 +7,195 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B720AC4338F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 427E0C432BE
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:08:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9681760FC2
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:08:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29F4060FF2
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 15:08:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234781AbhHBPIe (ORCPT
+        id S234789AbhHBPIf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 11:08:34 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.48]:36306 "EHLO
+        Mon, 2 Aug 2021 11:08:35 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:36318 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234804AbhHBPIa (ORCPT
+        by vger.kernel.org with ESMTP id S234579AbhHBPIc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Aug 2021 11:08:30 -0400
+        Mon, 2 Aug 2021 11:08:32 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mx1-us1.ppe-hosted.com (unknown [10.7.64.75])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 99D5B2007E
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id C62542007F
         for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2021 15:08:18 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 6EC5D8006E
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 9B4F18006E
         for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2021 15:08:18 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id EBD0013C2B1;
-        Mon,  2 Aug 2021 08:08:17 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com EBD0013C2B1
+        by mail3.candelatech.com (Postfix) with ESMTP id 4890E13C2B5;
+        Mon,  2 Aug 2021 08:08:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 4890E13C2B5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1627916898;
-        bh=xYPBzITvJYTKKmEdkaKDsyuxx3MJBtg5n/kGlevxoPE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EguYaDyVWsvrLk0bJYUoBZR90NYGOaswDxtIyrE9YxrjmnT1/f5xUhRjnAWXDyeJq
-         abldKAgPwQTPSUkPgZxEziNvgSZJspYf94An8X8IqW1GdFr79KPoWNNbjUJOEWT3yP
-         WiL3jqtKKGxf3HwWPuV0OdJ3rgS0yrwG1VJJVhEo=
+        bh=aDElV/Pvgx+lAhFSv7CvWl1Mos19XGYDaj8Vtcn0VDU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BmgZCoiM1RYNQPEFKKXYbyBEul9MlyeYwbMYREDV1KVNehRWgGpWkgjbfCAXnpp1n
+         isl8ZCodoOf4Tncqh0ajbbKx12L8Ius8SrG/UwoPCovp8muzG7uga0k8NpHV77Jxpr
+         O2rG03/Tpw6+VJyHq3cESYLVP35HUnYp2ELpiUMg=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v6 1/7] mt76: mt7915: add ethtool stats support
-Date:   Mon,  2 Aug 2021 08:08:02 -0700
-Message-Id: <20210802150808.30113-1-greearb@candelatech.com>
+Subject: [PATCH v6 3/7] mt76: mt7915: add some per-station tx stats to ethtool
+Date:   Mon,  2 Aug 2021 08:08:04 -0700
+Message-Id: <20210802150808.30113-3-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210802150808.30113-1-greearb@candelatech.com>
+References: <20210802150808.30113-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1627916899-paPgbjEFxHdW
+X-MDID: 1627916899-79UAgt7TA5uX
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This exposes some tx-path stats to the ethtool API, so that
-ethtool -S wlanX provides some more useful info.
+The tx status callback is not called for every frame, so
+those specific counters under-count, but at least they give
+some idea of what is going on.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-
-v6:  Fix punctuation in patch titles.
-
- .../net/wireless/mediatek/mt76/mt7915/main.c  | 139 ++++++++++++++++++
- 1 file changed, 139 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 98 ++++++++++++++++++-
+ 1 file changed, 93 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 48b5e2051bad..994f84e9d7aa 100644
+index 994f84e9d7aa..88a8547e2e7f 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -1028,6 +1028,142 @@ static void mt7915_sta_set_decap_offload(struct ieee80211_hw *hw,
- 	mt7915_mcu_sta_update_hdr_trans(dev, vif, sta);
+@@ -1068,6 +1068,35 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	"tx_msdu_pack_6",
+ 	"tx_msdu_pack_7",
+ 	"tx_msdu_pack_8",
++	/* per vif counters */
++	"v_tx_mpdu_attempts",
++	"v_tx_mpdu_fail",
++	"v_tx_mpdu_retry",
++	"v_tx_mode_cck",
++	"v_tx_mode_ofdm",
++	"v_tx_mode_ht",
++	"v_tx_mode_ht_gf",
++	"v_tx_mode_vht",
++	"v_tx_mode_he_su",
++	"v_tx_mode_he_ext_su",
++	"v_tx_mode_he_tb",
++	"v_tx_mode_he_mu",
++	"v_tx_bw_20",
++	"v_tx_bw_40",
++	"v_tx_bw_80",
++	"v_tx_bw_160",
++	"v_tx_mcs_0",
++	"v_tx_mcs_1",
++	"v_tx_mcs_2",
++	"v_tx_mcs_3",
++	"v_tx_mcs_4",
++	"v_tx_mcs_5",
++	"v_tx_mcs_6",
++	"v_tx_mcs_7",
++	"v_tx_mcs_8",
++	"v_tx_mcs_9",
++	"v_tx_mcs_10",
++	"v_tx_mcs_11",
+ };
+ 
+ #define MT7915_SSTATS_LEN ARRAY_SIZE(mt7915_gstrings_stats)
+@@ -1093,6 +1122,50 @@ int mt7915_get_et_sset_count(struct ieee80211_hw *hw,
+ 	return 0;
  }
  
-+static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_ampdu_len:0-1",
-+	"tx_ampdu_len:2-10",
-+	"tx_ampdu_len:11-19",
-+	"tx_ampdu_len:20-28",
-+	"tx_ampdu_len:29-37",
-+	"tx_ampdu_len:38-46",
-+	"tx_ampdu_len:47-55",
-+	"tx_ampdu_len:56-79",
-+	"tx_ampdu_len:80-103",
-+	"tx_ampdu_len:104-127",
-+	"tx_ampdu_len:128-151",
-+	"tx_ampdu_len:152-175",
-+	"tx_ampdu_len:176-199",
-+	"tx_ampdu_len:200-223",
-+	"tx_ampdu_len:224-247",
-+	"ba_miss_count",
-+	"tx_beamformer_ppdu_iBF",
-+	"tx_beamformer_ppdu_eBF",
-+	"tx_beamformer_rx_feedback_all",
-+	"tx_beamformer_rx_feedback_he",
-+	"tx_beamformer_rx_feedback_vht",
-+	"tx_beamformer_rx_feedback_ht",
-+	"tx_beamformer_rx_feedback_bw", /* zero based idx: 20, 40, 80, 160 */
-+	"tx_beamformer_rx_feedback_nc",
-+	"tx_beamformer_rx_feedback_nr",
-+	"tx_beamformee_ok_feedback_pkts",
-+	"tx_beamformee_feedback_trig",
-+	"tx_mu_beamforming",
-+	"tx_mu_mpdu",
-+	"tx_mu_successful_mpdu",
-+	"tx_su_successful_mpdu",
-+	"tx_msdu_pack_1",
-+	"tx_msdu_pack_2",
-+	"tx_msdu_pack_3",
-+	"tx_msdu_pack_4",
-+	"tx_msdu_pack_5",
-+	"tx_msdu_pack_6",
-+	"tx_msdu_pack_7",
-+	"tx_msdu_pack_8",
++struct mt7915_ethtool_worker_info {
++	u64 *data;
++	struct mt7915_vif *mvif;
++	int initial_stat_idx;
++	int worker_stat_count;
++	int sta_count;
 +};
 +
-+#define MT7915_SSTATS_LEN ARRAY_SIZE(mt7915_gstrings_stats)
-+
-+/* Ethtool related API */
-+static
-+void mt7915_get_et_strings(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif,
-+			   u32 sset, u8 *data)
++static void mt7915_ethtool_worker(void *wi_data, struct ieee80211_sta *sta)
 +{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *mt7915_gstrings_stats,
-+		       sizeof(mt7915_gstrings_stats));
-+}
++	struct mt7915_ethtool_worker_info *wi = wi_data;
++	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
++	int ei = wi->initial_stat_idx;
++	int q;
++	u64 *data = wi->data;
++	struct mt7915_sta_stats *mstats = &msta->stats;
 +
-+static
-+int mt7915_get_et_sset_count(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return MT7915_SSTATS_LEN;
-+
-+	return 0;
-+}
-+
-+static
-+void mt7915_get_et_stats(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif,
-+			 struct ethtool_stats *stats, u64 *data)
-+{
-+	struct mt7915_dev *dev = mt7915_hw_dev(hw);
-+	struct mt7915_phy *phy = mt7915_hw_phy(hw);
-+
-+	/* TODO:  These are mostly dev-wide stats at this point.
-+	 *  Get some per-vif stats?
-+	 */
-+
-+	/* See mt7915_ampdu_stat_read_phy, etc */
-+	bool ext_phy = phy != &dev->phy;
-+	int i, n, cnt;
-+	int ei = 0;
-+
-+	if (!phy)
++	if (msta->vif != wi->mvif)
 +		return;
 +
-+	/* Tx ampdu stat */
-+	n = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
-+	for (i = 0; i < 15 /*ARRAY_SIZE(bound)*/; i++)
-+		data[ei++] = dev->mt76.aggr_stats[i + n];
++	wi->sta_count++;
 +
-+	data[ei++] = phy->mib.ba_miss_cnt;
++	data[ei++] += mstats->tx_mpdu_attempts;
++	data[ei++] += mstats->tx_mpdu_fail;
++	data[ei++] += mstats->tx_mpdu_retry;
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_CCK];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_OFDM];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HT];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HT_GF];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_VHT];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HE_SU];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HE_EXT_SU];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HE_TB];
++	data[ei++] += mstats->tx_mode[MT_PHY_TYPE_HE_MU];
 +
-+	/* Tx Beamformer monitor */
-+	cnt = mt76_rr(dev, MT_ETBF_TX_APP_CNT(ext_phy));
-+	data[ei++] = FIELD_GET(MT_ETBF_TX_IBF_CNT, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_TX_EBF_CNT, cnt);
++	for (q = 0; q < ARRAY_SIZE(mstats->tx_bw); q++)
++		data[ei++] += mstats->tx_bw[q];
 +
-+	/* Tx Beamformer Rx feedback monitor */
-+	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CNT(ext_phy));
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_ALL, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_HE, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_VHT, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_HT, cnt);
++	for (q = 0; q < 12; q++)
++		data[ei++] += mstats->tx_mcs[q];
 +
-+	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CONT(ext_phy));
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_BW, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_NC, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_RX_FB_NR, cnt);
-+
-+	/* Tx Beamformee Rx NDPA & Tx feedback report */
-+	cnt = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP(ext_phy));
-+	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_CPL, cnt);
-+	data[ei++] = FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
-+
-+	/* Tx SU & MU counters */
-+	cnt = mt76_rr(dev, MT_MIB_SDR34(ext_phy));
-+	data[ei++] = FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR8(ext_phy));
-+	data[ei++] = cnt;
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR9(ext_phy));
-+	data[ei++] = cnt; /* MU MPDU SUccessful */
-+
-+	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
-+	data[ei++] = cnt; /* SU MPDU successful */
-+
-+	/* TODO:  External phy too?? */
-+
-+	/* Tx amsdu info (pack-count histogram) */
-+	for (i = 0; i < 8; i++)
-+		data[ei++] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
-+
-+	WARN_ON(ei != MT7915_SSTATS_LEN);
++	wi->worker_stat_count = ei - wi->initial_stat_idx;
 +}
 +
+ static
+ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 			 struct ieee80211_vif *vif,
+@@ -1100,10 +1173,8 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ {
+ 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
+-
+-	/* TODO:  These are mostly dev-wide stats at this point.
+-	 *  Get some per-vif stats?
+-	 */
++	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
++	struct mt7915_ethtool_worker_info wi;
+ 
+ 	/* See mt7915_ampdu_stat_read_phy, etc */
+ 	bool ext_phy = phy != &dev->phy;
+@@ -1161,7 +1232,24 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 	for (i = 0; i < 8; i++)
+ 		data[ei++] = mt76_rr(dev,  MT_PLE_AMSDU_PACK_MSDU_CNT(i));
+ 
+-	WARN_ON(ei != MT7915_SSTATS_LEN);
++	/* Add values for all stations owned by this vif */
++	wi.data = data;
++	wi.mvif = mvif;
++	wi.initial_stat_idx = ei;
++	wi.worker_stat_count = 0;
++	wi.sta_count = 0;
++
++	ieee80211_iterate_stations_atomic(hw, mt7915_ethtool_worker, &wi);
++
++	if (wi.sta_count == 0)
++		return;
++
++	ei += wi.worker_stat_count;
++	if (ei != MT7915_SSTATS_LEN) {
++		dev_err(dev->mt76.dev, "ei: %d  MT7915_SSTATS_LEN: %d",
++			ei, (int)(MT7915_SSTATS_LEN));
++		WARN_ON_ONCE(ei != MT7915_SSTATS_LEN);
++	}
+ }
+ 
  const struct ieee80211_ops mt7915_ops = {
- 	.tx = mt7915_tx,
- 	.start = mt7915_start,
-@@ -1052,6 +1188,9 @@ const struct ieee80211_ops mt7915_ops = {
- 	.get_txpower = mt76_get_txpower,
- 	.channel_switch_beacon = mt7915_channel_switch_beacon,
- 	.get_stats = mt7915_get_stats,
-+	.get_et_sset_count = mt7915_get_et_sset_count,
-+	.get_et_stats = mt7915_get_et_stats,
-+	.get_et_strings = mt7915_get_et_strings,
- 	.get_tsf = mt7915_get_tsf,
- 	.set_tsf = mt7915_set_tsf,
- 	.offset_tsf = mt7915_offset_tsf,
 -- 
 2.20.1
 
