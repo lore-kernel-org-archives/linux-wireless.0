@@ -7,147 +7,95 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95312C4338F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EBB2C4338F
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76FCC60F41
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:19:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34E2260F58
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 14:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234926AbhHBOUH (ORCPT
+        id S235612AbhHBOUU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Aug 2021 10:20:07 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50872 "EHLO
+        Mon, 2 Aug 2021 10:20:20 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50876 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S236849AbhHBOTy (ORCPT
+        with ESMTP id S234727AbhHBOUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Aug 2021 10:19:54 -0400
+        Mon, 2 Aug 2021 10:20:07 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mAYdb-001xoA-IQ; Mon, 02 Aug 2021 17:09:53 +0300
+        id 1mAYdZ-001xoA-EN; Mon, 02 Aug 2021 17:09:51 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon,  2 Aug 2021 17:09:40 +0300
-Message-Id: <iwlwifi.20210802170640.8b6a33544b4b.I55f97f70f8efa64db064a9207177a094c60ac8f1@changeid>
+Date:   Mon,  2 Aug 2021 17:09:38 +0300
+Message-Id: <iwlwifi.20210802170640.42d7c93279c4.I07f74e65aab0e3d965a81206fcb289dc92d74878@changeid>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210802140944.90143-1-luca@coelho.fi>
 References: <20210802140944.90143-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/12] iwlwifi: pcie: dump error on FW reset handshake failures
+Subject: [PATCH 06/12] iwlwifi: pcie: free RBs during configure
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If the firmware crashes while we're waiting for the reset
-handshake then it cannot possibly make progress anymore,
-and we will just time out the wait. That's pointless, so
-just stop waiting at that point.
+When switching op-modes, or more generally when reconfiguring,
+we might switch the RB size. In _iwl_pcie_rx_init() we have a
+comment saying we must free all RBs since we might switch the
+size, but this is actually too late: the switch has been done
+and we'll free the buffers with the wrong size.
 
-Additionally, if it never acknowledges the reset handshake,
-something went wrong.
-
-Dump an error in both of these cases, but we need to do it
-synchronously here since the device will be turned off.
+Fix this by always freeing the buffers, if any, at the start
+of configure, instead of only after the size may have changed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h   |  9 ++++++++-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c         | 10 ++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 11 ++++++++---
- 3 files changed, 24 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 5 ++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 10d763fc3d50..6c3b0403b68f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -254,6 +254,13 @@ struct cont_rec {
- };
- #endif
- 
-+enum iwl_pcie_fw_reset_state {
-+	FW_RESET_IDLE,
-+	FW_RESET_REQUESTED,
-+	FW_RESET_OK,
-+	FW_RESET_ERROR,
-+};
-+
- /**
-  * struct iwl_trans_pcie - PCIe transport specific data
-  * @rxq: all the RX queue data
-@@ -405,7 +412,7 @@ struct iwl_trans_pcie {
- 	dma_addr_t base_rb_stts_dma;
- 
- 	bool fw_reset_handshake;
--	bool fw_reset_done;
-+	enum iwl_pcie_fw_reset_state fw_reset_state;
- 	wait_queue_head_t fw_reset_waitq;
- 
- 	char rf_name[32];
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 54bfc01ab34c..8e45eb38304b 100644
+index 4f6f4b2720f0..ff7ca3c57f34 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -2228,7 +2228,13 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 			"Microcode SW error detected. Restarting 0x%X.\n",
- 			inta_fh);
- 		isr_stats->sw++;
--		iwl_pcie_irq_handle_error(trans);
-+		/* during FW reset flow report errors from there */
-+		if (trans_pcie->fw_reset_state == FW_RESET_REQUESTED) {
-+			trans_pcie->fw_reset_state = FW_RESET_ERROR;
-+			wake_up(&trans_pcie->fw_reset_waitq);
-+		} else {
-+			iwl_pcie_irq_handle_error(trans);
-+		}
- 	}
- 
- 	/* After checking FH register check HW register */
-@@ -2296,7 +2302,7 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 
- 	if (inta_hw & MSIX_HW_INT_CAUSES_REG_RESET_DONE) {
- 		IWL_DEBUG_ISR(trans, "Reset flow completed\n");
--		trans_pcie->fw_reset_done = true;
-+		trans_pcie->fw_reset_state = FW_RESET_OK;
- 		wake_up(&trans_pcie->fw_reset_waitq);
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index a34009357227..a266a35ff928 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -95,7 +95,7 @@ static void iwl_trans_pcie_fw_reset_handshake(struct iwl_trans *trans)
+@@ -487,6 +487,9 @@ void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
  	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ret;
+ 	int i;
  
--	trans_pcie->fw_reset_done = false;
-+	trans_pcie->fw_reset_state = FW_RESET_REQUESTED;
- 
- 	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		iwl_write_umac_prph(trans, UREG_NIC_SET_NMI_DRIVER,
-@@ -106,10 +106,15 @@ static void iwl_trans_pcie_fw_reset_handshake(struct iwl_trans *trans)
- 
- 	/* wait 200ms */
- 	ret = wait_event_timeout(trans_pcie->fw_reset_waitq,
--				 trans_pcie->fw_reset_done, FW_RESET_TIMEOUT);
--	if (!ret)
-+				 trans_pcie->fw_reset_state != FW_RESET_REQUESTED,
-+				 FW_RESET_TIMEOUT);
-+	if (!ret || trans_pcie->fw_reset_state == FW_RESET_ERROR) {
- 		IWL_INFO(trans,
- 			 "firmware didn't ACK the reset - continue anyway\n");
-+		iwl_trans_fw_error(trans, true);
-+	}
++	if (!trans_pcie->rx_pool)
++		return;
 +
-+	trans_pcie->fw_reset_state = FW_RESET_IDLE;
- }
+ 	for (i = 0; i < RX_POOL_SIZE(trans_pcie->num_rx_bufs); i++) {
+ 		if (!trans_pcie->rx_pool[i].page)
+ 			continue;
+@@ -1062,7 +1065,7 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	INIT_LIST_HEAD(&rba->rbd_empty);
+ 	spin_unlock_bh(&rba->lock);
  
- void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
+-	/* free all first - we might be reconfigured for a different size */
++	/* free all first - we overwrite everything here */
+ 	iwl_pcie_free_rbs_pool(trans);
+ 
+ 	for (i = 0; i < RX_QUEUE_SIZE; i++)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bee6b4574226..65cc25cbb9ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1866,6 +1866,9 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	/* free all first - we might be reconfigured for a different size */
++	iwl_pcie_free_rbs_pool(trans);
++
+ 	trans->txqs.cmd.q_id = trans_cfg->cmd_queue;
+ 	trans->txqs.cmd.fifo = trans_cfg->cmd_fifo;
+ 	trans->txqs.cmd.wdg_timeout = trans_cfg->cmd_q_wdg_timeout;
 -- 
 2.32.0
 
