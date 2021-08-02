@@ -2,146 +2,122 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 423B5C4338F
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 02:23:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA8AC4338F
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 157BD61042
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 02:23:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B01F760EBB
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Aug 2021 06:32:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231425AbhHBCYA (ORCPT
+        id S232069AbhHBGcc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Aug 2021 22:24:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229908AbhHBCX7 (ORCPT
+        Mon, 2 Aug 2021 02:32:32 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:40026 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231410AbhHBGcc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Aug 2021 22:23:59 -0400
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00A9BC06175F;
-        Sun,  1 Aug 2021 19:23:50 -0700 (PDT)
-Received: by mail-ej1-x62c.google.com with SMTP id nd39so28402405ejc.5;
-        Sun, 01 Aug 2021 19:23:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kcU9zh0OTfEVkVwBtfOEs7GMplFE2emjbqTkOWvTJmY=;
-        b=MH4e5RPIr6Gd5OKpKwYKjBLLrC1KcSfy3ETOyVLpDkTMrd1BirTdjNvMLKblpkeCOy
-         RXNWkBcZqxsIZWBC5WYhTz1EnDPGVInOJVRBpoMn0V+9mQsoL56ll0eHjb0nReKOOB4i
-         2JH1KRuhIVtUptWWd3PwdksBdx/muzswJCPECQPhhscy14K9Yb8qtJ4ZaKaf+ehBo0/8
-         BJPCCR6QeKJTFgH/Y6SHFNHhn4h2fj9NUBgo7NunQIF3vVthZz9vXMvbu4HWKkvbWgVT
-         5r3gUiSvlpxehbCbsd30ac2XgMQoEeUneSDLdPdUxJsn5e0AM3UU57JPcQ2+RdjhIWby
-         pQzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=kcU9zh0OTfEVkVwBtfOEs7GMplFE2emjbqTkOWvTJmY=;
-        b=imzqmWYPugY4xsjgB7tp4Pb5W/oAOycHSbOq7QVhNHJIhTRlb7pvS2yLz7tqeAJ9vk
-         qCdyrQS+uiIjSkAmE7N6Rbgtk0VxdX69qOx2O5BiqQqAy9dCvbCMTReAjVZeS0MdSPsE
-         B34Rv1ChJgCZgdTsY0aBe1tz66jiV15Dx9j/w2QhPpZZ8zRhM5/IQD0rXJrnnt9K0dNF
-         Ohgbz9PhGjkxdIk0ngvgHOdW5THTi0ij6DXH/jZpNu+5nvRYV0fYyjbV5iD7ZWuGWl+H
-         NU9wImjXvkOzYEniS4IygWx5o2rnzrdEd9ZLMVF1V/1vlbi8ozUYfKc0AtujGA2P31zP
-         TnQA==
-X-Gm-Message-State: AOAM531SlyQHwyufAD7mQq286/qXPkKEdTW9KMqEgArH3Ysfu315714y
-        PkIXG1/A2RiOEzbQdFlbFjZQTRbQCR0+Yq62oWE=
-X-Google-Smtp-Source: ABdhPJyWpcBYilhB5rRxMRSa3CCrCFIFRFqvnlP2Suej+HlvvmvJHn6xR3qCJEWmVySTguagDCpasNmcewlLedTS7Ag=
-X-Received: by 2002:a17:907:987c:: with SMTP id ko28mr13480958ejc.200.1627871028530;
- Sun, 01 Aug 2021 19:23:48 -0700 (PDT)
+        Mon, 2 Aug 2021 02:32:32 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1726WEmaC014975, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36502.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1726WEmaC014975
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 2 Aug 2021 14:32:14 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36502.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 2 Aug 2021 14:32:14 +0800
+Received: from localhost (172.16.21.121) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 2 Aug 2021
+ 14:32:13 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <timlee@realtek.com>,
+        <kevin_yang@realtek.com>
+Subject: [PATCH 0/4] rtw88: update regulartory mapping and adaptivity
+Date:   Mon, 2 Aug 2021 14:31:36 +0800
+Message-ID: <20210802063140.25670-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20210722193459.7474-1-ojab@ojab.ru> <CAKzrAgRvOLX6rcKKz=8ghD+QLyMu-1KEPm5HkkLEAzuE1MQpDA@mail.gmail.com>
-In-Reply-To: <CAKzrAgRvOLX6rcKKz=8ghD+QLyMu-1KEPm5HkkLEAzuE1MQpDA@mail.gmail.com>
-From:   Axel Rasmussen <axel.rasmussen1@gmail.com>
-Date:   Sun, 1 Aug 2021 19:23:37 -0700
-Message-ID: <CACC2YF1j45r0chib-HC463FVO_a1Um1f+7PvuRBYVLC7WbgGnQ@mail.gmail.com>
-Subject: Re: [PATCH V2] ath10k: don't fail if IRAM write fails
-To:     "ojab //" <ojab@ojab.ru>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath10k@lists.infradead.org,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.21.121]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 08/02/2021 06:13:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzgvMiCkV6TIIDA2OjAxOjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36502.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 08/02/2021 06:21:01
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 165335 [Aug 01 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 449 449 5db59deca4a4f5e6ea34a93b13bc730e229092f4
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;realtek.com:7.1.1
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 08/02/2021 06:23:00
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jul 22, 2021 at 12:42 PM ojab // <ojab@ojab.ru> wrote:
->
-> See also: https://lists.infradead.org/pipermail/ath10k/2021-May/012626.html
->
-> On Thu, 22 Jul 2021 at 22:36, ojab <ojab@ojab.ru> wrote:
-> >
-> > After reboot with kernel & firmware updates I found `failed to copy
-> > target iram contents:` in dmesg and missing wlan interfaces for both
-> > of my QCA9984 compex cards. Rolling back kernel/firmware didn't fixed
-> > it, so while I have no idea what's actually happening, I don't see why
-> > we should fail in this case, looks like some optional firmware ability
-> > that could be skipped.
-> >
-> > Also with additional logging there is
-> > ```
-> > [    6.839858] ath10k_pci 0000:04:00.0: No hardware memory
-> > [    6.841205] ath10k_pci 0000:04:00.0: failed to copy target iram contents: -12
-> > [    6.873578] ath10k_pci 0000:07:00.0: No hardware memory
-> > [    6.875052] ath10k_pci 0000:07:00.0: failed to copy target iram contents: -12
-> > ```
-> > so exact branch could be seen.
-> >
-> > Signed-off-by: Slava Kardakov <ojab@ojab.ru>
-> > ---
-> >  Of course I forgot to sing off, since I don't use it by default because I
-> >  hate my real name and kernel requires it
+Mapping table of regulatory, which manages tx power limit, is updated, and
+we update the mapping architecture according to this change. In order to
+choose proper regulatory domain from this table, we regard efuse value and
+regulatory hint. With proper regulatory domain, we can have adaptivity for
+ETSI/JP DFS region, and also have a firmware version of adaptivity.
 
-Thanks for working on this! And sorry for the slow response. I've been
-unexpectedly very busy lately, but I plan to test out this patch next
-week.
+Chin-Yen Lee (1):
+  rtw88: move adaptivity mechanism to firmware
 
-> >
-> >  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++---
-> >  1 file changed, 6 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> > index 2f9be182fbfb..d9fd5294e142 100644
-> > --- a/drivers/net/wireless/ath/ath10k/core.c
-> > +++ b/drivers/net/wireless/ath/ath10k/core.c
-> > @@ -2691,8 +2691,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
-> >         u32 len, remaining_len;
-> >
-> >         hw_mem = ath10k_coredump_get_mem_layout(ar);
-> > -       if (!hw_mem)
-> > +       if (!hw_mem) {
-> > +               ath10k_warn(ar, "No hardware memory");
-> >                 return -ENOMEM;
-> > +       }
-> >
-> >         for (i = 0; i < hw_mem->region_table.size; i++) {
-> >                 tmp = &hw_mem->region_table.regions[i];
-> > @@ -2702,8 +2704,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
-> >                 }
-> >         }
-> >
-> > -       if (!mem_region)
-> > +       if (!mem_region) {
-> > +               ath10k_warn(ar, "No memory region");
-> >                 return -ENOMEM;
-> > +       }
-> >
-> >         for (i = 0; i < ar->wmi.num_mem_chunks; i++) {
-> >                 if (ar->wmi.mem_chunks[i].req_id ==
-> > @@ -2917,7 +2921,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
-> >                 if (status) {
-> >                         ath10k_warn(ar, "failed to copy target iram contents: %d",
-> >                                     status);
-> > -                       goto err_hif_stop;
-> >                 }
-> >         }
-> >
-> > --
-> > 2.32.0
+Zong-Zhe Yang (3):
+  rtw88: upgrade rtw_regulatory mechanism and mapping
+  rtw88: add regulatory strategy by chip type
+  rtw88: support adaptivity for ETSI/JP DFS region
+
+ drivers/net/wireless/realtek/rtw88/debug.c    |  41 +-
+ drivers/net/wireless/realtek/rtw88/debug.h    |   1 +
+ drivers/net/wireless/realtek/rtw88/fw.c       |  47 ++
+ drivers/net/wireless/realtek/rtw88/fw.h       |  24 +
+ drivers/net/wireless/realtek/rtw88/main.c     |  14 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |  48 +-
+ drivers/net/wireless/realtek/rtw88/phy.c      | 119 ++-
+ drivers/net/wireless/realtek/rtw88/phy.h      |   2 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   5 +
+ drivers/net/wireless/realtek/rtw88/regd.c     | 753 ++++++++++--------
+ drivers/net/wireless/realtek/rtw88/regd.h     |   8 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c |   3 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c |  46 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h |   8 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  47 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 +
+ 16 files changed, 844 insertions(+), 325 deletions(-)
+
+-- 
+2.25.1
+
