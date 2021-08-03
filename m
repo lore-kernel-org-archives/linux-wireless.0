@@ -7,47 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C70C432BE
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF07EC432BE
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 15:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8032460F35
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:50:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CE696103C
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 15:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235846AbhHCOuC (ORCPT
+        id S236880AbhHCPJf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Aug 2021 10:50:02 -0400
-Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:59402
-        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232748AbhHCOuC (ORCPT
+        Tue, 3 Aug 2021 11:09:35 -0400
+Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:57128
+        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236685AbhHCPJT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Aug 2021 10:50:02 -0400
+        Tue, 3 Aug 2021 11:09:19 -0400
 Received: from localhost (1.general.cking.uk.vpn [10.172.193.212])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id A126F3F237;
-        Tue,  3 Aug 2021 14:49:49 +0000 (UTC)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 87E4E3F070;
+        Tue,  3 Aug 2021 15:09:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1628002189;
-        bh=NiVUhx/JAom6b6NYddYVcs0padMYBQPXPuWaKQhjOPc=;
+        s=20210705; t=1628003344;
+        bh=yujcAW928JS1+WAa5ppXQvA0AiE4xUVDj/s66hatc0A=;
         h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type;
-        b=IQeQmkWo4IIG36PuLt3BuPlcs6dLoGXLoioFFBPySG5XJuLbR+PVSeAMhcUZ3eSD0
-         A1x5Fv9uMg5OiB/MAkOqVc8YIR4SNOJ6YIl07R0lk+yXeag4rGULpaxnPVP8jMTH8g
-         /uuVennK05KOihQ25LvfJ93TYiS/0nD2hDJqqcAKuPiQjGH9efL7HcZ2NBLFyimE2x
-         1LNNu9IBtCBSqJcJZ9t5NvIB/Qh8baVqwjkX77j/fZCAPjdm2xt0+KDRqCD6ThX6/q
-         B+YDcSWLCcIIEKc9LuEScd/HDOV18X6loA6WdCHEHjrqeWNi7Hv5UOkqzu2+07bAEb
-         87c63L4QNKBig==
+        b=mREzlHPwx8jgCXwCQp5AweexjLomZrqnpv852tP8GEMfnDNQ9EJZuB1sab7bJNrGk
+         D7QfrRHgwLxawch47XtG9QsCVQPOGIvpgWHr9SDIg4f0MgRHnL21bIUQVP2+lKueKF
+         rQOEhkLmppi2Cu5ldSdAZmpjBIL8PyThXJuBTn8v47zgboCQ+mtaKrMNVaCgRcR76q
+         +rGSxnkpHTe/HkOjautuv4a3h4TvjTJX2hajKOnSSLz9oXKWYardQxD98JjMDR3Igu
+         jr//IdPSl+37xIHBh7CDoSUnpfddVTA3gkeTcmcXkrDffArQJxK9mAkPKq6n45huO4
+         F+/KQhEPocRXw==
 From:   Colin King <colin.king@canonical.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
+To:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3][RESEND] rtlwifi: rtl8192de: Remove redundant variable initializations
-Date:   Tue,  3 Aug 2021 15:49:47 +0100
-Message-Id: <20210803144949.79433-1-colin.king@canonical.com>
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] brcmfmac: firmware: Fix uninitialized variable ret
+Date:   Tue,  3 Aug 2021 16:09:04 +0100
+Message-Id: <20210803150904.80119-1-colin.king@canonical.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -58,38 +65,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-The variables rtstatus and place are being initialized with a values
-that are never read, the initializations are redundant and can be removed.
+Currently the variable ret is uninitialized and is only set if
+the pointer alt_path is non-null. Fix this by ininitializing ret
+to zero.
 
-Addresses-Coverity: ("Unused value")
+Addresses-Coverity: ("Uninitialized scalar variable")
+Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware binaries")
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index 76dd881ef9bb..50c2d8f6f9c0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -681,7 +681,7 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	bool rtstatus = true;
-+	bool rtstatus;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index adfdfc654b10..4f387e868120 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -680,7 +680,7 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	struct brcmf_fw_item *first = &req->items[0];
+ 	struct brcmf_fw *fwctx;
+ 	char *alt_path;
+-	int ret;
++	int ret = 0;
  
- 	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "==>\n");
- 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
-@@ -887,7 +887,7 @@ static void _rtl92d_ccxpower_index_check(struct ieee80211_hw *hw,
- 
- static u8 _rtl92c_phy_get_rightchnlplace(u8 chnl)
- {
--	u8 place = chnl;
-+	u8 place;
- 
- 	if (chnl > 14) {
- 		for (place = 14; place < sizeof(channel5g); place++) {
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+ 	if (!fw_cb)
 -- 
 2.31.1
 
