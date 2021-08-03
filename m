@@ -5,39 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FA55C432BE
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C70C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A87760F35
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:49:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8032460F35
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 14:50:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236321AbhHCOuE (ORCPT
+        id S235846AbhHCOuC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Aug 2021 10:50:04 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:55850
-        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235368AbhHCOuC (ORCPT
+        Tue, 3 Aug 2021 10:50:02 -0400
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:59402
+        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232748AbhHCOuC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 3 Aug 2021 10:50:02 -0400
 Received: from localhost (1.general.cking.uk.vpn [10.172.193.212])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 7AEE73F0FF;
-        Tue,  3 Aug 2021 14:49:50 +0000 (UTC)
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id A126F3F237;
+        Tue,  3 Aug 2021 14:49:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1628002190;
-        bh=OSXLs7UOCDaUH/Z2FsCqFS59Zra8YYCA6HkdQfm7sZs=;
-        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version:Content-Type;
-        b=Hg+RoLzmfw1V6/+4j87RoskXSf8QvgpdifyL0u9L6WCu0Dfd1NG/wkWZcAdNsIoZM
-         /be4sQu/GOR8IZgQn+aZb+Ni6oDufNdQ0pEnm9lSLk1Noje3T6yKt1yZi0jSbS1GNs
-         Lr0iwTqtN/uPqcdlxTEd3ZZQ6mb59ctSeEqW4DCw0NtLr0QP93gCC2Px8QZquLs5t3
-         u7Cc45+7pyX+rdTKNGtaWG84QP1Di6JwoKWTDNfZ7CNAL9i3CGMPzsGPDI+Z/3BwRZ
-         WUAsCd//Q67GcvTbZY9VzC6/nUPUukrmECBHp7wYVW8Lb2HRbnCsTg5Q5PNGMWzzup
-         5K+PqEdEtF2mQ==
+        s=20210705; t=1628002189;
+        bh=NiVUhx/JAom6b6NYddYVcs0padMYBQPXPuWaKQhjOPc=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type;
+        b=IQeQmkWo4IIG36PuLt3BuPlcs6dLoGXLoioFFBPySG5XJuLbR+PVSeAMhcUZ3eSD0
+         A1x5Fv9uMg5OiB/MAkOqVc8YIR4SNOJ6YIl07R0lk+yXeag4rGULpaxnPVP8jMTH8g
+         /uuVennK05KOihQ25LvfJ93TYiS/0nD2hDJqqcAKuPiQjGH9efL7HcZ2NBLFyimE2x
+         1LNNu9IBtCBSqJcJZ9t5NvIB/Qh8baVqwjkX77j/fZCAPjdm2xt0+KDRqCD6ThX6/q
+         B+YDcSWLCcIIEKc9LuEScd/HDOV18X6loA6WdCHEHjrqeWNi7Hv5UOkqzu2+07bAEb
+         87c63L4QNKBig==
 From:   Colin King <colin.king@canonical.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -46,12 +45,10 @@ To:     Ping-Ke Shih <pkshih@realtek.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] rtlwifi: rtl8192de: fix array size limit in for-loop
-Date:   Tue,  3 Aug 2021 15:49:49 +0100
-Message-Id: <20210803144949.79433-3-colin.king@canonical.com>
+Subject: [PATCH 1/3][RESEND] rtlwifi: rtl8192de: Remove redundant variable initializations
+Date:   Tue,  3 Aug 2021 15:49:47 +0100
+Message-Id: <20210803144949.79433-1-colin.king@canonical.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210803144949.79433-1-colin.king@canonical.com>
-References: <20210803144949.79433-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -61,31 +58,38 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-Currently the size of the entire array is being used in a for-loop
-for the element count. While this works since the elements are u8
-sized, it is preferred to use ARRAY_SIZE to get the element count
-of the array.
+The variables rtstatus and place are being initialized with a values
+that are never read, the initializations are redundant and can be removed.
 
-Kudos to Joe Perches for spotting this issue.
-
+Addresses-Coverity: ("Unused value")
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index 8ae69d914312..e11728622a9e 100644
+index 76dd881ef9bb..50c2d8f6f9c0 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -1366,7 +1366,7 @@ u8 rtl92d_get_rightchnlplace_for_iqk(u8 chnl)
- 	u8 place = chnl;
+@@ -681,7 +681,7 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+-	bool rtstatus = true;
++	bool rtstatus;
+ 
+ 	rtl_dbg(rtlpriv, COMP_INIT, DBG_TRACE, "==>\n");
+ 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
+@@ -887,7 +887,7 @@ static void _rtl92d_ccxpower_index_check(struct ieee80211_hw *hw,
+ 
+ static u8 _rtl92c_phy_get_rightchnlplace(u8 chnl)
+ {
+-	u8 place = chnl;
++	u8 place;
  
  	if (chnl > 14) {
--		for (place = 14; place < sizeof(channel_all); place++) {
-+		for (place = 14; place < ARRAY_SIZE(channel_all); place++) {
- 			if (channel_all[place] == chnl)
- 				return place - 13;
- 		}
+ 		for (place = 14; place < sizeof(channel5g); place++) {
 -- 
 2.31.1
 
