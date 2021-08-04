@@ -7,79 +7,118 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7555AC4320E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AA9C43216
 	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 511D560F56
+	by mail.kernel.org (Postfix) with ESMTP id 9E57760EFF
 	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238396AbhHDNp3 (ORCPT
+        id S238409AbhHDNpa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Aug 2021 09:45:29 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.184]:34002 "EHLO
+        Wed, 4 Aug 2021 09:45:30 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.48]:48208 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237957AbhHDNp2 (ORCPT
+        by vger.kernel.org with ESMTP id S238005AbhHDNp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 4 Aug 2021 09:45:28 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.175])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 4CF8F2A0074
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.133])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id B5E391C0071
         for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2021 13:45:14 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 216B48C0082
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 94222B0007E
         for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2021 13:45:14 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id C227213C2B8;
-        Wed,  4 Aug 2021 06:45:13 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C227213C2B8
+        by mail3.candelatech.com (Postfix) with ESMTP id 5935413C2BE;
+        Wed,  4 Aug 2021 06:45:14 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 5935413C2BE
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1628084713;
-        bh=jaPe5aCo0puDjlL/Yjg9OUAOkqrjKfpVDF9GVEcjijs=;
+        s=default; t=1628084714;
+        bh=dno2s6vpZpYzObc7adrbYSpkD2upB9f0haLZnDxJ2yo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RdlxZf/AUMeajLasRluyzBSZLcu7k3CTgDM7aWRe4+Vwl7UDPM4i9WymE+znE8JMW
-         Q8eG1W30kgRo1Y1D4HnsBH+6jquDhU/DPlKkbSbtTVqS1UPFNLo48R4osrv62WqLpV
-         gYmZ/3dEZhZUB+A8BqzE9jQIe29gY59yNKfNjelo=
+        b=Ew7F7tU1AqVDSLmmhThWYYTQ54ErHr4L1p5tr45U2Wu7ARWeYhbzDlHQQnEee+enQ
+         9pctnk2JQDF6BNxILwzf2yiOg+oQ1Lsa0FTSKpyejHOMu5a4DcUm5pZLad+vrgjyTl
+         DD22slZMxosxXDOb2vUQPlPu+Odxpk7TJQiDgPyQ=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v5 06/11] mt76: mt7915:  add note about TXSFM 0x2
-Date:   Wed,  4 Aug 2021 06:45:00 -0700
-Message-Id: <20210804134505.3208-6-greearb@candelatech.com>
+Subject: [PATCH v5 09/11] mt76: mt7915:  txfree status to show txcount instead of latency
+Date:   Wed,  4 Aug 2021 06:45:03 -0700
+Message-Id: <20210804134505.3208-9-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210804134505.3208-1-greearb@candelatech.com>
 References: <20210804134505.3208-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1628084714-wZKI3zdIsxbu
+X-MDID: 1628084715-uRowyS1ElJGv
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This format is not supported by any current hardware,
-add note to mention this.
+Latency is not obviously that useful, but txcount can let us deduce
+retries, which may be more interesting.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.h  | 8 +++++---
+ drivers/net/wireless/mediatek/mt76/mt7915/regs.h | 4 ++++
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index f174cf219724..a0d282771d77 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -304,6 +304,9 @@ static void mt7915_mac_init(struct mt7915_dev *dev)
+ 	/* enable hardware de-agg */
+ 	mt76_set(dev, MT_MDP_DCR0, MT_MDP_DCR0_DAMSDU_EN);
+ 
++	/* disable Tx latency report to enable Tx count in txfree path */
++	mt76_clear(dev, MT_PLE_HOST_RPT0, MT_PLE_HOST_RPT0_TX_LATENCY);
++
+ 	for (i = 0; i < MT7915_WTBL_SIZE; i++)
+ 		mt7915_mac_wtbl_update(dev, i,
+ 				       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-index ccce994dc07a..65dba1061376 100644
+index 65dba1061376..3f5a80158866 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-@@ -347,6 +347,10 @@ struct mt7915_tx_free {
+@@ -304,13 +304,15 @@ struct mt7915_tx_free {
  
- #define MT_TXS4_TIMESTAMP		GENMASK(31, 0)
- 
-+/* The F0 variables are for TXSFM 0x0 and 0x1.  The F1 variables
-+ * are for TXSFM 0x2 aka PPDU format.  TXSFM 0x2 not supported
-+ * at this time.
+ #define MT_TX_FREE_MSDU_CNT		GENMASK(9, 0)
+ #define MT_TX_FREE_WLAN_ID		GENMASK(23, 14)
++/* when configured for txfree latency mode.  See MT_PLE_HOST_RPT0_TX_LATENCY
++ * Not enabled by default now.
 + */
- #define MT_TXS5_F0_FINAL_MPDU		BIT(31)
- #define MT_TXS5_F0_QOS			BIT(30)
- #define MT_TXS5_F0_TX_COUNT		GENMASK(29, 25)
+ #define MT_TX_FREE_LATENCY		GENMASK(12, 0)
+-/* 0: success, others: dropped */
++/* when configured for txcount mode.  See MT_PLE_HOST_RPT0_TX_LATENCY. */
++#define MT_TX_FREE_TXCNT		GENMASK(12, 0)
+ #define MT_TX_FREE_STATUS		GENMASK(14, 13)
+ #define MT_TX_FREE_MSDU_ID		GENMASK(30, 16)
+ #define MT_TX_FREE_PAIR			BIT(31)
+-/* will support this field in further revision */
+-#define MT_TX_FREE_RATE			GENMASK(13, 0)
+ 
+ #define MT_TXS0_FIXED_RATE		BIT(31)
+ #define MT_TXS0_BW			GENMASK(30, 29)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index 62cc32a098fc..ac4d233b8cf2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -22,6 +22,10 @@
+ #define MT_PLE_BASE			0x8000
+ #define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
+ 
++/* Modify whether txfree struct returns latency or txcount. */
++#define MT_PLE_HOST_RPT0               MT_PLE(0x030)
++#define MT_PLE_HOST_RPT0_TX_LATENCY    BIT(3)
++
+ #define MT_PLE_FL_Q0_CTRL		MT_PLE(0x1b0)
+ #define MT_PLE_FL_Q1_CTRL		MT_PLE(0x1b4)
+ #define MT_PLE_FL_Q2_CTRL		MT_PLE(0x1b8)
 -- 
 2.20.1
 
