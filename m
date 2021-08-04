@@ -2,174 +2,102 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3779CC4338F
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 23:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80686C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 02:03:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06EE160E78
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Aug 2021 23:29:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F8E560E78
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 02:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233433AbhHCXaC (ORCPT
+        id S234248AbhHDCDz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Aug 2021 19:30:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49028 "EHLO
+        Tue, 3 Aug 2021 22:03:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232171AbhHCXaB (ORCPT
+        with ESMTP id S234126AbhHDCDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Aug 2021 19:30:01 -0400
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BECFEC061757
-        for <linux-wireless@vger.kernel.org>; Tue,  3 Aug 2021 16:29:49 -0700 (PDT)
-Received: by mail-lf1-x12c.google.com with SMTP id f42so1300491lfv.7
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Aug 2021 16:29:49 -0700 (PDT)
+        Tue, 3 Aug 2021 22:03:54 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169D7C06175F;
+        Tue,  3 Aug 2021 19:03:42 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id m10-20020a17090a34cab0290176b52c60ddso1420423pjf.4;
+        Tue, 03 Aug 2021 19:03:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=77+9YXp3jj+rN/Pk2KfaWP9zDZrcZqnNXtYW8KyfWi8=;
-        b=J0omb48aAgMB2lbMwDtomWLbHQvMLPV8zLagUTtxJEoBgUKYaImxPt2MTNYnDiw/AF
-         H5G/CuVPcbyIN2XR8XKxzHVta0fUmvfKz6U/aGGPtZLGLGkruXKol7aLy2Nim+c5N/lq
-         0R9lGcAjvLMwYZ4sbhqZ92gxxfQ7TLwxPSFF3fpx66QXFDoo8IFM/GlIlqm/Txi/m4R3
-         I1fl8rXIExHjAw062Twe0dLCMnFoJ/9bT+NowLLPEuSBaojfxSwnhU4JcsrsWxmSGLWa
-         DnEe5QOeerL99xymaqPsfR4kx/U/U98eUW+FYXBewOx+V65HJrB6wypriYo724WhRbe7
-         yQlA==
+        bh=9YU5h2Vun8MQkwnTAnfIYkUUTnWKnq1n3xEdd7fVbmg=;
+        b=dI6/sBh1r+4aj3KqmzBSLdxiYCUIK3p6AwJ9P23RNBsthgQN9An/AZxxfQIxKHZhdE
+         fGRhwYMLxeIo5PBya94+i8M4zJZ/SOcZBerZR4ImCUoH5xPCZn9I+mmmSHa7ZG/TlbD6
+         rRKKm3O8CY5SisVNCT93qaVhbhl8j44NntHgJXA+O6dSxPtBDB04DYAY0mwxQrlbEDwR
+         LJmAuLXXWNlsojtTdtM2+T12+qAF2zXePTImkVTKt5S+Hm2JehM65Y2SsWCV+w/HYP1k
+         k+O+hFqb6AVJwKmFcZA4rx2QakmIYhrlhtI+r/I/rrVyDt95aUyVJbOScfQ4j+27F+Yt
+         sAVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=77+9YXp3jj+rN/Pk2KfaWP9zDZrcZqnNXtYW8KyfWi8=;
-        b=syn1D27b/ziZULz80ln7zTyarao3sP/zSg0PWJlPS2Vhq39QTQ2WhWSYAZKZ4lF2Qz
-         C2RHarhujok1tIRXlSWB1DGQo6cgV/rBP+yPH0YcgztNzgAAws3/yxVGympnu2S3b1GS
-         3tWN24N0RiABHaBKml4/9tU7G8ClH7PSH+NVyT000dZ2tmB1RphmYirUX7fJRhEaFHjz
-         o95uZR9OK8Vq4+4VZldKzylqrw9A5ZWgCzTlmzLhtEplM9v+tnbyIL8FrxxYTyWD8Cyf
-         g0luHl8DKfmFzJjfA/nCJptV7FHn3oE6sbV/sOmoualV8GfBIy/5vTk8N4TgVkic4nui
-         CMzA==
-X-Gm-Message-State: AOAM530aA7gGNaxqzYCCVwaIJrQQLOXRqo9Eqb8BSiYorlbs2eWyXO8O
-        JpONG5XRRn1RXNGJd8Oe1V7tIg==
-X-Google-Smtp-Source: ABdhPJyTq1pigTPI9gVBduMYZtv6OSE1AEVqXptgY49b6AA2YAJvx4Qa6BJhp/W+C4D4QTHVw9J3yw==
-X-Received: by 2002:a05:6512:b88:: with SMTP id b8mr18146409lfv.563.1628033388141;
-        Tue, 03 Aug 2021 16:29:48 -0700 (PDT)
-Received: from localhost.localdomain (c-fdcc225c.014-348-6c756e10.bbcust.telenor.se. [92.34.204.253])
-        by smtp.gmail.com with ESMTPSA id e5sm37213ljn.72.2021.08.03.16.29.47
+        bh=9YU5h2Vun8MQkwnTAnfIYkUUTnWKnq1n3xEdd7fVbmg=;
+        b=dId2daDgJ3I1ObKZV1rktq+1QcvTZIzgk9BbMua75FgvRw19Y2g8lHNVfSz1MtE0Yr
+         QPqKTS1cdWhj++h17UIrvSHK4mTWDqs3ZaLof+1B9wbV+jRez+5KTQY5aOD8DcIp/ha9
+         9DLin8Ac0tNUCjKBPqdT+Ugd4XN+LdXT3n+eJh2OwjjEIRz7UexBuk2hEZmoKSAJuT4J
+         Pko0JuQyzDxA1Ze652RTJhFlwtwFNqBFshjd1o6x7Bx7zAgBE1LmyDgChMLL0HbdM5UN
+         8iPPAjYFdZrYC2xmGvxbn1Ps15yQT5zlX4KLfKpqPkR3e/vQbpIu4zT06M77lN0ui95x
+         UP+g==
+X-Gm-Message-State: AOAM532YHxAWeVuwV3hOhKu/R4Dq1YcPETOXdkkJY/WfvOTbxySIltkX
+        6uGOXFx5LHDqbtElUz02aCA=
+X-Google-Smtp-Source: ABdhPJwKWsjDTBUFLSXtW5FxaACuFxArM+2NsoI2csc8IIkeaWPr2plHaaCG+4okwaoj19CrHWXn7Q==
+X-Received: by 2002:a17:90a:1348:: with SMTP id y8mr25792949pjf.110.1628042621622;
+        Tue, 03 Aug 2021 19:03:41 -0700 (PDT)
+Received: from localhost.localdomain ([45.135.186.49])
+        by smtp.gmail.com with ESMTPSA id z16sm496818pgu.21.2021.08.03.19.03.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Aug 2021 16:29:47 -0700 (PDT)
-From:   Linus Walleij <linus.walleij@linaro.org>
-To:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Stefan Hansson <newbyte@disroot.org>
-Subject: [PATCH] brcmfmac: firmware: Fix firmware loading
-Date:   Wed,  4 Aug 2021 01:27:46 +0200
-Message-Id: <20210803232746.3389570-1-linus.walleij@linaro.org>
-X-Mailer: git-send-email 2.31.1
+        Tue, 03 Aug 2021 19:03:40 -0700 (PDT)
+From:   Tuo Li <islituo@gmail.com>
+To:     amitkarwar@gmail.com, ganapathi017@gmail.com,
+        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
+        kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [PATCH] mwifiex: drop redundant null-pointer check in mwifiex_dnld_cmd_to_fw()
+Date:   Tue,  3 Aug 2021 19:03:05 -0700
+Message-Id: <20210804020305.29812-1-islituo@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The patch that would first try the board-specific firmware
-had a bug because the fallback would not be called: the
-asynchronous interface is used meaning request_firmware_nowait()
-returns 0 immediately.
+There is no case in which the variable cmd_node->cmd_skb has no ->data,
+and thus the variable host_cmd is guaranteed to be not NULL. Therefore,
+the null-pointer check is redundant and can be dropped.
 
-Harden the firmware loading like this:
-
-- If we cannot build an alt_path (like if no board_type is
-  specified) just request the first firmware without any
-  suffix, like in the past.
-
-- If the lookup of a board specific firmware fails, we get
-  a NULL fw in the async callback, so just try again without
-  the alt_path. Use a static variable to check that we do not
-  try this indefinitely.
-
-- Rename the brcm_fw_request_done to brcm_fw_request_done_first
-  reflecting the fact that this callback is only used for the
-  first (main) firmware file, and drop the unnecessary
-  prototype.
-
-Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware binaries")
-Cc: Dmitry Osipenko <digetx@gmail.com>
-Cc: Stefan Hansson <newbyte@disroot.org>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Tuo Li <islituo@gmail.com>
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 29 +++++++++++++------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index adfdfc654b10..71ca4a517e42 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -431,8 +431,6 @@ struct brcmf_fw {
- 	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 3a11342a6bde..171a25742600 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -187,7 +187,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	host_cmd = (struct host_cmd_ds_command *) (cmd_node->cmd_skb->data);
  
--static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
--
- #ifdef CONFIG_EFI
- /* In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
-  * to specify "worldwide" compatible settings, but these 2 ccode-s do not work
-@@ -638,11 +636,26 @@ static int brcmf_fw_request_firmware(const struct firmware **fw,
- 	return request_firmware(fw, cur->path, fwctx->dev);
- }
- 
--static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
-+static void brcmf_fw_request_done_first(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
-+	struct brcmf_fw_item *first = &fwctx->req->items[0];
-+	static bool retry = true;
- 	int ret;
- 
-+	/*Something failed with the first firmware request , such as not
-+	 * getting the per-board firmware. Retry this, now using the less
-+	 * specific path for the first firmware item, i.e. without the board
-+	 * suffix.
-+	 */
-+	if (!fw && retry) {
-+		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
-+					      fwctx->dev, GFP_KERNEL, fwctx,
-+					      brcmf_fw_request_done_first);
-+		retry = false;
-+		return;
-+	}
-+
- 	ret = brcmf_fw_complete_request(fw, fwctx);
- 
- 	while (ret == 0 && ++fwctx->curpos < fwctx->req->n_items) {
-@@ -702,17 +715,15 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 	if (alt_path) {
- 		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
- 					      fwctx->dev, GFP_KERNEL, fwctx,
--					      brcmf_fw_request_done);
-+					      brcmf_fw_request_done_first);
- 		kfree(alt_path);
--	}
--	/* Else try canonical path */
--	if (ret) {
-+	} else {
- 		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
- 					      fwctx->dev, GFP_KERNEL, fwctx,
--					      brcmf_fw_request_done);
-+					      brcmf_fw_request_done_first);
- 	}
- 	if (ret < 0)
--		brcmf_fw_request_done(NULL, fwctx);
-+		brcmf_fw_request_done_first(NULL, fwctx);
- 
- 	return 0;
- }
+ 	/* Sanity test */
+-	if (host_cmd == NULL || host_cmd->size == 0) {
++	if (host_cmd->size == 0) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "DNLD_CMD: host_cmd is null\t"
+ 			    "or cmd size is 0, not sending\n");
 -- 
-2.31.1
+2.25.1
 
