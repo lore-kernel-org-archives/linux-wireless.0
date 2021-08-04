@@ -7,118 +7,85 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AA9C43216
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3588DC4338F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E57760EFF
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E8B560EFF
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 13:45:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238409AbhHDNpa (ORCPT
+        id S238509AbhHDNpa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 4 Aug 2021 09:45:30 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.48]:48208 "EHLO
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.183]:34026 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238005AbhHDNp2 (ORCPT
+        by vger.kernel.org with ESMTP id S237987AbhHDNp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 4 Aug 2021 09:45:28 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.133])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id B5E391C0071
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.175])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id A4D2A2A006D
         for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2021 13:45:14 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 94222B0007E
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 7A6E98C0080
         for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2021 13:45:14 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 5935413C2BE;
+        by mail3.candelatech.com (Postfix) with ESMTP id 2760013C2BC;
         Wed,  4 Aug 2021 06:45:14 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 5935413C2BE
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 2760013C2BC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1628084714;
-        bh=dno2s6vpZpYzObc7adrbYSpkD2upB9f0haLZnDxJ2yo=;
+        bh=2Es1FyVE3jgX+6477awy6BaMUBBUCRXlgW8KqeWJyjg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ew7F7tU1AqVDSLmmhThWYYTQ54ErHr4L1p5tr45U2Wu7ARWeYhbzDlHQQnEee+enQ
-         9pctnk2JQDF6BNxILwzf2yiOg+oQ1Lsa0FTSKpyejHOMu5a4DcUm5pZLad+vrgjyTl
-         DD22slZMxosxXDOb2vUQPlPu+Odxpk7TJQiDgPyQ=
+        b=qdf2O53xkPooug5QchWveYiQF0G2peswYtXtUMpOIRgJaX4fNLSm9mjtlHO+SvZpp
+         d1uP8Y5Tm0J4tyEno5UZHjOaMO8YDZSutW30/QMa3QHAeTweLAhoxV2VQUrwKmx7xA
+         jEgGohJRQP1eBbIQA+v+ziF6WNp/BnvEl8rm2jc0=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v5 09/11] mt76: mt7915:  txfree status to show txcount instead of latency
-Date:   Wed,  4 Aug 2021 06:45:03 -0700
-Message-Id: <20210804134505.3208-9-greearb@candelatech.com>
+Subject: [PATCH v5 08/11] mt76: mt7915:  fix SGI reporting when using tx-overrides
+Date:   Wed,  4 Aug 2021 06:45:02 -0700
+Message-Id: <20210804134505.3208-8-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210804134505.3208-1-greearb@candelatech.com>
 References: <20210804134505.3208-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1628084715-uRowyS1ElJGv
+X-MDID: 1628084715-U7xkcAXBFf_O
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Latency is not obviously that useful, but txcount can let us deduce
-retries, which may be more interesting.
+The station wtbl logic to read rate-ctrl settings does not work when
+fixed rates are used.  So, read sgi settings from the txo configuration
+in this case.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt7915/mac.h  | 8 +++++---
- drivers/net/wireless/mediatek/mt76/mt7915/regs.h | 4 ++++
- 3 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index f174cf219724..a0d282771d77 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -304,6 +304,9 @@ static void mt7915_mac_init(struct mt7915_dev *dev)
- 	/* enable hardware de-agg */
- 	mt76_set(dev, MT_MDP_DCR0, MT_MDP_DCR0_DAMSDU_EN);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 01f4aa7a6e88..6dd86dbe3e08 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -176,6 +176,15 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
+ 						       rx_cur);
+ 		}
  
-+	/* disable Tx latency report to enable Tx count in txfree path */
-+	mt76_clear(dev, MT_PLE_HOST_RPT0, MT_PLE_HOST_RPT0_TX_LATENCY);
++		/* If we are in tx-override mode, then wtbl doesn't provide useful report
++		 * for the SGI/LGI stuff, so just get it from the override struct.
++		 */
++		if (msta->test.txo_active) {
++			msta->wcid.rate_he_gi = msta->test.tx_rate_sgi;
++			msta->wcid.rate_short_gi = msta->test.tx_rate_sgi;
++			continue;
++		}
 +
- 	for (i = 0; i < MT7915_WTBL_SIZE; i++)
- 		mt7915_mac_wtbl_update(dev, i,
- 				       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-index 65dba1061376..3f5a80158866 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-@@ -304,13 +304,15 @@ struct mt7915_tx_free {
- 
- #define MT_TX_FREE_MSDU_CNT		GENMASK(9, 0)
- #define MT_TX_FREE_WLAN_ID		GENMASK(23, 14)
-+/* when configured for txfree latency mode.  See MT_PLE_HOST_RPT0_TX_LATENCY
-+ * Not enabled by default now.
-+ */
- #define MT_TX_FREE_LATENCY		GENMASK(12, 0)
--/* 0: success, others: dropped */
-+/* when configured for txcount mode.  See MT_PLE_HOST_RPT0_TX_LATENCY. */
-+#define MT_TX_FREE_TXCNT		GENMASK(12, 0)
- #define MT_TX_FREE_STATUS		GENMASK(14, 13)
- #define MT_TX_FREE_MSDU_ID		GENMASK(30, 16)
- #define MT_TX_FREE_PAIR			BIT(31)
--/* will support this field in further revision */
--#define MT_TX_FREE_RATE			GENMASK(13, 0)
- 
- #define MT_TXS0_FIXED_RATE		BIT(31)
- #define MT_TXS0_BW			GENMASK(30, 29)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 62cc32a098fc..ac4d233b8cf2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -22,6 +22,10 @@
- #define MT_PLE_BASE			0x8000
- #define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
- 
-+/* Modify whether txfree struct returns latency or txcount. */
-+#define MT_PLE_HOST_RPT0               MT_PLE(0x030)
-+#define MT_PLE_HOST_RPT0_TX_LATENCY    BIT(3)
-+
- #define MT_PLE_FL_Q0_CTRL		MT_PLE(0x1b0)
- #define MT_PLE_FL_Q1_CTRL		MT_PLE(0x1b4)
- #define MT_PLE_FL_Q2_CTRL		MT_PLE(0x1b8)
+ 		/*
+ 		 * We don't support reading GI info from txs packets.
+ 		 * For accurate tx status reporting and AQL improvement,
 -- 
 2.20.1
 
