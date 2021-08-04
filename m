@@ -2,83 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5094C432BE
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 21:21:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C12C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 22:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8E67603E9
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 21:21:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFBD760FC3
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 22:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230437AbhHDVVf (ORCPT
+        id S233487AbhHDWX2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Aug 2021 17:21:35 -0400
-Received: from li1434-30.members.linode.com ([45.33.107.30]:46080 "EHLO
-        node.akkea.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230344AbhHDVVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Aug 2021 17:21:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by node.akkea.ca (Postfix) with ESMTP id 8EE7355E34F;
-        Wed,  4 Aug 2021 21:12:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
-        t=1628111540; bh=4dE2NGlNch+XUI3o7qPjT+5wP/W535FSe3wPOINJFsk=;
-        h=From:To:Cc:Subject:Date;
-        b=v9Njar4ydKqSjJbuYDWrEmM3EW41O0BP+IJ8J4GwCCOLaAZVMCdiPYrVM1KT45wb6
-         9M1n/OgXCDfUrQIuiyx5j8kikHUoiU8UfBvrMExtkdoVLzCMWDim587QU4MPNUIg8R
-         Kae0f6XQBGmJnVFtAkEfznOvlq2TD3sZZ+c9d1xQ=
-X-Virus-Scanned: Debian amavisd-new at mail.akkea.ca
-Received: from node.akkea.ca ([127.0.0.1])
-        by localhost (mail.akkea.ca [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Qna9pl6cp0Cf; Wed,  4 Aug 2021 21:12:20 +0000 (UTC)
-Received: from midas.localdomain (S0106788a2041785e.gv.shawcable.net [70.66.86.75])
-        by node.akkea.ca (Postfix) with ESMTPSA id B379F55E34B;
-        Wed,  4 Aug 2021 21:12:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
-        t=1628111540; bh=4dE2NGlNch+XUI3o7qPjT+5wP/W535FSe3wPOINJFsk=;
-        h=From:To:Cc:Subject:Date;
-        b=v9Njar4ydKqSjJbuYDWrEmM3EW41O0BP+IJ8J4GwCCOLaAZVMCdiPYrVM1KT45wb6
-         9M1n/OgXCDfUrQIuiyx5j8kikHUoiU8UfBvrMExtkdoVLzCMWDim587QU4MPNUIg8R
-         Kae0f6XQBGmJnVFtAkEfznOvlq2TD3sZZ+c9d1xQ=
-From:   Angus Ainslie <angus@akkea.ca>
-To:     kernel@puri.sm
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Angus Ainslie <angus@akkea.ca>
-Subject: [PATCH 0/2] Add BCM43752 chipset support
-Date:   Wed,  4 Aug 2021 14:11:09 -0700
-Message-Id: <20210804211111.1452779-1-angus@akkea.ca>
-X-Mailer: git-send-email 2.25.1
+        Wed, 4 Aug 2021 18:23:28 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:35044 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230236AbhHDWX2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Aug 2021 18:23:28 -0400
+X-UUID: d1e909313d2e421b82c0b8d3fb9bbc16-20210805
+X-UUID: d1e909313d2e421b82c0b8d3fb9bbc16-20210805
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 291457690; Thu, 05 Aug 2021 06:23:10 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 5 Aug 2021 06:23:08 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 5 Aug 2021 06:23:02 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <jemele@google.com>, <yenlinlai@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v2] mt76: connac: add support maximum regulatory Tx power
+Date:   Thu, 5 Aug 2021 06:23:00 +0800
+Message-ID: <e05024275119c517a4eb7e39bf249640db68d07d.1628115504.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The SparkLan AP6275 SDIO M.2 card contains a BCM43752 based module and these
-patches were tested with that card.
+From: YN Chen <YN.Chen@mediatek.com>
 
-This was tested on the 5.13 kernel with a minor substition BRCMF_FW_DEF for
-BRCMF_FW_CLM_DEF.
+Consider .max_reg_power in struct ieee80211_channel to limit the
+maximum power the wireless device allowed to transmit on the
+corresponding channel according to the regulatory domain.
 
-It should apply and build on the wireless-next branch.
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+---
+v2: consider the power limit that can be allowed on mt7663
+---
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 43 ++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 2 deletions(-)
 
-TODO: Get bluetooth support working
-
-Angus Ainslie (2):
-  brcmfmac: add 43752 device ids
-  brcmfmac: add initializers for the 43752
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 3 +++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 8 ++++++--
- .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
- include/linux/mmc/sdio_ids.h                              | 1 +
- 5 files changed, 12 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index d71393b1c5e6..80987af03efe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1773,6 +1773,43 @@ static s8 mt76_connac_get_sar_power(struct mt76_phy *phy,
+ 	return target_power;
+ }
+ 
++static s8 mt76_connac_get_ch_power(struct mt76_phy *phy,
++				   struct ieee80211_channel *chan,
++				   s8 target_power)
++{
++	struct mt76_dev *dev = phy->dev;
++	struct ieee80211_supported_band *sband;
++	int i;
++
++	switch (chan->band) {
++	case NL80211_BAND_2GHZ:
++		sband = &phy->sband_2g.sband;
++		break;
++	case NL80211_BAND_5GHZ:
++		sband = &phy->sband_5g.sband;
++		break;
++	default:
++		return target_power;
++	}
++
++	for (i = 0; i < sband->n_channels; i++) {
++		struct ieee80211_channel *ch = &sband->channels[i];
++
++		if (ch->hw_value == chan->hw_value) {
++			if (!(ch->flags & IEEE80211_CHAN_DISABLED)) {
++				int power = 2 * ch->max_reg_power;
++
++				if (is_mt7663(dev) && (power > 63 || power < -64))
++					power = 63;
++				target_power = min_t(s8, power, target_power);
++			}
++			break;
++		}
++	}
++
++	return target_power;
++}
++
+ static int
+ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 				  enum nl80211_band band)
+@@ -1840,10 +1877,12 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 				.hw_value = ch_list[idx],
+ 				.band = band,
+ 			};
+-			s8 sar_power;
++			s8 reg_power, sar_power;
+ 
++			reg_power = mt76_connac_get_ch_power(phy, &chan,
++							     tx_power);
+ 			sar_power = mt76_connac_get_sar_power(phy, &chan,
+-							      tx_power);
++							      reg_power);
+ 
+ 			mt76_get_rate_power_limits(phy, &chan, &limits,
+ 						   sar_power);
 -- 
 2.25.1
 
