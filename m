@@ -2,118 +2,162 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E95E1C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 16:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB5D4C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 18:12:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C652960FC4
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 16:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A264160EB2
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 18:12:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236575AbhHDQWB (ORCPT
+        id S240082AbhHDSMu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Aug 2021 12:22:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43632 "EHLO mail.kernel.org"
+        Wed, 4 Aug 2021 14:12:50 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:14340 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234064AbhHDQWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Aug 2021 12:22:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E438860F94;
-        Wed,  4 Aug 2021 16:21:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628094108;
-        bh=3KghkMAaEVvO0bpaXEGPMyBaiRpeQXsRfgm2tvbKbFc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=etP3HeEVLchoQYPkz3OdxNNwoQofy2/aGrtIeOZGh2QzxVAcfDYwx22PX+X3JT3Qn
-         lskhxWVyibhOmVbaxw5EzjmndGfFD5/GjZjdrerWa/SOmaG/ajlIiFIIBEy/cYVskr
-         Q+k4AtYTnndrzra1dR/j7q83T4kM/syMtjFA88pLlkn18DAAAVmw18heD4clqEINxT
-         KK3+RRYNDjJAZPyPtMzJvY4AqwBqhKST4nh9M8B7jjdIhy/IZF/mQamW2bW65srG9M
-         pzL31t1SEcYTDxMvWvjgjrV2lEz1/pd4F2ws9zu2tbP6QT4cFlPDwurEXbPTiBjvdj
-         N4Gehi8pjP3kg==
-Date:   Wed, 4 Aug 2021 18:21:43 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     YN Chen <YN.Chen@mediatek.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Soul Huang <Soul.Huang@mediatek.com>,
-        Leon Yen <Leon.Yen@mediatek.com>,
-        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
-        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
-        Robin Chiu <robin.chiu@mediatek.com>,
-        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
-        Eric Liang <Eric.Liang@mediatek.com>,
-        Stella Chang <Stella.Chang@mediatek.com>, jemele@google.com,
-        yenlinlai@google.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v2] mt76: mt7921: enable VO tx aggregation
-Message-ID: <YQq+lxbs7SlKt87h@lore-desk>
-References: <889fc1f28a8402f82cb83243af4916c3311c3eb1.1628072837.git.deren.wu@mediatek.com>
+        id S237520AbhHDSMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Aug 2021 14:12:49 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1628100757; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=YHpXMJRZpoJmaQV1ah1HjLRlJ7e+sclU9XDYMISB9O0=; b=P2vcTW/Gjv7/app9Anmv5fhGWvDhSorKD1TuSrj+i5HMTE23Tk1Albc8eAYy/7zuiL2qkslX
+ yx7vcVg/2E/W09o05o4fca6gyoWYbGTMvc2sRyg8OGlHoOfbVxIzMJUp+kFb+d7BxT7XMaoS
+ 364yHk2v2da8mFB2w+qKDFp8MBA=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 610ad8931a9008a23ebea663 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 04 Aug 2021 18:12:35
+ GMT
+Sender: jouni=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 7AFC2C43217; Wed,  4 Aug 2021 18:12:33 +0000 (UTC)
+Received: from jouni.codeaurora.org (85-76-77-199-nat.elisa-mobile.fi [85.76.77.199])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: jouni)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4236EC43460;
+        Wed,  4 Aug 2021 18:12:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4236EC43460
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=jouni@codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Wen Gong <wgong@codeaurora.org>,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 2/3] ath11k: enable 6G channels for WCN6855
+Date:   Wed,  4 Aug 2021 21:12:16 +0300
+Message-Id: <20210804181217.88751-3-jouni@codeaurora.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210804181217.88751-1-jouni@codeaurora.org>
+References: <20210804181217.88751-1-jouni@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="vNJtZXllMJRnjY3o"
-Content-Disposition: inline
-In-Reply-To: <889fc1f28a8402f82cb83243af4916c3311c3eb1.1628072837.git.deren.wu@mediatek.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Wen Gong <wgong@codeaurora.org>
 
---vNJtZXllMJRnjY3o
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For some chips such as WCN6855, single_pdev_only is set in struct
+ath11k_hw_params which means ath11k calls ieee80211_register_hw() only
+once and create only one device interface, and that device interface
+supports all 2G/5G/6G channels.
 
-> From: Deren Wu <deren.wu@mediatek.com>
->=20
-> Avoid throughput drop in VO streaming, enable TX BA by default.
+ath11k_mac_setup_channels_rates() sets up the channels and it is called
+for each device interface. It is called only once for single_pdev_only,
+and then set up all channels for 2G/5G/6G. The logic of
+ath11k_mac_setup_channels_rates() is not suitable for single_pdev_only,
+it leads to all 6G channels being disabled for the device interface
+which is single_pdev_only such as WCN6855.
 
-802.11 ampdu is disabled for VO traffic in order to avoid introducing delay=
- I guess.
+Add channel frequency checks for the 6G band and enable the 6G channels
+properly based on what is supported by the chip.
 
-Regards,
-Lorenzo
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 
->=20
-> Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-> Signed-off-by: YN Chen <YN.Chen@mediatek.com>
-> ---
-> v1 -> v2 : commit format adjustment
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 2 --
->  1 file changed, 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7921/mac.c
-> index 296e0f7a1d14..1be1e07ae786 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-> @@ -913,8 +913,6 @@ mt7921_tx_check_aggr(struct ieee80211_sta *sta, __le3=
-2 *txwi)
->  		return;
-> =20
->  	tid =3D FIELD_GET(MT_TXD1_TID, le32_to_cpu(txwi[1]));
-> -	if (tid >=3D 6) /* skip VO queue */
-> -		return;
-> =20
->  	val =3D le32_to_cpu(txwi[2]);
->  	fc =3D FIELD_GET(MT_TXD2_FRAME_TYPE, val) << 2 |
-> --=20
-> 2.25.1
->=20
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
---vNJtZXllMJRnjY3o
-Content-Type: application/pgp-signature; name="signature.asc"
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index c83a968fc7ba..04a8f82e3a17 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -7213,7 +7213,7 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 					   u32 supported_bands)
+ {
+ 	struct ieee80211_supported_band *band;
+-	struct ath11k_hal_reg_capabilities_ext *reg_cap;
++	struct ath11k_hal_reg_capabilities_ext *reg_cap, *temp_reg_cap;
+ 	void *channels;
+ 	u32 phy_id;
+ 
+@@ -7223,6 +7223,7 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 		     ATH11K_NUM_CHANS);
+ 
+ 	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
++	temp_reg_cap = reg_cap;
+ 
+ 	if (supported_bands & WMI_HOST_WLAN_2G_CAP) {
+ 		channels = kmemdup(ath11k_2ghz_channels,
+@@ -7241,11 +7242,11 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 
+ 		if (ar->ab->hw_params.single_pdev_only) {
+ 			phy_id = ath11k_get_phy_id(ar, WMI_HOST_WLAN_2G_CAP);
+-			reg_cap = &ar->ab->hal_reg_cap[phy_id];
++			temp_reg_cap = &ar->ab->hal_reg_cap[phy_id];
+ 		}
+ 		ath11k_mac_update_ch_list(ar, band,
+-					  reg_cap->low_2ghz_chan,
+-					  reg_cap->high_2ghz_chan);
++					  temp_reg_cap->low_2ghz_chan,
++					  temp_reg_cap->high_2ghz_chan);
+ 	}
+ 
+ 	if (supported_bands & WMI_HOST_WLAN_5G_CAP) {
+@@ -7265,9 +7266,15 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 			band->n_bitrates = ath11k_a_rates_size;
+ 			band->bitrates = ath11k_a_rates;
+ 			ar->hw->wiphy->bands[NL80211_BAND_6GHZ] = band;
++
++			if (ar->ab->hw_params.single_pdev_only) {
++				phy_id = ath11k_get_phy_id(ar, WMI_HOST_WLAN_5G_CAP);
++				temp_reg_cap = &ar->ab->hal_reg_cap[phy_id];
++			}
++
+ 			ath11k_mac_update_ch_list(ar, band,
+-						  reg_cap->low_5ghz_chan,
+-						  reg_cap->high_5ghz_chan);
++						  temp_reg_cap->low_5ghz_chan,
++						  temp_reg_cap->high_5ghz_chan);
+ 		}
+ 
+ 		if (reg_cap->low_5ghz_chan < ATH11K_MIN_6G_FREQ) {
+@@ -7290,12 +7297,12 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 
+ 			if (ar->ab->hw_params.single_pdev_only) {
+ 				phy_id = ath11k_get_phy_id(ar, WMI_HOST_WLAN_5G_CAP);
+-				reg_cap = &ar->ab->hal_reg_cap[phy_id];
++				temp_reg_cap = &ar->ab->hal_reg_cap[phy_id];
+ 			}
+ 
+ 			ath11k_mac_update_ch_list(ar, band,
+-						  reg_cap->low_5ghz_chan,
+-						  reg_cap->high_5ghz_chan);
++						  temp_reg_cap->low_5ghz_chan,
++						  temp_reg_cap->high_5ghz_chan);
+ 		}
+ 	}
+ 
+-- 
+2.25.1
 
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYQq+lAAKCRA6cBh0uS2t
-rOWPAQD9D952emRHoqvknYacCFHvccY6iDjStYHSolG6jiE/VQEAq7k5f4u7Sh58
-MG0GaWDIbZ4/javYeZ2HrTAQF+R+wAA=
-=fERJ
------END PGP SIGNATURE-----
-
---vNJtZXllMJRnjY3o--
