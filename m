@@ -2,175 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66B1FC4338F
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 19:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F7DC4338F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 21:21:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E4AF60F38
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 19:57:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77356603E9
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Aug 2021 21:21:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240769AbhHDT5f (ORCPT
+        id S230411AbhHDVVe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Aug 2021 15:57:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45894 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240707AbhHDT5f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Aug 2021 15:57:35 -0400
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35C95C0613D5;
-        Wed,  4 Aug 2021 12:57:22 -0700 (PDT)
-Received: by mail-lf1-x12c.google.com with SMTP id b6so6401184lff.10;
-        Wed, 04 Aug 2021 12:57:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xJMFgRgXpJpT/vtaAvP3090/A5AAs0szhBD8RPLBxs0=;
-        b=l7aEb9lETEJ46q8/Za/M1ROJ6TuZhmaPHDgmwucebNCdMH93+BaSoKpR8ARomPiMil
-         hy5oGKzgrpT6TUz5lz80hKIbWZ4n7kG/4ljTFI2qbVeg2gcA4GuKi5r38x15ZvG1GJ3j
-         hqkJnT0ARUkPQD0TY6yqTejdNvazDqORA8NNxJFxnx9pgO1KJq6LaitwTqnqfEr0eq3b
-         nXTyyjzqryRDoyNhiDcbFpAvkYvd72o3ETWEcHo3jVJKaYyoMeO8pj018jizumgVbp14
-         vy9VRwWMlfMLPjMssHK7vptqBqf57knvIXt134yRNtXtSxCM0FeKKW1OGvKUkJBYu16j
-         pDpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xJMFgRgXpJpT/vtaAvP3090/A5AAs0szhBD8RPLBxs0=;
-        b=clM9p+NsZU94eIw1c0Kiq5lE5oNLAP5FdE/Zwq54KRvTRZRRUzIZbbG1G3NTlTwi6t
-         3lrncmjExgarMONISIosHAm8xSG4CAn7+7GSD6y9h0M59tMzXVx4C5ywMXJQn3JBMDoi
-         JbNEkWLCCXBdUUtzSnj7cbJ+QsCzL2YpkEgyJt0kouM53yN6e9E0ajs0grA/ChR5g/xk
-         lwcQs6Sl5XSk9EJxiWtfCuCHsbDHjAea/KEQTles7Od82VLEkixAJ4dUmtAz9ptYMIPU
-         1JA6crloGttV/GsxTO5c7999yidHx8CddNA/mBJL1yujUP/E9mu3UkZmUy2MVJ9A1f5Y
-         7xiQ==
-X-Gm-Message-State: AOAM533DEpEyOdchgCxsTk8gWTOyFcLRDXDRh0g4TClVMfr69uDRGk2Z
-        nEodpTS2ru6u/8LGprIYcYP8S16leO0=
-X-Google-Smtp-Source: ABdhPJxl4zWe0ke3ZsvVhXXat33jEQp3VDS5ZdiIJmLYZIUKKS5JvpfwczN8gR1AsefUINYuPtcHmQ==
-X-Received: by 2002:ac2:4105:: with SMTP id b5mr649836lfi.153.1628107040361;
-        Wed, 04 Aug 2021 12:57:20 -0700 (PDT)
-Received: from [192.168.1.11] ([94.103.226.235])
-        by smtp.gmail.com with ESMTPSA id m9sm227593ljo.85.2021.08.04.12.57.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Aug 2021 12:57:20 -0700 (PDT)
-Subject: Re: [PATCH] net: ath9k: fix use-after-free in ath9k_hif_usb_rx_cb
-To:     ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-        davem@davemloft.net, vasanth@atheros.com, senthilkumar@atheros.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzbot+03110230a11411024147@syzkaller.appspotmail.com,
-        linux-kernel@vger.kernel.org
-References: <20210804194841.14544-1-paskripkin@gmail.com>
-From:   Pavel Skripkin <paskripkin@gmail.com>
-Message-ID: <a490dcec-b14f-e8c8-fbb0-a480892c1def@gmail.com>
-Date:   Wed, 4 Aug 2021 22:57:19 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        Wed, 4 Aug 2021 17:21:34 -0400
+Received: from li1434-30.members.linode.com ([45.33.107.30]:46078 "EHLO
+        node.akkea.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229778AbhHDVVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Aug 2021 17:21:34 -0400
+X-Greylist: delayed 541 seconds by postgrey-1.27 at vger.kernel.org; Wed, 04 Aug 2021 17:21:34 EDT
+Received: from localhost (localhost [127.0.0.1])
+        by node.akkea.ca (Postfix) with ESMTP id A2D3455E350;
+        Wed,  4 Aug 2021 21:12:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
+        t=1628111540; bh=b7JOzQ7/TcIXJ+1xsV8fU//FIHLEIeJIfwUyuQmCl3M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=p2268ROHdb3/X+gjGB9UQwrgUbXTPz3AmE9gNJ6XQGgiSkilGfaw9kEeTUELeS4ib
+         GvWdyNiFiYpqG1FZNOUaZl3gvj7NS12tj6HzqldYb20QXIxlbRsLRRWjfp7LRLyOM/
+         OVAYl1kddDSC3vQRV8Kfrc8HcIhBmXNRhdllyscg=
+X-Virus-Scanned: Debian amavisd-new at mail.akkea.ca
+Received: from node.akkea.ca ([127.0.0.1])
+        by localhost (mail.akkea.ca [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ltvXa8wMvmXJ; Wed,  4 Aug 2021 21:12:20 +0000 (UTC)
+Received: from midas.localdomain (S0106788a2041785e.gv.shawcable.net [70.66.86.75])
+        by node.akkea.ca (Postfix) with ESMTPSA id 1EDD055E34D;
+        Wed,  4 Aug 2021 21:12:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
+        t=1628111540; bh=b7JOzQ7/TcIXJ+1xsV8fU//FIHLEIeJIfwUyuQmCl3M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=p2268ROHdb3/X+gjGB9UQwrgUbXTPz3AmE9gNJ6XQGgiSkilGfaw9kEeTUELeS4ib
+         GvWdyNiFiYpqG1FZNOUaZl3gvj7NS12tj6HzqldYb20QXIxlbRsLRRWjfp7LRLyOM/
+         OVAYl1kddDSC3vQRV8Kfrc8HcIhBmXNRhdllyscg=
+From:   Angus Ainslie <angus@akkea.ca>
+To:     kernel@puri.sm
+Cc:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Angus Ainslie <angus@akkea.ca>
+Subject: [PATCH 1/2] brcmfmac: add 43752 device ids
+Date:   Wed,  4 Aug 2021 14:11:10 -0700
+Message-Id: <20210804211111.1452779-2-angus@akkea.ca>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210804211111.1452779-1-angus@akkea.ca>
+References: <20210804211111.1452779-1-angus@akkea.ca>
 MIME-Version: 1.0
-In-Reply-To: <20210804194841.14544-1-paskripkin@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/4/21 10:48 PM, Pavel Skripkin wrote:
-> Syzbot reported use-after-free Read in ath9k_hif_usb_rx_cb(). The
-> problem was in incorrect htc_handle->drv_priv initialization.
-> 
-> Probable call trace which can trigger use-after-free:
-> 
-> ath9k_htc_probe_device()
->    /* htc_handle->drv_priv = priv; */
->    ath9k_htc_wait_for_target()      <--- Failed
->    ieee80211_free_hw()		   <--- priv pointer is freed
-> 
-> <IRQ>
-> ...
-> ath9k_hif_usb_rx_cb()
->    ath9k_hif_usb_rx_stream()
->     RX_STAT_INC()		<--- htc_handle->drv_priv access
-> 
-> In order to not add fancy protection for drv_priv we can move
-> htc_handle->drv_priv initialization at the end of the
-> ath9k_htc_probe_device() and add helper macro to make
-> all *_STAT_* macros NULL save.
-> 
-> Also, I made whitespaces clean ups in *_STAT_* macros definitions
-> to make checkpatch.pl happy.
-> 
-> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-> Reported-and-tested-by: syzbot+03110230a11411024147@syzkaller.appspotmail.com
-> Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
-> ---
-> 
-> Hi, ath9k maintainer/developers!
-> 
-> I know, that you do not like changes, that wasn't tested on real
-> hardware. I really don't access to this one, so I'd like you to test it on
-> real hardware piece, if you have one. At least, this patch was tested by
-> syzbot [1]
-> 
-> [1] https://syzkaller.appspot.com/bug?id=6ead44e37afb6866ac0c7dd121b4ce07cb665f60
-> 
-> ---
->   drivers/net/wireless/ath/ath9k/htc.h          | 11 ++++++-----
->   drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 ++-
->   2 files changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-> index 0a1634238e67..c16b2a482e83 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc.h
-> +++ b/drivers/net/wireless/ath/ath9k/htc.h
-> @@ -326,11 +326,12 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
->   
->   #ifdef CONFIG_ATH9K_HTC_DEBUGFS
->   
-> -#define TX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
-> -#define TX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
-> -#define RX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
-> -#define RX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
-> -#define CAB_STAT_INC   priv->debug.tx_stats.cab_queued++
-> +#define __STAT_SAVE(expr)	(hif_dev->htc_handle->drv_priv ? (expr) : 0)
-> +#define TX_STAT_INC(c)		__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
-> +#define TX_STAT_ADD(c, a)	__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
-> +#define RX_STAT_INC(c)		__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
-> +#define RX_STAT_ADD(c, a)	__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
-> +#define CAB_STAT_INC		(priv->debug.tx_stats.cab_queued++)
->   
->   #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
->   
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> index ff61ae34ecdf..07ac88fb1c57 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> @@ -944,7 +944,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
->   	priv->hw = hw;
->   	priv->htc = htc_handle;
->   	priv->dev = dev;
-> -	htc_handle->drv_priv = priv;
->   	SET_IEEE80211_DEV(hw, priv->dev);
->   
->   	ret = ath9k_htc_wait_for_target(priv);
-> @@ -965,6 +964,8 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
->   	if (ret)
->   		goto err_init;
->   
-> +	htc_handle->drv_priv = priv;
-> +
->   	return 0;
->   
->   err_init:
-> 
+Add HW and SDIO ids for use with the SparkLan AP6275S
 
-Added missing LKML in CC. Sorry for confusion.
+Signed-off-by: Angus Ainslie <angus@akkea.ca>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
+ include/linux/mmc/sdio_ids.h                                  | 1 +
+ 4 files changed, 5 insertions(+)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 633d0ab19031..485ddeb436ae 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -990,6 +990,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4359),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_4373),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43012),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_89359),
+ 	{ /* end: all zeroes */ }
+ };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 45037decba40..c9954da6c5cd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -727,6 +727,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 	case BRCM_CC_4364_CHIP_ID:
+ 	case CY_CC_4373_CHIP_ID:
+ 		return 0x160000;
++	case CY_CC_43752_CHIP_ID:
++		return 0x170000;
+ 	default:
+ 		brcmf_err("unknown chip: %s\n", ci->pub.name);
+ 		break;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 00309b272a0e..9d81320164ce 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -52,6 +52,7 @@
+ #define BRCM_CC_4371_CHIP_ID		0x4371
+ #define CY_CC_4373_CHIP_ID		0x4373
+ #define CY_CC_43012_CHIP_ID		43012
++#define CY_CC_43752_CHIP_ID		43752
+ 
+ /* USB Device IDs */
+ #define BRCM_USB_43143_DEVICE_ID	0xbd1e
+diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+index 12036619346c..a85c9f0bd470 100644
+--- a/include/linux/mmc/sdio_ids.h
++++ b/include/linux/mmc/sdio_ids.h
+@@ -75,6 +75,7 @@
+ #define SDIO_DEVICE_ID_BROADCOM_43364		0xa9a4
+ #define SDIO_DEVICE_ID_BROADCOM_43430		0xa9a6
+ #define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
++#define SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752	0xaae8
+ 
+ #define SDIO_VENDOR_ID_MARVELL			0x02df
+ #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
+-- 
+2.25.1
 
-With regards,
-Pavel Skripkin
