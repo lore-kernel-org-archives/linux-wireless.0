@@ -8,63 +8,64 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68AB3C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D825C4338F
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D7BF61154
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85D0460E8D
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242280AbhHEPje (ORCPT
+        id S242201AbhHEPjq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Aug 2021 11:39:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        Thu, 5 Aug 2021 11:39:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242273AbhHEPjd (ORCPT
+        with ESMTP id S241840AbhHEPjm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Aug 2021 11:39:33 -0400
+        Thu, 5 Aug 2021 11:39:42 -0400
 Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62F2BC061798
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Aug 2021 08:39:18 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id j1so9770392pjv.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2021 08:39:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED049C061765;
+        Thu,  5 Aug 2021 08:39:26 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id mz5-20020a17090b3785b0290176ecf64922so15722209pjb.3;
+        Thu, 05 Aug 2021 08:39:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=MALEPaHHc/EsqmzETjoT0BXGuVrPDKvHZtKjVXpWqAs=;
-        b=tncQI6Tv2gOgxIUz/J7Xvc5/29/QU2+LVrhjPZRllp86AhwFyhAHKHQZX79cglXRXH
-         yuv5PfYKHmIu2OFeu6JDFT7mMVphyR8xaJt3c0omDzd+/rWfew01TvsEujVbMo26FYnR
-         7XlpxVckSQ8nxX2tOK9b/ssWoSm0LoFsH0+rCGtAhWARZnKAbq7c9B3IOlsPlEweHAxu
-         i81VgMxbiGLG4lTmC83mnTRJb2Y8gmuqhhEMrc7e9FdzqsL5E3elJesXA8SWX5J1e1a4
-         G9jYIao/vHguK9N2ridpCbjOEiTY2NQd4hdJT52Hw5hruJtaA/TBbiv5jmO4oFUkL+70
-         o4nQ==
+        bh=5vBIrdt8B8CVa9oETvI/wFhOCaIABa5EmEBz4zWZ01I=;
+        b=Gg6667v/ufxR+ZJaa1GECyIPiUAgnOnIHtmOWBZkrSlCb/f29ngyB/Y5YYjDO1b3zN
+         vOr0+vQUEhKQw3YDnTttWdS7WkkIV2K2ggxxOp0g0HAMXB6DTpqDBm7Rd8xIvEq8z1Vr
+         +nL45S2Q9gt3ZsnBXUroCx1LZm4/OmcfXAjuBc1WsU9hYUBsh/KuowOhuoDouAozO23Q
+         bNJxQir0bF8ekbmMGDXMxFoy3XU3K6mmPms56dKPNOQq2q6OAEFdTuYOTn53X1YnpSO+
+         Ic7LyGTKafpb4w9Gx8nLuXoW4FwpguvakzmZg5HiI/9hWi0OMNpbL7ZBen57OhmY6wte
+         0Pyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=MALEPaHHc/EsqmzETjoT0BXGuVrPDKvHZtKjVXpWqAs=;
-        b=JNBlbcjNgqShOUnX0ttr/N8um05ksaa8UDtZS9ah0/eIduhOTomIOC8sM9SVeOse71
-         dsHzN9dIBPbtmRt9t5x6jr9U3RglBovNgRm+4iGnnT5QLediM2yMdaTmdVFS6jL2xHv9
-         zNwRI+80pvQ1VWr3VBrSQkEJe65AJw0vY1xKHbrnOaPBk+mtkx8PYK3M1xdnEKF1HKA5
-         t0bL76rZS4BTljhuV23hqsqHnTw/Pvtc2VTU4xRGZSXbeEsO52AQigV51QBJ1zXnWEhA
-         5p1TMxIQuhOn7QtLU/BPTsXV51WuGpfnAqm3TG9C0GstKvHofRm0uOq+Gq7T2kOUO6r9
-         v3Pg==
-X-Gm-Message-State: AOAM533i6bswKb6UaJJrKWUH9j+FyVOe0MvWB6lGfcFYiSKcI/9b6nye
-        4TbbBtnTCOR8cGg+XX/2Xnc=
-X-Google-Smtp-Source: ABdhPJyl/jYreKM8rT7ZF1N6xtbrpW6t3uRvQCYAys2qHvLar5pdP6mXohXMTkuCfQXLsgRx3jgIPQ==
-X-Received: by 2002:a17:90a:c89:: with SMTP id v9mr5381031pja.175.1628177957784;
-        Thu, 05 Aug 2021 08:39:17 -0700 (PDT)
-Received: from lattitude.lan ([49.206.116.229])
-        by smtp.googlemail.com with ESMTPSA id m17sm7173437pfh.133.2021.08.05.08.39.15
+        bh=5vBIrdt8B8CVa9oETvI/wFhOCaIABa5EmEBz4zWZ01I=;
+        b=rupzMTPg4wTGstpifztfR2ScxRk2M1Ii/Y9gys3jnhviKyVpW7IJp2gJwQEC15n//q
+         iecM4yu4KWaXZNxdLP6ncMBCepqPACgmAOLjA+mnk3FeVwaHZW/GpBB9rTYbi+sXQtWG
+         2mYGpUZY7wjqdI+Va6rVvyt+3mAkixb8s5CBHQbPtV2nMg3qWnZfiVk8YxYUt96vkOU1
+         JzdgQCmqCbzM5B9hlbDjOGLT6TQOf/xLwIg5gaWyFLs6hbLzE+5UOC8X1Q56DhmWUKDm
+         EosP577l4V7PRM993TMIJPM4ho/bVwpU8QhPcKNrIxT4FW84VPoD52BXuiHawQyuFz+J
+         yHDw==
+X-Gm-Message-State: AOAM532D0eYnGO7Ewn3woPJvh0hgnY87SI8+O4v0xaIhyVqNosExL0ha
+        iVOG6kRC6NvA71Bt8XvF3fs=
+X-Google-Smtp-Source: ABdhPJzf3lTIGiMS4P/exM38/Nyj0q06ZBOyeQapWim+xLd79Q9eNN7cBIDMLwGU0eieDdUMrsVbNw==
+X-Received: by 2002:a62:bd15:0:b029:31c:a584:5f97 with SMTP id a21-20020a62bd150000b029031ca5845f97mr5935776pff.33.1628177966550;
+        Thu, 05 Aug 2021 08:39:26 -0700 (PDT)
+Received: from localhost.localdomain ([45.135.186.81])
+        by smtp.gmail.com with ESMTPSA id p53sm7222242pfw.143.2021.08.05.08.39.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 08:39:17 -0700 (PDT)
-From:   Gokul Sivakumar <gokulkumar792@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Gokul Sivakumar <gokulkumar792@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] iw: mesh: fix crash when attempting to print the conf param "mesh_nolearn"
-Date:   Thu,  5 Aug 2021 21:08:06 +0530
-Message-Id: <20210805153807.645106-1-gokulkumar792@gmail.com>
+        Thu, 05 Aug 2021 08:39:26 -0700 (PDT)
+From:   Tuo Li <islituo@gmail.com>
+To:     kvalo@codeaurora.org, davem@davemloft.net, kuba@kernel.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [PATCH] ath: dfs_pattern_detector: Fix possible null-pointer dereference in channel_detector_create()
+Date:   Thu,  5 Aug 2021 08:38:53 -0700
+Message-Id: <20210805153854.154066-1-islituo@gmail.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -72,80 +73,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Even if iw did not receive some of the meshconf attributes in response to
-NL80211_CMD_GET_MESH_PARAMS, it tries to print that param and gets crashed.
-Fix this by adding a condition check before trying to access each of the
-mesh conf params.
+kzalloc() is used to allocate memory for cd->detectors, and if it fails,
+channel_detector_exit() behind the label fail will be called:
+  channel_detector_exit(dpd, cd);
 
-$ iw dev mesh0 get mesh_param mesh_nolearn
-Segmentation fault (core dumped)
+In channel_detector_exit(), cd->detectors is dereferenced through:
+  struct pri_detector *de = cd->detectors[i];
 
- (gdb) bt
- #0  0x00007f21f54660e9 in nla_get_u8 () from /lib/x86_64-linux-gnu/libnl-3.so.200
- #1  0x0000562ba2f5d70d in _print_u8 (a=<optimized out>) at mesh.c:131
- #2  0x0000562ba2f5d7ce in print_mesh_param_handler (msg=<optimized out>,
-     arg=0x562ba2f85758 <_mesh_param_descrs+1080>) at mesh.c:412
- #3  0x00007f21f546db9c in nl_recvmsgs_report () from /lib/x86_64-linux-gnu/libnl-3.so.200
- #4  0x00007f21f546e059 in nl_recvmsgs () from /lib/x86_64-linux-gnu/libnl-3.so.200
- #5  0x0000562ba2f5bb3b in __handle_cmd (state=0x7ffe677bc510, idby=II_NETDEV, argc=<optimized out>,
-     argv=<optimized out>, cmdout=0x7ffe677bc508) at iw.c:541
- #6  0x0000562ba2f4fe0c in __handle_cmd (cmdout=0x7ffe677bc508, argv=0x7ffe677bc658, argc=4, idby=II_NETDEV,
-     state=0x7ffe677bc510) at iw.c:613
- #7  main (argc=4, argv=0x7ffe677bc658) at iw.c:613
- (gdb) up 2
- #2  0x0000562ba2f5d7ce in print_mesh_param_handler (msg=<optimized out>,
-     arg=0x562ba2f85758 <_mesh_param_descrs+1080>) at mesh.c:412
- 412             mdescr->nla_print_fn(mesh_params[mdescr->mesh_param_num]);
- (gdb) i local
- mdescr = 0x562ba2f85758 <_mesh_param_descrs+1080>
- attrs = {0x0 <repeats 35 times>, 0x562ba4002a14, 0x0 <repeats 266 times>}
- parent_attr = <optimized out>
- mesh_params = {0x0, 0x562ba4002a20, 0x562ba4002a28, 0x562ba4002a30, 0x562ba4002a38, 0x562ba4002a40,
-   0x562ba4002a48, 0x562ba4002a58, 0x562ba4002a68, 0x562ba4002a70, 0x562ba4002a78, 0x562ba4002a80,
-   0x562ba4002a88, 0x562ba4002a98, 0x562ba4002aa0, 0x562ba4002a50, 0x562ba4002aa8, 0x562ba4002ab0,
-   0x562ba4002a90, 0x562ba4002ab8, 0x562ba4002ac0, 0x562ba4002a60, 0x562ba4002ac8, 0x562ba4002ad0,
-   0x562ba4002ad8, 0x562ba4002ae0, 0x562ba4002ae8, 0x562ba4002af0, 0x562ba4002af8, 0x562ba4002b00, 0x0, 0x0}
- gnlh = 0x562ba4002a10
- (gdb)
- (gdb) p mesh_params[30]
- $7 = (struct nlattr *) 0x0
- (gdb)
+To fix this possible null-pointer dereference, check cd->detectors before 
+the for loop to dereference cd->detectors. 
 
-Signed-off-by: Gokul Sivakumar <gokulkumar792@gmail.com>
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Tuo Li <islituo@gmail.com>
 ---
- mesh.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 23b3471..3797335 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -401,16 +401,20 @@ static int print_mesh_param_handler(struct nl_msg *msg, void *arg)
- 
- 		for (i = 0; i < ARRAY_SIZE(_mesh_param_descrs); i++) {
- 			mdescr = &_mesh_param_descrs[i];
--			printf("%s = ", mdescr->name);
--			mdescr->nla_print_fn(mesh_params[mdescr->mesh_param_num]);
--			printf("\n");
-+			if (mesh_params[mdescr->mesh_param_num]) {
-+				printf("%s = ", mdescr->name);
-+				mdescr->nla_print_fn(mesh_params[mdescr->mesh_param_num]);
-+				printf("\n");
-+			}
- 		}
- 		return NL_SKIP;
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 80390495ea25..75cb53a3ec15 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -183,10 +183,12 @@ static void channel_detector_exit(struct dfs_pattern_detector *dpd,
+ 	if (cd == NULL)
+ 		return;
+ 	list_del(&cd->head);
+-	for (i = 0; i < dpd->num_radar_types; i++) {
+-		struct pri_detector *de = cd->detectors[i];
+-		if (de != NULL)
+-			de->exit(de);
++	if (cd->detectors) {
++		for (i = 0; i < dpd->num_radar_types; i++) {
++			struct pri_detector *de = cd->detectors[i];
++			if (de != NULL)
++				de->exit(de);
++		}
  	}
- 
- 	/* print out the mesh parameter */
--	mdescr->nla_print_fn(mesh_params[mdescr->mesh_param_num]);
--	printf("\n");
-+	if (mesh_params[mdescr->mesh_param_num]) {
-+		mdescr->nla_print_fn(mesh_params[mdescr->mesh_param_num]);
-+		printf("\n");
-+	}
- 	return NL_SKIP;
- }
- 
+ 	kfree(cd->detectors);
+ 	kfree(cd);
 -- 
 2.25.1
 
