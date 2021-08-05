@@ -2,148 +2,164 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7592C4320E
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE81CC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 23:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EB2760E8D
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 15:39:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C373D60EB2
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 23:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242281AbhHEPjv (ORCPT
+        id S242411AbhHEXmx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Aug 2021 11:39:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58438 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242220AbhHEPjo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Aug 2021 11:39:44 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83FCEC0613D5
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Aug 2021 08:39:30 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id l19so9845973pjz.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2021 08:39:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ot7k522t7tkww/gX8P+bxa/STMEn0jLnSSwzpwYPO18=;
-        b=utic3nZYCnPeafOdB5uoaVtxojMNCLKIo2xKX9t82krXXWyGwcCFzlwckj6QdMlFXD
-         GLaEhJvWYX/fOONI+vz9BZhMifJBlAX7PLChJVqO975qI1icoCW0CcG2fn6+7QMNkiCv
-         Bg0U4OFesb9+eC+zI3YnpKcoJ/kRYrQa43DKeh/9Sv+Z+SSDfANVvAO1vOEFxlZ+N4IT
-         sKWWy55sqWsuvjP9/U4zqxB7jC3jkswfeocRKI3S1TVRUu4Yt65+HoVc4qsmW0sl7sLI
-         5jObu1fi7jCKCYeZkR3YoyedZnKfwKrB1WzmVfA2TuSTpUJE5LukyNcHwVWuU00AQdtD
-         f0zA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ot7k522t7tkww/gX8P+bxa/STMEn0jLnSSwzpwYPO18=;
-        b=o1j7EZktJRCYAhOxamCH9vqEz/kVZfNKjD6KOtzwhOlK0fstqk0cSrO4Dr1B6wEHGl
-         6RxdGhzmidujSEbzy/uD6set1Nc9KCda05+Ki9vJ3vr4CI7tW+acOh5L0i5sdlca1hjM
-         Pu0N2I4f/ar6dWiTzXtWCVocFdoCoik51VBBWdzFzEZyAiX90Ui+fGDP1XavYElg1HNT
-         ss5A2or1TNA9NZHkAoIfxMD/GmoJReh8NjpnQlOll6GC6bPap6WcvwC3QGm2QtS89xHI
-         6u7qPw363H5QzfhNxjW0yBb0evbvPCuFoPqenm2NYaa+VR+PmunbdDRtKzw471iXkgpM
-         g18A==
-X-Gm-Message-State: AOAM532RD0OlCt1S15pYNnC/BEDyAU+4B0ByVZvR8yBiAEEds6HyiXu2
-        B6z21uHjE+pJXI/yfpCZBGg=
-X-Google-Smtp-Source: ABdhPJzI6Osj7BruIbyH3v3jjgR8866LhUnUXyQp2+58ST7DxRr5rceLcY4XlVDKySf/AMl/sj3AYw==
-X-Received: by 2002:a62:1489:0:b029:336:162f:3417 with SMTP id 131-20020a6214890000b0290336162f3417mr148817pfu.14.1628177970105;
-        Thu, 05 Aug 2021 08:39:30 -0700 (PDT)
-Received: from lattitude.lan ([49.206.116.229])
-        by smtp.googlemail.com with ESMTPSA id m17sm7173437pfh.133.2021.08.05.08.39.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 08:39:29 -0700 (PDT)
-From:   Gokul Sivakumar <gokulkumar792@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Gokul Sivakumar <gokulkumar792@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] iw: mesh: add new cmd to dump all the supported mesh config params at once
-Date:   Thu,  5 Aug 2021 21:08:07 +0530
-Message-Id: <20210805153807.645106-2-gokulkumar792@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210805153807.645106-1-gokulkumar792@gmail.com>
-References: <20210805153807.645106-1-gokulkumar792@gmail.com>
+        Thu, 5 Aug 2021 19:42:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36664 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238198AbhHEXmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Aug 2021 19:42:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C4D0E610CD;
+        Thu,  5 Aug 2021 23:42:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628206956;
+        bh=Z/61WgkabawKvCqT33aQpch4UJfYpbpJ/lpjJTDKmJE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=KuDKmWy8QxzyN9WG7Q1pVzQ6S5j62PkYn7/jQtSiQ405ZyO5HsJaxlGQ4ptwW9KWQ
+         8JzTD06NkExqlaqFClHSIgp3ZV4HCT08Q0ZvAqUHpT3JHz2y5xKJeL0G0pylHGRvn6
+         U5xMy5iYmp2VcbacJIAcWlgxiuyj7K4SXjueq2YyorPxHzpAkvrgrNXJfYWPF6dNbg
+         +rqlXTqZ1NVd0xWfnIPttHUHPunKRAjCa2hTqiMX3yjjCM3obbaCQHJI0obD1yIuBB
+         sBxx4HfHs+13rY1cXK0ifZwIzG7diuJ8rdtPvOtsYTWDljySsOW/3p75koSGgoeKnq
+         J3gIMCJ0Jo3qg==
+Date:   Thu, 5 Aug 2021 18:42:34 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, kernel@pengutronix.de,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Russell Currey <ruscur@russell.cc>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Jiri Olsa <jolsa@redhat.com>,
+        Namhyung Kim <namhyung@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Vadym Kochan <vkochan@marvell.com>,
+        Taras Chornyi <tchornyi@marvell.com>,
+        Jiri Pirko <jiri@nvidia.com>, Ido Schimmel <idosch@nvidia.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Michael Buesch <m@bues.ch>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        Alexander Duyck <alexanderduyck@fb.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-crypto@vger.kernel.org, qat-linux@intel.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, oss-drivers@corigine.com,
+        xen-devel@lists.xenproject.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] PCI: Drop duplicated tracking of a pci_dev's
+ bound driver
+Message-ID: <20210805234234.GA1797883@bjorn-Precision-5520>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210803100150.1543597-1-u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The function print_mesh_param_handler() already supports printing all the
-mesh config params when not pasing one specific parameter, so add a new
-"mesh_param dump" command to help the user see all the parameters at once.
+On Tue, Aug 03, 2021 at 12:01:44PM +0200, Uwe Kleine-König wrote:
+> Hello,
+> 
+> changes since v1 (https://lore.kernel.org/linux-pci/20210729203740.1377045-1-u.kleine-koenig@pengutronix.de):
+> 
+> - New patch to simplify drivers/pci/xen-pcifront.c, spotted and
+>   suggested by Boris Ostrovsky
+> - Fix a possible NULL pointer dereference I introduced in xen-pcifront.c
+> - A few whitespace improvements
+> - Add a commit log to patch #6 (formerly #5)
+> 
+> I also expanded the audience for patches #4 and #6 to allow affected
+> people to actually see the changes to their drivers.
+> 
+> Interdiff can be found below.
+> 
+> The idea is still the same: After a few cleanups (#1 - #3) a new macro
+> is introduced abstracting access to struct pci_dev->driver. All users
+> are then converted to use this and in the last patch the macro is
+> changed to make use of struct pci_dev::dev->driver to get rid of the
+> duplicated tracking.
 
-$ iw dev mesh0 mesh_param dump
-mesh_retry_timeout = 100 milliseconds
-mesh_confirm_timeout = 100 milliseconds
-mesh_holding_timeout = 100 milliseconds
-mesh_max_peer_links = 99
-mesh_max_retries = 3
-mesh_ttl = 31
-mesh_element_ttl = 31
-mesh_auto_open_plinks = 0
-mesh_hwmp_max_preq_retries = 4
-mesh_path_refresh_time = 1000 milliseconds
-mesh_min_discovery_timeout = 100 milliseconds
-mesh_hwmp_active_path_timeout = 5000 TUs
-mesh_hwmp_preq_min_interval = 10 TUs
-mesh_hwmp_net_diameter_traversal_time = 50 TUs
-mesh_hwmp_rootmode = 0
-mesh_hwmp_rann_interval = 5000 TUs
-mesh_gate_announcements = 0
-mesh_fwding = 1
-mesh_sync_offset_max_neighor = 50
-mesh_rssi_threshold = 0 dBm
-mesh_hwmp_active_path_to_root_timeout = 6000 TUs
-mesh_hwmp_root_interval = 5000 TUs
-mesh_hwmp_confirmation_interval = 2000 TUs
-mesh_power_mode = active
-mesh_awake_window = 10 TUs
-mesh_plink_timeout = 0 seconds
-mesh_connected_to_gate = 0
+I love the idea of this series!
 
-Signed-off-by: Gokul Sivakumar <gokulkumar792@gmail.com>
----
- mesh.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+I looked at all the bus_type.probe() methods, it looks like pci_dev is
+not the only offender here.  At least the following also have a driver
+pointer in the device struct:
 
-diff --git a/mesh.c b/mesh.c
-index 3797335..943edf5 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -11,6 +11,7 @@
- #include "iw.h"
- 
- SECTION(mesh);
-+SECTION(mesh_param);
- 
- 
- typedef struct _any_t {
-@@ -447,6 +448,19 @@ COMMAND(get, mesh_param, "[<param>]",
- 	NL80211_CMD_GET_MESH_PARAMS, 0, CIB_NETDEV, get_interface_meshparam,
- 	"Retrieve mesh parameter (run command without any to see available ones).");
- 
-+static int dump_interface_meshparam(struct nl80211_state *state,
-+				    struct nl_msg *msg,
-+				    int argc, char **argv,
-+				    enum id_input id)
-+{
-+	register_handler(print_mesh_param_handler, NULL);
-+	return 0;
-+}
-+
-+COMMAND(mesh_param, dump, "",
-+	NL80211_CMD_GET_MESH_PARAMS, 0, CIB_NETDEV, dump_interface_meshparam,
-+	"List all supported mesh parameters");
-+
- static int join_mesh(struct nl80211_state *state,
- 		     struct nl_msg *msg, int argc, char **argv,
- 		     enum id_input id)
--- 
-2.25.1
+  parisc_device.driver
+  acpi_device.driver
+  dio_dev.driver
+  hid_device.driver
+  pci_dev.driver
+  pnp_dev.driver
+  rio_dev.driver
+  zorro_dev.driver
 
+Do you plan to do the same for all of them, or is there some reason
+why they need the pointer and PCI doesn't?
+
+In almost all cases, other buses define a "to_<bus>_driver()"
+interface.  In fact, PCI already has a to_pci_driver().
+
+This series adds pci_driver_of_dev(), which basically just means we
+can do this:
+
+  pdrv = pci_driver_of_dev(pdev);
+
+instead of this:
+
+  pdrv = to_pci_driver(pdev->dev.driver);
+
+I don't see any other "<bus>_driver_of_dev()" interfaces, so I assume
+other buses just live with the latter style?  I'd rather not be
+different and have two ways to get the "struct pci_driver *" unless
+there's a good reason.
+
+Looking through the places that care about pci_dev.driver (the ones
+updated by patch 5/6), many of them are ... a little dubious to begin
+with.  A few need the "struct pci_error_handlers *err_handler"
+pointer, so that's probably legitimate.  But many just need a name,
+and should probably be using dev_driver_string() instead.
+
+Bjorn
