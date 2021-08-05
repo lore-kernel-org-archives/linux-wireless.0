@@ -2,168 +2,177 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F7E1C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 10:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 242F2C4338F
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 10:31:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EA6E601FF
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 10:26:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 024476105A
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Aug 2021 10:31:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240299AbhHEK0S (ORCPT
+        id S240405AbhHEKbZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Aug 2021 06:26:18 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:51266 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S240339AbhHEK0R (ORCPT
+        Thu, 5 Aug 2021 06:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43706 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240404AbhHEKbX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Aug 2021 06:26:17 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <luca@coelho.fi>)
-        id 1mBaTZ-00240Q-J8; Thu, 05 Aug 2021 13:19:47 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu,  5 Aug 2021 13:19:33 +0300
-Message-Id: <iwlwifi.20210805130823.01530088097f.I903c236a574c7e4c0fc4db101fc39c0f5415ca43@changeid>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210805101934.431479-1-luca@coelho.fi>
-References: <20210805101934.431479-1-luca@coelho.fi>
+        Thu, 5 Aug 2021 06:31:23 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B7E6C061765
+        for <linux-wireless@vger.kernel.org>; Thu,  5 Aug 2021 03:31:08 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id t9so10103039lfc.6
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2021 03:31:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=GCz8VghwWMAz9oUJUmO8qp9qmqaKvRvMgArRh6FY3ac=;
+        b=qnjpEdJxP08hVHqyyCviZ9qzxhpqIbEdXs88KAENW+dk364qQJrBDtE5z5e6cIeaFU
+         7juZgX/CpclawYCfdTVYmkiNT4uB7d5+un1v0JG+hSDPcxDU6TLssHgQvpwFDuF4BPMS
+         ojjMUnbWIYTGl9HRKJz4GUzYfP4zYNtZw4gtQQxwZgG6N/04d7ROxilIyH7ampnHuUGe
+         sx0Y8rUiZakhfJK6oPpg1+5nSoKghT3gw1r9dln/nB+nKUWrgbBIKt1CoehFI1N6W5VN
+         thKX8ynhfMHG6hMiElk3I3Nwrz29RV8NDaWCjaZ+2dHfFpzWsTLM7j3ISVRpHBRzfyp3
+         HS2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=GCz8VghwWMAz9oUJUmO8qp9qmqaKvRvMgArRh6FY3ac=;
+        b=XJhemgr8HJTzaOfURuHYzTbucFrwZOUeJS8f1jY6cRnM4dEnB6Jaq/i6Ap6seeCWc/
+         eSN5Qt5PleBLRltvMircPFsuluI6MlRvFvjiL9Yzz746QhSghos2ORsw3NRfDelRiqTk
+         agF9u/5fkEuDTSaWfzn52YeOiha1rK3Qv536sSzrJAL7a16KjrdKjrPg6OGy12gtjFK2
+         ZO+eATX0WYFHrkXUuUbF51mU3sNXpCRMavR3lpRXqc7PmaiynVDpUzxpkS1DqXB2TtL5
+         A7x7KeCBX4DWYdAyoLkhQq1NeoSh/uwy/JmM1kGS0dBqME6HnKmudyVvFyDVtuGbT5me
+         KYIw==
+X-Gm-Message-State: AOAM5321qipkK8GSATexpneTDzLle/pwXk1r1dBDTz8VU6ofqKVEK6TX
+        Vsa8CtHwlZzyjFy6Pi2byLk=
+X-Google-Smtp-Source: ABdhPJwpBgv4hD6yMX9o7sF/vge/a3oxktDKYc5FBQBn1gqlHY88Wy4G3xvRGzwTyjNHUwV7klaWsg==
+X-Received: by 2002:ac2:5d2d:: with SMTP id i13mr3199029lfb.12.1628159466540;
+        Thu, 05 Aug 2021 03:31:06 -0700 (PDT)
+Received: from [192.168.2.145] (46-138-65-182.dynamic.spd-mgts.ru. [46.138.65.182])
+        by smtp.googlemail.com with ESMTPSA id d18sm362104ljc.64.2021.08.05.03.31.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Aug 2021 03:31:06 -0700 (PDT)
+Subject: Re: [PATCH v3] brcmfmac: firmware: Fix firmware loading
+To:     Linus Walleij <linus.walleij@linaro.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Stefan Hansson <newbyte@disroot.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+References: <20210805093023.3465081-1-linus.walleij@linaro.org>
+From:   Dmitry Osipenko <digetx@gmail.com>
+Message-ID: <9316a403-e755-3870-6393-62f20792af44@gmail.com>
+Date:   Thu, 5 Aug 2021 13:31:05 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <20210805093023.3465081-1-linus.walleij@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/12] iwlwifi: convert flat SAR profile table to a struct version
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+05.08.2021 12:30, Linus Walleij пишет:
+> The patch that would first try the board-specific firmware
+> had a bug because the fallback would not be called: the
+> asynchronous interface is used meaning request_firmware_nowait()
+> returns 0 immediately.
+> 
+> Harden the firmware loading like this:
+> 
+> - If we cannot build an alt_path (like if no board_type is
+>   specified) just request the first firmware without any
+>   suffix, like in the past.
+> 
+> - If the lookup of a board specific firmware fails, we get
+>   a NULL fw in the async callback, so just try again without
+>   the alt_path. Use a context state variable to check that
+>   we do not try this indefinitely.
+> 
+> - Rename the brcm_fw_request_done to brcm_fw_request_done_first
+>   reflecting the fact that this callback is only used for the
+>   first (main) firmware file, and drop the unnecessary
+>   prototype.
+> 
+> Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware binaries")
+> Cc: Dmitry Osipenko <digetx@gmail.com>
+> Cc: Stefan Hansson <newbyte@disroot.org>
+> Tested-by: Dmitry Osipenko <digetx@gmail.com>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> ChangeLog v2->v3:
+> - Rename state variable to "tried_board_variant".
+> ChangeLog v1->v2:
+> - Instead of using a static variable, add a context variable
+>   "tested_board_variant"
+> - Collect Arend's review tag.
+> - Collect Tested-by from Dmitry.
+> ---
 
-The SAR profiles have been stored in single-dimension arrays and the
-access has been done via a single index.  We will soon need to support
-different revisions of this table, which will make the flat array even
-harder to handle.  To prepare for that, convert the single-dimension
-array to a struct with substructures.
+Combining my previous comments together, I rewrote it like this:
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 30 +++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h | 13 ++++++---
- 2 files changed, 28 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index dff792653a24..f20f0150f407 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -414,16 +414,25 @@ static int iwl_sar_set_profile(union acpi_object *table,
- 			       struct iwl_sar_profile *profile,
- 			       bool enabled)
- {
--	int i;
-+	int i, j, idx = 0;
- 
- 	profile->enabled = enabled;
- 
--	for (i = 0; i < ACPI_SAR_TABLE_SIZE; i++) {
--		if (table[i].type != ACPI_TYPE_INTEGER ||
--		    table[i].integer.value > U8_MAX)
--			return -EINVAL;
-+	/*
-+	 * The table from ACPI is flat, but we store it in a
-+	 * structured array.
-+	 */
-+	for (i = 0; i < ACPI_SAR_NUM_CHAINS; i++) {
-+		for (j = 0; j < ACPI_SAR_NUM_SUB_BANDS; j++) {
-+			if (table[idx].type != ACPI_TYPE_INTEGER ||
-+			    table[idx].integer.value > U8_MAX)
-+				return -EINVAL;
-+
-+			profile->chains[i].subbands[j] =
-+				table[idx].integer.value;
- 
--		profile->table[i] = table[i].integer.value;
-+			idx++;
-+		}
- 	}
- 
- 	return 0;
-@@ -434,7 +443,7 @@ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
- 			      int prof_a, int prof_b)
- {
- 	int profs[ACPI_SAR_NUM_CHAINS] = { prof_a, prof_b };
--	int i, j, idx;
-+	int i, j;
- 
- 	for (i = 0; i < ACPI_SAR_NUM_CHAINS; i++) {
- 		struct iwl_sar_profile *prof;
-@@ -467,11 +476,10 @@ static int iwl_sar_fill_table(struct iwl_fw_runtime *fwrt,
- 			       i, profs[i]);
- 		IWL_DEBUG_RADIO(fwrt, "  Chain[%d]:\n", i);
- 		for (j = 0; j < n_subbands; j++) {
--			idx = i * ACPI_SAR_NUM_SUB_BANDS + j;
- 			per_chain[i * n_subbands + j] =
--				cpu_to_le16(prof->table[idx]);
-+				cpu_to_le16(prof->chains[i].subbands[j]);
- 			IWL_DEBUG_RADIO(fwrt, "    Band[%d] = %d * .125dBm\n",
--					j, prof->table[idx]);
-+					j, prof->chains[i].subbands[j]);
- 		}
- 	}
- 
-@@ -595,7 +603,7 @@ int iwl_sar_get_ewrd_table(struct iwl_fw_runtime *fwrt)
- 			break;
- 
- 		/* go to the next table */
--		pos += ACPI_SAR_TABLE_SIZE;
-+		pos += ACPI_SAR_NUM_CHAINS * ACPI_SAR_NUM_SUB_BANDS;
- 	}
- 
- out_free:
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index 24e94430e5d9..cd26a155baf7 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -26,7 +26,6 @@
- 
- #define ACPI_WIFI_DOMAIN	(0x07)
- 
--#define ACPI_SAR_TABLE_SIZE		10
- #define ACPI_SAR_PROFILE_NUM		4
- 
- #define ACPI_GEO_TABLE_SIZE		6
-@@ -37,9 +36,11 @@
- #define ACPI_SAR_NUM_SUB_BANDS		5
- #define ACPI_SAR_NUM_TABLES		1
- 
--#define ACPI_WRDS_WIFI_DATA_SIZE	(ACPI_SAR_TABLE_SIZE + 2)
-+#define ACPI_WRDS_WIFI_DATA_SIZE	(ACPI_SAR_NUM_CHAINS * \
-+					 ACPI_SAR_NUM_SUB_BANDS + 2)
- #define ACPI_EWRD_WIFI_DATA_SIZE	((ACPI_SAR_PROFILE_NUM - 1) * \
--					 ACPI_SAR_TABLE_SIZE + 3)
-+					 ACPI_SAR_NUM_CHAINS * \
-+					 ACPI_SAR_NUM_SUB_BANDS + 3)
- #define ACPI_WGDS_WIFI_DATA_SIZE	19
- #define ACPI_WRDD_WIFI_DATA_SIZE	2
- #define ACPI_SPLC_WIFI_DATA_SIZE	2
-@@ -64,9 +65,13 @@
- #define ACPI_PPAG_MIN_HB -16
- #define ACPI_PPAG_MAX_HB 40
- 
-+struct iwl_sar_profile_chain {
-+	u8 subbands[ACPI_SAR_NUM_SUB_BANDS];
-+};
-+
- struct iwl_sar_profile {
- 	bool enabled;
--	u8 table[ACPI_SAR_TABLE_SIZE];
-+	struct iwl_sar_profile_chain chains[ACPI_SAR_NUM_CHAINS];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index adfdfc654b10..4198ca9d898c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -431,8 +431,6 @@ struct brcmf_fw {
+ 	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
  };
  
- struct iwl_geo_profile {
+-static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
+-
+ #ifdef CONFIG_EFI
+ /* In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
+  * to specify "worldwide" compatible settings, but these 2 ccode-s do not work
+@@ -658,6 +656,21 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+ 	kfree(fwctx);
+ }
+ 
++static void brcmf_fw_request_done_first(const struct firmware *fw, void *ctx)
++{
++	struct brcmf_fw *fwctx = ctx;
++	struct brcmf_fw_item *first = &fwctx->req->items[0];
++	int ret = 0;
++
++	if (!fw)
++		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
++					      fwctx->dev, GFP_KERNEL, fwctx,
++					      brcmf_fw_request_done);
++
++	if (fw || ret < 0)
++		brcmf_fw_request_done(fw, ctx);
++}
++
+ static bool brcmf_fw_request_is_valid(struct brcmf_fw_request *req)
+ {
+ 	struct brcmf_fw_item *item;
+@@ -702,11 +715,9 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	if (alt_path) {
+ 		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
+ 					      fwctx->dev, GFP_KERNEL, fwctx,
+-					      brcmf_fw_request_done);
++					      brcmf_fw_request_done_first);
+ 		kfree(alt_path);
+-	}
+-	/* Else try canonical path */
+-	if (ret) {
++	} else {
+ 		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
+ 					      fwctx->dev, GFP_KERNEL, fwctx,
+ 					      brcmf_fw_request_done);
 -- 
-2.32.0
-
