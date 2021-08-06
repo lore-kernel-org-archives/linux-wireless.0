@@ -2,119 +2,184 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89CDAC4320E
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Aug 2021 12:35:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D93DC4338F
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Aug 2021 15:46:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E96B60F25
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Aug 2021 12:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42AF560F0F
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Aug 2021 15:46:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343728AbhHFMfk (ORCPT
+        id S244748AbhHFPqQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Aug 2021 08:35:40 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:16680 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343717AbhHFMfk (ORCPT
+        Fri, 6 Aug 2021 11:46:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48276 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238025AbhHFPqP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Aug 2021 08:35:40 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1628253324; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=N2y4oRCNfmsOR5AcLj7KTqZExbR4TqZaeaiHeBAWq7o=; b=S0MIYlKVBti4dThUFgq/St1y19X91dbIPDdqqYO6c6m8K1Pz90t811ScuU8+UhenB+Xinkb/
- XdWHCAmHj3m229b+CU0XhDDyAoV2I+dLQ+7jNCl1sn+a7mITy1UdHnXetByoGP1LXCGD+IEs
- K+JmHkN5gweB3qcuZikNP5N2PxI=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 610d2c815c73bba6fbbc3543 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 06 Aug 2021 12:35:13
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 81AB6C43145; Fri,  6 Aug 2021 12:35:12 +0000 (UTC)
-Received: from tykki (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D3A5AC433F1;
-        Fri,  6 Aug 2021 12:35:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D3A5AC433F1
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Colin Ian King <colin.king@canonical.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+        Fri, 6 Aug 2021 11:46:15 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1793C0613CF
+        for <linux-wireless@vger.kernel.org>; Fri,  6 Aug 2021 08:45:59 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id u3so18742589lff.9
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2021 08:45:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=G1s0SmGB6SLLAExqdCsWoJrk/+ubF5ahJAwxSO8mdu8=;
+        b=Jtl+du7vMxwHHrZvdoXe5IVzWW4RjC/qJaWgyuJMai3aP7ZE1WkTpJlWq7zV55tRjD
+         AE3YNAr0oBHZ9TWurYCE7OBgKcCJM+JNR4qIBxEsnFuEhQbb1Z3rIsUJriZ4SmkDHFXG
+         3tT6TJYh7gefNFMYUInz4dYxynn1yNLd7FVsFuE3JmRb7dkA9MSneTvQdF60/J2CZesv
+         WTH4/M+1Aevzv314TbyHoCag+JnSnDkRkSniaGeyyy3ZCQ0MU0a9z+TWfoUz20Cegrb2
+         ldVk0EeDpKIxOQmk3EL5Gxl8D3RoV8oa8HL2Ojs5Op4ATGNPCLBTsXSVhmqDL+ouXbvZ
+         q5fg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=G1s0SmGB6SLLAExqdCsWoJrk/+ubF5ahJAwxSO8mdu8=;
+        b=IDN4KBYL0aKfCmeUaGbjskR6paz+Rrno5uLwHKBb+FQ70YD08GaiwarGRsL3UeN48H
+         R3kuqPyGIUj9K4tLzkluyfL0uxzGx5lZiagV/odhRUe6WLc5IODbv9LUC6SbeDLS4EoG
+         jWSZipmmH3s7+gxgosVuLkCNQL7swle5driBOHubHFM1gbyQGY5nsWAlNEHbcJH0iAiI
+         n/is1qLTjxoyzrfJI6O0h6OTL5bKbhaMXWLhe5INV6hzvtVkk8hixE8cvcxD+JgmVTBe
+         wgM4ppHL/RH2oRYTac0PJNvwJZW9qaU7Hdj/DB6oWIqmjPPrifXCuNsZ8LKg5ns9QSLY
+         4HBA==
+X-Gm-Message-State: AOAM530ujYDLN3i4/lsvdNyiZhNEtM5bI3/XkICwmGnSvnyN5unwx0v+
+        gcSbrHaS3y1UPqyVTnl/XqA=
+X-Google-Smtp-Source: ABdhPJxaRoxS4oE8TmirhnP5oTHCPIeUuQvc0nCcjYkIwVOa6OR4QwJgc8periZyVZPbcUJJ80epfA==
+X-Received: by 2002:a19:e21e:: with SMTP id z30mr1527705lfg.579.1628264758124;
+        Fri, 06 Aug 2021 08:45:58 -0700 (PDT)
+Received: from [192.168.2.145] (46-138-20-31.dynamic.spd-mgts.ru. [46.138.20.31])
+        by smtp.googlemail.com with ESMTPSA id h13sm716751ljc.37.2021.08.06.08.45.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Aug 2021 08:45:57 -0700 (PDT)
+Subject: Re: [PATCH v3] brcmfmac: firmware: Fix firmware loading
+To:     Arend van Spriel <aspriel@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-hsien Lin <chi-hsien.lin@infineon.com>,
         Wright Feng <wright.feng@infineon.com>,
         Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev <netdev@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH][next] brcmfmac: firmware: Fix uninitialized variable ret
-References: <20210803150904.80119-1-colin.king@canonical.com>
-        <CACRpkdZ5u-C8uH2pCr1689v_ndyzqevDDksXvtPYv=FfD=x_xg@mail.gmail.com>
-        <875ywkc80d.fsf@codeaurora.org>
-        <96709926-30c6-457e-3e80-eb7ad6e9d778@broadcom.com>
-        <b2034ac5-0080-a2fb-32ef-61ad50dfd248@canonical.com>
-Date:   Fri, 06 Aug 2021 15:35:05 +0300
-In-Reply-To: <b2034ac5-0080-a2fb-32ef-61ad50dfd248@canonical.com> (Colin Ian
-        King's message of "Fri, 6 Aug 2021 12:28:29 +0100")
-Message-ID: <87eeb6bvk6.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Stefan Hansson <newbyte@disroot.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+References: <20210805093023.3465081-1-linus.walleij@linaro.org>
+ <CAJ65rDx1ab8gBZRpnyp5kb__VVA+_Vy3VS-0xesYC_+VmEKchw@mail.gmail.com>
+From:   Dmitry Osipenko <digetx@gmail.com>
+Message-ID: <d8a1d349-91ee-9ab5-6706-91090082d7f4@gmail.com>
+Date:   Fri, 6 Aug 2021 18:45:25 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ65rDx1ab8gBZRpnyp5kb__VVA+_Vy3VS-0xesYC_+VmEKchw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin Ian King <colin.king@canonical.com> writes:
+05.08.2021 14:35, Arend van Spriel пишет:
+> On Thu, Aug 5, 2021 at 11:32 AM Linus Walleij <linus.walleij@linaro.org> wrote:
+>>
+>> The patch that would first try the board-specific firmware
+>> had a bug because the fallback would not be called: the
+>> asynchronous interface is used meaning request_firmware_nowait()
+>> returns 0 immediately.
+>>
+>> Harden the firmware loading like this:
+>>
+>> - If we cannot build an alt_path (like if no board_type is
+>>   specified) just request the first firmware without any
+>>   suffix, like in the past.
+>>
+>> - If the lookup of a board specific firmware fails, we get
+>>   a NULL fw in the async callback, so just try again without
+>>   the alt_path. Use a context state variable to check that
+>>   we do not try this indefinitely.
+>>
+>> - Rename the brcm_fw_request_done to brcm_fw_request_done_first
+>>   reflecting the fact that this callback is only used for the
+>>   first (main) firmware file, and drop the unnecessary
+>>   prototype.
+> 
+> While implementing the firmware.c module at first I was doing every
+> firmware request with the 'nowait' variant hence the callback was used
+> repeatedly. However, I abandoned that as the reason for async request
+> was to avoid delay it may cause on kernel boot. Decoupling the initial
+> firmware request was sufficient for that and simplified things quite a
+> bit. As to the naming maybe 'brcmf_fw_async_request_done()' is a clear
+> alternative.
+> 
+>> Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware binaries")
+>> Cc: Dmitry Osipenko <digetx@gmail.com>
+>> Cc: Stefan Hansson <newbyte@disroot.org>
+>> Tested-by: Dmitry Osipenko <digetx@gmail.com>
+>> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+>> ---
+>> ChangeLog v2->v3:
+>> - Rename state variable to "tried_board_variant".
+>> ChangeLog v1->v2:
+>> - Instead of using a static variable, add a context variable
+>>   "tested_board_variant"
+>> - Collect Arend's review tag.
+>> - Collect Tested-by from Dmitry.
+>> ---
+>>  .../broadcom/brcm80211/brcmfmac/firmware.c    | 31 +++++++++++++------
+>>  1 file changed, 22 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> index adfdfc654b10..d32491fd74fe 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> @@ -428,11 +428,10 @@ struct brcmf_fw {
+>>         struct device *dev;
+>>         struct brcmf_fw_request *req;
+>>         u32 curpos;
+>> +       bool tried_board_variant;
+>>         void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
+>>  };
+>>
+>> -static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
+>> -
+>>  #ifdef CONFIG_EFI
+>>  /* In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
+>>   * to specify "worldwide" compatible settings, but these 2 ccode-s do not work
+>> @@ -638,11 +637,25 @@ static int brcmf_fw_request_firmware(const struct firmware **fw,
+>>         return request_firmware(fw, cur->path, fwctx->dev);
+>>  }
+>>
+>> -static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+>> +static void brcmf_fw_request_done_first(const struct firmware *fw, void *ctx)
+>>  {
+>>         struct brcmf_fw *fwctx = ctx;
+>> +       struct brcmf_fw_item *first = &fwctx->req->items[0];
+>>         int ret;
+>>
+>> +       /* Something failed with the first firmware request, such as not
+>> +        * getting the per-board firmware. Retry this, now using the less
+>> +        * specific path for the first firmware item, i.e. without the board
+>> +        * suffix.
+>> +        */
+>> +       if (!fw && !fwctx->tried_board_variant) {
+>> +               fwctx->tried_board_variant = true;
+>> +               ret = request_firmware_nowait(THIS_MODULE, true, first->path,
+>> +                                             fwctx->dev, GFP_KERNEL, fwctx,
+>> +                                             brcmf_fw_request_done_first);
+>> +               return;
+>> +       }
+>> +
+> 
+> So here we could use the synchronous variant instead for the reason
+> explained earlier.
 
-> On 06/08/2021 12:23, Arend van Spriel wrote:
->> On 05-08-2021 15:53, Kalle Valo wrote:
->>> Linus Walleij <linus.walleij@linaro.org> writes:
->>>
->>>> On Tue, Aug 3, 2021 at 5:09 PM Colin King <colin.king@canonical.com>
->>>> wrote:
->>>>
->>>>> From: Colin Ian King <colin.king@canonical.com>
->>>>>
->>>>> Currently the variable ret is uninitialized and is only set if
->>>>> the pointer alt_path is non-null. Fix this by ininitializing ret
->>>>> to zero.
->>>>>
->>>>> Addresses-Coverity: ("Uninitialized scalar variable")
->>>>> Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware
->>>>> binaries")
->>>>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->>>>
->>>> Nice catch!
->>>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
->>>
->>> I assume this will be fixed by Linus' patch "brcmfmac: firmware: Fix
->>> firmware loading" and I should drop Colin's patch, correct?
->> 
->> That would be my assumption as well, but not sure when he will submit
->> another revision of it. You probably know what to do ;-)
->
-> I'd prefer my patch to be dropped in preference to Linus' fix.
-
-Ok, I'll then drop Colin's patch.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+The blocking variant doesn't work as-is, it locks up the probe.
