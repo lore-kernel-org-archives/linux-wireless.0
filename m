@@ -4,35 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00134C432BE
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Aug 2021 03:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14F98C432BE
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D122161167
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Aug 2021 03:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D424F61050
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230331AbhHGDOw (ORCPT
+        id S229651AbhHGEJP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Aug 2021 23:14:52 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:37642 "EHLO
+        Sat, 7 Aug 2021 00:09:15 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:59160 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230225AbhHGDOu (ORCPT
+        with ESMTP id S229631AbhHGEJO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Aug 2021 23:14:50 -0400
-X-UUID: 3efae2f32a6340dd853af7ba595a3700-20210807
-X-UUID: 3efae2f32a6340dd853af7ba595a3700-20210807
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        Sat, 7 Aug 2021 00:09:14 -0400
+X-UUID: 0bcd7fafcbfc4b55a4f8b61042c0e795-20210807
+X-UUID: 0bcd7fafcbfc4b55a4f8b61042c0e795-20210807
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1309051348; Sat, 07 Aug 2021 11:14:30 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+        with ESMTP id 984609346; Sat, 07 Aug 2021 12:08:54 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
  mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 7 Aug 2021 11:14:29 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
+ 15.0.1497.2; Sat, 7 Aug 2021 12:08:53 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 7 Aug 2021 11:14:29 +0800
+ Transport; Sat, 7 Aug 2021 12:08:53 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
@@ -41,12 +41,12 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 4/4] mt76: mt7915: introduce mt7915_mcu_beacon_check_caps()
-Date:   Sat, 7 Aug 2021 11:14:24 +0800
-Message-ID: <a746f55cdc662faf73c0fd70cde74ba269ad9d97.1628301616.git.ryder.lee@mediatek.com>
+Subject: [PATCH v2] mt76: mt7915: introduce mt7915_mcu_beacon_check_caps()
+Date:   Sat, 7 Aug 2021 12:08:51 +0800
+Message-ID: <05d2df887a583a1ab694f2364520c275bfea9e38.1628306758.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <77372f644903053e09d671325c0cd44cf75e14ac.1628301615.git.ryder.lee@mediatek.com>
-References: <77372f644903053e09d671325c0cd44cf75e14ac.1628301615.git.ryder.lee@mediatek.com>
+In-Reply-To: <77372f644903053e09d671325c0cd44cf75e14ac.1628306758.git.ryder.lee@mediatek.com>
+References: <77372f644903053e09d671325c0cd44cf75e14ac.1628306758.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -54,18 +54,20 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Check some missing configuration options to allow AP mode in mac80211
-to remain in sync with hostapd settings, and get a subset of beacon
-and hardware capabilities through mt7915_mcu_beacon_check_caps().
+Strictly check beacon IEs which could be changed by user configuraion,
+so driver should determinate capability in practice by comparing IEs
+and hardware capability before association.
 
 Co-developed-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
 Signed-off-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
+v2 - clean up codes.
+---
  .../net/wireless/mediatek/mt76/mt7915/main.c  |   1 +
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 149 ++++++++++++++----
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 150 ++++++++++++++----
  .../wireless/mediatek/mt76/mt7915/mt7915.h    |  13 ++
- 3 files changed, 129 insertions(+), 34 deletions(-)
+ 3 files changed, 130 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
 index fc2110dc4a75..20b47ac33083 100644
@@ -80,7 +82,7 @@ index fc2110dc4a75..20b47ac33083 100644
  out:
  	mutex_unlock(&dev->mt76.mutex);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 59731c1831ea..380c1412fbcb 100644
+index 59731c1831ea..030d6fba59e9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 @@ -1488,8 +1488,10 @@ mt7915_mcu_sta_uapsd_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
@@ -131,7 +133,7 @@ index 59731c1831ea..380c1412fbcb 100644
  		ht = (struct wtbl_ht *)tlv;
 -		ht->ldpc = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING);
 +		ht->ldpc = mvif->cap.ht_ldpc &&
-+			   !!(sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING);
++			   (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING);
  		ht->af = sta->ht_cap.ampdu_factor;
  		ht->mm = sta->ht_cap.ampdu_density;
  		ht->ht = true;
@@ -141,7 +143,7 @@ index 59731c1831ea..380c1412fbcb 100644
  		vht = (struct wtbl_vht *)tlv;
 -		vht->ldpc = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC);
 +		vht->ldpc = mvif->cap.vht_ldpc &&
-+			    !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC);
++			    (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC);
  		vht->vht = true;
  
  		af = FIELD_GET(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
@@ -248,7 +250,7 @@ index 59731c1831ea..380c1412fbcb 100644
  	}
  
  	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
-@@ -2426,6 +2431,80 @@ mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct sk_buff *rskb,
+@@ -2426,6 +2431,81 @@ mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct sk_buff *rskb,
  	memcpy(buf + MT_TXD_SIZE, skb->data, skb->len);
  }
  
@@ -265,8 +267,9 @@ index 59731c1831ea..380c1412fbcb 100644
 +	const u8 *ie;
 +	u32 len, bc;
 +
-+	/* Beacon IEs may not match hardware capabilities so that driver
-+	 * has to check its content here for certain scenarios.
++	/* Check missing configuration options to allow AP mode in mac80211
++	 * to remain in sync with hostapd settings, and get a subset of
++	 * beacon and hardware capabilities.
 +	 */
 +	if (WARN_ON_ONCE(skb->len <= (mgmt->u.beacon.variable - skb->data)))
 +		return;
@@ -329,7 +332,7 @@ index 59731c1831ea..380c1412fbcb 100644
  int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
  			  struct ieee80211_vif *vif, bool en)
  {
-@@ -2466,6 +2545,8 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
+@@ -2466,6 +2546,8 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
  		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
  	}
  
