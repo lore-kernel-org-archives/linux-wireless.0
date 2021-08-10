@@ -2,86 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37D42C4320A
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 17:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF80BC4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 19:59:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D3AF600EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 17:08:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFBDD60C3E
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 19:59:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbhHJRJR (ORCPT
+        id S230184AbhHJT7p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Aug 2021 13:09:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45150 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhHJRJR (ORCPT
+        Tue, 10 Aug 2021 15:59:45 -0400
+Received: from mail-0201.mail-europe.com ([51.77.79.158]:38397 "EHLO
+        mail-0201.mail-europe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229480AbhHJT7o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Aug 2021 13:09:17 -0400
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3927C0613C1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2021 10:08:54 -0700 (PDT)
-Received: by mail-qt1-x82f.google.com with SMTP id b1so16044888qtx.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2021 10:08:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mojatatu-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=M0nMc32VdYeoROakqfdUuqdNeVnekYQ4hd5V8oDaN7M=;
-        b=pgVJN2i7UW0gnI9xKl+qd1+UJbk1gvKBllUJjNMc9eYv01CFtXlOZsejG/mBg46Ka3
-         dwcU/JR6gTtc2oO744Ojs2krSWB+9aCLGX7V9pCMRZUiM7nY94G383Ld3gWk3/ohKNPL
-         LgJ68mkfhYBUVKQKLqvUoyp/t6SQNRmFbK6v2iBiVy20ZoaYz9LchiaSJWCEa6+wdn/i
-         A+oWfBv7lw74wxLsb8Enfw0AGpgVlLcFzSB7j3YnN4KsTF/99dfKNfZM+pvbj16zNZij
-         +WX0Qv/KN398U+DH/170VpHbZb2kdkzc8IDwI9xTGVLjdvS/g+RcmFo42B2NyLMRKOse
-         esqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=M0nMc32VdYeoROakqfdUuqdNeVnekYQ4hd5V8oDaN7M=;
-        b=PwMjqdzJsUmfz+7RMRHA7IIUa03KVwPYQZoAoK7N/JrEdQ6K9MiYMuZ8+e9oQJlnBq
-         HVGmami0Z4x516ohawlfMOvXA4xIMsv617JrG532GgUSTOSrObjG5UjlfGyLAL8mVxHJ
-         5UMxeGkuUmVuNzWkYO4uO5cf0Fhpua3r5WiQb+L7rJpZWEnjNnY02yCdFkoaIVWFYwxW
-         Vgc1rfrCNiDzMGsvjM/PDntUBlYYQFmc13l/g688B2hiBSfyvse/y/Bdf99MFPP1z1ba
-         z/rf/coUABN0xpc7hSGOAb8V03qvGBN9owaatGIfqr/fKqTvzMNBRnVVjcntvt8yMli1
-         4vJQ==
-X-Gm-Message-State: AOAM533xb5L8Hgi8pH+EZVY3yS4U+D6ZxBaCYAEGz9W6+HHntTLmSQur
-        V56qaaagRWrvz3T62yfTTKY06w==
-X-Google-Smtp-Source: ABdhPJxKPrfTZqcK0gHuLOcyLYaxjm3Jy4sYYs8ctATrBZ7Mwl/gg2kJDtdAgx2mpAz7DsuayNYgEA==
-X-Received: by 2002:ac8:73c9:: with SMTP id v9mr13551051qtp.12.1628615333996;
-        Tue, 10 Aug 2021 10:08:53 -0700 (PDT)
-Received: from [192.168.1.171] (bras-base-kntaon1617w-grc-28-184-148-47-47.dsl.bell.ca. [184.148.47.47])
-        by smtp.googlemail.com with ESMTPSA id c69sm2442113qkg.1.2021.08.10.10.08.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Aug 2021 10:08:53 -0700 (PDT)
-From:   Jamal Hadi Salim <jhs@mojatatu.com>
-To:     people <people@netdevconf.org>
-Cc:     lwn@lwn.net, "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        netfilter-devel@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        lartc@vger.kernel.org
-Subject: Netdevconf 0x15 slides and papers up
-Message-ID: <64ae0651-61b7-7a40-2eb4-8f1cb6dda87e@mojatatu.com>
-Date:   Tue, 10 Aug 2021 13:08:52 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        Tue, 10 Aug 2021 15:59:44 -0400
+Date:   Tue, 10 Aug 2021 19:59:15 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail; t=1628625558;
+        bh=JpwKQU7qJGvcJbOmub6Vo4gSKW3dGyhyyY1vRQB7Uo4=;
+        h=Date:To:From:Reply-To:Subject:From;
+        b=YthvMLKdgFD0TDoG/Pk6rBF5GZj0q9my5X8G4kxdXL5xdhDhxGTa/jUv1XT6GDMH1
+         Bz4Lr6Q5orNffC/BDuW6KmIvWwQHygq7DW1q2RBN5k5rOJQn178kqVYRk8oMv7qm8o
+         KYXMTnUB9aDn1NBF489aKW8Csh8OZ5d+YNV+0ct0=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Michael Yartys <michael.yartys@protonmail.com>
+Reply-To: Michael Yartys <michael.yartys@protonmail.com>
+Subject: Not able to roam on FT-SAE network
+Message-ID: <NB-cdP_zWop55KKgEYOXNh25URknq08i4hqQ2mRF9aVBi6YFIlJaYIk9pg1ewyJY7hLC1x8mtEFX5WyutbN3YZRoyaJMvOpn7MH2GsUTv7o=@protonmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi folks,
+Hi
 
-The slides and papers are now up. The videos will come after.
+I've been running an FT-SAE network for quite some time now, and I've long =
+noticed that my both my laptops with Intel 7260AC cards are unable to roam =
+from one AP to another. When I move the laptops to an area with poor signal=
+ strength the background scanning of NetworkManager/hostapd is triggered as=
+ expected and a roam appears to be initiated, but instead of successfully r=
+oaming to the other AP with better signal strength it ends up returning to =
+the current AP. This keeps on happening until I either manually disable and=
+ re-enable wifi, or if I move back to an area where the current AP has good=
+ signal strength. The laptops are running the following distros, kernels an=
+d wpa_supplicant versions:
 
-Check the session pages for the links to the slides and papers
-https://netdevconf.info/0x15/accepted-sessions.html
+-- Laptop 1 --
+* Fedora 34
+* 5.13.8-200
+* wpa_supplicant v2.9
 
-cheers,
-jamal
+-- Laptop 2 --
+* Ubuntu 20.04.2 LTS
+* 5.11.0-25
+* wpa_supplicant v2.10-devel-hostap_2_9-2285-gc3155a725 (recent snapshot)
+
+I can provide relevant logs from wpa_supplicant and the APs to developers p=
+ersonally.
+
+Michael
