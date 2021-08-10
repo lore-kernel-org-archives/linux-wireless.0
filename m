@@ -2,162 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 274C7C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 13:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E0B2C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 13:50:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0737C60FDA
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 13:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E497161008
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Aug 2021 13:50:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240743AbhHJNDL (ORCPT
+        id S241939AbhHJNux (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Aug 2021 09:03:11 -0400
-Received: from mail-eopbgr110129.outbound.protection.outlook.com ([40.107.11.129]:28991
-        "EHLO GBR01-CWL-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S237619AbhHJNDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Aug 2021 09:03:10 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZEM1ImzeMOgDCU9DqsJ7BsGv5Z6DGDQEKybftX6CybEHHgR7vUBrcWNyjmYHnRCUvZL1tH0Z7Gfmr0fDaYKUySqbI/m9Fzjc+h6mVN/0ryQsXSK/0JeHTpHUhQK499pCKYPznAvwGGpHYePAI6KoVzo1HALLRyeZnL4pYNg50FATlyamaPEhWOxFu1pqU45AAHQ6J8wgADXWqEmz97Ph5abiTloAMA4xz1p6EEJH4aF/zIcw6mTQyr2iWXUPTM5A+TjiCjb3NbN3oZ7O17d1norMbw41U7J3D/YKaqolRZNV/LIrvApKIxmD0zaW28CtVGtoedLC/dRQXJ4ra3xiNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CeBV0AVLwJbLtHf5fcTXSWEAK4znScxJFLKElGUOMLI=;
- b=b7lagZeeEjw9JJet8Jp+zkoIcNML69o2BREdK/xK6uDMdh3R1vpXlIMHc51kSU8KHdP8PmTVhcsy+h6HOHPkiX9jKva6s9+6hcb/ZW119t/QAVoikJA6E6iKEiXqa5gPqLW1owim4K1V/btQvqCHU+iNzZowJZFitUgOOTbUU5TaCueDvfows51oauHhl9VSG4Tk1Nim07EbdGyt4nQlZAO7Uqof11hp4AVP7mtv65ij8/3cJ3P49gIuXr0+ZyTtc0A3eFkDrJc9pwxsSr3VknJk5PTp7HC4sm3suTcfb2QPjS+60gziEVmp67E7oiiEH4ZuM/fpy8Mm0D1KvjQWwA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=purelifi.com; dmarc=pass action=none header.from=purelifi.com;
- dkim=pass header.d=purelifi.com; arc=none
+        Tue, 10 Aug 2021 09:50:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55154 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233318AbhHJNuw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Aug 2021 09:50:52 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1E24C0613D3;
+        Tue, 10 Aug 2021 06:50:30 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id t7-20020a17090a5d87b029017807007f23so4422166pji.5;
+        Tue, 10 Aug 2021 06:50:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=purevlc.onmicrosoft.com; s=selector2-purevlc-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CeBV0AVLwJbLtHf5fcTXSWEAK4znScxJFLKElGUOMLI=;
- b=elRv8b0VYex9cWZK3392ilbDpp4RKoJf5iYK1XJZHUUIk2a9sGmAvZuzoj35L4pWeQSaWAj7mBQsfzK9oPhzv+EuSGri4nNiF49VffCW33Jncmy9NXdaXEPKbs6j7QEnvYlUgqfkd4iCrioLhcSJqYbo+R6ItAQGNh8Dy/yjYmg=
-Received: from CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:bb::9) by
- CWLP265MB2482.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:95::10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4394.21; Tue, 10 Aug 2021 13:02:46 +0000
-Received: from CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM
- ([fe80::b867:2f6b:483e:62e3]) by CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM
- ([fe80::b867:2f6b:483e:62e3%9]) with mapi id 15.20.4415.014; Tue, 10 Aug 2021
- 13:02:46 +0000
-From:   Srinivasan Raju <srini.raju@purelifi.com>
-CC:     Mostafa Afgani <mostafa.afgani@purelifi.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] [v14] wireless: Initial driver submission for pureLiFi
- STA devices
-Thread-Topic: [PATCH] [v14] wireless: Initial driver submission for pureLiFi
- STA devices
-Thread-Index: AQHXDECYN+cbMaQkH0qr/5BknxpUK6q8C0kQgLGrifM=
-Date:   Tue, 10 Aug 2021 13:02:46 +0000
-Message-ID: <CWLP265MB321782CCA0CC2130A2D59A53E0F79@CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM>
-References: <20200928102008.32568-1-srini.raju@purelifi.com>
- <20210226130810.119216-1-srini.raju@purelifi.com>
- <CWLP265MB17945FD418D1D242756B2AC4E0499@CWLP265MB1794.GBRP265.PROD.OUTLOOK.COM>
-In-Reply-To: <CWLP265MB17945FD418D1D242756B2AC4E0499@CWLP265MB1794.GBRP265.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: purelifi.com; dkim=none (message not signed)
- header.d=none;purelifi.com; dmarc=none action=none header.from=purelifi.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9735bf62-b6c4-4d25-3cb3-08d95bff264a
-x-ms-traffictypediagnostic: CWLP265MB2482:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CWLP265MB24829DE9C3537E26FF4069A2E0F79@CWLP265MB2482.GBRP265.PROD.OUTLOOK.COM>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: e5lTTHdYDp9i2BgIVaqJu4N6k6ctVrI3YnsIeuBFh++mAKXaGcsqxmnnoYl/CWl7qHGr1z281AEzZZeqgUN2vkuZhcqXEEjxknQuppao1h5O12B+rDs9ZWTpfpp6mJLRYj+3/hVoUcbNI0X3nOo+7ZBJVY4vFwpIjaqX4y77IjgW8yX1Ycb17u8bhaI2BU0pOtoPoWoYLdgp5HSUFLJ2ZVNnUWX4WiLe2ZHnfCZzuLT0hj7MaQI+IFzzYkcz3YfpM3NisxJoieC5hFpljSjDgK8zXB9SyJ8jR+M5L9UtryRVt5uXxzJH7agqPikQRWcNO8qBaMu0b0a5u0nUb7ec6K9sIrfxkiclt4gleKmm4T9chjICErxhTkC78QO6tIfXMi6kKrcnAkOU6XqJODbnY2ssdNsKIGbqjk9tifYbq+QHufPuNLHJ6TZ9Z9zDtYsBLSBj6aWACosweuUxRThYmBcZwb/ZTXyfjNZRum0vh9GgCpJU+WAMLjEDqKQ2Rfj27nQckmLIGr1el7lDybt6vutJn4wMSj5nmiGIuY5IY0XEtxmPienanZcqpIKRw9aLtlVby9uLeXa2Nal/f3d5cBuuiYzIUQttzibe1jmsPgyCRXkjmdycKHTv58yjZ5JlmCgBBGQIcaoiUoOm+p3PDPO88aEQRS2q1Q5ShFY3/iD3tC+ybe7R2fKJVZEL6rj2+/7rpPwP7sSqWIgzPpxyk4p69oW4fgFBeZZaWhptJAI83I2l1h18m3b2Ig2Nn4uuT/vp3HMUIxr8zZllQ+k6u0Ee8SyKj/mOGOqHZjmusX8=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(6029001)(4636009)(136003)(376002)(39830400003)(366004)(346002)(396003)(64756008)(66446008)(86362001)(66946007)(91956017)(8936002)(66476007)(66556008)(52536014)(76116006)(316002)(38100700002)(4326008)(478600001)(83380400001)(122000001)(54906003)(2906002)(55016002)(7696005)(33656002)(8676002)(9686003)(109986005)(38070700005)(966005)(5660300002)(6506007)(186003)(26005)(71200400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?H9YV+ZgdwF/VdP56J1WGMnUmRKUluysZGa6agauhSkqhjteOKb3mxDdi9x?=
- =?iso-8859-1?Q?71U3U88lTJwECppLh/5X3CrCsqnOwi2i2g1fmc/lrOl8QuAM2n9ZJcmyFd?=
- =?iso-8859-1?Q?6loz18tvbKAzOJ866wqmexclcxnyoSRappt3b7OnG1ihJjnchxFv6SgQyn?=
- =?iso-8859-1?Q?atqZnBAByuDHiyvJWmPDOhsPjkNFtgSjU6L/CZUHXsgDVIhCmf9yz+2br0?=
- =?iso-8859-1?Q?/RJlofPgarwHoyRBhaehU8T8JJvQFAGwoGEUrkA2KZdNJS62I+I7GjZarm?=
- =?iso-8859-1?Q?yLg8a2Yvcfy6GZEnQ2VMtKFH53sbCFNzQ3gVUKvfnm7fXxmge040Smc5x7?=
- =?iso-8859-1?Q?W59jNLyeCbzH8K7mP0RJFAsjlJ/dtNR19kml1hbIxdGZ5o4thBppu9fUoq?=
- =?iso-8859-1?Q?1pFr/N8DC2NnTLrbdJ1KGozekV9bhYbVl6cin0gwuN4jhSmpwrRZjXhvyF?=
- =?iso-8859-1?Q?GHjJPDRrl29Qc3j8Wl2VFzR5dniatfA3eIbl7/raRkud9QsuoBsH3W8xMa?=
- =?iso-8859-1?Q?wtB8DQe1K6jm5wlbxodi9oFpv4b6Gdx8Kb2N5SdQ4p0gKBctb1BVsmX4CJ?=
- =?iso-8859-1?Q?ivSF8qZcXrxjlFj5u8n3uxUm6MvY15/g4kozLF45Buc5VPnmfbOYm8xQG9?=
- =?iso-8859-1?Q?/oIIxsAEXf362WrT49qil2aoK8G/pkpbCvef6qcy1qArs7YMDjEbrLGfAj?=
- =?iso-8859-1?Q?p7Qwg6jsvZG6LOEZSa8AyBG2150DYeJXDk4n9PG1MCK8pCcm9EX9bMoZnh?=
- =?iso-8859-1?Q?al0taxh/SyhpFOAe5JyvmzdHxwcc3XSRIAoDmynjT2MLlxWkjiEkIA/9mC?=
- =?iso-8859-1?Q?YDdBe2Dg88jF0Eg6zWKSxEcnK+0zEgPa7WDavqApWq52dRU4F1uvhfGZLW?=
- =?iso-8859-1?Q?tW/ZaB+IoQ3qlJN31glWg04uIQtyB2Gd0OWejB7ItxnHVW/Wo9PZmIEn1U?=
- =?iso-8859-1?Q?q/Kp9OuW/ko/IH2FnoecjnvodWaweOXsTzfhFeTGUuT9+y1a7RbecZSZes?=
- =?iso-8859-1?Q?nC9QuV3Yf2wLVLLcvxswDzvt/q09LGTo18vgkmZbpnzakvUJlr5vYtXIfR?=
- =?iso-8859-1?Q?MvCYI4z6KPNXI0otSz50CSEMs8OTqXTeHvy02cyjlIUyhJa9xJgUu2Lf3w?=
- =?iso-8859-1?Q?qucntay80CloDbHZRiP4DcBviVO/9NDefGHQ4PgFvOl0jAJfLwSvqbI1fV?=
- =?iso-8859-1?Q?lnqXi9C1IYmkE8m/0wwgtZ3lj3wglMxdodsQRJviKSjWlnWisSJkpWiqQY?=
- =?iso-8859-1?Q?xg0FWk2jhvTcY2B6tCTYMtj/kXOOPnoqS3qQgeJ64bMKkFo224nkk5vl0I?=
- =?iso-8859-1?Q?wtlbbqEJ3DypoQVLLw1pBD2FUY5+mq3gtHuJvak9d4sQTeQ=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-transfer-encoding:content-language;
+        bh=Na5r6WxMbNS8Nyf4HKx/vDqX/nZNyBc04/DnaxOLZ2Y=;
+        b=Ahbyu2SQmqnDXV3uBXJSN8rqkMvO/ZJlqir0IXF1zyK/AGu22zKxz2xhsCDJEXR+uA
+         3alD+uwbGXY2v84PLfKm1FBFnWPEJ5FlkFfiBLCsEGZoQa/rEuo6P4+xcZG2ez3xqKAV
+         Smkq4m+LX89dPNk9wuhGd+UukuQSh1Jf6P0zH18Rei2FgLiqIHeKpZIjNvcJp68xV4O3
+         fhYSl0CaINn65Ft6SpvsEyqUC37C31UkXoied8mffJyG865V09HIdKxCE1+6xH416elk
+         QPi07rf45Yquu5bsMnJfsHxezsbCQ1AE4tFMeIcNY+AV7G6xg3WXhxVdjA2lGBoWz1mU
+         3itw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-transfer-encoding:content-language;
+        bh=Na5r6WxMbNS8Nyf4HKx/vDqX/nZNyBc04/DnaxOLZ2Y=;
+        b=leNr+6PHM+R2HoRrICc8Q0pqCnwIuKZpavzZ4uSo8MkRJEadqHshx5HLlgHTlhVE/N
+         wc82QYRh0lj0Ce4oGFLohKskRoib41W1Xz+eZLnMJkyVWI53foEWAFvpgz3rxprhoh05
+         M2JT91LwqtVHIaXVCyC9fLPU+PPs77LV0FfeHdYtHmD2q330BoLbwq/RE3y1eByg+TMj
+         8fjL+gvAnysNdc+CGyoJz0yGsZmESPE4sBwLifc//HHhNxc6QoHY8hI+BOVXpjKWJZzZ
+         R1XzzQ0wI2Gz5XZXSp+sQahjAJKNGYZHwgyb135FEyc2HqGf+6X+s/2amb/Cgpo0e0Bm
+         /gQA==
+X-Gm-Message-State: AOAM530VkHEWy86wPTLIFNh+QEw95l/V0T/nmD3CQLZhUZAsjbLAYpiB
+        AYx9W/8yqmx2j86nqVimNijgLaPZs3Jov9hE
+X-Google-Smtp-Source: ABdhPJwV3jkigz40brQy9FHVLtrTjI+Mefvt3ubGb4yUvVNbzWqZ6cgeEI5Ca4ZSqeMlG7am0ui1UQ==
+X-Received: by 2002:a05:6a00:808:b029:3c1:15ba:ade2 with SMTP id m8-20020a056a000808b02903c115baade2mr23517872pfk.74.1628603430204;
+        Tue, 10 Aug 2021 06:50:30 -0700 (PDT)
+Received: from [10.178.0.62] ([85.203.23.37])
+        by smtp.gmail.com with ESMTPSA id d2sm28417068pgv.87.2021.08.10.06.50.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Aug 2021 06:50:29 -0700 (PDT)
+To:     stas.yakovlev@gmail.com, kvalo@codeaurora.org, davem@davemloft.net,
+        kuba@kernel.org
+Cc:     "baijiaju1990@gmail.com" <baijiaju1990@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From:   Tuo Li <islituo@gmail.com>
+Subject: [BUG] ipw2x00: possible null-pointer dereference in
+ libipw_wx_set_encode()
+Message-ID: <b9e3b7c9-59e4-7b3d-45d0-89ca006d45fc@gmail.com>
+Date:   Tue, 10 Aug 2021 21:50:26 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-X-OriginatorOrg: purelifi.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9735bf62-b6c4-4d25-3cb3-08d95bff264a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Aug 2021 13:02:46.5937
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5cf4eba2-7b8f-4236-bed4-a2ac41f1a6dc
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: iyakYH+l+ak2CiiGkZEz/LGOhCcnlNCWSa7QuLJ4UtY+n4s4QqBQmyqHHEbfvhBl1BSUs+51cKno6JD4g816Fg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB2482
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,=0A=
-=0A=
-> From: Srinivasan Raju <srini.raju@purelifi.com> =0A=
-> Sent: 26 February 2021 13:09=0A=
-> This introduces the pureLiFi LiFi driver for LiFi-X, LiFi-XC=0A=
-> and LiFi-XL USB devices.=0A=
-> =0A=
-> This driver implementation has been based on the zd1211rw driver.=0A=
-> =0A=
-> Driver is based on 802.11 softMAC Architecture and uses=0A=
-> native 802.11 for configuration and management.=0A=
-> =0A=
-> The driver is compiled and tested in ARM, x86 architectures and=0A=
-> compiled in powerpc architecture.=0A=
->=0A=
-> Signed-off-by: Srinivasan Raju <srini.raju@purelifi.com>=0A=
->=0A=
-> ---=0A=
-> v14:=0A=
-=A0> - Endianess comments addressed=0A=
-=A0> - Sparse checked and fixed warnings=0A=
-=A0> - Firmware files renamed to lowercase=0A=
-=A0> - All other review comments in v13 addressed=0A=
-=0A=
-Could you please review this patch and let us know if there are any comment=
-s.=0A=
-And please let us know if any changes has to be made to the driver for gett=
-ing into wireless-next. =0A=
-We have already submitted the firmware for review as well. The patch is in =
-"Awaiting Upstream" state for a long time. =0A=
-Please let us know.=0A=
-=0A=
-https://patchwork.kernel.org/project/netdevbpf/patch/20210226130810.119216-=
-1-srini.raju@purelifi.com/=0A=
-=0A=
-Thanks=0A=
-Srini=
+Hello,
+
+Our static analysis tool finds a possible null-pointer dereference in 
+the ipw2x00 driver in Linux 5.14.0-rc3:
+
+The variable (*crypt)->ops is checked in:
+360:    if (*crypt != NULL && (*crypt)->ops != NULL && 
+strcmp((*crypt)->ops->name, "WEP") != 0)
+
+This indicates that (*crypt)->ops can be NULL. If so, some possible 
+null-pointer dereferences will occur:
+407:    (*crypt)->ops->set_key(sec.keys[key], len, NULL, (*crypt)->priv);
+417:    len = (*crypt)->ops->get_key(sec.keys[key], WEP_KEY_LEN, ...)
+
+I am not quite sure whether these possible null-pointer dereferences are 
+real and how to fix them if they are real.
+Any feedback would be appreciated, thanks!
+
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+
+Best wishes,
+Tuo Li
