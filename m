@@ -2,313 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EED5C43214
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 10:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8E0EC4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 15:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E65EC6054F
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 10:55:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A59B560232
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 15:28:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237226AbhHKK4T (ORCPT
+        id S233170AbhHKP2s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Aug 2021 06:56:19 -0400
-Received: from mga17.intel.com ([192.55.52.151]:46893 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237154AbhHKK4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Aug 2021 06:56:18 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10072"; a="195369033"
-X-IronPort-AV: E=Sophos;i="5.84,311,1620716400"; 
-   d="scan'208";a="195369033"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2021 03:55:54 -0700
-X-IronPort-AV: E=Sophos;i="5.84,311,1620716400"; 
-   d="scan'208";a="516648162"
-Received: from kniesyn-mobl1.ger.corp.intel.com (HELO egrumbac-mobl1.lan) ([10.254.155.111])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2021 03:55:53 -0700
-From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH v6 6/7] iwlwifi: mvm: add vendor commands needed for iwlmei
-Date:   Wed, 11 Aug 2021 13:55:40 +0300
-Message-Id: <20210811105541.43426-6-emmanuel.grumbach@intel.com>
+        Wed, 11 Aug 2021 11:28:48 -0400
+Received: from li1434-30.members.linode.com ([45.33.107.30]:46084 "EHLO
+        node.akkea.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233041AbhHKP2r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Aug 2021 11:28:47 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by node.akkea.ca (Postfix) with ESMTP id C534B55E350;
+        Wed, 11 Aug 2021 15:28:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
+        t=1628695703; bh=Y4ULleic4sLidZQr1bzS1iGOtw+QruSKGl5LtE0tSF0=;
+        h=From:To:Cc:Subject:Date;
+        b=Eb/Ulj1viguUt+K4SSc8jdRdpmH76HYb+5yNB/65dr/wFZMD8FAe+t0LDl8F+ePt6
+         5UdOUQAwWdKUm4suDCYPAc78FR/YQUOem7s5UOCvmL5MyTS1/N/Q4WAzeV63MjmCDy
+         c5G1hHNtS/4ah+e7IOMCODxvabpXpeEzD7Omc0Rc=
+X-Virus-Scanned: Debian amavisd-new at mail.akkea.ca
+Received: from node.akkea.ca ([127.0.0.1])
+        by localhost (mail.akkea.ca [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id xQ8an2An3ZS9; Wed, 11 Aug 2021 15:28:23 +0000 (UTC)
+Received: from midas.localdomain (S0106788a2041785e.gv.shawcable.net [70.66.86.75])
+        by node.akkea.ca (Postfix) with ESMTPSA id 0E95D55E344;
+        Wed, 11 Aug 2021 15:28:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
+        t=1628695703; bh=Y4ULleic4sLidZQr1bzS1iGOtw+QruSKGl5LtE0tSF0=;
+        h=From:To:Cc:Subject:Date;
+        b=Eb/Ulj1viguUt+K4SSc8jdRdpmH76HYb+5yNB/65dr/wFZMD8FAe+t0LDl8F+ePt6
+         5UdOUQAwWdKUm4suDCYPAc78FR/YQUOem7s5UOCvmL5MyTS1/N/Q4WAzeV63MjmCDy
+         c5G1hHNtS/4ah+e7IOMCODxvabpXpeEzD7Omc0Rc=
+From:   Angus Ainslie <angus@akkea.ca>
+To:     kernel@puri.sm
+Cc:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, Angus Ainslie <angus@akkea.ca>
+Subject: [PATCH v2 0/3] Add BCM43752 chipset support
+Date:   Wed, 11 Aug 2021 08:28:01 -0700
+Message-Id: <20210811152804.2379405-1-angus@akkea.ca>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210811105541.43426-1-emmanuel.grumbach@intel.com>
-References: <20210811105541.43426-1-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the vendor commands that must be used by the network manager
-to allow proper operation of iwlmei.
+The SparkLan AP6275 SDIO M.2 card contains a BCM43752 based module and these
+patches were tested with that card.
 
-* Send information on the AP CSME is connected to
-* Notify the userspace when roaming is forbidden
-* Allow the userspace to require ownership
+This was tested on the 5.13 kernel with a minor substition BRCMF_FW_DEF for
+BRCMF_FW_CLM_DEF.
 
-Co-Developed-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-v6: remove the VENDOR_CMDS Kconfig option and make the whole infra
-    depend on IWLMEI directly
----
- .../net/wireless/intel/iwlwifi/mvm/Makefile   |   1 +
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   2 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  15 +-
- .../wireless/intel/iwlwifi/mvm/vendor-cmd.c   | 176 ++++++++++++++++++
- 4 files changed, 185 insertions(+), 9 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
+It should apply and build on the wireless-next branch.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-index 75fc2d935e5d..11e814b7cad0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-@@ -10,5 +10,6 @@ iwlmvm-y += rfi.o
- iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o debugfs-vif.o
- iwlmvm-$(CONFIG_IWLWIFI_LEDS) += led.o
- iwlmvm-$(CONFIG_PM) += d3.o
-+iwlmvm-$(CONFIG_IWLMEI) += vendor-cmd.o
- 
- ccflags-y += -I $(srctree)/$(src)/../
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6c446dbb04bc..463af179f439 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -719,6 +719,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		wiphy_ext_feature_set(hw->wiphy,
- 				      NL80211_EXT_FEATURE_PROTECTED_TWT);
- 
-+	iwl_mvm_vendor_cmds_register(mvm);
-+
- 	hw->wiphy->available_antennas_tx = iwl_mvm_get_valid_tx_ant(mvm);
- 	hw->wiphy->available_antennas_rx = iwl_mvm_get_valid_rx_ant(mvm);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index e5b369e5874a..402851ba9565 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1952,16 +1952,16 @@ void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm);
- int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm);
- int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget);
- 
--#ifdef CONFIG_IWLMVM_VENDOR_CMDS
-+#if IS_ENABLED(CONFIG_IWLMEI)
- 
- /* vendor commands */
- void iwl_mvm_vendor_cmds_register(struct iwl_mvm *mvm);
- 
--#else // IWLMVM_VENDOR_CMDS
-+#else // CONFIG_IWLMEI
- 
- static inline void iwl_mvm_vendor_cmds_register(struct iwl_mvm *mvm) {}
- 
--#endif // IWLMVM_VENDOR_CMDS
-+#endif // CONFIG_IWLMEI
- 
- /* Location Aware Regulatory */
- struct iwl_mcc_update_resp *
-@@ -2216,11 +2216,8 @@ static inline void iwl_mvm_mei_set_sw_rfkill_state(struct iwl_mvm *mvm, bool sw_
- 		iwl_mei_set_rfkill_state(iwl_mvm_is_radio_killed(mvm), sw_rfkill);
- }
- 
--static inline void iwl_mvm_send_roaming_forbidden_event(struct iwl_mvm *mvm,
--							struct ieee80211_vif *vif,
--							bool forbidden)
--{
--	/* TODO */
--}
-+void iwl_mvm_send_roaming_forbidden_event(struct iwl_mvm *mvm,
-+					  struct ieee80211_vif *vif,
-+					  bool forbidden);
- 
- #endif /* __IWL_MVM_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c b/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
-new file mode 100644
-index 000000000000..947acedca99d
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
-@@ -0,0 +1,176 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-+ * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-+ * Copyright (C) 2016-2017 Intel Deutschland GmbH
-+ */
-+#include "mvm.h"
-+#include <linux/nl80211-vnd-intel.h>
-+
-+static const struct nla_policy
-+iwl_mvm_vendor_attr_policy[NUM_IWL_MVM_VENDOR_ATTR] = {
-+	[IWL_MVM_VENDOR_ATTR_ROAMING_FORBIDDEN] = { .type = NLA_U8 },
-+	[IWL_MVM_VENDOR_ATTR_AUTH_MODE] = { .type = NLA_U32 },
-+	[IWL_MVM_VENDOR_ATTR_CHANNEL_NUM] = { .type = NLA_U8 },
-+	[IWL_MVM_VENDOR_ATTR_SSID] = { .type = NLA_BINARY,
-+				       .len = IEEE80211_MAX_SSID_LEN },
-+	[IWL_MVM_VENDOR_ATTR_BAND] = { .type = NLA_U8 },
-+	[IWL_MVM_VENDOR_ATTR_COLLOC_CHANNEL] = { .type = NLA_U8 },
-+	[IWL_MVM_VENDOR_ATTR_COLLOC_ADDR] = { .type = NLA_BINARY, .len = ETH_ALEN },
-+};
-+
-+__maybe_unused static struct nlattr **
-+iwl_mvm_parse_vendor_data(const void *data, int data_len)
-+{
-+	struct nlattr **tb;
-+	int err;
-+
-+	if (!data)
-+		return ERR_PTR(-EINVAL);
-+
-+	tb = kcalloc(MAX_IWL_MVM_VENDOR_ATTR + 1, sizeof(*tb), GFP_KERNEL);
-+	if (!tb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	err = nla_parse(tb, MAX_IWL_MVM_VENDOR_ATTR, data, data_len,
-+			iwl_mvm_vendor_attr_policy, NULL);
-+	if (err) {
-+		kfree(tb);
-+		return ERR_PTR(err);
-+	}
-+
-+	return tb;
-+}
-+
-+static int iwl_mvm_vendor_get_csme_conn_info(struct wiphy *wiphy,
-+					     struct wireless_dev *wdev,
-+					     const void *data, int data_len)
-+{
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct iwl_mvm_csme_conn_info *csme_conn_info;
-+	struct sk_buff *skb;
-+	int err = 0;
-+
-+	mutex_lock(&mvm->mutex);
-+	csme_conn_info = iwl_mvm_get_csme_conn_info(mvm);
-+
-+	if (!csme_conn_info) {
-+		err = -EINVAL;
-+		goto out_unlock;
-+	}
-+
-+	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, 200);
-+	if (!skb) {
-+		err = -ENOMEM;
-+		goto out_unlock;
-+	}
-+
-+	if (nla_put_u32(skb, IWL_MVM_VENDOR_ATTR_AUTH_MODE,
-+			csme_conn_info->conn_info.auth_mode) ||
-+	    nla_put(skb, IWL_MVM_VENDOR_ATTR_SSID,
-+		    csme_conn_info->conn_info.ssid_len,
-+		    csme_conn_info->conn_info.ssid) ||
-+	    nla_put_u32(skb, IWL_MVM_VENDOR_ATTR_STA_CIPHER,
-+			csme_conn_info->conn_info.pairwise_cipher) ||
-+	    nla_put_u8(skb, IWL_MVM_VENDOR_ATTR_CHANNEL_NUM,
-+		       csme_conn_info->conn_info.channel) ||
-+	    nla_put(skb, IWL_MVM_VENDOR_ATTR_ADDR, ETH_ALEN,
-+		    csme_conn_info->conn_info.bssid)) {
-+		kfree_skb(skb);
-+		err = -ENOBUFS;
-+	}
-+
-+out_unlock:
-+	mutex_unlock(&mvm->mutex);
-+	if (err)
-+		return err;
-+
-+	return cfg80211_vendor_cmd_reply(skb);
-+}
-+
-+static int iwl_mvm_vendor_host_get_ownership(struct wiphy *wiphy,
-+					     struct wireless_dev *wdev,
-+					     const void *data, int data_len)
-+{
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	mutex_lock(&mvm->mutex);
-+	iwl_mvm_mei_get_ownership(mvm);
-+	mutex_unlock(&mvm->mutex);
-+
-+	return 0;
-+}
-+
-+static const struct wiphy_vendor_command iwl_mvm_vendor_commands[] = {
-+	{
-+		.info = {
-+			.vendor_id = INTEL_OUI,
-+			.subcmd = IWL_MVM_VENDOR_CMD_GET_CSME_CONN_INFO,
-+		},
-+		.doit = iwl_mvm_vendor_get_csme_conn_info,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV,
-+		.policy = iwl_mvm_vendor_attr_policy,
-+		.maxattr = MAX_IWL_MVM_VENDOR_ATTR,
-+	},
-+	{
-+		.info = {
-+			.vendor_id = INTEL_OUI,
-+			.subcmd = IWL_MVM_VENDOR_CMD_HOST_GET_OWNERSHIP,
-+		},
-+		.doit = iwl_mvm_vendor_host_get_ownership,
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV,
-+		.policy = iwl_mvm_vendor_attr_policy,
-+		.maxattr = MAX_IWL_MVM_VENDOR_ATTR,
-+	},
-+};
-+
-+enum iwl_mvm_vendor_events_idx {
-+        /* 0x0 - 0x3 are deprecated */
-+        IWL_MVM_VENDOR_EVENT_IDX_ROAMING_FORBIDDEN = 4,
-+        NUM_IWL_MVM_VENDOR_EVENT_IDX
-+};
-+
-+static const struct nl80211_vendor_cmd_info
-+iwl_mvm_vendor_events[NUM_IWL_MVM_VENDOR_EVENT_IDX] = {
-+	[IWL_MVM_VENDOR_EVENT_IDX_ROAMING_FORBIDDEN] = {
-+		.vendor_id = INTEL_OUI,
-+		.subcmd = IWL_MVM_VENDOR_CMD_ROAMING_FORBIDDEN_EVENT,
-+	},
-+};
-+
-+void iwl_mvm_vendor_cmds_register(struct iwl_mvm *mvm)
-+{
-+	mvm->hw->wiphy->vendor_commands = iwl_mvm_vendor_commands;
-+	mvm->hw->wiphy->n_vendor_commands = ARRAY_SIZE(iwl_mvm_vendor_commands);
-+	mvm->hw->wiphy->vendor_events = iwl_mvm_vendor_events;
-+	mvm->hw->wiphy->n_vendor_events = ARRAY_SIZE(iwl_mvm_vendor_events);
-+}
-+
-+void iwl_mvm_send_roaming_forbidden_event(struct iwl_mvm *mvm,
-+					  struct ieee80211_vif *vif,
-+					  bool forbidden)
-+{
-+	struct sk_buff *msg =
-+		cfg80211_vendor_event_alloc(mvm->hw->wiphy,
-+					    ieee80211_vif_to_wdev(vif),
-+					    200, IWL_MVM_VENDOR_EVENT_IDX_ROAMING_FORBIDDEN,
-+					    GFP_ATOMIC);
-+	if (!msg)
-+		return;
-+
-+	if (WARN_ON(!vif))
-+		return;
-+
-+	if (nla_put(msg, IWL_MVM_VENDOR_ATTR_VIF_ADDR,
-+		    ETH_ALEN, vif->addr) ||
-+	    nla_put_u8(msg, IWL_MVM_VENDOR_ATTR_ROAMING_FORBIDDEN, forbidden))
-+		goto nla_put_failure;
-+
-+	cfg80211_vendor_event(msg, GFP_ATOMIC);
-+	return;
-+
-+ nla_put_failure:
-+	kfree_skb(msg);
-+}
+Changes since v1:
+
+Add bluetooth patchram definition
+
+Angus Ainslie (3):
+  brcmfmac: add 43752 device ids
+  brcmfmac: add initializers for the 43752
+  brcmfmac: add patch ram for bluetooth
+
+ drivers/bluetooth/btbcm.c                                 | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 3 +++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 8 ++++++--
+ .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
+ include/linux/mmc/sdio_ids.h                              | 1 +
+ 6 files changed, 13 insertions(+), 2 deletions(-)
+
 -- 
 2.25.1
 
