@@ -2,127 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FF0AC432BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 15:28:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EF57C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 16:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3BC060232
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 15:28:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4029060E93
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Aug 2021 16:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233149AbhHKP2t (ORCPT
+        id S229811AbhHKQTq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Aug 2021 11:28:49 -0400
-Received: from li1434-30.members.linode.com ([45.33.107.30]:46088 "EHLO
-        node.akkea.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233160AbhHKP2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Aug 2021 11:28:48 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by node.akkea.ca (Postfix) with ESMTP id 5CC6E55E34D;
-        Wed, 11 Aug 2021 15:28:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
-        t=1628695704; bh=O98D6e2zuTrCXi+7B0oHeZQ4GwBBnRrpI8nf9qZQer8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=uKl697+35YZZMlluLsxqIMymboMD6wEuxHJSqCVRGyWBPEJZhLoD4MEW1nZoiYP0+
-         EJ1Ia/Ww9S3Y7MpqwJTkpvfSJU6Og3at5s0IeaAL7X7D8MfYkQhOcoIbP5ywh9KBJS
-         LH4obxgb5pD8a6BELq2ipuiSYG1R5/dkKeu79g8w=
-X-Virus-Scanned: Debian amavisd-new at mail.akkea.ca
-Received: from node.akkea.ca ([127.0.0.1])
-        by localhost (mail.akkea.ca [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id BmvMCzgaRZc8; Wed, 11 Aug 2021 15:28:24 +0000 (UTC)
-Received: from midas.localdomain (S0106788a2041785e.gv.shawcable.net [70.66.86.75])
-        by node.akkea.ca (Postfix) with ESMTPSA id C3EB455E34F;
-        Wed, 11 Aug 2021 15:28:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akkea.ca; s=mail;
-        t=1628695704; bh=O98D6e2zuTrCXi+7B0oHeZQ4GwBBnRrpI8nf9qZQer8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=uKl697+35YZZMlluLsxqIMymboMD6wEuxHJSqCVRGyWBPEJZhLoD4MEW1nZoiYP0+
-         EJ1Ia/Ww9S3Y7MpqwJTkpvfSJU6Og3at5s0IeaAL7X7D8MfYkQhOcoIbP5ywh9KBJS
-         LH4obxgb5pD8a6BELq2ipuiSYG1R5/dkKeu79g8w=
-From:   Angus Ainslie <angus@akkea.ca>
-To:     kernel@puri.sm
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, Angus Ainslie <angus@akkea.ca>
-Subject: [PATCH v2 2/3] brcmfmac: add initializers for the 43752
-Date:   Wed, 11 Aug 2021 08:28:03 -0700
-Message-Id: <20210811152804.2379405-3-angus@akkea.ca>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210811152804.2379405-1-angus@akkea.ca>
-References: <20210811152804.2379405-1-angus@akkea.ca>
+        Wed, 11 Aug 2021 12:19:46 -0400
+Received: from mail-40134.protonmail.ch ([185.70.40.134]:53390 "EHLO
+        mail-40134.protonmail.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229473AbhHKQTp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Aug 2021 12:19:45 -0400
+Date:   Wed, 11 Aug 2021 16:19:19 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail; t=1628698760;
+        bh=HzJlQKp2vEDcv5QHMFvxuwBRR+J+RG73R9ydHLvkdSw=;
+        h=Date:To:From:Reply-To:Subject:In-Reply-To:References:From;
+        b=WPcKX8AXN0ZhI3k5zxirbne+eMxEaYWqGwTacFay3LCzTrnEecDbWXXqKvxsufKjW
+         bGBWd9wrKOWur/edfb/p1FT9MpjOfGvrL1q6HMOwD1A5JAMX0cAbhBy4id6ut5iE0J
+         v6nRXVLgnF+py9SYrCKXsqVgy2EwttMzhZbvz5LM=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Michael Yartys <michael.yartys@protonmail.com>
+Reply-To: Michael Yartys <michael.yartys@protonmail.com>
+Subject: Re: Not able to roam on FT-SAE network
+Message-ID: <V0_IPYc_Npfn1PZUsG4j0O18IfrVvtou6oKpNYuaij5nYWJ1q8IALf7_C2trQiys9MSGzAPM22bxZAAPB2GbONz4Em5xGA116mR2N80qpV4=@protonmail.com>
+In-Reply-To: <NB-cdP_zWop55KKgEYOXNh25URknq08i4hqQ2mRF9aVBi6YFIlJaYIk9pg1ewyJY7hLC1x8mtEFX5WyutbN3YZRoyaJMvOpn7MH2GsUTv7o=@protonmail.com>
+References: <NB-cdP_zWop55KKgEYOXNh25URknq08i4hqQ2mRF9aVBi6YFIlJaYIk9pg1ewyJY7hLC1x8mtEFX5WyutbN3YZRoyaJMvOpn7MH2GsUTv7o=@protonmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the firmware mapping structures for the BRCM43752 chipset.
-The 43752 needs some things setup similar to the 43012 chipset.
-The WATERMARK shows better performance when initialized to the 4373 value.
+Hi
 
-Signed-off-by: Angus Ainslie <angus@akkea.ca>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 8 ++++++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
+I did a packet capture and I found out that what happens is that the client=
+ attempts to authenticate with fast transition, but the AP rejects the requ=
+est due to an invalid PMKID. What's interesting is that my iPad causes the =
+same behaviour, which might indicate that the problem lies with hostapd rat=
+her than the client implementations. I'll post this on the hostapd mailing =
+list as well.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index c9954da6c5cd..cc41ba5421f4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1413,6 +1413,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- 		reg = chip->ops->read32(chip->ctx, addr);
- 		return (reg & CC_SR_CTL0_ENABLE_MASK) != 0;
- 	case BRCM_CC_4359_CHIP_ID:
-+	case CY_CC_43752_CHIP_ID:
- 	case CY_CC_43012_CHIP_ID:
- 		addr = CORE_CC_REG(pmu->base, retention_ctl);
- 		reg = chip->ops->read32(chip->ctx, addr);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 97ee9e2e2e35..84d8ddff2aef 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -624,6 +624,7 @@ BRCMF_FW_CLM_DEF(4356, "brcmfmac4356-sdio");
- BRCMF_FW_DEF(4359, "brcmfmac4359-sdio");
- BRCMF_FW_CLM_DEF(4373, "brcmfmac4373-sdio");
- BRCMF_FW_CLM_DEF(43012, "brcmfmac43012-sdio");
-+BRCMF_FW_CLM_DEF(43752, "brcmfmac43752-sdio");
- 
- /* firmware config files */
- MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.txt");
-@@ -650,7 +651,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
- 	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
- 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
--	BRCMF_FW_ENTRY(CY_CC_43012_CHIP_ID, 0xFFFFFFFF, 43012)
-+	BRCMF_FW_ENTRY(CY_CC_43012_CHIP_ID, 0xFFFFFFFF, 43012),
-+	BRCMF_FW_ENTRY(CY_CC_43752_CHIP_ID, 0xFFFFFFFF, 43752)
- };
- 
- #define TXCTL_CREDITS	2
-@@ -3416,7 +3418,8 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 
- static bool brcmf_sdio_aos_no_decode(struct brcmf_sdio *bus)
- {
--	if (bus->ci->chip == CY_CC_43012_CHIP_ID)
-+	if (bus->ci->chip == CY_CC_43012_CHIP_ID ||
-+	    bus->ci->chip == CY_CC_43752_CHIP_ID)
- 		return true;
- 	else
- 		return false;
-@@ -4257,6 +4260,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 
- 		switch (sdiod->func1->device) {
- 		case SDIO_DEVICE_ID_BROADCOM_CYPRESS_4373:
-+		case SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752:
- 			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
- 				  CY_4373_F2_WATERMARK);
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
--- 
-2.25.1
+Michael
 
+=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90 Original Me=
+ssage =E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90
+
+On Tuesday, August 10th, 2021 at 21:59, Michael Yartys <michael.yartys@prot=
+onmail.com> wrote:
+
+> Hi
+>
+> I've been running an FT-SAE network for quite some time now, and I've lon=
+g noticed that my both my laptops with Intel 7260AC cards are unable to roa=
+m from one AP to another. When I move the laptops to an area with poor sign=
+al strength the background scanning of NetworkManager/hostapd is triggered =
+as expected and a roam appears to be initiated, but instead of successfully=
+ roaming to the other AP with better signal strength it ends up returning t=
+o the current AP. This keeps on happening until I either manually disable a=
+nd re-enable wifi, or if I move back to an area where the current AP has go=
+od signal strength. The laptops are running the following distros, kernels =
+and wpa_supplicant versions:
+>
+> -- Laptop 1 --
+>
+> -   Fedora 34
+> -   5.13.8-200
+> -   wpa_supplicant v2.9
+>
+>     -- Laptop 2 --
+> -   Ubuntu 20.04.2 LTS
+> -   5.11.0-25
+> -   wpa_supplicant v2.10-devel-hostap_2_9-2285-gc3155a725 (recent snapsho=
+t)
+>
+>     I can provide relevant logs from wpa_supplicant and the APs to develo=
+pers personally.
+>
+>     Michael
