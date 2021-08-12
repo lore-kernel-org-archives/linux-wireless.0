@@ -2,432 +2,178 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0CBC4320A
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 21:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F34E5C4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 22:25:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DA2960ED5
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 21:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7772610A4
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 22:25:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229655AbhHLVFA (ORCPT
+        id S238251AbhHLWZx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Aug 2021 17:05:00 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:55488 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234166AbhHLVE7 (ORCPT
+        Thu, 12 Aug 2021 18:25:53 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:46356 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233901AbhHLWZv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Aug 2021 17:04:59 -0400
-X-UUID: 8d0ecd04f6f6420dbf2687c5d0a5b87e-20210813
-X-UUID: 8d0ecd04f6f6420dbf2687c5d0a5b87e-20210813
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 733950239; Fri, 13 Aug 2021 05:04:29 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 13 Aug 2021 05:04:28 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 13 Aug 2021 05:04:28 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 2/3] mt76: mt7915: rework .set_bitrate_mask() to support more options
-Date:   Fri, 13 Aug 2021 05:04:25 +0800
-Message-ID: <94a371579db2c2c18f18984ad5b3f06cb642c68a.1628799602.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <1c3fc7ff6d5ab129a58160cd878787d9fbeba9c2.1628799602.git.ryder.lee@mediatek.com>
-References: <1c3fc7ff6d5ab129a58160cd878787d9fbeba9c2.1628799602.git.ryder.lee@mediatek.com>
+        Thu, 12 Aug 2021 18:25:51 -0400
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210812222523epoutp0112726bfbc26a119e4b9d053367f8139e~ar3MEgOQe0616506165epoutp01d
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Aug 2021 22:25:23 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210812222523epoutp0112726bfbc26a119e4b9d053367f8139e~ar3MEgOQe0616506165epoutp01d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1628807123;
+        bh=uGMImXLROuaXIlRM3ziE5kD/gMKtk73S5JDnGjDptSE=;
+        h=Subject:From:To:Date:In-Reply-To:References:From;
+        b=u/Ihj0/SU2iAsEnLHyacaTjw1E+qf0TRGTo/8q0Qyuu5bNZFHjtG0uhfh2b49KvWH
+         vy7n+cW2WK0aKuzFAq4mcUOdWoxE9uMPG9IJJJOsr6aWM6geWosg1EgUchMcZ14xrt
+         n1BbyNrKLTVIKq2YFk6MvyQYQzGLsCCgsBtoAWHg=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas1p3.samsung.com (KnoxPortal) with ESMTP id
+        20210812222523epcas1p3a2332b70096a521c8e22279f77ec6499~ar3LXhV2q2702527025epcas1p3M;
+        Thu, 12 Aug 2021 22:25:23 +0000 (GMT)
+Received: from epsmges1p1.samsung.com (unknown [182.195.40.155]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Gm1Tq5phWz4x9Pq; Thu, 12 Aug
+        2021 22:25:19 +0000 (GMT)
+Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
+        epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1B.9D.45479.FCF95116; Fri, 13 Aug 2021 07:25:19 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20210812222518epcas1p10a9de28c1dbbcadf244c58326776f3ce~ar3HnLVel2953529535epcas1p1C;
+        Thu, 12 Aug 2021 22:25:18 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20210812222518epsmtrp267773e085daef1d60b6bf840e597e402~ar3HmQE7c0661306613epsmtrp2D;
+        Thu, 12 Aug 2021 22:25:18 +0000 (GMT)
+X-AuditID: b6c32a35-cbfff7000001b1a7-35-61159fcf2317
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        68.35.08394.ECF95116; Fri, 13 Aug 2021 07:25:18 +0900 (KST)
+Received: from [10.113.113.235] (unknown [10.113.113.235]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20210812222518epsmtip28690c13cb8259cce15c7e3ff63daf580~ar3HSooDE2229922299epsmtip2h;
+        Thu, 12 Aug 2021 22:25:18 +0000 (GMT)
+Subject: Re: [PATCH] iwlwifi Add support for ax201 in Samsung Galaxy Book
+ Flex2 Alpha
+From:   Jaehoon Chung <jh80.chung@samsung.com>
+To:     Justin Forbes <jmforbes@linuxtx.org>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matti Gottlieb <matti.gottlieb@intel.com>,
+        ybaruch <yaara.baruch@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ihab Zhaika <ihab.zhaika@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-wireless@vger.kernel.org,
+        "open list:BPF (Safe dynamic programs and tools)" 
+        <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        yj99.shin@samsung.com
+Message-ID: <94edb3c4-43a6-1031-8431-2befb0eca2bf@samsung.com>
+Date:   Fri, 13 Aug 2021 07:26:06 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+        Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <8c55c7c9-a5ae-3b0e-8a0f-8954a8da7e7b@samsung.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCJsWRmVeSWpSXmKPExsWy7bCmru75+aKJBlNeaFjMOd/CYtG67S6r
+        xaPX25gtHmy+y2TxaMUsdosL2/pYLRatXMhmcXnXHDaLNyvusFsc3rqAyWJOyzlmi2MLxCzm
+        b3vEaHHozkJmBz6Py329TB5bVt5k8li85yWTx6ZVnWwe03c4ePRtWcXo8XmTXAB7VLZNRmpi
+        SmqRQmpecn5KZl66rZJ3cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtDFSgpliTmlQKGA
+        xOJiJX07m6L80pJUhYz84hJbpdSClJwCywK94sTc4tK8dL3k/FwrQwMDI1OgwoTsjDftVxkL
+        TnBU7Og8zNTAeJqti5GDQ0LARGJHX1QXIxeHkMAORon27mWMEM4nRoltRx+wQTjfGCXuL93F
+        2sXICdax4usTdojEXkaJO+cnsEI47xklLrw7yA5SJSwQLnHp/RUWEJtNQEdi+7fjTCC2iMAh
+        FomFb7NBbF4BO4lNU+cygtgsAqoS8xbMYQOxRQUiJc7vXsACUSMocXLmEzCbU8Be4tz2C8wg
+        NrOAuMStJ/OZIGx5ie1v5zCDHCEhcIBDYtORWcwQp7pIrL97jQ3CFpZ4dXwLO4QtJfH53V6o
+        eLXEruYzUM0djBK3tjUxQSSMJfYvncwECiVmAU2J9bv0IcKKEjt/QxzNLMAn8e5rDyskIHkl
+        OtqEIEpUJC69fskEs+ruk//QkPOQmDNvMwsksCYwSbS9OMU4gVFhFpI/ZyH5bRaS32YhXLGA
+        kWUVo1hqQXFuemqxYYEhcnRvYgQnZy3THYwT337QO8TIxMF4iFGCg1lJhHennFCiEG9KYmVV
+        alF+fFFpTmrxIUZTYMhPZJYSTc4H5oe8knhDUyNjY2MLE0MzU0NDJXHeb7FfE4QE0hNLUrNT
+        UwtSi2D6mDg4pRqYdLVfMXfsOCTyV3VyzdEj+ryi7/tWFssE+Oz9emX6Z8e/paFxj9NqvW6t
+        Lv3M/0NEMiP6X4nojUbfWe4T3v3b8Ksw6WfabvfdGjPrDXmaMt6989+8fBlD0IMNv6b+nv18
+        26ywojtn6/7Y/12aFH336ILn/jOUiyJOveuYwx8UsDZFwrXZ8dP6lRWqxclHq88fkxZuPrOv
+        lOOX5jbN7oot1o9zPLT2J/z+N72pu3GPbnZl+hS320duPZu08k+X56VnUb9bl8U4f7ayj5n1
+        wCm3p0bp972I9Zqmc/8Xstjsv/31wMGGRSdK1tcvM3Ar3P2wZgtPkKXobTYrZbPqnY4Tgq4m
+        sb1g3Mlx3PK615HwR0osxRmJhlrMRcWJAAsRFRpXBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKIsWRmVeSWpSXmKPExsWy7bCSvO65+aKJBrO6jSzmnG9hsWjddpfV
+        4tHrbcwWDzbfZbJ4tGIWu8WFbX2sFotWLmSzuLxrDpvFmxV32C0Ob13AZDGn5RyzxbEFYhbz
+        tz1itDh0ZyGzA5/H5b5eJo8tK28yeSze85LJY9OqTjaP6TscPPq2rGL0+LxJLoA9issmJTUn
+        syy1SN8ugSvjTftVxoITHBU7Og8zNTCeZuti5OSQEDCRWPH1CTuILSSwm1HiZpsIRFxK4vPT
+        qUA1HEC2sMThw8UQJW8ZJa58qgexhQXCJS69v8ICYrMJ6Ehs/3acqYuRi0NE4BCLxMtfT5hB
+        HCGBCUwSb3Y+Ywap4hWwk9g0dS4jiM0ioCoxb8EcsCNEBSIlPi94xQpRIyhxcuYTsKmcAvYS
+        57ZfAOtlFlCX+DPvEpQtLnHryXwmCFteYvvbOcwTGAVnIWmfhaRlFpKWWUhaFjCyrGKUTC0o
+        zk3PLTYsMMxLLdcrTswtLs1L10vOz93ECI45Lc0djNtXfdA7xMjEwXiIUYKDWUmEd6ecUKIQ
+        b0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotgskwcnFINTC7xPotK87hL
+        b2Qszev7kC8z2WJPooJOjpBklNGxZS95FumZ5+4L4wkL+vmpWCqu8uYm/+55FovfleyIz5E1
+        jCjgdk5zncAXP+1sSZL76SlmWZaPH+7sDeooXD4/Qml77kQrZTO9B7MnXsqwCmd/VeruP8di
+        UsnVzTslmLMevXNjn17dZl/Ct63e8PYLt/U9y1gkNtT/VAqN1f+66JPLnducd29l+Nh4Ld2o
+        tm2G8qGrzUtMFjB/Y+j0XV721cNqmXnYs/0lGqG1zacb+Nd7Vmx92yvbtPuh8cSioCeLShm6
+        D3166Ryte7Zoit+uJ0vPV4oylp6eIv+oeu2nPd810lbIGx1aVr970okPBgVJSizFGYmGWsxF
+        xYkAQYCyfCgDAAA=
+X-CMS-MailID: 20210812222518epcas1p10a9de28c1dbbcadf244c58326776f3ce
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210709173244epcas1p3ea6488202595e182d45f59fcba695e0a
+References: <20210702223155.1981510-1-jforbes@fedoraproject.org>
+        <CGME20210709173244epcas1p3ea6488202595e182d45f59fcba695e0a@epcas1p3.samsung.com>
+        <CAFxkdApGUeGdg4=rH=iC2SK58FO6yzbFiq3uSFMFTyZsDQ5j5w@mail.gmail.com>
+        <8c55c7c9-a5ae-3b0e-8a0f-8954a8da7e7b@samsung.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With this patch, driver can support single rate, (HE)GI and HE_LTF
-configuration through .set_bitrate_mask().
+Hi
 
-Tested-by: MeiChia Chiu <meichia.chiu@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |   2 +-
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  32 ++--
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 148 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  16 +-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   5 +
- 5 files changed, 175 insertions(+), 28 deletions(-)
+On 8/9/21 8:09 AM, Jaehoon Chung wrote:
+> Hi
+> 
+> On 7/10/21 2:32 AM, Justin Forbes wrote:
+>> On Fri, Jul 2, 2021 at 5:32 PM Justin M. Forbes
+>> <jforbes@fedoraproject.org> wrote:
+>>>
+>>> The Samsung Galaxy Book Flex2 Alpha uses an ax201 with the ID a0f0/6074.
+>>> This works fine with the existing driver once it knows to claim it.
+>>> Simple patch to add the device.
+>>>
+>>> Signed-off-by: Justin M. Forbes <jforbes@fedoraproject.org>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 5349736eac73..0ed86cbf722b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -101,7 +101,7 @@ bool mt7915_mac_wtbl_update(struct mt7915_dev *dev, int idx, u32 mask)
- 			 0, 5000);
- }
- 
--static u32 mt7915_mac_wtbl_lmac_addr(struct mt7915_dev *dev, u16 wcid, u8 dw)
-+u32 mt7915_mac_wtbl_lmac_addr(struct mt7915_dev *dev, u16 wcid, u8 dw)
- {
- 	mt76_wr(dev, MT_WTBLON_TOP_WDUCR,
- 		FIELD_PREP(MT_WTBLON_TOP_WDUCR_GROUP, (wcid >> 7)));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 20b47ac33083..9f9ad3a75122 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -172,6 +172,9 @@ static void mt7915_init_bitrate_mask(struct ieee80211_vif *vif)
- 	int i;
- 
- 	for (i = 0; i < ARRAY_SIZE(mvif->bitrate_mask.control); i++) {
-+		mvif->bitrate_mask.control[i].gi = NL80211_TXRATE_DEFAULT_GI;
-+		mvif->bitrate_mask.control[i].he_gi = GENMASK(7, 0);
-+		mvif->bitrate_mask.control[i].he_ltf = GENMASK(7, 0);
- 		mvif->bitrate_mask.control[i].legacy = GENMASK(31, 0);
- 		memset(mvif->bitrate_mask.control[i].ht_mcs, GENMASK(7, 0),
- 		       sizeof(mvif->bitrate_mask.control[i].ht_mcs));
-@@ -952,7 +955,6 @@ static void mt7915_sta_rc_work(void *data, struct ieee80211_sta *sta)
- {
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct mt7915_dev *dev = msta->vif->phy->dev;
--	struct ieee80211_hw *hw = msta->vif->phy->mt76->hw;
- 	u32 *changed = data;
- 
- 	spin_lock_bh(&dev->sta_poll_lock);
-@@ -960,8 +962,6 @@ static void mt7915_sta_rc_work(void *data, struct ieee80211_sta *sta)
- 	if (list_empty(&msta->rc_list))
- 		list_add_tail(&msta->rc_list, &dev->sta_rc_list);
- 	spin_unlock_bh(&dev->sta_poll_lock);
--
--	ieee80211_queue_work(hw, &dev->rc_work);
- }
- 
- static void mt7915_sta_rc_update(struct ieee80211_hw *hw,
-@@ -969,7 +969,11 @@ static void mt7915_sta_rc_update(struct ieee80211_hw *hw,
- 				 struct ieee80211_sta *sta,
- 				 u32 changed)
- {
-+	struct mt7915_phy *phy = mt7915_hw_phy(hw);
-+	struct mt7915_dev *dev = phy->dev;
-+
- 	mt7915_sta_rc_work(&changed, sta);
-+	ieee80211_queue_work(hw, &dev->rc_work);
- }
- 
- static int
-@@ -977,22 +981,22 @@ mt7915_set_bitrate_mask(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			const struct cfg80211_bitrate_mask *mask)
- {
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	enum nl80211_band band = mvif->phy->mt76->chandef.chan->band;
--	u32 changed;
--
--	if (mask->control[band].gi == NL80211_TXRATE_FORCE_LGI)
--		return -EINVAL;
-+	struct mt7915_phy *phy = mt7915_hw_phy(hw);
-+	struct mt7915_dev *dev = phy->dev;
-+	u32 changed = IEEE80211_RC_SUPP_RATES_CHANGED;
- 
--	changed = IEEE80211_RC_SUPP_RATES_CHANGED;
- 	mvif->bitrate_mask = *mask;
- 
--	/* Update firmware rate control to add a boundary on top of table
--	 * to limit the rate selection for each peer, so when set bitrates
--	 * vht-mcs-5 1:9, which actually means nss = 1 mcs = 0~9. This only
--	 * applies to data frames as for the other mgmt, mcast, bcast still
--	 * use legacy rates as it is.
-+	/* if multiple rates across different preambles are given we can
-+	 * reconfigure this info with all peers using sta_rec command with
-+	 * the below exception cases.
-+	 * - single rate : if a rate is passed along with different preambles,
-+	 * we select the highest one as fixed rate. i.e VHT MCS for VHT peers.
-+	 * - multiple rates: if it's not in range format i.e 0-{7,8,9} for VHT
-+	 * then multiple MCS setting (MCS 4,5,6) is not supported.
- 	 */
- 	ieee80211_iterate_stations_atomic(hw, mt7915_sta_rc_work, &changed);
-+	ieee80211_queue_work(hw, &dev->rc_work);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 028ee5bb0532..dfe9b47c8f4e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2042,6 +2042,128 @@ mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	return 0;
- }
- 
-+int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   void *data, u32 field)
-+{
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
-+	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-+	struct sta_phy *phy = data;
-+	struct sta_rec_ra_fixed *ra;
-+	struct sk_buff *skb;
-+	struct tlv *tlv;
-+	int len = sizeof(struct sta_req_hdr) + sizeof(*ra);
-+
-+	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta, len);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	tlv = mt7915_mcu_add_tlv(skb, STA_REC_RA_UPDATE, sizeof(*ra));
-+	ra = (struct sta_rec_ra_fixed *)tlv;
-+
-+	switch (field) {
-+	case RATE_PARAM_AUTO:
-+		break;
-+	case RATE_PARAM_FIXED_MCS:
-+	case RATE_PARAM_FIXED_GI:
-+	case RATE_PARAM_FIXED_HE_LTF:
-+		ra->phy = *phy;
-+		break;
-+	default:
-+		break;
-+	}
-+	ra->field = cpu_to_le32(field);
-+
-+	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
-+				     MCU_EXT_CMD(STA_REC_UPDATE), true);
-+}
-+
-+static int
-+mt7915_mcu_add_rate_ctrl_fixed(struct mt7915_dev *dev,
-+			       struct ieee80211_vif *vif,
-+			       struct ieee80211_sta *sta)
-+{
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
-+	struct cfg80211_chan_def *chandef = &mvif->phy->mt76->chandef;
-+	struct cfg80211_bitrate_mask *mask = &mvif->bitrate_mask;
-+	enum nl80211_band band = chandef->chan->band;
-+	struct sta_phy phy = {};
-+	int ret, nrates;
-+
-+#define __sta_phy_bitrate_mask_check(_mcs, _gi, _he)				\
-+	do {									\
-+		u8 i, gi = (_he) ? mask->control[band]._gi :			\
-+			   mask->control[band]._gi == NL80211_TXRATE_FORCE_SGI;	\
-+		for (i = 0; i <= sta->bandwidth; i++) {				\
-+			phy.sgi |= gi << (i << (_he));				\
-+			phy.he_ltf |= mask->control[band].he_ltf << (i << (_he));\
-+		}								\
-+		for (i = 0; i < ARRAY_SIZE(mask->control[band]._mcs); i++) 	\
-+			nrates += hweight16(mask->control[band]._mcs[i]);  	\
-+		phy.mcs = ffs(mask->control[band]._mcs[0]) - 1;			\
-+	} while (0)
-+
-+	if (sta->he_cap.has_he) {
-+		__sta_phy_bitrate_mask_check(he_mcs, he_gi, 1);
-+	} else if (sta->vht_cap.vht_supported) {
-+		__sta_phy_bitrate_mask_check(vht_mcs, gi, 0);
-+	} else if (sta->ht_cap.ht_supported) {
-+		__sta_phy_bitrate_mask_check(ht_mcs, gi, 0);
-+	} else {
-+		nrates = hweight32(mask->control[band].legacy);
-+		phy.mcs = ffs(mask->control[band].legacy) - 1;
-+	}
-+#undef __sta_phy_bitrate_mask_check
-+
-+	/* fall back to auto rate control */
-+	if (mask->control[band].gi == NL80211_TXRATE_DEFAULT_GI &&
-+	    mask->control[band].he_gi == GENMASK(7, 0) &&
-+	    mask->control[band].he_ltf == GENMASK(7, 0) &&
-+	    nrates != 1)
-+		return 0;
-+
-+	/* fixed single rate */
-+	if (nrates == 1) {
-+		ret = mt7915_mcu_set_fixed_rate_ctrl(dev, vif, sta, &phy,
-+						     RATE_PARAM_FIXED_MCS);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/* fixed GI */
-+	if (mask->control[band].gi != NL80211_TXRATE_DEFAULT_GI ||
-+	    mask->control[band].he_gi != GENMASK(7, 0)) {
-+		struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-+		u32 addr;
-+
-+		/* firmware updates only TXCMD but doesn't take WTBL into
-+		 * account, so driver should update here to reflect the
-+		 * actual txrate hardware sends out.
-+		 */
-+		addr = mt7915_mac_wtbl_lmac_addr(dev, msta->wcid.idx, 7);
-+		if (sta->he_cap.has_he)
-+			mt76_rmw_field(dev, addr, GENMASK(31, 24), phy.sgi);
-+		else
-+			mt76_rmw_field(dev, addr, GENMASK(15, 12), phy.sgi);
-+
-+		ret = mt7915_mcu_set_fixed_rate_ctrl(dev, vif, sta, &phy,
-+						     RATE_PARAM_FIXED_GI);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/* fixed HE_LTF */
-+	if (mask->control[band].he_ltf != GENMASK(7, 0)) {
-+		ret = mt7915_mcu_set_fixed_rate_ctrl(dev, vif, sta, &phy,
-+						     RATE_PARAM_FIXED_HE_LTF);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static void
- mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 			     struct ieee80211_vif *vif, struct ieee80211_sta *sta)
-@@ -2084,8 +2206,6 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 	}
- 
- 	if (sta->ht_cap.ht_supported) {
--		const u8 *mcs_mask = mask->control[band].ht_mcs;
--
- 		ra->supp_mode |= MODE_HT;
- 		ra->af = sta->ht_cap.ampdu_factor;
- 		ra->ht_gf = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD);
-@@ -2103,12 +2223,12 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 		    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
- 			cap |= STA_CAP_LDPC;
- 
--		mt7915_mcu_set_sta_ht_mcs(sta, ra->ht_mcs, mcs_mask);
-+		mt7915_mcu_set_sta_ht_mcs(sta, ra->ht_mcs,
-+					  mask->control[band].ht_mcs);
- 		ra->supp_ht_mcs = *(__le32 *)ra->ht_mcs;
- 	}
- 
- 	if (sta->vht_cap.vht_supported) {
--		const u16 *mcs_mask = mask->control[band].vht_mcs;
- 		u8 af;
- 
- 		ra->supp_mode |= MODE_VHT;
-@@ -2129,7 +2249,8 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 		    (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC))
- 			cap |= STA_CAP_VHT_LDPC;
- 
--		mt7915_mcu_set_sta_vht_mcs(sta, ra->supp_vht_mcs, mcs_mask);
-+		mt7915_mcu_set_sta_vht_mcs(sta, ra->supp_vht_mcs,
-+					   mask->control[band].vht_mcs);
- 	}
- 
- 	if (sta->he_cap.has_he) {
-@@ -2146,7 +2267,7 @@ int mt7915_mcu_add_rate_ctrl(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct sk_buff *skb;
--	int len;
-+	int ret, len;
- 
- 	len = sizeof(struct sta_req_hdr) + sizeof(struct sta_rec_ra) +
- 	      sizeof(struct sta_rec_he);
-@@ -2161,10 +2282,21 @@ int mt7915_mcu_add_rate_ctrl(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	if (sta->he_cap.has_he && changed)
- 		mt7915_mcu_sta_he_tlv(skb, sta);
- 
-+	/* sta_rec_ra accommodates BW, NSS and only MCS range format
-+	 * i.e 0-{7,8,9} for VHT.
-+	 */
- 	mt7915_mcu_sta_rate_ctrl_tlv(skb, dev, vif, sta);
- 
--	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
--				     MCU_EXT_CMD(STA_REC_UPDATE), true);
-+	ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
-+				    MCU_EXT_CMD(STA_REC_UPDATE), true);
-+	if (ret)
-+		return ret;
-+
-+	/* sta_rec_ra_fixed accommodates single rate, (HE)GI and HE_LTE,
-+	 * and updates as peer fixed rate parameters, which overrides
-+	 * sta_rec_ra and firmware rate control algorithm.
-+	 */
-+	return mt7915_mcu_add_rate_ctrl_fixed(dev, vif, sta);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index 2b47cdf0fd17..64f06d4445fe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -871,7 +871,7 @@ struct sta_rec_sec {
- 	struct sec_key key[2];
- } __packed;
- 
--struct ra_phy {
-+struct sta_phy {
- 	u8 type;
- 	u8 flag;
- 	u8 stbc;
-@@ -915,7 +915,7 @@ struct sta_rec_ra {
- 
- 	__le32 sta_cap;
- 
--	struct ra_phy phy;
-+	struct sta_phy phy;
- } __packed;
- 
- struct sta_rec_ra_fixed {
-@@ -928,7 +928,7 @@ struct sta_rec_ra_fixed {
- 	u8 op_vht_rx_nss;
- 	u8 op_vht_rx_nss_type;
- 
--	struct ra_phy phy;
-+	struct sta_phy phy;
- 
- 	u8 spe_en;
- 	u8 short_preamble;
-@@ -936,8 +936,14 @@ struct sta_rec_ra_fixed {
- 	u8 mmps_mode;
- } __packed;
- 
--#define RATE_PARAM_FIXED		3
--#define RATE_PARAM_AUTO			20
-+enum {
-+	RATE_PARAM_FIXED = 3,
-+	RATE_PARAM_FIXED_HE_LTF = 7,
-+	RATE_PARAM_FIXED_MCS,
-+	RATE_PARAM_FIXED_GI = 11,
-+	RATE_PARAM_AUTO = 20,
-+};
-+
- #define RATE_CFG_MCS			GENMASK(3, 0)
- #define RATE_CFG_NSS			GENMASK(7, 4)
- #define RATE_CFG_GI			GENMASK(11, 8)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index f842452af897..477a8621550a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -333,6 +333,10 @@ int mt7915_mcu_set_tx(struct mt7915_dev *dev, struct ieee80211_vif *vif);
- int mt7915_mcu_update_edca(struct mt7915_dev *dev, void *req);
- int mt7915_mcu_set_fixed_rate(struct mt7915_dev *dev,
- 			      struct ieee80211_sta *sta, u32 rate);
-+int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   void *data, u32 field);
- int mt7915_mcu_set_eeprom(struct mt7915_dev *dev);
- int mt7915_mcu_get_eeprom(struct mt7915_dev *dev, u32 offset);
- int mt7915_mcu_set_mac(struct mt7915_dev *dev, int band, bool enable,
-@@ -392,6 +396,7 @@ static inline void mt7915_irq_disable(struct mt7915_dev *dev, u32 mask)
- 		mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
- }
- 
-+u32 mt7915_mac_wtbl_lmac_addr(struct mt7915_dev *dev, u16 wcid, u8 dw);
- bool mt7915_mac_wtbl_update(struct mt7915_dev *dev, int idx, u32 mask);
- void mt7915_mac_reset_counters(struct mt7915_phy *phy);
- void mt7915_mac_cca_stats_reset(struct mt7915_phy *phy);
--- 
-2.29.2
+If this patch is merged, can this patch be also applied on stable tree?
+
+Best Regards,
+Jaehoon Chung
+
+> 
+> 
+> Before sending patch, I have found same patch to solve the Wifi problem.
+> Is there any progress about this patch? 
+> 
+> I hope that this patch will be applied.
+> 
+> Reviewed-by: Jaehoon Chung <jh80.chung@samsung.com>
+> 
+> Best Regards,
+> Jaehoon Chung
+> 
+> 
+>>> ---
+>>
+>> Just an update from the user with this hardware that I built a test kernel for:
+>> "Still going strong w/ AX201, speed OK, on par w/ speeds on windows,
+>> no crashes, no weird messages about the driver."
+>>
+>> Justin
+>>
+> 
+> 
 
