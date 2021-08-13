@@ -2,209 +2,120 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA911C4338F
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 17:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E2A3C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 17:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F4C760295
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 17:46:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A274610A4
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 17:55:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229703AbhHMRqi (ORCPT
+        id S232025AbhHMRzj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Aug 2021 13:46:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54892 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbhHMRqe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Aug 2021 13:46:34 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E8CCC061756
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2021 10:46:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:Subject:From:References:To:Sender:Reply-To:Cc:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=8YrbaCWBN6o2dZTIsmftPtA1nwsbp5/jkn8U66mIBzU=; b=kKvGJj0nzH7svxAH/JHSmkGj80
-        mcgRH/BKS17Ik3Vl85EOGWmUnIP/OMEZIggwS5Ug8PSMkvAO+NxxbZf8Ppded7Bs5tx2+Xs6aFszy
-        UyTKo06gpRD4eu7wGOxjzgbgDjXj++Z/k7dBmREfxX7j7F3/7fIaRI9vDi1izhbfLT/Q=;
-Received: from p4ff13206.dip0.t-ipconnect.de ([79.241.50.6] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1mEbFp-0003Lb-3w; Fri, 13 Aug 2021 19:46:01 +0200
-To:     Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-References: <20210804134505.3208-1-greearb@candelatech.com>
- <ec49f403-54d3-28e1-3ea8-811df0756b29@nbd.name>
- <0a7e7206-91c0-35a9-8935-20bc6283367f@candelatech.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v5 01/11] mt76: add hash lookup for skb on TXS status_list
-Message-ID: <d479d24c-87b4-51c3-8f07-d71480913f8f@nbd.name>
-Date:   Fri, 13 Aug 2021 19:46:00 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.13.0
+        Fri, 13 Aug 2021 13:55:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43466 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229944AbhHMRzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Aug 2021 13:55:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D881260EFE;
+        Fri, 13 Aug 2021 17:55:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628877304;
+        bh=eSU+ma0haKb2aIUsp/HJIzNk6roGALnzB8QN2POuuW8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Gp+R5/O+YZNgwjbJwcKEdlL4jwnjD1zMNc8tMlFvsCMSX8NyyUq+JCoeW2TsoFgaN
+         ZMvghvB7cZCk3pbB6K48ULDORiwWADVJImvMjrtI3L3D2pqdNywn6/C6nXiFP8WAbc
+         4GXoRdQztGp3Qv8OXd+0lagSa4ByrukVJhVc+4pP0zSnl8CiBsCtykiHMYhBTpq+pJ
+         bLaLPvX6PsZTlqaE22jVWQSFLxezv88+85qhjsv2GzSnxIUl77MvZ1nAbmuylwEdUY
+         kVeuryam7fQBw7pMaQTXLSIVAny278VEaSxm+M/iND0UiLpY6M4kHs7V9ifYyl3PjR
+         Y+tICLIRN5Jqw==
+Date:   Fri, 13 Aug 2021 10:55:03 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Yufeng Mo <moyufeng@huawei.com>
+Cc:     <davem@davemloft.net>, <netdev@vger.kernel.org>,
+        <shenjian15@huawei.com>, <lipeng321@huawei.com>,
+        <yisen.zhuang@huawei.com>, <linyunsheng@huawei.com>,
+        <huangguangbin2@huawei.com>, <chenhao288@hisilicon.com>,
+        <salil.mehta@huawei.com>, <linuxarm@huawei.com>,
+        <linuxarm@openeuler.org>, <dledford@redhat.com>, <jgg@ziepe.ca>,
+        <netanel@amazon.com>, <akiyano@amazon.com>,
+        <thomas.lendacky@amd.com>, <irusskikh@marvell.com>,
+        <michael.chan@broadcom.com>, <edwin.peer@broadcom.com>,
+        <rohitm@chelsio.com>, <jacob.e.keller@intel.com>,
+        <ioana.ciornei@nxp.com>, <vladimir.oltean@nxp.com>,
+        <sgoutham@marvell.com>, <sbhatta@marvell.com>, <saeedm@nvidia.com>,
+        <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
+        <merez@codeaurora.org>, <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC V3 net-next 1/4] ethtool: add two coalesce attributes for
+ CQE mode
+Message-ID: <20210813105503.600ad1cd@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <1628819129-23332-2-git-send-email-moyufeng@huawei.com>
+References: <1628819129-23332-1-git-send-email-moyufeng@huawei.com>
+        <1628819129-23332-2-git-send-email-moyufeng@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <0a7e7206-91c0-35a9-8935-20bc6283367f@candelatech.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-08-13 19:28, Ben Greear wrote:
-> On 8/13/21 9:50 AM, Felix Fietkau wrote:
->> 
->> On 2021-08-04 15:44, greearb@candelatech.com wrote:
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> This improves performance when sending lots of frames that
->>> are requesting being mapped to a TXS callback.
->>>
->>> Add comments to help next person understood the tx path
->>> better.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>> ---
->>>
->>> v5:  Rebased on top of previous series.
->>>
->>>   drivers/net/wireless/mediatek/mt76/mt76.h     | 48 +++++++---
->>>   .../net/wireless/mediatek/mt76/mt7603/mac.c   |  2 +-
->>>   .../net/wireless/mediatek/mt76/mt7615/mac.c   |  2 +-
->>>   .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  2 +-
->>>   .../net/wireless/mediatek/mt76/mt7915/mac.c   |  8 +-
->>>   .../net/wireless/mediatek/mt76/mt7921/mac.c   |  9 +-
->>>   drivers/net/wireless/mediatek/mt76/tx.c       | 90 ++++++++++++++++---
->>>   7 files changed, 132 insertions(+), 29 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
->>> index 436bf2b8e2cd..016f563fec39 100644
->>> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
->>> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
->>> @@ -235,6 +235,14 @@ DECLARE_EWMA(signal, 10, 8);
->>>   #define MT_WCID_TX_INFO_TXPWR_ADJ	GENMASK(25, 18)
->>>   #define MT_WCID_TX_INFO_SET		BIT(31)
->>>   
->>> +#define MT_PACKET_ID_MASK		GENMASK(6, 0)
->>> +#define MT_PACKET_ID_NO_ACK		0
->>> +/* Request TXS, but don't try to match with skb. */
->>> +#define MT_PACKET_ID_NO_SKB		1
->>> +#define MT_PACKET_ID_FIRST		2
->>> +#define MT_PACKET_ID_HAS_RATE		BIT(7)
->>> +#define MT_PACKET_ID_MAX		(GENMASK(7, 0) - 1)
->>> +
->>>   struct mt76_wcid {
->>>   	struct mt76_rx_tid __rcu *aggr[IEEE80211_NUM_TIDS];
->>>   
->>> @@ -246,6 +254,8 @@ struct mt76_wcid {
->>>   
->>>   	struct rate_info rate;
->>>   
->>> +	struct sk_buff *skb_status_array[MT_PACKET_ID_MAX + 1];
->> You could add this to reduce the struct size:
->> #define MT_NUM_STATUS_PACKETS \
->> 	(MT_PACKET_ID_MAX + 1 - MT_PACKET_ID_FIRST)
->> 
->> And then subtract MT_PACKET_ID_FIRST from cache entries.
+On Fri, 13 Aug 2021 09:45:26 +0800 Yufeng Mo wrote:
+> Currently, there many drivers who support CQE mode configuration,
+> some configure it as a fixed when initialized, some provide an
+> interface to change it by ethtool private flags. In order make it
+> more generic, add two new 'ETHTOOL_A_COALESCE_USE_CQE_TX' and
+> 'ETHTOOL_A_COALESCE_USE_CQE_RX' coalesce attributes, then these
+> parameters can be accessed by ethtool netlink coalesce uAPI.
 > 
-> That saves two void* bytes of memory, and complicates the code a bit?
-> I can do the change, just doesn't seem worthwhile to me.
-It's not much more complicated (simple subtraction in very few places),
-and the memory saved is per station.
+> Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
+> Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
 
->>>   	u16 idx;
->>>   	u8 hw_key_idx;
->>>   	u8 hw_key_idx2;
->>> @@ -302,13 +312,8 @@ struct mt76_rx_tid {
->>>   #define MT_TX_CB_TXS_DONE		BIT(1)
->>>   #define MT_TX_CB_TXS_FAILED		BIT(2)
->>>   
->>> -#define MT_PACKET_ID_MASK		GENMASK(6, 0)
->>> -#define MT_PACKET_ID_NO_ACK		0
->>> -#define MT_PACKET_ID_NO_SKB		1
->>> -#define MT_PACKET_ID_FIRST		2
->>> -#define MT_PACKET_ID_HAS_RATE		BIT(7)
->>> -
->>> -#define MT_TX_STATUS_SKB_TIMEOUT	HZ
->>> +/* This is timer for when to give up when waiting for TXS callback. */
->>> +#define MT_TX_STATUS_SKB_TIMEOUT	(HZ / 8)
->> I think the way timeouts are checked now, HZ/8 is way too short.
->> I would recommend checking timeout only for packets where
->> MT_TX_CB_DMA_DONE is already set, and setting cb->jiffies from within
->> __mt76_tx_status_skb_done on DMA completion. That should make it
->> possible to keep the timeout short without running into it in cases
->> where significant congestion adds huge completion latency.
-> 
-> Ok, I like that idea.  What is reasonable timeout from time of DMA done
-> before we give up on TXS callback?
-Your value of HZ / 8 seems reasonable to me for that case.
+The series LGTM. When I was asking for documentation earlier I meant 
+a paragraph explaining the difference between the two modes. Here is 
+an example based on my current understanding, I could very well be
+wrong but you see what kind of explanation I'm after? If this is more
+or less correct please feel free to use it and modify as you see fit.
 
->>> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
->>> index d9f52e2611a7..8f5702981900 100644
->>> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
->>> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
->>> @@ -1318,6 +1318,8 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
->>>   
->>>   	mt76_tx_status_lock(mdev, &list);
->>>   	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
->>> +
->>> +	/* TODO:  Gather stats anyway, even if we are not matching on an skb. */
->> Please drop this comment, since you're deleting in another patch in this
->> series anyway.
->> 
->>> @@ -1417,10 +1419,14 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
->>>   		stats->tx_bw[0]++;
->>>   		break;
->>>   	}
->>> +
->>> +	/* Cache rate for packets that don't get a TXS callback for some
->>> +	 * reason.
->>> +	 */
->>>   	wcid->rate = rate;
->> That comment is wrong, wcid->rate is cached because HE rates can't be
->> reported via skb->cb due to lack of space.
-> 
-> We can update the rate from txs callback, and and from txfree path,
-> and also from querying the firmware rate-ctrl registers (I think?).
-> TXS is disabled for most frames by default.  txfree gives only some
-> info, not enough.  And polling rate-ctrl registers is slow.
-> 
-> So I think the comment is OK, but I end up modifying the code later anyway,
-> so I can remove this comment if you prefer.
-Yes, please do that.
-
->>> diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
->>> index 6f302acb6e69..4c8504d3c904 100644
->>> --- a/drivers/net/wireless/mediatek/mt76/tx.c
->>> +++ b/drivers/net/wireless/mediatek/mt76/tx.c
->>> @@ -130,15 +154,30 @@ mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt76_wcid *wcid,
->>>   			     IEEE80211_TX_CTL_RATE_CTRL_PROBE)))
->>>   		return MT_PACKET_ID_NO_SKB;
->>>   
->>> +	/* due to limited range of the pktid (7 bits), we can only
->>> +	 * have a limited number of outstanding frames.  I think it is OK to
->>> +	 * check the length outside of a lock since it doesn't matter too much
->>> +	 * if we read wrong data here.
->>> +	 * The TX-status callbacks don't always return a callback for an SKB,
->>> +	 * so the status_list may contain some stale skbs.  Those will be cleaned
->>> +	 * out periodically, see MT_TX_STATUS_SKB_TIMEOUT.
->>> +	 */
->>> +
->>> +	qlen = skb_queue_len(&dev->status_list);
->>> +	if (qlen > 120)
->>> +		return MT_PACKET_ID_NO_SKB;
->> Checking the length of the per-device status list doesn't make sense,
->> since pktid allocation is per-wcid.
-> 
-> Ok, so just remove this code, or should I set some other higher
-> limit to bound the list?
-You could just check for a duplicate skb_status_array entry.
-
-- Felix
+diff --git a/Documentation/networking/ethtool-netlink.rst b/Documentation/networking/ethtool-netlink.rst
+index c86628e6a235..fc7ac5938aac 100644
+--- a/Documentation/networking/ethtool-netlink.rst
++++ b/Documentation/networking/ethtool-netlink.rst
+@@ -939,12 +939,25 @@ Gets coalescing parameters like ``ETHTOOL_GCOALESCE`` ioctl request.
+   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
+   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
+   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
++  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
++  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
+   ===========================================  ======  =======================
+ 
+ Attributes are only included in reply if their value is not zero or the
+ corresponding bit in ``ethtool_ops::supported_coalesce_params`` is set (i.e.
+ they are declared as supported by driver).
+ 
++Timer reset mode (``ETHTOOL_A_COALESCE_USE_CQE_TX`` and
++``ETHTOOL_A_COALESCE_USE_CQE_RX``) control the interaction between packet
++arrival and the various time based delay parameters. By default timers are
++expected to limit the max delay between any packet arrival/departure
++and a corresponding interrupt. In this mode timer should be started by packet
++arrival (sometimes delivery of previous interrupt) and reset when interrupt
++is delivered.
++Setting the appropriate attribute to 1 will enable ``CQE`` mode, where
++each packet event resets the timer. In this mode timer is used to force
++the interrupt if queue goes idle, while busy queues depend on the packet
++limit to trigger interrupts.
+ 
+ COALESCE_SET
+ ============
+@@ -977,6 +990,8 @@ Sets coalescing parameters like ``ETHTOOL_SCOALESCE`` ioctl request.
+   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
+   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
+   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
++  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
++  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
+   ===========================================  ======  =======================
+ 
+ Request is rejected if it attributes declared as unsupported by driver (i.e.
