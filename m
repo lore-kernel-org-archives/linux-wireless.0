@@ -2,236 +2,147 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 496AAC432BE
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 22:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86603C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 01:49:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 288DB6103E
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Aug 2021 22:48:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50A27610A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Aug 2021 01:49:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236723AbhHLWs6 (ORCPT
+        id S238331AbhHMBtq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Aug 2021 18:48:58 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:34290 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234084AbhHLWs5 (ORCPT
+        Thu, 12 Aug 2021 21:49:46 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:8406 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238266AbhHMBtp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Aug 2021 18:48:57 -0400
-X-UUID: 601d46cdf5674712a6c37f2c6446920b-20210813
-X-UUID: 601d46cdf5674712a6c37f2c6446920b-20210813
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1031051865; Fri, 13 Aug 2021 06:48:27 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 13 Aug 2021 06:48:25 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 13 Aug 2021 06:48:26 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <jemele@google.com>, <yenlinlai@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] mt76: mt7921: report HE MU radiotap
-Date:   Fri, 13 Aug 2021 06:48:24 +0800
-Message-ID: <c340d189992eb10288fb8f050ae513f1c15da179.1628807229.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
+        Thu, 12 Aug 2021 21:49:45 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Gm5wb10Fsz86yj;
+        Fri, 13 Aug 2021 09:45:19 +0800 (CST)
+Received: from dggpeml500024.china.huawei.com (7.185.36.10) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Fri, 13 Aug 2021 09:49:17 +0800
+Received: from localhost.localdomain (10.67.165.24) by
+ dggpeml500024.china.huawei.com (7.185.36.10) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Fri, 13 Aug 2021 09:49:17 +0800
+From:   Yufeng Mo <moyufeng@huawei.com>
+To:     <davem@davemloft.net>, <kuba@kernel.org>
+CC:     <netdev@vger.kernel.org>, <shenjian15@huawei.com>,
+        <lipeng321@huawei.com>, <yisen.zhuang@huawei.com>,
+        <linyunsheng@huawei.com>, <huangguangbin2@huawei.com>,
+        <chenhao288@hisilicon.com>, <salil.mehta@huawei.com>,
+        <moyufeng@huawei.com>, <linuxarm@huawei.com>,
+        <linuxarm@openeuler.org>, <dledford@redhat.com>, <jgg@ziepe.ca>,
+        <netanel@amazon.com>, <akiyano@amazon.com>,
+        <thomas.lendacky@amd.com>, <irusskikh@marvell.com>,
+        <michael.chan@broadcom.com>, <edwin.peer@broadcom.com>,
+        <rohitm@chelsio.com>, <jacob.e.keller@intel.com>,
+        <ioana.ciornei@nxp.com>, <vladimir.oltean@nxp.com>,
+        <sgoutham@marvell.com>, <sbhatta@marvell.com>, <saeedm@nvidia.com>,
+        <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
+        <merez@codeaurora.org>, <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>
+Subject: [RFC V3 net-next 1/4] ethtool: add two coalesce attributes for CQE mode
+Date:   Fri, 13 Aug 2021 09:45:26 +0800
+Message-ID: <1628819129-23332-2-git-send-email-moyufeng@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1628819129-23332-1-git-send-email-moyufeng@huawei.com>
+References: <1628819129-23332-1-git-send-email-moyufeng@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-MTK:  N
+X-Originating-IP: [10.67.165.24]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpeml500024.china.huawei.com (7.185.36.10)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+Currently, there many drivers who support CQE mode configuration,
+some configure it as a fixed when initialized, some provide an
+interface to change it by ethtool private flags. In order make it
+more generic, add two new 'ETHTOOL_A_COALESCE_USE_CQE_TX' and
+'ETHTOOL_A_COALESCE_USE_CQE_RX' coalesce attributes, then these
+parameters can be accessed by ethtool netlink coalesce uAPI.
 
-Report HE MU/BF radiotap.
-
-That fixed HE MU packets dropped by mac80211 because they are missing the
-ieee80211_radiotap_he_mu header.
-
-Fixes: 163f4d22c118d ("mt76: mt7921: add MAC support")
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Co-developed-by: Eric-SY Chang <Eric-SY.Chang@mediatek.com>
-Signed-off-by: Eric-SY Chang <Eric-SY.Chang@mediatek.com>
-Tested-by: Eric-SY Chang <Eric-SY.Chang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
+Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 65 ++++++++++++++++---
- .../net/wireless/mediatek/mt76/mt7921/mac.h   |  8 +++
- 2 files changed, 65 insertions(+), 8 deletions(-)
+ Documentation/networking/ethtool-netlink.rst | 8 ++++++++
+ include/linux/ethtool.h                      | 6 +++++-
+ include/uapi/linux/ethtool_netlink.h         | 2 ++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 296e0f7a1d14..7ee9ef2fb9f0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -180,12 +180,56 @@ mt7921_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
- 				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
- }
+diff --git a/Documentation/networking/ethtool-netlink.rst b/Documentation/networking/ethtool-netlink.rst
+index c86628e..af963cf 100644
+--- a/Documentation/networking/ethtool-netlink.rst
++++ b/Documentation/networking/ethtool-netlink.rst
+@@ -939,6 +939,10 @@ Kernel response contents:
+   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
+   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
+   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
++  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    with timer reset on
++                                                       packet arrival, Tx
++  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    with timer reset on
++                                                       packet arrival, Rx
+   ===========================================  ======  =======================
  
-+static void
-+mt7921_mac_decode_he_mu_radiotap(struct sk_buff *skb,
-+				 struct mt76_rx_status *status,
-+				 __le32 *rxv)
-+{
-+	static const struct ieee80211_radiotap_he_mu mu_known = {
-+		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_COMP_KNOWN),
-+		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN) |
-+			  HE_BITS(MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN),
-+	};
-+	struct ieee80211_radiotap_he_mu *he_mu = NULL;
-+
-+	he_mu = skb_push(skb, sizeof(mu_known));
-+	memcpy(he_mu, &mu_known, sizeof(mu_known));
-+
-+#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
-+
-+	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
-+	if (status->he_dcm)
-+		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
-+
-+	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
-+			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
-+				 le32_get_bits(rxv[2], MT_CRXV_HE_NUM_USER));
-+
-+	he_mu->ru_ch1[0] = FIELD_GET(MT_CRXV_HE_RU0, cpu_to_le32(rxv[3]));
-+
-+	if (status->bw >= RATE_INFO_BW_40) {
-+		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
-+		he_mu->ru_ch2[0] =
-+			FIELD_GET(MT_CRXV_HE_RU1, cpu_to_le32(rxv[3]));
-+	}
-+
-+	if (status->bw >= RATE_INFO_BW_80) {
-+		he_mu->ru_ch1[1] =
-+			FIELD_GET(MT_CRXV_HE_RU2, cpu_to_le32(rxv[3]));
-+		he_mu->ru_ch2[1] =
-+			FIELD_GET(MT_CRXV_HE_RU3, cpu_to_le32(rxv[3]));
-+	}
-+}
-+
- static void
- mt7921_mac_decode_he_radiotap(struct sk_buff *skb,
- 			      struct mt76_rx_status *status,
- 			      __le32 *rxv, u32 phy)
- {
--	/* TODO: struct ieee80211_radiotap_he_mu */
- 	static const struct ieee80211_radiotap_he known = {
- 		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
- 			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
-@@ -193,6 +237,7 @@ mt7921_mac_decode_he_radiotap(struct sk_buff *skb,
- 			 HE_BITS(DATA1_CODING_KNOWN) |
- 			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
- 			 HE_BITS(DATA1_DOPPLER_KNOWN) |
-+			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
- 			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
- 		.data2 = HE_BITS(DATA2_GI_KNOWN) |
- 			 HE_BITS(DATA2_TXBF_KNOWN) |
-@@ -207,9 +252,12 @@ mt7921_mac_decode_he_radiotap(struct sk_buff *skb,
+ Attributes are only included in reply if their value is not zero or the
+@@ -977,6 +981,10 @@ Request contents:
+   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
+   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
+   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
++  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    with timer reset on
++                                                       packet arrival, Tx
++  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    with timer reset on
++                                                       packet arrival, Rx
+   ===========================================  ======  =======================
  
- 	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[14]) |
- 		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[2]);
-+	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
- 	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[2]) |
- 		    le16_encode_bits(ltf_size,
- 				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
-+	if (cpu_to_le32(rxv[0]) & MT_PRXV_TXBF)
-+		he->data5 |= HE_BITS(DATA5_TXBF);
- 	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[14]) |
- 		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[14]);
+ Request is rejected if it attributes declared as unsupported by driver (i.e.
+diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
+index 4711b96..bad4c7a 100644
+--- a/include/linux/ethtool.h
++++ b/include/linux/ethtool.h
+@@ -211,7 +211,9 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
+ #define ETHTOOL_COALESCE_TX_USECS_HIGH		BIT(19)
+ #define ETHTOOL_COALESCE_TX_MAX_FRAMES_HIGH	BIT(20)
+ #define ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL	BIT(21)
+-#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(21, 0)
++#define ETHTOOL_COALESCE_USE_CQE_RX		BIT(22)
++#define ETHTOOL_COALESCE_USE_CQE_TX		BIT(23)
++#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(23, 0)
  
-@@ -217,8 +265,7 @@ mt7921_mac_decode_he_radiotap(struct sk_buff *skb,
- 	case MT_PHY_TYPE_HE_SU:
- 		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
- 			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE_KNOWN);
-+			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN);
+ #define ETHTOOL_COALESCE_USECS						\
+ 	(ETHTOOL_COALESCE_RX_USECS | ETHTOOL_COALESCE_TX_USECS)
+@@ -237,6 +239,8 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
+ 	 ETHTOOL_COALESCE_RX_USECS_LOW | ETHTOOL_COALESCE_RX_USECS_HIGH | \
+ 	 ETHTOOL_COALESCE_PKT_RATE_LOW | ETHTOOL_COALESCE_PKT_RATE_HIGH | \
+ 	 ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL)
++#define ETHTOOL_COALESCE_USE_CQE					\
++	(ETHTOOL_COALESCE_USE_CQE_RX | ETHTOOL_COALESCE_USE_CQE_TX)
  
- 		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[14]) |
- 			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
-@@ -232,17 +279,15 @@ mt7921_mac_decode_he_radiotap(struct sk_buff *skb,
- 		break;
- 	case MT_PHY_TYPE_HE_MU:
- 		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE_KNOWN);
-+			     HE_BITS(DATA1_UL_DL_KNOWN);
+ #define ETHTOOL_STAT_NOT_SET	(~0ULL)
  
- 		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		he->data4 |= HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
-+		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[7]);
+diff --git a/include/uapi/linux/ethtool_netlink.h b/include/uapi/linux/ethtool_netlink.h
+index b3b9371..5545f1c 100644
+--- a/include/uapi/linux/ethtool_netlink.h
++++ b/include/uapi/linux/ethtool_netlink.h
+@@ -377,6 +377,8 @@ enum {
+ 	ETHTOOL_A_COALESCE_TX_USECS_HIGH,		/* u32 */
+ 	ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH,		/* u32 */
+ 	ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL,	/* u32 */
++	ETHTOOL_A_COALESCE_USE_CQE_MODE_TX,		/* u8 */
++	ETHTOOL_A_COALESCE_USE_CQE_MODE_RX,		/* u8 */
  
- 		mt7921_mac_decode_he_radiotap_ru(status, he, rxv);
- 		break;
- 	case MT_PHY_TYPE_HE_TB:
- 		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
--			     HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
- 			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
- 			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
- 			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
-@@ -606,9 +651,13 @@ int mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 
- 	mt7921_mac_assoc_rssi(dev, skb);
- 
--	if (rxv && status->flag & RX_FLAG_RADIOTAP_HE)
-+	if (rxv && status->flag & RX_FLAG_RADIOTAP_HE) {
- 		mt7921_mac_decode_he_radiotap(skb, status, rxv, mode);
- 
-+		if (status->flag & RX_FLAG_RADIOTAP_HE_MU)
-+			mt7921_mac_decode_he_mu_radiotap(skb, status, rxv);
-+	}
-+
- 	if (!status->wcid || !ieee80211_is_data_qos(fc))
- 		return 0;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-index 3af67fac213d..f0194c878037 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-@@ -116,6 +116,7 @@ enum rx_pkt_type {
- #define MT_PRXV_TX_DCM			BIT(4)
- #define MT_PRXV_TX_ER_SU_106T		BIT(5)
- #define MT_PRXV_NSTS			GENMASK(9, 7)
-+#define MT_PRXV_TXBF			BIT(10)
- #define MT_PRXV_HT_AD_CODE		BIT(11)
- #define MT_PRXV_FRAME_MODE		GENMASK(14, 12)
- #define MT_PRXV_SGI			GENMASK(16, 15)
-@@ -138,8 +139,15 @@ enum rx_pkt_type {
- #define MT_CRXV_HE_LTF_SIZE		GENMASK(18, 17)
- #define MT_CRXV_HE_LDPC_EXT_SYM		BIT(20)
- #define MT_CRXV_HE_PE_DISAMBIG		BIT(23)
-+#define MT_CRXV_HE_NUM_USER		GENMASK(30, 24)
- #define MT_CRXV_HE_UPLINK		BIT(31)
- 
-+#define MT_CRXV_HE_RU0			GENMASK(7, 0)
-+#define MT_CRXV_HE_RU1			GENMASK(15, 8)
-+#define MT_CRXV_HE_RU2			GENMASK(23, 16)
-+#define MT_CRXV_HE_RU3			GENMASK(31, 24)
-+#define MT_CRXV_HE_MU_AID		GENMASK(30, 20)
-+
- #define MT_CRXV_HE_SR_MASK		GENMASK(11, 8)
- #define MT_CRXV_HE_SR1_MASK		GENMASK(16, 12)
- #define MT_CRXV_HE_SR2_MASK             GENMASK(20, 17)
+ 	/* add new constants above here */
+ 	__ETHTOOL_A_COALESCE_CNT,
 -- 
-2.25.1
+2.8.1
 
