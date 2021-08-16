@@ -2,106 +2,73 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8060C4338F
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 09:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC0F5C4338F
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 11:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94AA361B80
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 09:54:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE6426323D
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 11:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235539AbhHPJzP (ORCPT
+        id S230506AbhHPLzZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Aug 2021 05:55:15 -0400
-Received: from lpdvacalvio01.broadcom.com ([192.19.166.228]:44100 "EHLO
-        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235336AbhHPJzP (ORCPT
+        Mon, 16 Aug 2021 07:55:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56740 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229542AbhHPLzY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Aug 2021 05:55:15 -0400
-Received: from bld-lvn-bcawlan-34.lvn.broadcom.net (bld-lvn-bcawlan-34.lvn.broadcom.net [10.75.138.137])
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 8450180C2;
-        Mon, 16 Aug 2021 02:54:43 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 8450180C2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1629107683;
-        bh=Aj2VaZcpOH4Bg0zUIiSMcLLwUhPDKPLUYkCL/ibAG5s=;
-        h=Subject:To:References:From:Date:In-Reply-To:From;
-        b=cL4DgYMfLhxcHzkRuddbo/o/Xqy4EbL0iokgieCFiWE9Cf+MIm5UpDPzI3k5TqR+K
-         rBHLZStO1E5WDYf1NvxiQjMlFiwtcLMuCX1soEJKSqK3TtZ+FKVE+ZGcWdaPVmT9Fl
-         Az6z/sRGjB6LtIqnEMUmVkLVKgW6l9bqaf22VC3w=
-Received: from [10.176.51.53] (d581793.dhcp.broadcom.net [10.176.51.53])
-        by bld-lvn-bcawlan-34.lvn.broadcom.net (Postfix) with ESMTPSA id A27981874BD;
-        Mon, 16 Aug 2021 02:54:41 -0700 (PDT)
-Subject: Re: 5.10.58 UBSAN from brcmf_sdio_dpc+0xa50/0x128c [brcmfmac]
-To:     Ryutaroh Matsumoto <ryutaroh@ict.e.titech.ac.jp>,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@infineon.com,
-        wright.feng@infineon.com, chung-hsien.hsu@infineon.com
-References: <20210816.084210.1700916388797835755.ryutaroh@ict.e.titech.ac.jp>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <85b31c5a-eb4a-48a0-ad94-e46db00af016@broadcom.com>
-Date:   Mon, 16 Aug 2021 11:54:31 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        Mon, 16 Aug 2021 07:55:24 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36F5FC061764
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2021 04:54:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=aOpoZaetcZQnnRA0uKN7QU2Rzjn197f3bRPgPzR+YW4=; b=FoKXRqxHm9ezvl2YdU03NYwWeE
+        iK68Z6GJUb6VDs8Mr3y7/Ax+bSUQMJpVMqHGn27V/wYQXKW6gY7zP2Az1UtEDEq598MHwkLygZCVb
+        TBshKRYZdNxUG4JCoWP2ibtptnawR8iAfPIHayus8i+y83F26gON32pMzIPBPaW8tYvs=;
+Received: from p4ff13206.dip0.t-ipconnect.de ([79.241.50.6] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1mFbCY-0005gd-T2; Mon, 16 Aug 2021 13:54:46 +0200
+Subject: Re: [PATCH 2/3] mt76: mt7915: rework debugfs queue info
+To:     Ryder Lee <ryder.lee@mediatek.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        Sujuan Chen <sujuan.chen@mediatek.com>
+References: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629073504.git.ryder.lee@mediatek.com>
+ <a36459de6c378583c84ea737101ce2a2da0c8f5b.1629073504.git.ryder.lee@mediatek.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Message-ID: <ec48be04-d5f5-5221-c99b-401c91d05710@nbd.name>
+Date:   Mon, 16 Aug 2021 13:54:46 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20210816.084210.1700916388797835755.ryutaroh@ict.e.titech.ac.jp>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <a36459de6c378583c84ea737101ce2a2da0c8f5b.1629073504.git.ryder.lee@mediatek.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/16/2021 1:42 AM, Ryutaroh Matsumoto wrote:
-> Dear Maintainers of the drivers/net/wireless/broadcom/brcm80211/brcmfmac driver,
+On 2021-08-16 02:32, Ryder Lee wrote:
+> Complete PSE/PLE queue statistics, including per-sta AC queue
+> information.
 > 
-> I found the following UBSAN error in kernel 5.10.58 compiled with CLang 12.0.1
-> with integrated assembler (make LLVM=1 LLVM_IAS=1).
-> It always happens when iwd starts an access point, where /etc/iwd/main.conf
-> looks as follows:
-> [General]
-> UseDefaultInterface=true
-> DisableANQP=false
-> 
-> I do not observe the following error if
-> * kernel is compiled with gcc 10, or
-> * kernel version is 5.13.9 or 5.14rc5.
-> 
-> The reported UBSAN error is only seen with 5.10 series compiled with CLang 12.
-> UBSAN looks as follows. The hardware is Raspberry Pi 4B with 8GB RAM.
-> 
-> Aug 16 08:11:21 raspi4b-router systemd[1]: systemd-rfkill.service: Succeeded.
-> Aug 16 08:11:21 raspi4b-router kernel: IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> Aug 16 08:11:21 raspi4b-router systemd[1]: iwd_start_ap@Yamashita_guest.service: Succeeded.
-> Aug 16 08:11:21 raspi4b-router systemd[1]: Finished iwd starting Yamashita_guest access point.
-> Aug 16 08:11:21 raspi4b-router kernel: ================================================================================
-> Aug 16 08:11:21 raspi4b-router kernel: UBSAN: object-size-mismatch in ./include/linux/skbuff.h:2016:28
+> Co-developed-by: Sujuan Chen <sujuan.chen@mediatek.com>
+> Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Does this depend on any other patches? I'm getting compile errors
+because of missing defines like MT_CTX0
 
-Line 2016 in skbuff.h is inline function __skb_queue_before() and as far 
-as I can tell brcmfmac is not using that direct or indirect. Maybe I am 
-reading the line info incorrectly?
-
-> Aug 16 08:11:21 raspi4b-router kernel: member access within address 000000002d0b610c with insufficient space
-> Aug 16 08:11:21 raspi4b-router kernel: for an object of type 'struct sk_buff'
-> Aug 16 08:11:21 raspi4b-router kernel: CPU: 1 PID: 295 Comm: kworker/u8:3 Tainted: G         C        5.10.58-clang12a #1
-> Aug 16 08:11:21 raspi4b-router kernel: Hardware name: Raspberry Pi 4 Model B Rev 1.4 (DT)
-> Aug 16 08:11:21 raspi4b-router kernel: Workqueue: brcmf_wq/mmc0:0001:1 brcmf_sdio_dataworker [brcmfmac]
-> Aug 16 08:11:21 raspi4b-router kernel: Call trace:
-> Aug 16 08:11:21 raspi4b-router kernel:  dump_backtrace+0x0/0x1e4
-> Aug 16 08:11:21 raspi4b-router kernel:  show_stack+0x18/0x24
-> Aug 16 08:11:21 raspi4b-router kernel:  dump_stack+0xac/0x104
-> Aug 16 08:11:21 raspi4b-router kernel:  ubsan_type_mismatch_common+0x198/0x298
-> Aug 16 08:11:21 raspi4b-router kernel:  __ubsan_handle_type_mismatch_v1+0x40/0x50
-> Aug 16 08:11:21 raspi4b-router kernel:  brcmf_sdio_dpc+0xa50/0x128c [brcmfmac]
-
-Would you be able to provide information as to what line 
-brcmf_sdio_dpc+0xa50 refers to.
-
-Regards,
-Arend
+- Felix
