@@ -2,331 +2,190 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8C37C4338F
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD9D1C4320A
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:39:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B86160F22
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B995660F14
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232386AbhHPSiR (ORCPT
+        id S232065AbhHPSkY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Aug 2021 14:38:17 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:34794 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232237AbhHPSiO (ORCPT
+        Mon, 16 Aug 2021 14:40:24 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:37164 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230405AbhHPSkX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Aug 2021 14:38:14 -0400
-X-UUID: 3a65839042824c79a21bad08a602f960-20210817
-X-UUID: 3a65839042824c79a21bad08a602f960-20210817
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 600358646; Tue, 17 Aug 2021 02:37:39 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 17 Aug 2021 02:37:37 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 17 Aug 2021 02:37:38 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Sujuan Chen <sujuan.chen@mediatek.com>
-Subject: [PATCH v2 2/3] mt76: mt7915: rework debugfs queue info
-Date:   Tue, 17 Aug 2021 02:37:34 +0800
-Message-ID: <ca22390dd07253ed3cc7ce3acb1f423c5e41e342.1629133569.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629133569.git.ryder.lee@mediatek.com>
-References: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629133569.git.ryder.lee@mediatek.com>
+        Mon, 16 Aug 2021 14:40:23 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17GIZeKE022297;
+        Mon, 16 Aug 2021 18:39:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2021-07-09;
+ bh=LgCApoZD+Lhu6FBaOLRwE9aQssaxCMN4ndWTa+6o53E=;
+ b=wMJVIQmOzqrAGy5ky74Wv+FmjsvBY7e3wS6Zw4wnhPDoKe2Q6zk/0AowiNzj7xM1eDAb
+ Sg1erN+tOpPWKCNKCbPMaPMlq+RJ+q0bP2SSGwELW/imlIs3h519SSokrMEdW5qPwE6e
+ vzLzhHfEMVG97ksiAaBxyIay5kZNiWzWv1jY+OmbOnhE6bVo8agaDouMAUeOnyO+ubET
+ f7pwFZwarTlLXDM0VFH3rrznBBbg7XcU2ZQjejJ6v+RwDqfL+nFypwmpRnZ9sPKJZT48
+ m83Q9Gz8WXgBmAy69lfwlODbpIGukiq2/VOjo3usPcpUR8FkgaKnVJYzW1Bts/lotBoL ow== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2020-01-29;
+ bh=LgCApoZD+Lhu6FBaOLRwE9aQssaxCMN4ndWTa+6o53E=;
+ b=qrUTvlC7waho4i9BUAIWlzbiJ5tmIUs8rv89rkP1JYD4Y0CHHye2VzXGef7UDI7EEFDk
+ uJTkkkxJosTVYUW2Gge/bE2ixNzHRi6VDdgRNM81u5qHII8ZJVCOVsCayaIk3aFFMhau
+ 9/fiDbzyTAYPuQAijZuP4bmZRIJkdA1Dbb3lyVLfJadugTZIKLdm5A0jXsAw4yQlEMtf
+ tpK8aI0VH4RKcNWkv98U6sF7UymPC4GFPIlRA59IqCUaJkldwhsS1UXdZDd084yS3Cfu
+ 70zkMStGRCjL5bfHbcui8JOaE766djl0MXeQLjVdjEbXn6k5ue+NpdA9eKXClQ/Y4Af5 3w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3afgpghw9p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Aug 2021 18:39:47 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17GIYqrt176736;
+        Mon, 16 Aug 2021 18:39:46 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+        by aserp3030.oracle.com with ESMTP id 3ae3ve8d7k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Aug 2021 18:39:46 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DOL4Q+YRRherMRG7Iu9940fEihoZ5LgiHPhutelAZKLE0fmA7+XRLKcRxk+FXvJig5qxwwUA7Ke0FLxVpoLzkwMbokZ8l8bvDjH3dQKNvWR9vnZQjViCpfVXqNTF385Hm1MeKX+KDaOm2imzOw+QU/yJ92zRncBk5TtRzY6VdnN1GYS4acHJtpDQpNedzUs+xEdp5FiDT69C2pHgw0N+YWz2SMGgvPxyhn2j+HNwQDpGYpBz1i1pFNO6a0PneurO1IqwXMtD6JCZiTbJ2LTaVDSlv0rE/g8LFSgKCrXMTQU9dbzv0ErxSwxQ9n3SyL+LEISMSsC/0Nhrze5YO3ZTeA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LgCApoZD+Lhu6FBaOLRwE9aQssaxCMN4ndWTa+6o53E=;
+ b=MzIZSvJaUi8GgRL+OcWOLxgH4aOC7SiI+O7wC3Sf9wtQ69CrIv8aE4URhr+jmhV467K50icABtdY4FYX987nJ6UBoQadOqyRYmKIwgkdx4X7EGHEgPbwyA1gXsBZPOZcV18DuxaIakYlgQcy4QEJDjrrmtKSetpka1aSeruUmsHMli4GsX2cMOYJkglPWwa2ORg2F9RrVavtLvlxSHVyk6EQzST7AMHztG+OTVAAdrvCRNqkrIlS1m3Pj5XWntC2YuV0WTGRcsiN3gMmaF4LrO2l6Glfscf70rOIbmmyHqSNcZ0Rt3TNu5lF8Eqlq/Pt1FIxoVN7fAi+j/vHuK2edQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LgCApoZD+Lhu6FBaOLRwE9aQssaxCMN4ndWTa+6o53E=;
+ b=vAWdN4GwH4IjxOgtxMjtJmn64cocXvoM+PWdQ76Qvo7UEwDxoran9hqLjJ+RdUtPfAGdE4+P70mHbBU31mq9ghuFAS6GvGccYL/nHyH522kYjdC0LgE+y19tGZZZ+iTww+DVDcTKwa9NqMDNIuHws502HFsLcRdNQEE1HYuwZmk=
+Authentication-Results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=oracle.com;
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28) by MWHPR1001MB2160.namprd10.prod.outlook.com
+ (2603:10b6:301:36::32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.19; Mon, 16 Aug
+ 2021 18:39:44 +0000
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::5820:e42b:73d7:4268]) by MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::5820:e42b:73d7:4268%7]) with mapi id 15.20.4415.023; Mon, 16 Aug 2021
+ 18:39:44 +0000
+Date:   Mon, 16 Aug 2021 21:39:30 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Luca Coelho <luciano.coelho@intel.com>,
+        Tova Mussai <tova.mussai@intel.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Gil Adam <gil.adam@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Harish Mitty <harish.mitty@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] iwlwifi: mvm: Fix an error code in iwl_mvm_up()
+Message-ID: <20210816183930.GA2068@kili>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-ClientProxiedBy: ZR0P278CA0010.CHEP278.PROD.OUTLOOK.COM
+ (2603:10a6:910:16::20) To MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from kili (62.8.83.99) by ZR0P278CA0010.CHEP278.PROD.OUTLOOK.COM (2603:10a6:910:16::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.13 via Frontend Transport; Mon, 16 Aug 2021 18:39:39 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 6cbe83e8-6d46-4980-ecd5-08d960e53772
+X-MS-TrafficTypeDiagnostic: MWHPR1001MB2160:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MWHPR1001MB2160A4052980D1269BE03C298EFD9@MWHPR1001MB2160.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3173;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 9jKogrbws447+7M7/PIRpQJirZ5zlUSsCqHgL2L0ykRvrA1lLv1Yhutbajg2gR94H/DGE8wwoGDnR/OsTER1AY83Kz9cxb61T0jxtXp3G7BpEw/kP7vcC5awVzKWUDDgOLfjhGIInH6VgSjEIuYkn1lbKL9gIgOJYhDYv0GN1uJhvINxVpaTqX8dO8pvMoA0QUUKwSTx7b7PcpB3/AMvxF4KRJ/9JEbkq9bnrdS4yIhZQVL9UCGaF1cKHo47UlbvURmjUVKLF8dk3cF6NiI1uzqySrPLV6SI2Hef5d4e9SXSfsYgrQRO/I5k45BrLVKA2mAizrocyXIXVc2y4CegiJQdNR1OdQGRAMZqREQsImCflBQSX7EOhyw6MclzBONx/wkRVFX8TlbZUUbRZajwSUhRr+pMOZmkN9FrNeBN+GX12CTCYkcDb+zrwPXsyN+nCUWXynevrquppe7LbbpJnnTu6GfQxR95Tzc9VgOqAweEb4PlH7txFUVyBMNspKx3Xc7B/pYBbKfb4tgvDaxqC9yd9f1Lyt/GNbuE1+tpIVdHXbvjM6VSH2W3/n7Vtf+zCtHKGkVkxvTpkEsvYQbnKNiFb7iMngEPO4doCRy96KO+7220a3yMJOXpAWwKKazYWGZczIMO3VPRo7oKXSuTS63hhQZkv5n6/o8FvgmCGbcK9k+DSM59SbcOmN+xUzok
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(376002)(346002)(366004)(39860400002)(55016002)(4744005)(1076003)(33716001)(66946007)(52116002)(110136005)(54906003)(44832011)(6496006)(478600001)(316002)(6666004)(5660300002)(66556008)(66476007)(9686003)(956004)(8936002)(4326008)(86362001)(38350700002)(7416002)(26005)(186003)(9576002)(38100700002)(83380400001)(33656002)(8676002)(2906002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?81/bS2PpaRwBz1UbwmysVkLv++uDtwzIVjn4nHEz82ch9OzGkAt+xCckYeZG?=
+ =?us-ascii?Q?e40yYnZ9s7+hBEJJVJKZAYY1g21sQLKH/nKXEeTV2eIkvCf0QG9L3GBsJTrd?=
+ =?us-ascii?Q?OuqGFsRBBEjKkTcbgammnytUGMKZTVIef5oUEbZcLdYvVSk7IC4I2mX2/8Q+?=
+ =?us-ascii?Q?sIg0KfGcHEYeNXzcxHQTz4ArDmzikh1uIV5/97KJfFUFxFJFAepa63qXv2pZ?=
+ =?us-ascii?Q?I1YCYmYp4EJ5OODFgCP8lumDcTrYisDxA6U6EjWJqnYtrEMhhKosoEiR/S5i?=
+ =?us-ascii?Q?ccQFM+TLxmSKBh2fw09eeP5JfmTlBCUzd+3Mvcp15XHzWEPGlGJ2EEZz8Loo?=
+ =?us-ascii?Q?KC6Vq8xf5KxKiYzKqqhUyphv5QOiQF3RBhuOQysa/Pboufj162UxL+4jlH9l?=
+ =?us-ascii?Q?Ef9+TtvJCvP01fJxUhbUFjFruMa5AoFp7gVm90iU1N57EcZ0od+urRoMOM7I?=
+ =?us-ascii?Q?G0+LE6M556gTrZ5juyL2rVjmiYUHjTzDqlN1ZAldaOX+681+qNnWn3bhy/zj?=
+ =?us-ascii?Q?0LTYOqYHiOdSAjjHaCeI3u2YI2OAGvm39LSF8zvdW0xB3biHqPUGUVcUTWqs?=
+ =?us-ascii?Q?Arrf7tyGDouJHP7TFXqPl/3aOJUKlmHque1o3pM9Vr/1eT3J42hUUeHxUQFJ?=
+ =?us-ascii?Q?B7Qurr7rb0XqVix2pM1Dl2e0CTzUDcbwhcV3NHaXLPWRGf6tUe5Nj3YyDrsh?=
+ =?us-ascii?Q?9wKNXS0y/Tyq5hXSZr3DwbystdGCXqUEiIKX/13Op9hTlDIAGa0r5viCXQNz?=
+ =?us-ascii?Q?deLZ5fBoPPMEq7g8HaW61JZtqyfVB7bvPRXi841n8tBLRnKLXL84Z+MJWNKr?=
+ =?us-ascii?Q?aCJVsUQjOEtRvka119daHBE5HVX9Jgere3eU/F1w7+skc0QRcCMZN5TkcV8N?=
+ =?us-ascii?Q?84NDyMrqGLSJ4wuP+xxpDB0IIVTG8Cg1dEMLhMzdEtS9NdKOtWe6r//t7kn6?=
+ =?us-ascii?Q?iUzNz5oMWC4swlJVZ1cZuHKSXwu4p8hPVGagQmc9PcVjnF3OsLafNAIpLcKf?=
+ =?us-ascii?Q?su4BW23GaHJu3lXJ9JkmO3regrpPa0SIzGdpeUHwrtvu9wPI7jSZsi5/R551?=
+ =?us-ascii?Q?0jy5GbPiJqncfbxUdTDA0QkXhX3K0VIWfFE656hKEcKROlMQ0AzdQwikLqHl?=
+ =?us-ascii?Q?QbtVmjRq/G7hDACGYF/Cc+F5vexUGShbkfdEd2nsiaNpa5Nl68OVpb6RLOdd?=
+ =?us-ascii?Q?6eebYWFTTuSh64QELdQv5EfQBbnTk9u3bfXVlLxizXFnXO6wVY0MxHpxMJGM?=
+ =?us-ascii?Q?jNtwp+GIhDXLtjLtP51Wz8mGiyR7V+nGXCXB8JIfEAlKzcBuHMtnXYxpZ5WE?=
+ =?us-ascii?Q?4ALliWBaOzxS853106XYts49?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6cbe83e8-6d46-4980-ecd5-08d960e53772
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Aug 2021 18:39:44.6839
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: de7t9RH+9ycAnfKp9e2Q+oC2umP8yftJUFVzQ1ko9Y7Y3OizM6Ji5ykO94KfXgwFAJyIRL3WtABHrz+dLdlcDkOntPwAOfwI/8OTVi9CFfE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR1001MB2160
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10078 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 mlxlogscore=999 spamscore=0 bulkscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108160117
+X-Proofpoint-GUID: XjI51Be-BJiLtaMjAUrVweBIlh1MAVf7
+X-Proofpoint-ORIG-GUID: XjI51Be-BJiLtaMjAUrVweBIlh1MAVf7
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Complete PSE/PLE queue statistics, including per-sta AC queue
-information.
+Return -ENODEV instead of success on this error path.
 
-Co-developed-by: Sujuan Chen <sujuan.chen@mediatek.com>
-Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Fixes: dd36a507c806 ("iwlwifi: mvm: look for the first supported channel when add/remove phy ctxt")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
-v2: add a missing enum
----
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 160 +++++++++++++++---
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   6 +-
- .../net/wireless/mediatek/mt76/mt7915/regs.h  |  19 ++-
- 3 files changed, 159 insertions(+), 26 deletions(-)
+From static analysis.  Not tested.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index e1cdfbe52199..fdb4017e1ff9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -7,6 +7,13 @@
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 38fd5886af2d..1962abb81faa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1461,8 +1461,10 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	while (!sband && i < NUM_NL80211_BANDS)
+ 		sband = mvm->hw->wiphy->bands[i++];
  
- /** global debugfs **/
- 
-+struct hw_queue_map {
-+	const char *name;
-+	u8 index;
-+	u8 pid;
-+	u8 qid;
-+};
-+
- static int
- mt7915_implicit_txbf_set(void *data, u64 val)
- {
-@@ -233,30 +240,131 @@ mt7915_tx_stats_show(struct seq_file *file, void *data)
- 
- DEFINE_SHOW_ATTRIBUTE(mt7915_tx_stats);
- 
--static int
--mt7915_queues_acq(struct seq_file *s, void *data)
-+static void
-+mt7915_hw_queue_read(struct seq_file *s, u32 base, u32 size,
-+		     const struct hw_queue_map *map)
- {
- 	struct mt7915_dev *dev = dev_get_drvdata(s->private);
--	int i;
-+	u32 i, val;
- 
--	for (i = 0; i < 16; i++) {
--		int j, acs = i / 4, index = i % 4;
--		u32 ctrl, val, qlen = 0;
-+	val = mt76_rr(dev, base + MT_FL_Q_EMPTY);
-+	for (i = 0; i < size; i++) {
-+		u32 ctrl, head, tail, queued;
- 
--		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(acs, index));
--		ctrl = BIT(31) | BIT(15) | (acs << 8);
-+		if (val & BIT(map[i].index))
-+			continue;
-+
-+		ctrl = BIT(31) | (map[i].pid << 10) | (map[i].qid << 24);
-+		mt76_wr(dev, base + MT_FL_Q0_CTRL, ctrl);
- 
--		for (j = 0; j < 32; j++) {
--			if (val & BIT(j))
--				continue;
-+		head = mt76_get_field(dev, base + MT_FL_Q2_CTRL,
-+				      GENMASK(11, 0));
-+		tail = mt76_get_field(dev, base + MT_FL_Q2_CTRL,
-+				      GENMASK(27, 16));
-+		queued = mt76_get_field(dev, base + MT_FL_Q3_CTRL,
-+					GENMASK(11, 0));
- 
--			mt76_wr(dev, MT_PLE_FL_Q0_CTRL,
--				ctrl | (j + (index << 5)));
--			qlen += mt76_get_field(dev, MT_PLE_FL_Q3_CTRL,
--					       GENMASK(11, 0));
--		}
--		seq_printf(s, "AC%d%d: queued=%d\n", acs, index, qlen);
-+		seq_printf(s, "\t%s: ", map[i].name);
-+		seq_printf(s, "queued:0x%03x head:0x%03x tail:0x%03x\n",
-+			   queued, head, tail);
- 	}
-+}
-+
-+static void
-+mt7915_sta_hw_queue_read(void *data, struct ieee80211_sta *sta)
-+{
-+	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-+	struct mt7915_dev *dev = msta->vif->phy->dev;
-+	struct seq_file *s = data;
-+	u8 ac;
-+
-+	for (ac = 0; ac < 4; ac++) {
-+		u32 qlen, ctrl, val;
-+		u32 idx = msta->wcid.idx >> 5;
-+		u8 offs = msta->wcid.idx & GENMASK(4, 0);
-+
-+		ctrl = BIT(31) | BIT(11) | (ac << 24);
-+		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(ac, idx));
-+
-+		if (val & BIT(offs))
-+			continue;
-+
-+		mt76_wr(dev, MT_PLE_BASE + MT_FL_Q0_CTRL, ctrl | msta->wcid.idx);
-+		qlen = mt76_get_field(dev, MT_PLE_BASE + MT_FL_Q3_CTRL,
-+				      GENMASK(11, 0));
-+		seq_printf(s, "\tSTA %pM wcid %d: AC%d%d queued:%d\n",
-+			   sta->addr, msta->wcid.idx, msta->vif->wmm_idx,
-+			   ac, qlen);
+-	if (WARN_ON_ONCE(!sband))
++	if (WARN_ON_ONCE(!sband)) {
++		ret = -ENODEV;
+ 		goto error;
 +	}
-+}
-+
-+static int
-+mt7915_hw_queues_read(struct seq_file *s, void *data)
-+{
-+	struct mt7915_dev *dev = dev_get_drvdata(s->private);
-+	struct mt7915_phy *phy = mt7915_ext_phy(dev);
-+	static const struct hw_queue_map ple_queue_map[] = {
-+		{"CPU_Q0",  0,  1, MT_CTX0},
-+		{"CPU_Q1",  1,  1, MT_CTX0 + 1},
-+		{"CPU_Q2",  2,  1, MT_CTX0 + 2},
-+		{"CPU_Q3",  3,  1, MT_CTX0 + 3},
-+		{"ALTX_Q0", 8,  2, MT_LMAC_ALTX0},
-+		{"BMC_Q0",  9,  2, MT_LMAC_BMC0},
-+		{"BCN_Q0",  10, 2, MT_LMAC_BCN0},
-+		{"PSMP_Q0", 11, 2, MT_LMAC_PSMP0},
-+		{"ALTX_Q1", 12, 2, MT_LMAC_ALTX0 + 4},
-+		{"BMC_Q1",  13, 2, MT_LMAC_BMC0 + 4},
-+		{"BCN_Q1",  14, 2, MT_LMAC_BCN0 + 4},
-+		{"PSMP_Q1", 15, 2, MT_LMAC_PSMP0 + 4},
-+	};
-+	static const struct hw_queue_map pse_queue_map[] = {
-+		{"CPU Q0",  0,  1, MT_CTX0},
-+		{"CPU Q1",  1,  1, MT_CTX0 + 1},
-+		{"CPU Q2",  2,  1, MT_CTX0 + 2},
-+		{"CPU Q3",  3,  1, MT_CTX0 + 3},
-+		{"HIF_Q0",  8,  0, MT_HIF0},
-+		{"HIF_Q1",  9,  0, MT_HIF0 + 1},
-+		{"HIF_Q2",  10, 0, MT_HIF0 + 2},
-+		{"HIF_Q3",  11, 0, MT_HIF0 + 3},
-+		{"HIF_Q4",  12, 0, MT_HIF0 + 4},
-+		{"HIF_Q5",  13, 0, MT_HIF0 + 5},
-+		{"LMAC_Q",  16, 2, 0},
-+		{"MDP_TXQ", 17, 2, 1},
-+		{"MDP_RXQ", 18, 2, 2},
-+		{"SEC_TXQ", 19, 2, 3},
-+		{"SEC_RXQ", 20, 2, 4},
-+	};
-+	u32 val, head, tail;
-+
-+	/* ple queue */
-+	val = mt76_rr(dev, MT_PLE_FREEPG_CNT);
-+	head = mt76_get_field(dev, MT_PLE_FREEPG_HEAD_TAIL, GENMASK(11, 0));
-+	tail = mt76_get_field(dev, MT_PLE_FREEPG_HEAD_TAIL, GENMASK(27, 16));
-+	seq_puts(s, "PLE page info:\n");
-+	seq_printf(s, "\tTotal free page: 0x%08x head: 0x%03x tail: 0x%03x\n",
-+		   val, head, tail);
-+
-+	val = mt76_rr(dev, MT_PLE_PG_HIF_GROUP);
-+	head = mt76_get_field(dev, MT_PLE_HIF_PG_INFO, GENMASK(11, 0));
-+	tail = mt76_get_field(dev, MT_PLE_HIF_PG_INFO, GENMASK(27, 16));
-+	seq_printf(s, "\tHIF free page: 0x%03x res: 0x%03x used: 0x%03x\n",
-+		   val, head, tail);
-+
-+	seq_puts(s, "PLE non-empty queue info:\n");
-+	mt7915_hw_queue_read(s, MT_PLE_BASE, ARRAY_SIZE(ple_queue_map),
-+			     &ple_queue_map[0]);
-+
-+	/* iterate per-sta ple queue */
-+	ieee80211_iterate_stations_atomic(dev->mphy.hw,
-+					  mt7915_sta_hw_queue_read, s);
-+	if (phy)
-+		ieee80211_iterate_stations_atomic(phy->mt76->hw,
-+						  mt7915_sta_hw_queue_read, s);
-+
-+	/* pse queue */
-+	seq_puts(s, "PSE non-empty queue info:\n");
-+	mt7915_hw_queue_read(s, MT_PSE_BASE, ARRAY_SIZE(pse_queue_map),
-+			     &pse_queue_map[0]);
  
- 	return 0;
- }
-@@ -345,8 +453,8 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
- 
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "queues", dir,
- 				    mt7915_queues_read);
--	debugfs_create_devm_seqfile(dev->mt76.dev, "acq", dir,
--				    mt7915_queues_acq);
-+	debugfs_create_devm_seqfile(dev->mt76.dev, "hw-queues", dir,
-+				    mt7915_hw_queues_read);
- 	debugfs_create_file("tx_stats", 0400, dir, dev, &mt7915_tx_stats_fops);
- 	debugfs_create_file("fw_debug", 0600, dir, dev, &fops_fw_debug);
- 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
-@@ -431,9 +539,23 @@ static const struct file_operations fops_fixed_rate = {
- 	.llseek = default_llseek,
- };
- 
-+static int
-+mt7915_queues_show(struct seq_file *s, void *data)
-+{
-+	struct ieee80211_sta *sta = s->private;
-+
-+	mt7915_sta_hw_queue_read(s, sta);
-+
-+	return 0;
-+}
-+
-+DEFINE_SHOW_ATTRIBUTE(mt7915_queues);
-+
- void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
- 	debugfs_create_file("fixed_rate", 0600, dir, sta, &fops_fixed_rate);
-+	debugfs_create_file("hw-queues", 0400, dir, sta, &mt7915_queues_fops);
- }
-+
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index c0da97f2774c..f5a53a61754d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -219,13 +219,17 @@ enum {
- };
- 
- enum {
--	MT_LMAC_AC00,
-+	MT_CTX0,
-+	MT_HIF0 = 0x0,
-+
-+	MT_LMAC_AC00 = 0x0,
- 	MT_LMAC_AC01,
- 	MT_LMAC_AC02,
- 	MT_LMAC_AC03,
- 	MT_LMAC_ALTX0 = 0x10,
- 	MT_LMAC_BMC0,
- 	MT_LMAC_BCN0,
-+	MT_LMAC_PSMP0,
- };
- 
- enum {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 91c1fb56b0ed..3be53b73fc00 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -22,15 +22,22 @@
- #define MT_PLE_BASE			0x8000
- #define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
- 
--#define MT_PLE_FL_Q0_CTRL		MT_PLE(0x1b0)
--#define MT_PLE_FL_Q1_CTRL		MT_PLE(0x1b4)
--#define MT_PLE_FL_Q2_CTRL		MT_PLE(0x1b8)
--#define MT_PLE_FL_Q3_CTRL		MT_PLE(0x1bc)
--
--#define MT_PLE_AC_QEMPTY(ac, n)		MT_PLE(0x300 + 0x10 * (ac) + \
-+#define MT_FL_Q_EMPTY			0x0b0
-+#define MT_FL_Q0_CTRL			0x1b0
-+#define MT_FL_Q2_CTRL			0x1b8
-+#define MT_FL_Q3_CTRL			0x1bc
-+
-+#define MT_PLE_FREEPG_CNT		MT_PLE(0x100)
-+#define MT_PLE_FREEPG_HEAD_TAIL		MT_PLE(0x104)
-+#define MT_PLE_PG_HIF_GROUP		MT_PLE(0x110)
-+#define MT_PLE_HIF_PG_INFO		MT_PLE(0x114)
-+#define MT_PLE_AC_QEMPTY(ac, n)		MT_PLE(0x500 + 0x40 * (ac) + \
- 					       ((n) << 2))
- #define MT_PLE_AMSDU_PACK_MSDU_CNT(n)	MT_PLE(0x10e0 + ((n) << 2))
- 
-+#define MT_PSE_BASE			0xc000
-+#define MT_PSE(ofs)			(MT_PSE_BASE + (ofs))
-+
- #define MT_MDP_BASE			0xf000
- #define MT_MDP(ofs)			(MT_MDP_BASE + (ofs))
+ 	chan = &sband->channels[0];
  
 -- 
-2.29.2
+2.20.1
 
