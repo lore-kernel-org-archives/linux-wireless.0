@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A972AC4338F
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0F9EC4320E
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AED060F14
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C612A60F22
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Aug 2021 18:37:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232165AbhHPSiO (ORCPT
+        id S231652AbhHPSiQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Aug 2021 14:38:14 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:34780 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231652AbhHPSiO (ORCPT
+        Mon, 16 Aug 2021 14:38:16 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:37834 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232148AbhHPSiO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 16 Aug 2021 14:38:14 -0400
-X-UUID: be3af381f02747728c769b3ded82cac0-20210817
-X-UUID: be3af381f02747728c769b3ded82cac0-20210817
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+X-UUID: cdde079049b844768b90ed18d8efb245-20210817
+X-UUID: cdde079049b844768b90ed18d8efb245-20210817
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2106951730; Tue, 17 Aug 2021 02:37:38 +0800
+        with ESMTP id 1966111769; Tue, 17 Aug 2021 02:37:40 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
  mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 17 Aug 2021 02:37:37 +0800
+ 15.0.1497.2; Tue, 17 Aug 2021 02:37:38 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 17 Aug 2021 02:37:37 +0800
+ Transport; Tue, 17 Aug 2021 02:37:38 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
@@ -41,10 +41,12 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2 1/3] mt76: mt7915: update mac timing settings
-Date:   Tue, 17 Aug 2021 02:37:33 +0800
-Message-ID: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629133569.git.ryder.lee@mediatek.com>
+Subject: [PATCH v2 3/3] mt76: mt7915: rename debugfs tx-queues
+Date:   Tue, 17 Aug 2021 02:37:35 +0800
+Message-ID: <e6a59c0299c7c8569d843c85a8289534708ec8bf.1629133569.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629133569.git.ryder.lee@mediatek.com>
+References: <3f393508b9ed8251f4e2408356110af092c8ad3e.1629133569.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -52,75 +54,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-1. EIFS has been divided into OFDM/CCK fields after 11ax generation.
-2. For 5G/6G SIFS setting, hardware counts extra 6us for OFDM.
+Rename "queues" to "tx-queues" to reflect its meaning.
 
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c  | 14 ++++++--------
- drivers/net/wireless/mediatek/mt76/mt7915/regs.h |  5 ++++-
- 2 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 0ed86cbf722b..1b8e37e265cb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1575,17 +1575,12 @@ void mt7915_mac_set_timing(struct mt7915_phy *phy)
- 		  FIELD_PREP(MT_TIMEOUT_VAL_CCA, 48);
- 	u32 ofdm = FIELD_PREP(MT_TIMEOUT_VAL_PLCP, 60) |
- 		   FIELD_PREP(MT_TIMEOUT_VAL_CCA, 28);
--	int sifs, offset;
-+	int offset;
- 	bool is_5ghz = phy->mt76->chandef.chan->band == NL80211_BAND_5GHZ;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index fdb4017e1ff9..f626e367151a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -379,12 +379,11 @@ mt7915_queues_read(struct seq_file *s, void *data)
+ 		struct mt76_queue *q;
+ 		char *queue;
+ 	} queue_map[] = {
+-		{ dev->mphy.q_tx[MT_TXQ_BE],	 "WFDMA0" },
+-		{ ext_q,			 "WFDMA1" },
+-		{ dev->mphy.q_tx[MT_TXQ_BE],	 "WFDMA0" },
++		{ dev->mphy.q_tx[MT_TXQ_BE],	 "MAIN" },
++		{ ext_q,			 "EXT" },
+ 		{ dev->mt76.q_mcu[MT_MCUQ_WM],	 "MCUWM"  },
+ 		{ dev->mt76.q_mcu[MT_MCUQ_WA],	 "MCUWA"  },
+-		{ dev->mt76.q_mcu[MT_MCUQ_FWDL], "MCUFWQ" },
++		{ dev->mt76.q_mcu[MT_MCUQ_FWDL], "MCUFWDL" },
+ 	};
+ 	int i;
  
- 	if (!test_bit(MT76_STATE_RUNNING, &phy->mt76->state))
- 		return;
+@@ -451,7 +450,7 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
+ 	if (!dir)
+ 		return -ENOMEM;
  
--	if (is_5ghz)
--		sifs = 16;
--	else
--		sifs = 10;
--
- 	if (ext_phy) {
- 		coverage_class = max_t(s16, dev->phy.coverage_class,
- 				       coverage_class);
-@@ -1607,11 +1602,14 @@ void mt7915_mac_set_timing(struct mt7915_phy *phy)
- 	mt76_wr(dev, MT_TMAC_CDTR(ext_phy), cck + reg_offset);
- 	mt76_wr(dev, MT_TMAC_ODTR(ext_phy), ofdm + reg_offset);
- 	mt76_wr(dev, MT_TMAC_ICR0(ext_phy),
--		FIELD_PREP(MT_IFS_EIFS, 360) |
-+		FIELD_PREP(MT_IFS_EIFS_OFDM, is_5ghz ? 84 : 78) |
- 		FIELD_PREP(MT_IFS_RIFS, 2) |
--		FIELD_PREP(MT_IFS_SIFS, sifs) |
-+		FIELD_PREP(MT_IFS_SIFS, 10) |
- 		FIELD_PREP(MT_IFS_SLOT, phy->slottime));
- 
-+	mt76_wr(dev, MT_TMAC_ICR1(ext_phy),
-+		FIELD_PREP(MT_IFS_EIFS_CCK, 314));
-+
- 	if (phy->slottime < 20 || is_5ghz)
- 		val = MT7915_CFEND_RATE_DEFAULT;
- 	else
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index a213b5cb82f8..91c1fb56b0ed 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -72,11 +72,14 @@
- #define MT_TMAC_TRCR0_I2T_CHK		GENMASK(24, 16)
- 
- #define MT_TMAC_ICR0(_band)		MT_WF_TMAC(_band, 0x0a4)
--#define MT_IFS_EIFS			GENMASK(8, 0)
-+#define MT_IFS_EIFS_OFDM			GENMASK(8, 0)
- #define MT_IFS_RIFS			GENMASK(14, 10)
- #define MT_IFS_SIFS			GENMASK(22, 16)
- #define MT_IFS_SLOT			GENMASK(30, 24)
- 
-+#define MT_TMAC_ICR1(_band)		MT_WF_TMAC(_band, 0x0b4)
-+#define MT_IFS_EIFS_CCK			GENMASK(8, 0)
-+
- #define MT_TMAC_CTCR0(_band)			MT_WF_TMAC(_band, 0x0f4)
- #define MT_TMAC_CTCR0_INS_DDLMT_REFTIME		GENMASK(5, 0)
- #define MT_TMAC_CTCR0_INS_DDLMT_EN		BIT(17)
+-	debugfs_create_devm_seqfile(dev->mt76.dev, "queues", dir,
++	debugfs_create_devm_seqfile(dev->mt76.dev, "tx-queues", dir,
+ 				    mt7915_queues_read);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "hw-queues", dir,
+ 				    mt7915_hw_queues_read);
 -- 
 2.29.2
 
