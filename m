@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 905E2C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 02:40:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 723D5C432BE
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 02:40:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60E8460F46
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 02:40:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52E2E60C3F
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 02:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233953AbhHQCkd (ORCPT
+        id S236156AbhHQCkf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Aug 2021 22:40:33 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:14215 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233438AbhHQCkc (ORCPT
+        Mon, 16 Aug 2021 22:40:35 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:8428 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233634AbhHQCkc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 16 Aug 2021 22:40:32 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GpZxM4gp1z1CX14;
-        Tue, 17 Aug 2021 10:39:35 +0800 (CST)
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GpZs8628Sz88FG;
+        Tue, 17 Aug 2021 10:35:56 +0800 (CST)
 Received: from dggpeml500024.china.huawei.com (7.185.36.10) by
  dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 17 Aug 2021 10:39:57 +0800
+ 15.1.2176.2; Tue, 17 Aug 2021 10:39:58 +0800
 Received: from localhost.localdomain (10.67.165.24) by
  dggpeml500024.china.huawei.com (7.185.36.10) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 17 Aug 2021 10:39:57 +0800
+ 15.1.2176.2; Tue, 17 Aug 2021 10:39:58 +0800
 From:   Yufeng Mo <moyufeng@huawei.com>
 To:     <davem@davemloft.net>, <kuba@kernel.org>
 CC:     <netdev@vger.kernel.org>, <shenjian15@huawei.com>,
@@ -49,9 +49,9 @@ CC:     <netdev@vger.kernel.org>, <shenjian15@huawei.com>,
         <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
         <merez@codeaurora.org>, <kvalo@codeaurora.org>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH net-next 1/4] ethtool: add two coalesce attributes for CQE mode
-Date:   Tue, 17 Aug 2021 10:36:04 +0800
-Message-ID: <1629167767-7550-2-git-send-email-moyufeng@huawei.com>
+Subject: [PATCH net-next 4/4] net: hns3: add ethtool support for CQE/EQE mode configuration
+Date:   Tue, 17 Aug 2021 10:36:07 +0800
+Message-ID: <1629167767-7550-5-git-send-email-moyufeng@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1629167767-7550-1-git-send-email-moyufeng@huawei.com>
 References: <1629167767-7550-1-git-send-email-moyufeng@huawei.com>
@@ -65,98 +65,95 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, there many drivers who support CQE mode configuration,
-some configure it as a fixed when initialized, some provide an
-interface to change it by ethtool private flags. In order make it
-more generic, add two new 'ETHTOOL_A_COALESCE_USE_CQE_TX' and
-'ETHTOOL_A_COALESCE_USE_CQE_RX' coalesce attributes, then these
-parameters can be accessed by ethtool netlink coalesce uAPI.
+Add support in ethtool for switching EQE/CQE mode.
 
 Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
 Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
- Documentation/networking/ethtool-netlink.rst | 15 +++++++++++++++
- include/linux/ethtool.h                      |  6 +++++-
- include/uapi/linux/ethtool_netlink.h         |  2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/hisilicon/hns3/hns3_enet.c    |  6 +++---
+ drivers/net/ethernet/hisilicon/hns3/hns3_enet.h    |  3 +++
+ drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c | 18 +++++++++++++++++-
+ 3 files changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/networking/ethtool-netlink.rst b/Documentation/networking/ethtool-netlink.rst
-index c690bb3..d9b55b7 100644
---- a/Documentation/networking/ethtool-netlink.rst
-+++ b/Documentation/networking/ethtool-netlink.rst
-@@ -947,12 +947,25 @@ Kernel response contents:
-   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
-   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
-   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
-+  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
-+  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
-   ===========================================  ======  =======================
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+index 1bd83d7..39d01ca 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+@@ -5055,9 +5055,9 @@ static void hns3_set_cq_period_mode(struct hns3_nic_priv *priv,
+ 	}
+ }
  
- Attributes are only included in reply if their value is not zero or the
- corresponding bit in ``ethtool_ops::supported_coalesce_params`` is set (i.e.
- they are declared as supported by driver).
+-static void hns3_cq_period_mode_init(struct hns3_nic_priv *priv,
+-				     enum dim_cq_period_mode tx_mode,
+-				     enum dim_cq_period_mode rx_mode)
++void hns3_cq_period_mode_init(struct hns3_nic_priv *priv,
++			      enum dim_cq_period_mode tx_mode,
++			      enum dim_cq_period_mode rx_mode)
+ {
+ 	hns3_set_cq_period_mode(priv, tx_mode, true);
+ 	hns3_set_cq_period_mode(priv, rx_mode, false);
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+index ff45825..dfad906 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+@@ -718,4 +718,7 @@ void hns3_dbg_register_debugfs(const char *debugfs_dir_name);
+ void hns3_dbg_unregister_debugfs(void);
+ void hns3_shinfo_pack(struct skb_shared_info *shinfo, __u32 *size);
+ u16 hns3_get_max_available_channels(struct hnae3_handle *h);
++void hns3_cq_period_mode_init(struct hns3_nic_priv *priv,
++			      enum dim_cq_period_mode tx_mode,
++			      enum dim_cq_period_mode rx_mode);
+ #endif
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c b/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
+index 049be076..b8d9851 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
+@@ -1203,6 +1203,11 @@ static int hns3_get_coalesce(struct net_device *netdev,
+ 	cmd->tx_max_coalesced_frames = tx_coal->int_ql;
+ 	cmd->rx_max_coalesced_frames = rx_coal->int_ql;
  
-+Timer reset mode (``ETHTOOL_A_COALESCE_USE_CQE_TX`` and
-+``ETHTOOL_A_COALESCE_USE_CQE_RX``) controls the interaction between packet
-+arrival and the various time based delay parameters. By default timers are
-+expected to limit the max delay between any packet arrival/departure and a
-+corresponding interrupt. In this mode timer should be started by packet
-+arrival (sometimes delivery of previous interrupt) and reset when interrupt
-+is delivered.
-+Setting the appropriate attribute to 1 will enable ``CQE`` mode, where
-+each packet event resets the timer. In this mode timer is used to force
-+the interrupt if queue goes idle, while busy queues depend on the packet
-+limit to trigger interrupts.
++	kernel_coal->use_cqe_mode_tx = (priv->tx_cqe_mode ==
++					DIM_CQ_PERIOD_MODE_START_FROM_CQE);
++	kernel_coal->use_cqe_mode_rx = (priv->rx_cqe_mode ==
++					DIM_CQ_PERIOD_MODE_START_FROM_CQE);
++
+ 	return 0;
+ }
  
- COALESCE_SET
- ============
-@@ -985,6 +998,8 @@ Request contents:
-   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
-   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
-   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
-+  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
-+  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
-   ===========================================  ======  =======================
+@@ -1372,6 +1377,8 @@ static int hns3_set_coalesce(struct net_device *netdev,
+ 	struct hns3_enet_coalesce *tx_coal = &priv->tx_coal;
+ 	struct hns3_enet_coalesce *rx_coal = &priv->rx_coal;
+ 	u16 queue_num = h->kinfo.num_tqps;
++	enum dim_cq_period_mode tx_mode;
++	enum dim_cq_period_mode rx_mode;
+ 	int ret;
+ 	int i;
  
- Request is rejected if it attributes declared as unsupported by driver (i.e.
-diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
-index 4711b96..bad4c7a 100644
---- a/include/linux/ethtool.h
-+++ b/include/linux/ethtool.h
-@@ -211,7 +211,9 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
- #define ETHTOOL_COALESCE_TX_USECS_HIGH		BIT(19)
- #define ETHTOOL_COALESCE_TX_MAX_FRAMES_HIGH	BIT(20)
- #define ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL	BIT(21)
--#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(21, 0)
-+#define ETHTOOL_COALESCE_USE_CQE_RX		BIT(22)
-+#define ETHTOOL_COALESCE_USE_CQE_TX		BIT(23)
-+#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(23, 0)
+@@ -1397,6 +1404,14 @@ static int hns3_set_coalesce(struct net_device *netdev,
+ 	for (i = 0; i < queue_num; i++)
+ 		hns3_set_coalesce_per_queue(netdev, cmd, i);
  
- #define ETHTOOL_COALESCE_USECS						\
- 	(ETHTOOL_COALESCE_RX_USECS | ETHTOOL_COALESCE_TX_USECS)
-@@ -237,6 +239,8 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
- 	 ETHTOOL_COALESCE_RX_USECS_LOW | ETHTOOL_COALESCE_RX_USECS_HIGH | \
- 	 ETHTOOL_COALESCE_PKT_RATE_LOW | ETHTOOL_COALESCE_PKT_RATE_HIGH | \
- 	 ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL)
-+#define ETHTOOL_COALESCE_USE_CQE					\
-+	(ETHTOOL_COALESCE_USE_CQE_RX | ETHTOOL_COALESCE_USE_CQE_TX)
++	tx_mode = kernel_coal->use_cqe_mode_tx ?
++		  DIM_CQ_PERIOD_MODE_START_FROM_CQE :
++		  DIM_CQ_PERIOD_MODE_START_FROM_EQE;
++	rx_mode = kernel_coal->use_cqe_mode_rx ?
++		  DIM_CQ_PERIOD_MODE_START_FROM_CQE :
++		  DIM_CQ_PERIOD_MODE_START_FROM_EQE;
++	hns3_cq_period_mode_init(priv, tx_mode, rx_mode);
++
+ 	return 0;
+ }
  
- #define ETHTOOL_STAT_NOT_SET	(~0ULL)
+@@ -1702,7 +1717,8 @@ static int hns3_set_tunable(struct net_device *netdev,
+ 				 ETHTOOL_COALESCE_USE_ADAPTIVE |	\
+ 				 ETHTOOL_COALESCE_RX_USECS_HIGH |	\
+ 				 ETHTOOL_COALESCE_TX_USECS_HIGH |	\
+-				 ETHTOOL_COALESCE_MAX_FRAMES)
++				 ETHTOOL_COALESCE_MAX_FRAMES |		\
++				 ETHTOOL_COALESCE_USE_CQE)
  
-diff --git a/include/uapi/linux/ethtool_netlink.h b/include/uapi/linux/ethtool_netlink.h
-index b3b9371..5545f1c 100644
---- a/include/uapi/linux/ethtool_netlink.h
-+++ b/include/uapi/linux/ethtool_netlink.h
-@@ -377,6 +377,8 @@ enum {
- 	ETHTOOL_A_COALESCE_TX_USECS_HIGH,		/* u32 */
- 	ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH,		/* u32 */
- 	ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL,	/* u32 */
-+	ETHTOOL_A_COALESCE_USE_CQE_MODE_TX,		/* u8 */
-+	ETHTOOL_A_COALESCE_USE_CQE_MODE_RX,		/* u8 */
- 
- 	/* add new constants above here */
- 	__ETHTOOL_A_COALESCE_CNT,
+ static int hns3_get_ts_info(struct net_device *netdev,
+ 			    struct ethtool_ts_info *info)
 -- 
 2.8.1
 
