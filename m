@@ -2,86 +2,74 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03581C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 13:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B4CC4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 13:54:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEC2860F38
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 13:50:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0CA460FC3
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Aug 2021 13:54:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237517AbhHQNv2 (ORCPT
+        id S235168AbhHQNyu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Aug 2021 09:51:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233288AbhHQNv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Aug 2021 09:51:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8671760F35;
-        Tue, 17 Aug 2021 13:39:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629207545;
-        bh=2BNje+PP31tmUpIGZqD0jAs9iIRc8+S0ks+rtVdopxc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=R4HJPZX5snVbcwoIYEK0usstZOCCK2Ep5nJYVwb53BXFKPQ+2yLn/ANFidoHMO57r
-         FlfsVm/Eyq06l5McqN5AW7GPmsp/uPfoHzviKpMv4FB1omO5guXYYbBXoAPSd/gjIm
-         eXb6XfJ2NAVsEGnJeRXo53zILfUYimz0RyNeiV9o5MRjw4OWMrBd+FHSWkVlhgtp0z
-         mOxGEi0VH5udAslzPiKeoMIgPD+csn25l8fPsuk/n54SW3a45cYkP69iUx7scTQ7G3
-         AQG5sWYPLH4Ac5WDB7eM8mAGzcpVthql/haswrr8YSSla4y8xOQvKP2DLFrUOxNy/z
-         ZA/yWga36uZeQ==
-Date:   Tue, 17 Aug 2021 06:39:03 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Yufeng Mo <moyufeng@huawei.com>
-Cc:     <davem@davemloft.net>, <netdev@vger.kernel.org>,
-        <shenjian15@huawei.com>, <lipeng321@huawei.com>,
-        <yisen.zhuang@huawei.com>, <linyunsheng@huawei.com>,
-        <huangguangbin2@huawei.com>, <chenhao288@hisilicon.com>,
-        <salil.mehta@huawei.com>, <linuxarm@huawei.com>,
-        <linuxarm@openeuler.org>, <dledford@redhat.com>, <jgg@ziepe.ca>,
-        <netanel@amazon.com>, <akiyano@amazon.com>,
-        <thomas.lendacky@amd.com>, <irusskikh@marvell.com>,
-        <michael.chan@broadcom.com>, <edwin.peer@broadcom.com>,
-        <rohitm@chelsio.com>, <jacob.e.keller@intel.com>,
-        <ioana.ciornei@nxp.com>, <vladimir.oltean@nxp.com>,
-        <sgoutham@marvell.com>, <sbhatta@marvell.com>, <saeedm@nvidia.com>,
-        <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
-        <merez@codeaurora.org>, <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH net-next 2/4] ethtool: extend coalesce setting uAPI with
- CQE mode
-Message-ID: <20210817063903.6b62801c@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <1629167767-7550-3-git-send-email-moyufeng@huawei.com>
-References: <1629167767-7550-1-git-send-email-moyufeng@huawei.com>
-        <1629167767-7550-3-git-send-email-moyufeng@huawei.com>
+        Tue, 17 Aug 2021 09:54:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48218 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231786AbhHQNyt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Aug 2021 09:54:49 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F9B3C061764
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 06:54:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=Vu1TXcfH3DvBTTcz1EmP1TUDxly89rGPQJPnroBTIB8=;
+        t=1629208456; x=1630418056; b=UHI+LAZvUJW6VHosMsjWw/ZAX2n6HBWCtA0CsEan0TYbOde
+        PP5w/icqC9o8RtSclPXuymWR4v3KSQwa1qR8TUlCzA6EPI/uiEB224qX2gFnkT/tgf/oTdvHpBwd3
+        QPFNY74ApEXX+k9pYA735ZvibozX9wE/wV8fDbyTM3Qy/SJFzZOnHdTa/+H1E+Q4MD8tZMs6r9Ugu
+        m9bYJhPYNfN7ktnOe3s+EGjh1L4PLM91ap1q0B7/RHBfBTYXcd0sPd+rUMzuGn5H5Z0tKVNdn9VtT
+        NqiJjlahFght8hZgLRKYLmBQOpK49AoETvuhlghy0oA9IxFcGzwt5PrywdonSa1w==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1mFzXi-00CHfm-IS; Tue, 17 Aug 2021 15:54:14 +0200
+Message-ID: <ec979481036ad198d4c42d2756caf66fd3496bbc.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] cfg80211: Handle driver updated MU-EDCA params
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Muna Sinada <msinada@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 17 Aug 2021 15:54:13 +0200
+In-Reply-To: <1628660743-24413-1-git-send-email-msinada@codeaurora.org>
+References: <1628660743-24413-1-git-send-email-msinada@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 17 Aug 2021 10:36:05 +0800 Yufeng Mo wrote:
-> In order to support more coalesce parameters through netlink,
-> add an new structure kernel_ethtool_coalesce, and keep
-> struct ethtool_coalesce as the base(legacy) part, then the
-> new parameter can be added into struct kernel_ethtool_coalesce.
->=20
-> Also add new extack parameter for .set_coalesce and .get_coalesce
-> then some extra info can return to user with the netlink API.
->=20
-> Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
-> Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
+On Tue, 2021-08-10 at 22:45 -0700, Muna Sinada wrote:
+> Add necessary functions and attributes to receive updated MU-EDCA
+> parameters from driver and send to user space, where management
+> frame are updated to reflect latest parameters.
+> 
 
-This and the following patches don't build, please make sure
-allmodconfig builds correctly. Here's an example failure, but
-IDK if there isn't more:
+On second thought - this really could use some more explanation?
 
-drivers/net/ethernet/ti/davinci_emac.c: In function =E2=80=98emac_dev_open=
-=E2=80=99:
-drivers/net/ethernet/ti/davinci_emac.c:1469:3: error: too few arguments to =
-function =E2=80=98emac_set_coalesce=E2=80=99
- 1469 |   emac_set_coalesce(ndev, &coal);
-      |   ^~~~~~~~~~~~~~~~~
+Why are MU-EDCA parameters determined by the driver? What does this
+actually do? Is it meant for AP mode, or client mode? Any spec
+references?
+
+Mac80211 parses this coming from the AP, so probably this is meant for
+AP mode, but why? Why wouldn't hostapd determine the correct parameters?
+
+etc.
+
+johannes
+
