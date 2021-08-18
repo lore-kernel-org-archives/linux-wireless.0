@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A5A1C432BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BF6C4320E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5380861053
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F1796103A
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231526AbhHRJLA (ORCPT
+        id S231910AbhHRJLE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 05:11:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55136 "EHLO mail.kernel.org"
+        Wed, 18 Aug 2021 05:11:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55166 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231652AbhHRJLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 05:11:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B240461058;
-        Wed, 18 Aug 2021 09:10:24 +0000 (UTC)
+        id S231660AbhHRJLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Aug 2021 05:11:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 77CF761053;
+        Wed, 18 Aug 2021 09:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629277825;
-        bh=SG5jplHKsyaaoImMzErZlAhYWR7Nsl1kgSlVfaoEEDc=;
+        s=k20201202; t=1629277829;
+        bh=JtDZl5lLgHQ3HXh+IZ10r1oelsDgOkfXASzEO8lr6Hs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EdR3WCzpaFhuol1Ju+n2IIKGP3pfgQn0C7MpIX0CJ3D4L8pi0zT2Njd0+/4uQKWBb
-         g+7O6+/LZj28KkHAiONIHbjfaCnnu31+jzHwxb7TCt0KqMgapS2BnPyyNV4vnTkppV
-         XR3wRYo05ZSefEPpZexRJHJ05lafnb3VpluFTiBxII43v4UlWlrCiDTtIHdAcX2xhr
-         eGrsQjzVZHFDe9zVsW0ZoXcAS/2asp+/Ap+7QXMa+Q22uWbTjpLspYBMhAKYYwz3vG
-         olGuMRKoPMp6tvqWVGan4kiWu4RWZTNZ6sZGVBylwmBfcATxTV/E4z0go8zhlXaf2q
-         UxeuSoZuUZM3g==
+        b=Owc840fIJQThqoiX88rn6RclfpXEuYlfXzSNeYJ88o0vqoRYj+ZsIQU/rva9V3LpC
+         6JR5XoEZBxVT3iAMsQhraaSjLbrGxq4uvTzLWpiFhETR+NTwo7metSL/JF83uAUbg8
+         WOAsihqg7ZbC4tInkP17+fC5pnWAm7pH5RkhVivvvpWZ9spus0F/WkuBBVVJOrPGd1
+         J9SEctVJQpqabGq1Z3i1K0GuK16vl0kzcgTx8+h7uQ39NfxjjioapYETlOuxXPO6oc
+         eUdzWhSU5f1/0IthFOtgwkYcHlwWhSOKpZ2F0JLTRUQvN04u1XV73WtKb3VmgvK6ZS
+         6U0JnkCanX9FA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         sean.wang@mediatek.com, Deren.Wu@mediatek.com
-Subject: [PATCH 3/5] mt76: mt7921: report tx rate directly from tx status
-Date:   Wed, 18 Aug 2021 11:09:58 +0200
-Message-Id: <1aa7b946cac8bb1c3d3ad3eaa41a7c610d122d92.1629277624.git.lorenzo@kernel.org>
+Subject: [PATCH 5/5] mt76: mt7921: remove mt7921_sta_stats
+Date:   Wed, 18 Aug 2021 11:10:00 +0200
+Message-Id: <59abfc3592108a1bb1eb04ddaf654f1df4d7aa74.1629277624.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1629277624.git.lorenzo@kernel.org>
 References: <cover.1629277624.git.lorenzo@kernel.org>
@@ -48,432 +48,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Report tx rate from tx status packets instead of receiving periodic mcu
-event. This improves flexibility, accuracy and AQL performance, and
-simplifies code flow for better readability.
+mt7921_sta_stats is no longer needed
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 224 +++++++++++-------
- .../net/wireless/mediatek/mt76/mt7921/mac.h   |   4 +-
- .../net/wireless/mediatek/mt76/mt7921/main.c  |  22 +-
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |   2 -
- 4 files changed, 151 insertions(+), 101 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c    |  4 ++--
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h | 12 +-----------
+ 3 files changed, 4 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 83eed0797314..7d0554c03cfb 100644
+index d9e0b993a698..8e14451a065c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -61,6 +61,7 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
- 	struct mt7921_sta *msta;
- 	u32 tx_time[IEEE80211_NUM_ACS], rx_time[IEEE80211_NUM_ACS];
- 	LIST_HEAD(sta_poll_list);
-+	struct rate_info *rate;
- 	int i;
+@@ -966,9 +966,9 @@ int mt7921_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	if (sta) {
+ 		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
  
- 	spin_lock_bh(&dev->sta_poll_lock);
-@@ -71,8 +72,9 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
- 
- 	while (true) {
- 		bool clear = false;
--		u32 addr;
-+		u32 addr, val;
- 		u16 idx;
-+		u8 bw;
- 
- 		spin_lock_bh(&dev->sta_poll_lock);
- 		if (list_empty(&sta_poll_list)) {
-@@ -126,6 +128,41 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
- 			ieee80211_sta_register_airtime(sta, tid, tx_cur,
- 						       rx_cur);
+-		if (time_after(jiffies, msta->stats.jiffies + HZ / 4)) {
++		if (time_after(jiffies, msta->last_txs + HZ / 4)) {
+ 			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+-			msta->stats.jiffies = jiffies;
++			msta->last_txs = jiffies;
  		}
-+
-+		/* We don't support reading GI info from txs packets.
-+		 * For accurate tx status reporting and AQL improvement,
-+		 * we need to make sure that flags match so polling GI
-+		 * from per-sta counters directly.
-+		 */
-+		rate = &msta->wcid.rate;
-+		addr = MT_WTBL_LMAC_OFFS(idx, 0) + 7 * 4;
-+		val = mt76_rr(dev, addr);
-+
-+		switch (rate->bw) {
-+		case RATE_INFO_BW_160:
-+			bw = IEEE80211_STA_RX_BW_160;
-+			break;
-+		case RATE_INFO_BW_80:
-+			bw = IEEE80211_STA_RX_BW_80;
-+			break;
-+		case RATE_INFO_BW_40:
-+			bw = IEEE80211_STA_RX_BW_40;
-+			break;
-+		default:
-+			bw = IEEE80211_STA_RX_BW_20;
-+			break;
-+		}
-+
-+		if (rate->flags & RATE_INFO_FLAGS_HE_MCS) {
-+			u8 offs = 24 + 2 * bw;
-+
-+			rate->he_gi = (val & (0x3 << offs)) >> offs;
-+		} else if (rate->flags & RATE_INFO_FLAGS_VHT_MCS) {
-+			if (val & BIT(12 + bw))
-+				rate->flags |= RATE_INFO_FLAGS_SHORT_GI;
-+			else
-+				rate->flags &= ~RATE_INFO_FLAGS_SHORT_GI;
-+		}
  	}
- 
- 	rcu_read_unlock();
-@@ -783,24 +820,6 @@ mt7921_mac_write_txwi_80211(struct mt7921_dev *dev, __le32 *txwi,
- 	txwi[7] |= cpu_to_le32(val);
- }
- 
--static void mt7921_update_txs(struct mt76_wcid *wcid, __le32 *txwi)
--{
--	struct mt7921_sta *msta = container_of(wcid, struct mt7921_sta, wcid);
--	u32 pid, frame_type;
--
--	frame_type = FIELD_GET(MT_TXD2_FRAME_TYPE, le32_to_cpu(txwi[2]));
--	if (!(frame_type & (IEEE80211_FTYPE_DATA >> 2)))
--		return;
--
--	if (time_is_after_eq_jiffies(msta->next_txs_ts))
--		return;
--
--	msta->next_txs_ts = jiffies + msecs_to_jiffies(250);
--	pid = mt76_get_next_pkt_id(wcid);
--	txwi[5] |= cpu_to_le32(MT_TXD5_TX_STATUS_MCU |
--			       FIELD_PREP(MT_TXD5_PID, pid));
--}
--
- static void
- mt7921_mac_write_txwi(struct mt7921_dev *dev, __le32 *txwi,
- 		      struct sk_buff *skb, struct mt76_wcid *wcid,
-@@ -885,8 +904,6 @@ mt7921_mac_write_txwi(struct mt7921_dev *dev, __le32 *txwi,
- 		txwi[6] |= cpu_to_le32(val);
- 		txwi[3] |= cpu_to_le32(MT_TXD3_BA_DISABLE);
- 	}
--
--	mt7921_update_txs(wcid, txwi);
- }
- 
- static void
-@@ -928,10 +945,9 @@ int mt7921_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_info->skb);
- 	struct ieee80211_key_conf *key = info->control.hw_key;
--	struct mt76_tx_cb *cb = mt76_tx_skb_cb(tx_info->skb);
- 	struct mt76_txwi_cache *t;
- 	struct mt7921_txp_common *txp;
--	int id;
-+	int id, pid;
- 	u8 *txwi = (u8 *)txwi_ptr;
- 
- 	if (unlikely(tx_info->skb->len <= ETH_HLEN))
-@@ -940,8 +956,6 @@ int mt7921_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	if (!wcid)
- 		wcid = &dev->mt76.global_wcid;
- 
--	cb->wcid = wcid->idx;
--
- 	t = (struct mt76_txwi_cache *)(txwi + mdev->drv->txwi_size);
- 	t->skb = tx_info->skb;
- 
-@@ -949,8 +963,18 @@ int mt7921_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	if (id < 0)
- 		return id;
- 
-+	if (sta) {
-+		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+
-+		if (time_after(jiffies, msta->stats.jiffies + HZ / 4)) {
-+			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-+			msta->stats.jiffies = jiffies;
-+		}
-+	}
-+
-+	pid = mt76_tx_status_skb_add(mdev, wcid, tx_info->skb);
- 	mt7921_mac_write_txwi(dev, txwi_ptr, tx_info->skb, wcid, key,
--			      MT_PACKET_ID_NO_SKB, false);
-+			      pid, false);
- 
- 	txp = (struct mt7921_txp_common *)(txwi + MT_TXD_SIZE);
- 	memset(txp, 0, sizeof(struct mt7921_txp_common));
-@@ -986,42 +1010,6 @@ mt7921_tx_check_aggr(struct ieee80211_sta *sta, __le32 *txwi)
- 		ieee80211_start_tx_ba_session(sta, tid, 0);
- }
- 
--static void
--mt7921_tx_complete_status(struct mt76_dev *mdev, struct sk_buff *skb,
--			  struct ieee80211_sta *sta, bool clear_status,
--			  struct list_head *free_list)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_tx_status status = {
--		.sta = sta,
--		.info = info,
--		.skb = skb,
--		.free_list = free_list,
--	};
--	struct ieee80211_hw *hw;
--
--	if (sta) {
--		struct mt7921_sta *msta;
--
--		msta = (struct mt7921_sta *)sta->drv_priv;
--		status.rate = &msta->stats.tx_rate;
--	}
--
--	hw = mt76_tx_status_get_hw(mdev, skb);
--
--	if (info->flags & IEEE80211_TX_CTL_AMPDU)
--		info->flags |= IEEE80211_TX_STAT_AMPDU;
--
--	if (clear_status)
--		ieee80211_tx_info_clear_status(info);
--
--	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
--		info->flags |= IEEE80211_TX_STAT_ACK;
--
--	info->status.tx_time = 0;
--	ieee80211_tx_status_ext(hw, &status);
--}
--
- static void
- mt7921_txp_skb_unmap(struct mt76_dev *dev, struct mt76_txwi_cache *t)
- {
-@@ -1059,31 +1047,27 @@ mt7921_txwi_free(struct mt7921_dev *dev, struct mt76_txwi_cache *t,
- 		 struct list_head *free_list)
- {
- 	struct mt76_dev *mdev = &dev->mt76;
--	struct ieee80211_tx_info *info;
- 	__le32 *txwi;
-+	u16 wcid_idx;
- 
- 	mt7921_txp_skb_unmap(mdev, t);
- 	if (!t->skb)
- 		goto out;
- 
--	if (!sta)
--		goto out;
--
- 	txwi = (__le32 *)mt76_get_txwi_ptr(mdev, t);
--	if (likely(t->skb->protocol != cpu_to_be16(ETH_P_PAE)))
--		mt7921_tx_check_aggr(sta, txwi);
--
--	info = IEEE80211_SKB_CB(t->skb);
--	if (!info->tx_time_est) {
-+	if (sta) {
- 		struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
--		int pending;
- 
--		pending = atomic_dec_return(&wcid->non_aql_packets);
--		if (pending < 0)
--			atomic_cmpxchg(&wcid->non_aql_packets, pending, 0);
-+		if (likely(t->skb->protocol != cpu_to_be16(ETH_P_PAE)))
-+			mt7921_tx_check_aggr(sta, txwi);
-+
-+		wcid_idx = wcid->idx;
-+	} else {
-+		wcid_idx = FIELD_GET(MT_TXD1_WLAN_IDX, le32_to_cpu(txwi[1]));
- 	}
- 
--	mt7921_tx_complete_status(mdev, t->skb, sta, clear_status, free_list);
-+	__mt76_tx_complete_skb(mdev, wcid_idx, t->skb, free_list);
-+
- out:
- 	t->skb = NULL;
- 	mt76_put_txwi(mdev, t);
-@@ -1169,10 +1153,14 @@ static bool
- mt7921_mac_add_txs_skb(struct mt7921_dev *dev, struct mt76_wcid *wcid, int pid,
- 		       __le32 *txs_data)
- {
-+	struct ieee80211_supported_band *sband;
- 	struct mt76_dev *mdev = &dev->mt76;
- 	struct ieee80211_tx_info *info;
-+	struct rate_info rate = {};
- 	struct sk_buff_head list;
- 	struct sk_buff *skb;
-+	bool cck = false;
-+	u32 txrate, txs;
- 
- 	mt76_tx_status_lock(mdev, &list);
- 	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
-@@ -1180,7 +1168,8 @@ mt7921_mac_add_txs_skb(struct mt7921_dev *dev, struct mt76_wcid *wcid, int pid,
- 		goto out;
- 
- 	info = IEEE80211_SKB_CB(skb);
--	if (!(txs_data[0] & le32_to_cpu(MT_TXS0_ACK_ERROR_MASK)))
-+	txs = le32_to_cpu(txs_data[0]);
-+	if (!(txs & MT_TXS0_ACK_ERROR_MASK))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 
- 	info->status.ampdu_len = 1;
-@@ -1188,9 +1177,77 @@ mt7921_mac_add_txs_skb(struct mt7921_dev *dev, struct mt76_wcid *wcid, int pid,
- 					IEEE80211_TX_STAT_ACK);
- 
- 	info->status.rates[0].idx = -1;
--	mt76_tx_status_skb_done(mdev, skb, &list);
-+
-+	if (!wcid->sta)
-+		goto out;
-+
-+	txrate = FIELD_GET(MT_TXS0_TX_RATE, txs);
-+
-+	rate.mcs = FIELD_GET(MT_TX_RATE_IDX, txrate);
-+	rate.nss = FIELD_GET(MT_TX_RATE_NSS, txrate) + 1;
-+
-+	switch (FIELD_GET(MT_TX_RATE_MODE, txrate)) {
-+	case MT_PHY_TYPE_CCK:
-+		cck = true;
-+		fallthrough;
-+	case MT_PHY_TYPE_OFDM:
-+		if (dev->mphy.chandef.chan->band == NL80211_BAND_5GHZ)
-+			sband = &dev->mphy.sband_5g.sband;
-+		else
-+			sband = &dev->mphy.sband_2g.sband;
-+
-+		rate.mcs = mt76_get_rate(dev->mphy.dev, sband, rate.mcs, cck);
-+		rate.legacy = sband->bitrates[rate.mcs].bitrate;
-+		break;
-+	case MT_PHY_TYPE_HT:
-+	case MT_PHY_TYPE_HT_GF:
-+		rate.mcs += (rate.nss - 1) * 8;
-+		if (rate.mcs > 31)
-+			goto out;
-+
-+		rate.flags = RATE_INFO_FLAGS_MCS;
-+		if (wcid->rate.flags & RATE_INFO_FLAGS_SHORT_GI)
-+			rate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+		break;
-+	case MT_PHY_TYPE_VHT:
-+		if (rate.mcs > 9)
-+			goto out;
-+
-+		rate.flags = RATE_INFO_FLAGS_VHT_MCS;
-+		break;
-+	case MT_PHY_TYPE_HE_SU:
-+	case MT_PHY_TYPE_HE_EXT_SU:
-+	case MT_PHY_TYPE_HE_TB:
-+	case MT_PHY_TYPE_HE_MU:
-+		if (rate.mcs > 11)
-+			goto out;
-+
-+		rate.he_gi = wcid->rate.he_gi;
-+		rate.he_dcm = FIELD_GET(MT_TX_RATE_DCM, txrate);
-+		rate.flags = RATE_INFO_FLAGS_HE_MCS;
-+		break;
-+	default:
-+		goto out;
-+	}
-+
-+	switch (FIELD_GET(MT_TXS0_BW, txs)) {
-+	case IEEE80211_STA_RX_BW_160:
-+		rate.bw = RATE_INFO_BW_160;
-+		break;
-+	case IEEE80211_STA_RX_BW_80:
-+		rate.bw = RATE_INFO_BW_80;
-+		break;
-+	case IEEE80211_STA_RX_BW_40:
-+		rate.bw = RATE_INFO_BW_40;
-+		break;
-+	default:
-+		rate.bw = RATE_INFO_BW_20;
-+		break;
-+	}
-+	wcid->rate = rate;
- 
- out:
-+	mt76_tx_status_skb_done(mdev, skb, &list);
- 	mt76_tx_status_unlock(mdev, &list);
- 
- 	return !!skb;
-@@ -1305,15 +1362,8 @@ void mt7921_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue_entry *e)
- 		e->skb = t ? t->skb : NULL;
- 	}
- 
--	if (e->skb) {
--		struct mt76_tx_cb *cb = mt76_tx_skb_cb(e->skb);
--		struct mt76_wcid *wcid;
--
--		wcid = rcu_dereference(dev->mt76.wcid[cb->wcid]);
--
--		mt7921_tx_complete_status(mdev, e->skb, wcid_to_sta(wcid), 0,
--					  NULL);
--	}
-+	if (e->skb)
-+		mt76_tx_complete_skb(mdev, e->wcid, e->skb);
- }
- 
- void mt7921_mac_reset_counters(struct mt7921_phy *phy)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-index 4b29d2728f4d..1e4b07dd0b63 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-@@ -317,8 +317,10 @@ struct mt7921_tx_free {
- /* will support this field in further revision */
- #define MT_TX_FREE_RATE			GENMASK(13, 0)
- 
--#define MT_TXS0_ACK_ERROR_MASK		GENMASK(18, 16)
-+#define MT_TXS0_BW			GENMASK(30, 29)
- #define MT_TXS0_TXS_FORMAT		GENMASK(24, 23)
-+#define MT_TXS0_ACK_ERROR_MASK		GENMASK(18, 16)
-+#define MT_TXS0_TX_RATE			GENMASK(13, 0)
- 
- #define MT_TXS2_WCID			GENMASK(25, 16)
  
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 7ce014de3443..874c7c18ad09 100644
+index 8a7b4e78c097..217ed7055aa0 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -1012,22 +1012,22 @@ static void mt7921_sta_statistics(struct ieee80211_hw *hw,
- 				  struct station_info *sinfo)
- {
- 	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
--	struct mt7921_sta_stats *stats = &msta->stats;
-+	struct rate_info *txrate = &msta->wcid.rate;
+@@ -586,7 +586,7 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	msta->wcid.idx = idx;
+ 	msta->wcid.ext_phy = mvif->mt76.band_idx;
+ 	msta->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+-	msta->stats.jiffies = jiffies;
++	msta->last_txs = jiffies;
  
--	if (!stats->tx_rate.legacy && !stats->tx_rate.flags)
-+	if (!txrate->legacy && !txrate->flags)
- 		return;
- 
--	if (stats->tx_rate.legacy) {
--		sinfo->txrate.legacy = stats->tx_rate.legacy;
-+	if (txrate->legacy) {
-+		sinfo->txrate.legacy = txrate->legacy;
- 	} else {
--		sinfo->txrate.mcs = stats->tx_rate.mcs;
--		sinfo->txrate.nss = stats->tx_rate.nss;
--		sinfo->txrate.bw = stats->tx_rate.bw;
--		sinfo->txrate.he_gi = stats->tx_rate.he_gi;
--		sinfo->txrate.he_dcm = stats->tx_rate.he_dcm;
--		sinfo->txrate.he_ru_alloc = stats->tx_rate.he_ru_alloc;
-+		sinfo->txrate.mcs = txrate->mcs;
-+		sinfo->txrate.nss = txrate->nss;
-+		sinfo->txrate.bw = txrate->bw;
-+		sinfo->txrate.he_gi = txrate->he_gi;
-+		sinfo->txrate.he_dcm = txrate->he_dcm;
-+		sinfo->txrate.he_ru_alloc = txrate->he_ru_alloc;
- 	}
--	sinfo->txrate.flags = stats->tx_rate.flags;
-+	sinfo->txrate.flags = txrate->flags;
- 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- }
- 
+ 	ret = mt76_connac_pm_wake(&dev->mphy, &dev->pm);
+ 	if (ret)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index 761fc605e5e9..26f175ef505e 100644
+index 61fa53af3840..a6caca73fdda 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -93,8 +93,6 @@ struct mt7921_sta {
+@@ -65,15 +65,6 @@ enum mt7921_rxq_id {
+ 	MT7921_RXQ_MCU_WM = 0,
+ };
+ 
+-struct mt7921_sta_stats {
+-	struct rate_info prob_rate;
+-	struct rate_info tx_rate;
+-
+-	unsigned long per;
+-	unsigned long changed;
+-	unsigned long jiffies;
+-};
+-
+ struct mt7921_sta_key_conf {
+ 	s8 keyidx;
+ 	u8 key[16];
+@@ -87,8 +78,7 @@ struct mt7921_sta {
+ 	struct list_head poll_list;
+ 	u32 airtime_ac[8];
+ 
+-	struct mt7921_sta_stats stats;
+-
++	unsigned long last_txs;
  	unsigned long ampdu_state;
  
  	struct mt7921_sta_key_conf bip;
--
--	unsigned long next_txs_ts;
- };
- 
- DECLARE_EWMA(rssi, 10, 8);
 -- 
 2.31.1
 
