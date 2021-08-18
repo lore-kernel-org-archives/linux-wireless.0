@@ -8,83 +8,76 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D38C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3828C19F34
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00DA961058
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E01C6604AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239655AbhHRGSw (ORCPT
+        id S240830AbhHRGTC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:18:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45518 "EHLO
+        Wed, 18 Aug 2021 02:19:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239169AbhHRGQA (ORCPT
+        with ESMTP id S238781AbhHRGPx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:16:00 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E92CC03540D
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:19 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id r2so1162907pgl.10
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:19 -0700 (PDT)
+        Wed, 18 Aug 2021 02:15:53 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDDE7C0363E4
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:16 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id j1so1934101pjv.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=N3Iemq6IfMq8jyV2u9omGTepmgQD8wDuqLYjs8itz1Y=;
-        b=TxRwedVVvF+R1Lfnd1UxRNt4KDV9rNjmqnlR6ek55RYna0VF5FhXLYO+lYfDjL3lub
-         nJUaKphm8EO0FLwlYusMyQ7Zdz/KysFN+HKlkrQtKiJpAlXfQa/iisDbdKvMF/6dslTq
-         ZIzUo34Moo/ZceEV9eGHlI6bz1A5KD4Wfh1Nw=
+        bh=m1lc/nY2hnA6HnQKSHDtLAeIlS0dmnOBqNYLAvTUlGA=;
+        b=FS+HfMzV5+fC3odMkVXrJwEqyh1+slSdNTkOPSLEnKpgB5aUu5pQ/txX3nZwmH9j9N
+         JpUNb1Ke8Nib613Cf+hSPfr5Treumucoekmun+SpdbNf+2vy/QfKVo4jA8B9b1nCNQor
+         TC8YvVHzeO23Q0aiI3WkjSxOlWzmH2+99jfiw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=N3Iemq6IfMq8jyV2u9omGTepmgQD8wDuqLYjs8itz1Y=;
-        b=QAyr5glb2DYstqf7EMpO+r53NwOnikTAmaU43RXisi8V7jT0hxGmywHOkCohY00giF
-         X2y+6Bz9eajKT2LLrHAm2vmqVW3vWT2FgIzrd2X43ZKeI9GtsavgakU/makHzaeTrcqo
-         PM5Tmrq457cNK60Pf4K+bVl6txaVnbE2OmzaPLcJ+03p65h3ZTBpjYGp0W5/VkLKDjU2
-         Awwn8niArntl/zl3JYONSdW5b167660b1dEUlicKFwjy6DyUT5JjLeqWB4xDTMF7hczu
-         uEXgXO8MrJzAkezFZ/ZaHPg6vz7723S9tzF7msqNP++dNfLQzYgO8WDCWaczsaEytQ5I
-         TryA==
-X-Gm-Message-State: AOAM530UQE63BFFJQwtJQ9cd2Ek/BZ2mDBCqU7Z0ai685yDUMRjX3JNI
-        HYAp2yWbKK3/U/cTVi8Rh5EN4Q==
-X-Google-Smtp-Source: ABdhPJzbX3ZWnssMxhh5s/pWLIyPLFLmkxT6FRbi0vBpDllDzQCsAGSzrNp4dT0eMcLnMaiF/0hcZg==
-X-Received: by 2002:a63:cd02:: with SMTP id i2mr7277459pgg.116.1629267259068;
-        Tue, 17 Aug 2021 23:14:19 -0700 (PDT)
+        bh=m1lc/nY2hnA6HnQKSHDtLAeIlS0dmnOBqNYLAvTUlGA=;
+        b=Qcf5vDTmoSKL1Yj2t1cpE5afcycQbh1KMdnLSZ4npiwiAj3aT2mWFVlGSKATt5y2kL
+         fmJUeAK/KMVpk4tMOW2BeusTcs5fc8mpIzpipS8QeFaxzkwvhS1FOsoIm89NnL9/FUYZ
+         Tg4oa5Vm+KPHKeh8dwyl8EU2vOvZvwsNtQI2kVGbGPUqQUQub+G2O9PRjsfm9F0s3Arz
+         Hp4Eq8xy+ulPGZghdbEbu9Xkih6YlxO4XcddX9k5q7STcvzNkZC+0+44Rx9OLWpceoA7
+         +4/zr3TKR10vnrn+NGOQYhOrMw2XlAdA3bmmsz1SV0CcTEUr5E5lMOz3QvR3p/QJTSzJ
+         JD6g==
+X-Gm-Message-State: AOAM531qU0WReFBFkvg/A3Wwup7lubzO/Kh33i0Q3EuPJ/gpdQoyYim2
+        4qxgvoUE7tC1+Gqb2EGM0YkwIg==
+X-Google-Smtp-Source: ABdhPJwpjXTG6518NueOetV3W8JiXoD95XPqR41s/nyPvt6mMXPV0yaLuwDelBW15us2G4JddcQdZA==
+X-Received: by 2002:a17:90a:7848:: with SMTP id y8mr7473374pjl.223.1629267256351;
+        Tue, 17 Aug 2021 23:14:16 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id z9sm4655621pfa.2.2021.08.17.23.14.14
+        by smtp.gmail.com with ESMTPSA id c2sm4955669pfi.80.2021.08.17.23.14.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>, Jouni Malinen <j@w1.fi>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Kees Cook <keescook@chromium.org>,
+        Ariel Elior <aelior@marvell.com>,
+        GR-everest-linux-l2@marvell.com,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Allen Pais <allen.lkml@gmail.com>,
-        Romain Perier <romain.perier@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        Cong Wang <xiyou.wangcong@gmail.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 15/63] intersil: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:45 -0700
-Message-Id: <20210818060533.3569517-16-keescook@chromium.org>
+Subject: [PATCH v2 43/63] net: qede: Use memset_startat() for counters
+Date:   Tue, 17 Aug 2021 23:05:13 -0700
+Message-Id: <20210818060533.3569517-44-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3106; h=from:subject; bh=zQZGxBfl7dAgG5tBG/ZLbaDQfVLnlG18JlpAF80qB7s=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMhrEzcBPUO2fJ4Pn+xRO14SATLeMOS42x+QUKW 6CMu31qJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIQAKCRCJcvTf3G3AJjCpD/ 0bIdtbe2MXXc36t6JnE/BOu31oCVMunfUwVmUuWjcW5QZKCJKHCaWynEtZ43tRXaPeLyqe2eluQQLX mxQinp+l5Gk6QLjrZ/2gCmzu5dy3Ll0/1wKJHvFSLUCL4ll73Dl/CpGN9Gflki+/WsFSYz93ibz/z0 M39dEpmzX3sxWiz9mnlMByQXhV/tSjSUHsC/tgcT8GzKyWO3TMpyWD1XDQCrzLJtKSQi8YpAM59d9v mfq1ifJj8/Pr227Kk8ZL7KuWz86p/CiKS6R/QqrQ43x+fO1u8dB+xui76UQiHTj+vGBAUCqvW30Bfd g2qbVS2IkFYfjmpfNjvavGsEMxqM5stGW4RqB9jSuZ4tiEXwey6K9+85Nx5lTJyKlU4YCadcNdpEr3 4/oZM06OB8PnSr4lwMAjzFhI6R0fChF5uJxb5fb6pm5hRzt5+5hlgmAopQdTaxyhDK7JO8aZOWd6oV HIrlagRF1x3sVhMuP2UMukVaahRXE6seQlBvx68gpW8OolKr9O58KEWnVxisYzpFhd2vATCBNfT5be wFUq5DxkidJPPpbEzvf40Fgl8vb7r1fbY9+Tnjy4SrwOMGmE63TRwUAhpjgQSgYHKdQMk/8OplMa30 BXm38AUk8ZEnYTmCoH5mEsYfE0KahJm/YgOEspR8zcg/IvsloK8a6Dl/Fx5w==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1815; h=from:subject; bh=jbnLApEqieW/++fy2QnZQqeijBkPN++4uUcql8IdpbU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMnXjTo191/u7GxZ37Wuvyxz1yYXjk6kYYtU6NG Uk/+1reJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjJwAKCRCJcvTf3G3AJkUKEA CP9QtdF99HOjstydZyty+TXWHCHvk+L8yaRJLfQw9Ij2yJtDUvVtXCUQSdzfwtxENfHB4LlV+pLMa0 qtp570ToxI9xdKB+Abev9OkcAH5UA98HTqhTsHmWJGnTyekyI18DDinSJIB0eLexCslyevedljP+I0 QwGGo7hbN2h4cNBdVfqf7XV3IlJQUfMOqisWo+S9yQprBKthAsTiNykj7Z4XkUt6ZjwQxHdovfcNxr y8X7Xi2L5LS5RUO5L2qMg49ufYnSh+87p3iZSePm58cBLa6PcS3TS+fgKFWq6rKeq7vfzHvCpl9c7m 0Pi2EHJcBRd8x9Bq+0tTmOFbFJj7lE8rPmNRx5iXfmxnplgxUINQjPc04CKf01oNBQ5V2tlOBzEhYh lZkFnyIwxJit2hdyIBpT+Q/x61E/7iEhBXoo2xHetZ1taACUz+5xMZQcqpmrQMWxuQgbwSwepHUAvL ZuGf6b7xvI0ywqYOA0nuNIJ8EVw6IByYxIAIEjfx0glGfIIeP/tLoIsgTV930k309/s9y6TBWRCz8o h5lLHubwZ57QjtbHRdw0A7frEqm19KSAvXwam0MAB43vm0TSt7vbCCiR0uj/9PR2prngJ9eQUl6K5U BuIjpDHq3lGaWV82neHsDnTIdWx4qjzZBWqMMF/rnI56q46Pfk7bv8/pmkfw==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -92,78 +85,55 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct hfa384x_tx_frame around members
-frame_control, duration_id, addr1, addr2, addr3, and seq_ctrl, so they
-can be referenced together. This will allow memcpy() and sizeof() to
-more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of frame_control.
+Use memset_startat() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct.
 
-"pahole" shows no size nor member offset changes to struct
-hfa384x_tx_frame. "objdump -d" shows no object code changes.
+The old code was doing the wrong thing: it starts from the second member
+and writes beyond int_info, clobbering qede_lock:
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>
+struct qede_dev {
+	...
+        struct qed_int_info             int_info;
+
+        /* Smaller private variant of the RTNL lock */
+        struct mutex                    qede_lock;
+	...
+
+struct qed_int_info {
+        struct msix_entry       *msix;
+        u8                      msix_cnt;
+
+        /* This should be updated by the protocol driver */
+        u8                      used_cnt;
+};
+
+Cc: Ariel Elior <aelior@marvell.com>
+Cc: GR-everest-linux-l2@marvell.com
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Lee Jones <lee.jones@linaro.org>
-Cc: Allen Pais <allen.lkml@gmail.com>
-Cc: Romain Perier <romain.perier@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Vaibhav Gupta <vaibhavgupta40@gmail.com>
-Cc: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_hw.c   |  5 +++--
- drivers/net/wireless/intersil/hostap/hostap_wlan.h | 14 ++++++++------
- 2 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/ethernet/qlogic/qede/qede_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 9a19046217df..cea8a9ddc4da 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -1812,8 +1812,9 @@ static int prism2_tx_80211(struct sk_buff *skb, struct net_device *dev)
- 	memset(&txdesc, 0, sizeof(txdesc));
- 
- 	/* skb->data starts with txdesc->frame_control */
--	hdr_len = 24;
--	skb_copy_from_linear_data(skb, &txdesc.frame_control, hdr_len);
-+	hdr_len = sizeof(txdesc.frame);
-+	BUILD_BUG_ON(hdr_len != 24);
-+	skb_copy_from_linear_data(skb, &txdesc.frame, hdr_len);
- 	if (ieee80211_is_data(txdesc.frame_control) &&
- 	    ieee80211_has_a4(txdesc.frame_control) &&
- 	    skb->len >= 30) {
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_wlan.h b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-index dd2603d9b5d3..174735a137c5 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-+++ b/drivers/net/wireless/intersil/hostap/hostap_wlan.h
-@@ -115,12 +115,14 @@ struct hfa384x_tx_frame {
- 	__le16 tx_control; /* HFA384X_TX_CTRL_ flags */
- 
- 	/* 802.11 */
--	__le16 frame_control; /* parts not used */
--	__le16 duration_id;
--	u8 addr1[ETH_ALEN];
--	u8 addr2[ETH_ALEN]; /* filled by firmware */
--	u8 addr3[ETH_ALEN];
--	__le16 seq_ctrl; /* filled by firmware */
-+	struct_group(frame,
-+		__le16 frame_control; /* parts not used */
-+		__le16 duration_id;
-+		u8 addr1[ETH_ALEN];
-+		u8 addr2[ETH_ALEN]; /* filled by firmware */
-+		u8 addr3[ETH_ALEN];
-+		__le16 seq_ctrl; /* filled by firmware */
-+	);
- 	u8 addr4[ETH_ALEN];
- 	__le16 data_len;
- 
+diff --git a/drivers/net/ethernet/qlogic/qede/qede_main.c b/drivers/net/ethernet/qlogic/qede/qede_main.c
+index d400e9b235bf..0ed9a0c8452c 100644
+--- a/drivers/net/ethernet/qlogic/qede/qede_main.c
++++ b/drivers/net/ethernet/qlogic/qede/qede_main.c
+@@ -2419,7 +2419,7 @@ static int qede_load(struct qede_dev *edev, enum qede_load_mode mode,
+ 	goto out;
+ err4:
+ 	qede_sync_free_irqs(edev);
+-	memset(&edev->int_info.msix_cnt, 0, sizeof(struct qed_int_info));
++	memset_startat(&edev->int_info, 0, msix_cnt);
+ err3:
+ 	qede_napi_disable_remove(edev);
+ err2:
 -- 
 2.30.2
 
