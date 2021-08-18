@@ -5,77 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E885C4320E
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:24:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8EFCC4320A
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:24:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 078D760FDA
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:24:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCE8560FA0
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:24:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238412AbhHRGY6 (ORCPT
+        id S239339AbhHRGZG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:24:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48356 "EHLO
+        Wed, 18 Aug 2021 02:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238791AbhHRGYv (ORCPT
+        with ESMTP id S239999AbhHRGYw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:24:51 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B2B9C06129F
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:16 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id k14so1185286pga.13
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:16 -0700 (PDT)
+        Wed, 18 Aug 2021 02:24:52 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7DFFC06122E
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:17 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id i21so1103374pfd.8
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=k/wMqZhYPv/ednyUtGVLuOyBDdwE/DxTOa1GSHOTwQw=;
-        b=h1vqsKCq3LguZasBrpDaxLMbE54XIdT056wn+53xSVHzW2Ewxb/OwMHrme5OgTt4Jz
-         Rn6+Nw/UlSdQJuXyyuSYWqcsqPV0JLgcmYGV56fwQSHpm2I+9h+ZIKfx2co1C0VimpZf
-         7dKUtyu84DuqlRQ87BuDsdzr8aHRxeo0v95wg=
+        bh=pfheq8ucotkU63pWQCdudkbxUtaK+5E7fGdpUnnohcE=;
+        b=bOn7B1lcs0RvnQ+JyDcBrrDHbtMIszKBFbMg36dEvOm/cxiVZauZR1pM19AHYwcUKV
+         a8y/SA1b4oZfyx+I7fB2xkZ8xjkLsTtpEq4EMNm3JkMacp3b4/IpDUQxMVbVY4g6nEfW
+         zLrHVXNFumWsW5ybM/sxAkeypdIu2sT+eqT4k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=k/wMqZhYPv/ednyUtGVLuOyBDdwE/DxTOa1GSHOTwQw=;
-        b=GzHX/2Z1v4lHXa5G3aFyTpbgrbNAWC/FWkj1eRlCOQqnYxW/fDIVJck/MGBNwybZ7u
-         FtKtDww5UTmiLA+G+ZrvdCUaPoMwEPEP51s2CFq9znMhuurekmXiLIVYnCaArPJ1hDeP
-         HUj0NzJWWZ2sWSdlWsNuOPz0bEyGSG+1RRIiAdtux89hXrHeRREuRoTZ/gum9WUv0J6N
-         YV61vbNsLP8iRb2jRaPkzCTFGJ6qiYgYX41H6clP+zyqOMPHbjO0nxRTGphCfSl92Tut
-         /oxvXx3s1BkV+m/j33gd720mKjuZJUEMwARQsJKheKJfbR87xDwVgi2vaVMwpHWbh5cv
-         A8aA==
-X-Gm-Message-State: AOAM531p80HZ0KS0qEuyHfl3gzmwqPlJN4MyqjW8PKtbc39JiscRzpXO
-        7KTtk/lRm1RSN4T6moTTlIyUeA==
-X-Google-Smtp-Source: ABdhPJwamERI+b3fB1OT2OBb/Oo32Bs69oRVEvsPMoSjLvciwc2SdyfJNwL8U1PKVMBNffysj5z0og==
-X-Received: by 2002:a62:1a03:0:b029:3e0:30aa:5172 with SMTP id a3-20020a621a030000b02903e030aa5172mr7615458pfa.69.1629267856113;
+        bh=pfheq8ucotkU63pWQCdudkbxUtaK+5E7fGdpUnnohcE=;
+        b=mwzgIFqTN39dbIkqvq6cKqojTjeRJtyMAluQCgQ71rmitgK6FO31v4aqdPzx8FuGYb
+         YliA2uR1LbQcV1b3HTQtbOUlaL3AM1qaevWaj4PG8v0YmkmUCFxk15BnU1Qg5TvKB0VJ
+         aOeOjdPke1n4zM3S56YkC1QlDy4iTkogzOZlNGzrqs5bSbR4Qj6LNmz8itDNMLD6yqmz
+         EoUTWCBUKmkJ2YrvjOqEfr77CGi8U5c6fmL+88WGYXuDGajxPJtxRbjJ5K/bVl2p3Gi9
+         GGVW0z7ND3E+mlYXsXj9OpirHv9vCMG5U8Tuvv9K6bHetn4V4TBJYDpo3Ejf69xsIf5N
+         nxuw==
+X-Gm-Message-State: AOAM5331nCeK2eaRJ5FMZkRANZKMGjN+jsgyC+j3elVeH6mBCk5R+hBp
+        n3mBYwz2osYyWQuq5tT1h5LlKw==
+X-Google-Smtp-Source: ABdhPJydUsyn5VnHkzaXMydTCOu45RwPjXJEVv8iarwYsWIPkrbqfwKhMSfmnkkd0A09rXVQCYKrpA==
+X-Received: by 2002:a62:6242:0:b029:3c6:5a66:c8f2 with SMTP id w63-20020a6262420000b02903c65a66c8f2mr7615518pfb.59.1629267856691;
         Tue, 17 Aug 2021 23:24:16 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id p17sm3873060pjg.54.2021.08.17.23.24.14
+        by smtp.gmail.com with ESMTPSA id s16sm1923432pfd.95.2021.08.17.23.24.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Aug 2021 23:24:14 -0700 (PDT)
+        Tue, 17 Aug 2021 23:24:15 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        linux-input@vger.kernel.org,
+Cc:     Kees Cook <keescook@chromium.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Ido Schimmel <idosch@nvidia.com>, netdev@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 22/63] HID: cp2112: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:52 -0700
-Message-Id: <20210818060533.3569517-23-keescook@chromium.org>
+Subject: [PATCH v2 58/63] ethtool: stats: Use struct_group() to clear all stats at once
+Date:   Tue, 17 Aug 2021 23:05:28 -0700
+Message-Id: <20210818060533.3569517-59-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2247; h=from:subject; bh=/f7Uu4v/C7D/CabqYQdkLwI9T63RoTYSlGbQfk4by30=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMi/T6L3PaIJG69XO7seVV8nfPKvnO/RnRfY1YP eqF5TIqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIgAKCRCJcvTf3G3AJiqND/ 4o9z0rLLj4NSz3P+N5dEODqZN+0JFe68SJEpcnI/yqBAJ991CZgBW3P4hegMy7LP416vg4a8VXWuZf PdkwM1HtKI3bOIJmJ/oXuHc0Cd8E1/i9IdhWeZkwnk4ATdl52t6KiufRupzJ474wQ6gIOIfDj0KQ0R kyIFkhVeoA2Kr7NRe3qo9ChOoz9iHtgIp5yRu2OL9iopUm7HJMVli+T8Rkjfs1WdXgucAW17dFCaQf jscROMyLQGnCUMePS1yvQgUiFCFi1PlQtlLu+P7JTZudtLxFONjQCqvINDVVTB7e+TdY6/uBtgZzeK irTF7jSjV82n7MLfw4dCwSr5O2rrLJUaRZRfu6EiE2apChq5mvhSkWogW11l43Du1tv0vSY8wCE7XA sqKXkssO6OXrNOfPC9zrrUYQOnTwssqdo4orsoUV57XBYhxldJWv/VtIL/gNK2X1AMSQ2l2j8jVWtm /ZmkiVPYHo1cAbq84GdiW7UhznMM4bt9KCq8jxr7jM/YO6AI8nO2vNY/g02E3s1LVpfe2iqQHiaXcU HzwXGWuEQSSIRd009WPzQD3vPRqgiHua6vhSwtjUVgJ7mB06uFmWn0gFEj2FoGkgl1YLXKQ9crqUgL wCJdGavuSKwTapzMz2igVrV/qHEivZbe8115YGPQPbagYEoCWw+9D4gRcRag==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1971; h=from:subject; bh=E0TNBYZqVPbRitBJ5Zh/gLEgPeByfWBcEVfphcdRPN4=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMrF3QPyVB5GMFoBwvbiS+bGesf32/XaWgZh6rV XXUSuGeJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKwAKCRCJcvTf3G3AJuI/EA ChJAduV9dwQnlnG3wxAW9hWJ1q1jYsNmAAW03oHPyyyn4KhoNewX3nohRktZszGSOaJbWUuapbs0QS zhzLmfVfKhD7+DDfnZKD0XnlGiqH7Qvf5Q5ntMO0/ssU3MUgRP1gtdtb5NMHkByui7zpX/5x9W/2YW raKvA1KIXU6CdJePHvujGsZ5QP8biHCDP1thhwyJfUA4XwPHO3b8i6IC1kMBzBKINuCjLSkeqN3uWD PwoL5hyTqy4UKJN0gW6vj/hdXoIY6bLL/pGtAASCMDf1ZqU/p4Jgph8esB5nghJM4B5K/afkMfJgB+ vA/vxaYQSYgK9DPmx0RcanTPpspjeL27cp7jQyYi0izLRnpEiExj2zheTEAvmAN6nqq/leBQk6MTwN uE7XQ8NliZBAE0y+b+xl4TZEDKqaf3ZQLquskbjy9INmiSPSDGgnZODLH9BjIy5eLOJ0nYrc8QLN5B D18Vfd3FY3RNXbQkdqHx6rRPcX8ywj2ipEby99d78Sf6C421sRvINJCco18C7ckUJ5KbK307TNNlzA niH2xNat1pGZwKiztnfUGK9vkqebtbw9PjWgnoloa26nxruikmIBNbDpX17yxNTtNblkMvaAIxgqlv ZbPLstx3DpgFgVYefzNXWqrNibdM/9iNuS0mCC0zQsf6ZcpjwRIHZD0WHkXA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -83,59 +84,54 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memset(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct cp2112_string_report around members report,
-length, type, and string, so they can be referenced together. This will
-allow memcpy() and sizeof() to more easily reason about sizes, improve
-readability, and avoid future warnings about writing beyond the end of
-report.
+Add struct_group() to mark region of struct stats_reply_data that should
+be initialized, which can now be done in a single memset() call.
 
-"pahole" shows no size nor member offset changes to struct
-cp2112_string_report.  "objdump -d" shows no meaningful object
-code changes (i.e. only source line number induced differences.)
-
-Cc: Jiri Kosina <jikos@kernel.org>
-Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-Cc: linux-input@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Ido Schimmel <idosch@nvidia.com>
+Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/hid/hid-cp2112.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ net/ethtool/stats.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/hid/hid-cp2112.c b/drivers/hid/hid-cp2112.c
-index 477baa30889c..ece147d1a278 100644
---- a/drivers/hid/hid-cp2112.c
-+++ b/drivers/hid/hid-cp2112.c
-@@ -129,10 +129,12 @@ struct cp2112_xfer_status_report {
+diff --git a/net/ethtool/stats.c b/net/ethtool/stats.c
+index ec07f5765e03..a20e0a24ff61 100644
+--- a/net/ethtool/stats.c
++++ b/net/ethtool/stats.c
+@@ -14,10 +14,12 @@ struct stats_req_info {
  
- struct cp2112_string_report {
- 	u8 dummy;		/* force .string to be aligned */
--	u8 report;		/* CP2112_*_STRING */
--	u8 length;		/* length in bytes of everyting after .report */
--	u8 type;		/* USB_DT_STRING */
--	wchar_t string[30];	/* UTF16_LITTLE_ENDIAN string */
-+	struct_group_attr(contents, __packed,
-+		u8 report;		/* CP2112_*_STRING */
-+		u8 length;		/* length in bytes of everything after .report */
-+		u8 type;		/* USB_DT_STRING */
-+		wchar_t string[30];	/* UTF16_LITTLE_ENDIAN string */
+ struct stats_reply_data {
+ 	struct ethnl_reply_data		base;
+-	struct ethtool_eth_phy_stats	phy_stats;
+-	struct ethtool_eth_mac_stats	mac_stats;
+-	struct ethtool_eth_ctrl_stats	ctrl_stats;
+-	struct ethtool_rmon_stats	rmon_stats;
++	struct_group(stats,
++		struct ethtool_eth_phy_stats	phy_stats;
++		struct ethtool_eth_mac_stats	mac_stats;
++		struct ethtool_eth_ctrl_stats	ctrl_stats;
++		struct ethtool_rmon_stats	rmon_stats;
 +	);
- } __packed;
+ 	const struct ethtool_rmon_hist_range	*rmon_ranges;
+ };
  
- /* Number of times to request transfer status before giving up waiting for a
-@@ -986,8 +988,8 @@ static ssize_t pstr_show(struct device *kdev,
- 	u8 length;
- 	int ret;
+@@ -117,10 +119,7 @@ static int stats_prepare_data(const struct ethnl_req_info *req_base,
+ 	/* Mark all stats as unset (see ETHTOOL_STAT_NOT_SET) to prevent them
+ 	 * from being reported to user space in case driver did not set them.
+ 	 */
+-	memset(&data->phy_stats, 0xff, sizeof(data->phy_stats));
+-	memset(&data->mac_stats, 0xff, sizeof(data->mac_stats));
+-	memset(&data->ctrl_stats, 0xff, sizeof(data->ctrl_stats));
+-	memset(&data->rmon_stats, 0xff, sizeof(data->rmon_stats));
++	memset(&data->stats, 0xff, sizeof(data->stats));
  
--	ret = cp2112_hid_get(hdev, attr->report, &report.report,
--			     sizeof(report) - 1, HID_FEATURE_REPORT);
-+	ret = cp2112_hid_get(hdev, attr->report, (u8 *)&report.contents,
-+			     sizeof(report.contents), HID_FEATURE_REPORT);
- 	if (ret < 3) {
- 		hid_err(hdev, "error reading %s string: %d\n", kattr->attr.name,
- 			ret);
+ 	if (test_bit(ETHTOOL_STATS_ETH_PHY, req_info->stat_mask) &&
+ 	    dev->ethtool_ops->get_eth_phy_stats)
 -- 
 2.30.2
 
