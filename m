@@ -8,59 +8,58 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BDEC4320A
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16CC0C4320A
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23C1F604AC
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0EF1604AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240437AbhHRGRe (ORCPT
+        id S240595AbhHRGR5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:17:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45666 "EHLO
+        Wed, 18 Aug 2021 02:17:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238763AbhHRGQ3 (ORCPT
+        with ESMTP id S240342AbhHRGQr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:16:29 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36F02C08EE2C
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:23 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id y11so1081798pfl.13
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:23 -0700 (PDT)
+        Wed, 18 Aug 2021 02:16:47 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD42DC03327F
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:24 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id mq2-20020a17090b3802b0290178911d298bso1654008pjb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hsGHodQW7BgMepqmaGaetFXuKMTT3ZW1whu3YzYCf8E=;
-        b=chkB2Egl3g4Hj/WoopucGSp8JEGrZQBb17iw+f5FZVJ88kmKbQgr9VmudEIjafNmTE
-         FU+5/DnwuxN2T0PQuBqDKLSVlxbWgQNmuDbo93m2QOjwn8S/Nmj1KRmXQbdeWCM95LZY
-         12niQpi/k6iQ3pEmgTEwMOYCV0dGWkKcHe2PI=
+        bh=xqHRpTF29XKCvHESFQ890ZRLt8tV/z5c3XHhrLDSkrI=;
+        b=eDnWZw9KRm46hwXvZT4C7S5d+90hyINh4v1SZZHIktQhca39Kv5j4305RFuRZO4r+N
+         FpSZgAZO8EAZPKCqstt9sYRz4H1aNUG21Hkzfac89V2BS6o4rE2tpIfJtZvJgvvE0tGw
+         8wAP/HK8m8mUdps9C8RUZGGooYOTstKeYh1Yo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hsGHodQW7BgMepqmaGaetFXuKMTT3ZW1whu3YzYCf8E=;
-        b=PSISSlnEgG1fcU6wJcIdOgq9D3Ke9o3t8NtKwMGUonvQECJS2uvqe24JWaVrCsJTrG
-         kgKQmMJ7P5351N2HeRiNa15uTpLtoxoi5IcpA7iGM2mR23RHVcVVMsLat5BThjE6UjY5
-         XKmMxPWHflkGzX9diadUPUTVOhqQK1t7PYOEtDhdCTr1gNVGGJbsXpYqWZC/8dSzVb7M
-         AXitfQA2Dj/gdxu0qKGTyOcxOfR0NUyKHR6xzJobvIHeL1Z4ed2NqT/vRF1vhrRkPpDF
-         g3PLWXa3sOY2od0gj2o3T2whovRK4Z38x2kOV3sBFWZWKZQsCS/d6BSASMDAcqIhShJB
-         U5gQ==
-X-Gm-Message-State: AOAM5328Uu7dcXtF6hulvIcDNubKDfnjPe1N5saCfU0fQPQhmieg3JfO
-        +7tArPhcAiTJdGOEGqD4nicFPw==
-X-Google-Smtp-Source: ABdhPJzyxDStzvV0SEJOZX6pzOD1ZhMBNkc4S43QSApxA2j4lcyMvoA5D5UGsMDwrMeS2qx+i1yP6w==
-X-Received: by 2002:a63:5902:: with SMTP id n2mr7166965pgb.305.1629267262822;
-        Tue, 17 Aug 2021 23:14:22 -0700 (PDT)
+        bh=xqHRpTF29XKCvHESFQ890ZRLt8tV/z5c3XHhrLDSkrI=;
+        b=Ng5URNwkJDCPJOVTzpn/H3gvTHQuBLruHwGNIxT5QHFehI7ZLL10Cyibitcl007KKU
+         f8EoQhEZb67wBwkjo3D0X27BWxMaec5i4nOXGwot4abC/auY8KGG2Bqm8oY4EWO5pBIW
+         NC6Ts8EXQs9TLvOozxuxyXZsZTPUQmuFD7+ZU3l5uuuM5b2UmJJa0ricBuqzRsNwwZXp
+         l1MVjI33MZS1/dxyj4NWhNObay62NmFaHiRENrtMBsoJy1u9lb0OaRddMk1Ymvj18ubp
+         JN+mLUMHbrMkkK4prkH8b1rywaFKFRLStuR5Tw0MRbpUcto7d6UltPDhqIlXRS0i7HNP
+         hp/g==
+X-Gm-Message-State: AOAM533nNY6CuR/+a0WCbJp/ttQBuHttFMjnQq847SnSxe6NjFHaL4D9
+        IXuw7GatyoV3uCNy18XfHkltIA==
+X-Google-Smtp-Source: ABdhPJzs0l6+96q5WrJaIq9sc6XvKb4+TMWLp34figTZCCyBwzySh6PWPIKNRtNT4xpSHHkkTwp3EA==
+X-Received: by 2002:a17:902:cec3:b0:12d:92c4:1ea6 with SMTP id d3-20020a170902cec300b0012d92c41ea6mr5883424plg.36.1629267264338;
+        Tue, 17 Aug 2021 23:14:24 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id q26sm4699734pff.174.2021.08.17.23.14.19
+        by smtp.gmail.com with ESMTPSA id u10sm5718071pgj.48.2021.08.17.23.14.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:21 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Max Gurtovoy <maxg@mellanox.com>, linux-rdma@vger.kernel.org,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -70,14 +69,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 48/63] IB/mthca: Use memset_startat() for clearing mpt_entry
-Date:   Tue, 17 Aug 2021 23:05:18 -0700
-Message-Id: <20210818060533.3569517-49-keescook@chromium.org>
+Subject: [PATCH v2 50/63] tracing: Use memset_startat() to zero struct trace_iterator
+Date:   Tue, 17 Aug 2021 23:05:20 -0700
+Message-Id: <20210818060533.3569517-51-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1273; h=from:subject; bh=6zw6bd38jtlUGiQNcgA+7Vj02RWEpIKH1rjaE20U52M=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMoltYN7PTWawkHd68VShtA89JYpvOPT9nwsL7B vMD1Gn+JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKAAKCRCJcvTf3G3AJgWLEA CA0G8Um7L9QM3tAuk76gzDtGgj6wfZwbHC3gmdPYC4fe5ViwFuFPhPDIlMHnL5Oaft4DZAwvc4TUnI oTxi1AdRfYTfE3lw4LW1em7VDzoYiVdw68YpBJ6do2fEl9ZGK/0mX3zcOafcrAhiHBuet2CjOfPy6t Tq/8ys2f8EU1h6DXTZ5tCPSIi63+7bfI5g0u1GpcBNVQxt4gUaxR4O//oIO5lDG9qKBGuDeUG4v6MF sHcWe6CfAarnlC0ya+ORhjNk8xnbf+b/imo8zl4s0q9DrLXdZ7MNrxO3aI+5yaF2he2ea/hR5kliNG YKO8GWAbKimKYTi8SSFhhsLXFP/6Cks+GGfoihg9Z61PjIiHMhORoWY/P5pTQd90wKeXB9yySfHyeZ isD2ZFnlRhy403y1grxuLe0zaAw5SJXbwyy8thi3DDo7KeX4P92gmWueLuIvjcNP5Kj+GbCcV6vLSm nxByMIRVJuZ4ixj94olxP7vKtNZVvUPh4Ov/qwOFpG7f9rOHf1gXBcckiuBMeL+pZcSr/txM5+0jYN bYjM3KyxyB1TZMYtX1+WjrDISwqn5Gx8m/HAuDxJZ1l4CvotvblNbCStzkY4CxA2N1gZ+rSUQBe+yU YuRbJ6v7hrWUPvepMgl5M8bAqRbVyqW4hTUVa18TP98a9UAYJi8u4E2DpSiQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1037; h=from:subject; bh=tJ+Y8mubd5vChiEdKyhrwIAPkGIRLmuKu7c5cVoFF8E=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMpD14ogHSXr5bFvuUHYu3T5qJe0zYALPCZMtZa BMo6QAuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKQAKCRCJcvTf3G3AJmAwD/ 0a3+zKByTlHW7da31ew04MLWM2GyDtX5IWTWqZsa8eYoXbBB5X7LZRQLJ1vlQZHRLhepR9ZpITXmne EiQC9Yi2RCSGHYXs1DT8c2kWev59MckO9Ru6PbJsXCCCEtTQ6DMpe/Jx5fGA8+6uai2MdlkbPr1hcJ pBSeJNFQs0Pv1vqmL283XNUPLYaVRRlPmA9Gp6u3cYUEC+MvJh//1ksZAZO4Nyg2WQnN8olRr3f3NE /FPwlpkC0jjYP6MOJqAsGXQsShWeRQihUK27+fSMl0qP0sQvOypGdnWB5Xt9pHnrb59B+NoIWV3usD tlUXL9PjYEJYMDWPQTUUNPBMZZKOHI+48wGm37V+dXOW7TWP6k1ZaORRpaSbK4ePyA4y/UOyFr9kg/ uCpCZQbVxO0XsyHwZnPxyR0ffSAr5pZsGQoIXVSdGOiCT/l0l3GHYuulIqOqhrbldUvZjy3etP7MiI hx1VUn4EjkhIMB8HWOeouTN9VqnOXsp0Uoh3nMHIAOMLkJS8l1ptPjxUjAbP1ZRctjIKVTGS6xk+Mc BWlhshbZH64vEGQ9HoKgHm6UlwyYt5R2mkzOSjk0VSY4jGO4wg5giXsw55wRe6w4igcWbd0lCpFOWG qRUJgP1YlRnTAtp59niaAQ2aRXBKcpue4WIdo6iOcrFKIwc2EolBb7yDoGAA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -88,33 +87,31 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Use memset_startat() so memset() doesn't get confused about writing
-beyond the destination member that is intended to be the starting point
-of zeroing through the end of the struct.
+Use memset_startat() to avoid confusing memset() about writing beyond
+the target struct member.
 
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Max Gurtovoy <maxg@mellanox.com>
-Cc: linux-rdma@vger.kernel.org
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Ingo Molnar <mingo@redhat.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/infiniband/hw/mthca/mthca_mr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ kernel/trace/trace.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/infiniband/hw/mthca/mthca_mr.c b/drivers/infiniband/hw/mthca/mthca_mr.c
-index ce0e0867e488..1208e92ca3d3 100644
---- a/drivers/infiniband/hw/mthca/mthca_mr.c
-+++ b/drivers/infiniband/hw/mthca/mthca_mr.c
-@@ -469,8 +469,7 @@ int mthca_mr_alloc(struct mthca_dev *dev, u32 pd, int buffer_size_shift,
- 	mpt_entry->start     = cpu_to_be64(iova);
- 	mpt_entry->length    = cpu_to_be64(total_size);
+diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+index 13587e771567..9ff8c31975cd 100644
+--- a/kernel/trace/trace.c
++++ b/kernel/trace/trace.c
+@@ -6691,9 +6691,7 @@ tracing_read_pipe(struct file *filp, char __user *ubuf,
+ 		cnt = PAGE_SIZE - 1;
  
--	memset(&mpt_entry->lkey, 0,
--	       sizeof *mpt_entry - offsetof(struct mthca_mpt_entry, lkey));
-+	memset_startat(mpt_entry, 0, lkey);
- 
- 	if (mr->mtt)
- 		mpt_entry->mtt_seg =
+ 	/* reset all but tr, trace, and overruns */
+-	memset(&iter->seq, 0,
+-	       sizeof(struct trace_iterator) -
+-	       offsetof(struct trace_iterator, seq));
++	memset_startat(iter, 0, seq);
+ 	cpumask_clear(iter->started);
+ 	trace_seq_init(&iter->seq);
+ 	iter->pos = -1;
 -- 
 2.30.2
 
