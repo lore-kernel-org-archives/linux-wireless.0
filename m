@@ -8,60 +8,56 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11113C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D129AC4320E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1EF460FDA
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:24:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCFC160FA0
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240441AbhHRGZ2 (ORCPT
+        id S238658AbhHRGZ0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:25:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48358 "EHLO
+        Wed, 18 Aug 2021 02:25:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238662AbhHRGYt (ORCPT
+        with ESMTP id S238718AbhHRGYt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 Aug 2021 02:24:49 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 039AFC0617A8
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6953EC0613A4
         for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:15 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id x16so1103853pfh.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:14 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id 18so1102237pfh.9
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hNEXxevdADdpiZT9yDPKRLqHYKrfWBF19uxfyZWmCGo=;
-        b=EGdWOE7bxdowrmsIKSgjZSgmQoiGO+6J6ji89xZ0Q2fptOidpphd5g7qqYXeSAgP8F
-         HH8T/J8n5DYlHXumOIgXQUvZBImHN7ALjddHiJ17ignvtzPpjV4Byoe7oWxlyDXQgWZD
-         c2+aZ7dLhbaQbRZXx81PpkPBbEKgxoLZ5UKNk=
+        bh=orREwqmDjC6eAbyLmeCBTfr28uXfwJ53YVeS5e6q0po=;
+        b=bPPnHrhIoxiHuM8D+cA1VRSrPSxGoTSZYzeIp0b1bMI7T7u9fkHzfyCy90CBixJecQ
+         8rQO70g2CIpjMfs6uIxO3ANUmFCIzSNPjrNE6HTUcqVjwNZ+V+Pgy0B/O1dDcj1VvxZ0
+         kmsyQKHf4ee4t1fa2RmxDMulAyJEPUftMyLvc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hNEXxevdADdpiZT9yDPKRLqHYKrfWBF19uxfyZWmCGo=;
-        b=t4mdoh1O3LYuPMN+8BCjDSnaR+pCSraT98w7q3JMkEoatXGKNubtN5rWoQmzZ/xFZL
-         04vUOr3sCdGnhXj/i+4Xm+LDhQ7LDgzZzrbQGnPY4JSuZVfhuC1y74aSo+7rZzt7XZoD
-         EHVSX8zTXh6FZCKa8lPAmyTRbH+XRxHggqgBMEmTOa4ZUhfflDWxYTkgsk1pyoubROnT
-         4UqwZMijaS+tNImhCk/1g/plZVq5ibNo4915DnIzHOD4jJSlzOOfdefzoU8dcWYjWngF
-         N/nkd9ysbsIN5t6mLpi9U4Cs7uVgqpsXEXn+wYuSOl+TA20E8UiF1xzF6MrkegQGbXTT
-         qIIQ==
-X-Gm-Message-State: AOAM533xfLv6ecOW8m67oWj4TAqXJs+Nrq/m5kL5Rf+LuFqkItjF6eP+
-        Dl/XAGnXX9RayYbeUP99Pa9nWg==
-X-Google-Smtp-Source: ABdhPJzEZLL4+vuxKf2KA80vRRNe/aKYgSEeAOIcbSklQP4uG9CeHnUETuB9bUeNsXUisBI4mxHrBA==
-X-Received: by 2002:a65:6658:: with SMTP id z24mr7321502pgv.266.1629267854650;
+        bh=orREwqmDjC6eAbyLmeCBTfr28uXfwJ53YVeS5e6q0po=;
+        b=ScM13SOxTQCtUlnFlG9RiRrz4vsz8zWbw9VcH2spSIK1ZCWGlH+Mio6e11HgaASs2e
+         Z+5PtT0wiiGm82ak/SHFkcRYze9OCK+oaIxvEUbem03+Kz+u3+GtIgwNCrsl395wJtbw
+         D4mh9lR5YNlkV7zn7MYKZueY65uwLo0aK2gS3hgDlGooaaLQrH/DuVkQc7AK6UX8bPAQ
+         cQQzIHtY3KLOXcYBte+jvx8+VV9okYkoSJhEVfHhWvSenLfnoQTl88/FaG/fbfT3Gl5m
+         +KopMfa/bbmbuCm0GgF43wN+cUP8GuizdaGiZI62/9BlqD4oBX1fiiQePp/4CRcx47CP
+         yyxQ==
+X-Gm-Message-State: AOAM531v1t0e463dPhj4LhPLMT4Ik6hVZvd26g7MivO4aoIyypwVSA9e
+        tU5YCXSfI/eEQGrcAWBQNxtX8Q==
+X-Google-Smtp-Source: ABdhPJwhujyOzZJsyn/qls/NbUYTejcg76s5B/HGMQpCX0pMMUwKj7sY6oMzrnMq8C9M3Kvd92SiQQ==
+X-Received: by 2002:a63:79c7:: with SMTP id u190mr7225234pgc.355.1629267854929;
         Tue, 17 Aug 2021 23:24:14 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id v9sm5393520pga.82.2021.08.17.23.24.12
+        by smtp.gmail.com with ESMTPSA id j17sm4864162pfn.148.2021.08.17.23.24.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:24:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Stefan Achatz <erazor_de@users.sourceforge.net>,
-        Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        linux-input@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -71,73 +67,331 @@ Cc:     Kees Cook <keescook@chromium.org>,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 55/63] HID: roccat: Use struct_group() to zero kone_mouse_event
-Date:   Tue, 17 Aug 2021 23:05:25 -0700
-Message-Id: <20210818060533.3569517-56-keescook@chromium.org>
+Subject: [PATCH v2 33/63] lib: Introduce CONFIG_TEST_MEMCPY
+Date:   Tue, 17 Aug 2021 23:05:03 -0700
+Message-Id: <20210818060533.3569517-34-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1908; h=from:subject; bh=1pufhTOQ+Ev1TBqsKxncMFoRA1ZRswld+5UcgY3UHPc=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMqezgIdICqUvusV3uxfFgc/NzjoDMPzoTPLXKQ ysx/Q+WJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKgAKCRCJcvTf3G3AJvMhD/ 4/FvXFOoXTIkumS1QqMpAFhaJGCKF+0RDx/z48DGYo98kCwWG6ybzb+3Sly47Z+VgrSp0nI5xp/nwa 7vzRFjBAI8F/fZVbUlI8Z/Fya+aZbPEeiEK947R3H8Wbap6uVAex0YjyWhhrJ5ZvwN2gBayJJ1WAXz +0fz1YMH8bcbhmSMSRON2ZGR1UjjBuaTH+o0ighQljGy5YLUHHZ+P4xNS0whZ8d+THVIEhrrdzHdRV xQ+rSGFdrgJR7xYVHqTNDyySccjRR12fCgsnFgzx2wmvqD6usQbAtioyZ5ZCTcNXNfyyvHgd++uCyK e638UGzfpOzM5vUWRjmLl1KeEBbobuCg3sgk1AQzR2mUpn6cvbWbZbOyGlGZtTdTn7wCe/qfq120Ud zfBKERaOR0vpEYpiRESonq/qBjud3tRwJ0H/FhwsbPbp2lo15qfYimJ41SEC1abj3Da1Xu61TlMqEd S5Rzg+maFwNcx3sFBdUId31vsspRp/LAtiMPvI3MalLGcTxm9Gdf8i9hEI2yM8v6QUVUqBl/F6N1uW 0dr4/U6A89Pj+zJUWKnGqTw3EZAQEgK5Lbi/njYrrq3JeohlG7jtmoxQDLp3fMw23TORKszxjv3y76 kDqBN4o2faONCRYDcPk3N/ArWnW2NiFPXTb3nBBeYGgetTCuosxxzdiUWWLg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9572; h=from:subject; bh=p1QoeTWxn6DEJODiVvxWPGNDYFdsmH5aDDL7ng36IGY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMl2cfYNueA2t4nhVLJ6CVAeEsjEk0oThed6oX5 x/KTrVOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjJQAKCRCJcvTf3G3AJjNtD/ 9N5316VubSv+/QS+eA4q6I4ZLlYJYJxhRVcKTXmABF+pqH1pk9B2RJ10lamIDk1OmGkZhAJqvpyRim EYokH8jG9ERic0ljriKnWlMvBvR/oqFpA/+1bZCKpqX2zEYltWlK61D3eS06lAM+vM40MAxt4J5p9B Qog/QGYXrYuMIkKd9yjMeabM28TL8oLSIggJhIMI1NOVYkgBVVHLiirmKkK4eoUR7ElzmioYXXkDIc viHwQIKCxcGk5M2nNFiGLLJWe4CWE7xcuhmbdAEUqvZ+JgzFWyjZyrFY+sd2X12ESGtgyB+sSYfcU+ LDVdEuxaVXzeBjbMVVfTSgmVirrL0zoSzHWADGXqRqmiOK4DWjAprBNTc49ylWScVtAuaWHSW2Y5Jm ro5UxxrVbOan+kZKESNzcaSOfaGbZd6OjmE4HHaA1VNsjzqT8nQOPmGIoX15aRPCO8Dd5ih9HjFxC9 6ku9y5cvlQG1ULxqdlizR6t2dQsYOSEsjiVZRuZoQy7xJW2rysHStYmf0mSCfZth19ppuksL9KS50A W2zNB45woRFFLXifUkqMD0FvJO173N3Tfc9qfMVHeDeSgZFfRo0oFUL4FXvnf5loAsIAq327/RJFrt n3UxEQGgNao9G6lvM0j3RPpuwsq2C5w76FchRc4K586gN5PfXPGaz1c3zyRw==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+Before changing anything about memcpy(), memmove(), and memset(), add
+run-time tests to check basic behaviors for any regressions.
 
-Add struct_group() to mark region of struct kone_mouse_event that should
-be initialized to zero.
-
-Cc: Stefan Achatz <erazor_de@users.sourceforge.net>
-Cc: Jiri Kosina <jikos@kernel.org>
-Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-Cc: linux-input@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/hid/hid-roccat-kone.c |  2 +-
- drivers/hid/hid-roccat-kone.h | 12 +++++++-----
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ lib/Kconfig.debug |   7 ++
+ lib/Makefile      |   1 +
+ lib/test_memcpy.c | 264 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 272 insertions(+)
+ create mode 100644 lib/test_memcpy.c
 
-diff --git a/drivers/hid/hid-roccat-kone.c b/drivers/hid/hid-roccat-kone.c
-index 1ca64481145e..ea17abc7ad52 100644
---- a/drivers/hid/hid-roccat-kone.c
-+++ b/drivers/hid/hid-roccat-kone.c
-@@ -857,7 +857,7 @@ static int kone_raw_event(struct hid_device *hdev, struct hid_report *report,
- 		memcpy(&kone->last_mouse_event, event,
- 				sizeof(struct kone_mouse_event));
- 	else
--		memset(&event->tilt, 0, 5);
-+		memset(&event->wipe, 0, sizeof(event->wipe));
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index 139d362daa32..db2e8ffa6049 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -2476,6 +2476,13 @@ config RATIONAL_KUNIT_TEST
  
- 	kone_keep_values_up_to_date(kone, event);
+ 	  If unsure, say N.
  
-diff --git a/drivers/hid/hid-roccat-kone.h b/drivers/hid/hid-roccat-kone.h
-index 4a1a9cb76b08..65c800e3addc 100644
---- a/drivers/hid/hid-roccat-kone.h
-+++ b/drivers/hid/hid-roccat-kone.h
-@@ -152,11 +152,13 @@ struct kone_mouse_event {
- 	uint16_t x;
- 	uint16_t y;
- 	uint8_t wheel; /* up = 1, down = -1 */
--	uint8_t tilt; /* right = 1, left = -1 */
--	uint8_t unknown;
--	uint8_t event;
--	uint8_t value; /* press = 0, release = 1 */
--	uint8_t macro_key; /* 0 to 8 */
-+	struct_group(wipe,
-+		uint8_t tilt; /* right = 1, left = -1 */
-+		uint8_t unknown;
-+		uint8_t event;
-+		uint8_t value; /* press = 0, release = 1 */
-+		uint8_t macro_key; /* 0 to 8 */
-+	);
- } __attribute__ ((__packed__));
- 
- enum kone_mouse_events {
++config MEMCPY_KUNIT_TEST
++	tristate "Test memcpy(), memmove(), and memset() functions at runtime" if !KUNIT_ALL_TESTS
++	depends on KUNIT
++	default KUNIT_ALL_TESTS
++	help
++	  Builds unit tests for memcpy(), memmove(), and memset() functions.
++
+ config TEST_UDELAY
+ 	tristate "udelay test driver"
+ 	help
+diff --git a/lib/Makefile b/lib/Makefile
+index bd17c2bf43e1..8a4c8bdb38a2 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -77,6 +77,7 @@ obj-$(CONFIG_TEST_MIN_HEAP) += test_min_heap.o
+ obj-$(CONFIG_TEST_LKM) += test_module.o
+ obj-$(CONFIG_TEST_VMALLOC) += test_vmalloc.o
+ obj-$(CONFIG_TEST_OVERFLOW) += test_overflow.o
++obj-$(CONFIG_TEST_MEMCPY) += test_memcpy.o
+ obj-$(CONFIG_TEST_RHASHTABLE) += test_rhashtable.o
+ obj-$(CONFIG_TEST_SORT) += test_sort.o
+ obj-$(CONFIG_TEST_USER_COPY) += test_user_copy.o
+diff --git a/lib/test_memcpy.c b/lib/test_memcpy.c
+new file mode 100644
+index 000000000000..be192b8e82b7
+--- /dev/null
++++ b/lib/test_memcpy.c
+@@ -0,0 +1,264 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Test cases for memcpy(), memmove(), and memset().
++ */
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include <kunit/test.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/module.h>
++#include <linux/overflow.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/vmalloc.h>
++
++struct some_bytes {
++	union {
++		u8 data[32];
++		struct {
++			u32 one;
++			u16 two;
++			u8  three;
++			/* 1 byte hole */
++			u32 four[4];
++		};
++	};
++};
++
++#define check(instance, v) do {	\
++	int i;	\
++	BUILD_BUG_ON(sizeof(instance.data) != 32);	\
++	for (i = 0; i < sizeof(instance.data); i++) {	\
++		KUNIT_ASSERT_EQ_MSG(test, instance.data[i], v, \
++			"line %d: '%s' not initialized to 0x%02x @ %d (saw 0x%02x)\n", \
++			__LINE__, #instance, v, i, instance.data[i]);	\
++	}	\
++} while (0)
++
++#define compare(name, one, two) do { \
++	int i; \
++	BUILD_BUG_ON(sizeof(one) != sizeof(two)); \
++	for (i = 0; i < sizeof(one); i++) {	\
++		KUNIT_EXPECT_EQ_MSG(test, one.data[i], two.data[i], \
++			"line %d: %s.data[%d] (0x%02x) != %s.data[%d] (0x%02x)\n", \
++			__LINE__, #one, i, one.data[i], #two, i, two.data[i]); \
++	}	\
++	kunit_info(test, "ok: " TEST_OP "() " name "\n");	\
++} while (0)
++
++static void memcpy_test(struct kunit *test)
++{
++#define TEST_OP "memcpy"
++	struct some_bytes control = {
++		.data = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			},
++	};
++	struct some_bytes zero = { };
++	struct some_bytes middle = {
++		.data = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0x00,
++			  0x00, 0x00, 0x00, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			},
++	};
++	struct some_bytes three = {
++		.data = { 0x00, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x00, 0x00, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			  0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++			},
++	};
++	struct some_bytes dest = { };
++	int count;
++	u8 *ptr;
++
++	/* Verify static initializers. */
++	check(control, 0x20);
++	check(zero, 0);
++	compare("static initializers", dest, zero);
++
++	/* Verify assignment. */
++	dest = control;
++	compare("direct assignment", dest, control);
++
++	/* Verify complete overwrite. */
++	memcpy(dest.data, zero.data, sizeof(dest.data));
++	compare("complete overwrite", dest, zero);
++
++	/* Verify middle overwrite. */
++	dest = control;
++	memcpy(dest.data + 12, zero.data, 7);
++	compare("middle overwrite", dest, middle);
++
++	/* Verify argument side-effects aren't repeated. */
++	dest = control;
++	ptr = dest.data;
++	count = 1;
++	memcpy(ptr++, zero.data, count++);
++	ptr += 8;
++	memcpy(ptr++, zero.data, count++);
++	compare("argument side-effects", dest, three);
++#undef TEST_OP
++}
++
++static void memmove_test(struct kunit *test)
++{
++#define TEST_OP "memmove"
++	struct some_bytes control = {
++		.data = { 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			},
++	};
++	struct some_bytes zero = { };
++	struct some_bytes middle = {
++		.data = { 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x00, 0x00, 0x00, 0x00,
++			  0x00, 0x00, 0x00, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			},
++	};
++	struct some_bytes five = {
++		.data = { 0x00, 0x00, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x00, 0x00, 0x00, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			},
++	};
++	struct some_bytes overlap = {
++		.data = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
++			  0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			},
++	};
++	struct some_bytes overlap_expected = {
++		.data = { 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x07,
++			  0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			  0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99, 0x99,
++			},
++	};
++	struct some_bytes dest = { };
++	int count;
++	u8 *ptr;
++
++	/* Verify static initializers. */
++	check(control, 0x99);
++	check(zero, 0);
++	compare("static initializers", zero, dest);
++
++	/* Verify assignment. */
++	dest = control;
++	compare("direct assignment", dest, control);
++
++	/* Verify complete overwrite. */
++	memmove(dest.data, zero.data, sizeof(dest.data));
++	compare("complete overwrite", dest, zero);
++
++	/* Verify middle overwrite. */
++	dest = control;
++	memmove(dest.data + 12, zero.data, 7);
++	compare("middle overwrite", dest, middle);
++
++	/* Verify argument side-effects aren't repeated. */
++	dest = control;
++	ptr = dest.data;
++	count = 2;
++	memmove(ptr++, zero.data, count++);
++	ptr += 9;
++	memmove(ptr++, zero.data, count++);
++	compare("argument side-effects", dest, five);
++
++	/* Verify overlapping overwrite is correct. */
++	ptr = &overlap.data[2];
++	memmove(ptr, overlap.data, 5);
++	compare("overlapping write", overlap, overlap_expected);
++#undef TEST_OP
++}
++
++static void memset_test(struct kunit *test)
++{
++#define TEST_OP "memset"
++	struct some_bytes control = {
++		.data = { 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			},
++	};
++	struct some_bytes complete = {
++		.data = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			},
++	};
++	struct some_bytes middle = {
++		.data = { 0x30, 0x30, 0x30, 0x30, 0x31, 0x31, 0x31, 0x31,
++			  0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
++			  0x31, 0x31, 0x31, 0x31, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			},
++	};
++	struct some_bytes three = {
++		.data = { 0x60, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x61, 0x61, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			  0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
++			},
++	};
++	struct some_bytes dest = { };
++	int count, value;
++	u8 *ptr;
++
++	/* Verify static initializers. */
++	check(control, 0x30);
++	check(dest, 0);
++
++	/* Verify assignment. */
++	dest = control;
++	compare("direct assignment", dest, control);
++
++	/* Verify complete overwrite. */
++	memset(dest.data, 0xff, sizeof(dest.data));
++	compare("complete overwrite", dest, complete);
++
++	/* Verify middle overwrite. */
++	dest = control;
++	memset(dest.data + 4, 0x31, 16);
++	compare("middle overwrite", dest, middle);
++
++	/* Verify argument side-effects aren't repeated. */
++	dest = control;
++	ptr = dest.data;
++	value = 0x60;
++	count = 1;
++	memset(ptr++, value++, count++);
++	ptr += 8;
++	memset(ptr++, value++, count++);
++	compare("argument side-effects", dest, three);
++#undef TEST_OP
++}
++
++static struct kunit_case memcpy_test_cases[] = {
++	KUNIT_CASE(memset_test),
++	KUNIT_CASE(memcpy_test),
++	KUNIT_CASE(memmove_test),
++	{}
++};
++
++static struct kunit_suite memcpy_test_suite = {
++	.name = "memcpy-test",
++	.test_cases = memcpy_test_cases,
++};
++kunit_test_suite(memcpy_test_suite);
++
++MODULE_LICENSE("GPL");
 -- 
 2.30.2
 
