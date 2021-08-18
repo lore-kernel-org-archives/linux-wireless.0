@@ -2,362 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C85FC4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10605C432BE
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 232A560FDA
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED1F561058
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 09:10:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231814AbhHRJLC (ORCPT
+        id S231660AbhHRJLG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 05:11:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55150 "EHLO mail.kernel.org"
+        Wed, 18 Aug 2021 05:11:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231785AbhHRJLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 05:11:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9527060FDA;
-        Wed, 18 Aug 2021 09:10:26 +0000 (UTC)
+        id S231941AbhHRJLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Aug 2021 05:11:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4092F60FDA;
+        Wed, 18 Aug 2021 09:10:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629277827;
-        bh=ooTc24w8G1hkRljk59PdwhL7nXvh4cd3qPS6oYlWY9E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=b6mQTBzwF1qk967yl3c1a00mWB76karzjDyUOLNBiFbleMt8RuNLj/YkidEMjRAbE
-         x6M6i4ucgZ8Tm4foEjxbEv/r1sbk/8czR6YbtyhQgahrAjyBK+iQUPIXt9I9IG3Mn6
-         eIoXDYXeTd89AS4OQjm+IMhV78gatHswEjQsD8V1gFtcNxwXGT+A3m0iBi7EXc4Mbd
-         L81UV24zbeZERb3Ol3wM1WlapAphErshuuBVvT/OYYKhvZPhEY5CSGEV4ayTQfXaOH
-         OH7z76XJt5h0OzgEA99NrtcJJ3WefGtc3VvFpNW0w3lAqkzRvK5Tra/YF0dTbFKrDg
-         29hTM6RtTSlvA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, Deren.Wu@mediatek.com
-Subject: [PATCH 4/5] mt76: mt7921: remove mcu rate reporting code
-Date:   Wed, 18 Aug 2021 11:09:59 +0200
-Message-Id: <b62570f0d61897d54e32e555971a5e44b39c08b6.1629277624.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1629277624.git.lorenzo@kernel.org>
-References: <cover.1629277624.git.lorenzo@kernel.org>
+        s=k20201202; t=1629277830;
+        bh=PPTa4ZGPiX/cWmzK+A1mYmTwVJhs9k/3hFnHrqGBgJU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IZ115SfELwmW+pyUhAYF1TRZ0NKaJmHtt5iT3rlOdhUe8qtLvry+aML/UwX278fFM
+         8VffthE/aBzru2pqWM2SF7g9wtr4ULxpYfzmw1SfbqHUp+TPSz0EpUbhBkLSlzg4p+
+         im7lGv64X9aIc81icNsUyb+p4ho80hHSyrnGGHzbw2ZdmBaPz12Y7FXWOO1rAnQdh3
+         uW7ATKyi45FY/7uzN4XxYgtnuLgExHu/xkw83FsTTzYEDY7p1ytg1kmUFLdcTai4Qi
+         Z/iyhKrTgpASO0dRkwVuGblNF6w3wZZ7tPyXi8H8FuniuRWgdgoIkDcsSNlnjEH7X7
+         4u1QD5CBfG99g==
+Received: by pali.im (Postfix)
+        id 16B1968A; Wed, 18 Aug 2021 11:10:28 +0200 (CEST)
+Date:   Wed, 18 Aug 2021 11:10:27 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     stable@vger.kernel.org, Sasha Levin <sashal@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Backporting CVE-2020-3702 ath9k patches to stable
+Message-ID: <20210818091027.2mhqrhg5pcq2bagt@pali>
+References: <20210818084859.vcs4vs3yd6zetmyt@pali>
+ <YRzMt53Ca/5irXc0@kroah.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <YRzMt53Ca/5irXc0@kroah.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove unused tx rate reporting through mcu tx done event since
-now tx status is fully supported
+On Wednesday 18 August 2021 11:02:47 Greg KH wrote:
+> On Wed, Aug 18, 2021 at 10:48:59AM +0200, Pali Rohár wrote:
+> > Hello! I would like to request for backporting following ath9k commits
+> > which are fixing CVE-2020-3702 issue.
+> > 
+> > 56c5485c9e44 ("ath: Use safer key clearing with key cache entries")
+> > 73488cb2fa3b ("ath9k: Clear key cache explicitly on disabling hardware")
+> > d2d3e36498dd ("ath: Export ath_hw_keysetmac()")
+> > 144cd24dbc36 ("ath: Modify ath_key_delete() to not need full key entry")
+> > ca2848022c12 ("ath9k: Postpone key cache entry deletion for TXQ frames reference it")
+> > 
+> > See also:
+> > https://lore.kernel.org/linux-wireless/87o8hvlx5g.fsf@codeaurora.org/
+> > 
+> > This CVE-2020-3702 issue affects ath9k driver in stable kernel versions.
+> > And due to this issue Qualcomm suggests to not use open source ath9k
+> > driver and instead to use their proprietary driver which do not have
+> > this issue.
+> > 
+> > Details about CVE-2020-3702 are described on the ESET blog post:
+> > https://www.welivesecurity.com/2020/08/06/beyond-kr00k-even-more-wifi-chips-vulnerable-eavesdropping/
+> > 
+> > Two months ago ESET tested above mentioned commits applied on top of
+> > 4.14 stable tree and confirmed that issue cannot be reproduced anymore
+> > with those patches. Commits were applied cleanly on top of 4.14 stable
+> > tree without need to do any modification.
+> 
+> What stable tree(s) do you want to see these go into?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7921/init.c  |   1 -
- .../net/wireless/mediatek/mt76/mt7921/mac.c   |   2 -
- .../net/wireless/mediatek/mt76/mt7921/main.c  |   4 -
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 133 ------------------
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  47 -------
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |   2 -
- 6 files changed, 189 deletions(-)
+Commits were introduced in 5.12, so it should go to all stable trees << 5.12
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 1f37e64b6038..e067ab78be1b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -202,7 +202,6 @@ int mt7921_register_device(struct mt7921_dev *dev)
- 	mutex_init(&dev->pm.mutex);
- 	init_waitqueue_head(&dev->pm.wait);
- 	spin_lock_init(&dev->pm.txq_lock);
--	INIT_LIST_HEAD(&dev->phy.stats_list);
- 	INIT_DELAYED_WORK(&dev->mphy.mac_work, mt7921_mac_work);
- 	INIT_DELAYED_WORK(&dev->phy.scan_work, mt7921_scan_work);
- 	INIT_DELAYED_WORK(&dev->coredump.work, mt7921_coredump_work);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 7d0554c03cfb..d9e0b993a698 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1117,8 +1117,6 @@ mt7921_mac_tx_free(struct mt7921_dev *dev, struct sk_buff *skb)
- 			msta = container_of(wcid, struct mt7921_sta, wcid);
- 			phy = msta->vif->phy;
- 			spin_lock_bh(&dev->sta_poll_lock);
--			if (list_empty(&msta->stats_list))
--				list_add_tail(&msta->stats_list, &phy->stats_list);
- 			if (list_empty(&msta->poll_list))
- 				list_add_tail(&msta->poll_list, &dev->sta_poll_list);
- 			spin_unlock_bh(&dev->sta_poll_lock);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 874c7c18ad09..8a7b4e78c097 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -264,7 +264,6 @@ static int mt7921_add_interface(struct ieee80211_hw *hw,
- 
- 	idx = MT7921_WTBL_RESERVED - mvif->mt76.idx;
- 
--	INIT_LIST_HEAD(&mvif->sta.stats_list);
- 	INIT_LIST_HEAD(&mvif->sta.poll_list);
- 	mvif->sta.wcid.idx = idx;
- 	mvif->sta.wcid.ext_phy = mvif->mt76.band_idx;
-@@ -581,7 +580,6 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	if (idx < 0)
- 		return -ENOSPC;
- 
--	INIT_LIST_HEAD(&msta->stats_list);
- 	INIT_LIST_HEAD(&msta->poll_list);
- 	msta->vif = mvif;
- 	msta->wcid.sta = 1;
-@@ -657,8 +655,6 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	spin_lock_bh(&dev->sta_poll_lock);
- 	if (!list_empty(&msta->poll_list))
- 		list_del_init(&msta->poll_list);
--	if (!list_empty(&msta->stats_list))
--		list_del_init(&msta->stats_list);
- 	spin_unlock_bh(&dev->sta_poll_lock);
- 
- 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index cadb633639d3..f49fc8078125 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -322,94 +322,6 @@ mt7921_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[txq], skb, 0);
- }
- 
--static void
--mt7921_mcu_tx_rate_parse(struct mt76_phy *mphy,
--			 struct mt7921_mcu_peer_cap *peer,
--			 struct rate_info *rate, u16 r)
--{
--	struct ieee80211_supported_band *sband;
--	u16 flags = 0;
--	u8 txmode = FIELD_GET(MT_WTBL_RATE_TX_MODE, r);
--	u8 gi = 0;
--	u8 bw = 0;
--
--	rate->mcs = FIELD_GET(MT_WTBL_RATE_MCS, r);
--	rate->nss = FIELD_GET(MT_WTBL_RATE_NSS, r) + 1;
--
--	switch (peer->bw) {
--	case IEEE80211_STA_RX_BW_160:
--		gi = peer->g16;
--		break;
--	case IEEE80211_STA_RX_BW_80:
--		gi = peer->g8;
--		break;
--	case IEEE80211_STA_RX_BW_40:
--		gi = peer->g4;
--		break;
--	default:
--		gi = peer->g2;
--		break;
--	}
--
--	gi = txmode >= MT_PHY_TYPE_HE_SU ?
--		FIELD_GET(MT_WTBL_RATE_HE_GI, gi) :
--		FIELD_GET(MT_WTBL_RATE_GI, gi);
--
--	switch (txmode) {
--	case MT_PHY_TYPE_CCK:
--	case MT_PHY_TYPE_OFDM:
--		if (mphy->chandef.chan->band == NL80211_BAND_5GHZ)
--			sband = &mphy->sband_5g.sband;
--		else
--			sband = &mphy->sband_2g.sband;
--
--		rate->legacy = sband->bitrates[rate->mcs].bitrate;
--		break;
--	case MT_PHY_TYPE_HT:
--	case MT_PHY_TYPE_HT_GF:
--		flags |= RATE_INFO_FLAGS_MCS;
--
--		if (gi)
--			flags |= RATE_INFO_FLAGS_SHORT_GI;
--		break;
--	case MT_PHY_TYPE_VHT:
--		flags |= RATE_INFO_FLAGS_VHT_MCS;
--
--		if (gi)
--			flags |= RATE_INFO_FLAGS_SHORT_GI;
--		break;
--	case MT_PHY_TYPE_HE_SU:
--	case MT_PHY_TYPE_HE_EXT_SU:
--	case MT_PHY_TYPE_HE_TB:
--	case MT_PHY_TYPE_HE_MU:
--		rate->he_gi = gi;
--		rate->he_dcm = FIELD_GET(MT_RA_RATE_DCM_EN, r);
--
--		flags |= RATE_INFO_FLAGS_HE_MCS;
--		break;
--	default:
--		break;
--	}
--	rate->flags = flags;
--
--	bw = mt7921_mcu_chan_bw(&mphy->chandef) - FIELD_GET(MT_RA_RATE_BW, r);
--
--	switch (bw) {
--	case IEEE80211_STA_RX_BW_160:
--		rate->bw = RATE_INFO_BW_160;
--		break;
--	case IEEE80211_STA_RX_BW_80:
--		rate->bw = RATE_INFO_BW_80;
--		break;
--	case IEEE80211_STA_RX_BW_40:
--		rate->bw = RATE_INFO_BW_40;
--		break;
--	default:
--		rate->bw = RATE_INFO_BW_20;
--		break;
--	}
--}
--
- static void
- mt7921_mcu_scan_event(struct mt7921_dev *dev, struct sk_buff *skb)
- {
-@@ -509,48 +421,6 @@ mt7921_mcu_low_power_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 	trace_lp_event(dev, event->state);
- }
- 
--static void
--mt7921_mcu_tx_done_event(struct mt7921_dev *dev, struct sk_buff *skb)
--{
--	struct mt7921_mcu_tx_done_event *event;
--	struct mt7921_sta *msta;
--	struct mt7921_phy *mphy = &dev->phy;
--	struct mt7921_mcu_peer_cap peer;
--	struct ieee80211_sta *sta;
--	LIST_HEAD(list);
--
--	skb_pull(skb, sizeof(struct mt7921_mcu_rxd));
--	event = (struct mt7921_mcu_tx_done_event *)skb->data;
--
--	spin_lock_bh(&dev->sta_poll_lock);
--	list_splice_init(&mphy->stats_list, &list);
--
--	while (!list_empty(&list)) {
--		msta = list_first_entry(&list, struct mt7921_sta, stats_list);
--		list_del_init(&msta->stats_list);
--
--		if (msta->wcid.idx != event->wlan_idx)
--			continue;
--
--		spin_unlock_bh(&dev->sta_poll_lock);
--
--		sta = wcid_to_sta(&msta->wcid);
--
--		/* peer config based on IEEE SPEC */
--		memset(&peer, 0x0, sizeof(peer));
--		peer.bw = event->bw;
--		peer.g2 = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20);
--		peer.g4 = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40);
--		peer.g8 = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_80);
--		peer.g16 = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_160);
--		mt7921_mcu_tx_rate_parse(mphy->mt76, &peer,
--					 &msta->stats.tx_rate,
--					 le16_to_cpu(event->tx_rate));
--		return;
--	}
--	spin_unlock_bh(&dev->sta_poll_lock);
--}
--
- static void
- mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
- {
-@@ -577,9 +447,6 @@ mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 	case MCU_EVENT_LP_INFO:
- 		mt7921_mcu_low_power_event(dev, skb);
- 		break;
--	case MCU_EVENT_TX_DONE:
--		mt7921_mcu_tx_done_event(dev, skb);
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index 2ff7ffcd01ef..945015ab62cc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -259,25 +259,6 @@ struct mt7921_mcu_ant_id_config {
- 	u8 ant_id[4];
- } __packed;
- 
--struct mt7921_mcu_peer_cap {
--	struct mt7921_mcu_ant_id_config ant_id_config;
--
--	u8 power_offset;
--	u8 bw_selector;
--	u8 change_bw_rate_n;
--	u8 bw;
--	u8 spe_idx;
--
--	u8 g2;
--	u8 g4;
--	u8 g8;
--	u8 g16;
--
--	u8 mmss;
--	u8 ampdu_factor;
--	u8 rsv[1];
--} __packed;
--
- struct mt7921_txpwr_req {
- 	u8 ver;
- 	u8 action;
-@@ -293,34 +274,6 @@ struct mt7921_txpwr_event {
- 	struct mt7921_txpwr txpwr;
- } __packed;
- 
--struct mt7921_mcu_tx_done_event {
--	u8 pid;
--	u8 status;
--	__le16 seq;
--
--	u8 wlan_idx;
--	u8 tx_cnt;
--	__le16 tx_rate;
--
--	u8 flag;
--	u8 tid;
--	u8 rsp_rate;
--	u8 mcs;
--
--	u8 bw;
--	u8 tx_pwr;
--	u8 reason;
--	u8 rsv0[1];
--
--	__le32 delay;
--	__le32 timestamp;
--	__le32 applied_flag;
--
--	u8 txs[28];
--
--	u8 rsv1[32];
--} __packed;
--
- enum {
- 	TM_SWITCH_MODE,
- 	TM_SET_AT_CMD,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index 26f175ef505e..61fa53af3840 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -84,7 +84,6 @@ struct mt7921_sta {
- 
- 	struct mt7921_vif *vif;
- 
--	struct list_head stats_list;
- 	struct list_head poll_list;
- 	u32 airtime_ac[8];
- 
-@@ -136,7 +135,6 @@ struct mt7921_phy {
- 	u32 ampdu_ref;
- 
- 	struct mib_stats mib;
--	struct list_head stats_list;
- 
- 	u8 sta_work_count;
- 
--- 
-2.31.1
+> And what order are the above commits to be applied in, top-to-bottom or
+> bottom-to-top?
 
+Same order in which were applied in 5.12. So first commit to apply is
+56c5485c9e44, then 73488cb2fa3b and so on... (from top of the email to
+the bottom of email).
+
+> thanks,
+> 
+> greg k-h
