@@ -2,105 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E27FAC4320A
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 13:02:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8439AC4320E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 13:33:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA9B560EFF
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 13:02:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63847610A3
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 13:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236470AbhHRNDE (ORCPT
+        id S237097AbhHRNe1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 09:03:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57900 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235423AbhHRNDD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 09:03:03 -0400
-Received: from mail-il1-x130.google.com (mail-il1-x130.google.com [IPv6:2607:f8b0:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DF9DC061764;
-        Wed, 18 Aug 2021 06:02:29 -0700 (PDT)
-Received: by mail-il1-x130.google.com with SMTP id f15so2127287ilk.4;
-        Wed, 18 Aug 2021 06:02:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=MkYUY8hRWwEu70DXUFF8siW38IO889EQpcP0JG9olHM=;
-        b=p816tpeNXiyVNrHjM3CLMARaTaQ9Q1DNkBPMF5S/QiTyS8TtyNuS4uSDtOvWYkZ9DD
-         KQs/VrSCx51qbgHOlhlqY+ZKamKhLS30a7nBa0Wn0WLKywG5EDsLvKzBc8Q5yqbovwVx
-         JjTa60sLtZoqpUSmCE3n0/wVzWzMxMTWIHpNstWexLoJOQJ+OxMi+XyB3QXEwvmEN+f/
-         wXa6Legda4Ugp7uCGvf3V1ZSw2wJsDe8AJmzt4yb1ib7Fzm5YmC5TfAcZFARVI54/XV+
-         DmeEiBYBUtdGwSDq+flIDrO71sP+aqrSrFvrxjsUFvpe0gY8Pan4eGGNA/tuXNtoplKZ
-         TcWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=MkYUY8hRWwEu70DXUFF8siW38IO889EQpcP0JG9olHM=;
-        b=qgyZfoyFiYiTL5aNMFzViUyirAFPjdNqfFHKkBf2bU/EzmJ+wTdpbyu9Bw+i8VKva/
-         q6TeUZ04Df5USQcNsP2npho0jlnK14yN0B7oYgW5AX9IE3RdEtaU08GFL8607ZVHQ9jb
-         /T1P2sc/WgsxFLOUpyh9hiXoqYQgpXmKo4TpAJxm9xgSoRQft7DePq4SODjn3aZgGkF+
-         LSnCXL52DPQOr+7zuENVVeevW+yVYj2A4BB1F3ZmYqsdZqp8FseYuhpwtt+GujmZpOBV
-         xQbsiIeP4na7mUt8mIC4fk6mMovDg8N9BMTYwpvKhYF+WpKZBSvJde+Zbf6Th3/YxDB/
-         YjFA==
-X-Gm-Message-State: AOAM531yjGirPqgC5Pmy+20FI+k64n1Y2TiZqUuaCOD8E2IjMCINULZu
-        TV+cQofOABemlc0ZqbSBZQLtOVxR9l3het95/us=
-X-Google-Smtp-Source: ABdhPJzz3GCPM+tS9a6+M7GfZUygskgS+S/HcxGkyNlHvv5PJSFF8ixpr8ONuLYhcpUTCbKIGIlu3ps94hS6aZMTaMM=
-X-Received: by 2002:a92:b711:: with SMTP id k17mr6012067ili.247.1629291748768;
- Wed, 18 Aug 2021 06:02:28 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210818060533.3569517-1-keescook@chromium.org> <20210818060533.3569517-26-keescook@chromium.org>
-In-Reply-To: <20210818060533.3569517-26-keescook@chromium.org>
-From:   Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date:   Wed, 18 Aug 2021 15:02:17 +0200
-Message-ID: <CANiq72mQQuwfpFdxeJQoKnfpUFSPuakHRm8RC+eH-xECBjwDkw@mail.gmail.com>
-Subject: Re: [PATCH v2 25/63] compiler_types.h: Remove __compiletime_object_size()
+        Wed, 18 Aug 2021 09:34:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39160 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233722AbhHRNe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Aug 2021 09:34:27 -0400
+Received: from oasis.local.home (cpe-66-24-58-225.stny.res.rr.com [66.24.58.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C0CE6109E;
+        Wed, 18 Aug 2021 13:33:51 +0000 (UTC)
+Date:   Wed, 18 Aug 2021 09:33:49 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
 To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Miguel Ojeda <ojeda@kernel.org>,
-        Sedat Dilek <sedat.dilek@gmail.com>,
-        Will Deacon <will@kernel.org>, Marco Elver <elver@google.com>,
-        Arvind Sankar <nivedita@alum.mit.edu>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Sami Tolvanen <samitolvanen@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Oleg Nesterov <oleg@redhat.com>,
+Cc:     linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v2 50/63] tracing: Use memset_startat() to zero struct
+ trace_iterator
+Message-ID: <20210818093349.3144276b@oasis.local.home>
+In-Reply-To: <20210818060533.3569517-51-keescook@chromium.org>
+References: <20210818060533.3569517-1-keescook@chromium.org>
+        <20210818060533.3569517-51-keescook@chromium.org>
+X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Aug 18, 2021 at 8:14 AM Kees Cook <keescook@chromium.org> wrote:
->
-> Since all compilers support __builtin_object_size(), and there is only
-> one user of __compiletime_object_size, remove it to avoid the needless
-> indirection. This lets Clang reason about check_copy_size() correctly.
+On Tue, 17 Aug 2021 23:05:20 -0700
+Kees Cook <keescook@chromium.org> wrote:
 
-Sounds good to me, the indirection is making things more complex than
-they need to be.
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memset(), avoid intentionally writing across
+> neighboring fields.
+> 
+> Use memset_startat() to avoid confusing memset() about writing beyond
+> the target struct member.
+> 
+> Cc: Steven Rostedt <rostedt@goodmis.org>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  kernel/trace/trace.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+> index 13587e771567..9ff8c31975cd 100644
+> --- a/kernel/trace/trace.c
+> +++ b/kernel/trace/trace.c
+> @@ -6691,9 +6691,7 @@ tracing_read_pipe(struct file *filp, char __user *ubuf,
+>  		cnt = PAGE_SIZE - 1;
+>  
+>  	/* reset all but tr, trace, and overruns */
+> -	memset(&iter->seq, 0,
+> -	       sizeof(struct trace_iterator) -
+> -	       offsetof(struct trace_iterator, seq));
+> +	memset_startat(iter, 0, seq);
 
-Reviewed-by: Miguel Ojeda <ojeda@kernel.org>
+I can't find memset_startat() in mainline nor linux-next. I don't see it
+in this thread either, but since this has 63 patches, I could have
+easily missed it.
 
-Cheers,
-Miguel
+This change really should belong to a patch set that just introduces
+memset_startat() (and perhaps memset_after()) and then updates all the
+places that should use it. That way I can give it a proper review. In
+other words, you should break this patch set up into smaller, more
+digestible portions for the reviewers.
+
+Thanks,
+
+-- Steve
+
+
+
+>  	cpumask_clear(iter->started);
+>  	trace_seq_init(&iter->seq);
+>  	iter->pos = -1;
+
