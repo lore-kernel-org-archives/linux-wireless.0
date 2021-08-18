@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCE8BC43216
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 572A3C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C72B960FDA
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4432560FDA
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238445AbhHRG0M (ORCPT
+        id S238575AbhHRGYs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:26:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48352 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238487AbhHRGYs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 Aug 2021 02:24:48 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 539CDC06179A
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:14 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id w68so1097327pfd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:14 -0700 (PDT)
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48336 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238176AbhHRGYr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Aug 2021 02:24:47 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79A18C0613D9
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:13 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id y11so1102340pfl.13
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:24:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8+A9B+piI2a1pz1tZAhljlWwZX3AUujJJLfFoqwX48c=;
-        b=Q+q1h03VOWqVXzc4UWVq6BvyCUjGxNglcQsoPbOnB43uw1Jqc5Ed9uK4QDnveHGz1L
-         Kya8Q0vnWUuWLwq9hkYIWv7GxXRbMo2Cn56A77ympKTwr1zpeF0LpQAEZ7AZzIuS6Rai
-         ktv4XVcS4xzeG7T6YIHvPnWg9yZ74XkeQethw=
+        bh=sw/Jd50933MgMDKcslseqtGFSA6d20C1365G+gy2Cx4=;
+        b=lkb90SqGpvhafiRjISSgB0a2FrYdpBXG9CDn9kyMEGK8G+C6mKoqovQIKPmXFTd6fX
+         KhJkX9Egylj1mwlSIMLNcs5ZBl52s9MtlmYUhK0Xdyehqw1A6JTalUf7LXgHvquVhuiB
+         vdvmLxRGM0/kjfEaChvj3QOfSe7n54uv/XChU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8+A9B+piI2a1pz1tZAhljlWwZX3AUujJJLfFoqwX48c=;
-        b=f/YKui6Oyhe3yKQXslhaqoqISZngfYDwCBIOpwKjUUPa+HQKlexnskVCXIX4K2ilCl
-         7GUWaAMlFGRyMwujQ5L10pRANWWvoUkiCrNe3CgutiAQmv8jyLfCIHsspzjsK/OUZddp
-         MsL9YvJq5+CNEccLNcz4auovt0Hd0HPhzfRvqbOYw0T8v4DAc1PP/tpT6Dn4GyowX6xc
-         LtJ5+gVB0/2GYhe6K1YzDEBo095FdkStfPflvCSHAYy+RDwy4lVK3E2XAyL4j/XdcAyB
-         zuFLyN3U4FvUTBrbX38KynA3DBPQtESHnwMcuXrJnpIl2hEszETYhS289Rr+nwRnOp3w
-         1+uA==
-X-Gm-Message-State: AOAM5335EG5ZZM1GGmpjY8G7RUweJ59byUhjnbvtkRUukiQ/v/qpM9Xw
-        IrvxVhzwEv8yfYlvOq/Qi2lYvQ==
-X-Google-Smtp-Source: ABdhPJxCPUoUEoBjNrtfl0W88T/NpydxEyxEPAEFUx/gyRjyJ4MO5rFkm2cPoNcf30Dno8o0XcPo0w==
-X-Received: by 2002:a05:6a00:134e:b0:3e1:1ed:80ff with SMTP id k14-20020a056a00134e00b003e101ed80ffmr7575503pfu.34.1629267853688;
+        bh=sw/Jd50933MgMDKcslseqtGFSA6d20C1365G+gy2Cx4=;
+        b=QFBiGpIHt0CvIq/TMVZ54ggTjFKdU2feNbembh8EicPbBnLBFdS22S4AWe64TVFl6U
+         v8JlpN9/a+D2dbuJJ3zOmEvxQ25VfwJ0KTlaDNRhB3cBtRzq2s3vWyPOsBuc95zSe8Cw
+         cGtN6OVU743AFmTxcHaRHk1q+JBBe8+AxiruqCpbLkveDFBle+BN2rHcKCwufHRPZgyT
+         tm3i6pfXcc/F09otXrhSlqQFKyQ+ePzd87sMTj/6c5/aL2L9KlfHZmoIH7nqjdQbZBMD
+         XGANtkGtKW+DSnDkoWzN2GEGeD3LKtBHxL8XwnUfO9o7P6Bk8rTEFcOqA16AusL+zYpH
+         OfBg==
+X-Gm-Message-State: AOAM530PuW1/HEDd7VlGOnC0NXMAyFFQrlXBMHJLmwlft7MCT0Shh5BS
+        jXdM1UDybGL3IlsUVFIjezQ2+g==
+X-Google-Smtp-Source: ABdhPJy9CLfg35oDbbdeQsU7HbtEw7JEEvFjjstjJ1u7tRCnU3ll7bgG1jvkDuiyrvoW+GnkiwkfjA==
+X-Received: by 2002:a63:fb08:: with SMTP id o8mr7314165pgh.72.1629267853126;
         Tue, 17 Aug 2021 23:24:13 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id p24sm4878901pff.161.2021.08.17.23.24.12
+        by smtp.gmail.com with ESMTPSA id n13sm4501409pff.164.2021.08.17.23.24.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:24:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Harald Welte <laforge@gnumonks.org>,
+        Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Andrew Morton <akpm@linux-foundation.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
@@ -69,14 +69,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 54/63] dm integrity: Use struct_group() to zero struct journal_sector
-Date:   Tue, 17 Aug 2021 23:05:24 -0700
-Message-Id: <20210818060533.3569517-55-keescook@chromium.org>
+Subject: [PATCH v2 52/63] cm4000_cs: Use struct_group() to zero struct cm4000_dev region
+Date:   Tue, 17 Aug 2021 23:05:22 -0700
+Message-Id: <20210818060533.3569517-53-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1663; h=from:subject; bh=RPEjx0xOcNjHRBM+3EZ1vHtaj+TxiBoxNq+cj1Ac9bE=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMqKJz2SoJYeKtBFLmX4tcR3DHJFXvBbKzH4heh kSEkuyiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKgAKCRCJcvTf3G3AJuKGD/ 4n4SpuomtIZ+g22QufnnrQNKHA98zIHUxCFyPUWlldkaYq1yjxANA7kCeWzhMyhnDbNsMcPnBz0u8w gTumF2NUeGQx1DWnIYpoWchHj0biXBVmJ627d0qH4ZPJV0xVoCra7OxBNu9MzddxWpF6sdPcwkm6G6 KRyO9F4M4JhZ6wIx91tgVghgSzl5twheIhtA3njJ073Q8wNaDnBzfs/l9Ut/AzjfupZu1x3ki+jwpu WmD6nfcKbq0Iek6wuIdRHun0EOL5PBZd4fWR1bJEQePLiZZr/WzyrJktCcPBtbfNoxoh3Zd/RDOYxC Phqtb9d6KbfQDNPiqFq8A/FFx6Omeamuzt6AZrvZOtupVwaAqZxmTGL+T1t6dJrUD1sjtKDjGoNOLi 7dn6c/08XUE+My/kdCiaqMIMLvnXKeruIHQhrlJ6zoMYvFZ06D7/j39GezPIeXXaEJGwuF4EXX7UYn QzJ8yJKQqHgf3AnzSklDq7S2QgMQbMBg1H2HY21GsA89Wb8lyNm0RvImBjKDi+T7HWHtu01K2er3t2 O4+fb9meXQjoQXeBGEZ9RShjhKkgK9BaIxyiqfANsALqrrzQxMSMbRLvnALSRrEOGtrHi3ZBCAsQ/F uBwH2rx2bGKY/138CbdayzcXJ/PERuBisG0LhMFqbUDxYwVopHT1lxsnBtzA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1756; h=from:subject; bh=J4NGkJQCgahZv2zewL/wYUO+MpNSkAZfZF2EdzgyTRQ=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMplIHvWiwQENOF2c7XlC/x85JbSdFgE5kqsWuK 0OxdRfuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKQAKCRCJcvTf3G3AJtHPD/ 9w1C3xZTkrQOl8qCphP1NuYb6Zzm4m2uWKaotV03HQ6T9nZ1pYcDMMaHhAraQDtG/+gMBjur6kCewv ayrtSdcUPKzKabKpDYkkQQGEE9qhvOYR4et5WymZDf+eN80rUG6e4eGkoBaSg8aVufvzlEbWGGJI1g tqDg4cuv/AswW6J0SfIjA0LGvOcP86foOnbG0fLo1CjkuPmC73qAisdtYqZ728UwCF73xtFOwOcz58 eqjKu4Hpj2sUaNV2ghIn1t2tsXH9VMc5RRvDzUnjKE8WQiYMXT1GnQMQC30RP8X5s0vnTZZK9COqg4 oewq2GoOKKBWejZCZnIt2PWaHfLpUYE3cXHVsUUrUzVwgg/Sk3purVXNGauBM7zNDyMu+OqTX4ib/A +HNqKaO/5WxWULHr6ttMgZKJiYQpCIvqqVqyHlMArxKxGWwiOSShxbeoadhVmd0SxeqdGPdNCiAuk6 FFaKdGvO/XR7rdo2FnWbhYIs1bjRjMoCnyn4vUMe6sRx6ESs8Bvvf+nu0uOBDONLatp0KRkgfFUvYM i85g6GvFHJOXM2duu8wB+SxG0oCcvOTXiLpU3c5ok266H6TYTMs6yQQ6fEkcPZU/wwc56QrWbNdrgO Cwck+Q8ubdcpIlRqgjAb6NEZ7diJsEGXAyIkWnhUKNVIgROWsl4C+tImakjQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -87,44 +87,49 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Add struct_group() to mark region of struct journal_sector that should be
+Add struct_group() to mark region of struct cm4000_dev that should be
 initialized to zero.
 
-Cc: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
+Cc: Harald Welte <laforge@gnumonks.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Kees Cook <keescook@chromium.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Link: https://lore.kernel.org/lkml/YQDvxAofJlI1JoGZ@kroah.com
 ---
- drivers/md/dm-integrity.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/char/pcmcia/cm4000_cs.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 40f8116c8e44..59deea0dd305 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -119,8 +119,10 @@ struct journal_entry {
- #define JOURNAL_MAC_SIZE		(JOURNAL_MAC_PER_SECTOR * JOURNAL_BLOCK_SECTORS)
+diff --git a/drivers/char/pcmcia/cm4000_cs.c b/drivers/char/pcmcia/cm4000_cs.c
+index 8f1bce0b4fe5..2f43e7088e16 100644
+--- a/drivers/char/pcmcia/cm4000_cs.c
++++ b/drivers/char/pcmcia/cm4000_cs.c
+@@ -116,8 +116,9 @@ struct cm4000_dev {
+ 	wait_queue_head_t atrq;		/* wait for ATR valid */
+ 	wait_queue_head_t readq;	/* used by write to wake blk.read */
  
- struct journal_sector {
--	__u8 entries[JOURNAL_SECTOR_DATA - JOURNAL_MAC_PER_SECTOR];
--	__u8 mac[JOURNAL_MAC_PER_SECTOR];
-+	struct_group(sectors,
-+		__u8 entries[JOURNAL_SECTOR_DATA - JOURNAL_MAC_PER_SECTOR];
-+		__u8 mac[JOURNAL_MAC_PER_SECTOR];
+-	/* warning: do not move this fields.
++	/* warning: do not move this struct group.
+ 	 * initialising to zero depends on it - see ZERO_DEV below.  */
++	struct_group(init,
+ 	unsigned char atr_csum;
+ 	unsigned char atr_len_retry;
+ 	unsigned short atr_len;
+@@ -140,12 +141,10 @@ struct cm4000_dev {
+ 
+ 	struct timer_list timer;	/* used to keep monitor running */
+ 	int monitor_running;
 +	);
- 	commit_id_t commit_id;
  };
  
-@@ -2856,7 +2858,8 @@ static void init_journal(struct dm_integrity_c *ic, unsigned start_section,
- 		wraparound_section(ic, &i);
- 		for (j = 0; j < ic->journal_section_sectors; j++) {
- 			struct journal_sector *js = access_journal(ic, i, j);
--			memset(&js->entries, 0, JOURNAL_SECTOR_DATA);
-+			BUILD_BUG_ON(sizeof(js->sectors) != JOURNAL_SECTOR_DATA);
-+			memset(&js->sectors, 0, sizeof(js->sectors));
- 			js->commit_id = dm_integrity_commit_id(ic, i, j, commit_seq);
- 		}
- 		for (j = 0; j < ic->journal_section_entries; j++) {
+-#define	ZERO_DEV(dev)  						\
+-	memset(&dev->atr_csum,0,				\
+-		sizeof(struct cm4000_dev) - 			\
+-		offsetof(struct cm4000_dev, atr_csum))
++#define	ZERO_DEV(dev)	memset(&dev->init, 0, sizeof(dev->init))
+ 
+ static struct pcmcia_device *dev_table[CM4000_MAX_DEV];
+ static struct class *cmm_class;
 -- 
 2.30.2
 
