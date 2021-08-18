@@ -8,66 +8,58 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB4EEC4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C73C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B13E660FDA
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C2C6604AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240784AbhHRGSr (ORCPT
+        id S239494AbhHRGSv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:18:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45616 "EHLO
+        Wed, 18 Aug 2021 02:18:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238116AbhHRGP6 (ORCPT
+        with ESMTP id S238375AbhHRGP6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 Aug 2021 02:15:58 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4002AC0363F6
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:18 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id e7so1157666pgk.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:18 -0700 (PDT)
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B03DC0363F5
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:17 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id l11so1148879plk.6
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=axRxl6XNvdHdnVEeMiGlhBK2fx1eWMP1p1J87ZwKUtU=;
-        b=JpKHmXU+6i0jG8irvmKVhzXirA7pH+W7nH7J14Qn327X+LOQf3pL7DowyuBtKsP5wC
-         gHD1WyQqGKoFOHDbsbrtUlWANqYlMajHDOs5uRuKehjTdTUc/TyL5/NTurDtd+3UeEjx
-         runJ9+RCI5UpKUek8ddHgjdTJKkDX36NxGr60=
+        bh=0MMWsXNyPTiNeiAP5gS1SC+QG9nXJlmhwzZVB05s6vU=;
+        b=lFnsOWBb7INVqCBC7qdAJtdwm7/YI/zQgCoP3x3m0bM+t5LwRECJJtnUsDrlQxjrhX
+         QHqsidPkWI4X7e2ihavui/Ywcxlnw/aFhClReU+sv9f1EOAIRk2xMvoRioWP+UFLSFBK
+         RCfXzgJGwfpUuLe9H9dmyKkDNrcpU89QSc2mo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=axRxl6XNvdHdnVEeMiGlhBK2fx1eWMP1p1J87ZwKUtU=;
-        b=SiRcJLhAWE+ve69+5wEDFXHLJNE10B3AzXxxfuxUzmzfNTmTO4riAW1HwPi2mpCuHn
-         z2V26k/4YUMUKwmvx9hEeAaJHsiDsnNHPX3Z7aOX260/fIGtjZUqo+1zpb3806VuQMo4
-         3Ajj+wuMV/tKbINB4SWbFrhRH8F08yZIENFnJUqzEqncwg7YCUOpQ16zsJ3TJoCgvFg7
-         YNlbSIt4Ea5ps7d/ozi6QdSo4rTMQ7Htj6Vc+XC+6nfHONONm0yllJ4TYynA3xcdO4i4
-         cQyeC53IKkWmj7sZfKP9LhAuWj6goRBQZkgbTAITiI+9tPZY+mKV++BEE/4XvoRRyK8n
-         ijcg==
-X-Gm-Message-State: AOAM530BzPg777tgrxONqU0XBEIwJ3yveAdxuoSx0BTwU+dEJbQ9mcKF
-        3axtTSXlUOcQdIHEnnJTPvWZnA==
-X-Google-Smtp-Source: ABdhPJxq4OGdaH6r9U7yhjNUxqwYDhkvChY0GjS3sW8r1FpsJJV1IJrOiRrj6WilyBToIyIfhh4sdw==
-X-Received: by 2002:a65:4581:: with SMTP id o1mr7206734pgq.349.1629267257822;
-        Tue, 17 Aug 2021 23:14:17 -0700 (PDT)
+        bh=0MMWsXNyPTiNeiAP5gS1SC+QG9nXJlmhwzZVB05s6vU=;
+        b=FQif4hIi7iEalzyud6rOSRJgMHoUULXnqv3wEk+7ZUq7IhqSKbOfJrbfHY4eQIUBYy
+         wbJcPqhEuVxy7dJi/UyZLQVVvZ8qaeDAog8OKm8VMaoPYIUnJFkFpiLJLNhS6glvUOEo
+         Pf0asufdW4XK7d0a0u0OBSXn2/fVJUDWpyyYjHV47soqBJu0zD2TpPgR+PzD7XIjh3br
+         s0Yfs5gJQsDruZEa7hr1MZ8V/S3Dq96rVWV0oOVh4j+eKPEzaIyHL7vsAvu1GE/p1CEv
+         dgql7sKdIISxQINbW6Tsf7NRDO39KkdNpvDDnQzf2144sq1UcxYY1w4WD9iH83HfNTN4
+         ZiQQ==
+X-Gm-Message-State: AOAM532kZV1SMA4uJAvGl2Ja9DbiTdOVyDi305f3sOTMxEpXdPqwJsN5
+        8jM6CnociRt7NrUWUj0Kgja0eg==
+X-Google-Smtp-Source: ABdhPJzuLn/Q432TdsC9Yx7ftRK4PSNzWyeMnAwx3i8tWLw6BmbXc/OzOJqqzYHaCmof15Jus1chGA==
+X-Received: by 2002:a17:90a:f3d2:: with SMTP id ha18mr7684231pjb.232.1629267256892;
+        Tue, 17 Aug 2021 23:14:16 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id k9sm4320391pfu.109.2021.08.17.23.14.14
+        by smtp.gmail.com with ESMTPSA id y64sm5430806pgy.32.2021.08.17.23.14.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        "Pan, Xinhui" <Xinhui.Pan@amd.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Hawking Zhang <Hawking.Zhang@amd.com>,
-        Feifei Xu <Feifei.Xu@amd.com>, Lijo Lazar <lijo.lazar@amd.com>,
-        Likun Gao <Likun.Gao@amd.com>, Jiawei Gu <Jiawei.Gu@amd.com>,
-        Evan Quan <evan.quan@amd.com>, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org,
-        Alex Deucher <alexander.deucher@amd.com>,
+Cc:     Kees Cook <keescook@chromium.org>, David Airlie <airlied@linux.ie>,
+        Lee Jones <lee.jones@linaro.org>,
+        dri-devel@lists.freedesktop.org, Daniel Vetter <daniel@ffwll.ch>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -76,15 +68,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 18/63] drm/amd/pm: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:48 -0700
-Message-Id: <20210818060533.3569517-19-keescook@chromium.org>
+Subject: [PATCH v2 20/63] drm/mga/mga_ioc32: Use struct_group() for memcpy() region
+Date:   Tue, 17 Aug 2021 23:04:50 -0700
+Message-Id: <20210818060533.3569517-21-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9874; h=from:subject; bh=xkq/GgVQos4phY69YvlHwazwtJ7+oBoAW/iYv7WVAic=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMhiWVzzmhBur+1cBk2O2ZXVSjeLlgxz10CkbR5 AKO/11yJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIQAKCRCJcvTf3G3AJht6EA CaYxNgC78NjMU3NXMgzorx6fRtH4BJwYIGJ74DB/m7swwaAHceyK1O/6lCQ7H812Aiiq4XK3QDmoUk qASs/4198qLTAEHhq7Q18FiMX2P3A7Q0631t7ABRcNNf+8sZXncmdOZPGYXpPAODBOCabM/f3/oDCx juRFOQ2unI6EojppuO7CJSyN6BitOl0EfAAVwzH5qdN0dbqjvmJWEk6DyGUh+uyHqAcClSWCqlrEC2 2OsaBqNYzf5j6vWeBx02EpyOWFqkO/XyPXBqw7kL7GIS2sxESQTqmhPrfGjlNI8aLc5oqP4Nz/mHlj izA+lyAMf9/CaxogHr7ad/WNivgAySk9xHsccW792p6SsKVbNUtuWM4hk2GkKJimH31lP9pcLQL2Ch j7xVH/dOlAV9Ftvi7+KvJI+v+DmQ/gRxe5YIRztukLnhmjPWcMqKsuKK44UwR65YeFh33G6UZWzhZj SwUBV/6zpAPgCZDoeJ5hTeN2HohgNJ0fijbEnaK+ifaUEslAh2R7Yxz9WjnXacxem2c2/Z6wGyyAdq 8GbFcwR+u8iKZLAOMc13DJT6zOgy8+ZXHxMay8F6GzxmI1F43Z0WF2KzMZDLs5tgRr/UrucI9TgIhX cizSF2eNXvheQca86HlnqqfZiLL7gsttRC6U5oD07PukPv3YeEniSDJPST0g==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4026; h=from:subject; bh=qstupb1mRvuiCQ1RTR6k6oV2NxQS+tS8y2enFqRpd68=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMiDAfxk4XGgNDwyOny5QMoIdZacepKSLc24F9z Lo7XG+GJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIgAKCRCJcvTf3G3AJh6oD/ 9Ovp0Ql0AYVAVX1IIx8UFncQNMHylWbLYYu/pPeuq//n2vP3YxPODUvUsOhKeGvOP827UQo0zYW5iy tgiG1WBc8ebgh5QPmWb88QrAINPUhtbBp+Ot3NMw60te7sqbHEXsxkZV30DmTsosmCxyISKjyVvCWu k9+q0dosQewqL6/+1hWYp1uFW9SNaxLwoQPTdmTeeACtkvBcffo8L6czjWkLiNyOMCTdoqoQssvvRu zHaZ9swQIAAFRlHyaIwcnYCD8acVZhrpgLkn3SFlhEWx/CsFsuWCNm8ykKqoemb7waZs2mfagTLdNd j9c/hMpmgkGT5eBVZm8ZZc0VIpiQDZFHDrAdet4mxrXfRctgoALoLZZXdvZ6hovyaCJEmAL4dpEmzB SfbVedU11Uqk4gqtVGAPiExd0oEsgw9aH5Yi6f5Kq0NHSdjbUKSXAMoY/rdvqf/QkxZBOmr8Wsmgyh uaHkoAimq3GMz0bp3wb+4kSgsFxg4xCu45/FPrJc/fxu4K2kRpOUDG1wDjMc1G1trTeP21//dqz/DY dcmxUTtVuVe2fPww119RF2WXn3/GxtNi5RK7uTtxCgWr96J2MocjYw5//xWdXRfEEWLjXFK52hcX2N rEw10lDXzkEK6IQwMathNTugVFdbD4ID3UeC/FzYInnBnFPluTRksv4HTSmA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -95,249 +86,113 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memcpy(), memmove(), and memset(), avoid
 intentionally writing across neighboring fields.
 
-Use struct_group() in structs:
-	struct atom_smc_dpm_info_v4_5
-	struct atom_smc_dpm_info_v4_6
-	struct atom_smc_dpm_info_v4_7
-	struct atom_smc_dpm_info_v4_10
-	PPTable_t
-so the grouped members can be referenced together. This will allow
-memcpy() and sizeof() to more easily reason about sizes, improve
-readability, and avoid future warnings about writing beyond the end of
-the first member.
+Use struct_group() in struct drm32_mga_init around members chipset, sgram,
+maccess, fb_cpp, front_offset, front_pitch, back_offset, back_pitch,
+depth_cpp, depth_offset, depth_pitch, texture_offset, and texture_size,
+so they can be referenced together. This will allow memcpy() and sizeof()
+to more easily reason about sizes, improve readability, and avoid future
+warnings about writing beyond the end of chipset.
 
-"pahole" shows no size nor member offset changes to any structs.
-"objdump -d" shows no object code changes.
+"pahole" shows no size nor member offset changes to struct drm32_mga_init.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences and optimizations).
 
-Cc: "Christian König" <christian.koenig@amd.com>
-Cc: "Pan, Xinhui" <Xinhui.Pan@amd.com>
+Note that since this is a UAPI header, __struct_group() is used
+directly.
+
 Cc: David Airlie <airlied@linux.ie>
-Cc: Daniel Vetter <daniel@ffwll.ch>
-Cc: Hawking Zhang <Hawking.Zhang@amd.com>
-Cc: Feifei Xu <Feifei.Xu@amd.com>
-Cc: Lijo Lazar <lijo.lazar@amd.com>
-Cc: Likun Gao <Likun.Gao@amd.com>
-Cc: Jiawei Gu <Jiawei.Gu@amd.com>
-Cc: Evan Quan <evan.quan@amd.com>
-Cc: amd-gfx@lists.freedesktop.org
+Cc: Lee Jones <lee.jones@linaro.org>
 Cc: dri-devel@lists.freedesktop.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Alex Deucher <alexander.deucher@amd.com>
-Link: https://lore.kernel.org/lkml/CADnq5_Npb8uYvd+R4UHgf-w8-cQj3JoODjviJR_Y9w9wqJ71mQ@mail.gmail.com
+Acked-by: Daniel Vetter <daniel@ffwll.ch>
+Link: https://lore.kernel.org/lkml/YQKa76A6XuFqgM03@phenom.ffwll.local
 ---
- drivers/gpu/drm/amd/include/atomfirmware.h           |  9 ++++++++-
- .../gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h    |  3 ++-
- drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h  |  3 ++-
- .../gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h   |  3 ++-
- drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c    |  6 +++---
- drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c      | 12 ++++++++----
- drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c   |  6 +++---
- 7 files changed, 28 insertions(+), 14 deletions(-)
+ drivers/gpu/drm/mga/mga_ioc32.c | 27 ++++++++++++++-------------
+ include/uapi/drm/mga_drm.h      | 22 ++++++++++++----------
+ 2 files changed, 26 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/include/atomfirmware.h b/drivers/gpu/drm/amd/include/atomfirmware.h
-index 44955458fe38..7bf3edf15410 100644
---- a/drivers/gpu/drm/amd/include/atomfirmware.h
-+++ b/drivers/gpu/drm/amd/include/atomfirmware.h
-@@ -2081,6 +2081,7 @@ struct atom_smc_dpm_info_v4_5
- {
-   struct   atom_common_table_header  table_header;
-     // SECTION: BOARD PARAMETERS
-+  struct_group(dpm_info,
-     // I2C Control
-   struct smudpm_i2c_controller_config_v2  I2cControllers[8];
+diff --git a/drivers/gpu/drm/mga/mga_ioc32.c b/drivers/gpu/drm/mga/mga_ioc32.c
+index 4fd4de16cd32..894472921c30 100644
+--- a/drivers/gpu/drm/mga/mga_ioc32.c
++++ b/drivers/gpu/drm/mga/mga_ioc32.c
+@@ -38,16 +38,18 @@
+ typedef struct drm32_mga_init {
+ 	int func;
+ 	u32 sarea_priv_offset;
+-	int chipset;
+-	int sgram;
+-	unsigned int maccess;
+-	unsigned int fb_cpp;
+-	unsigned int front_offset, front_pitch;
+-	unsigned int back_offset, back_pitch;
+-	unsigned int depth_cpp;
+-	unsigned int depth_offset, depth_pitch;
+-	unsigned int texture_offset[MGA_NR_TEX_HEAPS];
+-	unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	struct_group(always32bit,
++		int chipset;
++		int sgram;
++		unsigned int maccess;
++		unsigned int fb_cpp;
++		unsigned int front_offset, front_pitch;
++		unsigned int back_offset, back_pitch;
++		unsigned int depth_cpp;
++		unsigned int depth_offset, depth_pitch;
++		unsigned int texture_offset[MGA_NR_TEX_HEAPS];
++		unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	);
+ 	u32 fb_offset;
+ 	u32 mmio_offset;
+ 	u32 status_offset;
+@@ -67,9 +69,8 @@ static int compat_mga_init(struct file *file, unsigned int cmd,
  
-@@ -2159,7 +2160,7 @@ struct atom_smc_dpm_info_v4_5
-   uint32_t MvddRatio; // This is used for MVDD Vid workaround. It has 16 fractional bits (Q16.16)
-   
-   uint32_t     BoardReserved[9];
--
-+  );
- };
+ 	init.func = init32.func;
+ 	init.sarea_priv_offset = init32.sarea_priv_offset;
+-	memcpy(&init.chipset, &init32.chipset,
+-		offsetof(drm_mga_init_t, fb_offset) -
+-		offsetof(drm_mga_init_t, chipset));
++	memcpy(&init.always32bit, &init32.always32bit,
++	       sizeof(init32.always32bit));
+ 	init.fb_offset = init32.fb_offset;
+ 	init.mmio_offset = init32.mmio_offset;
+ 	init.status_offset = init32.status_offset;
+diff --git a/include/uapi/drm/mga_drm.h b/include/uapi/drm/mga_drm.h
+index 8c4337548ab5..2978a435dff9 100644
+--- a/include/uapi/drm/mga_drm.h
++++ b/include/uapi/drm/mga_drm.h
+@@ -279,20 +279,22 @@ typedef struct drm_mga_init {
  
- struct atom_smc_dpm_info_v4_6
-@@ -2168,6 +2169,7 @@ struct atom_smc_dpm_info_v4_6
-   // section: board parameters
-   uint32_t     i2c_padding[3];   // old i2c control are moved to new area
+ 	unsigned long sarea_priv_offset;
  
-+  struct_group(dpm_info,
-   uint16_t     maxvoltagestepgfx; // in mv(q2) max voltage step that smu will request. multiple steps are taken if voltage change exceeds this value.
-   uint16_t     maxvoltagestepsoc; // in mv(q2) max voltage step that smu will request. multiple steps are taken if voltage change exceeds this value.
+-	int chipset;
+-	int sgram;
++	__struct_group(/* no tye */, always32bit, /* no attrs */,
++		int chipset;
++		int sgram;
  
-@@ -2246,12 +2248,14 @@ struct atom_smc_dpm_info_v4_6
+-	unsigned int maccess;
++		unsigned int maccess;
  
-   // reserved
-   uint32_t   boardreserved[10];
-+  );
- };
+-	unsigned int fb_cpp;
+-	unsigned int front_offset, front_pitch;
+-	unsigned int back_offset, back_pitch;
++		unsigned int fb_cpp;
++		unsigned int front_offset, front_pitch;
++		unsigned int back_offset, back_pitch;
  
- struct atom_smc_dpm_info_v4_7
- {
-   struct   atom_common_table_header  table_header;
-     // SECTION: BOARD PARAMETERS
-+  struct_group(dpm_info,
-     // I2C Control
-   struct smudpm_i2c_controller_config_v2  I2cControllers[8];
+-	unsigned int depth_cpp;
+-	unsigned int depth_offset, depth_pitch;
++		unsigned int depth_cpp;
++		unsigned int depth_offset, depth_pitch;
  
-@@ -2348,6 +2352,7 @@ struct atom_smc_dpm_info_v4_7
-   uint8_t      Padding8_Psi2;
+-	unsigned int texture_offset[MGA_NR_TEX_HEAPS];
+-	unsigned int texture_size[MGA_NR_TEX_HEAPS];
++		unsigned int texture_offset[MGA_NR_TEX_HEAPS];
++		unsigned int texture_size[MGA_NR_TEX_HEAPS];
++	);
  
-   uint32_t     BoardReserved[5];
-+  );
- };
- 
- struct smudpm_i2c_controller_config_v3
-@@ -2478,6 +2483,7 @@ struct atom_smc_dpm_info_v4_10
-   struct   atom_common_table_header  table_header;
- 
-   // SECTION: BOARD PARAMETERS
-+  struct_group(dpm_info,
-   // Telemetry Settings
-   uint16_t GfxMaxCurrent; // in Amps
-   uint8_t   GfxOffset;     // in Amps
-@@ -2524,6 +2530,7 @@ struct atom_smc_dpm_info_v4_10
-   uint16_t spare5;
- 
-   uint32_t reserved[16];
-+  );
- };
- 
- /* 
-diff --git a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
-index 43d43d6addc0..8093a98800c3 100644
---- a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
-+++ b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_arcturus.h
-@@ -643,6 +643,7 @@ typedef struct {
-   // SECTION: BOARD PARAMETERS
- 
-   // SVI2 Board Parameters
-+  struct_group(v4_6,
-   uint16_t     MaxVoltageStepGfx; // In mV(Q2) Max voltage step that SMU will request. Multiple steps are taken if voltage change exceeds this value.
-   uint16_t     MaxVoltageStepSoc; // In mV(Q2) Max voltage step that SMU will request. Multiple steps are taken if voltage change exceeds this value.
- 
-@@ -728,10 +729,10 @@ typedef struct {
-   uint32_t     BoardVoltageCoeffB;    // decode by /1000
- 
-   uint32_t     BoardReserved[7];
-+  );
- 
-   // Padding for MMHUB - do not modify this
-   uint32_t     MmHubPadding[8]; // SMU internal use
--
- } PPTable_t;
- 
- typedef struct {
-diff --git a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
-index 04752ade1016..0b4e6e907e95 100644
---- a/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
-+++ b/drivers/gpu/drm/amd/pm/inc/smu11_driver_if_navi10.h
-@@ -725,6 +725,7 @@ typedef struct {
-   uint32_t     Reserved[8];
- 
-   // SECTION: BOARD PARAMETERS
-+  struct_group(v4,
-   // I2C Control
-   I2cControllerConfig_t  I2cControllers[NUM_I2C_CONTROLLERS];     
- 
-@@ -809,10 +810,10 @@ typedef struct {
-   uint8_t      Padding8_Loadline;
- 
-   uint32_t     BoardReserved[8];
-+  );
- 
-   // Padding for MMHUB - do not modify this
-   uint32_t     MmHubPadding[8]; // SMU internal use
--
- } PPTable_t;
- 
- typedef struct {
-diff --git a/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h b/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
-index a017983ff1fa..5056d3728da8 100644
---- a/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
-+++ b/drivers/gpu/drm/amd/pm/inc/smu13_driver_if_aldebaran.h
-@@ -390,6 +390,7 @@ typedef struct {
-   uint32_t spare3[14];
- 
-   // SECTION: BOARD PARAMETERS
-+  struct_group(v4_10,
-   // Telemetry Settings
-   uint16_t GfxMaxCurrent; // in Amps
-   int8_t   GfxOffset;     // in Amps
-@@ -444,7 +445,7 @@ typedef struct {
- 
-   //reserved
-   uint32_t reserved[14];
--
-+  );
- } PPTable_t;
- 
- typedef struct {
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
-index 8ab58781ae13..341adf209240 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c
-@@ -463,11 +463,11 @@ static int arcturus_append_powerplay_table(struct smu_context *smu)
- 			smc_dpm_table->table_header.format_revision,
- 			smc_dpm_table->table_header.content_revision);
- 
-+	BUILD_BUG_ON(sizeof(smc_pptable->v4_6) != sizeof(smc_dpm_table->dpm_info));
- 	if ((smc_dpm_table->table_header.format_revision == 4) &&
- 	    (smc_dpm_table->table_header.content_revision == 6))
--		memcpy(&smc_pptable->MaxVoltageStepGfx,
--		       &smc_dpm_table->maxvoltagestepgfx,
--		       sizeof(*smc_dpm_table) - offsetof(struct atom_smc_dpm_info_v4_6, maxvoltagestepgfx));
-+		memcpy(&smc_pptable->v4_6, &smc_dpm_table->dpm_info,
-+		       sizeof(smc_dpm_table->dpm_info));
- 
- 	return 0;
- }
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
-index 2e5d3669652b..e8b6e25a7815 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c
-@@ -431,16 +431,20 @@ static int navi10_append_powerplay_table(struct smu_context *smu)
- 
- 	switch (smc_dpm_table->table_header.content_revision) {
- 	case 5: /* nv10 and nv14 */
--		memcpy(smc_pptable->I2cControllers, smc_dpm_table->I2cControllers,
--			sizeof(*smc_dpm_table) - sizeof(smc_dpm_table->table_header));
-+		BUILD_BUG_ON(sizeof(smc_pptable->v4) !=
-+			     sizeof(smc_dpm_table->dpm_info));
-+		memcpy(&smc_pptable->v4, &smc_dpm_table->dpm_info,
-+		       sizeof(smc_dpm_table->dpm_info));
- 		break;
- 	case 7: /* nv12 */
- 		ret = amdgpu_atombios_get_data_table(adev, index, NULL, NULL, NULL,
- 					      (uint8_t **)&smc_dpm_table_v4_7);
- 		if (ret)
- 			return ret;
--		memcpy(smc_pptable->I2cControllers, smc_dpm_table_v4_7->I2cControllers,
--			sizeof(*smc_dpm_table_v4_7) - sizeof(smc_dpm_table_v4_7->table_header));
-+		BUILD_BUG_ON(sizeof(smc_pptable->v4) !=
-+			     sizeof(smc_dpm_table_v4_7->dpm_info));
-+		memcpy(&smc_pptable->v4, &smc_dpm_table_v4_7->dpm_info,
-+		       sizeof(smc_dpm_table_v4_7->dpm_info));
- 		break;
- 	default:
- 		dev_err(smu->adev->dev, "smc_dpm_info with unsupported content revision %d!\n",
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
-index c8eefacfdd37..492ba37bc514 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/aldebaran_ppt.c
-@@ -407,11 +407,11 @@ static int aldebaran_append_powerplay_table(struct smu_context *smu)
- 			smc_dpm_table->table_header.format_revision,
- 			smc_dpm_table->table_header.content_revision);
- 
-+	BUILD_BUG_ON(sizeof(smc_pptable->v4_10) != sizeof(smc_dpm_table->dpm_info));
- 	if ((smc_dpm_table->table_header.format_revision == 4) &&
- 	    (smc_dpm_table->table_header.content_revision == 10))
--		memcpy(&smc_pptable->GfxMaxCurrent,
--		       &smc_dpm_table->GfxMaxCurrent,
--		       sizeof(*smc_dpm_table) - offsetof(struct atom_smc_dpm_info_v4_10, GfxMaxCurrent));
-+		memcpy(&smc_pptable->v4_10, &smc_dpm_table->dpm_info,
-+		       sizeof(smc_dpm_table->dpm_info));
- 	return 0;
- }
- 
+ 	unsigned long fb_offset;
+ 	unsigned long mmio_offset;
 -- 
 2.30.2
 
