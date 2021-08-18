@@ -8,78 +8,73 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA7DC4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E72D6C43216
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22D056108F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CACA76108E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238337AbhHRGJA (ORCPT
+        id S238461AbhHRGJa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:09:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44282 "EHLO
+        Wed, 18 Aug 2021 02:09:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239167AbhHRGIP (ORCPT
+        with ESMTP id S237981AbhHRGI4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:08:15 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76CE4C061155
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id t1so1141919pgv.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
+        Wed, 18 Aug 2021 02:08:56 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06104C061A2B
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:06:00 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id m24-20020a17090a7f98b0290178b1a81700so1604479pjl.4
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:06:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=MfvkDY5kt3lyAiNJVhXK5tG8hqr4QIBOkdIIoSIpZoY=;
-        b=NMAt3Z+vmc63UdPMMnwK22vzULAc39jN3JAUQfpgdeIAJMtmklwONc6o056nFTTKqQ
-         15r5+5EbazY7YogCaFZRnOHkqjDRrGOzUYaDbBnGvccHMzLb6JoTxWRZKrIsqn73HlCD
-         K6mCD7EQ6HELD+OoUJLp32Sp173giXgQxK8Mw=
+        bh=jQ7Q3jdQqye6b63JEwuz0UrVtVAQHNs/hH6Rmr9vUg0=;
+        b=OT8M8XZVnnmQITowEg3++UaRwWOJ1Y1SHyZ/03bsGckxWX9RY3SQa2j7WZwnatzVuC
+         NUqrCYi7tlBXQ4eaoMu2IjOgZjsQuSChke6S+FXKsR302j/bACPi/fzos2tbRcPhxlJj
+         cniRY49dbNdwPHsJy3Im0fWTrA1+un2S0g6Mc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MfvkDY5kt3lyAiNJVhXK5tG8hqr4QIBOkdIIoSIpZoY=;
-        b=QSFSeBEjy/uuLlfSDmESA6dkE/H6H0r+n6L3Le9Qa6EkU79Jk8ctDlo0eiR/IxT1WB
-         L3L4Qh60UKOcrDax2TS4+2o0g+21vuggJ2gnWmM5UkDb9gJxwSJfPtn3TnAYR5AQegXb
-         iBfCPDyvUkUHra+tmgZGPhDAo1viAguqpLZVAmrBna+WCZfPDKs+hx42ckUweF/fmtlx
-         skYWXz17ZkcFgnBfiEs0Kv/M8vEyhduUwaiYAXhZHev6BcYAi/BXf5PGMbr0e1IdcA+i
-         /uOBpUAA0gOpzOydbwXIhWgKQy1KR+lJJctHUsh0OWL7vSXbqfQrm/nCHI66WHdnKBvb
-         tOHg==
-X-Gm-Message-State: AOAM533IB7fEyNEQKFtak1uX/cyQ7NBuuI7+Xz3qEqrNxNk6HUnrhd+L
-        BwKMHeriaW8b3yjwtnrGqnjf3w==
-X-Google-Smtp-Source: ABdhPJxL+5LyS8fmfRDtLXE+jtdGJ+XmKClZl6r+/zYSaT9tS3pyhibmNGixNDmN2KDGG5wbevjKhA==
-X-Received: by 2002:aa7:9096:0:b0:3e1:72fd:a614 with SMTP id i22-20020aa79096000000b003e172fda614mr7502384pfa.56.1629266759093;
+        bh=jQ7Q3jdQqye6b63JEwuz0UrVtVAQHNs/hH6Rmr9vUg0=;
+        b=Am4sFh+SQWE82RM65nBkux9bD2dE0LM+6+qTeTMQEsDp1Q3YJajdFv0qac5/bcPH6y
+         FIdnRyRlXEEfpftnhS7997Koe6yV6TJUp/dRa0FZIowVTqdoZFwVfsadod3xgP8UmMbC
+         CdFmFDv0JWXuK+zuv/QrFnHWBzGZUuti3mR8SryyBgLusY+UCWfFWdCJ126nDlY6JCi0
+         H8Ij72GiMpWTcFnz6zlhHwDrh9hGRkSfRLtWd/kZYiUIrDw4gYha7vYFH3Du7GCkvX4e
+         y8k/PXdl2HinYheb5jq3c6i/r5j825vjXSToVWpyZAKeQYqmIcON78Prn5F3Yx1keFFF
+         a6vA==
+X-Gm-Message-State: AOAM531jKFcZWPPyF862G0bnuNEM2PhYYn2CIUuYg/44/bPfpvubglTM
+        0UFJHSsyz3V7BRGja6LwOmQxcQ==
+X-Google-Smtp-Source: ABdhPJxHDh79G9dXaOCC76aPYNrWjNDBVekEddb+DmPCiY5Po2r7Ips+iXeBS4T4v3zWCC+/q5ih1A==
+X-Received: by 2002:a17:90b:1809:: with SMTP id lw9mr7721059pjb.231.1629266759658;
         Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id g20sm4492489pfo.20.2021.08.17.23.05.54
+        by smtp.gmail.com with ESMTPSA id r4sm4798457pfc.167.2021.08.17.23.05.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Aug 2021 23:05:57 -0700 (PDT)
+        Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        YueHaibing <yuehaibing@huawei.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
         linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 11/63] libertas_tf: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:41 -0700
-Message-Id: <20210818060533.3569517-12-keescook@chromium.org>
+Subject: [PATCH v2 23/63] media: omap3isp: Use struct_group() for memcpy() region
+Date:   Tue, 17 Aug 2021 23:04:53 -0700
+Message-Id: <20210818060533.3569517-24-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2738; h=from:subject; bh=wd3681c0+x5eRHaVMU46XJm1dPQ+sYC85SAqAjsrf0g=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMgFu3aRs9ISQmN5Vt9YdvAypRlzexF9VxkmlTL fBYs8H2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIAAKCRCJcvTf3G3AJgbSD/ 9VvmG/dIP8wflkmUIV/4I63+sFI42prOwmcCJ7/QC6arAbd++55apbMaEbvsVv1TYzcOupBj3FJ3jn MzrscJSZO6s9qr6X/i4VQc63Y14g5kv5CMWrO127GRXfb/qRlMqNk8E3sr4Gp13yNGDXsonEASy26M ZAsvPOSnn3IaytMY+n8JweOfoB7i5WZ5mEBm2GjyQ2YRO4gqCZXxuJ4pufJR7SAmOVTyrGq4p/oSac nq2SUsVtaOo047ZAR3x2asWFV+3jHU6DuILOEhWF5H9pjXxVYfxtRc7tyP4pcjgqF5OB6To3eKp7TU lNEhWQQSE/GKR/8rUE5oYBrd5CyVJ352RemeAF3dhy9iSYllDDF8Dt7qDNFEHixdkgUBPY4YeRlcqV cP9/7P5xH3gI/UR4HG4sGw72lm/9sRvLbnPDbA+s8lzYlz6efPKiMJTBfV/Vo3YcsuR1mcrJygzkmu QQnYzrz9BtQfHFbe4OzkMKHaUCe9cJWWQqQbGjfGwqQFNttWU3Coo38o1FpdbJuhHvJyRDK47q3vNE Dc9vwC1o71BLG1c6D1ISVRzPUG2b7cEcd90GSkp7YejithdY+NvnSmZWTad+d2K15xdz2UNXL4hMRq fqBE0lJmxcxuhqVKSMuG8DKaxKopqiFzybGwsuT6xwpq9DI+1gph4HfAMHSA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4161; h=from:subject; bh=6HM1xQAwdUhYlxd827odkUtGQFwknJXIWVVzXi/7nLw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMjIy4m5wHWpoRTBmOzDmU3UD7/uFHIYWL3ROtF R72c0SGJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIwAKCRCJcvTf3G3AJoU1D/ 96jvsj5Or9IPBjba+1+MOrtyTu3Rf22j5jIOpSBXhF8bAVM3E+Mng2C2kqkdS2VlazoP3om8hm2RdP Bd6ykNbShrvCpyS87VH04TJw+MMBj3lrgwMSPGMclJCuzyMcoXTNNh15yCInvLI9PeemYWqaX5OVtK yisDsbYOp8PJHSGn95diLxU8nrq/G7J2RN/Z8rtlFQeqgGAHhVYXak6AH7RaDKvVmJFqEyhigpN1Gk 7YsDDbRdBgRAKkWtm+lXe5exSDPuh/0/ModmYO1MJ7p1DTSNMZ8BoyOq+RIVrYjd03hIxADreC4CsW 1DfHkIDk+wfRUUEYEgmCgzybZkG/huIU9uSvFPH10ar3mIWJednv0BvKLfmUTxIGGLhbh1Lppzq8Tv N92UE+OlAEEHytlx2d1oYz/6aP+kIBJisjP8fooNvawScUNc3Avdh8YhFjJ2pKLKKsAX9Lh1NSybsX Q/cUCJf44Cjh/P9My6aK0r5w1PlPN8bZ09qi29Fc6SNpT6AB9zaJc6lLqSESSe/+It0OLii+EpNDC1 mDrN/ZkbuxOBRJIwJl2iRCQOPHXSQ/Y6p2gshrXybuBLpLMu8a9tbUHdtwAdyRSxnBYRdHZ4ztMNzV 46peqTZ4Mh+JztxdkIJNqKE0o0PZValipPcEYLpotNQODIZtiKNEtjPvWCTg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -87,66 +82,119 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field array bounds checking for memcpy(), memmove(), and memset(),
-avoid intentionally writing across neighboring fields.
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields. Wrap the target region
+in struct_group(). This additionally fixes a theoretical misalignment
+of the copy (since the size of "buf" changes between 64-bit and 32-bit,
+but this is likely never built for 64-bit).
 
-Use struct_group() in struct txpd around members tx_dest_addr_high
-and tx_dest_addr_low so they can be referenced together. This will
-allow memcpy() and sizeof() to more easily reason about sizes, improve
-readability, and avoid future warnings about writing beyond the end
-of tx_dest_addr_high.
+FWIW, I think this code is totally broken on 64-bit (which appears to
+not be a "real" build configuration): it would either always fail (with
+an uninitialized data->buf_size) or would cause corruption in userspace
+due to the copy_to_user() in the call path against an uninitialized
+data->buf value:
 
-"pahole" shows no size nor member offset changes to struct txpd.
-"objdump -d" shows no object code changes.
+omap3isp_stat_request_statistics_time32(...)
+    struct omap3isp_stat_data data64;
+    ...
+    omap3isp_stat_request_statistics(stat, &data64);
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Lee Jones <lee.jones@linaro.org>
-Cc: YueHaibing <yuehaibing@huawei.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
+int omap3isp_stat_request_statistics(struct ispstat *stat,
+                                     struct omap3isp_stat_data *data)
+    ...
+    buf = isp_stat_buf_get(stat, data);
+
+static struct ispstat_buffer *isp_stat_buf_get(struct ispstat *stat,
+                                               struct omap3isp_stat_data *data)
+...
+    if (buf->buf_size > data->buf_size) {
+            ...
+            return ERR_PTR(-EINVAL);
+    }
+    ...
+    rval = copy_to_user(data->buf,
+                        buf->virt_addr,
+                        buf->buf_size);
+
+Regardless, additionally initialize data64 to be zero-filled to avoid
+undefined behavior.
+
+Fixes: 378e3f81cb56 ("media: omap3isp: support 64-bit version of omap3isp_stat_data")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/marvell/libertas_tf/libertas_tf.h | 10 ++++++----
- drivers/net/wireless/marvell/libertas_tf/main.c        |  3 ++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/media/platform/omap3isp/ispstat.c |  5 +++--
+ include/uapi/linux/omap3isp.h             | 21 +++++++++++++--------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-index 5d726545d987..b2af2ddb6bc4 100644
---- a/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-+++ b/drivers/net/wireless/marvell/libertas_tf/libertas_tf.h
-@@ -268,10 +268,12 @@ struct txpd {
- 	__le32 tx_packet_location;
- 	/* Tx packet length */
- 	__le16 tx_packet_length;
--	/* First 2 byte of destination MAC address */
--	u8 tx_dest_addr_high[2];
--	/* Last 4 byte of destination MAC address */
--	u8 tx_dest_addr_low[4];
-+	struct_group(tx_dest_addr,
-+		/* First 2 byte of destination MAC address */
-+		u8 tx_dest_addr_high[2];
-+		/* Last 4 byte of destination MAC address */
-+		u8 tx_dest_addr_low[4];
-+	);
- 	/* Pkt Priority */
- 	u8 priority;
- 	/* Pkt Trasnit Power control */
-diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-index 71492211904b..02a1e1f547d8 100644
---- a/drivers/net/wireless/marvell/libertas_tf/main.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-@@ -232,7 +232,8 @@ static void lbtf_tx_work(struct work_struct *work)
- 			     ieee80211_get_tx_rate(priv->hw, info)->hw_value);
+diff --git a/drivers/media/platform/omap3isp/ispstat.c b/drivers/media/platform/omap3isp/ispstat.c
+index 5b9b57f4d9bf..68cf68dbcace 100644
+--- a/drivers/media/platform/omap3isp/ispstat.c
++++ b/drivers/media/platform/omap3isp/ispstat.c
+@@ -512,7 +512,7 @@ int omap3isp_stat_request_statistics(struct ispstat *stat,
+ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+ 					struct omap3isp_stat_data_time32 *data)
+ {
+-	struct omap3isp_stat_data data64;
++	struct omap3isp_stat_data data64 = { };
+ 	int ret;
  
- 	/* copy destination address from 802.11 header */
--	memcpy(txpd->tx_dest_addr_high, skb->data + sizeof(struct txpd) + 4,
-+	BUILD_BUG_ON(sizeof(txpd->tx_dest_addr) != ETH_ALEN);
-+	memcpy(&txpd->tx_dest_addr, skb->data + sizeof(struct txpd) + 4,
- 		ETH_ALEN);
- 	txpd->tx_packet_length = cpu_to_le16(len);
- 	txpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
+ 	ret = omap3isp_stat_request_statistics(stat, &data64);
+@@ -521,7 +521,8 @@ int omap3isp_stat_request_statistics_time32(struct ispstat *stat,
+ 
+ 	data->ts.tv_sec = data64.ts.tv_sec;
+ 	data->ts.tv_usec = data64.ts.tv_usec;
+-	memcpy(&data->buf, &data64.buf, sizeof(*data) - sizeof(data->ts));
++	data->buf = (uintptr_t)data64.buf;
++	memcpy(&data->frame, &data64.frame, sizeof(data->frame));
+ 
+ 	return 0;
+ }
+diff --git a/include/uapi/linux/omap3isp.h b/include/uapi/linux/omap3isp.h
+index 87b55755f4ff..9a6b3ed11455 100644
+--- a/include/uapi/linux/omap3isp.h
++++ b/include/uapi/linux/omap3isp.h
+@@ -162,6 +162,7 @@ struct omap3isp_h3a_aewb_config {
+  * struct omap3isp_stat_data - Statistic data sent to or received from user
+  * @ts: Timestamp of returned framestats.
+  * @buf: Pointer to pass to user.
++ * @buf_size: Size of buffer.
+  * @frame_number: Frame number of requested stats.
+  * @cur_frame: Current frame number being processed.
+  * @config_counter: Number of the configuration associated with the data.
+@@ -176,10 +177,12 @@ struct omap3isp_stat_data {
+ 	struct timeval ts;
+ #endif
+ 	void __user *buf;
+-	__u32 buf_size;
+-	__u16 frame_number;
+-	__u16 cur_frame;
+-	__u16 config_counter;
++	__struct_group(/* no type */, frame, /* no attrs */,
++		__u32 buf_size;
++		__u16 frame_number;
++		__u16 cur_frame;
++		__u16 config_counter;
++	);
+ };
+ 
+ #ifdef __KERNEL__
+@@ -189,10 +192,12 @@ struct omap3isp_stat_data_time32 {
+ 		__s32	tv_usec;
+ 	} ts;
+ 	__u32 buf;
+-	__u32 buf_size;
+-	__u16 frame_number;
+-	__u16 cur_frame;
+-	__u16 config_counter;
++	__struct_group(/* no type */, frame, /* no attrs */,
++		__u32 buf_size;
++		__u16 frame_number;
++		__u16 cur_frame;
++		__u16 config_counter;
++	);
+ };
+ #endif
+ 
 -- 
 2.30.2
 
