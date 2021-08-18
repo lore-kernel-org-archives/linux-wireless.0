@@ -8,75 +8,75 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41556C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD89C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B1D06109E
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7CBF610C7
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:08:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238610AbhHRGIb (ORCPT
+        id S238951AbhHRGI5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:08:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44314 "EHLO
+        Wed, 18 Aug 2021 02:08:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238764AbhHRGHc (ORCPT
+        with ESMTP id S239160AbhHRGIP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:07:32 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A6DFC06114C
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:58 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id u15so1093914plg.13
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:58 -0700 (PDT)
+        Wed, 18 Aug 2021 02:08:15 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23446C061153
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id c17so1146928pgc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qoEKEQz6V+86Or8qeKX5Yf4kWfMbF2QL0Db0kr0lz4g=;
-        b=WlAKi22Aaxd66aE7c+5MNAXbM8FHEvSvKzaUuHnR9khMLMSWG4+MoK+yl2AxzSeyBL
-         0oOnLRoNLvr/TBkuuoRdc5S0LXzxct+MemC0GpBBq4/rob2GaI4AsUJyVBJ0Mi2qIHKU
-         TK85IEQc1tX7BUJWo8e7hcKQC3q5yrO4G+IS4=
+        bh=NTYV2vCojWGaRvoj20z4daltbaCLEHm5I23EtSqrsdc=;
+        b=gcLhrbC6oh1Q4v7lBnuyaS91t4jaL8TehpxBKFXFSBMm2H8MVSQk2tUC2P0GUeSeUv
+         h/dbuSnQtyawGoL6LpCi/+xx7NsJ21uSVxeAivgSkoywKe+OIiou9Fs+GBDr8IzotyVN
+         9YcRY+LtNaBwMh5J6OjEP2f59D4wukYLAQ6gs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qoEKEQz6V+86Or8qeKX5Yf4kWfMbF2QL0Db0kr0lz4g=;
-        b=CVP/fAQT/BI0p8yvVdp8J1pmhSJDIT2EJwnGlvmaMWbnuZZV12jCRENTOrg8wy4wAz
-         Jva6ca45HD7CgZppy+uSDpTbIzy5Fj5FyPB/bbWaRACwDrjf2bW1gln1AWA0rvjgvhMW
-         hWFBIozP7P132ILBd6xHWY0eJyv5j9gWrPqWWCr9eXvh58EJUjKY7dV13pJQGJxQd0cV
-         HkshD/5WxxsYQQ/GVdx1XwwWJvqsxY0aizYQTB3fG2kt8YhDW5VqqxyI2kpQsst83iVf
-         KgmhONuwDT+j4iWn1puM/RK+QjVECaDtFndWpwxgWS/RPFJpvKvi0Y+SRErrakgKZZNB
-         SqzA==
-X-Gm-Message-State: AOAM5307jaouhqQMCezVeaMfSt7eg2UKDpntIQJ+TsHlu/vBE04vhXju
-        hJsM9jX3ljx/6/uz87GUxUtyaw==
-X-Google-Smtp-Source: ABdhPJxpJFXNWAYeCCCFJZIlEATzNRZ2aSFGR938kI5Z+spsDKnKwOVP6z3feYwVg3UGuU+iIGtdmQ==
-X-Received: by 2002:a17:902:a986:b029:12d:21a9:74e5 with SMTP id bh6-20020a170902a986b029012d21a974e5mr5948924plb.1.1629266758174;
+        bh=NTYV2vCojWGaRvoj20z4daltbaCLEHm5I23EtSqrsdc=;
+        b=bKhGQuVDpugLLg/TAjm3HXUXMgiPplDUh2/zJAT2btLi7bTGkidEKPW/L37I+92fll
+         t4N4zqI1P+PAWRHs5A4aYp5ge50s4dkAVP3eLSRs/j4IUp1iXbCEIBgnf5GDPFl/e+Iy
+         82vvTolv3HNpcsWnPLBK6p92KMwA2W4bEOWOPquy6S51IYkBNaPhHUKaxXbB+WMMF3ao
+         AsAQLn2qG4dDRLw2iTrQcRBZuI5wCY6pp1H5YN9R8OrfVhedtBcu7j+vshvBeA8eU876
+         AU2S/2wgdgnUMrfx/pcC27kxCnKDUc3tOV9g1mAefVJQUK00h98Pv7dwaubB86wPbflv
+         UoMg==
+X-Gm-Message-State: AOAM531RjG0+PFuwboCHgCdJgTTason4D3+escD7EKYwA4yZOiJr3FrL
+        9VB2ZrZYKp8rXKKFdk9wXMFqFg==
+X-Google-Smtp-Source: ABdhPJzKHoX3yyU+dnBla/w9sJktvSQulGP69FZGHBDzf2nPRtzqPXfJGufcOa8NTqoZzja7AHU62Q==
+X-Received: by 2002:a05:6a00:2d6:b0:3e2:e023:c6cd with SMTP id b22-20020a056a0002d600b003e2e023c6cdmr1988068pft.19.1629266758722;
         Tue, 17 Aug 2021 23:05:58 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id t20sm2997336pgb.16.2021.08.17.23.05.54
+        by smtp.gmail.com with ESMTPSA id n23sm5008845pgv.76.2021.08.17.23.05.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:05:57 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        Raju Rangoju <rajur@chelsio.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+Cc:     Kees Cook <keescook@chromium.org>, Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>, linux-pm@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 14/63] cxgb3: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:44 -0700
-Message-Id: <20210818060533.3569517-15-keescook@chromium.org>
+Subject: [PATCH v2 12/63] thermal: intel: int340x_thermal: Use struct_group() for memcpy() region
+Date:   Tue, 17 Aug 2021 23:04:42 -0700
+Message-Id: <20210818060533.3569517-13-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1772; h=from:subject; bh=dC6mcEspFz77gHbxWbBozA/2WMcBANzLR6HyJHBb8Uk=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMgVl8joI0ywpJ0LBjKJdVvCciANpNIOWTCAd0k tQdZJNSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIAAKCRCJcvTf3G3AJpJlD/ 94VIp465N4ZikuyhCqr9oOxy3hfC8wSJm8aVEwloaG01XD1LFCR8s27vmn7TaR3Onvi0mShPzxfZVp z/0QHutcgzRmdKNmqUJplk8jCLV/Ka51qcE6BTRvOMGquGDo2ct0ChYwMZDk1LMPNJ2jm64OPw5nKY y0crYHeld2bi9RXWQ+Ukx77u16N/RWqpwUyRVbAqD1S4Bdan5KxpbN5Xq0t50nCnvKAyIzHv9Nk/+s bLOdz5lavXExfcEWBkCycCMFlNEl2riJKH5C9yoaPdGxylxjbWhFDsGBeTnUOVoiCNnlTV9RdcJl3R s029/Oh4nOA1H+Vg7mE0DW/vIHISxFXQ702NKF0D8XG5CuW1PTI6qbzGffXYHTDzApNzS7NmjkFTJs qvjyLJeTlYxFgqXgwtjvR2JZMsu/QY2tSZGxcZ2t2Vot8PoU19q6BtLBv2htxt/A1VgnpntQz8w3T9 2g3JsgEdrrRmIRG0jtyJgCi968GluQnrByGPGL0PLPvgKluk4p/jLJDYvjZg6GaoB0zLXOy3sXtYYt nnmde30+gam1BpjliHZbYIEqoSqGNVd0iwK8Deo4DkRqqFVT7CfbSDCPFub2TYNvLMWHfrp/zvIIXS uVJup0qetCqvbanZgkYM4YYEZmZ41k/RQ1gFaZ/uMI2ZTumZZrqJt1PlHysQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3430; h=from:subject; bh=eWRxzyg8ZHcfvuxChrH1G3MSkKagVjV8YQYyT7daR/o=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMgzFFZrngl6f/ha2lcQf7jZ0XOwEEmDffMqDAl g1Ks8xmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIAAKCRCJcvTf3G3AJr4LEA CsX0wkoSQ5k+eRw495v98ZukqiRSRwtgtvHDRZg+FSzpTwOnEEYMAyH7uOTV2xyt//wSEjLpityQkQ 6DJYoi8exVReP0/IGENdNgCX9CSvnY4mKgOStyQOF6wF6zUmA49X9+fDt/me/CXdx2hYbg0vtLMnkq 5gBvKdXtWgWRoELEugEmh2t5qHjUpqpCNnyRtLha7bTKgabmSOmpcevXF1HoOvOs1cRNXoPcdx5CV0 bDoINmq6Xyh/tk0h4pIdo6SfZAOs0c3ErkSnT15sehzyggOoDkGVjJG5VBR3mukUg7mBnWnktHwIHX /tYJqO+CdgwVMhdFRyKr6l6llZ3FYBwNYN/FLkfP1rnu6FXfH0LeQTTnuKm5YeiGKMK3k9oxRcqmp2 gMgnuYcTxVZ3rCDIYJJ6MzSIQtwWs9qBXZvHiQV4DaUG4xlsdQl73NhV0kA1qUrWu1KG3ET05Fm+c4 HDpZitCNYo0GvcGDfWBeLQqlbQ7IfL2V3I6YLWINVfJEsKl+g2+ctBb19ZzFmusloqZCbrZPyTc+0S NmmotsEztnwmtEBmMhE7LJfL4We9u8itUfkywd+2pr4j4z1E7U8Zv+BycFc/U8vYneKZZgYxcHGWiO T+ntRlh8llbsS1IRx6+6G4JBfFq6XbT/Hv9hLw4FXNSrDM+N5Np9vPDUT0Ow==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -84,53 +84,110 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), memmove(), and memset(), avoid
-intentionally writing across neighboring fields.
+field bounds checking for memcpy(), avoid intentionally writing across
+neighboring fields.
 
-Use struct_group() in struct rss_hdr around members imm_data and intr_gen,
+Use struct_group() in struct art around members weight, and ac[0-9]_max,
 so they can be referenced together. This will allow memcpy() and sizeof()
 to more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of imm_data.
+warnings about writing beyond the end of weight.
 
-"pahole" shows no size nor member offset changes to struct rss_hdr.
-"objdump -d" shows no object code changes.
+"pahole" shows no size nor member offset changes to struct art.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences).
 
-Cc: Raju Rangoju <rajur@chelsio.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: netdev@vger.kernel.org
+Cc: Zhang Rui <rui.zhang@intel.com>
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: Amit Kucheria <amitk@kernel.org>
+Cc: linux-pm@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/ethernet/chelsio/cxgb3/sge.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ .../intel/int340x_thermal/acpi_thermal_rel.c  |  5 +-
+ .../intel/int340x_thermal/acpi_thermal_rel.h  | 48 ++++++++++---------
+ 2 files changed, 29 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb3/sge.c b/drivers/net/ethernet/chelsio/cxgb3/sge.c
-index cb5c79c43bc9..1ab1bd86a3a6 100644
---- a/drivers/net/ethernet/chelsio/cxgb3/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb3/sge.c
-@@ -126,8 +126,10 @@ struct rsp_desc {		/* response queue descriptor */
- 	struct rss_header rss_hdr;
- 	__be32 flags;
- 	__be32 len_cq;
--	u8 imm_data[47];
--	u8 intr_gen;
-+	struct_group(immediate,
-+		u8 imm_data[47];
-+		u8 intr_gen;
-+	);
- };
- 
- /*
-@@ -929,7 +931,8 @@ static inline struct sk_buff *get_imm_packet(const struct rsp_desc *resp)
- 
- 	if (skb) {
- 		__skb_put(skb, IMMED_PKT_SIZE);
--		skb_copy_to_linear_data(skb, resp->imm_data, IMMED_PKT_SIZE);
-+		BUILD_BUG_ON(IMMED_PKT_SIZE != sizeof(resp->immediate));
-+		skb_copy_to_linear_data(skb, &resp->immediate, IMMED_PKT_SIZE);
+diff --git a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
+index a478cff8162a..e90690a234c4 100644
+--- a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
++++ b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
+@@ -250,8 +250,9 @@ static int fill_art(char __user *ubuf)
+ 		get_single_name(arts[i].source, art_user[i].source_device);
+ 		get_single_name(arts[i].target, art_user[i].target_device);
+ 		/* copy the rest int data in addition to source and target */
+-		memcpy(&art_user[i].weight, &arts[i].weight,
+-			sizeof(u64) * (ACPI_NR_ART_ELEMENTS - 2));
++		BUILD_BUG_ON(sizeof(art_user[i].data) !=
++			     sizeof(u64) * (ACPI_NR_ART_ELEMENTS - 2));
++		memcpy(&art_user[i].data, &arts[i].data, sizeof(art_user[i].data));
  	}
- 	return skb;
- }
+ 
+ 	if (copy_to_user(ubuf, art_user, art_len))
+diff --git a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
+index 58822575fd54..78d942477035 100644
+--- a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
++++ b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.h
+@@ -17,17 +17,19 @@
+ struct art {
+ 	acpi_handle source;
+ 	acpi_handle target;
+-	u64 weight;
+-	u64 ac0_max;
+-	u64 ac1_max;
+-	u64 ac2_max;
+-	u64 ac3_max;
+-	u64 ac4_max;
+-	u64 ac5_max;
+-	u64 ac6_max;
+-	u64 ac7_max;
+-	u64 ac8_max;
+-	u64 ac9_max;
++	struct_group(data,
++		u64 weight;
++		u64 ac0_max;
++		u64 ac1_max;
++		u64 ac2_max;
++		u64 ac3_max;
++		u64 ac4_max;
++		u64 ac5_max;
++		u64 ac6_max;
++		u64 ac7_max;
++		u64 ac8_max;
++		u64 ac9_max;
++	);
+ } __packed;
+ 
+ struct trt {
+@@ -47,17 +49,19 @@ union art_object {
+ 	struct {
+ 		char source_device[8]; /* ACPI single name */
+ 		char target_device[8]; /* ACPI single name */
+-		u64 weight;
+-		u64 ac0_max_level;
+-		u64 ac1_max_level;
+-		u64 ac2_max_level;
+-		u64 ac3_max_level;
+-		u64 ac4_max_level;
+-		u64 ac5_max_level;
+-		u64 ac6_max_level;
+-		u64 ac7_max_level;
+-		u64 ac8_max_level;
+-		u64 ac9_max_level;
++		struct_group(data,
++			u64 weight;
++			u64 ac0_max_level;
++			u64 ac1_max_level;
++			u64 ac2_max_level;
++			u64 ac3_max_level;
++			u64 ac4_max_level;
++			u64 ac5_max_level;
++			u64 ac6_max_level;
++			u64 ac7_max_level;
++			u64 ac8_max_level;
++			u64 ac9_max_level;
++		);
+ 	};
+ 	u64 __data[ACPI_NR_ART_ELEMENTS];
+ };
 -- 
 2.30.2
 
