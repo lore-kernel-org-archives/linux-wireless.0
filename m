@@ -8,82 +8,79 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80EF3C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D928C4320A
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68F5C61058
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC894610C7
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238668AbhHRGPx (ORCPT
+        id S238333AbhHRGP5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:15:53 -0400
+        Wed, 18 Aug 2021 02:15:57 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238557AbhHRGPr (ORCPT
+        with ESMTP id S238419AbhHRGPv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:15:47 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDB11C06129D
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id 18so1081850pfh.9
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
+        Wed, 18 Aug 2021 02:15:51 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72678C0363DD
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id nt11so1965194pjb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=YsZhptKgT8RdO2UT2M60Q/NccyUdJGsE7yDhN1K90D8=;
-        b=AqV5GrGQ6APa9jCXTlZsEv0yNQBd1buoKBsvC1Patiai/MrqWa7b1XmHW51ubErKfR
-         FKiWQ3qq8B5Ew32gz8StW83bO7rlDl3YjixVsDHSJA4wz/kFX3VFE/RVvNNLh2rGw6uj
-         aLVD1eBZqiJktmYYzr55zSr1HRkW5dhGCex20=
+        bh=U8hLOmyndrZpbH3W//YQN6YJRgGYlYr4YiBW+Lc3AF4=;
+        b=ClJUrT6ApBH0phA65aDisj5+kyHerJF2/GgwYf6sYImzafPzHckhYzZodOxI7uhCpI
+         vpe004kdrf64A0lB+HxzctUtSU11uTF4QZRwPZLG5yLy/UjnyJdf52u/HU6dj4zxkdJI
+         26TEVOy51sB8cue9oxYDxzhyCi71TMoiQfP2w=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=YsZhptKgT8RdO2UT2M60Q/NccyUdJGsE7yDhN1K90D8=;
-        b=X0LEDudNz+CoN/BN8BNr7ZwErXm0qs3cZj8UMmYYkoyLrRmlJpoy/HWJ8Au5ktpS+X
-         XPhfHCrQHLXXOlcGiTfgLHQKB1kc3JuWuDuzyrQZjh3yG4t8guvTI3uhKUlrjOMfkGH3
-         YEIhrjRYEpT5NNKdwplmpAlyu/zK8qKK8+8nTJHx6k4uIIt7+6cFIkLpiRN6j3lU06fv
-         RIhKLEl50mPIMkJ+c5921v7KVMP5r6TH9OiwqJ3XEy3xnoDn9Xy5sBj1kPMOsMydb6s0
-         Xt9JNQqYSho/rmtae4QBAWTbB+3Js+NV5HM3CCMplMTEp581cPV0IGxroIBmBJJvwwBT
-         lhvQ==
-X-Gm-Message-State: AOAM5311JHKnolB6zJ5Af6scpb+1SY97pB/nCyW/ceMXvLNeHcgyF/nD
-        6x8RfVAT/WEEFV9QU9JaxYhRag==
-X-Google-Smtp-Source: ABdhPJxPAH0mQ5JRMc8So+cEOoTT47AjgR2xcCPW7BD+067I11NQTK24J7A1TqH0vYvVkR9Q0mkDOA==
-X-Received: by 2002:a63:2242:: with SMTP id t2mr7083803pgm.111.1629267253551;
-        Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
+        bh=U8hLOmyndrZpbH3W//YQN6YJRgGYlYr4YiBW+Lc3AF4=;
+        b=oSLFIrwdPmw+LhYfASNlqMm5tufI+aDY4vCZXP7bR8dyVmmwxfCP890GFP/lix1QRB
+         VR4OltoaicxwuP2Y483pAZ04NfnHZXIlmc/C7LYzlM+5VmY03WNl+9AsAXwQG1AtxnzU
+         cIIJVNzQBx5Ee3MEU9n6fszVrjp2fuKJ11sc0NewUvtGlwhgSVKY3lSaFwC/79QAJYXA
+         aLZ/9OUdMnk+0PsMhoDoTTpfPceA3Civw4HliVL8e75M5HMhl9singjQCep2GlGLMRs0
+         EAm0y5+H3Sn+MXPf9+32vqBNuex5FcJ1Pc4XRCw/q6OiH18SWq9+Y5gq0xasNyFQMiMD
+         r61g==
+X-Gm-Message-State: AOAM530FGMyb8qtnudBx5TQU7zObSxTN2w6NxntgSVzwftPwB+tboPvg
+        BHcKRkDlOZgsUdlw/BdZUrRdRg==
+X-Google-Smtp-Source: ABdhPJwRPPIhR63YQCS3nZeOodK84yxk6DTCJU5/GeqbIYAqZWORFkCkpfMsUc8DkqkxWPqp6Ivd9w==
+X-Received: by 2002:a17:90a:3d4d:: with SMTP id o13mr7935552pjf.34.1629267255044;
+        Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id u20sm5380627pgm.4.2021.08.17.23.14.12
+        by smtp.gmail.com with ESMTPSA id f5sm4570524pfn.134.2021.08.17.23.14.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Wanpeng Li <wanpengli@tencent.com>,
-        Jim Mattson <jmattson@google.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
-        kvm@vger.kernel.org, "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Florian Westphal <fw@strlen.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        netdev@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 53/63] KVM: x86: Use struct_group() to zero decode cache
-Date:   Tue, 17 Aug 2021 23:05:23 -0700
-Message-Id: <20210818060533.3569517-54-keescook@chromium.org>
+Subject: [PATCH v2 40/63] netfilter: conntrack: Use memset_startat() to zero struct nf_conn
+Date:   Tue, 17 Aug 2021 23:05:10 -0700
+Message-Id: <20210818060533.3569517-41-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2338; h=from:subject; bh=Ox8odXNGawRcDoEtGWzS1ckYpMUjtDsTTZYtgzhZK3w=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMqj0+1jVnOnluvpSmjVC4NV24/mrWjdCYNGFB9 jwBTeKuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKgAKCRCJcvTf3G3AJvAxD/ 9iMuZIH7PHSmcbrF42uGoRIdS+nUfoKIZhbDR6xmtYDi0vxGbsdnyFZjSwy/XynEIH0Vdlrjpr81jC i9bK6rBJ6rF+TFv4HczlsySW3y3N1xIFaafTX6oJZJQC4gwj1WFe3QmoGDtyXKzIY3V9LTS+crmZ19 PKzynOfjnFyeQ88B1mbEeWil4T6EpIx+uc0Ly+QDT6NMxAjAahBFGnwpD01G5vsMAaUmvcocZEMyl7 7YIHmOz/j/dYDz4RvvjZx/Tcs75qRmaGJF5mD4G1uKSyBTSMrXFMz+xPji8ym/CQJOmxlJncwK1ZeJ 0q5RhAcBUU40d3SC6gNEwZxhqKp/+y9g5sTKSmizT6qqLhtju9XaLkFreo8BocUmC87/U8XumMROux H7hTx08E0OLINGfNct+Ilqcl/d8BtuufZvpRurcgDGLCiLVLOmp2EUpSW3/7zdBVa5/XtPcJMzTFjA lNxvtKUV7fsVvqiI/nL2V5pRPIqiN0Z49mX6zaB2ugX7c6zSuVN8n/lv7Vp7R7Z9ej1ZhByTkOtJJP THc7Uk079v0yMLps1P5flkXnDnRV6bEq0RtAKVLAUn5d/wqA8wB7KtIGzZ6iai9BxNsS1Z4r3pqD7h bI8Pa7iryL+NoaVDaYWVnzlhrUa4TSXPjODvqjZoZfkoykTseBzmuBsI+cpg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1292; h=from:subject; bh=fE+HPCTs14JsaXA0VZ1+azTXm9sRPSgAjXFdw5wZMQo=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMn9jUxUjmhnSM6V4Tc0qU7XODXJhF3t5WIJd3Y koV1FpKJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjJwAKCRCJcvTf3G3AJhk3D/ 9Y7TD9jWlZ06v+vvdPdc8QlSMediOUFC1q3DoYi7bvc4YyEqXGUCbEBONwNQLvsK3hI4ED3PL+2IhD hz/Dbx5DT2T40OMCMycZbUmvAgn6pOBBpw2q5g7L1MPBPiZjTMXq8E4ovppbe62BM08pHEnfAugWsL Vg8PPE0Mpa5a+QOsrBwIXi58FdhL+TgFoZSeBzbJm+KmZX4h++dF5E6mfecc7iWTRI8x9S8/YHdEh9 ZIb37NLdJeVivXFEuz3DfGGLCuGfbSDNomkElBmWe2yPoHWjEkJTWn6RNq+MEAjA9TJ5TJ3HDso1/K sKW9g8e4L1L/rtxaFXF9BV/xpTwz0kRs0XsBqZ+kJVDfducMf0ve5e9o39+ZRvnlGz1cBPnku+/z+w 0bwBKb/ZheH0vYU+K8EWpKneqiHfpTz4StFzfiQRwhbiGP3RgP5fcXs0kJTQd7Pb2ELVtqLcT+gjk9 6GhJhWeDD/p/qHw7tNmVAq61F9fgKxmA+c7cUPkuWqkaozXqUnyya2WLhQ5LvSbSIIu7/NC2yfZ+vB 5nw/neLBHyCcwQZyeBRVjmkcwXCcmWSOAeUgya9iGsWYJAEHUAkIzm1Hk4kcF6HSJmjPw9ayH8RBkV zBGERJvvVpyPFtl03OuHfjGRW4wn6Zs+wzWO0oB8CiPowPcXXUv7O9y+3+xA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -94,71 +91,37 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Add struct_group() to mark region of struct x86_emulate_ctxt that should
-be initialized to zero.
+Use memset_startat() to avoid confusing memset() about writing beyond
+the target struct member.
 
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Sean Christopherson <seanjc@google.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Wanpeng Li <wanpengli@tencent.com>
-Cc: Jim Mattson <jmattson@google.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: x86@kernel.org
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: kvm@vger.kernel.org
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
+Cc: Florian Westphal <fw@strlen.de>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: netfilter-devel@vger.kernel.org
+Cc: coreteam@netfilter.org
+Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- arch/x86/kvm/emulate.c     |  3 +--
- arch/x86/kvm/kvm_emulate.h | 19 +++++++++++--------
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ net/netfilter/nf_conntrack_core.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
-index 2837110e66ed..2608a047e769 100644
---- a/arch/x86/kvm/emulate.c
-+++ b/arch/x86/kvm/emulate.c
-@@ -5377,8 +5377,7 @@ static int fastop(struct x86_emulate_ctxt *ctxt, fastop_t fop)
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index d31dbccbe7bd..060503230519 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1500,9 +1500,7 @@ __nf_conntrack_alloc(struct net *net,
+ 	ct->status = 0;
+ 	ct->timeout = 0;
+ 	write_pnet(&ct->ct_net, net);
+-	memset(&ct->__nfct_init_offset, 0,
+-	       offsetof(struct nf_conn, proto) -
+-	       offsetof(struct nf_conn, __nfct_init_offset));
++	memset_after(ct, 0, __nfct_init_offset);
  
- void init_decode_cache(struct x86_emulate_ctxt *ctxt)
- {
--	memset(&ctxt->rip_relative, 0,
--	       (void *)&ctxt->modrm - (void *)&ctxt->rip_relative);
-+	memset(&ctxt->decode_cache, 0, sizeof(ctxt->decode_cache));
+ 	nf_ct_zone_add(ct, zone);
  
- 	ctxt->io_read.pos = 0;
- 	ctxt->io_read.end = 0;
-diff --git a/arch/x86/kvm/kvm_emulate.h b/arch/x86/kvm/kvm_emulate.h
-index 68b420289d7e..9b8afcb8ad39 100644
---- a/arch/x86/kvm/kvm_emulate.h
-+++ b/arch/x86/kvm/kvm_emulate.h
-@@ -341,14 +341,17 @@ struct x86_emulate_ctxt {
- 	 * the rest are initialized unconditionally in x86_decode_insn
- 	 * or elsewhere
- 	 */
--	bool rip_relative;
--	u8 rex_prefix;
--	u8 lock_prefix;
--	u8 rep_prefix;
--	/* bitmaps of registers in _regs[] that can be read */
--	u32 regs_valid;
--	/* bitmaps of registers in _regs[] that have been written */
--	u32 regs_dirty;
-+	struct_group(decode_cache,
-+		bool rip_relative;
-+		u8 rex_prefix;
-+		u8 lock_prefix;
-+		u8 rep_prefix;
-+		/* bitmaps of registers in _regs[] that can be read */
-+		u32 regs_valid;
-+		/* bitmaps of registers in _regs[] that have been written */
-+		u32 regs_dirty;
-+	);
-+
- 	/* modrm */
- 	u8 modrm;
- 	u8 modrm_mod;
 -- 
 2.30.2
 
