@@ -8,82 +8,81 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B51C4320A
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 474B2C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:07:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A7346108F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 333AB610A6
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238506AbhHRGHc (ORCPT
+        id S238851AbhHRGHe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:07:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44300 "EHLO
+        Wed, 18 Aug 2021 02:07:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238518AbhHRGG4 (ORCPT
+        with ESMTP id S238513AbhHRGG4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 Aug 2021 02:06:56 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EC58C0617A8
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16535C061292
         for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:57 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id l11so1138562plk.6
+Received: by mail-pf1-x434.google.com with SMTP id j187so1063902pfg.4
         for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Xs7dVfyCL9iWYPvsRCT3aHsdLwLjC6pcEwrwKfCUWFg=;
-        b=TEf6/TXCjpfGS9UXykN02SfNjHK5IVogzarwF+/pd4bie+1D+OFliU7/CvjJXmOFlP
-         uID/DzUYWa+WnG85IGgCCCd0wZSjSbxIL9BjQiUelCHSaJE6ttcwL0indJBpV2UfG3XP
-         /QuqoDZi2eevsoxzYvwIqa0mOMlVcx4djTE8Q=
+        bh=Df3M08ozQZ/wuG86+AN6C9MACPf6Ua4LnPIl1VqdGkQ=;
+        b=fqfWH5xzacAnh0+miJhptMLYGLpJ+mJNVIq3l+0GgQRuX61t6lEOMMLw784SzCT4EH
+         hqDzbMAVICROLXLXmTGWMOQDusnO33cZRylV/ECZsYPBru2294Qof+d9A7QOozMwfiYT
+         FGCoqMsz/DE0l3g+EcW0C9GSHhIAPMlL8tEp4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Xs7dVfyCL9iWYPvsRCT3aHsdLwLjC6pcEwrwKfCUWFg=;
-        b=SOgps2/47cptX7TsP3kH57HICRBtmKSLi8QcniDkUojNAyYvHR5foxFykYBVj92rsV
-         NmE80R4DvBFY5Nqc82uIuwH5q/QXYmj/gwlfgP4q6gYo+T0Mk5DioqD3Js65Refpdz3G
-         qhiMthKoHlOT3Uqb5CpWcbiG3f8b7vHLBtI3hg6R0s9i+hNZ8joN5yvcCqhqj/F8TKeu
-         vNxTtfS9TTJcS/lCBPO6/3nyHVz2T23n7HHeq6P5LZJvMayKhPcGAlx8MoR1sFF7tR+0
-         PlbMbT2uQqXh2N9OWUzrXOe+iP2s6HpYQrWtQdA3Bb82WZmmqC4jHYOaqxeQAEiBmfTN
-         +98A==
-X-Gm-Message-State: AOAM5312zLRkE3QJdW+ZI8X7EKCk6bfPgzEeU64mrZW9u/nJlDSvriEh
-        W64aocevQBVO3SV1Of21hJYFVg==
-X-Google-Smtp-Source: ABdhPJwTi1V24180jdpxp0J/irIQkuTbyz9wEdSSc+XtZLCOmtidlizMdtS+gLzb5nX5T1PtO2A5EA==
-X-Received: by 2002:a17:90a:b105:: with SMTP id z5mr7594033pjq.64.1629266756958;
+        bh=Df3M08ozQZ/wuG86+AN6C9MACPf6Ua4LnPIl1VqdGkQ=;
+        b=I6bkwnN6Vh59ooPq+hNvLbm3nvdjNh4OwcgW/EIj7ZcYJoMKpiOXUYAvTJBFGcVKlL
+         puQAx/l7mwHLI0x8W4Xalb5VfJydA8HDdf2O102fXyfPZJRZIocNc0WCZF8Uydn1D8G7
+         ohQSU3FNfftpiT6M81/CLVPINeBDGk7s3gnADnNZqJTUJA8qGSJ1PP3VrgNC48rDva4n
+         PxSkGI5b3/zwJUjcWg2Of5usMfi0Q2tbYa76YakbdbKke/fmd4B026vXCfq7zAmh7I6E
+         d5c/a93nQfZ9xwqrO4mMtmPsSXvOafAu4vaQThg068Kgn+Cr9Fp0X39gaSeX8L59Z1Mi
+         XgkA==
+X-Gm-Message-State: AOAM530tDieL7A/rMs7hOtTDtFFybH2hT7XHPSgpUXUofjWpFA8Asfcw
+        KYlO1J9D8DR+sGoqHOPe5Io5ZA==
+X-Google-Smtp-Source: ABdhPJzquXvqSXBuTCbj2eYrNtxehh2HuV6fs3AsulpduqmyMEsRD3xhPeevj3JhK8nYO8NCjxVrfQ==
+X-Received: by 2002:aa7:8116:0:b029:346:8678:ce26 with SMTP id b22-20020aa781160000b02903468678ce26mr7642769pfi.15.1629266756663;
         Tue, 17 Aug 2021 23:05:56 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id p3sm4750151pfw.152.2021.08.17.23.05.52
+        by smtp.gmail.com with ESMTPSA id fh2sm3751402pjb.12.2021.08.17.23.05.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:05:53 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Lennert Buytenhek <buytenh@wantstofly.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        wengjianfeng <wengjianfeng@yulong.com>,
-        Lv Yunlong <lyl2019@mail.ustc.edu.cn>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        Allen Pais <allen.lkml@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jonathan Lemon <jonathan.lemon@gmail.com>,
+        Alexander Lobakin <alobakin@pm.me>,
+        Jakub Sitnicki <jakub@cloudflare.com>,
+        Marco Elver <elver@google.com>,
+        Willem de Bruijn <willemb@google.com>,
+        wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 09/63] mwl8k: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:39 -0700
-Message-Id: <20210818060533.3569517-10-keescook@chromium.org>
+Subject: [PATCH v2 07/63] skbuff: Switch structure bounds to struct_group()
+Date:   Tue, 17 Aug 2021 23:04:37 -0700
+Message-Id: <20210818060533.3569517-8-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2241; h=from:subject; bh=L38tHT7L5gwWnZoNqjA8WBUp8uc/YzLDlgGZNE5EF7Q=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMfQHi0c/KxdlPcXJ7NIKNf3opHAze8JHRqvZJ2 HTMb8o6JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjHwAKCRCJcvTf3G3AJsndEA CTyr1mrRcwMNsVqnkQNKyL2vXGiaBP+O8ZL2ZnJYif0LzQ9SgU1FelufoxGIaesSZHEE5SPnP0Tfsl 9KJcO93AOrsZEpzIQ8drNeTOQ3lBvwG90XmnGMgbxprrjE8LUpiZhRSW7YHRT+D5AU2QRUIx8NWfMb abbVbTWbLt5ToBy6dxfb2m/nwWj7/j+KLjUYb1o6S/Gdh3F7rPGoJGPUhDvpfJ4ZEJwHG8eXPqBIpG 6H1pdmsRypyZ7TWzR8qZ303ptNMXJOIqxpJWH0oX46+I8DMTK3djo8qRqPMyrocaXaHH97cU/N6f16 CCjZgAxDqMhwoQxDT15ELj9UhtbUR98KcbTKZ65LXcHTIb3hN0+1HQUic3J6laKt3yYRNVzKQv1d94 GldIV0iCJHVvpmLzhBYcaR+nfF+YtoIRRyh4PmHtkSgG8lcV6ALD1vQy9CkCCEzg68xUrtLP0TMdv1 bWkRRkd8XAjLuvASWkcKkp9OxA+Nu75+d0Gdk0vAppy3FJjK3KNlSSfI+Y2g0bi0Uli2M6Pcacs1IJ 1sepRhmyuFQR4lAMVe+6LiCvvzcOSoJKRi+SJnYEddKohZIZQqqNSVghz/13aPpi9uItW/cfE4MMXK I7/jg0JFYnqdJT3/iN+fC7P2L4x21xvDExvG1DjqZQouQihAaONHkkxoYo0A==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4396; h=from:subject; bh=vIFaehJlmgaacelmPKMYZbSRddYmlAVC4AJuX8jcTLo=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMfC5Mwg8GEVNb5CXtGiGtsK4FwOhKAw15TLI67 rTMBsEGJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjHwAKCRCJcvTf3G3AJlkpD/ 9IW7rDFPZH4dI/1/P/uo+5nWHunuZP3664cpMwhwx+rHENSDLF5R/LmHEenMiL1vnoQ8J1iVu3EVgo 1xzQfV/jxCj8E9GdkDHFUogUHVaPjRb9CTVM6DHcTZ2/xkvhVi8nwdgd1lDfJe9XrMTuBkF8eEj6BO YWNUoNQdRGh2+IXaTCDDWCvkG5ZTfO0sXT/bDh9DMGodRIG/luglNHHLvts3knlgR8QM0WIzhsColC AHHcXV2gUexGt/UBGejzG1NRGAXDmkHZAIsMu7BsFDpweoRW6XGmOMOpo9rtP10ar9yPYp2+GFlioL 9tghS58ciKMcV1+v+6jX6Do4ybmYeDfU2rB6/Gpct6yVAs3pYpuFpRIew7WZItwzf2nCMt0ZEYduDJ Drj4jLrZUyIs6ixwydVuLC8Owg9cb/J4qXw4vk0tJ9evOSP/mJOQqUcFcIUdExIArnAVtXlgdzArhu 7hXpCD3qNAEHF+aWjVKGh8gTmrdYqhSN97k0I7jKrRx2kLtSrpcBS4ZQwjSaSERANnuDAk2of2H6Zb bUqvY5heKLllEOQg8ihTwR1efnbUnFXFFV5cpEUmN1YuS3na93hd4TS0rCXMIPIDmYPqG4ut0gh4rf LCZqI3HgwkGyN6BoC0cGob6w/hrvkXWGKt0s1vU5y2KdKmA62+teOpZ0qiVg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -94,59 +93,114 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memcpy(), memmove(), and memset(), avoid
 intentionally writing across neighboring fields.
 
-Use struct_group() in struct mwl8k_cmd_set_key around members
-key_material, tkip_tx_mic_key, and tkip_rx_mic_key so they can be
-referenced together. This will allow memcpy() and sizeof() to more easily
-reason about sizes, improve readability, and avoid future warnings about
-writing beyond the end of key_material.
+Replace the existing empty member position markers "headers_start" and
+"headers_end" with a struct_group(). This will allow memcpy() and sizeof()
+to more easily reason about sizes, and improve readability.
 
-"pahole" shows no size nor member offset changes to struct
-mwl8k_cmd_set_key. "objdump -d" shows no object code changes.
+"pahole" shows no size nor member offset changes to struct sk_buff.
+"objdump -d" shows no object code changes (outside of WARNs affected by
+source line number changes).
 
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: wengjianfeng <wengjianfeng@yulong.com>
-Cc: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Allen Pais <allen.lkml@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Cc: Jonathan Lemon <jonathan.lemon@gmail.com>
+Cc: Alexander Lobakin <alobakin@pm.me>
+Cc: Jakub Sitnicki <jakub@cloudflare.com>
+Cc: Marco Elver <elver@google.com>
+Cc: Willem de Bruijn <willemb@google.com>
+Cc: wireguard@lists.zx2c4.com
 Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Link: https://lore.kernel.org/lkml/20210728035006.GD35706@embeddedor
 ---
- drivers/net/wireless/marvell/mwl8k.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireguard/queueing.h |  4 +---
+ include/linux/skbuff.h           |  9 ++++-----
+ net/core/skbuff.c                | 14 +++++---------
+ 3 files changed, 10 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-index 3bf6571f4149..a29277d5f9da 100644
---- a/drivers/net/wireless/marvell/mwl8k.c
-+++ b/drivers/net/wireless/marvell/mwl8k.c
-@@ -4225,9 +4225,11 @@ struct mwl8k_cmd_set_key {
- 	__le32 key_info;
- 	__le32 key_id;
- 	__le16 key_len;
--	__u8 key_material[MAX_ENCR_KEY_LENGTH];
--	__u8 tkip_tx_mic_key[MIC_KEY_LENGTH];
--	__u8 tkip_rx_mic_key[MIC_KEY_LENGTH];
-+	struct {
-+			__u8 key_material[MAX_ENCR_KEY_LENGTH];
-+			__u8 tkip_tx_mic_key[MIC_KEY_LENGTH];
-+			__u8 tkip_rx_mic_key[MIC_KEY_LENGTH];
-+	} tkip;
- 	__le16 tkip_rsc_low;
- 	__le32 tkip_rsc_high;
- 	__le16 tkip_tsc_low;
-@@ -4375,7 +4377,7 @@ static int mwl8k_cmd_encryption_set_key(struct ieee80211_hw *hw,
- 		goto done;
- 	}
+diff --git a/drivers/net/wireguard/queueing.h b/drivers/net/wireguard/queueing.h
+index 4ef2944a68bc..52da5e963003 100644
+--- a/drivers/net/wireguard/queueing.h
++++ b/drivers/net/wireguard/queueing.h
+@@ -79,9 +79,7 @@ static inline void wg_reset_packet(struct sk_buff *skb, bool encapsulating)
+ 	u8 sw_hash = skb->sw_hash;
+ 	u32 hash = skb->hash;
+ 	skb_scrub_packet(skb, true);
+-	memset(&skb->headers_start, 0,
+-	       offsetof(struct sk_buff, headers_end) -
+-		       offsetof(struct sk_buff, headers_start));
++	memset(&skb->headers, 0, sizeof(skb->headers));
+ 	if (encapsulating) {
+ 		skb->l4_hash = l4_hash;
+ 		skb->sw_hash = sw_hash;
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index 6bdb0db3e825..fee9041aa402 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -801,11 +801,10 @@ struct sk_buff {
+ 	__u8			active_extensions;
+ #endif
  
--	memcpy(cmd->key_material, key->key, keymlen);
-+	memcpy(&cmd->tkip, key->key, keymlen);
- 	cmd->action = cpu_to_le32(action);
+-	/* fields enclosed in headers_start/headers_end are copied
++	/* Fields enclosed in headers group are copied
+ 	 * using a single memcpy() in __copy_skb_header()
+ 	 */
+-	/* private: */
+-	__u32			headers_start[0];
++	struct_group(headers,
+ 	/* public: */
  
- 	rc = mwl8k_post_pervif_cmd(hw, vif, &cmd->header);
+ /* if you move pkt_type around you also must adapt those constants */
+@@ -922,8 +921,8 @@ struct sk_buff {
+ 	u64			kcov_handle;
+ #endif
+ 
+-	/* private: */
+-	__u32			headers_end[0];
++	); /* end headers group */
++
+ 	/* public: */
+ 
+ 	/* These elements must be at the end, see alloc_skb() for details.  */
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index f9311762cc47..fd5ce57ccce6 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -991,12 +991,10 @@ void napi_consume_skb(struct sk_buff *skb, int budget)
+ }
+ EXPORT_SYMBOL(napi_consume_skb);
+ 
+-/* Make sure a field is enclosed inside headers_start/headers_end section */
++/* Make sure a field is contained by headers group */
+ #define CHECK_SKB_FIELD(field) \
+-	BUILD_BUG_ON(offsetof(struct sk_buff, field) <		\
+-		     offsetof(struct sk_buff, headers_start));	\
+-	BUILD_BUG_ON(offsetof(struct sk_buff, field) >		\
+-		     offsetof(struct sk_buff, headers_end));	\
++	BUILD_BUG_ON(offsetof(struct sk_buff, field) !=		\
++		     offsetof(struct sk_buff, headers.field));	\
+ 
+ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+ {
+@@ -1008,14 +1006,12 @@ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+ 	__skb_ext_copy(new, old);
+ 	__nf_copy(new, old, false);
+ 
+-	/* Note : this field could be in headers_start/headers_end section
++	/* Note : this field could be in the headers group.
+ 	 * It is not yet because we do not want to have a 16 bit hole
+ 	 */
+ 	new->queue_mapping = old->queue_mapping;
+ 
+-	memcpy(&new->headers_start, &old->headers_start,
+-	       offsetof(struct sk_buff, headers_end) -
+-	       offsetof(struct sk_buff, headers_start));
++	memcpy(&new->headers, &old->headers, sizeof(new->headers));
+ 	CHECK_SKB_FIELD(protocol);
+ 	CHECK_SKB_FIELD(csum);
+ 	CHECK_SKB_FIELD(hash);
 -- 
 2.30.2
 
