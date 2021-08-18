@@ -2,114 +2,219 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 896B9C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 04:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F62C432BE
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 610076109F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 04:53:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0CE16108E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:05:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237699AbhHREyQ (ORCPT
+        id S238078AbhHRGG0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 00:54:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56004 "EHLO
+        Wed, 18 Aug 2021 02:06:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237646AbhHREyP (ORCPT
+        with ESMTP id S237892AbhHRGG0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 00:54:15 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5AE7C061764
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 21:53:41 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id mq2-20020a17090b3802b0290178911d298bso1545889pjb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 21:53:41 -0700 (PDT)
+        Wed, 18 Aug 2021 02:06:26 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C8A4C061764
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:52 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id i133so1065826pfe.12
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:05:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:date:message-id:in-reply-to:references:user-agent
-         :subject:mime-version:content-transfer-encoding;
-        bh=P8U5WQJiAdYfDNducQrear0igBlA30OMY5Q6FHihzPA=;
-        b=ten3Nzn9bTxm+RZ1riVNtCnANcwueAyOjVPAevqD4tvzbLjiIDm2RwGB1tOE9ipsB1
-         mAz8xgA/7RhW8/lZWpbmpnfHFCrFofOAHe/Rs6mUDn8AH7KnyMAXl3wKudSweJhWthFT
-         +XaQmKiMqsGcY2a+a0YObotm7delpJ3oElQHqBBXxen2R96/g+y3L/cDiHJ6qV9o54UM
-         RvxsoCrk/SXssi9JEmbeMv5/SVdlvEmPgs3fue9kTnarqjQJMibOZqgX6vN72SCEl2AQ
-         JmeX8Oplk1DZ1d4VoOsYilh5m+yyc63QeHH8gFIyRwDAFaf+3aXyo45xclFmVOesZJPh
-         GgcQ==
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=23NqigPoreurbrTRI3DzstnCrCz1u9qo8AUicrCllIQ=;
+        b=UbvCFEyRrZ9eZIo3hC/X1djDK0zyKbZ+dpC5E+yFQ4NxlkNH9dIRozkfEuSe7qJjsQ
+         cxD/56o5spuj40J0Wg3fR6Wyk3fwk8hV9DWgzhqsRRVRBgGzTqUDfya1TW7GvmKLZ6wo
+         D9xixUQS4qz6M4i5bzbYYLvrORORYZfKr8WPc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:date:message-id:in-reply-to
-         :references:user-agent:subject:mime-version
-         :content-transfer-encoding;
-        bh=P8U5WQJiAdYfDNducQrear0igBlA30OMY5Q6FHihzPA=;
-        b=WWWKyiryHjTXBWVirOW0D6ODKJGD11DIPD962ZaO4ZU/1LfZ69RAdL6g7cLug33rPn
-         eG/y1ySyM/G2JOq9WfvSLKq6YX3qTtv9fAlL48hHWgbkSx4bU1Ql0Thv+XWCC6e2/Ymj
-         ri+JuvTlRMOqxYA7SBewsKYqSLjLnq903Vsyo/SH8MhvHkT1bznnc3PmbXBfcchJqPKh
-         76ZCPQgYojvHknj6XIGWoLWnaAZH5qCH8NAPFSEsTPHAMurO375VbaPlvjJf8rIZOdSU
-         YNbErcyipLviRE85s6xYOhbfSSh8jbMIMmXv7w43Qr4+YKNnMuyFpKJ6QUOinZYVr9T7
-         oFkw==
-X-Gm-Message-State: AOAM530HTMoh7G0wFCU4fLl5VdPIM3TuENdZNFYE+8OwnTdLeJIIGvL4
-        HgeVj4WWlH1Utoj2cO2ocvk=
-X-Google-Smtp-Source: ABdhPJwyF5cy06UYaCF8+k2ff5a+4+qHBYkQZOXF2SCVmASlIMtbr/PD5eDLoOS3FEGgDLpM9Sbp2g==
-X-Received: by 2002:a17:902:cec3:b0:12d:92c4:1ea6 with SMTP id d3-20020a170902cec300b0012d92c41ea6mr5653088plg.36.1629262421317;
-        Tue, 17 Aug 2021 21:53:41 -0700 (PDT)
-Received: from [10.230.42.144] ([192.19.152.250])
-        by smtp.gmail.com with ESMTPSA id w11sm4952030pgk.34.2021.08.17.21.53.34
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 17 Aug 2021 21:53:40 -0700 (PDT)
-From:   Arend van Spriel <aspriel@gmail.com>
-To:     Sean Anderson <sean.anderson@seco.com>,
-        <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>
-CC:     "Chi-hsien Lin" <chi-hsien.lin@cypress.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Tejun Heo <tj@kernel.org>, <SHA-cyfmac-dev-list@infineon.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        <brcm80211-dev-list.pdl@broadcom.com>
-Date:   Wed, 18 Aug 2021 06:53:31 +0200
-Message-ID: <17b579b74f8.279b.9696ff82abe5fb6502268bdc3b0467d4@gmail.com>
-In-Reply-To: <20210802170904.3116223-1-sean.anderson@seco.com>
-References: <20210802170904.3116223-1-sean.anderson@seco.com>
-User-Agent: AquaMail/1.30.1-1828 (build: 103001000)
-Subject: Re: [PATCH] brcmfmac: Set SDIO workqueue as WQ_HIGHPRI
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=23NqigPoreurbrTRI3DzstnCrCz1u9qo8AUicrCllIQ=;
+        b=FuoPlVdoZK8wPQEHR0kiHCMnq4uuhfHfBEni84avNfxWEFqM356QMADT5EJj6SjD8i
+         IAmL/Wn3IuKuVw/uZQJR0IZ5HLzD1Sl8v5iRau2HgBbvMzgR1jjVgy0qH/6tSVA0ShN9
+         Kh01rJJ3/mKyj/lrC7/LJkiWflzH5v6U32tpXrpo4O3RXFKF5tkkZjAe0RbTa9mNjaUk
+         4rpkOqo9c137771X/Hhw84jNF7rwDOfKpNC/kMEXwWZ/Yu11w/tLs3Bpv0eaBxN6Pi9Q
+         nCcSFTq/hKbIHIBmMVTPgRxAHdJQ8s2S65pkjdLjOtJwrXpEHWlEt3YNUo/pciWu7t2T
+         r3gA==
+X-Gm-Message-State: AOAM531KQUdpaDG86WFSitmiSAeeBrMQg0dRHqSlJqPFsZ538VwWJiz5
+        I5FPoAqo1sGnNzIhT2TfZqNmKA==
+X-Google-Smtp-Source: ABdhPJylu+fvLjWopDWFH3olkAdKgN4Z9FIPk8JyyTRG5xBoS/mN6Ano8pbp8qiJIYenr0R5MuEjMA==
+X-Received: by 2002:a05:6a00:16d2:b029:300:200b:6572 with SMTP id l18-20020a056a0016d2b0290300200b6572mr7570097pfc.62.1629266751598;
+        Tue, 17 Aug 2021 23:05:51 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id l6sm4585677pff.74.2021.08.17.23.05.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Aug 2021 23:05:51 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH v2 01/63] ipw2x00: Avoid field-overflowing memcpy()
+Date:   Tue, 17 Aug 2021 23:04:31 -0700
+Message-Id: <20210818060533.3569517-2-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
+References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4716; h=from:subject; bh=3b5t4fLR/wEetR2E8Hwk2j3VzU8yz2BgAEsleqg3XAU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMd3RE3VXLm1V4wHPPpY4uHLTNlH2i9cpT7/zcX 6bMNqjOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjHQAKCRCJcvTf3G3AJhpED/ 9b4pyd/DG5mv5Tblws3aMWZNDSeCRn3/s9TjbgOMXM4o11x/1+ZleM6Vk2EDLRI/StjZkH7suUShf9 pz8qPCLJYcMOnhXplowR65ecymaR26AWdAh+maUgxLzeDfaqIYCYeE1R/AQ0WwLm+5Exoa4ZI5WS0f rqmhbs0ehQFD4CZMRmfHfUrVstRDcMCvaGy4vJOILTRKBHVmbSZT9t4ZS26+G0Gn3/MfEpQl02c5VG giy+jakP/HC0SaKYh6fz0PynTwGctBrg0Jtrm+P5sBZ5LrYnPR4gQcC+zRGDLNvr9SJfvI3/F80g1h nBOlSrzvmz1/1UBqHvztStqbaaBG+fsJReRuAfOS4pPpyfoSreYc0FSty2WowsZKIQG4KRrFpPJq8y oyVcu4SpPwu0e+hpIT5XJ/ZlUJ3z+GSZyrMGUWADhlMLpd7MuTx1T01Z2DheK2fn7PAfCsewxY48vA klRgq5EmEm78Ws6wLDcon05s0EfYr4KarT1JdG+fV2JuY2Ks6lWjaiGXCMr3QOUuFt3P5lmt4vhwnj EdC/X6leqQSQ89oEFJBzrtCAV0vFOs8DxlHiDaWhg8+sGBq2zvBRy+rxcDyNI36k1pUC1aChW0369A Gf5WfOMa8Bm/SsspWmkkegUh+h5Z0fYmtTzn/GA0ekK/0u14dQxgyN2mEtFg==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On August 2, 2021 7:11:12 PM Sean Anderson <sean.anderson@seco.com> wrote:
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-> This puts tasks submitted to the SDIO workqueue at the head of the queue
-> and runs them immediately. This gets higher RX throughput with the SDIO
-> bus.
->
-> This was originally submitted as [1]. The original author Wright Feng
-> reports
->
->> throughput result with 43455(11ac) on 1 core 1.6 Ghz platform is
->> Without WQ_HIGGPRI TX/RX: 293/301 (mbps)
->> With    WQ_HIGHPRI TX/RX: 293/321 (mbps)
->
-> I tested this with a 43364(11bgn) on a 1 core 800 MHz platform and got
->    Without WQ_HIGHPRI TX/RX: 16/19 (Mbits/sec)
->    With    WQ_HIGHPRI TX/RX: 24/20 (MBits/sec)
->
-> [1] 
-> https://lore.kernel.org/linux-wireless/1584604406-15452-4-git-send-email-wright.feng@cypress.com/
+libipw_read_qos_param_element() copies a struct libipw_info_element
+into a struct libipw_qos_information_element, but is actually wanting to
+copy into the larger struct libipw_qos_parameter_info (the contents of
+ac_params_record[] is later examined). Refactor the routine to perform
+centralized checks, and copy the entire contents directly (since the id
+and len members match the elementID and length members):
 
-Not sure if Wright Feng needs to be attributed as you clearly had a good 
-look at his patch and the discussion related to it. You can add my ...
+struct libipw_info_element {
+        u8 id;
+        u8 len;
+        u8 data[];
+} __packed;
 
-Reviewed-by: Arend van Spriel <aspriel@gmail.com>
-> Signed-off-by: Sean Anderson <sean.anderson@seco.com>
-> ---
->
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
+struct libipw_qos_information_element {
+        u8 elementID;
+        u8 length;
+        u8 qui[QOS_OUI_LEN];
+        u8 qui_type;
+        u8 qui_subtype;
+        u8 version;
+        u8 ac_info;
+} __packed;
 
+struct libipw_qos_parameter_info {
+        struct libipw_qos_information_element info_element;
+        u8 reserved;
+        struct libipw_qos_ac_parameter ac_params_record[QOS_QUEUE_NUM];
+} __packed;
+
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ .../net/wireless/intel/ipw2x00/libipw_rx.c    | 56 ++++++-------------
+ 1 file changed, 17 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index 5a2a723e480b..7a684b76f39b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -927,7 +927,8 @@ static u8 qos_oui[QOS_OUI_LEN] = { 0x00, 0x50, 0xF2 };
+ static int libipw_verify_qos_info(struct libipw_qos_information_element
+ 				     *info_element, int sub_type)
+ {
+-
++	if (info_element->elementID != QOS_ELEMENT_ID)
++		return -1;
+ 	if (info_element->qui_subtype != sub_type)
+ 		return -1;
+ 	if (memcmp(info_element->qui, qos_oui, QOS_OUI_LEN))
+@@ -943,57 +944,34 @@ static int libipw_verify_qos_info(struct libipw_qos_information_element
+ /*
+  * Parse a QoS parameter element
+  */
+-static int libipw_read_qos_param_element(struct libipw_qos_parameter_info
+-					    *element_param, struct libipw_info_element
+-					    *info_element)
++static int libipw_read_qos_param_element(
++			struct libipw_qos_parameter_info *element_param,
++			struct libipw_info_element *info_element)
+ {
+-	int ret = 0;
+-	u16 size = sizeof(struct libipw_qos_parameter_info) - 2;
++	size_t size = sizeof(*element_param);
+ 
+-	if ((info_element == NULL) || (element_param == NULL))
++	if (!element_param || !info_element || info_element->len != size - 2)
+ 		return -1;
+ 
+-	if (info_element->id == QOS_ELEMENT_ID && info_element->len == size) {
+-		memcpy(element_param->info_element.qui, info_element->data,
+-		       info_element->len);
+-		element_param->info_element.elementID = info_element->id;
+-		element_param->info_element.length = info_element->len;
+-	} else
+-		ret = -1;
+-	if (ret == 0)
+-		ret = libipw_verify_qos_info(&element_param->info_element,
+-						QOS_OUI_PARAM_SUB_TYPE);
+-	return ret;
++	memcpy(element_param, info_element, size);
++	return libipw_verify_qos_info(&element_param->info_element,
++				      QOS_OUI_PARAM_SUB_TYPE);
+ }
+ 
+ /*
+  * Parse a QoS information element
+  */
+-static int libipw_read_qos_info_element(struct
+-					   libipw_qos_information_element
+-					   *element_info, struct libipw_info_element
+-					   *info_element)
++static int libipw_read_qos_info_element(
++			struct libipw_qos_information_element *element_info,
++			struct libipw_info_element *info_element)
+ {
+-	int ret = 0;
+-	u16 size = sizeof(struct libipw_qos_information_element) - 2;
++	size_t size = sizeof(struct libipw_qos_information_element) - 2;
+ 
+-	if (element_info == NULL)
++	if (!element_info || !info_element || info_element->len != size - 2)
+ 		return -1;
+-	if (info_element == NULL)
+-		return -1;
+-
+-	if ((info_element->id == QOS_ELEMENT_ID) && (info_element->len == size)) {
+-		memcpy(element_info->qui, info_element->data,
+-		       info_element->len);
+-		element_info->elementID = info_element->id;
+-		element_info->length = info_element->len;
+-	} else
+-		ret = -1;
+ 
+-	if (ret == 0)
+-		ret = libipw_verify_qos_info(element_info,
+-						QOS_OUI_INFO_SUB_TYPE);
+-	return ret;
++	memcpy(element_info, info_element, size);
++	return libipw_verify_qos_info(element_info, QOS_OUI_INFO_SUB_TYPE);
+ }
+ 
+ /*
+-- 
+2.30.2
 
