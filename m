@@ -8,77 +8,77 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABEAC43214
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B6AC4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 862B0610F7
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 440C961058
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238664AbhHRGP7 (ORCPT
+        id S238290AbhHRGQC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:15:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45652 "EHLO
+        Wed, 18 Aug 2021 02:16:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238006AbhHRGPv (ORCPT
+        with ESMTP id S238317AbhHRGPt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:15:51 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26DD1C0611F8
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id y11so1081525pfl.13
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:15 -0700 (PDT)
+        Wed, 18 Aug 2021 02:15:49 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44E48C0611C2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:14 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id a5so1150388plh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=f4O3R9w7Wsb1EUzo8wW0sX+4sR/BMGAQ/Nfx2MpJI38=;
-        b=LYUO69wYAGl48pxViZuNMfgY0F9cuDlQY6nCQU/3p+8l2QtHc07flb9OraE46ZvIBx
-         /xBG0BtrkwLHkotiYNUI/6fqla0cTVbsww7aEsuk4+Nngwd3P/pQjUKOvhuCMN7+yAE+
-         Jw6YFeg29gPpHQCtelCih+4VXzxZFuDljGQ8I=
+        bh=2xy8/Tts2Q0pCjtb48qnJm2SajC5SEAfbYkA07Au0YI=;
+        b=N1IWhHeIGBOPznpFmYcWRZnJUNwykvj7PFgOHlWYvKaPc+cPgY1O8yVwcgQcJCfF0O
+         1wIrsy0WvqMxKkjPp7ddmtLZ7u0JBo0fSPMSf4XEMdcOmOVzMLubsGfeG4F7+aLs4Anz
+         DBivjnb6cRK6FqL5VKQ3cy4DFeYHbbZmjbWPA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=f4O3R9w7Wsb1EUzo8wW0sX+4sR/BMGAQ/Nfx2MpJI38=;
-        b=Eb3A0/lNr6ZZbxT6k4w/hoDsNFSVU22lU4/7+2NRQQ9t0/195UDiss5OG18hB8/CAO
-         mySfZsWFwkbhFS6U12to2u4BEKy5mVF13vCcIgpiEXIu95eLJ2HC4dd7n9coNtkO6l9c
-         G6iGD7DDfmEu5zpzg903//EBT4kh89yewDOisIuhyhzewKm6ATI1yunctTiOvYR7ain6
-         6vFSPk9ZrvGdR3JmZ1WXcWhI1vGK2VZQ071fVOCxX4cYROA8e2b7/NcYIbjFxuOsda2P
-         EhZlOVsv2/wQG+oWddT8JN/TXdB5I4uB2NMwqUY7h5U7RgLVfRAFtU8X/AC0S1Wqtlvq
-         6nhw==
-X-Gm-Message-State: AOAM530TBkJwDFVX3aemMVnxz2P7E0ysH0Y1JFMTVkW48fit5qHpLtBi
-        3uGfPRHQdjTwnGV1gP8j7zWriA==
-X-Google-Smtp-Source: ABdhPJywnPw6z16Ak9Sf4n0+8mKmDYgUDbPdhB9YE0Tz2tAm6kKcI6tqk6MiIjPWY4zGxPe54WmG+A==
-X-Received: by 2002:a63:164e:: with SMTP id 14mr7225002pgw.246.1629267254757;
-        Tue, 17 Aug 2021 23:14:14 -0700 (PDT)
+        bh=2xy8/Tts2Q0pCjtb48qnJm2SajC5SEAfbYkA07Au0YI=;
+        b=OZDAQxC0w13PPStOiBf9qeaGQgU2l8ftJ8xyduluz2ODtFstpP+5v872y/Qtg/MUTr
+         eZzYsLCbSJei9274zQz0+B8v09kd6bHlnDnQ23d3zShJpvm0jIxSQBeIo1N0E9OXJUzu
+         u/UozRAKJhntPDgTB8E2q7kCi2ZtHUJsJJeM8e4Az7jl7h5HrzNvL2PFoqypRRgESKvU
+         A/8dAaurJrMQIkBiuCah5pF9j8kUSZYjUQ74WVa+PMF+KtylOvKg2fJ/WuaJBM8lIdow
+         ABi/JpstyirlJOGa3U/41Wn8PdR//Xlqu5SlbcUqT9/fwuiTZBwZzsprHy3V9uehFNCF
+         xzAw==
+X-Gm-Message-State: AOAM531a7mJtC85q65/tQ2LCHM93l8kmTR8F+A6ouDT+85PfBV5oq6Uf
+        wIyu+3VtOZ4bkJytFP5X0oP+Qg==
+X-Google-Smtp-Source: ABdhPJwZVI61yBxbgc94xcpC0vKFM8RdsF+Geat411+/6IprYSspNUgcCL5/LDmLoHHLCl5CFFI5+A==
+X-Received: by 2002:a17:903:41c2:b0:12d:a7aa:40a8 with SMTP id u2-20020a17090341c200b0012da7aa40a8mr6069996ple.61.1629267253835;
+        Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a8sm729024pfo.79.2021.08.17.23.14.12
+        by smtp.gmail.com with ESMTPSA id p29sm4918970pfw.141.2021.08.17.23.14.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rustam Kovhaev <rkovhaev@gmail.com>,
-        syzbot+22794221ab96b0bab53a@syzkaller.appspotmail.com,
-        Allen Pais <apais@linux.microsoft.com>,
-        Romain Perier <romain.perier@gmail.com>,
-        linux-staging@lists.linux.dev,
+        Ariel Elior <aelior@marvell.com>,
+        Sudarsana Kalluru <skalluru@marvell.com>,
+        GR-everest-linux-l2@marvell.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-block@vger.kernel.org,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
         linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 19/63] staging: wlan-ng: Use struct_group() for memcpy() region
-Date:   Tue, 17 Aug 2021 23:04:49 -0700
-Message-Id: <20210818060533.3569517-20-keescook@chromium.org>
+Subject: [PATCH v2 17/63] bnx2x: Use struct_group() for memcpy() region
+Date:   Tue, 17 Aug 2021 23:04:47 -0700
+Message-Id: <20210818060533.3569517-18-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2774; h=from:subject; bh=aGp1hVfQLzgNKVTBWpK4bHAQRaqFRmqtt5a8sjY+csw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMizR57up2j4NPi4kVovJhubhBpYTgyg8yWF9zZ icJ94SKJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIgAKCRCJcvTf3G3AJpL6D/ 9OjwhbTRWiOOzSFBp8HIcdXHzLynmUDoremqboLQbbZFdvhzt0JN+X+5SXEKgIkDTabHGAyJJg7vbo zVrFanG+ya6KLCwo9BdiQAR/ueZXO5L+r/Giz1yPapqbt9k/nsEc5SYr5ucwOuJAxFE9KIGWEqYMrT i3E/cMd8/4hSpxFdVPIAs28n3YGzs5RdmJrvt0oE1gIolLyt89z92a2rYJdvxqr4c3EEmcmpORTtTP lkwRQ5y4dqKRSgda52wvAVbJiXwqCu+cZMKZbgEa3KUIL7s+H43Se99pCXw8Ub5zIFo+91KGljDQEx tb8lzPY0rRNNY0mbwRNYXf/W38QwRxZ3D5oUvC0N/0w4QQutHp9rU1gZioa3fOM/rHRt4HcprXi+nt 0aVMHLjt3F6niAccQBbHURhgEcp8WwIJfTi/bJ+gg4LPSpeEvVE4tQYywNI4FkILs77ejtC8wiZxw7 ocghlmQFrIyZuFFHQ08aqyrz9X6fmTVjexgK98h9oM/QBofgPJlUMtugzgwK/6v8LzRJ1jiml8GBZy OhAwKq8Jq0qW2GJdSkuk64fcF8WOlLGLlP1HErn6FXZfEY4MdumebnHUJDxpcnKVjQhgEciCCqBCSb /vsaJRVs0/wXUdwiP2kC/s1S+odfxQ0hXzojzVg0H0lmI3gP3DxmkZLDHg7Q==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3830; h=from:subject; bh=GkN0LVVLNQH/53cAo4VYkKN66rn+11NBIFFE2ztC6YM=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMhRw9LfaYvUc+sf+L0uY8MlzrAk1ef7MCxvB9t k6OtDqOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjIQAKCRCJcvTf3G3AJifDD/ 9c0n+kvuNRhg8rqC3IlmdQj3GSvDZWsG+FKvThaAwsrcm5zgUTbPwQ6iL1wr4Jk3ViFO6PKwpuQs+W kYs8Ff8+E5QKNzTFYv9f3U+QrUgXZuliPkgx2C9OIEVvt2UEnDYPUhUqHBMLx0BXSCvr7kVoiYR8b2 iu457PTEfCQPJdDfKt78EEPnPsrqkubZweDgt/Gq/PsCcnEku9oGBRvz1KKVnO8QWy9TYdunjBP41s 792+Xj9Zh+GH4ISZfO3dP/vihbtHZcRxlUtqy2yT76MawS9BzD6PInHIpTeYQxnPOICMfQPusrHTT7 ndnKvr9GSg7peInc8FmZqYcs6y4mjJE/eklW07D6UJI9TtDjmKiqTTBOdNU43zM6qWjHal537hZmIe 9zFtdGwmUuRUgeltJDGJ4yXIugnOVn6G6DSwMAlT/S3hVGlxpguq6rEv6/0IWLa23jWt9JpGwJ1Jjj o+t/SbwzCJ0ClfKocBAik/2Za+ZKR9dJgOeM/G8xa98QQfHOvYYuIP//mv1JYcM1fvVbNymKySQfVs 8/HAgbbCc54arSAMkCFxkUT/fPiS/v1RbgtjVl9VmyC/p3ATw++a51ydTf5AAZxt2GMj+TS/xSz84B SiFL9TGxlTtdNqLwvPbVXHgt96CGuJjKFxAMufc9C7Zx6iAgBZyMu4MpCY0w==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -89,72 +89,97 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memcpy(), memmove(), and memset(), avoid
 intentionally writing across neighboring fields.
 
-Use struct_group() in struct hfa384x_tx_frame around members
-frame_control, duration_id, address[1-4], and sequence_control, so they
-can be referenced together. This will allow memcpy() and sizeof() to
-more easily reason about sizes, improve readability, and avoid future
-warnings about writing beyond the end of frame_control.
+Use struct_group() in struct nig_stats around members egress_mac_pkt0_lo,
+egress_mac_pkt0_hi, egress_mac_pkt1_lo, and egress_mac_pkt1_hi (and the
+respective members in struct bnx2x_eth_stats), so they can be referenced
+together. This will allow memcpy() and sizeof() to more easily reason
+about sizes, improve readability, and avoid future warnings about writing
+beyond the end of struct bnx2x_eth_stats's rx_stat_ifhcinbadoctets_hi.
 
-"pahole" shows no size nor member offset changes to struct
-hfa384x_tx_frame. "objdump -d" shows no meaningful object code changes
-(i.e. only source line number induced differences.)
+"pahole" shows no size nor member offset changes to either struct.
+"objdump -d" shows no meaningful object code changes (i.e. only source
+line number induced differences and optimizations).
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Rustam Kovhaev <rkovhaev@gmail.com>
-Cc: syzbot+22794221ab96b0bab53a@syzkaller.appspotmail.com
-Cc: Allen Pais <apais@linux.microsoft.com>
-Cc: Romain Perier <romain.perier@gmail.com>
-Cc: linux-staging@lists.linux.dev
+Additionally adds BUILD_BUG_ON() to compare the separate struct group
+sizes.
+
+Cc: Ariel Elior <aelior@marvell.com>
+Cc: Sudarsana Kalluru <skalluru@marvell.com>
+Cc: GR-everest-linux-l2@marvell.com
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Link: https://lore.kernel.org/lkml/YQDvC4CghCazix4w@kroah.com
 ---
- drivers/staging/wlan-ng/hfa384x.h     | 16 +++++++++-------
- drivers/staging/wlan-ng/hfa384x_usb.c |  4 +++-
- 2 files changed, 12 insertions(+), 8 deletions(-)
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c |  7 ++++---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h | 14 ++++++++++----
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wlan-ng/hfa384x.h b/drivers/staging/wlan-ng/hfa384x.h
-index 88e894dd3568..87eb87e3beab 100644
---- a/drivers/staging/wlan-ng/hfa384x.h
-+++ b/drivers/staging/wlan-ng/hfa384x.h
-@@ -476,13 +476,15 @@ struct hfa384x_tx_frame {
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
+index 0b193edb73b8..2bb133ae61c3 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c
+@@ -849,7 +849,8 @@ static int bnx2x_hw_stats_update(struct bnx2x *bp)
  
- 	/*-- 802.11 Header Information --*/
+ 	memcpy(old, new, sizeof(struct nig_stats));
  
--	u16 frame_control;
--	u16 duration_id;
--	u8 address1[6];
--	u8 address2[6];
--	u8 address3[6];
--	u16 sequence_control;
--	u8 address4[6];
-+	struct_group(p80211,
-+		u16 frame_control;
-+		u16 duration_id;
-+		u8 address1[6];
-+		u8 address2[6];
-+		u8 address3[6];
-+		u16 sequence_control;
-+		u8 address4[6];
+-	memcpy(&(estats->rx_stat_ifhcinbadoctets_hi), &(pstats->mac_stx[1]),
++	BUILD_BUG_ON(sizeof(estats->shared) != sizeof(pstats->mac_stx[1]));
++	memcpy(&(estats->shared), &(pstats->mac_stx[1]),
+ 	       sizeof(struct mac_stx));
+ 	estats->brb_drop_hi = pstats->brb_drop_hi;
+ 	estats->brb_drop_lo = pstats->brb_drop_lo;
+@@ -1634,9 +1635,9 @@ void bnx2x_stats_init(struct bnx2x *bp)
+ 			REG_RD(bp, NIG_REG_STAT0_BRB_TRUNCATE + port*0x38);
+ 	if (!CHIP_IS_E3(bp)) {
+ 		REG_RD_DMAE(bp, NIG_REG_STAT0_EGRESS_MAC_PKT0 + port*0x50,
+-			    &(bp->port.old_nig_stats.egress_mac_pkt0_lo), 2);
++			    &(bp->port.old_nig_stats.egress_mac_pkt0), 2);
+ 		REG_RD_DMAE(bp, NIG_REG_STAT0_EGRESS_MAC_PKT1 + port*0x50,
+-			    &(bp->port.old_nig_stats.egress_mac_pkt1_lo), 2);
++			    &(bp->port.old_nig_stats.egress_mac_pkt1), 2);
+ 	}
+ 
+ 	/* Prepare statistics ramrod data */
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
+index d55e63692cf3..ae93c078707b 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.h
+@@ -36,10 +36,14 @@ struct nig_stats {
+ 	u32 pbf_octets;
+ 	u32 pbf_packet;
+ 	u32 safc_inp;
+-	u32 egress_mac_pkt0_lo;
+-	u32 egress_mac_pkt0_hi;
+-	u32 egress_mac_pkt1_lo;
+-	u32 egress_mac_pkt1_hi;
++	struct_group(egress_mac_pkt0,
++		u32 egress_mac_pkt0_lo;
++		u32 egress_mac_pkt0_hi;
 +	);
- 	__le16 data_len;		/* little endian format */
++	struct_group(egress_mac_pkt1,
++		u32 egress_mac_pkt1_lo;
++		u32 egress_mac_pkt1_hi;
++	);
+ };
  
- 	/*-- 802.3 Header Information --*/
-diff --git a/drivers/staging/wlan-ng/hfa384x_usb.c b/drivers/staging/wlan-ng/hfa384x_usb.c
-index f2a0e16b0318..38aaae7a2d69 100644
---- a/drivers/staging/wlan-ng/hfa384x_usb.c
-+++ b/drivers/staging/wlan-ng/hfa384x_usb.c
-@@ -2516,7 +2516,9 @@ int hfa384x_drvr_txframe(struct hfa384x *hw, struct sk_buff *skb,
- 	cpu_to_le16s(&hw->txbuff.txfrm.desc.tx_control);
+ enum bnx2x_stats_event {
+@@ -83,6 +87,7 @@ struct bnx2x_eth_stats {
+ 	u32 no_buff_discard_hi;
+ 	u32 no_buff_discard_lo;
  
- 	/* copy the header over to the txdesc */
--	memcpy(&hw->txbuff.txfrm.desc.frame_control, p80211_hdr,
-+	BUILD_BUG_ON(sizeof(hw->txbuff.txfrm.desc.p80211) !=
-+		     sizeof(union p80211_hdr));
-+	memcpy(&hw->txbuff.txfrm.desc.p80211, p80211_hdr,
- 	       sizeof(union p80211_hdr));
++	struct_group(shared,
+ 	u32 rx_stat_ifhcinbadoctets_hi;
+ 	u32 rx_stat_ifhcinbadoctets_lo;
+ 	u32 tx_stat_ifhcoutbadoctets_hi;
+@@ -159,6 +164,7 @@ struct bnx2x_eth_stats {
+ 	u32 tx_stat_dot3statsinternalmactransmiterrors_lo;
+ 	u32 tx_stat_bmac_ufl_hi;
+ 	u32 tx_stat_bmac_ufl_lo;
++	);
  
- 	/* if we're using host WEP, increase size by IV+ICV */
+ 	u32 pause_frames_received_hi;
+ 	u32 pause_frames_received_lo;
 -- 
 2.30.2
 
