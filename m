@@ -8,76 +8,76 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47DB4C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:16:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 376E8C432BE
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3578D60E09
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:16:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22275604AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240396AbhHRGQu (ORCPT
+        id S240337AbhHRGRg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:16:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45480 "EHLO
+        Wed, 18 Aug 2021 02:17:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239265AbhHRGQb (ORCPT
+        with ESMTP id S238722AbhHRGQ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Aug 2021 02:16:31 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88319C033274
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:23 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id q2so1114233plr.11
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:23 -0700 (PDT)
+        Wed, 18 Aug 2021 02:16:29 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC480C08EE27
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:22 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id qe12-20020a17090b4f8c00b00179321cbae7so1647654pjb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=OUj8oRrB7MxugyxrrPjBU6cYuiAw0IG2BHh9L0frR4M=;
-        b=K5/QOCQ1GvHen4il+zts6aBVpR/MUixrVtFBh2u/OTX9/NfLMzS8Z3/B82bDko5rUs
-         +eln7mM7MgpGb5g2fE+0/q4b2GAEHUqQx+fWFvhMosxIkDyZCevOdwe60Fbd9V0q1eOl
-         0CFRhL0TI0b8ZFszkcA5toy3dO5yGBBGUx4X4=
+        bh=1LbbD/YHfDVHNeuHjhgxvKcBP+1WtTwantiuN7hQzxQ=;
+        b=R/1OtHvoHrsgMZo2li12wNTYlU4PYGAodCOD+bIgq6ChwHsHKH49ggQITGRp9klOcT
+         hhN+gn1T653COGeLJn51yUwjbH33XbTplN3tsZd0bxePCyRVYpIOaD3v9sb70h6Hkjpp
+         /6QSomg4XXw8M4XDn0+BhJ3006b/HlyORx8ko=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=OUj8oRrB7MxugyxrrPjBU6cYuiAw0IG2BHh9L0frR4M=;
-        b=Eo9lA+7Me4Kuo1Af5dFaw1FeFW1Dytd+gSHyYRpZHuWTsnerVQy+BBEmb8reb3m92E
-         e6kmhugMzl95XHB7EcKpYQ/m6QEhAMK+o5R2yDmY4a1Wax+pnIy1J3dcgpbGPs3u4W1K
-         xBKglV3SwNs19DHtjanUKBmqf9g8yD+aezaUN9ivoGsCRmOiiBCTDMLpOj95D+Dap5jZ
-         O3DsFN/1+6x2H+NBgeE78A8IXlYPJSDmYOwMyZW5y0i72EGaB1rI+h/hdus3u8oi+Yei
-         Y8i0fnIELE9Pa4benTV9p7RI48KgrOL6QywnR3zlM4kLErxf00WSn+64F37XHjI05MzU
-         E4TA==
-X-Gm-Message-State: AOAM531Kv/IlSnRibMEcGPtvudnxIFK+HsTu1OTWnSncO8tzr3UXctN6
-        XZYUWxMVD4xuKySMhcZD/+rzeQ==
-X-Google-Smtp-Source: ABdhPJxbVOgs77pmnTYxvMPZHd1kccPxvYaRj3SbBhPFubv/TnK5SJeyMbp4QCzFpEAy80w5v2ECHw==
-X-Received: by 2002:a17:90a:ad07:: with SMTP id r7mr7764155pjq.110.1629267263131;
-        Tue, 17 Aug 2021 23:14:23 -0700 (PDT)
+        bh=1LbbD/YHfDVHNeuHjhgxvKcBP+1WtTwantiuN7hQzxQ=;
+        b=OXJWtC2/9+DPZaPxTqMda0j6lp4JIVeqXSbaGkqn/6pXTZfkjLFh8Blx4A4y01BKPA
+         oDJHLTsckysD5BcnD8Km2t/jIeucByRCMrjFuPRtw57WXpTfz7uofEc+SkwgbXQcQB3B
+         QLozbYEy3fYD/JG56aGS0S0oB6a4NALeJHqg/QRykON0TpmQd4FqwuBcWF1ADrzvACi0
+         6OH60unqwxA+YGDZLibmgbZrv4xjMZMBA6KoR1m4VzqAauOPYZPMwSpnLtuarc0ai8Vk
+         /zN84T9Br4TKxwaqU0SwOg3BzPgsabFhlTdTA6YsV6o8GH9L/P15nP4F1eN1Chf8qhNC
+         uxgw==
+X-Gm-Message-State: AOAM532QWKv7ktvbgKgLHxdxrcBcDPt4EE9tM+I7c1C/KoMUeL8zjbVD
+        rxGOlIQWV64WN2pgXdVVpKc/uA==
+X-Google-Smtp-Source: ABdhPJyKMEAVPHsuvTX9JdA/U10JiK4He7DVLG9xhnHdmIIqBLdqt2XQeH2Vwwj2NzeOu2ek31vsog==
+X-Received: by 2002:a17:90b:360a:: with SMTP id ml10mr7562259pjb.134.1629267262532;
+        Tue, 17 Aug 2021 23:14:22 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id w3sm4782286pfn.96.2021.08.17.23.14.19
+        by smtp.gmail.com with ESMTPSA id m2sm4664262pfo.45.2021.08.17.23.14.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:21 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>, drbd-dev@lists.linbit.com,
-        linux-block@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         dri-devel@lists.freedesktop.org, linux-staging@lists.linux.dev,
-        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
+        linux-block@vger.kernel.org, linux-kbuild@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 51/63] drbd: Use struct_group() to zero algs
-Date:   Tue, 17 Aug 2021 23:05:21 -0700
-Message-Id: <20210818060533.3569517-52-keescook@chromium.org>
+Subject: [PATCH v2 44/63] mac80211: Use memset_after() to clear tx status
+Date:   Tue, 17 Aug 2021 23:05:14 -0700
+Message-Id: <20210818060533.3569517-45-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2518; h=from:subject; bh=Q2Uw9RXFjMIXKo2IteRobBuJ9t0Fke5gpQvhXOFkzbw=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMpAyrkrjCd9Sudd2DfvVM313Dv4J16Pprur7BE R2yLw5iJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKQAKCRCJcvTf3G3AJllsD/ wMjgK1D0usgaVPmcG7ap73L0KQ/QF2TmwlTkN7ZYJNbPcOUTgH5qCBiL4kXD4qvPRMMk0z6M1MOXdD ad40Qjj391s1LOtbrXKzB6J0ACE6yMl0izT0iLKpKz+DHNtX6SXR4SCElIRw7Oe+D3OKvp8ncq6h/L m13yHC4gKfbb79IqU0KWkeB5qij4Ou7trqxTVeSvJLXgH5H6vMpMIrwWdj1jMXJgy2G8nUmOkFIh0c 0ivZjFBnwVNyQGo2OJAUvyz7W+qHXTnM5y/SfhabHHCHfGMD1LGZjB64ItBJUK+pcOykcIH49b9FnO h5fpUcqYNY7PRCXpb3rxN6MHOUY3PGy+gXlfy1Vx3CvXI1nI+OvBPvO8wi/whnPXp+BTOePiw4Blh+ 8bAGX27nZlzfW1jE3Y0VKrvKEieIn/i0YS3XfaCmMPn2OjPgaFjZMQTtKm9F61UAlxVlnSXOyRWiAa m+Binjs5N0XDni6qQxE+PwYb4X6+L5pWbOSWdiBOGY85wCWrqAF6DrTw4mXIB61ww03FHpMrwNH9ra 8yuAKhS3W2V+UbAd/ToTq0/JvDMwmWZGu/z6EIbBy/wAWPT3+RGq1gfMcM6HmInqPQk3SfLeIsEZHe jsEogyBmIWFi3hcxJwpocYVxG6KAlMgJp3sy7ctAUBzS5sy3VSG31B8l/x7Q==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3555; h=from:subject; bh=jIEORg6wH0RDOzc/SbRhmDjozuh0HKi5XMaIwXi52DY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMn1+XywUWgPufzSUanBKkFtpljUhjVl6XdrCJz 43V0wceJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjJwAKCRCJcvTf3G3AJh5OD/ 9VdGJw1yYkd3gefk4A5UR8RKWnRGhCsbm09zznQ7YsRWg1t+N+YFLA4AFq3FqxFeqDG3jzMNoOsdTO L6w9PUmC/a9IT1z+It5L++wcgxo3uVfAxiDShSCXzCwqbKDVcSrgSTJgJPulz8y1znwvAOPKF64eH0 pSX5zFI6NJwx/mf9nIe+nz9g6VrdmWmHR7mcVM4AIklt7/5RSv325yrDnFLwAyB9rv4exDMh6Egpxj 8sF1D3Pa6Be8GmmXNM7DKo1oqmwnfhplZxkHPfRIFSXVTYwQNGJUx7dCkZsOWVIcy3w6u50Y0mU9DG A+XMuV8TDHlOIEIwtbJKGnvgGkIhTldX5Wd95E/0PKvT9wVgxcTgJUCXhO6V/PfeIWGU6PnZ849Td8 U6ZP5aiyGS6/WCMJuj0tczg2lozZzkge3SUEkNnYtQCKUr1vHrynm7rYVjMrIIvJG275gaGz60NbGE 67lI4Kcj/LGkuEZPVVCVwWeIwkVBaqWNe+W2D/Gs/U7WC+8+e2X7y7YmCXoJhak0Jjoz1KHL2NKG3c 7CTZmKih3SVwYKmzxvKgHmp8I/RljMKmk4PyeSMncOwCjk5UYHvkRAslkthRz0xs54C82JmN6NSLCC Y8i9yUKlOEZkCSxm3fC3nvo3ctL36pHA5wrQEu1m/IneouARaiIxI65dilNg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -88,66 +88,87 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Add a struct_group() for the algs so that memset() can correctly reason
-about the size.
+Use memset_after() so memset() doesn't get confused about writing
+beyond the destination member that is intended to be the starting point
+of zeroing through the end of the struct.
 
-Cc: Philipp Reisner <philipp.reisner@linbit.com>
-Cc: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: drbd-dev@lists.linbit.com
-Cc: linux-block@vger.kernel.org
+Additionally fix the common helper, ieee80211_tx_info_clear_status(),
+which was not clearing ack_signal, but the open-coded versions
+did. Johannes Berg points out this bug was introduced by commit
+e3e1a0bcb3f1 ("mac80211: reduce IEEE80211_TX_MAX_RATES") but was harmless.
+
+Also drops the associated unneeded BUILD_BUG_ON()s, and adds a note to
+carl9170 about usage.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/block/drbd/drbd_main.c     | 3 ++-
- drivers/block/drbd/drbd_protocol.h | 6 ++++--
- drivers/block/drbd/drbd_receiver.c | 3 ++-
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/carl9170/tx.c   | 11 +++++------
+ drivers/net/wireless/intersil/p54/txrx.c |  6 +-----
+ include/net/mac80211.h                   |  7 +------
+ 3 files changed, 7 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index 55234a558e98..b824679cfcb2 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -729,7 +729,8 @@ int drbd_send_sync_param(struct drbd_peer_device *peer_device)
- 	cmd = apv >= 89 ? P_SYNC_PARAM89 : P_SYNC_PARAM;
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 88444fe6d1c6..aa95d1a65882 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -275,12 +275,11 @@ static void carl9170_tx_release(struct kref *ref)
+ 	if (WARN_ON_ONCE(!ar))
+ 		return;
  
- 	/* initialize verify_alg and csums_alg */
--	memset(p->verify_alg, 0, 2 * SHARED_SECRET_MAX);
-+	BUILD_BUG_ON(sizeof(p->algs) != 2 * SHARED_SECRET_MAX);
-+	memset(&p->algs, 0, sizeof(p->algs));
+-	BUILD_BUG_ON(
+-	    offsetof(struct ieee80211_tx_info, status.ack_signal) != 20);
+-
+-	memset(&txinfo->status.ack_signal, 0,
+-	       sizeof(struct ieee80211_tx_info) -
+-	       offsetof(struct ieee80211_tx_info, status.ack_signal));
++	/*
++	 * Should this call ieee80211_tx_info_clear_status() instead of clearing
++	 * manually? txinfo->status.rates do not seem to be used here.
++	 */
++	memset_after(&txinfo->status, 0, rates);
  
- 	if (get_ldev(peer_device->device)) {
- 		dc = rcu_dereference(peer_device->device->ldev->disk_conf);
-diff --git a/drivers/block/drbd/drbd_protocol.h b/drivers/block/drbd/drbd_protocol.h
-index dea59c92ecc1..a882b65ab5d2 100644
---- a/drivers/block/drbd/drbd_protocol.h
-+++ b/drivers/block/drbd/drbd_protocol.h
-@@ -283,8 +283,10 @@ struct p_rs_param_89 {
+ 	if (atomic_read(&ar->tx_total_queued))
+ 		ar->tx_schedule = true;
+diff --git a/drivers/net/wireless/intersil/p54/txrx.c b/drivers/net/wireless/intersil/p54/txrx.c
+index 873fea59894f..8414aa208655 100644
+--- a/drivers/net/wireless/intersil/p54/txrx.c
++++ b/drivers/net/wireless/intersil/p54/txrx.c
+@@ -431,11 +431,7 @@ static void p54_rx_frame_sent(struct p54_common *priv, struct sk_buff *skb)
+ 	 * Clear manually, ieee80211_tx_info_clear_status would
+ 	 * clear the counts too and we need them.
+ 	 */
+-	memset(&info->status.ack_signal, 0,
+-	       sizeof(struct ieee80211_tx_info) -
+-	       offsetof(struct ieee80211_tx_info, status.ack_signal));
+-	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
+-			      status.ack_signal) != 20);
++	memset_after(&info->status, 0, rates);
  
- struct p_rs_param_95 {
- 	u32 resync_rate;
--	char verify_alg[SHARED_SECRET_MAX];
--	char csums_alg[SHARED_SECRET_MAX];
-+	struct_group(algs,
-+		char verify_alg[SHARED_SECRET_MAX];
-+		char csums_alg[SHARED_SECRET_MAX];
-+	);
- 	u32 c_plan_ahead;
- 	u32 c_delay_target;
- 	u32 c_fill_target;
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index 1f740e42e457..6df2539e215b 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -3921,7 +3921,8 @@ static int receive_SyncParam(struct drbd_connection *connection, struct packet_i
+ 	if (entry_hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
+ 		pad = entry_data->align[0];
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d8a1d09a2141..4c469b04de37 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1197,12 +1197,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+ 	/* clear the rate counts */
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+ 		info->status.rates[i].count = 0;
+-
+-	BUILD_BUG_ON(
+-	    offsetof(struct ieee80211_tx_info, status.ack_signal) != 20);
+-	memset(&info->status.ampdu_ack_len, 0,
+-	       sizeof(struct ieee80211_tx_info) -
+-	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
++	memset_after(&info->status, 0, rates);
+ }
  
- 	/* initialize verify_alg and csums_alg */
- 	p = pi->data;
--	memset(p->verify_alg, 0, 2 * SHARED_SECRET_MAX);
-+	BUILD_BUG_ON(sizeof(p->algs) != 2 * SHARED_SECRET_MAX);
-+	memset(&p->algs, 0, sizeof(p->algs));
  
- 	err = drbd_recv_all(peer_device->connection, p, header_size);
- 	if (err)
 -- 
 2.30.2
 
