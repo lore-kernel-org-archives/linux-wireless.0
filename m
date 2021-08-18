@@ -8,63 +8,66 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E794BC432BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80EF3C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4D8561058
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68F5C61058
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Aug 2021 06:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238217AbhHRGPv (ORCPT
+        id S238668AbhHRGPx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:15:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45652 "EHLO
+        Wed, 18 Aug 2021 02:15:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238438AbhHRGPr (ORCPT
+        with ESMTP id S238557AbhHRGPr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 Aug 2021 02:15:47 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5AEC0617A8
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDB11C06129D
         for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id om1-20020a17090b3a8100b0017941c44ce4so8203560pjb.3
+Received: by mail-pf1-x430.google.com with SMTP id 18so1081850pfh.9
         for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qcRMFUHVF6QqGnr97K+ATth5rLyNBKP5psUqyaewiPQ=;
-        b=a6bTyF6xsvXmJVaSI8AKs77+P0oFTI1gTPlsYa6mh59pACM92P1VFzFqvqU9+X+jNr
-         vTM9CS3vOAuRCBsVzn6N7KgVHI6W6ooLD8DmaYQuGxrolCI4Xru2kAG7C7jmtZ5uZ8PR
-         VDy1iToF9Tpap2g7DTRp0rqJ6lJwmpqW0wJjo=
+        bh=YsZhptKgT8RdO2UT2M60Q/NccyUdJGsE7yDhN1K90D8=;
+        b=AqV5GrGQ6APa9jCXTlZsEv0yNQBd1buoKBsvC1Patiai/MrqWa7b1XmHW51ubErKfR
+         FKiWQ3qq8B5Ew32gz8StW83bO7rlDl3YjixVsDHSJA4wz/kFX3VFE/RVvNNLh2rGw6uj
+         aLVD1eBZqiJktmYYzr55zSr1HRkW5dhGCex20=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qcRMFUHVF6QqGnr97K+ATth5rLyNBKP5psUqyaewiPQ=;
-        b=fuwzBe+IV+qE47vp775V7Jbtfm2S7rG4bR8CL+2/Ap0RtREB9gbkJrhGGZEM9iDCB7
-         gyMCgWcsa/I257SdQCbtqvbWr/3ZMJm+f3mpbkcpbXpi+ieOEkZVlk6r7acwZoDotDfM
-         lBtnOw5yjxTHbRMR0cGzM58N7PpmsYYzTI0zY8xjTPF3Iv6XA1cY/+FFZJ/ZjHt/aGB7
-         /oSnSoAxTBgVKvBi2+6AEnuxrCFLy5g3TCYh8WSJzjtbwfkREBDzvKKnhatIIL9QfukG
-         98Kcbw/Uo7BpX1CIL7AYcAUtA/6EIk3Y+BX3K1d635esZzpM/cZozWhJ1inR4NN+iv9i
-         gnaA==
-X-Gm-Message-State: AOAM531C8Fb4t5gF8LFNcD33C9szMBWXlXinG98KejB8114juc0WtofC
-        bCEZJn2pkvtEjwLZcPnxFoa9vw==
-X-Google-Smtp-Source: ABdhPJxYy9uajyke8AmxVdXcCpVPxEVIqn6teRhyhxiibQmTAmVANSe3Um2YhA94u6j4OQrmXZTUYg==
-X-Received: by 2002:a17:902:e9c6:b029:12d:4cb3:3985 with SMTP id 6-20020a170902e9c6b029012d4cb33985mr5959378plk.56.1629267253269;
+        bh=YsZhptKgT8RdO2UT2M60Q/NccyUdJGsE7yDhN1K90D8=;
+        b=X0LEDudNz+CoN/BN8BNr7ZwErXm0qs3cZj8UMmYYkoyLrRmlJpoy/HWJ8Au5ktpS+X
+         XPhfHCrQHLXXOlcGiTfgLHQKB1kc3JuWuDuzyrQZjh3yG4t8guvTI3uhKUlrjOMfkGH3
+         YEIhrjRYEpT5NNKdwplmpAlyu/zK8qKK8+8nTJHx6k4uIIt7+6cFIkLpiRN6j3lU06fv
+         RIhKLEl50mPIMkJ+c5921v7KVMP5r6TH9OiwqJ3XEy3xnoDn9Xy5sBj1kPMOsMydb6s0
+         Xt9JNQqYSho/rmtae4QBAWTbB+3Js+NV5HM3CCMplMTEp581cPV0IGxroIBmBJJvwwBT
+         lhvQ==
+X-Gm-Message-State: AOAM5311JHKnolB6zJ5Af6scpb+1SY97pB/nCyW/ceMXvLNeHcgyF/nD
+        6x8RfVAT/WEEFV9QU9JaxYhRag==
+X-Google-Smtp-Source: ABdhPJxPAH0mQ5JRMc8So+cEOoTT47AjgR2xcCPW7BD+067I11NQTK24J7A1TqH0vYvVkR9Q0mkDOA==
+X-Received: by 2002:a63:2242:: with SMTP id t2mr7083803pgm.111.1629267253551;
         Tue, 17 Aug 2021 23:14:13 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id l12sm5631661pgc.41.2021.08.17.23.14.12
+        by smtp.gmail.com with ESMTPSA id u20sm5380627pgm.4.2021.08.17.23.14.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 17 Aug 2021 23:14:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Qinglang Miao <miaoqinglang@huawei.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Hulk Robot <hulkci@huawei.com>,
-        Wang Wensheng <wangwensheng4@huawei.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        Michael Ellerman <mpe@ellerman.id.au>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Wanpeng Li <wanpengli@tencent.com>,
+        Jim Mattson <jmattson@google.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        kvm@vger.kernel.org, "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
@@ -73,14 +76,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v2 61/63] powerpc: Split memset() to avoid multi-field overflow
-Date:   Tue, 17 Aug 2021 23:05:31 -0700
-Message-Id: <20210818060533.3569517-62-keescook@chromium.org>
+Subject: [PATCH v2 53/63] KVM: x86: Use struct_group() to zero decode cache
+Date:   Tue, 17 Aug 2021 23:05:23 -0700
+Message-Id: <20210818060533.3569517-54-keescook@chromium.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210818060533.3569517-1-keescook@chromium.org>
 References: <20210818060533.3569517-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1360; h=from:subject; bh=JCECg/Hewr4d9JO4WQR5kDd0IjByC1o9V4GNPJaYPKM=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMrEHk87hiQVCzgI18EL/HOEsDc4MJhIkHkaVTZ DZKWkUOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKwAKCRCJcvTf3G3AJjKnD/ 9vO5rK1NcyiJFD1V1xX5Q3QwJPN1EMRWYcJsr5dTRrhYDef2VBoAd3vGVJhv5tPWCziVR95zI+LgIL d02IU4Ow0Hf/RnPFBOD9Lk1pR4bdZqy2udFH1tE06S0wBxz6HBgDxKiHg0hd49XAZs+xsJCSVXM+ks ZJe+gXBJkwU0QQlyx97a3srOeF6TBCIwRbfsc1ny8kqeq7rHXhuez2Nl/jEpDrSY7P6MGZ0RS9pwGp BG8XE5jwyatTqBbwztRYJO6EDxF1oljeN+vw6wXSMzHTs0P0jZF+xhBsDePue4SrU1uYVK4eI314VF ytJTqzumiq1LoMoetRo7XbnZL9HC+8KQkD7iex+cbwbl0vBuTQNERQCXbWiuHcR7WbrVndhdzqr/qr 7kpYWqqHhGYN42VOTCoEV+CxxyGt6O1oEwupEs9JwlhAHT0ET/3m5v95ln9sj4q/idsJQyugW9w9wS B+pdNyiwZvnrIR6r8PjnSHwflJuJYyRkP28Ci+HZxNLOE9WlE6UmnuDmdrcVKpWz+nctnlPQ9JHhAq vpfGhXMnm0qF1zx5IYh+d69+ZRtUQbUKz2k4hFKSxvSse3CvWfi63pBT3m1O556umLnQD6zZbq4vQZ p0vLhJOR+anh57gwE1CG5ilwh9jU07xLpPrNzUQkHrIgJsiMsfqPJrC73E9g==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2338; h=from:subject; bh=Ox8odXNGawRcDoEtGWzS1ckYpMUjtDsTTZYtgzhZK3w=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHKMqj0+1jVnOnluvpSmjVC4NV24/mrWjdCYNGFB9 jwBTeKuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRyjKgAKCRCJcvTf3G3AJvAxD/ 9iMuZIH7PHSmcbrF42uGoRIdS+nUfoKIZhbDR6xmtYDi0vxGbsdnyFZjSwy/XynEIH0Vdlrjpr81jC i9bK6rBJ6rF+TFv4HczlsySW3y3N1xIFaafTX6oJZJQC4gwj1WFe3QmoGDtyXKzIY3V9LTS+crmZ19 PKzynOfjnFyeQ88B1mbEeWil4T6EpIx+uc0Ly+QDT6NMxAjAahBFGnwpD01G5vsMAaUmvcocZEMyl7 7YIHmOz/j/dYDz4RvvjZx/Tcs75qRmaGJF5mD4G1uKSyBTSMrXFMz+xPji8ym/CQJOmxlJncwK1ZeJ 0q5RhAcBUU40d3SC6gNEwZxhqKp/+y9g5sTKSmizT6qqLhtju9XaLkFreo8BocUmC87/U8XumMROux H7hTx08E0OLINGfNct+Ilqcl/d8BtuufZvpRurcgDGLCiLVLOmp2EUpSW3/7zdBVa5/XtPcJMzTFjA lNxvtKUV7fsVvqiI/nL2V5pRPIqiN0Z49mX6zaB2ugX7c6zSuVN8n/lv7Vp7R7Z9ej1ZhByTkOtJJP THc7Uk079v0yMLps1P5flkXnDnRV6bEq0RtAKVLAUn5d/wqA8wB7KtIGzZ6iai9BxNsS1Z4r3pqD7h bI8Pa7iryL+NoaVDaYWVnzlhrUa4TSXPjODvqjZoZfkoykTseBzmuBsI+cpg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -91,36 +94,71 @@ In preparation for FORTIFY_SOURCE performing compile-time and run-time
 field bounds checking for memset(), avoid intentionally writing across
 neighboring fields.
 
-Instead of writing across a field boundary with memset(), move the call
-to just the array, and an explicit zeroing of the prior field.
+Add struct_group() to mark region of struct x86_emulate_ctxt that should
+be initialized to zero.
 
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Qinglang Miao <miaoqinglang@huawei.com>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: Hulk Robot <hulkci@huawei.com>
-Cc: Wang Wensheng <wangwensheng4@huawei.com>
-Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Sean Christopherson <seanjc@google.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Wanpeng Li <wanpengli@tencent.com>
+Cc: Jim Mattson <jmattson@google.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: x86@kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: kvm@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: Michael Ellerman <mpe@ellerman.id.au>
-Link: https://lore.kernel.org/lkml/87czqsnmw9.fsf@mpe.ellerman.id.au
 ---
- drivers/macintosh/smu.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/x86/kvm/emulate.c     |  3 +--
+ arch/x86/kvm/kvm_emulate.h | 19 +++++++++++--------
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/macintosh/smu.c b/drivers/macintosh/smu.c
-index 94fb63a7b357..59ce431da7ef 100644
---- a/drivers/macintosh/smu.c
-+++ b/drivers/macintosh/smu.c
-@@ -848,7 +848,8 @@ int smu_queue_i2c(struct smu_i2c_cmd *cmd)
- 	cmd->read = cmd->info.devaddr & 0x01;
- 	switch(cmd->info.type) {
- 	case SMU_I2C_TRANSFER_SIMPLE:
--		memset(&cmd->info.sublen, 0, 4);
-+		cmd->info.sublen = 0;
-+		memset(&cmd->info.subaddr, 0, 3);
- 		break;
- 	case SMU_I2C_TRANSFER_COMBINED:
- 		cmd->info.devaddr &= 0xfe;
+diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
+index 2837110e66ed..2608a047e769 100644
+--- a/arch/x86/kvm/emulate.c
++++ b/arch/x86/kvm/emulate.c
+@@ -5377,8 +5377,7 @@ static int fastop(struct x86_emulate_ctxt *ctxt, fastop_t fop)
+ 
+ void init_decode_cache(struct x86_emulate_ctxt *ctxt)
+ {
+-	memset(&ctxt->rip_relative, 0,
+-	       (void *)&ctxt->modrm - (void *)&ctxt->rip_relative);
++	memset(&ctxt->decode_cache, 0, sizeof(ctxt->decode_cache));
+ 
+ 	ctxt->io_read.pos = 0;
+ 	ctxt->io_read.end = 0;
+diff --git a/arch/x86/kvm/kvm_emulate.h b/arch/x86/kvm/kvm_emulate.h
+index 68b420289d7e..9b8afcb8ad39 100644
+--- a/arch/x86/kvm/kvm_emulate.h
++++ b/arch/x86/kvm/kvm_emulate.h
+@@ -341,14 +341,17 @@ struct x86_emulate_ctxt {
+ 	 * the rest are initialized unconditionally in x86_decode_insn
+ 	 * or elsewhere
+ 	 */
+-	bool rip_relative;
+-	u8 rex_prefix;
+-	u8 lock_prefix;
+-	u8 rep_prefix;
+-	/* bitmaps of registers in _regs[] that can be read */
+-	u32 regs_valid;
+-	/* bitmaps of registers in _regs[] that have been written */
+-	u32 regs_dirty;
++	struct_group(decode_cache,
++		bool rip_relative;
++		u8 rex_prefix;
++		u8 lock_prefix;
++		u8 rep_prefix;
++		/* bitmaps of registers in _regs[] that can be read */
++		u32 regs_valid;
++		/* bitmaps of registers in _regs[] that have been written */
++		u32 regs_dirty;
++	);
++
+ 	/* modrm */
+ 	u8 modrm;
+ 	u8 modrm_mod;
 -- 
 2.30.2
 
