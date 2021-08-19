@@ -2,243 +2,222 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5075AC4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 19:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8BAC43216
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:28:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F09560462
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 19:59:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B362C610FA
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:28:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233919AbhHSUAQ (ORCPT
+        id S235505AbhHSU3L (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 16:00:16 -0400
-Received: from mga09.intel.com ([134.134.136.24]:10440 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229514AbhHSUAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Aug 2021 16:00:16 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10081"; a="216634836"
-X-IronPort-AV: E=Sophos;i="5.84,335,1620716400"; 
-   d="scan'208";a="216634836"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 12:59:39 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,335,1620716400"; 
-   d="scan'208";a="679610884"
-Received: from lkp-server01.sh.intel.com (HELO d053b881505b) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 19 Aug 2021 12:59:37 -0700
-Received: from kbuild by d053b881505b with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mGoCP-000UFP-7I; Thu, 19 Aug 2021 19:59:37 +0000
-Date:   Fri, 20 Aug 2021 03:59:04 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD SUCCESS
- c448f0fd2ce59947b3b8b8d6b56e15036449d1f1
-Message-ID: <611eb808.jwFMpSv89mwSIIzq%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Thu, 19 Aug 2021 16:29:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235265AbhHSU3H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Aug 2021 16:29:07 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D75EC0617AD
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 13:28:29 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id 18so6597898pfh.9
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 13:28:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=23NqigPoreurbrTRI3DzstnCrCz1u9qo8AUicrCllIQ=;
+        b=F/aXFSEFO3B0S1KjxtCFJ0bHN8UOoU5i9j7QIQ9H4wCLpPExP8i4eq1nUqdGC+vTAl
+         qpkYSn/zo5uF001tqNcSIy5OHDEEyNlsMGJFCO4L+E7F3tNOhKH/pjcDNRFmTt4sIiKy
+         R+62ZU9GtHuOUMyC4YOREpkj2XaWxyuMRkKPQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=23NqigPoreurbrTRI3DzstnCrCz1u9qo8AUicrCllIQ=;
+        b=f31uhpE2hiZ8h4i551dASh8lvRhDFO0pvflkCFdfNR9hSaQu33kEB4XPkxVEX5lvPE
+         Gm9WSeuCxiTQvmEEVPSQxcRQKgupttHL/OaZuOqtW2y8Ezl5C9VY//673ijdOjaJioVJ
+         aCL1pPt6TncL430XwTfuLpyRUddhkns57FvdSOuv5yYrKNQt42tpvl2mClz8tiCCfcfP
+         RKWL6GaqVbdcFfjYY1yT1r0UGc0l4sBJvWTjFgX2v3d854TAsdR3VcFxnHhGVr2Zp44v
+         3H5G6+0V3k+vISFFk1wK17Zoe1MQu9JES+B1gTs/ZENN186tD3aT7XICe544u46u3xPj
+         I6oA==
+X-Gm-Message-State: AOAM5331tjIJju4AGQwfh93/kaHq7INLI4EhKfVzr7KChiEAmHO4PCT1
+        ffFs4B4gvIkETkVwZAJa4mixpg==
+X-Google-Smtp-Source: ABdhPJz+KOpZhGJ5FXJOigQpPSgrYjpb97GBUvqFXR+qoBMUxfptkbVry7hNayEJ2a7UzVP906Pfwg==
+X-Received: by 2002:aa7:8b07:0:b029:3c7:c29f:9822 with SMTP id f7-20020aa78b070000b02903c7c29f9822mr15973588pfd.33.1629404909020;
+        Thu, 19 Aug 2021 13:28:29 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id k25sm4370211pfa.213.2021.08.19.13.28.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Aug 2021 13:28:27 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     netdev@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Jesper Dangaard Brouer <hawk@kernel.org>,
+        John Fastabend <john.fastabend@gmail.com>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Martin KaFai Lau <kafai@fb.com>,
+        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
+        KP Singh <kpsingh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-rdma@vger.kernel.org, bpf@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH 1/3] ipw2x00: Avoid field-overflowing memcpy()
+Date:   Thu, 19 Aug 2021 13:28:23 -0700
+Message-Id: <20210819202825.3545692-2-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210819202825.3545692-1-keescook@chromium.org>
+References: <20210819202825.3545692-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4716; h=from:subject; bh=3b5t4fLR/wEetR2E8Hwk2j3VzU8yz2BgAEsleqg3XAU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHr7o3RE3VXLm1V4wHPPpY4uHLTNlH2i9cpT7/zcX 6bMNqjOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYR6+6AAKCRCJcvTf3G3AJumUD/ 0f1bg3FbVuqAiMBaS9IMEbmlwImkHFdXvVqAGU0c0JnDVZSLl2o2jU4irNcZfOHOGiyYpNUxA8mBNP Y0BXEwPXwzfEODoS/bKlfvvDB4v5d0nQoewu4eFdhGrxNUqnaYxIf2ZgkWFpbxJQnWNR9PSXhdRv/7 8Xe1K+TlHO/3aUYVYuWA/xyvHtdSpptiyvVf3SzuCCmB1Nxzl1mT2w8+AUzjXJ33G+FItKamDkI9iU fpmEm+7I35jZniX3qbMeW+pB/I1M/xgCAPZSeRkDk+x+5wL+ENoCG8oWONDewGhXmjydCkRSIcCinC Iw5eONYFN8dyEG0CljmQvmUrLMIaIowHZwfIbrnf2We+VJEMYCDc6DwIe6OB/fNutrXM0C7eF9il4z PrdDwnVMQawJ9pmSFF8T8fSvCFQ5IYh7/qiP+bYkKv6D6iBH8sep+aWaGHsPbXJCBTV4MSCj8Htluh T2+HVUM+wthFo1IgE64PMPX1dOnTXs6C/w+96vYw3d8flThTGS4zgwyEIXUBWVuqFeyl6zwyNeC2s8 91oO/WcGpuQ7nfQe/lhNmXygtElyjfy8OrkfQqJzAHjJOr7/h9InrqLU8Q93mnIFEx2mDaWcrJUMYR sQ8w+xtOk+PnA9bV07nr3lpdK4YQX8rffoX2nSX4l2Yc4i2FTP3Z66PxBt+Q==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-branch HEAD: c448f0fd2ce59947b3b8b8d6b56e15036449d1f1  cfg80211: fix BSS color notify trace enum confusion
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-elapsed time: 2187m
+libipw_read_qos_param_element() copies a struct libipw_info_element
+into a struct libipw_qos_information_element, but is actually wanting to
+copy into the larger struct libipw_qos_parameter_info (the contents of
+ac_params_record[] is later examined). Refactor the routine to perform
+centralized checks, and copy the entire contents directly (since the id
+and len members match the elementID and length members):
 
-configs tested: 177
-configs skipped: 3
+struct libipw_info_element {
+        u8 id;
+        u8 len;
+        u8 data[];
+} __packed;
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+struct libipw_qos_information_element {
+        u8 elementID;
+        u8 length;
+        u8 qui[QOS_OUI_LEN];
+        u8 qui_type;
+        u8 qui_subtype;
+        u8 version;
+        u8 ac_info;
+} __packed;
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20210816
-i386                 randconfig-c001-20210819
-h8300                       h8s-sim_defconfig
-powerpc                       maple_defconfig
-sh                           se7751_defconfig
-arm                        realview_defconfig
-mips                      loongson3_defconfig
-s390                                defconfig
-mips                         rt305x_defconfig
-powerpc                 linkstation_defconfig
-arm                       netwinder_defconfig
-alpha                               defconfig
-powerpc                  mpc885_ads_defconfig
-powerpc                 mpc8313_rdb_defconfig
-powerpc                    klondike_defconfig
-powerpc                          g5_defconfig
-sparc64                          alldefconfig
-riscv                          rv32_defconfig
-powerpc                         ps3_defconfig
-arm                         hackkit_defconfig
-sh                           se7724_defconfig
-parisc                generic-32bit_defconfig
-powerpc                      pmac32_defconfig
-sh                          rsk7203_defconfig
-m68k                             allmodconfig
-arm                           stm32_defconfig
-powerpc                       ppc64_defconfig
-mips                 decstation_r4k_defconfig
-mips                  cavium_octeon_defconfig
-arm                       aspeed_g5_defconfig
-powerpc                       eiger_defconfig
-xtensa                           alldefconfig
-sh                          rsk7201_defconfig
-sh                          lboxre2_defconfig
-powerpc                     tqm8541_defconfig
-sh                         ap325rxa_defconfig
-nds32                             allnoconfig
-mips                       capcella_defconfig
-mips                      maltaaprp_defconfig
-h8300                     edosk2674_defconfig
-sh                               allmodconfig
-ia64                        generic_defconfig
-sh                            shmin_defconfig
-mips                            e55_defconfig
-sh                ecovec24-romimage_defconfig
-arm                            mmp2_defconfig
-powerpc                  storcenter_defconfig
-sh                        dreamcast_defconfig
-ia64                      gensparse_defconfig
-powerpc                      ep88xc_defconfig
-arm                        cerfcube_defconfig
-sh                          rsk7269_defconfig
-arm64                            alldefconfig
-sh                        apsh4ad0a_defconfig
-mips                       bmips_be_defconfig
-powerpc                 mpc837x_rdb_defconfig
-arm                       aspeed_g4_defconfig
-nios2                         10m50_defconfig
-m68k                       m5249evb_defconfig
-m68k                       bvme6000_defconfig
-microblaze                          defconfig
-um                                  defconfig
-parisc                           alldefconfig
-m68k                       m5275evb_defconfig
-arm                         s5pv210_defconfig
-mips                         tb0226_defconfig
-mips                           ip22_defconfig
-arm                       imx_v4_v5_defconfig
-mips                           ip27_defconfig
-mips                      pic32mzda_defconfig
-xtensa                          iss_defconfig
-sh                           se7780_defconfig
-powerpc                 mpc8540_ads_defconfig
-powerpc                     mpc83xx_defconfig
-mips                     cu1830-neo_defconfig
-mips                           jazz_defconfig
-sh                   secureedge5410_defconfig
-x86_64                            allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a004-20210818
-x86_64               randconfig-a006-20210818
-x86_64               randconfig-a003-20210818
-x86_64               randconfig-a005-20210818
-x86_64               randconfig-a002-20210818
-x86_64               randconfig-a001-20210818
-x86_64               randconfig-a006-20210816
-x86_64               randconfig-a004-20210816
-x86_64               randconfig-a003-20210816
-x86_64               randconfig-a001-20210816
-x86_64               randconfig-a005-20210816
-x86_64               randconfig-a002-20210816
-i386                 randconfig-a004-20210818
-i386                 randconfig-a006-20210818
-i386                 randconfig-a002-20210818
-i386                 randconfig-a001-20210818
-i386                 randconfig-a003-20210818
-i386                 randconfig-a005-20210818
-x86_64               randconfig-a013-20210819
-x86_64               randconfig-a011-20210819
-x86_64               randconfig-a012-20210819
-x86_64               randconfig-a016-20210819
-x86_64               randconfig-a014-20210819
-x86_64               randconfig-a015-20210819
-i386                 randconfig-a015-20210819
-i386                 randconfig-a011-20210819
-i386                 randconfig-a014-20210819
-i386                 randconfig-a013-20210819
-i386                 randconfig-a016-20210819
-i386                 randconfig-a012-20210819
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
+struct libipw_qos_parameter_info {
+        struct libipw_qos_information_element info_element;
+        u8 reserved;
+        struct libipw_qos_ac_parameter ac_params_record[QOS_QUEUE_NUM];
+} __packed;
 
-clang tested configs:
-i386                 randconfig-c001-20210818
-x86_64               randconfig-a004-20210819
-x86_64               randconfig-a006-20210819
-x86_64               randconfig-a003-20210819
-x86_64               randconfig-a002-20210819
-x86_64               randconfig-a005-20210819
-x86_64               randconfig-a001-20210819
-x86_64               randconfig-a013-20210818
-x86_64               randconfig-a011-20210818
-x86_64               randconfig-a012-20210818
-x86_64               randconfig-a016-20210818
-x86_64               randconfig-a014-20210818
-x86_64               randconfig-a015-20210818
-i386                 randconfig-a015-20210818
-i386                 randconfig-a011-20210818
-i386                 randconfig-a013-20210818
-i386                 randconfig-a014-20210818
-i386                 randconfig-a016-20210818
-i386                 randconfig-a012-20210818
-i386                 randconfig-a011-20210816
-i386                 randconfig-a015-20210816
-i386                 randconfig-a013-20210816
-i386                 randconfig-a014-20210816
-i386                 randconfig-a016-20210816
-
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ .../net/wireless/intel/ipw2x00/libipw_rx.c    | 56 ++++++-------------
+ 1 file changed, 17 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index 5a2a723e480b..7a684b76f39b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -927,7 +927,8 @@ static u8 qos_oui[QOS_OUI_LEN] = { 0x00, 0x50, 0xF2 };
+ static int libipw_verify_qos_info(struct libipw_qos_information_element
+ 				     *info_element, int sub_type)
+ {
+-
++	if (info_element->elementID != QOS_ELEMENT_ID)
++		return -1;
+ 	if (info_element->qui_subtype != sub_type)
+ 		return -1;
+ 	if (memcmp(info_element->qui, qos_oui, QOS_OUI_LEN))
+@@ -943,57 +944,34 @@ static int libipw_verify_qos_info(struct libipw_qos_information_element
+ /*
+  * Parse a QoS parameter element
+  */
+-static int libipw_read_qos_param_element(struct libipw_qos_parameter_info
+-					    *element_param, struct libipw_info_element
+-					    *info_element)
++static int libipw_read_qos_param_element(
++			struct libipw_qos_parameter_info *element_param,
++			struct libipw_info_element *info_element)
+ {
+-	int ret = 0;
+-	u16 size = sizeof(struct libipw_qos_parameter_info) - 2;
++	size_t size = sizeof(*element_param);
+ 
+-	if ((info_element == NULL) || (element_param == NULL))
++	if (!element_param || !info_element || info_element->len != size - 2)
+ 		return -1;
+ 
+-	if (info_element->id == QOS_ELEMENT_ID && info_element->len == size) {
+-		memcpy(element_param->info_element.qui, info_element->data,
+-		       info_element->len);
+-		element_param->info_element.elementID = info_element->id;
+-		element_param->info_element.length = info_element->len;
+-	} else
+-		ret = -1;
+-	if (ret == 0)
+-		ret = libipw_verify_qos_info(&element_param->info_element,
+-						QOS_OUI_PARAM_SUB_TYPE);
+-	return ret;
++	memcpy(element_param, info_element, size);
++	return libipw_verify_qos_info(&element_param->info_element,
++				      QOS_OUI_PARAM_SUB_TYPE);
+ }
+ 
+ /*
+  * Parse a QoS information element
+  */
+-static int libipw_read_qos_info_element(struct
+-					   libipw_qos_information_element
+-					   *element_info, struct libipw_info_element
+-					   *info_element)
++static int libipw_read_qos_info_element(
++			struct libipw_qos_information_element *element_info,
++			struct libipw_info_element *info_element)
+ {
+-	int ret = 0;
+-	u16 size = sizeof(struct libipw_qos_information_element) - 2;
++	size_t size = sizeof(struct libipw_qos_information_element) - 2;
+ 
+-	if (element_info == NULL)
++	if (!element_info || !info_element || info_element->len != size - 2)
+ 		return -1;
+-	if (info_element == NULL)
+-		return -1;
+-
+-	if ((info_element->id == QOS_ELEMENT_ID) && (info_element->len == size)) {
+-		memcpy(element_info->qui, info_element->data,
+-		       info_element->len);
+-		element_info->elementID = info_element->id;
+-		element_info->length = info_element->len;
+-	} else
+-		ret = -1;
+ 
+-	if (ret == 0)
+-		ret = libipw_verify_qos_info(element_info,
+-						QOS_OUI_INFO_SUB_TYPE);
+-	return ret;
++	memcpy(element_info, info_element, size);
++	return libipw_verify_qos_info(element_info, QOS_OUI_INFO_SUB_TYPE);
+ }
+ 
+ /*
+-- 
+2.30.2
+
