@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 398EBC4320A
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 06:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 379FAC432BE
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 06:21:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1678C60F5E
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 06:21:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1981B6108B
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 06:21:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231293AbhHSGVy (ORCPT
+        id S230303AbhHSGV4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 02:21:54 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:8881 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230303AbhHSGVx (ORCPT
+        Thu, 19 Aug 2021 02:21:56 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:17045 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230463AbhHSGVx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 19 Aug 2021 02:21:53 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GqvgW4yygz8sjs;
-        Thu, 19 Aug 2021 14:17:11 +0800 (CST)
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Gqvgt53mXzbfNV;
+        Thu, 19 Aug 2021 14:17:30 +0800 (CST)
 Received: from dggpeml500024.china.huawei.com (7.185.36.10) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.2176.2; Thu, 19 Aug 2021 14:21:15 +0800
 Received: from localhost.localdomain (10.67.165.24) by
@@ -49,9 +49,9 @@ CC:     <netdev@vger.kernel.org>, <shenjian15@huawei.com>,
         <ecree.xilinx@gmail.com>, <grygorii.strashko@ti.com>,
         <merez@codeaurora.org>, <kvalo@codeaurora.org>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 net-next 1/4] ethtool: add two coalesce attributes for CQE mode
-Date:   Thu, 19 Aug 2021 14:17:21 +0800
-Message-ID: <1629353844-49626-2-git-send-email-moyufeng@huawei.com>
+Subject: [PATCH V2 net-next 3/4] net: hns3: add support for EQE/CQE mode configuration
+Date:   Thu, 19 Aug 2021 14:17:23 +0800
+Message-ID: <1629353844-49626-4-git-send-email-moyufeng@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1629353844-49626-1-git-send-email-moyufeng@huawei.com>
 References: <1629353844-49626-1-git-send-email-moyufeng@huawei.com>
@@ -65,197 +65,166 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, there are many drivers who support CQE mode configuration,
-some configure it as a fixed when initialized, some provide an
-interface to change it by ethtool private flags. In order to make it
-more generic, add two new 'ETHTOOL_A_COALESCE_USE_CQE_TX' and
-'ETHTOOL_A_COALESCE_USE_CQE_RX' coalesce attributes, then these
-parameters can be accessed by ethtool netlink coalesce uAPI.
+For device whose version is above V3(include V3), the GL can
+select EQE or CQE mode, so adds support for it.
 
-Also add an new structure kernel_ethtool_coalesce, then the
-new parameter can be added into this struct.
+In CQE mode, the coalesced timer will restart when the first new
+completion occurs, while in EQE mode, the timer will not restart.
 
 Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
 Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
- Documentation/networking/ethtool-netlink.rst | 15 +++++++++++++++
- include/linux/ethtool.h                      | 11 ++++++++++-
- include/uapi/linux/ethtool_netlink.h         |  2 ++
- net/ethtool/coalesce.c                       | 19 +++++++++++++++++--
- net/ethtool/netlink.h                        |  2 +-
- 5 files changed, 45 insertions(+), 4 deletions(-)
+ drivers/net/ethernet/hisilicon/hns3/hnae3.h        |  1 +
+ drivers/net/ethernet/hisilicon/hns3/hns3_enet.c    | 49 +++++++++++++++++++++-
+ drivers/net/ethernet/hisilicon/hns3/hns3_enet.h    |  8 ++++
+ .../ethernet/hisilicon/hns3/hns3pf/hclge_main.c    |  1 +
+ .../ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c  |  1 +
+ 5 files changed, 58 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/networking/ethtool-netlink.rst b/Documentation/networking/ethtool-netlink.rst
-index c690bb3..d9b55b7 100644
---- a/Documentation/networking/ethtool-netlink.rst
-+++ b/Documentation/networking/ethtool-netlink.rst
-@@ -947,12 +947,25 @@ Kernel response contents:
-   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
-   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
-   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
-+  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
-+  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
-   ===========================================  ======  =======================
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hnae3.h b/drivers/net/ethernet/hisilicon/hns3/hnae3.h
+index 848bed8..1d51fae 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hnae3.h
++++ b/drivers/net/ethernet/hisilicon/hns3/hnae3.h
+@@ -774,6 +774,7 @@ struct hnae3_knic_private_info {
  
- Attributes are only included in reply if their value is not zero or the
- corresponding bit in ``ethtool_ops::supported_coalesce_params`` is set (i.e.
- they are declared as supported by driver).
- 
-+Timer reset mode (``ETHTOOL_A_COALESCE_USE_CQE_TX`` and
-+``ETHTOOL_A_COALESCE_USE_CQE_RX``) controls the interaction between packet
-+arrival and the various time based delay parameters. By default timers are
-+expected to limit the max delay between any packet arrival/departure and a
-+corresponding interrupt. In this mode timer should be started by packet
-+arrival (sometimes delivery of previous interrupt) and reset when interrupt
-+is delivered.
-+Setting the appropriate attribute to 1 will enable ``CQE`` mode, where
-+each packet event resets the timer. In this mode timer is used to force
-+the interrupt if queue goes idle, while busy queues depend on the packet
-+limit to trigger interrupts.
- 
- COALESCE_SET
- ============
-@@ -985,6 +998,8 @@ Request contents:
-   ``ETHTOOL_A_COALESCE_TX_USECS_HIGH``         u32     delay (us), high Tx
-   ``ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH``    u32     max packets, high Tx
-   ``ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL``  u32     rate sampling interval
-+  ``ETHTOOL_A_COALESCE_USE_CQE_TX``            bool    timer reset mode, Tx
-+  ``ETHTOOL_A_COALESCE_USE_CQE_RX``            bool    timer reset mode, Rx
-   ===========================================  ======  =======================
- 
- Request is rejected if it attributes declared as unsupported by driver (i.e.
-diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
-index 4711b96..a9d77a6 100644
---- a/include/linux/ethtool.h
-+++ b/include/linux/ethtool.h
-@@ -172,6 +172,11 @@ extern int
- __ethtool_get_link_ksettings(struct net_device *dev,
- 			     struct ethtool_link_ksettings *link_ksettings);
- 
-+struct kernel_ethtool_coalesce {
-+	u8 use_cqe_mode_tx;
-+	u8 use_cqe_mode_rx;
-+};
-+
- /**
-  * ethtool_intersect_link_masks - Given two link masks, AND them together
-  * @dst: first mask and where result is stored
-@@ -211,7 +216,9 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
- #define ETHTOOL_COALESCE_TX_USECS_HIGH		BIT(19)
- #define ETHTOOL_COALESCE_TX_MAX_FRAMES_HIGH	BIT(20)
- #define ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL	BIT(21)
--#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(21, 0)
-+#define ETHTOOL_COALESCE_USE_CQE_RX		BIT(22)
-+#define ETHTOOL_COALESCE_USE_CQE_TX		BIT(23)
-+#define ETHTOOL_COALESCE_ALL_PARAMS		GENMASK(23, 0)
- 
- #define ETHTOOL_COALESCE_USECS						\
- 	(ETHTOOL_COALESCE_RX_USECS | ETHTOOL_COALESCE_TX_USECS)
-@@ -237,6 +244,8 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
- 	 ETHTOOL_COALESCE_RX_USECS_LOW | ETHTOOL_COALESCE_RX_USECS_HIGH | \
- 	 ETHTOOL_COALESCE_PKT_RATE_LOW | ETHTOOL_COALESCE_PKT_RATE_HIGH | \
- 	 ETHTOOL_COALESCE_RATE_SAMPLE_INTERVAL)
-+#define ETHTOOL_COALESCE_USE_CQE					\
-+	(ETHTOOL_COALESCE_USE_CQE_RX | ETHTOOL_COALESCE_USE_CQE_TX)
- 
- #define ETHTOOL_STAT_NOT_SET	(~0ULL)
- 
-diff --git a/include/uapi/linux/ethtool_netlink.h b/include/uapi/linux/ethtool_netlink.h
-index b3b9371..5545f1c 100644
---- a/include/uapi/linux/ethtool_netlink.h
-+++ b/include/uapi/linux/ethtool_netlink.h
-@@ -377,6 +377,8 @@ enum {
- 	ETHTOOL_A_COALESCE_TX_USECS_HIGH,		/* u32 */
- 	ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH,		/* u32 */
- 	ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL,	/* u32 */
-+	ETHTOOL_A_COALESCE_USE_CQE_MODE_TX,		/* u8 */
-+	ETHTOOL_A_COALESCE_USE_CQE_MODE_RX,		/* u8 */
- 
- 	/* add new constants above here */
- 	__ETHTOOL_A_COALESCE_CNT,
-diff --git a/net/ethtool/coalesce.c b/net/ethtool/coalesce.c
-index 1d6bc13..e6bc536 100644
---- a/net/ethtool/coalesce.c
-+++ b/net/ethtool/coalesce.c
-@@ -10,6 +10,7 @@ struct coalesce_req_info {
- struct coalesce_reply_data {
- 	struct ethnl_reply_data		base;
- 	struct ethtool_coalesce		coalesce;
-+	struct kernel_ethtool_coalesce	kernel_coalesce;
- 	u32				supported_params;
+ 	u16 int_rl_setting;
+ 	enum pkt_hash_types rss_type;
++	void __iomem *io_base;
  };
  
-@@ -100,7 +101,9 @@ static int coalesce_reply_size(const struct ethnl_req_info *req_base,
- 	       nla_total_size(sizeof(u32)) +	/* _RX_MAX_FRAMES_HIGH */
- 	       nla_total_size(sizeof(u32)) +	/* _TX_USECS_HIGH */
- 	       nla_total_size(sizeof(u32)) +	/* _TX_MAX_FRAMES_HIGH */
--	       nla_total_size(sizeof(u32));	/* _RATE_SAMPLE_INTERVAL */
-+	       nla_total_size(sizeof(u32)) +	/* _RATE_SAMPLE_INTERVAL */
-+	       nla_total_size(sizeof(u8)) +	/* _USE_CQE_MODE_TX */
-+	       nla_total_size(sizeof(u8));	/* _USE_CQE_MODE_RX */
+ struct hnae3_roce_private_info {
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+index fcbeb1f..1bd83d7 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.c
+@@ -4473,9 +4473,7 @@ static void hns3_tx_dim_work(struct work_struct *work)
+ static void hns3_nic_init_dim(struct hns3_enet_tqp_vector *tqp_vector)
+ {
+ 	INIT_WORK(&tqp_vector->rx_group.dim.work, hns3_rx_dim_work);
+-	tqp_vector->rx_group.dim.mode = DIM_CQ_PERIOD_MODE_START_FROM_EQE;
+ 	INIT_WORK(&tqp_vector->tx_group.dim.work, hns3_tx_dim_work);
+-	tqp_vector->tx_group.dim.mode = DIM_CQ_PERIOD_MODE_START_FROM_EQE;
  }
  
- static bool coalesce_put_u32(struct sk_buff *skb, u16 attr_type, u32 val,
-@@ -124,6 +127,7 @@ static int coalesce_fill_reply(struct sk_buff *skb,
- 			       const struct ethnl_reply_data *reply_base)
+ static int hns3_nic_init_vector_data(struct hns3_nic_priv *priv)
+@@ -5023,6 +5021,48 @@ static void hns3_info_show(struct hns3_nic_priv *priv)
+ 	dev_info(priv->dev, "Max mtu size: %u\n", priv->netdev->max_mtu);
+ }
+ 
++static void hns3_set_cq_period_mode(struct hns3_nic_priv *priv,
++				    enum dim_cq_period_mode mode, bool is_tx)
++{
++	struct hnae3_ae_dev *ae_dev = pci_get_drvdata(priv->ae_handle->pdev);
++	struct hnae3_handle *handle = priv->ae_handle;
++	int i;
++
++	if (is_tx) {
++		priv->tx_cqe_mode = mode;
++
++		for (i = 0; i < priv->vector_num; i++)
++			priv->tqp_vector[i].tx_group.dim.mode = mode;
++	} else {
++		priv->rx_cqe_mode = mode;
++
++		for (i = 0; i < priv->vector_num; i++)
++			priv->tqp_vector[i].rx_group.dim.mode = mode;
++	}
++
++	/* only device version above V3(include V3), GL can switch CQ/EQ
++	 * period mode.
++	 */
++	if (ae_dev->dev_version >= HNAE3_DEVICE_VERSION_V3) {
++		u32 new_mode;
++		u64 reg;
++
++		new_mode = (mode == DIM_CQ_PERIOD_MODE_START_FROM_CQE) ?
++			HNS3_CQ_MODE_CQE : HNS3_CQ_MODE_EQE;
++		reg = is_tx ? HNS3_GL1_CQ_MODE_REG : HNS3_GL0_CQ_MODE_REG;
++
++		writel(new_mode, handle->kinfo.io_base + reg);
++	}
++}
++
++static void hns3_cq_period_mode_init(struct hns3_nic_priv *priv,
++				     enum dim_cq_period_mode tx_mode,
++				     enum dim_cq_period_mode rx_mode)
++{
++	hns3_set_cq_period_mode(priv, tx_mode, true);
++	hns3_set_cq_period_mode(priv, rx_mode, false);
++}
++
+ static int hns3_client_init(struct hnae3_handle *handle)
  {
- 	const struct coalesce_reply_data *data = COALESCE_REPDATA(reply_base);
-+	const struct kernel_ethtool_coalesce *kcoal = &data->kernel_coalesce;
- 	const struct ethtool_coalesce *coal = &data->coalesce;
- 	u32 supported = data->supported_params;
+ 	struct pci_dev *pdev = handle->pdev;
+@@ -5090,6 +5130,9 @@ static int hns3_client_init(struct hnae3_handle *handle)
+ 		goto out_init_ring;
+ 	}
  
-@@ -170,7 +174,11 @@ static int coalesce_fill_reply(struct sk_buff *skb,
- 	    coalesce_put_u32(skb, ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH,
- 			     coal->tx_max_coalesced_frames_high, supported) ||
- 	    coalesce_put_u32(skb, ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL,
--			     coal->rate_sample_interval, supported))
-+			     coal->rate_sample_interval, supported) ||
-+	    coalesce_put_bool(skb, ETHTOOL_A_COALESCE_USE_CQE_MODE_TX,
-+			      kcoal->use_cqe_mode_tx, supported) ||
-+	    coalesce_put_bool(skb, ETHTOOL_A_COALESCE_USE_CQE_MODE_RX,
-+			      kcoal->use_cqe_mode_rx, supported))
- 		return -EMSGSIZE;
++	hns3_cq_period_mode_init(priv, DIM_CQ_PERIOD_MODE_START_FROM_EQE,
++				 DIM_CQ_PERIOD_MODE_START_FROM_EQE);
++
+ 	ret = hns3_init_phy(netdev);
+ 	if (ret)
+ 		goto out_init_phy;
+@@ -5422,6 +5465,8 @@ static int hns3_reset_notify_init_enet(struct hnae3_handle *handle)
+ 	if (ret)
+ 		goto err_uninit_vector;
  
- 	return 0;
-@@ -215,10 +223,13 @@ const struct nla_policy ethnl_coalesce_set_policy[] = {
- 	[ETHTOOL_A_COALESCE_TX_USECS_HIGH]	= { .type = NLA_U32 },
- 	[ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH]	= { .type = NLA_U32 },
- 	[ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL] = { .type = NLA_U32 },
-+	[ETHTOOL_A_COALESCE_USE_CQE_MODE_TX]	= NLA_POLICY_MAX(NLA_U8, 1),
-+	[ETHTOOL_A_COALESCE_USE_CQE_MODE_RX]	= NLA_POLICY_MAX(NLA_U8, 1),
- };
++	hns3_cq_period_mode_init(priv, priv->tx_cqe_mode, priv->rx_cqe_mode);
++
+ 	/* the device can work without cpu rmap, only aRFS needs it */
+ 	ret = hns3_set_rx_cpu_rmap(netdev);
+ 	if (ret)
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+index b0e696b..ff45825 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_enet.h
+@@ -202,6 +202,12 @@ enum hns3_nic_state {
  
- int ethnl_set_coalesce(struct sk_buff *skb, struct genl_info *info)
- {
-+	struct kernel_ethtool_coalesce kernel_coalesce = {};
- 	struct ethtool_coalesce coalesce = {};
- 	struct ethnl_req_info req_info = {};
- 	struct nlattr **tb = info->attrs;
-@@ -303,6 +314,10 @@ int ethnl_set_coalesce(struct sk_buff *skb, struct genl_info *info)
- 			 tb[ETHTOOL_A_COALESCE_TX_MAX_FRAMES_HIGH], &mod);
- 	ethnl_update_u32(&coalesce.rate_sample_interval,
- 			 tb[ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL], &mod);
-+	ethnl_update_u8(&kernel_coalesce.use_cqe_mode_tx,
-+			tb[ETHTOOL_A_COALESCE_USE_CQE_MODE_TX], &mod);
-+	ethnl_update_u8(&kernel_coalesce.use_cqe_mode_rx,
-+			tb[ETHTOOL_A_COALESCE_USE_CQE_MODE_RX], &mod);
- 	ret = 0;
- 	if (!mod)
- 		goto out_ops;
-diff --git a/net/ethtool/netlink.h b/net/ethtool/netlink.h
-index 077aac3..e8987e2 100644
---- a/net/ethtool/netlink.h
-+++ b/net/ethtool/netlink.h
-@@ -359,7 +359,7 @@ extern const struct nla_policy ethnl_rings_set_policy[ETHTOOL_A_RINGS_TX + 1];
- extern const struct nla_policy ethnl_channels_get_policy[ETHTOOL_A_CHANNELS_HEADER + 1];
- extern const struct nla_policy ethnl_channels_set_policy[ETHTOOL_A_CHANNELS_COMBINED_COUNT + 1];
- extern const struct nla_policy ethnl_coalesce_get_policy[ETHTOOL_A_COALESCE_HEADER + 1];
--extern const struct nla_policy ethnl_coalesce_set_policy[ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL + 1];
-+extern const struct nla_policy ethnl_coalesce_set_policy[ETHTOOL_A_COALESCE_MAX + 1];
- extern const struct nla_policy ethnl_pause_get_policy[ETHTOOL_A_PAUSE_HEADER + 1];
- extern const struct nla_policy ethnl_pause_set_policy[ETHTOOL_A_PAUSE_TX + 1];
- extern const struct nla_policy ethnl_eee_get_policy[ETHTOOL_A_EEE_HEADER + 1];
+ #define HNS3_RING_EN_B				0
+ 
++#define HNS3_GL0_CQ_MODE_REG			0x20d00
++#define HNS3_GL1_CQ_MODE_REG			0x20d04
++#define HNS3_GL2_CQ_MODE_REG			0x20d08
++#define HNS3_CQ_MODE_EQE			1U
++#define HNS3_CQ_MODE_CQE			0U
++
+ enum hns3_pkt_l2t_type {
+ 	HNS3_L2_TYPE_UNICAST,
+ 	HNS3_L2_TYPE_MULTICAST,
+@@ -572,6 +578,8 @@ struct hns3_nic_priv {
+ 
+ 	unsigned long state;
+ 
++	enum dim_cq_period_mode tx_cqe_mode;
++	enum dim_cq_period_mode rx_cqe_mode;
+ 	struct hns3_enet_coalesce tx_coal;
+ 	struct hns3_enet_coalesce rx_coal;
+ 	u32 tx_copybreak;
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
+index 8779a63..f688209 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c
+@@ -1814,6 +1814,7 @@ static int hclge_vport_setup(struct hclge_vport *vport, u16 num_tqps)
+ 	nic->pdev = hdev->pdev;
+ 	nic->ae_algo = &ae_algo;
+ 	nic->numa_node_mask = hdev->numa_node_mask;
++	nic->kinfo.io_base = hdev->hw.io_base;
+ 
+ 	ret = hclge_knic_setup(vport, num_tqps,
+ 			       hdev->num_tx_desc, hdev->num_rx_desc);
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c b/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
+index 3a19f08..ff65173 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
+@@ -539,6 +539,7 @@ static int hclgevf_set_handle_info(struct hclgevf_dev *hdev)
+ 	nic->pdev = hdev->pdev;
+ 	nic->numa_node_mask = hdev->numa_node_mask;
+ 	nic->flags |= HNAE3_SUPPORT_VF;
++	nic->kinfo.io_base = hdev->hw.io_base;
+ 
+ 	ret = hclgevf_knic_setup(hdev);
+ 	if (ret)
 -- 
 2.8.1
 
