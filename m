@@ -7,65 +7,71 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74DA1C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707F9C432BE
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EA3A60C41
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A5E360C41
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240614AbhHSPlV (ORCPT
+        id S240533AbhHSPlW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 11:41:21 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56912 "EHLO
+        Thu, 19 Aug 2021 11:41:22 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56920 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S240533AbhHSPlU (ORCPT
+        with ESMTP id S240597AbhHSPlV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Aug 2021 11:41:20 -0400
+        Thu, 19 Aug 2021 11:41:21 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mGk9p-002Hje-K7; Thu, 19 Aug 2021 18:40:43 +0300
+        id 1mGk9q-002Hje-In; Thu, 19 Aug 2021 18:40:44 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 19 Aug 2021 18:40:29 +0300
-Message-Id: <iwlwifi.20210819183728.0a292b05fcf4.I7e89dfa6495143585021cb628ebb17d52e4588e5@changeid>
+Date:   Thu, 19 Aug 2021 18:40:30 +0300
+Message-Id: <iwlwifi.20210819183728.72ca1232b27c.I6ec766691b89670e1683f9fc0fbd12648309a574@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210819154035.72584-1-luca@coelho.fi>
 References: <20210819154035.72584-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/11] iwlwifi: fix __percpu annotation
+Subject: [PATCH 06/11] iwlwifi: api: remove datamember from struct
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Sparse warns about some type mismatches, which really is just
-because of the strangely placed __percpu annotation. Put it
-into the correct place.
+We don't use this, but we embed this struct elsewhere and
+having structs with flexible arrays embedded isn't quite
+right, with sparse (for example) complaining. Remove the
+data[] member in this case.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 2cbc9ecd688b..8f0ff540f439 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -887,7 +887,7 @@ struct iwl_trans_txqs {
- 	bool bc_table_dword;
- 	u8 page_offs;
- 	u8 dev_cmd_offs;
--	struct __percpu iwl_tso_hdr_page * tso_hdr_page;
-+	struct iwl_tso_hdr_page __percpu *tso_hdr_page;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index 15a6b3eb999a..9d34c96c1692 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -33,12 +33,11 @@ struct iwl_fw_ini_hcmd {
+  *
+  * @version: TLV version
+  * @domain: domain of the TLV. One of &enum iwl_fw_ini_dbg_domain
+- * @data: TLV data
+  */
+ struct iwl_fw_ini_header {
+ 	__le32 version;
+ 	__le32 domain;
+-	u8 data[];
++	/* followed by the data */
+ } __packed; /* FW_TLV_DEBUG_HEADER_S_VER_1 */
  
- 	struct {
- 		u8 fifo;
+ /**
 -- 
 2.33.0
 
