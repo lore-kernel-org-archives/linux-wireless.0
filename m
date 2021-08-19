@@ -7,79 +7,85 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2347C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:50:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C63C432BE
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:50:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A57E2610A0
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31595610A0
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 20:50:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235631AbhHSUuq (ORCPT
+        id S235605AbhHSUus (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 16:50:46 -0400
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.49]:52998 "EHLO
+        Thu, 19 Aug 2021 16:50:48 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:37524 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235560AbhHSUup (ORCPT
+        by vger.kernel.org with ESMTP id S235669AbhHSUur (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Aug 2021 16:50:45 -0400
+        Thu, 19 Aug 2021 16:50:47 -0400
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.129])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id E3DEF1C0073
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 20:50:07 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.167])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id C1AF9A0073
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 20:50:09 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C3804500083
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 20:50:07 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 95E02240069
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2021 20:50:09 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 30B2213C2B8;
-        Thu, 19 Aug 2021 13:49:56 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 30B2213C2B8
+        by mail3.candelatech.com (Postfix) with ESMTP id 7CCC613C2B3;
+        Thu, 19 Aug 2021 13:49:55 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7CCC613C2B3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1629406196;
-        bh=jaPe5aCo0puDjlL/Yjg9OUAOkqrjKfpVDF9GVEcjijs=;
+        s=default; t=1629406195;
+        bh=KppOMUbNWFVwiVZmMA7VJzVyk5Br8QdOQVIDyRBVy/Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c89LeZ6zBc/c3MNaoMRFLMq9gHBzbTEyoO6G2ada7Jp8yzuJeY/3wTMj1Ri+1L4jw
-         ENf4NfVsbqd/ebOIgKqBp/apEq2/ptG10ahg8tcZNnsTzHOWhs2cs+3cRoawCagEr/
-         tDX+CS0XQ8+I/aGXySASzuIvffThsROzH+xEuS0U=
+        b=rB/GK6pqniUPyXamdJVVqyPqbWUWlsV5hyMUh4yuhh8VvPRpfxMb/VvQd0Aef6a4/
+         eUKdP7Jfvnu8FfDosF16T5yY4lJK0/eWu0ofVgJLAwryDxDr2SaZ1aWZ2KS7r1v2TK
+         6h/tyjDIwFqh4eQyJ0Gw0ChvQrRvQd4pcPK4/7ek=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v8 6/9] mt76: mt7915:  add note about TXSFM 0x2
-Date:   Thu, 19 Aug 2021 13:49:47 -0700
-Message-Id: <20210819204950.12150-6-greearb@candelatech.com>
+Subject: [PATCH v8 2/9] mt76: mt7915:  fix potential NPE in TXS processing
+Date:   Thu, 19 Aug 2021 13:49:43 -0700
+Message-Id: <20210819204950.12150-2-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210819204950.12150-1-greearb@candelatech.com>
 References: <20210819204950.12150-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1629406208-ZlXnlBwbafOy
+X-MDID: 1629406210-nzjLHkHJRsHE
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This format is not supported by any current hardware,
-add note to mention this.
+If skb is null, then don't try to dereference it.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-index ccce994dc07a..65dba1061376 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-@@ -347,6 +347,10 @@ struct mt7915_tx_free {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index c8432054a63e..05c80a8dd82a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1320,7 +1320,7 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
  
- #define MT_TXS4_TIMESTAMP		GENMASK(31, 0)
+ 	if (!skb)
+-		goto out;
++		goto out_no_skb;
  
-+/* The F0 variables are for TXSFM 0x0 and 0x1.  The F1 variables
-+ * are for TXSFM 0x2 aka PPDU format.  TXSFM 0x2 not supported
-+ * at this time.
-+ */
- #define MT_TXS5_F0_FINAL_MPDU		BIT(31)
- #define MT_TXS5_F0_QOS			BIT(30)
- #define MT_TXS5_F0_TX_COUNT		GENMASK(29, 25)
+ 	txs = le32_to_cpu(txs_data[0]);
+ 
+@@ -1423,6 +1423,8 @@ mt7915_mac_add_txs_skb(struct mt7915_dev *dev, struct mt76_wcid *wcid, int pid,
+ 
+ out:
+ 	mt76_tx_status_skb_done(mdev, skb, &list, wcid);
++
++out_no_skb:
+ 	mt76_tx_status_unlock(mdev, &list);
+ 
+ 	return !!skb;
 -- 
 2.20.1
 
