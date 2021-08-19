@@ -7,44 +7,43 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FBB6C4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:32:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B907DC4338F
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:33:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 195AC6056B
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:32:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D6806056B
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:33:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238460AbhHSPdF (ORCPT
+        id S239766AbhHSPdh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 11:33:05 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:62526 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239996AbhHSPdE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Aug 2021 11:33:04 -0400
+        Thu, 19 Aug 2021 11:33:37 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:40675 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238643AbhHSPdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Aug 2021 11:33:36 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629387148; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1629387180; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=m8oYcwwW35O1xYM7OTaGmj1IiMfk8wk5c9x55EP+xD0=; b=pjkzKsi7GcHQLQMmVTk0j2UtRKd4X+5uvcDHSz4rr4Iex1qB+ry6Sx5KSn7Jil2hvNrTuZGh
- nkq/0dOSxr7hSkL/9ASdMDKHgAaT2m+WbzBXCuPeIw6a3kZoXnCv03673Q2bGOWipEf14mPT
- S5rUDVSjKTJ80zQ1TsD0q+/xaXk=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ bh=4lf7fGSyNrXiNKNOPF0FvX37Dv17d/cz4Ka+TJDgHhI=; b=A8FH5GVdTzBLGmhKsG3M99w+FuV4zT5N5aOnpLbc049D12x9OpFxy1UiHSm8UALReVNTdu9K
+ vDPCu9GfrXMKl867j0iD0kgIxwJ+fAo/BnsNLqxhrV04lwUyHfMo54tEK53ZiEx0iNMMewFo
+ +FDRIqiGsbjOwy80c9KrMZZpN5o=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 611e7978454b7a558f6f498e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 19 Aug 2021 15:32:08
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 611e799b3f14248172da3685 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 19 Aug 2021 15:32:43
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C2535C43618; Thu, 19 Aug 2021 15:32:08 +0000 (UTC)
+        id C868BC43460; Thu, 19 Aug 2021 15:32:42 +0000 (UTC)
 Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 51B0FC4338F;
-        Thu, 19 Aug 2021 15:32:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 51B0FC4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CFB8EC4338F;
+        Thu, 19 Aug 2021 15:32:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org CFB8EC4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -55,12 +54,13 @@ Cc:     Felix Fietkau <nbd@nbd.name>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH 1/4] mt76: mt7915: checkpatch cleanup
+Subject: Re: [PATCH 2/4] mt76: mt7615: checkpatch cleanup
 References: <77372f644903053e09d671325c0cd44cf75e14ac.1628301615.git.ryder.lee@mediatek.com>
-Date:   Thu, 19 Aug 2021 18:32:01 +0300
-In-Reply-To: <77372f644903053e09d671325c0cd44cf75e14ac.1628301615.git.ryder.lee@mediatek.com>
-        (Ryder Lee's message of "Sat, 7 Aug 2021 11:14:21 +0800")
-Message-ID: <871r6pbgcu.fsf@tynnyri.adurom.net>
+        <1991c856459c2014386d1a16f6657e9ba82b6d1f.1628301615.git.ryder.lee@mediatek.com>
+Date:   Thu, 19 Aug 2021 18:32:38 +0300
+In-Reply-To: <1991c856459c2014386d1a16f6657e9ba82b6d1f.1628301615.git.ryder.lee@mediatek.com>
+        (Ryder Lee's message of "Sat, 7 Aug 2021 11:14:22 +0800")
+Message-ID: <87wnoha1rd.fsf@tynnyri.adurom.net>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -70,12 +70,11 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ryder Lee <ryder.lee@mediatek.com> writes:
 
-> Fix reasonable checkpatch warnings and clean up codes.
+> Fix reasonable checkpatch warnings.
 >
 > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 
-One logical change per patch, please. This is difficult to review as you
-are making several changes.
+One logical change per patch, please.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
