@@ -2,154 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47FACC4338F
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74793C4320A
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:43:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3138760C41
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:40:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C89B60EE4
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Aug 2021 15:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240524AbhHSPld (ORCPT
+        id S240066AbhHSPoS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Aug 2021 11:41:33 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56948 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S240640AbhHSPld (ORCPT
+        Thu, 19 Aug 2021 11:44:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238587AbhHSPoS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Aug 2021 11:41:33 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <luca@coelho.fi>)
-        id 1mGk9t-002Hje-UO; Thu, 19 Aug 2021 18:40:47 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 19 Aug 2021 18:40:34 +0300
-Message-Id: <iwlwifi.20210819183728.8c147659b331.If5924375e9bfd46214ab8ab81cb9d0f5c82fbcbc@changeid>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20210819154035.72584-1-luca@coelho.fi>
-References: <20210819154035.72584-1-luca@coelho.fi>
+        Thu, 19 Aug 2021 11:44:18 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B5B8C061575;
+        Thu, 19 Aug 2021 08:43:41 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id gt38so13720352ejc.13;
+        Thu, 19 Aug 2021 08:43:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:date:message-id:in-reply-to:references:user-agent
+         :subject:mime-version:content-transfer-encoding;
+        bh=8ijfvDsyns8e3FukmUhdkOQH6x/qKdqiPKSWYcH8vCQ=;
+        b=uRArM1418rKa3Ik+eFB00LsUjzkgm36oxmEK4qhRf18YDCMT0Yj6uO3UdWZMesM+k5
+         AgOYoyXhbXJTRAmslaoytrJCNtewyodI71iH0yElf4j1MW+XwUA9JmeVzuLbAEy7Xy+2
+         Gs348JTcM7BsyEpsYPXGnaddijcdXuj3faxT1tn7xuJfTjb+jrlUrk83fLLHrDeg//g9
+         1awXgQnvbxRweafyGXmBs74HlGyONGnTFaWxw1VrHYofTm8FlZnTLWxctuDjFkT0RRDZ
+         Y6jFT0rbYNKG85a+fsoAAwduXw6sezPAWF87SA2Htv/PrsJlWx8L1R8T27PHKp8XQIuM
+         E76w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:date:message-id:in-reply-to
+         :references:user-agent:subject:mime-version
+         :content-transfer-encoding;
+        bh=8ijfvDsyns8e3FukmUhdkOQH6x/qKdqiPKSWYcH8vCQ=;
+        b=M73wMzZYV93QxSQdYXjdJV/ZpMIHzFSEEbLOyV8ETJXADAB/Ms4R34HfKB87Yv/qLn
+         ZjI1qBEb+BwsiITVOkVvwdEqqsblGohrdOHG+uKm1QZdam5euVjyngTHg+/hKC+gkKTe
+         /oF2dOXMrSGH9T4HYSs8iL8u/8Tb2jfVPUuLxF4qPExj1uOM9G1CWPriUJDnpbiXWCwX
+         X40ZrEqKuf06z30hc7iYOkqZrcss/gNN2AVdlmSR8+kgtkx1jssPAEPa/GVmw6FhONwD
+         XPmQDNCBNjhVeP32cmOo9I1GHiKArBa8dJv1vEWAUcyE0zvooNdmYP9+UTOmPhqEQiJV
+         uR1A==
+X-Gm-Message-State: AOAM531O45dz3qXtXL30co5mrQX11lWQZ3msd5FV1JuePKA2po1QRJG9
+        0VFesw8iumBrZYznm2uNdIw=
+X-Google-Smtp-Source: ABdhPJzYk8WPSyVPDcVziWsVFYS9DWtlTlJXLGKJAGueSaNlhcVXrqy9s/u14lPIBO4YpR6WKQHbJw==
+X-Received: by 2002:a17:906:f910:: with SMTP id lc16mr16206536ejb.478.1629387820145;
+        Thu, 19 Aug 2021 08:43:40 -0700 (PDT)
+Received: from [10.230.42.144] ([192.19.152.250])
+        by smtp.gmail.com with ESMTPSA id v13sm1428864ejh.62.2021.08.19.08.43.39
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 19 Aug 2021 08:43:39 -0700 (PDT)
+From:   Arend van Spriel <aspriel@gmail.com>
+To:     Marcel Holtmann <marcel@holtmann.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+CC:     Angus Ainslie <angus@akkea.ca>, <kernel@puri.sm>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        <linux-bluetooth@vger.kernel.org>
+Date:   Thu, 19 Aug 2021 17:43:38 +0200
+Message-ID: <17b5f150410.279b.9696ff82abe5fb6502268bdc3b0467d4@gmail.com>
+In-Reply-To: <5766C95B-D5A4-463C-A87F-41B35BF82046@holtmann.org>
+References: <20210812165218.2508258-1-angus@akkea.ca>
+ <20210812165218.2508258-3-angus@akkea.ca>
+ <1cd0e008-9239-f430-7294-865d34795a2f@broadcom.com>
+ <5766C95B-D5A4-463C-A87F-41B35BF82046@holtmann.org>
+User-Agent: AquaMail/1.30.1-1828 (build: 103001000)
+Subject: Re: [PATCH v3 2/2] btbcm: add patch ram for bluetooth
 MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="us-ascii"
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/11] iwlwifi: mvm: don't schedule the roc_done_wk if it is already running
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+On August 19, 2021 5:26:42 PM Marcel Holtmann <marcel@holtmann.org> wrote:
 
-When P2P roc is removed, the IWL_MVM_STATUS_NEED_FLUSH_P2P bit is set
-to indicate to iwl_mvm_roc_done_wk() that the removed roc is a P2P
-one, so it will flush the broadcast station and not the aux station.
+> Hi Arend,
+>
+>>> Bluetooth on the BCM43752 needs a patchram file to function correctly.
+>>> Signed-off-by: Angus Ainslie <angus@akkea.ca>
+>>> ---
+>>> drivers/bluetooth/btbcm.c | 1 +
+>>> 1 file changed, 1 insertion(+)
+>>> diff --git a/drivers/bluetooth/btbcm.c b/drivers/bluetooth/btbcm.c
+>>> index e5d706ed55ea..e4182acee488 100644
+>>> --- a/drivers/bluetooth/btbcm.c
+>>> +++ b/drivers/bluetooth/btbcm.c
+>>> @@ -387,6 +387,7 @@ struct bcm_subver_table {
+>>> };
+>>> static const struct bcm_subver_table bcm_uart_subver_table[] = {
+>>> + { 0x1111, "BCM4362A2" }, /* 000.017.017 */
+>>
+>> Noticed Marcel applied this one already, but as I asked in earlier patch I 
+>> would like to know why the commit message says 43752 but this entry says 
+>> 4362? Still confused.
+>
+> seems I missed that part. Can you look internally what this hardware is and 
+> we fix it?
 
-However, since setting this bit and scheduling the worker is done
-in roc ended flow as well as in case the roc is removed, there is
-a race where the worker has already started running (but did not
-test this bit yet) and then it is scheduled again. In this case,
-the first run of the worker will clear this bit, and thus the second
-run will find it already cleared and will try to flush and remove
-the aux station by mistake.
+I will check although not internally as this is probably a Cypress chipset. 
+Anyway, I will follow up on this.
 
-Fix it by scheduling the worker only if this bit is not yet set. In
-case this bit is already set, the worker is either running or
-scheduled, so there is no need to re-schedule it.
+Regards,
+Arend
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/mvm/time-event.c   | 31 ++++++++++++-------
- 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 788fd2b84ed2..25af88a3edce 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -256,6 +256,18 @@ static void iwl_mvm_te_check_trigger(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static void iwl_mvm_p2p_roc_finished(struct iwl_mvm *mvm)
-+{
-+	/*
-+	 * If the IWL_MVM_STATUS_NEED_FLUSH_P2P is already set, then the
-+	 * roc_done_wk is already scheduled or running, so don't schedule it
-+	 * again to avoid a race where the roc_done_wk clears this bit after
-+	 * it is set here, affecting the next run of the roc_done_wk.
-+	 */
-+	if (!test_and_set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status))
-+		iwl_mvm_roc_finished(mvm);
-+}
-+
- /*
-  * Handles a FW notification for an event that is known to the driver.
-  *
-@@ -307,8 +319,7 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
- 		switch (te_data->vif->type) {
- 		case NL80211_IFTYPE_P2P_DEVICE:
- 			ieee80211_remain_on_channel_expired(mvm->hw);
--			set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
--			iwl_mvm_roc_finished(mvm);
-+			iwl_mvm_p2p_roc_finished(mvm);
- 			break;
- 		case NL80211_IFTYPE_STATION:
- 			/*
-@@ -684,8 +695,7 @@ static bool __iwl_mvm_remove_time_event(struct iwl_mvm *mvm,
- 			/* Session protection is still ongoing. Cancel it */
- 			iwl_mvm_cancel_session_protection(mvm, mvmvif, id);
- 			if (iftype == NL80211_IFTYPE_P2P_DEVICE) {
--				set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
--				iwl_mvm_roc_finished(mvm);
-+				iwl_mvm_p2p_roc_finished(mvm);
- 			}
- 		}
- 		return false;
-@@ -852,8 +862,7 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
- 		/* End TE, notify mac80211 */
- 		mvmvif->time_event_data.id = SESSION_PROTECT_CONF_MAX_ID;
- 		ieee80211_remain_on_channel_expired(mvm->hw);
--		set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
--		iwl_mvm_roc_finished(mvm);
-+		iwl_mvm_p2p_roc_finished(mvm);
- 	} else if (le32_to_cpu(notif->start)) {
- 		if (WARN_ON(mvmvif->time_event_data.id !=
- 				le32_to_cpu(notif->conf_id)))
-@@ -1014,14 +1023,13 @@ void iwl_mvm_stop_roc(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
- 			iwl_mvm_cancel_session_protection(mvm, mvmvif,
- 							  mvmvif->time_event_data.id);
--			set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
-+			iwl_mvm_p2p_roc_finished(mvm);
- 		} else {
- 			iwl_mvm_remove_aux_roc_te(mvm, mvmvif,
- 						  &mvmvif->time_event_data);
-+			iwl_mvm_roc_finished(mvm);
- 		}
- 
--		iwl_mvm_roc_finished(mvm);
--
- 		return;
- 	}
- 
-@@ -1035,12 +1043,11 @@ void iwl_mvm_stop_roc(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 
- 	if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
- 		iwl_mvm_remove_time_event(mvm, mvmvif, te_data);
--		set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
-+		iwl_mvm_p2p_roc_finished(mvm);
- 	} else {
- 		iwl_mvm_remove_aux_roc_te(mvm, mvmvif, te_data);
-+		iwl_mvm_roc_finished(mvm);
- 	}
--
--	iwl_mvm_roc_finished(mvm);
- }
- 
- void iwl_mvm_remove_csa_period(struct iwl_mvm *mvm,
--- 
-2.33.0
 
