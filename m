@@ -2,68 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF375C43216
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF8AC43216
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 13:01:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4CB9610C8
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:34:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05E6B60F91
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 13:01:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240487AbhHTMem (ORCPT
+        id S240600AbhHTNC1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Aug 2021 08:34:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36180 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239917AbhHTMek (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Aug 2021 08:34:40 -0400
-Received: from mail-qv1-xf2b.google.com (mail-qv1-xf2b.google.com [IPv6:2607:f8b0:4864:20::f2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96D46C0613CF
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2021 05:34:02 -0700 (PDT)
-Received: by mail-qv1-xf2b.google.com with SMTP id bl13so5410052qvb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2021 05:34:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=FxHzHqYkZIYKuBII5yJmxkfX68sHHNA5VrSWbqQXyKE=;
-        b=LKWHjCeNEUlwo8stybqJCnXzWMQM7x0bGZxSQUSvDEzvNf1rR/5NIRBxcsq8j+/O1Q
-         n0nUB2SGq4I944/SzVA06PgpS5TZJLAeuT0eHnupeq9B+6Ke4eApnMJzh0PSSn3USY22
-         DCevWLZt6mnoLjPVwnT/B6qIy3u8gu6R9V0eYF2w1BUAXn85ddRUOkrnCFaTavga7CyB
-         OHwKCMDxBA7mQeV8i9u/U1itYCfjgHgpthcASaDTqWMWWREFiEjUsvbxUeQR41p24/42
-         cXB4sxzSr+JXUbmuhE4oft2wqIs67/Ai41z+4L6PkD8HA2B/GtZI5tt/EczYHI2wefxZ
-         10cQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=FxHzHqYkZIYKuBII5yJmxkfX68sHHNA5VrSWbqQXyKE=;
-        b=qnbdhIdd9kr79I0alHu29aiLCiSofH+Hij0tvO/giH3XH9DGIMGO7RSHsH/Bm3tOp+
-         dKOmXSzv1LylC/1pHVv5Liy4iS9ec8CDPicFmD/JsyyP0TswNdibejmzrL3ggyjopJi1
-         1OpJhtXoTk9igTogNdipR1WTH6WaReeZDurPDLmmS9rvLLTwlLfJBSA9V5ipHFzOJSH4
-         /9bOiH1+F/VtJbbeKsU7BTYSMuZdHif1cuKO/U+oje+o3EQ+JyiFFQZGgsOe2JebSxMC
-         DO22f13ulDGd3e1GXzDYvJgIDmG48bzZmm6A/Vq2vj7CYvm5aQ9moe0RryqziiH5Xint
-         4JIA==
-X-Gm-Message-State: AOAM530ytvHwfWHlCHJ8bwZN8PscknLdIOn9I7pfKwoIz/P07LjgXABx
-        iLPLOUVs5sL36ZE9l1C3J7ISLw==
-X-Google-Smtp-Source: ABdhPJwGEOvhoU1c/BkmKt9S+cy9PyrWCoEZ7eevTf7BK/BVeVCzTaDTUl3qnqghNI/H9rEss9GPTg==
-X-Received: by 2002:a0c:d6cd:: with SMTP id l13mr1047928qvi.24.1629462841673;
-        Fri, 20 Aug 2021 05:34:01 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
-        by smtp.gmail.com with ESMTPSA id 69sm3472288qke.55.2021.08.20.05.34.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Aug 2021 05:34:01 -0700 (PDT)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1mH3ii-001q0s-MH; Fri, 20 Aug 2021 09:34:00 -0300
-Date:   Fri, 20 Aug 2021 09:34:00 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
+        Fri, 20 Aug 2021 09:02:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42352 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238220AbhHTNCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Aug 2021 09:02:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 240D760F91;
+        Fri, 20 Aug 2021 13:01:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1629464507;
+        bh=hR9/dWKch9bWcZVekLGpeTN+QgH+wrPKEnQu7sKE6gE=;
+        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
+        b=iL5B0OnfS09Z6jgzNGIvcQFyqKtx0MIgVwjS6nXRztExcUS2/6XSytizisvwUSaBH
+         A0JSHcr9CVtXdkxzt+kWsv5yS6u1cwiRgw5/B3WFYCgaMIs4xP6ri3x92TnItlwdzH
+         6kLmpnpPgryp0SPPhYNqZh2RrqypcTQFBX9LbS6VjLhq+qXmPuGwzdRKiDm9GaBC0W
+         Moy8HGrP/pCRHSH5Q0Qki/1eY7EPHmaczPRKJqimZYN33s08zrijFsE31SDeyowHxm
+         E813jEqNaw7/Y6UHsN6VohsEPFQRSsv7+AeRbyiCVrSmxRUiseUY+uVSBXeikij8vf
+         +8lrCMkrSIN7A==
+Date:   Fri, 20 Aug 2021 15:01:43 +0200 (CEST)
+From:   Jiri Kosina <jikos@kernel.org>
 To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
-        Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org,
+cc:     linux-kernel@vger.kernel.org,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        linux-input@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -73,32 +47,42 @@ Cc:     linux-kernel@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
         clang-built-linux@googlegroups.com,
         Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2 56/63] RDMA/mlx5: Use struct_group() to zero struct
- mlx5_ib_mr
-Message-ID: <20210820123400.GW543798@ziepe.ca>
-References: <20210818060533.3569517-1-keescook@chromium.org>
- <20210818060533.3569517-57-keescook@chromium.org>
- <20210819122716.GP543798@ziepe.ca>
- <202108190916.7CC455DA@keescook>
- <20210819164757.GS543798@ziepe.ca>
- <202108191106.1956C05A@keescook>
+Subject: Re: [PATCH v2 22/63] HID: cp2112: Use struct_group() for memcpy()
+ region
+In-Reply-To: <20210818060533.3569517-23-keescook@chromium.org>
+Message-ID: <nycvar.YFH.7.76.2108201501340.15313@cbobk.fhfr.pm>
+References: <20210818060533.3569517-1-keescook@chromium.org> <20210818060533.3569517-23-keescook@chromium.org>
+User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202108191106.1956C05A@keescook>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 11:14:37AM -0700, Kees Cook wrote:
+On Tue, 17 Aug 2021, Kees Cook wrote:
 
-> Which do you mean? When doing the conversions I tended to opt for
-> struct_group() since it provides more robust "intentionality". Strictly
-> speaking, the new memset helpers are doing field-spanning writes, but the
-> "clear to the end" pattern was so common it made sense to add the helpers,
-> as they're a bit less disruptive. It's totally up to you! :)
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memcpy(), memmove(), and memset(), avoid
+> intentionally writing across neighboring fields.
+> 
+> Use struct_group() in struct cp2112_string_report around members report,
+> length, type, and string, so they can be referenced together. This will
+> allow memcpy() and sizeof() to more easily reason about sizes, improve
+> readability, and avoid future warnings about writing beyond the end of
+> report.
+> 
+> "pahole" shows no size nor member offset changes to struct
+> cp2112_string_report.  "objdump -d" shows no meaningful object
+> code changes (i.e. only source line number induced differences.)
+> 
+> Cc: Jiri Kosina <jikos@kernel.org>
+> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+> Cc: linux-input@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Well, of the patches you cc'd to me only this one used the struct
-group..
+Applied, thanks.
 
-Jason 
+-- 
+Jiri Kosina
+SUSE Labs
+
