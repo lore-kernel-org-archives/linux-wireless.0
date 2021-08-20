@@ -7,262 +7,361 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0973C4320A
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 11:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B263CC432BE
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 11:03:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D48060FE8
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 11:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99D6760FDC
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 11:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239308AbhHTLEW (ORCPT
+        id S239343AbhHTLEY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Aug 2021 07:04:22 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:57570 "EHLO
+        Fri, 20 Aug 2021 07:04:24 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57558 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239386AbhHTLEM (ORCPT
+        with ESMTP id S239333AbhHTLEJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Aug 2021 07:04:12 -0400
+        Fri, 20 Aug 2021 07:04:09 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mH2J8-002IL4-4v; Fri, 20 Aug 2021 14:03:31 +0300
+        id 1mH2J5-002IL4-RS; Fri, 20 Aug 2021 14:03:29 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 20 Aug 2021 14:03:16 +0300
-Message-Id: <iwlwifi.20210820140104.8f8ce6f25ecd.Iec9b2e2615ce65e6aff5ce896589227a7030f4cf@changeid>
+Date:   Fri, 20 Aug 2021 14:03:14 +0300
+Message-Id: <iwlwifi.20210820140104.b5c7c6613634.I53b8d9fb194b88070a0df6613f7f57668ea0eaf8@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210820110318.260751-1-luca@coelho.fi>
 References: <20210820110318.260751-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/12] iwlwifi: Add support for getting rf id with blank otp
+Subject: [PATCH 08/12] iwlwifi: export DHC framework and add first public entry, twt_setup
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-When having a blank OTP the only way to get the rf id
-and the cdb info is from prph registers.
+Export the debug host command framework and add the twt_setup entry.
+This will allow external parties to use these debugging features.
+More entries can be added later on.
 
-Currently there is some implementation for this, but it
-is located in the wrong place in the code (should be before
-trying to understand what HW is connected and not after),
-and it has a partial implementation.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  2 +-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  4 -
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 38 ++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 97 +++++++++++++++++++
- 4 files changed, 136 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/Kconfig    |   6 +
+ .../wireless/intel/iwlwifi/fw/api/commands.h  |   5 +
+ .../net/wireless/intel/iwlwifi/fw/api/dhc.h   | 122 ++++++++++++++++++
+ .../wireless/intel/iwlwifi/mvm/debugfs-vif.c  |  87 +++++++++++++
+ .../net/wireless/intel/iwlwifi/mvm/fw-api.h   |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
+ 6 files changed, 223 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 6dcafd0a3d4b..b7f2f0662b82 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2077,7 +2077,7 @@ static u32 iwl_dump_ini_info(struct iwl_fw_runtime *fwrt,
- 	 */
- 	hw_type = CSR_HW_REV_TYPE(fwrt->trans->hw_rev);
- 	if (hw_type == IWL_AX210_HW_TYPE) {
--		u32 prph_val = iwl_read_prph(fwrt->trans, WFPM_OTP_CFG1_ADDR);
-+		u32 prph_val = iwl_read_prph(fwrt->trans, WFPM_OTP_CFG1_ADDR_GEN2);
- 		u32 is_jacket = !!(prph_val & WFPM_OTP_CFG1_IS_JACKET_BIT);
- 		u32 is_cdb = !!(prph_val & WFPM_OTP_CFG1_IS_CDB_BIT);
- 		u32 masked_bits = is_jacket | (is_cdb << 1);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 521ca2bb0e92..9036b32ec765 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -342,10 +342,6 @@ struct iwl_fw_ini_dump_cfg_name {
- #define IWL_AX210_HW_TYPE 0x42
- /* How many bits to roll when adding to the HW type of AX210 HW */
- #define IWL_AX210_HW_TYPE_ADDITION_SHIFT 12
--/* This prph is used to tell apart HW_TYPE == 0x42 NICs */
--#define WFPM_OTP_CFG1_ADDR 0xd03098
--#define WFPM_OTP_CFG1_IS_JACKET_BIT BIT(4)
--#define WFPM_OTP_CFG1_IS_CDB_BIT BIT(5)
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index 1085afbefba8..0b2c6c945bc0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -92,6 +92,12 @@ config IWLWIFI_BCAST_FILTERING
+ 	  If unsure, don't enable this option, as some programs might
+ 	  expect incoming broadcasts for their normal operations.
  
- /* struct iwl_fw_ini_dump_info - ini dump information
-  * @version: dump version
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index d0a7d58336a9..972f8ba7a95f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -347,6 +347,12 @@
- #define RADIO_REG_SYS_MANUAL_DFT_0	0xAD4078
- #define RFIC_REG_RD			0xAD0470
- #define WFPM_CTRL_REG			0xA03030
-+#define WFPM_CTRL_REG_GEN2		0xd03030
-+#define WFPM_OTP_CFG1_ADDR		0x00a03098
-+#define WFPM_OTP_CFG1_ADDR_GEN2		0x00d03098
-+#define WFPM_OTP_CFG1_IS_JACKET_BIT	BIT(4)
-+#define WFPM_OTP_CFG1_IS_CDB_BIT	BIT(5)
++config IWLWIFI_DHC
++	bool "Enable debug host commands"
++	help
++	  This option enables the debug host command API.  It's used
++	  for debugging and validation purposes.
 +
- #define WFPM_GP2			0xA030B4
+ menu "Debugging Options"
  
- /* DBGI SRAM Register details */
-@@ -399,10 +405,42 @@ enum {
- 	LMPM_PAGE_PASS_NOTIF_POS = BIT(20),
- };
+ config IWLWIFI_DEBUG
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+index ee6b5844a871..b07e75be8679 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+@@ -495,6 +495,11 @@ enum iwl_legacy_cmds {
+ 	 */
+ 	DTS_MEASUREMENT_NOTIFICATION = 0xdd,
  
++	/**
++	 * @DEBUG_HOST_COMMAND: &struct iwl_dhc_cmd
++	 */
++	DEBUG_HOST_COMMAND = 0xf1,
++
+ 	/**
+ 	 * @LDBG_CONFIG_CMD: configure continuous trace recording
+ 	 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
+new file mode 100644
+index 000000000000..3ffc5904056f
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
+@@ -0,0 +1,122 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/*
-+ * struct iwl_crf_chip_id_reg
-+ *
-+ * type: bits 0-11
-+ * reserved: bits 12-18
-+ * slave_exist: bit 19
-+ * dash: bits 20-23
-+ * step: bits 24-26
-+ * flavor: bits 27-31
++ * Copyright (C) 2016-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018-2021 Intel Corporation
 + */
-+struct iwl_crf_chip_id_reg {
-+	u32 type : 12;
-+	u32 reserved : 7;
-+	u32 slave_exist : 1;
-+	u32 dash : 4;
-+	u32 step : 4;
-+	u32 flavor : 4;
++#ifndef __iwl_fw_api_dhc_h__
++#define __iwl_fw_api_dhc_h__
++
++#define DHC_TABLE_MASK_POS (28)
++
++/**
++ * enum iwl_dhc_table_id - DHC table operations index
++ */
++enum iwl_dhc_table_id {
++	/* @DHC_TABLE_INTEGRATION: select the integration table */
++	DHC_TABLE_INTEGRATION	= 2 << DHC_TABLE_MASK_POS,
 +};
 +
- #define UREG_CHICK		(0xA05C00)
- #define UREG_CHICK_MSI_ENABLE	BIT(24)
- #define UREG_CHICK_MSIX_ENABLE	BIT(25)
++/**
++ * enum iwl_dhc_umac_integration_table - integration operations
++ */
++enum iwl_dhc_umac_integration_table {
++	/* @DHC_INT_UMAC_TWT_OPERATION: trigger a TWT operation */
++	DHC_INT_UMAC_TWT_OPERATION = 4,
++	/* @DHC_INTEGRATION_MAX: Maximum UMAC integration table entries */
++	DHC_INTEGRATION_MAX
++};
++
++#define DHC_TARGET_UMAC BIT(27)
++#define DHC_ADWELL_SCAN_CHANNEL_DWELL_INDEX 2
++#define DHC_ADWELL_SCAN_FINE_TUNE_INDEX 3
++
++/**
++ * struct iwl_dhc_cmd - debug host command
++ * @length: length in DWs of the data structure that is concatenated to the end
++ *	of this struct
++ * @index_and_mask: bit 31 is 1 for data set operation else it's 0
++ *	bits 28-30 is the index of the table of the operation -
++ *	&enum iwl_dhc_table_id *
++ *	bit 27 is 0 if the cmd targeted to LMAC and 1 if targeted to UMAC,
++ *	(LMAC is 0 for backward compatibility)
++ *	bit 26 is 0 if the cmd targeted to LMAC0 and 1 if targeted to LMAC1,
++ *	relevant only if bit 27 set to 0
++ *	bits 0-25 is a specific entry index in the table specified in bits 28-30
++ *
++ * @data: the concatenated data.
++ */
++struct iwl_dhc_cmd {
++	__le32 length;
++	__le32 index_and_mask;
++	__le32 data[0];
++} __packed; /* DHC_CMD_API_S */
++
++/**
++ * enum iwl_dhc_twt_operation_type - describes the TWT operation type
++ *
++ * @DHC_TWT_REQUEST: Send a Request TWT command
++ * @DHC_TWT_SUGGEST: Send a Suggest TWT command
++ * @DHC_TWT_DEMAND: Send a Demand TWT command
++ * @DHC_TWT_GROUPING: Send a Grouping TWT command
++ * @DHC_TWT_ACCEPT: Send a Accept TWT command
++ * @DHC_TWT_ALTERNATE: Send a Alternate TWT command
++ * @DHC_TWT_DICTATE: Send a Dictate TWT command
++ * @DHC_TWT_REJECT: Send a Reject TWT command
++ * @DHC_TWT_TEARDOWN: Send a TearDown TWT command
++ */
++enum iwl_dhc_twt_operation_type {
++	DHC_TWT_REQUEST,
++	DHC_TWT_SUGGEST,
++	DHC_TWT_DEMAND,
++	DHC_TWT_GROUPING,
++	DHC_TWT_ACCEPT,
++	DHC_TWT_ALTERNATE,
++	DHC_TWT_DICTATE,
++	DHC_TWT_REJECT,
++	DHC_TWT_TEARDOWN,
++}; /* DHC_TWT_OPERATION_TYPE_E */
++
++/**
++ * struct iwl_dhc_twt_operation - trigger a TWT operation
++ *
++ * @mac_id: the mac Id on which to trigger TWT operation
++ * @twt_operation: see &enum iwl_dhc_twt_operation_type
++ * @target_wake_time: when should we be on channel
++ * @interval_exp: the exponent for the interval
++ * @interval_mantissa: the mantissa for the interval
++ * @min_wake_duration: the minimum duration for the wake period
++ * @trigger: is the TWT triggered or not
++ * @flow_type: is the TWT announced or not
++ * @flow_id: the TWT flow identifier from 0 to 7
++ * @protection: is the TWT protected
++ * @ndo_paging_indicator: is ndo_paging_indicator set
++ * @responder_pm_mode: is responder_pm_mode set
++ * @negotiation_type: if the responder wants to doze outside the TWT SP
++ * @twt_request: 1 for TWT request, 0 otherwise
++ * @implicit: is TWT implicit
++ * @twt_group_assignment: the TWT group assignment
++ * @twt_channel: the TWT channel
++ * @reserved: reserved
++ */
++struct iwl_dhc_twt_operation {
++	__le32 mac_id;
++	__le32 twt_operation;
++	__le64 target_wake_time;
++	__le32 interval_exp;
++	__le32 interval_mantissa;
++	__le32 min_wake_duration;
++	u8 trigger;
++	u8 flow_type;
++	u8 flow_id;
++	u8 protection;
++	u8 ndo_paging_indicator;
++	u8 responder_pm_mode;
++	u8 negotiation_type;
++	u8 twt_request;
++	u8 implicit;
++	u8 twt_group_assignment;
++	u8 twt_channel;
++	u8 reserved;
++}; /* DHC_TWT_OPERATION_API_S */
++
++#endif /* __iwl_fw_api_dhc_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index 7d9faeffd154..4ddd18ae5f86 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -686,6 +686,86 @@ static ssize_t iwl_dbgfs_quota_min_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
  
-+#define SD_REG_VER		0xa29600
-+#define SD_REG_VER_GEN2		0x00a2b800
++#ifdef CONFIG_IWLWIFI_DHC
++static ssize_t iwl_dbgfs_twt_setup_write(struct ieee80211_vif *vif, char *buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm *mvm = mvmvif->mvm;
++	struct iwl_dhc_twt_operation *dhc_twt_cmd;
++	struct iwl_dhc_cmd *cmd;
 +
-+#define REG_CRF_ID_TYPE_JF_1			0x201
-+#define REG_CRF_ID_TYPE_JF_2			0x202
-+#define REG_CRF_ID_TYPE_HR_CDB			0x503
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB		0x504
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB_1X1	0x501
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB_CCP	0x532
-+#define REG_CRF_ID_TYPE_GF			0x410
-+#define REG_CRF_ID_TYPE_GF_TC			0xF08
-+#define REG_CRF_ID_TYPE_MR			0x810
++	u32 twt_operation;
++	u64 target_wake_time;
++	u32 interval_exp;
++	u32 interval_mantissa;
++	u32 min_wake_duration;
++	u8 trigger;
++	u8 flow_type;
++	u8 flow_id;
++	u8 protection;
++	u8 twt_request = 1;
++	u8 broadcast = 0;
++	u8 tenth_param;
++	int ret;
 +
- #define HPM_DEBUG			0xA03440
- #define PERSISTENCE_BIT			BIT(12)
- #define PREG_WFPM_ACCESS		BIT(12)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index c42b72c64020..01011aa01bbf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1120,6 +1120,93 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- #endif /* CONFIG_IWLMVM */
++	ret = sscanf(buf, "%u %llu %u %u %u %hhu %hhu %hhu %hhu %hhu",
++		     &twt_operation, &target_wake_time, &interval_exp,
++		     &interval_mantissa, &min_wake_duration, &trigger,
++		     &flow_type, &flow_id, &protection, &tenth_param);
++
++	// the new twt_request parameter is optional for station
++	if ((ret != 9 && ret != 10) ||
++	    (vif->type != NL80211_IFTYPE_STATION && tenth_param == 1))
++		return -EINVAL;
++
++	/*
++	 * The 10th parameter:
++	 * In STA mode - the TWT type (broadcast or individual)
++	 * In AP mode - the role (0 responder, 1 requester, 2 unsolicited)
++	 */
++	if (ret == 10) {
++		if (vif->type == NL80211_IFTYPE_STATION)
++			broadcast = tenth_param;
++		else
++			twt_request = tenth_param;
++	}
++
++	cmd = kzalloc(sizeof(*cmd) + sizeof(*dhc_twt_cmd), GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	dhc_twt_cmd = (void *)cmd->data;
++	dhc_twt_cmd->mac_id = cpu_to_le32(mvmvif->id);
++	dhc_twt_cmd->twt_operation = cpu_to_le32(twt_operation);
++	dhc_twt_cmd->target_wake_time = cpu_to_le64(target_wake_time);
++	dhc_twt_cmd->interval_exp = cpu_to_le32(interval_exp);
++	dhc_twt_cmd->interval_mantissa = cpu_to_le32(interval_mantissa);
++	dhc_twt_cmd->min_wake_duration = cpu_to_le32(min_wake_duration);
++	dhc_twt_cmd->trigger = trigger;
++	dhc_twt_cmd->flow_type = flow_type;
++	dhc_twt_cmd->flow_id = flow_id;
++	dhc_twt_cmd->protection = protection;
++	dhc_twt_cmd->twt_request = twt_request;
++	dhc_twt_cmd->negotiation_type = broadcast ? 3 : 0;
++
++	cmd->length = cpu_to_le32(sizeof(*dhc_twt_cmd) >> 2);
++	cmd->index_and_mask =
++		cpu_to_le32(DHC_TABLE_INTEGRATION | DHC_TARGET_UMAC |
++			    DHC_INT_UMAC_TWT_OPERATION);
++
++	mutex_lock(&mvm->mutex);
++	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(DEBUG_HOST_COMMAND,
++						   IWL_ALWAYS_LONG_GROUP, 0),
++				   0, sizeof(*cmd) + sizeof(*dhc_twt_cmd),
++				   cmd);
++	mutex_unlock(&mvm->mutex);
++	kfree(cmd);
++
++	return ret ?: count;
++}
++#endif
++
+ #define MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz) \
+ 	_MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct ieee80211_vif)
+ #define MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz) \
+@@ -705,6 +785,9 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(uapsd_misbehaving, 20);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(rx_phyinfo, 10);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(quota_min, 32);
+ MVM_DEBUGFS_READ_FILE_OPS(os_device_timediff);
++#ifdef CONFIG_IWLWIFI_DHC
++MVM_DEBUGFS_WRITE_FILE_OPS(twt_setup, 256);
++#endif
+ 
+ 
+ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+@@ -745,6 +828,10 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	    mvmvif == mvm->bf_allowed_vif)
+ 		MVM_DEBUGFS_ADD_FILE_VIF(bf_params, mvmvif->dbgfs_dir, 0600);
+ 
++#ifdef CONFIG_IWLWIFI_DHC
++	MVM_DEBUGFS_ADD_FILE_VIF(twt_setup, mvmvif->dbgfs_dir, S_IWUSR);
++#endif
++
+ 	/*
+ 	 * Create symlink for convenience pointing to interface specific
+ 	 * debugfs entries for the driver. For example, under
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 73a82f07dc59..aa18d802de8e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018, 2020 Intel Corporation
++ * Copyright (C) 2012-2014, 2018, 2020-2021 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -37,5 +37,6 @@
+ #include "fw/api/location.h"
+ #include "fw/api/tx.h"
+ #include "fw/api/rfi.h"
++#include "fw/api/dhc.h"
+ 
+ #endif /* __fw_api_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 6f60018feed1..51eb52003cb1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -493,6 +493,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(SCAN_ITERATION_COMPLETE),
+ 	HCMD_NAME(D0I3_END_CMD),
+ 	HCMD_NAME(LTR_CONFIG),
++	HCMD_NAME(DEBUG_HOST_COMMAND),
+ 	HCMD_NAME(LDBG_CONFIG_CMD),
  };
  
-+/*
-+ * In case that there is no OTP on the NIC, get the rf id and cdb info
-+ * from the prph registers.
-+ */
-+static int get_crf_id(struct iwl_trans *iwl_trans)
-+{
-+	int ret = 0;
-+	u32 wfpm_ctrl_addr;
-+	u32 wfpm_otp_cfg_addr;
-+	u32 sd_reg_ver_addr;
-+	u32 cdb = 0;
-+	struct iwl_crf_chip_id_reg reg = {0};
-+
-+	if (iwl_trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
-+		wfpm_ctrl_addr = WFPM_CTRL_REG_GEN2;
-+		wfpm_otp_cfg_addr = WFPM_OTP_CFG1_ADDR_GEN2;
-+		sd_reg_ver_addr = SD_REG_VER_GEN2;
-+	/* Qu/Pu families have other addresses */
-+	} else {
-+		wfpm_ctrl_addr = WFPM_CTRL_REG;
-+		wfpm_otp_cfg_addr = WFPM_OTP_CFG1_ADDR;
-+		sd_reg_ver_addr = SD_REG_VER;
-+	}
-+
-+	if (iwl_trans_grab_nic_access(iwl_trans)) {
-+		u32 val;
-+
-+		/* Enable access to peripheral registers */
-+		val = iwl_read_umac_prph_no_grab(iwl_trans, wfpm_ctrl_addr);
-+		val |= ENABLE_WFPM;
-+		iwl_write_umac_prph_no_grab(iwl_trans, wfpm_ctrl_addr, val);
-+
-+		/* Read crf info */
-+		val = iwl_read_prph_no_grab(iwl_trans, sd_reg_ver_addr);
-+		memcpy(&reg, &val, sizeof(reg));
-+
-+		/* Read cdb info (also contains the jacket info if needed in the future */
-+		cdb = iwl_read_umac_prph_no_grab(iwl_trans, wfpm_otp_cfg_addr);
-+
-+		/* Map between crf id to rf id */
-+		switch (reg.type) {
-+		case REG_CRF_ID_TYPE_JF_1:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_JF1 << 12);
-+			break;
-+		case REG_CRF_ID_TYPE_JF_2:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_JF2 << 12);
-+			break;
-+		case REG_CRF_ID_TYPE_HR_NONE_CDB:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_HR1 << 12);
-+			break;
-+		case REG_CRF_ID_TYPE_HR_CDB:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_HR2 << 12);
-+			break;
-+		case REG_CRF_ID_TYPE_GF:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_GF << 12);
-+			break;
-+		case REG_CRF_ID_TYPE_MR:
-+			iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_MR << 12);
-+			break;
-+		default:
-+			ret = -EIO;
-+			IWL_ERR(iwl_trans,
-+				"Can find a correct rfid for crf id 0x%x\n",
-+				reg.type);
-+			iwl_trans_release_nic_access(iwl_trans);
-+			goto out_get_crf_id;
-+		}
-+		iwl_trans_release_nic_access(iwl_trans);
-+	} else {
-+		IWL_ERR(iwl_trans, "Failed to grab nic access before reading crf id\n");
-+		ret = -EIO;
-+		goto out_get_crf_id;
-+	}
-+
-+	/* Set CDB capabilities */
-+	if (cdb & BIT(4)) {
-+		iwl_trans->hw_rf_id += BIT(28);
-+		IWL_INFO(iwl_trans, "Adding cdb to rf id\n");
-+	}
-+
-+	IWL_INFO(iwl_trans, "Detected RF 0x%x from crf id 0x%x\n",
-+		 iwl_trans->hw_rf_id, reg.type);
-+
-+out_get_crf_id:
-+	return ret;
-+}
-+
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
- 
-@@ -1153,6 +1240,16 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	iwl_trans->hw_rf_id = iwl_read32(iwl_trans, CSR_HW_RF_ID);
- 
-+	/*
-+	 * The RF_ID is set to zero in blank OTP so read version to
-+	 * extract the RF_ID.
-+	 * This is relevant only for family 9000 and up.
-+	 */
-+	if (iwl_trans->trans_cfg->rf_id &&
-+	    iwl_trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_9000 &&
-+	    !CSR_HW_RFID_TYPE(iwl_trans->hw_rf_id) && get_crf_id(iwl_trans))
-+		goto out_free_trans;
-+
- 	for (i = 0; i < ARRAY_SIZE(iwl_dev_info_table); i++) {
- 		const struct iwl_dev_info *dev_info = &iwl_dev_info_table[i];
- 		if ((dev_info->device == (u16)IWL_CFG_ANY ||
 -- 
 2.33.0
 
