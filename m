@@ -2,256 +2,340 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 170B7C4338F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 18:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB03C4338F
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 18:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E232961242
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 18:28:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7B3E60FBF
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 18:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236139AbhHTS2m (ORCPT
+        id S234028AbhHTSrY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Aug 2021 14:28:42 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:34714 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236119AbhHTS2f (ORCPT
+        Fri, 20 Aug 2021 14:47:24 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:53624 "EHLO
+        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229927AbhHTSrX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Aug 2021 14:28:35 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 17KIRHqM068427;
-        Fri, 20 Aug 2021 13:27:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1629484037;
-        bh=PA8KESUM4iIbQdy8FOvIfYXjnsAfczIewWjmDQ8Hgok=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=G0BmwBm/75FsPjyKBOfZehQosiB/OHK4ZE9aLqSOnGyBCNWdFYDNtB5bweyL+xiyd
-         5W5QJuqtLC/2ghlbVedt05IQaEYnH5rnNzs+tDyrXSqNunMBWUybdMZdgh6ZGzjZqn
-         ASRsI9IEHnv2yesUVu3sj2b9ayK7nWhEO1tEQnBg=
-Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 17KIRHLS107305
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 20 Aug 2021 13:27:17 -0500
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Fri, 20
- Aug 2021 13:27:17 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Fri, 20 Aug 2021 13:27:17 -0500
-Received: from [10.250.100.73] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 17KIR6mI088414;
-        Fri, 20 Aug 2021 13:27:06 -0500
-Subject: Re: [PATCH V3 net-next 2/4] ethtool: extend coalesce setting uAPI
- with CQE mode
-To:     Yufeng Mo <moyufeng@huawei.com>, <davem@davemloft.net>,
-        <kuba@kernel.org>
-CC:     <netdev@vger.kernel.org>, <shenjian15@huawei.com>,
-        <lipeng321@huawei.com>, <yisen.zhuang@huawei.com>,
-        <linyunsheng@huawei.com>, <huangguangbin2@huawei.com>,
-        <chenhao288@hisilicon.com>, <salil.mehta@huawei.com>,
-        <linuxarm@huawei.com>, <linuxarm@openeuler.org>,
-        <dledford@redhat.com>, <jgg@ziepe.ca>, <netanel@amazon.com>,
-        <akiyano@amazon.com>, <thomas.lendacky@amd.com>,
-        <irusskikh@marvell.com>, <michael.chan@broadcom.com>,
-        <edwin.peer@broadcom.com>, <rohitm@chelsio.com>,
-        <jacob.e.keller@intel.com>, <ioana.ciornei@nxp.com>,
-        <vladimir.oltean@nxp.com>, <sgoutham@marvell.com>,
-        <sbhatta@marvell.com>, <saeedm@nvidia.com>,
-        <ecree.xilinx@gmail.com>, <merez@codeaurora.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>
-References: <1629444920-25437-1-git-send-email-moyufeng@huawei.com>
- <1629444920-25437-3-git-send-email-moyufeng@huawei.com>
-From:   Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <32fd0b32-e748-42d9-6468-b5b1393511e9@ti.com>
-Date:   Fri, 20 Aug 2021 21:27:13 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        Fri, 20 Aug 2021 14:47:23 -0400
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.65.202])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 255E51A0070
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2021 18:46:44 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id EB29A80071
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2021 18:46:43 +0000 (UTC)
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 8A6E913C2B3;
+        Fri, 20 Aug 2021 11:46:43 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 8A6E913C2B3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1629485203;
+        bh=RxtBUtEEYiCRso33XnmvKbCqXjWJJiAdAhlhq6ov4dE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Y6nl+Vin/BDmTUipucyGdPL4xywKEuENNYht2SB+k0R2vUwc/qqI3ekilrea6MDU+
+         qJaiD+4ifctb93jlBPiEC4KOwPnHv+e+GF1eCE2bvyU9QgInTS0EK27zzvAM8ahynW
+         KWZNp/6E3ZaCj+iLrBOFbx0lvSr02UEn8ZWomVYk=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/2] mt76: mt7915: fix radar detector logic.
+Date:   Fri, 20 Aug 2021 11:46:37 -0700
+Message-Id: <20210820184637.4922-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210820184637.4922-1-greearb@candelatech.com>
+References: <20210820184637.4922-1-greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1629444920-25437-3-git-send-email-moyufeng@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Transfer-Encoding: 8bit
+X-MDID: 1629485204-UXvwrYYLyEXC
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Ben Greear <greearb@candelatech.com>
 
+Before this patch, if AP went from ch 100 to ch 36, the radar detector
+logic in the firmware was not being disabled.  This made the AP appear
+to be up, but no beacons were seen on air until module reload or
+reboot.
 
-On 20/08/2021 10:35, Yufeng Mo wrote:
-> In order to support more coalesce parameters through netlink,
-> add two new parameter kernel_coal and extack for .set_coalesce
-> and .get_coalesce, then some extra info can return to user with
-> the netlink API.
-> 
-> Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
-> Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
-> ---
->   drivers/infiniband/ulp/ipoib/ipoib_ethtool.c           |  8 ++++++--
->   drivers/net/ethernet/amazon/ena/ena_ethtool.c          |  8 ++++++--
->   drivers/net/ethernet/amd/xgbe/xgbe-ethtool.c           |  8 ++++++--
->   drivers/net/ethernet/aquantia/atlantic/aq_ethtool.c    |  8 ++++++--
->   drivers/net/ethernet/broadcom/bcmsysport.c             |  8 ++++++--
->   drivers/net/ethernet/broadcom/bnx2.c                   | 12 ++++++++----
->   drivers/net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c    |  8 ++++++--
->   drivers/net/ethernet/broadcom/bnxt/bnxt_ethtool.c      |  8 ++++++--
->   drivers/net/ethernet/broadcom/genet/bcmgenet.c         |  8 ++++++--
->   drivers/net/ethernet/broadcom/tg3.c                    | 10 ++++++++--
->   drivers/net/ethernet/brocade/bna/bnad_ethtool.c        | 12 ++++++++----
->   drivers/net/ethernet/cavium/liquidio/lio_ethtool.c     |  8 ++++++--
->   drivers/net/ethernet/cavium/thunder/nicvf_ethtool.c    |  4 +++-
->   drivers/net/ethernet/chelsio/cxgb/cxgb2.c              |  8 ++++++--
->   drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c        |  8 ++++++--
->   drivers/net/ethernet/chelsio/cxgb4/cxgb4_ethtool.c     |  8 ++++++--
->   drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |  8 ++++++--
->   drivers/net/ethernet/cisco/enic/enic_ethtool.c         |  8 ++++++--
->   drivers/net/ethernet/cortina/gemini.c                  |  8 ++++++--
->   drivers/net/ethernet/emulex/benet/be_ethtool.c         |  8 ++++++--
->   drivers/net/ethernet/freescale/dpaa/dpaa_ethtool.c     |  8 ++++++--
->   drivers/net/ethernet/freescale/enetc/enetc_ethtool.c   |  8 ++++++--
->   drivers/net/ethernet/freescale/fec_main.c              | 14 +++++++++-----
->   drivers/net/ethernet/freescale/gianfar_ethtool.c       |  8 ++++++--
->   drivers/net/ethernet/hisilicon/hip04_eth.c             |  8 ++++++--
->   drivers/net/ethernet/hisilicon/hns/hns_ethtool.c       | 12 ++++++++++--
->   drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c     |  8 ++++++--
->   drivers/net/ethernet/huawei/hinic/hinic_ethtool.c      |  8 ++++++--
->   drivers/net/ethernet/intel/e1000/e1000_ethtool.c       |  8 ++++++--
->   drivers/net/ethernet/intel/e1000e/ethtool.c            |  8 ++++++--
->   drivers/net/ethernet/intel/fm10k/fm10k_ethtool.c       |  8 ++++++--
->   drivers/net/ethernet/intel/i40e/i40e_ethtool.c         | 12 ++++++++++--
->   drivers/net/ethernet/intel/iavf/iavf_ethtool.c         | 12 ++++++++++--
->   drivers/net/ethernet/intel/ice/ice_ethtool.c           | 12 ++++++++----
->   drivers/net/ethernet/intel/igb/igb_ethtool.c           |  8 ++++++--
->   drivers/net/ethernet/intel/igbvf/ethtool.c             |  8 ++++++--
->   drivers/net/ethernet/intel/igc/igc_ethtool.c           |  8 ++++++--
->   drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c       |  8 ++++++--
->   drivers/net/ethernet/intel/ixgbevf/ethtool.c           |  8 ++++++--
->   drivers/net/ethernet/jme.c                             | 12 ++++++++----
->   drivers/net/ethernet/marvell/mv643xx_eth.c             | 12 ++++++++----
->   drivers/net/ethernet/marvell/mvneta.c                  | 14 ++++++++++----
->   drivers/net/ethernet/marvell/mvpp2/mvpp2_main.c        | 14 ++++++++++----
->   .../net/ethernet/marvell/octeontx2/nic/otx2_ethtool.c  |  8 ++++++--
->   drivers/net/ethernet/marvell/skge.c                    |  8 ++++++--
->   drivers/net/ethernet/marvell/sky2.c                    |  8 ++++++--
->   drivers/net/ethernet/mellanox/mlx4/en_ethtool.c        |  8 ++++++--
->   drivers/net/ethernet/mellanox/mlx5/core/en_ethtool.c   |  8 ++++++--
->   drivers/net/ethernet/mellanox/mlx5/core/en_rep.c       |  8 ++++++--
->   .../net/ethernet/mellanox/mlx5/core/ipoib/ethtool.c    |  8 ++++++--
->   drivers/net/ethernet/myricom/myri10ge/myri10ge.c       | 12 ++++++++----
->   drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c   |  8 ++++++--
->   drivers/net/ethernet/ni/nixge.c                        | 14 ++++++++++----
->   drivers/net/ethernet/pensando/ionic/ionic_ethtool.c    |  8 ++++++--
->   .../net/ethernet/qlogic/netxen/netxen_nic_ethtool.c    |  8 ++++++--
->   drivers/net/ethernet/qlogic/qede/qede.h                |  4 +++-
->   drivers/net/ethernet/qlogic/qede/qede_ethtool.c        |  8 ++++++--
->   drivers/net/ethernet/qlogic/qlcnic/qlcnic_ethtool.c    |  8 ++++++--
->   drivers/net/ethernet/realtek/r8169_main.c              | 10 ++++++++--
->   drivers/net/ethernet/samsung/sxgbe/sxgbe_ethtool.c     |  8 ++++++--
->   drivers/net/ethernet/sfc/ethtool.c                     |  8 ++++++--
->   drivers/net/ethernet/sfc/falcon/ethtool.c              |  8 ++++++--
->   drivers/net/ethernet/socionext/netsec.c                | 10 +++++++---
->   drivers/net/ethernet/stmicro/stmmac/stmmac_ethtool.c   |  8 ++++++--
->   drivers/net/ethernet/synopsys/dwc-xlgmac-ethtool.c     | 14 ++++++++++----
->   drivers/net/ethernet/tehuti/tehuti.c                   | 12 ++++++++----
->   drivers/net/ethernet/ti/cpsw.c                         |  2 +-
->   drivers/net/ethernet/ti/cpsw_ethtool.c                 |  8 ++++++--
->   drivers/net/ethernet/ti/cpsw_new.c                     |  2 +-
->   drivers/net/ethernet/ti/cpsw_priv.h                    |  8 ++++++--
->   drivers/net/ethernet/ti/davinci_emac.c                 | 14 +++++++++++---
->   drivers/net/ethernet/via/via-velocity.c                |  8 ++++++--
->   drivers/net/ethernet/xilinx/ll_temac_main.c            | 14 ++++++++++----
->   drivers/net/ethernet/xilinx/xilinx_axienet_main.c      | 18 ++++++++++++++----
->   drivers/net/netdevsim/ethtool.c                        |  8 ++++++--
->   drivers/net/tun.c                                      |  8 ++++++--
->   drivers/net/usb/r8152.c                                |  8 ++++++--
->   drivers/net/virtio_net.c                               |  8 ++++++--
->   drivers/net/vmxnet3/vmxnet3_ethtool.c                  | 12 ++++++++----
->   drivers/net/wireless/ath/wil6210/ethtool.c             | 14 ++++++++++----
->   drivers/s390/net/qeth_ethtool.c                        |  4 +++-
->   drivers/staging/qlge/qlge_ethtool.c                    | 10 ++++++++--
->   include/linux/ethtool.h                                | 11 +++++++++--
->   net/ethtool/coalesce.c                                 | 10 +++++++---
->   net/ethtool/ioctl.c                                    | 15 ++++++++++++---
->   85 files changed, 576 insertions(+), 202 deletions(-)
-> 
-> diff --git a/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c b/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-> index 823f683..a09ca21 100644
-> --- a/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-> +++ b/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-> @@ -72,7 +72,9 @@ static void ipoib_get_drvinfo(struct net_device *netdev,
->   }
->   
->   static int ipoib_get_coalesce(struct net_device *dev,
-> -			      struct ethtool_coalesce *coal)
-> +			      struct ethtool_coalesce *coal,
-> +			      struct kernel_ethtool_coalesce *kernel_coal,
-> +			      struct netlink_ext_ack *extack)
->   {
->   	struct ipoib_dev_priv *priv = ipoib_priv(dev);
->   
-> @@ -83,7 +85,9 @@ static int ipoib_get_coalesce(struct net_device *dev,
->   }
->   
->   static int ipoib_set_coalesce(struct net_device *dev,
-> -			      struct ethtool_coalesce *coal)
-> +			      struct ethtool_coalesce *coal,
-> +			      struct kernel_ethtool_coalesce *kernel_coal,
-> +			      struct netlink_ext_ack *extack)
->   {
->   	struct ipoib_dev_priv *priv = ipoib_priv(dev);
->   	int ret;
+To reproduce this, I change hostapd.conf and restart hostapd.  Others
+on openwrt used their UI to make changes and problem was seen, but
+stil others changed channels in some other way and/or had some other
+difference and could *not* reproduce it.  So, something perhaps a
+bit subtle.
 
-[...]
+To fix the problem, stop depending on comparing dfs_state, store last
+freq/bandwidth to detect changes in that, and streamline code that
+checks to enable/disable radar detection.  And add in error checking
+and dev_dbg logic so one can see what is actually happening if need
+to debug this again.
 
-This is very big change which is not only mix two separate changes, but also looks
-half-done. From one side you're adding HW feature supported by limited number of HW,
-from another - changing most of net drivers to support it by generating mix of legacy
-and new kernel_ethtool_coalesce parameters.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ .../net/wireless/mediatek/mt76/mt7915/init.c  |   7 +-
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 101 ++++++++++++------
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |  23 +++-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |   6 +-
+ 4 files changed, 99 insertions(+), 38 deletions(-)
 
-There is also an issue - you do not account get/set_per_queue_coalesce() in any way.
-
-Would it be possible to consider following, please?
-
-- move extack change out of this series
-
-- option (a)
-   add new callbacks in ethtool_ops as set_coalesce_cqe/get_coalesce_cqe for CQE support.
-   Only required drivers will need to be changed.
-
-- option (b)
-   add struct ethtool_coalesce as first field of kernel_ethtool_coalesce
-
-struct kernel_ethtool_coalesce {
-	/* legacy */
-	struct ethtool_coalesce coal;
-
-	/* new */
-	u8 use_cqe_mode_tx;
-	u8 use_cqe_mode_rx;
-};
-
---  then b.1
-   drivers can be updated as
-    static int set_coalesce(struct net_device *dev,
-    			    struct kernel_ethtool_coalesce *kernel_coal)
-    {
-	struct ethtool_coalesce *coal = &kernel_coal->coal;
-    
-    (which will clearly indicate migration to the new interface )
-
--- then b.2
-     add new callbacks in ethtool_ops as set_coalesce_ext/get_coalesce_ext (extended)
-     which will accept struct kernel_ethtool_coalesce as parameter an allow drivers to migrate when needed
-     (or as separate patch which will do only migration).
-
-Personally, I like "b.2".
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index f46ea989a348..543bb1e947e3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -205,6 +205,7 @@ mt7915_regd_notifier(struct wiphy *wiphy,
+ 	struct mt76_phy *mphy = hw->priv;
+ 	struct mt7915_phy *phy = mphy->priv;
+ 	struct cfg80211_chan_def *chandef = &mphy->chandef;
++	int ret;
+ 
+ 	memcpy(dev->mt76.alpha2, request->alpha2, sizeof(dev->mt76.alpha2));
+ 	dev->mt76.region = request->dfs_region;
+@@ -215,7 +216,10 @@ mt7915_regd_notifier(struct wiphy *wiphy,
+ 	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR))
+ 		return;
+ 
+-	mt7915_dfs_init_radar_detector(phy);
++	ret = mt7915_dfs_init_radar_detector(phy);
++	if (ret < 0)
++		dev_err(dev->mt76.dev, "init-wifi: dfs-init-radar-detector failed: %d",
++			ret);
+ }
+ 
+ static void
+@@ -832,7 +836,6 @@ int mt7915_register_device(struct mt7915_dev *dev)
+ 
+ 	dev->mphy.hw->wiphy->available_antennas_rx = dev->mphy.chainmask;
+ 	dev->mphy.hw->wiphy->available_antennas_tx = dev->mphy.chainmask;
+-	dev->phy.dfs_state = -1;
+ 
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	dev->mt76.test_ops = &mt7915_testmode_ops;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index a6e142d27b60..082bb496d017 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -2404,14 +2404,29 @@ void mt7915_mac_work(struct work_struct *work)
+ 				     MT7915_WATCHDOG_TIME);
+ }
+ 
+-static void mt7915_dfs_stop_radar_detector(struct mt7915_phy *phy)
++int mt7915_dfs_stop_radar_detector(struct mt7915_phy *phy, bool ext_phy)
+ {
+ 	struct mt7915_dev *dev = phy->dev;
++	int err;
++
++	dev_dbg(dev->mt76.dev, "dfs-stop-radar-detector, rdd-state: 0x%x",
++		phy->rdd_state);
++
++	err = mt7915_mcu_rdd_cmd(dev, RDD_NORMAL_START, ext_phy,
++				 MT_RX_SEL0, 0);
++	if (err < 0) {
++		dev_err(dev->mt76.dev, "mcu-rdd-cmd RDD_NORMAL_START failed: %d",
++			err);
++		/* I think best to carry on, even if we have an error here. */
++	}
+ 
+ 	if (phy->rdd_state & BIT(0))
+ 		mt7915_mcu_rdd_cmd(dev, RDD_STOP, 0, MT_RX_SEL0, 0);
+ 	if (phy->rdd_state & BIT(1))
+ 		mt7915_mcu_rdd_cmd(dev, RDD_STOP, 1, MT_RX_SEL0, 0);
++	phy->rdd_state = 0;
++
++	return err;
+ }
+ 
+ static int mt7915_dfs_start_rdd(struct mt7915_dev *dev, int chain)
+@@ -2419,10 +2434,14 @@ static int mt7915_dfs_start_rdd(struct mt7915_dev *dev, int chain)
+ 	int err;
+ 
+ 	err = mt7915_mcu_rdd_cmd(dev, RDD_START, chain, MT_RX_SEL0, 0);
++
++	dev_dbg(dev->mt76.dev, "dfs-start-rdd, RDD_START rv: %d", err);
+ 	if (err < 0)
+ 		return err;
+ 
+-	return mt7915_mcu_rdd_cmd(dev, RDD_DET_MODE, chain, MT_RX_SEL0, 1);
++	err = mt7915_mcu_rdd_cmd(dev, RDD_DET_MODE, chain, MT_RX_SEL0, 1);
++	dev_dbg(dev->mt76.dev, "dfs-start-rdd, RDD_DET_MODE rv: %d", err);
++	return err;
+ }
+ 
+ static int mt7915_dfs_start_radar_detector(struct mt7915_phy *phy)
+@@ -2523,47 +2542,67 @@ int mt7915_dfs_init_radar_detector(struct mt7915_phy *phy)
+ 	int err;
+ 	struct mt7915_vif_counts counts = {0};
+ 
+-	if (dev->mt76.region == NL80211_DFS_UNSET) {
+-		phy->dfs_state = -1;
+-		if (phy->rdd_state)
+-			goto stop;
++	dev_dbg(dev->mt76.dev,
++		"dfs-init-radar-detector, region: %d freq: %d chandef dfs-state: %d",
++		dev->mt76.region, chandef->chan->center_freq,
++		chandef->chan->dfs_state);
+ 
++	if (test_bit(MT76_SCANNING, &phy->mt76->state)) {
++		dev_dbg(dev->mt76.dev, "init-radar, was scanning, no change.\n");
+ 		return 0;
+ 	}
+ 
+-	if (test_bit(MT76_SCANNING, &phy->mt76->state))
+-		return 0;
++	if (dev->mt76.region == NL80211_DFS_UNSET) {
++		dev_dbg(dev->mt76.dev,
++			"dfs-init-radar, region is UNSET, disable radar.");
++		goto stop;
++	}
++
++	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR)) {
++		dev_dbg(dev->mt76.dev,
++			"dfs-init-radar, chandef does not want radar.");
++		goto stop;
++	}
+ 
+-	if (phy->dfs_state == chandef->chan->dfs_state)
++	ieee80211_iterate_active_interfaces(dev->mt76.hw,
++					    IEEE80211_IFACE_ITER_RESUME_ALL,
++					    mt7915_vif_counts, &counts);
++
++	if (!(counts.ap + counts.adhoc + counts.mesh)) {
++		/* No beaconning interfaces, do not start CAC */
++		dev_dbg(dev->mt76.dev,
++			"dfs-init-radar, no AP/Mesh/Adhoc vifs active, stop radar.");
++		goto stop;
++	}
++
++	/* At this point, we need radar detection, see if we have started
++	 * it already.
++	 */
++	if (phy->rdd_state) {
++		if (chandef->chan->dfs_state == NL80211_DFS_AVAILABLE) {
++			/* CAC is already complete. */
++			dev_dbg(dev->mt76.dev,
++				"init-radar, RADAR started and DFS state is AVAILABLE, call RDD_CAC_END");
++			return mt7915_mcu_rdd_cmd(dev, RDD_CAC_END, ext_phy,
++						  MT_RX_SEL0, 0);
++		}
++		dev_dbg(dev->mt76.dev,
++			"init-radar, rdd_state indicates RADAR already started, DFS state: %d not YET available, rdd_state: 0x%x",
++			chandef->chan->dfs_state, phy->rdd_state);
+ 		return 0;
++	}
+ 
+ 	err = mt7915_dfs_init_radar_specs(phy);
+ 	if (err < 0) {
+-		phy->dfs_state = -1;
++		dev_err(dev->mt76.dev, "dfs-init-radar-specs failed: %d",
++			err);
+ 		goto stop;
+ 	}
+ 
+-	phy->dfs_state = chandef->chan->dfs_state;
+-
+-	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
+-		if (chandef->chan->dfs_state != NL80211_DFS_AVAILABLE) {
+-			ieee80211_iterate_active_interfaces(phy->mt76->hw,
+-				IEEE80211_IFACE_ITER_RESUME_ALL,
+-				mt7915_vif_counts, &counts);
+-			if (counts.ap + counts.adhoc + counts.mesh)
+-				mt7915_dfs_start_radar_detector(phy);
+-			return 0;
+-		}
+-		return mt7915_mcu_rdd_cmd(dev, RDD_CAC_END, ext_phy,
+-					  MT_RX_SEL0, 0);
+-	}
++	err = mt7915_dfs_start_radar_detector(phy);
++	dev_dbg(dev->mt76.dev, "dfs-start-radar-detector rv: %d", err);
++	return err;
+ 
+ stop:
+-	err = mt7915_mcu_rdd_cmd(dev, RDD_NORMAL_START, ext_phy,
+-				 MT_RX_SEL0, 0);
+-	if (err < 0)
+-		return err;
+-
+-	mt7915_dfs_stop_radar_detector(phy);
+-	return 0;
++	return mt7915_dfs_stop_radar_detector(phy, ext_phy);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index f3df5ea066a2..6bffddb63461 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -298,6 +298,8 @@ static void mt7915_init_dfs_state(struct mt7915_phy *phy)
+ 	struct mt76_phy *mphy = phy->mt76;
+ 	struct ieee80211_hw *hw = mphy->hw;
+ 	struct cfg80211_chan_def *chandef = &hw->conf.chandef;
++	struct mt7915_dev *dev = phy->dev;
++	bool ext_phy = phy != &dev->phy;
+ 
+ 	if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+ 		return;
+@@ -305,11 +307,23 @@ static void mt7915_init_dfs_state(struct mt7915_phy *phy)
+ 	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR))
+ 		return;
+ 
+-	if (mphy->chandef.chan->center_freq == chandef->chan->center_freq &&
+-	    mphy->chandef.width == chandef->width)
++	if (phy->dfs_center_freq == chandef->chan->center_freq &&
++	    phy->dfs_ch_width == chandef->width)
+ 		return;
+ 
+-	phy->dfs_state = -1;
++	/* We are being moved to a new frequency/bw, still on DFS.  Stop
++	 * any existing DFS, then will start it again in the
++	 * init-radar-detector logic.
++	 */
++	if (phy->rdd_state) {
++		dev_dbg(dev->mt76.dev,
++			"init-dfs-state, channel changed, old: %d:%d  new: %d:%d, stopping radar.",
++			phy->dfs_center_freq, phy->dfs_ch_width,
++			chandef->chan->center_freq, chandef->width);
++		mt7915_dfs_stop_radar_detector(phy, ext_phy);
++	}
++	phy->dfs_center_freq = chandef->chan->center_freq;
++	phy->dfs_ch_width = chandef->width;
+ }
+ 
+ int mt7915_set_channel(struct mt7915_phy *phy)
+@@ -337,6 +351,9 @@ int mt7915_set_channel(struct mt7915_phy *phy)
+ 
+ 	mt7915_mac_set_timing(phy);
+ 	ret = mt7915_dfs_init_radar_detector(phy);
++	if (ret < 0)
++		dev_err(dev->mt76.dev, "set-channel: dfs-init-radar-detector failed: %d",
++			ret);
+ 	mt7915_mac_cca_stats_reset(phy);
+ 
+ 	mt7915_mac_reset_counters(phy);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index f46816cefa3f..a9f55748cf1e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -284,8 +284,9 @@ struct mt7915_phy {
+ 	s16 coverage_class;
+ 	u8 slottime;
+ 
+-	u8 rdd_state;
+-	int dfs_state;
++	u8 rdd_state; /* radar detection started bitfield */
++	enum nl80211_chan_width dfs_ch_width;
++	u32 dfs_center_freq;
+ 
+ 	u32 rx_ampdu_ts;
+ 	u32 ampdu_ref;
+@@ -574,6 +575,7 @@ int mt7915_dfs_init_radar_detector(struct mt7915_phy *phy);
+ void mt7915_set_stream_he_caps(struct mt7915_phy *phy);
+ void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy);
+ void mt7915_update_channel(struct mt76_phy *mphy);
++int mt7915_dfs_stop_radar_detector(struct mt7915_phy *phy, bool ext_phy);
+ int mt7915_init_debugfs(struct mt7915_dev *dev);
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 -- 
-Best regards,
-grygorii
+2.20.1
+
