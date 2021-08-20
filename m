@@ -5,54 +5,53 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE8AC4320A
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:21:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A39FC4320A
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:21:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12F5460F45
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:21:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84EE260F45
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Aug 2021 12:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240587AbhHTMVw (ORCPT
+        id S239917AbhHTMWB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Aug 2021 08:21:52 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:45228 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240586AbhHTMVv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Aug 2021 08:21:51 -0400
+        Fri, 20 Aug 2021 08:22:01 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:53290 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S240613AbhHTMV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Aug 2021 08:21:57 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629462073; h=Content-Transfer-Encoding: MIME-Version:
+ s=smtp; t=1629462079; h=Content-Transfer-Encoding: MIME-Version:
  References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=RTUiezN9FbKIsshyxNe23rZMeP1NaJDLEYiD0lv96m4=; b=G+EtpBXFz6rNBiU1GhT7OifYQ75UIaq8TgptuGF+rZqKSdp2ZI6O0PWlGxSkIs6zbrHesZP+
- QItJyMCzu8+CI+HYpKzOFynYBAFtrWF6MwZSdZv54jxMcRU1LDcE2JfI6MHI7W/dsdP92kOt
- SvFoekg5rclD8YVy/PfIWn5AoWo=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ Sender; bh=x/Cgq183T9f89XOOcwri40VOSTuVlC/dB43M5oaeiNc=; b=rDH0GxiEaYjkJPldProZUbwBGhx8d8sZQ1k2I8d0cCWgmRpHyhIxh4o1xxHtpqib+kcJXRAB
+ OxbCE4rcSKq5LQ5xj/C5qMEo0+TD9jilVLte/lnFmJsfPj0C9SYAe/AT6ZylJ4eitv/caqRN
+ yz+fFWt0kQ7xW3uMBe6O+ZOdv7s=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 611f9e2989fbdf3ffe7b8de8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 20 Aug 2021 12:20:57
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 611f9e2d0f9b337f11cd3ab6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 20 Aug 2021 12:21:01
  GMT
 Sender: wgong=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9404FC4360C; Fri, 20 Aug 2021 12:20:56 +0000 (UTC)
+        id 4FE75C43460; Fri, 20 Aug 2021 12:21:01 +0000 (UTC)
 Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E2EF4C4360D;
-        Fri, 20 Aug 2021 12:20:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org E2EF4C4360D
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9CEC0C43460;
+        Fri, 20 Aug 2021 12:20:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 9CEC0C43460
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Wen Gong <wgong@codeaurora.org>
 To:     johannes@sipsolutions.net, ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH v2 5/8] cfg80211: save power spectral density(psd) of regulatory rule
-Date:   Fri, 20 Aug 2021 08:20:38 -0400
-Message-Id: <20210820122041.12157-6-wgong@codeaurora.org>
+Subject: [PATCH v2 8/8] mac80211: save transmit power envelope element and power constraint
+Date:   Fri, 20 Aug 2021 08:20:41 -0400
+Message-Id: <20210820122041.12157-9-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210820122041.12157-1-wgong@codeaurora.org>
 References: <20210820122041.12157-1-wgong@codeaurora.org>
@@ -62,68 +61,105 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The power spectral density(psd) of regulatory rule should be take
-effect to the channels. This patch is to save the values to the
-channel which has psd value.
+This is to save the transmit power envelope element and power
+constraint in struct ieee80211_bss_conf for 6 GHz. Lower driver
+will use this info to calculate the power limit.
 
 Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- net/wireless/reg.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ include/net/mac80211.h |  6 ++++++
+ net/mac80211/chan.c    |  9 +++++++++
+ net/mac80211/mlme.c    | 26 ++++++++++++++++++++++++++
+ 3 files changed, 41 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0406ce7334fa..602d95e8bde6 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1583,6 +1583,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_NO_160MHZ;
- 	if (rd_flags & NL80211_RRF_NO_HE)
- 		channel_flags |= IEEE80211_CHAN_NO_HE;
-+	if (rd_flags & NL80211_RRF_PSD)
-+		channel_flags |= IEEE80211_CHAN_PSD;
- 	return channel_flags;
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e89530d0d9c6..6e11e122e364 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -631,6 +631,9 @@ struct ieee80211_fils_discovery {
+  * @s1g: BSS is S1G BSS (affects Association Request format).
+  * @beacon_tx_rate: The configured beacon transmit rate that needs to be passed
+  *	to driver when rate control is offloaded to firmware.
++ * @tx_pwr_env: transmit power envelope array of BSS.
++ * @tx_pwr_env_num: number of @tx_pwr_env.
++ * @pwr_reduction: power constraint of BSS.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -700,6 +703,9 @@ struct ieee80211_bss_conf {
+ 	u32 unsol_bcast_probe_resp_interval;
+ 	bool s1g;
+ 	struct cfg80211_bitrate_mask beacon_tx_rate;
++	struct ieee80211_tx_pwr_env tx_pwr_env[IEEE80211_TPE_MAX_IE_COUNT];
++	u8 tx_pwr_env_num;
++	u8 pwr_reduction;
+ };
  
-@@ -1787,6 +1789,9 @@ static void handle_channel_single_rule(struct wiphy *wiphy,
- 				chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
- 		}
+ /**
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 907bb1f748a1..149d4ac798f6 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -721,6 +721,15 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 					 lockdep_is_held(&local->chanctx_mtx));
  
-+		if (chan->flags & IEEE80211_CHAN_PSD)
-+			chan->psd = reg_rule->psd;
+ 	if (conf) {
++		if (conf->def.chan->band == NL80211_BAND_6GHZ) {
++			struct ieee80211_bss_conf *bss_conf;
 +
- 		return;
- 	}
- 
-@@ -1807,6 +1812,9 @@ static void handle_channel_single_rule(struct wiphy *wiphy,
- 			chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
- 	}
- 
-+	if (chan->flags & IEEE80211_CHAN_PSD)
-+		chan->psd = reg_rule->psd;
++			bss_conf = &sdata->vif.bss_conf;
++			bss_conf->pwr_reduction = 0;
++			bss_conf->tx_pwr_env_num = 0;
++			memset(bss_conf->tx_pwr_env, 0, sizeof(bss_conf->tx_pwr_env));
++		}
 +
- 	if (chan->orig_mpwr) {
- 		/*
- 		 * Devices that use REGULATORY_COUNTRY_IE_FOLLOW_POWER
-@@ -1876,6 +1884,9 @@ static void handle_channel_adjacent_rules(struct wiphy *wiphy,
- 							 rrule2->dfs_cac_ms);
- 		}
+ 		curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
  
-+		if (chan->flags & IEEE80211_CHAN_PSD)
-+			chan->psd = min_t(s8, rrule1->psd, rrule1->psd);
+ 		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2480bd0577bb..a6d66b4ad7ee 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5070,6 +5070,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HE)) {
+ 		const struct cfg80211_bss_ies *ies;
++		struct ieee80211_bss_conf *bss_conf;
+ 		const u8 *he_oper_ie;
+ 
+ 		ies = rcu_dereference(cbss->ies);
+@@ -5081,6 +5082,31 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		else
+ 			he_oper = NULL;
+ 
++		if (is_6ghz) {
++			struct ieee802_11_elems elems;
++			u8 i, j = 0;
 +
- 		return;
- 	}
- 
-@@ -2533,6 +2544,9 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 			chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
- 	}
- 
-+	if (chan->flags & IEEE80211_CHAN_PSD)
-+		chan->psd = reg_rule->psd;
++			ieee802_11_parse_elems(ies->data, ies->len, false, &elems,
++					       NULL, NULL);
 +
- 	chan->max_power = chan->max_reg_power;
- }
- 
++			if (elems.pwr_constr_elem)
++				bss_conf->pwr_reduction = *elems.pwr_constr_elem;
++
++			BUILD_BUG_ON(ARRAY_SIZE(bss_conf->tx_pwr_env) !=
++				     ARRAY_SIZE(elems.tx_pwr_env));
++
++			for (i = 0; i < elems.tx_pwr_env_num; i++) {
++				if (elems.tx_pwr_env_len[i] >
++				    sizeof(bss_conf->tx_pwr_env[j]))
++					continue;
++
++				bss_conf->tx_pwr_env_num++;
++				memcpy(&bss_conf->tx_pwr_env[j], elems.tx_pwr_env[i],
++				       elems.tx_pwr_env_len[i]);
++				j++;
++			}
++		}
++
+ 		if (!ieee80211_verify_sta_he_mcs_support(sband, he_oper))
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+ 	}
 -- 
 2.31.1
 
