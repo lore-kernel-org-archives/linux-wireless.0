@@ -2,71 +2,73 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67697C4338F
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Aug 2021 10:10:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 484D4C4320E
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Aug 2021 10:12:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41CCD61163
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Aug 2021 10:10:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CBF560E93
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Aug 2021 10:12:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234041AbhHUKLR (ORCPT
+        id S234228AbhHUKMj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Aug 2021 06:11:17 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:34304 "EHLO m43-7.mailgun.net"
+        Sat, 21 Aug 2021 06:12:39 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:32999 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229968AbhHUKLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Aug 2021 06:11:13 -0400
+        id S234055AbhHUKMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 21 Aug 2021 06:12:38 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629540634; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1629540719; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=0Jn1p+jiNWNrQR9dfmyf/Iou1gyXyNX1MhpjET/zZuU=; b=n3mAVwfX50W/M8FfTuqsiMaNNFMa32Dn69Uw9E8l/RwYPZbwfi1V7kE441wrdNHJpZeh20Nf
- +YhYocpRRUdoDYOYIWJBnRdA67U/iuk19pKattaDYJa0Zv6voP0OEgBbJ8y2i2YRR50BX2ex
- 8FLLLBsVIOL9BQjHwl36H2OqjNw=
+ bh=DtreSWuXzdy5PnILjEf5ZoEUDjROdOZk8ywtPP/mAQM=; b=ISkg44BvWqCq3AotnjTL36E71xC/srW2ZgMkzdvzJwgVFBRcJr3VGuJXp9mu1bz0Y/s4aVeo
+ GBtjAGI1TQaTcUZbWDoTMxRBi/IgU9YkgQgYHluse33ccLyQFl9MML3ciEqsDzfWRlYQNwZF
+ cZ/x3ciQiqlK2NVscCB5q924BLs=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 6120d1139b8228d0d017f893 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 21 Aug 2021 10:10:27
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 6120d16aa2d1fbf62b011a68 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 21 Aug 2021 10:11:54
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9C92DC43619; Sat, 21 Aug 2021 10:10:26 +0000 (UTC)
+        id 9DAB4C4360C; Sat, 21 Aug 2021 10:11:53 +0000 (UTC)
 Received: from tykki (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0D2BFC4338F;
-        Sat, 21 Aug 2021 10:10:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 0D2BFC4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8F2BAC4338F;
+        Sat, 21 Aug 2021 10:11:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 8F2BAC4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     jing yangyang <cgel.zte@gmail.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        jing yangyang <jing.yangyang@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: Re: [PATCH linux-next] net:wireless:mt76: fix boolreturn.cocci warnings
-References: <20210820024117.11688-1-jing.yangyang@zte.com.cn>
-Date:   Sat, 21 Aug 2021 13:10:20 +0300
-In-Reply-To: <20210820024117.11688-1-jing.yangyang@zte.com.cn> (jing
-        yangyang's message of "Thu, 19 Aug 2021 19:41:17 -0700")
-Message-ID: <87y28vt8fn.fsf@codeaurora.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Saeed Mahameed <saeedm@nvidia.com>, netdev@vger.kernel.org,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Leon Romanovsky <leon@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Jesper Dangaard Brouer <hawk@kernel.org>,
+        John Fastabend <john.fastabend@gmail.com>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Martin KaFai Lau <kafai@fb.com>,
+        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
+        KP Singh <kpsingh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        bpf@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 0/3] net: Cleanups for FORTIFY_SOURCE
+References: <20210819202825.3545692-1-keescook@chromium.org>
+        <20210820100151.25f7ccd4@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Date:   Sat, 21 Aug 2021 13:11:46 +0300
+In-Reply-To: <20210820100151.25f7ccd4@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        (Jakub Kicinski's message of "Fri, 20 Aug 2021 10:01:51 -0700")
+Message-ID: <87tujjt8d9.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -74,25 +76,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-jing yangyang <cgel.zte@gmail.com> writes:
+Jakub Kicinski <kuba@kernel.org> writes:
 
-> ./drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c:172:8-9:WARNING:
-> return of 0/1 in function 'mt7663_usb_sdio_tx_status_data' with return
-> type bool
+> On Thu, 19 Aug 2021 13:28:22 -0700 Kees Cook wrote:
+>> Hi,
+>> 
+>> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+>> field bounds checking for memcpy(), memmove(), and memset(), avoid
+>> intentionally writing across neighboring fields.
+>> 
+>> These three changes have been living in my memcpy() series[1], but have
+>> no external dependencies. It's probably better to have these go via
+>> netdev.
 >
-> Return statements in functions returning bool should use true/false
-> instead of 1/0.
+> Thanks.
 >
-> Generated by: scripts/coccinelle/misc/boolreturn.cocci
->
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: jing yangyang <jing.yangyang@zte.com.cn>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c | 2 +-
+> Kalle, Saeed - would you like to take the relevant changes? Presumably
+> they would get into net-next anyway by the time the merge window opens.
 
-The subject should be:
-
-mt76: mt7615: fix boolreturn.cocci warnings
+Ok, I'll take patch 1 to wireless-drivers-next.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
