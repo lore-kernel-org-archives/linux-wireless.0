@@ -2,109 +2,187 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0052AC4338F
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 20:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A71C4338F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 20:39:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEAB1613D0
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 20:19:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C14B60F8F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 20:39:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232016AbhHWUUb (ORCPT
+        id S232401AbhHWUkZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Aug 2021 16:20:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54968 "EHLO
+        Mon, 23 Aug 2021 16:40:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231377AbhHWUUb (ORCPT
+        with ESMTP id S232343AbhHWUkY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Aug 2021 16:20:31 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B603C061575
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2021 13:19:48 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id s12so8438098ljg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2021 13:19:47 -0700 (PDT)
+        Mon, 23 Aug 2021 16:40:24 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDAEFC061575
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2021 13:39:41 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id h1so5474033ljl.9
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2021 13:39:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=0vaj0uznqYe2FBJmFOITTJ3IqWEuG169317oUglvcEY=;
-        b=OtuDeDNUrV3Rzk/bqFdRCFW++lG/hxojlu0nhwhJ+N6MH8Klju7+XzQ4GPEvbEJj4s
-         7jPo+P/J8AfRNOswbzuSfWcDQQvLnWoomlHvoxKoOiSbO6EKb8LLGgQBU2rrlB8g96RT
-         fhvZ7uBvosEEGqt5o0FGOMsBvQOjsXMOuifN/lXC/kcZPuNb1fYBIggHBfejJ5s7z0V9
-         811Dm6zLSqT06sb8jU9V6cNet5dOOHnmxTjyuW7Nm6s3YoRN5D9VhRpJfAoteBwZNUsH
-         GTqk15EYOdCGz/vtnXMZnvP7M2dhWcwXSPio/StYPE2C9SkSib0ckhpH4NZ/XSmzhDS7
-         EUDg==
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=JFZLEAhA30rNPUlpm88OHaIhK1CzHABrd7DB+Lg/9bQ=;
+        b=ixsz1gejAEC+D5e0OPLB2PH3Ffo41Nu/tzUHz79iC2ZFSvtXKQnJLeHxIPz1Kn3IYH
+         Sm/K0ZXxrItBBPBDNzqxxa5+SK/GW+M0KruNhaj9jw68+rADxbyQtJjGdkl/G0JcfMTs
+         yau875ER8hjPTKcESljcyDCyw4AUI9+M0TZQ2fgtTW2CVxYYUHSEdbradDbUkLlV/y1k
+         TJPkeMmFshyKPdroUO2yd29uTBlP2gcUfhfgnIiZNsK2aybiNe2UdxvktfB4AtBREf4U
+         27ziJ0s4T3qATrDG0rdcYFRipuGYZgG3Xp7kdnd0JwPwhyuIJi2hvT66LQfubq6I3L3s
+         2gjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=0vaj0uznqYe2FBJmFOITTJ3IqWEuG169317oUglvcEY=;
-        b=aJS9T2a+kS2W6FnhF56UGHn7vj0A+XdD8HwQNMnoDM3qyy1AVBluw44KGIP8qP84IX
-         vQ9+qOvuxNuVuI1e/UG45C/fBapN4JlflI85Fz0R4rHLWkVX8zpdDxD8uORpO7fjZY3f
-         aw39ejnU2QpAoD8Gri92dR8i10zbgxWD0C7fhe1OD46350xg5CU6bSwQFq7ZTP3PW7vr
-         Pqk6F4SWG/KtmD4lAlpW5vsQOgciD7eEMEIxyzhzzy8k+BsF5PWeDrYyjmyzoszicRUS
-         prWNQJikK96xMmB0rTVTrHJ+TAjCn+rpxu7vmQSrYlrANvzZC17qFfeGuSHrbcTI9f+Y
-         5Ibw==
-X-Gm-Message-State: AOAM531liXnf5ox1sTwhInnPWnCqqGrhOh95Po7XfrVgfB1qE6JuHqZD
-        UMLbSgNWUKnJ8223kXlShAc=
-X-Google-Smtp-Source: ABdhPJwVfQcHNGRhsCMeMkAJgni0sp5/uJ0FX2VPazA3Al25tmUcQGNsQu0/6f7rxszKJFFH5QcSBA==
-X-Received: by 2002:a2e:b5d0:: with SMTP id g16mr29323870ljn.349.1629749985913;
-        Mon, 23 Aug 2021 13:19:45 -0700 (PDT)
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=JFZLEAhA30rNPUlpm88OHaIhK1CzHABrd7DB+Lg/9bQ=;
+        b=NM31hn4I40TS0n3ow+SaEuaeYG3M8VUmyXxURvq0duG4HHmf2QgO73YpxQDdP7wuKH
+         cIgotsjBKug7LvUreKN8XxX51N1Tr9tXtVh3PAkDnue/8Ja53rIPStRriaMZnuZe+ThA
+         xSaNueJJii0jgGmd1BMx04pvwepsTwjIcS9lvaMJ0KgUC3+lWPrlElc9o+k1v8jL73iz
+         0fgm6LkZc1nXOc/7P7W/yZHDnx9pExMimzLuEhQbZ8dmBqtV5Uej5DrDg8+MwQnHYJOZ
+         50jM3nOmPC3SQQFcNANKwErzeFmOgSM9mCrDzY2bJoYKvmYQjzWb1EJJWAmyOwwQXz1d
+         0lJA==
+X-Gm-Message-State: AOAM531T3cc28X6HyQiilGbrsA3M8jjn8j50D47sSbeSTa8QI+oi2C3/
+        CAXkPM6bKfsJXquglTY95Qw=
+X-Google-Smtp-Source: ABdhPJxcrkej2m+w34/8wZgqh89Nn40/n/KBhvMgoMj3eaqocRQEdySUWeXWqRjxvtBs3p4KcCMrWg==
+X-Received: by 2002:a05:651c:211a:: with SMTP id a26mr15593430ljq.305.1629751180124;
+        Mon, 23 Aug 2021 13:39:40 -0700 (PDT)
 Received: from localhost ([94.19.228.143])
-        by smtp.gmail.com with ESMTPSA id j20sm1288275lji.41.2021.08.23.13.19.44
+        by smtp.gmail.com with ESMTPSA id u21sm790667lfc.239.2021.08.23.13.39.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Aug 2021 13:19:44 -0700 (PDT)
-Date:   Mon, 23 Aug 2021 23:19:43 +0300
+        Mon, 23 Aug 2021 13:39:39 -0700 (PDT)
+Date:   Mon, 23 Aug 2021 23:39:38 +0300
 From:   Andrey Skvortsov <andrej.skvortzov@gmail.com>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>,
+To:     Peter Oh <peter.oh@eero.com>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
         Wen Gong <wgong@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Alvin =?utf-8?Q?=C5=A0ipraga?= <alsi@bang-olufsen.dk>,
+        Brian Norris <briannorris@chromium.org>,
         Julian Calaby <julian.calaby@gmail.com>, svp <svpm@yandex.ru>,
         felix+debian@gueux.org, Massimo Maggi <me@massimo-maggi.eu>
 Subject: Re: Revert: ath: add support for special 0x0 regulatory domain
-Message-ID: <YSQC32TygIq2SHJR@skv.local>
+Message-ID: <YSQHijyArNZW38Qq@skv.local>
 References: <YSJ//ki/A1EgfLga@skv.local>
- <CA+ASDXNzv6D1PthjUU-CVw6amT+JHmJP2mNSL=LVJKGm0zkEXw@mail.gmail.com>
+ <15d3d071-61a2-0847-de13-634a0c2077d5@eero.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CA+ASDXNzv6D1PthjUU-CVw6amT+JHmJP2mNSL=LVJKGm0zkEXw@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <15d3d071-61a2-0847-de13-634a0c2077d5@eero.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 21-08-23 10:23, Brian Norris wrote:
-> On Sun, Aug 22, 2021 at 9:49 AM Andrey Skvortsov
-> <andrej.skvortzov@gmail.com> wrote:
-> > 4) As many users are affected by this problem and maintainers don't really
-> > want to revert the problematic patch,
-> 
-> I'm not totally sure that's true. So far, it looks like an oversight.
-> 
-> Over a year ago, Kalle said he "just need[ed] to check something
-> internally first":
-> https://lore.kernel.org/linux-wireless/87r1rsbdnx.fsf@codeaurora.org/
-> 
-> I don't see the result of that, except that this is marked Superseded:
-> https://patchwork.kernel.org/project/linux-wireless/patch/20200730124923.271429-1-alsi@bang-olufsen.dk/
-> and this is marked Rejected:
-> https://patchwork.kernel.org/project/linux-wireless/patch/20200527165718.129307-1-briannorris@chromium.org/
-> I'm not sure if the Rejected was before or after the last reply above...
-> 
-> Maybe it needs an Nth person to submit a revert?
+On 21-08-23 11:15, Peter Oh wrote:
+>=20
+> On 8/22/21 9:49 AM, Andrey Skvortsov wrote:
+>=20
+> > 1) Current behaviour maps 0x0 regulatory domain to the most restrictive
+> > world domain. According to the wiki (probably based on Atheros
+> > documentation) 0x0 means US. Does wiki contain wrong information?
+>=20
+> 0x0 means country section in OTP is not written yet and open to set to any
+> country.
+>=20
+> QCA sets to US in this case as a default value.
 
-Later (Dec 23, 2020) said "Actually I don't see how I could apply the
-revert due to the regulatory problems explained by Jouni". [1]
-I think this could be the date when your patch was marked as Rejected.
+Do you mean it's set to US by code fragment described below?
 
-1. http://lists.infradead.org/pipermail/ath10k/2020-December/012370.html
 
--- 
+> > 2) If I understand correctly, 0x0 is always replaced with 0x64 and that
+> > makes the following code useless, because it will never be executed. Is=
+ it
+> > ok?
+> >=20
+> > drivers/net/wireless/ath/regd.c:703:708
+> >=20
+> > if (reg->country_code =3D=3D CTRY_DEFAULT &&
+> >          regdmn =3D=3D CTRY_DEFAULT) {
+> >              printk(KERN_DEBUG "ath: EEPROM indicates default "
+> >                  "country code should be used\n");
+> >              reg->country_code =3D CTRY_UNITED_STATES;
+> > }
+> I don't think that's true. If you're seeing 0x0 is replaced with 0x64
+> (CTRY_BULGARIA =3D 100), it could be because your device's manufacturer
+> preconfigured country code with the value.
+
+0x64 is not BULGARIA, it's not the country code in this case, but regulator=
+y domain - WOR4_WORLD
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dri=
+vers/net/wireless/ath/regd_common.h?h=3Dv5.14-rc7#n84
+
+country code is still default (CTRY_DEFAULT =3D=3D 0x00), but regdmn is
+sanitized (set to 0x64) and is not CTRY_DEFAULT (0x00), therefore
+country_code is not set to CTRY_UNITED_STATES any more.
+
+> > 3) Previously it was possible to get regulatory information using 'iw r=
+eg
+> > get', but now it doesn't work anymore. Is it expected behavior?
+> >=20
+> > [--------------------4.19 ---------------------------------]
+> > # iw reg get
+> > global
+> > country 98: DFS-UNSET
+> > (2400 - 2483 @ 40), (N/A, 20), (N/A)
+> > (5150 - 5250 @ 100), (N/A, 20), (N/A), NO-OUTDOOR
+> > (5250 - 5350 @ 100), (N/A, 20), (0 ms), NO-OUTDOOR, DFS
+> > (5650 - 5730 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS
+> > (5730 - 5850 @ 80), (N/A, 20), (N/A), NO-OUTDOOR
+> > (57240 - 66000 @ 2160), (N/A, 40), (N/A), NO-OUTDOOR
+> >=20
+> >=20
+> > [--------------------- 5.10 --------------------------------]
+> > #iw reg get
+> > global
+> > country RU: DFS-UNSET
+> > (2400 - 2483 @ 40), (N/A, 20), (N/A)
+> > (5150 - 5350 @ 160), (N/A, 20), (N/A), NO-OUTDOOR
+> > (5650 - 5850 @ 160), (N/A, 20), (N/A), NO-OUTDOOR
+> > (57000 - 66000 @ 2160), (N/A, 40), (N/A), NO-OUTDOOR
+> >=20
+> > [-----------------------------------------------------------]
+>=20
+> The 4.19 output tells you that country code is changed to different one f=
+rom
+> manufacturer is set(US).
+>=20
+> The 5.10 output seems manufacture set country code to RU. If it's the cas=
+e,
+> No phy level country code looks wrong or a bug.
+
+There hardware is the same in both cases. RU is displayed just because
+I played with 'iw reg set RU/US/..'. My question is more about why on
+newer kernels 'iw reg get' doesn't report regulatory information about
+these cards (phy#..) any more.
+
+I mean following lines:
+
+phy#0
+country US: DFS-FCC
+(2400 - 2483 @ 40), (N/A, 30), (N/A)
+(5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+(5250 - 5350 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+(5470 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+(5730 - 5850 @ 80), (N/A, 30), (N/A)
+(57240 - 71000 @ 2160), (N/A, 40), (N/A)
+
+phy#1
+country US: DFS-FCC
+(2400 - 2483 @ 40), (N/A, 30), (N/A)
+(5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+(5250 - 5350 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+(5470 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+(5730 - 5850 @ 80), (N/A, 30), (N/A)
+(57240 - 71000 @ 2160), (N/A, 40), (N/A)
+
+--=20
 Best regards,
 Andrey Skvortsov
