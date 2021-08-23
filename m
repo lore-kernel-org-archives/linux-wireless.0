@@ -2,71 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C32BC4338F
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:10:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B549C4338F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 12:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37CFB6136F
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:10:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58859611C8
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 12:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236381AbhHWLK6 (ORCPT
+        id S235731AbhHWMy0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Aug 2021 07:10:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60526 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236301AbhHWLK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Aug 2021 07:10:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 6B13661391;
-        Mon, 23 Aug 2021 11:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629717015;
-        bh=ig5ptECh8CQ3XDKyUcQf7E6A5jrN37C1+1uDZs38l54=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=ssWsmMDikjZhWAlZpshwXBgI9zfL9535Eb0RKMoMtrNIlxDJF7dfZw43BuzQe+c8K
-         Zxr24jAhhJVjhQoTrSFvPC3aLntH8kReIurvvJ4Uil/4Qgd4OHvpDLBMMXrRzHqFx6
-         TOO9yU9XM5L7TQ3vsM+GMUpBtFbnA4OUK0QiSVxu7sXCK4sEhAdCnLqBNI4WNuEmTs
-         ULlmZe3Ajs/G4TQ5kwnSsDM2tlSuXw+8jJR7ELFCVOK1+xAnCdJmHC67BjiXx3URug
-         abGAJMq71zN6xMf93kTlb1sPWSfvBJhqCXeBRStMYs27GYOPPHjtkc169zy0/zWaWD
-         FQvt8Cpk9vhrA==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 23 Aug 2021 08:54:26 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:47209 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232574AbhHWMy0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Aug 2021 08:54:26 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1629723223; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
+ To: From: Sender; bh=JcfDWR4cffqT+kvemo31Qw9aFals0hPQCxPipl6EkWA=; b=FzHJgtykFiN+2t6yIioZprcxLZS2X/YYIOxQwTR2o8t5hdCKBFX1ylsjNoM4JORDkGekczDa
+ SpQbeRNbF7kzRrK9/h0J/gyrCmxPtBJd9CaUhNsyVfpxDSxbwnK5RYi71L6rucVxO8Fe5i3U
+ TcJmTqpzWgyOT4yHn6inLsjJ7mQ=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 61239a4289fbdf3ffe5fb306 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 23 Aug 2021 12:53:22
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 27F62C4338F; Mon, 23 Aug 2021 12:53:22 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7F0DDC4338F;
+        Mon, 23 Aug 2021 12:53:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 7F0DDC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Wren Turkal <wt@penguintechs.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        regressions@lists.linux.dev,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Hemant Kumar <hemantk@codeaurora.org>,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: Re: 5.14 rc6 broken for QCA6390 on Dell XPS 13 9310
+References: <a8cddf24-ecfc-088e-27f4-98cbbb5fb67c@penguintechs.org>
+Date:   Mon, 23 Aug 2021 15:53:14 +0300
+In-Reply-To: <a8cddf24-ecfc-088e-27f4-98cbbb5fb67c@penguintechs.org> (Wren
+        Turkal's message of "Sun, 22 Aug 2021 14:08:11 -0700")
+Message-ID: <87y28sqq4l.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: wireless-drivers-next-2021-08-22
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <162971701539.8269.8347648767487963500.git-patchwork-notify@kernel.org>
-Date:   Mon, 23 Aug 2021 11:10:15 +0000
-References: <20210822085438.360ACC4338F@smtp.codeaurora.org>
-In-Reply-To: <20210822085438.360ACC4338F@smtp.codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+(adding linux-wireless, regressions and some mhi folks)
 
-This pull request was applied to netdev/net-next.git (refs/heads/master):
+Wren Turkal <wt@penguintechs.org> writes:
 
-On Sun, 22 Aug 2021 08:54:38 +0000 (UTC) you wrote:
-> Hi,
-> 
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
-> 
-> Kalle
-> 
-> [...]
+> I have no device for the wifi on my computer. 5.13 worked pretty well.
+> I also found others reporting similar issues:
+> https://forum.manjaro.org/t/kernel5-14-rc6-ath11k-on-qca6390-regression-m=
+hi-probe-failure/79362
+>
+> Here's info about the hardware on my laptop:
+> =E2=9E=9C  ~ sudo dmidecode -s system-product-name
+> XPS 13 9310
+>
+> =E2=9E=9C  ~ sudo dmidecode -s bios-version
+> 3.0.4
 
-Here is the summary with links:
-  - pull-request: wireless-drivers-next-2021-08-22
-    https://git.kernel.org/netdev/net-next/c/e6a70a02defd
+Do you get the same mhi error as in the forum post?
 
-You are awesome, thank you!
---
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+qcom_mhi_qrtr: probe of mhi0_IPCR failed with error -22
 
+MHI folks, any ideas? I have XPS 13 9310 myself but I'm not able to test
+v5.14-rc6 kernel right now.
 
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
