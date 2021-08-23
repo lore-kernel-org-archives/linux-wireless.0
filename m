@@ -4,68 +4,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF2BC432BE
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C32BC4338F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:10:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5DE2613A5
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:00:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37CFB6136F
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Aug 2021 11:10:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236400AbhHWLBN (ORCPT
+        id S236381AbhHWLK6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Aug 2021 07:01:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58634 "EHLO mail.kernel.org"
+        Mon, 23 Aug 2021 07:10:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60526 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236339AbhHWLA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Aug 2021 07:00:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 21D0E613CE;
-        Mon, 23 Aug 2021 11:00:08 +0000 (UTC)
+        id S236301AbhHWLK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Aug 2021 07:10:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 6B13661391;
+        Mon, 23 Aug 2021 11:10:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629716408;
-        bh=lc1Im8wSSH2obJkNnm9ge+Xx0A3EIz4JQmwso97pPa8=;
+        s=k20201202; t=1629717015;
+        bh=ig5ptECh8CQ3XDKyUcQf7E6A5jrN37C1+1uDZs38l54=;
         h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=XuEiMCU+yb4Or0NtGl5C9Sl6X9OnYfu4VnW+oi6CNyji2Aj7vTJYP4gbRswh5ya8l
-         IAh1iEuD8EgbdsNjR5vkdYutRcrAFUOAaB4wgXHBUuRbZ/istS4PccaIV5lTIBDDYa
-         dLgmgu04X7JqY4vQ0alb288UjZWxoPoYAXIao5wEvjgetgO9B5aSDL0cN7F+kyfhdw
-         F/HDlZVE9/2tUYnTFPxyNoB4xzzG+r4eddHUcgnOcZfGLEbTGlvKTi+6prKPsr0x15
-         LYIHl1EV2yDHzOBGfkEQiGR6VV8Kdrqf6tXva21F5Clv0gu4YRt+MdKXXojrTzdzO4
-         lSxsqAs06o8Gw==
+        b=ssWsmMDikjZhWAlZpshwXBgI9zfL9535Eb0RKMoMtrNIlxDJF7dfZw43BuzQe+c8K
+         Zxr24jAhhJVjhQoTrSFvPC3aLntH8kReIurvvJ4Uil/4Qgd4OHvpDLBMMXrRzHqFx6
+         TOO9yU9XM5L7TQ3vsM+GMUpBtFbnA4OUK0QiSVxu7sXCK4sEhAdCnLqBNI4WNuEmTs
+         ULlmZe3Ajs/G4TQ5kwnSsDM2tlSuXw+8jJR7ELFCVOK1+xAnCdJmHC67BjiXx3URug
+         abGAJMq71zN6xMf93kTlb1sPWSfvBJhqCXeBRStMYs27GYOPPHjtkc169zy0/zWaWD
+         FQvt8Cpk9vhrA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] qtnfmac: switch from 'pci_' to 'dma_' API
+Subject: Re: pull-request: wireless-drivers-next-2021-08-22
 From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <162971640809.3591.9339770206982762794.git-patchwork-notify@kernel.org>
-Date:   Mon, 23 Aug 2021 11:00:08 +0000
-References: <de7727a8aec3a3e3fae2218a05bdf3c5949b8150.1629618169.git.christophe.jaillet@wanadoo.fr>
-In-Reply-To: <de7727a8aec3a3e3fae2218a05bdf3c5949b8150.1629618169.git.christophe.jaillet@wanadoo.fr>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     imitsyanko@quantenna.com, geomatsi@gmail.com, davem@davemloft.net,
-        kvalo@codeaurora.org, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <162971701539.8269.8347648767487963500.git-patchwork-notify@kernel.org>
+Date:   Mon, 23 Aug 2021 11:10:15 +0000
+References: <20210822085438.360ACC4338F@smtp.codeaurora.org>
+In-Reply-To: <20210822085438.360ACC4338F@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hello:
 
-This patch was applied to netdev/net-next.git (refs/heads/master):
+This pull request was applied to netdev/net-next.git (refs/heads/master):
 
-On Sun, 22 Aug 2021 09:44:07 +0200 you wrote:
-> The wrappers in include/linux/pci-dma-compat.h should go away.
+On Sun, 22 Aug 2021 08:54:38 +0000 (UTC) you wrote:
+> Hi,
 > 
-> The patch has been generated with the coccinelle script below.
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
 > 
-> It has been compile tested.
-> 
+> Kalle
 > 
 > [...]
 
 Here is the summary with links:
-  - qtnfmac: switch from 'pci_' to 'dma_' API
-    https://git.kernel.org/netdev/net-next/c/06e1359cc83b
+  - pull-request: wireless-drivers-next-2021-08-22
+    https://git.kernel.org/netdev/net-next/c/e6a70a02defd
 
 You are awesome, thank you!
 --
