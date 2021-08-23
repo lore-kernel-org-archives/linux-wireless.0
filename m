@@ -2,117 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E583C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E42C4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 453FB61262
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:20:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E062A611CB
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231209AbhHXGVf (ORCPT
+        id S231962AbhHXGoI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Aug 2021 02:21:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47800 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230350AbhHXGVc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Aug 2021 02:21:32 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B5FFC061575;
-        Mon, 23 Aug 2021 23:20:49 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id jv8so11113630qvb.3;
-        Mon, 23 Aug 2021 23:20:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dntYHUzQ96z9Ky92LFdr542JcEb8KpIOuE1biM9oOng=;
-        b=XCRXYTyzatkPP8LEC19ZZxojm7wRfPfgig0TBX/WzVke5FJ94VLVeHBozn0K0xawJZ
-         hliKrJhvaacXh8PutX7ZOBMRfD7PmXd1C5avwhjShdNy05M0ZrK2MaFWDkFJvdcMxgup
-         3/+4OiQeJIPJMfPdnEr31zobPvuqOgmFtAaVF9Dn2kxn4CwLYxN9sIBwNntW7PxM+SAk
-         U+IIZ7W2W7RIFLUVLuXklqh3aeTNWACPFfYYaWWuhpKt8qSPmrbBClP6jkzgf08CP8fO
-         4PxNQkekqeupxF8Ohwn1ptAhB29JhZ06zqUatNmV/lpg+2CKqbKNc0eroYIWxjoXXtUz
-         g1mg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dntYHUzQ96z9Ky92LFdr542JcEb8KpIOuE1biM9oOng=;
-        b=XFmhspIBRgDDi2c4CMP4bUWOKkMWgxtTk4BpMLVgAFOm1KcdiEe8OBFMn8PduSsvCx
-         mRzvXwwZdoe5SA1voIAix8ZifYDfJ8HgUUTmAJF0XOztKhhBK6IFgktHxTibSN8mYo6j
-         0OZl37gwD1hF99fRnSQ0OAcQmiqVcSyvtM7WhlPZtyd9rKr291CRCzEDc943mOPtw9Cz
-         jSfz6p63XedYnyoaD36PYPbwDCAU+eJACWULQa5oZ9JL4YhG5HVxDY3vitLlQVyxzv6u
-         NQk++Y+mhpIccxU/kLucvNwTi2RAl8nqH0qsIVJR1wGH0p0ZzFyL7qIg/K4Mtxb0skIi
-         upCQ==
-X-Gm-Message-State: AOAM532g5fUf/NaScRMqmrd+XD3vnrLL2nKgoQ00myJCMFYFRYeX/4Q1
-        E7XDUQR4aKgDrE8LiP/hbZs=
-X-Google-Smtp-Source: ABdhPJw1m88JOSSpAu2p8G5KZFCnC1u84/ZdM/n5H8zPBv7IWbRO4BJEhMcVC8+mWl8PCdPbjahU/Q==
-X-Received: by 2002:a05:6214:1c1:: with SMTP id c1mr37231034qvt.37.1629786048450;
-        Mon, 23 Aug 2021 23:20:48 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id d129sm10144598qkf.136.2021.08.23.23.20.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Aug 2021 23:20:48 -0700 (PDT)
-From:   CGEL <cgel.zte@gmail.com>
-X-Google-Original-From: CGEL <deng.changcheng@zte.com.cn>
-To:     Luca Coelho <luciano.coelho@intel.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jing Yangyang <jing.yangyang@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] iwlwifi:rfi: fix memdup.cocci warnings
-Date:   Mon, 23 Aug 2021 23:20:40 -0700
-Message-Id: <20210824062040.59414-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        Tue, 24 Aug 2021 02:44:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43414 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232040AbhHXGoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Aug 2021 02:44:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD7B5610E9;
+        Tue, 24 Aug 2021 06:43:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1629787400;
+        bh=cZtsXgWO7DMRgYrwV9KWwAx/OrCZbrHnFx1TdQp61tU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=rxNm8D1o3kX7Ib7W1EdRY814sVfTge1SM00Kn6O2t85PEOuhQP4SxvRhMOzxGwy8d
+         1f/vJD2+a4AupVKYBRw0SwTOF4pa2CW+s5jPDE/8Klks9V3W+/++0J8M3LWXZq+Xe6
+         Iqhck00sSapK4AtOUoK3TjAz85ttdEhTWBtsod1Q=
+Date:   Mon, 23 Aug 2021 21:04:27 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: Drivers for Qualcomm wifi chips (ath*k) and security issues
+Message-ID: <YSPxO+VGnSopgn5G@kroah.com>
+References: <20210823140844.q3kx6ruedho7jen5@pali>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210823140844.q3kx6ruedho7jen5@pali>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jing Yangyang <jing.yangyang@zte.com.cn>
+On Mon, Aug 23, 2021 at 04:08:44PM +0200, Pali Rohár wrote:
+> Hello Sasha and Greg!
+> 
+> Last week I sent request for backporting ath9k wifi fixes for security
+> issue CVE-2020-3702 into stable LTS kernels because Qualcomm/maintainers
+> did not it for more months... details are in email:
+> https://lore.kernel.org/stable/20210818084859.vcs4vs3yd6zetmyt@pali/t/#u
+> 
+> And now I got reports that in stable LTS kernels (4.14, 4.19) are
+> missing also other fixes for other Qualcomm wifi security issues,
+> covered by FragAttacks codename: CVE-2020-26145 CVE-2020-26139
+> CVE-2020-26141
 
-./drivers/net/wireless/intel/iwlwifi/mvm/rfi.c:110:8-15:8-15:WARNING:
-opportunity for kmemdup
+Then someone needs to provide us backports if they care about these
+very old kernels and these issues.  Just like any other driver subsystem
+where patches are not able to be easily backported.
 
-Use kmemdup rather than duplicating its implementation
+Or just use a newer kernel, that's almost always a better idea.
 
-Generated by: scripts/coccinelle/api/memdup.cocci
+thanks,
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Jing Yangyang <jing.yangyang@zte.com.cn>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rfi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-index 0b81806..2225c4f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rfi.c
-@@ -107,12 +107,10 @@ struct iwl_rfi_freq_table_resp_cmd *iwl_rfi_get_freq_table(struct iwl_mvm *mvm)
- 	if (WARN_ON_ONCE(iwl_rx_packet_payload_len(cmd.resp_pkt) != resp_size))
- 		return ERR_PTR(-EIO);
- 
--	resp = kzalloc(resp_size, GFP_KERNEL);
-+	resp = kmemdup(cmd.resp_pkt->data, resp_size, GFP_KERNEL);
- 	if (!resp)
- 		return ERR_PTR(-ENOMEM);
- 
--	memcpy(resp, cmd.resp_pkt->data, resp_size);
--
- 	iwl_free_resp(&cmd);
- 	return resp;
- }
--- 
-1.8.3.1
-
-
+greg k-h
