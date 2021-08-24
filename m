@@ -2,69 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
-	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E42C4338F
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7795DC4338F
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 07:00:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E062A611CB
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 06:43:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5207061360
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Aug 2021 07:00:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231962AbhHXGoI (ORCPT
+        id S232245AbhHXHBL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Aug 2021 02:44:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43414 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232040AbhHXGoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Aug 2021 02:44:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BD7B5610E9;
-        Tue, 24 Aug 2021 06:43:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1629787400;
-        bh=cZtsXgWO7DMRgYrwV9KWwAx/OrCZbrHnFx1TdQp61tU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rxNm8D1o3kX7Ib7W1EdRY814sVfTge1SM00Kn6O2t85PEOuhQP4SxvRhMOzxGwy8d
-         1f/vJD2+a4AupVKYBRw0SwTOF4pa2CW+s5jPDE/8Klks9V3W+/++0J8M3LWXZq+Xe6
-         Iqhck00sSapK4AtOUoK3TjAz85ttdEhTWBtsod1Q=
-Date:   Mon, 23 Aug 2021 21:04:27 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: Drivers for Qualcomm wifi chips (ath*k) and security issues
-Message-ID: <YSPxO+VGnSopgn5G@kroah.com>
-References: <20210823140844.q3kx6ruedho7jen5@pali>
+        Tue, 24 Aug 2021 03:01:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56864 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231363AbhHXHBK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Aug 2021 03:01:10 -0400
+Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70092C061575;
+        Tue, 24 Aug 2021 00:00:26 -0700 (PDT)
+Received: by mail-qk1-x72c.google.com with SMTP id f22so12381170qkm.5;
+        Tue, 24 Aug 2021 00:00:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fwvoBNnOVeLStj97kABmgr2lP/M5U/faVgrrsm4jm84=;
+        b=mC9Ff686jjOmOumd3lR9JG3qMEQkK+Ag9ppBQvU50pFOwaIUXq64acUTXdLBaC5GtW
+         tUnI2RlSyaCDAOfyVIT/QMuEv/4E6HIGFdhfaM3NJ/MtQjeUpFaUac1v5aAIDSOhgzwk
+         a3sjh/voQHFgmv/8G/nrUN0QCH2gCJWVcvvSsWzhso40Ow5FctuGQ6ZED7094hK0Q1gl
+         7s2lQ8C+FrlLFrIbboHdCoxnznwPnw4RnV9RGiTKjBNFnMfp5Rz6tzcezU5TmBjQjNNb
+         Q8o/eVo/X5iqZje4p1IdLnLrVL4DLDpWtfqXEd7w3mt51rzgx6Rtqw4TZU1KefhSsoxH
+         Fvqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fwvoBNnOVeLStj97kABmgr2lP/M5U/faVgrrsm4jm84=;
+        b=NdPsym5nTdsBPRG6c1GB0qu0kjbJdiUIEJyRCTghtXapci3owUh94hofb2evbk6SBV
+         zQ1LE4+/1rx3+/a5Q4XZvzkv3oZAPrVKsDWoIdQW1Mk7N+vLa6/7R3hU+WrrgTEj7g1x
+         x0S0bjTSQnbxqdv+c02pZhT1t7lbiV+/AhLc6RMhe55DnII+zIFdbJdeAest8MdOnT52
+         Jlty1cUGkVrbcZ20fBQg2O48ptFUqSVM7xULgoLA0xzA7c/6hJe1mMuyuC7Dge5fHq8z
+         tAttE+X158Ouw1MG+JK2U1LVPjLcmPB4RSNbGPVYcEiuVy91VPX43RxDJbtRNvnysnvA
+         0jUA==
+X-Gm-Message-State: AOAM531NhXh3kADAmPOhikrJ3L8QIDt/Jo4Zi/+UejJ0UyuSix/pb4eb
+        VypTPL5TV6I+LFfSyRhiioY=
+X-Google-Smtp-Source: ABdhPJyImx60V8UEyg8azSONvBkqYkkNAY287rTKR4p7BzwG8oQScs6KgKrohwK/SSQxWCZuq1S5ZQ==
+X-Received: by 2002:a05:620a:1342:: with SMTP id c2mr25256932qkl.264.1629788425718;
+        Tue, 24 Aug 2021 00:00:25 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id c7sm8420156qtv.9.2021.08.24.00.00.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Aug 2021 00:00:25 -0700 (PDT)
+From:   CGEL <cgel.zte@gmail.com>
+X-Google-Original-From: CGEL <deng.changcheng@zte.com.cn>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Jing Yangyang <jing.yangyang@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] wireless:usb_sdio: fix boolreturn.cocci warnings
+Date:   Tue, 24 Aug 2021 00:00:17 -0700
+Message-Id: <20210824070017.60880-1-deng.changcheng@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210823140844.q3kx6ruedho7jen5@pali>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Aug 23, 2021 at 04:08:44PM +0200, Pali Rohár wrote:
-> Hello Sasha and Greg!
-> 
-> Last week I sent request for backporting ath9k wifi fixes for security
-> issue CVE-2020-3702 into stable LTS kernels because Qualcomm/maintainers
-> did not it for more months... details are in email:
-> https://lore.kernel.org/stable/20210818084859.vcs4vs3yd6zetmyt@pali/t/#u
-> 
-> And now I got reports that in stable LTS kernels (4.14, 4.19) are
-> missing also other fixes for other Qualcomm wifi security issues,
-> covered by FragAttacks codename: CVE-2020-26145 CVE-2020-26139
-> CVE-2020-26141
+From: Jing Yangyang <jing.yangyang@zte.com.cn>
 
-Then someone needs to provide us backports if they care about these
-very old kernels and these issues.  Just like any other driver subsystem
-where patches are not able to be easily backported.
+./drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c:172:8-9:WARNING:
+return of 0/1 in function 'mt7663_usb_sdio_tx_status_data'
+with return type bool
 
-Or just use a newer kernel, that's almost always a better idea.
+Return statements in functions returning bool should use true/false
+instead of 1/0.
 
-thanks,
+Generated by: scripts/coccinelle/misc/boolreturn.cocci
 
-greg k-h
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Jing Yangyang <jing.yangyang@zte.com.cn>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+index 996d48c..bd2939e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+@@ -169,7 +169,7 @@ bool mt7663_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update)
+ 	mt7615_mac_sta_poll(dev);
+ 	mt7615_mutex_release(dev);
+ 
+-	return 0;
++	return false;
+ }
+ EXPORT_SYMBOL_GPL(mt7663_usb_sdio_tx_status_data);
+ 
+-- 
+1.8.3.1
+
+
