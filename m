@@ -2,88 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95DA8C4338F
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 01:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A15D5C4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 02:18:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A8FB61220
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 01:37:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DAE461368
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 02:18:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232656AbhHYBiJ (ORCPT
+        id S235877AbhHYCTW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Aug 2021 21:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33500 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231415AbhHYBiI (ORCPT
+        Tue, 24 Aug 2021 22:19:22 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:52706 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235237AbhHYCTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Aug 2021 21:38:08 -0400
-Received: from fudo.makrotopia.org (fudo.makrotopia.org [IPv6:2a07:2ec0:3002::71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD84DC061757
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2021 18:37:23 -0700 (PDT)
-Received: from local
-        by fudo.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-         (Exim 4.94.2)
-        (envelope-from <daniel@makrotopia.org>)
-        id 1mIhmE-0007rm-DA; Wed, 25 Aug 2021 03:32:25 +0200
-Date:   Wed, 25 Aug 2021 02:32:16 +0100
-From:   Daniel Golle <daniel@makrotopia.org>
-To:     linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc:     Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Subject: [PATCH 1/2] mt76: support reading EEPROM data embedded in fdt
-Message-ID: <YSWdoKIaVCqAU6nG@makrotopia.org>
+        Tue, 24 Aug 2021 22:19:21 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1629857916; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=zkMf6TvHMYWGClNY/J3MKCa7YlhEPpJW5voKdcIkmC8=;
+ b=jaJ1BS+3t8gnwfb+BTuEpj33f745QoGTnryiabZhd+lyL8CoqoBaWDXabtaXyt1uRw3gyxea
+ Zc3raMfYlz8jwM6MNlimIJMPwkyGVm8SeDt+u6LO6iBXAYokUoHSigBnMIlYFKxS4LwLBbh9
+ BDXAP0mmTuv68g23rUbKze0CJxw=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 6125a86acd680e89699973b7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 02:18:18
+ GMT
+Sender: wgong=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id C082EC43618; Wed, 25 Aug 2021 02:18:17 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 40443C4338F;
+        Wed, 25 Aug 2021 02:18:17 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 25 Aug 2021 10:18:17 +0800
+From:   Wen Gong <wgong@codeaurora.org>
+To:     johannes@sipsolutions.net, ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 0/8] cfg80211/mac80211: Add support for 6GHZ STA for
+ various modes : LPI, SP and VLP
+In-Reply-To: <20210820122041.12157-1-wgong@codeaurora.org>
+References: <20210820122041.12157-1-wgong@codeaurora.org>
+Message-ID: <6589258be9fd32d2ac5b364c69c4c25a@codeaurora.org>
+X-Sender: wgong@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some platforms boot from SD card and don't come with calibration data
-stored anywhere on the board.
-As EEPROM data is rather small it can be embedded into the device tree
-to be loaded from there by the mt76.
+Hi johannes,
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/mediatek/mt76/eeprom.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Could I get your comments on this v2 patches?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
-index 3b47e85e95e7c..01bc42dc71c26 100644
---- a/drivers/net/wireless/mediatek/mt76/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
-@@ -15,6 +15,7 @@ int mt76_get_of_eeprom(struct mt76_dev *dev, void *eep, int offset, int len)
- 	struct device_node *np = dev->dev->of_node;
- 	struct mtd_info *mtd;
- 	const __be32 *list;
-+	const void *data;
- 	const char *part;
- 	phandle phandle;
- 	int size;
-@@ -24,6 +25,16 @@ int mt76_get_of_eeprom(struct mt76_dev *dev, void *eep, int offset, int len)
- 	if (!np)
- 		return -ENOENT;
- 
-+	data = of_get_property(np, "mediatek,eeprom-data", &size);
-+	if (data) {
-+		if (size > len)
-+			return -EINVAL;
-+
-+		memcpy(eep, data, size);
-+
-+		return 0;
-+	}
-+
- 	list = of_get_property(np, "mediatek,mtd-eeprom", &size);
- 	if (!list)
- 		return -ENOENT;
--- 
-2.32.0
-
+On 2021-08-20 20:20, Wen Gong wrote:
+> v2: change per comments of johannes.
+>     including code style, code logic, patch merge, commit log...
+> 
+> It introduced some new concept:
+> power type of AP(STANDARD_POWER_AP, INDOOR_AP, VERY_LOW_POWER_AP)
+> power type of STATION(DEFAULT_CLIENT, SUBORDINATE_CLIENT)
+> power spectral density(psd)
+> 
+> This patchset for cfg80211/mac80211 is to add the definition of new
+> concept of 6G and add basic parse of IE(transmit power envelope
+> element) in beacon and save power spectral density(psd) reported
+> by lower-driver for 6G channel, the info will be passed to lower
+> driver when connecting to 6G AP.
+> 
+> Wen Gong (8):
+>   cfg80211: add power type definition for 6 GHz
+>   mac80211: add definition of regulatory info in 6 GHz operation
+>     information
+>   mac80211: add parse regulatory info in 6 GHz operation information
+>   cfg80211: add definition for 6 GHz power spectral density(psd)
+>   cfg80211: save power spectral density(psd) of regulatory rule
+>   mac80211: add definition for transmit power envelope element
+>   mac80211: add parse transmit power envelope element
+>   mac80211: save transmit power envelope element and power constraint
+> 
+>  include/linux/ieee80211.h    | 43 +++++++++++++++++++++++++++++++++++-
+>  include/net/cfg80211.h       |  7 ++++++
+>  include/net/mac80211.h       |  6 +++++
+>  include/net/regulatory.h     |  1 +
+>  include/uapi/linux/nl80211.h | 36 ++++++++++++++++++++++++++++++
+>  net/mac80211/chan.c          |  9 ++++++++
+>  net/mac80211/ieee80211_i.h   |  3 +++
+>  net/mac80211/mlme.c          | 26 ++++++++++++++++++++++
+>  net/mac80211/util.c          | 19 ++++++++++++++++
+>  net/wireless/reg.c           | 14 ++++++++++++
+>  10 files changed, 163 insertions(+), 1 deletion(-)
