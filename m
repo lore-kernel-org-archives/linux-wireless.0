@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C993C4320A
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5BCC4338F
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 571CC610CE
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 939B961100
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239896AbhHYJjq (ORCPT
+        id S239618AbhHYJj4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Aug 2021 05:39:46 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:14298 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239840AbhHYJjp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Aug 2021 05:39:45 -0400
+        Wed, 25 Aug 2021 05:39:56 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:18932 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239513AbhHYJjx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Aug 2021 05:39:53 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629884340; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1629884348; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=cSjpKxnMW2nVzM98G6vYq2CvXAbSsJtK4DM8yThjHEU=; b=DnNzaki+IGwImSREfsYVEWa5qH+dGccR4x75U5W5P+aLOufd8QUJZmdtiGHeG/z0S9vVOpXX
- JA6WHA7Gj6VUA8CxzmVXANHghOJ3hDcwUTpCoFIKLSGb8/OMRT2SmHx1aohAdmvQRXRopIRs
- keqIb0VIpaglp1xu4aFVRtwDRkw=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ bh=de8TobcEumw9VK4+1G1I+0LuxSLPA/v83oAY+GkKWbw=; b=MpFeLAlezd/RN7XZoCJFEg3IyyPB2/J4od47JXJxXhlw7KffTPylHGSz9M6uiO/bTgpMbJ0Y
+ QIIZmNyBG+xUsOoybXrdfI678sHazHE79e2vk7U1oj38UW1hRjGDHu4JFRpS21FWFXVZ0U9Q
+ yg1ohRQnpx2PPEaCig7SSDkrt34=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 61260faf4d644b7d1c884173 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 09:38:55
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 61260fa940d2129ac1077aa2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 09:38:49
  GMT
 Sender: ppranees=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 40818C43460; Wed, 25 Aug 2021 09:38:55 +0000 (UTC)
+        id 9D910C43460; Wed, 25 Aug 2021 09:38:49 +0000 (UTC)
 Received: from ppranees-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: ppranees)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 993BDC43617;
-        Wed, 25 Aug 2021 09:38:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 993BDC43617
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 65C3AC43616;
+        Wed, 25 Aug 2021 09:38:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 65C3AC43616
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   P Praneesh <ppranees@codeaurora.org>
 To:     kvalo@codeaurora.org
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         P Praneesh <ppranees@codeaurora.org>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
         Sriram R <srirrama@codeaurora.org>,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH v2 04/12] ath11k: avoid additional access to ath11k_hal_srng_dst_num_free
-Date:   Wed, 25 Aug 2021 15:07:49 +0530
-Message-Id: <1629884277-18759-5-git-send-email-ppranees@codeaurora.org>
+Subject: [PATCH v2 02/12] ath11k: allocate dst ring descriptors from cacheable memory
+Date:   Wed, 25 Aug 2021 15:07:47 +0530
+Message-Id: <1629884277-18759-3-git-send-email-ppranees@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1629884277-18759-1-git-send-email-ppranees@codeaurora.org>
 References: <1629884277-18759-1-git-send-email-ppranees@codeaurora.org>
@@ -63,55 +63,239 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In ath11k_dp_process_rx(), after processing rx_desc from
-ath11k_hal_srng_dst_get_next_entry(), ath11k_hal_srng_dst_num_free()
-is accessed everytime because of done flag is not set.
+tcl_data and reo_dst rings are currently being allocated using
+dma_allocate_coherent() which is non cacheable.
 
-To avoid this additional access to ath11k_hal_srng_dst_num_free(),
-increment total_msdu_reaped only when continuation is not set and
-update done flag correspondingly.
+Allocating ring memory from cacheable memory area allows cached
+descriptor access and prefetch next descriptors to optimize CPU
+usage during descriptor processing on NAPI. Based on the hardware
+param we can enable/disable this feature for the corresponding
+platform.
 
 Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1.r2-00012-QCAHKSWPL_SILICONZ-1
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01695-QCAHKSWPL_SILICONZ-1
 
+Co-developed-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 Co-developed-by: Sriram R <srirrama@codeaurora.org>
 Signed-off-by: Sriram R <srirrama@codeaurora.org>
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: P Praneesh <ppranees@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c |  5 +++++
+ drivers/net/wireless/ath/ath11k/dp.c   | 38 +++++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath11k/dp.h   |  1 +
+ drivers/net/wireless/ath/ath11k/hal.c  | 28 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/hal.h  |  1 +
+ drivers/net/wireless/ath/ath11k/hw.h   |  1 +
+ 6 files changed, 67 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index b84c2db..994959b 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -2623,7 +2623,6 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 				 DMA_FROM_DEVICE);
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 969bf1a..298c4dc 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -71,6 +71,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.alloc_cacheable_memory = true,
+ 	},
+ 	{
+ 		.hw_rev = ATH11K_HW_IPQ6018_HW10,
+@@ -112,6 +113,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.alloc_cacheable_memory = true,
+ 	},
+ 	{
+ 		.name = "qca6390 hw2.0",
+@@ -152,6 +154,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = true,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.alloc_cacheable_memory = false,
+ 	},
+ 	{
+ 		.name = "qcn9074 hw1.0",
+@@ -190,6 +193,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_qcn9074),
+ 		.fix_l1ss = true,
++		.alloc_cacheable_memory = true,
+ 	},
+ 	{
+ 		.name = "wcn6855 hw2.0",
+@@ -230,6 +234,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = true,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_wcn6855),
+ 		.fix_l1ss = false,
++		.alloc_cacheable_memory = false,
+ 	},
+ };
  
- 		num_buffs_reaped[mac_id]++;
--		total_msdu_reaped++;
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index b0c8f62..57059c6 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -101,8 +101,11 @@ void ath11k_dp_srng_cleanup(struct ath11k_base *ab, struct dp_srng *ring)
+ 	if (!ring->vaddr_unaligned)
+ 		return;
  
- 		push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
- 					desc.info0);
-@@ -2646,10 +2645,15 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
+-	dma_free_coherent(ab->dev, ring->size, ring->vaddr_unaligned,
+-			  ring->paddr_unaligned);
++	if (ring->cached)
++		kfree(ring->vaddr_unaligned);
++	else
++		dma_free_coherent(ab->dev, ring->size, ring->vaddr_unaligned,
++				  ring->paddr_unaligned);
  
- 		__skb_queue_tail(&msdu_list, msdu);
+ 	ring->vaddr_unaligned = NULL;
+ }
+@@ -222,6 +225,7 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 	int entry_sz = ath11k_hal_srng_get_entrysize(ab, type);
+ 	int max_entries = ath11k_hal_srng_get_max_entries(ab, type);
+ 	int ret;
++	bool cached = false;
  
--		if (total_msdu_reaped >= quota && !rxcb->is_continuation) {
-+		if (rxcb->is_continuation) {
-+			done = false;
-+		} else {
-+			total_msdu_reaped++;
- 			done = true;
--			break;
- 		}
+ 	if (max_entries < 0 || entry_sz < 0)
+ 		return -EINVAL;
+@@ -230,9 +234,28 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 		num_entries = max_entries;
+ 
+ 	ring->size = (num_entries * entry_sz) + HAL_RING_BASE_ALIGN - 1;
+-	ring->vaddr_unaligned = dma_alloc_coherent(ab->dev, ring->size,
+-						   &ring->paddr_unaligned,
+-						   GFP_KERNEL);
 +
-+		if (total_msdu_reaped >= budget)
++	if (ab->hw_params.alloc_cacheable_memory) {
++		/* Allocate the reo dst and tx completion rings from cacheable memory */
++		switch (type) {
++		case HAL_REO_DST:
++			cached = true;
 +			break;
++		default:
++			cached = false;
++		}
++
++		if (cached) {
++			ring->vaddr_unaligned = kzalloc(ring->size, GFP_KERNEL);
++			ring->paddr_unaligned = virt_to_phys(ring->vaddr_unaligned);
++		}
++	}
++
++	if (!cached)
++		ring->vaddr_unaligned = dma_alloc_coherent(ab->dev, ring->size,
++							   &ring->paddr_unaligned,
++							   GFP_KERNEL);
++
+ 	if (!ring->vaddr_unaligned)
+ 		return -ENOMEM;
+ 
+@@ -292,6 +315,11 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 		return -EINVAL;
  	}
  
- 	/* Hw might have updated the head pointer after we cached it.
++	if (cached && ab->hw_params.alloc_cacheable_memory) {
++		params.flags |= HAL_SRNG_FLAGS_CACHED;
++		ring->cached = 1;
++	}
++
+ 	ret = ath11k_hal_srng_setup(ab, type, ring_num, mac_id, &params);
+ 	if (ret < 0) {
+ 		ath11k_warn(ab, "failed to setup srng: %d ring_id %d\n",
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index ee768cc..e659148 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -64,6 +64,7 @@ struct dp_srng {
+ 	dma_addr_t paddr;
+ 	int size;
+ 	u32 ring_id;
++	u8 cached;
+ };
+ 
+ struct dp_rxdma_ring {
+diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+index eaa0edc..f04edaf 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.c
++++ b/drivers/net/wireless/ath/ath11k/hal.c
+@@ -627,6 +627,21 @@ u32 *ath11k_hal_srng_dst_peek(struct ath11k_base *ab, struct hal_srng *srng)
+ 	return NULL;
+ }
+ 
++static void ath11k_hal_srng_prefetch_desc(struct ath11k_base *ab,
++					  struct hal_srng *srng)
++{
++	u32 *desc;
++
++	/* prefetch only if desc is available */
++	desc = ath11k_hal_srng_dst_peek(ab, srng);
++	if (likely(desc)) {
++		dma_sync_single_for_cpu(ab->dev, virt_to_phys(desc),
++					(srng->entry_size * sizeof(u32)),
++					DMA_FROM_DEVICE);
++		prefetch(desc);
++	}
++}
++
+ u32 *ath11k_hal_srng_dst_get_next_entry(struct ath11k_base *ab,
+ 					struct hal_srng *srng)
+ {
+@@ -642,6 +657,10 @@ u32 *ath11k_hal_srng_dst_get_next_entry(struct ath11k_base *ab,
+ 	srng->u.dst_ring.tp = (srng->u.dst_ring.tp + srng->entry_size) %
+ 			      srng->ring_size;
+ 
++	/* Try to prefetch the next descriptor in the ring */
++	if (srng->flags & HAL_SRNG_FLAGS_CACHED)
++		ath11k_hal_srng_prefetch_desc(ab, srng);
++
+ 	return desc;
+ }
+ 
+@@ -775,11 +794,16 @@ void ath11k_hal_srng_access_begin(struct ath11k_base *ab, struct hal_srng *srng)
+ {
+ 	lockdep_assert_held(&srng->lock);
+ 
+-	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
++	if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
+ 		srng->u.src_ring.cached_tp =
+ 			*(volatile u32 *)srng->u.src_ring.tp_addr;
+-	else
++	} else {
+ 		srng->u.dst_ring.cached_hp = *srng->u.dst_ring.hp_addr;
++
++		/* Try to prefetch the next descriptor in the ring */
++		if (srng->flags & HAL_SRNG_FLAGS_CACHED)
++			ath11k_hal_srng_prefetch_desc(ab, srng);
++	}
+ }
+ 
+ /* Update cached ring head/tail pointers to HW. ath11k_hal_srng_access_begin()
+diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+index 35ed3a1..0f4f9ce 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.h
++++ b/drivers/net/wireless/ath/ath11k/hal.h
+@@ -513,6 +513,7 @@ enum hal_srng_dir {
+ #define HAL_SRNG_FLAGS_DATA_TLV_SWAP		0x00000020
+ #define HAL_SRNG_FLAGS_LOW_THRESH_INTR_EN	0x00010000
+ #define HAL_SRNG_FLAGS_MSI_INTR			0x00020000
++#define HAL_SRNG_FLAGS_CACHED                   0x20000000
+ #define HAL_SRNG_FLAGS_LMAC_RING		0x80000000
+ 
+ #define HAL_SRNG_TLV_HDR_TAG		GENMASK(9, 1)
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 62f5978..7fe8edb 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -163,6 +163,7 @@ struct ath11k_hw_params {
+ 	bool supports_suspend;
+ 	u32 hal_desc_sz;
+ 	bool fix_l1ss;
++	bool alloc_cacheable_memory;
+ };
+ 
+ struct ath11k_hw_ops {
 -- 
 2.7.4
 
