@@ -2,112 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 628BCC432BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 23:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20710C4320E
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 23:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3586061075
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 23:24:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F12AA61008
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 23:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233361AbhHYXZa (ORCPT
+        id S233361AbhHYXkN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Aug 2021 19:25:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51606 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233291AbhHYXZa (ORCPT
+        Wed, 25 Aug 2021 19:40:13 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:64826 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233329AbhHYXkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Aug 2021 19:25:30 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 773CBC061757
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Aug 2021 16:24:43 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id j4so2366754lfg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Aug 2021 16:24:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ohnyH/sYJ4RhitC7WS5XOqlr5Fq+L2Nsz7HS2qyXv2Y=;
-        b=fFTMTLVaSYyrU35PgaGSgyyOg1shsRQ+Vfs/Ao7B4oHszJKMa7Zb9cRkHJZH29RFgO
-         q9xVAdKnNr+tuNBJ+fYIGc5UOMoTpdrKSiE+v4QqVwEA9KVFSiD69ThhdrTIkdUfILiM
-         AcBYL50IBx3zgSyuh5EEkh6mn4UzaT1Xyx1SZuv8uG2LQsa6bKGXAv1Bijq4BfbNMyEb
-         9emQnQH9e0/+9TAhi//CJOgs0TLz7sPAKIVbnTG5ymqKpeG+A3mNyGTrCOURPbGI5Peb
-         tCoC3ri3zUPvFid8hu/lauw5jj4o4pvzWQX3bhFIc/V8fNmOhdntAl/xQzYpAKZ0gkyh
-         dUug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ohnyH/sYJ4RhitC7WS5XOqlr5Fq+L2Nsz7HS2qyXv2Y=;
-        b=VXbv6i5oJYi8QWZUMGg1AkkXLP+P3XiHw+tbxQDXDPa1Cu6pR1uJpw5zgxfZj/uDf6
-         t9Xp7PsaMluTABfjth1ro4PPiJvrWN0IM/IHEoBEc/NIA7m4nSaw9fOEHXgMfevxIfO1
-         88Ik/vkhnRR6kFe5RlXEtCaWWgDBgPFxvrE1rdstecFzyR/ENm5rTsJbdJjNzsa6iKOR
-         1HT+IYonmaJlED3ukecqWXvlJ+H/b6u9aUrasNi3JOCc+Afwh5rAMejFOTB73wdu0Kbx
-         F/9pD9fN/q9L2HYn24oTw2fI2q6dMhgr62FuX1O6BWieJvuB1uXzN3j7TX+iiZXuBudj
-         6gCQ==
-X-Gm-Message-State: AOAM533ZHI1JdhHkvN/RjUK2JO0jH3f5KzZBxnE9RX7MR8+7zVJQWZr/
-        gtBkWs+JDbZmg0zwuDP9N6ms+4ybfT43a23yN/8=
-X-Google-Smtp-Source: ABdhPJx0yuexm2urpVSvrUS46piujDlfdC3y6Zpjw9XL+wDgCd6LNhL1oaONJBO/qYI4XxDSIfnnEBzIDSad6f4E2Ak=
-X-Received: by 2002:a05:6512:3d15:: with SMTP id d21mr431412lfv.474.1629933881878;
- Wed, 25 Aug 2021 16:24:41 -0700 (PDT)
-MIME-Version: 1.0
-References: <51ddd9063eddbd5ffb880728f610fba95428a313.1629925713.git.ryder.lee@mediatek.com>
-In-Reply-To: <51ddd9063eddbd5ffb880728f610fba95428a313.1629925713.git.ryder.lee@mediatek.com>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Thu, 26 Aug 2021 09:24:30 +1000
-Message-ID: <CAGRGNgW+4CG=TWxDMcocA3VuxLtY-d0MZAoWhFO3G-D0sDZm6g@mail.gmail.com>
-Subject: Re: [PATCH v3] mt76: mt7915: introduce mt7915_mcu_beacon_check_caps()
-To:     Ryder Lee <ryder.lee@mediatek.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 25 Aug 2021 19:40:12 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1629934766; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=FBhtRsz7II9iVtWFFo0AZP2XK3ulX6YiKBXT1VTeed0=; b=wyqngNYeOBzZYDbdPxR7tIy/wmR6yd5HV5DSz5jpXM6bFuwf/hMQ5wKZyRiUDGs7phI2OfVB
+ 4F8uSeBD5pHcZljWhyWbuHTNHY/6Vj10VXn1+VbtyG0notwlD5CpwV6TkG4GkH2m9Y/UJDu8
+ D4kys+T9IU1ArkUk09vC+E7Nfoc=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 6126d4a8b52e91333c4b4911 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 23:39:20
+ GMT
+Sender: srirrama=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 036B9C4360D; Wed, 25 Aug 2021 23:39:20 +0000 (UTC)
+Received: from srirrama-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: srirrama)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C1285C4338F;
+        Wed, 25 Aug 2021 23:39:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org C1285C4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Sriram R <srirrama@codeaurora.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net, Sriram R <srirrama@codeaurora.org>
+Subject: [PATCH] cfg80211: Fetch wiphy DFS domain if it is self-managed
+Date:   Thu, 26 Aug 2021 05:08:50 +0530
+Message-Id: <1629934730-16388-1-git-send-email-srirrama@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Ryder,
+Currently during CAC start or other radar events, the DFS
+domain is fetched from cfg based on global DFS setting.
 
-On Thu, Aug 26, 2021 at 7:22 AM Ryder Lee <ryder.lee@mediatek.com> wrote:
->
-> Beacon elements might be changed by hostapd configuraion, so driver
-> should compare both IEs and PHY capabilities to get the least common
-> denominator before association.
->
-> Co-developed-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-> Signed-off-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
-> v3 - rebase and rework LDPC part.
-> v2 - clean up codes.
-> ---
->  .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 164 +++++++++++++-----
->  .../wireless/mediatek/mt76/mt7915/mt7915.h    |  12 ++
->  2 files changed, 137 insertions(+), 39 deletions(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> index ab8fc27646e0..640e0f06bb97 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-> @@ -83,12 +83,24 @@ struct mt7915_sta {
->         struct mt7915_sta_key_conf bip;
->  };
->
-> ++struct mt7915_vif_cap {
+But this could be different in case of self managed wiphy's
+in case the self managed driver updates its database or supports
+regions which has DFS domain set to UNSET in cfg80211 local
+regdomain.
 
-Extra +?
+This avoids AP bringup failure for these self-managed drivers
+when such conflict occurs.
 
-Thanks,
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ net/wireless/reg.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c2d0ff7..78626e7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -171,6 +171,7 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
+ {
+ 	const struct ieee80211_regdomain *regd = NULL;
+ 	const struct ieee80211_regdomain *wiphy_regd = NULL;
++	enum nl80211_dfs_regions dfs_region;
+ 
+ 	rcu_read_lock();
+ 	regd = get_cfg80211_regdom();
+@@ -182,6 +183,13 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
+ 	if (!wiphy_regd)
+ 		goto out;
+ 
++	/* In case the wiphy is self managed, return its dfs domain */
++	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
++		dfs_region = wiphy_regd->dfs_region;
++		rcu_read_unlock();
++		return dfs_region;
++	}
++
+ 	if (wiphy_regd->dfs_region == regd->dfs_region)
+ 		goto out;
+ 
 -- 
-Julian Calaby
+2.7.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
