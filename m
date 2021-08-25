@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6698EC432BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32201C4320A
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4348161100
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1747661100
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Aug 2021 09:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239513AbhHYJj6 (ORCPT
+        id S239681AbhHYJj7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Aug 2021 05:39:58 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:60618 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239587AbhHYJj4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Aug 2021 05:39:56 -0400
+        Wed, 25 Aug 2021 05:39:59 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:29903 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239930AbhHYJj5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Aug 2021 05:39:57 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629884351; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1629884352; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=gjWRnhydAOjk1sR8RwwNsZBpFXGxC0oX6s53M8gpWVo=; b=QQRTuvcmgT2yMWjY0Q9dterS0HtE5o2nyxOFvN/BsPEKf//GWtYLh+e06YLiGngqZKWJyJ4T
- o5JvqZ6N4IeuiCGR+2vGVRpwd7BZvm2so+KYyWLgqg18MfOM1kTWvjnk2agPlbNd3dFu/Y85
- WCdst5+4lZsd0LpgogmGrq5LOh0=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ bh=6ul3VQjvvemrwPdajwEv/+bu8+uIacb+aiWqUebIvAY=; b=ricWkPVzBcPFohjhVvwrtXxaCZ01WTPEAJ5pSiX7VZx6Pq5ua/2BysAD7dkeclrj5VGrsbZr
+ D+9U/OodfW/Y03Dxa+YDeefmgl/9j1inrjFh03nzWhbWDObsK70d1lMAR9Dit47npaazgUCN
+ Oq7qiNFWKQncYLePr3HTpkIqPQA=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 61260fa7cd680e89699750a6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 09:38:47
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 61260fba4cd90150372c4eaa (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Aug 2021 09:39:06
  GMT
 Sender: ppranees=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5A3EDC43460; Wed, 25 Aug 2021 09:38:46 +0000 (UTC)
+        id CCFBAC4360D; Wed, 25 Aug 2021 09:39:06 +0000 (UTC)
 Received: from ppranees-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: ppranees)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 672EFC4338F;
-        Wed, 25 Aug 2021 09:38:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 672EFC4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4A9B8C4360C;
+        Wed, 25 Aug 2021 09:39:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 4A9B8C4360C
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   P Praneesh <ppranees@codeaurora.org>
@@ -52,9 +53,9 @@ Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         P Praneesh <ppranees@codeaurora.org>,
         Sriram R <srirrama@codeaurora.org>,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH v2 01/12] ath11k: disable unused CE8 interrupts for ipq8074
-Date:   Wed, 25 Aug 2021 15:07:46 +0530
-Message-Id: <1629884277-18759-2-git-send-email-ppranees@codeaurora.org>
+Subject: [PATCH v2 08/12] ath11k: allocate HAL_WBM2SW_RELEASE ring from cacheable memory
+Date:   Wed, 25 Aug 2021 15:07:53 +0530
+Message-Id: <1629884277-18759-9-git-send-email-ppranees@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1629884277-18759-1-git-send-email-ppranees@codeaurora.org>
 References: <1629884277-18759-1-git-send-email-ppranees@codeaurora.org>
@@ -62,39 +63,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Host driver doesn't need to process CE8 interrupts (used
-by target independently)
+Similar to REO destination ring, also allocate HAL_WBM2SW_RELEASE
+from cacheable memory so that descriptors could be prefetched during
+tx completion handling.
 
-The volume of interrupts is huge within short interval,
- CPU0           CPU1       CPU2       CPU3
-14022188          0          0          0       GIC  71 Edge      ce8
-
-Hence disabling unused CE8 interrupt will improve CPU usage.
-
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1.r2-00012-QCAHKSWPL_SILICONZ-1
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01695-QCAHKSWPL_SILICONZ-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01734-QCAHKSWPL_SILICONZ-1 v2
 
 Co-developed-by: Sriram R <srirrama@codeaurora.org>
 Signed-off-by: Sriram R <srirrama@codeaurora.org>
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: P Praneesh <ppranees@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ce.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/dp.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index de8b632..b6ffe03 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -77,7 +77,7 @@ const struct ce_attr ath11k_host_ce_config_ipq8074[] = {
- 
- 	/* CE8: target autonomous hif_memcpy */
- 	{
--		.flags = CE_ATTR_FLAGS,
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
- 		.src_nentries = 0,
- 		.src_sz_max = 0,
- 		.dest_nentries = 0,
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index 57059c6..e4fc2ba 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -239,6 +239,7 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 		/* Allocate the reo dst and tx completion rings from cacheable memory */
+ 		switch (type) {
+ 		case HAL_REO_DST:
++		case HAL_WBM2SW_RELEASE:
+ 			cached = true;
+ 			break;
+ 		default:
 -- 
 2.7.4
 
