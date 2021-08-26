@@ -2,129 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D870DC432BE
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 15:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40627C432BE
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 15:35:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0B8560F44
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 15:01:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B66960F25
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 15:35:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242875AbhHZPCa (ORCPT
+        id S242963AbhHZPgG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Aug 2021 11:02:30 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:19611 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231458AbhHZPC3 (ORCPT
+        Thu, 26 Aug 2021 11:36:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242959AbhHZPgF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Aug 2021 11:02:29 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1629990102; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=cvfqRjapXCxL1Oo9zylXK4vdNZnDzhAgTrYpUpBnjqU=; b=X0696Zt7+5Rm3Q3h9ji16C9XUVaY4Gb6B8312EhVncrkYoIIwOkVUTjAgwOcBvGnuoB2S4iL
- DEKxwdd9mwjlHxl2PS+laDevVG2A7uuYYVeG4kumcTKcRsmj/2pX/KBz8xA3W+HP8f+JRXJd
- Gmpo1/m1Wq2V2tky0kqoCDET0bc=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 6127aca3d6653df7672fde8b (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 26 Aug 2021 15:00:51
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 18A44C43460; Thu, 26 Aug 2021 15:00:51 +0000 (UTC)
-Received: from tykki (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1D542C4338F;
-        Thu, 26 Aug 2021 15:00:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 1D542C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linus Torvalds <torvalds@linuxfoundation.org>,
-        Wren Turkal <wt@penguintechs.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, regressions@lists.linux.dev,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Hemant Kumar <hemantk@codeaurora.org>,
-        Loic Poulain <loic.poulain@linaro.org>,
-        Nicolas Schichan <nschichan@freebox.fr>
-Subject: Re: [regression] Re: 5.14 rc6 broken for QCA6390 on Dell XPS 13 9310
-References: <a8cddf24-ecfc-088e-27f4-98cbbb5fb67c@penguintechs.org>
-        <87y28sqq4l.fsf@codeaurora.org>
-        <843e7689-fa1e-441b-c49a-ed7291046d5f@freebox.fr>
-        <87tujgqcth.fsf@codeaurora.org> <87mtp47073.fsf_-_@codeaurora.org>
-        <YSenaxWzxRkYkucv@kroah.com>
-        <20210826074850.16768dee@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Date:   Thu, 26 Aug 2021 18:00:40 +0300
-In-Reply-To: <20210826074850.16768dee@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-        (Jakub Kicinski's message of "Thu, 26 Aug 2021 07:48:50 -0700")
-Message-ID: <87eeag6yjr.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 26 Aug 2021 11:36:05 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60501C0613C1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2021 08:35:18 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id b6so5704432wrh.10
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2021 08:35:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=TaK24+8gH53dYWBrBRg64lij3FSBe4N9yadD4P1UUuU=;
+        b=nqxp7aNA2YFI86iFQqlTb8aAJarFLYJyjLq9tjqOgYQjle/y/kqUGpanPFyaG2V/ha
+         rGWgMsvszI7GNJDYdYDaAv3VryGdwcWmErLTdZ778olOb9rlm54q2lu7mVJLq4ehXDrD
+         DmlvDd5/ZA2t1xHZKHdjjMcnVGdy/DxI1L+PkpEzohBaUNFEXL60WhnFPulJ8bdcL2LI
+         2hIry2CRH8VaOscmYwYnBV61UPPHkmKa8DZ+mjIt/9hQ3ODMmH/nBEbHmCLF/AQM5lfK
+         +qNWCAdRiRCmcGDQj9LXYyJ9kIutkZE/becoZEc834dylfEO8pzrM1TKvqwg9dTC4Oqd
+         MHEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=TaK24+8gH53dYWBrBRg64lij3FSBe4N9yadD4P1UUuU=;
+        b=ety4S8QHC5+ak3aeBAGV8aEqqAgoSgdkU5Qii8FUPhX658TcLHjom/+R68DWvpSA4E
+         JoIQ+kJhq+1xS/vQ9ZNJ3JdVdCWuGmE/F/3qQJEKcRAmr4nejr10UxyAfzKOWU29LeIH
+         8ixymceatn9kVt6tg7dMkaR8L/i34zEoWJETXpnMAL46/Cqb5+hbn0wxSmS+Q4F/HBNa
+         tiW21TTjMlblfuV6MdnTT2b+7B1Pcwj49oAbrMvmijHtUwW1WtfH516GZTOT9WB7lhMG
+         JjBO3WruszFXAY++oxtqRFMrlFRx23xAYxGPAdkkWWfsppA+dUi2cE26vH1KD0APd7k2
+         +vPQ==
+X-Gm-Message-State: AOAM5306ER0IdEZBLbeSk7u+S8lGXlDrIXM5+E1Azx9oPtQysepc+UUm
+        VN5WHaM93DrWKUD+utqvpPGe+w==
+X-Google-Smtp-Source: ABdhPJwWtlpoyiq3Tf1o4x6ydu6b9X8evjT9i7XPAHO9VE5CQrgelXfYq0cINvAnpCy8MxPMTk5TVA==
+X-Received: by 2002:a5d:4dc3:: with SMTP id f3mr4917851wru.302.1629992116860;
+        Thu, 26 Aug 2021 08:35:16 -0700 (PDT)
+Received: from localhost.localdomain ([2a01:e0a:82c:5f0:edf4:979b:2385:1df8])
+        by smtp.gmail.com with ESMTPSA id a12sm7598553wmm.42.2021.08.26.08.35.15
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 26 Aug 2021 08:35:16 -0700 (PDT)
+From:   Loic Poulain <loic.poulain@linaro.org>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wcn36xx: Fix missing frame timestamp for beacon/probe-resp
+Date:   Thu, 26 Aug 2021 17:46:08 +0200
+Message-Id: <1629992768-23785-1-git-send-email-loic.poulain@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jakub Kicinski <kuba@kernel.org> writes:
+When receiving a beacon or probe response, we should update the
+boottime_ns field which is the timestamp the frame was received at.
+(cf mac80211.h)
 
-> On Thu, 26 Aug 2021 16:38:35 +0200 Greg Kroah-Hartman wrote:
->> > I did some investiation and I suspect that commit ce78ffa3ef16 ("net:
->> > really fix the build...")[1] is for handling a conflict between net-next
->> > and char-misc-next trees related to Loic's commit 0092a1e3f763 ("bus:
->> > mhi: Add inbound buffers allocation flag"). Greg mentions this in a
->> > commit[2]:
->> > 
->> > commit 813272ed5238b37c81e448b302048e8008570121
->> > Merge: de0534df9347 36a21d51725a
->> > Author:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> > 
->> >     Merge 5.14-rc5 into char-misc-next
->> >     
->> >     We need the fixes in here as well, and resolves some merge issues with
->> >     the mhi codebase.
->> > 
->> > If my assumption is correct when I propose that we revert commit
->> > ce78ffa3ef16 for v5.14, AFAICS it's not really needed for v5.14 (commit
->> > 0092a1e3f763 is in -next, not in Linus' tree yet) and commit
->> > ce78ffa3ef16 breaks ath11k. And the conflict between net-next and
->> > char-misc-next can be then later fixed during the merge window.
->> > 
->> > Will this work for everyone? If no objections, I'll submit the revert to
->> > Linus later today. We are getting really close to final v5.14 release so
->> > not much time left to fix this.
->> > 
->> > Just to reiterate why the urgency: commit ce78ffa3ef16 broke ath11k in
->> > v5.14-rc5, users have reported (and I have confirmed) that at least
->> > QCA6390 support is broken but I suspect all Qualcomm Wi-Fi 6 devices
->> > supported by ath11k are currently broken.  
->> 
->> No objection from me for reverting that, if it fixes the problems you
->> are seeing for 5.14-final.
->> 
->> The goal was for the mhi changes to go through the networking tree in
->> the first place, I don't see how this got out of sync.
->> 
->> If this is reverted, some help on how to resolve the merge issues it
->> will cause would be appreciated.
->
-> Also no objections here. FWIW I'm about to send the last PR for
-> networking, still waiting on BPF. You can send the revert to netdev, 
-> or directly to Linus as you prefer. LMK.
+This fixes a scanning issue with Android since it relies on this
+timestamp to determine when the AP has been seen for the last time
+(via the nl80211 BSS_LAST_SEEN_BOOTTIME parameter).
 
-I prefer take it via the net tree if possible, so if you can wait ~2h
-and I'll send it to you.
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 1b83115..cab196b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -287,6 +287,10 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+ 		status.rate_idx = 0;
+ 	}
+ 
++	if (ieee80211_is_beacon(hdr->frame_control) ||
++	    ieee80211_is_probe_resp(hdr->frame_control))
++		status.boottime_ns = ktime_get_boottime_ns();
++
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+ 
+ 	if (ieee80211_is_beacon(hdr->frame_control)) {
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.7.4
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
