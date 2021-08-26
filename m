@@ -7,258 +7,122 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CC3CC4320A
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 19:48:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 111D8C4320E
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 19:48:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6310660F11
+	by mail.kernel.org (Postfix) with ESMTP id EAC4B60F11
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Aug 2021 19:48:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231443AbhHZTtY (ORCPT
+        id S243522AbhHZTtY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 26 Aug 2021 15:49:24 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:33474 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:33478 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S243654AbhHZTtV (ORCPT
+        with ESMTP id S232398AbhHZTtX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Aug 2021 15:49:21 -0400
+        Thu, 26 Aug 2021 15:49:23 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <luca@coelho.fi>)
-        id 1mJLM1-002XB4-5n; Thu, 26 Aug 2021 22:48:03 +0300
+        id 1mJLM3-002XB4-3k; Thu, 26 Aug 2021 22:48:04 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 26 Aug 2021 22:47:46 +0300
-Message-Id: <iwlwifi.20210826224715.820c2ae18c2b.Iec9b2e2615ce65e6aff5ce896589227a7030f4cf@changeid>
+Date:   Thu, 26 Aug 2021 22:47:48 +0300
+Message-Id: <iwlwifi.20210826224715.609ad58a49f3.I05c351233601ecc51dddfa5df69ace292216eb95@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210826194748.826360-1-luca@coelho.fi>
 References: <20210826194748.826360-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 10/12] iwlwifi: Add support for getting rf id with blank otp
+Subject: [PATCH v2 12/12] iwlwifi: Start scratch debug register for Bz family
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-When having a blank OTP the only way to get the rf id
-and the cdb info is from prph registers.
-
-Currently there is some implementation for this, but it
-is located in the wrong place in the code (should be before
-trying to understand what HW is connected and not after),
-and it has a partial implementation.
+Start scratch debug register for Bz family.
+This register is used for FW debug, and the driver
+should start this register with a fixed value, during
+init, and upon an error, should read it, and add it to
+the dump.
 
 Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  2 +-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  4 -
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 35 +++++++
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 96 +++++++++++++++++++
- 4 files changed, 132 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dump.c         | 7 +++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h         | 7 +++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 8 +++++---
+ 3 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 6dcafd0a3d4b..b7f2f0662b82 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2077,7 +2077,7 @@ static u32 iwl_dump_ini_info(struct iwl_fw_runtime *fwrt,
- 	 */
- 	hw_type = CSR_HW_REV_TYPE(fwrt->trans->hw_rev);
- 	if (hw_type == IWL_AX210_HW_TYPE) {
--		u32 prph_val = iwl_read_prph(fwrt->trans, WFPM_OTP_CFG1_ADDR);
-+		u32 prph_val = iwl_read_prph(fwrt->trans, WFPM_OTP_CFG1_ADDR_GEN2);
- 		u32 is_jacket = !!(prph_val & WFPM_OTP_CFG1_IS_JACKET_BIT);
- 		u32 is_cdb = !!(prph_val & WFPM_OTP_CFG1_IS_CDB_BIT);
- 		u32 masked_bits = is_jacket | (is_cdb << 1);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 521ca2bb0e92..9036b32ec765 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -342,10 +342,6 @@ struct iwl_fw_ini_dump_cfg_name {
- #define IWL_AX210_HW_TYPE 0x42
- /* How many bits to roll when adding to the HW type of AX210 HW */
- #define IWL_AX210_HW_TYPE_ADDITION_SHIFT 12
--/* This prph is used to tell apart HW_TYPE == 0x42 NICs */
--#define WFPM_OTP_CFG1_ADDR 0xd03098
--#define WFPM_OTP_CFG1_IS_JACKET_BIT BIT(4)
--#define WFPM_OTP_CFG1_IS_CDB_BIT BIT(5)
- 
- /* struct iwl_fw_ini_dump_info - ini dump information
-  * @version: dump version
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index d0a7d58336a9..48213d61bac7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -347,6 +347,12 @@
- #define RADIO_REG_SYS_MANUAL_DFT_0	0xAD4078
- #define RFIC_REG_RD			0xAD0470
- #define WFPM_CTRL_REG			0xA03030
-+#define WFPM_CTRL_REG_GEN2		0xd03030
-+#define WFPM_OTP_CFG1_ADDR		0x00a03098
-+#define WFPM_OTP_CFG1_ADDR_GEN2		0x00d03098
-+#define WFPM_OTP_CFG1_IS_JACKET_BIT	BIT(4)
-+#define WFPM_OTP_CFG1_IS_CDB_BIT	BIT(5)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
+index a1842205e86a..1f9cf4e40547 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
+@@ -328,6 +328,13 @@ static void iwl_fwrt_dump_tcm_error_log(struct iwl_fw_runtime *fwrt)
+ 	for (i = 0; i < ARRAY_SIZE(table.sw_status); i++)
+ 		IWL_ERR(fwrt, "0x%08X | tcm SW status[%d]\n",
+ 			table.sw_status[i], i);
 +
- #define WFPM_GP2			0xA030B4
++	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ) {
++		u32 scratch = iwl_read32(trans, CSR_FUNC_SCRATCH);
++
++		IWL_ERR(fwrt, "Function Scratch status:\n");
++		IWL_ERR(fwrt, "0x%08X | Func Scratch\n", scratch);
++	}
+ }
  
- /* DBGI SRAM Register details */
-@@ -399,10 +405,39 @@ enum {
- 	LMPM_PAGE_PASS_NOTIF_POS = BIT(20),
- };
+ static void iwl_fwrt_dump_iml_error_log(struct iwl_fw_runtime *fwrt)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index cf796403c45c..2c4d70fb32fa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -34,6 +34,7 @@
+ #define CSR_GPIO_IN             (CSR_BASE+0x018) /* read external chip pins */
+ #define CSR_RESET               (CSR_BASE+0x020) /* busmaster enable, NMI, etc*/
+ #define CSR_GP_CNTRL            (CSR_BASE+0x024)
++#define CSR_FUNC_SCRATCH        (CSR_BASE+0x02c) /* Scratch register - used for FW dbg */
+ 
+ /* 2nd byte of CSR_INT_COALESCING, not accessible via iwl_write32()! */
+ #define CSR_INT_PERIODIC_REG	(CSR_BASE+0x005)
+@@ -135,6 +136,12 @@
+ #define CSR_DBG_HPET_MEM_REG		(CSR_BASE+0x240)
+ #define CSR_DBG_LINK_PWR_MGMT_REG	(CSR_BASE+0x250)
  
 +/*
-+ * CRF ID register
-+ *
-+ * type: bits 0-11
-+ * reserved: bits 12-18
-+ * slave_exist: bit 19
-+ * dash: bits 20-23
-+ * step: bits 24-26
-+ * flavor: bits 27-31
++ * Scratch register initial configuration - this is set on init, and read
++ * during a error FW error.
 + */
-+#define REG_CRF_ID_TYPE(val)		(((val) & 0x00000FFF) >> 0)
-+#define REG_CRF_ID_SLAVE(val)		(((val) & 0x00080000) >> 19)
-+#define REG_CRF_ID_DASH(val)		(((val) & 0x00F00000) >> 20)
-+#define REG_CRF_ID_STEP(val)		(((val) & 0x07000000) >> 24)
-+#define REG_CRF_ID_FLAVOR(val)		(((val) & 0xF8000000) >> 27)
++#define CSR_FUNC_SCRATCH_INIT_VALUE		(0x01010101)
 +
- #define UREG_CHICK		(0xA05C00)
- #define UREG_CHICK_MSI_ENABLE	BIT(24)
- #define UREG_CHICK_MSIX_ENABLE	BIT(25)
+ /* Bits for CSR_HW_IF_CONFIG_REG */
+ #define CSR_HW_IF_CONFIG_REG_MSK_MAC_DASH	(0x00000003)
+ #define CSR_HW_IF_CONFIG_REG_MSK_MAC_STEP	(0x0000000C)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index bf0c32a74ca4..53bc5b7d8d5c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -466,13 +466,15 @@ int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
  
-+#define SD_REG_VER		0xa29600
-+#define SD_REG_VER_GEN2		0x00a2b800
-+
-+#define REG_CRF_ID_TYPE_JF_1			0x201
-+#define REG_CRF_ID_TYPE_JF_2			0x202
-+#define REG_CRF_ID_TYPE_HR_CDB			0x503
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB		0x504
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB_1X1	0x501
-+#define REG_CRF_ID_TYPE_HR_NONE_CDB_CCP	0x532
-+#define REG_CRF_ID_TYPE_GF			0x410
-+#define REG_CRF_ID_TYPE_GF_TC			0xF08
-+#define REG_CRF_ID_TYPE_MR			0x810
-+
- #define HPM_DEBUG			0xA03440
- #define PERSISTENCE_BIT			BIT(12)
- #define PREG_WFPM_ACCESS		BIT(12)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index c42b72c64020..fb70198c6c8b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1120,6 +1120,92 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- #endif /* CONFIG_IWLMVM */
- };
+ 	iwl_pcie_set_ltr(trans);
  
-+/*
-+ * In case that there is no OTP on the NIC, get the rf id and cdb info
-+ * from the prph registers.
-+ */
-+static int get_crf_id(struct iwl_trans *iwl_trans)
-+{
-+	int ret = 0;
-+	u32 wfpm_ctrl_addr;
-+	u32 wfpm_otp_cfg_addr;
-+	u32 sd_reg_ver_addr;
-+	u32 cdb = 0;
-+	u32 val;
-+
-+	if (iwl_trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
-+		wfpm_ctrl_addr = WFPM_CTRL_REG_GEN2;
-+		wfpm_otp_cfg_addr = WFPM_OTP_CFG1_ADDR_GEN2;
-+		sd_reg_ver_addr = SD_REG_VER_GEN2;
-+	/* Qu/Pu families have other addresses */
+-	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
++	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ) {
++		iwl_write32(trans, CSR_FUNC_SCRATCH, CSR_FUNC_SCRATCH_INIT_VALUE);
+ 		iwl_set_bit(trans, CSR_GP_CNTRL,
+ 			    CSR_GP_CNTRL_REG_FLAG_ROM_START);
+-	else if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
++	} else if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
+ 		iwl_write_umac_prph(trans, UREG_CPU_INIT_RUN, 1);
+-	else
 +	} else {
-+		wfpm_ctrl_addr = WFPM_CTRL_REG;
-+		wfpm_otp_cfg_addr = WFPM_OTP_CFG1_ADDR;
-+		sd_reg_ver_addr = SD_REG_VER;
+ 		iwl_write_prph(trans, UREG_CPU_INIT_RUN, 1);
 +	}
-+
-+	if (!iwl_trans_grab_nic_access(iwl_trans)) {
-+		IWL_ERR(iwl_trans, "Failed to grab nic access before reading crf id\n");
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	/* Enable access to peripheral registers */
-+	val = iwl_read_umac_prph_no_grab(iwl_trans, wfpm_ctrl_addr);
-+	val |= ENABLE_WFPM;
-+	iwl_write_umac_prph_no_grab(iwl_trans, wfpm_ctrl_addr, val);
-+
-+	/* Read crf info */
-+	val = iwl_read_prph_no_grab(iwl_trans, sd_reg_ver_addr);
-+
-+	/* Read cdb info (also contains the jacket info if needed in the future */
-+	cdb = iwl_read_umac_prph_no_grab(iwl_trans, wfpm_otp_cfg_addr);
-+
-+	/* Map between crf id to rf id */
-+	switch (REG_CRF_ID_TYPE(val)) {
-+	case REG_CRF_ID_TYPE_JF_1:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_JF1 << 12);
-+		break;
-+	case REG_CRF_ID_TYPE_JF_2:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_JF2 << 12);
-+		break;
-+	case REG_CRF_ID_TYPE_HR_NONE_CDB:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_HR1 << 12);
-+		break;
-+	case REG_CRF_ID_TYPE_HR_CDB:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_HR2 << 12);
-+		break;
-+	case REG_CRF_ID_TYPE_GF:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_GF << 12);
-+		break;
-+	case REG_CRF_ID_TYPE_MR:
-+		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_MR << 12);
-+		break;
-+	default:
-+		ret = -EIO;
-+		IWL_ERR(iwl_trans,
-+			"Can find a correct rfid for crf id 0x%x\n",
-+			REG_CRF_ID_TYPE(val));
-+		goto out_release;
-+
-+	}
-+
-+	/* Set CDB capabilities */
-+	if (cdb & BIT(4)) {
-+		iwl_trans->hw_rf_id += BIT(28);
-+		IWL_INFO(iwl_trans, "Adding cdb to rf id\n");
-+	}
-+
-+	IWL_INFO(iwl_trans, "Detected RF 0x%x from crf id 0x%x\n",
-+		 iwl_trans->hw_rf_id, REG_CRF_ID_TYPE(val));
-+
-+out_release:
-+	iwl_trans_release_nic_access(iwl_trans);
-+
-+out:
-+	return ret;
-+}
-+
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
  
-@@ -1153,6 +1239,16 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	iwl_trans->hw_rf_id = iwl_read32(iwl_trans, CSR_HW_RF_ID);
- 
-+	/*
-+	 * The RF_ID is set to zero in blank OTP so read version to
-+	 * extract the RF_ID.
-+	 * This is relevant only for family 9000 and up.
-+	 */
-+	if (iwl_trans->trans_cfg->rf_id &&
-+	    iwl_trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_9000 &&
-+	    !CSR_HW_RFID_TYPE(iwl_trans->hw_rf_id) && get_crf_id(iwl_trans))
-+		goto out_free_trans;
-+
- 	for (i = 0; i < ARRAY_SIZE(iwl_dev_info_table); i++) {
- 		const struct iwl_dev_info *dev_info = &iwl_dev_info_table[i];
- 		if ((dev_info->device == (u16)IWL_CFG_ANY ||
+ 	/* re-check RF-Kill state since we may have missed the interrupt */
+ 	hw_rfkill = iwl_pcie_check_hw_rf_kill(trans);
 -- 
 2.33.0
 
