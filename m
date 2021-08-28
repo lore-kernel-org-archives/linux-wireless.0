@@ -2,222 +2,249 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A104C4320A
-	for <linux-wireless@archiver.kernel.org>; Sat, 28 Aug 2021 13:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD8DFC432BE
+	for <linux-wireless@archiver.kernel.org>; Sat, 28 Aug 2021 15:16:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3161960EB5
-	for <linux-wireless@archiver.kernel.org>; Sat, 28 Aug 2021 13:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A484160E76
+	for <linux-wireless@archiver.kernel.org>; Sat, 28 Aug 2021 15:16:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234354AbhH1N2I (ORCPT
+        id S230088AbhH1PQz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 28 Aug 2021 09:28:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46172 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234346AbhH1N17 (ORCPT
+        Sat, 28 Aug 2021 11:16:55 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:36728 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229799AbhH1PQy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Aug 2021 09:27:59 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 287AFC0613D9
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Aug 2021 06:27:09 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id h13so14950957wrp.1
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Aug 2021 06:27:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OtcS9aafz+Q0L8pDWZo/dhLnfCDOiTMCVcQTauLHP7s=;
-        b=V/EzGIz2+C/cJ6GWnn64p+/BA7g9PDwx1bo2grDO9nAcDJcJ/vkuIlEEiy0SG0jn2E
-         KJZPvuTna6VZtp7rJJ20rSyLIKRsiCEGn4ADxC8lMCupwhaXHQFFUnl4eDCZZd6+KRrk
-         1TugS80QncrTuvcV3+I7jWqv2gQSHhHnfnbbXyYqh26OzyC184EtRm8Xzk8eEFgn6E90
-         sjonBWd17dJUsN5vXUOVLUnBAEuoHcogMpbFhFhRGSIc4fVEL/9+2MVDi8x1h1w/L+oF
-         Hz5Ddv9MgwSENj/zEH22UxO8xA7juRSh22Zg5YhUo+KSGsjMzsfheRdkT2MOFwxxZWIy
-         lEew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OtcS9aafz+Q0L8pDWZo/dhLnfCDOiTMCVcQTauLHP7s=;
-        b=Z1wujtYBtAoyoj7jcHAXFBKoY0LQuThte8OfU13VgBfgLzf0WCylE/ljuY9C36YLLD
-         iHniDVEdC46WVBvAGA2wHVEDrftbu0RSmToHIwFJYWTCB1tLu3TOoQcBUtM0b7kj8Eqe
-         qHCOyBmDIQaD0Af0NifQ5DWw7qUpCMFqdJegRGODgRfk+jiyVbDmpmPcJwIs0lr7lRYY
-         zykAi/E5o7JynZt+26BrjTQFkGogGEQpzUI9MhPvXTZiyiPHWRnaVXt073VOiZHntMt1
-         RZJUIMvrGD0HS0sKS24K5HljyBFSlyVqhi4T5NT0sih3LDO6/eiLGZJM61hjO99TP5Ju
-         zUFw==
-X-Gm-Message-State: AOAM533K67CQ5eUOYvDyAuw+adSRk/3sI9tuQMq8PVb22wmMBQfQga5v
-        SOrDSlZ4ZOzDU9bZ9LJvmfblTyln5Hc=
-X-Google-Smtp-Source: ABdhPJwx2uGFEfrjrfSVYup07+zvpX7IRewIZf2qp78BZHFeMIoIES/tDrKCqGIbnmY87V4XwIkMdA==
-X-Received: by 2002:adf:e6d0:: with SMTP id y16mr16286581wrm.284.1630157227723;
-        Sat, 28 Aug 2021 06:27:07 -0700 (PDT)
-Received: from debian64.daheim (p5b0d759d.dip0.t-ipconnect.de. [91.13.117.157])
-        by smtp.gmail.com with ESMTPSA id n10sm9390328wrw.76.2021.08.28.06.27.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Aug 2021 06:27:07 -0700 (PDT)
-Received: from chuck by debian64.daheim with local (Exim 4.94.2)
-        (envelope-from <chunkeey@gmail.com>)
-        id 1mJyMT-000C8g-LJ; Sat, 28 Aug 2021 15:27:05 +0200
-From:   Christian Lamparter <chunkeey@gmail.com>
-To:     linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v1 1/2] ath9k: fetch calibration data via nvmem subsystem
-Date:   Sat, 28 Aug 2021 15:27:04 +0200
-Message-Id: <f9b732b50a3453fadf3923cc75d365bae3505fe7.1630157099.git.chunkeey@gmail.com>
-X-Mailer: git-send-email 2.33.0
+        Sat, 28 Aug 2021 11:16:54 -0400
+X-UUID: fdfdcbb23f2044d4aef447119dfb8bd6-20210828
+X-UUID: fdfdcbb23f2044d4aef447119dfb8bd6-20210828
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 368365835; Sat, 28 Aug 2021 23:16:02 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 28 Aug 2021 23:16:01 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 28 Aug 2021 23:16:00 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7915: add debugfs knobs for MCU utilization
+Date:   Sat, 28 Aug 2021 23:13:07 +0800
+Message-ID: <20210828151307.25011-2-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210828151307.25011-1-shayne.chen@mediatek.com>
+References: <20210828151307.25011-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On most embedded ath9k devices (like range extenders,
-routers, accesspoints, ...) the calibration data is
-stored in a MTD partitions named "ART", or "caldata"/
-"calibration".
+Add debugfs knobs to read MCU utilization, which helps user know
+firmware status more easily to narrow down CPU bottleneck issues.
 
-Since commit 4b361cfa8624 ("mtd: core: add OTP nvmem provider support"):
-All MTD partitions are all automatically available through
-the nvmem subsystem.
-
-This feature - together with an nvmem cell definition either
-in the platform data or via device-tree allows drivers to get
-the data necessary for initializing the WIFI, without having
-to wait around for the filesystem and userspace to do
-the extractions.
-
-Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom.c | 12 +++++-
- drivers/net/wireless/ath/ath9k/hw.h     |  2 +
- drivers/net/wireless/ath/ath9k/init.c   | 56 +++++++++++++++++++++++++
- 3 files changed, 69 insertions(+), 1 deletion(-)
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 49 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   |  5 +-
+ .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  2 +
+ .../net/wireless/mediatek/mt76/mt7915/mmio.c  |  3 ++
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  1 +
+ .../net/wireless/mediatek/mt76/mt7915/regs.h  | 17 +++++++
+ 6 files changed, 73 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index c22d457dbc54..e6b3cd49ea18 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -135,13 +135,23 @@ static bool ath9k_hw_nvram_read_firmware(const struct firmware *eeprom_blob,
- 					 offset, data);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index 3878635..5f2feb3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -93,6 +93,12 @@ mt7915_fw_debug_wm_set(void *data, u64 val)
+ 	for (debug = DEBUG_TXCMD; debug <= DEBUG_RPT_RX; debug++)
+ 		mt7915_mcu_fw_dbg_ctrl(dev, debug, !!dev->fw_debug_wm);
+ 
++	/* WM CPU info record control */
++	mt76_clear(dev, MT_CPU_UTLZ_CTRL, BIT(0));
++	mt76_wr(dev, MT_DIC_CMD_REG_CMD, BIT(2) | BIT(13) | !dev->fw_debug_wm);
++	mt76_wr(dev, MT_MCU_WM_CIRQ_IRQ_MASK_CLR_ADDR, BIT(5));
++	mt76_wr(dev, MT_MCU_WM_CIRQ_IRQ_SOFT_ADDR, BIT(5));
++
+ 	return 0;
  }
  
-+static bool ath9k_hw_nvram_read_nvmem(struct ath_hw *ah, off_t offset,
-+				      u16 *data)
-+{
-+	return ath9k_hw_nvram_read_array(ah->nvmem_blob,
-+					 ah->nvmem_blob_len / sizeof(u16),
-+					 offset, data);
-+}
+@@ -116,7 +122,11 @@ mt7915_fw_debug_wa_set(void *data, u64 val)
+ 
+ 	dev->fw_debug_wa = val ? MCU_FW_LOG_TO_HOST : 0;
+ 
+-	return mt7915_mcu_fw_log_2_host(dev, MCU_FW_LOG_WA, dev->fw_debug_wa);
++	mt7915_mcu_fw_log_2_host(dev, MCU_FW_LOG_WA, dev->fw_debug_wa);
++	mt7915_mcu_wa_cmd(dev, MCU_WA_PARAM_CMD(SET), MCU_WA_PARAM_PDMA_RX,
++			  !!dev->fw_debug_wa, 0);
 +
- bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_platform_data *pdata = ah->dev->platform_data;
- 	bool ret;
- 
--	if (ah->eeprom_blob)
-+	if (ah->nvmem_blob)
-+		ret = ath9k_hw_nvram_read_nvmem(ah, off, data);
-+	else if (ah->eeprom_blob)
- 		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
- 	else if (pdata && !pdata->use_eeprom)
- 		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b7b65b1c90e8..096a206f49ed 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -977,6 +977,8 @@ struct ath_hw {
- 	bool disable_5ghz;
- 
- 	const struct firmware *eeprom_blob;
-+	u16 *nvmem_blob;	/* devres managed */
-+	size_t nvmem_blob_len;
- 
- 	struct ath_dynack dynack;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e9a36dd7144f..1568730fc01e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -22,6 +22,7 @@
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_net.h>
-+#include <linux/nvmem-consumer.h>
- #include <linux/relay.h>
- #include <linux/dmi.h>
- #include <net/ieee80211_radiotap.h>
-@@ -568,6 +569,57 @@ static void ath9k_eeprom_release(struct ath_softc *sc)
- 	release_firmware(sc->sc_ah->eeprom_blob);
++	return 0;
  }
  
-+static int ath9k_nvmem_request_eeprom(struct ath_softc *sc)
+ static int
+@@ -132,6 +142,39 @@ mt7915_fw_debug_wa_get(void *data, u64 *val)
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_fw_debug_wa, mt7915_fw_debug_wa_get,
+ 			 mt7915_fw_debug_wa_set, "%lld\n");
+ 
++static int
++mt7915_fw_utilization_wm_show(struct seq_file *file, void *data)
 +{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct nvmem_cell *cell;
-+	void *buf;
-+	size_t len;
-+	int err;
++	struct mt7915_dev *dev = file->private;
 +
-+	cell = devm_nvmem_cell_get(sc->dev, "calibration");
-+	if (IS_ERR(cell)) {
-+		err = PTR_ERR(cell);
-+
-+		/* nvmem cell might not be defined, or the nvmem
-+		 * subsystem isn't included. In this case, follow
-+		 * the established "just return 0;" convention of
-+		 * ath9k_init_platform to say:
-+		 * "All good. Nothing to see here. Please go on."
-+		 */
-+		if (err == -ENOENT || err == -EOPNOTSUPP)
-+			return 0;
-+
-+		return err;
++	if (dev->fw_debug_wm) {
++		seq_printf(file, "Busy: %u%%  Peak busy: %u%%\n",
++			   mt76_rr(dev, MT_CPU_UTLZ_BUSY_PCT),
++			   mt76_rr(dev, MT_CPU_UTLZ_PEAK_BUSY_PCT));
++		seq_printf(file, "Idle count: %u  Peak idle count: %u\n",
++			   mt76_rr(dev, MT_CPU_UTLZ_IDLE_CNT),
++			   mt76_rr(dev, MT_CPU_UTLZ_PEAK_IDLE_CNT));
 +	}
-+
-+	buf = nvmem_cell_read(cell, &len);
-+	if (IS_ERR(buf))
-+		return PTR_ERR(buf);
-+
-+	/* run basic sanity checks on the returned nvram cell length.
-+	 * That length has to be a multiple of a "u16" (i.e.: & 1).
-+	 * Furthermore, it has to be more than "let's say" 512 bytes
-+	 * but less than the maximum of AR9300_EEPROM_SIZE (16kb).
-+	 */
-+	if ((len & 1) == 1 || len < 512 || len >= AR9300_EEPROM_SIZE) {
-+		kfree(buf);
-+		return -EINVAL;
-+	}
-+
-+	/* devres manages the calibration values release on shutdown */
-+	ah->nvmem_blob = (u16 *)devm_kmemdup(sc->dev, buf, len, GFP_KERNEL);
-+	kfree(buf);
-+	if (IS_ERR(ah->nvmem_blob))
-+		return PTR_ERR(ah->nvmem_blob);
-+
-+	ah->nvmem_blob_len = len;
-+	ah->ah_flags &= ~AH_USE_EEPROM;
-+	ah->ah_flags |= AH_NO_EEP_SWAP;
 +
 +	return 0;
 +}
 +
- static int ath9k_init_platform(struct ath_softc *sc)
- {
- 	struct ath9k_platform_data *pdata = sc->dev->platform_data;
-@@ -704,6 +756,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	ret = ath9k_nvmem_request_eeprom(sc);
-+	if (ret)
-+		return ret;
++DEFINE_SHOW_ATTRIBUTE(mt7915_fw_utilization_wm);
 +
- 	if (ath9k_led_active_high != -1)
- 		ah->config.led_active_high = ath9k_led_active_high == 1;
++static int
++mt7915_fw_utilization_wa_show(struct seq_file *file, void *data)
++{
++	struct mt7915_dev *dev = file->private;
++
++	if (dev->fw_debug_wa)
++		mt7915_mcu_wa_cmd(dev, MCU_WA_PARAM_CMD(QUERY),
++				  MCU_WA_PARAM_CPU_UTILIZATION, 0, 0);
++
++	return 0;
++}
++
++DEFINE_SHOW_ATTRIBUTE(mt7915_fw_utilization_wa);
++
+ static void
+ mt7915_ampdu_stat_read_phy(struct mt7915_phy *phy,
+ 			   struct seq_file *file)
+@@ -373,6 +416,10 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
+ 	debugfs_create_file("tx_stats", 0400, dir, dev, &mt7915_tx_stats_fops);
+ 	debugfs_create_file("fw_debug_wm", 0600, dir, dev, &fops_fw_debug_wm);
+ 	debugfs_create_file("fw_debug_wa", 0600, dir, dev, &fops_fw_debug_wa);
++	debugfs_create_file("fw_utilization_wm", 0400, dir, dev,
++			    &mt7915_fw_utilization_wm_fops);
++	debugfs_create_file("fw_utilization_wa", 0400, dir, dev,
++			    &mt7915_fw_utilization_wa_fops);
+ 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
+ 			    &fops_implicit_txbf);
+ 	debugfs_create_u32("dfs_hw_pattern", 0400, dir, &dev->hw_pattern);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index dad1858..cfa0550 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -416,8 +416,7 @@ exit:
+ 	return mt76_tx_queue_skb_raw(dev, mdev->q_mcu[qid], skb, 0);
+ }
  
+-static void
+-mt7915_mcu_wa_cmd(struct mt7915_dev *dev, int cmd, u32 a1, u32 a2, u32 a3)
++void mt7915_mcu_wa_cmd(struct mt7915_dev *dev, int cmd, u32 a1, u32 a2, u32 a3)
+ {
+ 	struct {
+ 		__le32 args[3];
+@@ -429,7 +428,7 @@ mt7915_mcu_wa_cmd(struct mt7915_dev *dev, int cmd, u32 a1, u32 a2, u32 a3)
+ 		},
+ 	};
+ 
+-	mt76_mcu_send_msg(&dev->mt76, cmd, &req, sizeof(req), true);
++	mt76_mcu_send_msg(&dev->mt76, cmd, &req, sizeof(req), false);
+ }
+ 
+ static void
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+index 44e215d..9c10073 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+@@ -298,6 +298,8 @@ enum {
+ };
+ 
+ enum {
++	MCU_WA_PARAM_PDMA_RX = 0x04,
++	MCU_WA_PARAM_CPU_UTILIZATION = 0x0b,
+ 	MCU_WA_PARAM_RED = 0x0e,
+ };
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+index af712a9..bb55224 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+@@ -34,6 +34,9 @@ static u32 __mt7915_reg_addr(struct mt7915_dev *dev, u32 addr)
+ 		u32 mapped;
+ 		u32 size;
+ 	} fixed_map[] = {
++		{ 0x00400000, 0x80000, 0x10000 }, /* WF_MCU_SYSRAM */
++		{ 0x00410000, 0x90000, 0x10000 }, /* WF_MCU_SYSRAM (configure regs) */
++		{ 0x40000000, 0x70000, 0x10000 }, /* WF_UMAC_SYSRAM */
+ 		{ 0x54000000, 0x02000, 0x1000 }, /* WFDMA PCIE0 MCU DMA0 */
+ 		{ 0x55000000, 0x03000, 0x1000 }, /* WFDMA PCIE0 MCU DMA1 */
+ 		{ 0x58000000, 0x06000, 0x1000 }, /* WFDMA PCIE1 MCU DMA0 (MEM_DMA) */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 75368ae..01c582e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -351,6 +351,7 @@ int mt7915_mcu_get_rx_rate(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta, struct rate_info *rate);
+ int mt7915_mcu_rdd_cmd(struct mt7915_dev *dev, enum mt7915_rdd_cmd cmd,
+ 		       u8 index, u8 rx_sel, u8 val);
++void mt7915_mcu_wa_cmd(struct mt7915_dev *dev, int cmd, u32 a1, u32 a2, u32 a3);
+ int mt7915_mcu_fw_log_2_host(struct mt7915_dev *dev, u8 type, u8 ctrl);
+ int mt7915_mcu_fw_dbg_ctrl(struct mt7915_dev *dev, u32 module, u8 level);
+ void mt7915_mcu_rx_event(struct mt7915_dev *dev, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index f4101cc..fdf65d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -413,6 +413,18 @@
+ #define MT_HIF_REMAP_L2_BASE		GENMASK(31, 12)
+ #define MT_HIF_REMAP_BASE_L2		0x00000
+ 
++#define MT_DIC_CMD_REG_BASE		0x41f000
++#define MT_DIC_CMD_REG(ofs)		(MT_DIC_CMD_REG_BASE + (ofs))
++#define MT_DIC_CMD_REG_CMD		MT_DIC_CMD_REG(0x10)
++
++#define MT_CPU_UTLZ_BASE		0x41f030
++#define MT_CPU_UTLZ(ofs)		(MT_CPU_UTLZ_BASE + (ofs))
++#define MT_CPU_UTLZ_BUSY_PCT		MT_CPU_UTLZ(0x00)
++#define MT_CPU_UTLZ_PEAK_BUSY_PCT	MT_CPU_UTLZ(0x04)
++#define MT_CPU_UTLZ_IDLE_CNT		MT_CPU_UTLZ(0x08)
++#define MT_CPU_UTLZ_PEAK_IDLE_CNT	MT_CPU_UTLZ(0x0c)
++#define MT_CPU_UTLZ_CTRL		MT_CPU_UTLZ(0x1c)
++
+ #define MT_SWDEF_BASE			0x41f200
+ #define MT_SWDEF(ofs)			(MT_SWDEF_BASE + (ofs))
+ #define MT_SWDEF_MODE			MT_SWDEF(0x3c)
+@@ -458,4 +470,9 @@
+ #define MT_WF_PHY_RXTD12_IRPI_SW_CLR_ONLY	BIT(18)
+ #define MT_WF_PHY_RXTD12_IRPI_SW_CLR	BIT(29)
+ 
++#define MT_MCU_WM_CIRQ_BASE			0x89010000
++#define MT_MCU_WM_CIRQ(ofs)			(MT_MCU_WM_CIRQ_BASE + (ofs))
++#define MT_MCU_WM_CIRQ_IRQ_MASK_CLR_ADDR	MT_MCU_WM_CIRQ(0x80)
++#define MT_MCU_WM_CIRQ_IRQ_SOFT_ADDR		MT_MCU_WM_CIRQ(0xc0)
++
+ #endif
 -- 
-2.33.0
+2.25.1
 
