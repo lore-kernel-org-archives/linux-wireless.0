@@ -2,61 +2,61 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 450BEC432BE
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Aug 2021 13:13:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B41FC43214
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Aug 2021 13:13:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 213CA60F3A
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Aug 2021 13:13:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 787B560F42
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Aug 2021 13:13:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235385AbhH2NOE (ORCPT
+        id S235585AbhH2NOP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Aug 2021 09:14:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46956 "EHLO
+        Sun, 29 Aug 2021 09:14:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235350AbhH2NOD (ORCPT
+        with ESMTP id S235465AbhH2NOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Aug 2021 09:14:03 -0400
+        Sun, 29 Aug 2021 09:14:08 -0400
 Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D8AEC06175F
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2021 06:13:11 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id b4so25203262lfo.13
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2021 06:13:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CC41C06179A
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2021 06:13:16 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id k5so25303811lfu.4
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2021 06:13:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=VaIELk3aejG928b4attVmLHeHooVAXSsVOw7u++6ic8=;
-        b=NBuVmcUEZj+2izFzWo7km7GIur/VKIWIdCygLu4Gtd5j+RVmNsWMrgh04N2TZuSMfU
-         qOCfcwDEjE8ZtdKrslnPtXszndze+62w2XWwb6xGVsH1q3jBWtuTLCb9KuSLNbPPRhlK
-         IbpDOICgqNbLc24No+PMG8DhLUM2mN/elJS0GRGV4rFr6iSEdeGZxaI/ykar8IBYY9uy
-         Mctoi0prxcBGI+UT9DvbqIAUUP2Iz4yWSGuhWEeXcrakwQ1fy45teTG3uj0aqnye2YP6
-         lXtLTZX24wvaqQuWHyNbc/msMLpxxBuORKzKEUoSATLWOgQ2fAAvsiPWesmAzPXBNpqI
-         WsVQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=W90zCRw/gyIjKh5bN6AdA5a45jbpL+6W+rmSnj/xdRc=;
+        b=MGtT4oebKOHyJUzHFk/GStnDRBlucvXQUdsvl3KqvG83GLCtg/sscD7aUZINgsWWxR
+         mry9SHUjRz6j/EVknFswB9UJeqJc+HnyQYofSptX+47CH9Ql58haBaYJs90uxm4l2ATF
+         HZVJLqaBdi40E8oRdmm2DKIQwzwImyoA5skuvtj15Bv9dhyyYqaJ9LbM8Eh6md+hckVJ
+         ktYNRzdmui0t6n855ydf+ooRalLokWct1cGpCbqeYE3xHBu6sbMZC+6WmTmouvLOH/DQ
+         VsHIFmJZWcKV4tYEZ1LMdwxFFSQaDPf3/4zqG4nB9OBSNwV1dkGh3RLs9xXTAFUsHS79
+         Styg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=VaIELk3aejG928b4attVmLHeHooVAXSsVOw7u++6ic8=;
-        b=W1dRmX6PfYehIEmf3vrtSXW0zMnZvXPBbl8kMtMRxFn9AG4mAf8ryKYqnavYRHMsWr
-         w4FrEOb5+2k7AXXqXvEZbEqfxAU7dMdobc+8Ez3J6K1hiwmwFEB+/g5Xm3GBLIBugHfb
-         sBJjtaFAjAMyNbG95LqdS58ty1a+nm/4u9YPPRxGCZd725TF53A34m0nyP8YZK+Exata
-         7POFxmyPmY3MLbDSb1gVMoNAqtiXEOy/aB8anW8jeMjpoXmhmtcCzQ1USoQVvpnDcGp8
-         0PvIvkI/eIQvrp+DcawLhmVTo60w7hKiYbn9PC5v/GNAvoeO2o5DSYLrcRwXOUOyTu8t
-         8ufw==
-X-Gm-Message-State: AOAM533ng0VUqOD5bLL8AK3rilfKUEGL9JJ66ae+rRODRx9Qrr/lr7Xd
-        73PHMakMs7Gj1zoueF2chQHMzg==
-X-Google-Smtp-Source: ABdhPJxoTTCTULxN0AI0ux6Ox/vGsWyAWulCZNHRsyc3AM9WfbWCnshA9YjeDZK67Cxvk0WaVZLaHA==
-X-Received: by 2002:a05:6512:6cd:: with SMTP id u13mr13935373lff.184.1630242789821;
-        Sun, 29 Aug 2021 06:13:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=W90zCRw/gyIjKh5bN6AdA5a45jbpL+6W+rmSnj/xdRc=;
+        b=ZROrgRZQ4T++8EqnlxteV5JFe+krlKvH+THvZBMoKxEym8kS1yLspeT6AZoKcI4iYD
+         dk7zm7CELXJQnG7/H8RUNQNXDP8qlJkfhkz5newISmVW+alUoUqiZr2yuAWIsGUN6dEJ
+         uDbAwcteaAP9Jxo4vHHQukfiWiKW4IQaoDzUa7hQHod5Lf3N0fyD74BDzEpktsXoq9yp
+         wixqiIWajpnDfg9WjEymGm1SRNaFj4B5DWAHXqkzXahKi7HOe3OJ05AtnjzyrNpdzR4W
+         NpNWyxXXy5E/3f7dBgGQ7+VUDQJ5Utl2LecRK/ytLf+f5KQ+a/B3Lu3Cxg12eOAmTYME
+         KsJA==
+X-Gm-Message-State: AOAM533FZxBQscthvlRNOUOd9Se+8iVWf/uIW3M3MrTOfHoMQTn7GCof
+        Qoc161txN9uOuPuk+99cyunbDA==
+X-Google-Smtp-Source: ABdhPJz8ss1hZf/h7XEdWNe+VXrVLZ8dFiYzYa9JHOoN8i2WkbHCSfq9a7aQ5moet2JaOib5Pq53hA==
+X-Received: by 2002:a05:6512:21d1:: with SMTP id d17mr14594374lft.588.1630242794541;
+        Sun, 29 Aug 2021 06:13:14 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id x13sm712503lfq.262.2021.08.29.06.13.09
+        by smtp.gmail.com with ESMTPSA id x13sm712503lfq.262.2021.08.29.06.13.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Aug 2021 06:13:09 -0700 (PDT)
+        Sun, 29 Aug 2021 06:13:14 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -72,63 +72,196 @@ Cc:     linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [RFC v2 00/13] create power sequencing subsystem
-Date:   Sun, 29 Aug 2021 16:12:52 +0300
-Message-Id: <20210829131305.534417-1-dmitry.baryshkov@linaro.org>
+Subject: [RFC v2 06/13] pwrseq: pwrseq_qca: implement fallback support
+Date:   Sun, 29 Aug 2021 16:12:58 +0300
+Message-Id: <20210829131305.534417-7-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20210829131305.534417-1-dmitry.baryshkov@linaro.org>
+References: <20210829131305.534417-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is the second RFC on the proposed power sequencer subsystem. This
-is a generification of the MMC pwrseq code. The subsystem tries to
-abstract the idea of complex power-up/power-down/reset of the devices.
+While we are waiting for all users of wcn399x-bt to be converted to the
+pwrseq declaration in the device tree, provide support for the pwrseq
+fallback: if the regulators are declared in the device itself, create
+pwrseq instance. This way the hci_qca driver doesn't have to cope with
+old and new dts bindings.
 
-To ease migration to pwrseq and to provide compatibility with older
-device trees, while keeping drivers simple, this iteration of RFC
-introduces pwrseq fallback support: pwrseq driver can register fallback
-providers. If another device driver requests pwrseq instance and none
-was declared, the pwrseq fallback code would go through the list of
-fallback providers and if the match is found, driver would return a
-crafted pwrseq instance. For now this mechanism is limited to the OF
-device matching, but it can be extended further to use any combination
-of device IDs.
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ drivers/power/pwrseq/pwrseq_qca.c | 148 +++++++++++++++++++++++++++++-
+ 1 file changed, 147 insertions(+), 1 deletion(-)
 
-The primary set of devices that promted me to create this patchset is
-the Qualcomm BT+WiFi family of chips. They reside on serial+platform or
-serial + SDIO interfaces (older generations) or on serial+PCIe (newer
-generations).  They require a set of external voltage regulators to be
-powered on and (some of them) have separate WiFi and Bluetooth enable
-GPIOs.
-
-This patchset being an RFC tries to demonstrate the approach, design and
-usage of the pwrseq subsystem. Following issues are present in the RFC
-at this moment but will be fixed later if the overall approach would be
-viewed as acceptable:
-
- - No documentation
-   While the code tries to be self-documenting proper documentation
-   would be required.
-
- - Minimal device tree bindings changes
-   There are no proper updates for the DT bindings (thus neither Rob
-   Herring nor devicetree are included in the To/Cc lists). The dt
-   schema changes would be a part of v1.
-
- - Lack of proper PCIe integration
-   At this moment support for PCIe is hacked up to be able to test the
-   PCIe part of qca6390. Proper PCIe support would require automatically
-   powering up the devices before the bus scan depending on the proper
-   device structure in the device tree.
-
-Changes since RFC v1:
- - Provider pwrseq fallback support
- - Implement fallback support in pwrseq_qca.
- - Mmove susclk handling to pwrseq_qca.
- - Significantly simplify hci_qca.c changes, by dropping all legacy
-   code. Now hci_qca uses only pwrseq calls to power up/down bluetooth
-   parts of the chip.
-
+diff --git a/drivers/power/pwrseq/pwrseq_qca.c b/drivers/power/pwrseq/pwrseq_qca.c
+index 7aa5f2d94039..d01f1ef4626b 100644
+--- a/drivers/power/pwrseq/pwrseq_qca.c
++++ b/drivers/power/pwrseq/pwrseq_qca.c
+@@ -11,9 +11,11 @@
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/mod_devicetable.h>
++#include <linux/of_device.h>
+ #include <linux/platform_device.h>
+ #include <linux/property.h>
+ #include <linux/pwrseq/driver.h>
++#include <linux/pwrseq/fallback.h>
+ #include <linux/regulator/consumer.h>
+ 
+ /* susclk rate */
+@@ -367,5 +369,149 @@ static struct platform_driver pwrseq_qca_driver = {
+ 	},
+ };
+ 
+-module_platform_driver(pwrseq_qca_driver);
++struct pwrseq_qca_fallback {
++	struct pwrseq_qca_one qca_one;
++	struct pwrseq_qca_common common;
++};
++
++static const struct of_device_id pwrseq_qca_bt_of_match[] = {
++	{ .compatible = "qcom,qca6174-bt" },
++	{ .compatible = "qcom,qca6390-bt", .data = &qca_soc_data_qca6390},
++	{ .compatible = "qcom,qca9377-bt" },
++	{ .compatible = "qcom,wcn3990-bt", .data = &qca_soc_data_wcn3990 },
++	{ .compatible = "qcom,wcn3991-bt", .data = &qca_soc_data_wcn3990 },
++	{ .compatible = "qcom,wcn3998-bt", .data = &qca_soc_data_wcn3998 },
++	{ .compatible = "qcom,wcn6750-bt", .data = &qca_soc_data_wcn6750 },
++	{ /* sentinel */ },
++};
++
++static const struct qca_device_data qca_soc_data_wifi = {
++	.vregs = {
++		{ "vdd-1.8-xo", 80000  },
++		{ "vdd-1.3-rfa", 300000 },
++		{ "vdd-3.3-ch0", 450000 },
++		{ "vdd-3.3-ch1", 450000 },
++	},
++	.num_vregs = 4,
++};
++
++static const struct of_device_id pwrseq_qca_wifi_of_match[] = {
++	{ .compatible = "qcom,wcn3990-wifi", .data = &qca_soc_data_wifi },
++	{ /* sentinel */ }
++};
++
++static struct pwrseq * pwrseq_qca_fallback_get(struct device *dev)
++{
++	struct pwrseq_qca_fallback *fallback;
++	const struct of_device_id *match;
++	const struct qca_device_data *data;
++	struct gpio_desc *gpiod;
++	int ret;
++
++	match = of_match_device(pwrseq_qca_bt_of_match, dev);
++	if (!match)
++		return ERR_PTR(-ENODEV);
++
++	data = match->data;
++	if (!data)
++		data = &qca_soc_data_default;
++
++	fallback = devm_kzalloc(dev, struct_size(fallback, common.vregs, data->num_vregs), GFP_KERNEL);
++	if (!data)
++		return ERR_PTR(-ENOMEM);
++
++	fallback->qca_one.common = &fallback->common;
++
++	ret = pwrseq_qca_common_init(dev, &fallback->common, data);
++	if (ret)
++		return ERR_PTR(ret);
++
++	if (data->has_enable_gpios) {
++		gpiod = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
++		if (IS_ERR(gpiod))
++			return ERR_PTR(dev_err_probe(dev, PTR_ERR(gpiod), "failed to acquire enable GPIO\n"));
++		fallback->qca_one.enable = gpiod;
++	}
++
++	/* If we have no control over device's enablement, make sure that sleep clock is always running */
++	if (!fallback->common.vddio ||
++	    !fallback->common.num_vregs ||
++	    !fallback->qca_one.enable) {
++		ret = clk_set_rate(fallback->common.susclk, SUSCLK_RATE_32KHZ);
++		if (ret)
++			return ERR_PTR(ret);
++
++		ret = clk_prepare_enable(fallback->common.susclk);
++		if (ret)
++			return ERR_PTR(ret);
++
++		ret = devm_add_action_or_reset(dev, pwrseq_qca_unprepare_susclk, &fallback->common);
++		if (ret)
++			return ERR_PTR(ret);
++	}
++
++	return devm_pwrseq_create(dev, &pwrseq_qca_ops, &fallback->qca_one);
++}
++
++static struct pwrseq * pwrseq_qca_fallback_get_bt(struct device *dev, const char *id)
++{
++	if (strcmp(id, "bt"))
++		return ERR_PTR(-ENODEV);
++
++	return pwrseq_qca_fallback_get(dev);
++}
++
++static struct pwrseq * pwrseq_qca_fallback_get_wifi(struct device *dev, const char *id)
++{
++	if (strcmp(id, "wifi"))
++		return ERR_PTR(-ENODEV);
++
++	return pwrseq_qca_fallback_get(dev);
++}
++
++static struct pwrseq_fallback pwrseq_qca_fallback_bt = {
++	.get = pwrseq_qca_fallback_get_bt,
++	.of_match_table = pwrseq_qca_bt_of_match,
++};
++
++static struct pwrseq_fallback pwrseq_qca_fallback_wifi = {
++	.get = pwrseq_qca_fallback_get_wifi,
++	.of_match_table = pwrseq_qca_wifi_of_match,
++};
++
++static int __init pwrseq_qca_init(void)
++{
++	int ret;
++
++	ret = platform_driver_register(&pwrseq_qca_driver);
++	if (ret)
++		return ret;
++
++	ret = pwrseq_fallback_register(&pwrseq_qca_fallback_bt);
++	if (ret)
++		goto err_bt;
++
++	ret = pwrseq_fallback_register(&pwrseq_qca_fallback_wifi);
++	if (ret)
++		goto err_wifi;
++
++	return 0;
++
++err_wifi:
++	pwrseq_fallback_unregister(&pwrseq_qca_fallback_bt);
++err_bt:
++	platform_driver_unregister(&pwrseq_qca_driver);
++
++	return ret;
++}
++module_init(pwrseq_qca_init);
++
++static void __exit pwrseq_qca_exit(void)
++{
++	pwrseq_fallback_unregister(&pwrseq_qca_fallback_wifi);
++	pwrseq_fallback_unregister(&pwrseq_qca_fallback_bt);
++	platform_driver_unregister(&pwrseq_qca_driver);
++}
++module_exit(pwrseq_qca_exit);
++
+ MODULE_LICENSE("GPL v2");
+-- 
+2.33.0
 
