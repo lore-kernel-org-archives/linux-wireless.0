@@ -2,113 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF47C4320A
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 15:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C05C432BE
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 16:50:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FA7B6103A
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 15:51:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F49360E98
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 16:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343815AbhIAPwK (ORCPT
+        id S231419AbhIAQvC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Sep 2021 11:52:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33802 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244935AbhIAPwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Sep 2021 11:52:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EBA2C61027;
-        Wed,  1 Sep 2021 15:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630511473;
-        bh=3lBDzHMwRFHFzEmJ5m7CdDmivd2al3khol396gFXMyY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fvIGRMsTiSiSONENP3ZgDmxoqbkwAc6KIqfKGMz3d+ei/XaH860hQWNfVYMuHelb0
-         YYIrId3XUgflrGPMo1SZ/uZSH3RXhLgxIDWIn6qfXcloKX7Ac0YnX2J1u+9OmyNYiV
-         A9pL6c7BhgW3/U2KGWt48/lihL7dJ2lMhhH+fdfJnvK03LGjPBhmVBi/whPR9420Sh
-         g8En/1AJYqej3EPhLOHFfNmB0BSaNn5jBCrWPiJ9bz4uaPeHA5aGOmcq5N2awjJNTX
-         77nGfF01hYcrD5OHM7F2a7x9yQ1bkKnxAa9XHlvpaRORXQwv76d8WQJeH9x4a1KQv5
-         tDyhwQ9PIKO/A==
-Received: by pali.im (Postfix)
-        id 9E7AEA46; Wed,  1 Sep 2021 17:51:10 +0200 (CEST)
-Date:   Wed, 1 Sep 2021 17:51:10 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Jonas =?utf-8?Q?Dre=C3=9Fler?= <verdre@v0yd.nl>
-Cc:     Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] mwifiex: Use non-posted PCI register writes
-Message-ID: <20210901155110.xgje2qrtq65loawh@pali>
-References: <20210830123704.221494-1-verdre@v0yd.nl>
- <20210830123704.221494-2-verdre@v0yd.nl>
- <CAHp75VeAKs=nFw4E20etKc3C_Cszyz9AqN=mLsum7F-BdVK5Rg@mail.gmail.com>
- <7e38931e-2f1c-066e-088e-b27b56c1245c@v0yd.nl>
+        Wed, 1 Sep 2021 12:51:02 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54498 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1344004AbhIAQvC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Sep 2021 12:51:02 -0400
+X-UUID: 9f8a8248f194407d9e87d74dce25b1d7-20210902
+X-UUID: 9f8a8248f194407d9e87d74dce25b1d7-20210902
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 2082156816; Thu, 02 Sep 2021 00:50:01 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 2 Sep 2021 00:50:00 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 2 Sep 2021 00:50:00 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 4/5] mt76: mt7915: fix sta_rec_wtbl tag len
+Date:   Thu, 2 Sep 2021 00:49:47 +0800
+Message-ID: <20210901164948.28149-4-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210901164948.28149-1-shayne.chen@mediatek.com>
+References: <20210901164948.28149-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7e38931e-2f1c-066e-088e-b27b56c1245c@v0yd.nl>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wednesday 01 September 2021 16:01:54 Jonas Dreßler wrote:
-> On 8/30/21 2:49 PM, Andy Shevchenko wrote:
-> > On Mon, Aug 30, 2021 at 3:38 PM Jonas Dreßler <verdre@v0yd.nl> wrote:
-> >>
-> >> On the 88W8897 card it's very important the TX ring write pointer is
-> >> updated correctly to its new value before setting the TX ready
-> >> interrupt, otherwise the firmware appears to crash (probably because
-> >> it's trying to DMA-read from the wrong place).
-> >>
-> >> Since PCI uses "posted writes" when writing to a register, it's not
-> >> guaranteed that a write will happen immediately. That means the pointer
-> >> might be outdated when setting the TX ready interrupt, leading to
-> >> firmware crashes especially when ASPM L1 and L1 substates are enabled
-> >> (because of the higher link latency, the write will probably take
-> >> longer).
-> >>
-> >> So fix those firmware crashes by always forcing non-posted writes. We do
-> >> that by simply reading back the register after writing it, just as a lot
-> >> of other drivers do.
-> >>
-> >> There are two reproducers that are fixed with this patch:
-> >>
-> >> 1) During rx/tx traffic and with ASPM L1 substates enabled (the enabled
-> >> substates are platform dependent), the firmware crashes and eventually a
-> >> command timeout appears in the logs. That crash is fixed by using a
-> >> non-posted write in mwifiex_pcie_send_data().
-> >>
-> >> 2) When sending lots of commands to the card, waking it up from sleep in
-> >> very quick intervals, the firmware eventually crashes. That crash
-> >> appears to be fixed by some other non-posted write included here.
-> >
-> > Thanks for all this work!
-> >
-> > Nevertheless, do we have any commits that may be a good candidate to
-> > be in the Fixes tag here?
-> >
-> 
-> I don't think there's any commit we could point to, given that the bug is
-> probably somewhere in the firmware code.
+Fix tag len error for sta_rec_wtbl, which causes fw parsing error for
+the tags placed behind it.
 
-Then please add Cc: stable@vger.kernel.org tag into commit message. Such
-bugfix is a good candidate for backporting into stable releases.
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based
+chipsets")
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> >> Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index ca3523101f3a..9c29b1567d89 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -607,7 +607,7 @@ mt7915_mcu_alloc_wtbl_req(struct mt7915_dev *dev, struct mt7915_sta *msta,
+ 	}
+ 
+ 	if (sta_hdr)
+-		sta_hdr->len = cpu_to_le16(sizeof(hdr));
++		le16_add_cpu(&sta_hdr->len, sizeof(hdr));
+ 
+ 	return skb_put_data(nskb, &hdr, sizeof(hdr));
+ }
+-- 
+2.25.1
+
