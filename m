@@ -2,126 +2,152 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B40C432BE
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 18:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22F6C4320A
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 19:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53C2860E98
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 18:06:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B32886101B
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 19:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346703AbhIASHw (ORCPT
+        id S243227AbhIATCU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Sep 2021 14:07:52 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:57902 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1346734AbhIASHv (ORCPT
+        Wed, 1 Sep 2021 15:02:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244864AbhIATCO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Sep 2021 14:07:51 -0400
-X-UUID: 62de42abce6d4f228f00c53115857dc6-20210902
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=JGJFdApMcubNDWvC7wCYe/neX6g9lSnZlMWbSWb6VQQ=;
-        b=Ur35WI6b93Vt0goLnNy7P0aVSgLl0QfsFqUtu7BacGCPDxLtH7Y59rbFUpO89t7mbny9cnSvQHTruxnUQiFFASq2huV8s72n8JQPcu4/UTUKWPnVQho14Sg9wYo+85NcuroaXsgq+aF9b6aNFY42ygXXAmxELBWgLk6x+r/TEfg=;
-X-UUID: 62de42abce6d4f228f00c53115857dc6-20210902
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2042623059; Thu, 02 Sep 2021 02:06:50 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 2 Sep 2021 02:06:49 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 2 Sep 2021 02:06:49 +0800
-Message-ID: <32b9ac1244f38d20f89548b14aa8d2afb0fa779b.camel@mediatek.com>
-Subject: Re: [PATCH v5 1/2] mt76: mt7915: fix hwmon temp sensor mem
- use-after-free
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Ben Greear <greearb@candelatech.com>, Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Date:   Thu, 2 Sep 2021 02:06:49 +0800
-In-Reply-To: <efe0cd18-b89a-0385-a271-d6c57fea08ca@candelatech.com>
-References: <d72e872e7fdb5c04e890b978575f4d86bc61ad36.1630515789.git.ryder.lee@mediatek.com>
-         <efe0cd18-b89a-0385-a271-d6c57fea08ca@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        Wed, 1 Sep 2021 15:02:14 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 009B9C061760
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Sep 2021 12:01:16 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id bq28so1095227lfb.7
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2021 12:01:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=npd1RU7mbNsF3k0GeBkr9d4yP6Ob5CEAADTVG3CYCjw=;
+        b=ErHaIpxZiEMxxjypsttdmUORwYq4vP1VZ+xYSjVl8afEmUE0mZp3Aj9x4LVzPgegFp
+         QxCWY5+Gxwtt2L2qth2RgEkh1nozrNfG4UGJESfbueNOy10Bzrii0P8RVC60ibu3uR99
+         Ri6W/fH6hsL0OtQOBkjpL0U0EcWE6CxP3PMa4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=npd1RU7mbNsF3k0GeBkr9d4yP6Ob5CEAADTVG3CYCjw=;
+        b=L/1eM1xhC87EsBpEyzxIJjBFsxZT+7wCkaND3eB13wtZDZKPw/MkP2AP3kI9ara5L+
+         oRQ/q2waL7jKzIFOFgPGgYNso/Muwjys33lfqKbPr+6KgTPgpby8KN7oeEEDJ9hqSm4C
+         bbpycWZsDtd/OUpjZZ4kTJQU9eUxPnFGONe4qzJGzcChfHYSS0gvWcU+bM+MNpd7UQf0
+         wLgjjtJ52ViYwzEZ3BM+Y3WojF+tvOv12kZr/JnjyUu28tvr5nqsrf6Q82Ncbrwr4ol+
+         suEhMGXiV0rRRXADc5Y8T06Ax/4BI07nnEqyyvAMEvXYmuIrGPR9ZDz5g9VyFCtM9PfN
+         QjdA==
+X-Gm-Message-State: AOAM532gPcziELwzdxhJLlb6N2F0Ke49mA88lcGRvzJMTtyQyWGGme1j
+        TYmDQPHuhs/5Re4kRtPEd56rueqFaHOIX+Ut
+X-Google-Smtp-Source: ABdhPJyQf5yx6NAwHaYLImtHRjVsfd67Ehgqij+wLHV/QWTAAcsZ2VmadbeRf/MvbFyTGQCtQjecqg==
+X-Received: by 2002:ac2:5689:: with SMTP id 9mr621374lfr.397.1630522874317;
+        Wed, 01 Sep 2021 12:01:14 -0700 (PDT)
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
+        by smtp.gmail.com with ESMTPSA id w5sm36275lfq.80.2021.09.01.12.01.13
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Sep 2021 12:01:14 -0700 (PDT)
+Received: by mail-lj1-f178.google.com with SMTP id y6so801341lje.2
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2021 12:01:13 -0700 (PDT)
+X-Received: by 2002:a2e:3004:: with SMTP id w4mr888035ljw.465.1630522873162;
+ Wed, 01 Sep 2021 12:01:13 -0700 (PDT)
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+References: <20210831203727.3852294-1-kuba@kernel.org>
+In-Reply-To: <20210831203727.3852294-1-kuba@kernel.org>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 1 Sep 2021 12:00:57 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wjB_zBwZ+WR9LOpvgjvaQn=cqryoKigod8QnZs=iYGEhA@mail.gmail.com>
+Message-ID: <CAHk-=wjB_zBwZ+WR9LOpvgjvaQn=cqryoKigod8QnZs=iYGEhA@mail.gmail.com>
+Subject: Re: [GIT PULL] Networking for v5.15
+To:     Jakub Kicinski <kuba@kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     David Miller <davem@davemloft.net>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gV2VkLCAyMDIxLTA5LTAxIGF0IDEwOjU1IC0wNzAwLCBCZW4gR3JlZWFyIHdyb3RlOg0KPiBP
-biA5LzEvMjEgMTA6NDkgQU0sIFJ5ZGVyIExlZSB3cm90ZToNCj4gPiBGcm9tOiBCZW4gR3JlZWFy
-IDxncmVlYXJiQGNhbmRlbGF0ZWNoLmNvbT4NCj4gPiANCj4gPiBXaXRob3V0IHRoaXMgY2hhbmdl
-LCBnYXJiYWdlIGlzIHNlZW4gaW4gdGhlIGh3bW9uIG5hbWUgYW5kIHNlbnNvcnMNCj4gPiBvdXRw
-dXQNCj4gPiBmb3IgbXQ3OTE1IGlzIGdhcmJsZWQuIEl0IGFwcGVhcnMgdGhhdCB0aGUgaHdtb24g
-bG9naWMgZG9lcyBub3QNCj4gPiBtYWtlIGENCj4gPiBjb3B5IG9mIHRoZSBpbmNvbWluZyBzdHJp
-bmcsIGJ1dCBpbnN0ZWFkIGp1c3QgY29waWVzIGEgY2hhciogYW5kDQo+ID4gZXhwZWN0cw0KPiA+
-IGl0IHRvIG5ldmVyIGdvIGF3YXkuDQo+ID4gDQo+ID4gRml4ZXM6IGQ2OTM4MjUxYmI1YiAoIm10
-NzY6IG10NzkxNTogYWRkIHRoZXJtYWwgc2Vuc29yIGRldmljZQ0KPiA+IHN1cHBvcnQiKQ0KPiA+
-IFNpZ25lZC1vZmYtYnk6IEJlbiBHcmVlYXIgPGdyZWVhcmJAY2FuZGVsYXRlY2guY29tPg0KPiA+
-IFNpZ25lZC1vZmYtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCj4gPiAt
-LS0NCj4gPiB2NTogIFVzZSBkZXZtX2tzdHJkdXAgb24gdGhlIHdpcGh5IG5hbWUgYXMgc3VnZ2Vz
-dGVkLg0KPiANCj4gSSBkb24ndCBjYXJlIGEgZ3JlYXQgZGVhbCBlaXRoZXIgd2F5LCBidXQgcGh5
-bmFtZSBjYW4gY2hhbmdlICh3aGljaA0KPiB3YXMgb3JpZ2luYWwNCj4gd2F5IHRvIHJlcHJvZHVj
-ZSB0aGlzIGNvcnJ1cHRpb24gYnVnKSwgc28gd2l0aCB0aGlzIHY1IGNoYW5nZSwgdGhlbg0KPiB0
-aGUgaHdtb24gJ2lkJyBjb3VsZCBjb25mdXNpbmdseQ0KPiBiZSAncGh5MCcgd2hpbGUgdXNlciBo
-YXMgcmVuYW1lZCB0aGUgcGh5MCB0byB3aXBoeTAgb3Igd2hhdGV2ZXIuDQo+IA0KPiBJdCB3b24n
-dCBicmVhayBteSB1c2FnZSBlaXRoZXIgd2F5LCBzbyBpZiB5b3UgYXJlIGhhcHB5IHdpdGggdGhp
-cywNCj4gdGhlbiBnb29kDQo+IGVub3VnaCBmb3IgbWUuDQoNCkkgdGhvdWdodCBvZiB0aGlzIC4u
-LiBDb25zaWRlcmluZyB0aGUgaHdtb24gY2FuJ3QgbmV2ZXIga25vdyB0aGUNCnBoeW5hbWUgb25j
-ZSBpdCBnb3QgY2hhbmdlZC4gV2UgY2FuIG9ubHkgc3BlY2lmaXkgYSBzdGF0aWMgIm10NzkxNS14
-eHgiIA0KdG8gbmFtZSBpdCwgb3IganVzdCB1c2UgYW4gaW5pdGlhbCBwaHluYW1lLiBBbnlob3cg
-aXQncyBub3QgdGhlIHJlYWwNCnBoeW5hbWUgeW91IGNoYW5nZSBhY3R1YWxseS4NCg0KPiBCdXQs
-IHNlZSBiZWxvdywgdGhlcmUgaXMgc3B1cmlvdXMgY2hhbmdlLi4uDQo+IA0KPiANCj4gPiB2NDog
-IFNpbXBsaWZ5IGZsb3cuDQo+ID4gdjM6ICBBZGQgJ2ZpeGVzJyB0YWcgdG8gYWlkIGJhY2twb3J0
-cy4NCj4gPiAtLS0NCj4gPiAgIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3
-OTE1L2luaXQuYyB8IDggKysrKy0tLS0NCj4gPiAgIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
-dGVrL210NzYvbXQ3OTE1L21jdS5jICB8IDIgKy0NCj4gPiAgIDIgZmlsZXMgY2hhbmdlZCwgNSBp
-bnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9pbml0LmMNCj4gPiBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L2luaXQuYw0KPiA+IGluZGV4IGFj
-YzgzZTlmNDA5Yi4uNzhiOWFiYmU2M2YzIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L2luaXQuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L2luaXQuYw0KPiA+IEBAIC0xNjAsOSArMTYw
-LDEwIEBAIHN0YXRpYyBpbnQgbXQ3OTE1X3RoZXJtYWxfaW5pdChzdHJ1Y3QNCj4gPiBtdDc5MTVf
-cGh5ICpwaHkpDQo+ID4gICAJc3RydWN0IHdpcGh5ICp3aXBoeSA9IHBoeS0+bXQ3Ni0+aHctPndp
-cGh5Ow0KPiA+ICAgCXN0cnVjdCB0aGVybWFsX2Nvb2xpbmdfZGV2aWNlICpjZGV2Ow0KPiA+ICAg
-CXN0cnVjdCBkZXZpY2UgKmh3bW9uOw0KPiA+ICsJY29uc3QgY2hhciAqbmFtZTsNCj4gPiAgIA0K
-PiA+IC0JY2RldiA9IHRoZXJtYWxfY29vbGluZ19kZXZpY2VfcmVnaXN0ZXIod2lwaHlfbmFtZSh3
-aXBoeSksIHBoeSwNCj4gPiAtCQkJCQkgICAgICAgJm10NzkxNV90aGVybWFsX29wcyk7DQo+ID4g
-KwluYW1lID0gZGV2bV9rc3RyZHVwKCZ3aXBoeS0+ZGV2LCB3aXBoeV9uYW1lKHdpcGh5KSwNCj4g
-PiBHRlBfS0VSTkVMKTsNCj4gPiArCWNkZXYgPSB0aGVybWFsX2Nvb2xpbmdfZGV2aWNlX3JlZ2lz
-dGVyKG5hbWUsIHBoeSwNCj4gPiAmbXQ3OTE1X3RoZXJtYWxfb3BzKTsNCj4gPiAgIAlpZiAoIUlT
-X0VSUihjZGV2KSkgew0KPiA+ICAgCQlpZiAoc3lzZnNfY3JlYXRlX2xpbmsoJndpcGh5LT5kZXYu
-a29iaiwgJmNkZXYtDQo+ID4gPmRldmljZS5rb2JqLA0KPiA+ICAgCQkJCSAgICAgICJjb29saW5n
-X2RldmljZSIpIDwgMCkNCj4gPiBAQCAtMTc0LDggKzE3NSw3IEBAIHN0YXRpYyBpbnQgbXQ3OTE1
-X3RoZXJtYWxfaW5pdChzdHJ1Y3QNCj4gPiBtdDc5MTVfcGh5ICpwaHkpDQo+ID4gICAJaWYgKCFJ
-U19SRUFDSEFCTEUoQ09ORklHX0hXTU9OKSkNCj4gPiAgIAkJcmV0dXJuIDA7DQo+ID4gICANCj4g
-PiAtCWh3bW9uID0gZGV2bV9od21vbl9kZXZpY2VfcmVnaXN0ZXJfd2l0aF9ncm91cHMoJndpcGh5
-LT5kZXYsDQo+ID4gLQkJCQkJCSAgICAgICB3aXBoeV9uYW1lKHdpcGh5DQo+ID4gKSwgcGh5LA0K
-PiA+ICsJaHdtb24gPSBkZXZtX2h3bW9uX2RldmljZV9yZWdpc3Rlcl93aXRoX2dyb3Vwcygmd2lw
-aHktPmRldiwNCj4gPiBuYW1lLCBwaHksDQo+ID4gICAJCQkJCQkgICAgICAgbXQ3OTE1X2h3bW9u
-X2dybw0KPiA+IHVwcyk7DQo+ID4gICAJaWYgKElTX0VSUihod21vbikpDQo+ID4gICAJCXJldHVy
-biBQVFJfRVJSKGh3bW9uKTsNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21l
-ZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jDQo+ID4gaW5kZXggOTMyY2Y1YTYyOWRiLi4yMTliYjM1
-M2I1NmQgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
-Ni9tdDc5MTUvbWN1LmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
-dDc2L210NzkxNS9tY3UuYw0KPiA+IEBAIC0xOTYyLDcgKzE5NjIsNyBAQCBtdDc5MTVfbWN1X3N0
-YV9iZmVyX3RsdihzdHJ1Y3QgbXQ3OTE1X2Rldg0KPiA+ICpkZXYsIHN0cnVjdCBza19idWZmICpz
-a2IsDQo+ID4gICAJZWxzZQ0KPiA+ICAgCQlyZXR1cm47DQo+ID4gICANCj4gPiAtCWJmLT5iZl9j
-YXAgPSBCSVQoIWViZiAmJiBkZXYtPmliZik7DQo+ID4gKwliZi0+YmZfY2FwID0gZWJmID8gZWJm
-IDogZGV2LT5pYmYgPDwgMTsNCj4gDQo+IEFuZCB0aGlzIHNob3VsZCBub3QgYmUgaW4gdGhpcyBw
-YXRjaC4NCj4gDQoNCk9vcHMuIEkgbWVzc2VkIHBhdGNoIHVwIHdoaWxlIG1lcmdpbmcgdG8gb3Ro
-ZXIgc2VyaWVzLiBXaWxsIGZpeC4NCg0KUnlkZXINCj4gDQo=
+On Tue, Aug 31, 2021 at 1:37 PM Jakub Kicinski <kuba@kernel.org> wrote:
+>
+> No conflicts at the time of writing. There were conflicts with
+> char-misc but I believe Greg dropped the commits in question.
 
+Hmm. I already merged this earlier, but didn't notice a new warning on
+my desktop:
+
+  RTNL: assertion failed at net/wireless/reg.c (4025)
+  WARNING: CPU: 60 PID: 1720 at net/wireless/reg.c:4025
+regulatory_set_wiphy_regd_sync+0x7f/0x90 [cfg80211]
+  Call Trace:
+   iwl_mvm_init_mcc+0x170/0x190 [iwlmvm]
+   iwl_op_mode_mvm_start+0x824/0xa60 [iwlmvm]
+   iwl_opmode_register+0xd0/0x130 [iwlwifi]
+   init_module+0x23/0x1000 [iwlmvm]
+
+and
+
+  RTNL: assertion failed at net/wireless/reg.c (3106)
+  WARNING: CPU: 60 PID: 1720 at net/wireless/reg.c:3106
+reg_process_self_managed_hint+0x26c/0x280 [cfg80211]
+  Call Trace:
+   regulatory_set_wiphy_regd_sync+0x3a/0x90 [cfg80211]
+   iwl_mvm_init_mcc+0x170/0x190 [iwlmvm]
+   iwl_op_mode_mvm_start+0x824/0xa60 [iwlmvm]
+   iwl_opmode_register+0xd0/0x130 [iwlwifi]
+   init_module+0x23/0x1000 [iwlmvm]
+
+and
+
+  RTNL: assertion failed at net/wireless/core.c (84)
+  WARNING: CPU: 60 PID: 1720 at net/wireless/core.c:84
+wiphy_idx_to_wiphy+0x97/0xd0 [cfg80211]
+  Call Trace:
+   nl80211_common_reg_change_event+0xf9/0x1e0 [cfg80211]
+   reg_process_self_managed_hint+0x23d/0x280 [cfg80211]
+   regulatory_set_wiphy_regd_sync+0x3a/0x90 [cfg80211]
+   iwl_mvm_init_mcc+0x170/0x190 [iwlmvm]
+   iwl_op_mode_mvm_start+0x824/0xa60 [iwlmvm]
+   iwl_opmode_register+0xd0/0x130 [iwlwifi]
+   init_module+0x23/0x1000 [iwlmvm]
+
+and
+
+  RTNL: assertion failed at net/wireless/core.c (61)
+  WARNING: CPU: 60 PID: 1720 at net/wireless/core.c:61
+wiphy_idx_to_wiphy+0xbf/0xd0 [cfg80211]
+  Call Trace:
+   nl80211_common_reg_change_event+0xf9/0x1e0 [cfg80211]
+   reg_process_self_managed_hint+0x23d/0x280 [cfg80211]
+   regulatory_set_wiphy_regd_sync+0x3a/0x90 [cfg80211]
+   iwl_mvm_init_mcc+0x170/0x190 [iwlmvm]
+   iwl_op_mode_mvm_start+0x824/0xa60 [iwlmvm]
+   iwl_opmode_register+0xd0/0x130 [iwlwifi]
+   init_module+0x23/0x1000 [iwlmvm]
+
+They all seem to have that same issue, and it looks like the fix would
+be to get the RTN lock in iwl_mvm_init_mcc(), but I didn't really look
+into it very much.
+
+This is on my desktop, and I actually don't _use_ the wireless on this
+machine. I assume it still works despite the warnings, but they should
+get fixed.
+
+I *don't* see these warnings on my laptop where I actually use
+wireless, but that one uses ath10k_pci, so it seems this is purely a
+iwlwifi issue.
+
+I can't be the only one that sees this. Hmm?
+
+                 Linus
