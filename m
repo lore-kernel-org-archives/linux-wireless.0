@@ -7,55 +7,54 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B3BC432BE
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:35:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA984C4320E
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:35:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 213BF610C8
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:35:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD37360FC0
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:35:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232603AbhIBFgP (ORCPT
+        id S232689AbhIBFgR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Sep 2021 01:36:15 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:56644 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231756AbhIBFgO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Sep 2021 01:36:14 -0400
+        Thu, 2 Sep 2021 01:36:17 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:36254 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232125AbhIBFgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Sep 2021 01:36:16 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1630560916; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1630560918; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=9gSGz8zPNFyGR2n0P44qKCJtAumjLBinCPzX+XYq2GQ=; b=wc0K3HtMXKkn1wradm5C0uOD5DeV4fU8o5vOs6nHlD59JSe0eYiHw4C+uLF3HXISQgBAz6lA
- 2gGtQP6gjeSQ6janQNDPMfYdwDgqPfICyKAqcIDM+jqNXKRYxaKHEXgzgQOC6XPYa6xI07HI
- kaZuhSgTLa7mFE/EOV9f61e2oro=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ bh=W7rFEcH37IDpOVDKlM3eyR7PAzy8WsNeHhyvYN4n3U8=; b=dLFcG1yx2lWhvICoDD5VWkl8oBKZ61VxFstNh9HfNpocrxtQd4RP88S7xjwVEQbRL2ksrq5h
+ wjR4AYxcwCMtyGmFqeA5kkzf1X/DasiR4UN+RvmxbMg8KOmeH8brXFGBEP2RXMMhesgGao9P
+ mDOepvv+Lm8PwKi6Giu1U9dldb4=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 613062891567234b8c116dda (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 02 Sep 2021 05:35:05
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 613062914d644b7d1c1e5520 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 02 Sep 2021 05:35:13
  GMT
 Sender: ppranees=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9EA6CC43617; Thu,  2 Sep 2021 05:35:04 +0000 (UTC)
+        id 4B9BAC4361A; Thu,  2 Sep 2021 05:35:13 +0000 (UTC)
 Received: from ppranees-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: ppranees)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CF9E7C4361A;
-        Thu,  2 Sep 2021 05:35:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org CF9E7C4361A
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3CF87C4361A;
+        Thu,  2 Sep 2021 05:35:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 3CF87C4361A
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   P Praneesh <ppranees@codeaurora.org>
 To:     kvalo@codeaurora.org
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         P Praneesh <ppranees@codeaurora.org>,
-        Sriram R <srirrama@codeaurora.org>,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH v3 09/12] ath11k: remove mod operator in dst ring processing
-Date:   Thu,  2 Sep 2021 11:03:37 +0530
-Message-Id: <1630560820-21905-10-git-send-email-ppranees@codeaurora.org>
+Subject: [PATCH v3 12/12] ath11k: avoid unnecessary lock contention in tx_completion path
+Date:   Thu,  2 Sep 2021 11:03:40 +0530
+Message-Id: <1630560820-21905-13-git-send-email-ppranees@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1630560820-21905-1-git-send-email-ppranees@codeaurora.org>
 References: <1630560820-21905-1-git-send-email-ppranees@codeaurora.org>
@@ -63,37 +62,102 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace use of mod operator with a manual wrap around
-to avoid additional cost of using mod operation.
+Avoid unnecessary idr_find calls before the idr_remove calls. Because
+idr_remove gives the valid ptr if id is valid otherwise return NULL ptr.
+So removed the idr_find before idr_remove in tx completion path. Also no
+need to disable the bottom half preempt if it is already in the
+bottom half context, so modify the spin_lock_bh to spin_lock in the
+data tx completion path.
 
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01734-QCAHKSWPL_SILICONZ-1 v2
 
-Co-developed-by: Sriram R <srirrama@codeaurora.org>
-Signed-off-by: Sriram R <srirrama@codeaurora.org>
+Co-developed-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: P Praneesh <ppranees@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/hal.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
-index f04edaf..7cf9e23 100644
---- a/drivers/net/wireless/ath/ath11k/hal.c
-+++ b/drivers/net/wireless/ath/ath11k/hal.c
-@@ -654,8 +654,11 @@ u32 *ath11k_hal_srng_dst_get_next_entry(struct ath11k_base *ab,
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 602184b..05bd86f 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -288,20 +288,18 @@ static void ath11k_dp_tx_free_txbuf(struct ath11k_base *ab, u8 mac_id,
+ 	struct sk_buff *msdu;
+ 	struct ath11k_skb_cb *skb_cb;
  
- 	desc = srng->ring_base_vaddr + srng->u.dst_ring.tp;
- 
--	srng->u.dst_ring.tp = (srng->u.dst_ring.tp + srng->entry_size) %
--			      srng->ring_size;
-+	srng->u.dst_ring.tp += srng->entry_size;
+-	spin_lock_bh(&tx_ring->tx_idr_lock);
+-	msdu = idr_find(&tx_ring->txbuf_idr, msdu_id);
+-	if (!msdu) {
++	spin_lock(&tx_ring->tx_idr_lock);
++	msdu = idr_remove(&tx_ring->txbuf_idr, msdu_id);
++	spin_unlock(&tx_ring->tx_idr_lock);
 +
-+	/* wrap around to start of ring*/
-+	if (srng->u.dst_ring.tp == srng->ring_size)
-+		srng->u.dst_ring.tp = 0;
++	if (unlikely(!msdu)) {
+ 		ath11k_warn(ab, "tx completion for unknown msdu_id %d\n",
+ 			    msdu_id);
+-		spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 		return;
+ 	}
  
- 	/* Try to prefetch the next descriptor in the ring */
- 	if (srng->flags & HAL_SRNG_FLAGS_CACHED)
+ 	skb_cb = ATH11K_SKB_CB(msdu);
+ 
+-	idr_remove(&tx_ring->txbuf_idr, msdu_id);
+-	spin_unlock_bh(&tx_ring->tx_idr_lock);
+-
+ 	dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 	dev_kfree_skb_any(msdu);
+ 
+@@ -320,12 +318,13 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 	struct ath11k_skb_cb *skb_cb;
+ 	struct ath11k *ar;
+ 
+-	spin_lock_bh(&tx_ring->tx_idr_lock);
+-	msdu = idr_find(&tx_ring->txbuf_idr, ts->msdu_id);
++	spin_lock(&tx_ring->tx_idr_lock);
++	msdu = idr_remove(&tx_ring->txbuf_idr, ts->msdu_id);
++	spin_unlock(&tx_ring->tx_idr_lock);
++
+ 	if (unlikely(!msdu)) {
+ 		ath11k_warn(ab, "htt tx completion for unknown msdu_id %d\n",
+ 			    ts->msdu_id);
+-		spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 		return;
+ 	}
+ 
+@@ -334,9 +333,6 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 
+ 	ar = skb_cb->ar;
+ 
+-	idr_remove(&tx_ring->txbuf_idr, ts->msdu_id);
+-	spin_unlock_bh(&tx_ring->tx_idr_lock);
+-
+ 	if (atomic_dec_and_test(&ar->dp.num_tx_pending))
+ 		wake_up(&ar->dp.tx_empty_waitq);
+ 
+@@ -579,16 +575,16 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 			continue;
+ 		}
+ 
+-		spin_lock_bh(&tx_ring->tx_idr_lock);
+-		msdu = idr_find(&tx_ring->txbuf_idr, msdu_id);
++		spin_lock(&tx_ring->tx_idr_lock);
++		msdu = idr_remove(&tx_ring->txbuf_idr, msdu_id);
+ 		if (unlikely(!msdu)) {
+ 			ath11k_warn(ab, "tx completion for unknown msdu_id %d\n",
+ 				    msdu_id);
+-			spin_unlock_bh(&tx_ring->tx_idr_lock);
++			spin_unlock(&tx_ring->tx_idr_lock);
+ 			continue;
+ 		}
+-		idr_remove(&tx_ring->txbuf_idr, msdu_id);
+-		spin_unlock_bh(&tx_ring->tx_idr_lock);
++
++		spin_unlock(&tx_ring->tx_idr_lock);
+ 
+ 		ar = ab->pdevs[mac_id].ar;
+ 
 -- 
 2.7.4
 
