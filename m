@@ -2,137 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3296C19F38
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 22:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E37CEC432BE
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:27:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96BDF60FDA
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Sep 2021 22:42:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8D476069E
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Sep 2021 05:27:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245210AbhIAWmy (ORCPT
+        id S231339AbhIBF2W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Sep 2021 18:42:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56990 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244935AbhIAWmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Sep 2021 18:42:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DEBD961074;
-        Wed,  1 Sep 2021 22:41:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630536116;
-        bh=77MmJsqsUPuSG3h/bnm06TfCwbXA3EPH83b89+5uW2U=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=dHI0LJk+dZT0xgWylN+Z8LTmxrxVvhsu0AbsTFI7fFAlwazcnAWHy6vN63t6/8G6c
-         6pNDmTea8P8WSmcE6dm4GzpzKaX+YuurwHH3n21y8rpPqjwEoYgryadtOXQ46igxyl
-         vMS6XZbd2QnXfO6fEO/+qFxx+/C17apOvMES3/lEsPvF97YsPcySswuUHM18DYnOJ0
-         klE0Tryzru9qi8FjpcsIzq6SqRcvZ/t8Zs4NyGiICuGcC7X3ZkZXLUzmnxPh1rJcps
-         ET0d6/6X8y6u27fA6zNy/1qCMZ9uiMM6RWQO8xE5CJ1e+rP2cUEMl5sAlBn0iYFNky
-         kvwUDj9VMLUtA==
-Date:   Wed, 1 Sep 2021 17:41:54 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Heiner Kallweit <hkallweit1@gmail.com>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Jonas =?iso-8859-1?Q?Dre=DFler?= <verdre@v0yd.nl>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] mwifiex: Use non-posted PCI register writes
-Message-ID: <20210901224154.GA230445@bjorn-Precision-5520>
+        Thu, 2 Sep 2021 01:28:22 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:30744 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229601AbhIBF2V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Sep 2021 01:28:21 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1630560444; h=Message-ID: Subject: Cc: To: From: Date:
+ Content-Transfer-Encoding: Content-Type: MIME-Version: Sender;
+ bh=xUPDCjlZZkxT5PbC0lrXcjdiYxOt/vxITKFTYtv1fFQ=; b=OfUDp8hP5oVeXyGVezupV0UmnxZCrHgOeyJvq8EApnV31ihMj9aLwYIlWVnKNzQXQ5AbECHl
+ w8WNSsxgJgZ8+z2dfJSc/Vr9zcoTuPWQ1N5ocW7eXlPk3V06GCuqwMU9cBVvwyKwj9EdF4Mg
+ yuSeyG/sbk9JmEEj7x5AOS/H644=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 613060aa825e13c54a9f691c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 02 Sep 2021 05:27:06
+ GMT
+Sender: murugana=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id CE65BC43460; Thu,  2 Sep 2021 05:27:05 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: murugana)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B699EC4338F;
+        Thu,  2 Sep 2021 05:27:04 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <f293c619399ba8bd60240879a20ee34db1248255.camel@sipsolutions.net>
+Date:   Thu, 02 Sep 2021 10:57:04 +0530
+From:   Sathishkumar Muruganandam <murugana@codeaurora.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: Multi-client EAPOL key timeout when not having RTNL lock protection
+Message-ID: <6cae54aee83a19dc13e458e4d20e4f28@codeaurora.org>
+X-Sender: murugana@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Sep 01, 2021 at 07:07:58PM +0200, Johannes Berg wrote:
-> On Wed, 2021-09-01 at 18:51 +0200, Heiner Kallweit wrote:
-> > On 01.09.2021 17:51, Pali Rohár wrote:
-> > > On Wednesday 01 September 2021 16:01:54 Jonas Dreßler wrote:
-> > > > On 8/30/21 2:49 PM, Andy Shevchenko wrote:
-> > > > > On Mon, Aug 30, 2021 at 3:38 PM Jonas Dreßler <verdre@v0yd.nl> wrote:
-> > > > > > 
-> > > > > > On the 88W8897 card it's very important the TX ring write pointer is
-> > > > > > updated correctly to its new value before setting the TX ready
-> > > > > > interrupt, otherwise the firmware appears to crash (probably because
-> > > > > > it's trying to DMA-read from the wrong place).
-> > > > > > 
-> > 
-> > This sounds somehow like the typical case where you write DMA descriptors
-> > and then ring the doorbell. This normally requires a dma_wmb().
-> > Maybe something like that is missing here?
-> 
-> But it looks like this "TX ring write pointer" is actually the register?
-> 
-> However, I would agree that doing it in mwifiex_write_reg() is possibly
-> too big a hammer - could be done only for reg->tx_wrptr, not all the
-> registers?
-> 
-> Actually, can two writes actually cross on PCI?
+Hi,
 
-Per PCIe r5.0, sec 2.4.1,
+In the multi-client (64 or higher clients on single radio) test scenario 
+of AP mode using hostapd, we are facing EAPOL key timeout for random 
+clients.
 
-  A2a  A Posted Request must not pass another Posted Request unless A2b
-       applies.
+wlan1: STA 00:41:c0:a8:03:10 WPA: received EAPOL-Key msg 4/4 in invalid 
+state (7) â€“ dropped
 
-  A2b  A Posted Request with RO Set is permitted to pass another
-       Posted Request.  A Posted Request with IDO Set is permitted to
-       pass another Posted Request if the two Requester IDs are
-       different or if both Requests contain a PASID TLP Prefix and
-       the two PASID values are different.
+This is happening due to delay in transmission of association response 
+frames for retried association request frames from the client and one of 
+the association requests is received when EAPOL key exchange is in 
+process. NL80211_CMD_NEW_STATION is received on hostapd when already 
+EAPOL M3 is transmitted and waiting for EAPOL M4. But since hostapd 
+received NL80211_CMD_NEW_STATION, it resets the handshake process from 
+M1 again by the time client sends M4 to see the above error.
 
-A few drivers enable RO (Relaxed Ordering) for their devices, which
-means the *device* is permitted to set the RO bit in transactions it
-initiates.
+This delay is seen only after the commit, a05829a7222e ("cfg80211: avoid 
+holding the RTNL when calling the driver") and not seen before/without 
+this commit. We could see delay in processing of nl80211_get_key, 
+nl80211_set_key, nl80211_new_key, nl80211_del_key and nl80211_tx_mgmt 
+commands.
 
-BUt IIUC we're talking about MMIO writes initiated by a CPU, and they
-won't have the RO bit set unless the Root Port has Relaxed Ordering
-enabled, and Linux generally does not enable that.  So A2a should
-apply, and writes should be ordered on PCI.
+The delay and EAPOL key timeout is not seen when NL80211_FLAG_NEED_RTNL 
+is set back to internal_flags of nl80211_get_key, nl80211_set_key, 
+nl80211_new_key, nl80211_del_key and nl80211_tx_mgmt messages alone.
 
-There are a few wrinkles that I worry about:
+Please share your comments on this issue requiring RTNL lock for key and 
+mgmt nl80211 commands.
 
-  d1e714db8129 ("mtip32xx: Fix ERO and NoSnoop values in PCIe upstream
-  on AMD systems") [1] turns off RO for some AMD Root Ports, which
-  makes me think BIOS might be enabling RO in these Root Ports.
-
-  c56d4450eb68 ("PCI: Turn off Request Attributes to avoid Chelsio T5
-  Completion erratum") [2] turns off RO for all Root Ports leading to
-  Chelsio T5 devices, which again makes me think there's firmware that
-  enables RO in Root Ports.  Follow-up [3].
-
-  77ffc1465cec ("tegra: add PCI Express support") [4] (see
-  tegra_pcie_relax_enable()) enables RO for Tegra Root Ports due to
-  some hardware issue.  I don't whether these Root Ports every
-  actually *set* RO in the PCIe transactions they generate.  Follow-up
-  [5].
-
-These concern me because I don't think we have a way for drivers to
-specify whether their writes should use strong ordering or relaxed
-ordering, and I think they depend on strong ordering.  If Root Ports
-have RO enabled, I think we are at risk, so I suspect Linux should
-actively *disable* RO for Root Ports.
-
-[1] https://git.kernel.org/linus/d1e714db8129
-[2] https://git.kernel.org/linus/c56d4450eb68
-[3] https://lore.kernel.org/r/20210901222353.GA251391@bjorn-Precision-5520
-[4] https://git.kernel.org/linus/77ffc1465cec
-[5] https://lore.kernel.org/r/20210901204045.GA236987@bjorn-Precision-5520
+With regards,
+Sathishkumar
