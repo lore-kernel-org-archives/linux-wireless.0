@@ -2,105 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9CAC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Sep 2021 11:49:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A695AC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Sep 2021 17:49:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E5AE60FDC
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Sep 2021 11:49:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B6DC60E93
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Sep 2021 17:49:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349318AbhICLuI (ORCPT
+        id S1349996AbhICRuB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Sep 2021 07:50:08 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:17175 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235280AbhICLuC (ORCPT
+        Fri, 3 Sep 2021 13:50:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56694 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349916AbhICRuB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Sep 2021 07:50:02 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1630669742; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=dGN37s3jyUX7eiqRdMr8/XPiuEfd1mFm9MFNpMM8P24=; b=jqJuZi0N6jPISVhn5DXGXDROIX/QI+8EUirtuuq26aFJCUrO6WQJzA0MRrTaSxBZyjDxpHn6
- HKdx3UELmXvTq798nO0nmLYU7pyEIEvvYvRcoWFiL6UoA1Jk0mOSwJUO8oS0VZTw2NzkePK1
- JZHm4fXdZAvsObVmic7icFU/FRk=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 61320b9189cdb62061a54145 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 03 Sep 2021 11:48:33
- GMT
-Sender: wgong=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1241DC4360C; Fri,  3 Sep 2021 11:48:33 +0000 (UTC)
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9857CC43460;
-        Fri,  3 Sep 2021 11:48:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 9857CC43460
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     johannes@sipsolutions.net, ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH v3 3/9] mac80211: add parse regulatory info in 6 GHz operation information
-Date:   Fri,  3 Sep 2021 07:48:15 -0400
-Message-Id: <20210903114821.23346-4-wgong@codeaurora.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210903114821.23346-1-wgong@codeaurora.org>
-References: <20210903114821.23346-1-wgong@codeaurora.org>
+        Fri, 3 Sep 2021 13:50:01 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E6AC061575;
+        Fri,  3 Sep 2021 10:49:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=OJ2pEw5jPPStfKuNWXFd6825jYJnL3pOyXkglFCIiQ4=; b=pwlxB4IL3DK1Eftvqa6FVK++Yc
+        coLVKGyAD06wolmKKZjYt/FJE7rS1cPtB/k5RwW+exKdv5MFxxXxlQ1AqhpCgJdWF078l3AweMU4F
+        y0uDq++WnpDSBj1MOqrVGcUifhMQWoGXObMhAxWVfhhLoEATtpz798h/V8t+cG461E1qMODC3iNvq
+        +j9u3ZE0VWiUru3vhJzP0Z8VUSvA+EKDEiv3jGqoeuXVn5jm8Gx602Ehzz9/zwQyICK+jUpbeM/1o
+        q6Bg2m0GvfDya+8BbKOsq4iFQmrvyds97Re89fhTPvIuzmKICNif99ecRvOtclR9Xyw6M3tD22wuX
+        6qJn/jnw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mMDJ9-00CVS0-My; Fri, 03 Sep 2021 17:48:55 +0000
+Date:   Fri, 3 Sep 2021 10:48:55 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     dingsenjie@163.com
+Cc:     jirislaby@kernel.org, mickflemm@gmail.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dingsenjie <dingsenjie@yulong.com>
+Subject: Re: [PATCH] wireless: ath5k: Remove unnecessary label of
+ ath5k_beacon_update
+Message-ID: <YTJgB4MNNolkrLYS@bombadil.infradead.org>
+References: <20210903062316.11756-1-dingsenjie@163.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210903062316.11756-1-dingsenjie@163.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch is to convert the regulatory info subfield in HE operation
-element to power type and save in struct cfg80211_chan_def.
+On Fri, Sep 03, 2021 at 02:23:16PM +0800, dingsenjie@163.com wrote:
+> From: dingsenjie <dingsenjie@yulong.com>
+> 
+> The label just used as return, so we delete it and
+> use the return statement instead of the goto statement.
+> 
+> Signed-off-by: dingsenjie <dingsenjie@yulong.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c | 13 ++++---------
+>  1 file changed, 4 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 4c6e57f..9739189 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1896,23 +1896,18 @@ static int ath5k_remove_padding(struct sk_buff *skb)
+>  	struct ath5k_vif *avf;
+>  	struct sk_buff *skb;
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- net/mac80211/util.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Just initialize ret = -EINVAL at the top, and you to get clear out a few
+braces which are not needed anymore. Anyway, this code is not reflected
+on linux-next, what codebase are you using? If the code change is just
+a cleanup it should remove more code than add, and a commmit log should
+reflect that clearly.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 93d96a4f9c3e..04f2ba530d4f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3352,6 +3352,7 @@ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
- 	const struct ieee80211_sta_he_cap *he_cap;
- 	struct cfg80211_chan_def he_chandef = *chandef;
- 	const struct ieee80211_he_6ghz_oper *he_6ghz_oper;
-+	struct ieee80211_bss_conf *bss_conf;
- 	bool support_80_80, support_160;
- 	u8 he_phy_cap;
- 	u32 freq;
-@@ -3395,6 +3396,18 @@ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
- 					      NL80211_BAND_6GHZ);
- 	he_chandef.chan = ieee80211_get_channel(sdata->local->hw.wiphy, freq);
- 
-+	bss_conf = &sdata->vif.bss_conf;
-+
-+	switch (u8_get_bits(he_6ghz_oper->control,
-+			    IEEE80211_HE_6GHZ_OPER_CTRL_REG_INFO)) {
-+	case IEEE80211_6GHZ_CTRL_REG_LPI_AP:
-+		bss_conf->power_type = IEEE80211_REG_LPI_AP;
-+		break;
-+	case IEEE80211_6GHZ_CTRL_REG_SP_AP:
-+		bss_conf->power_type = IEEE80211_REG_SP_AP;
-+		break;
-+	}
-+
- 	switch (u8_get_bits(he_6ghz_oper->control,
- 			    IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH)) {
- 	case IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_20MHZ:
--- 
-2.31.1
-
+  Luis
