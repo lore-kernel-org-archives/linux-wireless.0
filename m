@@ -2,107 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0268BC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 10:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC689C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 11:45:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA6A860F70
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 10:04:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CFA86056B
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 11:45:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241732AbhIFKFG (ORCPT
+        id S241356AbhIFLqP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Sep 2021 06:05:06 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:37028 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241736AbhIFKFF (ORCPT
+        Mon, 6 Sep 2021 07:46:15 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:38842 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S240647AbhIFLqO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Sep 2021 06:05:05 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1630922641; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=vb4/JswAWmt98qU4Xk7ycoBR57/SEn/Y7gRs6lvuB+o=;
- b=hEd5q6WQydIkyA6/0MinUJsDvU34c54/G+W1LpurjrDx7CCr9PwWDOt8eAo/L6rXVtYrZu4U
- 5RI13yzgHFj5wr404PWaomzqbRjsyn7oQ5rsOkaSjy/Dz+mkSZIGm5S1Et/9++D8p9tXyaBv
- btQ38T/T14/m6vO+/cYMeIdHn7c=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 6135e76c6fc2cf7ad90dd5b9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 06 Sep 2021 10:03:24
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id ACD4CC43460; Mon,  6 Sep 2021 10:03:23 +0000 (UTC)
-Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 50B52C4338F;
-        Mon,  6 Sep 2021 10:03:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 50B52C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Mon, 6 Sep 2021 07:46:14 -0400
+X-UUID: dee9cc243b794c80ae8b9c22e60b3caa-20210906
+X-UUID: dee9cc243b794c80ae8b9c22e60b3caa-20210906
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 87741492; Mon, 06 Sep 2021 19:45:07 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 6 Sep 2021 19:45:06 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 6 Sep 2021 19:45:06 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH v2 6/8] mt76: mt7915: fix muar_idx in mt7915_mcu_alloc_sta_req()
+Date:   Mon, 6 Sep 2021 19:44:21 +0800
+Message-ID: <20210906114423.13646-6-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210906114423.13646-1-shayne.chen@mediatek.com>
+References: <20210906114423.13646-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: iwlwifi: fix printk format warnings in uefi.c
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210821020901.25901-1-rdunlap@infradead.org>
-References: <20210821020901.25901-1-rdunlap@infradead.org>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     netdev@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
-        kernel test robot <lkp@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210906100323.ACD4CC43460@smtp.codeaurora.org>
-Date:   Mon,  6 Sep 2021 10:03:23 +0000 (UTC)
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Randy Dunlap <rdunlap@infradead.org> wrote:
+For broadcast/multicast wcid, the muar_idx should be 0xe.
 
-> The kernel test robot reports printk format warnings in uefi.c, so
-> correct them.
-> 
-> ../drivers/net/wireless/intel/iwlwifi/fw/uefi.c: In function 'iwl_uefi_get_pnvm':
-> ../drivers/net/wireless/intel/iwlwifi/fw/uefi.c:52:30: warning: format '%zd' expects argument of type 'signed size_t', but argument 7 has type 'long unsigned int' [-Wformat=]
->    52 |                              "PNVM UEFI variable not found %d (len %zd)\n",
->       |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->    53 |                              err, package_size);
->       |                                   ~~~~~~~~~~~~
->       |                                   |
->       |                                   long unsigned int
-> ../drivers/net/wireless/intel/iwlwifi/fw/uefi.c:59:29: warning: format '%zd' expects argument of type 'signed size_t', but argument 6 has type 'long unsigned int' [-Wformat=]
->    59 |         IWL_DEBUG_FW(trans, "Read PNVM from UEFI with size %zd\n", package_size);
->       |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ~~~~~~~~~~~~
->       |                                                                    |
->       |                                                                    long unsigned int
-> 
-> Fixes: 84c3c9952afb ("iwlwifi: move UEFI code to a separate file")
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Reported-by: kernel test robot <lkp@intel.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based
+chipsets")
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Patch applied to wireless-drivers.git, thanks.
-
-e4457a45b41c iwlwifi: fix printk format warnings in uefi.c
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index a801df6e6996..229ba3c469d1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -571,7 +571,7 @@ mt7915_mcu_alloc_sta_req(struct mt7915_dev *dev, struct mt7915_vif *mvif,
+ 		.bss_idx = mvif->idx,
+ 		.wlan_idx_lo = msta ? to_wcid_lo(msta->wcid.idx) : 0,
+ 		.wlan_idx_hi = msta ? to_wcid_hi(msta->wcid.idx) : 0,
+-		.muar_idx = msta ? mvif->omac_idx : 0,
++		.muar_idx = msta && msta->wcid.sta ? mvif->omac_idx : 0xe,
+ 		.is_tlv_append = 1,
+ 	};
+ 	struct sk_buff *skb;
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210821020901.25901-1-rdunlap@infradead.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
