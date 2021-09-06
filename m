@@ -2,404 +2,265 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A567C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 11:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA53C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 17:54:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74A7A60F14
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 11:45:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E7ED61004
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Sep 2021 17:54:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241358AbhIFLqT (ORCPT
+        id S244273AbhIFRzK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Sep 2021 07:46:19 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:39198 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S241369AbhIFLqQ (ORCPT
+        Mon, 6 Sep 2021 13:55:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51040 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243962AbhIFRzJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Sep 2021 07:46:16 -0400
-X-UUID: 1ee35d2208dc45edb3d6107547120928-20210906
-X-UUID: 1ee35d2208dc45edb3d6107547120928-20210906
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 127738021; Mon, 06 Sep 2021 19:45:06 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 6 Sep 2021 19:45:05 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 6 Sep 2021 19:45:05 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v2 1/8] mt76: mt7915: introduce mt7915_mcu_beacon_check_caps()
-Date:   Mon, 6 Sep 2021 19:44:16 +0800
-Message-ID: <20210906114423.13646-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Mon, 6 Sep 2021 13:55:09 -0400
+Received: from mail-qt1-x82a.google.com (mail-qt1-x82a.google.com [IPv6:2607:f8b0:4864:20::82a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF5C5C061575;
+        Mon,  6 Sep 2021 10:54:04 -0700 (PDT)
+Received: by mail-qt1-x82a.google.com with SMTP id r21so5957994qtw.11;
+        Mon, 06 Sep 2021 10:54:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2hKItWeebPyvylBL8MhOaSAfJQALDyW9ilZEFB/W+xU=;
+        b=q49etGc0sY6hVWq+frNdVFnnhMfy3dfgeL2hd+rPW/xwRIjIYUWflnD5JQvB2NZrrA
+         dWqhfbIWLCpfEc1vo1R10y4XAm7Ch0Y487YUf9YDDA75xGx6A9wvKkgN8ZA8oO5RtUlW
+         sF0n4g4iMTbUd7j8q88evnGxNHKVMnF6BD4GOUuzwzYMO3+UAnieusBgtVDoCREK+GIz
+         nqyGhm+6VEEB4Q4nYDSV8cCrsPzkg8SmjCyQOs589DU98NuyVfo7GYcjp1cNfPdglgm3
+         WbDOOzcOxihwREFZAN8++zpCbG5+H558JRwoI0EG8I0+Wox9qjQAe08kMWa7/ihiXzWw
+         YqZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2hKItWeebPyvylBL8MhOaSAfJQALDyW9ilZEFB/W+xU=;
+        b=S6o5+Lqf3Nzc9OJ7t93m2YxHAFlHamP0l+xoGQl3MG0liIR91pWX3XnKYm0jdmygqu
+         vdur1t2a379GBiGgthlZVobR1nhlKBufX37xlGyQgVPYZUGHIhF9/nYKJZt+XY0l66je
+         I8LyzCCiOOL8ALMm4tfYKKwngHh/fLbeekOYBGyOupztLmEB3v7eAL8Uvl1E0Kj1z4g5
+         GssV8XH7ZYQwU71AFEm5Xk1DUfkEonNiyGtHVAb7LwjY+ANeWc6ULxN4Ys9Tm+Tq0X0H
+         3hzsHsN2RLEyj46Ug36b2fN7aXgdlkvptEr8le9lyIpTwv1NQ9UjHX+0bltf4jOIVy/b
+         2gsQ==
+X-Gm-Message-State: AOAM5330obb69lCHAOWebb4oii6IpqB4Mw6WgnhxAJ6kDKtvTHAmIdKk
+        R5avNrNVNbAp6cK4yHBAVmtsgzrZvIsRTw==
+X-Google-Smtp-Source: ABdhPJyutF8z/b8rARNpr+SxAa87pGv0GFPPUcjFp7NQXb+ji1iejLqZcD2tDSzhuvZ2RrxV4Os09Q==
+X-Received: by 2002:a05:622a:2c3:: with SMTP id a3mr11618554qtx.41.1630950843296;
+        Mon, 06 Sep 2021 10:54:03 -0700 (PDT)
+Received: from localhost.localdomain ([177.89.177.169])
+        by smtp.gmail.com with ESMTPSA id w19sm6834735qki.21.2021.09.06.10.54.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Sep 2021 10:54:02 -0700 (PDT)
+From:   Ramon Fontes <ramonreisfontes@gmail.com>
+To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net, kvalo@codeaurora.org,
+        davem@davemloft.net, Ramon Fontes <ramonreisfontes@gmail.com>
+Subject: [PATCH] mac80211_hwsim: enable 6GHz channels
+Date:   Mon,  6 Sep 2021 14:53:50 -0300
+Message-Id: <20210906175350.13461-1-ramonreisfontes@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+This adds 6 GHz capabilities and reject HT/VHT
 
-Beacon elements might be changed by hostapd configuraion, so driver
-should compare both IEs and PHY capabilities to get the least common
-denominator before association.
-
-Co-developed-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-Signed-off-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Ramon Fontes <ramonreisfontes@gmail.com>
 ---
-v2: modify condition for mimo_dl_en
----
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 163 +++++++++++++-----
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  12 ++
- 2 files changed, 136 insertions(+), 39 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 150 +++++++++++++++++++++++---
+ 1 file changed, 137 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 39cba8210242..955afe9f2958 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -1317,9 +1317,11 @@ mt7915_mcu_sta_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
- }
- 
- static void
--mt7915_mcu_sta_he_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
-+mt7915_mcu_sta_he_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
-+		      struct ieee80211_vif *vif)
- {
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
- 	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
- 	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
- 	enum nl80211_band band = msta->vif->phy->mt76->chandef.chan->band;
-@@ -1352,8 +1354,8 @@ mt7915_mcu_sta_he_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- 	     IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_RU_MAPPING_IN_5G))
- 		cap |= STA_REC_HE_CAP_BW20_RU242_SUPPORT;
- 
--	if (elem->phy_cap_info[1] &
--	    IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD)
-+	if (mvif->cap.ldpc && (elem->phy_cap_info[1] &
-+			       IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD))
- 		cap |= STA_REC_HE_CAP_LDPC;
- 
- 	if (elem->phy_cap_info[1] &
-@@ -1488,8 +1490,10 @@ mt7915_mcu_sta_uapsd_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- }
- 
- static void
--mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
-+mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
-+			struct ieee80211_vif *vif)
- {
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
- 	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
- 	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
- 	struct sta_rec_muru *muru;
-@@ -1499,7 +1503,13 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- 
- 	muru = (struct sta_rec_muru *)tlv;
- 	muru->cfg.ofdma_dl_en = true;
--	muru->cfg.mimo_dl_en = true;
-+
-+	/* A non-AP HE station must support MU beamformee */
-+	muru->cfg.mimo_dl_en = (vif->type == NL80211_IFTYPE_STATION &&
-+				vif->bss_conf.he_support) ||
-+			       mvif->cap.he_mu_ebfer ||
-+			       mvif->cap.vht_mu_ebfer ||
-+			       mvif->cap.vht_mu_ebfee;
- 
- 	muru->ofdma_dl.punc_pream_rx =
- 		HE_PHY(CAP1_PREAMBLE_PUNC_RX_MASK, elem->phy_cap_info[1]);
-@@ -1598,7 +1608,7 @@ mt7915_mcu_sta_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
- 
- 	/* starec he */
- 	if (sta->he_cap.has_he)
--		mt7915_mcu_sta_he_tlv(skb, sta);
-+		mt7915_mcu_sta_he_tlv(skb, sta, vif);
- 
- 	/* starec uapsd */
- 	mt7915_mcu_sta_uapsd_tlv(skb, sta, vif);
-@@ -1620,9 +1630,11 @@ mt7915_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- }
- 
- static void
--mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
--		       void *sta_wtbl, void *wtbl_tlv)
-+mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
-+		       struct ieee80211_sta *sta, void *sta_wtbl,
-+		       void *wtbl_tlv)
- {
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
- 	struct wtbl_ht *ht = NULL;
- 	struct tlv *tlv;
- 
-@@ -1631,7 +1643,8 @@ mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 		tlv = mt7915_mcu_add_nested_tlv(skb, WTBL_HT, sizeof(*ht),
- 						wtbl_tlv, sta_wtbl);
- 		ht = (struct wtbl_ht *)tlv;
--		ht->ldpc = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING);
-+		ht->ldpc = mvif->cap.ldpc &&
-+			   (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING);
- 		ht->af = sta->ht_cap.ampdu_factor;
- 		ht->mm = sta->ht_cap.ampdu_density;
- 		ht->ht = true;
-@@ -1645,7 +1658,8 @@ mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 		tlv = mt7915_mcu_add_nested_tlv(skb, WTBL_VHT, sizeof(*vht),
- 						wtbl_tlv, sta_wtbl);
- 		vht = (struct wtbl_vht *)tlv;
--		vht->ldpc = !!(sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC);
-+		vht->ldpc = mvif->cap.ldpc &&
-+			    (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC);
- 		vht->vht = true;
- 
- 		af = FIELD_GET(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
-@@ -1968,7 +1982,7 @@ mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	struct mt7915_phy *phy;
- 	struct sk_buff *skb;
- 	int r, len;
--	bool ebfee = 0, ebf = 0;
-+	bool ebfee = false, ebfer = false;
- 
- 	if (vif->type != NL80211_IFTYPE_STATION &&
- 	    vif->type != NL80211_IFTYPE_AP)
-@@ -1977,42 +1991,32 @@ mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	phy = mvif->band_idx ? mt7915_ext_phy(dev) : &dev->phy;
- 
- 	if (sta->he_cap.has_he) {
--		struct ieee80211_he_cap_elem *pe;
--		const struct ieee80211_he_cap_elem *ve;
--		const struct ieee80211_sta_he_cap *vc;
--
--		pe = &sta->he_cap.he_cap_elem;
--		vc = mt7915_get_he_phy_cap(phy, vif);
--		ve = &vc->he_cap_elem;
--
--		ebfee = !!(HE_PHY(CAP3_SU_BEAMFORMER, pe->phy_cap_info[3]) &&
--			   HE_PHY(CAP4_SU_BEAMFORMEE, ve->phy_cap_info[4]));
--		ebf = !!(HE_PHY(CAP3_SU_BEAMFORMER, ve->phy_cap_info[3]) &&
--			 HE_PHY(CAP4_SU_BEAMFORMEE, pe->phy_cap_info[4]));
--	} else if (sta->vht_cap.vht_supported) {
--		struct ieee80211_sta_vht_cap *pc;
--		struct ieee80211_sta_vht_cap *vc;
-+		struct ieee80211_he_cap_elem *pe = &sta->he_cap.he_cap_elem;
- 
--		pc = &sta->vht_cap;
--		vc = &phy->mt76->sband_5g.sband.vht_cap;
-+		ebfee = mvif->cap.he_su_ebfee &&
-+			HE_PHY(CAP3_SU_BEAMFORMER, pe->phy_cap_info[3]);
-+		ebfer = mvif->cap.he_su_ebfer &&
-+			HE_PHY(CAP4_SU_BEAMFORMEE, pe->phy_cap_info[4]);
-+	} else if (sta->vht_cap.vht_supported) {
-+		u32 cap = sta->vht_cap.cap;
- 
--		ebfee = !!((pc->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE) &&
--			   (vc->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE));
--		ebf = !!((vc->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE) &&
--			 (pc->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE));
-+		ebfee = mvif->cap.vht_su_ebfee &&
-+			(cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE);
-+		ebfer = mvif->cap.vht_su_ebfer &&
-+			(cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
- 	}
- 
- 	/* must keep each tag independent */
- 
- 	/* starec bf */
--	if (ebf || dev->ibf) {
-+	if (ebfer || dev->ibf) {
- 		len = sizeof(struct sta_req_hdr) + sizeof(struct sta_rec_bf);
- 
- 		skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta, len);
- 		if (IS_ERR(skb))
- 			return PTR_ERR(skb);
- 
--		mt7915_mcu_sta_bfer_tlv(skb, sta, vif, phy, enable, ebf);
-+		mt7915_mcu_sta_bfer_tlv(skb, sta, vif, phy, enable, ebfer);
- 
- 		r = mt76_mcu_skb_send_msg(&dev->mt76, skb,
- 					  MCU_EXT_CMD(STA_REC_UPDATE), true);
-@@ -2217,7 +2221,8 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 			cap |= STA_CAP_TX_STBC;
- 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
- 			cap |= STA_CAP_RX_STBC;
--		if (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING)
-+		if (mvif->cap.ldpc &&
-+		    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
- 			cap |= STA_CAP_LDPC;
- 
- 		mt7915_mcu_set_sta_ht_mcs(sta, ra->ht_mcs,
-@@ -2242,7 +2247,8 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 			cap |= STA_CAP_VHT_TX_STBC;
- 		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXSTBC_1)
- 			cap |= STA_CAP_VHT_RX_STBC;
--		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC)
-+		if (mvif->cap.ldpc &&
-+		    (sta->vht_cap.cap & IEEE80211_VHT_CAP_RXLDPC))
- 			cap |= STA_CAP_VHT_LDPC;
- 
- 		mt7915_mcu_set_sta_vht_mcs(sta, ra->supp_vht_mcs,
-@@ -2276,7 +2282,7 @@ int mt7915_mcu_add_rate_ctrl(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	 * update sta_rec_he here as well.
- 	 */
- 	if (sta->he_cap.has_he && changed)
--		mt7915_mcu_sta_he_tlv(skb, sta);
-+		mt7915_mcu_sta_he_tlv(skb, sta, vif);
- 
- 	/* sta_rec_ra accommodates BW, NSS and only MCS range format
- 	 * i.e 0-{7,8,9} for VHT.
-@@ -2346,7 +2352,7 @@ mt7915_mcu_add_mu(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	/* wait until TxBF and MU ready to update stare vht */
- 
- 	/* starec muru */
--	mt7915_mcu_sta_muru_tlv(skb, sta);
-+	mt7915_mcu_sta_muru_tlv(skb, sta, vif);
- 	/* starec vht */
- 	mt7915_mcu_sta_vht_tlv(skb, sta);
- 
-@@ -2405,7 +2411,7 @@ int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		mt7915_mcu_wtbl_generic_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
- 		mt7915_mcu_wtbl_hdr_trans_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
- 		if (sta)
--			mt7915_mcu_wtbl_ht_tlv(skb, sta, sta_wtbl, wtbl_hdr);
-+			mt7915_mcu_wtbl_ht_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
- 	}
- 
- 	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
-@@ -2499,6 +2505,83 @@ mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct sk_buff *rskb,
- 	memcpy(buf + MT_TXD_SIZE, skb->data, skb->len);
- }
- 
-+static void
-+mt7915_mcu_beacon_check_caps(struct mt7915_phy *phy, struct ieee80211_vif *vif,
-+			     struct sk_buff *skb)
-+{
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
-+	struct mt7915_vif_cap *vc = &mvif->cap;
-+	const struct ieee80211_he_cap_elem *he;
-+	const struct ieee80211_vht_cap *vht;
-+	const struct ieee80211_ht_cap *ht;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
-+	const u8 *ie;
-+	u32 len, bc;
-+
-+	/* Check missing configuration options to allow AP mode in mac80211
-+	 * to remain in sync with hostapd settings, and get a subset of
-+	 * beacon and hardware capabilities.
-+	 */
-+	if (WARN_ON_ONCE(skb->len <= (mgmt->u.beacon.variable - skb->data)))
-+		return;
-+
-+	memset(vc, 0, sizeof(*vc));
-+
-+	len = skb->len - (mgmt->u.beacon.variable - skb->data);
-+
-+	ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, mgmt->u.beacon.variable,
-+			      len);
-+	if (ie && ie[1] >= sizeof(*ht)) {
-+		ht = (void *)(ie + 2);
-+		bc = le32_to_cpu(ht->cap_info);
-+
-+		vc->ldpc |= !!(bc & IEEE80211_HT_CAP_LDPC_CODING);
-+	}
-+
-+	ie = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, mgmt->u.beacon.variable,
-+			      len);
-+	if (ie && ie[1] >= sizeof(*vht)) {
-+		u32 pc = phy->mt76->sband_5g.sband.vht_cap.cap;
-+
-+		vht = (void *)(ie + 2);
-+		bc = le32_to_cpu(vht->vht_cap_info);
-+
-+		vc->ldpc |= !!(bc & IEEE80211_VHT_CAP_RXLDPC);
-+		vc->vht_su_ebfer =
-+			(bc & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE) &&
-+			(pc & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE);
-+		vc->vht_su_ebfee =
-+			(bc & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) &&
-+			(pc & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
-+		vc->vht_mu_ebfer =
-+			(bc & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE) &&
-+			(pc & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE);
-+		vc->vht_mu_ebfee =
-+			(bc & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE) &&
-+			(pc & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+	}
-+
-+	ie = cfg80211_find_ext_ie(WLAN_EID_EXT_HE_CAPABILITY,
-+				  mgmt->u.beacon.variable, len);
-+	if (ie && ie[1] >= sizeof(*he) + 1) {
-+		const struct ieee80211_sta_he_cap *pc =
-+			mt7915_get_he_phy_cap(phy, vif);
-+		const struct ieee80211_he_cap_elem *pe = &pc->he_cap_elem;
-+
-+		he = (void *)(ie + 3);
-+
-+		vc->he_su_ebfer =
-+			HE_PHY(CAP3_SU_BEAMFORMER, he->phy_cap_info[3]) &&
-+			HE_PHY(CAP3_SU_BEAMFORMER, pe->phy_cap_info[3]);
-+		vc->he_su_ebfee =
-+			HE_PHY(CAP4_SU_BEAMFORMEE, he->phy_cap_info[4]) &&
-+			HE_PHY(CAP4_SU_BEAMFORMEE, pe->phy_cap_info[4]);
-+		vc->he_mu_ebfer =
-+			HE_PHY(CAP4_MU_BEAMFORMER, he->phy_cap_info[4]) &&
-+			HE_PHY(CAP4_MU_BEAMFORMER, pe->phy_cap_info[4]);
-+	}
-+}
-+
- int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
- 			  struct ieee80211_vif *vif, bool en)
- {
-@@ -2539,6 +2622,8 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
- 		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
- 	}
- 
-+	mt7915_mcu_beacon_check_caps(phy, vif, skb);
-+
- 	/* TODO: subtag - bss color count & 11v MBSSID */
- 	mt7915_mcu_beacon_csa(rskb, skb, bcn, &offs);
- 	mt7915_mcu_beacon_cont(dev, rskb, skb, bcn, &offs);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index ab8fc27646e0..d68e345765e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -83,12 +83,24 @@ struct mt7915_sta {
- 	struct mt7915_sta_key_conf bip;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ffa894f73..d36770db1 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2988,6 +2988,118 @@ static const struct ieee80211_sband_iftype_data he_capa_5ghz[] = {
+ #endif
  };
  
-+struct mt7915_vif_cap {
-+	bool ldpc:1;
-+	bool vht_su_ebfer:1;
-+	bool vht_su_ebfee:1;
-+	bool vht_mu_ebfer:1;
-+	bool vht_mu_ebfee:1;
-+	bool he_su_ebfer:1;
-+	bool he_su_ebfee:1;
-+	bool he_mu_ebfer:1;
++static const struct ieee80211_sband_iftype_data he_capa_6ghz[] = {
++	{
++		/* TODO: should we support other types, e.g., P2P?*/
++		.types_mask = BIT(NL80211_IFTYPE_STATION) |
++			      BIT(NL80211_IFTYPE_AP),
++		.he_6ghz_capa = {
++			.capa = IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START |
++			        IEEE80211_HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP |
++			        IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN |
++			        IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS |
++			        IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS,
++		},
++		.he_cap = {
++			.has_he = true,
++			.he_cap_elem = {
++				.mac_cap_info[0] =
++					IEEE80211_HE_MAC_CAP0_HTC_HE,
++				.mac_cap_info[1] =
++					IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
++					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
++				.mac_cap_info[2] =
++					IEEE80211_HE_MAC_CAP2_BSR |
++					IEEE80211_HE_MAC_CAP2_MU_CASCADING |
++					IEEE80211_HE_MAC_CAP2_ACK_EN,
++				.mac_cap_info[3] =
++					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
++				.phy_cap_info[0] =
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G,
++				.phy_cap_info[1] =
++					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++					IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++					IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_TX_MAX_NSTS,
++				.phy_cap_info[2] =
++					IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
++					IEEE80211_HE_PHY_CAP2_STBC_TX_UNDER_80MHZ |
++					IEEE80211_HE_PHY_CAP2_STBC_RX_UNDER_80MHZ |
++					IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
++					IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO,
++
++				/* Leave all the other PHY capability bytes
++				 * unset, as DCM, beam forming, RU and PPE
++				 * threshold information are not supported
++				 */
++			},
++			.he_mcs_nss_supp = {
++				.rx_mcs_80 = cpu_to_le16(0xfffa),
++				.tx_mcs_80 = cpu_to_le16(0xfffa),
++				.rx_mcs_160 = cpu_to_le16(0xfffa),
++				.tx_mcs_160 = cpu_to_le16(0xfffa),
++				.rx_mcs_80p80 = cpu_to_le16(0xfffa),
++				.tx_mcs_80p80 = cpu_to_le16(0xfffa),
++			},
++		},
++	},
++#ifdef CONFIG_MAC80211_MESH
++	{
++		/* TODO: should we support other types, e.g., IBSS?*/
++		.types_mask = BIT(NL80211_IFTYPE_MESH_POINT),
++		.he_6ghz_capa = {
++			.capa = IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START |
++			        IEEE80211_HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP |
++			        IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN |
++			        IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS |
++			        IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS,
++		},
++		.he_cap = {
++			.has_he = true,
++			.he_cap_elem = {
++				.mac_cap_info[0] =
++					IEEE80211_HE_MAC_CAP0_HTC_HE,
++				.mac_cap_info[1] =
++					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
++				.mac_cap_info[2] =
++					IEEE80211_HE_MAC_CAP2_ACK_EN,
++				.mac_cap_info[3] =
++					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
++				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
++				.phy_cap_info[0] =
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G,
++				.phy_cap_info[1] =
++					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++					IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++					IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_TX_MAX_NSTS,
++				.phy_cap_info[2] = 0,
++
++				/* Leave all the other PHY capability bytes
++				 * unset, as DCM, beam forming, RU and PPE
++				 * threshold information are not supported
++				 */
++			},
++			.he_mcs_nss_supp = {
++				.rx_mcs_80 = cpu_to_le16(0xfffa),
++				.tx_mcs_80 = cpu_to_le16(0xfffa),
++				.rx_mcs_160 = cpu_to_le16(0xfffa),
++				.tx_mcs_160 = cpu_to_le16(0xfffa),
++				.rx_mcs_80p80 = cpu_to_le16(0xfffa),
++				.tx_mcs_80p80 = cpu_to_le16(0xfffa),
++			},
++		},
++	},
++#endif
 +};
 +
- struct mt7915_vif {
- 	u16 idx;
- 	u8 omac_idx;
- 	u8 band_idx;
- 	u8 wmm_idx;
+ static void mac80211_hwsim_he_capab(struct ieee80211_supported_band *sband)
+ {
+ 	u16 n_iftype_data;
+@@ -3000,6 +3112,10 @@ static void mac80211_hwsim_he_capab(struct ieee80211_supported_band *sband)
+ 		n_iftype_data = ARRAY_SIZE(he_capa_5ghz);
+ 		sband->iftype_data =
+ 			(struct ieee80211_sband_iftype_data *)he_capa_5ghz;
++	} else if (sband->band == NL80211_BAND_6GHZ) {
++		n_iftype_data = ARRAY_SIZE(he_capa_6ghz);
++		sband->iftype_data =
++			(struct ieee80211_sband_iftype_data *)he_capa_6ghz;
+ 	} else {
+ 		return;
+ 	}
+@@ -3290,6 +3406,12 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 			sband->vht_cap.vht_mcs.tx_mcs_map =
+ 				sband->vht_cap.vht_mcs.rx_mcs_map;
+ 			break;
++		case NL80211_BAND_6GHZ:
++			sband->channels = data->channels_6ghz;
++			sband->n_channels = ARRAY_SIZE(hwsim_channels_6ghz);
++			sband->bitrates = data->rates + 4;
++			sband->n_bitrates = ARRAY_SIZE(hwsim_rates) - 4;
++			break;
+ 		case NL80211_BAND_S1GHZ:
+ 			memcpy(&sband->s1g_cap, &hwsim_s1g_cap,
+ 			       sizeof(sband->s1g_cap));
+@@ -3300,19 +3422,21 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 			continue;
+ 		}
  
-+	struct mt7915_vif_cap cap;
- 	struct mt7915_sta sta;
- 	struct mt7915_phy *phy;
+-		sband->ht_cap.ht_supported = true;
+-		sband->ht_cap.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+-				    IEEE80211_HT_CAP_GRN_FLD |
+-				    IEEE80211_HT_CAP_SGI_20 |
+-				    IEEE80211_HT_CAP_SGI_40 |
+-				    IEEE80211_HT_CAP_DSSSCCK40;
+-		sband->ht_cap.ampdu_factor = 0x3;
+-		sband->ht_cap.ampdu_density = 0x6;
+-		memset(&sband->ht_cap.mcs, 0,
+-		       sizeof(sband->ht_cap.mcs));
+-		sband->ht_cap.mcs.rx_mask[0] = 0xff;
+-		sband->ht_cap.mcs.rx_mask[1] = 0xff;
+-		sband->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++		if (band != NL80211_BAND_6GHZ){
++			sband->ht_cap.ht_supported = true;
++			sband->ht_cap.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++					    IEEE80211_HT_CAP_GRN_FLD |
++					    IEEE80211_HT_CAP_SGI_20 |
++					    IEEE80211_HT_CAP_SGI_40 |
++					    IEEE80211_HT_CAP_DSSSCCK40;
++			sband->ht_cap.ampdu_factor = 0x3;
++			sband->ht_cap.ampdu_density = 0x6;
++			memset(&sband->ht_cap.mcs, 0,
++			       sizeof(sband->ht_cap.mcs));
++			sband->ht_cap.mcs.rx_mask[0] = 0xff;
++			sband->ht_cap.mcs.rx_mask[1] = 0xff;
++			sband->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++		}
+ 
+ 		mac80211_hwsim_he_capab(sband);
  
 -- 
 2.25.1
