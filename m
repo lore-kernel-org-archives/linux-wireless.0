@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD8DEC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27581C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7CD5610F8
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 145DA610FF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344582AbhIGMUR (ORCPT
+        id S1344599AbhIGMUT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Sep 2021 08:20:17 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33682
+        Tue, 7 Sep 2021 08:20:19 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33696
         "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344303AbhIGMTu (ORCPT
+        by vger.kernel.org with ESMTP id S1344087AbhIGMTv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Sep 2021 08:19:50 -0400
+        Tue, 7 Sep 2021 08:19:51 -0400
 Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 1373140793
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:32 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id C4D404019C
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631017112;
-        bh=alAZCnXDBZFqFGCWdjT1NtYwVcFPW4mHC6+AQVNQmag=;
+        s=20210705; t=1631017115;
+        bh=Puh8mRYPY/DpKQ/I9uyYNXcSBWp/u+3lkb87itcd3n8=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=ahWsmlix5qZu4PCN4E6up4Tnegthwc6b8exu+qOav9qLBEGmq/y6C1KlZHjcKvJqX
-         DopLZU0qot2emyWiCT9XcfTfJcwkXBfXAPPIp7v7r64FcdCoUQ2ueZJ6Jxc0qs3EcS
-         dyXMEIGI1Dhmnu4R/s6hqZXj7VUaRxlmu5Kon7JQmLOECXLzUivA1SlCafatGZpw/R
-         4ak4+stoe4VGLhZFP+4BSWPdmmRT80VjJqUm7b9s4yylVxM/19RNpXJJLZXbsBo6bO
-         QOqUEFfiyaS53aahakom2krSGYSqy8m80TUxJO6Isab2q4OlcrUVY48cFFFrPPu0bB
-         EBzGgcvXeebxA==
-Received: by mail-wm1-f70.google.com with SMTP id y188-20020a1c7dc5000000b002e80e0b2f87so1120044wmc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:32 -0700 (PDT)
+        b=uUM0PGv4Rfv1eIcr/jyhIigDDP8aHrh/h5BVxfaJ8Y/CnfjE8YPeL7liuR927Teqq
+         STekRzWqNFsFiHoLo5t/iynyWYXVdQ0HGA5UBL6syWw1UeEWS+ORr/8D7DEu4OLJmW
+         ZDegXvvAx1ePauQZeHS74aULclKv5J+6S8N3GUkIGtCMEAPt8hydng134zw5kYMc2S
+         8H912pfWb6qtYXviPK2WAMfiWwzJCQfuzaAGYfjPqE6xf3FqovXyzbd/lzwFplv1Es
+         2L/oX5igL3KDFVgiCFEUnR5ClL8RhnvuKBRKkZ9TcB8yHNTBCTVCY1s7+y2G6Jhg45
+         TkVBqvd3XDtRA==
+Received: by mail-wm1-f70.google.com with SMTP id u1-20020a05600c210100b002e74fc5af71so3326296wml.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=alAZCnXDBZFqFGCWdjT1NtYwVcFPW4mHC6+AQVNQmag=;
-        b=X8Dipx8tY17wg+AkK/D5M42zdliVefa+mJvfqUYlCnrS2srs5jai2t5uhuTJHPkWl2
-         ZIrJhqDBRnR3la1G88fYB1juEgEfhLjBIXHcZjbG3yFAFh6U0Hf8PcMQWLa3XRd0unpF
-         eNmLlauB7T7KLarS/HGWBYREO3BDFdBAMIdr+msEA0OuGn/LDJUrueu+suC0Bt2kX4qy
-         s7yCKFLWOTktry4DbSYqAf7SFFqWkYv4BEMwgr3tn84KLI4GVM3aTffwLgb3X4iMwd6q
-         Hb0nw7TeQhHwax6y2HzmYFcbgYrJbMuZqUpl9HwcQnfQF7E+YkemsG/TorH44bGvNr8x
-         4jcA==
-X-Gm-Message-State: AOAM531STmMgxnoSF92pXm88CMEBEqqYW2XetqyVEImHPE1HaVFKnnzW
-        HUtJlK34QjoFa7/lzRBvaWFv9HzZmjJ1AU1Mhv0BZ4F4Mu90V1JRCrKF3UoLwOGDLhkY8IVcdjh
-        AJx4Q72j+WqmilUDCmo0AcS8wlx6BQTQJNlDLIeQEtRTJ
-X-Received: by 2002:a7b:c4d2:: with SMTP id g18mr3717613wmk.135.1631017111458;
-        Tue, 07 Sep 2021 05:18:31 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxSzLNNlEK8DFo/MnzQggQYeVU3xGdFUyuK/8MdNZjNchdqevSP20XoztHRWZaK3JDeEdaRWA==
-X-Received: by 2002:a7b:c4d2:: with SMTP id g18mr3717597wmk.135.1631017111286;
-        Tue, 07 Sep 2021 05:18:31 -0700 (PDT)
+        bh=Puh8mRYPY/DpKQ/I9uyYNXcSBWp/u+3lkb87itcd3n8=;
+        b=garm8dBNiPezafHBesqUYF4OB2QfkF1lwORU1uZp1NZbMsPjNCnAQtbNrfmesRTTZw
+         CkDdn91rTS43VbWl4jk9U1AORgeWdQ69k57kn0A9gKO8M3MH0jhp4YTHo2LRgK6oZf6d
+         KzjUJEs0oMBWQB4R7aPfpwvbgqDhPsU8jcwhH816E8R5U7vC7mU0pjZPmzBvoyTJKIFr
+         b1EYOy541pkuX68jdTJTqiiM85tGue9nlctwtEnUHahhJBso8fiWpg63APAybToInAmw
+         spcGLhpdh8zZTKF+RJxBzZAYbQB0tne0VVggdzU6/9fQG7MLE+FnLMiHoGeK9ialbazt
+         VGRg==
+X-Gm-Message-State: AOAM530faY9li+5ct4tX/Q5A2giVfhYhddZxJfOdyTJKnqHivroIaQA9
+        tfRIrjsu3ad0Fce0P4XNpKZ9pF9Iw0C4Y/IcVZkfF1zDPctnooodNhubPLdfp1JHnStCxcxCOt7
+        eU491kcKePyRq8GIZcduRGUsBTagVPvNh5q3JEkokYCGg
+X-Received: by 2002:adf:f490:: with SMTP id l16mr18418669wro.136.1631017115522;
+        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyLMJx55+Q/WM79I6j8ltV38paMRUj8UUI3CoLPAg5wP7ajpWFYZY+esfWvjPdv6zq3PNmHWg==
+X-Received: by 2002:adf:f490:: with SMTP id l16mr18418651wro.136.1631017115342;
+        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
 Received: from kozik-lap.lan ([79.98.113.47])
-        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.30
+        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Sep 2021 05:18:30 -0700 (PDT)
+        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 08/15] nfc: pn544: drop unneeded memory allocation fail messages
-Date:   Tue,  7 Sep 2021 14:18:09 +0200
-Message-Id: <20210907121816.37750-9-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 11/15] nfc: st21nfca: drop unneeded debug prints
+Date:   Tue,  7 Sep 2021 14:18:12 +0200
+Message-Id: <20210907121816.37750-12-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
 References: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
@@ -83,30 +83,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-nfc_mei_phy_alloc() already prints an error message on memory allocation
-failure.
+ftrace is a preferred and standard way to debug entering and exiting
+functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/pn544/mei.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/nfc/st21nfca/i2c.c | 4 ----
+ drivers/nfc/st21nfca/se.c  | 4 ----
+ 2 files changed, 8 deletions(-)
 
-diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
-index a519fa0a53e2..c493f2dbd0e2 100644
---- a/drivers/nfc/pn544/mei.c
-+++ b/drivers/nfc/pn544/mei.c
-@@ -23,10 +23,8 @@ static int pn544_mei_probe(struct mei_cl_device *cldev,
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 279d88128b2e..f126ce96a7df 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -421,7 +421,6 @@ static int st21nfca_hci_i2c_read(struct st21nfca_i2c_phy *phy,
+ static irqreturn_t st21nfca_hci_irq_thread_fn(int irq, void *phy_id)
+ {
+ 	struct st21nfca_i2c_phy *phy = phy_id;
+-	struct i2c_client *client;
+ 
  	int r;
  
- 	phy = nfc_mei_phy_alloc(cldev);
--	if (!phy) {
--		pr_err("Cannot allocate memory for pn544 mei phy.\n");
-+	if (!phy)
- 		return -ENOMEM;
--	}
+@@ -430,9 +429,6 @@ static irqreturn_t st21nfca_hci_irq_thread_fn(int irq, void *phy_id)
+ 		return IRQ_NONE;
+ 	}
  
- 	r = pn544_hci_probe(phy, &mei_phy_ops, LLC_NOP_NAME,
- 			    MEI_NFC_HEADER_SIZE, 0, MEI_NFC_MAX_HCI_PAYLOAD,
+-	client = phy->i2c_dev;
+-	dev_dbg(&client->dev, "IRQ\n");
+-
+ 	if (phy->hard_fault != 0)
+ 		return IRQ_HANDLED;
+ 
+diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
+index c8bdf078d111..a43fc4117fa5 100644
+--- a/drivers/nfc/st21nfca/se.c
++++ b/drivers/nfc/st21nfca/se.c
+@@ -257,8 +257,6 @@ static void st21nfca_se_wt_timeout(struct timer_list *t)
+ 	struct st21nfca_hci_info *info = from_timer(info, t,
+ 						    se_info.bwi_timer);
+ 
+-	pr_debug("\n");
+-
+ 	info->se_info.bwi_active = false;
+ 
+ 	if (!info->se_info.xch_error) {
+@@ -278,8 +276,6 @@ static void st21nfca_se_activation_timeout(struct timer_list *t)
+ 	struct st21nfca_hci_info *info = from_timer(info, t,
+ 						    se_info.se_active_timer);
+ 
+-	pr_debug("\n");
+-
+ 	info->se_info.se_active = false;
+ 
+ 	complete(&info->se_info.req_completion);
 -- 
 2.30.2
 
