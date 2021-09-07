@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27581C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 650BAC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 145DA610FF
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E46D610F8
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344599AbhIGMUT (ORCPT
+        id S1344658AbhIGMUX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Sep 2021 08:20:19 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33696
+        Tue, 7 Sep 2021 08:20:23 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33686
         "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344087AbhIGMTv (ORCPT
+        by vger.kernel.org with ESMTP id S1344307AbhIGMTu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Sep 2021 08:19:51 -0400
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
+        Tue, 7 Sep 2021 08:19:50 -0400
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com [209.85.221.69])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id C4D404019C
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:35 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 96D4240784
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631017115;
-        bh=Puh8mRYPY/DpKQ/I9uyYNXcSBWp/u+3lkb87itcd3n8=;
+        s=20210705; t=1631017110;
+        bh=NBr1U4LAwKajfkWi8d66f/F7DJmWNcP01ndf/w7qpqs=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=uUM0PGv4Rfv1eIcr/jyhIigDDP8aHrh/h5BVxfaJ8Y/CnfjE8YPeL7liuR927Teqq
-         STekRzWqNFsFiHoLo5t/iynyWYXVdQ0HGA5UBL6syWw1UeEWS+ORr/8D7DEu4OLJmW
-         ZDegXvvAx1ePauQZeHS74aULclKv5J+6S8N3GUkIGtCMEAPt8hydng134zw5kYMc2S
-         8H912pfWb6qtYXviPK2WAMfiWwzJCQfuzaAGYfjPqE6xf3FqovXyzbd/lzwFplv1Es
-         2L/oX5igL3KDFVgiCFEUnR5ClL8RhnvuKBRKkZ9TcB8yHNTBCTVCY1s7+y2G6Jhg45
-         TkVBqvd3XDtRA==
-Received: by mail-wm1-f70.google.com with SMTP id u1-20020a05600c210100b002e74fc5af71so3326296wml.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
+        b=PN/OgM3lunGwgycn8et2C4vNacltmKKfNlmUUFbrGWpS3C4ybrYeybVbCB/ociM15
+         VLBswpaUVEvRR0gwRmEj3dCotqrvlEyrfcj14XqtadaRbGxwS3qUFo7aICSgeBuCoX
+         gFcwDXEiX1EV0u/N5vHhjtIUiBUK57RfB9T/EpYdAKw7Wv23EtsUp3+hM0Z1Sw6gnv
+         WlWNQh3kTXj/28whJnw4wecELya0uzowKAHYiScEd67ter83Xv5duSVX1p5ba6qgJp
+         g6bXfmpT+fIXZ1toEkaAnobqxkzbD/SFzMvTcVFPTUYNd7kxLZOGBEroQPovrASCbF
+         BlAgAQV2cX9dQ==
+Received: by mail-wr1-f69.google.com with SMTP id h1-20020adffd41000000b0015931e17ccfso2040047wrs.18
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Puh8mRYPY/DpKQ/I9uyYNXcSBWp/u+3lkb87itcd3n8=;
-        b=garm8dBNiPezafHBesqUYF4OB2QfkF1lwORU1uZp1NZbMsPjNCnAQtbNrfmesRTTZw
-         CkDdn91rTS43VbWl4jk9U1AORgeWdQ69k57kn0A9gKO8M3MH0jhp4YTHo2LRgK6oZf6d
-         KzjUJEs0oMBWQB4R7aPfpwvbgqDhPsU8jcwhH816E8R5U7vC7mU0pjZPmzBvoyTJKIFr
-         b1EYOy541pkuX68jdTJTqiiM85tGue9nlctwtEnUHahhJBso8fiWpg63APAybToInAmw
-         spcGLhpdh8zZTKF+RJxBzZAYbQB0tne0VVggdzU6/9fQG7MLE+FnLMiHoGeK9ialbazt
-         VGRg==
-X-Gm-Message-State: AOAM530faY9li+5ct4tX/Q5A2giVfhYhddZxJfOdyTJKnqHivroIaQA9
-        tfRIrjsu3ad0Fce0P4XNpKZ9pF9Iw0C4Y/IcVZkfF1zDPctnooodNhubPLdfp1JHnStCxcxCOt7
-        eU491kcKePyRq8GIZcduRGUsBTagVPvNh5q3JEkokYCGg
-X-Received: by 2002:adf:f490:: with SMTP id l16mr18418669wro.136.1631017115522;
-        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyLMJx55+Q/WM79I6j8ltV38paMRUj8UUI3CoLPAg5wP7ajpWFYZY+esfWvjPdv6zq3PNmHWg==
-X-Received: by 2002:adf:f490:: with SMTP id l16mr18418651wro.136.1631017115342;
-        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
+        bh=NBr1U4LAwKajfkWi8d66f/F7DJmWNcP01ndf/w7qpqs=;
+        b=Ds8fbtjpRzriJFGB8kS7OKNuQ53iY+BcbuWp4qKpyMHulH4twskmQXCCs4lH05NSDh
+         hc6rTxa+HKGHjhMwQ6aeqAfYUKzeLXZvRqM1SdZtkRp4yLdykqrXtSEGks/xKAFQS0n8
+         r53bQIJrje3JICYLGVyInBzQFaoK938NOMzDCtGB7hVRbR8J7JhoBtSJG5RGP+AiQetk
+         uAuDy0vVdLQu/O+WCI7yV/+bpcDY7euWVnAHbQVXDisL2/5NZr1A4hsLn90OJG9PwTCB
+         NE9keVUVOpCzXso+rlsDvqa1L8mTtoxXTiJFaILCrPt16lgTT5iYCeyRDJ5z7rAaCQZj
+         z5oQ==
+X-Gm-Message-State: AOAM532wwmBEe4v86YMxNI7BATVyOsYXqI0QQn3UaLCqOfJb7zmKBJeL
+        jWXJtEr/pcJDtvfKh9DME1oNQtaAOQCS0TJux6/1XhuB5D0wluQPpMUYfrSPbacll39MtRwgOkH
+        4xkJ8KKzBZVqXjiXh+CnL57CNsiNCbCBVRhk8lVW6KR9g
+X-Received: by 2002:a05:600c:210a:: with SMTP id u10mr3577101wml.127.1631017110345;
+        Tue, 07 Sep 2021 05:18:30 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwpmN+J+nVSHJybMfzx2E98USXqdlKN6XTJk2Iwf0j0Co7NOrQuorgTzMhtPjYxrxKxWVDRvA==
+X-Received: by 2002:a05:600c:210a:: with SMTP id u10mr3577088wml.127.1631017110234;
+        Tue, 07 Sep 2021 05:18:30 -0700 (PDT)
 Received: from kozik-lap.lan ([79.98.113.47])
-        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.34
+        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Sep 2021 05:18:35 -0700 (PDT)
+        Tue, 07 Sep 2021 05:18:29 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 11/15] nfc: st21nfca: drop unneeded debug prints
-Date:   Tue,  7 Sep 2021 14:18:12 +0200
-Message-Id: <20210907121816.37750-12-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 07/15] nfc: pn544: drop unneeded debug prints
+Date:   Tue,  7 Sep 2021 14:18:08 +0200
+Message-Id: <20210907121816.37750-8-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
 References: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
@@ -88,54 +88,31 @@ functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/st21nfca/i2c.c | 4 ----
- drivers/nfc/st21nfca/se.c  | 4 ----
- 2 files changed, 8 deletions(-)
+ drivers/nfc/pn544/mei.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 279d88128b2e..f126ce96a7df 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -421,7 +421,6 @@ static int st21nfca_hci_i2c_read(struct st21nfca_i2c_phy *phy,
- static irqreturn_t st21nfca_hci_irq_thread_fn(int irq, void *phy_id)
- {
- 	struct st21nfca_i2c_phy *phy = phy_id;
--	struct i2c_client *client;
- 
+diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
+index 5c10aac085a4..a519fa0a53e2 100644
+--- a/drivers/nfc/pn544/mei.c
++++ b/drivers/nfc/pn544/mei.c
+@@ -22,8 +22,6 @@ static int pn544_mei_probe(struct mei_cl_device *cldev,
+ 	struct nfc_mei_phy *phy;
  	int r;
  
-@@ -430,9 +429,6 @@ static irqreturn_t st21nfca_hci_irq_thread_fn(int irq, void *phy_id)
- 		return IRQ_NONE;
- 	}
- 
--	client = phy->i2c_dev;
--	dev_dbg(&client->dev, "IRQ\n");
+-	pr_info("Probing NFC pn544\n");
 -
- 	if (phy->hard_fault != 0)
- 		return IRQ_HANDLED;
+ 	phy = nfc_mei_phy_alloc(cldev);
+ 	if (!phy) {
+ 		pr_err("Cannot allocate memory for pn544 mei phy.\n");
+@@ -46,8 +44,6 @@ static void pn544_mei_remove(struct mei_cl_device *cldev)
+ {
+ 	struct nfc_mei_phy *phy = mei_cldev_get_drvdata(cldev);
  
-diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
-index c8bdf078d111..a43fc4117fa5 100644
---- a/drivers/nfc/st21nfca/se.c
-+++ b/drivers/nfc/st21nfca/se.c
-@@ -257,8 +257,6 @@ static void st21nfca_se_wt_timeout(struct timer_list *t)
- 	struct st21nfca_hci_info *info = from_timer(info, t,
- 						    se_info.bwi_timer);
- 
--	pr_debug("\n");
+-	pr_info("Removing pn544\n");
 -
- 	info->se_info.bwi_active = false;
+ 	pn544_hci_remove(phy->hdev);
  
- 	if (!info->se_info.xch_error) {
-@@ -278,8 +276,6 @@ static void st21nfca_se_activation_timeout(struct timer_list *t)
- 	struct st21nfca_hci_info *info = from_timer(info, t,
- 						    se_info.se_active_timer);
- 
--	pr_debug("\n");
--
- 	info->se_info.se_active = false;
- 
- 	complete(&info->se_info.req_completion);
+ 	nfc_mei_phy_free(phy);
 -- 
 2.30.2
 
