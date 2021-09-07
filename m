@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5439FC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:18:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E6BC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D81061102
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:18:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4508860F45
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344215AbhIGMTm (ORCPT
+        id S1344243AbhIGMTp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Sep 2021 08:19:42 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33442
-        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1343867AbhIGMTb (ORCPT
+        Tue, 7 Sep 2021 08:19:45 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:36896
+        "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1344142AbhIGMTe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Sep 2021 08:19:31 -0400
+        Tue, 7 Sep 2021 08:19:34 -0400
 Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id D2A7040784
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:24 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 34CE53F046
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631017104;
-        bh=ygx+SrZOuhDRvL55hE9xxzLOd3db853TUebx3pnrgoQ=;
+        s=20210705; t=1631017107;
+        bh=hZ5N4zB6ne7AqKTWsazgl2eww5+7SrfSBiF0jiwRIRU=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=jyUbkNv7nILzyveTW7jxCZgSs1rmx3R2NggqiL9rX23ZlrjOC7qGYwo/Z6Pl+9bXQ
-         tY7dz1GeYGgl0Vd0IEAuuSzQPQxIRHoXsNDXy8QLlZcu1eCMOKRRjuN8AK+yvcSboU
-         Nn/tFodei3Qi1jtn6JunhDAWaI//CRW32IT9vhGwHjffOD2ZEdVXVOOx2PvZTh8Ydg
-         lPiA6b00V28yMRED0VYTvk9mW0rsb5ld/FMBKZsdby5wNjSci6vWmbGz5uaPb70dLb
-         uR1YhGwze5n0qDdsw2BtTucZBcpTkz2aio/8L/agf2RgEP3GDDTGBm6/Dp2Qt/mMdx
-         xNIROWBFIGfiw==
-Received: by mail-wm1-f71.google.com with SMTP id v2-20020a7bcb420000b02902e6b108fcf1so1105295wmj.8
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:24 -0700 (PDT)
+        b=fkzyi7n2xgRThZvtfH3XLRK+o6Zi5blyGh4ByOfRM/sSR9Cgp0Y2eDc40e84Vanzs
+         kC+WzjJtzvYxuyFUmpdqyHEKLG5TRiTAXRwcBiRPqp4RZgwVSMTIn4QmEVe8lieaOU
+         KcPfoFh1kcX6o/UkVuptmGXQTUnYIUFgjcTaZyyKkZMdEN8JyhuyjOrXKrodx4V8eC
+         qCPbbUgwQ3y/qrmL6gT+SgFm857RhIunvC8c0LFXkt/iwGqqRKORntTYAluSCXTwfB
+         RigmusWPTsxExSx7aAk56pBDbWBvHTDqB88i+U5wyL2yJUETciH47H8bmuaNMErxNz
+         NJFnfzSFLe33A==
+Received: by mail-wm1-f71.google.com with SMTP id o20-20020a05600c379400b002e755735eedso1052935wmr.0
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ygx+SrZOuhDRvL55hE9xxzLOd3db853TUebx3pnrgoQ=;
-        b=Y3C55NuVgnDUackcFQ2lxU/pbnyi8AH56nTbz7BpN9wgK52XbgASzVc6u24ROMJDkr
-         FTeZ7OfanV3XL96glwXJWdRrHnVI7rgrX9GCGPzQSti1/pwVWTstnYQe8t8W5XKfDPGw
-         GhghYz8k0AehU0w+blW9aA16wLZaZU5qd8gQkyVM+w6MzSCcLj9C3DQF6FZyJ6UXlOuO
-         XYSXDXsA4ewEZTj/X/ZFPseO+QZJoXihxmmsEoIYA7lZV7owYTIUTMTszEcMj9xwLerF
-         xjCAsFXUkO0x+AJbpD7xdYGN3rZ1xwXmRr0/doUnyPwimeiwkubTBfw6k7CRZ39WnX8A
-         Qdmw==
-X-Gm-Message-State: AOAM531d87yVPMdotfYZg3xfyKNxpIDbBYJi9nVLGDoXsyjJvbD/uiuz
-        19lL/UlOHoBpaEPe2cVISa5rPSLZc3favj98NzrlbYamYWYE4ybRlnTw+Vuhhuqm0FpO6CfVF1q
-        IWvHU1p/vgKIApn+pAqBdBQrxViIyB3yknK6npbzpzqOP
-X-Received: by 2002:a05:600c:210a:: with SMTP id u10mr3576588wml.127.1631017104502;
-        Tue, 07 Sep 2021 05:18:24 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyB9lpSYRjC+nwBj78YNN3ZDlBL5vpXCZ8sbbrL5Cjob2y7j5eoJJP5w2OFbtm4kDLZhWgyyA==
-X-Received: by 2002:a05:600c:210a:: with SMTP id u10mr3576575wml.127.1631017104347;
-        Tue, 07 Sep 2021 05:18:24 -0700 (PDT)
+        bh=hZ5N4zB6ne7AqKTWsazgl2eww5+7SrfSBiF0jiwRIRU=;
+        b=RS3yodDrAjiOS1MlH55Uyk/6w7Sh6m9b6Ev9hk6MOO14hn7KlSOS0/k0/Q77kEWaFx
+         x3SvKSg31zXjQAaGYPHb7wyfZFX/+yrQtKrpJtuHqOoR3A2WtwaBH+HDI+b20No57kpt
+         bvXWTgP1DXzbqgJblYyYZNfaiXG+7c2uMUx4juaRfg5NH/Emt8bMg3kov9vA/XW0guUJ
+         Pz26mg1ZEBpFWHQwqYfpwV616Ixo2tScf/91eygy9C2G1SUCgvjFuIoLNdM3SC9VyKRT
+         iui+VqjQczk1htTbajirARdVk1sYsGU6DAtChD/KMUV4QvgU5ZFLo69gHJLgNbB0r+wx
+         68TQ==
+X-Gm-Message-State: AOAM533ykATRkMBOAFPNTCONUW2YkyLw3H6Vou2fj+9ivZKAO6KiBFDW
+        o2cJXKJAdV8nWmbBKJOhGOZvYWmpEnqAHLcjc0gPAdGljlnb0A3yOZhigN6egX6fBkO78cwKvlQ
+        7rknehx5FX2jwoVo72VzTZzrL6JcrW54SMakalXSfHzKM
+X-Received: by 2002:adf:b348:: with SMTP id k8mr3883767wrd.123.1631017106985;
+        Tue, 07 Sep 2021 05:18:26 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzgbBZYQOs4YRKdywoy8M0o3zhvETIaAW/i0wBtwjAAuvZRpPDbv0ZXj/kM++iU/bcy36GOCg==
+X-Received: by 2002:adf:b348:: with SMTP id k8mr3883754wrd.123.1631017106864;
+        Tue, 07 Sep 2021 05:18:26 -0700 (PDT)
 Received: from kozik-lap.lan ([79.98.113.47])
-        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.23
+        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Sep 2021 05:18:23 -0700 (PDT)
+        Tue, 07 Sep 2021 05:18:26 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 02/15] nfc: do not break pr_debug() call into separate lines
-Date:   Tue,  7 Sep 2021 14:18:03 +0200
-Message-Id: <20210907121816.37750-3-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 04/15] nfc: fdp: drop unneeded debug prints
+Date:   Tue,  7 Sep 2021 14:18:05 +0200
+Message-Id: <20210907121816.37750-5-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
 References: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
@@ -83,74 +83,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove unneeded line break between pr_debug and arguments.
+ftrace is a preferred and standard way to debug entering and exiting
+functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- net/nfc/hci/llc_shdlc.c | 23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+ drivers/nfc/fdp/i2c.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/nfc/hci/llc_shdlc.c b/net/nfc/hci/llc_shdlc.c
-index 78b2ceb8ae6e..e90f70385813 100644
---- a/net/nfc/hci/llc_shdlc.c
-+++ b/net/nfc/hci/llc_shdlc.c
-@@ -201,8 +201,7 @@ static void llc_shdlc_reset_t2(struct llc_shdlc *shdlc, int y_nr)
- 			del_timer_sync(&shdlc->t2_timer);
- 			shdlc->t2_active = false;
- 
--			pr_debug
--			    ("All sent frames acked. Stopped T2(retransmit)\n");
-+			pr_debug("All sent frames acked. Stopped T2(retransmit)\n");
- 		}
- 	} else {
- 		skb = skb_peek(&shdlc->ack_pending_q);
-@@ -211,8 +210,7 @@ static void llc_shdlc_reset_t2(struct llc_shdlc *shdlc, int y_nr)
- 			  msecs_to_jiffies(SHDLC_T2_VALUE_MS));
- 		shdlc->t2_active = true;
- 
--		pr_debug
--		    ("Start T2(retransmit) for remaining unacked sent frames\n");
-+		pr_debug("Start T2(retransmit) for remaining unacked sent frames\n");
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index 051c43a2a52f..f78670bf41e0 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -335,7 +335,6 @@ static int fdp_nci_i2c_probe(struct i2c_client *client)
+ 		return r;
  	}
+ 
+-	dev_dbg(dev, "I2C driver loaded\n");
+ 	return 0;
  }
- 
-@@ -518,12 +516,11 @@ static void llc_shdlc_handle_send_queue(struct llc_shdlc *shdlc)
- 	unsigned long time_sent;
- 
- 	if (shdlc->send_q.qlen)
--		pr_debug
--		    ("sendQlen=%d ns=%d dnr=%d rnr=%s w_room=%d unackQlen=%d\n",
--		     shdlc->send_q.qlen, shdlc->ns, shdlc->dnr,
--		     shdlc->rnr == false ? "false" : "true",
--		     shdlc->w - llc_shdlc_w_used(shdlc->ns, shdlc->dnr),
--		     shdlc->ack_pending_q.qlen);
-+		pr_debug("sendQlen=%d ns=%d dnr=%d rnr=%s w_room=%d unackQlen=%d\n",
-+			 shdlc->send_q.qlen, shdlc->ns, shdlc->dnr,
-+			 shdlc->rnr == false ? "false" : "true",
-+			 shdlc->w - llc_shdlc_w_used(shdlc->ns, shdlc->dnr),
-+			 shdlc->ack_pending_q.qlen);
- 
- 	while (shdlc->send_q.qlen && shdlc->ack_pending_q.qlen < shdlc->w &&
- 	       (shdlc->rnr == false)) {
-@@ -641,8 +638,7 @@ static void llc_shdlc_sm_work(struct work_struct *work)
- 		llc_shdlc_handle_send_queue(shdlc);
- 
- 		if (shdlc->t1_active && timer_pending(&shdlc->t1_timer) == 0) {
--			pr_debug
--			    ("Handle T1(send ack) elapsed (T1 now inactive)\n");
-+			pr_debug("Handle T1(send ack) elapsed (T1 now inactive)\n");
- 
- 			shdlc->t1_active = false;
- 			r = llc_shdlc_send_s_frame(shdlc, S_FRAME_RR,
-@@ -652,8 +648,7 @@ static void llc_shdlc_sm_work(struct work_struct *work)
- 		}
- 
- 		if (shdlc->t2_active && timer_pending(&shdlc->t2_timer) == 0) {
--			pr_debug
--			    ("Handle T2(retransmit) elapsed (T2 inactive)\n");
-+			pr_debug("Handle T2(retransmit) elapsed (T2 inactive)\n");
- 
- 			shdlc->t2_active = false;
  
 -- 
 2.30.2
