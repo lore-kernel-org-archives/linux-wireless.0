@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DB5C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28564C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67B8F610F8
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0975C610FF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Sep 2021 12:19:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344620AbhIGMUV (ORCPT
+        id S1344395AbhIGMUf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Sep 2021 08:20:21 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:33694
-        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344330AbhIGMTv (ORCPT
+        Tue, 7 Sep 2021 08:20:35 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:37090
+        "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1344354AbhIGMTw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Sep 2021 08:19:51 -0400
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com [209.85.221.70])
+        Tue, 7 Sep 2021 08:19:52 -0400
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id D23DB4079C
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:34 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 16BC64079C
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2021 12:18:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631017114;
-        bh=dm7SJ/bHwjEDyQ2RFr3SYt5wwlTFgyi3tJxfnWGO4aU=;
+        s=20210705; t=1631017118;
+        bh=AKOLSiNotprej29rkzU07CereuPK7jDMwjY+iTyzzwA=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=P8NE7jktgFoRLcAw9YKtpxd9cyE05iHpHlXZKxAUKWliYfHfNx+dRXd5HrDcc+eN1
-         7hdkaH7Q1qRKVmOT9IyEaWQ+0p74/V9ICAYjpS+I11GDYZOI7IYYKZYLe2nDK+0qqE
-         Lxler81NbAzvSk7rcIFlf//Xxa+TcYFHWh81Dv1WzUTUWxR0BlgZdcrM0qGtEqkZyp
-         n00Wm9C5NZaKciupQNoBaRqeqCT8VYM57UD04Lh7oZ2W5S8fv3N+Q08FwOBgNAEm8U
-         /JGztzo5iSGrp06CAcqRGril2z+xNHQM2JmGvw8zSoY100B6Pfd73lHEggtbTBM9Uu
-         sJehb81J6fnjA==
-Received: by mail-wr1-f70.google.com with SMTP id h1-20020adffd41000000b0015931e17ccfso2040092wrs.18
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:34 -0700 (PDT)
+        b=HFklzmnP9rTq9LMetMxwEr9i1bDD5hHmIqw5uu274s1r8Uf+oLJTxZtOocBDrf5jm
+         yH1mhPaWN+VeYCAxy2sfZ7/aFp7MS2iojNdSAWeuPD9qAIAtNiBZxPtnW2Rca7yNRJ
+         AyEcYKW6rnsYpvCz6sSTykeW/xY5FLzvfYf/9ctdoeuZMjIECe3hPvdI6aDYwIossl
+         a8goohdPd/dnNfzWMR9NtfWhioG6ZiDu+R6W/mWuyIN13rYSF9Of6Zljy/PLpUwoYZ
+         XcMwvv0Egboeb1j7FctJqKa/AmN4oxJlbPDjOaHAacgbnAOVjBVQgtYWUjKO/imTi1
+         KqxV2Nps2WIQA==
+Received: by mail-wm1-f70.google.com with SMTP id n17-20020a7bc5d1000000b002f8ca8bacdeso751231wmk.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2021 05:18:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dm7SJ/bHwjEDyQ2RFr3SYt5wwlTFgyi3tJxfnWGO4aU=;
-        b=JRsXI2GI7Nmli+EjZd5CDZk3Ph99Q4f1X/Hd3aUnRBr5sjGgMY4qcNonMnaZEwCv6B
-         omndlNiCEGypPPMNHkP/LmL9ERatygBNGMlPvBsuUbWqLvgLmayVbgNtB1QCi5xztwv0
-         SmKLV+ab7yzaUfCJc4Aw19J8o8mcyqLkkt3eiraA8F9StuxIFHVFMUDES7li/TiJLKYy
-         3qa41OgjITT2kiIDzgGx+7GIQhaqPt2ZBWaEPq/YL7lAynngEVcJJ+BGHN1IgwkSb0CK
-         HbfCWUBqnKOgclzCFvWCsCu+TSMpPkcwmMsdsJP2ngaZ7pjfXx/cutYM5rBgaixFp4tW
-         Sx2A==
-X-Gm-Message-State: AOAM533EfIq3fRW7NIoWa9J1iIo1zvRZaLmC1JBN/izFYbMkfGsuL02V
-        SapZyHm+8svkS5j0H3sGJScuwRJKl00NtHvswnfnoks0794dSpgFGcHJUM0jmnuUk/q1MC7aYOB
-        iGotufSxNdGZWhMeZ5Li8SiyfRrK+/+gx+lMrC6d0/a7J
-X-Received: by 2002:a05:600c:22d2:: with SMTP id 18mr3809631wmg.57.1631017114368;
-        Tue, 07 Sep 2021 05:18:34 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJy5jtNrITmHBDgLaBbxdrMwDPzRPd9HWI65g33beGxYwDoKNU0TPfWLbynhjY+3UZBxDrACFA==
-X-Received: by 2002:a05:600c:22d2:: with SMTP id 18mr3809616wmg.57.1631017114195;
-        Tue, 07 Sep 2021 05:18:34 -0700 (PDT)
+        bh=AKOLSiNotprej29rkzU07CereuPK7jDMwjY+iTyzzwA=;
+        b=GU1pFp8uUMwDAfonVqbh2wKdJ0fpPFkE1i3BjRB+lOEkAGx/HaEyhwYV330HVrKsmw
+         2z80kJNn2Vz9ogUc9g0QpgVAcuTnR53Q09LCx1q66hb0DTRYghTd99hf9Hbu3azncG4q
+         gWKrrV3AWUuIjif++MWFLtyXlpDhpsCkHRLiEHOvfaoCg41tj5HMjZROwUDxZQAxnGSb
+         Mlr7LWyQ8kttbGh0xo3MREQOIBoALHzAgEp6OjMtG0S6wZTV7F3OUrW0WxtHwlsenqUi
+         sI/x4/7aKyKx9NGKWqcj8EBsbc6e96f6Ymn+Xi67gqhOKAe1tfkjkrF6KZIYyKaXKj7/
+         8VOw==
+X-Gm-Message-State: AOAM531jQdaGI0Vs87RaKDdVFOtjMtvhlcAMITP0imsu7ns/6jqVcIyA
+        djPolmFVf4iwU+QsAhdV4bfa/RU3hHiVxardbmY9hptJLE9kFm8kqiOYKNROIRlsp7prBCEtOzK
+        3j9AARCq95UDDVuLE3n8/jiKB13BGzVtFSYPEHVhTFTss
+X-Received: by 2002:a5d:4ec5:: with SMTP id s5mr18813223wrv.267.1631017117795;
+        Tue, 07 Sep 2021 05:18:37 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzVLcRdCI3iDjK/G4gORzXajvhzjEDqB6WvYfzQBGQHCjdeU0byAvmPWP02UqU4TwnqzrjuVw==
+X-Received: by 2002:a5d:4ec5:: with SMTP id s5mr18813203wrv.267.1631017117668;
+        Tue, 07 Sep 2021 05:18:37 -0700 (PDT)
 Received: from kozik-lap.lan ([79.98.113.47])
-        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.32
+        by smtp.gmail.com with ESMTPSA id m3sm13525216wrg.45.2021.09.07.05.18.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Sep 2021 05:18:33 -0700 (PDT)
+        Tue, 07 Sep 2021 05:18:37 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 10/15] nfc: st-nci: drop unneeded debug prints
-Date:   Tue,  7 Sep 2021 14:18:11 +0200
-Message-Id: <20210907121816.37750-11-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH 13/15] nfc: microread: drop unneeded debug prints
+Date:   Tue,  7 Sep 2021 14:18:14 +0200
+Message-Id: <20210907121816.37750-14-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
 References: <20210907121816.37750-1-krzysztof.kozlowski@canonical.com>
@@ -88,109 +88,45 @@ functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/st-nci/i2c.c  | 4 ----
- drivers/nfc/st-nci/ndlc.c | 4 ----
- drivers/nfc/st-nci/se.c   | 6 ------
- drivers/nfc/st-nci/spi.c  | 4 ----
- 4 files changed, 18 deletions(-)
+ drivers/nfc/microread/i2c.c | 4 ----
+ drivers/nfc/microread/mei.c | 2 --
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index ccf6152ebb9f..cbd968f013c7 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -157,7 +157,6 @@ static int st_nci_i2c_read(struct st_nci_i2c_phy *phy,
- static irqreturn_t st_nci_irq_thread_fn(int irq, void *phy_id)
- {
- 	struct st_nci_i2c_phy *phy = phy_id;
--	struct i2c_client *client;
- 	struct sk_buff *skb = NULL;
+diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
+index 86f593c73ed6..067295124eb9 100644
+--- a/drivers/nfc/microread/i2c.c
++++ b/drivers/nfc/microread/i2c.c
+@@ -237,8 +237,6 @@ static int microread_i2c_probe(struct i2c_client *client,
+ 	struct microread_i2c_phy *phy;
  	int r;
  
-@@ -166,9 +165,6 @@ static irqreturn_t st_nci_irq_thread_fn(int irq, void *phy_id)
- 		return IRQ_NONE;
- 	}
- 
--	client = phy->i2c_dev;
--	dev_dbg(&client->dev, "IRQ\n");
+-	dev_dbg(&client->dev, "client %p\n", client);
 -
- 	if (phy->ndlc->hard_fault)
- 		return IRQ_HANDLED;
+ 	phy = devm_kzalloc(&client->dev, sizeof(struct microread_i2c_phy),
+ 			   GFP_KERNEL);
+ 	if (!phy)
+@@ -262,8 +260,6 @@ static int microread_i2c_probe(struct i2c_client *client,
+ 	if (r < 0)
+ 		goto err_irq;
  
-diff --git a/drivers/nfc/st-nci/ndlc.c b/drivers/nfc/st-nci/ndlc.c
-index e9dc313b333e..755460a73c0d 100644
---- a/drivers/nfc/st-nci/ndlc.c
-+++ b/drivers/nfc/st-nci/ndlc.c
-@@ -239,8 +239,6 @@ static void ndlc_t1_timeout(struct timer_list *t)
- {
- 	struct llt_ndlc *ndlc = from_timer(ndlc, t, t1_timer);
- 
--	pr_debug("\n");
+-	nfc_info(&client->dev, "Probed\n");
 -
- 	schedule_work(&ndlc->sm_work);
- }
+ 	return 0;
  
-@@ -248,8 +246,6 @@ static void ndlc_t2_timeout(struct timer_list *t)
- {
- 	struct llt_ndlc *ndlc = from_timer(ndlc, t, t2_timer);
- 
--	pr_debug("\n");
--
- 	schedule_work(&ndlc->sm_work);
- }
- 
-diff --git a/drivers/nfc/st-nci/se.c b/drivers/nfc/st-nci/se.c
-index 5fd89f72969d..7764b1a4c3cf 100644
---- a/drivers/nfc/st-nci/se.c
-+++ b/drivers/nfc/st-nci/se.c
-@@ -638,8 +638,6 @@ int st_nci_se_io(struct nci_dev *ndev, u32 se_idx,
- {
- 	struct st_nci_info *info = nci_get_drvdata(ndev);
- 
--	pr_debug("\n");
--
- 	switch (se_idx) {
- 	case ST_NCI_ESE_HOST_ID:
- 		info->se_info.cb = cb;
-@@ -671,8 +669,6 @@ static void st_nci_se_wt_timeout(struct timer_list *t)
- 	u8 param = 0x01;
- 	struct st_nci_info *info = from_timer(info, t, se_info.bwi_timer);
- 
--	pr_debug("\n");
--
- 	info->se_info.bwi_active = false;
- 
- 	if (!info->se_info.xch_error) {
-@@ -692,8 +688,6 @@ static void st_nci_se_activation_timeout(struct timer_list *t)
- 	struct st_nci_info *info = from_timer(info, t,
- 					      se_info.se_active_timer);
- 
--	pr_debug("\n");
--
- 	info->se_info.se_active = false;
- 
- 	complete(&info->se_info.req_completion);
-diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
-index a620c34790e6..af1f04c306cc 100644
---- a/drivers/nfc/st-nci/spi.c
-+++ b/drivers/nfc/st-nci/spi.c
-@@ -169,7 +169,6 @@ static int st_nci_spi_read(struct st_nci_spi_phy *phy,
- static irqreturn_t st_nci_irq_thread_fn(int irq, void *phy_id)
- {
- 	struct st_nci_spi_phy *phy = phy_id;
--	struct spi_device *dev;
- 	struct sk_buff *skb = NULL;
+ err_irq:
+diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
+index 8edf761a6b2a..686be3381727 100644
+--- a/drivers/nfc/microread/mei.c
++++ b/drivers/nfc/microread/mei.c
+@@ -23,8 +23,6 @@ static int microread_mei_probe(struct mei_cl_device *cldev,
+ 	struct nfc_mei_phy *phy;
  	int r;
  
-@@ -178,9 +177,6 @@ static irqreturn_t st_nci_irq_thread_fn(int irq, void *phy_id)
- 		return IRQ_NONE;
- 	}
- 
--	dev = phy->spi_dev;
--	dev_dbg(&dev->dev, "IRQ\n");
+-	pr_info("Probing NFC microread\n");
 -
- 	if (phy->ndlc->hard_fault)
- 		return IRQ_HANDLED;
- 
+ 	phy = nfc_mei_phy_alloc(cldev);
+ 	if (!phy) {
+ 		pr_err("Cannot allocate memory for microread mei phy.\n");
 -- 
 2.30.2
 
