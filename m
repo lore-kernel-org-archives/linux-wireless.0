@@ -2,143 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D3AC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Sep 2021 16:57:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8310AC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Sep 2021 18:55:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3CC661100
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Sep 2021 16:57:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 535126113C
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Sep 2021 18:55:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350124AbhIHQ6X (ORCPT
+        id S1348289AbhIHS4i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Sep 2021 12:58:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235666AbhIHQ6U (ORCPT
+        Wed, 8 Sep 2021 14:56:38 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:37970 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S240231AbhIHS4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Sep 2021 12:58:20 -0400
-Received: from mail-oo1-xc2a.google.com (mail-oo1-xc2a.google.com [IPv6:2607:f8b0:4864:20::c2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B95D5C061575
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Sep 2021 09:57:12 -0700 (PDT)
-Received: by mail-oo1-xc2a.google.com with SMTP id y16-20020a4ad6500000b0290258a7ff4058so986265oos.10
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2021 09:57:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZPnN7dR7n+u5y7QjkI7+sFJwmNUnbLvHhnWxVBaHsZk=;
-        b=grxJb7Lx1iF++audW+w5h2kl0K8plqduWfxPsmaNtm8dw41QhGozp0N+LLwdSh00ho
-         6QENQwdshsg2t5mH9kPlHzEKCSFarmVqihH4ACJ8wiHiEkhkoedbtlhrICtNkjm/3CJU
-         iHH0JhsdvH3Rg83Eq98+Nt11Vmkovw+TEz2II=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZPnN7dR7n+u5y7QjkI7+sFJwmNUnbLvHhnWxVBaHsZk=;
-        b=T6hOTu+DnBVya0vSf2aREOc/51BB9CXRA/0l1EcMJntM9liXPjOXoEFYzrJPqtjTB3
-         XleQol07dy9+fPf56vdS96wal+H89mwfOFaixab9hXXRZKl2MogHFDwCFoV1JgdpLiy8
-         DApAAFL2dSagbNdmet27GQXjbuq/HbYpzLdv8A0rn/2tYGBojw4gFltfMkveDvNf5kXd
-         sUK65pyzVFx3f6nFsOvL0EYmPl8Jr3H0M3bt/9n6gfHRw0W9Y5S5DygIrCnWs4PrySBg
-         LdTKm41jGz9UVg07naueIqbISJusTa+EX93bmSCDZzqYuTCpRDDuaxnwRVDXVSFgJwwG
-         Z0Ig==
-X-Gm-Message-State: AOAM532pzxqOTOkrABBROiTW+MHFrj2Vd1GEszQ6mMlHf3Bwb2zap/6I
-        PGyqdgMcOc9jpUyNbS/AJ0XAbQe/JsJvNA==
-X-Google-Smtp-Source: ABdhPJyW3mfzQWqDKlJKPf84Ai+0GFBbwffScVWBz6NxhF6EDnFKtxS2T9HCzYq9DA/YsvuzyDP5PA==
-X-Received: by 2002:a4a:b64b:: with SMTP id f11mr3738257ooo.18.1631120230934;
-        Wed, 08 Sep 2021 09:57:10 -0700 (PDT)
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com. [209.85.210.47])
-        by smtp.gmail.com with ESMTPSA id q22sm569623ots.64.2021.09.08.09.57.09
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Sep 2021 09:57:09 -0700 (PDT)
-Received: by mail-ot1-f47.google.com with SMTP id g66-20020a9d12c8000000b0051aeba607f1so3799210otg.11
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2021 09:57:09 -0700 (PDT)
-X-Received: by 2002:a9d:7d90:: with SMTP id j16mr4002766otn.186.1631120228931;
- Wed, 08 Sep 2021 09:57:08 -0700 (PDT)
-MIME-Version: 1.0
-References: <YTg/f5mHQ6jjHDt6@atmark-techno.com>
-In-Reply-To: <YTg/f5mHQ6jjHDt6@atmark-techno.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Wed, 8 Sep 2021 09:56:57 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXPXL78rxJWjqvVZVAjb6ryYKbY=QP3EZ0N0kfhaFH9CeA@mail.gmail.com>
-Message-ID: <CA+ASDXPXL78rxJWjqvVZVAjb6ryYKbY=QP3EZ0N0kfhaFH9CeA@mail.gmail.com>
-Subject: Re: mwifiex cmd timeout on one pci variant
-To:     Dominique MARTINET <dominique.martinet@atmark-techno.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>
+        Wed, 8 Sep 2021 14:56:38 -0400
+X-UUID: f413067d81e5494494b680887cf22618-20210909
+X-UUID: f413067d81e5494494b680887cf22618-20210909
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 578679305; Thu, 09 Sep 2021 02:55:27 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkexhb02.mediatek.inc
+ (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 9 Sep
+ 2021 02:55:26 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 9 Sep 2021 02:55:26 +0800
+Message-ID: <dbb767a306983d59beb68cb6249cd089805bb5e8.camel@mediatek.com>
+Subject: Re: [PATCH v3 8/8] mt76: mt7915: set muru platform type
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Shayne Chen <shayne.chen@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+Date:   Thu, 9 Sep 2021 02:55:26 +0800
+In-Reply-To: <20210908094144.25641-8-shayne.chen@mediatek.com>
+References: <20210908094144.25641-1-shayne.chen@mediatek.com>
+         <20210908094144.25641-8-shayne.chen@mediatek.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Sep 7, 2021 at 9:52 PM Dominique MARTINET
-<dominique.martinet@atmark-techno.com> wrote:
-> This is probably more a question for the maker.. But maybe someone will
-> know.
+On Wed, 2021-09-08 at 17:41 +0800, Shayne Chen wrote:
+> Set muru platform type by mcu cmd to notify fw to init corresponding
+> algorithm.
+> 
+> Suggested-by: Money Wang <money.wang@mediatek.com>
+> Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+> ---
+> v3: - fix endianess
+>     - rework muru ctrl function
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 17
+> +++++++++++++++++
+>  drivers/net/wireless/mediatek/mt76/mt7915/mcu.h |  5 +++++
+>  .../net/wireless/mediatek/mt76/mt7915/mt7915.h  |  1 +
+>  .../wireless/mediatek/mt76/mt7915/testmode.c    | 16 +++++--------
+> ---
+>  .../wireless/mediatek/mt76/mt7915/testmode.h    |  4 ----
+>  5 files changed, 28 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> index 229ba3c469d1..afafc47264cd 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> @@ -2949,6 +2949,21 @@ static int mt7915_mcu_set_mwds(struct
+> mt7915_dev *dev, bool enabled)
+>  				 sizeof(req), false);
+>  }
+>  
+> +int mt7915_mcu_set_muru_ctrl(struct mt7915_dev *dev, u32 cmd, u8
+> *val)
+> +{
+> +	struct {
+> +		__le32 cmd;
+> +		u8 val[4];
+> +	} __packed req = {
+> +		.cmd = cpu_to_le32(cmd),
+> +	};
+> +
+> +	memcpy(req.val, val, sizeof(req.val));
 
-Last I knew, at least one of the CC'd is still employed by the owner
-of this IP (NXP now), but I don't know that much. But then, they
-haven't been giving out a lot of free support lately, AFAIK.
+Will this lead to undefined behavior if memcpy size larger than source?
+what about passing u32 and using put_unaligned_le32?
 
-> I've got a mwifiex M.2 pci module that won't take any wifi command and
-> hang right away (dmesg below). Bluetooth through serial works.
->
->
-> Context:
-> I've got a board with an i.MX8MP chip, and three different marvell W8997
-> M.2 modules -- one from laird which works fine, and two from azurewave
-> which are labeled exactly the same AW-CM276MA 2276MA PCIE-UART except
-> one works and not the other.
-> The inscription on the chip itself are slightly different, one saying
-> it's a W8997-M1216 from marvell (works) and the other having AW-CM276NF
-> azurewave mark. The electronics around are also different.
+Ryder
 
-FWIW, I've only ever worked with the PCIe-USB variant of this chip.
-And it had tons of bugs that resulted in "command timeouts" along the
-way, and it took a lot of co-working with Marvell to get the firmware
-fixed. I don't know their release model well enough to know whether
-the PCIe-UART variant will have all the same bugs (and bugfixes). But
-in case it helps, here's our firmware history:
-https://chromium.googlesource.com/chromiumos/third_party/linux-firmware/+log/HEAD/mrvl/pcieusb8997_combo_v4.bin
-*Most* of those should align pretty closely with what was published to
-linux-firmware.git, but it's not guaranteed, since Marvell didn't
-always follow our upstream-first guidelines there.
-
-> I could say it's just a bad chip, but I've actually got two of each
-> (samples) which act the same... And I've tried it in another device
-> where it works with the same kernel/firmware, so there must be something
-> wrong on the board as well as the wifi card works elsewhere.
-
-I've seen something as small as the "wrong" kind of noise cause the
-firmware to grind to a halt, so there could be a firmware bug that
-gets tickled by the particular layout or antenna configuration of the
-board in question. I suppose that's not a very helpful guess, but at
-least it might validate your observations.
-
-> Anyway, if someone knows how to get around to debugging this, I'd
-> appreciate a pointer! I can't see anything wrong with the tools I have
-> here.
-> If nothing else, I can't read /sys/class/devcoredump/devcd*/data that I
-> saw Amitkumar Karwar request somewhere else, so just deciphering this
-> would be great help.
-
-I've never had success with that, but I haven't tried very hard. My
-understanding is that it's something equivalent to a register and
-state dump of the proprietary firmware, so you won't really learn much
-from it without proprietary knowledge.
-
-Good luck,
-Brian
