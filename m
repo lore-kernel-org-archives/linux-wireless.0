@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B4BC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C177AC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:59:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86D7D61051
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:59:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB1F561051
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:59:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352989AbhIINA1 (ORCPT
+        id S1355102AbhIINAe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 09:00:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40990 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 09:00:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42302 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354503AbhIIMvK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:51:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9474A63237;
-        Thu,  9 Sep 2021 11:57:13 +0000 (UTC)
+        id S1354661AbhIIMvf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:51:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F144C6323F;
+        Thu,  9 Sep 2021 11:57:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188634;
-        bh=XxpWqRYLel/LG59Qm3NLQDHNtbTcwgshYBLulKw/lvM=;
+        s=k20201202; t=1631188641;
+        bh=wdwkhDQfnQvYJY1RBZzGawuoDVJPTFDTxaNVaUyKE4E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=i45/0f+MzfjrcimtJoTA0j4C4KmBVWVnqRrE7mlCnp2JEKKb9yHQQ4jhWQYBAB+Ax
-         loDU5NFa/VrMXJtGp5KL0NJieW3NW4CD5pCgMBqOl/o5igk0ULeVdRiRRxuMhHcZhh
-         PYoQgR5p8YGqzUGvIq/DQScgDddsZPeEk3h8sd7NOdFCwLh7ftX1Ds7Fz9BxeTDV18
-         N10MdbKO/zbzvU7Wk1/IAU7QvCKCu2Cm5tJy8D4FxIv5XGz350EyAKLrtptZWx0tjz
-         A4V2Diy4CrEA6lrSNzEbrsis7yCDJUvpLOSLSa7YvJsHHZdd9CLdwGbPDIbKoCk2sX
-         9zMMatNGYFarw==
+        b=Favl3HsB1+DBtd5uL/oXo7ItMR7dp+Dc+50FWX4mQUSXl1p91g80aolSJ+hdtPGHY
+         Di6atK1bWotpLQxovm5YqgNQ8c6Q40eRKggZMhsw3mkMEcUICmJ5dWh59BOJkE8PR2
+         TGCTxaZGcZVyMuzie9Gey2fxYitIXM3oau2dTiFVQvnEZvv3MN/061I0xTOqs1Iqbk
+         YdtJ0rffhzMykKYaILLOPPVRONGrr8Y/cunQDyXOXtc44acYagSqn3vSJqpyskP9o5
+         dJCanCU3+JuvNPG91sHpHlLWsebP/F9rXJchvCHAr2uLELfHvHPrPzRIN7Mmw9iPIL
+         r2B1xUCAnRoDA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zhang Qilong <zhangqilong3@huawei.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 100/109] iwlwifi: mvm: fix a memory leak in iwl_mvm_mac_ctxt_beacon_changed
-Date:   Thu,  9 Sep 2021 07:54:57 -0400
-Message-Id: <20210909115507.147917-100-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 106/109] ath9k: fix sleeping in atomic context
+Date:   Thu,  9 Sep 2021 07:55:03 -0400
+Message-Id: <20210909115507.147917-106-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909115507.147917-1-sashal@kernel.org>
 References: <20210909115507.147917-1-sashal@kernel.org>
@@ -52,39 +52,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zhang Qilong <zhangqilong3@huawei.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit 0f5d44ac6e55551798dd3da0ff847c8df5990822 ]
+[ Upstream commit 7c48662b9d56666219f526a71ace8c15e6e12f1f ]
 
-If beacon_inject_active is true, we will return without freeing
-beacon.  Fid that by freeing it before returning.
+The problem is that gpio_free() can sleep and the cfg_soc() can be
+called with spinlocks held. One problematic call tree is:
 
-Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
-[reworded the commit message]
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210802172232.d16206ca60fc.I9984a9b442c84814c307cee3213044e24d26f38a@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+--> ath_reset_internal() takes &sc->sc_pcu_lock spin lock
+   --> ath9k_hw_reset()
+      --> ath9k_hw_gpio_request_in()
+         --> ath9k_hw_gpio_request()
+            --> ath9k_hw_gpio_cfg_soc()
+
+Remove gpio_free(), use error message instead, so we should make sure
+there is no GPIO conflict.
+
+Also remove ath9k_hw_gpio_free() from ath9k_hw_apply_gpio_override(),
+as gpio_mask will never be set for SOC chips.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1628481916-15030-1-git-send-email-miaoqing@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 9c417dd06291..7736621dca65 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1043,8 +1043,10 @@ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9fd8e64288ff..7e2e22b6bbbc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1622,7 +1622,6 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
+-		ath9k_hw_gpio_free(ah, i);
+ 	}
+ }
  
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--	if (mvm->beacon_inject_active)
-+	if (mvm->beacon_inject_active) {
-+		dev_kfree_skb(beacon);
- 		return -EBUSY;
+@@ -2730,14 +2729,17 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
+ static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
+ 				  const char *label)
+ {
++	int err;
++
+ 	if (ah->caps.gpio_requested & BIT(gpio))
+ 		return;
+ 
+-	/* may be requested by BSP, free anyway */
+-	gpio_free(gpio);
+-
+-	if (gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label))
++	err = gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label);
++	if (err) {
++		ath_err(ath9k_hw_common(ah), "request GPIO%d failed:%d\n",
++			gpio, err);
+ 		return;
 +	}
- #endif
  
- 	ret = iwl_mvm_mac_ctxt_send_beacon(mvm, vif, beacon);
+ 	ah->caps.gpio_requested |= BIT(gpio);
+ }
 -- 
 2.30.2
 
