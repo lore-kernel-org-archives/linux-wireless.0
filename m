@@ -7,41 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4533C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB632C4332F
 	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A663661179
+	by mail.kernel.org (Postfix) with ESMTP id C31C961205
 	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352192AbhIIMxN (ORCPT
+        id S1356163AbhIIMxO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:53:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48336 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:53:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55858 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1355094AbhIIMlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1355101AbhIIMlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 9 Sep 2021 08:41:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4652461BA8;
-        Thu,  9 Sep 2021 11:54:57 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D2EA461BF5;
+        Thu,  9 Sep 2021 11:54:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188498;
-        bh=k7GlPxKjxxPV1E0dBBXMjRRHeWhi0zDdQc+CVA8fLYg=;
+        s=k20201202; t=1631188500;
+        bh=b8uqT+IdXHTCWdfTeDRGw60YPedOurUWpACJtIdz0jA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QrxLEnR74SCSlXBA1egOh8jfIFdWMdAXhGIxYtsRjcueprXFFsKU9vnWru7ba00zB
-         NKVwdvep6z8JGA5ZpfAUrS0RPdjzppcLak+WgE+/JAJRU09NiVo7kiXAEI4SzmChOF
-         WD3T2KLb7TAxr28EXOFZdEW+haUcAT0apW0VmE3DSf056qdt/QkyW9taTXXdDnQjYF
-         K+Zlj7/+XvkaRvqQ0HOFhbzUTRRn0H9FD47wkYcYyEVQvO3K7RZXc1DMaxYM0VHkEw
-         iYF8pBsAW16bHGzUXbNU6nj77bxt1KpuZzyektFNl1k/kkBIRKIMlttGk1iElc9o1G
-         WhcV/RRrUOo2w==
+        b=I4pnuuYyWvcvwXDOYHJ/bG4lq+23Uadhtatwnix1+t+R1wEfpZQXZrneizMAm8sGQ
+         o3WDVN8xcMzogYEfsaadcdWvNHFf75UK1TciBEw4SepYAskK3lMH4d442DP5GyaEuw
+         oPeqEg5TwXILjDpD2I9Wa+Cod3uRkNgETBCl0D6Yi+flwLYDSjmON6ZbBmk94VucoU
+         DGWGYS7HnuVD0j4F6e4MSHTOapaLfWPW/jqAKlOc56C+hMjEtSoke8oqqA6L6MaG/0
+         CnePoQCXci5IRzFXCdjSl8DS94NqfnZC69kBv5amrV0EYwf49CArodAqaouyEuUt5f
+         f4j9LSxn79Wvg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Loic Poulain <loic.poulain@linaro.org>,
-        Bryan O'Donoghue <bryan.odonoghue@linaro.org>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, wcn36xx@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 170/176] wcn36xx: Fix missing frame timestamp for beacon/probe-resp
-Date:   Thu,  9 Sep 2021 07:51:12 -0400
-Message-Id: <20210909115118.146181-170-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 172/176] ath9k: fix sleeping in atomic context
+Date:   Thu,  9 Sep 2021 07:51:14 -0400
+Message-Id: <20210909115118.146181-172-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
 References: <20210909115118.146181-1-sashal@kernel.org>
@@ -53,42 +52,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Loic Poulain <loic.poulain@linaro.org>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit 8678fd31f2d3eb14f2b8b39c9bc266f16fa24b22 ]
+[ Upstream commit 7c48662b9d56666219f526a71ace8c15e6e12f1f ]
 
-When receiving a beacon or probe response, we should update the
-boottime_ns field which is the timestamp the frame was received at.
-(cf mac80211.h)
+The problem is that gpio_free() can sleep and the cfg_soc() can be
+called with spinlocks held. One problematic call tree is:
 
-This fixes a scanning issue with Android since it relies on this
-timestamp to determine when the AP has been seen for the last time
-(via the nl80211 BSS_LAST_SEEN_BOOTTIME parameter).
+--> ath_reset_internal() takes &sc->sc_pcu_lock spin lock
+   --> ath9k_hw_reset()
+      --> ath9k_hw_gpio_request_in()
+         --> ath9k_hw_gpio_request()
+            --> ath9k_hw_gpio_cfg_soc()
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Remove gpio_free(), use error message instead, so we should make sure
+there is no GPIO conflict.
+
+Also remove ath9k_hw_gpio_free() from ath9k_hw_apply_gpio_override(),
+as gpio_mask will never be set for SOC chips.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1629992768-23785-1-git-send-email-loic.poulain@linaro.org
+Link: https://lore.kernel.org/r/1628481916-15030-1-git-send-email-miaoqing@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wcn36xx/txrx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 1b831157ede1..cab196bb38cd 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -287,6 +287,10 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
- 		status.rate_idx = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c86faebbc459..6b2668f065d5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1622,7 +1622,6 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
+-		ath9k_hw_gpio_free(ah, i);
  	}
+ }
  
-+	if (ieee80211_is_beacon(hdr->frame_control) ||
-+	    ieee80211_is_probe_resp(hdr->frame_control))
-+		status.boottime_ns = ktime_get_boottime_ns();
+@@ -2730,14 +2729,17 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
+ static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
+ 				  const char *label)
+ {
++	int err;
 +
- 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+ 	if (ah->caps.gpio_requested & BIT(gpio))
+ 		return;
  
- 	if (ieee80211_is_beacon(hdr->frame_control)) {
+-	/* may be requested by BSP, free anyway */
+-	gpio_free(gpio);
+-
+-	if (gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label))
++	err = gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label);
++	if (err) {
++		ath_err(ath9k_hw_common(ah), "request GPIO%d failed:%d\n",
++			gpio, err);
+ 		return;
++	}
+ 
+ 	ah->caps.gpio_requested |= BIT(gpio);
+ }
 -- 
 2.30.2
 
