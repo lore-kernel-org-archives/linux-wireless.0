@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89479C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAC0C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 728C061059
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E7D060296
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350553AbhIIMnf (ORCPT
+        id S1356146AbhIIMxH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:43:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46126 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:53:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55852 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354809AbhIIMjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:39:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7928961BBD;
-        Thu,  9 Sep 2021 11:54:48 +0000 (UTC)
+        id S1355104AbhIIMlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:41:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A0B8D61BE5;
+        Thu,  9 Sep 2021 11:54:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188489;
-        bh=mHxO/FBPeeZaXjpwWiON9m/28B89HB6bi0zafwJ2j0Q=;
+        s=k20201202; t=1631188499;
+        bh=Uh4gAPJjL7EvxAYvjfESQ3h7Yip6zR0rBwfOQmMswjk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=InA5LSWoaH+nT4zK/6shZhpQU/yJyB+znLjXH/560VH9nYmFRA4OFpcXrIT27tjXS
-         Yfvd8Lf6D1/YkEZ4BWZe3aR7z3HpMnCRqiLuSGzZNz2FsKifXb4HDjO7J2V9CHU7n5
-         KFRvwZH8bfhqUfazExR9Skcos2fmUB938sVVz3ypHfI22yxtVlUBREP3SqlVaR5TYo
-         i3XvnhxyZFZb0XMl9+H0iifKbNzjBj0Zus6F0ueh6cPX6PvNYTfJUgBIuPyQN+YH8c
-         LlNI4snKV9nIwiBr2pjNbMuqacXebcFe2Mm/7Ek6zzd9FfFRoAiArdepwz36WQLM//
-         dPdehiqvPmt7A==
+        b=nkv91EdXl3abxlWCXMFj8hPfHQR5l3huMSA9VJS0ZmfeGXAbRXDQlXAL01lM1OE0Q
+         q2ESc9MBTwdSDejjSKZT1q1T7JaKTZUGKu7RwqwYfQAPo3e3VKDv1v77pntbuqpmHV
+         rnfE81UYjXzeyaR5D4Ihgbsocsap38gyOSdjP8+TK6eRhS868fF2aBmDeWL5k0mQLo
+         7z5sZTscOUm64ZJJQ2S8cMU1SSbvLd/RxIjpWH7Qx/d014k5WjiqxUtY5YU7mCSIHT
+         1MYMfuh2jc4K3u8Y6e++Q+yXXuvkLKgJQUiBqowaVhWu9jU+I1/+3+LL9VZry107Mu
+         pUEX7GpUzluZw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 163/176] iwlwifi: mvm: fix access to BSS elements
-Date:   Thu,  9 Sep 2021 07:51:05 -0400
-Message-Id: <20210909115118.146181-163-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 171/176] ath9k: fix OOB read ar9300_eeprom_restore_internal
+Date:   Thu,  9 Sep 2021 07:51:13 -0400
+Message-Id: <20210909115118.146181-171-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
 References: <20210909115118.146181-1-sashal@kernel.org>
@@ -52,49 +52,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Zekun Shen <bruceshenzk@gmail.com>
 
-[ Upstream commit 6c608cd6962ebdf84fd3de6d42f88ed64d2f4e1b ]
+[ Upstream commit 23151b9ae79e3bc4f6a0c4cd3a7f355f68dad128 ]
 
-BSS elements are protected using RCU, so we need to use
-RCU properly to access them, fix that.
+Bad header can have large length field which can cause OOB.
+cptr is the last bytes for read, and the eeprom is parsed
+from high to low address. The OOB, triggered by the condition
+length > cptr could cause memory error with a read on
+negative index.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210805130823.fd8b5791ab44.Iba26800a6301078d3782fb249c476dd8ac2bf3c6@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+There are some sanity check around length, but it is not
+compared with cptr (the remaining bytes). Here, the
+corrupted/bad EEPROM can cause panic.
+
+I was able to reproduce the crash, but I cannot find the
+log and the reproducer now. After I applied the patch, the
+bug is no longer reproducible.
+
+Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/YM3xKsQJ0Hw2hjrc@Zekuns-MBP-16.fios-router.home
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 8cba923b1ec6..d2af6909fcc8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3028,16 +3028,20 @@ static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
- 						    void *_data)
- {
- 	struct iwl_mvm_he_obss_narrow_bw_ru_data *data = _data;
-+	const struct cfg80211_bss_ies *ies;
- 	const struct element *elem;
- 
--	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, bss->ies->data,
--				  bss->ies->len);
-+	rcu_read_lock();
-+	ies = rcu_dereference(bss->ies);
-+	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
-+				  ies->len);
- 
- 	if (!elem || elem->datalen < 10 ||
- 	    !(elem->data[10] &
- 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
- 		data->tolerated = false;
- 	}
-+	rcu_read_unlock();
- }
- 
- static void iwl_mvm_check_he_obss_narrow_bw_ru(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index b4885a700296..b0a4ca3559fd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3351,7 +3351,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 			"Found block at %x: code=%d ref=%d length=%d major=%d minor=%d\n",
+ 			cptr, code, reference, length, major, minor);
+ 		if ((!AR_SREV_9485(ah) && length >= 1024) ||
+-		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485)) {
++		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485) ||
++		    (length > cptr)) {
+ 			ath_dbg(common, EEPROM, "Skipping bad header\n");
+ 			cptr -= COMP_HDR_LEN;
+ 			continue;
 -- 
 2.30.2
 
