@@ -5,46 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07889C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A7D1C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5A5F60FE3
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AA3161100
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353602AbhIIM0z (ORCPT
+        id S1346156AbhIIMlX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:26:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33294 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:41:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39748 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1353007AbhIIMWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:22:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 438DD61AFD;
-        Thu,  9 Sep 2021 11:51:08 +0000 (UTC)
+        id S1353606AbhIIMep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:34:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 50C3C61B64;
+        Thu,  9 Sep 2021 11:53:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188269;
-        bh=k7GlPxKjxxPV1E0dBBXMjRRHeWhi0zDdQc+CVA8fLYg=;
+        s=k20201202; t=1631188417;
+        bh=5Tmo5EoUoUNPILBlPgR5l9L/1NDvicyyvoVo8uwBhKQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kGIJAwrJfnx4nGHSCutdFSBX+1ikz0fv69kMrH6mSDViqqWNfJSLgl2Ov3otMtQKq
-         DVRX6kVKjx/9nnRB4kX4Otg+TJH5QnVosesTAjd8iNFl0EIAyNCEz5JZe/aEUuo8YU
-         a5WYTLOTERzhWBZkL4iGZMF2w9AzigSOJuoaMjlxN5irSZcwqeyQ9mBydd/G6syQGM
-         +ZlqPLx24B/ZhwaE4R5JQtAWRuIwIVLluBecbPYouQkX87unvZdODaklB6DsKyHBCY
-         tNvKjKWTt57GO4mKkQo1Z6BJMbvErqE7W+rtmKbPEv6FayKSxIqvCo292w7uNrMcWK
-         i3mHOEejO5UOA==
+        b=i9wAKuOAccQ/wN+rxQuiY2ZsC7xME/EaWkcAnXPWVGB/l3XAxyaXZJ3U6P/ydBdW7
+         qgqSt2aqSAtemOM+c7fLL54KM3kPVlJ+iZaSywBFAKWX/rtew+GJonuKfLqvuA2803
+         PNh7mFtxwTFUGmjx0ifslSaZXo06GuUi0zAr0KGcC6PQ/dqjv1DMLlFaQyf3IVqbwF
+         dZk+0zFxhap2HkvQqIda7vgvsd0EgPRD0VBMLgPFAkpgnHdSkiDsxs2aIMYTBQwfSC
+         URA7oVIM6va/hUr0oFEhRzNINgD+A9b73luSgI9qHx/IMrof1aZqw0pNJGcGeJeVdR
+         qdnuQi9KzTu5g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Loic Poulain <loic.poulain@linaro.org>,
-        Bryan O'Donoghue <bryan.odonoghue@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, wcn36xx@lists.infradead.org,
+Cc:     Johan Almbladh <johan.almbladh@anyfinetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 213/219] wcn36xx: Fix missing frame timestamp for beacon/probe-resp
-Date:   Thu,  9 Sep 2021 07:46:29 -0400
-Message-Id: <20210909114635.143983-213-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 107/176] mac80211: Fix monitor MTU limit so that A-MSDUs get through
+Date:   Thu,  9 Sep 2021 07:50:09 -0400
+Message-Id: <20210909115118.146181-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
-References: <20210909114635.143983-1-sashal@kernel.org>
+In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
+References: <20210909115118.146181-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,42 +52,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Loic Poulain <loic.poulain@linaro.org>
+From: Johan Almbladh <johan.almbladh@anyfinetworks.com>
 
-[ Upstream commit 8678fd31f2d3eb14f2b8b39c9bc266f16fa24b22 ]
+[ Upstream commit 79f5962baea74ce1cd4e5949598944bff854b166 ]
 
-When receiving a beacon or probe response, we should update the
-boottime_ns field which is the timestamp the frame was received at.
-(cf mac80211.h)
+The maximum MTU was set to 2304, which is the maximum MSDU size. While
+this is valid for normal WLAN interfaces, it is too low for monitor
+interfaces. A monitor interface may receive and inject MPDU frames, and
+the maximum MPDU frame size is larger than 2304. The MPDU may also
+contain an A-MSDU frame, in which case the size may be much larger than
+the MTU limit. Since the maximum size of an A-MSDU depends on the PHY
+mode of the transmitting STA, it is not possible to set an exact MTU
+limit for a monitor interface. Now the maximum MTU for a monitor
+interface is unrestricted.
 
-This fixes a scanning issue with Android since it relies on this
-timestamp to determine when the AP has been seen for the last time
-(via the nl80211 BSS_LAST_SEEN_BOOTTIME parameter).
-
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1629992768-23785-1-git-send-email-loic.poulain@linaro.org
+Signed-off-by: Johan Almbladh <johan.almbladh@anyfinetworks.com>
+Link: https://lore.kernel.org/r/20210628123246.2070558-1-johan.almbladh@anyfinetworks.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wcn36xx/txrx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/iface.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 1b831157ede1..cab196bb38cd 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -287,6 +287,10 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
- 		status.rate_idx = 0;
- 	}
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 30589b4c09da..3a15ef8dd322 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -2000,9 +2000,16 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
  
-+	if (ieee80211_is_beacon(hdr->frame_control) ||
-+	    ieee80211_is_probe_resp(hdr->frame_control))
-+		status.boottime_ns = ktime_get_boottime_ns();
-+
- 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+ 		netdev_set_default_ethtool_ops(ndev, &ieee80211_ethtool_ops);
  
- 	if (ieee80211_is_beacon(hdr->frame_control)) {
+-		/* MTU range: 256 - 2304 */
++		/* MTU range is normally 256 - 2304, where the upper limit is
++		 * the maximum MSDU size. Monitor interfaces send and receive
++		 * MPDU and A-MSDU frames which may be much larger so we do
++		 * not impose an upper limit in that case.
++		 */
+ 		ndev->min_mtu = 256;
+-		ndev->max_mtu = local->hw.max_mtu;
++		if (type == NL80211_IFTYPE_MONITOR)
++			ndev->max_mtu = 0;
++		else
++			ndev->max_mtu = local->hw.max_mtu;
+ 
+ 		ret = register_netdevice(ndev);
+ 		if (ret) {
 -- 
 2.30.2
 
