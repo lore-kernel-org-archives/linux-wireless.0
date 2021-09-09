@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B6CC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6F6C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF33C60FE3
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2469D6115A
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348869AbhIIM0b (ORCPT
+        id S1344100AbhIIM0d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:26:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57710 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:26:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58736 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1350425AbhIIMWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:22:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D5CE661AE1;
-        Thu,  9 Sep 2021 11:50:54 +0000 (UTC)
+        id S1345646AbhIIMWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:22:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C309361AF9;
+        Thu,  9 Sep 2021 11:50:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188255;
-        bh=6r3e4fFI0L1s1Y97K3IG8jSgzDA1fv8BgWIJ2Yf6GyE=;
+        s=k20201202; t=1631188260;
+        bh=YSgzmEAdQE7tXJ2RhuZPDeRbSkGlOH9uX5878HXAkE4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fUj5yCf5xoKpzViWVF/3U/vghmb8+OHU7tA8KE17pBgKrw+uwtHRQgqgM47xiYeSf
-         GB0q8O/0TJhkUV7lvDRO5nEWxYAPsAt7Fz0pKgGDAm91wpxNv+08lF4WfT4EMXQSP2
-         msg7K4kgFvGiudTu/BjaK2Yx9aHILy1h+6Rn2UDjG/tZzPCeFCXc4Dv94QJ1UAcneN
-         XOh/zS8mJR8sXx+b0I0c8VxN1POx0AC4/OebEFEPTQxOIER3lOyFxOHc/tzCGiy+yM
-         wDbmZfTkwKzLxZ8zTQV8bX8/4c3DxDFCowIGs2fSvAgss3uym1u4SCQWX0swTa9mHy
-         zIfA+vgjXEOtA==
+        b=iIZGxhe/Lhpkc+BAfSb5yuVL9W7/YnBH5TLD359NFcEjm6bo7fBTAT9KQudtI6xXD
+         z0D42GHweLPm4yfMT0MbCRifBlcCBzWf004KUEg2skolTx3XIn3hvVNSDBNir8E2iG
+         5p5AoBvhRA7P64maS3b9vrF0OXhGa/JTHdXevEDGljEDWhhZpDJ/Vqp6ISEonosJ2O
+         HT6vjRBY1CRgB2G9D/wDja8fG2MYys005m3M2ojzeo0xhsCweHpSr2TPmxBvPBlsBV
+         HqRZFu1h67JCN3xJ3PPyEIw+BlCr/8lM59+NnaplvauoFjZtK+RwuKqxftQUuvyzMi
+         VoaBMlwMA7NOw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 202/219] iwlwifi: mvm: Do not use full SSIDs in 6GHz scan
-Date:   Thu,  9 Sep 2021 07:46:18 -0400
-Message-Id: <20210909114635.143983-202-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 206/219] iwlwifi: mvm: fix access to BSS elements
+Date:   Thu,  9 Sep 2021 07:46:22 -0400
+Message-Id: <20210909114635.143983-206-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
 References: <20210909114635.143983-1-sashal@kernel.org>
@@ -52,51 +52,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit deedf9b97cd4ef45da476c9bdd2a5f3276053956 ]
+[ Upstream commit 6c608cd6962ebdf84fd3de6d42f88ed64d2f4e1b ]
 
-The scan request processing populated the direct SSIDs
-in the FW scan request command also for 6GHz scan, which is not
-needed and might result in unexpected behavior.
+BSS elements are protected using RCU, so we need to use
+RCU properly to access them, fix that.
 
-Fix the code to add the direct SSIDs only in case the scan
-is not a 6GHz scan.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210802170640.f465937c7bbf.Ic11a1659ddda850c3ec1b1afbe9e2b9577ac1800@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210805130823.fd8b5791ab44.Iba26800a6301078d3782fb249c476dd8ac2bf3c6@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 5a0696c44f6d..3627de2af344 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -2368,14 +2368,17 @@ static int iwl_mvm_scan_umac_v14(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 141d9fc299b0..6981608ef165 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2987,16 +2987,20 @@ static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
+ 						    void *_data)
+ {
+ 	struct iwl_mvm_he_obss_narrow_bw_ru_data *data = _data;
++	const struct cfg80211_bss_ies *ies;
+ 	const struct element *elem;
  
--	iwl_mvm_scan_umac_fill_probe_p_v4(params, &scan_p->probe_params,
--					  &bitmap_ssid);
- 	if (!params->scan_6ghz) {
-+		iwl_mvm_scan_umac_fill_probe_p_v4(params, &scan_p->probe_params,
-+					  &bitmap_ssid);
- 		iwl_mvm_scan_umac_fill_ch_p_v6(mvm, params, vif,
--					       &scan_p->channel_params, bitmap_ssid);
-+				       &scan_p->channel_params, bitmap_ssid);
+-	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, bss->ies->data,
+-				  bss->ies->len);
++	rcu_read_lock();
++	ies = rcu_dereference(bss->ies);
++	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
++				  ies->len);
  
- 		return 0;
-+	} else {
-+		pb->preq = params->preq;
+ 	if (!elem || elem->datalen < 10 ||
+ 	    !(elem->data[10] &
+ 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
+ 		data->tolerated = false;
  	}
-+
- 	cp->flags = iwl_mvm_scan_umac_chan_flags_v2(mvm, params, vif);
- 	cp->n_aps_override[0] = IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY;
- 	cp->n_aps_override[1] = IWL_SCAN_ADWELL_N_APS_SOCIAL_CHS;
++	rcu_read_unlock();
+ }
+ 
+ static void iwl_mvm_check_he_obss_narrow_bw_ru(struct ieee80211_hw *hw,
 -- 
 2.30.2
 
