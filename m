@@ -7,40 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A7D1C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFE5C4332F
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AA3161100
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA8EB60FDA
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346156AbhIIMlX (ORCPT
+        id S1353417AbhIIMnF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:41:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39748 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:43:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48338 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1353606AbhIIMep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:34:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 50C3C61B64;
-        Thu,  9 Sep 2021 11:53:36 +0000 (UTC)
+        id S1354151AbhIIMg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:36:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B0BB16137D;
+        Thu,  9 Sep 2021 11:54:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188417;
-        bh=5Tmo5EoUoUNPILBlPgR5l9L/1NDvicyyvoVo8uwBhKQ=;
+        s=k20201202; t=1631188449;
+        bh=S0XaWsB7k/mB7Pcpqzo+AJANBh9RP8g0gr0MnXtt/zo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=i9wAKuOAccQ/wN+rxQuiY2ZsC7xME/EaWkcAnXPWVGB/l3XAxyaXZJ3U6P/ydBdW7
-         qgqSt2aqSAtemOM+c7fLL54KM3kPVlJ+iZaSywBFAKWX/rtew+GJonuKfLqvuA2803
-         PNh7mFtxwTFUGmjx0ifslSaZXo06GuUi0zAr0KGcC6PQ/dqjv1DMLlFaQyf3IVqbwF
-         dZk+0zFxhap2HkvQqIda7vgvsd0EgPRD0VBMLgPFAkpgnHdSkiDsxs2aIMYTBQwfSC
-         URA7oVIM6va/hUr0oFEhRzNINgD+A9b73luSgI9qHx/IMrof1aZqw0pNJGcGeJeVdR
-         qdnuQi9KzTu5g==
+        b=rR8Ugf0XIi/iCAB7MHEcnMEAWzDfyMcarTpk1pAChOoczCJVwN9QCVR6uFwzCTZ3/
+         6RPufrUt9z529KTbQGN7Cz2oVOQ8Rl9tu0GHDx9SfwvEbKBllFXOPS5z5i5njO16mJ
+         5KboQF1wKZR2Rm4W8zfngrdI1+M+cGXSoN0DdP47Jjrj4uYMbHMPWnUDwIsrVIVn+x
+         lbaCorXcA93iuomyjcQiW9VM/O1p56lJrPGeYl+EOOoVF9eW6txagOMIb4KzjcDnAd
+         2INNzfRXgwIoclE8QeS1fBjcvHO2tauGdQ/9yrxPNm5y+CUPwrzrTXxZXa8pXq11K2
+         PnYkvA4o+w+FQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johan Almbladh <johan.almbladh@anyfinetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Chin-Yen Lee <timlee@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 107/176] mac80211: Fix monitor MTU limit so that A-MSDUs get through
-Date:   Thu,  9 Sep 2021 07:50:09 -0400
-Message-Id: <20210909115118.146181-107-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 132/176] rtw88: use read_poll_timeout instead of fixed sleep
+Date:   Thu,  9 Sep 2021 07:50:34 -0400
+Message-Id: <20210909115118.146181-132-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
 References: <20210909115118.146181-1-sashal@kernel.org>
@@ -52,51 +53,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johan Almbladh <johan.almbladh@anyfinetworks.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-[ Upstream commit 79f5962baea74ce1cd4e5949598944bff854b166 ]
+[ Upstream commit 02a55c0009a55b204e1e5c17295431f0a9e7d3b6 ]
 
-The maximum MTU was set to 2304, which is the maximum MSDU size. While
-this is valid for normal WLAN interfaces, it is too low for monitor
-interfaces. A monitor interface may receive and inject MPDU frames, and
-the maximum MPDU frame size is larger than 2304. The MPDU may also
-contain an A-MSDU frame, in which case the size may be much larger than
-the MTU limit. Since the maximum size of an A-MSDU depends on the PHY
-mode of the transmitting STA, it is not possible to set an exact MTU
-limit for a monitor interface. Now the maximum MTU for a monitor
-interface is unrestricted.
+In current wow flow, driver calls rtw_wow_fw_start and sleep for 100ms,
+to wait firmware finish preliminary work and then update the value of
+WOWLAN_WAKE_REASON register to zero. But later firmware will start wow
+function with power-saving mode, in which mode the value of
+WOWLAN_WAKE_REASON register is 0xea. So driver may get 0xea value and
+return fail. We use read_poll_timeout instead to check the value to avoid
+this issue.
 
-Signed-off-by: Johan Almbladh <johan.almbladh@anyfinetworks.com>
-Link: https://lore.kernel.org/r/20210628123246.2070558-1-johan.almbladh@anyfinetworks.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210728014335.8785-2-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/iface.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/wow.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 30589b4c09da..3a15ef8dd322 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -2000,9 +2000,16 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+diff --git a/drivers/net/wireless/realtek/rtw88/wow.c b/drivers/net/wireless/realtek/rtw88/wow.c
+index 2fcdf70a3a77..bb2fd4e544f0 100644
+--- a/drivers/net/wireless/realtek/rtw88/wow.c
++++ b/drivers/net/wireless/realtek/rtw88/wow.c
+@@ -283,15 +283,26 @@ static void rtw_wow_rx_dma_start(struct rtw_dev *rtwdev)
  
- 		netdev_set_default_ethtool_ops(ndev, &ieee80211_ethtool_ops);
+ static int rtw_wow_check_fw_status(struct rtw_dev *rtwdev, bool wow_enable)
+ {
+-	/* wait 100ms for wow firmware to finish work */
+-	msleep(100);
++	int ret;
++	u8 check;
++	u32 check_dis;
  
--		/* MTU range: 256 - 2304 */
-+		/* MTU range is normally 256 - 2304, where the upper limit is
-+		 * the maximum MSDU size. Monitor interfaces send and receive
-+		 * MPDU and A-MSDU frames which may be much larger so we do
-+		 * not impose an upper limit in that case.
-+		 */
- 		ndev->min_mtu = 256;
--		ndev->max_mtu = local->hw.max_mtu;
-+		if (type == NL80211_IFTYPE_MONITOR)
-+			ndev->max_mtu = 0;
-+		else
-+			ndev->max_mtu = local->hw.max_mtu;
+ 	if (wow_enable) {
+-		if (rtw_read8(rtwdev, REG_WOWLAN_WAKE_REASON))
++		ret = read_poll_timeout(rtw_read8, check, !check, 1000,
++					100000, true, rtwdev,
++					REG_WOWLAN_WAKE_REASON);
++		if (ret)
+ 			goto wow_fail;
+ 	} else {
+-		if (rtw_read32_mask(rtwdev, REG_FE1IMR, BIT_FS_RXDONE) ||
+-		    rtw_read32_mask(rtwdev, REG_RXPKT_NUM, BIT_RW_RELEASE))
++		ret = read_poll_timeout(rtw_read32_mask, check_dis,
++					!check_dis, 1000, 100000, true, rtwdev,
++					REG_FE1IMR, BIT_FS_RXDONE);
++		if (ret)
++			goto wow_fail;
++		ret = read_poll_timeout(rtw_read32_mask, check_dis,
++					!check_dis, 1000, 100000, false, rtwdev,
++					REG_RXPKT_NUM, BIT_RW_RELEASE);
++		if (ret)
+ 			goto wow_fail;
+ 	}
  
- 		ret = register_netdevice(ndev);
- 		if (ret) {
 -- 
 2.30.2
 
