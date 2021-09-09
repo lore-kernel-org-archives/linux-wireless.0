@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFAD2C43217
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:00:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F4FC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:01:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9210632C1
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:00:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A81B86139D
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:01:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344049AbhIIMCA (ORCPT
+        id S1345064AbhIIMC0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:02:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41776 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:02:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42124 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345874AbhIIL75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 07:59:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1A5B16147F;
-        Thu,  9 Sep 2021 11:46:05 +0000 (UTC)
+        id S236624AbhIIMAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:00:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 18CBF61501;
+        Thu,  9 Sep 2021 11:46:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631187965;
-        bh=SyAxMhOp2pwQ74LlnnoLxvfi9WBzRJkbZSYLuemmFXQ=;
+        s=k20201202; t=1631187970;
+        bh=+5m58+xQFmCuoTRYQN3SD0DmLLnkSLmePDjsPWnD0ks=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IiDDLrxQke98e3UxXfaj18NkCF9pMY/0gQ9ig2XnV66gYMAJBQKhMupzvvLuFwuOu
-         YetnQq+TZNMXhS0TVR3iM8SDC0YaylscUDIaGSEjTJAsPabARuOHhyRIf6KxGdIH0O
-         1mq9r8a1UrDHU+HhorcNzfAXvpf4XG6kChq/2avuKCa6MMToIDEsN2kQHUjmdhYRIu
-         xcohjLUIQPTDP0SHCwdE8lAxCGEQz1mDRG9bFRElsSc6MtAi8/9OyZHeh5p4+Hh7vM
-         6tHK8DXDm66InmOLO2to2c/B9d4I1HPrU9mD21o2ZDxmH7f6yjjUZBUUelPZo3HnRl
-         GqZXXoN/0/sjQ==
+        b=XAUqiDklHa50QbraVX4onMwX/eUTT2CFWgjP4CiHlOyieppeherNH1bnPjjUMzluJ
+         PlFq/s/8GmmgKY9VdMWPFxAiCVuRqLExdeFA+iUs6PA8s17dFeWuSMeMGDOJAc97CH
+         guATE1u0WxMrj9o+Lx4/wJyo0j/NRUJypponeOfd2o7p9M2RuThQdKxDA8jzQtV43p
+         z5+sG5TJ2l+aTlqBfTup9TxTimmil4bxSmLX3sX4HxvHJUDa94gDLkDnbuU3m6w2li
+         0eIorBQLzYJEXPxXSt1RQOejnw2NeUuzDo+XloS29E8aJZMv8O5FBF2uWDd87gLHlY
+         XfdDYhMb2Hgkw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zhang Qilong <zhangqilong3@huawei.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 230/252] iwlwifi: mvm: fix a memory leak in iwl_mvm_mac_ctxt_beacon_changed
-Date:   Thu,  9 Sep 2021 07:40:44 -0400
-Message-Id: <20210909114106.141462-230-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 234/252] iwlwifi: fw: correctly limit to monitor dump
+Date:   Thu,  9 Sep 2021 07:40:48 -0400
+Message-Id: <20210909114106.141462-234-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909114106.141462-1-sashal@kernel.org>
 References: <20210909114106.141462-1-sashal@kernel.org>
@@ -52,39 +52,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zhang Qilong <zhangqilong3@huawei.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 0f5d44ac6e55551798dd3da0ff847c8df5990822 ]
+[ Upstream commit e6344c060209ef4e970cac18adeac1676a2a73cd ]
 
-If beacon_inject_active is true, we will return without freeing
-beacon.  Fid that by freeing it before returning.
+In commit 79f033f6f229 ("iwlwifi: dbg: don't limit dump decisions
+to all or monitor") we changed the code to pass around a bitmap,
+but in the monitor_only case, one place accidentally used the bit
+number, not the bit mask, resulting in CSR and FW_INFO getting
+dumped instead of monitor data. Fix that.
 
-Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
-[reworded the commit message]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210802172232.d16206ca60fc.I9984a9b442c84814c307cee3213044e24d26f38a@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210805141826.774fd8729a33.Ic985a787071d1c0b127ef0ba8367da896ee11f57@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index fd5e08961651..7f0c82189808 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1005,8 +1005,10 @@ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index df7c55e06f54..a13fe01e487b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2321,7 +2321,7 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
+ 		return;
  
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--	if (mvm->beacon_inject_active)
-+	if (mvm->beacon_inject_active) {
-+		dev_kfree_skb(beacon);
- 		return -EBUSY;
-+	}
- #endif
+ 	if (dump_data->monitor_only)
+-		dump_mask &= IWL_FW_ERROR_DUMP_FW_MONITOR;
++		dump_mask &= BIT(IWL_FW_ERROR_DUMP_FW_MONITOR);
  
- 	ret = iwl_mvm_mac_ctxt_send_beacon(mvm, vif, beacon);
+ 	fw_error_dump.trans_ptr = iwl_trans_dump_data(fwrt->trans, dump_mask);
+ 	file_len = le32_to_cpu(dump_file->file_len);
 -- 
 2.30.2
 
