@@ -2,84 +2,195 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1828CC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:15:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A95B2C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:40:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F29B160FE3
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:15:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 865026109E
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231339AbhIIIQi (ORCPT
+        id S231728AbhIIIll (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 04:16:38 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:44870 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231426AbhIIIQh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 04:16:37 -0400
-X-UUID: e4fbee25def34d418faeac10a35e4490-20210909
-X-UUID: e4fbee25def34d418faeac10a35e4490-20210909
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 116656672; Thu, 09 Sep 2021 16:15:26 +0800
-Received: from mtkexhb02.mediatek.inc (172.21.101.103) by
- mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 9 Sep 2021 16:15:25 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkexhb02.mediatek.inc
- (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 9 Sep
- 2021 16:15:18 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 9 Sep 2021 16:15:18 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v4 4/8] mt76: mt7915: fix sta_rec_wtbl tag len
-Date:   Thu, 9 Sep 2021 16:15:08 +0800
-Message-ID: <20210909081512.5037-4-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20210909081512.5037-1-shayne.chen@mediatek.com>
-References: <20210909081512.5037-1-shayne.chen@mediatek.com>
+        Thu, 9 Sep 2021 04:41:41 -0400
+Received: from mout.web.de ([212.227.15.4]:34745 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231281AbhIIIlk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 04:41:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1631176809;
+        bh=TDYtB2JcYZdl2exMRt0DaFOKdnm/cLDcrA9GN52GAs0=;
+        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=fSfy+5e1UPRsu1uF5sKdX2j2N0MwJp8oKakSA3Ghq6orbX06lTOtPVkiWJ99uuhZ0
+         NaXpF3Ivxq9zMQqXvRpAqqBJoRl7cYTTVwILl0SIyZaf7l7p0BWVAkvzZ0XJ1Plitt
+         UJvfR2yjurGaWnUlIemidx0jAf3QYSK4IYIwIUpg=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.27] ([89.14.20.203]) by smtp.web.de (mrweb002
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0Lp7Lg-1mu27Z2Gcm-00esRM; Thu, 09
+ Sep 2021 10:40:09 +0200
+Subject: Re: [BUG] Re: [PATCH] brcmfmac: use ISO3166 country code and 0 rev as
+ fallback
+To:     Shawn Guo <shawn.guo@linaro.org>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-rockchip@lists.infradead.org" 
+        <linux-rockchip@lists.infradead.org>
+References: <20210425110200.3050-1-shawn.guo@linaro.org>
+ <cb7ac252-3356-8ef7-fcf9-eb017f5f161f@web.de> <20210908010057.GB25255@dragon>
+ <100f5bef-936c-43f1-9b3e-a477a0640d84@web.de> <20210909022033.GC25255@dragon>
+From:   Soeren Moch <smoch@web.de>
+Message-ID: <56e9a81a-4e05-cf5e-a8df-782ac75fdbe6@web.de>
+Date:   Thu, 9 Sep 2021 10:39:58 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <20210909022033.GC25255@dragon>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-GB
+X-Provags-ID: V03:K1:vnwaoO3CKyw/+P4arC4J3P4RilNP9UxvfkXbCFPrAJIrWhE4fas
+ zfTZToRbEd21n7qaSwo4h+jRz9xC+YhpWn/OS1t3M8iT/0zs6uO3+S73pyeuhEFRB0IvOU8
+ I/94oMJXXOT0uxGH7UlbWA0XteN5tflAjhTgaPnMOWuINuz1mje6JORCp/jsjdKWz5YmVRS
+ j9WpQeEtbJMRd8sn+9QrQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:cjiZyj6VQ8M=:tS9nCgiRMtk20B3olBKG1G
+ i7vEnrFk/td2e6qasyeRW+yOOPCSHYwaz4rHirW+lqUs9RWqgA3bqShbDqrizKkQ8d2BEAMGY
+ 7p322fSSqg0IybRkY3mvn7LlxG2vO/RoXYw84rGUukD1ui1vjmKHBoK30/m3UGs3k2qoTsVOv
+ phcAp28BivYXyRd9qBxIZWvCsh0I6p10x36LC1hioLlglqYS4Og0tJ2lAzJwuqqFd+uxRur6D
+ FZS4dpVXZKVaO2qwn9plD7sCxjdFl4ZgmnxoKNg4Mt61kjzeq+L7hhbYn1SwtvC+2gxCRpjI1
+ DcO9w8RQC+Nnh8DGzMuS/uF1zhbxQIWrGE6NUCIrLktrwG+8AbMKDPTUJI0wjjCWFVwc3LSF9
+ zTBpleJ/25MDG+kWSUHWWdlh+Cmr6KjJzbtK2a4Ot9AQO9TlFy0dM4QmRELgyEkExpF6MNWfU
+ KQb/PdJfLxT4VBB0gh44zbC5qf29bgf2z4weP3AMBM0t/PPmCLKtjVTBCP5nzOOd2CHp6cqQb
+ lypkay97BJ/w2aTojQ0Mzq4nk9/qaXiayn8ejES+MDrk06mEu+Ujwfxff88o53Zcd8FDnxQuH
+ PDDrM9wdxmRScumrFQ2WUL2FZ27hQR+xzz7J4V9jQfn7Z3/FDHb8lQRCrx8EhxDmkx0aaetSK
+ lU815ldge1H70AojNkvUpzT2I2uith2lQlmYLyw9kX0EyqzHBEY/2EaPvcmNBi5mgSyyd3jQZ
+ xEo5sTR7T8UhLJk1GOkGUxv0dUiMp3fQ8ANdpf3zO4nox5cr56qoNKuzWY8ZjudvMsrg7gw/3
+ 5BlNOo6DoxMd5OzDRgaXXEht3oRST9umn+9WU4HKVEGcjJHsxlMG9394naDrDaMmRmnsa9Fjs
+ U+U4HciMWGkFI9CAJ1UZzunqT56R/ngnqIQbmgLctn7Ds9k1PBj7KYdzc5SxVAqu2P5vf69P+
+ 5s4IGfTtIXskEft6YUOIFz8I5wW5jrBkiFF1Sy9KWmO+M9M5An4H0uqtfTNvJYNmwAlxgM6YE
+ oHxFB1SB9LR8b0enkJDUl3IP+c9SvO8HlhF2RHf3Tp/G9hmsI21jsaN6mMtb5fkbkPV/mPrTf
+ TXF4lrIgIyKIz8=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix tag len error for sta_rec_wtbl, which causes fw parsing error for
-the tags placed behind it.
+Hi Shawn,
 
-Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based
-chipsets")
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 09.09.21 04:20, Shawn Guo wrote:
+> On Wed, Sep 08, 2021 at 07:08:06AM +0200, Soeren Moch wrote:
+>> Hi Shawn,
+>>
+>> On 08.09.21 03:00, Shawn Guo wrote:
+>>> Hi Soeren,
+>>>
+>>> On Tue, Sep 07, 2021 at 09:22:52PM +0200, Soeren Moch wrote:
+>>>> On 25.04.21 13:02, Shawn Guo wrote:
+>>>>> Instead of aborting country code setup in firmware, use ISO3166 coun=
+try
+>>>>> code and 0 rev as fallback, when country_codes mapping table is not
+>>>>> configured.  This fallback saves the country_codes table setup for r=
+ecent
+>>>>> brcmfmac chipsets/firmwares, which just use ISO3166 code and require=
+ no
+>>>>> revision number.
+>>>> This patch breaks wireless support on RockPro64. At least the access
+>>>> point is not usable, station mode not tested.
+>>>>
+>>>> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4359/9 wl0: Mar=C2=A0 6=
+ 2017
+>>>> 10:16:06 version 9.87.51.7 (r686312) FWID 01-4dcc75d9
+>>>>
+>>>> Reverting this patch makes the access point show up again with linux-=
+5.14 .
+>>> Sorry for breaking your device!
+>>>
+>>> So it sounds like you do not have country_codes configured for your
+>>> BCM4359/9 device, while it needs particular `rev` setup for the ccode
+>>> you are testing with.  It was "working" likely because you have a stat=
+ic
+>>> `ccode` and `regrev` setting in nvram file.
+>> It always has been a mystery to me how country codes are configured for
+>> this device. Before I read your patch I did not even know that a
+>> translation table is required. Is there some documentation how this is
+>> supposed to work? Not sure if this makes a difference, BCM4359/9 is a
+>> Cypress device I think, I added mainline support for it some time ago.
+> One way to add the translation table is using DT.  You can find more
+> info and example in following commits:
+>
+> b41936227078 ("dt-bindings: bcm4329-fmac: add optional brcm,ccode-map")
+> 1a3ac5c651a0 ("brcmfmac: support parse country code map from DT")
+OK, thanks.
+When one way is to use DT, what is the 'traditional way' to add such table=
+?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index da40be8daa6e..fa4a98e59f77 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -607,7 +607,7 @@ mt7915_mcu_alloc_wtbl_req(struct mt7915_dev *dev, struct mt7915_sta *msta,
- 	}
- 
- 	if (sta_hdr)
--		sta_hdr->len = cpu_to_le16(sizeof(hdr));
-+		le16_add_cpu(&sta_hdr->len, sizeof(hdr));
- 
- 	return skb_put_data(nskb, &hdr, sizeof(hdr));
- }
--- 
-2.25.1
+And maybe the more interesting question, where can these settings be
+obtained from? The tweaked device specific settings probably from the
+device vendor, good luck!
+But the general country specific settings, as you are obviously
+interested in with your trivial mapping, shouldn't they go into driver
+directly? Only to be overruled when device specific settings are
+available via DT? And of course only for device/firmware combinations
+that support this general mapping, so that other devices with 'unknown
+mapping' are not broken by this enhancement?
+>> I have installed different firmware files, brcmfmac4359-sdio.clm_blob,
+>> brcmfmac4359-sdio.bin, brcmfmac4359-sdio.txt, the latter also linked as
+>> brcmfmac4359-sdio.pine64,rockpro64-2.1.txt. This probably is the nvram
+>> file. ccode and regrev are set to zero, which probably means
+>> 'international save settings".
+> I'm not sure how this 'international save settings' works for brcmfmac
+> devices.  Do you have more info or any pointers?
+The correct term in this context probably is 'world regulatory domain',
+the most restrictive wifi settings that can be used all over the world.
+This usually is taken as default by cfg80211, apparently also for
+(some?) brcmfmac devices/firmwares.
+
+These 'world' settings can be replaced by more permissive country
+specific regulatory domain settings, but for brcmfmac devices this seems
+to be firmware specific and requires this country mapping.
+
+I have seen a country code "00" for the world regulatory domain in the
+past, not sure if this is standard or a device/driver/software specific
+hack and if this can be used for brcmfmac (mapping from string "00" to
+country_code=3D0 ?). For sure here are more experienced wifi developers
+who know better.
+>>> But roaming to a different
+>>> region will mostly get you a broken WiFi support.  Is it possible to s=
+et
+>>> up the country_codes for your device to get it work properly?
+>> In linux-5.13 it worked, probably with save settings (not all channels
+>> selectable, limited tx power), with linux-5.14 it stopped working, so i=
+t
+>> is a regression.
+>> I personally would like to learn how all this is configured properly.
+>> For general use I think save settings are better than no wifi at all
+>> with this patch. This fallback to ISO CC seams to work with newer
+>> (Synaptics?) devices only.
+> I do not mind you send a reverting if you have problem to add a proper
+> translation table for your device.  But that would mean I have to add
+> a pretty "meaningless" translation table for my devices :(
+>
+Is this not the usual DT policy, that missing optional properties should
+not prevent a device to work, that old dtbs should still work when new
+properties are added?
+
+I'm not sure what's the best way forward. A plain revert of this patch
+would at least bring back wifi support for RockPro64 devices with
+existing dtbs. Maybe someone else has a better proposal how to proceed.
+
+Regards,
+Soeren
 
