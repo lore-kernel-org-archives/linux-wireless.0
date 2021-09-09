@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6F6C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E4C9C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2469D6115A
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 275816113A
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344100AbhIIM0d (ORCPT
+        id S1350519AbhIIM0i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:26:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58736 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:26:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33210 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345646AbhIIMWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:22:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C309361AF9;
-        Thu,  9 Sep 2021 11:50:59 +0000 (UTC)
+        id S1349582AbhIIMWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:22:49 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3090E61AD1;
+        Thu,  9 Sep 2021 11:51:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188260;
-        bh=YSgzmEAdQE7tXJ2RhuZPDeRbSkGlOH9uX5878HXAkE4=;
+        s=k20201202; t=1631188262;
+        bh=v2eAQalN9+dq+alzkTjatiitCku3D0+kDsMpTGOhSng=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iIZGxhe/Lhpkc+BAfSb5yuVL9W7/YnBH5TLD359NFcEjm6bo7fBTAT9KQudtI6xXD
-         z0D42GHweLPm4yfMT0MbCRifBlcCBzWf004KUEg2skolTx3XIn3hvVNSDBNir8E2iG
-         5p5AoBvhRA7P64maS3b9vrF0OXhGa/JTHdXevEDGljEDWhhZpDJ/Vqp6ISEonosJ2O
-         HT6vjRBY1CRgB2G9D/wDja8fG2MYys005m3M2ojzeo0xhsCweHpSr2TPmxBvPBlsBV
-         HqRZFu1h67JCN3xJ3PPyEIw+BlCr/8lM59+NnaplvauoFjZtK+RwuKqxftQUuvyzMi
-         VoaBMlwMA7NOw==
+        b=bCfB9le2MP5Z3mE+A5CGD3qW+Pnesf72tMRdfcllXedc+4yfri2ToBppbcvSCSKtm
+         RpppTj6eyBVhRBQwwb5FzzNu4ha4Nrj6hawM19y6wCJ9/vcE5FvDCV/OpWR1E/vjZc
+         qyHr+R2SbEAieBqDkMIderBgZWXcKd/GrNk0mbHa+UqUMbouTK/mTCr7mzTKsupTUN
+         wZDUYl6SjKAvmPzLQhBrP/hM06ttil4jHiXr2nM1QxywAiyQ979QrBrl2SXoZMPLab
+         l0ukxT457UoiiF4If29WzZXwUcOCP1MMg8aO/f0EpmJJMUUxMdTDNv0tQ2bdCuT8cT
+         c6BJMaGk1nG7Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 206/219] iwlwifi: mvm: fix access to BSS elements
-Date:   Thu,  9 Sep 2021 07:46:22 -0400
-Message-Id: <20210909114635.143983-206-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 208/219] iwlwifi: mvm: Fix scan channel flags settings
+Date:   Thu,  9 Sep 2021 07:46:24 -0400
+Message-Id: <20210909114635.143983-208-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
 References: <20210909114635.143983-1-sashal@kernel.org>
@@ -52,49 +52,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 6c608cd6962ebdf84fd3de6d42f88ed64d2f4e1b ]
+[ Upstream commit 090f1be3abf3069ef856b29761f181808bf55917 ]
 
-BSS elements are protected using RCU, so we need to use
-RCU properly to access them, fix that.
+The iwl_mvm_scan_ch_n_aps_flag() is called with a variable
+before the value of the variable is set. Fix it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210805130823.fd8b5791ab44.Iba26800a6301078d3782fb249c476dd8ac2bf3c6@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210826224715.f6f188980a5e.Ie7331a8b94004d308f6cbde44e519155a5be91dd@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 141d9fc299b0..6981608ef165 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2987,16 +2987,20 @@ static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
- 						    void *_data)
- {
- 	struct iwl_mvm_he_obss_narrow_bw_ru_data *data = _data;
-+	const struct cfg80211_bss_ies *ies;
- 	const struct element *elem;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 3627de2af344..ee3aff8bf7c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1648,7 +1648,7 @@ iwl_mvm_umac_scan_cfg_channels_v6(struct iwl_mvm *mvm,
+ 		struct iwl_scan_channel_cfg_umac *cfg = &cp->channel_config[i];
+ 		u32 n_aps_flag =
+ 			iwl_mvm_scan_ch_n_aps_flag(vif_type,
+-						   cfg->v2.channel_num);
++						   channels[i]->hw_value);
  
--	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, bss->ies->data,
--				  bss->ies->len);
-+	rcu_read_lock();
-+	ies = rcu_dereference(bss->ies);
-+	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
-+				  ies->len);
- 
- 	if (!elem || elem->datalen < 10 ||
- 	    !(elem->data[10] &
- 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
- 		data->tolerated = false;
- 	}
-+	rcu_read_unlock();
- }
- 
- static void iwl_mvm_check_he_obss_narrow_bw_ru(struct ieee80211_hw *hw,
+ 		cfg->flags = cpu_to_le32(flags | n_aps_flag);
+ 		cfg->v2.channel_num = channels[i]->hw_value;
 -- 
 2.30.2
 
