@@ -2,101 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01418C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31F30C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 14:48:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF4BB60555
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:43:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C7E761167
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 14:48:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344322AbhIINoH (ORCPT
+        id S242833AbhIIOtK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 09:44:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42302 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351834AbhIIMrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:47:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 817D363220;
-        Thu,  9 Sep 2021 11:56:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188589;
-        bh=Jqb7XaWOx11p37FMvH/ReA+WJNCzFGBf3lqGQwH79gI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=movnjE+IYV+9GnWIiFM5ZIMa66cHmb9QnNzBrSNvar5/oYJUFS+tdsjoalWd8/810
-         LnIY4LlEGe1fjJHUc18mSUH6iCNUBhw7V2oMGMBHxFj+NQFBALxt9SwvNjGG5faY6C
-         3wBfSDt3t+fu05F3tnG4czWNRRIQsuYKrbIP8GXTyv0VfgAdpVkT6XOAWeGDSZziXA
-         Eku1KLX0ubgpOd1m2723DiFkCAlS8TdZ6667Vr8M/YVTfJ+ARlPsFvnFBe+d93Fbvd
-         QEPKCSGFEr0RSnKH2yLRUdhM96aAIU2S/v4aCXiteAz9FIkqPWiZacnHYX7x0bSl+X
-         W9/i+WPKjWUrw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johan Almbladh <johan.almbladh@anyfinetworks.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 064/109] mac80211: Fix monitor MTU limit so that A-MSDUs get through
-Date:   Thu,  9 Sep 2021 07:54:21 -0400
-Message-Id: <20210909115507.147917-64-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909115507.147917-1-sashal@kernel.org>
-References: <20210909115507.147917-1-sashal@kernel.org>
+        Thu, 9 Sep 2021 10:49:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241922AbhIIOtC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 10:49:02 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E87CC0613CF
+        for <linux-wireless@vger.kernel.org>; Thu,  9 Sep 2021 07:42:38 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id n7-20020a05600c3b8700b002f8ca941d89so1588804wms.2
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Sep 2021 07:42:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=dv1391ZJpfbE5d0G7Ee4lP1GAG4bmKBnL172I+Jvp+o=;
+        b=yx1anUGKM1bVMqtRxTVz2c9uv/c5eepSPWVza6fb56AEOQKDjdbJt9ybEgWM+F6fjw
+         7B1TfxSr4YlcrsZgSbEf5FLipKIgbccINxlLvbKVuznOl5UrvVIKU6GfiWT9GlG1/7oO
+         uoKUDs+NKZEyiees65Qf91vm4IMImVR7zyC8UUpz8d6wg7nqINb2YmOqjxz71Lk13OFU
+         D/KHz8D8Xubo4b7zYcbnr3QuUYkpLRXsQ/8Xz8+6EMAotw3Ef3l4radTl2LKRIgw2QiZ
+         +DtfNZ4IuJi9vL7mFjFuDgt3+rR7OZ3QVVN3b+z/Zvs5f3GQOJyI/qwOGdGc3PCcj1rj
+         AFHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=dv1391ZJpfbE5d0G7Ee4lP1GAG4bmKBnL172I+Jvp+o=;
+        b=n+Ys6mKIx9sciWDW+hlty3Pdn36VNe9PQ6IovQvEYK0oveWFWISUxpsnikcYQG6+h5
+         8IDfGZgRDr4W5ZKQXJsFZ5i+torMsdrg85i7rEARTmAuNjWAbod7M3Efujlg3dmGcwTN
+         KMj6y7zcVkTg70VTfG0h5YtR9CBYJ+ekitbeXn1V9wC7aPwa//8hK4PsH3CKfrsJ19lh
+         KQI+DqqrmcWIov5glELszXFqsHXOzhzfvhhKXW3O5RKfK4r2wEpL3i/S8iqOCnZCvoUG
+         /YIMpwAAmvUANQ13Piu57Ls5lEum6y+/m/4Bt6VHJP3WWgpplfD6TbWZhtFuALvBCVKD
+         JuBw==
+X-Gm-Message-State: AOAM5336gQrftyfyT96YI04lgwKS/+vRU3dqAUNWALb3phwaDvRVW92P
+        FZIjRcqY4Vb/0Eu/7vM7HvkDTQ==
+X-Google-Smtp-Source: ABdhPJwkyR2b4kW0YuyrMm3U9DmfMAuRHnr1FXYsAZGo70VZP0wb0huf52hywhfQ8jJ7mdR5wl75vw==
+X-Received: by 2002:a7b:ce91:: with SMTP id q17mr3359386wmj.25.1631198556926;
+        Thu, 09 Sep 2021 07:42:36 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id k29sm1160712wms.24.2021.09.09.07.42.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Sep 2021 07:42:36 -0700 (PDT)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        wcn36xx@lists.infradead.org
+Cc:     loic.poulain@linaro.org, benl@squareup.com,
+        bryan.odonoghue@linaro.org
+Subject: [PATCH v2 2/2] wcn36xx: Add ability for wcn36xx_smd_dump_cmd_req to pass two's complement
+Date:   Thu,  9 Sep 2021 15:44:28 +0100
+Message-Id: <20210909144428.2564650-3-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20210909144428.2564650-1-bryan.odonoghue@linaro.org>
+References: <20210909144428.2564650-1-bryan.odonoghue@linaro.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johan Almbladh <johan.almbladh@anyfinetworks.com>
+Qcom documents suggest passing of negative values to the dump command,
+however currently we convert from string to u32 not s32, so we cannot pass
+a two's complement value to the firmware in this way.
 
-[ Upstream commit 79f5962baea74ce1cd4e5949598944bff854b166 ]
+There is in fact only one parameter which takes a two's complement value
+<tigger threshold> in the antenna diversity switch command.
 
-The maximum MTU was set to 2304, which is the maximum MSDU size. While
-this is valid for normal WLAN interfaces, it is too low for monitor
-interfaces. A monitor interface may receive and inject MPDU frames, and
-the maximum MPDU frame size is larger than 2304. The MPDU may also
-contain an A-MSDU frame, in which case the size may be much larger than
-the MTU limit. Since the maximum size of an A-MSDU depends on the PHY
-mode of the transmitting STA, it is not possible to set an exact MTU
-limit for a monitor interface. Now the maximum MTU for a monitor
-interface is unrestricted.
+Downstream:
+iwpriv wlan0 dump 71 3 <schedule period> <trigger threshold> <hysteresis value>
 
-Signed-off-by: Johan Almbladh <johan.almbladh@anyfinetworks.com>
-Link: https://lore.kernel.org/r/20210628123246.2070558-1-johan.almbladh@anyfinetworks.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Upstream:
+echo "71 3 <schedule period> <trigger threshold> <hysteresis value>" > /sys/kernel/debug/ieee80211/phy0/wcn36xx/dump
+
+Fixes: 8e84c2582169 ("wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware")
+Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- net/mac80211/iface.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6f576306a4d7..ddc001ad9055 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1875,9 +1875,16 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+index 389b5e7129a6..6af306ae41ad 100644
+--- a/drivers/net/wireless/ath/wcn36xx/debug.c
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -120,7 +120,7 @@ static ssize_t write_file_dump(struct file *file,
+ 		if (begin == NULL)
+ 			break;
  
- 		netdev_set_default_ethtool_ops(ndev, &ieee80211_ethtool_ops);
+-		if (kstrtou32(begin, 0, &arg[i]) != 0)
++		if (kstrtos32(begin, 0, &arg[i]) != 0)
+ 			break;
+ 	}
  
--		/* MTU range: 256 - 2304 */
-+		/* MTU range is normally 256 - 2304, where the upper limit is
-+		 * the maximum MSDU size. Monitor interfaces send and receive
-+		 * MPDU and A-MSDU frames which may be much larger so we do
-+		 * not impose an upper limit in that case.
-+		 */
- 		ndev->min_mtu = 256;
--		ndev->max_mtu = local->hw.max_mtu;
-+		if (type == NL80211_IFTYPE_MONITOR)
-+			ndev->max_mtu = 0;
-+		else
-+			ndev->max_mtu = local->hw.max_mtu;
- 
- 		ret = register_netdevice(ndev);
- 		if (ret) {
 -- 
-2.30.2
+2.33.0
 
