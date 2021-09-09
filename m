@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A787CC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C8FC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 923A460FC0
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 877156103D
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348085AbhIIMn3 (ORCPT
+        id S1347669AbhIIMnd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:43:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46130 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:43:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46118 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354811AbhIIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1354810AbhIIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 9 Sep 2021 08:39:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ABD9E61BD2;
-        Thu,  9 Sep 2021 11:54:49 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ADFBC61BE4;
+        Thu,  9 Sep 2021 11:54:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188490;
-        bh=BXcgJ5FGrSa1vP6CBtltDNlV8URBJBSRWoUnZO/prXY=;
+        s=k20201202; t=1631188485;
+        bh=BZrkluB2099K/J1qS8KSKoiffuQQBK2F02rugxMspQk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cXDmHwUXyhUsP6lwUTsfUe+Um5Dxew62CPaMVFgfQXhd9jXCCBFWYYaRwnGG4uK0B
-         RbWvGwgaeKMfTzIf7+0GsuVE5ePqP+xYO9+Ds0r+AmKsQNE+4urpZUVMxLF2Px33zD
-         9MGASox2H8MhkE2YH8DcOUXtY9z7woybCrIgW42MNeF+pbn0gcngtH/HcrdQAS6X0B
-         3BIBDLkQyU4Ub/w7Glhog0vO8H+vwBxu8Weu/UYfsqPjc5fLDk4SiaDQVBZIFNnMXb
-         aSGNl3jgN8UwRN3dn7sRyxV6gDdUHcf7H70xqWuuoI6ACsbdyAAEyditd6MS2ECYcB
-         fJXJ0ro5iKZPA==
+        b=CPAhG+6AjtrKPlyYZyP7G3Db5HkCbOXkYXAldfKwGonF1PWgHEJBrAz8wqTQ52NAw
+         9k7+wHtqBJzV8oR3o66NghWKUaGmQaeag2WDPN4WkGb8GsDJnZYPGoPZ9y6VmgOGIO
+         gTe2xyg/dFaLhTqDzbwsfuuOzsRcYotUXcKiZyjkegDK2fTMjeJtnoYuKUKSkulaQM
+         JC/ntjByvoTRUzSaWfL0dG9nONsd4usXpFd1zOtqv8h0vv4mLLeCUdYQl0joEhWKEk
+         tHZUled7eh37NyXd8j6dLvjbC5viujhXu45tv9Qh2axuMeiK6RrGPq9UIeIOa74u6t
+         mwFN1pBItaygg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 164/176] iwlwifi: fw: correctly limit to monitor dump
-Date:   Thu,  9 Sep 2021 07:51:06 -0400
-Message-Id: <20210909115118.146181-164-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 160/176] iwlwifi: pcie: free RBs during configure
+Date:   Thu,  9 Sep 2021 07:51:02 -0400
+Message-Id: <20210909115118.146181-160-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
 References: <20210909115118.146181-1-sashal@kernel.org>
@@ -54,36 +54,64 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit e6344c060209ef4e970cac18adeac1676a2a73cd ]
+[ Upstream commit 6ac5720086c8b176794eb74c5cc09f8b79017f38 ]
 
-In commit 79f033f6f229 ("iwlwifi: dbg: don't limit dump decisions
-to all or monitor") we changed the code to pass around a bitmap,
-but in the monitor_only case, one place accidentally used the bit
-number, not the bit mask, resulting in CSR and FW_INFO getting
-dumped instead of monitor data. Fix that.
+When switching op-modes, or more generally when reconfiguring,
+we might switch the RB size. In _iwl_pcie_rx_init() we have a
+comment saying we must free all RBs since we might switch the
+size, but this is actually too late: the switch has been done
+and we'll free the buffers with the wrong size.
+
+Fix this by always freeing the buffers, if any, at the start
+of configure, instead of only after the size may have changed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210805141826.774fd8729a33.Ic985a787071d1c0b127ef0ba8367da896ee11f57@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210802170640.42d7c93279c4.I07f74e65aab0e3d965a81206fcb289dc92d74878@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 5 ++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index ab4a8b942c81..419eaa5cf0b5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2303,7 +2303,7 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
- 		return;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 94299f259518..2c13fa8f2820 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -544,6 +544,9 @@ void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int i;
  
- 	if (dump_data->monitor_only)
--		dump_mask &= IWL_FW_ERROR_DUMP_FW_MONITOR;
-+		dump_mask &= BIT(IWL_FW_ERROR_DUMP_FW_MONITOR);
++	if (!trans_pcie->rx_pool)
++		return;
++
+ 	for (i = 0; i < RX_POOL_SIZE(trans_pcie->num_rx_bufs); i++) {
+ 		if (!trans_pcie->rx_pool[i].page)
+ 			continue;
+@@ -1094,7 +1097,7 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	INIT_LIST_HEAD(&rba->rbd_empty);
+ 	spin_unlock(&rba->lock);
  
- 	fw_error_dump.trans_ptr = iwl_trans_dump_data(fwrt->trans, dump_mask);
- 	file_len = le32_to_cpu(dump_file->file_len);
+-	/* free all first - we might be reconfigured for a different size */
++	/* free all first - we overwrite everything here */
+ 	iwl_pcie_free_rbs_pool(trans);
+ 
+ 	for (i = 0; i < RX_QUEUE_SIZE; i++)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bb990be7c870..082768ec8aa8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1909,6 +1909,9 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	/* free all first - we might be reconfigured for a different size */
++	iwl_pcie_free_rbs_pool(trans);
++
+ 	trans->txqs.cmd.q_id = trans_cfg->cmd_queue;
+ 	trans->txqs.cmd.fifo = trans_cfg->cmd_fifo;
+ 	trans->txqs.cmd.wdg_timeout = trans_cfg->cmd_q_wdg_timeout;
 -- 
 2.30.2
 
