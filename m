@@ -5,45 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB632C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E2BC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C31C961205
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 215B960F45
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356163AbhIIMxO (ORCPT
+        id S1352851AbhIIMx0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:53:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55858 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:53:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40984 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1355101AbhIIMlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:41:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D2EA461BF5;
-        Thu,  9 Sep 2021 11:54:59 +0000 (UTC)
+        id S1354484AbhIIMvK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:51:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F4DB63242;
+        Thu,  9 Sep 2021 11:57:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188500;
-        bh=b8uqT+IdXHTCWdfTeDRGw60YPedOurUWpACJtIdz0jA=;
+        s=k20201202; t=1631188636;
+        bh=tKk3M5hdu0SivRmHrP4r5yAGD7NV+BEosnEsay9gu6c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I4pnuuYyWvcvwXDOYHJ/bG4lq+23Uadhtatwnix1+t+R1wEfpZQXZrneizMAm8sGQ
-         o3WDVN8xcMzogYEfsaadcdWvNHFf75UK1TciBEw4SepYAskK3lMH4d442DP5GyaEuw
-         oPeqEg5TwXILjDpD2I9Wa+Cod3uRkNgETBCl0D6Yi+flwLYDSjmON6ZbBmk94VucoU
-         DGWGYS7HnuVD0j4F6e4MSHTOapaLfWPW/jqAKlOc56C+hMjEtSoke8oqqA6L6MaG/0
-         CnePoQCXci5IRzFXCdjSl8DS94NqfnZC69kBv5amrV0EYwf49CArodAqaouyEuUt5f
-         f4j9LSxn79Wvg==
+        b=Ggd6xxaEr8sC70xrg7QMsy2h6ULYjOvlFws6wYKEFxMdZQqduS76Lqg9gXU3CaAy+
+         6r56Eroh5QLtXPXsaFqnx3eYocZuA5DFGptQaPaIBXI8MxTnLwb87lsnnTVaXJLz2w
+         T7FuEJOAK8BmJW/0RodTipDsWgg/9D05HwRUcOthaTJLyxVQI3hE/tCQ+mYnyTlQaB
+         NoDb2J6iALStTXxGVv5HfvvhZQpHAUm+EjhHaiVEBb2ONeNyOrKyuGycXYtgpeBVYY
+         qCLFnBBGHAoEpjoO/pu8NbMsZu9KyaBAzatzb6OHrKmUgabTBqoAhXyqoKIX0W/8yT
+         rdTD9dPo2dwYw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 172/176] ath9k: fix sleeping in atomic context
-Date:   Thu,  9 Sep 2021 07:51:14 -0400
-Message-Id: <20210909115118.146181-172-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 102/109] iwlwifi: mvm: fix access to BSS elements
+Date:   Thu,  9 Sep 2021 07:54:59 -0400
+Message-Id: <20210909115507.147917-102-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
-References: <20210909115118.146181-1-sashal@kernel.org>
+In-Reply-To: <20210909115507.147917-1-sashal@kernel.org>
+References: <20210909115507.147917-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,67 +52,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 7c48662b9d56666219f526a71ace8c15e6e12f1f ]
+[ Upstream commit 6c608cd6962ebdf84fd3de6d42f88ed64d2f4e1b ]
 
-The problem is that gpio_free() can sleep and the cfg_soc() can be
-called with spinlocks held. One problematic call tree is:
+BSS elements are protected using RCU, so we need to use
+RCU properly to access them, fix that.
 
---> ath_reset_internal() takes &sc->sc_pcu_lock spin lock
-   --> ath9k_hw_reset()
-      --> ath9k_hw_gpio_request_in()
-         --> ath9k_hw_gpio_request()
-            --> ath9k_hw_gpio_cfg_soc()
-
-Remove gpio_free(), use error message instead, so we should make sure
-there is no GPIO conflict.
-
-Also remove ath9k_hw_gpio_free() from ath9k_hw_apply_gpio_override(),
-as gpio_mask will never be set for SOC chips.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1628481916-15030-1-git-send-email-miaoqing@codeaurora.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210805130823.fd8b5791ab44.Iba26800a6301078d3782fb249c476dd8ac2bf3c6@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c86faebbc459..6b2668f065d5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1622,7 +1622,6 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
- 		ath9k_hw_gpio_request_out(ah, i, NULL,
- 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
--		ath9k_hw_gpio_free(ah, i);
- 	}
- }
- 
-@@ -2730,14 +2729,17 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
- static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
- 				  const char *label)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 09b1a6beee77..081cbc9ec736 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2970,16 +2970,20 @@ static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
+ 						    void *_data)
  {
-+	int err;
-+
- 	if (ah->caps.gpio_requested & BIT(gpio))
- 		return;
+ 	struct iwl_mvm_he_obss_narrow_bw_ru_data *data = _data;
++	const struct cfg80211_bss_ies *ies;
+ 	const struct element *elem;
  
--	/* may be requested by BSP, free anyway */
--	gpio_free(gpio);
--
--	if (gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label))
-+	err = gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label);
-+	if (err) {
-+		ath_err(ath9k_hw_common(ah), "request GPIO%d failed:%d\n",
-+			gpio, err);
- 		return;
-+	}
+-	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, bss->ies->data,
+-				  bss->ies->len);
++	rcu_read_lock();
++	ies = rcu_dereference(bss->ies);
++	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
++				  ies->len);
  
- 	ah->caps.gpio_requested |= BIT(gpio);
+ 	if (!elem || elem->datalen < 10 ||
+ 	    !(elem->data[10] &
+ 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
+ 		data->tolerated = false;
+ 	}
++	rcu_read_unlock();
  }
+ 
+ static void iwl_mvm_check_he_obss_narrow_bw_ru(struct ieee80211_hw *hw,
 -- 
 2.30.2
 
