@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7543CC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 159DFC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59A3B60FE3
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1D466115B
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352802AbhIIM0V (ORCPT
+        id S1352869AbhIIM01 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:26:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33430 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:26:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57712 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351087AbhIIMW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:22:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9F8B961ABD;
-        Thu,  9 Sep 2021 11:51:09 +0000 (UTC)
+        id S1350433AbhIIMWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:22:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A501361ACE;
+        Thu,  9 Sep 2021 11:50:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188270;
-        bh=Uh4gAPJjL7EvxAYvjfESQ3h7Yip6zR0rBwfOQmMswjk=;
+        s=k20201202; t=1631188254;
+        bh=4waE5rk5InbcAiDlzUCB0X+a29DQNSAYUoca4lv1gNg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pYrC8L9h3qa3NnnyicPKd8kIFUm9YpDcf5LZDkY9gE5NtKGRvttZlidxvxBByxxqj
-         UjxaugT1RCLtxGWzor/kPYK6mwS43U7ALHBIN6ckzhWJBD3Vk79tUtXrH1RrkPmsli
-         WcI9yazVBcLH/4iwCxTuAQW5ix5DgNecMnBJBRQkjLUrF0PtPkt8o5PDRJp0j8hW4w
-         z5vJxpxCph/XuIcf4R5PkQqh6P/cbnbxWCRuvZielP1UbXTOVW72dskfgFGp6rTcBI
-         ng26EJV/1t89OLAeuKHx+y1ENhq9HRVrCsaM9p0STSP8edk7KWKDqBS9HFyxBsDm0M
-         RX63kHsLE6bcA==
+        b=Zw0lrbJDy6/Rgb4JElFZxj+bESglZ0pPt4w+XdzMxmvMZhp4vMh6dZSoNhcZi4kOx
+         27qS9mTlYimnaBKLeiWRpO/6OiYlBumFlVjZLUzxLwEu3si4ZrC6vm8Q+LdNZ62aF6
+         nOBl/NKNGjFPs3KIAqM46CEgkQVFF2AET/S8/EIr8jJRPwyY5c1dDq6uCe8UmxhFRn
+         1uAO5AEb3xADhRNF6LOSqFmRaPyLYQYZVmlRjASnKWWOiucSH+dvJNnBbyIIiHVsgu
+         QQE6LTNQFNH6W/t87qbeg4AMsA8d5O9MdShCyMy+FQmIf0WO6J9wjHN2Tl3JIz6cDz
+         2myh96R/E2Rog==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 214/219] ath9k: fix OOB read ar9300_eeprom_restore_internal
-Date:   Thu,  9 Sep 2021 07:46:30 -0400
-Message-Id: <20210909114635.143983-214-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 201/219] iwlwifi: pcie: free RBs during configure
+Date:   Thu,  9 Sep 2021 07:46:17 -0400
+Message-Id: <20210909114635.143983-201-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
 References: <20210909114635.143983-1-sashal@kernel.org>
@@ -52,46 +52,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 23151b9ae79e3bc4f6a0c4cd3a7f355f68dad128 ]
+[ Upstream commit 6ac5720086c8b176794eb74c5cc09f8b79017f38 ]
 
-Bad header can have large length field which can cause OOB.
-cptr is the last bytes for read, and the eeprom is parsed
-from high to low address. The OOB, triggered by the condition
-length > cptr could cause memory error with a read on
-negative index.
+When switching op-modes, or more generally when reconfiguring,
+we might switch the RB size. In _iwl_pcie_rx_init() we have a
+comment saying we must free all RBs since we might switch the
+size, but this is actually too late: the switch has been done
+and we'll free the buffers with the wrong size.
 
-There are some sanity check around length, but it is not
-compared with cptr (the remaining bytes). Here, the
-corrupted/bad EEPROM can cause panic.
+Fix this by always freeing the buffers, if any, at the start
+of configure, instead of only after the size may have changed.
 
-I was able to reproduce the crash, but I cannot find the
-log and the reproducer now. After I applied the patch, the
-bug is no longer reproducible.
-
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/YM3xKsQJ0Hw2hjrc@Zekuns-MBP-16.fios-router.home
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20210802170640.42d7c93279c4.I07f74e65aab0e3d965a81206fcb289dc92d74878@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c    | 5 ++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index b4885a700296..b0a4ca3559fd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3351,7 +3351,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 			"Found block at %x: code=%d ref=%d length=%d major=%d minor=%d\n",
- 			cptr, code, reference, length, major, minor);
- 		if ((!AR_SREV_9485(ah) && length >= 1024) ||
--		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485)) {
-+		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485) ||
-+		    (length > cptr)) {
- 			ath_dbg(common, EEPROM, "Skipping bad header\n");
- 			cptr -= COMP_HDR_LEN;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index fb8491412be4..586c4104edf2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -487,6 +487,9 @@ void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int i;
+ 
++	if (!trans_pcie->rx_pool)
++		return;
++
+ 	for (i = 0; i < RX_POOL_SIZE(trans_pcie->num_rx_bufs); i++) {
+ 		if (!trans_pcie->rx_pool[i].page)
  			continue;
+@@ -1093,7 +1096,7 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	INIT_LIST_HEAD(&rba->rbd_empty);
+ 	spin_unlock_bh(&rba->lock);
+ 
+-	/* free all first - we might be reconfigured for a different size */
++	/* free all first - we overwrite everything here */
+ 	iwl_pcie_free_rbs_pool(trans);
+ 
+ 	for (i = 0; i < RX_QUEUE_SIZE; i++)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 239bc177a3e5..a7a495dbf64d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1866,6 +1866,9 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	/* free all first - we might be reconfigured for a different size */
++	iwl_pcie_free_rbs_pool(trans);
++
+ 	trans->txqs.cmd.q_id = trans_cfg->cmd_queue;
+ 	trans->txqs.cmd.fifo = trans_cfg->cmd_fifo;
+ 	trans->txqs.cmd.wdg_timeout = trans_cfg->cmd_q_wdg_timeout;
 -- 
 2.30.2
 
