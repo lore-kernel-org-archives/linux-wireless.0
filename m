@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD39C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB297C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D27E6115B
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2D1C6115B
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 12:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351282AbhIIM0H (ORCPT
+        id S1352235AbhIIM0M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:26:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57788 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 08:26:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58740 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1350593AbhIIMWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:22:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 903ED61AEC;
-        Thu,  9 Sep 2021 11:50:58 +0000 (UTC)
+        id S1349031AbhIIMWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:22:49 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 00C2861AF0;
+        Thu,  9 Sep 2021 11:51:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188259;
-        bh=X+FLbjA7aUy6pDS2PfreaYIzs44DNysFpu7NLz6bn04=;
+        s=k20201202; t=1631188261;
+        bh=cp4aSFPOVoAmW7bC4hEc24SYlKqIiehUK6guMD+qXfs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gr2uoiNj9ogFWgjCFdHFHh4s7E2Z/nN2lz9Mz4rYq+FvqXb68N6n6+7ikqyJIwdxd
-         QkgG5ds90N1TEq3yS4xaObVHco0OfAUMCqQsSg7VwEOQ7ws+4iq7v7aQlr7cjTjuq1
-         4MycI/0DvvK+aapcbhDFTTpnoE8hjaDosaw5EuxSsTj6PzUMRbZIF7sQLDe+OGTVKb
-         PUIxITp44mpTgAqLsW5zMzC0F3rLIls2/NsroHU3YzrC9bYkZLjBD+cmixcvL3nkHZ
-         rui3q59Q09O2PEcqyFQyB4MoxdVw/+QzD4ZghCs1zJvv/BAk+6boFf8PkDJ/wIPiQO
-         dbhn+qVMIYeqw==
+        b=ddcDcU/h1TqqkLbwHtIdVpKvZMS+Bo4WKjfGJnCRsEvVx8BIGjMVOBpgRyQqV8gEp
+         oE5jYzUxBr4bGr+Zo0+qDyJEJpzNk8TJn2p+QCgL6ZDVGYOCaH52jx280LV7rOvZs6
+         IMXCQkBh0UR00hoEnUk49SJObHHJiyrHOolz/eVqzRoCemrEb54MdTVTN3jtAWWZD4
+         g7Y+R1NfVGr4prA6CBXwPaClgMnUpCuXAMdt7CMCLa9AmMYfFeDV6PNKjgtsirWRqo
+         qtS5fYbGY1Dr+9Y/1FAp7VGRxdKjPfLB0+aGkwfVzZyCHOd9WvCrHgzj/0Wkouqcu/
+         Q/bHomtcjEKrg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 205/219] iwlwifi: mvm: Fix umac scan request probe parameters
-Date:   Thu,  9 Sep 2021 07:46:21 -0400
-Message-Id: <20210909114635.143983-205-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 207/219] iwlwifi: fw: correctly limit to monitor dump
+Date:   Thu,  9 Sep 2021 07:46:23 -0400
+Message-Id: <20210909114635.143983-207-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
 References: <20210909114635.143983-1-sashal@kernel.org>
@@ -52,54 +52,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 35fc5feca7b24b97e828e6e6a4243b4b9b0131f8 ]
+[ Upstream commit e6344c060209ef4e970cac18adeac1676a2a73cd ]
 
-Both 'iwl_scan_probe_params_v3' and 'iwl_scan_probe_params_v4'
-wrongly addressed the 'bssid_array' field which should supposed
-to be any array of BSSIDs each of size ETH_ALEN and not the
-opposite. Fix it.
+In commit 79f033f6f229 ("iwlwifi: dbg: don't limit dump decisions
+to all or monitor") we changed the code to pass around a bitmap,
+but in the monitor_only case, one place accidentally used the bit
+number, not the bit mask, resulting in CSR and FW_INFO getting
+dumped instead of monitor data. Fix that.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20210802215208.04146f24794f.I90726440ddff75013e9fecbe9fa1a05c69e3f17b@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20210805141826.774fd8729a33.Ic985a787071d1c0b127ef0ba8367da896ee11f57@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index b2605aefc290..8b200379f7c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -874,7 +874,7 @@ struct iwl_scan_probe_params_v3 {
- 	u8 reserved;
- 	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX];
- 	__le32 short_ssid[SCAN_SHORT_SSID_MAX_SIZE];
--	u8 bssid_array[ETH_ALEN][SCAN_BSSID_MAX_SIZE];
-+	u8 bssid_array[SCAN_BSSID_MAX_SIZE][ETH_ALEN];
- } __packed; /* SCAN_PROBE_PARAMS_API_S_VER_3 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index cc4e18ca9566..a27849419d29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2314,7 +2314,7 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
+ 		return;
  
- /**
-@@ -894,7 +894,7 @@ struct iwl_scan_probe_params_v4 {
- 	__le16 reserved;
- 	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX];
- 	__le32 short_ssid[SCAN_SHORT_SSID_MAX_SIZE];
--	u8 bssid_array[ETH_ALEN][SCAN_BSSID_MAX_SIZE];
-+	u8 bssid_array[SCAN_BSSID_MAX_SIZE][ETH_ALEN];
- } __packed; /* SCAN_PROBE_PARAMS_API_S_VER_4 */
+ 	if (dump_data->monitor_only)
+-		dump_mask &= IWL_FW_ERROR_DUMP_FW_MONITOR;
++		dump_mask &= BIT(IWL_FW_ERROR_DUMP_FW_MONITOR);
  
- #define SCAN_MAX_NUM_CHANS_V3 67
+ 	fw_error_dump.trans_ptr = iwl_trans_dump_data(fwrt->trans, dump_mask);
+ 	file_len = le32_to_cpu(dump_file->file_len);
 -- 
 2.30.2
 
