@@ -2,105 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CACC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128D7C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:15:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBE4361132
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:10:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0AD260FE3
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 08:15:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230071AbhIIILa (ORCPT
+        id S230072AbhIIIQb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 04:11:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229492AbhIIILa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 04:11:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C13DB61167;
-        Thu,  9 Sep 2021 08:10:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631175021;
-        bh=X5pjz3HoJJpGJUfkusiSml7h57PTiGqR3UE1xQ7X6ho=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WUtKT1LgPQoKPnSnAWdpu4sVDjhxpjCZO4NdJGSuH8PKLlSoO0r4PCxRAm2i3WlOQ
-         xhl8skAS9mpgqx6oluMoKhaeUFo9yefP/qKaKCHH53CV+0yX2GUaOQ2jh31XNuJ4ds
-         kTUcq3doT+x/nmq/CdXoVNoMYul//GxoO1z8KhLYzVGPXEOfZaIAjDnXrBXfjkeHaK
-         7ykedJYZQFlPRnO5oSF6hRLE4Lsq2p9u5duENYOcaC0WPKkyF7mCFKUbuDA9B5F7m9
-         jqLg68R6ezeUheRPw6WBaKz3zAcg+PUMbLE8aa9y3yxRraUhUbtDE5cmFoOMQ7RTKi
-         P4Fp4VjvimeDQ==
-Date:   Thu, 9 Sep 2021 10:10:16 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
+        Thu, 9 Sep 2021 04:16:31 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:44730 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229876AbhIIIQb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 04:16:31 -0400
+X-UUID: 21fba95f4686407f8bbbf4b79701b451-20210909
+X-UUID: 21fba95f4686407f8bbbf4b79701b451-20210909
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1881140079; Thu, 09 Sep 2021 16:15:20 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 9 Sep 2021 16:15:19 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 9 Sep 2021 16:15:19 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76: mt7915: fix WMM index on DBDC cards
-Message-ID: <YTnBaNe0jA+rFUV+@lore-desk>
-References: <20210908155841.72052-1-nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH v4 7/8] mt76: mt7915: set VTA bit in tx descriptor
+Date:   Thu, 9 Sep 2021 16:15:11 +0800
+Message-ID: <20210909081512.5037-7-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210909081512.5037-1-shayne.chen@mediatek.com>
+References: <20210909081512.5037-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="fvK8rWg3jjBJdNxY"
-Content-Disposition: inline
-In-Reply-To: <20210908155841.72052-1-nbd@nbd.name>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+The VTA (Valid for Txd Arrival time) bit should be set in tx descriptor,
+which is necessary for WM fw to schedule SPL (station priority list)
+normally before generating txcmd.
+If it's not set, some unexpected wcids may be involved in SPL.
 
---fvK8rWg3jjBJdNxY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Suggested-by: Nelson Chang <nelson.chang@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> WMM index range needs to be split between both PHYs if a second PHY exist=
-s.
-> The condition for that was accidentally written as checking if the vif PHY
-> is the secondary one
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 1b8e37e265cb..497ae9935116 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1034,7 +1034,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
+ 	      FIELD_PREP(MT_TXD0_Q_IDX, q_idx);
+ 	txwi[0] = cpu_to_le32(val);
+ 
+-	val = MT_TXD1_LONG_FORMAT |
++	val = MT_TXD1_LONG_FORMAT | MT_TXD1_VTA |
+ 	      FIELD_PREP(MT_TXD1_WLAN_IDX, wcid->idx) |
+ 	      FIELD_PREP(MT_TXD1_OWN_MAC, omac_idx);
+ 
+-- 
+2.25.1
 
-We need to add the following Fixes tag here:
-
-Fixes: e57b7901469fc ("mt76: add mac80211 driver for MT7915 PCIe-based chip=
-sets")
-
-Regards,
-Lorenzo
-
->=20
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7915/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/n=
-et/wireless/mediatek/mt76/mt7915/main.c
-> index 748ea70ea12e..a19e68668c65 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-> @@ -215,7 +215,7 @@ static int mt7915_add_interface(struct ieee80211_hw *=
-hw,
->  	mvif->phy =3D phy;
->  	mvif->band_idx =3D ext_phy;
-> =20
-> -	if (ext_phy)
-> +	if (dev->mt76.phy2)
->  		mvif->wmm_idx =3D ext_phy * (MT7915_MAX_WMM_SETS / 2) +
->  				mvif->idx % (MT7915_MAX_WMM_SETS / 2);
->  	else
-> --=20
-> 2.30.1
->=20
-
---fvK8rWg3jjBJdNxY
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYTnBZQAKCRA6cBh0uS2t
-rIXtAQC9R+bE7bb8rxTT8GHQb9luGsyYm0fDvBsHqe/73+Y+mwEAvbDZZsUuou1c
-E4rRIH5tw1M792VZCaHdQGxkYL7sygU=
-=Vv4k
------END PGP SIGNATURE-----
-
---fvK8rWg3jjBJdNxY--
