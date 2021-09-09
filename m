@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C25F7C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01418C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:43:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB63B60E94
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF4BB60555
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 13:43:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357919AbhIINdR (ORCPT
+        id S1344322AbhIINoH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 09:33:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42450 "EHLO mail.kernel.org"
+        Thu, 9 Sep 2021 09:44:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42302 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1356260AbhIIM7A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:59:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5E2E163274;
-        Thu,  9 Sep 2021 11:58:54 +0000 (UTC)
+        id S1351834AbhIIMrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:47:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 817D363220;
+        Thu,  9 Sep 2021 11:56:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188735;
-        bh=XHmnESrehGGlAs3ls8IU5pXgsApA5DZLdX0Usn0sB9E=;
+        s=k20201202; t=1631188589;
+        bh=Jqb7XaWOx11p37FMvH/ReA+WJNCzFGBf3lqGQwH79gI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KMBNCT04RbGkaSJLdsfke6IWRiFaHV0pmzHMz3fs2UFCXgvx/Sq6Lio0jNixRKsA3
-         Prsplb/KJBWLnk/dZlFsbqQZxltFfkPrQnSIjgcS4mfgCPyJLSHWOo07mRh6pnFUy3
-         zBzxLtWePu+HdwdR4hQ9+jYi/sNIgX04By5QwdsV0kxG1kZEE/OzqiTMFXZkmQFJkY
-         2Q7tGp6ymfK7S1nQZalTkrpFyfU2bDfYSOh2PGel/2KKIBliA3yjx89d8bbdFOnuN2
-         FnrsXhXBnE+9jnd48gjUlzAgIGurIcaH2xC+GtwuzbSNOUtwZi/1Dr3vq43v7CXF+h
-         lJQrsn85R7aRw==
+        b=movnjE+IYV+9GnWIiFM5ZIMa66cHmb9QnNzBrSNvar5/oYJUFS+tdsjoalWd8/810
+         LnIY4LlEGe1fjJHUc18mSUH6iCNUBhw7V2oMGMBHxFj+NQFBALxt9SwvNjGG5faY6C
+         3wBfSDt3t+fu05F3tnG4czWNRRIQsuYKrbIP8GXTyv0VfgAdpVkT6XOAWeGDSZziXA
+         Eku1KLX0ubgpOd1m2723DiFkCAlS8TdZ6667Vr8M/YVTfJ+ARlPsFvnFBe+d93Fbvd
+         QEPKCSGFEr0RSnKH2yLRUdhM96aAIU2S/v4aCXiteAz9FIkqPWiZacnHYX7x0bSl+X
+         W9/i+WPKjWUrw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johan Almbladh <johan.almbladh@anyfinetworks.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 71/74] ath9k: fix OOB read ar9300_eeprom_restore_internal
-Date:   Thu,  9 Sep 2021 07:57:23 -0400
-Message-Id: <20210909115726.149004-71-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 064/109] mac80211: Fix monitor MTU limit so that A-MSDUs get through
+Date:   Thu,  9 Sep 2021 07:54:21 -0400
+Message-Id: <20210909115507.147917-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909115726.149004-1-sashal@kernel.org>
-References: <20210909115726.149004-1-sashal@kernel.org>
+In-Reply-To: <20210909115507.147917-1-sashal@kernel.org>
+References: <20210909115507.147917-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,46 +52,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Johan Almbladh <johan.almbladh@anyfinetworks.com>
 
-[ Upstream commit 23151b9ae79e3bc4f6a0c4cd3a7f355f68dad128 ]
+[ Upstream commit 79f5962baea74ce1cd4e5949598944bff854b166 ]
 
-Bad header can have large length field which can cause OOB.
-cptr is the last bytes for read, and the eeprom is parsed
-from high to low address. The OOB, triggered by the condition
-length > cptr could cause memory error with a read on
-negative index.
+The maximum MTU was set to 2304, which is the maximum MSDU size. While
+this is valid for normal WLAN interfaces, it is too low for monitor
+interfaces. A monitor interface may receive and inject MPDU frames, and
+the maximum MPDU frame size is larger than 2304. The MPDU may also
+contain an A-MSDU frame, in which case the size may be much larger than
+the MTU limit. Since the maximum size of an A-MSDU depends on the PHY
+mode of the transmitting STA, it is not possible to set an exact MTU
+limit for a monitor interface. Now the maximum MTU for a monitor
+interface is unrestricted.
 
-There are some sanity check around length, but it is not
-compared with cptr (the remaining bytes). Here, the
-corrupted/bad EEPROM can cause panic.
-
-I was able to reproduce the crash, but I cannot find the
-log and the reproducer now. After I applied the patch, the
-bug is no longer reproducible.
-
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/YM3xKsQJ0Hw2hjrc@Zekuns-MBP-16.fios-router.home
+Signed-off-by: Johan Almbladh <johan.almbladh@anyfinetworks.com>
+Link: https://lore.kernel.org/r/20210628123246.2070558-1-johan.almbladh@anyfinetworks.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/iface.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 983e1abbd9e4..4d45d5a8ad2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3351,7 +3351,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 			"Found block at %x: code=%d ref=%d length=%d major=%d minor=%d\n",
- 			cptr, code, reference, length, major, minor);
- 		if ((!AR_SREV_9485(ah) && length >= 1024) ||
--		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485)) {
-+		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485) ||
-+		    (length > cptr)) {
- 			ath_dbg(common, EEPROM, "Skipping bad header\n");
- 			cptr -= COMP_HDR_LEN;
- 			continue;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6f576306a4d7..ddc001ad9055 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1875,9 +1875,16 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 		netdev_set_default_ethtool_ops(ndev, &ieee80211_ethtool_ops);
+ 
+-		/* MTU range: 256 - 2304 */
++		/* MTU range is normally 256 - 2304, where the upper limit is
++		 * the maximum MSDU size. Monitor interfaces send and receive
++		 * MPDU and A-MSDU frames which may be much larger so we do
++		 * not impose an upper limit in that case.
++		 */
+ 		ndev->min_mtu = 256;
+-		ndev->max_mtu = local->hw.max_mtu;
++		if (type == NL80211_IFTYPE_MONITOR)
++			ndev->max_mtu = 0;
++		else
++			ndev->max_mtu = local->hw.max_mtu;
+ 
+ 		ret = register_netdevice(ndev);
+ 		if (ret) {
 -- 
 2.30.2
 
