@@ -2,222 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A09B1C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 15:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3946C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Sep 2021 05:39:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 711D361101
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Sep 2021 15:31:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAAAD610A4
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Sep 2021 05:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232656AbhIIPcl (ORCPT
+        id S230443AbhIJFlI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Sep 2021 11:32:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58944 "EHLO
+        Fri, 10 Sep 2021 01:41:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232359AbhIIPck (ORCPT
+        with ESMTP id S230324AbhIJFlH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Sep 2021 11:32:40 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE376C061574
-        for <linux-wireless@vger.kernel.org>; Thu,  9 Sep 2021 08:31:30 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id u16so3158541wrn.5
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Sep 2021 08:31:30 -0700 (PDT)
+        Fri, 10 Sep 2021 01:41:07 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 551CBC061574;
+        Thu,  9 Sep 2021 22:39:57 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id q68so833208pga.9;
+        Thu, 09 Sep 2021 22:39:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=6bcT8H0XxYOwPfG/ex8rhH7MU/535fM35JAq8iCTSoM=;
-        b=uanjnRZBU/oz1r5Bss7O464Ys4xNnm1ivBZYeLSt1FKixG552OIuOR/TMJMlPRW2zq
-         Ku1X9WRpDHYYBcYCmmjKFpAEuWGuFPbTDrieqXILNiWBodrFAodlhmDy1hhyDfb1lttG
-         euuDGfq5KnDcjrO7MwmcqibTM3949vQjo02/7uKSedftpFnoljmBrjvCn17RbxX2HjtA
-         ppydnhTmanFQ0yMJJzoKwakwPq+ygUz+/DMLA/8CvQrfmbeekWmoxrNghtgk4cFZIQrJ
-         Dps9mUBs/qjRDV5KHW+MRRNPZVLdixtUJnwtsMiLJDqctgwoXlbCxSBnD+0/npV7Ktlu
-         2rYw==
+        bh=vbOH6ll+rNRptf5bFlhufPxCFK/dpsvHD3JWD57fqWc=;
+        b=WGMmLd9Ckc6BmriCW8TMj9Nn19IF1+iwy9YH/ZeaLqX7IyTcJhfhg9SNrX1mWPVUMg
+         Pzn0DJMKOCA4NRNmwGpu01gYvZMf1XYoCPbkg2LgiFLCt7/0Ie6feJbOiDx+JE1qe4SW
+         Qpx8ifaZh79NGsqkPLgeJlFJZTVUKfSkjg5umE4xpTj+MxMxB45Knl6KwCDN0T6X8Qud
+         a2TngecUDOBQa47O7rTXn6hPL/I3ivBy9IZMZn69tEbdORJXvR3Ff1avNHjWrbyqRe0p
+         aUXRVkKC9GqtMaxYfKcMMoVW51Vvgu1uVuL3B/XUt3SrlFZcxqWLIEWN2fjgEJRdIxON
+         anSA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=6bcT8H0XxYOwPfG/ex8rhH7MU/535fM35JAq8iCTSoM=;
-        b=0oX5TrtQibLpwC2xZgnk7yRMntvcdaU4c2p0rImHbNLsUQYyAbMRmZWe+2C/cHMw9M
-         EoAsZ0o0i+9rJavBzjdARvnletzNNTHOTWS3XULRvmyNIA2n2p6GCXFdGt/PR5LU4+k2
-         UGHGhqDuduv5FrJA7tAS/CFRxnUffMPVjIQ37yv7r/1Fsed3f0qtRBzV88zFy2HMKMeU
-         mQ9nSJSicpbMggTk/loqkjhbn4ti41guSGHPVTJ6HA5eOgz+TLdCZhKwBMYXdgXMB8b1
-         uzIADO85qEsxunP1ma8MTXxKq976iUzTBPcgR1/rtdD80um1aJBzB5QrUgjiI0H1bPTP
-         HAbw==
-X-Gm-Message-State: AOAM532sK2FZs9G+ivyyab53lAMt5eQMdKgePpnm7lSa2a8D3bYiWJfm
-        /LXIJnyZMNAmF07rIyaLEtTaPw==
-X-Google-Smtp-Source: ABdhPJyUnNw9AirgAmvpQ8XRmbjEUpZI4c2M4sJ/i2j4UvI5T2jG7XOQsen3aJhQHbJndCvCOwTpaQ==
-X-Received: by 2002:adf:8b19:: with SMTP id n25mr4549458wra.216.1631201487554;
-        Thu, 09 Sep 2021 08:31:27 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id f5sm1856536wmb.47.2021.09.09.08.31.26
+        bh=vbOH6ll+rNRptf5bFlhufPxCFK/dpsvHD3JWD57fqWc=;
+        b=SF18NOqXTScRiRNTeiNiGzv4uqgbeMAlNuTWGEpgLw4RIkV/lw0XXETohfU3nAC2bt
+         KQF/py+JXg6wc8a+KwUs2+x1VD+I1iHu96o4SpvvDJkkJInsPchHNuAyJla0Ly1AxZvk
+         lildeOPjoqCeW4MfEXhhC25eD+XytJyV3pvonhjRAh3IHuj7FZxKyxrhSz2PVtETbx+P
+         bJ4AEhxY+1FsJpA0dHrQfFlLbU0Nsmy36UpJx8RO2yX2JwQLSuzjeVfZXToi9OrcZWoo
+         O4L5DO4ct0fDz5X4Y/Ov8yBnEWiOsb7GGLSHMxKFHDJ0LqY6E0B5PKk6+fW0RK9DMrGU
+         JmsQ==
+X-Gm-Message-State: AOAM533yZSoizai63KvhUYsTuaXMKkE0UAgJuj49KH2jlviBtue00Xzg
+        s/0KcfWUQAjCRbiiE+mgLq4=
+X-Google-Smtp-Source: ABdhPJwUp+hfHZCdHLBtXqHfk98qf4zhS80c0Fy1ZmZrMzoiU0SnfoJUXK6JF+1qENKyylogv39+XQ==
+X-Received: by 2002:aa7:9282:0:b0:3e2:800a:b423 with SMTP id j2-20020aa79282000000b003e2800ab423mr6378282pfa.21.1631252396876;
+        Thu, 09 Sep 2021 22:39:56 -0700 (PDT)
+Received: from linux-VirtualBox.. ([203.205.141.115])
+        by smtp.gmail.com with ESMTPSA id c24sm3980295pfd.145.2021.09.09.22.39.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Sep 2021 08:31:27 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        wcn36xx@lists.infradead.org
-Cc:     loic.poulain@linaro.org, benl@squareup.com,
-        bryan.odonoghue@linaro.org
-Subject: [PATCH] wcn36xx: Implement Idle Mode Power Save
-Date:   Thu,  9 Sep 2021 16:33:20 +0100
-Message-Id: <20210909153320.2624649-1-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.33.0
+        Thu, 09 Sep 2021 22:39:56 -0700 (PDT)
+From:   Xingbang Liu <liu.airalert@gmail.com>
+To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org, matthias.bgg@gmail.com
+Cc:     ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Xingbang Liu <liu.airalert@gmail.com>
+Subject: [PATCH] mt76: move spin_lock_bh to spin_lock in tasklet
+Date:   Fri, 10 Sep 2021 13:39:28 +0800
+Message-Id: <20210910053928.7254-1-liu.airalert@gmail.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Idle Mode Power Save (IMPS) is a power saving mechanism which when called
-by wcn36xx will cause the radio hardware to enter power collapse.
+as you are already in a tasklet, it is unnecessary to call spin_lock_bh.
 
-This particular call maps nicely to a simple conjunction/disjunction around
-IEEE80211_CONF_CHANGE_IDLE and IEEE80211_CONF_IDLE.
-
-Here we enter idle when we are not associated with an AP. The kernel will
-incrementally toggle idle on/off in the process of trying to establish a
-connection, thus saving power until we are connected to the AP again, at
-which point we give way to BMPS if power_save is on.
-
-We've validated that with IMPS an apq8039 device which has the wcn36xx
-module loaded but, has not authenticated with an AP will get to VMIN on
-suspend and will not without IMPS.
-
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Tested-by: Benjamin Li <benl@squareup.com>
+Signed-off-by: Xingbang Liu <liu.airalert@gmail.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h  |  6 +--
- drivers/net/wireless/ath/wcn36xx/main.c |  7 ++++
- drivers/net/wireless/ath/wcn36xx/smd.c  | 55 +++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h  |  3 ++
- 4 files changed, 68 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 455143c4164e..5f1f2480459a 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -3384,11 +3384,11 @@ struct tl_hal_flush_ac_rsp_msg {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+index b50084bbe83d..00b9d9efc5a9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+@@ -53,7 +53,7 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
+ 		mt76_skb_set_moredata(data.tail[i], false);
+ 	}
  
- struct wcn36xx_hal_enter_imps_req_msg {
- 	struct wcn36xx_hal_msg_header header;
--};
-+} __packed;
+-	spin_lock_bh(&q->lock);
++	spin_lock(&q->lock);
+ 	while ((skb = __skb_dequeue(&data.q)) != NULL) {
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		struct ieee80211_vif *vif = info->control.vif;
+@@ -61,7 +61,7 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
  
--struct wcn36xx_hal_exit_imps_req {
-+struct wcn36xx_hal_exit_imps_req_msg {
- 	struct wcn36xx_hal_msg_header header;
--};
-+} __packed;
- 
- struct wcn36xx_hal_enter_bmps_req_msg {
- 	struct wcn36xx_hal_msg_header header;
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 2561ae9cde65..412c629705a6 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -443,6 +443,13 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
- 	if (changed & IEEE80211_CONF_CHANGE_PS)
- 		wcn36xx_change_ps(wcn, hw->conf.flags & IEEE80211_CONF_PS);
- 
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+		if (hw->conf.flags & IEEE80211_CONF_IDLE)
-+			wcn36xx_smd_enter_imps(wcn);
-+		else
-+			wcn36xx_smd_exit_imps(wcn);
-+	}
-+
- 	mutex_unlock(&wcn->conf_mutex);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 57fa857b290b..599cb220b150 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2184,6 +2184,59 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- 	return ret;
+ 		mt76_tx_queue_skb(dev, q, skb, &mvif->group_wcid, NULL);
+ 	}
+-	spin_unlock_bh(&q->lock);
++	spin_unlock(&q->lock);
  }
  
-+int wcn36xx_smd_enter_imps(struct wcn36xx *wcn)
-+{
-+	struct wcn36xx_hal_enter_imps_req_msg msg_body;
-+	int ret;
-+
-+	mutex_lock(&wcn->hal_mutex);
-+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_IMPS_REQ);
-+
-+	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-+	if (ret) {
-+		wcn36xx_err("Sending hal_enter_imps failed\n");
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	if (ret) {
-+		wcn36xx_err("hal_enter_imps response failed err=%d\n", ret);
-+		goto out;
-+	}
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "Entered idle mode\n");
-+out:
-+	mutex_unlock(&wcn->hal_mutex);
-+	return ret;
-+}
-+
-+int wcn36xx_smd_exit_imps(struct wcn36xx *wcn)
-+{
-+	struct wcn36xx_hal_exit_imps_req_msg msg_body;
-+	int ret;
-+
-+	mutex_lock(&wcn->hal_mutex);
-+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_EXIT_IMPS_REQ);
-+
-+	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-+	if (ret) {
-+		wcn36xx_err("Sending hal_exit_imps failed\n");
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-+	if (ret) {
-+		wcn36xx_err("hal_exit_imps response failed err=%d\n", ret);
-+		goto out;
-+	}
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "Exited idle mode\n");
-+out:
-+	mutex_unlock(&wcn->hal_mutex);
-+	return ret;
-+}
-+
- int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
- {
- 	struct wcn36xx_hal_set_power_params_req_msg msg_body;
-@@ -3060,6 +3113,8 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 	case WCN36XX_HAL_GTK_OFFLOAD_RSP:
- 	case WCN36XX_HAL_GTK_OFFLOAD_GETINFO_RSP:
- 	case WCN36XX_HAL_HOST_RESUME_RSP:
-+	case WCN36XX_HAL_ENTER_IMPS_RSP:
-+	case WCN36XX_HAL_EXIT_IMPS_RSP:
- 		memcpy(wcn->hal_buf, buf, len);
- 		wcn->hal_rsp_len = len;
- 		complete(&wcn->hal_rsp_compl);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 75d1a6d663bb..dbca0bd1b6ae 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -165,4 +165,7 @@ int wcn36xx_smd_wlan_host_suspend_ind(struct wcn36xx *wcn);
- 
- int wcn36xx_smd_host_resume(struct wcn36xx *wcn);
- 
-+int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
-+int wcn36xx_smd_exit_imps(struct wcn36xx *wcn);
-+
- #endif	/* _SMD_H_ */
+ static void mt76x02e_pre_tbtt_enable(struct mt76x02_dev *dev, bool en)
 -- 
-2.33.0
+2.30.2
 
