@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB624C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA4AC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:29:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3E2A61221
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:26:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3A11613DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242225AbhIMN17 (ORCPT
+        id S241417AbhIMNaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Sep 2021 09:27:59 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:34170
+        Mon, 13 Sep 2021 09:30:30 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:33832
         "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236172AbhIMNZi (ORCPT
+        by vger.kernel.org with ESMTP id S240470AbhIMNV7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Sep 2021 09:25:38 -0400
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
+        Mon, 13 Sep 2021 09:21:59 -0400
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com [209.85.221.69])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id C78E14028E
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:21:06 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 25C914026E
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:20:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631539266;
-        bh=AKOLSiNotprej29rkzU07CereuPK7jDMwjY+iTyzzwA=;
+        s=20210705; t=1631539243;
+        bh=cs5MWRb4M9tfwP6GV7LH4BPGBlEq/OdD8zQOU93qEGI=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=miQX3ZyO2Si5M88Eae3XDTF1Zuq3JQtQFn4dHRPuWtVZ0a3shezfpZsaqxMC60Y42
-         OC0Q+6gM7+qpFhUyVTuz02UC5OyAXCjXrxtEaPLFJMrjstWWHvIpaMfqIXGdMmzhYO
-         TdSlPqRyGtITbYiXZc9ACAV/N7brxABfE5qdcBiTYODuF0yvLnYGzXHohiSPtxBTDn
-         PKSMfpjg7g/AZTvEznopOGUCMIIz4XmrIDQxScqnWVlMAw8nns+oo2YWXxLYR7xHyR
-         jkle5qe0LoxjoZzcxNlGMHaS43rvNdT+GLwKgVXkMjVjD62MGYJAvzvZtsf0gu15q4
-         oL8tprYBu+gdg==
-Received: by mail-wm1-f71.google.com with SMTP id m4-20020a05600c3b0400b00303b904380dso2609828wms.6
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:21:06 -0700 (PDT)
+        b=GR2bePmaj7WHRMOQZOKKwFcDtvnGOv/9VUhFeeLXGdOdqkXbZIiMb6ny7QWE1AOiT
+         l10/BEycIVdvCBpfDvCDq4gQmE8kSXgSdgM46gmKQkn7c7nbRR1X9HFUvaX1iklwgL
+         D1xAYPXbQ2arKr99yIySoVAGblH9FdIUhKqt1nlE/TqgI0Vis2d8l+c0uSzkOOwxV9
+         xfmoMIpXAf7+Vy4kdDldl6mWyUcnG1KLowWywtscEvpC07opVhLix1et5OJLDB2vYu
+         hmU4IoohS4n/DjMFGwB5YXlyfwBJBfgTwbxPTmBGbXksifdxv63j2zIaJV7dx5xvXk
+         /s3MRhHBPMl3A==
+Received: by mail-wr1-f69.google.com with SMTP id v15-20020adff68f000000b0015df51efa18so1323586wrp.16
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:20:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=AKOLSiNotprej29rkzU07CereuPK7jDMwjY+iTyzzwA=;
-        b=iPg7gaQ4Pmr+vGHk4XNFDOSYBq5qmz+pX8gUr0q2qH87p/zkdIMizo8RzK6eoza4Tt
-         Qqe1PEG8lZ7zH13kCw9Xoj5ZmgKfOPOTvx0fYWnh8VGn01lLXY5KS07jmmyqZldc/shK
-         Nj6scsFN/dD2mQeDs437NjsqnXcsUzpjIBcR305+4UxKCsY92HQlWyJfJlWSOFRv8HQE
-         hTGdigyxm94BX9foyg9M6XRBNUel/75R6zddvD+sbd0DXzTwpoEutNaorgSu7KiO6XXJ
-         nhXl9ls84/hNv3SLXRStmnVIw0leotjznXuNij3HrOG5l17hwIjmizpXQZ8k0XiFsVW3
-         xMkQ==
-X-Gm-Message-State: AOAM531JVgypjLLCLHYnpFL31qUAOaphmwKZSfSVOD0AncZjHXyKzq6K
-        +9kbA3W4DRck0GD8bSumMcXlxagcDAJ6xlyrXOxwSCr3VQfT3JE3tFKMgOVDNYVEP+N08aKY47R
-        7FHsscXdCDFaM/AqnMb/3onwJzSp++dcUfXjGkmOqzLDF
-X-Received: by 2002:a05:600c:896:: with SMTP id l22mr11120619wmp.173.1631539265712;
-        Mon, 13 Sep 2021 06:21:05 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzGKB8zsRCueVcnv/F/wvUaRLWvDTsfD6029ziTjUpm5OT7cpm9fnOgAqV38PdDEO3snD2i1w==
-X-Received: by 2002:a05:600c:896:: with SMTP id l22mr11120577wmp.173.1631539265398;
-        Mon, 13 Sep 2021 06:21:05 -0700 (PDT)
+        bh=cs5MWRb4M9tfwP6GV7LH4BPGBlEq/OdD8zQOU93qEGI=;
+        b=xEMLY4Q7D0y4I/YZQe+EDSFI6ZluSH3UOb3KeSyPS410C2rUN4un5vX8m/6JFl0Gu8
+         nLPvueRPC5eQfHtBjKD0mji6wNna7s/zwIxlhZf/g8cx95QAB8Lok7hDe57ri9gYPTzQ
+         +8fJs1qLSDqHwmgZByGGrJ8m9sLAf+TJs/kGjuo2Kt7+jCDLCQsTtcALqNDS2jS5H+xl
+         0NotR9654jcu3ggNQcIM5oNfMrJfRjruoR/TTw6l5kj41pwFVMI+kra6j114Kvx73gZM
+         7+wXHycQLUpGh69+w1hKzuTWLpvQ7DwPQxuQ6jqfM7zHZc9c8yyjY09uJcBglfr4SOCt
+         1mLw==
+X-Gm-Message-State: AOAM533Tbgo/VKbFJhscOrxrgP32qM8AjIMeTo/SxT9F9u3Q1GKtzQSc
+        54+sWbiBtEx42Go4FobY/nTcNoWE/J+OSSikhsR1DeyWzAIqQN/YBHUxkJCXf15aWWe7ItSuGL8
+        Qv7XosWiNd6yZqNtIVokyvk5HWEUR17UsmAcLAPgDw5Mu
+X-Received: by 2002:adf:b319:: with SMTP id j25mr8069929wrd.256.1631539242748;
+        Mon, 13 Sep 2021 06:20:42 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw5v4bayWSPxe/obNJPWhLd/yMiByG5JX8dkQyRTvyg7xiWBHVKbEBAdMX4lrRhGZ+UcTaROg==
+X-Received: by 2002:adf:b319:: with SMTP id j25mr8069894wrd.256.1631539242510;
+        Mon, 13 Sep 2021 06:20:42 -0700 (PDT)
 Received: from kozik-lap.lan (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
-        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.21.03
+        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.20.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Sep 2021 06:21:04 -0700 (PDT)
+        Mon, 13 Sep 2021 06:20:41 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH v2 13/15] nfc: microread: drop unneeded debug prints
-Date:   Mon, 13 Sep 2021 15:20:33 +0200
-Message-Id: <20210913132035.242870-14-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 01/15] nfc: drop unneeded debug prints
+Date:   Mon, 13 Sep 2021 15:20:21 +0200
+Message-Id: <20210913132035.242870-2-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
 References: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
@@ -88,45 +88,291 @@ functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/microread/i2c.c | 4 ----
- drivers/nfc/microread/mei.c | 2 --
- 2 files changed, 6 deletions(-)
+ net/nfc/hci/command.c   | 16 ----------------
+ net/nfc/hci/llc_shdlc.c | 12 ------------
+ net/nfc/llcp_commands.c |  8 --------
+ net/nfc/llcp_core.c     |  5 +----
+ net/nfc/nci/core.c      |  4 ----
+ net/nfc/nci/hci.c       |  4 ----
+ net/nfc/nci/ntf.c       |  9 ---------
+ 7 files changed, 1 insertion(+), 57 deletions(-)
 
-diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
-index 86f593c73ed6..067295124eb9 100644
---- a/drivers/nfc/microread/i2c.c
-+++ b/drivers/nfc/microread/i2c.c
-@@ -237,8 +237,6 @@ static int microread_i2c_probe(struct i2c_client *client,
- 	struct microread_i2c_phy *phy;
+diff --git a/net/nfc/hci/command.c b/net/nfc/hci/command.c
+index 3a89bd9b89fc..af6bacb3ba98 100644
+--- a/net/nfc/hci/command.c
++++ b/net/nfc/hci/command.c
+@@ -114,8 +114,6 @@ int nfc_hci_send_cmd(struct nfc_hci_dev *hdev, u8 gate, u8 cmd,
+ {
+ 	u8 pipe;
+ 
+-	pr_debug("\n");
+-
+ 	pipe = hdev->gate2pipe[gate];
+ 	if (pipe == NFC_HCI_INVALID_PIPE)
+ 		return -EADDRNOTAVAIL;
+@@ -130,8 +128,6 @@ int nfc_hci_send_cmd_async(struct nfc_hci_dev *hdev, u8 gate, u8 cmd,
+ {
+ 	u8 pipe;
+ 
+-	pr_debug("\n");
+-
+ 	pipe = hdev->gate2pipe[gate];
+ 	if (pipe == NFC_HCI_INVALID_PIPE)
+ 		return -EADDRNOTAVAIL;
+@@ -205,8 +201,6 @@ static int nfc_hci_open_pipe(struct nfc_hci_dev *hdev, u8 pipe)
+ 
+ static int nfc_hci_close_pipe(struct nfc_hci_dev *hdev, u8 pipe)
+ {
+-	pr_debug("\n");
+-
+ 	return nfc_hci_execute_cmd(hdev, pipe, NFC_HCI_ANY_CLOSE_PIPE,
+ 				   NULL, 0, NULL);
+ }
+@@ -242,8 +236,6 @@ static u8 nfc_hci_create_pipe(struct nfc_hci_dev *hdev, u8 dest_host,
+ 
+ static int nfc_hci_delete_pipe(struct nfc_hci_dev *hdev, u8 pipe)
+ {
+-	pr_debug("\n");
+-
+ 	return nfc_hci_execute_cmd(hdev, NFC_HCI_ADMIN_PIPE,
+ 				   NFC_HCI_ADM_DELETE_PIPE, &pipe, 1, NULL);
+ }
+@@ -256,8 +248,6 @@ static int nfc_hci_clear_all_pipes(struct nfc_hci_dev *hdev)
+ 	/* TODO: Find out what the identity reference data is
+ 	 * and fill param with it. HCI spec 6.1.3.5 */
+ 
+-	pr_debug("\n");
+-
+ 	if (test_bit(NFC_HCI_QUIRK_SHORT_CLEAR, &hdev->quirks))
+ 		param_len = 0;
+ 
+@@ -271,8 +261,6 @@ int nfc_hci_disconnect_gate(struct nfc_hci_dev *hdev, u8 gate)
+ 	int r;
+ 	u8 pipe = hdev->gate2pipe[gate];
+ 
+-	pr_debug("\n");
+-
+ 	if (pipe == NFC_HCI_INVALID_PIPE)
+ 		return -EADDRNOTAVAIL;
+ 
+@@ -296,8 +284,6 @@ int nfc_hci_disconnect_all_gates(struct nfc_hci_dev *hdev)
+ {
  	int r;
  
--	dev_dbg(&client->dev, "client %p\n", client);
+-	pr_debug("\n");
 -
- 	phy = devm_kzalloc(&client->dev, sizeof(struct microread_i2c_phy),
- 			   GFP_KERNEL);
- 	if (!phy)
-@@ -262,8 +260,6 @@ static int microread_i2c_probe(struct i2c_client *client,
+ 	r = nfc_hci_clear_all_pipes(hdev);
  	if (r < 0)
- 		goto err_irq;
- 
--	nfc_info(&client->dev, "Probed\n");
--
- 	return 0;
- 
- err_irq:
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index 8edf761a6b2a..686be3381727 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -23,8 +23,6 @@ static int microread_mei_probe(struct mei_cl_device *cldev,
- 	struct nfc_mei_phy *phy;
+ 		return r;
+@@ -314,8 +300,6 @@ int nfc_hci_connect_gate(struct nfc_hci_dev *hdev, u8 dest_host, u8 dest_gate,
+ 	bool pipe_created = false;
  	int r;
  
--	pr_info("Probing NFC microread\n");
+-	pr_debug("\n");
 -
- 	phy = nfc_mei_phy_alloc(cldev);
- 	if (!phy) {
- 		pr_err("Cannot allocate memory for microread mei phy.\n");
+ 	if (pipe == NFC_HCI_DO_NOT_CREATE_PIPE)
+ 		return 0;
+ 
+diff --git a/net/nfc/hci/llc_shdlc.c b/net/nfc/hci/llc_shdlc.c
+index aef750d7787c..78b2ceb8ae6e 100644
+--- a/net/nfc/hci/llc_shdlc.c
++++ b/net/nfc/hci/llc_shdlc.c
+@@ -365,8 +365,6 @@ static int llc_shdlc_connect_initiate(const struct llc_shdlc *shdlc)
+ {
+ 	struct sk_buff *skb;
+ 
+-	pr_debug("\n");
+-
+ 	skb = llc_shdlc_alloc_skb(shdlc, 2);
+ 	if (skb == NULL)
+ 		return -ENOMEM;
+@@ -381,8 +379,6 @@ static int llc_shdlc_connect_send_ua(const struct llc_shdlc *shdlc)
+ {
+ 	struct sk_buff *skb;
+ 
+-	pr_debug("\n");
+-
+ 	skb = llc_shdlc_alloc_skb(shdlc, 0);
+ 	if (skb == NULL)
+ 		return -ENOMEM;
+@@ -573,8 +569,6 @@ static void llc_shdlc_connect_timeout(struct timer_list *t)
+ {
+ 	struct llc_shdlc *shdlc = from_timer(shdlc, t, connect_timer);
+ 
+-	pr_debug("\n");
+-
+ 	schedule_work(&shdlc->sm_work);
+ }
+ 
+@@ -601,8 +595,6 @@ static void llc_shdlc_sm_work(struct work_struct *work)
+ 	struct llc_shdlc *shdlc = container_of(work, struct llc_shdlc, sm_work);
+ 	int r;
+ 
+-	pr_debug("\n");
+-
+ 	mutex_lock(&shdlc->state_mutex);
+ 
+ 	switch (shdlc->state) {
+@@ -686,8 +678,6 @@ static int llc_shdlc_connect(struct llc_shdlc *shdlc)
+ {
+ 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(connect_wq);
+ 
+-	pr_debug("\n");
+-
+ 	mutex_lock(&shdlc->state_mutex);
+ 
+ 	shdlc->state = SHDLC_CONNECTING;
+@@ -706,8 +696,6 @@ static int llc_shdlc_connect(struct llc_shdlc *shdlc)
+ 
+ static void llc_shdlc_disconnect(struct llc_shdlc *shdlc)
+ {
+-	pr_debug("\n");
+-
+ 	mutex_lock(&shdlc->state_mutex);
+ 
+ 	shdlc->state = SHDLC_DISCONNECTED;
+diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+index 3c4172a5aeb5..41e3a20c8935 100644
+--- a/net/nfc/llcp_commands.c
++++ b/net/nfc/llcp_commands.c
+@@ -337,8 +337,6 @@ int nfc_llcp_send_disconnect(struct nfc_llcp_sock *sock)
+ 	struct nfc_dev *dev;
+ 	struct nfc_llcp_local *local;
+ 
+-	pr_debug("Sending DISC\n");
+-
+ 	local = sock->local;
+ 	if (local == NULL)
+ 		return -ENODEV;
+@@ -362,8 +360,6 @@ int nfc_llcp_send_symm(struct nfc_dev *dev)
+ 	struct nfc_llcp_local *local;
+ 	u16 size = 0;
+ 
+-	pr_debug("Sending SYMM\n");
+-
+ 	local = nfc_llcp_find_local(dev);
+ 	if (local == NULL)
+ 		return -ENODEV;
+@@ -399,8 +395,6 @@ int nfc_llcp_send_connect(struct nfc_llcp_sock *sock)
+ 	u16 size = 0;
+ 	__be16 miux;
+ 
+-	pr_debug("Sending CONNECT\n");
+-
+ 	local = sock->local;
+ 	if (local == NULL)
+ 		return -ENODEV;
+@@ -475,8 +469,6 @@ int nfc_llcp_send_cc(struct nfc_llcp_sock *sock)
+ 	u16 size = 0;
+ 	__be16 miux;
+ 
+-	pr_debug("Sending CC\n");
+-
+ 	local = sock->local;
+ 	if (local == NULL)
+ 		return -ENODEV;
+diff --git a/net/nfc/llcp_core.c b/net/nfc/llcp_core.c
+index eaeb2b1cfa6a..5ad5157aa9c5 100644
+--- a/net/nfc/llcp_core.c
++++ b/net/nfc/llcp_core.c
+@@ -45,8 +45,6 @@ static void nfc_llcp_socket_purge(struct nfc_llcp_sock *sock)
+ 	struct nfc_llcp_local *local = sock->local;
+ 	struct sk_buff *s, *tmp;
+ 
+-	pr_debug("%p\n", &sock->sk);
+-
+ 	skb_queue_purge(&sock->tx_queue);
+ 	skb_queue_purge(&sock->tx_pending_queue);
+ 
+@@ -1505,9 +1503,8 @@ void nfc_llcp_recv(void *data, struct sk_buff *skb, int err)
+ {
+ 	struct nfc_llcp_local *local = (struct nfc_llcp_local *) data;
+ 
+-	pr_debug("Received an LLCP PDU\n");
+ 	if (err < 0) {
+-		pr_err("err %d\n", err);
++		pr_err("LLCP PDU receive err %d\n", err);
+ 		return;
+ 	}
+ 
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 82ab39d80726..6fd873aa86be 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -930,8 +930,6 @@ static void nci_deactivate_target(struct nfc_dev *nfc_dev,
+ 	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
+ 	unsigned long nci_mode = NCI_DEACTIVATE_TYPE_IDLE_MODE;
+ 
+-	pr_debug("entry\n");
+-
+ 	if (!ndev->target_active_prot) {
+ 		pr_err("unable to deactivate target, no active target\n");
+ 		return;
+@@ -977,8 +975,6 @@ static int nci_dep_link_down(struct nfc_dev *nfc_dev)
+ 	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
+ 	int rc;
+ 
+-	pr_debug("entry\n");
+-
+ 	if (nfc_dev->rf_mode == NFC_RF_INITIATOR) {
+ 		nci_deactivate_target(nfc_dev, NULL, NCI_DEACTIVATE_TYPE_IDLE_MODE);
+ 	} else {
+diff --git a/net/nfc/nci/hci.c b/net/nfc/nci/hci.c
+index e199912ee1e5..19703a649b5a 100644
+--- a/net/nfc/nci/hci.c
++++ b/net/nfc/nci/hci.c
+@@ -432,8 +432,6 @@ void nci_hci_data_received_cb(void *context,
+ 	struct sk_buff *frag_skb;
+ 	int msg_len;
+ 
+-	pr_debug("\n");
+-
+ 	if (err) {
+ 		nci_req_complete(ndev, err);
+ 		return;
+@@ -547,8 +545,6 @@ static u8 nci_hci_create_pipe(struct nci_dev *ndev, u8 dest_host,
+ 
+ static int nci_hci_delete_pipe(struct nci_dev *ndev, u8 pipe)
+ {
+-	pr_debug("\n");
+-
+ 	return nci_hci_send_cmd(ndev, NCI_HCI_ADMIN_GATE,
+ 				NCI_HCI_ADM_DELETE_PIPE, &pipe, 1, NULL);
+ }
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index c5eacaac41ae..282c51051dcc 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -738,8 +738,6 @@ static void nci_nfcee_discover_ntf_packet(struct nci_dev *ndev,
+ 	const struct nci_nfcee_discover_ntf *nfcee_ntf =
+ 				(struct nci_nfcee_discover_ntf *)skb->data;
+ 
+-	pr_debug("\n");
+-
+ 	/* NFCForum NCI 9.2.1 HCI Network Specific Handling
+ 	 * If the NFCC supports the HCI Network, it SHALL return one,
+ 	 * and only one, NFCEE_DISCOVER_NTF with a Protocol type of
+@@ -751,12 +749,6 @@ static void nci_nfcee_discover_ntf_packet(struct nci_dev *ndev,
+ 	nci_req_complete(ndev, status);
+ }
+ 
+-static void nci_nfcee_action_ntf_packet(struct nci_dev *ndev,
+-					const struct sk_buff *skb)
+-{
+-	pr_debug("\n");
+-}
+-
+ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ {
+ 	__u16 ntf_opcode = nci_opcode(skb->data);
+@@ -813,7 +805,6 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		break;
+ 
+ 	case NCI_OP_RF_NFCEE_ACTION_NTF:
+-		nci_nfcee_action_ntf_packet(ndev, skb);
+ 		break;
+ 
+ 	default:
 -- 
 2.30.2
 
