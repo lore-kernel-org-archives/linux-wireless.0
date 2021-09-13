@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ABA3C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1E2C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:26:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 071966121D
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:25:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 234AB613A2
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:26:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241161AbhIMNZk (ORCPT
+        id S241591AbhIMN1c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Sep 2021 09:25:40 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:34144
+        Mon, 13 Sep 2021 09:27:32 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:34274
         "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241168AbhIMNX2 (ORCPT
+        by vger.kernel.org with ESMTP id S241734AbhIMNZ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Sep 2021 09:23:28 -0400
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
+        Mon, 13 Sep 2021 09:25:27 -0400
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com [209.85.221.70])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 548874027F
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:20:50 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 6652C40281
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:20:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631539250;
-        bh=Fky4BN6I50Xw0PgUAedFiL1xcmFxZZIBVgJL+3QtpWs=;
+        s=20210705; t=1631539254;
+        bh=NBr1U4LAwKajfkWi8d66f/F7DJmWNcP01ndf/w7qpqs=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=LDLkqs8XWdJPlHwSTXyxBqQgS9MUADcFkE2jeuQ1h1KLFFQr12xXbs0/xRC364wcl
-         sPciEhQIlfWS5UBUJ7ZaX0nxjDSekxJpqo03sLPA34Z9h5iqSShgjabo/B1nr7tAf2
-         9tMo6cIGW4/p+dywCEinGyvGkCgpmbLYQDgHPyNOxOHNdKcHc2+6i19KA8Vbv8vo1C
-         +H5SPzBhLdqVmvoa8OeThfp23B2pNz9oBEsZDxamVfUmeod6v0rakq0ugxbr69xQPh
-         mB43Yedahb3jr57kc96lcNW2j9sLMFGpfBPmOsbBg1nnrEIjdvgI5cGDRWjN8sL9Ev
-         N7Yq8xekTvcng==
-Received: by mail-wr1-f72.google.com with SMTP id x7-20020a5d6507000000b0015dada209b1so1721242wru.15
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:20:50 -0700 (PDT)
+        b=eKne7l7JsWA9Oyqv1ej25m2CyAPojw00ksawllNBhUEzH0ZbiNYz83s/f9tfqky5F
+         nIdM5nruK+ENQJgamMXhOKzqvqbmCXZ0H7gNdv623agZNW7W2TuB96pz0byZuS9kyg
+         1gIsNpbQ/fU/u2CvHGQ7E4mmq4mZF83AJeCB6w2dhSVcMdPe8ZpB4/rbC/mVA9BAH3
+         jRY1ekDZCtXtrgeMFeSLZzbPulME9H2eq2URilg78BcpkGrFBSPkCj3QHpTJIw+OJb
+         fpCvjHdVDEuROrY95Re+jRus9/7YOom1q421gYqjLlWq7zNYRyfRgH8AR48iUwxE9P
+         KRmlgh5GimozA==
+Received: by mail-wr1-f70.google.com with SMTP id z1-20020adfec81000000b0015b085dbde3so2656958wrn.14
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:20:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Fky4BN6I50Xw0PgUAedFiL1xcmFxZZIBVgJL+3QtpWs=;
-        b=MPLymXQOIIPV/O43qFDBoR4S3ZxJU8yV4Nkjx3ey95eyk3GuGMNE2vr1aQ8voKRkAF
-         8/HxqJUC16+Kjf0FjTJsYWLJ0MO0pqD45xZoSJH+l6LCPGXu/Oc8yHvY3bQxAjTKH5cB
-         CdJHL8UKkULrhtN/rLj86gbeAB/YgJqNrq80Ig1A3/Py+Ygrh8CGYKtjD9VSHTnng6Rk
-         DVhAzqILcjOyCqPh80SsT+87J5ip7u1FMCRn++wNymWGsiX5RczkY7xNOS7jStIU8Y5B
-         JV0o80/CN+Z90sQ04zm6xirK8H1CQR2Y7SOx7VHZ/JYT120MUT6W584hA9ku61TRaWhE
-         dSYQ==
-X-Gm-Message-State: AOAM532mPdS9fyLczIIlq6uQL2PBN1n+Ul2YLbXMpxa84ynXAtUf+I6P
-        PdDDRxrCy/SqvaPVsrJZHH3E7SUT3l4rYBsPqq+KQ3xd3aXU9TbB29dvikkggkrWIp53H/wsp75
-        18ll8rgDx5alSZ7H50yc56mtURljNrsXuhtYxqhwnukJM
-X-Received: by 2002:adf:8064:: with SMTP id 91mr12357522wrk.252.1631539249989;
-        Mon, 13 Sep 2021 06:20:49 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw5+h/fKlKQdXDMhGSM5nR9XBZObuvBHmrufg69rir3eN+eLiOg4WceN/MxX2SmmovwgHEcrQ==
-X-Received: by 2002:adf:8064:: with SMTP id 91mr12357504wrk.252.1631539249872;
-        Mon, 13 Sep 2021 06:20:49 -0700 (PDT)
+        bh=NBr1U4LAwKajfkWi8d66f/F7DJmWNcP01ndf/w7qpqs=;
+        b=Ubd1mB+EyZGNZ2raG4Wyd3mrgkc7EuWZ6t7cnNZw8NerroNk0nU+WYhDvPchUomBuj
+         XEnMgDdUcTiw1Ybmyvq1I3dgPoi6DybFY7Gr8at0S2Y37+cb5nssL1H8WLxUWcxfWHc4
+         2eOK6U9Y9mVrhJqNJV9sOnp1YptppSuS/HhxL21E0yXEv5ptVARYN0e2GzkHo4t3oOfp
+         fbYXmXGVDlwTGYYIONTTt9TOSszvhcc60WUhIBDbHvcX6SmTTnvX8dWACOIGpwc782tO
+         w7g2oDakyjE0m4yEFl5wEhfTq3W61EVbmGFNzRHm+ETjrO+Kvul157lqt+XWmd/AwOYy
+         crig==
+X-Gm-Message-State: AOAM531kXnbJ5LtlbZcpx+pgZYwPMWDtg+gI9c3G0AhkRIS6x1HwI0RJ
+        /XAmE8gJP7UHenrZYJxHjhtqTQbhXwFZmsm5jDBIOD1oJX3YpnwZRlniaxBEp02sNiCliyXCDYp
+        Pf3t6hl67U+YZjU+XoYU+iFC0R2ZqNSC1Bj8jgsRuOlk0
+X-Received: by 2002:a1c:f60c:: with SMTP id w12mr11300819wmc.3.1631539253795;
+        Mon, 13 Sep 2021 06:20:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw4mhlijtrqBRrwe325QIJTV+NH9oRbw4vOfFD3MMxQ/lm7QV3e8395RpL+PFPpNFF13sZ40A==
+X-Received: by 2002:a1c:f60c:: with SMTP id w12mr11300790wmc.3.1631539253600;
+        Mon, 13 Sep 2021 06:20:53 -0700 (PDT)
 Received: from kozik-lap.lan (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
-        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.20.47
+        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.20.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Sep 2021 06:20:49 -0700 (PDT)
+        Mon, 13 Sep 2021 06:20:53 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH v2 05/15] nfc: pn533: drop unneeded debug prints
-Date:   Mon, 13 Sep 2021 15:20:25 +0200
-Message-Id: <20210913132035.242870-6-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 07/15] nfc: pn544: drop unneeded debug prints
+Date:   Mon, 13 Sep 2021 15:20:27 +0200
+Message-Id: <20210913132035.242870-8-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
 References: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
@@ -88,45 +88,31 @@ functions so drop useless debug prints.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/pn533/i2c.c   | 4 ----
- drivers/nfc/pn533/pn533.c | 2 --
- 2 files changed, 6 deletions(-)
+ drivers/nfc/pn544/mei.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/nfc/pn533/i2c.c b/drivers/nfc/pn533/i2c.c
-index e6bf8cfe3aa7..f5610b6b9894 100644
---- a/drivers/nfc/pn533/i2c.c
-+++ b/drivers/nfc/pn533/i2c.c
-@@ -128,7 +128,6 @@ static int pn533_i2c_read(struct pn533_i2c_phy *phy, struct sk_buff **skb)
- static irqreturn_t pn533_i2c_irq_thread_fn(int irq, void *data)
- {
- 	struct pn533_i2c_phy *phy = data;
--	struct i2c_client *client;
- 	struct sk_buff *skb = NULL;
+diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
+index 5c10aac085a4..a519fa0a53e2 100644
+--- a/drivers/nfc/pn544/mei.c
++++ b/drivers/nfc/pn544/mei.c
+@@ -22,8 +22,6 @@ static int pn544_mei_probe(struct mei_cl_device *cldev,
+ 	struct nfc_mei_phy *phy;
  	int r;
  
-@@ -137,9 +136,6 @@ static irqreturn_t pn533_i2c_irq_thread_fn(int irq, void *data)
- 		return IRQ_NONE;
- 	}
- 
--	client = phy->i2c_dev;
--	dev_dbg(&client->dev, "IRQ\n");
+-	pr_info("Probing NFC pn544\n");
 -
- 	if (phy->hard_fault != 0)
- 		return IRQ_HANDLED;
- 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index 2f3f3fe9a0ba..c5f127fe2d45 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -1235,8 +1235,6 @@ static void pn533_listen_mode_timer(struct timer_list *t)
+ 	phy = nfc_mei_phy_alloc(cldev);
+ 	if (!phy) {
+ 		pr_err("Cannot allocate memory for pn544 mei phy.\n");
+@@ -46,8 +44,6 @@ static void pn544_mei_remove(struct mei_cl_device *cldev)
  {
- 	struct pn533 *dev = from_timer(dev, t, listen_timer);
+ 	struct nfc_mei_phy *phy = mei_cldev_get_drvdata(cldev);
  
--	dev_dbg(dev->dev, "Listen mode timeout\n");
+-	pr_info("Removing pn544\n");
 -
- 	dev->cancel_listen = 1;
+ 	pn544_hci_remove(phy->hdev);
  
- 	pn533_poll_next_mod(dev);
+ 	nfc_mei_phy_free(phy);
 -- 
 2.30.2
 
