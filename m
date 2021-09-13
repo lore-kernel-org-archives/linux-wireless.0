@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF64C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D51E1C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C78F6140A
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:29:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF4D9610A6
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Sep 2021 13:31:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240181AbhIMNau (ORCPT
+        id S241930AbhIMNaf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Sep 2021 09:30:50 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:34280
-        "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241743AbhIMNZ3 (ORCPT
+        Mon, 13 Sep 2021 09:30:35 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:57746
+        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240599AbhIMNWD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Sep 2021 09:25:29 -0400
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com [209.85.221.71])
+        Mon, 13 Sep 2021 09:22:03 -0400
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 1CE5840284
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:21:04 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id C7E2140266
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 13:20:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631539264;
-        bh=vC5ZeeYLEo1QgnDozyJaTYMB8bYZWzk5ZY30xgpVgcM=;
+        s=20210705; t=1631539246;
+        bh=Lf3U+DHYhMpuIl7nTJH6GPAYe+llXfLG7+wtuS7r1DY=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=NxX+W5q53mrv7BPf8fvhZP5qOOJVjz3Wz9gK16ncuOso7L44VDHCJf0DySMSRR2Xe
-         wAJKoHZCyNFwJdQqRegd6j9Yp0p1FsCOrqmUHuEvcsc2V/O0KNmKnP9gPMTpYqpraS
-         LIhpMMCdxh9xsPZ6QoFfKQLcnFAYuI+svYJBZ0QImfsl3kJxufz7F3Nt5aVywavsYc
-         uVytcCuV9dHurAy1TmeW9nN9tNqcKfoY811qfz803MdSt1rA+dTrEsgYnMYoFxl+Qa
-         8m1KMYG4QP79+VlSLqn/M5f38evu+Ss2gogjQ4h06HTWmMGvUtdNohmXdeMJqmyjjd
-         VdNrJda/oL6IQ==
-Received: by mail-wr1-f71.google.com with SMTP id m18-20020adfe952000000b0015b0aa32fd6so2655187wrn.12
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:21:04 -0700 (PDT)
+        b=C9UVcbIUq3O4jN/3iHXwE6SSuKueuzAPU+yMYAhssYEWhd+HFJKX9NQCyZeGXBBm0
+         i542P4TyYCPz9wzsaKw1+fcRKbXbNbDzmnsgaPX6BuyUYa8Hr+Bq+kRESdzohlzahQ
+         zzqQAtkNcArCVaQEdKTWb0HvdE/bhhQ4fkEG1Su94IviI5ofwt3RNBlTGsY1kLN+Xm
+         G5gh62mfmk1AcRG82xVUhZV+pb5cd7YldXe96TNdn8LBXR6zEx9Hf1f1lHL5gaY2hz
+         oYRQK7bN1s9aoNeXAb7oNZeAXtUYB54cpWYSIe0NfD9ynDM9aPioGj45N93QuqxO9G
+         +6TFKvJ63c5Fw==
+Received: by mail-wr1-f72.google.com with SMTP id v15-20020adff68f000000b0015df51efa18so1323644wrp.16
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2021 06:20:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vC5ZeeYLEo1QgnDozyJaTYMB8bYZWzk5ZY30xgpVgcM=;
-        b=hHYLHBHVKqTJtDa2Rpgfi4MIUWDDd6XvDPW7WvdMqM4E+oAKXoKCo67k2dvkwRbQTz
-         /1ggVtZ8E9cV8/IBGukiCWUfB9s9CPZ+3TBaZGrmcGofj9qcMO75nCF6O/IEiCsYeWQY
-         dGjTDb12cNaSMzLxk0enM8cjmYePWkQqdwzTU7z6RSzPP6lgmGmx5X5EaZruwZ2zMYSZ
-         1h/6oulxH67s2c77SZ4v3JjjlyA+ItXYVh8nq8LBwWjRB+55vFJiGgCEI9uKT1mvprS8
-         GNo5MSe+eqJX5mbv6l74hERhXc7IvtcXV6reWLYzdG7gWhKrC9TL+OgpMcu+/6ERyIS/
-         sg1w==
-X-Gm-Message-State: AOAM533lr1TpzIOaBVUhO+kOFQEbj0ZPbvm+BcoM0W7Ou2XIuAnaH7G/
-        xRp+I/KTPyXOK4w5mVdQoIb5ZLxDrchLDqYWfwxNgpD3XQ5sBJ64kNeLtP8ioYEcHMFm0zwoST/
-        WnGZQOG5qai6uRGJ4Sc31IVmpVsS8z/ENmiZFK4JWoPaV
-X-Received: by 2002:a7b:c1c5:: with SMTP id a5mr11405621wmj.144.1631539263850;
-        Mon, 13 Sep 2021 06:21:03 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx/izsu1khftAkG5C5T0/hXLkw7auLof1x9kSlmEPTvEP1I+LgccfCmnvu7rQjvYP7wlALVsg==
-X-Received: by 2002:a7b:c1c5:: with SMTP id a5mr11405588wmj.144.1631539263665;
-        Mon, 13 Sep 2021 06:21:03 -0700 (PDT)
+        bh=Lf3U+DHYhMpuIl7nTJH6GPAYe+llXfLG7+wtuS7r1DY=;
+        b=K9+VdU9IT5WMY/m/HstaLmVVVy75u/GBYOsFrjJEGBR24eOsaT0+dv7/9/7lcVULib
+         lv9jEyQUEW16yef63V1QSOCk61cdmzdyPOrn8vVe+4cpb1EP4iWyIeUfjVOj8FFA3JeC
+         zGJfiIwHj35HbdnERpnoQxXVpIdjKvUS3bJ6y8qX+5ddfwAYBnj8WQD9AHSkNRd5WLPS
+         ABfXjaR/OPZ4zhWextLQPJsiJHxuHUdJEVqsia1M9Txb9gFloT4JBWf4fvwqpDk9rwuQ
+         xAqAGsFY2edou5pCpeO+tAIyYUbj1baEnxYGdwrxCJ3cGqSw0kM0nYvX8D964oWXSdKN
+         3FtQ==
+X-Gm-Message-State: AOAM532raGbnMM+uxziD5lHbjmWDNdH77gkG5aO5T7mB0HU2EO3/Zr4N
+        33kphLSEUbJeFvopGr/78IzbW4aubedm7ViJFvu1dyNGupjN9VBByZNbg1qt05O1g/Gzkyxhhsk
+        k8wU2XDkjMW48uHwT1Jh3jp34IIdMMObUN1lJDovEiDTK
+X-Received: by 2002:adf:f90f:: with SMTP id b15mr12528815wrr.364.1631539246423;
+        Mon, 13 Sep 2021 06:20:46 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwO4lsG5wdmhKIDutLLy9acqil5ZkWEOWZw6YwdcZcxBYqUrgu1dwPeeITR5yS7gtM6A2hFVg==
+X-Received: by 2002:adf:f90f:: with SMTP id b15mr12528787wrr.364.1631539246274;
+        Mon, 13 Sep 2021 06:20:46 -0700 (PDT)
 Received: from kozik-lap.lan (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
-        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.21.02
+        by smtp.gmail.com with ESMTPSA id n3sm7195888wmi.0.2021.09.13.06.20.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Sep 2021 06:21:03 -0700 (PDT)
+        Mon, 13 Sep 2021 06:20:45 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -71,9 +71,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH v2 12/15] nfc: trf7970a: drop unneeded debug prints
-Date:   Mon, 13 Sep 2021 15:20:32 +0200
-Message-Id: <20210913132035.242870-13-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 03/15] nfc: nci: replace GPLv2 boilerplate with SPDX
+Date:   Mon, 13 Sep 2021 15:20:23 +0200
+Message-Id: <20210913132035.242870-4-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
 References: <20210913132035.242870-1-krzysztof.kozlowski@canonical.com>
@@ -83,54 +83,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ftrace is a preferred and standard way to debug entering and exiting
-functions so drop useless debug prints.
+Replace standard GPLv2 only license text with SPDX tag.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/trf7970a.c | 8 --------
- 1 file changed, 8 deletions(-)
+ net/nfc/nci/uart.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 8890fcd59c39..29ca9c328df2 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2170,8 +2170,6 @@ static int trf7970a_suspend(struct device *dev)
- 	struct spi_device *spi = to_spi_device(dev);
- 	struct trf7970a *trf = spi_get_drvdata(spi);
- 
--	dev_dbg(dev, "Suspend\n");
+diff --git a/net/nfc/nci/uart.c b/net/nfc/nci/uart.c
+index 502e7a3f8948..65814dd72618 100644
+--- a/net/nfc/nci/uart.c
++++ b/net/nfc/nci/uart.c
+@@ -1,20 +1,8 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * Copyright (C) 2015, Marvell International Ltd.
+  *
+- * This software file (the "File") is distributed by Marvell International
+- * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+- * (the "License").  You may use, redistribute and/or modify this File in
+- * accordance with the terms and conditions of the License, a copy of which
+- * is available on the worldwide web at
+- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+- *
+- * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+- * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
+- * this warranty disclaimer.
+- */
 -
- 	mutex_lock(&trf->lock);
- 
- 	trf7970a_shutdown(trf);
-@@ -2187,8 +2185,6 @@ static int trf7970a_resume(struct device *dev)
- 	struct trf7970a *trf = spi_get_drvdata(spi);
- 	int ret;
- 
--	dev_dbg(dev, "Resume\n");
--
- 	mutex_lock(&trf->lock);
- 
- 	ret = trf7970a_startup(trf);
-@@ -2206,8 +2202,6 @@ static int trf7970a_pm_runtime_suspend(struct device *dev)
- 	struct trf7970a *trf = spi_get_drvdata(spi);
- 	int ret;
- 
--	dev_dbg(dev, "Runtime suspend\n");
--
- 	mutex_lock(&trf->lock);
- 
- 	ret = trf7970a_power_down(trf);
-@@ -2223,8 +2217,6 @@ static int trf7970a_pm_runtime_resume(struct device *dev)
- 	struct trf7970a *trf = spi_get_drvdata(spi);
- 	int ret;
- 
--	dev_dbg(dev, "Runtime resume\n");
--
- 	ret = trf7970a_power_up(trf);
- 	if (!ret)
- 		pm_runtime_mark_last_busy(dev);
+-/* Inspired (hugely) by HCI LDISC implementation in Bluetooth.
++ * Inspired (hugely) by HCI LDISC implementation in Bluetooth.
+  *
+  *  Copyright (C) 2000-2001  Qualcomm Incorporated
+  *  Copyright (C) 2002-2003  Maxim Krasnyansky <maxk@qualcomm.com>
 -- 
 2.30.2
 
