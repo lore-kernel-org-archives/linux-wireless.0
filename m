@@ -2,103 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C927BC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60659C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 18:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3DE560FED
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:57:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 308A7610CE
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 18:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231923AbhINR6i (ORCPT
+        id S231366AbhINSJK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 13:58:38 -0400
-Received: from gateway32.websitewelcome.com ([192.185.145.178]:23766 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230035AbhINR6i (ORCPT
+        Tue, 14 Sep 2021 14:09:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34378 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230008AbhINSJJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Sep 2021 13:58:38 -0400
-X-Greylist: delayed 1493 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Sep 2021 13:58:38 EDT
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id D07261A51BF
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2021 12:32:26 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id QCIEmmolIHlR1QCIEmCvQB; Tue, 14 Sep 2021 12:32:26 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=3sP6jXMNnxu6PJJC0Lvm+qOKW0f/dGtu/4FvN9Uf7iM=; b=g8Az3FMGHjcUQunQDfThX3OfVx
-        fI2MMchUpam/fzYsvIrUYzq3Ilrjsmjg+DZnyr7STqsjSE6Itbo44efKDrBR8yt4YU+riVw7lErnt
-        dR21PRArQDvU37USJICiFK8IoldkWyUV2C51+PhJihApbCnlTysBXPUGldNdXyzWcDPxzCuk9viYi
-        UOojkNYveJSd6GoERVUQOiaJEmTP0yFJ40vkx0Lblpafjwsw7qDE6uzkZbODbs5AN85CZa5jizmRL
-        nSBET8eexfyAaLddgskzpeW2PpEoY/fqAQxhOK8cuFH/FuHeLymn32wmV6yeWV3dneeYdtffFwStn
-        a3ziMzJw==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:34626 helo=[192.168.15.9])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1mQCIE-0035SF-A2; Tue, 14 Sep 2021 12:32:26 -0500
-Subject: Re: [PATCH][next] ath11k: Replace one-element array with
- flexible-array member
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20210823172159.GA25800@embeddedor>
- <6e8229a1-187c-cd69-ad1c-018737e5e455@embeddedor.com>
- <87r1dr1vpf.fsf@codeaurora.org>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <36d4e936-527d-e6ff-8f6a-e06fcb275327@embeddedor.com>
-Date:   Tue, 14 Sep 2021 12:36:13 -0500
+        Tue, 14 Sep 2021 14:09:09 -0400
+Received: from mail-qk1-x731.google.com (mail-qk1-x731.google.com [IPv6:2607:f8b0:4864:20::731])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FFD9C061574
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2021 11:07:52 -0700 (PDT)
+Received: by mail-qk1-x731.google.com with SMTP id m21so289491qkm.13
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2021 11:07:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=eero.com; s=google;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-transfer-encoding:content-language;
+        bh=WJiBlxaozEuDEtRZ3b/Y9e+YO9epr6fRsUcQC8+sYzY=;
+        b=ue66QzoJlE5nikK5NmBndxDS9hbePQqPNG57lOwLOI6YYqWS81tGdPqBgx+jSwXMsm
+         xr4IUYtAAZzhNFPiZTNj9Pc+2SZQkh5/eTL2+ONQOH9xDQYWp5XEOpPwZ8gYs2tD8TPD
+         fD2sBJQ40aK4rvK7GN0euYM7T/y/imdmSNtlY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=WJiBlxaozEuDEtRZ3b/Y9e+YO9epr6fRsUcQC8+sYzY=;
+        b=e14jhytcLWoH9tHDsIGKh17GxqZsrg3GOrbb2afg8UYlwi442G3fNuyKYeHs7CZYyg
+         qF+Loo8johKfT4OqS17DjyucQfS6FfG4dXZs6aRF8lyZZ51i67jIv4Gw3epxJg5JOjuJ
+         DkXRz42gSeC3ACO3YZlcYQ0PUms5Bzz51mdsDMgJVA0/tuN86usJzd95qCGnmXXKxPUb
+         OaxVrOTkdq7uKU/idm/f3nHfoxDJ7v/5KCK2aSE0CJM67qq0q38LVRk2GzaRNs+SFjk/
+         nTC1V6JNlLYn4ir4H8OA6kAFEsuM2cszTqEkV7ma8fmnzHHDewq/2Bx1x5sn8imaN2ET
+         hkKg==
+X-Gm-Message-State: AOAM533Nlm+w2QS3NrdLh417lmdEsgNEnzQy88BevZuV0uNuIP3hl+iY
+        xCwYnCXJccK3smvSRSfHiBc3YVCKRrsYSQ==
+X-Google-Smtp-Source: ABdhPJx5Jeup+tAAqgzUmXMSSmg/QiD79lnqDrcLDf02EImf/PItyINcbzOUSa3qDj4gdmIg0vfgwg==
+X-Received: by 2002:a05:620a:81c:: with SMTP id s28mr6187941qks.45.1631642871214;
+        Tue, 14 Sep 2021 11:07:51 -0700 (PDT)
+Received: from ?IPv6:2600:1700:38c5:675f:a482:d150:1965:8294? ([2600:1700:38c5:675f:a482:d150:1965:8294])
+        by smtp.gmail.com with ESMTPSA id q22sm6468655qtr.95.2021.09.14.11.07.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Sep 2021 11:07:50 -0700 (PDT)
+Subject: Re: Patch for Atheros QCA6174
+To:     Andreas Tepe <andreas.tepe@debitel.net>,
+        linux-wireless@vger.kernel.org
+References: <dd4aa95d-c7e6-f582-48bd-c7d6f8cdc8b2@debitel.net>
+From:   Peter Oh <peter.oh@eero.com>
+Message-ID: <839a16ab-7535-c719-2be7-10100c84a738@eero.com>
+Date:   Tue, 14 Sep 2021 11:07:49 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <87r1dr1vpf.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <dd4aa95d-c7e6-f582-48bd-c7d6f8cdc8b2@debitel.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1mQCIE-0035SF-A2
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.9]) [187.162.31.110]:34626
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 6
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
+On 9/14/21 9:59 AM, Andreas Tepe wrote:
+> @@ -426,6 +428,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+>          {CTRY_KOREA_ROC, APL9_WORLD, "KR"},
+>          {CTRY_KOREA_ROC2, APL2_WORLD, "K2"},
+>          {CTRY_KOREA_ROC3, APL9_WORLD, "K3"},
+> +       {CTRY_KOREA_ROC, APL10_WORLD, "KR"},
+>          {CTRY_KUWAIT, ETSI3_WORLD, "KW"},
+>          {CTRY_LATVIA, ETSI1_WORLD, "LV"},
+>          {CTRY_LEBANON, NULL1_WORLD, "LB"},
 
-On 9/14/21 02:07, Kalle Valo wrote:
-> "Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
-> 
->> I wonder if you can take this patch, please.
-> 
-> This is in my queue, please do not take ath11k patches.
+The same country number CTRY_KOREA_ROC(410) cannot be used for different 
+regDomainPairs.
 
-Great, and sure thing. :)
 
-Thanks
---
-Gustavo
+Thanks,
+
+Peter
+
