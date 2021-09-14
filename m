@@ -2,168 +2,128 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B28D8C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 16:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E9DC4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 16:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A462610FB
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 16:19:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F93460EB6
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 16:37:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbhINQU3 (ORCPT
+        id S230352AbhINQjH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 12:20:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36214 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbhINQU2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Sep 2021 12:20:28 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F67C061764;
-        Tue, 14 Sep 2021 09:19:11 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id r2so13192968pgl.10;
-        Tue, 14 Sep 2021 09:19:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SPe9Gq3rQeNmjwlopYRqoVmk2NhxavVv7k/FHKOjP9U=;
-        b=l9bTCaAKabfMQeg+UC5FYFsUZ6EE+yKH8m1kdgxUElTSNojq8BH7eaIDZp8VSOgNS1
-         ltDbe5Nxo8NzstfDicJgXFj/dgZEBF8w0nHjRQHL5nkB1o75X+AHgJXTWMEQezJUg+xc
-         21dmSUkSiUQ08/vvJOXpTrkCKKqcu0BUprL2DDSBW9BFuMH82UJ0hodG59kieRgX0hV9
-         eH5O1wp4w9ixxF9MjZxkmxiHwRzEL9v/kapAeeFJPbJubHHDQue6p+Q3KI5tJU6bJjK8
-         7chBEHbpuA3JN5ki5C4ijuKYSZnEWFHo5klE6HmrFQIcNDc6IK1uy63f8bRS3XzDlm+W
-         GQqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SPe9Gq3rQeNmjwlopYRqoVmk2NhxavVv7k/FHKOjP9U=;
-        b=1aOKsJlDPu723M5WPUoxN/9CHk4PdEava3+u+qgHyPEpBbb7xUyKxp4c/y+jujH1Tp
-         FrHXDSDd6i5RcnuDykt2ITerXvemXpKCOVijUMDenEYN8V7Zm8Pl6eAVGD41qygMx8JY
-         MKRZd9jRacqZZZjQksR1qlodrlCa13PElqbxl3QH+JcUvSi9XKMCDuZNZty48qZchd13
-         ATQQEYwL373eNXwZQwWq6rGrcRgERrpeHPspg79AB+y8kWmqh1/OWTeG5Fc8zmzgo/K7
-         q5Z2oJhJr0yiwYufov/zALQKxPacRJq+0KyzMG45x8IEOwtouTrrpTh8W2vXQ+7cUWSH
-         +Ehg==
-X-Gm-Message-State: AOAM532RVEz6o9FUpbD8nrzpdDIvqfCGbwFG/T2NCYgVmA5lAOGww/wB
-        2MBonWlEFYq9nEFWOanigXk=
-X-Google-Smtp-Source: ABdhPJz6cL93BvhyRqSwtPTBvS3LdxvtkwjlUHEaGb7pz+LOIxnmennP90VFJs0BQpX45kX+YOcdhQ==
-X-Received: by 2002:a05:6a00:1881:b0:3fa:7d56:c611 with SMTP id x1-20020a056a00188100b003fa7d56c611mr5571749pfh.8.1631636350656;
-        Tue, 14 Sep 2021 09:19:10 -0700 (PDT)
-Received: from localhost.localdomain ([223.39.130.38])
-        by smtp.googlemail.com with ESMTPSA id ga24sm2141476pjb.41.2021.09.14.09.19.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Sep 2021 09:19:10 -0700 (PDT)
-From:   MichelleJin <shjy180909@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, yoshfuji@linux-ipv6.org,
-        dsahern@kernel.org, johannes@sipsolutions.net
-Cc:     saeedm@nvidia.com, leon@kernel.org, roid@nvidia.com,
-        paulb@nvidia.com, lariel@nvidia.com, ozsh@nvidia.com,
-        vladbu@nvidia.com, cmi@nvidia.com, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH net-next] net: check return value of rhashtable_init
-Date:   Tue, 14 Sep 2021 16:18:53 +0000
-Message-Id: <20210914161853.4305-1-shjy180909@gmail.com>
+        Tue, 14 Sep 2021 12:39:07 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:11370 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229709AbhINQjA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Sep 2021 12:39:00 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1631637460; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=wIoJOvqF8dE6kwZEz+Y+D1Dd0q2DEPU/2+Tzin+CbL0=; b=scEJUovgfPzaK7tBTiow142m3o77XJoRmHZIdLLE4EYDySVeQw8TeMncd4iT3tGnBI8WxPDM
+ 9EiWhuVfwBUAmD9Uy0P5yytXBzEeYp7c5xme2GQbiuLJpbqBv5ZgCXxtxc1+dF9FdYhWgGzd
+ JMEfpCMWwCyACdeGVTYhi4mj3B0=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 6140cfd3c1b30e2f02fd69a7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 14 Sep 2021 16:37:39
+ GMT
+Sender: jouni=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 83957C4338F; Tue, 14 Sep 2021 16:37:38 +0000 (UTC)
+Received: from jouni.codeaurora.org (85-76-72-211-nat.elisa-mobile.fi [85.76.72.211])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: jouni)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A46D4C43460;
+        Tue, 14 Sep 2021 16:37:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org A46D4C43460
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Wen Gong <wgong@codeaurora.org>,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 3/3] ath11k: set correct NL80211_FEATURE_DYNAMIC_SMPS for WCN6855
+Date:   Tue, 14 Sep 2021 19:37:26 +0300
+Message-Id: <20210914163726.38604-3-jouni@codeaurora.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210914163726.38604-1-jouni@codeaurora.org>
+References: <20210914163726.38604-1-jouni@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Handling errors of rhashtable_init.
+From: Wen Gong <wgong@codeaurora.org>
 
-When rhashtable_init fails, it returns -EINVAL.
+Commit "ath11k: support SMPS configuration for 6 GHz" changed "if
+(ht_cap & WMI_HT_CAP_DYNAMIC_SMPS)" to "if (ht_cap &
+WMI_HT_CAP_DYNAMIC_SMPS || ar->supports_6ghz)" which means
+NL80211_FEATURE_DYNAMIC_SMPS is enabled for all chips which support 6
+GHz. However, WCN6855 supports 6 GHz but it does not support feature
+NL80211_FEATURE_DYNAMIC_SMPS, and this can lead to MU-MIMO test failures
+for WCN6855.
 
-Signed-off-by: MichelleJin <shjy180909@gmail.com>
+Disable NL80211_FEATURE_DYNAMIC_SMPS for WCN6855 since its ht_cap does
+not support WMI_HT_CAP_DYNAMIC_SMPS.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
- .../net/ethernet/mellanox/mlx5/core/en/tc_ct.c    | 15 ++++++++++++---
- net/ipv6/ila/ila_xlat.c                           |  4 +++-
- net/ipv6/seg6_hmac.c                              |  6 +++++-
- net/mac80211/mesh_pathtbl.c                       |  3 ++-
- 4 files changed, 22 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c | 1 +
+ drivers/net/wireless/ath/ath11k/hw.h   | 1 +
+ drivers/net/wireless/ath/ath11k/mac.c  | 3 ++-
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_ct.c b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_ct.c
-index 6c949abcd2e1..5ae3b97df10e 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_ct.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_ct.c
-@@ -2127,12 +2127,21 @@ mlx5_tc_ct_init(struct mlx5e_priv *priv, struct mlx5_fs_chains *chains,
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 265ff225bd81..2bae8c5184d4 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -279,6 +279,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.sram_dump = &sram_dump_wcn6855,
+ 		.max_tx_ring = DP_TCL_NUM_RING_MAX_QCA6390,
+ 		.hal_params = &ath11k_hal_params_qca6390,
++		.check_dynamic_smps = true,
+ 	},
+ };
  
- 	ct_priv->post_act = post_act;
- 	mutex_init(&ct_priv->control_lock);
--	rhashtable_init(&ct_priv->zone_ht, &zone_params);
--	rhashtable_init(&ct_priv->ct_tuples_ht, &tuples_ht_params);
--	rhashtable_init(&ct_priv->ct_tuples_nat_ht, &tuples_nat_ht_params);
-+	if (rhashtable_init(&ct_priv->zone_ht, &zone_params))
-+		goto err_ct_zone_ht;
-+	if (rhashtable_init(&ct_priv->ct_tuples_ht, &tuples_ht_params))
-+		goto err_ct_tuples_ht;
-+	if (rhashtable_init(&ct_priv->ct_tuples_nat_ht, &tuples_nat_ht_params))
-+		goto err_ct_tuples_nat_ht;
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index c6831fb110ba..7463b96770b7 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -180,6 +180,7 @@ struct ath11k_hw_params {
+ 	const struct ath11k_hw_sram_dump *sram_dump;
+ 	u8 max_tx_ring;
+ 	const struct hal_param *hal_params;
++	bool check_dynamic_smps;
+ };
  
- 	return ct_priv;
+ struct ath11k_hw_ops {
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 1f4765e43546..97a2c92b7b9b 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -7570,7 +7570,8 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	 * for each band for a dual band capable radio. It will be tricky to
+ 	 * handle it when the ht capability different for each band.
+ 	 */
+-	if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS || ar->supports_6ghz)
++	if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS ||
++	    (ar->supports_6ghz && !ab->hw_params.check_dynamic_smps))
+ 		ar->hw->wiphy->features |= NL80211_FEATURE_DYNAMIC_SMPS;
  
-+err_ct_tuples_nat_ht:
-+	rhashtable_destroy(&ct_priv->ct_tuples_nat_ht);
-+err_ct_tuples_ht:
-+	rhashtable_destroy(&ct_priv->ct_tuples_ht);
-+err_ct_zone_ht:
-+	rhashtable_destroy(&ct_priv->zone_ht);
- err_ct_nat_tbl:
- 	mlx5_chains_destroy_global_table(chains, ct_priv->ct);
- err_ct_tbl:
-diff --git a/net/ipv6/ila/ila_xlat.c b/net/ipv6/ila/ila_xlat.c
-index a1ac0e3d8c60..481d475353ea 100644
---- a/net/ipv6/ila/ila_xlat.c
-+++ b/net/ipv6/ila/ila_xlat.c
-@@ -610,7 +610,9 @@ int ila_xlat_init_net(struct net *net)
- 	if (err)
- 		return err;
- 
--	rhashtable_init(&ilan->xlat.rhash_table, &rht_params);
-+	err = rhashtable_init(&ilan->xlat.rhash_table, &rht_params);
-+	if (err)
-+		return err;
- 
- 	return 0;
- }
-diff --git a/net/ipv6/seg6_hmac.c b/net/ipv6/seg6_hmac.c
-index 687d95dce085..a78554993163 100644
---- a/net/ipv6/seg6_hmac.c
-+++ b/net/ipv6/seg6_hmac.c
-@@ -403,9 +403,13 @@ EXPORT_SYMBOL(seg6_hmac_init);
- 
- int __net_init seg6_hmac_net_init(struct net *net)
- {
-+	int err;
-+
- 	struct seg6_pernet_data *sdata = seg6_pernet(net);
- 
--	rhashtable_init(&sdata->hmac_infos, &rht_params);
-+	err = rhashtable_init(&sdata->hmac_infos, &rht_params);
-+	if (err)
-+		return err;
- 
- 	return 0;
- }
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index efbefcbac3ac..3ef5d6e00410 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -60,7 +60,8 @@ static struct mesh_table *mesh_table_alloc(void)
- 	atomic_set(&newtbl->entries,  0);
- 	spin_lock_init(&newtbl->gates_lock);
- 	spin_lock_init(&newtbl->walk_lock);
--	rhashtable_init(&newtbl->rhead, &mesh_rht_params);
-+	if (rhashtable_init(&newtbl->rhead, &mesh_rht_params))
-+		return NULL;
- 
- 	return newtbl;
- }
+ 	ar->hw->wiphy->max_scan_ssids = WLAN_SCAN_PARAMS_MAX_SSID;
 -- 
 2.25.1
 
