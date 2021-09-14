@@ -2,79 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4552C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61FCEC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:47:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FC9660F70
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:32:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A0B9610A2
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 17:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231307AbhINRde (ORCPT
+        id S231438AbhINRtC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 13:33:34 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:11136 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S230019AbhINRdd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Sep 2021 13:33:33 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 18EGhd4g029046;
-        Tue, 14 Sep 2021 13:31:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=aIo1TaDICCdei1g5dVPm7EpGYyAVvfgdhezR0Ptp5c0=;
- b=s7hXSBA/32Y5ktAMPYe7jo9025Kjck+fWN6v/EzWvTwx3VGbrZ7VPw/zkFshlWQwU28A
- /CZHT3M3LfXH6tc7ThNn7FIWAgHhTAmJrMfd4hy5L7VCkjf3xzK1TyhW76AB4f57CvE6
- yZHVAt47J4mbivuUfXLlgLl6ZLbGvSSGUTg1YnIvQNV1lUSTJX2sQec8YkfhSEDEpc2u
- UBhUgRqRIvp/UcEM4R5EQXkAg8+3YZP4AwCXdjE/wSck4HkMfHv9YyZWy7vdnYvzoCJM
- D1tWCAdJ4CrbxsB7S49+1NG8YJDn3FK0+gNWTNxtm4gLNP48n8QOELhpTjrhn9I2I0g7 dw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3b2ygt19er-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Sep 2021 13:31:38 -0400
-Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 18EGhuYX029606;
-        Tue, 14 Sep 2021 13:31:37 -0400
-Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3b2ygt19dt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Sep 2021 13:31:37 -0400
-Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
-        by ppma02fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18EHCBga013667;
-        Tue, 14 Sep 2021 17:31:35 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma02fra.de.ibm.com with ESMTP id 3b0m39dj50-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Sep 2021 17:31:35 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18EHVW7T46399848
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Sep 2021 17:31:32 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9AC59AE051;
-        Tue, 14 Sep 2021 17:31:32 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BBDB0AE053;
-        Tue, 14 Sep 2021 17:31:29 +0000 (GMT)
-Received: from [9.171.20.178] (unknown [9.171.20.178])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Sep 2021 17:31:29 +0000 (GMT)
-Message-ID: <a366c691-fb81-8e30-3853-3260ceabf080@linux.ibm.com>
-Date:   Tue, 14 Sep 2021 20:31:29 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.0
-Subject: Re: [PATCH V3 net-next 2/4] ethtool: extend coalesce setting uAPI
- with CQE mode
-Content-Language: en-US
-To:     Yufeng Mo <moyufeng@huawei.com>, davem@davemloft.net,
-        kuba@kernel.org
-Cc:     netdev@vger.kernel.org, shenjian15@huawei.com,
+        Tue, 14 Sep 2021 13:49:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44562 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231723AbhINRtB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Sep 2021 13:49:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CF44660EE7;
+        Tue, 14 Sep 2021 17:47:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631641663;
+        bh=XwFlKQprbS5Xsut4+KVkQ9rCehkueeb5Va+IvjAKMe4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=KSv+RtTpPHB8oKm9pr3uJGiIUDjyo2a5hOdIoMlnQ+P24YDigyFarSm+jspCdwnaF
+         78wzNARuX57eydl869SJQaHVt0n+G1NmLKKEHCwNPgxa6qAD3uhsKdlKXTwojUKZ7H
+         e7udUMegacreRABX8g+Klx5kSDDa8xPkubf2ga8jzzyOtSw/eAwSGSkqgPnkSsnnfs
+         DJLgqqWkeSW2lf1sKx3nerYD0NvR/aGS0vURmuOHsA4rK3TLz3D+S8yshF0EsjYWLd
+         EFkngxWr8o95rvJkavLuM9rA/6eGaHB/RYfqc4goNJ0MsM6pB+TnxV2cG/eGWX4zkF
+         xaDCKjKF8Ujdw==
+Date:   Tue, 14 Sep 2021 10:47:41 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Julian Wiedmann <jwi@linux.ibm.com>
+Cc:     Yufeng Mo <moyufeng@huawei.com>, davem@davemloft.net,
+        netdev@vger.kernel.org, shenjian15@huawei.com,
         lipeng321@huawei.com, yisen.zhuang@huawei.com,
         linyunsheng@huawei.com, huangguangbin2@huawei.com,
         chenhao288@hisilicon.com, salil.mehta@huawei.com,
@@ -88,96 +49,32 @@ Cc:     netdev@vger.kernel.org, shenjian15@huawei.com,
         ecree.xilinx@gmail.com, grygorii.strashko@ti.com,
         merez@codeaurora.org, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V3 net-next 2/4] ethtool: extend coalesce setting uAPI
+ with CQE mode
+Message-ID: <20210914104741.78b21e72@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <a366c691-fb81-8e30-3853-3260ceabf080@linux.ibm.com>
 References: <1629444920-25437-1-git-send-email-moyufeng@huawei.com>
- <1629444920-25437-3-git-send-email-moyufeng@huawei.com>
-From:   Julian Wiedmann <jwi@linux.ibm.com>
-In-Reply-To: <1629444920-25437-3-git-send-email-moyufeng@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+        <1629444920-25437-3-git-send-email-moyufeng@huawei.com>
+        <a366c691-fb81-8e30-3853-3260ceabf080@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: J9Eh5isQci_ecwaFFb4ZLD-60nRzRzVL
-X-Proofpoint-GUID: wCqWvBcAe21rS4r3kVmKye1GiH9Vqur8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
- definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- priorityscore=1501 impostorscore=0 suspectscore=0 mlxlogscore=999
- bulkscore=0 lowpriorityscore=0 adultscore=0 spamscore=0 malwarescore=0
- clxscore=1011 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109030001 definitions=main-2109140092
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 20.08.21 10:35, Yufeng Mo wrote:
-> In order to support more coalesce parameters through netlink,
-> add two new parameter kernel_coal and extack for .set_coalesce
-> and .get_coalesce, then some extra info can return to user with
-> the netlink API.
+On Tue, 14 Sep 2021 20:31:29 +0300 Julian Wiedmann wrote:
+> > -	if (!dev->ethtool_ops->set_coalesce)
+> > +	if (!dev->ethtool_ops->set_coalesce && !dev->ethtool_ops->get_coalesce)
+> >  		return -EOPNOTSUPP;
+> >    
 > 
-> Signed-off-by: Yufeng Mo <moyufeng@huawei.com>
-> Signed-off-by: Huazhong Tan <tanhuazhong@huawei.com>
-> ---
-
-[...]
-
-> index 81fa36a..f2abc31 100644
-> --- a/net/ethtool/ioctl.c
-> +++ b/net/ethtool/ioctl.c
-> @@ -1619,12 +1619,14 @@ static noinline_for_stack int ethtool_get_coalesce(struct net_device *dev,
->  						   void __user *useraddr)
->  {
->  	struct ethtool_coalesce coalesce = { .cmd = ETHTOOL_GCOALESCE };
-> +	struct kernel_ethtool_coalesce kernel_coalesce = {};
->  	int ret;
->  
->  	if (!dev->ethtool_ops->get_coalesce)
->  		return -EOPNOTSUPP;
->  
-> -	ret = dev->ethtool_ops->get_coalesce(dev, &coalesce);
-> +	ret = dev->ethtool_ops->get_coalesce(dev, &coalesce, &kernel_coalesce,
-> +					     NULL);
->  	if (ret)
->  		return ret;
->  
-> @@ -1691,19 +1693,26 @@ ethtool_set_coalesce_supported(struct net_device *dev,
->  static noinline_for_stack int ethtool_set_coalesce(struct net_device *dev,
->  						   void __user *useraddr)
->  {
-> +	struct kernel_ethtool_coalesce kernel_coalesce = {};
->  	struct ethtool_coalesce coalesce;
->  	int ret;
->  
-> -	if (!dev->ethtool_ops->set_coalesce)
-> +	if (!dev->ethtool_ops->set_coalesce && !dev->ethtool_ops->get_coalesce)
->  		return -EOPNOTSUPP;
->  
-
-This needs to be
-
-	if (!set_coalesce || !get_coalesce)
-		return -EOPNOTSUPP;
-
-Otherwise you end up calling a NULL pointer below if just _one_ of the
-callbacks is available.
-
-
-> +	ret = dev->ethtool_ops->get_coalesce(dev, &coalesce, &kernel_coalesce,
-> +					     NULL);
-> +	if (ret)
-> +		return ret;
-> +
->  	if (copy_from_user(&coalesce, useraddr, sizeof(coalesce)))
->  		return -EFAULT;
->  
->  	if (!ethtool_set_coalesce_supported(dev, &coalesce))
->  		return -EOPNOTSUPP;
->  
-> -	ret = dev->ethtool_ops->set_coalesce(dev, &coalesce);
-> +	ret = dev->ethtool_ops->set_coalesce(dev, &coalesce, &kernel_coalesce,
-> +					     NULL);
->  	if (!ret)
->  		ethtool_notify(dev, ETHTOOL_MSG_COALESCE_NTF, NULL);
->  	return ret;
+> This needs to be
 > 
+> 	if (!set_coalesce || !get_coalesce)
+> 		return -EOPNOTSUPP;
+> 
+> Otherwise you end up calling a NULL pointer below if just _one_ of the
+> callbacks is available.
 
+Good catch, care to send a fix?
