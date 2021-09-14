@@ -4,32 +4,32 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54011C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 20:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB7A5C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 20:00:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B7C96112D
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 20:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAB206112D
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 20:00:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233716AbhINUCG (ORCPT
+        id S233963AbhINUCH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 16:02:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60432 "EHLO
+        Tue, 14 Sep 2021 16:02:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233763AbhINUA6 (ORCPT
+        with ESMTP id S233476AbhINUBE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Sep 2021 16:00:58 -0400
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050::465:201])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20595C0613D8;
-        Tue, 14 Sep 2021 12:59:40 -0700 (PDT)
+        Tue, 14 Sep 2021 16:01:04 -0400
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050::465:101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 068FEC061766;
+        Tue, 14 Sep 2021 12:59:47 -0700 (PDT)
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [80.241.60.240])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4H8DhV5yNyzQjgH;
-        Tue, 14 Sep 2021 21:59:38 +0200 (CEST)
+        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4H8Dhd4yJRzQkBj;
+        Tue, 14 Sep 2021 21:59:45 +0200 (CEST)
 X-Virus-Scanned: amavisd-new at heinlein-support.de
 From:   =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>
 To:     Amitkumar Karwar <amitkarwar@gmail.com>,
@@ -46,99 +46,65 @@ Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
         Maximilian Luz <luzmaximilian@gmail.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-Subject: [PATCH 6/9] mwifiex: Allow switching interface type from P2P_CLIENT to P2P_GO
-Date:   Tue, 14 Sep 2021 21:59:06 +0200
-Message-Id: <20210914195909.36035-7-verdre@v0yd.nl>
+Subject: [PATCH 8/9] mwifiex: Properly initialize private structure on interface type changes
+Date:   Tue, 14 Sep 2021 21:59:08 +0200
+Message-Id: <20210914195909.36035-9-verdre@v0yd.nl>
 In-Reply-To: <20210914195909.36035-1-verdre@v0yd.nl>
 References: <20210914195909.36035-1-verdre@v0yd.nl>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: EE06E188C
+X-Rspamd-Queue-Id: C7EFD18B0
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It's possible to change virtual interface type between P2P_CLIENT and
-P2P_GO, the card supports that just fine, and it happens for example
-when using miracast with the miraclecast software.
+When creating a new virtual interface in mwifiex_add_virtual_intf(), we
+update our internal driver states like bss_type, bss_priority, bss_role
+and bss_mode to reflect the mode the firmware will be set to.
 
-So allow type changes between P2P_CLIENT and P2P_GO and simply call into
-mwifiex_change_vif_to_p2p(), which handles this just fine. We have to
-call mwifiex_cfg80211_deinit_p2p() before though to make sure the old
-p2p mode is properly uninitialized.
+When switching virtual interface mode using
+mwifiex_init_new_priv_params() though, we currently only update bss_mode
+and bss_role. In order for the interface mode switch to actually work,
+we also need to update bss_type to its proper value, so do that.
+
+This fixes a crash of the firmware (because the driver tries to execute
+commands that are invalid in AP mode) when switching from station mode
+to AP mode.
 
 Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
 ---
- .../net/wireless/marvell/mwifiex/cfg80211.c   | 36 +++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index f2797102c5a2..ed4041ff9c89 100644
+index 64caa5c4350d..0eb31201a82b 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
 +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -990,11 +990,26 @@ is_vif_type_change_allowed(struct mwifiex_adapter *adapter,
- 		}
- 
+@@ -908,16 +908,20 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
++		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
++		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
+ 		break;
  	case NL80211_IFTYPE_P2P_CLIENT:
-+		switch (new_iftype) {
-+		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_STATION:
-+			return true;
-+		case NL80211_IFTYPE_P2P_GO:
-+			return true;
-+		case NL80211_IFTYPE_AP:
-+			return adapter->curr_iface_comb.uap_intf !=
-+			       adapter->iface_limit.uap_intf;
-+		default:
-+			return false;
-+		}
-+
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
++		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
++		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
+ 		break;
  	case NL80211_IFTYPE_P2P_GO:
- 		switch (new_iftype) {
- 		case NL80211_IFTYPE_ADHOC:
- 		case NL80211_IFTYPE_STATION:
- 			return true;
-+		case NL80211_IFTYPE_P2P_CLIENT:
-+			return true;
- 		case NL80211_IFTYPE_AP:
- 			return adapter->curr_iface_comb.uap_intf !=
- 			       adapter->iface_limit.uap_intf;
-@@ -1265,6 +1280,24 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
- 		}
- 
- 	case NL80211_IFTYPE_P2P_CLIENT:
-+		if (mwifiex_cfg80211_deinit_p2p(priv))
-+			return -EFAULT;
-+
-+		switch (type) {
-+		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_STATION:
-+			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
-+							       type, params);
-+		case NL80211_IFTYPE_P2P_GO:
-+			return mwifiex_change_vif_to_p2p(dev, curr_iftype,
-+							 type, params);
-+		case NL80211_IFTYPE_AP:
-+			return mwifiex_change_vif_to_ap(dev, curr_iftype, type,
-+							params);
-+		default:
-+			goto errnotsupp;
-+		}
-+
- 	case NL80211_IFTYPE_P2P_GO:
- 		if (mwifiex_cfg80211_deinit_p2p(priv))
- 			return -EFAULT;
-@@ -1274,6 +1307,9 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
- 		case NL80211_IFTYPE_STATION:
- 			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
- 							       type, params);
-+		case NL80211_IFTYPE_P2P_CLIENT:
-+			return mwifiex_change_vif_to_p2p(dev, curr_iftype,
-+							 type, params);
- 		case NL80211_IFTYPE_AP:
- 			return mwifiex_change_vif_to_ap(dev, curr_iftype, type,
- 							params);
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
+ 		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR,
 -- 
 2.31.1
 
