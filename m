@@ -2,26 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA0DC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 19:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5108FC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 19:33:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53D64610CE
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 19:33:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AE3C60E9B
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 19:33:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232957AbhINTez (ORCPT
+        id S233322AbhINTe6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 15:34:55 -0400
-Received: from mail.aperture-lab.de ([116.203.183.178]:44928 "EHLO
+        Tue, 14 Sep 2021 15:34:58 -0400
+Received: from mail.aperture-lab.de ([116.203.183.178]:44930 "EHLO
         mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230390AbhINTey (ORCPT
+        with ESMTP id S232113AbhINTey (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 14 Sep 2021 15:34:54 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id D7D2E3EA6B;
-        Tue, 14 Sep 2021 21:25:25 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id D4D2641015;
+        Tue, 14 Sep 2021 21:25:34 +0200 (CEST)
 From:   =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
 To:     Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
         Sujith Manoharan <c_manoha@qca.qualcomm.com>,
@@ -33,10 +34,14 @@ Cc:     linux-wireless@vger.kernel.org,
         Felix Fietkau <nbd@openwrt.org>,
         Simon Wunderlich <sw@simonwunderlich.de>,
         Sven Eckelmann <sven@narfation.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] ath9k: interrupt fixes on queue reset
-Date:   Tue, 14 Sep 2021 21:25:12 +0200
-Message-Id: <20210914192515.9273-1-linus.luessing@c0d3.blue>
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Linus=20L=C3=BCssing?= <ll@simonwunderlich.de>,
+        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
+Subject: [PATCH 3/3] ath9k: Fix potential hw interrupt resume during reset
+Date:   Tue, 14 Sep 2021 21:25:15 +0200
+Message-Id: <20210914192515.9273-4-linus.luessing@c0d3.blue>
+In-Reply-To: <20210914192515.9273-1-linus.luessing@c0d3.blue>
+References: <20210914192515.9273-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -45,17 +50,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Linus Lüssing <ll@simonwunderlich.de>
 
-The following are two patches for ath9k to fix a potential interrupt
-storm (PATCH 2/3) and to fix potentially resetting the wifi chip while
-its interrupts were accidentally reenabled (PATCH 3/3).
+There is a small risk of the ath9k hw interrupts being reenabled in the
+following way:
 
-PATCH 1/3 adds the possibility to trigger the ath9k queue reset through
-the ath9k reset file in debugfs. Which was helpful to reproduce and debug
-this issue and might help for future debugging.
+1) ath_reset_internal()
+   ...
+   -> disable_irq()
+      ...
+      <- returns
 
-PATCH 2/3 and PATCH 3/3 should be applicable for stable.
+                      2) ath9k_tasklet()
+                         ...
+                         -> ath9k_hw_resume_interrupts()
+                         ...
 
-Regards, Linus
+1) ath_reset_internal() continued:
+   -> tasklet_disable(&sc->intr_tq); (= ath9k_tasklet() off)
+
+By first disabling the ath9k interrupt there is a small window
+afterwards which allows ath9k hw interrupts being reenabled through
+the ath9k_tasklet() before we disable this tasklet in
+ath_reset_internal(). Leading to having the ath9k hw interrupts enabled
+during the reset, which we should avoid.
+
+Fixing this by first disabling all ath9k tasklets. And only after
+they are not running anymore also disabling the overall ath9k interrupt.
+
+Either ath9k_queue_reset()->ath9k_kill_hw_interrupts() or
+ath_reset_internal()->disable_irq()->ath_isr()->ath9k_kill_hw_interrupts()
+should then have ensured that no ath9k hw interrupts are running during
+the actual ath9k reset.
+
+We could reproduce this issue with two Lima boards from 8devices
+(QCA4531) on OpenWrt 19.07 while sending UDP traffic between the two and
+triggering an ath9k_queue_reset() and with added msleep()s between
+disable_irq() and tasklet_disable() in ath_reset_internal().
+
+Cc: Sven Eckelmann <sven@narfation.org>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Linus Lüssing <linus.luessing@c0d3.blue>
+Fixes: e3f31175a3ee ("ath9k: fix race condition in irq processing during hardware reset")
+Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 98090e40e1cf..b9f9a8ae3b56 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -292,9 +292,9 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 
+ 	__ath_cancel_work(sc);
+ 
+-	disable_irq(sc->irq);
+ 	tasklet_disable(&sc->intr_tq);
+ 	tasklet_disable(&sc->bcon_tasklet);
++	disable_irq(sc->irq);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	if (!sc->cur_chan->offchannel) {
+-- 
+2.31.0
 
