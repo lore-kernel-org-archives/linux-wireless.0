@@ -2,157 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C6EC43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 11:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA32C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 15:55:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2395610F9
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 11:50:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A4EC61163
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Sep 2021 15:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232628AbhINLu0 (ORCPT
+        id S232898AbhINP4u (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Sep 2021 07:50:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232524AbhINLuD (ORCPT
+        Tue, 14 Sep 2021 11:56:50 -0400
+Received: from mailgw02.mediatek.com ([216.200.240.185]:25562 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232800AbhINP4u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Sep 2021 07:50:03 -0400
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [IPv6:2001:67c:2050::465:102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CED3C061574;
-        Tue, 14 Sep 2021 04:48:46 -0700 (PDT)
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:105:465:1:3:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4H81p43fQSzQkBS;
-        Tue, 14 Sep 2021 13:48:44 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-From:   =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
-Subject: [PATCH v2 2/2] mwifiex: Try waking the firmware until we get an interrupt
-Date:   Tue, 14 Sep 2021 13:48:13 +0200
-Message-Id: <20210914114813.15404-3-verdre@v0yd.nl>
-In-Reply-To: <20210914114813.15404-1-verdre@v0yd.nl>
-References: <20210914114813.15404-1-verdre@v0yd.nl>
+        Tue, 14 Sep 2021 11:56:50 -0400
+X-Greylist: delayed 306 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Sep 2021 11:56:50 EDT
+X-UUID: a13246075cc945eb9b68afac2e006ecd-20210914
+X-UUID: a13246075cc945eb9b68afac2e006ecd-20210914
+Received: from mtkcas67.mediatek.inc [(172.29.193.45)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 320159456; Tue, 14 Sep 2021 08:50:28 -0700
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ MTKMBS62N2.mediatek.inc (172.29.193.42) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 14 Sep 2021 08:50:26 -0700
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 14 Sep 2021 23:50:25 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <robin.chiu@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <Stella.Chang@mediatek.com>, <jemele@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/2] mt76: mt7921: fix retrying release semaphore without end
+Date:   Tue, 14 Sep 2021 23:50:22 +0800
+Message-ID: <b3b18e00b76699342af5f8a841221022a66a2f4c.1631633959.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <b3d4a17bdbb819424a6493f14b9cd3d7a6bbc588.1631633959.git.objelf@gmail.com>
+References: <b3d4a17bdbb819424a6493f14b9cd3d7a6bbc588.1631633959.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 94A12268
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It seems that the firmware of the 88W8897 card sometimes ignores or
-misses when we try to wake it up by writing to the firmware status
-register. This leads to the firmware wakeup timeout expiring and the
-driver resetting the card because we assume the firmware has hung up or
-crashed (unfortunately that's not unlikely with this card).
+From: Sean Wang <sean.wang@mediatek.com>
 
-Turns out that most of the time the firmware actually didn't hang up,
-but simply "missed" our wakeup request and didn't send us an AWAKE
-event.
+We should pass the error code to the caller immediately
+to avoid the possible infinite retry to release the semaphore.
 
-Trying again to read the firmware status register after a short timeout
-usually makes the firmware wake up as expected, so add a small retry
-loop to mwifiex_pm_wakeup_card() that looks at the interrupt status to
-check whether the card woke up.
-
-The number of tries and timeout lengths for this were determined
-experimentally: The firmware usually takes about 500 us to wake up
-after we attempt to read the status register. In some cases where the
-firmware is very busy (for example while doing a bluetooth scan) it
-might even miss our requests for multiple milliseconds, which is why
-after 15 tries the waiting time gets increased to 10 ms. The maximum
-number of tries it took to wake the firmware when testing this was
-around 20, so a maximum number of 50 tries should give us plenty of
-safety margin.
-
-A good reproducer for this issue is letting the firmware sleep and wake
-up in very short intervals, for example by pinging a device on the
-network every 0.1 seconds.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
+Fixes: 1c099ab44727 ("mt76: mt7921: add MCU support")
+Co-developed-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 33 +++++++++++++++++----
- 1 file changed, 27 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 0eff717ac5fa..7fea319e013c 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -661,11 +661,15 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- 			    "max count reached while accessing sleep cookie\n");
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 9b35b5da3619..db33506567dc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -876,7 +876,7 @@ static int mt7921_load_patch(struct mt7921_dev *dev)
+ 	default:
+ 		ret = -EAGAIN;
+ 		dev_err(dev->mt76.dev, "Failed to release patch semaphore\n");
+-		goto out;
++		break;
+ 	}
+ 	release_firmware(fw);
  
-+#define N_WAKEUP_TRIES_SHORT_INTERVAL 15
-+#define N_WAKEUP_TRIES_LONG_INTERVAL 35
-+
- /* This function wakes up the card by reading fw_status register. */
- static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
-+	int n_tries = 0;
- 
- 	mwifiex_dbg(adapter, EVENT,
- 		    "event: Wakeup device...\n");
-@@ -673,12 +677,29 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- 	if (reg->sleep_cookie)
- 		mwifiex_pcie_dev_wakeup_delay(adapter);
- 
--	/* Accessing fw_status register will wakeup device */
--	if (mwifiex_write_reg(adapter, reg->fw_status, FIRMWARE_READY_PCIE)) {
--		mwifiex_dbg(adapter, ERROR,
--			    "Writing fw_status register failed\n");
--		return -1;
--	}
-+	/* Access the fw_status register to wake up the device.
-+	 * Since the 88W8897 firmware sometimes appears to ignore or miss
-+	 * that wakeup request, we continue trying until we receive an
-+	 * interrupt from the card.
-+	 */
-+	do {
-+		if (mwifiex_write_reg(adapter, reg->fw_status, FIRMWARE_READY_PCIE)) {
-+			mwifiex_dbg(adapter, ERROR,
-+				    "Writing fw_status register failed\n");
-+			return -EIO;
-+		}
-+
-+		n_tries++;
-+
-+		if (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL)
-+			usleep_range(400, 700);
-+		else
-+			msleep(10);
-+	} while (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL + N_WAKEUP_TRIES_LONG_INTERVAL &&
-+		 READ_ONCE(adapter->int_status) == 0);
-+
-+	mwifiex_dbg(adapter, EVENT,
-+		    "event: Tried %d times until firmware woke up\n", n_tries);
- 
- 	if (reg->sleep_cookie) {
- 		mwifiex_pcie_dev_wakeup_delay(adapter);
 -- 
-2.31.1
+2.25.1
 
