@@ -2,249 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64483C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 16:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EEBC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 17:07:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5067461354
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 16:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFDF160FDA
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 17:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344383AbhIPQ4w (ORCPT
+        id S1345080AbhIPRIw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Sep 2021 12:56:52 -0400
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:30349 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346431AbhIPQyy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Sep 2021 12:54:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1631811213; x=1663347213;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=npvWdfgmR5vZ2mRxQ/8rud+z4aQccSrXIlCi2HVIHMg=;
-  b=W0Y+G6ES7b4f8qhIDGKsijQotgQTMINU6VK2D+tRqD3UdmQgJAyRo33Q
-   FOYrrBu88wxcs0m4oq/T4GBUFey7Awyr0whcR0qFBpIyDFLfCxbmmLbEx
-   Jg4yyFeoLtsUqTakyJdlMxW/ATcVHWLi95k4qCHY7zzeQ6JGfnJC7y/LW
-   li6ctqnRswn5mrXzAOqCsLa2Wkbm7+wMWsFu9drmTiFoxnESkFkCSQ/Ii
-   bnKem2PC9AmPTpeTXE/FhA7RG0m39DNJB6THmkSP+XAZyzWDa8Op2zDl/
-   A4hN3yPtZFKAKd/RiaxkzKzcYOlD9y86DtKgb0yOplRtvtgQtMEPhuVOW
-   g==;
-IronPort-SDR: hdKVVla6rJJ+i6DwE/0k2FDiIwgJ17IA5X9zPnT4icXvxO/HoLVaqQSFaQvDXmGv3vSmpTg4gT
- wps5KDG2orqe2nCRvwtGluLeLyBZd01RQgsc3Zy+O760R5XbkQhEvTWOJqx2hzjJ97p49EcdZo
- 2asXN3YOaG4FOGwePP3cl/sZa1msyVgZx/POLQnahSkC+VFa/sN7V8Q7F/rGgJNBxFgMpRNYzE
- iFBp7loQoHrb7fPhQGM370IiQle6wc8IKs6RMJqXRnptJaPJHJRoStUGvN6oO/Shh3KrqAkhZp
- 34fHfq/ds19RBdImjvlu6G0Y
-X-IronPort-AV: E=Sophos;i="5.85,299,1624345200"; 
-   d="scan'208";a="136238778"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 16 Sep 2021 09:49:22 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Thu, 16 Sep 2021 09:49:22 -0700
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.14 via Frontend
- Transport; Thu, 16 Sep 2021 09:49:22 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lkgEPMeCu8XLBYvFxPHhXnNc4hGqNGQna7AMqpsJkT2317rzuZr4OpKagcD7svcKsnYNdkIHaYRNdhSoJJ2LtHTN6BGqPuHMhpL9BRSlK1mhmrExwPancJvwdwPj/HrxlRkQ8Nn/Fr0xefAh6/FleqvLXBqsko7KfpJRwi8ae8Ox7QXlv4twTw7QSoC89ynN8tk1WIGecJElUcdU50tqs3YIUaSKr5mGC2AdsWBLgSG3yro/lXAg0Z0J/dBmm+o1EcCt6PEtFytxtuxmjhahLehMVcRq3yZBuoUjmmpx6pLlgmKfDf7xu00gaX3uCtOHwTJFAarwHQFvN2+6NGKGfQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=WfaOey3xwOxR6UVcI822Dz9AOuglnm3tW3NCznzopVo=;
- b=WWoqNPeIVD3KGS/a4AU1DHttagoTt7gjIBE2blI9eTmZLoLgLuaMff7HXUD9/Vvjk5s9IXTJGkLHHMQbwJouwh4YJ+w3E39Jh+5YaRPXfgOinJDKNZV5/Q22+8tAP10jdQ58l4i3zhXZF4jQtDcdRtk6mbZp31k9eFWT7JPvvgndml2RnYtOrdY3uJK7uVuwxdqOH0xg/YEu0L5lIWr7H66A98QXy6Rn1zCh9umfNujSqA0AaNyF8tHNEzMDKzFOwMXXbWVO8JUoY+urwGeHiNPVy65VqSmiN/aDLwQRU5nRmNGft0zPNKdvzRG8K1hyjt7txJgmDQdNFU4J/5C2Iw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WfaOey3xwOxR6UVcI822Dz9AOuglnm3tW3NCznzopVo=;
- b=i6M0gKNWmcz9RzhDX4n9kvaznHjrPXHrMy87Q+NFkASJJymS7Gu988+/7vt8uFtreaYR05rbd4KrwcrWW2ku2jx9TsLfKWSE078BG4ROq+V2T8ILbsjf10idqfeW5XTfyJJzG0NbaGSzMUg9PvBuO6AMZibHCiO5aNzWi1X/2ew=
-Received: from SJ0PR11MB4943.namprd11.prod.outlook.com (2603:10b6:a03:2ad::17)
- by SJ0PR11MB5197.namprd11.prod.outlook.com (2603:10b6:a03:2d1::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14; Thu, 16 Sep
- 2021 16:49:20 +0000
-Received: from SJ0PR11MB4943.namprd11.prod.outlook.com
- ([fe80::b095:c8cf:1d0c:a3bc]) by SJ0PR11MB4943.namprd11.prod.outlook.com
- ([fe80::b095:c8cf:1d0c:a3bc%5]) with mapi id 15.20.4500.019; Thu, 16 Sep 2021
- 16:49:20 +0000
-From:   <Ajay.Kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <Claudiu.Beznea@microchip.com>, <Ajay.Kathat@microchip.com>
-Subject: [PATCH v2 06/11] wilc1000: handle read failure issue for clockless
- registers
-Thread-Topic: [PATCH v2 06/11] wilc1000: handle read failure issue for
- clockless registers
-Thread-Index: AQHXqxrL9ivDMYK1EUmCexlRqdXQpA==
-Date:   Thu, 16 Sep 2021 16:49:20 +0000
-Message-ID: <20210916164902.74629-7-ajay.kathat@microchip.com>
-References: <20210916164902.74629-1-ajay.kathat@microchip.com>
-In-Reply-To: <20210916164902.74629-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.25.1
-authentication-results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: fc5ce5ad-fab2-4291-5b40-08d97931ee3d
-x-ms-traffictypediagnostic: SJ0PR11MB5197:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SJ0PR11MB51976A016C2ABC2CD00A4D49E3DC9@SJ0PR11MB5197.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:1169;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EvajlVP7lyGF71ZNBk3NmgzygQKrz8AzvnbSC2dDQdMpYkjK5wFfPC21EHgveLVjC8ijLr+LOrWl3gL98aRQy7CxmVFF4zcM7riwcXz9RyQy08DpoxiBRzvfMkDkceXKqSi+YgQIcZACtkRdBLHdAmGYWD8MtOGjyNruaJjyI0DhpLyNYgguX4e78zcNdYTQAoHwcQEFmiC/Si91Nb46JKNuQjsrUzIE/QTzkwEqan6oQAVz4UJ00gDZmMvkK4lKRHgLCRR/ZPPLEwjTVyKGTtZXlnxQqJj4R/HLYplO1ZII2uVZ+wYlloFq+EJrd44073Wfzn7ieeUSQGQNpI1+V8eCiZhTH7NVjnhi0fJjPlq2IjtOjCe4MDiFTUioTDiCZl4Xsz1S5JOYHBa6CzyGtGPzV1EWY2ouccJsr/VHW/+78DWXZzl+QFPfsdVk3tPGCGfVlvTX9jG2rJZgW23Ho/31Ad7hLTKHKKW+6PWRSimD2u+AxVKJEgYjRcQbzvlVYXDLQ/04SquWENTft5YE4BD0Ra6X9taEXGC1Zi+hTKSr9hXW/qh2RmxpxFq56pL0XdtZGoEcMqJIIM0hM6xJBNkKkBMluDiLEBN0F0kypXqiTYo1EU3FqqO2iVDMUh0+0SFILzNkAyMz+fyr1smGMk2jnhPjCG5Gr7X43Jr6lTIBMqmPvxSRnxUdff/Jv+7B0/6+pK9P2NwREGeu5iAKbg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB4943.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(26005)(107886003)(54906003)(76116006)(8676002)(6512007)(6916009)(66556008)(66476007)(86362001)(64756008)(66446008)(8936002)(66946007)(91956017)(122000001)(38100700002)(316002)(83380400001)(186003)(5660300002)(38070700005)(1076003)(2906002)(508600001)(4326008)(71200400001)(6486002)(2616005)(36756003)(6506007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?9i0LGiUUnzHYoO72jf1NC8MgOaJme9yU+d2R3rEw5+jdOTKU1+zFdmP0kB?=
- =?iso-8859-1?Q?4b9wcMNoEeK9kvDYzS3Iuw8SghH3UkvsDMN0j+D26xfj5etlPXCjVEK7E1?=
- =?iso-8859-1?Q?kWz/eVJLMfpjlkDu1vxGp+o51av9ymsvmUuorHba5lLS8+FCgKZ7IrfUpm?=
- =?iso-8859-1?Q?Pp2gMj7uY2ZkAoUtF62PEU7t3fQPRanZIH4lLvgJO3M+7DMVVryWle5UB6?=
- =?iso-8859-1?Q?AZlD3uGNOLr0P2/cnp4MrFdDXNHHgIRGumTuSwp5/4aP68oztxCzjEvzHH?=
- =?iso-8859-1?Q?4SM9KvmwEeVLAANFuOzXLybkFoqeabyUefApIl4ZOnbUUSUYKve4W422WS?=
- =?iso-8859-1?Q?835tnWo1/5Jy3Yr4kB4F0sEYrQ68QEGUF1scIEeeDuIRPmahfR+N9M0FIT?=
- =?iso-8859-1?Q?nPiGjIU+pKKxcs9zAYC7wo1VvwpA+ehqr6je8rx1IJ2FlJInTaZPu5kCyJ?=
- =?iso-8859-1?Q?e4ngDgaPiJQd9EAgyb03iJvukM3GsOUJbPkr31PHkTIIlIORZvL2O6hmY/?=
- =?iso-8859-1?Q?Noio/ZWEoq/e8vnWtTJ9MTTWH4Ei5OeL8nS1E1ktdNJTTdpnUpKWx/XhqY?=
- =?iso-8859-1?Q?hMGic4hgYyktqEeMCPfCwxN4vhfQrEnumkw+wE5cCYBDA5UYCqPSAz8us4?=
- =?iso-8859-1?Q?2eYpcSQEzCC4A3UllCf6Ceaow7Ion8ACio6QsdMTPO5v2PbF8TleL+KijK?=
- =?iso-8859-1?Q?P+KGitA5lMArSKUTqInA3P30qMiAHXyi1YDqDtpWsUlM68Ikfe+XZlyaoI?=
- =?iso-8859-1?Q?PXXRwhjg9gMKaT3BgFWXMqW09RkZyULFRC6dM9fGBSXkK81IWye5Ff8wEe?=
- =?iso-8859-1?Q?pPMmlwREhST5CQQUf0vDyWddYVY3FYlvYojavR10JNaDfWDoghOyT+peC3?=
- =?iso-8859-1?Q?sTIRzvpudSuh03VLvA9wf/ZjQ03qxxJwGhqAABTExlp4S5ZBH5CFoiaQmF?=
- =?iso-8859-1?Q?itADYF5LwtcibVDNLW7OPin+vqPi6vKRpxOGKHH1QQDEMGNmbomX6hPC8j?=
- =?iso-8859-1?Q?RPimjrC9EhS6Q4//4wjfKJi53IkSbBkbqBTNv+9ScOpNynALt3CJPqnNTA?=
- =?iso-8859-1?Q?N+L1Mh/jRfCGYZE/9bByT/zHFDdDpk8fgoXnopx3bPWOeEE3/nlI7OAa8z?=
- =?iso-8859-1?Q?W6/Iac7FrqVYdwCzMet+lAT5DVR2O9K7Fgrkbqz0MEnj2ZddZTam3Op9Ga?=
- =?iso-8859-1?Q?ZJ1G4X+Nih38F7KO6kbhvWBXnaQrYrIxpX+vRTYMC5tko6YIleGfVJ7+LH?=
- =?iso-8859-1?Q?EZWvene+6aVfaeP61KYNpa7cVQWvxz5Uo+YN9Up8qS5IusQq0E7uDrjNey?=
- =?iso-8859-1?Q?BXsR60Jz+VYSR9NnD65ekgNDyCDsJnTQMT3zKkCWuhK74AV2ob0MuwMAQa?=
- =?iso-8859-1?Q?PQwZKM/+so?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 16 Sep 2021 13:08:52 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:23684 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1345336AbhIPRGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Sep 2021 13:06:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1631811930; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=DmiPM4+DKVgRQ+kqBq5DPFD0G7lXMNZyxKHvSLKf5RQ=; b=b19GzF2Uh5Z/gaNiM8z8vtgqcVhbIdLy6u/1Gw16DL7YuPL13w9zbw/doJGoTRKSvJvDWm/9
+ kJuzlh1NwyF4RLoypdckYTXnLpF5Xi9EC91Zyv5ONOlwTTmutuXS5tGloCBguORb9lezM5Bq
+ 3NYosxMwng26jhfDa3qgl4siATk=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 61437957e0f78151d65a15c5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Sep 2021 17:05:27
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 77DCEC359F8; Thu, 16 Sep 2021 17:05:27 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D06CCC359F4;
+        Thu, 16 Sep 2021 17:05:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D06CCC359F4
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Dan Halperin <Dan1.Halperin@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 1/2] iwlwifi: mvm: d3: Fix off by ones in iwl_mvm_wowlan_get_rsc_v5_data()
+References: <20210831081802.GA9846@kili>
+Date:   Thu, 16 Sep 2021 20:05:19 +0300
+In-Reply-To: <20210831081802.GA9846@kili> (Dan Carpenter's message of "Tue, 31
+        Aug 2021 11:18:02 +0300")
+Message-ID: <87bl4sxxgw.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB4943.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fc5ce5ad-fab2-4291-5b40-08d97931ee3d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Sep 2021 16:49:20.3308
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: zGCr070fUMfSNabIQiDYoprJlMOAjlAatVYDUvv8sI4olo8ydbC/Ja9ippeT/+XOO8IRRb0yeRT/kt7qt4ZN0oyW0R0A0SXtRS77EAVJ9RI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5197
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-For SPI bus, the register read fails after read/write to the clockless
-register during chip wakeup sequence. Add workaround to send CMD_RESET
-command during chip wake-up sequence to overcome the issue.
+> These should be >= ARRAY_SIZE() instead of > ARRAY_SIZE() to prevent an
+> out of bounds write on the next line.
+>
+> Fixes: 79e561f0f05a ("iwlwifi: mvm: d3: implement RSC command version 5")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/net/wireless/microchip/wilc1000/sdio.c |  1 +
- drivers/net/wireless/microchip/wilc1000/spi.c  | 16 ++++++++++++++++
- drivers/net/wireless/microchip/wilc1000/wlan.c |  5 +++++
- drivers/net/wireless/microchip/wilc1000/wlan.h |  1 +
- 4 files changed, 23 insertions(+)
+I think I should take both patches to v5.15. Luca, do you agree? Ack?
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/sdio.c b/drivers/net/w=
-ireless/microchip/wilc1000/sdio.c
-index 42e03a701ae1..26ebf6664342 100644
---- a/drivers/net/wireless/microchip/wilc1000/sdio.c
-+++ b/drivers/net/wireless/microchip/wilc1000/sdio.c
-@@ -978,6 +978,7 @@ static const struct wilc_hif_func wilc_hif_sdio =3D {
- 	.hif_sync_ext =3D wilc_sdio_sync_ext,
- 	.enable_interrupt =3D wilc_sdio_enable_interrupt,
- 	.disable_interrupt =3D wilc_sdio_disable_interrupt,
-+	.hif_reset =3D wilc_sdio_reset,
- };
-=20
- static int wilc_sdio_resume(struct device *dev)
-diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wi=
-reless/microchip/wilc1000/spi.c
-index 602316f4367c..511b9264185f 100644
---- a/drivers/net/wireless/microchip/wilc1000/spi.c
-+++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -47,6 +47,8 @@ struct wilc_spi {
-=20
- static const struct wilc_hif_func wilc_hif_spi;
-=20
-+static int wilc_spi_reset(struct wilc *wilc);
-+
- /********************************************
-  *
-  *      Spi protocol Function
-@@ -956,6 +958,19 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr,=
- u8 *buf, u32 size)
-  *
-  ********************************************/
-=20
-+static int wilc_spi_reset(struct wilc *wilc)
-+{
-+	struct spi_device *spi =3D to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv =3D wilc->bus_data;
-+	int result;
-+
-+	result =3D wilc_spi_special_cmd(wilc, CMD_RESET);
-+	if (result && !spi_priv->probing_crc)
-+		dev_err(&spi->dev, "Failed cmd reset\n");
-+
-+	return result;
-+}
-+
- static int wilc_spi_deinit(struct wilc *wilc)
- {
- 	/*
-@@ -1173,4 +1188,5 @@ static const struct wilc_hif_func wilc_hif_spi =3D {
- 	.hif_block_tx_ext =3D wilc_spi_write,
- 	.hif_block_rx_ext =3D wilc_spi_read,
- 	.hif_sync_ext =3D wilc_spi_sync_ext,
-+	.hif_reset =3D wilc_spi_reset,
- };
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
-ireless/microchip/wilc1000/wlan.c
-index 1aad537c468f..f9256c1bad45 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -669,6 +669,11 @@ void chip_wakeup(struct wilc *wilc)
- 		pr_err("Failed to wake-up the chip\n");
- 		return;
- 	}
-+	/* Sometimes spi fail to read clock regs after reading
-+	 * writing clockless registers
-+	 */
-+	if (wilc->io_type =3D=3D WILC_HIF_SPI)
-+		wilc->hif_func->hif_reset(wilc);
- }
- EXPORT_SYMBOL_GPL(chip_wakeup);
-=20
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/w=
-ireless/microchip/wilc1000/wlan.h
-index 285e5d9a2b48..150648b2c872 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.h
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
-@@ -373,6 +373,7 @@ struct wilc_hif_func {
- 	int (*hif_sync_ext)(struct wilc *wilc, int nint);
- 	int (*enable_interrupt)(struct wilc *nic);
- 	void (*disable_interrupt)(struct wilc *nic);
-+	int (*hif_reset)(struct wilc *wilc);
- };
-=20
- #define WILC_MAX_CFG_FRAME_SIZE		1468
---=20
-2.25.1
+I assigned these to me on patchwork.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
