@@ -2,126 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB2FBC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 12:25:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4873CC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 12:39:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C59C60F25
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 12:25:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 299F160F6D
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 12:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239303AbhIPM0s (ORCPT
+        id S239539AbhIPMkp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Sep 2021 08:26:48 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:33736 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S239473AbhIPM0q (ORCPT
+        Thu, 16 Sep 2021 08:40:45 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:31692 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239739AbhIPMkl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Sep 2021 08:26:46 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=[192.168.100.150])
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1mQqS4-000F6O-RK; Thu, 16 Sep 2021 15:25:17 +0300
-Message-ID: <8ddba225f68405b5d4ed8b6cd9dcd05a03f532e4.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-List-Id: <linux-firmware.lore.kernel.org>
-To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kyle@infradead.org" <kyle@infradead.org>,
-        "jwboyer@kernel.org" <jwboyer@kernel.org>,
-        "ben@decadent.org.uk" <ben@decadent.org.uk>,
-        golan.ben.ami@intel.com, You-Sheng Yang <vicamo.yang@canonical.com>
-Date:   Thu, 16 Sep 2021 15:25:15 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-XvG4qb72zJkmqPpFD9ur"
-User-Agent: Evolution 3.38.3-1 
+        Thu, 16 Sep 2021 08:40:41 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1631795961; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=FWlDZB+/GDVY45adt3uihbENulBfzrai+xdADQpKrz0=; b=nTiG02G4O5sSHJvqubTo4+D5C8HuXCY2J+cxYBHQEWDt6T9SaP+Z5/yeyDc7klLKx+PKpIvz
+ 6A9J7u0ZDO+YFV8QMllwTMQ1XI0hwYCj7m+FbsGNYGJRfT3NwoS1kXeJQFqLi3i25a2pdt0f
+ FakZZagDIKe50yJ5fClRGgfcN/k=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 61433ae5507800c8802c2c75 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Sep 2021 12:39:01
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4AAE8C4361C; Thu, 16 Sep 2021 12:39:00 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8054DC4338F;
+        Thu, 16 Sep 2021 12:38:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 8054DC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Fabio Estevam <festevam@gmail.com>
+Cc:     Fabio Estevam <festevam@denx.de>, ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, erik.stromdahl@gmail.com,
+        Peter Oh <peter.oh@eero.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Marek Vasut <marex@denx.de>, alagusankar@silex-india.com
+Subject: Re: [PATCH v3] ath10k: high latency fixes for beacon buffer
+References: <20210818232627.2040121-1-festevam@denx.de>
+        <CAOMZO5CJC0=iH4zzJGj0e82GexBN7suOehz8ajKK8bK3ZcMOSg@mail.gmail.com>
+Date:   Thu, 16 Sep 2021 15:38:52 +0300
+In-Reply-To: <CAOMZO5CJC0=iH4zzJGj0e82GexBN7suOehz8ajKK8bK3ZcMOSg@mail.gmail.com>
+        (Fabio Estevam's message of "Thu, 26 Aug 2021 09:01:27 -0300")
+Message-ID: <871r5ozodf.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Subject: pull request: iwlwifi firmware updates 2021-09-14 v2
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Fabio Estevam <festevam@gmail.com> writes:
 
---=-XvG4qb72zJkmqPpFD9ur
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Hello Kalle,
+>
+> On Wed, Aug 18, 2021 at 8:27 PM Fabio Estevam <festevam@denx.de> wrote:
+>>
+>> From: Alagu Sankar <alagusankar@silex-india.com>
+>>
+>> Beacon buffer for high latency devices does not use DMA. other similar
+>> buffer allocation methods in the driver have already been modified for
+>> high latency path. Fix the beacon buffer allocation left out in the
+>> earlier high latency changes.
+>>
+>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> [fabio: adapt it to use ar->bus_param.dev_type ]
+>> Signed-off-by: Fabio Estevam <festevam@denx.de>
+>> ---
+>> Changes since v2:
+>> - Pick Alagu's patch:
+>> https://patchwork.kernel.org/project/ath10k/patch/20190417191503.18814-3-erik.stromdahl@gmail.com/
+>
+> A gentle ping on this one.
 
-Hi,
+This is on my queue, it's just that the queue is quite long at the
+moment.
 
-I had typos in the WHENCE file in my previous pull request.  I have
-fixed that and here's v2.
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-This pull request contains a single patch that adds firmware binaries
-to support one more device family in iwlwifi, namely So SOCs with Gf,
-Hr and Jf radio modules.  This replaces the previous patch that we
-reverted.
-
-Please pull or let me know if there are any issues.
-
---
-Cheers,
-Luca.
-
-
-The following changes since commit 198ac651f46b7d4efd660a1f5ab4f93ca422947d=
-:
-
-  amdgpu: add initial firmware for Yellow Carp (2021-09-15 09:03:35 -0400)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git =
-tags/iwlwifi-fw-2021-09-14-v2
-
-for you to fetch changes up to 0324161cb0723fccf5d7659114851cf8c1b1cda6:
-
-  iwlwifi: add FWs for new So device types with multiple RF modules (2021-0=
-9-16 15:19:45 +0300)
-
-----------------------------------------------------------------
-Add iwlwifi firmware binaries for So with Gf, Hr and Jf.
-
-----------------------------------------------------------------
-Luca Coelho (1):
-      iwlwifi: add FWs for new So device types with multiple RF modules
-
- WHENCE                       |  11 +++++++++++
- iwlwifi-so-a0-gf-a0-64.ucode | Bin 0 -> 1515812 bytes
- iwlwifi-so-a0-gf-a0.pnvm     | Bin 0 -> 41804 bytes
- iwlwifi-so-a0-hr-b0-64.ucode | Bin 0 -> 1427384 bytes
- iwlwifi-so-a0-jf-b0-64.ucode | Bin 0 -> 1365628 bytes
- 5 files changed, 11 insertions(+)
- create mode 100644 iwlwifi-so-a0-gf-a0-64.ucode
- create mode 100644 iwlwifi-so-a0-gf-a0.pnvm
- create mode 100644 iwlwifi-so-a0-hr-b0-64.ucode
- create mode 100644 iwlwifi-so-a0-jf-b0-64.ucode
-
-
---=-XvG4qb72zJkmqPpFD9ur
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAmFDN6sACgkQoUecoho8
-xfqd5BAAupkyteviyDX5zl8MKpbpKVICL1aV2AocLWjzJrolXEuluRj4pBv1Abaq
-I1/8xoNoqsyTeGOE+GE6qqspBvF6+kNbKsrfAhoCUzFVbWL8EpCkfs33Wgpd7Se0
-J3GrAtTQijm+1VWX6V1Mbaf0HE9PCcxkoiJh24nZd5F8Qit0G9qqEji8uunNe2e9
-1p/fvN2VMpHYgqW4zN9fLc1oI2bQtL/xKwin8vCNV5TwOubzLcA5TKIbTeXvSuSo
-cDfuZpVaJa2r9EgHH2/3cjY5yid0KdSfH3gUWiid7wS8CM3KTx7+EIldkrIGqB72
-WcQY96RC9/sSRT8VlLmVmOtMKnlqmh6X1H3CHVKLPWP+RGB0VJTyPqbvhKFVbNA1
-gL4wP40/ucfTa1+rij4K0QMNm6Hbtc9dYCucJgV7eH6MZUVOS+kdAdXpq3ZQ5vvY
-U6H/dsEsbCRw4+NWvgnfLHfgWJnfXd/3ehgHhbseBwh/N/RhQBOzOd6dO/pvpeQv
-YU6C6xPJITaWRWV3KZGrZ5DubUlY3RoEHrldTP/Za0oecWCUQ2Y/1M/2sx8CzByr
-mDbcE9mliNSbm3FNWrmnkACsfvRpTbKvSLFYD4+Dvi2xRc5POSqTGyJq2vVPutHb
-my6OaqKBHl4mooP+EJaceT/EyxvLDWYDxATkmKsfz4ZfOUD24EM=
-=UpBU
------END PGP SIGNATURE-----
-
---=-XvG4qb72zJkmqPpFD9ur--
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
