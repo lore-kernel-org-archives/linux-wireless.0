@@ -2,135 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19939C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Sep 2021 19:18:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49887C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 02:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 024526103E
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Sep 2021 19:18:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BFDE61178
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 02:54:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231494AbhIOTTe (ORCPT
+        id S233932AbhIPC4J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Sep 2021 15:19:34 -0400
-Received: from mail.aperture-lab.de ([116.203.183.178]:37308 "EHLO
-        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231153AbhIOTTe (ORCPT
+        Wed, 15 Sep 2021 22:56:09 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:13413 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233847AbhIPC4I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Sep 2021 15:19:34 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 9BD3A3EB3C;
-        Wed, 15 Sep 2021 21:18:05 +0200 (CEST)
-Date:   Wed, 15 Sep 2021 21:18:03 +0200
-From:   Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "John W . Linville" <linville@tuxdriver.com>,
-        Felix Fietkau <nbd@openwrt.org>,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        Sven Eckelmann <sven@narfation.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linus =?utf-8?Q?L=C3=BCssing?= <ll@simonwunderlich.de>
-Subject: Re: [PATCH 3/3] ath9k: Fix potential hw interrupt resume during reset
-Message-ID: <YUJGxZW1a+vlG335@sellars>
-References: <20210914192515.9273-1-linus.luessing@c0d3.blue>
- <20210914192515.9273-4-linus.luessing@c0d3.blue>
- <255a49c7-d763-50d9-87e0-da22f4a9b053@nbd.name>
+        Wed, 15 Sep 2021 22:56:08 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1631760889; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: To: From: Sender;
+ bh=15fdQX6zT2tntxoGP0v27aQrV2KORJqVa7s6QF1ywf0=; b=oUAs2BjktHlxiNztV7+0BELOIHAc9Grxtk6sCxjbfMfSaEni3H30iV+gYp2uoJlXNhInhW6L
+ 3bMtolX0ODjftkQ8JwKi8PilGCfPyU8XEmgOsu1t5hmL5NMXYMRVG51voQExh1VMwTwi86n7
+ 0b6x7bEsg8XeOFEFVDV8uCIRpUA=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6142b1f8b585cc7d24eb0d34 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Sep 2021 02:54:48
+ GMT
+Sender: alokad=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 450E1C4360D; Thu, 16 Sep 2021 02:54:48 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D1BE1C43617;
+        Thu, 16 Sep 2021 02:54:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D1BE1C43617
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: [PATCH v12 4/4] mac80211: MBSSID channel switch
+Date:   Wed, 15 Sep 2021 19:54:37 -0700
+Message-Id: <20210916025437.29138-5-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210916025437.29138-1-alokad@codeaurora.org>
+References: <20210916025437.29138-1-alokad@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <255a49c7-d763-50d9-87e0-da22f4a9b053@nbd.name>
-X-Last-TLS-Session-Version: TLSv1.3
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Sep 15, 2021 at 11:48:55AM +0200, Felix Fietkau wrote:
-> 
-> On 2021-09-14 21:25, Linus Lüssing wrote:
-> > From: Linus Lüssing <ll@simonwunderlich.de>
-> > 
-> > There is a small risk of the ath9k hw interrupts being reenabled in the
-> > following way:
-> > 
-> > 1) ath_reset_internal()
-> >    ...
-> >    -> disable_irq()
-> >       ...
-> >       <- returns
-> > 
-> >                       2) ath9k_tasklet()
-> >                          ...
-> >                          -> ath9k_hw_resume_interrupts()
-> >                          ...
-> > 
-> > 1) ath_reset_internal() continued:
-> >    -> tasklet_disable(&sc->intr_tq); (= ath9k_tasklet() off)
-> > 
-> > By first disabling the ath9k interrupt there is a small window
-> > afterwards which allows ath9k hw interrupts being reenabled through
-> > the ath9k_tasklet() before we disable this tasklet in
-> > ath_reset_internal(). Leading to having the ath9k hw interrupts enabled
-> > during the reset, which we should avoid.
-> I don't see a way in which interrupts can be re-enabled through the
-> tasklet. disable_irq disables the entire PCI IRQ (not through ath9k hw
-> registers), and they will only be re-enabled by the corresponding
-> enable_irq call.
+From: John Crispin <john@phrozen.org>
 
-Ah, okay, then I think I misunderstood the previous fixes to the
-ath9k interrupt shutdown during reset here. I had only tested the
-following diff and assumed that it were not okay to have the ath9k
-hw interrupt registers enabled within the spinlock'd section:
+Trigger ieee80211_csa_finish() on the non-transmitting interfaces
+when channel switch concludes on the transmitting interface.
 
-```
-@@ -299,11 +299,23 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
+Signed-off-by: John Crispin <john@phrozen.org>
+Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+v12: No changes.
+
+ net/mac80211/cfg.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 23fa0bb49be2..88fbed46e1bc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3271,8 +3271,19 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
  
-        __ath_cancel_work(sc);
- 
-        disable_irq(sc->irq);
-+       for (r = 0; r < 200; r++) {
-+               msleep(5);
+-	ieee80211_queue_work(&sdata->local->hw,
+-			     &sdata->csa_finalize_work);
++	if (vif->mbssid_tx_vif == vif) {
++		struct ieee80211_sub_if_data *child, *tmp;
 +
-+               if (REG_READ(ah, AR_INTR_SYNC_CAUSE) ||
-+                   REG_READ(ah, AR_INTR_ASYNC_CAUSE)) {
-+                       break;
-+               }
-+       }
-        tasklet_disable(&sc->intr_tq);
-        tasklet_disable(&sc->bcon_tasklet);
-        spin_lock_bh(&sc->sc_pcu_lock);
- 
-+       if (REG_READ(ah, AR_INTR_SYNC_CAUSE) ||
-+           REG_READ(ah, AR_INTR_ASYNC_CAUSE))
-+               ATH_DBG_WARN(1, "%s: interrupts are enabled", __func__);
++		list_for_each_entry_safe(child, tmp,
++					 &sdata->local->interfaces, list)
++			if (child != sdata && child->vif.mbssid_tx_vif == vif &&
++			    ieee80211_sdata_running(child)) {
++				ieee80211_queue_work(&child->local->hw,
++						     &child->csa_finalize_work);
++			}
++	}
 +
-        if (!sc->cur_chan->offchannel) {
-                fastcc = false;
-                caldata = &sc->cur_chan->caldata;
-```
++	ieee80211_queue_work(&sdata->local->hw, &sdata->csa_finalize_work);
+ }
+ EXPORT_SYMBOL(ieee80211_csa_finish);
+ 
+-- 
+2.31.1
 
-And yes, the general ath9k interrupt should still be disabled. Didn't
-test for that but seems like it.
-
-
-(And now I noticed that actually
- ath_reset_internal()
- -> ath_prepare_reset()
-   -> ath9k_hw_disable_interrupts()
-     -> ath9k_hw_kill_interrupts()
- disables the ath9k hw interrupt registers before the
- ath_reset_internal()->ath9k_hw_reset() call anyway.)
-
-
-What would you prefer, should this patch just be dropped or should
-I resend it without the "Fixes:" line as a cosmetic change? (e.g. to
-have the order in reverse to reenablement at the end of
-ath_reset_internal(), to avoid confusion in the future?)
-
-Regards, Linus
