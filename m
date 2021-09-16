@@ -2,105 +2,146 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72536C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 17:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BA5C4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 18:45:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54276611C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 17:59:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE6AF610A6
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 18:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346305AbhIPSBH (ORCPT
+        id S245696AbhIPSqf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Sep 2021 14:01:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39198 "EHLO
+        Thu, 16 Sep 2021 14:46:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350765AbhIPSA2 (ORCPT
+        with ESMTP id S242908AbhIPSq2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Sep 2021 14:00:28 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7835C03D74D
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2021 09:35:34 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id w19-20020a17090aaf9300b00191e6d10a19so5195610pjq.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2021 09:35:34 -0700 (PDT)
+        Thu, 16 Sep 2021 14:46:28 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA266C0619CF
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2021 10:19:32 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id 17so6802896pgp.4
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2021 10:19:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=gt+r7rB7pOJSQ7W9DGYo66pY6w1yXmUEGm3iewZagGs=;
-        b=YOO6pC2z+QRaJL2FP1+cetlhoPONSQZg7eY2yLDK8roGPWbc9sigaVpjLo8GpopAEt
-         6dpX5ls6QlvN8297Oc21azN16SHcgPDMJcitwRcy5ANGXg3bnVq3Rlc7QGoiwCwDQOsi
-         JNRPNZabX30oyA2uOTy4d0YnMNkpTLESRpv498IMBHqFIS9ZtJLpLwMudRhZqv9+4ZyD
-         W0F7vw7P+YsluTgr+ojS0mc5DXmGSLwQKhwpk7PYW4vV3cTbrCrXJqPWDxuqZYo6NQuv
-         ZvsPwmplyQK4fMp5EMraC3ntygo3wZs+GpSUOYXxvIn4Nr1DmeIDAlH9qcIQ80FO7PCN
-         l4yA==
+        bh=vfppOddBimlXKR9WfYAKpD75AZ1AT5Ln0YqbfJSrBQA=;
+        b=XCkNHl8kcS/0Qgn6DtGioUwi3UGpp9yaSUkX6AIaAHVxHt6CWjhcgvE5uF0tFMJgTu
+         GJ3qlQyId2bhiwxToQ9QXgA/LE1nFwFzIp1Qe319B6aUnxWfHHdLIUORYz4v50AvfcGv
+         CPPhv3fd0Yd3Uzg7MgtWJveVEA3r054tjVv6p19Ui/dzOn8aoobt2VyaThJExdk6Y4oU
+         h5eOXmGL5rZ2SpdIjKzi4MXwuAjSewzyUVq0BHjqXbek1y7X+pxbs/e+zm4SyboglDRT
+         03uFXeQfhBae9LoI5cF13wjc0B2XppuOTkD56EnPO6UP6yl5tegpWn5qHb8VtpVRVLD0
+         hsRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:content-transfer-encoding
          :in-reply-to;
-        bh=gt+r7rB7pOJSQ7W9DGYo66pY6w1yXmUEGm3iewZagGs=;
-        b=htq5QVqZLXLXvvw3pMwEPkysyiuaul/hNWCwyjSv5PeIg3aTNwzoA/GqD20vv9n6T/
-         9wdPFxkzjD2SMsVB0KAGu1M/TLD/fKVUY+JShtUkS0XghKlYyooYNAASdLRQPKzkiKaE
-         i41hNyh/oKD4ZyoPHLJQKDqUeoS2Tm6mP/mcuyMLFI4BG9bJ/j5jblJC2qk7RGOeFjgn
-         Tjq7Nb+ij/YILbk7yxjwjCQAa4oH7JRdHJDhEyg1iSuoYs5ir6xiuMeiUI93tinWUWnG
-         uvZvdIBLBLRRqR8kgYtX9wZ4LVaYjpB8VnvQbLmEQwhr+oiZ+7XUwQrxj2cT8H++xrfr
-         cOGA==
-X-Gm-Message-State: AOAM530C9NnD2vOrV3uC86WwVI/wsMQBlY7FFgKpWDNTJUTo2/xIiUz5
-        ZMC3TtwP3ZbchTFpt/rkFMkK
-X-Google-Smtp-Source: ABdhPJwLv1/q2iNeC58++mRrmPhb6MJdsEz0qlcZ2ADeRpdVKbb2FXjiUMui5WtQU9sga1edO/Q9Vg==
-X-Received: by 2002:a17:90a:ea8b:: with SMTP id h11mr7127110pjz.124.1631810134300;
-        Thu, 16 Sep 2021 09:35:34 -0700 (PDT)
+        bh=vfppOddBimlXKR9WfYAKpD75AZ1AT5Ln0YqbfJSrBQA=;
+        b=p07ek3SbYMsa5DjwRl7QhsMZxmX600CV3ryIUfh1Pm6Et85+p8mGhJdokZhGAa8AUl
+         Mf3L1hcUSuYbcJpWfxXhEfkDCsWXQqpKAKtiemLbArl7hB5o+xBYRN4aSsG/EcOsurRd
+         +PjqrF6SG5yWy017yWpaHXMBeyup9YUGIyJ10f0/5Puwoao1BD+xFg5G9FVmA0gMwsWy
+         WO8B24qtv5rJK4DROLA+4uIz68duuJmwKyi3mWUSdvOrRMnHMMXLp35WD9PNAOFCXf/a
+         jcSAv+earCo00qlfaqRaeJAmzKRsr1SLDJSmIRIBnhMlSMoi2iIF3ZRj/ldQpHR0/jHD
+         AWww==
+X-Gm-Message-State: AOAM531fjHQOeQSo7jMjlcu3ekkxp+iudt1KRVCY0HElA5QMv7KFo0DC
+        Iv1kw0iqM5UaFRVXUyZhOrP9
+X-Google-Smtp-Source: ABdhPJwVVDHmLdlkvPxa0RTx6TeaN8ENWRxxpE5tjoHD788yzE86ICDdkUJKi9NvVNz7J3GzX/2j1g==
+X-Received: by 2002:aa7:9841:0:b0:439:c4cb:fe9a with SMTP id n1-20020aa79841000000b00439c4cbfe9amr6279540pfq.13.1631812772167;
+        Thu, 16 Sep 2021 10:19:32 -0700 (PDT)
 Received: from thinkpad ([117.193.213.12])
-        by smtp.gmail.com with ESMTPSA id m28sm3751263pgl.9.2021.09.16.09.35.31
+        by smtp.gmail.com with ESMTPSA id o2sm3876721pgc.47.2021.09.16.10.19.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Sep 2021 09:35:33 -0700 (PDT)
-Date:   Thu, 16 Sep 2021 22:05:29 +0530
+        Thu, 16 Sep 2021 10:19:31 -0700 (PDT)
+Date:   Thu, 16 Sep 2021 22:49:27 +0530
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Loic Poulain <loic.poulain@linaro.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org,
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Loic Poulain <loic.poulain@linaro.org>, ath11k@lists.infradead.org,
         linux-arm-msm <linux-arm-msm@vger.kernel.org>,
         linux-wireless@vger.kernel.org, regressions@lists.linux.dev
 Subject: Re: [regression] mhi: ath11k resume fails on some devices
-Message-ID: <20210916163529.GA9027@thinkpad>
+Message-ID: <20210916171927.GB9027@thinkpad>
 References: <871r5p0x2u.fsf@codeaurora.org>
  <CAMZdPi8UJLvBFQd8-nf-iHAQh8cEuihq97PUFfZ7Q=rxRQoPsg@mail.gmail.com>
  <20210916111218.GA12918@thinkpad>
  <CAMZdPi94607mZorp+Zmkw3seWXak6p9Jr05CQ5hhfgKQoG8n7Q@mail.gmail.com>
+ <20210916163529.GA9027@thinkpad>
+ <87k0jgxyjp.fsf@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMZdPi94607mZorp+Zmkw3seWXak6p9Jr05CQ5hhfgKQoG8n7Q@mail.gmail.com>
+In-Reply-To: <87k0jgxyjp.fsf@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 01:18:22PM +0200, Loic Poulain wrote:
-> Le jeu. 16 sept. 2021 à 13:12, Manivannan Sadhasivam <
-> manivannan.sadhasivam@linaro.org> a écrit :
+On Thu, Sep 16, 2021 at 07:42:02PM +0300, Kalle Valo wrote:
+> Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org> writes:
 > 
-
-[...]
-
-> > If things seems to work fine without that patch, then it implies that
-> > setting M0
-> > state works during resume. I think we should just revert that patch.
+> > On Thu, Sep 16, 2021 at 01:18:22PM +0200, Loic Poulain wrote:
+> >> Le jeu. 16 sept. 2021 à 13:12, Manivannan Sadhasivam <
+> >> manivannan.sadhasivam@linaro.org> a écrit :
+> >> 
 > >
-> > Loic, did that patch fix any issue for you or it was a cosmetic fix only?
+> > [...]
+> >
+> >> > If things seems to work fine without that patch, then it implies that
+> >> > setting M0
+> >> > state works during resume. I think we should just revert that patch.
+> >> >
+> >> > Loic, did that patch fix any issue for you or it was a cosmetic fix only?
+> >> 
+> >> 
+> >> It fixes sdx modem resuming issue, without that we don’t know modem needs
+> >> to be reinitialized.
+> >> 
+> >
+> > Okay. Then in that case, the recovery mechanism has to be added to the ath11k
+> > MHI controller.
 > 
-> 
-> It fixes sdx modem resuming issue, without that we don’t know modem needs
-> to be reinitialized.
+> What does that mean in practise, do you have any pointers or examples? I
+> have no clue what you are proposing :)
 > 
 
-Okay. Then in that case, the recovery mechanism has to be added to the ath11k
-MHI controller.
+Take a look at the mhi_pci_recovery_work() function below:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/bus/mhi/pci_generic.c#n610
 
-If that's too much of work for Kalle, then I'll look into it. But I might get
-time only after Plumbers.
+You need to implement something similar that basically powers up the MHI
+endpoint (QCA6390) in case pm_resume() fails. At minimum, you need to call
+below functions:
+
+# Check if the device is powered on. If yes, then power it down to bring it back
+mhi_power_down()
+mhi_unprepare_after_power_down()
+
+# Power up the device
+mhi_prepare_for_power_up()
+mhi_sync_power_up()
+
+This implies that the WLAN device has been powered off during suspend, so the
+resume fails and we are bringing the device back to working state.
+
+> > If that's too much of work for Kalle, then I'll look into it. But I might get
+> > time only after Plumbers.
+> 
+> I'm busy, as always, so not sure when I'm able to do it either. I think
+> we should seriously consider reverting 020d3b26c07a and adding it back
+> after ath11k is able to handle this new situation.
+> 
+
+Since Loic said that reverting would cause his modem (SDX device) to fail during
+resume, this is not possible.
 
 Thanks,
 Mani
+
+> -- 
+> https://patchwork.kernel.org/project/linux-wireless/list/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
