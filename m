@@ -2,222 +2,122 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ADFBC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 02:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DCC7C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 04:40:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63FFF6113E
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 02:55:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53E0C61186
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Sep 2021 04:40:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234012AbhIPC41 (ORCPT
+        id S234248AbhIPElY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Sep 2021 22:56:27 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:16342 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233981AbhIPC40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Sep 2021 22:56:26 -0400
+        Thu, 16 Sep 2021 00:41:24 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:24870 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231951AbhIPElW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Sep 2021 00:41:22 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1631760907; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: To: From: Sender;
- bh=vlruAR/mFYVXxb712Zn9/EfmHlG0yf4GZsJMEX3a4BQ=; b=jgyxEVKD4Bt3ydQ1vP16RS06KpCPDM1VckPwXi7ZdMiKOhTzeptxjMzeFq7O7oG+8kKnu3G6
- QL/m2yXRa6ZRQzfOrZznHsjG+BdUCOJt2T1KjBkn9WSgGe+QyEdbapGu9iSnrARX/gGjZuUU
- A34DMcf07d/40PdmZoqWFkTi29A=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ s=smtp; t=1631767202; h=Content-Type: MIME-Version: Message-ID: Date:
+ References: In-Reply-To: Subject: Cc: To: From: Sender;
+ bh=/+s/jscahNm5opYfahNTF4pek+pW4Sb5V6rCSNLcwfc=; b=lp3Zzhf64j3pLRlcUo4xlT9QY2zyIRV0V7fJZ2/8U7qLcaASUyk7mgLKitiX3CeqAfqbL92k
+ oZBW83Jo/KoMoNhocRKdGe07kBFVq9rbrlJI0GKiGWYaKDtZvpWln+OHD4EUhexX+8d0U8Qv
+ EU1TAs9+fm/DVyUZHAol8j1NuuA=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 6142b1f8ec62f57c9a6a4527 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Sep 2021 02:54:48
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 6142ca8e507800c880a4bef3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 16 Sep 2021 04:39:42
  GMT
-Sender: alokad=codeaurora.org@mg.codeaurora.org
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1FDB4C4360C; Thu, 16 Sep 2021 02:54:48 +0000 (UTC)
-Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id 33B47C43619; Thu, 16 Sep 2021 04:39:41 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D0BB3C4360D;
-        Thu, 16 Sep 2021 02:54:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D0BB3C4360D
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id ABD35C4338F;
+        Thu, 16 Sep 2021 04:39:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org ABD35C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Aloka Dixit <alokad@codeaurora.org>
-To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: [PATCH v12 2/4] mac80211: MBSSID support in interface handling
-Date:   Wed, 15 Sep 2021 19:54:35 -0700
-Message-Id: <20210916025437.29138-3-alokad@codeaurora.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210916025437.29138-1-alokad@codeaurora.org>
-References: <20210916025437.29138-1-alokad@codeaurora.org>
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Marek Vasut <marex@denx.de>
+Cc:     netdev@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Angus Ainslie <angus@akkea.ca>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Martin Fuzzey <martin.fuzzey@flowbird.group>,
+        Martin Kepplinger <martink@posteo.de>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+        Siva Rebbagondla <siva8118@gmail.com>, stable@vger.kernel.org,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rsi: Fix module dev_oper_mode parameter description
+In-Reply-To: <20210915080841.73938-1-marex@denx.de> (Marek Vasut's message of
+        "Wed, 15 Sep 2021 10:08:41 +0200")
+References: <20210915080841.73938-1-marex@denx.de>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Date:   Thu, 16 Sep 2021 07:39:33 +0300
+Message-ID: <87fsu516d6.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: John Crispin <john@phrozen.org>
++ linux-wireless
 
-Configure multiple BSSID and enhanced multi-BSSID advertisement (EMA)
-parameters in mac80211 for AP mode.
+Marek Vasut <marex@denx.de> writes:
 
-For each interface, 'mbssid_tx_vif' points to the transmitting interface of
-the MBSSID set. The pointer is set to NULL if MBSSID is disabled.
+> The module parameters are missing dev_oper_mode 12, BT classic alone,
+> add it. Moreover, the parameters encode newlines, which ends up being
+> printed malformed e.g. by modinfo, so fix that too.
+>
+> However, the module parameter string is duplicated in both USB and SDIO
+> modules and the dev_oper_mode mode enumeration in those module parameters
+> is a duplicate of macros used by the driver. Furthermore, the enumeration
+> is confusing.
+>
+> So, deduplicate the module parameter string and use __stringify() to
+> encode the correct mode enumeration values into the module parameter
+> string. Finally, replace 'Wi-Fi' with 'Wi-Fi alone' and 'BT' with
+> 'BT classic alone' to clarify what those modes really mean.
+>
+> Fixes: 898b255339310 ("rsi: add module parameter operating mode")
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Cc: Angus Ainslie <angus@akkea.ca>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Karun Eagalapati <karun256@gmail.com>
+> Cc: Martin Fuzzey <martin.fuzzey@flowbird.group>
+> Cc: Martin Kepplinger <martink@posteo.de>
+> Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
+> Cc: Siva Rebbagondla <siva8118@gmail.com>
+> To: netdev@vger.kernel.org
+> Cc: <stable@vger.kernel.org> # 4.17+
+> ---
+>  drivers/net/wireless/rsi/rsi_91x_sdio.c |  5 +----
+>  drivers/net/wireless/rsi/rsi_91x_usb.c  |  5 +----
+>  drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++++++
+>  3 files changed, 13 insertions(+), 8 deletions(-)
 
-Function ieee80211_stop() is modified to always bring down all the
-non-transmitting interfaces first and the transmitting interface last.
+linux-wireless is not included so patchwork won't see this patch. Please
+resubmit (as v2) and include linux-wireless, more info in the wiki
+below.
 
-Signed-off-by: John Crispin <john@phrozen.org>
-Co-developed-by: Aloka Dixit <alokad@codeaurora.org>
-Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
----
-v12: Only cosmetic changes.
-v11: Moved dev_close() for non-transmitting interfaces
-     before locking wiphy->mtx.
-     Removed interface count, instead mac80211 passes pointer
-     'mbssid_tx_vif' to the driver for each interface.
-     Removed dev_close() calls from ieee80211_del_iface().
-     Removed IEEE80211_HW_SUPPORTS_MBSSID_AP and
-     IEEE80211_HW_SUPPORTS_EMA_AP.
-     Instead of new parameters in struct ieee80211_bss_conf,
-     reused the existing ones which were used for STA mode.
-
- include/net/mac80211.h |  3 +++
- net/mac80211/cfg.c     | 38 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/iface.c   | 29 ++++++++++++++++++++++++++++-
- 3 files changed, 69 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index af0fc13cea34..0d405e36c213 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1715,6 +1715,7 @@ enum ieee80211_offload_flags {
-  *	write-protected by sdata_lock and local->mtx so holding either is fine
-  *	for read access.
-  * @color_change_color: the bss color that will be used after the change.
-+ * @mbssid_tx_vif: Pointer to the transmitting interface if MBSSID is enabled.
-  */
- struct ieee80211_vif {
- 	enum nl80211_iftype type;
-@@ -1746,6 +1747,8 @@ struct ieee80211_vif {
- 	bool color_change_active;
- 	u8 color_change_color;
- 
-+	struct ieee80211_vif *mbssid_tx_vif;
-+
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d69b31c20fe2..e2b791c37591 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -111,6 +111,36 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+static int ieee80211_set_ap_mbssid_options(struct ieee80211_sub_if_data *sdata,
-+					   struct cfg80211_mbssid_config params)
-+{
-+	struct ieee80211_sub_if_data *tx_sdata;
-+
-+	sdata->vif.mbssid_tx_vif = NULL;
-+	sdata->vif.bss_conf.bssid_index = 0;
-+	sdata->vif.bss_conf.nontransmitted = false;
-+	sdata->vif.bss_conf.ema_ap = false;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_AP || !params.tx_wdev)
-+		return -EINVAL;
-+
-+	tx_sdata = IEEE80211_WDEV_TO_SUB_IF(params.tx_wdev);
-+	if (!tx_sdata)
-+		return -EINVAL;
-+
-+	if (tx_sdata == sdata) {
-+		sdata->vif.mbssid_tx_vif = &sdata->vif;
-+	} else {
-+		sdata->vif.mbssid_tx_vif = &tx_sdata->vif;
-+		sdata->vif.bss_conf.nontransmitted = true;
-+		sdata->vif.bss_conf.bssid_index = params.index;
-+	}
-+	if (params.ema)
-+		sdata->vif.bss_conf.ema_ap = true;
-+
-+	return 0;
-+}
-+
- static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 						const char *name,
- 						unsigned char name_assign_type,
-@@ -1105,6 +1135,14 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			changed |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    params->mbssid_config.tx_wdev) {
-+		err = ieee80211_set_ap_mbssid_options(sdata,
-+						      params->mbssid_config);
-+		if (err)
-+			return err;
-+	}
-+
- 	mutex_lock(&local->mtx);
- 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
- 					IEEE80211_CHANCTX_SHARED);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 62c95597704b..7c687434c5e9 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -632,17 +632,44 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 		ieee80211_add_virtual_monitor(local);
- }
- 
-+static void ieee80211_stop_mbssid(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_sub_if_data *tx_sdata, *non_tx_sdata, *tmp_sdata;
-+	struct ieee80211_vif *tx_vif = sdata->vif.mbssid_tx_vif;
-+
-+	tx_sdata = vif_to_sdata(tx_vif);
-+	sdata->vif.mbssid_tx_vif = NULL;
-+
-+	list_for_each_entry_safe(non_tx_sdata, tmp_sdata,
-+				 &tx_sdata->local->interfaces, list) {
-+		if (non_tx_sdata != sdata && non_tx_sdata != tx_sdata &&
-+		    non_tx_sdata->vif.mbssid_tx_vif == tx_vif &&
-+		    ieee80211_sdata_running(non_tx_sdata)) {
-+			non_tx_sdata->vif.mbssid_tx_vif = NULL;
-+			dev_close(non_tx_sdata->wdev.netdev);
-+		}
-+	}
-+
-+	if (sdata != tx_sdata && ieee80211_sdata_running(tx_sdata)) {
-+		tx_sdata->vif.mbssid_tx_vif = NULL;
-+		dev_close(tx_sdata->wdev.netdev);
-+	}
-+}
-+
- static int ieee80211_stop(struct net_device *dev)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	/* close all dependent VLAN interfaces before locking wiphy */
-+	/* close dependent VLAN and MBSSID interfaces before locking wiphy */
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
- 
- 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
- 					 u.vlan.list)
- 			dev_close(vlan->dev);
-+
-+		if (sdata->vif.mbssid_tx_vif)
-+			ieee80211_stop_mbssid(sdata);
- 	}
- 
- 	wiphy_lock(sdata->local->hw.wiphy);
 -- 
-2.31.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
