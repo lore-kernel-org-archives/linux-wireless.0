@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3EBC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D41C43217
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12E6E61216
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95C686121F
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344513AbhIQSYQ (ORCPT
+        id S1344402AbhIQSYV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34146 "EHLO
+        Fri, 17 Sep 2021 14:24:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344381AbhIQSYJ (ORCPT
+        with ESMTP id S1344400AbhIQSYK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:09 -0400
+        Fri, 17 Sep 2021 14:24:10 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D90DDC061574;
-        Fri, 17 Sep 2021 11:22:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B44EC061574;
+        Fri, 17 Sep 2021 11:22:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OQG1Hx1C3V+AIbyqDjpSPSWFykzcTbz1vVVOQjeWO0w=; b=Kqb3vawGdf5WUfPAXE1WjKV0Np
-        ST2UiWGAquVxLai4MtQ5hUkWtem+YnCJVFTZDcf64i2zFReePkjpahU7PkXcGIq1RlLrw+Wv6YAtw
-        eJg4vqto+NN3/mbkLvg6wxqUln2hBsZ1I6KmTaDRqUtva3VshG5w4R+ZUNkeGgAmkdrEtSkFQqmG1
-        5UTWiDuenVQ1S/yiMP3HCKsy3cE22NQQcVCxcMfna5tA2lLagNU3ydUiIBD95s/n8wEoL6Eklhw2i
-        8tC95HQNppTtqXsl1GNKtgNc+ND/waHTaJyaMT8hI2qB/2BC1jqNyE+NVaNNum8ARRg78y4zj9wMY
-        s+O4gRXg==;
+        bh=TpWhHDdGVfR6RDYKOLjBIoqQ9UQe+x0mjeEQUKQ9/JM=; b=S+S6gIrumrtOg4NhyFQ271dZdr
+        Ad/Ojk1EIqWUhRyG4pEowOeFSc09IYoYOdr6Ifq/RicwitFYjRS/qnK/kz1b+GQ3Zp+2BI4ZLKYGu
+        9o4lyOYtupqQnu8zmWePvOpRjpVfOB+9AK5fU044V2DF4oLutNlxUpG0qAWMBpIpoahUztQatvLdJ
+        0crirmh6RRhAPUe63SEsrjBp2P/ROCkGnoOOmK7YT5grfHMS6RrVyWRlIRvHyUEevaGGH+2mMg142
+        VcJO1lTEYnjVJObQ9PINBQi+t676d2Kd9O0mUSooqfv5jaH8jxuGTUKJXc4O/9zh9G1vdRzSgcHkw
+        WRt1ZY9A==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5U-5G; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5Q-0I; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 03/14] firmware_loader: add a sanity check for firmware_request_builtin()
-Date:   Fri, 17 Sep 2021 11:22:15 -0700
-Message-Id: <20210917182226.3532898-4-mcgrof@kernel.org>
+Subject: [PATCH 01/14] firmware_loader: fix pre-allocated buf built-in firmware use
+Date:   Fri, 17 Sep 2021 11:22:13 -0700
+Message-Id: <20210917182226.3532898-2-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -67,33 +67,74 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-Right now firmware_request_builtin() is used internally only
-and so we have control over the callers. But if we want to expose
-that API more broadly we should ensure the firmware pointer
-is valid.
+The firmware_loader can be used with a pre-allocated buffer
+through the use of the API calls:
 
-This doesn't fix any known issue, it just prepares us to later
-expose this API to other users.
+  o request_firmware_into_buf()
+  o request_partial_firmware_into_buf()
+
+If the firmware was built-in and present, our current check
+for if the built-in firmware fits into the pre-allocated buffer
+does not return any errors, and we proceed to tell the caller
+that everything worked fine. It's a lie and no firmware would
+end up being copied into the pre-allocated buffer. So if the
+caller trust the result it may end up writing a bunch of 0's
+to a device!
+
+Fix this by making the function that checks for the pre-allocated
+buffer return non-void. Since the typical use case is when no
+pre-allocated buffer is provided make this return successfully
+for that case. If the built-in firmware does *not* fit into the
+pre-allocated buffer size return a failure as we should have
+been doing before.
+
+I'm not aware of users of the built-in firmware using the API
+calls with a pre-allocated buffer, as such I doubt this fixes
+any real life issue. But you never know... perhaps some oddball
+private tree might use it.
+
+In so far as upstream is concerned this just fixes our code for
+correctness.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/base/firmware_loader/main.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/base/firmware_loader/main.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index eb4085b92ad4..d95b5fe5f700 100644
+index bdbedc6660a8..ef904b8b112e 100644
 --- a/drivers/base/firmware_loader/main.c
 +++ b/drivers/base/firmware_loader/main.c
-@@ -115,6 +115,9 @@ static bool firmware_request_builtin(struct firmware *fw, const char *name)
- {
- 	struct builtin_fw *b_fw;
+@@ -100,12 +100,15 @@ static struct firmware_cache fw_cache;
+ extern struct builtin_fw __start_builtin_fw[];
+ extern struct builtin_fw __end_builtin_fw[];
  
-+	if (!fw)
+-static void fw_copy_to_prealloc_buf(struct firmware *fw,
++static bool fw_copy_to_prealloc_buf(struct firmware *fw,
+ 				    void *buf, size_t size)
+ {
+-	if (!buf || size < fw->size)
+-		return;
++	if (!buf)
++		return true;
++	if (size < fw->size)
 +		return false;
-+
- 	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) {
+ 	memcpy(buf, fw->data, fw->size);
++	return true;
+ }
+ 
+ static bool fw_get_builtin_firmware(struct firmware *fw, const char *name,
+@@ -117,9 +120,7 @@ static bool fw_get_builtin_firmware(struct firmware *fw, const char *name,
  		if (strcmp(name, b_fw->name) == 0) {
  			fw->size = b_fw->size;
+ 			fw->data = b_fw->data;
+-			fw_copy_to_prealloc_buf(fw, buf, size);
+-
+-			return true;
++			return fw_copy_to_prealloc_buf(fw, buf, size);
+ 		}
+ 	}
+ 
 -- 
 2.30.2
 
