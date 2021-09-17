@@ -3,39 +3,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B3E2C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C38C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:22:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B4AE61241
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:22:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CCE961241
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:22:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344311AbhIQSYH (ORCPT
+        id S1344321AbhIQSYM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34128 "EHLO
+        Fri, 17 Sep 2021 14:24:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230465AbhIQSYG (ORCPT
+        with ESMTP id S234479AbhIQSYG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 17 Sep 2021 14:24:06 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DADC061757;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2D60C061574;
         Fri, 17 Sep 2021 11:22:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=4bQo5XXQSgN6eO5cUMGH1bS2NQ993+cG2D9qNC4TbPk=; b=z0MZai6HkL9APtqMptXhF0Kr7z
-        WO6Ilfzz6LyaBeplCsWkG3xdbtIM/PQN0EBDybfmLvfXTqH0XIUF/95RGbV98Gj6LJiKBhC8nfEIC
-        9McoqoSG+CBcSO0YpOy92w0lOg7fPxQI4u+h/6h7j/mRrbUsvFDf9MPEtrVuOwB9TXrk75EY0lw/0
-        pXKIUq2j3zNbcUOCkonmM5hn65EOZcEQUO8I+PxNQh7220UBQn+TmoqN/9UM3liFF4bD002dCF9k6
-        a0ul9oFm23MTyAfaUqHHW/ECGaUSqHZIVvprVZgruLQ1iBc995RtLD5SKuLlBXSdv03NN4RAe7jhW
-        wlcFUOIg==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=tD4Sbra29CB+zDaId3JKIIubIM6CxINJL6HrVfCbIoA=; b=zkwXatXSLHRehaBwXk1y8v317Y
+        1UtVMaNO10I3xGAvya1UM6SPveE0FNAH+KI5JrLvVpE9Bs6Cq2Ztb0QcBPOFGVkKzlIhhwOvDVLWy
+        cXZV56xaJpif4DvbrBmFhMyI16m9ZuJbrqfqh4mcUADuQnsItHEnBEupdvizQqsSnoLmQCEsx0kEz
+        R/UjBcBJ3/5mm10KLthGJocfnM7wMqLZkCo3n98IKYEP0Fm7Nwi07cDFzlKHHC7VwKIsy3tz9gUg4
+        Lj2VAsXzxBFdSxplrjX6Gdo0fBVXi5tGfGzDNfsquHu1vPccfnawu1UIqwMQ4Wdvd+CO1TH0fxLWc
+        LQ4mbEeA==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVH-00Ep5O-U4; Fri, 17 Sep 2021 18:22:27 +0000
+        id 1mRIVI-00Ep5s-Nq; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,10 +52,12 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 00/14] firmware_loader: built-in API and make x86 use it
-Date:   Fri, 17 Sep 2021 11:22:12 -0700
-Message-Id: <20210917182226.3532898-1-mcgrof@kernel.org>
+Subject: [PATCH 13/14] test_firmware: move a few test knobs out to its library
+Date:   Fri, 17 Sep 2021 11:22:25 -0700
+Message-Id: <20210917182226.3532898-14-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
+References: <20210917182226.3532898-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
@@ -65,70 +67,72 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-A while ago I noted to Boris how we could likely do away the odd
-direct use of the firmware sections on x86 and instead have it use
-the API directly. This indeed was possible but it required quite
-a bit of spring cleaning as well and on its way I spotted a small
-fix.
+These will be used by other tests cases in other files so
+move them to the library.
 
-This goes with a new series of tests against built-in firmware as well.
-Boris has confirmed this also does work for the x86 microcode loader.
-0day is happy with the build results. You can find these changes on my
-git tree branch 20210916-firmware-builtin-v2 [0].
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ .../testing/selftests/firmware/fw_filesystem.sh | 16 ----------------
+ tools/testing/selftests/firmware/fw_lib.sh      | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
-[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20210916-firmware-builtin-v2
-
-Borislav Petkov (1):
-  x86/microcode: Use the firmware_loader built-in API
-
-Luis Chamberlain (13):
-  firmware_loader: fix pre-allocated buf built-in firmware use
-  firmware_loader: split built-in firmware call
-  firmware_loader: add a sanity check for firmware_request_builtin()
-  firmware_loader: add built-in firmware kconfig entry
-  firmware_loader: formalize built-in firmware API
-  firmware_loader: remove old DECLARE_BUILTIN_FIRMWARE()
-  firmware_loader: move struct builtin_fw to the only place used
-  vmlinux.lds.h: wrap built-in firmware support under its kconfig symbol
-  x86/build: Tuck away built-in firmware under its kconfig symbol
-  firmware_loader: rename EXTRA_FIRMWARE and EXTRA_FIRMWARE_DIR
-  firmware_loader: move builtin build helper to shared library
-  test_firmware: move a few test knobs out to its library
-  test_firmware: add support for testing built-in firmware
-
- .../driver-api/firmware/built-in-fw.rst       |   8 +-
- Documentation/x86/microcode.rst               |   9 +-
- arch/x86/Kconfig                              |   4 +-
- arch/x86/include/asm/microcode.h              |   3 -
- arch/x86/kernel/cpu/microcode/amd.c           |  14 ++-
- arch/x86/kernel/cpu/microcode/core.c          |  17 ---
- arch/x86/kernel/cpu/microcode/intel.c         |   9 +-
- arch/x86/tools/relocs.c                       |   2 +
- drivers/base/firmware_loader/Kconfig          |  39 ++++---
- drivers/base/firmware_loader/Makefile         |   4 +-
- drivers/base/firmware_loader/builtin/Makefile |  43 ++------
- .../base/firmware_loader/builtin/lib.Makefile |  32 ++++++
- drivers/base/firmware_loader/builtin/main.c   | 101 ++++++++++++++++++
- drivers/base/firmware_loader/firmware.h       |  17 +++
- drivers/base/firmware_loader/main.c           |  65 +----------
- .../firmware_loader/test-builtin/.gitignore   |   3 +
- .../firmware_loader/test-builtin/Makefile     |  18 ++++
- drivers/staging/media/av7110/Kconfig          |   4 +-
- include/asm-generic/vmlinux.lds.h             |  20 ++--
- include/linux/firmware.h                      |  26 ++---
- lib/Kconfig.debug                             |  34 ++++++
- lib/test_firmware.c                           |  52 ++++++++-
- .../testing/selftests/firmware/fw_builtin.sh  |  69 ++++++++++++
- .../selftests/firmware/fw_filesystem.sh       |  16 ---
- tools/testing/selftests/firmware/fw_lib.sh    |  24 +++++
- .../selftests/firmware/fw_run_tests.sh        |   2 +
- 26 files changed, 447 insertions(+), 188 deletions(-)
- create mode 100644 drivers/base/firmware_loader/builtin/lib.Makefile
- create mode 100644 drivers/base/firmware_loader/builtin/main.c
- create mode 100644 drivers/base/firmware_loader/test-builtin/.gitignore
- create mode 100644 drivers/base/firmware_loader/test-builtin/Makefile
- create mode 100755 tools/testing/selftests/firmware/fw_builtin.sh
-
+diff --git a/tools/testing/selftests/firmware/fw_filesystem.sh b/tools/testing/selftests/firmware/fw_filesystem.sh
+index c2a2a100114b..7d763b303057 100755
+--- a/tools/testing/selftests/firmware/fw_filesystem.sh
++++ b/tools/testing/selftests/firmware/fw_filesystem.sh
+@@ -118,27 +118,11 @@ test_config_present()
+ 	fi
+ }
+ 
+-# Defaults :
+-#
+-# send_uevent: 1
+-# sync_direct: 0
+-# name: test-firmware.bin
+-# num_requests: 4
+-config_reset()
+-{
+-	echo 1 >  $DIR/reset
+-}
+-
+ release_all_firmware()
+ {
+ 	echo 1 >  $DIR/release_all_firmware
+ }
+ 
+-config_set_name()
+-{
+-	echo -n $1 >  $DIR/config_name
+-}
+-
+ config_set_into_buf()
+ {
+ 	echo 1 >  $DIR/config_into_buf
+diff --git a/tools/testing/selftests/firmware/fw_lib.sh b/tools/testing/selftests/firmware/fw_lib.sh
+index 5b8c0fedee76..31b71fe11dc5 100755
+--- a/tools/testing/selftests/firmware/fw_lib.sh
++++ b/tools/testing/selftests/firmware/fw_lib.sh
+@@ -221,3 +221,20 @@ kconfig_has()
+ 		fi
+ 	fi
+ }
++
++# Defaults :
++#
++# send_uevent: 1
++# sync_direct: 0
++# name: test-firmware.bin
++# num_requests: 4
++config_reset()
++{
++	echo 1 >  $DIR/reset
++}
++
++
++config_set_name()
++{
++	echo -n $1 >  $DIR/config_name
++}
 -- 
 2.30.2
 
