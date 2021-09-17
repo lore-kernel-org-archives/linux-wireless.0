@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AF81C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6502C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 459BB611C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D062B6121F
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245451AbhIQSYv (ORCPT
+        id S1344902AbhIQSYv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 17 Sep 2021 14:24:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34172 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244170AbhIQSYM (ORCPT
+        with ESMTP id S244038AbhIQSYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 17 Sep 2021 14:24:12 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AC9FC061757;
-        Fri, 17 Sep 2021 11:22:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9BF2C061574;
+        Fri, 17 Sep 2021 11:22:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=+bAxPNXEkjOLG0J16lJ79/BZjrPhBIO0OVG4jkta3IU=; b=0iVI7z+X129Mv0/pbPx3RKPj/k
-        hxZMBYWuTcr10TBXzIXvlSWek7JhKLJexctVeUzwzM00et4epv9Nqv9BJ7bak9Z8H7tBFuHDCcoyw
-        EWdX4D1o6FPa0MLP82YVOLadoF9RIM4LfNMRDL7twHJaB+os60U/5GYRiIl2V559w8p2Wl0SkVWJE
-        aJLRFTuPo2U/barhlN8MsMRMLrWHYLiO7g4Nb4QDyaQIgCnWyFCMzfh1gP4vV6GaR0durL++P8I1K
-        NzR2JlKf4klU/brjqKaI0qMCV/O22IaNfuYIMKWxZLc3OfKiPcqwcxRqrcdnoKYvivJVgC+dg2K7c
-        W4BwdnGw==;
+        bh=vQDziZ7ZyhPvCe5V/cGR0gQ3vb8WJNHnEcQgc70mPbE=; b=ZKs5RNOIEpLWqHseAvqSsPN6TY
+        wl9se0hdkMrYwz5bnT/vyxwRlPi3LDNXURpB9TIQ+fK1yTFhXvsmsgMFoOUILg8+MZoWJxbdlgfFU
+        VKNZOmYtnZm2z2st/ZJcDrqAqx0NoxPPhA9nFlbf2C9k3ChKZItsv/uO5jqwkONh0Pi0PySKePadt
+        AatwMeUpldovVfCiLV80lmA4JrycGUICN69Cffyze3TrpJYwAfeV32CXUHqJHsNN+j2GlSgZ1oSox
+        USrgnZId1AjWX2pppgnkn4gS2IZCjo314uCsGlK+xTqAi8I68mXD4AiHA5wVymGLelWZRLFtxlLhO
+        2cJ7PYjg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5Y-AF; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5q-MD; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 05/14] firmware_loader: formalize built-in firmware API
-Date:   Fri, 17 Sep 2021 11:22:17 -0700
-Message-Id: <20210917182226.3532898-6-mcgrof@kernel.org>
+Subject: [PATCH 12/14] firmware_loader: move builtin build helper to shared library
+Date:   Fri, 17 Sep 2021 11:22:24 -0700
+Message-Id: <20210917182226.3532898-13-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -67,317 +67,127 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-Now that we have a kconfig entry to represent built-in firmware
-support, formalize its use with a proper API. This can later be
-used by other callers where all they need is built-in firmware.
+If we wanted to use a different directory for building target
+builtin firmware it is easier if we just have a shared library
+Makefile, and each target directory can then just include it and
+populate the respective needed variables. This reduces clutter,
+makes things easier to read, and also most importantly allows
+us to not have to try to magically adjust only one target
+kconfig symbol for built-in firmware files. Trying to do this
+can easily end up causing odd build issues if the user is not
+careful.
 
-We export the firmware_request_builtin() call for now only
-under the TEST_FIRMWARE symbol namespace as there are no
-direct modular users for it. If they pop up they are free
-to export it generally. Built-in code always gets access to
-the callers and we'll demonstrate a hidden user which has been
-lurking in the kernel for a while and the reason why using a
-proper API was better long term.
+As an example issue, if we are going to try to extend the
+FW_LOADER_BUILTIN_FILES list and FW_LOADER_BUILTIN_DIR in case
+of a new test firmware builtin support currently our only option
+would be modify the defaults of each of these in case test firmware
+builtin support was enabled. Defaults however won't augment a prior
+setting, and so if FW_LOADER_BUILTIN_DIR="/lib/firmware" and you
+and want this to be changed to something like
+FW_LOADER_BUILTIN_DIR="drivers/base/firmware_loader/test-builtin"
+the change will not take effect as a prior build already had it
+set, and the build would fail. Trying to augment / append the
+variables in the Makefile just makes this very difficult to
+read.
 
-Reviewed-by: Borislav Petkov <bp@suse.de>
+Using a library let's us split up possible built-in targets so
+that the user does not have to be involved. This will be used
+in a subsequent patch which will add another user to this
+built-in firmware library Makefile and demo how to use it outside
+of the default FW_LOADER_BUILTIN_DIR and FW_LOADER_BUILTIN_FILES.
+
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/base/firmware_loader/builtin/Makefile |  6 +-
- drivers/base/firmware_loader/builtin/main.c   | 95 +++++++++++++++++++
- drivers/base/firmware_loader/firmware.h       | 17 ++++
- drivers/base/firmware_loader/main.c           | 78 +--------------
- include/linux/firmware.h                      | 11 +++
- 5 files changed, 128 insertions(+), 79 deletions(-)
- create mode 100644 drivers/base/firmware_loader/builtin/main.c
+ drivers/base/firmware_loader/builtin/Makefile | 34 ++-----------------
+ .../base/firmware_loader/builtin/lib.Makefile | 32 +++++++++++++++++
+ 2 files changed, 34 insertions(+), 32 deletions(-)
+ create mode 100644 drivers/base/firmware_loader/builtin/lib.Makefile
 
 diff --git a/drivers/base/firmware_loader/builtin/Makefile b/drivers/base/firmware_loader/builtin/Makefile
-index 101754ad48d9..eb4be452062a 100644
+index 7cdd0b5c7384..9b0dc193f6c7 100644
 --- a/drivers/base/firmware_loader/builtin/Makefile
 +++ b/drivers/base/firmware_loader/builtin/Makefile
-@@ -1,11 +1,13 @@
+@@ -1,4 +1,6 @@
  # SPDX-License-Identifier: GPL-2.0
-+obj-y  += main.o
++include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
++
+ obj-y  += main.o
  
- # Create $(fwdir) from $(CONFIG_EXTRA_FIRMWARE_DIR) -- if it doesn't have a
- # leading /, it's relative to $(srctree).
- fwdir := $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE_DIR))
- fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
+ # Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
+@@ -8,35 +10,3 @@ fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
  
--obj-y  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE)))
-+firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE)))
-+obj-y += $(firmware)
- 
- FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
- FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
-@@ -34,7 +36,7 @@ $(obj)/%.gen.S: FORCE
- 	$(call filechk,fwbin)
- 
- # The .o files depend on the binaries directly; the .S files don't.
--$(addprefix $(obj)/, $(obj-y)): $(obj)/%.gen.o: $(fwdir)/%
-+$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
- 
- targets := $(patsubst $(obj)/%,%, \
-                                 $(shell find $(obj) -name \*.gen.S 2>/dev/null))
-diff --git a/drivers/base/firmware_loader/builtin/main.c b/drivers/base/firmware_loader/builtin/main.c
+ firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_FILES)))
+ obj-y += $(firmware)
+-
+-FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
+-FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
+-ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
+-ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
+-PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
+-
+-filechk_fwbin = \
+-	echo "/* Generated by $(src)/Makefile */"		;\
+-	echo "    .section .rodata"				;\
+-	echo "    .p2align 4"					;\
+-	echo "_fw_$(FWSTR)_bin:"				;\
+-	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
+-	echo "_fw_end:"						;\
+-	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
+-	echo "    .p2align $(ASM_ALIGN)"			;\
+-	echo "_fw_$(FWSTR)_name:"				;\
+-	echo "    .string \"$(FWNAME)\""			;\
+-	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
+-	echo "    .p2align $(ASM_ALIGN)"			;\
+-	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
+-	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
+-	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
+-
+-$(obj)/%.gen.S: FORCE
+-	$(call filechk,fwbin)
+-
+-# The .o files depend on the binaries directly; the .S files don't.
+-$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
+-
+-targets := $(patsubst $(obj)/%,%, \
+-                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
+diff --git a/drivers/base/firmware_loader/builtin/lib.Makefile b/drivers/base/firmware_loader/builtin/lib.Makefile
 new file mode 100644
-index 000000000000..2af0e58f3f9f
+index 000000000000..e979a67acfa7
 --- /dev/null
-+++ b/drivers/base/firmware_loader/builtin/main.c
-@@ -0,0 +1,95 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Builtin firmware support */
++++ b/drivers/base/firmware_loader/builtin/lib.Makefile
+@@ -0,0 +1,32 @@
++# SPDX-License-Identifier: GPL-2.0
++FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
++FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
++ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
++ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
++PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
 +
-+#include <linux/firmware.h>
-+#include "../firmware.h"
++filechk_fwbin = \
++	echo "/* Generated by $(src)/Makefile */"		;\
++	echo "    .section .rodata"				;\
++	echo "    .p2align 4"					;\
++	echo "_fw_$(FWSTR)_bin:"				;\
++	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
++	echo "_fw_end:"						;\
++	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
++	echo "    .p2align $(ASM_ALIGN)"			;\
++	echo "_fw_$(FWSTR)_name:"				;\
++	echo "    .string \"$(FWNAME)\""			;\
++	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
++	echo "    .p2align $(ASM_ALIGN)"			;\
++	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
++	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
++	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
 +
-+extern struct builtin_fw __start_builtin_fw[];
-+extern struct builtin_fw __end_builtin_fw[];
++$(obj)/%.gen.S: FORCE
++	$(call filechk,fwbin)
 +
-+static bool fw_copy_to_prealloc_buf(struct firmware *fw,
-+				    void *buf, size_t size)
-+{
-+	if (!buf)
-+		return true;
-+	if (size < fw->size)
-+		return false;
-+	memcpy(buf, fw->data, fw->size);
-+	return true;
-+}
++# The .o files depend on the binaries directly; the .S files don't.
++$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
 +
-+/**
-+ * firmware_request_builtin() - load builtin firmware
-+ * @fw: pointer to firmware struct
-+ * @name: name of firmware file
-+ *
-+ * Some use cases in the kernel have a requirement so that no memory allocator
-+ * is involved as these calls take place early in boot process. An example is
-+ * the x86 CPU microcode loader. In these cases all the caller wants is to see
-+ * if the firmware was built-in and if so use it right away. This can be used
-+ * for such cases.
-+ *
-+ * This looks for the firmware in the built-in kernel. Only if the kernel was
-+ * built-in with the firmware you are looking for will this return successfully.
-+ *
-+ * Callers of this API do not need to use release_firmware() as the pointer to
-+ * the firmware is expected to be provided locally on the stack of the caller.
-+ **/
-+bool firmware_request_builtin(struct firmware *fw, const char *name)
-+{
-+	struct builtin_fw *b_fw;
-+
-+	if (!fw)
-+		return false;
-+
-+	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) {
-+		if (strcmp(name, b_fw->name) == 0) {
-+			fw->size = b_fw->size;
-+			fw->data = b_fw->data;
-+			return true;
-+		}
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_NS_GPL(firmware_request_builtin, TEST_FIRMWARE);
-+
-+/**
-+ * firmware_request_builtin_buf() - load builtin firmware into optional buffer
-+ * @fw: pointer to firmware struct
-+ * @name: name of firmware file
-+ * @buf: If set this lets you use a pre-allocated buffer so that the built-in
-+ *	firmware into is copied into. This field can be NULL. It is used by
-+ *	callers such as request_firmware_into_buf() and
-+ *	request_partial_firmware_into_buf()
-+ * @size: if buf was provided, the max size of the allocated buffer available.
-+ *	If the built-in firmware does not fit into the pre-allocated @buf this
-+ *	call will fail.
-+ *
-+ * This looks for the firmware in the built-in kernel. Only if the kernel was
-+ * built-in with the firmware you are looking for will this call possibly
-+ * succeed. If you passed a @buf the firmware will be copied into it *iff* the
-+ * built-in firmware fits into the pre-allocated buffer size specified in
-+ * @size.
-+ *
-+ * This caller is to be used internally by the firmware_loader only.
-+ **/
-+bool firmware_request_builtin_buf(struct firmware *fw, const char *name,
-+				  void *buf, size_t size)
-+{
-+	if (!firmware_request_builtin(fw, name))
-+		return false;
-+
-+	return fw_copy_to_prealloc_buf(fw, buf, size);
-+}
-+
-+bool firmware_is_builtin(const struct firmware *fw)
-+{
-+	struct builtin_fw *b_fw;
-+
-+	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++)
-+		if (fw->data == b_fw->data)
-+			return true;
-+
-+	return false;
-+}
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index a3014e9e2c85..7e38827ad006 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -151,6 +151,23 @@ static inline void fw_state_done(struct fw_priv *fw_priv)
- 
- int assign_fw(struct firmware *fw, struct device *device);
- 
-+#ifdef CONFIG_FW_LOADER_BUILTIN
-+bool firmware_is_builtin(const struct firmware *fw);
-+bool firmware_request_builtin_buf(struct firmware *fw, const char *name,
-+				  void *buf, size_t size);
-+#else
-+static inline bool firmware_is_builtin(const struct firmware *fw)
-+{
-+	return false;
-+}
-+static inline bool firmware_request_builtin_buf(struct firmware *fw,
-+						const char *name,
-+						void *buf, size_t size)
-+{
-+	return false;
-+}
-+#endif
-+
- #ifdef CONFIG_FW_LOADER_PAGED_BUF
- void fw_free_paged_buf(struct fw_priv *fw_priv);
- int fw_grow_paged_buf(struct fw_priv *fw_priv, int pages_needed);
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 45075c7f9290..94d1789a233e 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -93,82 +93,6 @@ DEFINE_MUTEX(fw_lock);
- 
- static struct firmware_cache fw_cache;
- 
--/* Builtin firmware support */
--
--#ifdef CONFIG_FW_LOADER_BUILTIN
--
--extern struct builtin_fw __start_builtin_fw[];
--extern struct builtin_fw __end_builtin_fw[];
--
--static bool fw_copy_to_prealloc_buf(struct firmware *fw,
--				    void *buf, size_t size)
--{
--	if (!buf)
--		return true;
--	if (size < fw->size)
--		return false;
--	memcpy(buf, fw->data, fw->size);
--	return true;
--}
--
--static bool firmware_request_builtin(struct firmware *fw, const char *name)
--{
--	struct builtin_fw *b_fw;
--
--	if (!fw)
--		return false;
--
--	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) {
--		if (strcmp(name, b_fw->name) == 0) {
--			fw->size = b_fw->size;
--			fw->data = b_fw->data;
--			return true;
--		}
--	}
--
--	return false;
--}
--
--static bool firmware_request_builtin_buf(struct firmware *fw, const char *name,
--					 void *buf, size_t size)
--{
--	if (!firmware_request_builtin(fw, name))
--		return false;
--	return fw_copy_to_prealloc_buf(fw, buf, size);
--}
--
--static bool fw_is_builtin_firmware(const struct firmware *fw)
--{
--	struct builtin_fw *b_fw;
--
--	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++)
--		if (fw->data == b_fw->data)
--			return true;
--
--	return false;
--}
--
--#else
--
--static inline bool firmware_request_builtin(struct firmware *fw,
--					    const char *name)
--{
--	return false;
--}
--
--static inline bool firmware_request_builtin_buf(struct firmware *fw,
--						const char *name, void *buf,
--						size_t size)
--{
--	return false;
--}
--
--static inline bool fw_is_builtin_firmware(const struct firmware *fw)
--{
--	return false;
--}
--#endif
--
- static void fw_state_init(struct fw_priv *fw_priv)
- {
- 	struct fw_state *fw_st = &fw_priv->fw_st;
-@@ -1068,7 +992,7 @@ EXPORT_SYMBOL(request_partial_firmware_into_buf);
- void release_firmware(const struct firmware *fw)
- {
- 	if (fw) {
--		if (!fw_is_builtin_firmware(fw))
-+		if (!firmware_is_builtin(fw))
- 			firmware_free_data(fw);
- 		kfree(fw);
- 	}
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index 25109192cebe..29d17a05ead6 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -20,12 +20,15 @@ struct firmware {
- struct module;
- struct device;
- 
-+#ifdef CONFIG_FW_LOADER_BUILTIN
- struct builtin_fw {
- 	char *name;
- 	void *data;
- 	unsigned long size;
- };
- 
-+bool firmware_request_builtin(struct firmware *fw, const char *name);
-+
- /* We have to play tricks here much like stringify() to get the
-    __COUNTER__ macro to be expanded as we want it */
- #define __fw_concat1(x, y) x##y
-@@ -38,6 +41,14 @@ struct builtin_fw {
- 	static const struct builtin_fw __fw_concat(__builtin_fw,__COUNTER__) \
- 	__used __section(".builtin_fw") = { name, blob, size }
- 
-+#else
-+static inline bool firmware_request_builtin(struct firmware *fw,
-+					    const char *name)
-+{
-+	return false;
-+}
-+#endif
-+
- #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
- int request_firmware(const struct firmware **fw, const char *name,
- 		     struct device *device);
++targets := $(patsubst $(obj)/%,%, \
++                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
 -- 
 2.30.2
 
