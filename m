@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 160BDC4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC46C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0036E611C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 869DA61248
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344648AbhIQSYY (ORCPT
+        id S1344561AbhIQSYT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34158 "EHLO
+        Fri, 17 Sep 2021 14:24:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344396AbhIQSYK (ORCPT
+        with ESMTP id S1344380AbhIQSYI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:10 -0400
+        Fri, 17 Sep 2021 14:24:08 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066EBC061757;
-        Fri, 17 Sep 2021 11:22:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75582C061574;
+        Fri, 17 Sep 2021 11:22:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=djQId+Hd358fYZPiVshZR/SjuQwiN+cHEqKXT2KVm8U=; b=JIZ1rDES3nl1mO2nbMpt4H+HCe
-        iCpmSmDRJRtKo6/uUAuDLPxKtsCecRAtLY6EmfNS9JlvEttwF0bo+TsjlgizO7VRU03F0lBS9wW4e
-        3O0dVsSsWVSDufjdQUj9aHIVrF6GZvllaBiGNBJx7tH6DmxyMkt0W5hzcjpiiEugsdV663UjAejgQ
-        tBxJtXa23lPOf06paArXukcVp/aWhyQ1jIR34zvkKJLk58jTs9eAdwwZNYIoD/AJnFv9MXquUspRy
-        snWvs1Y6kPl/NIYxcB9+mWURDsnJhn9R9+59Ol4pxTozModHZaHObzlnmhbkl6fUhSBcWwxs5dGXP
-        iM+zbXYA==;
+        bh=C6YoTJio2JJPviAT+lMOgCbn00AxJ3TaPTyT+Yh3YZQ=; b=IJ2JLglUvnZwPSc1ZlUZfS4ioP
+        WK6gyLTep0KUa/QICf09nDXKcUj/SgGm9Ylhy3FFGUsDikQ0H8aW/N53Pj5ZLzIh6QQCapobBK2Id
+        w/6Nah9ZeQTuKdF31UmVgv7RBbmjBb2eVF+RDOvbNPMcgIfDYQnQu0WWCvEnKeFGdkm+dWapYfyZL
+        pKalDwExdpsGsFXIPhGegHY1HXsxPrd7skl24r81GQtIpL85kfIV3Z+glNetfuxVmq5ZItL8MFWso
+        gPigO0vS89t/rPrAiJogD5dpXYxozY6iye4YIloNDOCSG5W7pcy/+D8FkG2m4eVVyy219IQWc8PNo
+        vOMlnY3Q==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5k-HN; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5a-D2; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 09/14] vmlinux.lds.h: wrap built-in firmware support under its kconfig symbol
-Date:   Fri, 17 Sep 2021 11:22:21 -0700
-Message-Id: <20210917182226.3532898-10-mcgrof@kernel.org>
+Subject: [PATCH 06/14] firmware_loader: remove old DECLARE_BUILTIN_FIRMWARE()
+Date:   Fri, 17 Sep 2021 11:22:18 -0700
+Message-Id: <20210917182226.3532898-7-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -67,57 +67,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-The firmware loader built-in firmware support now has a kconfig
-symbol representing support for it. Use that to tuck away the
-sections for built-in firmware.
-
-This ensures no oddball user tries to uses these sections without
-first enabling FW_LOADER_BUILTIN.
+This was never used upstream. Time to get rid of it. We
+don't carry around unused baggage.
 
 Reviewed-by: Borislav Petkov <bp@suse.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- include/asm-generic/vmlinux.lds.h | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ include/linux/firmware.h | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index f2984af2b85b..322af3d552ae 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -470,13 +470,7 @@
- 		__end_pci_fixups_suspend_late = .;			\
- 	}								\
- 									\
--	/* Built-in firmware blobs */					\
--	.builtin_fw : AT(ADDR(.builtin_fw) - LOAD_OFFSET) ALIGN(8) {	\
--		__start_builtin_fw = .;					\
--		KEEP(*(.builtin_fw))					\
--		__end_builtin_fw = .;					\
--	}								\
--									\
-+	FW_LOADER_BUILT_IN_DATA						\
- 	TRACEDATA							\
- 									\
- 	PRINTK_INDEX							\
-@@ -880,6 +874,18 @@
- #define ORC_UNWIND_TABLE
- #endif
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index 29d17a05ead6..9f21a0db715f 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -28,19 +28,6 @@ struct builtin_fw {
+ };
  
-+/* Built-in firmware blobs */
-+#ifdef CONFIG_FW_LOADER_BUILTIN
-+#define FW_LOADER_BUILT_IN_DATA						\
-+	.builtin_fw : AT(ADDR(.builtin_fw) - LOAD_OFFSET) ALIGN(8) {	\
-+		__start_builtin_fw = .;					\
-+		KEEP(*(.builtin_fw))					\
-+		__end_builtin_fw = .;					\
-+	}
-+#else
-+#define FW_LOADER_BUILT_IN_DATA
-+#endif
-+
- #ifdef CONFIG_PM_TRACE
- #define TRACEDATA							\
- 	. = ALIGN(4);							\
+ bool firmware_request_builtin(struct firmware *fw, const char *name);
+-
+-/* We have to play tricks here much like stringify() to get the
+-   __COUNTER__ macro to be expanded as we want it */
+-#define __fw_concat1(x, y) x##y
+-#define __fw_concat(x, y) __fw_concat1(x, y)
+-
+-#define DECLARE_BUILTIN_FIRMWARE(name, blob)				     \
+-	DECLARE_BUILTIN_FIRMWARE_SIZE(name, &(blob), sizeof(blob))
+-
+-#define DECLARE_BUILTIN_FIRMWARE_SIZE(name, blob, size)			     \
+-	static const struct builtin_fw __fw_concat(__builtin_fw,__COUNTER__) \
+-	__used __section(".builtin_fw") = { name, blob, size }
+-
+ #else
+ static inline bool firmware_request_builtin(struct firmware *fw,
+ 					    const char *name)
 -- 
 2.30.2
 
