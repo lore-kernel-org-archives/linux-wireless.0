@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC46C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95634C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 869DA61248
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80621611C4
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344561AbhIQSYT (ORCPT
+        id S1344731AbhIQSYd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34144 "EHLO
+        Fri, 17 Sep 2021 14:24:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344380AbhIQSYI (ORCPT
+        with ESMTP id S1344524AbhIQSYR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:08 -0400
+        Fri, 17 Sep 2021 14:24:17 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75582C061574;
-        Fri, 17 Sep 2021 11:22:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C594EC061768;
+        Fri, 17 Sep 2021 11:22:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=C6YoTJio2JJPviAT+lMOgCbn00AxJ3TaPTyT+Yh3YZQ=; b=IJ2JLglUvnZwPSc1ZlUZfS4ioP
-        WK6gyLTep0KUa/QICf09nDXKcUj/SgGm9Ylhy3FFGUsDikQ0H8aW/N53Pj5ZLzIh6QQCapobBK2Id
-        w/6Nah9ZeQTuKdF31UmVgv7RBbmjBb2eVF+RDOvbNPMcgIfDYQnQu0WWCvEnKeFGdkm+dWapYfyZL
-        pKalDwExdpsGsFXIPhGegHY1HXsxPrd7skl24r81GQtIpL85kfIV3Z+glNetfuxVmq5ZItL8MFWso
-        gPigO0vS89t/rPrAiJogD5dpXYxozY6iye4YIloNDOCSG5W7pcy/+D8FkG2m4eVVyy219IQWc8PNo
-        vOMlnY3Q==;
+        bh=Iu5EEZjwltqs2N860TioX8KgIjxPxn8KDGVoWqpsxrA=; b=p6Kb4Ueij1g/DmufXMCh5opuW5
+        hLt53u40jBqA8WAO9H2CPW2ZsMM5h9PlXtyx3kiOSpw/eRih/Hq31NeXxgq9CtTygqMGUKeWOH02j
+        AcOokCGQZnSqwi2pNxy45Eer8IV/B6+k4MnzO5eiALLSI1Re38irsl2pVHcAJs/pCEuZYIDf8LZKP
+        EY2Ok9d7TdtvfxtZeTXqbzy11PMClGEch4XKOD0hOCeKNYKKlMQF9EE/q+K/z/ADwcMyJTO9XifIc
+        OGY4vqdG7WtkUOn6Q+lm+B6GVuG3DZtJ9+ek8hiRET9NUYJZ7/Zi/MN94+J0nWstS64DmVL2/Gofm
+        pzQe+08Q==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5a-D2; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5W-7c; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 06/14] firmware_loader: remove old DECLARE_BUILTIN_FIRMWARE()
-Date:   Fri, 17 Sep 2021 11:22:18 -0700
-Message-Id: <20210917182226.3532898-7-mcgrof@kernel.org>
+Subject: [PATCH 04/14] firmware_loader: add built-in firmware kconfig entry
+Date:   Fri, 17 Sep 2021 11:22:16 -0700
+Message-Id: <20210917182226.3532898-5-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -67,37 +67,166 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-This was never used upstream. Time to get rid of it. We
-don't carry around unused baggage.
+The built-in firmware is always supported when a user enables
+FW_LOADER=y today, that is, it is built-in to the kernel. When the
+firmware loader is built as a module, support for built-in firmware
+is skipped. This requirement is not really clear to users or even
+developers.
+
+Also, by default the EXTRA_FIRMWARE is always set to an empty string
+and so by default we really have nothing built-in to that kernel's
+sections for built-in firmware, so today a all FW_LOADER=y kernels
+spins their wheels on an empty set of built-in firmware for each
+firmware request with no true need for it.
+
+Add a new kconfig entry to represent built-in firmware support more
+clearly. This let's knock 3 birds with one stone:
+
+ o Clarifies that support for built-in firmware requires the
+   firmware loader to be built-in to the kernel
+
+ o By default we now always skip built-in firmware even if a FW_LOADER=y
+
+ o This also lets us make it clear that the EXTRA_FIRMWARE_DIR
+   kconfig entry is only used for built-in firmware
 
 Reviewed-by: Borislav Petkov <bp@suse.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- include/linux/firmware.h | 13 -------------
- 1 file changed, 13 deletions(-)
+ .../driver-api/firmware/built-in-fw.rst       |  2 ++
+ Documentation/x86/microcode.rst               |  5 ++--
+ drivers/base/firmware_loader/Kconfig          | 25 +++++++++++++------
+ drivers/base/firmware_loader/Makefile         |  3 +--
+ drivers/base/firmware_loader/main.c           |  4 +--
+ 5 files changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index 29d17a05ead6..9f21a0db715f 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -28,19 +28,6 @@ struct builtin_fw {
- };
+diff --git a/Documentation/driver-api/firmware/built-in-fw.rst b/Documentation/driver-api/firmware/built-in-fw.rst
+index bc1c961bace1..9dd2b1df44f0 100644
+--- a/Documentation/driver-api/firmware/built-in-fw.rst
++++ b/Documentation/driver-api/firmware/built-in-fw.rst
+@@ -8,6 +8,7 @@ the filesystem. Instead, firmware can be looked for inside the kernel
+ directly. You can enable built-in firmware using the kernel configuration
+ options:
  
- bool firmware_request_builtin(struct firmware *fw, const char *name);
++  * CONFIG_FW_LOADER_BUILTIN
+   * CONFIG_EXTRA_FIRMWARE
+   * CONFIG_EXTRA_FIRMWARE_DIR
+ 
+@@ -17,6 +18,7 @@ into the kernel with CONFIG_EXTRA_FIRMWARE:
+ * Speed
+ * Firmware is needed for accessing the boot device, and the user doesn't
+   want to stuff the firmware into the boot initramfs.
++* Testing built-in firmware
+ 
+ Even if you have these needs there are a few reasons why you may not be
+ able to make use of built-in firmware:
+diff --git a/Documentation/x86/microcode.rst b/Documentation/x86/microcode.rst
+index a320d37982ed..d199f0b98869 100644
+--- a/Documentation/x86/microcode.rst
++++ b/Documentation/x86/microcode.rst
+@@ -114,11 +114,12 @@ Builtin microcode
+ =================
+ 
+ The loader supports also loading of a builtin microcode supplied through
+-the regular builtin firmware method CONFIG_EXTRA_FIRMWARE. Only 64-bit is
+-currently supported.
++the regular builtin firmware method using CONFIG_FW_LOADER_BUILTIN and
++CONFIG_EXTRA_FIRMWARE. Only 64-bit is currently supported.
+ 
+ Here's an example::
+ 
++  CONFIG_FW_LOADER_BUILTIN=y
+   CONFIG_EXTRA_FIRMWARE="intel-ucode/06-3a-09 amd-ucode/microcode_amd_fam15h.bin"
+   CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
+ 
+diff --git a/drivers/base/firmware_loader/Kconfig b/drivers/base/firmware_loader/Kconfig
+index 5b24f3959255..de4fcd9d41f3 100644
+--- a/drivers/base/firmware_loader/Kconfig
++++ b/drivers/base/firmware_loader/Kconfig
+@@ -29,8 +29,10 @@ if FW_LOADER
+ config FW_LOADER_PAGED_BUF
+ 	bool
+ 
+-config EXTRA_FIRMWARE
+-	string "Build named firmware blobs into the kernel binary"
++config FW_LOADER_BUILTIN
++	bool "Enable support for built-in firmware"
++	default n
++	depends on FW_LOADER=y
+ 	help
+ 	  Device drivers which require firmware can typically deal with
+ 	  having the kernel load firmware from the various supported
+@@ -43,7 +45,14 @@ config EXTRA_FIRMWARE
+ 	  in boot and cannot rely on the firmware being placed in an initrd or
+ 	  initramfs.
+ 
+-	  This option is a string and takes the (space-separated) names of the
++	  Support for built-in firmware is not supported if you are using
++	  the firmware loader as a module.
++
++config EXTRA_FIRMWARE
++	string "Build named firmware blobs into the kernel binary"
++	depends on FW_LOADER_BUILTIN
++	help
++	  This option is a string and takes the space-separated names of the
+ 	  firmware files -- the same names that appear in MODULE_FIRMWARE()
+ 	  and request_firmware() in the source. These files should exist under
+ 	  the directory specified by the EXTRA_FIRMWARE_DIR option, which is
+@@ -61,12 +70,14 @@ config EXTRA_FIRMWARE
+ 	  consult a lawyer of your own before distributing such an image.
+ 
+ config EXTRA_FIRMWARE_DIR
+-	string "Firmware blobs root directory"
+-	depends on EXTRA_FIRMWARE != ""
++	string "Directory with firmware to be built-in to the kernel"
++	depends on FW_LOADER_BUILTIN
+ 	default "/lib/firmware"
+ 	help
+-	  This option controls the directory in which the kernel build system
+-	  looks for the firmware files listed in the EXTRA_FIRMWARE option.
++	  This option specifies the directory which the kernel build system
++	  will use to look for the firmware files which are going to be
++	  built into the kernel using the space-separated EXTRA_FIRMWARE
++	  entries.
+ 
+ config FW_LOADER_USER_HELPER
+ 	bool "Enable the firmware sysfs fallback mechanism"
+diff --git a/drivers/base/firmware_loader/Makefile b/drivers/base/firmware_loader/Makefile
+index e87843408fe6..a2dbfa19201c 100644
+--- a/drivers/base/firmware_loader/Makefile
++++ b/drivers/base/firmware_loader/Makefile
+@@ -1,10 +1,9 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Makefile for the Linux firmware loader
+ 
++obj-$(CONFIG_FW_LOADER_BUILTIN) += builtin/
+ obj-$(CONFIG_FW_LOADER_USER_HELPER) += fallback_table.o
+ obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
+ firmware_class-objs := main.o
+ firmware_class-$(CONFIG_FW_LOADER_USER_HELPER) += fallback.o
+ firmware_class-$(CONFIG_EFI_EMBEDDED_FIRMWARE) += fallback_platform.o
 -
--/* We have to play tricks here much like stringify() to get the
--   __COUNTER__ macro to be expanded as we want it */
--#define __fw_concat1(x, y) x##y
--#define __fw_concat(x, y) __fw_concat1(x, y)
--
--#define DECLARE_BUILTIN_FIRMWARE(name, blob)				     \
--	DECLARE_BUILTIN_FIRMWARE_SIZE(name, &(blob), sizeof(blob))
--
--#define DECLARE_BUILTIN_FIRMWARE_SIZE(name, blob, size)			     \
--	static const struct builtin_fw __fw_concat(__builtin_fw,__COUNTER__) \
--	__used __section(".builtin_fw") = { name, blob, size }
--
- #else
+-obj-y += builtin/
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index d95b5fe5f700..45075c7f9290 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -95,7 +95,7 @@ static struct firmware_cache fw_cache;
+ 
+ /* Builtin firmware support */
+ 
+-#ifdef CONFIG_FW_LOADER
++#ifdef CONFIG_FW_LOADER_BUILTIN
+ 
+ extern struct builtin_fw __start_builtin_fw[];
+ extern struct builtin_fw __end_builtin_fw[];
+@@ -148,7 +148,7 @@ static bool fw_is_builtin_firmware(const struct firmware *fw)
+ 	return false;
+ }
+ 
+-#else /* Module case - no builtin firmware support */
++#else
+ 
  static inline bool firmware_request_builtin(struct firmware *fw,
  					    const char *name)
 -- 
