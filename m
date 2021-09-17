@@ -2,192 +2,153 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6502C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF57BC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 19:30:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D062B6121F
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 894BB61100
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 19:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344902AbhIQSYv (ORCPT
+        id S1343805AbhIQTbr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34170 "EHLO
+        Fri, 17 Sep 2021 15:31:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244038AbhIQSYM (ORCPT
+        with ESMTP id S1343779AbhIQTbn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:12 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9BF2C061574;
-        Fri, 17 Sep 2021 11:22:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=vQDziZ7ZyhPvCe5V/cGR0gQ3vb8WJNHnEcQgc70mPbE=; b=ZKs5RNOIEpLWqHseAvqSsPN6TY
-        wl9se0hdkMrYwz5bnT/vyxwRlPi3LDNXURpB9TIQ+fK1yTFhXvsmsgMFoOUILg8+MZoWJxbdlgfFU
-        VKNZOmYtnZm2z2st/ZJcDrqAqx0NoxPPhA9nFlbf2C9k3ChKZItsv/uO5jqwkONh0Pi0PySKePadt
-        AatwMeUpldovVfCiLV80lmA4JrycGUICN69Cffyze3TrpJYwAfeV32CXUHqJHsNN+j2GlSgZ1oSox
-        USrgnZId1AjWX2pppgnkn4gS2IZCjo314uCsGlK+xTqAi8I68mXD4AiHA5wVymGLelWZRLFtxlLhO
-        2cJ7PYjg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5q-MD; Fri, 17 Sep 2021 18:22:28 +0000
-From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
-To:     gregkh@linuxfoundation.org
-Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
-        rishabhb@codeaurora.org, kubakici@wp.pl, maco@android.com,
-        david.brown@linaro.org, bjorn.andersson@linaro.org,
-        linux-wireless@vger.kernel.org, keescook@chromium.org,
-        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
-        andresx7@gmail.com, dan.rue@linaro.org, brendanhiggins@google.com,
-        yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 12/14] firmware_loader: move builtin build helper to shared library
-Date:   Fri, 17 Sep 2021 11:22:24 -0700
-Message-Id: <20210917182226.3532898-13-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
-References: <20210917182226.3532898-1-mcgrof@kernel.org>
+        Fri, 17 Sep 2021 15:31:43 -0400
+Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A169C061574
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2021 12:30:21 -0700 (PDT)
+Received: by mail-il1-x12b.google.com with SMTP id d11so7503761ilc.8
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2021 12:30:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ojab.ru; s=ojab;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ojecROmdoKkDHQugVR33EyjeLmCBRcyr3oOr5dKqIQg=;
+        b=Ep0ZieCcO4BsRRbYVJprHD1D0tCQbXTeINo5K+rm/qMUe5lOMFaqTIx5rLAbUK3MZ0
+         iU2JgBpLlUxdCT9DhLA8cvosIVBG7Fyjz4cZ9HLY48P5FGCV2UgWZRTVuMIdBE0GX8ti
+         7coXIdlvUVOHrZ+ClGUILKUxAj0c5kbBFTiGEJtQPf+NkVrZijx4GqSF3O67JGs4GWVg
+         bmIk6weEl1jaxtmRgq/wlX8dMuxRcgHhMoKCZUd+RSJNEsaLtfSt0MX6Sqo4aWrVfTEF
+         /h0nUj+npLuTlV4j0AVc/PyneJXT1JaXpPxQ8Xycxrcxmsfi5XmsLZ212M+v5pMtFIG6
+         VhDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ojecROmdoKkDHQugVR33EyjeLmCBRcyr3oOr5dKqIQg=;
+        b=SQh4l5CDVMUmbxXuBqD1rDXYZNa0gAQdJ8Wf4gS54dItmwl13/s8vYWXj5N/R01hal
+         1SqxKXlLvuwesElrL9egID4QlptAB7O1YWxn2V7pX03Os/JVmTNQXPtSfPOkBJpUvvN/
+         Ung5B/6ESZV+bQVdzQ4e5xmsoa2s5MtXYImDveQHtz2q15w1pc0rKy3urFWwgbDFe7dk
+         REVfmXF3gEVFgZoqGJefTP7ig318aUc1Dhtw7YnF6tLUsjPOZ4Y/sNnmHgvoC34FdYIJ
+         zaCGM9uTCz3mXEjK3jRmsNU48FobJrYQrdeqXjVM/KEW5aPAL6PhG/QXfcnmXkQd5Tsz
+         4PAA==
+X-Gm-Message-State: AOAM530vNNc/vZObfjT/Pg8U7C8bV1BxRGVGJUQ1J7uZdiyEYRtGiqga
+        PyRT2FGld8ZH8p5KRIf2pePpO4PC5MKdZ1GWflcjjg==
+X-Google-Smtp-Source: ABdhPJzNhc+5vT8caUkTVnUoJ+e8ww4JroaL2iushz0B5BOIkm3zxnf+CYp3OJLGCdj3n2OSueskKdNmYpHTP0qsN6g=
+X-Received: by 2002:a05:6e02:1bc3:: with SMTP id x3mr9490382ilv.113.1631907020457;
+ Fri, 17 Sep 2021 12:30:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+References: <20210722193459.7474-1-ojab@ojab.ru> <CAKzrAgRt0jRFyFNjF-uq=feG-9nhCx=tTztCgCEitj1cpMk_Xg@mail.gmail.com>
+ <CAKzrAgQgsN6=Cu4SvjSSFoJOqAkU2t8cjt7sgEsJdNhvM8f7jg@mail.gmail.com>
+In-Reply-To: <CAKzrAgQgsN6=Cu4SvjSSFoJOqAkU2t8cjt7sgEsJdNhvM8f7jg@mail.gmail.com>
+From:   "ojab //" <ojab@ojab.ru>
+Date:   Fri, 17 Sep 2021 22:30:09 +0300
+Message-ID: <CAKzrAgSEiq-qOgetzryaE3JyBUe3URYjr=Fn0kz9sF7ZryQ5pA@mail.gmail.com>
+Subject: Re: [PATCH V2] ath10k: don't fail if IRAM write fails
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     ath10k@lists.infradead.org,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+._.
 
-If we wanted to use a different directory for building target
-builtin firmware it is easier if we just have a shared library
-Makefile, and each target directory can then just include it and
-populate the respective needed variables. This reduces clutter,
-makes things easier to read, and also most importantly allows
-us to not have to try to magically adjust only one target
-kconfig symbol for built-in firmware files. Trying to do this
-can easily end up causing odd build issues if the user is not
-careful.
+//wbr ojab
 
-As an example issue, if we are going to try to extend the
-FW_LOADER_BUILTIN_FILES list and FW_LOADER_BUILTIN_DIR in case
-of a new test firmware builtin support currently our only option
-would be modify the defaults of each of these in case test firmware
-builtin support was enabled. Defaults however won't augment a prior
-setting, and so if FW_LOADER_BUILTIN_DIR="/lib/firmware" and you
-and want this to be changed to something like
-FW_LOADER_BUILTIN_DIR="drivers/base/firmware_loader/test-builtin"
-the change will not take effect as a prior build already had it
-set, and the build would fail. Trying to augment / append the
-variables in the Makefile just makes this very difficult to
-read.
-
-Using a library let's us split up possible built-in targets so
-that the user does not have to be involved. This will be used
-in a subsequent patch which will add another user to this
-built-in firmware library Makefile and demo how to use it outside
-of the default FW_LOADER_BUILTIN_DIR and FW_LOADER_BUILTIN_FILES.
-
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/builtin/Makefile | 34 ++-----------------
- .../base/firmware_loader/builtin/lib.Makefile | 32 +++++++++++++++++
- 2 files changed, 34 insertions(+), 32 deletions(-)
- create mode 100644 drivers/base/firmware_loader/builtin/lib.Makefile
-
-diff --git a/drivers/base/firmware_loader/builtin/Makefile b/drivers/base/firmware_loader/builtin/Makefile
-index 7cdd0b5c7384..9b0dc193f6c7 100644
---- a/drivers/base/firmware_loader/builtin/Makefile
-+++ b/drivers/base/firmware_loader/builtin/Makefile
-@@ -1,4 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
-+
- obj-y  += main.o
- 
- # Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
-@@ -8,35 +10,3 @@ fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
- 
- firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_FILES)))
- obj-y += $(firmware)
--
--FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
--FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
--ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
--ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
--PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
--
--filechk_fwbin = \
--	echo "/* Generated by $(src)/Makefile */"		;\
--	echo "    .section .rodata"				;\
--	echo "    .p2align 4"					;\
--	echo "_fw_$(FWSTR)_bin:"				;\
--	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
--	echo "_fw_end:"						;\
--	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
--	echo "    .p2align $(ASM_ALIGN)"			;\
--	echo "_fw_$(FWSTR)_name:"				;\
--	echo "    .string \"$(FWNAME)\""			;\
--	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
--	echo "    .p2align $(ASM_ALIGN)"			;\
--	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
--	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
--	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
--
--$(obj)/%.gen.S: FORCE
--	$(call filechk,fwbin)
--
--# The .o files depend on the binaries directly; the .S files don't.
--$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
--
--targets := $(patsubst $(obj)/%,%, \
--                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
-diff --git a/drivers/base/firmware_loader/builtin/lib.Makefile b/drivers/base/firmware_loader/builtin/lib.Makefile
-new file mode 100644
-index 000000000000..e979a67acfa7
---- /dev/null
-+++ b/drivers/base/firmware_loader/builtin/lib.Makefile
-@@ -0,0 +1,32 @@
-+# SPDX-License-Identifier: GPL-2.0
-+FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
-+FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
-+ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
-+ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
-+PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
-+
-+filechk_fwbin = \
-+	echo "/* Generated by $(src)/Makefile */"		;\
-+	echo "    .section .rodata"				;\
-+	echo "    .p2align 4"					;\
-+	echo "_fw_$(FWSTR)_bin:"				;\
-+	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
-+	echo "_fw_end:"						;\
-+	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
-+	echo "    .p2align $(ASM_ALIGN)"			;\
-+	echo "_fw_$(FWSTR)_name:"				;\
-+	echo "    .string \"$(FWNAME)\""			;\
-+	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
-+	echo "    .p2align $(ASM_ALIGN)"			;\
-+	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
-+	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
-+	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
-+
-+$(obj)/%.gen.S: FORCE
-+	$(call filechk,fwbin)
-+
-+# The .o files depend on the binaries directly; the .S files don't.
-+$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
-+
-+targets := $(patsubst $(obj)/%,%, \
-+                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
--- 
-2.30.2
-
+On Thu, 9 Sept 2021 at 02:42, ojab // <ojab@ojab.ru> wrote:
+>
+> Gentle ping.
+>
+> //wbr ojab
+>
+> On Wed, 25 Aug 2021 at 19:15, ojab // <ojab@ojab.ru> wrote:
+> >
+> > Can I haz it merged?
+> >
+> > //wbr ojab
+> >
+> > On Thu, 22 Jul 2021 at 22:36, ojab <ojab@ojab.ru> wrote:
+> > >
+> > > After reboot with kernel & firmware updates I found `failed to copy
+> > > target iram contents:` in dmesg and missing wlan interfaces for both
+> > > of my QCA9984 compex cards. Rolling back kernel/firmware didn't fixed
+> > > it, so while I have no idea what's actually happening, I don't see why
+> > > we should fail in this case, looks like some optional firmware ability
+> > > that could be skipped.
+> > >
+> > > Also with additional logging there is
+> > > ```
+> > > [    6.839858] ath10k_pci 0000:04:00.0: No hardware memory
+> > > [    6.841205] ath10k_pci 0000:04:00.0: failed to copy target iram contents: -12
+> > > [    6.873578] ath10k_pci 0000:07:00.0: No hardware memory
+> > > [    6.875052] ath10k_pci 0000:07:00.0: failed to copy target iram contents: -12
+> > > ```
+> > > so exact branch could be seen.
+> > >
+> > > Signed-off-by: Slava Kardakov <ojab@ojab.ru>
+> > > ---
+> > >  Of course I forgot to sing off, since I don't use it by default because I
+> > >  hate my real name and kernel requires it
+> > >
+> > >  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++---
+> > >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> > > index 2f9be182fbfb..d9fd5294e142 100644
+> > > --- a/drivers/net/wireless/ath/ath10k/core.c
+> > > +++ b/drivers/net/wireless/ath/ath10k/core.c
+> > > @@ -2691,8 +2691,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
+> > >         u32 len, remaining_len;
+> > >
+> > >         hw_mem = ath10k_coredump_get_mem_layout(ar);
+> > > -       if (!hw_mem)
+> > > +       if (!hw_mem) {
+> > > +               ath10k_warn(ar, "No hardware memory");
+> > >                 return -ENOMEM;
+> > > +       }
+> > >
+> > >         for (i = 0; i < hw_mem->region_table.size; i++) {
+> > >                 tmp = &hw_mem->region_table.regions[i];
+> > > @@ -2702,8 +2704,10 @@ static int ath10k_core_copy_target_iram(struct ath10k *ar)
+> > >                 }
+> > >         }
+> > >
+> > > -       if (!mem_region)
+> > > +       if (!mem_region) {
+> > > +               ath10k_warn(ar, "No memory region");
+> > >                 return -ENOMEM;
+> > > +       }
+> > >
+> > >         for (i = 0; i < ar->wmi.num_mem_chunks; i++) {
+> > >                 if (ar->wmi.mem_chunks[i].req_id ==
+> > > @@ -2917,7 +2921,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+> > >                 if (status) {
+> > >                         ath10k_warn(ar, "failed to copy target iram contents: %d",
+> > >                                     status);
+> > > -                       goto err_hif_stop;
+> > >                 }
+> > >         }
+> > >
+> > > --
+> > > 2.32.0
