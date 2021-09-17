@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0599CC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 746CBC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E496661244
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6069260FC2
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344473AbhIQSYP (ORCPT
+        id S1344559AbhIQSYs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34148 "EHLO
+        Fri, 17 Sep 2021 14:24:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344382AbhIQSYJ (ORCPT
+        with ESMTP id S1344414AbhIQSYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:09 -0400
+        Fri, 17 Sep 2021 14:24:12 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28CAC061757;
-        Fri, 17 Sep 2021 11:22:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AD25C061764;
+        Fri, 17 Sep 2021 11:22:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=mKzIRlwB1vttNdxDwilSgA4QCORfxzhGeRWQQTM2hHY=; b=Jqz9nxvGRM6kbFIYuCNUdRqhKM
-        PWUbRkX+hRjiQ98/k5/NVzHov8XkBj9gkoDGMpntd1lYRAw8Hxgx/Pe8cm/zV+DyG/BUChfF7RvkY
-        O5uft/Wpt6ytZMTZm2DQYT/Jd9fLcjb6/1JzGnPcgEBBgeWNheUn8aPhkDqlbUkEOzvpfclVa0Iby
-        oQ2HE2jREcrQ3KrccbuvhjNo58wA9/pUOtMvlqQ/+14VJWd88e2PyC/MK/asPxt0jVETElr/jNQ8x
-        i79GK+d0xZ7H8woZXhoVPxo9wxSbpQRiKxGP6qk5+qKnNiyR2HNaJxw+vWoBzljsWeNh5pA+lP/BO
-        XvUeVXmg==;
+        bh=Go1/KDXYjjqeM5NYs2EPZoks5Gkw4uiCOQWYdQBV8sM=; b=Fb5IllX9BA7pj1gVTNIw6W5co/
+        OQd2O0dAt7UCsm62uQAc9xNWgZeJQ/28xEBQXfRe/SgtfVBErvF4tG08UL7X+GiE89EXbrV1ABUA9
+        BzuDymOIrVCQDBOTzth+/kOTEfKqfOuC2JQ8LeDs/rf4oG4v2DQh/ryEfZ2Fd62KpGrmph4eGDDCb
+        2N3TNzro0xMTYeiNNC3DDs3QMC34zq1IYoPDKFWsi84x04eMx4nft8r/IYUWG5evj9Ck8UW91afly
+        DvD2eFLNd5aZNvSE3zNsUlYLXGtorwWT3vxj1mfBuZRV1ZZNsLZG5kirob4ELhbdpfN6i57TEaYIw
+        CJFvDtDA==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5S-2r; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5i-Ff; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 02/14] firmware_loader: split built-in firmware call
-Date:   Fri, 17 Sep 2021 11:22:14 -0700
-Message-Id: <20210917182226.3532898-3-mcgrof@kernel.org>
+Subject: [PATCH 08/14] firmware_loader: move struct builtin_fw to the only place used
+Date:   Fri, 17 Sep 2021 11:22:20 -0700
+Message-Id: <20210917182226.3532898-9-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -67,95 +67,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-There are two ways the firmware_loader can use the built-in
-firmware: with or without the pre-allocated buffer. We already
-have one explicit use case for each of these, and so split them
-up so that it is clear what the intention is on the caller side.
+Now that x86 doesn't abuse picking at internals to the firmware
+loader move out the built-in firmware struct to its only user.
 
-This also paves the way so that eventually other callers outside
-of the firmware loader can uses these if and when needed.
-
-While at it, adopt the firmware prefix for the routine names.
-
+Reviewed-by: Borislav Petkov <bp@suse.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/base/firmware_loader/main.c | 29 +++++++++++++++++++++--------
- 1 file changed, 21 insertions(+), 8 deletions(-)
+ drivers/base/firmware_loader/builtin/main.c | 6 ++++++
+ include/linux/firmware.h                    | 6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index ef904b8b112e..eb4085b92ad4 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -111,8 +111,7 @@ static bool fw_copy_to_prealloc_buf(struct firmware *fw,
- 	return true;
- }
+diff --git a/drivers/base/firmware_loader/builtin/main.c b/drivers/base/firmware_loader/builtin/main.c
+index 2af0e58f3f9f..0c78adb39110 100644
+--- a/drivers/base/firmware_loader/builtin/main.c
++++ b/drivers/base/firmware_loader/builtin/main.c
+@@ -4,6 +4,12 @@
+ #include <linux/firmware.h>
+ #include "../firmware.h"
  
--static bool fw_get_builtin_firmware(struct firmware *fw, const char *name,
--				    void *buf, size_t size)
-+static bool firmware_request_builtin(struct firmware *fw, const char *name)
- {
- 	struct builtin_fw *b_fw;
- 
-@@ -120,13 +119,21 @@ static bool fw_get_builtin_firmware(struct firmware *fw, const char *name,
- 		if (strcmp(name, b_fw->name) == 0) {
- 			fw->size = b_fw->size;
- 			fw->data = b_fw->data;
--			return fw_copy_to_prealloc_buf(fw, buf, size);
-+			return true;
- 		}
- 	}
- 
- 	return false;
- }
- 
-+static bool firmware_request_builtin_buf(struct firmware *fw, const char *name,
-+					 void *buf, size_t size)
-+{
-+	if (!firmware_request_builtin(fw, name))
-+		return false;
-+	return fw_copy_to_prealloc_buf(fw, buf, size);
-+}
++struct builtin_fw {
++	char *name;
++	void *data;
++	unsigned long size;
++};
 +
- static bool fw_is_builtin_firmware(const struct firmware *fw)
- {
- 	struct builtin_fw *b_fw;
-@@ -140,9 +147,15 @@ static bool fw_is_builtin_firmware(const struct firmware *fw)
+ extern struct builtin_fw __start_builtin_fw[];
+ extern struct builtin_fw __end_builtin_fw[];
  
- #else /* Module case - no builtin firmware support */
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index 9f21a0db715f..7a948739decd 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -21,12 +21,6 @@ struct module;
+ struct device;
  
--static inline bool fw_get_builtin_firmware(struct firmware *fw,
--					   const char *name, void *buf,
--					   size_t size)
-+static inline bool firmware_request_builtin(struct firmware *fw,
-+					    const char *name)
-+{
-+	return false;
-+}
-+
-+static inline bool firmware_request_builtin_buf(struct firmware *fw,
-+						const char *name, void *buf,
-+						size_t size)
- {
- 	return false;
- }
-@@ -737,7 +750,7 @@ _request_firmware_prepare(struct firmware **firmware_p, const char *name,
- 		return -ENOMEM;
- 	}
- 
--	if (fw_get_builtin_firmware(firmware, name, dbuf, size)) {
-+	if (firmware_request_builtin_buf(firmware, name, dbuf, size)) {
- 		dev_dbg(device, "using built-in %s\n", name);
- 		return 0; /* assigned */
- 	}
-@@ -1216,7 +1229,7 @@ static int uncache_firmware(const char *fw_name)
- 
- 	pr_debug("%s: %s\n", __func__, fw_name);
- 
--	if (fw_get_builtin_firmware(&fw, fw_name, NULL, 0))
-+	if (firmware_request_builtin(&fw, fw_name))
- 		return 0;
- 
- 	fw_priv = lookup_fw_priv(fw_name);
+ #ifdef CONFIG_FW_LOADER_BUILTIN
+-struct builtin_fw {
+-	char *name;
+-	void *data;
+-	unsigned long size;
+-};
+-
+ bool firmware_request_builtin(struct firmware *fw, const char *name);
+ #else
+ static inline bool firmware_request_builtin(struct firmware *fw,
 -- 
 2.30.2
 
