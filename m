@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B040C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1BADC43219
 	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16F9060FC2
+	by mail.kernel.org (Postfix) with ESMTP id BDEE460FC2
 	for <linux-wireless@archiver.kernel.org>; Fri, 17 Sep 2021 18:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344876AbhIQSYr (ORCPT
+        id S1344587AbhIQSYq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Sep 2021 14:24:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34176 "EHLO
+        Fri, 17 Sep 2021 14:24:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344419AbhIQSYM (ORCPT
+        with ESMTP id S1344423AbhIQSYN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Sep 2021 14:24:12 -0400
+        Fri, 17 Sep 2021 14:24:13 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC2EC061766;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D11C061767;
         Fri, 17 Sep 2021 11:22:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Sg7U2bCbLjaubYtMWf6IzjmNz2LnCsp1x7XoP4U68JU=; b=zXBs1FkTPjDh+9oydNpR/wx3LF
-        Kl4h+BZBGRqjUxV21pxTQdf7Gl7bViMd/JWBl6nmaAtMjpQV4is87r6qIi17hna0UCf+EH3NznJig
-        eES0pOu4flmAZexpVaedWiWULLFZw3MAE8eSBTMeeoCaQMjtGl8lfT4xsRuhVWCbGXzuJo+G02whB
-        fz3DYktrUwvAXSOcKEoOpDMbW9cOqiRDqRokipGU3d8teG1RrLWpDMKP5nDJo4FhaKA3zxbyu7jtg
-        N5uNIuC5jjEnjkyCGzLRqJDcXBTG9gQ1o/N1HVoizt/bjNRJGBiKZDEDbHHcrf/nsbE5w/CYFaWSA
-        YJxE6R0w==;
+        bh=Ip6/d0KVA5eLYOz78z8ZvhxQLMpGbc01h5vuLB6lJwU=; b=XDy3LOE+qcr1jRa3cO8f3cX+We
+        I0PJsDXoJ5bfxBw5UYGmyFpaJzcKUp6A/RYLVNfLLGnR833Bx80TUGcGkGuWxAl9FixDCTq96apkg
+        0j2xcy0BqvuZV1Xw6E1kXNg80vjs8Gir4EOKQOUGLhO5SGld/m8txngmqZXGGfpFRcpTqFvrUl0eE
+        UtVVhjBXbyaPcgKLFkWOmVJNPg75xV17buwsRbEXwBMe0H7MZhcFCKeecKNjWY6fIj6aHXiu9rhIl
+        TOSjDTA2dKaBg3+w/bCoodJGZ2hbYApnE7LMrkb8r9HuvjpVs8SHnp6hZP74L62rLkYPyVehbzoo4
+        3etjOb3w==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mRIVI-00Ep5c-EF; Fri, 17 Sep 2021 18:22:28 +0000
+        id 1mRIVI-00Ep5m-Ig; Fri, 17 Sep 2021 18:22:28 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -52,9 +52,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 07/14] x86/microcode: Use the firmware_loader built-in API
-Date:   Fri, 17 Sep 2021 11:22:19 -0700
-Message-Id: <20210917182226.3532898-8-mcgrof@kernel.org>
+Subject: [PATCH 10/14] x86/build: Tuck away built-in firmware under its kconfig symbol
+Date:   Fri, 17 Sep 2021 11:22:22 -0700
+Message-Id: <20210917182226.3532898-11-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210917182226.3532898-1-mcgrof@kernel.org>
 References: <20210917182226.3532898-1-mcgrof@kernel.org>
@@ -65,131 +65,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Borislav Petkov <bp@suse.de>
+From: Luis Chamberlain <mcgrof@kernel.org>
 
-The microcode loader has been looping through __start_builtin_fw down to
-__end_builtin_fw to look for possibly built-in firmware for microcode
-updates.
+Now that it is clear that built-in firmware is only used
+when built-in firmware is enabled update x86 relocs to
+reflect that.
 
-Now that the firmware loader code has exported an API for looping
-through the kernel's built-in firmware section, use it and drop the x86
-implementation in favor.
-
-Signed-off-by: Borislav Petkov <bp@suse.de>
+Reviewed-by: Borislav Petkov <bp@suse.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- arch/x86/include/asm/microcode.h      |  3 ---
- arch/x86/kernel/cpu/microcode/amd.c   | 14 ++++++++++----
- arch/x86/kernel/cpu/microcode/core.c  | 17 -----------------
- arch/x86/kernel/cpu/microcode/intel.c |  9 ++++++++-
- 4 files changed, 18 insertions(+), 25 deletions(-)
+ arch/x86/tools/relocs.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/x86/include/asm/microcode.h b/arch/x86/include/asm/microcode.h
-index ab45a220fac4..d6bfdfb0f0af 100644
---- a/arch/x86/include/asm/microcode.h
-+++ b/arch/x86/include/asm/microcode.h
-@@ -130,14 +130,11 @@ static inline unsigned int x86_cpuid_family(void)
- extern void __init load_ucode_bsp(void);
- extern void load_ucode_ap(void);
- void reload_early_microcode(void);
--extern bool get_builtin_firmware(struct cpio_data *cd, const char *name);
- extern bool initrd_gone;
- #else
- static inline void __init load_ucode_bsp(void)			{ }
- static inline void load_ucode_ap(void)				{ }
- static inline void reload_early_microcode(void)			{ }
--static inline bool
--get_builtin_firmware(struct cpio_data *cd, const char *name)	{ return false; }
- #endif
- 
- #endif /* _ASM_X86_MICROCODE_H */
-diff --git a/arch/x86/kernel/cpu/microcode/amd.c b/arch/x86/kernel/cpu/microcode/amd.c
-index 3d4a48336084..8b2fcdfa6d31 100644
---- a/arch/x86/kernel/cpu/microcode/amd.c
-+++ b/arch/x86/kernel/cpu/microcode/amd.c
-@@ -456,17 +456,23 @@ apply_microcode_early_amd(u32 cpuid_1_eax, void *ucode, size_t size, bool save_p
- 
- static bool get_builtin_microcode(struct cpio_data *cp, unsigned int family)
- {
--#ifdef CONFIG_X86_64
- 	char fw_name[36] = "amd-ucode/microcode_amd.bin";
-+	struct firmware fw;
-+
-+	if (IS_ENABLED(CONFIG_X86_32))
-+		return false;
- 
- 	if (family >= 0x15)
- 		snprintf(fw_name, sizeof(fw_name),
- 			 "amd-ucode/microcode_amd_fam%.2xh.bin", family);
- 
--	return get_builtin_firmware(cp, fw_name);
--#else
-+	if (firmware_request_builtin(&fw, fw_name)) {
-+		cp->size = fw.size;
-+		cp->data = (void *)fw.data;
-+		return true;
-+	}
-+
- 	return false;
--#endif
- }
- 
- static void __load_ucode_amd(unsigned int cpuid_1_eax, struct cpio_data *ret)
-diff --git a/arch/x86/kernel/cpu/microcode/core.c b/arch/x86/kernel/cpu/microcode/core.c
-index efb69be41ab1..f955d25076ba 100644
---- a/arch/x86/kernel/cpu/microcode/core.c
-+++ b/arch/x86/kernel/cpu/microcode/core.c
-@@ -140,23 +140,6 @@ static bool __init check_loader_disabled_bsp(void)
- 	return *res;
- }
- 
--extern struct builtin_fw __start_builtin_fw[];
--extern struct builtin_fw __end_builtin_fw[];
--
--bool get_builtin_firmware(struct cpio_data *cd, const char *name)
--{
--	struct builtin_fw *b_fw;
--
--	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) {
--		if (!strcmp(name, b_fw->name)) {
--			cd->size = b_fw->size;
--			cd->data = b_fw->data;
--			return true;
--		}
--	}
--	return false;
--}
--
- void __init load_ucode_bsp(void)
- {
- 	unsigned int cpuid_1_eax;
-diff --git a/arch/x86/kernel/cpu/microcode/intel.c b/arch/x86/kernel/cpu/microcode/intel.c
-index 7e8e07bddd5f..d28a9f8f3fec 100644
---- a/arch/x86/kernel/cpu/microcode/intel.c
-+++ b/arch/x86/kernel/cpu/microcode/intel.c
-@@ -456,6 +456,7 @@ static void save_mc_for_early(struct ucode_cpu_info *uci, u8 *mc, unsigned int s
- static bool load_builtin_intel_microcode(struct cpio_data *cp)
- {
- 	unsigned int eax = 1, ebx, ecx = 0, edx;
-+	struct firmware fw;
- 	char name[30];
- 
- 	if (IS_ENABLED(CONFIG_X86_32))
-@@ -466,7 +467,13 @@ static bool load_builtin_intel_microcode(struct cpio_data *cp)
- 	sprintf(name, "intel-ucode/%02x-%02x-%02x",
- 		      x86_family(eax), x86_model(eax), x86_stepping(eax));
- 
--	return get_builtin_firmware(cp, name);
-+	if (firmware_request_builtin(&fw, name)) {
-+		cp->size = fw.size;
-+		cp->data = (void *)fw.data;
-+		return true;
-+	}
-+
-+	return false;
- }
- 
- /*
+diff --git a/arch/x86/tools/relocs.c b/arch/x86/tools/relocs.c
+index 27c82207d387..ab3554d4aa06 100644
+--- a/arch/x86/tools/relocs.c
++++ b/arch/x86/tools/relocs.c
+@@ -63,7 +63,9 @@ static const char * const sym_regex_kernel[S_NSYMTYPES] = {
+ 	"(__parainstructions|__alt_instructions)(_end)?|"
+ 	"(__iommu_table|__apicdrivers|__smp_locks)(_end)?|"
+ 	"__(start|end)_pci_.*|"
++#if CONFIG_FW_LOADER_BUILTIN
+ 	"__(start|end)_builtin_fw|"
++#endif
+ 	"__(start|stop)___ksymtab(_gpl)?|"
+ 	"__(start|stop)___kcrctab(_gpl)?|"
+ 	"__(start|stop)___param|"
 -- 
 2.30.2
 
