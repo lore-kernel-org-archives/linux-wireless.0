@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647C9C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Sep 2021 13:40:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0514BC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Sep 2021 13:40:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4ACC760F21
+	by mail.kernel.org (Postfix) with ESMTP id DC83E601FC
 	for <linux-wireless@archiver.kernel.org>; Mon, 20 Sep 2021 13:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239274AbhITNln (ORCPT
+        id S239328AbhITNlo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Sep 2021 09:41:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40082 "EHLO
+        Mon, 20 Sep 2021 09:41:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230159AbhITNlm (ORCPT
+        with ESMTP id S237482AbhITNlm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 20 Sep 2021 09:41:42 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2797C061574
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0331C061766
         for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2021 06:40:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=f1RUlEg6rAZNCIOyvGotkyjtFoVntWGLYrjEYkUGAGA=;
-        t=1632145215; x=1633354815; b=o6dbTQTC3VgROGi+5qkFBfYjq+qbWgNYH5NcV8lQqScBD6a
-        KEEeJHiuSLHPlR1Hm4qyjasIvh+W0XGr0wigF4CB9WrUGWPVNcgDZEO5mra7Acd1LAJCfOj6CoOC1
-        Xbruut4d++F5sLbgZ/ahjQQh7P5bWldlC6RwYhltwTMLKSxyJk1HooEwEuqtXXjI9W9gMKHfgpfr8
-        qUvy8pyy2ETPKDyGxLB0uZFU1SVgo0B1ve9nMcEXmKLTlbgJD7xtAXewo+exmMGppfMMZCrAK3poB
-        2IGNDEK70eBxHkawM5QUZu/HXNKqiqg8ImPBh3Uy/aK1CkC+6xOXmiSnzH9gEFYg==;
+        Resent-Cc:Resent-Message-ID; bh=cuPlf9q6lmv22e44XBjq5lfgVM6nGftG3smhl81Bmrk=;
+        t=1632145215; x=1633354815; b=GJ7Fh4EArtFl2XlaGZ8loNkKlhoZM3oec2yR0iITwRn6xOx
+        OCODcv3UOk3noWwrlKahHuJAS4qpitBryjge6b+ZaOcTBlv05Rkzu3sfH8y37IF/OXEi0IKMD7DIe
+        kXZlBi0uoL9ufCrphGVTuWGVlgOvRmFGTWqVIRvx/MTzy53YZA/ggUHNdBcxHy8RyPYdHb/NEh7x/
+        N5GeuIf2PoQPnN385KwaWWdhQk/MMo5JobKGHsJY1mnresMij5+gtstXHu20FYjPKcMBTE/Tr5fBO
+        BU8Zr2apUhHLXpegSqih2kbHdQe5ogCGJ1Yl/nE53hsWRjjgpGkIL4XTjEjHeNlw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95-RC2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1mSJWn-009SO7-Gw;
-        Mon, 20 Sep 2021 15:40:13 +0200
+        id 1mSJWo-009SO7-29;
+        Mon, 20 Sep 2021 15:40:14 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/6] mac80211: mesh: clean up rx_bcn_presp API
-Date:   Mon, 20 Sep 2021 15:40:07 +0200
-Message-Id: <20210920154009.a18ed3d2da6c.I1824b773a0fbae4453e1433c184678ca14e8df45@changeid>
+Subject: [PATCH v2 5/6] mac80211: mlme: find auth challenge directly
+Date:   Mon, 20 Sep 2021 15:40:09 +0200
+Message-Id: <20210920154009.45f9b3a15722.Ice3159ffad03a007d6154cbf1fb3a8c48489e86f@changeid>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210920154009.3110ff75be0c.Ib6a2ff9e9cc9bc6fca50fce631ec1ce725cc926b@changeid>
 References: <20210920154009.3110ff75be0c.Ib6a2ff9e9cc9bc6fca50fce631ec1ce725cc926b@changeid>
@@ -56,119 +56,89 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We currently pass the entire elements to the rx_bcn_presp()
-method, but only need mesh_config. Additionally, we use the
-length of the elements to calculate back the entire frame's
-length, but that's confusing - just pass the length of the
-frame instead.
+There's no need to parse all elements etc. just to find the
+authentication challenge - use cfg80211_find_elem() instead.
+This also allows us to remove WLAN_EID_CHALLENGE handling
+from the element parsing entirely.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  7 +++----
- net/mac80211/mesh.c        |  4 ++--
- net/mac80211/mesh_sync.c   | 26 ++++++++++++--------------
- 3 files changed, 17 insertions(+), 20 deletions(-)
+ net/mac80211/ieee80211_i.h |  2 --
+ net/mac80211/mlme.c        | 11 ++++++-----
+ net/mac80211/util.c        |  4 ----
+ 3 files changed, 6 insertions(+), 11 deletions(-)
 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 159af6c3ffb0..d74031bb4ae6 100644
+index 6a129a08bc9b..7a9e529f8366 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -631,10 +631,9 @@ struct ieee80211_if_ocb {
-  */
- struct ieee802_11_elems;
- struct ieee80211_mesh_sync_ops {
--	void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
--			     u16 stype,
--			     struct ieee80211_mgmt *mgmt,
--			     struct ieee802_11_elems *elems,
-+	void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata, u16 stype,
-+			     struct ieee80211_mgmt *mgmt, unsigned int len,
-+			     const struct ieee80211_meshconf_ie *mesh_cfg,
- 			     struct ieee80211_rx_status *rx_status);
- 
- 	/* should be called with beacon_data under RCU read lock */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 97095b7c9c64..65e9335b3614 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1353,8 +1353,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (ifmsh->sync_ops)
--		ifmsh->sync_ops->rx_bcn_presp(sdata,
--			stype, mgmt, &elems, rx_status);
-+		ifmsh->sync_ops->rx_bcn_presp(sdata, stype, mgmt, len,
-+					      elems.mesh_config, rx_status);
- }
- 
- int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
-index fde93de2b80a..9e342cc2504c 100644
---- a/net/mac80211/mesh_sync.c
-+++ b/net/mac80211/mesh_sync.c
-@@ -3,6 +3,7 @@
-  * Copyright 2011-2012, Pavel Zubarev <pavel.zubarev@gmail.com>
-  * Copyright 2011-2012, Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>
-  * Copyright 2011-2012, cozybit Inc.
-+ * Copyright (C) 2021 Intel Corporation
-  */
- 
- #include "ieee80211_i.h"
-@@ -35,12 +36,12 @@ struct sync_method {
- /**
-  * mesh_peer_tbtt_adjusting - check if an mp is currently adjusting its TBTT
-  *
-- * @ie: information elements of a management frame from the mesh peer
-+ * @cfg: mesh config element from the mesh peer (or %NULL)
-  */
--static bool mesh_peer_tbtt_adjusting(struct ieee802_11_elems *ie)
-+static bool mesh_peer_tbtt_adjusting(const struct ieee80211_meshconf_ie *cfg)
+@@ -1517,7 +1517,6 @@ struct ieee802_11_elems {
+ 	const u8 *supp_rates;
+ 	const u8 *ds_params;
+ 	const struct ieee80211_tim_ie *tim;
+-	const u8 *challenge;
+ 	const u8 *rsn;
+ 	const u8 *rsnx;
+ 	const u8 *erp_info;
+@@ -1571,7 +1570,6 @@ struct ieee802_11_elems {
+ 	u8 ssid_len;
+ 	u8 supp_rates_len;
+ 	u8 tim_len;
+-	u8 challenge_len;
+ 	u8 rsn_len;
+ 	u8 rsnx_len;
+ 	u8 ext_supp_rates_len;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 39b3ed89e0da..e18bd07f6822 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2870,17 +2870,17 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
  {
--	return (ie->mesh_config->meshconf_cap &
--			IEEE80211_MESHCONF_CAPAB_TBTT_ADJUSTING) != 0;
-+	return cfg &&
-+	       (cfg->meshconf_cap & IEEE80211_MESHCONF_CAPAB_TBTT_ADJUSTING);
- }
- 
- void mesh_sync_adjust_tsf(struct ieee80211_sub_if_data *sdata)
-@@ -76,11 +77,11 @@ void mesh_sync_adjust_tsf(struct ieee80211_sub_if_data *sdata)
- 	}
- }
- 
--static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
--				   u16 stype,
--				   struct ieee80211_mgmt *mgmt,
--				   struct ieee802_11_elems *elems,
--				   struct ieee80211_rx_status *rx_status)
-+static void
-+mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata, u16 stype,
-+			      struct ieee80211_mgmt *mgmt, unsigned int len,
-+			      const struct ieee80211_meshconf_ie *mesh_cfg,
-+			      struct ieee80211_rx_status *rx_status)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
  	struct ieee80211_local *local = sdata->local;
-@@ -101,10 +102,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	if (ieee80211_have_rx_timestamp(rx_status))
- 		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
--						       24 + 12 +
--						       elems->total_len +
--						       FCS_LEN,
--						       24);
-+						       len + FCS_LEN, 24);
- 	else
- 		t_r = drv_get_tsf(local, sdata);
+ 	struct ieee80211_mgd_auth_data *auth_data = sdata->u.mgd.auth_data;
++	const struct element *challenge;
+ 	u8 *pos;
+-	struct ieee802_11_elems elems;
+ 	u32 tx_flags = 0;
+ 	struct ieee80211_prep_tx_info info = {
+ 		.subtype = IEEE80211_STYPE_AUTH,
+ 	};
  
-@@ -119,7 +117,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	 * dot11MeshNbrOffsetMaxNeighbor non-peer non-MBSS neighbors
- 	 */
- 
--	if (elems->mesh_config && mesh_peer_tbtt_adjusting(elems)) {
-+	if (mesh_peer_tbtt_adjusting(mesh_cfg)) {
- 		msync_dbg(sdata, "STA %pM : is adjusting TBTT\n",
- 			  sta->sta.addr);
- 		goto no_sync;
+ 	pos = mgmt->u.auth.variable;
+-	ieee802_11_parse_elems(pos, len - (pos - (u8 *)mgmt), false, &elems,
+-			       mgmt->bssid, auth_data->bss->bssid);
+-	if (!elems.challenge)
++	challenge = cfg80211_find_elem(WLAN_EID_CHALLENGE, pos,
++				       len - (pos - (u8 *)mgmt));
++	if (!challenge)
+ 		return;
+ 	auth_data->expected_transaction = 4;
+ 	drv_mgd_prepare_tx(sdata->local, sdata, &info);
+@@ -2888,7 +2888,8 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
+ 		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 			   IEEE80211_TX_INTFL_MLME_CONN_TX;
+ 	ieee80211_send_auth(sdata, 3, auth_data->algorithm, 0,
+-			    elems.challenge - 2, elems.challenge_len + 2,
++			    (void *)challenge,
++			    challenge->datalen + sizeof(*challenge),
+ 			    auth_data->bss->bssid, auth_data->bss->bssid,
+ 			    auth_data->key, auth_data->key_len,
+ 			    auth_data->key_idx, tx_flags);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 43ccad8b24c7..dce841228297 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1112,10 +1112,6 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			} else
+ 				elem_parse_failed = true;
+ 			break;
+-		case WLAN_EID_CHALLENGE:
+-			elems->challenge = pos;
+-			elems->challenge_len = elen;
+-			break;
+ 		case WLAN_EID_VENDOR_SPECIFIC:
+ 			if (elen >= 4 && pos[0] == 0x00 && pos[1] == 0x50 &&
+ 			    pos[2] == 0xf2) {
 -- 
 2.31.1
 
