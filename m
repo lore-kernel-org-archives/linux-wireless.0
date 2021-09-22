@@ -2,165 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF4A6C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Sep 2021 19:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA4CC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Sep 2021 02:37:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9446660F6B
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Sep 2021 19:12:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2422611AD
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Sep 2021 02:37:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234240AbhIUTNu (ORCPT
+        id S229923AbhIVCim (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Sep 2021 15:13:50 -0400
-Received: from gateway33.websitewelcome.com ([192.185.146.130]:14407 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231135AbhIUTNt (ORCPT
+        Tue, 21 Sep 2021 22:38:42 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:60316 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229466AbhIVCim (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Sep 2021 15:13:49 -0400
-X-Greylist: delayed 1450 seconds by postgrey-1.27 at vger.kernel.org; Tue, 21 Sep 2021 15:13:48 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 0742586EE70
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2021 13:48:10 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id SkoLmejVujSwzSkoMm7s6r; Tue, 21 Sep 2021 13:48:10 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=DE7tJmoJY542ECw3zNe99FgfYCCZRmZ+e7TMY8BcwkI=; b=ydXAntc8wo6PEex7KQ+biJ4Ok4
-        kqiDaypCXy7PA53MZiT+wphL75V5V2rxZUxbVQgoM6i9XWx6YHoanCNTlPnV/ghZRgAl4st5d2GTC
-        YNj5IXr0Eo2QmSeJtWn9EvgpsR3X5Fxu6EPd8caMyS87EaJ76Dr3Xd/wxm1h9WQW8GSCyaPJ4UGmd
-        6B9wASWWXjU1ntxRGEOSF+W9MoisLFNceKTYv2u9DLSM8EmmqHtW5vnGO1HatUxZdF3PXXIoOYeVx
-        3a0+t6BATb/sMe3rsoAEBtL8SOL/VUjecYux4JxBNpyqIn3Su9bHGghNb+X4QcRKy9Bjh/tEge5P/
-        582q5ptA==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:36692 helo=[192.168.15.9])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1mSkoL-0010W9-Ey; Tue, 21 Sep 2021 13:48:09 -0500
-Subject: Re: [PATCH] nl80211: prefer struct_size over open coded arithmetic
-To:     Len Baker <len.baker@gmx.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210919114040.41522-1-len.baker@gmx.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <47961463-5b2c-dd6f-0e98-ea95c13409fb@embeddedor.com>
-Date:   Tue, 21 Sep 2021 13:51:58 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        Tue, 21 Sep 2021 22:38:42 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 18M2b5Dp9024556, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 18M2b5Dp9024556
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 22 Sep 2021 10:37:05 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.14; Wed, 22 Sep 2021 10:37:05 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 22 Sep
+ 2021 10:37:03 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <vincent_fann@realtek.com>
+Subject: [PATCH 1/2] rtw88: 8821c: support RFE type4 wifi NIC
+Date:   Wed, 22 Sep 2021 10:36:36 +0800
+Message-ID: <20210922023637.9357-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20210919114040.41522-1-len.baker@gmx.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1mSkoL-0010W9-Ey
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.9]) [187.162.31.110]:36692
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 16
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/22/2021 02:12:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzkvMjIgpFekyCAwMTowNjowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Guo-Feng Fan <vincent_fann@realtek.com>
 
+RFE type4 is a new NIC which has one RF antenna shares with BT.
+RFE type4 HW is the same as RFE type2 but attaching antenna to
+aux antenna connector.
 
-On 9/19/21 06:40, Len Baker wrote:
-> As noted in the "Deprecated Interfaces, Language Features, Attributes,
-> and Conventions" documentation [1], size calculations (especially
-> multiplication) should not be performed in memory allocator (or similar)
-> function arguments due to the risk of them overflowing. This could lead
-> to values wrapping around and a smaller allocation being made than the
-> caller was expecting. Using those allocations could lead to linear
-> overflows of heap memory and other misbehaviors.
-> 
-> So, use the struct_size() helper to do the arithmetic instead of the
-> argument "size + count * size" in the kzalloc() functions.
-> 
-> Also, take the opportunity to refactor the memcpy() call to use the
-> flex_array_size() helper.
-> 
-> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#open-coded-arithmetic-in-allocator-arguments
-> 
-> Signed-off-by: Len Baker <len.baker@gmx.com>
-> ---
->  net/wireless/nl80211.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index bf7cd4752547..b56856349ced 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -11766,9 +11766,10 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
->  	wdev_lock(wdev);
->  	if (n_thresholds) {
->  		struct cfg80211_cqm_config *cqm_config;
-> +		size_t size = struct_size(cqm_config, rssi_thresholds,
-> +					  n_thresholds);
-> 
-> -		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
-> -				     n_thresholds * sizeof(s32), GFP_KERNEL);
-> +		cqm_config = kzalloc(size, GFP_KERNEL);
+RFE type2 attach antenna to main antenna connector.
+Load the same parameter as RFE type2 when initializing NIC.
 
-I don't think variable _size_ is needed here; this is just fine:
+Signed-off-by: Guo-Feng Fan <vincent_fann@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
--               cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
--                                    n_thresholds * sizeof(s32), GFP_KERNEL);
-+               cqm_config = kzalloc(struct_size(cqm_config, rssi_thresholds,
-+                                                n_thresholds), GFP_KERNEL);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 349eef1a0ff2..3effdf902f22 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -305,7 +305,8 @@ static void rtw8821c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 	if (channel <= 14) {
+ 		if (rtwdev->efuse.rfe_option == 0)
+ 			rtw8821c_switch_rf_set(rtwdev, SWITCH_TO_WLG);
+-		else if (rtwdev->efuse.rfe_option == 2)
++		else if (rtwdev->efuse.rfe_option == 2 ||
++			 rtwdev->efuse.rfe_option == 4)
+ 			rtw8821c_switch_rf_set(rtwdev, SWITCH_TO_BTG);
+ 		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTDBG, BIT(6), 0x1);
+ 		rtw_write_rf(rtwdev, RF_PATH_A, 0x64, 0xf, 0xf);
+@@ -774,6 +775,15 @@ static void rtw8821c_coex_cfg_ant_switch(struct rtw_dev *rtwdev, u8 ctrl_type,
+ 	if (switch_status == coex_dm->cur_switch_status)
+ 		return;
+ 
++	if (coex_rfe->wlg_at_btg) {
++		ctrl_type = COEX_SWITCH_CTRL_BY_BBSW;
++
++		if (coex_rfe->ant_switch_polarity)
++			pos_type = COEX_SWITCH_TO_WLA;
++		else
++			pos_type = COEX_SWITCH_TO_WLG_BT;
++	}
++
+ 	coex_dm->cur_switch_status = switch_status;
+ 
+ 	if (coex_rfe->ant_switch_diversity &&
+@@ -1499,6 +1509,7 @@ static const struct rtw_intf_phy_para_table phy_para_table_8821c = {
+ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
+ 	[0] = RTW_DEF_RFE(8821c, 0, 0),
+ 	[2] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
++	[4] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
+ };
+ 
+ static struct rtw_hw_reg rtw8821c_dig[] = {
+-- 
+2.25.1
 
-Thanks
---
-Gustavo
-
->  		if (!cqm_config) {
->  			err = -ENOMEM;
->  			goto unlock;
-> @@ -11777,7 +11778,8 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
->  		cqm_config->rssi_hyst = hysteresis;
->  		cqm_config->n_rssi_thresholds = n_thresholds;
->  		memcpy(cqm_config->rssi_thresholds, thresholds,
-> -		       n_thresholds * sizeof(s32));
-> +		       flex_array_size(cqm_config, rssi_thresholds,
-> +				       n_thresholds));
-> 
->  		wdev->cqm_config = cqm_config;
->  	}
-> @@ -15081,9 +15083,7 @@ static int nl80211_set_sar_specs(struct sk_buff *skb, struct genl_info *info)
->  	if (specs > rdev->wiphy.sar_capa->num_freq_ranges)
->  		return -EINVAL;
-> 
-> -	sar_spec = kzalloc(sizeof(*sar_spec) +
-> -			   specs * sizeof(struct cfg80211_sar_sub_specs),
-> -			   GFP_KERNEL);
-> +	sar_spec = kzalloc(struct_size(sar_spec, sub_specs, specs), GFP_KERNEL);
->  	if (!sar_spec)
->  		return -ENOMEM;
-> 
-> --
-> 2.25.1
-> 
