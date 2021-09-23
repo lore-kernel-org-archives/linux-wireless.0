@@ -2,85 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 203D7C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Sep 2021 16:25:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F088C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Sep 2021 17:10:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B9DE610D1
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Sep 2021 16:25:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AA2861090
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Sep 2021 17:10:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242135AbhIWQ0h (ORCPT
+        id S242466AbhIWRLb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Sep 2021 12:26:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47060 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242117AbhIWQ0f (ORCPT
+        Thu, 23 Sep 2021 13:11:31 -0400
+Received: from mail-oo1-f49.google.com ([209.85.161.49]:42722 "EHLO
+        mail-oo1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242239AbhIWRLa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Sep 2021 12:26:35 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CE13C061574
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2021 09:25:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=3M/yF4tCbpXryxf3K6u+YHqyPlX4SwshdQnE4FL6Cyo=;
-        t=1632414304; x=1633623904; b=NY4wFFVfklP0TM1ut5XQwxgF3zdFUEtrUIrdMnkqFR+naFw
-        XjNX7TR/RsKQqv9FMPDUIfqCghqDSJ7lWMUnpiGi/J0gs+so/VyknGR3ziN7cNkKpjzv74zk1ML8J
-        DtXaphSrYuq/YHBbryRoBb9rx5/kiWvrlHZoZ3A5o9R4mryy66d+h4ShSZ/rP1Mu79Y5sO40LB+KF
-        6JdhwB/vXuJVWClaCSTY9uf8i+6rqlo3E+vZVN2zRhV8iti7CGmKIkOyv2MiS0gq6vkqXFH1AUg5w
-        a6FN2oA3mIVMUjsqXfCh6/XaVVhmN/vEgPp+xG9CX5Dd1omDG7coSOZGhoJA9LlA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95-RC2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1mTRWw-00AoiG-Eg;
-        Thu, 23 Sep 2021 18:25:02 +0200
-Message-ID: <e6b516a1ff05aaf46d3a5b2e12a219a557c82642.camel@sipsolutions.net>
-Subject: Re: [PATCH iw 1/4] iw: nl80211: add NLA_F_NESTED to
- nla_nest_start() with older libnl versions
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Gokul Sivakumar <gokulkumar792@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 23 Sep 2021 18:25:01 +0200
-In-Reply-To: <20210923162354.GB3812520@lattitude>
-References: <20210910141618.1594617-1-gokulkumar792@gmail.com>
-         <10ea557f9dfdf92083b9816d7370926e4222f333.camel@sipsolutions.net>
-         <20210923155308.GA3760174@lattitude>
-         <64776c93e7f98c34821042b6864e81b7c3ab6443.camel@sipsolutions.net>
-         <20210923162354.GB3812520@lattitude>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+        Thu, 23 Sep 2021 13:11:30 -0400
+Received: by mail-oo1-f49.google.com with SMTP id u15-20020a4a970f000000b0029aed4b0e4eso2352158ooi.9;
+        Thu, 23 Sep 2021 10:09:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=aRKOgb/IptW6U1Mvub3XjCFxU2/8lUJIfk6QZum3jmM=;
+        b=4xCLeJ6u/hLAL6mGgnQMNNJpk6UEZQLEISjlJIButE+VmzNpVaH9OVId7sz1weaeo4
+         rWD5crJ0kL7tERIu0GxyERejOnkD/T6+AnOXz76ufqdUv5JCHCIP38UAME9lxwgj3D9X
+         Jnihg3t40LB+acQq1j/mMPRjxWRmEuv/2+0DwsXkXHGvmE5aVL5/fOVJX4vKmM5LY0gZ
+         byf4ykttEuY2f4TvSlMgBTqAgcikekw3yMJjIvXL48XsoLIGt3dI7N1hTjVAYtQ4fRdC
+         Gi08CBKtcl++6wQQt7GaWu2RQu4T1QZoeowT0hUEB4e9MOvN/WFEIjsJp8Q97dnD8eCh
+         +6kA==
+X-Gm-Message-State: AOAM532ho7mnee1TxBDl5gBeZF/tZBTyFqG/cRzifOvcrt1kAJWPQ45a
+        Z5XiVXL88BEAJL+8oM16Z//3ztFioQ==
+X-Google-Smtp-Source: ABdhPJw676lPJ7r9WEiBbldf9ALqBQhp0Wdivqz9FvDU+aldnL2DEOFeYcGq580EGuIyBGC7VXj2ZA==
+X-Received: by 2002:a4a:ba90:: with SMTP id d16mr2406809oop.31.1632416998498;
+        Thu, 23 Sep 2021 10:09:58 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
+        by smtp.gmail.com with ESMTPSA id v16sm1453551oiv.23.2021.09.23.10.09.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Sep 2021 10:09:57 -0700 (PDT)
+Received: (nullmailer pid 3183978 invoked by uid 1000);
+        Thu, 23 Sep 2021 17:09:56 -0000
+Date:   Thu, 23 Sep 2021 12:09:56 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
+Cc:     "David S . Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+        =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        devel@driverdev.osuosl.org, linux-mmc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v7 02/24] dt-bindings: introduce silabs,wfx.yaml
+Message-ID: <YUy05Kn2iCCBC6AF@robh.at.kernel.org>
+References: <20210920161136.2398632-1-Jerome.Pouiller@silabs.com>
+ <20210920161136.2398632-3-Jerome.Pouiller@silabs.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210920161136.2398632-3-Jerome.Pouiller@silabs.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2021-09-23 at 21:53 +0530, Gokul Sivakumar wrote:
-> On Thu, Sep 23, 2021 at 05:56:40PM +0200, Johannes Berg wrote:
-> > On Thu, 2021-09-23 at 21:23 +0530, Gokul Sivakumar wrote:
-> > > The symbol NL_CAPABILITY_VERSION_3_5_0 is part of the libnl library and
-> > > this will be defined when using the libnl library version >= 3.5.0.
-> > > From libnl 3.5.0, the library itself handles setting NLA_F_NESTED flag
-> > > when using nla_nest_start() lib function. Please refer the
-> > > commit 7de65a0 ("attr: mark nested attributes as NLA_F_NESTED") in libnl
-> > > gitub tree (https://github.com/thom311/libnl/commit/7de65a0).
-> > > 
-> > 
-> > Huh ok, I guess I missed the memo on the (official?) tree moving ...
-> > 
-> > johannes
-> > 
+On Mon, 20 Sep 2021 18:11:14 +0200, Jerome Pouiller wrote:
+> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
 > 
-> I beleive https://github.com/thom311/libnl/ is the official tree for libnl
-> and I see Pull Requests are getting accepted in Github. Others can confirm!
+> Prepare the inclusion of the wfx driver in the kernel.
+> 
+> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> ---
+>  .../bindings/net/wireless/silabs,wfx.yaml     | 133 ++++++++++++++++++
+>  1 file changed, 133 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
+> 
 
-Yeah, debian seems to be shipping from that tree too.
-
-johannes
-
+Reviewed-by: Rob Herring <robh@kernel.org>
