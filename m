@@ -2,76 +2,64 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BBAAC433EF
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Sep 2021 07:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18F8EC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Sep 2021 10:27:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E469606A5
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Sep 2021 07:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E142361279
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Sep 2021 10:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230154AbhIYHRi (ORCPT
+        id S243920AbhIYK24 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Sep 2021 03:17:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36326 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230029AbhIYHRi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Sep 2021 03:17:38 -0400
-Received: from smtp.dkm.cz (smtp.dkm.cz [IPv6:2a02:8301:0:11::39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3FAC061570
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Sep 2021 00:16:03 -0700 (PDT)
-Received: from smtp.dkm.cz (localhost [127.0.0.1])
-        by smtp.dkm.cz (Postfix) with ESMTP id 171F32897E;
-        Sat, 25 Sep 2021 09:15:59 +0200 (CEST)
-Received: from router.bayer.uni.cx (ip-89-103-167-90.net.upcbroadband.cz [89.103.167.90])
-        by smtp.dkm.cz (Postfix) with ESMTP;
-        Sat, 25 Sep 2021 09:15:59 +0200 (CEST)
-Received: from album.bayer.uni.cx (album.bayer.uni.cx [IPv6:2001:470:993c:1:5246:5dff:fe8e:a186])
-        by router.bayer.uni.cx (Postfix) with SMTP id DA7EBA00CB;
-        Sat, 25 Sep 2021 09:15:57 +0200 (CEST)
-Received: by album.bayer.uni.cx (sSMTP sendmail emulation); Sat, 25 Sep 2021 09:15:57 +0200
-Date:   Sat, 25 Sep 2021 09:15:57 +0200
-From:   Petr Pisar <petr.pisar@atlas.cz>
-To:     linux-wireless@vger.kernel.org
-Cc:     petr.pisar@atlas.cz
-Subject: Re: [PATCH] Revert "mac80211: do not use low data rates for data
- frames with no ack flag"
-Message-ID: <YU7MrUv3ZM0PZvZe@album.bayer.uni.cx>
+        Sat, 25 Sep 2021 06:28:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38132 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234922AbhIYK2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Sep 2021 06:28:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 952AF610EA;
+        Sat, 25 Sep 2021 10:27:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632565641;
+        bh=eggPwwc4vRWZk4I6mJCe9UVRMjT4UM7c46DaoIaR9dg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=hWcoL7/9kx/1l2dwKHeu50FMFagop6aCZWn7+CSfInF2i2DgwAe+B+YsDij42l0Rn
+         9HAMvMbXjWq8+jHGpcpAx55HcYt5SQ6OFRC1oictVoGfb0iaHk4svtns8k6mAWc1GU
+         5GSfQWF6d+mk+D4Eh6Kene8RnO9oGo2C7ZcYOJc1drSV0eBcO4AADCIH0Y//jAza4i
+         NRyJk3w4e/+UDJ7mZvi/lIN+sfgf06OqqquAfJUcCzHam6sYuedVc6SvGDQ91XpIIr
+         0dZ77nAd7dZuYxUj0+8GserJQLqZPFphrzHobUhGainBH1DhfwyELl3H/+bg6BwPCk
+         YXZn5GbI5IBBg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: [PATCH v2 0/2] introduce a dedicated mt7915 debugfs sub-dir for ext-phy
+Date:   Sat, 25 Sep 2021 12:26:56 +0200
+Message-Id: <cover.1632565435.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wmy1x/AYgU+Af5Hv"
-Content-Disposition: inline
-In-Reply-To: <20210906083559.9109-1-nbd@nbd.name>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Introduce a dedicated mt76 debugfs sub-dir for ext-phy in dbdc mode for mt7915
+driver. This is a preliminary series to add zero-wait dfs support.
 
---wmy1x/AYgU+Af5Hv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Changes since v1:
+- rebase on top of mt76 master
 
-I confirm the revert fixes sending multicast frames on my ath9k device.
+Lorenzo Bianconi (2):
+  mt76: rely on phy pointer in mt76_register_debugfs_fops routine
+    signature
+  mt76: mt7915: introduce mt76 debugfs sub-dir for ext-phy
 
--- Petr
+ drivers/net/wireless/mediatek/mt76/debugfs.c  |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |   4 +-
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   |   2 +-
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 159 +++++++++---------
+ .../net/wireless/mediatek/mt76/mt7915/init.c  |   6 +-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |   2 +-
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |   2 +-
+ 7 files changed, 94 insertions(+), 86 deletions(-)
 
---wmy1x/AYgU+Af5Hv
-Content-Type: application/pgp-signature; name="signature.asc"
+-- 
+2.31.1
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEE4/QvzhVoMKgDWObpT9GuwzZa978FAmFOzK0ACgkQT9GuwzZa
-978LhQ/+LcMZh1VYlCYN90kmGFnBQFrfbrzJztTvZlV01Prr6Dclsk6bXGipBzQW
-rqxElvT4DmuIMSKsrtYia6HaXbl0CI3A2lxa3igBW1C+Lm378erHKv7dgzryArJd
-pN98LLAps4w4FGhYqbqGdaXVetPIyoM6Z5Tus76eiAoj9j2u67TNfkgy6X9FfrH5
-2IM0Vl5inPHNJtKS8Yv1Sftt+d95Os7ejfp1s0rxwWgvNzpnNjDqKrLmWvOXf6N+
-vlwAcUN0Bqh48rHC+WNhnuwAd32VtjCok/JfxPFgF3wHgIdiL2DiryNJSHen9RKu
-StGPGGpy/Q8POSJsSyuGxlRTVON4mtYUJfKwjTIuna19QGDAPwH2rgKowHKBI6f7
-LyHu0MeLWhHpSH18VYPpkHh7yNa+rMvs/YjcM5PSOGdkXZkXGGkEk9OPGfSuUFjY
-afzkm8hzJCHSO56luKh9rUNXE9pPmqdLVbrwN3KWv42JijWZR/GSb5/aoK6biB3u
-bFwvxNkHNL45wavwuh3sjN4BOO40iGtotk4AYhn+pR3v+KH++htf4IiWs/tYNt94
-+egl5jZHHqmWlhIC6GGKbRqG/LCO1zZvpkLvHPnet5qPo4mYWp8ANFegjEqLQK98
-XuyQxITeG+qmQWUAzZ1U7+VyY/kercpwR/gotftECAhAwOqGU6k=
-=Pr0/
------END PGP SIGNATURE-----
-
---wmy1x/AYgU+Af5Hv--
