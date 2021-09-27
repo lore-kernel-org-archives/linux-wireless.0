@@ -2,110 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 044A4C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE5FC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 04:20:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E12FF60FED
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 868C66113A
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 04:20:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232613AbhI0DhA (ORCPT
+        id S231436AbhI0EVm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Sep 2021 23:37:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50408 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232600AbhI0Dg6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Sep 2021 23:36:58 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6C26C061570;
-        Sun, 26 Sep 2021 20:35:21 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id nn5-20020a17090b38c500b0019af1c4b31fso12289539pjb.3;
-        Sun, 26 Sep 2021 20:35:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=h8lwQC5CtdK50mFU0zB09Pdklmp5zNmyWjC5W17/O0I=;
-        b=YcSSPeP8hdBlnjQPVmyuLpNxPmXrTUu9QNWRzZ7qd+RFnQvB+Nepijb0ZIWpVReSCb
-         CU/4gJ4t1EF21XrnNK7UvkoL4XkThdXiDJeN3er9dBAP58CUcwG5lA7qlRkghGI1NolT
-         cdD9U3XLeEubpcJ/aE25PE/0aKuhNCLBBXelRiAilo6P+5XFmr6L4rN/PWdpv7n8iNRc
-         jCPHigsTnGoHUEYiw7R/3CFiy83F0hZFgeZ9TH7giSJNOlbcf7AxRy6Cdy4lcV58Q1R+
-         e3bSgf3/0K2MYWXJZ6lMSHmfpdqpIY/S6eXR/h1KNz5ElXkOOjb75H0vqw+CGH36jkow
-         bUMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=h8lwQC5CtdK50mFU0zB09Pdklmp5zNmyWjC5W17/O0I=;
-        b=6e4TvQSoC5uukccwS6bbsIPpR0FZEhsBjl3+Haz33LzmYpLm7qhVgAtza/2hVQjhbI
-         PnkmjBBG1oMx7zwZb8ziWqDK4uRhWrk6SW3NiFmk4BBVKrL54pGLmkoQ+aXm1/QRJa7y
-         9uRKikf808vFYlbILbTCzd7JvdTCP/MUF3DsQEY8uGPg/slBF8aT6OjHsytVQwuh74cw
-         YG/5VtiaJvObSnPdZ6PmaJcJY+yMeoSZEanMFnSHYrCAQQ7Gb/nBmzFMS0f61aD2V/9Y
-         4mgk2mbU4zXukPbITz6HEJ5JVufW0Pt0s9DJROEhs8sY9WQgCxbfE7Pn6EMakaJjL+w+
-         s5SA==
-X-Gm-Message-State: AOAM531fuOiV3GjTLg8KavT8AbWfh02TS7+SuMYtMvfXHIhIchBIc72B
-        2HFKJs2DcqjjQ2J8cjwg2ts=
-X-Google-Smtp-Source: ABdhPJywH6xwy7TFmWZjSl9IAk4nkwohPB/1fyxngIhJwsU6b3voy3eqpu6+Wm5LG3Ck/l/wZ5Ww4g==
-X-Received: by 2002:a17:902:6e02:b0:13a:41f5:1666 with SMTP id u2-20020a1709026e0200b0013a41f51666mr20719619plk.39.1632713721297;
-        Sun, 26 Sep 2021 20:35:21 -0700 (PDT)
-Received: from localhost.localdomain ([210.99.160.97])
-        by smtp.googlemail.com with ESMTPSA id r206sm1404320pfc.218.2021.09.26.20.35.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Sep 2021 20:35:20 -0700 (PDT)
-From:   MichelleJin <shjy180909@gmail.com>
-To:     davem@davemloft.net, kuba@kernel.org, yoshfuji@linux-ipv6.org,
-        dsahern@kernel.org, johannes@sipsolutions.net
-Cc:     saeedm@nvidia.com, leon@kernel.org, roid@nvidia.com,
-        paulb@nvidia.com, ozsh@nvidia.com, lariel@nvidia.com,
-        cmi@nvidia.com, netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH net-next v4 3/3] net: mac80211: check return value of rhashtable_init
-Date:   Mon, 27 Sep 2021 03:34:57 +0000
-Message-Id: <20210927033457.1020967-4-shjy180909@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210927033457.1020967-1-shjy180909@gmail.com>
-References: <20210927033457.1020967-1-shjy180909@gmail.com>
+        Mon, 27 Sep 2021 00:21:42 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:39054 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230284AbhI0EVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Sep 2021 00:21:42 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1632716405; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Hg92022NZ2LLcfTeTol26mPSdM56Bzl5myW+9iN1OhA=;
+ b=Uk47YJyoz51my+dRScLXv7WWl+0ufy/Obv4BolR+VyZlVb5NjbZmkZWnYh3W4NDpJc39DtJB
+ jgXcimNppjL3eDtgQirGfNvAHlmGoUw+AzvnEFfbdrFQk4gMYtwPBaNPl1R3YGJYjwQbEwwL
+ 0qHMUmTOUhcsaMbyJOMCILZAvD0=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 615146625f16bce668eb1377 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 27 Sep 2021 04:19:46
+ GMT
+Sender: akolli=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id EB9A2C4360D; Mon, 27 Sep 2021 04:19:45 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: akolli)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 540A5C4338F;
+        Mon, 27 Sep 2021 04:19:45 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 27 Sep 2021 09:49:45 +0530
+From:   akolli@codeaurora.org
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Jouni Malinen <jouni@codeaurora.org>, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath11k: add htt cmd to enable full monitor mode
+In-Reply-To: <87tuiaryhk.fsf@codeaurora.org>
+References: <20210721171905.61838-1-jouni@codeaurora.org>
+ <20210721171905.61838-2-jouni@codeaurora.org>
+ <87tuiaryhk.fsf@codeaurora.org>
+Message-ID: <f01c7797e7072687ab6014ccba431eb9@codeaurora.org>
+X-Sender: akolli@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When rhashtable_init() fails, it returns -EINVAL.
-However, since error return value of rhashtable_init is not checked,
-it can cause use of uninitialized pointers.
-So, fix unhandled errors of rhashtable_init.
+On 2021-09-24 17:12, Kalle Valo wrote:
+> Jouni Malinen <jouni@codeaurora.org> writes:
+> 
+>> From: Anilkumar Kolli <akolli@codeaurora.org>
+>> 
+>> Add a new hw_param full_monitor_mode to enable full monitor support 
+>> for
+>> QCN9074. HTT_H2T_MSG_TYPE_RX_FULL_MONITOR_MODE cmd is sent to the
+>> firmware to enable the full monitor mode.
+> 
+> Nowhere it's explained what "full monitor mode" means from an user's
+> point of view. Can someone give a high level summary what advantages
+> this feature has? For example, more frames delivered to user space or
+> what?
 
-Signed-off-by: MichelleJin <shjy180909@gmail.com>
----
+Yes, more frames delivered with full monitor mode. The advantage with 
+full
+monitor mode is, hardware has status buffers available for all the MPDUs 
+in
+mon_dst_ring. Both status buffer and MPDUs from mon_dst_ring is used to 
+build
+the frame.
 
-v1->v2:
- - change commit message
- - fix possible memory leaks
-v2->v3:
- - nothing changed
-v3-> v4:
- - nothing changed
+Patch "ath11k: Process full monitor mode rx support" has the commit 
+message.
 
- net/mac80211/mesh_pathtbl.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+In full monitor mode, monitor destination ring is read before monitor
+status ring. mon_dst_ring has ppdu id, reap till the end of PPDU. Add
+all the MPDUs to list. Start processing the status ring, if PPDU id in
+status ring is lagging behind, reap the status ring, once the PPDU ID
+matches, deliver the MSDU to upper layer. If status PPDU id leading,
+reap the mon_dst_ring. The advantage with full monitor mode is hardware
+has status buffers available for all the MPDUs in mon_dst_ring.
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index efbefcbac3ac..7cab1cf09bf1 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -60,7 +60,10 @@ static struct mesh_table *mesh_table_alloc(void)
- 	atomic_set(&newtbl->entries,  0);
- 	spin_lock_init(&newtbl->gates_lock);
- 	spin_lock_init(&newtbl->walk_lock);
--	rhashtable_init(&newtbl->rhead, &mesh_rht_params);
-+	if (rhashtable_init(&newtbl->rhead, &mesh_rht_params)) {
-+		kfree(newtbl);
-+		return NULL;
-+	}
- 
- 	return newtbl;
- }
--- 
-2.25.1
-
+- Anil.
