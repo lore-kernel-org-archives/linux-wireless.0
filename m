@@ -2,119 +2,100 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BBCC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3595DC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:35:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7860C60F94
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:18:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 098F260E52
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229819AbhI0DUd (ORCPT
+        id S232503AbhI0Dgs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Sep 2021 23:20:33 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:52567 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbhI0DUc (ORCPT
+        Sun, 26 Sep 2021 23:36:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50336 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229572AbhI0Dgr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Sep 2021 23:20:32 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 18R3IkxV6025389, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 18R3IkxV6025389
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 27 Sep 2021 11:18:46 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.14; Mon, 27 Sep 2021 11:18:46 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 27 Sep
- 2021 11:18:36 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH] rtw88: fix RX clock gate setting while fifo dump
-Date:   Mon, 27 Sep 2021 19:18:30 +0800
-Message-ID: <20210927111830.5354-1-pkshih@realtek.com>
+        Sun, 26 Sep 2021 23:36:47 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B4AC061570;
+        Sun, 26 Sep 2021 20:35:10 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id d13-20020a17090ad3cd00b0019e746f7bd4so9066918pjw.0;
+        Sun, 26 Sep 2021 20:35:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=xJ8/f7J07TrLJL5jvwHsvtwj9CrW3RcVBkgRN85Urbg=;
+        b=JqGb1fDHwgiz42ZSzz+HOGCtEeMbx7afYtQyeMYzS+mcxfQ7SmxqKFtYBhNzIkoYFj
+         +o+pqR4NKMvYaZc8VTIk38hIXdO32M5ZnHm5vnXgbKzE6JP+Tdg6QxFisl9kcrz0daQt
+         hPXCIuCDGcNCtdiYZZj8KEzw45mziI3lTwW7C2CCS7Qi/3c0m1xj+E79sjJROPrcI5YV
+         2MRALAv8smB3u+rT2NSjKM0JLF0/TZyDv6lmD8BmS2VGG34IhFvjGgpcOS3qmh8BVDNx
+         12Q06XvNCoimmU8YzsY73pIEMj9a+bhqkgfLKTqVgjWKZN/E6szlq/40xL9utMA6hTGd
+         R2wQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=xJ8/f7J07TrLJL5jvwHsvtwj9CrW3RcVBkgRN85Urbg=;
+        b=q1aGqkRGvTuFHBn1pLBXkMi8nEsmC+KvdkxP94GGhxaJo2Ee43W58N6Ebw2a0DPCM1
+         opLfokcrtD1m2q3pFiLbaXwAawDPh5aPJG1ulfQHVDu4+nhhAuasRDqKBkwgSf2xnnnf
+         klvwq7jwq6eU+rykfam8GgHdvOwIZebIfH698RfXczWsNMtPSl8vriyvG2+LR4oYfsyD
+         bQNrm9rg1KxRMI1+YDVN7OjIKWYmDSvIUpNQM0encvq7Wf7feVCoQu7JA3XuCSSbpAhW
+         xYEZJTb4qh8ZTkq99bMUOs/P7A6t1AlT7E53iWvG0cU20eiFCantV2VFxlUkX5j2rYsP
+         IotA==
+X-Gm-Message-State: AOAM530NcZkN5GaB5lr3I0x4EfMQaLR28bnh7cTevh84ISNxNygNswhk
+        wV0+Cosin/OulqWtN8EoEPE=
+X-Google-Smtp-Source: ABdhPJzSplPkVJaCaXl+ZYVxi9p88xznm/FXpA2KQ/REwcmXoJP9STconydDNSae7+e060xpPpE3VQ==
+X-Received: by 2002:a17:903:1d2:b0:13d:c967:c14 with SMTP id e18-20020a17090301d200b0013dc9670c14mr20473445plh.52.1632713709756;
+        Sun, 26 Sep 2021 20:35:09 -0700 (PDT)
+Received: from localhost.localdomain ([210.99.160.97])
+        by smtp.googlemail.com with ESMTPSA id r206sm1404320pfc.218.2021.09.26.20.35.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Sep 2021 20:35:09 -0700 (PDT)
+From:   MichelleJin <shjy180909@gmail.com>
+To:     davem@davemloft.net, kuba@kernel.org, yoshfuji@linux-ipv6.org,
+        dsahern@kernel.org, johannes@sipsolutions.net
+Cc:     saeedm@nvidia.com, leon@kernel.org, roid@nvidia.com,
+        paulb@nvidia.com, ozsh@nvidia.com, lariel@nvidia.com,
+        cmi@nvidia.com, netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH net-next v4 0/3] check return value of rhashtable_init in mlx5e, ipv6, mac80211
+Date:   Mon, 27 Sep 2021 03:34:54 +0000
+Message-Id: <20210927033457.1020967-1-shjy180909@gmail.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/27/2021 02:58:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzkvMjYgpFWkyCAxMDoyOTowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+When rhashtable_init() fails, it returns -EINVAL.
+However, since error return value of rhashtable_init is not checked,
+it can cause use of uninitialized pointers.
+So, fix unhandled errors of rhashtable_init.
+The three patches are essentially the same logic.
 
-When fw fifo dumps, RX clock gating should be disabled to avoid
-something unexpected. However, the register operation ran into
-a mistake. So, we fix it.
+v1->v2:
+ - change commit message
+ - fix possible memory leaks
+v2->v3:
+ - split patch into mlx5e, ipv6, mac80211
+v3->v4:
+ - fix newly created warnings due to patches in net/ipv6/seg6.c
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/fw.c  | 7 +++----
- drivers/net/wireless/realtek/rtw88/reg.h | 1 +
- 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index ccd8221ab264..0c4f2a2f2d7f 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -1582,12 +1582,10 @@ static void rtw_fw_read_fifo_page(struct rtw_dev *rtwdev, u32 offset, u32 size,
- 	u32 i;
- 	u16 idx = 0;
- 	u16 ctl;
--	u8 rcr;
- 
--	rcr = rtw_read8(rtwdev, REG_RCR + 2);
- 	ctl = rtw_read16(rtwdev, REG_PKTBUF_DBG_CTRL) & 0xf000;
- 	/* disable rx clock gate */
--	rtw_write8(rtwdev, REG_RCR, rcr | BIT(3));
-+	rtw_write32_set(rtwdev, REG_RCR, BIT_DISGCLK);
- 
- 	do {
- 		rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, start_pg | ctl);
-@@ -1606,7 +1604,8 @@ static void rtw_fw_read_fifo_page(struct rtw_dev *rtwdev, u32 offset, u32 size,
- 
- out:
- 	rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, ctl);
--	rtw_write8(rtwdev, REG_RCR + 2, rcr);
-+	/* restore rx clock gate */
-+	rtw_write32_clr(rtwdev, REG_RCR, BIT_DISGCLK);
- }
- 
- static void rtw_fw_read_fifo(struct rtw_dev *rtwdev, enum rtw_fw_fifo_sel sel,
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index abb7b490d8fa..84ba9ec489c3 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -408,6 +408,7 @@
- #define BIT_MFBEN		BIT(22)
- #define BIT_DISCHKPPDLLEN	BIT(21)
- #define BIT_PKTCTL_DLEN		BIT(20)
-+#define BIT_DISGCLK		BIT(19)
- #define BIT_TIM_PARSER_EN	BIT(18)
- #define BIT_BC_MD_EN		BIT(17)
- #define BIT_UC_MD_EN		BIT(16)
+MichelleJin (3):
+  net/mlx5e: check return value of rhashtable_init
+  net: ipv6: check return value of rhashtable_init
+  net: mac80211: check return value of rhashtable_init
+
+ drivers/net/ethernet/mellanox/mlx5/core/en/tc_ct.c | 14 +++++++++++---
+ net/ipv6/ila/ila_xlat.c                            |  6 +++++-
+ net/ipv6/seg6.c                                    |  8 ++++++--
+ net/ipv6/seg6_hmac.c                               |  4 +---
+ net/mac80211/mesh_pathtbl.c                        |  5 ++++-
+ 5 files changed, 27 insertions(+), 10 deletions(-)
+
 -- 
 2.25.1
 
