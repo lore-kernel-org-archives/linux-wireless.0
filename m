@@ -2,150 +2,221 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB2FC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 20:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B014C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 20:44:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFA9561074
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 20:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4E0461074
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 20:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236563AbhI0Un2 (ORCPT
+        id S236890AbhI0UqT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Sep 2021 16:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60616 "EHLO
+        Mon, 27 Sep 2021 16:46:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236510AbhI0Un1 (ORCPT
+        with ESMTP id S236390AbhI0UqS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Sep 2021 16:43:27 -0400
-Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 668FCC06176A
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2021 13:41:48 -0700 (PDT)
-Received: by mail-ot1-x32f.google.com with SMTP id c6-20020a9d2786000000b005471981d559so26141931otb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2021 13:41:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=pUZgLCnNelRAaV+g7H8XGqFTT9YZLErJSXLJYla4RJo=;
-        b=dCoaJUF0HSoSC1tmNX6q8Fh6kJv7c6jk49XmhH2vq1ANKmz6EeVyVtD2Pcxxxh8aXz
-         /W0bzAWmoH3iHlFtKt4RHhcy9v4nMv6BEyBk34D8UUa8oCh+yyJJBwKYrK5zxFL+VJ5W
-         mmk25gMJbff0s4JgjQlL73M1frtzFLhhSSeKsoMfON0N7To1FwqmZevw+vpH964FuN5+
-         VDs07R1JX2daPpe7GTVjL3t8b85VIkNR+VDjVjC7aEfatwsh4ieB21gaSPHVc9FrfLe4
-         JK9GpMcv5K/VRzrKmX8WZg1LZAmnWcollVG6hxmBajWBFIxazJts7JTsm6AsqVhgOO/o
-         pUCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=pUZgLCnNelRAaV+g7H8XGqFTT9YZLErJSXLJYla4RJo=;
-        b=K4UiqN+ZGDDwhYb7gnDDefdo4uAy1ni9Wrc+A6TlkqB+3WJeKT9YXCB99LyGTs8yYG
-         +Uo1afSrQu/yQKZ14z8VcZEF1o9mPG2VojDYx3Hile0R25Pqy7Xd8BX1KbKBsKNKAf77
-         Ab5d/Xo/VrLL5UxUP7p7DVksb/ryfzxcoaiKocHKIWq2wmpRTYoPqbGvAeeGKAt9DBG2
-         pSV99XLu2uPx72x1pTJF34EaWehhelzQOkIweEKamF687AL4el5IYLv/fbgCWjAorkTL
-         AG4CJPlh5RCj6qo98+DwHTYX+zK7xx/kZTIWeA/qp7I/I+JkjVBvhLO9aCyVwMMbd4k8
-         ihUg==
-X-Gm-Message-State: AOAM530hcssqUNrEeOXClGaBDFavYNhvgmL61PABixR/7M3skR2cfRtH
-        9al8IhCE+Ih/ZPT+vgk7sxT37w==
-X-Google-Smtp-Source: ABdhPJydeIzDJHtHzGeBz5+87mWnwkDNbaEe+ql2n9gGjNC+NklvZH2OYxM0vWlXO7E/L2MFCogIbA==
-X-Received: by 2002:a9d:6a0f:: with SMTP id g15mr1832465otn.126.1632775307597;
-        Mon, 27 Sep 2021 13:41:47 -0700 (PDT)
-Received: from ripper (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id a8sm4414108oos.46.2021.09.27.13.41.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Sep 2021 13:41:47 -0700 (PDT)
-Date:   Mon, 27 Sep 2021 13:42:22 -0700
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     John Stultz <john.stultz@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>, Rob Clark <robdclark@gmail.com>,
-        Sean Paul <sean@poorly.run>, David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Alex Elder <elder@kernel.org>,
+        Mon, 27 Sep 2021 16:46:18 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C364FC061575
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2021 13:44:39 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mUxTe-0001jp-DD; Mon, 27 Sep 2021 22:43:54 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mUxTY-0001YX-J8; Mon, 27 Sep 2021 22:43:48 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mUxTY-0001NN-Gx; Mon, 27 Sep 2021 22:43:48 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org,
+        kernel@pengutronix.de, Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
         "David S. Miller" <davem@davemloft.net>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Andy Gross <agross@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Maxime Ripard <mripard@kernel.org>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        freedreno <freedreno@lists.freedesktop.org>,
-        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-sunxi@lists.linux.dev
-Subject: Re: [PATCH] [RFC] qcom_scm: hide Kconfig symbol
-Message-ID: <YVIsrgKiOG/gFVdT@ripper>
-References: <20210927152412.2900928-1-arnd@kernel.org>
- <YVIg9CxJGaJr1vpp@ripper>
- <CAK8P3a1fEuFsQVY9b1oGdTOHzr8pu9wvrSBCMn2iOvgWqtHNnA@mail.gmail.com>
+        Vadym Kochan <vkochan@marvell.com>,
+        Taras Chornyi <tchornyi@marvell.com>,
+        Jiri Pirko <jiri@nvidia.com>, Ido Schimmel <idosch@nvidia.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Michael Buesch <m@bues.ch>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Alexander Duyck <alexanderduyck@fb.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-crypto@vger.kernel.org,
+        netdev@vger.kernel.org, oss-drivers@corigine.com
+Subject: [PATCH v4 4/8] PCI: replace pci_dev::driver usage that gets the driver name
+Date:   Mon, 27 Sep 2021 22:43:22 +0200
+Message-Id: <20210927204326.612555-5-uwe@kleine-koenig.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210927204326.612555-1-uwe@kleine-koenig.org>
+References: <20210927204326.612555-1-uwe@kleine-koenig.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a1fEuFsQVY9b1oGdTOHzr8pu9wvrSBCMn2iOvgWqtHNnA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=a2O0HTv4aJywRdn8Xll+BiOFc5OY645rbrBOo3iG86g=; m=uiYraG79NtpzJXVYTkT2krJ2oKsGebV/4PDlvGFyew0=; p=AUabNdK3Oc6hLf1u5raYHAjiFBP1NcdSOD8qDOCVVeY=; g=9fc159a3b3d1c22b121315875a3324b706ea97b2
+X-Patch-Sig: m=pgp; i=uwe@kleine-koenig.org; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFSLNEACgkQwfwUeK3K7Ak0WAf+LIC 8H0Ni3FH7fEhqAxEC6O6fGPMdf/2Uz3OTec5bTRdY7DvxodsBp63bi7OJ13K5jPa7ij4bJOOWh7iX pJU4IYM7ydRfA3q19o6WWuYtjfZosjDi6HAEfun5hNZVm8IkhodehHyfaIHhiMNizGFJedWzcZcfY Aw529YNY7kWJ5QjJXMDNkwzTIQDFPVWiwpdvamB+NMXPd/DjyXJZVXhLX0DfW3eWzbCfO1cw55dfb VSPPw0hnLPcjdx9BAevJ4yqd3ufOJmkp6oRrzBa7cyKnECkyCF4NPhfht2lE5njNfVlAfhAlwK6Yj NnYPLRRXlhPvURkRF1X6bQKfT5KbHKQ==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon 27 Sep 13:15 PDT 2021, Arnd Bergmann wrote:
+From: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
-> On Mon, Sep 27, 2021 at 9:52 PM Bjorn Andersson
-> <bjorn.andersson@linaro.org> wrote:
-> > On Mon 27 Sep 08:22 PDT 2021, Arnd Bergmann wrote:
-> > > From: Arnd Bergmann <arnd@arndb.de>
-> > >
-> > >  - To avoid a circular dependency chain involving RESET_CONTROLLER
-> > >    and PINCTRL_SUNXI, change the 'depends on RESET_CONTROLLER' in
-> > >    the latter one to 'select'.
-> >
-> > Can you please help me understand why this is part of the same patch?
-> 
-> This can be done as a preparatory patch if we decide to do it this way,
-> for the review it seemed better to spell out that this is required.
-> 
-> I still hope that we can avoid adding another 'select RESET_CONTROLLER'
-> if someone can figure out what to do instead.
-> 
+struct pci_dev::driver holds (apart from a constant offset) the same
+data as struct pci_dev::dev->driver. With the goal to remove struct
+pci_dev::driver to get rid of data duplication replace getting the
+driver name by dev_driver_string() which implicitly makes use of struct
+pci_dev::dev->driver.
 
-Okay, thanks.
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ arch/powerpc/include/asm/ppc-pci.h                   | 9 ++++++++-
+ drivers/bcma/host_pci.c                              | 7 ++++---
+ drivers/crypto/hisilicon/qm.c                        | 2 +-
+ drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c   | 2 +-
+ drivers/net/ethernet/marvell/prestera/prestera_pci.c | 2 +-
+ drivers/net/ethernet/mellanox/mlxsw/pci.c            | 2 +-
+ drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c | 2 +-
+ drivers/ssb/pcihost_wrapper.c                        | 8 +++++---
+ 8 files changed, 22 insertions(+), 12 deletions(-)
 
-> The problem here is that QCOM_SCM selects RESET_CONTROLLER,
-> and turning that into 'depends on' would in turn mean that any driver that
-> wants to select QCOM_SCM would have to have the same RESET_CONTROLLER
-> dependency.
-> 
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index 2b9edbf6e929..e8f1795a2acf 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -57,7 +57,14 @@ void eeh_sysfs_remove_device(struct pci_dev *pdev);
+ 
+ static inline const char *eeh_driver_name(struct pci_dev *pdev)
+ {
+-	return (pdev && pdev->driver) ? pdev->driver->name : "<null>";
++	if (pdev) {
++		const char *drvstr = dev_driver_string(&pdev->dev);
++
++		if (strcmp(drvstr, ""))
++			return drvstr;
++	}
++
++	return "<null>";
+ }
+ 
+ #endif /* CONFIG_EEH */
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 69c10a7b7c61..0973022d4b13 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -175,9 +175,10 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
+ 	if (err)
+ 		goto err_kfree_bus;
+ 
+-	name = dev_name(&dev->dev);
+-	if (dev->driver && dev->driver->name)
+-		name = dev->driver->name;
++	name = dev_driver_string(&dev->dev);
++	if (!strcmp(name, ""))
++		name = dev_name(&dev->dev);
++
+ 	err = pci_request_regions(dev, name);
+ 	if (err)
+ 		goto err_pci_disable;
+diff --git a/drivers/crypto/hisilicon/qm.c b/drivers/crypto/hisilicon/qm.c
+index 369562d34d66..8f361e54e524 100644
+--- a/drivers/crypto/hisilicon/qm.c
++++ b/drivers/crypto/hisilicon/qm.c
+@@ -3085,7 +3085,7 @@ static int qm_alloc_uacce(struct hisi_qm *qm)
+ 	};
+ 	int ret;
+ 
+-	ret = strscpy(interface.name, pdev->driver->name,
++	ret = strscpy(interface.name, dev_driver_string(&pdev->dev),
+ 		      sizeof(interface.name));
+ 	if (ret < 0)
+ 		return -ENAMETOOLONG;
+diff --git a/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c b/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
+index 7ea511d59e91..f279edfce3f1 100644
+--- a/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
++++ b/drivers/net/ethernet/hisilicon/hns3/hns3_ethtool.c
+@@ -606,7 +606,7 @@ static void hns3_get_drvinfo(struct net_device *netdev,
+ 		return;
+ 	}
+ 
+-	strncpy(drvinfo->driver, h->pdev->driver->name,
++	strncpy(drvinfo->driver, dev_driver_string(&h->pdev->dev),
+ 		sizeof(drvinfo->driver));
+ 	drvinfo->driver[sizeof(drvinfo->driver) - 1] = '\0';
+ 
+diff --git a/drivers/net/ethernet/marvell/prestera/prestera_pci.c b/drivers/net/ethernet/marvell/prestera/prestera_pci.c
+index a250d394da38..a8f007f6dad2 100644
+--- a/drivers/net/ethernet/marvell/prestera/prestera_pci.c
++++ b/drivers/net/ethernet/marvell/prestera/prestera_pci.c
+@@ -720,7 +720,7 @@ static int prestera_fw_load(struct prestera_fw *fw)
+ static int prestera_pci_probe(struct pci_dev *pdev,
+ 			      const struct pci_device_id *id)
+ {
+-	const char *driver_name = pdev->driver->name;
++	const char *driver_name = dev_driver_string(&pdev->dev);
+ 	struct prestera_fw *fw;
+ 	int err;
+ 
+diff --git a/drivers/net/ethernet/mellanox/mlxsw/pci.c b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+index 13b0259f7ea6..8f306364f7bf 100644
+--- a/drivers/net/ethernet/mellanox/mlxsw/pci.c
++++ b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+@@ -1876,7 +1876,7 @@ static void mlxsw_pci_cmd_fini(struct mlxsw_pci *mlxsw_pci)
+ 
+ static int mlxsw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	const char *driver_name = pdev->driver->name;
++	const char *driver_name = dev_driver_string(&pdev->dev);
+ 	struct mlxsw_pci *mlxsw_pci;
+ 	int err;
+ 
+diff --git a/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c b/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c
+index 0685ece1f155..23dfb599c828 100644
+--- a/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c
++++ b/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c
+@@ -202,7 +202,7 @@ nfp_get_drvinfo(struct nfp_app *app, struct pci_dev *pdev,
+ {
+ 	char nsp_version[ETHTOOL_FWVERS_LEN] = {};
+ 
+-	strlcpy(drvinfo->driver, pdev->driver->name, sizeof(drvinfo->driver));
++	strlcpy(drvinfo->driver, dev_driver_string(&pdev->dev), sizeof(drvinfo->driver));
+ 	nfp_net_get_nspinfo(app, nsp_version);
+ 	snprintf(drvinfo->fw_version, sizeof(drvinfo->fw_version),
+ 		 "%s %s %s %s", vnic_version, nsp_version,
+diff --git a/drivers/ssb/pcihost_wrapper.c b/drivers/ssb/pcihost_wrapper.c
+index 410215c16920..4938ed5cfae5 100644
+--- a/drivers/ssb/pcihost_wrapper.c
++++ b/drivers/ssb/pcihost_wrapper.c
+@@ -78,9 +78,11 @@ static int ssb_pcihost_probe(struct pci_dev *dev,
+ 	err = pci_enable_device(dev);
+ 	if (err)
+ 		goto err_kfree_ssb;
+-	name = dev_name(&dev->dev);
+-	if (dev->driver && dev->driver->name)
+-		name = dev->driver->name;
++
++	name = dev_driver_string(&dev->dev);
++	if (*name == '\0')
++		name = dev_name(&dev->dev);
++
+ 	err = pci_request_regions(dev, name);
+ 	if (err)
+ 		goto err_pci_disable;
+-- 
+2.30.2
 
-Right, and that will just be another thing we'll get wrong across the
-tree.
-
-> An easier option might be to find a way to build QCOM_SCM without
-> RESET_CONTROLLER for compile testing purposes. I don't know
-> what would break from that.
-> 
-
-Afaict the reset API is properly stubbed and RESET_CONTROLLER is a bool,
-so I think we can simply drop the "select" and the kernel will still
-compile fine in all combinations.
-
-When it comes to runtime, we currently select RESET_CONTROLLER from the
-Qualcomm common clocks. If that is dropped (why would it...) it seems
-possible to build a custom kernel for msm8916 that we can boot and miss
-the stubbed out "mss restart" reset line from the SCM.
-
-
-So, let's just drop the select RESET_CONTROLLER from SCM for now.
-
-Regards,
-Bjorn
