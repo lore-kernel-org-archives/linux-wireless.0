@@ -2,62 +2,58 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFEC5C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 01:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BBCC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DAA960F91
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 01:28:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7860C60F94
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 03:18:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232317AbhI0BaA convert rfc822-to-8bit (ORCPT
+        id S229819AbhI0DUd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Sep 2021 21:30:00 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:39197 "EHLO
+        Sun, 26 Sep 2021 23:20:33 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:52567 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230175AbhI0BaA (ORCPT
+        with ESMTP id S229572AbhI0DUc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Sep 2021 21:30:00 -0400
+        Sun, 26 Sep 2021 23:20:32 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 18R1S8Fn8025807, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 18R3IkxV6025389, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 18R1S8Fn8025807
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 18R3IkxV6025389
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 27 Sep 2021 09:28:08 +0800
-Received: from RTEXMBS01.realtek.com.tw (172.21.6.94) by
+        Mon, 27 Sep 2021 11:18:46 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.14; Mon, 27 Sep 2021 09:28:08 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 27 Sep 2021 09:28:07 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098]) by
- RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098%5]) with mapi id
- 15.01.2106.013; Mon, 27 Sep 2021 09:28:07 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "andy200511@126.com" <andy200511@126.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Authentication Failure when target WiFi's signal strength is below 40% (rtw89)
-Thread-Topic: Authentication Failure when target WiFi's signal strength is
- below 40% (rtw89)
-Thread-Index: AQHXscRxDEiLbdM4IESPiClNRvGXtqu3GE4g
-Date:   Mon, 27 Sep 2021 01:28:07 +0000
-Message-ID: <897b9605327946a0b0d774dd3c0dbdd2@realtek.com>
-References: <2931264.cLPqxE5pUp@omenarch>
-In-Reply-To: <2931264.cLPqxE5pUp@omenarch>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS01.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2021/9/26_=3F=3F_10:29:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ 15.1.2308.14; Mon, 27 Sep 2021 11:18:46 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 27 Sep
+ 2021 11:18:36 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
+Subject: [PATCH] rtw88: fix RX clock gate setting while fifo dump
+Date:   Mon, 27 Sep 2021 19:18:30 +0800
+Message-ID: <20210927111830.5354-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/27/2021 02:58:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzkvMjYgpFWkyCAxMDoyOTowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
@@ -66,38 +62,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-> -----Original Message-----
-> From: andy200511@126.com <andy200511@126.com>
-> Sent: Saturday, September 25, 2021 11:48 AM
-> To: linux-wireless@vger.kernel.org
-> Subject: Authentication Failure when target WiFi's signal strength is below
-> 40% (rtw89)
-> 
-> Hello, dear Realtek engineers:
-> I am a user of the RTL8852AE card with the rtw89 kernel driver's unofficial
-> DKMS module AUR package
-> (https://aur.archlinux.org/packages/rtw89-dkms-git/). I have experienced
-> some issue of authentication when I tried to connect to a 5Ghz WiFi when its
-> signal strength is below 40%. The specific problem is even when I give the
-> correct password, the system keeps asking me to provide the password again
-> (using KDE's NetworkManager, unsure if it is related and have not yet tested
-> with other wifi managers). This issue solves when I move closer to my router
-> to gain more signal strength.
-> Here is the output of dmesg:
-> http://fars.ee/00U7
-> 
-> 
+When fw fifo dumps, RX clock gating should be disabled to avoid
+something unexpected. However, the register operation ran into
+a mistake. So, we fix it.
 
-Hi,
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/fw.c  | 7 +++----
+ drivers/net/wireless/realtek/rtw88/reg.h | 1 +
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-We have fixed similar symptom by v6 submitted on end of August, but
-the last update of DKMS module you took is 2021-07-08 06:29.
-So, I suggest to try the novel version of rtw89, and use the novel
-firmware as well. Please reference to [1]
-
-[1] https://lore.kernel.org/linux-wireless/20210820043538.12424-1-pkshih@realtek.com/
-
---
-Ping-Ke
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index ccd8221ab264..0c4f2a2f2d7f 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -1582,12 +1582,10 @@ static void rtw_fw_read_fifo_page(struct rtw_dev *rtwdev, u32 offset, u32 size,
+ 	u32 i;
+ 	u16 idx = 0;
+ 	u16 ctl;
+-	u8 rcr;
+ 
+-	rcr = rtw_read8(rtwdev, REG_RCR + 2);
+ 	ctl = rtw_read16(rtwdev, REG_PKTBUF_DBG_CTRL) & 0xf000;
+ 	/* disable rx clock gate */
+-	rtw_write8(rtwdev, REG_RCR, rcr | BIT(3));
++	rtw_write32_set(rtwdev, REG_RCR, BIT_DISGCLK);
+ 
+ 	do {
+ 		rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, start_pg | ctl);
+@@ -1606,7 +1604,8 @@ static void rtw_fw_read_fifo_page(struct rtw_dev *rtwdev, u32 offset, u32 size,
+ 
+ out:
+ 	rtw_write16(rtwdev, REG_PKTBUF_DBG_CTRL, ctl);
+-	rtw_write8(rtwdev, REG_RCR + 2, rcr);
++	/* restore rx clock gate */
++	rtw_write32_clr(rtwdev, REG_RCR, BIT_DISGCLK);
+ }
+ 
+ static void rtw_fw_read_fifo(struct rtw_dev *rtwdev, enum rtw_fw_fifo_sel sel,
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index abb7b490d8fa..84ba9ec489c3 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -408,6 +408,7 @@
+ #define BIT_MFBEN		BIT(22)
+ #define BIT_DISCHKPPDLLEN	BIT(21)
+ #define BIT_PKTCTL_DLEN		BIT(20)
++#define BIT_DISGCLK		BIT(19)
+ #define BIT_TIM_PARSER_EN	BIT(18)
+ #define BIT_BC_MD_EN		BIT(17)
+ #define BIT_UC_MD_EN		BIT(16)
+-- 
+2.25.1
 
