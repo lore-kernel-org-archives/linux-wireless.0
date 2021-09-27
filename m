@@ -2,105 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D43C433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Sep 2021 20:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 654EFC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 00:08:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7645860EE4
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Sep 2021 20:21:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45E81610CA
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Sep 2021 00:08:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230099AbhIZUWp (ORCPT
+        id S232227AbhI0AKN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Sep 2021 16:22:45 -0400
-Received: from mout.web.de ([212.227.15.4]:60423 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229894AbhIZUWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Sep 2021 16:22:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1632687651;
-        bh=9o/e66vAWG/z2ECjYL1NyiGoc7RJt52pRYvR60FMngk=;
-        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=jsP+1sFnoXMIb3sNNXYOutEgzo64bqRHeyQP60oS/RDRX/N6X3sKNI4se83ExgAxF
-         Z29gyHBDgKsiIAzLsA7In7FKxHhoBALP6GDsbO6zxcwkCH59ib4mllo/ufNTsoaPFi
-         Ofn373r0TB6efKE3YLc7epzlmGVdiidOg2/ZollI=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [10.9.8.2] ([62.227.172.72]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MmQYX-1nClDG0Owr-00iJRf; Sun, 26
- Sep 2021 22:20:51 +0200
-Subject: Re: [BUG] Re: [PATCH] brcmfmac: use ISO3166 country code and 0 rev as
- fallback
-To:     Kalle Valo <kvalo@codeaurora.org>, Shawn Guo <shawn.guo@linaro.org>
-Cc:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Sun, 26 Sep 2021 20:10:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232201AbhI0AKN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Sep 2021 20:10:13 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A6E5C061604
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Sep 2021 17:08:36 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id y186so4729690pgd.0
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Sep 2021 17:08:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ZITki0Tlgr2SOixro8XnxB3qWg1irmvVm6UWMwcCgLY=;
+        b=r9nqq+3OdoQV3e1vn4PowWpeKZ7ylD4rWLhHVnCkJP417FnWIxEDgJhoCgkID6ihv1
+         usIsh1VFvVIRavVoe00+WMmx2tYWi/QD723QrCt9LZpR4/Mod7LMVfMWTClFddoljQEc
+         TEhnjOHX7bXrQeCh69iNqjK8E9j+13McwJdENTftglreWqiJ2YFUsWOa3bAggPw6johS
+         8oJK/UXUriiDjI7S10sQPHBxJpaM2ElHt7JCEH7/rLq5CFSlYuEmLcM7VQ56ZiuVf+sn
+         GFi/rzGBA1wjn9ESFjsdGsQu4Vz1v5DYt3Etzr8joN6jFAozZG16N4846jZNapfsntGv
+         jU1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ZITki0Tlgr2SOixro8XnxB3qWg1irmvVm6UWMwcCgLY=;
+        b=Mb92AZZoELWmX0Vnxtu8OmKSZUplBG683ND1Vkmh3uXWlVmLPAR2S/gOleDGSsYfIR
+         41N4ZkyzQth5wQQjJBw6L0pMZehQeRaqq9OV2A4OgVgYyanvyCKSLBqHZK+dv5pKBW2Z
+         Yx4We6KotcMbAE01QgI6Fj49i5D7xyOdZI1wiKualwDV0UDHZxRAw+BoZwmJxh7YK0pY
+         bdOnQmpdQMWngD9LM+VA8WDjqXSiC4v5jXT6tDiULNe0MuSIYPLf0yhGqyh1QlwOTX6g
+         zzIttPFJ3jmPQ2cwZYNfeuYAv3WS4WWHOKYaXO8+OFfVQxCUgsA1QrA6d4lTkmDvCVEd
+         8NOw==
+X-Gm-Message-State: AOAM530h8+tJ9bqnFESfolF7xpaCoSDzt6480QN7hzpm5ldg47GRwzmv
+        M34pqIOpZ7OBYyaY8WtSMU9hYw==
+X-Google-Smtp-Source: ABdhPJz0KqJsswBZcZk1GMY1L+3Mp/JKNhbpIZ8FC0/9c8ADjX/fqNNkL2mOqao3KlX8y8cpTT39nw==
+X-Received: by 2002:a05:6a00:4:b0:440:6476:bcb4 with SMTP id h4-20020a056a00000400b004406476bcb4mr20529491pfk.0.1632701315853;
+        Sun, 26 Sep 2021 17:08:35 -0700 (PDT)
+Received: from dragon (80.251.214.228.16clouds.com. [80.251.214.228])
+        by smtp.gmail.com with ESMTPSA id o14sm15485637pfh.84.2021.09.26.17.08.32
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 26 Sep 2021 17:08:35 -0700 (PDT)
+Date:   Mon, 27 Sep 2021 08:08:29 +0800
+From:   Shawn Guo <shawn.guo@linaro.org>
+To:     Soeren Moch <smoch@web.de>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, stable@vger.kernel.org,
         Arend van Spriel <aspriel@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-hsien Lin <chi-hsien.lin@infineon.com>,
         Wright Feng <wright.feng@infineon.com>,
         Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-rockchip@lists.infradead.org" 
-        <linux-rockchip@lists.infradead.org>
-References: <20210425110200.3050-1-shawn.guo@linaro.org>
- <cb7ac252-3356-8ef7-fcf9-eb017f5f161f@web.de> <20210908010057.GB25255@dragon>
- <100f5bef-936c-43f1-9b3e-a477a0640d84@web.de> <20210909022033.GC25255@dragon>
- <56e9a81a-4e05-cf5e-a8df-782ac75fdbe6@web.de> <20210912015137.GD25255@dragon>
- <87pmt2uvxu.fsf@codeaurora.org>
-From:   Soeren Moch <smoch@web.de>
-Message-ID: <ffe146e8-a393-2388-0f31-2bd030a75812@web.de>
-Date:   Sun, 26 Sep 2021 22:20:48 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Revert "brcmfmac: use ISO3166 country code and 0 rev as
+ fallback"
+Message-ID: <20210927000828.GE9901@dragon>
+References: <20210926201905.211605-1-smoch@web.de>
 MIME-Version: 1.0
-In-Reply-To: <87pmt2uvxu.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Content-Language: en-GB
-X-Provags-ID: V03:K1:xaz3Z1xGU/FK/ErZ/VHwScYBHhAAf/Wz3uXzw3rKTjaX9jJKLnM
- abFUKWeJORbgaPadeDVLaedD6HO25jRa3NmRorRM4IabQ87iQyb7m43idS7aaBex2cxc9/5
- LxwgzS2ZSu3wCpyrpcPalFbVSgeb6LJ7wuYHpFnf+KD483grJJk4cIj3CCMH6SB7ygvo1Ei
- kAOFSBHK48g/KzYTTZBvA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:DFz2lwZNGAw=:zbH7iSdhVjqiEUCj+tjfey
- LD6rygIFVCROy4Nxe0esCXUx3Tl131W4RfZ5NLxPyiRqjltu6sI5DhPwHfklIN6vL6KjNf2F/
- lJBCLiBPQJMQCzHIk7Gxycsyu63SCCnGX/EXmAe+aM9sqnL0fvUWy9cF8ucjMN1TB9K2UFp2g
- 9lg+7/OPty1j0mwmPrFuUhOMby0ud8YSPK7J9VL/9UO3xrsam/8g635f0s+wyPCZJyC5G5Grc
- 4fyWMi8IsBirwhoe3GPk928M9oWprhy2ZVkLKxjQtstoBwZzt/fBIEmz3zBgsZUauJDPnwmMv
- hVRP6NDjRosoEPK5kNkA3EcM1bvvnG7k3T6KN0De9pbdFgndn0qzaVUs7NCQt4XLPdQH1xbXz
- E+7jsRVTQ5xvHmG0Gz7n5tVwPORTkSk9yDRpEE1CASy0nt9DCRozCudszpC3w1QcyMrQYRDKE
- tsMtTLe109nIv4LJt1xVoJ+6j5iLmipuekPeJFjA4+NcUGcO1tc6XO+oJ3OarNRRWpgzIvLcR
- FBZ0yrZ1V7tMjCbK67TyfJA8XVL5NefVwUEHx5zhY9C1cIeWuHYphrQ8FD8TB7HVkwDA0CSiR
- HpuBEHCjpYXHG8UmiF1bvupdIItI6Vaw5mwVX9Wob5/5eVc2Yc31ROdIvIZn0G9MxNeXU/DDI
- hcDHFpjrp3N2BDo9xOc5etxemDCIgzLVD57KbgOVIXxwjYrUhZvVm0MUFBin8WKh4RuRYCJ0s
- SiFItiYnLHzanGfItUOjEmW4kzN1Ei7UNroH9M91ME6f0N8XRLS8YPUyRB4gtJzE9Ia31zIUV
- 7wfsYqejLN3Mv73OQGzQqWhlGeGOQrjEw70IIxwbj0t6QoygWzeAAGCr/yMV1jqUHc1vQesU7
- pmufhAGzRCb1mNgZ4VDwz1rJLdX5x6DamnuTUE8BsL0ow7c3GUqi4UCswNuYWHmPPkUWpQmke
- uPylkm+TOxmwDX0Mp932V/JlCX5Bk0ttXhR2E89KKFQIvgOXhFgzkgj+ckIzlQ84Y9aw6ggYc
- IjhDjnRSHJBK4xUyarpshRVN7itmPa9doxWuFIe8URY/yssMa+3ugz3VUyohQAppWG8IWPJwr
- OxYGYFZNOGZBnY=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210926201905.211605-1-smoch@web.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Sun, Sep 26, 2021 at 10:19:05PM +0200, Soeren Moch wrote:
+> This reverts commit b0b524f079a23e440dd22b04e369368dde847533.
+> 
+> Commit b0b524f079a2 ("brcmfmac: use ISO3166 country code and 0 rev
+> as fallback") changes country setup to directly use ISO3166 country
+> codes if no more specific code is configured. This was done under
+> the assumption that brcmfmac firmwares can handle such simple
+> direct mapping from country codes to firmware ccode values.
+> 
+> Unfortunately this is not true for all chipset/firmware combinations.
+> E.g. BCM4359/9 devices stop working as access point with this change,
+> so revert the offending commit to avoid the regression.
+> 
+> Signed-off-by: Soeren Moch <smoch@web.de>
+> Cc: stable@vger.kernel.org  # 5.14.x
 
-
-On 21.09.21 11:20, Kalle Valo wrote:
-> Shawn Guo <shawn.guo@linaro.org> writes:
->
->>> Is this not the usual DT policy, that missing optional properties should
->>> not prevent a device to work, that old dtbs should still work when new
->>> properties are added?
->>>
->>> I'm not sure what's the best way forward. A plain revert of this patch
->>> would at least bring back wifi support for RockPro64 devices with
->>> existing dtbs. Maybe someone else has a better proposal how to proceed.
->> Go ahead to revert if we do not hear a better solution, I would say.
-> Yes, please do send a revert. And remember to explain the regression in
-> the commit log.
->
-I sent a revert patch.
-
-Sorry for the delay,
-Soeren
+Acked-by: Shawn Guo <shawn.guo@linaro.org>
