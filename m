@@ -2,116 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E51F1C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 09:05:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AAC1C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 09:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C93BF6113E
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 09:05:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EAF360F70
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 09:24:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239885AbhI1JHG (ORCPT
+        id S239880AbhI1J0U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Sep 2021 05:07:06 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:34680 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239883AbhI1JHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Sep 2021 05:07:05 -0400
+        Tue, 28 Sep 2021 05:26:20 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:34155 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239708AbhI1J0S (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Sep 2021 05:26:18 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1632819926; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=AEADEe6Ao53VNzkjzr4ASMukE0IbDTiq22jiTURIqwU=;
- b=wuxX+If9QDXDrh7AKKpcJGAyjneAkQDDgzi3bpcVEH7rvFYQR7Wc5RamMMLcHkZ7iQjpqb24
- qoCv9tltl5S4HKifYQ1MzRTPUskUPRimjcBKPSi98t024Mn9je2/zAhWAJ60Kb9fMSF7GNIR
- OTkI9Lx4eE7IWH84wEOiaUrlwwM=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ s=smtp; t=1632821079; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=8g1WmO4zsI0Qad1a7UPKfzGAjqJuKEOek2wPadV/g+g=; b=oSEgOStPTwnPwp4heu/VJbXR3wFHHgq30Bq7E2e+pspZwKfwJgMoTsRUVgwQXCcBDVk/btSQ
+ 9kBEZp8s6TxRdFgHLUlIxTGz1q9FfK0T9ZOSS+z02pCfjf/gP6PtXVg0/X1y2AfsWL1Mhz2V
+ QmnQ22v/vWH4WSWtjYXnUNjVttQ=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 6152dacd9ffb413149962f05 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 09:05:17
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 6152df4b713d5d6f96a30938 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 09:24:27
  GMT
-Sender: wgong=codeaurora.org@mg.codeaurora.org
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E02F6C4360C; Tue, 28 Sep 2021 09:05:16 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 70C56C4360D; Tue, 28 Sep 2021 09:24:26 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 87F1EC43460;
-        Tue, 28 Sep 2021 09:05:16 +0000 (UTC)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E3BFDC43460;
+        Tue, 28 Sep 2021 09:24:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org E3BFDC43460
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Anilkumar Kolli <akolli@codeaurora.org>
+Cc:     Jouni Malinen <jouni@codeaurora.org>, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] ath11k: add caldata download support from EEPROM
+References: <20210721201927.100369-1-jouni@codeaurora.org>
+        <20210721201927.100369-5-jouni@codeaurora.org>
+        <875yuqrp4d.fsf@codeaurora.org>
+        <53726bfd2c5d7911dc8433e7fd82d238@codeaurora.org>
+Date:   Tue, 28 Sep 2021 12:24:22 +0300
+In-Reply-To: <53726bfd2c5d7911dc8433e7fd82d238@codeaurora.org> (Anilkumar
+        Kolli's message of "Mon, 27 Sep 2021 10:12:35 +0530")
+Message-ID: <87ee99qchl.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Tue, 28 Sep 2021 17:05:16 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 4/6] cfg80211: save power spectral density(psd) of
- regulatory rule
-In-Reply-To: <a4e56dbbe88771456bcf3051a0891d66d5e34fd4.camel@sipsolutions.net>
-References: <20210924100052.32029-1-wgong@codeaurora.org>
- <20210924100052.32029-5-wgong@codeaurora.org>
- <a4e56dbbe88771456bcf3051a0891d66d5e34fd4.camel@sipsolutions.net>
-Message-ID: <5b40dee9ca9d91bb0ca6aaa82deae370@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-09-27 19:27, Johannes Berg wrote:
-> On Fri, 2021-09-24 at 06:00 -0400, Wen Gong wrote:
->> The power spectral density(psd) of regulatory rule should be take
->> effect to the channels. This patch is to save the values to the
->> channel which has psd value.
->> 
->> Signed-off-by: Wen Gong <wgong@codeaurora.org>
->> ---
->>  net/wireless/reg.c | 17 +++++++++++++++++
->>  1 file changed, 17 insertions(+)
->> 
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index df87c7f3a049..8f765befb9bc 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -1590,6 +1590,8 @@ static u32 map_regdom_flags(u32 rd_flags)
->>  		channel_flags |= IEEE80211_CHAN_NO_160MHZ;
->>  	if (rd_flags & NL80211_RRF_NO_HE)
->>  		channel_flags |= IEEE80211_CHAN_NO_HE;
->> +	if (rd_flags & NL80211_RRF_PSD)
->> +		channel_flags |= IEEE80211_CHAN_PSD;
-> 
-> I went to go squash this with patch 3 and took a closer look, and then 
-> I
-> realized you're doing this weird.
-> 
-> Please when you resend also squash this - it's a bit weird to read in
-> two patches.
-> 
-> However, I think this is missing a lot of things - we already talked
-> about the regulatory database, and while that'd be nice, I guess I
-> conceded that you don't really have to do it now.
-> 
-> However, for visibility reasons, I *really* think you need to add
-> nl80211 attributes for all of this data - when the regdomain is dumped
-> in nl80211_put_regdom() you would have the flag now (it dumps the value
-> of reg_rule->flags in NL80211_ATTR_REG_RULE_FLAGS), but you didn't add
-> the value of reg_rule->psd which you've added.
-> 
-> Similarly, you're not adding the PSD flag nor the PSD value for the
-> *channel* in nl80211_msg_put_channel(), both of which I think you 
-> should
-> have for visibility into what's going on in the kernel/driver.
-> 
-> I've applied all the other patches, so please just resend 3 and 4,
-> squashed into a single patch, with the fixes.
-> 
+Anilkumar Kolli <akolli@codeaurora.org> writes:
 
-Thanks
+> On 2021-09-24 20:34, Kalle Valo wrote:
+>> Jouni Malinen <jouni@codeaurora.org> writes:
+>>
+>>> From: Anilkumar Kolli <akolli@codeaurora.org>
+>>>
+>>> Firmware updates EEPROM support capability in QMI FW caps, send QMI
+>>> BDF
+>>> download request message with file type EEPROM, to get caldata
+>>> download
+>>> from EEPROM. Firmware takes more time to update cal data from
+>>> EEPROM, so
+>>> increase QMI timeout.
+>>
+>> The commit log would need more explanation how this patch works.
+>>
+>
+> FW advertizes calibration data support from EEPROM through
+> 'eeprom_read_timeout' in QMI FW Capability message. Ath11k sends BDF
+> download request with file type 'ATH11K_QMI_FILE_TYPE_EEPROM'. FW has
+> logic to read calibration data from EEPROM and process the calibration
+> data. FW takes more time to process the calibration data from EEPROM
+> so increase QMI timeout to 10msec.
 
-I have sent "[PATCH v5] cfg80211: save power spectral density(psd) of 
-regulatory rule"
-for this.
+Thanks, I now copied the updated commit log below. And do note that the
+timeout is 10 s, not 10 ms.
 
-> johannes
+    ath11k: add caldata download support from EEPROM
+    
+    In some devices the calibration data is stored to EEPROM within the device so add
+    support for that.
+    
+    The firmware advertises the calibration data support from EEPROM through
+    'eeprom_read_timeout' in the QMI firmware capability message. ath11k sends
+    boardfile download request with file type 'ATH11K_QMI_FILE_TYPE_EEPROM'. The
+    firmware has logic to read calibration data from EEPROM and process the
+    calibration data.
+    
+    As now the firmware takes more time to process the calibration data from EEPROM
+    so increase QMI timeout to 10 seconds.
+    
+    Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01838-QCAHKSWPL_SILICONZ-1
+
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
