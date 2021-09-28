@@ -2,174 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C928C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 15:15:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3CCC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 15:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 44A906120D
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 15:15:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 923256120D
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Sep 2021 15:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241487AbhI1PQs (ORCPT
+        id S241510AbhI1PQ7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Sep 2021 11:16:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47008 "EHLO mail.kernel.org"
+        Tue, 28 Sep 2021 11:16:59 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:30682 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241450AbhI1PQm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Sep 2021 11:16:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3730A61246;
-        Tue, 28 Sep 2021 15:15:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632842102;
-        bh=SJzLo98iVbB0CN9NrgCHSzfgMy9EloUv461315F4AiE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gBeXp1lVHGRoJfPbnmjPhg2OtKBvkISwKIxnsf6Vgeg6wMbVzU7Ucnxezy/kwkZXF
-         C+swZz+ABuR/6qC/+UEas5X2ATaLPxC77v6xmDN+KPBUAJEXllr4u4U69AczKDyLZO
-         pA1UZqF/YZ1+vvNEr+4cMCFQHWKDCWbCYRpMZMxONXvxCTib+4eXGQ+BZihy6e8zuj
-         rJZyJ+GN+l4TlLQCIHQv7DaZ8dXuyyAKn2++bSSqLkj/B705PcHiiOh06AK6zfW0uJ
-         FzZ73kf8cex6S1/Cw1ulNmVx01mKUeD2yrG/1tX3Zu28Fq1x6a/WhmDBFl2fY7EFbv
-         gXvQug9YK92DA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com, john@phrozen.org
-Subject: [RFC 7/7] mt76: mt7915: add cac support for offchannel chain
-Date:   Tue, 28 Sep 2021 17:14:38 +0200
-Message-Id: <1645ce5e1b844675929b74a5671a9bbd8b6d9dfb.1632841652.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1632841652.git.lorenzo@kernel.org>
-References: <cover.1632841652.git.lorenzo@kernel.org>
+        id S241542AbhI1PQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Sep 2021 11:16:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1632842111; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=JDk7dCPVVNhR9ZQSMtm5M00Z4sbXWA4AtO7xCSL/wXg=; b=N35cMXFSe53baRzlWRKUbdfYct4HAGv2LfOOHIVf3EjRZPwhEo4cFYD25HoHe/YhF3zhFGV+
+ DBSRT9fPcn33t+gPeuIPO8wqPwMpGRVfKWhBF6+kQNKczIHjD+oNalLFGcrlquZS0ASVZYQv
+ C0zUbtxF3nDHV57iA/qjEqfhfGw=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 6153303d713d5d6f969efcb7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 15:09:49
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 17C8DC43460; Tue, 28 Sep 2021 15:09:48 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8DADAC4338F;
+        Tue, 28 Sep 2021 15:09:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 8DADAC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Jouni Malinen <jouni@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Baochen Qiang <bqiang@codeaurora.org>
+Subject: Re: [PATCH 2/3] ath11k: change return buffer manager for QCA6390
+References: <20210914163726.38604-1-jouni@codeaurora.org>
+        <20210914163726.38604-2-jouni@codeaurora.org>
+Date:   Tue, 28 Sep 2021 18:09:41 +0300
+In-Reply-To: <20210914163726.38604-2-jouni@codeaurora.org> (Jouni Malinen's
+        message of "Tue, 14 Sep 2021 19:37:25 +0300")
+Message-ID: <87y27gpwi2.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce cac management for dedicated offchannel chain.
+Jouni Malinen <jouni@codeaurora.org> writes:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7915/init.c  |  2 ++
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 24 ++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  1 +
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 15 ++++++++++--
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  2 ++
- 5 files changed, 41 insertions(+), 3 deletions(-)
+> From: Baochen Qiang <bqiang@codeaurora.org>
+>
+> QCA6390 firmware uses HAL_RX_BUF_RBM_SW1_BM, not HAL_RX_BUF_RBM_SW3_BM.
+>
+> Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+>
+> Signed-off-by: Baochen Qiang <bqiang@codeaurora.org>
+> Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index ba4d644fe846..a3630953d7c7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -907,6 +907,8 @@ int mt7915_register_device(struct mt7915_dev *dev)
- 	dev->mt76.phy.priv = &dev->phy;
- 	INIT_WORK(&dev->rc_work, mt7915_mac_sta_rc_work);
- 	INIT_DELAYED_WORK(&dev->mphy.mac_work, mt7915_mac_work);
-+	INIT_DELAYED_WORK(&dev->offchan_chain.cac_work,
-+			  mt7915_offchan_cac_work);
- 	INIT_LIST_HEAD(&dev->sta_rc_list);
- 	INIT_LIST_HEAD(&dev->sta_poll_list);
- 	INIT_LIST_HEAD(&dev->twt_list);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index a2f94bedf9a1..5d588fe1056d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -2320,9 +2320,13 @@ void mt7915_mac_twt_teardown_flow(struct mt7915_dev *dev,
- int mt7915_dfs_set_rdd_monitor(struct mt7915_phy *phy, bool enable)
- {
- 	struct mt7915_dev *dev = phy->dev;
-+	struct ieee80211_channel *chan = dev->offchan_chain.chandef.chan;
-+	struct delayed_work *cac_work = &dev->offchan_chain.cac_work;
- 	int err, region;
- 
- 	if (!enable || dev->mt76.region == NL80211_DFS_UNSET) {
-+		cancel_delayed_work_sync(cac_work);
-+
- 		err = mt7915_mcu_rdd_cmd(dev, RDD_STOP, MT_RX_SEL2, 0, 0);
- 		if (err)
- 			return err;
-@@ -2349,5 +2353,23 @@ int mt7915_dfs_set_rdd_monitor(struct mt7915_phy *phy, bool enable)
- 		break;
- 	}
- 
--	return mt7915_mcu_rdd_cmd(dev, RDD_START, MT_RX_SEL2, 0, region);
-+	err = mt7915_mcu_rdd_cmd(dev, RDD_START, MT_RX_SEL2, 0, region);
-+	if (err)
-+		return err;
-+
-+	ieee80211_queue_delayed_work(mt76_hw(dev), cac_work,
-+				     msecs_to_jiffies(chan->dfs_cac_ms));
-+
-+	return 0;
-+}
-+
-+void mt7915_offchan_cac_work(struct work_struct *work)
-+{
-+	struct mt7915_dev *dev;
-+
-+	dev = (struct mt7915_dev *)container_of(work, struct mt7915_dev,
-+						offchan_chain.cac_work.work);
-+	cfg80211_cac_offchan_event(dev->mphy.hw->wiphy,
-+				   &dev->offchan_chain.chandef,
-+				   NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 406517bfbfc2..9020aa7bf359 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -98,6 +98,7 @@ static void mt7915_stop(struct ieee80211_hw *hw)
- 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
- 
- 	cancel_delayed_work_sync(&phy->mt76->mac_work);
-+	cancel_delayed_work_sync(&dev->offchan_chain.cac_work);
- 
- 	mutex_lock(&dev->mt76.mutex);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 6249be262825..d24eade6667b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -481,10 +481,21 @@ mt7915_mcu_rx_radar_detected(struct mt7915_dev *dev, struct sk_buff *skb)
- 
- 	r = (struct mt7915_mcu_rdd_report *)skb->data;
- 
--	if (r->band_idx && dev->mt76.phy2)
-+	if (r->band_idx == MT_RX_SEL1 && dev->mt76.phy2)
- 		mphy = dev->mt76.phy2;
- 
--	ieee80211_radar_detected(mphy->hw);
-+	if (r->band_idx == MT_RX_SEL2) {
-+		cancel_delayed_work_sync(&dev->offchan_chain.cac_work);
-+		cfg80211_cac_offchan_event(dev->mphy.hw->wiphy,
-+					   &dev->offchan_chain.chandef,
-+					   NL80211_RADAR_CAC_ABORTED,
-+					   GFP_KERNEL);
-+		cfg80211_radar_event(mphy->hw->wiphy,
-+				     &dev->offchan_chain.chandef,
-+				     GFP_KERNEL);
-+	} else {
-+		ieee80211_radar_detected(mphy->hw);
-+	}
- 	dev->hw_pattern++;
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 65017a4347b9..6576eb34d211 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -194,6 +194,7 @@ struct mt7915_dev {
- 	/* monitor rx chain configured channel */
- 	struct {
- 		struct cfg80211_chan_def chandef;
-+		struct delayed_work cac_work;
- 	} offchan_chain;
- 
- 	u16 chainmask;
-@@ -463,6 +464,7 @@ void mt7915_stats_work(struct work_struct *work);
- int mt76_dfs_start_rdd(struct mt7915_dev *dev, bool force);
- int mt7915_dfs_init_radar_detector(struct mt7915_phy *phy);
- int mt7915_dfs_set_rdd_monitor(struct mt7915_phy *phy, bool enable);
-+void mt7915_offchan_cac_work(struct work_struct *work);
- void mt7915_set_stream_he_caps(struct mt7915_phy *phy);
- void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy);
- void mt7915_update_channel(struct mt76_phy *mphy);
+[...]
+
+> --- a/drivers/net/wireless/ath/ath11k/hal.c
+> +++ b/drivers/net/wireless/ath/ath11k/hal.c
+> @@ -189,6 +189,14 @@ static const struct hal_srng_config hw_srng_config_template[] = {
+>  	},
+>  };
+>  
+> +const struct hal_param ath11k_hal_params_ipq8074 = {
+> +	.rx_buf_rbm = HAL_RX_BUF_RBM_SW3_BM,
+> +};
+> +
+> +const struct hal_param ath11k_hal_params_qca6390 = {
+> +	.rx_buf_rbm = HAL_RX_BUF_RBM_SW1_BM,
+> +};
+> +
+>  static int ath11k_hal_alloc_cont_rdp(struct ath11k_base *ab)
+>  {
+>  	struct ath11k_hal *hal = &ab->hal;
+> diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+> index 35ed3a14e200..1bf6e040120f 100644
+> --- a/drivers/net/wireless/ath/ath11k/hal.h
+> +++ b/drivers/net/wireless/ath/ath11k/hal.h
+> @@ -903,6 +903,13 @@ struct ath11k_hal {
+>  	int num_shadow_reg_configured;
+>  };
+>  
+> +struct hal_param {
+> +	enum hal_rx_buf_return_buf_manager rx_buf_rbm;
+> +};
+> +
+> +extern const struct hal_param ath11k_hal_params_ipq8074;
+> +extern const struct hal_param ath11k_hal_params_qca6390;
+
+In the pending branch I renamed these to struct ath11k_hw_hal_params and
+moved to hw.c and hw.h, respectively.
+
 -- 
-2.31.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
