@@ -2,114 +2,182 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CA21C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Sep 2021 17:27:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B878EC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Sep 2021 18:30:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CF09613CD
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Sep 2021 17:27:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 941716141B
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Sep 2021 18:30:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343888AbhI2R32 (ORCPT
+        id S1346165AbhI2Scc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Sep 2021 13:29:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57278 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244721AbhI2R31 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Sep 2021 13:29:27 -0400
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050::465:201])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 396D8C06161C
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2021 10:27:46 -0700 (PDT)
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [80.241.60.241])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4HKNcH0TzwzQlY2;
-        Wed, 29 Sep 2021 19:27:43 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gorani.run; s=MBO0001;
-        t=1632936459;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=7ZEK4wMXeUW5bEV7sbycmhopEv9Vlw1asfyGKcNSuLs=;
-        b=RPft8jbKpxBijxjjuCkPqWLkX5srkWUO8GavfP/mG+7ZB0TkkOuwb+aodEyZDwAvmonqN6
-        Snsb4FkiWq0WRv4QMRSMTe6yHJ9sKouLOf79vpB+P2o6TIRv0HZ64a04Dsua4TXk2V2x+E
-        aDmU9bteyczjoE45g/L+8XL8YXcNlEtDNXHYk3IwtRqobxJ8VHUo+MH336oBDkYAJs4Gc+
-        zMrSm+w5di/DY0JDKsItkTziU37RtQ9EV10d6qLRzEHfHOFOB0QwXUUCakUd7wjyyaU58P
-        jQX7Q3Qd7xdu3BZD+ZE7qXXvz/UFZRPNbN3HxdzbOnYFmiM1VFFuzeJpmnMBPw==
-From:   Sungbo Eo <mans0n@gorani.run>
-To:     sforshee@kernel.org
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sungbo Eo <mans0n@gorani.run>
-Subject: [PATCH] wireless-regdb: Update regulatory rules for South Korea (KR)
-Date:   Thu, 30 Sep 2021 02:27:28 +0900
-Message-Id: <20210929172728.7512-1-mans0n@gorani.run>
+        Wed, 29 Sep 2021 14:32:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60364 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1345707AbhI2Scb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Sep 2021 14:32:31 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8816F61527;
+        Wed, 29 Sep 2021 18:30:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632940249;
+        bh=gjF28VMTIug2m1bl/FU/M9snQ4rR61AFv5fVsRKalNI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=CISl9Rl7R+M6haM6b37hM8Y55j2HAbcMi0eojp8x2X5LO3rMaVS5sudmIbZDpY2Fa
+         v3jkZlxqIQsgk7xdc/KNDPDNwnRYggSWDCUgB/s/FiZxlhlKX24dWHVpR7Wt0mlN/7
+         mhK6ym9B69BkMQdp4WI4pKJ+rr90hmai+tmZp9rhMJtK7ONWh9AhmLAFD2pHKhaUG3
+         HMRbEb2CCpVxIrKjjd6yE6ttU5SikyGGITOLPKJu1L7QFLNrx8p43TXVkgBvbCSBJk
+         HoUf+R5uDfbywO7AlRlXS5uX8pbpj5u56JSH5+uMScUwkPlS/zeQ1/1lCIAk541NMv
+         d88464bdH/fHQ==
+Received: by mail-wr1-f46.google.com with SMTP id s21so5795619wra.7;
+        Wed, 29 Sep 2021 11:30:49 -0700 (PDT)
+X-Gm-Message-State: AOAM533mlJSocCVOo/4P9J4qQuKiBP7NH/xEdDD9UUrSLsaNSwbRmlJY
+        BB6Hiwg8DRcMl0JsnYHnxRYjLAvza1+qy4aCjik=
+X-Google-Smtp-Source: ABdhPJznh64DeD5YLkqLyCdpGZrw2eJDCFhsGINcOBsXO/6p1u7dAzpxKDez727ElHRBigRMgHpji/X6aGMkMR1n8h4=
+X-Received: by 2002:a05:6000:1561:: with SMTP id 1mr1607418wrz.369.1632940247984;
+ Wed, 29 Sep 2021 11:30:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: BEF5C1702
+References: <20210927152412.2900928-1-arnd@kernel.org> <20210929095107.GA21057@willie-the-truck>
+ <CAK8P3a2QnJkYCoEWhziYYXQusb-25_wUhA5ZTGtBsyfFx3NWzQ@mail.gmail.com> <YVR8Q7LO0weiFin+@yoga>
+In-Reply-To: <YVR8Q7LO0weiFin+@yoga>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Wed, 29 Sep 2021 20:30:30 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a2Kk6Y1Hs98z2UFEis8cWekREFt8YKg2Nbu3G5WQJ7Fag@mail.gmail.com>
+Message-ID: <CAK8P3a2Kk6Y1Hs98z2UFEis8cWekREFt8YKg2Nbu3G5WQJ7Fag@mail.gmail.com>
+Subject: Re: [PATCH] [RFC] qcom_scm: hide Kconfig symbol
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Will Deacon <will@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Rob Clark <robdclark@gmail.com>, Sean Paul <sean@poorly.run>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Joerg Roedel <joro@8bytes.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Alex Elder <elder@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Andy Gross <agross@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        freedreno <freedreno@lists.freedesktop.org>,
+        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-sunxi@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch is based on MSIT Public Notification 2020-113 ("Unlicensed Radio
-Equipment Established Without Notice"), officially announced on 2021-01-06.
+On Wed, Sep 29, 2021 at 4:46 PM Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
+>
+> On Wed 29 Sep 05:04 CDT 2021, Arnd Bergmann wrote:
+>
+> > On Wed, Sep 29, 2021 at 11:51 AM Will Deacon <will@kernel.org> wrote:
+> > > On Mon, Sep 27, 2021 at 05:22:13PM +0200, Arnd Bergmann wrote:
+> > > >
+> > > > diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+> > > > index 124c41adeca1..989c83acbfee 100644
+> > > > --- a/drivers/iommu/Kconfig
+> > > > +++ b/drivers/iommu/Kconfig
+> > > > @@ -308,7 +308,7 @@ config APPLE_DART
+> > > >  config ARM_SMMU
+> > > >       tristate "ARM Ltd. System MMU (SMMU) Support"
+> > > >       depends on ARM64 || ARM || (COMPILE_TEST && !GENERIC_ATOMIC64)
+> > > > -     depends on QCOM_SCM || !QCOM_SCM #if QCOM_SCM=m this can't be =y
+> > > > +     select QCOM_SCM
+> > > >       select IOMMU_API
+> > > >       select IOMMU_IO_PGTABLE_LPAE
+> > > >       select ARM_DMA_USE_IOMMU if ARM
+> > >
+> > > I don't want to get in the way of this patch because I'm also tired of the
+> > > randconfig failures caused by QCOM_SCM. However, ARM_SMMU is applicable to
+> > > a wide variety of (non-qcom) SoCs and so it seems a shame to require the
+> > > QCOM_SCM code to be included for all of those when it's not strictly needed
+> > > at all.
+> >
+> > Good point, I agree that needs to be fixed. I think this additional
+> > change should do the trick:
+> >
+>
+> ARM_SMMU and QCOM_IOMMU are two separate implementations and both uses
+> QCOM_SCM. So both of them should select QCOM_SCM.
 
-Extend the last 5 GHz frequency range to 5850 MHz.
+Right, I figured that out later as well.
 
-WiFi 6E is now allowed with the following restrictions:
-* Indoor: the full 1.2 GHz range, up to 160 MHz bandwidth and 250mW EIRP
-* Outdoor: the lower 500 MHz range, up to 160 MHz bandwidth and 25mW EIRP
-Here only the former entry is added.
+> "Unfortunately" the Qualcomm portion of ARM_SMMU is builtin
+> unconditionally, so going with something like select QCOM_SCM if
+> ARCH_QCOM would still require the stubs in qcom_scm.h.
 
-And also update the regulatory source links.
+Yes, sounds good. I also noticed that I still need one hack in there
+if I do this:
 
-Signed-off-by: Sungbo Eo <mans0n@gorani.run>
----
-I have two questions.
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+index 55690af1b25d..36c304a8fc9b 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c
+@@ -427,6 +427,9 @@ struct arm_smmu_device *qcom_smmu_impl_init(struct
+arm_smmu_device *smmu)
+ {
+        const struct device_node *np = smmu->dev->of_node;
 
-The regulation has one more restriction:
-  The TX power should not exceed 2.5 mW/MHz
-  when the frequency range includes the whole or a part of 5230-5250 MHz
-  and the bandwidth is equal to or less than 40 MHz.
-That leads to the followings:
-  5230-5250 @ 20 -> 17 dBm
-  5210-5250 @ 40 -> 20 dBm
-  5170-5250 @ 80 -> 23 dBm
-Is it possible to add this rule without lowering the TX power for 80 MHz bandwidth?
++       if (!IS_ENABLED(CONFIG_QCOM_SCM))
++               return ERR_PTR(-ENXIO);
++
+ #ifdef CONFIG_ACPI
+        if (np == NULL) {
+                /* Match platform for ACPI boot */
 
-And do we need AUTO-BW for 6E channels? I thought it is for merging adjacent frequency ranges.
----
- db.txt | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 6e8dbef..31052cf 100644
---- a/db.txt
-+++ b/db.txt
-@@ -862,15 +862,20 @@ country KP: DFS-JP
- 	(5490 - 5630 @ 20), (30), DFS
- 	(5735 - 5815 @ 20), (30)
- 
-+# Source:
-+# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196972
-+# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196973
-+# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196974
- country KR: DFS-JP
- 	# ref: https://www.rra.go.kr
- 	(2400 - 2483.5 @ 40), (23)
- 	(5150 - 5250 @ 80), (23), AUTO-BW
- 	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (20), DFS
--	(5725 - 5835 @ 80), (23)
--	# 60 GHz band channels 1-4,
--	# ref: http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
-+	(5725 - 5850 @ 80), (23)
-+	# 6 GHz band
-+	(5925 - 7125 @ 160), (24), NO-OUTDOOR, AUTO-BW
-+	# 60 GHz band channels 1-4
- 	(57000 - 66000 @ 2160), (43)
- 
- country KW: DFS-ETSI
--- 
-2.33.0
+Otherwise it still breaks with ARM_SMMU=y and QCOM_SCM=m.
 
+Splitting out the qualcomm portion of the arm_smmu driver using
+a separate 'bool' symbol should also work, if  you prefer that
+and can suggest a name and help text for that symbol. It would
+look like
+
+diff --git a/drivers/iommu/arm/arm-smmu/Makefile
+b/drivers/iommu/arm/arm-smmu/Makefile
+index e240a7bcf310..b0cc01aa20c9 100644
+--- a/drivers/iommu/arm/arm-smmu/Makefile
++++ b/drivers/iommu/arm/arm-smmu/Makefile
+@@ -1,4 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_QCOM_IOMMU) += qcom_iommu.o
+ obj-$(CONFIG_ARM_SMMU) += arm_smmu.o
+-arm_smmu-objs += arm-smmu.o arm-smmu-impl.o arm-smmu-nvidia.o arm-smmu-qcom.o
++arm_smmu-objs += arm-smmu.o arm-smmu-impl.o arm-smmu-nvidia.o
++arm_smmu-$(CONFIG_ARM_SMMU_QCOM) += arm-smmu-qcom.o
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+index 9f465e146799..2c25cce38060 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+@@ -215,7 +215,8 @@ struct arm_smmu_device *arm_smmu_impl_init(struct
+arm_smmu_device *smmu)
+            of_device_is_compatible(np, "nvidia,tegra186-smmu"))
+                return nvidia_smmu_impl_init(smmu);
+
+-       smmu = qcom_smmu_impl_init(smmu);
++       if (IS_ENABLED(CONFIG_ARM_SMMU_QCOM))
++               smmu = qcom_smmu_impl_init(smmu);
+
+        if (of_device_is_compatible(np, "marvell,ap806-smmu-500"))
+                smmu->impl = &mrvl_mmu500_impl;
+
+
+
+       Arnd
