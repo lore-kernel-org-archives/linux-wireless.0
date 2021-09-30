@@ -2,46 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC919C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 11:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E5FC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 11:11:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE3096136A
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 11:11:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD3466136A
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 11:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350418AbhI3LNZ (ORCPT
+        id S1350348AbhI3LN0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Sep 2021 07:13:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45210 "EHLO
+        Thu, 30 Sep 2021 07:13:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350266AbhI3LNJ (ORCPT
+        with ESMTP id S1350363AbhI3LNS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Sep 2021 07:13:09 -0400
+        Thu, 30 Sep 2021 07:13:18 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E04F8C06176A;
-        Thu, 30 Sep 2021 04:11:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5076BC06176A
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2021 04:11:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=YaAVZzMRlt2cuxF/VnOWuM/PzYC9bAHwPTryDdlLyvE=; t=1633000287; x=1634209887; 
-        b=RtSgdqAA7e0cN+Cf3QfpGgKIycrbkyTovJ5NLvVh1rmYYJ+iJ50HV+0XfeXb8g7YDX89RgxdpL6
-        pXkLnakatv9Um1U3+v47kzjkYSbuEOuVHYKLWeVsHa06DroHrR/GwTrR61LnelYN8J8W2Ynol+sc9
-        X/1o75+hYOU+nnuyhj3h8MCKwI1nrm+HJx9D8KCKQBc6cB9omE/h1qLEdtlv0mWODprIDdDGiySk9
-        Dl/c4s3ashNCvxrs/kv816Ai7q4KLAYP1so763dGl+vbl3uIMfb0gF1OwgazdsC+B6v8W9pQU8Y57
-        FbBXBvKDK9Pcz1/JtMucvzsYmYonJe5ufPZw==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=H0n6QHKdUTF0V4atc/hzEHKbZ/FgDfgWVCU6LPDHA8k=;
+        t=1633000296; x=1634209896; b=xaX8OCm9zOYIeFZkQ3z85KL3oMK7B/1f0mdqBgsSoOXRX4U
+        BIRyNeXbTX9Q3a71BEvBt5K+f9KRRqA3TZ6GTu8IgU/yMr91j5fVki4VFpRxh6zr7L6YMqvZ5Z3Ee
+        o/VI7TG3ngA4N9HuvuM25TopG5GhCpbR5CyKnWBDmIXoHLrCmRsdCLd5pxYTaHtoBA3/j+VbflBdN
+        u2nPZHlmTRNAAu64NohGXaQqHRTeSa0nTtbYvzrBxN/MISOS98LBsj0jN7HHLms1K+h3BxP7kcWn5
+        XnHowimATWGy2fjUveR69D28oUAejJuFL5ctBE46lt+rpNQV7gL+CTCIGNylgViw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95-RC2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1mVtyF-00Dlt4-Tk;
-        Thu, 30 Sep 2021 13:11:24 +0200
+        id 1mVtyQ-00Dlti-NM;
+        Thu, 30 Sep 2021 13:11:34 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: mesh: fix HE operation element length check
-Date:   Thu, 30 Sep 2021 13:11:20 +0200
-Message-Id: <20210930131120.b0f940976c56.I954e1be55e9f87cc303165bff5c906afe1e54648@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/5] mac80211: use ieee80211_bss_get_elem() in most places
+Date:   Thu, 30 Sep 2021 13:11:31 +0200
+Message-Id: <20210930131130.9a413f12a151.I0699ba7e48c9d88dbbfa3107cf4d34a8345d02a0@changeid>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210930131130.17ecf37f0605.I853c2f9c2117a713deca9b8deb3552796d98ffac@changeid>
+References: <20210930131130.17ecf37f0605.I853c2f9c2117a713deca9b8deb3552796d98ffac@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -50,46 +51,127 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The length check here was bad, if the length doesn't at
-least include the length of the fixed part, we cannot
-call ieee80211_he_oper_size() to determine the total.
-Fix this, and convert to cfg80211_find_ext_elem() while
-at it.
+There are a number of uses of ieee80211_bss_get_ie(),
+replace most of them with ieee80211_bss_get_elem().
 
-Cc: stable@vger.kernel.org
-Fixes: 70debba3ab7d ("mac80211: save HE oper info in BSS config for mesh")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c | 43 ++++++++++++++++++++++---------------------
+ 1 file changed, 22 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a4212a333d61..15ac08d111ea 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -672,7 +672,7 @@ ieee80211_mesh_update_bss_params(struct ieee80211_sub_if_data *sdata,
- 				 u8 *ie, u8 ie_len)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0ec183a92a01..e96811776f7e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2514,7 +2514,7 @@ static void ieee80211_mlme_send_probe_req(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
  {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	const u8 *ssid;
++	const struct element *ssid;
+ 	u8 *dst = ifmgd->associated->bssid;
+ 	u8 unicast_limit = max(1, max_probe_tries - 3);
+ 	struct sta_info *sta;
+@@ -2551,14 +2551,14 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 		int ssid_len;
+ 
+ 		rcu_read_lock();
+-		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
++		ssid = ieee80211_bss_get_elem(ifmgd->associated, WLAN_EID_SSID);
+ 		if (WARN_ON_ONCE(ssid == NULL))
+ 			ssid_len = 0;
+ 		else
+-			ssid_len = ssid[1];
++			ssid_len = ssid->datalen;
+ 
+ 		ieee80211_mlme_send_probe_req(sdata, sdata->vif.addr, dst,
+-					      ssid + 2, ssid_len,
++					      ssid->data, ssid_len,
+ 					      ifmgd->associated->channel);
+ 		rcu_read_unlock();
+ 	}
+@@ -2634,7 +2634,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct cfg80211_bss *cbss;
+ 	struct sk_buff *skb;
+-	const u8 *ssid;
++	const struct element *ssid;
+ 	int ssid_len;
+ 
+ 	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
+@@ -2652,16 +2652,17 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ 		return NULL;
+ 
+ 	rcu_read_lock();
+-	ssid = ieee80211_bss_get_ie(cbss, WLAN_EID_SSID);
+-	if (WARN_ONCE(!ssid || ssid[1] > IEEE80211_MAX_SSID_LEN,
+-		      "invalid SSID element (len=%d)", ssid ? ssid[1] : -1))
++	ssid = ieee80211_bss_get_elem(cbss, WLAN_EID_SSID);
++	if (WARN_ONCE(!ssid || ssid->datalen > IEEE80211_MAX_SSID_LEN,
++		      "invalid SSID element (len=%d)",
++		      ssid ? ssid->datalen : -1))
+ 		ssid_len = 0;
+ 	else
+-		ssid_len = ssid[1];
++		ssid_len = ssid->datalen;
+ 
+ 	skb = ieee80211_build_probe_req(sdata, sdata->vif.addr, cbss->bssid,
+ 					(u32) -1, cbss->channel,
+-					ssid + 2, ssid_len,
++					ssid->data, ssid_len,
+ 					NULL, 0, IEEE80211_PROBE_FLAG_DIRECTED);
+ 	rcu_read_unlock();
+ 
+@@ -5538,7 +5539,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	const struct cfg80211_bss_ies *beacon_ies;
  	struct ieee80211_supported_band *sband;
--	const u8 *cap;
-+	const struct element *cap;
- 	const struct ieee80211_he_operation *he_oper = NULL;
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+-	const u8 *ssidie, *ht_ie, *vht_ie;
++	const struct element *ssid_elem, *ht_elem, *vht_elem;
+ 	int i, err;
+ 	bool override = false;
  
- 	sband = ieee80211_get_sband(sdata);
-@@ -687,9 +687,10 @@ ieee80211_mesh_update_bss_params(struct ieee80211_sub_if_data *sdata,
+@@ -5547,14 +5548,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		return -ENOMEM;
  
- 	sdata->vif.bss_conf.he_support = true;
+ 	rcu_read_lock();
+-	ssidie = ieee80211_bss_get_ie(req->bss, WLAN_EID_SSID);
+-	if (!ssidie || ssidie[1] > sizeof(assoc_data->ssid)) {
++	ssid_elem = ieee80211_bss_get_elem(req->bss, WLAN_EID_SSID);
++	if (!ssid_elem || ssid_elem->datalen > sizeof(assoc_data->ssid)) {
+ 		rcu_read_unlock();
+ 		kfree(assoc_data);
+ 		return -EINVAL;
+ 	}
+-	memcpy(assoc_data->ssid, ssidie + 2, ssidie[1]);
+-	assoc_data->ssid_len = ssidie[1];
++	memcpy(assoc_data->ssid, ssid_elem->data, ssid_elem->datalen);
++	assoc_data->ssid_len = ssid_elem->datalen;
+ 	memcpy(bss_conf->ssid, assoc_data->ssid, assoc_data->ssid_len);
+ 	bss_conf->ssid_len = assoc_data->ssid_len;
+ 	rcu_read_unlock();
+@@ -5668,15 +5669,15 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	assoc_data->supp_rates_len = bss->supp_rates_len;
  
--	cap = cfg80211_find_ext_ie(WLAN_EID_EXT_HE_OPERATION, ie, ie_len);
--	if (cap && cap[1] >= ieee80211_he_oper_size(&cap[3]))
--		he_oper = (void *)(cap + 3);
-+	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ie, ie_len);
-+	if (cap && cap->datalen >= 1 + sizeof(*he_oper) &&
-+	    cap->datalen >= 1 + ieee80211_he_oper_size(cap->data + 1))
-+		he_oper = (void *)(cap->data + 1);
- 
- 	if (he_oper)
- 		sdata->vif.bss_conf.he_oper.params =
+ 	rcu_read_lock();
+-	ht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
+-	if (ht_ie && ht_ie[1] >= sizeof(struct ieee80211_ht_operation))
++	ht_elem = ieee80211_bss_get_elem(req->bss, WLAN_EID_HT_OPERATION);
++	if (ht_elem && ht_elem->datalen >= sizeof(struct ieee80211_ht_operation))
+ 		assoc_data->ap_ht_param =
+-			((struct ieee80211_ht_operation *)(ht_ie + 2))->ht_param;
++			((struct ieee80211_ht_operation *)(ht_elem->data))->ht_param;
+ 	else if (!is_6ghz)
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+-	vht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_VHT_CAPABILITY);
+-	if (vht_ie && vht_ie[1] >= sizeof(struct ieee80211_vht_cap))
+-		memcpy(&assoc_data->ap_vht_cap, vht_ie + 2,
++	vht_elem = ieee80211_bss_get_elem(req->bss, WLAN_EID_VHT_CAPABILITY);
++	if (vht_elem && vht_elem->datalen >= sizeof(struct ieee80211_vht_cap))
++		memcpy(&assoc_data->ap_vht_cap, vht_elem->data,
+ 		       sizeof(struct ieee80211_vht_cap));
+ 	else if (is_5ghz)
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT |
 -- 
 2.31.1
 
