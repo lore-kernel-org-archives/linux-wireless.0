@@ -2,173 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E0F6C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 17:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 620E6C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 18:04:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25577619E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 17:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47060615A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 18:04:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349592AbhI3RIc (ORCPT
+        id S1352986AbhI3SFw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Sep 2021 13:08:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35150 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1349021AbhI3RIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Sep 2021 13:08:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 01C07617E6;
-        Thu, 30 Sep 2021 17:06:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633021609;
-        bh=qB28pyd3G9W1jKU1sJvEmXSTCB/fM9hWT/YO9coO46Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lD57I7buZC1D+E/nzOsGe0U6OnyD8kIUuCz9uhE3hVGiL5ivBjtmL2P/Nn7oFn8+A
-         VXrPZctdXHc0YQ1Tf3KPhhEsTj9EZhra5W8tNNXYZcYUC65XFTIFCR2Uz23fbx3wew
-         vW0IUupDXZrundBUHGdNgTD4y+nj69kh1XiadvJ+RF7V0qlKXy9p1qY5F/Boswqb9T
-         8TkWRFWlsqmJiH2FIGnVy30ojkH9FuZuK1q6/1GF9lRs0m2rDrskD8+arwKi/Tm9JS
-         IcZoholK/+5AHdWXzh16Ff5a7TEYZolj28BmojKYyw0oV3eB6hCkulag+JZD8mHy9X
-         9dBgrdTdFLtMA==
-Received: by pali.im (Postfix)
-        id A4204E79; Thu, 30 Sep 2021 19:06:46 +0200 (CEST)
-Date:   Thu, 30 Sep 2021 19:06:46 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     =?utf-8?B?SsOpcsO0bWU=?= Pouiller <jerome.pouiller@silabs.com>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
+        Thu, 30 Sep 2021 14:05:52 -0400
+Received: from mout-p-101.mailbox.org ([80.241.56.151]:36742 "EHLO
+        mout-p-101.mailbox.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229699AbhI3SFw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Sep 2021 14:05:52 -0400
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:105:465:1:1:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4HL1Mq0ttGzQkBY;
+        Thu, 30 Sep 2021 20:04:07 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Subject: Re: [PATCH v2 2/2] mwifiex: Try waking the firmware until we get an
+ interrupt
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Xinming Hu <huxinming820@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        driverdevel <devel@driverdev.osuosl.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        DTML <devicetree@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-mmc <linux-mmc@vger.kernel.org>
-Subject: Re: [PATCH v7 08/24] wfx: add bus_sdio.c
-Message-ID: <20210930170646.cffsuytdpa72izbh@pali>
-References: <20210920161136.2398632-1-Jerome.Pouiller@silabs.com>
- <20210920161136.2398632-9-Jerome.Pouiller@silabs.com>
- <CAPDyKFp2_41mScO=-Ev+kvYD5xjShQdLugU_2FTTmvzgCxmEWA@mail.gmail.com>
- <19731906.ZuIkq4dnIL@pc-42>
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Tsuchiya Yuto <kitakar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
+References: <20210914114813.15404-1-verdre@v0yd.nl>
+ <20210914114813.15404-3-verdre@v0yd.nl> <YUsRT1rmtITJiJRh@smile.fi.intel.com>
+From:   =?UTF-8?Q?Jonas_Dre=c3=9fler?= <verdre@v0yd.nl>
+Message-ID: <d9b1c8ea-99e2-7c3e-ec8e-61362e8ccfa7@v0yd.nl>
+Date:   Thu, 30 Sep 2021 20:04:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <YUsRT1rmtITJiJRh@smile.fi.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <19731906.ZuIkq4dnIL@pc-42>
-User-Agent: NeoMutt/20180716
+X-Rspamd-Queue-Id: 839D1188F
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thursday 30 September 2021 18:51:09 Jérôme Pouiller wrote:
-> Hello Ulf,
+On 9/22/21 1:19 PM, Andy Shevchenko wrote:
+> On Tue, Sep 14, 2021 at 01:48:13PM +0200, Jonas Dreßler wrote:
+>> It seems that the firmware of the 88W8897 card sometimes ignores or
+>> misses when we try to wake it up by writing to the firmware status
+>> register. This leads to the firmware wakeup timeout expiring and the
+>> driver resetting the card because we assume the firmware has hung up or
+>> crashed (unfortunately that's not unlikely with this card).
+>>
+>> Turns out that most of the time the firmware actually didn't hang up,
+>> but simply "missed" our wakeup request and didn't send us an AWAKE
+>> event.
+>>
+>> Trying again to read the firmware status register after a short timeout
+>> usually makes the firmware wake up as expected, so add a small retry
+>> loop to mwifiex_pm_wakeup_card() that looks at the interrupt status to
+>> check whether the card woke up.
+>>
+>> The number of tries and timeout lengths for this were determined
+>> experimentally: The firmware usually takes about 500 us to wake up
+>> after we attempt to read the status register. In some cases where the
+>> firmware is very busy (for example while doing a bluetooth scan) it
+>> might even miss our requests for multiple milliseconds, which is why
+>> after 15 tries the waiting time gets increased to 10 ms. The maximum
+>> number of tries it took to wake the firmware when testing this was
+>> around 20, so a maximum number of 50 tries should give us plenty of
+>> safety margin.
+>>
+>> A good reproducer for this issue is letting the firmware sleep and wake
+>> up in very short intervals, for example by pinging a device on the
+>> network every 0.1 seconds.
 > 
-> On Thursday 30 September 2021 12:07:55 CEST Ulf Hansson wrote:
-> > On Mon, 20 Sept 2021 at 18:12, Jerome Pouiller
-> > <Jerome.Pouiller@silabs.com> wrote:
-> > >
-> > > From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> > >
-> > > Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> > > ---
-> > >  drivers/net/wireless/silabs/wfx/bus_sdio.c | 261 +++++++++++++++++++++
-> > >  1 file changed, 261 insertions(+)
-> > >  create mode 100644 drivers/net/wireless/silabs/wfx/bus_sdio.c
-> > >
-> > > diff --git a/drivers/net/wireless/silabs/wfx/bus_sdio.c b/drivers/net/wireless/silabs/wfx/bus_sdio.c
-> > 
-> > [...]
-> > 
-> > > +
-> > > +static int wfx_sdio_probe(struct sdio_func *func,
-> > > +                         const struct sdio_device_id *id)
-> > > +{
-> > > +       struct device_node *np = func->dev.of_node;
-> > > +       struct wfx_sdio_priv *bus;
-> > > +       int ret;
-> > > +
-> > > +       if (func->num != 1) {
-> > > +               dev_err(&func->dev, "SDIO function number is %d while it should always be 1 (unsupported chip?)\n",
-> > > +                       func->num);
-> > > +               return -ENODEV;
-> > > +       }
-> > > +
-> > > +       bus = devm_kzalloc(&func->dev, sizeof(*bus), GFP_KERNEL);
-> > > +       if (!bus)
-> > > +               return -ENOMEM;
-> > > +
-> > > +       if (!np || !of_match_node(wfx_sdio_of_match, np)) {
-> > > +               dev_warn(&func->dev, "no compatible device found in DT\n");
-> > > +               return -ENODEV;
-> > > +       }
-> > > +
-> > > +       bus->func = func;
-> > > +       bus->of_irq = irq_of_parse_and_map(np, 0);
-> > > +       sdio_set_drvdata(func, bus);
-> > > +       func->card->quirks |= MMC_QUIRK_LENIENT_FN0 |
-> > > +                             MMC_QUIRK_BLKSZ_FOR_BYTE_MODE |
-> > > +                             MMC_QUIRK_BROKEN_BYTE_MODE_512;
-> > 
-> > I would rather see that you add an SDIO_FIXUP for the SDIO card, to
-> > the sdio_fixup_methods[], in drivers/mmc/core/quirks.h, instead of
-> > this.
+> ...
 > 
-> In the current patch, these quirks are applied only if the device appears
-> in the device tree (see the condition above). If I implement them in
-> drivers/mmc/core/quirks.h they will be applied as soon as the device is
-> detected. Is it what we want?
+>> +	do {
+>> +		if (mwifiex_write_reg(adapter, reg->fw_status, FIRMWARE_READY_PCIE)) {
+>> +			mwifiex_dbg(adapter, ERROR,
+>> +				    "Writing fw_status register failed\n");
+>> +			return -EIO;
+>> +		}
+>> +
+>> +		n_tries++;
+>> +
+>> +		if (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL)
+>> +			usleep_range(400, 700);
+>> +		else
+>> +			msleep(10);
+>> +	} while (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL + N_WAKEUP_TRIES_LONG_INTERVAL &&
+>> +		 READ_ONCE(adapter->int_status) == 0);
 > 
-> Note: we already have had a discussion about the strange VID/PID declared
-> by this device:
->   https://www.spinics.net/lists/netdev/msg692577.html
+> Can't you use read_poll_timeout() twice instead of this custom approach?
+> 
 
-Yes, vendor id 0x0000 is invalid per SDIO spec. So based on this vendor
-id, it is not possible to write any quirk in mmc/sdio generic code.
+I've tried this now, but read_poll_timeout() is not ideal for our 
+use-case. What we'd need would be read->sleep->poll->repeat instead of 
+read->poll->sleep->repeat. With read_poll_timeout() we always end up 
+doing one more (unnecessary) write.
 
-Ulf, but maybe it could be possible to write quirk based on OF
-compatible string?
+>> +	mwifiex_dbg(adapter, EVENT,
+>> +		    "event: Tried %d times until firmware woke up\n", n_tries);
+> 
 
-Jérôme, could you please notify your hw departement that this sdio card
-does not comply with SDIO spec due to incorrect vendor id stored in hw,
-so they could fix this issue in next product, by proper allocation of
-vendor id number from USB-IF (*)? I know that for existing products it
-is not possible to fix, but it can be fixed in next generation of
-products based on used SDIO IP.
-
-(*) - USB-IF really allocates SDIO vendor ids, see:
-https://lore.kernel.org/linux-mmc/20210607140216.64iuprp3siggslrk@pali/
-
-> 
-> [...]
-> > > +
-> > > +static const struct sdio_device_id wfx_sdio_ids[] = {
-> > > +       { SDIO_DEVICE(SDIO_VENDOR_ID_SILABS, SDIO_DEVICE_ID_SILABS_WF200) },
-> > > +       { },
-> > > +};
-> > > +MODULE_DEVICE_TABLE(sdio, wfx_sdio_ids);
-> > > +
-> > > +struct sdio_driver wfx_sdio_driver = {
-> > > +       .name = "wfx-sdio",
-> > > +       .id_table = wfx_sdio_ids,
-> > > +       .probe = wfx_sdio_probe,
-> > > +       .remove = wfx_sdio_remove,
-> > > +       .drv = {
-> > > +               .owner = THIS_MODULE,
-> > > +               .of_match_table = wfx_sdio_of_match,
-> > 
-> > Is there no power management? Or do you intend to add that on top?
-> 
-> It seems we already have had this discussion:
-> 
->   https://lore.kernel.org/netdev/CAPDyKFqJf=vUqpQg3suDCadKrFTkQWFTY_qp=+yDK=_Lu9gJGg@mail.gmail.com/#r
-> 
-> In this thread, Kalle said:
-> > Many mac80211 drivers do so that the device is powered off during
-> > interface down (ifconfig wlan0 down), and as mac80211 does interface
-> > down automatically during suspend, suspend then works without extra
-> > handlers.
-> 
-> 
-> -- 
-> Jérôme Pouiller
-> 
-> 
