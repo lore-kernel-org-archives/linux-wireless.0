@@ -2,92 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B18B6C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 19:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C278CC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 20:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D05561A3B
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 19:50:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A728B61A0B
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 20:58:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347535AbhI3Tvr (ORCPT
+        id S1348488AbhI3VAc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Sep 2021 15:51:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54814 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347577AbhI3Tvq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Sep 2021 15:51:46 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 727D0C06176A;
-        Thu, 30 Sep 2021 12:49:58 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id q2so2035794wrc.4;
-        Thu, 30 Sep 2021 12:49:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=pjxwTHZS4LImNPuiEDq8eN889k4cwPptRNYXuQDkBTY=;
-        b=POFjq4PNVnMB+ghqugBSYt7WTv6oal3IwnJoiMg28UetK2WK9cy7KXe3PRMXHMgY4o
-         peg7m8WFgBC4Oi9e0mhVaCcsJXYlczuDdST5OF/iztGGXm6LbTWWQ2jIx01NYPcEA7ZB
-         IitFAQbYziDqlI7cHuEaRon0CvHtRoBsyPJqgkkqpmU6UfCXKOBwWJ1NPgknmIs/a3zE
-         wJib0yfwL5hPoI4mRxVXePWNg5sL8J6GeTt2lrx9zqPEKIL5xr0RHhfxWVkdqb4dRnsH
-         8VlYv7aL/nsGNXysonvuGIh0NqXnDwWde3NJutkyeeCgiHY1SenIuKW/DjAngvFUijH0
-         F25g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=pjxwTHZS4LImNPuiEDq8eN889k4cwPptRNYXuQDkBTY=;
-        b=ir6sbW+eb8GZmJNAjVCYLuPXh/jAhKAeRPIWnUS6ypSrYZEViaIPvq5ffohQX06iBv
-         2H2mxr/Ja9wuuqpIpLoORbICdzx0p/mWqeGG+VnTxp9iIE97N5B/3/uXczpAslNX67Yz
-         35LcIPYXvHP9ZFikWu0CZPewtYr3g1gNeZrsXb264V2PfRAqvZZVWY7rwJMAl0/02aCq
-         U9zW8ZegJbiKgMzDx4mXoZOptK8UAu52grV+hnDOawUlWiqqxa3j1umFOWzxkPke9t4z
-         dSdUW9O/s1WFDlpi73ly72c63oxJMtk9oWCSEjWH6OsNL3oAFpXNS8cdOz6/5vn80ACX
-         m5aQ==
-X-Gm-Message-State: AOAM531L1td9yNdrSfbsyqyhpfHDL18OUH7yQcRg6hSMdUC7b22N8OzH
-        mdkepysQcBw9XMnZiX8NVq0g7hBIREk=
-X-Google-Smtp-Source: ABdhPJwOi77wbzT/7bmPyGfyV4/xyTaep1joFMvcIhWVX6PYTpFC71gRXLwn00cLdDLKDh9yyUBRWw==
-X-Received: by 2002:a5d:4e8e:: with SMTP id e14mr8187959wru.280.1633031396526;
-        Thu, 30 Sep 2021 12:49:56 -0700 (PDT)
-Received: from localhost.localdomain ([197.49.49.194])
-        by smtp.googlemail.com with ESMTPSA id j4sm3894816wrt.67.2021.09.30.12.49.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Sep 2021 12:49:55 -0700 (PDT)
-From:   Sohaib Mohamed <sohaib.amhmd@gmail.com>
-Cc:     Sohaib Mohamed <sohaib.amhmd@gmail.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] bcma: drop unneeded initialization value
-Date:   Thu, 30 Sep 2021 21:49:20 +0200
-Message-Id: <20210930194920.15847-1-sohaib.amhmd@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        Thu, 30 Sep 2021 17:00:32 -0400
+Received: from mga05.intel.com ([192.55.52.43]:22707 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229957AbhI3VAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Sep 2021 17:00:31 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="310832977"
+X-IronPort-AV: E=Sophos;i="5.85,336,1624345200"; 
+   d="scan'208";a="310832977"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 13:58:47 -0700
+X-IronPort-AV: E=Sophos;i="5.85,336,1624345200"; 
+   d="scan'208";a="618437339"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 13:58:43 -0700
+Received: from andy by smile with local (Exim 4.95-RC2)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1mW38Z-007Fx0-P6;
+        Thu, 30 Sep 2021 23:58:39 +0300
+Date:   Thu, 30 Sep 2021 23:58:39 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Jonas =?iso-8859-1?Q?Dre=DFler?= <verdre@v0yd.nl>
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Tsuchiya Yuto <kitakar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Brian Norris <briannorris@chromium.org>, stable@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mwifiex: Try waking the firmware until we get an
+ interrupt
+Message-ID: <YVYk/1+ftFUOoitF@smile.fi.intel.com>
+References: <20210914114813.15404-1-verdre@v0yd.nl>
+ <20210914114813.15404-3-verdre@v0yd.nl>
+ <YUsRT1rmtITJiJRh@smile.fi.intel.com>
+ <d9b1c8ea-99e2-7c3e-ec8e-61362e8ccfa7@v0yd.nl>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+In-Reply-To: <d9b1c8ea-99e2-7c3e-ec8e-61362e8ccfa7@v0yd.nl>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Do not initialise statics to 0
-ERROR found by checkpatch.pl
+On Thu, Sep 30, 2021 at 08:04:00PM +0200, Jonas Dreﬂler wrote:
+> On 9/22/21 1:19 PM, Andy Shevchenko wrote:
+> > On Tue, Sep 14, 2021 at 01:48:13PM +0200, Jonas Dreﬂler wrote:
 
-Signed-off-by: Sohaib Mohamed <sohaib.amhmd@gmail.com>
----
- drivers/bcma/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+...
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index c6d6ba0d00b1..8e7ca3e4c8c4 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -20,7 +20,7 @@ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
- 
- /* contains the number the next bus should get. */
--static unsigned int bcma_bus_next_num = 0;
-+static unsigned int bcma_bus_next_num;
- 
- /* bcma_buses_mutex locks the bcma_bus_next_num */
- static DEFINE_MUTEX(bcma_buses_mutex);
+> > > +	do {
+> > > +		if (mwifiex_write_reg(adapter, reg->fw_status, FIRMWARE_READY_PCIE)) {
+> > > +			mwifiex_dbg(adapter, ERROR,
+> > > +				    "Writing fw_status register failed\n");
+> > > +			return -EIO;
+> > > +		}
+> > > +
+> > > +		n_tries++;
+> > > +
+> > > +		if (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL)
+> > > +			usleep_range(400, 700);
+> > > +		else
+> > > +			msleep(10);
+> > > +	} while (n_tries <= N_WAKEUP_TRIES_SHORT_INTERVAL + N_WAKEUP_TRIES_LONG_INTERVAL &&
+> > > +		 READ_ONCE(adapter->int_status) == 0);
+> > 
+> > Can't you use read_poll_timeout() twice instead of this custom approach?
+> 
+> I've tried this now, but read_poll_timeout() is not ideal for our use-case.
+> What we'd need would be read->sleep->poll->repeat instead of
+> read->poll->sleep->repeat. With read_poll_timeout() we always end up doing
+> one more (unnecessary) write.
+
+First of all, there is a parameter to get sleep beforehand.
+Second, what is the problem with having one write more or less?
+Your current code doesn't guarantee this either. It only decreases
+probability of such scenario. Am I wrong?
+
+
 -- 
-2.25.1
+With Best Regards,
+Andy Shevchenko
+
 
