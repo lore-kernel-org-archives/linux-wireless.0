@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D641AC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C774C4332F
 	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 23:50:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFE586120D
+	by mail.kernel.org (Postfix) with ESMTP id 37E24611C1
 	for <linux-wireless@archiver.kernel.org>; Thu, 30 Sep 2021 23:50:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350710AbhI3Xvy (ORCPT
+        id S1350700AbhI3Xvx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Sep 2021 19:51:54 -0400
+        Thu, 30 Sep 2021 19:51:53 -0400
 Received: from mailgw01.mediatek.com ([216.200.240.184]:33710 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350645AbhI3Xvw (ORCPT
+        with ESMTP id S1350564AbhI3Xvw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 30 Sep 2021 19:51:52 -0400
-X-UUID: 28996ee0ec4944d5a42ad149f5af6252-20210930
-X-UUID: 28996ee0ec4944d5a42ad149f5af6252-20210930
+X-UUID: e4da4dd9a3024049a05d5ac0f5bcb198-20210930
+X-UUID: e4da4dd9a3024049a05d5ac0f5bcb198-20210930
 Received: from mtkcas66.mediatek.inc [(172.29.193.44)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1217038487; Thu, 30 Sep 2021 16:50:06 -0700
+        with ESMTP id 1542614141; Thu, 30 Sep 2021 16:50:06 -0700
 Received: from mtkcas11.mediatek.inc (172.21.101.40) by
  MTKMBS62N2.mediatek.inc (172.29.193.42) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 30 Sep 2021 16:48:42 -0700
+ 15.0.1497.2; Thu, 30 Sep 2021 16:48:19 -0700
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 1 Oct 2021 07:48:41 +0800
+ Transport; Fri, 1 Oct 2021 07:48:19 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -41,9 +41,9 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <jsiuda@google.com>, <frankgor@google.com>, <jemele@google.com>,
         <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v3 09/16] mt76: mt7921: use physical addr to unify register access
-Date:   Fri, 1 Oct 2021 07:47:56 +0800
-Message-ID: <fd9ce3e4ead66956c582a3141361734f7372924f.1632961096.git.objelf@gmail.com>
+Subject: [PATCH v3 03/16] mt76: mt7921: refactor mcu.c to be bus independent
+Date:   Fri, 1 Oct 2021 07:47:50 +0800
+Message-ID: <b597ab756ae0631220c9a0c5cb3cec2f1eea3148.1632961096.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
 In-Reply-To: <cover.1632961096.git.objelf@gmail.com>
 References: <cover.1632961096.git.objelf@gmail.com>
@@ -56,177 +56,421 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-Use physical address to unify the register access and reorder the
-entries in fixed_map table to accelerate the address lookup for
-MT7921e. Cosmetics the patch with adding an extra space to make all
-entries in the array style consistent.
+This is a preliminary patch to introduce mt7921s support.
+
+Make mcu.c reusable between mt7921s and mt7921e
 
 Tested-by: Deren Wu <deren.wu@mediatek.com>
 Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/dma.c   | 27 ++++++++++---------
- .../net/wireless/mediatek/mt76/mt7921/regs.h  | 22 +++++++--------
- 2 files changed, 25 insertions(+), 24 deletions(-)
+ .../wireless/mediatek/mt76/mt7921/Makefile    |  3 +-
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  1 +
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   |  5 +-
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 94 ++----------------
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    | 20 +++-
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   |  3 +
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   |  2 +
+ .../wireless/mediatek/mt76/mt7921/pci_mcu.c   | 97 +++++++++++++++++++
+ 8 files changed, 130 insertions(+), 95 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-index 8f29d09179e4..cdff1fd52d93 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
-@@ -85,36 +85,37 @@ static u32 __mt7921_reg_addr(struct mt7921_dev *dev, u32 addr)
- 		u32 mapped;
- 		u32 size;
- 	} fixed_map[] = {
--		{ 0x00400000, 0x80000, 0x10000}, /* WF_MCU_SYSRAM */
--		{ 0x00410000, 0x90000, 0x10000}, /* WF_MCU_SYSRAM (configure register) */
--		{ 0x40000000, 0x70000, 0x10000}, /* WF_UMAC_SYSRAM */
-+		{ 0x820d0000, 0x30000, 0x10000 }, /* WF_LMAC_TOP (WF_WTBLON) */
-+		{ 0x820ed000, 0x24800, 0x0800 }, /* WF_LMAC_TOP BN0 (WF_MIB) */
-+		{ 0x820e4000, 0x21000, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_TMAC) */
-+		{ 0x820e7000, 0x21e00, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_DMA) */
-+		{ 0x820eb000, 0x24200, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_LPON) */
-+		{ 0x820e2000, 0x20800, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_AGG) */
-+		{ 0x820e3000, 0x20c00, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_ARB) */
-+		{ 0x820e5000, 0x21400, 0x0800 }, /* WF_LMAC_TOP BN0 (WF_RMAC) */
-+		{ 0x00400000, 0x80000, 0x10000 }, /* WF_MCU_SYSRAM */
-+		{ 0x00410000, 0x90000, 0x10000 }, /* WF_MCU_SYSRAM (configure register) */
-+		{ 0x40000000, 0x70000, 0x10000 }, /* WF_UMAC_SYSRAM */
- 		{ 0x54000000, 0x02000, 0x1000 }, /* WFDMA PCIE0 MCU DMA0 */
- 		{ 0x55000000, 0x03000, 0x1000 }, /* WFDMA PCIE0 MCU DMA1 */
- 		{ 0x58000000, 0x06000, 0x1000 }, /* WFDMA PCIE1 MCU DMA0 (MEM_DMA) */
- 		{ 0x59000000, 0x07000, 0x1000 }, /* WFDMA PCIE1 MCU DMA1 */
- 		{ 0x7c000000, 0xf0000, 0x10000 }, /* CONN_INFRA */
- 		{ 0x7c020000, 0xd0000, 0x10000 }, /* CONN_INFRA, WFDMA */
--		{ 0x7c060000, 0xe0000, 0x10000}, /* CONN_INFRA, conn_host_csr_top */
-+		{ 0x7c060000, 0xe0000, 0x10000 }, /* CONN_INFRA, conn_host_csr_top */
- 		{ 0x80020000, 0xb0000, 0x10000 }, /* WF_TOP_MISC_OFF */
- 		{ 0x81020000, 0xc0000, 0x10000 }, /* WF_TOP_MISC_ON */
- 		{ 0x820c0000, 0x08000, 0x4000 }, /* WF_UMAC_TOP (PLE) */
- 		{ 0x820c8000, 0x0c000, 0x2000 }, /* WF_UMAC_TOP (PSE) */
--		{ 0x820cc000, 0x0e000, 0x2000 }, /* WF_UMAC_TOP (PP) */
-+		{ 0x820cc000, 0x0e000, 0x1000 }, /* WF_UMAC_TOP (PP) */
-+		{ 0x820cd000, 0x0f000, 0x1000 }, /* WF_MDP_TOP */
- 		{ 0x820ce000, 0x21c00, 0x0200 }, /* WF_LMAC_TOP (WF_SEC) */
- 		{ 0x820cf000, 0x22000, 0x1000 }, /* WF_LMAC_TOP (WF_PF) */
--		{ 0x820d0000, 0x30000, 0x10000 }, /* WF_LMAC_TOP (WF_WTBLON) */
- 		{ 0x820e0000, 0x20000, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_CFG) */
- 		{ 0x820e1000, 0x20400, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_TRB) */
--		{ 0x820e2000, 0x20800, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_AGG) */
--		{ 0x820e3000, 0x20c00, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_ARB) */
--		{ 0x820e4000, 0x21000, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_TMAC) */
--		{ 0x820e5000, 0x21400, 0x0800 }, /* WF_LMAC_TOP BN0 (WF_RMAC) */
--		{ 0x820e7000, 0x21e00, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_DMA) */
- 		{ 0x820e9000, 0x23400, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_WTBLOFF) */
- 		{ 0x820ea000, 0x24000, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_ETBF) */
--		{ 0x820eb000, 0x24200, 0x0400 }, /* WF_LMAC_TOP BN0 (WF_LPON) */
- 		{ 0x820ec000, 0x24600, 0x0200 }, /* WF_LMAC_TOP BN0 (WF_INT) */
--		{ 0x820ed000, 0x24800, 0x0800 }, /* WF_LMAC_TOP BN0 (WF_MIB) */
- 		{ 0x820f0000, 0xa0000, 0x0400 }, /* WF_LMAC_TOP BN1 (WF_CFG) */
- 		{ 0x820f1000, 0xa0600, 0x0200 }, /* WF_LMAC_TOP BN1 (WF_TRB) */
- 		{ 0x820f2000, 0xa0800, 0x0400 }, /* WF_LMAC_TOP BN1 (WF_AGG) */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-index 26fb11823762..cb6069024320 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-@@ -14,7 +14,7 @@
- #define MT_MCU_INT_EVENT_SER_TRIGGER	BIT(2)
- #define MT_MCU_INT_EVENT_RESET_DONE	BIT(3)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/Makefile b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+index 554202358470..4cb0b000cfe1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/Makefile
+@@ -4,5 +4,6 @@ obj-$(CONFIG_MT7921E) += mt7921e.o
  
--#define MT_PLE_BASE			0x8000
-+#define MT_PLE_BASE			0x820c0000
- #define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
+ CFLAGS_trace.o := -I$(src)
  
- #define MT_PLE_FL_Q0_CTRL		MT_PLE(0x1b0)
-@@ -26,7 +26,7 @@
- 					       ((n) << 2))
- #define MT_PLE_AMSDU_PACK_MSDU_CNT(n)	MT_PLE(0x10e0 + ((n) << 2))
+-mt7921e-y := pci.o pci_mac.o mac.o mcu.o dma.o eeprom.o main.o init.o debugfs.o trace.o
++mt7921e-y := pci.o pci_mac.o pci_mcu.o mac.o mcu.o dma.o eeprom.o main.o \
++	     init.o debugfs.o trace.o
+ mt7921e-$(CONFIG_NL80211_TESTMODE) += testmode.o
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 4ef54343cef3..7956a57510c4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -304,6 +304,7 @@ void mt7921_unregister_device(struct mt7921_dev *dev)
+ 	mt7921_tx_token_put(dev);
+ 	mt7921_mcu_drv_pmctrl(dev);
+ 	mt7921_dma_cleanup(dev);
++	mt7921_wfsys_reset(dev);
+ 	mt7921_mcu_exit(dev);
  
--#define MT_MDP_BASE			0xf000
-+#define MT_MDP_BASE			0x820cd000
- #define MT_MDP(ofs)			(MT_MDP_BASE + (ofs))
+ 	tasklet_disable(&dev->irq_tasklet);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index eb27d8ab4a8b..bb6f0cea93bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -1276,12 +1276,9 @@ void mt7921_mac_reset_work(struct work_struct *work)
+ 	cancel_work_sync(&pm->wake_work);
  
- #define MT_MDP_DCR0			MT_MDP(0x000)
-@@ -49,7 +49,7 @@
- #define MT_MDP_TO_WM			1
+ 	mutex_lock(&dev->mt76.mutex);
+-	for (i = 0; i < 10; i++) {
+-		__mt7921_mcu_drv_pmctrl(dev);
+-
++	for (i = 0; i < 10; i++)
+ 		if (!mt7921_dev_reset(dev))
+ 			break;
+-	}
+ 	mutex_unlock(&dev->mt76.mutex);
  
- /* TMAC: band 0(0x21000), band 1(0xa1000) */
--#define MT_WF_TMAC_BASE(_band)		((_band) ? 0xa1000 : 0x21000)
-+#define MT_WF_TMAC_BASE(_band)		((_band) ? 0x820f4000 : 0x820e4000)
- #define MT_WF_TMAC(_band, ofs)		(MT_WF_TMAC_BASE(_band) + (ofs))
+ 	if (i == 10)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 3f6c9839d9d4..5553221b7f5c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -160,9 +160,8 @@ mt7921_mcu_parse_eeprom(struct mt76_dev *dev, struct sk_buff *skb)
+ 	return 0;
+ }
  
- #define MT_TMAC_TCR0(_band)		MT_WF_TMAC(_band, 0)
-@@ -74,7 +74,7 @@
- #define MT_TMAC_TRCR0(_band)		MT_WF_TMAC(_band, 0x09c)
- #define MT_TMAC_TFCR0(_band)		MT_WF_TMAC(_band, 0x1e0)
+-static int
+-mt7921_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+-			  struct sk_buff *skb, int seq)
++int mt7921_mcu_parse_response(struct mt76_dev *mdev, int cmd,
++			      struct sk_buff *skb, int seq)
+ {
+ 	struct mt7921_mcu_rxd *rxd;
+ 	int mcu_cmd = cmd & MCU_CMD_MASK;
+@@ -224,9 +223,8 @@ mt7921_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 	return ret;
+ }
  
--#define MT_WF_DMA_BASE(_band)		((_band) ? 0xa1e00 : 0x21e00)
-+#define MT_WF_DMA_BASE(_band)		((_band) ? 0x820f7000 : 0x820e7000)
- #define MT_WF_DMA(_band, ofs)		(MT_WF_DMA_BASE(_band) + (ofs))
+-static int
+-mt7921_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+-			int cmd, int *wait_seq)
++int mt7921_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
++			    int cmd, int *wait_seq)
+ {
+ 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
+ 	int txd_len, mcu_cmd = cmd & MCU_CMD_MASK;
+@@ -590,7 +588,7 @@ int mt7921_mcu_uni_rx_ba(struct mt7921_dev *dev,
+ 				      enable, false);
+ }
  
- #define MT_DMA_DCR0(_band)		MT_WF_DMA(_band, 0x000)
-@@ -82,7 +82,7 @@
- #define MT_DMA_DCR0_RXD_G5_EN		BIT(23)
+-static int mt7921_mcu_restart(struct mt76_dev *dev)
++int mt7921_mcu_restart(struct mt76_dev *dev)
+ {
+ 	struct {
+ 		u8 power_mode;
+@@ -603,20 +601,6 @@ static int mt7921_mcu_restart(struct mt76_dev *dev)
+ 				 sizeof(req), false);
+ }
  
- /* LPON: band 0(0x24200), band 1(0xa4200) */
--#define MT_WF_LPON_BASE(_band)		((_band) ? 0xa4200 : 0x24200)
-+#define MT_WF_LPON_BASE(_band)		((_band) ? 0x820fb000 : 0x820eb000)
- #define MT_WF_LPON(_band, ofs)		(MT_WF_LPON_BASE(_band) + (ofs))
+-static int mt7921_driver_own(struct mt7921_dev *dev)
+-{
+-	u32 reg = mt7921_reg_map_l1(dev, MT_TOP_LPCR_HOST_BAND0);
+-
+-	mt76_wr(dev, reg, MT_TOP_LPCR_HOST_DRV_OWN);
+-	if (!mt76_poll_msec(dev, reg, MT_TOP_LPCR_HOST_FW_OWN,
+-			    0, 500)) {
+-		dev_err(dev->mt76.dev, "Timeout for driver own\n");
+-		return -EIO;
+-	}
+-
+-	return 0;
+-}
+-
+ static u32 mt7921_get_data_mode(struct mt7921_dev *dev, u32 info)
+ {
+ 	u32 mode = DL_MODE_NEED_RSP;
+@@ -883,7 +867,6 @@ static int mt7921_load_firmware(struct mt7921_dev *dev)
+ 	}
  
- #define MT_LPON_UTTR0(_band)		MT_WF_LPON(_band, 0x080)
-@@ -93,7 +93,7 @@
- #define MT_LPON_TCR_SW_WRITE		BIT(0)
+ fw_loaded:
+-	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
  
- /* MIB: band 0(0x24800), band 1(0xa4800) */
--#define MT_WF_MIB_BASE(_band)		((_band) ? 0xa4800 : 0x24800)
-+#define MT_WF_MIB_BASE(_band)		((_band) ? 0x820fd000 : 0x820ed000)
- #define MT_WF_MIB(_band, ofs)		(MT_WF_MIB_BASE(_band) + (ofs))
+ #ifdef CONFIG_PM
+ 	dev->mt76.hw->wiphy->wowlan = &mt76_connac_wowlan_support;
+@@ -911,10 +894,6 @@ int mt7921_run_firmware(struct mt7921_dev *dev)
+ {
+ 	int err;
  
- #define MT_MIB_SCR1(_band)		MT_WF_MIB(_band, 0x004)
-@@ -142,7 +142,7 @@
- #define MT_MIB_ARNG(_band, n)		MT_WF_MIB(_band, 0x0b0 + ((n) << 2))
- #define MT_MIB_ARNCR_RANGE(val, n)	(((val) >> ((n) << 3)) & GENMASK(7, 0))
+-	err = mt7921_driver_own(dev);
+-	if (err)
+-		return err;
+-
+ 	err = mt7921_load_firmware(dev);
+ 	if (err)
+ 		return err;
+@@ -925,23 +904,8 @@ int mt7921_run_firmware(struct mt7921_dev *dev)
+ 	return mt76_connac_mcu_get_nic_capability(&dev->mphy);
+ }
  
--#define MT_WTBLON_TOP_BASE		0x34000
-+#define MT_WTBLON_TOP_BASE		0x820d4000
- #define MT_WTBLON_TOP(ofs)		(MT_WTBLON_TOP_BASE + (ofs))
- #define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x200)
- #define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(2, 0)
-@@ -152,7 +152,7 @@
- #define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(12)
- #define MT_WTBL_UPDATE_BUSY		BIT(31)
+-int mt7921_mcu_init(struct mt7921_dev *dev)
+-{
+-	static const struct mt76_mcu_ops mt7921_mcu_ops = {
+-		.headroom = sizeof(struct mt7921_mcu_txd),
+-		.mcu_skb_send_msg = mt7921_mcu_send_message,
+-		.mcu_parse_response = mt7921_mcu_parse_response,
+-		.mcu_restart = mt7921_mcu_restart,
+-	};
+-
+-	dev->mt76.mcu_ops = &mt7921_mcu_ops;
+-
+-	return mt7921_run_firmware(dev);
+-}
+-
+ void mt7921_mcu_exit(struct mt7921_dev *dev)
+ {
+-	mt7921_wfsys_reset(dev);
+ 	skb_queue_purge(&dev->mt76.mcu.res_q);
+ }
  
--#define MT_WTBL_BASE			0x38000
-+#define MT_WTBL_BASE			0x820d8000
- #define MT_WTBL_LMAC_ID			GENMASK(14, 8)
- #define MT_WTBL_LMAC_DW			GENMASK(7, 2)
- #define MT_WTBL_LMAC_OFFS(_id, _dw)	(MT_WTBL_BASE | \
-@@ -160,7 +160,7 @@
- 					FIELD_PREP(MT_WTBL_LMAC_DW, _dw))
+@@ -1231,35 +1195,6 @@ int mt7921_mcu_sta_update(struct mt7921_dev *dev, struct ieee80211_sta *sta,
+ 	return mt76_connac_mcu_sta_cmd(&dev->mphy, &info);
+ }
  
- /* AGG: band 0(0x20800), band 1(0xa0800) */
--#define MT_WF_AGG_BASE(_band)		((_band) ? 0xa0800 : 0x20800)
-+#define MT_WF_AGG_BASE(_band)		((_band) ? 0x820f2000 : 0x820e2000)
- #define MT_WF_AGG(_band, ofs)		(MT_WF_AGG_BASE(_band) + (ofs))
+-int __mt7921_mcu_drv_pmctrl(struct mt7921_dev *dev)
+-{
+-	struct mt76_phy *mphy = &dev->mt76.phy;
+-	struct mt76_connac_pm *pm = &dev->pm;
+-	int i, err = 0;
+-
+-	for (i = 0; i < MT7921_DRV_OWN_RETRY_COUNT; i++) {
+-		mt76_wr(dev, MT_CONN_ON_LPCTL, PCIE_LPCR_HOST_CLR_OWN);
+-		if (mt76_poll_msec(dev, MT_CONN_ON_LPCTL,
+-				   PCIE_LPCR_HOST_OWN_SYNC, 0, 50))
+-			break;
+-	}
+-
+-	if (i == MT7921_DRV_OWN_RETRY_COUNT) {
+-		dev_err(dev->mt76.dev, "driver own failed\n");
+-		err = -EIO;
+-		goto out;
+-	}
+-
+-	mt7921_wpdma_reinit_cond(dev);
+-	clear_bit(MT76_STATE_PM, &mphy->state);
+-
+-	pm->stats.last_wake_event = jiffies;
+-	pm->stats.doze_time += pm->stats.last_wake_event -
+-			       pm->stats.last_doze_event;
+-out:
+-	return err;
+-}
+-
+ int mt7921_mcu_drv_pmctrl(struct mt7921_dev *dev)
+ {
+ 	struct mt76_phy *mphy = &dev->mt76.phy;
+@@ -1285,29 +1220,14 @@ int mt7921_mcu_fw_pmctrl(struct mt7921_dev *dev)
+ {
+ 	struct mt76_phy *mphy = &dev->mt76.phy;
+ 	struct mt76_connac_pm *pm = &dev->pm;
+-	int i, err = 0;
++	int err = 0;
  
- #define MT_AGG_AWSCR0(_band, _n)	MT_WF_AGG(_band, 0x05c + (_n) * 4)
-@@ -191,7 +191,7 @@
- #define MT_AGG_ATCR3(_band)		MT_WF_AGG(_band, 0x0f4)
+ 	mutex_lock(&pm->mutex);
  
- /* ARB: band 0(0x20c00), band 1(0xa0c00) */
--#define MT_WF_ARB_BASE(_band)		((_band) ? 0xa0c00 : 0x20c00)
-+#define MT_WF_ARB_BASE(_band)		((_band) ? 0x820f3000 : 0x820e3000)
- #define MT_WF_ARB(_band, ofs)		(MT_WF_ARB_BASE(_band) + (ofs))
+ 	if (mt76_connac_skip_fw_pmctrl(mphy, pm))
+ 		goto out;
  
- #define MT_ARB_SCR(_band)		MT_WF_ARB(_band, 0x080)
-@@ -201,7 +201,7 @@
- #define MT_ARB_DRNGR0(_band, _n)	MT_WF_ARB(_band, 0x194 + (_n) * 4)
+-	for (i = 0; i < MT7921_DRV_OWN_RETRY_COUNT; i++) {
+-		mt76_wr(dev, MT_CONN_ON_LPCTL, PCIE_LPCR_HOST_SET_OWN);
+-		if (mt76_poll_msec(dev, MT_CONN_ON_LPCTL,
+-				   PCIE_LPCR_HOST_OWN_SYNC, 4, 50))
+-			break;
+-	}
+-
+-	if (i == MT7921_DRV_OWN_RETRY_COUNT) {
+-		dev_err(dev->mt76.dev, "firmware own failed\n");
+-		clear_bit(MT76_STATE_PM, &mphy->state);
+-		err = -EIO;
+-	}
+-
+-	pm->stats.last_doze_event = jiffies;
+-	pm->stats.awake_time += pm->stats.last_doze_event -
+-				pm->stats.last_wake_event;
++	err = __mt7921_mcu_fw_pmctrl(dev);
+ out:
+ 	mutex_unlock(&pm->mutex);
  
- /* RMAC: band 0(0x21400), band 1(0xa1400) */
--#define MT_WF_RMAC_BASE(_band)		((_band) ? 0xa1400 : 0x21400)
-+#define MT_WF_RMAC_BASE(_band)		((_band) ? 0x820f5000 : 0x820e5000)
- #define MT_WF_RMAC(_band, ofs)		(MT_WF_RMAC_BASE(_band) + (ofs))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index a6c3661b2bdd..9c15c9bdd41e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -133,9 +133,15 @@ struct mt7921_phy {
+ 	struct delayed_work scan_work;
+ };
  
- #define MT_WF_RFCR(_band)		MT_WF_RMAC(_band, 0x000)
+-#define mt7921_dev_reset(dev)	((dev)->hif_ops->reset(dev))
++#define mt7921_dev_reset(dev)		((dev)->hif_ops->reset(dev))
++#define mt7921_mcu_init(dev)		((dev)->hif_ops->mcu_init(dev))
++#define __mt7921_mcu_drv_pmctrl(dev)	((dev)->hif_ops->drv_own(dev))
++#define	__mt7921_mcu_fw_pmctrl(dev)	((dev)->hif_ops->fw_own(dev))
+ struct mt7921_hif_ops {
+ 	int (*reset)(struct mt7921_dev *dev);
++	int (*mcu_init)(struct mt7921_dev *dev);
++	int (*drv_own)(struct mt7921_dev *dev);
++	int (*fw_own)(struct mt7921_dev *dev);
+ };
+ 
+ struct mt7921_dev {
+@@ -250,7 +256,6 @@ int mt7921_wpdma_reset(struct mt7921_dev *dev, bool force);
+ int mt7921_wpdma_reinit_cond(struct mt7921_dev *dev);
+ void mt7921_dma_cleanup(struct mt7921_dev *dev);
+ int mt7921_run_firmware(struct mt7921_dev *dev);
+-int mt7921_mcu_init(struct mt7921_dev *dev);
+ int mt7921_mcu_add_key(struct mt7921_dev *dev, struct ieee80211_vif *vif,
+ 		       struct mt7921_sta *msta, struct ieee80211_key_conf *key,
+ 		       enum set_key_cmd cmd);
+@@ -364,7 +369,6 @@ int mt7921_mcu_uni_rx_ba(struct mt7921_dev *dev,
+ 			 bool enable);
+ void mt7921_scan_work(struct work_struct *work);
+ int mt7921_mcu_uni_bss_ps(struct mt7921_dev *dev, struct ieee80211_vif *vif);
+-int __mt7921_mcu_drv_pmctrl(struct mt7921_dev *dev);
+ int mt7921_mcu_drv_pmctrl(struct mt7921_dev *dev);
+ int mt7921_mcu_fw_pmctrl(struct mt7921_dev *dev);
+ void mt7921_pm_wake_work(struct work_struct *work);
+@@ -383,7 +387,17 @@ void mt7921_mac_write_txwi(struct mt7921_dev *dev, __le32 *txwi,
+ 			   bool beacon);
+ void mt7921_tx_check_aggr(struct ieee80211_sta *sta, __le32 *txwi);
+ void mt7921_mac_sta_poll(struct mt7921_dev *dev);
++int mt7921_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
++			    int cmd, int *wait_seq);
++int mt7921_mcu_parse_response(struct mt76_dev *mdev, int cmd,
++			      struct sk_buff *skb, int seq);
++int mt7921_mcu_restart(struct mt76_dev *dev);
++
+ void mt7921e_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 			  struct sk_buff *skb);
+ int mt7921e_mac_reset(struct mt7921_dev *dev);
++int mt7921e_mcu_init(struct mt7921_dev *dev);
++int mt7921e_mcu_drv_pmctrl(struct mt7921_dev *dev);
++int mt7921e_mcu_fw_pmctrl(struct mt7921_dev *dev);
++
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index fb19cff4a697..171aa2daef4d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -117,6 +117,9 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 
+ 	static const struct mt7921_hif_ops mt7921_pcie_ops = {
+ 		.reset = mt7921e_mac_reset,
++		.mcu_init = mt7921e_mcu_init,
++		.drv_own = mt7921e_mcu_drv_pmctrl,
++		.fw_own = mt7921e_mcu_fw_pmctrl,
+ 	};
+ 
+ 	struct mt7921_dev *dev;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+index c11f19e8ab74..fccca15525aa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+@@ -288,6 +288,8 @@ int mt7921e_mac_reset(struct mt7921_dev *dev)
+ {
+ 	int i, err;
+ 
++	mt7921e_mcu_drv_pmctrl(dev);
++
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
+ 
+ 	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+new file mode 100644
+index 000000000000..9ac3bc25f067
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+@@ -0,0 +1,97 @@
++// SPDX-License-Identifier: ISC
++/* Copyright (C) 2021 MediaTek Inc. */
++
++#include "mt7921.h"
++#include "mcu.h"
++
++static int mt7921e_driver_own(struct mt7921_dev *dev)
++{
++	u32 reg = mt7921_reg_map_l1(dev, MT_TOP_LPCR_HOST_BAND0);
++
++	mt76_wr(dev, reg, MT_TOP_LPCR_HOST_DRV_OWN);
++	if (!mt76_poll_msec(dev, reg, MT_TOP_LPCR_HOST_FW_OWN,
++			    0, 500)) {
++		dev_err(dev->mt76.dev, "Timeout for driver own\n");
++		return -EIO;
++	}
++
++	return 0;
++}
++
++int mt7921e_mcu_init(struct mt7921_dev *dev)
++{
++	static const struct mt76_mcu_ops mt7921_mcu_ops = {
++		.headroom = sizeof(struct mt7921_mcu_txd),
++		.mcu_skb_send_msg = mt7921_mcu_send_message,
++		.mcu_parse_response = mt7921_mcu_parse_response,
++		.mcu_restart = mt7921_mcu_restart,
++	};
++	int err;
++
++	dev->mt76.mcu_ops = &mt7921_mcu_ops;
++
++	err = mt7921e_driver_own(dev);
++	if (err)
++		return err;
++
++	err = mt7921_run_firmware(dev);
++
++	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
++
++	return err;
++}
++
++int mt7921e_mcu_drv_pmctrl(struct mt7921_dev *dev)
++{
++	struct mt76_phy *mphy = &dev->mt76.phy;
++	struct mt76_connac_pm *pm = &dev->pm;
++	int i, err = 0;
++
++	for (i = 0; i < MT7921_DRV_OWN_RETRY_COUNT; i++) {
++		mt76_wr(dev, MT_CONN_ON_LPCTL, PCIE_LPCR_HOST_CLR_OWN);
++		if (mt76_poll_msec(dev, MT_CONN_ON_LPCTL,
++				   PCIE_LPCR_HOST_OWN_SYNC, 0, 50))
++			break;
++	}
++
++	if (i == MT7921_DRV_OWN_RETRY_COUNT) {
++		dev_err(dev->mt76.dev, "driver own failed\n");
++		err = -EIO;
++		goto out;
++	}
++
++	mt7921_wpdma_reinit_cond(dev);
++	clear_bit(MT76_STATE_PM, &mphy->state);
++
++	pm->stats.last_wake_event = jiffies;
++	pm->stats.doze_time += pm->stats.last_wake_event -
++			       pm->stats.last_doze_event;
++out:
++	return err;
++}
++
++int mt7921e_mcu_fw_pmctrl(struct mt7921_dev *dev)
++{
++	struct mt76_phy *mphy = &dev->mt76.phy;
++	struct mt76_connac_pm *pm = &dev->pm;
++	int i, err = 0;
++
++	for (i = 0; i < MT7921_DRV_OWN_RETRY_COUNT; i++) {
++		mt76_wr(dev, MT_CONN_ON_LPCTL, PCIE_LPCR_HOST_SET_OWN);
++		if (mt76_poll_msec(dev, MT_CONN_ON_LPCTL,
++				   PCIE_LPCR_HOST_OWN_SYNC, 4, 50))
++			break;
++	}
++
++	if (i == MT7921_DRV_OWN_RETRY_COUNT) {
++		dev_err(dev->mt76.dev, "firmware own failed\n");
++		clear_bit(MT76_STATE_PM, &mphy->state);
++		err = -EIO;
++	}
++
++	pm->stats.last_doze_event = jiffies;
++	pm->stats.awake_time += pm->stats.last_doze_event -
++				pm->stats.last_wake_event;
++
++	return err;
++}
 -- 
 2.25.1
 
