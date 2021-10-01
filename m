@@ -2,26 +2,26 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F23C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:54:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F01AC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:54:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE0D061881
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24E7C61881
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353223AbhJAJzu (ORCPT
+        id S1353251AbhJAJzv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Oct 2021 05:55:50 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:34184 "EHLO
+        Fri, 1 Oct 2021 05:55:51 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:34194 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1353079AbhJAJzs (ORCPT
+        with ESMTP id S1353148AbhJAJzs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 1 Oct 2021 05:55:48 -0400
-X-UUID: ea2a3f43b1044b99b3f16fa094112b53-20211001
-X-UUID: ea2a3f43b1044b99b3f16fa094112b53-20211001
+X-UUID: 9d5397a52bcf43cc8d0620dfbfe3ee73-20211001
+X-UUID: 9d5397a52bcf43cc8d0620dfbfe3ee73-20211001
 Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 169611071; Fri, 01 Oct 2021 17:54:02 +0800
+        with ESMTP id 2123307048; Fri, 01 Oct 2021 17:54:02 +0800
 Received: from mtkcas11.mediatek.inc (172.21.101.40) by
  mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Fri, 1 Oct 2021 17:54:01 +0800
@@ -36,9 +36,9 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v5 8/8] mt76: mt7915: set muru platform type
-Date:   Fri, 1 Oct 2021 17:53:55 +0800
-Message-ID: <20211001095355.10598-8-shayne.chen@mediatek.com>
+Subject: [PATCH v5 4/8] mt76: mt7915: fix sta_rec_wtbl tag len
+Date:   Fri, 1 Oct 2021 17:53:51 +0800
+Message-ID: <20211001095355.10598-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20211001095355.10598-1-shayne.chen@mediatek.com>
 References: <20211001095355.10598-1-shayne.chen@mediatek.com>
@@ -49,141 +49,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set muru platform type by mcu cmd to notify fw to init corresponding
-algorithm.
+Fix tag len error for sta_rec_wtbl, which causes fw parsing error for
+the tags placed behind it.
 
-Suggested-by: Money Wang <money.wang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based
+chipsets")
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
-v3: - fix endianess
-    - rework muru ctrl function
-v4: use put_unaligned_le32() to get rid of undefined behavior
-v5: rebase to staging tree
----
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 20 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   | 10 ++++++++++
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  1 +
- .../wireless/mediatek/mt76/mt7915/testmode.c  | 16 +++++----------
- .../wireless/mediatek/mt76/mt7915/testmode.h  |  4 ----
- 5 files changed, 36 insertions(+), 15 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index be875f100c6f..6ee9d2dfd930 100644
+index 6c1f1674feb5..00c10d6de7cf 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2909,6 +2909,21 @@ static int mt7915_mcu_set_mwds(struct mt7915_dev *dev, bool enabled)
- 				 sizeof(req), false);
+@@ -621,7 +621,7 @@ mt7915_mcu_alloc_wtbl_req(struct mt7915_dev *dev, struct mt7915_sta *msta,
+ 	}
+ 
+ 	if (sta_hdr)
+-		sta_hdr->len = cpu_to_le16(sizeof(hdr));
++		le16_add_cpu(&sta_hdr->len, sizeof(hdr));
+ 
+ 	return skb_put_data(nskb, &hdr, sizeof(hdr));
  }
- 
-+int mt7915_mcu_set_muru_ctrl(struct mt7915_dev *dev, u32 cmd, u32 val)
-+{
-+	struct {
-+		__le32 cmd;
-+		u8 val[4];
-+	} __packed req = {
-+		.cmd = cpu_to_le32(cmd),
-+	};
-+
-+	put_unaligned_le32(val, req.val);
-+
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD(MURU_CTRL), &req,
-+				 sizeof(req), false);
-+}
-+
- int mt7915_mcu_init(struct mt7915_dev *dev)
- {
- 	static const struct mt76_mcu_ops mt7915_mcu_ops = {
-@@ -2942,6 +2957,11 @@ int mt7915_mcu_init(struct mt7915_dev *dev)
- 	if (ret)
- 		return ret;
- 
-+	ret = mt7915_mcu_set_muru_ctrl(dev, MURU_SET_PLATFORM_TYPE,
-+				       MURU_PLATFORM_TYPE_PERF_LEVEL_2);
-+	if (ret)
-+		return ret;
-+
- 	return mt7915_mcu_wa_cmd(dev, MCU_WA_PARAM_CMD(SET),
- 				 MCU_WA_PARAM_RED, 0, 0);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index 23a611873bfa..5d383918a2af 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -1091,6 +1091,16 @@ enum {
- 	MT_BF_MODULE_UPDATE = 25
- };
- 
-+enum {
-+	MURU_SET_ARB_OP_MODE = 14,
-+	MURU_SET_PLATFORM_TYPE = 25,
-+};
-+
-+enum {
-+	MURU_PLATFORM_TYPE_PERF_LEVEL_1 = 1,
-+	MURU_PLATFORM_TYPE_PERF_LEVEL_2,
-+};
-+
- #define MT7915_WTBL_UPDATE_MAX_SIZE	(sizeof(struct wtbl_req_hdr) +	\
- 					 sizeof(struct wtbl_generic) +	\
- 					 sizeof(struct wtbl_rx) +	\
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index e68ac8e6e148..904c711d4a3f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -358,6 +358,7 @@ int mt7915_mcu_set_pulse_th(struct mt7915_dev *dev,
- 			    const struct mt7915_dfs_pulse *pulse);
- int mt7915_mcu_set_radar_th(struct mt7915_dev *dev, int index,
- 			    const struct mt7915_dfs_pattern *pattern);
-+int mt7915_mcu_set_muru_ctrl(struct mt7915_dev *dev, u32 cmd, u32 val);
- int mt7915_mcu_apply_group_cal(struct mt7915_dev *dev);
- int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy);
- int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-index 00dcc46b9082..89aae323d29e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.c
-@@ -169,22 +169,16 @@ static int
- mt7915_tm_set_tam_arb(struct mt7915_phy *phy, bool enable, bool mu)
- {
- 	struct mt7915_dev *dev = phy->dev;
--	struct {
--		__le32 cmd;
--		u8 op_mode;
--	} __packed req = {
--		.cmd = cpu_to_le32(MURU_SET_ARB_OP_MODE),
--	};
-+	u32 op_mode;
- 
- 	if (!enable)
--		req.op_mode = TAM_ARB_OP_MODE_NORMAL;
-+		op_mode = TAM_ARB_OP_MODE_NORMAL;
- 	else if (mu)
--		req.op_mode = TAM_ARB_OP_MODE_TEST;
-+		op_mode = TAM_ARB_OP_MODE_TEST;
- 	else
--		req.op_mode = TAM_ARB_OP_MODE_FORCE_SU;
-+		op_mode = TAM_ARB_OP_MODE_FORCE_SU;
- 
--	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD(MURU_CTRL), &req,
--				 sizeof(req), false);
-+	return mt7915_mcu_set_muru_ctrl(dev, MURU_SET_ARB_OP_MODE, op_mode);
- }
- 
- static int
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-index 107f0cf2505e..5573ac309363 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/testmode.h
-@@ -102,8 +102,4 @@ enum {
- 	TAM_ARB_OP_MODE_FORCE_SU = 5,
- };
- 
--enum {
--	MURU_SET_ARB_OP_MODE = 14,
--};
--
- #endif
 -- 
 2.25.1
 
