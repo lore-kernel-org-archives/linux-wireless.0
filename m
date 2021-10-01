@@ -2,44 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FE3C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C91C3C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 10:10:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91A58619F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 09:55:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B853C6134F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Oct 2021 10:10:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353208AbhJAJ5h (ORCPT
+        id S1353437AbhJAKMD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Oct 2021 05:57:37 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:28046 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353148AbhJAJ5g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Oct 2021 05:57:36 -0400
+        Fri, 1 Oct 2021 06:12:03 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:25615 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1353428AbhJAKMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Oct 2021 06:12:02 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633082153; h=Content-Transfer-Encoding: Content-Type:
+ s=smtp; t=1633083018; h=Content-Transfer-Encoding: Content-Type:
  MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
- To: From: Sender; bh=tMw5Hzb3ztdNEHxY4bAev68n6seU8HT3Mf7aFuIt4P8=; b=rdHIMJnrygDT4HQsdbk1vGLisqmAwBPTqYwmEkK/eo4DZs24rq3Y7FLPZ4rVfV4FcM+8uPFT
- wxL8Jvi1IA/EC0OHna65u/Q0ZQuYHJq1X1mJJgKM7U/2La590uUKIEo6PYrnORyxYgqUiF6j
- 2nbo57CndejHwtvijRNT+UUOWQQ=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ To: From: Sender; bh=ZetgfVAwbJoN4AAZzEvqpEj2r1iuIB1GedGi9+QD1zc=; b=J+pZ7xDrLdY0NDgYzAI0lsR4rHSWoe7BW09qMe9TvGFV/p97/4x9LJAsMRQZ8Eka+lZX8K+8
+ DxUdp7XskpDsxawPyeDuQ62hOPwkgeEuBPKxrAVkfH4UC/5twVn518dR0Zb5TXXkFYUSFCHu
+ EvBuUSOpfx7CgtrOsC37SzT6QUg=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 6156db1c605ecf100b49b610 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 01 Oct 2021 09:55:40
+ 6156de72605ecf100b5be9e5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 01 Oct 2021 10:09:54
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 910CFC43618; Fri,  1 Oct 2021 09:55:40 +0000 (UTC)
+        id 9D619C4360D; Fri,  1 Oct 2021 10:09:54 +0000 (UTC)
 Received: from tykki (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E8C99C4338F;
-        Fri,  1 Oct 2021 09:55:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org E8C99C4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0E305C43460;
+        Fri,  1 Oct 2021 10:09:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 0E305C43460
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -52,13 +51,13 @@ Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-mmc@vger.kernel.org,
         Pali =?utf-8?Q?Roh?= =?utf-8?Q?=C3=A1r?= <pali@kernel.org>,
         Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH v7 13/24] wfx: add hif_tx*.c/hif_tx*.h
+Subject: Re: [PATCH v7 15/24] wfx: add hif_rx.c/hif_rx.h
 References: <20210920161136.2398632-1-Jerome.Pouiller@silabs.com>
-        <20210920161136.2398632-14-Jerome.Pouiller@silabs.com>
-Date:   Fri, 01 Oct 2021 12:55:33 +0300
-In-Reply-To: <20210920161136.2398632-14-Jerome.Pouiller@silabs.com> (Jerome
-        Pouiller's message of "Mon, 20 Sep 2021 18:11:25 +0200")
-Message-ID: <87fstlkr1m.fsf@codeaurora.org>
+        <20210920161136.2398632-16-Jerome.Pouiller@silabs.com>
+Date:   Fri, 01 Oct 2021 13:09:48 +0300
+In-Reply-To: <20210920161136.2398632-16-Jerome.Pouiller@silabs.com> (Jerome
+        Pouiller's message of "Mon, 20 Sep 2021 18:11:27 +0200")
+Message-ID: <87a6jtkqdv.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -75,59 +74,38 @@ Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
 
 [...]
 
-> --- /dev/null
-> +++ b/drivers/net/wireless/silabs/wfx/hif_tx_mib.h
-> @@ -0,0 +1,49 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
-> +/*
-> + * Implementation of the host-to-chip MIBs of the hardware API.
-> + *
-> + * Copyright (c) 2017-2020, Silicon Laboratories, Inc.
-> + * Copyright (c) 2010, ST-Ericsson
-> + * Copyright (C) 2010, ST-Ericsson SA
-> + */
-> +#ifndef WFX_HIF_TX_MIB_H
-> +#define WFX_HIF_TX_MIB_H
+> +static int hif_startup_indication(struct wfx_dev *wdev,
+> +				  const struct hif_msg *hif, const void *buf)
+> +{
+> +	const struct hif_ind_startup *body =3D buf;
 > +
-> +struct wfx_vif;
-> +struct sk_buff;
-> +
-> +int hif_set_output_power(struct wfx_vif *wvif, int val);
-> +int hif_set_beacon_wakeup_period(struct wfx_vif *wvif,
-> +				 unsigned int dtim_interval,
-> +				 unsigned int listen_interval);
-> +int hif_set_rcpi_rssi_threshold(struct wfx_vif *wvif,
-> +				int rssi_thold, int rssi_hyst);
-> +int hif_get_counters_table(struct wfx_dev *wdev, int vif_id,
-> +			   struct hif_mib_extended_count_table *arg);
-> +int hif_set_macaddr(struct wfx_vif *wvif, u8 *mac);
-> +int hif_set_rx_filter(struct wfx_vif *wvif,
-> +		      bool filter_bssid, bool fwd_probe_req);
-> +int hif_set_beacon_filter_table(struct wfx_vif *wvif, int tbl_len,
-> +				const struct hif_ie_table_entry *tbl);
-> +int hif_beacon_filter_control(struct wfx_vif *wvif,
-> +			      int enable, int beacon_count);
-> +int hif_set_operational_mode(struct wfx_dev *wdev, enum hif_op_power_mod=
-e mode);
-> +int hif_set_template_frame(struct wfx_vif *wvif, struct sk_buff *skb,
-> +			   u8 frame_type, int init_rate);
-> +int hif_set_mfp(struct wfx_vif *wvif, bool capable, bool required);
-> +int hif_set_block_ack_policy(struct wfx_vif *wvif,
-> +			     u8 tx_tid_policy, u8 rx_tid_policy);
-> +int hif_set_association_mode(struct wfx_vif *wvif, int ampdu_density,
-> +			     bool greenfield, bool short_preamble);
-> +int hif_set_tx_rate_retry_policy(struct wfx_vif *wvif,
-> +				 int policy_index, u8 *rates);
-> +int hif_keep_alive_period(struct wfx_vif *wvif, int period);
-> +int hif_set_arp_ipv4_filter(struct wfx_vif *wvif, int idx, __be32 *addr);
-> +int hif_use_multi_tx_conf(struct wfx_dev *wdev, bool enable);
-> +int hif_set_uapsd_info(struct wfx_vif *wvif, unsigned long val);
-> +int hif_erp_use_protection(struct wfx_vif *wvif, bool enable);
-> +int hif_slot_time(struct wfx_vif *wvif, int val);
-> +int hif_wep_default_key_id(struct wfx_vif *wvif, int val);
-> +int hif_rts_threshold(struct wfx_vif *wvif, int val);
+> +	if (body->status || body->firmware_type > 4) {
+> +		dev_err(wdev->dev, "received invalid startup indication");
+> +		return -EINVAL;
+> +	}
+> +	memcpy(&wdev->hw_caps, body, sizeof(struct hif_ind_startup));
+> +	le16_to_cpus((__le16 *)&wdev->hw_caps.hardware_id);
+> +	le16_to_cpus((__le16 *)&wdev->hw_caps.num_inp_ch_bufs);
+> +	le16_to_cpus((__le16 *)&wdev->hw_caps.size_inp_ch_buf);
+> +	le32_to_cpus((__le32 *)&wdev->hw_caps.supported_rate_mask);
 
-"wfx_" prefix missing from quite a few functions.
+I don't really like the casts here, and not really reliable either if
+there's ever more fields. I would just store values as little endian in
+hw_caps, I doubt it's performance critical.
+
+And why does struct hif_ind_startup use both u32 and __le32? If it's in
+little endian it should always use __le types.
+
+[...]
+
+> +	if (hif_id & 0x80)
+> +		dev_err(wdev->dev, "unsupported HIF indication: ID %02x\n",
+> +			hif_id);
+> +	else
+> +		dev_err(wdev->dev, "unexpected HIF confirmation: ID %02x\n",
+> +			hif_id);
+
+No magic values, please. A proper define for bit 0x80 would be nice.
 
 --=20
 https://patchwork.kernel.org/project/linux-wireless/list/
