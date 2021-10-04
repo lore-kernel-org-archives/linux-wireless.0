@@ -2,142 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A87C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Oct 2021 06:47:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E48C43217
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Oct 2021 13:34:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1659260F46
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Oct 2021 06:47:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20DEE611C7
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Oct 2021 13:34:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232788AbhJDGsx convert rfc822-to-8bit (ORCPT
+        id S237681AbhJDNgm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Oct 2021 02:48:53 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:43826 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232755AbhJDGsw (ORCPT
+        Mon, 4 Oct 2021 09:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34736 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237783AbhJDNe5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Oct 2021 02:48:52 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1946kx5mB017297, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1946kx5mB017297
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 Oct 2021 14:46:59 +0800
-Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
- RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.14; Mon, 4 Oct 2021 14:46:58 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 4 Oct 2021 14:46:57 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098]) by
- RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098%5]) with mapi id
- 15.01.2106.013; Mon, 4 Oct 2021 14:46:57 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v6 00/24] rtw89: add Realtek 802.11ax driver
-Thread-Topic: [PATCH v6 00/24] rtw89: add Realtek 802.11ax driver
-Thread-Index: AQHXlXz6iS5M0zbbfkSyaj358Nztiqu+mXDngAQPmeA=
-Date:   Mon, 4 Oct 2021 06:46:57 +0000
-Message-ID: <9b54e3c321a4414cbae62616d8a913f4@realtek.com>
-References: <20210820043538.12424-1-pkshih@realtek.com>
- <8735pkiu0t.fsf@codeaurora.org>
-In-Reply-To: <8735pkiu0t.fsf@codeaurora.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2021/10/4_=3F=3F_04:51:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Mon, 4 Oct 2021 09:34:57 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C1CC02B759
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Oct 2021 05:59:47 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZH-00054h-0t; Mon, 04 Oct 2021 14:59:43 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZF-0000L5-Mc; Mon, 04 Oct 2021 14:59:41 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZF-0000cZ-Lj; Mon, 04 Oct 2021 14:59:41 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc:     linux-pci@vger.kernel.org, kernel@pengutronix.de,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v6 04/11] bcma: simplify reference to the driver's name
+Date:   Mon,  4 Oct 2021 14:59:28 +0200
+Message-Id: <20211004125935.2300113-5-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
+References: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/04/2021 06:29:40
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 166474 [Oct 04 2021]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
-X-KSE-AntiSpam-Info: LuaCore: 463 463 5854868460de3f0d8e8c0a4df98aeb05fb764a09
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;git.kernel.org:7.1.1;realtek.com:7.1.1
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/04/2021 06:34:00
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=xSP+K0RSyQAwniF6A6kkbjiE0JBr+Cc60dr1a6KF2Cc=; m=9WMNRZUkbhy3cqoI0SdJ4z32UI6gOxRm4XsLfBOiMFc=; p=ynQzBWvQpvfCsznbo0TKCTlX0o4FNuUIlPzqKHsY1yI=; g=7b3a3bd10c36e651f6578f5837b227bfa43b045b
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFa+o8ACgkQwfwUeK3K7AnLewf8Dlz c2/6eRydXEQMGM0rSOh9Fyr9miaBUlNu5AanNfHSYWpPnz/8LfSEN3LEWiFHFi3IHz4ywopnBAxgy 9CSeG1Bt0MjLrywAD0AMje5hqtxD9LXfT8ZeJ+JyWKhkfsnIt46KOFywtD4Vd4oBviqwJUHglRhhA eeOVAeZMeh6WZWMymRQ/Z0E2zp1iBJr9iTdnDyDnRlLW5h3Zm5mM9Rp+8zu99/9Yik/8UokGkHPnS 2P913K6YlytVjhHbbwKJWaHMOEtoAj21nkmMJuNuL2xKLVIAtXoN5SepWwDoJ4rAu8HP5EsI+mLYK XGAgENRcZxksEfj65Ez1JRZ/wYFgftA==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+When bcma_host_pci_probe() is called the pci driver core already
+assigned the device's driver in local_pci_probe(). So dev->driver is
+always true and here it points to bcma_pci_bridge_driver which has .name
+set to "bcma-pci-bridge". Simplify accordingly.
 
-> -----Original Message-----
-> From: kvalo=codeaurora.org@mg.codeaurora.org <kvalo=codeaurora.org@mg.codeaurora.org> On
-> Behalf Of Kalle Valo
-> Sent: Saturday, October 2, 2021 12:34 AM
-> To: Pkshih <pkshih@realtek.com>
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH v6 00/24] rtw89: add Realtek 802.11ax driver
-> 
-> Ping-Ke Shih <pkshih@realtek.com> writes:
-> 
-> > This driver named rtw89, which is the next generation of rtw88, supports
-> > Realtek 8852AE 802.11ax 2x2 chip whose new features are OFDMA, DBCC,
-> > Spatial reuse, TWT and BSS coloring; now some of them aren't implemented
-> > though.
-> >
-> > The chip architecture is entirely different from the chips supported by
-> > rtw88 like RTL8822CE 802.11ac chip. First of all, register address ranges
-> > are totally redefined, so it's impossible to reuse register definition. To
-> > communicate with firmware, new H2C/C2H format is proposed. In order to have
-> > better utilization, TX DMA flow is changed to two stages DMA. To provide
-> > rich RX status information, additional RX PPDU packets are added.
-> >
-> > Since there are so many differences mentioned above, we decide to propose
-> > a new driver. It has many authors, they are listed in alphabetic order:
-> 
-> I did a review now and this looks pretty good to me. Kconfig has a
-> different license and lots of static/extern variables which are not
-> const, otherwise I only saw smaller issues. But I do have to admit that
-> after mac.h (in alphabetical order) my review was more on the sloppy
-> side, this is a large driver.
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/bcma/host_pci.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Thank you.
-I will revise the driver according to your comments.
-
-> 
-> The community has been testing this driver already, right?
-
-As Larry mentioned, end users use this driver. Since bugs found in v6,
-we have fixed them and driver is under QA. I plan to have that fixes in v7
-released this week.
-
-This version will also include fixes of your comments. 
-Does it work to you?
-
-> 
-> I pushed the driver to the pending branch for build testing:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=
-> pending&id=c9dfa866a9f4004fcbde9fc3ad8772ad417c6ad9
-> 
-
---
-Ping-Ke
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 69c10a7b7c61..960632197b05 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -162,7 +162,6 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
+ {
+ 	struct bcma_bus *bus;
+ 	int err = -ENOMEM;
+-	const char *name;
+ 	u32 val;
+ 
+ 	/* Alloc */
+@@ -175,10 +174,7 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
+ 	if (err)
+ 		goto err_kfree_bus;
+ 
+-	name = dev_name(&dev->dev);
+-	if (dev->driver && dev->driver->name)
+-		name = dev->driver->name;
+-	err = pci_request_regions(dev, name);
++	err = pci_request_regions(dev, "bcma-pci-bridge");
+ 	if (err)
+ 		goto err_pci_disable;
+ 	pci_set_master(dev);
+-- 
+2.30.2
 
