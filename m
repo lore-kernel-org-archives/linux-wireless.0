@@ -2,90 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35AAEC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:31:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2987C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:33:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1272861159
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E5CB6128A
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:33:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231142AbhJEFdq (ORCPT
+        id S232007AbhJEFfR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Oct 2021 01:33:46 -0400
+        Tue, 5 Oct 2021 01:35:17 -0400
 Received: from m43-7.mailgun.net ([69.72.43.7]:15347 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230403AbhJEFdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Oct 2021 01:33:46 -0400
+        id S231740AbhJEFfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Oct 2021 01:35:16 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633411916; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1633412006; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=c8LOerBQhA9YB/N4BZ5roeefjYwZzJONtp99S/VuNCE=;
- b=bQFVcR8ZF+TRINU5/+AUK1IBy+HBKChGoHG3A15r6cvsC0TJmihopQbqh44wcSwfrWwDekW7
- KHCzDahm91nnEpNdx0rzB9DXNCxR5UtyAOZH8XFBblpBMYC77VOTuLW+sW23Bmx0nY1bL2ak
- Xg7+PCl3JQKKaaip16Di0l2i4ZY=
+ Content-Type: Sender; bh=k8lSqHnJAUansCD00Twm75ZHHDIkxHaVX0p0kJSvRCQ=;
+ b=qDd9QGNYb1xNZjsutYxVfyaKVagxIrRriXk/+M2mbJ4mFYE9YSsG1H8EzRAl2vNq57+TyutT
+ /iNnFSpnBBh+2wEClk4VpzF4GqXW6zMBaRqdQPxlxEc93JROyM6wdo3HzsfXdQDCrrbJNf88
+ Cn792jBNiQuTNqTAknSaAfzEfFo=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 615be34887540061e6f8c344 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 05:31:52
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 615be3a20d9325367bca65b0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 05:33:22
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 352A5C4360D; Tue,  5 Oct 2021 05:31:52 +0000 (UTC)
+        id D556FC43460; Tue,  5 Oct 2021 05:33:22 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5942BC4338F;
-        Tue,  5 Oct 2021 05:31:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 5942BC4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA143C4338F;
+        Tue,  5 Oct 2021 05:33:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org AA143C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] brcmfmac: Add DMI nvram filename quirk for Cyberbook T116
- tablet
+Subject: Re: [PATCH v2] rtl8xxxu: Use lower tx rates for the ack packet
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210928160633.96928-1-hdegoede@redhat.com>
-References: <20210928160633.96928-1-hdegoede@redhat.com>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@infineon.com>,
-        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
+In-Reply-To: <20211001040044.1028708-1-chris.chiu@canonical.com>
+References: <20211001040044.1028708-1-chris.chiu@canonical.com>
+To:     Chris Chiu <chris.chiu@canonical.com>
+Cc:     Jes.Sorensen@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        code@reto-schneider.ch, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chris Chiu <chris.chiu@canonical.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20211005053152.352A5C4360D@smtp.codeaurora.org>
-Date:   Tue,  5 Oct 2021 05:31:52 +0000 (UTC)
+Message-Id: <20211005053322.D556FC43460@smtp.codeaurora.org>
+Date:   Tue,  5 Oct 2021 05:33:22 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hans de Goede <hdegoede@redhat.com> wrote:
+Chris Chiu <chris.chiu@canonical.com> wrote:
 
-> The Cyberbook T116 tablet contains quite generic names in the sys_vendor
-> and product_name DMI strings, without this patch brcmfmac will try to load:
-> "brcmfmac43455-sdio.Default string-Default string.txt" as nvram file which
-> is way too generic.
+> According to the Realtek propritary driver and the rtw88 driver, the
+> tx rates of the ack (includes block ack) are initialized with lower
+> tx rates (no HT rates) which is set by the RRSR register value. In
+> real cases, ack rate higher than current tx rate could lead to
+> difficulty for the receiving end to receive management/control frames.
+> The retransmission rate would be higher then expected when the driver
+> is acting as receiver and the RSSI is not good.
 > 
-> The nvram file shipped on the factory Android image contains the exact
-> same settings as those used on the AcePC T8 mini PC, so point the new
-> DMI nvram filename quirk to the acepc-t8 nvram file.
+> Cross out higer rates for ack packet before implementing dynamic rrsr
+> configuration like the commit 4830872685f8 ("rtw88: add dynamic rrsr
+> configuration").
 > 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+> Acked-by: Jes Sorensen <Jes.Sorensen@gmail.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-49c3eb3036e6 brcmfmac: Add DMI nvram filename quirk for Cyberbook T116 tablet
+7acd723c30c0 rtl8xxxu: Use lower tx rates for the ack packet
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210928160633.96928-1-hdegoede@redhat.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20211001040044.1028708-1-chris.chiu@canonical.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
