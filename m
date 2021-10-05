@@ -2,70 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C81A1C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 16:36:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77D26C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 17:50:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3FBF60F70
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 16:36:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51736613A9
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 17:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236550AbhJEQi1 (ORCPT
+        id S234628AbhJERvx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Oct 2021 12:38:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236537AbhJEQi0 (ORCPT
+        Tue, 5 Oct 2021 13:51:53 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:36074 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229626AbhJERvx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Oct 2021 12:38:26 -0400
-X-Greylist: delayed 1686 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 05 Oct 2021 09:36:35 PDT
-Received: from fudo.makrotopia.org (fudo.makrotopia.org [IPv6:2a07:2ec0:3002::71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D3E5C061749;
-        Tue,  5 Oct 2021 09:36:35 -0700 (PDT)
-Received: from local
-        by fudo.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-         (Exim 4.94.2)
-        (envelope-from <daniel@makrotopia.org>)
-        id 1mXmzM-0004zU-Ko; Tue, 05 Oct 2021 18:08:21 +0200
-Date:   Tue, 5 Oct 2021 17:08:05 +0100
-From:   Daniel Golle <daniel@makrotopia.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org, Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Subject: Re: [PATCH 2/2] dt: bindings: net: mt76: add eeprom-data property
-Message-ID: <YVx4ZaIZsfNQocT+@makrotopia.org>
-References: <YSWdv7ZKz7SBtF+v@makrotopia.org>
- <de40bcd3-d730-4d6b-27d0-50492fe18404@nbd.name>
+        Tue, 5 Oct 2021 13:51:53 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1633456202; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
+ To: From: Sender; bh=umNYz8pA01LGfst/ZDKb/BGeTkpsTgzCMazCvgWWhM4=; b=t5A2/u9w1e6hW7Z6gYXCGJ1gZxPcfqM75U0n6x47+Uq51pCQ+66fAHgjBsXM3F5rBKfdWDBS
+ NCfji9Q7rJY/kJJKbKJutaKCrFKqalD2xCmmIPudRaxSvJVe80aadSZbvTvhAM95xBRaQEA0
+ /crC2lWI4h9rS1zVdeGJQXd1WeY=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 615c903a003e680efbce267b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 17:49:46
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 9EE95C4338F; Tue,  5 Oct 2021 17:49:45 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E2E1DC4338F;
+        Tue,  5 Oct 2021 17:49:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org E2E1DC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     =?utf-8?B?SsOpcsO0bWU=?= Pouiller <jerome.pouiller@silabs.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-mmc@vger.kernel.org,
+        Pali =?utf-8?Q?Roh?= =?utf-8?Q?=C3=A1r?= <pali@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v8 00/24] wfx: get out from the staging area
+References: <20211005135400.788058-1-Jerome.Pouiller@silabs.com>
+        <875yubfthh.fsf@codeaurora.org> <2810333.gDgIz5hftg@pc-42>
+Date:   Tue, 05 Oct 2021 20:49:37 +0300
+In-Reply-To: <2810333.gDgIz5hftg@pc-42> (=?utf-8?B?IkrDqXLDtG1l?=
+ Pouiller"'s message of "Tue,
+        05 Oct 2021 18:22:31 +0200")
+Message-ID: <87o883e4zy.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <de40bcd3-d730-4d6b-27d0-50492fe18404@nbd.name>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 07:14:47PM +0200, Felix Fietkau wrote:
-> 
-> On 2021-08-25 03:33, Daniel Golle wrote:
-> > EEPROM data for mt76 can be embedded into device-tree as an array.
-> > 
-> > Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> > ---
-> >  .../devicetree/bindings/net/wireless/mediatek,mt76.yaml      | 5 +++++
-> >  1 file changed, 5 insertions(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > index 3e2c2e43175e5..1489d3c1cd6ec 100644
-> > --- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > @@ -47,6 +47,11 @@ properties:
-> >  
-> >    ieee80211-freq-limit: true
-> >  
-> > +  mediatek,eeprom-data:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> Given that the driver patch simply uses memcpy on the data, shouldn't we
-> use an uint8-array here?
+J=C3=A9r=C3=B4me Pouiller <jerome.pouiller@silabs.com> writes:
 
-When using the /incbin/('file.bin'); syntax the result is included as
-what appears to be a uint32-array when decompiling again with dtc.
+> On Tuesday 5 October 2021 16:15:22 CEST Kalle Valo wrote:
+>> Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
+>>=20
+>> > From: J=C3=A9r=C3=B4me Pouiller <jerome.pouiller@silabs.com>
+> [...]
+>> > v8:
+>> >   - Change the way the DT is handled. The user can now specify the nam=
+e of
+>> >     the board (=3D chip + antenna) he use. It easier for board designe=
+rs to
+>> >     add new entries. I plan to send a PR to linux-firmware to include =
+PDS
+>> >     files of the developpement boards belong the firmware (I also plan=
+ to
+>> >     relocate these file into wfx/ instead of silabs/). (Kalle, Pali)
+>> >   - Prefix visible functions and structs with "wfx_". I mostly kept the
+>> >     code under 80 columns. (Kalle, Pali, Greg)
+>> >   - Remove support for force_ps_timeout for now. (Kalle)
+>> >   - Fix licenses of Makefile, Kconfig and hif_api*.h. (Kalle)
+>> >   - Do not mix and match endianess in struct hif_ind_startup. (Kalle)
+>> >   - Remove magic values. (Kalle)
+>> >   - Use IS_ALIGNED(). (BTW, PTR_IS_ALIGNED() does not exist?) (Kalle)
+>> >   - I have also noticed that some headers files did not declare all the
+>> >     struct they used.
+>> >
+>> >   These issues remain (I hope they are not blockers):
+>> >   - I have currently no ideas how to improve/simplify the parsing PDS =
+file.
+>> >     (Kalle)
+>>=20
+>> For the PDS file problem it would help if you could actually describe
+>> what the firmware requires/needs and then we can start from that. I had
+>> some questions about this in v7 but apparently you missed those.
+>
+> Did you received this reply[1]?
+>
+> [1]: https://lore.kernel.org/all/2723787.uDASXpoAWK@pc-42/
+
+I did and I even made further questions:
+
+https://lore.kernel.org/all/87k0ixj5vn.fsf@codeaurora.org/
+
+Can we please continue the discussion on that thread instead of passing
+out lore links to each other :)
+
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
