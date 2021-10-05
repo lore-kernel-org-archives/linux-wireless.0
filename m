@@ -2,97 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6128C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 20:25:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D9D3C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:32:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B355261423
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 20:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE6561381
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Oct 2021 05:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235545AbhJEU1s (ORCPT
+        id S231751AbhJEFec (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Oct 2021 16:27:48 -0400
-Received: from mail.w1.fi ([212.71.239.96]:45786 "EHLO
-        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230019AbhJEU1s (ORCPT
+        Tue, 5 Oct 2021 01:34:32 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:47812 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230403AbhJEFec (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Oct 2021 16:27:48 -0400
-X-Greylist: delayed 306 seconds by postgrey-1.27 at vger.kernel.org; Tue, 05 Oct 2021 16:27:47 EDT
-Received: from localhost (localhost [127.0.0.1])
-        by li674-96.members.linode.com (Postfix) with ESMTP id 6DC7A110DE;
-        Tue,  5 Oct 2021 20:20:49 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at w1.fi
-Received: from li674-96.members.linode.com ([127.0.0.1])
-        by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id W-kqsIKIJhpv; Tue,  5 Oct 2021 20:20:47 +0000 (UTC)
-Received: by jm (sSMTP sendmail emulation); Tue, 05 Oct 2021 23:20:45 +0300
-Date:   Tue, 5 Oct 2021 23:20:45 +0300
-From:   Jouni Malinen <j@w1.fi>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Youghandhar Chintala <youghand@codeaurora.org>,
-        Abhishek Kumar <kuabhs@chromium.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: Re: [PATCH 2/3] mac80211: Add support to trigger sta disconnect on
- hardware restart
-Message-ID: <20211005202045.GA18000@w1.fi>
-References: <20201215172352.5311-1-youghand@codeaurora.org>
- <f2089f3c-db96-87bc-d678-199b440c05be@nbd.name>
- <ba0e6a3b783722c22715ae21953b1036@codeaurora.org>
- <CACTWRwt0F24rkueS9Ydq6gY3M-oouKGpaL3rhWngQ7cTP0xHMA@mail.gmail.com>
- <d5cfad1543f31b3e0d8e7a911d3741f3d5446c57.camel@sipsolutions.net>
- <66ba0f836dba111b8c7692f78da3f079@codeaurora.org>
- <5826123db4731bde01594212101ed5dbbea4d54f.camel@sipsolutions.net>
- <30fa98673ad816ec849f34853c9e1257@codeaurora.org>
- <90d3c3c8cedcf5f8baa77b3b6e94b18656fcd0be.camel@sipsolutions.net>
+        Tue, 5 Oct 2021 01:34:32 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1633411962; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=oeik4SHJ7/zT6Y6tH9SdWj4ivrSScffini1rxo27Ae8=;
+ b=uc5rf3Ogd0tGcbd4sY1Vx8nbPafJG/45OGtHJxSbN2Cz1FnN+1LQZFvTcDu57S6K736rR4yc
+ Fqc/Mw6wQlowfsHSzRD2K7e21wTqcqjd6bdXT3SnqUFYYEeRRrf4JSCE1qZEojgDS3Mp9Bhd
+ Rc7MYcZJXR7GkFGMekANAxfTwHk=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 615be377519bd8dcf0212176 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 05:32:39
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3E8DEC4338F; Tue,  5 Oct 2021 05:32:39 +0000 (UTC)
+Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 446F7C4338F;
+        Tue,  5 Oct 2021 05:32:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 446F7C4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <90d3c3c8cedcf5f8baa77b3b6e94b18656fcd0be.camel@sipsolutions.net>
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] bcma: drop unneeded initialization value
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210930194920.15847-1-sohaib.amhmd@gmail.com>
+References: <20210930194920.15847-1-sohaib.amhmd@gmail.com>
+To:     Sohaib Mohamed <sohaib.amhmd@gmail.com>
+Cc:     unlisted-recipients:; (no To-header on input)
+        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
+        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Illegal-Object: Syntax error in Cc: address found on vger.kernel.org:
+        Cc:     unlisted-recipients:; (no To-header on input)Sohaib Mohamed <sohaib.amhmd@gmail.com>
+                                                                     ^-missing end of address
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-Id: <20211005053239.3E8DEC4338F@smtp.codeaurora.org>
+Date:   Tue,  5 Oct 2021 05:32:39 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 11:20:50AM +0200, Johannes Berg wrote:
-> > We thought sending the delba would solve the problem as earlier thought 
-> > but the actual problem is with TX PN in a secure mode.
-> > It is not because of delba that the Seq number and TX PN are reset to 
-> > zero.
-> > It’s because of the HW restart, these parameters are reset to zero.
-> > Since FW/HW is the one which decides the TX PN, when it goes through 
-> > SSR, all these parameters are reset.
+Sohaib Mohamed <sohaib.amhmd@gmail.com> wrote:
+
+> Do not initialise statics to 0
+> ERROR found by checkpatch.pl
 > 
-> Right, we solved this problem too - in a sense the driver reads the
-> database (not just TX PN btw, also RX replay counters) when the firmware
-> crashes, and sending it back after the restart. mac80211 has some hooks
-> for that.
+> Signed-off-by: Sohaib Mohamed <sohaib.amhmd@gmail.com>
 
-This might be doable for some cases where the firmware is the component
-assigning the PN values on TX and the firmware still being in a state
-where the counter used for this could be fetched after a crash or
-detected misbehavior. However, this does not sound like a very reliable
-mechanism for cases where the firmware state for this cannot be trusted
-or for the cases where the TX PN is actually assigned by the hardware
-(which would get cleared on that restart and the value might be
-unreadable before that restart). Trying to pull for this information
-periodically before the issue is detected does not sound like a very
-robust design either, since that would both waste resources and have a
-race condition with the lower layers having transmitted additional
-frames.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Obviously it would be nice to be able to restore this type of state in
-all cases accurately, but that may not really be a viable approach for
-all designs and it would seem to make sense to provide an alternative
-approach to minimize the user visible impact from the rare cases of
-having to restart some low level components during an association.
+5668958f6a92 bcma: drop unneeded initialization value
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+https://patchwork.kernel.org/project/linux-wireless/patch/20210930194920.15847-1-sohaib.amhmd@gmail.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
