@@ -2,56 +2,56 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A54C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CE3C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F61F6120F
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:56:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D42E61166
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237597AbhJFD6M (ORCPT
+        id S237389AbhJFD6Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Oct 2021 23:58:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32986 "EHLO
+        Tue, 5 Oct 2021 23:58:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237388AbhJFD5B (ORCPT
+        with ESMTP id S237766AbhJFD5O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Oct 2021 23:57:01 -0400
+        Tue, 5 Oct 2021 23:57:14 -0400
 Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CDD9C06139D
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2021 20:54:25 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id t9so4633218lfd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2021 20:54:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD9BBC0613AA
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2021 20:54:26 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id x27so4576415lfu.5
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2021 20:54:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=lOnAyrBq8epXVQrN/WDXQeiKNCDBNkNLvVnOhj3ua+A=;
-        b=EXdBcPTCi9Pbs0BZua/dU4gI91si5Iub0rrfb+BVmheSvGSqXRSQ1kTj9Kqk/o+YSw
-         Sp1PzSb7XxDE6ZWrp4WTBqXtYUK5/iu+ZIPqibNy9cycqyaln2LWVHuzozAYV3rtzlq5
-         9JDIe22v3Rl6vzgtu8z/JAtQVwEN+sxrE1TnWj64YrQE2kjXFEYtiB6BN+wWrm+JRh2z
-         9/9v8A1FYXQ/r87Ky9Q+TyRfQMzrhSFQ1bsbzanHx72oRBfaCXppxWib6kYzeC6exCA9
-         QhKWbm+NHDc5HuI/TPTVgPnlLzD9VM/8PG/YDbKoHhCMtKa7spNdHPUdjZwN94pYp1e4
-         Xn7w==
+        bh=DZOpdA3eYjpudg4OpQFFkH8jLHw3BxsNdxzTMff7kgw=;
+        b=Vqowca4UgiaC+fBXqBcu/uY1PBquzcLUSNLvI4m85X7UrokO3SMSU2VjgjwlLvMQmh
+         qsx0PVYwuS97nctSczbW0/EPVJ0QBpI8npXxHwrFMaNxAVtaIlRSrtfDr/01lMkJFIzk
+         NeLaREUo2x9NAHKctYTeKFJdcbLKG3DGrW4TE6vnxKsvxVRzGpwnzWZPAhbV6qTOP1TZ
+         8albRcafCq9VIoNGF5i1EtEgCzTR7YeJxiTMPsw8rZxBFCSGpBQwXD+jrBjbyyQnVjnb
+         ujZ8iI+IoHoh/d/5ZhPx+FNiAsGnS4MzGWDOWNQ3qbBfyZhavzipupkGO+MkveylWsCR
+         B8HA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=lOnAyrBq8epXVQrN/WDXQeiKNCDBNkNLvVnOhj3ua+A=;
-        b=MNaTngTTHp/fIeTGNyOKz3YIQvh9oTFtlkCA1EHtTOOIdlOpzsGMedfX8NH7o/QBW0
-         fEj/OFJ5VKVy+j0YwaIuqwzmT5SLJdo4kxAgkxoyEf4AGVy0nKwo8sRIMiAiSkmZiG3y
-         V+mU8OeDZfdc1joiuvTvuiyhEvNxlK3VOL8Y8J808xxmE9Vrk8+RdtFyV+UbP5PY1Xg1
-         xT0Tbt4+YmOHLaMF6k7G44QzdtvrWOCfhpuY93S0xOqubVWV+9yUAKkrSrp/XzIKidD3
-         AVLaBNC5ckp5drU1dn4ZKqKr5kvKhd7SK3M0Kdz6VhB3sb4I8zUn/BBHEEERfqwQjk+u
-         oqGA==
-X-Gm-Message-State: AOAM532ahglh5pvMmB5GdoQZ9CnSm7i5+wMaG/SSK8GcQtotrZFT4rTu
-        8PfxxEVi170WRy8CLl0inVwM7A==
-X-Google-Smtp-Source: ABdhPJytJDOF+lgU658ts6E88pAfppSJZDYauPQN5bzLfv3wFMtv/ZGbgZCMTKCWUMBONI7iO1qyjQ==
-X-Received: by 2002:a2e:812:: with SMTP id 18mr26729407lji.497.1633492463509;
-        Tue, 05 Oct 2021 20:54:23 -0700 (PDT)
+        bh=DZOpdA3eYjpudg4OpQFFkH8jLHw3BxsNdxzTMff7kgw=;
+        b=H9aDS3yKoW2cdgr8FW68yaQe/U3CR1E+uoq51Mip1lijMoqCWBzmRSM3Objy0bwqfr
+         nH9qv4E+VruVFsDN4389pog1xiLhM7xX+UgeV0tXtHiCmbrnEVXHpwRFNTqAIz9WkBuq
+         XaknsPrd+GALeXobDKbhR5jLawUQdCxnna37neTwXiwH2Tm4JXPsO5tiYQmH5eO24OKD
+         dXsruUxjYo3mSd/y/0NmFDuslMG6STftNGj4jkfD8DWdyP5ckUH9DDHbEAGaz55ImtjW
+         sgjNhlZFs3QIYPNi9BozN9+2jRdK+sdqbR+kuq48mrGYYR/C+EcgPVV27gfm2dgz+yym
+         axWg==
+X-Gm-Message-State: AOAM533osxqHUjxEMTWj5ofgSalPC29yg+qinIO+qp6yQTNWAYqkxJm6
+        sZzurrTiaZVgGsdELjL7y4hiYQ==
+X-Google-Smtp-Source: ABdhPJzAuciR0Bs89UsVK2ICmqc78PA7gPD8wfVqylDag0DqJdI3Y1HguWHKaOEbTu8SD0HZCDgojQ==
+X-Received: by 2002:a2e:480a:: with SMTP id v10mr25910067lja.268.1633492465108;
+        Tue, 05 Oct 2021 20:54:25 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id s4sm2142967lfd.103.2021.10.05.20.54.22
+        by smtp.gmail.com with ESMTPSA id s4sm2142967lfd.103.2021.10.05.20.54.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Oct 2021 20:54:23 -0700 (PDT)
+        Tue, 05 Oct 2021 20:54:24 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -67,9 +67,9 @@ Cc:     linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
         ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH v1 13/15] arm64: dts: qcom: sdm845-db845c: add second channel to qca power sequencer
-Date:   Wed,  6 Oct 2021 06:54:05 +0300
-Message-Id: <20211006035407.1147909-14-dmitry.baryshkov@linaro.org>
+Subject: [PATCH v1 15/15] WIP: arm64: dts: qcom: qrb5165-rb5: add bus-pwrseq property to pcie0
+Date:   Wed,  6 Oct 2021 06:54:07 +0300
+Message-Id: <20211006035407.1147909-16-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211006035407.1147909-1-dmitry.baryshkov@linaro.org>
 References: <20211006035407.1147909-1-dmitry.baryshkov@linaro.org>
@@ -79,39 +79,23 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On DB845c board WiFi/BT chip can use both RF channels/antennas, so add
-vddch1-supply property.
-
 Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sdm845-db845c.dts | 7 +++++++
- 1 file changed, 7 insertions(+)
+ arch/arm64/boot/dts/qcom/qrb5165-rb5.dts | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
-index a6a34a959a91..0f3214c60980 100644
---- a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
-+++ b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
-@@ -342,6 +342,12 @@ vreg_l21a_2p95: ldo21 {
- 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
- 		};
+diff --git a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
+index 326330f528fc..0c347cb6f8e0 100644
+--- a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
++++ b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
+@@ -689,6 +689,7 @@ wifi-therm@1 {
  
-+		vreg_l23a_3p3: ldo23 {
-+			regulator-min-microvolt = <3300000>;
-+			regulator-max-microvolt = <3312000>;
-+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
-+		};
-+
- 		vreg_l24a_3p075: ldo24 {
- 			regulator-min-microvolt = <3088000>;
- 			regulator-max-microvolt = <3088000>;
-@@ -637,6 +643,7 @@ &qca_pwrseq {
- 	vddxo-supply = <&vreg_l7a_1p8>;
- 	vddrf-supply = <&vreg_l17a_1p3>;
- 	vddch0-supply = <&vreg_l25a_3p3>;
-+	vddch1-supply = <&vreg_l23a_3p3>;
+ &pcie0 {
+ 	status = "okay";
++	bus-pwrseq = <&qca_pwrseq 0>;
  };
  
- &sdhc_2 {
+ &pcie0_phy {
 -- 
 2.33.0
 
