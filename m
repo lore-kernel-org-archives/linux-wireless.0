@@ -2,130 +2,79 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23445C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D98C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 04:09:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A57D61166
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 03:57:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB72A6120F
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 04:09:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237461AbhJFD7G (ORCPT
+        id S229621AbhJFELi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Oct 2021 23:59:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33008 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237832AbhJFD5I (ORCPT
+        Wed, 6 Oct 2021 00:11:38 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:39439 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229460AbhJFELh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Oct 2021 23:57:08 -0400
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3C80C0613A4
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2021 20:54:25 -0700 (PDT)
-Received: by mail-lf1-x12b.google.com with SMTP id u18so4430689lfd.12
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2021 20:54:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=cntTQV+8xT1gaPRWwmEttMqurpErGQCflfEN/t0ShBw=;
-        b=nI8QFgOb018OHBusf4YC2JeMjW54+ysmQEB8kR7Xsem1gHesZm4WMMnTqiCIMiIJic
-         WI7/wxQI+UPOYHBu3IM8HVi9QtbP9cW2z7Dw6JKWTuCV4ApU9PGZzJrmoVoO8ohQJUx2
-         ofFLe3i5sE2uwNgAtXM+eSdn8y8WAry7pokGo4W4zYARZ5um+aTBPwVaXMYetwnPHqnt
-         EukYtJv6K7yZzw+gQsNKLblw67yWlUpB+YUL310GiTZMoiBbS2CMLfTpElLBXjmOdr5n
-         Qg+qq3q8Cw/VMVHNvozcdAKgFGZYFF40fyNeJ64thfSGSgOSto4way/p2ww9JO/ImxaM
-         5Lww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=cntTQV+8xT1gaPRWwmEttMqurpErGQCflfEN/t0ShBw=;
-        b=QhjNcAWLtzf0/WV7q0NlUTPybn24dqTdyanzQJ099ddnBACqpGVlbswLNx8h3vu+dy
-         AJXLyR+nkG8O+gtFV8UCmYTZvgiaZAMJad970o7gc5clRUp5iMR+qgUQH5a2OAmevXyW
-         fTfmfKPY/N7qjECuXbfs4evWX2J2qBuqJrlmBOMGPLxmISVJvnisZApmqpF97DkXkl/1
-         Z2/aEuMUijazAPmr/o5Ao0Rfe5gaxtKsg9pDuy1DKawEY2/OErT5SJ0MnBq6dADG9Ohf
-         sw1NcuK+6UHzqWDuxESQdqb+qW4gOospad4yGK+8MmmifQR3rnU86edUfm+kaQ1WDU/W
-         HtnA==
-X-Gm-Message-State: AOAM531Ml3zQzE48A32/3BPt1cEqjhQ5VQI9Le0Bur77qmJ2XHtdQbWe
-        5/mcjX9hq7OK5+/+fiMlErq02w==
-X-Google-Smtp-Source: ABdhPJxsUvRGDiX/+G1NjVUXp066qhnPQIzeN7/ovvdbZrBswOTRoBoS6GwOzADjXLYmhRy7xOhHcw==
-X-Received: by 2002:ac2:59d0:: with SMTP id x16mr7310130lfn.107.1633492464220;
-        Tue, 05 Oct 2021 20:54:24 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id s4sm2142967lfd.103.2021.10.05.20.54.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Oct 2021 20:54:23 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc:     linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH v1 14/15] WIP: PCI: qcom: use pwrseq to power up bus devices
-Date:   Wed,  6 Oct 2021 06:54:06 +0300
-Message-Id: <20211006035407.1147909-15-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211006035407.1147909-1-dmitry.baryshkov@linaro.org>
-References: <20211006035407.1147909-1-dmitry.baryshkov@linaro.org>
+        Wed, 6 Oct 2021 00:11:37 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1633493386; h=Content-Transfer-Encoding: MIME-Version:
+ Message-Id: Date: Subject: To: From: Sender;
+ bh=Epb80q1QhIE8K+LvMuWKca8JFrzu/zlPQkAurP80fmo=; b=U4KIAUbEhM3xEjBJkVq1PG3mHHL4NXUoMgx/xWASKc4Mm16wLUp3ewqgqUSjiJrK33mLQ8di
+ +UkDD5q5F1062/0yLqgWONpCIpgwAi1/foiho1qbZuNrSwC+cTr86DVQS28/4FlTvzga6uc9
+ FgfcipTTYpkK/1P37ALDKG9sH3o=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 615d218a03355859c81b676b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 06 Oct 2021 04:09:45
+ GMT
+Sender: alokad=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A8AEBC4338F; Wed,  6 Oct 2021 04:09:45 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1F7CDC4338F;
+        Wed,  6 Oct 2021 04:09:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 1F7CDC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: [v13 0/3] MBSSID and EMA support in AP mode
+Date:   Tue,  5 Oct 2021 21:09:35 -0700
+Message-Id: <20211006040938.9531-1-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use bus-pwrseq device tree node to power up the devices on the bus. This
-is to be rewritten with the proper code parsing the device tree and
-powering up individual devices.
+This patchset adds support for multiple BSSID and
+enhanced multi-BSSID advertisements for AP mode.
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+New patch added to split __ieee80211_beacon_get() first
+before MBSSID and EMA beacon handing.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8a7a300163e5..f398283912c7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -23,6 +23,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
-+#include <linux/pwrseq/consumer.h>
- #include <linux/regulator/consumer.h>
- #include <linux/reset.h>
- #include <linux/slab.h>
-@@ -1467,6 +1468,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	struct pcie_port *pp;
- 	struct dw_pcie *pci;
- 	struct qcom_pcie *pcie;
-+	struct pwrseq *pwrseq;
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -1520,6 +1522,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	pp->ops = &qcom_pcie_dw_ops;
- 
-+	pwrseq = devm_pwrseq_get(dev, "bus");
-+	if (IS_ERR(pwrseq)) {
-+		ret = PTR_ERR(pwrseq);
-+		goto err_pm_runtime_put;
-+	}
-+	if (pwrseq) {
-+		ret = pwrseq_full_power_on(pwrseq);
-+		if (ret)
-+			goto err_pm_runtime_put;
-+	}
-+
- 	ret = phy_init(pcie->phy);
- 	if (ret) {
- 		pm_runtime_disable(&pdev->dev);
+Aloka Dixit (1):
+  mac80211: split beacon retrieval functions
+
+John Crispin (2):
+  mac80211: MBSSID and EMA support in beacon handling
+  mac80211: MBSSID channel switch
+
+ include/net/mac80211.h     |  66 +++++++
+ net/mac80211/cfg.c         | 177 ++++++++++++++----
+ net/mac80211/ieee80211_i.h |   1 +
+ net/mac80211/tx.c          | 360 ++++++++++++++++++++++++++++---------
+ 4 files changed, 484 insertions(+), 120 deletions(-)
+
+
+base-commit: 171964252189d8ad5672c730f2197aa73092db6e
 -- 
-2.33.0
+2.31.1
 
