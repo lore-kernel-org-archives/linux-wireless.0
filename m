@@ -2,323 +2,260 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63856C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 04:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98ACBC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 07:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41FB46120F
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 04:09:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D0296113A
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Oct 2021 07:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230080AbhJFELm (ORCPT
+        id S237534AbhJFHex (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Oct 2021 00:11:42 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:56195 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229715AbhJFELm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Oct 2021 00:11:42 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633493391; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: To: From: Sender;
- bh=qOJs6C8FRmD1g6DWyS0ZFMfZOSufXk8Dh2RInssUWuk=; b=qvhlMXAn74WD0O+/DjO1ysuBQ7bVDjJzXKPvMHCpzWqoG2Ly75LGPmWFFYiOmF29N4soVA5m
- swAA6dGkiBGjR1JOYgAgvMT28FJhaqOwt2gcEgX+c0yO1Xpnv+FXFFAXgrUqVShabwk6FbDt
- 10MQKkeqHWuLo6B10OKRfbJ+HbE=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 615d218a03355859c81b6877 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 06 Oct 2021 04:09:46
- GMT
-Sender: alokad=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7298FC4338F; Wed,  6 Oct 2021 04:09:46 +0000 (UTC)
-Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9CF23C43460;
-        Wed,  6 Oct 2021 04:09:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 9CF23C43460
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Aloka Dixit <alokad@codeaurora.org>
-To:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: [v13 1/3] mac80211: split beacon retrieval functions
-Date:   Tue,  5 Oct 2021 21:09:36 -0700
-Message-Id: <20211006040938.9531-2-alokad@codeaurora.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211006040938.9531-1-alokad@codeaurora.org>
-References: <20211006040938.9531-1-alokad@codeaurora.org>
+        Wed, 6 Oct 2021 03:34:53 -0400
+Received: from mail-dm6nam10on2054.outbound.protection.outlook.com ([40.107.93.54]:26081
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S237448AbhJFHew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Oct 2021 03:34:52 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mRxRZ0dwyrh8/ZegOB9z3iZ23BsmB921g5fcF6N3Fc/GjyiWGyTyEpgD48GTy8+uJLlbegBvueXLe8ApqfHQmZrUGsDywJF0I3gUZTWtDnjTKh025QIIp9sSp2wN3MKMMZxsUylD0EIpLiHPUwIBR7hPZiCLeOCthWD/XiV1KYBwdZYTC6CUGmuNQ64LKbx9iDMzrwUp5U1C2XRG7xGoiWxsDVhp6O5v4GSrKC7zRuPKDNGaKlCQOdgQSi3W3vT2ST8c+svxW03KmoSKtUWYqDg0BJX7x4CsWOtrJi34umAQkjrOJ6rN9Yoi7Bs7uIPYSA6m70L26T5OwxWg7e4XEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CI3EkQPeflAF0v+8HIzRDHbCAyDTsxANKsxloD1B9tk=;
+ b=MUoNhc9GVu35JPYUyZcfKv1+Fb/w86m7RuPr/iYQPSANmS4GUFsgLIpNQsra8AKSDoEsNjXMWO3Oteo1yws0LTvhAqGQbMFVeKBYMoWP9a+DJnL9atk1wbA3Ra0H9n/uxSvbwjfMkyTXnWcKGUMjBnrBA+OXcSGMJNq33GZGFOvSgfpfsCvFcUXnkhEr8Di4slonNyHk6Em2oLBhWObJVarQUI+8iZsqG0qqhdtCSKdEmyziTzKWWEs+nxHwS1qE2QlwlEu8B5lYfpmIBMi4H42m9HWjjzXexwRNi1fstgaeKRXEnG2Dw0emfOj+0DrkgP0heEMl2Rw7pgDv8jfrKg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CI3EkQPeflAF0v+8HIzRDHbCAyDTsxANKsxloD1B9tk=;
+ b=C0F96TsLnUUK1mI0MVa/dwWnGA3oyyffJy0CZ8ZG/+dd6RuaeNiI+NwURlDptkKZWSYOBd0PHVVz7g9craUJarx4J4j4qmRUq5bwyCpj7o9bCxYou6J2x5DDxRH/8n7NxiAYBK+OJJDYmxhJePhbbAFJZzyfjvPenOEwzQL7AVw=
+Authentication-Results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=silabs.com;
+Received: from PH0PR11MB5657.namprd11.prod.outlook.com (2603:10b6:510:ee::19)
+ by PH0PR11MB5580.namprd11.prod.outlook.com (2603:10b6:510:e5::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.15; Wed, 6 Oct
+ 2021 07:32:58 +0000
+Received: from PH0PR11MB5657.namprd11.prod.outlook.com
+ ([fe80::31cb:3b13:b0e8:d8f4]) by PH0PR11MB5657.namprd11.prod.outlook.com
+ ([fe80::31cb:3b13:b0e8:d8f4%9]) with mapi id 15.20.4566.023; Wed, 6 Oct 2021
+ 07:32:58 +0000
+From:   =?ISO-8859-1?Q?J=E9r=F4me?= Pouiller <jerome.pouiller@silabs.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-mmc@vger.kernel.org,
+        Pali =?ISO-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v7 05/24] wfx: add main.c/main.h
+Date:   Wed, 06 Oct 2021 09:32:49 +0200
+Message-ID: <3570035.Z1gqkuQO5x@pc-42>
+Organization: Silicon Labs
+In-Reply-To: <87k0ixj5vn.fsf@codeaurora.org>
+References: <20210920161136.2398632-1-Jerome.Pouiller@silabs.com> <2723787.uDASXpoAWK@pc-42> <87k0ixj5vn.fsf@codeaurora.org>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+X-ClientProxiedBy: PR3P189CA0031.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:102:53::6) To PH0PR11MB5657.namprd11.prod.outlook.com
+ (2603:10b6:510:ee::19)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from pc-42.localnet (37.71.187.125) by PR3P189CA0031.EURP189.PROD.OUTLOOK.COM (2603:10a6:102:53::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.14 via Frontend Transport; Wed, 6 Oct 2021 07:32:55 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 540fd5ac-e407-442f-5ad9-08d9889b84cf
+X-MS-TrafficTypeDiagnostic: PH0PR11MB5580:
+X-Microsoft-Antispam-PRVS: <PH0PR11MB5580E54D8F7D0FBC6D46CBE493B09@PH0PR11MB5580.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: XHaxFnxC0VYcyNfilhw8osTedQp2tTjPObPrXg2P9kE2TJQdxX/oYaWQzfN7nceJJc/Dqv5HBEx6V0qSDFZNOitPp3Hpo4Gd2WvrWoFfuw8SPCX2y3i76BkvVedNLiEBqG7ez46R7P6HxSvxGxIIh0TEg51XwKERKVU75+nDxGh1gsEmWzz4QrDJQyx1eRMcWJdB6lYiCR+2SyUkSj3a1bzq4JIRin7BTr02Ec5kc0eT+TjcAYnszPyLzaWTA82oQ68QFCl9wYXJ0c950KLLGib2WHl6kWoL/b4GYX00dx4wUvnHfiwy7zK6QZoOo9tWgk8n4GaaZ/7emmSkJlumltEPG52TO2iVWmcoUtGOjXl3wllrpEpF7t+ypZw2pAWfQcYIfU3cWAosRd8EhFMWX24jhSwSE3MyV1tHtPjyqNJ85yk7XhuvaTDEMr6C83jX8GhSbNhy+oUQEWA65EbPAixZAvzIDpVSGPErHBXEY4b4Q7zyLOzvQVXL6aKU2krP27QW3zuJ7Z4eMqdsoog+5vLxu+MRQLOJDfSdiZ1dvReqk65YWNVGw1axP88pLQ75TG5DiK8WPnZEOOFqitXAt6kw+NwU7MyTojNAPcQSxnzf4lrXCqz6FfD8imnGuhifiC9kxUE4lqi9zXkRkEPncMWP4uWPSlEq7JT+EpNOsqb0XZho/EQ8Ak70/VTTsVsrnhe18c9Xoyffsxs27CTMItuA9ejXFW/93Evo0RsF/tM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB5657.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6486002)(186003)(36916002)(38100700002)(2906002)(7416002)(316002)(26005)(38350700002)(956004)(66556008)(66476007)(54906003)(8676002)(66946007)(52116002)(33716001)(6512007)(6666004)(6916009)(6506007)(9686003)(86362001)(4326008)(508600001)(83380400001)(66574015)(5660300002)(8936002)(39026012);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?iso-8859-1?Q?y+vgkbNMKFALkqOn2Kv0C1i5dDSlO1i1bCkblVuPTivTzygrvT0FGjbF5/?=
+ =?iso-8859-1?Q?lyVn0fGBro2YE9ew4RmFobo0UQib21w8xlXf7EoqaCbsyK5KDlVaN2Bb1l?=
+ =?iso-8859-1?Q?qNjPtOk2i921Q+oEU8aiSi7bFL55CgtynTeApsAPzcT0PewkNom5FmZDnV?=
+ =?iso-8859-1?Q?oYfny4ltA2jdsnYAS8hYNT1L39bgSOwwevGUwvp/rJhQBimgoz51i8dJOj?=
+ =?iso-8859-1?Q?EBJM2WdymCD1gtsPjHO1BrIeNAaW2J1KHWqUqW+oMGv0fSTJF0Vsvh90CT?=
+ =?iso-8859-1?Q?/OeprBi5LLaHG9qL3b3px/HXmlMW9C1CGCHioi9m4sSSPm3QBjjEcrOnzs?=
+ =?iso-8859-1?Q?udtBg2C62J6d8wwUuLmhRmr5yK5bvrgffnk8ht/ISTPQMI8UxK9RPv2Ut+?=
+ =?iso-8859-1?Q?LJbMUKss973/sv3J2kpJPp8hZ/wNrHAlpU+3QOlzsbYTqcKsmUZOu9A7m4?=
+ =?iso-8859-1?Q?qWV+JwoicQZ0zk4cEHpkwRKU7dZ8zJ3DVdDgB1CVFcpNYPQDdax5JqH/Lx?=
+ =?iso-8859-1?Q?wi1mnOCuQXCpmEejOuRFA5rBN+quE85uX62143HatJ2EG7TmVteQTjmvvq?=
+ =?iso-8859-1?Q?c7tAhcwfxi0/5y3sa108V85oWHVUq1SIXq/6PQBNljx8LMoKRlcNxqSAfP?=
+ =?iso-8859-1?Q?DSe8bvvuZdHzcvjeta/iBFDLvQptTVh1bi+dgANeK8RrOgn8kOojPJ7suk?=
+ =?iso-8859-1?Q?HEYXPvOZnM3svurYJuMRSGhpGMyAJzS6BKia5dA1fK6HDumX4pgqxz3EDe?=
+ =?iso-8859-1?Q?PsvoLhGQ6FrUqVt24iyzHNjRwEcOAUElyYUT+MG2x0TGT54zHmgzb+uln8?=
+ =?iso-8859-1?Q?tSW4sZEHMFQSJB9tTRlvHniAeFzXnlnyVjNVk8RA8g+gi7cCMHAo6ZWdTP?=
+ =?iso-8859-1?Q?ftdKiebePikn46LX9oZQ4IoWqk/sMoZjgXNUxWaAlgcxQqvxyUgZusl1XI?=
+ =?iso-8859-1?Q?f1bbNKrZzANXa5UGqnzJN8L6TrqxruqYkyVfEqBq75xntqPhUMVmd6jyLi?=
+ =?iso-8859-1?Q?93MRJLwIXddgKUZx/YLl55IJuXggCgY814/NLHiyKMVmGqkMj3avpaFtKu?=
+ =?iso-8859-1?Q?G2kYLJQXSCBWncTXPzSz26Nc0rxTH+1G3XNxlfHsrtYdM5hRWRoKTyRHjX?=
+ =?iso-8859-1?Q?mk6ONnfUS9EBbVo/u7iMSpbltu5aCjABgQud6hngEV6uEm2skXSvFO52eG?=
+ =?iso-8859-1?Q?LFHMupZiyP4WpArg7cOEdXhtz8KBnjLyCRi+O3wB+BMCIT4NttMDT+7sNd?=
+ =?iso-8859-1?Q?28eL+xvjehWOgMGGF0Kn+oLJaa9rdZT2Xtots44/71FXdDrTpp9EipZrqD?=
+ =?iso-8859-1?Q?yYK/WN1IlmzJ1nxnmsHrI2rvIXkFxcTG2lHbJBvInQuDaIfkivCsrBlgUs?=
+ =?iso-8859-1?Q?ypP/TrecU2?=
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 540fd5ac-e407-442f-5ad9-08d9889b84cf
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB5657.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Oct 2021 07:32:58.2152
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KqGG3eY+QNHkMoy98/bny2IcXRYo+hrGCjBemu88iqEY/I3RnJLbGQ4pBPuzcD+05wK9ZV16oHFpWeUqBfAYwQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB5580
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Split __ieee80211_beacon_get() into a separate function for AP mode
-ieee80211_beacon_get_ap().
-Also, move the code common to all modes (AP, adhoc and mesh) to
-a separate function ieee80211_beacon_get_finish().
+Hi Kalle,
 
-Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
----
-v13:New addition to the patch series compared to v12.
-This change is added in a separate patch for better readability.
+On Friday 1 October 2021 14:18:04 CEST Kalle Valo wrote:
+> J=E9r=F4me Pouiller <jerome.pouiller@silabs.com> writes:
+>=20
+> > On Friday 1 October 2021 11:22:08 CEST Kalle Valo wrote:
+> >> Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
+> >>=20
+> >> > From: J=E9r=F4me Pouiller <jerome.pouiller@silabs.com>
+> >> >
+> >> > Signed-off-by: J=E9r=F4me Pouiller <jerome.pouiller@silabs.com>
+> >>=20
+> >> [...]
+> >>=20
+> >> > +/* The device needs data about the antenna configuration. This info=
+rmation in
+> >> > + * provided by PDS (Platform Data Set, this is the wording used in =
+WF200
+> >> > + * documentation) files. For hardware integrators, the full process=
+ to create
+> >> > + * PDS files is described here:
+> >> > + *   https:github.com/SiliconLabs/wfx-firmware/blob/master/PDS/READ=
+ME.md
+> >> > + *
+> >> > + * So this function aims to send PDS to the device. However, the PD=
+S file is
+> >> > + * often bigger than Rx buffers of the chip, so it has to be sent i=
+n multiple
+> >> > + * parts.
+> >> > + *
+> >> > + * In add, the PDS data cannot be split anywhere. The PDS files con=
+tains tree
+> >> > + * structures. Braces are used to enter/leave a level of the tree (=
+in a JSON
+> >> > + * fashion). PDS files can only been split between root nodes.
+> >> > + */
+> >> > +int wfx_send_pds(struct wfx_dev *wdev, u8 *buf, size_t len)
+> >> > +{
+> >> > +     int ret;
+> >> > +     int start, brace_level, i;
+> >> > +
+> >> > +     start =3D 0;
+> >> > +     brace_level =3D 0;
+> >> > +     if (buf[0] !=3D '{') {
+> >> > + dev_err(wdev->dev, "valid PDS start with '{'. Did you forget to
+> >> > compress it?\n");
+> >> > +             return -EINVAL;
+> >> > +     }
+> >> > +     for (i =3D 1; i < len - 1; i++) {
+> >> > +             if (buf[i] =3D=3D '{')
+> >> > +                     brace_level++;
+> >> > +             if (buf[i] =3D=3D '}')
+> >> > +                     brace_level--;
+> >> > +             if (buf[i] =3D=3D '}' && !brace_level) {
+> >> > +                     i++;
+> >> > +                     if (i - start + 1 > WFX_PDS_MAX_SIZE)
+> >> > +                             return -EFBIG;
+> >> > +                     buf[start] =3D '{';
+> >> > +                     buf[i] =3D 0;
+> >> > +                     dev_dbg(wdev->dev, "send PDS '%s}'\n", buf + s=
+tart);
+> >> > +                     buf[i] =3D '}';
+> >> > +                     ret =3D hif_configuration(wdev, buf + start,
+> >> > +                                             i - start + 1);
+> >> > +                     if (ret > 0) {
+> >> > + dev_err(wdev->dev, "PDS bytes %d to %d: invalid data (unsupported
+> >> > options?)\n",
+> >> > +                                     start, i);
+> >> > +                             return -EINVAL;
+> >> > +                     }
+> >> > +                     if (ret =3D=3D -ETIMEDOUT) {
+> >> > + dev_err(wdev->dev, "PDS bytes %d to %d: chip didn't reply (corrupt=
+ed
+> >> > file?)\n",
+> >> > +                                     start, i);
+> >> > +                             return ret;
+> >> > +                     }
+> >> > +                     if (ret) {
+> >> > + dev_err(wdev->dev, "PDS bytes %d to %d: chip returned an unknown
+> >> > error\n",
+> >> > +                                     start, i);
+> >> > +                             return -EIO;
+> >> > +                     }
+> >> > +                     buf[i] =3D ',';
+> >> > +                     start =3D i;
+> >> > +             }
+> >> > +     }
+> >> > +     return 0;
+> >> > +}
+> >>=20
+> >> I'm not really fond of having this kind of ASCII based parser in the
+> >> kernel. Do you have an example compressed file somewhere?
+> >
+> > An example of uncompressed configuration file can be found here[1]. Onc=
+e
+> > compressed with [2], you get:
+> >
+> >     {a:{a:4,b:1},b:{a:{a:4,b:0,c:0,d:0,e:A},b:{a:4,b:0,c:0,d:0,e:B},c:{=
+a:4,b:0,c:0,d:0,e:C},d:{a:4,b:0,c:0,d:0,e:D},e:{a:4,b:0,c:0,d:0,e:E},f:{a:4=
+,b:0,c:0,d:0,e:F},g:{a:4,b:0,c:0,d:0,e:G},h:{a:4,b:0,c:0,d:0,e:H},i:{a:4,b:=
+0,c:0,d:0,e:I},j:{a:4,b:0,c:0,d:0,e:J},k:{a:4,b:0,c:0,d:0,e:K},l:{a:4,b:0,c=
+:0,d:1,e:L},m:{a:4,b:0,c:0,d:1,e:M}},c:{a:{a:4},b:{a:6},c:{a:6,c:0},d:{a:6}=
+,e:{a:6},f:{a:6}},e:{b:0,c:1},h:{e:0,a:50,b:0,d:0,c:[{a:1,b:[0,0,0,0,0,0]},=
+{a:2,b:[0,0,0,0,0,0]},{a:[3,9],b:[0,0,0,0,0,0]},{a:A,b:[0,0,0,0,0,0]},{a:B,=
+b:[0,0,0,0,0,0]},{a:[C,D],b:[0,0,0,0,0,0]},{a:E,b:[0,0,0,0,0,0]}]},j:{a:0,b=
+:0}}
+>=20
+> So what's the grand idea with this braces format? I'm not getting it.
 
- net/mac80211/tx.c | 203 +++++++++++++++++++++++++++-------------------
- 1 file changed, 118 insertions(+), 85 deletions(-)
+  - It allows to describe a tree structure
+  - It is ascii (easy to dump, easy to copy-paste)
+  - It is small (as I explain below, size matters)
+  - Since it is similar to JSON, the structure is obvious to many people
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2d1193ed3eb5..ac9ab007dc6f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4979,6 +4979,115 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
- 	return 0;
- }
- 
-+static void
-+ieee80211_beacon_get_finish(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif,
-+			    struct ieee80211_mutable_offsets *offs,
-+			    struct beacon_data *beacon,
-+			    struct sk_buff *skb,
-+			    struct ieee80211_chanctx_conf *chanctx_conf,
-+			    u16 csa_off_base)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_tx_info *info;
-+	enum nl80211_band band;
-+	struct ieee80211_tx_rate_control txrc;
-+
-+	/* CSA offsets */
-+	if (offs && beacon) {
-+		u16 i;
-+
-+		for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; i++) {
-+			u16 csa_off = beacon->cntdwn_counter_offsets[i];
-+
-+			if (!csa_off)
-+				continue;
-+
-+			offs->cntdwn_counter_offs[i] = csa_off_base + csa_off;
-+		}
-+	}
-+
-+	band = chanctx_conf->def.chan->band;
-+	info = IEEE80211_SKB_CB(skb);
-+	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	info->flags |= IEEE80211_TX_CTL_NO_ACK;
-+	info->band = band;
-+
-+	memset(&txrc, 0, sizeof(txrc));
-+	txrc.hw = hw;
-+	txrc.sband = local->hw.wiphy->bands[band];
-+	txrc.bss_conf = &sdata->vif.bss_conf;
-+	txrc.skb = skb;
-+	txrc.reported_rate.idx = -1;
-+	if (sdata->beacon_rate_set && sdata->beacon_rateidx_mask[band])
-+		txrc.rate_idx_mask = sdata->beacon_rateidx_mask[band];
-+	else
-+		txrc.rate_idx_mask = sdata->rc_rateidx_mask[band];
-+	txrc.bss = true;
-+	rate_control_get_rate(sdata, NULL, &txrc);
-+
-+	info->control.vif = vif;
-+	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT |
-+		       IEEE80211_TX_CTL_ASSIGN_SEQ |
-+		       IEEE80211_TX_CTL_FIRST_FRAGMENT;
-+}
-+
-+static struct sk_buff *
-+ieee80211_beacon_get_ap(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			struct ieee80211_mutable_offsets *offs,
-+			bool is_template,
-+			struct beacon_data *beacon,
-+			struct ieee80211_chanctx_conf *chanctx_conf)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_if_ap *ap = &sdata->u.ap;
-+	struct sk_buff *skb = NULL;
-+	u16 csa_off_base = 0;
-+
-+	if (beacon->cntdwn_counter_offsets[0]) {
-+		if (!is_template)
-+			ieee80211_beacon_update_cntdwn(vif);
-+
-+		ieee80211_set_beacon_cntdwn(sdata, beacon);
-+	}
-+
-+	/* headroom, head length,
-+	 * tail length and maximum TIM length
-+	 */
-+	skb = dev_alloc_skb(local->tx_headroom + beacon->head_len +
-+			    beacon->tail_len + 256 +
-+			    local->hw.extra_beacon_tailroom);
-+	if (!skb)
-+		return NULL;
-+
-+	skb_reserve(skb, local->tx_headroom);
-+	skb_put_data(skb, beacon->head, beacon->head_len);
-+
-+	ieee80211_beacon_add_tim(sdata, &ap->ps, skb, is_template);
-+
-+	if (offs) {
-+		offs->tim_offset = beacon->head_len;
-+		offs->tim_length = skb->len - beacon->head_len;
-+		offs->cntdwn_counter_offs[0] = beacon->cntdwn_counter_offsets[0];
-+
-+		/* for AP the csa offsets are from tail */
-+		csa_off_base = skb->len;
-+	}
-+
-+	if (beacon->tail)
-+		skb_put_data(skb, beacon->tail, beacon->tail_len);
-+
-+	if (ieee80211_beacon_protect(skb, local, sdata) < 0)
-+		return NULL;
-+
-+	ieee80211_beacon_get_finish(hw, vif, offs, beacon, skb, chanctx_conf,
-+				    csa_off_base);
-+	return skb;
-+}
-+
- static struct sk_buff *
- __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
-@@ -4988,12 +5097,8 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct beacon_data *beacon = NULL;
- 	struct sk_buff *skb = NULL;
--	struct ieee80211_tx_info *info;
- 	struct ieee80211_sub_if_data *sdata = NULL;
--	enum nl80211_band band;
--	struct ieee80211_tx_rate_control txrc;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
--	int csa_off_base = 0;
- 
- 	rcu_read_lock();
- 
-@@ -5010,48 +5115,11 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		struct ieee80211_if_ap *ap = &sdata->u.ap;
- 
- 		beacon = rcu_dereference(ap->beacon);
--		if (beacon) {
--			if (beacon->cntdwn_counter_offsets[0]) {
--				if (!is_template)
--					ieee80211_beacon_update_cntdwn(vif);
--
--				ieee80211_set_beacon_cntdwn(sdata, beacon);
--			}
--
--			/*
--			 * headroom, head length,
--			 * tail length and maximum TIM length
--			 */
--			skb = dev_alloc_skb(local->tx_headroom +
--					    beacon->head_len +
--					    beacon->tail_len + 256 +
--					    local->hw.extra_beacon_tailroom);
--			if (!skb)
--				goto out;
--
--			skb_reserve(skb, local->tx_headroom);
--			skb_put_data(skb, beacon->head, beacon->head_len);
--
--			ieee80211_beacon_add_tim(sdata, &ap->ps, skb,
--						 is_template);
--
--			if (offs) {
--				offs->tim_offset = beacon->head_len;
--				offs->tim_length = skb->len - beacon->head_len;
--				offs->cntdwn_counter_offs[0] = beacon->cntdwn_counter_offsets[0];
--
--				/* for AP the csa offsets are from tail */
--				csa_off_base = skb->len;
--			}
--
--			if (beacon->tail)
--				skb_put_data(skb, beacon->tail,
--					     beacon->tail_len);
--
--			if (ieee80211_beacon_protect(skb, local, sdata) < 0)
--				goto out;
--		} else
-+		if (!beacon)
- 			goto out;
-+
-+		skb = ieee80211_beacon_get_ap(hw, vif, offs, is_template,
-+					      beacon, chanctx_conf);
- 	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
- 		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 		struct ieee80211_hdr *hdr;
-@@ -5077,6 +5145,9 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 						 IEEE80211_STYPE_BEACON);
-+
-+		ieee80211_beacon_get_finish(hw, vif, offs, beacon, skb,
-+					    chanctx_conf, 0);
- 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
-@@ -5116,51 +5187,13 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		}
- 
- 		skb_put_data(skb, beacon->tail, beacon->tail_len);
-+		ieee80211_beacon_get_finish(hw, vif, offs, beacon, skb,
-+					    chanctx_conf, 0);
- 	} else {
- 		WARN_ON(1);
- 		goto out;
- 	}
- 
--	/* CSA offsets */
--	if (offs && beacon) {
--		int i;
--
--		for (i = 0; i < IEEE80211_MAX_CNTDWN_COUNTERS_NUM; i++) {
--			u16 csa_off = beacon->cntdwn_counter_offsets[i];
--
--			if (!csa_off)
--				continue;
--
--			offs->cntdwn_counter_offs[i] = csa_off_base + csa_off;
--		}
--	}
--
--	band = chanctx_conf->def.chan->band;
--
--	info = IEEE80211_SKB_CB(skb);
--
--	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
--	info->flags |= IEEE80211_TX_CTL_NO_ACK;
--	info->band = band;
--
--	memset(&txrc, 0, sizeof(txrc));
--	txrc.hw = hw;
--	txrc.sband = local->hw.wiphy->bands[band];
--	txrc.bss_conf = &sdata->vif.bss_conf;
--	txrc.skb = skb;
--	txrc.reported_rate.idx = -1;
--	if (sdata->beacon_rate_set && sdata->beacon_rateidx_mask[band])
--		txrc.rate_idx_mask = sdata->beacon_rateidx_mask[band];
--	else
--		txrc.rate_idx_mask = sdata->rc_rateidx_mask[band];
--	txrc.bss = true;
--	rate_control_get_rate(sdata, NULL, &txrc);
--
--	info->control.vif = vif;
--
--	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT |
--			IEEE80211_TX_CTL_ASSIGN_SEQ |
--			IEEE80211_TX_CTL_FIRST_FRAGMENT;
-  out:
- 	rcu_read_unlock();
- 	return skb;
--- 
-2.31.1
+Anyway, I am not the author of that and I have to deal with it.
+
+> Usually the drivers just consider this kind of firmware configuration
+> data as a binary blob and dump it to the firmware, without knowing what
+> the data contains. Can't you do the same?
+
+[I didn't had received this mail :( ]
+
+The idea was also to send it as a binary blob. However, the firmware use
+a limited buffer (1500 bytes) to parse it. In most of case the PDS exceeds
+this size. So, we have to split the PDS before to send it.
+
+Unfortunately, we can't split it anywhere. The PDS is a tree structure and
+the firmware expects to receive a well formatted tree.
+
+So, the easiest way to send it to the firmware is to split the tree
+between each root nodes and send each subtree separately (see also the
+comment above wfx_send_pds()).
+
+Anyway, someone has to cook this configuration before to send it to the
+firmware. This could be done by a script outside of the kernel. Then we
+could change the input format to simplify a bit the processing in the
+kernel. However, the driver has already some users and I worry that
+changing the input format would lead to a mess.
+
+
+--=20
+J=E9r=F4me Pouiller
+
 
