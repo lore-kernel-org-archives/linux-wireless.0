@@ -2,61 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B14C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60533C4332F
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18DEF61037
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46ACB61139
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241654AbhJGNkO (ORCPT
+        id S241769AbhJGNk1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Oct 2021 09:40:14 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:51870
+        Thu, 7 Oct 2021 09:40:27 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:51958
         "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241609AbhJGNkN (ORCPT
+        by vger.kernel.org with ESMTP id S241726AbhJGNkU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Oct 2021 09:40:13 -0400
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
+        Thu, 7 Oct 2021 09:40:20 -0400
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com [209.85.208.71])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 80C2940004
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2021 13:38:19 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 26E8E4000B
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2021 13:38:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1633613899;
-        bh=upOlM+YeqtC352ZviJAd3z51Fz6iHXHCRP6fI5EVtCE=;
-        h=From:To:Subject:Date:Message-Id:MIME-Version;
-        b=K5uPIBXYNqgj8WIbZHM0hMG99YXTHyO+Zovg4ikX+hRJC2O1bpHSFvA3kuTx9sSnO
-         VzhbizAApl2oBaiTMoD1M8r87qsbRPPHJ8iU6naqHZEbE8t9nZEBOMce5SvlQvtoQw
-         eYM7ZVfys1sbwbZrUKTcI20rb8b7YGUaOayHhX5Fc6bsWRXmiRi8+G9V+1loYzyM6i
-         PbkO9W6CPTxNCO2VkI4gE6RJ1ivFs7Mnrzsn629kzGx94QfPk+fUi3ITaCMOzwXThX
-         rpkg7yyPnSsR7HqMCSM5VrEV7tbLrUFmFvtef/BpjOLvpYeZPiJPPZ4E8s6XQ5UVMv
-         6tp0izuzWVg+g==
-Received: by mail-ed1-f70.google.com with SMTP id 1-20020a508741000000b003da559ba1eeso5917727edv.13
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2021 06:38:19 -0700 (PDT)
+        s=20210705; t=1633613906;
+        bh=7wHPc2hCaswmbEOYcj4jBzC9LLYp/Egl2xOhlhUQit0=;
+        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+         MIME-Version;
+        b=bCkeO3ho4YrUR6lTkKn/tO58cFU212ssnq2pQ8FEdorzzaUIBaMRu6UKoftWX0EPm
+         7vAcYyU74h6nyl6O2ZRmLwUrEQHhyzUF7h40jzlfz0RsvjR5pAj7BDjq67pBKetJT5
+         UY9rBmr1nfbmy8oPtpdHFEuVI1vogY2SNQjbVZ4Ij74NF1e5hI8MOmaGlM6PpMNv1F
+         ueQ90By2iPioZ52b04wqf8z7h/beYZzbN+Yu50Fea3FWAVzlRZO26bHW3VNP96BqTo
+         /4cdhnCkixh+I65Obb3A0jMRuWB00EsJZVhvycsAyMhuYSFOgsTvF0zhpS32f1zWCI
+         jmCBOSDZdsCLA==
+Received: by mail-ed1-f71.google.com with SMTP id 2-20020a508e02000000b003d871759f5dso5906680edw.10
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2021 06:38:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=upOlM+YeqtC352ZviJAd3z51Fz6iHXHCRP6fI5EVtCE=;
-        b=RHhiT47hQs8rBwO1chL5zBAzFhshO712se6jCVIh+rJ3E0fUYLcJHyhZIXLbC3vQeF
-         J9g8LfjHah6Q5okE2j4FuIpgAS6WMAp1tbBHbzTDBIDvZ3Oit3nf47e6OyeduW4FSD9l
-         dSL7Revn7qKrHS1hrsXTaGAxhR3IZxp81BofajoBkvkzFGHjy9KmFG92QQEV8p7EbQJh
-         iLVf/BHWgvLyaIGuYsxkW/AZzkvWTPSSRHGuMmaNy5Ex48idZ8PDHdXlAB/eJ7A2QxXO
-         F/cxO4EXfyybOcofamNqIFCchKxlX35M+J/AY1vQSdXjP+kVfrzkO5qwwSWqPQeQqDmi
-         b+Wg==
-X-Gm-Message-State: AOAM533+mUozp1ZrcIC2aYf3QAZC+wcwDa0IaP9JkCRRtGBFttO0iibI
-        FZ8i8VE7DG9VZ9Td467SczAY+q9T8YPZ6RjvGadb/+NvIgYOkHMNAtcyb1lIsyiD4tpPmjPnbZt
-        phujfPWXnXjWryia5VdMlCQrSYr/Hh4YJqJ6skyDE0uaQ
-X-Received: by 2002:a17:906:2cc9:: with SMTP id r9mr5959249ejr.138.1633613899064;
-        Thu, 07 Oct 2021 06:38:19 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJysz8D0vmS0o8wE8Hx/CAwpkXQSt/jJcGqT2FQLo0gEaR7VKf/x4sZjGm1ZRgWQW1Xzl63ykg==
-X-Received: by 2002:a17:906:2cc9:: with SMTP id r9mr5959208ejr.138.1633613898754;
-        Thu, 07 Oct 2021 06:38:18 -0700 (PDT)
+        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7wHPc2hCaswmbEOYcj4jBzC9LLYp/Egl2xOhlhUQit0=;
+        b=2uAK460OtB11d2+vEhsNBb4I9Ww1M3KbnmzZ0Xmn4zNe2AGh3/vgZS8aN82wIbwUK9
+         CWXpTUP6M4C5uqPBs/x9XvC3NwI730I9ltnvLIiXG8rdCdMMUxu+OfKnRGxbrZe2gl6O
+         9jeiHsdyUkj8UmtDthiAK5abs5z+EV09R9B6sbt6CYe4HXJBWnR1hjjYued6O549RcrC
+         FyVIy+pLIh4fC4Wy0YRpHC0bvb6is9sfJaiFZsMch9uNK5rNA9OD03++NXRchcPEfASe
+         3Mpqk7QDr3u5S/s2ZWiBrZL1X1BUQLCi/vUzVsyo1fW9QM15OAx3SRFflPI541tnlobR
+         fUGA==
+X-Gm-Message-State: AOAM530YCS/ii+DwI2gZX9K96WFEIO+Yb/WcoGh/w1QIVJi460wp7cUC
+        +Jjosl5RXNxSZzRfPjjmPuFX4IhraYhawGq0+lxLTDRH2F9h4oUQ+uX3Vjs1U+Ecs5SsTiEpX5b
+        Ac9xFyr/mQy0cM7kveGKFuRKgtfTbNaPMd0Zfug4RC2g5
+X-Received: by 2002:a17:907:7691:: with SMTP id jv17mr5620861ejc.378.1633613905827;
+        Thu, 07 Oct 2021 06:38:25 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwW6wSstelqxnszacAmVV1yOLN/Y4Rrb3LyOnmrOYct0SAg12rc5jiDQJPx5MKSQQJZNOEMxQ==
+X-Received: by 2002:a17:907:7691:: with SMTP id jv17mr5620839ejc.378.1633613905666;
+        Thu, 07 Oct 2021 06:38:25 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-186-13.adslplus.ch. [188.155.186.13])
-        by smtp.gmail.com with ESMTPSA id ay19sm8585613edb.20.2021.10.07.06.38.18
+        by smtp.gmail.com with ESMTPSA id ay19sm8585613edb.20.2021.10.07.06.38.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 06:38:18 -0700 (PDT)
+        Thu, 07 Oct 2021 06:38:24 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -65,56 +66,67 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [RESEND PATCH v2 0/7] nfc: minor printk cleanup
-Date:   Thu,  7 Oct 2021 15:30:14 +0200
-Message-Id: <20211007133021.32704-1-krzysztof.kozlowski@canonical.com>
+Subject: [RESEND PATCH v2 6/7] nfc: trf7970a: drop unneeded debug prints
+Date:   Thu,  7 Oct 2021 15:30:20 +0200
+Message-Id: <20211007133021.32704-7-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211007133021.32704-1-krzysztof.kozlowski@canonical.com>
+References: <20211007133021.32704-1-krzysztof.kozlowski@canonical.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+ftrace is a preferred and standard way to debug entering and exiting
+functions so drop useless debug prints.
 
-This is a rebase and resend of v2. No other changes.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Acked-by: Mark Greer <mgreer@animalcreek.com>
+---
+ drivers/nfc/trf7970a.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-Changes since v1:
-1. Remove unused variable in pn533 (reported by kbuild).
-
-Best regards,
-Krzysztof
-
-Krzysztof Kozlowski (7):
-  nfc: drop unneeded debug prints
-  nfc: nci: replace GPLv2 boilerplate with SPDX
-  nfc: s3fwrn5: simplify dereferencing pointer to struct device
-  nfc: st-nci: drop unneeded debug prints
-  nfc: st21nfca: drop unneeded debug prints
-  nfc: trf7970a: drop unneeded debug prints
-  nfc: microread: drop unneeded debug prints
-
- drivers/nfc/microread/i2c.c    |  4 ----
- drivers/nfc/microread/mei.c    |  2 --
- drivers/nfc/s3fwrn5/firmware.c | 29 +++++++++++------------------
- drivers/nfc/s3fwrn5/nci.c      | 18 +++++++-----------
- drivers/nfc/st-nci/i2c.c       |  4 ----
- drivers/nfc/st-nci/ndlc.c      |  4 ----
- drivers/nfc/st-nci/se.c        |  6 ------
- drivers/nfc/st-nci/spi.c       |  4 ----
- drivers/nfc/st21nfca/i2c.c     |  4 ----
- drivers/nfc/st21nfca/se.c      |  4 ----
- drivers/nfc/trf7970a.c         |  8 --------
- net/nfc/hci/command.c          | 16 ----------------
- net/nfc/hci/llc_shdlc.c        | 12 ------------
- net/nfc/llcp_commands.c        |  8 --------
- net/nfc/llcp_core.c            |  5 +----
- net/nfc/nci/core.c             |  4 ----
- net/nfc/nci/hci.c              |  4 ----
- net/nfc/nci/ntf.c              |  9 ---------
- net/nfc/nci/uart.c             | 16 ++--------------
- 19 files changed, 21 insertions(+), 140 deletions(-)
-
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 8890fcd59c39..29ca9c328df2 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2170,8 +2170,6 @@ static int trf7970a_suspend(struct device *dev)
+ 	struct spi_device *spi = to_spi_device(dev);
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 
+-	dev_dbg(dev, "Suspend\n");
+-
+ 	mutex_lock(&trf->lock);
+ 
+ 	trf7970a_shutdown(trf);
+@@ -2187,8 +2185,6 @@ static int trf7970a_resume(struct device *dev)
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+-	dev_dbg(dev, "Resume\n");
+-
+ 	mutex_lock(&trf->lock);
+ 
+ 	ret = trf7970a_startup(trf);
+@@ -2206,8 +2202,6 @@ static int trf7970a_pm_runtime_suspend(struct device *dev)
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+-	dev_dbg(dev, "Runtime suspend\n");
+-
+ 	mutex_lock(&trf->lock);
+ 
+ 	ret = trf7970a_power_down(trf);
+@@ -2223,8 +2217,6 @@ static int trf7970a_pm_runtime_resume(struct device *dev)
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+-	dev_dbg(dev, "Runtime resume\n");
+-
+ 	ret = trf7970a_power_up(trf);
+ 	if (!ret)
+ 		pm_runtime_mark_last_busy(dev);
 -- 
 2.30.2
 
