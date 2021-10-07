@@ -2,62 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 897EDC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 261BDC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 745B360F5C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D34C60F6F
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Oct 2021 13:38:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241686AbhJGNke (ORCPT
+        id S241698AbhJGNkS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Oct 2021 09:40:34 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:51986
+        Thu, 7 Oct 2021 09:40:18 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:51896
         "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241755AbhJGNkZ (ORCPT
+        by vger.kernel.org with ESMTP id S241682AbhJGNkP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Oct 2021 09:40:25 -0400
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
+        Thu, 7 Oct 2021 09:40:15 -0400
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 457ED40008
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2021 13:38:27 +0000 (UTC)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 4489340009
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2021 13:38:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1633613907;
-        bh=Caod7f/lk82yPL9l72YPa9/xdZxrVhuurClzVai7YFo=;
+        s=20210705; t=1633613901;
+        bh=P9fpmr5HVieD46S8E5o8kyy5EhCx6ykcZHTMM5JxYIs=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=wNNOXXlUwtFaXTccXUa4tqqTzfXMxsemp87Xwj23vUQ5ne22j84qPlN6VGN4iZOqY
-         qLtwj+0JrpLosbJGup63J5OKwLm0QXilUxALXquwHarMmHj+6s8EDjztpTaiRQ+FpG
-         BrfHzOBQ6lEz22HK7tK7I92K1gTkEmFDmYxG45jVurM9Cjq+2aRTJ1KQ1chqE/Rs6j
-         qrYuHO48O5dLXQKbhZ3aHYQLW3CLJBn9U2LV0uNTgmfUxCwO9s67CGru28dDDaQL+E
-         NnVLbU9h9sOIXmwDzUwQw/KdoWq2aqzQF00rB332BRyke3aVpmhT1cj9bMYFp29ur6
-         Noiza3ShjE0Aw==
-Received: by mail-ed1-f69.google.com with SMTP id t28-20020a508d5c000000b003dad7fc5caeso5895250edt.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2021 06:38:27 -0700 (PDT)
+        b=uFu9fqReyrlvhYZ45IDxmqQj99Kj9vm6d9iEe1oiRk9TPzBlYgzfC2iySG9yR21hg
+         g9RqctzYUH82dBLyqa+9JyJ33jBR5DkT1SYth+gQiqaHW7VbvsDEmcieg1vR5pFMAb
+         4ZGzDwvU5NfH19gC34AH5uJUUuO69grfZKPdI+XCEkJIQasPxUnQhIdPZIXyYKkOy4
+         bHa5XuZx6GbjuoneoWrV0IHNP8z0hGB/DtjCss8PWSrO8F512kNN9w7zLwTWxKQ+LM
+         GxEkVtFof8u0zd+lLU1wouWJgm8amA7ULwF6rVips/cwdDpg0BzhJe8uKf/Yu3uXPK
+         iNDeC/WLLkogQ==
+Received: by mail-ed1-f70.google.com with SMTP id v9-20020a50d849000000b003db459aa3f5so3324869edj.15
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2021 06:38:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Caod7f/lk82yPL9l72YPa9/xdZxrVhuurClzVai7YFo=;
-        b=BlA5C9j921X/wgWkfqkxOqiX6lqkT4UC52lsgvfDfj3yldJttRTJ7s74KHNJ8UiX67
-         2vscttG9rhQJKGeVqQAyMTFOEWryVDDVeHqz1Vnb81brBuzkt2BDNY6D+c9tv+pZx23U
-         Uw/hmXa8MatpWC0I09Y6XHGUfu4oPBZHv6Qcs7vEzGzGcVTerk80WjEhTSy+KCbG4U0L
-         mpTp+aW0DKxLV/ZDEmk8KyYhHQ4xft183QEScvQFM/NZuNGxl589qao+7rFc63vGyEXQ
-         FORWM/BaoH6FpSNE/2I5SA51lqKaEho4ZVnuPHvzSwKeAAKxsOO3JFDqSrM2Sdib8ixP
-         NUzw==
-X-Gm-Message-State: AOAM53217e5fuVRkh5ppu9a0QRw64C8Wr5RnP4mX3v76k/C1C/RGNRaF
-        /vw/w850lbNNIpB2R0+rsrYYUfhxzL3hif394VCyd1SrrAtCQfv43dtZNoTP0VF543LKROoDpOo
-        /D/Lifc8945xJ+O0OF5fyLHkuQslF2wZHioSWTZI9OAJx
-X-Received: by 2002:a17:906:ae14:: with SMTP id le20mr5850195ejb.89.1633613906949;
-        Thu, 07 Oct 2021 06:38:26 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwhM44QMJ2eosub/50WjbhCTf/eolBEhiGbo3QX3lfBJRMrgvITyIbkdtt7+Q73mJANGS4yFA==
-X-Received: by 2002:a17:906:ae14:: with SMTP id le20mr5850180ejb.89.1633613906761;
-        Thu, 07 Oct 2021 06:38:26 -0700 (PDT)
+        bh=P9fpmr5HVieD46S8E5o8kyy5EhCx6ykcZHTMM5JxYIs=;
+        b=YfAK8pKfmTxQujNcfZ9DEW/LeAo7lEmtJhG++u4uceSOrP/0nQ7BfvQanYzy+SmLEj
+         3wtv1vzEmnprDy/SSh00h+E6AlFyekr9tx1MUhbbadTrLDa7F3wV8V1PqjHdvLRYpBh4
+         h6DDBHpgoJBZeuC/RXaTsUEYr3ylwxCqp/PBE3JDuuvX7xjRgeDzNUvYSl0qDPueS2l1
+         kSXg0q2m7zMbbnWR5okGNRsH3F3Y1arUfOxLvYrMmb8b0z41vq+K6Mynu/v7reOKeVH9
+         wQH+byG3JObvvUUWETnNIyVOnReKyJ0tcFiEcKT5XHw+iLL82HEY/Sx+Z57Gj37rfBET
+         qy5Q==
+X-Gm-Message-State: AOAM533P8ClJDiDdMbV158fXWLZqiMSQyNpzgEaXfCLT62ymMeKXL7Ha
+        4GenrW7czmeVQIC0lH1lXEpbyuknpBhOAgFdtBj4vbXDzUSk3d0yH0zLE1K2uqH0Ykjc5eUDWC1
+        ouRl8xJTwezyc+Kb4tav2SuNDJ6Xu3KIMceuYXK5iWo0g
+X-Received: by 2002:a17:906:d92e:: with SMTP id rn14mr5665109ejb.526.1633613900987;
+        Thu, 07 Oct 2021 06:38:20 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzrLgayaQycMXHVAE11eReupmBB4F2YlHzdIYfeZ/DMNQZjj8xXof0XbzXsnm7VmJ48E1Zapw==
+X-Received: by 2002:a17:906:d92e:: with SMTP id rn14mr5665084ejb.526.1633613900782;
+        Thu, 07 Oct 2021 06:38:20 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-186-13.adslplus.ch. [188.155.186.13])
-        by smtp.gmail.com with ESMTPSA id ay19sm8585613edb.20.2021.10.07.06.38.25
+        by smtp.gmail.com with ESMTPSA id ay19sm8585613edb.20.2021.10.07.06.38.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 06:38:26 -0700 (PDT)
+        Thu, 07 Oct 2021 06:38:20 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Krzysztof Opasiak <k.opasiak@samsung.com>,
@@ -66,9 +66,9 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [RESEND PATCH v2 7/7] nfc: microread: drop unneeded debug prints
-Date:   Thu,  7 Oct 2021 15:30:21 +0200
-Message-Id: <20211007133021.32704-8-krzysztof.kozlowski@canonical.com>
+Subject: [RESEND PATCH v2 2/7] nfc: nci: replace GPLv2 boilerplate with SPDX
+Date:   Thu,  7 Oct 2021 15:30:16 +0200
+Message-Id: <20211007133021.32704-3-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211007133021.32704-1-krzysztof.kozlowski@canonical.com>
 References: <20211007133021.32704-1-krzysztof.kozlowski@canonical.com>
@@ -78,50 +78,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ftrace is a preferred and standard way to debug entering and exiting
-functions so drop useless debug prints.
+Replace standard GPLv2 only license text with SPDX tag.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- drivers/nfc/microread/i2c.c | 4 ----
- drivers/nfc/microread/mei.c | 2 --
- 2 files changed, 6 deletions(-)
+ net/nfc/nci/uart.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
-index 86f593c73ed6..067295124eb9 100644
---- a/drivers/nfc/microread/i2c.c
-+++ b/drivers/nfc/microread/i2c.c
-@@ -237,8 +237,6 @@ static int microread_i2c_probe(struct i2c_client *client,
- 	struct microread_i2c_phy *phy;
- 	int r;
- 
--	dev_dbg(&client->dev, "client %p\n", client);
+diff --git a/net/nfc/nci/uart.c b/net/nfc/nci/uart.c
+index 9bdd9a7d187e..9f7bae51404e 100644
+--- a/net/nfc/nci/uart.c
++++ b/net/nfc/nci/uart.c
+@@ -1,20 +1,8 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * Copyright (C) 2015, Marvell International Ltd.
+  *
+- * This software file (the "File") is distributed by Marvell International
+- * Ltd. under the terms of the GNU General Public License Version 2, June 1991
+- * (the "License").  You may use, redistribute and/or modify this File in
+- * accordance with the terms and conditions of the License, a copy of which
+- * is available on the worldwide web at
+- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+- *
+- * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+- * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+- * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
+- * this warranty disclaimer.
+- */
 -
- 	phy = devm_kzalloc(&client->dev, sizeof(struct microread_i2c_phy),
- 			   GFP_KERNEL);
- 	if (!phy)
-@@ -262,8 +260,6 @@ static int microread_i2c_probe(struct i2c_client *client,
- 	if (r < 0)
- 		goto err_irq;
- 
--	nfc_info(&client->dev, "Probed\n");
--
- 	return 0;
- 
- err_irq:
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index 00689e18dc46..e2a77a5fc887 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -23,8 +23,6 @@ static int microread_mei_probe(struct mei_cl_device *cldev,
- 	struct nfc_mei_phy *phy;
- 	int r;
- 
--	pr_info("Probing NFC microread\n");
--
- 	phy = nfc_mei_phy_alloc(cldev);
- 	if (!phy)
- 		return -ENOMEM;
+-/* Inspired (hugely) by HCI LDISC implementation in Bluetooth.
++ * Inspired (hugely) by HCI LDISC implementation in Bluetooth.
+  *
+  *  Copyright (C) 2000-2001  Qualcomm Incorporated
+  *  Copyright (C) 2002-2003  Maxim Krasnyansky <maxk@qualcomm.com>
 -- 
 2.30.2
 
