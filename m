@@ -2,353 +2,201 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA6DC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 08:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C6AC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 08:24:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 884C1600CD
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 08:20:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FFEB60231
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 08:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235023AbhJKIWu (ORCPT
+        id S234964AbhJKI0o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 04:22:50 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:10444 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235006AbhJKIWt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 04:22:49 -0400
+        Mon, 11 Oct 2021 04:26:44 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:22314 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234921AbhJKI0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Oct 2021 04:26:43 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633940449; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=jFcPGHMg5dRKPTxJuBqG+qc92FmH0gauICtJDnyyMYc=; b=i5JuhLOXbDeBZzCynQ8Q4VElcPXlrIOdAvKRylg4NkHaVe1nVSQ1dIw6EnqB7w8rEW2bavYE
- yYkjhpqtKtizQtDP5kkL3Kz5YG50NmqYTJCFk73VDdeqHp7j9C+/uTs2H91BJyu25/wFILKx
- Bf3bo733Yvl/D0J/LiTGt59lYew=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ s=smtp; t=1633940684; h=Content-Transfer-Encoding: MIME-Version:
+ Message-Id: Date: Subject: Cc: To: From: Sender;
+ bh=XIABq1LHDIFVVelZFIGS9twDlDWU/H8kFo1zOy38pgs=; b=d74H8p5dE/JBpKEPxakfglQpihVjANTPkYL6lvsCOYYhr2qbtaYYZ0t9/X2H32lGYjL6wNev
+ G8p7EvhImNWcAvqfOrvlbN7oBQxuGTK1jF/Pegru9yn3NK7LqHWX6pZqDabdhJW524v0I5hC
+ U4LBfgQxfhKj1EzfIgUJQu+1TgU=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 6163f3c8a45ca75307a0a560 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Oct 2021 08:20:24
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 6163f4cc0605239689f848e9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Oct 2021 08:24:44
  GMT
 Sender: wgong=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E8F40C43618; Mon, 11 Oct 2021 08:20:23 +0000 (UTC)
+        id 4C134C4360D; Mon, 11 Oct 2021 08:24:43 +0000 (UTC)
 Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A41CC4360D;
-        Mon, 11 Oct 2021 08:20:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6A41CC4360D
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D90C3C43460;
+        Mon, 11 Oct 2021 08:24:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D90C3C43460
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Wen Gong <wgong@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH 2/3] ath11k: add support for device recovery for QCA6390
-Date:   Mon, 11 Oct 2021 04:19:37 -0400
-Message-Id: <20211011081938.30327-3-wgong@codeaurora.org>
+Subject: [PATCH] ath11k: add read variant from SMBIOS for download board data
+Date:   Mon, 11 Oct 2021 04:24:33 -0400
+Message-Id: <20211011082433.30415-1-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211011081938.30327-1-wgong@codeaurora.org>
-References: <20211011081938.30327-1-wgong@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently ath11k has device recovery logic, it is introduced by this
-patch "ath11k: Add support for subsystem recovery" which is upstream
-by https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=ath11k-bringup&id=3a7b4838b6f6f234239f263ef3dc02e612a083ad.
+This is to read variant from SMBIOS such as read from DT, the variant
+string will be used to one part of string which used to search board
+data from board-2.bin.
 
-The patch is for AHB devices such as IPQ8074, it has remote proc module
-which is used to download the firmware and boots the processor which
-firmware is running on. If firmware crashed, remote proc module will
-detect it and download and boot firmware again. Below command will
-trigger a firmware crash, and then user can test feature of device
-recovery.
-
-Test command:
-echo assert > /sys/kernel/debug/ath11k/qca6390\ hw2.0/simulate_fw_crash
-
-Unfortunately, QCA6390 is PCIe bus, it does not have the remote proc
-module, it use mhi module to communicate between firmware and ath11k.
-So ath11k does not support device recovery for QCA6390 currently.
-
-This patch is to add the extra logic which is different for QCA6390.
-When firmware crashed, MHI_CB_EE_RDDM event will be indicate by
-firmware and then ath11k_mhi_op_status_cb which is the callback of
-mhi_controller will receive the MHI_CB_EE_RDDM event, then ath11k
-will start to do recovery process, ath11k_core_reset() calls
-ath11k_hif_power_down()/ath11k_hif_power_up(), then the mhi/ath11k
-will start to download and boot firmware. There are some logic to
-avoid deadloop recovery and two simultaneous recovery operations.
-And because it has muti-radios for the soc, so it add some logic
-in ath11k_mac_op_reconfig_complete() to make sure all radios has
-reconfig complete and then complete the device recovery.
-
-Also it add workqueue_aux, because ab->workqueue is used when receive
-ATH11K_QMI_EVENT_FW_READY in recovery process(queue_work(ab->workqueue,
-&ab->restart_work)), and ath11k_core_reset will wait for max
-ATH11K_RESET_TIMEOUT_HZ for the previous restart_work finished, if
-ath11k_core_reset also queued in ab->workqueue, then it will delay
-restart_work of previous recovery and lead previous recovery fail.
-
-ath11k recovery success for QCA6390 after apply this patch.
-
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 
 Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/core.c | 67 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/core.h | 13 +++++
- drivers/net/wireless/ath/ath11k/mac.c  | 18 +++++++
- drivers/net/wireless/ath/ath11k/mhi.c  | 33 +++++++++++++
- drivers/net/wireless/ath/ath11k/pci.c  |  3 ++
- 5 files changed, 134 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.c | 74 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/core.h | 11 ++++
+ drivers/net/wireless/ath/ath11k/qmi.c  |  4 ++
+ 3 files changed, 89 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 969bf1a590d9..be788ec08200 100644
+index 354ad84a2bb8..ae2f52b4373d 100644
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1043,6 +1043,65 @@ static void ath11k_core_restart(struct work_struct *work)
- 	complete(&ab->driver_recovery);
- }
- 
-+static void ath11k_core_reset(struct work_struct *work)
-+{
-+	struct ath11k_base *ab = container_of(work, struct ath11k_base, reset_work);
-+	int reset_count, fail_cont_count;
-+	long time_left;
+@@ -8,6 +8,9 @@
+ #include <linux/remoteproc.h>
+ #include <linux/firmware.h>
+ #include <linux/of.h>
++#include <linux/dmi.h>
++#include <linux/ctype.h>
 +
-+	if (!(test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))) {
-+		ath11k_warn(ab, "ignore reset dev flags 0x%lx\n", ab->dev_flags);
+ #include "core.h"
+ #include "dp_tx.h"
+ #include "dp_rx.h"
+@@ -372,6 +375,77 @@ int ath11k_core_resume(struct ath11k_base *ab)
+ }
+ EXPORT_SYMBOL(ath11k_core_resume);
+ 
++static void ath11k_core_check_bdfext(const struct dmi_header *hdr, void *data)
++{
++	struct ath11k_base *ab = data;
++	const char *bdf_ext;
++	const char *magic = ATH11K_SMBIOS_BDF_EXT_MAGIC;
++	u8 bdf_enabled;
++	int i;
++	size_t len;
++
++	if (ab->qmi.target.bdf_ext[0] != '\0')
++		return;
++
++	if (hdr->type != ATH11K_SMBIOS_BDF_EXT_TYPE)
++		return;
++
++	if (hdr->length != ATH11K_SMBIOS_BDF_EXT_LENGTH) {
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "wrong smbios bdf ext type length (%d).\n",
++			   hdr->length);
 +		return;
 +	}
 +
-+	/* Sometimes the recovery will fail and then the next all recovery fail,
-+	 * this is to avoid infinite recovery since it can not recovery success.
-+	 */
-+	fail_cont_count = atomic_read(&ab->fail_cont_count);
-+
-+	if (fail_cont_count >= ATH11K_RESET_MAX_FAIL_COUNT_FINAL)
++	bdf_enabled = *((u8 *)hdr + ATH11K_SMBIOS_BDF_EXT_OFFSET);
++	if (!bdf_enabled) {
++		ath11k_dbg(ab, ATH11K_DBG_BOOT, "bdf variant name not found.\n");
 +		return;
++	}
 +
-+	if (fail_cont_count >= ATH11K_RESET_MAX_FAIL_COUNT_FIRST &&
-+	    time_before(jiffies, ab->reset_fail_timeout))
++	/* Only one string exists (per spec) */
++	bdf_ext = (char *)hdr + hdr->length;
++
++	if (memcmp(bdf_ext, magic, strlen(magic)) != 0) {
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "bdf variant magic does not match.\n");
 +		return;
++	}
 +
-+	reset_count = atomic_inc_return(&ab->reset_count);
-+
-+	if (reset_count > 1) {
-+		/* Sometimes it happened another reset worker before the previous one
-+		 * completed, then the second reset worker will destroy the previous one,
-+		 * thus below is to avoid that.
-+		 */
-+		ath11k_warn(ab, "already reseting count %d\n", reset_count);
-+
-+		reinit_completion(&ab->reset_complete);
-+		time_left = wait_for_completion_timeout(&ab->reset_complete,
-+							ATH11K_RESET_TIMEOUT_HZ);
-+
-+		if (time_left) {
-+			ath11k_dbg(ab, ATH11K_DBG_BOOT, "to skip reset\n");
-+			atomic_dec(&ab->reset_count);
++	len = strlen(bdf_ext);
++	for (i = 0; i < len; i++) {
++		if (!isascii(bdf_ext[i]) || !isprint(bdf_ext[i])) {
++			ath11k_dbg(ab, ATH11K_DBG_BOOT,
++				   "bdf variant name contains non ascii chars.\n");
 +			return;
 +		}
-+
-+		ab->reset_fail_timeout = jiffies + ATH11K_RESET_FAIL_TIMEOUT_HZ;
-+		/* Record the continuous recovery fail count when recovery failed*/
-+		fail_cont_count = atomic_inc_return(&ab->fail_cont_count);
 +	}
 +
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "reset starting\n");
++	/* Copy extension name without magic prefix */
++	if (strscpy(ab->qmi.target.bdf_ext, bdf_ext + strlen(magic),
++		    sizeof(ab->qmi.target.bdf_ext)) < 0) {
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "bdf variant string is longer than the buffer can accommodate (variant: %s)\n",
++			    bdf_ext);
++		return;
++	}
 +
-+	ab->is_reset = true;
-+	atomic_set(&ab->recovery_count, 0);
-+
-+	ath11k_hif_power_down(ab);
-+	ath11k_qmi_free_resource(ab);
-+	ath11k_hif_power_up(ab);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "reset started\n");
++	ath11k_dbg(ab, ATH11K_DBG_BOOT,
++		   "found and validated bdf variant smbios_type 0x%x bdf %s\n",
++		   ATH11K_SMBIOS_BDF_EXT_TYPE, bdf_ext);
 +}
 +
- static int ath11k_init_hw_params(struct ath11k_base *ab)
- {
- 	const struct ath11k_hw_params *hw_params = NULL;
-@@ -1132,14 +1191,20 @@ struct ath11k_base *ath11k_core_alloc(struct device *dev, size_t priv_size,
- 	if (!ab->workqueue)
- 		goto err_sc_free;
- 
-+	ab->workqueue_aux = create_singlethread_workqueue("ath11k_aux_wq");
-+	if (!ab->workqueue_aux)
-+		goto err_free_wq;
++int ath11k_core_check_smbios(struct ath11k_base *ab)
++{
++	ab->qmi.target.bdf_ext[0] = '\0';
++	dmi_walk(ath11k_core_check_bdfext, ab);
 +
- 	mutex_init(&ab->core_lock);
- 	spin_lock_init(&ab->base_lock);
-+	init_completion(&ab->reset_complete);
- 
- 	INIT_LIST_HEAD(&ab->peers);
- 	init_waitqueue_head(&ab->peer_mapping_wq);
- 	init_waitqueue_head(&ab->wmi_ab.tx_credits_wq);
- 	init_waitqueue_head(&ab->qmi.cold_boot_waitq);
- 	INIT_WORK(&ab->restart_work, ath11k_core_restart);
-+	INIT_WORK(&ab->reset_work, ath11k_core_reset);
- 	timer_setup(&ab->rx_replenish_retry, ath11k_ce_rx_replenish_retry, 0);
- 	init_completion(&ab->htc_suspend);
- 	init_completion(&ab->wow.wakeup_completed);
-@@ -1150,6 +1215,8 @@ struct ath11k_base *ath11k_core_alloc(struct device *dev, size_t priv_size,
- 
- 	return ab;
- 
-+err_free_wq:
-+	destroy_workqueue(ab->workqueue);
- err_sc_free:
- 	kfree(ab);
- 	return NULL;
++	if (ab->qmi.target.bdf_ext[0] == '\0')
++		return -ENODATA;
++
++	return 0;
++}
++
+ int ath11k_core_check_dt(struct ath11k_base *ab)
+ {
+ 	size_t max_len = sizeof(ab->qmi.target.bdf_ext);
 diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 018fb2385f2a..9a9f8f24d407 100644
+index 63d569672cd2..dcc54d4cc096 100644
 --- a/drivers/net/wireless/ath/ath11k/core.h
 +++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -39,6 +39,10 @@
- extern unsigned int ath11k_frame_mode;
+@@ -1044,7 +1044,18 @@ int ath11k_core_fetch_board_data_api_1(struct ath11k_base *ab,
+ 				       char *name);
+ void ath11k_core_free_bdf(struct ath11k_base *ab, struct ath11k_board_data *bd);
+ int ath11k_core_check_dt(struct ath11k_base *ath11k);
++/* SMBIOS type containing Board Data File Name Extension */
++#define ATH11K_SMBIOS_BDF_EXT_TYPE 0xF8
  
- #define ATH11K_MON_TIMER_INTERVAL  10
-+#define ATH11K_RESET_TIMEOUT_HZ (20 * HZ)
-+#define ATH11K_RESET_MAX_FAIL_COUNT_FIRST 3
-+#define ATH11K_RESET_MAX_FAIL_COUNT_FINAL 5
-+#define ATH11K_RESET_FAIL_TIMEOUT_HZ (20 * HZ)
- 
- enum ath11k_supported_bw {
- 	ATH11K_BW_20	= 0,
-@@ -734,6 +738,15 @@ struct ath11k_base {
- 	struct completion driver_recovery;
- 	struct workqueue_struct *workqueue;
- 	struct work_struct restart_work;
-+	struct workqueue_struct *workqueue_aux;
-+	struct work_struct reset_work;
-+	atomic_t reset_count;
-+	atomic_t recovery_count;
-+	bool is_reset;
-+	struct completion reset_complete;
-+	/* continuous recovery fail count */
-+	atomic_t fail_cont_count;
-+	unsigned long reset_fail_timeout;
- 	struct {
- 		/* protected by data_lock */
- 		u32 fw_crash_counter;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index eb52332dbe3f..b0a2f257f328 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6032,6 +6032,8 @@ ath11k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
- 				enum ieee80211_reconfig_type reconfig_type)
- {
- 	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	int recovery_count;
- 
- 	if (reconfig_type != IEEE80211_RECONFIG_TYPE_RESTART)
- 		return;
-@@ -6043,6 +6045,22 @@ ath11k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
- 			    ar->pdev->pdev_id);
- 		ar->state = ATH11K_STATE_ON;
- 		ieee80211_wake_queues(ar->hw);
++/* SMBIOS type structure length (excluding strings-set) */
++#define ATH11K_SMBIOS_BDF_EXT_LENGTH 0x9
 +
-+		if (ab->is_reset) {
-+			recovery_count = atomic_inc_return(&ab->recovery_count);
-+			ath11k_dbg(ab, ATH11K_DBG_BOOT,
-+				   "recovery count %d\n", recovery_count);
-+			/* When there are multiple radios in an SOC,
-+			 * the recovery has to be done for each radio
-+			 */
-+			if (recovery_count == ab->num_radios) {
-+				atomic_dec(&ab->reset_count);
-+				complete(&ab->reset_complete);
-+				ab->is_reset = false;
-+				atomic_set(&ab->fail_cont_count, 0);
-+				ath11k_dbg(ab, ATH11K_DBG_BOOT, "reset success\n");
-+			}
-+		}
- 	}
- 
- 	mutex_unlock(&ar->conf_mutex);
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index 75cc2d80fde8..aea21ea2ca47 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -281,15 +281,48 @@ static void ath11k_mhi_op_runtime_put(struct mhi_controller *mhi_cntrl)
- {
- }
- 
-+static char *ath11k_mhi_op_callback_to_str(enum mhi_callback reason)
-+{
-+	switch (reason) {
-+	case MHI_CB_IDLE:
-+		return "MHI_CB_IDLE";
-+	case MHI_CB_PENDING_DATA:
-+		return "MHI_CB_PENDING_DATA";
-+	case MHI_CB_LPM_ENTER:
-+		return "MHI_CB_LPM_ENTER";
-+	case MHI_CB_LPM_EXIT:
-+		return "MHI_CB_LPM_EXIT";
-+	case MHI_CB_EE_RDDM:
-+		return "MHI_CB_EE_RDDM";
-+	case MHI_CB_EE_MISSION_MODE:
-+		return "MHI_CB_EE_MISSION_MODE";
-+	case MHI_CB_SYS_ERROR:
-+		return "MHI_CB_SYS_ERROR";
-+	case MHI_CB_FATAL_ERROR:
-+		return "MHI_CB_FATAL_ERROR";
-+	case MHI_CB_BW_REQ:
-+		return "MHI_CB_BW_REQ";
-+	default:
-+		return "UNKNOWN";
-+	}
-+};
++/* Offset pointing to Board Data File Name Extension */
++#define ATH11K_SMBIOS_BDF_EXT_OFFSET 0x8
 +
- static void ath11k_mhi_op_status_cb(struct mhi_controller *mhi_cntrl,
- 				    enum mhi_callback cb)
- {
- 	struct ath11k_base *ab = dev_get_drvdata(mhi_cntrl->cntrl_dev);
++/* The magic used by QCA spec */
++#define ATH11K_SMBIOS_BDF_EXT_MAGIC "BDF_"
++int ath11k_core_check_smbios(struct ath11k_base *ab);
+ void ath11k_core_halt(struct ath11k *ar);
+ int ath11k_core_resume(struct ath11k_base *ab);
+ int ath11k_core_suspend(struct ath11k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index d9db74e597b5..77880ddc4d77 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -2089,6 +2089,10 @@ static int ath11k_qmi_request_target_cap(struct ath11k_base *ab)
+ 		    ab->qmi.target.fw_build_timestamp,
+ 		    ab->qmi.target.fw_build_id);
  
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "mhi notify status reason %s\n",
-+		   ath11k_mhi_op_callback_to_str(cb));
++	r = ath11k_core_check_smbios(ab);
++	if (r)
++		ath11k_dbg(ab, ATH11K_DBG_QMI, "SMBIOS bdf variant name not set.\n");
 +
- 	switch (cb) {
- 	case MHI_CB_SYS_ERROR:
- 		ath11k_warn(ab, "firmware crashed: MHI_CB_SYS_ERROR\n");
- 		break;
-+	case MHI_CB_EE_RDDM:
-+		if (!(test_bit(ATH11K_FLAG_UNREGISTERING, &ab->dev_flags)))
-+			queue_work(ab->workqueue_aux, &ab->reset_work);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 646ad79f309c..1f8e3837cdfb 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -1346,6 +1346,7 @@ static void ath11k_pci_remove(struct pci_dev *pdev)
- 
- 	set_bit(ATH11K_FLAG_UNREGISTERING, &ab->dev_flags);
- 
-+	cancel_work_sync(&ab->reset_work);
- 	ath11k_core_deinit(ab);
- 
- qmi_fail:
-@@ -1357,6 +1358,8 @@ static void ath11k_pci_remove(struct pci_dev *pdev)
- 
- 	ath11k_hal_srng_deinit(ab);
- 	ath11k_ce_free_pipes(ab);
-+
-+	destroy_workqueue(ab->workqueue_aux);
- 	ath11k_core_free(ab);
- }
- 
+ 	r = ath11k_core_check_dt(ab);
+ 	if (r)
+ 		ath11k_dbg(ab, ATH11K_DBG_QMI, "DT bdf variant name not set.\n");
 -- 
 2.31.1
 
