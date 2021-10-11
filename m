@@ -2,421 +2,400 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1689CC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 11:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2CE5C43217
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 11:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0196A60EE2
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 11:37:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA7C160F0F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 11:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234209AbhJKLjr (ORCPT
+        id S234410AbhJKLlG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 07:39:47 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:39247 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234208AbhJKLjr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 07:39:47 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633952267; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=W9cryfzkKN/Q0Dshd41ICTv47fbN2Zr0IqqYXN8IbjY=; b=ksDJgHo0vCFOnf4h9BVH2P3SBTITmFiPgq4nrD0zbmGA92ESqL35zJavQPL6vGvt9gRh2+fG
- PGagf0368DsUcMUvWUARnvxBMj1xyGvmOdgGcX1FvHzyGhmvbpxBLytPgcoCb6iMEdveuu1T
- 2RMzRI6D3XOOyx7rEKBCIrNmfFY=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 616421fd446c6db0cb56efb9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Oct 2021 11:37:33
- GMT
-Sender: cjhuang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2625BC43460; Mon, 11 Oct 2021 11:37:33 +0000 (UTC)
-Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cjhuang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 91CFCC43460;
-        Mon, 11 Oct 2021 11:37:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 91CFCC43460
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Carl Huang <cjhuang@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] ath11k: support GTK rekey offload
-Date:   Mon, 11 Oct 2021 15:37:50 -0400
-Message-Id: <20211011193750.4891-7-cjhuang@codeaurora.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20211011193750.4891-1-cjhuang@codeaurora.org>
-References: <20211011193750.4891-1-cjhuang@codeaurora.org>
+        Mon, 11 Oct 2021 07:41:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33044 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233878AbhJKLlE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Oct 2021 07:41:04 -0400
+X-Greylist: delayed 66 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 11 Oct 2021 04:39:03 PDT
+Received: from lb2-smtp-cloud9.xs4all.net (lb2-smtp-cloud9.xs4all.net [IPv6:2001:888:0:108::2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D0C6C061570;
+        Mon, 11 Oct 2021 04:39:03 -0700 (PDT)
+Received: from cust-b5b5937f ([IPv6:fc0c:c16d:66b8:757f:c639:739b:9d66:799d])
+        by smtp-cloud9.xs4all.net with ESMTPA
+        id ZtcrmeTHF8cVwZtcum6mB7; Mon, 11 Oct 2021 13:37:54 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xs4all.nl; s=s2;
+        t=1633952274; bh=EJ468NMYmDML0AsBV+rtlsJvCbh1Ozlsqt14xY8DshU=;
+        h=Subject:To:From:Message-ID:Date:MIME-Version:Content-Type:From:
+         Subject;
+        b=uewlgQFmKMF1tLoPklw8UyISWs4X+SzrBkgZk9a4yocsOCZl9USgHVN8k1m1Ovf3P
+         ZghQAFKZTYKNfc+WJx9ZxvzVCcIWPInpuqmOiIbKblHBPGmJiKt6wQkgMdp2E2AsbJ
+         fKOQ+rdzQ90EtLElLP9nTW1IYLFryKItG7rXdOcEN9jv0ECaVynxanulCyNldxIxCR
+         Yn7uKUFdO8rBWPEHWi93OtbPLWmyyjs7pJMGqQr8YdUveZviQS10T/Cgj+oqb+o+gv
+         SqHLZV383tgzP9e/rw29caG8P3hEobf0z9HA1sRw133bLAVGoKVDolpPtstQid/Ai8
+         Uhwoh2d0gNAsg==
+Subject: Re: [PATCH v2 2/2] qcom_scm: hide Kconfig symbol
+To:     Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org
+Cc:     linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+        iommu@lists.linux-foundation.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-gpio@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alex Elder <elder@linaro.org>
+References: <20211007151010.333516-1-arnd@kernel.org>
+ <20211007151010.333516-2-arnd@kernel.org>
+From:   Hans Verkuil <hverkuil@xs4all.nl>
+Message-ID: <007b8902-312a-cbfd-5504-761687b7fdf8@xs4all.nl>
+Date:   Mon, 11 Oct 2021 13:37:49 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.14.0
+MIME-Version: 1.0
+In-Reply-To: <20211007151010.333516-2-arnd@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CMAE-Envelope: MS4xfJuuxVzHxX/HmRjTyBbu47R9dyBNkr37HCMQ1Xbi17ioHXz/+hb+Aj8C3tlEtmlSao8NmcH59bXPGXlwwWTUYI7+sNIQF+aiRYEQeezpnbcfpOtkrwq8
+ Q3CRj9K7XRQ8VBtz/bAyVP+BqkL3tf6mu4cwRnHr2V30MWOzgJs6sJI/WKL1zfSQ6Edn4Xs/GXz5wO7d4/f6yf8mY8R0Qtdc6tOLXwfiZg44jNDCwvY4jwxD
+ 58z29k40YCgWdFKgdHtxq0jIbAzixXJVygYwSTkSnX/Yg4+Oo9H5jZRTH5n+0FICC62LzOG8uIgEhjzea5lne6zyDC/7eqTmxgH0IUuK0pbjgjXVflG5jqdv
+ kUp1gU5FeukXumMNNFa1NZWuWZhAq5idlljOJXUrGZRKed307o29pbbLWA472cBxhDF9BQdGKmTCsF75pnxvPMD8yyBvGgd448ENjtqQS9o4QQ0v5XlP5uvm
+ tXAqXCAG3FWAv+Q/hFu7ncuj5feQDHbXVK0/bDTC7MGnecml/Zc6v1OllO2CiqPxZeMu7irEWqsnKLdamV3ps+fgcoAz/Dzvfc61OdZkyoNQnYv8zfoWziuz
+ nx7wOzWY+5NGM3kDxeU9Jmc/srCjIC8NuqTpV50wlcWCZ5VOsnHP16UywKJMIYomgWsyVfMVSD+Quk0+F6fbaUvUOgL3+iOjbE2pRzuuUDeTPGPPOeh6chfd
+ QU4iWqSBFqIkhYUSylrmHj81ryYQwC5SPxaLsIvJt2mikIWprBBDGP6bzJrJKQIbdjg2K6eeVXkTjEqxHhvDLm4Fod8MWYHJPR4TlzFbfZg2pze0xlfPRMeo
+ 8XC+rDnxfCeLsjJgT6/a1NSgTtabgCDl7v0mU7ojS+tChDV7a2T20gooopVuFizGq9+GZ1gzqYYVuzZeC9LXh0UQnxrm4AjVNE3OxerZ9pIHYtsW/8q7LWVl
+ Ul19nQ==
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Host sets GTK related info to firmware before WoW is enabled, and
-gets rekey replay_count and then disables GTK rekey when WoW quits.
+On 07/10/2021 17:10, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Now that SCM can be a loadable module, we have to add another
+> dependency to avoid link failures when ipa or adreno-gpu are
+> built-in:
+> 
+> aarch64-linux-ld: drivers/net/ipa/ipa_main.o: in function `ipa_probe':
+> ipa_main.c:(.text+0xfc4): undefined reference to `qcom_scm_is_available'
+> 
+> ld.lld: error: undefined symbol: qcom_scm_is_available
+>>>> referenced by adreno_gpu.c
+>>>>               gpu/drm/msm/adreno/adreno_gpu.o:(adreno_zap_shader_load) in archive drivers/built-in.a
+> 
+> This can happen when CONFIG_ARCH_QCOM is disabled and we don't select
+> QCOM_MDT_LOADER, but some other module selects QCOM_SCM. Ideally we'd
+> use a similar dependency here to what we have for QCOM_RPROC_COMMON,
+> but that causes dependency loops from other things selecting QCOM_SCM.
+> 
+> This appears to be an endless problem, so try something different this
+> time:
+> 
+>  - CONFIG_QCOM_SCM becomes a hidden symbol that nothing 'depends on'
+>    but that is simply selected by all of its users
+> 
+>  - All the stubs in include/linux/qcom_scm.h can go away
+> 
+>  - arm-smccc.h needs to provide a stub for __arm_smccc_smc() to
+>    allow compile-testing QCOM_SCM on all architectures.
+> 
+>  - To avoid a circular dependency chain involving RESET_CONTROLLER
+>    and PINCTRL_SUNXI, drop the 'select RESET_CONTROLLER' statement.
+>    According to my testing this still builds fine, and the QCOM
+>    platform selects this symbol already.
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Acked-by: Hans Verkuil <hverkuil-cisco@xs4all.nl>
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/core.h |   8 +++
- drivers/net/wireless/ath/ath11k/mac.c  |  32 ++++++++++
- drivers/net/wireless/ath/ath11k/wmi.c  | 110 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h  |  39 ++++++++++++
- drivers/net/wireless/ath/ath11k/wow.c  |  49 ++++++++++++++-
- 5 files changed, 237 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index d9c6c1d..69461c3 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -256,6 +256,13 @@ struct ath11k_arp_ns_offload {
- 	u8  mac_addr[ETH_ALEN];
- };
- 
-+struct ath11k_rekey_data {
-+	u8 kck[NL80211_KCK_LEN];
-+	u8 kek[NL80211_KCK_LEN];
-+	u64 replay_ctr;
-+	bool enable_offload;
-+};
-+
- struct ath11k_vif {
- 	u32 vdev_id;
- 	enum wmi_vdev_type vdev_type;
-@@ -307,6 +314,7 @@ struct ath11k_vif {
- 	struct ieee80211_chanctx_conf chanctx;
- 	struct ath11k_reg_tpc_power_info reg_tpc_info;
- 	struct ath11k_arp_ns_offload arp_ns_offload;
-+	struct ath11k_rekey_data rekey_data;
- };
- 
- struct ath11k_vif_iter {
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index e3dc998..797e45e 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -2206,6 +2206,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
- 	}
- 
- 	arvif->is_up = true;
-+	arvif->rekey_data.enable_offload = false;
- 
- 	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
- 		   "mac vdev %d up (associated) bssid %pM aid %d\n",
-@@ -2239,6 +2240,8 @@ static void ath11k_bss_disassoc(struct ieee80211_hw *hw,
- 
- 	arvif->is_up = false;
- 
-+	memset(&arvif->rekey_data, 0, sizeof(arvif->rekey_data));
-+
- 	cancel_delayed_work_sync(&arvif->connection_loss_work);
- }
- 
-@@ -7451,6 +7454,34 @@ static void ath11k_mac_op_ipv6_changed(struct ieee80211_hw *hw,
- 	ath11k_generate_ns_mc_addr(ar, offload);
- }
- 
-+static void ath11k_mac_op_set_rekey_data(struct ieee80211_hw *hw,
-+					 struct ieee80211_vif *vif,
-+					 struct cfg80211_gtk_rekey_data *data)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ath11k_rekey_data *rekey_data = &arvif->rekey_data;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "Set rekey data vdev_id %d\n",
-+		   arvif->vdev_id);
-+	mutex_lock(&ar->conf_mutex);
-+
-+	memcpy(rekey_data->kck, data->kck, NL80211_KCK_LEN);
-+	memcpy(rekey_data->kek, data->kek, NL80211_KEK_LEN);
-+
-+	/* supplicant works on big-endian, converts to cpu-endian */
-+	rekey_data->replay_ctr = be64_to_cpup((__be64 *)data->replay_ctr);
-+	arvif->rekey_data.enable_offload = true;
-+
-+	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "KCK", NULL,
-+			rekey_data->kck, NL80211_KCK_LEN);
-+	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "KEK", NULL,
-+			rekey_data->kck, NL80211_KEK_LEN);
-+	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "replay ctr", NULL,
-+			&rekey_data->replay_ctr, sizeof(rekey_data->replay_ctr));
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
- static const struct ieee80211_ops ath11k_ops = {
- 	.tx				= ath11k_mac_op_tx,
- 	.start                          = ath11k_mac_op_start,
-@@ -7465,6 +7496,7 @@ static const struct ieee80211_ops ath11k_ops = {
- 	.hw_scan                        = ath11k_mac_op_hw_scan,
- 	.cancel_hw_scan                 = ath11k_mac_op_cancel_hw_scan,
- 	.set_key                        = ath11k_mac_op_set_key,
-+	.set_rekey_data	                = ath11k_mac_op_set_rekey_data,
- 	.sta_state                      = ath11k_mac_op_sta_state,
- 	.sta_set_txpwr			= ath11k_mac_op_sta_set_txpwr,
- 	.sta_rc_update			= ath11k_mac_op_sta_rc_update,
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 1e276d51..5b02e95 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8005,6 +8005,53 @@ ath11k_wmi_tm_event_segmented(struct ath11k_base *ab, u32 cmd_id,
- 	}
- }
- 
-+static void
-+ath11k_wmi_gtk_offload_status_event(struct ath11k_base *ab,
-+				    struct sk_buff *skb)
-+{
-+	const void **tb;
-+	const struct wmi_gtk_offload_status_event *ev;
-+	struct ath11k_vif *arvif;
-+	__be64 replay_ctr;
-+	int ret;
-+
-+	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ret = PTR_ERR(tb);
-+		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
-+		return;
-+	}
-+
-+	ev = tb[WMI_TAG_GTK_OFFLOAD_STATUS_EVENT];
-+	if (!ev) {
-+		ath11k_warn(ab, "failed to fetch gtk offload status ev");
-+		kfree(tb);
-+		return;
-+	}
-+
-+	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, ev->vdev_id);
-+	if (!arvif) {
-+		ath11k_warn(ab, "failed to get arvif for vdev_id:%d\n",
-+			    ev->vdev_id);
-+		kfree(tb);
-+		return;
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_WMI, "gtk offload event refresh_cnt:%d\n",
-+		   ev->refresh_cnt);
-+	ath11k_dbg_dump(ab, ATH11K_DBG_WMI, "gtk offload event replay_cnt",
-+			NULL, ev->replay_counter, GTK_REPLAY_COUNTER_BYTES);
-+
-+	arvif->rekey_data.replay_ctr = le64_to_cpup((__le64 *)ev->replay_counter);
-+	/* supplicant expects big-endian replay counter */
-+	replay_ctr = cpu_to_be64(le64_to_cpup((__le64 *)ev->replay_counter));
-+
-+	ieee80211_gtk_rekey_notify(arvif->vif, arvif->bssid,
-+				   (void *)&replay_ctr, GFP_KERNEL);
-+
-+	kfree(tb);
-+}
-+
- static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
-@@ -8133,6 +8180,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- 	case WMI_RFKILL_STATE_CHANGE_EVENTID:
- 		ath11k_rfkill_state_change_event(ab, skb);
- 		break;
-+	case WMI_GTK_OFFLOAD_STATUS_EVENTID:
-+		ath11k_wmi_gtk_offload_status_event(ab, skb);
-+		break;
- 	/* TODO: Add remaining events */
- 	default:
- 		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
-@@ -8873,3 +8923,63 @@ int ath11k_wmi_arp_ns_offload(struct ath11k *ar,
- 
- 	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_SET_ARP_NS_OFFLOAD_CMDID);
- }
-+
-+int ath11k_wmi_gtk_rekey_offload(struct ath11k *ar,
-+				 struct ath11k_vif *arvif, bool enable)
-+{
-+	struct wmi_gtk_rekey_offload_cmd *cmd;
-+	struct ath11k_rekey_data *rekey_data = &arvif->rekey_data;
-+	int len;
-+	struct sk_buff *skb;
-+
-+	len = sizeof(*cmd);
-+	skb =  ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_gtk_rekey_offload_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_GTK_OFFLOAD_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = arvif->vdev_id;
-+
-+	if (enable) {
-+		cmd->flags = GTK_OFFLOAD_ENABLE_OPCODE;
-+
-+		/* the length in rekey_data and cmd is equal */
-+		memcpy(cmd->kck, rekey_data->kck, sizeof(cmd->kck));
-+		memcpy(cmd->kek, rekey_data->kek, sizeof(cmd->kek));
-+		memcpy(cmd->replay_ctr, &rekey_data->replay_ctr,
-+		       sizeof(cmd->replay_ctr));
-+	} else {
-+		cmd->flags = GTK_OFFLOAD_DISABLE_OPCODE;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "offload gtk rekey vdev: %d %d\n",
-+		   arvif->vdev_id, enable);
-+	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_GTK_OFFLOAD_CMDID);
-+}
-+
-+int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
-+				 struct ath11k_vif *arvif)
-+{
-+	struct wmi_gtk_rekey_offload_cmd *cmd;
-+	int len;
-+	struct sk_buff *skb;
-+
-+	len = sizeof(*cmd);
-+	skb =  ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_gtk_rekey_offload_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_GTK_OFFLOAD_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = arvif->vdev_id;
-+	cmd->flags = GTK_OFFLOAD_REQUEST_STATUS_OPCODE;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "get gtk rekey vdev_id: %d\n",
-+		   arvif->vdev_id);
-+	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_GTK_OFFLOAD_CMDID);
-+}
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index c2e5557..61dc5ea 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -5850,6 +5850,41 @@ struct wmi_set_arp_ns_offload_cmd {
- 	 */
- } __packed;
- 
-+#define GTK_OFFLOAD_OPCODE_MASK             0xFF000000
-+#define GTK_OFFLOAD_ENABLE_OPCODE           0x01000000
-+#define GTK_OFFLOAD_DISABLE_OPCODE          0x02000000
-+#define GTK_OFFLOAD_REQUEST_STATUS_OPCODE   0x04000000
-+
-+#define GTK_OFFLOAD_KEK_BYTES       16
-+#define GTK_OFFLOAD_KCK_BYTES       16
-+#define GTK_REPLAY_COUNTER_BYTES    8
-+#define WMI_MAX_KEY_LEN             32
-+#define IGTK_PN_SIZE                6
-+
-+struct wmi_gtk_offload_status_event {
-+	u32 vdev_id;
-+	u32 flags;
-+	u32 refresh_cnt;
-+	u8 replay_counter[GTK_REPLAY_COUNTER_BYTES];
-+	u8 igtk_key_index;
-+	u8 igtk_key_length;
-+	u8 igtk_key_rsc[IGTK_PN_SIZE];
-+	u8 igtk_key[WMI_MAX_KEY_LEN];
-+	u8 gtk_key_index;
-+	u8 gtk_key_length;
-+	u8 gtk_key_rsc[GTK_REPLAY_COUNTER_BYTES];
-+	u8 gtk_key[WMI_MAX_KEY_LEN];
-+} __packed;
-+
-+struct wmi_gtk_rekey_offload_cmd {
-+	u32 tlv_header;
-+	u32 vdev_id;
-+	u32 flags;
-+	u8 kek[GTK_OFFLOAD_KEK_BYTES];
-+	u8 kck[GTK_OFFLOAD_KCK_BYTES];
-+	u8 replay_ctr[GTK_REPLAY_COUNTER_BYTES];
-+} __packed;
-+
- int ath11k_wmi_cmd_send(struct ath11k_pdev_wmi *wmi, struct sk_buff *skb,
- 			u32 cmd_id);
- struct sk_buff *ath11k_wmi_alloc_skb(struct ath11k_wmi_base *wmi_sc, u32 len);
-@@ -6017,4 +6052,8 @@ int ath11k_wmi_send_hw_data_filter_cmd(struct ath11k *ar, u32 vdev_id,
- 				       u32 filter_bitmap, bool enable);
- int ath11k_wmi_arp_ns_offload(struct ath11k *ar,
- 			      struct ath11k_vif *arvif, bool enable);
-+int ath11k_wmi_gtk_rekey_offload(struct ath11k *ar,
-+				 struct ath11k_vif *arvif, bool enable);
-+int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
-+				 struct ath11k_vif *arvif);
- #endif
-diff --git a/drivers/net/wireless/ath/ath11k/wow.c b/drivers/net/wireless/ath/ath11k/wow.c
-index c1bef84..2632628 100644
---- a/drivers/net/wireless/ath/ath11k/wow.c
-+++ b/drivers/net/wireless/ath/ath11k/wow.c
-@@ -17,7 +17,9 @@
- 
- static const struct wiphy_wowlan_support ath11k_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_DISCONNECT |
--		 WIPHY_WOWLAN_MAGIC_PKT,
-+		 WIPHY_WOWLAN_MAGIC_PKT |
-+		 WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
-+		 WIPHY_WOWLAN_GTK_REKEY_FAILURE,
- 	.pattern_min_len = WOW_MIN_PATTERN_SIZE,
- 	.pattern_max_len = WOW_MAX_PATTERN_SIZE,
- 	.max_pkt_offset = WOW_MAX_PKT_OFFSET,
-@@ -573,11 +575,56 @@ static int ath11k_wow_arp_ns_offload(struct ath11k *ar, bool enable)
- 	return 0;
- }
- 
-+static int ath11k_gtk_rekey_offload(struct ath11k *ar, bool enable)
-+{
-+	struct ath11k_vif *arvif;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (arvif->vdev_type != WMI_VDEV_TYPE_STA ||
-+		    !arvif->is_up ||
-+		    !arvif->rekey_data.enable_offload)
-+			continue;
-+
-+		/* get rekey info before disable rekey offload */
-+		if (!enable) {
-+			ret = ath11k_wmi_gtk_rekey_getinfo(ar, arvif);
-+			if (ret) {
-+				ath11k_warn(ar->ab, "failed to request rekey info vdev %i, ret %d\n",
-+					    arvif->vdev_id, ret);
-+				return ret;
-+			}
-+		}
-+
-+		ret = ath11k_wmi_gtk_rekey_offload(ar, arvif, enable);
-+
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to offload gtk reky vdev %i: enable %d, ret %d\n",
-+				    arvif->vdev_id, enable, ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int ath11k_wow_protocol_offload(struct ath11k *ar, bool enable)
- {
- 	int ret;
- 
- 	ret = ath11k_wow_arp_ns_offload(ar, enable);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to offload ARP and NS %d %d\n",
-+			    enable, ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_gtk_rekey_offload(ar, enable);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to offload gtk rekey %d %d\n",
-+			    enable, ret);
- 
- 	return ret;
- }
--- 
-2.7.4
+	Hans
+
+> 
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Acked-by: Alex Elder <elder@linaro.org>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> Changes in v2:
+> - fix the iommu dependencies
+> 
+> I've queued this version as a bugfix along with patch 1/2
+> in my asm-generic tree.
+> 
+>  drivers/firmware/Kconfig                   |  5 +-
+>  drivers/gpu/drm/msm/Kconfig                |  4 +-
+>  drivers/iommu/Kconfig                      |  3 +-
+>  drivers/iommu/arm/arm-smmu/Makefile        |  3 +-
+>  drivers/iommu/arm/arm-smmu/arm-smmu-impl.c |  3 +-
+>  drivers/media/platform/Kconfig             |  2 +-
+>  drivers/mmc/host/Kconfig                   |  2 +-
+>  drivers/net/ipa/Kconfig                    |  1 +
+>  drivers/net/wireless/ath/ath10k/Kconfig    |  2 +-
+>  drivers/pinctrl/qcom/Kconfig               |  3 +-
+>  include/linux/arm-smccc.h                  | 10 +++
+>  include/linux/qcom_scm.h                   | 71 ----------------------
+>  12 files changed, 24 insertions(+), 85 deletions(-)
+> 
+> diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
+> index 220a58cf0a44..cda7d7162cbb 100644
+> --- a/drivers/firmware/Kconfig
+> +++ b/drivers/firmware/Kconfig
+> @@ -203,10 +203,7 @@ config INTEL_STRATIX10_RSU
+>  	  Say Y here if you want Intel RSU support.
+>  
+>  config QCOM_SCM
+> -	tristate "Qcom SCM driver"
+> -	depends on ARM || ARM64
+> -	depends on HAVE_ARM_SMCCC
+> -	select RESET_CONTROLLER
+> +	tristate
+>  
+>  config QCOM_SCM_DOWNLOAD_MODE_DEFAULT
+>  	bool "Qualcomm download mode enabled by default"
+> diff --git a/drivers/gpu/drm/msm/Kconfig b/drivers/gpu/drm/msm/Kconfig
+> index e9c6af78b1d7..3ddf739a6f9b 100644
+> --- a/drivers/gpu/drm/msm/Kconfig
+> +++ b/drivers/gpu/drm/msm/Kconfig
+> @@ -17,7 +17,7 @@ config DRM_MSM
+>  	select DRM_SCHED
+>  	select SHMEM
+>  	select TMPFS
+> -	select QCOM_SCM if ARCH_QCOM
+> +	select QCOM_SCM
+>  	select WANT_DEV_COREDUMP
+>  	select SND_SOC_HDMI_CODEC if SND_SOC
+>  	select SYNC_FILE
+> @@ -55,7 +55,7 @@ config DRM_MSM_GPU_SUDO
+>  
+>  config DRM_MSM_HDMI_HDCP
+>  	bool "Enable HDMI HDCP support in MSM DRM driver"
+> -	depends on DRM_MSM && QCOM_SCM
+> +	depends on DRM_MSM
+>  	default y
+>  	help
+>  	  Choose this option to enable HDCP state machine
+> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+> index 124c41adeca1..c5c71b7ab7e8 100644
+> --- a/drivers/iommu/Kconfig
+> +++ b/drivers/iommu/Kconfig
+> @@ -308,7 +308,6 @@ config APPLE_DART
+>  config ARM_SMMU
+>  	tristate "ARM Ltd. System MMU (SMMU) Support"
+>  	depends on ARM64 || ARM || (COMPILE_TEST && !GENERIC_ATOMIC64)
+> -	depends on QCOM_SCM || !QCOM_SCM #if QCOM_SCM=m this can't be =y
+>  	select IOMMU_API
+>  	select IOMMU_IO_PGTABLE_LPAE
+>  	select ARM_DMA_USE_IOMMU if ARM
+> @@ -438,7 +437,7 @@ config QCOM_IOMMU
+>  	# Note: iommu drivers cannot (yet?) be built as modules
+>  	bool "Qualcomm IOMMU Support"
+>  	depends on ARCH_QCOM || (COMPILE_TEST && !GENERIC_ATOMIC64)
+> -	depends on QCOM_SCM=y
+> +	select QCOM_SCM
+>  	select IOMMU_API
+>  	select IOMMU_IO_PGTABLE_LPAE
+>  	select ARM_DMA_USE_IOMMU
+> diff --git a/drivers/iommu/arm/arm-smmu/Makefile b/drivers/iommu/arm/arm-smmu/Makefile
+> index e240a7bcf310..b0cc01aa20c9 100644
+> --- a/drivers/iommu/arm/arm-smmu/Makefile
+> +++ b/drivers/iommu/arm/arm-smmu/Makefile
+> @@ -1,4 +1,5 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_QCOM_IOMMU) += qcom_iommu.o
+>  obj-$(CONFIG_ARM_SMMU) += arm_smmu.o
+> -arm_smmu-objs += arm-smmu.o arm-smmu-impl.o arm-smmu-nvidia.o arm-smmu-qcom.o
+> +arm_smmu-objs += arm-smmu.o arm-smmu-impl.o arm-smmu-nvidia.o
+> +arm_smmu-$(CONFIG_ARM_SMMU_QCOM) += arm-smmu-qcom.o
+> diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+> index 9f465e146799..2c25cce38060 100644
+> --- a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+> +++ b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+> @@ -215,7 +215,8 @@ struct arm_smmu_device *arm_smmu_impl_init(struct arm_smmu_device *smmu)
+>  	    of_device_is_compatible(np, "nvidia,tegra186-smmu"))
+>  		return nvidia_smmu_impl_init(smmu);
+>  
+> -	smmu = qcom_smmu_impl_init(smmu);
+> +	if (IS_ENABLED(CONFIG_ARM_SMMU_QCOM))
+> +		smmu = qcom_smmu_impl_init(smmu);
+>  
+>  	if (of_device_is_compatible(np, "marvell,ap806-smmu-500"))
+>  		smmu->impl = &mrvl_mmu500_impl;
+> diff --git a/drivers/media/platform/Kconfig b/drivers/media/platform/Kconfig
+> index 157c924686e4..80321e03809a 100644
+> --- a/drivers/media/platform/Kconfig
+> +++ b/drivers/media/platform/Kconfig
+> @@ -565,7 +565,7 @@ config VIDEO_QCOM_VENUS
+>  	depends on VIDEO_DEV && VIDEO_V4L2 && QCOM_SMEM
+>  	depends on (ARCH_QCOM && IOMMU_DMA) || COMPILE_TEST
+>  	select QCOM_MDT_LOADER if ARCH_QCOM
+> -	select QCOM_SCM if ARCH_QCOM
+> +	select QCOM_SCM
+>  	select VIDEOBUF2_DMA_CONTIG
+>  	select V4L2_MEM2MEM_DEV
+>  	help
+> diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
+> index 71313961cc54..95b3511b0560 100644
+> --- a/drivers/mmc/host/Kconfig
+> +++ b/drivers/mmc/host/Kconfig
+> @@ -547,7 +547,7 @@ config MMC_SDHCI_MSM
+>  	depends on MMC_SDHCI_PLTFM
+>  	select MMC_SDHCI_IO_ACCESSORS
+>  	select MMC_CQHCI
+> -	select QCOM_SCM if MMC_CRYPTO && ARCH_QCOM
+> +	select QCOM_SCM if MMC_CRYPTO
+>  	help
+>  	  This selects the Secure Digital Host Controller Interface (SDHCI)
+>  	  support present in Qualcomm SOCs. The controller supports
+> diff --git a/drivers/net/ipa/Kconfig b/drivers/net/ipa/Kconfig
+> index 8f99cfa14680..d037682fb7ad 100644
+> --- a/drivers/net/ipa/Kconfig
+> +++ b/drivers/net/ipa/Kconfig
+> @@ -4,6 +4,7 @@ config QCOM_IPA
+>  	depends on ARCH_QCOM || COMPILE_TEST
+>  	depends on QCOM_RPROC_COMMON || (QCOM_RPROC_COMMON=n && COMPILE_TEST)
+>  	select QCOM_MDT_LOADER if ARCH_QCOM
+> +	select QCOM_SCM
+>  	select QCOM_QMI_HELPERS
+>  	help
+>  	  Choose Y or M here to include support for the Qualcomm
+> diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+> index 741289e385d5..ca007b800f75 100644
+> --- a/drivers/net/wireless/ath/ath10k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+> @@ -44,7 +44,7 @@ config ATH10K_SNOC
+>  	tristate "Qualcomm ath10k SNOC support"
+>  	depends on ATH10K
+>  	depends on ARCH_QCOM || COMPILE_TEST
+> -	depends on QCOM_SCM || !QCOM_SCM #if QCOM_SCM=m this can't be =y
+> +	select QCOM_SCM
+>  	select QCOM_QMI_HELPERS
+>  	help
+>  	  This module adds support for integrated WCN3990 chip connected
+> diff --git a/drivers/pinctrl/qcom/Kconfig b/drivers/pinctrl/qcom/Kconfig
+> index 32ea2a8ec02b..5ff4207df66e 100644
+> --- a/drivers/pinctrl/qcom/Kconfig
+> +++ b/drivers/pinctrl/qcom/Kconfig
+> @@ -3,7 +3,8 @@ if (ARCH_QCOM || COMPILE_TEST)
+>  
+>  config PINCTRL_MSM
+>  	tristate "Qualcomm core pin controller driver"
+> -	depends on GPIOLIB && (QCOM_SCM || !QCOM_SCM) #if QCOM_SCM=m this can't be =y
+> +	depends on GPIOLIB
+> +	select QCOM_SCM
+>  	select PINMUX
+>  	select PINCONF
+>  	select GENERIC_PINCONF
+> diff --git a/include/linux/arm-smccc.h b/include/linux/arm-smccc.h
+> index 7d1cabe15262..63ccb5252190 100644
+> --- a/include/linux/arm-smccc.h
+> +++ b/include/linux/arm-smccc.h
+> @@ -321,10 +321,20 @@ asmlinkage unsigned long __arm_smccc_sve_check(unsigned long x0);
+>   * from register 0 to 3 on return from the SMC instruction.  An optional
+>   * quirk structure provides vendor specific behavior.
+>   */
+> +#ifdef CONFIG_HAVE_ARM_SMCCC
+>  asmlinkage void __arm_smccc_smc(unsigned long a0, unsigned long a1,
+>  			unsigned long a2, unsigned long a3, unsigned long a4,
+>  			unsigned long a5, unsigned long a6, unsigned long a7,
+>  			struct arm_smccc_res *res, struct arm_smccc_quirk *quirk);
+> +#else
+> +static inline void __arm_smccc_smc(unsigned long a0, unsigned long a1,
+> +			unsigned long a2, unsigned long a3, unsigned long a4,
+> +			unsigned long a5, unsigned long a6, unsigned long a7,
+> +			struct arm_smccc_res *res, struct arm_smccc_quirk *quirk)
+> +{
+> +	*res = (struct arm_smccc_res){};
+> +}
+> +#endif
+>  
+>  /**
+>   * __arm_smccc_hvc() - make HVC calls
+> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
+> index c0475d1c9885..81cad9e1e412 100644
+> --- a/include/linux/qcom_scm.h
+> +++ b/include/linux/qcom_scm.h
+> @@ -61,7 +61,6 @@ enum qcom_scm_ice_cipher {
+>  #define QCOM_SCM_PERM_RW (QCOM_SCM_PERM_READ | QCOM_SCM_PERM_WRITE)
+>  #define QCOM_SCM_PERM_RWX (QCOM_SCM_PERM_RW | QCOM_SCM_PERM_EXEC)
+>  
+> -#if IS_ENABLED(CONFIG_QCOM_SCM)
+>  extern bool qcom_scm_is_available(void);
+>  
+>  extern int qcom_scm_set_cold_boot_addr(void *entry, const cpumask_t *cpus);
+> @@ -115,74 +114,4 @@ extern int qcom_scm_lmh_dcvsh(u32 payload_fn, u32 payload_reg, u32 payload_val,
+>  extern int qcom_scm_lmh_profile_change(u32 profile_id);
+>  extern bool qcom_scm_lmh_dcvsh_available(void);
+>  
+> -#else
+> -
+> -#include <linux/errno.h>
+> -
+> -static inline bool qcom_scm_is_available(void) { return false; }
+> -
+> -static inline int qcom_scm_set_cold_boot_addr(void *entry,
+> -		const cpumask_t *cpus) { return -ENODEV; }
+> -static inline int qcom_scm_set_warm_boot_addr(void *entry,
+> -		const cpumask_t *cpus) { return -ENODEV; }
+> -static inline void qcom_scm_cpu_power_down(u32 flags) {}
+> -static inline u32 qcom_scm_set_remote_state(u32 state,u32 id)
+> -		{ return -ENODEV; }
+> -
+> -static inline int qcom_scm_pas_init_image(u32 peripheral, const void *metadata,
+> -		size_t size) { return -ENODEV; }
+> -static inline int qcom_scm_pas_mem_setup(u32 peripheral, phys_addr_t addr,
+> -		phys_addr_t size) { return -ENODEV; }
+> -static inline int qcom_scm_pas_auth_and_reset(u32 peripheral)
+> -		{ return -ENODEV; }
+> -static inline int qcom_scm_pas_shutdown(u32 peripheral) { return -ENODEV; }
+> -static inline bool qcom_scm_pas_supported(u32 peripheral) { return false; }
+> -
+> -static inline int qcom_scm_io_readl(phys_addr_t addr, unsigned int *val)
+> -		{ return -ENODEV; }
+> -static inline int qcom_scm_io_writel(phys_addr_t addr, unsigned int val)
+> -		{ return -ENODEV; }
+> -
+> -static inline bool qcom_scm_restore_sec_cfg_available(void) { return false; }
+> -static inline int qcom_scm_restore_sec_cfg(u32 device_id, u32 spare)
+> -		{ return -ENODEV; }
+> -static inline int qcom_scm_iommu_secure_ptbl_size(u32 spare, size_t *size)
+> -		{ return -ENODEV; }
+> -static inline int qcom_scm_iommu_secure_ptbl_init(u64 addr, u32 size, u32 spare)
+> -		{ return -ENODEV; }
+> -extern inline int qcom_scm_mem_protect_video_var(u32 cp_start, u32 cp_size,
+> -						 u32 cp_nonpixel_start,
+> -						 u32 cp_nonpixel_size)
+> -		{ return -ENODEV; }
+> -static inline int qcom_scm_assign_mem(phys_addr_t mem_addr, size_t mem_sz,
+> -		unsigned int *src, const struct qcom_scm_vmperm *newvm,
+> -		unsigned int dest_cnt) { return -ENODEV; }
+> -
+> -static inline bool qcom_scm_ocmem_lock_available(void) { return false; }
+> -static inline int qcom_scm_ocmem_lock(enum qcom_scm_ocmem_client id, u32 offset,
+> -		u32 size, u32 mode) { return -ENODEV; }
+> -static inline int qcom_scm_ocmem_unlock(enum qcom_scm_ocmem_client id,
+> -		u32 offset, u32 size) { return -ENODEV; }
+> -
+> -static inline bool qcom_scm_ice_available(void) { return false; }
+> -static inline int qcom_scm_ice_invalidate_key(u32 index) { return -ENODEV; }
+> -static inline int qcom_scm_ice_set_key(u32 index, const u8 *key, u32 key_size,
+> -				       enum qcom_scm_ice_cipher cipher,
+> -				       u32 data_unit_size) { return -ENODEV; }
+> -
+> -static inline bool qcom_scm_hdcp_available(void) { return false; }
+> -static inline int qcom_scm_hdcp_req(struct qcom_scm_hdcp_req *req, u32 req_cnt,
+> -		u32 *resp) { return -ENODEV; }
+> -
+> -static inline int qcom_scm_qsmmu500_wait_safe_toggle(bool en)
+> -		{ return -ENODEV; }
+> -
+> -static inline int qcom_scm_lmh_dcvsh(u32 payload_fn, u32 payload_reg, u32 payload_val,
+> -				     u64 limit_node, u32 node_id, u64 version)
+> -		{ return -ENODEV; }
+> -
+> -static inline int qcom_scm_lmh_profile_change(u32 profile_id) { return -ENODEV; }
+> -
+> -static inline bool qcom_scm_lmh_dcvsh_available(void) { return -ENODEV; }
+> -#endif
+>  #endif
+> 
 
