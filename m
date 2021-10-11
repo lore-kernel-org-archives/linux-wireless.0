@@ -2,218 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A3EC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 14:13:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C6EC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 14:22:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A20E60EB6
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 14:13:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B16260C4A
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 14:22:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244162AbhJKOPR (ORCPT
+        id S238565AbhJKOYQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 10:15:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38882 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235115AbhJKONJ (ORCPT
+        Mon, 11 Oct 2021 10:24:16 -0400
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:58468 "EHLO
+        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238126AbhJKOXA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 10:13:09 -0400
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050::465:101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC484C07E5FB;
-        Mon, 11 Oct 2021 06:51:57 -0700 (PDT)
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:105:465:1:3:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        Mon, 11 Oct 2021 10:23:00 -0400
+X-Greylist: delayed 494 seconds by postgrey-1.27 at vger.kernel.org; Mon, 11 Oct 2021 10:23:00 EDT
+Received: from dispatch1-us1.ppe-hosted.com (localhost.localdomain [127.0.0.1])
+        by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 1D1B0226157
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 14:12:48 +0000 (UTC)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.177])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 26EF41A006C;
+        Mon, 11 Oct 2021 14:12:44 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id DAA40680017;
+        Mon, 11 Oct 2021 14:12:43 +0000 (UTC)
+Received: from [192.168.1.115] (unknown [206.214.224.211])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4HSgFm2BkVzQkm1;
-        Mon, 11 Oct 2021 15:51:56 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-From:   =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Brian Norris <briannorris@chromium.org>,
-        David Laight <David.Laight@ACULAB.COM>
-Subject: [PATCH] mwifiex: Add quirk resetting the PCI bridge on MS Surface devices
-Date:   Mon, 11 Oct 2021 15:42:38 +0200
-Message-Id: <20211011134238.16551-1-verdre@v0yd.nl>
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 27EE713C2B0;
+        Mon, 11 Oct 2021 07:12:26 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 27EE713C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1633961546;
+        bh=GoJnhjzl+/RzwgltKNAs/NgVXCHQ3prpK60tN6Zsq2I=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=ZkpYyjzzzKFlxDTz+k28G6xfpND3BJTwn9AZVVfdJFxGaNbhARhrgzeL2II4hUIB9
+         WmweXJkbOKLFk0fkLfZbDBP4JDK9Uzau/LoePFVr18qpfCeZoEtH4sXh+4m8kwinBI
+         1sBMmnvdjbhLWc/nr2XbehVqsVAAuy3ivBm9xuS4=
+Subject: Re: [PATCH v5 05/11] mt76: mt7915: debugfs hook to enable TXS for
+ NO_SKB pkt-ids
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+References: <20210804134505.3208-1-greearb@candelatech.com>
+ <20210804134505.3208-5-greearb@candelatech.com>
+ <87mtpda079.fsf@tynnyri.adurom.net>
+ <093b94ea-b6db-aca8-26c4-6981e57e8ff4@candelatech.com>
+ <87ily352s4.fsf@codeaurora.org>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <0894595c-cea8-6ced-2082-9c7abc9f88d3@candelatech.com>
+Date:   Mon, 11 Oct 2021 07:12:25 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 38735387
+In-Reply-To: <87ily352s4.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
+X-MDID: 1633961564-3JT5r9KMCoxz
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The most recent firmware (15.68.19.p21) of the 88W8897 PCIe+USB card
-reports a hardcoded LTR value to the system during initialization,
-probably as an (unsuccessful) attempt of the developers to fix firmware
-crashes. This LTR value prevents most of the Microsoft Surface devices
-from entering deep powersaving states (either platform C-State 10 or
-S0ix state), because the exit latency of that state would be higher than
-what the card can tolerate.
+On 10/11/21 2:28 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> On 8/19/21 9:06 AM, Kalle Valo wrote:
+>>> greearb@candelatech.com writes:
+>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> This lets user turn on/off this feature.  Enabling gives better
+>>>> tx-rate related stats, but will cause extra driver and (maybe)
+>>>> firmware work.  Not sure if it actually affects performance or
+>>>> not.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>
+>>> This is grey area, debugfs is not really meant to be used for users
+>>> enabling driver features.
+>>>
+>>
+>> What method do you suggest?  Surely not trying to drive something down through
+>> netlink for something this chipset specific?
+> 
+> I think a module parameter would be a good choise for enabling this kind
+> of feature.
+> 
+> Of course the downside of a module parater is that when it's not
+> possible to configure this per device, only per driver. Like discussed
+> many times in the past, we would really need some kind more advanced
+> module parameters which can be per device.
 
-Turns out the card works just the same (including the firmware crashes)
-no matter if that hardcoded LTR value is reported or not, so it's kind
-of useless and only prevents us from saving power.
+Enabling/disabling via debugfs is way more useful than a module parameter.
+It is per-device and also changeable at run-time.  Maybe you want to enable
+detailed stats for a bit of time for some reason, and then go back to lower
+overhead approach.
 
-To get rid of those hardcoded LTR requirements, it's possible to reset
-the PCI bridge device after initializing the cards firmware. I'm not
-exactly sure why that works, maybe the power management subsystem of the
-PCH resets its stored LTR values when doing a function level reset of
-the bridge device. Doing the reset once after starting the wifi firmware
-works very well, probably because the firmware only reports that LTR
-value a single time during firmware startup.
+You are asking for a worse technical solution than debugfs implementation.
 
-Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c   | 12 +++++++++
- .../wireless/marvell/mwifiex/pcie_quirks.c    | 26 +++++++++++++------
- .../wireless/marvell/mwifiex/pcie_quirks.h    |  1 +
- 3 files changed, 31 insertions(+), 8 deletions(-)
+For the per-device module parameters, I implemented something similar for
+ath10k using a 'fwcfg' file that is loaded with device options sort of like
+a board file.  That worked well enough for that sort of thing.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index c6ccce426b49..2506e7e49f0c 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1748,9 +1748,21 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- static int mwifiex_pcie_init_fw_port(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
-+	struct pci_dev *pdev = card->dev;
-+	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 	int tx_wrap = card->txbd_wrptr & reg->tx_wrap_mask;
- 
-+	/* Trigger a function level reset of the PCI bridge device, this makes
-+	 * the firmware (latest version 15.68.19.p21) of the 88W8897 PCIe+USB
-+	 * card stop reporting a fixed LTR value that prevents the system from
-+	 * entering package C10 and S0ix powersaving states.
-+	 * We need to do it here because it must happen after firmware
-+	 * initialization and this function is called right after that is done.
-+	 */
-+	if (card->quirks & QUIRK_DO_FLR_ON_BRIDGE)
-+		pci_reset_function(parent_pdev);
-+
- 	/* Write the RX ring read pointer in to reg->rx_rdptr */
- 	if (mwifiex_write_reg(adapter, reg->rx_rdptr, card->rxbd_rdptr |
- 			      tx_wrap)) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie_quirks.c b/drivers/net/wireless/marvell/mwifiex/pcie_quirks.c
-index 0234cf3c2974..cbf0565353ae 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie_quirks.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie_quirks.c
-@@ -27,7 +27,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Pro 4"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Pro 5",
-@@ -36,7 +37,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_SKU, "Surface_Pro_1796"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Pro 5 (LTE)",
-@@ -45,7 +47,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_SKU, "Surface_Pro_1807"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Pro 6",
-@@ -53,7 +56,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Pro 6"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Book 1",
-@@ -61,7 +65,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Book"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Book 2",
-@@ -69,7 +74,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Book 2"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Laptop 1",
-@@ -77,7 +83,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Laptop"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{
- 		.ident = "Surface Laptop 2",
-@@ -85,7 +92,8 @@ static const struct dmi_system_id mwifiex_quirk_table[] = {
- 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
- 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Surface Laptop 2"),
- 		},
--		.driver_data = (void *)QUIRK_FW_RST_D3COLD,
-+		.driver_data = (void *)(QUIRK_FW_RST_D3COLD |
-+					QUIRK_DO_FLR_ON_BRIDGE),
- 	},
- 	{}
- };
-@@ -103,6 +111,8 @@ void mwifiex_initialize_quirks(struct pcie_service_card *card)
- 		dev_info(&pdev->dev, "no quirks enabled\n");
- 	if (card->quirks & QUIRK_FW_RST_D3COLD)
- 		dev_info(&pdev->dev, "quirk reset_d3cold enabled\n");
-+	if (card->quirks & QUIRK_DO_FLR_ON_BRIDGE)
-+		dev_info(&pdev->dev, "quirk do_flr_on_bridge enabled\n");
- }
- 
- static void mwifiex_pcie_set_power_d3cold(struct pci_dev *pdev)
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie_quirks.h b/drivers/net/wireless/marvell/mwifiex/pcie_quirks.h
-index 8ec4176d698f..f8d463f4269a 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie_quirks.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie_quirks.h
-@@ -18,6 +18,7 @@
- #include "pcie.h"
- 
- #define QUIRK_FW_RST_D3COLD	BIT(0)
-+#define QUIRK_DO_FLR_ON_BRIDGE	BIT(1)
- 
- void mwifiex_initialize_quirks(struct pcie_service_card *card);
- int mwifiex_pcie_reset_d3cold_quirk(struct pci_dev *pdev);
+Thanks,
+Ben
+
 -- 
-2.31.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
