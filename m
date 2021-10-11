@@ -2,62 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A65C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:40:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD2CC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:40:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 008F560D07
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:40:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24D3560D07
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:40:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234736AbhJKHmQ (ORCPT
+        id S234695AbhJKHmT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 03:42:16 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:43930
+        Mon, 11 Oct 2021 03:42:19 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:43894
         "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234707AbhJKHl6 (ORCPT
+        by vger.kernel.org with ESMTP id S234687AbhJKHl4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 03:41:58 -0400
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+        Mon, 11 Oct 2021 03:41:56 -0400
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id DD48540004
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 07:39:57 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 101793FFF3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 07:39:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1633937997;
-        bh=sEh5KUYuxEm3bzH5hsUc+ps6L/VdQWx+zLSKJvPfz9w=;
+        s=20210705; t=1633937996;
+        bh=/XeYfendRIFkvRSIer1TvzFUH2i0JBuqjZibDPlwRDM=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version;
-        b=aXk3vr02i9kK+jRKHuRBMyfsIsxmaYpVM4pkOH0gomK6ikRt7RdetGfkIesL3HySH
-         gwpRoN1ApFSG3y+AhnUMP7S7mtfVDQ8JubJpQ9U7GTz5RtMEVkjwMaXDvZgBHX4H/o
-         D+hnVn4eK/doE3PeVYcqHuYZoZNn3hZePF1/x2KpTSUgFsnAIRVnbYwYsy2PV3Y8sj
-         VmYsu7aJCudEduglpVO17OF5JvsGwBcrnvRryU8RoujR4GpTwCJTcgSYKzuwuR4nLb
-         /hO87EWehLGeuG1Bqm0myuWDoASx0F7RpLcw8uilUcuaFL6pyuf8Wth2owJMCvwhy9
-         ig8ZiCjBAmcOw==
-Received: by mail-ed1-f72.google.com with SMTP id u17-20020a50d511000000b003daa3828c13so15069330edi.12
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 00:39:57 -0700 (PDT)
+         MIME-Version:Content-Type;
+        b=va+ZpTcM47+BdWqsCXjNNXyG5ldnlRV4dmKKn+2MMoNZzx+cY9jFEoCg0D6w5HYCH
+         DPlWLtjA8iNnZj8j66X4WZ/yVo1U6Wp3qiJbtX8QY6goZqse6wYAbNVHszsX54xeN3
+         6siGTqNUuChuT5gFoS3dDwTtWcb+ZutSEA6QRrPI+UnqPqQqv4r72IfKTamhVW0JMA
+         Vkw1woIc3ESuPcQVUlwL3i3VTGWek1UE2+c51HBoEyr7njAmXKXLB3ywDdUzWhZqxE
+         Hkw8YcxMha9DHRm2yPRBNiVHnUTLLUvHLiiYvGdiPIzkjCPE43uqobUeVv8P0fUtIv
+         8gqp/TGBhnPCQ==
+Received: by mail-ed1-f70.google.com with SMTP id r11-20020aa7cfcb000000b003d4fbd652b9so13035709edy.14
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 00:39:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=sEh5KUYuxEm3bzH5hsUc+ps6L/VdQWx+zLSKJvPfz9w=;
-        b=vrsQUjDFv7E5A32x0Pz0IaQFjQEQYYSqqYhWcl8N+xyxb+Wsw3wwpFA9/jNsK4Bf6P
-         v9Nucy0wQdNmhBc8mdVu4K0K64/aHtpTIZGyfx+WDsAYNPrCJUtFQF+apBmGcRepZZ6g
-         MabwCXL2UZU2BIoPyuvUqmsfnKw+4wAIunYSt0C33y8s9xiPVWRyZz563nniKr/uypr8
-         6g5EjBhknvh4qlt/FneWEGV5whV/JPut+v0R3S5N0Rt1D9Y4mGA6qfg2OJlEbK0I3Q6W
-         ooDSpn5W+GWozWRYlRGhtPIPMdtAHDGITDthNeG02+6VUftoF1JfUSwpuM+K/FrUlL9g
-         2EAg==
-X-Gm-Message-State: AOAM530ygMw1ai9Q0YUe4ul2cztLrzpmg148oo/RdrweSiMu9gHoiikz
-        ivJnW8C/vO54iUJ6eYs/mh2l/2UTLgC0vKwrB0MfMYoXsCkDFW+aMeQeyjH0xi85A7yLMXkMiJl
-        BYQT8I4XFlm9j8CzZJNd7UJAdpj9xOOBzo8jiqvCcs1v2
-X-Received: by 2002:a17:906:7805:: with SMTP id u5mr23831452ejm.26.1633937996673;
-        Mon, 11 Oct 2021 00:39:56 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxAEg2SKbUYUgI5xLf79tbap6qzVlxVcbZCZgmYQ4c9v9F4kzNOwk0ZNgfo1iwPZTfpks2bOg==
-X-Received: by 2002:a17:906:7805:: with SMTP id u5mr23831438ejm.26.1633937996497;
-        Mon, 11 Oct 2021 00:39:56 -0700 (PDT)
+        bh=/XeYfendRIFkvRSIer1TvzFUH2i0JBuqjZibDPlwRDM=;
+        b=jht1GMowJnHyJeGRoggCXV/VUThoxOOf+0Sz/Z4/olTLiSHNskY9ez/NTv4lA13tAA
+         cvatVTsVuotVqwCc1WzIi5QGf194x2ubGdyRjFIYtS+/18P/9y9YBs4/+RgnKsZE/qTf
+         0fdghYIXsUF0ptk4Fxrss4TNIUqQZ1pMoG2oZUmcG3w8k/XmAPXjUx4LQ7CPRmIkFC18
+         u6gOpCERF173BPGyon1zwgVnIUUEhIx+bVC7RTK0aLuFY+A3OwUV95LNgY6caZ0QCtBS
+         b4tW+0PlJgHKU4tdvl+bx/u0n2kWMOAqq0Rt8tW0p3zTnb99Y/dmMc9wo8FqwvCdSaVe
+         TIBw==
+X-Gm-Message-State: AOAM532x1H3tIGMZsWw/JJx7WVsXJ5KvG30g/zI4DNAIbiYMgbmtcZvB
+        CYn4BNDUTsDxbMh6xe9NYVxTh3QROkJCVGnU84wgsih0+K/rdGadxAEDHWGydONxfD+LhnJyGV/
+        Q5gC+S8j0QeZHQxp8nPvZ2kq9ALRArPUcZTkCb5p2zWiE
+X-Received: by 2002:a17:907:7646:: with SMTP id kj6mr8875527ejc.152.1633937993537;
+        Mon, 11 Oct 2021 00:39:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw9iqe6eRX8bi+xuljjGbOC/sGTF2/LP6nad/H8ICj05RanR/nyRcOA/0y3B69U5ovTpKatFg==
+X-Received: by 2002:a17:907:7646:: with SMTP id kj6mr8875504ejc.152.1633937993356;
+        Mon, 11 Oct 2021 00:39:53 -0700 (PDT)
 Received: from localhost.localdomain (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.gmail.com with ESMTPSA id y8sm3023965ejm.104.2021.10.11.00.39.55
+        by smtp.gmail.com with ESMTPSA id y8sm3023965ejm.104.2021.10.11.00.39.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Oct 2021 00:39:55 -0700 (PDT)
+        Mon, 11 Oct 2021 00:39:52 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         "David S. Miller" <davem@davemloft.net>,
@@ -67,41 +67,51 @@ To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Mark Greer <mgreer@animalcreek.com>, linux-nfc@lists.01.org,
         netdev@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 8/8] dt-bindings: nfc: marvell,nci: convert to dtschema
-Date:   Mon, 11 Oct 2021 09:39:34 +0200
-Message-Id: <20211011073934.34340-9-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 6/8] dt-bindings: nfc: st,nci: convert to dtschema
+Date:   Mon, 11 Oct 2021 09:39:32 +0200
+Message-Id: <20211011073934.34340-7-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211011073934.34340-1-krzysztof.kozlowski@canonical.com>
 References: <20211011073934.34340-1-krzysztof.kozlowski@canonical.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Convert the Marvell NCI NFC controller to DT schema format.
+Convert the ST NCI (ST21NFCB) NFC controller to DT schema format.
+
+Changes during bindings conversion:
+1. Add a new required "reg" property for SPI binding, because SPI child
+   devices use it as chip-select.
+2. Drop the "clock-frequency" property during conversion because it is a
+   property of I2C bus controller, not I2C slave device.  It was also
+   never used by the driver.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- .../bindings/net/nfc/marvell,nci.yaml         | 170 ++++++++++++++++++
- .../devicetree/bindings/net/nfc/nfcmrvl.txt   |  84 ---------
- 2 files changed, 170 insertions(+), 84 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/marvell,nci.yaml
- delete mode 100644 Documentation/devicetree/bindings/net/nfc/nfcmrvl.txt
+ .../bindings/net/nfc/st,st-nci.yaml           | 106 ++++++++++++++++++
+ .../bindings/net/nfc/st-nci-i2c.txt           |  38 -------
+ .../bindings/net/nfc/st-nci-spi.txt           |  36 ------
+ 3 files changed, 106 insertions(+), 74 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/st,st-nci.yaml
+ delete mode 100644 Documentation/devicetree/bindings/net/nfc/st-nci-i2c.txt
+ delete mode 100644 Documentation/devicetree/bindings/net/nfc/st-nci-spi.txt
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/marvell,nci.yaml b/Documentation/devicetree/bindings/net/nfc/marvell,nci.yaml
+diff --git a/Documentation/devicetree/bindings/net/nfc/st,st-nci.yaml b/Documentation/devicetree/bindings/net/nfc/st,st-nci.yaml
 new file mode 100644
-index 000000000000..15a45db3899a
+index 000000000000..a6a1bc788d29
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/net/nfc/marvell,nci.yaml
-@@ -0,0 +1,170 @@
++++ b/Documentation/devicetree/bindings/net/nfc/st,st-nci.yaml
+@@ -0,0 +1,106 @@
 +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/net/nfc/marvell,nci.yaml#
++$id: http://devicetree.org/schemas/net/nfc/st,st-nci.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: Marvell International Ltd. NCI NFC controller
++title: STMicroelectronics ST NCI NFC controller
 +
 +maintainers:
 +  - Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
@@ -109,14 +119,17 @@ index 000000000000..15a45db3899a
 +properties:
 +  compatible:
 +    enum:
-+      - marvell,nfc-i2c
-+      - marvell,nfc-spi
-+      - marvell,nfc-uart
++      - st,st21nfcb-i2c
++      - st,st21nfcb-spi
++      - st,st21nfcc-i2c
 +
-+  hci-muxed:
++  reset-gpios:
++    description: Output GPIO pin used for resetting the controller
++
++  ese-present:
 +    type: boolean
 +    description: |
-+      Specifies that the chip is muxing NCI over HCI frames
++      Specifies that an ese is physically connected to the controller
 +
 +  interrupts:
 +    maxItems: 1
@@ -124,86 +137,33 @@ index 000000000000..15a45db3899a
 +  reg:
 +    maxItems: 1
 +
-+  reset-n-io:
-+    $ref: "/schemas/types.yaml#/definitions/phandle-array"
-+    maxItems: 1
-+    description: |
-+      Output GPIO pin used to reset the chip (active low)
-+
-+  i2c-int-falling:
-+    type: boolean
-+    description: |
-+      For I2C type of connection. Specifies that the chip read event shall be
-+      trigged on falling edge.
-+
-+  i2c-int-rising:
-+    type: boolean
-+    description: |
-+      For I2C type of connection.  Specifies that the chip read event shall be
-+      trigged on rising edge.
-+
-+  break-control:
-+    type: boolean
-+    description: |
-+      For UART type of connection. Specifies that the chip needs specific break
-+      management.
-+
-+  flow-control:
-+    type: boolean
-+    description: |
-+      For UART type of connection. Specifies that the chip is using RTS/CTS.
-+
-+  spi-cpha: true
-+  spi-cpol: true
 +  spi-max-frequency: true
++
++  uicc-present:
++    type: boolean
++    description: |
++      Specifies that the uicc swp signal can be physically connected to the
++      controller
 +
 +required:
 +  - compatible
++  - interrupts
++  - reg
++  - reset-gpios
 +
-+allOf:
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: marvell,nfc-i2c
-+    then:
-+      properties:
-+        break-control: false
-+        flow-control: false
-+        spi-cpha: false
-+        spi-cpol: false
-+        spi-max-frequency: false
-+      required:
-+        - reg
-+
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: marvell,nfc-spi
-+    then:
-+      properties:
-+        break-control: false
-+        flow-control: false
-+        i2c-int-falling: false
-+        i2c-int-rising: false
-+      required:
-+        - reg
-+
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: marvell,nfc-uart
-+    then:
-+      properties:
-+        i2c-int-falling: false
-+        i2c-int-rising: false
-+        interrupts: false
-+        spi-cpha: false
-+        spi-cpol: false
-+        spi-max-frequency: false
-+        reg: false
++if:
++  properties:
++    compatible:
++      contains:
++        enum:
++          - st,st21nfcb-i2c
++          - st,st21nfcc-i2c
++then:
++  properties:
++    spi-max-frequency: false
++else:
++  required:
++    - spi-max-frequency
 +
 +additionalProperties: false
 +
@@ -217,15 +177,15 @@ index 000000000000..15a45db3899a
 +        #size-cells = <0>;
 +
 +        nfc@8 {
-+            compatible = "marvell,nfc-i2c";
-+            reg = <0x8>;
++            compatible = "st,st21nfcb-i2c";
++            reg = <0x08>;
 +
-+            interrupt-parent = <&gpio3>;
-+            interrupts = <21 IRQ_TYPE_EDGE_RISING>;
++            interrupt-parent = <&gpio5>;
++            interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
++            reset-gpios = <&gpio5 29 GPIO_ACTIVE_HIGH>;
 +
-+            i2c-int-rising;
-+
-+            reset-n-io = <&gpio3 19 GPIO_ACTIVE_HIGH>;
++            ese-present;
++            uicc-present;
 +        };
 +    };
 +
@@ -238,121 +198,103 @@ index 000000000000..15a45db3899a
 +        #size-cells = <0>;
 +
 +        nfc@0 {
-+            compatible = "marvell,nfc-spi";
++            compatible = "st,st21nfcb-spi";
 +            reg = <0>;
 +
-+            spi-max-frequency = <3000000>;
-+            spi-cpha;
-+            spi-cpol;
++            spi-max-frequency = <4000000>;
 +
-+            interrupt-parent = <&gpio1>;
-+            interrupts = <17 IRQ_TYPE_EDGE_RISING>;
++            interrupt-parent = <&gpio5>;
++            interrupts = <2 IRQ_TYPE_EDGE_RISING>;
++            reset-gpios = <&gpio5 29 GPIO_ACTIVE_HIGH>;
 +
-+            reset-n-io = <&gpio3 19 GPIO_ACTIVE_HIGH>;
++            ese-present;
++            uicc-present;
 +        };
 +    };
-+
-+  - |
-+    #include <dt-bindings/gpio/gpio.h>
-+
-+    uart {
-+        nfc {
-+            compatible = "marvell,nfc-uart";
-+
-+            reset-n-io = <&gpio3 16 GPIO_ACTIVE_HIGH>;
-+
-+            hci-muxed;
-+            flow-control;
-+        };
-+    };
-diff --git a/Documentation/devicetree/bindings/net/nfc/nfcmrvl.txt b/Documentation/devicetree/bindings/net/nfc/nfcmrvl.txt
+diff --git a/Documentation/devicetree/bindings/net/nfc/st-nci-i2c.txt b/Documentation/devicetree/bindings/net/nfc/st-nci-i2c.txt
 deleted file mode 100644
-index c9b35251bb20..000000000000
---- a/Documentation/devicetree/bindings/net/nfc/nfcmrvl.txt
+index baa8f8133d19..000000000000
+--- a/Documentation/devicetree/bindings/net/nfc/st-nci-i2c.txt
 +++ /dev/null
-@@ -1,84 +0,0 @@
--* Marvell International Ltd. NCI NFC Controller
+@@ -1,38 +0,0 @@
+-* STMicroelectronics SAS. ST NCI NFC Controller
 -
 -Required properties:
--- compatible: Should be:
--  - "marvell,nfc-uart" or "mrvl,nfc-uart" for UART devices
--  - "marvell,nfc-i2c" for I2C devices
--  - "marvell,nfc-spi" for SPI devices
+-- compatible: Should be "st,st21nfcb-i2c" or "st,st21nfcc-i2c".
+-- clock-frequency: I²C work frequency.
+-- reg: address on the bus
+-- interrupts: GPIO interrupt to which the chip is connected
+-- reset-gpios: Output GPIO pin used to reset the ST21NFCB
 -
--Optional SoC specific properties:
+-Optional SoC Specific Properties:
 -- pinctrl-names: Contains only one value - "default".
 -- pintctrl-0: Specifies the pin control groups used for this controller.
--- reset-n-io: Output GPIO pin used to reset the chip (active low).
--- hci-muxed: Specifies that the chip is muxing NCI over HCI frames.
+-- ese-present: Specifies that an ese is physically connected to the nfc
+-controller.
+-- uicc-present: Specifies that the uicc swp signal can be physically
+-connected to the nfc controller.
 -
--Optional UART-based chip specific properties:
--- flow-control: Specifies that the chip is using RTS/CTS.
--- break-control: Specifies that the chip needs specific break management.
+-Example (for ARM-based BeagleBoard xM with ST21NFCB on I2C2):
 -
--Optional I2C-based chip specific properties:
--- i2c-int-falling: Specifies that the chip read event shall be trigged on
--  		   falling edge.
--- i2c-int-rising: Specifies that the chip read event shall be trigged on
--  		  rising edge.
--
--Example (for ARM-based BeagleBoard Black with 88W8887 on UART5):
--
--&uart5 {
--
--	nfcmrvluart: nfcmrvluart@5 {
--		compatible = "marvell,nfc-uart";
--
--		reset-n-io = <&gpio3 16 0>;
--
--		hci-muxed;
--		flow-control;
--        }
--};
+-&i2c2 {
 -
 -
--Example (for ARM-based BeagleBoard Black with 88W8887 on I2C1):
+-	st21nfcb: st21nfcb@8 {
 -
--&i2c1 {
--	clock-frequency = <400000>;
+-		compatible = "st,st21nfcb-i2c";
 -
--	nfcmrvli2c0: i2c@1 {
--		compatible = "marvell,nfc-i2c";
+-		reg = <0x08>;
+-		clock-frequency = <400000>;
 -
--		reg = <0x8>;
+-		interrupt-parent = <&gpio5>;
+-		interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
 -
--		/* I2C INT configuration */
--		interrupt-parent = <&gpio3>;
--		interrupts = <21 0>;
+-		reset-gpios = <&gpio5 29 GPIO_ACTIVE_HIGH>;
 -
--		/* I2C INT trigger configuration */
--		i2c-int-rising;
--
--		/* Reset IO */
--		reset-n-io = <&gpio3 19 0>;
+-		ese-present;
+-		uicc-present;
 -	};
 -};
+diff --git a/Documentation/devicetree/bindings/net/nfc/st-nci-spi.txt b/Documentation/devicetree/bindings/net/nfc/st-nci-spi.txt
+deleted file mode 100644
+index d33343330b94..000000000000
+--- a/Documentation/devicetree/bindings/net/nfc/st-nci-spi.txt
++++ /dev/null
+@@ -1,36 +0,0 @@
+-* STMicroelectronics SAS. ST NCI NFC Controller
+-
+-Required properties:
+-- compatible: Should be "st,st21nfcb-spi"
+-- spi-max-frequency: Maximum SPI frequency (<= 4000000).
+-- interrupts: GPIO interrupt to which the chip is connected
+-- reset-gpios: Output GPIO pin used to reset the ST21NFCB
+-
+-Optional SoC Specific Properties:
+-- pinctrl-names: Contains only one value - "default".
+-- pintctrl-0: Specifies the pin control groups used for this controller.
+-- ese-present: Specifies that an ese is physically connected to the nfc
+-controller.
+-- uicc-present: Specifies that the uicc swp signal can be physically
+-connected to the nfc controller.
+-
+-Example (for ARM-based BeagleBoard xM with ST21NFCB on SPI4):
+-
+-&mcspi4 {
 -
 -
--Example (for ARM-based BeagleBoard Black on SPI0):
+-	st21nfcb: st21nfcb@0 {
 -
--&spi0 {
+-		compatible = "st,st21nfcb-spi";
 -
--	mrvlnfcspi0: spi@0 {
--		compatible = "marvell,nfc-spi";
+-		clock-frequency = <4000000>;
 -
--		reg = <0>;
+-		interrupt-parent = <&gpio5>;
+-		interrupts = <2 IRQ_TYPE_EDGE_RISING>;
 -
--		/* SPI Bus configuration */
--		spi-max-frequency = <3000000>;
--		spi-cpha;
--		spi-cpol;
+-		reset-gpios = <&gpio5 29 GPIO_ACTIVE_HIGH>;
 -
--		/* SPI INT configuration */
--		interrupt-parent = <&gpio1>;
--		interrupts = <17 0>;
--
--		/* Reset IO */
--       		reset-n-io = <&gpio3 19 0>;
+-		ese-present;
+-		uicc-present;
 -	};
 -};
 -- 
