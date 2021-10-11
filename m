@@ -2,83 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86CFCC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 10:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9CBEC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 10:38:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B4E460E74
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 10:10:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9733D60EBD
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 10:38:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235751AbhJKKMH (ORCPT
+        id S235897AbhJKKkq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 06:12:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40872 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235712AbhJKKMG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 06:12:06 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD7FAC061570
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 03:10:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=CEp9SK2THAhiavjnyvyFXMvBhCVX42EpDIoO7m04Fuo=; b=paSEsLdqP962ly1Zvw/uCYX4US
-        70U2Xb0I1be/kTUtuMVgFu8aavkCqRPeGdlEkgZKwcj8AN0TDNARTX7SSlaAj/8WZGXcHLczMjGEg
-        sOk8lugkN6OXIrEkvxNbM5mBOxmq2lbKJlbuV/IZTSO1E5zqftnAKRqj9preA5S2cf8U=;
-Received: from p4ff1322b.dip0.t-ipconnect.de ([79.241.50.43] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1mZsFw-0007uD-F3
-        for linux-wireless@vger.kernel.org; Mon, 11 Oct 2021 12:10:04 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: do not access 802.11 header in ccmp check for 802.3 rx skbs
-Date:   Mon, 11 Oct 2021 12:10:02 +0200
-Message-Id: <20211011101002.53900-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.30.1
+        Mon, 11 Oct 2021 06:40:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235881AbhJKKkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Oct 2021 06:40:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E795B60E54;
+        Mon, 11 Oct 2021 10:38:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1633948725;
+        bh=UMJ7ASTuKEwkKpOZEU4PB74SUzkIEKxXfyR3Cy0vOKM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ubW5MrKWC/NOaZCHYgrRJDmygbr2QZPHvWsxaNgd4U6CgwAYBpH/pdR9Wc+7+7qHf
+         5XcBG7hRwxx4/Q4MbJzRzo+oeVDaYmiZdPzncnJMFgN1Dhu9BZJgLlwhNYu4a0vcj9
+         yZk3zKbezHLdN1y4TT5fMcdbKF0PWnxNxOYY3UEWMTKABu1vyqvo/gYUXnsE9RqaLl
+         AmEzu3rIBKo4QXLMX9L8iQuNk3Q4RfjI1qnmOtrXcKEgvA0NbvVL2kOWBk3MCsj031
+         hd4KbVzQyzJoVYspn0WYz5wBbpIrW6e4awoOJbH6SC7xxgjwMbDtvJsjDMjeB1NdQO
+         osr+ehTPuSnvA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: [PATCH v3 0/3] introduce a dedicated mt7915 debugfs sub-dir for ext-phy
+Date:   Mon, 11 Oct 2021 12:38:26 +0200
+Message-Id: <cover.1633948549.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Avoids false positive on detecting frags or encrypted mgmt frames
+Introduce a dedicated mt76 debugfs sub-dir for ext-phy in dbdc mode for mt7915
+driver. This is a preliminary series to add zero-wait dfs support.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Changes since v2:
+- rebase on top of mt76 master
+- add patch 3/3
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 5a6608f36ebc..766681a4f89e 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -974,6 +974,10 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
- 	if (!wcid || !wcid->rx_check_pn)
- 		return 0;
- 
-+	security_idx = status->qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
-+	if (status->flag & RX_FLAG_8023)
-+		goto skip_hdr_check;
-+
- 	hdr = mt76_skb_get_hdr(skb);
- 	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
- 		/*
-@@ -994,9 +998,8 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
- 	if (ieee80211_is_mgmt(hdr->frame_control) &&
- 	    !ieee80211_has_tods(hdr->frame_control))
- 		security_idx = IEEE80211_NUM_TIDS;
--	else
--		security_idx = status->qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
- 
-+skip_hdr_check:
- 	BUILD_BUG_ON(sizeof(status->iv) != sizeof(wcid->rx_key_pn[0]));
- 	ret = memcmp(status->iv, wcid->rx_key_pn[security_idx],
- 		     sizeof(status->iv));
+Changes since v1:
+- rebase on top of mt76 master
+
+Lorenzo Bianconi (3):
+  mt76: rely on phy pointer in mt76_register_debugfs_fops routine
+    signature
+  mt76: mt7915: introduce mt76 debugfs sub-dir for ext-phy
+  mt76: mt7915: improve code readability for xmit-queue handler
+
+ drivers/net/wireless/mediatek/mt76/debugfs.c  |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |   4 +-
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   |   2 +-
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 159 +++++++++---------
+ .../net/wireless/mediatek/mt76/mt7915/init.c  |   6 +-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |   2 +-
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |   2 +-
+ 7 files changed, 94 insertions(+), 86 deletions(-)
+
 -- 
-2.30.1
+2.31.1
 
