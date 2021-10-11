@@ -2,126 +2,213 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 543B3C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 06:48:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE8EC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:39:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EB8F60C41
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 06:48:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C5E60EFE
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Oct 2021 07:39:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234310AbhJKGuK (ORCPT
+        id S234598AbhJKHlv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Oct 2021 02:50:10 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:42558 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234284AbhJKGuK (ORCPT
+        Mon, 11 Oct 2021 03:41:51 -0400
+Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:57480
+        "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234566AbhJKHlt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Oct 2021 02:50:10 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633934890; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=X2IEGRiQjcWMuTqGKpeI/0QKhJdKCtBxxC+Br55StdU=; b=guAYGGB6w+9CDlEwYv9QPbdreokw+RBmB44JufN9rnsWPxXIq9Hc5k+p5BBqa388XTkvsu1g
- 8LAcYtN9RORZ4nPw90dzJBGgHcZgmc8WvAZzVx4NdfIZ+Stj9tMQOQMN6ThlbZ6nsUciutRo
- v2B7b0ceBsF+ZkKY1wLr07ZZi2U=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 6163de1f0605239689a7b3b8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 11 Oct 2021 06:47:59
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 38FAFC43460; Mon, 11 Oct 2021 06:47:58 +0000 (UTC)
-Received: from tykki (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 11 Oct 2021 03:41:49 -0400
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA389C4338F;
-        Mon, 11 Oct 2021 06:47:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org AA389C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Jouni Malinen <jouni@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Baochen Qiang <bqiang@codeaurora.org>
-Subject: Re: [PATCH 5/5] ath11k: Handle MSI enablement during rmmod and SSR
-References: <20210913180246.193388-1-jouni@codeaurora.org>
-        <20210913180246.193388-5-jouni@codeaurora.org>
-Date:   Mon, 11 Oct 2021 09:47:50 +0300
-In-Reply-To: <20210913180246.193388-5-jouni@codeaurora.org> (Jouni Malinen's
-        message of "Mon, 13 Sep 2021 21:02:46 +0300")
-Message-ID: <87r1cs3vmx.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 7083B40020
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 07:39:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1633937987;
+        bh=hrLA5o9OEIQ0nHS0Sc5B651Iz0OK3SR27lQhWVZgzKI=;
+        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+         MIME-Version:Content-Type;
+        b=I0mYu0D31VuK4pRmlCnk7ZywwcaMk+gp0zhdWj8iXMgwQewfI9QG6qIU91Pwhh+c2
+         9wGMiTvyaksVArjqqY/f8gbxgAOX2sNvaPds7LVIL888LQLe3Pe9Mb+dg1fn/KvpzV
+         E3sy0MKQDDQELkQMzsQ4E+RRWD8smZFiCX72yMd6n2+Mpi6+kOWIYPi/qC78Hlyzme
+         jjHQvA831DH0+HtG4sOSbORbLOqWx2Dp9e0FJbg5spbKEFYoYEq28FJvt5b2RbBOF0
+         Uj0rABuoFsPV0tvCyVslMnu9goVjeZBN1Pey87RySvXFIahhr3HAy4xea+A3NNdxM6
+         yl5Mryw2TRQig==
+Received: by mail-ed1-f70.google.com with SMTP id cy14-20020a0564021c8e00b003db8c9a6e30so2673191edb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2021 00:39:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=hrLA5o9OEIQ0nHS0Sc5B651Iz0OK3SR27lQhWVZgzKI=;
+        b=UKyQmbGg41Gmt8dmmCtwQzSF8RH4hEJQl7Zy1R0jA+k9r8itBJPioCb7N/tPzutz19
+         mjsZ04cWmimtCA2xuhhaZoZl749iL+6kpD3uW8I3JQwY3ryhryXzUyKy49bqRLIVvsd3
+         j9XjXu15RgNZe6lIxYi5+SbrVZ5c4cEdvY/bVlpL83KAzsU5ZdpTjt7AXxXCFZcaXPyh
+         KgZGfAn2Rj1T+hZKIu2DPM31RnuW6T8AAIj1v38BC/QmaK6SGHMzX3llR9Svp5Y/6Kmn
+         LLhJXBfyk7lkKux/OQmDY3FH/tTq7tdYUyE0wAPceaIaqXaEM9TkCw/f5GG+PiGHbtCv
+         Dypg==
+X-Gm-Message-State: AOAM532m/sI+/kD/UoFC4p0o17eTLl+KBuy4H6xqk4PJ2KG2+6GkvW6r
+        /5as4tJfbNx/SMHjoJP6KIlLq6bc4s4xM81HFgSNElg3Hq09pci1NzfKkdeZrIBjp0VXWqAXCzk
+        tPci8Vd7jmamo54ruCw+D8EBFlYFQwz21v1jf5FN3p3bY
+X-Received: by 2002:a50:be81:: with SMTP id b1mr39180543edk.59.1633937986054;
+        Mon, 11 Oct 2021 00:39:46 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwRojHIPPzkKpzS+divt5D4CXRSkB9G3jbMbb2k4RwWF1y3DeZtH0vRHHfAbA51bv493rwOpQ==
+X-Received: by 2002:a50:be81:: with SMTP id b1mr39180520edk.59.1633937985884;
+        Mon, 11 Oct 2021 00:39:45 -0700 (PDT)
+Received: from localhost.localdomain (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
+        by smtp.gmail.com with ESMTPSA id y8sm3023965ejm.104.2021.10.11.00.39.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Oct 2021 00:39:45 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Charles Gorand <charles.gorand@effinnov.com>,
+        Mark Greer <mgreer@animalcreek.com>, linux-nfc@lists.01.org,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/8] dt-bindings: nfc: nxp,nci: convert to dtschema
+Date:   Mon, 11 Oct 2021 09:39:27 +0200
+Message-Id: <20211011073934.34340-2-krzysztof.kozlowski@canonical.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211011073934.34340-1-krzysztof.kozlowski@canonical.com>
+References: <20211011073934.34340-1-krzysztof.kozlowski@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jouni Malinen <jouni@codeaurora.org> writes:
+Convert the NXP NCI NFC controller to DT schema format.
 
-> From: Baochen Qiang <bqiang@codeaurora.org>
->
-> When doing "rmmod ath11k_pci", ath11k performs global SOC reset
-> and MHI reset, where 0 address access is captured by IOMMU. See
-> log below:
->
-> ...
-> [  133.953860] ath11k_pci 0000:02:00.0: setting mhi state: DEINIT(1)
-> [  133.959714] ath11k_pci 0000:02:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x000a address=0x0 flags=0x0020]
-> [  133.973854] ath11k_pci 0000:02:00.0: MHISTATUS 0xff04
-> [  133.974095] ath11k_pci 0000:02:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x000a address=0x0 flags=0x0020]
-> ...
->
-> This issue is also observed in SSR process, cause a similar
-> sequence as above is performed.
->
-> Such an invalid access occurs because, during rmmod or SSR, MSI
-> address is cleared but HW MSI functionality not disabled, thus HW
-> target is able to raise an MSI transaction with 0 as MSI address.
->
-> So it can be fixed by simply disabling MSI before reset. For SSR,
-> since MSI functionality is still needed after target is brought
-> back, we need to reenable it.
->
-> Also change naming of some interfaces related.
->
-> Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
->
-> Signed-off-by: Baochen Qiang <bqiang@codeaurora.org>
-> Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath11k/pci.c | 27 ++++++++++++++++++++++-----
->  1 file changed, 22 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-> index 7b3bce0ba76e..1094b53465bc 100644
-> --- a/drivers/net/wireless/ath/ath11k/pci.c
-> +++ b/drivers/net/wireless/ath/ath11k/pci.c
-> @@ -855,7 +855,18 @@ static void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
->  	}
->  }
->  
-> -static int ath11k_pci_enable_msi(struct ath11k_pci *ab_pci)
-> +static void ath11k_pci_enable_msi(struct pci_dev *dev, bool enable)
-> +{
-> +	u16 control;
-> +
-> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> +	control &= ~PCI_MSI_FLAGS_ENABLE;
-> +	if (enable)
-> +		control |= PCI_MSI_FLAGS_ENABLE;
-> +	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> +}
+Drop the "clock-frequency" property during conversion because it is a
+property of I2C bus controller, not I2C slave device.  It was also never
+used by the driver.
 
-To make the function cleaner I renamed this to ath11k_pci_msi_config(),
-added an else branch and changed it to take structh ath11k_pci. I also
-added helpers ath11k_pci_msi_enable() and ath11k_pci_msi_disable().
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+---
+ .../devicetree/bindings/net/nfc/nxp,nci.yaml  | 57 +++++++++++++++++++
+ .../devicetree/bindings/net/nfc/nxp-nci.txt   | 33 -----------
+ MAINTAINERS                                   |  1 +
+ 3 files changed, 58 insertions(+), 33 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/nxp,nci.yaml
+ delete mode 100644 Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
 
+diff --git a/Documentation/devicetree/bindings/net/nfc/nxp,nci.yaml b/Documentation/devicetree/bindings/net/nfc/nxp,nci.yaml
+new file mode 100644
+index 000000000000..70634d20d4d7
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/nfc/nxp,nci.yaml
+@@ -0,0 +1,57 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/net/nfc/nxp,nci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: NXP Semiconductors NCI NFC controller
++
++maintainers:
++  - Charles Gorand <charles.gorand@effinnov.com>
++  - Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
++
++properties:
++  compatible:
++    const: nxp,nxp-nci-i2c
++
++  enable-gpios:
++    description: Output GPIO pin used for enabling/disabling the controller
++
++  firmware-gpios:
++    description: Output GPIO pin used to enter firmware download mode
++
++  interrupts:
++    maxItems: 1
++
++  reg:
++    maxItems: 1
++
++required:
++  - compatible
++  - enable-gpios
++  - interrupts
++  - reg
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
++
++    i2c {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        nfc@29 {
++            compatible = "nxp,nxp-nci-i2c";
++
++            reg = <0x29>;
++
++            interrupt-parent = <&gpio1>;
++            interrupts = <29 IRQ_TYPE_LEVEL_HIGH>;
++
++            enable-gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
++            firmware-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
++        };
++    };
+diff --git a/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt b/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
+deleted file mode 100644
+index 285a37c2f189..000000000000
+--- a/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
++++ /dev/null
+@@ -1,33 +0,0 @@
+-* NXP Semiconductors NXP NCI NFC Controllers
+-
+-Required properties:
+-- compatible: Should be "nxp,nxp-nci-i2c".
+-- clock-frequency: I²C work frequency.
+-- reg: address on the bus
+-- interrupts: GPIO interrupt to which the chip is connected
+-- enable-gpios: Output GPIO pin used for enabling/disabling the chip
+-
+-Optional SoC Specific Properties:
+-- pinctrl-names: Contains only one value - "default".
+-- pintctrl-0: Specifies the pin control groups used for this controller.
+-- firmware-gpios: Output GPIO pin used to enter firmware download mode
+-
+-Example (for ARM-based BeagleBone with NPC100 NFC controller on I2C2):
+-
+-&i2c2 {
+-
+-
+-	npc100: npc100@29 {
+-
+-		compatible = "nxp,nxp-nci-i2c";
+-
+-		reg = <0x29>;
+-		clock-frequency = <100000>;
+-
+-		interrupt-parent = <&gpio1>;
+-		interrupts = <29 IRQ_TYPE_LEVEL_HIGH>;
+-
+-		enable-gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
+-		firmware-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
+-	};
+-};
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7cfd63ce7122..3294aaf5e56c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13632,6 +13632,7 @@ NXP-NCI NFC DRIVER
+ R:	Charles Gorand <charles.gorand@effinnov.com>
+ L:	linux-nfc@lists.01.org (subscribers-only)
+ S:	Supported
++F:	Documentation/devicetree/bindings/net/nfc/nxp,nci.yaml
+ F:	drivers/nfc/nxp-nci
+ 
+ NXP i.MX 8QXP/8QM JPEG V4L2 DRIVER
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.30.2
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
