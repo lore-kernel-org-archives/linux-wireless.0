@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 722DFC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 23:01:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C3F3C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 23:01:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4721A60724
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 23:01:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 833A6604DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 23:01:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235747AbhJLXD6 (ORCPT
+        id S235775AbhJLXD6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 12 Oct 2021 19:03:58 -0400
 Received: from mailgw01.mediatek.com ([216.200.240.184]:34259 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbhJLXD5 (ORCPT
+        with ESMTP id S235142AbhJLXD6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Oct 2021 19:03:57 -0400
-X-UUID: 115737f18eaf4f8385a767bb796bed03-20211012
-X-UUID: 115737f18eaf4f8385a767bb796bed03-20211012
+        Tue, 12 Oct 2021 19:03:58 -0400
+X-UUID: 1b7e65cf6ef44331826a78eb36d11bbf-20211012
+X-UUID: 1b7e65cf6ef44331826a78eb36d11bbf-20211012
 Received: from mtkcas66.mediatek.inc [(172.29.193.44)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1726609347; Tue, 12 Oct 2021 16:01:52 -0700
+        with ESMTP id 1163947230; Tue, 12 Oct 2021 16:01:52 -0700
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
  MTKMBS62DR.mediatek.inc (172.29.94.18) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 12 Oct 2021 15:52:34 -0700
+ 15.0.1497.2; Tue, 12 Oct 2021 15:52:13 -0700
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 13 Oct 2021 06:52:33 +0800
+ Transport; Wed, 13 Oct 2021 06:52:12 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -42,13 +42,11 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <frankgor@google.com>, <jemele@google.com>,
         <abhishekpandit@google.com>, <shawnku@google.com>,
         <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v4 06/16] mt76: connac: move mcu reg access utility routines in mt76_connac_lib module
-Date:   Wed, 13 Oct 2021 06:51:59 +0800
-Message-ID: <9db79a69d6557dee8e55954e0b97066b5d15c5a7.1634077769.git.objelf@gmail.com>
+        <linux-mediatek@lists.infradead.org>, Sean Wang <objelf@gmail.com>
+Subject: [PATCH v4 00/16] Add MT7921 SDIO WiFi support
+Date:   Wed, 13 Oct 2021 06:51:53 +0800
+Message-ID: <cover.1634077769.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <cover.1634077769.git.objelf@gmail.com>
-References: <cover.1634077769.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -56,68 +54,108 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+From: Sean Wang <objelf@gmail.com>
 
-Move mcu reg access shared between mt7663s and mt7921s in mt76_connac_lib
-module.
+The patchset adds the SDIO support to the MT7921 driver, basically are
+made up of 3 parts.
 
-Tested-by: Deren Wu <deren.wu@mediatek.com>
-Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 27 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  2 ++
- 2 files changed, 29 insertions(+)
+PART 1: patch 1-5, 8-9 and 12-14
+These are preliminary patches for mt7921s driver to refactor and reuse the
+current mt7921e driver as much as possible.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index c569e320f843..404c6bf8578e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -2412,6 +2412,33 @@ void mt76_connac_mcu_set_suspend_iter(void *priv, u8 *mac,
- }
- EXPORT_SYMBOL_GPL(mt76_connac_mcu_set_suspend_iter);
- 
-+u32 mt76_connac_mcu_reg_rr(struct mt76_dev *dev, u32 offset)
-+{
-+	struct {
-+		__le32 addr;
-+		__le32 val;
-+	} __packed req = {
-+		.addr = cpu_to_le32(offset),
-+	};
-+
-+	return mt76_mcu_send_msg(dev, MCU_CMD_REG_READ, &req, sizeof(req),
-+				 true);
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac_mcu_reg_rr);
-+
-+void mt76_connac_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val)
-+{
-+	struct {
-+		__le32 addr;
-+		__le32 val;
-+	} __packed req = {
-+		.addr = cpu_to_le32(offset),
-+		.val = cpu_to_le32(val),
-+	};
-+
-+	mt76_mcu_send_msg(dev, MCU_CMD_REG_WRITE, &req, sizeof(req), false);
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac_mcu_reg_wr);
- #endif /* CONFIG_PM */
- 
- MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 848f43c44258..e5a0a6827145 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1113,4 +1113,6 @@ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
- int mt76_connac_mcu_set_rate_txpower(struct mt76_phy *phy);
- int mt76_connac_mcu_set_p2p_oppps(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif);
-+u32 mt76_connac_mcu_reg_rr(struct mt76_dev *dev, u32 offset);
-+void mt76_connac_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val);
- #endif /* __MT76_CONNAC_MCU_H */
--- 
+PART 2: patch 6-7, 10
+These are preliminary patches for mt7921s driver to refactor and reuse the
+current mt7663s driver as much as possible.
+
+PART 3: patch 11 and 15-16
+These are specific patches for mt7921s driver and reset mechanism in the
+same framework where mt7921e have been supported.
+
+The patchset are built and generated against the current mt76 tree
+with the tag mt76-for-kvalo-2021-10-12 to help the review and merge process
+be easier.
+
+The change list from v1 to v2
+1. rework the whole driver according to the new patches added
+   ("mt76: introduce __mt76_mcu_send_firmware routine"),
+   ("mt76: not accounting the MCU header size in __mt76_mcu_send_firmware for mt7915/21") and
+   ("mt76: sdio: move common code in mt76_sdio module")
+2. drop pci_init.c and sdio_init.c by moving the related logic to pci.c and sdio.c, respectively.
+3. cosmetics the patches like removing unnecessary new line, adding an extra space to fixed_map table and so on ...
+4. fix typo in commit message
+
+The change list from v2 to v3
+1. rebase onto the latest mt76 branch
+2. update per Lorenzo comments on v2
+3. fix scheduling while atomic in mt7921_mac_sta_poll for mt7921s driver
+
+The change list from v3 to v4
+1. change the title of coverletter
+2. fix the git message in patch 14
+3. rebase onto the mt76-for-kvalo-2021-10-12
+
+Lorenzo Bianconi (1):
+  mt76: sdio: move common code in mt76_sdio module
+
+Sean Wang (15):
+  mt76: mt7921: refactor mac.c to be bus independent
+  mt76: mt7921: refactor dma.c to be pcie specific
+  mt76: mt7921: refactor mcu.c to be bus independent
+  mt76: mt7921: refactor init.c to be bus independent
+  mt76: mt7921: add MT7921_COMMON module
+  mt76: connac: move mcu reg access utility routines in mt76_connac_lib
+    module
+  mt76: mt7663s: rely on mcu reg access utility
+  mt76: mt7921: make all event parser reusable between mt7921s and
+    mt7921e
+  mt76: mt7921: use physical addr to unify register access
+  mt76: sdio: extend sdio module to support CONNAC2
+  mt76: connac: extend mcu_get_nic_capability
+  mt76: mt7921: rely on mcu_get_nic_capability
+  mt76: mt7921: refactor mt7921_mcu_send_message
+  mt76: mt7921: introduce mt7921s support
+  mt76: mt7921s: add reset support
+
+ drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  22 +
+ .../wireless/mediatek/mt76/mt7615/Makefile    |   2 +-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  28 --
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |   6 -
+ .../net/wireless/mediatek/mt76/mt7615/sdio.c  | 282 +------------
+ .../wireless/mediatek/mt76/mt7615/sdio_mcu.c  |  11 +-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  93 +++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   2 +
+ .../net/wireless/mediatek/mt76/mt7921/Kconfig |  18 +-
+ .../wireless/mediatek/mt76/mt7921/Makefile    |   8 +-
+ .../wireless/mediatek/mt76/mt7921/debugfs.c   |  18 +-
+ .../net/wireless/mediatek/mt76/mt7921/dma.c   |  38 +-
+ .../wireless/mediatek/mt76/mt7921/eeprom.c    | 101 -----
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  51 +--
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   | 381 ++----------------
+ .../net/wireless/mediatek/mt76/mt7921/mac.h   |   4 +
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |   8 +
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 135 ++-----
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  94 ++++-
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   |  48 ++-
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   | 354 ++++++++++++++++
+ .../wireless/mediatek/mt76/mt7921/pci_mcu.c   | 115 ++++++
+ .../net/wireless/mediatek/mt76/mt7921/regs.h  |  22 +-
+ .../net/wireless/mediatek/mt76/mt7921/sdio.c  | 285 +++++++++++++
+ .../wireless/mediatek/mt76/mt7921/sdio_mac.c  | 220 ++++++++++
+ .../wireless/mediatek/mt76/mt7921/sdio_mcu.c  | 135 +++++++
+ drivers/net/wireless/mediatek/mt76/sdio.c     | 282 +++++++++++++
+ .../mediatek/mt76/{mt7615 => }/sdio.h         |  50 ++-
+ .../mediatek/mt76/{mt7615 => }/sdio_txrx.c    | 171 +++++---
+ 30 files changed, 1987 insertions(+), 999 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
+ rename drivers/net/wireless/mediatek/mt76/{mt7615 => }/sdio.h (68%)
+ rename drivers/net/wireless/mediatek/mt76/{mt7615 => }/sdio_txrx.c (59%)
+
+--
 2.25.1
 
