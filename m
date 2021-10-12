@@ -2,104 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFA1EC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:18:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50147C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8BA260698
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:18:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33CFF60698
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236178AbhJLLU3 (ORCPT
+        id S236190AbhJLLXB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Oct 2021 07:20:29 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:19671 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232791AbhJLLU2 (ORCPT
+        Tue, 12 Oct 2021 07:23:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44232 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236184AbhJLLXA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Oct 2021 07:20:28 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1634037507; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=0q2YRKv3uyGBISXmLzoboNGiNvzauNXZoaVbEX1+pLQ=; b=ndBSrOwuhh2A07kK9gJn13cZxpFpPj8+tWdgAHS5yn/+QkylSPMSu24144q4G4IBh0sR7cy+
- wRqlT2Pi0BtT5wtGjYiYR+bdr5vEEG9iGfy1VMSZsNrUF8+m8VUoptDb/ITsv0i7Vzw2ydQR
- m59Icluv4ChrjkcbtQ/pNs12uT4=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
- 61656eec22fe3a98e537a9ac (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 12 Oct 2021 11:18:04
- GMT
-Sender: cjhuang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 61B48C4338F; Tue, 12 Oct 2021 11:18:02 +0000 (UTC)
-Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Tue, 12 Oct 2021 07:23:00 -0400
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [IPv6:2001:67c:2050::465:102])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE642C061570;
+        Tue, 12 Oct 2021 04:20:58 -0700 (PDT)
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:105:465:1:2:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        (Authenticated sender: cjhuang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 32626C4338F;
-        Tue, 12 Oct 2021 11:18:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 32626C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Carl Huang <cjhuang@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] ath11k: set DTIM policy to stick mode for station interface
-Date:   Tue, 12 Oct 2021 15:18:33 -0400
-Message-Id: <20211012191833.8836-1-cjhuang@codeaurora.org>
-X-Mailer: git-send-email 2.17.1
+        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4HTCs36VXgzQkkS;
+        Tue, 12 Oct 2021 13:20:55 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Message-ID: <3c98ea6c-b80f-59d4-ad84-85cf1c9ff440@v0yd.nl>
+Date:   Tue, 12 Oct 2021 13:20:46 +0200
+MIME-Version: 1.0
+Subject: Re: [PATCH] mwifiex: Add quirk resetting the PCI bridge on MS Surface
+ devices
+Content-Language: en-US
+To:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Tsuchiya Yuto <kitakar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Brian Norris <briannorris@chromium.org>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20211011165301.GA1650148@bhelgaas>
+ <fee8b431-617f-3890-3ad2-67a61d3ffca2@v0yd.nl>
+ <20211012090037.v3w4za5hshtm253f@pali>
+From:   =?UTF-8?Q?Jonas_Dre=c3=9fler?= <verdre@v0yd.nl>
+In-Reply-To: <20211012090037.v3w4za5hshtm253f@pali>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: CBF09183C
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set DTIM policy to DTIM stick mode, so station follows AP DTIM
-interval rather than listen interval which is set in peer assoc cmd.
-DTIM stick mode is more preferred per firmware team request.
+On 10/12/21 11:00, Pali Rohár wrote:
+> On Tuesday 12 October 2021 10:48:49 Jonas Dreßler wrote:
+>> 1) Revert the cards firmware in linux-firmware back to the second-latest
+>> version. That firmware didn't report a fixed LTR value and also doesn't
+>> have any other obvious issues I know of compared to the latest one.
+> 
+> FYI, there are new bugs with new firmware versions for 8997 sent by NXP
+> to linux-firmware repository... and questions what to do with it. Seems
+> that NXP again do not respond to any questions after new version was
+> merged into linux-firmware repo.
+> 
+> https://lore.kernel.org/linux-firmware/edeb34bc-7c85-7f1d-79e4-e3e21df86334@gk2.net/
+> 
+> So firmware revert also for other ex-Marvell / NXP chips is not
+> something which could not happen.
+> 
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Argh, nevermind, it seems like my memory is fooling me once again, sorry.
+I just tried the older firmware and I was completely wrong, there's no
+difference at all between the versions when it comes to LTR messages. So
+there goes alternative 1).
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/mac.c | 7 +++++++
- drivers/net/wireless/ath/ath11k/wmi.h | 7 +++++++
- 2 files changed, 14 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index bb5d12f40..9a86856 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -2219,6 +2219,13 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
- 			    arvif->vdev_id, ret);
- 
- 	ath11k_mac_11d_scan_stop_all(ar->ab);
-+
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    WMI_VDEV_PARAM_DTIM_POLICY,
-+					    WMI_DTIM_POLICY_STICK);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to set vdev %d dtim policy: %d\n",
-+			    arvif->vdev_id, ret);
- }
- 
- static void ath11k_bss_disassoc(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 6848089..28e2e57 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -2191,6 +2191,13 @@ enum wmi_nss_ratio {
- 	WMI_NSS_RATIO_2_NSS = 0x3,
- };
- 
-+enum wmi_dtim_policy {
-+	WMI_DTIM_POLICY_IGNORE = 1,
-+	WMI_DTIM_POLICY_NORMAL = 2,
-+	WMI_DTIM_POLICY_STICK  = 3,
-+	WMI_DTIM_POLICY_AUTO   = 4,
-+};
-+
- struct wmi_host_pdev_band_to_mac {
- 	u32 pdev_id;
- 	u32 start_freq;
--- 
-2.7.4
-
+Something interesting and reassuring I noticed though: After resuming from
+suspend the firmware actually doesn't send a new LTR message, which means
+now the LTR is 0 and we enter PC10/S0ix just fine. So basically the change
+this patch does is already in effect, just after one suspend/resume cycle.
+That gives me more confidence that we should maybe apply this patch for
+all 8897 devices, not only Surface devices?
