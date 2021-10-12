@@ -2,195 +2,191 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D633DC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 10:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28002C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:16:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4C086101D
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 10:24:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FE3E60524
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Oct 2021 11:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235798AbhJLK03 (ORCPT
+        id S236065AbhJLLSM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Oct 2021 06:26:29 -0400
-Received: from mout.kundenserver.de ([217.72.192.74]:51347 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235153AbhJLK02 (ORCPT
+        Tue, 12 Oct 2021 07:18:12 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:19671 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232475AbhJLLSK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Oct 2021 06:26:28 -0400
-Received: from [192.168.0.66] ([92.154.77.116]) by mrelayeu.kundenserver.de
- (mreue109 [213.165.67.119]) with ESMTPSA (Nemesis) id
- 1N2E9Y-1mkjda1tTK-013eCv; Tue, 12 Oct 2021 12:24:20 +0200
-From:   Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org
-References: <20201129153055.1971298-1-luca@coelho.fi>
- <iwlwifi.20201129172929.290fa5c5568a.Ic5732aa64de6ee97ae3578bd5779fc723ba489d1@changeid>
- <e8e6afa6-275e-2cc5-6351-e1ed5eb0e0af@green-communications.fr>
- <87ily325t4.fsf@tynnyri.adurom.net>
-Subject: Re: [PATCH 09/13] cfg80211: Save the regulatory domain when setting
- custom regulatory
-Message-ID: <cedc93ef-496f-a403-0089-b2a82477fe0f@green-communications.fr>
-Date:   Tue, 12 Oct 2021 12:24:17 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
-MIME-Version: 1.0
-In-Reply-To: <87ily325t4.fsf@tynnyri.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: fr
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:NFb3DiIVumic+Y4ptgRlpnoDS068/GPSfkAkUKMjjrYsHksjASW
- re2tZirBTJlVh/t6thf3Ccs86tqSHH72oFSL8qeEWC5ysyXYGa0ywsMV/Z4CNoRQBDym7XC
- q9+DhlMr3KH7tTLFWGU+sb4GeVO3cd8IqO39PiActIlkG5ckEUwlauwR7Cb9D+kQOpSrrWr
- j6yUXbtKltozfutW+it5A==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Yy/UhS/FEmE=:ACMOug2S1S2Z45K13d5Va+
- AN3aipRtueLnX4w7/43xo+8BwI4c5RPrDWuvIidwmvo8lHPI3h1ufSbaUgZs8uJARcWWm73a3
- +laKQDMdbi2ZahCJoTi1elTEzQZ5314sx1NY1OvAiSGEYmf4R3trBGU4UU96WBcKA/SihnPUH
- 7UhcRD7puXd8eJEuUz1z3mpKPibpKkpaoM+JL9hcHnQmULo0UrH0dxIsMHgXC47LaPE14oom+
- X3yfzslqgxmIcOpqQy2uBpp+inQBs6OYifukdDBl0cP8Kbt8KXisnEw4YvcMufKQNbK+2irYK
- M1qKE+VSnoveQHim/fhugw31usggQEK2BUPsJFkDQeXQq8JzR1N06kBjvPMAlWZOutxIyfo8v
- o/gV3YPfbhxYJvG0k+JowC632CpQ0JKrSfK7aF04xvqgOOCx9W4me7VrHBv1ikHhxYN7Cus/o
- 6FZcSsx2eU7RRl0d/bjgHlQagXpNgZY3j1Pxa8Zaz3xuexw7HHzA9CmNLhByG8rV/IlQBQdvd
- Qj2mAGs0J9Vqfb/Gi4hDNh2ItMZtfL0ap17HEZpzTC/NUjk9fCx235y4ZQfDW3hBHF0pNK/Gs
- z2gcghPdwCczKiLlI8IYXP+V2SY3+l7jQ2h0uD9VhfUZLmDRecgIa2+KCCH2aWExCxWBIYDG9
- YpSsLtwXAxnL/bAw2+zZNJvTFJiyKQ4yfuaPhC7yJRfn3WVbi6alQEbEOmvPwfrMqWLPRLRjc
- ffYQX9P8/o+z4oQSztfwmDLPCv8CDTeErpgQ4bREtrlxO2aJTw1fJAFrg9JZ4yxUKUHku+jeK
- Y1FsCsq
+        Tue, 12 Oct 2021 07:18:10 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1634037368; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=RLwtSyczHXrmwI41URsgeQHDCH2qk5zy2DPYlSlzIDI=; b=pEixJMwzUJJqKfqwt2qUo+EAx4oj8lwIEcq1g5iNgnqHwREQZakVi2xyfbwWbuZlIQAZSnKj
+ m10BtB6u9VTB5XGUTRw52vhZhWzQrqGi9lRfMAYjyaxKGBYVVDJz6Wdn2llFMR7Q88h2mesd
+ fFjnUGfxzHcJB08lXgiL0NHqEsA=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 61656e77f3e5b80f1fcc8044 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 12 Oct 2021 11:16:07
+ GMT
+Sender: cjhuang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 85058C4360D; Tue, 12 Oct 2021 11:16:07 +0000 (UTC)
+Received: from cjhuang-Inspiron-7590.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cjhuang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 42DA3C4338F;
+        Tue, 12 Oct 2021 11:16:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 42DA3C4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Carl Huang <cjhuang@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath11k: support MAC address randomization in scan
+Date:   Tue, 12 Oct 2021 15:16:38 -0400
+Message-Id: <20211012191638.8749-1-cjhuang@codeaurora.org>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/10/2021 12:51, Kalle Valo wrote:
-> Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr> writes:
-> 
->> On 29/11/2020 16:30, Luca Coelho wrote:
->>> From: Ilan Peer <ilan.peer@intel.com>
->>>
->>> When custom regulatory was set, only the channels setting was updated, but
->>> the regulatory domain was not saved. Fix it by saving it.
->>>
->>> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
->>> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->>> ---
->>>    net/wireless/reg.c | 8 ++++++++
->>>    1 file changed, 8 insertions(+)
->>>
->>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>> index a04fdfb35f07..094492b62f8a 100644
->>> --- a/net/wireless/reg.c
->>> +++ b/net/wireless/reg.c
->>> @@ -2547,6 +2547,7 @@ static void handle_band_custom(struct wiphy *wiphy,
->>>    void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
->>>    				   const struct ieee80211_regdomain *regd)
->>>    {
->>> +	const struct ieee80211_regdomain *new_regd, *tmp;
->>>    	enum nl80211_band band;
->>>    	unsigned int bands_set = 0;
->>>    @@ -2566,6 +2567,13 @@ void wiphy_apply_custom_regulatory(struct
->>> wiphy *wiphy,
->>>    	 * on your device's supported bands.
->>>    	 */
->>>    	WARN_ON(!bands_set);
->>> +	new_regd = reg_copy_regd(regd);
->>> +	if (IS_ERR(new_regd))
->>> +		return;
->>> +
->>> +	tmp = get_wiphy_regdom(wiphy);
->>> +	rcu_assign_pointer(wiphy->regd, new_regd);
->>> +	rcu_free_regdom(tmp);
->>>    }
->>>    EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
->>>    
->>>
->>
->> Hello,
->>
->> This patch somehow appears to break ath9k's eeprom hints and restrict
->> it to the world regulatory domain on v5.12.10.
->>
->> ath9k calls wiphy_apply_custom_regulatory() with its own kind of world
->> regulatory domain, before it decodes hints from the eeprom and uses
->> regulatory_hint() to request a specific alpha2.
->>
->> With this patch, applying the hint fails because wiphy->regd is already set.
->> If i revert this patch, ath9k works again.
-> 
-> I have lost track, is this regression fixed now or is it sill
-> unresolved?
-> 
+The driver reports NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR capability
+to upper layer based on the service bit firmware reported. Driver
+sets the spoofed flag in scan_ctrl_flag to firmware if upper layer
+has enabled this feature in scan request.
 
-It appears to be still unresolved on 5.14.11 :
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
-ath: EEPROM regdomain: 0x80fa
-ath: EEPROM indicates we should expect a country code
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x37
-ath: Country alpha2 being used: FR
-ath: Regpair used: 0x37
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.c | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h |  9 +++++++++
+ 3 files changed, 58 insertions(+)
 
-yet,
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 797e45e..bb5d12f40 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3048,6 +3048,12 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
+ 		arg.scan_flags |= WMI_SCAN_FLAG_PASSIVE;
+ 	}
+ 
++	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
++		arg.scan_f_add_spoofed_mac_in_probe = 1;
++		ether_addr_copy(arg.mac_addr.addr, req->mac_addr);
++		ether_addr_copy(arg.mac_mask.addr, req->mac_addr_mask);
++	}
++
+ 	if (req->n_channels) {
+ 		arg.num_chan = req->n_channels;
+ 		for (i = 0; i < arg.num_chan; i++)
+@@ -4992,6 +4998,14 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
+ 		goto err;
+ 	}
+ 
++	if (test_bit(WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi->wmi_ab->svc_map)) {
++		ret = ath11k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
++		if (ret) {
++			ath11k_err(ab, "failed to set prob req oui: %i\n", ret);
++			goto err;
++		}
++	}
++
+ 	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_ARP_AC_OVERRIDE,
+ 					0, pdev->pdev_id);
+ 	if (ret) {
+@@ -7888,6 +7902,11 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 
+ 	ar->hw->wiphy->max_ap_assoc_sta = ar->max_num_stations;
+ 
++	if (test_bit(WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi->wmi_ab->svc_map)) {
++		ar->hw->wiphy->features |=
++			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++	}
++
+ 	if (test_bit(WMI_TLV_SERVICE_NLO, ar->wmi->wmi_ab->svc_map)) {
+ 		ar->hw->wiphy->max_sched_scan_ssids = WMI_PNO_MAX_SUPP_NETWORKS;
+ 		ar->hw->wiphy->max_match_sets = WMI_PNO_MAX_SUPP_NETWORKS;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 5b02e95..888c587 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -2181,6 +2181,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
+ 	cmd->num_ssids = params->num_ssids;
+ 	cmd->ie_len = params->extraie.len;
+ 	cmd->n_probes = params->n_probes;
++	ether_addr_copy(cmd->mac_addr.addr, params->mac_addr.addr);
++	ether_addr_copy(cmd->mac_mask.addr, params->mac_mask.addr);
+ 
+ 	ptr += sizeof(*cmd);
+ 
+@@ -8983,3 +8985,31 @@ int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
+ 		   arvif->vdev_id);
+ 	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_GTK_OFFLOAD_CMDID);
+ }
++
++int ath11k_wmi_scan_prob_req_oui(struct ath11k *ar,
++				 const u8 mac_addr[ETH_ALEN])
++{
++	struct sk_buff *skb;
++	struct wmi_scan_prob_req_oui_cmd *cmd;
++	u32 prob_req_oui;
++	int len;
++
++	prob_req_oui = (((u32)mac_addr[0]) << 16) |
++		       (((u32)mac_addr[1]) << 8) | mac_addr[2];
++
++	len = sizeof(*cmd);
++	skb = ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_scan_prob_req_oui_cmd *)skb->data;
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG,
++				     WMI_TAG_SCAN_PROB_REQ_OUI_CMD) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
++	cmd->prob_req_oui = prob_req_oui;
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "wmi scan prob req oui %d\n",
++		   prob_req_oui);
++
++	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_SCAN_PROB_REQ_OUI_CMDID);
++}
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 61dc5ea..6848089 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -3369,6 +3369,8 @@ struct scan_req_params {
+ 	u32 num_hint_bssid;
+ 	struct hint_short_ssid hint_s_ssid[WLAN_SCAN_MAX_HINT_S_SSID];
+ 	struct hint_bssid hint_bssid[WLAN_SCAN_MAX_HINT_BSSID];
++	struct wmi_mac_addr mac_addr;
++	struct wmi_mac_addr mac_mask;
+ };
+ 
+ struct wmi_ssid_arg {
+@@ -3749,6 +3751,11 @@ struct wmi_scan_chan_list_cmd {
+ 	u32 pdev_id;
+ } __packed;
+ 
++struct wmi_scan_prob_req_oui_cmd {
++	u32 tlv_header;
++	u32 prob_req_oui;
++}  __packed;
++
+ #define WMI_MGMT_SEND_DOWNLD_LEN	64
+ 
+ #define WMI_TX_PARAMS_DWORD0_POWER		GENMASK(7, 0)
+@@ -6056,4 +6063,6 @@ int ath11k_wmi_gtk_rekey_offload(struct ath11k *ar,
+ 				 struct ath11k_vif *arvif, bool enable);
+ int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
+ 				 struct ath11k_vif *arvif);
++int ath11k_wmi_scan_prob_req_oui(struct ath11k *ar,
++				 const u8 mac_addr[ETH_ALEN]);
+ #endif
+-- 
+2.7.4
 
-$ iw reg get
-global
-country 00: DFS-UNSET
-         (2402 - 2472 @ 40), (N/A, 20), (N/A)
-         (2457 - 2482 @ 20), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
-         (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, PASSIVE-SCAN
-         (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
-         (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
-         (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, PASSIVE-SCAN
-         (5735 - 5835 @ 80), (N/A, 20), (N/A), PASSIVE-SCAN
-         (57240 - 63720 @ 2160), (N/A, 0), (N/A)
-
-phy#1
-country 99: DFS-UNSET
-         (2402 - 2472 @ 40), (N/A, 20), (N/A)
-         (5140 - 5360 @ 80), (N/A, 30), (N/A), PASSIVE-SCAN
-         (5715 - 5860 @ 80), (N/A, 30), (N/A), PASSIVE-SCAN
-
-If i revert this patch, i get this instead:
-
-global
-country FR: DFS-ETSI
-         (2400 - 2483 @ 40), (N/A, 20), (N/A)
-         (5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
-         (5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
-         (5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
-         (5725 - 5875 @ 80), (N/A, 13), (N/A)
-         (57000 - 66000 @ 2160), (N/A, 40), (N/A)
-
-phy#2
-country FR: DFS-ETSI
-         (2400 - 2483 @ 40), (N/A, 20), (N/A)
-         (5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
-         (5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
-         (5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
-         (5725 - 5875 @ 80), (N/A, 13), (N/A)
-         (57000 - 66000 @ 2160), (N/A, 40), (N/A)
-
-I'm not familiar with the regd code, but looking at where ath9k calls 
-wiphy_apply_custom_regulatory in ath_regd_init_wiphy() 
-(drivers/net/wireless/ath/regd.c):
-
-           wiphy->regulatory_flags |= REGULATORY_STRICT_REG |
-                                      REGULATORY_CUSTOM_REG;
-
-           if (ath_is_world_regd(reg)) {
-                   /*
-                    * Anything applied here (prior to wiphy registration) gets
-                    * saved on the wiphy orig_* parameters
-                    */
-                   regd = ath_world_regdomain(reg);
-                   wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_FOLLOW_POWER;
-           } else {
-                   /*
-                    * This gets applied in the case of the absence of CRDA,
-                    * it's our own custom world regulatory domain, similar to
-                    * cfg80211's but we enable passive scanning.
-                    */
-                   regd = ath_default_world_regdomain();
-           }
-
-           wiphy_apply_custom_regulatory(wiphy, regd);
-
-Probably not calling wiphy_apply_custom_regulatory() in the non-world-regd case 
-would solve the problem ? i'm not sure if the comment is still valid.
