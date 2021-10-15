@@ -2,29 +2,30 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C78C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Oct 2021 03:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 212A9C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Oct 2021 03:30:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5ECBC60F9F
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Oct 2021 03:30:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05FBB60F9F
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Oct 2021 03:30:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234281AbhJODc7 (ORCPT
+        id S235149AbhJODc7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 14 Oct 2021 23:32:59 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:58084 "EHLO
+Received: from mailgw02.mediatek.com ([210.61.82.184]:58054 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234238AbhJODc5 (ORCPT
+        with ESMTP id S234241AbhJODc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 14 Oct 2021 23:32:57 -0400
-X-UUID: 311ebc97ac124a34b4b09c8b94ba3106-20211015
-X-UUID: 311ebc97ac124a34b4b09c8b94ba3106-20211015
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+X-UUID: e2e99931b9494cf4a4fb1b4150711446-20211015
+X-UUID: e2e99931b9494cf4a4fb1b4150711446-20211015
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1213229263; Fri, 15 Oct 2021 11:30:41 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 930020450; Fri, 15 Oct 2021 11:30:40 +0800
 Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 15 Oct 2021 11:30:39 +0800
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.792.15; Fri, 15 Oct 2021 11:30:39 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
  Transport; Fri, 15 Oct 2021 11:30:39 +0800
@@ -33,12 +34,12 @@ To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v6 5/8] mt76: mt7915: rework starec TLV tags
-Date:   Fri, 15 Oct 2021 11:29:35 +0800
-Message-ID: <20211015032938.7493-5-shayne.chen@mediatek.com>
+Subject: [PATCH v6 3/8] mt76: mt7915: improve starec readability of txbf
+Date:   Fri, 15 Oct 2021 11:29:33 +0800
+Message-ID: <20211015032938.7493-3-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20211015032938.7493-1-shayne.chen@mediatek.com>
 References: <20211015032938.7493-1-shayne.chen@mediatek.com>
@@ -49,414 +50,245 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rework starec tags to the order which firmware expected. This also fixes
-some weird behaviors during generating SPL of HE-MU.
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
+1. Drop unnecessary MT_EBF/MT_IBF enum.
+2. Rename fields 'nc'/'nr' to 'ncol'/'nrow'.
+
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/main.c  |   3 +-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 229 +++++++-----------
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   |   1 +
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   2 -
- 4 files changed, 94 insertions(+), 141 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 81 ++++++++++---------
+ .../net/wireless/mediatek/mt76/mt7915/mcu.h   | 13 +--
+ 2 files changed, 45 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index a98fb43..2c6266a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -663,7 +663,7 @@ int mt7915_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
- 
--	return mt7915_mcu_add_sta_adv(dev, vif, sta, true);
-+	return mt7915_mcu_add_rate_ctrl(dev, vif, sta);
- }
- 
- void mt7915_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-@@ -673,7 +673,6 @@ void mt7915_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	int i;
- 
--	mt7915_mcu_add_sta_adv(dev, vif, sta, false);
- 	mt7915_mcu_add_sta(dev, vif, sta, false);
- 
- 	mt7915_mac_wtbl_update(dev, msta->wcid.idx,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index a82a526..cd31cb1 100644
+index d290acf..926fd92 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -1342,14 +1342,16 @@ mt7915_mcu_sta_he_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- {
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
--	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
-+	struct ieee80211_he_cap_elem *elem = &sta->he_cap.he_cap_elem;
- 	enum nl80211_band band = msta->vif->phy->mt76->chandef.chan->band;
- 	const u16 *mcs_mask = msta->vif->bitrate_mask.control[band].he_mcs;
- 	struct sta_rec_he *he;
- 	struct tlv *tlv;
- 	u32 cap = 0;
- 
-+	if (!sta->he_cap.has_he)
-+		return;
-+
- 	tlv = mt7915_mcu_add_tlv(skb, STA_REC_HE, sizeof(*he));
- 
- 	he = (struct sta_rec_he *)tlv;
-@@ -1514,11 +1516,13 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 			struct ieee80211_vif *vif)
- {
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
--	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
-+	struct ieee80211_he_cap_elem *elem = &sta->he_cap.he_cap_elem;
- 	struct sta_rec_muru *muru;
- 	struct tlv *tlv;
- 
-+	if (!sta->vht_cap.vht_supported && !sta->he_cap.has_he)
-+		return;
-+
- 	tlv = mt7915_mcu_add_tlv(skb, STA_REC_MURU, sizeof(*muru));
- 
- 	muru = (struct sta_rec_muru *)tlv;
-@@ -1563,12 +1567,27 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 		HE_PHY(CAP2_UL_MU_PARTIAL_MU_MIMO, elem->phy_cap_info[2]);
- }
- 
-+static void
-+mt7915_mcu_sta_ht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
-+{
-+	struct sta_rec_ht *ht;
-+	struct tlv *tlv;
-+
-+	tlv = mt7915_mcu_add_tlv(skb, STA_REC_HT, sizeof(*ht));
-+
-+	ht = (struct sta_rec_ht *)tlv;
-+	ht->ht_cap = cpu_to_le16(sta->ht_cap.cap);
-+}
-+
+@@ -1811,7 +1811,6 @@ mt7915_is_ebf_supported(struct mt7915_phy *phy, struct ieee80211_vif *vif,
  static void
- mt7915_mcu_sta_vht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
+ mt7915_mcu_sta_sounding_rate(struct sta_rec_bf *bf)
  {
- 	struct sta_rec_vht *vht;
- 	struct tlv *tlv;
+-	bf->bf_cap = MT_EBF;
+ 	bf->sounding_phy = MT_PHY_TYPE_OFDM;
+ 	bf->ndp_rate = 0;				/* mcs0 */
+ 	bf->ndpa_rate = MT7915_CFEND_RATE_DEFAULT;	/* ofdm 24m */
+@@ -1826,7 +1825,6 @@ mt7915_mcu_sta_bfer_ht(struct ieee80211_sta *sta, struct mt7915_phy *phy,
+ 	u8 n = 0;
  
-+	if (!sta->vht_cap.vht_supported)
-+		return;
-+
- 	tlv = mt7915_mcu_add_tlv(skb, STA_REC_VHT, sizeof(*vht));
+ 	bf->tx_mode = MT_PHY_TYPE_HT;
+-	bf->bf_cap = MT_IBF;
  
- 	vht = (struct sta_rec_vht *)tlv;
-@@ -1578,12 +1597,17 @@ mt7915_mcu_sta_vht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
+ 	if (mcs->tx_params & IEEE80211_HT_MCS_TX_RX_DIFF &&
+ 	    (mcs->tx_params & IEEE80211_HT_MCS_TX_DEFINED))
+@@ -1839,8 +1837,8 @@ mt7915_mcu_sta_bfer_ht(struct ieee80211_sta *sta, struct mt7915_phy *phy,
+ 	else if (mcs->rx_mask[1])
+ 		n = 1;
+ 
+-	bf->nr = hweight8(phy->mt76->chainmask) - 1;
+-	bf->nc = min_t(u8, bf->nr, n);
++	bf->nrow = hweight8(phy->mt76->chainmask) - 1;
++	bf->ncol = min_t(u8, bf->nrow, n);
+ 	bf->ibf_ncol = n;
  }
  
- static void
--mt7915_mcu_sta_amsdu_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
-+mt7915_mcu_sta_amsdu_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
-+			 struct ieee80211_sta *sta)
- {
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct sta_rec_amsdu *amsdu;
- 	struct tlv *tlv;
+@@ -1857,23 +1855,23 @@ mt7915_mcu_sta_bfer_vht(struct ieee80211_sta *sta, struct mt7915_phy *phy,
+ 	bf->tx_mode = MT_PHY_TYPE_VHT;
  
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    vif->type != NL80211_IFTYPE_AP)
-+		return;
+ 	if (explicit) {
+-		u8 bfee_nr, bfer_nr;
++		u8 sts, snd_dim;
+ 
+ 		mt7915_mcu_sta_sounding_rate(bf);
+-		bfee_nr = FIELD_GET(IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK,
+-				    pc->cap);
+-		bfer_nr = FIELD_GET(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
 +
- 	if (!sta->max_amsdu_len)
- 	    return;
++		sts = FIELD_GET(IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK,
++				pc->cap);
++		snd_dim = FIELD_GET(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
+ 				    vc->cap);
+-		bf->nr = min_t(u8, min_t(u8, bfer_nr, bfee_nr), tx_ant);
+-		bf->nc = min_t(u8, nss_mcs, bf->nr);
+-		bf->ibf_ncol = bf->nc;
++		bf->nrow = min_t(u8, min_t(u8, snd_dim, sts), tx_ant);
++		bf->ncol = min_t(u8, nss_mcs, bf->nrow);
++		bf->ibf_ncol = bf->ncol;
  
-@@ -1596,44 +1620,6 @@ mt7915_mcu_sta_amsdu_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- 	msta->wcid.amsdu = true;
- }
+ 		if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+-			bf->nr = 1;
++			bf->nrow = 1;
+ 	} else {
+-		bf->bf_cap = MT_IBF;
+-		bf->nr = tx_ant;
+-		bf->nc = min_t(u8, nss_mcs, bf->nr);
++		bf->nrow = tx_ant;
++		bf->ncol = min_t(u8, nss_mcs, bf->nrow);
+ 		bf->ibf_ncol = nss_mcs;
  
--static bool
--mt7915_hw_amsdu_supported(struct ieee80211_vif *vif)
--{
--	switch (vif->type) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_STATION:
--		return true;
--	default:
--		return false;
--	}
--}
--
--static void
--mt7915_mcu_sta_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
--		   struct ieee80211_sta *sta, struct ieee80211_vif *vif)
--{
--	struct tlv *tlv;
--
--	/* starec ht */
--	if (sta->ht_cap.ht_supported) {
--		struct sta_rec_ht *ht;
--
--		tlv = mt7915_mcu_add_tlv(skb, STA_REC_HT, sizeof(*ht));
--		ht = (struct sta_rec_ht *)tlv;
--		ht->ht_cap = cpu_to_le16(sta->ht_cap.cap);
--
--		if (mt7915_hw_amsdu_supported(vif))
--			mt7915_mcu_sta_amsdu_tlv(skb, sta);
--	}
--
--	/* starec he */
--	if (sta->he_cap.has_he)
--		mt7915_mcu_sta_he_tlv(skb, sta, vif);
--
--	/* starec uapsd */
--	mt7915_mcu_sta_uapsd_tlv(skb, sta, vif);
--}
--
- static void
- mt7915_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 			 void *sta_wtbl, void *wtbl_tlv)
-@@ -1644,9 +1630,7 @@ mt7915_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 	tlv = mt7915_mcu_add_nested_tlv(skb, WTBL_SMPS, sizeof(*smps),
- 					wtbl_tlv, sta_wtbl);
- 	smps = (struct wtbl_smps *)tlv;
--
--	if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC)
--		smps->smps = true;
-+	smps->smps = (sta->smps_mode == IEEE80211_SMPS_DYNAMIC);
- }
+ 		if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+@@ -1891,21 +1889,23 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
+ 	const struct ieee80211_he_cap_elem *ve = &vc->he_cap_elem;
+ 	u16 mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_80);
+ 	u8 nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+-	u8 bfee_nr, bfer_nr;
++	u8 snd_dim, sts;
  
- static void
-@@ -1720,6 +1704,32 @@ mt7915_mcu_wtbl_hdr_trans_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
- 	}
- }
- 
-+static int
-+mt7915_mcu_sta_wtbl_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
-+			struct ieee80211_vif *vif, struct ieee80211_sta *sta)
-+{
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
-+	struct mt7915_sta *msta;
-+	struct wtbl_req_hdr *wtbl_hdr;
-+	struct tlv *tlv;
+ 	bf->tx_mode = MT_PHY_TYPE_HE_SU;
 +
-+	msta = sta ? (struct mt7915_sta *)sta->drv_priv : &mvif->sta;
+ 	mt7915_mcu_sta_sounding_rate(bf);
 +
-+	tlv = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
-+	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_RESET_AND_SET,
-+					     tlv, &skb);
-+	if (IS_ERR(wtbl_hdr))
-+		return PTR_ERR(wtbl_hdr);
-+
-+	mt7915_mcu_wtbl_generic_tlv(skb, vif, sta, tlv, wtbl_hdr);
-+	mt7915_mcu_wtbl_hdr_trans_tlv(skb, vif, sta, tlv, wtbl_hdr);
-+
-+	if (sta)
-+		mt7915_mcu_wtbl_ht_tlv(skb, vif, sta, tlv, wtbl_hdr);
-+
-+	return 0;
-+}
-+
- int mt7915_mcu_sta_update_hdr_trans(struct mt7915_dev *dev,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_sta *sta)
-@@ -2039,28 +2049,6 @@ mt7915_mcu_sta_bfee_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
- 	bfee->fb_identity_matrix = (nrow == 1 && tx_ant == 2);
- }
+ 	bf->trigger_su = HE_PHY(CAP6_TRIG_SU_BEAMFORMER_FB,
+ 				pe->phy_cap_info[6]);
+ 	bf->trigger_mu = HE_PHY(CAP6_TRIG_MU_BEAMFORMER_FB,
+ 				pe->phy_cap_info[6]);
+-	bfer_nr = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
++	snd_dim = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
+ 			 ve->phy_cap_info[5]);
+-	bfee_nr = HE_PHY(CAP4_BEAMFORMEE_MAX_STS_UNDER_80MHZ_MASK,
+-			 pe->phy_cap_info[4]);
+-	bf->nr = min_t(u8, bfer_nr, bfee_nr);
+-	bf->nc = min_t(u8, nss_mcs, bf->nr);
+-	bf->ibf_ncol = bf->nc;
++	sts = HE_PHY(CAP4_BEAMFORMEE_MAX_STS_UNDER_80MHZ_MASK,
++		     pe->phy_cap_info[4]);
++	bf->nrow = min_t(u8, snd_dim, sts);
++	bf->ncol = min_t(u8, nss_mcs, bf->nrow);
++	bf->ibf_ncol = bf->ncol;
  
--static int
--mt7915_mcu_add_txbf(struct mt7915_dev *dev, struct ieee80211_vif *vif,
--		    struct ieee80211_sta *sta, bool enable)
--{
--	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
--	struct sk_buff *skb;
--
--	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta,
--				       MT7915_STA_UPDATE_MAX_SIZE);
--	if (IS_ERR(skb))
--		return PTR_ERR(skb);
--
--	/* starec bf */
--	mt7915_mcu_sta_bfer_tlv(dev, skb, vif, sta);
--	/* starec bfee */
--	mt7915_mcu_sta_bfee_tlv(dev, skb, vif, sta);
--
--	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
--				     MCU_EXT_CMD(STA_REC_UPDATE), true);
--}
--
- static void
- mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
- 			     struct ieee80211_vif *vif, struct ieee80211_sta *sta)
-@@ -2206,7 +2194,7 @@ mt7915_mcu_add_group(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- {
- #define MT_STA_BSS_GROUP		1
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
-+	struct mt7915_sta *msta;
- 	struct {
- 		__le32 action;
- 		u8 wlan_idx_lo;
-@@ -2217,75 +2205,24 @@ mt7915_mcu_add_group(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		u8 rsv1[8];
- 	} __packed req = {
- 		.action = cpu_to_le32(MT_STA_BSS_GROUP),
--		.wlan_idx_lo = to_wcid_lo(msta->wcid.idx),
--		.wlan_idx_hi = to_wcid_hi(msta->wcid.idx),
- 		.val = cpu_to_le32(mvif->idx % 16),
- 	};
+ 	if (sta->bandwidth != IEEE80211_STA_RX_BW_160)
+ 		return;
+@@ -1916,7 +1916,7 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
+ 		mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_160);
+ 		nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
  
-+	msta = sta ? (struct mt7915_sta *)sta->drv_priv : &mvif->sta;
-+	req.wlan_idx_lo = to_wcid_lo(msta->wcid.idx);
-+	req.wlan_idx_hi = to_wcid_hi(msta->wcid.idx);
-+
- 	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD(SET_DRR_CTRL), &req,
- 				 sizeof(req), true);
- }
- 
--static int
--mt7915_mcu_add_mu(struct mt7915_dev *dev, struct ieee80211_vif *vif,
--		  struct ieee80211_sta *sta)
--{
--	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
--	struct sk_buff *skb;
--	int ret;
--
--	if (!sta->vht_cap.vht_supported && !sta->he_cap.has_he)
--		return 0;
--
--	ret = mt7915_mcu_add_group(dev, vif, sta);
--	if (ret)
--		return ret;
--
--	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta,
--				       MT7915_STA_UPDATE_MAX_SIZE);
--	if (IS_ERR(skb))
--		return PTR_ERR(skb);
--
--	/* wait until TxBF and MU ready to update stare vht */
--
--	/* starec muru */
--	mt7915_mcu_sta_muru_tlv(skb, sta, vif);
--	/* starec vht */
--	mt7915_mcu_sta_vht_tlv(skb, sta);
--
--	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
--				     MCU_EXT_CMD(STA_REC_UPDATE), true);
--}
--
--int mt7915_mcu_add_sta_adv(struct mt7915_dev *dev, struct ieee80211_vif *vif,
--			   struct ieee80211_sta *sta, bool enable)
--{
--	int ret;
--
--	if (!sta)
--		return 0;
--
--	/* must keep the order */
--	ret = mt7915_mcu_add_txbf(dev, vif, sta, enable);
--	if (ret || !enable)
--		return ret;
--
--	ret = mt7915_mcu_add_mu(dev, vif, sta);
--	if (ret)
--		return ret;
--
--	return mt7915_mcu_add_rate_ctrl(dev, vif, sta);
--}
--
- int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta, bool enable)
- {
- 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct wtbl_req_hdr *wtbl_hdr;
- 	struct mt7915_sta *msta;
--	struct tlv *sta_wtbl;
- 	struct sk_buff *skb;
-+	int ret;
- 
- 	msta = sta ? (struct mt7915_sta *)sta->drv_priv : &mvif->sta;
- 
-@@ -2294,24 +2231,42 @@ int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
-+	/* starec basic */
- 	mt7915_mcu_sta_basic_tlv(skb, vif, sta, enable);
--	if (enable && sta)
--		mt7915_mcu_sta_tlv(dev, skb, sta, vif);
-+	if (!enable)
-+		goto out;
- 
--	sta_wtbl = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
-+	/* tag order is in accordance with firmware dependency. */
-+	if (sta && sta->ht_cap.ht_supported) {
-+		/* starec bfer */
-+		mt7915_mcu_sta_bfer_tlv(dev, skb, vif, sta);
-+		/* starec ht */
-+		mt7915_mcu_sta_ht_tlv(skb, sta);
-+		/* starec vht */
-+		mt7915_mcu_sta_vht_tlv(skb, sta);
-+		/* starec uapsd */
-+		mt7915_mcu_sta_uapsd_tlv(skb, sta, vif);
-+	}
- 
--	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_RESET_AND_SET,
--					     sta_wtbl, &skb);
--	if (IS_ERR(wtbl_hdr))
--		return PTR_ERR(wtbl_hdr);
-+	ret = mt7915_mcu_sta_wtbl_tlv(dev, skb, vif, sta);
-+	if (ret)
-+		return ret;
- 
--	if (enable) {
--		mt7915_mcu_wtbl_generic_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
--		mt7915_mcu_wtbl_hdr_trans_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
--		if (sta)
--			mt7915_mcu_wtbl_ht_tlv(skb, vif, sta, sta_wtbl, wtbl_hdr);
-+	if (sta && sta->ht_cap.ht_supported) {
-+		/* starec amsdu */
-+		mt7915_mcu_sta_amsdu_tlv(skb, vif, sta);
-+		/* starec he */
-+		mt7915_mcu_sta_he_tlv(skb, sta, vif);
-+		/* starec muru */
-+		mt7915_mcu_sta_muru_tlv(skb, sta, vif);
-+		/* starec bfee */
-+		mt7915_mcu_sta_bfee_tlv(dev, skb, vif, sta);
+-		bf->nc_bw160 = nss_mcs;
++		bf->ncol_bw160 = nss_mcs;
  	}
  
-+	ret = mt7915_mcu_add_group(dev, vif, sta);
-+	if (ret)
-+		return ret;
-+out:
- 	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
- 				     MCU_EXT_CMD(STA_REC_UPDATE), true);
+ 	if (pe->phy_cap_info[0] &
+@@ -1924,18 +1924,18 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
+ 		mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_80p80);
+ 		nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+ 
+-		if (bf->nc_bw160)
+-			bf->nc_bw160 = min_t(u8, bf->nc_bw160, nss_mcs);
++		if (bf->ncol_bw160)
++			bf->ncol_bw160 = min_t(u8, bf->ncol_bw160, nss_mcs);
+ 		else
+-			bf->nc_bw160 = nss_mcs;
++			bf->ncol_bw160 = nss_mcs;
+ 	}
+ 
+-	bfer_nr = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK,
++	snd_dim = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK,
+ 			 ve->phy_cap_info[5]);
+-	bfee_nr = HE_PHY(CAP4_BEAMFORMEE_MAX_STS_ABOVE_80MHZ_MASK,
+-			 pe->phy_cap_info[4]);
++	sts = HE_PHY(CAP4_BEAMFORMEE_MAX_STS_ABOVE_80MHZ_MASK,
++		     pe->phy_cap_info[4]);
+ 
+-	bf->nr_bw160 = min_t(int, bfer_nr, bfee_nr);
++	bf->nrow_bw160 = min_t(int, snd_dim, sts);
  }
+ 
+ static void
+@@ -1976,19 +1976,20 @@ mt7915_mcu_sta_bfer_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	else
+ 		return;
+ 
++	bf->bf_cap = ebf ? ebf : dev->ibf << 1;
+ 	bf->bw = sta->bandwidth;
+ 	bf->ibf_dbw = sta->bandwidth;
+ 	bf->ibf_nrow = tx_ant;
+ 
+-	if (!ebf && sta->bandwidth <= IEEE80211_STA_RX_BW_40 && !bf->nc)
++	if (!ebf && sta->bandwidth <= IEEE80211_STA_RX_BW_40 && !bf->ncol)
+ 		bf->ibf_timeout = 0x48;
+ 	else
+ 		bf->ibf_timeout = 0x18;
+ 
+-	if (ebf && bf->nr != tx_ant)
+-		bf->mem_20m = matrix[tx_ant][bf->nc];
++	if (ebf && bf->nrow != tx_ant)
++		bf->mem_20m = matrix[tx_ant][bf->ncol];
+ 	else
+-		bf->mem_20m = matrix[bf->nr][bf->nc];
++		bf->mem_20m = matrix[bf->nrow][bf->ncol];
+ 
+ 	switch (sta->bandwidth) {
+ 	case IEEE80211_STA_RX_BW_160:
+@@ -2014,7 +2015,7 @@ mt7915_mcu_sta_bfee_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	int tx_ant = hweight8(phy->mt76->chainmask) - 1;
+ 	struct sta_rec_bfee *bfee;
+ 	struct tlv *tlv;
+-	u8 nr = 0;
++	u8 nrow = 0;
+ 
+ 	if (!mt7915_is_ebf_supported(phy, vif, sta, true))
+ 		return;
+@@ -2025,17 +2026,17 @@ mt7915_mcu_sta_bfee_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	if (sta->he_cap.has_he) {
+ 		struct ieee80211_he_cap_elem *pe = &sta->he_cap.he_cap_elem;
+ 
+-		nr = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
+-			    pe->phy_cap_info[5]);
++		nrow = HE_PHY(CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
++			      pe->phy_cap_info[5]);
+ 	} else if (sta->vht_cap.vht_supported) {
+ 		struct ieee80211_sta_vht_cap *pc = &sta->vht_cap;
+ 
+-		nr = FIELD_GET(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
+-			       pc->cap);
++		nrow = FIELD_GET(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
++				 pc->cap);
+ 	}
+ 
+ 	/* reply with identity matrix to avoid 2x2 BF negative gain */
+-	bfee->fb_identity_matrix = !!(nr == 1 && tx_ant == 2);
++	bfee->fb_identity_matrix = (nrow == 1 && tx_ant == 2);
+ }
+ 
+ static int
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index a880593..012b959 100644
+index 268a758..a880593 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -1110,6 +1110,7 @@ enum {
- 					 sizeof(struct sta_rec_vht) +	\
- 					 sizeof(struct sta_rec_uapsd) + \
- 					 sizeof(struct sta_rec_amsdu) +	\
-+					 sizeof(struct sta_rec_muru) +	\
- 					 sizeof(struct sta_rec_bfee) +	\
- 					 sizeof(struct tlv) +		\
- 					 MT7915_WTBL_UPDATE_MAX_SIZE)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 267fd18..78c0896 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -394,8 +394,6 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
- 			    struct ieee80211_vif *vif, int enable);
- int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta, bool enable);
--int mt7915_mcu_add_sta_adv(struct mt7915_dev *dev, struct ieee80211_vif *vif,
--			   struct ieee80211_sta *sta, bool enable);
- int mt7915_mcu_sta_update_hdr_trans(struct mt7915_dev *dev,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_sta *sta);
+@@ -973,8 +973,8 @@ struct sta_rec_bf {
+ 	u8 ndp_rate;
+ 	u8 rept_poll_rate;
+ 	u8 tx_mode;		/* 0: legacy, 1: OFDM, 2: HT, 4: VHT ... */
+-	u8 nc;
+-	u8 nr;
++	u8 ncol;
++	u8 nrow;
+ 	u8 bw;			/* 0: 20M, 1: 40M, 2: 80M, 3: 160M */
+ 
+ 	u8 mem_total;
+@@ -994,8 +994,8 @@ struct sta_rec_bf {
+ 	u8 ibf_dbw;
+ 	u8 ibf_ncol;
+ 	u8 ibf_nrow;
+-	u8 nr_bw160;
+-	u8 nc_bw160;
++	u8 nrow_bw160;
++	u8 ncol_bw160;
+ 	u8 ru_start_idx;
+ 	u8 ru_end_idx;
+ 
+@@ -1086,11 +1086,6 @@ enum {
+ 	THERMAL_PROTECT_STATE_ACT,
+ };
+ 
+-enum {
+-	MT_EBF = BIT(0),	/* explicit beamforming */
+-	MT_IBF = BIT(1)		/* implicit beamforming */
+-};
+-
+ enum {
+ 	MT_BF_SOUNDING_ON = 1,
+ 	MT_BF_TYPE_UPDATE = 20,
 -- 
 2.25.1
 
