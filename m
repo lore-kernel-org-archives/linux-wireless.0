@@ -2,81 +2,73 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E37F7C41535
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Oct 2021 10:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1644FC433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Oct 2021 10:22:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB0AB60FF2
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Oct 2021 10:18:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFA4A60F48
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Oct 2021 10:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244028AbhJPKUW (ORCPT
+        id S240114AbhJPKYn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Oct 2021 06:20:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38026 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235335AbhJPKUO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Oct 2021 06:20:14 -0400
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050::465:101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 069B1C061570;
-        Sat, 16 Oct 2021 03:18:06 -0700 (PDT)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [80.241.60.245])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4HWfGj1pqvzQkBP;
-        Sat, 16 Oct 2021 12:18:05 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-From:   =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-Subject: [PATCH 1/4] mwifiex: Don't log error on suspend if wake-on-wlan is disabled
-Date:   Sat, 16 Oct 2021 12:17:40 +0200
-Message-Id: <20211016101743.15565-2-verdre@v0yd.nl>
-In-Reply-To: <20211016101743.15565-1-verdre@v0yd.nl>
-References: <20211016101743.15565-1-verdre@v0yd.nl>
+        Sat, 16 Oct 2021 06:24:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50178 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232450AbhJPKYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Oct 2021 06:24:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7702360F11;
+        Sat, 16 Oct 2021 10:22:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634379754;
+        bh=3AKYeeLaRO1PCI7ZLk5LsPqfsYpKiDoI8Hkn1KpQNM8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=scKaX4BNUjPOb4Dbx2RvASMhuKqrmQuIlZuQY1mfO/35vXfqlCE70g44J/Acugtxl
+         tY70Uhp8aq9IMQjUowi6g0e73QY9NIRAv3/1yPC6eRuM2TRS/S/RrgtsYetApWUNUJ
+         wUdnGpDuQp6TFXvU89qlbiDkUDwORpD7SNfsQHRuGtYHMhLm/yIScGZT23C/EmOb5L
+         7oOGS/52o+aOJBfGVYkCWkFl+1d1GmxRms973YuWfcwHH+4x+ErtAhZhWCd+I6A2vz
+         s9VHySOdZCoxu7EDudO3G5vmw+3cfsgfJUK1reDY2CTuZNmYCAMRD0TWA6WOmiWSzA
+         SeGzv7CAkCD2Q==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com
+Subject: [PATCH] mt76: mt7921: get rid of unused variable in mt7921_mac_tx_free
+Date:   Sat, 16 Oct 2021 12:22:24 +0200
+Message-Id: <31b0fee56b0ce1b009b637522197b81b4b269e9a.1634379664.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 12F1526E
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It's not an error if someone chooses to put their computer to sleep, not
-wanting it to wake up because the person next door has just discovered
-what a magic packet is. So change the loglevel of this annoying message
-from ERROR to INFO.
+Remove unused phy variable in mt7921_mac_tx_free routine
 
-Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ef697572a293..987558c4fc79 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3492,7 +3492,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index ae67e93524c2..0659ff290af9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -1119,7 +1119,6 @@ mt7921_mac_tx_free(struct mt7921_dev *dev, struct sk_buff *skb)
+ 		 */
+ 		if (info & MT_TX_FREE_PAIR) {
+ 			struct mt7921_sta *msta;
+-			struct mt7921_phy *phy;
+ 			struct mt76_wcid *wcid;
+ 			u16 idx;
  
- 	if (!wowlan) {
--		mwifiex_dbg(adapter, ERROR,
-+		mwifiex_dbg(adapter, INFO,
- 			    "None of the WOWLAN triggers enabled\n");
- 		ret = 0;
- 		goto done;
+@@ -1131,7 +1130,6 @@ mt7921_mac_tx_free(struct mt7921_dev *dev, struct sk_buff *skb)
+ 				continue;
+ 
+ 			msta = container_of(wcid, struct mt7921_sta, wcid);
+-			phy = msta->vif->phy;
+ 			spin_lock_bh(&dev->sta_poll_lock);
+ 			if (list_empty(&msta->poll_list))
+ 				list_add_tail(&msta->poll_list, &dev->sta_poll_list);
 -- 
 2.31.1
 
