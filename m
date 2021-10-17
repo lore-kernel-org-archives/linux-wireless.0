@@ -2,114 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1498FC43219
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9517C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE8DD60F35
+	by mail.kernel.org (Postfix) with ESMTP id 7F4CF61054
 	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245165AbhJQJmg (ORCPT
+        id S245135AbhJQJmf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 05:42:36 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53640 "EHLO
+        Sun, 17 Oct 2021 05:42:35 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53652 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S245109AbhJQJme (ORCPT
+        with ESMTP id S241728AbhJQJme (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 17 Oct 2021 05:42:34 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mc2eT-000YUg-Nl; Sun, 17 Oct 2021 12:40:22 +0300
+        id 1mc2eV-000YUg-AF; Sun, 17 Oct 2021 12:40:23 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 17 Oct 2021 12:40:08 +0300
-Message-Id: <iwlwifi.20211017123741.328c2b33081c.Ib3570e8f214538a878204cc2b0b612b5ed0571b3@changeid>
+Date:   Sun, 17 Oct 2021 12:40:10 +0300
+Message-Id: <iwlwifi.20211017123741.954001ec079f.I9deb8bc7520ad569a453f72c8d99adc9c99c9be3@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211017094019.442271-1-luca@coelho.fi>
 References: <20211017094019.442271-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/12] iwlwifi: fix fw/img.c license statement
+Subject: [PATCH 03/12] iwlwifi: mvm: correct sta-state logic for TDLS
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We still had the entire license statement here, but with BSD,
-so the SPDX tag was not matching the actual text. Fix that
-and remove all the texts since they're no longer needed.
+For TDLS stations, much of the sta-state logic shouldn't apply,
+since they don't affect the link to the AP. Fix that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/img.c | 53 ++-------------------
- 1 file changed, 3 insertions(+), 50 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 37 ++++++++++---------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.c b/drivers/net/wireless/intel/iwlwifi/fw/img.c
-index 5755e179066a..24a966673691 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.c
-@@ -1,54 +1,7 @@
--/******************************************************************************
-- *
-- * This file is provided under a dual BSD/GPLv2 license.  When using or
-- * redistributing this file, you may do so under either license.
-- *
-- * GPL LICENSE SUMMARY
-- *
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/*
-  * Copyright(c) 2019 - 2020 Intel Corporation
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called COPYING.
-- * BSD LICENSE
-- *
-- * Copyright(c) 2019 - 2020 Intel Corporation
-- * All rights reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- *
-- *  * Redistributions of source code must retain the above copyright
-- *    notice, this list of conditions and the following disclaimer.
-- *  * Redistributions in binary form must reproduce the above copyright
-- *    notice, this list of conditions and the following disclaimer in
-- *    the documentation and/or other materials provided with the
-- *    distribution.
-- *  * Neither the name Intel Corporation nor the names of its
-- *    contributors may be used to endorse or promote products derived
-- *    from this software without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- *****************************************************************************/
-+ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5374faa15684..56da2759777c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3194,32 +3194,35 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 		if (iwl_mvm_phy_ctx_count(mvm) > 1)
+ 			iwl_mvm_teardown_tdls_peers(mvm);
  
- #include "img.h"
+-		if (sta->tdls)
++		if (sta->tdls) {
+ 			iwl_mvm_tdls_check_trigger(mvm, vif, sta->addr,
+ 						   NL80211_TDLS_ENABLE_LINK);
++		} else {
++			/* enable beacon filtering */
++			WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
  
+-		/* enable beacon filtering */
+-		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+-
+-		/*
+-		 * Now that the station is authorized, i.e., keys were already
+-		 * installed, need to indicate to the FW that
+-		 * multicast data frames can be forwarded to the driver
+-		 */
+-		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
++			/*
++			 * Now that the station is authorized, i.e., keys were already
++			 * installed, need to indicate to the FW that
++			 * multicast data frames can be forwarded to the driver
++			 */
++			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
++		}
+ 
+ 		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
+ 				     true);
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+ 		   new_state == IEEE80211_STA_ASSOC) {
+-		/* Multicast data frames are no longer allowed */
+-		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
++		if (!sta->tdls) {
++			/* Multicast data frames are no longer allowed */
++			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 
+-		/* disable beacon filtering */
+-		ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
+-		WARN_ON(ret &&
+-			!test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
+-				  &mvm->status));
++			/* disable beacon filtering */
++			ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
++			WARN_ON(ret &&
++				!test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
++					  &mvm->status));
++		}
+ 		ret = 0;
+ 	} else if (old_state == IEEE80211_STA_ASSOC &&
+ 		   new_state == IEEE80211_STA_AUTH) {
 -- 
 2.33.0
 
