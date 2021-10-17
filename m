@@ -2,129 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA53DC433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05376C4332F
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF09461252
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAC3861252
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343698AbhJQN2U (ORCPT
+        id S1343702AbhJQN2V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 09:28:20 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53846 "EHLO
+        Sun, 17 Oct 2021 09:28:21 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53834 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1343688AbhJQN2T (ORCPT
+        with ESMTP id S1343689AbhJQN2T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 17 Oct 2021 09:28:19 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mc6Ax-000YdS-0V; Sun, 17 Oct 2021 16:26:07 +0300
+        id 1mc6Av-000YdS-Cm; Sun, 17 Oct 2021 16:26:05 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 17 Oct 2021 16:25:54 +0300
-Message-Id: <iwlwifi.20211017162352.648931fe07e2.Ibf30f9b8e70536da93c4a574ace33d325d3f8da4@changeid>
+Date:   Sun, 17 Oct 2021 16:25:52 +0300
+Message-Id: <20211017132604.480251-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211017132604.480251-1-luca@coelho.fi>
-References: <20211017132604.480251-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/12] iwlwifi: BZ Family SW reset support
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.16 2021-10-17 part 3
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Roee Goldfiner <roee.h.goldfiner@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Previously added BZ reset wasn't taking into account the
-call to iwl_trans_pcie_sw_reset which used a pre-BZ logic
-to reset the device - enabling iwl_trans_pcie_sw_reset to
-support BZ family made this reset redundant.
+Hi,
 
-MAC_ACCESS clear shouldn't be called here but only when calling
-_iwl_trans_pcie_stop_device which now support also BZ family.
+Here's the third set of patches intended for v5.16.  It's the usual
+development, new features, cleanups and bugfixes.
 
-Signed-off-by: Roee Goldfiner <roee.h.goldfiner@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 12 ----------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 24 ++++++++++++++-----
- 2 files changed, 18 insertions(+), 18 deletions(-)
+The changes are:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 1ab8e29294a1..9983660c9079 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -163,18 +163,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
- 	else
- 		iwl_pcie_ctxt_info_free(trans);
- 
--	/* Make sure (redundant) we've released our request to stay awake */
--	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
--		iwl_clear_bit(trans, CSR_GP_CNTRL,
--			      CSR_GP_CNTRL_REG_FLAG_BZ_MAC_ACCESS_REQ);
--	else
--		iwl_clear_bit(trans, CSR_GP_CNTRL,
--			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--
--	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ) {
--		iwl_set_bit(trans, CSR_GP_CNTRL,
--			    CSR_GP_CNTRL_REG_FLAG_SW_RESET);
--	}
- 	/* Stop the device, and put it in low power state */
- 	iwl_pcie_gen2_apm_stop(trans, false);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 22393b724e98..12a402be2e06 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -129,7 +129,12 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- static void iwl_trans_pcie_sw_reset(struct iwl_trans *trans)
- {
- 	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
--	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
-+	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
-+		iwl_set_bit(trans, CSR_GP_CNTRL,
-+			    CSR_GP_CNTRL_REG_FLAG_SW_RESET);
-+	else
-+		iwl_set_bit(trans, CSR_RESET,
-+			    CSR_RESET_REG_FLAG_SW_RESET);
- 	usleep_range(5000, 6000);
- }
- 
-@@ -1209,8 +1214,12 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	}
- 
- 	/* Make sure (redundant) we've released our request to stay awake */
--	iwl_clear_bit(trans, CSR_GP_CNTRL,
--		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
-+		iwl_clear_bit(trans, CSR_GP_CNTRL,
-+			      CSR_GP_CNTRL_REG_FLAG_BZ_MAC_ACCESS_REQ);
-+	else
-+		iwl_clear_bit(trans, CSR_GP_CNTRL,
-+			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- 
- 	/* Stop the device, and put it in low power state */
- 	iwl_pcie_apm_stop(trans, false);
-@@ -2141,9 +2150,12 @@ static void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans)
- 
- 	if (trans_pcie->cmd_hold_nic_awake)
- 		goto out;
--
--	__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
--				   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
-+		__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
-+					   CSR_GP_CNTRL_REG_FLAG_BZ_MAC_ACCESS_REQ);
-+	else
-+		__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
-+					   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- 	/*
- 	 * Above we read the CSR_GP_CNTRL register, which will flush
- 	 * any previous writes, but we need the write that clears the
+* Continue implementation of new rate and flags format in the FW APIs;
+* Some fixes for BZ family initialization;
+* Fix session protection in some scenarios;
+* Some other small fixes, clean-ups and improvements.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Johannes Berg (4):
+  iwlwifi: remove redundant iwl_finish_nic_init() argument
+  iwlwifi: mvm: remove session protection after auth/assoc
+  iwlwifi: allow rate-limited error messages
+  iwlwifi: mvm: reduce WARN_ON() in TX status path
+
+Luca Coelho (2):
+  iwlwifi: mvm: Support new rate_n_flags for REPLY_RX_MPDU_CMD and
+    RX_NO_DATA_NOTIF
+  iwlwifi: mvm: remove csi from iwl_mvm_pass_packet_to_mac80211()
+
+Miri Korenblit (4):
+  iwlwifi: mvm: Add support for new rate_n_flags in tx_cmd.
+  iwlwifi: mvm: Support new version of BEACON_TEMPLATE_CMD.
+  iwlwifi: mvm: Support new TX_RSP and COMPRESSED_BA_RES versions
+  iwlwifi: mvm: Add RTS and CTS flags to iwl_tx_cmd_flags.
+
+Roee Goldfiner (2):
+  iwlwifi: BZ Family BUS_MASTER_DISABLE_REQ code duplication
+  iwlwifi: BZ Family SW reset support
+
+ drivers/net/wireless/intel/iwlwifi/dvm/agn.h  |  11 +-
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  12 +-
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  37 +++--
+ drivers/net/wireless/intel/iwlwifi/fw/dump.c  |   2 +-
+ .../net/wireless/intel/iwlwifi/iwl-debug.c    |  24 ++-
+ .../net/wireless/intel/iwlwifi/iwl-debug.h    |  21 ++-
+ .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c   |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-io.h   |   5 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |   8 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  30 +++-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  16 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 140 ++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 107 ++++++++++---
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  27 +++-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  30 +---
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  33 +++--
+ 19 files changed, 353 insertions(+), 175 deletions(-)
+
 -- 
 2.33.0
 
