@@ -2,68 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE38C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BED31C43217
 	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02F4561261
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A39AC61261
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343717AbhJQN20 (ORCPT
+        id S1343721AbhJQN21 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 09:28:26 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53882 "EHLO
+        Sun, 17 Oct 2021 09:28:27 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53894 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1343709AbhJQN2Y (ORCPT
+        with ESMTP id S1343707AbhJQN2Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Oct 2021 09:28:24 -0400
+        Sun, 17 Oct 2021 09:28:25 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mc6B2-000YdS-VC; Sun, 17 Oct 2021 16:26:13 +0300
+        id 1mc6B4-000YdS-Jv; Sun, 17 Oct 2021 16:26:15 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 17 Oct 2021 16:26:00 +0300
-Message-Id: <iwlwifi.20211017162352.b5aaabb04432.I999f86ed6a9d9b99e63a33f724963f83f85fbb44@changeid>
+Date:   Sun, 17 Oct 2021 16:26:02 +0300
+Message-Id: <iwlwifi.20211017162352.95e4bebb069b.I635280e5d26c70414ac6eb5d62b46fe4bd942818@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211017132604.480251-1-luca@coelho.fi>
 References: <20211017132604.480251-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/12] iwlwifi: mvm: Add RTS and CTS flags to iwl_tx_cmd_flags.
+Subject: [PATCH 10/12] iwlwifi: mvm: remove session protection after auth/assoc
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-As part of the new rate_n_flags, the RTS and CTS flags
-are being removed from it. Instead, we have these flags
-in the flags field in the TX command.
-Add to new flags to the iwl_tx_cmd_flags enum.
+When auth/assoc completes, we should remove session protection,
+except when association is successful, where we need it until a
+beacon is received from the AP.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+In particular, in the case of assoc comeback, currently the session
+protection event just times out, leading to confusing messages:
+
+  wlan0: 42:00:00:00:00:00 rejected association temporarily; comeback duration 1000 TU (1024 ms)
+  iwlwifi 0000:00:00.0: Not associated and the session protection is over already...
+  wlan0: Connection to AP 42:00:00:00:00:00 lost
+  wlan0: associate with 42:00:00:00:00:00 (try 2/3)
+
+mac80211 never does anything on the "Connection ... lost" as it's
+not even connected.
+
+Removing the session protection when it's no longer needed removes
+those confusing messages and lets the device do other things in the
+allocated time.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c    | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index b7090ae95cfb..9b3bce83efb6 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -81,6 +81,10 @@ enum iwl_tx_cmd_flags {
- 	IWL_TX_FLAGS_CMD_RATE		= BIT(0),
- 	IWL_TX_FLAGS_ENCRYPT_DIS	= BIT(1),
- 	IWL_TX_FLAGS_HIGH_PRI		= BIT(2),
-+	/* Use these flags only from
-+	 * TX_FLAGS_BITS_API_S_VER_4 and above */
-+	IWL_TX_FLAGS_RTS		= BIT(3),
-+	IWL_TX_FLAGS_CTS		= BIT(4),
- }; /* TX_FLAGS_BITS_API_S_VER_3 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 4660f21c4e79..adca7c78b815 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3347,6 +3347,21 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	mutex_unlock(&mvm->mutex);
+ }
  
- /**
++static void iwl_mvm_mac_mgd_complete_tx(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					struct ieee80211_prep_tx_info *info)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++
++	/* for successful cases (auth/assoc), don't cancel session protection */
++	if (info->success)
++		return;
++
++	mutex_lock(&mvm->mutex);
++	iwl_mvm_stop_session_protection(mvm, vif);
++	mutex_unlock(&mvm->mutex);
++}
++
+ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+ 					struct ieee80211_vif *vif,
+ 					struct cfg80211_sched_scan_request *req,
+@@ -5347,6 +5362,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.sta_rc_update = iwl_mvm_sta_rc_update,
+ 	.conf_tx = iwl_mvm_mac_conf_tx,
+ 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
++	.mgd_complete_tx = iwl_mvm_mac_mgd_complete_tx,
+ 	.mgd_protect_tdls_discover = iwl_mvm_mac_mgd_protect_tdls_discover,
+ 	.flush = iwl_mvm_mac_flush,
+ 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
 -- 
 2.33.0
 
