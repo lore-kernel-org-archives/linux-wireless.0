@@ -2,65 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DBEC433F5
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 14:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8AD9C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 14:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C72861151
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 14:00:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAC1F61247
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 14:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343822AbhJQOCW (ORCPT
+        id S237740AbhJQOHg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 10:02:22 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53988 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1343821AbhJQOCU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Oct 2021 10:02:20 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1mc6ho-000Yi6-Ft; Sun, 17 Oct 2021 17:00:09 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 17 Oct 2021 16:59:54 +0300
-Message-Id: <iwlwifi.20211017165728.83422182774a.I40703fd517534133eb67d644ee16532ba8a67e35@changeid>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211017135954.504836-1-luca@coelho.fi>
-References: <20211017135954.504836-1-luca@coelho.fi>
+        Sun, 17 Oct 2021 10:07:36 -0400
+Received: from smtpbg604.qq.com ([59.36.128.82]:45528 "EHLO smtpbg604.qq.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236660AbhJQOHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Oct 2021 10:07:35 -0400
+X-QQ-mid: bizesmtp38t1634479512t0h13aby
+Received: from localhost.localdomain (unknown [125.70.163.155])
+        by esmtp6.qq.com (ESMTP) with 
+        id ; Sun, 17 Oct 2021 22:05:10 +0800 (CST)
+X-QQ-SSF: 01000000008000B0C000B00A0000000
+X-QQ-FEAT: rn/rQ7Qm5gWdCk5JbhbQSTGJnjljZ1hDnk+3bFOOdNKN64lt9zw7RqM9MW/mM
+        nb3yCUEYgjCRG6VDdOdGHuXTSwVuhOv0Fopv5Cdi7RjJWgrT2G/jTGfAwWwgBarAD8pER+L
+        bpBt60qXXRM7LfJUxyAhBm76bjTAdATbTFc9cioO20EalVDlH8jzmAz14/ITcGOnwvbQFGj
+        TtHQKDsaRO7MFNNhxIDqSuH/4XxwgLeUYzWVRKBS2cQxcObwuFJQLbg6l5rdT439SITY0qr
+        clT4Q496+04telqpO9hkVu/rFIk9MVD2yVHhLND7ifDBwK1vAGCQRaxQNqKe5zDlEgoQBic
+        jyLW2veJguQ24Dz1EK+zxHLwU/QpQ==
+X-QQ-GoodBg: 0
+From:   Huilong Deng <denghuilong@cdjrlc.com>
+To:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, kvalo@codeaurora.org
+Cc:     colin.king@canonical.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Huilong Deng <denghuilong@cdjrlc.com>
+Subject: [PATCH] mt76: Return true/false (not 1/0) from bool functions
+Date:   Sun, 17 Oct 2021 22:03:38 +0800
+Message-Id: <20211017140338.65469-1-denghuilong@cdjrlc.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/10] iwlwifi: pnvm: print out the version properly
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The version really is a git sha1, not a hex number, so we
-need to print it out with leading zeroes (8 digits) and
-without 0x prefix.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Huilong Deng <denghuilong@cdjrlc.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index dde22bdc8703..3b0880127c66 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -162,7 +162,7 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+index 996d48cca18a..bd2939ebcbf4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c
+@@ -169,7 +169,7 @@ bool mt7663_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update)
+ 	mt7615_mac_sta_poll(dev);
+ 	mt7615_mutex_release(dev);
  
--	IWL_INFO(trans, "loaded PNVM version 0x%0x\n", sha1);
-+	IWL_INFO(trans, "loaded PNVM version %08x\n", sha1);
+-	return 0;
++	return false;
+ }
+ EXPORT_SYMBOL_GPL(mt7663_usb_sdio_tx_status_data);
  
- 	ret = iwl_trans_set_pnvm(trans, pnvm_data, size);
- out:
 -- 
-2.33.0
+2.32.0
 
