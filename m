@@ -2,85 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD48C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 12:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 788CEC433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E13CB61260
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 12:28:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 481B461261
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 13:26:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245645AbhJQMa4 (ORCPT
+        id S1343696AbhJQN2U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 08:30:56 -0400
-Received: from mout.gmx.net ([212.227.15.15]:49225 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245634AbhJQMa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Oct 2021 08:30:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1634473696;
-        bh=cbmUGzU1hyhfVw27QCJZ4UFCSB3owM8yg3KH4pv2Meo=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=FgQF1bnMfZpqiLiWcwmo4tKY92EvGGpLSrDNF8O8Pl2Ok7TFaQFmXtHPkpiNnWcTb
-         +kVIye22YcImxnUMoO/R3nPQLDOuma5QAVqihArxeVkZUN0TWSjXk0iN1w4FOmzGg3
-         aVQFHOxFlgTm/24TudrTjM59RMRGfTkjOhDal5YA=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [157.180.225.22] ([157.180.225.22]) by web-mail.gmx.net
- (3c-app-gmx-bs33.server.lan [172.19.170.85]) (via HTTP); Sun, 17 Oct 2021
- 14:28:16 +0200
+        Sun, 17 Oct 2021 09:28:20 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53838 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1343648AbhJQN2S (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Oct 2021 09:28:18 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <luca@coelho.fi>)
+        id 1mc6Aw-000YdS-7y; Sun, 17 Oct 2021 16:26:06 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
+Date:   Sun, 17 Oct 2021 16:25:53 +0300
+Message-Id: <iwlwifi.20211017162352.46183bcd6549.Ie05161496810d3f28fb9d1fecb5f8593889ed2c6@changeid>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211017132604.480251-1-luca@coelho.fi>
+References: <20211017132604.480251-1-luca@coelho.fi>
 MIME-Version: 1.0
-Message-ID: <trinity-b64203a5-8e23-4d1c-afd1-a29afa69f8f6-1634473696601@3c-app-gmx-bs33>
-From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Daniel Golle <daniel@makrotopia.org>
-Cc:     Nick <vincent@systemli.org>, Kalle Valo <kvalo@codeaurora.org>,
-        nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        davem@davemloft.net, kuba@kernel.org, matthias.bgg@gmail.com,
-        sean.wang@mediatek.com, shayne.chen@mediatek.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Robert Foss <robert.foss@linaro.org>
-Subject: Aw: Re: [RFC v2] mt76: mt7615: mt7622: fix ibss and meshpoint
-Content-Type: text/plain; charset=UTF-8
-Date:   Sun, 17 Oct 2021 14:28:16 +0200
-Importance: normal
-Sensitivity: Normal
-In-Reply-To: <YWGXiExg1uBIFr2c@makrotopia.org>
-References: <20211007225725.2615-1-vincent@systemli.org>
- <87czoe61kh.fsf@codeaurora.org>
- <274013cd-29e4-9202-423b-bd2b2222d6b8@systemli.org>
- <YWGXiExg1uBIFr2c@makrotopia.org>
-X-UI-Message-Type: mail
-X-Priority: 3
-X-Provags-ID: V03:K1:fyBM2xVbitALniHvauTUD7yrO0uOEc4mCU0F1K23UQXJGTTN449orREFI7R6/jIwk2Gfz
- +/t5YHtCN79gYYBepZq88+TxCl9EOmLon24tVUZtoEA+yhKSKkYwyZfIMvm4BmHiBOooqXdvcPkN
- 2tiEOmsT8A75bnUmNG3cwMe2lVBuOhH9OQ96pnvWguNt1I8QU8ooFGKgHp7PWQok+ckMlwWMpQnU
- DCRkLgt6buZvFOvW9LKpt8RMxF+gVj07Jt+pnBeV6TmBIIY5cOfKzjCvRfR697xToQ48ZFR4+kSg
- Ec=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:uRD9Evc6puo=:G4Jl5nlDqhYHEAGiTmwbT9
- B4HxHhEQJFhMTmBBoc65QLaRQ+84jKSXRdt59yACNSSbcCvyyGLvnrwSeO2xVx5jBnmJn/eMM
- z5HhMUlK4WpOrvAoD5QdWjiNvEiZrPiWfGk7WOXa+BDfgAP9dBZzeXQNRptwumLi1LDGEY0+3
- Q3jjuyfFqb4wN/PWx36xsnYAKK66Z7KL4z1nOmkhWc1UXcetmdrWzsYIb3h4YrWSPIC9gk+DP
- c4hILA67s3n35PnK2nQJkCHwqGB4ngTOQZBfSDAJXxxvghncAfXIAohXT+9pLtrgj2o4+MSCo
- VBJO8EtTsIMhJ/z6R1HxiHVOyi2RSGKvdY+fAQ5Y5Ptnb5R2pzM56i5wmIITBA+BPWtrsN0ei
- 1ZM+BPGhBZTsWFGii7Q5KOVsFm/KiNtwC4FpLXyRhhzEXADby7Wll0Iaorhx/AiY4xeF/7oIQ
- DuEOOSsnV5vltv7sEUCB00SIPWnSske6NpOh9hxMS150uB75Uy10lSVUddwQbWvC2IrZ4RkiE
- BRrlxcKZmA5IWfHBU8/4iMAFz2nLGmL4ySQ+0B0CC9xN521KUMjlFkGTxalvCq9mZ2b9muquX
- wsL7buDtbeD4iQVs8khWkueC1UyJMRmyL+wPVPsbQbvR2skb+cADRMI269FjG/+AUjmjox6aC
- EuTLt25a8zAvN1KGXCcEn/6StV8u8DB236SL04zPCNRwkhKrD/x5laTLaKYGcJUATGoIF/LKI
- xAzkrGay/GV/iFmBg9w26NP8IX8TfSCwKUKtp3iUHVI3b+wwpFXAX605EOdKFmo4FXPWTcEEs
- 4X+LBRj
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 01/12] iwlwifi: BZ Family BUS_MASTER_DISABLE_REQ code duplication
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Gesendet: Samstag, 09. Oktober 2021 um 15:22 Uhr
-> Von: "Daniel Golle" <daniel@makrotopia.org>
+From: Roee Goldfiner <roee.h.goldfiner@intel.com>
 
-> Does Mesh+AP or Ad-Hoc+AP also work on MT7622 and does it still work on
-> MT7615E card with your patch applied?
+Remove redundant code which occurs anyway in a later stage and add
+msleep(100) which is required after disable request.
 
-tested bananapi-r2 with mt7615 and bananapi-r64 with internal mt7622-wmac
+Signed-off-by: Roee Goldfiner <roee.h.goldfiner@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 16 ++--------------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c  |  1 +
+ 2 files changed, 3 insertions(+), 14 deletions(-)
 
-ibss/ad-hoc: working
-AP-Mode: still working
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index bf0c32a74ca4..1ab8e29294a1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -131,21 +131,9 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
+ 	if (trans_pcie->is_down)
+ 		return;
+ 
+-	if (trans->state >= IWL_TRANS_FW_STARTED) {
+-		if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ) {
+-			iwl_set_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_BUS_MASTER_DISABLE_REQ);
+-			iwl_poll_bit(trans, CSR_GP_CNTRL,
+-				     CSR_GP_CNTRL_REG_FLAG_BUS_MASTER_DISABLE_STATUS,
+-				     CSR_GP_CNTRL_REG_FLAG_BUS_MASTER_DISABLE_STATUS,
+-				     5000);
+-			msleep(100);
+-			iwl_set_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_SW_RESET);
+-		} else if (trans_pcie->fw_reset_handshake) {
++	if (trans->state >= IWL_TRANS_FW_STARTED)
++		if (trans_pcie->fw_reset_handshake)
+ 			iwl_trans_pcie_fw_reset_handshake(trans);
+-		}
+-	}
+ 
+ 	trans_pcie->is_down = true;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 9e462633af55..22393b724e98 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -458,6 +458,7 @@ void iwl_pcie_apm_stop_master(struct iwl_trans *trans)
+ 				   CSR_GP_CNTRL_REG_FLAG_BUS_MASTER_DISABLE_STATUS,
+ 				   CSR_GP_CNTRL_REG_FLAG_BUS_MASTER_DISABLE_STATUS,
+ 				   100);
++		msleep(100);
+ 	} else {
+ 		iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
+ 
+-- 
+2.33.0
 
-regards Frank
