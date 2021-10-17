@@ -2,293 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE50BC4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2937C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D77FE60F23
-	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9C0560F35
+	for <linux-wireless@archiver.kernel.org>; Sun, 17 Oct 2021 09:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245184AbhJQJms (ORCPT
+        id S245182AbhJQJmv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 05:42:48 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:53688 "EHLO
+        Sun, 17 Oct 2021 05:42:51 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:53700 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S245181AbhJQJmn (ORCPT
+        with ESMTP id S245179AbhJQJmr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Oct 2021 05:42:43 -0400
+        Sun, 17 Oct 2021 05:42:47 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mc2ec-000YUg-A5; Sun, 17 Oct 2021 12:40:31 +0300
+        id 1mc2ef-000YUg-3S; Sun, 17 Oct 2021 12:40:33 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 17 Oct 2021 12:40:16 +0300
-Message-Id: <iwlwifi.20211017123741.1ea5263dafec.Iadffe7cb26554d4c23c9242eb2ec8326306202a9@changeid>
+Date:   Sun, 17 Oct 2021 12:40:18 +0300
+Message-Id: <iwlwifi.20211017123741.c5c6c863631e.I4b493f4eeabbfa1dc965ae012b72fc57de7d5f4f@changeid>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211017094019.442271-1-luca@coelho.fi>
 References: <20211017094019.442271-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: mvm: convert old rate & flags to the new format.
+Subject: [PATCH 11/12] iwlwifi: mvm: Support new version of ranging response notification
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-As part of the new rate & flags, convert an old format rate to
-the new. This is needed if the driver supports the new format
-but the FW supports the old one.
+As part of the new rate_n_flags, FW added a new version for
+LOCATION_RANGE_RSP_NTFY, and it's internal structure -
+LOCATION_RANGE_RSP_AP_ETRY_NTFY. Add support for this.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/Makefile   |   2 +-
- .../net/wireless/intel/iwlwifi/fw/api/rs.h    |   7 +
- drivers/net/wireless/intel/iwlwifi/fw/rs.c    | 131 ++++++++++++++++++
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |  25 +---
- 4 files changed, 141 insertions(+), 24 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/rs.c
+ drivers/net/wireless/intel/iwlwifi/fw/api/location.h   | 7 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c           | 4 ++--
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index d86918d162aa..0d4656efe908 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -15,7 +15,7 @@ iwlwifi-objs		+= iwl-dbg-tlv.o
- iwlwifi-objs		+= iwl-trans.o
- iwlwifi-objs		+= queue/tx.o
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
+index 5f27829f8996..12af94e166ed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
+@@ -1501,7 +1501,9 @@ struct iwl_tof_range_rsp_ap_entry_ntfy_v6 {
+ 	u8 reserved[3];
+ 	u8 rx_pn[IEEE80211_CCMP_PN_LEN];
+ 	u8 tx_pn[IEEE80211_CCMP_PN_LEN];
+-} __packed; /* LOCATION_RANGE_RSP_AP_ETRY_NTFY_API_S_VER_6 */
++} __packed; /* LOCATION_RANGE_RSP_AP_ETRY_NTFY_API_S_VER_6,
++	       LOCATION_RANGE_RSP_AP_ETRY_NTFY_API_S_VER_7 */
++
  
--iwlwifi-objs		+= fw/img.o fw/notif-wait.o
-+iwlwifi-objs		+= fw/img.o fw/notif-wait.o fw/rs.o
- iwlwifi-objs		+= fw/dbg.o fw/pnvm.o fw/dump.o
- iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o
- iwlwifi-$(CONFIG_ACPI) += fw/acpi.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-index 8d7198897535..8b4f3c311634 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-@@ -303,6 +303,7 @@ enum {
- #define RATE_HT_MCS_RATE_CODE_MSK_V1	0x7
- #define RATE_HT_MCS_NSS_POS_V1          3
- #define RATE_HT_MCS_NSS_MSK_V1          (3 << RATE_HT_MCS_NSS_POS_V1)
-+#define RATE_HT_MCS_MIMO2_MSK		BIT(RATE_HT_MCS_NSS_POS_V1)
+ /**
+  * enum iwl_tof_response_status - tof response status
+@@ -1582,7 +1584,8 @@ struct iwl_tof_range_rsp_ntfy_v8 {
+ 	u8 last_report;
+ 	u8 reserved;
+ 	struct iwl_tof_range_rsp_ap_entry_ntfy_v6 ap[IWL_MVM_TOF_MAX_APS];
+-} __packed; /* LOCATION_RANGE_RSP_NTFY_API_S_VER_8 */
++} __packed; /* LOCATION_RANGE_RSP_NTFY_API_S_VER_8,
++	       LOCATION_RANGE_RSP_NTFY_API_S_VER_9 */
  
- /* Bit 10: (1) Use Green Field preamble */
- #define RATE_HT_MCS_GF_POS		10
-@@ -324,6 +325,7 @@ enum {
- #define RATE_VHT_MCS_RATE_CODE_MSK	0xf
- #define RATE_VHT_MCS_NSS_POS		4
- #define RATE_VHT_MCS_NSS_MSK		(3 << RATE_VHT_MCS_NSS_POS)
-+#define RATE_VHT_MCS_MIMO2_MSK		BIT(RATE_VHT_MCS_NSS_POS)
- 
- /*
-  * Legacy OFDM rate format for bits 7:0
-@@ -545,6 +547,7 @@ enum {
- #define RATE_MCS_HE_GI_LTF_MSK		(0x7 << RATE_MCS_HE_GI_LTF_POS)
- #define RATE_MCS_SGI_POS		RATE_MCS_HE_GI_LTF_POS
- #define RATE_MCS_SGI_MSK		(1 << RATE_MCS_SGI_POS)
-+#define RATE_MCS_HE_SU_4_LTF		3
- 
- /* Bit 24-23: HE type. (0) SU, (1) SU_EXT, (2) MU, (3) trigger based */
- #define RATE_MCS_HE_TYPE_POS		23
-@@ -694,4 +697,8 @@ struct iwl_lq_cmd {
- 	__le32 ss_params;
- }; /* LINK_QUALITY_CMD_API_S_VER_1 */
- 
-+u8 iwl_fw_rate_idx_to_plcp(int idx);
-+u32 iwl_new_rate_from_v1(u32 rate_v1);
-+u32 iwl_legacy_rate_to_fw_idx(u32 rate_n_flags);
-+
- #endif /* __iwl_fw_api_rs_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/rs.c b/drivers/net/wireless/intel/iwlwifi/fw/rs.c
-new file mode 100644
-index 000000000000..4e066588d5ba
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/rs.c
-@@ -0,0 +1,131 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/*
-+ * Copyright (C) 2021 Intel Corporation
-+ */
-+
-+#include <net/mac80211.h>
-+#include "fw/api/rs.h"
-+#include "iwl-drv.h"
-+
-+#define IWL_DECLARE_RATE_INFO(r) \
-+	[IWL_RATE_##r##M_INDEX] = IWL_RATE_##r##M_PLCP
-+
-+u8 iwl_fw_rate_idx_to_plcp(int idx)
-+{
-+/*
-+ * Translate from fw_rate_index (IWL_RATE_XXM_INDEX) to PLCP
-+ * */
-+static const u8 fw_rate_idx_to_plcp[IWL_RATE_COUNT] = {
-+	IWL_DECLARE_RATE_INFO(1),
-+	IWL_DECLARE_RATE_INFO(2),
-+	IWL_DECLARE_RATE_INFO(5),
-+	IWL_DECLARE_RATE_INFO(11),
-+	IWL_DECLARE_RATE_INFO(6),
-+	IWL_DECLARE_RATE_INFO(9),
-+	IWL_DECLARE_RATE_INFO(12),
-+	IWL_DECLARE_RATE_INFO(18),
-+	IWL_DECLARE_RATE_INFO(24),
-+	IWL_DECLARE_RATE_INFO(36),
-+	IWL_DECLARE_RATE_INFO(48),
-+	IWL_DECLARE_RATE_INFO(54),
-+};
-+
-+	return fw_rate_idx_to_plcp[idx];
-+}
-+IWL_EXPORT_SYMBOL(iwl_fw_rate_idx_to_plcp);
-+
-+u32 iwl_new_rate_from_v1(u32 rate_v1)
-+{
-+	u32 rate_v2 = 0;
-+	u32 dup = 0;
-+
-+	if (rate_v1 == 0)
-+		return rate_v1;
-+	/* convert rate */
-+	if (rate_v1 & RATE_MCS_HT_MSK_V1) {
-+		u32 nss = 0;
-+
-+		rate_v2 |= RATE_MCS_HT_MSK;
-+		rate_v2 |=
-+			rate_v1 & RATE_HT_MCS_RATE_CODE_MSK_V1;
-+		nss = (rate_v1 & RATE_HT_MCS_MIMO2_MSK) >>
-+			RATE_HT_MCS_NSS_POS_V1;
-+		rate_v2 |= nss << RATE_MCS_NSS_POS;
-+	} else if (rate_v1 & RATE_MCS_VHT_MSK_V1 ||
-+		   rate_v1 & RATE_MCS_HE_MSK_V1) {
-+		rate_v2 |= rate_v1 & RATE_VHT_MCS_RATE_CODE_MSK;
-+
-+		rate_v2 |= rate_v1 & RATE_VHT_MCS_MIMO2_MSK;
-+
-+		if (rate_v1 & RATE_MCS_HE_MSK_V1) {
-+			u32 he_type_bits = rate_v1 & RATE_MCS_HE_TYPE_MSK_V1;
-+			u32 he_type = he_type_bits >> RATE_MCS_HE_TYPE_POS_V1;
-+			u32 he_106t = (rate_v1 & RATE_MCS_HE_106T_MSK_V1) >>
-+				RATE_MCS_HE_106T_POS_V1;
-+			u32 he_gi_ltf = (rate_v1 & RATE_MCS_HE_GI_LTF_MSK_V1) >>
-+				RATE_MCS_HE_GI_LTF_POS;
-+
-+			if ((he_type_bits == RATE_MCS_HE_TYPE_SU ||
-+			     he_type_bits == RATE_MCS_HE_TYPE_EXT_SU) &&
-+			    he_gi_ltf == RATE_MCS_HE_SU_4_LTF)
-+				/* the new rate have an additional bit to
-+				 * represent the value 4 rather then using SGI
-+				 * bit for this purpose - as it was done in the old
-+				 * rate */
-+				he_gi_ltf += (rate_v1 & RATE_MCS_SGI_MSK_V1) >>
-+					RATE_MCS_SGI_POS_V1;
-+
-+			rate_v2 |= he_gi_ltf << RATE_MCS_HE_GI_LTF_POS;
-+			rate_v2 |= he_type << RATE_MCS_HE_TYPE_POS;
-+			rate_v2 |= he_106t << RATE_MCS_HE_106T_POS;
-+			rate_v2 |= rate_v1 & RATE_HE_DUAL_CARRIER_MODE_MSK;
-+			rate_v2 |= RATE_MCS_HE_MSK;
-+		} else {
-+			rate_v2 |= RATE_MCS_VHT_MSK;
-+		}
-+	/* if legacy format */
-+	} else {
-+		u32 legacy_rate = iwl_legacy_rate_to_fw_idx(rate_v1);
-+
-+		WARN_ON(legacy_rate < 0);
-+		rate_v2 |= legacy_rate;
-+		if (!(rate_v1 & RATE_MCS_CCK_MSK_V1))
-+			rate_v2 |= RATE_MCS_LEGACY_OFDM_MSK;
-+	}
-+
-+	/* convert flags */
-+	if (rate_v1 & RATE_MCS_LDPC_MSK_V1)
-+		rate_v2 |= RATE_MCS_LDPC_MSK;
-+	rate_v2 |= (rate_v1 & RATE_MCS_CHAN_WIDTH_MSK_V1) |
-+		(rate_v1 & RATE_MCS_ANT_AB_MSK) |
-+		(rate_v1 & RATE_MCS_STBC_MSK) |
-+		(rate_v1 & RATE_MCS_BF_MSK);
-+
-+	dup = (rate_v1 & RATE_MCS_DUP_MSK_V1) >> RATE_MCS_DUP_POS_V1;
-+	if (dup) {
-+		rate_v2 |= RATE_MCS_DUP_MSK;
-+		rate_v2 |= dup << RATE_MCS_CHAN_WIDTH_POS;
-+	}
-+
-+	if ((!(rate_v1 & RATE_MCS_HE_MSK_V1)) &&
-+	    (rate_v1 & RATE_MCS_SGI_MSK_V1))
-+		rate_v2 |= RATE_MCS_SGI_MSK;
-+
-+	return rate_v2;
-+}
-+IWL_EXPORT_SYMBOL(iwl_new_rate_from_v1);
-+
-+u32 iwl_legacy_rate_to_fw_idx(u32 rate_n_flags)
-+{
-+	int rate = rate_n_flags & RATE_LEGACY_RATE_MSK_V1;
-+	int idx;
-+	bool ofdm = !(rate_n_flags & RATE_MCS_CCK_MSK_V1);
-+	int offset = ofdm ? IWL_FIRST_OFDM_RATE : 0;
-+	int last = ofdm ? IWL_RATE_COUNT_LEGACY : IWL_FIRST_OFDM_RATE;
-+
-+	for (idx = offset; idx < last; idx++)
-+		if (iwl_fw_rate_idx_to_plcp(idx) == rate)
-+			return idx - offset;
-+	return -1;
-+}
-+
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 70ca6d7a31bf..dc1727280248 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -135,27 +135,6 @@ int iwl_mvm_send_cmd_pdu_status(struct iwl_mvm *mvm, u32 id, u16 len,
- 	return iwl_mvm_send_cmd_status(mvm, &cmd, status);
- }
- 
--#define IWL_DECLARE_RATE_INFO(r) \
--	[IWL_RATE_##r##M_INDEX] = IWL_RATE_##r##M_PLCP
--
--/*
-- * Translate from fw_rate_index (IWL_RATE_XXM_INDEX) to PLCP
-- */
--static const u8 fw_rate_idx_to_plcp[IWL_RATE_COUNT] = {
--	IWL_DECLARE_RATE_INFO(1),
--	IWL_DECLARE_RATE_INFO(2),
--	IWL_DECLARE_RATE_INFO(5),
--	IWL_DECLARE_RATE_INFO(11),
--	IWL_DECLARE_RATE_INFO(6),
--	IWL_DECLARE_RATE_INFO(9),
--	IWL_DECLARE_RATE_INFO(12),
--	IWL_DECLARE_RATE_INFO(18),
--	IWL_DECLARE_RATE_INFO(24),
--	IWL_DECLARE_RATE_INFO(36),
--	IWL_DECLARE_RATE_INFO(48),
--	IWL_DECLARE_RATE_INFO(54),
--};
--
- int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
- 					enum nl80211_band band)
+ #define IWL_MVM_TOF_MCSI_BUF_SIZE  (245)
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+index 73be95fffb95..949fb790f8fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+@@ -1154,6 +1154,7 @@ static u8 iwl_mvm_ftm_get_range_resp_ver(struct iwl_mvm *mvm)
+ static bool iwl_mvm_ftm_resp_size_validation(u8 ver, unsigned int pkt_len)
  {
-@@ -167,7 +146,7 @@ int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
- 	if (band != NL80211_BAND_2GHZ)
- 		band_offset = IWL_FIRST_OFDM_RATE;
- 	for (idx = band_offset; idx < IWL_RATE_COUNT_LEGACY; idx++)
--		if (fw_rate_idx_to_plcp[idx] == rate)
-+		if (iwl_fw_rate_idx_to_plcp(idx) == rate)
- 			return idx - band_offset;
+ 	switch (ver) {
++	case 9:
+ 	case 8:
+ 		return pkt_len == sizeof(struct iwl_tof_range_rsp_ntfy_v8);
+ 	case 7:
+@@ -1217,7 +1218,7 @@ void iwl_mvm_ftm_range_resp(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		int peer_idx;
  
- 	return -1;
-@@ -176,7 +155,7 @@ int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
- u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx)
- {
- 	/* Get PLCP rate for tx_cmd->rate_n_flags */
--	return fw_rate_idx_to_plcp[rate_idx];
-+	return iwl_fw_rate_idx_to_plcp(rate_idx);
- }
+ 		if (new_api) {
+-			if (notif_ver == 8) {
++			if (notif_ver >= 8) {
+ 				fw_ap = &fw_resp_v8->ap[i];
+ 				iwl_mvm_ftm_pasn_update_pn(mvm, fw_ap);
+ 			} else if (notif_ver == 7) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 3b0d5a068541..e331e18b9ab1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1044,8 +1044,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mvm->cmd_ver.range_resp =
+ 		iwl_fw_lookup_notif_ver(mvm->fw, LOCATION_GROUP,
+ 					TOF_RANGE_RESPONSE_NOTIF, 5);
+-	/* we only support up to version 8 */
+-	if (WARN_ON_ONCE(mvm->cmd_ver.range_resp > 8))
++	/* we only support up to version 9 */
++	if (WARN_ON_ONCE(mvm->cmd_ver.range_resp > 9))
+ 		goto out_free;
  
- u8 iwl_mvm_mac80211_ac_to_ucode_ac(enum ieee80211_ac_numbers ac)
+ 	/*
 -- 
 2.33.0
 
