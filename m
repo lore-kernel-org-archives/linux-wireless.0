@@ -2,98 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6493DC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FCD7C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EFDC60FDA
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 457EF60F02
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:20:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233650AbhJRXRo (ORCPT
+        id S231296AbhJRXWg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 19:17:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56060 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233627AbhJRXRm (ORCPT
+        Mon, 18 Oct 2021 19:22:36 -0400
+Received: from mailgw01.mediatek.com ([216.200.240.184]:42418 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229524AbhJRXWf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 19:17:42 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84EB3C061745
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 16:15:30 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id k7so43982819wrd.13
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 16:15:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=GbLM5Z3jD8SPQEozMJryUhBVooDo33aFTB2Os0auzZc=;
-        b=hAIrENvHRnb4RSIeGT/YWT7oVggO3TgS+sD3kWQ/0yA+1biY1bh6snfeNIpAmdBmmI
-         2WlL6CSXl3HxWwFJpCPICwkoY/Vyv68aa1khsfHcwcXFiCv6Ql84UDkHa/NTyZTyBGd1
-         Hzk+LT3iAYZ9F29nfhP7jx1F5+6UtzEwUqUj5J++sefpeUIeVfYhz9beDSqj8pW/3ZdE
-         x49l/OLkuGjxcr8J59p72kTPXqr30JJA9jWIb6uUNNQZEsuGge9NYJajTthIIxN1iylD
-         Ws0sXHCxxezrcf6CwrFKgIJuMD1/Bx/6lJTItcMPKUI31M+2IbXoKLU33l2kGnevv9xy
-         2Qtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=GbLM5Z3jD8SPQEozMJryUhBVooDo33aFTB2Os0auzZc=;
-        b=LlMCvF6jRvqXsL2OC1UU+hQFPVNWEBxKG0pXTJ4htxCXMxDp/Jok5z9tqmulIPP/m5
-         Rupz7Fa8ZKmHz6E579hLa7NGMUlzSNRI8WX3psS4HFmb1061rYsE/BsncpA5YX/yqh1m
-         QaEWPQiDvP2I8oMgeP4IrZs94JxKRxUzKySDrJm2eA/dA6jVv5OdqOZsnLv5Wd1kKPCC
-         EKSFBG0bVafQnG0sfYXJT3MJAmr/5I598EG4WrKPQw605FXl/s32I9ReRJiwG1COZBXV
-         2HuHkeKJGbW/dlcyWTZ9RqhmeZVGDxkPU+XeG7WwJ8F96/InXVgPJVVeX1ty6OSon2s0
-         kjxg==
-X-Gm-Message-State: AOAM531tyGVLlsG0EDGU5imZracTqCNlIOLd92UYslZAOFTjE3BhnMK2
-        sZsbZ14SzQIeqU3GxK7kh5r1eg==
-X-Google-Smtp-Source: ABdhPJxeawc99BF6bii7izYsT+pg4cPUjx39WvlisOhOW36ApDogSAD62YcY3CD36Xz9rfvlCvY4Kg==
-X-Received: by 2002:adf:bbc3:: with SMTP id z3mr40159667wrg.10.1634598929207;
-        Mon, 18 Oct 2021 16:15:29 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id s8sm3685379wrr.15.2021.10.18.16.15.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Oct 2021 16:15:28 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        wcn36xx@lists.infradead.org
-Cc:     loic.poulain@linaro.org, benl@squareup.com,
-        daniel.thompson@linaro.org, johannes@sipsolutions.net,
-        bryan.odonoghue@linaro.org
-Subject: [PATCH v2 5/5] wcn36xx: Put DXE block into reset before freeing memory
-Date:   Tue, 19 Oct 2021 00:17:22 +0100
-Message-Id: <20211018231722.873525-6-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211018231722.873525-1-bryan.odonoghue@linaro.org>
-References: <20211018231722.873525-1-bryan.odonoghue@linaro.org>
+        Mon, 18 Oct 2021 19:22:35 -0400
+X-UUID: 48e571e35c8d43b493b5aab7c1928d6e-20211018
+X-UUID: 48e571e35c8d43b493b5aab7c1928d6e-20211018
+Received: from mtkcas66.mediatek.inc [(172.29.193.44)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1105758733; Mon, 18 Oct 2021 16:20:21 -0700
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ MTKMBS62DR.mediatek.inc (172.29.94.18) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 18 Oct 2021 16:12:12 -0700
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 19 Oct 2021 07:12:12 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
+        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <Stella.Chang@mediatek.com>, <Tom.Chou@mediatek.com>,
+        <steve.lee@mediatek.com>, <jsiuda@google.com>,
+        <frankgor@google.com>, <jemele@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v5 07/17] mt76: mt7663s: rely on mcu reg access utility
+Date:   Tue, 19 Oct 2021 07:11:37 +0800
+Message-ID: <95bb420671155004cb395fffaf59d6be1caeb189.1634598341.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1634598341.git.objelf@gmail.com>
+References: <cover.1634598341.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When deiniting the DXE hardware we should reset the block to ensure there
-is no spurious DMA write transaction from the downstream WCNSS to upstream
-MSM at a skbuff address we will have released.
+From: Sean Wang <sean.wang@mediatek.com>
 
-Fixes: 8e84c2582169 ("wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware")
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+rely on mcu reg access utility and drop the duplicated code.
+
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 3 +++
- 1 file changed, 3 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 28 -------------------
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 --
+ .../wireless/mediatek/mt76/mt7615/sdio_mcu.c  |  4 +--
+ 3 files changed, 2 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index d4f5746d9b10a..cf85b0cd11be4 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -1089,6 +1089,9 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
- 		wcn->tx_ack_skb = NULL;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 2ba730808f3b..2cb3969e6432 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -2769,31 +2769,3 @@ int mt7615_mcu_set_roc(struct mt7615_phy *phy, struct ieee80211_vif *vif,
+ 	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_ROC, &req,
+ 				 sizeof(req), false);
+ }
+-
+-u32 mt7615_mcu_reg_rr(struct mt76_dev *dev, u32 offset)
+-{
+-	struct {
+-		__le32 addr;
+-		__le32 val;
+-	} __packed req = {
+-		.addr = cpu_to_le32(offset),
+-	};
+-
+-	return mt76_mcu_send_msg(dev, MCU_CMD_REG_READ, &req, sizeof(req),
+-				 true);
+-}
+-EXPORT_SYMBOL_GPL(mt7615_mcu_reg_rr);
+-
+-void mt7615_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val)
+-{
+-	struct {
+-		__le32 addr;
+-		__le32 val;
+-	} __packed req = {
+-		.addr = cpu_to_le32(offset),
+-		.val = cpu_to_le32(val),
+-	};
+-
+-	mt76_mcu_send_msg(dev, MCU_CMD_REG_WRITE, &req, sizeof(req), false);
+-}
+-EXPORT_SYMBOL_GPL(mt7615_mcu_reg_wr);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 58a98b5c0cbc..437f14f06e63 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -553,8 +553,6 @@ int mt7615_mac_set_beacon_filter(struct mt7615_phy *phy,
+ int mt7615_mcu_set_bss_pm(struct mt7615_dev *dev, struct ieee80211_vif *vif,
+ 			  bool enable);
+ int __mt7663_load_firmware(struct mt7615_dev *dev);
+-u32 mt7615_mcu_reg_rr(struct mt76_dev *dev, u32 offset);
+-void mt7615_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val);
+ void mt7615_coredump_work(struct work_struct *work);
  
-+	/* Put the DXE block into reset before freeing memory */
-+	wcn36xx_dxe_reset(wcn);
-+
- 	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_l_ch);
- 	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_h_ch);
- 
+ void mt7622_trigger_hif_int(struct mt7615_dev *dev, bool en);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
+index 45c1cd3b9f49..517419bb7772 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio_mcu.c
+@@ -137,8 +137,8 @@ int mt7663s_mcu_init(struct mt7615_dev *dev)
+ 		.mcu_skb_send_msg = mt7663s_mcu_send_message,
+ 		.mcu_parse_response = mt7615_mcu_parse_response,
+ 		.mcu_restart = mt7615_mcu_restart,
+-		.mcu_rr = mt7615_mcu_reg_rr,
+-		.mcu_wr = mt7615_mcu_reg_wr,
++		.mcu_rr = mt76_connac_mcu_reg_rr,
++		.mcu_wr = mt76_connac_mcu_reg_wr,
+ 	};
+ 	struct mt7615_mcu_ops *mcu_ops;
+ 	int ret;
 -- 
-2.33.0
+2.25.1
 
