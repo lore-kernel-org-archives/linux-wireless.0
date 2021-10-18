@@ -2,238 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87768C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 14:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2871C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 15:35:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6ACED60ED5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 14:18:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C11796128A
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 15:35:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232912AbhJROUU (ORCPT
+        id S232818AbhJRPhr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 10:20:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45022 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231905AbhJROUQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 10:20:16 -0400
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36EA5C0612F1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 07:16:45 -0700 (PDT)
-Received: by mail-wm1-x32c.google.com with SMTP id p21so8883754wmq.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 07:16:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=LAd+S0Qnz+V8XxjM+PVfUF/cgcdX7dHn+MP2lN3vIGw=;
-        b=FSmnVMcfCwvzrHxPNyCK6iCEYmyR46utpI4L7WYoDcKbBm+DiVvKL3/8XrgSjZyy2P
-         kc9O9Mnd64saaasklTaWc4GVhXsNmYUCEPsAcxrxOOHKJatbqdfENrlGN0D0yq3dDoof
-         DEqYlLp0jDQNqAm4IEwN6Sjb7/q9i7YfxHA/q4tkcN9iSNeOmmLD/4a7AcYgRqI4SJZS
-         LQm4TFYcpWIJqgCmzQ9BljASZM9Jwzm5QK/NxpQBaOJvFgbvKG+bt2LTjg15ExK3y+q/
-         2TyVT3I2iyynFQOe9BzfRTJf6HMkn9uLYMNs08dpNFQemPYVWiZ9x/aU/l28S4U5/gle
-         eiZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=LAd+S0Qnz+V8XxjM+PVfUF/cgcdX7dHn+MP2lN3vIGw=;
-        b=FAXEeifHVQw2diUSAHDB189dF6qT5LZAB+OIRuaGtD+EPSem/xX7g94Yo2R5A6xrJa
-         iJdrY2dbN+cwGVPBWcitNV3750hN8/vrOKM2Algmh+p70U1YdICXi45HMOiJ4JLIre0e
-         Depmb88rLh+4IS62MQOvqkjKUKXtPgFV2MAk88s3GvHkEDQa8LRA67G0iX44nTPQJwco
-         b98PV9BrjiclPv3UtQgLFO3cPZwaY0Ry14mF3rvkxzd+O6eko3L+LwdzoRuWikJeKOJ1
-         bwtiLA7nPazEs8C7KmHBKlxy82zVd7imN/gfLJaeEHGLimuW1AiSnzGvpoBO4VgddtJu
-         rykg==
-X-Gm-Message-State: AOAM53155XbqqOuRDfLFTBbIHgikPZVQ8I6af5A6ZlFjwHpvLO7qKJTZ
-        9XRo9H534WzhNBHTip5P2K+79Q==
-X-Google-Smtp-Source: ABdhPJzABYktdw0zjlgeJ3AzNeoPQyZk7xqA/hSJMeTkJzF4o5LJqe0QUd6TsgF3nAtjzDXJCoPLJQ==
-X-Received: by 2002:a7b:c5d8:: with SMTP id n24mr31541462wmk.51.1634566603668;
-        Mon, 18 Oct 2021 07:16:43 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:e0a:82c:5f0:9df5:c752:530b:345b])
-        by smtp.gmail.com with ESMTPSA id v185sm18482862wme.35.2021.10.18.07.16.42
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 18 Oct 2021 07:16:43 -0700 (PDT)
-From:   Loic Poulain <loic.poulain@linaro.org>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        bryan.odonoghue@linaro.org, Loic Poulain <loic.poulain@linaro.org>,
-        stable@vger.kernel.org
-Subject: [PATCH v2] wcn36xx: Fix tx_status mechanism
-Date:   Mon, 18 Oct 2021 16:28:01 +0200
-Message-Id: <1634567281-28997-1-git-send-email-loic.poulain@linaro.org>
-X-Mailer: git-send-email 2.7.4
+        Mon, 18 Oct 2021 11:37:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46374 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231893AbhJRPhm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Oct 2021 11:37:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C720B6103D;
+        Mon, 18 Oct 2021 15:35:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634571331;
+        bh=q7lcmruj3DqRwUoAeERdWNwhIR2lW91g6h7Kdo5lQp8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Pvv8j5rrguCLZzOjZEgHhY0Txc2BPVnAj4d0dfiw6bV43dEU76xoOTxKNCA5XOFeZ
+         yHlL0Mqgywrqr5T8fNQq12o5APx8Zl2HGncM/4pFYOrRxVLbZM+lP03XqA0rpoRVso
+         l3BukXmaCXnliqfxezF07+nUVHExtbCmVbG7VpKL2wHlfQYE5Ogl6m/6IZNNhpGETb
+         d1Rv6QvwRmX7MtJ6/6GyKNAIAMq+5Towrzub7S7LaNAumjCmZ90nw394bZ970/cTZP
+         6JZryrPojvE8chSkiXvJjHZiLyz3zMr+wb0lylbqUIIZm+1Zs8UA1JWIsntfqRRgzI
+         zS91iUQ2HG0wA==
+Date:   Mon, 18 Oct 2021 10:35:29 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jonas =?iso-8859-1?Q?Dre=DFler?= <verdre@v0yd.nl>
+Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Tsuchiya Yuto <kitakar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Brian Norris <briannorris@chromium.org>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Victor Ding <victording@google.com>
+Subject: Re: [PATCH] mwifiex: Add quirk resetting the PCI bridge on MS
+ Surface devices
+Message-ID: <20211018153529.GA2235731@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e7983fec-f4f1-6d31-5e46-f5a427fe55cc@v0yd.nl>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This change fix the TX ack mechanism in various ways:
+On Thu, Oct 14, 2021 at 12:08:31AM +0200, Jonas Dreßler wrote:
+> On 10/12/21 17:39, Bjorn Helgaas wrote:
+> > [+cc Vidya, Victor, ASPM L1.2 config issue; beginning of thread:
+> > https://lore.kernel.org/all/20211011134238.16551-1-verdre@v0yd.nl/]
 
-- For NO_ACK tagged packets, we don't need to way for TX_ACK indication
-and so are not subject to the single packet ack limitation. So we don't
-have to stop the tx queue, and can call the tx status callback as soon
-as DMA transfer has completed.
+> > I wonder if this reset quirk works because pci_reset_function() saves
+> > and restores much of config space, but it currently does *not* restore
+> > the L1 PM Substates capability, so those T_POWER_ON,
+> > Common_Mode_Restore_Time, and LTR_L1.2_THRESHOLD values probably get
+> > cleared out by the reset.  We did briefly save/restore it [1], but we
+> > had to revert that because of a regression that AFAIK was never
+> > resolved [2].  I expect we will eventually save/restore this, so if
+> > the quirk depends on it *not* being restored, that would be a problem.
+> > 
+> > You should be able to test whether this is the critical thing by
+> > clearing those registers with setpci instead of doing the reset.  Per
+> > spec, they can only be modified when L1.2 is disabled, so you would
+> > have to disable it via sysfs (for the endpoint, I think)
+> > /sys/.../l1_2_aspm and /sys/.../l1_2_pcipm, do the setpci on the root
+> > port, then re-enable L1.2.
+> > 
+> > [1] https://git.kernel.org/linus/4257f7e008ea
+> > [2] https://lore.kernel.org/all/20210127160449.2990506-1-helgaas@kernel.org/
+> 
+> Hmm, interesting, thanks for those links.
+> 
+> Are you sure the config values will get lost on the reset? If we only reset
+> the port by going into D3hot and back into D0, the device will remain powered
+> and won't lose the config space, will it?
 
-- Fix skb ownership/reference. Only start status indication timeout
-once the DMA transfer has been completed. This avoids the skb to be
-both referenced in the DMA tx ring and by the tx_ack_skb pointer,
-preventing any use-after-free or double-free.
-
-- This adds a sanity (paranoia?) check on the skb tx ack pointer.
-
-- Resume TX queue if TX status tagged packet TX fails.
-
-Cc: stable@vger.kernel.org
-Fixes: fdf21cc37149 ("wcn36xx: Add TX ack support")
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
----
- v2: Fix unused variable error/warning (flag)
-
- drivers/net/wireless/ath/wcn36xx/dxe.c  | 37 +++++++++++++--------------------
- drivers/net/wireless/ath/wcn36xx/txrx.c | 31 ++++++---------------------
- 2 files changed, 21 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 8e1dbfd..0e0bbcd 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -403,8 +403,21 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
- 					 ctl->skb->len, DMA_TO_DEVICE);
- 			info = IEEE80211_SKB_CB(ctl->skb);
--			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
--				/* Keep frame until TX status comes */
-+			if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+				if (info->flags & IEEE80211_TX_CTL_NO_ACK) {
-+					info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+					ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
-+				} else {
-+					/* Wait for the TX ack indication or timeout... */
-+					spin_lock(&wcn->dxe_lock);
-+					if (WARN_ON(wcn->tx_ack_skb))
-+						ieee80211_free_txskb(wcn->hw, wcn->tx_ack_skb);
-+					wcn->tx_ack_skb = ctl->skb; /* Tracking ref */
-+					mod_timer(&wcn->tx_ack_timer, jiffies + HZ / 10);
-+					spin_unlock(&wcn->dxe_lock);
-+				}
-+				/* do not free, ownership transferred to mac80211 status cb */
-+			} else {
- 				ieee80211_free_txskb(wcn->hw, ctl->skb);
- 			}
- 
-@@ -426,7 +439,6 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- {
- 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
- 	int int_src, int_reason;
--	bool transmitted = false;
- 
- 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
- 
-@@ -466,7 +478,6 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
- 				  WCN36XX_CH_STAT_INT_ED_MASK)) {
- 			reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
--			transmitted = true;
- 		}
- 	}
- 
-@@ -479,7 +490,6 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 					   WCN36XX_DXE_0_INT_CLR,
- 					   WCN36XX_INT_MASK_CHAN_TX_L);
- 
--
- 		if (int_reason & WCN36XX_CH_STAT_INT_ERR_MASK ) {
- 			wcn36xx_dxe_write_register(wcn,
- 						   WCN36XX_DXE_0_INT_ERR_CLR,
-@@ -507,25 +517,8 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
- 				  WCN36XX_CH_STAT_INT_ED_MASK)) {
- 			reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
--			transmitted = true;
--		}
--	}
--
--	spin_lock(&wcn->dxe_lock);
--	if (wcn->tx_ack_skb && transmitted) {
--		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(wcn->tx_ack_skb);
--
--		/* TX complete, no need to wait for 802.11 ack indication */
--		if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
--		    info->flags & IEEE80211_TX_CTL_NO_ACK) {
--			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
--			del_timer(&wcn->tx_ack_timer);
--			ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
--			wcn->tx_ack_skb = NULL;
--			ieee80211_wake_queues(wcn->hw);
- 		}
- 	}
--	spin_unlock(&wcn->dxe_lock);
- 
- 	return IRQ_HANDLED;
- }
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 1edc703..f9d2fc3 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -608,10 +608,11 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct wcn36xx_vif *vif_priv = NULL;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	unsigned long flags;
- 	bool is_low = ieee80211_is_data(hdr->frame_control);
- 	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
- 		is_multicast_ether_addr(hdr->addr1);
-+	bool ack_ind = (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) &&
-+					!(info->flags & IEEE80211_TX_CTL_NO_ACK);
- 	struct wcn36xx_tx_bd bd;
- 	int ret;
- 
-@@ -627,30 +628,16 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 	bd.dpu_rf = WCN36XX_BMU_WQ_TX;
- 
--	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+	if (unlikely(ack_ind)) {
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
- 
--		spin_lock_irqsave(&wcn->dxe_lock, flags);
--		if (wcn->tx_ack_skb) {
--			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
--			wcn36xx_warn("tx_ack_skb already set\n");
--			return -EINVAL;
--		}
--
--		wcn->tx_ack_skb = skb;
--		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
--
- 		/* Only one at a time is supported by fw. Stop the TX queues
- 		 * until the ack status gets back.
- 		 */
- 		ieee80211_stop_queues(wcn->hw);
- 
--		/* TX watchdog if no TX irq or ack indication received  */
--		mod_timer(&wcn->tx_ack_timer, jiffies + HZ / 10);
--
- 		/* Request ack indication from the firmware */
--		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
--			bd.tx_comp = 1;
-+		bd.tx_comp = 1;
- 	}
- 
- 	/* Data frames served first*/
-@@ -664,14 +651,8 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 	bd.tx_bd_sign = 0xbdbdbdbd;
- 
- 	ret = wcn36xx_dxe_tx_frame(wcn, vif_priv, &bd, skb, is_low);
--	if (ret && (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
--		/* If the skb has not been transmitted,
--		 * don't keep a reference to it.
--		 */
--		spin_lock_irqsave(&wcn->dxe_lock, flags);
--		wcn->tx_ack_skb = NULL;
--		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
--
-+	if (unlikely(ret && ack_ind)) {
-+		/* If the skb has not been transmitted, resume TX queue */
- 		ieee80211_wake_queues(wcn->hw);
- 	}
- 
--- 
-2.7.4
-
+I think you're doing a PM reset (transition to D3hot and back to D0).
+Linux only does this when PCI_PM_CTRL_NO_SOFT_RESET == 0.  The spec
+doesn't actually *require* the device to be reset; it only says the
+internal state of the device is undefined after these transitions.
