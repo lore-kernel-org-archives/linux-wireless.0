@@ -2,33 +2,29 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D4FEC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68836C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:10:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E551F61076
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:09:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52D7361002
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:10:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231126AbhJRIMJ (ORCPT
+        id S230525AbhJRIML (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 04:12:09 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:51780 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230525AbhJRIMJ (ORCPT
+        Mon, 18 Oct 2021 04:12:11 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:55388 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231131AbhJRIMK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 04:12:09 -0400
-X-UUID: 74a68fb476254d3d9bf6b1cb2f333255-20211018
-X-UUID: 74a68fb476254d3d9bf6b1cb2f333255-20211018
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        Mon, 18 Oct 2021 04:12:10 -0400
+X-UUID: da5fd4d0c752489aa5bc25de18efd080-20211018
+X-UUID: da5fd4d0c752489aa5bc25de18efd080-20211018
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 559937839; Mon, 18 Oct 2021 16:09:56 +0800
-Received: from mtkexhb02.mediatek.inc (172.21.101.103) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Mon, 18 Oct 2021 16:09:55 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by mtkexhb02.mediatek.inc
- (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 18 Oct
- 2021 16:09:54 +0800
+        with ESMTP id 1310573939; Mon, 18 Oct 2021 16:09:56 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 18 Oct 2021 16:09:54 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
  Transport; Mon, 18 Oct 2021 16:09:54 +0800
@@ -37,12 +33,12 @@ To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Ryder Lee <ryder.lee@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v3 2/4] mt76: mt7915: rework mt7915_mcu_sta_muru_tlv()
-Date:   Mon, 18 Oct 2021 16:09:39 +0800
-Message-ID: <20211018080941.11443-2-shayne.chen@mediatek.com>
+Subject: [PATCH v3 4/4] mt76: mt7915: change max rx len limit of hw modules
+Date:   Mon, 18 Oct 2021 16:09:41 +0800
+Message-ID: <20211018080941.11443-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20211018080941.11443-1-shayne.chen@mediatek.com>
 References: <20211018080941.11443-1-shayne.chen@mediatek.com>
@@ -53,91 +49,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Re-order and modify conditions for MU DL/UL and ofdma DL fields, and
-also clean up some unnecessary zero settings.
+Update max rx len of some hw modules, which aligns out vendor SDK.
+In normal modes, we exchange MPDU 7991 cap with peers; however, this
+won't play a part in sniffer mode.
+To prevent packets which exceed the max MPDU size from entering specific
+rx path in hw, we need to set a proper limit to filter them out.
 
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 42 +++++++++----------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 8ba60b66e4a9..4c687380120e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -1520,22 +1520,37 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 	struct sta_rec_muru *muru;
- 	struct tlv *tlv;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 274b30a58f05..b77647b4575e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -386,7 +386,7 @@ mt7915_mac_init_band(struct mt7915_dev *dev, u8 band)
+ 	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_TO_HIF);
+ 	mt76_rmw(dev, MT_MDP_BNRCFR1(band), mask, set);
  
--	if (!sta->vht_cap.vht_supported && !sta->he_cap.has_he)
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    vif->type != NL80211_IFTYPE_AP)
-+		return;
-+
-+	if (!sta->vht_cap.vht_supported)
- 		return;
- 
- 	tlv = mt7915_mcu_add_tlv(skb, STA_REC_MURU, sizeof(*muru));
- 
- 	muru = (struct sta_rec_muru *)tlv;
--	muru->cfg.ofdma_dl_en = true;
- 
--	/* A non-AP HE station must support MU beamformee */
--	muru->cfg.mimo_dl_en = (vif->type == NL80211_IFTYPE_STATION &&
--				vif->bss_conf.he_support) ||
--			       mvif->cap.he_mu_ebfer ||
-+	muru->cfg.mimo_dl_en = mvif->cap.he_mu_ebfer ||
- 			       mvif->cap.vht_mu_ebfer ||
- 			       mvif->cap.vht_mu_ebfee;
-+
-+	muru->mimo_dl.vht_mu_bfee =
-+		!!(sta->vht_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+
-+	if (!sta->he_cap.has_he)
-+		return;
-+
-+	muru->mimo_dl.partial_bw_dl_mimo =
-+		HE_PHY(CAP6_PARTIAL_BANDWIDTH_DL_MUMIMO, elem->phy_cap_info[6]);
-+
- 	muru->cfg.mimo_ul_en = true;
-+	muru->mimo_ul.full_ul_mimo =
-+		HE_PHY(CAP2_UL_MU_FULL_MU_MIMO, elem->phy_cap_info[2]);
-+	muru->mimo_ul.partial_ul_mimo =
-+		HE_PHY(CAP2_UL_MU_PARTIAL_MU_MIMO, elem->phy_cap_info[2]);
- 
-+	muru->cfg.ofdma_dl_en = true;
- 	muru->ofdma_dl.punc_pream_rx =
- 		HE_PHY(CAP1_PREAMBLE_PUNC_RX_MASK, elem->phy_cap_info[1]);
- 	muru->ofdma_dl.he_20m_in_40m_2g =
-@@ -1544,9 +1559,6 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 		HE_PHY(CAP8_20MHZ_IN_160MHZ_HE_PPDU, elem->phy_cap_info[8]);
- 	muru->ofdma_dl.he_80m_in_160m =
- 		HE_PHY(CAP8_80MHZ_IN_160MHZ_HE_PPDU, elem->phy_cap_info[8]);
--	muru->ofdma_dl.lt16_sigb = 0;
--	muru->ofdma_dl.rx_su_comp_sigb = 0;
--	muru->ofdma_dl.rx_su_non_comp_sigb = 0;
- 
- 	muru->ofdma_ul.t_frame_dur =
- 		HE_MAC(CAP1_TF_MAC_PAD_DUR_MASK, elem->mac_cap_info[1]);
-@@ -1554,18 +1566,6 @@ mt7915_mcu_sta_muru_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
- 		HE_MAC(CAP2_MU_CASCADING, elem->mac_cap_info[2]);
- 	muru->ofdma_ul.uo_ra =
- 		HE_MAC(CAP3_OFDMA_RA, elem->mac_cap_info[3]);
--	muru->ofdma_ul.he_2x996_tone = 0;
--	muru->ofdma_ul.rx_t_frame_11ac = 0;
--
--	muru->mimo_dl.vht_mu_bfee =
--		!!(sta->vht_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
--	muru->mimo_dl.partial_bw_dl_mimo =
--		HE_PHY(CAP6_PARTIAL_BANDWIDTH_DL_MUMIMO, elem->phy_cap_info[6]);
--
--	muru->mimo_ul.full_ul_mimo =
--		HE_PHY(CAP2_UL_MU_FULL_MU_MIMO, elem->phy_cap_info[2]);
--	muru->mimo_ul.partial_ul_mimo =
--		HE_PHY(CAP2_UL_MU_PARTIAL_MU_MIMO, elem->phy_cap_info[2]);
+-	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_MAX_RX_LEN, 1536);
++	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_MAX_RX_LEN, 0x680);
+ 	/* disable rx rate report by default due to hw issues */
+ 	mt76_clear(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN);
  }
+@@ -395,7 +395,7 @@ static void mt7915_mac_init(struct mt7915_dev *dev)
+ {
+ 	int i;
  
- static void
+-	mt76_rmw_field(dev, MT_MDP_DCR1, MT_MDP_DCR1_MAX_RX_LEN, 1536);
++	mt76_rmw_field(dev, MT_MDP_DCR1, MT_MDP_DCR1_MAX_RX_LEN, 0x400);
+ 	/* enable hardware de-agg */
+ 	mt76_set(dev, MT_MDP_DCR0, MT_MDP_DCR0_DAMSDU_EN);
+ 
 -- 
 2.29.2
 
