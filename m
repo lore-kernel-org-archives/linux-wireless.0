@@ -2,26 +2,26 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1321BC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 497F4C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:08:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F046061050
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3264261050
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 08:08:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231240AbhJRIKf (ORCPT
+        id S231251AbhJRIKg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 04:10:35 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:52590 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231176AbhJRIKe (ORCPT
+        Mon, 18 Oct 2021 04:10:36 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:49422 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230392AbhJRIKf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 04:10:34 -0400
-X-UUID: 82bf0eeca859416ca27f854630b4d340-20211018
-X-UUID: 82bf0eeca859416ca27f854630b4d340-20211018
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        Mon, 18 Oct 2021 04:10:35 -0400
+X-UUID: 2a059aff2da1453a9b5617dc794183fd-20211018
+X-UUID: 2a059aff2da1453a9b5617dc794183fd-20211018
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1026044695; Mon, 18 Oct 2021 16:08:19 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1078444345; Mon, 18 Oct 2021 16:08:21 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
  mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Mon, 18 Oct 2021 16:08:19 +0800
@@ -36,9 +36,9 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v7 4/8] mt76: mt7915: fix sta_rec_wtbl tag len
-Date:   Mon, 18 Oct 2021 16:07:02 +0800
-Message-ID: <20211018080706.11401-4-shayne.chen@mediatek.com>
+Subject: [PATCH v7 6/8] mt76: mt7915: fix muar_idx in mt7915_mcu_alloc_sta_req()
+Date:   Mon, 18 Oct 2021 16:07:04 +0800
+Message-ID: <20211018080706.11401-6-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20211018080706.11401-1-shayne.chen@mediatek.com>
 References: <20211018080706.11401-1-shayne.chen@mediatek.com>
@@ -49,8 +49,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix tag len error for sta_rec_wtbl, which causes fw parsing error for
-the tags placed behind it.
+For broadcast/multicast wcid, the muar_idx should be 0xe.
 
 Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
@@ -61,18 +60,18 @@ v6: remove line break of fix tag
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index d65d428e6845..4e4906d9d374 100644
+index 4e48c06bd467..f32e124b1a0f 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -622,7 +622,7 @@ mt7915_mcu_alloc_wtbl_req(struct mt7915_dev *dev, struct mt7915_sta *msta,
- 	}
- 
- 	if (sta_hdr)
--		sta_hdr->len = cpu_to_le16(sizeof(hdr));
-+		le16_add_cpu(&sta_hdr->len, sizeof(hdr));
- 
- 	return skb_put_data(nskb, &hdr, sizeof(hdr));
- }
+@@ -586,7 +586,7 @@ mt7915_mcu_alloc_sta_req(struct mt7915_dev *dev, struct mt7915_vif *mvif,
+ 		.bss_idx = mvif->idx,
+ 		.wlan_idx_lo = msta ? to_wcid_lo(msta->wcid.idx) : 0,
+ 		.wlan_idx_hi = msta ? to_wcid_hi(msta->wcid.idx) : 0,
+-		.muar_idx = msta ? mvif->omac_idx : 0,
++		.muar_idx = msta && msta->wcid.sta ? mvif->omac_idx : 0xe,
+ 		.is_tlv_append = 1,
+ 	};
+ 	struct sk_buff *skb;
 -- 
 2.29.2
 
