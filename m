@@ -2,105 +2,122 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BA49C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4772C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 13:10:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23D4F60E76
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 969346103C
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 13:10:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230399AbhJRMtv (ORCPT
+        id S231741AbhJRNM7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 08:49:51 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:44022 "EHLO m43-7.mailgun.net"
+        Mon, 18 Oct 2021 09:12:59 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:32303 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229519AbhJRMtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 08:49:50 -0400
+        id S229519AbhJRNM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Oct 2021 09:12:59 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1634561259; h=Date: Message-ID: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=0j+IfNmIKl8RYC/I1HBAehhfSRQaJld1SDjqTOGGquk=;
- b=nXHU3POU1c+rYuD7dO6Zn/tv0Ff1/YHgS8FgBApud2NyGIjAelln+c9T1sj08Ii5nneJT+QS
- c0E0RNcxSQ8lbmVUQbwiwo6YA9TTT/eZJy385gcDEClPkqR6NNMIoqc6lchAw6rs15scTQl+
- rdhMLWfIxivYscNK4qd8zLefmSk=
+ s=smtp; t=1634562648; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=2iZh5xPrIPUDbVFXGh7W2cb2/hGVEE7gEkCaxI5tQ2Y=; b=hS0uANKZd4oOmh+Y5BBJF6ajbSr55BRRE7Fr+Ts5qqjShvRa07xCCvuICypnpVJS0Ax2hoSY
+ dVgkIy7ETwf3DJjrucHt2waCyeZxZy74Ynn66G++wmrha2H+PLvHpkM4zOYg3Rk9r36LkSJ3
+ drnukEVCAnkP19jCd0qQ70+RI80=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 616d6ceaab9da96e64ed0d8f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Oct 2021 12:47:38
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 616d72490605239689a079b0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Oct 2021 13:10:33
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DB14BC43460; Mon, 18 Oct 2021 12:47:37 +0000 (UTC)
-Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        id AAA0BC4361C; Mon, 18 Oct 2021 13:10:32 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 89CC0C4338F;
-        Mon, 18 Oct 2021 12:47:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 89CC0C4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D04D4C4338F;
+        Mon, 18 Oct 2021 13:10:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D04D4C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wcn36xx: Fix tx_status mechanism
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1634560260-15056-1-git-send-email-loic.poulain@linaro.org>
-References: <1634560260-15056-1-git-send-email-loic.poulain@linaro.org>
-To:     Loic Poulain <loic.poulain@linaro.org>
-Cc:     linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        bryan.odonoghue@linaro.org, Loic Poulain <loic.poulain@linaro.org>,
-        stable@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163456125238.11105.17236254354491324059.kvalo@codeaurora.org>
-Date:   Mon, 18 Oct 2021 12:47:37 +0000 (UTC)
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Alagu Sankar <alagusankar@silex-india.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Wen Gong <wgong@codeaurora.org>,
+        Tamizh Chelvam <tamizhr@codeaurora.org>,
+        Carl Huang <cjhuang@codeaurora.org>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        Ben Greear <greearb@candelatech.com>,
+        Erik Stromdahl <erik.stromdahl@gmail.com>,
+        Fabio Estevam <festevam@denx.de>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath10k: fix invalid dma_addr_t token assignment
+References: <20211014075153.3655910-1-arnd@kernel.org>
+Date:   Mon, 18 Oct 2021 16:10:21 +0300
+In-Reply-To: <20211014075153.3655910-1-arnd@kernel.org> (Arnd Bergmann's
+        message of "Thu, 14 Oct 2021 09:51:15 +0200")
+Message-ID: <87fssytr5u.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Loic Poulain <loic.poulain@linaro.org> wrote:
+Arnd Bergmann <arnd@kernel.org> writes:
 
-> This change fix the TX ack mechanism in various ways:
-> 
-> - For NO_ACK tagged packets, we don't need to way for TX_ACK indication
-> and so are not subject to the single packet ack limitation. So we don't
-> have to stop the tx queue, and can call the tx status callback as soon
-> as DMA transfer has completed.
-> 
-> - Fix skb ownership/reference. Only start status indication timeout
-> once the DMA transfer has been completed. This avoids the skb to be
-> both referenced in the DMA tx ring and by the tx_ack_skb pointer,
-> preventing any use-after-free or double-free.
-> 
-> - This adds a sanity (paranoia?) check on the skb tx ack pointer.
-> 
-> - Resume TX queue if TX status tagged packet TX fails.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: fdf21cc37149 ("wcn36xx: Add TX ack support")
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> Using a kernel pointer in place of a dma_addr_t token can
+> lead to undefined behavior if that makes it into cache
+> management functions. The compiler caught one such attempt
+> in a cast:
+>
+> drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_add_interface':
+> drivers/net/wireless/ath/ath10k/mac.c:5586:47: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]
+>  5586 |                         arvif->beacon_paddr = (dma_addr_t)arvif->beacon_buf;
+>       |                                               ^
+>
+> Looking through how this gets used down the way, I'm fairly
+> sure that beacon_paddr is never accessed again for ATH10K_DEV_TYPE_HL
+> devices, and if it was accessed, that would be a bug.
 
-Fails to build:
+That's my understanding as well. beacon_paddr is only accessed in
+ath10k_wmi_event_host_swba() and only low latency (ATH10K_DEV_TYPE_LL)
+should use that function.
 
-drivers/net/wireless/ath/wcn36xx/txrx.c: In function 'wcn36xx_start_tx':
-drivers/net/wireless/ath/wcn36xx/txrx.c:611:23: error: unused variable 'flags' [-Werror=unused-variable]
-  611 |         unsigned long flags;
-      |                       ^~~~~
-cc1: all warnings being treated as errors
-make[5]: *** [scripts/Makefile.build:277: drivers/net/wireless/ath/wcn36xx/txrx.o] Error 1
-make[5]: *** Waiting for unfinished jobs....
-make[4]: *** [scripts/Makefile.build:540: drivers/net/wireless/ath/wcn36xx] Error 2
-make[3]: *** [scripts/Makefile.build:540: drivers/net/wireless/ath] Error 2
-make[2]: *** [scripts/Makefile.build:540: drivers/net/wireless] Error 2
-make[1]: *** [scripts/Makefile.build:540: drivers/net] Error 2
-make: *** [Makefile:1874: drivers] Error 2
+> Change the assignment to use a known-invalid address token
+> instead, which avoids the warning and makes it easier to catch
+> bugs if it does end up getting used.
+>
+> Fixes: e263bdab9c0e ("ath10k: high latency fixes for beacon buffer")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 7ca68c81d9b6..c0e78eaa65f8 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -5583,7 +5583,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>  		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
+>  			arvif->beacon_buf = kmalloc(IEEE80211_MAX_FRAME_LEN,
+>  						    GFP_KERNEL);
+> -			arvif->beacon_paddr = (dma_addr_t)arvif->beacon_buf;
+> +			arvif->beacon_paddr = DMA_MAPPING_ERROR;
 
-Patch set to Changes Requested.
+In the pending branch I added a comment here:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=02a383c9bf959147a95c4efeaa4edf35c4450fac
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1634560260-15056-1-git-send-email-loic.poulain@linaro.org/
+https://patchwork.kernel.org/project/linux-wireless/list/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
