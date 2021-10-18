@@ -2,123 +2,145 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE7A1C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 22:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDA4C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B91C4611C6
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 22:49:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0377360FDA
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 23:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230070AbhJRWwB (ORCPT
+        id S233210AbhJRXPM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 18:52:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50404 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbhJRWwB (ORCPT
+        Mon, 18 Oct 2021 19:15:12 -0400
+Received: from mailgw02.mediatek.com ([216.200.240.185]:49105 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229627AbhJRXPL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 18:52:01 -0400
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2661AC06161C
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 15:49:49 -0700 (PDT)
-Received: by mail-wm1-x32c.google.com with SMTP id 63-20020a1c0042000000b0030d60716239so671856wma.4
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 15:49:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=08L6ahPiPVZBAM0Pb517B8J7QZf0zGeMvYDZn3F0mnI=;
-        b=RAu154yvG9m47SvUAmcGVpcJ1apJ8MzOFMvrNBpyVpDNSecWbaTSkgoQE5kefMmOhq
-         OzUyvr9XzccJ2FPkY8/SG9M9S1Xi8mcgLHXmXzYT2tdT81oy+VBc4kEvcTKObNRPj2NO
-         qRScTAqBjVp6OVuIxwGG5aYswXNz0ktOHpzDSDaru153LVgaYUMTQGLlwe/5la+sZcA5
-         E5VzqDWUroX1iFAMO9098vAHr1wXixQdfbFOyACHHtYB7JOiy3Rp98aJ36tLkkzHnWJ/
-         2r1FGvKKcxAtlgj1guE9eh9aMTYzFtIncSR+wmJWEbtZXF+3aprlhUPwCGto9+rad/Te
-         8MzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=08L6ahPiPVZBAM0Pb517B8J7QZf0zGeMvYDZn3F0mnI=;
-        b=VznnYCPcU2DHlcqRnv/0PCVfCSmRY1V5JLD/sKYVjDfo2Lu3y74v2gRjuv9fDs9Thc
-         znitebnVbWPdMdotANbctRiCCufOWT70+XMNFT5fnKJ2adD8nzxWFFDL3+rwIDEN3ekM
-         5yN4SPbcckFOpzCZ+kmBUBxKuFpkctXAPM3hCAGpQP/nciXOx8Tcgm+Tu0FYFjTsLAUl
-         yx7keRg5GP/RGU/qQulg/6IBVJwNOz2OaHY8VE3k/YiG9Q/CcpxcBFxmf8Eyt3o9CTvZ
-         OwBBJeukraiBNO7KNPw9wHQ3zHh0Cz26kI6kwPcuv1BLQD8IJGmk480vYfXKL8YNw2bt
-         4Tow==
-X-Gm-Message-State: AOAM532wvcT+aD1dT1UBfzxO1UhiCD99gv9AH6FQMVaJMt+fXhuXZDzr
-        cyAFNdVRVmkQM+UoGKvRZPUTHUUo5AObwg==
-X-Google-Smtp-Source: ABdhPJw6Ewo1IAD0gqAqjJ5hrAfqff08LwucDdK6hJYILy11Uq0z1BnBpOOCzOVCgHrK/L3RE2OVHQ==
-X-Received: by 2002:a7b:cb10:: with SMTP id u16mr1895230wmj.65.1634597387672;
-        Mon, 18 Oct 2021 15:49:47 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id n68sm636275wmn.13.2021.10.18.15.49.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Oct 2021 15:49:46 -0700 (PDT)
-Message-ID: <d37b9978-7b0f-69ae-9c2f-693baec8bb2b@linaro.org>
-Date:   Mon, 18 Oct 2021 23:51:47 +0100
+        Mon, 18 Oct 2021 19:15:11 -0400
+X-UUID: eb493c82ff084e0fb88e997fbd64c324-20211018
+X-UUID: eb493c82ff084e0fb88e997fbd64c324-20211018
+Received: from mtkcas66.mediatek.inc [(172.29.193.44)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (musrelay.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1160000967; Mon, 18 Oct 2021 16:12:52 -0700
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ MTKMBS62N1.mediatek.inc (172.29.193.41) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 18 Oct 2021 16:11:59 -0700
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 19 Oct 2021 07:11:58 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
+        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <Stella.Chang@mediatek.com>, <Tom.Chou@mediatek.com>,
+        <steve.lee@mediatek.com>, <jsiuda@google.com>,
+        <frankgor@google.com>, <jemele@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v5 02/17] mt76: mt7921: refactor dma.c to be pcie specific
+Date:   Tue, 19 Oct 2021 07:11:32 +0800
+Message-ID: <57caf70a339b49fa8336ecfb4a8dd33d864cb593.1634598341.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <cover.1634598341.git.objelf@gmail.com>
+References: <cover.1634598341.git.objelf@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.1
-Subject: Re: [PATCH 2/2] wcn36xx: Enable hardware scan offload for 5Ghz band
-Content-Language: en-US
-To:     Loic Poulain <loic.poulain@linaro.org>, kvalo@codeaurora.org
-Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <1634554678-7993-1-git-send-email-loic.poulain@linaro.org>
- <1634554678-7993-2-git-send-email-loic.poulain@linaro.org>
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-In-Reply-To: <1634554678-7993-2-git-send-email-loic.poulain@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 18/10/2021 11:57, Loic Poulain wrote:
-> Until now, offload scanning for 5Ghz channels was considered broken.
-> However it was mostly a driver issue, caused by bad reporting of the
-> beacons/probe-resp bands and frequencies, which has been fixed.
-> 
-> We can now allow offload scan for 5GHz band, this reduces the scanning
-> time comparing to software driven scanning.
-> 
-> Note that offloaded scan is limited to 48 channels, check for this.
-> 
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-> ---
->   drivers/net/wireless/ath/wcn36xx/main.c | 12 ++++++------
->   1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index 263af65..2ac8efa 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -659,19 +659,19 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
->   			   struct ieee80211_scan_request *hw_req)
->   {
->   	struct wcn36xx *wcn = hw->priv;
-> -	int i;
->   
->   	if (!get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
->   		/* fallback to mac80211 software scan */
->   		return 1;
->   	}
->   
-> -	/* For unknown reason, the hardware offloaded scan only works with
-> -	 * 2.4Ghz channels, fallback to software scan in other cases.
-> +	/* Firmware scan offload is limited to 48 channels, fallback to
-> +	 * software driven scanning otherwise.
->   	 */
-> -	for (i = 0; i < hw_req->req.n_channels; i++) {
-> -		if (hw_req->req.channels[i]->band != NL80211_BAND_2GHZ)
-> -			return 1;
-> +	if (hw_req->req.n_channels > 48) {
-> +		wcn36xx_warn("Offload scan aborted, n_channels=%u",
-> +			     hw_req->req.n_channels);
-> +		return 1;
->   	}
->   
->   	mutex_lock(&wcn->scan_lock);
-> 
+From: Sean Wang <sean.wang@mediatek.com>
 
-Really sweet fix, good job
+This is a preliminary patch to introduce mt7921s support.
 
-Tested-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+make dma.c be used dedicately for mt7921e.
+
+by moving out mt7921_tx_cleanup from dma.c to mcu.c and then renaming
+mt7921_tx_cleanup to refect the exact thing the function actually does.
+
+Finally, dma.c totally become pcie specific one, only needed to
+be compiled only when CONFIG_MT7921E is enabled.
+
+Tested-by: Deren Wu <deren.wu@mediatek.com>
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/dma.c    | 8 +-------
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c    | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h | 7 ++++++-
+ 3 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+index 802e40e42040..d3e2036a1974 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+@@ -19,12 +19,6 @@ int mt7921_init_tx_queues(struct mt7921_phy *phy, int idx, int n_desc)
+ 	return 0;
+ }
+ 
+-void mt7921_tx_cleanup(struct mt7921_dev *dev)
+-{
+-	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
+-	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WA], false);
+-}
+-
+ static int mt7921_poll_tx(struct napi_struct *napi, int budget)
+ {
+ 	struct mt7921_dev *dev;
+@@ -37,7 +31,7 @@ static int mt7921_poll_tx(struct napi_struct *napi, int budget)
+ 		return 0;
+ 	}
+ 
+-	mt7921_tx_cleanup(dev);
++	mt7921_mcu_tx_cleanup(dev);
+ 	if (napi_complete(napi))
+ 		mt7921_irq_enable(dev, MT_INT_TX_DONE_ALL);
+ 	mt76_connac_pm_unref(&dev->mphy, &dev->pm);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 0857d523bb06..eb27d8ab4a8b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -1386,7 +1386,7 @@ void mt7921_pm_wake_work(struct work_struct *work)
+ 		mt76_for_each_q_rx(&dev->mt76, i)
+ 			napi_schedule(&dev->mt76.napi[i]);
+ 		mt76_connac_pm_dequeue_skbs(mphy, &dev->pm);
+-		mt7921_tx_cleanup(dev);
++		mt7921_mcu_tx_cleanup(dev);
+ 		if (test_bit(MT76_STATE_RUNNING, &mphy->state))
+ 			ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
+ 						     MT7921_WATCHDOG_TIME);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 70c0f41180a1..a6c3661b2bdd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -316,6 +316,12 @@ static inline bool mt7921_dma_need_reinit(struct mt7921_dev *dev)
+ 	return !mt76_get_field(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
+ }
+ 
++static inline void mt7921_mcu_tx_cleanup(struct mt7921_dev *dev)
++{
++	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WM], false);
++	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WA], false);
++}
++
+ int mt7921_mac_init(struct mt7921_dev *dev);
+ bool mt7921_mac_wtbl_update(struct mt7921_dev *dev, int idx, u32 mask);
+ void mt7921_mac_reset_counters(struct mt7921_phy *phy);
+@@ -330,7 +336,6 @@ void mt7921_mac_work(struct work_struct *work);
+ void mt7921_mac_reset_work(struct work_struct *work);
+ void mt7921_mac_update_mib_stats(struct mt7921_phy *phy);
+ void mt7921_reset(struct mt76_dev *mdev);
+-void mt7921_tx_cleanup(struct mt7921_dev *dev);
+ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			   enum mt76_txq_id qid, struct mt76_wcid *wcid,
+ 			   struct ieee80211_sta *sta,
+-- 
+2.25.1
+
