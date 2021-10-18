@@ -2,86 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCCDC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:31:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76752C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:34:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3AFB60FC3
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 577F760FC3
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 12:34:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230526AbhJRMeI (ORCPT
+        id S231310AbhJRMg3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 08:34:08 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:21445 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231301AbhJRMeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 08:34:06 -0400
+        Mon, 18 Oct 2021 08:36:29 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:44620 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231217AbhJRMg2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Oct 2021 08:36:28 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1634560315; h=Date: Message-ID: Cc: To: References:
+ s=smtp; t=1634560457; h=Date: Message-ID: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=JR9U6T89OgvtMGdfLytY6B9PP5hNdlPtQz41jb6E9Zc=;
- b=lcnW+To4/8HzTEyjku2g49NHAUY4FotQ54zZZYcvUes/DXtDIeBg7nSa0V4EHd2P42P7QL88
- Cg5MDHLeDU0+FHQJvhajVn1A+eezbtugQJzvGIqvOsZu0g+0kONMppYmgko87M6Af+xD3sJg
- Q4RA0Y0mL2uqG+PnqWpYEbnGJ6c=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ Content-Type: Sender; bh=78huWSW48dpLsjExYLT1rNtU/f7bhv2g8eGApbb/7BE=;
+ b=XEFYweGaPkn7RKZaf20SSq+/xOsL88qfCCOwhkRAt9X5PWMaB2ykRqytGFe+avJXdCPpkaBl
+ +wYAmC2dUYMde85YkNq8YPI0r+guePE+owB1G5mhaRM6GDD5GJiYrDvrkN8EiI7bnGabq5wf
+ YuEeMnX6UiviZIsYDCVE6JzXyaY=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 616d6933f3e5b80f1f0ed6d3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Oct 2021 12:31:47
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 616d69ba30ce13d2b4b16ea0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 18 Oct 2021 12:34:02
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 70F44C43460; Mon, 18 Oct 2021 12:31:47 +0000 (UTC)
+        id BA6BDC4360C; Mon, 18 Oct 2021 12:34:02 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 055FCC4338F;
-        Mon, 18 Oct 2021 12:31:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 055FCC4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B8F3FC4338F;
+        Mon, 18 Oct 2021 12:33:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org B8F3FC4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] rtw89: Remove redundant check of ret after call to
- rtw89_mac_enable_bb_rf
+Subject: Re: [PATCH] wireless: ath5k: replace snprintf in show functions with
+ sysfs_emit
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20211015152113.33179-1-colin.king@canonical.com>
-References: <20211015152113.33179-1-colin.king@canonical.com>
-To:     Colin King <colin.king@canonical.com>
-Cc:     "David S . Miller" <davem@davemloft.net>,
+In-Reply-To: <1634095651-4273-1-git-send-email-wangqing@vivo.com>
+References: <1634095651-4273-1-git-send-email-wangqing@vivo.com>
+To:     Qing Wang <wangqing@vivo.com>
+Cc:     Jiri Slaby <jirislaby@kernel.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+        linux-kernel@vger.kernel.org, Qing Wang <wangqing@vivo.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163456030329.5790.17899781504247161319.kvalo@codeaurora.org>
-Date:   Mon, 18 Oct 2021 12:31:47 +0000 (UTC)
+Message-ID: <163456043468.24652.4752103758451442171.kvalo@codeaurora.org>
+Date:   Mon, 18 Oct 2021 12:34:02 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin King <colin.king@canonical.com> wrote:
+Qing Wang <wangqing@vivo.com> wrote:
 
-> From: Colin Ian King <colin.king@canonical.com>
+> coccicheck complains about the use of snprintf() in sysfs show functions.
 > 
-> The function rtw89_mac_enable_bb_rf is a void return type, so there is
-> no return error code to ret, so the following check for an error in ret
-> is redundant dead code and can be removed.
+> Fix the coccicheck warning:
+> WARNING: use scnprintf or sprintf.
 > 
-> Addresses-Coverity: ("Logically dead code")
-> Fixes: e3ec7017f6a2 ("rtw89: add Realtek 802.11ax driver")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+> 
+> Signed-off-by: Qing Wang <wangqing@vivo.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-f7e7e440550b rtw89: Remove redundant check of ret after call to rtw89_mac_enable_bb_rf
+65b4b8aa0f59 ath5k: replace snprintf in show functions with sysfs_emit
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211015152113.33179-1-colin.king@canonical.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/1634095651-4273-1-git-send-email-wangqing@vivo.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
