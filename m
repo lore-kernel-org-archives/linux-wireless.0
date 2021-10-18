@@ -2,130 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28756C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 03:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 277C1C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 06:39:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E56860174
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 03:39:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B38D60E90
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 06:39:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232102AbhJRDlb convert rfc822-to-8bit (ORCPT
+        id S230268AbhJRGl2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 17 Oct 2021 23:41:31 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:60499 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231916AbhJRDl3 (ORCPT
+        Mon, 18 Oct 2021 02:41:28 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:29903 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229533AbhJRGl1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Oct 2021 23:41:29 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 19I3d4sN5024726, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 19I3d4sN5024726
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 18 Oct 2021 11:39:04 +0800
-Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
- RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+        Mon, 18 Oct 2021 02:41:27 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4HXnD26P8xzbn55;
+        Mon, 18 Oct 2021 14:34:42 +0800 (CST)
+Received: from kwepemm600001.china.huawei.com (7.193.23.3) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.14; Mon, 18 Oct 2021 11:39:04 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.14; Mon, 18 Oct 2021 11:39:03 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098]) by
- RTEXMBS04.realtek.com.tw ([fe80::cdd5:82a3:e854:7098%5]) with mapi id
- 15.01.2106.013; Mon, 18 Oct 2021 11:39:03 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Yang Yingliang <yangyingliang@huawei.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     "kuba@kernel.org" <kuba@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-Subject: RE: [PATCH net-next] rtw89: fix return value check in rtw89_cam_send_sec_key_cmd()
-Thread-Topic: [PATCH net-next] rtw89: fix return value check in
- rtw89_cam_send_sec_key_cmd()
-Thread-Index: AQHXw8+LjeR4qgI7Tkacveo1F2lD6avYG4wg
-Date:   Mon, 18 Oct 2021 03:39:03 +0000
-Message-ID: <a4b733db61544d7a9fd0134cfe02fb44@realtek.com>
-References: <20211018033102.1813058-1-yangyingliang@huawei.com>
-In-Reply-To: <20211018033102.1813058-1-yangyingliang@huawei.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXDAG02.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2021/10/18_=3F=3F_12:04:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ 15.1.2308.15; Mon, 18 Oct 2021 14:39:14 +0800
+Received: from huawei.com (10.175.104.82) by kwepemm600001.china.huawei.com
+ (7.193.23.3) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.15; Mon, 18 Oct
+ 2021 14:39:12 +0800
+From:   Wang Hai <wanghai38@huawei.com>
+To:     <kvalo@codeaurora.org>, <davem@davemloft.net>, <kuba@kernel.org>,
+        <shenyang39@huawei.com>, <marcelo@kvack.org>,
+        <linville@tuxdriver.com>, <luisca@cozybit.com>
+CC:     <libertas-dev@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH net] mwifiex: Fix possible memleak in probe and disconnect
+Date:   Mon, 18 Oct 2021 14:38:18 +0800
+Message-ID: <20211018063818.1895774-1-wanghai38@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/18/2021 03:26:20
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 166777 [Oct 17 2021]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
-X-KSE-AntiSpam-Info: LuaCore: 463 463 5854868460de3f0d8e8c0a4df98aeb05fb764a09
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;realtek.com:7.1.1
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/18/2021 03:28:00
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.104.82]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemm600001.china.huawei.com (7.193.23.3)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+I got memory leak as follows when doing fault injection test:
 
-> -----Original Message-----
-> From: Yang Yingliang <yangyingliang@huawei.com>
-> Sent: Monday, October 18, 2021 11:31 AM
-> To: linux-kernel@vger.kernel.org; netdev@vger.kernel.org; linux-wireless@vger.kernel.org
-> Cc: Pkshih <pkshih@realtek.com>; kuba@kernel.org; davem@davemloft.net; kvalo@codeaurora.org
-> Subject: [PATCH net-next] rtw89: fix return value check in rtw89_cam_send_sec_key_cmd()
-> 
-> Fix the return value check which testing the wrong variable
-> in rtw89_cam_send_sec_key_cmd().
-> 
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Fixes: e3ec7017f6a2 ("rtw89: add Realtek 802.11ax driver")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+unreferenced object 0xffff888031c2f000 (size 512):
+  comm "kworker/0:2", pid 165, jiffies 4294922253 (age 391.180s)
+  hex dump (first 32 bytes):
+    00 20 f7 08 80 88 ff ff 01 00 00 00 00 00 00 00  . ..............
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000537bdb86>] kmem_cache_alloc_trace+0x16d/0x360
+    [<0000000047666fab>] if_usb_probe+0x90/0x96e [usb8xxx]
+    [<00000000de44b4f0>] usb_probe_interface+0x31b/0x800 [usbcore]
+    [<000000009b1a1951>] really_probe+0x299/0xc30
+    [<0000000055b8ffce>] __driver_probe_device+0x357/0x500
+    [<00000000bb0c7161>] driver_probe_device+0x4e/0x140
+    [<00000000866d1730>] __device_attach_driver+0x257/0x340
+    [<0000000084e79b96>] bus_for_each_drv+0x166/0x1e0
+    [<000000009bad60ea>] __device_attach+0x272/0x420
+    [<00000000236b97c1>] bus_probe_device+0x1eb/0x2a0
+    [<000000008d77d7cf>] device_add+0xbf0/0x1cd0
+    [<000000004af6a3f0>] usb_set_configuration+0x10fb/0x18d0 [usbcore]
+    [<000000002ebdfdcd>] usb_generic_driver_probe+0xa2/0xe0 [usbcore]
+    [<00000000444f344d>] usb_probe_device+0xe4/0x2b0 [usbcore]
+    [<000000009b1a1951>] really_probe+0x299/0xc30
+    [<0000000055b8ffce>] __driver_probe_device+0x357/0x500
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+cardp is missing being freed in the error handling path of the probe
+and the path of the disconnect, which will cause kmemleak.
 
-> ---
->  drivers/net/wireless/realtek/rtw89/cam.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw89/cam.c
-> b/drivers/net/wireless/realtek/rtw89/cam.c
-> index c1e8c76c6aca..ad7a8155dbed 100644
-> --- a/drivers/net/wireless/realtek/rtw89/cam.c
-> +++ b/drivers/net/wireless/realtek/rtw89/cam.c
-> @@ -77,7 +77,7 @@ static int rtw89_cam_send_sec_key_cmd(struct rtw89_dev *rtwdev,
->  		return 0;
-> 
->  	ext_skb = rtw89_cam_get_sec_key_cmd(rtwdev, sec_cam, true);
-> -	if (!skb) {
-> +	if (!ext_skb) {
->  		rtw89_err(rtwdev, "failed to get ext sec key command\n");
->  		return -ENOMEM;
->  	}
-> --
-> 2.25.1
-> 
-> ------Please consider the environment before printing this e-mail.
+This patch adds the missing free().
+
+Fixes: 876c9d3aeb98 ("[PATCH] Marvell Libertas 8388 802.11b/g USB driver")
+Fixes: c305a19a0d0a ("libertas_tf: usb specific functions")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wang Hai <wanghai38@huawei.com>
+---
+ drivers/net/wireless/marvell/libertas/if_usb.c    | 2 ++
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index 20436a289d5c..5d6dc1dd050d 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -292,6 +292,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if_usb_reset_device(cardp);
+ dealloc:
+ 	if_usb_free(cardp);
++	kfree(cardp);
+ 
+ error:
+ 	return r;
+@@ -316,6 +317,7 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 
+ 	/* Unlink and free urb */
+ 	if_usb_free(cardp);
++	kfree(cardp);
+ 
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(intf));
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index fe0a69e804d8..75b5319d033f 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -230,6 +230,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 
+ dealloc:
+ 	if_usb_free(cardp);
++	kfree(cardp);
+ error:
+ lbtf_deb_leave(LBTF_DEB_MAIN);
+ 	return -ENOMEM;
+@@ -254,6 +255,7 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 
+ 	/* Unlink and free urb */
+ 	if_usb_free(cardp);
++	kfree(cardp);
+ 
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(intf));
+-- 
+2.25.1
+
