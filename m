@@ -2,103 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5623AC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 21:04:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3B75C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 21:44:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2356103D
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 21:04:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B72876112D
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Oct 2021 21:44:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229555AbhJRVGu (ORCPT
+        id S232495AbhJRVqi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Oct 2021 17:06:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57690 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229529AbhJRVGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Oct 2021 17:06:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 52C9560FC3;
-        Mon, 18 Oct 2021 21:04:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634591078;
-        bh=VNh+iLTefjYB1dJLM3/f3OT4eYSLkDnSvr5ru6WGQ1I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FtxJeqFTHZ/ZM69DYb3iT0XfAc62YXmpvfVCVmX0tPMmpm469lNJC5uxzezknFjou
-         hjTKjYRFepfW9HCN7MjCMOM1SC7AsfV+vxxa9eRTHf5ko9+Y9FlJ8M6TcarwxonWMg
-         jr/suTyGpHfn7weQEI7BLYKZ3GgP68twwUaUR9ZnO/lUG7HM3VskTonoLvoYIvcmfz
-         9R5T+4sWelAlR6Gz9qACKZgOBhSUTETKN6/1PlNk2VtqX+1RcVf61VhTcQymObrPN1
-         R+oZYlvzhwE9KF/kfc80Tl3TdT8MtoUlXE8/5IuTaq1yb9dfXM4Z7pF4h+iip+GHr8
-         9frR1vkS1MCJQ==
-Date:   Mon, 18 Oct 2021 23:04:34 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, greearb@candelatech.com
-Subject: Re: [PATCH 00/10] mt76: ethtool stats features and fixes
-Message-ID: <YW3hYr1Q6OlOAlhb@lore-desk>
-References: <cover.1634558817.git.lorenzo@kernel.org>
+        Mon, 18 Oct 2021 17:46:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35810 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232641AbhJRVqh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Oct 2021 17:46:37 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4372FC061745
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 14:44:25 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id r10so43800094wra.12
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2021 14:44:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=wiP9cqmeNhE3SS3r7/ImXkRP5I5mctQ3JZnalKD2HjA=;
+        b=nf6FwWRGGPGgWPUsuDdikgD0xgCWW8s3jEPffWWVX18J8s12PBLlY2LXkCSTKOB1xp
+         zji7o8MXCls6mkUQfp+6mq58cSn1c/kKKw23D1IjHw1LKDimzoSNXILwqAM6MkxSZIIg
+         UKG14qw4looKKFAZhIKJFXvPxAeEJyeQuWoSL7Nse4+qDMOSuHJ9xByHII/Eg2EkVw7y
+         2rd5w7tyTBcaAbAUEGiIbjOiQTWPrCX8rT0cfvhLLMmywYMXsxLuVkJpXWEZfIryPhhK
+         8D56G+0qTA9KdcDzzfNO32pzP9gFrkXrAMKl+jDPVgffr8yS8mnEm3DpUtwkTj7Gr0tg
+         aoHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=wiP9cqmeNhE3SS3r7/ImXkRP5I5mctQ3JZnalKD2HjA=;
+        b=z46OSyPNyuKjBlgbe3ttM4ku3IZH7Z3B9DvW4XIztctvQA7Sn9jacGuJkHBg39dIb2
+         9ZQTAYlRuYwk9MuDzGvGkreQhRjo9lkNM5P99soWxCbXstLa9GZ4Fd37hYpMHSYvYXXe
+         hhcl7IfFyxNXEUdbKNGECb7VFhgG239EDW3jClXj7qZQPDGu/NMMuguS52KeMaI8x91t
+         xufNLXiKHWQd6/M1RilWAfcuCulDJQdvHA2p+e4aEHFfgIlcHbRJRBmdQIMiVobcTO3n
+         iOWCp9iVY265K+HGcvkJaiT9BcJEO+Xhx6kP4kVvo4eCWGvFaYV6KtmaoZrNIXlRtWP8
+         izJw==
+X-Gm-Message-State: AOAM5332fzhGjIqOGqM1LdZpxaBVLmKOZWHYMIF2NF44qA/XQjgSPNZD
+        mA7aTuO2L6JH+lSCyExc8VgHiH6OeLqxIw==
+X-Google-Smtp-Source: ABdhPJweINqdwDLBIYpWgleW4JBTYsGWJagJbCR9SwgW/lRVZtsZQK/0jB0Ii1reLykzOGYmqgAC2Q==
+X-Received: by 2002:a05:6000:168d:: with SMTP id y13mr38864674wrd.172.1634593463853;
+        Mon, 18 Oct 2021 14:44:23 -0700 (PDT)
+Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id m2sm557941wml.15.2021.10.18.14.44.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Oct 2021 14:44:23 -0700 (PDT)
+Message-ID: <e5ccf59d-54a9-dbaf-1711-ae370879bd9a@linaro.org>
+Date:   Mon, 18 Oct 2021 22:46:23 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="+iAae6AE78u2m0wg"
-Content-Disposition: inline
-In-Reply-To: <cover.1634558817.git.lorenzo@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.1.1
+Subject: Re: [PATCH] wcn36xx: Add chained transfer support for AMSDU
+Content-Language: en-US
+To:     Loic Poulain <loic.poulain@linaro.org>, kvalo@codeaurora.org
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1634557705-11120-1-git-send-email-loic.poulain@linaro.org>
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+In-Reply-To: <1634557705-11120-1-git-send-email-loic.poulain@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 18/10/2021 12:48, Loic Poulain wrote:
+> WCNSS RX DMA transfer support is limited to 3872 bytes, which is
+> enough for simple MPDUs (single MSDU), but not enough for cases
+> with A-MSDU (depending on max AMSDU size or max MPDU size).
+> 
+> In that case the MPDU is spread ove multiple transfers, with the
+> first transfer containing the MPDU header and (at least) the first
+> A-MSDU subframe and additional transfer(s) containing the following
+> A-MSDUs. This can be handled with a series of flags to tagging the
+> first and last A-MSDU transfers.
+> 
+> In that case we have to bufferize and re-linearize the A-MSDU buffers
+> into a proper MPDU skb before forwarding to mac80211 (in the same way
+> as it is done in ath10k).
+> 
+> This change also includes sanity check of the buffer descriptor to
+> prevent skb overflow.
 
---+iAae6AE78u2m0wg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I like this patch and I think it plugs a gap we have but, my question 
+is, have we seen this code be triggered at least once ?
 
-> - mt7921: add ethtool support similar to mt7915 driver
-> - mt7915: some ethtool fixes
+I'm a bit reticent about apply it upstream unless/until we have.
 
-Hi Felix,
-
-please drop this series, I will post v2 addressing some bits.
-
-Regards,
-Lorenzo
-
->=20
-> Lorenzo Bianconi (10):
->   mt76: move mt76_sta_stats in mt76.h
->   mt76: mt7921: add sta stats accounting in mt7921_mac_add_txs_skb
->   mt76: mt7921: add some more MIB counters
->   mt76: mt7921: introduce stats reporting through ethtool
->   mt76: mt7921: move tx amsdu stats in mib_stats
->   mt76: move mt76_ethtool_worker_info in mt76 module
->   mt76: mt7921: add per-vif counters in ethtool
->   mt76: mt7915: run mt7915_get_et_stats holding mt76 mutex
->   mt76: mt7915: do not overwrite all mib counters in mt7915_get_stats
->   mt76: mt7915: move tx amsdu stats in mib_stats
->=20
->  drivers/net/wireless/mediatek/mt76/mac80211.c |  28 +++
->  drivers/net/wireless/mediatek/mt76/mt76.h     |  17 ++
->  .../wireless/mediatek/mt76/mt7915/debugfs.c   |  24 +--
->  .../net/wireless/mediatek/mt76/mt7915/mac.c   |  11 +-
->  .../net/wireless/mediatek/mt76/mt7915/main.c  |  59 ++----
->  .../wireless/mediatek/mt76/mt7915/mt7915.h    |  13 +-
->  .../wireless/mediatek/mt76/mt7921/debugfs.c   |  27 ++-
->  .../net/wireless/mediatek/mt76/mt7921/mac.c   |  49 ++++-
->  .../net/wireless/mediatek/mt76/mt7921/main.c  | 169 +++++++++++++++++-
->  .../wireless/mediatek/mt76/mt7921/mt7921.h    |  22 +++
->  .../net/wireless/mediatek/mt76/mt7921/regs.h  |  28 +++
->  11 files changed, 363 insertions(+), 84 deletions(-)
->=20
-> --=20
-> 2.31.1
->=20
-
---+iAae6AE78u2m0wg
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYW3hYgAKCRA6cBh0uS2t
-rIe/AQDQ67jQKh33IzDEAyVsshjguDeAvQXKaz0GMHmWMvYEswD9Fz1ySAIBThD4
-4Tcr1jvINRIEgkZKVXDMO5S/CmWJZw0=
-=ZOf2
------END PGP SIGNATURE-----
-
---+iAae6AE78u2m0wg--
+---
+bod
