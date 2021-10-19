@@ -2,116 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 635FEC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1DA3C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 12:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B2BC6113D
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC40A6115A
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 12:12:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235518AbhJSMCI (ORCPT
+        id S235551AbhJSMO2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Oct 2021 08:02:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41068 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230514AbhJSMCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Oct 2021 08:02:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 80CD361360;
-        Tue, 19 Oct 2021 11:59:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634644787;
-        bh=9IUDbZbWE2C5ogAJcx9v1OWBL3Z6Vq+A1v1RaxpzVYE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bT38lu09lv42heNnvi6njETafrFsW+T7rn0TdUZIA1G+uEp+hfEHB4DGyWAqUUan2
-         ue49+JII2FjVhn7bsEoC+iLgkxRmZ9lT+xN5MJjM9pczSZpfVShV77XrelJEaQPF3B
-         dU7OVc8t3PoeXc6mMs+znIX4e3wROPRUptxVSqq5dlQ8pAsnZNn676iua3IRSs3GBD
-         sEELvN12RG9TC3ksVSuO5AEGTsQm08335XpCcPuMNJLN8KnRPoZ7eNNBU66YsB18fs
-         WdaAb9OYzTZNHZ6wIAVanv59axzm9mCX3v/v4OLhjTPo0gJ+vK0O6do+GjBs/QL7wp
-         KpcavJ7PkqLXg==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     johannes@sipsolutions.net
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com
-Subject: [PATCH mac80211-next 3/4] cfg80211: introduce cfg80211_cac_offchan_event routine
-Date:   Tue, 19 Oct 2021 13:59:06 +0200
-Message-Id: <b263b45944edea9564835db19b4502fafcec677d.1634644309.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1634644309.git.lorenzo@kernel.org>
-References: <cover.1634644309.git.lorenzo@kernel.org>
+        Tue, 19 Oct 2021 08:14:28 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:30905 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230097AbhJSMO1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Oct 2021 08:14:27 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1634645535; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=oD8yCzrvHNN1ogSZeyYP+BbjUrlIhp1HkijKnjLBoV8=; b=CfAJeqakSepg6LzSL1Kn/Ncq6mKwCWxt2QJ4tqgPCmcgPEOWwINpDmjF30rEShw2gOP8SN/S
+ YN3sqYxqzADy1SJ5A/hqMNRUqGz8mbwP3TvMz4HKR4aguCEhDMsrvpzd1t3S8EqxjgYxOsHN
+ DlslMMbobjNbbmLjud/dySfNqnM=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 616eb61759612e01006269e3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 19 Oct 2021 12:12:07
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1C49DC43616; Tue, 19 Oct 2021 12:12:07 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D1656C43460;
+        Tue, 19 Oct 2021 12:12:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D1656C43460
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Loic Poulain <loic.poulain@linaro.org>
+Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        regressions@lists.linux.dev, mhi <mhi@lists.linux.dev>
+Subject: Re: [regression] mhi: ath11k resume fails on some devices
+References: <871r5p0x2u.fsf@codeaurora.org>
+        <CAMZdPi8UJLvBFQd8-nf-iHAQh8cEuihq97PUFfZ7Q=rxRQoPsg@mail.gmail.com>
+        <877df6tlnq.fsf@codeaurora.org>
+        <CAMZdPi8P7YZPhPir+WfS3cY_a7He1m2Pq2uqBhczPdEeoNRb0Q@mail.gmail.com>
+        <87a6jl9ndo.fsf@codeaurora.org>
+Date:   Tue, 19 Oct 2021 15:12:01 +0300
+In-Reply-To: <87a6jl9ndo.fsf@codeaurora.org> (Kalle Valo's message of "Thu, 07
+        Oct 2021 12:48:19 +0300")
+Message-ID: <87ee8hgqni.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce cfg80211_cac_offchan_event routine in order to notify
-userland when a Channel Availability Check (CAC) is finished or aborted
-by offchannel dedicated chain.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Tested-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- include/net/cfg80211.h | 13 +++++++++++++
- net/wireless/mlme.c    | 26 ++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+)
+> (adding the new mhi list, yay)
+>
+> Hi Loic,
+>
+> Loic Poulain <loic.poulain@linaro.org> writes:
+>
+>>> Loic Poulain <loic.poulain@linaro.org> writes:
+>>>
+>>> > On Thu, 16 Sept 2021 at 10:00, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>
+>>> >> At the moment I'm running my tests with commit 020d3b26c07a reverted and
+>>> >> everything works without problems. Is there a simple way to fix this? Or
+>>> >> maybe we should just revert the commit? Commit log and kernel logs from
+>>> >> a failing case below.
+>>> >
+>>> > Do you have log of success case?
+>>>
+>>> A log from a successful case in the end of email, using v5.15-rc1 plus
+>>> revert of commit 020d3b26c07abe27.
+>>>
+>>> > To me, the device loses power, that is why MHI resuming is failing.
+>>> > Normally the device should be properly recovered/reinitialized. Before
+>>> > that patch the power loss was simply not detected (or handled at
+>>> > higher stack level).
+>>>
+>>> Currently in ath11k we always keep the firmware running when in suspend,
+>>> this is a workaround due to problems between mac80211 and MHI stack.
+>>> IIRC the problem was something related MHI creating struct device during
+>>> resume or something like that.
+>>
+>> Could you give a try with the attached patch? It should solve your
+>> issue without breaking modem support.
+>
+> Sorry for taking so long, but I now tested your patch on top of
+> v5.15-rc3 and, as expected, everything works as before with QCA6390 on
+> NUC x86 testbox.
+>
+> Tested-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index af62af6bf369..2419b4e192ae 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -7630,6 +7630,19 @@ void cfg80211_cac_event(struct net_device *netdev,
- 			const struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp);
- 
-+/**
-+ * cfg80211_cac_offchan_event - Channel Availability Check (CAC) offchan event
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ * @event: type of event
-+ * @gfp: context flags
-+ *
-+ * This function is called when a Channel Availability Check (CAC) is finished
-+ * or aborted by offchannel dedicated chain.
-+ */
-+void cfg80211_cac_offchan_event(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef,
-+				enum nl80211_radar_event event, gfp_t gfp);
- 
- /**
-  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 3aa69b375a10..4362f4f49bb4 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -968,3 +968,29 @@ void cfg80211_cac_event(struct net_device *netdev,
- 	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cac_event);
-+
-+void cfg80211_cac_offchan_event(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef,
-+				enum nl80211_radar_event event, gfp_t gfp)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+
-+	switch (event) {
-+	case NL80211_RADAR_CAC_FINISHED:
-+		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
-+		memcpy(&rdev->cac_done_chandef, chandef,
-+		       sizeof(struct cfg80211_chan_def));
-+		queue_work(cfg80211_wq, &rdev->propagate_cac_done_wk);
-+		cfg80211_sched_dfs_chan_update(rdev);
-+		break;
-+	case NL80211_RADAR_CAC_ABORTED:
-+	case NL80211_RADAR_CAC_STARTED:
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return;
-+	}
-+
-+	nl80211_radar_notify(rdev, chandef, event, NULL, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_cac_offchan_event);
+I doubt we will find enough time to fully debug this mhi issue anytime
+soon. Can we commit Loic's patch so that this regression is resolved?
+
+At the moment I'm doing all my regression testing with commit
+020d3b26c07abe27 reverted. That's a risk, I would prefer to do my
+testing without any hacks.
+
 -- 
-2.31.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
