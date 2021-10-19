@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184B0C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D25C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 031936113B
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DE866113B
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Oct 2021 11:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235487AbhJSMB7 (ORCPT
+        id S235537AbhJSMCG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Oct 2021 08:01:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40990 "EHLO mail.kernel.org"
+        Tue, 19 Oct 2021 08:02:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41094 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230514AbhJSMB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Oct 2021 08:01:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1DE926113D;
-        Tue, 19 Oct 2021 11:59:44 +0000 (UTC)
+        id S235512AbhJSMCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Oct 2021 08:02:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E5361608FE;
+        Tue, 19 Oct 2021 11:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634644786;
-        bh=tyaEHIND8wtVgCzYDUnjRRE9A+umQK4q8h0ga8CK+Vo=;
+        s=k20201202; t=1634644788;
+        bh=5TpOpCEmRgdDJAFrndHldF7r7JFyL8Oty5GQHp4GKF4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ks5sGGotgegwGkTxrZ89hBNlL4RS1Mp+5NBXcM5v4z4PIY5sYJwQ5s3G7Xfts1gbP
-         O1rNvFAAxQEV6AFoz+Fg+jY7iyrKV9BuNj208uQBNDJpkgaZzh2DQe6TAUg+DpMe29
-         b3xJC0EedfVjeAj+3hdsjX2l8oBPFFk2tYBiF5v3GJ/2w7EwJUmDsW4VFw83NOoXf6
-         gDrP6xXZZPu8YsjSkrkFMEKxAxbcZOhSQhjSPa0Xivtkj6l+8h/Bqkh+wI/cVm/CLp
-         ierhu1pXY0y0U5176roSClgllggyPFfAsVWYpNKnTmPty8NDY5LuRidrsaeoilwQjI
-         ZJx0V/275dQgQ==
+        b=kU0NdzehiCgcugWCGC04fVItE99rULOuzP8bS5mWE3bbd7lPG18VHLJ5Zmuxdm0lV
+         lM0GXuKn8Fr/mWLpCpssgOVeHMXRZ+4ugBexTttN+DNtkw57tULm6QhPKpwPsBq0BT
+         w8tANrXLXATKbN5ktqwE8NIgoefMFLhltduRL0A0XdMqo7r794A524FOchtTQK45dx
+         Bby7voGQS+7l7FOi5P9yVYMP5kMaKwHRozMNZedrzvU9us/4HaCsNda9jA0892LQRC
+         B9g0Gk4mZSsE3hsmaRPSQUjzrlisqJpBpT3WIb6U/LdA9xm3T6bX7tO+0ws6fZ05kk
+         /SxhE6LGqhUIA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     johannes@sipsolutions.net
 Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
         lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com
-Subject: [PATCH mac80211-next 2/4] cfg80211: introduce NL80211_ATTR_RADAR_OFFCHAN netlink attribute
-Date:   Tue, 19 Oct 2021 13:59:05 +0200
-Message-Id: <c3adad927a5d32003fd969edc32c566869673a34.1634644309.git.lorenzo@kernel.org>
+Subject: [PATCH mac80211-next 4/4] cfg80211: introduce NL80211_EXT_FEATURE_RADAR_OFFCHAN feature flag
+Date:   Tue, 19 Oct 2021 13:59:07 +0200
+Message-Id: <b453dd696f27559cd028e49cf8f9d5566a2e0601.1634644309.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634644309.git.lorenzo@kernel.org>
 References: <cover.1634644309.git.lorenzo@kernel.org>
@@ -43,78 +43,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce NL80211_ATTR_RADAR_OFFCHAN netlink attribute in order to
-configure offchannel radar chain if supported by the underlay driver.
+Introduce NL80211_EXT_FEATURE_RADAR_OFFCHAN feature flag in order to
+notify userland the underlay hw supports offchannel radar/CAC detection.
 
-Tested-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/nl80211.c       | 12 ++++++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h | 4 ++++
+ net/wireless/nl80211.c       | 4 ++++
+ 2 files changed, 8 insertions(+)
 
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index eda608b1eb09..96e622777bb2 100644
+index 96e622777bb2..d856c95ea736 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -2639,6 +2639,10 @@ enum nl80211_commands {
-  *	Mandatory parameter for the transmitting interface to enable MBSSID.
-  *	Optional for the non-transmitting interfaces.
+@@ -6055,6 +6055,9 @@ enum nl80211_feature_flags {
+  *	frames. Userspace has to share FILS AAD details to the driver by using
+  *	@NL80211_CMD_SET_FILS_AAD.
   *
-+ * @NL80211_ATTR_RADAR_OFFCHAN: Configure dedicated chain available for radar
-+ *	detection on some hw. The chain can't be used to transmits or receives
-+ *	frames. The driver is supposed to implement CAC management in sw or fw.
++ * @NL80211_EXT_FEATURE_RADAR_OFFCHAN: Device supports offchannel radar/CAC
++ *	detection.
 + *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3145,6 +3149,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MBSSID_CONFIG,
- 	NL80211_ATTR_MBSSID_ELEMS,
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -6121,6 +6124,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_PROT_RANGE_NEGO_AND_MEASURE,
+ 	NL80211_EXT_FEATURE_BSS_COLOR,
+ 	NL80211_EXT_FEATURE_FILS_CRYPTO_OFFLOAD,
++	NL80211_EXT_FEATURE_RADAR_OFFCHAN,
  
-+	NL80211_ATTR_RADAR_OFFCHAN,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3f37e4d5c5d2..a296f180624e 100644
+index a296f180624e..9f19ff5b13c5 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -776,6 +776,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_MBSSID_CONFIG] =
- 			NLA_POLICY_NESTED(nl80211_mbssid_config_policy),
- 	[NL80211_ATTR_MBSSID_ELEMS] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_RADAR_OFFCHAN] = { .type = NLA_FLAG },
- };
+@@ -9304,6 +9304,10 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
  
- /* policy for the key attributes */
-@@ -9279,10 +9280,12 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
--	if (netif_carrier_ok(dev))
-+	if (!nla_get_flag(info->attrs[NL80211_ATTR_RADAR_OFFCHAN]) &&
-+	    netif_carrier_ok(dev))
- 		return -EBUSY;
- 
--	if (wdev->cac_started)
-+	if (!nla_get_flag(info->attrs[NL80211_ATTR_RADAR_OFFCHAN]) &&
-+	    wdev->cac_started)
- 		return -EBUSY;
- 
- 	err = cfg80211_chandef_dfs_required(wiphy, &chandef, wdev->iftype);
-@@ -9299,6 +9302,11 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (wiphy_ext_feature_isset(wiphy, NL80211_EXT_FEATURE_DFS_OFFLOAD))
- 		return -EOPNOTSUPP;
- 
-+	if (nla_get_flag(info->attrs[NL80211_ATTR_RADAR_OFFCHAN])) {
-+		/* offchannel radar detection */
-+		return rdev_set_radar_offchan(rdev, &chandef);
-+	}
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_RADAR_OFFCHAN])) {
+ 		/* offchannel radar detection */
++		if (!wiphy_ext_feature_isset(wiphy,
++					     NL80211_EXT_FEATURE_RADAR_OFFCHAN))
++			return -EOPNOTSUPP;
 +
- 	if (!rdev->ops->start_radar_detection)
- 		return -EOPNOTSUPP;
+ 		return rdev_set_radar_offchan(rdev, &chandef);
+ 	}
  
 -- 
 2.31.1
