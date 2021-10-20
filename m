@@ -2,112 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BFFC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Oct 2021 12:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A64C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Oct 2021 13:27:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E13CC60EE5
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Oct 2021 12:04:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FC766128E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Oct 2021 13:27:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbhJTMHI (ORCPT
+        id S229943AbhJTN3h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Oct 2021 08:07:08 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:13959 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230274AbhJTMHE (ORCPT
+        Wed, 20 Oct 2021 09:29:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37040 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229632AbhJTN3g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Oct 2021 08:07:04 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4HZ8Px0bkKzZcPN;
-        Wed, 20 Oct 2021 20:03:01 +0800 (CST)
-Received: from kwepemm600001.china.huawei.com (7.193.23.3) by
- dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.15; Wed, 20 Oct 2021 20:04:42 +0800
-Received: from huawei.com (10.175.104.82) by kwepemm600001.china.huawei.com
- (7.193.23.3) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.15; Wed, 20 Oct
- 2021 20:04:41 +0800
-From:   Wang Hai <wanghai38@huawei.com>
-To:     <kvalo@codeaurora.org>, <briannorris@chromium.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <shenyang39@huawei.com>,
-        <marcelo@kvack.org>, <linville@tuxdriver.com>, <luisca@cozybit.com>
-CC:     <libertas-dev@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 wireless-drivers 1/2] libertas_tf: Fix possible memory leak in probe and disconnect
-Date:   Wed, 20 Oct 2021 20:03:44 +0800
-Message-ID: <20211020120345.2016045-2-wanghai38@huawei.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211020120345.2016045-1-wanghai38@huawei.com>
-References: <20211020120345.2016045-1-wanghai38@huawei.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.104.82]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemm600001.china.huawei.com (7.193.23.3)
-X-CFilter-Loop: Reflected
+        Wed, 20 Oct 2021 09:29:36 -0400
+Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E609FC06161C
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2021 06:27:21 -0700 (PDT)
+Received: by mail-wm1-x32b.google.com with SMTP id g2so19025882wme.4
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2021 06:27:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=ICSjjYrq5VBgD8+gohBOnArWicPN7yL8vl3yOhj3VxQ=;
+        b=yQZTdnRNPauSNqDkM/wcTsfPzIEKLiSbgpgHlePGgunYPfEocceAv7OBg8sEnEqbME
+         LMmolEWqs84RY04lOC510iFtmypW7SBOmWTtTYDJPcHo14E39MbJt+f6Idjx2NcNVeyG
+         nPQSFHzyv0f2mqG6xRj9u/9Pp8yeQT0Iu0Qw2tgimZwJ2JeUe/TutLJ0i+ztEAkOthLw
+         3OYkq53MkCJyxaZ/++LV+f6saqj4McR7FZg3RYiXAlrqElZcpxE4Q0isPeqwy3kTUJGc
+         qIqomhwali+T/zpCpOpx5xgKVAjbE1fTsMIvZ34a7mHLvQIzlYXjQBmUsOBsX/fpoXne
+         yAew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ICSjjYrq5VBgD8+gohBOnArWicPN7yL8vl3yOhj3VxQ=;
+        b=nxBIYI0bpWNJydZPDAYJkQu9fqKxyfm0befw4MheqFh0n5AbHbW3MwsZT8c1WxKzCo
+         4o3MLa79KPlqH8d4gBM/0s2WvY7zhPLOzlNhqpzqPoEWJKKLlnrisIhWWQykeVSeC26O
+         5VDUgC3WFaLHQfL02Qel5TAoXCxezvhli4IuuFT3gGGm84zSZx++rcJetpaT2tSEMfKv
+         HTWqL1v5U54EOBDQYowC6ezLKVmnJ3FuhQyzloTnluzJXB9wABWL0HlD1H3E+JPJvnVF
+         nrNqGe4zLFtRh59LQ2Gv3jS0MMd7+TIf+JOFRLVSRtmALgyXh9TecLhUefHnWXuKaOKv
+         YuuA==
+X-Gm-Message-State: AOAM532tt+lxZJbGg6e5Xizp6GPCJJGzLtXmTaiM4gNJa7B6PGnEl8IR
+        DqmXiOgNbnOkQhpXQJkk7gWTIw==
+X-Google-Smtp-Source: ABdhPJw3xyULxICaUOPMhLQVJsH/O39qsna5P1f69B0vVbjnmxuIZ8t47pJzBtJ2/dHgFytlfdqdzQ==
+X-Received: by 2002:adf:97d0:: with SMTP id t16mr50663575wrb.124.1634736440394;
+        Wed, 20 Oct 2021 06:27:20 -0700 (PDT)
+Received: from localhost.localdomain ([88.160.176.23])
+        by smtp.gmail.com with ESMTPSA id j206sm5052170wmj.23.2021.10.20.06.27.19
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 20 Oct 2021 06:27:19 -0700 (PDT)
+From:   Loic Poulain <loic.poulain@linaro.org>
+To:     kvalo@codeaurora.org
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        bryan.odonoghue@linaro.org, Loic Poulain <loic.poulain@linaro.org>,
+        stable@vger.kernel.org
+Subject: [PATCH] wcn36xx: Fix HT40 capability for 2Ghz band
+Date:   Wed, 20 Oct 2021 15:38:53 +0200
+Message-Id: <1634737133-22336-1-git-send-email-loic.poulain@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I got memory leak as follows when doing fault injection test:
+All wcn36xx controllers are supposed to support HT40 (and SGI40),
+This doubles the maximum bitrate/throughput with compatible APs.
 
-unreferenced object 0xffff88810a2ddc00 (size 512):
-  comm "kworker/6:1", pid 176, jiffies 4295009893 (age 757.220s)
-  hex dump (first 32 bytes):
-    00 50 05 18 81 88 ff ff 00 00 00 00 00 00 00 00  .P..............
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<ffffffff8167939c>] slab_post_alloc_hook+0x9c/0x490
-    [<ffffffff8167f627>] kmem_cache_alloc_trace+0x1f7/0x470
-    [<ffffffffa02a1530>] if_usb_probe+0x60/0x37c [libertas_tf_usb]
-    [<ffffffffa022668a>] usb_probe_interface+0x1aa/0x3c0 [usbcore]
-    [<ffffffff82b59630>] really_probe+0x190/0x480
-    [<ffffffff82b59a19>] __driver_probe_device+0xf9/0x180
-    [<ffffffff82b59af3>] driver_probe_device+0x53/0x130
-    [<ffffffff82b5a075>] __device_attach_driver+0x105/0x130
-    [<ffffffff82b55949>] bus_for_each_drv+0x129/0x190
-    [<ffffffff82b593c9>] __device_attach+0x1c9/0x270
-    [<ffffffff82b5a250>] device_initial_probe+0x20/0x30
-    [<ffffffff82b579c2>] bus_probe_device+0x142/0x160
-    [<ffffffff82b52e49>] device_add+0x829/0x1300
-    [<ffffffffa02229b1>] usb_set_configuration+0xb01/0xcc0 [usbcore]
-    [<ffffffffa0235c4e>] usb_generic_driver_probe+0x6e/0x90 [usbcore]
-    [<ffffffffa022641f>] usb_probe_device+0x6f/0x130 [usbcore]
+Tested with wcn3620 & wcn3680B.
 
-cardp is missing being freed in the error handling path of the probe
-and the path of the disconnect, which will cause memory leak.
-
-This patch adds the missing kfree().
-
-Fixes: c305a19a0d0a ("libertas_tf: usb specific functions")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Wang Hai <wanghai38@huawei.com>
+Cc: stable@vger.kernel.org
+Fixes: 8e84c2582169 ("wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware")
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-index fe0a69e804d8..75b5319d033f 100644
---- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-@@ -230,6 +230,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 
- dealloc:
- 	if_usb_free(cardp);
-+	kfree(cardp);
- error:
- lbtf_deb_leave(LBTF_DEB_MAIN);
- 	return -ENOMEM;
-@@ -254,6 +255,7 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 
- 	/* Unlink and free urb */
- 	if_usb_free(cardp);
-+	kfree(cardp);
- 
- 	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(interface_to_usbdev(intf));
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index d4f44c8..4f139d9 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -137,7 +137,9 @@ static struct ieee80211_supported_band wcn_band_2ghz = {
+ 		.cap =	IEEE80211_HT_CAP_GRN_FLD |
+ 			IEEE80211_HT_CAP_SGI_20 |
+ 			IEEE80211_HT_CAP_DSSSCCK40 |
+-			IEEE80211_HT_CAP_LSIG_TXOP_PROT,
++			IEEE80211_HT_CAP_LSIG_TXOP_PROT |
++			IEEE80211_HT_CAP_SGI_40 |
++			IEEE80211_HT_CAP_SUP_WIDTH_20_40,
+ 		.ht_supported = true,
+ 		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K,
+ 		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
 -- 
-2.25.1
+2.7.4
 
