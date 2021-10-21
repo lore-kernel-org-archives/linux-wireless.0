@@ -2,35 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C218CC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FCA5C43219
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A578A613A1
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AEFE611CB
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231961AbhJUQBT (ORCPT
+        id S232210AbhJUQBn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Oct 2021 12:01:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60938 "EHLO
+        Thu, 21 Oct 2021 12:01:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229597AbhJUQBP (ORCPT
+        with ESMTP id S231967AbhJUQBT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Oct 2021 12:01:15 -0400
+        Thu, 21 Oct 2021 12:01:19 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 041BEC061243;
-        Thu, 21 Oct 2021 08:58:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A322C061764;
+        Thu, 21 Oct 2021 08:59:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=+t/vvP4oUE+C+jnp9T5zmZocQtVq/GU6RPnUPNVoq9E=; b=ouSBtCIGhtHVe8yatmK3EAo7fW
-        UOTws2bYS2nTtBEhIFbV8kK1jHEnGf0nTf6IHdlQb3B9F2tEsXCn9YyI80UIM3Gr5o9zgn5c26YI1
-        11gqSo4rRA9xaWTiu4avIKOIaZYnulivS3CVa2PT6BmOmWUcDQr78L8nCoxTooMIYIoVjvSyUidXX
-        3NFYDTOx0ch+fE5bQYNjqvTAuQR5vCewtp3pdxSytkIX5CFgUQG4AzNgCc0P2XLnGslcLzj7psAMV
-        2LPuPUpJ/mQpnd1ORfp6Vx3yHxhZ4sONAErKI4TxIodI/3dwj43ZMKoCimMkA5XYTMOnaT+OcEvIw
-        42CjrYrw==;
+        bh=Y5FBc8qS1stSEUraOLslgljnraTtrP2CYc9ccR7SUvM=; b=nVBV4dniNzDQeQ3BID45o7KFYg
+        7nZxBzCQVfIodyTYL22EVrm+ZO/COckKRz82exODPpLbeSRKkUfi1+wLiNsooUie+E++PJ4H92Qyk
+        c4PPjg2WeolI2ylfb+sMqBt6QeHT2QyLuvSW3XX/6FMlwzBysusUbXgRu0ts2k2PifljjxQ9sBz+g
+        tPGAPVOc8L2R5mdSBsvLlI7+N0CrmLtBfsbgf3xBH0PPuTkaE+yls6XHIB6mWkkucT0Id7P46eWM+
+        +tIeVqCYZxT4T8MOETHtAaqXjooIlOavxChHiBZic+7YlEFnfyZNvd6mm4xwnViAZ5CTumORKD2Vi
+        ZxeMe5Cw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mdaSq-008GME-Kx; Thu, 21 Oct 2021 15:58:44 +0000
+        id 1mdaSq-008GMN-RV; Thu, 21 Oct 2021 15:58:44 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -47,9 +47,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 07/10] firmware_loader: rename EXTRA_FIRMWARE and EXTRA_FIRMWARE_DIR
-Date:   Thu, 21 Oct 2021 08:58:40 -0700
-Message-Id: <20211021155843.1969401-8-mcgrof@kernel.org>
+Subject: [PATCH v2 10/10] test_firmware: add support for testing built-in firmware
+Date:   Thu, 21 Oct 2021 08:58:43 -0700
+Message-Id: <20211021155843.1969401-11-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211021155843.1969401-1-mcgrof@kernel.org>
 References: <20211021155843.1969401-1-mcgrof@kernel.org>
@@ -62,179 +62,351 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-Now that we've tied loose ends on the built-in firmware API,
-rename the kconfig symbols for it to reflect more that they are
-associated to the firmware_loader and to make it easier to
-understand what they are for.
+This adds some basic knobs to let us test built-in firmware
+support. We test to ensure built-in firmware is indeed used,
+and that it matches the contents we expect. Likewise we test
+that a file that should not be built-in was not present.
 
+For older kernels with older test_firmware drivers (yes some
+folks do test selftests this way and we support it), the new
+built-in test will simply bail out early.
+
+Reviewed-by: Borislav Petkov <bp@suse.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- .../driver-api/firmware/built-in-fw.rst       |  6 ++--
- Documentation/x86/microcode.rst               |  8 ++---
- arch/x86/Kconfig                              |  4 +--
- drivers/base/firmware_loader/Kconfig          | 29 ++++++++++++-------
- drivers/base/firmware_loader/builtin/Makefile |  6 ++--
- drivers/staging/media/av7110/Kconfig          |  4 +--
- 6 files changed, 33 insertions(+), 24 deletions(-)
+ drivers/base/firmware_loader/Makefile         |  1 +
+ drivers/base/firmware_loader/builtin/Makefile |  1 +
+ .../firmware_loader/test-builtin/.gitignore   |  3 +
+ .../firmware_loader/test-builtin/Makefile     | 18 +++++
+ lib/Kconfig.debug                             | 33 +++++++++
+ lib/test_firmware.c                           | 52 +++++++++++++-
+ .../testing/selftests/firmware/fw_builtin.sh  | 69 +++++++++++++++++++
+ tools/testing/selftests/firmware/fw_lib.sh    |  7 ++
+ .../selftests/firmware/fw_run_tests.sh        |  2 +
+ 9 files changed, 185 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/base/firmware_loader/test-builtin/.gitignore
+ create mode 100644 drivers/base/firmware_loader/test-builtin/Makefile
+ create mode 100755 tools/testing/selftests/firmware/fw_builtin.sh
 
-diff --git a/Documentation/driver-api/firmware/built-in-fw.rst b/Documentation/driver-api/firmware/built-in-fw.rst
-index bc1c961bace1..a9a0ab8c9512 100644
---- a/Documentation/driver-api/firmware/built-in-fw.rst
-+++ b/Documentation/driver-api/firmware/built-in-fw.rst
-@@ -8,11 +8,11 @@ the filesystem. Instead, firmware can be looked for inside the kernel
- directly. You can enable built-in firmware using the kernel configuration
- options:
+diff --git a/drivers/base/firmware_loader/Makefile b/drivers/base/firmware_loader/Makefile
+index e87843408fe6..dbeba0fa315d 100644
+--- a/drivers/base/firmware_loader/Makefile
++++ b/drivers/base/firmware_loader/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Makefile for the Linux firmware loader
  
--  * CONFIG_EXTRA_FIRMWARE
--  * CONFIG_EXTRA_FIRMWARE_DIR
-+  * CONFIG_FW_LOADER_BUILTIN_FILES
-+  * CONFIG_FW_LOADER_BUILTIN_DIR
- 
- There are a few reasons why you might want to consider building your firmware
--into the kernel with CONFIG_EXTRA_FIRMWARE:
-+into the kernel with CONFIG_FW_LOADER_BUILTIN_FILES:
- 
- * Speed
- * Firmware is needed for accessing the boot device, and the user doesn't
-diff --git a/Documentation/x86/microcode.rst b/Documentation/x86/microcode.rst
-index a320d37982ed..2cacc7f60014 100644
---- a/Documentation/x86/microcode.rst
-+++ b/Documentation/x86/microcode.rst
-@@ -114,13 +114,13 @@ Builtin microcode
- =================
- 
- The loader supports also loading of a builtin microcode supplied through
--the regular builtin firmware method CONFIG_EXTRA_FIRMWARE. Only 64-bit is
--currently supported.
-+the regular builtin firmware method using CONFIG_FW_LOADER_BUILTIN and
-+CONFIG_FW_LOADER_BUILTIN_FILES. Only 64-bit is currently supported.
- 
- Here's an example::
- 
--  CONFIG_EXTRA_FIRMWARE="intel-ucode/06-3a-09 amd-ucode/microcode_amd_fam15h.bin"
--  CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
-+  CONFIG_FW_LOADER_BUILTIN_FILES="intel-ucode/06-3a-09 amd-ucode/microcode_amd_fam15h.bin"
-+  CONFIG_FW_LOADER_BUILTIN_DIR="/lib/firmware"
- 
- This basically means, you have the following tree structure locally::
- 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 999907dd7544..cfb09dc7f21b 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -1315,8 +1315,8 @@ config MICROCODE
- 	  initrd for microcode blobs.
- 
- 	  In addition, you can build the microcode into the kernel. For that you
--	  need to add the vendor-supplied microcode to the CONFIG_EXTRA_FIRMWARE
--	  config option.
-+	  need to add the vendor-supplied microcode to the configuration option
-+	  CONFIG_FW_LOADER_BUILTIN_FILES
- 
- config MICROCODE_INTEL
- 	bool "Intel microcode loading support"
-diff --git a/drivers/base/firmware_loader/Kconfig b/drivers/base/firmware_loader/Kconfig
-index 5b24f3959255..2dc3e137d903 100644
---- a/drivers/base/firmware_loader/Kconfig
-+++ b/drivers/base/firmware_loader/Kconfig
-@@ -22,14 +22,14 @@ config FW_LOADER
- 	  You typically want this built-in (=y) but you can also enable this
- 	  as a module, in which case the firmware_class module will be built.
- 	  You also want to be sure to enable this built-in if you are going to
--	  enable built-in firmware (CONFIG_EXTRA_FIRMWARE).
-+	  enable built-in firmware (CONFIG_FW_LOADER_BUILTIN_FILES).
- 
- if FW_LOADER
- 
- config FW_LOADER_PAGED_BUF
- 	bool
- 
--config EXTRA_FIRMWARE
-+config FW_LOADER_BUILTIN_FILES
- 	string "Build named firmware blobs into the kernel binary"
- 	help
- 	  Device drivers which require firmware can typically deal with
-@@ -43,14 +43,21 @@ config EXTRA_FIRMWARE
- 	  in boot and cannot rely on the firmware being placed in an initrd or
- 	  initramfs.
- 
--	  This option is a string and takes the (space-separated) names of the
-+	  Support for built-in firmware is not supported if you are using
-+	  the firmware loader as a module.
-+
-+	  This option is a string and takes the space-separated names of the
- 	  firmware files -- the same names that appear in MODULE_FIRMWARE()
- 	  and request_firmware() in the source. These files should exist under
--	  the directory specified by the EXTRA_FIRMWARE_DIR option, which is
-+	  the directory specified by the FW_LOADER_BUILTIN_DIR option, which is
- 	  /lib/firmware by default.
- 
--	  For example, you might set CONFIG_EXTRA_FIRMWARE="usb8388.bin", copy
--	  the usb8388.bin file into /lib/firmware, and build the kernel. Then
-+	  For example, you might have set:
-+
-+	  CONFIG_FW_LOADER_BUILTIN_FILES="usb8388.bin"
-+
-+	  After this you would copy the usb8388.bin file into directory
-+	  specified by FW_LOADER_BUILTIN_DIR and build the kernel. Then
- 	  any request_firmware("usb8388.bin") will be satisfied internally
- 	  inside the kernel without ever looking at your filesystem at runtime.
- 
-@@ -60,13 +67,15 @@ config EXTRA_FIRMWARE
- 	  image since it combines both GPL and non-GPL work. You should
- 	  consult a lawyer of your own before distributing such an image.
- 
--config EXTRA_FIRMWARE_DIR
--	string "Firmware blobs root directory"
-+config FW_LOADER_BUILTIN_DIR
-+	string "Directory with firmware to be built-in to the kernel"
- 	depends on EXTRA_FIRMWARE != ""
- 	default "/lib/firmware"
- 	help
--	  This option controls the directory in which the kernel build system
--	  looks for the firmware files listed in the EXTRA_FIRMWARE option.
-+	  This option specifies the directory which the kernel build system
-+	  will use to look for the firmware files which are going to be
-+	  built into the kernel using the space-separated
-+	  FW_LOADER_BUILTIN_FILES entries.
- 
- config FW_LOADER_USER_HELPER
- 	bool "Enable the firmware sysfs fallback mechanism"
++obj-$(CONFIG_TEST_FIRMWARE_BUILTIN) += test-builtin/
+ obj-$(CONFIG_FW_LOADER_USER_HELPER) += fallback_table.o
+ obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
+ firmware_class-objs := main.o
 diff --git a/drivers/base/firmware_loader/builtin/Makefile b/drivers/base/firmware_loader/builtin/Makefile
-index eb4be452062a..7cdd0b5c7384 100644
+index 9b0dc193f6c7..baad7777974b 100644
 --- a/drivers/base/firmware_loader/builtin/Makefile
 +++ b/drivers/base/firmware_loader/builtin/Makefile
-@@ -1,12 +1,12 @@
- # SPDX-License-Identifier: GPL-2.0
+@@ -2,6 +2,7 @@
+ include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
+ 
  obj-y  += main.o
++obj-$(CONFIG_TEST_BUILTIN_FIRMWARE)  += test-builtin-firmware.bin.gen.o
  
--# Create $(fwdir) from $(CONFIG_EXTRA_FIRMWARE_DIR) -- if it doesn't have a
-+# Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
+ # Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
  # leading /, it's relative to $(srctree).
--fwdir := $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE_DIR))
-+fwdir := $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_DIR))
- fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
+diff --git a/drivers/base/firmware_loader/test-builtin/.gitignore b/drivers/base/firmware_loader/test-builtin/.gitignore
+new file mode 100644
+index 000000000000..1d46553f50a0
+--- /dev/null
++++ b/drivers/base/firmware_loader/test-builtin/.gitignore
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: GPL-2.0
++*.gen.S
++*.bin
+diff --git a/drivers/base/firmware_loader/test-builtin/Makefile b/drivers/base/firmware_loader/test-builtin/Makefile
+new file mode 100644
+index 000000000000..04204ad7ede1
+--- /dev/null
++++ b/drivers/base/firmware_loader/test-builtin/Makefile
+@@ -0,0 +1,18 @@
++# SPDX-License-Identifier: GPL-2.0
++include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
++
++extra-y := test-builtin-firmware.bin
++$(obj)/test-builtin-firmware.bin: FORCE
++	@$(kecho) "  GEN     $@"
++	@(set -e;			\
++	(				\
++		echo 'ABCD0123';	\
++	) > $@)
++
++# Create $(fwdir) from $(CONFIG_TEST_FIRMWARE_BUILTIN_DIR) -- if it doesn't
++# have a leading /, it's relative to $(srctree).
++fwdir := $(subst $(quote),,$(CONFIG_TEST_FIRMWARE_BUILTIN_DIR))
++fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
++
++firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_TEST_FIRMWARE_BUILTIN_FILES)))
++obj-y += $(firmware)
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index 3266fef7cb53..b8af41619fc3 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -2333,6 +2333,39 @@ config TEST_FIRMWARE
  
--firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE)))
-+firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_FILES)))
- obj-y += $(firmware)
+ 	  If unsure, say N.
  
- FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
-diff --git a/drivers/staging/media/av7110/Kconfig b/drivers/staging/media/av7110/Kconfig
-index 9faf9d2d4001..87c7702f72f6 100644
---- a/drivers/staging/media/av7110/Kconfig
-+++ b/drivers/staging/media/av7110/Kconfig
-@@ -31,8 +31,8 @@ config DVB_AV7110
- 	  or /lib/firmware (depending on configuration of firmware hotplug).
++config TEST_FIRMWARE_BUILTIN
++	bool "Allow building built-in test firmware"
++	depends on TEST_FIRMWARE
++	help
++	  If enabled, firmware will be built into to the kernel so that
++	  loading it with the test_firmware driver can be tested. Disabling
++	  this will just mean the test firmware scripts won't find any
++	  built-in firmware. Enabling this will make the kernel generate the
++	  file test-builtin-firmware.bin inside local directory
++	  drivers/base/firmware_loader/test-builtin. This file will then
++	  be available whenever the request firmware API is used.
++
++	  Enabling this functionlity essentially overrides the location where
++	  you specify to find built-in firmware, and so should only be enabled
++	  if you don't need to build firmware into your kernel for full
++	  funcionality.
++
++	  This should be disabled on production kernels as otherwise you'll
++	  end up with a test firmware stuck into your final kernel image and
++	  with default built-in firmware support.
++
++	  If unsure, say N.
++
++config TEST_FIRMWARE_BUILTIN_FILES
++	string
++	depends on TEST_FIRMWARE_BUILTIN
++	default "test-builtin-firmware.bin"
++
++config TEST_FIRMWARE_BUILTIN_DIR
++	string
++	depends on TEST_FIRMWARE_BUILTIN
++	default "drivers/base/firmware_loader/test-builtin"
++
+ config TEST_SYSCTL
+ 	tristate "sysctl test driver"
+ 	depends on PROC_SYSCTL
+diff --git a/lib/test_firmware.c b/lib/test_firmware.c
+index 1bccd6cd5f48..134f8c78d2d4 100644
+--- a/lib/test_firmware.c
++++ b/lib/test_firmware.c
+@@ -34,6 +34,7 @@ MODULE_IMPORT_NS(TEST_FIRMWARE);
  
- 	  Alternatively, you can download the file and use the kernel's
--	  EXTRA_FIRMWARE configuration option to build it into your
--	  kernel image by adding the filename to the EXTRA_FIRMWARE
-+	  FW_LOADER_BUILTIN_FILES configuration option to build it into your
-+	  kernel image by adding the filename to the FW_LOADER_BUILTIN_FILES
- 	  configuration option string.
+ static DEFINE_MUTEX(test_fw_mutex);
+ static const struct firmware *test_firmware;
++static struct firmware builtin_test_firmware;
  
- 	  Say Y if you own such a card and want to use it.
+ struct test_batched_req {
+ 	u8 idx;
+@@ -58,6 +59,10 @@ struct test_batched_req {
+  * @sync_direct: when the sync trigger is used if this is true
+  *	request_firmware_direct() will be used instead.
+  * @send_uevent: whether or not to send a uevent for async requests
++ * @is_builtin: used only internally to determine if the firmware was found
++ *	to be built-in to the kernel using only the API call
++ *	firmware_request_builtin(). We treat this specially as we are
++ *	responsible for the firmware struct.
+  * @num_requests: number of requests to try per test case. This is trigger
+  *	specific.
+  * @reqs: stores all requests information
+@@ -99,6 +104,7 @@ struct test_config {
+ 	bool partial;
+ 	bool sync_direct;
+ 	bool send_uevent;
++	bool is_builtin;
+ 	u8 num_requests;
+ 	u8 read_fw_idx;
+ 
+@@ -120,7 +126,11 @@ static ssize_t test_fw_misc_read(struct file *f, char __user *buf,
+ 	ssize_t rc = 0;
+ 
+ 	mutex_lock(&test_fw_mutex);
+-	if (test_firmware)
++	if (test_fw_config->is_builtin)
++		rc = simple_read_from_buffer(buf, size, offset,
++					     builtin_test_firmware.data,
++					     builtin_test_firmware.size);
++	else if (test_firmware)
+ 		rc = simple_read_from_buffer(buf, size, offset,
+ 					     test_firmware->data,
+ 					     test_firmware->size);
+@@ -194,6 +204,7 @@ static int __test_firmware_config_init(void)
+ 	test_fw_config->buf_size = TEST_FIRMWARE_BUF_SIZE;
+ 	test_fw_config->file_offset = 0;
+ 	test_fw_config->partial = false;
++	test_fw_config->is_builtin = false;
+ 	test_fw_config->sync_direct = false;
+ 	test_fw_config->req_firmware = request_firmware;
+ 	test_fw_config->test_result = 0;
+@@ -1051,6 +1062,44 @@ static ssize_t read_firmware_show(struct device *dev,
+ }
+ static DEVICE_ATTR_RO(read_firmware);
+ 
++/*
++ * In order to test this, set CONFIG_FW_LOADER_BUILTIN_FILES to a firmware file
++ * which will be built into the kernel image. Then echo the name into the
++ * "trigger_request_builtin" sysfs file of this module.
++ */
++static ssize_t trigger_request_builtin_store(struct device *dev,
++					     struct device_attribute *attr,
++					     const char *buf, size_t count)
++{
++	int rc = -ENOENT;
++
++	if (!test_fw_config->name) {
++		pr_warn("unconfigured firmware settings\n");
++		return rc;
++	}
++
++	pr_info("loading builtin '%s'\n", test_fw_config->name);
++
++	mutex_lock(&test_fw_mutex);
++
++	if (firmware_request_builtin(&builtin_test_firmware,
++				     test_fw_config->name)) {
++		/* This let's us diff against the firmware */
++		test_fw_config->is_builtin = true;
++		pr_info("loaded: %zu\n", builtin_test_firmware.size);
++		rc = count;
++		goto out;
++	}
++
++	pr_info("load of '%s' failed\n", test_fw_config->name);
++
++out:
++	mutex_unlock(&test_fw_mutex);
++
++	return rc;
++}
++static DEVICE_ATTR_WO(trigger_request_builtin);
++
+ #define TEST_FW_DEV_ATTR(name)          &dev_attr_##name.attr
+ 
+ static struct attribute *test_dev_attrs[] = {
+@@ -1082,6 +1131,7 @@ static struct attribute *test_dev_attrs[] = {
+ 	TEST_FW_DEV_ATTR(release_all_firmware),
+ 	TEST_FW_DEV_ATTR(test_result),
+ 	TEST_FW_DEV_ATTR(read_firmware),
++	TEST_FW_DEV_ATTR(trigger_request_builtin),
+ 	NULL,
+ };
+ 
+diff --git a/tools/testing/selftests/firmware/fw_builtin.sh b/tools/testing/selftests/firmware/fw_builtin.sh
+new file mode 100755
+index 000000000000..44e4198ed88f
+--- /dev/null
++++ b/tools/testing/selftests/firmware/fw_builtin.sh
+@@ -0,0 +1,69 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Test loading built-in firmware
++set -e
++
++TEST_REQS_FW_SYSFS_FALLBACK="no"
++TEST_REQS_FW_SET_CUSTOM_PATH="yes"
++TEST_DIR=$(dirname $0)
++source $TEST_DIR/fw_lib.sh
++
++check_mods
++check_setup
++verify_reqs
++setup_tmp_file
++
++trap "test_finish" EXIT
++
++if [ "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
++	# Turn down the timeout so failures don't take so long.
++	echo 1 >/sys/class/firmware/timeout
++fi
++
++# built-in firmware support can be optional to test
++if [[ "$HAS_FW_LOADER_BUILTIN" != "yes" || "$HAS_TEST_FIRMWARE_BUILTIN" != "yes" ]]; then
++	exit $ksft_skip
++fi
++
++echo "Testing builtin firmware API ... "
++
++config_trigger_builtin()
++{
++	echo -n 1 > $DIR/trigger_request_builtin
++}
++
++test_builtin_firmware()
++{
++	echo -n "Testing firmware_request_builtin() ... "
++	config_reset
++	config_set_name $TEST_FIRMWARE_BUILTIN_FILENAME
++	config_trigger_builtin
++	echo OK
++	# Verify the contents are what we expect.
++	echo -n "Verifying file integrity ..."
++	if ! diff -q "$FW" /dev/test_firmware >/dev/null ; then
++		echo "$0: firmware loaded content differs" >&2
++		exit 1
++	else
++		echo "firmware content matches what we expect - OK"
++	fi
++}
++
++test_builtin_firmware_nofile()
++{
++	echo -n "Testing firmware_request_builtin() with fake file... "
++	config_reset
++	config_set_name fake-${TEST_FIRMWARE_BUILTIN_FILENAME}
++	if config_trigger_builtin 2> /dev/null; then
++		echo "$0: firmware shouldn't have loaded" >&2
++	fi
++	echo "OK"
++}
++
++test_builtin_firmware
++test_builtin_firmware_nofile
++
++# Ensure test_fw_config->is_builtin is set back to false
++# otherwise we won't be able to diff against the right target
++# firmware for other tests.
++config_reset
+diff --git a/tools/testing/selftests/firmware/fw_lib.sh b/tools/testing/selftests/firmware/fw_lib.sh
+index 31b71fe11dc5..bbae33d9f5ed 100755
+--- a/tools/testing/selftests/firmware/fw_lib.sh
++++ b/tools/testing/selftests/firmware/fw_lib.sh
+@@ -15,6 +15,10 @@ TEST_DIR=$(dirname $0)
+ # To reproduce rename this to test-firmware.bin
+ TEST_FIRMWARE_INTO_BUF_FILENAME=test-firmware-into-buf.bin
+ 
++# We should use a different filename for built-in firmware otherwise
++# we'd always have the file present.
++TEST_FIRMWARE_BUILTIN_FILENAME=test-builtin-firmware.bin
++
+ # Kselftest framework requirement - SKIP code is 4.
+ ksft_skip=4
+ 
+@@ -63,6 +67,9 @@ check_setup()
+ 	HAS_FW_LOADER_USER_HELPER="$(kconfig_has CONFIG_FW_LOADER_USER_HELPER=y)"
+ 	HAS_FW_LOADER_USER_HELPER_FALLBACK="$(kconfig_has CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y)"
+ 	HAS_FW_LOADER_COMPRESS="$(kconfig_has CONFIG_FW_LOADER_COMPRESS=y)"
++	HAS_FW_LOADER_USER_HELPER="$(kconfig_has CONFIG_FW_LOADER_USER_HELPER=y)"
++	HAS_FW_LOADER_BUILTIN="$(kconfig_has CONFIG_FW_LOADER=y)"
++	HAS_TEST_FIRMWARE_BUILTIN="$(kconfig_has CONFIG_TEST_FIRMWARE_BUILTIN=y)"
+ 	PROC_FW_IGNORE_SYSFS_FALLBACK="0"
+ 	PROC_FW_FORCE_SYSFS_FALLBACK="0"
+ 
+diff --git a/tools/testing/selftests/firmware/fw_run_tests.sh b/tools/testing/selftests/firmware/fw_run_tests.sh
+index 777377078d5e..08a9bf043333 100755
+--- a/tools/testing/selftests/firmware/fw_run_tests.sh
++++ b/tools/testing/selftests/firmware/fw_run_tests.sh
+@@ -65,6 +65,8 @@ echo "Running namespace test: "
+ $TEST_DIR/fw_namespace $DIR/trigger_request
+ echo "OK"
+ 
++$TEST_DIR/fw_builtin.sh
++
+ if [ -f $FW_FORCE_SYSFS_FALLBACK ]; then
+ 	run_test_config_0001
+ 	run_test_config_0002
 -- 
 2.30.2
 
