@@ -2,28 +2,28 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 781D5C4321E
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6019DC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51251610CF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F7BF610A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232179AbhJUUct (ORCPT
+        id S232195AbhJUUcv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Oct 2021 16:32:49 -0400
-Received: from mga05.intel.com ([192.55.52.43]:46175 "EHLO mga05.intel.com"
+        Thu, 21 Oct 2021 16:32:51 -0400
+Received: from mga05.intel.com ([192.55.52.43]:46172 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232134AbhJUUcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S232139AbhJUUcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Oct 2021 16:32:46 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="315343857"
+X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="315343868"
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="315343857"
+   d="scan'208";a="315343868"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:23 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:24 -0700
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="527625056"
+   d="scan'208";a="527625092"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:22 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:23 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -32,9 +32,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
         haijun.liu@mediatek.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH 03/14] net: wwan: t7xx: Add core components
-Date:   Thu, 21 Oct 2021 13:27:27 -0700
-Message-Id: <20211021202738.729-4-ricardo.martinez@linux.intel.com>
+Subject: [PATCH 08/14] net: wwan: t7xx: Add data path interface
+Date:   Thu, 21 Oct 2021 13:27:32 -0700
+Message-Id: <20211021202738.729-9-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
 References: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
@@ -42,3113 +42,3404 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Registers the t7xx device driver with the kernel. Setup all the core
-components: PCIe layer, Modem Host Cross Core Interface (MHCCIF),
-modem control operations, modem state machine, and build
-infrastructure.
+Data Path Modem AP Interface (DPMAIF) HIF layer provides methods
+for initialization, ISR, control and event handling of TX/RX flows.
 
-* PCIe layer code implements driver probe and removal.
-* MHCCIF provides interrupt channels to communicate events
-  such as handshake, PM and port enumeration.
-* Modem control implements the entry point for modem init,
-  reset and exit.
-* The modem status monitor is a state machine used by modem control
-  to complete initialization and stop. It is used also to propagate
-  exception events reported by other components.
+DPMAIF TX
+Exposes the `dmpaif_tx_send_skb` function which can be used by the
+network device to transmit packets.
+The uplink data management uses a Descriptor Ring Buffer (DRB).
+First DRB entry is a message type that will be followed by 1 or more
+normal DRB entries. Message type DRB will hold the skb information
+and each normal DRB entry holds a pointer to the skb payload.
+
+DPMAIF RX
+The downlink buffer management uses Buffer Address Table (BAT) and
+Packet Information Table (PIT) rings.
+The BAT ring holds the address of skb data buffer for the HW to use,
+while the PIT contains metadata about a whole network packet including
+a reference to the BAT entry holding the data buffer address.
+The driver reads the PIT and BAT entries written by the modem, when
+reaching a threshold, the driver will reload the PIT and BAT rings.
 
 Signed-off-by: Haijun Lio <haijun.liu@mediatek.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- drivers/net/wwan/Kconfig                   |  14 +
- drivers/net/wwan/Makefile                  |   1 +
- drivers/net/wwan/t7xx/Makefile             |  13 +
- drivers/net/wwan/t7xx/t7xx_common.h        |  69 +++
- drivers/net/wwan/t7xx/t7xx_mhccif.c        |  99 ++++
- drivers/net/wwan/t7xx/t7xx_mhccif.h        |  29 +
- drivers/net/wwan/t7xx/t7xx_modem_ops.c     | 480 +++++++++++++++++
- drivers/net/wwan/t7xx/t7xx_modem_ops.h     |  82 +++
- drivers/net/wwan/t7xx/t7xx_monitor.h       | 137 +++++
- drivers/net/wwan/t7xx/t7xx_pci.c           | 228 ++++++++
- drivers/net/wwan/t7xx/t7xx_pci.h           |  59 ++
- drivers/net/wwan/t7xx/t7xx_pcie_mac.c      | 270 ++++++++++
- drivers/net/wwan/t7xx/t7xx_pcie_mac.h      |  29 +
- drivers/net/wwan/t7xx/t7xx_reg.h           | 389 ++++++++++++++
- drivers/net/wwan/t7xx/t7xx_skb_util.c      | 354 ++++++++++++
- drivers/net/wwan/t7xx/t7xx_skb_util.h      | 102 ++++
- drivers/net/wwan/t7xx/t7xx_state_monitor.c | 591 +++++++++++++++++++++
- 17 files changed, 2946 insertions(+)
- create mode 100644 drivers/net/wwan/t7xx/Makefile
- create mode 100644 drivers/net/wwan/t7xx/t7xx_common.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_mhccif.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_mhccif.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_modem_ops.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_modem_ops.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_monitor.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_pci.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_pci.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_pcie_mac.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_pcie_mac.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_reg.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_skb_util.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_skb_util.h
- create mode 100644 drivers/net/wwan/t7xx/t7xx_state_monitor.c
+ drivers/net/wwan/t7xx/Makefile             |    4 +
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c    |  532 +++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h    |  270 ++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 1523 ++++++++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.h |  110 ++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c |  802 +++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h |   74 +
+ 7 files changed, 3315 insertions(+)
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.h
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h
 
-diff --git a/drivers/net/wwan/Kconfig b/drivers/net/wwan/Kconfig
-index 77dbfc418bce..244cb522e2c5 100644
---- a/drivers/net/wwan/Kconfig
-+++ b/drivers/net/wwan/Kconfig
-@@ -79,6 +79,20 @@ config IOSM
- 
- 	  If unsure, say N.
- 
-+config MTK_T7XX
-+	tristate "MediaTek PCIe 5G WWAN modem T7XX device"
-+	depends on PCI
-+	help
-+	  Enables MediaTek PCIe based 5G WWAN modem (T700 series) device.
-+	  Adapts WWAN framework and provides network interface like wwan0
-+	  and tty interfaces like wwan0at0 (AT protocol), wwan0mbim0
-+	  (MBIM protocol), etc.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mtk_t7xx.
-+
-+	  If unsure, say N.
-+
- endif # WWAN
- 
- endmenu
-diff --git a/drivers/net/wwan/Makefile b/drivers/net/wwan/Makefile
-index fe51feedac21..ae913797efa4 100644
---- a/drivers/net/wwan/Makefile
-+++ b/drivers/net/wwan/Makefile
-@@ -12,3 +12,4 @@ obj-$(CONFIG_MHI_WWAN_CTRL) += mhi_wwan_ctrl.o
- obj-$(CONFIG_MHI_WWAN_MBIM) += mhi_wwan_mbim.o
- obj-$(CONFIG_RPMSG_WWAN_CTRL) += rpmsg_wwan_ctrl.o
- obj-$(CONFIG_IOSM) += iosm/
-+obj-$(CONFIG_MTK_T7XX) += t7xx/
 diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
-new file mode 100644
-index 000000000000..dc0e6e025d55
---- /dev/null
+index 9b3cc4c5ebae..a2c97a66dfbe 100644
+--- a/drivers/net/wwan/t7xx/Makefile
 +++ b/drivers/net/wwan/t7xx/Makefile
-@@ -0,0 +1,13 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+
-+ccflags-y += -Werror
-+
-+obj-${CONFIG_MTK_T7XX} := mtk_t7xx.o
-+mtk_t7xx-y:=	t7xx_pci.o \
-+		t7xx_pcie_mac.o \
-+		t7xx_mhccif.o \
-+		t7xx_state_monitor.o  \
-+		t7xx_modem_ops.o \
-+		t7xx_skb_util.o \
-+		t7xx_cldma.o \
-+		t7xx_hif_cldma.o  \
-diff --git a/drivers/net/wwan/t7xx/t7xx_common.h b/drivers/net/wwan/t7xx/t7xx_common.h
+@@ -14,3 +14,7 @@ mtk_t7xx-y:=	t7xx_pci.o \
+ 		t7xx_port_proxy.o  \
+ 		t7xx_port_ctrl_msg.o \
+ 		t7xx_port_wwan.o \
++		t7xx_dpmaif.o \
++		t7xx_hif_dpmaif.o  \
++		t7xx_hif_dpmaif_tx.o \
++		t7xx_hif_dpmaif_rx.o  \
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
 new file mode 100644
-index 000000000000..2b0340236c2e
+index 000000000000..69956c65eae4
 --- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_common.h
-@@ -0,0 +1,69 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_COMMON_H__
-+#define __T7XX_COMMON_H__
-+
-+#include <linux/bits.h>
-+#include <linux/types.h>
-+
-+struct ccci_header {
-+	/* do not assume data[1] is data length in rx */
-+	u32 data[2];
-+	u32 status;
-+	u32 reserved;
-+};
-+
-+enum txq_type {
-+	TXQ_NORMAL,
-+	TXQ_FAST,
-+	TXQ_TYPE_CNT
-+};
-+
-+enum direction {
-+	MTK_IN,
-+	MTK_OUT,
-+	MTK_INOUT,
-+};
-+
-+#define HDR_FLD_AST		BIT(31)
-+#define HDR_FLD_SEQ		GENMASK(30, 16)
-+#define HDR_FLD_CHN		GENMASK(15, 0)
-+
-+#define CCCI_H_LEN		16
-+/* CCCI_H_LEN + reserved space that is used in exception flow */
-+#define CCCI_H_ELEN		128
-+
-+#define CCCI_HEADER_NO_DATA	0xffffffff
-+
-+/* Control identification numbers for AP<->MD messages  */
-+#define CTL_ID_HS1_MSG		0x0
-+#define CTL_ID_HS2_MSG		0x1
-+#define CTL_ID_HS3_MSG		0x2
-+#define CTL_ID_MD_EX		0x4
-+#define CTL_ID_DRV_VER_ERROR	0x5
-+#define CTL_ID_MD_EX_ACK	0x6
-+#define CTL_ID_MD_EX_PASS	0x8
-+#define CTL_ID_PORT_ENUM	0x9
-+
-+/* Modem exception check identification number */
-+#define MD_EX_CHK_ID		0x45584350
-+/* Modem exception check acknowledge identification number */
-+#define MD_EX_CHK_ACK_ID	0x45524543
-+
-+enum md_state {
-+	MD_STATE_INVALID, /* no traffic */
-+	MD_STATE_GATED, /* no traffic */
-+	MD_STATE_WAITING_FOR_HS1,
-+	MD_STATE_WAITING_FOR_HS2,
-+	MD_STATE_READY,
-+	MD_STATE_EXCEPTION,
-+	MD_STATE_RESET, /* no traffic */
-+	MD_STATE_WAITING_TO_STOP,
-+	MD_STATE_STOPPED,
-+};
-+
-+#endif
-diff --git a/drivers/net/wwan/t7xx/t7xx_mhccif.c b/drivers/net/wwan/t7xx/t7xx_mhccif.c
-new file mode 100644
-index 000000000000..c68d98a3d765
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_mhccif.c
-@@ -0,0 +1,99 @@
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
+@@ -0,0 +1,532 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (c) 2021, MediaTek Inc.
 + * Copyright (c) 2021, Intel Corporation.
 + */
 +
-+#include <linux/completion.h>
-+#include <linux/pci.h>
-+
-+#include "t7xx_mhccif.h"
-+#include "t7xx_modem_ops.h"
-+#include "t7xx_pci.h"
-+#include "t7xx_pcie_mac.h"
-+
-+static void mhccif_clear_interrupts(struct mtk_pci_dev *mtk_dev, u32 mask)
-+{
-+	void __iomem *mhccif_pbase;
-+
-+	mhccif_pbase = mtk_dev->base_addr.mhccif_rc_base;
-+
-+	/* Clear level 2 interrupt */
-+	iowrite32(mask, mhccif_pbase + REG_EP2RC_SW_INT_ACK);
-+
-+	/* Read back to ensure write is done */
-+	mhccif_read_sw_int_sts(mtk_dev);
-+
-+	/* Clear level 1 interrupt */
-+	mtk_pcie_mac_clear_int_status(mtk_dev, MHCCIF_INT);
-+}
-+
-+static irqreturn_t mhccif_isr_thread(int irq, void *data)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	u32 int_sts;
-+
-+	mtk_dev = data;
-+
-+	/* Use 1*4 bits to avoid low power bits*/
-+	iowrite32(L1_1_DISABLE_BIT(1) | L1_2_DISABLE_BIT(1),
-+		  IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+
-+	int_sts = mhccif_read_sw_int_sts(mtk_dev);
-+	if (int_sts & mtk_dev->mhccif_bitmask)
-+		mtk_pci_mhccif_isr(mtk_dev);
-+
-+	/* Clear 2 & 1 level interrupts */
-+	mhccif_clear_interrupts(mtk_dev, int_sts);
-+
-+	/* Enable corresponding interrupt */
-+	mtk_pcie_mac_set_int(mtk_dev, MHCCIF_INT);
-+	return IRQ_HANDLED;
-+}
-+
-+u32 mhccif_read_sw_int_sts(struct mtk_pci_dev *mtk_dev)
-+{
-+	return ioread32(mtk_dev->base_addr.mhccif_rc_base + REG_EP2RC_SW_INT_STS);
-+}
-+
-+void mhccif_mask_set(struct mtk_pci_dev *mtk_dev, u32 val)
-+{
-+	iowrite32(val, mtk_dev->base_addr.mhccif_rc_base + REG_EP2RC_SW_INT_EAP_MASK_SET);
-+}
-+
-+void mhccif_mask_clr(struct mtk_pci_dev *mtk_dev, u32 val)
-+{
-+	iowrite32(val, mtk_dev->base_addr.mhccif_rc_base + REG_EP2RC_SW_INT_EAP_MASK_CLR);
-+}
-+
-+u32 mhccif_mask_get(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* mtk_dev is validated in calling function */
-+	return ioread32(mtk_dev->base_addr.mhccif_rc_base + REG_EP2RC_SW_INT_EAP_MASK);
-+}
-+
-+static irqreturn_t mhccif_isr_handler(int irq, void *data)
-+{
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+void mhccif_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	mtk_dev->base_addr.mhccif_rc_base = mtk_dev->base_addr.pcie_ext_reg_base +
-+					    MHCCIF_RC_DEV_BASE -
-+					    mtk_dev->base_addr.pcie_dev_reg_trsl_addr;
-+
-+	/* Register MHCCHIF int handler to handle */
-+	mtk_dev->intr_handler[MHCCIF_INT] = mhccif_isr_handler;
-+	mtk_dev->intr_thread[MHCCIF_INT] = mhccif_isr_thread;
-+	mtk_dev->callback_param[MHCCIF_INT] = mtk_dev;
-+}
-+
-+void mhccif_h2d_swint_trigger(struct mtk_pci_dev *mtk_dev, u32 channel)
-+{
-+	void __iomem *mhccif_pbase;
-+
-+	mhccif_pbase = mtk_dev->base_addr.mhccif_rc_base;
-+	iowrite32(BIT(channel), mhccif_pbase + REG_RC2EP_SW_BSY);
-+	iowrite32(channel, mhccif_pbase + REG_RC2EP_SW_TCHNUM);
-+}
-diff --git a/drivers/net/wwan/t7xx/t7xx_mhccif.h b/drivers/net/wwan/t7xx/t7xx_mhccif.h
-new file mode 100644
-index 000000000000..ad25945a74e5
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_mhccif.h
-@@ -0,0 +1,29 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_MHCCIF_H__
-+#define __T7XX_MHCCIF_H__
-+
-+#include <linux/types.h>
-+
-+#include "t7xx_pci.h"
-+#include "t7xx_reg.h"
-+
-+#define D2H_SW_INT_MASK (D2H_INT_EXCEPTION_INIT |		\
-+			 D2H_INT_EXCEPTION_INIT_DONE |		\
-+			 D2H_INT_EXCEPTION_CLEARQ_DONE |	\
-+			 D2H_INT_EXCEPTION_ALLQ_RESET |		\
-+			 D2H_INT_PORT_ENUM |			\
-+			 D2H_INT_ASYNC_MD_HK)
-+
-+void mhccif_mask_set(struct mtk_pci_dev *mtk_dev, u32 val);
-+void mhccif_mask_clr(struct mtk_pci_dev *mtk_dev, u32 val);
-+u32 mhccif_mask_get(struct mtk_pci_dev *mtk_dev);
-+void mhccif_init(struct mtk_pci_dev *mtk_dev);
-+u32 mhccif_read_sw_int_sts(struct mtk_pci_dev *mtk_dev);
-+void mhccif_h2d_swint_trigger(struct mtk_pci_dev *mtk_dev, u32 channel);
-+
-+#endif /*__T7XX_MHCCIF_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.c b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-new file mode 100644
-index 000000000000..b47ce6e55758
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-@@ -0,0 +1,480 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/bitfield.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+
-+#include "t7xx_hif_cldma.h"
-+#include "t7xx_mhccif.h"
-+#include "t7xx_modem_ops.h"
-+#include "t7xx_monitor.h"
-+#include "t7xx_pci.h"
-+#include "t7xx_pcie_mac.h"
-+
-+#define RGU_RESET_DELAY_US	20
-+#define PORT_RESET_DELAY_US	2000
-+
-+enum mtk_feature_support_type {
-+	MTK_FEATURE_DOES_NOT_EXIST,
-+	MTK_FEATURE_NOT_SUPPORTED,
-+	MTK_FEATURE_MUST_BE_SUPPORTED,
-+};
-+
-+static inline unsigned int get_interrupt_status(struct mtk_pci_dev *mtk_dev)
-+{
-+	return mhccif_read_sw_int_sts(mtk_dev) & D2H_SW_INT_MASK;
-+}
-+
-+/**
-+ * mtk_pci_mhccif_isr() - Process MHCCIF interrupts
-+ * @mtk_dev: MTK device
-+ *
-+ * Check the interrupt status, and queue commands accordingly
-+ *
-+ * Returns: 0 on success or -EINVAL on failure
-+ */
-+int mtk_pci_mhccif_isr(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct md_sys_info *md_info;
-+	struct ccci_fsm_ctl *ctl;
-+	struct mtk_modem *md;
-+	unsigned int int_sta;
-+	unsigned long flags;
-+	u32 mask;
-+
-+	md = mtk_dev->md;
-+	ctl = fsm_get_entry();
-+	if (!ctl) {
-+		dev_err(&mtk_dev->pdev->dev,
-+			"process MHCCIF interrupt before modem monitor was initialized\n");
-+		return -EINVAL;
-+	}
-+
-+	md_info = md->md_info;
-+	spin_lock_irqsave(&md_info->exp_spinlock, flags);
-+	int_sta = get_interrupt_status(mtk_dev);
-+	md_info->exp_id |= int_sta;
-+
-+	if (md_info->exp_id & D2H_INT_PORT_ENUM) {
-+		md_info->exp_id &= ~D2H_INT_PORT_ENUM;
-+		if (ctl->curr_state == CCCI_FSM_INIT ||
-+		    ctl->curr_state == CCCI_FSM_PRE_START ||
-+		    ctl->curr_state == CCCI_FSM_STOPPED)
-+			ccci_fsm_recv_md_interrupt(MD_IRQ_PORT_ENUM);
-+	}
-+
-+	if (md_info->exp_id & D2H_INT_EXCEPTION_INIT) {
-+		if (ctl->md_state == MD_STATE_INVALID ||
-+		    ctl->md_state == MD_STATE_WAITING_FOR_HS1 ||
-+		    ctl->md_state == MD_STATE_WAITING_FOR_HS2 ||
-+		    ctl->md_state == MD_STATE_READY) {
-+			md_info->exp_id &= ~D2H_INT_EXCEPTION_INIT;
-+			ccci_fsm_recv_md_interrupt(MD_IRQ_CCIF_EX);
-+		}
-+	} else if (ctl->md_state == MD_STATE_WAITING_FOR_HS1) {
-+		/* start handshake if MD not assert */
-+		mask = mhccif_mask_get(mtk_dev);
-+		if ((md_info->exp_id & D2H_INT_ASYNC_MD_HK) && !(mask & D2H_INT_ASYNC_MD_HK)) {
-+			md_info->exp_id &= ~D2H_INT_ASYNC_MD_HK;
-+			queue_work(md->handshake_wq, &md->handshake_work);
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&md_info->exp_spinlock, flags);
-+
-+	return 0;
-+}
-+
-+static void clr_device_irq_via_pcie(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct mtk_addr_base *pbase_addr;
-+	void __iomem *rgu_pciesta_reg;
-+
-+	pbase_addr = &mtk_dev->base_addr;
-+	rgu_pciesta_reg = pbase_addr->pcie_ext_reg_base + TOPRGU_CH_PCIE_IRQ_STA -
-+			  pbase_addr->pcie_dev_reg_trsl_addr;
-+
-+	/* clear RGU PCIe IRQ state */
-+	iowrite32(ioread32(rgu_pciesta_reg), rgu_pciesta_reg);
-+}
-+
-+void mtk_clear_rgu_irq(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* clear L2 */
-+	clr_device_irq_via_pcie(mtk_dev);
-+	/* clear L1 */
-+	mtk_pcie_mac_clear_int_status(mtk_dev, SAP_RGU_INT);
-+}
-+
-+static int mtk_acpi_reset(struct mtk_pci_dev *mtk_dev, char *fn_name)
-+{
-+#ifdef CONFIG_ACPI
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	acpi_status acpi_ret;
-+	struct device *dev;
-+	acpi_handle handle;
-+
-+	dev = &mtk_dev->pdev->dev;
-+
-+	if (acpi_disabled) {
-+		dev_err(dev, "acpi function isn't enabled\n");
-+		return -EFAULT;
-+	}
-+
-+	handle = ACPI_HANDLE(dev);
-+	if (!handle) {
-+		dev_err(dev, "acpi handle isn't found\n");
-+		return -EFAULT;
-+	}
-+
-+	if (!acpi_has_method(handle, fn_name)) {
-+		dev_err(dev, "%s method isn't found\n", fn_name);
-+		return -EFAULT;
-+	}
-+
-+	acpi_ret = acpi_evaluate_object(handle, fn_name, NULL, &buffer);
-+	if (ACPI_FAILURE(acpi_ret)) {
-+		dev_err(dev, "%s method fail: %s\n", fn_name, acpi_format_exception(acpi_ret));
-+		return -EFAULT;
-+	}
-+#endif
-+	return 0;
-+}
-+
-+int mtk_acpi_fldr_func(struct mtk_pci_dev *mtk_dev)
-+{
-+	return mtk_acpi_reset(mtk_dev, "_RST");
-+}
-+
-+static void reset_device_via_pmic(struct mtk_pci_dev *mtk_dev)
-+{
-+	unsigned int val;
-+
-+	val = ioread32(IREG_BASE(mtk_dev) + PCIE_MISC_DEV_STATUS);
-+
-+	if (val & MISC_RESET_TYPE_PLDR)
-+		mtk_acpi_reset(mtk_dev, "MRST._RST");
-+	else if (val & MISC_RESET_TYPE_FLDR)
-+		mtk_acpi_fldr_func(mtk_dev);
-+}
-+
-+static irqreturn_t rgu_isr_thread(int irq, void *data)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	struct mtk_modem *modem;
-+
-+	mtk_dev = data;
-+	modem = mtk_dev->md;
-+
-+	msleep(RGU_RESET_DELAY_US);
-+	reset_device_via_pmic(modem->mtk_dev);
-+	return IRQ_HANDLED;
-+}
-+
-+static irqreturn_t rgu_isr_handler(int irq, void *data)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	struct mtk_modem *modem;
-+
-+	mtk_dev = data;
-+	modem = mtk_dev->md;
-+
-+	mtk_clear_rgu_irq(mtk_dev);
-+
-+	if (!mtk_dev->rgu_pci_irq_en)
-+		return IRQ_HANDLED;
-+
-+	atomic_set(&modem->rgu_irq_asserted, 1);
-+	mtk_pcie_mac_clear_int(mtk_dev, SAP_RGU_INT);
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+static void mtk_pcie_register_rgu_isr(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* registers RGU callback isr with PCIe driver */
-+	mtk_pcie_mac_clear_int(mtk_dev, SAP_RGU_INT);
-+	mtk_pcie_mac_clear_int_status(mtk_dev, SAP_RGU_INT);
-+
-+	mtk_dev->intr_handler[SAP_RGU_INT] = rgu_isr_handler;
-+	mtk_dev->intr_thread[SAP_RGU_INT] = rgu_isr_thread;
-+	mtk_dev->callback_param[SAP_RGU_INT] = mtk_dev;
-+	mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
-+}
-+
-+static void md_exception(struct mtk_modem *md, enum hif_ex_stage stage)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+
-+	mtk_dev = md->mtk_dev;
-+
-+	if (stage == HIF_EX_CLEARQ_DONE)
-+		/* give DHL time to flush data.
-+		 * this is an empirical value that assure
-+		 * that DHL have enough time to flush all the date.
-+		 */
-+		msleep(PORT_RESET_DELAY_US);
-+
-+	cldma_exception(ID_CLDMA1, stage);
-+
-+	if (stage == HIF_EX_INIT)
-+		mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_EXCEPTION_ACK);
-+	else if (stage == HIF_EX_CLEARQ_DONE)
-+		mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_EXCEPTION_CLEARQ_ACK);
-+}
-+
-+static int wait_hif_ex_hk_event(struct mtk_modem *md, int event_id)
-+{
-+	struct md_sys_info *md_info;
-+	int sleep_time = 10;
-+	int retries = 500; /* MD timeout is 5s */
-+
-+	md_info = md->md_info;
-+	do {
-+		if (md_info->exp_id & event_id)
-+			return 0;
-+
-+		msleep(sleep_time);
-+	} while (--retries);
-+
-+	return -EFAULT;
-+}
-+
-+static void md_sys_sw_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* Register the MHCCIF isr for MD exception, port enum and
-+	 * async handshake notifications.
-+	 */
-+	mhccif_mask_set(mtk_dev, D2H_SW_INT_MASK);
-+	mtk_dev->mhccif_bitmask = D2H_SW_INT_MASK;
-+	mhccif_mask_clr(mtk_dev, D2H_INT_PORT_ENUM);
-+
-+	/* register RGU irq handler for sAP exception notification */
-+	mtk_dev->rgu_pci_irq_en = true;
-+	mtk_pcie_register_rgu_isr(mtk_dev);
-+}
-+
-+static void md_hk_wq(struct work_struct *work)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+	struct mtk_modem *md;
-+
-+	ctl = fsm_get_entry();
-+
-+	cldma_switch_cfg(ID_CLDMA1);
-+	cldma_start(ID_CLDMA1);
-+	fsm_broadcast_state(ctl, MD_STATE_WAITING_FOR_HS2);
-+	md = container_of(work, struct mtk_modem, handshake_work);
-+	atomic_set(&md->core_md.ready, 1);
-+	wake_up(&ctl->async_hk_wq);
-+}
-+
-+void mtk_md_event_notify(struct mtk_modem *md, enum md_event_id evt_id)
-+{
-+	struct md_sys_info *md_info;
-+	void __iomem *mhccif_base;
-+	struct ccci_fsm_ctl *ctl;
-+	unsigned int int_sta;
-+	unsigned long flags;
-+
-+	ctl = fsm_get_entry();
-+	md_info = md->md_info;
-+
-+	switch (evt_id) {
-+	case FSM_PRE_START:
-+		mhccif_mask_clr(md->mtk_dev, D2H_INT_PORT_ENUM);
-+		break;
-+
-+	case FSM_START:
-+		mhccif_mask_set(md->mtk_dev, D2H_INT_PORT_ENUM);
-+		spin_lock_irqsave(&md_info->exp_spinlock, flags);
-+		int_sta = get_interrupt_status(md->mtk_dev);
-+		md_info->exp_id |= int_sta;
-+		if (md_info->exp_id & D2H_INT_EXCEPTION_INIT) {
-+			atomic_set(&ctl->exp_flg, 1);
-+			md_info->exp_id &= ~D2H_INT_EXCEPTION_INIT;
-+			md_info->exp_id &= ~D2H_INT_ASYNC_MD_HK;
-+		} else if (atomic_read(&ctl->exp_flg)) {
-+			md_info->exp_id &= ~D2H_INT_ASYNC_MD_HK;
-+		} else if (md_info->exp_id & D2H_INT_ASYNC_MD_HK) {
-+			queue_work(md->handshake_wq, &md->handshake_work);
-+			md_info->exp_id &= ~D2H_INT_ASYNC_MD_HK;
-+			mhccif_base = md->mtk_dev->base_addr.mhccif_rc_base;
-+			iowrite32(D2H_INT_ASYNC_MD_HK, mhccif_base + REG_EP2RC_SW_INT_ACK);
-+			mhccif_mask_set(md->mtk_dev, D2H_INT_ASYNC_MD_HK);
-+		} else {
-+			/* unmask async handshake interrupt */
-+			mhccif_mask_clr(md->mtk_dev, D2H_INT_ASYNC_MD_HK);
-+		}
-+
-+		spin_unlock_irqrestore(&md_info->exp_spinlock, flags);
-+		/* unmask exception interrupt */
-+		mhccif_mask_clr(md->mtk_dev,
-+				D2H_INT_EXCEPTION_INIT |
-+				D2H_INT_EXCEPTION_INIT_DONE |
-+				D2H_INT_EXCEPTION_CLEARQ_DONE |
-+				D2H_INT_EXCEPTION_ALLQ_RESET);
-+		break;
-+
-+	case FSM_READY:
-+		/* mask async handshake interrupt */
-+		mhccif_mask_set(md->mtk_dev, D2H_INT_ASYNC_MD_HK);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
-+static void md_structure_reset(struct mtk_modem *md)
-+{
-+	struct md_sys_info *md_info;
-+
-+	md_info = md->md_info;
-+	md_info->exp_id = 0;
-+	spin_lock_init(&md_info->exp_spinlock);
-+}
-+
-+void mtk_md_exception_handshake(struct mtk_modem *md)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	int ret;
-+
-+	mtk_dev = md->mtk_dev;
-+	md_exception(md, HIF_EX_INIT);
-+	ret = wait_hif_ex_hk_event(md, D2H_INT_EXCEPTION_INIT_DONE);
-+
-+	if (ret)
-+		dev_err(&mtk_dev->pdev->dev, "EX CCIF HS timeout, RCH 0x%lx\n",
-+			D2H_INT_EXCEPTION_INIT_DONE);
-+
-+	md_exception(md, HIF_EX_INIT_DONE);
-+	ret = wait_hif_ex_hk_event(md, D2H_INT_EXCEPTION_CLEARQ_DONE);
-+	if (ret)
-+		dev_err(&mtk_dev->pdev->dev, "EX CCIF HS timeout, RCH 0x%lx\n",
-+			D2H_INT_EXCEPTION_CLEARQ_DONE);
-+
-+	md_exception(md, HIF_EX_CLEARQ_DONE);
-+	ret = wait_hif_ex_hk_event(md, D2H_INT_EXCEPTION_ALLQ_RESET);
-+	if (ret)
-+		dev_err(&mtk_dev->pdev->dev, "EX CCIF HS timeout, RCH 0x%lx\n",
-+			D2H_INT_EXCEPTION_ALLQ_RESET);
-+
-+	md_exception(md, HIF_EX_ALLQ_RESET);
-+}
-+
-+static struct mtk_modem *ccci_md_alloc(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct mtk_modem *md;
-+
-+	md = devm_kzalloc(&mtk_dev->pdev->dev, sizeof(*md), GFP_KERNEL);
-+	if (!md)
-+		return NULL;
-+
-+	md->md_info = devm_kzalloc(&mtk_dev->pdev->dev, sizeof(*md->md_info), GFP_KERNEL);
-+	if (!md->md_info)
-+		return NULL;
-+
-+	md->mtk_dev = mtk_dev;
-+	mtk_dev->md = md;
-+	atomic_set(&md->core_md.ready, 0);
-+	md->handshake_wq = alloc_workqueue("%s",
-+					   WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_HIGHPRI,
-+					   0, "md_hk_wq");
-+	if (!md->handshake_wq)
-+		return NULL;
-+
-+	INIT_WORK(&md->handshake_work, md_hk_wq);
-+	md->core_md.feature_set[RT_ID_MD_PORT_ENUM] &= ~FEATURE_MSK;
-+	md->core_md.feature_set[RT_ID_MD_PORT_ENUM] |=
-+		FIELD_PREP(FEATURE_MSK, MTK_FEATURE_MUST_BE_SUPPORTED);
-+	return md;
-+}
-+
-+void mtk_md_reset(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct mtk_modem *md;
-+
-+	md = mtk_dev->md;
-+	md->md_init_finish = false;
-+	md_structure_reset(md);
-+	ccci_fsm_reset();
-+	cldma_reset(ID_CLDMA1);
-+	md->md_init_finish = true;
-+}
-+
-+/**
-+ * mtk_md_init() - Initialize modem
-+ * @mtk_dev: MTK device
-+ *
-+ * Allocate and initialize MD ctrl block, and initialize data path
-+ * Register MHCCIF ISR and RGU ISR, and start the state machine
-+ *
-+ * Return: 0 on success or -ENOMEM on allocation failure
-+ */
-+int mtk_md_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct ccci_fsm_ctl *fsm_ctl;
-+	struct mtk_modem *md;
-+	int ret;
-+
-+	/* allocate and initialize md ctrl memory */
-+	md = ccci_md_alloc(mtk_dev);
-+	if (!md)
-+		return -ENOMEM;
-+
-+	ret = cldma_alloc(ID_CLDMA1, mtk_dev);
-+	if (ret)
-+		goto err_alloc;
-+
-+	/* initialize md ctrl block */
-+	md_structure_reset(md);
-+
-+	ret = ccci_fsm_init(md);
-+	if (ret)
-+		goto err_alloc;
-+
-+	ret = cldma_init(ID_CLDMA1);
-+	if (ret)
-+		goto err_fsm_init;
-+
-+	fsm_ctl = fsm_get_entry();
-+	fsm_append_command(fsm_ctl, CCCI_COMMAND_START, 0);
-+
-+	md_sys_sw_init(mtk_dev);
-+
-+	md->md_init_finish = true;
-+	return 0;
-+
-+err_fsm_init:
-+	ccci_fsm_uninit();
-+err_alloc:
-+	destroy_workqueue(md->handshake_wq);
-+
-+	dev_err(&mtk_dev->pdev->dev, "modem init failed\n");
-+	return ret;
-+}
-+
-+void mtk_md_exit(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct mtk_modem *md = mtk_dev->md;
-+	struct ccci_fsm_ctl *fsm_ctl;
-+
-+	md = mtk_dev->md;
-+
-+	mtk_pcie_mac_clear_int(mtk_dev, SAP_RGU_INT);
-+
-+	if (!md->md_init_finish)
-+		return;
-+
-+	fsm_ctl = fsm_get_entry();
-+	/* change FSM state, will auto jump to stopped */
-+	fsm_append_command(fsm_ctl, CCCI_COMMAND_PRE_STOP, 1);
-+	cldma_exit(ID_CLDMA1);
-+	ccci_fsm_uninit();
-+	destroy_workqueue(md->handshake_wq);
-+}
-diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.h b/drivers/net/wwan/t7xx/t7xx_modem_ops.h
-new file mode 100644
-index 000000000000..1d2fee18b559
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.h
-@@ -0,0 +1,82 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_MODEM_OPS_H__
-+#define __T7XX_MODEM_OPS_H__
-+
-+#include <linux/bits.h>
-+#include <linux/spinlock.h>
-+#include <linux/types.h>
-+#include <linux/workqueue.h>
-+
-+#include "t7xx_pci.h"
-+
-+#define RT_ID_MD_PORT_ENUM 0
-+#define FEATURE_COUNT 64
-+/* Modem feature query identification number */
-+#define MD_FEATURE_QUERY_ID	0x49434343
-+
-+#define FEATURE_VER GENMASK(7, 4)
-+#define FEATURE_MSK GENMASK(3, 0)
-+
-+/**
-+ * enum hif_ex_stage -	HIF exception handshake stages with the HW
-+ * @HIF_EX_INIT:        disable and clear TXQ
-+ * @HIF_EX_INIT_DONE:   polling for init to be done
-+ * @HIF_EX_CLEARQ_DONE: disable RX, flush TX/RX workqueues and clear RX
-+ * @HIF_EX_ALLQ_RESET:  HW is back in safe mode for reinitialization and restart
-+ */
-+enum hif_ex_stage {
-+	HIF_EX_INIT = 0,
-+	HIF_EX_INIT_DONE,
-+	HIF_EX_CLEARQ_DONE,
-+	HIF_EX_ALLQ_RESET,
-+};
-+
-+struct mtk_runtime_feature {
-+	u8 feature_id;
-+	u8 support_info;
-+	u8 reserved[2];
-+	u32 data_len;
-+	u8 data[];
-+};
-+
-+enum md_event_id {
-+	FSM_PRE_START,
-+	FSM_START,
-+	FSM_READY,
-+};
-+
-+struct core_sys_info {
-+	atomic_t ready;
-+	u8 feature_set[FEATURE_COUNT];
-+};
-+
-+struct mtk_modem {
-+	struct md_sys_info *md_info;
-+	struct mtk_pci_dev *mtk_dev;
-+	struct core_sys_info core_md;
-+	bool md_init_finish;
-+	atomic_t rgu_irq_asserted;
-+	struct workqueue_struct *handshake_wq;
-+	struct work_struct handshake_work;
-+};
-+
-+struct md_sys_info {
-+	unsigned int	exp_id;
-+	spinlock_t	exp_spinlock; /* protect exp_id containing EX events */
-+};
-+
-+void mtk_md_exception_handshake(struct mtk_modem *md);
-+void mtk_md_event_notify(struct mtk_modem *md, enum md_event_id evt_id);
-+void mtk_md_reset(struct mtk_pci_dev *mtk_dev);
-+int mtk_md_init(struct mtk_pci_dev *mtk_dev);
-+void mtk_md_exit(struct mtk_pci_dev *mtk_dev);
-+void mtk_clear_rgu_irq(struct mtk_pci_dev *mtk_dev);
-+int mtk_acpi_fldr_func(struct mtk_pci_dev *mtk_dev);
-+int mtk_pci_mhccif_isr(struct mtk_pci_dev *mtk_dev);
-+
-+#endif	/* __T7XX_MODEM_OPS_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_monitor.h b/drivers/net/wwan/t7xx/t7xx_monitor.h
-new file mode 100644
-index 000000000000..42dec0e19035
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_monitor.h
-@@ -0,0 +1,137 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_MONITOR_H__
-+#define __T7XX_MONITOR_H__
-+
-+#include <linux/sched.h>
-+#include <linux/spinlock.h>
-+#include <linux/types.h>
-+#include <linux/wait.h>
-+
-+#include "t7xx_common.h"
-+#include "t7xx_modem_ops.h"
-+#include "t7xx_monitor.h"
-+#include "t7xx_skb_util.h"
-+
-+enum ccci_fsm_state {
-+	CCCI_FSM_INIT,
-+	CCCI_FSM_PRE_START,
-+	CCCI_FSM_STARTING,
-+	CCCI_FSM_READY,
-+	CCCI_FSM_EXCEPTION,
-+	CCCI_FSM_STOPPING,
-+	CCCI_FSM_STOPPED,
-+};
-+
-+enum ccci_fsm_event_state {
-+	CCCI_EVENT_INVALID,
-+	CCCI_EVENT_MD_EX,
-+	CCCI_EVENT_MD_EX_REC_OK,
-+	CCCI_EVENT_MD_EX_PASS,
-+	CCCI_EVENT_MAX
-+};
-+
-+enum ccci_fsm_cmd_state {
-+	CCCI_COMMAND_INVALID,
-+	CCCI_COMMAND_START,
-+	CCCI_COMMAND_EXCEPTION,
-+	CCCI_COMMAND_PRE_STOP,
-+	CCCI_COMMAND_STOP,
-+};
-+
-+enum ccci_ex_reason {
-+	EXCEPTION_HS_TIMEOUT,
-+	EXCEPTION_EE,
-+	EXCEPTION_EVENT,
-+};
-+
-+enum md_irq_type {
-+	MD_IRQ_WDT,
-+	MD_IRQ_CCIF_EX,
-+	MD_IRQ_PORT_ENUM,
-+};
-+
-+enum fsm_cmd_result {
-+	FSM_CMD_RESULT_PENDING,
-+	FSM_CMD_RESULT_OK,
-+	FSM_CMD_RESULT_FAIL,
-+};
-+
-+#define FSM_CMD_FLAG_WAITING_TO_COMPLETE	BIT(0)
-+#define FSM_CMD_FLAG_FLIGHT_MODE		BIT(1)
-+
-+#define EVENT_POLL_INTERVAL_MS			20
-+#define MD_EX_REC_OK_TIMEOUT_MS			10000
-+#define MD_EX_PASS_TIMEOUT_MS			(45 * 1000)
-+
-+struct ccci_fsm_monitor {
-+	dev_t dev_n;
-+	wait_queue_head_t rx_wq;
-+	struct ccci_skb_queue rx_skb_list;
-+};
-+
-+struct ccci_fsm_ctl {
-+	struct mtk_modem *md;
-+	enum md_state md_state;
-+	unsigned int curr_state;
-+	unsigned int last_state;
-+	struct list_head command_queue;
-+	struct list_head event_queue;
-+	wait_queue_head_t command_wq;
-+	wait_queue_head_t event_wq;
-+	wait_queue_head_t async_hk_wq;
-+	spinlock_t event_lock;		/* protects event_queue */
-+	spinlock_t command_lock;	/* protects command_queue */
-+	spinlock_t cmd_complete_lock;	/* protects fsm_command */
-+	struct task_struct *fsm_thread;
-+	atomic_t exp_flg;
-+	struct ccci_fsm_monitor monitor_ctl;
-+	spinlock_t notifier_lock;	/* protects notifier_list */
-+	struct list_head notifier_list;
-+};
-+
-+struct ccci_fsm_event {
-+	struct list_head entry;
-+	enum ccci_fsm_event_state event_id;
-+	unsigned int length;
-+	unsigned char data[];
-+};
-+
-+struct ccci_fsm_command {
-+	struct list_head entry;
-+	enum ccci_fsm_cmd_state cmd_id;
-+	unsigned int flag;
-+	enum fsm_cmd_result result;
-+	wait_queue_head_t complete_wq;
-+};
-+
-+struct fsm_notifier_block {
-+	struct list_head entry;
-+	int (*notifier_fn)(enum md_state state, void *data);
-+	void *data;
-+};
-+
-+int fsm_append_command(struct ccci_fsm_ctl *ctl, enum ccci_fsm_cmd_state cmd_id,
-+		       unsigned int flag);
-+int fsm_append_event(struct ccci_fsm_ctl *ctl, enum ccci_fsm_event_state event_id,
-+		     unsigned char *data, unsigned int length);
-+void fsm_clear_event(struct ccci_fsm_ctl *ctl, enum ccci_fsm_event_state event_id);
-+
-+struct ccci_fsm_ctl *fsm_get_entity_by_device_number(dev_t dev_n);
-+struct ccci_fsm_ctl *fsm_get_entry(void);
-+
-+void fsm_broadcast_state(struct ccci_fsm_ctl *ctl, enum md_state state);
-+void ccci_fsm_reset(void);
-+int ccci_fsm_init(struct mtk_modem *md);
-+void ccci_fsm_uninit(void);
-+void ccci_fsm_recv_md_interrupt(enum md_irq_type type);
-+enum md_state ccci_fsm_get_md_state(void);
-+unsigned int ccci_fsm_get_current_state(void);
-+void fsm_notifier_register(struct fsm_notifier_block *notifier);
-+void fsm_notifier_unregister(struct fsm_notifier_block *notifier);
-+
-+#endif /* __T7XX_MONITOR_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
-new file mode 100644
-index 000000000000..c16b3a2557f1
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_pci.c
-@@ -0,0 +1,228 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/pci.h>
-+
-+#include "t7xx_mhccif.h"
-+#include "t7xx_modem_ops.h"
-+#include "t7xx_pci.h"
-+#include "t7xx_pcie_mac.h"
-+#include "t7xx_reg.h"
-+#include "t7xx_skb_util.h"
-+
-+#define	PCI_IREG_BASE			0
-+#define	PCI_EREG_BASE			2
-+
-+static int mtk_request_irq(struct pci_dev *pdev)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	int ret, i;
-+
-+	mtk_dev = pci_get_drvdata(pdev);
-+
-+	for (i = 0; i < EXT_INT_NUM; i++) {
-+		const char *irq_descr;
-+		int irq_vec;
-+
-+		if (!mtk_dev->intr_handler[i])
-+			continue;
-+
-+		irq_descr = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s_%d", pdev->driver->name, i);
-+		if (!irq_descr)
-+			return -ENOMEM;
-+
-+		irq_vec = pci_irq_vector(pdev, i);
-+		ret = request_threaded_irq(irq_vec, mtk_dev->intr_handler[i],
-+					   mtk_dev->intr_thread[i], 0, irq_descr,
-+					   mtk_dev->callback_param[i]);
-+		if (ret) {
-+			dev_err(&pdev->dev, "Failed to request_irq: %d, int: %d, ret: %d\n",
-+				irq_vec, i, ret);
-+			while (i--) {
-+				if (!mtk_dev->intr_handler[i])
-+					continue;
-+
-+				free_irq(pci_irq_vector(pdev, i), mtk_dev->callback_param[i]);
-+			}
-+
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int mtk_setup_msix(struct mtk_pci_dev *mtk_dev)
-+{
-+	int ret;
-+
-+	/* We are interested only in 6 interrupts, but HW-design requires power-of-2
-+	 * IRQs allocation.
-+	 */
-+	ret = pci_alloc_irq_vectors(mtk_dev->pdev, EXT_INT_NUM, EXT_INT_NUM, PCI_IRQ_MSIX);
-+	if (ret < 0) {
-+		dev_err(&mtk_dev->pdev->dev, "Failed to allocate MSI-X entry, errno: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = mtk_request_irq(mtk_dev->pdev);
-+	if (ret) {
-+		pci_free_irq_vectors(mtk_dev->pdev);
-+		return ret;
-+	}
-+
-+	/* Set MSIX merge config */
-+	mtk_pcie_mac_msix_cfg(mtk_dev, EXT_INT_NUM);
-+	return 0;
-+}
-+
-+static int mtk_interrupt_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	int ret, i;
-+
-+	if (!mtk_dev->pdev->msix_cap)
-+		return -EINVAL;
-+
-+	ret = mtk_setup_msix(mtk_dev);
-+	if (ret)
-+		return ret;
-+
-+	/* let the IPs enable interrupts when they are ready */
-+	for (i = EXT_INT_START; i < EXT_INT_START + EXT_INT_NUM; i++)
-+		PCIE_MAC_MSIX_MSK_SET(mtk_dev, i);
-+
-+	return 0;
-+}
-+
-+static inline void mtk_pci_infracfg_ao_calc(struct mtk_pci_dev *mtk_dev)
-+{
-+	mtk_dev->base_addr.infracfg_ao_base = mtk_dev->base_addr.pcie_ext_reg_base +
-+					      INFRACFG_AO_DEV_CHIP -
-+					      mtk_dev->base_addr.pcie_dev_reg_trsl_addr;
-+}
-+
-+static int mtk_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	int ret;
-+
-+	mtk_dev = devm_kzalloc(&pdev->dev, sizeof(*mtk_dev), GFP_KERNEL);
-+	if (!mtk_dev)
-+		return -ENOMEM;
-+
-+	pci_set_drvdata(pdev, mtk_dev);
-+	mtk_dev->pdev = pdev;
-+
-+	ret = pcim_enable_device(pdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = pcim_iomap_regions(pdev, BIT(PCI_IREG_BASE) | BIT(PCI_EREG_BASE), pci_name(pdev));
-+	if (ret) {
-+		dev_err(&pdev->dev, "PCIm iomap regions fail %d\n", ret);
-+		return -ENOMEM;
-+	}
-+
-+	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-+	if (ret) {
-+		ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+		if (ret) {
-+			dev_err(&pdev->dev, "Could not set PCI DMA mask, err: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
-+	ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
-+	if (ret) {
-+		ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-+		if (ret) {
-+			dev_err(&pdev->dev, "Could not set consistent PCI DMA mask, err: %d\n",
-+				ret);
-+			return ret;
-+		}
-+	}
-+
-+	IREG_BASE(mtk_dev) = pcim_iomap_table(pdev)[PCI_IREG_BASE];
-+	mtk_dev->base_addr.pcie_ext_reg_base = pcim_iomap_table(pdev)[PCI_EREG_BASE];
-+
-+	ret = ccci_skb_pool_alloc(&mtk_dev->pools);
-+	if (ret)
-+		return ret;
-+
-+	mtk_pcie_mac_atr_init(mtk_dev);
-+	mtk_pci_infracfg_ao_calc(mtk_dev);
-+	mhccif_init(mtk_dev);
-+
-+	ret = mtk_md_init(mtk_dev);
-+	if (ret)
-+		goto err;
-+
-+	mtk_pcie_mac_interrupts_dis(mtk_dev);
-+	ret = mtk_interrupt_init(mtk_dev);
-+	if (ret)
-+		goto err;
-+
-+	mtk_pcie_mac_set_int(mtk_dev, MHCCIF_INT);
-+	mtk_pcie_mac_interrupts_en(mtk_dev);
-+	pci_set_master(pdev);
-+
-+	return 0;
-+
-+err:
-+	ccci_skb_pool_free(&mtk_dev->pools);
-+	return ret;
-+}
-+
-+static void mtk_pci_remove(struct pci_dev *pdev)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	int i;
-+
-+	mtk_dev = pci_get_drvdata(pdev);
-+	mtk_md_exit(mtk_dev);
-+
-+	for (i = 0; i < EXT_INT_NUM; i++) {
-+		if (!mtk_dev->intr_handler[i])
-+			continue;
-+
-+		free_irq(pci_irq_vector(pdev, i), mtk_dev->callback_param[i]);
-+	}
-+
-+	pci_free_irq_vectors(mtk_dev->pdev);
-+	ccci_skb_pool_free(&mtk_dev->pools);
-+}
-+
-+static const struct pci_device_id t7xx_pci_table[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x4d75) },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(pci, t7xx_pci_table);
-+
-+static struct pci_driver mtk_pci_driver = {
-+	.name = "mtk_t7xx",
-+	.id_table = t7xx_pci_table,
-+	.probe = mtk_pci_probe,
-+	.remove = mtk_pci_remove,
-+};
-+
-+static int __init mtk_pci_init(void)
-+{
-+	return pci_register_driver(&mtk_pci_driver);
-+}
-+module_init(mtk_pci_init);
-+
-+static void __exit mtk_pci_cleanup(void)
-+{
-+	pci_unregister_driver(&mtk_pci_driver);
-+}
-+module_exit(mtk_pci_cleanup);
-+
-+MODULE_AUTHOR("MediaTek Inc");
-+MODULE_DESCRIPTION("MediaTek PCIe 5G WWAN modem t7xx driver");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wwan/t7xx/t7xx_pci.h b/drivers/net/wwan/t7xx/t7xx_pci.h
-new file mode 100644
-index 000000000000..fc27c8c9bf12
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_pci.h
-@@ -0,0 +1,59 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_PCI_H__
-+#define __T7XX_PCI_H__
-+
-+#include <linux/pci.h>
-+#include <linux/types.h>
-+
-+#include "t7xx_reg.h"
-+#include "t7xx_skb_util.h"
-+
-+/* struct mtk_addr_base - holds base addresses
-+ * @pcie_mac_ireg_base: PCIe MAC register base
-+ * @pcie_ext_reg_base: used to calculate base addresses for CLDMA, DPMA and MHCCIF registers
-+ * @pcie_dev_reg_trsl_addr: used to calculate the register base address
-+ * @infracfg_ao_base: base address used in CLDMA reset operations
-+ * @mhccif_rc_base: host view of MHCCIF rc base addr
-+ */
-+struct mtk_addr_base {
-+	void __iomem *pcie_mac_ireg_base;
-+	void __iomem *pcie_ext_reg_base;
-+	u32 pcie_dev_reg_trsl_addr;
-+	void __iomem *infracfg_ao_base;
-+	void __iomem *mhccif_rc_base;
-+};
-+
-+typedef irqreturn_t (*mtk_intr_callback)(int irq, void *param);
-+
-+/* struct mtk_pci_dev - MTK device context structure
-+ * @intr_handler: array of handler function for request_threaded_irq
-+ * @intr_thread: array of thread_fn for request_threaded_irq
-+ * @callback_param: array of cookie passed back to interrupt functions
-+ * @mhccif_bitmask: device to host interrupt mask
-+ * @pdev: pci device
-+ * @base_addr: memory base addresses of HW components
-+ * @md: modem interface
-+ * @ccmni_ctlb: context structure used to control the network data path
-+ * @rgu_pci_irq_en: RGU callback isr registered and active
-+ * @pools: pre allocated skb pools
-+ */
-+struct mtk_pci_dev {
-+	mtk_intr_callback	intr_handler[EXT_INT_NUM];
-+	mtk_intr_callback	intr_thread[EXT_INT_NUM];
-+	void			*callback_param[EXT_INT_NUM];
-+	u32			mhccif_bitmask;
-+	struct pci_dev		*pdev;
-+	struct mtk_addr_base	base_addr;
-+	struct mtk_modem	*md;
-+
-+	struct ccmni_ctl_block	*ccmni_ctlb;
-+	bool			rgu_pci_irq_en;
-+	struct skb_pools	pools;
-+};
-+
-+#endif /* __T7XX_PCI_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_pcie_mac.c b/drivers/net/wwan/t7xx/t7xx_pcie_mac.c
-new file mode 100644
-index 000000000000..9e512010245d
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_pcie_mac.c
-@@ -0,0 +1,270 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#include <linux/io-64-nonatomic-lo-hi.h>
-+#include <linux/msi.h>
-+
-+#include "t7xx_pci.h"
-+#include "t7xx_pcie_mac.h"
-+#include "t7xx_reg.h"
-+
-+#define PCIE_REG_BAR			2
-+#define PCIE_REG_PORT			ATR_SRC_PCI_WIN0
-+#define PCIE_REG_TABLE_NUM		0
-+#define PCIE_REG_TRSL_PORT		ATR_DST_AXIM_0
-+
-+#define PCIE_DEV_DMA_PORT_START		ATR_SRC_AXIS_0
-+#define PCIE_DEV_DMA_PORT_END		ATR_SRC_AXIS_2
-+#define PCIE_DEV_DMA_TABLE_NUM		0
-+#define PCIE_DEV_DMA_TRSL_ADDR		0x00000000
-+#define PCIE_DEV_DMA_SRC_ADDR		0x00000000
-+#define PCIE_DEV_DMA_TRANSPARENT	1
-+#define PCIE_DEV_DMA_SIZE		0
-+
-+enum mtk_atr_src_port {
-+	ATR_SRC_PCI_WIN0,
-+	ATR_SRC_PCI_WIN1,
-+	ATR_SRC_AXIS_0,
-+	ATR_SRC_AXIS_1,
-+	ATR_SRC_AXIS_2,
-+	ATR_SRC_AXIS_3,
-+};
-+
-+enum mtk_atr_dst_port {
-+	ATR_DST_PCI_TRX,
-+	ATR_DST_PCI_CONFIG,
-+	ATR_DST_AXIM_0 = 4,
-+	ATR_DST_AXIM_1,
-+	ATR_DST_AXIM_2,
-+	ATR_DST_AXIM_3,
-+};
-+
-+struct mtk_atr_config {
-+	u64			src_addr;
-+	u64			trsl_addr;
-+	u64			size;
-+	u32			port;
-+	u32			table;
-+	enum mtk_atr_dst_port	trsl_id;
-+	u32			transparent;
-+};
-+
-+static void mtk_pcie_mac_atr_tables_dis(void __iomem *pbase, enum mtk_atr_src_port port)
-+{
-+	void __iomem *reg;
-+	int i, offset;
-+
-+	for (i = 0; i < ATR_TABLE_NUM_PER_ATR; i++) {
-+		offset = (ATR_PORT_OFFSET * port) + (ATR_TABLE_OFFSET * i);
-+
-+		/* Disable table by SRC_ADDR */
-+		reg = pbase + ATR_PCIE_WIN0_T0_ATR_PARAM_SRC_ADDR + offset;
-+		iowrite64(0, reg);
-+	}
-+}
-+
-+static int mtk_pcie_mac_atr_cfg(struct mtk_pci_dev *mtk_dev, struct mtk_atr_config *cfg)
-+{
-+	int atr_size, pos, offset;
-+	void __iomem *pbase;
-+	struct device *dev;
-+	void __iomem *reg;
-+	u64 value;
-+
-+	dev = &mtk_dev->pdev->dev;
-+	pbase = IREG_BASE(mtk_dev);
-+
-+	if (cfg->transparent) {
-+		/* No address conversion is performed */
-+		atr_size = ATR_TRANSPARENT_SIZE;
-+	} else {
-+		if (cfg->src_addr & (cfg->size - 1)) {
-+			dev_err(dev, "src addr is not aligned to size\n");
-+			return -EINVAL;
-+		}
-+
-+		if (cfg->trsl_addr & (cfg->size - 1)) {
-+			dev_err(dev, "trsl addr %llx not aligned to size %llx\n",
-+				cfg->trsl_addr, cfg->size - 1);
-+			return -EINVAL;
-+		}
-+
-+		pos = ffs(lower_32_bits(cfg->size));
-+		if (!pos)
-+			pos = ffs(upper_32_bits(cfg->size)) + 32;
-+
-+		/* The HW calculates the address translation space as 2^(atr_size + 1)
-+		 * but we also need to consider that ffs() starts counting from 1.
-+		 */
-+		atr_size = pos - 2;
-+	}
-+
-+	/* Calculate table offset */
-+	offset = ATR_PORT_OFFSET * cfg->port + ATR_TABLE_OFFSET * cfg->table;
-+
-+	reg = pbase + ATR_PCIE_WIN0_T0_TRSL_ADDR + offset;
-+	value = cfg->trsl_addr & ATR_PCIE_WIN0_ADDR_ALGMT;
-+	iowrite64(value, reg);
-+
-+	reg = pbase + ATR_PCIE_WIN0_T0_TRSL_PARAM + offset;
-+	iowrite32(cfg->trsl_id, reg);
-+
-+	reg = pbase + ATR_PCIE_WIN0_T0_ATR_PARAM_SRC_ADDR + offset;
-+	value = (cfg->src_addr & ATR_PCIE_WIN0_ADDR_ALGMT) | (atr_size << 1) | BIT(0);
-+	iowrite64(value, reg);
-+
-+	/* Read back to ensure ATR is set */
-+	ioread64(reg);
-+	return 0;
-+}
-+
-+/**
-+ * mtk_pcie_mac_atr_init() - initialize address translation
-+ * @mtk_dev: MTK device
-+ *
-+ * Setup ATR for ports & device.
-+ *
-+ */
-+void mtk_pcie_mac_atr_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct mtk_atr_config cfg;
-+	u32 i;
-+
-+	/* Disable all ATR table for all ports */
-+	for (i = ATR_SRC_PCI_WIN0; i <= ATR_SRC_AXIS_3; i++)
-+		mtk_pcie_mac_atr_tables_dis(IREG_BASE(mtk_dev), i);
-+
-+	memset(&cfg, 0, sizeof(cfg));
-+	/* Config ATR for RC to access device's register */
-+	cfg.src_addr = pci_resource_start(mtk_dev->pdev, PCIE_REG_BAR);
-+	cfg.size = PCIE_REG_SIZE_CHIP;
-+	cfg.trsl_addr = PCIE_REG_TRSL_ADDR_CHIP;
-+	cfg.port = PCIE_REG_PORT;
-+	cfg.table = PCIE_REG_TABLE_NUM;
-+	cfg.trsl_id = PCIE_REG_TRSL_PORT;
-+	mtk_pcie_mac_atr_tables_dis(IREG_BASE(mtk_dev), cfg.port);
-+	mtk_pcie_mac_atr_cfg(mtk_dev, &cfg);
-+
-+	/* Update translation base */
-+	mtk_dev->base_addr.pcie_dev_reg_trsl_addr = PCIE_REG_TRSL_ADDR_CHIP;
-+
-+	/* Config ATR for EP to access RC's memory */
-+	for (i = PCIE_DEV_DMA_PORT_START; i <= PCIE_DEV_DMA_PORT_END; i++) {
-+		cfg.src_addr = PCIE_DEV_DMA_SRC_ADDR;
-+		cfg.size = PCIE_DEV_DMA_SIZE;
-+		cfg.trsl_addr = PCIE_DEV_DMA_TRSL_ADDR;
-+		cfg.port = i;
-+		cfg.table = PCIE_DEV_DMA_TABLE_NUM;
-+		cfg.trsl_id = ATR_DST_PCI_TRX;
-+		/* Enable transparent translation */
-+		cfg.transparent = PCIE_DEV_DMA_TRANSPARENT;
-+		mtk_pcie_mac_atr_tables_dis(IREG_BASE(mtk_dev), cfg.port);
-+		mtk_pcie_mac_atr_cfg(mtk_dev, &cfg);
-+	}
-+}
-+
-+/**
-+ * mtk_pcie_mac_enable_disable_int() - enable/disable interrupts
-+ * @mtk_dev: MTK device
-+ * @enable: enable/disable
-+ *
-+ * Enable or disable device interrupts.
-+ *
-+ */
-+static void mtk_pcie_mac_enable_disable_int(struct mtk_pci_dev *mtk_dev, bool enable)
-+{
-+	u32 value;
-+
-+	value = ioread32(IREG_BASE(mtk_dev) + ISTAT_HST_CTRL);
-+	if (enable)
-+		value &= ~ISTAT_HST_CTRL_DIS;
-+	else
-+		value |= ISTAT_HST_CTRL_DIS;
-+
-+	iowrite32(value, IREG_BASE(mtk_dev) + ISTAT_HST_CTRL);
-+}
-+
-+void mtk_pcie_mac_interrupts_en(struct mtk_pci_dev *mtk_dev)
-+{
-+	mtk_pcie_mac_enable_disable_int(mtk_dev, true);
-+}
-+
-+void mtk_pcie_mac_interrupts_dis(struct mtk_pci_dev *mtk_dev)
-+{
-+	mtk_pcie_mac_enable_disable_int(mtk_dev, false);
-+}
-+
-+/**
-+ * mtk_pcie_mac_clear_set_int() - clear/set interrupt by type
-+ * @mtk_dev: MTK device
-+ * @int_type: interrupt type
-+ * @clear: clear/set
-+ *
-+ * Clear or set device interrupt by type.
-+ *
-+ */
-+static void mtk_pcie_mac_clear_set_int(struct mtk_pci_dev *mtk_dev,
-+				       enum pcie_int int_type, bool clear)
-+{
-+	void __iomem *reg;
-+
-+	if (mtk_dev->pdev->msix_enabled) {
-+		if (clear)
-+			reg = IREG_BASE(mtk_dev) + IMASK_HOST_MSIX_CLR_GRP0_0;
-+		else
-+			reg = IREG_BASE(mtk_dev) + IMASK_HOST_MSIX_SET_GRP0_0;
-+	} else {
-+		if (clear)
-+			reg = IREG_BASE(mtk_dev) + INT_EN_HST_CLR;
-+		else
-+			reg = IREG_BASE(mtk_dev) + INT_EN_HST_SET;
-+	}
-+
-+	iowrite32(BIT(EXT_INT_START + int_type), reg);
-+}
-+
-+void mtk_pcie_mac_clear_int(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type)
-+{
-+	mtk_pcie_mac_clear_set_int(mtk_dev, int_type, true);
-+}
-+
-+void mtk_pcie_mac_set_int(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type)
-+{
-+	mtk_pcie_mac_clear_set_int(mtk_dev, int_type, false);
-+}
-+
-+/**
-+ * mtk_pcie_mac_clear_int_status() - clear interrupt status by type
-+ * @mtk_dev: MTK device
-+ * @int_type: interrupt type
-+ *
-+ * Enable or disable device interrupts' status by type.
-+ *
-+ */
-+void mtk_pcie_mac_clear_int_status(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type)
-+{
-+	void __iomem *reg;
-+
-+	if (mtk_dev->pdev->msix_enabled)
-+		reg = IREG_BASE(mtk_dev) + MSIX_ISTAT_HST_GRP0_0;
-+	else
-+		reg = IREG_BASE(mtk_dev) + ISTAT_HST;
-+
-+	iowrite32(BIT(EXT_INT_START + int_type), reg);
-+}
-+
-+/**
-+ * mtk_pcie_mac_msix_cfg() - write MSIX control configuration
-+ * @mtk_dev: MTK device
-+ * @irq_count: number of MSIX IRQ vectors
-+ *
-+ * Write IRQ count to device.
-+ *
-+ */
-+void mtk_pcie_mac_msix_cfg(struct mtk_pci_dev *mtk_dev, unsigned int irq_count)
-+{
-+	iowrite32(ffs(irq_count) * 2 - 1, IREG_BASE(mtk_dev) + PCIE_CFG_MSIX);
-+}
-diff --git a/drivers/net/wwan/t7xx/t7xx_pcie_mac.h b/drivers/net/wwan/t7xx/t7xx_pcie_mac.h
-new file mode 100644
-index 000000000000..bba0998179ae
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_pcie_mac.h
-@@ -0,0 +1,29 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_PCIE_MAC_H__
-+#define __T7XX_PCIE_MAC_H__
-+
-+#include <linux/bitops.h>
-+#include <linux/io.h>
-+
-+#include "t7xx_pci.h"
-+#include "t7xx_reg.h"
-+
-+#define IREG_BASE(mtk_dev)	((mtk_dev)->base_addr.pcie_mac_ireg_base)
-+
-+#define PCIE_MAC_MSIX_MSK_SET(mtk_dev, ext_id)	\
-+	iowrite32(BIT(ext_id), IREG_BASE(mtk_dev) + IMASK_HOST_MSIX_SET_GRP0_0)
-+
-+void mtk_pcie_mac_interrupts_en(struct mtk_pci_dev *mtk_dev);
-+void mtk_pcie_mac_interrupts_dis(struct mtk_pci_dev *mtk_dev);
-+void mtk_pcie_mac_atr_init(struct mtk_pci_dev *mtk_dev);
-+void mtk_pcie_mac_clear_int(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type);
-+void mtk_pcie_mac_set_int(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type);
-+void mtk_pcie_mac_clear_int_status(struct mtk_pci_dev *mtk_dev, enum pcie_int int_type);
-+void mtk_pcie_mac_msix_cfg(struct mtk_pci_dev *mtk_dev, unsigned int irq_count);
-+
-+#endif /* __T7XX_PCIE_MAC_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_reg.h b/drivers/net/wwan/t7xx/t7xx_reg.h
-new file mode 100644
-index 000000000000..8e4b5507a3c8
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_reg.h
-@@ -0,0 +1,389 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_REG_H__
-+#define __T7XX_REG_H__
-+
-+#include <linux/bits.h>
-+
-+/* RC part */
-+
-+/* Device base address offset - update if reg BAR base is changed */
-+#define MHCCIF_RC_DEV_BASE			0x10024000
-+
-+#define REG_RC2EP_SW_BSY			0x04
-+#define REG_RC2EP_SW_INT_START			0x08
-+
-+#define REG_RC2EP_SW_TCHNUM			0x0c
-+#define H2D_CH_EXCEPTION_ACK			1
-+#define H2D_CH_EXCEPTION_CLEARQ_ACK		2
-+#define H2D_CH_DS_LOCK				3
-+/* Channels 4-8 are reserved */
-+#define H2D_CH_SUSPEND_REQ			9
-+#define H2D_CH_RESUME_REQ			10
-+#define H2D_CH_SUSPEND_REQ_AP			11
-+#define H2D_CH_RESUME_REQ_AP			12
-+#define H2D_CH_DEVICE_RESET			13
-+#define H2D_CH_DRM_DISABLE_AP			14
-+
-+#define REG_EP2RC_SW_INT_STS			0x10
-+#define REG_EP2RC_SW_INT_ACK			0x14
-+#define REG_EP2RC_SW_INT_EAP_MASK		0x20
-+#define REG_EP2RC_SW_INT_EAP_MASK_SET		0x30
-+#define REG_EP2RC_SW_INT_EAP_MASK_CLR		0x40
-+
-+#define D2H_INT_DS_LOCK_ACK			BIT(0)
-+#define D2H_INT_EXCEPTION_INIT			BIT(1)
-+#define D2H_INT_EXCEPTION_INIT_DONE		BIT(2)
-+#define D2H_INT_EXCEPTION_CLEARQ_DONE		BIT(3)
-+#define D2H_INT_EXCEPTION_ALLQ_RESET		BIT(4)
-+#define D2H_INT_PORT_ENUM			BIT(5)
-+/* bits 6-10 are reserved */
-+#define D2H_INT_SUSPEND_ACK			BIT(11)
-+#define D2H_INT_RESUME_ACK			BIT(12)
-+#define D2H_INT_SUSPEND_ACK_AP			BIT(13)
-+#define D2H_INT_RESUME_ACK_AP			BIT(14)
-+#define D2H_INT_ASYNC_SAP_HK			BIT(15)
-+#define D2H_INT_ASYNC_MD_HK			BIT(16)
-+
-+/* EP part */
-+
-+/* Device base address offset */
-+#define MHCCIF_EP_DEV_BASE			0x10025000
-+
-+/* Reg base */
-+#define INFRACFG_AO_DEV_CHIP			0x10001000
-+
-+/* ATR setting */
-+#define PCIE_REG_TRSL_ADDR_CHIP			0x10000000
-+#define PCIE_REG_SIZE_CHIP			0x00400000
-+
-+/* RGU */
-+#define TOPRGU_CH_PCIE_IRQ_STA			0x1000790c
-+
-+#define EXP_BAR0				0x0c
-+#define EXP_BAR2				0x04
-+#define EXP_BAR4				0x0c
-+#define EXP_BAR0_SIZE				0x00008000
-+#define EXP_BAR2_SIZE				0x00800000
-+#define EXP_BAR4_SIZE				0x00800000
-+
-+#define ATR_PORT_OFFSET				0x100
-+#define ATR_TABLE_OFFSET			0x20
-+#define ATR_TABLE_NUM_PER_ATR			8
-+#define ATR_TRANSPARENT_SIZE			0x3f
-+
-+/* PCIE_MAC_IREG Register Definition */
-+
-+#define INT_EN_HST				0x0188
-+#define ISTAT_HST				0x018c
-+
-+#define ISTAT_HST_CTRL				0x01ac
-+#define ISTAT_HST_CTRL_DIS			BIT(0)
-+
-+#define INT_EN_HST_SET				0x01f0
-+#define INT_EN_HST_CLR				0x01f4
-+
-+#define PCIE_MISC_CTRL				0x0348
-+#define PCIE_MISC_MAC_SLEEP_DIS			BIT(7)
-+
-+#define PCIE_CFG_MSIX				0x03ec
-+#define ATR_PCIE_WIN0_T0_ATR_PARAM_SRC_ADDR	0x0600
-+#define ATR_PCIE_WIN0_T0_TRSL_ADDR		0x0608
-+#define ATR_PCIE_WIN0_T0_TRSL_PARAM		0x0610
-+#define ATR_PCIE_WIN0_ADDR_ALGMT		GENMASK_ULL(63, 12)
-+
-+#define ATR_SRC_ADDR_INVALID			0x007f
-+
-+#define PCIE_PM_RESUME_STATE			0x0d0c
-+enum mtk_pm_resume_state {
-+	PM_RESUME_REG_STATE_L3,
-+	PM_RESUME_REG_STATE_L1,
-+	PM_RESUME_REG_STATE_INIT,
-+	PM_RESUME_REG_STATE_EXP,
-+	PM_RESUME_REG_STATE_L2,
-+	PM_RESUME_REG_STATE_L2_EXP,
-+};
-+
-+#define PCIE_MISC_DEV_STATUS			0x0d1c
-+#define MISC_STAGE_MASK				GENMASK(2, 0)
-+#define MISC_RESET_TYPE_PLDR			BIT(26)
-+#define MISC_RESET_TYPE_FLDR			BIT(27)
-+#define LINUX_STAGE				4
-+
-+#define PCIE_RESOURCE_STATUS			0x0d28
-+#define PCIE_RESOURCE_STATUS_MSK		GENMASK(4, 0)
-+
-+#define DIS_ASPM_LOWPWR_SET_0			0x0e50
-+#define DIS_ASPM_LOWPWR_CLR_0			0x0e54
-+#define DIS_ASPM_LOWPWR_SET_1			0x0e58
-+#define DIS_ASPM_LOWPWR_CLR_1			0x0e5c
-+#define L1_DISABLE_BIT(i)			BIT((i) * 4 + 1)
-+#define L1_1_DISABLE_BIT(i)			BIT((i) * 4 + 2)
-+#define L1_2_DISABLE_BIT(i)			BIT((i) * 4 + 3)
-+
-+#define MSIX_SW_TRIG_SET_GRP0_0			0x0e80
-+#define MSIX_ISTAT_HST_GRP0_0			0x0f00
-+#define IMASK_HOST_MSIX_SET_GRP0_0		0x3000
-+#define IMASK_HOST_MSIX_CLR_GRP0_0		0x3080
-+#define IMASK_HOST_MSIX_GRP0_0			0x3100
-+#define EXT_INT_START				24
-+#define EXT_INT_NUM				8
-+#define MSIX_MSK_SET_ALL			GENMASK(31, 24)
-+enum pcie_int {
-+	DPMAIF_INT = 0,
-+	CLDMA0_INT,
-+	CLDMA1_INT,
-+	CLDMA2_INT,
-+	MHCCIF_INT,
-+	DPMAIF2_INT,
-+	SAP_RGU_INT,
-+	CLDMA3_INT,
-+};
-+
-+/* DPMA definitions */
-+
-+#define DPMAIF_PD_BASE				0x1022d000
-+#define BASE_DPMAIF_UL				DPMAIF_PD_BASE
-+#define BASE_DPMAIF_DL				(DPMAIF_PD_BASE + 0x100)
-+#define BASE_DPMAIF_AP_MISC			(DPMAIF_PD_BASE + 0x400)
-+#define BASE_DPMAIF_MMW_HPC			(DPMAIF_PD_BASE + 0x600)
-+#define BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX		(DPMAIF_PD_BASE + 0x900)
-+#define BASE_DPMAIF_PD_SRAM_DL			(DPMAIF_PD_BASE + 0xc00)
-+#define BASE_DPMAIF_PD_SRAM_UL			(DPMAIF_PD_BASE + 0xd00)
-+
-+#define DPMAIF_AO_BASE				0x10014000
-+#define BASE_DPMAIF_AO_UL			DPMAIF_AO_BASE
-+#define BASE_DPMAIF_AO_DL			(DPMAIF_AO_BASE + 0x400)
-+
-+/* dpmaif_ul */
-+#define DPMAIF_UL_ADD_DESC			(BASE_DPMAIF_UL + 0x00)
-+#define DPMAIF_UL_CHK_BUSY			(BASE_DPMAIF_UL + 0x88)
-+#define DPMAIF_UL_RESERVE_AO_RW			(BASE_DPMAIF_UL + 0xac)
-+#define DPMAIF_UL_ADD_DESC_CH0			(BASE_DPMAIF_UL + 0xb0)
-+
-+/* dpmaif_dl */
-+#define DPMAIF_DL_BAT_INIT			(BASE_DPMAIF_DL + 0x00)
-+#define DPMAIF_DL_BAT_ADD			(BASE_DPMAIF_DL + 0x04)
-+#define DPMAIF_DL_BAT_INIT_CON0			(BASE_DPMAIF_DL + 0x08)
-+#define DPMAIF_DL_BAT_INIT_CON1			(BASE_DPMAIF_DL + 0x0c)
-+#define DPMAIF_DL_BAT_INIT_CON2			(BASE_DPMAIF_DL + 0x10)
-+#define DPMAIF_DL_BAT_INIT_CON3			(BASE_DPMAIF_DL + 0x50)
-+#define DPMAIF_DL_CHK_BUSY			(BASE_DPMAIF_DL + 0xb4)
-+
-+/* dpmaif_ap_misc */
-+#define DPMAIF_AP_L2TISAR0			(BASE_DPMAIF_AP_MISC + 0x00)
-+#define DPMAIF_AP_APDL_L2TISAR0			(BASE_DPMAIF_AP_MISC + 0x50)
-+#define DPMAIF_AP_IP_BUSY			(BASE_DPMAIF_AP_MISC + 0x60)
-+#define DPMAIF_AP_CG_EN				(BASE_DPMAIF_AP_MISC + 0x68)
-+#define DPMAIF_AP_OVERWRITE_CFG			(BASE_DPMAIF_AP_MISC + 0x90)
-+#define DPMAIF_AP_MEM_CLR			(BASE_DPMAIF_AP_MISC + 0x94)
-+#define DPMAIF_AP_ALL_L2TISAR0_MASK		GENMASK(31, 0)
-+#define DPMAIF_AP_APDL_ALL_L2TISAR0_MASK	GENMASK(31, 0)
-+#define DPMAIF_AP_IP_BUSY_MASK			GENMASK(31, 0)
-+
-+/* dpmaif_ao_ul */
-+#define DPMAIF_AO_UL_INIT_SET			(BASE_DPMAIF_AO_UL + 0x0)
-+#define DPMAIF_AO_UL_CHNL_ARB0			(BASE_DPMAIF_AO_UL + 0x1c)
-+#define DPMAIF_AO_UL_AP_L2TIMR0			(BASE_DPMAIF_AO_UL + 0x80)
-+#define DPMAIF_AO_UL_AP_L2TIMCR0		(BASE_DPMAIF_AO_UL + 0x84)
-+#define DPMAIF_AO_UL_AP_L2TIMSR0		(BASE_DPMAIF_AO_UL + 0x88)
-+#define DPMAIF_AO_UL_AP_L1TIMR0			(BASE_DPMAIF_AO_UL + 0x8c)
-+#define DPMAIF_AO_UL_APDL_L2TIMR0		(BASE_DPMAIF_AO_UL + 0x90)
-+#define DPMAIF_AO_UL_APDL_L2TIMCR0		(BASE_DPMAIF_AO_UL + 0x94)
-+#define DPMAIF_AO_UL_APDL_L2TIMSR0		(BASE_DPMAIF_AO_UL + 0x98)
-+#define DPMAIF_AO_AP_DLUL_IP_BUSY_MASK		(BASE_DPMAIF_AO_UL + 0x9c)
-+
-+/* dpmaif_pd_sram_ul */
-+#define DPMAIF_AO_UL_CHNL0_CON0			(BASE_DPMAIF_PD_SRAM_UL + 0x10)
-+#define DPMAIF_AO_UL_CHNL0_CON1			(BASE_DPMAIF_PD_SRAM_UL + 0x14)
-+#define DPMAIF_AO_UL_CHNL0_CON2			(BASE_DPMAIF_PD_SRAM_UL + 0x18)
-+#define DPMAIF_AO_UL_CH0_STA			(BASE_DPMAIF_PD_SRAM_UL + 0x70)
-+
-+/* dpmaif_ao_dl */
-+#define DPMAIF_AO_DL_INIT_SET			(BASE_DPMAIF_AO_DL + 0x00)
-+#define DPMAIF_AO_DL_IRQ_MASK			(BASE_DPMAIF_AO_DL + 0x0c)
-+#define DPMAIF_AO_DL_DLQPIT_INIT_CON5		(BASE_DPMAIF_AO_DL + 0x28)
-+#define DPMAIF_AO_DL_DLQPIT_TRIG_THRES		(BASE_DPMAIF_AO_DL + 0x34)
-+
-+/* dpmaif_pd_sram_dl */
-+#define DPMAIF_AO_DL_PKTINFO_CON0		(BASE_DPMAIF_PD_SRAM_DL + 0x00)
-+#define DPMAIF_AO_DL_PKTINFO_CON1		(BASE_DPMAIF_PD_SRAM_DL + 0x04)
-+#define DPMAIF_AO_DL_PKTINFO_CON2		(BASE_DPMAIF_PD_SRAM_DL + 0x08)
-+#define DPMAIF_AO_DL_RDY_CHK_THRES		(BASE_DPMAIF_PD_SRAM_DL + 0x0c)
-+#define DPMAIF_AO_DL_RDY_CHK_FRG_THRES		(BASE_DPMAIF_PD_SRAM_DL + 0x10)
-+
-+#define DPMAIF_AO_DL_DLQ_AGG_CFG		(BASE_DPMAIF_PD_SRAM_DL + 0x20)
-+#define DPMAIF_AO_DL_DLQPIT_TIMEOUT0		(BASE_DPMAIF_PD_SRAM_DL + 0x24)
-+#define DPMAIF_AO_DL_DLQPIT_TIMEOUT1		(BASE_DPMAIF_PD_SRAM_DL + 0x28)
-+#define DPMAIF_AO_DL_HPC_CNTL			(BASE_DPMAIF_PD_SRAM_DL + 0x38)
-+#define DPMAIF_AO_DL_PIT_SEQ_END		(BASE_DPMAIF_PD_SRAM_DL + 0x40)
-+
-+#define DPMAIF_AO_DL_BAT_RIDX			(BASE_DPMAIF_PD_SRAM_DL + 0xd8)
-+#define DPMAIF_AO_DL_BAT_WRIDX			(BASE_DPMAIF_PD_SRAM_DL + 0xdc)
-+#define DPMAIF_AO_DL_PIT_RIDX			(BASE_DPMAIF_PD_SRAM_DL + 0xec)
-+#define DPMAIF_AO_DL_PIT_WRIDX			(BASE_DPMAIF_PD_SRAM_DL + 0x60)
-+#define DPMAIF_AO_DL_FRGBAT_WRIDX		(BASE_DPMAIF_PD_SRAM_DL + 0x78)
-+#define DPMAIF_AO_DL_DLQ_WRIDX			(BASE_DPMAIF_PD_SRAM_DL + 0xa4)
-+
-+/* dpmaif_hpc */
-+#define DPMAIF_HPC_INTR_MASK			(BASE_DPMAIF_MMW_HPC + 0x0f4)
-+#define DPMA_HPC_ALL_INT_MASK			GENMASK(15, 0)
-+
-+#define DPMAIF_HPC_DLQ_PATH_MODE		3
-+#define DPMAIF_HPC_ADD_MODE_DF			0
-+#define DPMAIF_HPC_TOTAL_NUM			8
-+#define DPMAIF_HPC_MAX_TOTAL_NUM		8
-+
-+/* dpmaif_dlq */
-+#define DPMAIF_DL_DLQPIT_INIT			(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x00)
-+#define DPMAIF_DL_DLQPIT_ADD			(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x10)
-+#define DPMAIF_DL_DLQPIT_INIT_CON0		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x14)
-+#define DPMAIF_DL_DLQPIT_INIT_CON1		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x18)
-+#define DPMAIF_DL_DLQPIT_INIT_CON2		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x1c)
-+#define DPMAIF_DL_DLQPIT_INIT_CON3		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x20)
-+#define DPMAIF_DL_DLQPIT_INIT_CON4		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x24)
-+#define DPMAIF_DL_DLQPIT_INIT_CON5		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x28)
-+#define DPMAIF_DL_DLQPIT_INIT_CON6		(BASE_DPMAIF_DL_DLQ_REMOVEAO_IDX + 0x2c)
-+
-+/* common include function */
-+#define DPMAIF_ULQSAR_n(q)			(DPMAIF_AO_UL_CHNL0_CON0 + 0x10 * (q))
-+#define DPMAIF_UL_DRBSIZE_ADDRH_n(q)		(DPMAIF_AO_UL_CHNL0_CON1 + 0x10 * (q))
-+#define DPMAIF_UL_DRB_ADDRH_n(q)		(DPMAIF_AO_UL_CHNL0_CON2 + 0x10 * (q))
-+#define DPMAIF_ULQ_STA0_n(q)			(DPMAIF_AO_UL_CH0_STA + 0x04 * (q))
-+#define DPMAIF_ULQ_ADD_DESC_CH_n(q)		(DPMAIF_UL_ADD_DESC_CH0 + 0x04 * (q))
-+
-+#define DPMAIF_UL_DRB_RIDX_OFFSET		16
-+
-+#define DPMAIF_AP_RGU_ASSERT			0x10001150
-+#define DPMAIF_AP_RGU_DEASSERT			0x10001154
-+#define DPMAIF_AP_RST_BIT			BIT(2)
-+
-+#define DPMAIF_AP_AO_RGU_ASSERT			0x10001140
-+#define DPMAIF_AP_AO_RGU_DEASSERT		0x10001144
-+#define DPMAIF_AP_AO_RST_BIT			BIT(6)
-+
-+/* DPMAIF init/restore */
-+#define DPMAIF_UL_ADD_NOT_READY			BIT(31)
-+#define DPMAIF_UL_ADD_UPDATE			BIT(31)
-+#define DPMAIF_UL_ADD_COUNT_MASK		GENMASK(15, 0)
-+#define DPMAIF_UL_ALL_QUE_ARB_EN		GENMASK(11, 8)
-+
-+#define DPMAIF_DL_ADD_UPDATE			BIT(31)
-+#define DPMAIF_DL_ADD_NOT_READY			BIT(31)
-+#define DPMAIF_DL_FRG_ADD_UPDATE		BIT(16)
-+#define DPMAIF_DL_ADD_COUNT_MASK		GENMASK(15, 0)
-+
-+#define DPMAIF_DL_BAT_INIT_ALLSET		BIT(0)
-+#define DPMAIF_DL_BAT_FRG_INIT			BIT(16)
-+#define DPMAIF_DL_BAT_INIT_EN			BIT(31)
-+#define DPMAIF_DL_BAT_INIT_NOT_READY		BIT(31)
-+#define DPMAIF_DL_BAT_INIT_ONLY_ENABLE_BIT	0
-+
-+#define DPMAIF_DL_PIT_INIT_ALLSET		BIT(0)
-+#define DPMAIF_DL_PIT_INIT_EN			BIT(31)
-+#define DPMAIF_DL_PIT_INIT_NOT_READY		BIT(31)
-+
-+#define DPMAIF_PKT_ALIGN64_MODE			0
-+#define DPMAIF_PKT_ALIGN128_MODE		1
-+
-+#define DPMAIF_BAT_REMAIN_SZ_BASE		16
-+#define DPMAIF_BAT_BUFFER_SZ_BASE		128
-+#define DPMAIF_FRG_BUFFER_SZ_BASE		128
-+
-+#define DLQ_PIT_IDX_SIZE			0x20
-+
-+#define DPMAIF_PIT_SIZE_MSK			GENMASK(17, 0)
-+
-+#define DPMAIF_PIT_REM_CNT_MSK			GENMASK(17, 0)
-+
-+#define DPMAIF_BAT_EN_MSK			BIT(16)
-+#define DPMAIF_FRG_EN_MSK			BIT(28)
-+#define DPMAIF_BAT_SIZE_MSK			GENMASK(15, 0)
-+
-+#define DPMAIF_BAT_BID_MAXCNT_MSK		GENMASK(31, 16)
-+#define DPMAIF_BAT_REMAIN_MINSZ_MSK		GENMASK(15, 8)
-+#define DPMAIF_PIT_CHK_NUM_MSK			GENMASK(31, 24)
-+#define DPMAIF_BAT_BUF_SZ_MSK			GENMASK(16, 8)
-+#define DPMAIF_FRG_BUF_SZ_MSK			GENMASK(16, 8)
-+#define DPMAIF_BAT_RSV_LEN_MSK			GENMASK(7, 0)
-+#define DPMAIF_PKT_ALIGN_MSK			GENMASK(23, 22)
-+
-+#define DPMAIF_BAT_CHECK_THRES_MSK		GENMASK(21, 16)
-+#define DPMAIF_FRG_CHECK_THRES_MSK		GENMASK(7, 0)
-+
-+#define DPMAIF_PKT_ALIGN_EN			BIT(23)
-+
-+#define DPMAIF_DRB_SIZE_MSK			GENMASK(15, 0)
-+
-+#define DPMAIF_DL_PIT_WRIDX_MSK			GENMASK(17, 0)
-+#define DPMAIF_DL_BAT_WRIDX_MSK			GENMASK(17, 0)
-+#define DPMAIF_DL_FRG_WRIDX_MSK			GENMASK(17, 0)
-+
-+/* Bit fields of registers */
-+/* DPMAIF_UL_CHK_BUSY */
-+#define DPMAIF_UL_IDLE_STS			BIT(11)
-+/* DPMAIF_DL_CHK_BUSY */
-+#define DPMAIF_DL_IDLE_STS			BIT(23)
-+/* DPMAIF_AO_DL_RDY_CHK_THRES */
-+#define DPMAIF_DL_PKT_CHECKSUM_EN		BIT(31)
-+#define DPMAIF_PORT_MODE_PCIE			BIT(30)
-+#define DPMAIF_DL_BURST_PIT_EN			BIT(13)
-+/* DPMAIF_DL_BAT_INIT_CON1 */
-+#define DPMAIF_DL_BAT_CACHE_PRI			BIT(22)
-+/* DPMAIF_AP_MEM_CLR */
-+#define DPMAIF_MEM_CLR				BIT(0)
-+/* DPMAIF_AP_OVERWRITE_CFG */
-+#define DPMAIF_SRAM_SYNC			BIT(0)
-+/* DPMAIF_AO_UL_INIT_SET */
-+#define DPMAIF_UL_INIT_DONE			BIT(0)
-+/* DPMAIF_AO_DL_INIT_SET */
-+#define DPMAIF_DL_INIT_DONE			BIT(0)
-+/* DPMAIF_AO_DL_PIT_SEQ_END */
-+#define DPMAIF_DL_PIT_SEQ_MSK			GENMASK(7, 0)
-+/* DPMAIF_UL_RESERVE_AO_RW */
-+#define DPMAIF_PCIE_MODE_SET_VALUE		0x55
-+/* DPMAIF_AP_CG_EN */
-+#define DPMAIF_CG_EN				0x7f
-+
-+/* DPMAIF interrupt */
-+#define _UL_INT_DONE_OFFSET			0
-+#define _UL_INT_EMPTY_OFFSET			4
-+#define _UL_INT_MD_NOTRDY_OFFSET		8
-+#define _UL_INT_PWR_NOTRDY_OFFSET		12
-+#define _UL_INT_LEN_ERR_OFFSET			16
-+
-+#define DPMAIF_DL_INT_BATCNT_LEN_ERR		BIT(2)
-+#define DPMAIF_DL_INT_PITCNT_LEN_ERR		BIT(3)
-+
-+#define DPMAIF_UL_INT_QDONE_MSK			GENMASK(3, 0)
-+#define DPMAIF_UL_INT_ERR_MSK			GENMASK(19, 16)
-+
-+#define DPMAIF_UDL_IP_BUSY			BIT(0)
-+#define DPMAIF_DL_INT_DLQ0_QDONE		BIT(8)
-+#define DPMAIF_DL_INT_DLQ1_QDONE		BIT(9)
-+#define DPMAIF_DL_INT_DLQ0_PITCNT_LEN		BIT(10)
-+#define DPMAIF_DL_INT_DLQ1_PITCNT_LEN		BIT(11)
-+#define DPMAIF_DL_INT_Q2TOQ1			BIT(24)
-+#define DPMAIF_DL_INT_Q2APTOP			BIT(25)
-+
-+#define DPMAIF_DLQ_LOW_TIMEOUT_THRES_MKS	GENMASK(15, 0)
-+#define DPMAIF_DLQ_HIGH_TIMEOUT_THRES_MSK	GENMASK(31, 16)
-+
-+/* DPMAIF DLQ HW configure */
-+#define DPMAIF_AGG_MAX_LEN_DF			65535
-+#define DPMAIF_AGG_TBL_ENT_NUM_DF		50
-+#define DPMAIF_HASH_PRIME_DF			13
-+#define DPMAIF_MID_TIMEOUT_THRES_DF		100
-+#define DPMAIF_DLQ_TIMEOUT_THRES_DF		100
-+#define DPMAIF_DLQ_PRS_THRES_DF			10
-+#define DPMAIF_DLQ_HASH_BIT_CHOOSE_DF		0
-+
-+#define DPMAIF_DLQPIT_EN_MSK			BIT(20)
-+#define DPMAIF_DLQPIT_CHAN_OFS			16
-+#define DPMAIF_ADD_DLQ_PIT_CHAN_OFS		20
-+
-+#endif /* __T7XX_REG_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_skb_util.c b/drivers/net/wwan/t7xx/t7xx_skb_util.c
-new file mode 100644
-index 000000000000..0194a7c65934
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_skb_util.c
-@@ -0,0 +1,354 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/netdevice.h>
-+#include <linux/sched.h>
-+#include <linux/spinlock.h>
-+#include <linux/wait.h>
-+#include <linux/skbuff.h>
-+
-+#include "t7xx_pci.h"
-+#include "t7xx_skb_util.h"
-+
-+/* define the pool size of each different skb length */
-+#define SKB_64K_POOL_SIZE	50
-+#define SKB_4K_POOL_SIZE	256
-+#define SKB_16_POOL_SIZE	64
-+
-+/* reload pool if pool size dropped below 1/RELOAD_TH */
-+#define RELOAD_TH		3
-+
-+#define ALLOC_SKB_RETRY		20
-+
-+static struct sk_buff *alloc_skb_from_pool(struct skb_pools *pools, size_t size)
-+{
-+	if (size > MTK_SKB_4K)
-+		return ccci_skb_dequeue(pools->reload_work_queue, &pools->skb_pool_64k);
-+	else if (size > MTK_SKB_16)
-+		return ccci_skb_dequeue(pools->reload_work_queue, &pools->skb_pool_4k);
-+	else if (size > 0)
-+		return ccci_skb_dequeue(pools->reload_work_queue, &pools->skb_pool_16);
-+
-+	return NULL;
-+}
-+
-+static struct sk_buff *alloc_skb_from_kernel(size_t size, gfp_t gfp_mask)
-+{
-+	if (size > MTK_SKB_4K)
-+		return __dev_alloc_skb(MTK_SKB_64K, gfp_mask);
-+	else if (size > MTK_SKB_1_5K)
-+		return __dev_alloc_skb(MTK_SKB_4K, gfp_mask);
-+	else if (size > MTK_SKB_16)
-+		return __dev_alloc_skb(MTK_SKB_1_5K, gfp_mask);
-+	else if (size > 0)
-+		return __dev_alloc_skb(MTK_SKB_16, gfp_mask);
-+
-+	return NULL;
-+}
-+
-+struct sk_buff *ccci_skb_dequeue(struct workqueue_struct *reload_work_queue,
-+				 struct ccci_skb_queue *queue)
-+{
-+	struct sk_buff *skb;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&queue->skb_list.lock, flags);
-+	skb = __skb_dequeue(&queue->skb_list);
-+	if (queue->max_occupied < queue->max_len - queue->skb_list.qlen)
-+		queue->max_occupied = queue->max_len - queue->skb_list.qlen;
-+
-+	queue->deq_count++;
-+	if (queue->pre_filled && queue->skb_list.qlen < queue->max_len / RELOAD_TH)
-+		queue_work(reload_work_queue, &queue->reload_work);
-+
-+	spin_unlock_irqrestore(&queue->skb_list.lock, flags);
-+
-+	return skb;
-+}
-+
-+void ccci_skb_enqueue(struct ccci_skb_queue *queue, struct sk_buff *skb)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&queue->skb_list.lock, flags);
-+	if (queue->skb_list.qlen < queue->max_len) {
-+		queue->enq_count++;
-+		__skb_queue_tail(&queue->skb_list, skb);
-+		if (queue->skb_list.qlen > queue->max_history)
-+			queue->max_history = queue->skb_list.qlen;
-+	} else {
-+		dev_kfree_skb_any(skb);
-+	}
-+
-+	spin_unlock_irqrestore(&queue->skb_list.lock, flags);
-+}
-+
-+int ccci_skb_queue_alloc(struct ccci_skb_queue *queue, size_t skb_size, size_t max_len, bool fill)
-+{
-+	skb_queue_head_init(&queue->skb_list);
-+	queue->max_len = max_len;
-+	if (fill) {
-+		unsigned int i;
-+
-+		for (i = 0; i < queue->max_len; i++) {
-+			struct sk_buff *skb;
-+
-+			skb = alloc_skb_from_kernel(skb_size, GFP_KERNEL);
-+
-+			if (!skb) {
-+				while ((skb = skb_dequeue(&queue->skb_list)))
-+					dev_kfree_skb_any(skb);
-+				return -ENOMEM;
-+			}
-+
-+			skb_queue_tail(&queue->skb_list, skb);
-+		}
-+
-+		queue->pre_filled = true;
-+	} else {
-+		queue->pre_filled = false;
-+	}
-+
-+	queue->max_history = 0;
-+
-+	return 0;
-+}
-+
-+/**
-+ * ccci_alloc_skb_from_pool() - allocate memory for skb from pre-allocated pools
-+ * @pools: skb pools
-+ * @size: allocation size
-+ * @blocking : true for blocking operation
-+ *
-+ * Returns pointer to skb on success, NULL on failure.
-+ */
-+struct sk_buff *ccci_alloc_skb_from_pool(struct skb_pools *pools, size_t size, bool blocking)
-+{
-+	struct ccci_buffer_ctrl *buf_ctrl;
-+	struct sk_buff *skb;
-+	int count;
-+
-+	if (!size || size > MTK_SKB_64K)
-+		return NULL;
-+
-+	for (count = 0; count < ALLOC_SKB_RETRY; count++) {
-+		skb = alloc_skb_from_pool(pools, size);
-+		if (skb || !blocking)
-+			break;
-+
-+		/* no memory at the pool.
-+		 * waiting for pools reload_work which will allocate new memory from kernel
-+		 */
-+		might_sleep();
-+		msleep(MTK_SKB_WAIT_FOR_POOLS_RELOAD_MS);
-+	}
-+
-+	if (skb && skb_headroom(skb) == NET_SKB_PAD) {
-+		buf_ctrl = skb_push(skb, sizeof(*buf_ctrl));
-+		buf_ctrl->head_magic = CCCI_BUF_MAGIC;
-+		buf_ctrl->policy = MTK_SKB_POLICY_RECYCLE;
-+		buf_ctrl->ioc_override = 0;
-+		skb_pull(skb, sizeof(struct ccci_buffer_ctrl));
-+	}
-+
-+	return skb;
-+}
-+
-+/**
-+ * ccci_alloc_skb() - allocate memory for skb from the kernel
-+ * @size: allocation size
-+ * @blocking : true for blocking operation
-+ *
-+ * Returns pointer to skb on success, NULL on failure.
-+ */
-+struct sk_buff *ccci_alloc_skb(size_t size, bool blocking)
-+{
-+	struct sk_buff *skb;
-+	int count;
-+
-+	if (!size || size > MTK_SKB_64K)
-+		return NULL;
-+
-+	if (blocking) {
-+		might_sleep();
-+		skb = alloc_skb_from_kernel(size, GFP_KERNEL);
-+	} else {
-+		for (count = 0; count < ALLOC_SKB_RETRY; count++) {
-+			skb = alloc_skb_from_kernel(size, GFP_ATOMIC);
-+			if (skb)
-+				return skb;
-+		}
-+	}
-+
-+	return skb;
-+}
-+
-+static void free_skb_from_pool(struct skb_pools *pools, struct sk_buff *skb)
-+{
-+	if (skb_size(skb) < MTK_SKB_4K)
-+		ccci_skb_enqueue(&pools->skb_pool_16, skb);
-+	else if (skb_size(skb) < MTK_SKB_64K)
-+		ccci_skb_enqueue(&pools->skb_pool_4k, skb);
-+	else
-+		ccci_skb_enqueue(&pools->skb_pool_64k, skb);
-+}
-+
-+void ccci_free_skb(struct skb_pools *pools, struct sk_buff *skb)
-+{
-+	struct ccci_buffer_ctrl *buf_ctrl;
-+	enum data_policy policy;
-+	int offset;
-+
-+	if (!skb)
-+		return;
-+
-+	offset = NET_SKB_PAD - sizeof(*buf_ctrl);
-+	buf_ctrl = (struct ccci_buffer_ctrl *)(skb->head + offset);
-+	policy = MTK_SKB_POLICY_FREE;
-+
-+	if (buf_ctrl->head_magic == CCCI_BUF_MAGIC) {
-+		policy = buf_ctrl->policy;
-+		memset(buf_ctrl, 0, sizeof(*buf_ctrl));
-+	}
-+
-+	if (policy != MTK_SKB_POLICY_RECYCLE || skb->dev ||
-+	    skb_size(skb) < NET_SKB_PAD + MTK_SKB_16)
-+		policy = MTK_SKB_POLICY_FREE;
-+
-+	switch (policy) {
-+	case MTK_SKB_POLICY_RECYCLE:
-+		skb->data = skb->head;
-+		skb->len = 0;
-+		skb_reset_tail_pointer(skb);
-+		/* reserve memory as netdev_alloc_skb */
-+		skb_reserve(skb, NET_SKB_PAD);
-+		/* enqueue */
-+		free_skb_from_pool(pools, skb);
-+		break;
-+
-+	case MTK_SKB_POLICY_FREE:
-+		dev_kfree_skb_any(skb);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
-+static void reload_work_64k(struct work_struct *work)
-+{
-+	struct ccci_skb_queue *queue;
-+	struct sk_buff *skb;
-+
-+	queue = container_of(work, struct ccci_skb_queue, reload_work);
-+
-+	while (queue->skb_list.qlen < SKB_64K_POOL_SIZE) {
-+		skb = alloc_skb_from_kernel(MTK_SKB_64K, GFP_KERNEL);
-+		if (skb)
-+			skb_queue_tail(&queue->skb_list, skb);
-+	}
-+}
-+
-+static void reload_work_4k(struct work_struct *work)
-+{
-+	struct ccci_skb_queue *queue;
-+	struct sk_buff *skb;
-+
-+	queue = container_of(work, struct ccci_skb_queue, reload_work);
-+
-+	while (queue->skb_list.qlen < SKB_4K_POOL_SIZE) {
-+		skb = alloc_skb_from_kernel(MTK_SKB_4K, GFP_KERNEL);
-+		if (skb)
-+			skb_queue_tail(&queue->skb_list, skb);
-+	}
-+}
-+
-+static void reload_work_16(struct work_struct *work)
-+{
-+	struct ccci_skb_queue *queue;
-+	struct sk_buff *skb;
-+
-+	queue = container_of(work, struct ccci_skb_queue, reload_work);
-+
-+	while (queue->skb_list.qlen < SKB_16_POOL_SIZE) {
-+		skb = alloc_skb_from_kernel(MTK_SKB_16, GFP_KERNEL);
-+		if (skb)
-+			skb_queue_tail(&queue->skb_list, skb);
-+	}
-+}
-+
-+int ccci_skb_pool_alloc(struct skb_pools *pools)
-+{
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	ret = ccci_skb_queue_alloc(&pools->skb_pool_64k,
-+				   MTK_SKB_64K, SKB_64K_POOL_SIZE, true);
-+	if (ret)
-+		return ret;
-+
-+	ret = ccci_skb_queue_alloc(&pools->skb_pool_4k,
-+				   MTK_SKB_4K, SKB_4K_POOL_SIZE, true);
-+	if (ret)
-+		goto err_pool_4k;
-+
-+	ret = ccci_skb_queue_alloc(&pools->skb_pool_16,
-+				   MTK_SKB_16, SKB_16_POOL_SIZE, true);
-+	if (ret)
-+		goto err_pool_16k;
-+
-+	pools->reload_work_queue = alloc_workqueue("pool_reload_work",
-+						   WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_HIGHPRI,
-+						   1);
-+	if (!pools->reload_work_queue) {
-+		ret = -ENOMEM;
-+		goto err_wq;
-+	}
-+
-+	INIT_WORK(&pools->skb_pool_64k.reload_work, reload_work_64k);
-+	INIT_WORK(&pools->skb_pool_4k.reload_work, reload_work_4k);
-+	INIT_WORK(&pools->skb_pool_16.reload_work, reload_work_16);
-+
-+	return ret;
-+
-+err_wq:
-+	while ((skb = skb_dequeue(&pools->skb_pool_16.skb_list)))
-+		dev_kfree_skb_any(skb);
-+err_pool_16k:
-+	while ((skb = skb_dequeue(&pools->skb_pool_4k.skb_list)))
-+		dev_kfree_skb_any(skb);
-+err_pool_4k:
-+	while ((skb = skb_dequeue(&pools->skb_pool_64k.skb_list)))
-+		dev_kfree_skb_any(skb);
-+
-+	return ret;
-+}
-+
-+void ccci_skb_pool_free(struct skb_pools *pools)
-+{
-+	struct ccci_skb_queue *queue;
-+	struct sk_buff *newsk;
-+
-+	flush_work(&pools->skb_pool_64k.reload_work);
-+	flush_work(&pools->skb_pool_4k.reload_work);
-+	flush_work(&pools->skb_pool_16.reload_work);
-+
-+	if (pools->reload_work_queue)
-+		destroy_workqueue(pools->reload_work_queue);
-+
-+	queue = &pools->skb_pool_64k;
-+	while ((newsk = skb_dequeue(&queue->skb_list)) != NULL)
-+		dev_kfree_skb_any(newsk);
-+
-+	queue = &pools->skb_pool_4k;
-+	while ((newsk = skb_dequeue(&queue->skb_list)) != NULL)
-+		dev_kfree_skb_any(newsk);
-+
-+	queue = &pools->skb_pool_16;
-+	while ((newsk = skb_dequeue(&queue->skb_list)) != NULL)
-+		dev_kfree_skb_any(newsk);
-+}
-diff --git a/drivers/net/wwan/t7xx/t7xx_skb_util.h b/drivers/net/wwan/t7xx/t7xx_skb_util.h
-new file mode 100644
-index 000000000000..0d6860a4eac9
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_skb_util.h
-@@ -0,0 +1,102 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#ifndef __T7XX_SKB_UTIL_H__
-+#define __T7XX_SKB_UTIL_H__
-+
-+#include <linux/skbuff.h>
-+#include <linux/workqueue.h>
-+#include <linux/wwan.h>
-+
-+#define MTK_SKB_64K	64528		/* 63kB + CCCI header */
-+#define MTK_SKB_4K	3584		/* 3.5kB */
-+#define MTK_SKB_1_5K	(WWAN_DEFAULT_MTU + 16)	/* net MTU + CCCI_H, for network packet */
-+#define MTK_SKB_16	16		/* for struct ccci_header */
-+#define NET_RX_BUF	MTK_SKB_4K
-+
-+#define CCCI_BUF_MAGIC	0xFECDBA89
-+
-+#define MTK_SKB_WAIT_FOR_POOLS_RELOAD_MS	20
-+
-+struct ccci_skb_queue {
-+	struct sk_buff_head	skb_list;
-+	unsigned int		max_len;
-+	struct work_struct	reload_work;
-+	bool			pre_filled;
-+	unsigned int		max_history;
-+	unsigned int		max_occupied;
-+	unsigned int		enq_count;
-+	unsigned int		deq_count;
-+};
-+
-+struct skb_pools {
-+	struct ccci_skb_queue skb_pool_64k;
-+	struct ccci_skb_queue skb_pool_4k;
-+	struct ccci_skb_queue skb_pool_16;
-+	struct workqueue_struct *reload_work_queue;
-+};
-+
-+/**
-+ * enum data_policy - tells the request free routine how to handle the skb
-+ * @FREE: free the skb
-+ * @RECYCLE: put the skb back into our pool
-+ *
-+ * The driver request structure will always be recycled, but its skb
-+ * can have a different policy. The driver request can work as a wrapper
-+ * because the network subsys will handle the skb itself.
-+ * TX: policy is determined by sender
-+ * RX: policy is determined by receiver
-+ */
-+enum data_policy {
-+	MTK_SKB_POLICY_FREE = 0,
-+	MTK_SKB_POLICY_RECYCLE,
-+};
-+
-+/* Get free skb flags */
-+#define	GFS_NONE_BLOCKING	0
-+#define	GFS_BLOCKING		1
-+
-+/* CCCI buffer control structure. Must be less than NET_SKB_PAD */
-+struct ccci_buffer_ctrl {
-+	unsigned int		head_magic;
-+	enum data_policy	policy;
-+	unsigned char		ioc_override;
-+	unsigned char		blocking;
-+};
-+
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+static inline unsigned int skb_size(struct sk_buff *skb)
-+{
-+	return skb->end;
-+}
-+
-+static inline unsigned int skb_data_size(struct sk_buff *skb)
-+{
-+	return skb->head + skb->end - skb->data;
-+}
-+#else
-+static inline unsigned int skb_size(struct sk_buff *skb)
-+{
-+	return skb->end - skb->head;
-+}
-+
-+static inline unsigned int skb_data_size(struct sk_buff *skb)
-+{
-+	return skb->end - skb->data;
-+}
-+#endif
-+
-+int ccci_skb_pool_alloc(struct skb_pools *pools);
-+void ccci_skb_pool_free(struct skb_pools *pools);
-+struct sk_buff *ccci_alloc_skb_from_pool(struct skb_pools *pools, size_t size, bool blocking);
-+struct sk_buff *ccci_alloc_skb(size_t size, bool blocking);
-+void ccci_free_skb(struct skb_pools *pools, struct sk_buff *skb);
-+struct sk_buff *ccci_skb_dequeue(struct workqueue_struct *reload_work_queue,
-+				 struct ccci_skb_queue *queue);
-+void ccci_skb_enqueue(struct ccci_skb_queue *queue, struct sk_buff *skb);
-+int ccci_skb_queue_alloc(struct ccci_skb_queue *queue, size_t skb_size, size_t max_len, bool fill);
-+
-+#endif /* __T7XX_SKB_UTIL_H__ */
-diff --git a/drivers/net/wwan/t7xx/t7xx_state_monitor.c b/drivers/net/wwan/t7xx/t7xx_state_monitor.c
-new file mode 100644
-index 000000000000..e4d7fd9fa8b1
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_state_monitor.c
-@@ -0,0 +1,591 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/delay.h>
-+#include <linux/iopoll.h>
 +#include <linux/kernel.h>
 +#include <linux/kthread.h>
 +#include <linux/list.h>
++#include <linux/module.h>
++#include <linux/netdevice.h>
++#include <linux/sched.h>
++#include <linux/skbuff.h>
++#include <linux/spinlock.h>
++#include <linux/workqueue.h>
 +
-+#include "t7xx_hif_cldma.h"
-+#include "t7xx_mhccif.h"
-+#include "t7xx_modem_ops.h"
-+#include "t7xx_monitor.h"
-+#include "t7xx_pci.h"
++#include "t7xx_common.h"
++#include "t7xx_dpmaif.h"
++#include "t7xx_hif_dpmaif.h"
++#include "t7xx_hif_dpmaif_rx.h"
++#include "t7xx_hif_dpmaif_tx.h"
 +#include "t7xx_pcie_mac.h"
 +
-+#define FSM_DRM_DISABLE_DELAY_MS 200
-+#define FSM_EX_REASON GENMASK(23, 16)
-+
-+static struct ccci_fsm_ctl *ccci_fsm_entry;
-+
-+void fsm_notifier_register(struct fsm_notifier_block *notifier)
++unsigned int ring_buf_get_next_wrdx(unsigned int buf_len, unsigned int buf_idx)
 +{
-+	struct ccci_fsm_ctl *ctl;
-+	unsigned long flags;
++	buf_idx++;
 +
-+	ctl = ccci_fsm_entry;
-+	spin_lock_irqsave(&ctl->notifier_lock, flags);
-+	list_add_tail(&notifier->entry, &ctl->notifier_list);
-+	spin_unlock_irqrestore(&ctl->notifier_lock, flags);
++	return buf_idx < buf_len ? buf_idx : 0;
 +}
 +
-+void fsm_notifier_unregister(struct fsm_notifier_block *notifier)
++unsigned int ring_buf_read_write_count(unsigned int total_cnt, unsigned int rd_idx,
++				       unsigned int wrt_idx, bool rd_wrt)
 +{
-+	struct fsm_notifier_block *notifier_cur, *notifier_next;
-+	struct ccci_fsm_ctl *ctl;
-+	unsigned long flags;
++	int pkt_cnt;
 +
-+	ctl = ccci_fsm_entry;
-+	spin_lock_irqsave(&ctl->notifier_lock, flags);
-+	list_for_each_entry_safe(notifier_cur, notifier_next,
-+				 &ctl->notifier_list, entry) {
-+		if (notifier_cur == notifier)
-+			list_del(&notifier->entry);
++	if (rd_wrt)
++		pkt_cnt = wrt_idx - rd_idx;
++	else
++		pkt_cnt = rd_idx - wrt_idx - 1;
++
++	if (pkt_cnt < 0)
++		pkt_cnt += total_cnt;
++
++	return (unsigned int)pkt_cnt;
++}
++
++static void dpmaif_enable_irq(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_isr_para *isr_para;
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dpmaif_ctrl->isr_para); i++) {
++		isr_para = &dpmaif_ctrl->isr_para[i];
++		mtk_pcie_mac_set_int(dpmaif_ctrl->mtk_dev, isr_para->pcie_int);
++	}
++}
++
++static void dpmaif_disable_irq(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_isr_para *isr_para;
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dpmaif_ctrl->isr_para); i++) {
++		isr_para = &dpmaif_ctrl->isr_para[i];
++		mtk_pcie_mac_clear_int(dpmaif_ctrl->mtk_dev, isr_para->pcie_int);
++	}
++}
++
++static void dpmaif_irq_cb(struct dpmaif_isr_para *isr_para)
++{
++	struct dpmaif_hw_intr_st_para intr_status;
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct device *dev;
++	int i;
++
++	dpmaif_ctrl = isr_para->dpmaif_ctrl;
++	dev = dpmaif_ctrl->dev;
++	memset(&intr_status, 0, sizeof(intr_status));
++
++	/* gets HW interrupt types */
++	if (dpmaif_hw_get_interrupt_status(dpmaif_ctrl, &intr_status, isr_para->dlq_id) < 0) {
++		dev_err(dev, "Get HW interrupt status failed!\n");
++		return;
 +	}
 +
-+	spin_unlock_irqrestore(&ctl->notifier_lock, flags);
++	/* Clear level 1 interrupt status */
++	/* Clear level 2 DPMAIF interrupt status first,
++	 * then clear level 1 PCIe interrupt status
++	 * to avoid an empty interrupt.
++	 */
++	mtk_pcie_mac_clear_int_status(dpmaif_ctrl->mtk_dev, isr_para->pcie_int);
++
++	/* handles interrupts */
++	for (i = 0; i < intr_status.intr_cnt; i++) {
++		switch (intr_status.intr_types[i]) {
++		case DPF_INTR_UL_DONE:
++			dpmaif_irq_tx_done(dpmaif_ctrl, intr_status.intr_queues[i]);
++			break;
++
++		case DPF_INTR_UL_DRB_EMPTY:
++		case DPF_INTR_UL_MD_NOTREADY:
++		case DPF_INTR_UL_MD_PWR_NOTREADY:
++			/* no need to log an error for these cases. */
++			break;
++
++		case DPF_INTR_DL_BATCNT_LEN_ERR:
++			dev_err_ratelimited(dev, "DL interrupt: packet BAT count length error!\n");
++			dpmaif_unmask_dl_batcnt_len_err_interrupt(&dpmaif_ctrl->hif_hw_info);
++			break;
++
++		case DPF_INTR_DL_PITCNT_LEN_ERR:
++			dev_err_ratelimited(dev, "DL interrupt: PIT count length error!\n");
++			dpmaif_unmask_dl_pitcnt_len_err_interrupt(&dpmaif_ctrl->hif_hw_info);
++			break;
++
++		case DPF_DL_INT_DLQ0_PITCNT_LEN_ERR:
++			dev_err_ratelimited(dev, "DL interrupt: DLQ0 PIT count length error!\n");
++			dpmaif_dlq_unmask_rx_pitcnt_len_err_intr(&dpmaif_ctrl->hif_hw_info,
++								 DPF_RX_QNO_DFT);
++			break;
++
++		case DPF_DL_INT_DLQ1_PITCNT_LEN_ERR:
++			dev_err_ratelimited(dev, "DL interrupt: DLQ1 PIT count length error!\n");
++			dpmaif_dlq_unmask_rx_pitcnt_len_err_intr(&dpmaif_ctrl->hif_hw_info,
++								 DPF_RX_QNO1);
++			break;
++
++		case DPF_INTR_DL_DONE:
++		case DPF_INTR_DL_DLQ0_DONE:
++		case DPF_INTR_DL_DLQ1_DONE:
++			dpmaif_irq_rx_done(dpmaif_ctrl, intr_status.intr_queues[i]);
++			break;
++
++		default:
++			dev_err_ratelimited(dev, "DL interrupt error: type : %d\n",
++					    intr_status.intr_types[i]);
++		}
++	}
 +}
 +
-+static void fsm_state_notify(enum md_state state)
++static irqreturn_t dpmaif_isr_handler(int irq, void *data)
 +{
-+	struct fsm_notifier_block *notifier;
-+	struct ccci_fsm_ctl *ctl;
-+	unsigned long flags;
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_isr_para *isr_para;
 +
-+	ctl = ccci_fsm_entry;
-+	spin_lock_irqsave(&ctl->notifier_lock, flags);
-+	list_for_each_entry(notifier, &ctl->notifier_list, entry) {
-+		spin_unlock_irqrestore(&ctl->notifier_lock, flags);
-+		if (notifier->notifier_fn)
-+			notifier->notifier_fn(state, notifier->data);
++	isr_para = data;
++	dpmaif_ctrl = isr_para->dpmaif_ctrl;
 +
-+		spin_lock_irqsave(&ctl->notifier_lock, flags);
++	if (dpmaif_ctrl->state != DPMAIF_STATE_PWRON) {
++		dev_err(dpmaif_ctrl->dev, "interrupt received before initializing DPMAIF\n");
++		return IRQ_HANDLED;
 +	}
 +
-+	spin_unlock_irqrestore(&ctl->notifier_lock, flags);
++	mtk_pcie_mac_clear_int(dpmaif_ctrl->mtk_dev, isr_para->pcie_int);
++	dpmaif_irq_cb(isr_para);
++	mtk_pcie_mac_set_int(dpmaif_ctrl->mtk_dev, isr_para->pcie_int);
++	return IRQ_HANDLED;
 +}
 +
-+void fsm_broadcast_state(struct ccci_fsm_ctl *ctl, enum md_state state)
++static void dpmaif_isr_parameter_init(struct dpmaif_ctrl *dpmaif_ctrl)
 +{
-+	if (ctl->md_state != MD_STATE_WAITING_FOR_HS2 && state == MD_STATE_READY)
++	struct dpmaif_isr_para *isr_para;
++	unsigned char i;
++
++	/* set up the RXQ and isr relation */
++	dpmaif_ctrl->rxq_int_mapping[DPF_RX_QNO0] = DPMAIF_INT;
++	dpmaif_ctrl->rxq_int_mapping[DPF_RX_QNO1] = DPMAIF2_INT;
++
++	/* init the isr parameter */
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		isr_para = &dpmaif_ctrl->isr_para[i];
++		isr_para->dpmaif_ctrl = dpmaif_ctrl;
++		isr_para->dlq_id = i;
++		isr_para->pcie_int = dpmaif_ctrl->rxq_int_mapping[i];
++	}
++}
++
++static void dpmaif_platform_irq_init(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_isr_para *isr_para;
++	struct mtk_pci_dev *mtk_dev;
++	enum pcie_int int_type;
++	int i;
++
++	mtk_dev = dpmaif_ctrl->mtk_dev;
++	/* PCIe isr parameter init */
++	dpmaif_isr_parameter_init(dpmaif_ctrl);
++
++	/* register isr */
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		isr_para = &dpmaif_ctrl->isr_para[i];
++		int_type = isr_para->pcie_int;
++		mtk_pcie_mac_clear_int(mtk_dev, int_type);
++
++		mtk_dev->intr_handler[int_type] = dpmaif_isr_handler;
++		mtk_dev->intr_thread[int_type] = NULL;
++		mtk_dev->callback_param[int_type] = isr_para;
++
++		mtk_pcie_mac_clear_int_status(mtk_dev, int_type);
++		mtk_pcie_mac_set_int(mtk_dev, int_type);
++	}
++}
++
++static void dpmaif_skb_pool_free(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_skb_pool *pool;
++	unsigned int i;
++
++	pool = &dpmaif_ctrl->skb_pool;
++	flush_work(&pool->reload_work);
++
++	if (pool->reload_work_queue) {
++		destroy_workqueue(pool->reload_work_queue);
++		pool->reload_work_queue = NULL;
++	}
++
++	for (i = 0; i < DPMA_SKB_QUEUE_CNT; i++)
++		dpmaif_skb_queue_free(dpmaif_ctrl, i);
++}
++
++/* we put initializations which takes too much time here: SW init only */
++static int dpmaif_sw_init(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_rx_queue *rx_q;
++	struct dpmaif_tx_queue *tx_q;
++	int ret, i, j;
++
++	/* RX normal BAT table init */
++	ret = dpmaif_bat_alloc(dpmaif_ctrl, &dpmaif_ctrl->bat_req, BAT_TYPE_NORMAL);
++	if (ret) {
++		dev_err(dpmaif_ctrl->dev, "normal BAT table init fail, %d!\n", ret);
++		return ret;
++	}
++
++	/* RX frag BAT table init */
++	ret = dpmaif_bat_alloc(dpmaif_ctrl, &dpmaif_ctrl->bat_frag, BAT_TYPE_FRAG);
++	if (ret) {
++		dev_err(dpmaif_ctrl->dev, "frag BAT table init fail, %d!\n", ret);
++		goto bat_frag_err;
++	}
++
++	/* dpmaif RXQ resource init */
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		rx_q = &dpmaif_ctrl->rxq[i];
++		rx_q->index = i;
++		rx_q->dpmaif_ctrl = dpmaif_ctrl;
++		ret = dpmaif_rxq_alloc(rx_q);
++		if (ret)
++			goto rxq_init_err;
++	}
++
++	/* dpmaif TXQ resource init */
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		tx_q = &dpmaif_ctrl->txq[i];
++		tx_q->index = i;
++		tx_q->dpmaif_ctrl = dpmaif_ctrl;
++		ret = dpmaif_txq_init(tx_q);
++		if (ret)
++			goto txq_init_err;
++	}
++
++	/* Init TX thread: send skb data to dpmaif HW */
++	ret = dpmaif_tx_thread_init(dpmaif_ctrl);
++	if (ret)
++		goto tx_thread_err;
++
++	/* Init the RX skb pool */
++	ret = dpmaif_skb_pool_init(dpmaif_ctrl);
++	if (ret)
++		goto pool_init_err;
++
++	/* Init BAT rel workqueue */
++	ret = dpmaif_bat_release_work_alloc(dpmaif_ctrl);
++	if (ret)
++		goto bat_work_init_err;
++
++	return 0;
++
++bat_work_init_err:
++	dpmaif_skb_pool_free(dpmaif_ctrl);
++pool_init_err:
++	dpmaif_tx_thread_release(dpmaif_ctrl);
++tx_thread_err:
++	i = DPMAIF_TXQ_NUM;
++txq_init_err:
++	for (j = 0; j < i; j++) {
++		tx_q = &dpmaif_ctrl->txq[j];
++		dpmaif_txq_free(tx_q);
++	}
++
++	i = DPMAIF_RXQ_NUM;
++rxq_init_err:
++	for (j = 0; j < i; j++) {
++		rx_q = &dpmaif_ctrl->rxq[j];
++		dpmaif_rxq_free(rx_q);
++	}
++
++	dpmaif_bat_free(dpmaif_ctrl, &dpmaif_ctrl->bat_frag);
++bat_frag_err:
++	dpmaif_bat_free(dpmaif_ctrl, &dpmaif_ctrl->bat_req);
++
++	return ret;
++}
++
++static void dpmaif_sw_release(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_rx_queue *rx_q;
++	struct dpmaif_tx_queue *tx_q;
++	int i;
++
++	/* release the tx thread */
++	dpmaif_tx_thread_release(dpmaif_ctrl);
++
++	/* release the BAT release workqueue */
++	dpmaif_bat_release_work_free(dpmaif_ctrl);
++
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		tx_q = &dpmaif_ctrl->txq[i];
++		dpmaif_txq_free(tx_q);
++	}
++
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		rx_q = &dpmaif_ctrl->rxq[i];
++		dpmaif_rxq_free(rx_q);
++	}
++
++	/* release the skb pool */
++	dpmaif_skb_pool_free(dpmaif_ctrl);
++}
++
++static int dpmaif_start(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_hw_params hw_init_para;
++	struct dpmaif_rx_queue *rxq;
++	struct dpmaif_tx_queue *txq;
++	unsigned int buf_cnt;
++	int i, ret = 0;
++
++	if (dpmaif_ctrl->state == DPMAIF_STATE_PWRON)
++		return -EFAULT;
++
++	memset(&hw_init_para, 0, sizeof(hw_init_para));
++
++	/* rx */
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		rxq = &dpmaif_ctrl->rxq[i];
++		rxq->que_started = true;
++		rxq->index = i;
++		rxq->budget = rxq->bat_req->bat_size_cnt - 1;
++
++		/* DPMAIF HW RX queue init parameter */
++		hw_init_para.pkt_bat_base_addr[i] = rxq->bat_req->bat_bus_addr;
++		hw_init_para.pkt_bat_size_cnt[i] = rxq->bat_req->bat_size_cnt;
++		hw_init_para.pit_base_addr[i] = rxq->pit_bus_addr;
++		hw_init_para.pit_size_cnt[i] = rxq->pit_size_cnt;
++		hw_init_para.frg_bat_base_addr[i] = rxq->bat_frag->bat_bus_addr;
++		hw_init_para.frg_bat_size_cnt[i] = rxq->bat_frag->bat_size_cnt;
++	}
++
++	/* rx normal BAT mask init */
++	memset(dpmaif_ctrl->bat_req.bat_mask, 0,
++	       dpmaif_ctrl->bat_req.bat_size_cnt * sizeof(unsigned char));
++	/* normal BAT - skb buffer and submit BAT */
++	buf_cnt = dpmaif_ctrl->bat_req.bat_size_cnt - 1;
++	ret = dpmaif_rx_buf_alloc(dpmaif_ctrl, &dpmaif_ctrl->bat_req, 0, buf_cnt, true);
++	if (ret) {
++		dev_err(dpmaif_ctrl->dev, "dpmaif_rx_buf_alloc fail, ret:%d\n", ret);
++		return ret;
++	}
++
++	/* frag BAT - page buffer init */
++	buf_cnt = dpmaif_ctrl->bat_frag.bat_size_cnt - 1;
++	ret = dpmaif_rx_frag_alloc(dpmaif_ctrl, &dpmaif_ctrl->bat_frag, 0, buf_cnt, true);
++	if (ret) {
++		dev_err(dpmaif_ctrl->dev, "dpmaif_rx_frag_alloc fail, ret:%d\n", ret);
++		goto err_bat;
++	}
++
++	/* tx */
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		txq = &dpmaif_ctrl->txq[i];
++		txq->que_started = true;
++
++		/* DPMAIF HW TX queue init parameter */
++		hw_init_para.drb_base_addr[i] = txq->drb_bus_addr;
++		hw_init_para.drb_size_cnt[i] = txq->drb_size_cnt;
++	}
++
++	ret = dpmaif_hw_init(dpmaif_ctrl, &hw_init_para);
++	if (ret) {
++		dev_err(dpmaif_ctrl->dev, "dpmaif_hw_init fail, ret:%d\n", ret);
++		goto err_frag;
++	}
++
++	/* notifies DPMAIF HW for available BAT count */
++	ret = dpmaif_dl_add_bat_cnt(dpmaif_ctrl, 0, rxq->bat_req->bat_size_cnt - 1);
++	if (ret)
++		goto err_frag;
++
++	ret = dpmaif_dl_add_frg_cnt(dpmaif_ctrl, 0, rxq->bat_frag->bat_size_cnt - 1);
++	if (ret)
++		goto err_frag;
++
++	dpmaif_clr_ul_all_interrupt(&dpmaif_ctrl->hif_hw_info);
++	dpmaif_clr_dl_all_interrupt(&dpmaif_ctrl->hif_hw_info);
++
++	dpmaif_ctrl->state = DPMAIF_STATE_PWRON;
++	dpmaif_enable_irq(dpmaif_ctrl);
++
++	/* wake up the dpmaif tx thread */
++	wake_up(&dpmaif_ctrl->tx_wq);
++	return 0;
++err_frag:
++	dpmaif_bat_free(rxq->dpmaif_ctrl, rxq->bat_frag);
++err_bat:
++	dpmaif_bat_free(rxq->dpmaif_ctrl, rxq->bat_req);
++	return ret;
++}
++
++static void dpmaif_pos_stop_hw(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	dpmaif_suspend_tx_sw_stop(dpmaif_ctrl);
++	dpmaif_suspend_rx_sw_stop(dpmaif_ctrl);
++}
++
++static void dpmaif_stop_hw(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	dpmaif_hw_stop_tx_queue(dpmaif_ctrl);
++	dpmaif_hw_stop_rx_queue(dpmaif_ctrl);
++}
++
++static int dpmaif_stop(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	if (!dpmaif_ctrl->dpmaif_sw_init_done) {
++		dev_err(dpmaif_ctrl->dev, "dpmaif SW init fail\n");
++		return -EFAULT;
++	}
++
++	if (dpmaif_ctrl->state == DPMAIF_STATE_PWROFF)
++		return -EFAULT;
++
++	dpmaif_disable_irq(dpmaif_ctrl);
++	dpmaif_ctrl->state = DPMAIF_STATE_PWROFF;
++	dpmaif_pos_stop_hw(dpmaif_ctrl);
++	flush_work(&dpmaif_ctrl->skb_pool.reload_work);
++	dpmaif_stop_tx_sw(dpmaif_ctrl);
++	dpmaif_stop_rx_sw(dpmaif_ctrl);
++	return 0;
++}
++
++int dpmaif_md_state_callback(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char state)
++{
++	int ret = 0;
++
++	switch (state) {
++	case MD_STATE_WAITING_FOR_HS1:
++		ret = dpmaif_start(dpmaif_ctrl);
++		break;
++
++	case MD_STATE_EXCEPTION:
++		ret = dpmaif_stop(dpmaif_ctrl);
++		break;
++
++	case MD_STATE_STOPPED:
++		ret = dpmaif_stop(dpmaif_ctrl);
++		break;
++
++	case MD_STATE_WAITING_TO_STOP:
++		dpmaif_stop_hw(dpmaif_ctrl);
++		break;
++
++	default:
++		break;
++	}
++
++	return ret;
++}
++
++/**
++ * dpmaif_hif_init() - Initialize data path
++ * @mtk_dev: MTK context structure
++ * @callbacks: Callbacks implemented by the network layer to handle RX skb and
++ *	       event notifications
++ *
++ * Allocate and initialize datapath control block
++ * Register datapath ISR, TX and RX resources
++ *
++ * Return: pointer to DPMAIF context structure or NULL in case of error
++ */
++struct dpmaif_ctrl *dpmaif_hif_init(struct mtk_pci_dev *mtk_dev,
++				    struct dpmaif_callbacks *callbacks)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	int ret;
++
++	if (!callbacks)
++		return NULL;
++
++	dpmaif_ctrl = devm_kzalloc(&mtk_dev->pdev->dev, sizeof(*dpmaif_ctrl), GFP_KERNEL);
++	if (!dpmaif_ctrl)
++		return NULL;
++
++	dpmaif_ctrl->mtk_dev = mtk_dev;
++	dpmaif_ctrl->callbacks = callbacks;
++	dpmaif_ctrl->dev = &mtk_dev->pdev->dev;
++	dpmaif_ctrl->dpmaif_sw_init_done = false;
++	dpmaif_ctrl->hif_hw_info.pcie_base = mtk_dev->base_addr.pcie_ext_reg_base -
++					     mtk_dev->base_addr.pcie_dev_reg_trsl_addr;
++
++	/* registers dpmaif irq by PCIe driver API */
++	dpmaif_platform_irq_init(dpmaif_ctrl);
++	dpmaif_disable_irq(dpmaif_ctrl);
++
++	/* Alloc TX/RX resource */
++	ret = dpmaif_sw_init(dpmaif_ctrl);
++	if (ret) {
++		dev_err(&mtk_dev->pdev->dev, "DPMAIF SW initialization fail! %d\n", ret);
++		return NULL;
++	}
++
++	dpmaif_ctrl->dpmaif_sw_init_done = true;
++	return dpmaif_ctrl;
++}
++
++void dpmaif_hif_exit(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	if (dpmaif_ctrl->dpmaif_sw_init_done) {
++		dpmaif_stop(dpmaif_ctrl);
++		dpmaif_sw_release(dpmaif_ctrl);
++		dpmaif_ctrl->dpmaif_sw_init_done = false;
++	}
++}
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
+new file mode 100644
+index 000000000000..1a8f15904806
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
+@@ -0,0 +1,270 @@
++/* SPDX-License-Identifier: GPL-2.0-only
++ *
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ */
++
++#ifndef __T7XX_DPMA_TX_H__
++#define __T7XX_DPMA_TX_H__
++
++#include <linux/netdevice.h>
++#include <linux/workqueue.h>
++#include <linux/wait.h>
++#include <linux/types.h>
++
++#include "t7xx_common.h"
++#include "t7xx_pci.h"
++#include "t7xx_skb_util.h"
++
++#define DPMAIF_RXQ_NUM		2
++#define DPMAIF_TXQ_NUM		5
++
++#define DPMA_SKB_QUEUE_CNT	1
++
++struct dpmaif_isr_en_mask {
++	unsigned int		ap_ul_l2intr_en_msk;
++	unsigned int		ap_dl_l2intr_en_msk;
++	unsigned int		ap_udl_ip_busy_en_msk;
++	unsigned int		ap_dl_l2intr_err_en_msk;
++};
++
++struct dpmaif_ul {
++	bool			que_started;
++	unsigned char		reserve[3];
++	dma_addr_t		drb_base;
++	unsigned int		drb_size_cnt;
++};
++
++struct dpmaif_dl {
++	bool			que_started;
++	unsigned char		reserve[3];
++	dma_addr_t		pit_base;
++	unsigned int		pit_size_cnt;
++	dma_addr_t		bat_base;
++	unsigned int		bat_size_cnt;
++	dma_addr_t		frg_base;
++	unsigned int		frg_size_cnt;
++	unsigned int		pit_seq;
++};
++
++struct dpmaif_dl_hwq {
++	unsigned int		bat_remain_size;
++	unsigned int		bat_pkt_bufsz;
++	unsigned int		frg_pkt_bufsz;
++	unsigned int		bat_rsv_length;
++	unsigned int		pkt_bid_max_cnt;
++	unsigned int		pkt_alignment;
++	unsigned int		mtu_size;
++	unsigned int		chk_pit_num;
++	unsigned int		chk_bat_num;
++	unsigned int		chk_frg_num;
++};
++
++/* Structure of DL BAT */
++struct dpmaif_cur_rx_skb_info {
++	bool			msg_pit_received;
++	struct sk_buff		*cur_skb;
++	unsigned int		cur_chn_idx;
++	unsigned int		check_sum;
++	unsigned int		pit_dp;
++	int			err_payload;
++};
++
++struct dpmaif_bat {
++	unsigned int		p_buffer_addr;
++	unsigned int		buffer_addr_ext;
++};
++
++struct dpmaif_bat_skb {
++	struct sk_buff		*skb;
++	dma_addr_t		data_bus_addr;
++	unsigned int		data_len;
++};
++
++struct dpmaif_bat_page {
++	struct page		*page;
++	dma_addr_t		data_bus_addr;
++	unsigned int		offset;
++	unsigned int		data_len;
++};
++
++enum bat_type {
++	BAT_TYPE_NORMAL = 0,
++	BAT_TYPE_FRAG = 1,
++};
++
++struct dpmaif_bat_request {
++	void			*bat_base;
++	dma_addr_t		bat_bus_addr;
++	unsigned int		bat_size_cnt;
++	unsigned short		bat_wr_idx;
++	unsigned short		bat_release_rd_idx;
++	void			*bat_skb_ptr;
++	unsigned int		skb_pkt_cnt;
++	unsigned int		pkt_buf_sz;
++	unsigned char		*bat_mask;
++	atomic_t		refcnt;
++	spinlock_t		mask_lock; /* protects bat_mask */
++	enum bat_type		type;
++};
++
++struct dpmaif_rx_queue {
++	unsigned char		index;
++	bool			que_started;
++	unsigned short		budget;
++
++	void			*pit_base;
++	dma_addr_t		pit_bus_addr;
++	unsigned int		pit_size_cnt;
++
++	unsigned short		pit_rd_idx;
++	unsigned short		pit_wr_idx;
++	unsigned short		pit_release_rd_idx;
++
++	struct dpmaif_bat_request *bat_req;
++	struct dpmaif_bat_request *bat_frag;
++
++	wait_queue_head_t	rx_wq;
++	struct task_struct	*rx_thread;
++	struct ccci_skb_queue	skb_queue;
++
++	struct workqueue_struct	*worker;
++	struct work_struct	dpmaif_rxq_work;
++
++	atomic_t		rx_processing;
++
++	struct dpmaif_ctrl	*dpmaif_ctrl;
++	unsigned int		expect_pit_seq;
++	unsigned int		pit_remain_release_cnt;
++	struct dpmaif_cur_rx_skb_info rx_data_info;
++};
++
++struct dpmaif_tx_queue {
++	unsigned char		index;
++	bool			que_started;
++	atomic_t		tx_budget;
++	void			*drb_base;
++	dma_addr_t		drb_bus_addr;
++	unsigned int		drb_size_cnt;
++	unsigned short		drb_wr_idx;
++	unsigned short		drb_rd_idx;
++	unsigned short		drb_release_rd_idx;
++	unsigned short		last_ch_id;
++	void			*drb_skb_base;
++	wait_queue_head_t	req_wq;
++	struct workqueue_struct	*worker;
++	struct work_struct	dpmaif_tx_work;
++	spinlock_t		tx_lock; /* protects txq DRB */
++	atomic_t		tx_processing;
++
++	struct dpmaif_ctrl	*dpmaif_ctrl;
++	/* tx thread skb_list */
++	spinlock_t		tx_event_lock;
++	struct list_head	tx_event_queue;
++	unsigned int		tx_submit_skb_cnt;
++	unsigned int		tx_list_max_len;
++	unsigned int		tx_skb_stat;
++	bool			drb_lack;
++};
++
++/* data path skb pool */
++struct dpmaif_map_skb {
++	struct list_head	head;
++	u32			qlen;
++	spinlock_t		lock; /* protects skb queue*/
++};
++
++struct dpmaif_skb_info {
++	struct list_head	entry;
++	struct sk_buff		*skb;
++	unsigned int		data_len;
++	dma_addr_t		data_bus_addr;
++};
++
++struct dpmaif_skb_queue {
++	struct dpmaif_map_skb	skb_list;
++	unsigned int		size;
++	unsigned int		max_len;
++};
++
++struct dpmaif_skb_pool {
++	struct dpmaif_skb_queue	queue[DPMA_SKB_QUEUE_CNT];
++	struct workqueue_struct	*reload_work_queue;
++	struct work_struct	reload_work;
++	unsigned int		queue_cnt;
++};
++
++struct dpmaif_isr_para {
++	struct dpmaif_ctrl	*dpmaif_ctrl;
++	unsigned char		pcie_int;
++	unsigned char		dlq_id;
++};
++
++struct dpmaif_tx_event {
++	struct list_head	entry;
++	int			qno;
++	struct sk_buff		*skb;
++	unsigned int		drb_cnt;
++};
++
++enum dpmaif_state {
++	DPMAIF_STATE_MIN,
++	DPMAIF_STATE_PWROFF,
++	DPMAIF_STATE_PWRON,
++	DPMAIF_STATE_EXCEPTION,
++	DPMAIF_STATE_MAX
++};
++
++struct dpmaif_hw_info {
++	void __iomem			*pcie_base;
++	struct dpmaif_dl		dl_que[DPMAIF_RXQ_NUM];
++	struct dpmaif_ul		ul_que[DPMAIF_TXQ_NUM];
++	struct dpmaif_dl_hwq		dl_que_hw[DPMAIF_RXQ_NUM];
++	struct dpmaif_isr_en_mask	isr_en_mask;
++};
++
++enum dpmaif_txq_state {
++	DMPAIF_TXQ_STATE_IRQ,
++	DMPAIF_TXQ_STATE_FULL,
++};
++
++struct dpmaif_callbacks {
++	void (*state_notify)(struct mtk_pci_dev *mtk_dev,
++			     enum dpmaif_txq_state state, int txqt);
++	void (*recv_skb)(struct mtk_pci_dev *mtk_dev, int netif_id, struct sk_buff *skb);
++};
++
++struct dpmaif_ctrl {
++	struct device			*dev;
++	struct mtk_pci_dev		*mtk_dev;
++	enum dpmaif_state		state;
++	bool				dpmaif_sw_init_done;
++	struct dpmaif_hw_info		hif_hw_info;
++	struct dpmaif_tx_queue		txq[DPMAIF_TXQ_NUM];
++	struct dpmaif_rx_queue		rxq[DPMAIF_RXQ_NUM];
++
++	unsigned char			rxq_int_mapping[DPMAIF_RXQ_NUM];
++	struct dpmaif_isr_para		isr_para[DPMAIF_RXQ_NUM];
++
++	struct dpmaif_bat_request	bat_req;
++	struct dpmaif_bat_request	bat_frag;
++	struct workqueue_struct		*bat_release_work_queue;
++	struct work_struct		bat_release_work;
++	struct dpmaif_skb_pool		skb_pool;
++
++	wait_queue_head_t		tx_wq;
++	struct task_struct		*tx_thread;
++	unsigned char			txq_select_times;
++
++	struct dpmaif_callbacks		*callbacks;
++};
++
++struct dpmaif_ctrl *dpmaif_hif_init(struct mtk_pci_dev *mtk_dev,
++				    struct dpmaif_callbacks *callbacks);
++void dpmaif_hif_exit(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_md_state_callback(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char state);
++unsigned int ring_buf_get_next_wrdx(unsigned int buf_len, unsigned int buf_idx);
++unsigned int ring_buf_read_write_count(unsigned int total_cnt, unsigned int rd_idx,
++				       unsigned int wrt_idx, bool rd_wrt);
++
++#endif /* __T7XX_DPMA_TX_H__ */
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+new file mode 100644
+index 000000000000..a902f1ffa4c2
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -0,0 +1,1523 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ */
++
++#include <linux/bitfield.h>
++#include <linux/dma-mapping.h>
++#include <linux/err.h>
++#include <linux/interrupt.h>
++#include <linux/iopoll.h>
++#include <linux/jiffies.h>
++#include <linux/kthread.h>
++#include <linux/list.h>
++#include <linux/mm.h>
++#include <linux/skbuff.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++
++#include "t7xx_dpmaif.h"
++#include "t7xx_hif_dpmaif.h"
++#include "t7xx_hif_dpmaif_rx.h"
++
++#define DPMAIF_BAT_COUNT		8192
++#define DPMAIF_FRG_COUNT		4814
++#define DPMAIF_PIT_COUNT		(DPMAIF_BAT_COUNT * 2)
++
++#define DPMAIF_BAT_CNT_THRESHOLD	30
++#define DPMAIF_PIT_CNT_THRESHOLD	60
++#define DPMAIF_RX_PUSH_THRESHOLD_MASK	0x7
++#define DPMAIF_NOTIFY_RELEASE_COUNT	128
++#define DPMAIF_POLL_PIT_TIME_US		20
++#define DPMAIF_POLL_PIT_MAX_TIME_US	2000
++#define DPMAIF_WQ_TIME_LIMIT_MS		2
++#define DPMAIF_CS_RESULT_PASS		0
++
++#define DPMAIF_SKB_OVER_HEAD		SKB_DATA_ALIGN(sizeof(struct skb_shared_info))
++#define DPMAIF_SKB_SIZE_EXTRA		SKB_DATA_ALIGN(NET_SKB_PAD + DPMAIF_SKB_OVER_HEAD)
++#define DPMAIF_SKB_SIZE(s)		((s) + DPMAIF_SKB_SIZE_EXTRA)
++#define DPMAIF_SKB_Q_SIZE		(DPMAIF_BAT_COUNT * DPMAIF_SKB_SIZE(DPMAIF_HW_BAT_PKTBUF))
++#define DPMAIF_SKB_SIZE_MIN		32
++#define DPMAIF_RELOAD_TH_1		4
++#define DPMAIF_RELOAD_TH_2		5
++
++/* packet_type */
++#define DES_PT_PD			0x00
++#define DES_PT_MSG			0x01
++/* buffer_type */
++#define PKT_BUF_FRAG			0x01
++
++static inline unsigned int normal_pit_bid(const struct dpmaif_normal_pit *pit_info)
++{
++	return (FIELD_GET(NORMAL_PIT_H_BID, pit_info->pit_footer) << 13) +
++		FIELD_GET(NORMAL_PIT_BUFFER_ID, pit_info->pit_header);
++}
++
++static void dpmaif_set_skb_cs_type(const unsigned int cs_result, struct sk_buff *skb)
++{
++	if (cs_result == DPMAIF_CS_RESULT_PASS)
++		skb->ip_summed = CHECKSUM_UNNECESSARY;
++	else
++		skb->ip_summed = CHECKSUM_NONE;
++}
++
++static int dpmaif_net_rx_push_thread(void *arg)
++{
++	struct dpmaif_ctrl *hif_ctrl;
++	struct dpmaif_callbacks *cb;
++	struct dpmaif_rx_queue *q;
++	struct sk_buff *skb;
++	u32 *lhif_header;
++	int netif_id;
++
++	q = arg;
++	hif_ctrl = q->dpmaif_ctrl;
++	cb = hif_ctrl->callbacks;
++	while (!kthread_should_stop()) {
++		if (skb_queue_empty(&q->skb_queue.skb_list)) {
++			if (wait_event_interruptible(q->rx_wq,
++						     !skb_queue_empty(&q->skb_queue.skb_list) ||
++						     kthread_should_stop()))
++				continue;
++		}
++
++		if (kthread_should_stop())
++			break;
++
++		skb = ccci_skb_dequeue(hif_ctrl->mtk_dev->pools.reload_work_queue,
++				       &q->skb_queue);
++		if (!skb)
++			continue;
++
++		lhif_header = (u32 *)skb->data;
++		netif_id = FIELD_GET(LHIF_HEADER_NETIF, *lhif_header);
++		skb_pull(skb, sizeof(*lhif_header));
++		cb->recv_skb(hif_ctrl->mtk_dev, netif_id, skb);
++
++		cond_resched();
++	}
++
++	return 0;
++}
++
++static int dpmaif_update_bat_wr_idx(struct dpmaif_ctrl *dpmaif_ctrl,
++				    const unsigned char q_num, const unsigned int bat_cnt)
++{
++	unsigned short old_rl_idx, new_wr_idx, old_wr_idx;
++	struct dpmaif_bat_request *bat_req;
++	struct dpmaif_rx_queue *rxq;
++
++	rxq = &dpmaif_ctrl->rxq[q_num];
++	bat_req = rxq->bat_req;
++
++	if (!rxq->que_started) {
++		dev_err(dpmaif_ctrl->dev, "RX queue %d has not been started\n", rxq->index);
++		return -EINVAL;
++	}
++
++	old_rl_idx = bat_req->bat_release_rd_idx;
++	old_wr_idx = bat_req->bat_wr_idx;
++	new_wr_idx = old_wr_idx + bat_cnt;
++
++	if (old_rl_idx > old_wr_idx) {
++		if (new_wr_idx >= old_rl_idx) {
++			dev_err(dpmaif_ctrl->dev, "RX BAT flow check fail\n");
++			return -EINVAL;
++		}
++	} else if (new_wr_idx >= bat_req->bat_size_cnt) {
++		new_wr_idx -= bat_req->bat_size_cnt;
++		if (new_wr_idx >= old_rl_idx) {
++			dev_err(dpmaif_ctrl->dev, "RX BAT flow check fail\n");
++			return -EINVAL;
++		}
++	}
++
++	bat_req->bat_wr_idx = new_wr_idx;
++	return 0;
++}
++
++#define GET_SKB_BY_ENTRY(skb_entry)\
++	((struct dpmaif_skb_info *)list_entry(skb_entry, struct dpmaif_skb_info, entry))
++
++static struct dpmaif_skb_info *alloc_and_map_skb_info(const struct dpmaif_ctrl *dpmaif_ctrl,
++						      struct sk_buff *skb)
++{
++	struct dpmaif_skb_info *skb_info;
++	dma_addr_t data_bus_addr;
++	size_t data_len;
++
++	skb_info = kmalloc(sizeof(*skb_info), GFP_KERNEL);
++	if (!skb_info)
++		return NULL;
++
++	/* DMA mapping */
++	data_len = skb_data_size(skb);
++	data_bus_addr = dma_map_single(dpmaif_ctrl->dev, skb->data, data_len, DMA_FROM_DEVICE);
++	if (dma_mapping_error(dpmaif_ctrl->dev, data_bus_addr)) {
++		dev_err_ratelimited(dpmaif_ctrl->dev, "DMA mapping error\n");
++		kfree(skb_info);
++		return NULL;
++	}
++
++	INIT_LIST_HEAD(&skb_info->entry);
++	skb_info->skb = skb;
++	skb_info->data_len = data_len;
++	skb_info->data_bus_addr = data_bus_addr;
++	return skb_info;
++}
++
++static struct list_head *dpmaif_map_skb_deq(struct dpmaif_map_skb *skb_list)
++{
++	struct list_head *entry;
++
++	entry = skb_list->head.next;
++	if (!list_empty(&skb_list->head) && entry) {
++		list_del(entry);
++		skb_list->qlen--;
++		return entry;
++	}
++
++	return NULL;
++}
++
++static struct dpmaif_skb_info *dpmaif_skb_dequeue(struct dpmaif_skb_pool *pool,
++						  struct dpmaif_skb_queue *queue)
++{
++	unsigned int max_len, qlen;
++	struct list_head *entry;
++	unsigned long flags;
++
++	spin_lock_irqsave(&queue->skb_list.lock, flags);
++	entry = dpmaif_map_skb_deq(&queue->skb_list);
++	max_len = queue->max_len;
++	qlen = queue->skb_list.qlen;
++	spin_unlock_irqrestore(&queue->skb_list.lock, flags);
++	if (!entry)
++		return NULL;
++
++	if (qlen < max_len * DPMAIF_RELOAD_TH_1 / DPMAIF_RELOAD_TH_2)
++		queue_work(pool->reload_work_queue, &pool->reload_work);
++
++	return GET_SKB_BY_ENTRY(entry);
++}
++
++static struct dpmaif_skb_info *dpmaif_dev_alloc_skb(struct dpmaif_ctrl *dpmaif_ctrl,
++						    const unsigned int size)
++{
++	struct dpmaif_skb_info *skb_info;
++	struct sk_buff *skb;
++
++	skb = __dev_alloc_skb(size, GFP_KERNEL);
++	if (!skb)
++		return NULL;
++
++	skb_info = alloc_and_map_skb_info(dpmaif_ctrl, skb);
++	if (!skb_info)
++		dev_kfree_skb_any(skb);
++
++	return skb_info;
++}
++
++static struct dpmaif_skb_info *dpmaif_alloc_skb(struct dpmaif_ctrl *dpmaif_ctrl,
++						const unsigned int size)
++{
++	unsigned int i;
++
++	if (size > DPMAIF_HW_BAT_PKTBUF)
++		return dpmaif_dev_alloc_skb(dpmaif_ctrl, size);
++
++	for (i = 0; i < dpmaif_ctrl->skb_pool.queue_cnt; i++) {
++		struct dpmaif_skb_info *skb_info;
++		struct dpmaif_skb_queue *queue;
++
++		queue = &dpmaif_ctrl->skb_pool.queue[DPMA_SKB_QUEUE_CNT - 1 - i];
++
++		if (size <= queue->size) {
++			skb_info = dpmaif_skb_dequeue(&dpmaif_ctrl->skb_pool, queue);
++			if (skb_info && skb_info->skb)
++				return skb_info;
++
++			kfree(skb_info);
++			return dpmaif_dev_alloc_skb(dpmaif_ctrl, size);
++		}
++	}
++
++	return NULL;
++}
++
++/**
++ * dpmaif_rx_buf_alloc() - Allocates buffers for the BAT ring
++ * @dpmaif_ctrl: Pointer to DPMAIF context structure
++ * @bat_req: Pointer to BAT request structure
++ * @q_num: Queue number
++ * @buf_cnt: Number of buffers to allocate
++ * @first_time: Indicates if the ring is being populated for the first time
++ *
++ * Allocates skb and store the start address of the data buffer into the BAT ring.
++ * If the this is not the initial call then notify the HW about the new entries.
++ *
++ * Return: 0 on success, a negative error code on failure
++ */
++int dpmaif_rx_buf_alloc(struct dpmaif_ctrl *dpmaif_ctrl,
++			const struct dpmaif_bat_request *bat_req,
++			const unsigned char q_num, const unsigned int buf_cnt,
++			const bool first_time)
++{
++	unsigned int alloc_cnt, i, hw_wr_idx;
++	unsigned int bat_cnt, bat_max_cnt;
++	unsigned short bat_start_idx;
++	int ret;
++
++	alloc_cnt = buf_cnt;
++	if (!alloc_cnt || alloc_cnt > bat_req->bat_size_cnt)
++		return -EINVAL;
++
++	/* check BAT buffer space */
++	bat_max_cnt = bat_req->bat_size_cnt;
++	bat_cnt = ring_buf_read_write_count(bat_max_cnt, bat_req->bat_release_rd_idx,
++					    bat_req->bat_wr_idx, false);
++
++	if (alloc_cnt > bat_cnt)
++		return -ENOMEM;
++
++	bat_start_idx = bat_req->bat_wr_idx;
++
++	/* Set buffer to be used */
++	for (i = 0; i < alloc_cnt; i++) {
++		unsigned short cur_bat_idx = bat_start_idx + i;
++		struct dpmaif_bat_skb *cur_skb;
++		struct dpmaif_bat *cur_bat;
++
++		if (cur_bat_idx >= bat_max_cnt)
++			cur_bat_idx -= bat_max_cnt;
++
++		cur_skb = (struct dpmaif_bat_skb *)bat_req->bat_skb_ptr + cur_bat_idx;
++		if (!cur_skb->skb) {
++			struct dpmaif_skb_info *skb_info;
++
++			skb_info = dpmaif_alloc_skb(dpmaif_ctrl, bat_req->pkt_buf_sz);
++			if (!skb_info)
++				break;
++
++			cur_skb->skb = skb_info->skb;
++			cur_skb->data_bus_addr = skb_info->data_bus_addr;
++			cur_skb->data_len = skb_info->data_len;
++			kfree(skb_info);
++		}
++
++		cur_bat = (struct dpmaif_bat *)bat_req->bat_base + cur_bat_idx;
++		cur_bat->buffer_addr_ext = upper_32_bits(cur_skb->data_bus_addr);
++		cur_bat->p_buffer_addr = lower_32_bits(cur_skb->data_bus_addr);
++	}
++
++	if (!i)
++		return -ENOMEM;
++
++	ret = dpmaif_update_bat_wr_idx(dpmaif_ctrl, q_num, i);
++	if (ret)
++		return ret;
++
++	if (!first_time) {
++		ret = dpmaif_dl_add_bat_cnt(dpmaif_ctrl, q_num, i);
++		if (ret)
++			return ret;
++
++		hw_wr_idx = dpmaif_dl_get_bat_wridx(&dpmaif_ctrl->hif_hw_info, DPF_RX_QNO_DFT);
++		if (hw_wr_idx != bat_req->bat_wr_idx) {
++			ret = -EFAULT;
++			dev_err(dpmaif_ctrl->dev, "Write index mismatch in Rx ring\n");
++		}
++	}
++
++	return ret;
++}
++
++static int dpmaifq_release_rx_pit_entry(struct dpmaif_rx_queue *rxq,
++					const unsigned short rel_entry_num)
++{
++	unsigned short old_sw_rel_idx, new_sw_rel_idx, old_hw_wr_idx;
++	int ret;
++
++	if (!rxq->que_started)
++		return 0;
++
++	if (rel_entry_num >= rxq->pit_size_cnt) {
++		dev_err(rxq->dpmaif_ctrl->dev, "Invalid PIT entry release index.\n");
++		return -EINVAL;
++	}
++
++	old_sw_rel_idx = rxq->pit_release_rd_idx;
++	new_sw_rel_idx = old_sw_rel_idx + rel_entry_num;
++
++	old_hw_wr_idx = rxq->pit_wr_idx;
++
++	if (old_hw_wr_idx < old_sw_rel_idx && new_sw_rel_idx >= rxq->pit_size_cnt)
++		new_sw_rel_idx = new_sw_rel_idx - rxq->pit_size_cnt;
++
++	ret = dpmaif_dl_add_dlq_pit_remain_cnt(rxq->dpmaif_ctrl, rxq->index, rel_entry_num);
++
++	if (ret) {
++		dev_err(rxq->dpmaif_ctrl->dev,
++			"PIT release failure, PIT-r/w/rel-%d,%d%d; rel_entry_num = %d, ret=%d\n",
++			rxq->pit_rd_idx, rxq->pit_wr_idx,
++			rxq->pit_release_rd_idx, rel_entry_num, ret);
++		return ret;
++	}
++	rxq->pit_release_rd_idx = new_sw_rel_idx;
++	return 0;
++}
++
++static void dpmaif_set_bat_mask(struct device *dev,
++				struct dpmaif_bat_request *bat_req, unsigned int idx)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&bat_req->mask_lock, flags);
++	if (!bat_req->bat_mask[idx])
++		bat_req->bat_mask[idx] = 1;
++	else
++		dev_err(dev, "%s BAT mask was already set\n",
++			bat_req->type == BAT_TYPE_NORMAL ? "Normal" : "Frag");
++
++	spin_unlock_irqrestore(&bat_req->mask_lock, flags);
++}
++
++static int frag_bat_cur_bid_check(struct dpmaif_rx_queue *rxq,
++				  const unsigned int cur_bid)
++{
++	struct dpmaif_bat_request *bat_frag;
++	struct page *page;
++
++	bat_frag = rxq->bat_frag;
++
++	if (cur_bid >= DPMAIF_FRG_COUNT) {
++		dev_err(rxq->dpmaif_ctrl->dev, "frag BAT cur_bid[%d] err\n", cur_bid);
++		return -EINVAL;
++	}
++
++	page = ((struct dpmaif_bat_page *)bat_frag->bat_skb_ptr + cur_bid)->page;
++	if (!page)
++		return -EINVAL;
++
++	return 0;
++}
++
++/**
++ * dpmaif_rx_frag_alloc() - Allocates buffers for the Fragment BAT ring
++ * @dpmaif_ctrl: Pointer to DPMAIF context structure
++ * @bat_req: Pointer to BAT request structure
++ * @q_num: Queue number
++ * @buf_cnt: Number of buffers to allocate
++ * @first_time: Indicates if the ring is being populated for the first time
++ *
++ * Fragment BAT is used when the received packet won't fit in a regular BAT entry.
++ * This function allocates a page fragment and store the start address of the page
++ * into the Fragment BAT ring.
++ * If the this is not the initial call then notify the HW about the new entries.
++ *
++ * Return: 0 on success, a negative error code on failure
++ */
++int dpmaif_rx_frag_alloc(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_bat_request *bat_req,
++			 unsigned char q_num, const unsigned int buf_cnt, const bool first_time)
++{
++	unsigned short cur_bat_idx;
++	unsigned int buf_space;
++	int i, ret = 0;
++
++	if (!buf_cnt || buf_cnt > bat_req->bat_size_cnt)
++		return -EINVAL;
++
++	buf_space = ring_buf_read_write_count(bat_req->bat_size_cnt, bat_req->bat_release_rd_idx,
++					      bat_req->bat_wr_idx, false);
++
++	if (buf_cnt > buf_space) {
++		dev_err(dpmaif_ctrl->dev,
++			"Requested more buffers than the space available in Rx frag ring\n");
++		return -EINVAL;
++	}
++
++	cur_bat_idx = bat_req->bat_wr_idx;
++
++	for (i = 0; i < buf_cnt; i++) {
++		struct dpmaif_bat_page *cur_page;
++		struct dpmaif_bat *cur_bat;
++		dma_addr_t data_base_addr;
++
++		cur_page = (struct dpmaif_bat_page *)bat_req->bat_skb_ptr + cur_bat_idx;
++		if (!cur_page->page) {
++			unsigned long offset;
++			struct page *page;
++			void *data;
++
++			data = netdev_alloc_frag(bat_req->pkt_buf_sz);
++			if (!data)
++				break;
++
++			page = virt_to_head_page(data);
++			offset = data - page_address(page);
++			data_base_addr = dma_map_page(dpmaif_ctrl->dev, page, offset,
++						      bat_req->pkt_buf_sz, DMA_FROM_DEVICE);
++
++			if (dma_mapping_error(dpmaif_ctrl->dev, data_base_addr)) {
++				dev_err(dpmaif_ctrl->dev, "DMA mapping fail\n");
++				put_page(virt_to_head_page(data));
++				break;
++			}
++
++			/* record frag information */
++			cur_page->page = page;
++			cur_page->data_bus_addr = data_base_addr;
++			cur_page->offset = offset;
++			cur_page->data_len = bat_req->pkt_buf_sz;
++		}
++
++		/* set to dpmaif HW */
++		data_base_addr = cur_page->data_bus_addr;
++		cur_bat = (struct dpmaif_bat *)bat_req->bat_base + cur_bat_idx;
++		cur_bat->buffer_addr_ext = upper_32_bits(data_base_addr);
++		cur_bat->p_buffer_addr = lower_32_bits(data_base_addr);
++
++		cur_bat_idx = ring_buf_get_next_wrdx(bat_req->bat_size_cnt, cur_bat_idx);
++	}
++
++	if (i < buf_cnt)
++		return -ENOMEM;
++
++	bat_req->bat_wr_idx = cur_bat_idx;
++
++	/* all rxq share one frag_bat table */
++	q_num = DPF_RX_QNO_DFT;
++
++	/* notify to HW */
++	if (!first_time)
++		dpmaif_dl_add_frg_cnt(dpmaif_ctrl, q_num, i);
++
++	return ret;
++}
++
++static int dpmaif_set_rx_frag_to_skb(const struct dpmaif_rx_queue *rxq,
++				     const struct dpmaif_normal_pit *pkt_info,
++				     const struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	unsigned long long data_bus_addr, data_base_addr;
++	struct dpmaif_bat_page *cur_page_info;
++	struct sk_buff *base_skb;
++	unsigned int data_len;
++	struct device *dev;
++	struct page *page;
++	int data_offset;
++
++	base_skb = rx_skb_info->cur_skb;
++	dev = rxq->dpmaif_ctrl->dev;
++	cur_page_info = rxq->bat_frag->bat_skb_ptr;
++	cur_page_info += normal_pit_bid(pkt_info);
++	page = cur_page_info->page;
++
++	/* rx current frag data unmapping */
++	dma_unmap_page(dev, cur_page_info->data_bus_addr,
++		       cur_page_info->data_len, DMA_FROM_DEVICE);
++	if (!page) {
++		dev_err(dev, "frag check fail, bid:%d", normal_pit_bid(pkt_info));
++		return -EINVAL;
++	}
++
++	/* calculate data address && data len. */
++	data_bus_addr = pkt_info->data_addr_ext;
++	data_bus_addr = (data_bus_addr << 32) + pkt_info->p_data_addr;
++	data_base_addr = (unsigned long long)cur_page_info->data_bus_addr;
++	data_offset = (int)(data_bus_addr - data_base_addr);
++
++	data_len = FIELD_GET(NORMAL_PIT_DATA_LEN, pkt_info->pit_header);
++
++	/* record to skb for user: fragment data to nr_frags */
++	skb_add_rx_frag(base_skb, skb_shinfo(base_skb)->nr_frags, page,
++			cur_page_info->offset + data_offset, data_len, cur_page_info->data_len);
++
++	cur_page_info->page = NULL;
++	cur_page_info->offset = 0;
++	cur_page_info->data_len = 0;
++	return 0;
++}
++
++static int dpmaif_get_rx_frag(struct dpmaif_rx_queue *rxq,
++			      const struct dpmaif_normal_pit *pkt_info,
++			      const struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	unsigned int cur_bid;
++	int ret;
++
++	cur_bid = normal_pit_bid(pkt_info);
++
++	/* check frag bid */
++	ret = frag_bat_cur_bid_check(rxq, cur_bid);
++	if (ret < 0)
++		return ret;
++
++	/* set frag data to cur_skb skb_shinfo->frags[] */
++	ret = dpmaif_set_rx_frag_to_skb(rxq, pkt_info, rx_skb_info);
++	if (ret < 0) {
++		dev_err(rxq->dpmaif_ctrl->dev, "dpmaif_set_rx_frag_to_skb fail, ret = %d\n", ret);
++		return ret;
++	}
++
++	dpmaif_set_bat_mask(rxq->dpmaif_ctrl->dev, rxq->bat_frag, cur_bid);
++	return 0;
++}
++
++static inline int bat_cur_bid_check(struct dpmaif_rx_queue *rxq,
++				    const unsigned int cur_bid)
++{
++	struct dpmaif_bat_skb *bat_req;
++	struct dpmaif_bat_skb *bat_skb;
++
++	bat_req = rxq->bat_req->bat_skb_ptr;
++	bat_skb = bat_req + cur_bid;
++
++	if (cur_bid >= DPMAIF_BAT_COUNT || !bat_skb->skb)
++		return -EINVAL;
++
++	return 0;
++}
++
++static int dpmaif_check_read_pit_seq(const struct dpmaif_normal_pit *pit)
++{
++	return FIELD_GET(NORMAL_PIT_PIT_SEQ, pit->pit_footer);
++}
++
++static int dpmaif_check_pit_seq(struct dpmaif_rx_queue *rxq,
++				const struct dpmaif_normal_pit *pit)
++{
++	unsigned int cur_pit_seq, expect_pit_seq = rxq->expect_pit_seq;
++
++	/* Running in soft interrupt therefore cannot sleep */
++	if (read_poll_timeout_atomic(dpmaif_check_read_pit_seq, cur_pit_seq,
++				     cur_pit_seq == expect_pit_seq, DPMAIF_POLL_PIT_TIME_US,
++				     DPMAIF_POLL_PIT_MAX_TIME_US, false, pit))
++		return -EFAULT;
++
++	rxq->expect_pit_seq++;
++	if (rxq->expect_pit_seq >= DPMAIF_DL_PIT_SEQ_VALUE)
++		rxq->expect_pit_seq = 0;
++
++	return 0;
++}
++
++static unsigned int dpmaif_avail_pkt_bat_cnt(struct dpmaif_bat_request *bat_req)
++{
++	unsigned long flags;
++	unsigned int i;
++
++	spin_lock_irqsave(&bat_req->mask_lock, flags);
++	for (i = 0; i < bat_req->bat_size_cnt; i++) {
++		unsigned int index = bat_req->bat_release_rd_idx + i;
++
++		if (index >= bat_req->bat_size_cnt)
++			index -= bat_req->bat_size_cnt;
++
++		if (!bat_req->bat_mask[index])
++			break;
++	}
++
++	spin_unlock_irqrestore(&bat_req->mask_lock, flags);
++
++	return i;
++}
++
++static int dpmaif_release_dl_bat_entry(const struct dpmaif_rx_queue *rxq,
++				       const unsigned int rel_entry_num,
++				       const enum bat_type buf_type)
++{
++	unsigned short old_sw_rel_idx, new_sw_rel_idx, hw_rd_idx;
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_bat_request *bat;
++	unsigned long flags;
++	unsigned int i;
++
++	dpmaif_ctrl = rxq->dpmaif_ctrl;
++
++	if (!rxq->que_started)
++		return -EINVAL;
++
++	if (buf_type == BAT_TYPE_FRAG) {
++		bat = rxq->bat_frag;
++		hw_rd_idx = dpmaif_dl_get_frg_ridx(&dpmaif_ctrl->hif_hw_info, rxq->index);
++	} else {
++		bat = rxq->bat_req;
++		hw_rd_idx = dpmaif_dl_get_bat_ridx(&dpmaif_ctrl->hif_hw_info, rxq->index);
++	}
++
++	if (rel_entry_num >= bat->bat_size_cnt || !rel_entry_num)
++		return -EINVAL;
++
++	old_sw_rel_idx = bat->bat_release_rd_idx;
++	new_sw_rel_idx = old_sw_rel_idx + rel_entry_num;
++
++	/* queue had empty and no need to release */
++	if (bat->bat_wr_idx == old_sw_rel_idx)
++		return 0;
++
++	if (hw_rd_idx >= old_sw_rel_idx) {
++		if (new_sw_rel_idx > hw_rd_idx)
++			return -EINVAL;
++	} else if (new_sw_rel_idx >= bat->bat_size_cnt) {
++		new_sw_rel_idx -= bat->bat_size_cnt;
++		if (new_sw_rel_idx > hw_rd_idx)
++			return -EINVAL;
++	}
++
++	/* reset BAT mask value */
++	spin_lock_irqsave(&bat->mask_lock, flags);
++	for (i = 0; i < rel_entry_num; i++) {
++		unsigned int index = bat->bat_release_rd_idx + i;
++
++		if (index >= bat->bat_size_cnt)
++			index -= bat->bat_size_cnt;
++
++		bat->bat_mask[index] = 0;
++	}
++
++	spin_unlock_irqrestore(&bat->mask_lock, flags);
++	bat->bat_release_rd_idx = new_sw_rel_idx;
++
++	return rel_entry_num;
++}
++
++static int dpmaif_dl_pit_release_and_add(struct dpmaif_rx_queue *rxq)
++{
++	int ret;
++
++	if (rxq->pit_remain_release_cnt < DPMAIF_PIT_CNT_THRESHOLD)
++		return 0;
++
++	ret = dpmaifq_release_rx_pit_entry(rxq, rxq->pit_remain_release_cnt);
++	if (ret)
++		dev_err(rxq->dpmaif_ctrl->dev, "release PIT fail\n");
++	else
++		rxq->pit_remain_release_cnt = 0;
++
++	return ret;
++}
++
++static int dpmaif_dl_pkt_bat_release_and_add(const struct dpmaif_rx_queue *rxq)
++{
++	unsigned int bid_cnt;
++	int ret;
++
++	bid_cnt = dpmaif_avail_pkt_bat_cnt(rxq->bat_req);
++
++	if (bid_cnt < DPMAIF_BAT_CNT_THRESHOLD)
++		return 0;
++
++	ret = dpmaif_release_dl_bat_entry(rxq, bid_cnt, BAT_TYPE_NORMAL);
++	if (ret <= 0) {
++		dev_err(rxq->dpmaif_ctrl->dev, "release PKT BAT failed, ret:%d\n", ret);
++		return ret;
++	}
++
++	ret = dpmaif_rx_buf_alloc(rxq->dpmaif_ctrl, rxq->bat_req, rxq->index, bid_cnt, false);
++
++	if (ret < 0)
++		dev_err(rxq->dpmaif_ctrl->dev, "allocate new RX buffer failed, ret:%d\n", ret);
++
++	return ret;
++}
++
++static int dpmaif_dl_frag_bat_release_and_add(const struct dpmaif_rx_queue *rxq)
++{
++	unsigned int bid_cnt;
++	int ret;
++
++	bid_cnt = dpmaif_avail_pkt_bat_cnt(rxq->bat_frag);
++
++	if (bid_cnt < DPMAIF_BAT_CNT_THRESHOLD)
++		return 0;
++
++	ret = dpmaif_release_dl_bat_entry(rxq, bid_cnt, BAT_TYPE_FRAG);
++	if (ret <= 0) {
++		dev_err(rxq->dpmaif_ctrl->dev, "release PKT BAT failed, ret:%d\n", ret);
++		return ret;
++	}
++
++	return dpmaif_rx_frag_alloc(rxq->dpmaif_ctrl, rxq->bat_frag, rxq->index, bid_cnt, false);
++}
++
++static inline void dpmaif_rx_msg_pit(const struct dpmaif_rx_queue *rxq,
++				     const struct dpmaif_msg_pit *msg_pit,
++				     struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	rx_skb_info->cur_chn_idx = FIELD_GET(MSG_PIT_CHANNEL_ID, msg_pit->dword1);
++	rx_skb_info->check_sum = FIELD_GET(MSG_PIT_CHECKSUM, msg_pit->dword1);
++	rx_skb_info->pit_dp = FIELD_GET(MSG_PIT_DP, msg_pit->dword1);
++}
++
++static int dpmaif_rx_set_data_to_skb(const struct dpmaif_rx_queue *rxq,
++				     const struct dpmaif_normal_pit *pkt_info,
++				     struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	unsigned long long data_bus_addr, data_base_addr;
++	struct dpmaif_bat_skb *cur_bat_skb;
++	struct sk_buff *new_skb;
++	unsigned int data_len;
++	struct device *dev;
++	int data_offset;
++
++	dev = rxq->dpmaif_ctrl->dev;
++	cur_bat_skb = rxq->bat_req->bat_skb_ptr;
++	cur_bat_skb += normal_pit_bid(pkt_info);
++	dma_unmap_single(dev, cur_bat_skb->data_bus_addr, cur_bat_skb->data_len, DMA_FROM_DEVICE);
++
++	/* calculate data address && data len. */
++	/* cur pkt physical address(in a buffer bid pointed) */
++	data_bus_addr = pkt_info->data_addr_ext;
++	data_bus_addr = (data_bus_addr << 32) + pkt_info->p_data_addr;
++	data_base_addr = (unsigned long long)cur_bat_skb->data_bus_addr;
++	data_offset = (int)(data_bus_addr - data_base_addr);
++
++	data_len = FIELD_GET(NORMAL_PIT_DATA_LEN, pkt_info->pit_header);
++	/* cur pkt data len */
++	/* record to skb for user: wapper, enqueue */
++	/* get skb which data contained pkt data */
++	new_skb = cur_bat_skb->skb;
++	new_skb->len = 0;
++	skb_reset_tail_pointer(new_skb);
++	/* set data len, data pointer */
++	skb_reserve(new_skb, data_offset);
++
++	if (new_skb->tail + data_len > new_skb->end) {
++		dev_err(dev, "No buffer space available\n");
++		return -ENOBUFS;
++	}
++
++	skb_put(new_skb, data_len);
++
++	rx_skb_info->cur_skb = new_skb;
++	cur_bat_skb->skb = NULL;
++	return 0;
++}
++
++static int dpmaif_get_rx_pkt(struct dpmaif_rx_queue *rxq,
++			     const struct dpmaif_normal_pit *pkt_info,
++			     struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	unsigned int cur_bid;
++	int ret;
++
++	cur_bid = normal_pit_bid(pkt_info);
++	ret = bat_cur_bid_check(rxq, cur_bid);
++	if (ret < 0)
++		return ret;
++
++	ret = dpmaif_rx_set_data_to_skb(rxq, pkt_info, rx_skb_info);
++	if (ret < 0) {
++		dev_err(rxq->dpmaif_ctrl->dev, "rx set data to skb failed, ret = %d\n", ret);
++		return ret;
++	}
++
++	dpmaif_set_bat_mask(rxq->dpmaif_ctrl->dev, rxq->bat_req, cur_bid);
++	return 0;
++}
++
++static int dpmaifq_rx_notify_hw(struct dpmaif_rx_queue *rxq)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	int ret;
++
++	dpmaif_ctrl = rxq->dpmaif_ctrl;
++
++	/* normal BAT release and add */
++	queue_work(dpmaif_ctrl->bat_release_work_queue, &dpmaif_ctrl->bat_release_work);
++
++	ret = dpmaif_dl_pit_release_and_add(rxq);
++	if (ret < 0)
++		dev_err(dpmaif_ctrl->dev, "dlq%d update PIT fail\n", rxq->index);
++
++	return ret;
++}
++
++static void dpmaif_rx_skb(struct dpmaif_rx_queue *rxq, struct dpmaif_cur_rx_skb_info *rx_skb_info)
++{
++	struct sk_buff *new_skb;
++	u32 *lhif_header;
++
++	new_skb = rx_skb_info->cur_skb;
++	rx_skb_info->cur_skb = NULL;
++
++	if (rx_skb_info->pit_dp) {
++		dev_kfree_skb_any(new_skb);
++		return;
++	}
++
++	dpmaif_set_skb_cs_type(rx_skb_info->check_sum, new_skb);
++
++	/* MD put the ccmni_index to the msg pkt,
++	 * so we need push it alone. Maybe not needed.
++	 */
++	lhif_header = skb_push(new_skb, sizeof(*lhif_header));
++	*lhif_header &= ~LHIF_HEADER_NETIF;
++	*lhif_header |= FIELD_PREP(LHIF_HEADER_NETIF, rx_skb_info->cur_chn_idx);
++
++	/* add data to rx thread skb list */
++	ccci_skb_enqueue(&rxq->skb_queue, new_skb);
++}
++
++static int dpmaif_rx_start(struct dpmaif_rx_queue *rxq, const unsigned short pit_cnt,
++			   const unsigned long timeout)
++{
++	struct dpmaif_cur_rx_skb_info *cur_rx_skb_info;
++	unsigned short rx_cnt, recv_skb_cnt = 0;
++	unsigned int cur_pit, pit_len;
++	int ret = 0, ret_hw = 0;
++	struct device *dev;
++
++	dev = rxq->dpmaif_ctrl->dev;
++	if (!rxq->pit_base)
++		return -EAGAIN;
++
++	pit_len = rxq->pit_size_cnt;
++	cur_rx_skb_info = &rxq->rx_data_info;
++	cur_pit = rxq->pit_rd_idx;
++
++	for (rx_cnt = 0; rx_cnt < pit_cnt; rx_cnt++) {
++		struct dpmaif_normal_pit *pkt_info;
++
++		if (!cur_rx_skb_info->msg_pit_received && time_after_eq(jiffies, timeout))
++			break;
++
++		pkt_info = (struct dpmaif_normal_pit *)rxq->pit_base + cur_pit;
++
++		if (dpmaif_check_pit_seq(rxq, pkt_info)) {
++			dev_err_ratelimited(dev, "dlq%u checks PIT SEQ fail\n", rxq->index);
++			return -EAGAIN;
++		}
++
++		if (FIELD_GET(NORMAL_PIT_PACKET_TYPE, pkt_info->pit_header) == DES_PT_MSG) {
++			if (cur_rx_skb_info->msg_pit_received)
++				dev_err(dev, "dlq%u receive repeat msg_pit err\n", rxq->index);
++			cur_rx_skb_info->msg_pit_received = true;
++			dpmaif_rx_msg_pit(rxq, (struct dpmaif_msg_pit *)pkt_info,
++					  cur_rx_skb_info);
++		} else { /* DES_PT_PD */
++			if (FIELD_GET(NORMAL_PIT_BUFFER_TYPE, pkt_info->pit_header) !=
++			    PKT_BUF_FRAG) {
++				/* skb->data: add to skb ptr && record ptr */
++				ret = dpmaif_get_rx_pkt(rxq, pkt_info, cur_rx_skb_info);
++			} else if (!cur_rx_skb_info->cur_skb) {
++				/* msg + frag PIT, no data pkt received */
++				dev_err(dev,
++					"rxq%d skb_idx < 0 PIT/BAT = %d, %d; buf: %ld; %d, %d\n",
++					rxq->index, cur_pit, normal_pit_bid(pkt_info),
++					FIELD_GET(NORMAL_PIT_BUFFER_TYPE, pkt_info->pit_header),
++					rx_cnt, pit_cnt);
++				ret = -EINVAL;
++			} else {
++				/* skb->frags[]: add to frags[] */
++				ret = dpmaif_get_rx_frag(rxq, pkt_info, cur_rx_skb_info);
++			}
++
++			/* check rx status */
++			if (ret < 0) {
++				cur_rx_skb_info->err_payload = 1;
++				dev_err_ratelimited(dev, "rxq%d error payload\n", rxq->index);
++			}
++
++			if (!FIELD_GET(NORMAL_PIT_CONT, pkt_info->pit_header)) {
++				if (!cur_rx_skb_info->err_payload) {
++					dpmaif_rx_skb(rxq, cur_rx_skb_info);
++				} else if (cur_rx_skb_info->cur_skb) {
++					dev_kfree_skb_any(cur_rx_skb_info->cur_skb);
++					cur_rx_skb_info->cur_skb = NULL;
++				}
++
++				/* reinit cur_rx_skb_info */
++				memset(cur_rx_skb_info, 0, sizeof(*cur_rx_skb_info));
++				recv_skb_cnt++;
++				if (!(recv_skb_cnt & DPMAIF_RX_PUSH_THRESHOLD_MASK)) {
++					wake_up_all(&rxq->rx_wq);
++					recv_skb_cnt = 0;
++				}
++			}
++		}
++
++		/* get next pointer to get pkt data */
++		cur_pit = ring_buf_get_next_wrdx(pit_len, cur_pit);
++		rxq->pit_rd_idx = cur_pit;
++
++		/* notify HW++ */
++		rxq->pit_remain_release_cnt++;
++		if (rx_cnt > 0 && !(rx_cnt % DPMAIF_NOTIFY_RELEASE_COUNT)) {
++			ret_hw = dpmaifq_rx_notify_hw(rxq);
++			if (ret_hw < 0)
++				break;
++		}
++	}
++
++	/* still need sync to SW/HW cnt */
++	if (recv_skb_cnt)
++		wake_up_all(&rxq->rx_wq);
++
++	/* update to HW */
++	if (!ret_hw)
++		ret_hw = dpmaifq_rx_notify_hw(rxq);
++
++	if (ret_hw < 0 && !ret)
++		ret = ret_hw;
++
++	return ret < 0 ? ret : rx_cnt;
++}
++
++static unsigned int dpmaifq_poll_rx_pit(struct dpmaif_rx_queue *rxq)
++{
++	unsigned short hw_wr_idx;
++	unsigned int pit_cnt;
++
++	if (!rxq->que_started)
++		return 0;
++
++	hw_wr_idx = dpmaif_dl_dlq_pit_get_wridx(&rxq->dpmaif_ctrl->hif_hw_info, rxq->index);
++	pit_cnt = ring_buf_read_write_count(rxq->pit_size_cnt, rxq->pit_rd_idx, hw_wr_idx, true);
++	rxq->pit_wr_idx = hw_wr_idx;
++	return pit_cnt;
++}
++
++static int dpmaif_rx_data_collect(struct dpmaif_ctrl *dpmaif_ctrl,
++				  const unsigned char q_num, const int budget)
++{
++	struct dpmaif_rx_queue *rxq;
++	unsigned long time_limit;
++	unsigned int cnt;
++
++	time_limit = jiffies + msecs_to_jiffies(DPMAIF_WQ_TIME_LIMIT_MS);
++	rxq = &dpmaif_ctrl->rxq[q_num];
++
++	do {
++		cnt = dpmaifq_poll_rx_pit(rxq);
++		if (cnt) {
++			unsigned int rd_cnt = (cnt > budget) ? budget : cnt;
++			int real_cnt = dpmaif_rx_start(rxq, rd_cnt, time_limit);
++
++			if (real_cnt < 0) {
++				if (real_cnt != -EAGAIN)
++					dev_err(dpmaif_ctrl->dev, "dlq%u rx err: %d\n",
++						rxq->index, real_cnt);
++				return real_cnt;
++			} else if (real_cnt < cnt) {
++				return -EAGAIN;
++			}
++		}
++	} while (cnt);
++
++	return 0;
++}
++
++static void dpmaif_do_rx(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_rx_queue *rxq)
++{
++	int ret;
++
++	ret = dpmaif_rx_data_collect(dpmaif_ctrl, rxq->index, rxq->budget);
++	if (ret < 0) {
++		/* Rx done and empty interrupt will be enabled in workqueue */
++		/* Try one more time */
++		queue_work(rxq->worker, &rxq->dpmaif_rxq_work);
++		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++	} else {
++		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++		dpmaif_hw_dlq_unmask_rx_done(&dpmaif_ctrl->hif_hw_info, rxq->index);
++	}
++}
++
++static void dpmaif_rxq_work(struct work_struct *work)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_rx_queue *rxq;
++
++	rxq = container_of(work, struct dpmaif_rx_queue, dpmaif_rxq_work);
++	dpmaif_ctrl = rxq->dpmaif_ctrl;
++
++	atomic_set(&rxq->rx_processing, 1);
++	 /* Ensure rx_processing is changed to 1 before actually begin RX flow */
++	smp_mb();
++
++	if (!rxq->que_started) {
++		atomic_set(&rxq->rx_processing, 0);
++		dev_err(dpmaif_ctrl->dev, "work RXQ: %d has not been started\n", rxq->index);
++		return;
++	}
++
++	dpmaif_do_rx(dpmaif_ctrl, rxq);
++
++	atomic_set(&rxq->rx_processing, 0);
++}
++
++void dpmaif_irq_rx_done(struct dpmaif_ctrl *dpmaif_ctrl, const unsigned int que_mask)
++{
++	struct dpmaif_rx_queue *rxq;
++	int qno;
++
++	/* get the queue id */
++	qno = ffs(que_mask) - 1;
++	if (qno < 0 || qno > DPMAIF_RXQ_NUM - 1) {
++		dev_err(dpmaif_ctrl->dev, "rxq number err, qno:%u\n", qno);
++		return;
++	}
++
++	rxq = &dpmaif_ctrl->rxq[qno];
++	queue_work(rxq->worker, &rxq->dpmaif_rxq_work);
++}
++
++static void dpmaif_base_free(const struct dpmaif_ctrl *dpmaif_ctrl,
++			     const struct dpmaif_bat_request *bat_req)
++{
++	if (bat_req->bat_base)
++		dma_free_coherent(dpmaif_ctrl->dev,
++				  bat_req->bat_size_cnt * sizeof(struct dpmaif_bat),
++				  bat_req->bat_base, bat_req->bat_bus_addr);
++}
++
++/**
++ * dpmaif_bat_alloc() - Allocate the BAT ring buffer
++ * @dpmaif_ctrl: Pointer to DPMAIF context structure
++ * @bat_req: Pointer to BAT request structure
++ * @buf_type: BAT ring type
++ *
++ * This function allocates the BAT ring buffer shared with the HW device, also allocates
++ * a buffer used to store information about the BAT skbs for further release.
++ *
++ * Return: 0 on success, a negative error code on failure
++ */
++int dpmaif_bat_alloc(const struct dpmaif_ctrl *dpmaif_ctrl,
++		     struct dpmaif_bat_request *bat_req,
++		     const enum bat_type buf_type)
++{
++	int sw_buf_size;
++
++	sw_buf_size = (buf_type == BAT_TYPE_FRAG) ?
++		sizeof(struct dpmaif_bat_page) : sizeof(struct dpmaif_bat_skb);
++
++	bat_req->bat_size_cnt = (buf_type == BAT_TYPE_FRAG) ? DPMAIF_FRG_COUNT : DPMAIF_BAT_COUNT;
++
++	bat_req->skb_pkt_cnt = bat_req->bat_size_cnt;
++	bat_req->pkt_buf_sz = (buf_type == BAT_TYPE_FRAG) ? DPMAIF_HW_FRG_PKTBUF : NET_RX_BUF;
++
++	bat_req->type = buf_type;
++	bat_req->bat_wr_idx = 0;
++	bat_req->bat_release_rd_idx = 0;
++
++	/* alloc buffer for HW && AP SW */
++	bat_req->bat_base = dma_alloc_coherent(dpmaif_ctrl->dev,
++					       bat_req->bat_size_cnt * sizeof(struct dpmaif_bat),
++					       &bat_req->bat_bus_addr, GFP_KERNEL | __GFP_ZERO);
++
++	if (!bat_req->bat_base)
++		return -ENOMEM;
++
++	/* alloc buffer for AP SW to record skb information */
++	bat_req->bat_skb_ptr = devm_kzalloc(dpmaif_ctrl->dev, bat_req->skb_pkt_cnt * sw_buf_size,
++					    GFP_KERNEL);
++
++	if (!bat_req->bat_skb_ptr)
++		goto err_base;
++
++	/* alloc buffer for BAT mask */
++	bat_req->bat_mask = kcalloc(bat_req->bat_size_cnt, sizeof(unsigned char), GFP_KERNEL);
++	if (!bat_req->bat_mask)
++		goto err_base;
++
++	spin_lock_init(&bat_req->mask_lock);
++	atomic_set(&bat_req->refcnt, 0);
++	return 0;
++
++err_base:
++	dpmaif_base_free(dpmaif_ctrl, bat_req);
++
++	return -ENOMEM;
++}
++
++static void unmap_bat_skb(struct device *dev, struct dpmaif_bat_skb *bat_skb_base,
++			  unsigned int index)
++{
++	struct dpmaif_bat_skb *bat_skb;
++
++	bat_skb = bat_skb_base + index;
++
++	if (bat_skb->skb) {
++		dma_unmap_single(dev, bat_skb->data_bus_addr, bat_skb->data_len,
++				 DMA_FROM_DEVICE);
++		kfree_skb(bat_skb->skb);
++		bat_skb->skb = NULL;
++	}
++}
++
++static void unmap_bat_page(struct device *dev, struct dpmaif_bat_page *bat_page_base,
++			   unsigned int index)
++{
++	struct dpmaif_bat_page *bat_page;
++
++	bat_page = bat_page_base + index;
++
++	if (bat_page->page) {
++		dma_unmap_page(dev, bat_page->data_bus_addr, bat_page->data_len,
++			       DMA_FROM_DEVICE);
++		put_page(bat_page->page);
++		bat_page->page = NULL;
++	}
++}
++
++void dpmaif_bat_free(const struct dpmaif_ctrl *dpmaif_ctrl,
++		     struct dpmaif_bat_request *bat_req)
++{
++	if (!bat_req)
 +		return;
 +
-+	ctl->md_state = state;
++	if (!atomic_dec_and_test(&bat_req->refcnt))
++		return;
 +
-+	fsm_state_notify(state);
++	kfree(bat_req->bat_mask);
++	bat_req->bat_mask = NULL;
++
++	if (bat_req->bat_skb_ptr) {
++		unsigned int i;
++
++		for (i = 0; i < bat_req->bat_size_cnt; i++) {
++			if (bat_req->type == BAT_TYPE_FRAG)
++				unmap_bat_page(dpmaif_ctrl->dev, bat_req->bat_skb_ptr, i);
++			else
++				unmap_bat_skb(dpmaif_ctrl->dev, bat_req->bat_skb_ptr, i);
++		}
++	}
++
++	dpmaif_base_free(dpmaif_ctrl, bat_req);
 +}
 +
-+static void fsm_finish_command(struct ccci_fsm_ctl *ctl, struct ccci_fsm_command *cmd, int result)
++static int dpmaif_rx_alloc(struct dpmaif_rx_queue *rxq)
 +{
-+	unsigned long flags;
++	/* PIT buffer init */
++	rxq->pit_size_cnt = DPMAIF_PIT_COUNT;
++	rxq->pit_rd_idx = 0;
++	rxq->pit_wr_idx = 0;
++	rxq->pit_release_rd_idx = 0;
++	rxq->expect_pit_seq = 0;
++	rxq->pit_remain_release_cnt = 0;
 +
-+	if (cmd->flag & FSM_CMD_FLAG_WAITING_TO_COMPLETE) {
-+		/* The processing thread may see the list, after a command is added,
-+		 * without being woken up. Hence a spinlock is needed.
-+		 */
-+		spin_lock_irqsave(&ctl->cmd_complete_lock, flags);
-+		cmd->result = result;
-+		wake_up_all(&cmd->complete_wq);
-+		spin_unlock_irqrestore(&ctl->cmd_complete_lock, flags);
-+	} else {
-+		/* no one is waiting for this command, free to kfree */
-+		kfree(cmd);
++	memset(&rxq->rx_data_info, 0, sizeof(rxq->rx_data_info));
++
++	/* PIT allocation */
++	rxq->pit_base = dma_alloc_coherent(rxq->dpmaif_ctrl->dev,
++					   rxq->pit_size_cnt * sizeof(struct dpmaif_normal_pit),
++					   &rxq->pit_bus_addr, GFP_KERNEL | __GFP_ZERO);
++
++	if (!rxq->pit_base)
++		return -ENOMEM;
++
++	/* RXQ BAT table init */
++	rxq->bat_req = &rxq->dpmaif_ctrl->bat_req;
++	atomic_inc(&rxq->bat_req->refcnt);
++
++	/* RXQ Frag BAT table init */
++	rxq->bat_frag = &rxq->dpmaif_ctrl->bat_frag;
++	atomic_inc(&rxq->bat_frag->refcnt);
++	return 0;
++}
++
++static void dpmaif_rx_buf_free(const struct dpmaif_rx_queue *rxq)
++{
++	if (!rxq->dpmaif_ctrl)
++		return;
++
++	dpmaif_bat_free(rxq->dpmaif_ctrl, rxq->bat_req);
++	dpmaif_bat_free(rxq->dpmaif_ctrl, rxq->bat_frag);
++
++	if (rxq->pit_base)
++		dma_free_coherent(rxq->dpmaif_ctrl->dev,
++				  rxq->pit_size_cnt * sizeof(struct dpmaif_normal_pit),
++				  rxq->pit_base, rxq->pit_bus_addr);
++}
++
++int dpmaif_rxq_alloc(struct dpmaif_rx_queue *queue)
++{
++	int ret;
++
++	/* rxq data (PIT, BAT...) allocation */
++	ret = dpmaif_rx_alloc(queue);
++	if (ret < 0) {
++		dev_err(queue->dpmaif_ctrl->dev, "rx buffer alloc fail, %d\n", ret);
++		return ret;
++	}
++
++	INIT_WORK(&queue->dpmaif_rxq_work, dpmaif_rxq_work);
++	queue->worker = alloc_workqueue("dpmaif_rx%d_worker",
++					WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_HIGHPRI,
++					1, queue->index);
++	if (!queue->worker)
++		return -ENOMEM;
++
++	/* rx push thread and skb list init */
++	init_waitqueue_head(&queue->rx_wq);
++	ccci_skb_queue_alloc(&queue->skb_queue, queue->bat_req->skb_pkt_cnt,
++			     queue->bat_req->pkt_buf_sz, false);
++	queue->rx_thread = kthread_run(dpmaif_net_rx_push_thread,
++				       queue, "dpmaif_rx%d_push", queue->index);
++	if (IS_ERR(queue->rx_thread)) {
++		dev_err(queue->dpmaif_ctrl->dev, "failed to start rx thread\n");
++		return PTR_ERR(queue->rx_thread);
++	}
++
++	return 0;
++}
++
++void dpmaif_rxq_free(struct dpmaif_rx_queue *queue)
++{
++	struct sk_buff *skb;
++
++	if (queue->worker)
++		destroy_workqueue(queue->worker);
++
++	if (queue->rx_thread)
++		kthread_stop(queue->rx_thread);
++
++	while ((skb = skb_dequeue(&queue->skb_queue.skb_list)))
++		kfree_skb(skb);
++
++	dpmaif_rx_buf_free(queue);
++}
++
++void dpmaif_skb_queue_free(struct dpmaif_ctrl *dpmaif_ctrl, const unsigned int index)
++{
++	struct dpmaif_skb_queue *queue;
++
++	queue = &dpmaif_ctrl->skb_pool.queue[index];
++	while (!list_empty(&queue->skb_list.head)) {
++		struct list_head *entry = dpmaif_map_skb_deq(&queue->skb_list);
++
++		if (entry) {
++			struct dpmaif_skb_info *skb_info = GET_SKB_BY_ENTRY(entry);
++
++			if (skb_info) {
++				if (skb_info->skb) {
++					dev_kfree_skb_any(skb_info->skb);
++					skb_info->skb = NULL;
++				}
++
++				kfree(skb_info);
++			}
++		}
 +	}
 +}
 +
-+/* call only with protection of event_lock */
-+static void fsm_finish_event(struct ccci_fsm_ctl *ctl, struct ccci_fsm_event *event)
++static void skb_reload_work(struct work_struct *work)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_skb_pool *pool;
++	unsigned int i;
++
++	pool = container_of(work, struct dpmaif_skb_pool, reload_work);
++	dpmaif_ctrl = container_of(pool, struct dpmaif_ctrl, skb_pool);
++
++	for (i = 0; i < DPMA_SKB_QUEUE_CNT; i++) {
++		struct dpmaif_skb_queue *queue = &pool->queue[i];
++		unsigned int cnt, qlen, size, max_cnt;
++		unsigned long flags;
++
++		spin_lock_irqsave(&queue->skb_list.lock, flags);
++		size = queue->size;
++		max_cnt = queue->max_len;
++		qlen = queue->skb_list.qlen;
++		spin_unlock_irqrestore(&queue->skb_list.lock, flags);
++
++		if (qlen >= max_cnt * DPMAIF_RELOAD_TH_1 / DPMAIF_RELOAD_TH_2)
++			continue;
++
++		cnt = max_cnt - qlen;
++		while (cnt--) {
++			struct dpmaif_skb_info *skb_info;
++
++			skb_info = dpmaif_dev_alloc_skb(dpmaif_ctrl, size);
++			if (!skb_info)
++				return;
++
++			spin_lock_irqsave(&queue->skb_list.lock, flags);
++			list_add_tail(&skb_info->entry, &queue->skb_list.head);
++			queue->skb_list.qlen++;
++			spin_unlock_irqrestore(&queue->skb_list.lock, flags);
++		}
++	}
++}
++
++static int dpmaif_skb_queue_init_struct(struct dpmaif_ctrl *dpmaif_ctrl,
++					const unsigned int index)
++{
++	struct dpmaif_skb_queue *queue;
++	unsigned int max_cnt, size;
++
++	queue = &dpmaif_ctrl->skb_pool.queue[index];
++	size = DPMAIF_HW_BAT_PKTBUF / BIT(index);
++	max_cnt = DPMAIF_SKB_Q_SIZE / DPMAIF_SKB_SIZE(size);
++
++	if (size < DPMAIF_SKB_SIZE_MIN)
++		return -EINVAL;
++
++	INIT_LIST_HEAD(&queue->skb_list.head);
++	spin_lock_init(&queue->skb_list.lock);
++	queue->skb_list.qlen = 0;
++	queue->size = size;
++	queue->max_len = max_cnt;
++	return 0;
++}
++
++/**
++ * dpmaif_skb_pool_init() - Initialize DPMAIF SKB pool
++ * @dpmaif_ctrl: Pointer to data path control struct dpmaif_ctrl
++ *
++ * Init the DPMAIF SKB queue structures that includes SKB pool, work and workqueue.
++ *
++ * Return: Zero on success and negative errno on failure
++ */
++int dpmaif_skb_pool_init(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	struct dpmaif_skb_pool *pool;
++	int i;
++
++	pool = &dpmaif_ctrl->skb_pool;
++	pool->queue_cnt = DPMA_SKB_QUEUE_CNT;
++
++	/* init the skb queue structure */
++	for (i = 0; i < pool->queue_cnt; i++) {
++		int ret = dpmaif_skb_queue_init_struct(dpmaif_ctrl, i);
++
++		if (ret) {
++			dev_err(dpmaif_ctrl->dev, "Init skb_queue:%d fail\n", i);
++			return ret;
++		}
++	}
++
++	/* init pool reload work */
++	pool->reload_work_queue = alloc_workqueue("dpmaif_skb_pool_reload_work",
++						  WQ_MEM_RECLAIM | WQ_HIGHPRI, 1);
++	if (!pool->reload_work_queue) {
++		dev_err(dpmaif_ctrl->dev, "Create the reload_work_queue fail\n");
++		return -ENOMEM;
++	}
++
++	INIT_WORK(&pool->reload_work, skb_reload_work);
++	queue_work(pool->reload_work_queue, &pool->reload_work);
++
++	return 0;
++}
++
++static void dpmaif_bat_release_work(struct work_struct *work)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_rx_queue *rxq;
++
++	dpmaif_ctrl = container_of(work, struct dpmaif_ctrl, bat_release_work);
++
++	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
++	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
++
++	/* normal BAT release and add */
++	dpmaif_dl_pkt_bat_release_and_add(rxq);
++	/* frag BAT release and add */
++	dpmaif_dl_frag_bat_release_and_add(rxq);
++}
++
++int dpmaif_bat_release_work_alloc(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	dpmaif_ctrl->bat_release_work_queue =
++		alloc_workqueue("dpmaif_bat_release_work_queue", WQ_MEM_RECLAIM, 1);
++
++	if (!dpmaif_ctrl->bat_release_work_queue)
++		return -ENOMEM;
++
++	INIT_WORK(&dpmaif_ctrl->bat_release_work, dpmaif_bat_release_work);
++
++	return 0;
++}
++
++void dpmaif_bat_release_work_free(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	flush_work(&dpmaif_ctrl->bat_release_work);
++
++	if (dpmaif_ctrl->bat_release_work_queue) {
++		destroy_workqueue(dpmaif_ctrl->bat_release_work_queue);
++		dpmaif_ctrl->bat_release_work_queue = NULL;
++	}
++}
++
++/**
++ * dpmaif_suspend_rx_sw_stop() - Suspend RX flow
++ * @dpmaif_ctrl: Pointer to data path control struct dpmaif_ctrl
++ *
++ * Wait for all the RX work to finish executing and mark the RX queue as paused
++ *
++ */
++void dpmaif_suspend_rx_sw_stop(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	unsigned int i;
++
++	/* Disable DL/RX SW active */
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++) {
++		struct dpmaif_rx_queue *rxq;
++		int timeout, value;
++
++		rxq = &dpmaif_ctrl->rxq[i];
++		flush_work(&rxq->dpmaif_rxq_work);
++
++		timeout = readx_poll_timeout_atomic(atomic_read, &rxq->rx_processing, value,
++						    !value, 0, DPMAIF_CHECK_INIT_TIMEOUT_US);
++
++		if (timeout)
++			dev_err(dpmaif_ctrl->dev, "Stop RX SW failed\n");
++
++		/* Ensure RX processing has already been stopped before we toggle
++		 * the rxq->que_started to false during RX suspend flow.
++		 */
++		smp_mb();
++		rxq->que_started = false;
++	}
++}
++
++static void dpmaif_stop_rxq(struct dpmaif_rx_queue *rxq)
++{
++	int cnt, j = 0;
++
++	flush_work(&rxq->dpmaif_rxq_work);
++
++	/* reset SW */
++	rxq->que_started = false;
++	do {
++		/* disable HW arb and check idle */
++		cnt = ring_buf_read_write_count(rxq->pit_size_cnt, rxq->pit_rd_idx,
++						rxq->pit_wr_idx, true);
++		/* retry handler */
++		if (++j >= DPMAIF_MAX_CHECK_COUNT) {
++			dev_err(rxq->dpmaif_ctrl->dev, "stop RX SW failed, %d\n", cnt);
++			break;
++		}
++	} while (cnt);
++
++	memset(rxq->pit_base, 0, rxq->pit_size_cnt * sizeof(struct dpmaif_normal_pit));
++	memset(rxq->bat_req->bat_base, 0, rxq->bat_req->bat_size_cnt * sizeof(struct dpmaif_bat));
++	memset(rxq->bat_req->bat_mask, 0, rxq->bat_req->bat_size_cnt * sizeof(unsigned char));
++	memset(&rxq->rx_data_info, 0, sizeof(rxq->rx_data_info));
++
++	rxq->pit_rd_idx = 0;
++	rxq->pit_wr_idx = 0;
++	rxq->pit_release_rd_idx = 0;
++
++	rxq->expect_pit_seq = 0;
++	rxq->pit_remain_release_cnt = 0;
++
++	rxq->bat_req->bat_release_rd_idx = 0;
++	rxq->bat_req->bat_wr_idx = 0;
++
++	rxq->bat_frag->bat_release_rd_idx = 0;
++	rxq->bat_frag->bat_wr_idx = 0;
++}
++
++void dpmaif_stop_rx_sw(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	int i;
++
++	for (i = 0; i < DPMAIF_RXQ_NUM; i++)
++		dpmaif_stop_rxq(&dpmaif_ctrl->rxq[i]);
++}
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.h b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.h
+new file mode 100644
+index 000000000000..4d571593be3e
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.h
+@@ -0,0 +1,110 @@
++/* SPDX-License-Identifier: GPL-2.0-only
++ *
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ */
++
++#ifndef __T7XX_HIF_DPMA_RX_H__
++#define __T7XX_HIF_DPMA_RX_H__
++
++#include <linux/bitfield.h>
++#include <linux/types.h>
++
++#include "t7xx_hif_dpmaif.h"
++
++/* lhif header feilds */
++#define LHIF_HEADER_NW_TYPE	GENMASK(31, 29)
++#define LHIF_HEADER_NETIF	GENMASK(28, 24)
++#define LHIF_HEADER_F		GENMASK(22, 20)
++#define LHIF_HEADER_FLOW	GENMASK(19, 16)
++
++/* Structure of DL PIT */
++struct dpmaif_normal_pit {
++	unsigned int	pit_header;
++	unsigned int	p_data_addr;
++	unsigned int	data_addr_ext;
++	unsigned int	pit_footer;
++};
++
++/* pit_header fields */
++#define NORMAL_PIT_DATA_LEN	GENMASK(31, 16)
++#define NORMAL_PIT_BUFFER_ID	GENMASK(15, 3)
++#define NORMAL_PIT_BUFFER_TYPE	BIT(2)
++#define NORMAL_PIT_CONT		BIT(1)
++#define NORMAL_PIT_PACKET_TYPE	BIT(0)
++/* pit_footer fields */
++#define NORMAL_PIT_DLQ_DONE	GENMASK(31, 30)
++#define NORMAL_PIT_ULQ_DONE	GENMASK(29, 24)
++#define NORMAL_PIT_HEADER_OFFSET GENMASK(23, 19)
++#define NORMAL_PIT_BI_F		GENMASK(18, 17)
++#define NORMAL_PIT_IG		BIT(16)
++#define NORMAL_PIT_RES		GENMASK(15, 11)
++#define NORMAL_PIT_H_BID	GENMASK(10, 8)
++#define NORMAL_PIT_PIT_SEQ	GENMASK(7, 0)
++
++struct dpmaif_msg_pit {
++	unsigned int	dword1;
++	unsigned int	dword2;
++	unsigned int	dword3;
++	unsigned int	dword4;
++};
++
++/* double word 1 */
++#define MSG_PIT_DP		BIT(31)
++#define MSG_PIT_RES		GENMASK(30, 27)
++#define MSG_PIT_NETWORK_TYPE	GENMASK(26, 24)
++#define MSG_PIT_CHANNEL_ID	GENMASK(23, 16)
++#define MSG_PIT_RES2		GENMASK(15, 12)
++#define MSG_PIT_HPC_IDX		GENMASK(11, 8)
++#define MSG_PIT_SRC_QID		GENMASK(7, 5)
++#define MSG_PIT_ERROR_BIT	BIT(4)
++#define MSG_PIT_CHECKSUM	GENMASK(3, 2)
++#define MSG_PIT_CONT		BIT(1)
++#define MSG_PIT_PACKET_TYPE	BIT(0)
++
++/* double word 2 */
++#define MSG_PIT_HP_IDX		GENMASK(31, 27)
++#define MSG_PIT_CMD		GENMASK(26, 24)
++#define MSG_PIT_RES3		GENMASK(23, 21)
++#define MSG_PIT_FLOW		GENMASK(20, 16)
++#define MSG_PIT_COUNT		GENMASK(15, 0)
++
++/* double word 3 */
++#define MSG_PIT_HASH		GENMASK(31, 24)
++#define MSG_PIT_RES4		GENMASK(23, 18)
++#define MSG_PIT_PRO		GENMASK(17, 16)
++#define MSG_PIT_VBID		GENMASK(15, 3)
++#define MSG_PIT_RES5		GENMASK(2, 0)
++
++/* dwourd 4 */
++#define MSG_PIT_DLQ_DONE	GENMASK(31, 30)
++#define MSG_PIT_ULQ_DONE	GENMASK(29, 24)
++#define MSG_PIT_IP		BIT(23)
++#define MSG_PIT_RES6		BIT(22)
++#define MSG_PIT_MR		GENMASK(21, 20)
++#define MSG_PIT_RES7		GENMASK(19, 17)
++#define MSG_PIT_IG		BIT(16)
++#define MSG_PIT_RES8		GENMASK(15, 11)
++#define MSG_PIT_H_BID		GENMASK(10, 8)
++#define MSG_PIT_PIT_SEQ		GENMASK(7, 0)
++
++int dpmaif_rxq_alloc(struct dpmaif_rx_queue *queue);
++void dpmaif_stop_rx_sw(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_bat_release_work_alloc(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_rx_buf_alloc(struct dpmaif_ctrl *dpmaif_ctrl,
++			const struct dpmaif_bat_request *bat_req, const unsigned char q_num,
++			const unsigned int buf_cnt, const bool first_time);
++void dpmaif_skb_queue_free(struct dpmaif_ctrl *dpmaif_ctrl, const unsigned int index);
++int dpmaif_skb_pool_init(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_rx_frag_alloc(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_bat_request *bat_req,
++			 unsigned char q_num, const unsigned int buf_cnt, const bool first_time);
++void dpmaif_suspend_rx_sw_stop(struct dpmaif_ctrl *dpmaif_ctrl);
++void dpmaif_irq_rx_done(struct dpmaif_ctrl *dpmaif_ctrl, const unsigned int que_mask);
++void dpmaif_rxq_free(struct dpmaif_rx_queue *queue);
++void dpmaif_bat_release_work_free(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_bat_alloc(const struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_bat_request *bat_req,
++		     const enum bat_type buf_type);
++void dpmaif_bat_free(const struct dpmaif_ctrl *dpmaif_ctrl,
++		     struct dpmaif_bat_request *bat_req);
++
++#endif /* __T7XX_HIF_DPMA_RX_H__ */
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+new file mode 100644
+index 000000000000..70f1547fbaff
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -0,0 +1,802 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ */
++
++#include <linux/bitfield.h>
++#include <linux/device.h>
++#include <linux/dma-mapping.h>
++#include <linux/kernel.h>
++#include <linux/kthread.h>
++#include <linux/list.h>
++#include <linux/spinlock.h>
++
++#include "t7xx_common.h"
++#include "t7xx_dpmaif.h"
++#include "t7xx_hif_dpmaif.h"
++#include "t7xx_hif_dpmaif_tx.h"
++
++#define DPMAIF_SKB_TX_BURST_CNT	5
++#define DPMAIF_DRB_ENTRY_SIZE	6144
++
++/* DRB dtype */
++#define DES_DTYP_PD		0
++#define DES_DTYP_MSG		1
++
++static unsigned int dpmaifq_poll_tx_drb(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char q_num)
++{
++	unsigned short old_sw_rd_idx, new_hw_rd_idx;
++	struct dpmaif_tx_queue *txq;
++	unsigned int hw_read_idx;
++	unsigned int drb_cnt = 0;
++	unsigned long flags;
++
++	txq = &dpmaif_ctrl->txq[q_num];
++	if (!txq->que_started)
++		return drb_cnt;
++
++	old_sw_rd_idx = txq->drb_rd_idx;
++
++	hw_read_idx = dpmaif_ul_get_ridx(&dpmaif_ctrl->hif_hw_info, q_num);
++
++	new_hw_rd_idx = hw_read_idx / DPMAIF_UL_DRB_ENTRY_WORD;
++
++	if (new_hw_rd_idx >= DPMAIF_DRB_ENTRY_SIZE) {
++		dev_err(dpmaif_ctrl->dev, "out of range read index: %u\n", new_hw_rd_idx);
++		return 0;
++	}
++
++	if (old_sw_rd_idx <= new_hw_rd_idx)
++		drb_cnt = new_hw_rd_idx - old_sw_rd_idx;
++	else
++		drb_cnt = txq->drb_size_cnt - old_sw_rd_idx + new_hw_rd_idx;
++
++	spin_lock_irqsave(&txq->tx_lock, flags);
++	txq->drb_rd_idx = new_hw_rd_idx;
++	spin_unlock_irqrestore(&txq->tx_lock, flags);
++	return drb_cnt;
++}
++
++static unsigned short dpmaif_release_tx_buffer(struct dpmaif_ctrl *dpmaif_ctrl,
++					       unsigned char q_num, unsigned int release_cnt)
++{
++	struct dpmaif_drb_skb *cur_drb_skb, *drb_skb_base;
++	struct dpmaif_drb_pd *cur_drb, *drb_base;
++	struct dpmaif_tx_queue *txq;
++	struct dpmaif_callbacks *cb;
++	unsigned int drb_cnt, i;
++	unsigned short cur_idx;
++	unsigned long flags;
++
++	if (!release_cnt)
++		return 0;
++
++	txq = &dpmaif_ctrl->txq[q_num];
++	drb_skb_base = txq->drb_skb_base;
++	drb_base = txq->drb_base;
++	cb = dpmaif_ctrl->callbacks;
++
++	spin_lock_irqsave(&txq->tx_lock, flags);
++	drb_cnt = txq->drb_size_cnt;
++	cur_idx = txq->drb_release_rd_idx;
++	spin_unlock_irqrestore(&txq->tx_lock, flags);
++
++	for (i = 0; i < release_cnt; i++) {
++		cur_drb = drb_base + cur_idx;
++		if (FIELD_GET(DRB_PD_DTYP, cur_drb->header) == DES_DTYP_PD) {
++			cur_drb_skb = drb_skb_base + cur_idx;
++			dma_unmap_single(dpmaif_ctrl->dev, cur_drb_skb->bus_addr,
++					 cur_drb_skb->data_len, DMA_TO_DEVICE);
++
++			if (!FIELD_GET(DRB_PD_CONT, cur_drb->header)) {
++				if (!cur_drb_skb->skb) {
++					dev_err(dpmaif_ctrl->dev,
++						"txq%u: DRB check fail, invalid skb\n", q_num);
++					continue;
++				}
++
++				dev_kfree_skb_any(cur_drb_skb->skb);
++			}
++
++			cur_drb_skb->skb = NULL;
++		} else {
++			txq->last_ch_id = FIELD_GET(DRB_MSG_CHANNEL_ID,
++						    ((struct dpmaif_drb_msg *)cur_drb)->header_dw2);
++		}
++
++		spin_lock_irqsave(&txq->tx_lock, flags);
++		cur_idx = ring_buf_get_next_wrdx(drb_cnt, cur_idx);
++		txq->drb_release_rd_idx = cur_idx;
++		spin_unlock_irqrestore(&txq->tx_lock, flags);
++
++		if (atomic_inc_return(&txq->tx_budget) > txq->drb_size_cnt / 8)
++			cb->state_notify(dpmaif_ctrl->mtk_dev,
++					 DMPAIF_TXQ_STATE_IRQ, txq->index);
++	}
++
++	if (FIELD_GET(DRB_PD_CONT, cur_drb->header))
++		dev_err(dpmaif_ctrl->dev, "txq%u: DRB not marked as the last one\n", q_num);
++
++	return i;
++}
++
++static int dpmaif_tx_release(struct dpmaif_ctrl *dpmaif_ctrl,
++			     unsigned char q_num, unsigned int budget)
++{
++	unsigned int rel_cnt, real_rel_cnt;
++	struct dpmaif_tx_queue *txq;
++
++	txq = &dpmaif_ctrl->txq[q_num];
++
++	/* update rd idx: from HW */
++	dpmaifq_poll_tx_drb(dpmaif_ctrl, q_num);
++	/* release the readable pkts */
++	rel_cnt = ring_buf_read_write_count(txq->drb_size_cnt, txq->drb_release_rd_idx,
++					    txq->drb_rd_idx, true);
++
++	real_rel_cnt = min_not_zero(budget, rel_cnt);
++
++	/* release data buff */
++	if (real_rel_cnt)
++		real_rel_cnt = dpmaif_release_tx_buffer(dpmaif_ctrl, q_num, real_rel_cnt);
++
++	return ((real_rel_cnt < rel_cnt) ? -EAGAIN : 0);
++}
++
++/* return false indicates there are remaining spurious interrupts */
++static inline bool dpmaif_no_remain_spurious_tx_done_intr(struct dpmaif_tx_queue *txq)
++{
++	return (dpmaifq_poll_tx_drb(txq->dpmaif_ctrl, txq->index) > 0);
++}
++
++static void dpmaif_tx_done(struct work_struct *work)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++	struct dpmaif_tx_queue *txq;
++	int ret;
++
++	txq = container_of(work, struct dpmaif_tx_queue, dpmaif_tx_work);
++	dpmaif_ctrl = txq->dpmaif_ctrl;
++
++	ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
++	if (ret == -EAGAIN ||
++	    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
++	     dpmaif_no_remain_spurious_tx_done_intr(txq))) {
++		queue_work(dpmaif_ctrl->txq[txq->index].worker,
++			   &dpmaif_ctrl->txq[txq->index].dpmaif_tx_work);
++		/* clear IP busy to give the device time to enter the low power state */
++		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++	} else {
++		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++		dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
++	}
++}
++
++static void set_drb_msg(struct dpmaif_ctrl *dpmaif_ctrl,
++			unsigned char q_num, unsigned short cur_idx,
++			unsigned int pkt_len, unsigned short count_l,
++			unsigned char channel_id, __be16 network_type)
++{
++	struct dpmaif_drb_msg *drb_base;
++	struct dpmaif_drb_msg *drb;
++
++	drb_base = dpmaif_ctrl->txq[q_num].drb_base;
++	drb = drb_base + cur_idx;
++
++	drb->header_dw1 = FIELD_PREP(DRB_MSG_DTYP, DES_DTYP_MSG);
++	drb->header_dw1 |= FIELD_PREP(DRB_MSG_CONT, 1);
++	drb->header_dw1 |= FIELD_PREP(DRB_MSG_PACKET_LEN, pkt_len);
++
++	drb->header_dw2 = FIELD_PREP(DRB_MSG_COUNT_L, count_l);
++	drb->header_dw2 |= FIELD_PREP(DRB_MSG_CHANNEL_ID, channel_id);
++	drb->header_dw2 |= FIELD_PREP(DRB_MSG_L4_CHK, 1);
++}
++
++static void set_drb_payload(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char q_num,
++			    unsigned short cur_idx, dma_addr_t data_addr,
++			    unsigned int pkt_size, char last_one)
++{
++	struct dpmaif_drb_pd *drb_base;
++	struct dpmaif_drb_pd *drb;
++
++	drb_base = dpmaif_ctrl->txq[q_num].drb_base;
++	drb = drb_base + cur_idx;
++
++	drb->header &= ~DRB_PD_DTYP;
++	drb->header |= FIELD_PREP(DRB_PD_DTYP, DES_DTYP_PD);
++
++	drb->header &= ~DRB_PD_CONT;
++	if (!last_one)
++		drb->header |= FIELD_PREP(DRB_PD_CONT, 1);
++
++	drb->header &= ~DRB_PD_DATA_LEN;
++	drb->header |= FIELD_PREP(DRB_PD_DATA_LEN, pkt_size);
++	drb->p_data_addr = lower_32_bits(data_addr);
++	drb->data_addr_ext = upper_32_bits(data_addr);
++}
++
++static void record_drb_skb(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char q_num,
++			   unsigned short cur_idx, struct sk_buff *skb, unsigned short is_msg,
++			   bool is_frag, bool is_last_one, dma_addr_t bus_addr,
++			   unsigned int data_len)
++{
++	struct dpmaif_drb_skb *drb_skb_base;
++	struct dpmaif_drb_skb *drb_skb;
++
++	drb_skb_base = dpmaif_ctrl->txq[q_num].drb_skb_base;
++	drb_skb = drb_skb_base + cur_idx;
++
++	drb_skb->skb = skb;
++	drb_skb->bus_addr = bus_addr;
++	drb_skb->data_len = data_len;
++	drb_skb->config = FIELD_PREP(DRB_SKB_DRB_IDX, cur_idx);
++	drb_skb->config |= FIELD_PREP(DRB_SKB_IS_MSG, is_msg);
++	drb_skb->config |= FIELD_PREP(DRB_SKB_IS_FRAG, is_frag);
++	drb_skb->config |= FIELD_PREP(DRB_SKB_IS_LAST, is_last_one);
++}
++
++static int dpmaif_tx_send_skb_on_tx_thread(struct dpmaif_ctrl *dpmaif_ctrl,
++					   struct dpmaif_tx_event *event)
++{
++	unsigned int wt_cnt, send_cnt, payload_cnt;
++	struct skb_shared_info *info;
++	struct dpmaif_tx_queue *txq;
++	int drb_wr_idx_backup = -1;
++	struct ccci_header ccci_h;
++	bool is_frag, is_last_one;
++	bool skb_pulled = false;
++	unsigned short cur_idx;
++	unsigned int data_len;
++	int qno = event->qno;
++	dma_addr_t bus_addr;
++	unsigned long flags;
++	struct sk_buff *skb;
++	void *data_addr;
++	int ret = 0;
++
++	skb = event->skb;
++	txq = &dpmaif_ctrl->txq[qno];
++	if (!txq->que_started || dpmaif_ctrl->state != DPMAIF_STATE_PWRON)
++		return -ENODEV;
++
++	atomic_set(&txq->tx_processing, 1);
++
++	 /* Ensure tx_processing is changed to 1 before actually begin TX flow */
++	smp_mb();
++
++	info = skb_shinfo(skb);
++
++	if (info->frag_list)
++		dev_err(dpmaif_ctrl->dev, "ulq%d skb frag_list not supported!\n", qno);
++
++	payload_cnt = info->nr_frags + 1;
++	/* nr_frags: frag cnt, 1: skb->data, 1: msg DRB */
++	send_cnt = payload_cnt + 1;
++
++	ccci_h = *(struct ccci_header *)skb->data;
++	skb_pull(skb, sizeof(struct ccci_header));
++	skb_pulled = true;
++
++	spin_lock_irqsave(&txq->tx_lock, flags);
++	/* update the drb_wr_idx */
++	cur_idx = txq->drb_wr_idx;
++	drb_wr_idx_backup = cur_idx;
++	txq->drb_wr_idx += send_cnt;
++	if (txq->drb_wr_idx >= txq->drb_size_cnt)
++		txq->drb_wr_idx -= txq->drb_size_cnt;
++
++	/* 3 send data. */
++	/* 3.1 a msg drb first, then payload DRB. */
++	set_drb_msg(dpmaif_ctrl, txq->index, cur_idx, skb->len, 0, ccci_h.data[0], skb->protocol);
++	record_drb_skb(dpmaif_ctrl, txq->index, cur_idx, skb, 1, 0, 0, 0, 0);
++	spin_unlock_irqrestore(&txq->tx_lock, flags);
++
++	cur_idx = ring_buf_get_next_wrdx(txq->drb_size_cnt, cur_idx);
++
++	/* 3.2 DRB payload: skb->data + frags[] */
++	for (wt_cnt = 0; wt_cnt < payload_cnt; wt_cnt++) {
++		/* get data_addr && data_len */
++		if (!wt_cnt) {
++			data_len = skb_headlen(skb);
++			data_addr = skb->data;
++			is_frag = false;
++		} else {
++			skb_frag_t *frag = info->frags + wt_cnt - 1;
++
++			data_len = skb_frag_size(frag);
++			data_addr = skb_frag_address(frag);
++			is_frag = true;
++		}
++
++		if (wt_cnt == payload_cnt - 1)
++			is_last_one = true;
++		else
++			/* set 0~(n-1) DRB, maybe none */
++			is_last_one = false;
++
++		/* tx mapping */
++		bus_addr = dma_map_single(dpmaif_ctrl->dev, data_addr, data_len, DMA_TO_DEVICE);
++		if (dma_mapping_error(dpmaif_ctrl->dev, bus_addr)) {
++			dev_err(dpmaif_ctrl->dev, "DMA mapping fail\n");
++			ret = -ENOMEM;
++			break;
++		}
++
++		spin_lock_irqsave(&txq->tx_lock, flags);
++		set_drb_payload(dpmaif_ctrl, txq->index, cur_idx, bus_addr, data_len,
++				is_last_one);
++		record_drb_skb(dpmaif_ctrl, txq->index, cur_idx, skb, 0, is_frag,
++			       is_last_one, bus_addr, data_len);
++		spin_unlock_irqrestore(&txq->tx_lock, flags);
++
++		cur_idx = ring_buf_get_next_wrdx(txq->drb_size_cnt, cur_idx);
++	}
++
++	if (ret < 0) {
++		atomic_set(&txq->tx_processing, 0);
++		dev_err(dpmaif_ctrl->dev,
++			"send fail: drb_wr_idx_backup:%d, ret:%d\n", drb_wr_idx_backup, ret);
++
++		if (skb_pulled)
++			skb_push(skb, sizeof(struct ccci_header));
++
++		if (drb_wr_idx_backup >= 0) {
++			spin_lock_irqsave(&txq->tx_lock, flags);
++			txq->drb_wr_idx = drb_wr_idx_backup;
++			spin_unlock_irqrestore(&txq->tx_lock, flags);
++		}
++	} else {
++		atomic_sub(send_cnt, &txq->tx_budget);
++		atomic_set(&txq->tx_processing, 0);
++	}
++
++	return ret;
++}
++
++/* must be called within protection of event_lock */
++static inline void dpmaif_finish_event(struct dpmaif_tx_event *event)
 +{
 +	list_del(&event->entry);
 +	kfree(event);
 +}
 +
-+static void fsm_flush_queue(struct ccci_fsm_ctl *ctl)
++static bool tx_lists_are_all_empty(const struct dpmaif_ctrl *dpmaif_ctrl)
 +{
-+	struct ccci_fsm_event *event, *evt_next;
-+	struct ccci_fsm_command *cmd, *cmd_next;
-+	unsigned long flags;
-+	struct device *dev;
++	int i;
 +
-+	dev = &ctl->md->mtk_dev->pdev->dev;
-+	spin_lock_irqsave(&ctl->command_lock, flags);
-+	list_for_each_entry_safe(cmd, cmd_next, &ctl->command_queue, entry) {
-+		dev_warn(dev, "unhandled command %d\n", cmd->cmd_id);
-+		list_del(&cmd->entry);
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		if (!list_empty(&dpmaif_ctrl->txq[i].tx_event_queue))
++			return false;
 +	}
 +
-+	spin_unlock_irqrestore(&ctl->command_lock, flags);
-+	spin_lock_irqsave(&ctl->event_lock, flags);
-+	list_for_each_entry_safe(event, evt_next, &ctl->event_queue, entry) {
-+		dev_warn(dev, "unhandled event %d\n", event->event_id);
-+		fsm_finish_event(ctl, event);
-+	}
-+
-+	spin_unlock_irqrestore(&ctl->event_lock, flags);
++	return true;
 +}
 +
-+/* cmd is not NULL only when reason is ordinary exception */
-+static void fsm_routine_exception(struct ccci_fsm_ctl *ctl, struct ccci_fsm_command *cmd,
-+				  enum ccci_ex_reason reason)
++static int select_tx_queue(struct dpmaif_ctrl *dpmaif_ctrl)
 +{
-+	bool rec_ok = false;
-+	struct ccci_fsm_event *event;
-+	unsigned long flags;
-+	struct device *dev;
-+	int cnt;
++	unsigned char txq_prio[TXQ_TYPE_CNT] = {TXQ_FAST, TXQ_NORMAL};
++	unsigned char txq_id, i;
 +
-+	dev = &ctl->md->mtk_dev->pdev->dev;
-+	dev_err(dev, "exception %d, from %ps\n", reason, __builtin_return_address(0));
-+	/* state sanity check */
-+	if (ctl->curr_state != CCCI_FSM_READY && ctl->curr_state != CCCI_FSM_STARTING) {
-+		if (cmd)
-+			fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+		return;
-+	}
++	for (i = 0; i < TXQ_TYPE_CNT; i++) {
++		txq_id = txq_prio[dpmaif_ctrl->txq_select_times % TXQ_TYPE_CNT];
++		if (!dpmaif_ctrl->txq[txq_id].que_started)
++			break;
 +
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_EXCEPTION;
-+
-+	/* check exception reason */
-+	switch (reason) {
-+	case EXCEPTION_HS_TIMEOUT:
-+		dev_err(dev, "BOOT_HS_FAIL\n");
-+		break;
-+
-+	case EXCEPTION_EVENT:
-+		fsm_broadcast_state(ctl, MD_STATE_EXCEPTION);
-+		mtk_md_exception_handshake(ctl->md);
-+		cnt = 0;
-+		while (cnt < MD_EX_REC_OK_TIMEOUT_MS / EVENT_POLL_INTERVAL_MS) {
-+			if (kthread_should_stop())
-+				return;
-+
-+			spin_lock_irqsave(&ctl->event_lock, flags);
-+			if (!list_empty(&ctl->event_queue)) {
-+				event = list_first_entry(&ctl->event_queue,
-+							 struct ccci_fsm_event, entry);
-+				if (event->event_id == CCCI_EVENT_MD_EX) {
-+					fsm_finish_event(ctl, event);
-+				} else if (event->event_id == CCCI_EVENT_MD_EX_REC_OK) {
-+					rec_ok = true;
-+					fsm_finish_event(ctl, event);
-+				}
-+			}
-+
-+			spin_unlock_irqrestore(&ctl->event_lock, flags);
-+			if (rec_ok)
-+				break;
-+
-+			cnt++;
-+			msleep(EVENT_POLL_INTERVAL_MS);
++		if (!list_empty(&dpmaif_ctrl->txq[txq_id].tx_event_queue)) {
++			dpmaif_ctrl->txq_select_times++;
++			return txq_id;
 +		}
 +
-+		cnt = 0;
-+		while (cnt < MD_EX_PASS_TIMEOUT_MS / EVENT_POLL_INTERVAL_MS) {
-+			if (kthread_should_stop())
-+				return;
-+
-+			spin_lock_irqsave(&ctl->event_lock, flags);
-+			if (!list_empty(&ctl->event_queue)) {
-+				event = list_first_entry(&ctl->event_queue,
-+							 struct ccci_fsm_event, entry);
-+				if (event->event_id == CCCI_EVENT_MD_EX_PASS)
-+					fsm_finish_event(ctl, event);
-+			}
-+
-+			spin_unlock_irqrestore(&ctl->event_lock, flags);
-+			cnt++;
-+			msleep(EVENT_POLL_INTERVAL_MS);
-+		}
-+
-+		break;
-+
-+	default:
-+		break;
++		dpmaif_ctrl->txq_select_times++;
 +	}
 +
-+	if (cmd)
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_OK);
++	return -EAGAIN;
 +}
 +
-+static void fsm_stopped_handler(struct ccci_fsm_ctl *ctl)
++static int txq_burst_send_skb(struct dpmaif_tx_queue *txq)
 +{
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_STOPPED;
-+
-+	fsm_broadcast_state(ctl, MD_STATE_STOPPED);
-+	mtk_md_reset(ctl->md->mtk_dev);
-+}
-+
-+static void fsm_routine_stopped(struct ccci_fsm_ctl *ctl, struct ccci_fsm_command *cmd)
-+{
-+	/* state sanity check */
-+	if (ctl->curr_state == CCCI_FSM_STOPPED) {
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+		return;
-+	}
-+
-+	fsm_stopped_handler(ctl);
-+	fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_OK);
-+}
-+
-+static void fsm_routine_stopping(struct ccci_fsm_ctl *ctl, struct ccci_fsm_command *cmd)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	int err;
-+
-+	/* state sanity check */
-+	if (ctl->curr_state == CCCI_FSM_STOPPED || ctl->curr_state == CCCI_FSM_STOPPING) {
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+		return;
-+	}
-+
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_STOPPING;
-+
-+	fsm_broadcast_state(ctl, MD_STATE_WAITING_TO_STOP);
-+	/* stop HW */
-+	cldma_stop(ID_CLDMA1);
-+
-+	mtk_dev = ctl->md->mtk_dev;
-+	if (!atomic_read(&ctl->md->rgu_irq_asserted)) {
-+		/* disable DRM before FLDR */
-+		mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_DRM_DISABLE_AP);
-+		msleep(FSM_DRM_DISABLE_DELAY_MS);
-+		/* try FLDR first */
-+		err = mtk_acpi_fldr_func(mtk_dev);
-+		if (err)
-+			mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_DEVICE_RESET);
-+	}
-+
-+	/* auto jump to stopped state handler */
-+	fsm_stopped_handler(ctl);
-+
-+	fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_OK);
-+}
-+
-+static void fsm_routine_ready(struct ccci_fsm_ctl *ctl)
-+{
-+	struct mtk_modem *md;
-+
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_READY;
-+	fsm_broadcast_state(ctl, MD_STATE_READY);
-+	md = ctl->md;
-+	mtk_md_event_notify(md, FSM_READY);
-+}
-+
-+static void fsm_routine_starting(struct ccci_fsm_ctl *ctl)
-+{
-+	struct mtk_modem *md;
-+	struct device *dev;
-+
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_STARTING;
-+
-+	fsm_broadcast_state(ctl, MD_STATE_WAITING_FOR_HS1);
-+	md = ctl->md;
-+	dev = &md->mtk_dev->pdev->dev;
-+	mtk_md_event_notify(md, FSM_START);
-+
-+	wait_event_interruptible_timeout(ctl->async_hk_wq,
-+					 atomic_read(&md->core_md.ready) ||
-+					 atomic_read(&ctl->exp_flg), HZ * 60);
-+
-+	if (atomic_read(&ctl->exp_flg))
-+		dev_err(dev, "MD exception is captured during handshake\n");
-+
-+	if (!atomic_read(&md->core_md.ready)) {
-+		dev_err(dev, "MD handshake timeout\n");
-+		fsm_routine_exception(ctl, NULL, EXCEPTION_HS_TIMEOUT);
-+	} else {
-+		fsm_routine_ready(ctl);
-+	}
-+}
-+
-+static void fsm_routine_start(struct ccci_fsm_ctl *ctl, struct ccci_fsm_command *cmd)
-+{
-+	struct mtk_modem *md;
-+	struct device *dev;
-+	u32 dev_status;
-+
-+	md = ctl->md;
-+	if (!md)
-+		return;
-+
-+	dev = &md->mtk_dev->pdev->dev;
-+	/* state sanity check */
-+	if (ctl->curr_state != CCCI_FSM_INIT &&
-+	    ctl->curr_state != CCCI_FSM_PRE_START &&
-+	    ctl->curr_state != CCCI_FSM_STOPPED) {
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+		return;
-+	}
-+
-+	ctl->last_state = ctl->curr_state;
-+	ctl->curr_state = CCCI_FSM_PRE_START;
-+	mtk_md_event_notify(md, FSM_PRE_START);
-+
-+	read_poll_timeout(ioread32, dev_status, (dev_status & MISC_STAGE_MASK) == LINUX_STAGE,
-+			  20000, 2000000, false, IREG_BASE(md->mtk_dev) + PCIE_MISC_DEV_STATUS);
-+	if ((dev_status & MISC_STAGE_MASK) != LINUX_STAGE) {
-+		dev_err(dev, "invalid device status 0x%lx\n", dev_status & MISC_STAGE_MASK);
-+		fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+		return;
-+	}
-+	cldma_hif_hw_init(ID_CLDMA1);
-+	fsm_routine_starting(ctl);
-+	fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_OK);
-+}
-+
-+static int fsm_main_thread(void *data)
-+{
-+	struct ccci_fsm_command *cmd;
-+	struct ccci_fsm_ctl *ctl;
++	int drb_remain_cnt, i;
 +	unsigned long flags;
++	int drb_cnt = 0;
++	int ret = 0;
 +
-+	ctl = data;
++	spin_lock_irqsave(&txq->tx_lock, flags);
++	drb_remain_cnt = ring_buf_read_write_count(txq->drb_size_cnt, txq->drb_release_rd_idx,
++						   txq->drb_wr_idx, false);
++	spin_unlock_irqrestore(&txq->tx_lock, flags);
 +
-+	while (!kthread_should_stop()) {
-+		if (wait_event_interruptible(ctl->command_wq, !list_empty(&ctl->command_queue) ||
-+					     kthread_should_stop()))
++	/* write DRB descriptor information */
++	for (i = 0; i < DPMAIF_SKB_TX_BURST_CNT; i++) {
++		struct dpmaif_tx_event *event;
++
++		spin_lock_irqsave(&txq->tx_event_lock, flags);
++		if (list_empty(&txq->tx_event_queue)) {
++			spin_unlock_irqrestore(&txq->tx_event_lock, flags);
++			break;
++		}
++		event = list_first_entry(&txq->tx_event_queue, struct dpmaif_tx_event, entry);
++		spin_unlock_irqrestore(&txq->tx_event_lock, flags);
++
++		if (drb_remain_cnt < event->drb_cnt) {
++			spin_lock_irqsave(&txq->tx_lock, flags);
++			drb_remain_cnt = ring_buf_read_write_count(txq->drb_size_cnt,
++								   txq->drb_release_rd_idx,
++								   txq->drb_wr_idx,
++								   false);
++			spin_unlock_irqrestore(&txq->tx_lock, flags);
 +			continue;
++		}
++
++		drb_remain_cnt -= event->drb_cnt;
++
++		ret = dpmaif_tx_send_skb_on_tx_thread(txq->dpmaif_ctrl, event);
++
++		if (ret < 0) {
++			dev_crit(txq->dpmaif_ctrl->dev,
++				 "txq%d send skb fail, ret=%d\n", event->qno, ret);
++			break;
++		}
++
++		drb_cnt += event->drb_cnt;
++		spin_lock_irqsave(&txq->tx_event_lock, flags);
++		dpmaif_finish_event(event);
++		txq->tx_submit_skb_cnt--;
++		spin_unlock_irqrestore(&txq->tx_event_lock, flags);
++	}
++
++	if (drb_cnt > 0) {
++		txq->drb_lack = false;
++		ret = drb_cnt;
++	} else if (ret == -ENOMEM) {
++		txq->drb_lack = true;
++	}
++
++	return ret;
++}
++
++static bool check_all_txq_drb_lack(const struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	unsigned char i;
++
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++)
++		if (!list_empty(&dpmaif_ctrl->txq[i].tx_event_queue) &&
++		    !dpmaif_ctrl->txq[i].drb_lack)
++			return false;
++
++	return true;
++}
++
++static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	dpmaif_ctrl->txq_select_times = 0;
++	do {
++		int txq_id;
++
++		txq_id = select_tx_queue(dpmaif_ctrl);
++		if (txq_id >= 0) {
++			struct dpmaif_tx_queue *txq;
++			int ret;
++
++			txq = &dpmaif_ctrl->txq[txq_id];
++			ret = txq_burst_send_skb(txq);
++			if (ret > 0) {
++				int drb_send_cnt = ret;
++
++				/* notify the dpmaif HW */
++				ret = dpmaif_ul_add_wcnt(dpmaif_ctrl, (unsigned char)txq_id,
++							 drb_send_cnt * DPMAIF_UL_DRB_ENTRY_WORD);
++				if (ret < 0)
++					dev_err(dpmaif_ctrl->dev,
++						"txq%d: dpmaif_ul_add_wcnt fail.\n", txq_id);
++			} else {
++				/* all txq the lack of DRB count */
++				if (check_all_txq_drb_lack(dpmaif_ctrl))
++					usleep_range(10, 20);
++			}
++		}
++
++		cond_resched();
++
++	} while (!tx_lists_are_all_empty(dpmaif_ctrl) && !kthread_should_stop() &&
++		 (dpmaif_ctrl->state == DPMAIF_STATE_PWRON));
++}
++
++static int dpmaif_tx_hw_push_thread(void *arg)
++{
++	struct dpmaif_ctrl *dpmaif_ctrl;
++
++	dpmaif_ctrl = arg;
++	while (!kthread_should_stop()) {
++		if (tx_lists_are_all_empty(dpmaif_ctrl) ||
++		    dpmaif_ctrl->state != DPMAIF_STATE_PWRON) {
++			if (wait_event_interruptible(dpmaif_ctrl->tx_wq,
++						     (!tx_lists_are_all_empty(dpmaif_ctrl) &&
++						     dpmaif_ctrl->state == DPMAIF_STATE_PWRON) ||
++						     kthread_should_stop()))
++				continue;
++		}
++
 +		if (kthread_should_stop())
 +			break;
 +
-+		spin_lock_irqsave(&ctl->command_lock, flags);
-+		cmd = list_first_entry(&ctl->command_queue, struct ccci_fsm_command, entry);
-+		list_del(&cmd->entry);
-+		spin_unlock_irqrestore(&ctl->command_lock, flags);
++		do_tx_hw_push(dpmaif_ctrl);
++	}
 +
-+		switch (cmd->cmd_id) {
-+		case CCCI_COMMAND_START:
-+			fsm_routine_start(ctl, cmd);
-+			break;
++	return 0;
++}
 +
-+		case CCCI_COMMAND_EXCEPTION:
-+			fsm_routine_exception(ctl, cmd, FIELD_GET(FSM_EX_REASON, cmd->flag));
-+			break;
++int dpmaif_tx_thread_init(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	init_waitqueue_head(&dpmaif_ctrl->tx_wq);
++	dpmaif_ctrl->tx_thread = kthread_run(dpmaif_tx_hw_push_thread,
++					     dpmaif_ctrl, "dpmaif_tx_hw_push");
++	if (IS_ERR(dpmaif_ctrl->tx_thread)) {
++		dev_err(dpmaif_ctrl->dev, "failed to start tx thread\n");
++		return PTR_ERR(dpmaif_ctrl->tx_thread);
++	}
 +
-+		case CCCI_COMMAND_PRE_STOP:
-+			fsm_routine_stopping(ctl, cmd);
-+			break;
++	return 0;
++}
 +
-+		case CCCI_COMMAND_STOP:
-+			fsm_routine_stopped(ctl, cmd);
-+			break;
++void dpmaif_tx_thread_release(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	if (dpmaif_ctrl->tx_thread)
++		kthread_stop(dpmaif_ctrl->tx_thread);
++}
 +
-+		default:
-+			fsm_finish_command(ctl, cmd, FSM_CMD_RESULT_FAIL);
-+			fsm_flush_queue(ctl);
-+			break;
++static inline unsigned char get_drb_cnt_per_skb(struct sk_buff *skb)
++{
++	/* normal DRB (frags data + skb linear data) + msg DRB */
++	return (skb_shinfo(skb)->nr_frags + 1 + 1);
++}
++
++static bool check_tx_queue_drb_available(struct dpmaif_tx_queue *txq, unsigned int send_drb_cnt)
++{
++	unsigned int drb_remain_cnt;
++	unsigned long flags;
++
++	spin_lock_irqsave(&txq->tx_lock, flags);
++	drb_remain_cnt = ring_buf_read_write_count(txq->drb_size_cnt, txq->drb_release_rd_idx,
++						   txq->drb_wr_idx, false);
++	spin_unlock_irqrestore(&txq->tx_lock, flags);
++
++	return drb_remain_cnt >= send_drb_cnt;
++}
++
++/**
++ * dpmaif_tx_send_skb() - Add SKB to the xmit queue
++ * @dpmaif_ctrl: Pointer to struct dpmaif_ctrl
++ * @txqt: Queue type to xmit on (normal or fast)
++ * @skb: Pointer to the SKB to xmit
++ *
++ * Add the SKB to the queue of the SKBs to be xmit.
++ * Wake up the thread that push the SKBs from the queue to the HW.
++ *
++ * Return: Zero on success and negative errno on failure
++ */
++int dpmaif_tx_send_skb(struct dpmaif_ctrl *dpmaif_ctrl, enum txq_type txqt, struct sk_buff *skb)
++{
++	bool tx_drb_available = true;
++	struct dpmaif_tx_queue *txq;
++	struct dpmaif_callbacks *cb;
++	unsigned int send_drb_cnt;
++
++	send_drb_cnt = get_drb_cnt_per_skb(skb);
++	txq = &dpmaif_ctrl->txq[txqt];
++
++	/* check tx queue DRB full */
++	if (!(txq->tx_skb_stat++ % DPMAIF_SKB_TX_BURST_CNT))
++		tx_drb_available = check_tx_queue_drb_available(txq, send_drb_cnt);
++
++	if (txq->tx_submit_skb_cnt < txq->tx_list_max_len && tx_drb_available) {
++		struct dpmaif_tx_event *event;
++		unsigned long flags;
++
++		event = kmalloc(sizeof(*event), GFP_ATOMIC);
++		if (!event)
++			return -ENOMEM;
++
++		INIT_LIST_HEAD(&event->entry);
++		event->qno = txqt;
++		event->skb = skb;
++		event->drb_cnt = send_drb_cnt;
++
++		spin_lock_irqsave(&txq->tx_event_lock, flags);
++		list_add_tail(&event->entry, &txq->tx_event_queue);
++		txq->tx_submit_skb_cnt++;
++		spin_unlock_irqrestore(&txq->tx_event_lock, flags);
++		wake_up(&dpmaif_ctrl->tx_wq);
++
++		return 0;
++	}
++
++	cb = dpmaif_ctrl->callbacks;
++	cb->state_notify(dpmaif_ctrl->mtk_dev, DMPAIF_TXQ_STATE_FULL, txqt);
++
++	return -EBUSY;
++}
++
++void dpmaif_irq_tx_done(struct dpmaif_ctrl *dpmaif_ctrl, unsigned int que_mask)
++{
++	int i;
++
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		if (que_mask & BIT(i))
++			queue_work(dpmaif_ctrl->txq[i].worker, &dpmaif_ctrl->txq[i].dpmaif_tx_work);
++	}
++}
++
++static int dpmaif_tx_buf_init(struct dpmaif_tx_queue *txq)
++{
++	size_t brb_skb_size;
++	size_t brb_pd_size;
++
++	brb_pd_size = DPMAIF_DRB_ENTRY_SIZE * sizeof(struct dpmaif_drb_pd);
++	brb_skb_size = DPMAIF_DRB_ENTRY_SIZE * sizeof(struct dpmaif_drb_skb);
++
++	txq->drb_size_cnt = DPMAIF_DRB_ENTRY_SIZE;
++
++	/* alloc buffer for HW && AP SW */
++	txq->drb_base = dma_alloc_coherent(txq->dpmaif_ctrl->dev, brb_pd_size,
++					   &txq->drb_bus_addr, GFP_KERNEL | __GFP_ZERO);
++	if (!txq->drb_base)
++		return -ENOMEM;
++
++	/* alloc buffer for AP SW to record the skb information */
++	txq->drb_skb_base = devm_kzalloc(txq->dpmaif_ctrl->dev, brb_skb_size, GFP_KERNEL);
++	if (!txq->drb_skb_base) {
++		dma_free_coherent(txq->dpmaif_ctrl->dev, brb_pd_size,
++				  txq->drb_base, txq->drb_bus_addr);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static void dpmaif_tx_buf_rel(struct dpmaif_tx_queue *txq)
++{
++	if (txq->drb_base)
++		dma_free_coherent(txq->dpmaif_ctrl->dev,
++				  txq->drb_size_cnt * sizeof(struct dpmaif_drb_pd),
++				  txq->drb_base, txq->drb_bus_addr);
++
++	if (txq->drb_skb_base) {
++		struct dpmaif_drb_skb *drb_skb, *drb_skb_base = txq->drb_skb_base;
++		unsigned int i;
++
++		for (i = 0; i < txq->drb_size_cnt; i++) {
++			drb_skb = drb_skb_base + i;
++			if (drb_skb->skb) {
++				dma_unmap_single(txq->dpmaif_ctrl->dev, drb_skb->bus_addr,
++						 drb_skb->data_len, DMA_TO_DEVICE);
++				if (FIELD_GET(DRB_SKB_IS_LAST, drb_skb->config)) {
++					kfree_skb(drb_skb->skb);
++					drb_skb->skb = NULL;
++				}
++			}
++		}
++	}
++}
++
++/**
++ * dpmaif_txq_init() - Initialize TX queue
++ * @txq: Pointer to struct dpmaif_tx_queue
++ *
++ * Initialize the TX queue data structure and allocate memory for it to use.
++ *
++ * Return: Zero on success and negative errno on failure
++ */
++int dpmaif_txq_init(struct dpmaif_tx_queue *txq)
++{
++	int ret;
++
++	spin_lock_init(&txq->tx_event_lock);
++	INIT_LIST_HEAD(&txq->tx_event_queue);
++	txq->tx_submit_skb_cnt = 0;
++	txq->tx_skb_stat = 0;
++	txq->tx_list_max_len = DPMAIF_DRB_ENTRY_SIZE / 2;
++	txq->drb_lack = false;
++
++	init_waitqueue_head(&txq->req_wq);
++	atomic_set(&txq->tx_budget, DPMAIF_DRB_ENTRY_SIZE);
++
++	/* init the DRB DMA buffer and tx skb record info buffer */
++	ret = dpmaif_tx_buf_init(txq);
++	if (ret) {
++		dev_err(txq->dpmaif_ctrl->dev, "tx buffer init fail %d\n", ret);
++		return ret;
++	}
++
++	txq->worker = alloc_workqueue("md_dpmaif_tx%d_worker", WQ_UNBOUND | WQ_MEM_RECLAIM |
++				      (txq->index ? 0 : WQ_HIGHPRI), 1, txq->index);
++	if (!txq->worker)
++		return -ENOMEM;
++
++	INIT_WORK(&txq->dpmaif_tx_work, dpmaif_tx_done);
++	spin_lock_init(&txq->tx_lock);
++	return 0;
++}
++
++void dpmaif_txq_free(struct dpmaif_tx_queue *txq)
++{
++	struct dpmaif_tx_event *event, *event_next;
++	unsigned long flags;
++
++	if (txq->worker)
++		destroy_workqueue(txq->worker);
++
++	spin_lock_irqsave(&txq->tx_event_lock, flags);
++	list_for_each_entry_safe(event, event_next, &txq->tx_event_queue, entry) {
++		if (event->skb)
++			dev_kfree_skb_any(event->skb);
++
++		dpmaif_finish_event(event);
++	}
++
++	spin_unlock_irqrestore(&txq->tx_event_lock, flags);
++	dpmaif_tx_buf_rel(txq);
++}
++
++void dpmaif_suspend_tx_sw_stop(struct dpmaif_ctrl *dpmaif_ctrl)
++{
++	int i;
++
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++) {
++		struct dpmaif_tx_queue *txq;
++		int count;
++
++		txq = &dpmaif_ctrl->txq[i];
++
++		txq->que_started = false;
++		/* Ensure tx_processing is changed to 1 before actually begin TX flow */
++		smp_mb();
++
++		/* Confirm that SW will not transmit */
++		count = 0;
++		do {
++			if (++count >= DPMAIF_MAX_CHECK_COUNT) {
++				dev_err(dpmaif_ctrl->dev, "tx queue stop failed\n");
++				break;
++			}
++		} while (atomic_read(&txq->tx_processing));
++	}
++}
++
++static void dpmaif_stop_txq(struct dpmaif_tx_queue *txq)
++{
++	txq->que_started = false;
++
++	cancel_work_sync(&txq->dpmaif_tx_work);
++	flush_work(&txq->dpmaif_tx_work);
++
++	if (txq->drb_skb_base) {
++		struct dpmaif_drb_skb *drb_skb, *drb_skb_base = txq->drb_skb_base;
++		unsigned int i;
++
++		for (i = 0; i < txq->drb_size_cnt; i++) {
++			drb_skb = drb_skb_base + i;
++			if (drb_skb->skb) {
++				dma_unmap_single(txq->dpmaif_ctrl->dev, drb_skb->bus_addr,
++						 drb_skb->data_len, DMA_TO_DEVICE);
++				if (FIELD_GET(DRB_SKB_IS_LAST, drb_skb->config)) {
++					kfree_skb(drb_skb->skb);
++					drb_skb->skb = NULL;
++				}
++			}
 +		}
 +	}
 +
-+	return 0;
++	txq->drb_rd_idx = 0;
++	txq->drb_wr_idx = 0;
++	txq->drb_release_rd_idx = 0;
 +}
 +
-+int fsm_append_command(struct ccci_fsm_ctl *ctl, enum ccci_fsm_cmd_state cmd_id, unsigned int flag)
++void dpmaif_stop_tx_sw(struct dpmaif_ctrl *dpmaif_ctrl)
 +{
-+	struct ccci_fsm_command *cmd;
-+	unsigned long flags;
-+	int result = 0;
++	int i;
 +
-+	cmd = kmalloc(sizeof(*cmd),
-+		      (in_irq() || in_softirq() || irqs_disabled()) ? GFP_ATOMIC : GFP_KERNEL);
-+	if (!cmd)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&cmd->entry);
-+	init_waitqueue_head(&cmd->complete_wq);
-+	cmd->cmd_id = cmd_id;
-+	cmd->result = FSM_CMD_RESULT_PENDING;
-+	if (in_irq() || irqs_disabled())
-+		flag &= ~FSM_CMD_FLAG_WAITING_TO_COMPLETE;
-+
-+	cmd->flag = flag;
-+
-+	spin_lock_irqsave(&ctl->command_lock, flags);
-+	list_add_tail(&cmd->entry, &ctl->command_queue);
-+	spin_unlock_irqrestore(&ctl->command_lock, flags);
-+	/* after this line, only dereference command when "waiting-to-complete" */
-+	wake_up(&ctl->command_wq);
-+	if (flag & FSM_CMD_FLAG_WAITING_TO_COMPLETE) {
-+		wait_event(cmd->complete_wq, cmd->result != FSM_CMD_RESULT_PENDING);
-+		if (cmd->result != FSM_CMD_RESULT_OK)
-+			result = -EINVAL;
-+
-+		spin_lock_irqsave(&ctl->cmd_complete_lock, flags);
-+		kfree(cmd);
-+		spin_unlock_irqrestore(&ctl->cmd_complete_lock, flags);
-+	}
-+
-+	return result;
++	/* flush and release UL descriptor */
++	for (i = 0; i < DPMAIF_TXQ_NUM; i++)
++		dpmaif_stop_txq(&dpmaif_ctrl->txq[i]);
 +}
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h
+new file mode 100644
+index 000000000000..6d51bd60c345
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h
+@@ -0,0 +1,74 @@
++/* SPDX-License-Identifier: GPL-2.0-only
++ *
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ */
 +
-+int fsm_append_event(struct ccci_fsm_ctl *ctl, enum ccci_fsm_event_state event_id,
-+		     unsigned char *data, unsigned int length)
-+{
-+	struct ccci_fsm_event *event;
-+	unsigned long flags;
-+	struct device *dev;
++#ifndef __T7XX_HIF_DPMA_TX_H__
++#define __T7XX_HIF_DPMA_TX_H__
 +
-+	dev = &ctl->md->mtk_dev->pdev->dev;
++#include <linux/bitfield.h>
++#include <linux/skbuff.h>
 +
-+	if (event_id <= CCCI_EVENT_INVALID || event_id >= CCCI_EVENT_MAX) {
-+		dev_err(dev, "invalid event %d\n", event_id);
-+		return -EINVAL;
-+	}
++#include "t7xx_common.h"
++#include "t7xx_hif_dpmaif.h"
 +
-+	event = kmalloc(struct_size(event, data, length),
-+			in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-+	if (!event)
-+		return -ENOMEM;
++/* UL DRB */
++struct dpmaif_drb_pd {
++	unsigned int		header;
++	unsigned int		p_data_addr;
++	unsigned int		data_addr_ext;
++	unsigned int		reserved2;
++};
 +
-+	INIT_LIST_HEAD(&event->entry);
-+	event->event_id = event_id;
-+	event->length = length;
-+	if (data && length)
-+		memcpy(event->data, data, flex_array_size(event, data, event->length));
++/* header's fields */
++#define DRB_PD_DATA_LEN		GENMASK(31, 16)
++#define DRB_PD_RES		GENMASK(15, 3)
++#define DRB_PD_CONT		BIT(2)
++#define DRB_PD_DTYP		GENMASK(1, 0)
 +
-+	spin_lock_irqsave(&ctl->event_lock, flags);
-+	list_add_tail(&event->entry, &ctl->event_queue);
-+	spin_unlock_irqrestore(&ctl->event_lock, flags);
-+	wake_up_all(&ctl->event_wq);
-+	return 0;
-+}
++struct dpmaif_drb_msg {
++	unsigned int		header_dw1;
++	unsigned int		header_dw2;
++	unsigned int		reserved4;
++	unsigned int		reserved5;
++};
 +
-+void fsm_clear_event(struct ccci_fsm_ctl *ctl, enum ccci_fsm_event_state event_id)
-+{
-+	struct ccci_fsm_event *event, *evt_next;
-+	unsigned long flags;
-+	struct device *dev;
++/* first double word header fields */
++#define DRB_MSG_PACKET_LEN	GENMASK(31, 16)
++#define DRB_MSG_DW1_RES		GENMASK(15, 3)
++#define DRB_MSG_CONT		BIT(2)
++#define DRB_MSG_DTYP		GENMASK(1, 0)
 +
-+	dev = &ctl->md->mtk_dev->pdev->dev;
++/* second double word header fields */
++#define DRB_MSG_DW2_RES		GENMASK(31, 30)
++#define DRB_MSG_L4_CHK		BIT(29)
++#define DRB_MSG_IP_CHK		BIT(28)
++#define DRB_MSG_RES2		BIT(27)
++#define DRB_MSG_NETWORK_TYPE	GENMASK(26, 24)
++#define DRB_MSG_CHANNEL_ID	GENMASK(23, 16)
++#define DRB_MSG_COUNT_L		GENMASK(15, 0)
 +
-+	spin_lock_irqsave(&ctl->event_lock, flags);
-+	list_for_each_entry_safe(event, evt_next, &ctl->event_queue, entry) {
-+		dev_err(dev, "unhandled event %d\n", event->event_id);
-+		if (event->event_id == event_id)
-+			fsm_finish_event(ctl, event);
-+	}
++struct dpmaif_drb_skb {
++	struct sk_buff		*skb;
++	dma_addr_t		bus_addr;
++	unsigned short		data_len;
++	u16			config;
++};
 +
-+	spin_unlock_irqrestore(&ctl->event_lock, flags);
-+}
++#define DRB_SKB_IS_LAST		BIT(15)
++#define DRB_SKB_IS_FRAG		BIT(14)
++#define DRB_SKB_IS_MSG		BIT(13)
++#define DRB_SKB_DRB_IDX		GENMASK(12, 0)
 +
-+struct ccci_fsm_ctl *fsm_get_entity_by_device_number(dev_t dev_n)
-+{
-+	if (ccci_fsm_entry && ccci_fsm_entry->monitor_ctl.dev_n == dev_n)
-+		return ccci_fsm_entry;
++int dpmaif_tx_send_skb(struct dpmaif_ctrl *dpmaif_ctrl, enum txq_type txqt,
++		       struct sk_buff *skb);
++void dpmaif_tx_thread_release(struct dpmaif_ctrl *dpmaif_ctrl);
++int dpmaif_tx_thread_init(struct dpmaif_ctrl *dpmaif_ctrl);
++void dpmaif_txq_free(struct dpmaif_tx_queue *txq);
++void dpmaif_irq_tx_done(struct dpmaif_ctrl *dpmaif_ctrl, unsigned int que_mask);
++int dpmaif_txq_init(struct dpmaif_tx_queue *txq);
++void dpmaif_suspend_tx_sw_stop(struct dpmaif_ctrl *dpmaif_ctrl);
++void dpmaif_stop_tx_sw(struct dpmaif_ctrl *dpmaif_ctrl);
 +
-+	return NULL;
-+}
-+
-+struct ccci_fsm_ctl *fsm_get_entry(void)
-+{
-+	return ccci_fsm_entry;
-+}
-+
-+enum md_state ccci_fsm_get_md_state(void)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = ccci_fsm_entry;
-+	if (ctl)
-+		return ctl->md_state;
-+	else
-+		return MD_STATE_INVALID;
-+}
-+
-+unsigned int ccci_fsm_get_current_state(void)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = ccci_fsm_entry;
-+	if (ctl)
-+		return ctl->curr_state;
-+	else
-+		return CCCI_FSM_STOPPED;
-+}
-+
-+void ccci_fsm_recv_md_interrupt(enum md_irq_type type)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = ccci_fsm_entry;
-+	if (type == MD_IRQ_PORT_ENUM) {
-+		fsm_append_command(ctl, CCCI_COMMAND_START, 0);
-+	} else if (type == MD_IRQ_CCIF_EX) {
-+		/* interrupt handshake flow */
-+		atomic_set(&ctl->exp_flg, 1);
-+		wake_up(&ctl->async_hk_wq);
-+		fsm_append_command(ctl, CCCI_COMMAND_EXCEPTION,
-+				   FIELD_PREP(FSM_EX_REASON, EXCEPTION_EE));
-+	}
-+}
-+
-+void ccci_fsm_reset(void)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = ccci_fsm_entry;
-+	/* Clear event and command queues */
-+	fsm_flush_queue(ctl);
-+
-+	ctl->last_state = CCCI_FSM_INIT;
-+	ctl->curr_state = CCCI_FSM_STOPPED;
-+	atomic_set(&ctl->exp_flg, 0);
-+}
-+
-+int ccci_fsm_init(struct mtk_modem *md)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = devm_kzalloc(&md->mtk_dev->pdev->dev, sizeof(*ctl), GFP_KERNEL);
-+	if (!ctl)
-+		return -ENOMEM;
-+
-+	ccci_fsm_entry = ctl;
-+	ctl->md = md;
-+	ctl->last_state = CCCI_FSM_INIT;
-+	ctl->curr_state = CCCI_FSM_INIT;
-+	INIT_LIST_HEAD(&ctl->command_queue);
-+	INIT_LIST_HEAD(&ctl->event_queue);
-+	init_waitqueue_head(&ctl->async_hk_wq);
-+	init_waitqueue_head(&ctl->event_wq);
-+	INIT_LIST_HEAD(&ctl->notifier_list);
-+	init_waitqueue_head(&ctl->command_wq);
-+	spin_lock_init(&ctl->event_lock);
-+	spin_lock_init(&ctl->command_lock);
-+	spin_lock_init(&ctl->cmd_complete_lock);
-+	atomic_set(&ctl->exp_flg, 0);
-+	spin_lock_init(&ctl->notifier_lock);
-+
-+	ctl->fsm_thread = kthread_run(fsm_main_thread, ctl, "ccci_fsm");
-+	if (IS_ERR(ctl->fsm_thread)) {
-+		dev_err(&md->mtk_dev->pdev->dev, "failed to start monitor thread\n");
-+		return PTR_ERR(ctl->fsm_thread);
-+	}
-+
-+	return 0;
-+}
-+
-+void ccci_fsm_uninit(void)
-+{
-+	struct ccci_fsm_ctl *ctl;
-+
-+	ctl = ccci_fsm_entry;
-+	if (!ctl)
-+		return;
-+
-+	if (ctl->fsm_thread)
-+		kthread_stop(ctl->fsm_thread);
-+
-+	fsm_flush_queue(ctl);
-+}
++#endif /* __T7XX_HIF_DPMA_TX_H__ */
 -- 
 2.17.1
 
