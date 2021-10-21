@@ -2,35 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC44C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD738C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CE256108E
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B257761213
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 15:59:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231883AbhJUQBP (ORCPT
+        id S232272AbhJUQBt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Oct 2021 12:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60936 "EHLO
+        Thu, 21 Oct 2021 12:01:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230187AbhJUQBP (ORCPT
+        with ESMTP id S231845AbhJUQBP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Oct 2021 12:01:15 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04112C061348;
-        Thu, 21 Oct 2021 08:58:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9566EC0613B9;
+        Thu, 21 Oct 2021 08:58:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=rHoTJjYWMdAiapE2XRg3xLJcB1bcn01nx+1c6y3EDeQ=; b=LO+V5ESHFJAxWWwrJFBS7d2p36
-        Blz/PkXiDj2bnFiPVfa7wOY8AF2C05wZ4ln7FW9Mdo2z6uFffTBJykCcVD48pTrpsPcKQ/MoRSYzp
-        fak90Q4LIV9DUrzov33Chyhp62QXBbaF1r+TRxX7JjW+kgrSjqtXKuZNTeGUIem34KySR4Z2VEO8t
-        U1huuWJ/OMEQ1aF52yjWgYRgt6yGEry/rCmVSS6X5UcPmxH6azBmiR4WW0r+weNbHxMyMzPtKnkEj
-        lwHfaHM13/b+45LydAnKUSyDdt+7zKRqaSX0E68X3lmrfDFJ7FhFbLIkXyaBxmSyyIoDraujZZ3Bm
-        xQimJa9A==;
+        bh=vQDziZ7ZyhPvCe5V/cGR0gQ3vb8WJNHnEcQgc70mPbE=; b=NBENbHtc6XiEJIOZ5j+cAWVvtt
+        QtHqrnXRpwR/s7tfVmMvwXR4DKtj19TN9sojNSyrcGDeU1ZM3fmPmPxAEsv4Yxp5YABY+ljRlJvha
+        VDr+2CPDdy50VmqfhUWIrAPvNXpKFZpP+xd6uSa6Bvq2VhC9f0a7M+kUgV01j2pGW7UaqK4VM3A34
+        bXvj64B5+A53e+5Cqs6JWJRD1/laiy2iaU3mR1/SPLwRakxU7wW9RvFGGlTdlLqWjTaTWHHbGUpT1
+        ap036WxmP8Mbb5RwEdXsCI3OhqoEkW+lYvpGDh2RvSYf4S0j6X6La+/aEAxCV+rlcGtP9OOCEZdLu
+        h4TsjZJg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mdaSq-008GM0-Ce; Thu, 21 Oct 2021 15:58:44 +0000
+        id 1mdaSq-008GMG-Mh; Thu, 21 Oct 2021 15:58:44 +0000
 From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -47,9 +47,9 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 02/10] firmware_loader: remove old DECLARE_BUILTIN_FIRMWARE()
-Date:   Thu, 21 Oct 2021 08:58:35 -0700
-Message-Id: <20211021155843.1969401-3-mcgrof@kernel.org>
+Subject: [PATCH v2 08/10] firmware_loader: move builtin build helper to shared library
+Date:   Thu, 21 Oct 2021 08:58:41 -0700
+Message-Id: <20211021155843.1969401-9-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211021155843.1969401-1-mcgrof@kernel.org>
 References: <20211021155843.1969401-1-mcgrof@kernel.org>
@@ -62,39 +62,127 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-This was never used upstream. Time to get rid of it. We
-don't carry around unused baggage.
+If we wanted to use a different directory for building target
+builtin firmware it is easier if we just have a shared library
+Makefile, and each target directory can then just include it and
+populate the respective needed variables. This reduces clutter,
+makes things easier to read, and also most importantly allows
+us to not have to try to magically adjust only one target
+kconfig symbol for built-in firmware files. Trying to do this
+can easily end up causing odd build issues if the user is not
+careful.
 
-Reviewed-by: Borislav Petkov <bp@suse.de>
+As an example issue, if we are going to try to extend the
+FW_LOADER_BUILTIN_FILES list and FW_LOADER_BUILTIN_DIR in case
+of a new test firmware builtin support currently our only option
+would be modify the defaults of each of these in case test firmware
+builtin support was enabled. Defaults however won't augment a prior
+setting, and so if FW_LOADER_BUILTIN_DIR="/lib/firmware" and you
+and want this to be changed to something like
+FW_LOADER_BUILTIN_DIR="drivers/base/firmware_loader/test-builtin"
+the change will not take effect as a prior build already had it
+set, and the build would fail. Trying to augment / append the
+variables in the Makefile just makes this very difficult to
+read.
+
+Using a library let's us split up possible built-in targets so
+that the user does not have to be involved. This will be used
+in a subsequent patch which will add another user to this
+built-in firmware library Makefile and demo how to use it outside
+of the default FW_LOADER_BUILTIN_DIR and FW_LOADER_BUILTIN_FILES.
+
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- include/linux/firmware.h | 13 -------------
- 1 file changed, 13 deletions(-)
+ drivers/base/firmware_loader/builtin/Makefile | 34 ++-----------------
+ .../base/firmware_loader/builtin/lib.Makefile | 32 +++++++++++++++++
+ 2 files changed, 34 insertions(+), 32 deletions(-)
+ create mode 100644 drivers/base/firmware_loader/builtin/lib.Makefile
 
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index d743a8d1c2fe..34e8d5844fa0 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -32,19 +32,6 @@ struct builtin_fw {
- };
+diff --git a/drivers/base/firmware_loader/builtin/Makefile b/drivers/base/firmware_loader/builtin/Makefile
+index 7cdd0b5c7384..9b0dc193f6c7 100644
+--- a/drivers/base/firmware_loader/builtin/Makefile
++++ b/drivers/base/firmware_loader/builtin/Makefile
+@@ -1,4 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
++include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
++
+ obj-y  += main.o
  
- bool firmware_request_builtin(struct firmware *fw, const char *name);
+ # Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
+@@ -8,35 +10,3 @@ fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
+ 
+ firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_FILES)))
+ obj-y += $(firmware)
 -
--/* We have to play tricks here much like stringify() to get the
--   __COUNTER__ macro to be expanded as we want it */
--#define __fw_concat1(x, y) x##y
--#define __fw_concat(x, y) __fw_concat1(x, y)
+-FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
+-FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
+-ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
+-ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
+-PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
 -
--#define DECLARE_BUILTIN_FIRMWARE(name, blob)				     \
--	DECLARE_BUILTIN_FIRMWARE_SIZE(name, &(blob), sizeof(blob))
+-filechk_fwbin = \
+-	echo "/* Generated by $(src)/Makefile */"		;\
+-	echo "    .section .rodata"				;\
+-	echo "    .p2align 4"					;\
+-	echo "_fw_$(FWSTR)_bin:"				;\
+-	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
+-	echo "_fw_end:"						;\
+-	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
+-	echo "    .p2align $(ASM_ALIGN)"			;\
+-	echo "_fw_$(FWSTR)_name:"				;\
+-	echo "    .string \"$(FWNAME)\""			;\
+-	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
+-	echo "    .p2align $(ASM_ALIGN)"			;\
+-	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
+-	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
+-	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
 -
--#define DECLARE_BUILTIN_FIRMWARE_SIZE(name, blob, size)			     \
--	static const struct builtin_fw __fw_concat(__builtin_fw,__COUNTER__) \
--	__used __section(".builtin_fw") = { name, blob, size }
+-$(obj)/%.gen.S: FORCE
+-	$(call filechk,fwbin)
 -
- #else
- static inline bool firmware_request_builtin(struct firmware *fw,
- 					    const char *name)
+-# The .o files depend on the binaries directly; the .S files don't.
+-$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
+-
+-targets := $(patsubst $(obj)/%,%, \
+-                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
+diff --git a/drivers/base/firmware_loader/builtin/lib.Makefile b/drivers/base/firmware_loader/builtin/lib.Makefile
+new file mode 100644
+index 000000000000..e979a67acfa7
+--- /dev/null
++++ b/drivers/base/firmware_loader/builtin/lib.Makefile
+@@ -0,0 +1,32 @@
++# SPDX-License-Identifier: GPL-2.0
++FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
++FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
++ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
++ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
++PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
++
++filechk_fwbin = \
++	echo "/* Generated by $(src)/Makefile */"		;\
++	echo "    .section .rodata"				;\
++	echo "    .p2align 4"					;\
++	echo "_fw_$(FWSTR)_bin:"				;\
++	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
++	echo "_fw_end:"						;\
++	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
++	echo "    .p2align $(ASM_ALIGN)"			;\
++	echo "_fw_$(FWSTR)_name:"				;\
++	echo "    .string \"$(FWNAME)\""			;\
++	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
++	echo "    .p2align $(ASM_ALIGN)"			;\
++	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
++	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
++	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
++
++$(obj)/%.gen.S: FORCE
++	$(call filechk,fwbin)
++
++# The .o files depend on the binaries directly; the .S files don't.
++$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
++
++targets := $(patsubst $(obj)/%,%, \
++                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
 -- 
 2.30.2
 
