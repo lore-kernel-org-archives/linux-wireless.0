@@ -2,28 +2,28 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A4EC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82AD6C43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA5DD610CF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644B8610CF
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232108AbhJUUbP (ORCPT
+        id S232184AbhJUUbU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Oct 2021 16:31:15 -0400
-Received: from mga07.intel.com ([134.134.136.100]:57403 "EHLO mga07.intel.com"
+        Thu, 21 Oct 2021 16:31:20 -0400
+Received: from mga07.intel.com ([134.134.136.100]:57401 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232054AbhJUUbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S231934AbhJUUbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Oct 2021 16:31:10 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="292598308"
+X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="292598317"
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="292598308"
+   d="scan'208";a="292598317"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:24 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:25 -0700
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="527625097"
+   d="scan'208";a="527625111"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:23 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:24 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -32,9 +32,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
         haijun.liu@mediatek.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH 09/14] net: wwan: t7xx: Add WWAN network interface
-Date:   Thu, 21 Oct 2021 13:27:33 -0700
-Message-Id: <20211021202738.729-10-ricardo.martinez@linux.intel.com>
+Subject: [PATCH 12/14] net: wwan: t7xx: Device deep sleep lock/unlock
+Date:   Thu, 21 Oct 2021 13:27:36 -0700
+Message-Id: <20211021202738.729-13-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
 References: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
@@ -42,682 +42,404 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Creates the Cross Core Modem Network Interface (CCMNI) which implements
-the wwan_ops for registration with the WWAN framework, CCMNI also
-implements the net_device_ops functions used by the network device.
-Network device operations include open, close, start transmission, TX
-timeout, change MTU, and select queue.
+Introduce the mechanism to lock/unlock the device 'deep sleep' mode.
+When the PCIe link state is L1.2 or L2, the host side still can keep
+the device is in D0 state from the host side point of view. At the same
+time, if the device's 'deep sleep' mode is unlocked, the device will
+go to 'deep sleep' while it is still in D0 state on the host side.
 
 Signed-off-by: Haijun Lio <haijun.liu@mediatek.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- drivers/net/wwan/t7xx/Makefile         |   1 +
- drivers/net/wwan/t7xx/t7xx_modem_ops.c |  11 +-
- drivers/net/wwan/t7xx/t7xx_netdev.c    | 535 +++++++++++++++++++++++++
- drivers/net/wwan/t7xx/t7xx_netdev.h    |  56 +++
- 4 files changed, 602 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wwan/t7xx/t7xx_netdev.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_netdev.h
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 11 +++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 24 ++++--
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 39 ++++++---
+ drivers/net/wwan/t7xx/t7xx_mhccif.c        |  3 +
+ drivers/net/wwan/t7xx/t7xx_pci.c           | 95 ++++++++++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_pci.h           | 10 +++
+ 6 files changed, 166 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
-index a2c97a66dfbe..fcee61e7c4bc 100644
---- a/drivers/net/wwan/t7xx/Makefile
-+++ b/drivers/net/wwan/t7xx/Makefile
-@@ -18,3 +18,4 @@ mtk_t7xx-y:=	t7xx_pci.o \
- 		t7xx_hif_dpmaif.o  \
- 		t7xx_hif_dpmaif_tx.o \
- 		t7xx_hif_dpmaif_rx.o  \
-+		t7xx_netdev.o \
-diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.c b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-index 8802948fb6ef..ab1faa628702 100644
---- a/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-+++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-@@ -13,6 +13,7 @@
- #include "t7xx_mhccif.h"
- #include "t7xx_modem_ops.h"
- #include "t7xx_monitor.h"
-+#include "t7xx_netdev.h"
- #include "t7xx_pci.h"
- #include "t7xx_pcie_mac.h"
- #include "t7xx_port.h"
-@@ -683,10 +684,15 @@ int mtk_md_init(struct mtk_pci_dev *mtk_dev)
- 	if (ret)
- 		goto err_alloc;
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+index 358b4727f7db..4a8288340cfc 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+@@ -1137,6 +1137,7 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	if (val < 0 && val != -EACCES)
+ 		return val;
  
--	ret = cldma_init(ID_CLDMA1);
-+	/* init the data path */
-+	ret = ccmni_init(mtk_dev);
- 	if (ret)
- 		goto err_fsm_init;
++	mtk_pci_disable_sleep(md_ctrl->mtk_dev);
+ 	if (qno >= CLDMA_TXQ_NUM) {
+ 		ret = -EINVAL;
+ 		goto exit;
+@@ -1172,6 +1173,11 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 			queue->tx_xmit = cldma_ring_step_forward(queue->tr_ring, tx_req);
+ 			spin_unlock_irqrestore(&queue->ring_lock, flags);
  
-+	ret = cldma_init(ID_CLDMA1);
-+	if (ret)
-+		goto err_ccmni_init;
++			if (!mtk_pci_sleep_disable_complete(md_ctrl->mtk_dev)) {
++				ret = -EBUSY;
++				break;
++			}
 +
- 	ret = port_proxy_init(mtk_dev->md);
- 	if (ret)
- 		goto err_cldma_init;
-@@ -701,6 +707,8 @@ int mtk_md_init(struct mtk_pci_dev *mtk_dev)
+ 			spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
+ 			cldma_hw_start_send(md_ctrl, qno);
+ 			spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
+@@ -1179,6 +1185,10 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 		}
  
- err_cldma_init:
- 	cldma_exit(ID_CLDMA1);
-+err_ccmni_init:
-+	ccmni_exit(mtk_dev);
- err_fsm_init:
- 	ccci_fsm_uninit();
- err_alloc:
-@@ -727,6 +735,7 @@ void mtk_md_exit(struct mtk_pci_dev *mtk_dev)
- 	fsm_append_command(fsm_ctl, CCCI_COMMAND_PRE_STOP, 1);
- 	port_proxy_uninit();
- 	cldma_exit(ID_CLDMA1);
-+	ccmni_exit(mtk_dev);
- 	ccci_fsm_uninit();
- 	destroy_workqueue(md->handshake_wq);
+ 		spin_unlock_irqrestore(&queue->ring_lock, flags);
++		if (!mtk_pci_sleep_disable_complete(md_ctrl->mtk_dev)) {
++			ret = -EBUSY;
++			break;
++		}
+ 
+ 		/* check CLDMA status */
+ 		if (!cldma_hw_queue_status(&md_ctrl->hw_info, qno, false)) {
+@@ -1200,6 +1210,7 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	} while (!ret);
+ 
+ exit:
++	mtk_pci_enable_sleep(md_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(md_ctrl->dev);
+ 	pm_runtime_put_autosuspend(md_ctrl->dev);
+ 	return ret;
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+index 1c29e5576959..4383b0b3f14b 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -31,6 +31,8 @@
+ #define DPMAIF_RX_PUSH_THRESHOLD_MASK	0x7
+ #define DPMAIF_NOTIFY_RELEASE_COUNT	128
+ #define DPMAIF_POLL_PIT_TIME_US		20
++#define DPMAIF_POLL_RX_TIME_US		10
++#define DPMAIF_POLL_RX_TIMEOUT_US	200
+ #define DPMAIF_POLL_PIT_MAX_TIME_US	2000
+ #define DPMAIF_WQ_TIME_LIMIT_MS		2
+ #define DPMAIF_CS_RESULT_PASS		0
+@@ -1011,6 +1013,7 @@ static int dpmaif_rx_data_collect(struct dpmaif_ctrl *dpmaif_ctrl,
+ 	return 0;
  }
-diff --git a/drivers/net/wwan/t7xx/t7xx_netdev.c b/drivers/net/wwan/t7xx/t7xx_netdev.c
-new file mode 100644
-index 000000000000..542344abafef
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_netdev.c
-@@ -0,0 +1,535 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ */
+ 
++/* call after mtk_pci_disable_sleep */
+ static void dpmaif_do_rx(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_rx_queue *rxq)
+ {
+ 	int ret;
+@@ -1050,7 +1053,13 @@ static void dpmaif_rxq_work(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
+-	dpmaif_do_rx(dpmaif_ctrl, rxq);
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+#include <linux/bitfield.h>
-+#include <linux/ip.h>
-+#include <linux/netdevice.h>
-+#include <linux/wwan.h>
++	/* we can try blocking wait for lock resource here in process context */
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev))
++		dpmaif_do_rx(dpmaif_ctrl, rxq);
 +
-+#include <net/ipv6.h>
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+@@ -1424,14 +1433,19 @@ static void dpmaif_bat_release_work(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+#include "t7xx_hif_dpmaif_rx.h"
-+#include "t7xx_hif_dpmaif_tx.h"
-+#include "t7xx_netdev.h"
-+
-+#define IP_MUX_SESSION_DEFAULT	0
-+#define SBD_PACKET_TYPE_MASK	GENMASK(7, 4)
-+
-+static void ccmni_make_etherframe(struct net_device *dev, void *skb_eth_hdr,
-+				  u8 *mac_addr, unsigned int packet_type)
-+{
-+	struct ethhdr *eth_hdr;
-+
-+	eth_hdr = skb_eth_hdr;
-+	memcpy(eth_hdr->h_dest, mac_addr, sizeof(eth_hdr->h_dest));
-+	memset(eth_hdr->h_source, 0, sizeof(eth_hdr->h_source));
-+
-+	if (packet_type == IPV6_VERSION)
-+		eth_hdr->h_proto = cpu_to_be16(ETH_P_IPV6);
-+	else
-+		eth_hdr->h_proto = cpu_to_be16(ETH_P_IP);
-+}
-+
-+static enum txq_type get_txq_type(struct sk_buff *skb)
-+{
-+	u32 total_len, payload_len, l4_off;
-+	bool tcp_syn_fin_rst, is_tcp;
-+	struct ipv6hdr *ip6h;
-+	struct tcphdr *tcph;
-+	struct iphdr *ip4h;
-+	u32 packet_type;
-+	__be16 frag_off;
-+
-+	packet_type = skb->data[0] & SBD_PACKET_TYPE_MASK;
-+	if (packet_type == IPV6_VERSION) {
-+		ip6h = (struct ipv6hdr *)skb->data;
-+		total_len = sizeof(struct ipv6hdr) + ntohs(ip6h->payload_len);
-+		l4_off = ipv6_skip_exthdr(skb, sizeof(struct ipv6hdr), &ip6h->nexthdr, &frag_off);
-+		tcph = (struct tcphdr *)(skb->data + l4_off);
-+		is_tcp = ip6h->nexthdr == IPPROTO_TCP;
-+		payload_len = total_len - l4_off - (tcph->doff << 2);
-+	} else if (packet_type == IPV4_VERSION) {
-+		ip4h = (struct iphdr *)skb->data;
-+		tcph = (struct tcphdr *)(skb->data + (ip4h->ihl << 2));
-+		is_tcp = ip4h->protocol == IPPROTO_TCP;
-+		payload_len = ntohs(ip4h->tot_len) - (ip4h->ihl << 2) - (tcph->doff << 2);
-+	} else {
-+		return TXQ_NORMAL;
+ 	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
+ 	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
+ 
+-	/* normal BAT release and add */
+-	dpmaif_dl_pkt_bat_release_and_add(rxq);
+-	/* frag BAT release and add */
+-	dpmaif_dl_frag_bat_release_and_add(rxq);
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev)) {
++		/* normal BAT release and add */
++		dpmaif_dl_pkt_bat_release_and_add(rxq);
++		/* frag BAT release and add */
++		dpmaif_dl_frag_bat_release_and_add(rxq);
 +	}
+ 
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+index afb53ed12b12..c1fe78874b46 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -164,19 +164,26 @@ static void dpmaif_tx_done(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
+-	ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
+-	if (ret == -EAGAIN ||
+-	    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
+-	     dpmaif_no_remain_spurious_tx_done_intr(txq))) {
+-		queue_work(dpmaif_ctrl->txq[txq->index].worker,
+-			   &dpmaif_ctrl->txq[txq->index].dpmaif_tx_work);
+-		/* clear IP busy to give the device time to enter the low power state */
+-		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+-	} else {
+-		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+-		dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
++	/* The device may be in low power state. disable sleep if needed */
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+	tcp_syn_fin_rst = tcph->syn || tcph->fin || tcph->rst;
-+	if (is_tcp && !payload_len && !tcp_syn_fin_rst)
-+		return TXQ_FAST;
-+
-+	return TXQ_NORMAL;
-+}
-+
-+static u16 ccmni_select_queue(struct net_device *dev, struct sk_buff *skb,
-+			      struct net_device *sb_dev)
-+{
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = netdev_priv(dev);
-+
-+	if (ccmni->ctlb->capability & NIC_CAP_DATA_ACK_DVD)
-+		return get_txq_type(skb);
-+
-+	return TXQ_NORMAL;
-+}
-+
-+static int ccmni_open(struct net_device *dev)
-+{
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = wwan_netdev_drvpriv(dev);
-+	netif_carrier_on(dev);
-+	netif_tx_start_all_queues(dev);
-+	atomic_inc(&ccmni->usage);
-+	return 0;
-+}
-+
-+static int ccmni_close(struct net_device *dev)
-+{
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = wwan_netdev_drvpriv(dev);
-+
-+	if (atomic_dec_return(&ccmni->usage) < 0)
-+		return -EINVAL;
-+
-+	netif_carrier_off(dev);
-+	netif_tx_disable(dev);
-+	return 0;
-+}
-+
-+static int ccmni_send_packet(struct ccmni_instance *ccmni, struct sk_buff *skb, enum txq_type txqt)
-+{
-+	struct ccmni_ctl_block *ctlb;
-+	struct ccci_header *ccci_h;
-+	unsigned int ccmni_idx;
-+
-+	skb_push(skb, sizeof(struct ccci_header));
-+	ccci_h = (struct ccci_header *)skb->data;
-+	ccci_h->status &= ~HDR_FLD_CHN;
-+
-+	ccmni_idx = ccmni->index;
-+	ccci_h->data[0] = ccmni_idx;
-+	ccci_h->data[1] = skb->len;
-+	ccci_h->reserved = 0;
-+
-+	ctlb = ccmni->ctlb;
-+	if (dpmaif_tx_send_skb(ctlb->hif_ctrl, txqt, skb)) {
-+		skb_pull(skb, sizeof(struct ccci_header));
-+		/* we will reserve header again in the next retry */
-+		return NETDEV_TX_BUSY;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ccmni_start_xmit(struct sk_buff *skb, struct net_device *dev)
-+{
-+	struct ccmni_instance *ccmni;
-+	struct ccmni_ctl_block *ctlb;
-+	enum txq_type txqt;
-+	int skb_len;
-+
-+	ccmni = wwan_netdev_drvpriv(dev);
-+	ctlb = ccmni->ctlb;
-+	txqt = TXQ_NORMAL;
-+	skb_len = skb->len;
-+
-+	/* If MTU changed or there is no headroom, drop the packet */
-+	if (skb->len > dev->mtu || skb_headroom(skb) < sizeof(struct ccci_header)) {
-+		dev_kfree_skb(skb);
-+		dev->stats.tx_dropped++;
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (ctlb->capability & NIC_CAP_DATA_ACK_DVD)
-+		txqt = get_txq_type(skb);
-+
-+	if (ccmni_send_packet(ccmni, skb, txqt)) {
-+		if (!(ctlb->capability & NIC_CAP_TXBUSY_STOP)) {
-+			if ((ccmni->tx_busy_cnt[txqt]++) % 100 == 0)
-+				netdev_notice(dev, "[TX]CCMNI:%d busy:pkt=%ld(ack=%d) cnt=%ld\n",
-+					      ccmni->index, dev->stats.tx_packets,
-+					      txqt, ccmni->tx_busy_cnt[txqt]);
++	/* ensure that we are not in deep sleep */
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev)) {
++		ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
++		if (ret == -EAGAIN ||
++		    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
++		     dpmaif_no_remain_spurious_tx_done_intr(txq))) {
++			queue_work(dpmaif_ctrl->txq[txq->index].worker,
++				   &dpmaif_ctrl->txq[txq->index].dpmaif_tx_work);
++			/* clear IP busy to give the device time to enter the low power state */
++			dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
 +		} else {
-+			ccmni->tx_busy_cnt[txqt]++;
++			dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++			dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
 +		}
+ 	}
+ 
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+@@ -477,6 +484,8 @@ static bool check_all_txq_drb_lack(const struct dpmaif_ctrl *dpmaif_ctrl)
+ 
+ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ {
++	bool first_time = true;
 +
-+		return NETDEV_TX_BUSY;
-+	}
+ 	dpmaif_ctrl->txq_select_times = 0;
+ 	do {
+ 		int txq_id;
+@@ -491,6 +500,11 @@ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ 			if (ret > 0) {
+ 				int drb_send_cnt = ret;
+ 
++				/* wait for the PCIe resource locked done */
++				if (first_time &&
++				    !mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev))
++					return;
 +
-+	dev->stats.tx_packets++;
-+	dev->stats.tx_bytes += skb_len;
-+	if (ccmni->tx_busy_cnt[txqt] > 10) {
-+		netdev_notice(dev, "[TX]CCMNI:%d TX busy:tx_pkt=%ld(ack=%d) retries=%ld\n",
-+			      ccmni->index, dev->stats.tx_packets,
-+			      txqt, ccmni->tx_busy_cnt[txqt]);
-+	}
-+	ccmni->tx_busy_cnt[txqt] = 0;
+ 				/* notify the dpmaif HW */
+ 				ret = dpmaif_ul_add_wcnt(dpmaif_ctrl, (unsigned char)txq_id,
+ 							 drb_send_cnt * DPMAIF_UL_DRB_ENTRY_WORD);
+@@ -504,6 +518,7 @@ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ 			}
+ 		}
+ 
++		first_time = false;
+ 		cond_resched();
+ 
+ 	} while (!tx_lists_are_all_empty(dpmaif_ctrl) && !kthread_should_stop() &&
+@@ -533,7 +548,9 @@ static int dpmaif_tx_hw_push_thread(void *arg)
+ 		if (ret < 0 && ret != -EACCES)
+ 			return ret;
+ 
++		mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
+ 		do_tx_hw_push(dpmaif_ctrl);
++		mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	}
+diff --git a/drivers/net/wwan/t7xx/t7xx_mhccif.c b/drivers/net/wwan/t7xx/t7xx_mhccif.c
+index 68acf1ca0555..2bc976e0d7f2 100644
+--- a/drivers/net/wwan/t7xx/t7xx_mhccif.c
++++ b/drivers/net/wwan/t7xx/t7xx_mhccif.c
+@@ -51,6 +51,9 @@ static irqreturn_t mhccif_isr_thread(int irq, void *data)
+ 	/* Clear 2 & 1 level interrupts */
+ 	mhccif_clear_interrupts(mtk_dev, int_sts);
+ 
++	if (int_sts & D2H_INT_DS_LOCK_ACK)
++		complete_all(&mtk_dev->sleep_lock_acquire);
 +
-+	return NETDEV_TX_OK;
+ 	if (int_sts & D2H_INT_SR_ACK)
+ 		complete(&mtk_dev->pm_sr_ack);
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
+index 260fe87ea631..559d3648e368 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.c
++++ b/drivers/net/wwan/t7xx/t7xx_pci.c
+@@ -25,6 +25,7 @@
+ #define	PCI_IREG_BASE			0
+ #define	PCI_EREG_BASE			2
+ 
++#define MTK_WAIT_TIMEOUT_MS		10
+ #define PM_ACK_TIMEOUT_MS		1500
+ #define PM_AUTOSUSPEND_MS		20000
+ #define PM_RESOURCE_POLL_TIMEOUT_US	10000
+@@ -37,6 +38,22 @@ enum mtk_pm_state {
+ 	MTK_PM_RESUMED,		/* Device in resume state */
+ };
+ 
++static void mtk_dev_set_sleep_capability(struct mtk_pci_dev *mtk_dev, bool enable)
++{
++	void __iomem *ctrl_reg;
++	u32 value;
++
++	ctrl_reg = IREG_BASE(mtk_dev) + PCIE_MISC_CTRL;
++	value = ioread32(ctrl_reg);
++
++	if (enable)
++		value &= ~PCIE_MISC_MAC_SLEEP_DIS;
++	else
++		value |= PCIE_MISC_MAC_SLEEP_DIS;
++
++	iowrite32(value, ctrl_reg);
 +}
 +
-+static int ccmni_change_mtu(struct net_device *dev, int new_mtu)
+ static int mtk_wait_pm_config(struct mtk_pci_dev *mtk_dev)
+ {
+ 	int ret, val;
+@@ -59,10 +76,14 @@ static int mtk_pci_pm_init(struct mtk_pci_dev *mtk_dev)
+ 
+ 	INIT_LIST_HEAD(&mtk_dev->md_pm_entities);
+ 
++	spin_lock_init(&mtk_dev->md_pm_lock);
++
+ 	mutex_init(&mtk_dev->md_pm_entity_mtx);
+ 
++	init_completion(&mtk_dev->sleep_lock_acquire);
+ 	init_completion(&mtk_dev->pm_sr_ack);
+ 
++	atomic_set(&mtk_dev->sleep_disable_count, 0);
+ 	device_init_wakeup(&pdev->dev, true);
+ 
+ 	dev_pm_set_driver_flags(&pdev->dev, pdev->dev.power.driver_flags |
+@@ -81,6 +102,7 @@ void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev)
+ {
+ 	/* enable the PCIe Resource Lock only after MD deep sleep is done */
+ 	mhccif_mask_clr(mtk_dev,
++			D2H_INT_DS_LOCK_ACK |
+ 			D2H_INT_SUSPEND_ACK |
+ 			D2H_INT_RESUME_ACK |
+ 			D2H_INT_SUSPEND_ACK_AP |
+@@ -147,6 +169,79 @@ int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entit
+ 	return -ENXIO;
+ }
+ 
++int mtk_pci_sleep_disable_complete(struct mtk_pci_dev *mtk_dev)
 +{
-+	if (new_mtu > CCMNI_MTU_MAX)
-+		return -EINVAL;
-+
-+	dev->mtu = new_mtu;
-+	return 0;
-+}
-+
-+static void ccmni_tx_timeout(struct net_device *dev, unsigned int __always_unused txqueue)
-+{
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = (struct ccmni_instance *)netdev_priv(dev);
-+	dev->stats.tx_errors++;
-+	if (atomic_read(&ccmni->usage) > 0)
-+		netif_tx_wake_all_queues(dev);
-+}
-+
-+static const struct net_device_ops ccmni_netdev_ops = {
-+	.ndo_open	  = ccmni_open,
-+	.ndo_stop	  = ccmni_close,
-+	.ndo_start_xmit   = ccmni_start_xmit,
-+	.ndo_tx_timeout   = ccmni_tx_timeout,
-+	.ndo_change_mtu   = ccmni_change_mtu,
-+	.ndo_select_queue = ccmni_select_queue,
-+};
-+
-+static void ccmni_start(struct ccmni_ctl_block *ctlb)
-+{
-+	struct ccmni_instance *ccmni;
-+	int i;
-+
-+	/* carry on the net link */
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0) {
-+			netif_tx_start_all_queues(ccmni->dev);
-+			netif_carrier_on(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void ccmni_pre_stop(struct ccmni_ctl_block *ctlb)
-+{
-+	struct ccmni_instance *ccmni;
-+	int i;
-+
-+	/* stop tx */
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0)
-+			netif_tx_disable(ccmni->dev);
-+	}
-+}
-+
-+static void ccmni_pos_stop(struct ccmni_ctl_block *ctlb)
-+{
-+	struct ccmni_instance *ccmni;
-+	int i;
-+
-+	/* carry off the net link */
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0)
-+			netif_carrier_off(ccmni->dev);
-+	}
-+}
-+
-+static void ccmni_wwan_setup(struct net_device *dev)
-+{
-+	dev->header_ops = NULL;
-+	dev->hard_header_len += sizeof(struct ccci_header);
-+
-+	dev->mtu = WWAN_DEFAULT_MTU;
-+	dev->max_mtu = CCMNI_MTU_MAX;
-+	dev->tx_queue_len = CCMNI_TX_QUEUE;
-+	dev->watchdog_timeo = CCMNI_NETDEV_WDT_TO;
-+	/* ccmni is a pure IP device */
-+	dev->flags = (IFF_POINTOPOINT | IFF_NOARP)
-+		     & ~(IFF_BROADCAST | IFF_MULTICAST);
-+
-+	/* not supporting VLAN */
-+	dev->features = NETIF_F_VLAN_CHALLENGED;
-+
-+	dev->features |= NETIF_F_SG;
-+	dev->hw_features |= NETIF_F_SG;
-+
-+	/* uplink checksum offload */
-+	dev->features |= NETIF_F_HW_CSUM;
-+	dev->hw_features |= NETIF_F_HW_CSUM;
-+
-+	/* downlink checksum offload */
-+	dev->features |= NETIF_F_RXCSUM;
-+	dev->hw_features |= NETIF_F_RXCSUM;
-+
-+	dev->addr_len = ETH_ALEN;
-+
-+	/* use kernel default free_netdev() function */
-+	dev->needs_free_netdev = true;
-+
-+	/* no need to free again because of free_netdev() */
-+	dev->priv_destructor = NULL;
-+	dev->type = ARPHRD_PPP;
-+
-+	dev->netdev_ops = &ccmni_netdev_ops;
-+	random_ether_addr((u8 *)dev->dev_addr);
-+}
-+
-+static int ccmni_wwan_newlink(void *ctxt, struct net_device *dev, u32 if_id,
-+			      struct netlink_ext_ack *extack)
-+{
-+	struct ccmni_ctl_block *ctlb;
-+	struct ccmni_instance *ccmni;
 +	int ret;
 +
-+	ctlb = ctxt;
-+
-+	if (if_id >= ARRAY_SIZE(ctlb->ccmni_inst))
-+		return -EINVAL;
-+
-+	/* initialize private structure of netdev */
-+	ccmni = wwan_netdev_drvpriv(dev);
-+	ccmni->index = if_id;
-+	ccmni->ctlb = ctlb;
-+	ccmni->dev = dev;
-+	atomic_set(&ccmni->usage, 0);
-+	ctlb->ccmni_inst[if_id] = ccmni;
-+
-+	ret = register_netdevice(dev);
-+	if (ret)
-+		return ret;
-+
-+	netif_device_attach(dev);
-+	return 0;
-+}
-+
-+static void ccmni_wwan_dellink(void *ctxt, struct net_device *dev, struct list_head *head)
-+{
-+	struct ccmni_instance *ccmni;
-+	struct ccmni_ctl_block *ctlb;
-+	int if_id;
-+
-+	ccmni = wwan_netdev_drvpriv(dev);
-+	ctlb = ctxt;
-+	if_id = ccmni->index;
-+
-+	if (if_id >= ARRAY_SIZE(ctlb->ccmni_inst))
-+		return;
-+
-+	if (WARN_ON(ctlb->ccmni_inst[if_id] != ccmni))
-+		return;
-+
-+	unregister_netdevice(dev);
-+}
-+
-+static const struct wwan_ops ccmni_wwan_ops = {
-+	.priv_size = sizeof(struct ccmni_instance),
-+	.setup     = ccmni_wwan_setup,
-+	.newlink   = ccmni_wwan_newlink,
-+	.dellink   = ccmni_wwan_dellink,
-+};
-+
-+static int ccmni_md_state_callback(enum md_state state, void *para)
-+{
-+	struct ccmni_ctl_block *ctlb;
-+	int ret = 0;
-+
-+	ctlb = para;
-+	ctlb->md_sta = state;
-+
-+	switch (state) {
-+	case MD_STATE_READY:
-+		ccmni_start(ctlb);
-+		break;
-+
-+	case MD_STATE_EXCEPTION:
-+	case MD_STATE_STOPPED:
-+		ccmni_pre_stop(ctlb);
-+		ret = dpmaif_md_state_callback(ctlb->hif_ctrl, state);
-+		if (ret < 0)
-+			dev_err(ctlb->hif_ctrl->dev,
-+				"dpmaif md state callback err, md_sta=%d\n", state);
-+
-+		ccmni_pos_stop(ctlb);
-+		break;
-+
-+	case MD_STATE_WAITING_FOR_HS1:
-+	case MD_STATE_WAITING_TO_STOP:
-+		ret = dpmaif_md_state_callback(ctlb->hif_ctrl, state);
-+		if (ret < 0)
-+			dev_err(ctlb->hif_ctrl->dev,
-+				"dpmaif md state callback err, md_sta=%d\n", state);
-+		break;
-+
-+	default:
-+		break;
-+	}
++	ret = wait_for_completion_timeout(&mtk_dev->sleep_lock_acquire,
++					  msecs_to_jiffies(MTK_WAIT_TIMEOUT_MS));
++	if (!ret)
++		dev_err_ratelimited(&mtk_dev->pdev->dev, "Resource wait complete timed out\n");
 +
 +	return ret;
 +}
 +
-+static void init_md_status_notifier(struct ccmni_ctl_block *ctlb)
-+{
-+	struct fsm_notifier_block *md_status_notifier;
-+
-+	md_status_notifier = &ctlb->md_status_notify;
-+	INIT_LIST_HEAD(&md_status_notifier->entry);
-+	md_status_notifier->notifier_fn = ccmni_md_state_callback;
-+	md_status_notifier->data = ctlb;
-+
-+	fsm_notifier_register(md_status_notifier);
-+}
-+
-+static void ccmni_recv_skb(struct mtk_pci_dev *mtk_dev, int netif_id, struct sk_buff *skb)
-+{
-+	struct ccmni_instance *ccmni;
-+	struct net_device *dev;
-+	int pkt_type, skb_len;
-+
-+	ccmni = mtk_dev->ccmni_ctlb->ccmni_inst[netif_id];
-+	if (!ccmni) {
-+		dev_kfree_skb(skb);
-+		return;
-+	}
-+
-+	dev = ccmni->dev;
-+
-+	pkt_type = skb->data[0] & SBD_PACKET_TYPE_MASK;
-+	ccmni_make_etherframe(dev, skb->data - ETH_HLEN, dev->dev_addr, pkt_type);
-+	skb_set_mac_header(skb, -ETH_HLEN);
-+	skb_reset_network_header(skb);
-+	skb->dev = dev;
-+	if (pkt_type == IPV6_VERSION)
-+		skb->protocol = htons(ETH_P_IPV6);
-+	else
-+		skb->protocol = htons(ETH_P_IP);
-+
-+	skb_len = skb->len;
-+
-+	netif_rx_any_context(skb);
-+	dev->stats.rx_packets++;
-+	dev->stats.rx_bytes += skb_len;
-+}
-+
-+static void ccmni_queue_tx_irq_notify(struct ccmni_ctl_block *ctlb, int qno)
-+{
-+	struct netdev_queue *net_queue;
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = ctlb->ccmni_inst[0];
-+
-+	if (netif_running(ccmni->dev) && atomic_read(&ccmni->usage) > 0) {
-+		if (ctlb->capability & NIC_CAP_CCMNI_MQ) {
-+			net_queue = netdev_get_tx_queue(ccmni->dev, qno);
-+			if (netif_tx_queue_stopped(net_queue))
-+				netif_tx_wake_queue(net_queue);
-+		} else if (netif_queue_stopped(ccmni->dev)) {
-+			netif_wake_queue(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void ccmni_queue_tx_full_notify(struct ccmni_ctl_block *ctlb, int qno)
-+{
-+	struct netdev_queue *net_queue;
-+	struct ccmni_instance *ccmni;
-+
-+	ccmni = ctlb->ccmni_inst[0];
-+
-+	if (atomic_read(&ccmni->usage) > 0) {
-+		dev_err(&ctlb->mtk_dev->pdev->dev, "TX queue %d is full\n", qno);
-+		if (ctlb->capability & NIC_CAP_CCMNI_MQ) {
-+			net_queue = netdev_get_tx_queue(ccmni->dev, qno);
-+			netif_tx_stop_queue(net_queue);
-+		} else {
-+			netif_stop_queue(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void ccmni_queue_state_notify(struct mtk_pci_dev *mtk_dev,
-+				     enum dpmaif_txq_state state, int qno)
-+{
-+	if (!(mtk_dev->ccmni_ctlb->capability & NIC_CAP_TXBUSY_STOP) ||
-+	    mtk_dev->ccmni_ctlb->md_sta != MD_STATE_READY ||
-+	    qno >= TXQ_TYPE_CNT)
-+		return;
-+
-+	if (!mtk_dev->ccmni_ctlb->ccmni_inst[0]) {
-+		dev_warn(&mtk_dev->pdev->dev, "No netdev registered yet\n");
-+		return;
-+	}
-+
-+	if (state == DMPAIF_TXQ_STATE_IRQ)
-+		ccmni_queue_tx_irq_notify(mtk_dev->ccmni_ctlb, qno);
-+	else if (state == DMPAIF_TXQ_STATE_FULL)
-+		ccmni_queue_tx_full_notify(mtk_dev->ccmni_ctlb, qno);
-+}
-+
-+int ccmni_init(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct ccmni_ctl_block *ctlb;
-+	int ret;
-+
-+	ctlb = devm_kzalloc(&mtk_dev->pdev->dev, sizeof(*ctlb), GFP_KERNEL);
-+	if (!ctlb)
-+		return -ENOMEM;
-+
-+	mtk_dev->ccmni_ctlb = ctlb;
-+	ctlb->mtk_dev = mtk_dev;
-+	ctlb->callbacks.state_notify = ccmni_queue_state_notify;
-+	ctlb->callbacks.recv_skb = ccmni_recv_skb;
-+	ctlb->nic_dev_num = NIC_DEV_DEFAULT;
-+	ctlb->capability = NIC_CAP_TXBUSY_STOP | NIC_CAP_SGIO |
-+			   NIC_CAP_DATA_ACK_DVD | NIC_CAP_CCMNI_MQ;
-+
-+	ctlb->hif_ctrl = dpmaif_hif_init(mtk_dev, &ctlb->callbacks);
-+	if (!ctlb->hif_ctrl)
-+		return -ENOMEM;
-+
-+	/* WWAN core will create a netdev for the default IP MUX channel */
-+	ret = wwan_register_ops(&ctlb->mtk_dev->pdev->dev, &ccmni_wwan_ops, ctlb,
-+				IP_MUX_SESSION_DEFAULT);
-+	if (ret)
-+		goto error_md;
-+
-+	init_md_status_notifier(ctlb);
-+
-+	return 0;
-+
-+error_md:
-+	wwan_unregister_ops(&ctlb->mtk_dev->pdev->dev);
-+
-+	return ret;
-+}
-+
-+void ccmni_exit(struct mtk_pci_dev *mtk_dev)
-+{
-+	struct ccmni_ctl_block *ctlb;
-+
-+	ctlb = mtk_dev->ccmni_ctlb;
-+	/* unregister FSM notifier */
-+	fsm_notifier_unregister(&ctlb->md_status_notify);
-+	wwan_unregister_ops(&ctlb->mtk_dev->pdev->dev);
-+	dpmaif_hif_exit(ctlb->hif_ctrl);
-+}
-diff --git a/drivers/net/wwan/t7xx/t7xx_netdev.h b/drivers/net/wwan/t7xx/t7xx_netdev.h
-new file mode 100644
-index 000000000000..4346b279a0cf
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_netdev.h
-@@ -0,0 +1,56 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
++/**
++ * mtk_pci_disable_sleep() - disable deep sleep capability
++ * @mtk_dev: MTK device
 + *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
++ * Lock the deep sleep capabitily, note that the device can go into deep sleep
++ * state while it is still in D0 state from the host point of view.
++ *
++ * If device is in deep sleep state then wake up the device and disable deep sleep capability.
 + */
++void mtk_pci_disable_sleep(struct mtk_pci_dev *mtk_dev)
++{
++	unsigned long flags;
 +
-+#ifndef __T7XX_NETDEV_H__
-+#define __T7XX_NETDEV_H__
++	if (atomic_read(&mtk_dev->md_pm_state) < MTK_PM_RESUMED) {
++		atomic_inc(&mtk_dev->sleep_disable_count);
++		complete_all(&mtk_dev->sleep_lock_acquire);
++		return;
++	}
 +
-+#include <linux/bitfield.h>
-+#include <linux/netdevice.h>
++	spin_lock_irqsave(&mtk_dev->md_pm_lock, flags);
++	if (atomic_inc_return(&mtk_dev->sleep_disable_count) == 1) {
++		reinit_completion(&mtk_dev->sleep_lock_acquire);
++		mtk_dev_set_sleep_capability(mtk_dev, false);
++		/* read register status to check whether the device's
++		 * deep sleep is disabled or not.
++		 */
++		if ((ioread32(IREG_BASE(mtk_dev) + PCIE_RESOURCE_STATUS) &
++		     PCIE_RESOURCE_STATUS_MSK) == PCIE_RESOURCE_STATUS_MSK) {
++			spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
++			complete_all(&mtk_dev->sleep_lock_acquire);
++			return;
++		}
 +
-+#include "t7xx_common.h"
-+#include "t7xx_hif_dpmaif.h"
-+#include "t7xx_monitor.h"
++		mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_DS_LOCK);
++	}
 +
-+#define RXQ_NUM			DPMAIF_RXQ_NUM
-+#define NIC_DEV_MAX		21
-+#define NIC_DEV_DEFAULT		2
-+#define NIC_CAP_TXBUSY_STOP	BIT(0)
-+#define NIC_CAP_SGIO		BIT(1)
-+#define NIC_CAP_DATA_ACK_DVD	BIT(2)
-+#define NIC_CAP_CCMNI_MQ	BIT(3)
++	spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
++}
 +
-+/* must be less than DPMAIF_HW_MTU_SIZE (3*1024 + 8) */
-+#define CCMNI_MTU_MAX		3000
-+#define CCMNI_TX_QUEUE		1000
-+#define CCMNI_NETDEV_WDT_TO	(1 * HZ)
++/**
++ * mtk_pci_enable_sleep() - enable deep sleep capability
++ * @mtk_dev: MTK device
++ *
++ * After enabling deep sleep, device can enter into deep sleep state.
++ */
++void mtk_pci_enable_sleep(struct mtk_pci_dev *mtk_dev)
++{
++	unsigned long flags;
 +
-+#define IPV4_VERSION		0x40
-+#define IPV6_VERSION		0x60
++	if (atomic_read(&mtk_dev->md_pm_state) < MTK_PM_RESUMED) {
++		atomic_dec(&mtk_dev->sleep_disable_count);
++		return;
++	}
 +
-+struct ccmni_instance {
-+	unsigned int		index;
-+	atomic_t		usage;
-+	struct net_device	*dev;
-+	struct ccmni_ctl_block	*ctlb;
-+	unsigned long		tx_busy_cnt[TXQ_TYPE_CNT];
-+};
++	if (atomic_dec_and_test(&mtk_dev->sleep_disable_count)) {
++		spin_lock_irqsave(&mtk_dev->md_pm_lock, flags);
++		mtk_dev_set_sleep_capability(mtk_dev, true);
++		spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
++	}
++}
 +
-+struct ccmni_ctl_block {
-+	struct mtk_pci_dev	*mtk_dev;
-+	struct dpmaif_ctrl	*hif_ctrl;
-+	struct ccmni_instance	*ccmni_inst[NIC_DEV_MAX];
-+	struct dpmaif_callbacks	callbacks;
-+	unsigned int		nic_dev_num;
-+	unsigned int		md_sta;
-+	unsigned int		capability;
-+
-+	struct fsm_notifier_block md_status_notify;
-+};
-+
-+int ccmni_init(struct mtk_pci_dev *mtk_dev);
-+void ccmni_exit(struct mtk_pci_dev *mtk_dev);
-+
-+#endif /* __T7XX_NETDEV_H__ */
+ static int __mtk_pci_pm_suspend(struct pci_dev *pdev)
+ {
+ 	struct mtk_pci_dev *mtk_dev;
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.h b/drivers/net/wwan/t7xx/t7xx_pci.h
+index 57c58d47c031..669ca3d56606 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.h
++++ b/drivers/net/wwan/t7xx/t7xx_pci.h
+@@ -10,6 +10,7 @@
+ #include <linux/completion.h>
+ #include <linux/mutex.h>
+ #include <linux/pci.h>
++#include <linux/spinlock.h>
+ #include <linux/types.h>
+ 
+ #include "t7xx_reg.h"
+@@ -41,7 +42,10 @@ typedef irqreturn_t (*mtk_intr_callback)(int irq, void *param);
+  * @base_addr: memory base addresses of HW components
+  * @md: modem interface
+  * @md_pm_entities: list of pm entities
++ * @md_pm_lock: protects PCIe sleep lock
+  * @md_pm_entity_mtx: protects md_pm_entities list
++ * @sleep_disable_count: PCIe L1.2 lock counter
++ * @sleep_lock_acquire: indicates that sleep has been disabled
+  * @pm_sr_ack: ack from the device when went to sleep or woke up
+  * @md_pm_state: state for resume/suspend
+  * @ccmni_ctlb: context structure used to control the network data path
+@@ -59,7 +63,10 @@ struct mtk_pci_dev {
+ 
+ 	/* Low Power Items */
+ 	struct list_head	md_pm_entities;
++	spinlock_t		md_pm_lock;		/* protects PCI resource lock */
+ 	struct mutex		md_pm_entity_mtx;	/* protects md_pm_entities list */
++	atomic_t		sleep_disable_count;
++	struct completion	sleep_lock_acquire;
+ 	struct completion	pm_sr_ack;
+ 	atomic_t		md_pm_state;
+ 
+@@ -96,6 +103,9 @@ struct md_pm_entity {
+ 	void			*entity_param;
+ };
+ 
++void mtk_pci_disable_sleep(struct mtk_pci_dev *mtk_dev);
++void mtk_pci_enable_sleep(struct mtk_pci_dev *mtk_dev);
++int mtk_pci_sleep_disable_complete(struct mtk_pci_dev *mtk_dev);
+ int mtk_pci_pm_entity_register(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
+ int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
+ void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev);
 -- 
 2.17.1
 
