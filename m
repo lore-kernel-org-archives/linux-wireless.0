@@ -2,26 +2,26 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88AC8C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A4F1C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F641610EA
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:29:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60B54610A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Oct 2021 20:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232242AbhJUUbY (ORCPT
+        id S232132AbhJUUcq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Oct 2021 16:31:24 -0400
-Received: from mga07.intel.com ([134.134.136.100]:57402 "EHLO mga07.intel.com"
+        Thu, 21 Oct 2021 16:32:46 -0400
+Received: from mga05.intel.com ([192.55.52.43]:46172 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232122AbhJUUbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Oct 2021 16:31:19 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="292598321"
+        id S231934AbhJUUcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Oct 2021 16:32:45 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10144"; a="315343873"
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="292598321"
+   d="scan'208";a="315343873"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:25 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:24 -0700
 X-IronPort-AV: E=Sophos;i="5.87,170,1631602800"; 
-   d="scan'208";a="527625118"
+   d="scan'208";a="527625107"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
   by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 13:28:24 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
@@ -32,9 +32,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
         haijun.liu@mediatek.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH 14/14] net: wwan: t7xx: Add maintainers and documentation
-Date:   Thu, 21 Oct 2021 13:27:38 -0700
-Message-Id: <20211021202738.729-15-ricardo.martinez@linux.intel.com>
+Subject: [PATCH 11/14] net: wwan: t7xx: Runtime PM
+Date:   Thu, 21 Oct 2021 13:27:35 -0700
+Message-Id: <20211021202738.729-12-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
 References: <20211021202738.729-1-ricardo.martinez@linux.intel.com>
@@ -42,179 +42,284 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adds maintainers and documentation for MediaTek t7xx 5G WWAN modem
-device driver.
+Enables runtime power management callbacks including runtime_suspend
+and runtime_resume. Autosuspend is used to prevent overhead by frequent
+wake-ups.
 
 Signed-off-by: Haijun Lio <haijun.liu@mediatek.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- .../networking/device_drivers/wwan/index.rst  |   1 +
- .../networking/device_drivers/wwan/t7xx.rst   | 120 ++++++++++++++++++
- MAINTAINERS                                   |  11 ++
- 3 files changed, 132 insertions(+)
- create mode 100644 Documentation/networking/device_drivers/wwan/t7xx.rst
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 13 +++++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 16 ++++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 15 +++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_pci.c           | 21 +++++++++++++++++++++
+ 4 files changed, 65 insertions(+)
 
-diff --git a/Documentation/networking/device_drivers/wwan/index.rst b/Documentation/networking/device_drivers/wwan/index.rst
-index 1cb8c7371401..370d8264d5dc 100644
---- a/Documentation/networking/device_drivers/wwan/index.rst
-+++ b/Documentation/networking/device_drivers/wwan/index.rst
-@@ -9,6 +9,7 @@ Contents:
-    :maxdepth: 2
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+index 0f15f9283eca..358b4727f7db 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+@@ -13,6 +13,7 @@
+ #include <linux/kernel.h>
+ #include <linux/list.h>
+ #include <linux/mutex.h>
++#include <linux/pm_runtime.h>
+ #include <linux/skbuff.h>
  
-    iosm
-+   t7xx
+ #include "t7xx_common.h"
+@@ -300,6 +301,8 @@ static void cldma_rx_done(struct work_struct *work)
+ 	/* enable RX_DONE && EMPTY interrupt */
+ 	cldma_hw_dismask_txrxirq(&md_ctrl->hw_info, queue->index, true);
+ 	cldma_hw_dismask_eqirq(&md_ctrl->hw_info, queue->index, true);
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
+ }
  
- .. only::  subproject and html
+ static int cldma_gpd_tx_collect(struct cldma_queue *queue)
+@@ -441,6 +444,8 @@ static void cldma_tx_done(struct work_struct *work)
+ 	}
  
-diff --git a/Documentation/networking/device_drivers/wwan/t7xx.rst b/Documentation/networking/device_drivers/wwan/t7xx.rst
-new file mode 100644
-index 000000000000..dd5b731957ca
---- /dev/null
-+++ b/Documentation/networking/device_drivers/wwan/t7xx.rst
-@@ -0,0 +1,120 @@
-+.. SPDX-License-Identifier: GPL-2.0-only
-+
-+.. Copyright (C) 2020-21 Intel Corporation
-+
-+.. _t7xx_driver_doc:
-+
-+============================================
-+t7xx driver for MTK PCIe based T700 5G modem
-+============================================
-+The t7xx driver is a WWAN PCIe host driver developed for linux or Chrome OS platforms
-+for data exchange over PCIe interface between Host platform & MediaTek's T700 5G modem.
-+The driver exposes an interface conforming to the MBIM protocol [1]. Any front end
-+application (e.g. Modem Manager) could easily manage the MBIM interface to enable
-+data communication towards WWAN. The driver also provides an interface to interact
-+with the MediaTek's modem via AT commands.
-+
-+Basic usage
-+===========
-+MBIM & AT functions are inactive when unmanaged. The t7xx driver provides
-+WWAN port userspace interfaces representing MBIM & AT control channels and does
-+not play any role in managing their functionality. It is the job of a userspace
-+application to detect port enumeration and enable MBIM & AT functionalities.
-+
-+Examples of few such userspace applications are:
-+
-+- mbimcli (included with the libmbim [2] library), and
-+- Modem Manager [3]
-+
-+Management Applications to carry out below required actions for establishing
-+MBIM IP session:
-+
-+- open the MBIM control channel
-+- configure network connection settings
-+- connect to network
-+- configure IP network interface
-+
-+Management Applications to carry out below required actions for send an AT
-+command and receive response:
-+
-+- open the AT control channel using a UART tool or a special user tool
-+
-+Management application development
-+==================================
-+The driver and userspace interfaces are described below. The MBIM protocol is
-+described in [1] Mobile Broadband Interface Model v1.0 Errata-1.
-+
-+MBIM control channel userspace ABI
-+----------------------------------
-+
-+/dev/wwan0mbim0 character device
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+The driver exposes an MBIM interface to the MBIM function by implementing
-+MBIM WWAN Port. The userspace end of the control channel pipe is a
-+/dev/wwan0mbim0 character device. Application shall use this interface for
-+MBIM protocol communication.
-+
-+Fragmentation
-+~~~~~~~~~~~~~
-+The userspace application is responsible for all control message fragmentation
-+and defragmentation as per MBIM specification.
-+
-+/dev/wwan0mbim0 write()
-+~~~~~~~~~~~~~~~~~~~~~~~
-+The MBIM control messages from the management application must not exceed the
-+negotiated control message size.
-+
-+/dev/wwan0mbim0 read()
-+~~~~~~~~~~~~~~~~~~~~~~
-+The management application must accept control messages of up the negotiated
-+control message size.
-+
-+MBIM data channel userspace ABI
-+-------------------------------
-+
-+wwan0-X network device
-+~~~~~~~~~~~~~~~~~~~~~~
-+The t7xx driver exposes IP link interface "wwan0-X" of type "wwan" for IP
-+traffic. Iproute network utility is used for creating "wwan0-X" network
-+interface and for associating it with MBIM IP session.
-+
-+The userspace management application is responsible for creating new IP link
-+prior to establishing MBIM IP session where the SessionId is greater than 0.
-+
-+For example, creating new IP link for a MBIM IP session with SessionId 1:
-+
-+  ip link add dev wwan0-1 parentdev wwan0 type wwan linkid 1
-+
-+The driver will automatically map the "wwan0-1" network device to MBIM IP
-+session 1.
-+
-+AT port userspace ABI
-+----------------------------------
-+
-+/dev/wwan0at0 character device
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+The driver exposes an AT port by implementing AT WWAN Port.
-+The userspace end of the control port is a /dev/wwan0at0 character
-+device. Application shall use this interface to issue AT commands.
-+
-+The MediaTek's T700 modem supports the 3GPP TS 27.007 [4] specification.
-+
-+References
-+==========
-+[1] *MBIM (Mobile Broadband Interface Model) Errata-1*
-+
-+- https://www.usb.org/document-library/
-+
-+[2] *libmbim "a glib-based library for talking to WWAN modems and devices which
-+speak the Mobile Interface Broadband Model (MBIM) protocol"*
-+
-+- http://www.freedesktop.org/wiki/Software/libmbim/
-+
-+[3] *Modem Manager "a DBus-activated daemon which controls mobile broadband
-+(2G/3G/4G/5G) devices and connections"*
-+
-+- http://www.freedesktop.org/wiki/Software/ModemManager/
-+
-+[4] *Specification # 27.007 - 3GPP*
-+
-+- https://www.3gpp.org/DynaReport/27007.htm
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8d118d7957d2..839796a287e3 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11880,6 +11880,17 @@ S:	Maintained
- F:	drivers/net/dsa/mt7530.*
- F:	net/dsa/tag_mtk.c
+ 	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
+ }
  
-+MEDIATEK T7XX 5G WWAN MODEM DRIVER
-+M:	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-+M:	Intel Corporation <linuxwwan@intel.com>
-+R:	Chiranjeevi Rapolu <chiranjeevi.rapolu@linux.intel.com>
-+R:	Liu Haijun <haijun.liu@mediatek.com>
-+R:	M Chetan Kumar <m.chetan.kumar@linux.intel.com>
-+R:	Ricardo Martinez <ricardo.martinez@linux.intel.com>
-+L:	netdev@vger.kernel.org
-+S:	Maintained
-+F:	drivers/net/wwan/t7xx/
+ static void cldma_ring_free(struct cldma_ctrl *md_ctrl,
+@@ -664,6 +669,7 @@ static void cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
+ 		if (l2_tx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
+ 			for (i = 0; i < CLDMA_TXQ_NUM; i++) {
+ 				if (l2_tx_int & BIT(i)) {
++					pm_runtime_get(md_ctrl->dev);
+ 					/* disable TX_DONE interrupt */
+ 					cldma_hw_mask_eqirq(hw_info, i, false);
+ 					cldma_hw_mask_txrxirq(hw_info, i, false);
+@@ -692,6 +698,7 @@ static void cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
+ 		if (l2_rx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
+ 			for (i = 0; i < CLDMA_RXQ_NUM; i++) {
+ 				if (l2_rx_int & (BIT(i) | EQ_STA_BIT(i))) {
++					pm_runtime_get(md_ctrl->dev);
+ 					/* disable RX_DONE and QUEUE_EMPTY interrupt */
+ 					cldma_hw_mask_eqirq(hw_info, i, true);
+ 					cldma_hw_mask_txrxirq(hw_info, i, true);
+@@ -1123,8 +1130,12 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	struct cldma_queue *queue;
+ 	unsigned long flags;
+ 	int ret = 0;
++	int val;
+ 
+ 	md_ctrl = md_cd_get(hif_id);
++	val = pm_runtime_resume_and_get(md_ctrl->dev);
++	if (val < 0 && val != -EACCES)
++		return val;
+ 
+ 	if (qno >= CLDMA_TXQ_NUM) {
+ 		ret = -EINVAL;
+@@ -1189,6 +1200,8 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	} while (!ret);
+ 
+ exit:
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+index a902f1ffa4c2..1c29e5576959 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -13,6 +13,7 @@
+ #include <linux/kthread.h>
+ #include <linux/list.h>
+ #include <linux/mm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+@@ -1030,6 +1031,7 @@ static void dpmaif_rxq_work(struct work_struct *work)
+ {
+ 	struct dpmaif_ctrl *dpmaif_ctrl;
+ 	struct dpmaif_rx_queue *rxq;
++	int ret;
+ 
+ 	rxq = container_of(work, struct dpmaif_rx_queue, dpmaif_rxq_work);
+ 	dpmaif_ctrl = rxq->dpmaif_ctrl;
+@@ -1044,8 +1046,14 @@ static void dpmaif_rxq_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
++		return;
 +
- MEDIATEK USB3 DRD IP DRIVER
- M:	Chunfeng Yun <chunfeng.yun@mediatek.com>
- L:	linux-usb@vger.kernel.org
+ 	dpmaif_do_rx(dpmaif_ctrl, rxq);
+ 
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	atomic_set(&rxq->rx_processing, 0);
+ }
+ 
+@@ -1408,9 +1416,14 @@ static void dpmaif_bat_release_work(struct work_struct *work)
+ {
+ 	struct dpmaif_ctrl *dpmaif_ctrl;
+ 	struct dpmaif_rx_queue *rxq;
++	int ret;
+ 
+ 	dpmaif_ctrl = container_of(work, struct dpmaif_ctrl, bat_release_work);
+ 
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
++		return;
++
+ 	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
+ 	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
+ 
+@@ -1418,6 +1431,9 @@ static void dpmaif_bat_release_work(struct work_struct *work)
+ 	dpmaif_dl_pkt_bat_release_and_add(rxq);
+ 	/* frag BAT release and add */
+ 	dpmaif_dl_frag_bat_release_and_add(rxq);
++
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+ int dpmaif_bat_release_work_alloc(struct dpmaif_ctrl *dpmaif_ctrl)
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+index 70f1547fbaff..afb53ed12b12 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -10,6 +10,7 @@
+ #include <linux/kernel.h>
+ #include <linux/kthread.h>
+ #include <linux/list.h>
++#include <linux/pm_runtime.h>
+ #include <linux/spinlock.h>
+ 
+ #include "t7xx_common.h"
+@@ -159,6 +160,10 @@ static void dpmaif_tx_done(struct work_struct *work)
+ 	txq = container_of(work, struct dpmaif_tx_queue, dpmaif_tx_work);
+ 	dpmaif_ctrl = txq->dpmaif_ctrl;
+ 
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
++		return;
++
+ 	ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
+ 	if (ret == -EAGAIN ||
+ 	    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
+@@ -171,6 +176,9 @@ static void dpmaif_tx_done(struct work_struct *work)
+ 		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+ 		dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
+ 	}
++
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+ static void set_drb_msg(struct dpmaif_ctrl *dpmaif_ctrl,
+@@ -505,6 +513,7 @@ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ static int dpmaif_tx_hw_push_thread(void *arg)
+ {
+ 	struct dpmaif_ctrl *dpmaif_ctrl;
++	int ret;
+ 
+ 	dpmaif_ctrl = arg;
+ 	while (!kthread_should_stop()) {
+@@ -520,7 +529,13 @@ static int dpmaif_tx_hw_push_thread(void *arg)
+ 		if (kthread_should_stop())
+ 			break;
+ 
++		ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++		if (ret < 0 && ret != -EACCES)
++			return ret;
++
+ 		do_tx_hw_push(dpmaif_ctrl);
++		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
+index 788bd6db8bc5..260fe87ea631 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.c
++++ b/drivers/net/wwan/t7xx/t7xx_pci.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include <linux/spinlock.h>
+ 
+ #include "t7xx_mhccif.h"
+@@ -25,6 +26,7 @@
+ #define	PCI_EREG_BASE			2
+ 
+ #define PM_ACK_TIMEOUT_MS		1500
++#define PM_AUTOSUSPEND_MS		20000
+ #define PM_RESOURCE_POLL_TIMEOUT_US	10000
+ #define PM_RESOURCE_POLL_STEP_US	100
+ 
+@@ -69,6 +71,8 @@ static int mtk_pci_pm_init(struct mtk_pci_dev *mtk_dev)
+ 	atomic_set(&mtk_dev->md_pm_state, MTK_PM_INIT);
+ 
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
++	pm_runtime_set_autosuspend_delay(&pdev->dev, PM_AUTOSUSPEND_MS);
++	pm_runtime_use_autosuspend(&pdev->dev);
+ 
+ 	return mtk_wait_pm_config(mtk_dev);
+ }
+@@ -83,6 +87,8 @@ void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev)
+ 			D2H_INT_RESUME_ACK_AP);
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
+ 	atomic_set(&mtk_dev->md_pm_state, MTK_PM_RESUMED);
++
++	pm_runtime_put_noidle(&mtk_dev->pdev->dev);
+ }
+ 
+ static int mtk_pci_pm_reinit(struct mtk_pci_dev *mtk_dev)
+@@ -92,6 +98,8 @@ static int mtk_pci_pm_reinit(struct mtk_pci_dev *mtk_dev)
+ 	 */
+ 	atomic_set(&mtk_dev->md_pm_state, MTK_PM_INIT);
+ 
++	pm_runtime_get_noresume(&mtk_dev->pdev->dev);
++
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
+ 	return mtk_wait_pm_config(mtk_dev);
+ }
+@@ -396,6 +404,7 @@ static int __mtk_pci_pm_resume(struct pci_dev *pdev, bool state_check)
+ 	mtk_dev->rgu_pci_irq_en = true;
+ 	mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
++	pm_runtime_mark_last_busy(&pdev->dev);
+ 	atomic_set(&mtk_dev->md_pm_state, MTK_PM_RESUMED);
+ 
+ 	return ret;
+@@ -437,6 +446,16 @@ static int mtk_pci_pm_thaw(struct device *dev)
+ 	return __mtk_pci_pm_resume(to_pci_dev(dev), false);
+ }
+ 
++static int mtk_pci_pm_runtime_suspend(struct device *dev)
++{
++	return __mtk_pci_pm_suspend(to_pci_dev(dev));
++}
++
++static int mtk_pci_pm_runtime_resume(struct device *dev)
++{
++	return __mtk_pci_pm_resume(to_pci_dev(dev), true);
++}
++
+ static const struct dev_pm_ops mtk_pci_pm_ops = {
+ 	.suspend = mtk_pci_pm_suspend,
+ 	.resume = mtk_pci_pm_resume,
+@@ -446,6 +465,8 @@ static const struct dev_pm_ops mtk_pci_pm_ops = {
+ 	.poweroff = mtk_pci_pm_suspend,
+ 	.restore = mtk_pci_pm_resume,
+ 	.restore_noirq = mtk_pci_pm_resume_noirq,
++	.runtime_suspend = mtk_pci_pm_runtime_suspend,
++	.runtime_resume = mtk_pci_pm_runtime_resume
+ };
+ 
+ static int mtk_request_irq(struct pci_dev *pdev)
 -- 
 2.17.1
 
