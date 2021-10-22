@@ -2,35 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDDFCC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Oct 2021 17:41:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B84C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Oct 2021 17:41:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3EF76108B
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Oct 2021 17:41:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F9B861052
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Oct 2021 17:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234058AbhJVRnZ (ORCPT
+        id S234079AbhJVRn1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Oct 2021 13:43:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
+        Fri, 22 Oct 2021 13:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233992AbhJVRnS (ORCPT
+        with ESMTP id S234024AbhJVRnS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 22 Oct 2021 13:43:18 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE293C061764;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C45BBC061767;
         Fri, 22 Oct 2021 10:41:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=vv/KmcqWJK/oFV2TawxBudXMWzXGYV14w9h1+x9j/Xk=; b=4bCE495yXilm7MSgyuKxSR2CG7
-        SveJNa+OWSNtIfZ8r1/Vmaonz8kGiRXfzu6dsh7EDj4xeaACDi8SIGmDC0a6MMJ1LuzkKodCIjSMs
-        metO5VPB/whe2keXvA1lXLuKtf1ab4umo/j/3cHiQDFEdol1G99/yrSiqTAzOf66liLzKRx4LakVN
-        rlf6mSJ+uWXnjigUjR0TKg05oH/f+0KotRamROVUyLtsrDNd4w2m0ZX0H7mGTXgm+c6YHta+3Cubr
-        50aEhw9wLgORr41wg5xTMx8KDH7N6diznGqbvSfOJLDUMT8JZPKBbsrn8RsRCSaDGYycTz0ccCL/1
-        6A8PzdNw==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=PQGAwwzDcqi+LKyXyVffXbDs6+KXex5wyQmEkA3rIH0=; b=L4Pu77xwTOghWTcVCGeepll+LU
+        czfhr8Wb0hVc099/PZtjAOTZkTTy3fRGToOSrBu5VghMn3CusPxkk1wdeHw6bZYJic6j9lVDgVQ1F
+        uqMVO9bv5J8bPpjiX6jbwlCVpXs3BWbdJzQGzNXQLfTm+F4Mp8YAZRxXIxVi4LmDNVANR0o6fWEWO
+        ZEZ498Jh59PF0v3AVZ9ELmDhHQrCr8NhYDSipy9xY996rh2nbIgzRNDIidzQqlrWxi8MDSumf/wZ1
+        TGJmeKearPm7rrwG2bldSpI6efqIPXWu0baodiWj1S5a0JCdBGC5MX7Jd0zcVdbKj8qXXbOw2hKUt
+        YHt2oXoQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mdyX6-00BeR8-NC; Fri, 22 Oct 2021 17:40:44 +0000
+        id 1mdyX6-00BeR4-Kf; Fri, 22 Oct 2021 17:40:44 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     gregkh@linuxfoundation.org
 Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
@@ -47,12 +47,10 @@ Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
         sfr@canb.auug.org.au, rdunlap@infradead.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v3 2/4] firmware_loader: move builtin build helper to shared library
-Date:   Fri, 22 Oct 2021 10:40:39 -0700
-Message-Id: <20211022174041.2776969-3-mcgrof@kernel.org>
+Subject: [PATCH v3 0/4] firmware_loader: built-in API and make x86 use it
+Date:   Fri, 22 Oct 2021 10:40:37 -0700
+Message-Id: <20211022174041.2776969-1-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211022174041.2776969-1-mcgrof@kernel.org>
-References: <20211022174041.2776969-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
@@ -60,127 +58,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If we wanted to use a different directory for building target
-builtin firmware it is easier if we just have a shared library
-Makefile, and each target directory can then just include it and
-populate the respective needed variables. This reduces clutter,
-makes things easier to read, and also most importantly allows
-us to not have to try to magically adjust only one target
-kconfig symbol for built-in firmware files. Trying to do this
-can easily end up causing odd build issues if the user is not
-careful.
+This v3 addresses the last remaining patches from my v2, the only change
+is fixing the patch "firmware_loader: built-in API and make x86 use it"
+where I left an old CONFIG_FW_LOADER_BUILTIN symbol in the
+documentation.
 
-As an example issue, if we are going to try to extend the
-FW_LOADER_BUILTIN_FILES list and FW_LOADER_BUILTIN_DIR in case
-of a new test firmware builtin support currently our only option
-would be modify the defaults of each of these in case test firmware
-builtin support was enabled. Defaults however won't augment a prior
-setting, and so if FW_LOADER_BUILTIN_DIR="/lib/firmware" and you
-and want this to be changed to something like
-FW_LOADER_BUILTIN_DIR="drivers/base/firmware_loader/test-builtin"
-the change will not take effect as a prior build already had it
-set, and the build would fail. Trying to augment / append the
-variables in the Makefile just makes this very difficult to
-read.
+Luis Chamberlain (4):
+  firmware_loader: rename EXTRA_FIRMWARE and EXTRA_FIRMWARE_DIR
+  firmware_loader: move builtin build helper to shared library
+  test_firmware: move a few test knobs out to its library
+  test_firmware: add support for testing built-in firmware
 
-Using a library let's us split up possible built-in targets so
-that the user does not have to be involved. This will be used
-in a subsequent patch which will add another user to this
-built-in firmware library Makefile and demo how to use it outside
-of the default FW_LOADER_BUILTIN_DIR and FW_LOADER_BUILTIN_FILES.
-
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/builtin/Makefile | 34 ++-----------------
- .../base/firmware_loader/builtin/lib.Makefile | 32 +++++++++++++++++
- 2 files changed, 34 insertions(+), 32 deletions(-)
+ .../driver-api/firmware/built-in-fw.rst       |  6 +-
+ Documentation/x86/microcode.rst               |  8 +--
+ arch/x86/Kconfig                              |  4 +-
+ drivers/base/firmware_loader/Kconfig          | 29 +++++---
+ drivers/base/firmware_loader/Makefile         |  1 +
+ drivers/base/firmware_loader/builtin/Makefile | 41 ++---------
+ .../base/firmware_loader/builtin/lib.Makefile | 32 +++++++++
+ .../firmware_loader/test-builtin/.gitignore   |  3 +
+ .../firmware_loader/test-builtin/Makefile     | 18 +++++
+ drivers/staging/media/av7110/Kconfig          |  4 +-
+ lib/Kconfig.debug                             | 33 +++++++++
+ lib/test_firmware.c                           | 52 +++++++++++++-
+ .../testing/selftests/firmware/fw_builtin.sh  | 69 +++++++++++++++++++
+ .../selftests/firmware/fw_filesystem.sh       | 16 -----
+ tools/testing/selftests/firmware/fw_lib.sh    | 24 +++++++
+ .../selftests/firmware/fw_run_tests.sh        |  2 +
+ 16 files changed, 269 insertions(+), 73 deletions(-)
  create mode 100644 drivers/base/firmware_loader/builtin/lib.Makefile
+ create mode 100644 drivers/base/firmware_loader/test-builtin/.gitignore
+ create mode 100644 drivers/base/firmware_loader/test-builtin/Makefile
+ create mode 100755 tools/testing/selftests/firmware/fw_builtin.sh
 
-diff --git a/drivers/base/firmware_loader/builtin/Makefile b/drivers/base/firmware_loader/builtin/Makefile
-index 7cdd0b5c7384..9b0dc193f6c7 100644
---- a/drivers/base/firmware_loader/builtin/Makefile
-+++ b/drivers/base/firmware_loader/builtin/Makefile
-@@ -1,4 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+include $(srctree)/drivers/base/firmware_loader/builtin/lib.Makefile
-+
- obj-y  += main.o
- 
- # Create $(fwdir) from $(CONFIG_FW_LOADER_BUILTIN_DIR) -- if it doesn't have a
-@@ -8,35 +10,3 @@ fwdir := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
- 
- firmware  := $(addsuffix .gen.o, $(subst $(quote),,$(CONFIG_FW_LOADER_BUILTIN_FILES)))
- obj-y += $(firmware)
--
--FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
--FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
--ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
--ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
--PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
--
--filechk_fwbin = \
--	echo "/* Generated by $(src)/Makefile */"		;\
--	echo "    .section .rodata"				;\
--	echo "    .p2align 4"					;\
--	echo "_fw_$(FWSTR)_bin:"				;\
--	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
--	echo "_fw_end:"						;\
--	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
--	echo "    .p2align $(ASM_ALIGN)"			;\
--	echo "_fw_$(FWSTR)_name:"				;\
--	echo "    .string \"$(FWNAME)\""			;\
--	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
--	echo "    .p2align $(ASM_ALIGN)"			;\
--	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
--	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
--	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
--
--$(obj)/%.gen.S: FORCE
--	$(call filechk,fwbin)
--
--# The .o files depend on the binaries directly; the .S files don't.
--$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
--
--targets := $(patsubst $(obj)/%,%, \
--                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
-diff --git a/drivers/base/firmware_loader/builtin/lib.Makefile b/drivers/base/firmware_loader/builtin/lib.Makefile
-new file mode 100644
-index 000000000000..e979a67acfa7
---- /dev/null
-+++ b/drivers/base/firmware_loader/builtin/lib.Makefile
-@@ -0,0 +1,32 @@
-+# SPDX-License-Identifier: GPL-2.0
-+FWNAME    = $(patsubst $(obj)/%.gen.S,%,$@)
-+FWSTR     = $(subst $(comma),_,$(subst /,_,$(subst .,_,$(subst -,_,$(FWNAME)))))
-+ASM_WORD  = $(if $(CONFIG_64BIT),.quad,.long)
-+ASM_ALIGN = $(if $(CONFIG_64BIT),3,2)
-+PROGBITS  = $(if $(CONFIG_ARM),%,@)progbits
-+
-+filechk_fwbin = \
-+	echo "/* Generated by $(src)/Makefile */"		;\
-+	echo "    .section .rodata"				;\
-+	echo "    .p2align 4"					;\
-+	echo "_fw_$(FWSTR)_bin:"				;\
-+	echo "    .incbin \"$(fwdir)/$(FWNAME)\""		;\
-+	echo "_fw_end:"						;\
-+	echo "    .section .rodata.str,\"aMS\",$(PROGBITS),1"	;\
-+	echo "    .p2align $(ASM_ALIGN)"			;\
-+	echo "_fw_$(FWSTR)_name:"				;\
-+	echo "    .string \"$(FWNAME)\""			;\
-+	echo "    .section .builtin_fw,\"a\",$(PROGBITS)"	;\
-+	echo "    .p2align $(ASM_ALIGN)"			;\
-+	echo "    $(ASM_WORD) _fw_$(FWSTR)_name"		;\
-+	echo "    $(ASM_WORD) _fw_$(FWSTR)_bin"			;\
-+	echo "    $(ASM_WORD) _fw_end - _fw_$(FWSTR)_bin"
-+
-+$(obj)/%.gen.S: FORCE
-+	$(call filechk,fwbin)
-+
-+# The .o files depend on the binaries directly; the .S files don't.
-+$(addprefix $(obj)/, $(firmware)): $(obj)/%.gen.o: $(fwdir)/%
-+
-+targets := $(patsubst $(obj)/%,%, \
-+                                $(shell find $(obj) -name \*.gen.S 2>/dev/null))
 -- 
 2.30.2
 
