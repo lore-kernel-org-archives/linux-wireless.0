@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAB6C433F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F228C4332F
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15E666101C
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 453B06109D
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230208AbhJWJNu (ORCPT
+        id S230267AbhJWJNw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Oct 2021 05:13:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60848 "EHLO mail.kernel.org"
+        Sat, 23 Oct 2021 05:13:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60896 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230166AbhJWJNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Oct 2021 05:13:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E4C061090;
-        Sat, 23 Oct 2021 09:11:28 +0000 (UTC)
+        id S230224AbhJWJNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Oct 2021 05:13:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A45F61073;
+        Sat, 23 Oct 2021 09:11:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634980290;
-        bh=2lSMxPgXNvOnfBq9+fRQ86iDDXDwmQ5IITIUwHcot5Y=;
+        s=k20201202; t=1634980293;
+        bh=2L8s2H3bU6sFrOhiOtFbYFeWrB/EluG4V/kioF6sqRM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ehtzRgcw/Gn6A0OkIWwiUAWgIiDJMQK49l5K5fj+rIDhhCrboOt26wPmTmY4sI+v5
-         jA75Y/Fn79wmg0WXmnpBerS+vW1Zdr1dqrXllkL+ybhK/niwDaZfDb3VGkvufMeElD
-         Y9nXhi4JXDrVnXvD6jkPRLcmkBdgoo110Gxa5bUaNYpPFgCRQk8jqry1ae4D8AWXYv
-         KFJL753V/P787MX4U9WPshk6yt5dOjj8nPIll5zMjikdLNrsT7XzXXX8oKzyjQ/CGW
-         1L5xqXB5BqeX1Pu9QPcmSZY0hn/4kyT91aoIA72flfb3qvIXoT2Y0fNp+5W49lTJ88
-         njHUF7wfvwVGQ==
+        b=A9QnRrpiMHamAyiFa6pcZpx6jlqOG6geIzhh5I2Lwspv2dLuWphWrermPujGzQwqH
+         /Vwhpb3mwv5dylWSkBPSzXX5Ae9qBgwnzyJunELph9uha8Wz+bv8bxWNUArbc2na78
+         mHNt3wRwPJ1eVR74uItT7Il2eFz3vPFc0mt+e0PJpaRL1ETCuKl+8IJ7trphK7caRA
+         GDhtcF4tledB2LGIdlI889NWlO/1PO020RZg5iR++LSeVbTP/Vy/vNs3rLJGpzTmgs
+         +Hex8+PxHOGqxJfgGSUf8hYJ/gp3uuDkY7QaPyUdOl1hnlLO+st7n/TPkxFmbbTndp
+         PrsITBBEERC+Q==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     johannes@sipsolutions.net
 Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
         lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
         evelyn.tsai@mediatek.com
-Subject: [PATCH v2 mac80211-next 4/6] cfg80211: introduce cfg80211_cac_offchan_event routine
-Date:   Sat, 23 Oct 2021 11:10:53 +0200
-Message-Id: <85fa50f57fc3adb2934c8d9ca0be30394de6b7e8.1634979655.git.lorenzo@kernel.org>
+Subject: [PATCH v2 mac80211-next 6/6] cfg80211: introduce NL80211_EXT_FEATURE_RADAR_OFFCHAN feature flag
+Date:   Sat, 23 Oct 2021 11:10:55 +0200
+Message-Id: <241849ccaf2c228873c6f8495bf87b19159ba458.1634979655.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634979655.git.lorenzo@kernel.org>
 References: <cover.1634979655.git.lorenzo@kernel.org>
@@ -44,122 +44,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce cfg80211_cac_offchan_event routine in order to notify
-userland when a Channel Availability Check (CAC) is finished, started
-or aborted by a offchannel dedicated chain.
+Introduce NL80211_EXT_FEATURE_RADAR_OFFCHAN feature flag in order to
+notify userland the underlay hw supports offchannel radar/CAC detection.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- include/net/cfg80211.h | 13 ++++++++++
- net/wireless/mlme.c    | 57 ++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 68 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h | 4 ++++
+ net/wireless/mlme.c          | 4 ++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3bb76835f4b1..8d075e11a1f8 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -7646,6 +7646,19 @@ void cfg80211_cac_event(struct net_device *netdev,
- 			const struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp);
- 
-+/**
-+ * cfg80211_offchan_cac_event - Channel Availability Check (CAC) offchan event
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ * @event: type of event
-+ * @gfp: context flags
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 87ece3e68b8b..3e734826792f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -6060,6 +6060,9 @@ enum nl80211_feature_flags {
+  *	frames. Userspace has to share FILS AAD details to the driver by using
+  *	@NL80211_CMD_SET_FILS_AAD.
+  *
++ * @NL80211_EXT_FEATURE_RADAR_OFFCHAN: Device supports offchannel radar/CAC
++ *	detection.
 + *
-+ * This function is called when a Channel Availability Check (CAC) is finished,
-+ * started or aborted by a offchannel dedicated chain.
-+ */
-+void cfg80211_offchan_cac_event(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef,
-+				enum nl80211_radar_event event, gfp_t gfp);
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -6126,6 +6129,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_PROT_RANGE_NEGO_AND_MEASURE,
+ 	NL80211_EXT_FEATURE_BSS_COLOR,
+ 	NL80211_EXT_FEATURE_FILS_CRYPTO_OFFLOAD,
++	NL80211_EXT_FEATURE_RADAR_OFFCHAN,
  
- /**
-  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 053293f51188..9f379a91d7fd 100644
+index 532df85d1c26..247ee0a01e8b 100644
 --- a/net/wireless/mlme.c
 +++ b/net/wireless/mlme.c
-@@ -969,6 +969,57 @@ void cfg80211_cac_event(struct net_device *netdev,
- }
- EXPORT_SYMBOL(cfg80211_cac_event);
+@@ -1040,6 +1040,10 @@ cfg80211_start_offchan_radar_detection(struct cfg80211_registered_device *rdev,
+ 	unsigned int cac_time_ms;
+ 	int err = -EBUSY;
  
-+static void
-+__cfg80211_offchan_cac_event(struct cfg80211_registered_device *rdev,
-+			     struct wireless_dev *wdev,
-+			     const struct cfg80211_chan_def *chandef,
-+			     enum nl80211_radar_event event, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = &rdev->wiphy;
-+	struct net_device *netdev;
++	if (!wiphy_ext_feature_isset(&rdev->wiphy,
++				     NL80211_EXT_FEATURE_RADAR_OFFCHAN))
++		return -EOPNOTSUPP;
 +
-+	lockdep_assert_held(&rdev->offchan_mutex);
-+
-+	if (event != NL80211_RADAR_CAC_STARTED && !rdev->offchan_radar_wdev)
-+		return;
-+
-+	switch (event) {
-+	case NL80211_RADAR_CAC_FINISHED:
-+		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
-+		memcpy(&rdev->cac_done_chandef, chandef, sizeof(*chandef));
-+		queue_work(cfg80211_wq, &rdev->propagate_cac_done_wk);
-+		cfg80211_sched_dfs_chan_update(rdev);
-+		wdev = rdev->offchan_radar_wdev;
-+		rdev->offchan_radar_wdev = NULL;
-+		break;
-+	case NL80211_RADAR_CAC_ABORTED:
-+		wdev = rdev->offchan_radar_wdev;
-+		rdev->offchan_radar_wdev = NULL;
-+		break;
-+	case NL80211_RADAR_CAC_STARTED:
-+		WARN_ON(!wdev);
-+		rdev->offchan_radar_wdev = wdev;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	netdev = wdev ? wdev->netdev : NULL;
-+	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
-+}
-+
-+void cfg80211_offchan_cac_event(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef,
-+				enum nl80211_radar_event event, gfp_t gfp)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+
-+	mutex_lock(&rdev->offchan_mutex);
-+	__cfg80211_offchan_cac_event(rdev, NULL, chandef, event, gfp);
-+	mutex_unlock(&rdev->offchan_mutex);
-+}
-+EXPORT_SYMBOL(cfg80211_offchan_cac_event);
-+
- int
- cfg80211_start_offchan_radar_detection(struct cfg80211_registered_device *rdev,
- 				       struct wireless_dev *wdev,
-@@ -984,7 +1035,8 @@ cfg80211_start_offchan_radar_detection(struct cfg80211_registered_device *rdev,
- 	if (err)
+ 	mutex_lock(&rdev->offchan_mutex);
+ 	if (rdev->offchan_radar_wdev)
  		goto out;
- 
--	rdev->offchan_radar_wdev = wdev;
-+	__cfg80211_offchan_cac_event(rdev, wdev, chandef,
-+				     NL80211_RADAR_CAC_STARTED, GFP_KERNEL);
- out:
- 	mutex_unlock(&rdev->offchan_mutex);
- 	return err;
-@@ -1003,7 +1055,8 @@ cfg80211_stop_offchan_radar_detection(struct cfg80211_registered_device *rdev)
- 	if (err)
- 		goto out;
- 
--	rdev->offchan_radar_wdev = NULL;
-+	__cfg80211_offchan_cac_event(rdev, NULL, NULL,
-+				     NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
- out:
- 	mutex_unlock(&rdev->offchan_mutex);
- 	return err;
 -- 
 2.31.1
 
