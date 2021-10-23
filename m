@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4791BC433FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAB6C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30F696101C
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15E666101C
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Oct 2021 09:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230198AbhJWJNu (ORCPT
+        id S230208AbhJWJNu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 23 Oct 2021 05:13:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60782 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:60848 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230108AbhJWJNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Oct 2021 05:13:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5AA086105A;
-        Sat, 23 Oct 2021 09:11:24 +0000 (UTC)
+        id S230166AbhJWJNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Oct 2021 05:13:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E4C061090;
+        Sat, 23 Oct 2021 09:11:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634980285;
-        bh=8a7rA28uPrbDiD/r4pK3TzFWlYEXPoN8dU2BKDRcPFk=;
+        s=k20201202; t=1634980290;
+        bh=2lSMxPgXNvOnfBq9+fRQ86iDDXDwmQ5IITIUwHcot5Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E29JQVF7X7cswifMQEQMI8RVYEnyKu+IQS/nb6t606sLFXuGpjJGzfDpreLtA/X7/
-         IJ1KjV0QVDiGxtKowuNvIAwki6L9dItykYZ/W1SbufAJx8IzJ4GmCgsxuJXW/KGh3J
-         8KMp24/0eZmZnYGmFfTJ2V5OB0HJcf5jc3x3bGY5gJXW+VjWu+uWTce4MJxEDqhIII
-         PnqJ+T0dm4/mPLYVaiU99vnsBFGmAuwmDsQGTi5kGWf1Y3Uj+lLh4VHIeYor1PHoeu
-         Jb53KCt/kJA+Ny6p9Q4JSqWrRuFQDfNGFeSrIQxNUxznaDoI1mgc57vXb+N34nH1ej
-         KyxVtBkhQGxmw==
+        b=ehtzRgcw/Gn6A0OkIWwiUAWgIiDJMQK49l5K5fj+rIDhhCrboOt26wPmTmY4sI+v5
+         jA75Y/Fn79wmg0WXmnpBerS+vW1Zdr1dqrXllkL+ybhK/niwDaZfDb3VGkvufMeElD
+         Y9nXhi4JXDrVnXvD6jkPRLcmkBdgoo110Gxa5bUaNYpPFgCRQk8jqry1ae4D8AWXYv
+         KFJL753V/P787MX4U9WPshk6yt5dOjj8nPIll5zMjikdLNrsT7XzXXX8oKzyjQ/CGW
+         1L5xqXB5BqeX1Pu9QPcmSZY0hn/4kyT91aoIA72flfb3qvIXoT2Y0fNp+5W49lTJ88
+         njHUF7wfvwVGQ==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     johannes@sipsolutions.net
 Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
         lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
         evelyn.tsai@mediatek.com
-Subject: [PATCH v2 mac80211-next 1/6] cfg80211: introduce set_radar_offchan callback
-Date:   Sat, 23 Oct 2021 11:10:50 +0200
-Message-Id: <7468e291ef5d05d692c1738d25b8f778d8ea5c3f.1634979655.git.lorenzo@kernel.org>
+Subject: [PATCH v2 mac80211-next 4/6] cfg80211: introduce cfg80211_cac_offchan_event routine
+Date:   Sat, 23 Oct 2021 11:10:53 +0200
+Message-Id: <85fa50f57fc3adb2934c8d9ca0be30394de6b7e8.1634979655.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634979655.git.lorenzo@kernel.org>
 References: <cover.1634979655.git.lorenzo@kernel.org>
@@ -44,108 +44,122 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce set_radar_offchan callback in cfg80211_ops in order to
-configure a dedicated offchannel chain available for radar/CAC
-detection on some hw. This chain can't be used to transmit
-or receive frames and it is bounded to a running wdev.
-Offchannel radar/CAC detection allows to avoid the CAC downtime
-switching on a different channel during CAC detection on the selected
-radar channel.
+Introduce cfg80211_cac_offchan_event routine in order to notify
+userland when a Channel Availability Check (CAC) is finished, started
+or aborted by a offchannel dedicated chain.
 
-Tested-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- include/net/cfg80211.h  | 11 +++++++++++
- net/wireless/rdev-ops.h | 18 ++++++++++++++++++
- net/wireless/trace.h    | 19 +++++++++++++++++++
- 3 files changed, 48 insertions(+)
+ include/net/cfg80211.h | 13 ++++++++++
+ net/wireless/mlme.c    | 57 ++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 68 insertions(+), 2 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7c9d5db4f0e6..3bb76835f4b1 100644
+index 3bb76835f4b1..8d075e11a1f8 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4072,6 +4072,15 @@ struct mgmt_frame_regs {
-  * @set_fils_aad: Set FILS AAD data to the AP driver so that the driver can use
-  *	those to decrypt (Re)Association Request and encrypt (Re)Association
-  *	Response frame.
+@@ -7646,6 +7646,19 @@ void cfg80211_cac_event(struct net_device *netdev,
+ 			const struct cfg80211_chan_def *chandef,
+ 			enum nl80211_radar_event event, gfp_t gfp);
+ 
++/**
++ * cfg80211_offchan_cac_event - Channel Availability Check (CAC) offchan event
++ * @wiphy: the wiphy
++ * @chandef: chandef for the current channel
++ * @event: type of event
++ * @gfp: context flags
 + *
-+ * @set_radar_offchan: Configure dedicated offchannel chain available for
-+ *	radar/CAC detection on some hw. This chain can't be used to transmit
-+ *	or receive frames and it is bounded to a running wdev.
-+ *	Offchannel radar/CAC detection allows to avoid the CAC downtime
-+ *	switching to a different channel during CAC detection on the selected
-+ *	radar channel.
-+ *	The caller is expected to set chandef pointer to NULL in order to
-+ *	disable offchannel CAC/radar detection.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -4404,6 +4413,8 @@ struct cfg80211_ops {
- 				struct cfg80211_color_change_settings *params);
- 	int     (*set_fils_aad)(struct wiphy *wiphy, struct net_device *dev,
- 				struct cfg80211_fils_aad *fils_aad);
-+	int	(*set_radar_offchan)(struct wiphy *wiphy,
-+				     struct cfg80211_chan_def *chandef);
- };
++ * This function is called when a Channel Availability Check (CAC) is finished,
++ * started or aborted by a offchannel dedicated chain.
++ */
++void cfg80211_offchan_cac_event(struct wiphy *wiphy,
++				const struct cfg80211_chan_def *chandef,
++				enum nl80211_radar_event event, gfp_t gfp);
  
- /*
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index cc1efec4b27b..980f1403e000 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1395,4 +1395,22 @@ rdev_set_fils_aad(struct cfg80211_registered_device *rdev,
- 	return ret;
+ /**
+  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 053293f51188..9f379a91d7fd 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -969,6 +969,57 @@ void cfg80211_cac_event(struct net_device *netdev,
  }
+ EXPORT_SYMBOL(cfg80211_cac_event);
  
-+static inline int
-+rdev_set_radar_offchan(struct cfg80211_registered_device *rdev,
-+		       struct cfg80211_chan_def *chandef)
++static void
++__cfg80211_offchan_cac_event(struct cfg80211_registered_device *rdev,
++			     struct wireless_dev *wdev,
++			     const struct cfg80211_chan_def *chandef,
++			     enum nl80211_radar_event event, gfp_t gfp)
 +{
 +	struct wiphy *wiphy = &rdev->wiphy;
-+	int ret;
++	struct net_device *netdev;
 +
-+	if (!rdev->ops->set_radar_offchan)
-+		return -EOPNOTSUPP;
++	lockdep_assert_held(&rdev->offchan_mutex);
 +
-+	if (chandef)
-+		trace_rdev_set_radar_offchan(wiphy, chandef);
-+	ret = rdev->ops->set_radar_offchan(wiphy, chandef);
-+	trace_rdev_return_int(wiphy, ret);
++	if (event != NL80211_RADAR_CAC_STARTED && !rdev->offchan_radar_wdev)
++		return;
 +
-+	return ret;
++	switch (event) {
++	case NL80211_RADAR_CAC_FINISHED:
++		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
++		memcpy(&rdev->cac_done_chandef, chandef, sizeof(*chandef));
++		queue_work(cfg80211_wq, &rdev->propagate_cac_done_wk);
++		cfg80211_sched_dfs_chan_update(rdev);
++		wdev = rdev->offchan_radar_wdev;
++		rdev->offchan_radar_wdev = NULL;
++		break;
++	case NL80211_RADAR_CAC_ABORTED:
++		wdev = rdev->offchan_radar_wdev;
++		rdev->offchan_radar_wdev = NULL;
++		break;
++	case NL80211_RADAR_CAC_STARTED:
++		WARN_ON(!wdev);
++		rdev->offchan_radar_wdev = wdev;
++		break;
++	default:
++		return;
++	}
++
++	netdev = wdev ? wdev->netdev : NULL;
++	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
 +}
 +
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ad6c16a06bcb..0b27eaa14a18 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3674,6 +3674,25 @@ TRACE_EVENT(cfg80211_bss_color_notify,
- 		  __entry->color_bitmap)
- );
++void cfg80211_offchan_cac_event(struct wiphy *wiphy,
++				const struct cfg80211_chan_def *chandef,
++				enum nl80211_radar_event event, gfp_t gfp)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	mutex_lock(&rdev->offchan_mutex);
++	__cfg80211_offchan_cac_event(rdev, NULL, chandef, event, gfp);
++	mutex_unlock(&rdev->offchan_mutex);
++}
++EXPORT_SYMBOL(cfg80211_offchan_cac_event);
++
+ int
+ cfg80211_start_offchan_radar_detection(struct cfg80211_registered_device *rdev,
+ 				       struct wireless_dev *wdev,
+@@ -984,7 +1035,8 @@ cfg80211_start_offchan_radar_detection(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		goto out;
  
-+TRACE_EVENT(rdev_set_radar_offchan,
-+	TP_PROTO(struct wiphy *wiphy, struct cfg80211_chan_def *chandef),
-+
-+	TP_ARGS(wiphy, chandef),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		CHAN_DEF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		CHAN_DEF_ASSIGN(chandef)
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT,
-+		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG)
-+);
-+
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+-	rdev->offchan_radar_wdev = wdev;
++	__cfg80211_offchan_cac_event(rdev, wdev, chandef,
++				     NL80211_RADAR_CAC_STARTED, GFP_KERNEL);
+ out:
+ 	mutex_unlock(&rdev->offchan_mutex);
+ 	return err;
+@@ -1003,7 +1055,8 @@ cfg80211_stop_offchan_radar_detection(struct cfg80211_registered_device *rdev)
+ 	if (err)
+ 		goto out;
  
- #undef TRACE_INCLUDE_PATH
+-	rdev->offchan_radar_wdev = NULL;
++	__cfg80211_offchan_cac_event(rdev, NULL, NULL,
++				     NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
+ out:
+ 	mutex_unlock(&rdev->offchan_mutex);
+ 	return err;
 -- 
 2.31.1
 
