@@ -2,117 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E1BC433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 13:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1730C433EF
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 15:20:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00F5360FD7
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 13:55:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB0EC60EFE
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 15:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231765AbhJXN5q (ORCPT
+        id S230016AbhJXPXF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Oct 2021 09:57:46 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58566 "EHLO
+        Sun, 24 Oct 2021 11:23:05 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:58608 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231706AbhJXN5o (ORCPT
+        with ESMTP id S229564AbhJXPXE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Oct 2021 09:57:44 -0400
+        Sun, 24 Oct 2021 11:23:04 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1medy5-000cvJ-W0; Sun, 24 Oct 2021 16:55:22 +0300
+        id 1mefId-000czj-Hc; Sun, 24 Oct 2021 18:20:42 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 24 Oct 2021 16:55:06 +0300
-Message-Id: <iwlwifi.20211024165252.21c90ba4fa5f.I2a30f62aa4685dc7623d3c69838909833c3f435c@changeid>
+Date:   Sun, 24 Oct 2021 18:20:25 +0300
+Message-Id: <20211024152037.332948-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211024135506.285102-1-luca@coelho.fi>
-References: <20211024135506.285102-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/11] iwlwifi: dump host monitor data when NIC doesn't init
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.16 2021-10-24 part 2
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-If the NIC cannot be initialized, dump host monitor data
-so we can analyze properly why it didn't initialize.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-io.c | 46 ++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
+Here's the sixth set of patches intended for v5.16.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index 6e96ee5bc261..46917b4216b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -398,6 +398,47 @@ int iwl_dump_fh(struct iwl_trans *trans, char **buf)
- 	return 0;
- }
- 
-+#define IWL_HOST_MON_BLOCK_PEMON	0x00
-+#define IWL_HOST_MON_BLOCK_HIPM		0x22
-+
-+#define IWL_HOST_MON_BLOCK_PEMON_VEC0	0x00
-+#define IWL_HOST_MON_BLOCK_PEMON_VEC1	0x01
-+#define IWL_HOST_MON_BLOCK_PEMON_WFPM	0x06
-+
-+static void iwl_dump_host_monitor_block(struct iwl_trans *trans,
-+					u32 block, u32 vec, u32 iter)
-+{
-+	int i;
-+
-+	IWL_ERR(trans, "Host monitor block 0x%x vector 0x%x\n", block, vec);
-+	iwl_write32(trans, CSR_MONITOR_CFG_REG, (block << 8) | vec);
-+	for (i = 0; i < iter; i++)
-+		IWL_ERR(trans, "    value [iter %d]: 0x%08x\n",
-+			i, iwl_read32(trans, CSR_MONITOR_STATUS_REG));
-+}
-+
-+static void iwl_dump_host_monitor(struct iwl_trans *trans)
-+{
-+	switch (trans->trans_cfg->device_family) {
-+	case IWL_DEVICE_FAMILY_22000:
-+	case IWL_DEVICE_FAMILY_AX210:
-+		IWL_ERR(trans, "CSR_RESET = 0x%x\n",
-+			iwl_read32(trans, CSR_RESET));
-+		iwl_dump_host_monitor_block(trans, IWL_HOST_MON_BLOCK_PEMON,
-+					    IWL_HOST_MON_BLOCK_PEMON_VEC0, 15);
-+		iwl_dump_host_monitor_block(trans, IWL_HOST_MON_BLOCK_PEMON,
-+					    IWL_HOST_MON_BLOCK_PEMON_VEC1, 15);
-+		iwl_dump_host_monitor_block(trans, IWL_HOST_MON_BLOCK_PEMON,
-+					    IWL_HOST_MON_BLOCK_PEMON_WFPM, 15);
-+		iwl_dump_host_monitor_block(trans, IWL_HOST_MON_BLOCK_HIPM,
-+					    IWL_HOST_MON_BLOCK_PEMON_VEC0, 1);
-+		break;
-+	default:
-+		/* not supported yet */
-+		return;
-+	}
-+}
-+
- int iwl_finish_nic_init(struct iwl_trans *trans)
- {
- 	const struct iwl_cfg_trans_params *cfg_trans = trans->trans_cfg;
-@@ -433,9 +474,12 @@ int iwl_finish_nic_init(struct iwl_trans *trans)
- 	 * and accesses to uCode SRAM.
- 	 */
- 	err = iwl_poll_bit(trans, CSR_GP_CNTRL, poll_ready, poll_ready, 25000);
--	if (err < 0)
-+	if (err < 0) {
- 		IWL_DEBUG_INFO(trans, "Failed to wake NIC\n");
- 
-+		iwl_dump_host_monitor(trans);
-+	}
-+
- 	if (cfg_trans->bisr_workaround) {
- 		/* ensure BISR shift has finished */
- 		udelay(200);
+The changes are:
+
+* Some fixes in the Geographic SAR implementation;
+* Support for WiFi 6E enablement via BIOS;
+* Support FW API version 67;
+* Improve debugging support;
+* Some fixes in session protection;
+* Some other small fixes, clean-ups and improvements.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Gregory Greenman (1):
+  iwlwifi: mvm: update RFI TLV
+
+Johannes Berg (4):
+  iwlwifi: fw: uefi: add missing include guards
+  iwlwifi: mvm: d3: use internal data representation
+  iwlwifi: mvm: remove session protection on disassoc
+  iwlwifi: mvm: extend session protection on association
+
+Luca Coelho (5):
+  iwlwifi: mvm: read 6E enablement flags from DSM and pass to FW
+  iwlwifi: mvm: don't get address of mvm->fwrt just to dereference as a
+    pointer
+  iwlwifi: rename GEO_TX_POWER_LIMIT to PER_CHAIN_LIMIT_OFFSET_CMD
+  iwlwifi: mvm: fix WGDS table print in iwl_mvm_chub_update_mcc()
+  iwlwifi: bump FW API to 67 for AX devices
+
+Mukesh Sisodiya (1):
+  iwlwifi: yoyo: support for ROM usniffer
+
+Nathan Errera (1):
+  iwlwifi: rename CHANNEL_SWITCH_NOA_NOTIF to CHANNEL_SWITCH_START_NOTIF
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |   8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |   1 +
+ .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  43 ---
+ .../net/wireless/intel/iwlwifi/fw/api/debug.h |  17 +
+ .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   |  10 +-
+ .../net/wireless/intel/iwlwifi/fw/api/phy.h   |   6 +-
+ .../net/wireless/intel/iwlwifi/fw/api/power.h |  28 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.h  |   5 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  92 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 357 +++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  28 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   6 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  67 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c  |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  10 +-
+ 18 files changed, 417 insertions(+), 274 deletions(-)
+
 -- 
 2.33.0
 
