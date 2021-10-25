@@ -2,110 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40289C433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 20:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7652AC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:14:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EB0F61039
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Oct 2021 20:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CDF560EE9
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:14:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231859AbhJXUS0 (ORCPT
+        id S232095AbhJYIQe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Oct 2021 16:18:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49724 "EHLO
+        Mon, 25 Oct 2021 04:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbhJXUS0 (ORCPT
+        with ESMTP id S231915AbhJYIQd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Oct 2021 16:18:26 -0400
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCC56C061745
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Oct 2021 13:16:04 -0700 (PDT)
-Received: by mail-lj1-x22a.google.com with SMTP id f16so2984951ljo.12
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Oct 2021 13:16:04 -0700 (PDT)
+        Mon, 25 Oct 2021 04:16:33 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F87DC061745
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 01:14:11 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id e12so11243644wra.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 01:14:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=59H4YP+8FVs7dxtAMpMerX1hrtP3cWNKONPn0AFnRV8=;
-        b=B0rx8dGZemSXdHtoaMr7ERCl7mOAaeO28H80xzhyug+9qKj/2yV6heJtldlr9+goPW
-         uIOH11hKD1v4jprHC0nzDlc4J7Z2Lj1/1RtAG1ebeOVk54YPqWp8szI5MVhSPuneMXq8
-         Nbay79EHInJVvej334Cu+bJ8elmsKgCVzAwvQE6U670P9iIN7getQGL7DkC/IAGw8bnY
-         9xf4o/Slaxyy+Vr7OPyWmdTeFnXRREGHRg4/RYQ+alu5o9FEIKSPW/Um2Y+ImwRTGLPX
-         Z5rMxpIz6SQqTVIHlXqygXct3cz71s4Qz7qVTXfi0jpAeR9iX7EmS9hc6PxgTvcov4H0
-         iw2Q==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=+hNUpViVOWM+kQGVZ8OCPBbFBkkztmAA/6VLjx/j7DQ=;
+        b=GyKzU0E/RinCdAIH7eRkenDlUrnAD3aQZf0EGaMe9X0wvhX3sYZ8CEA2ETxOugxF09
+         z4bf+XBpWbbORnyEirRzwOHHqQkJNVACF7EDqBGEu1uH2vc0/VNzU7qTUOrXlvfHeCD4
+         zyVolhL+4ex+BzdQHKuZnP85vjdkcTfY+ipM9qGUSWbyqX2ygGWYT6E9uWl/40Xp34DF
+         6is4BX7fyOa+/yQ9r4uBw/fOat/PDFSgTTHDsh1YCHtatKpSTGMKJWz29bvWuH+J+8PV
+         EEAlZoXJKfKA7rn4jgXdSpVQnCjilwI2eQnFYLWJS5djRPKtK+QvetvjRUmHwS1fB0HB
+         UpoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=59H4YP+8FVs7dxtAMpMerX1hrtP3cWNKONPn0AFnRV8=;
-        b=qXIeMQYvfAomVEejnz7L9DvxaI8Jm+ZwurEtCHWvqM9njVzssVsWgBDf/+EkWARskW
-         g/tVybFGL5e5nd6DtOtpxPapo7PQOnRUAg9iFrYTQgZdlA4WVxUTv1/OB2U7rpMQp5q5
-         r2rzsSgR2WaPzJ7gMhGG9V5QFsi4tidi5bKasZYPlf0S+ZhbDK+GkE+hfqxhs4MEx5ks
-         NKjiDfHcY+R88okUVXBDvO81JP/pQLDHlUr6/rdytcWW5euc4dNx5j/Rs0mVRsa2R80V
-         MNkMactvuoy4An/JA5JaBZ21u1qIIuL0e/yCqyK6NqR2h0KxbNcNtPLLaMx3R9+JbtvL
-         NHyQ==
-X-Gm-Message-State: AOAM532rvtcwd9EAtjIzvH4WfKbUiOOww2vhi8w7rh368a/0R38qH3Kd
-        Dp/pgZ5umUa5PFXN5XJ3zLZhPzuRf6s=
-X-Google-Smtp-Source: ABdhPJwZZsmrEhsfkx0sajInI5Bc5sBIE4KvbGguR5v2qyFERQoZwcCqhXrpqmX44SjiWggKW8YBlQ==
-X-Received: by 2002:a2e:9242:: with SMTP id v2mr14305060ljg.103.1635106563118;
-        Sun, 24 Oct 2021 13:16:03 -0700 (PDT)
-Received: from localhost.localdomain ([62.141.192.106])
-        by smtp.gmail.com with ESMTPSA id u25sm1413689lfr.279.2021.10.24.13.16.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Oct 2021 13:16:02 -0700 (PDT)
-From:   Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net,
-        Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: [PATCH] cfg80211: move bridge/4addr mode check
-Date:   Sun, 24 Oct 2021 22:15:46 +0200
-Message-Id: <20211024201546.614379-1-janusz.dziedzic@gmail.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=+hNUpViVOWM+kQGVZ8OCPBbFBkkztmAA/6VLjx/j7DQ=;
+        b=oob2kS6YAScf0AbFyRr1N4VMHPm8aFWHeA/tdLXpfCvmRGQrxW1tOCDknZbyorHQyP
+         g5WIXnuqiNp7oIiD8kCjwksEka/GGzb5v6rhrpmBqbnbSkqe2RVdmOZxCVtw8gZIWln2
+         foLdPZScsrBJvj5PAHnfnYcxZAsvUpiiW2ZEKYV8yYikRZPXX/OREsrUDu3rAHTQkRkY
+         pCK4CrPJ+KMVzsW/gLhAdi49kXMzC18NtglQuBUkgo9j5h2vh5ApgEYie/M1pQsS4+/b
+         r1tKKEZxAyjcF9W7lUls00aI5W6BkZkUwafisk17V2QTWG39+6puEXVZxQXs+YUITwAC
+         0LBA==
+X-Gm-Message-State: AOAM531GGZ6y35daKUpTWGmLB0YYXC3ge+pasjCrac7YZ5WPsm1vp671
+        lFDKvH1Le3qI3UfD6XHShEmQ8Q==
+X-Google-Smtp-Source: ABdhPJzGT9kgbC4AhtAYDpfYVOKnN1Qe8IH9zoeGwW65vEo2+N0BfbZWKEJKl4aWTG0Qb3RtwPnaZQ==
+X-Received: by 2002:a5d:6481:: with SMTP id o1mr21356262wri.60.1635149649676;
+        Mon, 25 Oct 2021 01:14:09 -0700 (PDT)
+Received: from localhost.localdomain ([88.160.176.23])
+        by smtp.gmail.com with ESMTPSA id w10sm10956630wrq.88.2021.10.25.01.14.08
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 25 Oct 2021 01:14:09 -0700 (PDT)
+From:   Loic Poulain <loic.poulain@linaro.org>
+To:     kvalo@codeaurora.org
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        bryan.odonoghue@linaro.org, Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wcn36xx: Fix discarded frames due to wrong sequence number
+Date:   Mon, 25 Oct 2021 10:25:36 +0200
+Message-Id: <1635150336-18736-1-git-send-email-loic.poulain@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Without the patch we failed:
+The firmware is offering features such as ARP offload, for which
+firmware crafts its own (QoS)packets without waking up the host.
+Point is that the sequence numbers generated by the firmware are
+not in sync with the host mac80211 layer and can cause packets
+such as firmware ARP reponses to be dropped by the AP (too old SN).
 
-janusz@t2:~$ sudo brctl addbr br0
-janusz@t2:~$ sudo brctl addif br0 wlp1s0
-janusz@t2:~$ sudo iw wlp1s0 set 4addr on
-command failed: Device or resource busy (-16)
+To fix this we need to let the firmware manages the sequence
+numbers by its own (except for QoS null frames). There is a SN
+counter for each QoS queue and one global/baseline counter for
+Non-QoS.
 
-Last command failed but iface was already in 4addr mode.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Fixes: 84aff52e4f57 ("wcn36xx: Use sequence number allocated by mac80211")
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- net/wireless/util.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 18dba3d7c638..c0c87541326f 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1028,14 +1028,14 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	    !(rdev->wiphy.interface_modes & (1 << ntype)))
- 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 81db90f..75951cc 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -427,8 +427,6 @@ static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
+ 		bd->pdu.mpdu_header_off;
+ 	bd->pdu.mpdu_len = len;
+ 	bd->pdu.tid = tid;
+-	/* Use seq number generated by mac80211 */
+-	bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_HOST;
+ }
  
--	/* if it's part of a bridge, reject changing type to station/ibss */
--	if (netif_is_bridge_port(dev) &&
--	    (ntype == NL80211_IFTYPE_ADHOC ||
--	     ntype == NL80211_IFTYPE_STATION ||
--	     ntype == NL80211_IFTYPE_P2P_CLIENT))
--		return -EBUSY;
--
- 	if (ntype != otype) {
-+		/* if it's part of a bridge, reject changing type to station/ibss */
-+		if (netif_is_bridge_port(dev) &&
-+		    (ntype == NL80211_IFTYPE_ADHOC ||
-+		     ntype == NL80211_IFTYPE_STATION ||
-+		     ntype == NL80211_IFTYPE_P2P_CLIENT))
-+				return -EBUSY;
+ static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
+@@ -525,6 +523,9 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 		tid = ieee80211_get_tid(hdr);
+ 		/* TID->QID is one-to-one mapping */
+ 		bd->queue_id = tid;
++		bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_DPU_QOS;
++	} else {
++		bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_DPU_NON_QOS;
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT ||
+@@ -536,6 +537,8 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 		/* Don't use a regular queue for null packet (no ampdu) */
+ 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
+ 		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
++		if (ieee80211_is_qos_nullfunc(hdr->frame_control))
++			bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_HOST;
+ 	}
+ 
+ 	if (bcast) {
+@@ -595,6 +598,8 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
+ 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
+ 	*vif_priv = __vif_priv;
+ 
++	bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_DPU_NON_QOS;
 +
- 		dev->ieee80211_ptr->use_4addr = false;
- 		dev->ieee80211_ptr->mesh_id_up_len = 0;
- 		wdev_lock(dev->ieee80211_ptr);
+ 	wcn36xx_set_tx_pdu(bd,
+ 			   ieee80211_is_data_qos(hdr->frame_control) ?
+ 			   sizeof(struct ieee80211_qos_hdr) :
 -- 
-2.25.1
+2.7.4
 
