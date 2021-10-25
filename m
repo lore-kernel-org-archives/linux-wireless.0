@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADBFFC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 12:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762AFC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 12:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EEA261002
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 12:05:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C72A61002
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 12:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232400AbhJYMIM (ORCPT
+        id S232656AbhJYMIN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Oct 2021 08:08:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48762 "EHLO mail.kernel.org"
+        Mon, 25 Oct 2021 08:08:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48754 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231512AbhJYMIL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S231501AbhJYMIL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 25 Oct 2021 08:08:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4D49560F46;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 49FCA60F9D;
         Mon, 25 Oct 2021 12:05:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1635163549;
-        bh=XbL8XaQ+j8qWJFr6k5TpoWRzAyQkgL31WLDyiJCm/xw=;
+        bh=mi2YBgOVXZK98qc5s25s+ODSzvYGuyAGSaDUbDTLRq4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rFYvITElZXPr2Gj3rMTxDsABNP4KwYOghn8z318gs124G+vc+pO7kVpAGRpKKN0oM
-         yj3RMK9U8vEFtzrpwkbWrURFnUyTi5RJ9rRZGHzfukuRAvWbeLw3opE7o/D2qqJP5N
-         4eCQ4AaX2Mw7dHnzy/MWuvKnwz3shqs0Bi38VFRjG0wxRXx72zCPQacU9bnZXnMDYJ
-         XVMfNy+tMTp8JN4Iyre5moqu3+ADXXN/zQ/po9XDc3RHqX0Bea9HOXAdyc42h5AQuu
-         xzy6ZM22sRwhJbP9pzFzD5SOmbs1Pxe0+QynG3XTe3D12bOmj07YUmMkohDe3vb+Mb
-         3jvqGqjmFE/Iw==
+        b=IVMfPD9LjVVUFVxAnyH6u4a3mIDrvFPSHcQSpl2gKvzLO8VRTJDa8RwOiouGQt5zJ
+         MlqJJE6u3n0HRwxsl8rX/BoLl+KT/qLk5lUqNi8i4yIhBMopZHDruHeTAULOxX1lxI
+         wNemlNYxFM5I0jKcjazScwGgCBmNVUEt+bBOGXF3lootoLGWoyf8kKqMTBSzcI9lU1
+         2zHwiemSjSNVwI8097L4bezkGXxm2x3bQ1fSarJKlpEIULGJpbEerqETb4+PNjdjzv
+         eqksDktL5zlWqr6agwgKKbqPtcFw2EFuP06cayrRXSo2R2Ic9Eq/WXuFyftJmQJ0NC
+         gNqWllaYUGt4g==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan@kernel.org>)
-        id 1meyjL-0001aR-Q3; Mon, 25 Oct 2021 14:05:31 +0200
+        id 1meyjL-0001aV-Vq; Mon, 25 Oct 2021 14:05:32 +0200
 From:   Johan Hovold <johan@kernel.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Herton Ronaldo Krzesinski <herton@canonical.com>,
@@ -39,11 +39,10 @@ Cc:     Herton Ronaldo Krzesinski <herton@canonical.com>,
         Siva Rebbagondla <siva8118@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>, stable@vger.kernel.org,
-        Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 1/4] ath10k: fix control-message timeout
-Date:   Mon, 25 Oct 2021 14:05:19 +0200
-Message-Id: <20211025120522.6045-2-johan@kernel.org>
+        Johan Hovold <johan@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH 3/4] rtl8187: fix control-message timeouts
+Date:   Mon, 25 Oct 2021 14:05:21 +0200
+Message-Id: <20211025120522.6045-4-johan@kernel.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211025120522.6045-1-johan@kernel.org>
 References: <20211025120522.6045-1-johan@kernel.org>
@@ -56,27 +55,80 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 USB control-message timeouts are specified in milliseconds and should
 specifically not vary with CONFIG_HZ.
 
-Fixes: 4db66499df91 ("ath10k: add initial USB support")
-Cc: stable@vger.kernel.org      # 4.14
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Fixes: 605bebe23bf6 ("[PATCH] Add rtl8187 wireless driver")
+Cc: stable@vger.kernel.org      # 2.6.23
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/realtek/rtl818x/rtl8187/rtl8225.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
-index 19b9c27e30e2..6d831b098cbb 100644
---- a/drivers/net/wireless/ath/ath10k/usb.c
-+++ b/drivers/net/wireless/ath/ath10k/usb.c
-@@ -525,7 +525,7 @@ static int ath10k_usb_submit_ctrl_in(struct ath10k *ar,
- 			      req,
- 			      USB_DIR_IN | USB_TYPE_VENDOR |
- 			      USB_RECIP_DEVICE, value, index, buf,
--			      size, 2 * HZ);
-+			      size, 2000);
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
+index 585784258c66..4efab907a3ac 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
+@@ -28,7 +28,7 @@ u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits8, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits8, sizeof(val), 500);
  
- 	if (ret < 0) {
- 		ath10k_warn(ar, "Failed to read usb control message: %d\n",
+ 	val = priv->io_dmabuf->bits8;
+ 	mutex_unlock(&priv->io_mutex);
+@@ -45,7 +45,7 @@ u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits16, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits16, sizeof(val), 500);
+ 
+ 	val = priv->io_dmabuf->bits16;
+ 	mutex_unlock(&priv->io_mutex);
+@@ -62,7 +62,7 @@ u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits32, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits32, sizeof(val), 500);
+ 
+ 	val = priv->io_dmabuf->bits32;
+ 	mutex_unlock(&priv->io_mutex);
+@@ -79,7 +79,7 @@ void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits8, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits8, sizeof(val), 500);
+ 
+ 	mutex_unlock(&priv->io_mutex);
+ }
+@@ -93,7 +93,7 @@ void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits16, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits16, sizeof(val), 500);
+ 
+ 	mutex_unlock(&priv->io_mutex);
+ }
+@@ -107,7 +107,7 @@ void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+ 			(unsigned long)addr, idx & 0x03,
+-			&priv->io_dmabuf->bits32, sizeof(val), HZ / 2);
++			&priv->io_dmabuf->bits32, sizeof(val), 500);
+ 
+ 	mutex_unlock(&priv->io_mutex);
+ }
+@@ -183,7 +183,7 @@ static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, __le16 data)
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+ 			addr, 0x8225, &priv->io_dmabuf->bits16, sizeof(data),
+-			HZ / 2);
++			500);
+ 
+ 	mutex_unlock(&priv->io_mutex);
+ 
 -- 
 2.32.0
 
