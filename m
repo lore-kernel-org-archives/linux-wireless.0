@@ -2,208 +2,164 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C1FAC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BBAC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:59:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33E5160EFF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:30:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90C9160C41
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231917AbhJYJc3 (ORCPT
+        id S232735AbhJYKB5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Oct 2021 05:32:29 -0400
-Received: from mga14.intel.com ([192.55.52.115]:14008 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229946AbhJYJc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Oct 2021 05:32:28 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10147"; a="229879260"
-X-IronPort-AV: E=Sophos;i="5.87,179,1631602800"; 
-   d="scan'208";a="229879260"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2021 02:30:06 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,179,1631602800"; 
-   d="scan'208";a="464800857"
-Received: from lkp-server02.sh.intel.com (HELO 74392981b700) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 25 Oct 2021 02:30:04 -0700
-Received: from kbuild by 74392981b700 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mewIt-0001b0-S1; Mon, 25 Oct 2021 09:30:03 +0000
-Date:   Mon, 25 Oct 2021 17:30:00 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [jberg-mac80211:master] BUILD SUCCESS
- 7fcb1c950e98e47918e86a5aa7b8fcc283ec6629
-Message-ID: <61767918.rlGtqgJAZOLM0Q8v%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Mon, 25 Oct 2021 06:01:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34236 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230297AbhJYKBx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Oct 2021 06:01:53 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8349C061745;
+        Mon, 25 Oct 2021 02:59:30 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id q16so8229807ljg.3;
+        Mon, 25 Oct 2021 02:59:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=+TIj5y8QsMaTWrj/bXk+5lqEByFxDn6ZBGaeeKVM1t4=;
+        b=gmHqC4hXEi/uZzQY9R3wXUpk8h9YSkzbPgGyvI3qxU923udgW1KbfxMv1NdrplM5hl
+         P7KAA6WxIimu2DyeqQCxdo4jUKFwLATk3mOgXJh3BI66u6wbXZw7oN0lroexTTbdg1Ov
+         NUs817d0u5leYI7bCHlEDmPjxHJR3pNk3fp8SLEirwNbmHpeIsuZuAJ/+X2jIPQG8WPp
+         U5SqGQeBWn8eeTzxCaVMx0+BKIkStLLaaEDh73d4NgiwYJpfcQCA7BZ3fV1CGir9zx87
+         +Mhkp8TrR0B4ZHLqEqvCul1fa6HPXMJ0RwIu8NuNQJwcZ7yV8/Yqj5pkXeLX0zaZcovD
+         mUSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=+TIj5y8QsMaTWrj/bXk+5lqEByFxDn6ZBGaeeKVM1t4=;
+        b=lzFiOax7ZZKPGtsLFyrJvn0wrzfIGBmjOUjR1OP6TfL5a4TIJqEndj0GJN+3+K0gyI
+         oJLonGV54bWTRqRJl2wu1Nh+WfiXNCHPYtx+i9Y8OA6OqxHOe6twxNSG8SXBF4lM5975
+         doXWaZOFLM796MIMcl+xd1cQxOGsy/Jhfxr1rjBqsiue17J5gs/M8S7rwJbl0uagrVpO
+         pjf08SN0T1GvKup3QHtn5iVleJhxcx83ZQvhAHlB9e22DDTWNjo2O7x2MYExW45/dwcy
+         0lEt2D8g+JN3XGuN1Oi1j4xduwowbW3p7GhBJ2xMyFTnu+mRSgJWN2Wz1P+lnA/Z+Oq2
+         0wfA==
+X-Gm-Message-State: AOAM532I+MQ87NspxfQtge4thLnGqydLT65B8XcL50zBcbJl80KgTj0e
+        guXRNaWE/+tAXZC1wu0unNU=
+X-Google-Smtp-Source: ABdhPJwehqJNnfIOxj7asWNT4mHVfIICRvlh5rfggFDthwIhGRiIVTpHn+T8Kld3zmZQ6HMr9pe3LA==
+X-Received: by 2002:a05:651c:554:: with SMTP id q20mr17890375ljp.118.1635155969220;
+        Mon, 25 Oct 2021 02:59:29 -0700 (PDT)
+Received: from kari-VirtualBox (85-23-89-224.bb.dnainternet.fi. [85.23.89.224])
+        by smtp.gmail.com with ESMTPSA id b16sm1534228lfb.220.2021.10.25.02.59.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Oct 2021 02:59:28 -0700 (PDT)
+Date:   Mon, 25 Oct 2021 12:59:27 +0300
+From:   Kari Argillander <kari.argillander@gmail.com>
+To:     Srinivasan Raju <srini.raju@purelifi.com>
+Cc:     mostafa.afgani@purelifi.com, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH v20 2/2] wireless: Initial driver submission for pureLiFi
+ STA devices
+Message-ID: <20211025095927.cssdlblcdprdwfsy@kari-VirtualBox>
+References: <20200928102008.32568-1-srini.raju@purelifi.com>
+ <20211018100143.7565-1-srini.raju@purelifi.com>
+ <20211018100143.7565-3-srini.raju@purelifi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <20211018100143.7565-3-srini.raju@purelifi.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git master
-branch HEAD: 7fcb1c950e98e47918e86a5aa7b8fcc283ec6629  Merge tag 'mac80211-for-net-2021-10-21' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211
+On Mon, Oct 18, 2021 at 11:00:55AM +0100, Srinivasan Raju wrote:
+> This driver implementation has been based on the zd1211rw driver
+> 
+> Driver is based on 802.11 softMAC Architecture and uses
+> native 802.11 for configuration and management
+> 
+> The driver is compiled and tested in ARM, x86 architectures and
+> compiled in powerpc architecture
 
-elapsed time: 1816m
+I have run some static analyzing tools against this driver. Here is my
+findings. If you have CI system in house I strongly recommend that you
+take these in use. Note that I have included just what might be real
+warnings but they might also not be. Please check them.
 
-configs tested: 144
-configs skipped: 3
+------------------------------------------
+Thease are just what I found myself.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+drivers/net/wireless/purelifi/plfxlc/usb.c:47:
+Has static. Will not work with multiple device.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allmodconfig
-arm                              allyesconfig
-i386                 randconfig-c001-20211025
-sh                         ap325rxa_defconfig
-powerpc                      pcm030_defconfig
-mips                     decstation_defconfig
-powerpc                      arches_defconfig
-sh                            migor_defconfig
-powerpc                      pmac32_defconfig
-powerpc                      walnut_defconfig
-m68k                         amcore_defconfig
-arc                        nsim_700_defconfig
-powerpc                        cell_defconfig
-s390                          debug_defconfig
-powerpc                 mpc832x_rdb_defconfig
-sh                           se7751_defconfig
-xtensa                          iss_defconfig
-powerpc                 mpc837x_rdb_defconfig
-nios2                            alldefconfig
-arm                       mainstone_defconfig
-mips                          rb532_defconfig
-arm                           sunxi_defconfig
-xtensa                generic_kc705_defconfig
-arm                           h3600_defconfig
-mips                      bmips_stb_defconfig
-mips                        vocore2_defconfig
-sh                        sh7757lcr_defconfig
-i386                             alldefconfig
-powerpc                 mpc8313_rdb_defconfig
-sparc                       sparc32_defconfig
-sparc64                          alldefconfig
-sh                        sh7785lcr_defconfig
-openrisc                    or1ksim_defconfig
-xtensa                  cadence_csp_defconfig
-powerpc                 mpc8315_rdb_defconfig
-powerpc                 mpc8272_ads_defconfig
-arm                            xcep_defconfig
-powerpc                     kmeter1_defconfig
-openrisc                         alldefconfig
-powerpc                     tqm8548_defconfig
-arm                       spear13xx_defconfig
-mips                 decstation_r4k_defconfig
-powerpc                   bluestone_defconfig
-nios2                         3c120_defconfig
-arc                      axs103_smp_defconfig
-powerpc                      obs600_defconfig
-mips                          rm200_defconfig
-arm                           h5000_defconfig
-arm                          pxa3xx_defconfig
-powerpc                        warp_defconfig
-arm                        mvebu_v7_defconfig
-arm                            dove_defconfig
-mips                          ath79_defconfig
-mips                    maltaup_xpa_defconfig
-arm                          ep93xx_defconfig
-mips                           ip32_defconfig
-arm                  randconfig-c002-20211025
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                               defconfig
-nds32                             allnoconfig
-arc                              allyesconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-nios2                            allyesconfig
-xtensa                           allyesconfig
-arc                                 defconfig
-h8300                            allyesconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a002-20211024
-x86_64               randconfig-a004-20211024
-x86_64               randconfig-a005-20211024
-x86_64               randconfig-a006-20211024
-x86_64               randconfig-a001-20211024
-x86_64               randconfig-a003-20211024
-i386                 randconfig-a003-20211024
-i386                 randconfig-a004-20211024
-i386                 randconfig-a002-20211024
-i386                 randconfig-a005-20211024
-i386                 randconfig-a006-20211024
-i386                 randconfig-a001-20211024
-x86_64               randconfig-a013-20211025
-x86_64               randconfig-a015-20211025
-x86_64               randconfig-a011-20211025
-x86_64               randconfig-a014-20211025
-x86_64               randconfig-a016-20211025
-x86_64               randconfig-a012-20211025
-i386                 randconfig-a012-20211025
-i386                 randconfig-a013-20211025
-i386                 randconfig-a011-20211025
-i386                 randconfig-a016-20211025
-i386                 randconfig-a015-20211025
-i386                 randconfig-a014-20211025
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                           allyesconfig
+drivers/net/wireless/purelifi/plfxlc/mac.h:75: You use spaces over tabs.
+drivers/net/wireless/purelifi/plfxlc/mac.c:704: You use spaces over tabs.
+drivers/net/wireless/purelifi/plfxlc/usb.c:920: You use spaces over tabs.
+There is more of these. Please find all of them.
 
-clang tested configs:
-riscv                randconfig-c006-20211025
-powerpc              randconfig-c003-20211025
-arm                  randconfig-c002-20211025
-x86_64               randconfig-c007-20211025
-mips                 randconfig-c004-20211025
-i386                 randconfig-c001-20211025
-s390                 randconfig-c005-20211025
-i386                 randconfig-a003-20211025
-i386                 randconfig-a004-20211025
-i386                 randconfig-a002-20211025
-i386                 randconfig-a005-20211025
-i386                 randconfig-a001-20211025
-i386                 randconfig-a006-20211025
-hexagon              randconfig-r045-20211025
-hexagon              randconfig-r041-20211025
+------------------------------------------
+$ cppcheck drivers/net/wireless/purelifi/plfxlc/*.[ch] --enable=all
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+drivers/net/wireless/purelifi/plfxlc/usb.c:55:31: style:
+Boolean result is used in bitwise operation. Clarify expression with
+parentheses. [clarifyCondition]
+
+drivers/net/wireless/purelifi/plfxlc/mac.c:447:6: style:
+Condition '!bad_frame' is always true [knownConditionTrueFalse]
+
+drivers/net/wireless/purelifi/plfxlc/mac.c:572:16: style:
+Variable 'changed_flags' is assigned a value that is never used.
+[unreadVariable]
+        Please check next comment line 577. There you talk about use of
+        changed_flags but you never use it.
+
+Unused functions. I do not have opinion if you should remove these or
+not, but some times there is bug if some function is unused. Please at
+least comment if these are not mistakes.
+
+drivers/net/wireless/purelifi/plfxlc/usb.c:38:0: style: The function 'get_bcd_device' is never used. [unusedFunction]
+drivers/net/wireless/purelifi/plfxlc/usb.c:398:0: style: The function 'purelifi_usb_tx' is never used. [unusedFunction]
+drivers/net/wireless/purelifi/plfxlc/chip.h:64:0: style: The function 'purelifi_mc_clear' is never used. [unusedFunction]
+drivers/net/wireless/purelifi/plfxlc/chip.c:75:0: style: The function 'purelifi_chip_disable_rxtx' is never used. [unusedFunction]
+drivers/net/wireless/purelifi/plfxlc/chip.h:79:0: style: The function 'purelifi_mc_add_addr' is never used. [unusedFunction]
+drivers/net/wireless/purelifi/plfxlc/mac.c:89:0: style: The function 'purelifi_mac_init_hw' is never used. [unusedFunction]
+
+------------------------------------------
+$ codespell drivers/net/wireless/purelifi/plfxlc/*.[ch]
+
+mac.c:237: ocasions ==> occasions
+------------------------------------------
+$ ./scripts/checkpatch.pl --strict drivers/net/wireless/purelifi/plfxlc/*.[ch]
+$ make coccicheck M=drivers/net/wireless/purelifi/plfxlc/
+$ flawfinder drivers/net/wireless/purelifi/plfxlc/*.[ch]
+
+$ touch drivers/net/wireless/purelifi/plfxlc/*.[ch]
+$ make -j6 W=1
+
+These were all good.
+------------------------------------------
+$ touch drivers/net/wireless/purelifi/plfxlc/*.[ch]
+$ make -j6 CC=clang W=1 drivers/net/wireless/purelifi/plfxlc/
+
+drivers/net/wireless/purelifi/plfxlc/usb.c:38:19: warning:
+unused function 'get_bcd_device' [-Wunused-function]
+
+drivers/net/wireless/purelifi/plfxlc/usb.c:55:7: warning:
+logical not is only applied to the left hand side of this bitwise
+operator [-Wlogical-not-parentheses]
+------------------------------------------
+$ ~/smatch/smatch_scripts/build_kernel_data.sh
+$ ~/smatch/smatch_scripts/kchecker drivers/net/wireless/purelifi/plfxlc/
+
+drivers/net/wireless/purelifi/plfxlc/usb.c:55
+purelifi_send_packet_from_data_queue() warn: add some parenthesis here?
+
+drivers/net/wireless/purelifi/plfxlc/mac.c:685
+purelifi_get_et_strings() error: memcpy() '*et_strings' too small (32 vs 64)
+
+  Argillander
