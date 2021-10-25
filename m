@@ -2,83 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFABC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 15:37:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8138FC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 15:51:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A55D6023E
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 15:37:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A7C860720
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 15:51:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233628AbhJYPj3 (ORCPT
+        id S232805AbhJYPxa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Oct 2021 11:39:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56152 "EHLO
+        Mon, 25 Oct 2021 11:53:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232329AbhJYPj3 (ORCPT
+        with ESMTP id S230070AbhJYPx3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Oct 2021 11:39:29 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB28C061745
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 08:37:06 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id y78so5846763wmc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 08:37:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=UabaFjJbIc5knMtgoSzbReSVzjHUJNdVrXW6X2vdSlQ=;
-        b=RegJa8sIQ4iEImoME8YghlKdm6+8c7LHvRfUL65kPvbWoW0VOWyflkv+S8F+zOhjU4
-         G1EOJqldfJqJWfFkT+gIy66sqpk5epugWeIn8OQ0tQvWh2QSWjwiARYF++PKLlJ9WAqP
-         M9Uhp1NzVwuEG7GuJaiGDW7o9RzeJ5yETJ+vs+tESbFOC9x2gxgqUZs5mMzZkmS0pN0H
-         GlL4W07M+sR/B1Q3XNHTzB6CYBsq87cyQjiPIqYv0X4TNtAhJ5ENHmfvTFKHQr0pPUuq
-         Ppwt8VdP7NexRJ4ioBAvQ95dLuZCagMMc3ZWRinaRYjkWjTMd6zDzkTI7A9990yNIphn
-         M5aA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=UabaFjJbIc5knMtgoSzbReSVzjHUJNdVrXW6X2vdSlQ=;
-        b=a7KFRKCz2J5+n163gFiK0ei25V+6wNIRn6l5a2HvqnXMG3SPLeynaMZC6SVeLflLit
-         WoPcW3Et5gwp7Efn4QEeGrL2I8XN+EtCqX2TPh1ctVu4eiIg82qxojRyZq/Ba0aKBXm0
-         lyBQE3bYTwTRsmEmYwwm0BS5s+rJep/YWpgkAwAck9aiOG3VQoE85ldgZ+LxTVnxT8BO
-         fHyJg2AypiHJJ0xZa5HXQhNDzHpja7+eYKz27SDVH+yEdiUj+gl2dE2pYY1u3br5ondC
-         X033WiPXpxb8ansqiSwYdgotbysybFnEcDcQ/ERdO0/6Pf+YuctVgLlvmZ2H2qKZF+By
-         b5qQ==
-X-Gm-Message-State: AOAM532ppGFekZH8/KHZL6IAE1GDfVEBvBoU6Jkl/ULcjdESDL/IdAu9
-        ybrvyh08i98RD688woI4DFmVXTbliKBBuA==
-X-Google-Smtp-Source: ABdhPJwIAJ6LdpA83jcZYtaMUjBmSnUxGALe/Zl0TVjguWX5gtSA8i414/ChXOSghkaTKf4vohKSXg==
-X-Received: by 2002:a7b:c359:: with SMTP id l25mr49929477wmj.84.1635176225220;
-        Mon, 25 Oct 2021 08:37:05 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id s11sm3549274wru.16.2021.10.25.08.37.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Oct 2021 08:37:04 -0700 (PDT)
-Message-ID: <3e226886-ab82-82f5-65bc-e0fb10fad46c@linaro.org>
-Date:   Mon, 25 Oct 2021 16:39:06 +0100
+        Mon, 25 Oct 2021 11:53:29 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 010CAC061745;
+        Mon, 25 Oct 2021 08:51:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=sD4M77sMZipbi4n7OfMHOpvymBF2RK3PbnXf7BuorEc=; b=D/mocSywZnf9DStUX7jAO45bDE
+        jXrbxJA9a+bFmDHYuO12zo2sZzZKenpvaiEMWVzuTvIY0Rm57D1ERraYjLWtrOT2hWnRVKXN6y1EY
+        6SLUmOlCksFsDoErVjp3PEQ3TsJMkMgixCSTFferPs8k7vP3DT7dovCpirZpBYkB05U39AAMdTshZ
+        sgmgOr0MctOsL62vIk5oE0OyePZ2tSTJ9YdiLqu8Fy5HRgNHuWwF8HxpngFeg0qm1QDoGs5kHa9qM
+        9qqmRtmnUDeHr5O6AUEgrHc85e3EMfJf+j0q7xYxo6A7pcPNp0mVaT2X13rNso1vZr7CX8jt7atLO
+        uMa3toqA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mf2FR-00GvIH-8r; Mon, 25 Oct 2021 15:50:53 +0000
+Date:   Mon, 25 Oct 2021 08:50:53 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
+        rishabhb@codeaurora.org, kubakici@wp.pl, maco@android.com,
+        david.brown@linaro.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org, keescook@chromium.org,
+        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
+        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
+        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
+        andresx7@gmail.com, brendanhiggins@google.com, yzaikin@google.com,
+        sfr@canb.auug.org.au, rdunlap@infradead.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] firmware_loader: rename EXTRA_FIRMWARE and
+ EXTRA_FIRMWARE_DIR
+Message-ID: <YXbSXSGO3uK7W3IO@bombadil.infradead.org>
+References: <20211022174041.2776969-1-mcgrof@kernel.org>
+ <20211022174041.2776969-2-mcgrof@kernel.org>
+ <YXOvGX1O69s0Qaoe@kroah.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.1
-Subject: Re: [PATCH] wcn36xx: Add chained transfer support for AMSDU
-Content-Language: en-US
-To:     Loic Poulain <loic.poulain@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <1634557705-11120-1-git-send-email-loic.poulain@linaro.org>
- <163516812328.10163.3396652728924346112.kvalo@codeaurora.org>
- <CAMZdPi9uUXiQZjLLu_ccG6PZgdvdgEKtZQDspEoM1=tXdS0ggg@mail.gmail.com>
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-In-Reply-To: <CAMZdPi9uUXiQZjLLu_ccG6PZgdvdgEKtZQDspEoM1=tXdS0ggg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YXOvGX1O69s0Qaoe@kroah.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 25/10/2021 16:46, Loic Poulain wrote:
-> But it's better than the previous situation IMHO, since we check the
-> buffer descriptor to prevent skb breakage.
+On Sat, Oct 23, 2021 at 08:43:37AM +0200, Greg KH wrote:
+> On Fri, Oct 22, 2021 at 10:40:38AM -0700, Luis Chamberlain wrote:
+> > Now that we've tied loose ends on the built-in firmware API,
+> > rename the kconfig symbols for it to reflect more that they are
+> > associated to the firmware_loader and to make it easier to
+> > understand what they are for.
+> > 
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> 
+> This patch has the same bug I pointed out the last time I reviewed it :(
 
-Let's apply it and see how we go..
+Sorry I missed it, but I checked and I can't see where, can you point
+that out in the patch?
 
----
-bod
+  Luis
