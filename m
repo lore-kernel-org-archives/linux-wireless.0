@@ -2,86 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 357A5C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FDEC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:28:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1430960F46
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89B3060EDF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 09:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232216AbhJYJIU (ORCPT
+        id S232413AbhJYJbK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Oct 2021 05:08:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50066 "EHLO
+        Mon, 25 Oct 2021 05:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230128AbhJYJIT (ORCPT
+        with ESMTP id S229499AbhJYJbI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Oct 2021 05:08:19 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 732D4C061745
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 02:05:57 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id m22so8214255wrb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 02:05:57 -0700 (PDT)
+        Mon, 25 Oct 2021 05:31:08 -0400
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67FCBC061745
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 02:28:46 -0700 (PDT)
+Received: by mail-wm1-x329.google.com with SMTP id j205so9350712wmj.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 02:28:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=cNXCepX+q4Z8flK+e607d2EIOPTdLNfsIAA9uW0a6FQ=;
-        b=UkdgIeQHI6yyLkhSM8YHOAHRbI3EHyb5QCnCk3x31MBQ0LjyTc7XCRJdx2z4MfRiqL
-         7mCTKLbwlfvU4+zlaejQE60E3CJQ3uvb1JEs1TZDMdwOWtfCUTFKG8QzztcDRtGw4DVV
-         ojFu1A8WZEzSXiLGDPmU6O8Jei8o7O6ezsd+d4AOtcvtHNbI1+/RZ+VpMubOXB9/aRoh
-         QFxr4hZpdOLDn2CuALHYEXOHZ6QMfABDnaHb50tsxAn1gsOOfEBeNbzmN9qO+riVjGBL
-         b7wZps/rPGseE0Ud8B52joY7M5LbsC3aGVjP6MjE4E3RHiKKVQCL20MuuX5mUOd/Ooey
-         eNOg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=I/+oZOCwMQqCUIX1z5v+OaCxmYJRHF2kwnH6X7mMYmA=;
+        b=m7Mhijl3RAylArH+60Hlq/RuLfM9ldI53Bb42CqSn1GCr6S8hx64jpBY6CP2hUiT2B
+         quGkJ4vfPtem7pc4DQtwFCqBnr/xGIzO40/1sZwp3W2LISbOKZLaJYHXF3QlXMth75lZ
+         b5vXgpDkvLuDIWFAReFy1tqnuZnS/jXuqWC6gTwdb0+EQ7RiHsUeX1Azbo2SCKvgV4yh
+         cNG4El8nRzgSosgRpgTnpfkz4KcpJAFVI/ww5MYEpltwBgpNiMNSSJE89YhFiFsTjrIW
+         ZcUNlfcQ2tfp6RHIQMoRPFDabqnNp2vt/DhUvV0CDev47Jsme/f+kxTo14mfjT25HzM9
+         gFxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=cNXCepX+q4Z8flK+e607d2EIOPTdLNfsIAA9uW0a6FQ=;
-        b=XLw5s8qkh8d1qPJbq/rC11Ly9ntg3o/GCzLPBt0nkAFZnCv8KZMQVpysmaQ1opx7EX
-         6kqRw5fkWPATgq7h6fcKmUmMtrrMLScsPibqr/bgQ6rDpqRPf3cyLlZyMoNC/TDQDAPF
-         UmtNIN6M9MeP5qhqt+HZZeozpmVquMDfEzgpt7wq+oLE3GYeVw3jiHiBXWpdLxuitxzl
-         820GtPAyOXgVSRk2wP32JgcrP3uGfGfOOOY4BUQLE/iYWsEIUAHlU131JPjxAFnM+x1Q
-         kx6VM0i4mUtAX5LwmULf1DBHX1aM+2tQErh5/nl/rvJpDvRhnIyisnv780dtrDQJe+K8
-         iVdA==
-X-Gm-Message-State: AOAM532tC2532lXhCOG8sNOOn885H5uSP6O/qIIXSvtIVAZZQqmjS7/3
-        1wBd3SaWghFXYIBiieNYq60mqg==
-X-Google-Smtp-Source: ABdhPJzOyeUyUvfQaq4xuV1EefgEcgmwWUmsXcM+gXl4OZ9LvSB2w4xyj6xXv49Ud5HZphhveQlKLw==
-X-Received: by 2002:a05:6000:1563:: with SMTP id 3mr22252606wrz.20.1635152755868;
-        Mon, 25 Oct 2021 02:05:55 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id s8sm15814633wrr.15.2021.10.25.02.05.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Oct 2021 02:05:27 -0700 (PDT)
-Message-ID: <fad96461-d8cd-374a-062d-2ff541928198@linaro.org>
-Date:   Mon, 25 Oct 2021 10:07:07 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.1
-Subject: Re: [PATCH 0/1] wcn36xx: Revert firmware link monitoring
-Content-Language: en-US
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, benl@squareup.com,
-        daniel.thompson@linaro.org
-References: <20211022141008.2846454-1-bryan.odonoghue@linaro.org>
- <874k95eba3.fsf@codeaurora.org>
+        bh=I/+oZOCwMQqCUIX1z5v+OaCxmYJRHF2kwnH6X7mMYmA=;
+        b=kQznaqo0qV1l1TmI4iOOpBo3wlWDCEs00ikdGp/GpQqTtyx3CWtO+2RF6JpGihHIev
+         OVYLqNfoosqtpNYyk7W4fvQoxOyfS4Cme7ytNqQsthieFpruA8t7sgyQPSF5OU7izWeV
+         tlT6N0G2sRlQbtUGRO6IQbP7+4aeDepuorvzs+NbUc/IKKtddGqH6MHrnWSQxYPDJ8M9
+         ngkn+n7fGYzYl7acGPL2g5nkz2iikPDY69bkznKOSJd70qcmG47tyY4Asux5gONAGnTR
+         QI40wLJDBzKML1BEfiabPvQIMCsZZmj+zykbIG4o9eLhFx5XjoCZhYuGzcHGS3g5ecCQ
+         YBLg==
+X-Gm-Message-State: AOAM531eG39TfZKp1peQyDYQEEkF0UsTddbPeNJtGnBrF3ji9swm5I7F
+        mQ+y8tCZuBMxyAPTIh7ITrsFPy4DQZ47zA==
+X-Google-Smtp-Source: ABdhPJy5ssV78/mBoHv8MRUlJLUhN/pch5w5kcP4Kple26xMVmO/dSaxiThtx/Bt1/MnHuTGKI72Mg==
+X-Received: by 2002:a1c:cc0f:: with SMTP id h15mr18624045wmb.37.1635154125046;
+        Mon, 25 Oct 2021 02:28:45 -0700 (PDT)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id z135sm20858853wmc.45.2021.10.25.02.28.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Oct 2021 02:28:44 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-In-Reply-To: <874k95eba3.fsf@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        wcn36xx@lists.infradead.org
+Cc:     loic.poulain@linaro.org, benl@squareup.com,
+        daniel.thompson@linaro.org, bryan.odonoghue@linaro.org
+Subject: [PATCH v3 0/1] wcn36xx: Revert firmware link monitoring 
+Date:   Mon, 25 Oct 2021 10:30:36 +0100
+Message-Id: <20211025093037.3966022-1-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.33.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 25/10/2021 09:52, Kalle Valo wrote:
-> Avoid using acronyms as much as possible, PS meaning power save might
-> not be clear for everyone.
-> 
-> And please try to be more specific, I'm not sure what power save feature
-> you are meaning here. (802.11 protocol power save, BMPS or what?)
+V3:
+- Remove Ben's SOB
+- Drops Fixes tag
+- Adds meaningful description of what's being done and why to commit log
 
-Yep - the issue is on an Open AP when we enter BMPS link monitoring 
-stops working.
+V2:
+- Adds Fixes tag
 
-I'll make that clear in a resend
+V1:
+We can get this working with
+
+- Secure APs PS on/off
+- Open APs PS on
+
+by setting firmware feature bit WLANACTIVE_OFFLOAD 
+
+Open APs PS off though is non-functional even with the above bit enabled
+and three quaters of a wheel is useless.
+
+So unfortunately for now zap it off. 
+
+Bryan O'Donoghue (1):
+  Revert "wcn36xx: Enable firmware link monitoring"
+
+ drivers/net/wireless/ath/wcn36xx/main.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+-- 
+2.33.0
+
