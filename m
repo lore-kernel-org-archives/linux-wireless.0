@@ -2,86 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5815C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:27:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E153EC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:28:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9088D6008E
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:27:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA85A60EE9
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Oct 2021 08:28:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231685AbhJYI3w (ORCPT
+        id S231685AbhJYIbB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Oct 2021 04:29:52 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:50958 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231519AbhJYI3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Oct 2021 04:29:44 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1635150442; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=3oQbzqRRdL8+x0aQm5Jf5ctmhHZ6BiFyGzG+UwXMaQ4=;
- b=vDN+HFbkdjAEPUjUnVmY3NHNDtJBvPX2RolBJdaV7af/6elHi5G/T6sNElFawR5ezCQ/zfoQ
- LIfvfHIpC3ag4pePo35aD/2Jy969R2vPS/zQlNap9QBNBs2+Llj4uUO+Q6RocxNN+eXGiErU
- 9y1r5VIBCTW2XdroK/v9QKHhBc8=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 61766a5cfd91319f0f13a6bf (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 25 Oct 2021 08:27:08
- GMT
-Sender: vjakkam=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AD12AC43616; Mon, 25 Oct 2021 08:27:08 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: vjakkam)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 34D97C4360C;
-        Mon, 25 Oct 2021 08:27:07 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 25 Oct 2021 13:57:07 +0530
-From:   vjakkam@codeaurora.org
-To:     Johannes Berg <johannes@sipsolutions.net>
+        Mon, 25 Oct 2021 04:31:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41494 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230019AbhJYIbA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Oct 2021 04:31:00 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEFB1C061745
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2021 01:28:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=sRrD0msxG/+ng2qxnOvwKsnXBFV/VlH30hJbeQxIH+I=;
+        t=1635150518; x=1636360118; b=Nx30I44Pw8xdbe3liXI3r0lVLfM9YUot4baBWC+ph0P5yDV
+        594Yk4akst4J1LEbjKX9I0vypN5MfbCxfYPI7th8qtUo3O2kbMWDC/x6IAYHTbgruIzxDi/YEu8Lb
+        TjHY7+c/q7U/oJ2lBxGTWTVqKHS3egANkmoqxdGb3OgOjOdYUspZMaffJEo6pImzqRrL7uJe72bxR
+        8NPVES/Ulk4bQyyBcAP5iuEJJ1r3yDmTUrOFIziWwRsBcaONVr7qnyl5VbQGvnQpuO6wbYs+Kx3Ii
+        I/bCzUwe20nuM0eYKd/T8SacIMGcA1XAW+YjyMQDsJJpBEVBEX6vfPw/DrczoSUQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1mevLO-006dQi-Rm;
+        Mon, 25 Oct 2021 10:28:34 +0200
+Message-ID: <1dd3525ee437ff2ccf18b455851692338af342fa.camel@sipsolutions.net>
+Subject: Re: [PATCH] nl80211: Indicate SA Query procedures offload for AP
+ SME device
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     vjakkam@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Indicate SA Query procedures offload for AP SME
- device
-In-Reply-To: <69995d6c767edcea15ef7645fabc0e39c0dc7960.camel@sipsolutions.net>
+Date:   Mon, 25 Oct 2021 10:28:34 +0200
+In-Reply-To: <7c5b87329c58ac2b68329573f587f8d7@codeaurora.org>
 References: <1634210331-9001-1-git-send-email-vjakkam@codeaurora.org>
- <612e80125878bae6fccbb72701381832a8a6029c.camel@sipsolutions.net>
- <5a1f654e3406e99c816afbc762519fea@codeaurora.org>
- <69995d6c767edcea15ef7645fabc0e39c0dc7960.camel@sipsolutions.net>
-Message-ID: <7c5b87329c58ac2b68329573f587f8d7@codeaurora.org>
-X-Sender: vjakkam@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+         <612e80125878bae6fccbb72701381832a8a6029c.camel@sipsolutions.net>
+         <5a1f654e3406e99c816afbc762519fea@codeaurora.org>
+         <69995d6c767edcea15ef7645fabc0e39c0dc7960.camel@sipsolutions.net>
+         <7c5b87329c58ac2b68329573f587f8d7@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-10-22 18:59, Johannes Berg wrote:
-> On Fri, 2021-10-22 at 18:56 +0530, vjakkam@codeaurora.org wrote:
->> >
->> > So how's that going to work with older hostapd? It'll be offloaded, and
->> > then hostapd doesn't know, so it's still going to disconnect them?
->> >
->> > So should be that hostapd also opts in to this driver behaviour?
->> 
->> yes, we have to update hostapd also with new implementation based on 
->> the
->> feature flag.
+On Mon, 2021-10-25 at 13:57 +0530, vjakkam@codeaurora.org wrote:
+> On 2021-10-22 18:59, Johannes Berg wrote:
+> > On Fri, 2021-10-22 at 18:56 +0530, vjakkam@codeaurora.org wrote:
+> > > > 
+> > > > So how's that going to work with older hostapd? It'll be offloaded, and
+> > > > then hostapd doesn't know, so it's still going to disconnect them?
+> > > > 
+> > > > So should be that hostapd also opts in to this driver behaviour?
+> > > 
+> > > yes, we have to update hostapd also with new implementation based on 
+> > > the
+> > > feature flag.
+> > 
+> > That wasn't my question. My question was what happens if you have a
+> > hostapd that's *not* updated?>
+> > 
+> > johannes
 > 
-> That wasn't my question. My question was what happens if you have a
-> hostapd that's *not* updated?>
+> Apologies for not clear answer in my previous reply.
+> Yes, If hostapd is not updated, it's going to disconnect the STAs.
 > 
-> johannes
+> We should update hostapd also to opt in this driver behavior.
 
-Apologies for not clear answer in my previous reply.
-Yes, If hostapd is not updated, it's going to disconnect the STAs.
+That would also mean the driver opts in and asks the firmware to offload
+only if hostapd did, right?
 
-We should update hostapd also to opt in this driver behavior.
+johannes
 
-Thanks,
-Veeru
