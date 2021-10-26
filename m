@@ -2,98 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB74AC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Oct 2021 04:17:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFB1EC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Oct 2021 08:33:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C52B60D43
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Oct 2021 04:17:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A500860E75
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Oct 2021 08:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231225AbhJZEUI (ORCPT
+        id S232392AbhJZIf5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Oct 2021 00:20:08 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:57628 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231224AbhJZEUG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Oct 2021 00:20:06 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1635221863; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=jEEIgUVrINI0IucnhBKSg0qksHoIt+oGv9TeC+tnQHU=; b=vg44jYSTJmKRNduPm5+BNjEprbOpwk4pT2E6QG5sPN6a9WtIoWQnVv91gmaaqEeViMG6KFHh
- oKzwYNVQ56dqAcsfvWcHGQQWNpAXaE1iClXIKF6mhvTtxuWAFs6tb+IpNuBki5Vhn2Z1Ka3s
- kOLp+EpDhIEeltXgIGXMi5uTYTk=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 617781585baa84c77be2fbb4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 Oct 2021 04:17:28
- GMT
-Sender: bqiang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E9630C4360D; Tue, 26 Oct 2021 04:17:27 +0000 (UTC)
-Received: from bqiang-Celadon-RN.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: bqiang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id ECC69C43460;
-        Tue, 26 Oct 2021 04:17:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org ECC69C43460
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Baochen Qiang <bqiang@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 6/7] ath11k: do not restore ASPM in case of single MSI vector
-Date:   Tue, 26 Oct 2021 12:17:22 +0800
-Message-Id: <20211026041722.5271-1-bqiang@codeaurora.org>
-X-Mailer: git-send-email 2.25.1
+        Tue, 26 Oct 2021 04:35:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55956 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233224AbhJZIfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Oct 2021 04:35:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D9F4760F46;
+        Tue, 26 Oct 2021 08:33:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635237212;
+        bh=QzdqZpiGX5vzH78kafZN2BbBbWTTTjlj04OaCvEnSO4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=R9M5fmXvJV81R3cbYtLS61achVk1fflWq5UM7WAJsoXmeXYqovJFGY+hKKhi/NjOz
+         okDNBwMnoJS8nGkqv94Mw3cmjfKeFa+rutVIvemZyguKtUnvFKhX5N4c22c3zetN6k
+         TVcRYDGeV5+6e6VHypheEiXP5KuPkfcNfFDZ8gSOqziQwpBjzAS7ajqhEFOad9ie3L
+         Wtiju9TeSmJBSh6hIhQuaQuKp6WAxoEZ3qYayR4QE1Lx5zhZK53W/dZzP1IdM+C4cG
+         +9amLZemg9pze/PISe5rYSitGz9U2Txa1tGRy6fCHtAgLtjGB73npXsL4mYw1zXr+m
+         w9fNQ05xDxofA==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Deren Wu <deren.wu@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mt76: mt7663s: fix link error with CONFIG_PM=n
+Date:   Tue, 26 Oct 2021 10:33:09 +0200
+Message-Id: <20211026083326.3421663-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Carl Huang <cjhuang@codeaurora.org>
+From: Arnd Bergmann <arnd@arndb.de>
 
-Current code enables ASPM by default, it allows MHI to enter M2 state.
-In case of one MSI vector, system hang is observed if ath11k does MHI
-register reading in this state. The issue was reported on Dell XPS 13
-9310 but is seen also on XPS 15 and XPS 17 laptops.
+The generic register access functions are compiled conditionally,
+causing a link failure in some randconfig builds:
 
-The workaround here is to prevent MHI from entering M2 state, this can
-be done by disabling ASPM if only one MSI vector is used. When using 32
-vectors ASPM is enabled as before.
+ERROR: modpost: "mt76_connac_mcu_reg_wr" [drivers/net/wireless/mediatek/mt76/mt7615/mt7663s.ko] undefined!
+ERROR: modpost: "mt76_connac_mcu_reg_rr" [drivers/net/wireless/mediatek/mt76/mt7615/mt7663s.ko] undefined!
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Move them out of the #ifdef block.
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Baochen Qiang <bqiang@codeaurora.org>
+Fixes: 02fbf8199f6e ("mt76: mt7663s: rely on mcu reg access utility")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 0a87d00a3a23..b450b4ed35d1 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -1220,7 +1220,13 @@ static int ath11k_pci_start(struct ath11k_base *ab)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 32e25180fc1e..26b4b875dcc0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -2477,6 +2477,7 @@ void mt76_connac_mcu_set_suspend_iter(void *priv, u8 *mac,
+ 	mt76_connac_mcu_set_wow_ctrl(phy, vif, suspend, wowlan);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_set_suspend_iter);
++#endif /* CONFIG_PM */
  
- 	set_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags);
+ u32 mt76_connac_mcu_reg_rr(struct mt76_dev *dev, u32 offset)
+ {
+@@ -2505,7 +2506,6 @@ void mt76_connac_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val)
+ 	mt76_mcu_send_msg(dev, MCU_CMD_REG_WRITE, &req, sizeof(req), false);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_reg_wr);
+-#endif /* CONFIG_PM */
  
--	ath11k_pci_aspm_restore(ab_pci);
-+	/* TODO: for now don't restore ASPM in case of single MSI
-+	 * vector as MHI register reading in M2 causes system hang.
-+	 */
-+	if (test_bit(ATH11K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags))
-+		ath11k_pci_aspm_restore(ab_pci);
-+	else
-+		ath11k_info(ab, "leaving PCI ASPM disabled to avoid MHI M2 problems\n");
- 
- 	ath11k_pci_ce_irqs_enable(ab);
- 	ath11k_ce_rx_post_buf(ab);
+ MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
+ MODULE_LICENSE("Dual BSD/GPL");
 -- 
-2.25.1
+2.29.2
 
