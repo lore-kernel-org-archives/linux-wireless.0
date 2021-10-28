@@ -2,269 +2,149 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C57BDC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Oct 2021 10:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C6D9C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Oct 2021 11:31:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8406610F8
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Oct 2021 10:41:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D93C610F8
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Oct 2021 11:31:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbhJ1KoC (ORCPT
+        id S230157AbhJ1Ldd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Oct 2021 06:44:02 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:59068 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229835AbhJ1KoB (ORCPT
+        Thu, 28 Oct 2021 07:33:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46370 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229578AbhJ1Ldc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Oct 2021 06:44:01 -0400
-X-UUID: 96d34b3098694bb5b0937d5446ff412f-20211028
-X-UUID: 96d34b3098694bb5b0937d5446ff412f-20211028
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1888420858; Thu, 28 Oct 2021 18:41:30 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Thu, 28 Oct 2021 18:41:29 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 28 Oct 2021 18:41:29 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Bo Jiao <Bo.Jiao@mediatek.com>
-Subject: [PATCH v2] mt76: mt7915: add default calibrated data support
-Date:   Thu, 28 Oct 2021 18:41:24 +0800
-Message-ID: <20211028104124.4872-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Thu, 28 Oct 2021 07:33:32 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E97CC061570
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2021 04:31:05 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id d3so9566579wrh.8
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2021 04:31:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=v45ZDvsCFAEFClI2WbhlvofL+jPYAH3IJRRv2CmKvZY=;
+        b=Dtp5BSb9RfS5Q4eAHJvIgnSeVRI0mFRwjSX9yXn/Sa3FQT1nKdOPINwHjwY5joS6bw
+         0eIi4/vNnwD7l/M194kArgX4XYRTK3wGwOk1/3ZY8SmsotdyzNnLbWlWI4AzSVcgaloO
+         PpX+Fa/RRGtn/VZkWTNFlLNmlUxUrkeEiUJVmsSBQH92B+XQdfEG9ma8Kq7rKTbsg3ab
+         y7p12BmbHUcHzdegTgjCyafL2Wsv8qG15CFQBTX2fM2mtQ8aItp1tqVhC4tSpokqui4o
+         Z4t5hevM59e9kflaaCJx2YeTXcQPkVaVppylYPjLxMaNCBR5F7fulQBrJe/+I3ZhOoV+
+         S+BQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=v45ZDvsCFAEFClI2WbhlvofL+jPYAH3IJRRv2CmKvZY=;
+        b=53hIMDNznPE9/FjF+52aMTRJh75C6JLSxyyMU53OBIgLiDyaCVFFIpak8lW0rubrJ8
+         exCnS5oT6j2K0ykJrfVBkt2nBzpMljZ3SlRp3AxsdvoWGhnj9o6RwnbYjKc1gICTWPZx
+         aWJ+AXHQZZXl/8BdDUdViFqdPMmGEn+XntSEp7G9k9JbASekFJuTzwQkDsvCr/a4naUO
+         GV0gW7EQ1SDl0id3KjSFz8XV+8z1T5SEIFsUJeUHc6HtXAkpuxxDu9LD8TAnOjSJxZrb
+         c1LUaSsMHzjxCloIobID4JgR89r/As+V3PpgnAKpzHs5mqp1Z41GrcNXodO7YNVYy2Du
+         TXgw==
+X-Gm-Message-State: AOAM533wJF2rGS7UD0eGUGZImYbB/zYoygWNZWCtnT8d5+I9Ef+duuJb
+        FNNnKftGDyt2nc9KHsoH7e0Gx6NDuDQ=
+X-Google-Smtp-Source: ABdhPJw/1GYkx/Y2CbDy7KIVuyoIC0xF5Cv943IL2bvIf/Qr4SjNwh8qFyBBOVkIW6iQCRMTBjqlaQ==
+X-Received: by 2002:adf:f8c2:: with SMTP id f2mr5062194wrq.234.1635420664066;
+        Thu, 28 Oct 2021 04:31:04 -0700 (PDT)
+Received: from debian64.daheim (p5b0d7857.dip0.t-ipconnect.de. [91.13.120.87])
+        by smtp.gmail.com with ESMTPSA id m3sm2769475wrx.52.2021.10.28.04.31.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Oct 2021 04:31:03 -0700 (PDT)
+Received: from localhost.daheim ([127.0.0.1])
+        by debian64.daheim with esmtp (Exim 4.95)
+        (envelope-from <chunkeey@gmail.com>)
+        id 1mg1jk-0006pt-1M;
+        Thu, 28 Oct 2021 13:31:03 +0200
+Message-ID: <3a8840ea-1499-950b-fb44-7546a32c586f@gmail.com>
+Date:   Thu, 28 Oct 2021 13:31:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.1
+Subject: Re: [PATCH v2] ath10k: fetch (pre-)calibration data via nvmem
+ subsystem
+Content-Language: en-US
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Ansuel Smith <ansuelsmth@gmail.com>
+References: <20211016234609.1568317-1-chunkeey@gmail.com>
+ <87ee855xwa.fsf@codeaurora.org>
+From:   Christian Lamparter <chunkeey@gmail.com>
+In-Reply-To: <87ee855xwa.fsf@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Load the default eeprom data when the content of flash/efuse is invalid.
-This could help to eliminate some issues due to incorrect or
-insufficient rf values.
+On 28/10/2021 10:58, Kalle Valo wrote:
+> Christian Lamparter <chunkeey@gmail.com> writes:
+> 
+>> ATH10K chips are used it wide range of routers,
+>> accesspoints, range extenders, network appliances.
+>> On these embedded devices, calibration data is often
+>> stored on the main system's flash and was out of reach
+>> for the driver.
+>>
+>> To bridge this gap, ath10k is getting extended to pull
+>> the (pre-)calibration data through nvmem subsystem.
+>> To do this, a nvmem-cell containing the information can
+>> either be specified in the platform data or via device-tree.
+>>
+>> Tested with:
+>>          Netgear EX6150v2 (IPQ4018 - pre-calibration method)
+>>          TP-Link Archer C7 v2 (QCA9880v2 - old calibration method)
+>>
+>> Cc: Robert Marko <robimarko@gmail.com>
+>> Cc: Thibaut VARÈNE <hacks@slashdirt.org>
+>> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+>> ---
+>>
+>> v1 -> v2:
+>> 	- use %zu and %u in the format string for size_t
+>>            and u32 types (catched by the "kernel test robot").
+>> 	- reworded commit message + successfully tested on QCA9880v2
+>>
+>> I placed the nvmem code in front of the current "file" method
+>> (firmware_request). Reason is that this makes it easier for me
+>> to test it. If needed it can be moved to a different place.
+> 
+> Looks good to me. Before I apply this, I want to mention to that I have
+> had a long in my deferred queue related two patchsets:
 
-Co-developed-by: Bo Jiao <Bo.Jiao@mediatek.com>
-Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
----
-v2: drop unnecessary goto and return
----
- .../wireless/mediatek/mt76/mt7915/eeprom.c    | 81 +++++++++++++++----
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 24 ++++++
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  1 +
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  4 +
- 4 files changed, 96 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-index ee3d644..a21a6fa 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: ISC
- /* Copyright (C) 2020 MediaTek Inc. */
- 
-+#include <linux/firmware.h>
- #include "mt7915.h"
- #include "eeprom.h"
- 
-@@ -10,6 +11,9 @@ static int mt7915_eeprom_load_precal(struct mt7915_dev *dev)
- 	u8 *eeprom = mdev->eeprom.data;
- 	u32 val = eeprom[MT_EE_DO_PRE_CAL];
- 
-+	if (!dev->flash_mode)
-+		return 0;
-+
- 	if (val != (MT_EE_WIFI_CAL_DPD | MT_EE_WIFI_CAL_GROUP))
- 		return 0;
- 
-@@ -21,6 +25,49 @@ static int mt7915_eeprom_load_precal(struct mt7915_dev *dev)
- 	return mt76_get_of_eeprom(mdev, dev->cal, MT_EE_PRECAL, val);
- }
- 
-+static int mt7915_check_eeprom(struct mt7915_dev *dev)
-+{
-+	u8 *eeprom = dev->mt76.eeprom.data;
-+	u16 val = get_unaligned_le16(eeprom);
-+
-+	switch (val) {
-+	case 0x7915:
-+		return 0;
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static int
-+mt7915_eeprom_load_default(struct mt7915_dev *dev)
-+{
-+	char *default_bin = MT7915_EEPROM_DEFAULT;
-+	u8 *eeprom = dev->mt76.eeprom.data;
-+	const struct firmware *fw = NULL;
-+	int ret;
-+
-+	if (dev->dbdc_support)
-+		default_bin = MT7915_EEPROM_DEFAULT_DBDC;
-+
-+	ret = request_firmware(&fw, default_bin, dev->mt76.dev);
-+	if (ret)
-+		return ret;
-+
-+	if (!fw || !fw->data) {
-+		dev_err(dev->mt76.dev, "Invalid default bin\n");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	memcpy(eeprom, fw->data, MT7915_EEPROM_SIZE);
-+	dev->flash_mode = true;
-+
-+out:
-+	release_firmware(fw);
-+
-+	return ret;
-+}
-+
- static int mt7915_eeprom_load(struct mt7915_dev *dev)
- {
- 	int ret;
-@@ -31,8 +78,8 @@ static int mt7915_eeprom_load(struct mt7915_dev *dev)
- 
- 	if (ret) {
- 		dev->flash_mode = true;
--		ret = mt7915_eeprom_load_precal(dev);
- 	} else {
-+		/* read eeprom data from efuse */
- 		u32 block_num, i;
- 
- 		block_num = DIV_ROUND_UP(MT7915_EEPROM_SIZE,
-@@ -42,20 +89,26 @@ static int mt7915_eeprom_load(struct mt7915_dev *dev)
- 					      i * MT7915_EEPROM_BLOCK_SIZE);
- 	}
- 
--	return ret;
--}
--
--static int mt7915_check_eeprom(struct mt7915_dev *dev)
--{
--	u8 *eeprom = dev->mt76.eeprom.data;
--	u16 val = get_unaligned_le16(eeprom);
-+	if (!dev->flash_mode) {
-+		u8 free_block_num;
-+
-+		mt7915_mcu_get_eeprom_free_block(dev, &free_block_num);
-+		if (free_block_num >= 29) {
-+			dev_warn(dev->mt76.dev,
-+				 "efuse info not enough, use default bin\n");
-+			ret = mt7915_eeprom_load_default(dev);
-+			if (ret)
-+				return ret;
-+		}
-+	}
- 
--	switch (val) {
--	case 0x7915:
--		return 0;
--	default:
--		return -EINVAL;
-+	ret = mt7915_check_eeprom(dev);
-+	if (ret) {
-+		dev_warn(dev->mt76.dev, "eeprom check fail, use default bin\n");
-+		ret = mt7915_eeprom_load_default(dev);
- 	}
-+
-+	return ret;
- }
- 
- void mt7915_eeprom_parse_band_config(struct mt7915_phy *phy)
-@@ -120,7 +173,7 @@ int mt7915_eeprom_init(struct mt7915_dev *dev)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = mt7915_check_eeprom(dev);
-+	ret = mt7915_eeprom_load_precal(dev);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index b054663..ee9952d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3580,6 +3580,30 @@ int mt7915_mcu_get_eeprom(struct mt7915_dev *dev, u32 offset)
- 	return 0;
- }
- 
-+int mt7915_mcu_get_eeprom_free_block(struct mt7915_dev *dev, u8 *block_num)
-+{
-+	struct {
-+		u8 _rsv;
-+		u8 version;
-+		u8 die_idx;
-+		u8 _rsv2;
-+	} __packed req = {
-+		.version = 1,
-+	};
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_QUERY(EFUSE_FREE_BLOCK), &req,
-+					sizeof(req), true, &skb);
-+	if (ret)
-+		return ret;
-+
-+	*block_num = *(u8 *)skb->data;
-+	dev_kfree_skb(skb);
-+
-+	return 0;
-+}
-+
- static int mt7915_mcu_set_pre_cal(struct mt7915_dev *dev, u8 idx,
- 				  u8 *data, u32 len, int cmd)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index b563e7c..e9f39ed 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -278,6 +278,7 @@ enum {
- 	MCU_EXT_CMD_MUAR_UPDATE = 0x48,
- 	MCU_EXT_CMD_RX_AIRTIME_CTRL = 0x4a,
- 	MCU_EXT_CMD_SET_RX_PATH = 0x4e,
-+	MCU_EXT_CMD_EFUSE_FREE_BLOCK = 0x4f,
- 	MCU_EXT_CMD_TX_POWER_FEATURE_CTRL = 0x58,
- 	MCU_EXT_CMD_GET_MIB_INFO = 0x5a,
- 	MCU_EXT_CMD_MWDS_SUPPORT = 0x80,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index e69b4c8..c6c846d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -30,6 +30,9 @@
- #define MT7915_FIRMWARE_WM		"mediatek/mt7915_wm.bin"
- #define MT7915_ROM_PATCH		"mediatek/mt7915_rom_patch.bin"
- 
-+#define MT7915_EEPROM_DEFAULT		"mediatek/mt7915_eeprom.bin"
-+#define MT7915_EEPROM_DEFAULT_DBDC	"mediatek/mt7915_eeprom_dbdc.bin"
-+
- #define MT7915_EEPROM_SIZE		3584
- #define MT7915_EEPROM_BLOCK_SIZE	16
- #define MT7915_TOKEN_SIZE		8192
-@@ -423,6 +426,7 @@ int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
- 				   void *data, u32 field);
- int mt7915_mcu_set_eeprom(struct mt7915_dev *dev);
- int mt7915_mcu_get_eeprom(struct mt7915_dev *dev, u32 offset);
-+int mt7915_mcu_get_eeprom_free_block(struct mt7915_dev *dev, u8 *block_num);
- int mt7915_mcu_set_mac(struct mt7915_dev *dev, int band, bool enable,
- 		       bool hdr_trans);
- int mt7915_mcu_set_test_param(struct mt7915_dev *dev, u8 param, bool test_mode,
--- 
-2.25.1
+> https://patchwork.kernel.org/project/linux-wireless/patch/20200927192515.86-1-ansuelsmth@gmail.com/
+> https://patchwork.kernel.org/project/linux-wireless/patch/20200927192515.86-2-ansuelsmth@gmail.com/
+Oh ok, serves me right for not looking thoroughly googling this first.
+Alban Bedel and Ansuel's work made this nvmem all possible. And indeed,
+the second patch here looks eerie similar.
 
+Do you want to go with his two patches instead? I'll change mine, so it
+just consists of the cal_mode for the older QCA9880v2,QCA9887 and
+add the -EPROBE_DEFER handling. This -EPROBE_DEFER only ever comes up
+with the Meraki gear. This is because Meraki likes putting the MACs-Values
+into SoC-connected AT24 eeproms-chips. Everyone else just have them in a
+proper FLASH partition. Though, this's usually nothing more than adding
+the following line:
+
+if (ret == -EPROBER_DEFER)
+	return ret;
+
+> https://patchwork.kernel.org/project/linux-wireless/patch/20200918181104.98-1-ansuelsmth@gmail.com/
+> https://patchwork.kernel.org/project/linux-wireless/patch/20200918181104.98-2-ansuelsmth@gmail.com/
+
+Ansuel's post: https://patchwork.kernel.org/project/linux-wireless/patch/20200918181104.98-2-ansuelsmth@gmail.com/#23639361
+ > You are right about nvmem... Problem is that nvmem for mtd is still not
+ > supported. I already sent a patch to fix this in the mtd mailing list but
+ > I'm waiting for review...
+ > If that will be accepted, I can convert this patch to use nvmem api.
+
+The nvmem api is there (which makes these two patches obsolete I think).
+Granted: The nvmem can't do all the same cases (From what I know, mtd
+partitions splitters and mtdparts through commandline is being worked on.
+But we always have userspace + firmware_request as a fallback).
+
+Cheers,
+Christian
