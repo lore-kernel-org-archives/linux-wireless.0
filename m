@@ -2,89 +2,195 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECFA4C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 03:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 805DAC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 07:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEE7461056
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 03:53:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D4B760FE3
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 07:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231721AbhJ2D4L (ORCPT
+        id S232186AbhJ2H2O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Oct 2021 23:56:11 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:49831 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231523AbhJ2D4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Oct 2021 23:56:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1635479621; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=svVJj/ptgEELOk5d+/buD8kNREVbrRN5Zobef5vXTGA=; b=bT7DCx85X+kg4UNSGdt4h+EwfOpTuKv+3qnqOfn5lJHI9vYH1OTYm4uQy8IW7UssskD4xAod
- zFIV+Hv3MxfIVukSjQxxLb5Shu+uRG5MrNHqSX6cr38qxmi00NmJ7eZWGvewjFsiWi1Zagd6
- fVaL8qofLUI9MeRxceyPzuvB0PE=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 617b703e648aeeca5c8479ff (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 29 Oct 2021 03:53:34
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 040ADC43460; Fri, 29 Oct 2021 03:53:34 +0000 (UTC)
-Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 00CA4C4338F;
-        Fri, 29 Oct 2021 03:53:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 00CA4C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Zekun Shen <bruceshenzk@gmail.com>
-Cc:     Pontus Fuchs <pontus.fuchs@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ar5523: Fix null-ptr-deref with unexpected WDCMSG_TARGET_START reply
-References: <YXsmPQ3awHFLuAj2@10-18-43-117.dynapool.wireless.nyu.edu>
-Date:   Fri, 29 Oct 2021 06:53:30 +0300
-In-Reply-To: <YXsmPQ3awHFLuAj2@10-18-43-117.dynapool.wireless.nyu.edu> (Zekun
-        Shen's message of "Thu, 28 Oct 2021 18:37:49 -0400")
-Message-ID: <87tuh0xz9h.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Fri, 29 Oct 2021 03:28:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33734 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232243AbhJ2H2N (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Oct 2021 03:28:13 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A06C2C061570
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2021 00:25:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=lAOYpeXKC/OmkPJIVCQ6m0WZtG6sMrrykOsbEaR0Ckg=; t=1635492345; x=1636701945; 
+        b=JdHofL/4WsTGI8e4NJrIGU0kjSseKm7FtT3ZE62CNS2EKUBnyyetZzKKtnkYjKFcYs83gSPOyhA
+        txnuJCJv8GbOw8j8i3qK9+6g2ZhlztfAhc4jMsJE70KVra5CFi6GwyxTYnkTH4LwaVSSvsZS5YaaH
+        PrdCMjceUYM81Y3lPMcC38uQe4sWnZ53XGm7gkdNr6T2e9BmpJ5AmjzxAm6lNJ/gDKa2JgFCb/JZ5
+        SJ715bTezvCcQGmnnk+FHDddhNDvP2aFEFKh26TbkJiCIKb+vTVIevbKx8l3LGG0MjMRC+wlx8q1v
+        rbEZdGR96FOwckZ5jJXkvWVANjrwi4/K9DeA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1mgMGk-008Eq1-Jv;
+        Fri, 29 Oct 2021 09:25:42 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Jan Fuchs <jf@simonwunderlich.de>
+Subject: [PATCH] nl80211: fix radio statistics in survey dump
+Date:   Fri, 29 Oct 2021 09:25:39 +0200
+Message-Id: <20211029092539.2851b4799386.If9736d4575ee79420cbec1bd930181e1d53c7317@changeid>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zekun Shen <bruceshenzk@gmail.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Unexpected WDCMSG_TARGET_START replay can lead to null-ptr-deref
-> when ar->tx_cmd->odata is NULL. The patch adds a null check to
-> prevent such case.
->
-> KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
->  ar5523_cmd+0x46a/0x581 [ar5523]
->  ar5523_probe.cold+0x1b7/0x18da [ar5523]
->  ? ar5523_cmd_rx_cb+0x7a0/0x7a0 [ar5523]
->  ? __pm_runtime_set_status+0x54a/0x8f0
->  ? _raw_spin_trylock_bh+0x120/0x120
->  ? pm_runtime_barrier+0x220/0x220
->  ? __pm_runtime_resume+0xb1/0xf0
->  usb_probe_interface+0x25b/0x710
->  really_probe+0x209/0x5d0
->  driver_probe_device+0xc6/0x1b0
->  device_driver_attach+0xe2/0x120
->
-> Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Even if userspace specifies the NL80211_ATTR_SURVEY_RADIO_STATS
+attribute, we cannot get the statistics because we're not really
+parsing the incoming attributes properly any more.
 
-How did you test this?
+Fix this by passing the attrbuf to nl80211_prepare_wdev_dump()
+and filling it there, if given, and using a local version only
+if no output is desired.
 
+Since I'm touching it anyway, make nl80211_prepare_wdev_dump()
+static.
+
+Fixes: 50508d941c18 ("cfg80211: use parallel_ops for genl")
+Reported-by: Jan Fuchs <jf@simonwunderlich.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 34 +++++++++++++++++++---------------
+ net/wireless/nl80211.h |  6 +-----
+ 2 files changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 25ee16558dfa..83a1ba96e172 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -937,33 +937,37 @@ nl80211_packet_pattern_policy[MAX_NL80211_PKTPAT + 1] = {
+ 	[NL80211_PKTPAT_OFFSET] = { .type = NLA_U32 },
+ };
+ 
+-int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
+-			      struct cfg80211_registered_device **rdev,
+-			      struct wireless_dev **wdev)
++static int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
++				     struct cfg80211_registered_device **rdev,
++				     struct wireless_dev **wdev,
++				     struct nlattr **attrbuf)
+ {
+ 	int err;
+ 
+ 	if (!cb->args[0]) {
+-		struct nlattr **attrbuf;
++		struct nlattr **attrbuf_free = NULL;
+ 
+-		attrbuf = kcalloc(NUM_NL80211_ATTR, sizeof(*attrbuf),
+-				  GFP_KERNEL);
+-		if (!attrbuf)
+-			return -ENOMEM;
++		if (!attrbuf) {
++			attrbuf = kcalloc(NUM_NL80211_ATTR, sizeof(*attrbuf),
++					  GFP_KERNEL);
++			if (!attrbuf)
++				return -ENOMEM;
++			attrbuf_free = attrbuf;
++		}
+ 
+ 		err = nlmsg_parse_deprecated(cb->nlh,
+ 					     GENL_HDRLEN + nl80211_fam.hdrsize,
+ 					     attrbuf, nl80211_fam.maxattr,
+ 					     nl80211_policy, NULL);
+ 		if (err) {
+-			kfree(attrbuf);
++			kfree(attrbuf_free);
+ 			return err;
+ 		}
+ 
+ 		rtnl_lock();
+ 		*wdev = __cfg80211_wdev_from_attrs(NULL, sock_net(cb->skb->sk),
+ 						   attrbuf);
+-		kfree(attrbuf);
++		kfree(attrbuf_free);
+ 		if (IS_ERR(*wdev)) {
+ 			rtnl_unlock();
+ 			return PTR_ERR(*wdev);
+@@ -6198,7 +6202,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
+ 	int sta_idx = cb->args[2];
+ 	int err;
+ 
+-	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev);
++	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev, NULL);
+ 	if (err)
+ 		return err;
+ 	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+@@ -7093,7 +7097,7 @@ static int nl80211_dump_mpath(struct sk_buff *skb,
+ 	int path_idx = cb->args[2];
+ 	int err;
+ 
+-	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev);
++	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev, NULL);
+ 	if (err)
+ 		return err;
+ 	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+@@ -7293,7 +7297,7 @@ static int nl80211_dump_mpp(struct sk_buff *skb,
+ 	int path_idx = cb->args[2];
+ 	int err;
+ 
+-	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev);
++	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev, NULL);
+ 	if (err)
+ 		return err;
+ 	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+@@ -9723,7 +9727,7 @@ static int nl80211_dump_scan(struct sk_buff *skb, struct netlink_callback *cb)
+ 	int start = cb->args[2], idx = 0;
+ 	int err;
+ 
+-	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev);
++	err = nl80211_prepare_wdev_dump(cb, &rdev, &wdev, NULL);
+ 	if (err)
+ 		return err;
+ 	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+@@ -9856,7 +9860,7 @@ static int nl80211_dump_survey(struct sk_buff *skb, struct netlink_callback *cb)
+ 	if (!attrbuf)
+ 		return -ENOMEM;
+ 
+-	res = nl80211_prepare_wdev_dump(cb, &rdev, &wdev);
++	res = nl80211_prepare_wdev_dump(cb, &rdev, &wdev, attrbuf);
+ 	if (res) {
+ 		kfree(attrbuf);
+ 		return res;
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index a3f387770f1b..d642e3be4ee7 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Portions of this file
+- * Copyright (C) 2018, 2020 Intel Corporation
++ * Copyright (C) 2018, 2020-2021 Intel Corporation
+  */
+ #ifndef __NET_WIRELESS_NL80211_H
+ #define __NET_WIRELESS_NL80211_H
+@@ -22,10 +22,6 @@ static inline u64 wdev_id(struct wireless_dev *wdev)
+ 	       ((u64)wiphy_to_rdev(wdev->wiphy)->wiphy_idx << 32);
+ }
+ 
+-int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
+-			      struct cfg80211_registered_device **rdev,
+-			      struct wireless_dev **wdev);
+-
+ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 			  struct genl_info *info,
+ 			  struct cfg80211_chan_def *chandef);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.31.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
