@@ -2,128 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C55FEC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F19FC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4C2E61184
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80DFD61051
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229968AbhJ2PHj (ORCPT
+        id S229957AbhJ2Pph (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Oct 2021 11:07:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53794 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230016AbhJ2PHe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Oct 2021 11:07:34 -0400
-X-Greylist: delayed 584 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 29 Oct 2021 08:05:05 PDT
-Received: from simonwunderlich.de (unknown [IPv6:2a01:4f8:c17:e8c0::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00721C061766
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2021 08:05:05 -0700 (PDT)
-Received: from [IPv6:2003:c5:973a:b0b8:1f6e:7eaa:c693:97eb] (p200300c5973aB0B81F6e7eAAC69397EB.dip0.t-ipconnect.de [IPv6:2003:c5:973a:b0b8:1f6e:7eaa:c693:97eb])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by simonwunderlich.de (Postfix) with ESMTPSA id 3A4A7FA152;
-        Fri, 29 Oct 2021 16:55:18 +0200 (CEST)
-Subject: iw reg get Not showing 6GHz channels in Germany
-From:   Sharadanand Karanjkar <sk@simonwunderlich.de>
-To:     luciano.coelho@intel.com
-References: <57f467ec-074c-8260-7872-84eccfdcc1c7@simonwunderlich.de>
-Cc:     linux-wireless@vger.kernel.org, se@simonwunderlich.de
-Message-ID: <dd512568-9d9f-289a-bc7b-9b6dfc1c0c8a@simonwunderlich.de>
-Date:   Fri, 29 Oct 2021 16:55:16 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        Fri, 29 Oct 2021 11:45:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50556 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229607AbhJ2Ppf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Oct 2021 11:45:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E1B861181;
+        Fri, 29 Oct 2021 15:43:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635522185;
+        bh=EKpljgVa5r5UmD2IEpypElISm7qojaXBWVSnqjIx8EI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=DUE9p0WKnSWBxCzU791qowB58og7xeQNSE+jvOr1AKoxKnhkoir2yzs78lYIslDXB
+         FkE/zSncUhI2lA2tKUexN3X3Q5AYvoam/0VqTPisHApFRfY6pSFASrjziUwf9cJw/J
+         5EqV9PzRuXmjhWYvbpOSI2a+sC27jG+66ztNgD0SlLfEnCP9xi7yZw5bnkU7zq1yNk
+         Zi0z7TpI3fQL3b2Xepxi1+kZRIozugkx+CwlqoEAJSOQXpXOELDKtHcvPADLl9vrx3
+         pZay4F1IeCUQPTS7H2FclvL4K6vt+ZMEB97l1RFIB+DbfJHN4Pz1kak4gspPq3KprB
+         AgktZwKqMjE0A==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Yaara Baruch <yaara.baruch@intel.com>,
+        Matti Gottlieb <matti.gottlieb@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: [PATCH] iwlwifi: pcie: fix constant-conversion warning
+Date:   Fri, 29 Oct 2021 17:42:29 +0200
+Message-Id: <20211029154253.3824677-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-In-Reply-To: <57f467ec-074c-8260-7872-84eccfdcc1c7@simonwunderlich.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Hi Luca,
->
-> Greeting of the day!!
-> We are using Intels "ax210ngw" card with "iwlwifi-ty-a0-gf-a0-66.ucode"
-> firmware, we are using the kernel from "5.15.0-rc7" tag.
-> The problem we are facing is we are not able to enable 6GHz channels 
-> for Germany region. Following is the output for "iw reg get"
->
-> country DE: DFS-ETSI
->     (2400 - 2483 @ 40), (N/A, 20), (N/A)
->     (5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
->     (5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
->     (5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
->     (5725 - 5875 @ 80), (N/A, 13), (N/A)
->     (5945 - 6425 @ 160), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
->     (57000 - 66000 @ 2160), (N/A, 40), (N/A)
->
-> phy#0 (self-managed)
-> country DE: DFS-UNSET
->     (2402 - 2437 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, 
-> NO-80MHZ, NO-160MHZ
->     (2422 - 2462 @ 40), (6, 22), (N/A), AUTO-BW, NO-80MHZ, NO-160MHZ
->     (2447 - 2482 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS, 
-> NO-80MHZ, NO-160MHZ
->     (5170 - 5190 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, 
-> IR-CONCURRENT, NO-HT40MINUS, PASSIVE-SCAN
->     (5190 - 5210 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, 
-> IR-CONCURRENT, NO-HT40PLUS, PASSIVE-SCAN
->     (5210 - 5230 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, 
-> IR-CONCURRENT, NO-HT40MINUS, PASSIVE-SCAN
->     (5230 - 5250 @ 160), (6, 22), (N/A), NO-OUTDOOR, AUTO-BW, 
-> IR-CONCURRENT, NO-HT40PLUS, PASSIVE-SCAN
->     (5250 - 5270 @ 160), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5270 - 5290 @ 160), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5290 - 5310 @ 160), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5310 - 5330 @ 160), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5490 - 5510 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5510 - 5530 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5530 - 5550 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5550 - 5570 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5570 - 5590 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5590 - 5610 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5610 - 5630 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> PASSIVE-SCAN
->     (5630 - 5650 @ 220), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> PASSIVE-SCAN
->     (5650 - 5670 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> NO-160MHZ, PASSIVE-SCAN
->     (5670 - 5690 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40PLUS, 
-> NO-160MHZ, PASSIVE-SCAN
->     (5690 - 5710 @ 80), (6, 22), (0 ms), DFS, AUTO-BW, NO-HT40MINUS, 
-> NO-160MHZ, PASSIVE-SCAN
->     (5735 - 5755 @ 80), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, NO-160MHZ
->     (5755 - 5775 @ 80), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS, NO-160MHZ
->     (5775 - 5795 @ 80), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, NO-160MHZ
->     (5795 - 5815 @ 80), (6, 22), (N/A), AUTO-BW, NO-HT40PLUS, NO-160MHZ
->     (5815 - 5835 @ 40), (6, 22), (N/A), AUTO-BW, NO-HT40MINUS, 
-> NO-80MHZ, NO-160MHZ
->
-> The iw phy# info also shows that the 6GHz channels are not enabled. We 
-> have found one commit which is included in the "5.15.0-rc7" tag which 
-> indicates that 6Ghz channels are now supported in the driver.
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git/commit/?id=cdf854d2ddca01bf126ac138a8ee3e5d6320086f 
->
->
-> From "iw reg get" output it looks like the intel firmware may not be 
-> supporting the 6GHz channels.
-> When we can we expect the support for 6GHz channels for Germany?
->
-> Warm regards,
-> Sharadanand Karanjkar
->
+From: Arnd Bergmann <arnd@arndb.de>
+
+clang points out a potential issue with integer overflow when
+the iwl_dev_info_table[] array is empty:
+
+drivers/net/wireless/intel/iwlwifi/pcie/drv.c:1344:42: error: implicit conversion from 'unsigned long' to 'int' changes value from 18446744073709551615 to -1 [-Werror,-Wconstant-conversion]
+        for (i = ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
+               ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+
+This is still harmless, as the loop correctly terminates, but adding
+an (int) cast makes that clearer to the compiler.
+
+Fixes: 3f7320428fa4 ("iwlwifi: pcie: simplify iwl_pci_find_dev_info()")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index c574f041f096..81e8f2fc4982 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1341,7 +1341,7 @@ iwl_pci_find_dev_info(u16 device, u16 subsystem_device,
+ {
+ 	int i;
+ 
+-	for (i = ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
++	for (i = (int)ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
+ 		const struct iwl_dev_info *dev_info = &iwl_dev_info_table[i];
+ 
+ 		if (dev_info->device != (u16)IWL_CFG_ANY &&
+-- 
+2.29.2
+
