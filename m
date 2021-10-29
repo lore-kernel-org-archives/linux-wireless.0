@@ -2,86 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F19FC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB15C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 16:10:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80DFD61051
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 15:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 311FE610EA
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Oct 2021 16:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229957AbhJ2Pph (ORCPT
+        id S230010AbhJ2QMm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Oct 2021 11:45:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50556 "EHLO mail.kernel.org"
+        Fri, 29 Oct 2021 12:12:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55230 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229607AbhJ2Ppf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Oct 2021 11:45:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E1B861181;
-        Fri, 29 Oct 2021 15:43:03 +0000 (UTC)
+        id S229807AbhJ2QMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Oct 2021 12:12:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 6E042610EA;
+        Fri, 29 Oct 2021 16:10:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635522185;
-        bh=EKpljgVa5r5UmD2IEpypElISm7qojaXBWVSnqjIx8EI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=DUE9p0WKnSWBxCzU791qowB58og7xeQNSE+jvOr1AKoxKnhkoir2yzs78lYIslDXB
-         FkE/zSncUhI2lA2tKUexN3X3Q5AYvoam/0VqTPisHApFRfY6pSFASrjziUwf9cJw/J
-         5EqV9PzRuXmjhWYvbpOSI2a+sC27jG+66ztNgD0SlLfEnCP9xi7yZw5bnkU7zq1yNk
-         Zi0z7TpI3fQL3b2Xepxi1+kZRIozugkx+CwlqoEAJSOQXpXOELDKtHcvPADLl9vrx3
-         pZay4F1IeCUQPTS7H2FclvL4K6vt+ZMEB97l1RFIB+DbfJHN4Pz1kak4gspPq3KprB
-         AgktZwKqMjE0A==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Yaara Baruch <yaara.baruch@intel.com>,
-        Matti Gottlieb <matti.gottlieb@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
-Subject: [PATCH] iwlwifi: pcie: fix constant-conversion warning
-Date:   Fri, 29 Oct 2021 17:42:29 +0200
-Message-Id: <20211029154253.3824677-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.29.2
+        s=k20201202; t=1635523812;
+        bh=ILLsBsnJPVMWjVbPV54Y8QWxVd96XeyAwkndQq9HDGA=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=KTvaC7s61xC1RvU/Q4IAj+egBnyaswOuidomOwTtWouR4VOmMwRXPYbdvER7Cj2gb
+         RMJI4FkXs6917zU/9RLCppRmEPY6/LGPADgJ7rcJL83y91eBzgr72zc1SlO5ZzV11z
+         9gneeP71+f2KuBzocTbtClrCquC+zcSOSAZE+Vw/jMSN43lntO3hBbHpUuaOhGFMh/
+         LrTT299E4Hx4UZbnSSsBx8lvt9WIwaFT+3oNrnXCUv64LUbN9ZuXpSGexbat6B8sVQ
+         yai3RaeH0bMaf/5J0Q/eW/MwAxZRZOol6mfQkeoV6lMuCbpYyPk1RMfmaFe3WZwM+D
+         mZNiYjAEeLrEQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-drivers-next-2021-10-29
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <163552381240.29393.17076956367201637695.git-patchwork-notify@kernel.org>
+Date:   Fri, 29 Oct 2021 16:10:12 +0000
+References: <20211029134707.DE2B0C4360D@smtp.codeaurora.org>
+In-Reply-To: <20211029134707.DE2B0C4360D@smtp.codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hello:
 
-clang points out a potential issue with integer overflow when
-the iwl_dev_info_table[] array is empty:
+This pull request was applied to netdev/net-next.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
 
-drivers/net/wireless/intel/iwlwifi/pcie/drv.c:1344:42: error: implicit conversion from 'unsigned long' to 'int' changes value from 18446744073709551615 to -1 [-Werror,-Wconstant-conversion]
-        for (i = ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
-               ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+On Fri, 29 Oct 2021 13:47:07 +0000 (UTC) you wrote:
+> Hi,
+> 
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
+> 
+> Kalle
+> 
+> [...]
 
-This is still harmless, as the loop correctly terminates, but adding
-an (int) cast makes that clearer to the compiler.
+Here is the summary with links:
+  - pull-request: wireless-drivers-next-2021-10-29
+    https://git.kernel.org/netdev/net-next/c/28131d896d6d
 
-Fixes: 3f7320428fa4 ("iwlwifi: pcie: simplify iwl_pci_find_dev_info()")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index c574f041f096..81e8f2fc4982 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1341,7 +1341,7 @@ iwl_pci_find_dev_info(u16 device, u16 subsystem_device,
- {
- 	int i;
- 
--	for (i = ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
-+	for (i = (int)ARRAY_SIZE(iwl_dev_info_table) - 1; i >= 0; i--) {
- 		const struct iwl_dev_info *dev_info = &iwl_dev_info_table[i];
- 
- 		if (dev_info->device != (u16)IWL_CFG_ANY &&
+You are awesome, thank you!
 -- 
-2.29.2
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
