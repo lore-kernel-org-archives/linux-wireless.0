@@ -2,28 +2,28 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 747A5C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59662C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62D7C60F42
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C80F60F42
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:58:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230501AbhKAEAY (ORCPT
+        id S229613AbhKAEAm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Nov 2021 00:00:24 -0400
+        Mon, 1 Nov 2021 00:00:42 -0400
 Received: from mga17.intel.com ([192.55.52.151]:48872 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230417AbhKAEAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Nov 2021 00:00:00 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10154"; a="211708387"
+        id S230107AbhKAEAW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Nov 2021 00:00:22 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10154"; a="211708399"
 X-IronPort-AV: E=Sophos;i="5.87,198,1631602800"; 
-   d="scan'208";a="211708387"
+   d="scan'208";a="211708399"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:06 -0700
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:07 -0700
 X-IronPort-AV: E=Sophos;i="5.87,198,1631602800"; 
-   d="scan'208";a="467133039"
+   d="scan'208";a="467133057"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:05 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:06 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -37,9 +37,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
         sreehari.kancharla@intel.com, suresh.nagaraj@intel.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH v2 06/14] net: wwan: t7xx: Add AT and MBIM WWAN ports
-Date:   Sun, 31 Oct 2021 20:56:27 -0700
-Message-Id: <20211101035635.26999-7-ricardo.martinez@linux.intel.com>
+Subject: [PATCH v2 12/14] net: wwan: t7xx: Device deep sleep lock/unlock
+Date:   Sun, 31 Oct 2021 20:56:33 -0700
+Message-Id: <20211101035635.26999-13-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211101035635.26999-1-ricardo.martinez@linux.intel.com>
 References: <20211101035635.26999-1-ricardo.martinez@linux.intel.com>
@@ -47,347 +47,407 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+From: Haijun Lio <haijun.liu@mediatek.com>
 
-Adds AT and MBIM ports to the port proxy infrastructure.
-The initialization method is responsible for creating the corresponding
-ports using the WWAN framework infrastructure. The implemented WWAN port
-operations are start, stop, and TX.
+Introduce the mechanism to lock/unlock the device 'deep sleep' mode.
+When the PCIe link state is L1.2 or L2, the host side still can keep
+the device is in D0 state from the host side point of view. At the same
+time, if the device's 'deep sleep' mode is unlocked, the device will
+go to 'deep sleep' while it is still in D0 state on the host side.
 
+Signed-off-by: Haijun Lio <haijun.liu@mediatek.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- drivers/net/wwan/t7xx/Makefile          |   1 +
- drivers/net/wwan/t7xx/t7xx_port_proxy.c |   4 +
- drivers/net/wwan/t7xx/t7xx_port_proxy.h |   1 +
- drivers/net/wwan/t7xx/t7xx_port_wwan.c  | 281 ++++++++++++++++++++++++
- 4 files changed, 287 insertions(+)
- create mode 100644 drivers/net/wwan/t7xx/t7xx_port_wwan.c
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 11 +++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 24 ++++--
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 39 ++++++---
+ drivers/net/wwan/t7xx/t7xx_mhccif.c        |  3 +
+ drivers/net/wwan/t7xx/t7xx_pci.c           | 95 ++++++++++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_pci.h           | 10 +++
+ 6 files changed, 166 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
-index b0fac99420a0..9b3cc4c5ebae 100644
---- a/drivers/net/wwan/t7xx/Makefile
-+++ b/drivers/net/wwan/t7xx/Makefile
-@@ -13,3 +13,4 @@ mtk_t7xx-y:=	t7xx_pci.o \
- 		t7xx_hif_cldma.o  \
- 		t7xx_port_proxy.o  \
- 		t7xx_port_ctrl_msg.o \
-+		t7xx_port_wwan.o \
-diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.c b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
-index 39e779531068..970b5160febf 100644
---- a/drivers/net/wwan/t7xx/t7xx_port_proxy.c
-+++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
-@@ -51,6 +51,10 @@ static struct port_proxy *port_prox;
- 	     i++, (p) = &(proxy)->ports[i])
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+index 18c1fcccd9dc..4299061fe50d 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+@@ -1147,6 +1147,7 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	if (val < 0 && val != -EACCES)
+ 		return val;
  
- static struct t7xx_port md_ccci_ports[] = {
-+	{CCCI_UART2_TX, CCCI_UART2_RX, DATA_AT_CMD_Q, DATA_AT_CMD_Q, 0xff,
-+	 0xff, ID_CLDMA1, PORT_F_RX_CHAR_NODE, &wwan_sub_port_ops, 0, "ttyC0", WWAN_PORT_AT},
-+	{CCCI_MBIM_TX, CCCI_MBIM_RX, 2, 2, 0, 0, ID_CLDMA1,
-+	 PORT_F_RX_CHAR_NODE, &wwan_sub_port_ops, 10, "ttyCMBIM0", WWAN_PORT_MBIM},
- 	{CCCI_CONTROL_TX, CCCI_CONTROL_RX, 0, 0, 0, 0, ID_CLDMA1,
- 	 0, &ctl_port_ops, 0xff, "ccci_ctrl",},
- };
-diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.h b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
-index bc6fef0d7cf6..3d43c1f46e2a 100644
---- a/drivers/net/wwan/t7xx/t7xx_port_proxy.h
-+++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
-@@ -82,6 +82,7 @@ struct port_msg {
- #define PORT_ENUM_VER_MISMATCH	0x00657272
++	mtk_pci_disable_sleep(md_ctrl->mtk_dev);
+ 	if (qno >= CLDMA_TXQ_NUM) {
+ 		ret = -EINVAL;
+ 		goto exit;
+@@ -1182,6 +1183,11 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 			queue->tx_xmit = cldma_ring_step_forward(queue->tr_ring, tx_req);
+ 			spin_unlock_irqrestore(&queue->ring_lock, flags);
  
- /* port operations mapping */
-+extern struct port_ops wwan_sub_port_ops;
- extern struct port_ops ctl_port_ops;
- 
- int port_proxy_send_skb(struct t7xx_port *port, struct sk_buff *skb, bool from_pool);
-diff --git a/drivers/net/wwan/t7xx/t7xx_port_wwan.c b/drivers/net/wwan/t7xx/t7xx_port_wwan.c
-new file mode 100644
-index 000000000000..c101651b84aa
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_port_wwan.c
-@@ -0,0 +1,281 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ *
-+ * Authors: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-+ *          Haijun Lio <haijun.liu@mediatek.com>
-+ * Contributors: Amir Hanania <amir.hanania@intel.com>
-+ *               Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-+ *               Chiranjeevi Rapolu <chiranjeevi.rapolu@intel.com>
-+ *               Eliot Lee <eliot.lee@intel.com>
-+ *               Moises Veleta <moises.veleta@intel.com>
-+ *               Ricardo Martinez<ricardo.martinez@linux.intel.com>
-+ *               Sreehari Kancharla <sreehari.kancharla@intel.com>
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/fs.h>
-+#include <linux/minmax.h>
-+#include <linux/module.h>
-+#include <linux/poll.h>
-+#include <linux/uaccess.h>
-+#include <linux/wait.h>
-+#include <linux/wwan.h>
-+#include <linux/bitfield.h>
-+
-+#include "t7xx_common.h"
-+#include "t7xx_hif_cldma.h"
-+#include "t7xx_monitor.h"
-+#include "t7xx_port_proxy.h"
-+#include "t7xx_skb_util.h"
-+
-+static int mtk_port_ctrl_start(struct wwan_port *port)
-+{
-+	struct t7xx_port *port_mtk;
-+
-+	port_mtk = wwan_port_get_drvdata(port);
-+
-+	if (atomic_read(&port_mtk->usage_cnt))
-+		return -EBUSY;
-+
-+	atomic_inc(&port_mtk->usage_cnt);
-+	return 0;
-+}
-+
-+static void mtk_port_ctrl_stop(struct wwan_port *port)
-+{
-+	struct t7xx_port *port_mtk;
-+
-+	port_mtk = wwan_port_get_drvdata(port);
-+
-+	atomic_dec(&port_mtk->usage_cnt);
-+}
-+
-+static int mtk_port_ctrl_tx(struct wwan_port *port, struct sk_buff *skb)
-+{
-+	size_t actual_count = 0, alloc_size = 0, txq_mtu = 0;
-+	struct sk_buff *skb_ccci = NULL;
-+	struct t7xx_port *port_ccci;
-+	int i, multi_packet = 1;
-+	enum md_state md_state;
-+	unsigned int count;
-+	int ret = 0;
-+
-+	count = skb->len;
-+	if (!count)
-+		return -EINVAL;
-+
-+	port_ccci = wwan_port_get_drvdata(port);
-+	md_state = ccci_fsm_get_md_state();
-+	if (md_state == MD_STATE_WAITING_FOR_HS1 || md_state == MD_STATE_WAITING_FOR_HS2) {
-+		dev_warn(port_ccci->dev, "port %s ch%d write fail when md_state=%d!\n",
-+			 port_ccci->name, port_ccci->tx_ch, md_state);
-+		return -ENODEV;
-+	}
-+
-+	txq_mtu = CLDMA_TXQ_MTU;
-+
-+	if (port_ccci->flags & PORT_F_RAW_DATA || port_ccci->flags & PORT_F_USER_HEADER) {
-+		if (port_ccci->flags & PORT_F_USER_HEADER && count > txq_mtu) {
-+			dev_err(port_ccci->dev, "reject packet(size=%u), larger than MTU on %s\n",
-+				count, port_ccci->name);
-+			return -ENOMEM;
-+		}
-+
-+		alloc_size = min_t(size_t, txq_mtu, count);
-+		actual_count = alloc_size;
-+	} else {
-+		alloc_size = min_t(size_t, txq_mtu, count + CCCI_H_ELEN);
-+		actual_count = alloc_size - CCCI_H_ELEN;
-+		if (count + CCCI_H_ELEN > txq_mtu &&
-+		    (port_ccci->tx_ch == CCCI_MBIM_TX ||
-+		     (port_ccci->tx_ch >= CCCI_DSS0_TX && port_ccci->tx_ch <= CCCI_DSS7_TX)))
-+			multi_packet = DIV_ROUND_UP(count, txq_mtu - CCCI_H_ELEN);
-+	}
-+
-+	for (i = 0; i < multi_packet; i++) {
-+		struct ccci_header *ccci_h = NULL;
-+
-+		if (multi_packet > 1 && multi_packet == i + 1) {
-+			actual_count = count % (txq_mtu - CCCI_H_ELEN);
-+			alloc_size = actual_count + CCCI_H_ELEN;
-+		}
-+
-+		skb_ccci = ccci_alloc_skb_from_pool(&port_ccci->mtk_dev->pools, alloc_size,
-+						    GFS_BLOCKING);
-+		if (!skb_ccci)
-+			return -ENOMEM;
-+
-+		if (port_ccci->flags & PORT_F_RAW_DATA) {
-+			memcpy(skb_put(skb_ccci, actual_count), skb->data, actual_count);
-+
-+			if (port_ccci->flags & PORT_F_USER_HEADER) {
-+				/* The ccci_header is provided by user.
-+				 *
-+				 * For only send ccci_header without additional data
-+				 * case, data[0]=CCCI_HEADER_NO_DATA, data[1]=user_data,
-+				 * ch=tx_channel, reserved=no_use.
-+				 *
-+				 * For send ccci_header
-+				 * with additional data case, data[0]=0,
-+				 * data[1]=data_size, ch=tx_channel,
-+				 * reserved=user_data.
-+				 */
-+				ccci_h = (struct ccci_header *)skb->data;
-+				if (actual_count == CCCI_H_LEN)
-+					ccci_h->data[0] = CCCI_HEADER_NO_DATA;
-+				else
-+					ccci_h->data[1] = actual_count;
-+
-+				ccci_h->status &= ~HDR_FLD_CHN;
-+				ccci_h->status |= FIELD_PREP(HDR_FLD_CHN, port_ccci->tx_ch);
++			if (!mtk_pci_sleep_disable_complete(md_ctrl->mtk_dev)) {
++				ret = -EBUSY;
++				break;
 +			}
-+		} else {
-+			/* ccci_header is provided by driver */
-+			ccci_h = skb_put(skb_ccci, CCCI_H_LEN);
-+			ccci_h->data[0] = 0;
-+			ccci_h->data[1] = actual_count + CCCI_H_LEN;
-+			ccci_h->status &= ~HDR_FLD_CHN;
-+			ccci_h->status |= FIELD_PREP(HDR_FLD_CHN, port_ccci->tx_ch);
-+			ccci_h->reserved = 0;
 +
-+			memcpy(skb_put(skb_ccci, actual_count),
-+			       skb->data + i * (txq_mtu - CCCI_H_ELEN), actual_count);
+ 			spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
+ 			cldma_hw_start_send(md_ctrl, qno);
+ 			spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
+@@ -1189,6 +1195,10 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 		}
+ 
+ 		spin_unlock_irqrestore(&queue->ring_lock, flags);
++		if (!mtk_pci_sleep_disable_complete(md_ctrl->mtk_dev)) {
++			ret = -EBUSY;
++			break;
 +		}
+ 
+ 		/* check CLDMA status */
+ 		if (!cldma_hw_queue_status(&md_ctrl->hw_info, qno, false)) {
+@@ -1210,6 +1220,7 @@ int cldma_send_skb(enum cldma_id hif_id, int qno, struct sk_buff *skb, bool skb_
+ 	} while (!ret);
+ 
+ exit:
++	mtk_pci_enable_sleep(md_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(md_ctrl->dev);
+ 	pm_runtime_put_autosuspend(md_ctrl->dev);
+ 	return ret;
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+index ae38fb29ec81..c7dfb74bfe31 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -40,6 +40,8 @@
+ #define DPMAIF_RX_PUSH_THRESHOLD_MASK	0x7
+ #define DPMAIF_NOTIFY_RELEASE_COUNT	128
+ #define DPMAIF_POLL_PIT_TIME_US		20
++#define DPMAIF_POLL_RX_TIME_US		10
++#define DPMAIF_POLL_RX_TIMEOUT_US	200
+ #define DPMAIF_POLL_PIT_MAX_TIME_US	2000
+ #define DPMAIF_WQ_TIME_LIMIT_MS		2
+ #define DPMAIF_CS_RESULT_PASS		0
+@@ -1020,6 +1022,7 @@ static int dpmaif_rx_data_collect(struct dpmaif_ctrl *dpmaif_ctrl,
+ 	return 0;
+ }
+ 
++/* call after mtk_pci_disable_sleep */
+ static void dpmaif_do_rx(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_rx_queue *rxq)
+ {
+ 	int ret;
+@@ -1059,7 +1062,13 @@ static void dpmaif_rxq_work(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
+-	dpmaif_do_rx(dpmaif_ctrl, rxq);
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+		port_proxy_set_seq_num(port_ccci, ccci_h);
-+		ret = port_send_skb_to_md(port_ccci, skb_ccci, true);
-+		if (ret)
-+			goto err_out;
++	/* we can try blocking wait for lock resource here in process context */
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev))
++		dpmaif_do_rx(dpmaif_ctrl, rxq);
 +
-+		/* record the port seq_num after the data is sent to HIF */
-+		port_ccci->seq_nums[MTK_OUT]++;
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+@@ -1433,14 +1442,19 @@ static void dpmaif_bat_release_work(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+		if (multi_packet == 1)
-+			return actual_count;
-+		else if (multi_packet == i + 1)
-+			return count;
+ 	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
+ 	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
+ 
+-	/* normal BAT release and add */
+-	dpmaif_dl_pkt_bat_release_and_add(rxq);
+-	/* frag BAT release and add */
+-	dpmaif_dl_frag_bat_release_and_add(rxq);
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev)) {
++		/* normal BAT release and add */
++		dpmaif_dl_pkt_bat_release_and_add(rxq);
++		/* frag BAT release and add */
++		dpmaif_dl_frag_bat_release_and_add(rxq);
 +	}
+ 
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+index 84fc980824e5..8b2f2fc0b7d3 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -172,19 +172,26 @@ static void dpmaif_tx_done(struct work_struct *work)
+ 	if (ret < 0 && ret != -EACCES)
+ 		return;
+ 
+-	ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
+-	if (ret == -EAGAIN ||
+-	    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
+-	     dpmaif_no_remain_spurious_tx_done_intr(txq))) {
+-		queue_work(dpmaif_ctrl->txq[txq->index].worker,
+-			   &dpmaif_ctrl->txq[txq->index].dpmaif_tx_work);
+-		/* clear IP busy to give the device time to enter the low power state */
+-		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+-	} else {
+-		dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+-		dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
++	/* The device may be in low power state. disable sleep if needed */
++	mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
 +
-+err_out:
-+	if (ret != -ENOMEM) {
-+		dev_err(port_ccci->dev, "write error done on %s, size=%zu, ret=%d\n",
-+			port_ccci->name, actual_count, ret);
-+		ccci_free_skb(&port_ccci->mtk_dev->pools, skb_ccci);
-+	}
++	/* ensure that we are not in deep sleep */
++	if (mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev)) {
++		ret = dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
++		if (ret == -EAGAIN ||
++		    (dpmaif_hw_check_clr_ul_done_status(&dpmaif_ctrl->hif_hw_info, txq->index) &&
++		     dpmaif_no_remain_spurious_tx_done_intr(txq))) {
++			queue_work(dpmaif_ctrl->txq[txq->index].worker,
++				   &dpmaif_ctrl->txq[txq->index].dpmaif_tx_work);
++			/* clear IP busy to give the device time to enter the low power state */
++			dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++		} else {
++			dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
++			dpmaif_unmask_ulq_interrupt(dpmaif_ctrl, txq->index);
++		}
+ 	}
+ 
++	mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+@@ -485,6 +492,8 @@ static bool check_all_txq_drb_lack(const struct dpmaif_ctrl *dpmaif_ctrl)
+ 
+ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ {
++	bool first_time = true;
++
+ 	dpmaif_ctrl->txq_select_times = 0;
+ 	do {
+ 		int txq_id;
+@@ -499,6 +508,11 @@ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ 			if (ret > 0) {
+ 				int drb_send_cnt = ret;
+ 
++				/* wait for the PCIe resource locked done */
++				if (first_time &&
++				    !mtk_pci_sleep_disable_complete(dpmaif_ctrl->mtk_dev))
++					return;
++
+ 				/* notify the dpmaif HW */
+ 				ret = dpmaif_ul_add_wcnt(dpmaif_ctrl, (unsigned char)txq_id,
+ 							 drb_send_cnt * DPMAIF_UL_DRB_ENTRY_WORD);
+@@ -512,6 +526,7 @@ static void do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ 			}
+ 		}
+ 
++		first_time = false;
+ 		cond_resched();
+ 
+ 	} while (!tx_lists_are_all_empty(dpmaif_ctrl) && !kthread_should_stop() &&
+@@ -541,7 +556,9 @@ static int dpmaif_tx_hw_push_thread(void *arg)
+ 		if (ret < 0 && ret != -EACCES)
+ 			return ret;
+ 
++		mtk_pci_disable_sleep(dpmaif_ctrl->mtk_dev);
+ 		do_tx_hw_push(dpmaif_ctrl);
++		mtk_pci_enable_sleep(dpmaif_ctrl->mtk_dev);
+ 		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	}
+diff --git a/drivers/net/wwan/t7xx/t7xx_mhccif.c b/drivers/net/wwan/t7xx/t7xx_mhccif.c
+index e511a4117f47..df250f85f31e 100644
+--- a/drivers/net/wwan/t7xx/t7xx_mhccif.c
++++ b/drivers/net/wwan/t7xx/t7xx_mhccif.c
+@@ -57,6 +57,9 @@ static irqreturn_t mhccif_isr_thread(int irq, void *data)
+ 	/* Clear 2 & 1 level interrupts */
+ 	mhccif_clear_interrupts(mtk_dev, int_sts);
+ 
++	if (int_sts & D2H_INT_DS_LOCK_ACK)
++		complete_all(&mtk_dev->sleep_lock_acquire);
++
+ 	if (int_sts & D2H_INT_SR_ACK)
+ 		complete(&mtk_dev->pm_sr_ack);
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
+index 3328a225e20b..1087ce489eff 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.c
++++ b/drivers/net/wwan/t7xx/t7xx_pci.c
+@@ -34,6 +34,7 @@
+ #define PCI_IREG_BASE			0
+ #define PCI_EREG_BASE			2
+ 
++#define MTK_WAIT_TIMEOUT_MS		10
+ #define PM_ACK_TIMEOUT_MS		1500
+ #define PM_AUTOSUSPEND_MS		20000
+ #define PM_RESOURCE_POLL_TIMEOUT_US	10000
+@@ -46,6 +47,22 @@ enum mtk_pm_state {
+ 	MTK_PM_RESUMED,		/* Device in resume state */
+ };
+ 
++static void mtk_dev_set_sleep_capability(struct mtk_pci_dev *mtk_dev, bool enable)
++{
++	void __iomem *ctrl_reg;
++	u32 value;
++
++	ctrl_reg = IREG_BASE(mtk_dev) + PCIE_MISC_CTRL;
++	value = ioread32(ctrl_reg);
++
++	if (enable)
++		value &= ~PCIE_MISC_MAC_SLEEP_DIS;
++	else
++		value |= PCIE_MISC_MAC_SLEEP_DIS;
++
++	iowrite32(value, ctrl_reg);
++}
++
+ static int mtk_wait_pm_config(struct mtk_pci_dev *mtk_dev)
+ {
+ 	int ret, val;
+@@ -68,10 +85,14 @@ static int mtk_pci_pm_init(struct mtk_pci_dev *mtk_dev)
+ 
+ 	INIT_LIST_HEAD(&mtk_dev->md_pm_entities);
+ 
++	spin_lock_init(&mtk_dev->md_pm_lock);
++
+ 	mutex_init(&mtk_dev->md_pm_entity_mtx);
+ 
++	init_completion(&mtk_dev->sleep_lock_acquire);
+ 	init_completion(&mtk_dev->pm_sr_ack);
+ 
++	atomic_set(&mtk_dev->sleep_disable_count, 0);
+ 	device_init_wakeup(&pdev->dev, true);
+ 
+ 	dev_pm_set_driver_flags(&pdev->dev, pdev->dev.power.driver_flags |
+@@ -90,6 +111,7 @@ void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev)
+ {
+ 	/* enable the PCIe Resource Lock only after MD deep sleep is done */
+ 	mhccif_mask_clr(mtk_dev,
++			D2H_INT_DS_LOCK_ACK |
+ 			D2H_INT_SUSPEND_ACK |
+ 			D2H_INT_RESUME_ACK |
+ 			D2H_INT_SUSPEND_ACK_AP |
+@@ -156,6 +178,79 @@ int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entit
+ 	return -ENXIO;
+ }
+ 
++int mtk_pci_sleep_disable_complete(struct mtk_pci_dev *mtk_dev)
++{
++	int ret;
++
++	ret = wait_for_completion_timeout(&mtk_dev->sleep_lock_acquire,
++					  msecs_to_jiffies(MTK_WAIT_TIMEOUT_MS));
++	if (!ret)
++		dev_err_ratelimited(&mtk_dev->pdev->dev, "Resource wait complete timed out\n");
 +
 +	return ret;
 +}
 +
-+static const struct wwan_port_ops mtk_wwan_port_ops = {
-+	.start = mtk_port_ctrl_start,
-+	.stop = mtk_port_ctrl_stop,
-+	.tx = mtk_port_ctrl_tx,
-+};
-+
-+static int port_wwan_init(struct t7xx_port *port)
++/**
++ * mtk_pci_disable_sleep() - disable deep sleep capability
++ * @mtk_dev: MTK device
++ *
++ * Lock the deep sleep capabitily, note that the device can go into deep sleep
++ * state while it is still in D0 state from the host point of view.
++ *
++ * If device is in deep sleep state then wake up the device and disable deep sleep capability.
++ */
++void mtk_pci_disable_sleep(struct mtk_pci_dev *mtk_dev)
 +{
-+	port->rx_length_th = MAX_RX_QUEUE_LENGTH;
-+	port->skb_from_pool = true;
++	unsigned long flags;
 +
-+	if (!(port->flags & PORT_F_RAW_DATA))
-+		port->flags |= PORT_F_RX_ADJUST_HEADER;
-+
-+	if (port->rx_ch == CCCI_UART2_RX)
-+		port->flags |= PORT_F_RX_CH_TRAFFIC;
-+
-+	if (port->mtk_port_type != WWAN_PORT_UNKNOWN) {
-+		port->mtk_wwan_port =
-+			wwan_create_port(port->dev, port->mtk_port_type, &mtk_wwan_port_ops, port);
-+		if (IS_ERR(port->mtk_wwan_port))
-+			return PTR_ERR(port->mtk_wwan_port);
-+	} else {
-+		port->mtk_wwan_port = NULL;
++	if (atomic_read(&mtk_dev->md_pm_state) < MTK_PM_RESUMED) {
++		atomic_inc(&mtk_dev->sleep_disable_count);
++		complete_all(&mtk_dev->sleep_lock_acquire);
++		return;
 +	}
 +
-+	return 0;
-+}
-+
-+static void port_wwan_uninit(struct t7xx_port *port)
-+{
-+	if (port->mtk_wwan_port) {
-+		if (port->chn_crt_stat == CCCI_CHAN_ENABLE) {
-+			spin_lock(&port->port_update_lock);
-+			port->chn_crt_stat = CCCI_CHAN_DISABLE;
-+			spin_unlock(&port->port_update_lock);
++	spin_lock_irqsave(&mtk_dev->md_pm_lock, flags);
++	if (atomic_inc_return(&mtk_dev->sleep_disable_count) == 1) {
++		reinit_completion(&mtk_dev->sleep_lock_acquire);
++		mtk_dev_set_sleep_capability(mtk_dev, false);
++		/* read register status to check whether the device's
++		 * deep sleep is disabled or not.
++		 */
++		if ((ioread32(IREG_BASE(mtk_dev) + PCIE_RESOURCE_STATUS) &
++		     PCIE_RESOURCE_STATUS_MSK) == PCIE_RESOURCE_STATUS_MSK) {
++			spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
++			complete_all(&mtk_dev->sleep_lock_acquire);
++			return;
 +		}
 +
-+		wwan_remove_port(port->mtk_wwan_port);
-+		port->mtk_wwan_port = NULL;
++		mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_DS_LOCK);
++	}
++
++	spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
++}
++
++/**
++ * mtk_pci_enable_sleep() - enable deep sleep capability
++ * @mtk_dev: MTK device
++ *
++ * After enabling deep sleep, device can enter into deep sleep state.
++ */
++void mtk_pci_enable_sleep(struct mtk_pci_dev *mtk_dev)
++{
++	unsigned long flags;
++
++	if (atomic_read(&mtk_dev->md_pm_state) < MTK_PM_RESUMED) {
++		atomic_dec(&mtk_dev->sleep_disable_count);
++		return;
++	}
++
++	if (atomic_dec_and_test(&mtk_dev->sleep_disable_count)) {
++		spin_lock_irqsave(&mtk_dev->md_pm_lock, flags);
++		mtk_dev_set_sleep_capability(mtk_dev, true);
++		spin_unlock_irqrestore(&mtk_dev->md_pm_lock, flags);
 +	}
 +}
 +
-+static int port_wwan_recv_skb(struct t7xx_port *port, struct sk_buff *skb)
-+{
-+	if (port->flags & PORT_F_RX_CHAR_NODE) {
-+		if (!atomic_read(&port->usage_cnt)) {
-+			dev_err_ratelimited(port->dev, "port %s is not opened, drop packets\n",
-+					    port->name);
-+			return -ENETDOWN;
-+		}
-+	}
-+
-+	return port_recv_skb(port, skb);
-+}
-+
-+static int port_status_update(struct t7xx_port *port)
-+{
-+	if (port->flags & PORT_F_RX_CHAR_NODE) {
-+		if (port->chan_enable == CCCI_CHAN_ENABLE) {
-+			port->flags &= ~PORT_F_RX_ALLOW_DROP;
-+		} else {
-+			port->flags |= PORT_F_RX_ALLOW_DROP;
-+			spin_lock(&port->port_update_lock);
-+			port->chn_crt_stat = CCCI_CHAN_DISABLE;
-+			spin_unlock(&port->port_update_lock);
-+			return port_proxy_broadcast_state(port, MTK_PORT_STATE_DISABLE);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int port_wwan_enable_chl(struct t7xx_port *port)
-+{
-+	spin_lock(&port->port_update_lock);
-+	port->chan_enable = CCCI_CHAN_ENABLE;
-+	spin_unlock(&port->port_update_lock);
-+
-+	if (port->chn_crt_stat != port->chan_enable)
-+		return port_status_update(port);
-+
-+	return 0;
-+}
-+
-+static int port_wwan_disable_chl(struct t7xx_port *port)
-+{
-+	spin_lock(&port->port_update_lock);
-+	port->chan_enable = CCCI_CHAN_DISABLE;
-+	spin_unlock(&port->port_update_lock);
-+
-+	if (port->chn_crt_stat != port->chan_enable)
-+		return port_status_update(port);
-+
-+	return 0;
-+}
-+
-+static void port_wwan_md_state_notify(struct t7xx_port *port, unsigned int state)
-+{
-+	if (state == MD_STATE_READY)
-+		port_status_update(port);
-+}
-+
-+struct port_ops wwan_sub_port_ops = {
-+	.init = &port_wwan_init,
-+	.recv_skb = &port_wwan_recv_skb,
-+	.uninit = &port_wwan_uninit,
-+	.enable_chl = &port_wwan_enable_chl,
-+	.disable_chl = &port_wwan_disable_chl,
-+	.md_state_notify = &port_wwan_md_state_notify,
-+};
+ static int __mtk_pci_pm_suspend(struct pci_dev *pdev)
+ {
+ 	struct mtk_pci_dev *mtk_dev;
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.h b/drivers/net/wwan/t7xx/t7xx_pci.h
+index 7ce429db240f..ab49b2ab8614 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.h
++++ b/drivers/net/wwan/t7xx/t7xx_pci.h
+@@ -17,6 +17,7 @@
+ #include <linux/completion.h>
+ #include <linux/mutex.h>
+ #include <linux/pci.h>
++#include <linux/spinlock.h>
+ #include <linux/types.h>
+ 
+ #include "t7xx_reg.h"
+@@ -48,7 +49,10 @@ typedef irqreturn_t (*mtk_intr_callback)(int irq, void *param);
+  * @base_addr: memory base addresses of HW components
+  * @md: modem interface
+  * @md_pm_entities: list of pm entities
++ * @md_pm_lock: protects PCIe sleep lock
+  * @md_pm_entity_mtx: protects md_pm_entities list
++ * @sleep_disable_count: PCIe L1.2 lock counter
++ * @sleep_lock_acquire: indicates that sleep has been disabled
+  * @pm_sr_ack: ack from the device when went to sleep or woke up
+  * @md_pm_state: state for resume/suspend
+  * @ccmni_ctlb: context structure used to control the network data path
+@@ -66,7 +70,10 @@ struct mtk_pci_dev {
+ 
+ 	/* Low Power Items */
+ 	struct list_head	md_pm_entities;
++	spinlock_t		md_pm_lock;		/* protects PCI resource lock */
+ 	struct mutex		md_pm_entity_mtx;	/* protects md_pm_entities list */
++	atomic_t		sleep_disable_count;
++	struct completion	sleep_lock_acquire;
+ 	struct completion	pm_sr_ack;
+ 	atomic_t		md_pm_state;
+ 
+@@ -103,6 +110,9 @@ struct md_pm_entity {
+ 	void			*entity_param;
+ };
+ 
++void mtk_pci_disable_sleep(struct mtk_pci_dev *mtk_dev);
++void mtk_pci_enable_sleep(struct mtk_pci_dev *mtk_dev);
++int mtk_pci_sleep_disable_complete(struct mtk_pci_dev *mtk_dev);
+ int mtk_pci_pm_entity_register(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
+ int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
+ void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev);
 -- 
 2.17.1
 
