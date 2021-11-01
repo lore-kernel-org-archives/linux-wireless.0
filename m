@@ -2,107 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07AFDC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 09:34:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 886D5C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 11:01:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E536B610FC
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 09:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CCF560231
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 11:01:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232996AbhKAJgp (ORCPT
+        id S231959AbhKALEU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Nov 2021 05:36:45 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:58718 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233733AbhKAJeK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Nov 2021 05:34:10 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1A19VVO80011837, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1A19VVO80011837
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 1 Nov 2021 17:31:31 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.15; Mon, 1 Nov 2021 17:31:30 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.15; Mon, 1 Nov
- 2021 17:31:30 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 0/4] rtw89: update power limit and regulatory map tables
-Date:   Mon, 1 Nov 2021 17:31:02 +0800
-Message-ID: <20211101093106.28848-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+        Mon, 1 Nov 2021 07:04:20 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:15136 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231512AbhKALEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Nov 2021 07:04:20 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1635764507; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=q5+g+Fpr9ojaic/Ns1gbfTcZexvkJSORFNk1aokovgQ=; b=bDvOmFbXIzJ7y7PdU6DYvTMbIysQ05RorbjhfN7ZvfNguuhXE8H54rVIdrcI92Ao3iYtttN4
+ iisaY5gW7eWhXd8F6AcdgQ7xSz/Mkxxr8RzV11pBnXoMf5C4KnUZw7rKNjZmVntShGSdxYCi
+ k7l8Sm429n5JH3+k5LeeOhzH+0c=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 617fc8e0c8c1b282a5fef57a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 01 Nov 2021 11:00:48
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D9599C4338F; Mon,  1 Nov 2021 11:00:47 +0000 (UTC)
+Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 87538C4338F;
+        Mon,  1 Nov 2021 11:00:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 87538C4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>, tony0620emma@gmail.com,
+        linux-wireless@vger.kernel.org, steventing@realtek.com
+Subject: Re: [PATCH v2 2/2] rtw88: add debugfs to force lowest basic rate
+References: <20210422030413.9738-1-pkshih@realtek.com>
+        <20210422030413.9738-2-pkshih@realtek.com>
+        <YMPqT8VH5alHQXXA@google.com>
+Date:   Mon, 01 Nov 2021 13:00:41 +0200
+In-Reply-To: <YMPqT8VH5alHQXXA@google.com> (Brian Norris's message of "Fri, 11
+        Jun 2021 15:57:19 -0700")
+Message-ID: <87k0hs2l9i.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 11/01/2021 09:11:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzExLzEgpFekyCAwODoxOTowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 11/01/2021 09:07:58
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 167015 [Nov 01 2021]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
-X-KSE-AntiSpam-Info: LuaCore: 465 465 eb31509370142567679dd183ac984a0cb2ee3296
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;realtek.com:7.1.1
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 11/01/2021 09:11:00
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Update these two tables according to internal updates that follow the
-latest regulations.
+(replying to an old thread:
 
-v2:
-  - First patch uses name instead of number to represent domain indices,
-    because second patch changes the indices according to internal tables.
-    With the name, the second patch has only small and clear changes.
-  - becomes 4 patches (v1 has 2 patches only)
-    1/2 of v1 is split into three patches, and 2/2 of v1 is equal to 4/4 of v2.
+https://patchwork.kernel.org/project/linux-wireless/patch/20210422030413.9738-2-pkshih@realtek.com/ )
 
-Zong-Zhe Yang (4):
-  rtw89: fill regd field of limit/limit_ru tables by enum
-  rtw89: update rtw89 regulation definition to R58-R31
-  rtw89: update tx power limit/limit_ru tables to R54
-  rtw89: update rtw89_regulatory map to R58-R31
 
- drivers/net/wireless/realtek/rtw89/core.h     |     9 +-
- drivers/net/wireless/realtek/rtw89/phy.c      |    12 +
- drivers/net/wireless/realtek/rtw89/regd.c     |   375 +-
- .../wireless/realtek/rtw89/rtw8852a_table.c   | 12201 +++++++++-------
- 4 files changed, 7177 insertions(+), 5420 deletions(-)
+Brian Norris <briannorris@chromium.org> writes:
+
+> On Thu, Apr 22, 2021 at 11:04:13AM +0800, Ping-Ke Shih wrote:
+>> From: Yu-Yen Ting <steventing@realtek.com>
+>> 
+>> The management frame with high rate e.g. 24M may not be transmitted
+>> smoothly in long range environment.
+>> Add a debugfs to force to use the lowest basic rate
+>> in order to debug the reachability of transmitting management frame.
+>> 
+>> obtain current setting
+>> cat /sys/kernel/debug/ieee80211/phyX/rtw88/basic_rates
+>> 
+>> force lowest rate:
+>> echo 1 > /sys/kernel/debug/ieee80211/phyX/rtw88/basic_rates
+>> 
+>> Signed-off-by: Yu-Yen Ting <steventing@realtek.com>
+>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>
+> I believe some initial objection to this was because it was unclear if
+> this is for "production" use (e.g., recommending distros to play with
+> this) or for debugging. I'll admit, I requested the feature for patch 1,
+> because I've seen that for those networks where people *do* configure
+> odd Basic Rates, they intend for stations to follow those, and not use
+> the lowest (and most airtime-hogging) rates.
+>
+> And I can say, I don't see why distributions should be turning that back
+> off. If the Basic Rates setting is wrong, then the that's up to the
+> network admin to fix.
+>
+> All that is to say: I agree that this patch is purely for debugging, as
+> stated, and that it belongs in debugfs. I also maintain a distribution,
+> and I don't plan on using this beyond debugging.
+>
+> Therefore:
+>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+Ok, fair enough as long as this will not end up normal users using it. I
+still would prefer to have extensive bitrate handling via nl80211 but
+clearly it's not going anywhere.
+
+But could the debugfs filename be more descriptive, for example
+force_basic_rates or something like that?
 
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
