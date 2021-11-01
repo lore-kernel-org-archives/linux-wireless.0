@@ -2,28 +2,28 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1071AC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BCE3C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA34A60ED3
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4222860F3A
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 03:57:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231378AbhKAEAB (ORCPT
+        id S230307AbhKAEAX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Nov 2021 00:00:01 -0400
-Received: from mga17.intel.com ([192.55.52.151]:48872 "EHLO mga17.intel.com"
+        Mon, 1 Nov 2021 00:00:23 -0400
+Received: from mga17.intel.com ([192.55.52.151]:48886 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231138AbhKAD7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Oct 2021 23:59:55 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10154"; a="211708394"
+        id S230501AbhKAEAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Nov 2021 00:00:00 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10154"; a="211708385"
 X-IronPort-AV: E=Sophos;i="5.87,198,1631602800"; 
-   d="scan'208";a="211708394"
+   d="scan'208";a="211708385"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
   by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:06 -0700
 X-IronPort-AV: E=Sophos;i="5.87,198,1631602800"; 
-   d="scan'208";a="467133051"
+   d="scan'208";a="467133035"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:06 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 20:57:05 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -37,9 +37,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
         sreehari.kancharla@intel.com, suresh.nagaraj@intel.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH v2 10/14] net: wwan: t7xx: Introduce power management support
-Date:   Sun, 31 Oct 2021 20:56:31 -0700
-Message-Id: <20211101035635.26999-11-ricardo.martinez@linux.intel.com>
+Subject: [PATCH v2 05/14] net: wwan: t7xx: Add control port
+Date:   Sun, 31 Oct 2021 20:56:26 -0700
+Message-Id: <20211101035635.26999-6-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211101035635.26999-1-ricardo.martinez@linux.intel.com>
 References: <20211101035635.26999-1-ricardo.martinez@linux.intel.com>
@@ -49,946 +49,571 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Haijun Lio <haijun.liu@mediatek.com>
 
-Implements suspend, resumes, freeze, thaw, poweroff, and restore
-`dev_pm_ops` callbacks.
+Control Port implements driver control messages such as modem-host
+handshaking, controls port enumeration, and handles exception messages.
 
-From the host point of view, the t7xx driver is one entity. But, the
-device has several modules that need to be addressed in different ways
-during power management (PM) flows.
-The driver uses the term 'PM entities' to refer to the 2 DPMA and
-2 CLDMA HW blocks that need to be managed during PM flows.
-When a dev_pm_ops function is called, the PM entities list is iterated
-and the matching function is called for each entry in the list.
+The handshaking process between the driver and the modem happens during
+the init sequence. The process involves the exchange of a list of
+supported runtime features to make sure that modem and host are ready
+to provide proper feature lists including port enumeration. Further
+features can be enabled and controlled in this handshaking process.
 
 Signed-off-by: Haijun Lio <haijun.liu@mediatek.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 122 +++++-
- drivers/net/wwan/t7xx/t7xx_hif_cldma.h     |   1 +
- drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c    |  98 +++++
- drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h    |   1 +
- drivers/net/wwan/t7xx/t7xx_mhccif.c        |  16 +
- drivers/net/wwan/t7xx/t7xx_pci.c           | 435 +++++++++++++++++++++
- drivers/net/wwan/t7xx/t7xx_pci.h           |  45 +++
- drivers/net/wwan/t7xx/t7xx_state_monitor.c |   2 +
- 8 files changed, 719 insertions(+), 1 deletion(-)
+ drivers/net/wwan/t7xx/Makefile             |   1 +
+ drivers/net/wwan/t7xx/t7xx_modem_ops.c     | 244 ++++++++++++++++++++-
+ drivers/net/wwan/t7xx/t7xx_modem_ops.h     |   2 +
+ drivers/net/wwan/t7xx/t7xx_monitor.h       |   3 +
+ drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c | 150 +++++++++++++
+ drivers/net/wwan/t7xx/t7xx_port_proxy.c    |   9 +-
+ drivers/net/wwan/t7xx/t7xx_port_proxy.h    |   4 +
+ drivers/net/wwan/t7xx/t7xx_state_monitor.c |   3 +
+ 8 files changed, 411 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c
 
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-index a63c4b514944..bcee31a5af12 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-@@ -1382,6 +1382,120 @@ void cldma_exception(enum cldma_id hif_id, enum hif_ex_stage stage)
- 	}
+diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
+index 1f117f36124a..b0fac99420a0 100644
+--- a/drivers/net/wwan/t7xx/Makefile
++++ b/drivers/net/wwan/t7xx/Makefile
+@@ -12,3 +12,4 @@ mtk_t7xx-y:=	t7xx_pci.o \
+ 		t7xx_cldma.o \
+ 		t7xx_hif_cldma.o  \
+ 		t7xx_port_proxy.o  \
++		t7xx_port_ctrl_msg.o \
+diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.c b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
+index a814705dab3a..612be5cbcbd2 100644
+--- a/drivers/net/wwan/t7xx/t7xx_modem_ops.c
++++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
+@@ -270,6 +270,242 @@ static void md_sys_sw_init(struct mtk_pci_dev *mtk_dev)
+ 	mtk_pcie_register_rgu_isr(mtk_dev);
  }
  
-+static void cldma_resume_early(struct mtk_pci_dev *mtk_dev, void *entity_param)
-+{
-+	struct cldma_hw_info *hw_info;
-+	struct cldma_ctrl *md_ctrl;
-+	unsigned long flags;
-+	int qno_t;
-+
-+	md_ctrl = entity_param;
-+	hw_info = &md_ctrl->hw_info;
-+	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
-+	cldma_hw_restore(hw_info);
-+
-+	for (qno_t = 0; qno_t < CLDMA_TXQ_NUM; qno_t++) {
-+		cldma_hw_set_start_address(hw_info, qno_t, md_ctrl->txq[qno_t].tx_xmit->gpd_addr,
-+					   false);
-+		cldma_hw_set_start_address(hw_info, qno_t, md_ctrl->rxq[qno_t].tr_done->gpd_addr,
-+					   true);
-+	}
-+
-+	cldma_enable_irq(md_ctrl);
-+	cldma_hw_start_queue(hw_info, CLDMA_ALL_Q, true);
-+	md_ctrl->rxq_active |= TXRX_STATUS_BITMASK;
-+	cldma_hw_dismask_eqirq(hw_info, CLDMA_ALL_Q, true);
-+	cldma_hw_dismask_txrxirq(hw_info, CLDMA_ALL_Q, true);
-+	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
-+}
-+
-+static int cldma_resume(struct mtk_pci_dev *mtk_dev, void *entity_param)
-+{
-+	struct cldma_ctrl *md_ctrl;
-+	unsigned long flags;
-+
-+	md_ctrl = entity_param;
-+	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
-+	md_ctrl->txq_active |= TXRX_STATUS_BITMASK;
-+	cldma_hw_dismask_txrxirq(&md_ctrl->hw_info, CLDMA_ALL_Q, false);
-+	cldma_hw_dismask_eqirq(&md_ctrl->hw_info, CLDMA_ALL_Q, false);
-+	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
-+	if (md_ctrl->hif_id == ID_CLDMA1)
-+		mhccif_mask_clr(mtk_dev, D2H_SW_INT_MASK);
-+
-+	return 0;
-+}
-+
-+static void cldma_suspend_late(struct mtk_pci_dev *mtk_dev, void *entity_param)
-+{
-+	struct cldma_hw_info *hw_info;
-+	struct cldma_ctrl *md_ctrl;
-+	unsigned long flags;
-+
-+	md_ctrl = entity_param;
-+	hw_info = &md_ctrl->hw_info;
-+	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
-+	cldma_hw_mask_eqirq(hw_info, CLDMA_ALL_Q, true);
-+	cldma_hw_mask_txrxirq(hw_info, CLDMA_ALL_Q, true);
-+	md_ctrl->rxq_active &= ~TXRX_STATUS_BITMASK;
-+	cldma_hw_stop_queue(hw_info, CLDMA_ALL_Q, true);
-+	cldma_clear_ip_busy(hw_info);
-+	cldma_disable_irq(md_ctrl);
-+	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
-+}
-+
-+static int cldma_suspend(struct mtk_pci_dev *mtk_dev, void *entity_param)
-+{
-+	struct cldma_hw_info *hw_info;
-+	struct cldma_ctrl *md_ctrl;
-+	unsigned long flags;
-+
-+	md_ctrl = entity_param;
-+	hw_info = &md_ctrl->hw_info;
-+	if (md_ctrl->hif_id == ID_CLDMA1)
-+		mhccif_mask_set(mtk_dev, D2H_SW_INT_MASK);
-+
-+	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
-+	cldma_hw_mask_eqirq(hw_info, CLDMA_ALL_Q, false);
-+	cldma_hw_mask_txrxirq(hw_info, CLDMA_ALL_Q, false);
-+	md_ctrl->txq_active &= ~TXRX_STATUS_BITMASK;
-+	cldma_hw_stop_queue(hw_info, CLDMA_ALL_Q, false);
-+	md_ctrl->txq_started = 0;
-+	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
-+	return 0;
-+}
-+
-+static int cldma_pm_init(struct cldma_ctrl *md_ctrl)
-+{
-+	md_ctrl->pm_entity = kzalloc(sizeof(*md_ctrl->pm_entity), GFP_KERNEL);
-+	if (!md_ctrl->pm_entity)
-+		return -ENOMEM;
-+
-+	md_ctrl->pm_entity->entity_param = md_ctrl;
-+	if (md_ctrl->hif_id == ID_CLDMA1)
-+		md_ctrl->pm_entity->id = PM_ENTITY_ID_CTRL1;
-+	else
-+		md_ctrl->pm_entity->id = PM_ENTITY_ID_CTRL2;
-+
-+	md_ctrl->pm_entity->suspend = cldma_suspend;
-+	md_ctrl->pm_entity->suspend_late = cldma_suspend_late;
-+	md_ctrl->pm_entity->resume = cldma_resume;
-+	md_ctrl->pm_entity->resume_early = cldma_resume_early;
-+
-+	return mtk_pci_pm_entity_register(md_ctrl->mtk_dev, md_ctrl->pm_entity);
-+}
-+
-+static int cldma_pm_uninit(struct cldma_ctrl *md_ctrl)
-+{
-+	if (!md_ctrl->pm_entity)
-+		return -EINVAL;
-+
-+	mtk_pci_pm_entity_unregister(md_ctrl->mtk_dev, md_ctrl->pm_entity);
-+	kfree_sensitive(md_ctrl->pm_entity);
-+	md_ctrl->pm_entity = NULL;
-+	return 0;
-+}
-+
- void cldma_hif_hw_init(enum cldma_id hif_id)
- {
- 	struct cldma_hw_info *hw_info;
-@@ -1423,6 +1537,7 @@ static irqreturn_t cldma_isr_handler(int irq, void *data)
-  * cldma_init() - Initialize CLDMA
-  * @hif_id: CLDMA ID (ID_CLDMA0 or ID_CLDMA1)
-  *
-+ * allocate and initialize device power management entity
-  * initialize HIF TX/RX queue structure
-  * register CLDMA callback isr with PCIe driver
-  *
-@@ -1433,7 +1548,7 @@ int cldma_init(enum cldma_id hif_id)
- 	struct cldma_hw_info *hw_info;
- 	struct cldma_ctrl *md_ctrl;
- 	struct mtk_modem *md;
--	int i;
-+	int ret, i;
- 
- 	md_ctrl = md_cd_get(hif_id);
- 	md = md_ctrl->mtk_dev->md;
-@@ -1442,6 +1557,9 @@ int cldma_init(enum cldma_id hif_id)
- 	md_ctrl->rxq_active = 0;
- 	md_ctrl->is_late_init = false;
- 	hw_info = &md_ctrl->hw_info;
-+	ret = cldma_pm_init(md_ctrl);
-+	if (ret)
-+		return ret;
- 
- 	spin_lock_init(&md_ctrl->cldma_lock);
- 	/* initialize HIF queue structure */
-@@ -1516,4 +1634,6 @@ void cldma_exit(enum cldma_id hif_id)
- 			md_ctrl->rxq[i].worker = NULL;
- 		}
- 	}
-+
-+	cldma_pm_uninit(md_ctrl);
- }
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.h b/drivers/net/wwan/t7xx/t7xx_hif_cldma.h
-index ec713197c85d..09b55f75c905 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.h
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.h
-@@ -102,6 +102,7 @@ struct cldma_ctrl {
- 	struct dma_pool *gpd_dmapool;
- 	struct cldma_ring tx_ring[CLDMA_TXQ_NUM];
- 	struct cldma_ring rx_ring[CLDMA_RXQ_NUM];
-+	struct md_pm_entity *pm_entity;
- 	struct cldma_hw_info hw_info;
- 	bool is_late_init;
- 	int (*recv_skb)(struct cldma_queue *queue, struct sk_buff *skb);
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
-index e97e1a6082d3..e9aebcc7d0de 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.c
-@@ -456,6 +456,98 @@ static int dpmaif_stop(struct dpmaif_ctrl *dpmaif_ctrl)
- 	return 0;
- }
- 
-+static int dpmaif_suspend(struct mtk_pci_dev *mtk_dev, void *param)
-+{
-+	struct dpmaif_ctrl *dpmaif_ctrl;
-+
-+	dpmaif_ctrl = param;
-+	dpmaif_suspend_tx_sw_stop(dpmaif_ctrl);
-+	dpmaif_hw_stop_tx_queue(dpmaif_ctrl);
-+	dpmaif_hw_stop_rx_queue(dpmaif_ctrl);
-+	dpmaif_disable_irq(dpmaif_ctrl);
-+	dpmaif_suspend_rx_sw_stop(dpmaif_ctrl);
-+	return 0;
-+}
-+
-+static void dpmaif_unmask_dlq_interrupt(struct dpmaif_ctrl *dpmaif_ctrl)
-+{
-+	int qno;
-+
-+	for (qno = 0; qno < DPMAIF_RXQ_NUM; qno++)
-+		dpmaif_hw_dlq_unmask_rx_done(&dpmaif_ctrl->hif_hw_info, qno);
-+}
-+
-+static void dpmaif_pre_start_hw(struct dpmaif_ctrl *dpmaif_ctrl)
-+{
-+	struct dpmaif_rx_queue *rxq;
-+	struct dpmaif_tx_queue *txq;
-+	unsigned int que_cnt;
-+
-+	/* Enable UL SW active */
-+	for (que_cnt = 0; que_cnt < DPMAIF_TXQ_NUM; que_cnt++) {
-+		txq = &dpmaif_ctrl->txq[que_cnt];
-+		txq->que_started = true;
-+	}
-+
-+	/* Enable DL/RX SW active */
-+	for (que_cnt = 0; que_cnt < DPMAIF_RXQ_NUM; que_cnt++) {
-+		rxq = &dpmaif_ctrl->rxq[que_cnt];
-+		rxq->que_started = true;
-+	}
-+}
-+
-+static int dpmaif_resume(struct mtk_pci_dev *mtk_dev, void *param)
-+{
-+	struct dpmaif_ctrl *dpmaif_ctrl;
-+
-+	dpmaif_ctrl = param;
-+	if (!dpmaif_ctrl)
-+		return 0;
-+
-+	/* start dpmaif tx/rx queue SW */
-+	dpmaif_pre_start_hw(dpmaif_ctrl);
-+	/* unmask PCIe DPMAIF interrupt */
-+	dpmaif_enable_irq(dpmaif_ctrl);
-+	dpmaif_unmask_dlq_interrupt(dpmaif_ctrl);
-+	dpmaif_start_hw(dpmaif_ctrl);
-+	wake_up(&dpmaif_ctrl->tx_wq);
-+	return 0;
-+}
-+
-+static int dpmaif_pm_entity_init(struct dpmaif_ctrl *dpmaif_ctrl)
-+{
-+	struct md_pm_entity *dpmaif_pm_entity;
-+	int ret;
-+
-+	dpmaif_pm_entity = &dpmaif_ctrl->dpmaif_pm_entity;
-+	INIT_LIST_HEAD(&dpmaif_pm_entity->entity);
-+	dpmaif_pm_entity->suspend = &dpmaif_suspend;
-+	dpmaif_pm_entity->suspend_late = NULL;
-+	dpmaif_pm_entity->resume_early = NULL;
-+	dpmaif_pm_entity->resume = &dpmaif_resume;
-+	dpmaif_pm_entity->id = PM_ENTITY_ID_DATA;
-+	dpmaif_pm_entity->entity_param = dpmaif_ctrl;
-+
-+	ret = mtk_pci_pm_entity_register(dpmaif_ctrl->mtk_dev, dpmaif_pm_entity);
-+	if (ret)
-+		dev_err(dpmaif_ctrl->dev, "dpmaif register pm_entity fail\n");
-+
-+	return ret;
-+}
-+
-+static int dpmaif_pm_entity_release(struct dpmaif_ctrl *dpmaif_ctrl)
-+{
-+	struct md_pm_entity *dpmaif_pm_entity;
-+	int ret;
-+
-+	dpmaif_pm_entity = &dpmaif_ctrl->dpmaif_pm_entity;
-+	ret = mtk_pci_pm_entity_unregister(dpmaif_ctrl->mtk_dev, dpmaif_pm_entity);
-+	if (ret < 0)
-+		dev_err(dpmaif_ctrl->dev, "dpmaif register pm_entity fail\n");
-+
-+	return ret;
-+}
-+
- int dpmaif_md_state_callback(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char state)
- {
- 	int ret = 0;
-@@ -515,6 +607,10 @@ struct dpmaif_ctrl *dpmaif_hif_init(struct mtk_pci_dev *mtk_dev,
- 	dpmaif_ctrl->hif_hw_info.pcie_base = mtk_dev->base_addr.pcie_ext_reg_base -
- 					     mtk_dev->base_addr.pcie_dev_reg_trsl_addr;
- 
-+	ret = dpmaif_pm_entity_init(dpmaif_ctrl);
-+	if (ret)
-+		return NULL;
-+
- 	/* registers dpmaif irq by PCIe driver API */
- 	dpmaif_platform_irq_init(dpmaif_ctrl);
- 	dpmaif_disable_irq(dpmaif_ctrl);
-@@ -523,6 +619,7 @@ struct dpmaif_ctrl *dpmaif_hif_init(struct mtk_pci_dev *mtk_dev,
- 	ret = dpmaif_sw_init(dpmaif_ctrl);
- 	if (ret) {
- 		dev_err(&mtk_dev->pdev->dev, "DPMAIF SW initialization fail! %d\n", ret);
-+		dpmaif_pm_entity_release(dpmaif_ctrl);
- 		return NULL;
- 	}
- 
-@@ -534,6 +631,7 @@ void dpmaif_hif_exit(struct dpmaif_ctrl *dpmaif_ctrl)
- {
- 	if (dpmaif_ctrl->dpmaif_sw_init_done) {
- 		dpmaif_stop(dpmaif_ctrl);
-+		dpmaif_pm_entity_release(dpmaif_ctrl);
- 		dpmaif_sw_release(dpmaif_ctrl);
- 		dpmaif_ctrl->dpmaif_sw_init_done = false;
- 	}
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
-index 384a44acbf62..461ad4f4b836 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif.h
-@@ -245,6 +245,7 @@ struct dpmaif_callbacks {
- struct dpmaif_ctrl {
- 	struct device			*dev;
- 	struct mtk_pci_dev		*mtk_dev;
-+	struct md_pm_entity		dpmaif_pm_entity;
- 	enum dpmaif_state		state;
- 	bool				dpmaif_sw_init_done;
- 	struct dpmaif_hw_info		hif_hw_info;
-diff --git a/drivers/net/wwan/t7xx/t7xx_mhccif.c b/drivers/net/wwan/t7xx/t7xx_mhccif.c
-index 927aeb39e313..e511a4117f47 100644
---- a/drivers/net/wwan/t7xx/t7xx_mhccif.c
-+++ b/drivers/net/wwan/t7xx/t7xx_mhccif.c
-@@ -18,6 +18,11 @@
- #include "t7xx_pci.h"
- #include "t7xx_pcie_mac.h"
- 
-+#define D2H_INT_SR_ACK		(D2H_INT_SUSPEND_ACK |		\
-+				 D2H_INT_RESUME_ACK |		\
-+				 D2H_INT_SUSPEND_ACK_AP |	\
-+				 D2H_INT_RESUME_ACK_AP)
-+
- static void mhccif_clear_interrupts(struct mtk_pci_dev *mtk_dev, u32 mask)
- {
- 	void __iomem *mhccif_pbase;
-@@ -52,6 +57,17 @@ static irqreturn_t mhccif_isr_thread(int irq, void *data)
- 	/* Clear 2 & 1 level interrupts */
- 	mhccif_clear_interrupts(mtk_dev, int_sts);
- 
-+	if (int_sts & D2H_INT_SR_ACK)
-+		complete(&mtk_dev->pm_sr_ack);
-+
-+	/* Use the 1 bits to avoid low power bits */
-+	iowrite32(L1_DISABLE_BIT(1), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+
-+	int_sts = mhccif_read_sw_int_sts(mtk_dev);
-+	if (!int_sts)
-+		iowrite32(L1_1_DISABLE_BIT(1) | L1_2_DISABLE_BIT(1),
-+			  IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+
- 	/* Enable corresponding interrupt */
- 	mtk_pcie_mac_set_int(mtk_dev, MHCCIF_INT);
- 	return IRQ_HANDLED;
-diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
-index 4b624b36e584..5afd8eb4203f 100644
---- a/drivers/net/wwan/t7xx/t7xx_pci.c
-+++ b/drivers/net/wwan/t7xx/t7xx_pci.c
-@@ -13,13 +13,18 @@
-  *               Sreehari Kancharla <sreehari.kancharla@intel.com>
-  */
- 
-+#include <linux/delay.h>
- #include <linux/device.h>
-+#include <linux/iopoll.h>
-+#include <linux/list.h>
- #include <linux/module.h>
- #include <linux/mutex.h>
- #include <linux/pci.h>
-+#include <linux/spinlock.h>
- 
- #include "t7xx_mhccif.h"
- #include "t7xx_modem_ops.h"
-+#include "t7xx_monitor.h"
- #include "t7xx_pci.h"
- #include "t7xx_pcie_mac.h"
- #include "t7xx_reg.h"
-@@ -28,6 +33,430 @@
- #define PCI_IREG_BASE			0
- #define PCI_EREG_BASE			2
- 
-+#define PM_ACK_TIMEOUT_MS		1500
-+#define PM_RESOURCE_POLL_TIMEOUT_US	10000
-+#define PM_RESOURCE_POLL_STEP_US	100
-+
-+enum mtk_pm_state {
-+	MTK_PM_EXCEPTION,	/* Exception flow */
-+	MTK_PM_INIT,		/* Device initialized, but handshake not completed */
-+	MTK_PM_SUSPENDED,	/* Device in suspend state */
-+	MTK_PM_RESUMED,		/* Device in resume state */
++struct feature_query {
++	u32 head_pattern;
++	u8 feature_set[FEATURE_COUNT];
++	u32 tail_pattern;
 +};
 +
-+static int mtk_wait_pm_config(struct mtk_pci_dev *mtk_dev)
++static void prepare_host_rt_data_query(struct core_sys_info *core)
 +{
-+	int ret, val;
++	struct ctrl_msg_header *ctrl_msg_h;
++	struct feature_query *ft_query;
++	struct ccci_header *ccci_h;
++	struct sk_buff *skb;
++	size_t packet_size;
 +
-+	ret = read_poll_timeout(ioread32, val,
-+				(val & PCIE_RESOURCE_STATUS_MSK) == PCIE_RESOURCE_STATUS_MSK,
-+				PM_RESOURCE_POLL_STEP_US, PM_RESOURCE_POLL_TIMEOUT_US, true,
-+				IREG_BASE(mtk_dev) + PCIE_RESOURCE_STATUS);
-+	if (ret == -ETIMEDOUT)
-+		dev_err(&mtk_dev->pdev->dev, "PM configuration timed out\n");
++	packet_size = sizeof(struct ccci_header) +
++		      sizeof(struct ctrl_msg_header) +
++		      sizeof(struct feature_query);
++	skb = ccci_alloc_skb(packet_size, GFS_BLOCKING);
++	if (!skb)
++		return;
 +
-+	return ret;
++	skb_put(skb, packet_size);
++	/* fill CCCI header */
++	ccci_h = (struct ccci_header *)skb->data;
++	ccci_h->data[0] = 0;
++	ccci_h->data[1] = packet_size;
++	ccci_h->status &= ~HDR_FLD_CHN;
++	ccci_h->status |= FIELD_PREP(HDR_FLD_CHN, core->ctl_port->tx_ch);
++	ccci_h->status &= ~HDR_FLD_SEQ;
++	ccci_h->reserved = 0;
++	/* fill control message */
++	ctrl_msg_h = (struct ctrl_msg_header *)(skb->data +
++						sizeof(struct ccci_header));
++	ctrl_msg_h->ctrl_msg_id = CTL_ID_HS1_MSG;
++	ctrl_msg_h->reserved = 0;
++	ctrl_msg_h->data_length = sizeof(struct feature_query);
++	/* fill feature query */
++	ft_query = (struct feature_query *)(skb->data +
++					    sizeof(struct ccci_header) +
++					    sizeof(struct ctrl_msg_header));
++	ft_query->head_pattern = MD_FEATURE_QUERY_ID;
++	memcpy(ft_query->feature_set, core->feature_set, FEATURE_COUNT);
++	ft_query->tail_pattern = MD_FEATURE_QUERY_ID;
++	/* send HS1 message to device */
++	port_proxy_send_skb(core->ctl_port, skb, 0);
 +}
 +
-+static int mtk_pci_pm_init(struct mtk_pci_dev *mtk_dev)
++static int prepare_device_rt_data(struct core_sys_info *core, struct device *dev,
++				  void *data, int data_length)
 +{
-+	struct pci_dev *pdev;
++	struct mtk_runtime_feature rt_feature;
++	struct ctrl_msg_header *ctrl_msg_h;
++	struct feature_query *md_feature;
++	struct ccci_header *ccci_h;
++	struct sk_buff *skb;
++	int packet_size = 0;
++	char *rt_data;
++	int i;
 +
-+	pdev = mtk_dev->pdev;
++	skb = ccci_alloc_skb(MTK_SKB_4K, GFS_BLOCKING);
++	if (!skb)
++		return -EFAULT;
 +
-+	INIT_LIST_HEAD(&mtk_dev->md_pm_entities);
++	/* fill CCCI header */
++	ccci_h = (struct ccci_header *)skb->data;
++	ccci_h->data[0] = 0;
++	ccci_h->status &= ~HDR_FLD_CHN;
++	ccci_h->status |= FIELD_PREP(HDR_FLD_CHN, core->ctl_port->tx_ch);
++	ccci_h->status &= ~HDR_FLD_SEQ;
++	ccci_h->reserved = 0;
++	/* fill control message header */
++	ctrl_msg_h = (struct ctrl_msg_header *)(skb->data + sizeof(struct ccci_header));
++	ctrl_msg_h->ctrl_msg_id = CTL_ID_HS3_MSG;
++	ctrl_msg_h->reserved = 0;
++	rt_data = (skb->data + sizeof(struct ccci_header) + sizeof(struct ctrl_msg_header));
 +
-+	mutex_init(&mtk_dev->md_pm_entity_mtx);
-+
-+	init_completion(&mtk_dev->pm_sr_ack);
-+
-+	device_init_wakeup(&pdev->dev, true);
-+
-+	dev_pm_set_driver_flags(&pdev->dev, pdev->dev.power.driver_flags |
-+				DPM_FLAG_NO_DIRECT_COMPLETE);
-+
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_INIT);
-+
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+
-+	return mtk_wait_pm_config(mtk_dev);
-+}
-+
-+void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* enable the PCIe Resource Lock only after MD deep sleep is done */
-+	mhccif_mask_clr(mtk_dev,
-+			D2H_INT_SUSPEND_ACK |
-+			D2H_INT_RESUME_ACK |
-+			D2H_INT_SUSPEND_ACK_AP |
-+			D2H_INT_RESUME_ACK_AP);
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_RESUMED);
-+}
-+
-+static int mtk_pci_pm_reinit(struct mtk_pci_dev *mtk_dev)
-+{
-+	/* The device is kept in FSM re-init flow
-+	 * so just roll back PM setting to the init setting.
-+	 */
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_INIT);
-+
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+	return mtk_wait_pm_config(mtk_dev);
-+}
-+
-+void mtk_pci_pm_exp_detected(struct mtk_pci_dev *mtk_dev)
-+{
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+	mtk_wait_pm_config(mtk_dev);
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_EXCEPTION);
-+}
-+
-+int mtk_pci_pm_entity_register(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity)
-+{
-+	struct md_pm_entity *entity;
-+
-+	mutex_lock(&mtk_dev->md_pm_entity_mtx);
-+	list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->id == pm_entity->id) {
-+			mutex_unlock(&mtk_dev->md_pm_entity_mtx);
-+			return -EEXIST;
-+		}
++	/* parse MD runtime data query */
++	md_feature = data;
++	if (md_feature->head_pattern != MD_FEATURE_QUERY_ID ||
++	    md_feature->tail_pattern != MD_FEATURE_QUERY_ID) {
++		dev_err(dev, "md_feature pattern is wrong: head 0x%x, tail 0x%x\n",
++			md_feature->head_pattern, md_feature->tail_pattern);
++		return -EINVAL;
 +	}
 +
-+	list_add_tail(&pm_entity->entity, &mtk_dev->md_pm_entities);
-+	mutex_unlock(&mtk_dev->md_pm_entity_mtx);
++	/* fill runtime feature */
++	for (i = 0; i < FEATURE_COUNT; i++) {
++		u8 md_feature_mask = FIELD_GET(FEATURE_MSK, md_feature->feature_set[i]);
++
++		memset(&rt_feature, 0, sizeof(rt_feature));
++		rt_feature.feature_id = i;
++		switch (md_feature_mask) {
++		case MTK_FEATURE_DOES_NOT_EXIST:
++		case MTK_FEATURE_MUST_BE_SUPPORTED:
++			rt_feature.support_info = md_feature->feature_set[i];
++			break;
++
++		default:
++			break;
++		}
++
++		if (FIELD_GET(FEATURE_MSK, rt_feature.support_info) !=
++		    MTK_FEATURE_MUST_BE_SUPPORTED) {
++			rt_feature.data_len = 0;
++			memcpy(rt_data, &rt_feature, sizeof(struct mtk_runtime_feature));
++			rt_data += sizeof(struct mtk_runtime_feature);
++		}
++
++		packet_size += (sizeof(struct mtk_runtime_feature) + rt_feature.data_len);
++	}
++
++	ctrl_msg_h->data_length = packet_size;
++	ccci_h->data[1] = packet_size + sizeof(struct ctrl_msg_header) +
++			  sizeof(struct ccci_header);
++	skb_put(skb, ccci_h->data[1]);
++	/* send HS3 message to device */
++	port_proxy_send_skb(core->ctl_port, skb, 0);
 +	return 0;
 +}
 +
-+int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity)
++static int parse_host_rt_data(struct core_sys_info *core, struct device *dev,
++			      void *data, int data_length)
 +{
-+	struct md_pm_entity *entity, *tmp_entity;
++	enum mtk_feature_support_type ft_spt_st, ft_spt_cfg;
++	struct mtk_runtime_feature *rt_feature;
++	int i, offset;
 +
-+	mutex_lock(&mtk_dev->md_pm_entity_mtx);
++	offset = sizeof(struct feature_query);
++	for (i = 0; i < FEATURE_COUNT && offset < data_length; i++) {
++		rt_feature = (struct mtk_runtime_feature *)(data + offset);
++		ft_spt_st = FIELD_GET(FEATURE_MSK, rt_feature->support_info);
++		ft_spt_cfg = FIELD_GET(FEATURE_MSK, core->feature_set[i]);
++		offset += sizeof(struct mtk_runtime_feature) + rt_feature->data_len;
 +
-+	list_for_each_entry_safe(entity, tmp_entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->id == pm_entity->id) {
-+			list_del(&pm_entity->entity);
-+			mutex_unlock(&mtk_dev->md_pm_entity_mtx);
-+			return 0;
++		if (ft_spt_cfg == MTK_FEATURE_MUST_BE_SUPPORTED) {
++			if (ft_spt_st != MTK_FEATURE_MUST_BE_SUPPORTED) {
++				dev_err(dev, "mismatch: runtime feature%d (%d,%d)\n",
++					i, ft_spt_cfg, ft_spt_st);
++				return -EINVAL;
++			}
++
++			if (i == RT_ID_MD_PORT_ENUM)
++				port_proxy_node_control(dev, (struct port_msg *)rt_feature->data);
 +		}
 +	}
 +
-+	mutex_unlock(&mtk_dev->md_pm_entity_mtx);
-+
-+	return -ENXIO;
++	return 0;
 +}
 +
-+static int __mtk_pci_pm_suspend(struct pci_dev *pdev)
++static void core_reset(struct mtk_modem *md)
 +{
-+	struct mtk_pci_dev *mtk_dev;
-+	struct md_pm_entity *entity;
-+	unsigned long wait_ret;
-+	enum mtk_pm_id id;
-+	int ret = 0;
++	struct ccci_fsm_ctl *fsm_ctl;
 +
-+	mtk_dev = pci_get_drvdata(pdev);
++	atomic_set(&md->core_md.ready, 0);
++	fsm_ctl = fsm_get_entry();
 +
-+	if (atomic_read(&mtk_dev->md_pm_state) <= MTK_PM_INIT) {
-+		dev_err(&pdev->dev,
-+			"[PM] Exiting suspend, because handshake failure or in an exception\n");
-+		return -EFAULT;
++	if (!fsm_ctl) {
++		dev_err(&md->mtk_dev->pdev->dev, "fsm ctl is not initialized\n");
++		return;
 +	}
 +
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+	ret = mtk_wait_pm_config(mtk_dev);
-+	if (ret)
-+		return ret;
++	/* append HS2_EXIT event to cancel the ongoing handshake in core_hk_handler() */
++	if (atomic_read(&md->core_md.handshake_ongoing))
++		fsm_append_event(fsm_ctl, CCCI_EVENT_MD_HS2_EXIT, NULL, 0);
 +
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_SUSPENDED);
++	atomic_set(&md->core_md.handshake_ongoing, 0);
++}
 +
-+	mtk_pcie_mac_clear_int(mtk_dev, SAP_RGU_INT);
-+	mtk_dev->rgu_pci_irq_en = false;
++static void core_hk_handler(struct mtk_modem *md, struct ccci_fsm_ctl *ctl,
++			    enum ccci_fsm_event_state event_id,
++			    enum ccci_fsm_event_state err_detect)
++{
++	struct core_sys_info *core_info;
++	struct ccci_fsm_event *event, *event_next;
++	unsigned long flags;
++	struct device *dev;
++	int ret;
 +
-+	list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->suspend) {
-+			ret = entity->suspend(mtk_dev, entity->entity_param);
-+			if (ret) {
-+				id = entity->id;
++	core_info = &md->core_md;
++	dev = &md->mtk_dev->pdev->dev;
++	prepare_host_rt_data_query(core_info);
++	while (!kthread_should_stop()) {
++		bool event_received = false;
++
++		spin_lock_irqsave(&ctl->event_lock, flags);
++		list_for_each_entry_safe(event, event_next, &ctl->event_queue, entry) {
++			if (event->event_id == err_detect) {
++				list_del(&event->entry);
++				spin_unlock_irqrestore(&ctl->event_lock, flags);
++				dev_err(dev, "core handshake error event received\n");
++				goto exit;
++			}
++
++			if (event->event_id == event_id) {
++				list_del(&event->entry);
++				event_received = true;
 +				break;
 +			}
 +		}
++
++		spin_unlock_irqrestore(&ctl->event_lock, flags);
++
++		if (event_received)
++			break;
++
++		wait_event_interruptible(ctl->event_wq, !list_empty(&ctl->event_queue) ||
++					 kthread_should_stop());
++		if (kthread_should_stop())
++			goto exit;
 +	}
 +
++	if (atomic_read(&ctl->exp_flg))
++		goto exit;
++
++	ret = parse_host_rt_data(core_info, dev, event->data, event->length);
 +	if (ret) {
-+		dev_err(&pdev->dev, "[PM] Suspend error: %d, id: %d\n", ret, id);
++		dev_err(dev, "host runtime data parsing fail:%d\n", ret);
++		goto exit;
++	}
 +
-+		list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+			if (id == entity->id)
-+				break;
++	if (atomic_read(&ctl->exp_flg))
++		goto exit;
 +
-+			if (entity->resume)
-+				entity->resume(mtk_dev, entity->entity_param);
++	ret = prepare_device_rt_data(core_info, dev, event->data, event->length);
++	if (ret) {
++		dev_err(dev, "device runtime data parsing fail:%d", ret);
++		goto exit;
++	}
++
++	atomic_set(&core_info->ready, 1);
++	atomic_set(&core_info->handshake_ongoing, 0);
++	wake_up(&ctl->async_hk_wq);
++exit:
++	kfree(event);
++}
++
+ static void md_hk_wq(struct work_struct *work)
+ {
+ 	struct ccci_fsm_ctl *ctl;
+@@ -277,12 +513,14 @@ static void md_hk_wq(struct work_struct *work)
+ 
+ 	ctl = fsm_get_entry();
+ 
++	/* clear the HS2 EXIT event appended in core_reset() */
++	fsm_clear_event(ctl, CCCI_EVENT_MD_HS2_EXIT);
+ 	cldma_switch_cfg(ID_CLDMA1);
+ 	cldma_start(ID_CLDMA1);
+ 	fsm_broadcast_state(ctl, MD_STATE_WAITING_FOR_HS2);
+ 	md = container_of(work, struct mtk_modem, handshake_work);
+-	atomic_set(&md->core_md.ready, 1);
+-	wake_up(&ctl->async_hk_wq);
++	atomic_set(&md->core_md.handshake_ongoing, 1);
++	core_hk_handler(md, ctl, CCCI_EVENT_MD_HS2, CCCI_EVENT_MD_HS2_EXIT);
+ }
+ 
+ void mtk_md_event_notify(struct mtk_modem *md, enum md_event_id evt_id)
+@@ -394,6 +632,7 @@ static struct mtk_modem *ccci_md_alloc(struct mtk_pci_dev *mtk_dev)
+ 	md->mtk_dev = mtk_dev;
+ 	mtk_dev->md = md;
+ 	atomic_set(&md->core_md.ready, 0);
++	atomic_set(&md->core_md.handshake_ongoing, 0);
+ 	md->handshake_wq = alloc_workqueue("%s",
+ 					   WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_HIGHPRI,
+ 					   0, "md_hk_wq");
+@@ -418,6 +657,7 @@ void mtk_md_reset(struct mtk_pci_dev *mtk_dev)
+ 	cldma_reset(ID_CLDMA1);
+ 	port_proxy_reset(&mtk_dev->pdev->dev);
+ 	md->md_init_finish = true;
++	core_reset(md);
+ }
+ 
+ /**
+diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.h b/drivers/net/wwan/t7xx/t7xx_modem_ops.h
+index 11aa29ad023f..4f08d1330f36 100644
+--- a/drivers/net/wwan/t7xx/t7xx_modem_ops.h
++++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.h
+@@ -60,7 +60,9 @@ enum md_event_id {
+ 
+ struct core_sys_info {
+ 	atomic_t ready;
++	atomic_t handshake_ongoing;
+ 	u8 feature_set[FEATURE_COUNT];
++	struct t7xx_port *ctl_port;
+ };
+ 
+ struct mtk_modem {
+diff --git a/drivers/net/wwan/t7xx/t7xx_monitor.h b/drivers/net/wwan/t7xx/t7xx_monitor.h
+index e03e044e685a..30b06bcbf524 100644
+--- a/drivers/net/wwan/t7xx/t7xx_monitor.h
++++ b/drivers/net/wwan/t7xx/t7xx_monitor.h
+@@ -36,9 +36,12 @@ enum ccci_fsm_state {
+ 
+ enum ccci_fsm_event_state {
+ 	CCCI_EVENT_INVALID,
++	CCCI_EVENT_MD_HS2,
+ 	CCCI_EVENT_MD_EX,
+ 	CCCI_EVENT_MD_EX_REC_OK,
+ 	CCCI_EVENT_MD_EX_PASS,
++	CCCI_EVENT_MD_HS2_EXIT,
++	CCCI_EVENT_AP_HS2_EXIT,
+ 	CCCI_EVENT_MAX
+ };
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c b/drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c
+new file mode 100644
+index 000000000000..6bd0e9682127
+--- /dev/null
++++ b/drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c
+@@ -0,0 +1,150 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021, Intel Corporation.
++ *
++ * Authors: Haijun Lio <haijun.liu@mediatek.com>
++ * Contributors: Amir Hanania <amir.hanania@intel.com>
++ *               Chiranjeevi Rapolu <chiranjeevi.rapolu@intel.com>
++ *               Eliot Lee <eliot.lee@intel.com>
++ *               Moises Veleta <moises.veleta@intel.com>
++ *               Ricardo Martinez<ricardo.martinez@linux.intel.com>
++ *               Sreehari Kancharla <sreehari.kancharla@intel.com>
++ */
++
++#include <linux/kthread.h>
++#include <linux/skbuff.h>
++#include <linux/spinlock.h>
++
++#include "t7xx_common.h"
++#include "t7xx_monitor.h"
++#include "t7xx_port_proxy.h"
++
++static void fsm_ee_message_handler(struct sk_buff *skb)
++{
++	struct ctrl_msg_header *ctrl_msg_h;
++	struct ccci_fsm_ctl *ctl;
++	enum md_state md_state;
++	struct device *dev;
++
++	ctrl_msg_h = (struct ctrl_msg_header *)skb->data;
++	md_state = ccci_fsm_get_md_state();
++	ctl = fsm_get_entry();
++	dev = &ctl->md->mtk_dev->pdev->dev;
++	if (md_state != MD_STATE_EXCEPTION) {
++		dev_err(dev, "receive invalid MD_EX %x when MD state is %d\n",
++			ctrl_msg_h->reserved, md_state);
++		return;
++	}
++
++	switch (ctrl_msg_h->ctrl_msg_id) {
++	case CTL_ID_MD_EX:
++		if (ctrl_msg_h->reserved != MD_EX_CHK_ID) {
++			dev_err(dev, "receive invalid MD_EX %x\n", ctrl_msg_h->reserved);
++		} else {
++			port_proxy_send_msg_to_md(CCCI_CONTROL_TX, CTL_ID_MD_EX, MD_EX_CHK_ID);
++			fsm_append_event(ctl, CCCI_EVENT_MD_EX, NULL, 0);
 +		}
 +
-+		goto suspend_complete;
-+	}
-+
-+	reinit_completion(&mtk_dev->pm_sr_ack);
-+	/* send D3 enter request to MD */
-+	mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_SUSPEND_REQ);
-+	wait_ret = wait_for_completion_timeout(&mtk_dev->pm_sr_ack,
-+					       msecs_to_jiffies(PM_ACK_TIMEOUT_MS));
-+	if (!wait_ret)
-+		dev_err(&pdev->dev, "[PM] Wait for device suspend ACK timeout-MD\n");
-+
-+	reinit_completion(&mtk_dev->pm_sr_ack);
-+	/* send D3 enter request to sAP */
-+	mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_SUSPEND_REQ_AP);
-+	wait_ret = wait_for_completion_timeout(&mtk_dev->pm_sr_ack,
-+					       msecs_to_jiffies(PM_ACK_TIMEOUT_MS));
-+	if (!wait_ret)
-+		dev_err(&pdev->dev, "[PM] Wait for device suspend ACK timeout-SAP\n");
-+
-+	/* Each HW's final work */
-+	list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->suspend_late)
-+			entity->suspend_late(mtk_dev, entity->entity_param);
-+	}
-+
-+suspend_complete:
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+	if (ret) {
-+		atomic_set(&mtk_dev->md_pm_state, MTK_PM_RESUMED);
-+		mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
-+	}
-+
-+	return ret;
-+}
-+
-+static void mtk_pcie_interrupt_reinit(struct mtk_pci_dev *mtk_dev)
-+{
-+	mtk_pcie_mac_msix_cfg(mtk_dev, EXT_INT_NUM);
-+
-+	/* Disable interrupt first and let the IPs enable them */
-+	iowrite32(MSIX_MSK_SET_ALL, IREG_BASE(mtk_dev) + IMASK_HOST_MSIX_CLR_GRP0_0);
-+
-+	/* Device disables PCIe interrupts during resume and
-+	 * following function will re-enable PCIe interrupts.
-+	 */
-+	mtk_pcie_mac_interrupts_en(mtk_dev);
-+	mtk_pcie_mac_set_int(mtk_dev, MHCCIF_INT);
-+}
-+
-+static int mtk_pcie_reinit(struct mtk_pci_dev *mtk_dev, bool is_d3)
-+{
-+	int ret;
-+
-+	ret = pcim_enable_device(mtk_dev->pdev);
-+	if (ret)
-+		return ret;
-+
-+	mtk_pcie_mac_atr_init(mtk_dev);
-+	mtk_pcie_interrupt_reinit(mtk_dev);
-+
-+	if (is_d3) {
-+		mhccif_init(mtk_dev);
-+		return mtk_pci_pm_reinit(mtk_dev);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mtk_send_fsm_command(struct mtk_pci_dev *mtk_dev, u32 event)
-+{
-+	struct ccci_fsm_ctl *fsm_ctl;
-+	int ret = -EINVAL;
-+
-+	fsm_ctl = fsm_get_entry();
-+
-+	switch (event) {
-+	case CCCI_COMMAND_STOP:
-+		ret = fsm_append_command(fsm_ctl, CCCI_COMMAND_STOP, 1);
 +		break;
 +
-+	case CCCI_COMMAND_START:
-+		mtk_pcie_mac_clear_int(mtk_dev, SAP_RGU_INT);
-+		mtk_pcie_mac_clear_int_status(mtk_dev, SAP_RGU_INT);
-+		mtk_dev->rgu_pci_irq_en = true;
-+		mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
-+		ret = fsm_append_command(fsm_ctl, CCCI_COMMAND_START, 0);
++	case CTL_ID_MD_EX_ACK:
++		if (ctrl_msg_h->reserved != MD_EX_CHK_ACK_ID)
++			dev_err(dev, "receive invalid MD_EX_ACK %x\n", ctrl_msg_h->reserved);
++		else
++			fsm_append_event(ctl, CCCI_EVENT_MD_EX_REC_OK, NULL, 0);
++
++		break;
++
++	case CTL_ID_MD_EX_PASS:
++		fsm_append_event(ctl, CCCI_EVENT_MD_EX_PASS, NULL, 0);
++		break;
++
++	case CTL_ID_DRV_VER_ERROR:
++		dev_err(dev, "AP/MD driver version mismatch\n");
++	}
++}
++
++static void control_msg_handler(struct t7xx_port *port, struct sk_buff *skb)
++{
++	struct ctrl_msg_header *ctrl_msg_h;
++	struct ccci_fsm_ctl *ctl;
++	int ret = 0;
++
++	skb_pull(skb, sizeof(struct ccci_header));
++	ctrl_msg_h = (struct ctrl_msg_header *)skb->data;
++	ctl = fsm_get_entry();
++
++	switch (ctrl_msg_h->ctrl_msg_id) {
++	case CTL_ID_HS2_MSG:
++		skb_pull(skb, sizeof(struct ctrl_msg_header));
++		if (port->rx_ch == CCCI_CONTROL_RX)
++			fsm_append_event(ctl, CCCI_EVENT_MD_HS2,
++					 skb->data, ctrl_msg_h->data_length);
++
++		ccci_free_skb(&port->mtk_dev->pools, skb);
++		break;
++
++	case CTL_ID_MD_EX:
++	case CTL_ID_MD_EX_ACK:
++	case CTL_ID_MD_EX_PASS:
++	case CTL_ID_DRV_VER_ERROR:
++		fsm_ee_message_handler(skb);
++		ccci_free_skb(&port->mtk_dev->pools, skb);
++		break;
++
++	case CTL_ID_PORT_ENUM:
++		skb_pull(skb, sizeof(struct ctrl_msg_header));
++		ret = port_proxy_node_control(port->dev, (struct port_msg *)skb->data);
++		if (!ret)
++			port_proxy_send_msg_to_md(CCCI_CONTROL_TX, CTL_ID_PORT_ENUM, 0);
++		else
++			port_proxy_send_msg_to_md(CCCI_CONTROL_TX,
++						  CTL_ID_PORT_ENUM, PORT_ENUM_VER_MISMATCH);
++
 +		break;
 +
 +	default:
++		dev_err(port->dev, "unknown control message ID to FSM %x\n",
++			ctrl_msg_h->ctrl_msg_id);
 +		break;
 +	}
++
 +	if (ret)
-+		dev_err(&mtk_dev->pdev->dev, "handling FSM CMD event: %u error: %d\n", event, ret);
-+
-+	return ret;
++		dev_err(port->dev, "%s control message handle error: %d\n", port->name, ret);
 +}
 +
-+static int __mtk_pci_pm_resume(struct pci_dev *pdev, bool state_check)
++static int port_ctl_init(struct t7xx_port *port)
 +{
-+	struct mtk_pci_dev *mtk_dev;
-+	struct md_pm_entity *entity;
-+	unsigned long wait_ret;
-+	u32 resume_reg_state;
-+	int ret = 0;
-+
-+	mtk_dev = pci_get_drvdata(pdev);
-+
-+	if (atomic_read(&mtk_dev->md_pm_state) <= MTK_PM_INIT) {
-+		iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+		return 0;
++	port->skb_handler = &control_msg_handler;
++	port->thread = kthread_run(port_kthread_handler, port, "%s", port->name);
++	if (IS_ERR(port->thread)) {
++		dev_err(port->dev, "failed to start port control thread\n");
++		return PTR_ERR(port->thread);
 +	}
 +
-+	/* Get the previous state */
-+	resume_reg_state = ioread32(IREG_BASE(mtk_dev) + PCIE_PM_RESUME_STATE);
-+
-+	if (state_check) {
-+		/* For D3/L3 resume, the device could boot so quickly that the
-+		 * initial value of the dummy register might be overwritten.
-+		 * Identify new boots if the ATR source address register is not initialized.
-+		 */
-+		u32 atr_reg_val = ioread32(IREG_BASE(mtk_dev) +
-+					   ATR_PCIE_WIN0_T0_ATR_PARAM_SRC_ADDR);
-+
-+		if (resume_reg_state == PM_RESUME_REG_STATE_L3 ||
-+		    (resume_reg_state == PM_RESUME_REG_STATE_INIT &&
-+		     atr_reg_val == ATR_SRC_ADDR_INVALID)) {
-+			ret = mtk_send_fsm_command(mtk_dev, CCCI_COMMAND_STOP);
-+			if (ret)
-+				return ret;
-+
-+			ret = mtk_pcie_reinit(mtk_dev, true);
-+			if (ret)
-+				return ret;
-+
-+			mtk_clear_rgu_irq(mtk_dev);
-+			return mtk_send_fsm_command(mtk_dev, CCCI_COMMAND_START);
-+		} else if (resume_reg_state == PM_RESUME_REG_STATE_EXP ||
-+			   resume_reg_state == PM_RESUME_REG_STATE_L2_EXP) {
-+			if (resume_reg_state == PM_RESUME_REG_STATE_L2_EXP) {
-+				ret = mtk_pcie_reinit(mtk_dev, false);
-+				if (ret)
-+					return ret;
-+			}
-+
-+			atomic_set(&mtk_dev->md_pm_state, MTK_PM_SUSPENDED);
-+			mtk_dev->rgu_pci_irq_en = true;
-+			mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
-+
-+			mhccif_mask_clr(mtk_dev,
-+					D2H_INT_EXCEPTION_INIT |
-+					D2H_INT_EXCEPTION_INIT_DONE |
-+					D2H_INT_EXCEPTION_CLEARQ_DONE |
-+					D2H_INT_EXCEPTION_ALLQ_RESET |
-+					D2H_INT_PORT_ENUM);
-+
-+			return ret;
-+		} else if (resume_reg_state == PM_RESUME_REG_STATE_L2) {
-+			ret = mtk_pcie_reinit(mtk_dev, false);
-+			if (ret)
-+				return ret;
-+
-+		} else if (resume_reg_state != PM_RESUME_REG_STATE_L1 &&
-+			   resume_reg_state != PM_RESUME_REG_STATE_INIT) {
-+			ret = mtk_send_fsm_command(mtk_dev, CCCI_COMMAND_STOP);
-+			if (ret)
-+				return ret;
-+
-+			mtk_clear_rgu_irq(mtk_dev);
-+			atomic_set(&mtk_dev->md_pm_state, MTK_PM_SUSPENDED);
-+			return 0;
-+		}
-+	}
-+
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_SET_0);
-+	mtk_wait_pm_config(mtk_dev);
-+
-+	list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->resume_early)
-+			entity->resume_early(mtk_dev, entity->entity_param);
-+	}
-+
-+	reinit_completion(&mtk_dev->pm_sr_ack);
-+	/* send D3 exit request to MD */
-+	mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_RESUME_REQ);
-+	wait_ret = wait_for_completion_timeout(&mtk_dev->pm_sr_ack,
-+					       msecs_to_jiffies(PM_ACK_TIMEOUT_MS));
-+	if (!wait_ret)
-+		dev_err(&pdev->dev, "[PM] Timed out waiting for device MD resume ACK\n");
-+
-+	reinit_completion(&mtk_dev->pm_sr_ack);
-+	/* send D3 exit request to sAP */
-+	mhccif_h2d_swint_trigger(mtk_dev, H2D_CH_RESUME_REQ_AP);
-+	wait_ret = wait_for_completion_timeout(&mtk_dev->pm_sr_ack,
-+					       msecs_to_jiffies(PM_ACK_TIMEOUT_MS));
-+	if (!wait_ret)
-+		dev_err(&pdev->dev, "[PM] Timed out waiting for device SAP resume ACK\n");
-+
-+	/* Each HW final restore works */
-+	list_for_each_entry(entity, &mtk_dev->md_pm_entities, entity) {
-+		if (entity->resume) {
-+			ret = entity->resume(mtk_dev, entity->entity_param);
-+			if (ret)
-+				dev_err(&pdev->dev, "[PM] Resume entry ID: %d err: %d\n",
-+					entity->id, ret);
-+		}
-+	}
-+
-+	mtk_dev->rgu_pci_irq_en = true;
-+	mtk_pcie_mac_set_int(mtk_dev, SAP_RGU_INT);
-+	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(mtk_dev) + DIS_ASPM_LOWPWR_CLR_0);
-+	atomic_set(&mtk_dev->md_pm_state, MTK_PM_RESUMED);
-+
-+	return ret;
-+}
-+
-+static int mtk_pci_pm_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pci_dev *mtk_dev;
-+	struct pci_dev *pdev;
-+	void __iomem *pbase;
-+
-+	pdev = to_pci_dev(dev);
-+	mtk_dev = pci_get_drvdata(pdev);
-+	pbase = IREG_BASE(mtk_dev);
-+
-+	/* disable interrupt first and let the IPs enable them */
-+	iowrite32(MSIX_MSK_SET_ALL, pbase + IMASK_HOST_MSIX_CLR_GRP0_0);
-+
++	port->rx_length_th = MAX_CTRL_QUEUE_LENGTH;
++	port->skb_from_pool = true;
 +	return 0;
 +}
 +
-+static void mtk_pci_shutdown(struct pci_dev *pdev)
++static void port_ctl_uninit(struct t7xx_port *port)
 +{
-+	__mtk_pci_pm_suspend(pdev);
++	unsigned long flags;
++	struct sk_buff *skb;
++
++	if (port->thread)
++		kthread_stop(port->thread);
++
++	spin_lock_irqsave(&port->rx_wq.lock, flags);
++	while ((skb = __skb_dequeue(&port->rx_skb_list)) != NULL)
++		ccci_free_skb(&port->mtk_dev->pools, skb);
++
++	spin_unlock_irqrestore(&port->rx_wq.lock, flags);
 +}
 +
-+static int mtk_pci_pm_suspend(struct device *dev)
-+{
-+	return __mtk_pci_pm_suspend(to_pci_dev(dev));
-+}
-+
-+static int mtk_pci_pm_resume(struct device *dev)
-+{
-+	return __mtk_pci_pm_resume(to_pci_dev(dev), true);
-+}
-+
-+static int mtk_pci_pm_thaw(struct device *dev)
-+{
-+	return __mtk_pci_pm_resume(to_pci_dev(dev), false);
-+}
-+
-+static const struct dev_pm_ops mtk_pci_pm_ops = {
-+	.suspend = mtk_pci_pm_suspend,
-+	.resume = mtk_pci_pm_resume,
-+	.resume_noirq = mtk_pci_pm_resume_noirq,
-+	.freeze = mtk_pci_pm_suspend,
-+	.thaw = mtk_pci_pm_thaw,
-+	.poweroff = mtk_pci_pm_suspend,
-+	.restore = mtk_pci_pm_resume,
-+	.restore_noirq = mtk_pci_pm_resume_noirq,
++struct port_ops ctl_port_ops = {
++	.init = &port_ctl_init,
++	.recv_skb = &port_recv_skb,
++	.uninit = &port_ctl_uninit,
 +};
-+
- static int mtk_request_irq(struct pci_dev *pdev)
- {
- 	struct mtk_pci_dev *mtk_dev;
-@@ -165,6 +594,10 @@ static int mtk_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (ret)
- 		return ret;
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.c b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
+index a3795d30c317..39e779531068 100644
+--- a/drivers/net/wwan/t7xx/t7xx_port_proxy.c
++++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
+@@ -50,10 +50,9 @@ static struct port_proxy *port_prox;
+ 	     i < (proxy)->port_number;		\
+ 	     i++, (p) = &(proxy)->ports[i])
  
-+	ret = mtk_pci_pm_init(mtk_dev);
-+	if (ret)
-+		goto err;
-+
- 	mtk_pcie_mac_atr_init(mtk_dev);
- 	mtk_pci_infracfg_ao_calc(mtk_dev);
- 	mhccif_init(mtk_dev);
-@@ -219,6 +652,8 @@ static struct pci_driver mtk_pci_driver = {
- 	.id_table = t7xx_pci_table,
- 	.probe = mtk_pci_probe,
- 	.remove = mtk_pci_remove,
-+	.driver.pm = &mtk_pci_pm_ops,
-+	.shutdown = mtk_pci_shutdown,
+-static struct port_ops dummy_port_ops;
+-
+ static struct t7xx_port md_ccci_ports[] = {
+-	{0, 0, 0, 0, 0, 0, ID_CLDMA1, 0, &dummy_port_ops, 0xff, "dummy_port",},
++	{CCCI_CONTROL_TX, CCCI_CONTROL_RX, 0, 0, 0, 0, ID_CLDMA1,
++	 0, &ctl_port_ops, 0xff, "ccci_ctrl",},
  };
  
- static int __init mtk_pci_init(void)
-diff --git a/drivers/net/wwan/t7xx/t7xx_pci.h b/drivers/net/wwan/t7xx/t7xx_pci.h
-index bc6f0a83f546..7ce429db240f 100644
---- a/drivers/net/wwan/t7xx/t7xx_pci.h
-+++ b/drivers/net/wwan/t7xx/t7xx_pci.h
-@@ -14,6 +14,8 @@
- #ifndef __T7XX_PCI_H__
- #define __T7XX_PCI_H__
+ static int port_netlink_send_msg(struct t7xx_port *port, int grp,
+@@ -586,6 +585,10 @@ static void proxy_init_all_ports(struct mtk_modem *md)
  
-+#include <linux/completion.h>
-+#include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/types.h>
+ 	for_each_proxy_port(i, port, port_prox) {
+ 		port_struct_init(port);
++		if (port->tx_ch == CCCI_CONTROL_TX) {
++			port_prox->ctl_port = port;
++			md->core_md.ctl_port = port;
++		}
  
-@@ -45,6 +47,10 @@ typedef irqreturn_t (*mtk_intr_callback)(int irq, void *param);
-  * @pdev: pci device
-  * @base_addr: memory base addresses of HW components
-  * @md: modem interface
-+ * @md_pm_entities: list of pm entities
-+ * @md_pm_entity_mtx: protects md_pm_entities list
-+ * @pm_sr_ack: ack from the device when went to sleep or woke up
-+ * @md_pm_state: state for resume/suspend
-  * @ccmni_ctlb: context structure used to control the network data path
-  * @rgu_pci_irq_en: RGU callback isr registered and active
-  * @pools: pre allocated skb pools
-@@ -58,9 +64,48 @@ struct mtk_pci_dev {
- 	struct mtk_addr_base	base_addr;
- 	struct mtk_modem	*md;
+ 		port->major = port_prox->major;
+ 		port->minor_base = port_prox->minor_base;
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.h b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
+index bd700321ca60..bc6fef0d7cf6 100644
+--- a/drivers/net/wwan/t7xx/t7xx_port_proxy.h
++++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
+@@ -45,6 +45,7 @@ struct port_proxy {
+ 	unsigned int		major;
+ 	unsigned int		minor_base;
+ 	struct t7xx_port	*ports;
++	struct t7xx_port	*ctl_port;
+ 	struct t7xx_port	*dedicated_ports[CLDMA_NUM][MTK_MAX_QUEUE_NUM];
+ 	/* port list of each RX channel, for RX dispatching */
+ 	struct list_head	rx_ch_ports[CCCI_MAX_CH_ID];
+@@ -80,6 +81,9 @@ struct port_msg {
+ #define PORT_ENUM_TAIL_PATTERN	0xa5a5a5a5
+ #define PORT_ENUM_VER_MISMATCH	0x00657272
  
-+	/* Low Power Items */
-+	struct list_head	md_pm_entities;
-+	struct mutex		md_pm_entity_mtx;	/* protects md_pm_entities list */
-+	struct completion	pm_sr_ack;
-+	atomic_t		md_pm_state;
++/* port operations mapping */
++extern struct port_ops ctl_port_ops;
 +
- 	struct ccmni_ctl_block	*ccmni_ctlb;
- 	bool			rgu_pci_irq_en;
- 	struct skb_pools	pools;
- };
- 
-+enum mtk_pm_id {
-+	PM_ENTITY_ID_CTRL1,
-+	PM_ENTITY_ID_CTRL2,
-+	PM_ENTITY_ID_DATA,
-+};
-+
-+/* struct md_pm_entity - device power management entity
-+ * @entity: list of PM Entities
-+ * @suspend: callback invoked before sending D3 request to device
-+ * @suspend_late: callback invoked after getting D3 ACK from device
-+ * @resume_early: callback invoked before sending the resume request to device
-+ * @resume: callback invoked after getting resume ACK from device
-+ * @id: unique PM entity identifier
-+ * @entity_param: parameter passed to the registered callbacks
-+ *
-+ *  This structure is used to indicate PM operations required by internal
-+ *  HW modules such as CLDMA and DPMA.
-+ */
-+struct md_pm_entity {
-+	struct list_head	entity;
-+	int (*suspend)(struct mtk_pci_dev *mtk_dev, void *entity_param);
-+	void (*suspend_late)(struct mtk_pci_dev *mtk_dev, void *entity_param);
-+	void (*resume_early)(struct mtk_pci_dev *mtk_dev, void *entity_param);
-+	int (*resume)(struct mtk_pci_dev *mtk_dev, void *entity_param);
-+	enum mtk_pm_id		id;
-+	void			*entity_param;
-+};
-+
-+int mtk_pci_pm_entity_register(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
-+int mtk_pci_pm_entity_unregister(struct mtk_pci_dev *mtk_dev, struct md_pm_entity *pm_entity);
-+void mtk_pci_pm_init_late(struct mtk_pci_dev *mtk_dev);
-+void mtk_pci_pm_exp_detected(struct mtk_pci_dev *mtk_dev);
-+
- #endif /* __T7XX_PCI_H__ */
+ int port_proxy_send_skb(struct t7xx_port *port, struct sk_buff *skb, bool from_pool);
+ void port_proxy_set_seq_num(struct t7xx_port *port, struct ccci_header *ccci_h);
+ int port_proxy_node_control(struct device *dev, struct port_msg *port_msg);
 diff --git a/drivers/net/wwan/t7xx/t7xx_state_monitor.c b/drivers/net/wwan/t7xx/t7xx_state_monitor.c
-index 5a049f0f6bfc..dd4aa3463359 100644
+index 4f9e8cfa2f94..5a049f0f6bfc 100644
 --- a/drivers/net/wwan/t7xx/t7xx_state_monitor.c
 +++ b/drivers/net/wwan/t7xx/t7xx_state_monitor.c
-@@ -173,6 +173,7 @@ static void fsm_routine_exception(struct ccci_fsm_ctl *ctl, struct ccci_fsm_comm
+@@ -334,6 +334,9 @@ static void fsm_routine_starting(struct ccci_fsm_ctl *ctl)
  
- 	case EXCEPTION_EVENT:
- 		fsm_broadcast_state(ctl, MD_STATE_EXCEPTION);
-+		mtk_pci_pm_exp_detected(ctl->md->mtk_dev);
- 		mtk_md_exception_handshake(ctl->md);
- 		cnt = 0;
- 		while (cnt < MD_EX_REC_OK_TIMEOUT_MS / EVENT_POLL_INTERVAL_MS) {
-@@ -339,6 +340,7 @@ static void fsm_routine_starting(struct ccci_fsm_ctl *ctl)
- 
+ 	if (!atomic_read(&md->core_md.ready)) {
+ 		dev_err(dev, "MD handshake timeout\n");
++		if (atomic_read(&md->core_md.handshake_ongoing))
++			fsm_append_event(ctl, CCCI_EVENT_MD_HS2_EXIT, NULL, 0);
++
  		fsm_routine_exception(ctl, NULL, EXCEPTION_HS_TIMEOUT);
  	} else {
-+		mtk_pci_pm_init_late(md->mtk_dev);
  		fsm_routine_ready(ctl);
- 	}
- }
 -- 
 2.17.1
 
