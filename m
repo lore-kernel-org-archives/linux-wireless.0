@@ -2,113 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D716AC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 14:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DB7DC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 14:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5B3A61051
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 14:11:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1080E60524
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Nov 2021 14:13:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232250AbhKAONw (ORCPT
+        id S231874AbhKAOQZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Nov 2021 10:13:52 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:41699 "EHLO
+        Mon, 1 Nov 2021 10:16:25 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:15584 "EHLO
         so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232390AbhKAONt (ORCPT
+        with ESMTP id S229826AbhKAOQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Nov 2021 10:13:49 -0400
+        Mon, 1 Nov 2021 10:16:24 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1635775876; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=CvtnDpKjW8pQbenyBtfylZcE3DM2k5AZjm8hFYUwq1E=; b=QxmKT4rLCQZLEfE80uxr7zqouemKtQIpjVxfoBm+ZV9nOo0iiiIdMaxrlcR17G6Qai1Pj0IE
- dL1tRjpsTrorO+0SOsOi85DS/lOMZRZfc37F93V6RhMNZP1CorZPnqUNOWhvn2HUw+qEBbYC
- 0LTG61rzvxEDbEUKAQmqWQAIcUY=
+ s=smtp; t=1635776031; h=Date: Message-ID: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=hfPTa5dxL3T5AIUBZZwn7bV77RB+FEBII+Ne84D4g4c=;
+ b=h4Am5HfJG+5Vw0do9Jwok4zE11geK4zTioXaRDaaBvE1IjpaXE95B6jHbA2yzybo7aBxoRgt
+ 9H0dk0TqRx/9Y111zWvVo55DK65t3pnEJsCbwWP1Ddh39Yy98h2yDI6drLV6NH43UXOaljMc
+ JP7gu5O71zqxu4j0QkM7wFf2Ymk=
 X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 617ff4aeaeb23905560c9fb9 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 01 Nov 2021 14:07:42
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 617ff61e2e144ac4d31aa288 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 01 Nov 2021 14:13:49
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9C808C43617; Mon,  1 Nov 2021 14:07:42 +0000 (UTC)
-Received: from tykki (tynnyri.adurom.net [51.15.11.48])
+        id F3BA9C4360D; Mon,  1 Nov 2021 14:13:47 +0000 (UTC)
+Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EBF4BC4360D;
-        Mon,  1 Nov 2021 14:07:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org EBF4BC4360D
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2437DC4338F;
+        Mon,  1 Nov 2021 14:13:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 2437DC4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Zekun Shen <bruceshenzk@gmail.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brendandg@nyu.edu
-Subject: Re: [PATCH] rsi_usb: Fix out-of-bounds read in rsi_read_pkt
-References: <YXxXS4wgu2OsmlVv@10-18-43-117.dynapool.wireless.nyu.edu>
-Date:   Mon, 01 Nov 2021 16:07:37 +0200
-In-Reply-To: <YXxXS4wgu2OsmlVv@10-18-43-117.dynapool.wireless.nyu.edu> (Zekun
-        Shen's message of "Fri, 29 Oct 2021 16:19:23 -0400")
-Message-ID: <87tugw0y1i.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 3/3] ath11k: set correct NL80211_FEATURE_DYNAMIC_SMPS for
+ WCN6855
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20210914163726.38604-3-jouni@codeaurora.org>
+References: <20210914163726.38604-3-jouni@codeaurora.org>
+To:     Jouni Malinen <jouni@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Wen Gong <wgong@codeaurora.org>,
+        Jouni Malinen <jouni@codeaurora.org>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <163577602395.7461.6563543942960093028.kvalo@codeaurora.org>
+Date:   Mon,  1 Nov 2021 14:13:47 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zekun Shen <bruceshenzk@gmail.com> writes:
+Jouni Malinen <jouni@codeaurora.org> wrote:
 
-> rsi_get_* functions rely on an offset variable from usb
-> input. The size of usb input is RSI_MAX_RX_USB_PKT_SIZE(3000),
-> while 2-byte offset can be up to 0xFFFF. Thus a large offset
-> can cause out-of-bounds read.
->
-> The patch adds a bound checking condition when rcv_pkt_len is 0,
-> indicating it's USB. It's unclear whether this is triggerable
-> from other type of bus. The following check might help in that case.
-> offset > rcv_pkt_len - FRAME_DESC_SZ
->
-> The bug is trigerrable with conpromised/malfunctioning USB devices.
-> I tested the patch with the crashing input and got no more bug report.
->
-> Attached is the KASAN report from fuzzing.
->
-> BUG: KASAN: slab-out-of-bounds in rsi_read_pkt+0x42e/0x500 [rsi_91x]
-> Read of size 2 at addr ffff888019439fdb by task RX-Thread/227
->
-> CPU: 0 PID: 227 Comm: RX-Thread Not tainted 5.6.0 #66
-> Call Trace:
->  dump_stack+0x76/0xa0
->  print_address_description.constprop.0+0x16/0x200
->  ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
->  ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
->  __kasan_report.cold+0x37/0x7c
->  ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
->  kasan_report+0xe/0x20
->  rsi_read_pkt+0x42e/0x500 [rsi_91x]
->  rsi_usb_rx_thread+0x1b1/0x2fc [rsi_usb]
->  ? rsi_probe+0x16a0/0x16a0 [rsi_usb]
->  ? _raw_spin_lock_irqsave+0x7b/0xd0
->  ? _raw_spin_trylock_bh+0x120/0x120
->  ? __wake_up_common+0x10b/0x520
->  ? rsi_probe+0x16a0/0x16a0 [rsi_usb]
->  kthread+0x2b5/0x3b0
->  ? kthread_create_on_node+0xd0/0xd0
->  ret_from_fork+0x22/0x40
->
-> Reported-by: Zekun Shen <bruceshenzk@gmail.com>
+> Commit 6f4d70308e5e ("ath11k: support SMPS configuration for 6 GHz") changed
+> "if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS)" to "if (ht_cap &
+> WMI_HT_CAP_DYNAMIC_SMPS || ar->supports_6ghz)" which means
+> NL80211_FEATURE_DYNAMIC_SMPS is enabled for all chips which support 6 GHz.
+> However, WCN6855 supports 6 GHz but it does not support feature
+> NL80211_FEATURE_DYNAMIC_SMPS, and this can lead to MU-MIMO test failures for
+> WCN6855.
+> 
+> Disable NL80211_FEATURE_DYNAMIC_SMPS for WCN6855 since its ht_cap does not
+> support WMI_HT_CAP_DYNAMIC_SMPS. Enable the feature only on QCN9074 as that's
+> the only other device supporting 6 GHz band.
+> 
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+> 
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-You are the author, no need to have your name in Reported-by.
+Patch applied to ath-next branch of ath.git, thanks.
 
+82c434c10340 ath11k: set correct NL80211_FEATURE_DYNAMIC_SMPS for WCN6855
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20210914163726.38604-3-jouni@codeaurora.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
