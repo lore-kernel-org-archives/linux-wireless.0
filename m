@@ -2,124 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B88C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD30DC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:46:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A00D76112E
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF6D66112E
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:46:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234071AbhKDSmf (ORCPT
+        id S232418AbhKDStB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Nov 2021 14:42:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45008 "EHLO
+        Thu, 4 Nov 2021 14:49:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbhKDSme (ORCPT
+        with ESMTP id S232214AbhKDStA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Nov 2021 14:42:34 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52C96C061714
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Nov 2021 11:39:56 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id u11so13876229lfs.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2021 11:39:56 -0700 (PDT)
+        Thu, 4 Nov 2021 14:49:00 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2C80C061203
+        for <linux-wireless@vger.kernel.org>; Thu,  4 Nov 2021 11:46:21 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id v20so8737696plo.7
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2021 11:46:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openwisp-io.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=qxTFr0OwAYxyQ/D8q0akcACku+9rWPHHeE9dfhWvumY=;
-        b=MhZCUCvQXWlliciIE1G6krBJlejHBeUT+e81el3q63nhn3UmDZV853zfyoPuxoWGe2
-         NltOcZIEKLZ6Sn62EJhfrX76RIOb7HBgQaJmo/W3htlZy93Do0/Sr5QpIxFijXZslZzS
-         6Gfrf73JwaCS+jXCulLvpMyFbZ6pkYzWd0axFXep+RN8EuZ8rydHSadvzu4wRQMKHMP2
-         1l8f3nscIxMe2fAJ6dOZKFT9UuWsCWhUuDBd2Igyz+PtVNjww5aYTJ48sAMe0voBYndO
-         JYGqNgzTErkSKObNHmKskGRbPR30/9vmYbA5Qf7iY88XKLGiP+0zzQ67mKq+a7OWcY6g
-         Ca0g==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qZRCurcnAWlfcIEIhKEcHpG6APnIk0vWAzCbgW8z74I=;
+        b=uH/jS2pXU8+Dx5lWubYytMer/C5V/1X14Bd5IfnS5fUDR3XBRv+7fBQQJwg6g6g0aj
+         1XPh2SaIBvoa01RrWOHZO7EFonhxf5w9D4Uy3AhYUknrH2vHYs4mQRaJE2mUzqH9G3Bi
+         pJnAq2AgTdQ8y63e4JJx/7Ekid/PUdc8kXH3OYZFnfCV+zSt38giw3DFP+IVDPH5wEfv
+         P+1Qx5EOjZ6cM5H7LZ5UIvtpTIIYJk7GDutSSODCvVGddWu8pcQTStxTnaZPTydo2Bh3
+         6JJc+CTRfyBTipZd5ooXG5ODVkF6KeDKkFIJ0DNAfox8usWEIcNUvY++smWCTM5nCAVH
+         wNGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=qxTFr0OwAYxyQ/D8q0akcACku+9rWPHHeE9dfhWvumY=;
-        b=BD3qPKwL4EdbVTYt0Wo0RsCXNUwWjZReFch4sCx8UQIcjeK96UhoVMJxf8ni10BZCH
-         ZsRy5FHQLAMWfOnzzTiwQeBsGpO96Y9LRAxgnGuoERb9DWGLWwf7Z0unJJ2F6ygGzv9I
-         uhaeD4BBkF2nd8amCI44aJt/K8VLVCPUBc4ibBp3zgEyZPJY2Ca8SrQ9TvVI1ByqjptG
-         JmO7M/gxOUmvfbDdbrnqrj/TWrVPTZqYuUeIn6fzrPrcUoDot3ZH9JmXEm+2K2/h8Maq
-         unmHoKPenDs2jlICMJGuA7owNUMY5lqrNTDuUI9r+p9Z7DBldIS7IoMs5hmPFqCciulD
-         dk1Q==
-X-Gm-Message-State: AOAM5320ybZbLkKMjImz0hbvx1r93FjimrMYfWO+pW2oBp5zS1IDoR7D
-        4VWMWMsojCWh1UHCYKpRU5TKSBLcyOZKQXQ68cJymHQWLVRwvQ==
-X-Google-Smtp-Source: ABdhPJxUJig9lA87bHez+jJbwjwk5i9kB2/GFMaLJ2J4JJO+RyDqPLTtUwaDwbscbhunHseaa+krlUKcTPR/8V2gKLc=
-X-Received: by 2002:a05:6512:2390:: with SMTP id c16mr304866lfv.55.1636051194448;
- Thu, 04 Nov 2021 11:39:54 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qZRCurcnAWlfcIEIhKEcHpG6APnIk0vWAzCbgW8z74I=;
+        b=RmDJNAM7YlG2Lo0wRGmcYw4kJfEoQrMYAW/ODMfWHsFxavZESgXyqoJWQu5Fws9KpY
+         S0GucjmZ4Scdk+tjDXfpv0kDRXeJtb74XmYutCY7IRf3vwE6M6cgNXT0A7U+yLN+X6rM
+         uh11WStAO6r4YfyHB9uASnit2aQM+b3yaedPJPyaRPOCBkhlCV4Pt3X+iBL5ZGb71ma0
+         Ye7SRUb7moEBliTbyQs+N0u+8yW4KkKKDsNZnHazU6ugb8XHRsGxECH/6NETdDEZxEHa
+         YGN88q6sRq/JpD+XaQXeRc3HbNjnG+AcmDtRJ5OMnuoIXoRhqZlEGgQ7SIzNMEzrUJRC
+         dMgA==
+X-Gm-Message-State: AOAM533ZmbEGDrXxZ4i6P7m/HkHrrrnORtzDNtkPcgBMrn86Xg3QoGJI
+        vG0izJRpKOWR+szAbBTDeEzJS2E6I6C87Z4pewxjcg==
+X-Google-Smtp-Source: ABdhPJwCR7/sViRZj+ZMPCbfgHTih5igO1NmnmR9fxCChoxweHr2wNdJG9+mCW6rOYw0WM0ZsAp4pjFd8JWfIk87quQ=
+X-Received: by 2002:a17:902:e890:b0:142:f3:7bf7 with SMTP id
+ w16-20020a170902e89000b0014200f37bf7mr21229752plg.87.1636051581383; Thu, 04
+ Nov 2021 11:46:21 -0700 (PDT)
 MIME-Version: 1.0
-From:   Federico Capoano <f.capoano@openwisp.io>
-Date:   Thu, 4 Nov 2021 13:39:43 -0500
-Message-ID: <CAAGgX6+okJRVP4v+a5scg1ZOTvBgRmbOAsoQhJVmBiSwiVamcw@mail.gmail.com>
-Subject: Mesh 802.11s blackhole due to bogus mpath routes with nexthop 00:00:00:00:00:00
-To:     linux-wireless@vger.kernel.org
+References: <20211104010548.1107405-1-benl@squareup.com> <20211104010548.1107405-2-benl@squareup.com>
+In-Reply-To: <20211104010548.1107405-2-benl@squareup.com>
+From:   Loic Poulain <loic.poulain@linaro.org>
+Date:   Thu, 4 Nov 2021 19:57:02 +0100
+Message-ID: <CAMZdPi8SnET8x0CBOyzSNcXroy=ctb_k-qE=bqpx_8027vVTTA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] wcn36xx: populate band before determining rate on RX
+To:     Benjamin Li <benl@squareup.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "Bryan O'Donoghue" <bryan.odonoghue@linaro.org>,
+        linux-arm-msm@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi everyone,
+On Thu, 4 Nov 2021 at 02:05, Benjamin Li <benl@squareup.com> wrote:
+>
+> status.band is used in determination of status.rate -- for 5GHz on legacy
+> rates there is a linear shift between the BD descriptor's rate field and
+> the wcn36xx driver's rate table (wcn_5ghz_rates).
+>
+> We have a special clause to populate status.band for hardware scan offload
+> frames. However, this block occurs after status.rate is already populated.
+> Correctly handle this dependency by moving the band block before the rate
+> block.
+>
+> This patch addresses kernel warnings & missing scan results for 5GHz APs
+> that send their beacons/probe responses at the higher four legacy rates
+> (24-54 Mbps), when using hardware scan offload:
+>
+>   ------------[ cut here ]------------
+>   WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:4532 ieee80211_rx_napi+0x744/0x8d8
+>   Modules linked in: wcn36xx [...]
+>   CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W         4.19.107-g73909fa #1
+>   Hardware name: Square, Inc. T2 (all variants) (DT)
+>   Call trace:
+>   dump_backtrace+0x0/0x148
+>   show_stack+0x14/0x1c
+>   dump_stack+0xb8/0xf0
+>   __warn+0x2ac/0x2d8
+>   warn_slowpath_null+0x44/0x54
+>   ieee80211_rx_napi+0x744/0x8d8
+>   ieee80211_tasklet_handler+0xa4/0xe0
+>   tasklet_action_common+0xe0/0x118
+>   tasklet_action+0x20/0x28
+>   __do_softirq+0x108/0x1ec
+>   irq_exit+0xd4/0xd8
+>   __handle_domain_irq+0x84/0xbc
+>   gic_handle_irq+0x4c/0xb8
+>   el1_irq+0xe8/0x190
+>   lpm_cpuidle_enter+0x220/0x260
+>   cpuidle_enter_state+0x114/0x1c0
+>   cpuidle_enter+0x34/0x48
+>   do_idle+0x150/0x268
+>   cpu_startup_entry+0x20/0x24
+>   rest_init+0xd4/0xe0
+>   start_kernel+0x398/0x430
+>   ---[ end trace ae28cb759352b403 ]---
+>
+> Fixes: 8a27ca394782 ("wcn36xx: Correct band/freq reporting on RX")
+> Signed-off-by: Benjamin Li <benl@squareup.com>
 
-I want to report an issue I am having and ask for guidance on how to
-collect more technical information that can help in understanding why
-this happens and how to fix it (instead of working around it with
-scripts that reload the WiFi when the issue appears).
-
-Kernel in use: 5.4.155
-Linux distribution: OpenWrt
-Target: confirmed on a mediatek device from Winstars using drivers
-mt7603e, mt7615e, Netgear EA8500 and Netgear EX6400
-The router device I am using has 2 CPUs.
-
-Steps to reproduce: I am not sure what exactly triggers this, the bug
-happens on its own periodically, if anyone has suggestions on specific
-actions to do to try to replicate it, please let me know
-
-What happens:
-
-The connection to the root mesh node is lost, but inspecting the
-status of the mesh links with =E2=80=9Ciw mesh0 station dump=E2=80=9D or =
-=E2=80=9Ciw mesh1
-station dump=E2=80=9D shows the links are active.
-
-Inspecting =E2=80=9Ciw mesh0 mpath dump=E2=80=9D or =E2=80=9Ciw mesh1 mpath=
- dump=E2=80=9D show a list
-of mac addresses which are from devices in the LAN, with an invalid
-next hop (00:00:00:00:00:00), which for some reason end up in the mesh
-routing table and fill it.
-
-For example, when the problem starts showing up, the mesh routing
-table may look as follows:
-
-iw mesh1 mpath dump
-DEST ADDR         NEXT HOP          IFACE SN METRIC QLEN EXPTIME DTIM
-DRET FLAGS HOP_COUNT PATH_CHANGE
-16:dd:0c:a4:ba:aa 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-fc:93:c3:3b:0b:fe 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-90:f4:c0:8f:de:80 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-bc:a1:da:cb:87:a8 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-1e:f7:95:47:4a:b3 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-3a:e2:e6:88:65:fb 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-6c:cd:48:37:af:bc 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-d8:54:0b:7c:20:46 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-ce:43:28:84:44:7e 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-26:75:58:0b:39:18 00:00:00:00:00:00 mesh1 0 0 0 0 1600 4 0x0 0 0
-80:3f:5d:**:**:** 80:3f:5d:**:**:** mesh1 0 4857 0 0 0 0 0x10 1 1
-
-After one minute, the size may have doubled or tripled.
-
-At some point one of the mesh nodes ends up in the routing table with
-a bogus route (with nexthop 00:00:00:00:00:00), which basically screws
-up routing 100%, until that happens, the other rough mesh routes do
-not cause issues, but once the black hole appears, removing the bogus
-mesh routes does not fix it, only turning off wifi and then on again
-fixes it.
-
-I would be grateful for any suggestion on how to collect more useful
-information that can help to track down and fix this bug.
-
-Best regards
-Federico Capoano
-OpenWISP Project
+Tested-by: Loic Poulain <loic.poulain@linaro.org>
