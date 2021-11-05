@@ -2,79 +2,123 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D000C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:46:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B8E8C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Nov 2021 07:17:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03C6361212
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Nov 2021 18:46:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B39561250
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Nov 2021 07:17:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233861AbhKDSt1 (ORCPT
+        id S232541AbhKEHUP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Nov 2021 14:49:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46552 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233778AbhKDStY (ORCPT
+        Fri, 5 Nov 2021 03:20:15 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:44490 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232525AbhKEHUO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Nov 2021 14:49:24 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FD0BC061205
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Nov 2021 11:46:46 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id o14so8768196plg.5
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2021 11:46:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=PorSLppZT3IedQU0Aiir1xp4SHeSb1PGuZKovfWyfMo=;
-        b=C6AYOPXp7GDQstXKhfY+qqe7bihiJvlo46H/bBrDRr5nb2tlWh1oLFYNUaUXAySyQI
-         MQ2Mb+ynV83Kl5cwf5b42/IzSP+02VBbsrN4e0K4G7L5A5b2JDxoAP0noBYBjWHlyuaJ
-         4mIf7A/jxmo15PFNXR/Gv7eDzmpnRBdsp9Xm4lo8fUx1gm8eg2PZ/4ho/zMa0WLdZYxP
-         6RfJMV2kWKj5kbtsqm7txzYlJU1v8HQLboR7DWx7zmr8uX7LfiKT+5cWcBS+ViGhjgH/
-         0wrSRn2HE1tnIbq9taGm+kFwx2u/3ZCt5ERDrsOLq1IvB3/iXodMRbHoKldR2olwjuRG
-         Pf8g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PorSLppZT3IedQU0Aiir1xp4SHeSb1PGuZKovfWyfMo=;
-        b=0j6kRe6/0wbrCwZdJXh8x2WSi3gb5xMG1tzwKUb9QfUrjFbGme+NLN96EzdA4Sen1V
-         PRtsAvJ6qwLpdBJj0mF2nYnsdCSF73FC611PHjF5i8xAp6k1XNhWmW7g9WE4YQHNXT7q
-         AsNHiltPXXp0Jaf0+ELmPwJ/91w8Pu9teuWBSV2JATEZoFRwlL/K9+9o8jreLlF+EWEX
-         djMADI774MBRzMaq1sKFkc3JKq3ZQDMZ0GgfR0AbWYR25jcYI8zwt6Syw9ZKp8C2mPxb
-         SYHLUtQJNPCKgVLL/rKCZ+oY9n7hAbgPScgPmeTLZe8erxOSISldaNnvfI4QhbPJSUaV
-         L1jA==
-X-Gm-Message-State: AOAM533VWTAGv+Og5/x2LuqzbsxFHYyHZlyGIMzqTj3jEk5K1yPqdFjp
-        da9RWJfqMmINcXmmlA+Ij6/efT3qVJOS1UmxambckA==
-X-Google-Smtp-Source: ABdhPJwVT/QSowoDtWEN2jsATxofev3CtcyomsTIjU0EabHehx7QAl/wAGopkNPrEbIm1a3otSFjmLDNu8h0dJBepJ8=
-X-Received: by 2002:a17:90a:3b02:: with SMTP id d2mr23648066pjc.159.1636051605807;
- Thu, 04 Nov 2021 11:46:45 -0700 (PDT)
+        Fri, 5 Nov 2021 03:20:14 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 7D0DC21892;
+        Fri,  5 Nov 2021 07:17:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1636096652; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=moIlCeqCuX+BsEoLqCY+cHnNdFET5l+jgYndyJOOQNs=;
+        b=ZqtOdJ9uOP5MZNPS2y14CTLZmV1VJ+b3qhzmy8M2x4tGscufH1D8wb2oY+13hB+SPZcsLC
+        puCMiX3yN/JH7xdynOXsyu5yyTLbVuxlgvtf06byB1ISD5INDoa4WahEutC7UJeJKg6cBG
+        ZmBqxqF5rQNPKeGqQF1WFUl0aXrWP8I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1636096652;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=moIlCeqCuX+BsEoLqCY+cHnNdFET5l+jgYndyJOOQNs=;
+        b=EM/hLDfSBdiMED7Mt1/Zyo5bmYSNqRQiy9CoiLr67DCnn8aJIs8a9dTt6lMqQlNSeergt9
+        gR6S4GYlizmmc5Ag==
+Received: from alsa1.nue.suse.com (alsa1.suse.de [10.160.4.42])
+        by relay2.suse.de (Postfix) with ESMTP id 657C72C144;
+        Fri,  5 Nov 2021 07:17:32 +0000 (UTC)
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Larry Finger <Larry.Finger@gmail.com>
+Subject: [PATCH] rtw89: Fix crash by loading compressed firmware file
+Date:   Fri,  5 Nov 2021 08:17:25 +0100
+Message-Id: <20211105071725.31539-1-tiwai@suse.de>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-References: <20211104010548.1107405-1-benl@squareup.com> <20211104010548.1107405-3-benl@squareup.com>
-In-Reply-To: <20211104010548.1107405-3-benl@squareup.com>
-From:   Loic Poulain <loic.poulain@linaro.org>
-Date:   Thu, 4 Nov 2021 19:57:27 +0100
-Message-ID: <CAMZdPi_piZp8nTP+TwxTw8_AE7F53st3X3d-gY2rvnN9-81D5Q@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] wcn36xx: fix RX BD rate mapping for 5GHz legacy rates
-To:     Benjamin Li <benl@squareup.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "Bryan O'Donoghue" <bryan.odonoghue@linaro.org>,
-        linux-arm-msm@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 4 Nov 2021 at 02:06, Benjamin Li <benl@squareup.com> wrote:
->
-> The linear mapping between the BD rate field and the driver's 5GHz
-> legacy rates table (wcn_5ghz_rates) does not only apply for the latter
-> four rates -- it applies to all eight rates.
->
-> Fixes: 6ea131acea98 ("wcn36xx: Fix warning due to bad rate_idx")
-> Signed-off-by: Benjamin Li <benl@squareup.com>
+When a firmware is loaded in the compressed format or via user-mode
+helper, it's mapped in read-only, and the rtw89 driver crashes at
+rtw89_fw_download() when it tries to modify some data.
 
-Tested-by: Loic Poulain <loic.poulain@linaro.org>
+This patch is an attemp to avoid the crash by re-allocating the data
+via vmalloc() for the data modification.
+
+Buglink: https://bugzilla.opensuse.org/show_bug.cgi?id=1188303
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+
+---
+ drivers/net/wireless/realtek/rtw89/core.h |  3 ++-
+ drivers/net/wireless/realtek/rtw89/fw.c   | 15 ++++++++++-----
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index c2885e4dd882..048855e05697 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2309,7 +2309,8 @@ struct rtw89_fw_suit {
+ 	RTW89_FW_VER_CODE((s)->major_ver, (s)->minor_ver, (s)->sub_ver, (s)->sub_idex)
+ 
+ struct rtw89_fw_info {
+-	const struct firmware *firmware;
++	const void *firmware;
++	size_t firmware_size;
+ 	struct rtw89_dev *rtwdev;
+ 	struct completion completion;
+ 	u8 h2c_seq;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 212aaf577d3c..b59fecaeea25 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -124,8 +124,8 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
+ 			struct rtw89_fw_suit *fw_suit)
+ {
+ 	struct rtw89_fw_info *fw_info = &rtwdev->fw;
+-	const u8 *mfw = fw_info->firmware->data;
+-	u32 mfw_len = fw_info->firmware->size;
++	const u8 *mfw = fw_info->firmware;
++	u32 mfw_len = fw_info->firmware_size;
+ 	const struct rtw89_mfw_hdr *mfw_hdr = (const struct rtw89_mfw_hdr *)mfw;
+ 	const struct rtw89_mfw_info *mfw_info;
+ 	int i;
+@@ -489,7 +489,10 @@ static void rtw89_load_firmware_cb(const struct firmware *firmware, void *contex
+ 		return;
+ 	}
+ 
+-	fw->firmware = firmware;
++	fw->firmware = vmalloc(firmware->size);
++	if (fw->firmware)
++		memcpy((void *)fw->firmware, firmware->data, firmware->size);
++	release_firmware(firmware);
+ 	complete_all(&fw->completion);
+ }
+ 
+@@ -518,8 +521,10 @@ void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
+ 
+ 	rtw89_wait_firmware_completion(rtwdev);
+ 
+-	if (fw->firmware)
+-		release_firmware(fw->firmware);
++	if (fw->firmware) {
++		vfree(fw->firmware);
++		fw->firmware = NULL;
++	}
+ }
+ 
+ #define H2C_CAM_LEN 60
+-- 
+2.26.2
+
