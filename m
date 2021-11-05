@@ -2,36 +2,36 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C3E0C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6406C43217
 	for <linux-wireless@archiver.kernel.org>; Fri,  5 Nov 2021 10:02:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 567776124F
+	by mail.kernel.org (Postfix) with ESMTP id D0D7561244
 	for <linux-wireless@archiver.kernel.org>; Fri,  5 Nov 2021 10:02:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233053AbhKEKFJ (ORCPT
+        id S233058AbhKEKFJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 5 Nov 2021 06:05:09 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:49012 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233042AbhKEKFH (ORCPT
+Received: from mailgw02.mediatek.com ([210.61.82.184]:54494 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S233046AbhKEKFH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 5 Nov 2021 06:05:07 -0400
-X-UUID: 1ca5c0fe03a1415180f996ee0b602fbd-20211105
-X-UUID: 1ca5c0fe03a1415180f996ee0b602fbd-20211105
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+X-UUID: a56436409cfd4984abc8b6cb11e18c02-20211105
+X-UUID: a56436409cfd4984abc8b6cb11e18c02-20211105
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
         (envelope-from <bo.jiao@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2081143389; Fri, 05 Nov 2021 18:02:25 +0800
+        with ESMTP id 1599280687; Fri, 05 Nov 2021 18:02:27 +0800
 Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
  mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Fri, 5 Nov 2021 18:02:24 +0800
+ 15.2.792.15; Fri, 5 Nov 2021 18:02:25 +0800
 Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS34N1.mediatek.inc
  (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 5 Nov
- 2021 18:02:18 +0800
+ 2021 18:02:19 +0800
 Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
  MTKCAS32.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Fri, 5 Nov 2021 18:02:17 +0800
+ 15.0.1497.2 via Frontend Transport; Fri, 5 Nov 2021 18:02:19 +0800
 From:   Bo Jiao <bo.jiao@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -42,9 +42,9 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Bo Jiao <Bo.Jiao@mediatek.com>
-Subject: [PATCH v2 09/11] mt76: mt7915: update mt7915_chan_mib_offs for mt7916
-Date:   Fri, 5 Nov 2021 18:02:08 +0800
-Message-ID: <ff18f48c17d99e3f62ca521706361db9183aa1e3.1636105953.git.Bo.Jiao@mediatek.com>
+Subject: [PATCH v2 11/11] mt76: mt7915: add device id for mt7916
+Date:   Fri, 5 Nov 2021 18:02:10 +0800
+Message-ID: <41cf3dab18241e27d64ae5a579c391a1af58f7a3.1636105953.git.Bo.Jiao@mediatek.com>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <cover.1636105953.git.Bo.Jiao@mediatek.com>
 References: <cover.1636105953.git.Bo.Jiao@mediatek.com>
@@ -57,7 +57,8 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Bo Jiao <Bo.Jiao@mediatek.com>
 
-Update v2 offset. This is an intermediate patch to add mt7916 support.
+Add pci_device_id to enable mt7916. Note that MT_HW_CHIPID is no
+longer used for further chips, so drop it accordingly.
 
 Co-developed-by: Sujuan Chen <sujuan.chen@mediatek.com>
 Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
@@ -65,65 +66,60 @@ Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 13 +++++++++----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.h |  8 +++++++-
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mmio.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7915/pci.c  | 7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 43ddbc1..dee5aee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3794,19 +3794,24 @@ int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy)
- int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- {
- 	/* strict order */
--	static const enum mt7915_chan_mib_offs offs[] = {
--		MIB_BUSY_TIME, MIB_TX_TIME, MIB_RX_TIME, MIB_OBSS_AIRTIME
-+	static const u32 offs[] = {
-+		MIB_BUSY_TIME, MIB_TX_TIME, MIB_RX_TIME, MIB_OBSS_AIRTIME,
-+		MIB_BUSY_TIME_V2, MIB_TX_TIME_V2, MIB_RX_TIME_V2,
-+		MIB_OBSS_AIRTIME_V2
- 	};
- 	struct mt76_channel_state *state = phy->mt76->chan_state;
- 	struct mt76_channel_state *state_ts = &phy->state_ts;
- 	struct mt7915_dev *dev = phy->dev;
- 	struct mt7915_mcu_mib *res, req[4];
- 	struct sk_buff *skb;
--	int i, ret;
-+	int i, ret, start = 0;
-+
-+	if (!is_mt7915(&dev->mt76))
-+		start = 4;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+index 7ba5b1f..d463b3c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+@@ -534,7 +534,7 @@ static int mt7915_mmio_init(struct mt76_dev *mdev,
+ 	bus_ops->rmw = mt7915_rmw;
+ 	dev->mt76.bus = bus_ops;
  
- 	for (i = 0; i < 4; i++) {
- 		req[i].band = cpu_to_le32(phy != &dev->phy);
--		req[i].offs = cpu_to_le32(offs[i]);
-+		req[i].offs = cpu_to_le32(offs[i + start]);
- 	}
+-	mdev->rev = (mt76_rr(dev, MT_HW_CHIPID) << 16) |
++	mdev->rev = (device_id << 16) |
+ 		    (mt76_rr(dev, MT_HW_REV) & 0xff);
+ 	dev_dbg(mdev->dev, "ASIC revision: %04x\n", mdev->rev);
  
- 	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(GET_MIB_INFO),
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index e9f39ed..22b0e85 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -182,10 +182,16 @@ struct mt7915_mcu_mib {
- } __packed;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+index 3134b46..8d1a811 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+@@ -18,11 +18,13 @@ static u32 hif_idx;
  
- enum mt7915_chan_mib_offs {
-+	/* mt7915 */
- 	MIB_BUSY_TIME = 14,
- 	MIB_TX_TIME = 81,
- 	MIB_RX_TIME,
--	MIB_OBSS_AIRTIME = 86
-+	MIB_OBSS_AIRTIME = 86,
-+	/* mt7916 */
-+	MIB_BUSY_TIME_V2 = 0,
-+	MIB_TX_TIME_V2 = 6,
-+	MIB_RX_TIME_V2 = 8,
-+	MIB_OBSS_AIRTIME_V2 = 490
+ static const struct pci_device_id mt7915_pci_device_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7915) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7906) },
+ 	{ },
  };
  
- struct edca {
+ static const struct pci_device_id mt7915_hif_device_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7916) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x790a) },
+ 	{ },
+ };
+ 
+@@ -61,7 +63,8 @@ static void mt7915_put_hif2(struct mt7915_hif *hif)
+ static struct mt7915_hif *mt7915_pci_init_hif2(struct pci_dev *pdev)
+ {
+ 	hif_idx++;
+-	if (!pci_get_device(PCI_VENDOR_ID_MEDIATEK, 0x7916, NULL))
++	if (!pci_get_device(PCI_VENDOR_ID_MEDIATEK, 0x7916, NULL) &&
++	    !pci_get_device(PCI_VENDOR_ID_MEDIATEK, 0x790a, NULL))
+ 		return NULL;
+ 
+ 	writel(hif_idx | MT_PCIE_RECOG_ID_SEM,
+@@ -112,7 +115,7 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
+ 
+ 	mt76_pci_disable_aspm(pdev);
+ 
+-	if (id->device == 0x7916)
++	if (id->device == 0x7916 || id->device == 0x790a)
+ 		return mt7915_pci_hif2_probe(pdev);
+ 
+ 	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
 -- 
 2.18.0
 
