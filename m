@@ -2,47 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F23C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9044C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7528D61B07
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A493B61B1F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242250AbhKIBKo (ORCPT
+        id S241900AbhKIBKz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:10:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33370 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:10:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33466 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241998AbhKIBIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:08:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 26B9961A61;
-        Tue,  9 Nov 2021 01:03:52 +0000 (UTC)
+        id S242014AbhKIBIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:08:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9001761A59;
+        Tue,  9 Nov 2021 01:04:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636419833;
-        bh=cUOFcqmLTKk3OcS3S1EwlHCbPmr4+clh389r4B8xohI=;
+        s=k20201202; t=1636419843;
+        bh=bHa5gPhozM+s6vrbsoyeHM3zp4a5PsqgvND0jai6kAo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=W7+M0diPq2Bgj42fFYZP0JafhVcKymIn1MfTmthO3cDJF21oqM8pjG2r6itIjMPUd
-         XzBrbQqO16e3Zd7/l2KzUmcACc8XmTvXZiEG3EQcGOBZNA7R2oUPd8jleYMI5jtd1O
-         B/GUfNcu5VmqUSUDiUM9n2Lg2mGcsLBpt9fdOpG8WcHJQy8Nr/Lt7OkTAYHsmPD5T3
-         LnZ9lo9EaNMEYPybd65OKRWOsgd9Mk3wu3rCpTP4xVsfIvszDLDY42ZpzYDmhqed73
-         iYjoqNOrv4IpC1XPf1/JQ2Rl0DUjMglSilTALMePjORqh5gyq5Hu3qd0S239rolCUi
-         igKWXHh5vlUuA==
+        b=Q6oAFhob9m48AisTdlKlukU/Cghj0bCNSaXx0LyuVByGmHi28pw0g4e0mIAa8NYgY
+         7l3xD7MBG3aYCtXFrvCg+xtB/0YsIQ9Kz4Q4OZW8O6cCYVAWoNwTO+AfOvYDATSdHC
+         3gOKDjTD/TuqtEgv6PmOHO0mDJdo0IhPKom1jUqdZvdFOgRImqQFqzGG2Gqmd4FQ88
+         PG2nuYBOSisKEXJGX25um2+nnRXfVo7AYWsvvOvGO9KTJ6BqOh3L1GnivDqySNzmHG
+         UQD2xepFJYAUBJgzGwgMqZUdz1GLe0mV5K5og1WHE/wuEDwxtgJkrgUwZ6p8P2y/Z9
+         4Q36hwb/mXCrA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
+Cc:     Wen Gong <wgong@codeaurora.org>,
+        Jouni Malinen <jouni@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
-        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
-        huxinming820@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        kuba@kernel.org, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 020/101] mwifiex: Properly initialize private structure on interface type changes
-Date:   Mon,  8 Nov 2021 12:47:10 -0500
-Message-Id: <20211108174832.1189312-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 024/101] ath11k: add handler for scan event WMI_SCAN_EVENT_DEQUEUED
+Date:   Mon,  8 Nov 2021 12:47:14 -0500
+Message-Id: <20211108174832.1189312-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211108174832.1189312-1-sashal@kernel.org>
 References: <20211108174832.1189312-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -50,59 +49,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jonas Dreßler <verdre@v0yd.nl>
+From: Wen Gong <wgong@codeaurora.org>
 
-[ Upstream commit c606008b70627a2fc485732a53cc22f0f66d0981 ]
+[ Upstream commit 441b3b5911f8ead7f2fe2336587b340a33044d58 ]
 
-When creating a new virtual interface in mwifiex_add_virtual_intf(), we
-update our internal driver states like bss_type, bss_priority, bss_role
-and bss_mode to reflect the mode the firmware will be set to.
+When wlan interface is up, 11d scan is sent to the firmware, and the
+firmware needs to spend couple of seconds to complete the 11d scan. If
+immediately a normal scan from user space arrives to ath11k, then the
+normal scan request is also sent to the firmware, but the scan started
+event will be reported to ath11k until the 11d scan complete. When timed
+out for the scan started in ath11k, ath11k stops the normal scan and the
+firmware reports WMI_SCAN_EVENT_DEQUEUED to ath11k for the normal scan.
+ath11k has no handler for the event and then timed out for the scan
+completed in ath11k_scan_stop(), and ath11k prints the following error
+message.
 
-When switching virtual interface mode using
-mwifiex_init_new_priv_params() though, we currently only update bss_mode
-and bss_role. In order for the interface mode switch to actually work,
-we also need to update bss_type to its proper value, so do that.
+[ 1491.604750] ath11k_pci 0000:02:00.0: failed to receive scan abort comple: timed out
+[ 1491.604756] ath11k_pci 0000:02:00.0: failed to stop scan: -110
+[ 1491.604758] ath11k_pci 0000:02:00.0: failed to start hw scan: -110
 
-This fixes a crash of the firmware (because the driver tries to execute
-commands that are invalid in AP mode) when switching from station mode
-to AP mode.
+Add a handler for WMI_SCAN_EVENT_DEQUEUED and then complete the scan to
+get rid of the above error message.
 
-Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210914195909.36035-9-verdre@v0yd.nl
+Link: https://lore.kernel.org/r/20210914164226.38843-1-jouni@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 7a4e3c693d38b..3d1b5d3d295ae 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -908,16 +908,20 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
--		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 2f777d61f9065..cf0f778b0cbc9 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -5856,6 +5856,8 @@ static void ath11k_scan_event(struct ath11k_base *ab, struct sk_buff *skb)
+ 		ath11k_wmi_event_scan_start_failed(ar);
  		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
--		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
--		priv->bss_role =  MWIFIEX_BSS_ROLE_UAP;
-+		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
-+		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
-+		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
- 		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR,
+ 	case WMI_SCAN_EVENT_DEQUEUED:
++		__ath11k_mac_scan_finish(ar);
++		break;
+ 	case WMI_SCAN_EVENT_PREEMPTED:
+ 	case WMI_SCAN_EVENT_RESTARTED:
+ 	case WMI_SCAN_EVENT_FOREIGN_CHAN_EXIT:
 -- 
 2.33.0
 
