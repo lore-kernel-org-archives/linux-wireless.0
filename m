@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C4AC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF02C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:16:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A563E6128B
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:14:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE61161353
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:16:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242543AbhKIBRi (ORCPT
+        id S242041AbhKIBR1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:17:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44376 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:17:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39302 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243219AbhKIBPS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:15:18 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7BE1161A04;
-        Tue,  9 Nov 2021 01:06:22 +0000 (UTC)
+        id S242361AbhKIBL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:11:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2E36061A81;
+        Tue,  9 Nov 2021 01:04:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636419983;
-        bh=P59xDehY1csqTbjGuBoZgfpEDc4AncfQwMj9FjfRqMs=;
+        s=k20201202; t=1636419896;
+        bh=f3N/kgs6bo6MHjbx6q85/nXKf+mVH4MjV0F5rCvAmiY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V88khiyibit2XPJEi82zWUcCc2TNn4kbYqME/13uMY2Mz/dMHtTjYmnAZHQYwE4cH
-         UnSk6jwDF5JSUYEF68ReL4C8sXFCkG1EERFxNAsukLDuNsVaK38EgFH31agGSaE4sN
-         KDxaBAhX195EXx1D4Yve2+awB06agsEuedzJWnDTQUi1urWoO6Deb2wHABGiVscUuJ
-         08MLqZX4/+b2DT1zohyxiRSk7bvJTSuccU/n7XJvUu4nvNqCq5OMoMatuYSJQoTvau
-         HZV7kUXkjlVH/HYEDzvd9hiu8qx/gGHvCMNi9lNcWyAwsYZRCS2JhxkDgjNm8Rrl8c
-         HzMTuLWLH84Cg==
+        b=m3EmxIGP8+H97zUlHQQ/pQDQU7LAt3t8Sut970F66qSx8DMZO4rAdZqCVf4O+VbNE
+         Sva+lkwa6/g2O/0gMTx+OTKgYXlFLxiygu63FGQwDEYx7VgfgEGVDlgSwureA83C9f
+         N0EHVgRKPhCHSsBPvgKgasUMFJ/+r3VdXqhi2FNPhjBsRS4u1IcWkM61cnTCsgYfkm
+         InatpYBtVVgCj0f6jumu94OidijMNEnnK7X4x3seiUMmSDu2E4m2uoTrFyNxBLYPNh
+         dxkdWe1enYoe9lPVlKLa4g6DykFxNMmUR3vl1Kv+kK22qxBOlVPmdBnWPGsvBJJ01g
+         5rC4YGfG0qKbQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@codeaurora.org,
-        davem@davemloft.net, kuba@kernel.org,
-        miriam.rachel.korenblit@intel.com, mordechay.goodstein@intel.com,
-        haim.dreyfuss@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 36/47] iwlwifi: mvm: disable RX-diversity in powersave
-Date:   Mon,  8 Nov 2021 12:50:20 -0500
-Message-Id: <20211108175031.1190422-36-sashal@kernel.org>
+Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
+        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
+        huxinming820@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 16/74] mwifiex: Run SET_BSS_MODE when changing from P2P to STATION vif-type
+Date:   Mon,  8 Nov 2021 12:48:43 -0500
+Message-Id: <20211108174942.1189927-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211108175031.1190422-1-sashal@kernel.org>
-References: <20211108175031.1190422-1-sashal@kernel.org>
+In-Reply-To: <20211108174942.1189927-1-sashal@kernel.org>
+References: <20211108174942.1189927-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -50,37 +50,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jonas Dreßler <verdre@v0yd.nl>
 
-[ Upstream commit e5322b9ab5f63536c41301150b7ce64605ce52cc ]
+[ Upstream commit c2e9666cdffd347460a2b17988db4cfaf2a68fb9 ]
 
-Just like we have default SMPS mode as dynamic in powersave,
-we should not enable RX-diversity in powersave, to reduce
-power consumption when connected to a non-MIMO AP.
+We currently handle changing from the P2P to the STATION virtual
+interface type slightly different than changing from P2P to ADHOC: When
+changing to STATION, we don't send the SET_BSS_MODE command. We do send
+that command on all other type-changes though, and it probably makes
+sense to send the command since after all we just changed our BSS_MODE.
+Looking at prior changes to this part of the code, it seems that this is
+simply a leftover from old refactorings.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211017113927.fc896bc5cdaa.I1d11da71b8a5cbe921a37058d5f578f1b14a2023@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Since sending the SET_BSS_MODE command is the only difference between
+mwifiex_change_vif_to_sta_adhoc() and the current code, we can now use
+mwifiex_change_vif_to_sta_adhoc() for both switching to ADHOC and
+STATION interface type.
+
+This does not fix any particular bug and just "looked right", so there's
+a small chance it might be a regression.
+
+Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20210914195909.36035-4-verdre@v0yd.nl
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 3 +++
- 1 file changed, 3 insertions(+)
+ .../net/wireless/marvell/mwifiex/cfg80211.c   | 22 ++++---------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 00712205c05f2..bc3f67e0bf334 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1018,6 +1018,9 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM)
-+		return false;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 9e6dc289ec3e8..b5134f11fc32b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1233,29 +1233,15 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_P2P_GO:
++		if (mwifiex_cfg80211_deinit_p2p(priv))
++			return -EFAULT;
 +
- 	if (num_of_ant(iwl_mvm_get_valid_rx_ant(mvm)) == 1)
- 		return false;
- 
+ 		switch (type) {
+-		case NL80211_IFTYPE_STATION:
+-			if (mwifiex_cfg80211_deinit_p2p(priv))
+-				return -EFAULT;
+-			priv->adapter->curr_iface_comb.p2p_intf--;
+-			priv->adapter->curr_iface_comb.sta_intf++;
+-			dev->ieee80211_ptr->iftype = type;
+-			if (mwifiex_deinit_priv_params(priv))
+-				return -1;
+-			if (mwifiex_init_new_priv_params(priv, dev, type))
+-				return -1;
+-			if (mwifiex_sta_init_cmd(priv, false, false))
+-				return -1;
+-			break;
+ 		case NL80211_IFTYPE_ADHOC:
+-			if (mwifiex_cfg80211_deinit_p2p(priv))
+-				return -EFAULT;
++		case NL80211_IFTYPE_STATION:
+ 			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+ 							       type, params);
+-			break;
+ 		case NL80211_IFTYPE_AP:
+-			if (mwifiex_cfg80211_deinit_p2p(priv))
+-				return -EFAULT;
+ 			return mwifiex_change_vif_to_ap(dev, curr_iftype, type,
+ 							params);
+ 		case NL80211_IFTYPE_UNSPECIFIED:
 -- 
 2.33.0
 
