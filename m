@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DDAEC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 742FCC4332F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:14:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3530061A54
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EE16614C8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242302AbhKIBLI (ORCPT
+        id S242449AbhKIBR3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:11:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33602 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:17:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39304 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242018AbhKIBIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:08:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 95FD8619F6;
-        Tue,  9 Nov 2021 01:04:05 +0000 (UTC)
+        id S242362AbhKIBL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:11:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E9C1C61AA2;
+        Tue,  9 Nov 2021 01:04:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636419846;
-        bh=hmu+N6SDxU2j51vgWSqTSsSPerqeeMoo7dgvOvk2bBM=;
+        s=k20201202; t=1636419898;
+        bh=TXVwtSXUSWiimwSag+fG1PKAtCarrvo/xGcZLas51Z8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XyCmvsLamOHs8rDq2hD1q07Sg+k/9pgKOKWOS3+ADsaMugtK1oo6WaDh+7f06ZpDe
-         3J2KJ+xg2W/ysKXvzTM15tbpG9eOFuE9hb1iuyYT5AFVRdJJdlcTqOdSVfU3u0FYJk
-         DhaNiaSbo6y+v2J26WgtjkXO1HIVC5ppJCCfcmXJ7J8DI5xXuXn5j8E43b8fDz0Tme
-         tGmQutAtEg1CKhru8HJBDgC+L1+jWj0p0fwxW8iXUsDTn7XIUm+xs6KMnIOH8lB4KZ
-         Rl4zq0oqZ1vnH+ZMcWDXi+PbVA7YDBEbrtt5Zega5Z7WkfM0BXI+Uk7Lok7bAm8MlO
-         xQoJDulEU5pVg==
+        b=HQ/Yf1dZhxkZ8ozc18hkQ/i9MG2i9V7hbDomvFF6MdyeUD6N3gip4TQS4DRLMou6p
+         I5qFfhpQmvXmkLkc0HHWULxh75DNpiOZCh2/QqGl+1uz/L8V2gsdiS8TG3jjbvZzGu
+         7ak4/yUvTqhd4B3FF5U/BujAL7QWN8Ajw+9GY7VqmHTF1pkZqJK2qFbmg5q0shhfFo
+         1mzBE9O3teSz7AQ+zJsAiK0ZTwGxO3hN29mm26JMxEFYf98g+bdPU5Dz+547fho/3G
+         XLiBKrUpu1FpsN9O8p+SV9out+TOdRMWZy9xogIBzpHVQFWHJSzqLGktmPoUeYDPn6
+         ku8b0VSgc1Gig==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alagu Sankar <alagusankar@silex-india.com>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>,
-        Fabio Estevam <festevam@denx.de>,
+Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
-        kuba@kernel.org, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
+        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
+        huxinming820@gmail.com, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 026/101] ath10k: high latency fixes for beacon buffer
-Date:   Mon,  8 Nov 2021 12:47:16 -0500
-Message-Id: <20211108174832.1189312-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 17/74] mwifiex: Properly initialize private structure on interface type changes
+Date:   Mon,  8 Nov 2021 12:48:44 -0500
+Message-Id: <20211108174942.1189927-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211108174832.1189312-1-sashal@kernel.org>
-References: <20211108174832.1189312-1-sashal@kernel.org>
+In-Reply-To: <20211108174942.1189927-1-sashal@kernel.org>
+References: <20211108174942.1189927-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -50,82 +50,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+From: Jonas Dreßler <verdre@v0yd.nl>
 
-[ Upstream commit e263bdab9c0e8025fb7f41f153709a9cda51f6b6 ]
+[ Upstream commit c606008b70627a2fc485732a53cc22f0f66d0981 ]
 
-Beacon buffer for high latency devices does not use DMA. other similar
-buffer allocation methods in the driver have already been modified for
-high latency path. Fix the beacon buffer allocation left out in the
-earlier high latency changes.
+When creating a new virtual interface in mwifiex_add_virtual_intf(), we
+update our internal driver states like bss_type, bss_priority, bss_role
+and bss_mode to reflect the mode the firmware will be set to.
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-[fabio: adapt it to use ar->bus_param.dev_type ]
-Signed-off-by: Fabio Estevam <festevam@denx.de>
+When switching virtual interface mode using
+mwifiex_init_new_priv_params() though, we currently only update bss_mode
+and bss_role. In order for the interface mode switch to actually work,
+we also need to update bss_type to its proper value, so do that.
+
+This fixes a crash of the firmware (because the driver tries to execute
+commands that are invalid in AP mode) when switching from station mode
+to AP mode.
+
+Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210818232627.2040121-1-festevam@denx.de
+Link: https://lore.kernel.org/r/20210914195909.36035-9-verdre@v0yd.nl
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 31 ++++++++++++++++++++-------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 36183fdfb7f03..90dc48f66fbfe 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -982,8 +982,12 @@ static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
- 	ath10k_mac_vif_beacon_free(arvif);
- 
- 	if (arvif->beacon_buf) {
--		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
--				  arvif->beacon_buf, arvif->beacon_paddr);
-+		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL)
-+			kfree(arvif->beacon_buf);
-+		else
-+			dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+					  arvif->beacon_buf,
-+					  arvif->beacon_paddr);
- 		arvif->beacon_buf = NULL;
- 	}
- }
-@@ -5466,10 +5470,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT ||
- 	    vif->type == NL80211_IFTYPE_AP) {
--		arvif->beacon_buf = dma_alloc_coherent(ar->dev,
--						       IEEE80211_MAX_FRAME_LEN,
--						       &arvif->beacon_paddr,
--						       GFP_ATOMIC);
-+		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
-+			arvif->beacon_buf = kmalloc(IEEE80211_MAX_FRAME_LEN,
-+						    GFP_KERNEL);
-+			arvif->beacon_paddr = (dma_addr_t)arvif->beacon_buf;
-+		} else {
-+			arvif->beacon_buf =
-+				dma_alloc_coherent(ar->dev,
-+						   IEEE80211_MAX_FRAME_LEN,
-+						   &arvif->beacon_paddr,
-+						   GFP_ATOMIC);
-+		}
- 		if (!arvif->beacon_buf) {
- 			ret = -ENOMEM;
- 			ath10k_warn(ar, "failed to allocate beacon buffer: %d\n",
-@@ -5684,8 +5695,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 
- err:
- 	if (arvif->beacon_buf) {
--		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
--				  arvif->beacon_buf, arvif->beacon_paddr);
-+		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL)
-+			kfree(arvif->beacon_buf);
-+		else
-+			dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+					  arvif->beacon_buf,
-+					  arvif->beacon_paddr);
- 		arvif->beacon_buf = NULL;
- 	}
- 
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index b5134f11fc32b..1599ae74b066b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -912,16 +912,20 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
++		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
++		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
++		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
++		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_GO:
+-		priv->bss_role =  MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
+ 		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR,
 -- 
 2.33.0
 
