@@ -2,42 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94165C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F670C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D68B61A71
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 810B961B28
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:08:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242280AbhKIBK4 (ORCPT
+        id S242282AbhKIBK7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:10:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38626 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:10:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60628 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242011AbhKIBIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S242016AbhKIBIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 8 Nov 2021 20:08:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0334961361;
-        Tue,  9 Nov 2021 01:04:00 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2013761A71;
+        Tue,  9 Nov 2021 01:04:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636419842;
-        bh=SqMwSJlsmhRnzp2vM6XUPwpHBdW+FdUM2Grw036Ydhc=;
+        s=k20201202; t=1636419845;
+        bh=7aameh29KZ7F4eWJbvaEzI58laStKlQ9gTUJIFvTU8Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QXY86Hk3UBksnZoIJikSuIpj8pGbNA/9S5cC/JnzL9MADPEYlvtOPH6hTdoH2uyD7
-         oemV5i0dikhtbAkI0v1NcyL6OrHmCec46qDvU7ImFAUNvMRzAQxz/kNXZh5KqXk1yM
-         +aynRbNbMNI5aD9GplZeMFaewNyoWkLcurVbKto7K+Z2pPQGblyZeRzSX8gZK4nRLx
-         0lwSWGh7/qfC42pYH2UPL8TnjyuHy14urWFIZSWXWIpVdp19RYJqD/Jp//FeIRHZf2
-         SiIuZQaL6hC883XBDza8byK5KYirD4vVcx0dJWUwkmF79fC254CAfGQ6KBYOSQ7Y9C
-         1YmrEZ9jOXSAA==
+        b=u6l8jHbZ0i6o2NB24E5iIiXxIUFAi2dkVnz0QTfmH3iHqYiLbnIqez9UEWCSl7JGh
+         5CMbT9CNHH8rcnCp6ENp7+huQCsrTMCzq45LULY0Dqgki87BnD5t3tcxRcZBrybH2q
+         p0PUvawY6u+BtTWFqrqCdPsB/NsWEzpD6o62x1ycaVdy6miaiMoV+dYkUoP8YPSeWL
+         DHUUCrs7a2UnTn5jFmt9evF2pv5h1QWLsr7evaGuiXGmmqF6bvVBGQCbTmyKqCcTzn
+         nKuF+L8orQXHBA5+faMuzyQYfHcUBtk2VoijUrruwCIDwAA5JhF+U9sGyqNCkBX1lp
+         wj9AjoBoZsyrg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sriram R <srirrama@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>,
+Cc:     Baochen Qiang <bqiang@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
         kuba@kernel.org, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 023/101] ath11k: Avoid reg rules update during firmware recovery
-Date:   Mon,  8 Nov 2021 12:47:13 -0500
-Message-Id: <20211108174832.1189312-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 025/101] ath11k: Change DMA_FROM_DEVICE to DMA_TO_DEVICE when map reinjected packets
+Date:   Mon,  8 Nov 2021 12:47:15 -0500
+Message-Id: <20211108174832.1189312-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211108174832.1189312-1-sashal@kernel.org>
 References: <20211108174832.1189312-1-sashal@kernel.org>
@@ -49,77 +48,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sriram R <srirrama@codeaurora.org>
+From: Baochen Qiang <bqiang@codeaurora.org>
 
-[ Upstream commit 69a0fcf8a9f2273040d03e5ee77c9689c09e9d3a ]
+[ Upstream commit 86a03dad0f5ad8182ed5fcf7bf3eec71cd96577c ]
 
-During firmware recovery, the default reg rules which are
-received via WMI_REG_CHAN_LIST_CC_EVENT can overwrite
-the currently configured user regd.
+For fragmented packets, ath11k reassembles each fragment as a normal
+packet and then reinjects it into HW ring. In this case, the DMA
+direction should be DMA_TO_DEVICE, not DMA_FROM_DEVICE, otherwise
+invalid payload will be reinjected to HW and then delivered to host.
+What is more, since arbitrary memory could be allocated to the frame, we
+don't know what kind of data is contained in the buffer reinjected.
+Thus, as a bad result, private info may be leaked.
 
-See below snap for example,
+Note that this issue is only found on Intel platform.
 
-root@OpenWrt:/# iw reg get | grep country
-country FR: DFS-ETSI
-country FR: DFS-ETSI
-country FR: DFS-ETSI
-country FR: DFS-ETSI
-
-root@OpenWrt:/# echo assert > /sys/kernel/debug/ath11k/ipq8074\ hw2.0/simulate_f
-w_crash
-<snip>
-[ 5290.471696] ath11k c000000.wifi1: pdev 1 successfully recovered
-
-root@OpenWrt:/# iw reg get | grep country
-country FR: DFS-ETSI
-country US: DFS-FCC
-country US: DFS-FCC
-country US: DFS-FCC
-
-In the above, the user configured country 'FR' is overwritten
-when the rules of default country 'US' are received and updated during
-recovery. Hence avoid processing of these rules in general
-during firmware recovery as they have been already applied during
-driver registration or after last set user country is configured.
-
-This scenario applies for both AP and STA devices basically because
-cfg80211 is not aware of the recovery and only the driver recovers, but
-changing or resetting of the reg domain during recovery is not needed so
-as to continue with the configured regdomain currently in use.
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01460-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Sriram R <srirrama@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+Signed-off-by: Baochen Qiang <bqiang@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210721212029.142388-3-jouni@codeaurora.org
+Link: https://lore.kernel.org/r/20210916064617.20006-1-bqiang@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index fca71e00123d9..2f777d61f9065 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5362,6 +5362,17 @@ static int ath11k_reg_chan_list_event(struct ath11k_base *ab, struct sk_buff *sk
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 2bff8eb507d4d..7d6fd8155bb22 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -3273,7 +3273,7 @@ static int ath11k_dp_rx_h_defrag_reo_reinject(struct ath11k *ar, struct dp_rx_ti
  
- 	pdev_idx = reg_info->phy_id;
+ 	paddr = dma_map_single(ab->dev, defrag_skb->data,
+ 			       defrag_skb->len + skb_tailroom(defrag_skb),
+-			       DMA_FROM_DEVICE);
++			       DMA_TO_DEVICE);
+ 	if (dma_mapping_error(ab->dev, paddr))
+ 		return -ENOMEM;
  
-+	/* Avoid default reg rule updates sent during FW recovery if
-+	 * it is already available
-+	 */
-+	spin_lock(&ab->base_lock);
-+	if (test_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags) &&
-+	    ab->default_regd[pdev_idx]) {
-+		spin_unlock(&ab->base_lock);
-+		goto mem_free;
-+	}
-+	spin_unlock(&ab->base_lock);
-+
- 	if (pdev_idx >= ab->num_radios) {
- 		/* Process the event for phy0 only if single_pdev_only
- 		 * is true. If pdev_idx is valid but not 0, discard the
+@@ -3338,7 +3338,7 @@ static int ath11k_dp_rx_h_defrag_reo_reinject(struct ath11k *ar, struct dp_rx_ti
+ 	spin_unlock_bh(&rx_refill_ring->idr_lock);
+ err_unmap_dma:
+ 	dma_unmap_single(ab->dev, paddr, defrag_skb->len + skb_tailroom(defrag_skb),
+-			 DMA_FROM_DEVICE);
++			 DMA_TO_DEVICE);
+ 	return ret;
+ }
+ 
 -- 
 2.33.0
 
