@@ -2,46 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A7A6C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB0D4C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00B4D610A3
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C516E610A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243279AbhKIB1G (ORCPT
+        id S243649AbhKIB16 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:27:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50182 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:27:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243456AbhKIBXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:23:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7267861B1D;
-        Tue,  9 Nov 2021 01:08:55 +0000 (UTC)
+        id S230441AbhKIBZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:25:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 81CFC61B4A;
+        Tue,  9 Nov 2021 01:09:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636420136;
-        bh=E6xC2TBxTIvXTshqm9Z5PDEHQ7VUiWZQdGWelHONzpE=;
+        s=k20201202; t=1636420191;
+        bh=hXW8FtxbzZ1SI7n0WtdWelRy0BL6GlcbWUAnMOdKOtQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dIbnQ4Z3TYWwOTM5qrkqMBEkSkZ0gj4ohJhZu47cSc5i7RwHQ3Gpfn5A+4orr/5yG
-         VcIerMYiwLz8gsDl8VM7SaUhq/p7nH52LPzzcOXSC6ISGiWFDFpcqRW9IE3nuXJTv6
-         HzDTKAxu/XJ8v7aH9DIdummiKWl94+5KCnjfzBByRinQjYHg5Et+dlZogwxOKuN/BC
-         qeQXEn53J+pOFr8ey3Hdkuzh60CLPvWGgGe4xYvT7DxC5PP9ssdjSxn5eUp8i0BYWz
-         ij/4Kivzy9/VkrMMgD7FcB4Aff5zHCC1T2W2AkeYzDHQM19yAx1IF06y36jERQWMMn
-         P/XpsD3cioSeA==
+        b=NBZpZENh6V5a+bsQ45AphrjcyNzfGEv63Gok7RjjqLRZbLD41uuxdRwtb09pr6APS
+         /dS0b2HCp/rTNly68/g2SRxPO9j4FAolyZxCDEptcdC/gECVcmux9Gbq5LHmHGOaLm
+         TkGy6xPR6wBie0Hmq3T0rYSeV5WIaizPS7fOpp0lUiovL13gwYpRwkBz05PfN/wS+5
+         CyMyDtPMC3AHx7d7t5lF4hz7egHEKVr32kiRkzG65nDzw83GCN19B78J3rx+kY8+XS
+         DpGpDZa6Xao4yekwq4uDtyiWR2GLloAZF+Jflqek+XlBplDQKUbyRxm5fVHzX+nZEC
+         EBg3wdFzRxPwQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zheyu Ma <zheyuma97@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, buytenh@wantstofly.org,
-        davem@davemloft.net, kuba@kernel.org,
-        christophe.jaillet@wanadoo.fr, arnd@arndb.de,
-        wengjianfeng@yulong.com, lyl2019@mail.ustc.edu.cn,
-        keescook@chromium.org, linux-wireless@vger.kernel.org,
+Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        kuba@kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 25/33] mwl8k: Fix use-after-free in mwl8k_fw_state_machine()
-Date:   Mon,  8 Nov 2021 20:07:59 -0500
-Message-Id: <20211109010807.1191567-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 18/30] ath: dfs_pattern_detector: Fix possible null-pointer dereference in channel_detector_create()
+Date:   Mon,  8 Nov 2021 20:09:06 -0500
+Message-Id: <20211109010918.1192063-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109010807.1191567-1-sashal@kernel.org>
-References: <20211109010807.1191567-1-sashal@kernel.org>
+In-Reply-To: <20211109010918.1192063-1-sashal@kernel.org>
+References: <20211109010918.1192063-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,59 +48,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zheyu Ma <zheyuma97@gmail.com>
+From: Tuo Li <islituo@gmail.com>
 
-[ Upstream commit 257051a235c17e33782b6e24a4b17f2d7915aaec ]
+[ Upstream commit 4b6012a7830b813799a7faf40daa02a837e0fd5b ]
 
-When the driver fails to request the firmware, it calls its error
-handler. In the error handler, the driver detaches device from driver
-first before releasing the firmware, which can cause a use-after-free bug.
+kzalloc() is used to allocate memory for cd->detectors, and if it fails,
+channel_detector_exit() behind the label fail will be called:
+  channel_detector_exit(dpd, cd);
 
-Fix this by releasing firmware first.
+In channel_detector_exit(), cd->detectors is dereferenced through:
+  struct pri_detector *de = cd->detectors[i];
 
-The following log reveals it:
+To fix this possible null-pointer dereference, check cd->detectors before
+the for loop to dereference cd->detectors.
 
-[    9.007301 ] BUG: KASAN: use-after-free in mwl8k_fw_state_machine+0x320/0xba0
-[    9.010143 ] Workqueue: events request_firmware_work_func
-[    9.010830 ] Call Trace:
-[    9.010830 ]  dump_stack_lvl+0xa8/0xd1
-[    9.010830 ]  print_address_description+0x87/0x3b0
-[    9.010830 ]  kasan_report+0x172/0x1c0
-[    9.010830 ]  ? mutex_unlock+0xd/0x10
-[    9.010830 ]  ? mwl8k_fw_state_machine+0x320/0xba0
-[    9.010830 ]  ? mwl8k_fw_state_machine+0x320/0xba0
-[    9.010830 ]  __asan_report_load8_noabort+0x14/0x20
-[    9.010830 ]  mwl8k_fw_state_machine+0x320/0xba0
-[    9.010830 ]  ? mwl8k_load_firmware+0x5f0/0x5f0
-[    9.010830 ]  request_firmware_work_func+0x172/0x250
-[    9.010830 ]  ? read_lock_is_recursive+0x20/0x20
-[    9.010830 ]  ? process_one_work+0x7a1/0x1100
-[    9.010830 ]  ? request_firmware_nowait+0x460/0x460
-[    9.010830 ]  ? __this_cpu_preempt_check+0x13/0x20
-[    9.010830 ]  process_one_work+0x9bb/0x1100
-
-Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Tuo Li <islituo@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1634356979-6211-1-git-send-email-zheyuma97@gmail.com
+Link: https://lore.kernel.org/r/20210805153854.154066-1-islituo@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwl8k.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-index 66cd38d4f199b..c6f008796ff16 100644
---- a/drivers/net/wireless/marvell/mwl8k.c
-+++ b/drivers/net/wireless/marvell/mwl8k.c
-@@ -5783,8 +5783,8 @@ static void mwl8k_fw_state_machine(const struct firmware *fw, void *context)
- fail:
- 	priv->fw_state = FW_STATE_ERROR;
- 	complete(&priv->firmware_loading_complete);
--	device_release_driver(&priv->pdev->dev);
- 	mwl8k_release_firmware(priv);
-+	device_release_driver(&priv->pdev->dev);
- }
- 
- #define MAX_RESTART_ATTEMPTS 1
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 0835828ffed77..2f4b79102a27a 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -182,10 +182,12 @@ static void channel_detector_exit(struct dfs_pattern_detector *dpd,
+ 	if (cd == NULL)
+ 		return;
+ 	list_del(&cd->head);
+-	for (i = 0; i < dpd->num_radar_types; i++) {
+-		struct pri_detector *de = cd->detectors[i];
+-		if (de != NULL)
+-			de->exit(de);
++	if (cd->detectors) {
++		for (i = 0; i < dpd->num_radar_types; i++) {
++			struct pri_detector *de = cd->detectors[i];
++			if (de != NULL)
++				de->exit(de);
++		}
+ 	}
+ 	kfree(cd->detectors);
+ 	kfree(cd);
 -- 
 2.33.0
 
