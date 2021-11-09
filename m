@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDDEFC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F305C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAF22610A3
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88CBA610A8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243218AbhKIB07 (ORCPT
+        id S243233AbhKIB1B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:26:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44362 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:27:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49932 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243073AbhKIBTM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:19:12 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F38BD61350;
-        Tue,  9 Nov 2021 01:07:27 +0000 (UTC)
+        id S242638AbhKIBXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:23:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FDE561B28;
+        Tue,  9 Nov 2021 01:08:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636420049;
+        s=k20201202; t=1636420122;
         bh=AEtsryqMgiz7txJQbTtIKhhazF22c3vMUYB4VyAzqyU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LQNL6PTGNxahHY22RsVD2Ah4XOaEXbVnK64rqOjRIeJZ9tDYBC3JK22d+42Nq4LWE
-         8p2v6jF1Qbn/X+JqS0tTZ+wmQc6ATjCu8/bC8hpU+g8A8ULR1/rQEKSOyT8Ufmn2Dy
-         piTiE/bpwzvhGVwTFRVoaSBmDeNE4Zi4mS3yTbqul77f4IWg/FHW3LoAzY8MbXAb4w
-         R+TiJ2hAs37ytuofTioeESCQjNf5ANtOL7zmoTunXdipL9sr1hYVsCUAdgGTwmNEFO
-         mgwyyXvdwFZtspyZjxBahHn9QDxhn1xnTX6NaZs2POOH1ocy7gIaDKEW03h/J0Zj99
-         sy22wvR2agk0w==
+        b=WR4rMqVb9wg+i8y2cWmSnPvw7zU+q8EwHYB5UsihoDSDWllIXZfihhiW4uEt82Dw1
+         65m00kwTL42mcI8TCQ5xTmWcK8sNnLpY7s3GCGs0No32we87pTviE6vLyeZRj/EcIV
+         CDe1q+YJYf0mqYtcW3QCloTPZN4xNTYGTgY5c1WvzkC6JlDd+jvr594nXKdg2rQin8
+         vfC53Libm+TLw4v4qP7PyGER0Z5fL46sAV+NB2tHp5jojdSucZeLShGDZC9DPJVBxe
+         lTyP+zlC8oDwPlWdyccuTraQ7Mmz9O9s6ryGdvk2DOVQiV179YSkT9lo0ok9bQ28D3
+         5G271QiAHPvXQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
@@ -34,12 +34,12 @@ Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
         Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
         kuba@kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 22/39] ath: dfs_pattern_detector: Fix possible null-pointer dereference in channel_detector_create()
-Date:   Mon,  8 Nov 2021 20:06:32 -0500
-Message-Id: <20211109010649.1191041-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 19/33] ath: dfs_pattern_detector: Fix possible null-pointer dereference in channel_detector_create()
+Date:   Mon,  8 Nov 2021 20:07:53 -0500
+Message-Id: <20211109010807.1191567-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109010649.1191041-1-sashal@kernel.org>
-References: <20211109010649.1191041-1-sashal@kernel.org>
+In-Reply-To: <20211109010807.1191567-1-sashal@kernel.org>
+References: <20211109010807.1191567-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
