@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F305C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 288F8C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88CBA610A8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18264610A8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243233AbhKIB1B (ORCPT
+        id S242593AbhKIB1C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:27:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49932 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:27:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50184 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242638AbhKIBXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:23:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FDE561B28;
-        Tue,  9 Nov 2021 01:08:41 +0000 (UTC)
+        id S243465AbhKIBXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:23:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1B34461A79;
+        Tue,  9 Nov 2021 01:09:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636420122;
-        bh=AEtsryqMgiz7txJQbTtIKhhazF22c3vMUYB4VyAzqyU=;
+        s=k20201202; t=1636420142;
+        bh=tXNqZFEup+T7Gb0GfPeWhphkJylcrBNUBCMBVQ2ToDo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WR4rMqVb9wg+i8y2cWmSnPvw7zU+q8EwHYB5UsihoDSDWllIXZfihhiW4uEt82Dw1
-         65m00kwTL42mcI8TCQ5xTmWcK8sNnLpY7s3GCGs0No32we87pTviE6vLyeZRj/EcIV
-         CDe1q+YJYf0mqYtcW3QCloTPZN4xNTYGTgY5c1WvzkC6JlDd+jvr594nXKdg2rQin8
-         vfC53Libm+TLw4v4qP7PyGER0Z5fL46sAV+NB2tHp5jojdSucZeLShGDZC9DPJVBxe
-         lTyP+zlC8oDwPlWdyccuTraQ7Mmz9O9s6ryGdvk2DOVQiV179YSkT9lo0ok9bQ28D3
-         5G271QiAHPvXQ==
+        b=UMejXKMWJItSXPftSCrgpZRdkYRR8PwZSaVEABqT7m4WBYrct5+m4rbymQUD8XQ1B
+         jbjG0s8tDHkpQiXdDHCrv1k2aIsLhBY4TNkxxpZhG9wnkrs7ufbnPWeF5CVoOSr1Bx
+         r4vgyHMxtygwTAUtMSgA9xcC6mV89JS6K9ciruKGftyz3VDK7WtJcmGM2PqBuYP+Rw
+         baEff2z9fhhhcrMxlLNTLYmo5ua8QOnTRN92Y9E/T58WLpv3elelR27h1UOpnXOVEy
+         YSUZvZZ1ZX5kMCQqtLVOD2G8r1cNMT4Bu8zRwVI1MgmRTrsNJTU+3z3oEAHHiYt1Qo
+         ybdXIl1QMbUrA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@codeaurora.org,
+        davem@davemloft.net, kuba@kernel.org,
+        miriam.rachel.korenblit@intel.com, mordechay.goodstein@intel.com,
+        emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 19/33] ath: dfs_pattern_detector: Fix possible null-pointer dereference in channel_detector_create()
-Date:   Mon,  8 Nov 2021 20:07:53 -0500
-Message-Id: <20211109010807.1191567-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 27/33] iwlwifi: mvm: disable RX-diversity in powersave
+Date:   Mon,  8 Nov 2021 20:08:01 -0500
+Message-Id: <20211109010807.1191567-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109010807.1191567-1-sashal@kernel.org>
 References: <20211109010807.1191567-1-sashal@kernel.org>
@@ -48,50 +50,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tuo Li <islituo@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 4b6012a7830b813799a7faf40daa02a837e0fd5b ]
+[ Upstream commit e5322b9ab5f63536c41301150b7ce64605ce52cc ]
 
-kzalloc() is used to allocate memory for cd->detectors, and if it fails,
-channel_detector_exit() behind the label fail will be called:
-  channel_detector_exit(dpd, cd);
+Just like we have default SMPS mode as dynamic in powersave,
+we should not enable RX-diversity in powersave, to reduce
+power consumption when connected to a non-MIMO AP.
 
-In channel_detector_exit(), cd->detectors is dereferenced through:
-  struct pri_detector *de = cd->detectors[i];
-
-To fix this possible null-pointer dereference, check cd->detectors before
-the for loop to dereference cd->detectors.
-
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20210805153854.154066-1-islituo@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211017113927.fc896bc5cdaa.I1d11da71b8a5cbe921a37058d5f578f1b14a2023@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/dfs_pattern_detector.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index 78146607f16e8..acd85e5069346 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -182,10 +182,12 @@ static void channel_detector_exit(struct dfs_pattern_detector *dpd,
- 	if (cd == NULL)
- 		return;
- 	list_del(&cd->head);
--	for (i = 0; i < dpd->num_radar_types; i++) {
--		struct pri_detector *de = cd->detectors[i];
--		if (de != NULL)
--			de->exit(de);
-+	if (cd->detectors) {
-+		for (i = 0; i < dpd->num_radar_types; i++) {
-+			struct pri_detector *de = cd->detectors[i];
-+			if (de != NULL)
-+				de->exit(de);
-+		}
- 	}
- 	kfree(cd->detectors);
- 	kfree(cd);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index ff5ce1ed03c42..4746f4b096c56 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -913,6 +913,9 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM)
++		return false;
++
+ 	if (num_of_ant(iwl_mvm_get_valid_rx_ant(mvm)) == 1)
+ 		return false;
+ 
 -- 
 2.33.0
 
