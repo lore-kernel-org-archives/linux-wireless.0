@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF02C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:16:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF73EC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE61161353
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:16:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC7A3611BF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Nov 2021 01:17:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242041AbhKIBR1 (ORCPT
+        id S242054AbhKIBUl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:17:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39302 "EHLO mail.kernel.org"
+        Mon, 8 Nov 2021 20:20:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242361AbhKIBL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Nov 2021 20:11:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2E36061A81;
-        Tue,  9 Nov 2021 01:04:55 +0000 (UTC)
+        id S242396AbhKIBRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Nov 2021 20:17:23 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A6A261AFB;
+        Tue,  9 Nov 2021 01:07:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636419896;
-        bh=f3N/kgs6bo6MHjbx6q85/nXKf+mVH4MjV0F5rCvAmiY=;
+        s=k20201202; t=1636420028;
+        bh=fUGXu9XiCLQlNUs3S91utdZvZpz/jZEZ4cd17L50V2U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m3EmxIGP8+H97zUlHQQ/pQDQU7LAt3t8Sut970F66qSx8DMZO4rAdZqCVf4O+VbNE
-         Sva+lkwa6/g2O/0gMTx+OTKgYXlFLxiygu63FGQwDEYx7VgfgEGVDlgSwureA83C9f
-         N0EHVgRKPhCHSsBPvgKgasUMFJ/+r3VdXqhi2FNPhjBsRS4u1IcWkM61cnTCsgYfkm
-         InatpYBtVVgCj0f6jumu94OidijMNEnnK7X4x3seiUMmSDu2E4m2uoTrFyNxBLYPNh
-         dxkdWe1enYoe9lPVlKLa4g6DykFxNMmUR3vl1Kv+kK22qxBOlVPmdBnWPGsvBJJ01g
-         5rC4YGfG0qKbQ==
+        b=j+fEtnJuRH1O1LPW65X8z60v5gFR4RtZZk7x9c26lScZqm4fZMJKXwpvAO1XRsRIm
+         UnIrCBE9gIQc9YVD82uJ7O6gffoMgnYF+dQoDrvnOJIMXCGJ3HnWky3RhI/rcnQsf4
+         EvPclwmQNYyj83R4GhZrKB+yI6XtLO1e7MhD91v8aTgjRru9n7JUqNUPzHzSt1FXhE
+         3kcqS8gWZ1TFjTHSc3pkz2UsTxkTyWoiKaj+uhlpWJl4MFVmg+VsnxTCrciCivlUFb
+         4MsL5a1REI7uIG8zBSznX++Nw/BQ+Es86/FYZeB7UgoPPGzEGfdbdZIVJMKOBQngg8
+         kOdK1CnGteHQQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
@@ -35,12 +35,12 @@ Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
         ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
         huxinming820@gmail.com, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 16/74] mwifiex: Run SET_BSS_MODE when changing from P2P to STATION vif-type
-Date:   Mon,  8 Nov 2021 12:48:43 -0500
-Message-Id: <20211108174942.1189927-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 10/39] mwifiex: Run SET_BSS_MODE when changing from P2P to STATION vif-type
+Date:   Mon,  8 Nov 2021 20:06:20 -0500
+Message-Id: <20211109010649.1191041-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211108174942.1189927-1-sashal@kernel.org>
-References: <20211108174942.1189927-1-sashal@kernel.org>
+In-Reply-To: <20211109010649.1191041-1-sashal@kernel.org>
+References: <20211109010649.1191041-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 9e6dc289ec3e8..b5134f11fc32b 100644
+index 79c50aebffc4b..7bdcbe79d963d 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
 +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1233,29 +1233,15 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+@@ -1217,29 +1217,15 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
  		break;
  	case NL80211_IFTYPE_P2P_CLIENT:
  	case NL80211_IFTYPE_P2P_GO:
