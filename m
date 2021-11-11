@@ -2,127 +2,139 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 774A2C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Nov 2021 22:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A34DC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Nov 2021 02:15:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50C5461264
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Nov 2021 22:36:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 364BD61247
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Nov 2021 02:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233705AbhKJWja (ORCPT
+        id S233392AbhKKCSZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Nov 2021 17:39:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40672 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233569AbhKJWj3 (ORCPT
+        Wed, 10 Nov 2021 21:18:25 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:50928 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233581AbhKKCSS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Nov 2021 17:39:29 -0500
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F352C061766
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2021 14:36:41 -0800 (PST)
-Received: by mail-lf1-x12a.google.com with SMTP id br15so5768972lfb.9
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2021 14:36:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=67v8CYjUoqWXmr8UJo7fttpj4RphDD0fJcr4jA9b+dQ=;
-        b=jcMAZ5Dbl1y1hcNIFt/RfcTVbNYE46rtD/TmjyB50zYYyy36I4ahKH8AXLC3sMrPuU
-         jg/pwtzCeosMhHxppFObleLcygAf5yRZhRIj1b/eF1KUbd7L+l+iGUWKLgHUh4DJfSC2
-         IOppu7PjonS35UU3b6bwHAvl+/hyJqsNAlETljLt3+6ANgJhyovfS/KauHdiYY2qpX5h
-         JBBRD9ksMK7P/NVYLQdeLiohfJh1Yq8O8Cr+8tCpwPgq/YKIMEjmLvjhmVNYCZRzXMhx
-         adkbV/Yf8iv6GLBPiBJSY90X4jcIUJvO6E6xJO/GocQmwrvm+g0RDLmoY511aXRjEKM9
-         JRLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=67v8CYjUoqWXmr8UJo7fttpj4RphDD0fJcr4jA9b+dQ=;
-        b=V7D/J2+Tt4T0YE3JI/d1VeMunuKO8nQf/b6Wts2zJZP4Dr15HGGL6A6mOzMyjqX6x/
-         v0YrmTB6q5yy9uhOrKXImMC2w/KwXWK90cj13assHaDJqsHdAWB1UycUu3Z3zL9TztYB
-         LUBaZskNvEpDrioqtUkE5Vu0kuyKJGLwShAmbdi7OW/AIZdIyu8ojQuVXGFSGhZMgrqc
-         gPiVhIlD12x86qgA7dAcQS47wpwk+ZK8MRTSNaoLcsuXjQVeqJdFfpnCapPR73mjQI3F
-         MtT7r05QTp6nqrpge2IiReJ/0xZJREb4iak1TOc2CRk8uj/HUcaS1+3enEC0qdqH5XPV
-         s89Q==
-X-Gm-Message-State: AOAM533di8T+TdRV7Tu4UIKffVDpyZKm0sF3v/GJtG+FRZEI6+ZmPmF+
-        mPhPsHRwza7oZJBkjaOHIlFVMb3DMq2PKSUUmEQ=
-X-Google-Smtp-Source: ABdhPJwEnYgc6umu7stiqISVDMGNeGTafcOa4T4zJUhJ+27MqJJ4PpApJp6psbYqpKhfJUEZWKmaVrNR4tY3aOKVWfc=
-X-Received: by 2002:a05:6512:239c:: with SMTP id c28mr2441783lfv.502.1636583799837;
- Wed, 10 Nov 2021 14:36:39 -0800 (PST)
+        Wed, 10 Nov 2021 21:18:18 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1AB2FLU00003041, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36503.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1AB2FLU00003041
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 11 Nov 2021 10:15:21 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36503.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.15; Thu, 11 Nov 2021 10:15:20 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.15; Thu, 11 Nov
+ 2021 10:15:20 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <tiwai@suse.de>
+Subject: [PATCH 1/3] rtw89: update partition size of firmware header on skb->data
+Date:   Thu, 11 Nov 2021 10:14:55 +0800
+Message-ID: <20211111021457.13776-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211111021457.13776-1-pkshih@realtek.com>
+References: <20211111021457.13776-1-pkshih@realtek.com>
 MIME-Version: 1.0
-References: <20210820203531.20706-1-greearb@candelatech.com>
- <20210820203531.20706-2-greearb@candelatech.com> <950c52e2-8422-36f0-9024-55e45ef2672c@candelatech.com>
-In-Reply-To: <950c52e2-8422-36f0-9024-55e45ef2672c@candelatech.com>
-From:   Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Date:   Wed, 10 Nov 2021 23:36:28 +0100
-Message-ID: <CAFED-jksc5480ZfX+RK+c1FUs43kRvnDJv+xA8BfFE7YN5i86Q@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] mt76: mt7915: fix radar detector logic
-To:     Ben Greear <greearb@candelatech.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 11/11/2021 02:00:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzExLzExIKRXpMggMTI6MjM6MDA=?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36503.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-AntiSpam-Outbound-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 11/11/2021 01:57:39
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 167193 [Nov 11 2021]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: pkshih@realtek.com
+X-KSE-AntiSpam-Info: LuaCore: 465 465 eb31509370142567679dd183ac984a0cb2ee3296
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: realtek.com:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 11/11/2021 02:00:00
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-=C5=9Br., 10 lis 2021 o 21:36 Ben Greear <greearb@candelatech.com> napisa=
-=C5=82(a):
->
-> On 8/20/21 1:35 PM, greearb@candelatech.com wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> >
-> > Before this patch, if AP went from ch 100 to ch 36, the radar detector
-> > logic in the firmware was not being disabled.  This made the AP appear
-> > to be up, but no beacons were seen on air until module reload or
-> > reboot.
-> >
-> > To reproduce this, I change hostapd.conf and restart hostapd.  Others
-> > on openwrt used their UI to make changes and problem was seen, but
-> > stil others changed channels in some other way and/or had some other
-> > difference and could *not* reproduce it.  So, something perhaps a
-> > bit subtle.
-> >
-> > To fix the problem, stop depending on comparing dfs_state, store last
-> > freq/bandwidth to detect changes in that, and streamline code that
-> > checks to enable/disable radar detection.  And add in error checking
-> > and dev_dbg logic so one can see what is actually happening if need
-> > to debug this again.
->
-> Back when I was working on this, someone sent me an email or chat or some=
-thing
-> about some other way to do this that was simpler and just relied on
-> mac80211 timers.  But, I cannot find that email for the life of me.
->
-> In case you are reading, please resend!  Evidently this 2/2 patch had
-> some regression for someone so it is not acceptable upstream in
-> current state...maybe the mac80211 option is best.
->
-> Thanks,
+The partition size is used to tell hardware the size of piece we are going
+to send a firmware. The old code updates the size in constant buffer of
+firmware, and leads system crash.
 
---- a/mt7615/mac.c
-+++ b/mt7615/mac.c
-@@ -2034,6 +2034,11 @@ static int mt7615_dfs_start_radar_detect
-  phy->rdd_state |=3D BIT(1);
-  }
+To fix this, update the size on skb->data after we copy the firmware data
+into skb.
 
-+   /* end CAC - upper layer will care about it, lock tx, beacon setup */
-+   err =3D mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, ext_phy, MT_RX_SEL0, 0);
-+   if (err < 0)
-+       return err;
-+
-  return 0;
- }
+Fixes: e3ec7017f6a2 ("rtw89: add Realtek 802.11ax driver")
+Reported-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.c | 2 +-
+ drivers/net/wireless/realtek/rtw89/fw.h | 6 ++++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-@@ -2104,11 +2109,7 @@ int mt7615_dfs_init_radar_detector(struc
-  phy->dfs_state =3D chandef->chan->dfs_state;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 212aaf577d3c5..65ef3dc9d0614 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -91,7 +91,6 @@ static int rtw89_fw_hdr_parser(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
+ 	info->section_num = GET_FW_HDR_SEC_NUM(fw);
+ 	info->hdr_len = RTW89_FW_HDR_SIZE +
+ 			info->section_num * RTW89_FW_SECTION_HDR_SIZE;
+-	SET_FW_HDR_PART_SIZE(fw, FWDL_SECTION_PER_PKT_LEN);
+ 
+ 	bin = fw + info->hdr_len;
+ 
+@@ -275,6 +274,7 @@ static int __rtw89_fw_download_hdr(struct rtw89_dev *rtwdev, const u8 *fw, u32 l
+ 	}
+ 
+ 	skb_put_data(skb, fw, len);
++	SET_FW_HDR_PART_SIZE(skb->data, FWDL_SECTION_PER_PKT_LEN);
+ 	rtw89_h2c_pkt_set_hdr_fwdl(rtwdev, skb, FWCMD_TYPE_H2C,
+ 				   H2C_CAT_MAC, H2C_CL_MAC_FWDL,
+ 				   H2C_FUNC_MAC_FWHDR_DL, len);
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 7ee0d93233107..36e8d0da6c1e7 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -282,8 +282,10 @@ struct rtw89_h2creg_sch_tx_en {
+ 	le32_get_bits(*((__le32 *)(fwhdr) + 6), GENMASK(15, 8))
+ #define GET_FW_HDR_CMD_VERSERION(fwhdr)	\
+ 	le32_get_bits(*((__le32 *)(fwhdr) + 7), GENMASK(31, 24))
+-#define SET_FW_HDR_PART_SIZE(fwhdr, val)	\
+-	le32p_replace_bits((__le32 *)(fwhdr) + 7, val, GENMASK(15, 0))
++static inline void SET_FW_HDR_PART_SIZE(void *fwhdr, u32 val)
++{
++	le32p_replace_bits((__le32 *)fwhdr + 7, val, GENMASK(15, 0));
++}
+ 
+ #define SET_CTRL_INFO_MACID(table, val) \
+ 	le32p_replace_bits((__le32 *)(table) + 0, val, GENMASK(6, 0))
+-- 
+2.25.1
 
-  if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
--   if (chandef->chan->dfs_state !=3D NL80211_DFS_AVAILABLE)
--     return mt7615_dfs_start_radar_detector(phy);
--
--   return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, ext_phy,
--   MT_RX_SEL0, 0);
-+   return mt7615_dfs_start_radar_detector(phy);
-  }
-
---=20
-Janusz Dziedzic
