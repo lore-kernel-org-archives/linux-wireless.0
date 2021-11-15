@@ -2,91 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 014E3C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Nov 2021 09:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A35DDC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Nov 2021 09:26:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D627061BFE
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Nov 2021 09:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F15C63215
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Nov 2021 09:26:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237633AbhKOJ2u (ORCPT
+        id S237270AbhKOJ3q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Nov 2021 04:28:50 -0500
-Received: from smtpbg704.qq.com ([203.205.195.105]:40071 "EHLO
-        smtpproxy21.qq.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S237707AbhKOJ2N (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Nov 2021 04:28:13 -0500
-X-QQ-mid: bizesmtp54t1636968132tgkosmaa
-Received: from localhost.localdomain (unknown [113.57.152.160])
-        by esmtp6.qq.com (ESMTP) with 
-        id ; Mon, 15 Nov 2021 17:22:11 +0800 (CST)
-X-QQ-SSF: 01400000002000B0B000B00C0000000
-X-QQ-FEAT: bOEXdVvRX8Y572JsKxccmj89e1WDJA+VIFcPTVPcE5+QP2APXfGS2txs/OTS3
-        fmVzyUb9hg+EHZ4POH+fuvLED/JaUPK+ao9eIl1YSdAAMxy5+mHKz+XF/xsSHVIDrAnmd6N
-        GT8X1ksrxzTfUmj4vgu3HNScOQCgtLkVVbLBFy+hHddk5rEIZfywl0p0IfbpFOtkEMs2nZ7
-        g9XZ8252jg8T260MFnmerxeiT2PB3CBUltwaOjvkl3eTMpPSMyAA2vI/cOj48dKwALrtltk
-        a6LcXe+34WnfBM6Q7ylL2/aXkuj16nO1gL4si2oAxU2aJFZox83PrgBTGqa825JpgfMlNXa
-        rapg92CQauO5c2DNo08gW8CMqiJ3scFage9xINp
-X-QQ-GoodBg: 2
-From:   liuguoqiang <liuguoqiang@uniontech.com>
-To:     johannes@sipsolutions.net
-Cc:     davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        liuguoqiang <liuguoqiang@uniontech.com>
-Subject: [PATCH] cfg80211: delete redundant free code
-Date:   Mon, 15 Nov 2021 17:21:39 +0800
-Message-Id: <20211115092139.24407-1-liuguoqiang@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+        Mon, 15 Nov 2021 04:29:46 -0500
+Received: from m43-7.mailgun.net ([69.72.43.7]:39203 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237691AbhKOJ27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Nov 2021 04:28:59 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1636968364; h=Date: Message-ID: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=pM1Hj7+qTdm+bCFtPE48hOmFVlAu6IkxkbjG6nyb82M=;
+ b=D206LDBN64b5PNGj2HKk3Cqgbaq9I19NJV3WTgiWOEVC3jXZ894dNpaaxzgoqYc7X3zN1Ef4
+ 0a/sa+e8xxoH366HP9D/BhoYfHTHG18YLZ9Jwtpw1pbAnVgKIH5NzpUsWAWmmkUkrBEK5hl9
+ BTZnPwuqktJJQBV1LAJuhyRotjA=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 619227abe10f164c25e5a80f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 15 Nov 2021 09:26:03
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 58E54C43635; Mon, 15 Nov 2021 09:26:02 +0000 (UTC)
+Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 312FEC43617;
+        Mon, 15 Nov 2021 09:25:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 312FEC43617
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign2
-X-QQ-Bgrelay: 1
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] ath11k: Increment pending_mgmt_tx count before tx send
+ invoke
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1635168282-8845-1-git-send-email-quic_ppranees@quicinc.com>
+References: <1635168282-8845-1-git-send-email-quic_ppranees@quicinc.com>
+To:     P Praneesh <quic_ppranees@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        P Praneesh <quic_ppranees@quicinc.com>,
+        Lavanya Suresh <lavaks@codeaurora.org>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <163696835789.13305.793744230126024707.kvalo@codeaurora.org>
+Date:   Mon, 15 Nov 2021 09:26:02 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When kzalloc failed and rdev->sacn_req or rdev->scan_msg is null, pass a
-null pointer to kfree is redundant, delete it and return directly.
+P Praneesh <quic_ppranees@quicinc.com> wrote:
 
-Signed-off-by: liuguoqiang <liuguoqiang@uniontech.com>
----
- net/wireless/scan.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+> There is a race condition whereby the tx completion handler can be invoked
+> before the 'num_pending_mgmt_tx" count is incremented. If that occurs, we
+> could get warning trace indicating that 'num_pending_mgmt_tx' is 0 (because
+> it was not yet incremented). Ideally, this trace should be seen only if
+> mgmt tx has not happened but tx completion is received, and it is not
+> expected in this race condition.
+> 
+> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01386-QCAHKSWPL_SILICONZ-1
+> 
+> Co-developed-by: Lavanya Suresh <lavaks@codeaurora.org>
+> Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+> Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 22e92be61938..011fcfabc846 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -2702,10 +2702,8 @@ int cfg80211_wext_siwscan(struct net_device *dev,
- 	if (IS_ERR(rdev))
- 		return PTR_ERR(rdev);
- 
--	if (rdev->scan_req || rdev->scan_msg) {
--		err = -EBUSY;
--		goto out;
--	}
-+	if (rdev->scan_req || rdev->scan_msg)
-+		return -EBUSY;
- 
- 	wiphy = &rdev->wiphy;
- 
-@@ -2718,10 +2716,8 @@ int cfg80211_wext_siwscan(struct net_device *dev,
- 	creq = kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
- 		       n_channels * sizeof(void *),
- 		       GFP_ATOMIC);
--	if (!creq) {
--		err = -ENOMEM;
--		goto out;
--	}
-+	if (!creq)
-+		return -ENOMEM;
- 
- 	creq->wiphy = wiphy;
- 	creq->wdev = dev->ieee80211_ptr;
+Patch applied to ath-next branch of ath.git, thanks.
+
+c0b0d2e87d91 ath11k: Increment pending_mgmt_tx count before tx send invoke
+
 -- 
-2.20.1
+https://patchwork.kernel.org/project/linux-wireless/patch/1635168282-8845-1-git-send-email-quic_ppranees@quicinc.com/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
-	
