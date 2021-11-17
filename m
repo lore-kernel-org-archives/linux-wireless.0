@@ -2,85 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B33C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Nov 2021 08:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4528C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Nov 2021 08:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AA5E60F9C
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Nov 2021 08:48:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD89E6187F
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Nov 2021 08:55:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234613AbhKQIvy (ORCPT
+        id S234716AbhKQI60 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Nov 2021 03:51:54 -0500
-Received: from m43-7.mailgun.net ([69.72.43.7]:14534 "EHLO m43-7.mailgun.net"
+        Wed, 17 Nov 2021 03:58:26 -0500
+Received: from m43-7.mailgun.net ([69.72.43.7]:29717 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234606AbhKQIvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Nov 2021 03:51:50 -0500
+        id S234711AbhKQI6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Nov 2021 03:58:25 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1637138930; h=Date: Message-ID: Cc: To: References:
+ s=smtp; t=1637139327; h=Date: Message-ID: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Va4OnKJJNqeV+RT0nY6jUwSah1RO4b+0ZmF3us1G63E=;
- b=nokJyB74I/l2AmfqtCQWvZHD9ic0HpbWKx7KhBCVStcG0t3xK/NUDm4N46PIiHNRTCn10cEQ
- LrHCCeBBG+l+N2HtoXwNosEf6OWuaL1J5x7yNGwDEyTLBS6IfzDDeMrBw5bvJaQrtQdj9xyr
- 5T5o3ZQ9WOc8Is1+vSvIHzVp5EA=
+ Content-Type: Sender; bh=psNHdrQjd1DGSYvv+He0WJ21TCqFZwc6FWmmMhgbuog=;
+ b=RyVcArwLo31Di+g26xMlYykOGK7Zfu5fsW+Hcd+FCBsuFrSUsJEAgX7izE7fv4SZq/26SS+x
+ ICHmQTaD30CtFrq5yF02/9t07RWX8T8ueUWBUXQ64ACdrqN7XOYvayahs2yoJvo2jHrylQpI
+ kRxVnCZwQj7J1CQ85+s2UWY+Df4=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 6194c1f1638a2f4d6141fae3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Nov 2021 08:48:49
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 6194c37f1e1d2f5233e7b9d9 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 17 Nov 2021 08:55:27
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CD348C43460; Wed, 17 Nov 2021 08:48:48 +0000 (UTC)
+        id 19D74C43619; Wed, 17 Nov 2021 08:55:27 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 33E47C4338F;
-        Wed, 17 Nov 2021 08:48:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 33E47C4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E00AC4338F;
+        Wed, 17 Nov 2021 08:55:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 5E00AC4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 1/4] ath11k: add ath11k_qmi_free_resource() for
- recovery
+Subject: Re: [PATCH] ath11k: skip sending vdev down for channel switch
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20211116041522.23529-2-quic_wgong@quicinc.com>
-References: <20211116041522.23529-2-quic_wgong@quicinc.com>
+In-Reply-To: <20211027094836.12524-1-quic_wgong@quicinc.com>
+References: <20211027094836.12524-1-quic_wgong@quicinc.com>
 To:     Wen Gong <quic_wgong@quicinc.com>
 Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
         <quic_wgong@quicinc.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163713892498.10263.2312396236754200205.kvalo@codeaurora.org>
-Date:   Wed, 17 Nov 2021 08:48:48 +0000 (UTC)
+Message-ID: <163713932325.10263.1700447801857143342.kvalo@codeaurora.org>
+Date:   Wed, 17 Nov 2021 08:55:27 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Wen Gong <quic_wgong@quicinc.com> wrote:
 
-> ath11k_qmi_free_target_mem_chunk() and ath11k_qmi_m3_free() is static
-> in qmi.c, they are needed for recovery, export them in a new function.
+> The ath11k driver currently sends vdev down to the firmware before
+> updating the channel context, which is followed by a vdev restart
+> command.
+> 
+> Sending vdev down is not required before sending a vdev restart,
+> because the firmware internally does vdev down when ath11k sends
+> a vdev restart command.
+> 
+> Firmware will happen crash while channel switch without this change.
+> 
+> Hence skip the vdev down command sending when updating the channel
+> context and then fix the firmware crash issue.
 > 
 > Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 > 
 > Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 
-Wen mentioned me privately that some extra features are needed to get
-this working, so dropping the patchset.
+Fails to apply:
 
-4 patches set to Changes Requested.
+error: patch failed: drivers/net/wireless/ath/ath11k/mac.c:5440
+error: drivers/net/wireless/ath/ath11k/mac.c: patch does not apply
+stg import: Diff does not apply cleanly
 
-12621327 [v4,1/4] ath11k: add ath11k_qmi_free_resource() for recovery
-12621331 [v4,2/4] ath11k: fix invalid m3 buffer address
-12621329 [v4,3/4] ath11k: add support for device recovery for QCA6390
-12621333 [v4,4/4] ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211116041522.23529-2-quic_wgong@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20211027094836.12524-1-quic_wgong@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
