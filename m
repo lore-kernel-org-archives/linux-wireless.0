@@ -2,81 +2,147 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0FEC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Nov 2021 16:41:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50CE9C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Nov 2021 16:41:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45222610A5
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Nov 2021 16:41:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A7C4610A5
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Nov 2021 16:41:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233617AbhKRQog (ORCPT
+        id S233602AbhKRQok (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Nov 2021 11:44:36 -0500
-Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:39906 "EHLO
+        Thu, 18 Nov 2021 11:44:40 -0500
+Received: from dispatch1-us1.ppe-hosted.com ([67.231.154.164]:60662 "EHLO
         dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233608AbhKRQof (ORCPT
+        by vger.kernel.org with ESMTP id S233601AbhKRQok (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Nov 2021 11:44:35 -0500
+        Thu, 18 Nov 2021 11:44:40 -0500
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.166])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 66C6F20061
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2021 16:41:34 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.164])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 2947E2005E
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2021 16:41:38 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 3BE9B90007F
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2021 16:41:34 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id E22FDB00075
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2021 16:41:37 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id B6AA613C2BC;
+        by mail3.candelatech.com (Postfix) with ESMTP id 41BA713C2B8;
         Thu, 18 Nov 2021 08:41:07 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com B6AA613C2BC
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 41BA713C2B8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1637253667;
-        bh=cz7hdPYqV1/6OZEcKtZ46vixX5rQ2uVZjynkomjDlQ8=;
+        bh=3v0xb8ptFJWVBSz+nkPgNelUV7VR/B9WdNoYnlW6jKA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XY9/ZrBy8QLVf6Pmnr3599YMX643L59Bjk7LE0bXXrpZ9ZvGvflMeKDB2iOaLik+J
-         umxbXWLDdgq/kOzjBRykdMzP7rndjKx/SHZYG+rP2rEa5lOHOsWuEyLPSl9PgNcz6Q
-         od3n1tL7+/Lmy++f1yvX5J9CaMB+RMuec2H9R278=
+        b=O9ayABCeJW1whXXeyD2JKVFZbj7r93GS7BcQWKdN1Op5WwZaVDFwR/FxsWWG1uDdv
+         1TBmertlzUddFrH30fQFIHMzv5/sdWf/FiVIht5nbq15a9KKbkonEtsWW/7Fl9m9Vc
+         uMSUbfzniBh9+0hOqpxerkzQe0h138hLjo+6Lukk=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 11/11] mt76: mt7915: poll mib counters every 200ms
-Date:   Thu, 18 Nov 2021 08:40:56 -0800
-Message-Id: <20211118164056.2965-11-greearb@candelatech.com>
+Subject: [PATCH 08/11] mt76: mt7915: add ethtool tx/rx pkts/bytes
+Date:   Thu, 18 Nov 2021 08:40:53 -0800
+Message-Id: <20211118164056.2965-8-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211118164056.2965-1-greearb@candelatech.com>
 References: <20211118164056.2965-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1637253694-HEkbK62m7M2f
+X-MDID: 1637253698-RBXa75bmoo1w
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Instead of every 500ms, this will do better job of catching wraps
-of 16-bit pkt counters.
+These stats are provided with same name by ath10k
+and some intel wired NIC drivers.  Add them to mt7915
+as well to allow user-space code to more easily get some
+basic stats out of the radio.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c    |  7 +++++++
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c   | 11 +++++++++++
+ drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h |  7 +++++++
+ 3 files changed, 25 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 3c89c7573015..7cfa6b2abda5 100644
+index 300928edd0d7..a97b4e64f74d 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -2390,7 +2390,11 @@ void mt7915_mac_work(struct work_struct *work)
- 	mutex_lock(&mphy->dev->mutex);
+@@ -782,6 +782,9 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 			mt7915_mac_decode_he_mu_radiotap(skb, status, rxv);
+ 	}
  
- 	mt76_update_survey(mphy);
--	if (++mphy->mac_work_count == 5) {
++	mib->rx_pkts_nic++;
++	mib->rx_bytes_nic += skb->len;
 +
-+	/* this method is called about every 100ms.  Some pkt counters are 16-bit,
-+	 * so poll every 200ms to keep overflows at a minimum.
-+	 */
-+	if (++mphy->mac_work_count == 2) {
- 		mphy->mac_work_count = 0;
+ 	if (!status->wcid || !ieee80211_is_data_qos(fc))
+ 		return 0;
  
- 		mt7915_mac_update_stats(phy);
+@@ -1384,6 +1387,8 @@ mt7915_txwi_free(struct mt7915_dev *dev, struct mt76_txwi_cache *t,
+ 	u16 wcid_idx;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_tx_rate *rate;
++	struct mt7915_phy *phy = &dev->phy;
++	struct mib_stats *mib = &phy->mib;
+ 
+ 	mt7915_txp_skb_unmap(mdev, t);
+ 	if (!t->skb)
+@@ -1465,6 +1470,8 @@ mt7915_txwi_free(struct mt7915_dev *dev, struct mt76_txwi_cache *t,
+ 	/* Apply the values that this txfree path reports */
+ 	rate->count = tx_cnt;
+ 	if (tx_status == 0) {
++		mib->tx_pkts_nic++;
++		mib->tx_bytes_nic += t->skb->len;
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 		info->status.ampdu_ack_len = 1;
+ 	} else {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index f6c334721bca..c4eee951699e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1077,6 +1077,10 @@ static void mt7915_sta_set_decap_offload(struct ieee80211_hw *hw,
+ }
+ 
+ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_pkts_nic", /* from driver, phy tx-ok skb */
++	"tx_bytes_nic", /* from driver, phy tx-ok bytes */
++	"rx_pkts_nic", /* from driver, phy rx OK skb */
++	"rx_bytes_nic", /* from driver, phy rx OK bytes */
+ 	"tx_ampdu_cnt",
+ 	"tx_stop_q_empty_cnt",
+ 	"tx_mpdu_attempts",
+@@ -1259,6 +1263,13 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 
+ 	mt7915_mac_update_stats(phy);
+ 
++	/* driver phy-wide stats */
++	data[ei++] = mib->tx_pkts_nic;
++	data[ei++] = mib->tx_bytes_nic;
++	data[ei++] = mib->rx_pkts_nic;
++	data[ei++] = mib->rx_bytes_nic;
++
++	/* MIB stats from FW/HW */
+ 	data[ei++] = mib->tx_ampdu_cnt;
+ 	data[ei++] = mib->tx_stop_q_empty_cnt;
+ 	data[ei++] = mib->tx_mpdu_attempts_cnt;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index bcbc8496516e..60881b357399 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -138,6 +138,13 @@ struct mt7915_vif {
+ 
+ /* per-phy stats.  */
+ struct mib_stats {
++	/* phy wide driver stats */
++	u32 tx_pkts_nic; /* tx OK skb */
++	u32 tx_bytes_nic; /* tx OK bytes */
++	u32 rx_pkts_nic; /* rx OK skb */
++	u32 rx_bytes_nic; /* rx OK bytes */
++
++	/* MIB counters from FW/HW */
+ 	u32 ack_fail_cnt;
+ 	u32 fcs_err_cnt;
+ 	u32 rts_cnt;
 -- 
 2.20.1
 
