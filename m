@@ -2,123 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19084C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Nov 2021 13:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 292DDC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Nov 2021 13:56:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6C6A61247
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Nov 2021 13:51:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DB4961547
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Nov 2021 13:56:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235650AbhKSNyd (ORCPT
+        id S235605AbhKSN7t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Nov 2021 08:54:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50678 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235627AbhKSNyd (ORCPT
+        Fri, 19 Nov 2021 08:59:49 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:40956 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234522AbhKSN7t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Nov 2021 08:54:33 -0500
-Received: from dvalin.narfation.org (dvalin.narfation.org [IPv6:2a00:17d8:100::8b1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97170C061574
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2021 05:51:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-        s=20121; t=1637329888;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+        Fri, 19 Nov 2021 08:59:49 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 03D0C212C9;
+        Fri, 19 Nov 2021 13:56:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1637330207; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=gbObE9ucGPXTlt67EJ6vFWsn9MjX4s/zPYYmj7eYKSM=;
-        b=rGchiJcmaMzPocBsBJ2kmggvW3JPwWupjAHWrT+qwgRVasYjajj1zcjc4BaYBFyhL98Mb0
-        t+hY9y5tGhuHFW094XCMQooEB7KIf3HYzcXbkvU7uBne0s15lhzEA3jFGOPWANx3N3FhRV
-        Th1Iwef5DL+J/AB3NfhSFx9picjCM4Q=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     ath11k@lists.infradead.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        robh@kernel.org, Anilkumar Kolli <akolli@codeaurora.org>
-Subject: Re: [PATCH v2 2/2] ath11k: Use reserved host DDR addresses from DT for PCI devices
-Date:   Fri, 19 Nov 2021 14:51:25 +0100
-Message-ID: <8643453.gy25EnUU4W@sven-l14>
-In-Reply-To: <1637082058-6398-2-git-send-email-akolli@codeaurora.org>
-References: <1637082058-6398-1-git-send-email-akolli@codeaurora.org> <1637082058-6398-2-git-send-email-akolli@codeaurora.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+        bh=85XTByKl5Pw3o1U01Reg7LSWSS4FBg2XIwmnhRDDDUk=;
+        b=hQhJd3Fc8OpBwU0L0BDkqPIDw8mNgAjf4UwGdEFGaxtK7YM4nE5tI6WGyVNCWkh5CTot0w
+        E6OjeoDbH+MciR/5CyxoVUlzXFe65eEputswwkg95qLdmt7hp7KLROYHPDWXi5NztWehzJ
+        BT7Z20YdtxJYk+8mliBp5gkgsrsq2jI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1637330207;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=85XTByKl5Pw3o1U01Reg7LSWSS4FBg2XIwmnhRDDDUk=;
+        b=LQlzl7CSgDz1aq2Fb/TrDqtAAN/BCsK0s057bhW4ZiCUPgthpCWq6IuGiUVwyX8Z0hGhnD
+        5tt7Hk6H6+WfbzBA==
+Received: from alsa1.suse.de (alsa1.suse.de [10.160.4.42])
+        by relay2.suse.de (Postfix) with ESMTP id 94242A3B83;
+        Fri, 19 Nov 2021 13:56:46 +0000 (UTC)
+Date:   Fri, 19 Nov 2021 14:56:46 +0100
+Message-ID: <s5h7dd4fdup.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        <linux-wireless@vger.kernel.org>, <tiwai@suse.de>,
+        <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v3 0/3] rtw89: fix crash when loading firmware file on certain platforms
+In-Reply-To: <87ee7cwdsr.fsf@tynnyri.adurom.net>
+References: <20211119054512.10620-1-pkshih@realtek.com>
+        <87ee7cwdsr.fsf@tynnyri.adurom.net>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tuesday, 16 November 2021 18:00:58 CET Anilkumar Kolli wrote:
-[...]
-> @@ -1866,10 +1867,62 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
->  
->  static int ath11k_qmi_assign_target_mem_chunk(struct ath11k_base *ab)
->  {
-> -	int i, idx;
-> +	struct device *dev = ab->dev;
-> +	struct device_node *hremote_node = NULL;
-> +	phandle hremote_phandle;
-> +	int i, idx, len, sw, aw, host_ddr_sz;
-> +	u32 *reg, *reg_end;
-> +	u64 start, size;
->  
->  	for (i = 0, idx = 0; i < ab->qmi.mem_seg_count; i++) {
->  		switch (ab->qmi.target_mem[i].type) {
-> +		case HOST_DDR_REGION_TYPE:
-> +			if (of_property_read_u32(dev->of_node, "memory-region",
-> +						 &hremote_phandle)) {
-> +				ath11k_dbg(ab, ATH11K_DBG_QMI,
-> +					   "qmi fail to get hremote phandle\n");
-> +				return 0;
-> +			}
-> +
-> +			hremote_node = of_find_node_by_phandle(hremote_phandle);
-> +			if (!hremote_node) {
-> +				ath11k_dbg(ab, ATH11K_DBG_QMI,
-> +					   "qmi fail to get hremote_node\n");
-> +				return 0;
-> +			}
-> +
+On Fri, 19 Nov 2021 13:05:56 +0100,
+Kalle Valo wrote:
+> 
+> Ping-Ke Shih <pkshih@realtek.com> writes:
+> 
+> > First patch is to avoid writing "partition size" on read-only firmware
+> > buffer, so it has to fix the crash.
+> > The later two patches are used to make the semantics clear, but they don't
+> > change the logic at all.
+> >
+> > I hope at least first patch can be taken into 5.16-rc, so people can avoid
+> > this crash.
+> 
+> My plan is to take patch 1 to wireless-drivers. And, after patch 1
+> trickles down to wireless-drivers-next, patch 2-3 to
+> wireless-drivers-next. Sounds good to everyone?
 
-Why aren't you using something like of_address_to_resource? Or some other 
-__of_get_address related function.
-
-> +			aw = of_n_addr_cells(hremote_node);
-> +			sw = of_n_size_cells(hremote_node);
-> +
-> +			reg = (unsigned int *)of_get_property(hremote_node, "reg", &len);
-> +			if (!reg) {
-> +				ath11k_dbg(ab, ATH11K_DBG_QMI,
-> +					   "qmi fail to get reg from hremote\n");
-> +				return 0;
-> +			}
-> +
-> +			reg_end = reg + len / (aw * sw);
-
-Why are you multiplying aw with sw? And why are you then dividing len by it?
-
-1. if you calculate (u32 *)x + 1 then then you would increase the address by 4 bytes.
-2. for each address + size pair you would have (aw + sw) * 4 bytes
-3. len is in bytes
-
-So if you want to get the first byte after a full u32 reg buffer then it would be:
-
-    reg + len / sizeof(u32);
-
-If you would want to get the amount of full address+size pairs
-
-    len / sizeof(u32) / (aw + sw)
+Yes, sounds like a good plan.
 
 
-> +
-> +			do {
-> +				start = of_read_number(reg, aw);
-> +				reg += aw;
-> +				size = of_read_number(reg, sw);
-> +				reg += sw;
-> +			} while (reg < reg_end);
+thanks,
 
-What are you trying to achieve with this loop?
-
-Kind regards,
-	Sven
-
-
+Takashi
