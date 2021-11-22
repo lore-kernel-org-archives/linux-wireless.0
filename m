@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 512BEC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Nov 2021 15:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D839FC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Nov 2021 15:57:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240510AbhKVQAP (ORCPT
+        id S240499AbhKVQAO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Nov 2021 11:00:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37968 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240470AbhKVQAG (ORCPT
+        Mon, 22 Nov 2021 11:00:14 -0500
+Received: from leibniz.telenet-ops.be ([195.130.137.77]:52558 "EHLO
+        leibniz.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240410AbhKVQAG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 22 Nov 2021 11:00:06 -0500
-Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B6C6C061758
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 07:56:59 -0800 (PST)
+Received: from andre.telenet-ops.be (andre.telenet-ops.be [IPv6:2a02:1800:120:4::f00:15])
+        by leibniz.telenet-ops.be (Postfix) with ESMTPS id 4HyX2f59xMzMqh2w
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 16:56:58 +0100 (CET)
 Received: from ramsan.of.borg ([84.195.186.194])
-        by baptiste.telenet-ops.be with bizsmtp
-        id MTwG2600F4C55Sk01TwGVb; Mon, 22 Nov 2021 16:56:57 +0100
+        by andre.telenet-ops.be with bizsmtp
+        id MTwG260014C55Sk01TwGyl; Mon, 22 Nov 2021 16:56:58 +0100
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe6-00EL3m-Lm; Mon, 22 Nov 2021 16:54:18 +0100
+        id 1mpBe6-00EL3P-62; Mon, 22 Nov 2021 16:54:18 +0100
 Received: from geert by rox.of.borg with local (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe5-00HH1L-TK; Mon, 22 Nov 2021 16:54:17 +0100
+        id 1mpBe5-00HGyZ-Hn; Mon, 22 Nov 2021 16:54:17 +0100
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Tony Lindgren <tony@atomide.com>,
         Russell King <linux@armlinux.org.uk>,
@@ -71,9 +71,9 @@ Cc:     linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
         linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
         alsa-devel@alsa-project.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH/RFC 15/17] thermal/ti-soc-thermal: Use bitfield helpers
-Date:   Mon, 22 Nov 2021 16:54:08 +0100
-Message-Id: <37efc6013a24653e316215424b160d613f42dcd5.1637592133.git.geert+renesas@glider.be>
+Subject: [PATCH/RFC 05/17] bus: omap_l3_noc: Use bitfield helpers
+Date:   Mon, 22 Nov 2021 16:53:58 +0100
+Message-Id: <8f5ac0ff643fcfe29ba671b434c57d88524f0450.1637592133.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1637592133.git.geert+renesas@glider.be>
 References: <cover.1637592133.git.geert+renesas@glider.be>
@@ -83,8 +83,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the field_{get,prep}() helpers, instead of open-coding the same
-operations.
+Use the field_get() bitfield helper, instead of open-coding the same
+operation.
 
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
@@ -92,54 +92,31 @@ Compile-tested only.
 Marked RFC, as this depends on [PATCH 01/17], but follows a different
 path to upstream.
 ---
- drivers/thermal/ti-soc-thermal/ti-bandgap.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/bus/omap_l3_noc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/thermal/ti-soc-thermal/ti-bandgap.c b/drivers/thermal/ti-soc-thermal/ti-bandgap.c
-index ea0603b59309f5f0..83a34d698414b177 100644
---- a/drivers/thermal/ti-soc-thermal/ti-bandgap.c
-+++ b/drivers/thermal/ti-soc-thermal/ti-bandgap.c
-@@ -9,6 +9,7 @@
-  *   Eduardo Valentin <eduardo.valentin@ti.com>
+diff --git a/drivers/bus/omap_l3_noc.c b/drivers/bus/omap_l3_noc.c
+index dcfb32ee5cb60239..1a692c86d085f43e 100644
+--- a/drivers/bus/omap_l3_noc.c
++++ b/drivers/bus/omap_l3_noc.c
+@@ -14,6 +14,7 @@
+  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
   */
- 
 +#include <linux/bitfield.h>
- #include <linux/clk.h>
- #include <linux/cpu_pm.h>
- #include <linux/device.h>
-@@ -80,10 +81,10 @@ do {								\
- 	struct temp_sensor_registers *t;			\
- 	u32 r;							\
- 								\
--	t = bgp->conf->sensors[(id)].registers;		\
-+	t = bgp->conf->sensors[(id)].registers;			\
- 	r = ti_bandgap_readl(bgp, t->reg);			\
- 	r &= ~t->mask;						\
--	r |= (val) << __ffs(t->mask);				\
-+	r |= field_prep(t->mask, val);				\
- 	ti_bandgap_writel(bgp, r, t->reg);			\
- } while (0)
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+@@ -118,8 +119,7 @@ static int l3_handle_target(struct omap_l3 *l3, void __iomem *base,
+ 	}
  
-@@ -342,8 +343,7 @@ static void ti_bandgap_read_counter(struct ti_bandgap *bgp, int id,
+ 	/* STDERRLOG_MSTADDR Stores the NTTP master address. */
+-	masterid = (readl_relaxed(l3_targ_mstaddr) &
+-		    l3->mst_addr_mask) >> __ffs(l3->mst_addr_mask);
++	masterid = field_get(l3->mst_addr_mask, readl_relaxed(l3_targ_mstaddr));
  
- 	tsr = bgp->conf->sensors[id].registers;
- 	time = ti_bandgap_readl(bgp, tsr->bgap_counter);
--	time = (time & tsr->counter_mask) >>
--					__ffs(tsr->counter_mask);
-+	time = field_get(tsr->counter_mask, time);
- 	time = time * 1000 / bgp->clk_rate;
- 	*interval = time;
- }
-@@ -363,8 +363,7 @@ static void ti_bandgap_read_counter_delay(struct ti_bandgap *bgp, int id,
- 	tsr = bgp->conf->sensors[id].registers;
- 
- 	reg_val = ti_bandgap_readl(bgp, tsr->bgap_mask_ctrl);
--	reg_val = (reg_val & tsr->mask_counter_delay_mask) >>
--				__ffs(tsr->mask_counter_delay_mask);
-+	reg_val = field_get(tsr->mask_counter_delay_mask, reg_val);
- 	switch (reg_val) {
- 	case 0:
- 		*interval = 0;
+ 	for (k = 0, master = l3->l3_masters; k < l3->num_masters;
+ 	     k++, master++) {
 -- 
 2.25.1
 
