@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CC6C2BA4C
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Nov 2021 15:55:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D78C4321E
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Nov 2021 15:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240207AbhKVP6U (ORCPT
+        id S240184AbhKVP6r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Nov 2021 10:58:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37394 "EHLO
+        Mon, 22 Nov 2021 10:58:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240165AbhKVP6P (ORCPT
+        with ESMTP id S240086AbhKVP6q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Nov 2021 10:58:15 -0500
-Received: from michel.telenet-ops.be (michel.telenet-ops.be [IPv6:2a02:1800:110:4::f00:18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20E91C061746
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 07:55:07 -0800 (PST)
+        Mon, 22 Nov 2021 10:58:46 -0500
+Received: from laurent.telenet-ops.be (laurent.telenet-ops.be [IPv6:2a02:1800:110:4::f00:19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDE61C061759
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 07:55:38 -0800 (PST)
 Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:e4da:38c:79e9:48bf])
-        by michel.telenet-ops.be with bizsmtp
-        id MTuK2600Z4yPVd606TuK7s; Mon, 22 Nov 2021 16:55:06 +0100
+        by laurent.telenet-ops.be with bizsmtp
+        id MTux2600K4yPVd601Tuxk9; Mon, 22 Nov 2021 16:55:38 +0100
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe6-00EL3u-UU; Mon, 22 Nov 2021 16:54:18 +0100
+        id 1mpBe6-00EL3j-Vr; Mon, 22 Nov 2021 16:54:18 +0100
 Received: from geert by rox.of.borg with local (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe5-00HH2O-V9; Mon, 22 Nov 2021 16:54:17 +0100
+        id 1mpBe5-00HGzT-Qs; Mon, 22 Nov 2021 16:54:17 +0100
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Tony Lindgren <tony@atomide.com>,
         Russell King <linux@armlinux.org.uk>,
@@ -71,9 +71,9 @@ Cc:     linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
         linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
         alsa-devel@alsa-project.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH/RFC 17/17] rtw89: Use bitfield helpers
-Date:   Mon, 22 Nov 2021 16:54:10 +0100
-Message-Id: <f7b81122f7596fa004188bfae68f25a68c2d2392.1637592133.git.geert+renesas@glider.be>
+Subject: [PATCH/RFC 13/17] pinctl: ti: iodelay: Use bitfield helpers
+Date:   Mon, 22 Nov 2021 16:54:06 +0100
+Message-Id: <60257a3c5b567fb5b14d6f9adb770899bce88f7a.1637592133.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1637592133.git.geert+renesas@glider.be>
 References: <cover.1637592133.git.geert+renesas@glider.be>
@@ -83,8 +83,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the field_{get,prep}() helpers, instead of open-coding the same
-operations.
+Use the field_{get,prep}() helpers, instead of defining a custom
+function, or open-coding the same operations.
 
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
@@ -92,101 +92,104 @@ Compile-tested only.
 Marked RFC, as this depends on [PATCH 01/17], but follows a different
 path to upstream.
 ---
- drivers/net/wireless/realtek/rtw89/core.h | 38 ++++-------------------
- 1 file changed, 6 insertions(+), 32 deletions(-)
+ drivers/pinctrl/ti/pinctrl-ti-iodelay.c | 35 +++++++------------------
+ 1 file changed, 10 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index c2885e4dd882f045..f9c0300ec373aaf2 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2994,81 +2994,55 @@ rtw89_write32_clr(struct rtw89_dev *rtwdev, u32 addr, u32 bit)
- static inline u32
- rtw89_read32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask)
- {
--	u32 shift = __ffs(mask);
--	u32 orig;
--	u32 ret;
+diff --git a/drivers/pinctrl/ti/pinctrl-ti-iodelay.c b/drivers/pinctrl/ti/pinctrl-ti-iodelay.c
+index 4e2382778d38f557..b220dcd9215520db 100644
+--- a/drivers/pinctrl/ti/pinctrl-ti-iodelay.c
++++ b/drivers/pinctrl/ti/pinctrl-ti-iodelay.c
+@@ -9,6 +9,7 @@
+  * warranty of any kind, whether express or implied.
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/err.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
+@@ -155,18 +156,6 @@ struct ti_iodelay_device {
+ 	struct ti_iodelay_reg_values reg_init_conf_values;
+ };
+ 
+-/**
+- * ti_iodelay_extract() - extract bits for a field
+- * @val: Register value
+- * @mask: Mask
+- *
+- * Return: extracted value which is appropriately shifted
+- */
+-static inline u32 ti_iodelay_extract(u32 val, u32 mask)
+-{
+-	return (val & mask) >> __ffs(mask);
+-}
 -
--	orig = rtw89_read32(rtwdev, addr);
--	ret = (orig & mask) >> shift;
--
--	return ret;
-+	return field_get(mask, rtw89_read32(rtwdev, addr));
- }
+ /**
+  * ti_iodelay_compute_dpe() - Compute equation for delay parameter
+  * @period: Period to use
+@@ -233,10 +222,10 @@ static int ti_iodelay_pinconf_set(struct ti_iodelay_device *iod,
+ 	}
  
- static inline u16
- rtw89_read16_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask)
- {
--	u32 shift = __ffs(mask);
--	u32 orig;
--	u32 ret;
--
--	orig = rtw89_read16(rtwdev, addr);
--	ret = (orig & mask) >> shift;
--
--	return ret;
-+	return field_get(mask, rtw89_read16(rtwdev, addr));
- }
+ 	reg_mask = reg->signature_mask;
+-	reg_val = reg->signature_value << __ffs(reg->signature_mask);
++	reg_val = field_prep(reg->signature_mask, reg->signature_value);
  
- static inline u8
- rtw89_read8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask)
- {
--	u32 shift = __ffs(mask);
--	u32 orig;
--	u32 ret;
--
--	orig = rtw89_read8(rtwdev, addr);
--	ret = (orig & mask) >> shift;
--
--	return ret;
-+	return field_get(mask, rtw89_read8(rtwdev, addr));
- }
+ 	reg_mask |= reg->binary_data_coarse_mask;
+-	tmp_val = c_elements << __ffs(reg->binary_data_coarse_mask);
++	tmp_val = field_prep(reg->binary_data_coarse_mask, c_elements);
+ 	if (tmp_val & ~reg->binary_data_coarse_mask) {
+ 		dev_err(dev, "Masking overflow of coarse elements %08x\n",
+ 			tmp_val);
+@@ -245,7 +234,7 @@ static int ti_iodelay_pinconf_set(struct ti_iodelay_device *iod,
+ 	reg_val |= tmp_val;
  
- static inline void
- rtw89_write32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u32 data)
- {
--	u32 shift = __ffs(mask);
- 	u32 orig;
- 	u32 set;
+ 	reg_mask |= reg->binary_data_fine_mask;
+-	tmp_val = f_elements << __ffs(reg->binary_data_fine_mask);
++	tmp_val = field_prep(reg->binary_data_fine_mask, f_elements);
+ 	if (tmp_val & ~reg->binary_data_fine_mask) {
+ 		dev_err(dev, "Masking overflow of fine elements %08x\n",
+ 			tmp_val);
+@@ -260,7 +249,7 @@ static int ti_iodelay_pinconf_set(struct ti_iodelay_device *iod,
+ 	 * impacting iodelay configuration. Use with care!
+ 	 */
+ 	reg_mask |= reg->lock_mask;
+-	reg_val |= reg->unlock_val << __ffs(reg->lock_mask);
++	reg_val |= field_prep(reg->lock_mask, reg->unlock_val);
+ 	r = regmap_update_bits(iod->regmap, cfg->offset, reg_mask, reg_val);
  
- 	WARN(addr & 0x3, "should be 4-byte aligned, addr = 0x%08x\n", addr);
+ 	dev_dbg(dev, "Set reg 0x%x Delay(a: %d g: %d), Elements(C=%d F=%d)0x%x\n",
+@@ -296,16 +285,14 @@ static int ti_iodelay_pinconf_init_dev(struct ti_iodelay_device *iod)
+ 	r = regmap_read(iod->regmap, reg->reg_refclk_offset, &val);
+ 	if (r)
+ 		return r;
+-	ival->ref_clk_period = ti_iodelay_extract(val, reg->refclk_period_mask);
++	ival->ref_clk_period = field_get(reg->refclk_period_mask, val);
+ 	dev_dbg(dev, "refclk_period=0x%04x\n", ival->ref_clk_period);
  
- 	orig = rtw89_read32(rtwdev, addr);
--	set = (orig & ~mask) | ((data << shift) & mask);
-+	set = (orig & ~mask) | field_prep(mask, data);
- 	rtw89_write32(rtwdev, addr, set);
- }
- 
- static inline void
- rtw89_write16_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u16 data)
- {
--	u32 shift;
- 	u16 orig, set;
- 
- 	mask &= 0xffff;
--	shift = __ffs(mask);
- 
- 	orig = rtw89_read16(rtwdev, addr);
--	set = (orig & ~mask) | ((data << shift) & mask);
-+	set = (orig & ~mask) | field_prep(mask, data);
- 	rtw89_write16(rtwdev, addr, set);
- }
- 
- static inline void
- rtw89_write8_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask, u8 data)
- {
--	u32 shift;
- 	u8 orig, set;
- 
- 	mask &= 0xff;
--	shift = __ffs(mask);
- 
- 	orig = rtw89_read8(rtwdev, addr);
--	set = (orig & ~mask) | ((data << shift) & mask);
-+	set = (orig & ~mask) | field_prep(mask, data);
- 	rtw89_write8(rtwdev, addr, set);
- }
- 
+ 	r = regmap_read(iod->regmap, reg->reg_coarse_offset, &val);
+ 	if (r)
+ 		return r;
+-	ival->coarse_ref_count =
+-	    ti_iodelay_extract(val, reg->coarse_ref_count_mask);
+-	ival->coarse_delay_count =
+-	    ti_iodelay_extract(val, reg->coarse_delay_count_mask);
++	ival->coarse_ref_count = field_get(reg->coarse_ref_count_mask, val);
++	ival->coarse_delay_count = field_get(reg->coarse_delay_count_mask, val);
+ 	if (!ival->coarse_delay_count) {
+ 		dev_err(dev, "Invalid Coarse delay count (0) (reg=0x%08x)\n",
+ 			val);
+@@ -326,10 +313,8 @@ static int ti_iodelay_pinconf_init_dev(struct ti_iodelay_device *iod)
+ 	r = regmap_read(iod->regmap, reg->reg_fine_offset, &val);
+ 	if (r)
+ 		return r;
+-	ival->fine_ref_count =
+-	    ti_iodelay_extract(val, reg->fine_ref_count_mask);
+-	ival->fine_delay_count =
+-	    ti_iodelay_extract(val, reg->fine_delay_count_mask);
++	ival->fine_ref_count = field_get(reg->fine_ref_count_mask, val);
++	ival->fine_delay_count = field_get(reg->fine_delay_count_mask, val);
+ 	if (!ival->fine_delay_count) {
+ 		dev_err(dev, "Invalid Fine delay count (0) (reg=0x%08x)\n",
+ 			val);
 -- 
 2.25.1
 
