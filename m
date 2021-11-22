@@ -2,31 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1A8C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAE91C4332F
 	for <linux-wireless@archiver.kernel.org>; Mon, 22 Nov 2021 15:57:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240572AbhKVQAb (ORCPT
+        id S240587AbhKVQAc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Nov 2021 11:00:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37906 "EHLO
+        Mon, 22 Nov 2021 11:00:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240087AbhKVQAG (ORCPT
+        with ESMTP id S240474AbhKVQAM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Nov 2021 11:00:06 -0500
-Received: from andre.telenet-ops.be (andre.telenet-ops.be [IPv6:2a02:1800:120:4::f00:15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4035C0613E1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 07:56:59 -0800 (PST)
+        Mon, 22 Nov 2021 11:00:12 -0500
+Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C072C061785
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2021 07:57:00 -0800 (PST)
 Received: from ramsan.of.borg ([84.195.186.194])
-        by andre.telenet-ops.be with bizsmtp
-        id MTwG2600C4C55Sk01TwGyn; Mon, 22 Nov 2021 16:56:58 +0100
+        by xavier.telenet-ops.be with bizsmtp
+        id MTwH260044C55Sk01TwHfq; Mon, 22 Nov 2021 16:56:58 +0100
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe5-00EL3M-Q1; Mon, 22 Nov 2021 16:54:17 +0100
+        id 1mpBe5-00EL3K-Py; Mon, 22 Nov 2021 16:54:17 +0100
 Received: from geert by rox.of.borg with local (Exim 4.93)
         (envelope-from <geert@linux-m68k.org>)
-        id 1mpBe5-00HGyE-C8; Mon, 22 Nov 2021 16:54:17 +0100
+        id 1mpBe5-00HGy1-9n; Mon, 22 Nov 2021 16:54:17 +0100
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Tony Lindgren <tony@atomide.com>,
         Russell King <linux@armlinux.org.uk>,
@@ -71,135 +71,149 @@ Cc:     linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
         linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
         alsa-devel@alsa-project.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 02/17] clk: renesas: Use bitfield helpers
-Date:   Mon, 22 Nov 2021 16:53:55 +0100
-Message-Id: <c6e4bfbf798a8fcb4d8c02861a0c1b029f2f5cb1.1637592133.git.geert+renesas@glider.be>
+Subject: [PATCH 00/17] Non-const bitfield helper conversions
+Date:   Mon, 22 Nov 2021 16:53:53 +0100
+Message-Id: <cover.1637592133.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1637592133.git.geert+renesas@glider.be>
-References: <cover.1637592133.git.geert+renesas@glider.be>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the FIELD_{GET,PREP}() and field_{get,prep}() helpers for const
-respective non-const bitfields, instead of open-coding the same
-operations.
+	Hi all,
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/clk/renesas/clk-div6.c          |  6 +++---
- drivers/clk/renesas/r8a779a0-cpg-mssr.c |  9 +++------
- drivers/clk/renesas/rcar-gen3-cpg.c     | 15 +++++----------
- 3 files changed, 11 insertions(+), 19 deletions(-)
+<linux/bitfield.h> contains various helpers for accessing bitfields, as
+typically used in hardware registers for memory-mapped I/O blocks. These
+helpers ensure type safety, and deduce automatically shift values from
+mask values, avoiding mistakes due to inconsistent shifts and masks, and
+leading to a reduction in source code size.
 
-diff --git a/drivers/clk/renesas/clk-div6.c b/drivers/clk/renesas/clk-div6.c
-index 3abd6e5400aded6a..f7b827b5e9b2dd32 100644
---- a/drivers/clk/renesas/clk-div6.c
-+++ b/drivers/clk/renesas/clk-div6.c
-@@ -7,6 +7,7 @@
-  * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/clk-provider.h>
- #include <linux/init.h>
- #include <linux/io.h>
-@@ -171,8 +172,7 @@ static u8 cpg_div6_clock_get_parent(struct clk_hw *hw)
- 	if (clock->src_mask == 0)
- 		return 0;
- 
--	hw_index = (readl(clock->reg) & clock->src_mask) >>
--		   __ffs(clock->src_mask);
-+	hw_index = field_get(clock->src_mask, readl(clock->reg));
- 	for (i = 0; i < clk_hw_get_num_parents(hw); i++) {
- 		if (clock->parents[i] == hw_index)
- 			return i;
-@@ -191,7 +191,7 @@ static int cpg_div6_clock_set_parent(struct clk_hw *hw, u8 index)
- 	if (index >= clk_hw_get_num_parents(hw))
- 		return -EINVAL;
- 
--	src = clock->parents[index] << __ffs(clock->src_mask);
-+	src = field_prep(clock->src_mask, clock->parents[index]);
- 	writel((readl(clock->reg) & ~clock->src_mask) | src, clock->reg);
- 	return 0;
- }
-diff --git a/drivers/clk/renesas/r8a779a0-cpg-mssr.c b/drivers/clk/renesas/r8a779a0-cpg-mssr.c
-index 7df86743c5491292..f716e739d138b722 100644
---- a/drivers/clk/renesas/r8a779a0-cpg-mssr.c
-+++ b/drivers/clk/renesas/r8a779a0-cpg-mssr.c
-@@ -302,11 +302,7 @@ static unsigned long cpg_z_clk_recalc_rate(struct clk_hw *hw,
- 					   unsigned long parent_rate)
- {
- 	struct cpg_z_clk *zclk = to_z_clk(hw);
--	unsigned int mult;
--	u32 val;
--
--	val = readl(zclk->reg) & zclk->mask;
--	mult = 32 - (val >> __ffs(zclk->mask));
-+	unsigned int mult = 32 - field_get(zclk->mask, readl(zclk->reg));
- 
- 	return DIV_ROUND_CLOSEST_ULL((u64)parent_rate * mult,
- 				     32 * zclk->fixed_div);
-@@ -357,7 +353,8 @@ static int cpg_z_clk_set_rate(struct clk_hw *hw, unsigned long rate,
- 	if (readl(zclk->kick_reg) & CPG_FRQCRB_KICK)
- 		return -EBUSY;
- 
--	cpg_reg_modify(zclk->reg, zclk->mask, (32 - mult) << __ffs(zclk->mask));
-+	cpg_reg_modify(zclk->reg, zclk->mask,
-+		       field_prep(zclk->mask, 32 - mult));
- 
- 	/*
- 	 * Set KICK bit in FRQCRB to update hardware setting and wait for
-diff --git a/drivers/clk/renesas/rcar-gen3-cpg.c b/drivers/clk/renesas/rcar-gen3-cpg.c
-index a9816b1beabb2582..30bbe8418e018153 100644
---- a/drivers/clk/renesas/rcar-gen3-cpg.c
-+++ b/drivers/clk/renesas/rcar-gen3-cpg.c
-@@ -54,10 +54,8 @@ static unsigned long cpg_pll_clk_recalc_rate(struct clk_hw *hw,
- {
- 	struct cpg_pll_clk *pll_clk = to_pll_clk(hw);
- 	unsigned int mult;
--	u32 val;
- 
--	val = readl(pll_clk->pllcr_reg) & CPG_PLLnCR_STC_MASK;
--	mult = (val >> __ffs(CPG_PLLnCR_STC_MASK)) + 1;
-+	mult = FIELD_GET(CPG_PLLnCR_STC_MASK, readl(pll_clk->pllcr_reg)) + 1;
- 
- 	return parent_rate * mult * pll_clk->fixed_mult;
- }
-@@ -94,7 +92,7 @@ static int cpg_pll_clk_set_rate(struct clk_hw *hw, unsigned long rate,
- 
- 	val = readl(pll_clk->pllcr_reg);
- 	val &= ~CPG_PLLnCR_STC_MASK;
--	val |= (mult - 1) << __ffs(CPG_PLLnCR_STC_MASK);
-+	val |= FIELD_PREP(CPG_PLLnCR_STC_MASK, mult - 1);
- 	writel(val, pll_clk->pllcr_reg);
- 
- 	for (i = 1000; i; i--) {
-@@ -176,11 +174,7 @@ static unsigned long cpg_z_clk_recalc_rate(struct clk_hw *hw,
- 					   unsigned long parent_rate)
- {
- 	struct cpg_z_clk *zclk = to_z_clk(hw);
--	unsigned int mult;
--	u32 val;
--
--	val = readl(zclk->reg) & zclk->mask;
--	mult = 32 - (val >> __ffs(zclk->mask));
-+	unsigned int mult = 32 - field_get(zclk->mask, readl(zclk->reg));
- 
- 	return DIV_ROUND_CLOSEST_ULL((u64)parent_rate * mult,
- 				     32 * zclk->fixed_div);
-@@ -231,7 +225,8 @@ static int cpg_z_clk_set_rate(struct clk_hw *hw, unsigned long rate,
- 	if (readl(zclk->kick_reg) & CPG_FRQCRB_KICK)
- 		return -EBUSY;
- 
--	cpg_reg_modify(zclk->reg, zclk->mask, (32 - mult) << __ffs(zclk->mask));
-+	cpg_reg_modify(zclk->reg, zclk->mask,
-+		       field_prep(zclk->mask, 32 - mult));
- 
- 	/*
- 	 * Set KICK bit in FRQCRB to update hardware setting and wait for
+I have already submitted a few conversions to the FIELD_{GET,PREP}()
+helpers that were fixes for real bugs:
+  - [PATCH] mips: cm: Convert to bitfield API to fix out-of-bounds
+    access
+    https://lore.kernel.org/r/0471c545117c5fa05bd9c73005cda9b74608a61e.1635501373.git.geert+renesas@glider.be
+  - [PATCH] drm/armada: Fix off-by-one error in
+    armada_overlay_get_property()
+    https://lore.kernel.org/r/5818c8b04834e6a9525441bc181580a230354b69.1635501237.git.geert+renesas@glider.be
+
+Plus several patches for normal conversions:
+  - [PATCH] ARM: ptrace: Use bitfield helpers
+    https://lore.kernel.org/r/a1445d3abb45cfc95cb1b03180fd53caf122035b.1637593297.git.geert+renesas@glider.be
+  - [PATCH] MIPS: CPC: Use bitfield helpers
+    https://lore.kernel.org/r/35f0f17e3d987afaa9cd09cdcb8131d42a53c3e1.1637593297.git.geert+renesas@glider.be
+  - [PATCH] MIPS: CPS: Use bitfield helpers
+    https://lore.kernel.org/r/8bd8b1b9a3787e594285addcf2057754540d0a5f.1637593297.git.geert+renesas@glider.be
+  - [PATCH] crypto: sa2ul - Use bitfield helpers
+    https://lore.kernel.org/r/ca89d204ef2e40193479db2742eadf0d9cf3c0ff.1637593297.git.geert+renesas@glider.be
+  - [PATCH] dmaengine: stm32-mdma: Use bitfield helpers
+    https://lore.kernel.org/r/36ceab242a594233dc7dc6f1dddb4ac32d1e846f.1637593297.git.geert+renesas@glider.be
+  - [PATCH] intel_th: Use bitfield helpers
+    https://lore.kernel.org/r/b1e4f027aa88acfbdfaa771b0920bd1d977828ba.1637593297.git.geert+renesas@glider.be
+  - [PATCH] Input: palmas-pwrbutton - use bitfield helpers
+    https://lore.kernel.org/r/f8831b88346b36fc6e01e0910d0db6c94287d2b4.1637593297.git.geert+renesas@glider.be
+  - [PATCH] irqchip/mips-gic: Use bitfield helpers
+    https://lore.kernel.org/r/74f9d126961a90d3e311b92a54870eaac5b3ae57.1637593297.git.geert+renesas@glider.be
+  - [PATCH] mfd: mc13xxx: Use bitfield helpers
+    https://lore.kernel.org/r/afa46868cf8c1666e9cbbbec42767ca2294b024d.1637593297.git.geert+renesas@glider.be
+  - [PATCH] regulator: lp873x: Use bitfield helpers
+    https://lore.kernel.org/r/44d60384b640c8586b4ca7edbc9287a34ce21c5b.1637593297.git.geert+renesas@glider.be
+  - [PATCH] regulator: lp87565: Use bitfield helpers
+    https://lore.kernel.org/r/941c2dfd5b5b124b8950bcce42db4c343dfe9821.1637593297.git.geert+renesas@glider.be
+
+The existing FIELD_{GET,PREP}() macros are limited to compile-time
+constants.  However, it is very common to prepare or extract bitfield
+elements where the bitfield mask is not a compile-time constant.
+To avoid this limitation, the AT91 clock driver already has its own
+field_{prep,get}() macros.
+
+This patch series makes them available for general use, and converts
+several drivers to the existing FIELD_{GET,PREP}() and the new
+field_{get,prep}() helpers.
+
+I can take the first two patches through the reneas-clk tree for v5.17,
+but probably it is best for the remaining patches to be postponed to
+v5.18.
+
+Thanks for your comments!
+
+Geert Uytterhoeven (17):
+  bitfield: Add non-constant field_{prep,get}() helpers
+  clk: renesas: Use bitfield helpers
+  [RFC] soc: renesas: Use bitfield helpers
+  [RFC] ARM: OMAP2+: Use bitfield helpers
+  [RFC] bus: omap_l3_noc: Use bitfield helpers
+  [RFC] clk: ti: Use bitfield helpers
+  [RFC] iio: st_sensors: Use bitfield helpers
+  [RFC] iio: humidity: hts221: Use bitfield helpers
+  [RFC] iio: imu: st_lsm6dsx: Use bitfield helpers
+  [RFC] media: ti-vpe: cal: Use bitfield helpers
+  [RFC] mmc: sdhci-of-aspeed: Use bitfield helpers
+  [RFC] pinctrl: aspeed: Use bitfield helpers
+  [RFC] pinctl: ti: iodelay: Use bitfield helpers
+  [RFC] regulator: ti-abb: Use bitfield helpers
+  [RFC] thermal/ti-soc-thermal: Use bitfield helpers
+  [RFC] ALSA: ice1724: Use bitfield helpers
+  [RFC] rtw89: Use bitfield helpers
+
+ arch/arm/mach-omap2/clkt2xxx_dpllcore.c       |  5 +-
+ arch/arm/mach-omap2/cm2xxx.c                  | 11 ++-
+ arch/arm/mach-omap2/cm2xxx_3xxx.h             |  9 +--
+ arch/arm/mach-omap2/cm33xx.c                  |  9 +--
+ arch/arm/mach-omap2/cm3xxx.c                  |  7 +-
+ arch/arm/mach-omap2/cminst44xx.c              |  9 +--
+ arch/arm/mach-omap2/powerdomains3xxx_data.c   |  3 +-
+ arch/arm/mach-omap2/prm.h                     |  2 -
+ arch/arm/mach-omap2/prm2xxx.c                 |  4 +-
+ arch/arm/mach-omap2/prm2xxx_3xxx.c            |  7 +-
+ arch/arm/mach-omap2/prm2xxx_3xxx.h            |  9 +--
+ arch/arm/mach-omap2/prm33xx.c                 | 53 +++++-------
+ arch/arm/mach-omap2/prm3xxx.c                 |  3 +-
+ arch/arm/mach-omap2/prm44xx.c                 | 53 ++++--------
+ arch/arm/mach-omap2/vc.c                      | 12 +--
+ arch/arm/mach-omap2/vp.c                      | 11 +--
+ drivers/bus/omap_l3_noc.c                     |  4 +-
+ drivers/clk/at91/clk-peripheral.c             |  1 +
+ drivers/clk/at91/pmc.h                        |  3 -
+ drivers/clk/renesas/clk-div6.c                |  6 +-
+ drivers/clk/renesas/r8a779a0-cpg-mssr.c       |  9 +--
+ drivers/clk/renesas/rcar-gen3-cpg.c           | 15 ++--
+ drivers/clk/ti/apll.c                         | 25 +++---
+ drivers/clk/ti/dpll3xxx.c                     | 81 ++++++++-----------
+ .../iio/common/st_sensors/st_sensors_core.c   |  5 +-
+ drivers/iio/humidity/hts221_core.c            |  8 +-
+ drivers/iio/imu/st_lsm6dsx/st_lsm6dsx.h       |  1 -
+ .../iio/imu/st_lsm6dsx/st_lsm6dsx_buffer.c    |  7 +-
+ drivers/iio/imu/st_lsm6dsx/st_lsm6dsx_core.c  | 45 +++++------
+ drivers/iio/imu/st_lsm6dsx/st_lsm6dsx_shub.c  | 11 +--
+ drivers/media/platform/ti-vpe/cal.h           |  4 +-
+ drivers/mmc/host/sdhci-of-aspeed.c            |  5 +-
+ drivers/net/wireless/realtek/rtw89/core.h     | 38 ++-------
+ drivers/pinctrl/aspeed/pinctrl-aspeed-g4.c    |  3 +-
+ drivers/pinctrl/aspeed/pinctrl-aspeed-g5.c    |  3 +-
+ drivers/pinctrl/aspeed/pinctrl-aspeed-g6.c    |  3 +-
+ drivers/pinctrl/aspeed/pinctrl-aspeed.c       |  5 +-
+ drivers/pinctrl/aspeed/pinmux-aspeed.c        |  6 +-
+ drivers/pinctrl/ti/pinctrl-ti-iodelay.c       | 35 +++-----
+ drivers/regulator/ti-abb-regulator.c          |  7 +-
+ drivers/soc/renesas/renesas-soc.c             |  4 +-
+ drivers/thermal/ti-soc-thermal/ti-bandgap.c   | 11 ++-
+ include/linux/bitfield.h                      | 30 +++++++
+ sound/pci/ice1712/wm8766.c                    | 14 ++--
+ sound/pci/ice1712/wm8776.c                    | 14 ++--
+ 45 files changed, 263 insertions(+), 347 deletions(-)
+
 -- 
 2.25.1
 
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
