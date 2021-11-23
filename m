@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D111C4167B
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 18:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 890E8C43219
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 18:51:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235274AbhKWSyf (ORCPT
+        id S237066AbhKWSym (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Nov 2021 13:54:35 -0500
+        Tue, 23 Nov 2021 13:54:42 -0500
 Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:14975 "EHLO
         alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236704AbhKWSyf (ORCPT
+        by vger.kernel.org with ESMTP id S238049AbhKWSyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Nov 2021 13:54:35 -0500
+        Tue, 23 Nov 2021 13:54:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1637693487; x=1669229487;
+  t=1637693491; x=1669229491;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=dIp3tipooK895cuYWraD7e7PeIibFdpPvj10C9lyciM=;
-  b=EvT9TFl6xP3aGAUJFpsk9RyzShUrtP7c/UY6m5wxmtn9BJdWP4ELAyfW
-   T4OhQZkwIQk3yGeqOzd54S3FvK1AB9rP2DxJKahNWPBNzulx4+dwPFQZ/
-   1517ScF7YVzzfv0nJO9NU43nuVq9ynse3K4bEt3uA4HPA1rzIwtbrUDdB
-   k=;
+  bh=fRl7EvwIYpFNkA229GClNfw/ZXipbb+QJ2QhNH3szlo=;
+  b=kQRcp2U/1b3V+vlVNt1FNohe/wF0V6KJcFKGIvug+22R6pTdHYncEcJJ
+   lWhLv9ai+wUHa4iQkHwgToAZKk/FgGl6YXFiPn3NSKIhWo4UCgVk2izyW
+   /Q7sOzi/Gxp3FttPkf5p4ryDCVjRKARq09fdtnWxRw1jJwoz/kaPL9Rvh
+   c=;
 Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Nov 2021 10:51:26 -0800
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Nov 2021 10:51:31 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2021 10:51:26 -0800
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2021 10:51:31 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 23 Nov 2021 10:51:26 -0800
+ 15.2.922.19; Tue, 23 Nov 2021 10:51:31 -0800
 Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 23 Nov 2021 10:51:24 -0800
+ 15.2.922.19; Tue, 23 Nov 2021 10:51:28 -0800
 From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <robh@kernel.org>, Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH 04/19] ath11k: Refactor MSI logic
-Date:   Wed, 24 Nov 2021 00:20:19 +0530
-Message-ID: <1637693434-15462-5-git-send-email-quic_mpubbise@quicinc.com>
+Subject: [PATCH 06/19] ath11k: Add HW params for WCN6750
+Date:   Wed, 24 Nov 2021 00:20:21 +0530
+Message-ID: <1637693434-15462-7-git-send-email-quic_mpubbise@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1637693434-15462-1-git-send-email-quic_mpubbise@quicinc.com>
 References: <1637693434-15462-1-git-send-email-quic_mpubbise@quicinc.com>
@@ -55,8 +55,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Refactor MSI logic in order to support hybrid bus devices
-like WCN6750.
+Add HW params for WCN6750. It is similar to the HW params
+of QCA6390 with few differences wrt DP APIs and register
+offsets.
 
 Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
@@ -65,18 +66,93 @@ Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.h    | 21 ++++++++++++++++
- drivers/net/wireless/ath/ath11k/mhi.c     |  3 +--
- drivers/net/wireless/ath/ath11k/pci.c     | 29 ++++++++++++++--------
- drivers/net/wireless/ath/ath11k/pci.h     | 16 ------------
- drivers/net/wireless/ath/ath11k/pci_cmn.c | 41 ++++++-------------------------
- drivers/net/wireless/ath/ath11k/pci_cmn.h |  5 +---
- 6 files changed, 50 insertions(+), 65 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c | 48 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/core.h |  1 +
+ drivers/net/wireless/ath/ath11k/qmi.h  |  2 ++
+ 3 files changed, 51 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 6e3d4aa..a65a4f3 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/module.h>
+@@ -299,6 +300,53 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_dynamic_smps_6ghz = false,
+ 		.alloc_cacheable_memory = false,
+ 	},
++	{
++		.name = "wcn6750 hw1.0",
++		.hw_rev = ATH11K_HW_WCN6750_HW10,
++		.fw = {
++			.dir = "WCN6750/hw1.0",
++			.board_size = 256 * 1024,
++			.cal_offset = 128 * 1024,
++		},
++		.max_radios = 1,
++		.bdf_addr = 0x4B0C0000,
++		.ring_mask = &ath11k_hw_ring_mask_qca6390,
++		.internal_sleep_clock = false,
++		.qmi_service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_WCN6750,
++		.host_ce_config = ath11k_host_ce_config_qca6390,
++		.ce_count = 9,
++		.target_ce_config = ath11k_target_ce_config_wlan_qca6390,
++		.target_ce_count = 9,
++		.svc_to_ce_map = ath11k_target_service_to_ce_map_wlan_qca6390,
++		.svc_to_ce_map_len = 14,
++		.single_pdev_only = true,
++		.rxdma1_enable = false,
++		.num_rxmda_per_pdev = 1,
++		.rx_mac_buf_ring = true,
++		.vdev_start_delay = true,
++		.htt_peer_map_v2 = false,
++
++		.spectral = {
++			.fft_sz = 0,
++			.fft_pad_sz = 0,
++			.summary_pad_sz = 0,
++			.fft_hdr_len = 0,
++			.max_fft_bins = 0,
++		},
++
++		.interface_modes = BIT(NL80211_IFTYPE_STATION) |
++					BIT(NL80211_IFTYPE_AP),
++		.supports_monitor = false,
++		.supports_shadow_regs = true,
++		.idle_ps = true,
++		.cold_boot_calib = false,
++		.supports_suspend = false,
++		.fix_l1ss = true,
++		.max_tx_ring = DP_TCL_NUM_RING_MAX_QCA6390,
++		.hal_params = &ath11k_hw_hal_params_qca6390,
++		.supports_dynamic_smps_6ghz = false,
++		.alloc_cacheable_memory = false,
++	},
+ };
+ 
+ int ath11k_core_suspend(struct ath11k_base *ab)
 diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 7b1770a..ec841d5 100644
+index 70324ee..7cb90cd 100644
 --- a/drivers/net/wireless/ath/ath11k/core.h
 +++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -118,6 +118,7 @@ enum ath11k_hw_rev {
+ 	ATH11K_HW_IPQ6018_HW10,
+ 	ATH11K_HW_QCN9074_HW10,
+ 	ATH11K_HW_WCN6855_HW20,
++	ATH11K_HW_WCN6750_HW10,
+ };
+ 
+ enum ath11k_firmware_mode {
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
+index 3bb0f9e..2b99cc5 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.h
++++ b/drivers/net/wireless/ath/ath11k/qmi.h
 @@ -1,6 +1,7 @@
  /* SPDX-License-Identifier: BSD-3-Clause-Clear */
  /*
@@ -84,288 +160,15 @@ index 7b1770a..ec841d5 100644
 + * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
   */
  
- #ifndef ATH11K_CORE_H
-@@ -677,6 +678,19 @@ struct ath11k_soc_dp_stats {
- 	struct ath11k_dp_ring_bp_stats bp_stats;
- };
- 
-+struct ath11k_msi_user {
-+	char *name;
-+	int num_vectors;
-+	u32 base_vector;
-+};
-+
-+struct ath11k_msi_config {
-+	int total_vectors;
-+	int total_users;
-+	struct ath11k_msi_user *users;
-+	u16 hw_rev;
-+};
-+
- /* Master structure to hold the hw data which may be used in core module */
- struct ath11k_base {
- 	enum ath11k_hw_rev hw_rev;
-@@ -782,6 +796,13 @@ struct ath11k_base {
- 		u32 subsystem_device;
- 	} id;
- 
-+	struct {
-+		const struct ath11k_msi_config *msi_config;
-+		u32 msi_ep_base_data;
-+		u32 msi_addr_lo;
-+		u32 msi_addr_hi;
-+	} msi;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index 7872cda..9a22b44 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -254,8 +254,7 @@ static int ath11k_mhi_get_msi(struct ath11k_pci *ab_pci)
- 	int *irq;
- 	unsigned int msi_data;
- 
--	ret = ath11k_pci_get_user_msi_assignment(ab_pci,
--						 "MHI", &num_vectors,
-+	ret = ath11k_pci_get_user_msi_assignment(ab, "MHI", &num_vectors,
- 						 &user_base_data, &base_vector);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index a53de6c..699f4df 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -307,12 +307,13 @@ static void ath11k_pci_msi_disable(struct ath11k_pci *ab_pci)
- static int ath11k_pci_alloc_msi(struct ath11k_pci *ab_pci)
- {
- 	struct ath11k_base *ab = ab_pci->ab;
--	const struct ath11k_msi_config *msi_config = ab_pci->msi_config;
-+	const struct ath11k_msi_config *msi_config = ab->msi.msi_config;
-+	struct pci_dev *pci_dev = ab_pci->pdev;
- 	struct msi_desc *msi_desc;
- 	int num_vectors;
- 	int ret;
- 
--	num_vectors = pci_alloc_irq_vectors(ab_pci->pdev,
-+	num_vectors = pci_alloc_irq_vectors(pci_dev,
- 					    msi_config->total_vectors,
- 					    msi_config->total_vectors,
- 					    PCI_IRQ_MSI);
-@@ -329,7 +330,7 @@ static int ath11k_pci_alloc_msi(struct ath11k_pci *ab_pci)
- 			goto reset_msi_config;
- 		}
- 		clear_bit(ATH11K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags);
--		ab_pci->msi_config = &msi_config_one_msi;
-+		ab->msi.msi_config = &msi_config_one_msi;
- 		ab_pci->irq_flags = IRQF_SHARED | IRQF_NOBALANCING;
- 		ath11k_dbg(ab, ATH11K_DBG_PCI, "request MSI one vector\n");
- 	}
-@@ -344,11 +345,19 @@ static int ath11k_pci_alloc_msi(struct ath11k_pci *ab_pci)
- 		goto free_msi_vector;
- 	}
- 
--	ab_pci->msi_ep_base_data = msi_desc->msg.data;
--	if (msi_desc->msi_attrib.is_64)
--		set_bit(ATH11K_PCI_FLAG_IS_MSI_64, &ab_pci->flags);
-+	ab->msi.msi_ep_base_data = msi_desc->msg.data;
-+
-+	pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_LO,
-+			      &ab->msi.msi_addr_lo);
-+
-+	if (msi_desc->msi_attrib.is_64) {
-+		pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_HI,
-+				      &ab->msi.msi_addr_hi);
-+	} else {
-+		ab->msi.msi_addr_hi = 0;
-+	}
- 
--	ath11k_dbg(ab, ATH11K_DBG_PCI, "msi base data is %d\n", ab_pci->msi_ep_base_data);
-+	ath11k_dbg(ab, ATH11K_DBG_PCI, "msi base data is %d\n", ab->msi.msi_ep_base_data);
- 
- 	return 0;
- 
-@@ -375,10 +384,10 @@ static int ath11k_pci_config_msi_data(struct ath11k_pci *ab_pci)
- 		return -EINVAL;
- 	}
- 
--	ab_pci->msi_ep_base_data = msi_desc->msg.data;
-+	ab_pci->ab->msi.msi_ep_base_data = msi_desc->msg.data;
- 
- 	ath11k_dbg(ab_pci->ab, ATH11K_DBG_PCI, "pci after request_irq msi_ep_base_data %d\n",
--		   ab_pci->msi_ep_base_data);
-+		   ab_pci->ab->msi.msi_ep_base_data);
- 
- 	return 0;
- }
-@@ -562,7 +571,7 @@ static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
- 	.irq_enable = ath11k_pci_ext_irq_enable,
- 	.irq_disable = ath11k_pci_ext_irq_disable,
- 	.get_msi_address =  ath11k_pci_get_msi_address,
--	.get_user_msi_vector = ath11k_get_user_msi_assignment,
-+	.get_user_msi_vector = ath11k_pci_get_user_msi_assignment,
- 	.map_service_to_pipe = ath11k_pci_map_service_to_pipe,
- 	.ce_irq_enable = ath11k_pci_hif_ce_irq_enable,
- 	.ce_irq_disable = ath11k_pci_hif_ce_irq_disable,
-diff --git a/drivers/net/wireless/ath/ath11k/pci.h b/drivers/net/wireless/ath/ath11k/pci.h
-index 03868f3f..694fcb4 100644
---- a/drivers/net/wireless/ath/ath11k/pci.h
-+++ b/drivers/net/wireless/ath/ath11k/pci.h
-@@ -53,22 +53,8 @@
- #define WLAON_QFPROM_PWR_CTRL_REG		0x01f8031c
- #define QFPROM_PWR_CTRL_VDD4BLOW_MASK		0x4
- 
--struct ath11k_msi_user {
--	char *name;
--	int num_vectors;
--	u32 base_vector;
--};
--
--struct ath11k_msi_config {
--	int total_vectors;
--	int total_users;
--	struct ath11k_msi_user *users;
--	u16 hw_rev;
--};
--
- enum ath11k_pci_flags {
- 	ATH11K_PCI_FLAG_INIT_DONE,
--	ATH11K_PCI_FLAG_IS_MSI_64,
- 	ATH11K_PCI_ASPM_RESTORE,
- 	ATH11K_PCI_FLAG_MULTI_MSI_VECTORS,
- };
-@@ -78,9 +64,7 @@ struct ath11k_pci {
- 	struct ath11k_base *ab;
- 	u16 dev_id;
- 	char amss_path[100];
--	u32 msi_ep_base_data;
- 	struct mhi_controller *mhi_ctrl;
--	const struct ath11k_msi_config *msi_config;
- 	unsigned long mhi_state;
- 	u32 register_window;
- 
-diff --git a/drivers/net/wireless/ath/ath11k/pci_cmn.c b/drivers/net/wireless/ath/ath11k/pci_cmn.c
-index 5c32322..cd1d08d 100644
---- a/drivers/net/wireless/ath/ath11k/pci_cmn.c
-+++ b/drivers/net/wireless/ath/ath11k/pci_cmn.c
-@@ -100,7 +100,6 @@ static const struct ath11k_msi_config ath11k_msi_config[] = {
- 
- int ath11k_pci_get_msi_config(struct ath11k_base *ab)
- {
--	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
- 	const struct ath11k_msi_config *msi_config;
- 	int i;
- 
-@@ -117,7 +116,7 @@ int ath11k_pci_get_msi_config(struct ath11k_base *ab)
- 		return -EINVAL;
- 	}
- 
--	ab_pci->msi_config = msi_config;
-+	ab->msi.msi_config = msi_config;
- 	return 0;
- }
- 
-@@ -251,33 +250,22 @@ int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector)
- void ath11k_pci_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
- 				u32 *msi_addr_hi)
- {
--	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
--	struct pci_dev *pci_dev = to_pci_dev(ab->dev);
--
--	pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_LO,
--			      msi_addr_lo);
--
--	if (test_bit(ATH11K_PCI_FLAG_IS_MSI_64, &ab_pci->flags)) {
--		pci_read_config_dword(pci_dev, pci_dev->msi_cap + PCI_MSI_ADDRESS_HI,
--				      msi_addr_hi);
--	} else {
--		*msi_addr_hi = 0;
--	}
-+	*msi_addr_lo = ab->msi.msi_addr_lo;
-+	*msi_addr_hi = ab->msi.msi_addr_hi;
- }
- 
--int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_name,
-+int ath11k_pci_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
- 				       int *num_vectors, u32 *user_base_data,
- 				       u32 *base_vector)
- {
--	struct ath11k_base *ab = ab_pci->ab;
--	const struct ath11k_msi_config *msi_config = ab_pci->msi_config;
-+	const struct ath11k_msi_config *msi_config = ab->msi.msi_config;
- 	int idx;
- 
- 	for (idx = 0; idx < msi_config->total_users; idx++) {
- 		if (strcmp(user_name, msi_config->users[idx].name) == 0) {
- 			*num_vectors = msi_config->users[idx].num_vectors;
- 			*base_vector =  msi_config->users[idx].base_vector;
--			*user_base_data = *base_vector + ab_pci->msi_ep_base_data;
-+			*user_base_data = *base_vector + ab->msi.msi_ep_base_data;
- 
- 			ath11k_dbg(ab, ATH11K_DBG_PCI,
- 				   "Assign MSI to user: %s, num_vectors: %d, user_base_data: %u, base_vector: %u\n",
-@@ -309,17 +297,6 @@ void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx)
- 	*msi_idx = msi_data_idx;
- }
- 
--int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
--				   int *num_vectors, u32 *user_base_data,
--				   u32 *base_vector)
--{
--	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
--
--	return ath11k_pci_get_user_msi_assignment(ab_pci, user_name,
--						  num_vectors, user_base_data,
--						  base_vector);
--}
--
- static void ath11k_pci_free_ext_irq(struct ath11k_base *ab)
- {
- 	int i, j;
-@@ -564,8 +541,7 @@ static int ath11k_pci_ext_irq_config(struct ath11k_base *ab)
- 	int i, j, ret, num_vectors = 0;
- 	u32 user_base_data = 0, base_vector = 0;
- 
--	ret = ath11k_pci_get_user_msi_assignment(ath11k_pci_priv(ab), "DP",
--						 &num_vectors,
-+	ret = ath11k_pci_get_user_msi_assignment(ab, "DP", &num_vectors,
- 						 &user_base_data,
- 						 &base_vector);
- 	if (ret < 0)
-@@ -640,8 +616,7 @@ int ath11k_pci_config_irq(struct ath11k_base *ab)
- 	unsigned int msi_data;
- 	int irq, i, ret, irq_idx;
- 
--	ret = ath11k_pci_get_user_msi_assignment(ath11k_pci_priv(ab),
--						 "CE", &msi_data_count,
-+	ret = ath11k_pci_get_user_msi_assignment(ab, "CE", &msi_data_count,
- 						 &msi_data_start, &msi_irq_start);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/ath/ath11k/pci_cmn.h b/drivers/net/wireless/ath/ath11k/pci_cmn.h
-index f5916da..cc78c23 100644
---- a/drivers/net/wireless/ath/ath11k/pci_cmn.h
-+++ b/drivers/net/wireless/ath/ath11k/pci_cmn.h
-@@ -25,7 +25,7 @@
-  */
- #define ATH11K_PCI_ACCESS_ALWAYS_OFF 0xFE0
- 
--int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ar_pci, char *user_name,
-+int ath11k_pci_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
- 				       int *num_vectors, u32 *user_base_data,
- 				       u32 *base_vector);
- int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector);
-@@ -44,9 +44,6 @@ int ath11k_pci_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
- 				   u8 *ul_pipe, u8 *dl_pipe);
- void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab);
- void ath11k_pci_ce_irq_disable_sync(struct ath11k_base *ab);
--int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
--				   int *num_vectors, u32 *user_base_data,
--				   u32 *base_vector);
- void ath11k_pci_aspm_restore(struct ath11k_pci *ab_pci);
- int ath11k_pci_set_irq_affinity_hint(struct ath11k_pci *ab_pci,
- 				     const struct cpumask *m);
+ #ifndef ATH11K_QMI_H
+@@ -20,6 +21,7 @@
+ #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCA6390	0x01
+ #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_IPQ8074	0x02
+ #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCN9074	0x07
++#define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_WCN6750	0x03
+ #define ATH11K_QMI_WLANFW_MAX_TIMESTAMP_LEN_V01	32
+ #define ATH11K_QMI_RESP_LEN_MAX			8192
+ #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	52
 -- 
 2.7.4
 
