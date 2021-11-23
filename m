@@ -2,146 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0415EC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 16:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8332CC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 16:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238861AbhKWQZv (ORCPT
+        id S231311AbhKWQ1z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Nov 2021 11:25:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32964 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbhKWQZs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Nov 2021 11:25:48 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF565C061574;
-        Tue, 23 Nov 2021 08:22:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=T+McMKyDOKDOU+PBL1nHadWch3B4nQMaS2x2M/9vBbU=;
-        t=1637684559; x=1638894159; b=FZEKOi6ePb4qAW001XGN4ny0EAoQKUvK8czoKry60NRVFzj
-        GV9whpuel/QM1aCcfKZHf0A+Qnd2klugIEob4O0iWYkeUez0tj7rv2BGMitJ9SLYmaUOeOerRPq2i
-        y3OfSeSD+T1VyLS+k7/oNlrZAyccxgdW3InWGzLn6OoEKkmkb09Mnh4iEBR0k5Cj00ivPbiOWqQ/r
-        HFQne/h8c/BMzABbNFIJgbGZZ1nTbcG/DieqFxLMJ2AhwFiflqenOx4vLewVH9IPtS9Li056PYE6R
-        dTlYnezaO43hV8/3veGAgX2ehkv5fUZSFFWRRMPnnb9FQb5h58WdHgHdnyiz097g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1mpYYB-001ofh-UH;
-        Tue, 23 Nov 2021 17:21:44 +0100
-Message-ID: <12825803045d1cec0df968f72a9ef2724a2548fb.camel@sipsolutions.net>
-Subject: Re: [PATCH 01/17] bitfield: Add non-constant field_{prep,get}()
- helpers
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Tony Lindgren <tony@atomide.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Rajendra Nayak <rnayak@codeaurora.org>,
-        Paul Walmsley <paul@pwsan.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Nicolas Ferre <nicolas.ferre@microchip.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Ludovic Desroches <ludovic.desroches@microchip.com>,
-        Tero Kristo <kristo@kernel.org>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Benoit Parrot <bparrot@ti.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Andrew Jeffery <andrew@aj.id.au>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Joel Stanley <joel@jms.id.au>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Keerthy <j-keerthy@ti.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Amit Kucheria <amitk@kernel.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-aspeed@lists.ozlabs.org, openbmc@lists.ozlabs.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Date:   Tue, 23 Nov 2021 17:21:41 +0100
-In-Reply-To: <CAMuHMdUnBgFpqhgjf5AA0LH9MZOFALeC=YinZ4Tv_V+Y9hkRSg@mail.gmail.com>
-References: <cover.1637592133.git.geert+renesas@glider.be>
-         <3a54a6703879d10f08cf0275a2a69297ebd2b1d4.1637592133.git.geert+renesas@glider.be>
-         <01b44b38c087c151171f8d45a2090474c2559306.camel@sipsolutions.net>
-         <CAMuHMdUnBgFpqhgjf5AA0LH9MZOFALeC=YinZ4Tv_V+Y9hkRSg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.1 (3.42.1-1.fc35) 
+        Tue, 23 Nov 2021 11:27:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41136 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231216AbhKWQ1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Nov 2021 11:27:54 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4735160F5A;
+        Tue, 23 Nov 2021 16:24:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637684686;
+        bh=D6/GWU6y51q5xDOOg1hGwsiAzMFchVwjcAshTdT3uMY=;
+        h=From:To:Cc:Subject:Date:From;
+        b=qC4Hrzjicabn/TMmOOeZ9HVaUod5c83UjJdh65a0wpFdBLykKdsrXSplhsd7JAL0X
+         RNflUBcnnhf9PEUHiJI6T5LUFhEL/TE05AacnMot7E/bm6HlISndfvqR+wcW8xceiz
+         PVTJra5+RXRRJdbMdHQ5My+l3NK3RXfdzy/Q60VeFVx4/2u23ZQ/q2RTh9ilC2PkDX
+         1OuHErVM1JGo5tSGsqHBsHnWdqPVDprhLdYdNhTpO0gx0mzon4y8OSunIVnyfEHiJa
+         vgsywZhxrNPG8TIcDv3Xoz9alhkL7Jsiy3n0NYgsR43WLdNmtz+0U4o1cl9gOtAGaL
+         D/FmbXJ6MXdTw==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        ryder.lee@mediatek.com
+Subject: [PATCH] mt76: mt7915: introduce SAR support
+Date:   Tue, 23 Nov 2021 17:24:31 +0100
+Message-Id: <ed704f40d9681041d330b1c55dcaf4b10f50c331.1637684612.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2021-11-23 at 09:30 +0100, Geert Uytterhoeven wrote:
-> > We have the upper-case (constant) versions, and already
-> > {u32,...}_get_bits()/etc.
-> 
-> These don't work for non-const masks.
+Add SAR spec support to mt7915 driver to allow configuring SAR power
+limitations on the frequency ranges from the userland.
 
-Obviously, I know that. Still, just saying.
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 23 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   |  8 +++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-I'm actually in the opposite camp to you I guess - I much prefer the
-typed versions (u32_get_bits() and friends) over the FIELD_GET() macros
-that are more magic.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 057ab27b7083..2179ea85d304 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -425,6 +425,28 @@ static int mt7915_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	return err;
+ }
+ 
++static int mt7915_set_sar_specs(struct ieee80211_hw *hw,
++				const struct cfg80211_sar_specs *sar)
++{
++	struct mt7915_phy *phy = mt7915_hw_phy(hw);
++	struct mt7915_dev *dev = mt7915_hw_dev(hw);
++	int err = -EINVAL;
++
++	mutex_lock(&dev->mt76.mutex);
++	if (!cfg80211_chandef_valid(&phy->mt76->chandef))
++		goto out;
++
++	err = mt76_init_sar_power(hw, sar);
++	if (err)
++		goto out;
++
++	err = mt7915_mcu_set_txpower_sku(phy);
++out:
++	mutex_unlock(&dev->mt76.mutex);
++
++	return err;
++}
++
+ static int mt7915_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
+@@ -1331,6 +1353,7 @@ const struct ieee80211_ops mt7915_ops = {
+ 	.sw_scan_complete = mt76_sw_scan_complete,
+ 	.release_buffered_frames = mt76_release_buffered_frames,
+ 	.get_txpower = mt76_get_txpower,
++	.set_sar_specs = mt7915_set_sar_specs,
+ 	.channel_switch_beacon = mt7915_channel_switch_beacon,
+ 	.get_stats = mt7915_get_stats,
+ 	.get_et_sset_count = mt7915_get_et_sset_count,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 7ed1c47dec63..d7a6df23fc42 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -3856,11 +3856,11 @@ int mt7915_mcu_set_txpower_sku(struct mt7915_phy *phy)
+ 	struct mt76_power_limits limits_array;
+ 	s8 *la = (s8 *)&limits_array;
+ 	int i, idx, n_chains = hweight8(mphy->antenna_mask);
+-	int tx_power;
+-
+-	tx_power = hw->conf.power_level * 2 -
+-		   mt76_tx_power_nss_delta(n_chains);
++	int tx_power = hw->conf.power_level * 2;
+ 
++	tx_power = mt76_get_sar_power(mphy, mphy->chandef.chan,
++				      tx_power);
++	tx_power -= mt76_tx_power_nss_delta(n_chains);
+ 	tx_power = mt76_get_rate_power_limits(mphy, mphy->chandef.chan,
+ 					      &limits_array, tx_power);
+ 	mphy->txpower_cur = tx_power;
+-- 
+2.31.1
 
-Mostly though that's because the typed ones also have le32_/be32_/...
-variants, which are tremendously useful, and so I prefer to use them all
-across. In fact, I have considered in the past to just remove the upper-
-case macros entirely but ... no time I guess.
-
-> > Also, you're using __ffs(), which doesn't work for 64-bit on 32-bit
-> > architectures (afaict), so that seems a bit awkward.
-> 
-> That's a valid comment. Can be fixed by using a wrapper macro
-> that checks if typeof(mask) == u64, and uses an __ffs64() version when
-> needed.
-
-You can't really do a typeof()==something, but you can check the size,
-so yeah, that could be done.
-
-> > Maybe we can make {u32,...}_get_bits() be doing compile-time only checks
-> > if it is indeed a constant? The __field_overflow() usage is already only
-> > done if __builtin_constant_p(v), so I guess we can do the same with
-> > __bad_mask()?
-> 
-> Are all compilers smart enough to replace the division by
-> field_multiplier(field) by a shift?
-
-In the constant case they are, but you'd have to replace
-field_multiplier() with the __ffs(), including the size check discussed
-above. Then it's no longer a constant, and then I'm not so sure it would
-actually be able to translate it, even if it's "1<<__ffs64(...)". I
-guess you can check, or just change it to not use the division and
-multiplication, but shifts/masks instead manually?
-
-IOW - I would much prefer to make the type_get_bits() and friends work
-for non-constant masks.
-
-In fact, you have e.g. code in drivers/usb/chipidea/udc.c that does
-things like cpu_to_le32(mul << __ffs(...)) - though in those cases it's
-actually constant today, so you could already write it as
-le32_encode_bits(...).
-
-johannes
