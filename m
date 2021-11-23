@@ -2,360 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C274C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 07:50:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A85C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Nov 2021 08:20:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234605AbhKWHyE (ORCPT
+        id S234664AbhKWIYB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Nov 2021 02:54:04 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:56504 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234468AbhKWHxr (ORCPT
+        Tue, 23 Nov 2021 03:24:01 -0500
+Received: from mail-ot1-f43.google.com ([209.85.210.43]:37656 "EHLO
+        mail-ot1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230306AbhKWIXy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Nov 2021 02:53:47 -0500
-X-UUID: 95bee7ae23c74098996d5228dd659dbc-20211123
-X-UUID: 95bee7ae23c74098996d5228dd659dbc-20211123
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <bo.jiao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 939847225; Tue, 23 Nov 2021 15:50:35 +0800
-Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 23 Nov 2021 15:50:34 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS34N1.mediatek.inc
- (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 23 Nov
- 2021 15:50:34 +0800
-Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
- MTKCAS32.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Tue, 23 Nov 2021 15:50:33 +0800
-From:   Bo Jiao <bo.jiao@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Xing Song <xing.song@mediatek.com>,
-        Sujuan Chen <sujuan.chen@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Bo Jiao <Bo.Jiao@mediatek.com>
-Subject: [PATCH v3 08/11] mt76: mt7915: update rx rate reporting for mt7916
-Date:   Tue, 23 Nov 2021 15:49:52 +0800
-Message-ID: <c3519b5f2ed307b18bd0c23e3185ee5d894aa5ca.1637652742.git.Bo.Jiao@mediatek.com>
-X-Mailer: git-send-email 2.17.0
-In-Reply-To: <cover.1637652742.git.Bo.Jiao@mediatek.com>
-References: <cover.1637652742.git.Bo.Jiao@mediatek.com>
+        Tue, 23 Nov 2021 03:23:54 -0500
+Received: by mail-ot1-f43.google.com with SMTP id h19-20020a9d3e53000000b0056547b797b2so32710152otg.4;
+        Tue, 23 Nov 2021 00:20:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EqDPz0+moIASV8/u18qtwgFpVhcXgwVMGWtajI5MBd0=;
+        b=1+BrM5ab/nAOx38mqOY5EiIsoIHJshvpzrms3mNltCT/grGe1DZiRFqVnUrv+a9REA
+         2qPEOov7jWklahWSboLBlrmFkoUaUHOaWx1uE0R9vh4iB59KD9l89nlcXVUCOkECXKgd
+         cEBS96wc07XGbbnq9bZP9lWJvngwo6AWkkysfpKr+B9I+5lmSSHTHpWHFVtNSMKsIBKw
+         ukPkFG0Akro9oKI2kp9YBVa0rqiQ+Wo3MLzZK+DZPRY9/lTC1ir7G+Haq0yfwB2tme4C
+         Okundo4drrFPwChrNvQ1V+wRsETxqQmoPKZvM7UURzHeV9FkH2J46OiH0MpiabeOHARU
+         LKbw==
+X-Gm-Message-State: AOAM531zV7a2Bi5IYbemDickJkqZB8l7tHzJQdvOQsCm6uVtO+D+qfUH
+        k0YwZlGAKBLKiVy2syvjFeMl6/qhwvqQ+A==
+X-Google-Smtp-Source: ABdhPJwe9sx059Wb7JhFyeXY/CngRgc5BHN/QDbA5X094r9QBlKhv/BTVKvqe6nOczniqpfZc40LFQ==
+X-Received: by 2002:a9d:19e3:: with SMTP id k90mr2701498otk.99.1637655646043;
+        Tue, 23 Nov 2021 00:20:46 -0800 (PST)
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com. [209.85.210.42])
+        by smtp.gmail.com with ESMTPSA id w19sm2408417oih.44.2021.11.23.00.20.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 Nov 2021 00:20:45 -0800 (PST)
+Received: by mail-ot1-f42.google.com with SMTP id a23-20020a9d4717000000b0056c15d6d0caso32654069otf.12;
+        Tue, 23 Nov 2021 00:20:45 -0800 (PST)
+X-Received: by 2002:a9f:248b:: with SMTP id 11mr5954157uar.14.1637655634916;
+ Tue, 23 Nov 2021 00:20:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <cover.1637592133.git.geert+renesas@glider.be> <YZvYW1ElW7ZYZNTC@piout.net>
+In-Reply-To: <YZvYW1ElW7ZYZNTC@piout.net>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Tue, 23 Nov 2021 09:20:23 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdWKHoBWm2XQmKwB0q8Ya8KzpCgA29D0igXJrGY8=3e8_A@mail.gmail.com>
+Message-ID: <CAMuHMdWKHoBWm2XQmKwB0q8Ya8KzpCgA29D0igXJrGY8=3e8_A@mail.gmail.com>
+Subject: Re: [PATCH 00/17] Non-const bitfield helper conversions
+To:     Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc:     Tony Lindgren <tony@atomide.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Rajendra Nayak <rnayak@codeaurora.org>,
+        Paul Walmsley <paul@pwsan.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Nicolas Ferre <nicolas.ferre@microchip.com>,
+        Ludovic Desroches <ludovic.desroches@microchip.com>,
+        Tero Kristo <kristo@kernel.org>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Benoit Parrot <bparrot@ti.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Andrew Jeffery <andrew@aj.id.au>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Joel Stanley <joel@jms.id.au>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Keerthy <j-keerthy@ti.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-aspeed@lists.ozlabs.org, openbmc@lists.ozlabs.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bo Jiao <Bo.Jiao@mediatek.com>
+Hi Alexandre,
 
-mt7916 reports rx rate from rxd group3 directly.
+On Mon, Nov 22, 2021 at 6:50 PM Alexandre Belloni
+<alexandre.belloni@bootlin.com> wrote:
+> On 22/11/2021 16:53:53+0100, Geert Uytterhoeven wrote:
+> > The existing FIELD_{GET,PREP}() macros are limited to compile-time
+> > constants.  However, it is very common to prepare or extract bitfield
+> > elements where the bitfield mask is not a compile-time constant.
+> > To avoid this limitation, the AT91 clock driver already has its own
+> > field_{prep,get}() macros.
+>
+> My understanding was that this (being compile time only) was actually
+> done on purpose. Did I misunderstand?
 
-Co-developed-by: Sujuan Chen <sujuan.chen@mediatek.com>
-Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7915/init.c  |   3 +-
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 199 +++++++++++-------
- .../net/wireless/mediatek/mt76/mt7915/mac.h   |   6 +
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  11 +-
- 4 files changed, 137 insertions(+), 82 deletions(-)
+Yes, it was done on purpose, to maximize type safety.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 1b8a47c..6dae11a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -408,7 +408,8 @@ mt7915_mac_init_band(struct mt7915_dev *dev, u8 band)
- 	mt76_rmw(dev, MT_MDP_BNRCFR1(band), mask, set);
- 
- 	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_MAX_RX_LEN, 0x680);
--	/* disable rx rate report by default due to hw issues */
-+
-+	/* mt7915: disable rx rate report by default due to hw issues */
- 	mt76_clear(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 8e3901b..84879a3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -460,6 +460,119 @@ static int mt7915_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_gap)
- 	return 0;
- }
- 
-+static int
-+mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
-+			struct mt76_rx_status *status,
-+			struct ieee80211_supported_band *sband,
-+			__le32 *rxv)
-+{
-+	u32 v0, v1, v2;
-+	u16 legacy;
-+	u8 flags, stbc, gi, bw, dcm, mode, nss;
-+	int i, idx;
-+	bool cck = false;
-+
-+	v0 = le32_to_cpu(rxv[0]);
-+	v1 = le32_to_cpu(rxv[1]);
-+	v2 = le32_to_cpu(rxv[2]);
-+
-+	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
-+	nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
-+
-+	if (!is_mt7915(&dev->mt76)) {
-+		stbc = FIELD_GET(MT_PRXV_HT_STBC, v0);
-+		gi = FIELD_GET(MT_PRXV_HT_SHORT_GI, v0);
-+		mode = FIELD_GET(MT_PRXV_TX_MODE, v0);
-+		dcm = FIELD_GET(MT_PRXV_DCM, v0);
-+		bw = FIELD_GET(MT_PRXV_FRAME_MODE, v0);
-+	} else {
-+		stbc = FIELD_GET(MT_CRXV_HT_STBC, v2);
-+		gi = FIELD_GET(MT_CRXV_HT_SHORT_GI, v2);
-+		mode = FIELD_GET(MT_CRXV_TX_MODE, v2);
-+		dcm = !!(idx & GENMASK(3, 0) & MT_PRXV_TX_DCM);
-+		bw = FIELD_GET(MT_CRXV_FRAME_MODE, v2);
-+	}
-+
-+	switch (mode) {
-+	case MT_PHY_TYPE_CCK:
-+		cck = true;
-+		fallthrough;
-+	case MT_PHY_TYPE_OFDM:
-+		i = mt76_get_rate(&dev->mt76, sband, i, cck);
-+		legacy = sband->bitrates[i].bitrate;
-+		break;
-+	case MT_PHY_TYPE_HT_GF:
-+	case MT_PHY_TYPE_HT:
-+		status->encoding = RX_ENC_HT;
-+		if (i > 31)
-+			return -EINVAL;
-+
-+		flags = RATE_INFO_FLAGS_MCS;
-+		if (gi)
-+			flags |= RATE_INFO_FLAGS_SHORT_GI;
-+		break;
-+	case MT_PHY_TYPE_VHT:
-+		status->nss = nss;
-+		status->encoding = RX_ENC_VHT;
-+		if (i > 9)
-+			return -EINVAL;
-+
-+		flags = RATE_INFO_FLAGS_VHT_MCS;
-+		if (gi)
-+			flags |= RATE_INFO_FLAGS_SHORT_GI;
-+		break;
-+	case MT_PHY_TYPE_HE_MU:
-+		status->flag |= RX_FLAG_RADIOTAP_HE_MU;
-+		fallthrough;
-+	case MT_PHY_TYPE_HE_SU:
-+	case MT_PHY_TYPE_HE_EXT_SU:
-+	case MT_PHY_TYPE_HE_TB:
-+		status->nss = nss;
-+		status->encoding = RX_ENC_HE;
-+		status->flag |= RX_FLAG_RADIOTAP_HE;
-+		i &= GENMASK(3, 0);
-+
-+		if (gi <= NL80211_RATE_INFO_HE_GI_3_2)
-+			status->he_gi = gi;
-+
-+		status->he_dcm = dcm;
-+		flags |= RATE_INFO_FLAGS_HE_MCS;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	status->rate_idx = i;
-+
-+	switch (bw) {
-+	case IEEE80211_STA_RX_BW_20:
-+		break;
-+	case IEEE80211_STA_RX_BW_40:
-+		if (mode & MT_PHY_TYPE_HE_EXT_SU &&
-+		    (idx & MT_PRXV_TX_ER_SU_106T)) {
-+			status->bw = RATE_INFO_BW_HE_RU;
-+			status->he_ru =
-+				NL80211_RATE_INFO_HE_RU_ALLOC_106;
-+		} else {
-+			status->bw = RATE_INFO_BW_40;
-+		}
-+		break;
-+	case IEEE80211_STA_RX_BW_80:
-+		status->bw = RATE_INFO_BW_80;
-+		break;
-+	case IEEE80211_STA_RX_BW_160:
-+		status->bw = RATE_INFO_BW_160;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	status->enc_flags |= RX_ENC_FLAG_STBC_MASK * stbc;
-+	if (mode < MT_PHY_TYPE_HE_SU && gi)
-+		status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+
-+	return 0;
-+}
-+
- static int
- mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- {
-@@ -618,7 +731,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 
- 	/* RXD Group 3 - P-RXV */
- 	if (rxd1 & MT_RXD1_NORMAL_GROUP_3) {
--		u32 v0, v1, v2;
-+		u32 v0, v1;
-+		int ret;
- 
- 		rxv = rxd;
- 		rxd += 2;
-@@ -627,7 +741,6 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 
- 		v0 = le32_to_cpu(rxv[0]);
- 		v1 = le32_to_cpu(rxv[1]);
--		v2 = le32_to_cpu(rxv[2]);
- 
- 		if (v0 & MT_PRXV_HT_AD_CODE)
- 			status->enc_flags |= RX_ENC_FLAG_LDPC;
-@@ -649,85 +762,17 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 
- 		/* RXD Group 5 - C-RXV */
- 		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
--			u8 stbc = FIELD_GET(MT_CRXV_HT_STBC, v2);
--			u8 gi = FIELD_GET(MT_CRXV_HT_SHORT_GI, v2);
--			bool cck = false;
--
- 			rxd += 18;
- 			if ((u8 *)rxd - skb->data >= skb->len)
- 				return -EINVAL;
-+		}
- 
--			idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
--			mode = FIELD_GET(MT_CRXV_TX_MODE, v2);
--
--			switch (mode) {
--			case MT_PHY_TYPE_CCK:
--				cck = true;
--				fallthrough;
--			case MT_PHY_TYPE_OFDM:
--				i = mt76_get_rate(&dev->mt76, sband, i, cck);
--				break;
--			case MT_PHY_TYPE_HT_GF:
--			case MT_PHY_TYPE_HT:
--				status->encoding = RX_ENC_HT;
--				if (i > 31)
--					return -EINVAL;
--				break;
--			case MT_PHY_TYPE_VHT:
--				status->nss =
--					FIELD_GET(MT_PRXV_NSTS, v0) + 1;
--				status->encoding = RX_ENC_VHT;
--				if (i > 9)
--					return -EINVAL;
--				break;
--			case MT_PHY_TYPE_HE_MU:
--				status->flag |= RX_FLAG_RADIOTAP_HE_MU;
--				fallthrough;
--			case MT_PHY_TYPE_HE_SU:
--			case MT_PHY_TYPE_HE_EXT_SU:
--			case MT_PHY_TYPE_HE_TB:
--				status->nss =
--					FIELD_GET(MT_PRXV_NSTS, v0) + 1;
--				status->encoding = RX_ENC_HE;
--				status->flag |= RX_FLAG_RADIOTAP_HE;
--				i &= GENMASK(3, 0);
--
--				if (gi <= NL80211_RATE_INFO_HE_GI_3_2)
--					status->he_gi = gi;
--
--				status->he_dcm = !!(idx & MT_PRXV_TX_DCM);
--				break;
--			default:
--				return -EINVAL;
--			}
--			status->rate_idx = i;
--
--			switch (FIELD_GET(MT_CRXV_FRAME_MODE, v2)) {
--			case IEEE80211_STA_RX_BW_20:
--				break;
--			case IEEE80211_STA_RX_BW_40:
--				if (mode & MT_PHY_TYPE_HE_EXT_SU &&
--				    (idx & MT_PRXV_TX_ER_SU_106T)) {
--					status->bw = RATE_INFO_BW_HE_RU;
--					status->he_ru =
--						NL80211_RATE_INFO_HE_RU_ALLOC_106;
--				} else {
--					status->bw = RATE_INFO_BW_40;
--				}
--				break;
--			case IEEE80211_STA_RX_BW_80:
--				status->bw = RATE_INFO_BW_80;
--				break;
--			case IEEE80211_STA_RX_BW_160:
--				status->bw = RATE_INFO_BW_160;
--				break;
--			default:
--				return -EINVAL;
--			}
--
--			status->enc_flags |= RX_ENC_FLAG_STBC_MASK * stbc;
--			if (mode < MT_PHY_TYPE_HE_SU && gi)
--				status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-+		if (!is_mt7915(&dev->mt76) ||
-+		    (is_mt7915(&dev->mt76) &&
-+		     (rxd1 & MT_RXD1_NORMAL_GROUP_5))) {
-+			ret = mt7915_mac_fill_rx_rate(dev, status, sband, rxv);
-+			if (ret < 0)
-+				return ret;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-index 4504ebc..d79f0a5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.h
-@@ -125,6 +125,12 @@ enum rx_pkt_type {
- #define MT_PRXV_RCPI2			GENMASK(23, 16)
- #define MT_PRXV_RCPI1			GENMASK(15, 8)
- #define MT_PRXV_RCPI0			GENMASK(7, 0)
-+#define MT_PRXV_HT_SHORT_GI		GENMASK(16, 15)
-+#define MT_PRXV_HT_STBC			GENMASK(23, 22)
-+#define MT_PRXV_TX_MODE			GENMASK(27, 24)
-+#define MT_PRXV_FRAME_MODE		GENMASK(14, 12)
-+#define MT_PRXV_DCM			BIT(17)
-+#define MT_PRXV_NUM_RX			BIT(20, 18)
- 
- /* C-RXV */
- #define MT_CRXV_HT_STBC			GENMASK(1, 0)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 057ab27..0650140 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -969,11 +969,14 @@ static void mt7915_sta_statistics(struct ieee80211_hw *hw,
- 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct rate_info *txrate = &msta->wcid.rate;
--	struct rate_info rxrate = {};
- 
--	if (!mt7915_mcu_get_rx_rate(phy, vif, sta, &rxrate)) {
--		sinfo->rxrate = rxrate;
--		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
-+	if (is_mt7915(&phy->dev->mt76)) {
-+		struct rate_info rxrate = {};
-+
-+		if (!mt7915_mcu_get_rx_rate(phy, vif, sta, &rxrate)) {
-+			sinfo->rxrate = rxrate;
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
-+		}
- 	}
- 
- 	if (!txrate->legacy && !txrate->flags)
--- 
-2.18.0
+However, this imposes a severe limitation: we cannot use them in case
+the mask is non-const (i.e. stored in some data structure).  This
+is a quite common use-case, given the examples I found and converted,
+and given you added field_{get,prep}() to the AT91 clock driver.
 
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
