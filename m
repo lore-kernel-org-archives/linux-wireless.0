@@ -2,131 +2,130 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CEEC4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Nov 2021 13:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 951F0C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Nov 2021 14:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345498AbhKXNTV (ORCPT
+        id S1351624AbhKXOKo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Nov 2021 08:19:21 -0500
-Received: from phobos.denx.de ([85.214.62.61]:54428 "EHLO phobos.denx.de"
+        Wed, 24 Nov 2021 09:10:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1346005AbhKXNOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Nov 2021 08:14:35 -0500
-Received: from localhost.localdomain (unknown [IPv6:2804:14c:485:504a:e573:ff9b:725:6f6b])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: festevam@denx.de)
-        by phobos.denx.de (Postfix) with ESMTPSA id 2E835812A2;
-        Wed, 24 Nov 2021 14:11:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-        s=phobos-20191101; t=1637759483;
-        bh=pvE9ogzQNqGhHkwS6ssMiCv7c3mA6R8LTIYSlH47Uig=;
-        h=From:To:Cc:Subject:Date:From;
-        b=u992Zdo84qzBKJH5ru0QbcvuGOZ2k0LmMKk3//QH7Qr+r4i9adOQJioiZhEFqOoip
-         /cx4bcbq9QOEE6HE0wuvDNHJeZFsLo8WNjhUC3BIW7J9F4v2uXdajIiim4H+c3lGNY
-         PEpRgF+6QEJRNq48mrMI9B4KdNyqxwoYX+bgWT1IrOnUbWTMSoBhwr9TZrgnddD8U6
-         i6iYV/6y3XCSoxI6MVNrvkxYB3PcaxM2odAaK7z4Qv+lvjzqD5b21r/iwZ2mud5rS4
-         DJX4t91PoCESvw9dsVzRtaZAk6MulPLuRbysX5WbXq4Cm/i//q9us7AIWirTgpOJPa
-         W9CWDyrThUeLg==
-From:   Fabio Estevam <festevam@denx.de>
-To:     kvalo@codeaurora.org
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        wgong@codeaurora.org, Fabio Estevam <festevam@denx.de>
-Subject: [PATCH v3] ath10k: Fix the MTU size on QCA9377 SDIO
-Date:   Wed, 24 Nov 2021 10:10:47 -0300
-Message-Id: <20211124131047.713756-1-festevam@denx.de>
-X-Mailer: git-send-email 2.25.1
+        id S1356052AbhKXOIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Nov 2021 09:08:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B124C6135F;
+        Wed, 24 Nov 2021 13:59:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637762378;
+        bh=qRP+clj8R/VdWhftZ8Y8X7gwjyLiR1Ndt0XMFQ1d99I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=qwjskdleu3wFs5Bp+wvn7/HQgcncwjzNLbZJvm05oYaNrcYQTwWP5OPt4NA+r19ce
+         xvpj4Ygu81mu+0T0HClP6KV/QWjpcF9snHTHoGaG5tUeLxnTTWkLES0g3C2OG9fyHP
+         3gdMDDzRgjs1FxHFxipNVT3bu4+1WLgAMlUBkLt05N30IajW10WzN8g5y+5eK5i725
+         UrYk6tfyltIEGHPLMkyi6LuRszHy8ZTAL81DcgYxpSc8FxYZIzgFUL244Ub8IMFPQK
+         iyz4glX1RQI/lDwdXU9D49kB+bXi/+6kFMsXGuBY9Lzmn68zgSqocZJHLF6A/zwCj2
+         E8n91Zb/v+PWQ==
+Date:   Wed, 24 Nov 2021 05:59:35 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Rajendra Nayak <rnayak@codeaurora.org>,
+        Paul Walmsley <paul@pwsan.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Nicolas Ferre <nicolas.ferre@microchip.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Ludovic Desroches <ludovic.desroches@microchip.com>,
+        Tero Kristo <kristo@kernel.org>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Benoit Parrot <bparrot@ti.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Andrew Jeffery <andrew@aj.id.au>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Joel Stanley <joel@jms.id.au>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Keerthy <j-keerthy@ti.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-aspeed@lists.ozlabs.org, openbmc@lists.ozlabs.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-pm@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH 01/17] bitfield: Add non-constant field_{prep,get}()
+ helpers
+Message-ID: <20211124055935.416dc472@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <05d4673a0343bfd83824d307e9cf8bf92e3814a6.camel@sipsolutions.net>
+References: <cover.1637592133.git.geert+renesas@glider.be>
+        <3a54a6703879d10f08cf0275a2a69297ebd2b1d4.1637592133.git.geert+renesas@glider.be>
+        <01b44b38c087c151171f8d45a2090474c2559306.camel@sipsolutions.net>
+        <20211122171739.03848154@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <CAMuHMdWAAGrQUZN18cnDTDUUhuPNTZTFkRMe2Sbf+s7CedPSxA@mail.gmail.com>
+        <637a4183861a1f2cdab52b7652bfa7ed33fbcdd2.camel@sipsolutions.net>
+        <20211123154922.600fd3b5@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <05d4673a0343bfd83824d307e9cf8bf92e3814a6.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Virus-Scanned: clamav-milter 0.103.2 at phobos.denx.de
-X-Virus-Status: Clean
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On an imx6dl-pico-pi board with a QCA9377 SDIO chip, simply trying to
-connect via ssh to another machine causes:
+On Wed, 24 Nov 2021 09:03:24 +0100 Johannes Berg wrote:
+> On Tue, 2021-11-23 at 15:49 -0800, Jakub Kicinski wrote:
+> > > Indeed.
+> > > 
+> > > Also as I said in my other mail, the le32/be32/... variants are
+> > > tremendously useful, and they fundamentally cannot be expressed with the
+> > > FIELD_GET() or field_get() macros. IMHO this is a clear advantage to the  
+> > 
+> > Can you elaborate?  
+> 
+> Well, the way I see it, the only advantage of FIELD_GET() is that it
+> will auto-determine the type (based on the mask type.) This cannot work
+> if you need be/le conversions, because the be/le type annotations are
+> invisible to the compiler.
+> 
+> So obviously you could write a BE32_FIELD_GET(), but then really that's
+> equivalent to be32_get_bits() - note you you have to actually specify
+> the type in the macro name. I guess in theory you could make macros
+> where the type is an argument (like FIELD_GET_TYPE(be32, ...)), but I
+> don't see how that gains anything.
 
-[   55.824159] ath10k_sdio mmc1:0001:1: failed to transmit packet, dropping: -12
-[   55.832169] ath10k_sdio mmc1:0001:1: failed to submit frame: -12
-[   55.838529] ath10k_sdio mmc1:0001:1: failed to push frame: -12
-[   55.905863] ath10k_sdio mmc1:0001:1: failed to transmit packet, dropping: -12
-[   55.913650] ath10k_sdio mmc1:0001:1: failed to submit frame: -12
-[   55.919887] ath10k_sdio mmc1:0001:1: failed to push frame: -12
+Ah, that's what you meant! Thanks for spelling it out.
 
-, leading to an ssh connection failure.
+FWIW I never found the be/le versions useful. Most of the time the data
+comes from bus accessors which swap or is unaligned so you have to do
+be/le_get_unaligned, which swaps. Plus if you access/set multiple
+fields you'd swap them one by one which seems wasteful.
 
-One user inspected the size of frames on Wireshark and reported
-the followig:
+> > > typed versions, and if you ask me we should get rid of the FIELD_GETand
+> > > FIELD_PREP entirely - difficult now, but at least let's not propagate
+> > > that?  
+> > 
+> > I don't see why.  
+> 
+> Just for being more regular, in the spirit of "there's exactly one
+> correct way of doing it" :)
 
-"I was able to narrow the issue down to the mtu. If I set the mtu for
-the wlan0 device to 1486 instead of 1500, the issue does not happen.
+Right now it seems the uppercase macros are more prevalent.
 
-The size of frames that I see on Wireshark is exactly 1500 after
-setting it to 1486."
-
-Clearing the HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE avoids the problem and
-the ssh command works successfully after that.
-
-Introduce a 'credit_size_workaround' field to ath10k_hw_params for
-the QCA9377 SDIO, so that the HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE
-is not set in this case.
-
-Tested with QCA9377 SDIO with firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1.
-
-Fixes: 2f918ea98606 ("ath10k: enable alt data of TX path for sdio")
-Signed-off-by: Fabio Estevam <festevam@denx.de>
----
-Changes since v2:
-- Set the credit_size_workaround field as true for QCA9377 SDIO.
-
- drivers/net/wireless/ath/ath10k/core.c | 4 +++-
- drivers/net/wireless/ath/ath10k/hw.h   | 3 +++
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 72a366aa9f60..8a325ae97b0e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -571,6 +571,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.uart_pin_workaround = true,
-+		.credit_size_workaround = true,
- 		.dynamic_sar_support = false,
- 	},
- 	{
-@@ -715,6 +716,7 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
- 
- static int ath10k_init_sdio(struct ath10k *ar, enum ath10k_firmware_mode mode)
- {
-+	bool mtu_workaround = ar->hw_params.credit_size_workaround;
- 	int ret;
- 	u32 param = 0;
- 
-@@ -732,7 +734,7 @@ static int ath10k_init_sdio(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 
- 	param |= HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET;
- 
--	if (mode == ATH10K_FIRMWARE_MODE_NORMAL)
-+	if (mode == ATH10K_FIRMWARE_MODE_NORMAL && !mtu_workaround)
- 		param |= HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE;
- 	else
- 		param &= ~HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 6b03c7787e36..591ef7416b61 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -618,6 +618,9 @@ struct ath10k_hw_params {
- 	 */
- 	bool uart_pin_workaround;
- 
-+	/* Workaround for the credit size calculation */
-+	bool credit_size_workaround;
-+
- 	/* tx stats support over pktlog */
- 	bool tx_stats_over_pktlog;
- 
--- 
-2.25.1
-
+Could just be because of the way the "swapping ones" are defined.
