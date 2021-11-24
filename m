@@ -2,82 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E2CC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Nov 2021 14:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAF0EC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Nov 2021 14:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352088AbhKXOZA (ORCPT
+        id S1351755AbhKXOiK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Nov 2021 09:25:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45856 "EHLO
+        Wed, 24 Nov 2021 09:38:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356369AbhKXOYY (ORCPT
+        with ESMTP id S1350936AbhKXOiF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Nov 2021 09:24:24 -0500
-Received: from phobos.denx.de (phobos.denx.de [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BFF5C0619FB
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2021 04:50:09 -0800 (PST)
-Received: from mail.denx.de (unknown [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: festevam@denx.de)
-        by phobos.denx.de (Postfix) with ESMTPSA id 9546582FA8;
-        Wed, 24 Nov 2021 13:50:05 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-        s=phobos-20191101; t=1637758205;
-        bh=zbYWMVyBGaGWXHJvm/teZQMBCLTITZf7ywToqsz9XHQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=llm55hIdAPJDCRRqtFBfGRz8e9G6DsTg9u695E6ZCT7sL1U4ivKqu30WH2uL1uwS8
-         j9VkjszKmEuAoNkflWWGvC0Niy2FWhUA4aoNnfCZXInI0eb5fQH57O8Uc/V02gMfFx
-         EfJX+cdu3JoCmZTG18lfgApQ+6qzye49Woor5mKgX2VWpCqCkhxkUWpPQd8UCgoUKA
-         jx/hH81xSxS/rEBM6PPFTbnAnjGMa+gn4Ohpla/GMeSpz90I9fLb2B9JLVuWZi7Ihe
-         bdRanFmQv7slJ5VtDd+zg1c/liAw6XOVtZ4MLYbeA9mjgAFrjJxh7NyS0mfx2u10Ps
-         foxNws4sAPM2g==
+        Wed, 24 Nov 2021 09:38:05 -0500
+Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11B7EC1E9D8C;
+        Wed, 24 Nov 2021 05:33:50 -0800 (PST)
+Received: by mail-ot1-x335.google.com with SMTP id 35-20020a9d08a6000000b00579cd5e605eso4357929otf.0;
+        Wed, 24 Nov 2021 05:33:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=091FqIUggUob/ZEgOD1UGmSVx8eqHMlVt+VyvTQhn6A=;
+        b=5alA6/f+UhETRaXz3Ziw0Mbfo79WBHXEc9krzNgtd01IqyNVmRhY/0lZB/P6eLDJQW
+         eoZjcdR6rFE3pNseQfZ/D4cF20VQuAdK9siwpsGXViPdZGdSZj5I7hCVl20qAoKihTGU
+         9Y2cOZqzkmtsFqHF2VURZQn4cJm3wj70y+AFGjSq6Sge2gQczR5OFVvJJdJ6IFzUWzxq
+         IVi22hsX9WOChk0ReYeUTGW+sRirou0ll7bhp3yZtfxQJtiPER1ed37a6y9j3340xgjb
+         ErontMp+30VXcxUe44s8V4vCUHh05Mex6eQ39n7jGM/fHZcBKylMk53BPCN8cbtkTZqx
+         +ZjA==
+X-Gm-Message-State: AOAM531TyN2EynZbSlLf7LBYl1nok7NN7r4Hxj4bx77v+XJxg7AIKRGn
+        uytjIbBVqRFhWWLNCZpA+SzEgd93DpVRF3YhMW0=
+X-Google-Smtp-Source: ABdhPJzQoNI/Fsb1RYaYMIo8ITBU8mCa/gSsaWPVLoUcuICuMNXnffh1kRK/Zt6rxw8a35LfxbFQ+4vJZ0v59kljSMQ=
+X-Received: by 2002:a05:6830:348f:: with SMTP id c15mr13170421otu.254.1637760829265;
+ Wed, 24 Nov 2021 05:33:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 24 Nov 2021 09:50:05 -0300
-From:   Fabio Estevam <festevam@denx.de>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
-        Fabio Estevam <festevam@gmail.com>, ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        erik.stromdahl@gmail.com, alagusankar@silex-india.com,
-        kvalo=codeaurora.org@mg.codeaurora.org
-Subject: Re: [PATCH] ath10k: Clean the HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE flag
-In-Reply-To: <87a6hu6ksf.fsf@codeaurora.org>
-References: <20210915160422.2839595-1-festevam@denx.de>
- <CAOMZO5AYUxJg4bWudT3L1P=qNR2UBcNR1zmjCf5O9_ExyPw4ww@mail.gmail.com>
- <CAOMZO5AJ8q06YTHP=p84nJnKOYU+=MKVqJ3qz3XnUGcAg0xo=g@mail.gmail.com>
- <87ilwi6lo4.fsf@codeaurora.org>
- <5dc61605-2ada-3c0b-64de-ea16ad31efbc@quicinc.com>
- <87a6hu6ksf.fsf@codeaurora.org>
-Message-ID: <12399c734dbe4867d1ea4569a192ecb6@denx.de>
-X-Sender: festevam@denx.de
-User-Agent: Roundcube Webmail/1.3.6
-X-Virus-Scanned: clamav-milter 0.103.2 at phobos.denx.de
-X-Virus-Status: Clean
+References: <20210818060533.3569517-1-keescook@chromium.org>
+ <20210818060533.3569517-13-keescook@chromium.org> <CAJZ5v0iS3qMgdab1S-NzGfeLLXV=S6p5Qx8AaqJ50rsUngS=LA@mail.gmail.com>
+ <c5d1ee1f3b59bf18591a164c185650c77ec8aba7.camel@linux.intel.com>
+In-Reply-To: <c5d1ee1f3b59bf18591a164c185650c77ec8aba7.camel@linux.intel.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 24 Nov 2021 14:33:38 +0100
+Message-ID: <CAJZ5v0i61F9SpwfER8o5J_Kf=J9dJUv-qd+bG9hcL42X2eMRtw@mail.gmail.com>
+Subject: Re: [PATCH v2 12/63] thermal: intel: int340x_thermal: Use
+ struct_group() for memcpy() region
+To:     Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Kees Cook <keescook@chromium.org>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>, netdev <netdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        linux-staging@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle and Wen,
+On Wed, Nov 24, 2021 at 12:53 AM Srinivas Pandruvada
+<srinivas.pandruvada@linux.intel.com> wrote:
+>
+> On Tue, 2021-11-23 at 14:19 +0100, Rafael J. Wysocki wrote:
+> > On Wed, Aug 18, 2021 at 8:08 AM Kees Cook <keescook@chromium.org>
+> > wrote:
+> > >
+> > > In preparation for FORTIFY_SOURCE performing compile-time and run-
+> > > time
+> > > field bounds checking for memcpy(), avoid intentionally writing
+> > > across
+> > > neighboring fields.
+> > >
+> > > Use struct_group() in struct art around members weight, and ac[0-
+> > > 9]_max,
+> > > so they can be referenced together. This will allow memcpy() and
+> > > sizeof()
+> > > to more easily reason about sizes, improve readability, and avoid
+> > > future
+> > > warnings about writing beyond the end of weight.
+> > >
+> > > "pahole" shows no size nor member offset changes to struct art.
+> > > "objdump -d" shows no meaningful object code changes (i.e. only
+> > > source
+> > > line number induced differences).
+> > >
+> > > Cc: Zhang Rui <rui.zhang@intel.com>
+> > > Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+> > > Cc: Amit Kucheria <amitk@kernel.org>
+> > > Cc: linux-pm@vger.kernel.org
+> > > Signed-off-by: Kees Cook <keescook@chromium.org>
+> >
+> > Rui, Srinivas, any comments here?
+> Looks good.
+> Reviewed-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
 
-On 24/11/2021 05:05, Kalle Valo wrote:
-
-> Thanks, I was worried it's something like this. One way to solve this
-> would be to add a new field to ath10k_hw_params so that the workaround
-> is done only on QCA9377 SDIO.
-
-Thanks for the feedback, appreciate it.
-
-I have done as suggested in v2.
-
-Thanks a lot,
-
-Fabio Estevam
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-60 Fax: (+49)-8142-66989-80 Email: 
-festevam@denx.de
+Applied as 5.17 material, thank you!
