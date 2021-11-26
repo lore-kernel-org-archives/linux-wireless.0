@@ -2,68 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5A0C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8568C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354291AbhKZQGm (ORCPT
+        id S1353727AbhKZQJp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Nov 2021 11:06:42 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:56336 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378278AbhKZQEm (ORCPT
+        Fri, 26 Nov 2021 11:09:45 -0500
+Received: from so254-9.mailgun.net ([198.61.254.9]:12200 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231773AbhKZQHp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Nov 2021 11:04:42 -0500
-X-Greylist: delayed 415 seconds by postgrey-1.27 at vger.kernel.org; Fri, 26 Nov 2021 11:04:42 EST
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        Fri, 26 Nov 2021 11:07:45 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1637942672; h=Date: Message-ID: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=72Jn51EJNAech/2ThbEgA8eIv+7lDd1/UWa1dZkm+Fg=;
+ b=PVXNMl7ai7yBjICXWYDp98oErqVqcEESDLREOyM9PO8BiU08L/YaoURuMnX54as978S8rKjS
+ j6kryMrLyWFrYQEJgfoPRhZU5uHjZAjs3BReY4vPykd0RlgAq4vihMembvZrvv47BE5dtUlE
+ 6h2Or//NYh7w6LzjQB4jiJjqiAI=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
+ 61a1058f135a8a9d0e8518e7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Nov 2021 16:04:31
+ GMT
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id C6314C43618; Fri, 26 Nov 2021 16:04:30 +0000 (UTC)
+Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7401F622BA;
-        Fri, 26 Nov 2021 15:54:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BBDEC93056;
-        Fri, 26 Nov 2021 15:54:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1637942071;
-        bh=WOOQ113ctzMnTFkP8ZcZnIHdwNH/Fb3G9USm0u/hRg8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GC6v97BD/K/gXkBdZOHGCwLSjuKV4ZaxQHwBRwqkB34IWgVkBxKvzfwB0nebvz6u2
-         F7yMi4CWcY8NL6NMOl7Nr8IhBfbLkueBjbZyALnqd1/8FWXANJ4Kc//zBlDf622bRE
-         aKvPO13iQjlhN/YvwfgekiPv9FnLMl1oCKbZYb7o=
-Date:   Fri, 26 Nov 2021 16:54:29 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     bp@suse.de, akpm@linux-foundation.org, josh@joshtriplett.org,
-        rishabhb@codeaurora.org, kubakici@wp.pl, maco@android.com,
-        david.brown@linaro.org, bjorn.andersson@linaro.org,
-        linux-wireless@vger.kernel.org, keescook@chromium.org,
-        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
-        andresx7@gmail.com, brendanhiggins@google.com, yzaikin@google.com,
-        sfr@canb.auug.org.au, rdunlap@infradead.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v4 0/4] firmware_loader: built-in API and make x86 use it
-Message-ID: <YaEDNa7Vhse7t41a@kroah.com>
-References: <20211025195031.4169165-1-mcgrof@kernel.org>
- <YZRJpcZ4LgBzhge0@bombadil.infradead.org>
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B94E8C4360C;
+        Fri, 26 Nov 2021 16:04:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org B94E8C4360C
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YZRJpcZ4LgBzhge0@bombadil.infradead.org>
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v3 2/3] rtw89: add const in the cast of le32_get_bits()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20211119054512.10620-3-pkshih@realtek.com>
+References: <20211119054512.10620-3-pkshih@realtek.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>, <tiwai@suse.de>,
+        <Larry.Finger@lwfinger.net>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <163794266430.10370.12782593167544053248.kvalo@codeaurora.org>
+Date:   Fri, 26 Nov 2021 16:04:30 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Nov 16, 2021 at 04:15:33PM -0800, Luis Chamberlain wrote:
-> On Mon, Oct 25, 2021 at 12:50:27PM -0700, Luis Chamberlain wrote:
-> > The only change on this v4 is to fix a kconfig dependency
-> > (EXTRA_FIRMWARE != "") which I missed to address on the v3 series.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+
+> Add 'const' to be clear that this is a read-only access, and this patch
+> doesn't change logic at all.
 > 
-> Hey Greg, now that the merge window is closed let me know if you'd like
-> a resend of this or if you can take it as-is.
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Tested-by: Takashi Iwai <tiwai@suse.de>
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-All now queued up, thanks.
+Depends on:
 
-greg k-h
+5737b4515dee rtw89: update partition size of firmware header on skb->data
+
+Currently in wireless-drivers.
+
+2 patches set to Awaiting Upstream.
+
+12628209 [v3,2/3] rtw89: add const in the cast of le32_get_bits()
+12628211 [v3,3/3] rtw89: use inline function instead macro to set H2C and CAM
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20211119054512.10620-3-pkshih@realtek.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
