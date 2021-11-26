@@ -2,87 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E0BC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 10:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA55CC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 10:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231382AbhKZKZM (ORCPT
+        id S1377069AbhKZKcI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Nov 2021 05:25:12 -0500
-Received: from m43-7.mailgun.net ([69.72.43.7]:42719 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230336AbhKZKXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Nov 2021 05:23:12 -0500
+        Fri, 26 Nov 2021 05:32:08 -0500
+Received: from so254-9.mailgun.net ([198.61.254.9]:42919 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1377336AbhKZKaH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Nov 2021 05:30:07 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1637922000; h=Date: Message-ID: Cc: To: References:
+ s=smtp; t=1637922415; h=Date: Message-ID: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=rf1Qj/gQ+mNKKp3kFoBiOBpr5ndsPA7Rx+um94+xG/g=;
- b=hHow+HuotFsO2Wl+8M/bl9xzy5mW/ph3W/Bu0kCS+eOWhtV5XjFydD2o2+WA7Xa5RNGUXoj2
- x05wlZomg09p6PwCUEcDtXPOG1VnTYFIMKZhKc2MjyFCsgaYz6JGUKF3YDwj22e+Ec8TtAJH
- 6ZldJnqwMRTBLF87HtCbGQcD7v0=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ Content-Type: Sender; bh=D36i+TEzYvAfF+8CwLgTruoyqqi5b/grJJSwC8YVulc=;
+ b=vlvG2/+uQTJ1H7aKtcGVs4EDyhMaaMCzwGpdwVCKcC13XRFXUlBWBQ/JxShUyNYC+EjZSiWP
+ FVYgwamAJ4ColJzhKTCSWJN3drRD29i9CF8wkiEUePySOI6/fCfygWK3NbjzJDepSYaLidTy
+ 1OhXo6pR0P/3xnzHrQEYFsCqJyc=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
- 61a0b4ba3553c354be1efea4 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Nov 2021 10:19:38
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 61a0b66e465c4a723bef9616 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Nov 2021 10:26:54
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 694BBC4360D; Fri, 26 Nov 2021 10:19:37 +0000 (UTC)
+        id 24338C4363B; Fri, 26 Nov 2021 10:26:54 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D3F1CC43617;
-        Fri, 26 Nov 2021 10:19:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org D3F1CC43617
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7042C4363B;
+        Fri, 26 Nov 2021 10:26:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org C7042C4363B
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wcn36xx: Use correct SSN for ADD BA request
+Subject: Re: [PATCH v6 1/2] dt: bindings: add new DT entry for ath11k PCI
+ device
+ support
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1637604251-11763-1-git-send-email-loic.poulain@linaro.org>
-References: <1637604251-11763-1-git-send-email-loic.poulain@linaro.org>
-To:     Loic Poulain <loic.poulain@linaro.org>
-Cc:     linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Loic Poulain <loic.poulain@linaro.org>
+In-Reply-To: <1637839211-1503-1-git-send-email-akolli@codeaurora.org>
+References: <1637839211-1503-1-git-send-email-akolli@codeaurora.org>
+To:     Anilkumar Kolli <akolli@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org, robh@kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163792197409.23943.7303108798447763543.kvalo@codeaurora.org>
-Date:   Fri, 26 Nov 2021 10:19:37 +0000 (UTC)
+Message-ID: <163792240626.28516.5997258436480035214.kvalo@codeaurora.org>
+Date:   Fri, 26 Nov 2021 10:26:54 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Loic Poulain <loic.poulain@linaro.org> wrote:
+Anilkumar Kolli <akolli@codeaurora.org> wrote:
 
-> Since firmware uses its own sequence number counters, we need to
-> use firmware number as well when mac80211 generates the ADD_BA
-> request packet. Indeed the firmware sequence counters tend to
-> slightly drift from the mac80211 ones because of firmware offload
-> features like ARP responses. This causes the starting sequence
-> number field of the ADD_BA request to be unaligned, and can possibly
-> cause issues with strict/picky APs.
+> Ath11k driver supports PCI devices such as QCN9074/QCA6390.
+> Ath11k firmware uses host DDR memory, DT entry is used to
+> reserve host DDR memory regions, send these memory base
+> addresses using DT entries.
 > 
-> To fix this, we retrieve the current firmware sequence number for
-> a given TID through the smd_trigger_ba API, and use that number as
-> replacement of the mac80211 starting sequence number.
-> 
-> This change also ensures that any issue in the smd *ba procedures
-> will cause the ba action to properly fail, and remove useless call
-> to smd_trigger_ba() from IEEE80211_AMPDU_RX_START.
-> 
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Failed to apply, remember to use ath.git master branch as the baseline.
 
-23cddeb5a770 wcn36xx: Use correct SSN for ADD BA request
+error: patch failed: drivers/net/wireless/ath/ath11k/core.h:194
+error: drivers/net/wireless/ath/ath11k/core.h: patch does not apply
+error: patch failed: drivers/net/wireless/ath/ath11k/mhi.c:339
+error: drivers/net/wireless/ath/ath11k/mhi.c: patch does not apply
+stg import: Diff does not apply cleanly
+
+2 patches set to Changes Requested.
+
+12638957 [v6,1/2] dt: bindings: add new DT entry for ath11k PCI device support
+12638955 [v6,2/2] ath11k: Use reserved host DDR addresses from DT for PCI devices
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1637604251-11763-1-git-send-email-loic.poulain@linaro.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/1637839211-1503-1-git-send-email-akolli@codeaurora.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
