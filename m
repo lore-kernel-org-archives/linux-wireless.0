@@ -2,85 +2,128 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3315C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECEFC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378483AbhKZQiQ (ORCPT
+        id S1378676AbhKZQlv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Nov 2021 11:38:16 -0500
-Received: from so254-9.mailgun.net ([198.61.254.9]:39817 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378606AbhKZQgQ (ORCPT
+        Fri, 26 Nov 2021 11:41:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35554 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1378684AbhKZQjv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Nov 2021 11:36:16 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1637944383; h=Date: Message-ID: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=eaSosQOu1szub+ibVnzjtek81Xwk+ZUhUxB5g3hNm8E=;
- b=tkHkSCmxfjJGZdoEiNW7xq/NUUqn5smY8Xf6lVLozJcZ7/Ls0p08S2C4+i8J6qKGzZnkz88T
- QwmttPNI7dBLhzJnRdbhl5TB4lLqhY8BRMSG+2Chi3lXGa97kP2npgItnLdF8b1Lb9sSAqpq
- MFZh2zFprcQQWHuERRLkC1uBlaY=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 61a10c3edb3ac5552aafa860 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 26 Nov 2021 16:33:02
- GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7B40FC43616; Fri, 26 Nov 2021 16:33:02 +0000 (UTC)
-Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        Fri, 26 Nov 2021 11:39:51 -0500
+X-Greylist: delayed 3413 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 26 Nov 2021 08:23:11 PST
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E900C061399
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2021 08:23:11 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B6493C4338F;
-        Fri, 26 Nov 2021 16:33:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org B6493C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DA8F0622B7
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2021 16:23:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDD2AC93056;
+        Fri, 26 Nov 2021 16:23:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637943790;
+        bh=UKKwM2m+sH+4g4wE7xatRpyzE9EhE/tXLP02E+/e4H8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=r9fvgA10fvbt6Qm/qQNZwNlrwUu+mYSEKP3bUrbY3ftlcK4AX45P5VdSAp1hm573y
+         ytqvcxjipj2NG8Y0N+r0i1Y4th5PkE02HRqXwP1uSS7aX80djJyuVQnfJBcbDAcx7l
+         /Z9HYtmh+3yAGWN2VrT6j/w3amaiSZWcJu3/hieMXSb97O7hdEj8K8YQL95QiuYl3c
+         CZt5qHFJ/4KbFLPMB3H0rImZPVFW/DlwsjOOeXrDnHXCGkMNsppc+rvWgt64Qe11sY
+         mxQiCCDwJ3I+bdjHGYFfG3EJG1TNzlm4J/qzljVwAZJY1rsh9s5k7a7USJhFio0qkr
+         3XVlVxJj4frvw==
+Date:   Fri, 26 Nov 2021 17:23:06 +0100
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
+        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
+        ryder.lee@mediatek.com
+Subject: Re: [PATCH wireless-drivers] mt76: fix possible pktid leak
+Message-ID: <YaEJ6hQ0uC32+Mts@lore-desk>
+References: <a560caffcc24452fb48af53904bbe5c45ea5db93.1637602268.git.lorenzo@kernel.org>
+ <163777451567.4686.3609119971518562275.kvalo@codeaurora.org>
+ <YaDo21+/MBeeuTDN@lore-desk>
+ <87fsrj3qxo.fsf@codeaurora.org>
+ <YaD8lT5csiLvmBzS@lore-desk>
+ <87sfvij4eh.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wilc1000: remove '-Wunused-but-set-variable' warning in
- chip_wakeup()
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20211115102809.1408267-1-ajay.kathat@microchip.com>
-References: <20211115102809.1408267-1-ajay.kathat@microchip.com>
-To:     <Ajay.Kathat@microchip.com>
-Cc:     <linux-wireless@vger.kernel.org>, <Claudiu.Beznea@microchip.com>,
-        <Ajay.Kathat@microchip.com>, <lkp@intel.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163794437900.10370.13472021044884634684.kvalo@codeaurora.org>
-Date:   Fri, 26 Nov 2021 16:33:02 +0000 (UTC)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="0jlUeta7muUdJbMT"
+Content-Disposition: inline
+In-Reply-To: <87sfvij4eh.fsf@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<Ajay.Kathat@microchip.com> wrote:
 
-> From: Ajay Singh <ajay.kathat@microchip.com>
-> 
-> Remove unused variables to avoid the below warnings:
-> 
->    drivers/net/wireless/microchip/wilc1000/wlan.c: In function 'chip_wakeup':
-> >> drivers/net/wireless/microchip/wilc1000/wlan.c:620:34: warning: variable 'to_host_from_fw_bit' set but not used [-Wunused-but-set-variable]
->      620 |         u32 to_host_from_fw_reg, to_host_from_fw_bit;
->          |                                  ^~~~~~~~~~~~~~~~~~~
-> >> drivers/net/wireless/microchip/wilc1000/wlan.c:620:13: warning: variable 'to_host_from_fw_reg' set but not used [-Wunused-but-set-variable]
->      620 |         u32 to_host_from_fw_reg, to_host_from_fw_bit;
->          |             ^~~~~~~~~~~~~~~~~~~
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+--0jlUeta7muUdJbMT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Patch applied to wireless-drivers-next.git, thanks.
+> Lorenzo Bianconi <lorenzo@kernel.org> writes:
+>=20
+> >> Lorenzo Bianconi <lorenzo@kernel.org> writes:
+> >>=20
+> >> >> Lorenzo Bianconi <lorenzo@kernel.org> wrote:
+> >> >>=20
+> >> >> > Fix a possible idr pkt-id leak if the packet is dropped on tx side
+> >> >> >=20
+> >> >> > Fixes: bd1e3e7b693c ("mt76: introduce packet_id idr")
+> >> >> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> >> >> > Acked-by: Felix Fietkau <nbd@nbd.name>
+> >> >>=20
+> >> >> Patch applied to wireless-drivers.git, thanks.
+> >> >>=20
+> >> >> 2a9e9857473b mt76: fix possible pktid leak
+> >> >
+> >> > Hi Kalle,
+> >> >
+> >> > Unfortunately I found a regression introduced by this patch for mt76=
+63u (and I
+> >> > guess for mt7921s as well). Do you want me to post a fix or just a v=
+2?
+> >>=20
+> >> I don't rebase my trees, so please post a fix. I was planning to submit
+> >> a pull request to net tree today, but is this so serious that I should
+> >> skip that?
+> >
+> > I have already tested mt7663u but I do not have mt7921s hw for testing =
+(but the
+> > behaviour should be the same). I guess we can split the patch, just pos=
+t the
+> > fix for mt7663u and let Sean the time to test it on mt7921s (I am not s=
+ure
+> > mt7921s is already available on the market). In this way you can send t=
+he PR
+> > today. What do you think?
+>=20
+> I think it's best to wait, I prefer to have proper build testing on my
+> tree before I submit the pull request.
 
-d1e69b5492d1 wilc1000: remove '-Wunused-but-set-variable' warning in chip_wakeup()
+ack, fine to me. Let's wait for Sean in this case.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211115102809.1408267-1-ajay.kathat@microchip.com/
+Regards,
+Lorenzo
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>=20
+> --=20
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>=20
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches
 
+--0jlUeta7muUdJbMT
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYaEJ6gAKCRA6cBh0uS2t
+rKWNAQCx4kXVMUxGJnwCQTkziK1f4UR+vvKJxRt9biH7MqnKBwD/RGAt4dEVj32h
+nOxB1DeJUX3/tPkhTFg+uLqQA7R64Qw=
+=GNIL
+-----END PGP SIGNATURE-----
+
+--0jlUeta7muUdJbMT--
