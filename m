@@ -2,128 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECEFC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5039C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 16:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378676AbhKZQlv (ORCPT
+        id S231230AbhKZRAx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Nov 2021 11:41:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35554 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378684AbhKZQjv (ORCPT
+        Fri, 26 Nov 2021 12:00:53 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:56692 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231902AbhKZQ6x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Nov 2021 11:39:51 -0500
-X-Greylist: delayed 3413 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 26 Nov 2021 08:23:11 PST
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E900C061399
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2021 08:23:11 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DA8F0622B7
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2021 16:23:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDD2AC93056;
-        Fri, 26 Nov 2021 16:23:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637943790;
-        bh=UKKwM2m+sH+4g4wE7xatRpyzE9EhE/tXLP02E+/e4H8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=r9fvgA10fvbt6Qm/qQNZwNlrwUu+mYSEKP3bUrbY3ftlcK4AX45P5VdSAp1hm573y
-         ytqvcxjipj2NG8Y0N+r0i1Y4th5PkE02HRqXwP1uSS7aX80djJyuVQnfJBcbDAcx7l
-         /Z9HYtmh+3yAGWN2VrT6j/w3amaiSZWcJu3/hieMXSb97O7hdEj8K8YQL95QiuYl3c
-         CZt5qHFJ/4KbFLPMB3H0rImZPVFW/DlwsjOOeXrDnHXCGkMNsppc+rvWgt64Qe11sY
-         mxQiCCDwJ3I+bdjHGYFfG3EJG1TNzlm4J/qzljVwAZJY1rsh9s5k7a7USJhFio0qkr
-         3XVlVxJj4frvw==
-Date:   Fri, 26 Nov 2021 17:23:06 +0100
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
-        ryder.lee@mediatek.com
-Subject: Re: [PATCH wireless-drivers] mt76: fix possible pktid leak
-Message-ID: <YaEJ6hQ0uC32+Mts@lore-desk>
-References: <a560caffcc24452fb48af53904bbe5c45ea5db93.1637602268.git.lorenzo@kernel.org>
- <163777451567.4686.3609119971518562275.kvalo@codeaurora.org>
- <YaDo21+/MBeeuTDN@lore-desk>
- <87fsrj3qxo.fsf@codeaurora.org>
- <YaD8lT5csiLvmBzS@lore-desk>
- <87sfvij4eh.fsf@codeaurora.org>
+        Fri, 26 Nov 2021 11:58:53 -0500
+X-UUID: 5085afb1127d4aa28501a6903edc1b19-20211127
+X-UUID: 5085afb1127d4aa28501a6903edc1b19-20211127
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 2137549975; Sat, 27 Nov 2021 00:55:38 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 27 Nov 2021 00:55:37 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 27 Nov 2021 00:55:37 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Deren Wu <deren.wu@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH] mt76: mt7921: use correct iftype data on 6GHz cap init
+Date:   Sat, 27 Nov 2021 00:53:16 +0800
+Message-ID: <20211126165316.1662-1-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="0jlUeta7muUdJbMT"
-Content-Disposition: inline
-In-Reply-To: <87sfvij4eh.fsf@codeaurora.org>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Set 6GHz cap to iftype data which is matched to the type of
+current interface.
 
---0jlUeta7muUdJbMT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes: 50ac15a511e3 ("mt76: mt7921: add 6GHz support")
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Lorenzo Bianconi <lorenzo@kernel.org> writes:
->=20
-> >> Lorenzo Bianconi <lorenzo@kernel.org> writes:
-> >>=20
-> >> >> Lorenzo Bianconi <lorenzo@kernel.org> wrote:
-> >> >>=20
-> >> >> > Fix a possible idr pkt-id leak if the packet is dropped on tx side
-> >> >> >=20
-> >> >> > Fixes: bd1e3e7b693c ("mt76: introduce packet_id idr")
-> >> >> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> >> >> > Acked-by: Felix Fietkau <nbd@nbd.name>
-> >> >>=20
-> >> >> Patch applied to wireless-drivers.git, thanks.
-> >> >>=20
-> >> >> 2a9e9857473b mt76: fix possible pktid leak
-> >> >
-> >> > Hi Kalle,
-> >> >
-> >> > Unfortunately I found a regression introduced by this patch for mt76=
-63u (and I
-> >> > guess for mt7921s as well). Do you want me to post a fix or just a v=
-2?
-> >>=20
-> >> I don't rebase my trees, so please post a fix. I was planning to submit
-> >> a pull request to net tree today, but is this so serious that I should
-> >> skip that?
-> >
-> > I have already tested mt7663u but I do not have mt7921s hw for testing =
-(but the
-> > behaviour should be the same). I guess we can split the patch, just pos=
-t the
-> > fix for mt7663u and let Sean the time to test it on mt7921s (I am not s=
-ure
-> > mt7921s is already available on the market). In this way you can send t=
-he PR
-> > today. What do you think?
->=20
-> I think it's best to wait, I prefer to have proper build testing on my
-> tree before I submit the pull request.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 5a64126..5540b2d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -178,7 +178,7 @@ mt7921_init_he_caps(struct mt7921_phy *phy, enum nl80211_band band,
+ 			if (vht_cap->cap & IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN)
+ 				cap |= IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS;
+ 
+-			data->he_6ghz_capa.capa = cpu_to_le16(cap);
++			data[idx].he_6ghz_capa.capa = cpu_to_le16(cap);
+ 		}
+ 		idx++;
+ 	}
+-- 
+2.25.1
 
-ack, fine to me. Let's wait for Sean in this case.
-
-Regards,
-Lorenzo
-
->=20
-> --=20
-> https://patchwork.kernel.org/project/linux-wireless/list/
->=20
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
-tches
-
---0jlUeta7muUdJbMT
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYaEJ6gAKCRA6cBh0uS2t
-rKWNAQCx4kXVMUxGJnwCQTkziK1f4UR+vvKJxRt9biH7MqnKBwD/RGAt4dEVj32h
-nOxB1DeJUX3/tPkhTFg+uLqQA7R64Qw=
-=GNIL
------END PGP SIGNATURE-----
-
---0jlUeta7muUdJbMT--
