@@ -2,90 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EED08C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Nov 2021 22:42:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB45BC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Nov 2021 02:34:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245145AbhKYWqI (ORCPT
+        id S1358008AbhKZChW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Nov 2021 17:46:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55034 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243877AbhKYWoE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Nov 2021 17:44:04 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52176C06175C
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Nov 2021 14:39:03 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id g19so7055354pfb.8
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Nov 2021 14:39:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xYv14kZYE4AF2Ym5Xu7adceQk8b7SUuJqwMzSpHa+bY=;
-        b=G9DMCRuIAhqctvDmi0s7ct7CsY7nrMePWH70kkq1/XNxBC7q5P3KBl5mPk1V6VcKhD
-         sv8UtouU6ZLAs5Rxsc6DtXsAZW9GlRSqH98k00R8BP+KckjGt4kFIF4a3zb94OKos/oQ
-         vOASqSEsN6FD5sI9qSQReXK4KM+AExJzqwDdMUzlO9UTBnL+BGhmfTBrY+XaoQFE3he+
-         dquX4l2tUk2Q5GrVFE4PWVMNGkFLJcWIDwLR3lC8WqAGVoX6DJPb6munRkF/AGGFLSh5
-         Ve8B4R5JiPd+7KeWS9QNu0rAqyf19ZtIs/LOQBqmW7u6MkRuL6ANu9nvMPa+pnYQr34q
-         VfcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xYv14kZYE4AF2Ym5Xu7adceQk8b7SUuJqwMzSpHa+bY=;
-        b=frj3cG/vz1PHb0HEqYqawdK8bd4Xxfmz0KVG8A37JdvklYQQnoaHmAMs1sdefMEgRt
-         iw2SEYzo4AogeI8ymNW3CgeRKIcfEoAgW9cg8Yu2MJEyj+wynImCl2pLT5DhdBuljpcC
-         lshLXVetXo0R7BNOlPevwnOZzuSRYa79xGaBhx05KGrW6X9aBlIeGf75loSkRDYkq+/i
-         0PH16dy/sg/m2ni3pqDGthnPUHUL7E2t2WQ1VCaWOZYkD/yw+/e1PsGmeHnCDu55mopi
-         s2sbR7T4lsUflndrPU+XFBhVHJowFqkMGV9i+5PMjNIBUVR1EhiHr0jPLa4h7NbYX9r/
-         tmcA==
-X-Gm-Message-State: AOAM530lRsM8LAQvNNI4b6aJ13Lv+5OmnmL6rX0fYSUD/CmW8UTFt2P4
-        25KiuD1IZEEpDoibuhdZjh7qm1e9ZRQFOYc7U/U=
-X-Google-Smtp-Source: ABdhPJx7kiGLhfcVAfJFOq/wYRMvo3nUxlq4MXgPiHV5bmqEtLiVzWSU9vpBeEf6MNIRp+p4YSMxnWYRODwh1IPYj/w=
-X-Received: by 2002:a05:6a00:230e:b0:44c:4f2d:9b00 with SMTP id
- h14-20020a056a00230e00b0044c4f2d9b00mr17054324pfh.24.1637879942841; Thu, 25
- Nov 2021 14:39:02 -0800 (PST)
+        Thu, 25 Nov 2021 21:37:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48248 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1351850AbhKZCfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Nov 2021 21:35:21 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4863E61185;
+        Fri, 26 Nov 2021 02:32:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637893928;
+        bh=Ngs82xBj1LLbXSDmWF4eJlRbBj4Kc8mqIGfH7kS/xA0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=K4VPe/AxYLPuaLDpoCQRggx+OkU3EiOEYzfQ9bk08gmkMLeD+P0Q69IjZw077Aqbq
+         xdOhuICtVvayIci/usScI3RxgL0jLqrB6yUkvLiCfXd196XVZw0SRbj47/MnqpsXpl
+         IBuBHlTB8PYmXo35xr0yCyGkewYH/wjgFP7t4IgBtSUd+aCBWHX1vbHbiwNMczcvLT
+         Yyxr2XAY5XUp09J/lvwdTx14o5RJdvJi/C+HHg7Kilhn4BlC118k+bvcu/MUBQ/sXs
+         ebjVS0xjQP/EW6yo0yjsOGCJw3LbQxVi5QH9ltMUuzMkz7S+axZAa+94VsDcirrY9m
+         W4U+qOCMBrCYg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Xing Song <xing.song@mediatek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, kuba@kernel.org, matthias.bgg@gmail.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.15 06/39] mac80211: do not access the IV when it was stripped
+Date:   Thu, 25 Nov 2021 21:31:23 -0500
+Message-Id: <20211126023156.441292-6-sashal@kernel.org>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211126023156.441292-1-sashal@kernel.org>
+References: <20211126023156.441292-1-sashal@kernel.org>
 MIME-Version: 1.0
-References: <20211125121652.6073-1-jelonek.jonas@gmail.com> <878rxcb4q2.fsf@toke.dk>
-In-Reply-To: <878rxcb4q2.fsf@toke.dk>
-From:   Jonas Jelonek <jelonek.jonas@gmail.com>
-Date:   Thu, 25 Nov 2021 23:38:52 +0100
-Message-ID: <CAChE-vT1UMw2iadzuzsUPEcAopi=86N4GV_b4=chZbSvap3x=A@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: switch to rate table based lookup
-To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org, nbd@nbd.name,
-        Thomas Huehn <thomas.huehn@hs-nordhausen.de>
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> What's the practical implication of this? Performance benefits, better
-> rates selected, or what? Got any benchmark numbers?
+From: Xing Song <xing.song@mediatek.com>
 
-We're planning to annotate and implement 'transmit power control' per
-packet / per MRR
-and to improve the rate control API in mac80211 to support newer hardware.
-SKB->CB is limited in space, tx power annotation also does not fit in
-there. Future
-perspective is that rate control won't use SKB->CB anymore, neither
-for normal rate
-setting nor for probing.
+[ Upstream commit 77dfc2bc0bb4b8376ecd7a430f27a4a8fff6a5a0 ]
 
-The new rate control API (introduced with commit
-0d528d85c519b755b6f4e1bafa3a39984370e1c1) allows drivers to directly
-get rates from sta->rates. This is not used by every driver yet,
-ieee80211_get_tx_rates performs the
-translation/merge for the drivers.
-The call to ieee80211_get_tx_rates and subsequent calls in ath9k can
-be avoided by directly fetching rates from sta->rates. This may also
-improve performance.
-ath9k does not expect rates in SKB->CB, therefore table merge does not
-need to consider this
-(except for first rate in SKB->CB for probing).
+ieee80211_get_keyid() will return false value if IV has been stripped,
+such as return 0 for IP/ARP frames due to LLC header, and return -EINVAL
+for disassociation frames due to its length... etc. Don't try to access
+it if it's not present.
 
-> You don't generally need a co-developed-by for yourself, and your S-o-b
-> should go at the end when you're the submitter...
+Signed-off-by: Xing Song <xing.song@mediatek.com>
+Link: https://lore.kernel.org/r/20211101024657.143026-1-xing.song@mediatek.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-will fix this in V2.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c4071b015c188..ba3b82a72a604 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1952,7 +1952,8 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		int keyid = rx->sta->ptk_idx;
+ 		sta_ptk = rcu_dereference(rx->sta->ptk[keyid]);
+ 
+-		if (ieee80211_has_protected(fc)) {
++		if (ieee80211_has_protected(fc) &&
++		    !(status->flag & RX_FLAG_IV_STRIPPED)) {
+ 			cs = rx->sta->cipher_scheme;
+ 			keyid = ieee80211_get_keyid(rx->skb, cs);
+ 
+-- 
+2.33.0
+
