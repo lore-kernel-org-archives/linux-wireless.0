@@ -2,111 +2,66 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F7CC433EF
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 Nov 2021 20:17:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7648BC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 27 Nov 2021 22:50:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343656AbhK0UUW (ORCPT
+        id S236342AbhK0Wxl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Nov 2021 15:20:22 -0500
-Received: from mga12.intel.com ([192.55.52.136]:36748 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229663AbhK0USV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Nov 2021 15:18:21 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10181"; a="215806854"
-X-IronPort-AV: E=Sophos;i="5.87,269,1631602800"; 
-   d="scan'208";a="215806854"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Nov 2021 12:15:06 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,269,1631602800"; 
-   d="scan'208";a="498812387"
-Received: from lkp-server02.sh.intel.com (HELO 9e1e9f9b3bcb) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 27 Nov 2021 12:15:05 -0800
-Received: from kbuild by 9e1e9f9b3bcb with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mr46C-0009wo-Rc; Sat, 27 Nov 2021 20:15:04 +0000
-Date:   Sun, 28 Nov 2021 04:14:29 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [jberg-mac80211-next:master] BUILD SUCCESS
- 1d671eb9730b3b0925e9713aa522813b804bbbab
-Message-ID: <61a291a5.Gbx5VOsGu2rHGleo%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Sat, 27 Nov 2021 17:53:41 -0500
+Received: from titan58.planetwebservers.net ([51.79.1.102]:55817 "EHLO
+        titan58.planetwebservers.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240002AbhK0Wvk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Nov 2021 17:51:40 -0500
+X-Greylist: delayed 1548 seconds by postgrey-1.27 at vger.kernel.org; Sat, 27 Nov 2021 17:51:40 EST
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lockie.ca;
+        s=default; h=Content-Transfer-Encoding:Content-Type:Subject:From:To:
+        MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=cjcwm3TfpZCzXN+nQ2OHuCZwCXdnrUqYGPEnVd49QjY=; b=YRY9kg5ELfDiYtw4EHOPm7DWTn
+        jDXLQ/JQ+SFTM4coNOSeObaFib+eqoCm2Q/oo8DgW7Js+7c7TUJVGaY27PqRzgctAQxS6QYKuBsL2
+        fTUkNQLRiBziXiGJFylBBPv39F/g57gNL+2o1t/8Us1PmU7cBx1QI8bUBXOfNo2mmyo2SIhL3DYoB
+        VYRs8pjytYXmme7KHwyme89vgbmss0P5vEqrzyIe2EStnTXCh3pY+UpaynVf8wgPMJOMofq7X07OX
+        oin6eSE2h87dwR+lwsvrsxAvE48iDSKPvzsBGGcbNbY8lQbgkyHc5YAZrGGQwJy3cfo6oXPxF1oLD
+        hpoFwLCw==;
+Received: from [98.124.54.9] (port=45336 helo=[192.168.68.65])
+        by titan.planetwebservers.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <bjlockie@lockie.ca>)
+        id 1mr65b-0008Rc-10
+        for linux-wireless@vger.kernel.org; Sun, 28 Nov 2021 09:22:36 +1100
+Message-ID: <5bdf4393-273f-2ad2-40e0-556ec7dc6817@lockie.ca>
+Date:   Sat, 27 Nov 2021 17:22:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+To:     linux-wireless@vger.kernel.org
+Content-Language: en-US
+From:   James <bjlockie@lockie.ca>
+Subject: USB for rtw89 driver?
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - titan.planetwebservers.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - lockie.ca
+X-Get-Message-Sender-Via: titan.planetwebservers.net: authenticated_id: bjlockie@lockie.ca
+X-Authenticated-Sender: titan.planetwebservers.net: bjlockie@lockie.ca
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-From-Rewrite: unmodified, already matched
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-branch HEAD: 1d671eb9730b3b0925e9713aa522813b804bbbab  ieee80211: change HE nominal packet padding value defines
+Are there any plans to support the USB interface with this driver?
+Specifically for the DLink DWA-X1850 and other wifi6 USB devices based 
+on this chipset?
 
-elapsed time: 1879m
-
-configs tested: 54
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm64                               defconfig
-arm64                            allyesconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-sparc                               defconfig
-sparc                            allyesconfig
-mips                             allmodconfig
-mips                             allyesconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-powerpc                          allyesconfig
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allyesconfig
-riscv                            allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Also,
+Does anyone know if the proprietary driver works on the Raspberry Pi4B 
+(Arm)?
