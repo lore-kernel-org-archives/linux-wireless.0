@@ -2,90 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FE2C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58DF5C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345460AbhK2Ni1 (ORCPT
+        id S1347321AbhK2Ni3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 08:38:27 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:49808 "EHLO
+        Mon, 29 Nov 2021 08:38:29 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:49820 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233319AbhK2NgU (ORCPT
+        with ESMTP id S237460AbhK2NgW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 08:36:20 -0500
+        Mon, 29 Nov 2021 08:36:22 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mrgmC-0012xo-O0; Mon, 29 Nov 2021 15:33:01 +0200
+        id 1mrgmE-0012xo-6g; Mon, 29 Nov 2021 15:33:02 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon, 29 Nov 2021 15:32:40 +0200
-Message-Id: <iwlwifi.20211129152938.cab99f22fe19.Iefe494687f15fd85f77c1b989d1149c8efdfdc36@changeid>
+Date:   Mon, 29 Nov 2021 15:32:42 +0200
+Message-Id: <iwlwifi.20211129152938.1c80c17ffd8a.I94ae31378b363c1182cfdca46c4b7e7165cff984@changeid>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211129133248.83829-1-luca@coelho.fi>
 References: <20211129133248.83829-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/16] mac80211: do drv_reconfig_complete() before restarting all
+Subject: [PATCH 10/16] mac80211: update channel context before station state
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-When we reconfigure, the driver might do some things to complete
-the reconfiguration. It's strange and could be broken in some
-cases because we restart other works (e.g. remain-on-channel and
-TX) before this happens, yet only start queues later.
+Currently channel context is updated only after station got an update about
+new assoc state, this results in station using the old channel context.
 
-Change this to do the reconfig complete when reconfiguration is
-actually complete, not when we've already started doing other
-things again.
+Fix this by moving the update channel context before updating station,
+enabling the driver to immediately use the updated channel context in
+the new assoc state.
 
-For iwlwifi, this should fix a race where the reconfig can race
-with TX, for ath10k and ath11k that also use this it won't make
-a difference because they just start queues there, and mac80211
-also stopped the queues and will restart them later as before.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/util.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ net/mac80211/sta_info.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 43df2f0c5db9..4b102d5863cf 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2646,6 +2646,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_unlock(&local->sta_mtx);
- 	}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 51b49f0d3ad4..9d496923fc19 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -667,6 +667,15 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
  
-+	/*
-+	 * If this is for hw restart things are still running.
-+	 * We may want to change that later, however.
+ 	list_add_tail_rcu(&sta->list, &local->sta_list);
+ 
++	/* update channel context before notifying the driver about state
++	 * change, this enables driver using the updated channel context right away.
 +	 */
-+	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
-+		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
++	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
++		ieee80211_recalc_min_chandef(sta->sdata);
++		if (!sta->sta.support_p2p_ps)
++			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
++	}
 +
- 	if (local->in_reconfig) {
- 		local->in_reconfig = false;
- 		barrier();
-@@ -2664,13 +2671,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 					false);
+ 	/* notify driver */
+ 	err = sta_info_insert_drv_state(local, sdata, sta);
+ 	if (err)
+@@ -674,12 +683,6 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
  
--	/*
--	 * If this is for hw restart things are still running.
--	 * We may want to change that later, however.
--	 */
--	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
--		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
+ 	set_sta_flag(sta, WLAN_STA_INSERTED);
+ 
+-	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
+-		ieee80211_recalc_min_chandef(sta->sdata);
+-		if (!sta->sta.support_p2p_ps)
+-			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
+-	}
 -
- 	if (!suspended)
- 		return 0;
+ 	/* accept BA sessions now */
+ 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
  
 -- 
 2.33.1
