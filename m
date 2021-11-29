@@ -2,67 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 148CFC43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 10:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0FDC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 10:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353772AbhK2Kvt (ORCPT
+        id S1354172AbhK2KwZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 05:51:49 -0500
-Received: from so254-9.mailgun.net ([198.61.254.9]:47917 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353891AbhK2Ktq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 05:49:46 -0500
+        Mon, 29 Nov 2021 05:52:25 -0500
+Received: from m43-7.mailgun.net ([69.72.43.7]:42005 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1354415AbhK2KuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Nov 2021 05:50:22 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1638182788; h=Date: Message-ID: Cc: To: References:
+ s=smtp; t=1638182825; h=Date: Message-ID: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=5RzQiQp3jkT5YFkBT67otMjYP3aVw25+BbGFV+LkcUY=;
- b=VDnn8YueqcD+hWoXAh/+UIPpyy3pnqPLcAsge7QbJwOi1+AErnBgWKgN/eNyLDGRxinRhofc
- Uauwqgw7fGg/1KXszhS6ie95GglduuSZqL/Lqy62hj1nMG7Drq8tTCxflkVf35fWcUnnGYdj
- zsoYD2lUJ4S8OQ8w3jaHt5ESK1A=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ Content-Type: Sender; bh=M0d4Zf9rLLIPq9EZ9XZQ8e0fDOvwL9WXvTMDoOP2CO4=;
+ b=B7d3Drwgnki7oNAAVXOVohN+RwjGqkrz4JNlYH7Rd8t5raDsEAXh/i3S7U2XnmCf7O73MZ6o
+ FPtVAsJx+QKRPTpbGYdRjv82d2VyF8xc868/FvoGzgiN3BAGA7+WcWRBjc7wBxY+RnIkukh+
+ r1Rzq5Qi+PycGokcMwpazJVy+Hc=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 61a4af82e7d68470afa2adab (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Nov 2021 10:46:26
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 61a4af31465c4a723bb0c9e2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Nov 2021 10:45:05
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 01FF2C43635; Mon, 29 Nov 2021 10:46:25 +0000 (UTC)
+        id 8A763C43619; Mon, 29 Nov 2021 10:45:05 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CED92C43616;
-        Mon, 29 Nov 2021 10:46:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org CED92C43616
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5DE16C4338F;
+        Mon, 29 Nov 2021 10:45:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 5DE16C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] mwl8k: Use named struct for memcpy() region
+Subject: Re: [PATCH] libertas_tf: Use struct_group() for memcpy() region
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20211119004905.2348143-1-keescook@chromium.org>
-References: <20211119004905.2348143-1-keescook@chromium.org>
+In-Reply-To: <20211118184121.1283821-1-keescook@chromium.org>
+References: <20211118184121.1283821-1-keescook@chromium.org>
 To:     Kees Cook <keescook@chromium.org>
-Cc:     Lennert Buytenhek <buytenh@wantstofly.org>,
-        Kees Cook <keescook@chromium.org>,
+Cc:     Kees Cook <keescook@chromium.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        wengjianfeng <wengjianfeng@yulong.com>,
-        Lv Yunlong <lyl2019@mail.ustc.edu.cn>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        Allen Pais <allen.lkml@gmail.com>,
-        Zheyu Ma <zheyuma97@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org
+        Lee Jones <lee.jones@linaro.org>,
+        YueHaibing <yuehaibing@huawei.com>,
+        Wan Jiabing <wanjiabing@vivo.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163818277998.17830.3859485770079586213.kvalo@codeaurora.org>
-Date:   Mon, 29 Nov 2021 10:46:25 +0000 (UTC)
+Message-ID: <163818270049.17830.12070115902776828737.kvalo@codeaurora.org>
+Date:   Mon, 29 Nov 2021 10:45:05 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -70,26 +65,26 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 Kees Cook <keescook@chromium.org> wrote:
 
 > In preparation for FORTIFY_SOURCE performing compile-time and run-time
-> field bounds checking for memcpy(), memmove(), and memset(), avoid
-> intentionally writing across neighboring fields.
+> field array bounds checking for memcpy(), memmove(), and memset(),
+> avoid intentionally writing across neighboring fields.
 > 
-> Use named struct in struct mwl8k_cmd_set_key around members key_material,
-> tkip_tx_mic_key, and tkip_rx_mic_key so they can be referenced
-> together. This will allow memcpy() and sizeof() to more easily reason
-> about sizes, improve readability, and avoid future warnings about writing
-> beyond the end of key_material.
+> Use struct_group() in struct txpd around members tx_dest_addr_high
+> and tx_dest_addr_low so they can be referenced together. This will
+> allow memcpy() and sizeof() to more easily reason about sizes, improve
+> readability, and avoid future warnings about writing beyond the end
+> of tx_dest_addr_high.
 > 
-> "pahole" shows no size nor member offset changes to struct
-> mwl8k_cmd_set_key. "objdump -d" shows no object code changes.
+> "pahole" shows no size nor member offset changes to struct txpd.
+> "objdump -d" shows no object code changes.
 > 
 > Signed-off-by: Kees Cook <keescook@chromium.org>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-f01b3774309f mwl8k: Use named struct for memcpy() region
+642a57475b30 libertas_tf: Use struct_group() for memcpy() region
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211119004905.2348143-1-keescook@chromium.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/20211118184121.1283821-1-keescook@chromium.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
