@@ -2,61 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E90AC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6769FC43217
 	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377479AbhK2Nif (ORCPT
+        id S1349509AbhK2Nid (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 08:38:35 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:49838 "EHLO
+        Mon, 29 Nov 2021 08:38:33 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:49856 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1343674AbhK2Ng1 (ORCPT
+        with ESMTP id S1377768AbhK2Ng3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 08:36:27 -0500
+        Mon, 29 Nov 2021 08:36:29 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mrgmG-0012xo-Qf; Mon, 29 Nov 2021 15:33:05 +0200
+        id 1mrgmJ-0012xo-4N; Mon, 29 Nov 2021 15:33:07 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon, 29 Nov 2021 15:32:45 +0200
-Message-Id: <iwlwifi.20211129152938.0a82d6891719.I8ded1f2e0bccb9e71222c945666bcd86537f2e35@changeid>
+Date:   Mon, 29 Nov 2021 15:32:48 +0200
+Message-Id: <iwlwifi.20211129152938.faf291271590.I40ad9372a47cbad53b4aae7b5a6ccc0dc3fddf8b@changeid>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211129133248.83829-1-luca@coelho.fi>
 References: <20211129133248.83829-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/16] mac80211: Fix the size used for building probe request
+Subject: [PATCH 16/16] cfg80211: Acquire wiphy mutex on regulatory work
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ilan Peer <ilan.peer@intel.com>
 
-Instead of using the hard-coded value of '100' use the correct
-scan IEs length as calculated during HW registration to mac80211.
+The function cfg80211_reg_can_beacon_relax() expects wiphy
+mutex to be held when it is being called. However, when
+reg_leave_invalid_chans() is called the mutex is not held.
+Fix it by acquiring the lock before calling the function.
 
+Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/reg.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 4b102d5863cf..1e306ea2f625 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2063,7 +2063,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 		chandef.chan = chan;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index df87c7f3a049..6f6da1cedd80 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2338,6 +2338,7 @@ static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	struct cfg80211_chan_def chandef = {};
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 	enum nl80211_iftype iftype;
++	bool ret;
  
- 	skb = ieee80211_probereq_get(&local->hw, src, ssid, ssid_len,
--				     100 + ie_len);
-+				     local->scan_ies_len + ie_len);
- 	if (!skb)
- 		return NULL;
+ 	wdev_lock(wdev);
+ 	iftype = wdev->iftype;
+@@ -2387,7 +2388,11 @@ static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_ADHOC:
+-		return cfg80211_reg_can_beacon_relax(wiphy, &chandef, iftype);
++		wiphy_lock(wiphy);
++		ret = cfg80211_reg_can_beacon_relax(wiphy, &chandef, iftype);
++		wiphy_unlock(wiphy);
++
++		return ret;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		return cfg80211_chandef_usable(wiphy, &chandef,
+@@ -2409,7 +2414,6 @@ static void reg_leave_invalid_chans(struct wiphy *wiphy)
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
  
+ 	ASSERT_RTNL();
+-
+ 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list)
+ 		if (!reg_wdev_chan_valid(wiphy, wdev))
+ 			cfg80211_leave(rdev, wdev);
 -- 
 2.33.1
 
