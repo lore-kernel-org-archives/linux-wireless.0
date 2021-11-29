@@ -2,89 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0FDC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 10:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93C22C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 10:49:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354172AbhK2KwZ (ORCPT
+        id S1354291AbhK2Kws (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 05:52:25 -0500
-Received: from m43-7.mailgun.net ([69.72.43.7]:42005 "EHLO m43-7.mailgun.net"
+        Mon, 29 Nov 2021 05:52:48 -0500
+Received: from m43-7.mailgun.net ([69.72.43.7]:41683 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354415AbhK2KuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 05:50:22 -0500
+        id S238455AbhK2Kur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Nov 2021 05:50:47 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1638182825; h=Date: Message-ID: Cc: To: References:
+ s=smtp; t=1638182850; h=Date: Message-ID: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=M0d4Zf9rLLIPq9EZ9XZQ8e0fDOvwL9WXvTMDoOP2CO4=;
- b=B7d3Drwgnki7oNAAVXOVohN+RwjGqkrz4JNlYH7Rd8t5raDsEAXh/i3S7U2XnmCf7O73MZ6o
- FPtVAsJx+QKRPTpbGYdRjv82d2VyF8xc868/FvoGzgiN3BAGA7+WcWRBjc7wBxY+RnIkukh+
- r1Rzq5Qi+PycGokcMwpazJVy+Hc=
+ Content-Type: Sender; bh=2nMJDBN+GqX/wV54zDjXZRK0qNCinY9dlxw2kEJR8mI=;
+ b=DErlvBTBSfkES5bHAnMvjhq9QY/244kSZfNRyKxbCYxAC5OeOz1FPRYDrzFWAJqjqLXTjUZe
+ xD0LNhpjLBD8kKXmtxGTukiwvvUHqcA6f5QgfzmjN1Rt80tOZs0P71mDjeyjKHb27i+p0QmG
+ pXRSF8FZyuaySjQp5Nx9yMavRqM=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 61a4af31465c4a723bb0c9e2 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Nov 2021 10:45:05
+ smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
+ 61a4afc2135a8a9d0e535b42 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Nov 2021 10:47:30
  GMT
 Sender: kvalo=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8A763C43619; Mon, 29 Nov 2021 10:45:05 +0000 (UTC)
+        id 55F26C43617; Mon, 29 Nov 2021 10:47:29 +0000 (UTC)
 Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5DE16C4338F;
-        Mon, 29 Nov 2021 10:45:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 5DE16C4338F
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 99612C4338F;
+        Mon, 29 Nov 2021 10:47:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 99612C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas_tf: Use struct_group() for memcpy() region
+Subject: Re: [PATCH v3] rtlwifi: rtl8192de: Style clean-ups
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20211118184121.1283821-1-keescook@chromium.org>
-References: <20211118184121.1283821-1-keescook@chromium.org>
+In-Reply-To: <20211119192233.1021063-1-keescook@chromium.org>
+References: <20211119192233.1021063-1-keescook@chromium.org>
 To:     Kees Cook <keescook@chromium.org>
-Cc:     Kees Cook <keescook@chromium.org>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Kees Cook <keescook@chromium.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Wan Jiabing <wanjiabing@vivo.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-hardening@vger.kernel.org
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Colin Ian King <colin.king@canonical.com>,
+        Colin Ian King <colin.king@intel.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Kaixu Xia <kaixuxia@tencent.com>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163818270049.17830.12070115902776828737.kvalo@codeaurora.org>
-Date:   Mon, 29 Nov 2021 10:45:05 +0000 (UTC)
+Message-ID: <163818284377.17830.14790047082768302984.kvalo@codeaurora.org>
+Date:   Mon, 29 Nov 2021 10:47:29 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Kees Cook <keescook@chromium.org> wrote:
 
-> In preparation for FORTIFY_SOURCE performing compile-time and run-time
-> field array bounds checking for memcpy(), memmove(), and memset(),
-> avoid intentionally writing across neighboring fields.
+> Clean up some style issues:
+> - Use ARRAY_SIZE() even though it's a u8 array.
+> - Remove redundant CHANNEL_MAX_NUMBER_2G define.
+> Additionally fix some dead code WARNs.
 > 
-> Use struct_group() in struct txpd around members tx_dest_addr_high
-> and tx_dest_addr_low so they can be referenced together. This will
-> allow memcpy() and sizeof() to more easily reason about sizes, improve
-> readability, and avoid future warnings about writing beyond the end
-> of tx_dest_addr_high.
-> 
-> "pahole" shows no size nor member offset changes to struct txpd.
-> "objdump -d" shows no object code changes.
-> 
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> Link: https://lore.kernel.org/lkml/57d0d1b6064342309f680f692192556c@realtek.com/
 > Signed-off-by: Kees Cook <keescook@chromium.org>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-642a57475b30 libertas_tf: Use struct_group() for memcpy() region
+69831173fcbb rtlwifi: rtl8192de: Style clean-ups
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211118184121.1283821-1-keescook@chromium.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/20211119192233.1021063-1-keescook@chromium.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
