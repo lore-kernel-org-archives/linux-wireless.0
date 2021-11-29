@@ -2,117 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CD56C43219
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E91BC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377668AbhK2Nig (ORCPT
+        id S244013AbhK2NjG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 08:38:36 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:49850 "EHLO
+        Mon, 29 Nov 2021 08:39:06 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:49796 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1377765AbhK2Ng3 (ORCPT
+        with ESMTP id S1377730AbhK2NgS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 08:36:29 -0500
+        Mon, 29 Nov 2021 08:36:18 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mrgmI-0012xo-8W; Mon, 29 Nov 2021 15:33:06 +0200
+        id 1mrgmB-0012xo-6G; Mon, 29 Nov 2021 15:32:59 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon, 29 Nov 2021 15:32:47 +0200
-Message-Id: <iwlwifi.20211129152938.d5fceeb7e166.I555fef8e67d93fff3d9a304886c4a9f8b322e591@changeid>
+Date:   Mon, 29 Nov 2021 15:32:38 +0200
+Message-Id: <iwlwifi.20211129152938.cd2a615a0702.I9edb14785586344af17644b610ab5be109dcef00@changeid>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211129133248.83829-1-luca@coelho.fi>
 References: <20211129133248.83829-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 15/16] mac80211: agg-tx: don't schedule_and_wake_txq() under sta->lock
+Subject: [PATCH 06/16] mac80211: introduce channel switch disconnect function
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Nathan Errera <nathan.errera@intel.com>
 
-When we call ieee80211_agg_start_txq(), that will in turn call
-schedule_and_wake_txq(). Called from ieee80211_stop_tx_ba_cb()
-this is done under sta->lock, which leads to certain circular
-lock dependencies, as reported by Chris Murphy:
-https://lore.kernel.org/r/CAJCQCtSXJ5qA4bqSPY=oLRMbv-irihVvP7A2uGutEbXQVkoNaw@mail.gmail.com
+Introduce a disconnect function that can be used when a
+channel switch error occurs. The channel switch can request to
+block the tx, and so, we need to make sure we do not send a deauth
+frame in this case.
 
-In general, ieee80211_agg_start_txq() is usually not called
-with sta->lock held, only in this one place. But it's always
-called with sta->ampdu_mlme.mtx held, and that's therefore
-clearly sufficient.
-
-Change ieee80211_stop_tx_ba_cb() to also call it without the
-sta->lock held, by factoring it out of ieee80211_remove_tid_tx()
-(which is only called in this one place).
-
-This breaks the locking chain and makes it less likely that
-we'll have similar locking chain problems in the future.
-
-Reported-by: Chris Murphy <lists@colorremedies.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Nathan Errera <nathan.errera@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/agg-tx.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ include/net/mac80211.h | 12 ++++++++++++
+ net/mac80211/cfg.c     | 14 +++++++++++++-
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 430a58587538..4dd56daed89b 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -9,7 +9,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2007-2010, Intel Corporation
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2020 Intel Corporation
-+ * Copyright (C) 2018 - 2021 Intel Corporation
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 775dbb982654..6770e17a1d38 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -6073,6 +6073,18 @@ void ieee80211_radar_detected(struct ieee80211_hw *hw);
+  */
+ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
+ 
++/**
++ * ieee80211_channel_switch_disconnect - disconnect due to channel switch error
++ * @vif &struct ieee80211_vif pointer from the add_interface callback.
++ * @block_tx: if %true, do not send deauth frame.
++ *
++ * Instruct mac80211 to disconnect due to a channel switch error. The channel
++ * switch can request to block the tx and so, we need to make sure we do not send
++ * a deauth frame in this case.
++ */
++void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif,
++					 bool block_tx);
++
+ /**
+  * ieee80211_request_smps - request SM PS transition
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 45334d59fe06..23b35fe73a50 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -5,7 +5,7 @@
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2015  Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2020 Intel Corporation
++ * Copyright (C) 2018-2021 Intel Corporation
   */
  
  #include <linux/ieee80211.h>
-@@ -213,6 +213,8 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
- 	struct ieee80211_txq *txq = sta->sta.txq[tid];
- 	struct txq_info *txqi;
- 
-+	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-+
- 	if (!txq)
- 		return;
- 
-@@ -290,7 +292,6 @@ static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
- 	ieee80211_assign_tid_tx(sta, tid, NULL);
- 
- 	ieee80211_agg_splice_finish(sta->sdata, tid);
--	ieee80211_agg_start_txq(sta, tid, false);
- 
- 	kfree_rcu(tid_tx, rcu_head);
+@@ -3198,6 +3198,18 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
  }
-@@ -889,6 +890,7 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	bool send_delba = false;
-+	bool start_txq = false;
+ EXPORT_SYMBOL(ieee80211_csa_finish);
  
- 	ht_dbg(sdata, "Stopping Tx BA session for %pM tid %d\n",
- 	       sta->sta.addr, tid);
-@@ -906,10 +908,14 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- 		send_delba = true;
- 
- 	ieee80211_remove_tid_tx(sta, tid);
-+	start_txq = true;
- 
-  unlock_sta:
- 	spin_unlock_bh(&sta->lock);
- 
-+	if (start_txq)
-+		ieee80211_agg_start_txq(sta, tid, false);
++void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif, bool block_tx)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct ieee80211_local *local = sdata->local;
 +
- 	if (send_delba)
- 		ieee80211_send_delba(sdata, sta->sta.addr, tid,
- 			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
++	sdata->csa_block_tx = block_tx;
++	sdata_info(sdata, "channel switch failed, disconnecting\n");
++	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
++}
++EXPORT_SYMBOL(ieee80211_channel_switch_disconnect);
++
+ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 					  u32 *changed)
+ {
 -- 
 2.33.1
 
