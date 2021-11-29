@@ -2,71 +2,66 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 239F9C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC86C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 13:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343946AbhK2NiZ (ORCPT
+        id S1346967AbhK2Ni3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 08:38:25 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:49802 "EHLO
+        Mon, 29 Nov 2021 08:38:29 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:49814 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1377758AbhK2NgT (ORCPT
+        with ESMTP id S242398AbhK2NgV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 08:36:19 -0500
+        Mon, 29 Nov 2021 08:36:21 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mrgmB-0012xo-WF; Mon, 29 Nov 2021 15:33:00 +0200
+        id 1mrgmD-0012xo-FT; Mon, 29 Nov 2021 15:33:01 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Mon, 29 Nov 2021 15:32:39 +0200
-Message-Id: <iwlwifi.20211129152938.4573a221c0e1.I0d1d5daea3089be3fc0dccc92991b0f8c5677f0c@changeid>
+Date:   Mon, 29 Nov 2021 15:32:41 +0200
+Message-Id: <iwlwifi.20211129152938.4ef43aff0c5d.I96dcb743bcd4f387ba4cfaa61987aeb642ad762b@changeid>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211129133248.83829-1-luca@coelho.fi>
 References: <20211129133248.83829-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/16] mac80211: mark TX-during-stop for TX in in_reconfig
+Subject: [PATCH 09/16] cfg80211: Fix order of enum nl80211_band_iftype_attr documentation
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-Mark TXQs as having seen transmit while they were stopped if
-we bail out of drv_wake_tx_queue() due to reconfig, so that
-the queue wake after this will make them catch up. This is
-particularly necessary for when TXQs are used for management
-packets since those TXQs won't see a lot of traffic that'd
-make them catch up later.
+And fix the comment.
 
-Cc: stable@vger.kernel.org
-Fixes: 4856bfd23098 ("mac80211: do not call driver wake_tx_queue op during reconfig")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/driver-ops.h | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ include/uapi/linux/nl80211.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index cd3731cbf6c6..c336267f4599 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1219,8 +1219,11 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->txq.vif);
- 
--	if (local->in_reconfig)
-+	/* In reconfig don't transmit now, but mark for waking later */
-+	if (local->in_reconfig) {
-+		set_bit(IEEE80211_TXQ_STOP_NETIF_TX, &txq->flags);
- 		return;
-+	}
- 
- 	if (!check_sdata_in_driver(sdata))
- 		return;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5ab616dc363e..a8e20d25252b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3754,13 +3754,12 @@ enum nl80211_mpath_info {
+  *     capabilities IE
+  * @NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE: HE PPE thresholds information as
+  *     defined in HE capabilities IE
+- * @NL80211_BAND_IFTYPE_ATTR_MAX: highest band HE capability attribute currently
+- *     defined
+  * @NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA: HE 6GHz band capabilities (__le16),
+  *	given for all 6 GHz band channels
+  * @NL80211_BAND_IFTYPE_ATTR_VENDOR_ELEMS: vendor element capabilities that are
+  *	advertised on this band/for this iftype (binary)
+  * @__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST: internal use
++ * @NL80211_BAND_IFTYPE_ATTR_MAX: highest band attribute currently defined
+  */
+ enum nl80211_band_iftype_attr {
+ 	__NL80211_BAND_IFTYPE_ATTR_INVALID,
 -- 
 2.33.1
 
