@@ -2,97 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83351C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 14:11:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD7A5C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Nov 2021 14:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239183AbhK2OPK (ORCPT
+        id S1377937AbhK2Oav (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Nov 2021 09:15:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34230 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232110AbhK2ONK (ORCPT
+        Mon, 29 Nov 2021 09:30:51 -0500
+Received: from titan58.planetwebservers.net ([51.79.1.102]:37895 "EHLO
+        titan58.planetwebservers.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233810AbhK2O2M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Nov 2021 09:13:10 -0500
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C089CC08EAD2;
-        Mon, 29 Nov 2021 04:49:23 -0800 (PST)
-Received: by mail-wm1-x335.google.com with SMTP id j140-20020a1c2392000000b003399ae48f58so16717226wmj.5;
-        Mon, 29 Nov 2021 04:49:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=F0poFPJsWt+35ZjTKPTDqAWquj99j6P21+mLO9eANjc=;
-        b=I3hKvrFIpV9B6n8epfPsaPBOwhiF+v9Dqo0UZCSDDztmiIeVrboxg9Y/U8uVLCwsAf
-         0bacUL33sAdOklbyi+Eq2rJDYyjrOrNI3KAKLIovfpRVlc9Iw1+HjnM6BF/uliFuRAph
-         INeOzkQVrYEsqFem7A9d9kHDdHoFJ0h1rAhdbS23IZgZAJJArh/Yf6X5wRaUP98gWGMW
-         LS9zqOgLMVrhSKAhf/GPt+KuVgI4Ra+vr0gg6v4BdddtvMxJ9OveMWOCJ5t4ozyv+OE7
-         BJtfaVMD6ZFF46fH7tcAxb18+IH7maBtdmSp1pzLYPjVr3gdKaRKBDWH1ZdCU/vdFb+j
-         zCoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=F0poFPJsWt+35ZjTKPTDqAWquj99j6P21+mLO9eANjc=;
-        b=HgtDXTKGbyQ+LzCq2UCoEI2F41jcrQzkNIpUnMqdHy95SopPMihfN4BJmn3ZP7ImsP
-         pIwS3GEveqASk7kAnf7GP2Gof3I5F2OEW1+I+vpNAYQeJKQJ8tqQ/TrFbaL7wLydrbu2
-         3TPCmTr6E/wZTL46aOdXAhlTdELodRB/K7Ryu91kB1PxQf7PKYE0Kz1hxzGQVYo6v5SE
-         C4/lUXpzKpAFIzeBKr3xpzAJ+y1VMUEh2gh5Q2SRYfW+t8n0wJ1FHsdhyMk5K5ZfZDRo
-         4uG7KpKi1yegQJQwE4q71EX+GKcDAf/p9E+3CDbtxHYKhKQMTjRVFti9QBc1lySApfW9
-         uOaw==
-X-Gm-Message-State: AOAM533lc0XxBVn7xp9tT3xL2DF/gAjmhuXfHROXmZaltHKEOejO6cIc
-        kb0XALLoKbwcRw==
-X-Google-Smtp-Source: ABdhPJwyDHDSWQ4+H0d8lJOqJyR6Q1Wjwp2YNIkTFYzwztVdV2R+f1sLmz7AX/uYwADPN+ki1fw22w==
-X-Received: by 2002:a7b:c256:: with SMTP id b22mr10743444wmj.176.1638190162365;
-        Mon, 29 Nov 2021 04:49:22 -0800 (PST)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id t11sm13926384wrz.97.2021.11.29.04.49.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Nov 2021 04:49:21 -0800 (PST)
-From:   Colin Ian King <colin.i.king@googlemail.com>
-X-Google-Original-From: Colin Ian King <colin.i.king@gmail.com>
-To:     Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next][V2] iwlwifi: mei: Fix spelling mistake "req_ownserhip" -> "req_ownership"
-Date:   Mon, 29 Nov 2021 12:49:21 +0000
-Message-Id: <20211129124921.11817-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.33.1
+        Mon, 29 Nov 2021 09:28:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lockie.ca;
+        s=default; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:
+        References:In-Reply-To:Message-ID:Cc:To:From:Date:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=SdHGsdHPju0auK467ZsIg0yHr1MlV/cLP9xty2rj5Gw=; b=kdDSPVnxOi+sasrVGuJYZDBwnI
+        D3Z8mSrieisYNR+EjMY4XMfHeUQT5Pr3onrwmbqXix8U3jEP+izUXdmHfnFap7/8S0HWHODkKuu82
+        dULtnElEe7mr5EtAzNHlqFUTYfQzIOAOVFEwoaaBENC1aEmrJWhUc89RPrDM7A3vPTCO7UwYFyes3
+        O8el6dQKdQE5dbnpzpt5tUnV4YrivOsS/PbplkZauBePUsIXwCFefT1usZ12wJ5xMgFXANEYQaLkV
+        5V+/ZwOYzRr2alyewAjbgY7g/XgdrsmRgu92erTKwspkSyJzbovjoZG+jQOgRTyibedbRb/YqP251
+        8/qLFrWw==;
+Received: from [98.124.54.9] (port=40750 helo=dummy.faircode.eu)
+        by titan.planetwebservers.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <bjlockie@lockie.ca>)
+        id 1mrhaO-0007sj-Ui; Tue, 30 Nov 2021 01:24:52 +1100
+Date:   Mon, 29 Nov 2021 14:24:50 +0000 (UTC)
+From:   James <bjlockie@lockie.ca>
+To:     Pkshih <pkshih@realtek.com>
+Cc:     linux-wireless@vger.kernel.org
+Message-ID: <3fef8020-a496-41e3-8974-4d16ff4551b6@lockie.ca>
+In-Reply-To: <867f4b97151745d5a5fa0daa5ebcdbd2@realtek.com>
+References: <5bdf4393-273f-2ad2-40e0-556ec7dc6817@lockie.ca> <867f4b97151745d5a5fa0daa5ebcdbd2@realtek.com>
+Subject: RE: USB for rtw89 driver?
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Correlation-ID: <3fef8020-a496-41e3-8974-4d16ff4551b6@lockie.ca>
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - titan.planetwebservers.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - lockie.ca
+X-Get-Message-Sender-Via: titan.planetwebservers.net: authenticated_id: bjlockie@lockie.ca
+X-Authenticated-Sender: titan.planetwebservers.net: bjlockie@lockie.ca
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-From-Rewrite: unmodified, already matched
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is a spelling mistake in a debugfs filename. Fix it.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/net/wireless/intel/iwlwifi/mei/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> Does anyone know if the proprietary driver works on the Raspberry Pi4B
+>> (Arm)?
+>
+> Don't have a proprietary driver neither.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-index 112cc362e8e7..0865e4fb25da 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-@@ -1754,7 +1754,7 @@ static void iwl_mei_dbgfs_register(struct iwl_mei *mei)
- 			     mei->dbgfs_dir, &iwl_mei_status);
- 	debugfs_create_file("send_start_message", S_IWUSR, mei->dbgfs_dir,
- 			    mei, &iwl_mei_dbgfs_send_start_message_ops);
--	debugfs_create_file("req_ownserhip", S_IWUSR, mei->dbgfs_dir,
-+	debugfs_create_file("req_ownership", S_IWUSR, mei->dbgfs_dir,
- 			    mei, &iwl_mei_dbgfs_req_ownership_ops);
- }
- 
--- 
-V2: Just fix the debugfs spelling mistake, the error message has already been fixed.
-    Change commit message and subject line with correct information.
---
+Dlink seems to have added USB support.
+I assumed that is proprietary but I guess that is only x86.
 
-2.33.1
+https://support.dlink.com/ProductInfo.aspx?m=3DDWA-181-US
 
+There is also an open source USB driver on github=C2=A0 but I don't think i=
+t is getting fixes like the lfinger github one.
+https://github.com/neojou/rtw89-usb
