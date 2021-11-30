@@ -2,87 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B315C43219
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Nov 2021 17:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB1DC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Nov 2021 18:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245170AbhK3Ryr (ORCPT
+        id S239550AbhK3Sfj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Nov 2021 12:54:47 -0500
-Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:33628 "EHLO
-        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S245158AbhK3Ryh (ORCPT
+        Tue, 30 Nov 2021 13:35:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56358 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234761AbhK3Sfi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Nov 2021 12:54:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1638294678; x=1669830678;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=AehaPN9mAVpFKqjj4RHvCuU9GRZ7+GwKC1WV+P6Ie5U=;
-  b=Ns8+L6SdB0Jaog0R6yyG8R+JTSU7kkmUjYWad82KoswKZt+EQlQmqlzk
-   PFd14fOC6RDCocHklN+P3SB+Se+DsIWoK9humBqydLehSuQDlUDmsPPBr
-   PJiMlXF0VtFaKcXp0Y94rZAVzmmZzeZ9y7I3BYLFUiyXkcCvk7MdBTHcb
-   I=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 30 Nov 2021 09:51:17 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Nov 2021 09:51:17 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 30 Nov 2021 09:51:17 -0800
-Received: from ppranees-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 30 Nov 2021 09:51:15 -0800
-From:   P Praneesh <quic_ppranees@quicinc.com>
-To:     <ath11k@lists.infradead.org>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        P Praneesh <quic_ppranees@quicinc.com>
-Subject: [PATCH 1/2] mac80211: fix FEC flag in radio tap header
-Date:   Tue, 30 Nov 2021 23:20:47 +0530
-Message-ID: <1638294648-844-2-git-send-email-quic_ppranees@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1638294648-844-1-git-send-email-quic_ppranees@quicinc.com>
-References: <1638294648-844-1-git-send-email-quic_ppranees@quicinc.com>
+        Tue, 30 Nov 2021 13:35:38 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD710C061574
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2021 10:32:16 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2801CB81875
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2021 18:32:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0FFCC53FCC;
+        Tue, 30 Nov 2021 18:32:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638297133;
+        bh=CL1JsLrNj91T3hCHEOM5FMzrebrCpdWGN18ObZv1xTQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OQyxbDSpvzOaXQ8X+NNUkxy4HV70UxWQj7s8ogxPwUEvJrFUTTL1OiSwtjqKUO8wF
+         aT0DJioso0azxmIZbJ/vjQhY73dzrlyu/uzLFAtZN1AKINQbDWALKjKQn/j4jVD1Jk
+         99nvJ1PYRQ2LGa+DI+xgRlZRlTtKedmWVJgSPa/2Jje5usANY7LeB+RgreL06EMgjP
+         ePXRTt53WbjkhPiFRLhQ5RPIrRvo1on+jcyePk+i6e+CXR7ss9892UGkD8vVubNVAl
+         MVruczNirAqN4C542IGtqgIVYvEKblh9FY5RTypY6WSXxJKHP/FwVBqazhQkb4mc5z
+         QsleeK5v8BPiA==
+Date:   Tue, 30 Nov 2021 11:32:09 -0700
+From:   Nathan Chancellor <nathan@kernel.org>
+To:     Finn Behrens <me@kloenk.dev>
+Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        llvm@lists.linux.dev
+Subject: Re: [PATCH v5] nl80211: reset regdom when reloading regdb
+Message-ID: <YaZuKYM5bfWe2Urn@archlinux-ax161>
+References: <20210526112418.cdwkn7ed4twctimc@imap.mailbox.org>
+ <YaIIZfxHgqc/UTA7@gimli.kloenk.dev>
+ <YaZLEEj2pUU/DhZD@archlinux-ax161>
+ <6BAD2771-7C01-408E-98BE-76A1CAF3A810@kloenk.dev>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6BAD2771-7C01-408E-98BE-76A1CAF3A810@kloenk.dev>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In mac80211, while building radiotap header
-IEEE80211_RADIOTAP_MCS_HAVE_FEC flag is missing when LDPC enabled
-from driver, hence LDPC is not updated properly in radiotap header.
-Fix that by adding HAVE_FEC flag while building radiotap header.
+On Tue, Nov 30, 2021 at 05:50:58PM +0100, Finn Behrens wrote:
+> > On 30. Nov 2021, at 17:02, Nathan Chancellor <nathan@kernel.org> wrote:
+> > On Sat, Nov 27, 2021 at 11:28:53AM +0100, Finn Behrens wrote:
+> >> this reloads the regdom when the regulatory db is reloaded.
+> >> Without this patch the user had to change the regulatoy domain to a
+> >> different, and then reset it to the one the user is in, to have the new
+> >> regulatory db take effect
+> >> 
+> >> Signed-off-by: Finn Behrens <fin@nyantec.com>
+> > 
+> > This patch as commit 1eda919126b4 ("nl80211: reset regdom when reloading
+> > regdb") in -next causes the following clang warning/error:
+> > 
+> > net/wireless/reg.c:1137:23: error: implicit conversion from enumeration type 'enum nl80211_user_reg_hint_type' to different enumeration type 'enum nl80211_reg_initiator' [-Werror,-Wenum-conversion]
+> >        request->initiator = NL80211_USER_REG_HINT_USER;
+> >                           ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~
+> > 1 error generated.
+> > 
+> > Should that be NL80211_REGDOM_SET_BY_CORE (same value, 0) or something
+> > different?
+> 
+> I think It should have been NL80211_REGDOM_SET_BY_USER, as the reload
+> flag check is currently implemented in the user hint function. But If
+> I see it correctly right now. We could remove the reload flag, and
+> NL80211_REGDOM_SET_BY_CORE should work as well. As the
+> reg_query_database function is called unconditionally there.
 
-Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
----
- net/mac80211/rx.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+If you tested the current version of your patch and it worked fine, then
+it seems like you should just revert the addition of the reload flag and
+change
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9541a4c..be12fa8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -465,7 +465,12 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 		unsigned int stbc;
- 
- 		rthdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_MCS));
--		*pos++ = local->hw.radiotap_mcs_details;
-+		*pos = local->hw.radiotap_mcs_details;
-+		if (status->enc_flags & RX_ENC_FLAG_HT_GF)
-+			*pos |= IEEE80211_RADIOTAP_MCS_HAVE_FMT;
-+		if (status->enc_flags & RX_ENC_FLAG_LDPC)
-+			*pos |= IEEE80211_RADIOTAP_MCS_HAVE_FEC;
-+		pos++;
- 		*pos = 0;
- 		if (status->enc_flags & RX_ENC_FLAG_SHORT_GI)
- 			*pos |= IEEE80211_RADIOTAP_MCS_SGI;
--- 
-2.7.4
+request->initiator = NL80211_USER_REG_HINT_USER;
 
+to
+
+request->initiator = NL80211_REGDOM_SET_BY_CORE;
+
+given that is what is happening right now. The warning is basically
+pointing out that reg_process_hint() is calling reg_process_hint_core()
+instead of reg_process_hint_user() because NL80211_USER_REG_HINT_USER =
+NL80211_REGDOM_SET_BY_CORE = 0. Hopefully that makes sense.
+
+Cheers,
+Nathan
