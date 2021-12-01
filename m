@@ -2,75 +2,120 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFE0C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Dec 2021 10:09:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80370C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Dec 2021 11:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348527AbhLAKMy (ORCPT
+        id S1348968AbhLALhw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Dec 2021 05:12:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42520 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348516AbhLAKMw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Dec 2021 05:12:52 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1621AC061574
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Dec 2021 02:09:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=xO/dX92dbVuUV4Ei7lwtxqIvB+xYbA9p0vfkVhgdsJM=; t=1638353372; x=1639562972; 
-        b=Kk3GCYNQfKrhe1Nxozj8q0VkWRc7VqH39ZsR4tzyxAGi3vd7ivABjDmMSIFrPf+dTSpnpfw5JWu
-        0KUpt5syPiCoNuOk54Auo15TkFmj/8WDhIg6mkZvV6RH+xJAGGaENJr6tUTxEMfRshEBA1QFNlNLa
-        H+2jNGnDw41gld3JFVdJuwDw0kbXPdOHHOhv64p6KrAFQxrB/aSIR2dsn9vOa7pU+cGryAlqLSi2w
-        EOjxxvueInpTyaSusUO7NOw487AD1hMHIGy2b1ZfUb5wbTi94N4h/nDbOC70m8Ep6/YtGgBQhs7IE
-        BvLtH+pXATKHWE3nZCUNmHEZE4iipQmcp8yQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1msMYK-005KzG-9e;
-        Wed, 01 Dec 2021 11:09:28 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl82011: clarify interface combinations wrt. channels
-Date:   Wed,  1 Dec 2021 11:09:25 +0100
-Message-Id: <20211201110924.2816d91b6862.I2d997abd525574529f88e941d90aeb640dbb1abf@changeid>
-X-Mailer: git-send-email 2.33.1
+        Wed, 1 Dec 2021 06:37:52 -0500
+Received: from mga11.intel.com ([192.55.52.93]:46248 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1349043AbhLALhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Dec 2021 06:37:43 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10184"; a="233942408"
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="233942408"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 03:34:22 -0800
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="500213133"
+Received: from vkerner-mobl2.ger.corp.intel.com (HELO egrumbac-mobl1.intel.com) ([10.255.204.12])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 03:34:20 -0800
+From:   Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, luca@coelho.fi,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Jiri Slaby <jirislaby@kernel.org>
+Subject: [PATCH] iwlwifi: mei: fix linking when tracing is not enabled
+Date:   Wed,  1 Dec 2021 13:34:10 +0200
+Message-Id: <20211201113411.130409-1-emmanuel.grumbach@intel.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+I forgot to add stubs in case tracing is disabled.
 
-Thinking about MLD (Draft 802.11be) now, it's clear that
-we'll have new limitations where different stations (or
-links) must be on _different_ channels (or in different
-frequency ranges even.) Clarify that the current limit of
-multiple channels is a maximum and the same one is OK.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Jiri Slaby <jirislaby@kernel.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/uapi/linux/nl80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/mei/trace-data.h    | 13 +++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mei/trace.h     | 14 ++++++++++++++
+ 2 files changed, 27 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 61cab81e920d..c12c55623f9a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5555,7 +5555,7 @@ enum nl80211_iface_limit_attrs {
-  *	=> allows 8 of AP/GO that can have BI gcd >= min gcd
-  *
-  *	numbers = [ #{STA} <= 2 ], channels = 2, max = 2
-- *	=> allows two STAs on different channels
-+ *	=> allows two STAs on the same or on different channels
-  *
-  *	numbers = [ #{STA} <= 1, #{P2P-client,P2P-GO} <= 3 ], max = 4
-  *	=> allows a STA plus three P2P interfaces
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h b/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
+index 0a0078a79c7e..83639c6225ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
++++ b/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
+@@ -3,6 +3,12 @@
+  * Copyright(c) 2021        Intel Corporation
+  */
+ 
++#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++
++#define trace_iwlmei_sap_data(...)
++
++#else
++
+ #if !defined(__IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_DATA) || defined(TRACE_HEADER_MULTI_READ)
+ 
+ #ifndef __IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_DATA
+@@ -60,6 +66,11 @@ TRACE_EVENT(iwlmei_sap_data,
+ 		  __entry->trace_type, __get_dynamic_array_len(data))
+ );
+ 
++/*
++ * If you add something here, add a stub in case
++ * !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++ */
++
+ #endif /* __IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_DATA */
+ 
+ #undef TRACE_INCLUDE_PATH
+@@ -67,3 +78,5 @@ TRACE_EVENT(iwlmei_sap_data,
+ #undef TRACE_INCLUDE_FILE
+ #define TRACE_INCLUDE_FILE trace-data
+ #include <trace/define_trace.h>
++
++#endif /* CONFIG_IWLWIFI_DEVICE_TRACING */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/trace.h b/drivers/net/wireless/intel/iwlwifi/mei/trace.h
+index 6f673f2817ad..45ecb22ec84a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/trace.h
++++ b/drivers/net/wireless/intel/iwlwifi/mei/trace.h
+@@ -3,6 +3,13 @@
+  * Copyright(c) 2021        Intel Corporation
+  */
+ 
++#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++
++#define trace_iwlmei_sap_cmd(...)
++#define trace_iwlmei_me_msg(...)
++
++#else
++
+ #if !defined(__IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_CMD) || defined(TRACE_HEADER_MULTI_READ)
+ #define __IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_CMD
+ 
+@@ -53,6 +60,11 @@ TRACE_EVENT(iwlmei_me_msg,
+ 		  __entry->type, __entry->seq_num)
+ );
+ 
++/*
++ * If you add something here, add a stub in case
++ * !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++ */
++
+ #endif /* __IWLWIFI_DEVICE_TRACE_IWLWIFI_SAP_CMD */
+ 
+ #undef TRACE_INCLUDE_PATH
+@@ -60,3 +72,5 @@ TRACE_EVENT(iwlmei_me_msg,
+ #undef TRACE_INCLUDE_FILE
+ #define TRACE_INCLUDE_FILE trace
+ #include <trace/define_trace.h>
++
++#endif /* CONFIG_IWLWIFI_DEVICE_TRACING */
 -- 
-2.33.1
+2.25.1
 
