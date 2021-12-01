@@ -2,101 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E3B1C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Dec 2021 17:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA77C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Dec 2021 17:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351916AbhLARgI (ORCPT
+        id S243999AbhLARmq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Dec 2021 12:36:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60182 "EHLO
+        Wed, 1 Dec 2021 12:42:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351886AbhLARgD (ORCPT
+        with ESMTP id S231499AbhLARmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Dec 2021 12:36:03 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FFDFC061757
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Dec 2021 09:32:42 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id fv9-20020a17090b0e8900b001a6a5ab1392so2241841pjb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2021 09:32:42 -0800 (PST)
+        Wed, 1 Dec 2021 12:42:45 -0500
+Received: from mail-oo1-xc34.google.com (mail-oo1-xc34.google.com [IPv6:2607:f8b0:4864:20::c34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C61A8C061574
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Dec 2021 09:39:24 -0800 (PST)
+Received: by mail-oo1-xc34.google.com with SMTP id d1-20020a4a3c01000000b002c2612c8e1eso8057352ooa.6
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2021 09:39:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=VDFng/HdHr1z5en3DZh+RIhvqJzKbtsFFlHQpWJVHps=;
-        b=PFbBnO4QcqiOnDyKLMv8qME2XvouVSAqMxxG3Be+nyokOph72Oo9J3ZajgDmRuExPz
-         Dn5RdJoX0jAUjmfLBvltEkFSxz07kOnztJ3V7VA8B6EGAO2EXHm+I8Cwo40CYBeoYBk5
-         rpTQs+r8ZUQFp/Rn3RPrvb6Tv4lp1KQ5bbEXw=
+        d=gmail.com; s=20210112;
+        h=sender:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/cNut1odEz58+5WQpjXbh5Y9M+BW4+Q22MxZye+tdpc=;
+        b=T4Z2Ykqs4ogTIETvF9wdO3RMBKV61jDmUdanwFudXfF7HohR4TNPi0Pv/qGpexLjBE
+         risgyv7H9BvbfwciBWl9KKh+nSUvxAkriJfsBFaufYxBUy3avQ7+w23b91WOnBGTLEni
+         Tivhe6iKKEWA4rBmOHDGZa5EvYnziAgMx4L96gKtxmho2pAxen20mn4M7LvIXRL5wscT
+         nNR/gF1r1P8yUyB2J6MVlKzrpZU0mc7zLSg1xUpm2qbHR/zDgOEnmZXusHTRDc1LdYqo
+         TVDcSktZyS0z6or9KiiCPUCBvme5nZEZw3ZqqgnZUgnV/no2VdNkCI2NW4Q6mSOeec5e
+         j9ZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=VDFng/HdHr1z5en3DZh+RIhvqJzKbtsFFlHQpWJVHps=;
-        b=xlzbk0Pm32AqezdjRPNg7P4OjXKKnhAR06fcrljFk4QcHdFZTrhLaFdqngAW5ie3u5
-         aJimSMjA92qJy8+vHOuFwdxH2qVdaQ2/8jIhkRlG91zkA7wEPcd0PSUzojxgHXvTeM0S
-         T1UvoEGDyFRQ1YVJzHTKSqGU23SKM/WvRyAI1g+qboYldrdvIlhGDdbTH2lW3KEFfzIg
-         f/nmeNnuSsL1E8Z3oueq02CyEK1QJ/0KvMI6i6WCNXNJMb9UNJ46vw5g0DMDOVmq9dEQ
-         ffy+6+dEiGRq67AVdy8pgIo/be7hJmTt7FfC216e1yc35JaNSDt/i7P0lLjx3SqOrwrb
-         ecXA==
-X-Gm-Message-State: AOAM532lOlCCsSwSUte3K1bnR9DOwooatDwh9xcxprRSAOU0QAmhaOix
-        TziOz+5Ir6WJEIWakAD0bv/9Lw==
-X-Google-Smtp-Source: ABdhPJxbCZOLVkbSi8hSb8aaT9HL/poHl09z8+W5KXqp0xjeO6WgjDUDlHuOBseaXUocTBzQ/OOf2g==
-X-Received: by 2002:a17:902:8645:b0:142:8c0d:3f4a with SMTP id y5-20020a170902864500b001428c0d3f4amr9084371plt.3.1638379962062;
-        Wed, 01 Dec 2021 09:32:42 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id o9sm293481pgu.12.2021.12.01.09.32.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Dec 2021 09:32:41 -0800 (PST)
-From:   Kees Cook <keescook@chromium.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        kernel test robot <lkp@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Wan Jiabing <wanjiabing@vivo.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Luis Carlos Cobo <luisca@cozybit.com>,
-        linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH 1/2] libertas: Add missing __packed annotation with struct_group()
-Date:   Wed,  1 Dec 2021 09:32:33 -0800
-Message-Id: <20211201173234.578124-2-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211201173234.578124-1-keescook@chromium.org>
-References: <20211201173234.578124-1-keescook@chromium.org>
+        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
+         :subject:content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/cNut1odEz58+5WQpjXbh5Y9M+BW4+Q22MxZye+tdpc=;
+        b=RMCX1D9NWUeKu2KOiDVRzV6wmmyN/TDlBtnYQx+9Ie1xK2BFBjlDNmZTVKcsWg9Ebi
+         PprdxJVGmBiSJM9cS9Wnfo90qz+ijcI7De8en49jEVsUd7DICOIrVJJon7cu3bXHTQ7t
+         4gmDF971STOM7zDsKyk+prr7RzsvC6xyTNEgJt6gwe+9jazUSpGDZKPGzNHqZCAz5kZt
+         DkAukegmvRu5GUF0LKOYmY7MhE0D3JHuLJ8fQb5m6UfISI6n39+BD9TUCbaJ5C1/aM39
+         iXuuzhzrAvzyfzPHAOju0OBo3Cl/85Jv3BZ6qGoS0br641RlRmMZ2PXZyc67fCA84CNr
+         rT/A==
+X-Gm-Message-State: AOAM531vWPEUnyvwq5yBmIsllQdw4DNBR7uWJudDJWjgPoyWhxkLhkPX
+        i9JYaZCWmAZ5CrLbDnkJHD4xk6QQtAmFF7+L
+X-Google-Smtp-Source: ABdhPJyHf7jO/IracVwTSgnDN7lmS+0Go7vytwELHXdOMR6GWtspzKH3j8eAJ20B59vHCBeQxj1Yig==
+X-Received: by 2002:a05:6820:388:: with SMTP id r8mr5304735ooj.0.1638380364155;
+        Wed, 01 Dec 2021 09:39:24 -0800 (PST)
+Received: from [10.62.118.101] (cpe-24-31-246-181.kc.res.rr.com. [24.31.246.181])
+        by smtp.gmail.com with ESMTPSA id p23sm151504otf.37.2021.12.01.09.39.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Dec 2021 09:39:23 -0800 (PST)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <5dc56416-7564-6a11-d477-9841b27a7123@lwfinger.net>
+Date:   Wed, 1 Dec 2021 11:39:22 -0600
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1155; h=from:subject; bh=UHcWUjjchMfnBh6ACbi53yKeEOrVQYslm/sSokOlE+M=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhp7Gx/RgHNdsPLmzjDYuEiI9vMdoO8j78eyHwZ2rs IlEbUlSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYaexsQAKCRCJcvTf3G3AJrphD/ 95/0le+jMZxsKtI9YiFhTKDT13uBt5ykYHVuufhXiYOgLEZGOEs/DggHAW/krcqe6o4Rj1DvtOAQ/z KqL1FFThrORl6RPJSvwKhvp8iYUClSzGzR7A05Him9mWzuNAnJiMUb0SOz21wkJfjcGunHUpGpsGLo kh0JZ32GbPNdEUQd5+Pe3jqNjEGhtUMslNSTMoeBbd4gOuX40342pCZPrl/J8Ks7xieEJ0NhiFzOWB qbfH1h4qHqLI0/d48KzJq9oWzZkC+crx0/77bPI0GCTL7/EUZIJ8jwo7pdQMS9zp+iTVeb+hyfQ/p1 4q8u7vZ1fOm4t27MGFULoSb0k/+zOl67P8+Z0IF0GCTOPqdHUGFUtu7MqxDuXBqoNh1rEvc1tNB94Z V+z96IUZmnbrAmwMSKOPebFjGA/tjeOTbrj7X2omLrl72MRCucteYt87ikxvwI2XvMsO1gDjXylk1F 4hyXvgE+5op4uov0SzQPxYMKHMx1/HbaF0kkSrMrM2jDKGhSruZDwe1Te6vA1/8hgzJRcSeTC4vmS6 oWcglWNo2PiXWm0fjQxOr4XDSAtfQ5i8Iz1eK6jnnWg4us7bSmZ2p6y9C+JILBSQRW4KMvp6CLvibf x3cgwIDZMABSV/mhU69wM2hohHYZoBoCV6AOKw+aa2a1vAZZEoWYSUP0IqYw==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: Latency spikes in rtw89
+Content-Language: en-US
+To:     Jeff Clay <jeffclay@gmail.com>, Pkshih <pkshih@realtek.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <CACJOGMP0k1AH9Coz2DjZjkeoxPGjSyP60MYMSHrMN-hSJrrvTQ@mail.gmail.com>
+ <74887ec8f49846f5ae8b40b4c213d2da@realtek.com>
+ <CACJOGMOBaQ+vc37dnpS8JYEnE4v4bufSkw+_Or5FEzkTiKXfBQ@mail.gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <CACJOGMOBaQ+vc37dnpS8JYEnE4v4bufSkw+_Or5FEzkTiKXfBQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Build testing of the newly added struct_group() usage missed smaller
-architecture width tests for changes to pahole output. Add the missed
-__packed annotation with struct_group() usage in a __packed struct.
+On 12/1/21 08:48, Jeff Clay wrote:
+> Thank you for the information. Would the issue persist if I were to
+> disable wireless power management?
 
-Reported-by: kernel test robot <lkp@intel.com>
-Link: https://lore.kernel.org/linux-mm/202111302102.apaePz2J-lkp@intel.com
-Fixes: 5fd32ae0433a ("libertas: Use struct_group() for memcpy() region")
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/marvell/libertas/host.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That is an easy experiment to try. Use the "disable_ps_mode=y' module option for 
+rtw89core.
 
-diff --git a/drivers/net/wireless/marvell/libertas/host.h b/drivers/net/wireless/marvell/libertas/host.h
-index af96bdba3b2b..ceff4b92e7a1 100644
---- a/drivers/net/wireless/marvell/libertas/host.h
-+++ b/drivers/net/wireless/marvell/libertas/host.h
-@@ -308,7 +308,7 @@ struct txpd {
- 	__le32 tx_packet_location;
- 	/* Tx packet length */
- 	__le16 tx_packet_length;
--	struct_group(tx_dest_addr,
-+	struct_group_attr(tx_dest_addr, __packed,
- 		/* First 2 byte of destination MAC address */
- 		u8 tx_dest_addr_high[2];
- 		/* Last 4 byte of destination MAC address */
--- 
-2.30.2
+Larry
 
