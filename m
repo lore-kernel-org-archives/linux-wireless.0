@@ -2,101 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58754C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Dec 2021 19:02:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 843CEC433F5
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Dec 2021 00:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243231AbhLCTGM (ORCPT
+        id S1383940AbhLDBBR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Dec 2021 14:06:12 -0500
-Received: from gimli.kloenk.dev ([195.39.247.182]:59166 "EHLO gimli.kloenk.dev"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238521AbhLCTGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Dec 2021 14:06:12 -0500
-Content-Type: text/plain;
-        charset=us-ascii
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kloenk.dev; s=mail;
-        t=1638558160; bh=PJHqZmjT3PnRyKxLBEa+PZQKrzNlbhOqvNAuE9mhDOs=;
-        h=Subject:From:In-Reply-To:Date:Cc:References:To;
-        b=sOLaR4R9vIPwFEJjSjtLPLGE25SIm7tqOMgaCmB5kmfT2OQ1gWqqgwEsrHjMmq8+1
-         bXt9cR2IsJW2958D4HkPWNhazRQF+TZlQ+fByCzP0QSC7oUjGGHfJzW5PJQVfC3hFM
-         /UnHs9ApwCgX1ACoQED5yqWoZ4cHHnC+uuTVp4dk=
-Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.20.0.1.32\))
-Subject: Re: [PATCH] nl80211: use correct enum type in reg_reload_regdb
-From:   Finn Behrens <me@kloenk.dev>
-In-Reply-To: <20211203185700.756121-1-arnd@kernel.org>
-Date:   Fri, 3 Dec 2021 20:02:38 +0100
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Bhaskar Chowdhury <unixbhaskar@gmail.com>,
-        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-        Sriram R <srirrama@codeaurora.org>,
-        Qiheng Lin <linqiheng@huawei.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E95BFD18-CB51-4CA5-A6A8-370444F9E714@kloenk.dev>
-References: <20211203185700.756121-1-arnd@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
+        Fri, 3 Dec 2021 20:01:17 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:53308 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1383932AbhLDBBP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Dec 2021 20:01:15 -0500
+X-UUID: dee51072620a46068c8b402c3580d68b-20211204
+X-UUID: dee51072620a46068c8b402c3580d68b-20211204
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 294837326; Sat, 04 Dec 2021 08:57:48 +0800
+Received: from mtkexhb01.mediatek.inc (172.21.101.102) by
+ mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 4 Dec 2021 08:57:26 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by mtkexhb01.mediatek.inc
+ (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sat, 4 Dec
+ 2021 08:55:05 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 4 Dec 2021 08:55:04 +0800
+From:   <sean.wang@mediatek.com>
+To:     <lorenzo.bianconi@redhat.com>
+CC:     <nbd@nbd.name>, <sven@narfation.org>, <jf@simonwunderlich.de>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        "Sean Wang" <sean.wang@mediatek.com>
+Subject: Re: mt76: MT7921K monitor mode not working
+Date:   Sat, 4 Dec 2021 08:55:04 +0800
+Message-ID: <1638579304-17794-1-git-send-email-sean.wang@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <YapTmM3EztojTS9F@lore-desk--annotate>
+References: <YapTmM3EztojTS9F@lore-desk--annotate>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Sean Wang <sean.wang@mediatek.com>
 
+>> From: Sean Wang <sean.wang@mediatek.com>
+>>
+>> >> On Thursday, 2 December 2021 23:13:31 CET Lorenzo Bianconi wrote:
+>> >> > IIRC you need to disable runtime-pm and deep-sleep to proper
+>> >> > enable monitor
+>> >> > mode:
+>> >> >
+>> >> > echo 0 > /sys/kernel/debug/ieee80211/phy<x>/mt76/runtime-pm
+>> >> > echo 0 > /sys/kernel/debug/ieee80211/phy<x>/mt76/deep-sleep
+>> >> >
+>> >> > Can you please give it whirl?
+>> >>
+>> >> Jan gave me the card. I've set it to a rather busy channel (2.4GHz
+>> >> channel 11), created a monitor interface, attached tcpdump and then
+>> >> waited what happens. I didn't get anything and then I've tried to
+>> >> set runtime-pm and deep- sleep to 0. This didn't change the
+>> >> behavior for me at lot. I saw two packets and then it went silent again.
+>> >>
+>> >> I wanted to try the same on a different card (ath11k) in the same
+>> >> system. But it crashed my complete system - so I had to recreate
+>> >> the test setup. This time, I've set runtime-pm + deep-sleep to 0
+>> >> before creating mon0. After doing this, it seemed to work.
+>> >
+>> >interesting, adding Sean to the loop here.
+>> >It seems the fw is mainting a different state in this case.
+>>
+>> fw cannot receive any frame on monitor mode in deeply doze mode
+>>
+>> so it seemed to me we need a patch to explicitly disable pm runtime in driver when monitor interface is enabled until it is being disabled.
+>
+>ack, I agree, but I guess the point here is what is the difference (from the fw pov) if you disable runtime-pm/deep-sleep before/after the vif is added. I guess it is supposed to be the same, right?
 
-> On 3. Dec 2021, at 19:56, Arnd Bergmann <arnd@kernel.org> wrote:
->=20
-> From: Arnd Bergmann <arnd@arndb.de>
->=20
-> NL80211_USER_REG_HINT_USER is not something that can be
-> assigned to an 'enum nl80211_reg_initiator', as pointed out
-> by gcc.
->=20
-> net/wireless/reg.c: In function 'reg_reload_regdb':
-> net/wireless/reg.c:1137:28: error: implicit conversion from 'enum =
-nl80211_user_reg_hint_type' to 'enum nl80211_reg_initiator' =
-[-Werror=3Denum-conversion]
->=20
-> I don't know what was intended here, most likely it was either
-> NL80211_REGDOM_SET_BY_CORE (same numeric value) or
-> NL80211_REGDOM_SET_BY_USER (most similar name), so I pick the former
-> here, leaving the behavior unchanged while avoiding the warning.
->=20
-> Fixes: 1eda919126b4 ("nl80211: reset regdom when reloading regdb")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+yes, it is supposed to be the same.
 
-Thanks,
-I did miss it somehow, but after Intels robot mail about it, I did write =
-a proper patch, as this is a different value as I wanted for the =
-original proposed patch. But It works better this way.
-See =
-https://lore.kernel.org/linux-wireless/YadvTolO8rQcNCd%2F@gimli.kloenk.dev=
-/
-
-Cheers,
-Finn
-
-> net/wireless/reg.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 61f1bf1bc4a7..edb2081f75e8 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -1134,7 +1134,7 @@ int reg_reload_regdb(void)
-> 	request->wiphy_idx =3D WIPHY_IDX_INVALID;
-> 	request->alpha2[0] =3D current_regdomain->alpha2[0];
-> 	request->alpha2[1] =3D current_regdomain->alpha2[1];
-> -	request->initiator =3D NL80211_USER_REG_HINT_USER;
-> +	request->initiator =3D NL80211_REGDOM_SET_BY_CORE;
-> 	request->user_reg_hint_type =3D NL80211_USER_REG_HINT_USER;
-> 	request->reload =3D true;
->=20
-> --=20
-> 2.29.2
->=20
-
+>
+>Regards,
+>Lorenzo
+>
+>>
+>> >
+>> >@Sean: any pointers?
+>> >
+>> >Regards,
+>> >Lorenzo
+>> >
+>> >>
+>> >> Kind regards,
+>> >>	Sven
+>> >
+>>
+>
