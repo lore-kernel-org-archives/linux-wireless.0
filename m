@@ -2,96 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F73CC433F5
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Dec 2021 06:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E06FC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Dec 2021 06:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239878AbhLDGja (ORCPT
+        id S240659AbhLDGjc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 4 Dec 2021 01:39:30 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:50278 "EHLO
+        Sat, 4 Dec 2021 01:39:32 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:50290 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S238276AbhLDGj3 (ORCPT
+        with ESMTP id S238276AbhLDGjb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Dec 2021 01:39:29 -0500
+        Sat, 4 Dec 2021 01:39:31 -0500
 Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mtOeQ-0017AH-Qg; Sat, 04 Dec 2021 08:36:03 +0200
+        id 1mtOeS-0017AH-Rb; Sat, 04 Dec 2021 08:36:05 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sat,  4 Dec 2021 08:35:45 +0200
-Message-Id: <iwlwifi.20211204083238.51aea5b79ea4.I88a44798efda16e9fe480fb3e94224931d311b29@changeid>
+Date:   Sat,  4 Dec 2021 08:35:47 +0200
+Message-Id: <iwlwifi.20211204083238.fc8626515758.Ibfeffc8bb071f9773ea189992ebef056f51be1be@changeid>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211204063555.769822-1-luca@coelho.fi>
 References: <20211204063555.769822-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/12] iwlwifi: mvm: synchronize with FW after multicast commands
+Subject: [PATCH 04/12] iwlwifi: add support for Bz-Z HW
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mike Golant <michael.golant@intel.com>
 
-If userspace installs a lot of multicast groups very quickly, then
-we may run out of command queue space as we send the updates in an
-asynchronous fashion (due to locking concerns), and the CPU can
-create them faster than the firmware can process them. This is true
-even when mac80211 has a work struct that gets scheduled.
+Add support for Bz Z step HW with GF RF.
 
-Fix this by synchronizing with the firmware after sending all those
-commands - outside of the iteration we can send a synchronous echo
-command that just has the effect of the CPU waiting for the prior
-asynchronous commands to finish. This also will cause fewer of the
-commands to be sent to the firmware overall, because the work will
-only run once when rescheduled multiple times while it's running.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=213649
-Suggested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reported-by: Maximilian Ernestus <maximilian@ernestus.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mike Golant <michael.golant@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c   | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h    |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  7 +++++++
+ 4 files changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 20422e640059..9d84be991469 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1710,6 +1710,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	struct iwl_mvm_mc_iter_data iter_data = {
- 		.mvm = mvm,
- 	};
-+	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 1572097bccf1..7a06bbae178b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -55,6 +55,7 @@
+ #define IWL_BZ_A_MR_A_FW_PRE		"iwlwifi-bz-a0-mr-a0-"
+ #define IWL_BZ_A_FM_A_FW_PRE		"iwlwifi-bz-a0-fm-a0-"
+ #define IWL_GL_A_FM_A_FW_PRE		"iwlwifi-gl-a0-fm7-a0-"
++#define IWL_BZ_Z_GF_A_FW_PRE		"iwlwifi-bz-z0-gf-a0-"
  
- 	lockdep_assert_held(&mvm->mutex);
  
-@@ -1719,6 +1720,22 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	ieee80211_iterate_active_interfaces_atomic(
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_mc_iface_iterator, &iter_data);
+ #define IWL_QU_B_HR_B_MODULE_FIRMWARE(api) \
+@@ -113,6 +114,8 @@
+ 		IWL_BZ_A_FM_A_FW_PRE __stringify(api) ".ucode"
+ #define IWL_GL_A_FM_A_MODULE_FIRMWARE(api) \
+ 		IWL_GL_A_FM_A_FW_PRE __stringify(api) ".ucode"
++#define IWL_BZ_Z_GF_A_MODULE_FIRMWARE(api) \
++	IWL_BZ_Z_GF_A_FW_PRE __stringify(api) ".ucode"
+ 
+ static const struct iwl_base_params iwl_22000_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+@@ -879,6 +882,13 @@ const struct iwl_cfg iwl_cfg_gl_a0_fm_a0 = {
+ 	.num_rbds = IWL_NUM_RBDS_AX210_HE,
+ };
+ 
++const struct iwl_cfg iwl_cfg_bz_z0_gf_a0 = {
++	.fw_name_pre = IWL_BZ_Z_GF_A_FW_PRE,
++	.uhb_supported = true,
++	IWL_DEVICE_BZ,
++	.num_rbds = IWL_NUM_RBDS_AX210_HE,
++};
 +
-+	/*
-+	 * Send a (synchronous) ech command so that we wait for the
-+	 * multiple asynchronous MCAST_FILTER_CMD commands sent by
-+	 * the interface iterator. Otherwise, we might get here over
-+	 * and over again (by userspace just sending a lot of these)
-+	 * and the CPU can send them faster than the firmware can
-+	 * process them.
-+	 * Note that the CPU is still faster - but with this we'll
-+	 * actually send fewer commands overall because the CPU will
-+	 * not schedule the work in mac80211 as frequently if it's
-+	 * still running when rescheduled (possibly multiple times).
-+	 */
-+	ret = iwl_mvm_send_cmd_pdu(mvm, ECHO_CMD, 0, 0, NULL);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to synchronize multicast groups update\n");
- }
+ MODULE_FIRMWARE(IWL_QU_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_QNJ_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_QU_C_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 665167a223f6..d704e278b577 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -634,6 +634,7 @@ extern const struct iwl_cfg iwl_cfg_bz_a0_gf4_a0;
+ extern const struct iwl_cfg iwl_cfg_bz_a0_mr_a0;
+ extern const struct iwl_cfg iwl_cfg_bz_a0_fm_a0;
+ extern const struct iwl_cfg iwl_cfg_gl_a0_fm_a0;
++extern const struct iwl_cfg iwl_cfg_bz_z0_gf_a0;
+ #endif /* CONFIG_IWLMVM */
  
- static u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index cfea20e507b3..046a01f5988b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -304,6 +304,7 @@ enum {
+ 	SILICON_A_STEP = 0,
+ 	SILICON_B_STEP,
+ 	SILICON_C_STEP,
++	SILICON_Z_STEP = 0xf,
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index db8b62e432eb..93d789670f89 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1130,6 +1130,13 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+ 		      iwl_cfg_gl_a0_fm_a0, iwl_bz_name),
+ 
++/* BZ Z step */
++	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_BZ, SILICON_Z_STEP,
++		      IWL_CFG_RF_TYPE_GF, IWL_CFG_ANY,
++		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
++		      iwl_cfg_bz_z0_gf_a0, iwl_bz_name),
++
+ /* SoF with JF2 */
+ 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+ 		      IWL_CFG_MAC_TYPE_SOF, IWL_CFG_ANY,
 -- 
 2.33.1
 
