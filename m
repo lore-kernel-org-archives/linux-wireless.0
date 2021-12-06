@@ -2,461 +2,171 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D87B9C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Dec 2021 14:10:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AAFEC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Dec 2021 16:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245646AbhLFOOO (ORCPT
+        id S1386793AbhLFQTN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Dec 2021 09:14:14 -0500
-Received: from mailgw01.mediatek.com ([60.244.123.138]:54532 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S245673AbhLFOOH (ORCPT
+        Mon, 6 Dec 2021 11:19:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41244 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1382208AbhLFQSq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Dec 2021 09:14:07 -0500
-X-UUID: 5dde3c35272f4919a7a6d53679afc9cc-20211206
-X-UUID: 5dde3c35272f4919a7a6d53679afc9cc-20211206
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-        (envelope-from <meichia.chiu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 710644008; Mon, 06 Dec 2021 22:10:34 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Mon, 6 Dec 2021 22:10:33 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 6 Dec 2021 22:10:33 +0800
-From:   MeiChia Chiu <MeiChia.Chiu@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Money Wang <Money.Wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        MeiChia Chiu <meichia.chiu@mediatek.com>
-Subject: [PATCH] mt76: mt7915: add mu-mimo and ofdma debugfs knobs
-Date:   Mon, 6 Dec 2021 22:10:06 +0800
-Message-ID: <20211206141006.29632-1-MeiChia.Chiu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Mon, 6 Dec 2021 11:18:46 -0500
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E2E1C08E844
+        for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2021 08:11:07 -0800 (PST)
+Received: by mail-pf1-x429.google.com with SMTP id n26so10603413pff.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2021 08:11:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/dZMe5fXW3JmkstQUnuTxaguikQO8croA43e/A9yBnw=;
+        b=wsxIo8iRiao/IrGDfq47xrllVJ4TjbrPMq5pi3ujnxN/VKCJ3gsfxKRCeoeCqPfYQu
+         kOwY5U32UUnpRggGW8w10rv9Qb+gMMChBODZE8cet49sqH0aXLIuy3Hy/fNcF2I49xtW
+         w/tPBkVH6OZ0gml4qbyNHA2LKoSRu2Duh75QZw7O02/WxlK7y7iu/eS+gRwq5vnZ0TMf
+         4NrQWs80FVlPsg+02Ay9mkBOTx6d4n9cp8+8F0Dpa7NfdGkA7BMrgrVXUDuNa+sp9Oa0
+         tBWh2Wm8WKIWHNKf1R7ackwqOJUltuACyxAA6XpX27PTUDAPkFN9K/s0tPCDvwcBdLVB
+         v8Ww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/dZMe5fXW3JmkstQUnuTxaguikQO8croA43e/A9yBnw=;
+        b=ND8Qb7XzDXlHZWIEOAw7zNpPqxEID9SXjezmpR9g0OjypudOh0kp22CLPDZhMyg0jD
+         vXDYXeb0+bc7ayF0meRWgon7OU+PbbJK1fkQ8NxIHl45o020MdtABd9pyHPatu4dsYFm
+         0KGpTpYoq+aleZT3ETHoY5Alf0tj0ElSEAHV8BwQkxHhzfoWMDXGueSTfZ5Iua0YdyZP
+         eFDQoCwmr2WxGjO2vCMY3oVsrkugUTwL31P8dZlicchiWFfiZjxzUHFpaaq5WrcyqBhI
+         pBO9UxlH7jgjQx2fKqDTQKQRq8sGiAzh5hOlvK3FpwR3jc3J0kjayiEx/ZzFIZX2ZxYR
+         BVNg==
+X-Gm-Message-State: AOAM531K31B3vOknf8ouNaKOp2brZbUsYxs7n3UTXSjKu2oFZPB5Vukn
+        xArnTGyhCDTJULn+46BWdYRY
+X-Google-Smtp-Source: ABdhPJzHztOd8XGPiN1RUx+EQUVKeXqRT/D1cHtxog5GiB7PeT8WgTwjvv+39GKJ//C4Nqx58PR66g==
+X-Received: by 2002:a05:6a00:1594:b0:4ae:dc6:f344 with SMTP id u20-20020a056a00159400b004ae0dc6f344mr7919655pfk.56.1638807066912;
+        Mon, 06 Dec 2021 08:11:06 -0800 (PST)
+Received: from localhost.localdomain ([117.217.176.38])
+        by smtp.gmail.com with ESMTPSA id lr6sm11288968pjb.0.2021.12.06.08.11.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Dec 2021 08:11:06 -0800 (PST)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     mhi@lists.linux.dev
+Cc:     hemantk@codeaurora.org, bbhatt@codeaurora.org,
+        loic.poulain@linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        stable@vger.kernel.org, Pengyu Ma <mapengyu@gmail.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH] bus: mhi: core: Add support for forced PM resume
+Date:   Mon,  6 Dec 2021 21:40:59 +0530
+Message-Id: <20211206161059.107007-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: MeiChia Chiu <meichia.chiu@mediatek.com>
+From: Loic Poulain <loic.poulain@linaro.org>
 
-Add mu-mimo and ofdma packet counters statistics.
+For whatever reason, some devices like QCA6390, WCN6855 using ath11k
+are not in M3 state during PM resume, but still functional. The
+mhi_pm_resume should then not fail in those cases, and let the higher
+level device specific stack continue resuming process.
 
-Reviewed-by: Money Wang <money.wang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: MeiChia Chiu <meichia.chiu@mediatek.com>
+Add a new parameter to mhi_pm_resume, to force resuming, whatever the
+current MHI state is. This fixes a regression with non functional
+ath11k WiFi after suspend/resume cycle on some machines.
+
+Bug report: https://bugzilla.kernel.org/show_bug.cgi?id=214179
+
+Cc: stable@vger.kernel.org #5.13
+Fixes: 020d3b26c07a ("bus: mhi: Early MHI resume failure in non M3 state")
+Reported-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Pengyu Ma <mapengyu@gmail.com>
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+[mani: Added comment, bug report, added reported-by tags and CCed stable]
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- .../net/wireless/mediatek/mt76/mt7915/debugfs.c | 242 ++++++++++++++++++++++++++++++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c     |  41 ++++++++
- .../net/wireless/mediatek/mt76/mt7915/mcu.h     |  45 +++++++++
- .../net/wireless/mediatek/mt76/mt7915/mt7915.h  |   3 +
- 4 files changed, 330 insertions(+), 1 deletion(-)
+ drivers/bus/mhi/core/pm.c             | 10 +++++++---
+ drivers/bus/mhi/pci_generic.c         |  2 +-
+ drivers/net/wireless/ath/ath11k/mhi.c |  6 +++++-
+ include/linux/mhi.h                   |  3 ++-
+ 4 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index a15aa256..b57818b3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -81,6 +81,244 @@ mt7915_radar_trigger(void *data, u64 val)
- DEFINE_DEBUGFS_ATTRIBUTE(fops_radar_trigger, NULL,
- 			 mt7915_radar_trigger, "%lld\n");
- 
-+static int
-+mt7915_muru_debug_set(void *data, u64 val)
-+{
-+	struct mt7915_dev *dev = data;
-+
-+	dev->muru_debug = val;
-+	mt7915_mcu_muru_debug_set(dev, data);
-+
-+	return 0;
-+}
-+
-+static int
-+mt7915_muru_debug_get(void *data, u64 *val)
-+{
-+	struct mt7915_dev *dev = data;
-+
-+	*val = dev->muru_debug;
-+
-+	return 0;
-+}
-+
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_muru_debug, mt7915_muru_debug_get,
-+			 mt7915_muru_debug_set, "%lld\n");
-+
-+static int mt7915_muru_stat_show(struct seq_file *file, void *data)
-+{
-+	struct mt7915_phy *phy = file->private;
-+	struct mt7915_dev *dev = phy->dev;
-+	struct mt7915_mcu_muru_stats mu_stats = {};
-+	static const char * const dl_non_he_type[] = {
-+		"CCK", "OFDM", "HT MIX", "HT GF",
-+		"VHT SU", "VHT 2MU", "VHT 3MU", "VHT 4MU"
-+	};
-+	static const char * const dl_he_type[] = {
-+		"HE SU", "HE EXT", "HE 2MU", "HE 3MU", "HE 4MU",
-+		"HE 2RU", "HE 3RU", "HE 4RU", "HE 5-8RU", "HE 9-16RU",
-+		"HE >16RU"
-+	};
-+	static const char * const ul_he_type[] = {
-+		"HE 2MU", "HE 3MU", "HE 4MU", "HE SU", "HE 2RU",
-+		"HE 3RU", "HE 4RU", "HE 5-8RU", "HE 9-16RU", "HE >16RU"
-+	};
-+	int ret, i;
-+	__le32 total_ppdu_cnt;
-+
-+	if (!dev->muru_debug) {
-+		seq_puts(file, "Please enable muru_debug first.\n");
-+		return 0;
-+	}
-+
-+	mutex_lock(&dev->mt76.mutex);
-+
-+	ret = mt7915_mcu_muru_debug_get(phy, &mu_stats);
-+	if (ret)
-+		goto exit;
-+
-+#define __ms_ratio(s)	(!total_ppdu_cnt ? 0 :			  \
-+		le32_to_cpu(s) * 100 / le32_to_cpu(total_ppdu_cnt))
-+
-+	/* Non-HE Downlink*/
-+	total_ppdu_cnt = mu_stats.dl.cck_cnt +
-+		mu_stats.dl.ofdm_cnt +
-+		mu_stats.dl.htmix_cnt +
-+		mu_stats.dl.htgf_cnt +
-+		mu_stats.dl.vht_su_cnt +
-+		mu_stats.dl.vht_2mu_cnt +
-+		mu_stats.dl.vht_3mu_cnt +
-+		mu_stats.dl.vht_4mu_cnt;
-+
-+	seq_puts(file, "[Non-HE]\nDownlink\nData Type:  ");
-+
-+	for (i = 0; i < 5; i++)
-+		seq_printf(file, "%8s | ", dl_non_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | %8u | %8u | ",
-+		   le32_to_cpu(mu_stats.dl.cck_cnt),
-+		   le32_to_cpu(mu_stats.dl.ofdm_cnt),
-+		   le32_to_cpu(mu_stats.dl.htmix_cnt),
-+		   le32_to_cpu(mu_stats.dl.htgf_cnt),
-+		   le32_to_cpu(mu_stats.dl.vht_su_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | %7d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.dl.cck_cnt),
-+		   __ms_ratio(mu_stats.dl.ofdm_cnt),
-+		   __ms_ratio(mu_stats.dl.htmix_cnt),
-+		   __ms_ratio(mu_stats.dl.htgf_cnt),
-+		   __ms_ratio(mu_stats.dl.vht_su_cnt));
-+
-+	seq_puts(file, "\nDownlink MU-MIMO\nData Type:  ");
-+
-+	for (i = 5; i < 8; i++)
-+		seq_printf(file, "%8s | ", dl_non_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | ",
-+		   le32_to_cpu(mu_stats.dl.vht_2mu_cnt),
-+		   le32_to_cpu(mu_stats.dl.vht_3mu_cnt),
-+		   le32_to_cpu(mu_stats.dl.vht_4mu_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.dl.vht_2mu_cnt),
-+		   __ms_ratio(mu_stats.dl.vht_3mu_cnt),
-+		   __ms_ratio(mu_stats.dl.vht_4mu_cnt));
-+
-+	/* HE Downlink */
-+	total_ppdu_cnt = mu_stats.dl.he_su_cnt +
-+		mu_stats.dl.he_ext_su_cnt +
-+		mu_stats.dl.he_2mu_cnt +
-+		mu_stats.dl.he_3mu_cnt +
-+		mu_stats.dl.he_4mu_cnt +
-+		mu_stats.dl.he_2ru_cnt +
-+		mu_stats.dl.he_3ru_cnt +
-+		mu_stats.dl.he_4ru_cnt +
-+		mu_stats.dl.he_5to8ru_cnt +
-+		mu_stats.dl.he_9to16ru_cnt +
-+		mu_stats.dl.he_gtr16ru_cnt;
-+
-+	seq_puts(file, "\n\n[HE]\nDownlink\nData Type:  ");
-+
-+	for (i = 0; i < 2; i++)
-+		seq_printf(file, "%8s | ", dl_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | ",
-+		   le32_to_cpu(mu_stats.dl.he_su_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_ext_su_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.dl.he_su_cnt),
-+		   __ms_ratio(mu_stats.dl.he_ext_su_cnt));
-+
-+	seq_puts(file, "\nDownlink MU-MIMO\nData Type:  ");
-+
-+	for (i = 2; i < 5; i++)
-+		seq_printf(file, "%8s | ", dl_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | ",
-+		   le32_to_cpu(mu_stats.dl.he_2mu_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_3mu_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_4mu_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.dl.he_2mu_cnt),
-+		   __ms_ratio(mu_stats.dl.he_3mu_cnt),
-+		   __ms_ratio(mu_stats.dl.he_4mu_cnt));
-+
-+	seq_puts(file, "\nDownlink OFDMA\nData Type:  ");
-+
-+	for (i = 5; i < 11; i++)
-+		seq_printf(file, "%8s | ", dl_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | %8u | %9u | %8u | ",
-+		   le32_to_cpu(mu_stats.dl.he_2ru_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_3ru_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_4ru_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_5to8ru_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_9to16ru_cnt),
-+		   le32_to_cpu(mu_stats.dl.he_gtr16ru_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | %7d%% | %8d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.dl.he_2ru_cnt),
-+		   __ms_ratio(mu_stats.dl.he_3ru_cnt),
-+		   __ms_ratio(mu_stats.dl.he_4ru_cnt),
-+		   __ms_ratio(mu_stats.dl.he_5to8ru_cnt),
-+		   __ms_ratio(mu_stats.dl.he_9to16ru_cnt),
-+		   __ms_ratio(mu_stats.dl.he_gtr16ru_cnt));
-+
-+	/* HE Uplink */
-+	total_ppdu_cnt = mu_stats.ul.hetrig_2ru_cnt +
-+		mu_stats.ul.hetrig_3ru_cnt +
-+		mu_stats.ul.hetrig_4ru_cnt +
-+		mu_stats.ul.hetrig_5to8ru_cnt +
-+		mu_stats.ul.hetrig_9to16ru_cnt +
-+		mu_stats.ul.hetrig_gtr16ru_cnt +
-+		mu_stats.ul.hetrig_su_cnt +
-+		mu_stats.ul.hetrig_2mu_cnt +
-+		mu_stats.ul.hetrig_3mu_cnt +
-+		mu_stats.ul.hetrig_4mu_cnt;
-+
-+	seq_puts(file, "\n\nUplink\nData Type:  ");
-+	seq_puts(file, "\nTrigger-based Uplink MU-MIMO\nData Type:  ");
-+
-+	for (i = 0; i < 3; i++)
-+		seq_printf(file, "%8s | ", ul_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | ",
-+		   le32_to_cpu(mu_stats.ul.hetrig_2mu_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_3mu_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_4mu_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | ",
-+		   __ms_ratio(mu_stats.ul.hetrig_2mu_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_3mu_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_4mu_cnt));
-+
-+	seq_puts(file, "\nTrigger-based Uplink OFDMA\nData Type:  ");
-+
-+	for (i = 3; i < 10; i++)
-+		seq_printf(file, "%8s | ", ul_he_type[i]);
-+
-+	seq_puts(file, "\nTotal Cnt:  ");
-+	seq_printf(file, "%8u | %8u | %8u | %8u | %8u | %9u |  %7u | ",
-+		   le32_to_cpu(mu_stats.ul.hetrig_su_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_2ru_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_3ru_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_4ru_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_5to8ru_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_9to16ru_cnt),
-+		   le32_to_cpu(mu_stats.ul.hetrig_gtr16ru_cnt));
-+
-+	seq_puts(file, "\nRatio    :  ");
-+	seq_printf(file, "%7d%% | %7d%% | %7d%% | %7d%% | %7d%% |  %7d%% | %7d%% |\n",
-+		   __ms_ratio(mu_stats.ul.hetrig_su_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_2ru_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_3ru_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_4ru_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_5to8ru_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_9to16ru_cnt),
-+		   __ms_ratio(mu_stats.ul.hetrig_gtr16ru_cnt));
-+#undef __ms_ratio
-+
-+exit:
-+	mutex_unlock(&dev->mt76.mutex);
-+
-+	return ret;
-+}
-+DEFINE_SHOW_ATTRIBUTE(mt7915_muru_stat);
-+
- static int
- mt7915_fw_debug_wm_set(void *data, u64 val)
- {
-@@ -528,7 +766,9 @@ int mt7915_init_debugfs(struct mt7915_phy *phy)
- 	dir = mt76_register_debugfs_fops(phy->mt76, NULL);
- 	if (!dir)
- 		return -ENOMEM;
--
-+	debugfs_create_file("muru_debug", 0600, dir, dev, &fops_muru_debug);
-+	debugfs_create_file("muru_stat", 0400, dir, phy,
-+			    &mt7915_muru_stat_fops);
- 	debugfs_create_file("hw-queues", 0400, dir, phy,
- 			    &mt7915_hw_queues_fops);
- 	debugfs_create_file("xmit-queues", 0400, dir, phy,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 73a11448..a32d2199 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2993,6 +2993,47 @@ int mt7915_mcu_fw_dbg_ctrl(struct mt7915_dev *dev, u32 module, u8 level)
- 				 sizeof(data), false);
+diff --git a/drivers/bus/mhi/core/pm.c b/drivers/bus/mhi/core/pm.c
+index 7464f5d09973..4ddd266e042e 100644
+--- a/drivers/bus/mhi/core/pm.c
++++ b/drivers/bus/mhi/core/pm.c
+@@ -881,7 +881,7 @@ int mhi_pm_suspend(struct mhi_controller *mhi_cntrl)
  }
+ EXPORT_SYMBOL_GPL(mhi_pm_suspend);
  
-+int mt7915_mcu_muru_debug_set(struct mt7915_dev *dev, bool enabled)
-+{
-+	struct {
-+		__le32 cmd;
-+		u8 enable;
-+	} data = {
-+		.cmd = cpu_to_le32(MURU_SET_TXC_TX_STATS_EN),
-+		.enable = enabled,
-+	};
-+
-+	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD(MURU_CTRL), &data,
-+				sizeof(data), false);
-+}
-+
-+int mt7915_mcu_muru_debug_get(struct mt7915_phy *phy, void *ms)
-+{
-+	struct mt7915_dev *dev = phy->dev;
-+	struct sk_buff *skb;
-+	struct mt7915_mcu_muru_stats *mu_stats =
-+				(struct mt7915_mcu_muru_stats *)ms;
-+	int ret;
-+
-+	struct {
-+		__le32 cmd;
-+		u8 band_idx;
-+	} req = {
-+		.cmd = cpu_to_le32(MURU_GET_TXC_TX_STATS),
-+		.band_idx = phy != &dev->phy,
-+	};
-+
-+	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(MURU_CTRL),
-+					&req, sizeof(req), true, &skb);
-+	if (ret)
-+		return ret;
-+
-+	memcpy(mu_stats, skb->data, sizeof(struct mt7915_mcu_muru_stats));
-+	dev_kfree_skb(skb);
-+
-+	return 0;
-+}
-+
- static int mt7915_mcu_set_mwds(struct mt7915_dev *dev, bool enabled)
+-int mhi_pm_resume(struct mhi_controller *mhi_cntrl)
++int mhi_pm_resume(struct mhi_controller *mhi_cntrl, bool force)
  {
- 	struct {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index 4636b7dc..60b18457 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -44,6 +44,13 @@ enum {
- 	MCU_EXT_EVENT_RDD_REPORT = 0x3a,
- 	MCU_EXT_EVENT_CSA_NOTIFY = 0x4f,
- 	MCU_EXT_EVENT_BCC_NOTIFY = 0x75,
-+	MCU_EXT_EVENT_MURU_CTRL = 0x9f,
-+};
-+
-+/* tx cmd tx statistics */
-+enum {
-+	MURU_SET_TXC_TX_STATS_EN = 150,
-+	MURU_GET_TXC_TX_STATS = 151,
- };
+ 	struct mhi_chan *itr, *tmp;
+ 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+@@ -898,8 +898,12 @@ int mhi_pm_resume(struct mhi_controller *mhi_cntrl)
+ 	if (MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state))
+ 		return -EIO;
  
- enum {
-@@ -206,6 +213,44 @@ struct mt7915_mcu_tx {
- 	struct edca edca[IEEE80211_NUM_ACS];
- } __packed;
+-	if (mhi_get_mhi_state(mhi_cntrl) != MHI_STATE_M3)
+-		return -EINVAL;
++	if (mhi_get_mhi_state(mhi_cntrl) != MHI_STATE_M3) {
++		dev_warn(dev, "Resuming from non M3 state (%s)\n",
++			 TO_MHI_STATE_STR(mhi_get_mhi_state(mhi_cntrl)));
++		if (!force)
++			return -EINVAL;
++	}
  
-+struct mt7915_mcu_muru_stats {
-+	__le32 event_id;
-+	struct {
-+		__le32 cck_cnt;
-+		__le32 ofdm_cnt;
-+		__le32 htmix_cnt;
-+		__le32 htgf_cnt;
-+		__le32 vht_su_cnt;
-+		__le32 vht_2mu_cnt;
-+		__le32 vht_3mu_cnt;
-+		__le32 vht_4mu_cnt;
-+		__le32 he_su_cnt;
-+		__le32 he_ext_su_cnt;
-+		__le32 he_2ru_cnt;
-+		__le32 he_2mu_cnt;
-+		__le32 he_3ru_cnt;
-+		__le32 he_3mu_cnt;
-+		__le32 he_4ru_cnt;
-+		__le32 he_4mu_cnt;
-+		__le32 he_5to8ru_cnt;
-+		__le32 he_9to16ru_cnt;
-+		__le32 he_gtr16ru_cnt;
-+	} dl;
-+
-+	struct {
-+		__le32 hetrig_su_cnt;
-+		__le32 hetrig_2ru_cnt;
-+		__le32 hetrig_3ru_cnt;
-+		__le32 hetrig_4ru_cnt;
-+		__le32 hetrig_5to8ru_cnt;
-+		__le32 hetrig_9to16ru_cnt;
-+		__le32 hetrig_gtr16ru_cnt;
-+		__le32 hetrig_2mu_cnt;
-+		__le32 hetrig_3mu_cnt;
-+		__le32 hetrig_4mu_cnt;
-+	} ul;
-+};
-+
- #define WMM_AIFS_SET		BIT(0)
- #define WMM_CW_MIN_SET		BIT(1)
- #define WMM_CW_MAX_SET		BIT(2)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index c6c846d1..81f1ab18 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -273,6 +273,7 @@ struct mt7915_dev {
+ 	/* Notify clients about exiting LPM */
+ 	list_for_each_entry_safe(itr, tmp, &mhi_cntrl->lpm_chans, node) {
+diff --git a/drivers/bus/mhi/pci_generic.c b/drivers/bus/mhi/pci_generic.c
+index 9ef41354237c..efd1da66fdf9 100644
+--- a/drivers/bus/mhi/pci_generic.c
++++ b/drivers/bus/mhi/pci_generic.c
+@@ -959,7 +959,7 @@ static int __maybe_unused mhi_pci_runtime_resume(struct device *dev)
+ 		return 0; /* Nothing to do at MHI level */
  
- 	bool dbdc_support;
- 	bool flash_mode;
-+	bool muru_debug;
- 	bool ibf;
- 	u8 fw_debug_wm;
- 	u8 fw_debug_wa;
-@@ -526,6 +527,8 @@ int mt7915_dfs_init_radar_detector(struct mt7915_phy *phy);
- void mt7915_set_stream_he_caps(struct mt7915_phy *phy);
- void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy);
- void mt7915_update_channel(struct mt76_phy *mphy);
-+int mt7915_mcu_muru_debug_set(struct mt7915_dev *dev, bool enable);
-+int mt7915_mcu_muru_debug_get(struct mt7915_phy *phy, void *ms);
- int mt7915_init_debugfs(struct mt7915_phy *phy);
- #ifdef CONFIG_MAC80211_DEBUGFS
- void mt7915_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	/* Exit M3, transition to M0 state */
+-	err = mhi_pm_resume(mhi_cntrl);
++	err = mhi_pm_resume(mhi_cntrl, false);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "failed to resume device: %d\n", err);
+ 		goto err_recovery;
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index 26c7ae242db6..f1f2fa2d690d 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -533,7 +533,11 @@ static int ath11k_mhi_set_state(struct ath11k_pci *ab_pci,
+ 		ret = mhi_pm_suspend(ab_pci->mhi_ctrl);
+ 		break;
+ 	case ATH11K_MHI_RESUME:
+-		ret = mhi_pm_resume(ab_pci->mhi_ctrl);
++		/* Do force MHI resume as some devices like QCA6390, WCN6855
++		 * are not in M3 state but they are functional. So just ignore
++		 * the MHI state while resuming.
++		 */
++		ret = mhi_pm_resume(ab_pci->mhi_ctrl, true);
+ 		break;
+ 	case ATH11K_MHI_TRIGGER_RDDM:
+ 		ret = mhi_force_rddm_mode(ab_pci->mhi_ctrl);
+diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+index 723985879035..102303288cee 100644
+--- a/include/linux/mhi.h
++++ b/include/linux/mhi.h
+@@ -660,8 +660,9 @@ int mhi_pm_suspend(struct mhi_controller *mhi_cntrl);
+ /**
+  * mhi_pm_resume - Resume MHI from suspended state
+  * @mhi_cntrl: MHI controller
++ * @force: Force resuming to M0 irrespective of the device MHI state
+  */
+-int mhi_pm_resume(struct mhi_controller *mhi_cntrl);
++int mhi_pm_resume(struct mhi_controller *mhi_cntrl, bool force);
+ 
+ /**
+  * mhi_download_rddm_image - Download ramdump image from device for
 -- 
-2.29.2
+2.25.1
 
