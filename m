@@ -2,163 +2,348 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF675C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Dec 2021 08:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E954BC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Dec 2021 09:49:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239685AbhLFIvq (ORCPT
+        id S241417AbhLFJwa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Dec 2021 03:51:46 -0500
-Received: from so254-9.mailgun.net ([198.61.254.9]:48529 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239624AbhLFIvp (ORCPT
+        Mon, 6 Dec 2021 04:52:30 -0500
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:18279 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241499AbhLFJwW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Dec 2021 03:51:45 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1638780496; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=RgEGARtdX8Ecq3hZIc6J30SsDuIyhFkmJZWmTKtHbWs=;
- b=kLuedqTNgIgeB6+CBxSyCI2WQZHSECD/CSbpruOPC/ZRTqozhsYiP8o27vv3swDpg6Yp+SZ3
- 2DWcZC5cgkH4AxOnBlcASYe90GgmTKP9pqAHJ5SoqxLOOfVN8yYiS+ugSUkLCY3WoVuXray8
- xtbTp/HZCsrFYUQmHJCtxih8EAk=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 61adce507d878c8dedfa1c9f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 06 Dec 2021 08:48:16
- GMT
-Sender: wgong=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 96E95C4360D; Mon,  6 Dec 2021 08:48:05 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CEA78C4360C;
-        Mon,  6 Dec 2021 08:48:04 +0000 (UTC)
+        Mon, 6 Dec 2021 04:52:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1638784134; x=1670320134;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=hwKJ/axYaIAgbKvPW/cwUvOdDi+iX6PE5iTzUs7SSHk=;
+  b=WFXSj+sRzZ8WDqhfLX/1UUQ7f+KugN4ubRCuCivOgRpJUWLh3BcznF8O
+   0zdAqCNzbTmckz7H4Srcq5WRxy3qZV8BcHjP91o5GK8CarnDA6B1G0rTn
+   /tNddfmWwzIyEieivPuglxd5EUe69PN+ESit2+Q+NS/DRTfPrbUKs7PxV
+   8=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 06 Dec 2021 01:48:53 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2021 01:48:53 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Mon, 6 Dec 2021 01:48:52 -0800
+Received: from FUZHOU.qca.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Mon, 6 Dec 2021 01:48:51 -0800
+From:   Cheng Wang <quic_chengwan@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_chengwan@quicinc.com>
+Subject: [PATCH] ath11k: add support of firmware logging for WCN6855
+Date:   Mon, 6 Dec 2021 17:48:34 +0800
+Message-ID: <20211206094834.2060080-1-quic_chengwan@quicinc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 06 Dec 2021 16:48:04 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Venkateswara Naralasetty <vnaralas@qti.qualcomm.com>,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        wgong=codeaurora.org@codeaurora.org
-Subject: Re: [PATCH v5] cfg80211: save power spectral density(psd) of
- regulatory rule
-In-Reply-To: <6053b0963612057267f00b89e14b9e15@codeaurora.org>
-References: <20210928085211.26186-1-wgong@codeaurora.org>
- <bd649a3d2cf2ea9064d427d633055891@codeaurora.org>
- <cb20427eae96c4551084e4c899618b94@codeaurora.org>
- <2afb1bf6f06cb53f43fe0d354afa4e7c@codeaurora.org>
- <2ed76cff292dcca18326de0407a93821@codeaurora.org>
- <1222384c2bc7d80bf572b65ab17660477bb27300.camel@sipsolutions.net>
- <562080d7fc3b7568811c47a8e8e79156@codeaurora.org>
- <DM8PR02MB8154258563A4F7C805C84B4BE6B59@DM8PR02MB8154.namprd02.prod.outlook.com>
- <0b05f6e555bcb89c49f56279c077ce63@codeaurora.org>
- <18363bc18538ea9b7e8fe28f4c5595c54f3b93d3.camel@sipsolutions.net>
- <67936afa5545b9a5d6eb5ad6931026d7@codeaurora.org>
- <6053b0963612057267f00b89e14b9e15@codeaurora.org>
-Message-ID: <68b700b371399db0ed4174d20ddd0b8b@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+Host enables WMI firmware logging feature via QMI message.
+Host receives firmware logging messages on WMI_DIAG_EVENTID, then
+sends logging messages to user space via event tracing infrastructure.
 
-Are you waiting for the AP/STA concurrency patches, then apply this 
-patch?
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 
-On 2021-11-09 17:57, Wen Gong wrote:
-> Hi Johannes,
-> 
-> do you have comments about my description for PSD?
-> 
-> On 2021-10-26 19:26, Wen Gong wrote:
->> On 2021-10-26 04:09, Johannes Berg wrote:
->>> On Mon, 2021-10-11 at 15:48 +0800, Wen Gong wrote:
->>>> 
->>>> > IMO, Only power rules and PSD info might vary for AP and STATION. Rest
->>>> > of the rules will remains same right?
->>>> >
->>>> The freq_range may also be different for AP and STATION.
->>>> and reg_rules number also may also be different for AP and STATION.
->>>> 
->>>> for example:
->>>> SUBORDINATE CLIENT of STANDARD POWER reg rules number 2
->>>> reg rule 1: (5945 - 6425 @ 160) (0, 30) (FLAGS 0) (psd flag 1 EIRP 
->>>> 17
->>>> dB/MHz)
->>>> reg rule 2: (6525 - 6885 @ 160) (0, 30) (FLAGS 0) (psd flag 1 EIRP 
->>>> 17
->>>> dB/MHz)
->>>> 
->>>> INDOOR AP reg rules number 1
->>>> reg rule 1: (5945 - 7125 @ 160) (0, 24) (FLAGS 0) (psd flag 0 EIRP 0
->>>> dB/MHz)
->>> 
->>> That seems right, but isn't that an orthogonal question?
->>> 
->>> Here, on this patch, we're discussing what data we should have in the
->>> channel information, and it would seem that if it's different for
->>> AP/client, then we do need both information stored, so that we can 
->>> cope
->>> with concurrency between AP and client?
->>> 
->>> If we additionally need to have different data for the regulatory 
->>> rules
->>> for AP and client, that might mean we need to go back and actually
->>> change the code there *as well*, and then fill in the right fields in
->>> this patch?
->>> 
->>> Unless somehow we're convinced that for this feature we don't need to
->>> worry about concurrently using AP and client modes?
->>> 
->>> johannes
->> 
->> Currently these patches of mac80211/cfg80211/ieee80211 for LPI/SP/VLP 
->> is
->> the base patches, to enable the feature of LPI/SP/VLP, it still need 
->> other
->> patches of lower drivers such as ath11k to enable it. It will not have
->> LPI/SP/VLP without patches of ath11k, it means all these patches will
->> not take effect.
->> 
->> When lower driver such as ath11k set max_interfaces of
->> ieee80211_iface_combination
->> to 1, then it can not start more than 1 interface on the same
->> ieee80211_hw/wiphy.
->> When STATION interface is up, then AP interface can not start up. AP 
->> interface
->> can start up after STATION interfacedown. Also when AP interface is 
->> up,
->> STATION interface can not start up. STATION interface can start up 
->> after
->> AP interface down.
->> 
->> I have sent out my ath11k
->> patches(https://lore.kernel.org/linux-wireless/20211026111913.7346-1-quic_wgong@quicinc.com/),
->> it will allow only one interface
->> up simultaneously for the chip which enable LPI/SP/VLP feature in this
->> patch: "ath11k: allow only one interface up simultaneously for 
->> WCN6855"
->> https://lore.kernel.org/linux-wireless/20211026111913.7346-5-quic_wgong@quicinc.com/
->> It means it will not have both AP/STA together and these patches of 
->> mac80211/
->> cfg80211/ieee80211 not need changes and it will not have bugs.
->> 
->> If there are some chip want to both enable LPI/SP/VLP feature and
->> enable AP/STA simultaneously in same ieee80211_hw/wiphy in future,
->> then he/she need to refine reg rules and channels of 
->> mac80211/cfg80211/
->> ieee80211, but at that moment, this patch "cfg80211: save power
->> spectral density(psd) of regulatory rule" still not need change.
->> Because this patch is change in each reg rule/each channel in a
->> low layer, the refine reg rules and channels is a high layer, they
->> have no intersection.
+Signed-off-by: Cheng Wang <quic_chengwan@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/core.c  |  5 ++
+ drivers/net/wireless/ath/ath11k/hw.h    |  1 +
+ drivers/net/wireless/ath/ath11k/qmi.c   | 94 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/qmi.h   | 12 ++++
+ drivers/net/wireless/ath/ath11k/trace.h | 27 +++++++
+ drivers/net/wireless/ath/ath11k/wmi.c   | 10 +++
+ 6 files changed, 149 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 969bf1a590d9..949c0b781cba 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -71,6 +71,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.fw_wmi_diag_event = false,
+ 	},
+ 	{
+ 		.hw_rev = ATH11K_HW_IPQ6018_HW10,
+@@ -112,6 +113,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.fw_wmi_diag_event = false,
+ 	},
+ 	{
+ 		.name = "qca6390 hw2.0",
+@@ -152,6 +154,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = true,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
+ 		.fix_l1ss = true,
++		.fw_wmi_diag_event = true,
+ 	},
+ 	{
+ 		.name = "qcn9074 hw1.0",
+@@ -190,6 +193,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_qcn9074),
+ 		.fix_l1ss = true,
++		.fw_wmi_diag_event = false,
+ 	},
+ 	{
+ 		.name = "wcn6855 hw2.0",
+@@ -230,6 +234,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = true,
+ 		.hal_desc_sz = sizeof(struct hal_rx_desc_wcn6855),
+ 		.fix_l1ss = false,
++		.fw_wmi_diag_event = true,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 62f5978b3005..a05a964dc567 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -163,6 +163,7 @@ struct ath11k_hw_params {
+ 	bool supports_suspend;
+ 	u32 hal_desc_sz;
+ 	bool fix_l1ss;
++	bool fw_wmi_diag_event;
+ };
+ 
+ struct ath11k_hw_ops {
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index f06f452a6f9f..1081e7115b3a 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -1545,6 +1545,50 @@ static struct qmi_elem_info qmi_wlanfw_athdiag_read_req_msg_v01_ei[] = {
+ 	},
+ };
+ 
++static struct qmi_elem_info qmi_wlanfw_wlan_ini_req_msg_v01_ei[] = {
++	{
++		.data_type	= QMI_OPT_FLAG,
++		.elem_len	= 1,
++		.elem_size	= sizeof(u8),
++		.array_type	= NO_ARRAY,
++		.tlv_type	= 0x10,
++		.offset		= offsetof(struct qmi_wlanfw_wlan_ini_req_msg_v01,
++					   enablefwlog_valid),
++	},
++	{
++		.data_type	= QMI_UNSIGNED_1_BYTE,
++		.elem_len	= 1,
++		.elem_size	= sizeof(u8),
++		.array_type	= NO_ARRAY,
++		.tlv_type	= 0x10,
++		.offset		= offsetof(struct qmi_wlanfw_wlan_ini_req_msg_v01,
++					   enablefwlog),
++	},
++	{
++		.data_type	= QMI_EOTI,
++		.array_type	= NO_ARRAY,
++		.tlv_type	= QMI_COMMON_TLV_TYPE,
++	},
++};
++
++static struct qmi_elem_info qmi_wlanfw_wlan_ini_resp_msg_v01_ei[] = {
++	{
++		.data_type	= QMI_STRUCT,
++		.elem_len	= 1,
++		.elem_size	= sizeof(struct qmi_response_type_v01),
++		.array_type	= NO_ARRAY,
++		.tlv_type	= 0x02,
++		.offset		= offsetof(struct qmi_wlanfw_wlan_ini_resp_msg_v01,
++					   resp),
++		.ei_array	= qmi_response_type_v01_ei,
++	},
++	{
++		.data_type	= QMI_EOTI,
++		.array_type	= NO_ARRAY,
++		.tlv_type	= QMI_COMMON_TLV_TYPE,
++	},
++};
++
+ static struct qmi_elem_info qmi_wlanfw_athdiag_read_resp_msg_v01_ei[] = {
+ 	{
+ 		.data_type	= QMI_STRUCT,
+@@ -2467,6 +2511,48 @@ static int ath11k_qmi_wlanfw_wlan_cfg_send(struct ath11k_base *ab)
+ 	return ret;
+ }
+ 
++int ath11k_qmi_wlanfw_wlan_ini_send(struct ath11k_base *ab, bool enable)
++{
++	int ret;
++	struct qmi_txn txn;
++	struct qmi_wlanfw_wlan_ini_req_msg_v01 req = {};
++	struct qmi_wlanfw_wlan_ini_resp_msg_v01 resp = {};
++
++	req.enablefwlog_valid = true;
++	req.enablefwlog = enable ? 1 : 0;
++
++	ret = qmi_txn_init(&ab->qmi.handle, &txn,
++			   qmi_wlanfw_wlan_ini_resp_msg_v01_ei, &resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
++			       QMI_WLANFW_WLAN_INI_REQ_V01,
++			       QMI_WLANFW_WLAN_INI_REQ_MSG_V01_MAX_LEN,
++			       qmi_wlanfw_wlan_ini_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		ath11k_warn(ab, "qmi failed to send wlan ini request, err = %d\n",
++			    ret);
++		qmi_txn_cancel(&txn);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, msecs_to_jiffies(ATH11K_QMI_WLANFW_TIMEOUT_MS));
++	if (ret < 0) {
++		ath11k_warn(ab, "qmi failed wlan ini request, err = %d\n", ret);
++		goto out;
++	}
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath11k_warn(ab, "qmi wlan ini request failed, result: %d, err: %d\n",
++			    resp.resp.result, resp.resp.error);
++		ret = -EINVAL;
++	}
++
++out:
++	return ret;
++}
++
+ void ath11k_qmi_firmware_stop(struct ath11k_base *ab)
+ {
+ 	int ret;
+@@ -2487,6 +2573,14 @@ int ath11k_qmi_firmware_start(struct ath11k_base *ab,
+ 
+ 	ath11k_dbg(ab, ATH11K_DBG_QMI, "qmi firmware start\n");
+ 
++	if (ab->hw_params.fw_wmi_diag_event) {
++		ret = ath11k_qmi_wlanfw_wlan_ini_send(ab, true);
++		if (ret < 0) {
++			ath11k_warn(ab, "qmi failed to send wlan fw ini:%d\n", ret);
++			return ret;
++		}
++	}
++
+ 	ret = ath11k_qmi_wlanfw_wlan_cfg_send(ab);
+ 	if (ret < 0) {
+ 		ath11k_warn(ab, "qmi failed to send wlan cfg: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
+index fb643165e2ff..847c96380251 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.h
++++ b/drivers/net/wireless/ath/ath11k/qmi.h
+@@ -456,10 +456,12 @@ struct qmi_wlanfw_m3_info_resp_msg_v01 {
+ #define QMI_WLANFW_WLAN_MODE_RESP_MSG_V01_MAX_LEN	7
+ #define QMI_WLANFW_WLAN_CFG_REQ_MSG_V01_MAX_LEN		803
+ #define QMI_WLANFW_WLAN_CFG_RESP_MSG_V01_MAX_LEN	7
++#define QMI_WLANFW_WLAN_INI_REQ_MSG_V01_MAX_LEN		4
+ #define QMI_WLANFW_WLAN_MODE_REQ_V01			0x0022
+ #define QMI_WLANFW_WLAN_MODE_RESP_V01			0x0022
+ #define QMI_WLANFW_WLAN_CFG_REQ_V01			0x0023
+ #define QMI_WLANFW_WLAN_CFG_RESP_V01			0x0023
++#define QMI_WLANFW_WLAN_INI_REQ_V01			0x002F
+ #define QMI_WLANFW_MAX_STR_LEN_V01			16
+ #define QMI_WLANFW_MAX_NUM_CE_V01			12
+ #define QMI_WLANFW_MAX_NUM_SVC_V01			24
+@@ -501,6 +503,16 @@ struct qmi_wlanfw_wlan_cfg_resp_msg_v01 {
+ 	struct qmi_response_type_v01 resp;
+ };
+ 
++struct qmi_wlanfw_wlan_ini_req_msg_v01 {
++	/* Must be set to true if enablefwlog is being passed */
++	u8 enablefwlog_valid;
++	u8 enablefwlog;
++};
++
++struct qmi_wlanfw_wlan_ini_resp_msg_v01 {
++	struct qmi_response_type_v01 resp;
++};
++
+ int ath11k_qmi_firmware_start(struct ath11k_base *ab,
+ 			      u32 mode);
+ void ath11k_qmi_firmware_stop(struct ath11k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath11k/trace.h b/drivers/net/wireless/ath/ath11k/trace.h
+index d2d2a3cb0826..e7a1db805284 100644
+--- a/drivers/net/wireless/ath/ath11k/trace.h
++++ b/drivers/net/wireless/ath/ath11k/trace.h
+@@ -105,6 +105,33 @@ TRACE_EVENT(ath11k_htt_rxdesc,
+ 	 )
+ );
+ 
++TRACE_EVENT(ath11k_wmi_diag,
++	    TP_PROTO(struct ath11k_base *ab, const void *data, size_t len),
++
++	TP_ARGS(ab, data, len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ab->dev))
++		__string(driver, dev_driver_string(ab->dev))
++		__field(u16, len)
++		__dynamic_array(u8, data, len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ab->dev));
++		__assign_str(driver, dev_driver_string(ab->dev));
++		__entry->len = len;
++		memcpy(__get_dynamic_array(data), data, len);
++	),
++
++	TP_printk(
++		"%s %s tlv diag len %d",
++		__get_str(driver),
++		__get_str(device),
++		__entry->len
++	)
++);
++
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 6c253eae9d06..324325a66656 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -6967,6 +6967,13 @@ static void ath11k_wmi_event_wow_wakeup_host(struct ath11k_base *ab, struct sk_b
+ 	complete(&ab->wow.wakeup_completed);
+ }
+ 
++static void
++ath11k_wmi_diag_event(struct ath11k_base *ab,
++		      struct sk_buff *skb)
++{
++	trace_ath11k_wmi_diag(ab, skb->data, skb->len);
++}
++
+ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+@@ -7077,6 +7084,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ 	case WMI_WOW_WAKEUP_HOST_EVENTID:
+ 		ath11k_wmi_event_wow_wakeup_host(ab, skb);
+ 		break;
++	case WMI_DIAG_EVENTID:
++		ath11k_wmi_diag_event(ab, skb);
++		break;
+ 	/* TODO: Add remaining events */
+ 	default:
+ 		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
+-- 
+2.25.1
+
