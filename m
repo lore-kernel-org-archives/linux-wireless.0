@@ -2,106 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD6AC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Dec 2021 14:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7BECC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Dec 2021 14:40:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233367AbhLGOeF (ORCPT
+        id S233672AbhLGOoH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Dec 2021 09:34:05 -0500
-Received: from dvalin.narfation.org ([213.160.73.56]:58080 "EHLO
-        dvalin.narfation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232417AbhLGOeF (ORCPT
+        Tue, 7 Dec 2021 09:44:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47528 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233408AbhLGOoH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Dec 2021 09:34:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-        s=20121; t=1638887433;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=M/6VW7i7W+xthc4rrARhEy/BbZdY9QLtRROjfHQerbo=;
-        b=UzoljNDWkgQnQwRzMb4XekfUMSiDgAsdMPdJhoqkHCuIkUdlVBnh/SqIbGLiNg8hBSNC9Y
-        BL6JAUVjz6FgCYWG5guqnc4QvA9CdSuaaiVl/4WStufgvwPnxaSNgHMubcSDjkjsDb10U5
-        HTORV6os2TbTUmEcrHvUZzHqk74QZ0Y=
-From:   Sven Eckelmann <sven@narfation.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, Wen Gong <quic_wgong@quicinc.com>,
-        Sven Eckelmann <sven@narfation.org>, stable@vger.kernel.org
-Subject: [PATCH] ath11k: Fix buffer overflow when scanning with extraie
-Date:   Tue,  7 Dec 2021 15:29:13 +0100
-Message-Id: <20211207142913.1734635-1-sven@narfation.org>
-X-Mailer: git-send-email 2.30.2
+        Tue, 7 Dec 2021 09:44:07 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F150BC061746;
+        Tue,  7 Dec 2021 06:40:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=5WChx4umjJB+KsV4D80qywndcGXTe8bk6l5sBo3k6PE=;
+        t=1638888037; x=1640097637; b=M6M7X55ZhWyvA50C25g31S/zqP1SzxZET3vDJv5hwdsaX3h
+        9G+PL9A7fkwmlf1XkpGTAVYiBteZ5wvkomQG86yfjPcHCJX9Oq77XyEYy8rFdG9GoTlQLcAhACkTl
+        KoD7w5F55TioZH8V2AI8VDEguecgn2RPTwuxr79Fd1lzrZtJJFgknjdm4nG16khLJkZwtfF9XL+3U
+        EeSo2tkewleQjo+x6k5ok1oZ9025eLxzZgiYImd1bG4T/cNPOd8ZLrjT+BoGUQUf0EAKVFawEKhme
+        lp9xCUB7aWSHJKr6iBQIZh2bRiNRHVxfuNoWrMfxNAhFnBMARnh+d47FEfP4xEmw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1mubdr-008EHP-0X;
+        Tue, 07 Dec 2021 15:40:27 +0100
+Message-ID: <5ed6ad0f5d4fed1cb0a49ecfd7f6b35dbe0f0803.camel@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: work around reverse dependency on MEI
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Arnd Bergmann <arnd@kernel.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc:     "Coelho, Luciano" <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Beker, Ayala" <ayala.beker@intel.com>,
+        "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Tue, 07 Dec 2021 15:40:25 +0100
+In-Reply-To: <CAK8P3a35HHPs2sMsfQ_SrX4DTKmzidFUOczu8khzwJJTAy++yw@mail.gmail.com>
+References: <20211207125430.2423871-1-arnd@kernel.org>
+         <SA1PR11MB58258D60F7C1334471E2F434F26E9@SA1PR11MB5825.namprd11.prod.outlook.com>
+         <CAK8P3a35HHPs2sMsfQ_SrX4DTKmzidFUOczu8khzwJJTAy++yw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.1 (3.42.1-1.fc35) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If cfg80211 is providing extraie's for a scanning process then ath11k will
-copy that over to the firmware. The extraie.len is a 32 bit value in struct
-element_info and describes the amount of bytes for the vendor information
-elements.
+On Tue, 2021-12-07 at 14:25 +0100, Arnd Bergmann wrote:
 
-The WMI_TLV packet is having a special WMI_TAG_ARRAY_BYTE section. This
-section can have a (payload) length up to 65535 bytes because the
-WMI_TLV_LEN can store up to 16 bits. The code was missing such a check and
-could have created a scan request which cannot be parsed correctly by the
-firmware.
+> > >  config IWLMEI
+> > > -     tristate "Intel Management Engine communication over WLAN"
+> > > -     depends on INTEL_MEI
+> > > +     bool "Intel Management Engine communication over WLAN"
+> > > +     depends on INTEL_MEI=y || INTEL_MEI=IWLMVM
+> > > +     depends on IWLMVM=y || IWLWIFI=m
+> > >       depends on PM
+> > > -     depends on IWLMVM
+> > >       help
+> > >         Enables the iwlmei kernel module.
+> > 
+> > Johannes suggested to make IWLMVM depend on IWLMEI || !IWLMEI
+> > That worked as well, I just had issues with this in our internal backport based tree.
+> > I need to spend a bit more time on this, but I admit my total ignorance in Kconfig's dialect.
+> 
+> It's still not enough, the dependency is in iwlwifi, not in iwlmvm, so it
+> would remain broken for IWLWIFI=y IWLMVM=m IWLMEI=m.
+> 
 
-But the bigger problem was the allocation of the buffer. It has to align
-the TLV sections by 4 bytes. But the code was using an u8 to store the
-newly calculated length of this section (with alignment). And the new
-calculated length was then used to allocate the skbuff. But the actual code
-to copy in the data is using the extraie.len and not the calculated
-"aligned" length.
+I missed the pcie/trans.c dependency, and the others are (I think) in
+mvm...
 
-The length of extraie with IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS enabled
-was 264 bytes during tests with a QCA Milan card. But it only allocated 8
-bytes (264 bytes % 256) for it. As consequence, the code to memcpy the
-extraie into the skb was then just overwriting data after skb->end. Things
-like shinfo were therefore corrupted. This could usually be seen by a crash
-in skb_zcopy_clear which tried to call a ubuf_info callback (using a bogus
-address).
+but then we can do
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-02892.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+config IWLWIFI
+	...
+	depends on IWLMEI || !IWLMEI
+	...
 
-Cc: stable@vger.kernel.org
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
----
- drivers/net/wireless/ath/ath11k/wmi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+no? That way, we exclude IWLWIFI=y && IWLMEI=m, which I believe causes
+the issue? And IWLMVM already depends on IWLWIFI (via the if clause), so
+that 
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 6da16d095e37..d817ea468ab5 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2115,7 +2115,7 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	void *ptr;
- 	int i, ret, len;
- 	u32 *tmp_ptr;
--	u8 extraie_len_with_pad = 0;
-+	u16 extraie_len_with_pad = 0;
- 	struct hint_short_ssid *s_ssid = NULL;
- 	struct hint_bssid *hint_bssid = NULL;
- 
-@@ -2134,7 +2134,7 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 		len += sizeof(*bssid) * params->num_bssid;
- 
- 	len += TLV_HDR_SIZE;
--	if (params->extraie.len)
-+	if (params->extraie.len && params->extraie.len <= 0xFFFF)
- 		extraie_len_with_pad =
- 			roundup(params->extraie.len, sizeof(u32));
- 	len += extraie_len_with_pad;
-@@ -2241,7 +2241,7 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 		      FIELD_PREP(WMI_TLV_LEN, len);
- 	ptr += TLV_HDR_SIZE;
- 
--	if (params->extraie.len)
-+	if (extraie_len_with_pad)
- 		memcpy(ptr, params->extraie.ptr,
- 		       params->extraie.len);
- 
--- 
-2.30.2
-
+johannes
