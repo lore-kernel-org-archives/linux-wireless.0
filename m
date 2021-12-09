@@ -2,76 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 858A3C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Dec 2021 08:16:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22BA0C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Dec 2021 08:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230047AbhLIIUJ (ORCPT
+        id S234888AbhLIIgt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Dec 2021 03:20:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59242 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbhLIIUJ (ORCPT
+        Thu, 9 Dec 2021 03:36:49 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:37326 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232681AbhLIIgt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Dec 2021 03:20:09 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E36AC061746
-        for <linux-wireless@vger.kernel.org>; Thu,  9 Dec 2021 00:16:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 83BADCE24FE
-        for <linux-wireless@vger.kernel.org>; Thu,  9 Dec 2021 08:16:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE99DC004DD;
-        Thu,  9 Dec 2021 08:16:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639037792;
-        bh=hHIZzJ4ztLVFhIuazZxbc+tg62aR9GAkzbKw4gDmRzI=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Xxz+Y/KwpHITbp/Xl3DyVSL6llXh8JeZQ2TyRgY5BKHLJcVTj/Zzrofvk5lIhC/R4
-         pjBHaDIECnn9qENEptQG3d1b8IaZiP8sbmRBIlPrSY7+JiKo2lPelA5B7uoBr3Hya6
-         ReuiJBhR1ZD+1uTCOcWpBUpsxjiCwchhNqgGqSUEBjczN39XR5MuSyEZ4CbeKXmfn8
-         2KbPlfwhr/l50XxooeTnM9MOH/DsyDIdKcdVbCcRnAppqzQn9tj2UtWZNvJ6guFYl8
-         dYFWaOq5/7KIR4k61AFAhXenMTkvXV5FBZRylqZLMPkfHAnWlaGQZM/tYWQUtu6oa4
-         UzwZhTnkFMI4g==
-Content-Type: text/plain; charset="utf-8"
+        Thu, 9 Dec 2021 03:36:49 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1B98X9nE4006336, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1B98X9nE4006336
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 9 Dec 2021 16:33:09 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Thu, 9 Dec 2021 16:33:09 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 9 Dec
+ 2021 16:33:08 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <ku920601@realtek.com>
+Subject: [PATCH 0/7] rtw89: coex: improve performance when Wifi PS is on
+Date:   Thu, 9 Dec 2021 16:32:22 +0800
+Message-ID: <20211209083229.10815-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] ath10k: drop beacon and probe response which leak from
- other channel
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20211208061752.16564-1-quic_wgong@quicinc.com>
-References: <20211208061752.16564-1-quic_wgong@quicinc.com>
-To:     Wen Gong <quic_wgong@quicinc.com>
-Cc:     <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <quic_wgong@quicinc.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <163903778980.12588.4204363037879005735.kvalo@kernel.org>
-Date:   Thu,  9 Dec 2021 08:16:31 +0000 (UTC)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 12/09/2021 08:09:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzEyLzkgpFekyCAwNjozMjowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <quic_wgong@quicinc.com> wrote:
+This patchset is to improve performance especially wifi PS is on. During
+debug, we found some counters are abnormal, so fix them in this patchset
+as well. Because coex highly depends on BT firmware, we update the coex
+version to avoid mismatching.
 
-> When scan request on channel 1, it also receive beacon from other
-> channels, and the beacon also indicate to mac80211 and wpa_supplicant,
-> and then the bss info appears in radio measurement report of radio
-> measurement sent from wpa_supplicant, thus lead RRM case fail.
-> 
-> This is to drop the beacon and probe response which is not the same
-> channel of scanning.
-> 
-> Tested-on: QCA6174 hw3.2 SDIO WLAN.RMH.4.4.1-00049
-> 
-> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Ching-Te Ku (7):
+  rtw89: coex: correct C2H header length
+  rtw89: coex: Not to send H2C when WL not ready and count H2C
+  rtw89: coex: Add MAC API to get BT polluted counter
+  rtw89: coex: Define LPS state for BTC using
+  rtw89: coex: Update BT counters while receiving report
+  rtw89: coex: Cancel PS leaving while C2H comes
+  rtw89: coex: Update COEX to 5.5.8
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-3bf2537ec2e3 ath10k: drop beacon and probe response which leak from other channel
+ drivers/net/wireless/realtek/rtw89/coex.c     | 73 ++++++++++++-------
+ drivers/net/wireless/realtek/rtw89/coex.h     |  6 ++
+ drivers/net/wireless/realtek/rtw89/core.h     |  1 +
+ drivers/net/wireless/realtek/rtw89/mac.c      | 12 +++
+ drivers/net/wireless/realtek/rtw89/mac.h      |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  2 +-
+ 6 files changed, 69 insertions(+), 26 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20211208061752.16564-1-quic_wgong@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
