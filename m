@@ -2,144 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A42BC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Dec 2021 20:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC941C433FE
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Dec 2021 06:31:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344194AbhLJUd7 (ORCPT
+        id S229787AbhLKGbS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Dec 2021 15:33:59 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:35858 "EHLO
-        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344184AbhLJUd6 (ORCPT
+        Sat, 11 Dec 2021 01:31:18 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:44300 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229779AbhLKGbS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Dec 2021 15:33:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
-        h=from:subject:in-reply-to:references:mime-version:to:cc:
-        content-transfer-encoding:content-type;
-        s=sgd; bh=aOFq/ymrkhh+1xjIr5PEl78GKED6RbjTLdF1XyyvOAQ=;
-        b=HddRQb9yBMD7BdKblBFuweDKyWtmPR7adHhjd/tYZ2EtC7GPYNBDeMbpUaQX9zAixG2Y
-        ryQ7LPrOWZpa0626ybazgO0BYDjDNmq5raajd2MkbcGGPvXDYBlpJ86JsTAd7F+60EoZiJ
-        88+UxuSGI1Ls2Lxk6kAYe2HZd/k2quA0i0YD1mnKclzqatawMjNwoZ3u1hMNdI3V5x5c4z
-        KvTh8JsnYgjyZUJIJzYzTzRxGLOVfssVLQsHZtsOXy6xXMtifhcm3oZxu6os9QQH2vakCG
-        sCejPgJrHpnK5bpTDZ0OwimuMLNO03jgb8KNOHFQ2wC3n9A+zsJVfjwTzpzR04+w==
-Received: by filterdrecv-75ff7b5ffb-q2hvm with SMTP id filterdrecv-75ff7b5ffb-q2hvm-1-61B3B8DE-50
-        2021-12-10 20:30:22.354960945 +0000 UTC m=+8633406.199069630
-Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-4-1 (SG)
-        with ESMTP
-        id 5YVvpbITTEGQzGwPPsYsHA
-        Fri, 10 Dec 2021 20:30:22.226 +0000 (UTC)
-Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id B1E4E700922; Fri, 10 Dec 2021 13:30:21 -0700 (MST)
-From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 1/1] wilc1000: Improve WILC TX performance when power_save
- is off
-Date:   Fri, 10 Dec 2021 20:30:22 +0000 (UTC)
-Message-Id: <20211210203016.3680425-2-davidm@egauge.net>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211210203016.3680425-1-davidm@egauge.net>
-References: <20211210203016.3680425-1-davidm@egauge.net>
-MIME-Version: 1.0
-X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvJ+c=2FU+9SC0L3N0eo?=
- =?us-ascii?Q?qpSQAh2SdcM3M=2FPj42+clWjkbmvlTK1A7FuifVZ?=
- =?us-ascii?Q?dVo72smJeqVTpSq9SenDW=2FPemXVKcWI=2F4v=2FcVWU?=
- =?us-ascii?Q?AKtnhFQTjlXsBU+H=2FSz5CTVcsreGbuLk=2FTHkaoj?=
- =?us-ascii?Q?MCZ7a7=2FDChAcfXIEFQP3rCHO4IVB3HBl4nawOc4?=
- =?us-ascii?Q?V3qhuJwKAjBJuquTDSjcA=3D=3D?=
-To:     Ajay Singh <ajay.kathat@microchip.com>
-Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
+        Sat, 11 Dec 2021 01:31:18 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 1BB6V20a8002517, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 1BB6V20a8002517
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Sat, 11 Dec 2021 14:31:02 +0800
+Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Sat, 11 Dec 2021 14:31:02 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Sat, 11 Dec 2021 14:31:02 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::65a3:1e23:d911:4b01]) by
+ RTEXMBS04.realtek.com.tw ([fe80::65a3:1e23:d911:4b01%5]) with mapi id
+ 15.01.2308.020; Sat, 11 Dec 2021 14:31:01 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     Jian-Hong Pan <jhp@endlessos.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+CC:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        David Mosberger-Tang <davidm@egauge.net>
-X-Entity-ID: Xg4JGAcGrJFIz2kDG9eoaQ==
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=us-ascii
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux@endlessos.org" <linux@endlessos.org>
+Subject: RE: [PATCH] rtw88: 8821c: disable the ASPM of RTL8821CE
+Thread-Topic: [PATCH] rtw88: 8821c: disable the ASPM of RTL8821CE
+Thread-Index: AQHX7Z6qoa2juW6HuEaQNtYEJNeW8KwrYzIg//+KwICAAAK8AIAB4vUw
+Date:   Sat, 11 Dec 2021 06:31:01 +0000
+Message-ID: <617008e3be9c4b5aa37b26f97daf9354@realtek.com>
+References: <20211210081659.4621-1-jhp@endlessos.org>
+ <6b0fcc8cf3bd4a77ad190dc6f72eb66f@realtek.com>
+ <CAAd53p66HPH9v0_hzOaQAydberd8JA4HthNVwpQ86xb-dSuUEA@mail.gmail.com>
+ <CAPpJ_efvmPWsCFsff35GHV8Q52YvQcFr_Hs=q3RtvbfVohY+4Q@mail.gmail.com>
+In-Reply-To: <CAPpJ_efvmPWsCFsff35GHV8Q52YvQcFr_Hs=q3RtvbfVohY+4Q@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXDAG02.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
+ rules found
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIxLzEyLzExIOS4iuWNiCAwNDozNTowMA==?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The wakeup and sleep commands need to be sent to the WILC chip only
-when it is in power save mode (PSM, as controlled by "iw dev wlan0 set
-power_save on/off").  The commands are relatively costly, so it pays
-to skip them when possible.
-
-iperf3 without this patch (no significant different with PSM on/off):
-  TX   0.00-120.01 sec   140 MBytes  9.82 Mbits/sec
-  RX   0.00-120.69 sec   283 MBytes  19.6 Mbits/sec
-
-with this patch applied:
-
-PSM off (TX is 46% improved, RX slightly improved; may not be significant):
-  TX   0.00-120.00 sec   206 MBytes  14.4 Mbits/sec
-  RX   0.00-120.48 sec   322 MBytes  22.4 Mbits/sec
-
-PSM on (no significant change):
-  TX   0.00-120.00 sec   140 MBytes  9.78 Mbits/sec
-  RX   0.00-120.08 sec   257 MBytes  18.0 Mbits/sec
-
-Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
----
- drivers/net/wireless/microchip/wilc1000/hif.c    | 3 +++
- drivers/net/wireless/microchip/wilc1000/netdev.h | 1 +
- drivers/net/wireless/microchip/wilc1000/wlan.c   | 4 ++--
- 3 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/microchip/wilc1000/hif.c b/drivers/net/wireless/microchip/wilc1000/hif.c
-index e69b9c7f3d31..29a42bc47017 100644
---- a/drivers/net/wireless/microchip/wilc1000/hif.c
-+++ b/drivers/net/wireless/microchip/wilc1000/hif.c
-@@ -1929,6 +1929,7 @@ int wilc_edit_station(struct wilc_vif *vif, const u8 *mac,
- 
- int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
- {
-+	struct wilc *wilc = vif->wilc;
- 	struct wid wid;
- 	int result;
- 	s8 power_mode;
-@@ -1944,6 +1945,8 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
- 	result = wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1);
- 	if (result)
- 		netdev_err(vif->ndev, "Failed to send power management\n");
-+	else
-+		wilc->power_save_mode = enabled;
- 
- 	return result;
- }
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.h b/drivers/net/wireless/microchip/wilc1000/netdev.h
-index b9a88b3e322f..6c0e634d0249 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.h
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.h
-@@ -212,6 +212,7 @@ struct wilc {
- 	s8 mac_status;
- 	struct clk *rtc_clk;
- 	bool initialized;
-+	bool power_save_mode;
- 	int dev_irq_num;
- 	int close;
- 	u8 vif_num;
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 82566544419a..c63219fc634b 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -20,13 +20,13 @@ static inline bool is_wilc1000(u32 id)
- static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- {
- 	mutex_lock(&wilc->hif_cs);
--	if (acquire == WILC_BUS_ACQUIRE_AND_WAKEUP)
-+	if (acquire == WILC_BUS_ACQUIRE_AND_WAKEUP && wilc->power_save_mode)
- 		chip_wakeup(wilc);
- }
- 
- static inline void release_bus(struct wilc *wilc, enum bus_release release)
- {
--	if (release == WILC_BUS_RELEASE_ALLOW_SLEEP)
-+	if (release == WILC_BUS_RELEASE_ALLOW_SLEEP && wilc->power_save_mode)
- 		chip_allow_sleep(wilc);
- 	mutex_unlock(&wilc->hif_cs);
- }
--- 
-2.25.1
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEppYW4tSG9uZyBQYW4gPGpo
+cEBlbmRsZXNzb3Mub3JnPg0KPiBTZW50OiBGcmlkYXksIERlY2VtYmVyIDEwLCAyMDIxIDU6MzQg
+UE0NCj4gVG86IEthaS1IZW5nIEZlbmcgPGthaS5oZW5nLmZlbmdAY2Fub25pY2FsLmNvbT4NCj4g
+Q2M6IFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPjsgWWFuLUhzdWFuIENodWFuZyA8dG9ueTA2
+MjBlbW1hQGdtYWlsLmNvbT47IEthbGxlIFZhbG8NCj4gPGt2YWxvQGNvZGVhdXJvcmEub3JnPjsg
+bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0K
+PiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eEBlbmRsZXNzb3Mub3JnDQo+IFN1
+YmplY3Q6IFJlOiBbUEFUQ0hdIHJ0dzg4OiA4ODIxYzogZGlzYWJsZSB0aGUgQVNQTSBvZiBSVEw4
+ODIxQ0UNCj4gDQo+IEthaS1IZW5nIEZlbmcgPGthaS5oZW5nLmZlbmdAY2Fub25pY2FsLmNvbT4g
+5pa8IDIwMjHlubQxMuaciDEw5pelIOmAseS6lCDkuIvljYg1OjI05a+r6YGT77yaDQo+ID4NCj4g
+PiBPbiBGcmksIERlYyAxMCwgMjAyMSBhdCA1OjAwIFBNIFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsu
+Y29tPiB3cm90ZToNCj4gPiA+DQo+ID4gPiArS2FpLUhlbmcNCj4gPiA+DQo+ID4gPiA+IC0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiA+IEZyb206IEppYW4tSG9uZyBQYW4gPGpocEBl
+bmRsZXNzb3Mub3JnPg0KPiA+ID4gPiBTZW50OiBGcmlkYXksIERlY2VtYmVyIDEwLCAyMDIxIDQ6
+MTcgUE0NCj4gPiA+ID4gVG86IFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPjsgWWFuLUhzdWFu
+IENodWFuZyA8dG9ueTA2MjBlbW1hQGdtYWlsLmNvbT47IEthbGxlIFZhbG8NCj4gPiA+ID4gPGt2
+YWxvQGNvZGVhdXJvcmEub3JnPg0KPiA+ID4gPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOw0KPiA+ID4gPiBsaW51eEBlbmRsZXNzb3Mub3JnOyBKaWFuLUhvbmcgUGFuIDxqaHBAZW5k
+bGVzc29zLm9yZz4NCj4gPiA+ID4gU3ViamVjdDogW1BBVENIXSBydHc4ODogODgyMWM6IGRpc2Fi
+bGUgdGhlIEFTUE0gb2YgUlRMODgyMUNFDQo+ID4gPiA+DQo+ID4gPiA+IE1vcmUgYW5kIG1vcmUg
+bGFwdG9wcyBiZWNvbWUgZnJvemVuLCBkdWUgdG8gdGhlIGVxdWlwcGVkIFJUTDg4MjFDRS4NCj4g
+PiA+ID4NCj4gPiA+ID4gVGhpcyBwYXRjaCBmb2xsb3dzIHRoZSBpZGVhIG1lbnRpb25lZCBpbiBj
+b21taXRzIDk1NmM2ZDRmMjBjNSAoInJ0dzg4Og0KPiA+ID4gPiBhZGQgcXVpcmtzIHRvIGRpc2Fi
+bGUgcGNpIGNhcGFiaWxpdGllcyIpIGFuZCAxZDRkY2FmM2RiOWJkICgicnR3ODg6IGFkZA0KPiA+
+ID4gPiBxdWlyayB0byBkaXNhYmxlIHBjaSBjYXBzIG9uIEhQIFBhdmlsaW9uIDE0LWNlMHh4eCIp
+LCBidXQgZGlzYWJsZXMgaXRzDQo+ID4gPiA+IFBDSSBBU1BNIGNhcGFiaWxpdHkgb2YgUlRMODgy
+MUNFIGRpcmVjdGx5LCBpbnN0ZWFkIG9mIGNoZWNraW5nIERNSS4NCj4gPiA+ID4NCj4gPiA+ID4g
+QnVnbGluazpodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIxNTIz
+OQ0KPiA+ID4gPiBGaXhlczogMWQ0ZGNhZjNkYjliZCAoInJ0dzg4OiBhZGQgcXVpcmsgdG8gZGlz
+YWJsZSBwY2kgY2FwcyBvbiBIUCBQYXZpbGlvbiAxNC1jZTB4eHgiKQ0KPiA+ID4gPiBTaWduZWQt
+b2ZmLWJ5OiBKaWFuLUhvbmcgUGFuIDxqaHBAZW5kbGVzc29zLm9yZz4NCj4gPiA+DQo+ID4gPiBX
+ZSBhbHNvIGRpc2N1c3Mgc2ltaWxhciB0aGluZyBpbiB0aGlzIHRocmVhZDoNCj4gPiA+IGh0dHBz
+Oi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjE1MTMxDQo+ID4gPg0KPiA+
+ID4gU2luY2Ugd2Ugc3RpbGwgd2FudCB0byB0dXJuIG9uIEFTUE0gdG8gc2F2ZSBtb3JlIHBvd2Vy
+LCBJIHdvdWxkIGxpa2UgdG8NCj4gPiA+IGVudW1lcmF0ZSB0aGUgYmxhY2tsaXN0LiBEb2VzIGl0
+IHdvcmsgdG8geW91Pw0KPiA+DQo+ID4gVG9vIG1hbnkgcGxhdGZvcm1zIGFyZSBhZmZlY3RlZCwg
+dGhlIGJsYWNrbGlzdCBtZXRob2Qgd29uJ3Qgc2NhbGUuDQo+IA0KPiBFeGFjdGx5IQ0KDQpHb3Qg
+aXQuDQoNCj4gDQo+ID4gUmlnaHQgbm93IGl0IHNlZW1zIGxpa2Ugb25seSBJbnRlbCBwbGF0Zm9y
+bXMgYXJlIGFmZmVjdGVkLCBzbyBjYW4gSQ0KPiA+IHByb3Bvc2UgYSBwYXRjaCB0byBkaXNhYmxl
+IEFTUE0gd2hlbiBpdHMgdXBzdHJlYW0gcG9ydCBpcyBJbnRlbD8NCj4gDQo+IEkgb25seSBoYXZl
+IGxhcHRvcHMgd2l0aCBJbnRlbCBjaGlwIG5vdy4gIFNvLCBJIGFtIG5vdCBzdXJlIHRoZSBzdGF0
+dXMNCj4gd2l0aCBBTUQgcGxhdGZvcm1zLg0KPiBJZiB0aGlzIGlzIHRydWUsIHRoZW4gImRpc2Fi
+bGUgQVNQTSB3aGVuIGl0cyB1cHN0cmVhbSBwb3J0IGlzIEludGVsIg0KPiBtaWdodCBiZSBhIGdv
+b2QgaWRlYS4NCj4gDQoNCkppYW4tSG9uZywgY291bGQgeW91IHRyeSBLYWktSGVuZydzIHdvcmth
+cm91bmQgdGhhdCBvbmx5IHR1cm4gb2ZmIEFTUE0NCmR1cmluZyBOQVBJIHBvbGwgZnVuY3Rpb24u
+IElmIGl0IGFsc28gd29ya3MgdG8geW91LCBJIHRoaW5rIGl0IGlzIG9rYXkNCnRvIGFwcGx5IHRo
+aXMgd29ya2Fyb3VuZCB0byBhbGwgSW50ZWwgcGxhdGZvcm0gd2l0aCBSVEw4ODIxQ0UgY2hpcHNl
+dC4NCkJlY2F1c2UgdGhpcyB3b3JrYXJvdW5kIGhhcyBsaXR0bGUgKGFsbW9zdCBubykgaW1wYWN0
+IG9mIHBvd2VyIGNvbnN1bXB0aW9uLg0KDQo+IA0KPiA+ID4gSWYgc28sIHBsZWFzZSBoZWxwIHRv
+IGFkZCBvbmUgcXVpcmsgZW50cnkgb2YgeW91ciBwbGF0Zm9ybS4NCj4gPiA+DQo+ID4gPiBBbm90
+aGVyIHRoaW5nIGlzIHRoYXQgImF0dGFjaG1lbnQgMjk5NzM1IiBpcyBhbm90aGVyIHdvcmthcm91
+bmQgZm9yIGNlcnRhaW4NCj4gPiA+IHBsYXRmb3JtLiBBbmQsIHdlIHBsYW4gdG8gYWRkIHF1aXJr
+IHRvIGVuYWJsZSB0aGlzIHdvcmthcm91bmQuDQo+ID4gPiBDb3VsZCB5b3UgdHJ5IGlmIGl0IHdv
+cmtzIHRvIHlvdT8NCj4gPg0KPiA+IFdoZW4gdGhlIGhhcmR3YXJlIGlzIGRvaW5nIERNQSwgaXQg
+c2hvdWxkIGluaXRpYXRlIGxlYXZpbmcgQVNQTSBMMSwNCj4gPiBjb3JyZWN0PyBTbyBpbiB0aGVv
+cnkgbXkgd29ya2Fyb3VuZCBzaG91bGQgYmUgYmVuaWduIGVub3VnaCBmb3IgbW9zdA0KPiA+IHBs
+YXRmb3Jtcy4NCg0KSSBkb24ndCBzZWUgYW5kIGtub3cgdGhlIGRldGFpbCBvZiBoYXJkd2FyZSB3
+YXZlZm9ybSwgYnV0IEkgdGhpbmsgeW91cg0KdW5kZXJzdGFuZGluZyBpcyBjb3JyZWN0Lg0KDQot
+LQ0KUGluZy1LZQ0KDQo=
