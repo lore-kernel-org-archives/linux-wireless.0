@@ -2,85 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF84C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Dec 2021 15:00:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE55C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Dec 2021 16:49:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239810AbhLMPAT (ORCPT
+        id S237011AbhLMQtv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Dec 2021 10:00:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47940 "EHLO
+        Mon, 13 Dec 2021 11:49:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239555AbhLMPAO (ORCPT
+        with ESMTP id S231563AbhLMQtv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Dec 2021 10:00:14 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1223C061574;
-        Mon, 13 Dec 2021 07:00:13 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3A52DB8113B;
-        Mon, 13 Dec 2021 15:00:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F3526C34611;
-        Mon, 13 Dec 2021 15:00:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639407611;
-        bh=WjcGELbu5JIKbGB4EMlOVci44ait6RcZ0lcliNjSfIA=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=psYdtPJZOEQQuzAu/yovjNacJXoUwfT9h2sMTh8oPH0Jf45yQlcUfxbC+3uiYqdS8
-         ePjf4HZhOZIBN4lIh4/i8m6yo9+ZcGptg15ajxDewsplStTINzNycAgDOhRlSpWXHM
-         dBz9f3KjkZPs29f/WPyuate7otj9zYpTqXoV3lvwxcp0KSYr0bAUQuf8w748pFitbw
-         HxIdShlgRuLvo52xBPL1BLObLnwk68393gpvcXPFqVyiNcQptIYdiBPlwaAMigJ3xt
-         mAixPmPLMddJtMgSZmV5SDlcJp+cojEyvn17IDJ+1saDTnAAPbELCW1cdZGJvPTFLz
-         SjZNMoTvw2Daw==
-Received: from pdx-korg-docbuild-2.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by pdx-korg-docbuild-2.ci.codeaurora.org (Postfix) with ESMTP id D30D66098C;
-        Mon, 13 Dec 2021 15:00:10 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Mon, 13 Dec 2021 11:49:51 -0500
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A576FC061574
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2021 08:49:50 -0800 (PST)
+Received: by mail-ed1-x52f.google.com with SMTP id t5so53960889edd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2021 08:49:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/epOCxL1dYFsUthpYZJekNbI7Df3awc1mycCpxkh7Dc=;
+        b=LPxDLsNk9La3dwaKbzk7neuQNEl+wMS4lDTogXkoh2WvpYPpbbjH9HvIK3t5it0uuY
+         9rPbLc0x17c5y5gMmLzBDEEnFJLNy9zn5tWBjonwgTAJYdMGe1xAgxA/TEsQ+czJO1g0
+         gtJS0II59XMFT5SvkCtjAAFJfcoBVj7puinYrnpZSlBliZVrli6ZblyefY/5qZWa8k8e
+         +46mklcnPmIVrFzXImf28V6cGg7Tq+wX1uzBbrAeTngzc1czyyNrRNZGN4eu+V/sUG+8
+         IV0+0tXI8j8VDpb9Yn5Ti6J3cG3lEOu/dUKO2DCksz6k+BRpEvnnr/Qo3YsLhv8/+vH2
+         cOvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/epOCxL1dYFsUthpYZJekNbI7Df3awc1mycCpxkh7Dc=;
+        b=omlCMCqpL8Q54fWM82lW8G7LmeqS7CRBSsfdLn3ewVVqKy4eDPnREq9QLElMmogDXm
+         cUMs9uVRMZVIF4xBMkfmYyh3Ph+AaURwBDSJK58KifJWntUynHRxiBmWFkJd8CSWlu27
+         ckTJt9XjcmkD/6Ayh6nPbhxa5/LN7ozMGN/2tjJp5cV3lOsabIuhhKNyINTDh3g500Qd
+         1XE3r2M3UieZcUY7nSSeLuwf4HEKjMfDVRrTsCB7ByL54Q61poIZ2kACSwWNVCf2L3Bv
+         71b63LdLBR5Ey0BWsZqNH7lrwI1+21K+mpJyXEDPw3c3NurPjYHerpnKn+pZf5ydbu9T
+         FMXA==
+X-Gm-Message-State: AOAM533HWU0ORelfe46aYHQswDhbQk0++BIC7FUtNWoGs0i33ceujOQe
+        SZZbcfMPMD5SkPiEFZmTHxWzYP9YU9S6FagQUId8Zkkh
+X-Google-Smtp-Source: ABdhPJzPmVR4XNPlOqRPgsjycZaQjdbsibwN78OEzWXyxNxjsH1/03Z8t8C2WIAvVtrYgB7MnDE6tmBlPcuPaZMOkJ4=
+X-Received: by 2002:a17:906:c14f:: with SMTP id dp15mr45113107ejc.283.1639414189249;
+ Mon, 13 Dec 2021 08:49:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH -next] mt76: remove variable set but not used
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <163940761085.26947.2175837807635652318.git-patchwork-notify@kernel.org>
-Date:   Mon, 13 Dec 2021 15:00:10 +0000
-References: <20211213095413.99456-1-yang.lee@linux.alibaba.com>
-In-Reply-To: <20211213095413.99456-1-yang.lee@linux.alibaba.com>
-To:     Yang Li <yang.lee@linux.alibaba.com>
-Cc:     nbd@nbd.name, lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        shayne.chen@mediatek.com, sean.wang@mediatek.com, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, matthias.bgg@gmail.com,
-        nathan@kernel.org, ndesaulniers@google.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev, abaci@linux.alibaba.com
+References: <CAKkT90b_C+B-2RY2BDO9tiQJh_Vv8y95JuVGADhc+ML-bSqxmQ@mail.gmail.com>
+ <4481549.kEIK8Ajiyv@ripper>
+In-Reply-To: <4481549.kEIK8Ajiyv@ripper>
+From:   Roberto Riggio <roberto.riggio@gmail.com>
+Date:   Mon, 13 Dec 2021 17:49:38 +0100
+Message-ID: <CAKkT90ZoMA-FYtMqqu9hm8W--g1Wj1RpkkxzT=OO4zE7VaVP=Q@mail.gmail.com>
+Subject: Re: Frame injection on ath9k
+To:     Sven Eckelmann <sven@narfation.org>
+Cc:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+Thanks Sven for the follow-up. Do you know if besides on the ath9k
+driver the frame injection is supported also on the ath10k driver?
 
-This patch was applied to netdev/net-next.git (master)
-by David S. Miller <davem@davemloft.net>:
+R.
 
-On Mon, 13 Dec 2021 17:54:13 +0800 you wrote:
-> The code that uses variable queued has been removed,
-> and "mt76_is_usb(dev) ? q->ndesc - q->queued : q->queued"
-> didn't do anything, so all they should be removed as well.
-> 
-> Eliminate the following clang warnings:
-> drivers/net/wireless/mediatek/mt76/debugfs.c:77:9: warning: variable
-> ‘queued’ set but not used.
-> 
-> [...]
-
-Here is the summary with links:
-  - [-next] mt76: remove variable set but not used
-    https://git.kernel.org/netdev/net-next/c/93d576f54e0f
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+On Fri, 10 Dec 2021 at 09:27, Sven Eckelmann <sven@narfation.org> wrote:
+>
+> On Thursday, 9 December 2021 15:41:03 CET Roberto Riggio wrote:
+> > Could somebody be so kind to provide me with some pointers about
+> > where the frame injection at arbitrary rates from a radiotap header is
+> > implemented now?
+>
+> Not in ath9k - it is in net/mac80211/tx.c. The function
+> ieee80211_parse_tx_radiotap will inspect the radiotap header and set the flag
+> IEEE80211_TX_CTRL_RATE_INJECT if it was able to retrieve some rates from it.
+>
+> And ieee80211_tx_h_rate_ctrl will just not try to calculate new rates when
+> they were already injected by the radiotap header (see
+> IEEE80211_TX_CTRL_RATE_INJECT).
+>
+> Kind regards,
+>         Sven
