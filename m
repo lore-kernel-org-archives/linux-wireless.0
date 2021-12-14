@@ -2,48 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF432C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Dec 2021 16:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10F83C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Dec 2021 16:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235991AbhLNQdX (ORCPT
+        id S235961AbhLNQdd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Dec 2021 11:33:23 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:23976 "EHLO
+        Tue, 14 Dec 2021 11:33:33 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25386 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235949AbhLNQdV (ORCPT
+        with ESMTP id S235980AbhLNQdY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Dec 2021 11:33:21 -0500
+        Tue, 14 Dec 2021 11:33:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
-        h=from:subject:mime-version:to:cc:content-transfer-encoding:
-        content-type;
-        s=sgd; bh=IJV8PusPqPkrxAZlSJxF+oVTe0HORUxFLp6tQeLt1s8=;
-        b=s3fyn9KBdTIQRjnoU6oHuN9EHJOZPk7jwxK3m/1iORFiNy1YlpqSrjkNOnvG0hfb/R/v
-        OPggmibOMhMCxcVpVj3mOB3oC1UXFQDCLUqpIfEZmtzZ6Mej/56+JTeSHcDVOKt83LVbM6
-        6CselkLxP4eutSaFa8+OZV6cG+lTnC2uXnFTc3mfWcLJ/CjuYLE9Bh+lMlQc9VsWu0P/7T
-        6nGC3GhI1m1Yoq8x/5mYO7Z0xZDOj9aS8FyxDKjJwxUVwApocYak53IzX++eo0y7zFPbOD
-        IHnAkcp0nTt9Txtvs/eaYO26D65NVDDMS3+ZqpxYC+bwNke3k55L3PTIJBouYfvA==
-Received: by filterdrecv-64fcb979b9-2mw87 with SMTP id filterdrecv-64fcb979b9-2mw87-1-61B8C750-7D
-        2021-12-14 16:33:20.485721837 +0000 UTC m=+7922123.955850576
+        h=from:subject:in-reply-to:references:mime-version:to:cc:
+        content-transfer-encoding:content-type;
+        s=sgd; bh=yQXnRnX5mAV219nBVUMu6m7E3hTr67JRAHd87199Dpg=;
+        b=DXBRUXbnGdklKRKTxORhG97uAouv2hixXJA6lqRz1x7Q7c8ZgDKVlaA8tCIgpdHxxnaW
+        jP9wqIQP3WghJgM1CJWSHzstyp/dirsqbPcL3IqMyEwpawc06fX/wGZfJR2oTL9WrUAhZT
+        He22ZJFSEaMO43RqzlBrUbLfgvWNc19AAZuRk+rrAV2cPKMfnZoEFppgT0XAJ8kHJiPRt8
+        pIFqoR8+cJli0Jp2EUzUdu3yjbzYmJkMBW3JlSTyAUmRRrFVrqd7FRkSH4al6UXxQmYw+c
+        hLezr9NTY59CFUI77tnLr0Ql8d5qhbbudkO696BJi78zIDVcFmPDxj04apUrjhXw==
+Received: by filterdrecv-55446c4d49-ww7gg with SMTP id filterdrecv-55446c4d49-ww7gg-1-61B8C752-84
+        2021-12-14 16:33:22.516521248 +0000 UTC m=+8964793.130447238
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-5-1 (SG)
+        by geopod-ismtpd-1-0 (SG)
         with ESMTP
-        id fPpvnHkiQ_awP5-wiFek1g
-        Tue, 14 Dec 2021 16:33:20.203 +0000 (UTC)
+        id TK2IY_rHQcakZ4T_OtfL8Q
+        Tue, 14 Dec 2021 16:33:22.348 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 6CF8E700269; Tue, 14 Dec 2021 09:33:19 -0700 (MST)
+        id 083CE700269; Tue, 14 Dec 2021 09:33:22 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v4 0/2] Add reset/enable GPIO support to SPI driver
-Date:   Tue, 14 Dec 2021 16:33:20 +0000 (UTC)
-Message-Id: <20211214163315.3769677-1-davidm@egauge.net>
+Subject: [PATCH v4 2/2] wilc1000: Document enable-gpios and reset-gpios
+ properties
+Date:   Tue, 14 Dec 2021 16:33:22 +0000 (UTC)
+Message-Id: <20211214163315.3769677-3-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211214163315.3769677-1-davidm@egauge.net>
+References: <20211214163315.3769677-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvBoQ+OES1vxgY33Go?=
- =?us-ascii?Q?OnFY7WpVM1MtolvW065rR7eEZ+HpazFWrCv8kL2?=
- =?us-ascii?Q?2H0L5MCjp=2FpTmAxLGBlfG=2F2YY0CGd1YyE5atUDt?=
- =?us-ascii?Q?8w2bQs7TgG9U8jTMwnCCEzPyrgPzDfvHBRiGtl3?=
- =?us-ascii?Q?WNx3Kzd0OLMbPWbF6m4grz20EQZgGCKcSZ302gW?=
- =?us-ascii?Q?A2Wf+tzt4HmetLroB0=2FPg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvH93Xhh=2FYR9spz2Bt?=
+ =?us-ascii?Q?A5gO8dpXLqtzVT1vHEwdJSvMWZx2WdZTHyNXu1U?=
+ =?us-ascii?Q?E5ARhbnTmdjbrbP9IjXyX8HUoKo0APkCDIeRRyV?=
+ =?us-ascii?Q?ZxxsFRoR3FFi0p5BnlDn6lfwjL4iNkjO2n1FdBN?=
+ =?us-ascii?Q?Xtkx1mi9C7raxqt49d00OxinZMZTkKVNyb6ezLE?=
+ =?us-ascii?Q?J2P0lKE5TORkjQK7Ull3Q=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Adham Abozaeid <adham.abozaeid@microchip.com>,
         Claudiu Beznea <claudiu.beznea@microchip.com>,
@@ -60,22 +63,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I made a mistake last night when checking whether gpiod_set_value() is
-safe to call with a NULL gpiod descriptor (it is).  v4 of the patch
-just fixes that mistake.  It does simplify the code nicely.
+Add documentation for the ENABLE and RESET GPIOs that may be needed by
+wilc1000-spi.
 
-This version also fixes the error handling when the reset gpio is
-missing.
+Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
+---
+ .../net/wireless/microchip,wilc1000.yaml        | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-David Mosberger-Tang (2):
-  wilc1000: Add reset/enable GPIO support to SPI driver
-  wilc1000: Document enable-gpios and reset-gpios properties
-
- .../net/wireless/microchip,wilc1000.yaml      | 17 ++++++
- drivers/net/wireless/microchip/wilc1000/spi.c | 58 ++++++++++++++++++-
- .../net/wireless/microchip/wilc1000/wlan.c    |  2 +-
- 3 files changed, 73 insertions(+), 4 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+index 6c35682377e6..790a774a19ee 100644
+--- a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+@@ -32,6 +32,21 @@ properties:
+   clock-names:
+     const: rtc
+ 
++  enable-gpios:
++    maxItems: 1
++    description: Used by wilc1000-spi to determine the GPIO line
++      connected to the ENABLE line.  If specified, reset-gpios
++      must be specified as well as otherwise the driver cannot
++      ensure the timing required between asserting ENABLE
++      and deasserting RESET.  This should be declared as an
++      active-high signal.
++
++  reset-gpios:
++    maxItems: 1
++    description: Used by wilc1000-spi to determine the GPIO line
++      connected to the RESET line.  This should be declared as an
++      active-low signal.
++
+ required:
+   - compatible
+   - interrupts
+@@ -51,6 +66,8 @@ examples:
+         interrupts = <27 0>;
+         clocks = <&pck1>;
+         clock-names = "rtc";
++        enable-gpios = <&pioA 5 GPIO_ACTIVE_HIGH>;
++        reset-gpios = <&pioA 6 GPIO_ACTIVE_LOW>;
+       };
+     };
+ 
 -- 
 2.25.1
 
