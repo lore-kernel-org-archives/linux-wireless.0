@@ -2,33 +2,29 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F01C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Dec 2021 21:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6BF1C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Dec 2021 21:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229491AbhLOVZn (ORCPT
+        id S229545AbhLOVZq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Dec 2021 16:25:43 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:58194 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229441AbhLOVZn (ORCPT
+        Wed, 15 Dec 2021 16:25:46 -0500
+Received: from mailgw01.mediatek.com ([60.244.123.138]:48882 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229441AbhLOVZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Dec 2021 16:25:43 -0500
-X-UUID: 82c6d2470e324c8f934e37e6f9e82cd5-20211216
-X-UUID: 82c6d2470e324c8f934e37e6f9e82cd5-20211216
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        Wed, 15 Dec 2021 16:25:46 -0500
+X-UUID: 55221cc82be54164a5497c9c0613adcb-20211216
+X-UUID: 55221cc82be54164a5497c9c0613adcb-20211216
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 119946643; Thu, 16 Dec 2021 05:25:40 +0800
-Received: from mtkexhb01.mediatek.inc (172.21.101.102) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Thu, 16 Dec 2021 05:25:39 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by mtkexhb01.mediatek.inc
- (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 16 Dec
- 2021 05:25:38 +0800
+        with ESMTP id 1772946277; Thu, 16 Dec 2021 05:25:43 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 16 Dec 2021 05:25:41 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 16 Dec 2021 05:25:38 +0800
+ Transport; Thu, 16 Dec 2021 05:25:41 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -44,10 +40,12 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <abhishekpandit@google.com>, <shawnku@google.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v2 1/4] mt76: mt7921: clear pm->suspended in mt7921_mac_reset_work
-Date:   Thu, 16 Dec 2021 05:25:34 +0800
-Message-ID: <9813aaab7c86fbbdd160a8c421696a09deb559d3.1639602937.git.objelf@gmail.com>
+Subject: [PATCH v2 3/4] mt76: mt7921s: make pm->suspended usage consistent
+Date:   Thu, 16 Dec 2021 05:25:36 +0800
+Message-ID: <57d752fc7ee5af393e2856d25ed701ce8fd01aed.1639602937.git.objelf@gmail.com>
 X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <9813aaab7c86fbbdd160a8c421696a09deb559d3.1639602937.git.objelf@gmail.com>
+References: <9813aaab7c86fbbdd160a8c421696a09deb559d3.1639602937.git.objelf@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -57,28 +55,42 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-clear pm->suspended in mt7921_mac_reset_work to allow pm runtime
-can be enabled after wifi reset in any circumstance.
+Update pm->suspended usage to be consistent with mt7921e driver.
 
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
-v2: create a new patch for the following ones
+v2: refine the error handling path
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/sdio.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index edf54b192f37..a0f23047f13c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1399,6 +1399,7 @@ void mt7921_mac_reset_work(struct work_struct *work)
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
+index 84be229a899d..65d693902c22 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
+@@ -278,7 +278,6 @@ static int mt7921s_resume(struct device *__dev)
+ 	struct mt76_dev *mdev = &dev->mt76;
+ 	int err;
  
- 	dev->hw_full_reset = false;
+-	pm->suspended = false;
+ 	clear_bit(MT76_STATE_SUSPEND, &mdev->phy.state);
+ 
+ 	err = mt7921_mcu_drv_pmctrl(dev);
+@@ -294,7 +293,13 @@ static int mt7921s_resume(struct device *__dev)
+ 	if (!pm->ds_enable)
+ 		mt76_connac_mcu_set_deep_sleep(mdev, false);
+ 
+-	return mt76_connac_mcu_set_hif_suspend(mdev, false);
++	err = mt76_connac_mcu_set_hif_suspend(mdev, false);
++	if (err)
++		return err;
++
 +	pm->suspended = false;
- 	ieee80211_wake_queues(hw);
- 	ieee80211_iterate_active_interfaces(hw,
- 					    IEEE80211_IFACE_ITER_RESUME_ALL,
++
++	return err;
+ }
+ 
+ static const struct dev_pm_ops mt7921s_pm_ops = {
 -- 
 2.25.1
 
