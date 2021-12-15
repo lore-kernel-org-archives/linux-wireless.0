@@ -2,80 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE169C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Dec 2021 17:18:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23404C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Dec 2021 17:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245247AbhLORSr (ORCPT
+        id S234986AbhLORix (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Dec 2021 12:18:47 -0500
-Received: from p-impout007aa.msg.pkvw.co.charter.net ([47.43.26.138]:51033
-        "EHLO p-impout007.msg.pkvw.co.charter.net" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S235266AbhLORSq (ORCPT
+        Wed, 15 Dec 2021 12:38:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39168 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234823AbhLORiw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Dec 2021 12:18:46 -0500
-X-Greylist: delayed 428 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 Dec 2021 12:18:46 EST
-Received: from localhost.localdomain ([24.31.246.181])
-        by cmsmtp with ESMTP
-        id xXoWmVObHtfLpxXoXmICun; Wed, 15 Dec 2021 17:11:37 +0000
-X-Authority-Analysis: v=2.4 cv=A+F/goaG c=1 sm=1 tr=0 ts=61ba21c9
- a=cAe/7qmlxnd6JlJqP68I9A==:117 a=cAe/7qmlxnd6JlJqP68I9A==:17 a=hSkVLCK3AAAA:8
- a=VwQbUJbxAAAA:8 a=yQdBAQUQAAAA:8 a=tY4FJJ6CfTjgVO9VqIUA:9
- a=cQPPKAXgyycSBL8etih5:22 a=AjGcO6oz07-iQ99wixmX:22 a=SzazLyfi1tnkUD6oumHU:22
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-To:     kvalo@kernel.org
-Cc:     linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        syzbot+cce1ee31614c171f5595@syzkaller.appspotmail.com,
-        stable@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Fix WARNING when calling local_irq_restore() with interrupts enabled
-Date:   Wed, 15 Dec 2021 11:11:05 -0600
-Message-Id: <20211215171105.20623-1-Larry.Finger@lwfinger.net>
+        Wed, 15 Dec 2021 12:38:52 -0500
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1A60C061574
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2021 09:38:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=3rZmdTkSnVfeLclPAhYbTFnZ4FIeN0HdEyPAj+H05og=; b=nNmMny0zWY2PPCo0HvxqeWERy/
+        8SgGM5rX10DmIe3EprnKbO1IsIk92FGobo2zyR0lVD0+qg2ARi5gC976n0NkL6l2P74vCR3sh+Ba2
+        uHXbOkrCFLXKAgkpnPca5jx249Yh0A2/U0hJ2l4TFD0/PDXxMivbNWQ+nah2Ut0n1azE=;
+Received: from p54ae911a.dip0.t-ipconnect.de ([84.174.145.26] helo=localhost.localdomain)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1mxYEr-0000He-SJ
+        for linux-wireless@vger.kernel.org; Wed, 15 Dec 2021 18:38:49 +0100
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] mt76: mt7615: in debugfs queue stats, skip wmm index 3 on mt7663
+Date:   Wed, 15 Dec 2021 18:38:39 +0100
+Message-Id: <20211215173839.20853-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20211215173839.20853-1-nbd@nbd.name>
+References: <20211215173839.20853-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMAE-Envelope: MS4xfLkNsLwfUnYG9J9RMJuoIpxGw5SYgcBLJWa15udU5lmKI6ID6vW6x+qxPAW9dpJjn0WPx5c2u+usecqpeiGtg/t2hJbiLv8+KDJCK4tgAzr0PFm0b6sO
- DAh/ycoJHdOxb/rEuWj0hVmBNy/dIQpmVYxQ+zU8gDFLdSo91D1pPg2FDbD0v8AlTF7zeFkPdPQV9m0KDO7L9Pz3diEi5O5tJUr9FU+P8KhC266TY/LrJ9G3
- RMofXy8Vbv0TetKlLs/6eJgql9lH9ekajs//iDgowzMsAJ3xwFefaZcxkLBqC6XDoCArxAjaxNUNyYKzbztVbNFJSBRwHqc2/9+xVzEGQS04vZsZYEsBd3FB
- oKNjHbzhrTPPi3RzLqVr2LAa3jdLuJrHmF21MXW2xcIehIpPWkM=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Syzbot reports the following WARNING:
+The hardware only supports WMM index 0-2 and registers for index 3 return
+bogus data.
 
-[200~raw_local_irq_restore() called with IRQs enabled
-WARNING: CPU: 1 PID: 1206 at kernel/locking/irqflag-debug.c:10
-   warn_bogus_irq_restore+0x1d/0x20 kernel/locking/irqflag-debug.c:10
-
-Hardware initialization for the rtl8188cu can run for as long as 350 ms,
-and the routine may be called with interrupts disabled. To avoid locking
-the machine for this long, the current routine saves the interrupt flags
-and enables local interrupts. The problem is that it restores the flags
-at the end without disabling local interrupts first.
-
-This patch fixes commit a53268be0cb9 ("rtlwifi: rtl8192cu: Fix too long
-disable of IRQs").
-
-Reported-by: syzbot+cce1ee31614c171f5595@syzkaller.appspotmail.com
-Cc: stable@vger.kernel.org
-Fixes: a53268be0cb9 ("rtlwifi: rtl8192cu: Fix too long disable of IRQs")
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index 6312fddd9c00..eaba66113328 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -1000,6 +1000,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	_initpabias(hw);
- 	rtl92c_dm_init(hw);
- exit:
-+	local_irq_disable();
- 	local_irq_restore(flags);
- 	return err;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+index 6fd6f067da49..b53528014fbc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+@@ -359,6 +359,9 @@ mt7615_queues_acq(struct seq_file *s, void *data)
+ 		int acs = i / MT7615_MAX_WMM_SETS;
+ 		u32 ctrl, val, qlen = 0;
+ 
++		if (wmm_idx == 3 && is_mt7663(&dev->mt76))
++			continue;
++
+ 		val = mt76_rr(dev, MT_PLE_AC_QEMPTY(acs, wmm_idx));
+ 		ctrl = BIT(31) | BIT(15) | (acs << 8);
+ 
 -- 
 2.34.1
 
