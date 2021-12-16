@@ -2,29 +2,29 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BFC7C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Dec 2021 11:09:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51156C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Dec 2021 11:56:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236432AbhLPLJR (ORCPT
+        id S234044AbhLPL4C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Dec 2021 06:09:17 -0500
-Received: from mga04.intel.com ([192.55.52.120]:17482 "EHLO mga04.intel.com"
+        Thu, 16 Dec 2021 06:56:02 -0500
+Received: from mga01.intel.com ([192.55.52.88]:9992 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233682AbhLPLJR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Dec 2021 06:09:17 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10199"; a="238202711"
+        id S234035AbhLPL4A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Dec 2021 06:56:00 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10199"; a="263631256"
 X-IronPort-AV: E=Sophos;i="5.88,211,1635231600"; 
-   d="scan'208";a="238202711"
+   d="scan'208";a="263631256"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 03:09:16 -0800
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 03:55:59 -0800
 X-IronPort-AV: E=Sophos;i="5.88,211,1635231600"; 
-   d="scan'208";a="519205080"
+   d="scan'208";a="519217842"
 Received: from jetten-mobl.ger.corp.intel.com ([10.252.36.24])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 03:09:07 -0800
-Date:   Thu, 16 Dec 2021 13:08:55 +0200 (EET)
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 03:55:53 -0800
+Date:   Thu, 16 Dec 2021 13:55:50 +0200 (EET)
 From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
-cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
         m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
@@ -35,11 +35,10 @@ cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
         moises.veleta@intel.com, pierre-louis.bossart@intel.com,
         muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
         sreehari.kancharla@intel.com, suresh.nagaraj@intel.com
-Subject: Re: [PATCH net-next v3 01/12] net: wwan: t7xx: Add control DMA
- interface
-In-Reply-To: <20211207024711.2765-2-ricardo.martinez@linux.intel.com>
-Message-ID: <a6325ef-e06e-c236-9d23-42fdb8b62747@linux.intel.com>
-References: <20211207024711.2765-1-ricardo.martinez@linux.intel.com> <20211207024711.2765-2-ricardo.martinez@linux.intel.com>
+Subject: Re: [PATCH net-next v3 02/12] net: wwan: t7xx: Add core components
+In-Reply-To: <20211207024711.2765-3-ricardo.martinez@linux.intel.com>
+Message-ID: <db45c31-5041-5853-e88a-b1f76a1fb9a0@linux.intel.com>
+References: <20211207024711.2765-1-ricardo.martinez@linux.intel.com> <20211207024711.2765-3-ricardo.martinez@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -50,29 +49,19 @@ On Mon, 6 Dec 2021, Ricardo Martinez wrote:
 
 > From: Haijun Liu <haijun.liu@mediatek.com>
 > 
-> Cross Layer DMA (CLDMA) Hardware interface (HIF) enables the control
-> path of Host-Modem data transfers. CLDMA HIF layer provides a common
-> interface to the Port Layer.
+> Registers the t7xx device driver with the kernel. Setup all the core
+> components: PCIe layer, Modem Host Cross Core Interface (MHCCIF),
+> modem control operations, modem state machine, and build
+> infrastructure.
 > 
-> CLDMA manages 8 independent RX/TX physical channels with data flow
-> control in HW queues. CLDMA uses ring buffers of General Packet
-> Descriptors (GPD) for TX/RX. GPDs can represent multiple or single
-> data buffers (DB).
-> 
-> CLDMA HIF initializes GPD rings, registers ISR handlers for CLDMA
-> interrupts, and initializes CLDMA HW registers.
-> 
-> CLDMA TX flow:
-> 1. Port Layer write
-> 2. Get DB address
-> 3. Configure GPD
-> 4. Triggering processing via HW register write
-> 
-> CLDMA RX flow:
-> 1. CLDMA HW sends a RX "done" to host
-> 2. Driver starts thread to safely read GPD
-> 3. DB is sent to Port layer
-> 4. Create a new buffer for GPD ring
+> * PCIe layer code implements driver probe and removal.
+> * MHCCIF provides interrupt channels to communicate events
+>   such as handshake, PM and port enumeration.
+> * Modem control implements the entry point for modem init,
+>   reset and exit.
+> * The modem status monitor is a state machine used by modem control
+>   to complete initialization and stop. It is used also to propagate
+>   exception events reported by other components.
 > 
 > Signed-off-by: Haijun Liu <haijun.liu@mediatek.com>
 > Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
@@ -80,44 +69,101 @@ On Mon, 6 Dec 2021, Ricardo Martinez wrote:
 > Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 
 
-> +static struct cldma_request *t7xx_cldma_ring_step_forward(struct cldma_ring *ring,
-> +							  struct cldma_request *req)
+> +	switch (reason) {
+> +	case EXCEPTION_HS_TIMEOUT:
+> +		dev_err(dev, "BOOT_HS_FAIL\n");
+> +		break;
+> +
+> +	case EXCEPTION_EVENT:
+> +		t7xx_fsm_broadcast_state(ctl, MD_STATE_EXCEPTION);
+> +		t7xx_md_exception_handshake(ctl->md);
+> +
+> +		cnt = 0;
+> +		while (cnt < FSM_MD_EX_REC_OK_TIMEOUT_MS / FSM_EVENT_POLL_INTERVAL_MS) {
+> +			if (kthread_should_stop())
+> +				return;
+> +
+> +			spin_lock_irqsave(&ctl->event_lock, flags);
+> +			event = list_first_entry_or_null(&ctl->event_queue,
+> +							 struct t7xx_fsm_event, entry);
+> +			if (event) {
+> +				if (event->event_id == FSM_EVENT_MD_EX) {
+> +					fsm_del_kf_event(event);
+> +				} else if (event->event_id == FSM_EVENT_MD_EX_REC_OK) {
+> +					rec_ok = true;
+> +					fsm_del_kf_event(event);
+> +				}
+> +			}
+> +
+> +			spin_unlock_irqrestore(&ctl->event_lock, flags);
+> +			if (rec_ok)
+> +				break;
+> +
+> +			cnt++;
+> +			/* Try again after 20ms */
+> +			msleep(FSM_EVENT_POLL_INTERVAL_MS);
+> +		}
+> +
+> +		cnt = 0;
+> +		while (cnt < FSM_MD_EX_PASS_TIMEOUT_MS / FSM_EVENT_POLL_INTERVAL_MS) {
+> +			if (kthread_should_stop())
+> +				return;
+> +
+> +			spin_lock_irqsave(&ctl->event_lock, flags);
+> +			event = list_first_entry_or_null(&ctl->event_queue,
+> +							 struct t7xx_fsm_event, entry);
+> +			if (event && event->event_id == FSM_EVENT_MD_EX_PASS) {
+> +				pass = true;
+> +				fsm_del_kf_event(event);
+> +			}
+> +
+> +			spin_unlock_irqrestore(&ctl->event_lock, flags);
+> +
+> +			if (pass)
+> +				break;
+> +			cnt++;
+> +			/* Try again after 20ms */
+> +			msleep(FSM_EVENT_POLL_INTERVAL_MS);
+> +		}
+
+It hurts me a bit to see so much code duplication with only that one 
+extra if branch + if condition right-hand sides being different. It would 
+seem like something that could be solved with a helper taking those two 
+things as parameters.
+
+I hope the ordering of FSM_EVENT_MD_EX, FSM_EVENT_MD_EX_REC_OK, and
+FSM_EVENT_MD_EX_PASS is guaranteed by something. Otherwise, the event 
+being waited for might not become the first entry in the event_queue and 
+the loop just keeps waiting until timeout?
+
+
+> +void t7xx_fsm_clr_event(struct t7xx_fsm_ctl *ctl, enum t7xx_fsm_event_state event_id)
 > +{
-> +	if (req->entry.next == &ring->gpd_ring)
-> +		return list_first_entry(&ring->gpd_ring, struct cldma_request, entry);
+> +       struct device *dev = &ctl->md->t7xx_dev->pdev->dev;
+> +       struct t7xx_fsm_event *event, *evt_next;
+> +       unsigned long flags;
 > +
-> +	return list_next_entry(req, entry);
-> +}
+> +       spin_lock_irqsave(&ctl->event_lock, flags);
+> +       list_for_each_entry_safe(event, evt_next, &ctl->event_queue, entry) {
+> +               dev_err(dev, "Unhandled event %d\n", event->event_id);
 > +
-> +static struct cldma_request *t7xx_cldma_ring_step_backward(struct cldma_ring *ring,
-> +							   struct cldma_request *req)
-> +{
-> +	if (req->entry.prev == &ring->gpd_ring)
-> +		return list_last_entry(&ring->gpd_ring, struct cldma_request, entry);
-> +
-> +	return list_prev_entry(req, entry);
-> +}
+> +               if (event->event_id == event_id)
+> +                       fsm_del_kf_event(event);
+> +       }
 
-Wouldn't these two seems generic enough to warrant adding something like 
-list_next/prev_entry_circular(...) to list.h?
+It seems that only events matching to event_id are removed from the 
+event_queue. Can that dev_err print the same event over and over again 
+(I'm assuming here multiple calls to t7xx_fsm_clr_event can occur) because 
+the other events still remaining in event_queue?
 
-> +static int t7xx_cldma_alloc_and_map_skb(struct cldma_ctrl *md_ctrl, struct cldma_request *req,
-> +					size_t size)
-> +{
-> +	req->skb = __dev_alloc_skb(size, GFP_KERNEL);
-> +	if (!req->skb)
-> +		return -ENOMEM;
-> +
-> +	req->mapped_buff = dma_map_single(md_ctrl->dev, req->skb->data,
-> +					  t7xx_skb_data_size(req->skb), DMA_FROM_DEVICE);
 
-t7xx_skb_data_size() is not defined by this patch but only in a later 
-patch in the series.
+> +struct t7xx_fsm_ctl {
+> +	struct t7xx_modem	*md;
+> +	enum md_state		md_state;
+> +	unsigned int		curr_state;
+> +	unsigned int		last_state;
 
-Also, I'd prefer its name to be changed to e.g. t7xx_skb_data_area_size() 
-given what it calculates. IHMO, "data size" refers to actual 
-frame/packet/payload and does not include the reserves/*rooms around it
-so the name is bit misleading as is.
+The value of last_state is never used.
 
 
 -- 
