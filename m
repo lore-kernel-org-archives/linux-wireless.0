@@ -2,157 +2,141 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DDF6C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Dec 2021 21:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF881C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Dec 2021 00:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230021AbhLOVwN (ORCPT
+        id S229545AbhLPAyi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Dec 2021 16:52:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41930 "EHLO
+        Wed, 15 Dec 2021 19:54:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbhLOVwN (ORCPT
+        with ESMTP id S229441AbhLPAyi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Dec 2021 16:52:13 -0500
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA136C061574
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2021 13:52:12 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id d198-20020a1c1dcf000000b0034569cdd2a2so1976658wmd.5
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2021 13:52:12 -0800 (PST)
+        Wed, 15 Dec 2021 19:54:38 -0500
+Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E20C3C061574
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2021 16:54:37 -0800 (PST)
+Received: by mail-io1-xd2c.google.com with SMTP id q72so32862984iod.12
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2021 16:54:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Lo4oo3QOGXKE387FLp62r10ePTuPRwfqozZsRv7vgSE=;
-        b=JLGkZAow4HHXvvhusL6C2oMoH9kuOcFcDv6CUCkVkooHfYR07jBLmtxpBqh1RiFDwH
-         3E99fPGJFLLvefF+46qq5sG9wD6XNY7FQGatoOFH8BuE43OlciawB+rkXERfBr4vgeEE
-         T6Cr7I9D/UbysEYXhCrpFvR3fEzv3jYzagnr3jvDT7smGB/wER0RPqT02VPu6iwI4Qo8
-         /PqI3sN96vh0e/Ht5WnqsHM3dDWmcscXgqjJFoivwtbTJG49aHY66ymdT78uQ0l1sbX0
-         /wrDZbtCsVC56i7aFaPjtVSRTW5pd+gBH358HYYuQ3dhOmh5EBk3txpZdcCLzhMgWHqh
-         jX6Q==
+        d=egauge.net; s=google;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :organization:user-agent:mime-version:content-transfer-encoding;
+        bh=DxLv+nTj3iyF1XqRT921ana05xn+Hmmvy3irbfbMeUg=;
+        b=fgsGDeLK7ztcoYM+u3Hed1c7I8HlCgkuEnVF58UJruKy5AFxe8OGYQAL0t3+4W4rNG
+         OKwJEx5KXCDr00rPCnJhzN1VetNIFbawhVwXcghlozLrDHwFsabtyoXpvtevvl0HLNil
+         EZnGMlf5Bpu1IFJjV1kdszh67TxPhBguRmsJ0GH1SvI65otyTeBGiOSbmJiw6e6kJhQv
+         Vv6cAP/m3nehvw8dwKbgow9HoMqqQeYifAuVXHWDuzFuZq+GpsGJ8dMmeygxcUjt0CRo
+         xuDw3HI7E+JjuGdkdmygC/Z5HZoDmr8nOIjLdfWeuv2BLGZHtny5YBpW3VnfH715qCIE
+         Mp9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:organization:user-agent:mime-version
          :content-transfer-encoding;
-        bh=Lo4oo3QOGXKE387FLp62r10ePTuPRwfqozZsRv7vgSE=;
-        b=CL1f18Rt3ZzazpUpGYWv8eoNinHmGN3adNM4u3LnCfU4IF7zXhaS3cepHTPDVhjAJh
-         vv60zgLygnWQV6wgFzg2UWOBjgqw7IHGLdMHfQgdbOmUywMyrqBGmjvNR5BIzr3bpy85
-         BBXpZLI/i/41h7F5oHh1tNLwHsWdvNEPAc4qi1Ug/WRTW8T+QGN3S23fVfSG6mg3t8oH
-         OPuiIPHQvjMusLMu33TAY695OxvXU3i3byIOpZahp9td9Y5BUY3BCKy2zR76rzvBoMwu
-         ggRQKJ4XlV7vofFEepZZFdHn2biiZMFke2obHzdOwzM84CF17JUuP2vgjZZy4OnIL8Bd
-         a0eg==
-X-Gm-Message-State: AOAM531yk3fdnRTnfHlMumh7veabLkpIYIPFUsPEFF4R6whAh6HJouQp
-        CXvoBh+XBKkLLIxw9W7pfbhtgj2SM1pOIQ==
-X-Google-Smtp-Source: ABdhPJwntiU0UkMooFD1y/hk6Vbu3ZTY0tDz2hJd3aGCCufE3FU7s+5dp4A9B1jSHEUkzT2bAYKVeA==
-X-Received: by 2002:a05:600c:4153:: with SMTP id h19mr2144265wmm.142.1639605131425;
-        Wed, 15 Dec 2021 13:52:11 -0800 (PST)
-Received: from build-server.fritz.box (p200300c56f1b6b00880d3dfffedefb04.dip0.t-ipconnect.de. [2003:c5:6f1b:6b00:880d:3dff:fede:fb04])
-        by smtp.gmail.com with ESMTPSA id l15sm2795285wme.47.2021.12.15.13.52.09
+        bh=DxLv+nTj3iyF1XqRT921ana05xn+Hmmvy3irbfbMeUg=;
+        b=A3eTzi39uXrzwyzDLpf91PWBawWpUYxoZhwulowl3uD9kTEqh3v41eiFd8Yc3ImXq7
+         MIGob4U0xG70qAHvAjAbFG3Dg77uvdEjY+3X823EH/AdMFXvyPb7Tv2DmzHuD6gdcFcF
+         36TIqvOszKAz63pzhsu5CzWkbTmTPfUX+xqsVQX3Qm5Bgr+OpibLcQpUcK1SjrqGfrF4
+         7W1rgsmr2L1hakSN27YC3yKLRl4IlwoqKOsfkwwxQ1RkJ9YECleuI7aPWQcfRIX2sPG+
+         hexRERKQRBwBrAopupnRGcUA8du19M0Ctu1ZOMCK5KqTmP2ll2t1uD3NsO96LWvyr9vM
+         AODg==
+X-Gm-Message-State: AOAM5315rRTT5q8YKLi39IEN0i9zk2xiXyoHG4J6hTxrRU+3Co146L3X
+        9ro2VysjTCbLyo+ImyrV7x+v
+X-Google-Smtp-Source: ABdhPJxZWNK/+lFDVswO9ljLaEr02GFWsO0oX4D9//e7ZP8UsNLqpEEb6AZLxgePXkBviezTDdMDTA==
+X-Received: by 2002:a02:7053:: with SMTP id f80mr7596204jac.28.1639616077169;
+        Wed, 15 Dec 2021 16:54:37 -0800 (PST)
+Received: from ?IPv6:2601:281:8300:4e0:2ba9:697d:eeec:13b? ([2601:281:8300:4e0:2ba9:697d:eeec:13b])
+        by smtp.gmail.com with ESMTPSA id j6sm1715921ilc.8.2021.12.15.16.54.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Dec 2021 13:52:10 -0800 (PST)
-From:   Jonas Jelonek <jelonek.jonas@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org, nbd@nbd.name,
-        Jonas Jelonek <jelonek.jonas@gmail.com>,
-        Thomas Huehn <thomas.huehn@hs-nordhausen.de>
-Subject: [PATCH] ath5k: switch to rate table based lookup
-Date:   Wed, 15 Dec 2021 22:50:42 +0100
-Message-Id: <20211215215042.637-1-jelonek.jonas@gmail.com>
-X-Mailer: git-send-email 2.30.2
+        Wed, 15 Dec 2021 16:54:36 -0800 (PST)
+Message-ID: <8bca161b9689bf02f0620e3b59f5040c7e8b2db1.camel@egauge.net>
+Subject: Re: RFC: wilc1000: refactor TX path to use sk_buff queue
+From:   David Mosberger-Tang <davidm@egauge.net>
+To:     Ajay.Kathat@microchip.com, Claudiu.Beznea@microchip.com,
+        kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date:   Wed, 15 Dec 2021 17:54:27 -0700
+In-Reply-To: <7a6956db-8710-4d6c-9bed-702ec1b7041e@microchip.com>
+References: <e3502ecffe0c4c01b263ada8deed814d5135c24c.camel@egauge.net>
+         <7a6956db-8710-4d6c-9bed-702ec1b7041e@microchip.com>
+Organization: eGauge Systems LLC
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Switching from legacy usage of ieee80211_get_tx_rates() lookup to direct
-rate table lookup in struct ieee80211_sta->rates.
+On Wed, 2021-12-15 at 12:44 +0000, Ajay.Kathat@microchip.com wrote:
+> On 12/12/21 02:02, David Mosberger-Tang wrote:
+> > Notes:
+> > 
+> >   - Don't try to apply this patch as is.  There are two other small
+> >     but unrelated changes that this patch below depends on.
+> 
+> Btw what are the other two changes required to make it work. I believe 
+> the working flow shouldn't get impacted after the restructuring 
+> especially when code is refactor(replaced) using the existing solution.
 
-The current rate control API allows drivers to directly get rates from
-ieee80211_sta->rates. ath5k is currently one of the legacy drivers that
-perform translation/merge with the internal rate table via
-ieee80211_get_tx_rates provided by rate control API.
-For our upcoming changes to rate control API and the implementation of
-transmit power control, this patch changes the behaviour. The call to
-ieee80211_get_tx_rates and subsequent calls are also avoided. ath5k now
-directly reads rates from sta->rates into its internal rate table. Cause
-ath5k does not rely on the rate array in SKB->CB, this is not considered
-anymore except for the first entry (used for probing).
+I'll start working on a patch series.  There are some before and some
+after the sk_buff refactor, but those are all pretty straight-forward
+in comparison.
 
-Tested this on a PCEngines ALIX with CMP9-GP miniPCI wifi card (Atheros
-AR5213A). Generated traffic between AP and multiple STAs before and
-after applying the patch and simultaneously measured throughput and
-captured rc_stats. Comparison resulted in same rate selection and no
-performance loss between both runs.
+> > 
+> > Thoughts and/or suggestions?
+> 
+> Using sk_buff queue is a good idea but the patch has other changes also. 
+> This patch should be splited into a few different logical related 
+> changes. Using a single patch for all these changes may not be easy to 
+> review and handle if there are any regressions.
+> 
+> One way to split the changes could be like:
+> 
+>   - sk_buff handling for mgmt/data and config frames
+>   - WID(config packets) functions refactoring
+>   - Functions refactoring
+>   - Rename related changes
 
-Co-developed-by: Thomas Huehn <thomas.huehn@hs-nordhausen.de>
-Signed-off-by: Thomas Huehn <thomas.huehn@hs-nordhausen.de>
-Signed-off-by: Jonas Jelonek <jelonek.jonas@gmail.com>
----
- drivers/net/wireless/ath/ath5k/base.c | 44 +++++++++++++++++++++++++--
- 1 file changed, 42 insertions(+), 2 deletions(-)
+Yeah, the WID refactoring and structure renaming can be split off
+easily, good suggestion.  Let me start working on that.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index cef17f33c69e..647b3b76495c 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -727,6 +727,43 @@ ath5k_get_rate_hw_value(const struct ieee80211_hw *hw,
- 	return hw_rate;
- }
- 
-+static bool ath5k_merge_ratetbl(struct ieee80211_sta *sta,
-+				struct ath5k_buf *bf,
-+				struct ieee80211_tx_info *tx_info)
-+{
-+	struct ieee80211_sta_rates *ratetbl;
-+	u8 i;
-+
-+	if (!sta)
-+		return false;
-+
-+	ratetbl = rcu_dereference(sta->rates);
-+	if (!ratetbl)
-+		return false;
-+
-+	if (tx_info->control.rates[0].idx < 0 ||
-+	    tx_info->control.rates[0].count == 0)
-+	{
-+		i = 0;
-+	} else {
-+		bf->rates[0] = tx_info->control.rates[0];
-+		i = 1;
-+	}
-+
-+	for ( ; i < IEEE80211_TX_MAX_RATES; i++) {
-+		bf->rates[i].idx = ratetbl->rate[i].idx;
-+		bf->rates[i].flags = ratetbl->rate[i].flags;
-+		if (tx_info->control.use_rts)
-+			bf->rates[i].count = ratetbl->rate[i].count_rts;
-+		else if (tx_info->control.use_cts_prot)
-+			bf->rates[i].count = ratetbl->rate[i].count_cts;
-+		else
-+			bf->rates[i].count = ratetbl->rate[i].count;
-+	}
-+
-+	return true;
-+}
-+
- static int
- ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
- 		  struct ath5k_txq *txq, int padsize,
-@@ -753,8 +790,11 @@ ath5k_txbuf_setup(struct ath5k_hw *ah, struct ath5k_buf *bf,
- 	if (dma_mapping_error(ah->dev, bf->skbaddr))
- 		return -ENOSPC;
- 
--	ieee80211_get_tx_rates(info->control.vif, (control) ? control->sta : NULL, skb, bf->rates,
--			       ARRAY_SIZE(bf->rates));
-+	if (!ath5k_merge_ratetbl((control) ? control->sta : NULL, bf, info)) {
-+		ieee80211_get_tx_rates(info->control.vif,
-+			(control) ? control->sta : NULL, skb, bf->rates,
-+			ARRAY_SIZE(bf->rates));
-+	}
- 
- 	rate = ath5k_get_rate(ah->hw, info, bf, 0);
- 
--- 
-2.30.2
+> <snip>
+> 
+> >                  (*ac)++;
+> >          
+> > +static int wilc_wlan_cfg_apply_wid(struct wilc_vif *vif, int start, u16 wid,
+> > +                                  u8 *buffer, u32 buffer_size, int commit,
+> > +                                  u32 drv_handler, bool set)
+> >   {
+> > -       u32 offset;
+> >          int ret_size;
+> >          struct wilc *wilc = vif->wilc;
+> > 
+> >          mutex_lock(&wilc->cfg_cmd_lock);
+> > 
+> > -       if (start)
+> > -               wilc->cfg_frame_offset = 0;
+> > -
+> > -       offset = wilc->cfg_frame_offset;
+> > -       ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
+> > -                                        wid, buffer, buffer_size);
+> > -       offset += ret_size;
+> > -       wilc->cfg_frame_offset = offset;
+> > -
+> > -       if (!commit) {
+> > -               mutex_unlock(&wilc->cfg_cmd_lock);
+> > -               return ret_size;
+> > +       if (start) {
+> > +               WARN_ON(wilc->cfg_skb);
+> > +               wilc->cfg_skb = alloc_cfg_skb(vif);
+> > +               if (!wilc->cfg_skb) {
+> 
+> 'cfg_cmd_lock' mutex unlock is missing.
+
+Indeed, thanks for catching that!
+
+  --david
+
 
