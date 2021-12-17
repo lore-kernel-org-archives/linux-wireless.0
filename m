@@ -2,44 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 045C5C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Dec 2021 17:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57424C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Dec 2021 17:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239931AbhLQRtH (ORCPT
+        id S239930AbhLQRtL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Dec 2021 12:49:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34484 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239928AbhLQRtG (ORCPT
+        Fri, 17 Dec 2021 12:49:11 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:44386 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239933AbhLQRtL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Dec 2021 12:49:06 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5773BC061574
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 09:49:06 -0800 (PST)
+        Fri, 17 Dec 2021 12:49:11 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A4BDACE2595
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 17:49:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0F30C36AE7;
-        Fri, 17 Dec 2021 17:49:01 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A6CB9CE2612
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 17:49:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4005C36AE9;
+        Fri, 17 Dec 2021 17:49:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639763342;
-        bh=FdR5Dth1ZoN4GM+AKGCIHDSIXCrV7udFLQnAG5CvLHI=;
+        s=k20201202; t=1639763347;
+        bh=v4FpN0Vl/V9lywV3Tte93VNZnGkSW9gDkcSXC8eYC9U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Bw6EiaVC0D09GE63KxftnDx80LF0O0idKcOlbS+ehna521ePPJAtrvd0tbuC2SmxL
-         NNfVu2yUkPTjW67a3FC6OYLwhtf0rCHu1i1qpVz1eCdai66RQ5vwmQgJhJmzH8N/1X
-         5b8n9QvS3hcwAtmSb9ecnvwjfSyHL68mj1FxZE2jkN8lFw5DE4Or8le/etE+2Z2/gn
-         Mxh4E8yOml7RZQr2JO9k/exn5gmd6WsR2yMvtJw1piGaPgLyB0xqVwN4T20ZRUwvVC
-         WpD4xb6Knu48lfZfG7B0sf7roR+CQxiY2CuLuqHix5+B2XbtzsfeMz4MgyMjU3QN43
-         se68wHMS5qEeg==
+        b=KCuBbb7I+gssUwz+4/wJd0BXViJhlmWMVQIxJh2Nd6Z3TqyBYNQM0nKf2OcO8gP6l
+         KsNxf2x78T16rBfyj59ilKNEGjxBGxMqVh+DrfpjmzLJ1TE6pj4jtUjJ/ZVftgfkAf
+         PmAQ0N1fTbkPxLbp7phjjt4PPXiOD+WA0+EumbLluTo7wYgIxI/TsqR4AiPR56NbcW
+         VBTpSw6My+cqgPjxL5vAvdXuRk9sbZE1/l8qwtyBl8cJjB0yYUh30UREyYIlpp2kAq
+         R/KXqsFd92RKG1CylhWnLXRWO52TGXaGR4Z3iSHG17sca2ARjT3g4b0RBpDzrl1+U6
+         TSGL5KFRxIFJg==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com
-Subject: [PATCH 2/7] mt76: mt7915: rely on  mt76_connac_mcu_alloc_wtbl_req
-Date:   Fri, 17 Dec 2021 18:48:46 +0100
-Message-Id: <de5be711eae18d4d471ec142616a35a5247ab83b.1639763123.git.lorenzo@kernel.org>
+Subject: [PATCH 4/7] mt76: connac: move mt76_connac_mcu_get_cipher in common code
+Date:   Fri, 17 Dec 2021 18:48:48 +0100
+Message-Id: <4ddc383a9472d9502cc07ed6be371583d94c8749.1639763123.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <cover.1639763123.git.lorenzo@kernel.org>
 References: <cover.1639763123.git.lorenzo@kernel.org>
@@ -49,115 +46,147 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rely on mt76_connac_mcu_alloc_wtbl_req routine and remove
-duplicated code.
+Move mt76_connac_mcu_get_cipher in mt76-connac code and remove
+duplicated code from mt7921 and mt7915 driver.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  8 +++-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 43 ++++---------------
- 2 files changed, 15 insertions(+), 36 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  | 27 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 29 +------------------
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 29 +------------------
+ 3 files changed, 29 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index fc5c870da420..ee512651d9f1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -309,8 +309,12 @@ mt76_connac_mcu_alloc_wtbl_req(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 		*skb = nskb;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 4c0220df18b4..07dfde25dbd7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1428,6 +1428,33 @@ struct mt76_connac_config {
+ 	u8 data[320];
+ } __packed;
  
--	if (sta_hdr)
--		sta_hdr->len = cpu_to_le16(sizeof(hdr));
-+	if (sta_hdr) {
-+		if (is_mt7915(dev))
-+			le16_add_cpu(&sta_hdr->len, sizeof(hdr));
-+		else
-+			sta_hdr->len = cpu_to_le16(sizeof(hdr));
++static inline enum mcu_cipher_type
++mt76_connac_mcu_get_cipher(int cipher)
++{
++	switch (cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++		return MCU_CIPHER_WEP40;
++	case WLAN_CIPHER_SUITE_WEP104:
++		return MCU_CIPHER_WEP104;
++	case WLAN_CIPHER_SUITE_TKIP:
++		return MCU_CIPHER_TKIP;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		return MCU_CIPHER_BIP_CMAC_128;
++	case WLAN_CIPHER_SUITE_CCMP:
++		return MCU_CIPHER_AES_CCMP;
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		return MCU_CIPHER_CCMP_256;
++	case WLAN_CIPHER_SUITE_GCMP:
++		return MCU_CIPHER_GCMP;
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		return MCU_CIPHER_GCMP_256;
++	case WLAN_CIPHER_SUITE_SMS4:
++		return MCU_CIPHER_WAPI;
++	default:
++		return MCU_CIPHER_NONE;
 +	}
++}
++
+ #define to_wcid_lo(id)		FIELD_GET(GENMASK(7, 0), (u16)id)
+ #define to_wcid_hi(id)		FIELD_GET(GENMASK(9, 8), (u16)id)
  
- 	return skb_put_data(nskb, &hdr, sizeof(hdr));
- }
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 6ad6eaef3c87..840df0498676 100644
+index 771dae905864..b29f03409587 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -574,33 +574,6 @@ void mt7915_mcu_rx_event(struct mt7915_dev *dev, struct sk_buff *skb)
- 		mt76_mcu_rx_event(&dev->mt76, skb);
- }
+@@ -85,33 +85,6 @@ struct mt7915_fw_region {
+ #define HE_PHY(p, c)			u8_get_bits(c, IEEE80211_HE_PHY_##p)
+ #define HE_MAC(m, c)			u8_get_bits(c, IEEE80211_HE_MAC_##m)
  
--static struct wtbl_req_hdr *
--mt7915_mcu_alloc_wtbl_req(struct mt7915_dev *dev, struct mt7915_sta *msta,
--			  int cmd, void *sta_wtbl, struct sk_buff **skb)
+-static enum mcu_cipher_type
+-mt7915_mcu_get_cipher(int cipher)
 -{
--	struct tlv *sta_hdr = sta_wtbl;
--	struct wtbl_req_hdr hdr = {
--		.wlan_idx_lo = to_wcid_lo(msta->wcid.idx),
--		.wlan_idx_hi = to_wcid_hi(msta->wcid.idx),
--		.operation = cmd,
--	};
--	struct sk_buff *nskb = *skb;
--
--	if (!nskb) {
--		nskb = mt76_mcu_msg_alloc(&dev->mt76, NULL,
--					  MT76_CONNAC_WTBL_UPDATE_MAX_SIZE);
--		if (!nskb)
--			return ERR_PTR(-ENOMEM);
--
--		*skb = nskb;
+-	switch (cipher) {
+-	case WLAN_CIPHER_SUITE_WEP40:
+-		return MCU_CIPHER_WEP40;
+-	case WLAN_CIPHER_SUITE_WEP104:
+-		return MCU_CIPHER_WEP104;
+-	case WLAN_CIPHER_SUITE_TKIP:
+-		return MCU_CIPHER_TKIP;
+-	case WLAN_CIPHER_SUITE_AES_CMAC:
+-		return MCU_CIPHER_BIP_CMAC_128;
+-	case WLAN_CIPHER_SUITE_CCMP:
+-		return MCU_CIPHER_AES_CCMP;
+-	case WLAN_CIPHER_SUITE_CCMP_256:
+-		return MCU_CIPHER_CCMP_256;
+-	case WLAN_CIPHER_SUITE_GCMP:
+-		return MCU_CIPHER_GCMP;
+-	case WLAN_CIPHER_SUITE_GCMP_256:
+-		return MCU_CIPHER_GCMP_256;
+-	case WLAN_CIPHER_SUITE_SMS4:
+-		return MCU_CIPHER_WAPI;
+-	default:
+-		return MCU_CIPHER_NONE;
 -	}
--
--	if (sta_hdr)
--		le16_add_cpu(&sta_hdr->len, sizeof(hdr));
--
--	return skb_put_data(nskb, &hdr, sizeof(hdr));
 -}
 -
- static struct tlv *
- mt7915_mcu_add_nested_tlv(struct sk_buff *skb, int tag, int len,
- 			  void *sta_ntlv, void *sta_wtbl)
-@@ -1187,8 +1160,8 @@ mt7915_mcu_sta_ba(struct mt7915_dev *dev,
+ static u8 mt7915_mcu_chan_bw(struct cfg80211_chan_def *chandef)
+ {
+ 	static const u8 width_to_bw[] = {
+@@ -984,7 +957,7 @@ mt7915_mcu_sta_key_tlv(struct mt7915_sta *msta, struct sk_buff *skb,
+ 		struct sec_key *sec_key;
+ 		u8 cipher;
  
- 	sta_wtbl = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
+-		cipher = mt7915_mcu_get_cipher(key->cipher);
++		cipher = mt76_connac_mcu_get_cipher(key->cipher);
+ 		if (cipher == MCU_CIPHER_NONE)
+ 			return -EOPNOTSUPP;
  
--	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_SET, sta_wtbl,
--					     &skb);
-+	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
-+						  WTBL_SET, sta_wtbl, &skb);
- 	if (IS_ERR(wtbl_hdr))
- 		return PTR_ERR(wtbl_hdr);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index ef1e1ef91611..0858b026de2d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -93,33 +93,6 @@ struct mt7921_fw_region {
+ #define PATCH_SEC_ENC_SCRAMBLE_INFO_MASK	GENMASK(15, 0)
+ #define PATCH_SEC_ENC_AES_KEY_MASK		GENMASK(7, 0)
  
-@@ -1693,8 +1666,9 @@ mt7915_mcu_sta_wtbl_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
- 	msta = sta ? (struct mt7915_sta *)sta->drv_priv : &mvif->sta;
+-static enum mcu_cipher_type
+-mt7921_mcu_get_cipher(int cipher)
+-{
+-	switch (cipher) {
+-	case WLAN_CIPHER_SUITE_WEP40:
+-		return MCU_CIPHER_WEP40;
+-	case WLAN_CIPHER_SUITE_WEP104:
+-		return MCU_CIPHER_WEP104;
+-	case WLAN_CIPHER_SUITE_TKIP:
+-		return MCU_CIPHER_TKIP;
+-	case WLAN_CIPHER_SUITE_AES_CMAC:
+-		return MCU_CIPHER_BIP_CMAC_128;
+-	case WLAN_CIPHER_SUITE_CCMP:
+-		return MCU_CIPHER_AES_CCMP;
+-	case WLAN_CIPHER_SUITE_CCMP_256:
+-		return MCU_CIPHER_CCMP_256;
+-	case WLAN_CIPHER_SUITE_GCMP:
+-		return MCU_CIPHER_GCMP;
+-	case WLAN_CIPHER_SUITE_GCMP_256:
+-		return MCU_CIPHER_GCMP_256;
+-	case WLAN_CIPHER_SUITE_SMS4:
+-		return MCU_CIPHER_WAPI;
+-	default:
+-		return MCU_CIPHER_NONE;
+-	}
+-}
+-
+ static u8 mt7921_mcu_chan_bw(struct cfg80211_chan_def *chandef)
+ {
+ 	static const u8 width_to_bw[] = {
+@@ -483,7 +456,7 @@ mt7921_mcu_sta_key_tlv(struct mt7921_sta *msta, struct sk_buff *skb,
+ 		struct sec_key *sec_key;
+ 		u8 cipher;
  
- 	tlv = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
--	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_RESET_AND_SET,
--					     tlv, &skb);
-+	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
-+						  WTBL_RESET_AND_SET, tlv,
-+						  &skb);
- 	if (IS_ERR(wtbl_hdr))
- 		return PTR_ERR(wtbl_hdr);
- 
-@@ -1720,7 +1694,8 @@ int mt7915_mcu_sta_update_hdr_trans(struct mt7915_dev *dev,
- 	if (!skb)
- 		return -ENOMEM;
- 
--	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_SET, NULL, &skb);
-+	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
-+						  WTBL_SET, NULL, &skb);
- 	if (IS_ERR(wtbl_hdr))
- 		return PTR_ERR(wtbl_hdr);
- 
-@@ -2074,8 +2049,8 @@ int mt7915_mcu_add_smps(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 
- 	sta_wtbl = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
- 
--	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_SET, sta_wtbl,
--					     &skb);
-+	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
-+						  WTBL_SET, sta_wtbl, &skb);
- 	if (IS_ERR(wtbl_hdr))
- 		return PTR_ERR(wtbl_hdr);
+-		cipher = mt7921_mcu_get_cipher(key->cipher);
++		cipher = mt76_connac_mcu_get_cipher(key->cipher);
+ 		if (cipher == MCU_CIPHER_NONE)
+ 			return -EOPNOTSUPP;
  
 -- 
 2.33.1
