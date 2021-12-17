@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BAF9C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1A1C4332F
 	for <linux-wireless@archiver.kernel.org>; Fri, 17 Dec 2021 14:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237548AbhLQOls (ORCPT
+        id S237435AbhLQOlr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Dec 2021 09:41:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
+        Fri, 17 Dec 2021 09:41:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237454AbhLQOlf (ORCPT
+        with ESMTP id S237425AbhLQOld (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Dec 2021 09:41:35 -0500
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EFA3C06173E
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 06:41:34 -0800 (PST)
-Received: by mail-ed1-x52a.google.com with SMTP id y12so8528217eda.12
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 06:41:34 -0800 (PST)
+        Fri, 17 Dec 2021 09:41:33 -0500
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DB2BC061748
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 06:41:32 -0800 (PST)
+Received: by mail-ed1-x52c.google.com with SMTP id z29so8605507edl.7
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 06:41:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=YtXzvh0C6WiWca/wi/qfYHW/5QpcMjxHI9YNhLAWuJ0=;
-        b=Z5ZRrmxwSJv9i19fPSkPWScIrN4tJBVTD5Er/ou2k9ZfJbuqbPWdF0gB+PYhYh83cs
-         5TCqk+2oZdFe+S3/0evA0R3hOmhwoDopVdaZBhTEMTAJpL2jXWW3IMZPZAxxTFY6S7u/
-         cPMwtote0l2lYQVFo5IRKzVDdo08mtzkYJdkQEIO+kF9froty6srsvbSDovwuGCC4ibm
-         iiF6JInTkfPm4f3XwtZ205yhv9/doP5v3OFIwEnmsWZiu8uEWM0HrUJ2/RjcHJ9FG5XH
-         btGf5ySG+s1sdl43Ooa2e2jLF7wFgnCJJTWuJHIJjNUz/lJYsfCtCovNBNwb4NXPdys+
-         NSWg==
+        bh=k+svxlPz5OlRyuMV50vRrVJIHOOyvczmg0QiSlPy51s=;
+        b=j1aM23b5L+9FAsI/JFVtUQ7Z11q1UydXjrez4RF6MsbyScjBAq+JKfprC2EVDkfRY0
+         4X+QR1ju7VnFzABb4fYINyKRq5nbu6j1kLj0HQuTOI8JVyPm9X0TWDwxg8qo27qpr+x4
+         DmIomiBmEn7KGY9ul0m2CrHWVpnmP0B943h4jegKL2hI8jO1sV5dTviacDbHXhzKHf31
+         ROuy8l3ocfJudOROjsEJATuS8IkHTMzTHZxZ1oLLuGwdvFLmJsLVbGRMyhFStEoXm2ye
+         xygDGnLiiY+q/I5VaWJjmJM+hhPUNPy0fuQKgEdtyfBwQzcjbgG2iNFZqskMwRwKyxmb
+         N9Zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=YtXzvh0C6WiWca/wi/qfYHW/5QpcMjxHI9YNhLAWuJ0=;
-        b=TNLYrn9TOmorWiaG5SFCIJLj9kUvUbDBRW1mT28Eh+VoNdZEEikCOuDEMHFexZVEQG
-         N+6IQUU1J9E8f10VOzbDj2wS1Zq1pF7xTEa4B+6OBQOJyAYe4Jf5oaLYi3u/QbK1MGsK
-         px/c0RiW++pIi6uJiCIoDbX+OttM8en5QLWdHdbsZwDEwcZGoaelNtd0FxhmKi+JcR+G
-         b3q1L5O/CwIy9WNCnj4FMLPD6mUcbk6l249xgbsIAl4WO4SbbEGk/sCIThUCm1LB60Rg
-         g1nhlGb0LpqhLuVzh/YzYubw+ORiR/fmHD2bJ0fvisxpmCvVkoJM5sOtqqiCTOxb4dMf
-         +usQ==
-X-Gm-Message-State: AOAM533kxJSEiM/FFx3QsR/mxlMnOIbvfAMB9u7AD30wngLZUBIMcXMv
-        umHh2s7vKEoIrCmo2BzmckJEEg==
-X-Google-Smtp-Source: ABdhPJwE5DG1GPBbARyfTn2B2dT+ezPQUD+vIyLEwqxURyDd3r3xXCtCoRncy6rsxZvxSAb+TFQ4oA==
-X-Received: by 2002:a05:6402:c8:: with SMTP id i8mr3113551edu.183.1639752093143;
-        Fri, 17 Dec 2021 06:41:33 -0800 (PST)
+        bh=k+svxlPz5OlRyuMV50vRrVJIHOOyvczmg0QiSlPy51s=;
+        b=u7i3arq6CzcYia44c1gCaXVNbZ5eIzz1Y+OoyVb0fEMrI0XnAt/4sqkxTqvV8kzkqf
+         R0obPJEpG8kYXGG3jWVJlyZNgGCg1rG+4zQwY2FB8FQ1YyoZgC7H3A4bTYVJjvDhGmlx
+         WQKdo7mdsm+LbA2YTia3CB2FaLmr6SbpK33Kv+kHJjlgcLg7II9u+Fr1DYMarie333iK
+         jO2bOJ2GqnfVEto64fimQjiVC+ImDdGePSElOh1gQjYZvMrfAXRdgMa+379lXTLj5i1K
+         iIzSmMEI8oxFQUOCD3kDdgbd94GybJR1nJDafeokPuidxlP+XYqf6KQNdVwwPyorEhZE
+         X3fQ==
+X-Gm-Message-State: AOAM531pdCXiTvBccK6vILJfr6ZqoTziswEU++NSZAhh5c+1J8KnSUMk
+        fIbQHjNw82qLP/8+Nmpvtm8gAg==
+X-Google-Smtp-Source: ABdhPJzTkKRPpi6WR0ponHtsYRpuOiZc61sU6f2OiXF6/1UTxwJ6H/X7l6zLEn1Caw+E98y/s3f9fw==
+X-Received: by 2002:a17:907:961a:: with SMTP id gb26mr2884154ejc.71.1639752090781;
+        Fri, 17 Dec 2021 06:41:30 -0800 (PST)
 Received: from localhost (c-9b28e555.07-21-73746f28.bbcust.telenor.se. [85.229.40.155])
-        by smtp.gmail.com with ESMTPSA id gn26sm2942234ejc.14.2021.12.17.06.41.32
+        by smtp.gmail.com with ESMTPSA id v3sm3707964edc.69.2021.12.17.06.41.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Dec 2021 06:41:32 -0800 (PST)
+        Fri, 17 Dec 2021 06:41:30 -0800 (PST)
 From:   Anders Roxell <anders.roxell@linaro.org>
 To:     stable@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, woojung.huh@microchip.com,
@@ -61,13 +61,15 @@ Cc:     linux-kernel@vger.kernel.org, woojung.huh@microchip.com,
         linux-wireless@vger.kernel.org, rostedt@goodmis.org,
         mingo@redhat.com, dmitry.torokhov@gmail.com,
         ndesaulniers@google.com, nathan@kernel.org,
-        linux-input@vger.kernel.org, Stefan Agner <stefan@agner.ch>,
-        Arnd Bergmann <arnd@arndb.de>,
+        linux-input@vger.kernel.org,
+        Nicolas Pitre <nicolas.pitre@linaro.org>,
+        Nicolas Pitre <nico@linaro.org>,
+        Stefan Agner <stefan@agner.ch>,
         Russell King <rmk+kernel@armlinux.org.uk>,
         Anders Roxell <anders.roxell@linaro.org>
-Subject: [PATCH 4.19 4/6] ARM: 8800/1: use choice for kernel unwinders
-Date:   Fri, 17 Dec 2021 15:41:17 +0100
-Message-Id: <20211217144119.2538175-5-anders.roxell@linaro.org>
+Subject: [PATCH 4.19 2/6] ARM: 8805/2: remove unneeded naked function usage
+Date:   Fri, 17 Dec 2021 15:41:15 +0100
+Message-Id: <20211217144119.2538175-3-anders.roxell@linaro.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211217144119.2538175-1-anders.roxell@linaro.org>
 References: <20211217144119.2538175-1-anders.roxell@linaro.org>
@@ -77,132 +79,542 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Stefan Agner <stefan@agner.ch>
+From: Nicolas Pitre <nicolas.pitre@linaro.org>
 
-commit f9b58e8c7d031b0daa5c9a9ee27f5a4028ba53ac upstream.
+commit b99afae1390140f5b0039e6b37a7380de31ae874 upstream.
 
-While in theory multiple unwinders could be compiled in, it does
-not make sense in practise. Use a choice to make the unwinder
-selection mutually exclusive and mandatory.
+The naked attribute is known to confuse some old gcc versions when
+function arguments aren't explicitly listed as inline assembly operands
+despite the gcc documentation. That resulted in commit 9a40ac86152c
+("ARM: 6164/1: Add kto and kfrom to input operands list.").
 
-Already before this commit it has not been possible to deselect
-FRAME_POINTER. Remove the obsolete comment.
+Yet that commit has problems of its own by having assembly operand
+constraints completely wrong. If the generated code has been OK since
+then, it is due to luck rather than correctness. So this patch also
+provides proper assembly operand constraints, and removes two instances
+of redundant register usages in the implementation while at it.
 
-Furthermore, to produce a meaningful backtrace with FRAME_POINTER
-enabled the kernel needs a specific function prologue:
-    mov    ip, sp
-    stmfd    sp!, {fp, ip, lr, pc}
-    sub    fp, ip, #4
+Inspection of the generated code with this patch doesn't show any
+obvious quality degradation either, so not relying on __naked at all
+will make the code less fragile, and avoid some issues with clang.
 
-To get to the required prologue gcc uses apcs and no-sched-prolog.
-This compiler options are not available on clang, and clang is not
-able to generate the required prologue. Make the FRAME_POINTER
-config symbol depending on !clang.
+The only remaining __naked instances (excluding the kprobes test cases)
+are exynos_pm_power_up_setup(), tc2_pm_power_up_setup() and
 
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Stefan Agner <stefan@agner.ch>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+cci_enable_port_for_self(. But in the first two cases, only the function
+address is used by the compiler with no chance of inlining it by
+mistake, and the third case is called from assembly code only. And the
+fact that no stack is available when the corresponding code is executed
+does warrant the __naked usage in those cases.
+
+Signed-off-by: Nicolas Pitre <nico@linaro.org>
+Reviewed-by: Stefan Agner <stefan@agner.ch>
+Tested-by: Stefan Agner <stefan@agner.ch>
 Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
 ---
- arch/arm/Kconfig.debug | 44 +++++++++++++++++++++++++++---------------
- lib/Kconfig.debug      |  6 +++---
- 2 files changed, 31 insertions(+), 19 deletions(-)
+ arch/arm/mm/copypage-fa.c       | 35 ++++++------
+ arch/arm/mm/copypage-feroceon.c | 98 ++++++++++++++++-----------------
+ arch/arm/mm/copypage-v4mc.c     | 19 +++----
+ arch/arm/mm/copypage-v4wb.c     | 41 +++++++-------
+ arch/arm/mm/copypage-v4wt.c     | 37 ++++++-------
+ arch/arm/mm/copypage-xsc3.c     | 71 +++++++++++-------------
+ arch/arm/mm/copypage-xscale.c   | 71 ++++++++++++------------
+ 7 files changed, 178 insertions(+), 194 deletions(-)
 
-diff --git a/arch/arm/Kconfig.debug b/arch/arm/Kconfig.debug
-index bee0ba1d1cfb..01c760929c9e 100644
---- a/arch/arm/Kconfig.debug
-+++ b/arch/arm/Kconfig.debug
-@@ -45,30 +45,42 @@ config DEBUG_WX
- 
- 		If in doubt, say "Y".
- 
--# RMK wants arm kernels compiled with frame pointers or stack unwinding.
--# If you know what you are doing and are willing to live without stack
--# traces, you can get a slightly smaller kernel by setting this option to
--# n, but then RMK will have to kill you ;).
--config FRAME_POINTER
--	bool
--	depends on !THUMB2_KERNEL
--	default y if !ARM_UNWIND || FUNCTION_GRAPH_TRACER
-+choice
-+	prompt "Choose kernel unwinder"
-+	default UNWINDER_ARM if AEABI && !FUNCTION_GRAPH_TRACER
-+	default UNWINDER_FRAME_POINTER if !AEABI || FUNCTION_GRAPH_TRACER
-+	help
-+	  This determines which method will be used for unwinding kernel stack
-+	  traces for panics, oopses, bugs, warnings, perf, /proc/<pid>/stack,
-+	  livepatch, lockdep, and more.
+diff --git a/arch/arm/mm/copypage-fa.c b/arch/arm/mm/copypage-fa.c
+index d130a5ece5d5..bf24690ec83a 100644
+--- a/arch/arm/mm/copypage-fa.c
++++ b/arch/arm/mm/copypage-fa.c
+@@ -17,26 +17,25 @@
+ /*
+  * Faraday optimised copy_user_page
+  */
+-static void __naked
+-fa_copy_user_page(void *kto, const void *kfrom)
++static void fa_copy_user_page(void *kto, const void *kfrom)
+ {
+-	asm("\
+-	stmfd	sp!, {r4, lr}			@ 2\n\
+-	mov	r2, %0				@ 1\n\
+-1:	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	stmia	r0, {r3, r4, ip, lr}		@ 4\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ 1   clean and invalidate D line\n\
+-	add	r0, r0, #16			@ 1\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	stmia	r0, {r3, r4, ip, lr}		@ 4\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ 1   clean and invalidate D line\n\
+-	add	r0, r0, #16			@ 1\n\
+-	subs	r2, r2, #1			@ 1\n\
++	int tmp;
 +
-+config UNWINDER_FRAME_POINTER
-+	bool "Frame pointer unwinder"
-+	depends on !THUMB2_KERNEL && !CC_IS_CLANG
-+	select ARCH_WANT_FRAME_POINTERS
-+	select FRAME_POINTER
- 	help
--	  If you say N here, the resulting kernel will be slightly smaller and
--	  faster. However, if neither FRAME_POINTER nor ARM_UNWIND are enabled,
--	  when a problem occurs with the kernel, the information that is
--	  reported is severely limited.
-+	  This option enables the frame pointer unwinder for unwinding
-+	  kernel stack traces.
++	asm volatile ("\
++1:	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	stmia	%0, {r3, r4, ip, lr}		@ 4\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ 1   clean and invalidate D line\n\
++	add	%0, %0, #16			@ 1\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	stmia	%0, {r3, r4, ip, lr}		@ 4\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ 1   clean and invalidate D line\n\
++	add	%0, %0, #16			@ 1\n\
++	subs	%2, %2, #1			@ 1\n\
+ 	bne	1b				@ 1\n\
+-	mcr	p15, 0, r2, c7, c10, 4		@ 1   drain WB\n\
+-	ldmfd	sp!, {r4, pc}			@ 3"
+-	:
+-	: "I" (PAGE_SIZE / 32));
++	mcr	p15, 0, %2, c7, c10, 4		@ 1   drain WB"
++	: "+&r" (kto), "+&r" (kfrom), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 32)
++	: "r3", "r4", "ip", "lr");
+ }
  
--config ARM_UNWIND
--	bool "Enable stack unwinding support (EXPERIMENTAL)"
-+config UNWINDER_ARM
-+	bool "ARM EABI stack unwinder"
- 	depends on AEABI
--	default y
-+	select ARM_UNWIND
- 	help
- 	  This option enables stack unwinding support in the kernel
- 	  using the information automatically generated by the
- 	  compiler. The resulting kernel image is slightly bigger but
- 	  the performance is not affected. Currently, this feature
--	  only works with EABI compilers. If unsure say Y.
-+	  only works with EABI compilers.
+ void fa_copy_user_highpage(struct page *to, struct page *from,
+diff --git a/arch/arm/mm/copypage-feroceon.c b/arch/arm/mm/copypage-feroceon.c
+index 49ee0c1a7209..cc819732d9b8 100644
+--- a/arch/arm/mm/copypage-feroceon.c
++++ b/arch/arm/mm/copypage-feroceon.c
+@@ -13,58 +13,56 @@
+ #include <linux/init.h>
+ #include <linux/highmem.h>
+ 
+-static void __naked
+-feroceon_copy_user_page(void *kto, const void *kfrom)
++static void feroceon_copy_user_page(void *kto, const void *kfrom)
+ {
+-	asm("\
+-	stmfd	sp!, {r4-r9, lr}		\n\
+-	mov	ip, %2				\n\
+-1:	mov	lr, r1				\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	pld	[lr, #32]			\n\
+-	pld	[lr, #64]			\n\
+-	pld	[lr, #96]			\n\
+-	pld	[lr, #128]			\n\
+-	pld	[lr, #160]			\n\
+-	pld	[lr, #192]			\n\
+-	pld	[lr, #224]			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	ldmia	r1!, {r2 - r9}			\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
+-	stmia	r0, {r2 - r9}			\n\
+-	subs	ip, ip, #(32 * 8)		\n\
+-	mcr	p15, 0, r0, c7, c14, 1		@ clean and invalidate D line\n\
+-	add	r0, r0, #32			\n\
++	int tmp;
 +
-+endchoice
++	asm volatile ("\
++1:	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	pld	[%1, #0]			\n\
++	pld	[%1, #32]			\n\
++	pld	[%1, #64]			\n\
++	pld	[%1, #96]			\n\
++	pld	[%1, #128]			\n\
++	pld	[%1, #160]			\n\
++	pld	[%1, #192]			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	ldmia	%1!, {r2 - r7, ip, lr}		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
++	stmia	%0, {r2 - r7, ip, lr}		\n\
++	subs	%2, %2, #(32 * 8)		\n\
++	mcr	p15, 0, %0, c7, c14, 1		@ clean and invalidate D line\n\
++	add	%0, %0, #32			\n\
+ 	bne	1b				\n\
+-	mcr	p15, 0, ip, c7, c10, 4		@ drain WB\n\
+-	ldmfd	sp!, {r4-r9, pc}"
+-	:
+-	: "r" (kto), "r" (kfrom), "I" (PAGE_SIZE));
++	mcr	p15, 0, %2, c7, c10, 4		@ drain WB"
++	: "+&r" (kto), "+&r" (kfrom), "=&r" (tmp)
++	: "2" (PAGE_SIZE)
++	: "r2", "r3", "r4", "r5", "r6", "r7", "ip", "lr");
+ }
+ 
+ void feroceon_copy_user_highpage(struct page *to, struct page *from,
+diff --git a/arch/arm/mm/copypage-v4mc.c b/arch/arm/mm/copypage-v4mc.c
+index 0224416cba3c..b03202cddddb 100644
+--- a/arch/arm/mm/copypage-v4mc.c
++++ b/arch/arm/mm/copypage-v4mc.c
+@@ -40,12 +40,11 @@ static DEFINE_RAW_SPINLOCK(minicache_lock);
+  * instruction.  If your processor does not supply this, you have to write your
+  * own copy_user_highpage that does the right thing.
+  */
+-static void __naked
+-mc_copy_user_page(void *from, void *to)
++static void mc_copy_user_page(void *from, void *to)
+ {
+-	asm volatile(
+-	"stmfd	sp!, {r4, lr}			@ 2\n\
+-	mov	r4, %2				@ 1\n\
++	int tmp;
 +
-+config ARM_UNWIND
-+	bool
++	asm volatile ("\
+ 	ldmia	%0!, {r2, r3, ip, lr}		@ 4\n\
+ 1:	mcr	p15, 0, %1, c7, c6, 1		@ 1   invalidate D line\n\
+ 	stmia	%1!, {r2, r3, ip, lr}		@ 4\n\
+@@ -55,13 +54,13 @@ mc_copy_user_page(void *from, void *to)
+ 	mcr	p15, 0, %1, c7, c6, 1		@ 1   invalidate D line\n\
+ 	stmia	%1!, {r2, r3, ip, lr}		@ 4\n\
+ 	ldmia	%0!, {r2, r3, ip, lr}		@ 4\n\
+-	subs	r4, r4, #1			@ 1\n\
++	subs	%2, %2, #1			@ 1\n\
+ 	stmia	%1!, {r2, r3, ip, lr}		@ 4\n\
+ 	ldmneia	%0!, {r2, r3, ip, lr}		@ 4\n\
+-	bne	1b				@ 1\n\
+-	ldmfd	sp!, {r4, pc}			@ 3"
+-	:
+-	: "r" (from), "r" (to), "I" (PAGE_SIZE / 64));
++	bne	1b				@ "
++	: "+&r" (from), "+&r" (to), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 64)
++	: "r2", "r3", "ip", "lr");
+ }
+ 
+ void v4_mc_copy_user_highpage(struct page *to, struct page *from,
+diff --git a/arch/arm/mm/copypage-v4wb.c b/arch/arm/mm/copypage-v4wb.c
+index 067d0fdd630c..cd3e165afeed 100644
+--- a/arch/arm/mm/copypage-v4wb.c
++++ b/arch/arm/mm/copypage-v4wb.c
+@@ -22,29 +22,28 @@
+  * instruction.  If your processor does not supply this, you have to write your
+  * own copy_user_highpage that does the right thing.
+  */
+-static void __naked
+-v4wb_copy_user_page(void *kto, const void *kfrom)
++static void v4wb_copy_user_page(void *kto, const void *kfrom)
+ {
+-	asm("\
+-	stmfd	sp!, {r4, lr}			@ 2\n\
+-	mov	r2, %2				@ 1\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-1:	mcr	p15, 0, r0, c7, c6, 1		@ 1   invalidate D line\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4+1\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	mcr	p15, 0, r0, c7, c6, 1		@ 1   invalidate D line\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	subs	r2, r2, #1			@ 1\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmneia	r1!, {r3, r4, ip, lr}		@ 4\n\
++	int tmp;
 +
-+config FRAME_POINTER
-+	bool
++	asm volatile ("\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++1:	mcr	p15, 0, %0, c7, c6, 1		@ 1   invalidate D line\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4+1\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	mcr	p15, 0, %0, c7, c6, 1		@ 1   invalidate D line\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	subs	%2, %2, #1			@ 1\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmneia	%1!, {r3, r4, ip, lr}		@ 4\n\
+ 	bne	1b				@ 1\n\
+-	mcr	p15, 0, r1, c7, c10, 4		@ 1   drain WB\n\
+-	ldmfd	 sp!, {r4, pc}			@ 3"
+-	:
+-	: "r" (kto), "r" (kfrom), "I" (PAGE_SIZE / 64));
++	mcr	p15, 0, %1, c7, c10, 4		@ 1   drain WB"
++	: "+&r" (kto), "+&r" (kfrom), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 64)
++	: "r3", "r4", "ip", "lr");
+ }
  
- config OLD_MCOUNT
- 	bool
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 6970759f296c..621859a453f8 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1178,7 +1178,7 @@ config LOCKDEP
- 	bool
- 	depends on DEBUG_KERNEL && LOCK_DEBUGGING_SUPPORT
- 	select STACKTRACE
--	select FRAME_POINTER if !MIPS && !PPC && !ARM_UNWIND && !S390 && !MICROBLAZE && !ARC && !X86
-+	select FRAME_POINTER if !MIPS && !PPC && !ARM && !S390 && !MICROBLAZE && !ARC && !X86
- 	select KALLSYMS
- 	select KALLSYMS_ALL
+ void v4wb_copy_user_highpage(struct page *to, struct page *from,
+diff --git a/arch/arm/mm/copypage-v4wt.c b/arch/arm/mm/copypage-v4wt.c
+index b85c5da2e510..8614572e1296 100644
+--- a/arch/arm/mm/copypage-v4wt.c
++++ b/arch/arm/mm/copypage-v4wt.c
+@@ -20,27 +20,26 @@
+  * dirty data in the cache.  However, we do have to ensure that
+  * subsequent reads are up to date.
+  */
+-static void __naked
+-v4wt_copy_user_page(void *kto, const void *kfrom)
++static void v4wt_copy_user_page(void *kto, const void *kfrom)
+ {
+-	asm("\
+-	stmfd	sp!, {r4, lr}			@ 2\n\
+-	mov	r2, %2				@ 1\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-1:	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4+1\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmia	r1!, {r3, r4, ip, lr}		@ 4\n\
+-	subs	r2, r2, #1			@ 1\n\
+-	stmia	r0!, {r3, r4, ip, lr}		@ 4\n\
+-	ldmneia	r1!, {r3, r4, ip, lr}		@ 4\n\
++	int tmp;
++
++	asm volatile ("\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++1:	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4+1\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmia	%1!, {r3, r4, ip, lr}		@ 4\n\
++	subs	%2, %2, #1			@ 1\n\
++	stmia	%0!, {r3, r4, ip, lr}		@ 4\n\
++	ldmneia	%1!, {r3, r4, ip, lr}		@ 4\n\
+ 	bne	1b				@ 1\n\
+-	mcr	p15, 0, r2, c7, c7, 0		@ flush ID cache\n\
+-	ldmfd	sp!, {r4, pc}			@ 3"
+-	:
+-	: "r" (kto), "r" (kfrom), "I" (PAGE_SIZE / 64));
++	mcr	p15, 0, %2, c7, c7, 0		@ flush ID cache"
++	: "+&r" (kto), "+&r" (kfrom), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 64)
++	: "r3", "r4", "ip", "lr");
+ }
  
-@@ -1589,7 +1589,7 @@ config FAULT_INJECTION_STACKTRACE_FILTER
- 	depends on FAULT_INJECTION_DEBUG_FS && STACKTRACE_SUPPORT
- 	depends on !X86_64
- 	select STACKTRACE
--	select FRAME_POINTER if !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM_UNWIND && !ARC && !X86
-+	select FRAME_POINTER if !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM && !ARC && !X86
- 	help
- 	  Provide stacktrace filter for fault-injection capabilities
+ void v4wt_copy_user_highpage(struct page *to, struct page *from,
+diff --git a/arch/arm/mm/copypage-xsc3.c b/arch/arm/mm/copypage-xsc3.c
+index 03a2042aced5..55cbc3a89d85 100644
+--- a/arch/arm/mm/copypage-xsc3.c
++++ b/arch/arm/mm/copypage-xsc3.c
+@@ -21,53 +21,46 @@
  
-@@ -1598,7 +1598,7 @@ config LATENCYTOP
- 	depends on DEBUG_KERNEL
- 	depends on STACKTRACE_SUPPORT
- 	depends on PROC_FS
--	select FRAME_POINTER if !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM_UNWIND && !ARC && !X86
-+	select FRAME_POINTER if !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM && !ARC && !X86
- 	select KALLSYMS
- 	select KALLSYMS_ALL
- 	select STACKTRACE
+ /*
+  * XSC3 optimised copy_user_highpage
+- *  r0 = destination
+- *  r1 = source
+  *
+  * The source page may have some clean entries in the cache already, but we
+  * can safely ignore them - break_cow() will flush them out of the cache
+  * if we eventually end up using our copied page.
+  *
+  */
+-static void __naked
+-xsc3_mc_copy_user_page(void *kto, const void *kfrom)
++static void xsc3_mc_copy_user_page(void *kto, const void *kfrom)
+ {
+-	asm("\
+-	stmfd	sp!, {r4, r5, lr}		\n\
+-	mov	lr, %2				\n\
+-						\n\
+-	pld	[r1, #0]			\n\
+-	pld	[r1, #32]			\n\
+-1:	pld	[r1, #64]			\n\
+-	pld	[r1, #96]			\n\
++	int tmp;
++
++	asm volatile ("\
++	pld	[%1, #0]			\n\
++	pld	[%1, #32]			\n\
++1:	pld	[%1, #64]			\n\
++	pld	[%1, #96]			\n\
+ 						\n\
+-2:	ldrd	r2, [r1], #8			\n\
+-	mov	ip, r0				\n\
+-	ldrd	r4, [r1], #8			\n\
+-	mcr	p15, 0, ip, c7, c6, 1		@ invalidate\n\
+-	strd	r2, [r0], #8			\n\
+-	ldrd	r2, [r1], #8			\n\
+-	strd	r4, [r0], #8			\n\
+-	ldrd	r4, [r1], #8			\n\
+-	strd	r2, [r0], #8			\n\
+-	strd	r4, [r0], #8			\n\
+-	ldrd	r2, [r1], #8			\n\
+-	mov	ip, r0				\n\
+-	ldrd	r4, [r1], #8			\n\
+-	mcr	p15, 0, ip, c7, c6, 1		@ invalidate\n\
+-	strd	r2, [r0], #8			\n\
+-	ldrd	r2, [r1], #8			\n\
+-	subs	lr, lr, #1			\n\
+-	strd	r4, [r0], #8			\n\
+-	ldrd	r4, [r1], #8			\n\
+-	strd	r2, [r0], #8			\n\
+-	strd	r4, [r0], #8			\n\
++2:	ldrd	r2, [%1], #8			\n\
++	ldrd	r4, [%1], #8			\n\
++	mcr	p15, 0, %0, c7, c6, 1		@ invalidate\n\
++	strd	r2, [%0], #8			\n\
++	ldrd	r2, [%1], #8			\n\
++	strd	r4, [%0], #8			\n\
++	ldrd	r4, [%1], #8			\n\
++	strd	r2, [%0], #8			\n\
++	strd	r4, [%0], #8			\n\
++	ldrd	r2, [%1], #8			\n\
++	ldrd	r4, [%1], #8			\n\
++	mcr	p15, 0, %0, c7, c6, 1		@ invalidate\n\
++	strd	r2, [%0], #8			\n\
++	ldrd	r2, [%1], #8			\n\
++	subs	%2, %2, #1			\n\
++	strd	r4, [%0], #8			\n\
++	ldrd	r4, [%1], #8			\n\
++	strd	r2, [%0], #8			\n\
++	strd	r4, [%0], #8			\n\
+ 	bgt	1b				\n\
+-	beq	2b				\n\
+-						\n\
+-	ldmfd	sp!, {r4, r5, pc}"
+-	:
+-	: "r" (kto), "r" (kfrom), "I" (PAGE_SIZE / 64 - 1));
++	beq	2b				"
++	: "+&r" (kto), "+&r" (kfrom), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 64 - 1)
++	: "r2", "r3", "r4", "r5");
+ }
+ 
+ void xsc3_mc_copy_user_highpage(struct page *to, struct page *from,
+@@ -85,8 +78,6 @@ void xsc3_mc_copy_user_highpage(struct page *to, struct page *from,
+ 
+ /*
+  * XScale optimised clear_user_page
+- *  r0 = destination
+- *  r1 = virtual user address of ultimate destination page
+  */
+ void xsc3_mc_clear_user_highpage(struct page *page, unsigned long vaddr)
+ {
+diff --git a/arch/arm/mm/copypage-xscale.c b/arch/arm/mm/copypage-xscale.c
+index 97972379f4d6..b0ae8c7acb48 100644
+--- a/arch/arm/mm/copypage-xscale.c
++++ b/arch/arm/mm/copypage-xscale.c
+@@ -36,52 +36,51 @@ static DEFINE_RAW_SPINLOCK(minicache_lock);
+  * Dcache aliasing issue.  The writes will be forwarded to the write buffer,
+  * and merged as appropriate.
+  */
+-static void __naked
+-mc_copy_user_page(void *from, void *to)
++static void mc_copy_user_page(void *from, void *to)
+ {
++	int tmp;
++
+ 	/*
+ 	 * Strangely enough, best performance is achieved
+ 	 * when prefetching destination as well.  (NP)
+ 	 */
+-	asm volatile(
+-	"stmfd	sp!, {r4, r5, lr}		\n\
+-	mov	lr, %2				\n\
+-	pld	[r0, #0]			\n\
+-	pld	[r0, #32]			\n\
+-	pld	[r1, #0]			\n\
+-	pld	[r1, #32]			\n\
+-1:	pld	[r0, #64]			\n\
+-	pld	[r0, #96]			\n\
+-	pld	[r1, #64]			\n\
+-	pld	[r1, #96]			\n\
+-2:	ldrd	r2, [r0], #8			\n\
+-	ldrd	r4, [r0], #8			\n\
+-	mov	ip, r1				\n\
+-	strd	r2, [r1], #8			\n\
+-	ldrd	r2, [r0], #8			\n\
+-	strd	r4, [r1], #8			\n\
+-	ldrd	r4, [r0], #8			\n\
+-	strd	r2, [r1], #8			\n\
+-	strd	r4, [r1], #8			\n\
++	asm volatile ("\
++	pld	[%0, #0]			\n\
++	pld	[%0, #32]			\n\
++	pld	[%1, #0]			\n\
++	pld	[%1, #32]			\n\
++1:	pld	[%0, #64]			\n\
++	pld	[%0, #96]			\n\
++	pld	[%1, #64]			\n\
++	pld	[%1, #96]			\n\
++2:	ldrd	r2, [%0], #8			\n\
++	ldrd	r4, [%0], #8			\n\
++	mov	ip, %1				\n\
++	strd	r2, [%1], #8			\n\
++	ldrd	r2, [%0], #8			\n\
++	strd	r4, [%1], #8			\n\
++	ldrd	r4, [%0], #8			\n\
++	strd	r2, [%1], #8			\n\
++	strd	r4, [%1], #8			\n\
+ 	mcr	p15, 0, ip, c7, c10, 1		@ clean D line\n\
+-	ldrd	r2, [r0], #8			\n\
++	ldrd	r2, [%0], #8			\n\
+ 	mcr	p15, 0, ip, c7, c6, 1		@ invalidate D line\n\
+-	ldrd	r4, [r0], #8			\n\
+-	mov	ip, r1				\n\
+-	strd	r2, [r1], #8			\n\
+-	ldrd	r2, [r0], #8			\n\
+-	strd	r4, [r1], #8			\n\
+-	ldrd	r4, [r0], #8			\n\
+-	strd	r2, [r1], #8			\n\
+-	strd	r4, [r1], #8			\n\
++	ldrd	r4, [%0], #8			\n\
++	mov	ip, %1				\n\
++	strd	r2, [%1], #8			\n\
++	ldrd	r2, [%0], #8			\n\
++	strd	r4, [%1], #8			\n\
++	ldrd	r4, [%0], #8			\n\
++	strd	r2, [%1], #8			\n\
++	strd	r4, [%1], #8			\n\
+ 	mcr	p15, 0, ip, c7, c10, 1		@ clean D line\n\
+-	subs	lr, lr, #1			\n\
++	subs	%2, %2, #1			\n\
+ 	mcr	p15, 0, ip, c7, c6, 1		@ invalidate D line\n\
+ 	bgt	1b				\n\
+-	beq	2b				\n\
+-	ldmfd	sp!, {r4, r5, pc}		"
+-	:
+-	: "r" (from), "r" (to), "I" (PAGE_SIZE / 64 - 1));
++	beq	2b				"
++	: "+&r" (from), "+&r" (to), "=&r" (tmp)
++	: "2" (PAGE_SIZE / 64 - 1)
++	: "r2", "r3", "r4", "r5", "ip");
+ }
+ 
+ void xscale_mc_copy_user_highpage(struct page *to, struct page *from,
 -- 
 2.34.1
 
