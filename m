@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEBEC43219
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07817C433FE
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234969AbhLRXyh (ORCPT
+        id S234587AbhLRXy0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Dec 2021 18:54:37 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25726 "EHLO
-        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234974AbhLRXy0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 18 Dec 2021 18:54:26 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25468 "EHLO
+        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234901AbhLRXyT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Dec 2021 18:54:19 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=o7oSOnb8F57kKru8yGwzxIQp/4qaa84HAsOuc9Qe3GU=;
-        b=J3QHPiVAo7ftDRJZFh6x1ZM1eGaPXQOxPM9uWB7T+EVAHEkQUh8FOH1lIBHIXOvL0Zr7
-        iwh9POzw4r5dLsJdWNEh8ibBcl9T5LApkLDhaB0NiJ95XaO7LMtBb8RUTW6X4sLzeyZmYc
-        fxmv44vg4kgJhN3Sf29H7EheBA3z8IJoTGcr84bPVXANaX3qK4X5YiV4xTDo8nPXC0fhZa
-        dTFHSuejOkg0di5kYPpT57FSF74/zmXqmh+GPlPfLOiUbGa3szfpG7rp5q1bg09Y7PDA6H
-        vz2AqCJifQsu/B+vdvyWIp4rq7mOmD6G0O0MkwdQx11MTXEaKl/AVqOuG8aeW4FA==
-Received: by filterdrecv-64fcb979b9-8r2zw with SMTP id filterdrecv-64fcb979b9-8r2zw-1-61BE74A9-6
-        2021-12-18 23:54:17.233925598 +0000 UTC m=+8294249.268681274
+        s=sgd; bh=QAh24Ex5HQMwz2LcHEFWDu0hjRaIliWenvyP2BPryNQ=;
+        b=RihxgcCN7Rp8Skq01adkqBvOMORTUxGQHEzj0nnhO+qYCB4gwzn1n2npuBBAIlD5K+0A
+        DFs90Fovz24xQE5DLDpVZwP6I4wOcWTbuNu0AzOLV0L0cOLe+cIqPWmH3oHb0uZc/Xo7gL
+        dBmUcK5n30roGWdlMOK7GZKOVkH58opBaYQtAgsGlQZ/k+kIJbSqrvlBhgnYRPo77WjRO3
+        DNSHkCwwiObZpiv4fZ+Ac9TXR1YfbJxnJA0ht31E23poKCCqC8bArqBK5rjwa1fz7STIdR
+        Hht4S8gtMn69vJB/NhqhxMq1wXokSdqEvyy8F8cFNuPcxkSWXZtY2pLoC5kchrmA==
+Received: by filterdrecv-656998cfdd-phncc with SMTP id filterdrecv-656998cfdd-phncc-1-61BE74A8-1D
+        2021-12-18 23:54:16.838337232 +0000 UTC m=+7604818.024584014
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-6-1 (SG)
+        by geopod-ismtpd-5-1 (SG)
         with ESMTP
-        id WODQW4uCRqSfD_BdUJPSqg
-        Sat, 18 Dec 2021 23:54:17.067 +0000 (UTC)
+        id MZ7uISucQJa4P7omMBWJmg
+        Sat, 18 Dec 2021 23:54:16.696 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id CCF52701426; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
+        id 99A23700F78; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH 19/23] wilc1000: don't tell the chip to go to sleep while
- copying tx packets
+Subject: [PATCH 08/23] wilc1000: fix management packet type inconsistency
 Date:   Sat, 18 Dec 2021 23:54:17 +0000 (UTC)
-Message-Id: <20211218235404.3963475-20-davidm@egauge.net>
+Message-Id: <20211218235404.3963475-9-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211218235404.3963475-1-davidm@egauge.net>
 References: <20211218235404.3963475-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvBxusGV4Bz+mo2Dhm?=
- =?us-ascii?Q?qm6c7pe6RJmTeflUX3Xl0lMdXMkyBl5XbqwAmvR?=
- =?us-ascii?Q?rRZNjb6=2FG5PGf7B9pBuxASy=2FiQJqPLlJ+ieI599?=
- =?us-ascii?Q?=2F43eP+HlvOB2wlwr0jp8nOP5vgz9ketnwzD72K4?=
- =?us-ascii?Q?R1gAHeh7yF6E2VQmAAFJBef9p86gNWZTVZtfnM9?=
- =?us-ascii?Q?RTtWekGY3WQ1VqisBq+vQ=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvBgWXtrCB5OF5sDb1?=
+ =?us-ascii?Q?M3PEtEXGAnFYO34+OEM+j2yxQqTLIGNhi5Sbe1v?=
+ =?us-ascii?Q?3retJL1jACmWBuhInLXrqxzUtEf=2Fz7H8ANDeXBX?=
+ =?us-ascii?Q?pQ7=2Ft3BXfF+jgCJgN2LYyscpIBd5FY77AD11zOD?=
+ =?us-ascii?Q?2U2G8qy5QgPW=2FSm0fJnimgsBpQhtDYPOFZcT9A6?=
+ =?us-ascii?Q?3hHKGKv6vIBj3rEYWEHwA=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -62,60 +61,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Putting the chip to sleep and waking it up again is relatively slow,
-so there is no point to put the chip to sleep for the short time it
-takes to copy a couple of packets.
+The queue type for management packets was initialized to AC_BE_Q
+(best-effort queue) but the packet was then actually added to the
+AC_VO_Q queue (voice, or highest-priority queue).  This fixes the
+inconsistency by setting the type to AC_VO_Q.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- .../net/wireless/microchip/wilc1000/wlan.c    | 24 +++++++++----------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index b7c8ff95b646a..8652ec9f6d9c8 100644
+index b85ceda8409e6..c72eb4244508c 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -920,29 +920,27 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- 	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
- 
- 	ret = send_vmm_table(wilc, i, vmm_table);
-+	if (ret <= 0) {
-+		if (ret == 0)
-+			/* No VMM space available in firmware.  Inform
-+			 * caller to retry later.
-+			 */
-+			ret = WILC_VMM_ENTRY_FULL_RETRY;
-+		goto out_release_bus;
-+	}
- 
--	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
--
--	if (ret < 0)
--		goto out_unlock;
-+	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
- 
- 	entries = ret;
--	if (entries == 0) {
--		/* No VMM space available in firmware.  Inform caller
--		 * to retry later.
--		 */
--		ret = WILC_VMM_ENTRY_FULL_RETRY;
--		goto out_unlock;
--	}
--
- 	len = copy_packets(wilc, entries, vmm_table, vmm_entries_ac);
- 	if (len <= 0)
- 		goto out_unlock;
- 
--	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
-+	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
- 
- 	ret = send_packets(wilc, len);
- 
-+out_release_bus:
- 	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
- 
- out_unlock:
+@@ -507,7 +507,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->buffer_size = buffer_size;
+ 	tqe->tx_complete_func = tx_complete_fn;
+ 	tqe->priv = priv;
+-	tqe->q_num = AC_BE_Q;
++	tqe->q_num = AC_VO_Q;
+ 	tqe->ack_idx = NOT_TCP_ACK;
+ 	tqe->vif = vif;
+ 	wilc_wlan_txq_add_to_tail(dev, AC_VO_Q, tqe);
 -- 
 2.25.1
 
