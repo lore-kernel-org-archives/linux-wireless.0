@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB59BC433FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16FA5C43217
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235016AbhLRXyX (ORCPT
+        id S235042AbhLRXyZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Dec 2021 18:54:23 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25378 "EHLO
+        Sat, 18 Dec 2021 18:54:25 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25336 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234896AbhLRXyS (ORCPT
+        with ESMTP id S234858AbhLRXyS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 18 Dec 2021 18:54:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=xruF0/wdRiftakYKJKiX4VcckLBgAfUgvUqV7IHx2E4=;
-        b=dvStbokSfDMpTQUXRJu+YAjUI9UwxMp2MHMiyY/9ALhBCn1Y2Peu1dDN5dADoF07cGGA
-        DFqgjXTfrqNRIIlFGTHClbyjiQpTLlqt3o5ciPLWhYIR5PwfymNblYUN4DMdbVdMDFOfoY
-        iSfRY/qTu/mZ1bjS9zysqfptkdjVDLXrQaaymQYk19rzyUAisp87w39OCNGy9QHi+cwPw4
-        z+bR5sIytIlsRVlW5S64VBkomFmB3fprqVpBJY5Gl2Us8JxiyJbYuXYbzSa8EFkpgfZ05f
-        38epAeVY373jOHwYvQdhrXQHk7MJypEu4fPA6RM5LxwYWW4bEm0eLTjO3g4FQg6w==
-Received: by filterdrecv-656998cfdd-gwqfx with SMTP id filterdrecv-656998cfdd-gwqfx-1-61BE74A8-1D
-        2021-12-18 23:54:16.730054846 +0000 UTC m=+7604790.136767512
+        s=sgd; bh=0hlvidBJdhIlrLaOHqRVQf+FcgIZ6mOxvt9oZ5jAdx0=;
+        b=vQ9EnhDfneo5BqECP/eh1ztxPZq24D5XUBEaQAsws/L7qQ1jRNwgl5i3Gt9LaGrt0Txq
+        p/bSHsC2I5KuElmBo/qIt/Da9Kx/KRpmMzXUT68KapI2JHMOmNGamups9cBzWd5R6DpEmC
+        97DzFXmAmYjTbOcY/ooOHab/jItIWv3rXLATYzeX7nwuvelkmWJRVAm8OOREo/F4jAhlnL
+        AflfqxNeopq11JwrY3EoJLKPZikm1H3vjW8sMw7Z7/xSK3BrmLxZGkmSiO99RmiwwNcswm
+        6PUqJmQTQaXL+9BZ0qhU45sZkiXpaPNMqhAEqPHaWDRfszCy5P1o+kcKLgrlT+hw==
+Received: by filterdrecv-75ff7b5ffb-wdd5z with SMTP id filterdrecv-75ff7b5ffb-wdd5z-1-61BE74A8-17
+        2021-12-18 23:54:16.568724745 +0000 UTC m=+9336864.670000613
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-6-0 (SG)
+        by geopod-ismtpd-1-1 (SG)
         with ESMTP
-        id cnPWmkt0R9uhsSnxU4r7cQ
-        Sat, 18 Dec 2021 23:54:16.575 +0000 (UTC)
+        id 6K7gRl6-Tv2qCxjFpmNq-A
+        Sat, 18 Dec 2021 23:54:16.367 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 93A9B700A10; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
+        id 8D75D70086E; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH 06/23] wilc1000: move tx packet drop code into its own
- function
+Subject: [PATCH 04/23] wilc1000: factor common code in wilc_wlan_cfg_set() and
+ wilc_wlan_cfg_get()
 Date:   Sat, 18 Dec 2021 23:54:16 +0000 (UTC)
-Message-Id: <20211218235404.3963475-7-davidm@egauge.net>
+Message-Id: <20211218235404.3963475-5-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211218235404.3963475-1-davidm@egauge.net>
 References: <20211218235404.3963475-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvHMIlWy+OoiMKxiCz?=
- =?us-ascii?Q?vO9KY39A4krq0DN1w2fLd3tpplREjmFMJN8N3lh?=
- =?us-ascii?Q?1YratNtlBhMv13mzJqt8RyMczEzAcbWzTk+EJgY?=
- =?us-ascii?Q?UYAgJTNT0hzNOD3RTvuVNgnd3nh4jFABUgfVxrn?=
- =?us-ascii?Q?e31wwBsqeeAH9dbz9OymSfDglWtY7pWLfLWePE7?=
- =?us-ascii?Q?W3xD6YH1Ke=2FRzbu=2FI1xIA=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvE+Fbp=2FMICLbrzIyn?=
+ =?us-ascii?Q?lqvh2mpwH=2F4CJ7Fl+jG2+wFUWQcq78AkswDBm0M?=
+ =?us-ascii?Q?GRp9lFxQYYmrW1+AHjdJjCedyCNvjiNb8nCXqQ7?=
+ =?us-ascii?Q?QUPbB6eefetRuWwuUEZ0WirGQdzlvZPjYxPQ9yG?=
+ =?us-ascii?Q?v8YzOIkZIEgSPuHnnp=2FSsFuMQCiHd0oz2KyfiAS?=
+ =?us-ascii?Q?jhlz2=2FucxjmhUYynDgurA=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -62,45 +62,115 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is just to improve code clarity.
+The functions are almost identical, so factor the common code into new
+function wilc_wlan_cfg_apply_wid().  No functional change.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ .../net/wireless/microchip/wilc1000/wlan.c    | 65 ++++++++-----------
+ 1 file changed, 27 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index caaa03c8e5df8..a9bfd71b0e667 100644
+index 2d103131b2e93..1c487342c1a88 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -200,6 +200,14 @@ static void wilc_wlan_tx_packet_done(struct txq_entry_t *tqe, int status)
- 	kfree(tqe);
+@@ -1276,8 +1276,14 @@ static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
+ 	return 0;
  }
  
-+static void wilc_wlan_txq_drop_net_pkt(struct txq_entry_t *tqe)
+-int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+-		      u32 buffer_size, int commit, u32 drv_handler)
++/**
++ * Add a WID set/query to the current config packet and optionally
++ * submit the resulting packet to the chip and wait for its reply.
++ * Returns 0 on failure, positive number on success.
++ */
++static int wilc_wlan_cfg_apply_wid(struct wilc_vif *vif, int start, u16 wid,
++				   u8 *buffer, u32 buffer_size, int commit,
++				   u32 drv_handler, bool set)
+ {
+ 	u32 offset;
+ 	int ret_size;
+@@ -1289,8 +1295,12 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		wilc->cfg_frame_offset = 0;
+ 
+ 	offset = wilc->cfg_frame_offset;
+-	ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
+-					 wid, buffer, buffer_size);
++	if (set)
++		ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
++						 wid, buffer, buffer_size);
++	else
++		ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset,
++						 wid);
+ 	offset += ret_size;
+ 	wilc->cfg_frame_offset = offset;
+ 
+@@ -1299,9 +1309,11 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		return ret_size;
+ 	}
+ 
+-	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
++	netdev_dbg(vif->ndev, "%s: %s seqno[%d]\n",
++		   __func__, set ? "set" : "get", wilc->cfg_seq_no);
+ 
+-	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
++	if (wilc_wlan_cfg_commit(vif, set ? WILC_CFG_SET : WILC_CFG_QUERY,
++				 drv_handler))
+ 		ret_size = 0;
+ 
+ 	if (!wait_for_completion_timeout(&wilc->cfg_event,
+@@ -1317,41 +1329,18 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 	return ret_size;
+ }
+ 
++int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
++		      u32 buffer_size, int commit, u32 drv_handler)
 +{
-+	struct wilc *wilc = tqe->vif->wilc;
-+
-+	wilc_wlan_txq_remove(wilc, tqe->q_num, tqe);
-+	wilc_wlan_tx_packet_done(tqe, 1);
++	return wilc_wlan_cfg_apply_wid(vif, start, wid, buffer, buffer_size,
++				       commit, drv_handler, true);
 +}
 +
- static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
+ 		      u32 drv_handler)
  {
- 	struct wilc_vif *vif = netdev_priv(dev);
-@@ -228,10 +236,8 @@ static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 			struct txq_entry_t *tqe;
+-	u32 offset;
+-	int ret_size;
+-	struct wilc *wilc = vif->wilc;
+-
+-	mutex_lock(&wilc->cfg_cmd_lock);
+-
+-	if (start)
+-		wilc->cfg_frame_offset = 0;
+-
+-	offset = wilc->cfg_frame_offset;
+-	ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
+-	offset += ret_size;
+-	wilc->cfg_frame_offset = offset;
+-
+-	if (!commit) {
+-		mutex_unlock(&wilc->cfg_cmd_lock);
+-		return ret_size;
+-	}
+-
+-	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
+-		ret_size = 0;
+-
+-	if (!wait_for_completion_timeout(&wilc->cfg_event,
+-					 WILC_CFG_PKTS_TIMEOUT)) {
+-		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
+-		ret_size = 0;
+-	}
+-	wilc->cfg_frame_offset = 0;
+-	wilc->cfg_seq_no += 1;
+-	mutex_unlock(&wilc->cfg_cmd_lock);
+-
+-	return ret_size;
++	return wilc_wlan_cfg_apply_wid(vif, start, wid, NULL, 0,
++				       commit, drv_handler, false);
+ }
  
- 			tqe = f->pending_acks[i].txqe;
--			if (tqe) {
--				wilc_wlan_txq_remove(wilc, tqe->q_num, tqe);
--				wilc_wlan_tx_packet_done(tqe, 1);
--			}
-+			if (tqe)
-+				wilc_wlan_txq_drop_net_pkt(tqe);
- 		}
- 	}
- 	f->pending_acks_idx = 0;
+ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
 -- 
 2.25.1
 
