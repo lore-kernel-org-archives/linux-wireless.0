@@ -2,155 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F04C433F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 07:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D05C433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 08:37:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232301AbhLRHj5 (ORCPT
+        id S229914AbhLRIhJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Dec 2021 02:39:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232292AbhLRHj5 (ORCPT
+        Sat, 18 Dec 2021 03:37:09 -0500
+Received: from dvalin.narfation.org ([213.160.73.56]:52186 "EHLO
+        dvalin.narfation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229610AbhLRIhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Dec 2021 02:39:57 -0500
-X-Greylist: delayed 501 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 17 Dec 2021 23:39:57 PST
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [IPv6:2001:67c:2050::465:103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 011B7C061574
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2021 23:39:56 -0800 (PST)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:105:465:1:4:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4JGHbN3Nf5zQjg6;
-        Sat, 18 Dec 2021 08:31:28 +0100 (CET)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gorani.run; s=MBO0001;
-        t=1639812686;
+        Sat, 18 Dec 2021 03:37:09 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1639816627;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=d6u0ICZ1Vq3Og20K+K5O3kr4+0ZawUseX4zVdNjgfGU=;
-        b=RL7x6atzXmGd8F04/B20CLYW3iKFS8VmI3WUVg10y9r6eMEqhWHd9x6spRP5E+DvLjO99B
-        K7MyduLCLy6tLPNoqINZx/qSACuDv+Lln0M6+4D4ULQdHyUyKzFO3+cE4TcO0n4rEz+GvJ
-        q2WhKBV1oyOJrgaEGaguT546QBSq/uiZzi5pmIAXAczJFbjJZ4JxHCJVnWovL6ABlNyJND
-        T09FRXHfD8lCbof5GXbCEKfIto8JxO+aQa122hB1zbm97FaFjptG4/AAK6I7Px/TxkK1s7
-        i9K4VHCE5fy4/1FKFavCFRSG3rHeyuAi7Ajtv5bZI4ZIYI4gkJTMXk8Bqiq02g==
-Message-ID: <b2288492-cdbd-0310-0951-cdee77fc3a79@gorani.run>
-Date:   Sat, 18 Dec 2021 16:31:17 +0900
+        bh=7XGIosFYTDWGNz4+uFjHL6ROYC57PsHCdGUmmDVimiA=;
+        b=2UpmT8HHh/ITqa7HrXJYhk20MsxFlLxfYmnYhHtZ+VJbuuu0xScqoUlixa3ziz5Pp8c33D
+        USNWtrBKmIKLX/lItH76SuoAz/s1gPjzxPx/YgfAsUruv583EWU4i/kbO6cKSq2wZhATMs
+        o6+6fwjN543I3FGkpxC+ak1xhggj0Ms=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     Kalle Valo <kvalo@kernel.org>, ath11k@lists.infradead.org
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        quic_cjhuang@quicinc.com, Carl Huang <cjhuang@codeaurora.org>
+Subject: Re: [PATCH 6/6] ath11k: support GTK rekey offload
+Date:   Sat, 18 Dec 2021 09:37:02 +0100
+Message-ID: <2102838.219ycuhFCz@sven-l14>
+In-Reply-To: <4f28496abae7743ab2a9fa7150c5d64c@codeaurora.org>
+References: <20211011193750.4891-1-cjhuang@codeaurora.org> <87lf0tydad.fsf@codeaurora.org> <4f28496abae7743ab2a9fa7150c5d64c@codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for South
- Korea (KR)
-To:     Seth Forshee <sforshee@kernel.org>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <20210929172728.7512-1-mans0n@gorani.run>
- <20211024113821.51538-1-mans0n@gorani.run> <YXmVLUzVEgrAMLwL@ubuntu-x1>
- <4f05b6b1-084d-9046-4c63-6975c25d7615@gorani.run>
- <Yb0JAXsCnjnIQ9c9@ubuntu-x1>
-From:   Sungbo Eo <mans0n@gorani.run>
-In-Reply-To: <Yb0JAXsCnjnIQ9c9@ubuntu-x1>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="nextPart1939230.MS5jTM4reW"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-12-18 07:02, Seth Forshee wrote:
-> On Sat, Oct 30, 2021 at 01:12:08AM +0900, Sungbo Eo wrote:
->> On 2021-10-28 03:06, Seth Forshee wrote:
->>> On Sun, Oct 24, 2021 at 08:38:21PM +0900, Sungbo Eo wrote:
->>>> This patch is based on MSIT Public Notification 2020-113 ("Unlicensed Radio
->>>> Equipment Established Without Notice"), officially announced on 2021-01-06.
->>>>
->>>> The PSD must not exceed 2.5 mW/MHz if the frequency range includes all or
->>>> part of 5230-5250 MHz and the bandwidth is equal to or less than 40 MHz.
->>>> This leads to the following:
->>>> * 5230-5250 @ 20 -> 17 dBm
->>>> * 5210-5250 @ 40 -> 20 dBm
->>>> Here the power limits for 80/160 MHz bandwidth are also lowered to 17 dBm,
->>>> as it's not possible to set different power limits for different bandwidths
->>>> at the moment.
->>>>
->>>> Extend the last 5 GHz frequency range to 5850 MHz.
->>>>
->>>> WiFi 6E is now allowed with the following restrictions:
->>>> * Indoor: the full 1.2 GHz range, up to 160 MHz bandwidth and 250mW EIRP
->>>> * Outdoor: the lower 500 MHz range, up to 160 MHz bandwidth and 25mW EIRP
->>>> Here only the former entry is added.
->>>>
->>>> And also update the regulatory source links.
->>>>
->>>> Signed-off-by: Sungbo Eo <mans0n@gorani.run>
->>>> ---
->>>> v2:
->>>> * split 5150-5250 MHz band rule to accommodate the PSD limit
->>>> * remove AUTO-BW flag from 6 GHz band rule
->>>> ---
->>>>    db.txt | 17 ++++++++++++-----
->>>>    1 file changed, 12 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/db.txt b/db.txt
->>>> index 6e8dbef..387ac93 100644
->>>> --- a/db.txt
->>>> +++ b/db.txt
->>>> @@ -862,15 +862,22 @@ country KP: DFS-JP
->>>>    	(5490 - 5630 @ 20), (30), DFS
->>>>    	(5735 - 5815 @ 20), (30)
->>>> +# Source:
->>>> +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196972
->>>> +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196973
->>>> +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196974
->>>>    country KR: DFS-JP
->>>> -	# ref: https://www.rra.go.kr
->>>>    	(2400 - 2483.5 @ 40), (23)
->>>> -	(5150 - 5250 @ 80), (23), AUTO-BW
->>>> +	(5150 - 5210 @ 40), (23), AUTO-BW
->>>> +	# max. PSD 2.5 mW/MHz in 5230-5250 MHz frequency range
->>>> +	(5210 - 5230 @ 20), (20), AUTO-BW
->>>> +	(5230 - 5250 @ 20), (17), AUTO-BW
->>>
->>> Even with 5210-5230 split out like this, 5210-5250 @ 40 still gets
->>> limited to 17 dBm by the 5230-5250 rule. So why do we need to split out
->>> 5210-5230 separate from 5150-5210?
->>
->> I did some tests with regdb and I found out that the rule to be applied
->> depends on the main 20 MHz channel. With the rules above, if I select
->> channel 48 (5230-5250) and enable VHT40, then the TX power is set to 17 dBm.
->> OTOH if I select channel 44 (5210–5230) and enable VHT40, then the TX power
->> is set to 20 dBm. I'm not sure whether my result is really correct, though.
-> 
-> I'm sorry, when I saw the v3 patch I realized that I forgot to reply to
-> this email. I had wanted to take a look at the kernel source to try and
-> understand the behavior you described.
-> 
-> I took a quick look, and from what I'm seeing the minimum of the power
-> limits for the two ranges should be used. This is the behavior I expect.
-> Can you provide more detail about how you're getting that result?
-> 
-> Thanks,
-> Seth
+--nextPart1939230.MS5jTM4reW
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
+From: Sven Eckelmann <sven@narfation.org>
+To: Kalle Valo <kvalo@kernel.org>, ath11k@lists.infradead.org
+Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, quic_cjhuang@quicinc.com, Carl Huang <cjhuang@codeaurora.org>
+Subject: Re: [PATCH 6/6] ath11k: support GTK rekey offload
+Date: Sat, 18 Dec 2021 09:37:02 +0100
+Message-ID: <2102838.219ycuhFCz@sven-l14>
+In-Reply-To: <4f28496abae7743ab2a9fa7150c5d64c@codeaurora.org>
+References: <20211011193750.4891-1-cjhuang@codeaurora.org> <87lf0tydad.fsf@codeaurora.org> <4f28496abae7743ab2a9fa7150c5d64c@codeaurora.org>
 
-I've got the result on MT7623+MT7615N AP with OpenWrt installed. (kernel 
-5.10)
-I set the channel and bandwidth in /etc/config/wireless (in 
-OpenWrt-standard way) and checked the tx power with `iw dev wlan0 info` 
-and Android WiFi Analyzer app.
+> On Thursday, 9 December 2021 17:05:14 CET Kalle Valo wrote:
+>> Isn't ath11k WMI commands and events supposed to be in CPU
+>> endian and the firmware automatically translates them if CPU is little
+>> or big endian? 
+[...]
+On Friday, 17 December 2021 12:04:45 CET Carl Huang wrote:
+> Both cpu and firmware are supposed to be little endian in ath11k.
 
-# channel 48, htmode VHT40
-type AP
-channel 48 (5240 MHz), width: 40 MHz, center1: 5230 MHz
-txpower 17.00 dBm
+I hope this statement is incorrect. But if it isn't:
 
-# channel 44, htmode VHT40
-type AP
-channel 44 (5220 MHz), width: 40 MHz, center1: 5230 MHz
-txpower 20.00 dBm
+You cannot limit a non-architecture dependent driver to be only used by little 
+endian CPUs. This would be grave bug in ath11k.
 
-The WiFi Analyzer app also reported higher RSSI for the channel 44 case.
+If your firmware requires wmi messages and similar things in little endian 
+then you have to mark types correctly as big/little endian. E.g. __le32 
+instead of u32. And then you have to convert everything manually with 
+cpu_to_le32 and so on. See the ath10k code for examples.
 
-I also had a quick look at net/wireless/reg.c and it seems you're right. 
-Perhaps my tests were bad, I do believe your comments more than my 
-result. ;)
+Tools like sparse can assist you in your search for problematic places when 
+your kernel has the __CHECK_ENDIAN__ related code activated. This is the 
+default for kernels >= 4.10.
 
-Regards,
-Sungbo
+
+If Kalle' statement is true that the firmware takes care of endianness 
+translation of WMI messages to host endianness, then your code would still be 
+questionable:
+
+>> +       /* supplicant expects big-endian replay counter */
+>> +       replay_ctr = cpu_to_be64(le64_to_cpup((__le64 
+>> *)ev->replay_counter));
+
+Why isn't the firmware taking care of the conversion at that place?
+
+Why are you defining it as `u8 replay_counter[GTK_REPLAY_COUNTER_BYTES];` in 
+the struct instead of using `__le64 replay_counter;`?
+
+What ensures that this is value is 64 bit aligned in memory? Wouldn't it be 
+more correct to (see above) use
+
+    replay_ctr = cpu_to_be64(get_unaligned_le64(ev->replay_counter));
+
+Kind regards,
+	Sven
+--nextPart1939230.MS5jTM4reW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAmG9na4ACgkQXYcKB8Em
+e0aCNhAAhHy4Q89qTeLnxf2M2B4EsogXkCDmByJKzD2zh2RKOZGR4Cr83zZZQLrt
+Ugf6tUgjPJHku22jnulsJQEYgghpYDdko0ajh8dFtW9GHsikQwM2KuE55XkM1I/Y
+FF7hauJdsSQNpXbLZZxTtnf4NI3xLSU5tVKr+qMvgG6e64IJ1TOfsM0n+0X0YHkW
+qnL89QqjpOodEwChsg8aOBEJnrIWcBgZKFSS8lMn3wmbt2uMIx3YkgLkxmcNQCF6
+mBopA9rLU5De87ouxvmOt2r81CHeqFFzJ1IBE28toCHf3BprCxEF08yFkFJLszTx
+6wlbSVtq5ba9cHI0Hg8j2fydVIixf2AxOSdqKo3WuYvsuSjwsbJVE/zsclt3DGQE
+STpAoQUCZ+tHcVA3pM209uvyz2LQ2Bt3+8hxF404BmAbGVuc1lPyg0JXyOLFCdqJ
+KEvRn2qVa2j5qp5xw0KRnxEVAgl+sW25dbZ1Y/isCa3y0uSRTKhq5D6Avlq9hyEd
+8rgqzeAZ+4yzUgCbO8Oa3vTiMnDE0edi53xBzlxmfRgz9V1000evT7YpvwK88L1Q
+HdFGXwkTj2DYY8MAfhKzyPOJTEMSSv9Lkv1JLC22CC+hrHGfotSnTQY1dgWyAsh/
+Cw6cyqt6Zb8YJfD2FPjnkU9JJJfiL7P9r9dqAUlC8F82a8hCfAY=
+=DiwO
+-----END PGP SIGNATURE-----
+
+--nextPart1939230.MS5jTM4reW--
+
+
+
