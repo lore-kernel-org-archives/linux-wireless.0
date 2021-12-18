@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA483C46467
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1EE8C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:54:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234929AbhLRXyb (ORCPT
+        id S235096AbhLRXyd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Dec 2021 18:54:31 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25502 "EHLO
+        Sat, 18 Dec 2021 18:54:33 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25750 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234912AbhLRXyT (ORCPT
+        with ESMTP id S234983AbhLRXy2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Dec 2021 18:54:19 -0500
+        Sat, 18 Dec 2021 18:54:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=7Hm3AquiIUdJpoJNmQhIPdf9H6zGdNGjNitvQcp4Vl0=;
-        b=ddhf6b2F3RJn2Yy14Q6Dw8PQ9gtWMXLY8IZbWymw15cu5JVGDgf1I3ZEy9b9CRG653oU
-        VRxbhlEe6GBVHVHcb1NOi/MaEwb0J9CeSU+ipaewOqV3o0RpCCMWeBi0LqtA9lPn1AX8Wi
-        zqRSanNOwvwsC1lfsBAuAgBBfI4+f07Oi3J3KMSn7UOHAuge7TwGoyX4cWpEBwnv082fWi
-        BqcFes1EyYKgR04fgapAF4cYYRyT7P8CHFgYdewB4Qe/x7WUkiZU1lIc20r0FlkLWqqFRU
-        Z29HLdMGEGfWCTaTTXUTYWvnom+U3GTwvQRUuTWdtUtnC4SDsGJHkeYC6/56kFKg==
-Received: by filterdrecv-64fcb979b9-5m6bg with SMTP id filterdrecv-64fcb979b9-5m6bg-1-61BE74A8-2F
-        2021-12-18 23:54:16.939374845 +0000 UTC m=+8294248.906437584
+        s=sgd; bh=NIm9rxhOLkpRgRFKJtyRTp7JTwyLk6yRswQbMG0UUTo=;
+        b=voIRU6slURfuVeo2wOTfAkEwyphIm6JEwrC5sdgsa8ZKhxsTWlEh9eLP/4DcN43wA/Iq
+        OGICVnDIdiMKzVerGfDg+7XQWQgUOEU8JtlbpbcFtAlK7k6l5SCarmMk9U9Vktw/k0c19q
+        cWKPYbTMwBAY0qicqukGhkD14PPLd0D58eUtBEs6F7Hy4t8aWsXBEpvE8qqMHpS4MovyPo
+        Imd7YVh3C3ZJ+D0K7KwfRQQ045OkODvdhZrVZNUbaQiAHyc7jG0CqxwihbYHzkIIiJ7Ysd
+        B/asARevSESSNEqJxOpvUUf1gSCl0NiFmoTFaobOF0dPuW+a7/EUOC8S/PPiPaIQ==
+Received: by filterdrecv-75ff7b5ffb-dtr6p with SMTP id filterdrecv-75ff7b5ffb-dtr6p-1-61BE74A9-6
+        2021-12-18 23:54:17.223635968 +0000 UTC m=+9336808.918388692
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-5-0 (SG)
+        by geopod-ismtpd-3-0 (SG)
         with ESMTP
-        id 4Ej3bdy0SEWVNGLRE4ciEw
-        Sat, 18 Dec 2021 23:54:16.765 +0000 (UTC)
+        id bI8oJ2quQkaR_GpQKIKhaA
+        Sat, 18 Dec 2021 23:54:17.102 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id AA5217011B9; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
+        id D824370144B; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH 13/23] wilc1000: sanitize config packet sequence number
- management a bit
+Subject: [PATCH 21/23] wilc1000: declare read-only ac_preserve_ratio as static
+ and const
 Date:   Sat, 18 Dec 2021 23:54:17 +0000 (UTC)
-Message-Id: <20211218235404.3963475-14-davidm@egauge.net>
+Message-Id: <20211218235404.3963475-22-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211218235404.3963475-1-davidm@egauge.net>
 References: <20211218235404.3963475-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvDr8Y3qBfvE6zFPF5?=
- =?us-ascii?Q?khqlKFLZiUwzYO3DHUibB8X0HYh+GG7Armgdxbk?=
- =?us-ascii?Q?XEpYA2o6RQVm88pm2K11mbywCAqW2OlaroGGNuQ?=
- =?us-ascii?Q?QcYVbuBObPCulrvv+wuJ=2F2gbHajiayseYAfJCOf?=
- =?us-ascii?Q?dr3FWzFbJWPEpPpAVZMSHNOOI52RZl5lUKLRY22?=
- =?us-ascii?Q?gF9i8=2FxRG5JedYvhwIz9w=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvFVBzuJ05dy4HNGst?=
+ =?us-ascii?Q?cfpDHzb=2FqHb+wbJQVql955ae=2FixbOi74n=2FKtcks?=
+ =?us-ascii?Q?OtXq5NVGKd+ISwwjQO0Y52QoGGKbuQemxqQZdLW?=
+ =?us-ascii?Q?y8i5LNwbnRnyoo9fhyzqmi+1De73JFvVmWkgbF0?=
+ =?us-ascii?Q?FSK0HbZdVb89ll9YYEP1VT5xZm=2FFW8yF7DyOt47?=
+ =?us-ascii?Q?Y0cAQvlXvtFGgarQt8ilg=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -62,39 +62,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Always keep the config packet sequence number in the valid range from
-0..255.
+Apart from being slightly more efficient, this makes the code easier
+to follow.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 8cd2ede8d2775..6484e4ab8e159 100644
+index 88a981b00bda2..debed2f159215 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -1275,10 +1275,9 @@ static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
- 
- 	hdr = &cfg->hdr;
- 	hdr->cmd_type = (type == WILC_CFG_SET) ? 'W' : 'Q';
--	hdr->seq_no = wilc->cfg_seq_no % 256;
-+	hdr->seq_no = wilc->cfg_seq_no;
- 	hdr->total_len = cpu_to_le16(t_len);
- 	hdr->driver_handler = cpu_to_le32(drv_handler);
--	wilc->cfg_seq_no = cfg->hdr.seq_no;
- 
- 	if (!wilc_wlan_txq_add_cfg_pkt(vif, (u8 *)&cfg->hdr, t_len))
- 		return -1;
-@@ -1333,7 +1332,7 @@ static int wilc_wlan_cfg_apply_wid(struct wilc_vif *vif, int start, u16 wid,
- 	}
- 
- 	wilc->cfg_frame_offset = 0;
--	wilc->cfg_seq_no += 1;
-+	wilc->cfg_seq_no = (wilc->cfg_seq_no + 1) % 256;
- 	mutex_unlock(&wilc->cfg_cmd_lock);
- 
- 	return ret_size;
+@@ -633,8 +633,8 @@ static int fill_vmm_table(const struct wilc *wilc,
+ 	int i;
+ 	u8 k, ac;
+ 	u32 sum;
+-	u8 ac_preserve_ratio[NQUEUES] = {1, 1, 1, 1};
+-	u8 *num_pkts_to_add;
++	static const u8 ac_preserve_ratio[NQUEUES] = {1, 1, 1, 1};
++	const u8 *num_pkts_to_add;
+ 	bool ac_exist = 0;
+ 	int vmm_sz = 0;
+ 	struct sk_buff *tqe_q[NQUEUES];
 -- 
 2.25.1
 
