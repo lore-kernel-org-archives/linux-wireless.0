@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7FBC433F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED4AC4332F
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Dec 2021 23:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235400AbhLRXzB (ORCPT
+        id S235373AbhLRXy7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Dec 2021 18:55:01 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25712 "EHLO
+        Sat, 18 Dec 2021 18:54:59 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:25734 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234958AbhLRXyZ (ORCPT
+        with ESMTP id S234967AbhLRXyZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 18 Dec 2021 18:54:25 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=sinBnLCkTHw0t/yG9XyJF667Cq9tEjWOwIYZimlz2fI=;
-        b=oMcJxPsyVLauYPrdCbrnJ+MOBf7W0JPsXJMtsJJ/sw2QAipj5tjZaOJpRtEHX9jfhvwd
-        1yGbdOMgg0TuEwCJhl74LbshNcmJZT8q53UvscoHnSkf08aC9CfCaKHv2K0oM6NBGlg04C
-        NbCOKRqBZUY6OCJTvJ9oTkkvJGBaLwUqLkWfxWbwHG8447zcSHraPz8g3/MLuN+MggTcA3
-        7/bZHNuEOlXFR9W9PD5Pf6+O73qDiThuloEdHr/Fhiya1PY3eF5NvjId6CcdeK4JzepojG
-        ArvM4p58tVKfwClqQgaC3WRkfzuZqCUoAq+qjPb/CeET/QuZMvYTMBD9LaIr46kQ==
-Received: by filterdrecv-656998cfdd-vtnvg with SMTP id filterdrecv-656998cfdd-vtnvg-1-61BE74A9-6
-        2021-12-18 23:54:17.271696307 +0000 UTC m=+7604818.321476290
+        s=sgd; bh=L4jrxjI60V18U1KfdB6NjFsObHJc3K9dkEXY7jnJOIY=;
+        b=tCTjJY0CsCNWIqe8qw53n7lkhgCLfogkvYOGmNXDrF3CaQwIKc5sPLXDgRzteQLdtLLJ
+        2MEcjQS/tCHacgSE+TRdk0UT3+ESOy2REXFGqEfnDV2nkJXaVnnNL1oxYvUj1EKi49A2ZA
+        zSzBNlmPtzHtTP/KtxsmN6BHc3HyvtNiauspfX2EYVjSM6CE26kJbu5vfFq1wD+KkEuny+
+        CXY81bbSbEuZWPf6oGRpAP8RBufWqp+5YeOZIAEnoLDHfn7ta2zB9+kWkRucVACQziQ2hm
+        gHrHiVAbF6wkyO15w1LDyfhfFia9GfTEKWzcxxx8M1JO3otHQ8SQ+Rc4QJDcX9hg==
+Received: by filterdrecv-64fcb979b9-6sxlb with SMTP id filterdrecv-64fcb979b9-6sxlb-1-61BE74A9-9
+        2021-12-18 23:54:17.267529153 +0000 UTC m=+8294205.257723544
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-4-1 (SG)
+        by geopod-ismtpd-6-0 (SG)
         with ESMTP
-        id qiWQH8zgTK2qOWAia0hduw
-        Sat, 18 Dec 2021 23:54:17.110 +0000 (UTC)
+        id uH6ySRw9RY6s7dhCBnIeqw
+        Sat, 18 Dec 2021 23:54:17.120 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id E35AD701463; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
+        id DDBC8701456; Sat, 18 Dec 2021 16:54:15 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH 23/23] wilc1000: introduce symbolic names for two tx-related
- control bits
+Subject: [PATCH 22/23] wilc1000: minor syntax cleanup
 Date:   Sat, 18 Dec 2021 23:54:17 +0000 (UTC)
-Message-Id: <20211218235404.3963475-24-davidm@egauge.net>
+Message-Id: <20211218235404.3963475-23-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211218235404.3963475-1-davidm@egauge.net>
 References: <20211218235404.3963475-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvJSzRgudYonBolmfI?=
- =?us-ascii?Q?0YU2DoSFm5tqSCL4wZQyH3747ovQKXVWM8m16oO?=
- =?us-ascii?Q?Q0L2V7G0GjotG2D4xN5xA=2FnEHEKuDcLe=2FYb0qug?=
- =?us-ascii?Q?1eCuNmVAmFq551cEMaoHyx82K1IPqiOcaTOJZXq?=
- =?us-ascii?Q?cbRbci=2FCEwmmtiw4Dy9LamY+XeaR011fDc=2FBgg3?=
- =?us-ascii?Q?ZqxJk5lZkr2RPFENZ=2F+Gg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvOyBcWEdJk+6TgtIk?=
+ =?us-ascii?Q?W4kHOENRwsRKyKvxEg1Xg4ZujUJ=2FQuiR6NhPsGd?=
+ =?us-ascii?Q?Dm4hR4B807UtsqD+ucPQmTOnkdVodNtS3fTmKJi?=
+ =?us-ascii?Q?N1=2FQDoMEaxSPGvBnlbNDhgk3aNrdOqm2Tt1yabg?=
+ =?us-ascii?Q?GHngmnuMEp5vUW71Em3u8lT3Pgb02yqa3+sPnkJ?=
+ =?us-ascii?Q?8acyDYn3CXKBNha=2FLW=2FTw=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -62,66 +61,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I wish these registers were documented so I wouldn't have to guess at
-their meanings and make up my own names.
+Remove extraneous parentheses and braces.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 6 +++---
- drivers/net/wireless/microchip/wilc1000/wlan.h | 2 ++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 4ec23b2b2da05..b7a792edea187 100644
+index debed2f159215..4ec23b2b2da05 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -672,7 +672,7 @@ static int fill_vmm_table(const struct wilc *wilc,
+@@ -653,10 +653,9 @@ static int fill_vmm_table(const struct wilc *wilc,
+ 				continue;
+ 
+ 			ac_exist = 1;
+-			for (k = 0; (k < num_pkts_to_add[ac]) && tqe_q[ac]; k++) {
+-				if (i >= (WILC_VMM_TBL_SIZE - 1)) {
++			for (k = 0; k < num_pkts_to_add[ac] && tqe_q[ac]; k++) {
++				if (i >= WILC_VMM_TBL_SIZE - 1)
  					goto out;
+-				}
+ 
+ 				tx_cb = WILC_SKB_TX_CB(tqe_q[ac]);
+ 				if (tx_cb->type == WILC_CFG_PKT)
+@@ -669,9 +668,8 @@ static int fill_vmm_table(const struct wilc *wilc,
+ 				vmm_sz += tqe_q[ac]->len;
+ 				vmm_sz = ALIGN(vmm_sz, 4);
+ 
+-				if ((sum + vmm_sz) > WILC_TX_BUFF_SIZE) {
++				if (sum + vmm_sz > WILC_TX_BUFF_SIZE)
+ 					goto out;
+-				}
  				vmm_table[i] = vmm_sz / 4;
  				if (tx_cb->type == WILC_CFG_PKT)
--					vmm_table[i] |= BIT(10);
-+					vmm_table[i] |= WILC_VMM_CFG_PKT;
+ 					vmm_table[i] |= BIT(10);
+@@ -735,10 +733,8 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
  
- 				cpu_to_le32s(&vmm_table[i]);
- 				vmm_entries_ac[i] = ac;
-@@ -715,7 +715,7 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
+ 	timeout = 200;
+ 	do {
+-		ret = func->hif_block_tx(wilc,
+-					 WILC_VMM_TBL_RX_SHADOW_BASE,
+-					 (u8 *)vmm_table,
+-					 ((i + 1) * 4));
++		ret = func->hif_block_tx(wilc, WILC_VMM_TBL_RX_SHADOW_BASE,
++					 (u8 *)vmm_table, (i + 1) * 4);
  		if (ret)
  			break;
  
--		if ((reg & 0x1) == 0) {
-+		if ((reg & WILC_HOST_TX_CTRL_BUSY) == 0) {
- 			ac_update_fw_ac_pkt_info(wilc, reg);
- 			break;
- 		}
-@@ -763,7 +763,7 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
- 			ret = func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
- 			if (ret)
- 				break;
--			reg &= ~BIT(0);
-+			reg &= ~WILC_HOST_TX_CTRL_BUSY;
- 			ret = func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, reg);
- 		} else {
- 			ret = entries;
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/wireless/microchip/wilc1000/wlan.h
-index 10618327133ce..f5d32ec93fdb9 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.h
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
-@@ -224,6 +224,7 @@
- #define BE_AC_ACM_STAT_FIELD		BIT(8)
- #define BK_AC_COUNT_FIELD		GENMASK(7, 3)
- #define BK_AC_ACM_STAT_FIELD		BIT(1)
-+#define WILC_HOST_TX_CTRL_BUSY		BIT(0)
- 
- #define WILC_PKT_HDR_CONFIG_FIELD	BIT(31)
- #define WILC_PKT_HDR_OFFSET_FIELD	GENMASK(30, 22)
-@@ -233,6 +234,7 @@
- #define WILC_INTERRUPT_DATA_SIZE	GENMASK(14, 0)
- 
- #define WILC_VMM_BUFFER_SIZE		GENMASK(9, 0)
-+#define WILC_VMM_CFG_PKT		BIT(10)
- 
- #define WILC_VMM_HDR_TYPE		BIT(31)
- #define WILC_VMM_HDR_MGMT_FIELD		BIT(30)
 -- 
 2.25.1
 
