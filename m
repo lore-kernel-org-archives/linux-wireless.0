@@ -2,142 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D84EAC433FE
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 11:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F65EC433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 11:28:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235637AbhLSL2q (ORCPT
+        id S235643AbhLSL2s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 Dec 2021 06:28:46 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51424 "EHLO
+        Sun, 19 Dec 2021 06:28:48 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51436 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235618AbhLSL2p (ORCPT
+        with ESMTP id S235623AbhLSL2r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Dec 2021 06:28:45 -0500
+        Sun, 19 Dec 2021 06:28:47 -0500
 Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1myuMs-001O73-GG; Sun, 19 Dec 2021 13:28:44 +0200
+        id 1myuMv-001O73-K2; Sun, 19 Dec 2021 13:28:46 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 19 Dec 2021 13:28:28 +0200
-Message-Id: <iwlwifi.20211219132536.f9d0ba617fe7.I609265c79add6aa59af68cb87f76b39502985125@changeid>
+Date:   Sun, 19 Dec 2021 13:28:30 +0200
+Message-Id: <iwlwifi.20211219132536.b1e96021b616.Id0164855f2dd01ecdecf79b239d6ee5974882245@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211219112836.132859-1-luca@coelho.fi>
 References: <20211219112836.132859-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: mvm: fix rfi get table vendor command handler
+Subject: [PATCH 06/12] iwlwifi: return op_mode only in case the failure is from MEI
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-In get table handler, skb was freed even on the correct path without
-any error and it caused kernel crash further in the flow.
+Currently we always return the op_mode with valid pointer in case
+getting NVM failed, while it's only relevant for cases that CSME is the
+owner of the nic.
 
-Also, increase the size of the allocated skb.
+Fix this by checking also who's the owner of the nic.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 55 ++++++++++++++-------
- 1 file changed, 36 insertions(+), 19 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 65c1f9c88e67..f48459da0fcc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -32,6 +32,9 @@
- #define IWL_PPAG_MASK 3
- #define IWL_PPAG_ETSI_MASK BIT(0)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 83d5df52f2af..3a308585ed06 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1303,12 +1303,18 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
  
-+#define IWL_TAS_US_MCC 0x5553
-+#define IWL_TAS_CANADA_MCC 0x4341
-+
- struct iwl_mvm_alive_data {
- 	bool valid;
- 	u32 scd_base_addr;
-@@ -1183,12 +1186,30 @@ static const struct dmi_system_id dmi_tas_approved_list[] = {
- 	{}
- };
+ 	mvm->mei_registered = !iwl_mei_register(mvm, &mei_ops);
  
-+static bool iwl_mvm_add_to_tas_block_list(__le32 *list, __le32 *le_size, unsigned int mcc)
-+{
-+	int i;
-+	u32 size = le32_to_cpu(*le_size);
+-	/*
+-	 * Get NVM failed, but we are registered to MEI, we'll get
+-	 * the NVM later when it'll be possible to get it from CSME.
+-	 */
+-	if (iwl_mvm_start_get_nvm(mvm) && mvm->mei_registered)
+-		return op_mode;
++	if (iwl_mvm_start_get_nvm(mvm)) {
++		/*
++		 * Getting NVM failed while CSME is the owner, but we are
++		 * registered to MEI, we'll get the NVM later when it'll be
++		 * possible to get it from CSME.
++		 */
++		if (trans->csme_own && mvm->mei_registered)
++			return op_mode;
 +
-+	/* Verify that there is room for another country */
-+	if (size >= IWL_TAS_BLOCK_LIST_MAX)
-+		return false;
-+
-+	for (i = 0; i < size; i++) {
-+		if (list[i] == cpu_to_le32(mcc))
-+			return true;
++		goto out_thermal_exit;
 +	}
 +
-+	list[size++] = cpu_to_le32(mcc);
-+	*le_size = cpu_to_le32(size);
-+	return true;
-+}
-+
- static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
- {
- 	int ret;
- 	struct iwl_tas_config_cmd_v3 cmd = {};
- 	int cmd_size;
--	const struct ieee80211_regdomain *regd;
  
- 	BUILD_BUG_ON(ARRAY_SIZE(cmd.block_list_array) <
- 		     APCI_WTAS_BLACK_LIST_MAX);
-@@ -1198,24 +1219,6 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
- 		return;
- 	}
- 
--	/* Get the MCC from cfg80211 */
--	regd = wiphy_dereference(mvm->hw->wiphy, mvm->hw->wiphy->regd);
--
--	if (!regd) {
--		IWL_DEBUG_RADIO(mvm, "MCC is unavailable\n");
--		return;
--	}
--
--	if ((regd->alpha2[0] == 'U' && regd->alpha2[1] == 'S') ||
--	    (regd->alpha2[0] == 'C' && regd->alpha2[1] == 'A')) {
--		if (!dmi_check_system(dmi_tas_approved_list)) {
--			IWL_DEBUG_RADIO(mvm,
--					"System vendor '%s' is not in the approved list, disabling TAS.\n",
--					dmi_get_system_info(DMI_SYS_VENDOR));
--			return;
--		}
--	}
--
- 	ret = iwl_acpi_get_tas(&mvm->fwrt, &cmd);
- 	if (ret < 0) {
- 		IWL_DEBUG_RADIO(mvm,
-@@ -1227,6 +1230,20 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
- 	if (ret == 0)
- 		return;
- 
-+	if (!dmi_check_system(dmi_tas_approved_list)) {
-+		IWL_DEBUG_RADIO(mvm,
-+				"System vendor '%s' is not in the approved list, disabling TAS in US and Canada.\n",
-+				dmi_get_system_info(DMI_SYS_VENDOR));
-+		if ((!iwl_mvm_add_to_tas_block_list(cmd.block_list_array,
-+						    &cmd.block_list_size, IWL_TAS_US_MCC)) ||
-+		    (!iwl_mvm_add_to_tas_block_list(cmd.block_list_array,
-+						    &cmd.block_list_size, IWL_TAS_CANADA_MCC))) {
-+			IWL_DEBUG_RADIO(mvm,
-+					"Unable to add US/Canada to TAS block list, disabling TAS\n");
-+			return;
-+		}
-+	}
-+
- 	cmd_size = iwl_fw_lookup_cmd_ver(mvm->fw, REGULATORY_AND_NVM_GROUP,
- 					 TAS_CONFIG,
- 					 IWL_FW_CMD_VER_UNKNOWN) < 3 ?
+ 	if (iwl_mvm_start_post_nvm(mvm))
+ 		goto out_thermal_exit;
 -- 
 2.34.1
 
