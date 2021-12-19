@@ -2,64 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72117C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 09:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15D17C433EF
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 09:14:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235448AbhLSJBj (ORCPT
+        id S235437AbhLSJOW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 Dec 2021 04:01:39 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51300 "EHLO
+        Sun, 19 Dec 2021 04:14:22 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51314 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235437AbhLSJBi (ORCPT
+        with ESMTP id S229585AbhLSJOW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Dec 2021 04:01:38 -0500
+        Sun, 19 Dec 2021 04:14:22 -0500
 Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mys4W-001O16-5c; Sun, 19 Dec 2021 11:01:36 +0200
+        id 1mysGq-001O2N-7A; Sun, 19 Dec 2021 11:14:20 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 19 Dec 2021 11:01:28 +0200
-Message-Id: <20211219090128.42417-2-luca@coelho.fi>
+Date:   Sun, 19 Dec 2021 11:14:18 +0200
+Message-Id: <iwlwifi.20211219111352.e56cbf614a4d.Ib98004ccd2c7a55fd883a8ea7eebd810f406dec6@changeid>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211219090128.42417-1-luca@coelho.fi>
-References: <20211219090128.42417-1-luca@coelho.fi>
+In-Reply-To: <iwlwifi.20211210110539.4b397e664d44.Ib98004ccd2c7a55fd883a8ea7eebd810f406dec6@changeid>
+References: <iwlwifi.20211210110539.4b397e664d44.Ib98004ccd2c7a55fd883a8ea7eebd810f406dec6@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 4/4] iwlwifi: mvm: fix imbalanced locking in iwl_mvm_start_get_nvm()
+Subject: [PATCH v2 05/10] iwlwifi: mvm: fix 32-bit build in FTM
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-If iwl_transt_start_hw() failed, we were returning without calling
-wiphy_unlock() and rtnl_unlock(), causing a locking imbalance:
+On a 32-bit build, the division here needs to be done
+using do_div(), otherwise the compiler will try to call
+a function that doesn't exist, thus failing to build.
 
-drivers/net/wireless/intel/iwlwifi/mvm/ops.c:686:12: warning: context imbalance in 'iwl_mvm_start_get_nvm' - wrong count at exit
-
-Fix that by adding the unlock calls.
-
+Fixes: b68bd2e3143a ("iwlwifi: mvm: Add FTM initiator RTT smoothing logic")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 9bd869b8a974..3941baa3eda3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -718,6 +718,8 @@ static int iwl_mvm_start_get_nvm(struct iwl_mvm *mvm)
- 	ret = iwl_trans_start_hw(mvm->trans);
- 	if (ret) {
- 		mutex_unlock(&mvm->mutex);
-+		wiphy_unlock(mvm->hw->wiphy);
-+		rtnl_unlock();
- 		return ret;
- 	}
+In v2:
+   * Add "Fixes:" tag.
+
+
+drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+index 949fb790f8fb..3e6c13fc74eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+@@ -1066,7 +1066,8 @@ static void iwl_mvm_ftm_rtt_smoothing(struct iwl_mvm *mvm,
+ 	overshoot = IWL_MVM_FTM_INITIATOR_SMOOTH_OVERSHOOT;
+ 	alpha = IWL_MVM_FTM_INITIATOR_SMOOTH_ALPHA;
  
+-	rtt_avg = (alpha * rtt + (100 - alpha) * resp->rtt_avg) / 100;
++	rtt_avg = alpha * rtt + (100 - alpha) * resp->rtt_avg;
++	do_div(rtt_avg, 100);
+ 
+ 	IWL_DEBUG_INFO(mvm,
+ 		       "%pM: prev rtt_avg=%lld, new rtt_avg=%lld, rtt=%lld\n",
 -- 
 2.34.1
 
