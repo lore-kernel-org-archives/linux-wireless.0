@@ -2,80 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03508C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 09:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03619C433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 10:18:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235450AbhLSJJx (ORCPT
+        id S235564AbhLSKSZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 Dec 2021 04:09:53 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51308 "EHLO
+        Sun, 19 Dec 2021 05:18:25 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51322 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235437AbhLSJJw (ORCPT
+        with ESMTP id S231185AbhLSKSZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Dec 2021 04:09:52 -0500
-Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=[192.168.100.150])
+        Sun, 19 Dec 2021 05:18:25 -0500
+Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mysCT-001O2D-AV; Sun, 19 Dec 2021 11:09:49 +0200
-Message-ID: <ad06fddfcc8bef222fecf69b8a9c7effd8cc9db5.camel@coelho.fi>
+        id 1mytGo-001O3b-Ft; Sun, 19 Dec 2021 12:18:23 +0200
 From:   Luca Coelho <luca@coelho.fi>
-To:     Kalle Valo <kvalo@kernel.org>,
-        Loic Poulain <loic.poulain@linaro.org>
-Cc:     Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date:   Sun, 19 Dec 2021 11:09:47 +0200
-In-Reply-To: <CAMZdPi9eeVCakwQPnzvc-3BHo8ABv6=kb3VJj+FAXDZbz4R6bw@mail.gmail.com>
-References: <20211207144211.A9949C341C1@smtp.kernel.org>
-         <20211207211412.13c78ace@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-         <87tufjfrw0.fsf@codeaurora.org>
-         <20211208065025.7060225d@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-         <87zgpb83uz.fsf@codeaurora.org>
-         <CAMZdPi9eeVCakwQPnzvc-3BHo8ABv6=kb3VJj+FAXDZbz4R6bw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.2-1 
+To:     kvalo@kernel.org
+Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
+Date:   Sun, 19 Dec 2021 12:18:08 +0200
+Message-Id: <20211219101820.85153-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: pull-request: wireless-drivers-next-2021-12-07
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.17 2021-12-19 part 1
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2021-12-08 at 17:58 +0100, Loic Poulain wrote:
-> Hi Kalle,
-> 
-> On Wed, 8 Dec 2021 at 17:21, Kalle Valo <kvalo@kernel.org> wrote:
-> > 
-> > Jakub Kicinski <kuba@kernel.org> writes:
-> > 
-> > > On Wed, 08 Dec 2021 10:00:15 +0200 Kalle Valo wrote:
-> > > > Jakub Kicinski <kuba@kernel.org> writes:
-> > > Yeah, scroll down, there is a diff of the old warnings vs new ones, and
-> > > a summary of which files have changed their warning count:
-> > > 
-> > > +      2 ../drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> > > +      3 ../drivers/net/wireless/intel/iwlwifi/mei/main.c
-> > > -      1 ../drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-> > > +      2 ../drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-> > > -      2 ../drivers/net/wireless/microchip/wilc1000/wlan.c
-> > 
-> > Ah, that makes it easier.
-> > 
-> > > So presumably these are the warnings that were added:
-> > > 
-> > > drivers/net/wireless/intel/iwlwifi/mei/main.c:193: warning: cannot
-> > > understand function prototype: 'struct '
-> > > drivers/net/wireless/intel/iwlwifi/mei/main.c:1784: warning: Function
-> > > parameter or member 'cldev' not described in 'iwl_mei_probe'
-> > > drivers/net/wireless/intel/iwlwifi/mei/main.c:1784: warning: Function
-> > > parameter or member 'id' not described in 'iwl_mei_probe'
-> > 
-> > Luca, please take a look and send a patch. I'll then apply it directly
-> > to wireless-drivers-next.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Kalle, as we agreed, I sent 4 patches fixes this errors/warnings in
-iwlwifi.
+Hi,
 
---
+Here's the sixth set of patches intended for v5.17.  It's the usual
+development, new features, cleanups and bugfixes.
+
+The changes are:
+
+* Some RX changes for new HW family
+* Some fixes for 6 GHz scan;
+* Fix SAR table fixes with newer platforms;
+* Some other small fixes, clean-ups and improvements.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
 Cheers,
 Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: perform 6GHz passive scan after suspend
+
+Ayala Beker (1):
+  iwlwifi: mvm: correctly set channel flags
+
+Ilan Peer (1):
+  iwlwifi: mvm: Fix calculation of frame length
+
+Johannes Berg (4):
+  iwlwifi: mvm: use a define for checksum flags mask
+  iwlwifi: mvm: handle RX checksum on Bz devices
+  iwlwifi: mvm: don't trust hardware queue number
+  iwlwifi: mvm: change old-SN drop threshold
+
+Luca Coelho (2):
+  iwlwifi: don't pass actual WGDS revision number in table_revision
+  iwlwifi: bump FW API to 69 for AX devices
+
+Miri Korenblit (1):
+  iwlwifi: mvm: always store the PPAG table as the latest version.
+
+Mukesh Sisodiya (1):
+  iwlwifi: yoyo: support TLV-based firmware reset
+
+Nathan Errera (1):
+  iwlwifi: mvm: test roc running status bits before removing the sta
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |  5 ++
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   | 15 +++-
+ .../net/wireless/intel/iwlwifi/fw/api/power.h |  8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  3 +
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  3 +-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 43 ++++++++++-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  2 +
+ .../wireless/intel/iwlwifi/mvm/constants.h    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 74 ++++++++++---------
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  | 16 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 33 ++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 28 ++++---
+ .../wireless/intel/iwlwifi/mvm/time-event.c   | 15 +++-
+ 16 files changed, 185 insertions(+), 68 deletions(-)
+
+-- 
+2.34.1
+
