@@ -2,59 +2,74 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A0EC433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 10:18:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF8FC4332F
+	for <linux-wireless@archiver.kernel.org>; Sun, 19 Dec 2021 10:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235599AbhLSKSf (ORCPT
+        id S235606AbhLSKSf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sun, 19 Dec 2021 05:18:35 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51376 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:51388 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231185AbhLSKSd (ORCPT
+        with ESMTP id S235596AbhLSKSf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Dec 2021 05:18:33 -0500
+        Sun, 19 Dec 2021 05:18:35 -0500
 Received: from 91-156-5-105.elisa-laajakaista.fi ([91.156.5.105] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <luca@coelho.fi>)
-        id 1mytGx-001O3b-Lq; Sun, 19 Dec 2021 12:18:32 +0200
+        id 1mytGz-001O3b-Ak; Sun, 19 Dec 2021 12:18:33 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Sun, 19 Dec 2021 12:18:17 +0200
-Message-Id: <iwlwifi.20211219121514.7d8fe0dffaea.I2de65c1efd9ab464d4158a3d852f73efe63024f8@changeid>
+Date:   Sun, 19 Dec 2021 12:18:19 +0200
+Message-Id: <iwlwifi.20211219121514.0ede76a9ca92.Ie64a4df79ea9c485ae3d2fc043319e8f79cefa8e@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211219101820.85153-1-luca@coelho.fi>
 References: <20211219101820.85153-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: bump FW API to 69 for AX devices
+Subject: [PATCH 11/12] iwlwifi: mvm: correctly set channel flags
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ayala Beker <ayala.beker@intel.com>
 
-Start supporting API version 69 for AX devices.
+In case of forced passive scan on a UHB channel,
+don't set the direct probe option for this channel.
 
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 23e2a28b3aa8..511195a2058e 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -9,7 +9,7 @@
- #include "iwl-prph.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index b401ab6d46a9..cad190fac9e3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1826,8 +1826,6 @@ iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
+ 			}
+ 		}
  
- /* Highest firmware API version supported */
--#define IWL_22000_UCODE_API_MAX	68
-+#define IWL_22000_UCODE_API_MAX	69
+-		flags = bssid_bitmap | (s_ssid_bitmap << 16);
+-
+ 		if (cfg80211_channel_is_psc(params->channels[i]) &&
+ 		    psc_no_listen)
+ 			flags |= IWL_UHB_CHAN_CFG_FLAG_PSC_CHAN_NO_LISTEN;
+@@ -1869,8 +1867,11 @@ iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
+ 					  (s_max > 1 || b_max > 3));
+ 		}
+ 		if ((allow_passive && force_passive) ||
+-		    (!flags && !cfg80211_channel_is_psc(params->channels[i])))
++		    (!(bssid_bitmap | s_ssid_bitmap) &&
++		     !cfg80211_channel_is_psc(params->channels[i])))
+ 			flags |= IWL_UHB_CHAN_CFG_FLAG_FORCE_PASSIVE;
++		else
++			flags |= bssid_bitmap | (s_ssid_bitmap << 16);
  
- /* Lowest firmware API version supported */
- #define IWL_22000_UCODE_API_MIN	39
+ 		channel_cfg[i].flags |= cpu_to_le32(flags);
+ 	}
 -- 
 2.34.1
 
