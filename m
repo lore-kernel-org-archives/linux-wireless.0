@@ -2,48 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 526DCC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B005C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:01:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234877AbhLUCBh (ORCPT
+        id S234939AbhLUCBp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 21:01:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45250 "EHLO
+        Mon, 20 Dec 2021 21:01:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234372AbhLUCAY (ORCPT
+        with ESMTP id S233885AbhLUCA1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 21:00:24 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2043AC061A08;
-        Mon, 20 Dec 2021 18:00:24 -0800 (PST)
+        Mon, 20 Dec 2021 21:00:27 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE535C061D60;
+        Mon, 20 Dec 2021 18:00:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B9B3BB8110A;
-        Tue, 21 Dec 2021 02:00:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65866C36AE5;
-        Tue, 21 Dec 2021 02:00:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C27161377;
+        Tue, 21 Dec 2021 02:00:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FC7BC36AE8;
+        Tue, 21 Dec 2021 02:00:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640052022;
-        bh=Gw6UeiUH2+kw+PAZbOZfb+mp0ortwcexKlRJEU1oCyE=;
+        s=k20201202; t=1640052025;
+        bh=dQhzvlzN+ESGzQ/t66wl1mMot656MtLCVD5Dgq07tRU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YSA9Z/Y9TfddWdz2uOKRHQ6se4NpBipy/tb6Bx6fi25nncualqlYoQscLwQO7IG7y
-         q9kz71n49bCJLIX4qGb+pDhknYGwZrh+F5M6IA40M+XZKAyZSpuLf86nf76owBjFwv
-         L6a9GZeaC854YbSgYEPo8wMnsVzf0yGJFyCrASw+cl1ghqq/MvyO9ttb7q7hprX547
-         iaOxMzpXYwQ1v3oeU6YZ6biLcwVmTGNdOo49tTf1L2Jsj3DjySib+n6NzfvcuzQX0F
-         /LoJP9+TFSIEx/j+SHg7jcshD0jxbuMfkONi0InYB8AkRxHygBO1M2fLPFMQHc7+WU
-         0V/2SpV/eF0Qg==
+        b=hwTNNSGxBPwhDlu4fkgdlmZSMqU6JGsaCt/i5pLv0+Ll2ErZanUImj4DifNDXwk/W
+         VmUGpeNNkASFIDYA6L1PiqKtEtxfd3loEeXHsPpyZHJq4BkQxZzyfXriaiL35dENmP
+         cm1hyxhhLZPIxuaOnmd09WYw7EozNxfDJt/C8tbNRpTlHzqFNSRB+fc9lSw6Mjxfh/
+         IoGfqDERdcHMBxtnJH2VgrrYYzfn+l/tK/LJOST05u399/pxZYx9vHEzVdd6vvH7ux
+         q+Z0pNrAYtW8BfrzAS5uD7bx8uM8bMO+2uIykpaIcsQ+wmE8qo51Rt1QGtfQFnS/9V
+         dI3cOfi2THDUA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 09/14] mac80211: Fix the size used for building probe request
-Date:   Mon, 20 Dec 2021 20:59:47 -0500
-Message-Id: <20211221015952.117052-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 11/14] mac80211: do drv_reconfig_complete() before restarting all
+Date:   Mon, 20 Dec 2021 20:59:49 -0500
+Message-Id: <20211221015952.117052-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211221015952.117052-1-sashal@kernel.org>
 References: <20211221015952.117052-1-sashal@kernel.org>
@@ -55,34 +54,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit f22d981386d12d1513bd2720fb4387b469124d4b ]
+[ Upstream commit 13dee10b30c058ee2c58c5da00339cc0d4201aa6 ]
 
-Instead of using the hard-coded value of '100' use the correct
-scan IEs length as calculated during HW registration to mac80211.
+When we reconfigure, the driver might do some things to complete
+the reconfiguration. It's strange and could be broken in some
+cases because we restart other works (e.g. remain-on-channel and
+TX) before this happens, yet only start queues later.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Change this to do the reconfig complete when reconfiguration is
+actually complete, not when we've already started doing other
+things again.
+
+For iwlwifi, this should fix a race where the reconfig can race
+with TX, for ath10k and ath11k that also use this it won't make
+a difference because they just start queues there, and mac80211
+also stopped the queues and will restart them later as before.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211129152938.0a82d6891719.I8ded1f2e0bccb9e71222c945666bcd86537f2e35@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20211129152938.cab99f22fe19.Iefe494687f15fd85f77c1b989d1149c8efdfdc36@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/util.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index decd46b383938..fc326a3fc2e64 100644
+index fc326a3fc2e64..73a9e21b060d6 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -1901,7 +1901,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 		chandef.chan = chan;
+@@ -2486,6 +2486,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		mutex_unlock(&local->sta_mtx);
+ 	}
  
- 	skb = ieee80211_probereq_get(&local->hw, src, ssid, ssid_len,
--				     100 + ie_len);
-+				     local->scan_ies_len + ie_len);
- 	if (!skb)
- 		return NULL;
++	/*
++	 * If this is for hw restart things are still running.
++	 * We may want to change that later, however.
++	 */
++	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
++		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
++
+ 	if (local->in_reconfig) {
+ 		local->in_reconfig = false;
+ 		barrier();
+@@ -2504,13 +2511,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 					false);
+ 
+-	/*
+-	 * If this is for hw restart things are still running.
+-	 * We may want to change that later, however.
+-	 */
+-	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
+-		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
+-
+ 	if (!suspended)
+ 		return 0;
  
 -- 
 2.34.1
