@@ -2,88 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52754C4321E
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9A22C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:40:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233634AbhLUCGo (ORCPT
+        id S233116AbhLUCk5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 21:06:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45078 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235076AbhLUCD7 (ORCPT
+        Mon, 20 Dec 2021 21:40:57 -0500
+Received: from mailgw01.mediatek.com ([60.244.123.138]:45504 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231833AbhLUCk4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 21:03:59 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D2FBC0698C5;
-        Mon, 20 Dec 2021 18:02:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F1710B81114;
-        Tue, 21 Dec 2021 02:02:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FA41C36AE8;
-        Tue, 21 Dec 2021 02:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640052125;
-        bh=GUKLvCW3QxUOI2qq6LJRRmK+b6RA3leVbn6X5p3+IPo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oeUC77BK0q1PdNwV+bD1a8SdFbcZ5yXvqJRvDa0YnyVORFvZU3N/Kk9c1GelQP2WD
-         QKJ/E6AkCWiN94WeUGrgcHet3tc98uSbnu7RXUltbQzwBJ891VJNZbR/j99aeR3ahR
-         VZAqllBAl0up5Uf0mfKwcs+a15AtA8RqbZ6R9gPArYf0M3btW1PzioxAkpuk0LKjfg
-         CS7shL1GKw5JzUdipSPzaxK2PDwXLdZiIi+uXvwcX9/B+IHS//mgIdeTM0oRHH0J8C
-         n3QG06r8c+npoTPz5N2swrDPKUy9hAKwp6aDthIkyclJM62i8+veA+sGv1N/9ipu7b
-         VBEj8hs2PJIWw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 4/4] mac80211: Fix the size used for building probe request
-Date:   Mon, 20 Dec 2021 21:01:58 -0500
-Message-Id: <20211221020158.117612-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211221020158.117612-1-sashal@kernel.org>
-References: <20211221020158.117612-1-sashal@kernel.org>
+        Mon, 20 Dec 2021 21:40:56 -0500
+X-UUID: ce6cbfe5366f4689a35296cec46a932e-20211221
+X-UUID: ce6cbfe5366f4689a35296cec46a932e-20211221
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <bo.jiao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1972157130; Tue, 21 Dec 2021 10:40:50 +0800
+Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 21 Dec 2021 10:40:49 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS34N1.mediatek.inc
+ (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 21 Dec
+ 2021 10:40:46 +0800
+Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
+ MTKCAS32.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
+ 15.0.1497.2 via Frontend Transport; Tue, 21 Dec 2021 10:40:46 +0800
+From:   Bo Jiao <bo.jiao@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Xing Song <xing.song@mediatek.com>,
+        Sujuan Chen <sujuan.chen@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Bo Jiao <Bo.Jiao@mediatek.com>
+Subject: [PATCH] mt76: mt7915: fix kernel build warning
+Date:   Tue, 21 Dec 2021 10:40:41 +0800
+Message-ID: <ac714fe3ce1f74bec7adb971f6145a05aa0554eb.1640054337.git.Bo.Jiao@mediatek.com>
+X-Mailer: git-send-email 2.17.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Bo Jiao <Bo.Jiao@mediatek.com>
 
-[ Upstream commit f22d981386d12d1513bd2720fb4387b469124d4b ]
+remove the unused variable 'legacy' and 'v1'.
 
-Instead of using the hard-coded value of '100' use the correct
-scan IEs length as calculated during HW registration to mac80211.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211129152938.0a82d6891719.I8ded1f2e0bccb9e71222c945666bcd86537f2e35@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Fixes: d2cf90e432b3 ("mt76: mt7915: update rx rate reporting for mt7916")
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
 ---
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 52f9742c438a4..a7e1a29a95933 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1545,7 +1545,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 		chandef.chan = chan;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index e16df04..ee4535a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -468,14 +468,12 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 			struct ieee80211_supported_band *sband,
+ 			__le32 *rxv)
+ {
+-	u32 v0, v1, v2;
+-	u16 legacy;
++	u32 v0, v2;
+ 	u8 flags, stbc, gi, bw, dcm, mode, nss;
+ 	int i, idx;
+ 	bool cck = false;
  
- 	skb = ieee80211_probereq_get(&local->hw, src, ssid, ssid_len,
--				     100 + ie_len);
-+				     local->scan_ies_len + ie_len);
- 	if (!skb)
- 		return NULL;
+ 	v0 = le32_to_cpu(rxv[0]);
+-	v1 = le32_to_cpu(rxv[1]);
+ 	v2 = le32_to_cpu(rxv[2]);
  
+ 	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
+@@ -501,7 +499,6 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 		fallthrough;
+ 	case MT_PHY_TYPE_OFDM:
+ 		i = mt76_get_rate(&dev->mt76, sband, i, cck);
+-		legacy = sband->bitrates[i].bitrate;
+ 		break;
+ 	case MT_PHY_TYPE_HT_GF:
+ 	case MT_PHY_TYPE_HT:
 -- 
-2.34.1
+2.18.0
 
