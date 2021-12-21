@@ -2,51 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A0FC43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60501C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234962AbhLUCBq (ORCPT
+        id S234036AbhLUCCp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 21:01:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45270 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233429AbhLUCA1 (ORCPT
+        Mon, 20 Dec 2021 21:02:45 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:35066 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233795AbhLUCBN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 21:00:27 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA41BC061784;
-        Mon, 20 Dec 2021 18:00:26 -0800 (PST)
+        Mon, 20 Dec 2021 21:01:13 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AAE7461357;
-        Tue, 21 Dec 2021 02:00:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C31C36AE9;
-        Tue, 21 Dec 2021 02:00:22 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 32F1CB81107;
+        Tue, 21 Dec 2021 02:01:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0178CC36AEC;
+        Tue, 21 Dec 2021 02:01:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640052024;
-        bh=tLfx/6CvkybJK6NyfBcLLX6k9iaJeGawGeIuyQnUBVo=;
+        s=k20201202; t=1640052071;
+        bh=+N6VHVgiZXIqmaPwaFeNl+UHTNP6/oEcCoFu3pD8c40=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Nnz31FPytrWeuN7cG8gwOqwoN5WSD2sXocaJOFXWj41VylrrsLuqjA5Nx/VK69jO9
-         rN7m8n/rPxfHTyLf+c4rT3aPgFsc4/lRYY/uUAAWcBIj5d8RgMvypC4hHaHDd4wWS3
-         J9RPganAWpm2Us6fzY1zacwYMetOiUA3CeycxuYL+yldBTTm9iiSCdU6BkFTzcHafz
-         7DyIO2+k5ZTlQ/vAf7PTQs1J1AC/EGJxTcIeD0UT/LA2UzJ8xxesWGvtlMBa3SGMrM
-         a5YYdbf6JW1Fvd0GVeCjzZ4C+RvLbHpgqtUP2puMJcCU/z9Tan4nazX9w79FvoyK7c
-         Ml2jd8c6s7EzA==
+        b=MTsRf+vokl5YthwwzJ0MVaz3tCiAxo3V3V0pYqxzsBEVs4238gCwG2oxZICgaSd6F
+         jSN+h/VFHhaIkwvrTaOAOrhnwbmB4Cf8Oa+JluJHJbVSpx2RvXVexnRUGA7frWTKY0
+         TpnFJ94Kn05+D0soEZrzAByiNooqboHYCpSps/qb6xrHj1C++FWq8QliEfA+1dffUe
+         OqX2ZP9oqu07HhvCUUEqap+rxuGI4/Lcc/cWM7IPmCxYBUuQN15DCADKa7vOwa/VjO
+         XRxMSDARrsaW5Z67Rthpgqrjcm4pk8h8elVTB4udsifTE4TBnN2ypwiV+nCqDozF/3
+         Lp/CvBVNguQIQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Ahmed Zaki <anzaki@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 10/14] mac80211: update channel context before station state
-Date:   Mon, 20 Dec 2021 20:59:48 -0500
-Message-Id: <20211221015952.117052-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 03/11] mac80211: fix a memory leak where sta_info is not freed
+Date:   Mon, 20 Dec 2021 21:00:22 -0500
+Message-Id: <20211221020030.117225-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211221015952.117052-1-sashal@kernel.org>
-References: <20211221015952.117052-1-sashal@kernel.org>
+In-Reply-To: <20211221020030.117225-1-sashal@kernel.org>
+References: <20211221020030.117225-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,59 +51,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Ahmed Zaki <anzaki@gmail.com>
 
-[ Upstream commit 4dde3c3627b52ca515a34f6f4de3898224aa1dd3 ]
+[ Upstream commit 8f9dcc29566626f683843ccac6113a12208315ca ]
 
-Currently channel context is updated only after station got an update about
-new assoc state, this results in station using the old channel context.
+The following is from a system that went OOM due to a memory leak:
 
-Fix this by moving the update channel context before updating station,
-enabling the driver to immediately use the updated channel context in
-the new assoc state.
+wlan0: Allocated STA 74:83:c2:64:0b:87
+wlan0: Allocated STA 74:83:c2:64:0b:87
+wlan0: IBSS finish 74:83:c2:64:0b:87 (---from ieee80211_ibss_add_sta)
+wlan0: Adding new IBSS station 74:83:c2:64:0b:87
+wlan0: moving STA 74:83:c2:64:0b:87 to state 2
+wlan0: moving STA 74:83:c2:64:0b:87 to state 3
+wlan0: Inserted STA 74:83:c2:64:0b:87
+wlan0: IBSS finish 74:83:c2:64:0b:87 (---from ieee80211_ibss_work)
+wlan0: Adding new IBSS station 74:83:c2:64:0b:87
+wlan0: moving STA 74:83:c2:64:0b:87 to state 2
+wlan0: moving STA 74:83:c2:64:0b:87 to state 3
+.
+.
+wlan0: expiring inactive not authorized STA 74:83:c2:64:0b:87
+wlan0: moving STA 74:83:c2:64:0b:87 to state 2
+wlan0: moving STA 74:83:c2:64:0b:87 to state 1
+wlan0: Removed STA 74:83:c2:64:0b:87
+wlan0: Destroyed STA 74:83:c2:64:0b:87
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211129152938.1c80c17ffd8a.I94ae31378b363c1182cfdca46c4b7e7165cff984@changeid
+The ieee80211_ibss_finish_sta() is called twice on the same STA from 2
+different locations. On the second attempt, the allocated STA is not
+destroyed creating a kernel memory leak.
+
+This is happening because sta_info_insert_finish() does not call
+sta_info_free() the second time when the STA already exists (returns
+-EEXIST). Note that the caller sta_info_insert_rcu() assumes STA is
+destroyed upon errors.
+
+Same fix is applied to -ENOMEM.
+
+Signed-off-by: Ahmed Zaki <anzaki@gmail.com>
+Link: https://lore.kernel.org/r/20211002145329.3125293-1-anzaki@gmail.com
+[change the error path label to use the existing code]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/sta_info.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ net/mac80211/sta_info.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 384a95617ee5e..6a1d3935bd3e1 100644
+index 3a907ba7f7634..03f4358020796 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -651,6 +651,15 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+@@ -574,13 +574,13 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ 	/* check if STA exists already */
+ 	if (sta_info_get_bss(sdata, sta->sta.addr)) {
+ 		err = -EEXIST;
+-		goto out_err;
++		goto out_cleanup;
+ 	}
  
- 	list_add_tail_rcu(&sta->list, &local->sta_list);
+ 	sinfo = kzalloc(sizeof(struct station_info), GFP_KERNEL);
+ 	if (!sinfo) {
+ 		err = -ENOMEM;
+-		goto out_err;
++		goto out_cleanup;
+ 	}
  
-+	/* update channel context before notifying the driver about state
-+	 * change, this enables driver using the updated channel context right away.
-+	 */
-+	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
-+		ieee80211_recalc_min_chandef(sta->sdata);
-+		if (!sta->sta.support_p2p_ps)
-+			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
-+	}
-+
- 	/* notify driver */
- 	err = sta_info_insert_drv_state(local, sdata, sta);
- 	if (err)
-@@ -658,12 +667,6 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 
- 	set_sta_flag(sta, WLAN_STA_INSERTED);
- 
--	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
--		ieee80211_recalc_min_chandef(sta->sdata);
--		if (!sta->sta.support_p2p_ps)
--			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
--	}
--
- 	/* accept BA sessions now */
- 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 
+ 	local->num_sta++;
+@@ -636,8 +636,8 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+  out_drop_sta:
+ 	local->num_sta--;
+ 	synchronize_net();
++ out_cleanup:
+ 	cleanup_single_sta(sta);
+- out_err:
+ 	mutex_unlock(&local->sta_mtx);
+ 	kfree(sinfo);
+ 	rcu_read_lock();
 -- 
 2.34.1
 
