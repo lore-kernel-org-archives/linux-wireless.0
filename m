@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69646C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08536C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234973AbhLUCDt (ORCPT
+        id S235038AbhLUCDx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 21:03:49 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:57992 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235078AbhLUCCF (ORCPT
+        Mon, 20 Dec 2021 21:03:53 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:35782 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234503AbhLUCCN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 21:02:05 -0500
+        Mon, 20 Dec 2021 21:02:13 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6C98E61347;
-        Tue, 21 Dec 2021 02:02:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C780C36AEA;
-        Tue, 21 Dec 2021 02:02:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C0012B81115;
+        Tue, 21 Dec 2021 02:02:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FD49C36AE9;
+        Tue, 21 Dec 2021 02:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640052122;
-        bh=O8tppKcRB/FXE5XiKYgTTYxvn0PbzCfAaewxyEGUBGA=;
+        s=k20201202; t=1640052130;
+        bh=aht5Fn7Bx/fEmLyVAftQWO0O/Vvjiin6jgfCmYxfBn8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Fp/x4QGZJzNUZtr9AdxHg3YUgiK0tBRq+l8kiICxKRKICN66ca/9Rfo8yeXbL27zJ
-         qpe0TqIs4fNhwtUq3ZqBwvq5wAGIk4zxf9Q1lfBPI3hV6ytcELpQ+vPo1LFYJtDO9z
-         51FqOupsHwjonfWABh+z5f2f/aiQiZ+m6GSGoUmkiRCrxVZ8JuhQ5Jrmwk4Tvy+2Tz
-         NtZt2f5tdGoa2QS8JNFKMIwgyft5as09RsVcyhgQqYSaunogN3P63HlX5ESZ5G7odg
-         1+1XCcF1ukL4LTMpGYPW9LI8VogWULEhFXE6cPs+K1XaGTHQ+5qdxN0czEtv/OSuQw
-         E2pOStNbJwgjg==
+        b=eQpSW0QI9HTXhIOuA6+BPEN1l2r2gBnwAR/DuXQd9GiVpgpOERMX600nnjyZbO9wm
+         LyxclKiwpPA93fsYZFAS5/SGEdEdByMoTdPeufqJsylxDHDBpIHiynkJmaYQ2i3+Qh
+         x5muMeatsg03miUCCT+UGo88t87Om6UpvqyINWeJrjWaA2XYFmYzZVahgDCek05SYn
+         fk/0ib5hjj28icIT7ShJ6NPRqXq3Vv0QzbtUJsOBS7sBVpNpQ9fFYs6i2ha2zXhlD2
+         lnSXJkFDENHEPu0m6gaRrMt/MnlQcnSHTOpt6j8T7tqBOPlfCRgmzxNBqWeJnPD0ab
+         FZ8WFS8gvnTuQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Xing Song <xing.song@mediatek.com>,
@@ -40,12 +40,12 @@ Cc:     Xing Song <xing.song@mediatek.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.9 2/4] mac80211: set up the fwd_skb->dev for mesh forwarding
-Date:   Mon, 20 Dec 2021 21:01:56 -0500
-Message-Id: <20211221020158.117612-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 2/4] mac80211: set up the fwd_skb->dev for mesh forwarding
+Date:   Mon, 20 Dec 2021 21:02:04 -0500
+Message-Id: <20211221020206.117771-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211221020158.117612-1-sashal@kernel.org>
-References: <20211221020158.117612-1-sashal@kernel.org>
+In-Reply-To: <20211221020206.117771-1-sashal@kernel.org>
+References: <20211221020206.117771-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -113,10 +113,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 3dc370ad23bf6..5be4d73ea9b74 100644
+index 688d7b5b71395..b391066e858fd 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2632,6 +2632,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+@@ -2461,6 +2461,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
  		goto out;
  	}
  
