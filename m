@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC37C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 01:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E98C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 01:58:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232624AbhLUB6S (ORCPT
+        id S232935AbhLUB60 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 20:58:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44488 "EHLO
+        Mon, 20 Dec 2021 20:58:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232223AbhLUB6H (ORCPT
+        with ESMTP id S232745AbhLUB6W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 20:58:07 -0500
+        Mon, 20 Dec 2021 20:58:22 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79F25C061574;
-        Mon, 20 Dec 2021 17:58:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68AE1C061574;
+        Mon, 20 Dec 2021 17:58:22 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3F6D6B810D9;
-        Tue, 21 Dec 2021 01:58:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAE86C36AE5;
-        Tue, 21 Dec 2021 01:58:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 33C33B8111E;
+        Tue, 21 Dec 2021 01:58:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE0B2C36AEB;
+        Tue, 21 Dec 2021 01:58:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640051885;
-        bh=dPkDGzeocqgxsXdr5ixQYGslgMy9wJ6IbtCezWjiNsg=;
+        s=k20201202; t=1640051900;
+        bh=BjfGgLQJp9X5r/PO8WkL/FIqgaWUhAASR5Hah6RKsyI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tum+DbKClQyplIt/lo8M9Po9mRPMXQRHuEIKP3/hz1wmOCos2GTpYF3iEX26pb4P9
-         iKAgcjfcizKhad7JLb+N9BkV74Bj9icYg8OkkVJno5FyQpTsDbGrjITxMGqBXdAoRq
-         R8xASjleJnvbdOHlbNkhuDC5l4XsLKYoijPE8R2lv5S0uwlNSZGd72cZjfGLLqE49E
-         ST3UGJ8TUYAR2JxeRfNdPBSj5ihGSdna3+EhogfDE2blOa/SHlt2MF3aDW3h+tPo0P
-         V1UxXFtFJyvfIxMAybnV3LTeK4DM5ZSVi5aCqBCVDpcqrLRp0Hvnq7HXuRRy3t5Cxn
-         kJorEWwY3RdHA==
+        b=VRMW3W4UZ+e72d0IJJ1x6YDiqCp1qJP5l/jze4y0F6XoUWFf7XoyYnCHcj/lNcySZ
+         l4xfTunT2oJuCnBYydspeyzCA7farmIfz0joXrOZBx4bjCC/ENajLvQmS3UoBzbPrl
+         8KEDlptyD2dyh9DGxEioUcRYAye1phV+oTKh0HKqxcj+WqgJd6FVepucwcpCAHF6xT
+         MhubVs/uOo3jFtd7MZSmOdmqqt86N4dsh9K0tsJCD7Y4CtfyJktElOPEfmzPXy32e8
+         8d9tGNHSgXC8029J/lgqtZ5+TtNZCdZP0q2YKovI6lD4ULdtMlRia6FHzqA78kMKeK
+         Mn9/x7rpp4Qjw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        stf_xl@wp.pl, kvalo@codeaurora.org, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 08/29] iwlwifi: fix LED dependencies
-Date:   Mon, 20 Dec 2021 20:57:29 -0500
-Message-Id: <20211221015751.116328-8-sashal@kernel.org>
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 16/29] mac80211: update channel context before station state
+Date:   Mon, 20 Dec 2021 20:57:37 -0500
+Message-Id: <20211221015751.116328-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211221015751.116328-1-sashal@kernel.org>
 References: <20211221015751.116328-1-sashal@kernel.org>
@@ -55,89 +55,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-[ Upstream commit efdbfa0ad03e764419378485d1b8f6e7706fb1a3 ]
+[ Upstream commit 4dde3c3627b52ca515a34f6f4de3898224aa1dd3 ]
 
-The dependencies for LED configuration are highly inconsistent and too
-complicated at the moment. One of the results is a randconfig failure I
-get very rarely when LEDS_CLASS is in a loadable module, but the wireless
-core is built-in:
+Currently channel context is updated only after station got an update about
+new assoc state, this results in station using the old channel context.
 
-WARNING: unmet direct dependencies detected for MAC80211_LEDS
-  Depends on [n]: NET [=y] && WIRELESS [=y] && MAC80211 [=y] && (LEDS_CLASS [=m]=y || LEDS_CLASS [=m]=MAC80211 [=y])
-  Selected by [m]:
-  - IWLEGACY [=m] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_INTEL [=y]
-  - IWLWIFI_LEDS [=y] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_INTEL [=y] && IWLWIFI [=m] && (LEDS_CLASS [=m]=y || LEDS_CLASS [=m]=IWLWIFI [=m]) && (IWLMVM [=m] || IWLDVM [=m])
+Fix this by moving the update channel context before updating station,
+enabling the driver to immediately use the updated channel context in
+the new assoc state.
 
-aarch64-linux-ld: drivers/net/wireless/ath/ath5k/led.o: in function `ath5k_register_led':
-led.c:(.text+0x60): undefined reference to `led_classdev_register_ext'
-aarch64-linux-ld: drivers/net/wireless/ath/ath5k/led.o: in function `ath5k_unregister_leds':
-led.c:(.text+0x200): undefined reference to `led_classdev_unregister'
-
-For iwlwifi, the dependency is wrong, since this config prevents the
-MAC80211_LEDS code from being part of a built-in MAC80211 driver.
-
-For iwlegacy, this is worse because the driver tries to force-enable
-the other subsystems, which is both a layering violation and a bug
-because it will still fail with MAC80211=y and IWLEGACY=m, leading
-to LEDS_CLASS being a module as well.
-
-The actual link failure in the ath5k driver is a result of MAC80211_LEDS
-being enabled but not usable. With the Kconfig logic fixed in the
-Intel drivers, the ath5k driver works as expected again.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20211204173848.873293-1-arnd@kernel.org
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211129152938.1c80c17ffd8a.I94ae31378b363c1182cfdca46c4b7e7165cff984@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlegacy/Kconfig | 4 ++--
- drivers/net/wireless/intel/iwlwifi/Kconfig  | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/sta_info.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/Kconfig b/drivers/net/wireless/intel/iwlegacy/Kconfig
-index 24fe3f63c3215..7eacc8e58ee14 100644
---- a/drivers/net/wireless/intel/iwlegacy/Kconfig
-+++ b/drivers/net/wireless/intel/iwlegacy/Kconfig
-@@ -2,14 +2,13 @@
- config IWLEGACY
- 	tristate
- 	select FW_LOADER
--	select NEW_LEDS
--	select LEDS_CLASS
- 	select LEDS_TRIGGERS
- 	select MAC80211_LEDS
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 6eeef7a61927b..9e0bb402674c9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -664,6 +664,15 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
  
- config IWL4965
- 	tristate "Intel Wireless WiFi 4965AGN (iwl4965)"
- 	depends on PCI && MAC80211
-+	depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
- 	select IWLEGACY
- 	help
- 	  This option enables support for
-@@ -38,6 +37,7 @@ config IWL4965
- config IWL3945
- 	tristate "Intel PRO/Wireless 3945ABG/BG Network Connection (iwl3945)"
- 	depends on PCI && MAC80211
-+	depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
- 	select IWLEGACY
- 	help
- 	  Select to build the driver supporting the:
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 1085afbefba87..418ae4f870ab7 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -47,7 +47,7 @@ if IWLWIFI
+ 	list_add_tail_rcu(&sta->list, &local->sta_list);
  
- config IWLWIFI_LEDS
- 	bool
--	depends on LEDS_CLASS=y || LEDS_CLASS=IWLWIFI
-+	depends on LEDS_CLASS=y || LEDS_CLASS=MAC80211
- 	depends on IWLMVM || IWLDVM
- 	select LEDS_TRIGGERS
- 	select MAC80211_LEDS
++	/* update channel context before notifying the driver about state
++	 * change, this enables driver using the updated channel context right away.
++	 */
++	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
++		ieee80211_recalc_min_chandef(sta->sdata);
++		if (!sta->sta.support_p2p_ps)
++			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
++	}
++
+ 	/* notify driver */
+ 	err = sta_info_insert_drv_state(local, sdata, sta);
+ 	if (err)
+@@ -671,12 +680,6 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ 
+ 	set_sta_flag(sta, WLAN_STA_INSERTED);
+ 
+-	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
+-		ieee80211_recalc_min_chandef(sta->sdata);
+-		if (!sta->sta.support_p2p_ps)
+-			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
+-	}
+-
+ 	/* accept BA sessions now */
+ 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 
 -- 
 2.34.1
 
