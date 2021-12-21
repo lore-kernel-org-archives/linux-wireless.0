@@ -2,47 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B2DC43219
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F8FC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Dec 2021 02:00:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234227AbhLUCAQ (ORCPT
+        id S234391AbhLUCA1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Dec 2021 21:00:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44974 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231817AbhLUB7c (ORCPT
+        Mon, 20 Dec 2021 21:00:27 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:33932 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233134AbhLUB7g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Dec 2021 20:59:32 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2938FC061D60;
-        Mon, 20 Dec 2021 17:59:24 -0800 (PST)
+        Mon, 20 Dec 2021 20:59:36 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B445161166;
-        Tue, 21 Dec 2021 01:59:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 090C1C36AE8;
-        Tue, 21 Dec 2021 01:59:21 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9CBAAB8110A;
+        Tue, 21 Dec 2021 01:59:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70941C36AEB;
+        Tue, 21 Dec 2021 01:59:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640051963;
-        bh=BNXgPjfocNKSR3tWjYTYadaxv98CJjuMh5GNFeludyc=;
+        s=k20201202; t=1640051973;
+        bh=EwU1W6zye0oxIzP4RBnEX/iAIIeFiHxwVjNWBI/c6GE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WS2WiYfov1k/3Xc8UeVClG/Fg1auuhjsEJyiBle4BPSp9W7H5ySgVW0aYWbnyR7Vo
-         6RE7o8DTuzSoKSssEjRfh91p1aRhDviGtpsfNEDBYWrI69vMz64KqhLLGnF/11PCoz
-         w/QiZG2lSxEX9FDszctz+YMYZui5IAC7GopUyYXpNFue4H5UHuL9AQy7waUKWQzwSJ
-         tkn7r337+OPhi7FVDpdHImTzgn5Mo04Ku6ZRYz4MXB5RTD4hHBD31uPt9udSgev+RT
-         QIVRoyr3TMTierDshmec7A8qPKRpnVnueP0RpC0/rVt3ODQ9JPYAHs5MsmL9qijcB7
-         Mj+hV9x7lDy1w==
+        b=lWGLRK+9HAhQ/1pDkEJoWdeU+n7ipfxZU5CU1OFOZ6wy6Pt8l1w9W5/5z577xneF2
+         AyGO5ICoI0+8kwsDCDOyD4HT/opXKwtkinPQTjxsj2x22nJyhoQKl/4lFXZhqhufQQ
+         ZNKpLHBoG5dAoY8jqmR/T+/DN0MJnyS4bVYJBJtzLr86dZq/1qXNXB5mC17wZ8qAXr
+         dc3DCJ+d48nprcvfMA176jH1h3R0ZqwrZAZenh56nfeX5AQBFb8DApQh3BPfpkzkXQ
+         O5Zz7gfWsAARDWUJP7yhpnySGAzxRlLtvjQS2y+ztyr+GlWVleYdb0o8J5EfWyA3ar
+         xIV2dl/eeBcng==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Behrens <me@kloenk.dev>, Finn Behrens <fin@nyantec.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
-        kuba@kernel.org, johannes@sipsolutions.net, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 05/19] nl80211: reset regdom when reloading regdb
-Date:   Mon, 20 Dec 2021 20:59:00 -0500
-Message-Id: <20211221015914.116767-5-sashal@kernel.org>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 12/19] mac80211: do drv_reconfig_complete() before restarting all
+Date:   Mon, 20 Dec 2021 20:59:07 -0500
+Message-Id: <20211221015914.116767-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211221015914.116767-1-sashal@kernel.org>
 References: <20211221015914.116767-1-sashal@kernel.org>
@@ -54,98 +51,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Finn Behrens <me@kloenk.dev>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 1eda919126b420fee6b8d546f7f728fbbd4b8f11 ]
+[ Upstream commit 13dee10b30c058ee2c58c5da00339cc0d4201aa6 ]
 
-Reload the regdom when the regulatory db is reloaded.
-Otherwise, the user had to change the regulatoy domain
-to a different one and then reset it to the correct
-one to have a new regulatory db take effect after a
-reload.
+When we reconfigure, the driver might do some things to complete
+the reconfiguration. It's strange and could be broken in some
+cases because we restart other works (e.g. remain-on-channel and
+TX) before this happens, yet only start queues later.
 
-Signed-off-by: Finn Behrens <fin@nyantec.com>
-Link: https://lore.kernel.org/r/YaIIZfxHgqc/UTA7@gimli.kloenk.dev
-[edit commit message]
+Change this to do the reconfig complete when reconfiguration is
+actually complete, not when we've already started doing other
+things again.
+
+For iwlwifi, this should fix a race where the reconfig can race
+with TX, for ath10k and ath11k that also use this it won't make
+a difference because they just start queues there, and mac80211
+also stopped the queues and will restart them later as before.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211129152938.cab99f22fe19.Iefe494687f15fd85f77c1b989d1149c8efdfdc36@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/net/regulatory.h |  1 +
- net/wireless/reg.c       | 27 +++++++++++++++++++++++++--
- 2 files changed, 26 insertions(+), 2 deletions(-)
+ net/mac80211/util.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 47f06f6f5a67c..0cf9335431e07 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -83,6 +83,7 @@ struct regulatory_request {
- 	enum nl80211_dfs_regions dfs_region;
- 	bool intersect;
- 	bool processed;
-+	bool reload;
- 	enum environment_cap country_ie_env;
- 	struct list_head list;
- };
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index a04fdfb35f070..341c88972aed1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -133,6 +133,7 @@ static u32 reg_is_indoor_portid;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5dfa26b533802..dcebb0eb8a4be 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2624,6 +2624,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		mutex_unlock(&local->sta_mtx);
+ 	}
  
- static void restore_regulatory_settings(bool reset_user, bool cached);
- static void print_regdomain(const struct ieee80211_regdomain *rd);
-+static void reg_process_hint(struct regulatory_request *reg_request);
- 
- static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
- {
-@@ -1079,6 +1080,8 @@ int reg_reload_regdb(void)
- 	const struct firmware *fw;
- 	void *db;
- 	int err;
-+	const struct ieee80211_regdomain *current_regdomain;
-+	struct regulatory_request *request;
- 
- 	err = request_firmware(&fw, "regulatory.db", &reg_pdev->dev);
- 	if (err)
-@@ -1099,8 +1102,27 @@ int reg_reload_regdb(void)
- 	if (!IS_ERR_OR_NULL(regdb))
- 		kfree(regdb);
- 	regdb = db;
--	rtnl_unlock();
- 
-+	/* reset regulatory domain */
-+	current_regdomain = get_cfg80211_regdom();
++	/*
++	 * If this is for hw restart things are still running.
++	 * We may want to change that later, however.
++	 */
++	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
++		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
 +
-+	request = kzalloc(sizeof(*request), GFP_KERNEL);
-+	if (!request) {
-+		err = -ENOMEM;
-+		goto out_unlock;
-+	}
-+
-+	request->wiphy_idx = WIPHY_IDX_INVALID;
-+	request->alpha2[0] = current_regdomain->alpha2[0];
-+	request->alpha2[1] = current_regdomain->alpha2[1];
-+	request->initiator = NL80211_USER_REG_HINT_USER;
-+	request->user_reg_hint_type = NL80211_USER_REG_HINT_USER;
-+	request->reload = true;
-+
-+	reg_process_hint(request);
-+
-+out_unlock:
-+	rtnl_unlock();
-  out:
- 	release_firmware(fw);
- 	return err;
-@@ -2657,7 +2679,8 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	if (local->in_reconfig) {
+ 		local->in_reconfig = false;
+ 		barrier();
+@@ -2642,13 +2649,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 					false);
  
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
--	    treatment == REG_REQ_ALREADY_SET)
-+	    (treatment == REG_REQ_ALREADY_SET &&
-+	     !user_request->reload))
- 		return REG_REQ_IGNORE;
+-	/*
+-	 * If this is for hw restart things are still running.
+-	 * We may want to change that later, however.
+-	 */
+-	if (local->open_count && (!suspended || reconfig_due_to_wowlan))
+-		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_RESTART);
+-
+ 	if (!suspended)
+ 		return 0;
  
- 	user_request->intersect = treatment == REG_REQ_INTERSECT;
 -- 
 2.34.1
 
