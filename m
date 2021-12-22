@@ -2,77 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB22C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Dec 2021 11:17:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FF2C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Dec 2021 11:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244526AbhLVLRK (ORCPT
+        id S239384AbhLVLwe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 06:17:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46348 "EHLO
+        Wed, 22 Dec 2021 06:52:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240196AbhLVLRJ (ORCPT
+        with ESMTP id S239086AbhLVLwd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 06:17:09 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F32CCC061574;
-        Wed, 22 Dec 2021 03:17:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Sb5Qc+GscYGAZKT3zRpL2xaJQHjtFgXyZ36fz2qmxnw=; b=ACe/to6El0tOh9S8I205MWS2Sk
-        QVLGBrcI2+PkfLP04iO6Q2ba03rWzH8vKJitQOJVwGzTY/MZYnfYjvN1g3VFossJlX8WGIX2SVFR/
-        05gFpu1LOnKldKL7F1qr5b3l1YTAE8WNVjdooNqXePEkbUDM8WcReMVKYJBcXVlzWyrc=;
-Received: from p54ae97a7.dip0.t-ipconnect.de ([84.174.151.167] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1mzzc3-0002Du-4V; Wed, 22 Dec 2021 12:16:51 +0100
-Message-ID: <c156c75f-5797-917c-a8f7-ad7620903bf1@nbd.name>
-Date:   Wed, 22 Dec 2021 12:16:49 +0100
+        Wed, 22 Dec 2021 06:52:33 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC1D3C06173F
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2021 03:52:32 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B7D67B81BC8
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2021 11:52:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67A10C36AEA;
+        Wed, 22 Dec 2021 11:52:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640173950;
+        bh=21NhSvRv7+HMjSRF8OZg9KtzgafWBytJEjFs25vu1lQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=HHLM76TS7Wp3I4hkf3vCEwRGe6Z+tCtiFh3CTdchuS40E8GVHEJaxxHMdMbm3ryxL
+         2ILxvltGn/hsja15g38fTI12/qWtvJaCLIh68/fc6X4zHdD5urU5epK5S0VPnSbG2x
+         LAaLH0a/qoloAEKZ3WJIbmJem0Sut9mEm4B3HsL/wRLlLmdXDfznx0+Eej9WTcyXoc
+         GKZn/4kSRcB0OFfbsHck43hK3n8dxsjC7lKLk9T/IDQiUCw5xgfhvduD8p0fQmQbxS
+         zFFNrfdW9IHQfTiMBtuf1mbw2fqmZf5fFIJp5poryG4/0TWY1Y2WA4W6b20Ix9KL4l
+         8StjHK2YrhurQ==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com
+Subject: [PATCH] mt76: mt7915: use proper aid value in mt7915_mcu_wtbl_generic_tlv in sta mode
+Date:   Wed, 22 Dec 2021 12:52:17 +0100
+Message-Id: <7ca692b291bec98229befe677ed5ff2af0c70088.1640173873.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.33.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.1
-Subject: Re: [PATCH] ath10k: enable threaded napi on ath10k driver
-Content-Language: en-US
-To:     Abhishek Kumar <kuabhs@chromium.org>, kvalo@codeaurora.org,
-        briannorris@chromium.org
-Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        dianders@chromium.org, pillair@codeaurora.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath10k@lists.infradead.org,
-        netdev@vger.kernel.org
-References: <20211214223901.1.I777939e0ef1e89872d4ab65340f3fd756615a047@changeid>
-From:   Felix Fietkau <nbd@nbd.name>
-In-Reply-To: <20211214223901.1.I777939e0ef1e89872d4ab65340f3fd756615a047@changeid>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2021-12-14 23:39, Abhishek Kumar wrote:
-> NAPI poll can be done in threaded context along with soft irq
-> context. Threaded context can be scheduled efficiently, thus
-> creating less of bottleneck during Rx processing. This patch is
-> to enable threaded NAPI on ath10k driver.
-> 
-> Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.2.2-00696-QCAHLSWMTPL-1
-> Signed-off-by: Abhishek Kumar <kuabhs@chromium.org>
-The name of the dummy device should be filled in as well. How about
-something like this:
+mac80211 provides aid in vif->bss_conf.aid for sta mode and not in
+sta->aid. Fix mt7915_mcu_wtbl_generic_tlv routine using proper value for
+aid in sta mode.
 
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -3576,6 +3576,9 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
-  		  ath10k_core_set_coverage_class_work);
-  
-  	init_dummy_netdev(&ar->napi_dev);
-+	snprintf(ar->napi_dev.name, sizeof(ar->napi_dev.name), "%s",
-+		 wiphy_name(ar->hw->wiphy));
-+	ar->napi_dev.threaded = 1;
-  
-  	ret = ath10k_coredump_create(ar);
-  	if (ret)
+Fixes: e57b7901469fc ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 1985240c0083..a1d50bbdece2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -988,8 +988,11 @@ mt7915_mcu_wtbl_generic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	generic = (struct wtbl_generic *)tlv;
+ 
+ 	if (sta) {
++		if (vif->type == NL80211_IFTYPE_STATION)
++			generic->partial_aid = cpu_to_le16(vif->bss_conf.aid);
++		else
++			generic->partial_aid = cpu_to_le16(sta->aid);
+ 		memcpy(generic->peer_addr, sta->addr, ETH_ALEN);
+-		generic->partial_aid = cpu_to_le16(sta->aid);
+ 		generic->muar_idx = mvif->mt76.omac_idx;
+ 		generic->qos = sta->wme;
+ 	} else {
+-- 
+2.33.1
+
