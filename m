@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC988C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 444E1C43219
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346934AbhLWBQs (ORCPT
+        id S1346243AbhLWBQq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:16:48 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18346 "EHLO
+        Wed, 22 Dec 2021 20:16:46 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18168 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345761AbhLWBOP (ORCPT
+        with ESMTP id S1345744AbhLWBOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:15 -0500
+        Wed, 22 Dec 2021 20:14:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=VdSmr7LcH0rW8kHWmZpoh/Ig1LSGlhHmXHB0t3cqZGc=;
-        b=AGJAB9NF2r1y61gG1NFibLyjYqebZYsKzYQcyhYBEKFYqqWwu8BuwSFhK0VCpq+UoUxt
-        Fgfp5X8r6vQtUrMwJp0elicdllDHKLvt1X7EGdEuT0VRQYDHOdRYmpuZHKGWYytmh7nhrg
-        hRMcbf+nteyrDWlChGGdXIyMLM+oYUTGSYy7nDrqIf7DW74x8qEoHJs9AHz+jFRha8lz2A
-        tsJj6HzeIfuluuFGT+CUAwMxLaKtxLJRVkxU7ukN9K2xEdsvXTr/g6so2joTiiveH9o4/F
-        8sawsJ7aa84oUE3iqZkpuMvkg5C79l8hC6IEfUGQsD0exT3joAie/Pq2I2WiDbFw==
-Received: by filterdrecv-64fcb979b9-6vbpf with SMTP id filterdrecv-64fcb979b9-6vbpf-1-61C3CD5E-35
-        2021-12-23 01:14:06.683709228 +0000 UTC m=+8644637.687945467
+        s=sgd; bh=m7/NHd70aW+5nMyYcygmge2MErZGaxPW2OeWbTdP2ZI=;
+        b=UGhCfPVJLrG5fdt631HayU/HkgnPSBr/OW//HfPWFRPo8wlRWuHNDXBIj/E+KQ0c0yNb
+        WyNfQkNuiU34RLLV5lZHygBSQQGJV9u2Z002n9RAUgixoiGtWvqPEMM5lsRAtBsDxO1l/J
+        Dqm9hnN3r+xDBpb/21xy8t+Onzp6GGtgp75gkFy8HYakq+a1nsUJwETOhp032G2P1hZSj/
+        7jO+Opn4hIVMUwuRvP8bYWO3qAYAbZiiCEHQ/1qk5s2OUvdoKFGWv5zeCWTdoY/tuUR+eB
+        YF0Prxhr9hscKB9hb2Xpv/iO/7Yuv1WGm2vlExaUBR/KUc4o5CpoTfil89am6q7g==
+Received: by filterdrecv-75ff7b5ffb-q2hvm with SMTP id filterdrecv-75ff7b5ffb-q2hvm-1-61C3CD5E-1A
+        2021-12-23 01:14:06.383809858 +0000 UTC m=+9687230.227918554
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-6-0 (SG)
+        by geopod-ismtpd-canary-0 (SG)
         with ESMTP
-        id OwzaDxMVSaWpyCRXrQezBA
-        Thu, 23 Dec 2021 01:14:06.542 +0000 (UTC)
+        id odf-ZXRpRF20CW2pPp5AVQ
+        Thu, 23 Dec 2021 01:14:06.223 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 73DAF701488; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 0EB277010D8; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 27/50] wilc1000: simplify ac_balance() a bit
+Subject: [PATCH v2 12/50] wilc1000: refactor wilc_wlan_cfg_commit() a bit
 Date:   Thu, 23 Dec 2021 01:14:06 +0000 (UTC)
-Message-Id: <20211223011358.4031459-28-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-13-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvFH5jXK85cQtbtZt7?=
- =?us-ascii?Q?SL3jCjJD5yamKyyCopUd3NzO3D=2FhuQ5uOd=2Fdefx?=
- =?us-ascii?Q?Rnh5BvGJtoyo9c8YpecROwyRILZQe2JFN=2FJR4IP?=
- =?us-ascii?Q?qMVuKZM9SL=2FrQskbTbYfOK8iq7Y5p5St869NGsX?=
- =?us-ascii?Q?mi0Q5ehFLNnYxynlaE0whcIQHHamwFuwU4uedrZ?=
- =?us-ascii?Q?rDudO7WOtEPBSdXogmfpg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvCI5wdCf6k9nSTiV8?=
+ =?us-ascii?Q?Y5orYAp30zrmhpmPpWiYcIZ7KjBx7mrhBRbhHE8?=
+ =?us-ascii?Q?NiP1IDsjpJ8qs9=2F442dFh+0K0Pmp3hUHC8lODUd?=
+ =?us-ascii?Q?X+ntzBnLYE2IaWJX4eai4FbMT34Qw3MGNWEykZa?=
+ =?us-ascii?Q?WB8GGGF2xXywET1MbC3Eg9qZALuiIpEzCxN9=2F3f?=
+ =?us-ascii?Q?Xt6=2F4iQxm46velendSlig=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -61,58 +61,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ac_balance() is never going to fail ("ratio" is always non-NULL), so
-there is no reason to pretend otherwise.
+This cleanup makes the switch to sk_buff queues easier.  There is no
+functional change.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 5ea9129b36925..287c0843ba152 100644
+index 26b7d219ecbbb..2e3dc04120832 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -345,21 +345,23 @@ static inline u8 ac_classify(struct wilc *wilc, struct sk_buff *skb)
- 	return q_num;
- }
+@@ -1271,15 +1271,13 @@ static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
+ 	struct wilc *wilc = vif->wilc;
+ 	struct wilc_cfg_frame *cfg = &wilc->cfg_frame;
+ 	int t_len = wilc->cfg_frame_offset + sizeof(struct wilc_cfg_cmd_hdr);
++	struct wilc_cfg_cmd_hdr *hdr;
  
--static inline int ac_balance(struct wilc *wl, u8 *ratio)
-+/**
-+ * ac_balance() - balance queues by favoring ones with fewer packets pending
-+ * @wl: Pointer to the wilc structure.
-+ * @ratio: Pointer to array of length NQUEUES in which this function
-+ *	returns the number of packets that may be scheduled for each
-+ *	access category.
-+ */
-+static inline void ac_balance(const struct wilc *wl, u8 *ratio)
- {
- 	u8 i, max_count = 0;
- 
--	if (!ratio)
--		return -EINVAL;
+-	if (type == WILC_CFG_SET)
+-		cfg->hdr.cmd_type = 'W';
+-	else
+-		cfg->hdr.cmd_type = 'Q';
 -
- 	for (i = 0; i < NQUEUES; i++)
- 		if (wl->fw[i].count > max_count)
- 			max_count = wl->fw[i].count;
+-	cfg->hdr.seq_no = wilc->cfg_seq_no % 256;
+-	cfg->hdr.total_len = cpu_to_le16(t_len);
+-	cfg->hdr.driver_handler = cpu_to_le32(drv_handler);
++	hdr = &cfg->hdr;
++	hdr->cmd_type = (type == WILC_CFG_SET) ? 'W' : 'Q';
++	hdr->seq_no = wilc->cfg_seq_no % 256;
++	hdr->total_len = cpu_to_le16(t_len);
++	hdr->driver_handler = cpu_to_le32(drv_handler);
+ 	wilc->cfg_seq_no = cfg->hdr.seq_no;
  
- 	for (i = 0; i < NQUEUES; i++)
- 		ratio[i] = max_count - wl->fw[i].count;
--
--	return 0;
- }
- 
- static inline void ac_update_fw_ac_pkt_info(struct wilc *wl, u32 reg)
-@@ -894,8 +896,7 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- 	if (wilc->quit)
- 		goto out_update_cnt;
- 
--	if (ac_balance(wilc, ac_desired_ratio))
--		return -EINVAL;
-+	ac_balance(wilc, ac_desired_ratio);
- 
- 	mutex_lock(&wilc->txq_add_to_head_cs);
- 
+ 	if (!wilc_wlan_txq_add_cfg_pkt(vif, (u8 *)&cfg->hdr, t_len))
 -- 
 2.25.1
 
