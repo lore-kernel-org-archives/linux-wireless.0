@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E799C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BC9C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345808AbhLWBPA (ORCPT
+        id S242123AbhLWBPD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:15:00 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18330 "EHLO
+        Wed, 22 Dec 2021 20:15:03 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18392 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345798AbhLWBOV (ORCPT
+        with ESMTP id S1345778AbhLWBOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:21 -0500
+        Wed, 22 Dec 2021 20:14:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=P3vjFpDJHEWW7SWSpRLhpleR6qDxnZjgnmLnPz6G8BU=;
-        b=snT890lOOe4TeW91I9cPz+4/ladedXzhvy20QFJaibRKlF6/txys+ynk2ZZrS/wIUfEJ
-        oR2Z/TvDaVsvnrbuTeo/UCtZHDbWagzLAKSzX3V9G1gfhO7+Od6/BeUhjFO15UOxxVPrde
-        oVWhUj5x3NqAn+oy3zK8yWeHgKqAlKgYlxgFNOGj9HAEr3be+oi20Pk7gr5tvhqaLQmQ8b
-        z12UO4XVxiGoXNlf21CQGz2SVAhvQRkLf7vPEsg1Hll401WCLoEUlya/aAW/T7rrhKlNy+
-        9bjKkH/uyBQJQX0nf0fXRMBR53pT2F5qmF+yCWdRrqwKcrufDd/OQCURTMH9ASdA==
-Received: by filterdrecv-7bf5c69d5-5zdgz with SMTP id filterdrecv-7bf5c69d5-5zdgz-1-61C3CD5E-30
-        2021-12-23 01:14:06.61160249 +0000 UTC m=+9687225.820325608
+        s=sgd; bh=eTCBwwd712xb7qk5FJKt9s2SPN4iZ3evhxEvhrmqVG0=;
+        b=qFAobek2GlJ0Bkyz99qu4u/sbAGwfA94iQP2eQnx6F0l3ZQqMGl3V9ATyVBFo5tka1ys
+        VDLmw83n7hy/5Lcij+pLHuzMeMVrRa9bEMmsIgMz80r/r5NOAyfO9T7AXoruljLkCQEioR
+        sJ7zyntVMAYNMTtus9Vil6m9tF7Ke9sEHpFmRm66WRyGArWbXZP+9OCn1P9kMTifTBhSX/
+        06ScxdAJPbPv5adpoAxV6AzGPSj/eTH1Rsuij9VLmJsdgZB7sBUp7UdoC9Yqf8X8k0z1aK
+        ePO/7TH5YcNLE/q/Zl+/h8mhvNEYUu8dH0CUJgiLYALRYVFWlh/BtYsO1CHcVOuw==
+Received: by filterdrecv-64fcb979b9-tjknx with SMTP id filterdrecv-64fcb979b9-tjknx-1-61C3CD5E-1D
+        2021-12-23 01:14:06.570345309 +0000 UTC m=+8644589.373863885
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-2-0 (SG)
+        by geopod-ismtpd-4-0 (SG)
         with ESMTP
-        id 0V7qflYNS7iEC4FxhBJa7g
-        Thu, 23 Dec 2021 01:14:06.475 +0000 (UTC)
+        id Ix1XkgGqSFi8py498O2p_g
+        Thu, 23 Dec 2021 01:14:06.429 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 5813070144B; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 2F9327012D2; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 23/50] wilc1000: introduce symbolic names for two
- tx-related control bits
+Subject: [PATCH v2 17/50] wilc1000: remove no longer used "vif" argument from
+ init_txq_entry()
 Date:   Thu, 23 Dec 2021 01:14:06 +0000 (UTC)
-Message-Id: <20211223011358.4031459-24-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-18-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvJD+x2smqDgMhvITP?=
- =?us-ascii?Q?dFZ8LpvZ4l0gufVGuiwD1p5mR9rphOFgG4bG=2F4z?=
- =?us-ascii?Q?=2F+tkUCDTCYhl0x1an9kXtm6YdZV+BOb6o8iifpS?=
- =?us-ascii?Q?NxZJnf3+Am7JkbiFBrnT=2F2emIhQL4npnC18rDBr?=
- =?us-ascii?Q?YAkEZJRyZD5aAPyj=2FMOkFs7d9KxlPR8f1oDiaZ+?=
- =?us-ascii?Q?2JHrJUEHZ7h+9y8iBIONw=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvF57zItUWDc68Njwz?=
+ =?us-ascii?Q?om2zBXkmJEYQhgSnJ3Qik1UqW8tfJqfcvcHJvYK?=
+ =?us-ascii?Q?bKbeuYAkOQbStMz=2Fkx2DZvHrec6MDTSXoPeHfQ3?=
+ =?us-ascii?Q?0Jn64mYapEM6cFSVZC5yNLKFMy+3asG+BKmETyD?=
+ =?us-ascii?Q?aaibIk2a63mfIXzpD9nAkTOmhI2kX6=2Fo=2FKBEOma?=
+ =?us-ascii?Q?jhd11D9h2kJw2g1q8bM1w=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,66 +62,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I wish these registers were documented so I wouldn't have to guess at
-their meanings and make up my own names.
+With the tx-path switched to sk_buffs, there is no longer any need for
+the "vif" argument in init_txq_entry().
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
  drivers/net/wireless/microchip/wilc1000/wlan.c | 6 +++---
- drivers/net/wireless/microchip/wilc1000/wlan.h | 2 ++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 27b1d317dc0c4..f82857cebe35e 100644
+index a970ddf43edf0..8bff1d8050b11 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -675,7 +675,7 @@ static int fill_vmm_table(const struct wilc *wilc,
- 					goto out;
- 				vmm_table[i] = vmm_sz / 4;
- 				if (tx_cb->type == WILC_CFG_PKT)
--					vmm_table[i] |= BIT(10);
-+					vmm_table[i] |= WILC_VMM_CFG_PKT;
+@@ -37,7 +37,7 @@ static inline void release_bus(struct wilc *wilc, enum bus_release release)
+ 	mutex_unlock(&wilc->hif_cs);
+ }
  
- 				cpu_to_le32s(&vmm_table[i]);
- 				vmm_entries_ac[i] = ac;
-@@ -721,7 +721,7 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
- 		if (ret)
- 			break;
+-static void init_txq_entry(struct sk_buff *tqe, struct wilc_vif *vif,
++static void init_txq_entry(struct sk_buff *tqe,
+ 			   u8 type, enum ip_pkt_priority q_num)
+ {
+ 	struct wilc_skb_tx_cb *tx_cb = WILC_SKB_TX_CB(tqe);
+@@ -53,7 +53,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev, u8 type, u8 q_num,
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	struct wilc *wilc = vif->wilc;
  
--		if ((reg & 0x1) == 0) {
-+		if ((reg & WILC_HOST_TX_CTRL_BUSY) == 0) {
- 			ac_update_fw_ac_pkt_info(wilc, reg);
- 			break;
- 		}
-@@ -769,7 +769,7 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
- 			ret = func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
- 			if (ret)
- 				break;
--			reg &= ~BIT(0);
-+			reg &= ~WILC_HOST_TX_CTRL_BUSY;
- 			ret = func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, reg);
- 		} else {
- 			ret = entries;
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/wireless/microchip/wilc1000/wlan.h
-index 10618327133ce..f5d32ec93fdb9 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.h
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
-@@ -224,6 +224,7 @@
- #define BE_AC_ACM_STAT_FIELD		BIT(8)
- #define BK_AC_COUNT_FIELD		GENMASK(7, 3)
- #define BK_AC_ACM_STAT_FIELD		BIT(1)
-+#define WILC_HOST_TX_CTRL_BUSY		BIT(0)
+-	init_txq_entry(tqe, vif, type, q_num);
++	init_txq_entry(tqe, type, q_num);
+ 	if (type == WILC_NET_PKT && vif->ack_filter.enabled)
+ 		tcp_process(dev, tqe);
  
- #define WILC_PKT_HDR_CONFIG_FIELD	BIT(31)
- #define WILC_PKT_HDR_OFFSET_FIELD	GENMASK(30, 22)
-@@ -233,6 +234,7 @@
- #define WILC_INTERRUPT_DATA_SIZE	GENMASK(14, 0)
+@@ -68,7 +68,7 @@ static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif, u8 type, u8 q_num,
+ {
+ 	struct wilc *wilc = vif->wilc;
  
- #define WILC_VMM_BUFFER_SIZE		GENMASK(9, 0)
-+#define WILC_VMM_CFG_PKT		BIT(10)
+-	init_txq_entry(tqe, vif, type, q_num);
++	init_txq_entry(tqe, type, q_num);
  
- #define WILC_VMM_HDR_TYPE		BIT(31)
- #define WILC_VMM_HDR_MGMT_FIELD		BIT(30)
+ 	mutex_lock(&wilc->txq_add_to_head_cs);
+ 
 -- 
 2.25.1
 
