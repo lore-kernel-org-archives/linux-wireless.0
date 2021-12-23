@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8234C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36174C43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346313AbhLWBPP (ORCPT
+        id S1346285AbhLWBPQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:15:15 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27138 "EHLO
+        Wed, 22 Dec 2021 20:15:16 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27186 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346204AbhLWBOh (ORCPT
+        with ESMTP id S1346212AbhLWBOj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:37 -0500
+        Wed, 22 Dec 2021 20:14:39 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=/EyEEryj91qJLUiXheTiSQXnfpShGhTXZyiF3Fj6NOE=;
-        b=q/ktgvMgsfoIZL1oIY5FDcoHRa952fgBF/tSQCzetaW6A6iSaECMJBZjNeNkj2K3OeMP
-        nEW33KEzv4pfCdNxtFl7i+KCLMPH2usx8VFOH7uGiFc8MOMwVNJRqlOpSMgSljRda9t5fF
-        ulq7AzGlvmrw75pKEuGZTRhlxn+//l3Ay0JbDTQ2O+hDJCDgNMKIOsgLTQpj/Tc2IKOTEV
-        oZyYAt/d/fL7x61CNKA8SAFggJJ8pjcyDcImy1wO91cMO+pBd+kkzmjlds1WxsxCsUFfv9
-        Lqn0BQ+8JRP15/3fokjqzAmKPrTIJ01RWskrvTm9Ycdj6tATTfz8Hl+83X6xAKXQ==
-Received: by filterdrecv-64fcb979b9-zwvj5 with SMTP id filterdrecv-64fcb979b9-zwvj5-1-61C3CD5E-30
-        2021-12-23 01:14:06.829827724 +0000 UTC m=+8644582.987173852
+        s=sgd; bh=6N7dj4qJUKtMM/lJa8tbpsQXTpV3hh508uNFMCeLTmw=;
+        b=vr+cyHY2pvPEH42hDN8WIQdKRBy7fQiQTie0z7EgQ7iJcIbs1LSTZYR7mEUfwFqWDZDh
+        5eh39xKSQJsPmXg0qm9SZecMP4+N2M3Dsp4XOZI2ureZ36yZWB1L4zPYkQBy/FIabKx85L
+        WhAbvaYhcxqjFoUA6Ig/vFhMhvANjYyAoNnQjaqctzadT252UF1LaXebuRIj3dtOt3jU4y
+        sTPETVrmyUPUDm2UDsUewXIa4bqSiZoVm/LnZcQiqsfCiIGH4mydq+a9v6GhInK6h8K6dA
+        oGM7H7iq6m9YlvrN9ndnefOeUCQExmMlHsHa0kGZvOn4g0oWBiFMo3zSggd5ZCTg==
+Received: by filterdrecv-64fcb979b9-4vrtk with SMTP id filterdrecv-64fcb979b9-4vrtk-1-61C3CD5E-33
+        2021-12-23 01:14:06.639603191 +0000 UTC m=+8644640.706394453
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-5-1 (SG)
+        by geopod-ismtpd-4-1 (SG)
         with ESMTP
-        id NjOZgUDzQ4eb6TiIrCXIPw
-        Thu, 23 Dec 2021 01:14:06.686 +0000 (UTC)
+        id XtinkhGEQb2hIYycvpVgXQ
+        Thu, 23 Dec 2021 01:14:06.505 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id B08E5700394; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 6AE00701474; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 34/50] wilc1000: restructure wilc-wlan_handle_txq() for
- clarity
+Subject: [PATCH v2 26/50] wilc1000: reduce amount of time ack_filter_lock is
+ held
 Date:   Thu, 23 Dec 2021 01:14:07 +0000 (UTC)
-Message-Id: <20211223011358.4031459-35-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-27-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvPrUup0j1uxIpwHi0?=
- =?us-ascii?Q?Qdt824iAYJZBYYzjLIm4TfOHHZ+R40nsdoqq+2g?=
- =?us-ascii?Q?FdQlY5Su9zFVWJ0l69QnER98Ee0W5Awk9UqVX3U?=
- =?us-ascii?Q?0fDlmKgeieJZYRO=2Fsn8zFdtba5bzgSuJaUgD3G8?=
- =?us-ascii?Q?Tc1LGc2TnRWsWYSaWyFzd3Pg=2FFeJbCl7dse0pcF?=
- =?us-ascii?Q?2D+u6Ag4CRsnGelT1QuPA=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvGGquUt9ycIje3WqF?=
+ =?us-ascii?Q?lCafr+1TG2O9DDHkxjFYdcB99nE90QGpbToWeya?=
+ =?us-ascii?Q?nt9YrHssVEPslyq=2FMdXIm7BTKB7tj7ax2jMM05S?=
+ =?us-ascii?Q?LIi0LcpA=2FSxe1vAx+zbi8Eyes=2FzaGoUKc0SUoFl?=
+ =?us-ascii?Q?uThxFZqYvSHKB7zUWXTBCOsTnba0bAg+4MhPYs8?=
+ =?us-ascii?Q?2C88KBx8wO0SBtGd8K9Mg=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,85 +62,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This restructures the function to make it much clearer how the bus
-hand-off works.  The patch is unfortunately a bit difficult to read,
-but the final code is clearer and eliminates some gotos.
+In tcp_process(), only hold the ack_filter_lock while accessing the
+ack_filter state.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- .../net/wireless/microchip/wilc1000/wlan.c    | 43 ++++++++-----------
- 1 file changed, 19 insertions(+), 24 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 64497754a36b1..803d35b18d2e0 100644
+index 81180b2f9f4e1..5ea9129b36925 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -818,8 +818,8 @@ static int send_vmm_table(struct wilc *wilc,
-  * Context: The txq_add_to_head_cs mutex must still be held when
-  * calling this function.
-  *
-- * Return:
-- *	Negative number on error, 0 on success.
-+ * Return: Number of bytes copied to the transmit buffer (always
-+ *	non-negative).
-  */
- static int copy_packets(struct wilc *wilc, int entries, u32 *vmm_table,
- 			u8 *vmm_entries_ac)
-@@ -908,7 +908,7 @@ static int send_packets(struct wilc *wilc, int len)
+@@ -130,15 +130,13 @@ static inline void tcp_process(struct net_device *dev, struct sk_buff *tqe)
+ 	const struct tcphdr *tcp_hdr_ptr;
+ 	u32 ihl, total_length, data_offset;
  
- int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- {
--	int vmm_table_len, entries, len;
-+	int vmm_table_len, entries;
- 	u8 vmm_entries_ac[WILC_VMM_TBL_SIZE];
- 	int ret = 0;
- 	u32 vmm_table[WILC_VMM_TBL_SIZE];
-@@ -931,29 +931,24 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
+-	mutex_lock(&vif->ack_filter_lock);
+-
+ 	if (eth_hdr_ptr->h_proto != htons(ETH_P_IP))
+-		goto out;
++		return;
  
- 	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
+ 	ip_hdr_ptr = buffer + ETH_HLEN;
  
--	ret = send_vmm_table(wilc, vmm_table_len, vmm_table);
--	if (ret <= 0) {
--		if (ret == 0)
--			/* No VMM space available in firmware.  Inform
--			 * caller to retry later.
--			 */
--			ret = WILC_VMM_ENTRY_FULL_RETRY;
--		goto out_release_bus;
+ 	if (ip_hdr_ptr->protocol != IPPROTO_TCP)
+-		goto out;
++		return;
+ 
+ 	ihl = ip_hdr_ptr->ihl << 2;
+ 	tcp_hdr_ptr = buffer + ETH_HLEN + ihl;
+@@ -150,6 +148,9 @@ static inline void tcp_process(struct net_device *dev, struct sk_buff *tqe)
+ 
+ 		seq_no = ntohl(tcp_hdr_ptr->seq);
+ 		ack_no = ntohl(tcp_hdr_ptr->ack_seq);
++
++		mutex_lock(&vif->ack_filter_lock);
++
+ 		for (i = 0; i < f->tcp_session; i++) {
+ 			u32 j = f->ack_session_info[i].seq_num;
+ 
+@@ -163,10 +164,9 @@ static inline void tcp_process(struct net_device *dev, struct sk_buff *tqe)
+ 			add_tcp_session(vif, 0, 0, seq_no);
+ 
+ 		add_tcp_pending_ack(vif, ack_no, i, tqe);
 -	}
--
--	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
--
--	entries = ret;
--	len = copy_packets(wilc, entries, vmm_table, vmm_entries_ac);
--	if (len <= 0)
--		goto out_unlock;
--
--	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
-+	entries = send_vmm_table(wilc, vmm_table_len, vmm_table);
  
--	ret = send_packets(wilc, len);
-+	release_bus(wilc, (entries > 0 ?
-+			   WILC_BUS_RELEASE_ONLY :
-+			   WILC_BUS_RELEASE_ALLOW_SLEEP));
- 
--out_release_bus:
--	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
-+	if (entries <= 0) {
-+		ret = entries;
-+	} else {
-+		ret = copy_packets(wilc, entries, vmm_table, vmm_entries_ac);
-+		if (ret > 0) {
-+			acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
-+			ret = send_packets(wilc, ret);
-+			release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
-+		}
+-out:
+-	mutex_unlock(&vif->ack_filter_lock);
++		mutex_unlock(&vif->ack_filter_lock);
 +	}
-+	if (ret >= 0 && entries < vmm_table_len)
-+		ret = WILC_VMM_ENTRY_FULL_RETRY;
+ }
  
- out_unlock:
- 	mutex_unlock(&wilc->txq_add_to_head_cs);
+ static void wilc_wlan_tx_packet_done(struct sk_buff *tqe, int status)
 -- 
 2.25.1
 
