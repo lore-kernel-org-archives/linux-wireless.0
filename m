@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1229CC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97CBAC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346629AbhLWBPq (ORCPT
+        id S1346203AbhLWBPx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:15:46 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27468 "EHLO
+        Wed, 22 Dec 2021 20:15:53 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27452 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346270AbhLWBOy (ORCPT
+        with ESMTP id S1346261AbhLWBOw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:54 -0500
+        Wed, 22 Dec 2021 20:14:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=Hgcvux2x80iJNHTT8Ywl3SP3JaAxVpVY4jdADVtyp24=;
-        b=Zxb6E2yywaTqNbgdk7xF0Hb7M6bZBGfSj3ue71HXm4EUzTfmYCieKc5YrGHzJivzvITU
-        2jjwWex4r8C0OEf36dCqam1wf463/NKRRF9WVkndExYOdxJqUngipCu0twbUaT3ISfBFf7
-        q1+FWbqsZOvxOo1IhHi5uehOOd2NY8lx6/jz6LDTB49CrLLlO3omRSuO+wX48ggI28hcf3
-        X4DQKtvgpP9Q+hJSvn5nuRSy5seVlrXDm8n/C6Rv3V0RK1sBARuARnz8WjnSHbjY8VWMwQ
-        1fbdWTSv3g9oDNr/YFMFuS11NrbVdTR8CU868BHcJCva9Jlkj50HxtaYkYIzAaPA==
-Received: by filterdrecv-7bf5c69d5-n84ln with SMTP id filterdrecv-7bf5c69d5-n84ln-1-61C3CD5E-B
-        2021-12-23 01:14:06.168607769 +0000 UTC m=+9687225.761254579
+        s=sgd; bh=2c/X1EdWX/aLwBtKGFM16h0YJReLWDvNVnx1yZUKCwI=;
+        b=Ck5t/Ozis0iqs/wTDS19vBodqbA5azVMtX0IYMOAfnjZPMWpLM3wtUoCHIRq8nFEHhEx
+        jjmQuiSAxYxnoI8nqAjoHfzkRLcMkHYl6gDP158+b5Hcp/oGfWqVN2pjVWG7WDpAhP6g9s
+        U5o8meQAOFrixEsD5v9I2uWiL9hoecO8R+Wnie1sDW2KXxJYwJ+zGhUQN/3myPz5UmURld
+        fc2Y3k+cswTjkvDAoLJDjHUvDOFECjiJypygGFxTAK6tAq1rJJlSDDjlZSKiu9ruEpHWdY
+        RO/6R7HzeUvCDOoUPLgToQnzKTjrAK9pC2f8cRV02U6RcogmGOa2l0uhctvkYr5w==
+Received: by filterdrecv-75ff7b5ffb-ndqvq with SMTP id filterdrecv-75ff7b5ffb-ndqvq-1-61C3CD5F-5
+        2021-12-23 01:14:07.082131275 +0000 UTC m=+9687225.682526901
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-1-1 (SG)
+        by geopod-ismtpd-canary-0 (SG)
         with ESMTP
-        id SbsXXKDTRbKHV6cqEM3tPw
-        Thu, 23 Dec 2021 01:14:06.029 +0000 (UTC)
+        id p8gjty75SwG8apQHg0pwTw
+        Thu, 23 Dec 2021 01:14:06.926 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id E32C1700BFC; Wed, 22 Dec 2021 18:14:04 -0700 (MST)
+        id B72FD7009E9; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 05/50] wilc1000: add wilc_wlan_tx_packet_done() function
+Subject: [PATCH v2 36/50] wilc1000: introduce transmit path chip queue
 Date:   Thu, 23 Dec 2021 01:14:07 +0000 (UTC)
-Message-Id: <20211223011358.4031459-6-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-37-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvCKFafSZUZYOu1P05?=
- =?us-ascii?Q?CEj+Zsb9CK5JKRSqsrljNdImB023LgVhJEGXKH0?=
- =?us-ascii?Q?RMK5+rzygP7Kr=2FZNSpO4YzuYBgPGjO6yc2LKBDT?=
- =?us-ascii?Q?r7yb9UlyMnNUywGeQc90+SCr5T5+Dm4KakrmZ5I?=
- =?us-ascii?Q?jG6vTZ4E3Eg1Aww2XHbHyLCzySlK+WJCrzBfJXs?=
- =?us-ascii?Q?s5zZvn0gQj6KXHjFICusg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvEhJic2zkDB1r+fbU?=
+ =?us-ascii?Q?c8nmpgeA7v6NrfJJORVx0hnOWe=2F=2FipO5kL0BYhA?=
+ =?us-ascii?Q?sRVAYQ+iZyXl2JaXGGqJdDuCTqpBdy+n6hvpruc?=
+ =?us-ascii?Q?S0fMH=2FZq7BVFBNN8NhFKZrgn3QOL82HIaBsuKjS?=
+ =?us-ascii?Q?L4aT6fDKHyPMqSX7cPKXXn4s0hTWnI1iT0olqHa?=
+ =?us-ascii?Q?BfZoPVI=2FWWCcxKgQt05Ww=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -61,76 +61,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Factor common tx packet-done handling code into a function.
+This introduces a chip queue that will hold packets ready to be
+transferred to the chip.  A later patch will start using it.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- .../net/wireless/microchip/wilc1000/wlan.c    | 31 +++++++++----------
- 1 file changed, 14 insertions(+), 17 deletions(-)
+ .../net/wireless/microchip/wilc1000/cfg80211.c |  3 +++
+ .../net/wireless/microchip/wilc1000/netdev.h   | 18 ++++++++++++++++++
+ drivers/net/wireless/microchip/wilc1000/wlan.c |  5 +++++
+ 3 files changed, 26 insertions(+)
 
+diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+index 6f19dee813f2a..6d3635864569f 100644
+--- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
++++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+@@ -1716,6 +1716,9 @@ int wilc_cfg80211_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	for (i = 0; i < NQUEUES; i++)
+ 		skb_queue_head_init(&wl->txq[i]);
+ 
++	skb_queue_head_init(&wl->chipq);
++	wl->chipq_bytes = 0;
++
+ 	INIT_LIST_HEAD(&wl->rxq_head.list);
+ 	INIT_LIST_HEAD(&wl->vif_list);
+ 
+diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.h b/drivers/net/wireless/microchip/wilc1000/netdev.h
+index 82f38a0e20214..e168f8644c678 100644
+--- a/drivers/net/wireless/microchip/wilc1000/netdev.h
++++ b/drivers/net/wireless/microchip/wilc1000/netdev.h
+@@ -261,6 +261,24 @@ struct wilc {
+ 	struct wilc_tx_queue_status tx_q_limit;
+ 	struct rxq_entry_t rxq_head;
+ 
++	/* The chip queue contains sk_buffs that are ready to be
++	 * transferred to the wilc1000 chip.  In particular, they
++	 * already have the VMM and Ethernet headers (for net packets)
++	 * and they are padded to a size that is an integer-multiple
++	 * of 4 bytes.
++	 *
++	 * This queue is usually empty on return from
++	 * wilc_wlan_handle_txq().  However, when the chip does fill
++	 * up, the packets that didn't fit will be held until there is
++	 * space again.
++	 *
++	 * This queue is only accessed by the txq handler thread, so
++	 * no locking is required.
++	 */
++	struct sk_buff_head chipq;
++	/* Total number of bytes queued on the chipq: */
++	int chipq_bytes;
++
+ 	const struct firmware *firmware;
+ 
+ 	struct device *dev;
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 97624f758cbe4..7b7ee6ee9f849 100644
+index 18b1e7fad4d71..c3802a34defed 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -190,6 +190,16 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- }
- 
-+static void wilc_wlan_tx_packet_done(struct txq_entry_t *tqe, int status)
-+{
-+	tqe->status = status;
-+	if (tqe->tx_complete_func)
-+		tqe->tx_complete_func(tqe->priv, tqe->status);
-+	if (tqe->ack_idx != NOT_TCP_ACK && tqe->ack_idx < MAX_PENDING_ACKS)
-+		tqe->vif->ack_filter.pending_acks[tqe->ack_idx].txqe = NULL;
-+	kfree(tqe);
-+}
-+
- static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
-@@ -220,11 +230,7 @@ static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 			tqe = f->pending_acks[i].txqe;
- 			if (tqe) {
- 				wilc_wlan_txq_remove(wilc, tqe->q_num, tqe);
--				tqe->status = 1;
--				if (tqe->tx_complete_func)
--					tqe->tx_complete_func(tqe->priv,
--							      tqe->status);
--				kfree(tqe);
-+				wilc_wlan_tx_packet_done(tqe, 1);
- 			}
- 		}
- 	}
-@@ -911,13 +917,7 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- 		       tqe->buffer, tqe->buffer_size);
- 		offset += vmm_sz;
- 		i++;
--		tqe->status = 1;
--		if (tqe->tx_complete_func)
--			tqe->tx_complete_func(tqe->priv, tqe->status);
--		if (tqe->ack_idx != NOT_TCP_ACK &&
--		    tqe->ack_idx < MAX_PENDING_ACKS)
--			vif->ack_filter.pending_acks[tqe->ack_idx].txqe = NULL;
--		kfree(tqe);
-+		wilc_wlan_tx_packet_done(tqe, 1);
- 	} while (--entries);
- 	for (i = 0; i < NQUEUES; i++)
- 		wilc->fw[i].count += ac_pkt_num_to_chip[i];
-@@ -1236,11 +1236,8 @@ void wilc_wlan_cleanup(struct net_device *dev)
+@@ -1263,6 +1263,11 @@ void wilc_wlan_cleanup(struct net_device *dev)
+ 	struct wilc *wilc = vif->wilc;
  
  	wilc->quit = 1;
++
++	while ((tqe = __skb_dequeue(&wilc->chipq)))
++		wilc_wlan_tx_packet_done(tqe, 0);
++	wilc->chipq_bytes = 0;
++
  	for (ac = 0; ac < NQUEUES; ac++) {
--		while ((tqe = wilc_wlan_txq_remove_from_head(wilc, ac))) {
--			if (tqe->tx_complete_func)
--				tqe->tx_complete_func(tqe->priv, 0);
--			kfree(tqe);
--		}
-+		while ((tqe = wilc_wlan_txq_remove_from_head(wilc, ac)))
-+			wilc_wlan_tx_packet_done(tqe, 0);
- 	}
- 
- 	while ((rqe = wilc_wlan_rxq_remove(wilc)))
+ 		while ((tqe = skb_dequeue(&wilc->txq[ac])))
+ 			wilc_wlan_tx_packet_done(tqe, 0);
 -- 
 2.25.1
 
