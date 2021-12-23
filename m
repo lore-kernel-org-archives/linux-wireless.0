@@ -2,238 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3B5C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 18:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3DE6C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 20:30:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240159AbhLWSeF (ORCPT
+        id S1350258AbhLWUaQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Dec 2021 13:34:05 -0500
-Received: from mga07.intel.com ([134.134.136.100]:49343 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235579AbhLWSeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Dec 2021 13:34:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1640284444; x=1671820444;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=BFv40C4tL416DsOs+PpT2MD7H41mH/r5lDk6Ih6wPVc=;
-  b=GzRkwWK7RRurhK0Cv33P5+7HXiTA5im5NJn32HXoxK1xBmRVs9Q5AgaW
-   T7tt45pLd5KmfOKotdedWyuu3H0PtxM69L5qRQzmVS/40Q8V0BKihDFre
-   2klqYkDpA3bYX8JGwG+fnorjuifLtvtcxZMSb5dAwqeYPBuKRQ38okGCF
-   XGANixNoaA1nTCxGLqylg1ycnYiOqkiFzoyxVOucfo1mFUGcR7i4EvF9S
-   J0ay2tfT6OUiAs+0ReesPhskasDej4A/Gvtpm8X8PWFznLAOhIm470HSc
-   IqTaSYsgq4dYTbtAYJQw4QX4jHsm+8fcthR2alZLyhf6U1tibh3VE4CaX
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10207"; a="304239469"
-X-IronPort-AV: E=Sophos;i="5.88,230,1635231600"; 
-   d="scan'208";a="304239469"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Dec 2021 10:34:04 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,230,1635231600"; 
-   d="scan'208";a="685451546"
-Received: from lkp-server01.sh.intel.com (HELO e357b3ef1427) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 23 Dec 2021 10:34:03 -0800
-Received: from kbuild by e357b3ef1427 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1n0Sug-0002A8-HA; Thu, 23 Dec 2021 18:34:02 +0000
-Date:   Fri, 24 Dec 2021 02:33:10 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [kvalo-wireless-drivers-next:master] BUILD SUCCESS
- d430dffbe9dd30759f3c64b65bf85b0245c8d8ab
-Message-ID: <61c4c0e6.hYF9nTZ5OG8snjPB%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Thu, 23 Dec 2021 15:30:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42368 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245049AbhLWUaP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Dec 2021 15:30:15 -0500
+Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F10C061401
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:30:15 -0800 (PST)
+Received: by mail-lj1-x235.google.com with SMTP id p7so10034988ljj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:30:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Odt0JsRPKSwzZrSogY/TSKmJxhU81pD7uS/KWPJG7aw=;
+        b=AgIToA7aaUbbuygVsn68Z8gYx2R+pQYR1IGhjy1yu+LyX5dNysFzXbkdgswMVTwTep
+         0hI1Ae/3TaPJPhWnCgvYHJ1VxnHq4l/eFg5e3kj/JRuOb7mac6NKG5+ybt3ENDX/mSaq
+         0xzI/qhLfARJdv2pkCjradsG9Wzj6pj4xZ8TfjQHTecXRkE4KDhq9AUTCvqpomHD7nct
+         wHr7wkKfJp2gGHQWmp3oI6tTwBS2Vz6LouKFC6ASCZELLqgy8+qcg8nboxxGhWJcEIzj
+         dWufJ966D9lg/OGYmwR5V+BL41B2Pi6FMkc2jhL5RAoV/B9HXcKhRs6Rytt/j7+GidI2
+         UWIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Odt0JsRPKSwzZrSogY/TSKmJxhU81pD7uS/KWPJG7aw=;
+        b=G0gHKTwoWbIpxhiyG+aZZOYVVBLJ2wdYdWCm1EShmBWLhdcfY6PVV+1qqLaatfBw5Z
+         lPNoiJR+VyXP9pD0xlPpXfLzKDIKRxwReknfJ/pQjnj+u5ibMgJjq/9xDXcDb5EMC+f0
+         UrsIZF6ErERFsX0GGJ5imrs6tD1rKgXrdZmXuL9l6JYC1XDcgxmYU2PbPH/JHPt/ClWK
+         XhMIc97zc37zjB757BFTXxy6Q/JGpzKy7EGd7Uf8M3XAASc9fO6mVNeM1pk/LoPAkU3C
+         QL6aAHf1wlHGhCgxNwy6oPVL5lf45pBgg8C6w0HA7YrGZIFFQaDlXFznPokafhre7Sv/
+         QMPw==
+X-Gm-Message-State: AOAM53193qhZWrL5pG3KTgYXzVbw5pRxs6pGePJCuEzKVjeNYNckIc5Y
+        H+GTQWkvV79rSjlg3H7GZOR5sdCsV2kBIrKP9WvFWP5YTcYpsA==
+X-Google-Smtp-Source: ABdhPJyYWN/xeRMF+9Dfpv8zcB/XlMiakJ1FyMZHUYzjhf10Y8zM74gGT8+Mckyyk2oE+tUZO5jm/ikoSyjgvNoCFBc=
+X-Received: by 2002:a2e:908b:: with SMTP id l11mr2705599ljg.62.1640291413074;
+ Thu, 23 Dec 2021 12:30:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20211223162848.3243702-1-trix@redhat.com>
+In-Reply-To: <20211223162848.3243702-1-trix@redhat.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Thu, 23 Dec 2021 12:30:01 -0800
+Message-ID: <CAKwvOd=dLjMAim_FRNyWegzEjy0_1vF2xVW1hNPQ55=32qO4Wg@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: initialize variable have_higher_than_11mbit
+To:     trix@redhat.com
+Cc:     johannes@sipsolutions.net, davem@davemloft.net, kuba@kernel.org,
+        nathan@kernel.org, linville@tuxdriver.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-branch HEAD: d430dffbe9dd30759f3c64b65bf85b0245c8d8ab  mt76: mt7921: fix a possible race enabling/disabling runtime-pm
+On Thu, Dec 23, 2021 at 8:29 AM <trix@redhat.com> wrote:
+>
+> From: Tom Rix <trix@redhat.com>
+>
+> Clang static analysis reports this warnings
+>
+> mlme.c:5332:7: warning: Branch condition evaluates to a
+>   garbage value
+>     have_higher_than_11mbit)
+>     ^~~~~~~~~~~~~~~~~~~~~~~
+>
+> have_higher_than_11mbit is only set to true some of the time in
+> ieee80211_get_rates() but is checked all of the time.  So
+> have_higher_than_11mbit needs to be initialized to false.
 
-elapsed time: 1409m
+LGTM. There's only one caller of ieee80211_get_rates() today; if there
+were others, they could make a similar mistake in the future. An
+alternate approach: ieee80211_get_rates() could unconditionally write
+false before the loop that could later write true. Then call sites
+don't need to worry about this conditional assignment. Perhaps that
+would be preferable? If not:
 
-configs tested: 166
-configs skipped: 3
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+>
+> Fixes: 5d6a1b069b7f ("mac80211: set basic rates earlier")
+> Signed-off-by: Tom Rix <trix@redhat.com>
+> ---
+>  net/mac80211/mlme.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 51f55c4ee3c6e..766cbbc9c3a72 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -5279,7 +5279,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+>          */
+>         if (new_sta) {
+>                 u32 rates = 0, basic_rates = 0;
+> -               bool have_higher_than_11mbit;
+> +               bool have_higher_than_11mbit = false;
+>                 int min_rate = INT_MAX, min_rate_index = -1;
+>                 const struct cfg80211_bss_ies *ies;
+>                 int shift = ieee80211_vif_get_shift(&sdata->vif);
+> --
+> 2.26.3
+>
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20211223
-arm                          moxart_defconfig
-powerpc               mpc834x_itxgp_defconfig
-sparc                       sparc64_defconfig
-powerpc                         wii_defconfig
-powerpc64                        alldefconfig
-powerpc                      ppc44x_defconfig
-sh                 kfr2r09-romimage_defconfig
-powerpc                      pcm030_defconfig
-arc                     nsimosci_hs_defconfig
-mips                         db1xxx_defconfig
-sh                          sdk7786_defconfig
-arm                          badge4_defconfig
-powerpc                     tqm8540_defconfig
-mips                           ip22_defconfig
-sh                          landisk_defconfig
-arm                           sama5_defconfig
-ia64                          tiger_defconfig
-sh                           se7343_defconfig
-ia64                      gensparse_defconfig
-powerpc                   motionpro_defconfig
-arm                        clps711x_defconfig
-h8300                     edosk2674_defconfig
-arc                        vdk_hs38_defconfig
-m68k                       m5208evb_defconfig
-powerpc                     tqm8555_defconfig
-arm                         lpc32xx_defconfig
-mips                   sb1250_swarm_defconfig
-arm                       aspeed_g4_defconfig
-arm                          pxa3xx_defconfig
-sh                           se7722_defconfig
-mips                     cu1000-neo_defconfig
-mips                            e55_defconfig
-arm                             pxa_defconfig
-sh                          kfr2r09_defconfig
-powerpc                 mpc832x_mds_defconfig
-ia64                             allyesconfig
-powerpc                     skiroot_defconfig
-powerpc                      ep88xc_defconfig
-mips                     decstation_defconfig
-arc                            hsdk_defconfig
-powerpc                      pmac32_defconfig
-arm                        oxnas_v6_defconfig
-powerpc                     ppa8548_defconfig
-powerpc64                           defconfig
-sh                        edosk7760_defconfig
-powerpc                     kilauea_defconfig
-sh                          rsk7264_defconfig
-arm                          pxa168_defconfig
-powerpc                      makalu_defconfig
-arm                        trizeps4_defconfig
-sh                      rts7751r2d1_defconfig
-s390                             allyesconfig
-openrisc                            defconfig
-m68k                       bvme6000_defconfig
-alpha                               defconfig
-riscv             nommu_k210_sdcard_defconfig
-arm                            mmp2_defconfig
-powerpc                         ps3_defconfig
-sh                          rsk7203_defconfig
-powerpc                 mpc832x_rdb_defconfig
-mips                       capcella_defconfig
-mips                         tb0226_defconfig
-xtensa                           alldefconfig
-sh                           se7724_defconfig
-mips                     loongson1b_defconfig
-powerpc                 mpc8313_rdb_defconfig
-arm                           sunxi_defconfig
-sh                           se7721_defconfig
-arm                  randconfig-c002-20211223
-arm                  randconfig-c002-20211222
-ia64                             allmodconfig
-ia64                                defconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a006-20211222
-i386                 randconfig-a004-20211222
-i386                 randconfig-a002-20211222
-i386                 randconfig-a003-20211222
-i386                 randconfig-a005-20211222
-i386                 randconfig-a001-20211222
-x86_64               randconfig-a013-20211223
-x86_64               randconfig-a015-20211223
-x86_64               randconfig-a014-20211223
-x86_64               randconfig-a011-20211223
-x86_64               randconfig-a012-20211223
-x86_64               randconfig-a016-20211223
-i386                 randconfig-a012-20211223
-i386                 randconfig-a011-20211223
-i386                 randconfig-a014-20211223
-i386                 randconfig-a016-20211223
-i386                 randconfig-a015-20211223
-i386                 randconfig-a013-20211223
-x86_64               randconfig-a001-20211222
-x86_64               randconfig-a003-20211222
-x86_64               randconfig-a005-20211222
-x86_64               randconfig-a006-20211222
-x86_64               randconfig-a004-20211222
-x86_64               randconfig-a002-20211222
-arc                  randconfig-r043-20211223
-riscv                randconfig-r042-20211223
-s390                 randconfig-r044-20211223
-arc                  randconfig-r043-20211222
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
 
-clang tested configs:
-x86_64               randconfig-a001-20211223
-x86_64               randconfig-a003-20211223
-x86_64               randconfig-a005-20211223
-x86_64               randconfig-a006-20211223
-x86_64               randconfig-a004-20211223
-x86_64               randconfig-a002-20211223
-i386                 randconfig-a006-20211223
-i386                 randconfig-a004-20211223
-i386                 randconfig-a002-20211223
-i386                 randconfig-a003-20211223
-i386                 randconfig-a005-20211223
-i386                 randconfig-a001-20211223
-hexagon              randconfig-r041-20211222
-hexagon              randconfig-r045-20211222
-s390                 randconfig-r044-20211222
-riscv                randconfig-r042-20211222
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+-- 
+Thanks,
+~Nick Desaulniers
