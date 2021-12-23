@@ -2,109 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B5FC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01138C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 03:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346123AbhLWBQy (ORCPT
+        id S1346271AbhLWD4l (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:16:54 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27168 "EHLO
-        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346209AbhLWBOi (ORCPT
+        Wed, 22 Dec 2021 22:56:41 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:7061 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238699AbhLWD4l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:38 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
-        h=from:subject:in-reply-to:references:mime-version:to:cc:
-        content-transfer-encoding:content-type;
-        s=sgd; bh=EbITibNsBXzvKKlU+piJIV+uEtgNRqVMqmU3tYGIQcU=;
-        b=xzHrFlKjQzAtjaW8yiDPgKpwVk301omL4rrVVi8w8Wn5+ps/av+vh+5OfXPZEERTPYPt
-        /W99RjK/+Ra1HWGnMvN4BkuLRimUWd3HUT5joH31sv2h9xq+esNyqdoHCAOvTFy+FJRevZ
-        ekxP5YtIX8x9iYHauJ9tEFmtAlvociUKCh8SKNsnABibWrDzZZbzoM3m1O+utHpr7+s4yM
-        ZW6SUsBW8M5pZLX+Ee+75eOiQc3+NsnylO+gY7a3n9fIlt317EgfxB64fageRmVHUsGhMJ
-        pT37rWDgO0SGrLHKUVJ+CiSLRoI/7n9vh78VXlW7zNOnWWG11+xLFDlnj3lm1DvQ==
-Received: by filterdrecv-64fcb979b9-dthbb with SMTP id filterdrecv-64fcb979b9-dthbb-1-61C3CD5E-2A
-        2021-12-23 01:14:06.798901564 +0000 UTC m=+8644642.033288874
-Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-5-0 (SG)
-        with ESMTP
-        id EaVvzUYwQcujwsJtTuNFnQ
-        Thu, 23 Dec 2021 01:14:06.651 +0000 (UTC)
-Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id A1A667014DF; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
-From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 32/50] wilc1000: introduce vmm_table_entry() helper
- function
-Date:   Thu, 23 Dec 2021 01:14:07 +0000 (UTC)
-Message-Id: <20211223011358.4031459-33-davidm@egauge.net>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
-References: <20211223011358.4031459-1-davidm@egauge.net>
+        Wed, 22 Dec 2021 22:56:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1640231801; x=1671767801;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=4bXlA5F3cLVBy3uYJ0gkFL2w1iNHOoR8G+83Wal1ibo=;
+  b=dI8PJiVSQoPHF+PWAkx3Ww0XBzS3oN2gKyq2ewlM/gUeh+ceZZ5Y6EBE
+   ZCBluvgSc8Bhif/NrDHuQzBPn9TpRBFBPXaMFnWM47K7KtsDb2B/zBRwS
+   4vs6wdwBcpQKP7O0rmk+HcuGY7iT9R+gDf169aueVKu2PprefwjIH1FgC
+   4=;
+Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
+  by alexa-out.qualcomm.com with ESMTP; 22 Dec 2021 19:56:41 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Dec 2021 19:56:40 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Wed, 22 Dec 2021 19:56:40 -0800
+Received: from adisi-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Wed, 22 Dec 2021 19:56:38 -0800
+From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Aditya Kumar Singh <quic_adisi@quicinc.com>
+Subject: [PATCH] ath11k: fix workqueue not getting destroyed after rmmod
+Date:   Thu, 23 Dec 2021 09:26:27 +0530
+Message-ID: <1640231787-17408-1-git-send-email-quic_adisi@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvLgTn20zR8huEqDJ0?=
- =?us-ascii?Q?MxRBKbzqZl9pgBv8ieFLgCozwXIMY+YaD2HCv+S?=
- =?us-ascii?Q?nV6T96yvIyZ5Zej8MBI9aX5ZsbvXSxbM8ZRkjTg?=
- =?us-ascii?Q?OhzpedG6J=2FbiZiyjoHijOms6QMNVpeWVDOoOmdX?=
- =?us-ascii?Q?Y=2FGogB3NGIGcUU7NjjvBLvO9m3MAiqqk0RTcZxU?=
- =?us-ascii?Q?yUfgFJ9FlmZH+2Ta6yKTw=3D=3D?=
-To:     Ajay Singh <ajay.kathat@microchip.com>
-Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        David Mosberger-Tang <davidm@egauge.net>
-X-Entity-ID: Xg4JGAcGrJFIz2kDG9eoaQ==
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This simplifies fill_vmm_table() a bit more and will become even more
-useful with the following patches.
+Currently, ath11k_core_alloc() creates a single thread workqueue.
+This workqueue is not detroyed during clean up when ath11k modules
+are unloaded from the kernel and is left as it is.
+If workqueue is not destroyed, it could lead to kernel
+memory scarcity in a longer run. This could affect self and
+other drivers workability as well.
 
-Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
+Add destroy workqueue in ath11k_core_free(). 
+
+Tested on: IPQ8074 WLAN.HK.2.4.0.1-01746-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index cff70f7d38c89..5939ed5b2db68 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -629,6 +629,17 @@ static u32 tx_hdr_len(u8 type)
- 	}
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 2ba3bf8..6de0fc5 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/module.h>
+@@ -1172,6 +1173,9 @@ EXPORT_SYMBOL(ath11k_core_deinit);
+ 
+ void ath11k_core_free(struct ath11k_base *ab)
+ {
++	flush_workqueue(ab->workqueue);
++	destroy_workqueue(ab->workqueue);
++
+ 	kfree(ab);
  }
- 
-+static u32 vmm_table_entry(struct sk_buff *tqe, u32 vmm_sz)
-+{
-+	struct wilc_skb_tx_cb *tx_cb = WILC_SKB_TX_CB(tqe);
-+	u32 entry;
-+
-+	entry = vmm_sz / 4;
-+	if (tx_cb->type == WILC_CFG_PKT)
-+		entry |= WILC_VMM_CFG_PKT;
-+	return cpu_to_le32(entry);
-+}
-+
- /**
-  * fill_vmm_table() - Fill VMM table with packets to be sent
-  * @wilc: Pointer to the wilc structure.
-@@ -691,11 +702,7 @@ static int fill_vmm_table(const struct wilc *wilc,
- 
- 				if (sum + vmm_sz > WILC_TX_BUFF_SIZE)
- 					goto out;
--				vmm_table[i] = vmm_sz / 4;
--				if (tx_cb->type == WILC_CFG_PKT)
--					vmm_table[i] |= WILC_VMM_CFG_PKT;
--
--				cpu_to_le32s(&vmm_table[i]);
-+				vmm_table[i] = vmm_table_entry(tqe_q[ac], vmm_sz);
- 				vmm_entries_ac[i] = ac;
- 
- 				i++;
+ EXPORT_SYMBOL(ath11k_core_free);
 -- 
-2.25.1
+2.7.4
 
