@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A23CFC43217
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 439B7C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345848AbhLWBOH (ORCPT
+        id S1346014AbhLWBQi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:14:07 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:17728 "EHLO
+        Wed, 22 Dec 2021 20:16:38 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18696 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235345AbhLWBOG (ORCPT
+        with ESMTP id S1345838AbhLWBOX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:06 -0500
+        Wed, 22 Dec 2021 20:14:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=SmrKBnVEuSa1Juw5SAAEJzj60ijmoTkRxcpcsF5nTSA=;
-        b=YzSVNjRk+pvvM/BP2KyqNRbFcAtzJzqrV6h52ohmxR9Ww55s/6LALy6sVHvjEUv4TYMD
-        fQ4LVwp3Ly2gngrVfmzWb+ZGvO4MCjEzzPo9HB2XHuQocnkPkqtu88vpwBo6iImkLrFttH
-        OhTrn4ii0s2x1DSGx5pRCs2qRwMvNGeZ/ODXAuRw8sdB8GxHJzUft8kDY5V0IJwp8jz8a0
-        hiMNwVZplJdRMiq0TMyz9k4i7tAHzrNatBuuO2HlRCQmOkNBlHygcafhBxxIdZ8deNw/Nk
-        towjwgWcVKCKpvwD0X8DIpWpEaR03lizF0ufxN49H9g7NE8iVQ1IpCYQbL1ks2+Q==
-Received: by filterdrecv-64fcb979b9-tjknx with SMTP id filterdrecv-64fcb979b9-tjknx-1-61C3CD5D-25
-        2021-12-23 01:14:05.75681832 +0000 UTC m=+8644588.560336792
+        s=sgd; bh=yps8dWzMUKU9RpPhjdHxIE2MYXvMyKmHNVpEu8C+Av8=;
+        b=YDmkak+OJEFHYXe/bj0Hi6XL2ELKUc4fCQN0z5nFM2oYV6GPyJxBnSq9OPl6vD1wKRHA
+        cOcYfPSCr3Eckn5sQ4WMg/PwZIf6yjIPG9KgH8qSbL3TfcKGTfo3mIrcm/KuaUg+Fww3ch
+        M03YDD0sBTbfHuCZFpFHard5V3ByPZK66/6RACPSdLgc6lgNBuBOu38VdUbEfrIUR4jNXc
+        WVC+ivPgLdV6s7LL1FPa1EHQ5Pu05r+Ry5C7lBNumIwlMeHLccJ7hl0A1x2uon7n6DF4ZP
+        vlRBywOeK3Atj11UpaYoWdlKgueDtgXMsgbDFpwAzU9oVNjYWTRd9iiBK9jUQG2Q==
+Received: by filterdrecv-656998cfdd-phncc with SMTP id filterdrecv-656998cfdd-phncc-1-61C3CD5F-4
+        2021-12-23 01:14:07.130091855 +0000 UTC m=+7955208.316338637
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-4-0 (SG)
+        by geopod-ismtpd-6-0 (SG)
         with ESMTP
-        id s_DzTIWtT-iUGkJKJ4u1tg
-        Thu, 23 Dec 2021 01:14:05.581 +0000 (UTC)
+        id cnVlM2Y7Qw-Hv8JFSNpx_A
+        Thu, 23 Dec 2021 01:14:06.990 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id D188C70054A; Wed, 22 Dec 2021 18:14:04 -0700 (MST)
+        id 20C9E700BFC; Wed, 22 Dec 2021 18:14:06 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 01/50] wilc1000: don't hold txq_spinlock while initializing
- AC queue limits
-Date:   Thu, 23 Dec 2021 01:14:05 +0000 (UTC)
-Message-Id: <20211223011358.4031459-2-davidm@egauge.net>
+Subject: [PATCH v2 50/50] wilc1000: add module parameter
+ "disable_zero_copy_tx" to SPI driver
+Date:   Thu, 23 Dec 2021 01:14:07 +0000 (UTC)
+Message-Id: <20211223011358.4031459-51-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvFFgikHEO6TrfMipf?=
- =?us-ascii?Q?R5df56socHUWL2usMYlQYxi9mNZe3jUS8vaJZg3?=
- =?us-ascii?Q?E+EW8ovRMMV2T=2Fwpc1krcS5fB6jrNH91fVEvmXw?=
- =?us-ascii?Q?fCFc0qA2xa4gl+xAx7Wqx7j3CAOPc89Afa7aXeG?=
- =?us-ascii?Q?rR+8sjKRZQz0+yuTZPgQw3hxhyDUgwCV+6pg6+b?=
- =?us-ascii?Q?JWCAvPelpJDy4p8jwAnBg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvNU=2FAiSwPXGwNeF4R?=
+ =?us-ascii?Q?8pktv6qIQV9=2FvaYSYgd73qzUc+WcF+3KTLAn0Dz?=
+ =?us-ascii?Q?BHXeSqbDC7G4R7ZfYu1EAHyy3Sq2tG4eerFoLwP?=
+ =?us-ascii?Q?WgQBlB4hho+sXfAoa07rJ+kJnUztYPjGRmA0wp=2F?=
+ =?us-ascii?Q?JGqfOozcJ7djVy2VWuSHpeE4jDG+RBqGPUIpD5o?=
+ =?us-ascii?Q?+1b5h5OMzvrxVFltrvutA=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,93 +62,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The wilc_tx_queue_status queue is relatively large and there is
-absolutely no need to initialize it while holding a spinlock.
+Add a module parameter to disable the zero-copy transmit path.  This
+is useful for testing and performance measurement, for example.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- .../net/wireless/microchip/wilc1000/netdev.h  |  1 -
- .../net/wireless/microchip/wilc1000/wlan.c    | 32 +++++++++++--------
- 2 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/spi.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.h b/drivers/net/wireless/microchip/wilc1000/netdev.h
-index a067274c20144..f4fc2cc392bd0 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.h
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.h
-@@ -202,7 +202,6 @@ struct wilc_tx_queue_status {
- 	u16 end_index;
- 	u16 cnt[NQUEUES];
- 	u16 sum;
--	bool initialized;
- };
+diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wireless/microchip/wilc1000/spi.c
+index 8d94f111ffc49..588cec326a74b 100644
+--- a/drivers/net/wireless/microchip/wilc1000/spi.c
++++ b/drivers/net/wireless/microchip/wilc1000/spi.c
+@@ -31,6 +31,11 @@ MODULE_PARM_DESC(enable_crc16,
+ 		 "\t\t\tData transfers can be large and the CPU-cycle cost\n"
+ 		 "\t\t\tof enabling this may be substantial.");
  
- struct wilc {
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index fb5633a05fd51..c4da14147dd04 100644
---- a/drivers/net/wireless/microchip/wilc1000/wlan.c
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -12,6 +12,8 @@
- 
- #define WAKE_UP_TRIAL_RETRY		10000
- 
-+static const u8 factors[NQUEUES] = {1, 1, 1, 1};
++static bool disable_zero_copy_tx;
++module_param(disable_zero_copy_tx, bool, 0644);
++MODULE_PARM_DESC(disable_zero_copy_tx,
++		 "Disable zero-copy when sending packets.");
 +
- static inline bool is_wilc1000(u32 id)
- {
- 	return (id & (~WILC_CHIP_REV_FIELD)) == WILC_1000_BASE_ID;
-@@ -283,10 +285,23 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
- 	return 1;
+ /*
+  * For CMD_SINGLE_READ and CMD_INTERNAL_READ, WILC may insert one or
+  * more zero bytes between the command response and the DATA Start tag
+@@ -41,7 +46,7 @@ MODULE_PARM_DESC(enable_crc16,
+  */
+ #define WILC_SPI_RSP_HDR_EXTRA_DATA	8
+ 
+-static const struct wilc_hif_func wilc_hif_spi;
++static struct wilc_hif_func wilc_hif_spi;
+ 
+ static int wilc_spi_reset(struct wilc *wilc);
+ static int wilc_spi_write_sk_buffs(struct wilc *wilc, u32 addr,
+@@ -254,6 +259,9 @@ static int wilc_bus_probe(struct spi_device *spi)
+ 	if (!spi_priv)
+ 		return -ENOMEM;
+ 
++	if (!disable_zero_copy_tx)
++		wilc_hif_spi.hif_sk_buffs_tx = wilc_spi_write_sk_buffs;
++
+ 	ret = wilc_cfg80211_init(&wilc, &spi->dev, WILC_HIF_SPI, &wilc_hif_spi);
+ 	if (ret)
+ 		goto free;
+@@ -1424,7 +1432,7 @@ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
  }
  
-+static void init_q_limits(struct wilc *wl)
-+{
-+	struct wilc_tx_queue_status *q = &wl->tx_q_limit;
-+	int i;
-+
-+	for (i = 0; i < AC_BUFFER_SIZE; i++)
-+		q->buffer[i] = i % NQUEUES;
-+
-+	for (i = 0; i < NQUEUES; i++) {
-+		q->cnt[i] = AC_BUFFER_SIZE * factors[i] / NQUEUES;
-+		q->sum += q->cnt[i];
-+	}
-+	q->end_index = AC_BUFFER_SIZE - 1;
-+}
-+
- static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
- {
--	u8 factors[NQUEUES] = {1, 1, 1, 1};
--	u16 i;
- 	unsigned long flags;
- 	struct wilc_tx_queue_status *q = &wl->tx_q_limit;
- 	u8 end_index;
-@@ -294,17 +309,6 @@ static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
- 	bool ret = false;
- 
- 	spin_lock_irqsave(&wl->txq_spinlock, flags);
--	if (!q->initialized) {
--		for (i = 0; i < AC_BUFFER_SIZE; i++)
--			q->buffer[i] = i % NQUEUES;
--
--		for (i = 0; i < NQUEUES; i++) {
--			q->cnt[i] = AC_BUFFER_SIZE * factors[i] / NQUEUES;
--			q->sum += q->cnt[i];
--		}
--		q->end_index = AC_BUFFER_SIZE - 1;
--		q->initialized = 1;
--	}
- 
- 	end_index = q->end_index;
- 	q->cnt[q->buffer[end_index]] -= factors[q->buffer[end_index]];
-@@ -1484,6 +1488,8 @@ int wilc_wlan_init(struct net_device *dev)
- 		goto fail;
- 	}
- 
-+	init_q_limits(wilc);
-+
- 	if (!wilc->tx_buffer)
- 		wilc->tx_buffer = kmalloc(WILC_TX_BUFF_SIZE, GFP_KERNEL);
- 
+ /* Global spi HIF function table */
+-static const struct wilc_hif_func wilc_hif_spi = {
++static struct wilc_hif_func wilc_hif_spi = {
+ 	.hif_init = wilc_spi_init,
+ 	.hif_deinit = wilc_spi_deinit,
+ 	.hif_read_reg = wilc_spi_read_reg,
+@@ -1436,7 +1444,6 @@ static const struct wilc_hif_func wilc_hif_spi = {
+ 	.hif_read_size = wilc_spi_read_size,
+ 	.hif_block_tx_ext = wilc_spi_write,
+ 	.hif_block_rx_ext = wilc_spi_read,
+-	.hif_sk_buffs_tx = wilc_spi_write_sk_buffs,
+ 	.hif_sync_ext = wilc_spi_sync_ext,
+ 	.hif_reset = wilc_spi_reset,
+ };
 -- 
 2.25.1
 
