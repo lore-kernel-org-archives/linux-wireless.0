@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F21C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFB6CC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:15:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346460AbhLWBPY (ORCPT
+        id S1345935AbhLWBPj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:15:24 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27374 "EHLO
+        Wed, 22 Dec 2021 20:15:39 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:27522 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346246AbhLWBOp (ORCPT
+        with ESMTP id S1346278AbhLWBOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:45 -0500
+        Wed, 22 Dec 2021 20:14:55 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=O3ZizfkdwvjAFL0IllFWvZYbWlz/CPB//NPk13szDnA=;
-        b=XTCcYYMiXOfOO8UZtTG2f4+h7DnLy2umVMF+CdELsqaDItfv4WYfrK+AW4TM2ZY7Wiz5
-        hc3RNIYrxa5LoCQedwb+b4jaEdcBZJYqBWbR4RQ8qhU01QPzbUblFv4RAINGa0R6UPBXr6
-        accQA7xeA371StT45tuT9cpy/iWPU8Cc1EdmRZPoG56rEypnktm6AM3IilMihvm75KNBEl
-        IYvFNEPcfLHWEJxS/lqNTlroQHVDUvrDRGPQMaB1D4AHnh2U4hQjkmVZ5g0sJmVEvTrB2J
-        bH8gzmyLyFuYSgzbupsRv9Fozsi72vtPL1ZnYAQrsXhBhPwVXMFITMWAGBNyENTg==
-Received: by filterdrecv-64fcb979b9-6vbpf with SMTP id filterdrecv-64fcb979b9-6vbpf-1-61C3CD5F-5
-        2021-12-23 01:14:07.110980273 +0000 UTC m=+8644638.115216542
+        s=sgd; bh=K3gvUb3OfxsaOhe9tlq0tGnjjw1iUXxBhXljWscLEpA=;
+        b=EyL6nlfgr9jVdtVhMT6au8qt34Za+LdjzKKipZCKpqlgz6G1wl5F3+25Hbw0xEDLe2wu
+        FrihvBjOH6zXmTgA3DRnJftUG5FCjuj5rCxeHcC251pZQuyGFJCwfV5v7gDc1e/y/avUCB
+        0UO1lhho1nSvG87xayM8xWqixfBePLN9481Ei9NJQ53z6p07N2K4bk1XHoWIKjhnDSnikd
+        6bOlQ5ulnfrVrLW5DvvVKo4ESFryeS2RHRZcYuHoU/LyoDffXjFEEavVG+/Ri/6snSR7Ul
+        NGt1Q+S0RbMcoGGgtYpyydfsRRVmyTHAieajpg3t3EgvBkqMFC0e4bMSQph529TA==
+Received: by filterdrecv-75ff7b5ffb-ndqvq with SMTP id filterdrecv-75ff7b5ffb-ndqvq-1-61C3CD5F-F
+        2021-12-23 01:14:07.170941284 +0000 UTC m=+9687225.771336929
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-5-1 (SG)
+        by geopod-ismtpd-2-0 (SG)
         with ESMTP
-        id TsQv68ysQ0ubKGaRoRZ4qw
-        Thu, 23 Dec 2021 01:14:06.927 +0000 (UTC)
+        id IA6WsOnwRGSzJ75Zl9-9BQ
+        Thu, 23 Dec 2021 01:14:07.020 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id E53EE701518; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id EE86B70152F; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 45/50] wilc1000: move struct wilc_spi declaration
+Subject: [PATCH v2 46/50] wilc1000: remove duplicate CRC calculation code
 Date:   Thu, 23 Dec 2021 01:14:07 +0000 (UTC)
-Message-Id: <20211223011358.4031459-46-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-47-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvH9Cvv=2F5ehKJw4467?=
- =?us-ascii?Q?7quhFIAFUnbiUWmbmmTg6+hqXGuYJ3ieEzuxpbm?=
- =?us-ascii?Q?7Je+yt+BbiVHKqzw5OrYGLhvWgBHh5inoafnrrp?=
- =?us-ascii?Q?EK2yRyGTt4dr+D3eA=2FRVVzGhrnebnHKHHnIn3Ov?=
- =?us-ascii?Q?3VO0iiNdKKUz1jxWdRA+H1AbU8ylwJAHEoXqPxT?=
- =?us-ascii?Q?maYro4siN6gYujA+J0kpg=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvCNKwj+DYMFZnlIhP?=
+ =?us-ascii?Q?R3K1iY1ejP=2F1ZZy1gRWB3YD8=2FXZCKVGtzkSucLw?=
+ =?us-ascii?Q?WRtW7fomsuWltgqRjiEBKbxvD+9e=2Fp3SVxfMklN?=
+ =?us-ascii?Q?vxmp5HYNKcSfaHCVGYdDwC5PyAQ4OxlyPw5qSPD?=
+ =?us-ascii?Q?Kq2fDOn07kQOK5eo2M3g9WgUc4R6bC+VPaYPKgG?=
+ =?us-ascii?Q?GGujWFBIHi6A2pTvhh5Cw=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -61,54 +61,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Just move the structure down by a few lines so that a later patch can
-be understood more easily.  No functional change.
+Factor two copies of the same calculation into a single instance.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/spi.c | 22 +++++++++----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/spi.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wireless/microchip/wilc1000/spi.c
-index 2c2ed4b09efd5..5f73b3d2d2112 100644
+index 5f73b3d2d2112..189907580d921 100644
 --- a/drivers/net/wireless/microchip/wilc1000/spi.c
 +++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -41,17 +41,6 @@ MODULE_PARM_DESC(enable_crc16,
-  */
- #define WILC_SPI_RSP_HDR_EXTRA_DATA	8
+@@ -658,7 +658,7 @@ static int wilc_spi_dma_rw(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz)
+ 	u8 wb[32], rb[32];
+ 	int cmd_len, resp_len;
+ 	int retry, ix = 0;
+-	u8 crc[2];
++	u8 crc[2], *crc7;
+ 	struct wilc_spi_cmd *c;
+ 	struct wilc_spi_rsp_data *r;
  
--struct wilc_spi {
--	bool isinit;		/* true if SPI protocol has been configured */
--	bool probing_crc;	/* true if we're probing chip's CRC config */
--	bool crc7_enabled;	/* true if crc7 is currently enabled */
--	bool crc16_enabled;	/* true if crc16 is currently enabled */
--	struct wilc_gpios {
--		struct gpio_desc *enable;	/* ENABLE GPIO or NULL */
--		struct gpio_desc *reset;	/* RESET GPIO or NULL */
--	} gpios;
--};
--
- static const struct wilc_hif_func wilc_hif_spi;
+@@ -673,8 +673,6 @@ static int wilc_spi_dma_rw(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz)
+ 		c->u.dma_cmd.size[0] = sz >> 8;
+ 		c->u.dma_cmd.size[1] = sz;
+ 		cmd_len = offsetof(struct wilc_spi_cmd, u.dma_cmd.crc);
+-		if (spi_priv->crc7_enabled)
+-			c->u.dma_cmd.crc[0] = wilc_get_crc7(wb, cmd_len);
+ 	} else if (cmd == CMD_DMA_EXT_WRITE || cmd == CMD_DMA_EXT_READ) {
+ 		c->u.dma_cmd_ext.addr[0] = adr >> 16;
+ 		c->u.dma_cmd_ext.addr[1] = adr >> 8;
+@@ -683,15 +681,16 @@ static int wilc_spi_dma_rw(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz)
+ 		c->u.dma_cmd_ext.size[1] = sz >> 8;
+ 		c->u.dma_cmd_ext.size[2] = sz;
+ 		cmd_len = offsetof(struct wilc_spi_cmd, u.dma_cmd_ext.crc);
+-		if (spi_priv->crc7_enabled)
+-			c->u.dma_cmd_ext.crc[0] = wilc_get_crc7(wb, cmd_len);
+ 	} else {
+ 		dev_err(&spi->dev, "dma read write cmd [%x] not supported\n",
+ 			cmd);
+ 		return -EINVAL;
+ 	}
+-	if (spi_priv->crc7_enabled)
++	if (spi_priv->crc7_enabled) {
++		crc7 = wb + cmd_len;
++		*crc7 = wilc_get_crc7(wb, cmd_len);
+ 		cmd_len += 1;
++	}
  
- static int wilc_spi_reset(struct wilc *wilc);
-@@ -109,6 +98,17 @@ static int wilc_spi_reset(struct wilc *wilc);
- #define WILC_SPI_COMMAND_STAT_SUCCESS		0
- #define WILC_GET_RESP_HDR_START(h)		(((h) >> 4) & 0xf)
+ 	resp_len = sizeof(*r);
  
-+struct wilc_spi {
-+	bool isinit;		/* true if SPI protocol has been configured */
-+	bool probing_crc;	/* true if we're probing chip's CRC config */
-+	bool crc7_enabled;	/* true if crc7 is currently enabled */
-+	bool crc16_enabled;	/* true if crc16 is currently enabled */
-+	struct wilc_gpios {
-+		struct gpio_desc *enable;	/* ENABLE GPIO or NULL */
-+		struct gpio_desc *reset;	/* RESET GPIO or NULL */
-+	} gpios;
-+};
-+
- struct wilc_spi_cmd {
- 	u8 cmd_type;
- 	union {
 -- 
 2.25.1
 
