@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 114BFC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E479DC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:14:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345872AbhLWBOL (ORCPT
+        id S238630AbhLWBOP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:14:11 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18022 "EHLO
+        Wed, 22 Dec 2021 20:14:15 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18282 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241033AbhLWBOK (ORCPT
+        with ESMTP id S1345735AbhLWBON (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:10 -0500
+        Wed, 22 Dec 2021 20:14:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=umwnLomDnL8JV4cAJEilJ/xdGNnjtl/WMw/dTXYXnHw=;
-        b=XaMT+NPDkMBwRbNRZ5nRuZewLyDWkWRsKt0OjjotqbZA5gZ/4Mr952ZLdrWQlkAWkT22
-        3ep1d56SkgTGHRdHk942/yDUNP/FvzId1G2ygcDXyq84vd+gePBibmJKVeXV9YwBfYZcNV
-        gQdSChdqCVd6rOG2KEHP2lmIa5Yo/JgyrJ1uu/++8vIvVEUTrfDP9whKL6AtZH32LX0nmv
-        vtMNkh6n2lAqaGZF9QAvunsif6eXLFVbvA8sRUe8REk4j875uz5OfiZwjHq7ysBusRsKZA
-        sL3lh45yxbtwUA6U1QNx6Xcu1Z7M/egVgOABzz3q51G5VQoNxN0ee+e6SKZ+zXSw==
-Received: by filterdrecv-75ff7b5ffb-w7hgd with SMTP id filterdrecv-75ff7b5ffb-w7hgd-1-61C3CD5E-9
-        2021-12-23 01:14:06.198059899 +0000 UTC m=+9687226.166389619
+        s=sgd; bh=+rDeixZ7MJSx6InnY+u1z6fli4Hj5k1B4JVFs6766eU=;
+        b=fehs5hthNSvBBSTyskZKbAzPyTqgZjqfQ/jS+p9Ph4LoWr/V/zHU5EePqlvAGEQBmxHj
+        NU4/6nmxnMVjlDgS1u6IRFAnhWi+tkZfQlvsRWH9VPbyroPrdzNs2cSEwyuQKoDsRP1lGZ
+        3Cx2JYQkRNC66xLxS4RCoNUtZV6O7MiwR8PgZq3LB7D+AKYaPUEvrUBIpkO0ELJtwkCQmY
+        DedxsmJ8y+lyKSxsN3RYiBjR06zZJW1fuF6rtVbYX4zgSIKsuvln2AXdyBuTYvhZIt0hEB
+        CRYANGPpn/JkKubcMqZo5M5B/0zsky6xkHqZeTErrhSYDlQoLAYHM+C8wHhdNvEw==
+Received: by filterdrecv-656998cfdd-ptr8m with SMTP id filterdrecv-656998cfdd-ptr8m-1-61C3CD5E-32
+        2021-12-23 01:14:06.611838373 +0000 UTC m=+7955208.471421114
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-3-0 (SG)
+        by geopod-ismtpd-5-0 (SG)
         with ESMTP
-        id j-W6BjeiQ9uWp7sLPSK6Ng
-        Thu, 23 Dec 2021 01:14:06.044 +0000 (UTC)
+        id 0znaJCznRG-yQLmOzbTajw
+        Thu, 23 Dec 2021 01:14:06.470 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 1B3B97011B9; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 5122870144A; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 14/50] wilc1000: if there is no tx packet, don't increment
- packets-sent counter
+Subject: [PATCH v2 22/50] wilc1000: minor syntax cleanup
 Date:   Thu, 23 Dec 2021 01:14:06 +0000 (UTC)
-Message-Id: <20211223011358.4031459-15-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-23-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvOR25dwhR8xVxUiJR?=
- =?us-ascii?Q?PvfwopFiHKgJmz5nG7pPD2E+83y=2Fm+RHtKjsCtp?=
- =?us-ascii?Q?gPwMsMrHiC8Af1aM9ryNHWuHG4x4Wz1++nSOzK3?=
- =?us-ascii?Q?jSJ6JgMnkw0hAX3NkgydUr1dORcy+DcVGZMDc=2Fg?=
- =?us-ascii?Q?QHHtTAy02gev1cQtcyxLUgxm3I224ZUAec=2FYSM+?=
- =?us-ascii?Q?c=2F2r2enVWr1iMriACv+pQ=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvJKfYCcYkBmI5xpqF?=
+ =?us-ascii?Q?oSD34tNpJNDAhFw+fPQk430jNmTlt1liYNUH15c?=
+ =?us-ascii?Q?CnQ=2Ffa6zQty9oXEWTbqAz5=2F=2FJ0EIGQ7kCU+BoXK?=
+ =?us-ascii?Q?rUKcv9HUNgOfr=2FqSAPlmKvCRBtWpJk=2FkNYVGTvO?=
+ =?us-ascii?Q?snqL0yShWIucOScGUAd7q3D+mD45sT=2FWgtFNArv?=
+ =?us-ascii?Q?N4Ja7nhdPsxRe0Jamfusg=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,31 +61,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Granted, this case is mostly theoretical as the queue should never be
-empty in this place, and hence tqe should never be NULL, but it's
-still wrong to count a packet that doesn't exist.
+Remove extraneous parentheses and braces.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 979615914d420..7106e6be719c1 100644
+index bdc31a4fd0f6a..27b1d317dc0c4 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -893,10 +893,10 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- 		u8 mgmt_ptk = 0;
+@@ -656,10 +656,9 @@ static int fill_vmm_table(const struct wilc *wilc,
+ 				continue;
  
- 		tqe = wilc_wlan_txq_remove_from_head(wilc, vmm_entries_ac[i]);
--		ac_pkt_num_to_chip[vmm_entries_ac[i]]++;
- 		if (!tqe)
+ 			ac_exist = 1;
+-			for (k = 0; (k < num_pkts_to_add[ac]) && tqe_q[ac]; k++) {
+-				if (i >= (WILC_VMM_TBL_SIZE - 1)) {
++			for (k = 0; k < num_pkts_to_add[ac] && tqe_q[ac]; k++) {
++				if (i >= WILC_VMM_TBL_SIZE - 1)
+ 					goto out;
+-				}
+ 
+ 				tx_cb = WILC_SKB_TX_CB(tqe_q[ac]);
+ 				if (tx_cb->type == WILC_CFG_PKT)
+@@ -672,9 +671,8 @@ static int fill_vmm_table(const struct wilc *wilc,
+ 				vmm_sz += tqe_q[ac]->len;
+ 				vmm_sz = ALIGN(vmm_sz, 4);
+ 
+-				if ((sum + vmm_sz) > WILC_TX_BUFF_SIZE) {
++				if (sum + vmm_sz > WILC_TX_BUFF_SIZE)
+ 					goto out;
+-				}
+ 				vmm_table[i] = vmm_sz / 4;
+ 				if (tx_cb->type == WILC_CFG_PKT)
+ 					vmm_table[i] |= BIT(10);
+@@ -741,10 +739,8 @@ static int send_vmm_table(struct wilc *wilc, int i, const u32 *vmm_table)
+ 
+ 	timeout = 200;
+ 	do {
+-		ret = func->hif_block_tx(wilc,
+-					 WILC_VMM_TBL_RX_SHADOW_BASE,
+-					 (u8 *)vmm_table,
+-					 ((i + 1) * 4));
++		ret = func->hif_block_tx(wilc, WILC_VMM_TBL_RX_SHADOW_BASE,
++					 (u8 *)vmm_table, (i + 1) * 4);
+ 		if (ret)
  			break;
  
-+		ac_pkt_num_to_chip[vmm_entries_ac[i]]++;
- 		vif = tqe->vif;
- 		if (vmm_table[i] == 0)
- 			break;
 -- 
 2.25.1
 
