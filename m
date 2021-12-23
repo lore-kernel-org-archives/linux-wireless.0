@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC9B1C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC988C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346144AbhLWBQp (ORCPT
+        id S1346934AbhLWBQs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:16:45 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18388 "EHLO
+        Wed, 22 Dec 2021 20:16:48 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18346 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345777AbhLWBOS (ORCPT
+        with ESMTP id S1345761AbhLWBOP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:18 -0500
+        Wed, 22 Dec 2021 20:14:15 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=N46QLJgAXe0NvBlcbTaWBwYjHo/Ap7DZmE5k7VZ+W3Q=;
-        b=V64BEDRL3vBXJzMTbzc6Zw5w8bWHXW3QPOVeOZ1rCzoRRF5U/xrJZjkvJjjXUQ7GDUwZ
-        e6kbIZjO2AEwZ8IjpQvQpfmRV5rm1PjiVRPfdK1CfW+0+lUzDd6+BopDXAirnUjQSDqAFG
-        WKyqC7NfeyCabd0oKi1XRghEK2xDCQSlcYASMbOQ5mi26CwrNWIbF7bNEU5V8wVbYjWmuQ
-        UoeXghe8Lg0Ilm7l7rm/Phy7C6iZLXpUGlKNNZskttfZU7y9p77HDE3ycVuHfidwB47hI3
-        c2Of3FNGpUFcMSTvKB9VkpaIBW6NS/RPkV1m5+xCleUER4JiobS/wif3jg6cpLmA==
-Received: by filterdrecv-64fcb979b9-st7n5 with SMTP id filterdrecv-64fcb979b9-st7n5-1-61C3CD5E-31
-        2021-12-23 01:14:06.632823617 +0000 UTC m=+8644640.616410629
+        s=sgd; bh=VdSmr7LcH0rW8kHWmZpoh/Ig1LSGlhHmXHB0t3cqZGc=;
+        b=AGJAB9NF2r1y61gG1NFibLyjYqebZYsKzYQcyhYBEKFYqqWwu8BuwSFhK0VCpq+UoUxt
+        Fgfp5X8r6vQtUrMwJp0elicdllDHKLvt1X7EGdEuT0VRQYDHOdRYmpuZHKGWYytmh7nhrg
+        hRMcbf+nteyrDWlChGGdXIyMLM+oYUTGSYy7nDrqIf7DW74x8qEoHJs9AHz+jFRha8lz2A
+        tsJj6HzeIfuluuFGT+CUAwMxLaKtxLJRVkxU7ukN9K2xEdsvXTr/g6so2joTiiveH9o4/F
+        8sawsJ7aa84oUE3iqZkpuMvkg5C79l8hC6IEfUGQsD0exT3joAie/Pq2I2WiDbFw==
+Received: by filterdrecv-64fcb979b9-6vbpf with SMTP id filterdrecv-64fcb979b9-6vbpf-1-61C3CD5E-35
+        2021-12-23 01:14:06.683709228 +0000 UTC m=+8644637.687945467
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-6-1 (SG)
+        by geopod-ismtpd-6-0 (SG)
         with ESMTP
-        id __87Da3hTAGNaPsJHueHmQ
-        Thu, 23 Dec 2021 01:14:06.464 +0000 (UTC)
+        id OwzaDxMVSaWpyCRXrQezBA
+        Thu, 23 Dec 2021 01:14:06.542 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 5E49F701456; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 73DAF701488; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 24/50] wilc1000: protect tx_q_limit with a mutex instead of
- a spinlock
+Subject: [PATCH v2 27/50] wilc1000: simplify ac_balance() a bit
 Date:   Thu, 23 Dec 2021 01:14:06 +0000 (UTC)
-Message-Id: <20211223011358.4031459-25-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-28-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvGBcp4s2Az1AHv79A?=
- =?us-ascii?Q?BU3BFGyn+E9LPexzA58AtugPyGPRXwwtc3DKSoO?=
- =?us-ascii?Q?sBtpfgdGlcAixxwv=2FfgakudCQuG61w7CMYNU1oc?=
- =?us-ascii?Q?UDXPTenKqkmi247to98LX2acMVrY4oQgc6NJRcm?=
- =?us-ascii?Q?AqpM3IMI1p4rC6owYEnLuncxdz47JaQ9rjhUJ4M?=
- =?us-ascii?Q?6i9zR3Eh2XG3rfVsKA7Xw=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvFH5jXK85cQtbtZt7?=
+ =?us-ascii?Q?SL3jCjJD5yamKyyCopUd3NzO3D=2FhuQ5uOd=2Fdefx?=
+ =?us-ascii?Q?Rnh5BvGJtoyo9c8YpecROwyRILZQe2JFN=2FJR4IP?=
+ =?us-ascii?Q?qMVuKZM9SL=2FrQskbTbYfOK8iq7Y5p5St869NGsX?=
+ =?us-ascii?Q?mi0Q5ehFLNnYxynlaE0whcIQHHamwFuwU4uedrZ?=
+ =?us-ascii?Q?rDudO7WOtEPBSdXogmfpg=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,77 +61,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Access to tx_q_limit needs to be serialized among the possibly
-multiple writers to the tx queue.  A mutex will do fine for that.
+ac_balance() is never going to fail ("ratio" is always non-NULL), so
+there is no reason to pretend otherwise.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 2 ++
- drivers/net/wireless/microchip/wilc1000/netdev.h   | 2 ++
- drivers/net/wireless/microchip/wilc1000/wlan.c     | 5 ++---
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index d352b7dd03283..0fcc064254f1e 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -1672,6 +1672,7 @@ static void wlan_init_locks(struct wilc *wl)
- 
- 	spin_lock_init(&wl->txq_spinlock);
- 	mutex_init(&wl->txq_add_to_head_cs);
-+	mutex_init(&wl->tx_q_limit_lock);
- 
- 	init_waitqueue_head(&wl->txq_event);
- 	init_completion(&wl->cfg_event);
-@@ -1688,6 +1689,7 @@ void wlan_deinit_locks(struct wilc *wilc)
- 	mutex_destroy(&wilc->txq_add_to_head_cs);
- 	mutex_destroy(&wilc->vif_mutex);
- 	mutex_destroy(&wilc->deinit_lock);
-+	mutex_destroy(&wilc->tx_q_limit_lock);
- 	cleanup_srcu_struct(&wilc->srcu);
- }
- 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.h b/drivers/net/wireless/microchip/wilc1000/netdev.h
-index 650b40961cf98..e247f92a409e0 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.h
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.h
-@@ -257,6 +257,8 @@ struct wilc {
- 	atomic_t txq_entries;
- 	struct txq_fw_recv_queue_stat fw[NQUEUES];
- 
-+	/* protect tx_q_limit state */
-+	struct mutex tx_q_limit_lock;
- 	struct wilc_tx_queue_status tx_q_limit;
- 	struct rxq_entry_t rxq_head;
- 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index f82857cebe35e..9b6605e9df296 100644
+index 5ea9129b36925..287c0843ba152 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -279,13 +279,12 @@ static void init_q_limits(struct wilc *wl)
- 
- static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
- {
--	unsigned long flags;
- 	struct wilc_tx_queue_status *q = &wl->tx_q_limit;
- 	u8 end_index;
- 	u8 q_limit;
- 	bool ret = false;
- 
--	spin_lock_irqsave(&wl->txq_spinlock, flags);
-+	mutex_lock(&wl->tx_q_limit_lock);
- 
- 	end_index = q->end_index;
- 	q->cnt[q->buffer[end_index]] -= factors[q->buffer[end_index]];
-@@ -306,7 +305,7 @@ static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
- 	if (skb_queue_len(&wl->txq[q_num]) <= q_limit)
- 		ret = true;
- 
--	spin_unlock_irqrestore(&wl->txq_spinlock, flags);
-+	mutex_unlock(&wl->tx_q_limit_lock);
- 
- 	return ret;
+@@ -345,21 +345,23 @@ static inline u8 ac_classify(struct wilc *wilc, struct sk_buff *skb)
+ 	return q_num;
  }
+ 
+-static inline int ac_balance(struct wilc *wl, u8 *ratio)
++/**
++ * ac_balance() - balance queues by favoring ones with fewer packets pending
++ * @wl: Pointer to the wilc structure.
++ * @ratio: Pointer to array of length NQUEUES in which this function
++ *	returns the number of packets that may be scheduled for each
++ *	access category.
++ */
++static inline void ac_balance(const struct wilc *wl, u8 *ratio)
+ {
+ 	u8 i, max_count = 0;
+ 
+-	if (!ratio)
+-		return -EINVAL;
+-
+ 	for (i = 0; i < NQUEUES; i++)
+ 		if (wl->fw[i].count > max_count)
+ 			max_count = wl->fw[i].count;
+ 
+ 	for (i = 0; i < NQUEUES; i++)
+ 		ratio[i] = max_count - wl->fw[i].count;
+-
+-	return 0;
+ }
+ 
+ static inline void ac_update_fw_ac_pkt_info(struct wilc *wl, u32 reg)
+@@ -894,8 +896,7 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
+ 	if (wilc->quit)
+ 		goto out_update_cnt;
+ 
+-	if (ac_balance(wilc, ac_desired_ratio))
+-		return -EINVAL;
++	ac_balance(wilc, ac_desired_ratio);
+ 
+ 	mutex_lock(&wilc->txq_add_to_head_cs);
+ 
 -- 
 2.25.1
 
