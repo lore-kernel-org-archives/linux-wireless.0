@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2595EC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 12:08:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F514C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 12:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348116AbhLWMIP (ORCPT
+        id S239577AbhLWMIR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Dec 2021 07:08:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42466 "EHLO
+        Thu, 23 Dec 2021 07:08:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239577AbhLWMIL (ORCPT
+        with ESMTP id S1348119AbhLWMIQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Dec 2021 07:08:11 -0500
+        Thu, 23 Dec 2021 07:08:16 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A86C061401
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 04:08:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D2E7C061401
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 04:08:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1F7CAB81F6D
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:08:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C997EC36AEA;
-        Thu, 23 Dec 2021 12:08:07 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BD85EB81F6D
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:08:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68BEDC36AE5;
+        Thu, 23 Dec 2021 12:08:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640261288;
-        bh=D2hi6vZ0dF/AB15kIWyGKMpd7u9PQ0CUP44HtuBSM6Y=;
+        s=k20201202; t=1640261293;
+        bh=C538nIjQqSQO5qe3AOFcYJvRMgcsmEyS2++CN27y8yE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RjWgdUxIKhGAoVEX207ux8ls3CXpzWLF0WVVfWlt575Ukmpw6WE0jzNmifZLtdt/h
-         wi44PK9Dh4hgif4CAGJa4UWS15QpoMuASUbvBD6J4kUS07RVV5ntpSTGLSRPTjipUw
-         8hqnvNLTuf5MRtj4jhCWr7N/VcgvMGmieES5gSx/Xvqwqk5vLnVzD8imuXBZC9AJyi
-         e7t2rkGkyKjNmT2LVsTijz8HgFbk9X9++d2xGcCQO+kDjlAIjpl25Gz5Qrmx6nJOCw
-         +LnY/75MP1wSbTDupgLp21BOOWZDDn5gqb2oJNs/iG8NEOHWUDOk+pDY4DC6Yfd4Dd
-         npQM/KdmeWnYg==
+        b=IRYGkG1bxbfCIjUiUN87AKDjdOSsFZgkrAkWAKjrqBJPjYCKYbVFABO9hWDgQiNYr
+         55M+SjdQh8PJvvxkksL050uqRB2hLchL8pCZ8szFY3R57iOcpnja8nzr3ML6wvpjxm
+         QBIntsrHJnw8T6ztxif998+UDcyclvAqKGJaW62mCwIxqIOMoU86fDJIZ5e9INJIyd
+         +UZB4QXIx8ezgG0iQleN4RsNClehkVGS6w/ZBJctR0u3LBpLT6IqQmszf8SoRN0Ydb
+         kg1qRrxm4u3IFggaVxb/wDxe41L20urkQcA0++QKb1ZuIixoiiM14sZ6jGcFOgSMbV
+         ENxVF4+jw+mdA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com
-Subject: [PATCH 04/15] mt76: connac: move mt76_connac_mcu_bss_basic_tlv in connac module
-Date:   Thu, 23 Dec 2021 13:07:32 +0100
-Message-Id: <f6ca98ba8a7c20cc60e4481a38c2722d9d43fe50.1640260901.git.lorenzo@kernel.org>
+Subject: [PATCH 07/15] mt76: mt7915: rely on mt76_connac_mcu_sta_ba
+Date:   Thu, 23 Dec 2021 13:07:35 +0100
+Message-Id: <85bed04a0c3899f65fdb8231c7c0376bdf145501.1640260901.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <cover.1640260901.git.lorenzo@kernel.org>
 References: <cover.1640260901.git.lorenzo@kernel.org>
@@ -49,265 +49,179 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt7615_mcu_bss_basic_tlv/mt7915_mcu_bss_basic_tlv in connac
-module since it is shared between mt7615 and mt7915 drivers.
+Rely on mt76_connac_mcu_sta_ba routine in mt7915 and remove duplicated
+code.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 55 +--------------
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 65 ++++++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  5 ++
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 68 +------------------
- 4 files changed, 74 insertions(+), 119 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  3 +-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  8 +--
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  2 +-
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 58 +++++--------------
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  2 +
+ 5 files changed, 21 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 40b8cdc29ed3..3bec99f08009 100644
+index 3bec99f08009..45c16f5f39a9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -784,58 +784,6 @@ mt7615_mcu_ctrl_pm_state(struct mt7615_dev *dev, int band, int state)
- 				 &req, sizeof(req), true);
+@@ -1191,7 +1191,8 @@ mt7615_mcu_uni_tx_ba(struct mt7615_dev *dev,
+ 	struct mt7615_sta *sta = (struct mt7615_sta *)params->sta->drv_priv;
+ 
+ 	return mt76_connac_mcu_sta_ba(&dev->mt76, &sta->vif->mt76, params,
+-				      enable, true);
++				      MCU_UNI_CMD(STA_REC_UPDATE), enable,
++				      true);
  }
  
--static int
--mt7615_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
--			 struct ieee80211_sta *sta, struct mt7615_phy *phy,
--			 bool enable)
--{
--	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
--	u32 type = vif->p2p ? NETWORK_P2P : NETWORK_INFRA;
--	struct bss_info_basic *bss;
--	u8 wlan_idx = mvif->sta.wcid.idx;
--	struct tlv *tlv;
--
--	tlv = mt76_connac_mcu_add_tlv(skb, BSS_INFO_BASIC, sizeof(*bss));
--
--	switch (vif->type) {
--	case NL80211_IFTYPE_MESH_POINT:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_MONITOR:
--		break;
--	case NL80211_IFTYPE_STATION:
--		/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
--		if (enable && sta) {
--			struct mt7615_sta *msta;
--
--			msta = (struct mt7615_sta *)sta->drv_priv;
--			wlan_idx = msta->wcid.idx;
--		}
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		type = NETWORK_IBSS;
--		break;
--	default:
--		WARN_ON(1);
--		break;
--	}
--
--	bss = (struct bss_info_basic *)tlv;
--	bss->network_type = cpu_to_le32(type);
--	bss->bmc_wcid_lo = wlan_idx;
--	bss->wmm_idx = mvif->mt76.wmm_idx;
--	bss->active = enable;
--
--	if (vif->type != NL80211_IFTYPE_MONITOR) {
--		memcpy(bss->bssid, vif->bss_conf.bssid, ETH_ALEN);
--		bss->bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int);
--		bss->dtim_period = vif->bss_conf.dtim_period;
--	} else {
--		memcpy(bss->bssid, phy->mt76->macaddr, ETH_ALEN);
--	}
--
--	return 0;
--}
--
  static int
- mt7615_mcu_add_bss(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta, bool enable)
-@@ -854,7 +802,8 @@ mt7615_mcu_add_bss(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 	if (enable)
- 		mt76_connac_mcu_bss_omac_tlv(skb, vif);
- 
--	mt7615_mcu_bss_basic_tlv(skb, vif, sta, phy, enable);
-+	mt76_connac_mcu_bss_basic_tlv(skb, vif, sta, phy->mt76,
-+				      mvif->sta.wcid.idx, enable);
- 
- 	if (enable && mvif->mt76.omac_idx >= EXT_BSSID_START &&
- 	    mvif->mt76.omac_idx < REPEATER_BSSID_START)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 93c5e4d0ea8c..7788f0073c1e 100644
+index 1b56c2956d29..14bfbbb3114e 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -2632,5 +2632,70 @@ void mt76_connac_mcu_bss_ext_tlv(struct sk_buff *skb, struct mt76_vif *mvif)
- }
- EXPORT_SYMBOL_GPL(mt76_connac_mcu_bss_ext_tlv);
+@@ -1148,7 +1148,7 @@ EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_ba_tlv);
  
-+int mt76_connac_mcu_bss_basic_tlv(struct sk_buff *skb,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_sta *sta,
-+				  struct mt76_phy *phy, u8 wlan_idx,
-+				  bool enable)
-+{
-+	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
-+	u32 type = vif->p2p ? NETWORK_P2P : NETWORK_INFRA;
-+	struct bss_info_basic *bss;
-+	struct tlv *tlv;
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MONITOR:
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		if (enable) {
-+			rcu_read_lock();
-+			if (!sta)
-+				sta = ieee80211_find_sta(vif,
-+							 vif->bss_conf.bssid);
-+			/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
-+			if (sta) {
-+				struct mt76_wcid *wcid;
-+
-+				wcid = (struct mt76_wcid *)sta->drv_priv;
-+				wlan_idx = wcid->idx;
-+			}
-+			rcu_read_unlock();
-+		}
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		type = NETWORK_IBSS;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		break;
-+	}
-+
-+	tlv = mt76_connac_mcu_add_tlv(skb, BSS_INFO_BASIC, sizeof(*bss));
-+
-+	bss = (struct bss_info_basic *)tlv;
-+	bss->network_type = cpu_to_le32(type);
-+	bss->bmc_wcid_lo = to_wcid_lo(wlan_idx);
-+	bss->bmc_wcid_hi = to_wcid_hi(wlan_idx);
-+	bss->wmm_idx = mvif->wmm_idx;
-+	bss->active = enable;
-+
-+	if (vif->type != NL80211_IFTYPE_MONITOR) {
-+		struct cfg80211_chan_def *chandef = &phy->chandef;
-+
-+		memcpy(bss->bssid, vif->bss_conf.bssid, ETH_ALEN);
-+		bss->bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int);
-+		bss->dtim_period = vif->bss_conf.dtim_period;
-+		bss->phy_mode = mt76_connac_get_phy_mode(phy, vif,
-+							 chandef->chan->band, NULL);
-+	} else {
-+		memcpy(bss->bssid, phy->macaddr, ETH_ALEN);
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac_mcu_bss_basic_tlv);
-+
- MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
- MODULE_LICENSE("Dual BSD/GPL");
+ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 			   struct ieee80211_ampdu_params *params,
+-			   bool enable, bool tx)
++			   int cmd, bool enable, bool tx)
+ {
+ 	struct mt76_wcid *wcid = (struct mt76_wcid *)params->sta->drv_priv;
+ 	struct wtbl_req_hdr *wtbl_hdr;
+@@ -1171,8 +1171,7 @@ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 	mt76_connac_mcu_wtbl_ba_tlv(dev, skb, params, enable, tx, sta_wtbl,
+ 				    wtbl_hdr);
+ 
+-	ret = mt76_mcu_skb_send_msg(dev, skb,
+-				    MCU_UNI_CMD(STA_REC_UPDATE), true);
++	ret = mt76_mcu_skb_send_msg(dev, skb, cmd, true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1182,8 +1181,7 @@ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 
+ 	mt76_connac_mcu_sta_ba_tlv(skb, params, enable, tx);
+ 
+-	return mt76_mcu_skb_send_msg(dev, skb,
+-				     MCU_UNI_CMD(STA_REC_UPDATE), true);
++	return mt76_mcu_skb_send_msg(dev, skb, cmd, true);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_ba);
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 84ab91decdb7..ccae578922f6 100644
+index ccae578922f6..f3c809a3ddb9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1596,4 +1596,9 @@ int mt76_connac_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
- void mt76_connac_mcu_bss_ext_tlv(struct sk_buff *skb, struct mt76_vif *mvif);
- void mt76_connac_mcu_bss_omac_tlv(struct sk_buff *skb,
- 				  struct ieee80211_vif *vif);
-+int mt76_connac_mcu_bss_basic_tlv(struct sk_buff *skb,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_sta *sta,
-+				  struct mt76_phy *phy, u8 wlan_idx,
-+				  bool enable);
- #endif /* __MT76_CONNAC_MCU_H */
+@@ -1532,7 +1532,7 @@ int mt76_connac_mcu_uni_add_dev(struct mt76_phy *phy,
+ 				bool enable);
+ int mt76_connac_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+ 			   struct ieee80211_ampdu_params *params,
+-			   bool enable, bool tx);
++			   int cmd, bool enable, bool tx);
+ int mt76_connac_mcu_uni_add_bss(struct mt76_phy *phy,
+ 				struct ieee80211_vif *vif,
+ 				struct mt76_wcid *wcid,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 32a461182cdf..4fb7bc81d7c9 100644
+index f56fc4c82fe6..ef81b3ff48f9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -487,71 +487,6 @@ mt7915_mcu_add_nested_subtlv(struct sk_buff *skb, int sub_tag, int sub_len,
+@@ -742,63 +742,31 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
  }
  
- /** bss info **/
+ /** starec & wtbl **/
 -static int
--mt7915_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
--			 struct mt7915_phy *phy, bool enable)
--{
--	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct bss_info_basic *bss;
--	u16 wlan_idx = mvif->sta.wcid.idx;
--	u32 type = NETWORK_INFRA;
--	struct tlv *tlv;
+-mt7915_mcu_sta_ba(struct mt7915_dev *dev,
+-		  struct ieee80211_ampdu_params *params,
+-		  bool enable, bool tx)
++int mt7915_mcu_add_tx_ba(struct mt7915_dev *dev,
++			 struct ieee80211_ampdu_params *params,
++			 bool enable)
+ {
+ 	struct mt7915_sta *msta = (struct mt7915_sta *)params->sta->drv_priv;
+ 	struct mt7915_vif *mvif = msta->vif;
+-	struct wtbl_req_hdr *wtbl_hdr;
+-	struct tlv *sta_wtbl;
+-	struct sk_buff *skb;
+-	int ret;
+ 
+-	if (enable && tx && !params->amsdu)
++	if (enable && !params->amsdu)
+ 		msta->wcid.amsdu = false;
+ 
+-	skb = mt76_connac_mcu_alloc_sta_req(&dev->mt76, &mvif->mt76,
+-					    &msta->wcid);
+-	if (IS_ERR(skb))
+-		return PTR_ERR(skb);
 -
--	tlv = mt76_connac_mcu_add_tlv(skb, BSS_INFO_BASIC, sizeof(*bss));
+-	sta_wtbl = mt76_connac_mcu_add_tlv(skb, STA_REC_WTBL,
+-					   sizeof(struct tlv));
+-	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
+-						  WTBL_SET, sta_wtbl, &skb);
+-	if (IS_ERR(wtbl_hdr))
+-		return PTR_ERR(wtbl_hdr);
 -
--	switch (vif->type) {
--	case NL80211_IFTYPE_MESH_POINT:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_MONITOR:
--		break;
--	case NL80211_IFTYPE_STATION:
--		/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
--		if (enable) {
--			struct ieee80211_sta *sta;
--			struct mt7915_sta *msta;
+-	mt76_connac_mcu_wtbl_ba_tlv(&dev->mt76, skb, params, enable, tx,
+-				    sta_wtbl, wtbl_hdr);
+-	ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-				    MCU_EXT_CMD(STA_REC_UPDATE), true);
+-	if (ret)
+-		return ret;
 -
--			rcu_read_lock();
--			sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
--			if (!sta) {
--				rcu_read_unlock();
--				return -EINVAL;
--			}
+-	skb = mt76_connac_mcu_alloc_sta_req(&dev->mt76, &mvif->mt76,
+-					    &msta->wcid);
+-	if (IS_ERR(skb))
+-		return PTR_ERR(skb);
 -
--			msta = (struct mt7915_sta *)sta->drv_priv;
--			wlan_idx = msta->wcid.idx;
--			rcu_read_unlock();
--		}
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		type = NETWORK_IBSS;
--		break;
--	default:
--		WARN_ON(1);
--		break;
--	}
+-	mt76_connac_mcu_sta_ba_tlv(skb, params, enable, tx);
 -
--	bss = (struct bss_info_basic *)tlv;
--	bss->network_type = cpu_to_le32(type);
--	bss->bmc_wcid_lo = to_wcid_lo(wlan_idx);
--	bss->bmc_wcid_hi = to_wcid_hi(wlan_idx);
--	bss->wmm_idx = mvif->mt76.wmm_idx;
--	bss->active = enable;
--
--	if (vif->type != NL80211_IFTYPE_MONITOR) {
--		struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
--
--		memcpy(bss->bssid, vif->bss_conf.bssid, ETH_ALEN);
--		bss->bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int);
--		bss->dtim_period = vif->bss_conf.dtim_period;
--		bss->phy_mode = mt76_connac_get_phy_mode(phy->mt76, vif,
--							 chandef->chan->band, NULL);
--	} else {
--		memcpy(bss->bssid, phy->mt76->macaddr, ETH_ALEN);
--	}
--
--	return 0;
+-	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-				     MCU_EXT_CMD(STA_REC_UPDATE), true);
 -}
 -
- struct mt7915_he_obss_narrow_bw_ru_data {
- 	bool tolerated;
- };
-@@ -782,7 +717,8 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
- 	if (enable)
- 		mt76_connac_mcu_bss_omac_tlv(skb, vif);
+-int mt7915_mcu_add_tx_ba(struct mt7915_dev *dev,
+-			 struct ieee80211_ampdu_params *params,
+-			 bool enable)
+-{
+-	return mt7915_mcu_sta_ba(dev, params, enable, true);
++	return mt76_connac_mcu_sta_ba(&dev->mt76, &mvif->mt76, params,
++				      MCU_EXT_CMD(STA_REC_UPDATE),
++				      enable, true);
+ }
  
--	mt7915_mcu_bss_basic_tlv(skb, vif, phy, enable);
-+	mt76_connac_mcu_bss_basic_tlv(skb, vif, NULL, phy->mt76,
-+				      mvif->sta.wcid.idx, enable);
+ int mt7915_mcu_add_rx_ba(struct mt7915_dev *dev,
+ 			 struct ieee80211_ampdu_params *params,
+ 			 bool enable)
+ {
+-	return mt7915_mcu_sta_ba(dev, params, enable, false);
++	struct mt7915_sta *msta = (struct mt7915_sta *)params->sta->drv_priv;
++	struct mt7915_vif *mvif = msta->vif;
++
++	return mt76_connac_mcu_sta_ba(&dev->mt76, &mvif->mt76, params,
++				      MCU_EXT_CMD(STA_REC_UPDATE),
++				      enable, false);
+ }
  
- 	if (vif->type == NL80211_IFTYPE_MONITOR)
- 		goto out;
+ static void
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index d014e574ce6a..b0022713c469 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -429,6 +429,7 @@ int mt7921_mcu_uni_tx_ba(struct mt7921_dev *dev,
+ 		msta->wcid.amsdu = false;
+ 
+ 	return mt76_connac_mcu_sta_ba(&dev->mt76, &msta->vif->mt76, params,
++				      MCU_UNI_CMD(STA_REC_UPDATE),
+ 				      enable, true);
+ }
+ 
+@@ -439,6 +440,7 @@ int mt7921_mcu_uni_rx_ba(struct mt7921_dev *dev,
+ 	struct mt7921_sta *msta = (struct mt7921_sta *)params->sta->drv_priv;
+ 
+ 	return mt76_connac_mcu_sta_ba(&dev->mt76, &msta->vif->mt76, params,
++				      MCU_UNI_CMD(STA_REC_UPDATE),
+ 				      enable, false);
+ }
+ 
 -- 
 2.33.1
 
