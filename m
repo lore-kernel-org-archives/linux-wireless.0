@@ -2,83 +2,189 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F218FC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 00:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05472C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:14:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238456AbhLWAuM (ORCPT
+        id S238586AbhLWBOH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 19:50:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33340 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238150AbhLWAuM (ORCPT
+        Wed, 22 Dec 2021 20:14:07 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:17724 "EHLO
+        o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229977AbhLWBOG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 19:50:12 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A6A6C061574;
-        Wed, 22 Dec 2021 16:50:12 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 02B7CB81F47;
-        Thu, 23 Dec 2021 00:50:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BABEAC36AEA;
-        Thu, 23 Dec 2021 00:50:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640220609;
-        bh=hMkExGW3xLUwd0qRah6sMhBW5wuhCL8RWHxF+ccCF70=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=NBUjKFQXLUuCjL1uYrahsFFsYUJPqklyF0sahvX26hIwC7tzLcHtdvhxOU1Ic0iS1
-         +5KPZB79VkNJZTdeoe6AoIqF6xDaNTMs6yGd7mj3KFVaNLZtReKYP+mdSBCdG/VHPg
-         R2dB/nDodJ1CA9eSlgJv31MrjfJe0GGbnW3tOZoCr1PYED7T0XfCmjDQoDs8qBlUOk
-         Ep+tsGfVAFGfDmwRjJQAZ+lO5F/0kGm14UqEFEqDKXnI9r7UYWBS7hxzSDDdTPWYv8
-         6qz16BAaCVifHDIu/J2PH5ZwezynzuBwIdNs28+83gkwrrGZ5n1f5Hugon+IpZzJ5s
-         4+g4zMwnELTrQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id A2E8BFE55A6;
-        Thu, 23 Dec 2021 00:50:09 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Wed, 22 Dec 2021 20:14:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
+        h=from:subject:in-reply-to:references:mime-version:to:cc:
+        content-transfer-encoding:content-type;
+        s=sgd; bh=EAPQRl9XYrJUUbnmBFI0oiwVcQ9+ZAVKjeClJzCesz8=;
+        b=bmo2xaUcf4Gu0xVrnJmREEsXgLBlENc3edPCdKxjQYBPf2zpHAkoRKU3VOuqJLBeHBuG
+        v/sN03Z6xFCWwuifdMVAxlyJLeq5NojC6rZ3iaBJ9cpTnCmeZOfUWmNOmLVHeI2pNBvvmv
+        oWLcQ7Sa1fGYHq3zw90H5JGLemGnAvnzgwkzzRNy2TbqoB7WvpWl7leldGUpCw1bkZ/vqJ
+        trI+oPEJw4MKap6sEvu0cwjq6OMv23Qb3nWf8Lb+2VYU4lKw2/PYkSvRmd0Qeg1rICNXP1
+        Qt9dM8mzXGsJg3twScDtNK/pOGzdZW3SFbfB4UzweU8nqnjVvH6pDaCKl2UR1PQg==
+Received: by filterdrecv-64fcb979b9-7lnp4 with SMTP id filterdrecv-64fcb979b9-7lnp4-1-61C3CD5D-31
+        2021-12-23 01:14:05.752259373 +0000 UTC m=+8644592.682819742
+Received: from pearl.egauge.net (unknown)
+        by geopod-ismtpd-6-1 (SG)
+        with ESMTP
+        id O7tYqgpCS7SEqvxXfg_VLg
+        Thu, 23 Dec 2021 01:14:05.558 +0000 (UTC)
+Received: by pearl.egauge.net (Postfix, from userid 1000)
+        id DAC1E700BB0; Wed, 22 Dec 2021 18:14:04 -0700 (MST)
+From:   David Mosberger-Tang <davidm@egauge.net>
+Subject: [PATCH v2 04/50] wilc1000: factor common code in wilc_wlan_cfg_set()
+ and wilc_wlan_cfg_get()
+Date:   Thu, 23 Dec 2021 01:14:05 +0000 (UTC)
+Message-Id: <20211223011358.4031459-5-davidm@egauge.net>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
+References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net-next 1/2] codel: remove unnecessary sock.h include
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <164022060966.21673.3814438675172430394.git-patchwork-notify@kernel.org>
-Date:   Thu, 23 Dec 2021 00:50:09 +0000
-References: <20211221193941.3805147-1-kuba@kernel.org>
-In-Reply-To: <20211221193941.3805147-1-kuba@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     davem@davemloft.net, netdev@vger.kernel.org, kvalo@kernel.org,
-        pkshih@realtek.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
+X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvKRPg1r8DnHgLz9uT?=
+ =?us-ascii?Q?sd8CBTF3hyA386sin=2FBGCA3+pABmTC=2FMMOPAidl?=
+ =?us-ascii?Q?lHc49Lyg8vU82CAz1L5iTJI+eUXDHHMJHNXjXwX?=
+ =?us-ascii?Q?10OCCI+IuAPAil+xXSpY49=2FlatOl7ILwS1Qzl0I?=
+ =?us-ascii?Q?vqEJT49Zt2WoJ2ILX16DMDTaGdwDw=2FCOR5tcz4J?=
+ =?us-ascii?Q?sZWkwVffG3bAvjeeC=2FjUw=3D=3D?=
+To:     Ajay Singh <ajay.kathat@microchip.com>
+Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        David Mosberger-Tang <davidm@egauge.net>
+X-Entity-ID: Xg4JGAcGrJFIz2kDG9eoaQ==
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+The functions are almost identical, so factor the common code into new
+function wilc_wlan_cfg_apply_wid().  No functional change.
 
-This series was applied to netdev/net-next.git (master)
-by Jakub Kicinski <kuba@kernel.org>:
+Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
+---
+ .../net/wireless/microchip/wilc1000/wlan.c    | 79 ++++++++++---------
+ 1 file changed, 41 insertions(+), 38 deletions(-)
 
-On Tue, 21 Dec 2021 11:39:40 -0800 you wrote:
-> Since sock.h is modified relatively often (60 times in the last
-> 12 months) it seems worthwhile to decrease the incremental build
-> work.
-> 
-> CoDel's header includes net/inet_ecn.h which in turn includes net/sock.h.
-> codel.h is itself included by mac80211 which is included by much of
-> the WiFi stack and drivers. Removing the net/inet_ecn.h include from
-> CoDel breaks the dependecy between WiFi and sock.h.
-> 
-> [...]
-
-Here is the summary with links:
-  - [net-next,1/2] codel: remove unnecessary sock.h include
-    https://git.kernel.org/netdev/net-next/c/15fcb1031178
-  - [net-next,2/2] codel: remove unnecessary pkt_sched.h include
-    https://git.kernel.org/netdev/net-next/c/e6e590445581
-
-You are awesome, thank you!
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
+index d1f68df1dbeef..97624f758cbe4 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.c
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -1276,8 +1276,28 @@ static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
+ 	return 0;
+ }
+ 
+-int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+-		      u32 buffer_size, int commit, u32 drv_handler)
++/**
++ * wilc_wlan_cfg_apply_wid() - Add a config set or get (query).
++ * @vif: The virtual interface to which the set/get applies.
++ * @start: Should be 1 if a new config packet should be initialized,
++ *	0 otherwise.
++ * @wid: The WID to use.
++ * @buffer: For a set, the bytes to include in the request,
++ *	for a get, the buffer in which to return the result.
++ * @buffer_size: The size of the buffer in bytes.
++ * @commit: Should be 1 if the config packet should be sent after
++ *	adding this request/query.
++ * @drv_handler: An opaque cookie that will be sent in the config header.
++ * @set: Should be true if a set, false for get.
++ *
++ * Add a WID set/query to the current config packet and optionally
++ * submit the resulting packet to the chip and wait for its reply.
++ *
++ * Return: Zero on failure, positive number on success.
++ */
++static int wilc_wlan_cfg_apply_wid(struct wilc_vif *vif, int start, u16 wid,
++				   u8 *buffer, u32 buffer_size, int commit,
++				   u32 drv_handler, bool set)
+ {
+ 	u32 offset;
+ 	int ret_size;
+@@ -1289,8 +1309,12 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		wilc->cfg_frame_offset = 0;
+ 
+ 	offset = wilc->cfg_frame_offset;
+-	ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
+-					 wid, buffer, buffer_size);
++	if (set)
++		ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
++						 wid, buffer, buffer_size);
++	else
++		ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset,
++						 wid);
+ 	offset += ret_size;
+ 	wilc->cfg_frame_offset = offset;
+ 
+@@ -1299,9 +1323,11 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		return ret_size;
+ 	}
+ 
+-	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
++	netdev_dbg(vif->ndev, "%s: %s seqno[%d]\n",
++		   __func__, set ? "set" : "get", wilc->cfg_seq_no);
+ 
+-	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
++	if (wilc_wlan_cfg_commit(vif, set ? WILC_CFG_SET : WILC_CFG_QUERY,
++				 drv_handler))
+ 		ret_size = 0;
+ 
+ 	if (!wait_for_completion_timeout(&wilc->cfg_event,
+@@ -1317,41 +1343,18 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 	return ret_size;
+ }
+ 
++int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
++		      u32 buffer_size, int commit, u32 drv_handler)
++{
++	return wilc_wlan_cfg_apply_wid(vif, start, wid, buffer, buffer_size,
++				       commit, drv_handler, true);
++}
++
+ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
+ 		      u32 drv_handler)
+ {
+-	u32 offset;
+-	int ret_size;
+-	struct wilc *wilc = vif->wilc;
+-
+-	mutex_lock(&wilc->cfg_cmd_lock);
+-
+-	if (start)
+-		wilc->cfg_frame_offset = 0;
+-
+-	offset = wilc->cfg_frame_offset;
+-	ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
+-	offset += ret_size;
+-	wilc->cfg_frame_offset = offset;
+-
+-	if (!commit) {
+-		mutex_unlock(&wilc->cfg_cmd_lock);
+-		return ret_size;
+-	}
+-
+-	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
+-		ret_size = 0;
+-
+-	if (!wait_for_completion_timeout(&wilc->cfg_event,
+-					 WILC_CFG_PKTS_TIMEOUT)) {
+-		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
+-		ret_size = 0;
+-	}
+-	wilc->cfg_frame_offset = 0;
+-	wilc->cfg_seq_no += 1;
+-	mutex_unlock(&wilc->cfg_cmd_lock);
+-
+-	return ret_size;
++	return wilc_wlan_cfg_apply_wid(vif, start, wid, NULL, 0,
++				       commit, drv_handler, false);
+ }
+ 
+ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.25.1
 
