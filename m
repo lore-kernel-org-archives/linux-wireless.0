@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36EE5C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC9B1C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 01:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346100AbhLWBQn (ORCPT
+        id S1346144AbhLWBQp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:16:43 -0500
-Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18428 "EHLO
+        Wed, 22 Dec 2021 20:16:45 -0500
+Received: from o1.ptr2625.egauge.net ([167.89.112.53]:18388 "EHLO
         o1.ptr2625.egauge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345807AbhLWBOV (ORCPT
+        with ESMTP id S1345777AbhLWBOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Dec 2021 20:14:21 -0500
+        Wed, 22 Dec 2021 20:14:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=egauge.net;
         h=from:subject:in-reply-to:references:mime-version:to:cc:
         content-transfer-encoding:content-type;
-        s=sgd; bh=9GhperGdLp5mSs2oGPGWX3vVh6QZlgVmNWU2J8h4eJY=;
-        b=LDUXjoktAgidrqd0DknbCqj+Cq40xD+T0dA+omHvM5a/4tAsOr8lu85ZnBVyl117D4T1
-        FF/7RavN0zfbhSOk65PFCRePblFoKBm7YovjdXl36Irqi5OE0cZerC77CMMg778yvMHGOA
-        4LQvwb8c/Sa5XuP3gfzg0bWBOzGIC4GeFNSiViaBFUloEd1urrYLDtOBRa8VKL3ZJjDrPe
-        HBXWnwHuUWJxbf9WKQZS2ZbRYEtdF9hZLmGCSMNC9oNE7TvGuLp41zLzEMZkmjB3UaN17Q
-        vAIQJ6EZkyay17ZVb9Lr0l2llKMvaffc9QCNvyD8Ah15pv21Nq8rtulondgJF2Nw==
-Received: by filterdrecv-656998cfdd-vtnvg with SMTP id filterdrecv-656998cfdd-vtnvg-1-61C3CD5E-1E
-        2021-12-23 01:14:06.716473164 +0000 UTC m=+7955207.766253174
+        s=sgd; bh=N46QLJgAXe0NvBlcbTaWBwYjHo/Ap7DZmE5k7VZ+W3Q=;
+        b=V64BEDRL3vBXJzMTbzc6Zw5w8bWHXW3QPOVeOZ1rCzoRRF5U/xrJZjkvJjjXUQ7GDUwZ
+        e6kbIZjO2AEwZ8IjpQvQpfmRV5rm1PjiVRPfdK1CfW+0+lUzDd6+BopDXAirnUjQSDqAFG
+        WKyqC7NfeyCabd0oKi1XRghEK2xDCQSlcYASMbOQ5mi26CwrNWIbF7bNEU5V8wVbYjWmuQ
+        UoeXghe8Lg0Ilm7l7rm/Phy7C6iZLXpUGlKNNZskttfZU7y9p77HDE3ycVuHfidwB47hI3
+        c2Of3FNGpUFcMSTvKB9VkpaIBW6NS/RPkV1m5+xCleUER4JiobS/wif3jg6cpLmA==
+Received: by filterdrecv-64fcb979b9-st7n5 with SMTP id filterdrecv-64fcb979b9-st7n5-1-61C3CD5E-31
+        2021-12-23 01:14:06.632823617 +0000 UTC m=+8644640.616410629
 Received: from pearl.egauge.net (unknown)
-        by geopod-ismtpd-4-0 (SG)
+        by geopod-ismtpd-6-1 (SG)
         with ESMTP
-        id FZOMOdXcTZSqSpHTHFO7eA
-        Thu, 23 Dec 2021 01:14:06.545 +0000 (UTC)
+        id __87Da3hTAGNaPsJHueHmQ
+        Thu, 23 Dec 2021 01:14:06.464 +0000 (UTC)
 Received: by pearl.egauge.net (Postfix, from userid 1000)
-        id 3DED070133A; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
+        id 5E49F701456; Wed, 22 Dec 2021 18:14:05 -0700 (MST)
 From:   David Mosberger-Tang <davidm@egauge.net>
-Subject: [PATCH v2 19/50] wilc1000: don't tell the chip to go to sleep while
- copying tx packets
+Subject: [PATCH v2 24/50] wilc1000: protect tx_q_limit with a mutex instead of
+ a spinlock
 Date:   Thu, 23 Dec 2021 01:14:06 +0000 (UTC)
-Message-Id: <20211223011358.4031459-20-davidm@egauge.net>
+Message-Id: <20211223011358.4031459-25-davidm@egauge.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011358.4031459-1-davidm@egauge.net>
 References: <20211223011358.4031459-1-davidm@egauge.net>
 MIME-Version: 1.0
 X-SG-EID: =?us-ascii?Q?+kMxBqj35EdRUKoy8diX1j4AXmPtd302oan+iXZuF8m2Nw4HRW2irNspffT=2Fkh?=
- =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvP9gs2xqRpyIBtGYR?=
- =?us-ascii?Q?lDavY3uO9Y96GusEhphEvR8U2Or9IV1GN9AtCEU?=
- =?us-ascii?Q?roMXcil4bWWz0vBANOAMeohSevp9gTXvyUMIATv?=
- =?us-ascii?Q?1RdH+nd5xkzLSLN5y=2FX21psbKKk3gVo1z303Rgz?=
- =?us-ascii?Q?0VCC8csbnJLJ1naS=2FJqTtOjlf=2FHx6B4=2FfN31hgf?=
- =?us-ascii?Q?ZiFTADVolu+57qdFW5PxQ=3D=3D?=
+ =?us-ascii?Q?ET6RJF6+Prbl0h=2FEtF1rRLvGBcp4s2Az1AHv79A?=
+ =?us-ascii?Q?BU3BFGyn+E9LPexzA58AtugPyGPRXwwtc3DKSoO?=
+ =?us-ascii?Q?sBtpfgdGlcAixxwv=2FfgakudCQuG61w7CMYNU1oc?=
+ =?us-ascii?Q?UDXPTenKqkmi247to98LX2acMVrY4oQgc6NJRcm?=
+ =?us-ascii?Q?AqpM3IMI1p4rC6owYEnLuncxdz47JaQ9rjhUJ4M?=
+ =?us-ascii?Q?6i9zR3Eh2XG3rfVsKA7Xw=3D=3D?=
 To:     Ajay Singh <ajay.kathat@microchip.com>
 Cc:     Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -62,60 +62,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Putting the chip to sleep and waking it up again is relatively slow,
-so there is no point to put the chip to sleep for the short time it
-takes to copy a couple of packets.
+Access to tx_q_limit needs to be serialized among the possibly
+multiple writers to the tx queue.  A mutex will do fine for that.
 
 Signed-off-by: David Mosberger-Tang <davidm@egauge.net>
 ---
- .../net/wireless/microchip/wilc1000/wlan.c    | 24 +++++++++----------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/cfg80211.c | 2 ++
+ drivers/net/wireless/microchip/wilc1000/netdev.h   | 2 ++
+ drivers/net/wireless/microchip/wilc1000/wlan.c     | 5 ++---
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+index d352b7dd03283..0fcc064254f1e 100644
+--- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
++++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+@@ -1672,6 +1672,7 @@ static void wlan_init_locks(struct wilc *wl)
+ 
+ 	spin_lock_init(&wl->txq_spinlock);
+ 	mutex_init(&wl->txq_add_to_head_cs);
++	mutex_init(&wl->tx_q_limit_lock);
+ 
+ 	init_waitqueue_head(&wl->txq_event);
+ 	init_completion(&wl->cfg_event);
+@@ -1688,6 +1689,7 @@ void wlan_deinit_locks(struct wilc *wilc)
+ 	mutex_destroy(&wilc->txq_add_to_head_cs);
+ 	mutex_destroy(&wilc->vif_mutex);
+ 	mutex_destroy(&wilc->deinit_lock);
++	mutex_destroy(&wilc->tx_q_limit_lock);
+ 	cleanup_srcu_struct(&wilc->srcu);
+ }
+ 
+diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.h b/drivers/net/wireless/microchip/wilc1000/netdev.h
+index 650b40961cf98..e247f92a409e0 100644
+--- a/drivers/net/wireless/microchip/wilc1000/netdev.h
++++ b/drivers/net/wireless/microchip/wilc1000/netdev.h
+@@ -257,6 +257,8 @@ struct wilc {
+ 	atomic_t txq_entries;
+ 	struct txq_fw_recv_queue_stat fw[NQUEUES];
+ 
++	/* protect tx_q_limit state */
++	struct mutex tx_q_limit_lock;
+ 	struct wilc_tx_queue_status tx_q_limit;
+ 	struct rxq_entry_t rxq_head;
+ 
 diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
-index 54dfb2b9f3524..a6064a85140b4 100644
+index f82857cebe35e..9b6605e9df296 100644
 --- a/drivers/net/wireless/microchip/wilc1000/wlan.c
 +++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
-@@ -924,29 +924,27 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
- 	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
+@@ -279,13 +279,12 @@ static void init_q_limits(struct wilc *wl)
  
- 	ret = send_vmm_table(wilc, i, vmm_table);
-+	if (ret <= 0) {
-+		if (ret == 0)
-+			/* No VMM space available in firmware.  Inform
-+			 * caller to retry later.
-+			 */
-+			ret = WILC_VMM_ENTRY_FULL_RETRY;
-+		goto out_release_bus;
-+	}
+ static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
+ {
+-	unsigned long flags;
+ 	struct wilc_tx_queue_status *q = &wl->tx_q_limit;
+ 	u8 end_index;
+ 	u8 q_limit;
+ 	bool ret = false;
  
--	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
--
--	if (ret < 0)
--		goto out_unlock;
-+	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
+-	spin_lock_irqsave(&wl->txq_spinlock, flags);
++	mutex_lock(&wl->tx_q_limit_lock);
  
- 	entries = ret;
--	if (entries == 0) {
--		/* No VMM space available in firmware.  Inform caller
--		 * to retry later.
--		 */
--		ret = WILC_VMM_ENTRY_FULL_RETRY;
--		goto out_unlock;
--	}
--
- 	len = copy_packets(wilc, entries, vmm_table, vmm_entries_ac);
- 	if (len <= 0)
- 		goto out_unlock;
+ 	end_index = q->end_index;
+ 	q->cnt[q->buffer[end_index]] -= factors[q->buffer[end_index]];
+@@ -306,7 +305,7 @@ static bool is_ac_q_limit(struct wilc *wl, u8 q_num)
+ 	if (skb_queue_len(&wl->txq[q_num]) <= q_limit)
+ 		ret = true;
  
--	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
-+	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
+-	spin_unlock_irqrestore(&wl->txq_spinlock, flags);
++	mutex_unlock(&wl->tx_q_limit_lock);
  
- 	ret = send_packets(wilc, len);
- 
-+out_release_bus:
- 	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
- 
- out_unlock:
+ 	return ret;
+ }
 -- 
 2.25.1
 
