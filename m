@@ -2,44 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC0CFC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 12:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEB9C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Dec 2021 12:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348127AbhLWMIT (ORCPT
+        id S1348121AbhLWMIV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Dec 2021 07:08:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42498 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348123AbhLWMIR (ORCPT
+        Thu, 23 Dec 2021 07:08:21 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:39518 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348123AbhLWMIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Dec 2021 07:08:17 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82FAEC061401
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 04:08:17 -0800 (PST)
+        Thu, 23 Dec 2021 07:08:20 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 40606B81FDC
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:08:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA9F3C36AE9;
-        Thu, 23 Dec 2021 12:08:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3414E61E2E
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2021 12:08:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A238C36AEA;
+        Thu, 23 Dec 2021 12:08:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640261295;
-        bh=5jlWdDWajc7u7ENz0rzdx523p8WsoOuSDFLNpmg1d2A=;
+        s=k20201202; t=1640261299;
+        bh=zUA29Zfj0+peSQnkULpoH4LXGaZzFk+o+hittqjeDlQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hXyuUgFLgpQWekco7HHal2BKOR6TQtwvYvS604shmZ8/ZVKis421e2UE9JBfL4BNT
-         zvdgdKCb8dVmvGuhKnGoM9aB/WFwWRkBOE8NT6tHu7oUfD3sJnivcN+n4d8/5KwyM4
-         H2cn7XsEFP7VeQLYnqTYO/FDWsuAZ4ykLyJeUJMIhViqiUaXFMkPYX7iSsM+Q56+Yt
-         YlFCKpygVHfAX1Iazov4+hL/e+hmYo7rvK4cJbhyygMCxRqh0CZgP/AR30DDWFy8xV
-         yQWW/r0PO1/4idMnupNJEuxBpf8z/GFlQFiRFjd7yJ18tYQ/hSxATWq0HWbeTc/syS
-         oxcIzWZykBTBQ==
+        b=mgdqvsOpAeEowLZy4HbD5kjFRwgAHpdHlqeC/FsP8wjPErnfpw3+xCo6Sm6R+yLDZ
+         /MsIRvhGB++WzUpbexH8vRFysFPM2nBfX7Pc/VIPM6IOmmQ2XeCsg036bn8DfFp+PH
+         PNhM273A6CCGEQBM848sLkv8l7N7tr9oRvmASrvg4OvnRLeH80ndCVXMYjq5qb4MyG
+         z8P8sFH+QSdccyNK7zhXx37uWqC697DH+g3UCCygB9UB9H+5NR/JCXzZ9tzRzs10av
+         d9EdI3XSDmhYEaOjPOQ5AK4ot9ks6py+7X8Y8RS+z11MPZKkb7qdwyjpVtCyYypAc7
+         hMoF9edWsg2ng==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com
-Subject: [PATCH 08/15] mt76: mt7915: rely on mt76_connac_mcu_wtbl_generic_tlv
-Date:   Thu, 23 Dec 2021 13:07:36 +0100
-Message-Id: <973c72fc1607b0525d41f2fe8bff97d4cadfc969.1640260901.git.lorenzo@kernel.org>
+Subject: [PATCH 11/15] mt76: mt7915: rely on mt76_connac_mcu_wtbl_smps_tlv
+Date:   Thu, 23 Dec 2021 13:07:39 +0100
+Message-Id: <32f11040634e08dc537f7658a92baeeb2727d1a3.1640260901.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <cover.1640260901.git.lorenzo@kernel.org>
 References: <cover.1640260901.git.lorenzo@kernel.org>
@@ -49,100 +46,100 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rely on mt76_connac_mcu_wtbl_generic_tlv routine in mt7915 and remove
-duplicated code.
+Rely on mt76_connac_mcu_wtbl_smps_tlv routine in mt7915
+and remove duplicated code.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  4 +-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 45 +------------------
- 2 files changed, 4 insertions(+), 45 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c    | 11 +++++------
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h    |  3 +++
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 17 ++---------------
+ 3 files changed, 10 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 14bfbbb3114e..b25f4ab44ad6 100644
+index bf2f1ff01e4a..769b3da486cc 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -530,7 +530,7 @@ void mt76_connac_mcu_wtbl_generic_tlv(struct mt76_dev *dev,
- 		generic->muar_idx = mvif->omac_idx;
- 		generic->qos = sta->wme;
- 	} else {
--		if (is_mt7921(dev) &&
-+		if ((is_mt7921(dev) || is_mt7915(dev)) &&
- 		    vif->type == NL80211_IFTYPE_STATION)
- 			memcpy(generic->peer_addr, vif->bss_conf.bssid,
- 			       ETH_ALEN);
-@@ -548,7 +548,7 @@ void mt76_connac_mcu_wtbl_generic_tlv(struct mt76_dev *dev,
- 	rx->rca2 = 1;
- 	rx->rv = 1;
+@@ -861,9 +861,9 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_sta_tlv);
  
--	if (is_mt7921(dev))
-+	if (is_mt7921(dev) || is_mt7915(dev))
- 		return;
+-static void
+-mt76_connac_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
+-			      void *sta_wtbl, void *wtbl_tlv)
++void mt76_connac_mcu_wtbl_smps_tlv(struct sk_buff *skb,
++				   struct ieee80211_sta *sta,
++				   void *sta_wtbl, void *wtbl_tlv)
+ {
+ 	struct wtbl_smps *smps;
+ 	struct tlv *tlv;
+@@ -871,10 +871,9 @@ mt76_connac_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
+ 	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_SMPS, sizeof(*smps),
+ 					     wtbl_tlv, sta_wtbl);
+ 	smps = (struct wtbl_smps *)tlv;
+-
+-	if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC)
+-		smps->smps = true;
++	smps->smps = (sta->smps_mode == IEEE80211_SMPS_DYNAMIC);
+ }
++EXPORT_SYMBOL_GPL(mt76_connac_mcu_wtbl_smps_tlv);
  
- 	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_SPE, sizeof(*spe),
+ void mt76_connac_mcu_wtbl_ht_tlv(struct mt76_dev *dev, struct sk_buff *skb,
+ 				 struct ieee80211_sta *sta, void *sta_wtbl,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 8d1be17886af..68754f4aa1bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1603,4 +1603,7 @@ int mt76_connac_mcu_bss_basic_tlv(struct sk_buff *skb,
+ 				  bool enable);
+ void mt76_connac_mcu_sta_uapsd(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 			       struct ieee80211_sta *sta);
++void mt76_connac_mcu_wtbl_smps_tlv(struct sk_buff *skb,
++				   struct ieee80211_sta *sta,
++				   void *sta_wtbl, void *wtbl_tlv);
+ #endif /* __MT76_CONNAC_MCU_H */
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index ef81b3ff48f9..03deec48a758 100644
+index dcaff00b2a04..9794a0383748 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -769,48 +769,6 @@ int mt7915_mcu_add_rx_ba(struct mt7915_dev *dev,
- 				      enable, false);
+@@ -1022,19 +1022,6 @@ mt7915_mcu_sta_amsdu_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	msta->wcid.amsdu = true;
  }
  
 -static void
--mt7915_mcu_wtbl_generic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
--			    struct ieee80211_sta *sta, void *sta_wtbl,
--			    void *wtbl_tlv)
+-mt7915_mcu_wtbl_smps_tlv(struct sk_buff *skb, struct ieee80211_sta *sta,
+-			 void *sta_wtbl, void *wtbl_tlv)
 -{
--	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
--	struct wtbl_generic *generic;
--	struct wtbl_rx *rx;
+-	struct wtbl_smps *smps;
 -	struct tlv *tlv;
 -
--	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_GENERIC,
--					     sizeof(*generic),
+-	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_SMPS, sizeof(*smps),
 -					     wtbl_tlv, sta_wtbl);
--	generic = (struct wtbl_generic *)tlv;
--
--	if (sta) {
--		if (vif->type == NL80211_IFTYPE_STATION)
--			generic->partial_aid = cpu_to_le16(vif->bss_conf.aid);
--		else
--			generic->partial_aid = cpu_to_le16(sta->aid);
--		memcpy(generic->peer_addr, sta->addr, ETH_ALEN);
--		generic->muar_idx = mvif->mt76.omac_idx;
--		generic->qos = sta->wme;
--	} else {
--		/* use BSSID in station mode */
--		if (vif->type == NL80211_IFTYPE_STATION)
--			memcpy(generic->peer_addr, vif->bss_conf.bssid,
--			       ETH_ALEN);
--		else
--			eth_broadcast_addr(generic->peer_addr);
--
--		generic->muar_idx = 0xe;
--	}
--
--	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_RX, sizeof(*rx),
--					     wtbl_tlv, sta_wtbl);
--	rx = (struct wtbl_rx *)tlv;
--	rx->rca1 = sta ? vif->type != NL80211_IFTYPE_AP : 1;
--	rx->rca2 = 1;
--	rx->rv = 1;
+-	smps = (struct wtbl_smps *)tlv;
+-	smps->smps = (sta->smps_mode == IEEE80211_SMPS_DYNAMIC);
 -}
 -
  static void
- mt7915_mcu_sta_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
- 			 struct ieee80211_sta *sta, bool enable)
-@@ -1249,7 +1207,8 @@ mt7915_mcu_sta_wtbl_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta, void *sta_wtbl,
+@@ -1075,7 +1062,7 @@ mt7915_mcu_wtbl_ht_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 			ht->af = max_t(u8, ht->af, af);
+ 	}
+ 
+-	mt7915_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_tlv);
++	mt76_connac_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_tlv);
+ }
+ 
+ static void
+@@ -1509,7 +1496,7 @@ int mt7915_mcu_add_smps(struct mt7915_dev *dev, struct ieee80211_vif *vif,
  	if (IS_ERR(wtbl_hdr))
  		return PTR_ERR(wtbl_hdr);
  
--	mt7915_mcu_wtbl_generic_tlv(skb, vif, sta, tlv, wtbl_hdr);
-+	mt76_connac_mcu_wtbl_generic_tlv(&dev->mt76, skb, vif, sta, tlv,
-+					 wtbl_hdr);
- 	mt7915_mcu_wtbl_hdr_trans_tlv(skb, vif, sta, tlv, wtbl_hdr);
+-	mt7915_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_hdr);
++	mt76_connac_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_hdr);
  
- 	if (sta)
+ 	ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
+ 				    MCU_EXT_CMD(STA_REC_UPDATE), true);
 -- 
 2.33.1
 
