@@ -2,117 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B525AC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Dec 2021 08:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACCFC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Dec 2021 08:54:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352091AbhLXIxg (ORCPT
+        id S241551AbhLXIy6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Dec 2021 03:53:36 -0500
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:58584 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241419AbhLXIxf (ORCPT
+        Fri, 24 Dec 2021 03:54:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35536 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238166AbhLXIy4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Dec 2021 03:53:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1640336015; x=1671872015;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rOeBX60/PShcm6gZdqOYV+B1vAwmNHr2rz72Cm4Ikhw=;
-  b=qU9qItsLQdsTrl7kS4i1W70kwQUhBsCWgaRkwOcRL3+mkehawkl/dXJc
-   w9vioP4goas8eZrCzWvP/HbKqqBi111J/eGjTMbp7EIl+HkQNLY1/NKAT
-   ICGUlNuslmcRSMYi3DnIk0SeGuJYn99x1XTxbhDurvYHBe7LZw918w/Fn
-   s=;
-Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
-  by alexa-out.qualcomm.com with ESMTP; 24 Dec 2021 00:53:34 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Dec 2021 00:53:09 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Fri, 24 Dec 2021 00:53:08 -0800
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Fri, 24 Dec 2021 00:53:07 -0800
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v2 10/15] ath11k: save max tx power in vdev start response event from firmware
-Date:   Fri, 24 Dec 2021 03:52:31 -0500
-Message-ID: <20211224085236.9064-11-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211224085236.9064-1-quic_wgong@quicinc.com>
-References: <20211224085236.9064-1-quic_wgong@quicinc.com>
+        Fri, 24 Dec 2021 03:54:56 -0500
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 972C4C061401;
+        Fri, 24 Dec 2021 00:54:56 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: usama.anjum)
+        with ESMTPSA id AD4C21F41522
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1640336094;
+        bh=HYXUD2wnC2nF4d9aLRWZznmW4plKGdtTk8jipb8l4G4=;
+        h=Date:From:To:Cc:Subject:From;
+        b=NnkOxKJEBhFI0hM3hgO9HogchwfXxb8jS/LjlM36wHc/cOc1xmyup+sPdL/K5B9Es
+         qCK1gqTBjmyMXPJP2f3sJjk+JAJ47at7XcNiHvY68uiGnWjitWFwa/9t7iSa3gXzlw
+         kChQVei5Yv/eiOCPf5tCHk2fOnlklu8uKNcPFaahQixRXbSUSmCN5eRxw4kcjjtm/o
+         XNSM/yB3ahPPCRP02H8MOmstkxps+F/Wr5MmcsbOFMG7qb9j01nekBV3pVItfnpTZX
+         c/G/tORm5xjGOI+ISvQwFTh+GTYVQovFI+XbA3xFb37NNGKM3NmFGEGY2wIuhr3IhG
+         V3eZ6XqLlnmnQ==
+Date:   Fri, 24 Dec 2021 13:54:46 +0500
+From:   Muhammad Usama Anjum <usama.anjum@collabora.com>
+To:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Po-Hao Huang <phhuang@realtek.com>,
+        "open list:REALTEK WIRELESS DRIVER (rtw88)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Cc:     usama.anjum@collabora.com, kernel@collabora.com
+Subject: [PATCH v3] rtw88: check for validity before using a pointer
+Message-ID: <YcWK1jxnd3vGdmCq@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Save the max tx power received in the vdev start response event from
-firmware. A subsequent patch will use this to calculate the final power
-value for WMI_VDEV_SET_TPC_POWER_CMDID.
+ieee80211_probereq_get() can return NULL. Pointer skb should be checked
+for validty before use. If it is not valid, list of skbs needs to be
+freed.
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+Fixes: 10d162b2ed39 ("rtw88: 8822c: add ieee80211_ops::hw_scan")
+Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.h | 1 +
- drivers/net/wireless/ath/ath11k/wmi.c  | 3 ++-
- drivers/net/wireless/ath/ath11k/wmi.h  | 1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
+v3:
+Use skb_queue_walk instead of skb_queue_walk_safe
+v2:
+Free the list in case of error
+---
+ drivers/net/wireless/realtek/rtw88/fw.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 506829febad7..01909035017d 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -641,6 +641,7 @@ struct ath11k {
- 	struct completion finish_11d_ch_list;
- 	bool pending_11d;
- 	bool regdom_set_by_user;
-+	s8 max_allowed_tx_power;
- };
- 
- struct ath11k_band_cap {
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index d2d0873fda83..4afe9b90c457 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -4688,6 +4688,7 @@ static int ath11k_pull_vdev_start_resp_tlv(struct ath11k_base *ab, struct sk_buf
- 	vdev_rsp->mac_id = ev->mac_id;
- 	vdev_rsp->cfgd_tx_streams = ev->cfgd_tx_streams;
- 	vdev_rsp->cfgd_rx_streams = ev->cfgd_rx_streams;
-+	vdev_rsp->max_allowed_tx_power = ev->max_allowed_tx_power;
- 
- 	kfree(tb);
- 	return 0;
-@@ -7115,7 +7116,7 @@ static void ath11k_vdev_start_resp_event(struct ath11k_base *ab, struct sk_buff
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index 2f7c036f9022..b56dc43229d2 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -1866,11 +1866,19 @@ static int rtw_hw_scan_update_probe_req(struct rtw_dev *rtwdev,
+ 					     req->ssids[i].ssid,
+ 					     req->ssids[i].ssid_len,
+ 					     req->ie_len);
++		if (!skb)
++			goto out;
+ 		rtw_append_probe_req_ie(rtwdev, skb, &list, rtwvif);
+ 		kfree_skb(skb);
  	}
  
- 	ar->last_wmi_vdev_start_status = 0;
--
-+	ar->max_allowed_tx_power = vdev_start_resp.max_allowed_tx_power;
- 	status = vdev_start_resp.status;
+ 	return _rtw_hw_scan_update_probe_req(rtwdev, num, &list);
++
++out:
++	skb_queue_walk(&list, skb)
++		kfree_skb(skb);
++
++	return -ENOMEM;
+ }
  
- 	if (WARN_ON_ONCE(status)) {
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 754fef933cc7..2c50dc8c3834 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -4076,6 +4076,7 @@ struct wmi_vdev_start_resp_event {
- 	};
- 	u32 cfgd_tx_streams;
- 	u32 cfgd_rx_streams;
-+	s32 max_allowed_tx_power;
- } __packed;
- 
- /* VDEV start response status codes */
+ static int rtw_add_chan_info(struct rtw_dev *rtwdev, struct rtw_chan_info *info,
 -- 
-2.31.1
+2.30.2
 
