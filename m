@@ -2,27 +2,23 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E17DC4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Dec 2021 15:38:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB4E3C4332F
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Dec 2021 15:39:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233961AbhLZPis (ORCPT
+        id S234025AbhLZPi6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Dec 2021 10:38:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34744 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229627AbhLZPia (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Dec 2021 10:38:30 -0500
-Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92E08C06175D;
-        Sun, 26 Dec 2021 07:38:30 -0800 (PST)
+        Sun, 26 Dec 2021 10:38:58 -0500
+Received: from marcansoft.com ([212.63.210.85]:56376 "EHLO mail.marcansoft.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234105AbhLZPir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Dec 2021 10:38:47 -0500
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: hector@marcansoft.com)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id B442044B2A;
-        Sun, 26 Dec 2021 15:38:21 +0000 (UTC)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id C407044B42;
+        Sun, 26 Dec 2021 15:38:37 +0000 (UTC)
 From:   Hector Martin <marcan@marcan.st>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -50,9 +46,9 @@ Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com
-Subject: [PATCH 14/34] brcmfmac: pcie: Add IDs/properties for BCM4378
-Date:   Mon, 27 Dec 2021 00:36:04 +0900
-Message-Id: <20211226153624.162281-15-marcan@marcan.st>
+Subject: [PATCH 16/34] brcmfmac: acpi: Add support for fetching Apple ACPI properties
+Date:   Mon, 27 Dec 2021 00:36:06 +0900
+Message-Id: <20211226153624.162281-17-marcan@marcan.st>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211226153624.162281-1-marcan@marcan.st>
 References: <20211226153624.162281-1-marcan@marcan.st>
@@ -62,94 +58,123 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This chip is present on Apple M1 (t8103) platforms:
+On DT platforms, the module-instance and antenna-sku-info properties
+are passed in the DT. On ACPI platforms, module-instance is passed via
+the analogous Apple device property mechanism, while the antenna SKU
+info is instead obtained via an ACPI method that grabs it from
+non-volatile storage.
 
-* atlantisb (apple,j274): Mac mini (M1, 2020)
-* honshu    (apple,j293): MacBook Pro (13-inch, M1, 2020)
-* shikoku   (apple,j313): MacBook Air (M1, 2020)
-* capri     (apple,j456): iMac (24-inch, 4x USB-C, M1, 2020)
-* santorini (apple,j457): iMac (24-inch, 2x USB-C, M1, 2020)
+Add support for this, to allow proper firmware selection on Apple
+platforms.
 
 Signed-off-by: Hector Martin <marcan@marcan.st>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 8 ++++++++
- .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
- 3 files changed, 12 insertions(+)
+ .../broadcom/brcm80211/brcmfmac/Makefile      |  2 +
+ .../broadcom/brcm80211/brcmfmac/acpi.c        | 51 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/common.c      |  1 +
+ .../broadcom/brcm80211/brcmfmac/common.h      |  9 ++++
+ 4 files changed, 63 insertions(+)
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/acpi.c
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 1ee49f9e325d..56a6f41685c1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -731,6 +731,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 		return 0x160000;
- 	case CY_CC_43752_CHIP_ID:
- 		return 0x170000;
-+	case BRCM_CC_4378_CHIP_ID:
-+		return 0x352000;
- 	default:
- 		brcmf_err("unknown chip: %s\n", ci->pub.name);
- 		break;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 520de2531e30..40d0fc6fa9ce 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -58,6 +58,7 @@ BRCMF_FW_DEF(4365C, "brcmfmac4365c-pcie");
- BRCMF_FW_DEF(4366B, "brcmfmac4366b-pcie");
- BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
- BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
-+BRCMF_FW_CLM_DEF(4378B1, "brcmfmac4378b1-pcie");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index 13c13504a6e8..19009eb9db93 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -47,3 +47,5 @@ brcmfmac-$(CONFIG_OF) += \
+ 		of.o
+ brcmfmac-$(CONFIG_DMI) += \
+ 		dmi.o
++brcmfmac-$(CONFIG_ACPI) += \
++		acpi.o
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/acpi.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/acpi.c
+new file mode 100644
+index 000000000000..3e56dc7a8db2
+--- /dev/null
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/acpi.c
+@@ -0,0 +1,51 @@
++// SPDX-License-Identifier: ISC
++/*
++ * Copyright The Asahi Linux Contributors
++ */
++
++#include <linux/acpi.h>
++#include "debug.h"
++#include "core.h"
++#include "common.h"
++
++void brcmf_acpi_probe(struct device *dev, enum brcmf_bus_type bus_type,
++		      struct brcmf_mp_device *settings)
++{
++	acpi_status status;
++	struct acpi_device *adev = ACPI_COMPANION(dev);
++	const union acpi_object *o;
++	struct acpi_buffer buf = {ACPI_ALLOCATE_BUFFER, NULL};
++
++	if (!adev)
++		return;
++
++	if (!ACPI_FAILURE(acpi_dev_get_property(adev, "module-instance",
++						ACPI_TYPE_STRING, &o))) {
++		const char *prefix = "apple,";
++		int len = strlen(prefix) + o->string.length + 1;
++		char *board_type = devm_kzalloc(dev, len, GFP_KERNEL);
++
++		strscpy(board_type, prefix, len);
++		strlcat(board_type, o->string.pointer, len);
++		brcmf_dbg(INFO, "ACPI module-instance=%s\n", o->string.pointer);
++		settings->board_type = board_type;
++	} else {
++		brcmf_dbg(INFO, "No ACPI module-instance\n");
++	}
++
++	status = acpi_evaluate_object(adev->handle, "RWCV", NULL, &buf);
++	o = buf.pointer;
++	if (!ACPI_FAILURE(status) && o && o->type == ACPI_TYPE_BUFFER &&
++	    o->buffer.length >= 2) {
++		char *antenna_sku = devm_kzalloc(dev, 3, GFP_KERNEL);
++
++		memcpy(antenna_sku, o->buffer.pointer, 2);
++		brcmf_dbg(INFO, "ACPI RWCV data=%*phN antenna-sku=%s\n",
++			  (int)o->buffer.length, o->buffer.pointer,
++			  antenna_sku);
++
++		settings->antenna_sku = antenna_sku;
++	} else {
++		brcmf_dbg(INFO, "No ACPI antenna-sku\n");
++	}
++}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index b8ed851129b4..c84c48e49fde 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -437,6 +437,7 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
+ 		/* No platform data for this device, try OF and DMI data */
+ 		brcmf_dmi_probe(settings, chip, chiprev);
+ 		brcmf_of_probe(dev, bus_type, settings);
++		brcmf_acpi_probe(dev, bus_type, settings);
+ 	}
+ 	return settings;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+index d4aa25d646fe..a88c4a9310f3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+@@ -73,6 +73,15 @@ static inline void
+ brcmf_dmi_probe(struct brcmf_mp_device *settings, u32 chip, u32 chiprev) {}
+ #endif
  
- /* firmware config files */
- MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.txt");
-@@ -87,6 +88,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43664_CHIP_ID, 0xFFFFFFF0, 4366C),
- 	BRCMF_FW_ENTRY(BRCM_CC_43666_CHIP_ID, 0xFFFFFFF0, 4366C),
- 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
-+	BRCMF_FW_ENTRY(BRCM_CC_4378_CHIP_ID, 0xFFFFFFFF, 4378B1), /* 3 */
- };
++#ifdef CONFIG_ACPI
++void brcmf_acpi_probe(struct device *dev, enum brcmf_bus_type bus_type,
++		      struct brcmf_mp_device *settings);
++#else
++static inline void brcmf_acpi_probe(struct device *dev,
++				    enum brcmf_bus_type bus_type,
++				    struct brcmf_mp_device *settings) {}
++#endif
++
+ u8 brcmf_map_prio_to_prec(void *cfg, u8 prio);
  
- #define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
-@@ -2010,6 +2012,11 @@ static int brcmf_pcie_read_otp(struct brcmf_pciedev_info *devinfo)
- 	int ret;
- 
- 	switch (devinfo->ci->chip) {
-+	case BRCM_CC_4378_CHIP_ID:
-+		coreid = BCMA_CORE_GCI;
-+		base = 0x1120;
-+		words = 0x170;
-+		break;
- 	default:
- 		/* OTP not supported on this chip */
- 		return 0;
-@@ -2516,6 +2523,7 @@ static const struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_2G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_5G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4371_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4378_DEVICE_ID),
- 	{ /* end: all zeroes */ }
- };
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index 9d81320164ce..8f552b53f3bc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -50,6 +50,7 @@
- #define BRCM_CC_43664_CHIP_ID		43664
- #define BRCM_CC_43666_CHIP_ID		43666
- #define BRCM_CC_4371_CHIP_ID		0x4371
-+#define BRCM_CC_4378_CHIP_ID		0x4378
- #define CY_CC_4373_CHIP_ID		0x4373
- #define CY_CC_43012_CHIP_ID		43012
- #define CY_CC_43752_CHIP_ID		43752
-@@ -85,6 +86,7 @@
- #define BRCM_PCIE_4366_2G_DEVICE_ID	0x43c4
- #define BRCM_PCIE_4366_5G_DEVICE_ID	0x43c5
- #define BRCM_PCIE_4371_DEVICE_ID	0x440d
-+#define BRCM_PCIE_4378_DEVICE_ID	0x4425
- 
- 
- /* brcmsmac IDs */
+ u8 brcmf_map_prio_to_aci(void *cfg, u8 prio);
 -- 
 2.33.0
 
