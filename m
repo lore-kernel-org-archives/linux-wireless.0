@@ -2,27 +2,23 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AF2C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Dec 2021 15:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D9F6C433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Dec 2021 15:40:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234112AbhLZPkk (ORCPT
+        id S234298AbhLZPkw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Dec 2021 10:40:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35000 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234207AbhLZPj2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Dec 2021 10:39:28 -0500
-Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5CB8C06175A;
-        Sun, 26 Dec 2021 07:39:26 -0800 (PST)
+        Sun, 26 Dec 2021 10:40:52 -0500
+Received: from marcansoft.com ([212.63.210.85]:57190 "EHLO mail.marcansoft.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232743AbhLZPkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Dec 2021 10:40:31 -0500
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: hector@marcansoft.com)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id EC7AD44B48;
-        Sun, 26 Dec 2021 15:39:17 +0000 (UTC)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 3511544B2A;
+        Sun, 26 Dec 2021 15:40:21 +0000 (UTC)
 From:   Hector Martin <marcan@marcan.st>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -50,9 +46,9 @@ Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com
-Subject: [PATCH 21/34] brcmfmac: chip: Only disable D11 cores; handle an arbitrary number
-Date:   Mon, 27 Dec 2021 00:36:11 +0900
-Message-Id: <20211226153624.162281-22-marcan@marcan.st>
+Subject: [PATCH 29/34] brcmfmac: pcie: Read the console on init and shutdown
+Date:   Mon, 27 Dec 2021 00:36:19 +0900
+Message-Id: <20211226153624.162281-30-marcan@marcan.st>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211226153624.162281-1-marcan@marcan.st>
 References: <20211226153624.162281-1-marcan@marcan.st>
@@ -62,49 +58,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-At least on BCM4387, the D11 cores are held in reset on cold startup and
-firmware expects to release reset itself. Just assert reset here and let
-firmware deassert it. Premature deassertion results in the firmware
-failing to initialize properly some of the time, with strange AXI bus
-errors.
-
-Also, BCM4387 has 3 cores, up from 2. The logic for handling that is in
-brcmf_chip_ai_resetcore(), but since we aren't using that any more, just
-handle it here.
+This allows us to get console messages if the firmware crashed during
+early init, or if an operation failed and we're about to shut down.
 
 Signed-off-by: Hector Martin <marcan@marcan.st>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 73ab96968ac6..713546cebd5a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1289,15 +1289,18 @@ static bool brcmf_chip_cm3_set_active(struct brcmf_chip_priv *chip)
- static inline void
- brcmf_chip_cr4_set_passive(struct brcmf_chip_priv *chip)
- {
-+	int i;
- 	struct brcmf_core *core;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 6cf55027e0d7..4202ca2e9381 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -851,6 +851,8 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo,
+ 		return;
  
- 	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CR4);
+ 	console = &devinfo->shared.console;
++	if (!console->base_addr)
++		return;
+ 	addr = console->base_addr + BRCMF_CONSOLE_WRITEIDX_OFFSET;
+ 	newidx = brcmf_pcie_read_tcm32(devinfo, addr);
+ 	while (newidx != console->read_idx) {
+@@ -1627,6 +1629,7 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
+ 		  shared->max_rxbufpost, shared->rx_dataoffset);
  
--	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_80211);
--	brcmf_chip_resetcore(core, D11_BCMA_IOCTL_PHYRESET |
--				   D11_BCMA_IOCTL_PHYCLOCKEN,
--			     D11_BCMA_IOCTL_PHYCLOCKEN,
--			     D11_BCMA_IOCTL_PHYCLOCKEN);
-+	/* Disable the cores only and let the firmware enable them.
-+	 * Releasing reset ourselves breaks BCM4387 in weird ways.
-+	 */
-+	for (i = 0; (core = brcmf_chip_get_d11core(&chip->pub, i)); i++)
-+		brcmf_chip_coredisable(core, D11_BCMA_IOCTL_PHYRESET |
-+				       D11_BCMA_IOCTL_PHYCLOCKEN,
-+				       D11_BCMA_IOCTL_PHYCLOCKEN);
+ 	brcmf_pcie_bus_console_init(devinfo);
++	brcmf_pcie_bus_console_read(devinfo, false);
+ 
+ 	return 0;
  }
+@@ -2394,6 +2397,7 @@ brcmf_pcie_remove(struct pci_dev *pdev)
+ 		return;
  
- static bool brcmf_chip_cr4_set_active(struct brcmf_chip_priv *chip, u32 rstvec)
+ 	devinfo = bus->bus_priv.pcie->devinfo;
++	brcmf_pcie_bus_console_read(devinfo, false);
+ 
+ 	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
+ 	if (devinfo->ci)
 -- 
 2.33.0
 
