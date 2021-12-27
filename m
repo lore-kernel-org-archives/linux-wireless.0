@@ -2,95 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C22C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Dec 2021 12:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B74CBC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Dec 2021 13:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236703AbhL0MaR (ORCPT
+        id S232922AbhL0NJP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Dec 2021 07:30:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51458 "EHLO
+        Mon, 27 Dec 2021 08:09:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236696AbhL0MaQ (ORCPT
+        with ESMTP id S230148AbhL0NJO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Dec 2021 07:30:16 -0500
-X-Greylist: delayed 1652 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 27 Dec 2021 04:30:15 PST
-Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6156C06173E;
-        Mon, 27 Dec 2021 04:30:15 -0800 (PST)
-Received: by bues.ch with esmtpsa (Exim 4.92)
-        (envelope-from <m@bues.ch>)
-        id 1n1oi0-0007gR-Kw; Mon, 27 Dec 2021 13:02:32 +0100
-Date:   Mon, 27 Dec 2021 13:01:48 +0100
-From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To:     Chaofan Li <lichaofan@cdjrlc.com>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ssb: Use true and false for bool variable
-Message-ID: <20211227130148.0fd19710@wiggum>
-In-Reply-To: <20211227062159.22746-1-lichaofan@cdjrlc.com>
-References: <20211227062159.22746-1-lichaofan@cdjrlc.com>
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        Mon, 27 Dec 2021 08:09:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CBABC06173E
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2021 05:09:14 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1AE9160FF8
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2021 13:09:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96EB1C36AEA;
+        Mon, 27 Dec 2021 13:09:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640610553;
+        bh=fq3WybTeZrVniTutpifyxcmOUF3+FDU3s+3O6YkeTJk=;
+        h=From:To:Cc:Subject:Date:From;
+        b=bCkdfPDOk1VaWt7n6ktaCkVqFEF602P9mAr9P6LJe86SWSvgB/crtjzQ0PgdkUmSt
+         5hOrg7HhT5MTFmGCQpXduDwC/DnO6SG9S55+L8ehw8WoXu7MGOhtLoxZ8Q4wPOngpb
+         Mdpb31iM9G+vUtPV46E7qyXdMcZghL1BEGdM3oVdWSggyr5n/pykDwtBM7I2PByYBO
+         2O/V1gd+VBu4FJgsy9hVG3vbRj97oQNH1ctU6UEu+/Xph2vm854E72NiMAoK4+2LDo
+         OjSlbo+tPX8AF/dVJGwyFVVfjVmp0vGjSUEM6dWnatlhpolAfzxPlUkZmoW97MlBmL
+         uStydi66f3mOg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: mt7615: fix a possible race enabling/disabling runtime-pm
+Date:   Mon, 27 Dec 2021 14:08:52 +0100
+Message-Id: <9c15fb4f3924ef3b0f8efdc5012d5a027876e3b1.1640610438.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.33.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/Ewtc7_jKL/358o1fj2OylCA";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/Ewtc7_jKL/358o1fj2OylCA
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Similar to mt7921 driver, fix a possible race enabling/disabling
+runtime-pm between mt7615_pm_set() and mt7615_poll_rx().
+mt7615_pm_wake_work() always schedules rx-napi callback and it will
+trigger mt7615_pm_power_save_work routine putting the chip in low-power
+state even if we are disabling runtime-pm deferring the actual chip wake
+at the next access.
 
-On Mon, 27 Dec 2021 14:21:59 +0800
-Chaofan Li <lichaofan@cdjrlc.com> wrote:
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ .../net/wireless/mediatek/mt76/mt7615/debugfs.c   | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Chaofan Li <lichaofan@cdjrlc.com>
-> ---
->  include/linux/ssb/ssb_driver_gige.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/include/linux/ssb/ssb_driver_gige.h b/include/linux/ssb/ssb_=
-driver_gige.h
-> index 15ba0df1ee0d..28c145a51e57 100644
-> --- a/include/linux/ssb/ssb_driver_gige.h
-> +++ b/include/linux/ssb/ssb_driver_gige.h
-> @@ -95,7 +95,7 @@ static inline bool ssb_gige_must_flush_posted_writes(st=
-ruct pci_dev *pdev)
->  	struct ssb_gige *dev =3D pdev_to_ssb_gige(pdev);
->  	if (dev)
->  		return (dev->dev->bus->chip_id =3D=3D 0x4785);
-> -	return 0;
-> +	return false;
->  }
-> =20
->  /* Get the device MAC address */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+index b53528014fbc..ca7efca1543f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+@@ -105,10 +105,10 @@ mt7615_pm_set(void *data, u64 val)
+ 	if (!mt7615_firmware_offload(dev) || mt76_is_usb(&dev->mt76))
+ 		return -EOPNOTSUPP;
+ 
+-	if (val == pm->enable)
+-		return 0;
++	mutex_lock(&dev->mt76.mutex);
+ 
+-	mt7615_mutex_acquire(dev);
++	if (val == pm->enable)
++		goto out;
+ 
+ 	if (dev->phy.n_beacon_vif) {
+ 		ret = -EBUSY;
+@@ -119,9 +119,16 @@ mt7615_pm_set(void *data, u64 val)
+ 		pm->stats.last_wake_event = jiffies;
+ 		pm->stats.last_doze_event = jiffies;
+ 	}
++	/* make sure the chip is awake here and ps_work is scheduled
++	 * just at end of the this routine.
++	 */
++	pm->enable = false;
++	mt76_connac_pm_wake(&dev->mphy, pm);
++
+ 	pm->enable = val;
++	mt76_connac_power_save_sched(&dev->mphy, pm);
+ out:
+-	mt7615_mutex_release(dev);
++	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	return ret;
+ }
+-- 
+2.33.1
 
-
-Acked-by: Michael B=C3=BCsch <m@bues.ch>
-
-
---=20
-Michael
-https://bues.ch/
-
---Sig_/Ewtc7_jKL/358o1fj2OylCA
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmHJqywACgkQ9TK+HZCN
-iw5ByQ//eeYeD/EWJrr0y6YdWL0G9X1yUgAUejS4A/A7qb4o8U82kcfwpjXHp1+1
-d1nE6wWH9uevSGOMwmxqNPNMMXjOqCiCSey/9Vxn+yDBH6sRWOBoTQU2UkekwmOm
-PJqWImE18+xy8VlcC0V+tsEPF7r5Yl7WYpwJIK6K9vqoBL+BUv9d0L6aMKEJdyon
-zEnhsxPl5ykDbLzHFbifRD0/zGTb5FtvaIkq//jexG32DWLYHljniZdO8Q19CsCr
-X99JPedrAXgZ2q6NHNs4Ahl5pMSGxJUvopcrdR0qSBcm9TDZnKYnRZ2RK4M5aLp0
-b2gcsE1xxcv8EyV3RjFjApvpRdsYchJYe9JtmlMvwykJaxE2HDWhDOYtlf4FZyrC
-Y3fqHtip/mELAabeC5t5RqqGS89hZHv7UZVX0HhsQ3AcGuWZnomccVid1plx5/Vo
-G1YnkcuhXm0kzRHxw00tIufjvVmHIhsQDm+WOE1kwWy8lSvb08mt0prNQjW1lio4
-kYgHsq8oGjX4w9qD3uCeEJmi7ePUzXtnY4eqUqSy5pKGon394vhT7j8P6+SIcVmF
-mibtdBzBqIuBGdB7B6zwcLpBnzO9h7g4Q+Qcb8LLReOCVky3UF2Fvm++QqB/6Gjg
-9sydgWEBpZlZZYN1EwhWvMb3cR5Drl0fWWNJajF1X+4Zm0SRkpg=
-=K+ZT
------END PGP SIGNATURE-----
-
---Sig_/Ewtc7_jKL/358o1fj2OylCA--
