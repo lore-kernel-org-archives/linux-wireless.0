@@ -2,131 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A60C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Dec 2021 17:01:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 812BDC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Dec 2021 17:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229901AbhL0RB4 (ORCPT
+        id S229782AbhL0RGB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Dec 2021 12:01:56 -0500
-Received: from static-109-72-52-77.cpe.sn.co.rs ([109.72.52.77]:35492 "EHLO
-        fx.arvanta.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229565AbhL0RBz (ORCPT
+        Mon, 27 Dec 2021 12:06:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58540 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229508AbhL0RGB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Dec 2021 12:01:55 -0500
-X-Greylist: delayed 1635 seconds by postgrey-1.27 at vger.kernel.org; Mon, 27 Dec 2021 12:01:55 EST
-Received: from m1 (unknown [10.5.1.15])
-        by fx.arvanta.net (Postfix) with ESMTP id BF13724BE0;
-        Mon, 27 Dec 2021 17:34:38 +0100 (CET)
-Date:   Mon, 27 Dec 2021 17:34:38 +0100
-From:   Milan =?utf-8?Q?P=2E_Stani=C4=87?= <mps@arvanta.net>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>
-Subject: Re: [BUG] mwifiex sdio wifi crashes on samsung peach pi chromebook
-Message-ID: <YcnrHl5rY+7YUlp+@m1>
-References: <YXKXf1cBjPWqD1Aw@elm.arvanta.net>
- <CA+ASDXPExGHnDdZwvMGbZTTYB76Psy2JMTH7RTnvO1Zggh6c_w@mail.gmail.com>
- <YXhw+qwY1rtkPk+1@elm.arvanta.net>
- <CA+ASDXP6v3sJj9YEXpOMk+F73dd5sUs_PHWm5+ye16yJsy2S0g@mail.gmail.com>
- <YXmv0XkBUj/oQGva@elm.arvanta.net>
+        Mon, 27 Dec 2021 12:06:01 -0500
+Received: from mail-ua1-x92d.google.com (mail-ua1-x92d.google.com [IPv6:2607:f8b0:4864:20::92d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 075C0C06173E;
+        Mon, 27 Dec 2021 09:06:01 -0800 (PST)
+Received: by mail-ua1-x92d.google.com with SMTP id t18so20361070uaj.1;
+        Mon, 27 Dec 2021 09:06:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=/Jl9rD98P7u8+W/KPfuS6926/YvVcB+fWGfP5gXmcTo=;
+        b=DDIfjCIH8zwOvNzVxa6/z0ntzbksgSSL55dovlZgWOtGSrp3q1ZaH60trhPrBO7InU
+         VQzMnJflyMmq1QzPT7DEvhz62ejT/hFT0wjAjxwDXWyaPtjdk5Zi8t5nAy/6/jv76drI
+         M9izPrQFhzXJCFjuvZ6thVvLO6WMqpQa1emRr/faWqTsHilWmOgaKDoE6iEMFYq8rx6x
+         Ys1H9LtoD+fHreydGZ+bsh6TW1LLAI90CgvBxyVxyJKZhXp7ph/ujC1j74L22ZWv9PHX
+         R6TGHEHxozjoooC98744KFk42Cdo+KUCfaMoA3Z3SErBc3wxVKqUdtqrhndUDDgmdg26
+         29Lg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/Jl9rD98P7u8+W/KPfuS6926/YvVcB+fWGfP5gXmcTo=;
+        b=ABWCJq/4DtR1dEV4LdeONtZYqDxXIlyXHyeDxBTsn/fp8djfsf/iIoBeqSvxVS5TE3
+         Z8YCvQ04nt8Z4vw5oMQuOnOGAUofF7OnqhnItAhbvnbVdKichSUFFTQargL2DWlYLHH0
+         GIK2M4CIsL1vwOcPhzwij14uwFf8Wjsu+RcJPlwLMWQiMe23GmABURMlqVVWlZTdjxA4
+         b2C4BLma0ZIRdnthVNB9NNDr8SqPonPD51LbWTRIREIvNJJ0rmjDgRmFDgvw5/77VdUL
+         aR6NQRqVuPEzcBgjuW+z4RbPZV3BtJ4cZyzN2h2SI7Oc8GblVyViztmszarQMgmfUmhg
+         kAgQ==
+X-Gm-Message-State: AOAM5334EeI07KTHGGCx4GFM1G7BMJ1sHIMb29aythZVjkrNKGPnTOvu
+        R0U7WAzlvSbGIkJk/wJpnww=
+X-Google-Smtp-Source: ABdhPJy0eYa4Kbf89/rW9lywsPSxvgEPpudw09MmZke+H+vogBjO7hdxao99ZqQw5ZKvwLE0rweVqg==
+X-Received: by 2002:a9f:2322:: with SMTP id 31mr5172057uae.133.1640624760159;
+        Mon, 27 Dec 2021 09:06:00 -0800 (PST)
+Received: from [10.230.29.137] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 92sm3030310uar.19.2021.12.27.09.05.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Dec 2021 09:05:59 -0800 (PST)
+Message-ID: <ee2d9730-6f7c-a210-8949-0eb2edd9b22e@gmail.com>
+Date:   Mon, 27 Dec 2021 09:05:52 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YXmv0XkBUj/oQGva@elm.arvanta.net>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH 5/9] mtd: rawnand: brcmnand: Allow working without
+ interrupts
+Content-Language: en-US
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     "open list:MEMORY TECHNOLOGY..." <linux-mtd@lists.infradead.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Kamal Dasu <kdasu.kdev@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Cai Huoqing <caihuoqing@baidu.com>,
+        Colin Ian King <colin.king@intel.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM SPECIFIC AMBA DRIVER (BCMA)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM STB NAND FLASH DRIVER" 
+        <bcm-kernel-feedback-list@broadcom.com>
+References: <20211223002225.3738385-1-f.fainelli@gmail.com>
+ <20211223002225.3738385-6-f.fainelli@gmail.com>
+ <CAHp75VeLAuGbeh+DJ=Oox5o8vdt=iLxr80sS3RrZbdJ9smh4OA@mail.gmail.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <CAHp75VeLAuGbeh+DJ=Oox5o8vdt=iLxr80sS3RrZbdJ9smh4OA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
 
-On Wed, 2021-10-27 at 22:00, Milan P. Stanić wrote:
-> On Tue, 2021-10-26 at 14:29, Brian Norris wrote:
-> > On Tue, Oct 26, 2021 at 2:20 PM Milan P. Stanić <mps@arvanta.net> wrote:
-> > > On Tue, 2021-10-26 at 13:55, Brian Norris wrote:
-> > > > On Fri, Oct 22, 2021 at 4:20 AM Milan P. Stanić <mps@arvanta.net> wrote:
-> > > > > On my chromebook samsung peach pi (exynos-5800) wifi driver stops to
-> > > > > work at random time, sometimes after few hours and sometimes after day
-> > > > > or two.
-> > > >
-> > > > I don't have official recommendations, nor HW to test at the moment,
-> > > > but for the record, Peach Pi should have Marvell SD 8797. You can see
-> > > > what firmware Chrome OS used to ship for those devices here:
-> > > >
-> > > > https://chromium.googlesource.com/chromiumos/third_party/marvell/+/HEAD/sd8797_uapsta.bin
-> > > > https://chromium.googlesource.com/chromiumos/third_party/marvell/+log/HEAD/sd8797_uapsta.bin
-> > >
-> > > On these urls I can't find actual file to download, or I'm blind (or
-> > > don't understand how this site 'works').
-> > > Whatever I click I get new url and not binary file to download.
-> > 
-> > Ack, I forgot Gitiles is not super friendly for downloading binaries directly:
-> > 
-> > https://github.com/google/gitiles/issues/106
-> > 
-> > > Could you give url for binary file that I could download, please?
-> > 
-> > This should do it:
-> > 
-> > curl https://chromium.googlesource.com/chromiumos/third_party/marvell/+/HEAD/sd8797_uapsta.bin?format=TEXT
-> > | base64 -d > sd8797_uapsta.bin
-> 
-> This works, thanks.
-> 
-> With this firmware it crashed after 8 hours, and I rebooted machine to
-> see how long it will work on second try.
-> 
-> > Or some similar invocation if you have to use the browser (click on
-> > the "txt" link, then base64-decode the result).
-> > 
-> > > > > kernel is mainline 5.14.4 without patches, but I recall that I noticed
-> > > > > this crashes on older ones but can't remember exact version.
-> > > >
-> > > > Did it ever work well? I'm curious if this was a kernel regression, or
-> > > > perhaps just a long-standing firmware issue.
-> > >
-> > > Yes, it worked for few years but started to crash about few months ago
-> > > and that happened when I upgraded complete root filesystem, so it could
-> > > be related to upgraded firmware. Thank you for hint what to try to test.
-> > 
-> > Could be. It does look like mainline linux-firmware got an update for
-> > this file in 2019, so it's possible your distro (or whatever provides
-> > your rootfs) only semi-recently got the update.
-> 
-> I use linux-firmware-mrvl-20210919 release but this also happened with
-> some earlier versions released this year.
-> 
-> I use Alpine linux (https://alpinelinux.org/, I'm alpine linux developer
-> and maintainer of latest stable kernels on it).
-> 
-> In meantime I found that Arch linux for ARM (alarm) have older firmware
-> for peach chromebook here (probably copied from chromeos):
-> https://archlinuxarm.org/builder/src/sd8787_uapsta_cros.bin
-> https://archlinuxarm.org/builder/src/sd8797_uapsta_cros.bin
-> https://archlinuxarm.org/builder/src/sd8897_uapsta_cros.bin
-> 
-> They even have patched kernel for this here:
-> https://archlinuxarm.org/packages/armv7h/linux-peach/files/0002-use-chromiumos-mwifiex-drivers.patch
-> but this is for old 3.8.11 kernel.
-> 
-> I will try with them and see how it would work.
-> Also I will try to find if I have old root FS which worked few years on
-> it (if I have it archived somewhere).
-> 
-> Also, I will report back results.
 
-After two months of testing with above firmware it works better but
-still crashes, sometimes after 4-12 days but more times it works about
-7-8 days.
+On 12/25/2021 9:45 AM, Andy Shevchenko wrote:
+> On Sat, Dec 25, 2021 at 1:41 AM Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>
+>> The BCMA devices include the brcmnand controller but they do not wire up
+>> any interrupt line, allow the main interrupt to be optional and update
+>> the completion path to also check for the lack of an interrupt line.
+>>
+>> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> 
+>> -       unsigned int            irq;
+>> +       int                     irq;
+> 
+> instead.,,
+> 
+>> +       ctrl->irq = platform_get_irq_optional(pdev, 0);
+>> +       if (ctrl->irq >= 0) {
+> 
+> ret = ...
+> if (ret > 0) {
+> 
+> And drop 0 from the equation, OF never uses 0 as valid vIRQ.
 
-So, not sure is worth to debug this problem more for me but maybe
-it is worth someone who need it to run without reboot for long periods
-to find firmware which is stable.
-
-Thank you all for help and best wishes for new year.
-
+OK but the point of this patch series is to allow the use of the 
+brcmnand driver in a configuration without OF. I don't really see the 
+point in continuing to use unsigned int instead of just letting 
+request_irq() play through and tell us if the interrupt descriptor was 
+valid later on.
 -- 
-Kind regards
+Florian
