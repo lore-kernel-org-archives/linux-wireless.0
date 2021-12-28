@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2FDC4167B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2E18C28CF5
 	for <linux-wireless@archiver.kernel.org>; Tue, 28 Dec 2021 21:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237420AbhL1VP1 (ORCPT
+        id S237475AbhL1VPc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Dec 2021 16:15:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33238 "EHLO
+        Tue, 28 Dec 2021 16:15:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236394AbhL1VPW (ORCPT
+        with ESMTP id S237409AbhL1VP0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Dec 2021 16:15:22 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ADDC06173E;
-        Tue, 28 Dec 2021 13:15:22 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id a203-20020a1c7fd4000000b003457874263aso13402385wmd.2;
-        Tue, 28 Dec 2021 13:15:22 -0800 (PST)
+        Tue, 28 Dec 2021 16:15:26 -0500
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 707D5C061747;
+        Tue, 28 Dec 2021 13:15:25 -0800 (PST)
+Received: by mail-wr1-x42d.google.com with SMTP id s1so40554779wra.6;
+        Tue, 28 Dec 2021 13:15:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=SM7IJAA3tcUmFTUnWjNYesUcXf6+3Mf9PHZAoA83J4U=;
-        b=QZ+8HAuXGBgfsak4gck5ckM7OeD3E9/AGDswNzIk917HFY8+h3ct8wFVKyxvdSuNZd
-         Ow7IkbGTpEEt4yOp15JDUKFUTHLNwpsPEmKW5T+ccYjwrQAywAitzp5pgmiZ2LEw6qLU
-         cmXMawG20NILd1KwaCqmHpjQRxbnWMBdRyLHReDeXUyEVAL+sd5iY95e1w/d22zTfqkV
-         EDg7IfiGBhosrRBXIpvRxQNfxi5EtBBRAftkaPasIuEN33LT9Aj43nRHBHZggrL+uyzV
-         3qtsYkKivC3s+V0/ml4llPkZMFR4qdQOrgLnJ0QWB4EbwFFsL8qrQpT7G+DGJIBgzhFb
-         TFRA==
+        bh=qYRAJooeejsLElKVR8lduV1KN6qXlfQTHsLzXUd3d6g=;
+        b=De5Lu8bqh0J4nFPh1J69zRiHeEeBM2ppK6xezxClAjS6uLL4Y60F3uW64i1SnSazIJ
+         aRxe3+1yiVtrHxsP+NEDWJrFME3yxqrblgn7cfBWLlb7mTwElERwknrpIs3LWn0FRiqE
+         kndJDA3VzRwYZxTZoKDeX7LpE3LwGnUV8VQfl2O/DPN6tqqvr1qPsN1qtsnSxedtfKyw
+         5kB1y3ZpXYm4l7wK5RSVQ9IOb+AzisBzsj57paOjSudnbCFH18T9WWBE3SSRHHzoiRE6
+         v5a8xnX6wkjQOUKtg/4e/JRnDfYpUTM+aJwJ4NqlomIJhv+K0AvjdsSxHTE55TclpU+F
+         OFsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=SM7IJAA3tcUmFTUnWjNYesUcXf6+3Mf9PHZAoA83J4U=;
-        b=ESqvB03OSVk6/XhKEarfRU5Npm/dqgW+Lqb9HW2V0g4cj2HaUA8xtSb6gSAsibUePq
-         gJng+YLFNXSgeYbYNqrsDlXMniOThc2bsEGpj926C6Jvg05XKd48vs4kBz1eIHJgYrYb
-         xNzAHf9bt87Fid+NHrRvfXvFxQ3vkUndA00rgJsA3qpgPdutSnhMJ2cviUGykKwgGsL5
-         9fWOgBys4V49n3UOF0kHnwGmxoHNSM4PIBxwWh+0OIaIR3e+IKc4uZI6jOIDVOBui2G8
-         PuiYkbZZGbItuSzVLYQrUjhMFl2sMGx0KQAyej7DkH0ToETGEM9PkTP/rkAfNfFAyhy6
-         f1gA==
-X-Gm-Message-State: AOAM530q1WsOHWxwbVJ08H8evDKi76TPq1VJ20yHQ1msZtFi1BAA4f+k
-        6xA/+nUKz7wB+YyZrdT0uctZSUQvakQ=
-X-Google-Smtp-Source: ABdhPJxtQTWB/yWQnfM47HkjuOCWuTBJe2oNf7zVW6g32iRMzXm/TQ7OiZsPScm//M6kKOKFPzTJcQ==
-X-Received: by 2002:a05:600c:354c:: with SMTP id i12mr17535444wmq.139.1640726120430;
-        Tue, 28 Dec 2021 13:15:20 -0800 (PST)
+        bh=qYRAJooeejsLElKVR8lduV1KN6qXlfQTHsLzXUd3d6g=;
+        b=CHRtvOUu3eEYY3rslp2Y1oacnudrsPWgEWddUMARQTpYmHhLVXNRC6tOKHVyiBDa0Q
+         nKg/7wuKrqW6zDm4N6lrnn2hSmqvqcX59lH8F3rJZIe1ld4ETyNmkyPB9XAIuyUY00tz
+         8R9W8LADGUI8aEFkEH9Jbq2hQdPxUno5o1zaKaK+V9qlozrq8zRzuJMjGqV9DYocJj+v
+         W2NitDB3Sc9hazDE3PQRLxN0x+E+g4rcNOotXfAlvj98BykpzL3IYqWEebTCadioYp6E
+         XIjK79sphdqC3ejHwHXhN5wksQSG6CG6WocSoEovRACC2yAKr6I3DG3yxVqxWZ7cwwNR
+         7eHw==
+X-Gm-Message-State: AOAM533uZRZS2iv/J7S5UpPqDU1cttoyFpE0pOwsE9oErrhYa42uytj2
+        kS7skUngBwd8wMdF3d+1R5shWY900D0=
+X-Google-Smtp-Source: ABdhPJwoVqHyw+Vr0+/djiZypcuQw8B+dO5JU0Cud6lQWCXyu7oUiPSB1gjR2+g36JWYa/FefvvpBQ==
+X-Received: by 2002:a5d:59a6:: with SMTP id p6mr17447028wrr.559.1640726123719;
+        Tue, 28 Dec 2021 13:15:23 -0800 (PST)
 Received: from localhost.localdomain (dynamic-2a01-0c23-c1d2-d400-f22f-74ff-fe21-0725.c23.pool.telefonica.de. [2a01:c23:c1d2:d400:f22f:74ff:fe21:725])
-        by smtp.googlemail.com with ESMTPSA id o11sm21939036wmq.15.2021.12.28.13.15.19
+        by smtp.googlemail.com with ESMTPSA id o11sm21939036wmq.15.2021.12.28.13.15.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Dec 2021 13:15:20 -0800 (PST)
+        Tue, 28 Dec 2021 13:15:23 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
@@ -57,9 +57,9 @@ Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Pkshih <pkshih@realtek.com>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 2/9] rtw88: Move rtw_chip_cfg_csi_rate() out of rtw_vif_watch_dog_iter()
-Date:   Tue, 28 Dec 2021 22:14:54 +0100
-Message-Id: <20211228211501.468981-3-martin.blumenstingl@googlemail.com>
+Subject: [PATCH 6/9] rtw88: Replace usage of rtw_iterate_keys_rcu() with rtw_iterate_keys()
+Date:   Tue, 28 Dec 2021 22:14:58 +0100
+Message-Id: <20211228211501.468981-7-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211228211501.468981-1-martin.blumenstingl@googlemail.com>
 References: <20211228211501.468981-1-martin.blumenstingl@googlemail.com>
@@ -69,86 +69,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-rtw_bf_cfg_csi_rate() internally access some registers while being
-called unter an atomic lock acquired by rtw_iterate_vifs_atomic(). Move
-the rtw_bf_cfg_csi_rate() call out of rtw_vif_watch_dog_iter() in
-preparation for SDIO support where register access may sleep.
+Upcoming SDIO support may sleep in the read/write handlers. The only
+occurrence of rtw_iterate_keys_rcu() reads and writes registers from
+it's iterator function. Replace it with rtw_iterate_keys() (the non-RCU
+version). This will prevent an "scheduling while atomic" issue when
+using an SDIO device.
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
-v1 -> v2:
-- this patch is new in v2
-- keep rtw_iterate_vifs_atomic() to not undo the fix from commit
-  5b0efb4d670c8 ("rtw88: avoid circular locking between
-  local->iflist_mtx and rtwdev->mutex") and instead call
-  rtw_bf_cfg_csi_rate() from rtw_watch_dog_work() (outside the atomic
-  section) as suggested by Ping-Ke.
-
- drivers/net/wireless/realtek/rtw88/main.c | 35 +++++++++++------------
- 1 file changed, 16 insertions(+), 19 deletions(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 4 +---
+ drivers/net/wireless/realtek/rtw88/util.h | 2 --
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 38252113c4a8..fd02c0b0025a 100644
+index 4b28c81b3ca0..3d4257e0367a 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.c
 +++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -144,26 +144,9 @@ static struct ieee80211_supported_band rtw_band_5ghz = {
- struct rtw_watch_dog_iter_data {
- 	struct rtw_dev *rtwdev;
- 	struct rtw_vif *rtwvif;
-+	bool cfg_csi_rate;
- };
+@@ -581,9 +581,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
  
--static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
--{
--	struct rtw_bf_info *bf_info = &rtwdev->bf_info;
--	u8 fix_rate_enable = 0;
--	u8 new_csi_rate_idx;
--
--	if (rtwvif->bfee.role != RTW_BFEE_SU &&
--	    rtwvif->bfee.role != RTW_BFEE_MU)
--		return;
--
--	rtw_chip_cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
--			      bf_info->cur_csi_rpt_rate,
--			      fix_rate_enable, &new_csi_rate_idx);
--
--	if (new_csi_rate_idx != bf_info->cur_csi_rpt_rate)
--		bf_info->cur_csi_rpt_rate = new_csi_rate_idx;
--}
--
- static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
- 				   struct ieee80211_vif *vif)
+ 	WARN(1, "firmware crash, start reset and recover\n");
+ 
+-	rcu_read_lock();
+-	rtw_iterate_keys_rcu(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
+-	rcu_read_unlock();
++	rtw_iterate_keys(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
+ 	rtw_iterate_stas(rtwdev, rtw_reset_sta_iter, rtwdev);
+ 	rtw_iterate_vifs(rtwdev, rtw_reset_vif_iter, rtwdev);
+ 	rtw_enter_ips(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
+index b0dfadf8b82a..06a5b4c4111c 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.h
++++ b/drivers/net/wireless/realtek/rtw88/util.h
+@@ -19,8 +19,6 @@ struct rtw_dev;
+ 	ieee80211_iterate_stations_atomic(rtwdev->hw, iterator, data)
+ #define rtw_iterate_keys(rtwdev, vif, iterator, data)			       \
+ 	ieee80211_iter_keys(rtwdev->hw, vif, iterator, data)
+-#define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
+-	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
+ 
+ static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
  {
-@@ -174,7 +157,8 @@ static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
- 		if (vif->bss_conf.assoc)
- 			iter_data->rtwvif = rtwvif;
- 
--	rtw_dynamic_csi_rate(iter_data->rtwdev, rtwvif);
-+	iter_data->cfg_csi_rate = rtwvif->bfee.role == RTW_BFEE_SU ||
-+				  rtwvif->bfee.role == RTW_BFEE_MU;
- 
- 	rtwvif->stats.tx_unicast = 0;
- 	rtwvif->stats.rx_unicast = 0;
-@@ -241,6 +225,19 @@ static void rtw_watch_dog_work(struct work_struct *work)
- 	/* use atomic version to avoid taking local->iflist_mtx mutex */
- 	rtw_iterate_vifs_atomic(rtwdev, rtw_vif_watch_dog_iter, &data);
- 
-+	if (data.cfg_csi_rate) {
-+		struct rtw_bf_info *bf_info = &rtwdev->bf_info;
-+		u8 fix_rate_enable = 0;
-+		u8 new_csi_rate_idx;
-+
-+		rtw_chip_cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
-+				      bf_info->cur_csi_rpt_rate,
-+				      fix_rate_enable, &new_csi_rate_idx);
-+
-+		if (new_csi_rate_idx != bf_info->cur_csi_rpt_rate)
-+			bf_info->cur_csi_rpt_rate = new_csi_rate_idx;
-+	}
-+
- 	/* fw supports only one station associated to enter lps, if there are
- 	 * more than two stations associated to the AP, then we can not enter
- 	 * lps, because fw does not handle the overlapped beacon interval
 -- 
 2.34.1
 
