@@ -2,80 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08108C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Dec 2021 11:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0644AC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Dec 2021 17:13:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229531AbhLaLgO (ORCPT
+        id S230374AbhLaRNE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Dec 2021 06:36:14 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:40226 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbhLaLgO (ORCPT
+        Fri, 31 Dec 2021 12:13:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229699AbhLaRNB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Dec 2021 06:36:14 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E2340B81D72
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2021 11:36:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CE94C36AEA;
-        Fri, 31 Dec 2021 11:36:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640950570;
-        bh=0lv7bmaHgkW1YigwoZ315t0CBlNONLGdakWjZz605cw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=U9Ym8jDuYnMCtr4iFZEtaflhBg2BGcvvXNTU82iRxIKiA7aWKdfqtAhTVcLkrBUwE
-         8lF0sz5RtUKe0X/hv0VbQnNM8gdoQIBFzMphAY1Flm/2dWQ0wx6AbowlURs8R9pd0N
-         K/EeES2xDUenJ/8Y1bcFH5NA/FuB3js84hkveWYX+XO0MjxqmlqBR6Q9dcGrwxQwJV
-         N9bhkKWs3ztz4odhGodOt7XvgFbE/U3gSoPzWQB9dn6csiG65gfcV+0JPQZhl3KpYG
-         RNmW30Ku+hepSRriqqHhzdg62uYjN97kD9EZf/bOsNhl2deVtK8W50+xQ34HgyRXj9
-         ugl+nl8Ok+JpQ==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        sean.wang@mediatek.com, deren.wu@mediatek.com
-Subject: [PATCH] mt76: mt7921: do not always disable fw runtime-pm
-Date:   Fri, 31 Dec 2021 12:36:02 +0100
-Message-Id: <910ea351fa27e39b9116a3895090291235e24b4b.1640950454.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.33.1
+        Fri, 31 Dec 2021 12:13:01 -0500
+X-Greylist: delayed 319 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 31 Dec 2021 09:13:01 PST
+Received: from mout0.freenet.de (mout0.freenet.de [IPv6:2001:748:100:40::2:2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 202CDC061574
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2021 09:13:01 -0800 (PST)
+Received: from [195.4.92.122] (helo=sub3.freenet.de)
+        by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.92 #3)
+        id 1n3LNS-0008QU-LS
+        for linux-wireless@vger.kernel.org; Fri, 31 Dec 2021 18:07:38 +0100
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justmail.de
+        ; s=mjaymdexmjqk; h=Subject:From:To:MIME-Version:Date:Message-ID:Content-Type
+        :Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Xlzrxh7JQtps10BW+uGVvWVsROhshMlEtOPmlYrwQzk=; b=dcMxXfBsN1bu+jGUHbPmtCxYFq
+        IeyX7Ykr3vpqobqDtV9xuN4+eUdRxGBNvm8nKCODax0OZH8VRIyouxQV10ti+mdMDENplxu2i81i9
+        c0rUeHyenPdx4Va+UmAcgedHdj0FqrbBUp4RII1AmnBgXfw3BfGLCKO7ozLrP1/TdmTUrEN6+5bK8
+        VCNlW+3mWPRh0CADhS/nJF3bBG+VrsSs/jtoSLAyQ9IxYzOySKMOysVInrFd1jxX3iCVTXK+STPZm
+        7KT7CuSj2tqg4AktQnRBesIfZhjZoCebeB21gAQyr5f0YmakLKBg7Wxzc5QsDDEQQKlMIKS9VR+X6
+        wlX1Nsag==;
+Received: from p200300de574ba600505400fffe15ac42.dip0.t-ipconnect.de ([2003:de:574b:a600:5054:ff:fe15:ac42]:50152 helo=mail.maya.org)
+        by sub3.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256) (port 465) (Exim 4.92 #3)
+        id 1n3LNS-0003b7-Iy
+        for linux-wireless@vger.kernel.org; Fri, 31 Dec 2021 18:07:38 +0100
+Received: internal info suppressed
+Content-Type: multipart/mixed; boundary="------------t30KFMvVduofS9dWVYW250tm"
+Message-ID: <bf74cccd-92f9-c09d-b29c-53b126a5ae88@justmail.de>
+Date:   Fri, 31 Dec 2021 18:07:48 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Content-Language: en-US
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Klaus Mueller <kmueller@justmail.de>
+Subject: rtw88 (https://github.com/lwfinger/rtw88) / compile error since 5.15?
+X-Originated-At: 2003:de:574b:a600:5054:ff:fe15:ac42!50152
+X-FNSign: v=2 s=7084C6090B58D86AB622A53E521E57AC7E6A5860AB80213B51406D4D6E687AA5
+X-Scan-TS: Fri, 31 Dec 2021 18:07:38 +0100
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-After commit 'd430dffbe9dd ("mt76: mt7921: fix a possible race
-enabling/disabling runtime-pm")', runtime-pm is always disabled in the
-fw even if the user requests to enable it toggling debugfs node since
-mt7921_pm_interface_iter routine will use pm->enable to configure the fw.
-Fix the issue moving enable variable configuration before running
-mt7921_pm_interface_iter routine.
+This is a multi-part message in MIME format.
+--------------t30KFMvVduofS9dWVYW250tm
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Fixes: d430dffbe9dd ("mt76: mt7921: fix a possible race enabling/disabling runtime-pm")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Hello,
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-index 86fd7292b229..45a393070e46 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/debugfs.c
-@@ -291,13 +291,12 @@ mt7921_pm_set(void *data, u64 val)
- 	pm->enable = false;
- 	mt76_connac_pm_wake(&dev->mphy, pm);
- 
-+	pm->enable = val;
- 	ieee80211_iterate_active_interfaces(mt76_hw(dev),
- 					    IEEE80211_IFACE_ITER_RESUME_ALL,
- 					    mt7921_pm_interface_iter, dev);
- 
- 	mt76_connac_mcu_set_deep_sleep(&dev->mt76, pm->ds_enable);
--
--	pm->enable = val;
- 	mt76_connac_power_save_sched(&dev->mphy, pm);
- out:
- 	mutex_unlock(&dev->mt76.mutex);
--- 
-2.33.1
+I found an error compiling rtw88 w/ kernel 5.15(.12). The attached short patch fixes it (works for me). Could you please apply a better patch?
 
+
+Thanks
+Klaus
+
+--------------t30KFMvVduofS9dWVYW250tm
+Content-Type: text/x-patch; charset=UTF-8; name="rtw88_mac80211.c.diff"
+Content-Disposition: attachment; filename="rtw88_mac80211.c.diff"
+Content-Transfer-Encoding: base64
+
+LS0tIG1hYzgwMjExLmMub3JpZwkyMDIxLTA1LTI2IDIyOjAzOjE4LjYzNjAwMzQ2OSArMDIw
+MAorKysgbWFjODAyMTEuYwkyMDIxLTEyLTMxIDE1OjIxOjAxLjI0Mzg5NjUyNiArMDEwMApA
+QCAtNjU1LDEzICs2NTUsMTQgQEAKIAltdXRleF91bmxvY2soJnJ0d2Rldi0+bXV0ZXgpOwog
+fQogCi0jaWYgTElOVVhfVkVSU0lPTl9DT0RFID49IEtFUk5FTF9WRVJTSU9OKDQsIDE4LCAw
+KQorI2lmIExJTlVYX1ZFUlNJT05fQ09ERSA+PSBLRVJORUxfVkVSU0lPTig1LCAxNSwgMCkK
+IHN0YXRpYyB2b2lkIHJ0d19vcHNfbWdkX3ByZXBhcmVfdHgoc3RydWN0IGllZWU4MDIxMV9o
+dyAqaHcsCiAJCQkJICAgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwKLQkJCQkgICB1MTYg
+ZHVyYXRpb24pCisJCQkJICAgc3RydWN0IGllZWU4MDIxMV9wcmVwX3R4X2luZm8gKmluZm8p
+CiAjZWxzZQogc3RhdGljIHZvaWQgcnR3X29wc19tZ2RfcHJlcGFyZV90eChzdHJ1Y3QgaWVl
+ZTgwMjExX2h3ICpodywKLQkJCQkgICBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmKQorCQkJ
+CSAgIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsCisJCQkJICAgdTE2IGR1cmF0aW9uKQog
+I2VuZGlmCiB7CiAJc3RydWN0IHJ0d19kZXYgKnJ0d2RldiA9IGh3LT5wcml2Owo=
+
+--------------t30KFMvVduofS9dWVYW250tm--
