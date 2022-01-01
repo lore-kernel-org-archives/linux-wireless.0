@@ -2,20 +2,20 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB92AC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC478C4332F
 	for <linux-wireless@archiver.kernel.org>; Sat,  1 Jan 2022 20:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232689AbiAAU1i (ORCPT
+        id S232696AbiAAU1i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 1 Jan 2022 15:27:38 -0500
-Received: from mout.kundenserver.de ([217.72.192.74]:58447 "EHLO
+Received: from mout.kundenserver.de ([217.72.192.74]:49315 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231542AbiAAU1h (ORCPT
+        with ESMTP id S232693AbiAAU1i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Jan 2022 15:27:37 -0500
+        Sat, 1 Jan 2022 15:27:38 -0500
 Received: from localhost.localdomain ([37.4.249.169]) by
  mrelayeu.kundenserver.de (mreue107 [212.227.15.183]) with ESMTPSA (Nemesis)
- id 1N4Q8u-1mNJUA3VhO-011R9z; Sat, 01 Jan 2022 21:27:16 +0100
+ id 1Mhl4Q-1mQ0NL0gWe-00do8f; Sat, 01 Jan 2022 21:27:19 +0100
 From:   Stefan Wahren <stefan.wahren@i2se.com>
 To:     Rob Herring <robh+dt@kernel.org>,
         Florian Fainelli <f.fainelli@gmail.com>,
@@ -36,71 +36,64 @@ Cc:     Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         linux-rpi-kernel@lists.infradead.org,
         Stefan Wahren <stefan.wahren@i2se.com>
-Subject: [PATCH RFC 1/4] brcmfmac: use separate firmware for 43430 revision 4
-Date:   Sat,  1 Jan 2022 21:26:49 +0100
-Message-Id: <1641068812-5851-2-git-send-email-stefan.wahren@i2se.com>
+Subject: [PATCH RFC 4/4] arm64: dts: broadcom: Add reference to RPi Zero 2 W
+Date:   Sat,  1 Jan 2022 21:26:52 +0100
+Message-Id: <1641068812-5851-5-git-send-email-stefan.wahren@i2se.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1641068812-5851-1-git-send-email-stefan.wahren@i2se.com>
 References: <1641068812-5851-1-git-send-email-stefan.wahren@i2se.com>
-X-Provags-ID: V03:K1:gbP/sU8ZIGxy06v2ug+WXnZFZ7jofwY7iLEid7yG1YEy2peckqw
- blWo1Fu/bUb4yjxr0UDvV85nPuBNwfaP8gYYypSFkles0VjBmbU8FeavVJbo6SYyzopL62p
- WEFZ2zeTW9O0yMHcJZopr/E+gNa4rruTor2G3+1UQNH9g4mJDRAYVJfvk/LTX5QcR/iWzoH
- 7rTfMDofdb2q5eGF+EQtA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:8AXvqx+XFYo=:xpc3rhMdo1k55aT0TB8jar
- Z+b73VPGMgq8WivDZ/l85YinrI68a7dZ1mh8ayqp4J44nrdB+7NWjtcMjdXhArIi15qBPWtEb
- hYWt7Rl4NCMCSDc3J/8gB1cMFD6TEAw4B7sbEOS4dy4CNGTUQ+HeQ6lSjhy/ONZn8H+nCd4gN
- kV8ifov8ieZAaLiLYSnbox5Hedi4rzXU8VPnwhDcXL+zjjj8B6au7J978sX2czUhmbx5/QJ+z
- Ir7AyTJgcNiysXOiisrRCMzONCn6Ocg2IwED1Zjx64slEpZrdGB5Q4hTuc08fDXhAYiB0a1fX
- CkaqTVrvA5V1LRzmZpS+F0uB23/kQrlfb8tte2MFhF0l4AHtAnCPNY5J5c9lwbTXN0ydEU6eP
- mKB/XOUWRPlm8Ac4CwZT45aHngsDBbgUBYwVsHLI0gK0pgPGBjj71HoSyHBd+usTXNYgBEyfQ
- vaDIhH0DHwczdmpP2pKQjCSsGdP9SRy9N5fbaFDnVMOdJ2g5NBqQTfePbyFtZxATx/9Vd2LgG
- NIkAjJ73qvfqrEiwkoq3FJdIAyAcUsiYBw1ey+h1hdwoi228If9JZVAJVNm/TEmLe4JO7VOAX
- ItKkw5akvzRH2ReeQg27CLyYiqb4YTUXBzpdfF1hU1Zr4QAQaoIfhMHa76YDWtQqw9PdDTFLY
- 8ecV4KZnsbVTe8B/lF42ocBmC8ltEHeSvBL2ZOYOMypz8DKBLChNugBkhe9SGZJyhVTemlxqc
- kMoKLhfVcF8tKsdY
+X-Provags-ID: V03:K1:VUyfbNXMUTZ28FWicxIVh7Ab5XomgIvGNewGUykBBN+BdaVpTKF
+ fd7K7/AnwSw54Q0jUcXxTbOIfhv8T8RjrbjfKAia1quN1RBqi/XZmgrjgFjAv75LD9yX+JF
+ INqg6VlqwzPXQ6PdGlSM+QDKzN469ASPClUj3ix89M+Tj3J+wz4Pe6y206R7USzYomvTcYp
+ g2ArOhhnuZE0AWPDLKlPg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:RTIGgM0LfcE=:DCJ33IC5XicleX2NVL6AhH
+ kNbu+Pd9g618cFxUyXyMLcHmaZIwOq7pmcDK+evfa+u7n+xIl98nIu0pISkkoU3pG/mo6GkW+
+ UGotZI8fuaYN293E3gEBovMt6Lldi/FTEW/dLJ+kZTbEJnuCIzPplORrkc7XUjCp5j83A4L3X
+ kcPIfuDPP7D3s6Rsex2UpbZAl9X+p3xrqdmDwrk+aGTXUtg9ZPGWGt0NNN3Dk+p7R3zga5jmz
+ 0joFRiWdgGOOAQmczHkayjlOc1xzK3j/3sCNjW+6MczECngs7dc9A4vSLJNCkTE/XDdgLvXrN
+ v0Vdo+Iyn3x3XtyPFDm1J4dGB1zZhTFV3UZfcfgFgF8cBGLH4fW0WulSQCECO0pvMVG4Q3Z8J
+ 67XC11Vz6hQd/fiFIfBOQEgPWSzQV16f2EU7zAQ7DZkC+hYLDk1hJuy92es+9c1DoVGt4nRse
+ zwUHN2WY3McuxFRzkR+YuyjhJ7+y5Ys7QM1zLZ8g+URkrFCMEHDcJUTzl2sOB5QzMccLO/rju
+ cOsOjy0WIf0J3mLe5tCWZtDUA4pwbJnFlKeh3MJi1bJKJsybK7NuScwDWMKKL2SOiNlhTmkZl
+ vSN437/oVlR/GmxiqXmlvQMEd94JzHalBaAUkQZ4V0EFnceV0cV9p4zET4JdmqGtPAQ8lGBV1
+ vZ6nGNlFEdLsg5Vgl1vyVHHHy7sUhmjlqBPnNfIY3kN5aE4RsYV9KE5lluqkwPuID32XktJ0B
+ sWa0rSu5ctgsjFpn
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A separate firmware is needed, for Broadcom 43430 revision 4. This
-chip can be found on e.g. certain revisions of Raspberry Pi Zero 2 W.
-Original firmware file from IC vendor is named 'brcmfmac43436-sdio.bin',
-but brcmfmac and also btbcm drivers report chip id 43430, so requested
-firmware file name is 'brcmfmac43430c0-sdio.bin' in line with other
-43430 revisions.
+This adds a reference to the dts of the Raspberry Pi Zero 2 W,
+so we don't need to maintain the content in arm64.
 
 Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
 ---
+ arch/arm64/boot/dts/broadcom/Makefile                 | 3 ++-
+ arch/arm64/boot/dts/broadcom/bcm2837-rpi-zero-2-w.dts | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/broadcom/bcm2837-rpi-zero-2-w.dts
 
-Hi,
-i'm not sure about all these mappings. All i can say is that the wifi
-interface of the RPi Zero 2 cames up with this patch.
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 8effeb7..c79bd47 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -618,6 +618,7 @@ BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
- /* Note the names are not postfixed with a1 for backward compatibility */
- BRCMF_FW_CLM_DEF(43430A1, "brcmfmac43430-sdio");
- BRCMF_FW_DEF(43430B0, "brcmfmac43430b0-sdio");
-+BRCMF_FW_CLM_DEF(43430C0, "brcmfmac43430c0-sdio");
- BRCMF_FW_CLM_DEF(43455, "brcmfmac43455-sdio");
- BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
- BRCMF_FW_CLM_DEF(4354, "brcmfmac4354-sdio");
-@@ -649,7 +650,8 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
- 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
- 	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000002, 43430A1),
--	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFC, 43430B0),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000004, 43430C0),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFF8, 43430B0),
- 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0x00000200, 43456),
- 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
- 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+diff --git a/arch/arm64/boot/dts/broadcom/Makefile b/arch/arm64/boot/dts/broadcom/Makefile
+index c688203..5082fcd 100644
+--- a/arch/arm64/boot/dts/broadcom/Makefile
++++ b/arch/arm64/boot/dts/broadcom/Makefile
+@@ -5,7 +5,8 @@ dtb-$(CONFIG_ARCH_BCM2835) += bcm2711-rpi-400.dtb \
+ 			      bcm2837-rpi-3-a-plus.dtb \
+ 			      bcm2837-rpi-3-b.dtb \
+ 			      bcm2837-rpi-3-b-plus.dtb \
+-			      bcm2837-rpi-cm3-io3.dtb
++			      bcm2837-rpi-cm3-io3.dtb \
++			      bcm2837-rpi-zero-2-w.dtb
+ 
+ subdir-y	+= bcm4908
+ subdir-y	+= northstar2
+diff --git a/arch/arm64/boot/dts/broadcom/bcm2837-rpi-zero-2-w.dts b/arch/arm64/boot/dts/broadcom/bcm2837-rpi-zero-2-w.dts
+new file mode 100644
+index 0000000..307ae69
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/bcm2837-rpi-zero-2-w.dts
+@@ -0,0 +1,2 @@
++// SPDX-License-Identifier: GPL-2.0
++#include "arm/bcm2837-rpi-zero-2-w.dts"
 -- 
 2.7.4
 
