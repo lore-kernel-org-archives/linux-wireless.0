@@ -2,99 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB4C5C433EF
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Jan 2022 02:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A089C433EF
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Jan 2022 20:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231962AbiAACXd (ORCPT
+        id S232676AbiAAU1e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Dec 2021 21:23:33 -0500
-Received: from titan58.planetwebservers.net ([51.79.1.102]:54019 "EHLO
-        titan58.planetwebservers.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231938AbiAACXc (ORCPT
+        Sat, 1 Jan 2022 15:27:34 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:36489 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231513AbiAAU1d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Dec 2021 21:23:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lockie.ca;
-        s=default; h=Content-Transfer-Encoding:Content-Type:To:Subject:From:
-        MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=719pbIjP2fnsARJCr/TTFgLmRia4I6Lq3qNliheHZvQ=; b=IJvNbyWCFXvahzAuXNHe4XtFfQ
-        NYb/L3ygV1lLAdD2EB2DSFAP+/RB9Qyn5KrtWjv5VSqd9PfmE0QSdOVB9SRR/LlyJfTkP9GJ+4vT+
-        FfMdqDOfozKleKHYmTaX19h/aF8LTGGP5PzeF89iUwPwxAonRPHUABtw+BYMnpbzL1HrwDSIxLCPt
-        ybzez8JX2NCqo0IikrDbKc6F64hkjVQ7QAxIONzKG6Z4LNIwOD52g0TeeKB/UXg+IRcwz9jYWTz7c
-        r2qTyi0/pUkalzP+V1JexqDbSC+Az9He+vb+qBUlCvU6ULftA+BGqjzcQ3GiEL5JkRI3Z/fo2e3LQ
-        y9T+OYXA==;
-Received: from [37.19.213.90] (port=41066 helo=[10.5.0.2])
-        by titan.planetwebservers.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <bjlockie@lockie.ca>)
-        id 1n3U3S-0005q0-12
-        for linux-wireless@vger.kernel.org; Sat, 01 Jan 2022 13:23:31 +1100
-Message-ID: <ada800c1-8404-2dd4-0d1e-a72a4643b261@lockie.ca>
-Date:   Fri, 31 Dec 2021 21:23:30 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-From:   James <bjlockie@lockie.ca>
-Subject: Intel Ice Lake-LP PCH CNVi WiFi (rev 30) unknown rate information
-To:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - titan.planetwebservers.net
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - lockie.ca
-X-Get-Message-Sender-Via: titan.planetwebservers.net: authenticated_id: bjlockie@lockie.ca
-X-Authenticated-Sender: titan.planetwebservers.net: bjlockie@lockie.ca
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-From-Rewrite: unmodified, already matched
+        Sat, 1 Jan 2022 15:27:33 -0500
+Received: from localhost.localdomain ([37.4.249.169]) by
+ mrelayeu.kundenserver.de (mreue107 [212.227.15.183]) with ESMTPSA (Nemesis)
+ id 1MfZDK-1mSCEf2Wfw-00g13p; Sat, 01 Jan 2022 21:27:17 +0100
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+To:     Rob Herring <robh+dt@kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Chung-hsien Hsu <chung-hsien.hsu@infineon.com>,
+        Kalle Valo <kvalo@kernel.org>
+Cc:     Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+        Phil Elwell <phil@raspberrypi.com>, devicetree@vger.kernel.org,
+        soc@kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org,
+        Stefan Wahren <stefan.wahren@i2se.com>
+Subject: [PATCH RFC 2/4] dt-bindings: arm: bcm2835: Add Raspberry Pi Zero 2 W
+Date:   Sat,  1 Jan 2022 21:26:50 +0100
+Message-Id: <1641068812-5851-3-git-send-email-stefan.wahren@i2se.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1641068812-5851-1-git-send-email-stefan.wahren@i2se.com>
+References: <1641068812-5851-1-git-send-email-stefan.wahren@i2se.com>
+X-Provags-ID: V03:K1:/F4aUJqeYItmMr5Xkbt5w/NV6TF/mg6jj6khyL26kHagOjvPDzP
+ 67MAt3RXnAhWGKDz2F5r+Mumr6w6YWmsjPENlkHL0oZeaJ4/vLM46hrTuhGs/FlkavSH9RS
+ VypmT7/GMis7HiXHC8JpNcpevy0NY+Sc2460HfzvH7axSkTfQIBI6PzDEubck6CQMBFlFWr
+ YNrM7uqzvnfIUTyiJ1U7w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:sENR6rDv6vs=:KM0QArLvRm8xCG/YV5DJ+j
+ WKvsTzR1GhriCC9RkdoecD9EiPduo/yLxOuQ6WxZhBWiybf5QJmrsIKzJ4RIRq47lWHKJ6q9p
+ 24sblnP9bAnruQHYhx+QzBw9e7MEZ7VbCR6gG0DH5rAXU6OXoQOjqlxjptk68KS0eDPjlkV4w
+ /XsHd6anhRI5q17homEATDxgAwMgoY2Xmav5l7c62/Tn16TVrtzEM9Aiavp1zw62OLQCvcR5q
+ dfKrGQcYF6rBMzPU2glQPuhyCN0ZK2cZih4pD1Tnsoq63CfVwAHTyIDO8/bsJYGtE+sqdxDG+
+ 6zLS1fvqb5q/Xs1Trqt9mdc1T0xMh425g2CaRQR3AhHioVhXc2fhaEeQVqq0iNMjUs1m2PMmZ
+ rnkW42j8nGjgXVJAU2hGI9LU32Ifnxzh1W2CrGDTKow+4VZ2kiHZ1xQIEgfiTS7r1oK99FakH
+ zDoCu1R4hctbpmNstz8sCmUvOMmgjoTZIqoFv9Nj7jGuNIf2nY1c9HCrVEHcYsEXJQEb5dNQG
+ /Gq3vav6vapnii76U83wr5cfJf/teStStkLN69dgzyu5REL1BqiREIQX8+56gPcPKcUM9gj3w
+ 9Lix466O+nOLnCIkMvuP7O82LL+oR05Z7e5+loJcBveMRbqyKh1c7FBFGI7HWjeW7yg0AqbrJ
+ AdtamXem5DsSButYJs8zksLnqfysPgkzfCp8z2/qHnaIm8SMZaJGMLu2a672hGax11UeWcNcl
+ 6TaFHZQgiVnLg47d
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is the unknown rate information error.
-And it is VERY slow to negotiate a higher tx bitrate.
-It always starts at 245.0 MBit/s then eventually gets to 1200.9 MBit/s.
+Add the Raspberry Pi Zero 2 W to DT schema.
 
-$ lspci
-00:14.3 Network controller: Intel Corporation Ice Lake-LP PCH CNVi WiFi 
-(rev 30)
+Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+---
+ Documentation/devicetree/bindings/arm/bcm/bcm2835.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-$ iwlist wlp0s20f3 bitrate
-wlp0s20f3  unknown bit-rate information.
-           Current Bit Rate:245 Mb/s
-
-$ ifconfig
-wlp0s20f3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-         inet 192.168.68.73  netmask 255.255.252.0  broadcast 192.168.71.255
-         inet6 fe80::242d:b7ca:92cc:79d0  prefixlen 64  scopeid 0x20<link>
-         ether 84:1b:77:02:d9:6a  txqueuelen 1000  (Ethernet)
-         RX packets 298984  bytes 281963663 (281.9 MB)
-         RX errors 0  dropped 58  overruns 0  frame 0
-         TX packets 55874  bytes 6700470 (6.7 MB)
-         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
-$ uname -a
-Linux james-aspirea51555 5.13.0-22-generic #22-Ubuntu SMP Fri Nov 5 
-13:21:36 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
-
-$ iw dev wlp0s20f3 link
-Connected to xxx (on wlp0s20f3)
-         SSID: xxx
-         freq: 5240
-         RX: 32287683 bytes (32648 packets)
-         TX: 586902 bytes (4676 packets)
-         signal: -39 dBm
-         rx bitrate: 1200.9 MBit/s 80MHz HE-MCS 11 HE-NSS 2 HE-GI 0 HE-DCM 0
-         tx bitrate: 245.0 MBit/s 80MHz HE-MCS 3 HE-NSS 2 HE-GI 2 HE-DCM 0
-
-         bss flags:      short-slot-time
-         dtim period:    1
-         beacon int:     100
-
+diff --git a/Documentation/devicetree/bindings/arm/bcm/bcm2835.yaml b/Documentation/devicetree/bindings/arm/bcm/bcm2835.yaml
+index 5dc4824..8051a75 100644
+--- a/Documentation/devicetree/bindings/arm/bcm/bcm2835.yaml
++++ b/Documentation/devicetree/bindings/arm/bcm/bcm2835.yaml
+@@ -51,6 +51,7 @@ properties:
+               - raspberrypi,3-model-b-plus
+               - raspberrypi,3-compute-module
+               - raspberrypi,3-compute-module-lite
++              - raspberrypi,model-zero-2-w
+           - const: brcm,bcm2837
+ 
+ additionalProperties: true
+-- 
+2.7.4
 
