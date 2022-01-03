@@ -2,129 +2,134 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 009ECC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jan 2022 01:26:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F43BC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Jan 2022 01:37:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231310AbiACB0V (ORCPT
+        id S231326AbiACBhP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Jan 2022 20:26:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37918 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbiACB0U (ORCPT
+        Sun, 2 Jan 2022 20:37:15 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:56768 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230110AbiACBhP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Jan 2022 20:26:20 -0500
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30BC3C061761;
-        Sun,  2 Jan 2022 17:26:20 -0800 (PST)
-Received: by mail-lf1-x12a.google.com with SMTP id x7so72091430lfu.8;
-        Sun, 02 Jan 2022 17:26:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=LOG+LRnFpNPHGcbZgexu8NnNf42wYWPGSEjdgT8j34Y=;
-        b=LDuf7jp1iGCDGF/Phth7mxhqpRpg6gEA869QeS6uWzxl7NG5QOemxoHXNMjYvowX1I
-         MmOlEwTe46SDzM2b8blgf6TFvb9IV14yOW23g4r1ZG4h/WNl25rAggVGIHNa/GjwKj3s
-         dBDEyAYkBUsY5J/87asojbXG+B5Ypa8BE/vLL0z0xtyAJ2SGWDtnq4q1p+0XzC7lhJ52
-         75aaf0dMceQClHkqHB9lDV2cqHZGVnRnbVrmM049bKvYznmK6Ps54XaXRUi3/NpfLbO2
-         hjCohLxihMTAfPLPIEnE5ka6I857i8Ry5KUe7P5dQT9EqHGvndZ7evUfLb6pj6f7pvrW
-         EOnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=LOG+LRnFpNPHGcbZgexu8NnNf42wYWPGSEjdgT8j34Y=;
-        b=2CVnR/P6eD7TUTLWfj1II7JVMoijQc7R5BBXNFsgwixFEoiwYqBrVJhaEEnXorealH
-         IkZ0rJdVzS3JyMLwDWDiE9EdNcKXOWrb5H24BBFZFPjcTa+YVznQVOq7csGk7//oh3s5
-         UHaYslIrB/yjTb8FmFKKXcSo0NL7t2vu10x5Rip1i0MJvtuKasu6YUeG5hYUZ/LQYkJF
-         yYxfuR0XyA8mn2ttLV0QFl99yFh/CP7DR9DL8+tOMOsS0lwlutdng9P8rQUaaIYOjwXu
-         YnQKm91YqsW1aMLW2m/251B85HHOOY8XCzwB7+/OGqqBrpfAynHItDxmufAtjfjJ+5KD
-         qwWA==
-X-Gm-Message-State: AOAM532N54gFhOE8eG+ZYD2qmfKAb1oFCeRbb6T/fCLMq0qPEdfunLCh
-        XeSzMLj2JNPHpLX+K0qfTag=
-X-Google-Smtp-Source: ABdhPJyEa/GRkFoaZ/6C94axN4nLg9bDFQsbmGsslW3JBM0Y64w0IUKXjq3OOgLvP86NJtfc2P1zyw==
-X-Received: by 2002:a05:6512:2305:: with SMTP id o5mr39533999lfu.564.1641173178486;
-        Sun, 02 Jan 2022 17:26:18 -0800 (PST)
-Received: from [192.168.2.145] (46-138-43-24.dynamic.spd-mgts.ru. [46.138.43.24])
-        by smtp.googlemail.com with ESMTPSA id p14sm3442104ljj.12.2022.01.02.17.26.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Jan 2022 17:26:18 -0800 (PST)
-Subject: Re: [PATCH 03/34] brcmfmac: firmware: Support having multiple alt
- paths
-To:     Hector Martin <marcan@marcan.st>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
-        Wright Feng <wright.feng@infineon.com>
-Cc:     Sven Peter <sven@svenpeter.dev>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Mark Kettenis <kettenis@openbsd.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        "brian m. carlson" <sandals@crustytoothpaste.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-References: <20211226153624.162281-1-marcan@marcan.st>
- <20211226153624.162281-4-marcan@marcan.st>
- <8e99eb47-2bc1-7899-5829-96f2a515b2cb@gmail.com>
- <e9ecbd0b-8741-1e7d-ae7a-f839287cb5c9@marcan.st>
- <48f16559-6891-9401-dd8e-762c7573304c@gmail.com>
- <d96fe60e-c029-b400-9c29-0f95c3632301@marcan.st>
-From:   Dmitry Osipenko <digetx@gmail.com>
-Message-ID: <4a307f13-0bd3-5fa5-dd51-9cd1d39eaa33@gmail.com>
-Date:   Mon, 3 Jan 2022 04:26:17 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        Sun, 2 Jan 2022 20:37:15 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2031anu87024262, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2031anu87024262
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 3 Jan 2022 09:36:49 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Mon, 3 Jan 2022 09:36:48 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 3 Jan
+ 2022 09:36:48 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>, <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>, <rgoldwyn@suse.com>
+Subject: [PATCH v2 2/3] rtw89: Add RX counters of VHT MCS-10/11 to debugfs
+Date:   Mon, 3 Jan 2022 09:36:22 +0800
+Message-ID: <20220103013623.17052-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220103013623.17052-1-pkshih@realtek.com>
+References: <20220103013623.17052-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <d96fe60e-c029-b400-9c29-0f95c3632301@marcan.st>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 01/03/2022 01:24:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzEvMiCkVaTIIDA2OjQ5OjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-03.01.2022 03:41, Hector Martin пишет:
->> There is indeed no need for the castings in such cases, it's a typical
->> code pattern in kernel. You would need to do the casting for the other
->> way around, i.e. if char ** was returned and **alt_paths was a const.
-> You do need to do the cast. Try it.
-> 
-> $ cat test.c
-> int main() {
->         char *foo[1];
->         const char **bar = foo;
-> 
->         return 0;
-> }
-> 
-> $ gcc test.c
-> test.c: In function ‘main’:
-> test.c:4:28: warning: initialization of ‘const char **’ from
-> incompatible pointer type ‘char **’ [-Wincompatible-pointer-types]
->     4 |         const char **bar = foo;
->       |
-> 
-> You can implicitly cast char* to const char*, but you *cannot*
-> impliclicitly cast char** to const char** for the reason I explained. It
-> requires a cast.
+8852AE can receive packets with VHT MCS10/11, and we want to know we have
+received this kind of packets, so show the counter of VHT MCS10/11 in
+debugfs, like:
 
-Right, I read it as "char * const *". The "const char **" vs "char *
-const *" always confuses me.
+TP TX: 1 [1] Mbps (lv: 1), RX: 420 [422] Mbps (lv: 4)
+Beacon: 19
+Avg packet length: TX=102, RX=3081
+RX count:
+   Legacy: [0, 0, 0, 0]
+     OFDM: [0, 0, 0, 0, 0, 0, 0, 0]
+     HT 0: [0, 0, 0, 0, 0, 0, 0, 0]
+     HT 1: [0, 0, 0, 0, 0, 0, 0, 0]
+  VHT 1SS: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0][0, 0]
+  VHT 2SS: [0, 0, 0, 0, 0, 0, 0, 4, 624, 4818][29913, 556]
+   HE 1SS: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+   HE 2ss: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+TX rate [0]: VHT 2SS MCS-9 SGI	(hw_rate=0x119)	==> agg_wait=1 (3500)
+RX rate [0]: VHT 2SS MCS-10 SGI	(hw_rate=0x11a)
+RSSI: -30 dBm (raw=161, prev=165)
 
-Hence you should've written "const char **alt_paths;" in
-brcm_alt_fw_paths() in the first place and then casting wouldn't have
-been needed.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2: remove VHT MCS-10/11 limit from driver, and change subject.
+---
+ drivers/net/wireless/realtek/rtw89/debug.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
+index 9756d75ef24e1..fb2f4870172d9 100644
+--- a/drivers/net/wireless/realtek/rtw89/debug.c
++++ b/drivers/net/wireless/realtek/rtw89/debug.c
+@@ -2322,16 +2322,17 @@ rtw89_debug_append_rx_rate(struct seq_file *m, struct rtw89_pkt_stat *pkt_stat,
+ static const struct rtw89_rx_rate_cnt_info {
+ 	enum rtw89_hw_rate first_rate;
+ 	int len;
++	int ext;
+ 	const char *rate_mode;
+ } rtw89_rx_rate_cnt_infos[] = {
+-	{RTW89_HW_RATE_CCK1, 4, "Legacy:"},
+-	{RTW89_HW_RATE_OFDM6, 8, "OFDM:"},
+-	{RTW89_HW_RATE_MCS0, 8, "HT 0:"},
+-	{RTW89_HW_RATE_MCS8, 8, "HT 1:"},
+-	{RTW89_HW_RATE_VHT_NSS1_MCS0, 10, "VHT 1SS:"},
+-	{RTW89_HW_RATE_VHT_NSS2_MCS0, 10, "VHT 2SS:"},
+-	{RTW89_HW_RATE_HE_NSS1_MCS0, 12, "HE 1SS:"},
+-	{RTW89_HW_RATE_HE_NSS2_MCS0, 12, "HE 2ss:"},
++	{RTW89_HW_RATE_CCK1, 4, 0, "Legacy:"},
++	{RTW89_HW_RATE_OFDM6, 8, 0, "OFDM:"},
++	{RTW89_HW_RATE_MCS0, 8, 0, "HT 0:"},
++	{RTW89_HW_RATE_MCS8, 8, 0, "HT 1:"},
++	{RTW89_HW_RATE_VHT_NSS1_MCS0, 10, 2, "VHT 1SS:"},
++	{RTW89_HW_RATE_VHT_NSS2_MCS0, 10, 2, "VHT 2SS:"},
++	{RTW89_HW_RATE_HE_NSS1_MCS0, 12, 0, "HE 1SS:"},
++	{RTW89_HW_RATE_HE_NSS2_MCS0, 12, 0, "HE 2ss:"},
+ };
+ 
+ static int rtw89_debug_priv_phy_info_get(struct seq_file *m, void *v)
+@@ -2356,6 +2357,11 @@ static int rtw89_debug_priv_phy_info_get(struct seq_file *m, void *v)
+ 		seq_printf(m, "%10s [", info->rate_mode);
+ 		rtw89_debug_append_rx_rate(m, pkt_stat,
+ 					   info->first_rate, info->len);
++		if (info->ext) {
++			seq_puts(m, "][");
++			rtw89_debug_append_rx_rate(m, pkt_stat,
++						   info->first_rate + info->len, info->ext);
++		}
+ 		seq_puts(m, "]\n");
+ 	}
+ 
+-- 
+2.25.1
+
