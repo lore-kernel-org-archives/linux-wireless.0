@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95980C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jan 2022 00:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA17C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  7 Jan 2022 00:14:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344000AbiAGAOL (ORCPT
+        id S1344065AbiAGAON (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Jan 2022 19:14:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49656 "EHLO
+        Thu, 6 Jan 2022 19:14:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343810AbiAGAOF (ORCPT
+        with ESMTP id S1343890AbiAGAOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jan 2022 19:14:05 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4440EC061201;
-        Thu,  6 Jan 2022 16:14:05 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id b22so3811338pfb.5;
-        Thu, 06 Jan 2022 16:14:05 -0800 (PST)
+        Thu, 6 Jan 2022 19:14:08 -0500
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B88EC061245;
+        Thu,  6 Jan 2022 16:14:08 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id j16so3601887pll.10;
+        Thu, 06 Jan 2022 16:14:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=rCIfzKgE4qJZwLWVi+wYkpGX0QTT3iPMxkFstpoGxDk=;
-        b=TKzbHnJb6DTEAJ8lLBsC9+fFDeouNU26qG1XtCueUBDAeLtl0gdremzCEdkDCQS4Jk
-         Tt8kcmGlqujPTWNTxF5nvn6uyqmP6YkYWhJgTGjPTAqHIG3nMGwpXpNQDM50AK7QBzYd
-         ISCAGGCD3xfnrC9ax+fgL8YoLOK78pqK5b1Il27Sa4wAq+zf1Pc6uY6ZytR25cpXgNU3
-         89TMciv0FBV3PaY15T2TlSy386fuesF2PABEiO7MWijg37KvxFWm0DZ88elWPu0dBUFx
-         +brrD47D+b7VVj4nYIpUB6rfHi8wNE3CEOLLFD8tVxniqNYYs+IW3mmQxANmZwpvoACp
-         qIBw==
+        bh=IoY5n8/hOXcYzzCekmvhUPi61HYip2TvWuhybrzU3W0=;
+        b=fHEPV0IbYaeoGAvRgyHjHhrb3ALA2rKz2ZwOsHdUqg0dVO3o66WNLPzuTuH/F59/y0
+         wkjiLOYFk5d87glZGSB43JO5Eo8Z+NxFwbTiLo6RFuBtgR7O+4Ie84nPbCwTpTDkwHYj
+         QFWiXCE3upESxoU+ILxtb3fexh/RGt5TWxEBEJCPeMGqnGfuuIxUH3qYF/e2VITDQvjK
+         Yxzonyb+JkZKNcV+DTpRaLAY+Nx3bLgJZCfWXlqU2K5rtGs5/dMBvO+Ea/ogcF+rLpvU
+         iceOM12AgRt3cx+JzyzOeWqh0t7Mfpnvx4K2K1BQi1s6jSD9OY6WuCShKQisaldi/nop
+         dEug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=rCIfzKgE4qJZwLWVi+wYkpGX0QTT3iPMxkFstpoGxDk=;
-        b=x8QVf5ktlZRkWCIUlj3ghn5IkdVCmgSpWM4n3n+ARBKNJg4EgWGkqcZmeSsh3bDfat
-         Xtum65ngEwJ8HREP7PgMAHsAls6s0RjjPyJh6B5tdx5mFqCSYZmovzFdAwvJD3l+TsJ/
-         k7ctoJj7yNXuH6GQuSHnC30DFTDfQyztsNlB1DyNVSEtaj0wMFt3mH+e0c68ypl1W3Yk
-         dQool0h68UmT4EwM2VJoA6NzEPmp6DARhkSQRaSAa6JcPqdI1k1lafhxdBuyzzHGG5Gt
-         BMr4Pw6RJ0GNRSaJt6PxYCR2D8WnfmdwQ5IDnnhBG8mykbyMnYkiDgE2U7+sD3HWBkt0
-         K8cw==
-X-Gm-Message-State: AOAM531ITPKpmlGsRFiiPWuXouRqvnYnDiFkwcFThl5wTYPNzEZFjjMU
-        FvfbqoAmoisw1tit8Qm06vg=
-X-Google-Smtp-Source: ABdhPJzYlUyiAsqMiAv9ClrDXHMNZueh7frDd9keoH8jwHgYCstpkMinx9N91VuQMKvxMOUdjKnmVw==
-X-Received: by 2002:a65:6aa7:: with SMTP id x7mr16752617pgu.273.1641514444759;
-        Thu, 06 Jan 2022 16:14:04 -0800 (PST)
+        bh=IoY5n8/hOXcYzzCekmvhUPi61HYip2TvWuhybrzU3W0=;
+        b=7EK89cFzXedUpQNEBpHcTAA1bdPMCPqJmhQ8XPQphNMZV3/iOLe52SdhEh8W7vBnT8
+         5PmBhZ7ESgbVVIvMr8FFXRGwlBmIWrz0bVk+a384aPpL5ifzvKH3C9zY0WNRAH87ZmBX
+         qlZhixcZe2xsLA96BIACzk18n0tXqaccSb7N7H3H/7FYR3Nq6IvpYzMWu0GQtb15+0ic
+         jQ5XCTigroqmTTFSML919ZeHo74Mx4BnKAt7xNA4C++gVKjXjR5S5qPXwTCighNmQXWI
+         Hmw9yjDP5GV5DunwYWLoEW/iYdczi7qG3HX9nsA5us9x4zTY8YptzsJ+ROqGSKpsDM60
+         dm8g==
+X-Gm-Message-State: AOAM532um86Z3uJD05+486NvhXfDH3SGARkUk2RHGcQveFiCekzrJnMs
+        3DsLmv7A/BfhYP/KK8B1FpQ=
+X-Google-Smtp-Source: ABdhPJytawMvWhdWce/qO7j0+OrT8e2Wdw3x91mbzd1pgM9mPVTH3uptZffWDJnhOIwhA52g1o4gQw==
+X-Received: by 2002:a17:902:ce85:b0:148:d590:573e with SMTP id f5-20020a170902ce8500b00148d590573emr61616173plg.85.1641514448138;
+        Thu, 06 Jan 2022 16:14:08 -0800 (PST)
 Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id y3sm3301906pju.37.2022.01.06.16.14.03
+        by smtp.gmail.com with ESMTPSA id y3sm3301906pju.37.2022.01.06.16.14.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jan 2022 16:14:04 -0800 (PST)
+        Thu, 06 Jan 2022 16:14:07 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     linux-mtd@lists.infradead.org
 Cc:     Florian Fainelli <f.fainelli@gmail.com>,
@@ -66,9 +66,9 @@ Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         (BCMA)),
         bcm-kernel-feedback-list@broadcom.com (open list:BROADCOM STB NAND
         FLASH DRIVER)
-Subject: [PATCH v2 2/9] mtd: rawnand: brcmnand: Allow SoC to provide I/O operations
-Date:   Thu,  6 Jan 2022 16:13:21 -0800
-Message-Id: <20220107001328.2233896-3-f.fainelli@gmail.com>
+Subject: [PATCH v2 4/9] mtd: rawnand: brcmnand: Move OF operations out of brcmnand_init_cs()
+Date:   Thu,  6 Jan 2022 16:13:23 -0800
+Message-Id: <20220107001328.2233896-5-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220107001328.2233896-1-f.fainelli@gmail.com>
 References: <20220107001328.2233896-1-f.fainelli@gmail.com>
@@ -78,164 +78,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow a brcmnand_soc instance to provide a custom set of I/O operations
-which we will require when using this driver on a BCMA bus which is not
-directly memory mapped I/O. Update the nand_{read,write}_reg accordingly
-to use the SoC operations if provided.
-
-To minimize the penalty on other SoCs which do support standard MMIO
-accesses, we use a static key which is disabled by default and gets
-enabled if a soc implementation does provide I/O operations.
+In order to initialize a given chip select object for use by the
+brcmnand driver, move all of the Device Tree specific routines outside
+of brcmnand_init_cs() in order to make it usable in a platform data
+configuration which will be necessary for supporting BCMA chips.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/mtd/nand/raw/brcmnand/brcmnand.c | 30 ++++++++++++++++++++++--
- drivers/mtd/nand/raw/brcmnand/brcmnand.h | 29 +++++++++++++++++++++++
- 2 files changed, 57 insertions(+), 2 deletions(-)
+ drivers/mtd/nand/raw/brcmnand/brcmnand.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/mtd/nand/raw/brcmnand/brcmnand.c b/drivers/mtd/nand/raw/brcmnand/brcmnand.c
-index 63080ae3aef1..9c3909c34dc2 100644
+index fc14765f7d23..eb3f96489f83 100644
 --- a/drivers/mtd/nand/raw/brcmnand/brcmnand.c
 +++ b/drivers/mtd/nand/raw/brcmnand/brcmnand.c
-@@ -25,6 +25,7 @@
- #include <linux/of.h>
- #include <linux/of_platform.h>
- #include <linux/slab.h>
-+#include <linux/static_key.h>
- #include <linux/list.h>
- #include <linux/log2.h>
- 
-@@ -207,6 +208,8 @@ enum {
- 
- struct brcmnand_host;
- 
-+static DEFINE_STATIC_KEY_FALSE(brcmnand_soc_has_ops_key);
-+
- struct brcmnand_controller {
- 	struct device		*dev;
- 	struct nand_controller	controller;
-@@ -592,15 +595,25 @@ enum {
- 	INTFC_CTLR_READY		= BIT(31),
+@@ -2768,7 +2768,7 @@ static const struct nand_controller_ops brcmnand_controller_ops = {
+ 	.attach_chip = brcmnand_attach_chip,
  };
  
-+static inline bool brcmnand_non_mmio_ops(struct brcmnand_controller *ctrl)
-+{
-+	return static_branch_unlikely(&brcmnand_soc_has_ops_key);
-+}
-+
- static inline u32 nand_readreg(struct brcmnand_controller *ctrl, u32 offs)
+-static int brcmnand_init_cs(struct brcmnand_host *host, struct device_node *dn)
++static int brcmnand_init_cs(struct brcmnand_host *host)
  {
-+	if (brcmnand_non_mmio_ops(ctrl))
-+		return brcmnand_soc_read(ctrl->soc, offs);
- 	return brcmnand_readl(ctrl->nand_base + offs);
- }
+ 	struct brcmnand_controller *ctrl = host->ctrl;
+ 	struct device *dev = ctrl->dev;
+@@ -2777,16 +2777,9 @@ static int brcmnand_init_cs(struct brcmnand_host *host, struct device_node *dn)
+ 	int ret;
+ 	u16 cfg_offs;
  
- static inline void nand_writereg(struct brcmnand_controller *ctrl, u32 offs,
- 				 u32 val)
- {
--	brcmnand_writel(val, ctrl->nand_base + offs);
-+	if (brcmnand_non_mmio_ops(ctrl))
-+		brcmnand_soc_write(ctrl->soc, val, offs);
-+	else
-+		brcmnand_writel(val, ctrl->nand_base + offs);
- }
+-	ret = of_property_read_u32(dn, "reg", &host->cs);
+-	if (ret) {
+-		dev_err(dev, "can't get chip-select\n");
+-		return -ENXIO;
+-	}
+-
+ 	mtd = nand_to_mtd(&host->chip);
+ 	chip = &host->chip;
  
- static int brcmnand_revision_init(struct brcmnand_controller *ctrl)
-@@ -766,13 +779,18 @@ static inline void brcmnand_rmw_reg(struct brcmnand_controller *ctrl,
+-	nand_set_flash_node(chip, dn);
+ 	nand_set_controller_data(chip, host);
+ 	mtd->name = devm_kasprintf(dev, GFP_KERNEL, "brcmnand.%d",
+ 				   host->cs);
+@@ -3195,7 +3188,16 @@ int brcmnand_probe(struct platform_device *pdev, struct brcmnand_soc *soc)
+ 			host->pdev = pdev;
+ 			host->ctrl = ctrl;
  
- static inline u32 brcmnand_read_fc(struct brcmnand_controller *ctrl, int word)
- {
-+	if (brcmnand_non_mmio_ops(ctrl))
-+		return brcmnand_soc_read(ctrl->soc, BRCMNAND_NON_MMIO_FC_ADDR);
- 	return __raw_readl(ctrl->nand_fc + word * 4);
- }
- 
- static inline void brcmnand_write_fc(struct brcmnand_controller *ctrl,
- 				     int word, u32 val)
- {
--	__raw_writel(val, ctrl->nand_fc + word * 4);
-+	if (brcmnand_non_mmio_ops(ctrl))
-+		brcmnand_soc_write(ctrl->soc, val, BRCMNAND_NON_MMIO_FC_ADDR);
-+	else
-+		__raw_writel(val, ctrl->nand_fc + word * 4);
- }
- 
- static inline void edu_writel(struct brcmnand_controller *ctrl,
-@@ -3000,6 +3018,12 @@ int brcmnand_probe(struct platform_device *pdev, struct brcmnand_soc *soc)
- 	ctrl->dev = dev;
- 	ctrl->soc = soc;
- 
-+	/* Enable the static key if the soc provides I/O operations indicating
-+	 * that a non-memory mapped IO access path must be used
-+	 */
-+	if (brcmnand_soc_has_ops(ctrl->soc))
-+		static_branch_enable(&brcmnand_soc_has_ops_key);
+-			ret = brcmnand_init_cs(host, child);
++			ret = of_property_read_u32(child, "reg", &host->cs);
++			if (ret) {
++				dev_err(dev, "can't get chip-select\n");
++				devm_kfree(dev, host);
++				continue;
++			}
 +
- 	init_completion(&ctrl->done);
- 	init_completion(&ctrl->dma_done);
- 	init_completion(&ctrl->edu_done);
-@@ -3145,6 +3169,8 @@ int brcmnand_probe(struct platform_device *pdev, struct brcmnand_soc *soc)
- 		/* Enable interrupt */
- 		ctrl->soc->ctlrdy_ack(ctrl->soc);
- 		ctrl->soc->ctlrdy_set_enabled(ctrl->soc, true);
-+		if (brcmnand_soc_has_ops(soc))
-+			static_branch_enable(&brcmnand_soc_has_ops_key);
- 	} else {
- 		/* Use standard interrupt infrastructure */
- 		ret = devm_request_irq(dev, ctrl->irq, brcmnand_ctlrdy_irq, 0,
-diff --git a/drivers/mtd/nand/raw/brcmnand/brcmnand.h b/drivers/mtd/nand/raw/brcmnand/brcmnand.h
-index eb498fbe505e..f1f93d85f50d 100644
---- a/drivers/mtd/nand/raw/brcmnand/brcmnand.h
-+++ b/drivers/mtd/nand/raw/brcmnand/brcmnand.h
-@@ -11,12 +11,25 @@
- 
- struct platform_device;
- struct dev_pm_ops;
-+struct brcmnand_io_ops;
++			nand_set_flash_node(&host->chip, child);
 +
-+/* Special register offset constant to intercept a non-MMIO access
-+ * to the flash cache register space. This is intentionally large
-+ * not to overlap with an existing offset.
-+ */
-+#define BRCMNAND_NON_MMIO_FC_ADDR	0xffffffff
- 
- struct brcmnand_soc {
- 	bool (*ctlrdy_ack)(struct brcmnand_soc *soc);
- 	void (*ctlrdy_set_enabled)(struct brcmnand_soc *soc, bool en);
- 	void (*prepare_data_bus)(struct brcmnand_soc *soc, bool prepare,
- 				 bool is_param);
-+	const struct brcmnand_io_ops *ops;
-+};
-+
-+struct brcmnand_io_ops {
-+	u32 (*read_reg)(struct brcmnand_soc *soc, u32 offset);
-+	void (*write_reg)(struct brcmnand_soc *soc, u32 val, u32 offset);
- };
- 
- static inline void brcmnand_soc_data_bus_prepare(struct brcmnand_soc *soc,
-@@ -58,6 +71,22 @@ static inline void brcmnand_writel(u32 val, void __iomem *addr)
- 		writel_relaxed(val, addr);
- }
- 
-+static inline bool brcmnand_soc_has_ops(struct brcmnand_soc *soc)
-+{
-+	return soc && soc->ops && soc->ops->read_reg && soc->ops->write_reg;
-+}
-+
-+static inline u32 brcmnand_soc_read(struct brcmnand_soc *soc, u32 offset)
-+{
-+	return soc->ops->read_reg(soc, offset);
-+}
-+
-+static inline void brcmnand_soc_write(struct brcmnand_soc *soc, u32 val,
-+				      u32 offset)
-+{
-+	soc->ops->write_reg(soc, val, offset);
-+}
-+
- int brcmnand_probe(struct platform_device *pdev, struct brcmnand_soc *soc);
- int brcmnand_remove(struct platform_device *pdev);
- 
++			ret = brcmnand_init_cs(host);
+ 			if (ret) {
+ 				devm_kfree(dev, host);
+ 				continue; /* Try all chip-selects */
 -- 
 2.25.1
 
