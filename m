@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A4BC433F5
-	for <linux-wireless@archiver.kernel.org>; Sat,  8 Jan 2022 00:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E49C433EF
+	for <linux-wireless@archiver.kernel.org>; Sat,  8 Jan 2022 00:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232395AbiAHA4M (ORCPT
+        id S232193AbiAHAz5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jan 2022 19:56:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44668 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232184AbiAHAz5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 7 Jan 2022 19:55:57 -0500
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38FFC06173E;
-        Fri,  7 Jan 2022 16:55:56 -0800 (PST)
-Received: by mail-wr1-x432.google.com with SMTP id a5so10158070wrh.5;
-        Fri, 07 Jan 2022 16:55:56 -0800 (PST)
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232114AbiAHAzy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jan 2022 19:55:54 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE664C061747;
+        Fri,  7 Jan 2022 16:55:53 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id q8so14046332wra.12;
+        Fri, 07 Jan 2022 16:55:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RaQ9bvcWekXUuYk7Fwo10dE04Y9Sl54Vm+TM6HP1ZNg=;
-        b=LsbHBuuZq8WZqkWVuh0uWnPQ5KGTbX/mhUycXNMmzDi271huaM+h/+7AbcSftIf3kt
-         Gyh0rNgM2P8kG0brHAaof1WrszcBOPix7wYBYtRM/fLfkgnbbyprPIpRycTo/q1dmp1d
-         7xvwi7MrR3rvjjgkP5GOAoQvRLFnzoZ4XhWdRu3F5iueXMLGB8CPf7FIifMm1BTkJU9W
-         Rt33OOYruxWKuIcj1S4ZHIUiXtvaxy0zGSOWyR1Y1IwNt6PGEtNB+rWNv3XT2sHC4B0P
-         zdNEIPayFyuo1p0z5wIRqlMmTZ3hvZk72yKNYOdVh2zY6v4raXn8nakCIzPlVujb+KNP
-         7+fg==
+        bh=VjfR3K+5JgkYbWpldO+nZERSdwRbxL2f2Vl4DU5yMWU=;
+        b=neBFGG+X9YesGNyfLHBpb2KYn79YN6bSuanrNB4rumB3UROf7cYPXUURMwpmTAMYC5
+         ae/1WRuJDo0vNq5R5mSTF55AOJicQmNrUtFUzsHOba1aGlaOKmftPCCMEGJhScx4N+K9
+         EBY90qr+zD3AorGqPZmRec0RyXQ25SHa1xvrKbduWwu4FIUWvsCjhMZWjQNSJBeXoBgF
+         mz+Vmr85vX4Zul/yUW7hHQ+mP69Ac63nD92c4/xCOvVt/Pzg/GJ/NtUR/Ye2y0yyuTPq
+         s4RBfe24wwmtoPxvKIuwCd7i9bs7YCHPZBpkvKzy/mjSyRf/+/29rQ/5aAFC0AqIsJMN
+         zmgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RaQ9bvcWekXUuYk7Fwo10dE04Y9Sl54Vm+TM6HP1ZNg=;
-        b=FfDP7byZlrB2lS8cskeAdg0t7DiCWiWMxtlaWmTA2O9V+PrpNKtRLXBxygx72CEKWy
-         6iJEFJul17Z76b5G9yes6a4yp0sDlmpJRlAXYrTU6GUoeQChTdD3LF/MtPWl/C+/3z6k
-         psjSbMMU+o/HdBt3MbGgtlM2NlM68oGRiYHlElY/vkCH+WBaPS0HM/TxER/dO7rj/D6L
-         5gfgEtBM3zT/v3iadMsYzhwhWgaN+P7hzQ6zZLEkjmvIBJHhJcQigStjPtUOjEL9gO2Z
-         qG6nhWDX1RwcTExUDjOYKl4y0LU+ZugUyyIujZhXxSGo9Rk2BTd3HW+7i4nJ9Tn3ayoE
-         aDdg==
-X-Gm-Message-State: AOAM532NVF4kHW2b+cM01uoAVaWF1McK2CbLZHJIaeBXwZQhGYS6LNK5
-        LdCQQztqqAwF+H+PLubFciEMOUDtqGI=
-X-Google-Smtp-Source: ABdhPJy/++KBPtHjbaOYSC2W+1uPCMcbl2BG5y7ZLjdFBcd6ylYlj9n8DNtyRJyxIgWWDovD6NhDOg==
-X-Received: by 2002:a05:6000:22a:: with SMTP id l10mr56092336wrz.534.1641603355296;
-        Fri, 07 Jan 2022 16:55:55 -0800 (PST)
+        bh=VjfR3K+5JgkYbWpldO+nZERSdwRbxL2f2Vl4DU5yMWU=;
+        b=IfOU0uJJbpy/XyZ64LdC7nejUdDA7BvlJYqEBF8x3ZQhsVAurhj+YRAQfA6ReHeqr2
+         rNcE0aiZVnMcfl2PNmY0z5o1hgqL6/4ZTatf6ev6kxG5bzNKh/qt8ZMA9kcrh6akbfLD
+         YrN+E2LJIR5m/nnwCG0LcTlftRqWdCFa6bwg2TwDaFd1XM2aQVJ3aZQlmvbyY4f2LQGL
+         KbjxjQs9F8gR5H/MyK3qvMfiB31vL30o99JZw6XQwfyv6r7XdchejQFSfk6ssSq75M33
+         OIR3Bi+6v+mzFB1B6kxRV0eteLuMDp3xoiX5zaCKz+YkHpqNds7E0/yYIVqNwLOYqyp8
+         +q+g==
+X-Gm-Message-State: AOAM532i0umXENkKqbK7jBYAdbsxkUKuZ6kOBqQ0CIYR92YlydYTUMhf
+        iYeVLB5DNo8+Zhbk2IZLnPPjZUhDo68=
+X-Google-Smtp-Source: ABdhPJyXQOnSc9UKWlhOKczv6rtXjetQ8Xtch38MBm8uGq1edT1IOdp56d9sCGloQlSB/wOeyiJ3vg==
+X-Received: by 2002:a5d:5909:: with SMTP id v9mr1647819wrd.680.1641603352255;
+        Fri, 07 Jan 2022 16:55:52 -0800 (PST)
 Received: from localhost.localdomain (dynamic-095-117-123-222.95.117.pool.telefonica.de. [95.117.123.222])
-        by smtp.googlemail.com with ESMTPSA id z6sm77357wmp.9.2022.01.07.16.55.54
+        by smtp.googlemail.com with ESMTPSA id z6sm77357wmp.9.2022.01.07.16.55.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Jan 2022 16:55:55 -0800 (PST)
+        Fri, 07 Jan 2022 16:55:52 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
@@ -57,9 +57,9 @@ Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Pkshih <pkshih@realtek.com>, Ed Swierk <eswierk@gh.st>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v3 8/8] rtw88: fw: Convert h2c.lock from a spinlock to a mutex
-Date:   Sat,  8 Jan 2022 01:55:33 +0100
-Message-Id: <20220108005533.947787-9-martin.blumenstingl@googlemail.com>
+Subject: [PATCH v3 4/8] rtw88: Use rtw_iterate_stas where the iterator reads or writes registers
+Date:   Sat,  8 Jan 2022 01:55:29 +0100
+Message-Id: <20220108005533.947787-5-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220108005533.947787-1-martin.blumenstingl@googlemail.com>
 References: <20220108005533.947787-1-martin.blumenstingl@googlemail.com>
@@ -70,99 +70,78 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Upcoming SDIO support may sleep in the read/write handlers. Switch
-the h2c.lock from a spinlock to a mutex to allow for this behavior.
+all users of rtw_iterate_stas_atomic() which are either reading or
+writing a register to rtw_iterate_stas().
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c   | 14 +++++++-------
- drivers/net/wireless/realtek/rtw88/main.c |  2 +-
- drivers/net/wireless/realtek/rtw88/main.h |  2 +-
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/phy.c  | 4 ++--
+ drivers/net/wireless/realtek/rtw88/util.h | 2 ++
+ drivers/net/wireless/realtek/rtw88/wow.c  | 2 +-
+ 4 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 2f7c036f9022..1bff43c14a05 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -317,7 +317,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		h2c[3], h2c[2], h2c[1], h2c[0],
- 		h2c[7], h2c[6], h2c[5], h2c[4]);
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	mutex_lock(&rtwdev->h2c.lock);
- 
- 	box = rtwdev->h2c.last_box_num;
- 	switch (box) {
-@@ -342,9 +342,9 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		goto out;
- 	}
- 
--	ret = read_poll_timeout_atomic(rtw_read8, box_state,
--				       !((box_state >> box) & 0x1), 100, 3000,
--				       false, rtwdev, REG_HMETFR);
-+	ret = read_poll_timeout(rtw_read8, box_state,
-+				!((box_state >> box) & 0x1), 100, 3000, false,
-+				rtwdev, REG_HMETFR);
- 
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
-@@ -360,7 +360,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		rtwdev->h2c.last_box_num = 0;
- 
- out:
--	spin_unlock(&rtwdev->h2c.lock);
-+	mutex_unlock(&rtwdev->h2c.lock);
- }
- 
- void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-@@ -372,7 +372,7 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- {
- 	int ret;
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	mutex_lock(&rtwdev->h2c.lock);
- 
- 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
- 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
-@@ -380,7 +380,7 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- 		rtw_err(rtwdev, "failed to send h2c packet\n");
- 	rtwdev->h2c.seq++;
- 
--	spin_unlock(&rtwdev->h2c.lock);
-+	mutex_unlock(&rtwdev->h2c.lock);
- }
- 
- void
 diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index a94678effd77..e883f5ecf307 100644
+index b0e2ca8ddbe9..4b28c81b3ca0 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.c
 +++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1920,12 +1920,12 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	skb_queue_head_init(&rtwdev->coex.queue);
- 	skb_queue_head_init(&rtwdev->tx_report.queue);
+@@ -584,7 +584,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
+ 	rcu_read_lock();
+ 	rtw_iterate_keys_rcu(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
+ 	rcu_read_unlock();
+-	rtw_iterate_stas_atomic(rtwdev, rtw_reset_sta_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_reset_sta_iter, rtwdev);
+ 	rtw_iterate_vifs(rtwdev, rtw_reset_vif_iter, rtwdev);
+ 	rtw_enter_ips(rtwdev);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index e505d17f107e..d8442adc11b1 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -300,7 +300,7 @@ static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
  
--	spin_lock_init(&rtwdev->h2c.lock);
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
+ 	data.rtwdev = rtwdev;
+ 	data.min_rssi = U8_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_stat_rssi_iter, &data);
++	rtw_iterate_stas(rtwdev, rtw_phy_stat_rssi_iter, &data);
  
- 	mutex_init(&rtwdev->mutex);
- 	mutex_init(&rtwdev->rf_lock);
-+	mutex_init(&rtwdev->h2c.lock);
- 	mutex_init(&rtwdev->coex.mutex);
- 	mutex_init(&rtwdev->hal.tx_power_mutex);
+ 	dm_info->pre_min_rssi = dm_info->min_rssi;
+ 	dm_info->min_rssi = data.min_rssi;
+@@ -544,7 +544,7 @@ static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
+ 	if (rtwdev->watch_dog_cnt & 0x3)
+ 		return;
  
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index e7a60e6f8596..495a28028ac0 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1975,7 +1975,7 @@ struct rtw_dev {
- 		/* incicate the mail box to use with fw */
- 		u8 last_box_num;
- 		/* protect to send h2c to fw */
--		spinlock_t lock;
-+		struct mutex lock;
- 		u32 seq;
- 	} h2c;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
+ }
  
+ static u32 rtw_phy_get_rrsr_mask(struct rtw_dev *rtwdev, u8 rate_idx)
+diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
+index 0c23b5069be0..b0dfadf8b82a 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.h
++++ b/drivers/net/wireless/realtek/rtw88/util.h
+@@ -13,6 +13,8 @@ struct rtw_dev;
+ #define rtw_iterate_vifs_atomic(rtwdev, iterator, data)                        \
+ 	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,                 \
+ 			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
++#define rtw_iterate_stas(rtwdev, iterator, data)                        \
++	ieee80211_iterate_stations(rtwdev->hw, iterator, data)
+ #define rtw_iterate_stas_atomic(rtwdev, iterator, data)                        \
+ 	ieee80211_iterate_stations_atomic(rtwdev->hw, iterator, data)
+ #define rtw_iterate_keys(rtwdev, vif, iterator, data)			       \
+diff --git a/drivers/net/wireless/realtek/rtw88/wow.c b/drivers/net/wireless/realtek/rtw88/wow.c
+index 89dc595094d5..7ec0731c0346 100644
+--- a/drivers/net/wireless/realtek/rtw88/wow.c
++++ b/drivers/net/wireless/realtek/rtw88/wow.c
+@@ -468,7 +468,7 @@ static void rtw_wow_fw_media_status(struct rtw_dev *rtwdev, bool connect)
+ 	data.rtwdev = rtwdev;
+ 	data.connect = connect;
+ 
+-	rtw_iterate_stas_atomic(rtwdev, rtw_wow_fw_media_status_iter, &data);
++	rtw_iterate_stas(rtwdev, rtw_wow_fw_media_status_iter, &data);
+ }
+ 
+ static int rtw_wow_config_wow_fw_rsvd_page(struct rtw_dev *rtwdev)
 -- 
 2.34.1
 
