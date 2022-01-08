@@ -2,113 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47393C433EF
-	for <linux-wireless@archiver.kernel.org>; Sat,  8 Jan 2022 00:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2573FC433F5
+	for <linux-wireless@archiver.kernel.org>; Sat,  8 Jan 2022 03:14:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232484AbiAHA4U (ORCPT
+        id S233429AbiAHDOg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Jan 2022 19:56:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44668 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232135AbiAHAzz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jan 2022 19:55:55 -0500
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F805C06173E;
-        Fri,  7 Jan 2022 16:55:54 -0800 (PST)
-Received: by mail-wr1-x42c.google.com with SMTP id w20so14097544wra.9;
-        Fri, 07 Jan 2022 16:55:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=qYRAJooeejsLElKVR8lduV1KN6qXlfQTHsLzXUd3d6g=;
-        b=ouxrwHpNjIGM+LMQA2WDKhHbWEPuw92qkfHyFDK3qYXt2dB3mKCsqTwbt9l9nNNmtu
-         XCLZDlW0yzOYAapvXNBgS3d0fvZLLiPkEP2t+CvNv43PRrWFEePtraVKqOaA193YazrZ
-         JBiVwsADnRVi31c4aeBpmkW0XDRv346tN1g0tX8fzpXssrO3kmLDB2mkzO1VR7FeKUae
-         pxI/mRrLl7FjN1b9va9guxgMjMW/sUf5KlJlhffPFlI8B/bTD2rOM5dlerImS3/OD+P3
-         L+vg4a0PjBEF2MbanOPRzsrcYA6lnzPWI2IIEfjsSjX7d433SBQfxSc2kKZdI7N7WFic
-         gxtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=qYRAJooeejsLElKVR8lduV1KN6qXlfQTHsLzXUd3d6g=;
-        b=pW6ucCA839am10YcJL7zgTVmKvfTfWdiJ45c7zwHA5VC0vK9Q3Eacbzcx7m2qhNo0y
-         8dB6WO3onbfJTs3oGu9UsQVkA049L1J3CPHbMMyDWAN8wZuy1ubvrrma5IPa0UEQt8Bl
-         tYkbC3DXJTWKuAve42599xIk2PUTelHEJUarMbKgZEV6geetV4bjbpcVKhLWRYkDEyaU
-         Vwam++S/rCJcF/ski59mJM48IHfDcui25noZ07nLgjH0iCHKQErwMcA+E05vn++DmXXr
-         qR0//iflozBsiwvq/eQ4wc3PesdYBr6Ona8dSW7SaDDtJ4CntgJcTCVqomE08hErYGsU
-         IRbw==
-X-Gm-Message-State: AOAM533MtsZYWUkOiBQKKhhzE2CzkQn8IWjef8EEfSz/iRE0LBwl24rV
-        5LbQzdkqoZlGFYy1T4sQiBdOnUhyZc4=
-X-Google-Smtp-Source: ABdhPJwJJ13t6pOnsUqETHnSbhHtqaSiPpIlTgAEf9at9sLUTTzkciB0CMZyZf5hOYHbRZMkwlFV4w==
-X-Received: by 2002:a5d:64a7:: with SMTP id m7mr55004041wrp.687.1641603353047;
-        Fri, 07 Jan 2022 16:55:53 -0800 (PST)
-Received: from localhost.localdomain (dynamic-095-117-123-222.95.117.pool.telefonica.de. [95.117.123.222])
-        by smtp.googlemail.com with ESMTPSA id z6sm77357wmp.9.2022.01.07.16.55.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Jan 2022 16:55:52 -0800 (PST)
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
-        johannes@sipsolutions.net, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Pkshih <pkshih@realtek.com>, Ed Swierk <eswierk@gh.st>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v3 5/8] rtw88: Replace usage of rtw_iterate_keys_rcu() with rtw_iterate_keys()
-Date:   Sat,  8 Jan 2022 01:55:30 +0100
-Message-Id: <20220108005533.947787-6-martin.blumenstingl@googlemail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220108005533.947787-1-martin.blumenstingl@googlemail.com>
-References: <20220108005533.947787-1-martin.blumenstingl@googlemail.com>
+        Fri, 7 Jan 2022 22:14:36 -0500
+Received: from mga04.intel.com ([192.55.52.120]:50934 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233287AbiAHDOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jan 2022 22:14:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1641611675; x=1673147675;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=+u3dTzcaO34xqmBxu4T2D6mrH13SWuF61TSnDFmDAVQ=;
+  b=NjLmtqpOvMjYtxml5T7cGkKwlCI8yIOqF2x0wjR6LWf4YJ2mt1QzjKWX
+   AcmXjgal2dxyLL4prORybeHgYcptoXkxsnBUUklT3aTvZpig6avUWMynE
+   gM9pzoV8ViVUtqzU0rCHZ1N8m96JWHyzw7RwfKyqZBTxr4frLkE8SF4CP
+   f5SzmV7OAKfrEOQ3xZxK9/CD2jwUXNFuWbcOVjS8FXgGB39drXcgu5cdq
+   t84it7lMRPuL8b+DHxz2hgKYIAlfMs1y8hOtIC95r3yLd9ANBHgEwPBJh
+   xl3UBk9hXVsrf6V7XwX3BAs/sBs9QTMKtt5/KoD8dYOYUCWeTvg2Gx+ga
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10220"; a="241795060"
+X-IronPort-AV: E=Sophos;i="5.88,271,1635231600"; 
+   d="scan'208";a="241795060"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2022 19:14:34 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,271,1635231600"; 
+   d="scan'208";a="514018652"
+Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
+  by orsmga007.jf.intel.com with ESMTP; 07 Jan 2022 19:14:32 -0800
+Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1n62Bb-0000Cp-EK; Sat, 08 Jan 2022 03:14:31 +0000
+Date:   Sat, 8 Jan 2022 11:14:28 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Abhishek Kumar <kuabhs@chromium.org>, kvalo@codeaurora.org,
+        dianders@chromium.org
+Cc:     kbuild-all@lists.01.org, pillair@codeaurora.org,
+        kuabhs@chromium.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@kernel.org>, ath10k@lists.infradead.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath10k: search for default BDF name provided in DT
+Message-ID: <202201081118.iN7Rcf4J-lkp@intel.com>
+References: <20220107200417.1.Ie4dcc45b0bf365077303c596891d460d716bb4c5@changeid>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220107200417.1.Ie4dcc45b0bf365077303c596891d460d716bb4c5@changeid>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Upcoming SDIO support may sleep in the read/write handlers. The only
-occurrence of rtw_iterate_keys_rcu() reads and writes registers from
-it's iterator function. Replace it with rtw_iterate_keys() (the non-RCU
-version). This will prevent an "scheduling while atomic" issue when
-using an SDIO device.
+Hi Abhishek,
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on kvalo-ath/ath-next]
+[also build test WARNING on kvalo-wireless-drivers-next/master kvalo-wireless-drivers/master v5.16-rc8 next-20220107]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/0day-ci/linux/commits/Abhishek-Kumar/ath10k-search-for-default-BDF-name-provided-in-DT/20220108-040711
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20220108/202201081118.iN7Rcf4J-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/98e7f008cb14b9c4038287915c271bb485a89346
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Abhishek-Kumar/ath10k-search-for-default-BDF-name-provided-in-DT/20220108-040711
+        git checkout 98e7f008cb14b9c4038287915c271bb485a89346
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=alpha SHELL=/bin/bash drivers/net/wireless/ath/ath10k/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+   drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_parse_default_bdf_dt':
+>> drivers/net/wireless/ath/ath10k/core.c:1103:115: warning: format '%d' expects argument of type 'int', but argument 4 has type 'long unsigned int' [-Wformat=]
+    1103 |                             "default board name is longer than allocated buffer, board_name: %s; allocated size: %d\n",
+         |                                                                                                                  ~^
+         |                                                                                                                   |
+         |                                                                                                                   int
+         |                                                                                                                  %ld
+    1104 |                             board_name, sizeof(ar->id.default_bdf));
+         |                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 
+         |                                         |
+         |                                         long unsigned int
+
+
+vim +1103 drivers/net/wireless/ath/ath10k/core.c
+
+  1083	
+  1084	int ath10k_core_parse_default_bdf_dt(struct ath10k *ar)
+  1085	{
+  1086		struct device_node *node;
+  1087		const char *board_name = NULL;
+  1088	
+  1089		ar->id.default_bdf[0] = '\0';
+  1090	
+  1091		node = ar->dev->of_node;
+  1092		if (!node)
+  1093			return -ENOENT;
+  1094	
+  1095		of_property_read_string(node, "qcom,ath10k-default-bdf",
+  1096					&board_name);
+  1097		if (!board_name)
+  1098			return -ENODATA;
+  1099	
+  1100		if (strscpy(ar->id.default_bdf,
+  1101			    board_name, sizeof(ar->id.default_bdf)) < 0)
+  1102			ath10k_warn(ar,
+> 1103				    "default board name is longer than allocated buffer, board_name: %s; allocated size: %d\n",
+  1104				    board_name, sizeof(ar->id.default_bdf));
+  1105	
+  1106		return 0;
+  1107	}
+  1108	EXPORT_SYMBOL(ath10k_core_parse_default_bdf_dt);
+  1109	
+
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 4 +---
- drivers/net/wireless/realtek/rtw88/util.h | 2 --
- 2 files changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 4b28c81b3ca0..3d4257e0367a 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -581,9 +581,7 @@ static void __fw_recovery_work(struct rtw_dev *rtwdev)
- 
- 	WARN(1, "firmware crash, start reset and recover\n");
- 
--	rcu_read_lock();
--	rtw_iterate_keys_rcu(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
--	rcu_read_unlock();
-+	rtw_iterate_keys(rtwdev, NULL, rtw_reset_key_iter, rtwdev);
- 	rtw_iterate_stas(rtwdev, rtw_reset_sta_iter, rtwdev);
- 	rtw_iterate_vifs(rtwdev, rtw_reset_vif_iter, rtwdev);
- 	rtw_enter_ips(rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
-index b0dfadf8b82a..06a5b4c4111c 100644
---- a/drivers/net/wireless/realtek/rtw88/util.h
-+++ b/drivers/net/wireless/realtek/rtw88/util.h
-@@ -19,8 +19,6 @@ struct rtw_dev;
- 	ieee80211_iterate_stations_atomic(rtwdev->hw, iterator, data)
- #define rtw_iterate_keys(rtwdev, vif, iterator, data)			       \
- 	ieee80211_iter_keys(rtwdev->hw, vif, iterator, data)
--#define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
--	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
- 
- static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
- {
--- 
-2.34.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
