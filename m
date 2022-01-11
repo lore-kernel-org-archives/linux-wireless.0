@@ -2,32 +2,33 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E50AC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jan 2022 07:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23C5BC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jan 2022 07:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348708AbiAKHvS (ORCPT
+        id S1348713AbiAKHvU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Jan 2022 02:51:18 -0500
-Received: from mailgw01.mediatek.com ([60.244.123.138]:58602 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235911AbiAKHvS (ORCPT
+        Tue, 11 Jan 2022 02:51:20 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:44152 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1348710AbiAKHvT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jan 2022 02:51:18 -0500
-X-UUID: a1ca0a13e6284976ab4dfc0aaf695c46-20220111
-X-UUID: a1ca0a13e6284976ab4dfc0aaf695c46-20220111
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        Tue, 11 Jan 2022 02:51:19 -0500
+X-UUID: 1e9275eab18141929d7c6a52294b6de1-20220111
+X-UUID: 1e9275eab18141929d7c6a52294b6de1-20220111
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <bo.jiao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1076703475; Tue, 11 Jan 2022 15:51:14 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1324450976; Tue, 11 Jan 2022 15:51:16 +0800
 Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
- mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 11 Jan 2022 15:51:13 +0800
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Tue, 11 Jan 2022 15:51:16 +0800
 Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS34N1.mediatek.inc
  (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 11 Jan
- 2022 15:51:13 +0800
+ 2022 15:51:15 +0800
 Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
  MTKCAS32.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Tue, 11 Jan 2022 15:51:12 +0800
+ 15.0.1497.2 via Frontend Transport; Tue, 11 Jan 2022 15:51:14 +0800
 From:   Bo Jiao <bo.jiao@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -37,13 +38,13 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Shayne Chen <shayne.chen@mediatek.com>,
         "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Bo Jiao <Bo.Jiao@mediatek.com>,
-        "Peter Chiu" <chui-hao.chiu@mediatek.com>,
-        <devicetree@vger.kernel.org>
-Subject: [PATCH 1/5] dt-bindings: net: wireless: mt76: document bindings for MT7986
-Date:   Tue, 11 Jan 2022 15:51:04 +0800
-Message-ID: <351271a274dc236f027c58487df6b21c7dbf9fd0.1641886298.git.Bo.Jiao@mediatek.com>
+        Bo Jiao <Bo.Jiao@mediatek.com>
+Subject: [PATCH 4/5] mt76: mt7915: add Kconfig entry for MT7986
+Date:   Tue, 11 Jan 2022 15:51:07 +0800
+Message-ID: <d63ae1dfe22f90e0a9fa4ccc01152e82287ea0da.1641886298.git.Bo.Jiao@mediatek.com>
 X-Mailer: git-send-email 2.17.0
+In-Reply-To: <351271a274dc236f027c58487df6b21c7dbf9fd0.1641886298.git.Bo.Jiao@mediatek.com>
+References: <351271a274dc236f027c58487df6b21c7dbf9fd0.1641886298.git.Bo.Jiao@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -53,76 +54,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Bo Jiao <Bo.Jiao@mediatek.com>
 
-Add an entry for MT7986 SoC.
+This enables building support for the MT7986 SoC built-in WLAN chip.
 
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
-Cc: devicetree@vger.kernel.org
 ---
- .../bindings/net/wireless/mediatek,mt76.yaml  | 29 +++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/Kconfig | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-index 1489d3c..4444524 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-@@ -18,7 +18,7 @@ description: |
-   wireless device. The node is expected to be specified as a child
-   node of the PCI controller to which the wireless chip is connected.
-   Alternatively, it can specify the wireless part of the MT7628/MT7688
--  or MT7622 SoC.
-+  or MT7622/MT7986 SoC.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/Kconfig b/drivers/net/wireless/mediatek/mt76/mt7915/Kconfig
+index b8b98cb..8db1ddc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/Kconfig
+@@ -11,3 +11,14 @@ config MT7915E
+ 	  OFDMA, spatial reuse and dual carrier modulation.
  
- allOf:
-   - $ref: ieee80211.yaml#
-@@ -29,9 +29,10 @@ properties:
-       - mediatek,mt76
-       - mediatek,mt7628-wmac
-       - mediatek,mt7622-wmac
-+      - mediatek,mt7986-wmac
- 
-   reg:
--    maxItems: 1
-+    maxItems: 3
- 
-   interrupts:
-     maxItems: 1
-@@ -39,6 +40,17 @@ properties:
-   power-domains:
-     maxItems: 1
- 
-+  memory-region:
-+    maxItems: 1
+ 	  To compile this driver as a module, choose M here.
 +
-+  resets:
-+    maxItems: 1
-+    description:
-+      Specify the consys reset for mt7986.
-+
-+  reset-name:
-+    const: consys
-+
-   mediatek,infracfg:
-     $ref: /schemas/types.yaml#/definitions/phandle
-     description:
-@@ -231,3 +243,16 @@ examples:
- 
-       power-domains = <&scpsys 3>;
-     };
-+
-+  - |
-+    #include <dt-bindings/reset/mt7986-resets.h>
-+    wifi@18000000 {
-+        compatible = "mediatek,mt7986-wmac";
-+        resets = <&watchdog MT7986_TOPRGU_CONSYS_RST>;
-+        reset-names = "consys";
-+        reg = <0 0x18000000 0 0x1000000>,
-+              <0 0x10003000 0 0x1000>,
-+              <0 0x011d1000 0 0x1000>;
-+        interrupts = <GIC_SPI 213 IRQ_TYPE_LEVEL_HIGH>;
-+        memory-region = <&wmcpu_emi>;
-+    };
++config MT7986_WMAC
++	bool "MT7986 (SoC) WMAC support"
++	depends on MT7915E
++	depends on ARCH_MEDIATEK || COMPILE_TEST
++	select REGMAP
++	default y
++	help
++	  This adds support for the built-in WMAC on MT7986 SoC devices
++	  which has the same feature set as a MT7915, but enables 6E
++	  support.
 -- 
 2.18.0
 
