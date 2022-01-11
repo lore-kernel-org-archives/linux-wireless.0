@@ -2,106 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8105CC43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jan 2022 20:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36C17C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jan 2022 21:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244483AbiAKUtj (ORCPT
+        id S245466AbiAKVFM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Jan 2022 15:49:39 -0500
-Received: from mail-oi1-f176.google.com ([209.85.167.176]:37568 "EHLO
-        mail-oi1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244133AbiAKUtj (ORCPT
+        Tue, 11 Jan 2022 16:05:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236925AbiAKVEc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jan 2022 15:49:39 -0500
-Received: by mail-oi1-f176.google.com with SMTP id i9so743787oih.4;
-        Tue, 11 Jan 2022 12:49:38 -0800 (PST)
+        Tue, 11 Jan 2022 16:04:32 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B75C061751
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2022 13:04:31 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id g11so1115319lfu.2
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2022 13:04:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=G0YuEwCZnEuKRpVHXAiy69Z0RUFspZC8cHSjq2E3Eto=;
+        b=qTdZ5dTgpxUc0ZcpidxLsEDi6ERAo8DHppbBJPpYplppIMsdax7ZVx2GfuYIzFUVAF
+         +tOQb43S73Rfi+LWRdO6GqUFiE2h+bbbxlz1GZgiPHkf9mKrXq9mbQGbVQjYcaHoJuHR
+         zjKucDCVEsS+bhlWpbNRGdhIadDyswENHSVsfF/aA0YxmICNTWyeE97DPl2bXniIluGc
+         QMRcF+gyM9f3tcJsd/10oBCG9yaHz6LkVEKNthySqWWZ37KxO3+/qCo5ka3vAc7Ifa2L
+         10jO7uyi44Qf/tRw8QyQMaR0qhMT0cICAoWB4iIG/4L6U8KqmgnEIqz+2A6/Jda3r8Uo
+         RKpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
-         :message-id;
-        bh=U76C2a19MWE9uT4WLaPrUqwz6TsEjxbpHwmPW7gPznI=;
-        b=8ARJ19Of6uW1ythyL8fs5FRJPT/y+IDICg9NmOy7lnBA76JoC5vcwqk9OPeEwDhh4q
-         JyAC8KiAwpjmP/nNVV84Li+vK/08Hw7aWnLK2yuUFb77FSZnVBfY/6Ga5yHWyQm+atrT
-         6A6HuStELx+JuEVDCmvm+kJ0/IjQd/PCH0YTYB0caQ5JKOy716ubcR8iSwVLgdx6KHTd
-         MSBe0gXEsqvrpKo4uSDz9eIJBrR+Lrn7m62Gsi7llT23yluziOYfpLEI/i+RZsKdnzpU
-         cFTwGBJEASs7q9tKi2n24P7cGr8/8Voj44kL4RhjJG9TXtxGsi12pRVBt5nVo3a8OsFo
-         xhWw==
-X-Gm-Message-State: AOAM532+ibBTibuz/eb248LycNpp0BfJn8i79lYaBIIsrjrtWDDnkmnD
-        W2pHrp6MkDlGR0LqImiViuq4WgaxqQ==
-X-Google-Smtp-Source: ABdhPJyphqSOHGSY9thM6FbjwFquqWnM/ksTcDqbx78SxrpLMWiSpEXzKtszrmyfWwxjdWJk7gcjFQ==
-X-Received: by 2002:a05:6808:3b9:: with SMTP id n25mr3095147oie.100.1641934178423;
-        Tue, 11 Jan 2022 12:49:38 -0800 (PST)
-Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
-        by smtp.gmail.com with ESMTPSA id g61sm2263305otg.43.2022.01.11.12.49.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Jan 2022 12:49:37 -0800 (PST)
-Received: (nullmailer pid 3479811 invoked by uid 1000);
-        Tue, 11 Jan 2022 20:49:36 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
-Cc:     "David S . Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-wireless@vger.kernel.org,
-        =?utf-8?b?SsOpcsO0bWUgUG91aWxsZXI=?= <jerome.pouiller@silabs.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-mmc@vger.kernel.org,
-        devel@driverdev.osuosl.org
-In-Reply-To: <20220111171424.862764-3-Jerome.Pouiller@silabs.com>
-References: <20220111171424.862764-1-Jerome.Pouiller@silabs.com> <20220111171424.862764-3-Jerome.Pouiller@silabs.com>
-Subject: Re: [PATCH v9 02/24] dt-bindings: introduce silabs,wfx.yaml
-Date:   Tue, 11 Jan 2022 14:49:36 -0600
-Message-Id: <1641934176.672363.3479810.nullmailer@robh.at.kernel.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=G0YuEwCZnEuKRpVHXAiy69Z0RUFspZC8cHSjq2E3Eto=;
+        b=u0xno7kFV/DUKZFd5eUlyhCmCGaMUqu/z84cRrMAuOePEjhwJUWiL24hApNfcrHTkn
+         0cqFNOk1i+yNVpvYppwq2VXqP6l0LwQwiHM1LtfbeYCoQy/5DGzjTqrPNL6MwJY5ZR53
+         1R1UHO5f2/sjLA8CoABXqr9cy6OJnJAcv4TV4kzf1kmct2HHc6PB7nMurD+lmlqgdlS6
+         GR1bDgod6eaEa8D8UA96bDo0fY77UpfIK8t5NVkmMnnvQy+kqIBpEW9HYLbGR1YRUe1+
+         k6lVK0gJSTdF77Gx6hC6r0XSEtF2LFqFleIzack652iC7RSG4rfILk3k4+aRdDJmCkXt
+         3XOA==
+X-Gm-Message-State: AOAM530ehPfroA2uoJa6lv+YCnShLvKIDzZnByOkNZa+qdx321kOvsJW
+        XsqH4yciH9FovPbSLG9MGKZBPGqy8dS29hCUF+72QQ==
+X-Google-Smtp-Source: ABdhPJzeO4rualg1booOzsUS3uAdK5sSssH1EAbNZfANOukwZD7t8d8mIVQd3g6cPIbfo7bMnRfW6rPqpxrPZ15ACFc=
+X-Received: by 2002:a2e:a5c9:: with SMTP id n9mr3176921ljp.220.1641935069710;
+ Tue, 11 Jan 2022 13:04:29 -0800 (PST)
+MIME-Version: 1.0
+References: <20211217144119.2538175-1-anders.roxell@linaro.org> <20211217144119.2538175-6-anders.roxell@linaro.org>
+In-Reply-To: <20211217144119.2538175-6-anders.roxell@linaro.org>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Tue, 11 Jan 2022 13:04:18 -0800
+Message-ID: <CAKwvOdk0p98ac0yVLwLiJXndvyJw+Ufpxke2WEVrhyUOftN6=Q@mail.gmail.com>
+Subject: Re: [PATCH 4.19 5/6] ARM: 8788/1: ftrace: remove old mcount support
+To:     Anders Roxell <anders.roxell@linaro.org>,
+        Greg KH <gregkh@linuxfoundation.org>
+Cc:     stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        woojung.huh@microchip.com, UNGLinuxDriver@microchip.com,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org, clang-built-linux@googlegroups.com,
+        ulli.kroll@googlemail.com, linux@armlinux.org.uk,
+        linux-arm-kernel@lists.infradead.org, amitkarwar@gmail.com,
+        nishants@marvell.com, gbhat@marvell.com, huxinming820@gmail.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        rostedt@goodmis.org, mingo@redhat.com, dmitry.torokhov@gmail.com,
+        nathan@kernel.org, linux-input@vger.kernel.org,
+        Stefan Agner <stefan@agner.ch>,
+        Russell King <rmk+kernel@armlinux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 11 Jan 2022 18:14:02 +0100, Jerome Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> Prepare the inclusion of the wfx driver in the kernel.
-> 
-> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> ---
->  .../bindings/net/wireless/silabs,wfx.yaml     | 138 ++++++++++++++++++
->  1 file changed, 138 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
-> 
+ On Fri, Dec 17, 2021 at 6:41 AM Anders Roxell <anders.roxell@linaro.org> wrote:
+>
+> From: Stefan Agner <stefan@agner.ch>
+>
+> commit d3c61619568c88d48eccd5e74b4f84faa1440652 upstream.
+>
+> Commit cafa0010cd51 ("Raise the minimum required gcc version to 4.6")
+> raised the minimum GCC version to 4.6. Old mcount is only required for
+> GCC versions older than 4.4.0. Hence old mcount support can be dropped
+> too.
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
-
-yamllint warnings/errors:
-
-dtschema/dtc warnings/errors:
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/net/wireless/silabs,wfx.example.dt.yaml: wifi@0: compatible: 'anyOf' conditional failed, one must be fixed:
-	['silabs,brd4001a', 'silabs,wf200'] is too long
-	Additional items are not allowed ('silabs,wf200' was unexpected)
-	'silabs,wf200' was expected
-	'silabs,brd8022a' was expected
-	'silabs,brd8023a' was expected
-	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/net/wireless/silabs,wfx.example.dt.yaml: wifi@1: compatible: 'anyOf' conditional failed, one must be fixed:
-	['silabs,brd8022a', 'silabs,wf200'] is too long
-	Additional items are not allowed ('silabs,wf200' was unexpected)
-	'silabs,wf200' was expected
-	'silabs,brd4001a' was expected
-	'silabs,brd8023a' was expected
-	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.ozlabs.org/patch/1578580
-
-This check can fail if there are any dependencies. The base for a patch
-series is generally the most recent rc1.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit.
-
+cafa0010cd51 first landed in v4.19-rc1, so that lgtm.
+-- 
+Thanks,
+~Nick Desaulniers
