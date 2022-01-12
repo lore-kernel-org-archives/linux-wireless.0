@@ -2,114 +2,423 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93751C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 18:00:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFCEC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 18:00:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355860AbiALSAF (ORCPT
+        id S1348662AbiALSAn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jan 2022 13:00:05 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:40300 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1355856AbiALSAE (ORCPT
+        Wed, 12 Jan 2022 13:00:43 -0500
+Received: from so254-9.mailgun.net ([198.61.254.9]:31551 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348654AbiALSAi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jan 2022 13:00:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642010404;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pEptlI5akvEi6pWcIuSbohMlWFpnQbMFTJDYOQOJcWA=;
-        b=eweQfaDQPk5T+mM/whIvc8MXPPP2miLsGMoCxQhN8yg3xIqub0hf6XCwjAJfrhhErn3c7S
-        TRSqNXVRx7/RlLr0u8yofB9HGuesPT7nDdtBDSnKRjQCNXQoN3wywaczzVkNN9B0NG/M7F
-        DEXBuol76s4/6Ng7P0jfgPPYiNqLqPo=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-26-aKOO3lHsOk67lciVESnIWg-1; Wed, 12 Jan 2022 13:00:00 -0500
-X-MC-Unique: aKOO3lHsOk67lciVESnIWg-1
-Received: by mail-qt1-f200.google.com with SMTP id g9-20020ac842c9000000b002c7f117c948so1381392qtm.7
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 10:00:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=pEptlI5akvEi6pWcIuSbohMlWFpnQbMFTJDYOQOJcWA=;
-        b=04Dqew1vIgqDYMOBfNtHG9PdFdBWMsSiKo5K5bSFrjJLNkNEHdzW5v9EmGgIzLAGiQ
-         990YI2mBfgZrGjTfTTIKDvhcJWVukQ/8eqccrQKZ3iuCYPV0TZItJWbzUPkJfV+jaJ5c
-         HB2wXe6uYGvGrf1OrIFehDyAzal0zWeJ2pxTS35oPOHFDqh2sHjXoByk7CsudrurQscR
-         pppSZ4wWWSW3S7sAxYKinEsgzPGGhZsLHK4XVqgOq2QUZTwvHjE0ANyHrU4H2zXjY9zO
-         7GbIqsrtp5p2cMrJYR6MSQKGJWe7J7wMle9fjADz7/hCWO4o2Hgh6MSN+9Bj9lrBvAwX
-         0xIA==
-X-Gm-Message-State: AOAM532FNOT3fKCq9Phpo7fHGn+fRx8qO3SXF3HvovZ6Tqe3wZLxaOZV
-        BMPx9/JUIXKAJdQmE/3KI+icsxX2uDH/oMtb7eb+p1stac+49L3us4mpDuiebZr5qC5kRZEGNjh
-        jfAF45wd2TnH5ovP33romD5zUtK8=
-X-Received: by 2002:a05:622a:3cf:: with SMTP id k15mr597350qtx.272.1642010400300;
-        Wed, 12 Jan 2022 10:00:00 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwQBGTdrQXxArGr5p3XeAsoeIo3BayYJiCf8dTC8GaOhfVWk7kvK/kuco9fH+RuSWLMc5jOTA==
-X-Received: by 2002:a05:622a:3cf:: with SMTP id k15mr597337qtx.272.1642010400083;
-        Wed, 12 Jan 2022 10:00:00 -0800 (PST)
-Received: from localhost (net-93-146-37-237.cust.vodafonedsl.it. [93.146.37.237])
-        by smtp.gmail.com with ESMTPSA id d17sm331123qtb.71.2022.01.12.09.59.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jan 2022 09:59:59 -0800 (PST)
-Date:   Wed, 12 Jan 2022 18:59:56 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>, owen.peng@mediatek.com,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 0/6] introduce background radar support for mt7915 driver
-Message-ID: <Yd8XHCHaBJGxYq+g@lore-desk>
-References: <cover.1641996493.git.lorenzo@kernel.org>
- <Yd7jdaKTrTFDU36g@lore-desk>
- <CAL_JsqLzJCi+7ziZ6H=oBoQhi_onMXk7Hb9ry-Gv17S0_gYvwQ@mail.gmail.com>
+        Wed, 12 Jan 2022 13:00:38 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1642010436; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=N0y72wPSbIE2h/nO1Fqk7OoOuvrOPsjCTObbzaz878Y=; b=LYRzfvdLyk6olfCr2q7EJXqQxGLhC7ACvdi4Dhmmg+1HyVqzfu2yItReo4zwxE2mCiPZkRQO
+ FEs3eurNNRLjQdNlFl5ZGI4jTUwVc4qMqlsG0mRsFYSDWH5S963dOr6ptPxtet260AQWgZmq
+ ruXDpIwL4FdWiHLPp36wpt2B1so=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
+ 61df174469943108c5977215 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 12 Jan 2022 18:00:36
+ GMT
+Sender: alokad=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1911CC4338F; Wed, 12 Jan 2022 18:00:36 +0000 (UTC)
+Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: alokad)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C0EC9C43619;
+        Wed, 12 Jan 2022 18:00:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org C0EC9C43619
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Aloka Dixit <alokad@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>,
+        Aloka Dixit <alokad@codeaurora.org>
+Subject: [V7 2/2] ath11k: add debugfs for TWT debug calls
+Date:   Wed, 12 Jan 2022 10:00:26 -0800
+Message-Id: <20220112180026.5554-2-alokad@codeaurora.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220112180026.5554-1-alokad@codeaurora.org>
+References: <20220112180026.5554-1-alokad@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="rzTC0dn+5h0fM9tq"
-Content-Disposition: inline
-In-Reply-To: <CAL_JsqLzJCi+7ziZ6H=oBoQhi_onMXk7Hb9ry-Gv17S0_gYvwQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: John Crispin <john@phrozen.org>
 
---rzTC0dn+5h0fM9tq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+New debugfs files to manually add/delete/pause/resume TWT
+dialogs for test/debug purposes.
 
-> On Wed, Jan 12, 2022 at 8:19 AM Lorenzo Bianconi
-> <lorenzo.bianconi@redhat.com> wrote:
-> >
-> > > Introduce radar/CAC background detection support for mt7915 driver
-> > > Background radar/CAC detection allows to avoid the CAC downtime
-> > > switching on a different channel during CAC detection on the selected
-> > > radar channel.
-> >
-> > @Rob: I forgot to add devicetree ML in cc. Do I need to repost?
->=20
-> Yes, that's the only way patchwork picks up patches and checks run.
->=20
-> Rob
->=20
+The debugfs files expect the following parameters
+(1) Add dialog
+echo '<Peer_MAC> <Dialog_ID> <Wake_Interval_Usec> <Wake_Interval_Mantis>
+ <Wake_Duration_Usec> <First_SP_Offset> <TWT_Command>
+ <1:Broadcast /0:Individual> <1:Triggered / 0:Untriggered>
+ <1:Unannounced /0:Announced> <1:Protected / 0:Unprotected>' >
+ /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/twt/add_dialog
 
-ack, posted v2.
+Example (Non-triggered and un-announced):
+echo '00:03:7F:20:13:52 1 102400 100 30720 20480 4 0 0 1 0' >
+ /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/twt/add_dialog
 
-Regards,
-Lorenzo
+(2) Delete dialog
+echo '<Peer_MAC> <Dialog_ID>' >
+ /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/twt/del_dialog
 
---rzTC0dn+5h0fM9tq
-Content-Type: application/pgp-signature; name="signature.asc"
+(3) Pause dialog
+echo '<Peer_MAC> <Dialog_ID>' >
+ /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/twt/pause_dialog
 
------BEGIN PGP SIGNATURE-----
+(4) Resume dialog
+echo '<Peer_MAC> <Dialog_ID> <SP_Offset_Usec> <Next_TWT_Size>' >
+ /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/twt/resume_dialog
 
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYd8XHAAKCRA6cBh0uS2t
-rHMnAP9ly482DLSNr2TVK3rdVQyQwe7Mn0Vi30+mg/JdpgywtQD/W55pFE6dT+de
-1XsbcaDaHyeh4Ivq1krXcvON29TY5gI=
-=VaN/
------END PGP SIGNATURE-----
+Example:
+echo '00:03:7F:20:13:52 1 2000000 3' >
+ /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/twt/resume_dialog
 
---rzTC0dn+5h0fM9tq--
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01179-QCAHKSWPL_SILICONZ-1
+Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+Changes in V7
+* Only rebased
+
+Changes in V6
+* Moved all functions from debug.c to debugfs.c
+* ath11k_debugfs_add_interface() returns int instead of void
+
+Changes in V5
+* TWT directory created during ath11k_mac_op_add_interface() instead
+  of during TWT enable command.
+* File write operation check for twt_enabled.
+* Used CONFIG_ATH11K_DEBUGFS instead of CONFIG_MAC80211_DEBUGFS.
+* Example commands in commit description.
+
+ drivers/net/wireless/ath/ath11k/core.h    |   3 +
+ drivers/net/wireless/ath/ath11k/debugfs.c | 222 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/debugfs.h |  14 +-
+ drivers/net/wireless/ath/ath11k/mac.c     |   7 +
+ 4 files changed, 245 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 9bea019605d5..501c88c99c2b 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -263,6 +263,9 @@ struct ath11k_vif {
+ 	bool bcca_zero_sent;
+ 	bool do_not_send_tmpl;
+ 	struct ieee80211_chanctx_conf chanctx;
++#ifdef CONFIG_ATH11K_DEBUGFS
++	struct dentry *debugfs_twt;
++#endif /* CONFIG_ATH11K_DEBUGFS */
+ };
+ 
+ struct ath11k_vif_iter {
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
+index 198ade90b725..6cfa5c6093aa 100644
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -1152,3 +1152,225 @@ int ath11k_debugfs_register(struct ath11k *ar)
+ void ath11k_debugfs_unregister(struct ath11k *ar)
+ {
+ }
++
++static ssize_t ath11k_write_twt_add_dialog(struct file *file,
++					   const char __user *ubuf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_add_dialog_params params = { 0 };
++	u8 buf[128] = {0};
++	int ret;
++
++	if (arvif->ar->twt_enabled == 0) {
++		ath11k_err(arvif->ar->ab, "twt support is not enabled\n");
++		return -EOPNOTSUPP;
++	}
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf,
++		     "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u %u %u %u %hhu %hhu %hhu %hhu %hhu",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id,
++		     &params.wake_intvl_us,
++		     &params.wake_intvl_mantis,
++		     &params.wake_dura_us,
++		     &params.sp_offset_us,
++		     &params.twt_cmd,
++		     &params.flag_bcast,
++		     &params.flag_trigger,
++		     &params.flag_flow_type,
++		     &params.flag_protection);
++	if (ret != 16)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_add_dialog_cmd(arvif->ar, &params);
++	if (ret)
++		return ret;
++
++	return count;
++}
++
++static ssize_t ath11k_write_twt_del_dialog(struct file *file,
++					   const char __user *ubuf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_del_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	if (arvif->ar->twt_enabled == 0) {
++		ath11k_err(arvif->ar->ab, "twt support is not enabled\n");
++		return -EOPNOTSUPP;
++	}
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id);
++	if (ret != 7)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_del_dialog_cmd(arvif->ar, &params);
++	if (ret)
++		return ret;
++
++	return count;
++}
++
++static ssize_t ath11k_write_twt_pause_dialog(struct file *file,
++					     const char __user *ubuf,
++					     size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_pause_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	if (arvif->ar->twt_enabled == 0) {
++		ath11k_err(arvif->ar->ab, "twt support is not enabled\n");
++		return -EOPNOTSUPP;
++	}
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id);
++	if (ret != 7)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_pause_dialog_cmd(arvif->ar, &params);
++	if (ret)
++		return ret;
++
++	return count;
++}
++
++static ssize_t ath11k_write_twt_resume_dialog(struct file *file,
++					      const char __user *ubuf,
++					      size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_resume_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	if (arvif->ar->twt_enabled == 0) {
++		ath11k_err(arvif->ar->ab, "twt support is not enabled\n");
++		return -EOPNOTSUPP;
++	}
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id,
++		     &params.sp_offset_us,
++		     &params.next_twt_size);
++	if (ret != 9)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_resume_dialog_cmd(arvif->ar, &params);
++	if (ret)
++		return ret;
++
++	return count;
++}
++
++static const struct file_operations ath11k_fops_twt_add_dialog = {
++	.write = ath11k_write_twt_add_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_del_dialog = {
++	.write = ath11k_write_twt_del_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_pause_dialog = {
++	.write = ath11k_write_twt_pause_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_resume_dialog = {
++	.write = ath11k_write_twt_resume_dialog,
++	.open = simple_open
++};
++
++int ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
++{
++	if (arvif->vif->type == NL80211_IFTYPE_AP && !arvif->debugfs_twt) {
++		arvif->debugfs_twt = debugfs_create_dir("twt",
++							arvif->vif->debugfs_dir);
++		if (!arvif->debugfs_twt || IS_ERR(arvif->debugfs_twt)) {
++			ath11k_warn(arvif->ar->ab,
++				    "failed to create directory %p\n",
++				    arvif->debugfs_twt);
++			arvif->debugfs_twt = NULL;
++			return -1;
++		}
++
++		debugfs_create_file("add_dialog", 0200, arvif->debugfs_twt,
++				    arvif, &ath11k_fops_twt_add_dialog);
++
++		debugfs_create_file("del_dialog", 0200, arvif->debugfs_twt,
++				    arvif, &ath11k_fops_twt_del_dialog);
++
++		debugfs_create_file("pause_dialog", 0200, arvif->debugfs_twt,
++				    arvif, &ath11k_fops_twt_pause_dialog);
++
++		debugfs_create_file("resume_dialog", 0200, arvif->debugfs_twt,
++				    arvif, &ath11k_fops_twt_resume_dialog);
++	}
++	return 0;
++}
++
++void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif)
++{
++	debugfs_remove_recursive(arvif->debugfs_twt);
++	arvif->debugfs_twt = NULL;
++}
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs.h b/drivers/net/wireless/ath/ath11k/debugfs.h
+index 4c0740394c95..8ee5759fadf8 100644
+--- a/drivers/net/wireless/ath/ath11k/debugfs.h
++++ b/drivers/net/wireless/ath/ath11k/debugfs.h
+@@ -151,6 +151,9 @@ static inline int ath11k_debugfs_rx_filter(struct ath11k *ar)
+ 	return ar->debug.rx_filter;
+ }
+ 
++int ath11k_debugfs_add_interface(struct ath11k_vif *arvif);
++void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif);
++
+ #else
+ static inline int ath11k_debugfs_soc_create(struct ath11k_base *ab)
+ {
+@@ -224,6 +227,15 @@ static inline int ath11k_debugfs_get_fw_stats(struct ath11k *ar,
+ 	return 0;
+ }
+ 
+-#endif /* CONFIG_MAC80211_DEBUGFS*/
++static inline int ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
++{
++	return 0;
++}
++
++static inline void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif)
++{
++}
++
++#endif /* CONFIG_ATH11K_DEBUGFS*/
+ 
+ #endif /* _ATH11K_DEBUGFS_H_ */
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 07f499d5ec92..52fc661a5606 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -6341,6 +6341,10 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	ret = ath11k_debugfs_add_interface(arvif);
++	if (ret)
++		goto err_peer_del;
++
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	return 0;
+@@ -6375,6 +6379,7 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ err:
++	ath11k_debugfs_remove_interface(arvif);
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	return ret;
+@@ -6473,6 +6478,8 @@ static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
+ 	/* Recalc txpower for remaining vdev */
+ 	ath11k_mac_txpower_recalc(ar);
+ 
++	ath11k_debugfs_remove_interface(arvif);
++
+ 	/* TODO: recal traffic pause state based on the available vdevs */
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+-- 
+2.31.1
 
