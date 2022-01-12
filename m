@@ -2,140 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B28C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 18:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44331C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 18:50:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343875AbiALSeF (ORCPT
+        id S1356464AbiALSuA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jan 2022 13:34:05 -0500
-Received: from mga01.intel.com ([192.55.52.88]:65227 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242378AbiALSdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jan 2022 13:33:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642012416; x=1673548416;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=kl6KE6fIlAJUOkzEpfMsk817zHBF9cKcozgZRyFfBLA=;
-  b=QTuEg4q38B/skIEZxMANTPtApQZ90+n58ZpEeEwtbZrM+f9CsZQ61vKF
-   uFoDZjLV8FVbVpOV/mdwnj3fnKi7d7OPUEqT3iGupyFbh4z3AQmLI/Xsn
-   K3HgYk99d5+PnEzK456N22IUYD1bVtPZD1sdgCZzW8J4WAb5ILFBBiq05
-   SIB/GsqHJjSABvcmHAq7SSxq+aSFawb5LKQQ7yINZMfiviwnSB2YbhoaS
-   Yx6eAA17Us5qEoMywb++AkZCOuo81cw6xe8DmgNLJ+PBKibpHjfrd0eIf
-   KxquxgH1nWMFEP8s3fAAHhLnW0GeZiz9VZ1dcGDUokIoHuS2IhV93R+kM
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10225"; a="268160898"
-X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="268160898"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 10:16:46 -0800
-X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="529301545"
-Received: from frpiroth-mobl2.ger.corp.intel.com ([10.251.217.139])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 10:16:39 -0800
-Date:   Wed, 12 Jan 2022 20:16:38 +0200 (EET)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-cc:     "Martinez, Ricardo" <ricardo.martinez@linux.intel.com>,
-        Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
-        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
-        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
-        haijun.liu@mediatek.com, amir.hanania@intel.com,
-        dinesh.sharma@intel.com, eliot.lee@intel.com,
-        mika.westerberg@linux.intel.com, moises.veleta@intel.com,
-        pierre-louis.bossart@intel.com, muralidharan.sethuraman@intel.com,
-        Soumya.Prakash.Mishra@intel.com, sreehari.kancharla@intel.com
-Subject: Re: [PATCH net-next v3 01/12] net: wwan: t7xx: Add control DMA
- interface
-In-Reply-To: <Yd7/se+LD1c1wiBA@smile.fi.intel.com>
-Message-ID: <b638aa4-5a1c-e6ad-5a85-d4c3298c4daf@linux.intel.com>
-References: <20211207024711.2765-1-ricardo.martinez@linux.intel.com> <20211207024711.2765-2-ricardo.martinez@linux.intel.com> <a6325ef-e06e-c236-9d23-42fdb8b62747@linux.intel.com> <2b21bfa5-4b18-d615-b6ab-09ad97d73fe4@linux.intel.com> <Yd6+GjPLP2qCCEfv@smile.fi.intel.com>
- <b0cb18b-dc7b-9241-b21a-850d055d86@linux.intel.com> <Yd7/se+LD1c1wiBA@smile.fi.intel.com>
+        Wed, 12 Jan 2022 13:50:00 -0500
+Received: from mail-lf1-f47.google.com ([209.85.167.47]:44020 "EHLO
+        mail-lf1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1356514AbiALStm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jan 2022 13:49:42 -0500
+Received: by mail-lf1-f47.google.com with SMTP id x22so11301385lfd.10
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 10:49:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5nye0DiCqjNr3aFUpaJZ/kaqZMmnDI1WKX5tmwjOLIg=;
+        b=yF37zVhilTx4saT7dA852DMD3Qf0GDleKCuKAjzjdPFfJCls7tVwcLFzG9U7D7TG8t
+         WxXhw3PCXtFvVdqor4V0SNL842D29leui2v+4WuoeyPR2Zd4aynKTSZR8YDCEPBVu5z+
+         Tv7vv4ojwW2TvseAKw7W2NrjXmTCtOOxGTa8oPM2pOq5oq5XwoiTKavPBoY/SLsU3UBz
+         OpPE06CxhwlxhRFtKe+KOtWc7eae0T9gMI4XPHTM687nXC5xuF1NI/VkCWkRp365bWGs
+         q+tELzWntFhHHOmV8OG5X5RcXqeqDTsBEZ/FLS1w5aXp3mzONAsB0oiTurTUWtRV9tEV
+         LJJA==
+X-Gm-Message-State: AOAM533K8TM1dPuHYeUwAQCP9Urq35tyjgVWzfGyFqNuXrj8tbaXlFn5
+        1Zvg29B1/yMHtafVJ5j3kaPKxjckYjyNjxmYj9eIsxnfV7DvOg==
+X-Google-Smtp-Source: ABdhPJxUifUudRt3yS0/wTj3Va/C4AZirQQBfQtrXSRlmPOPBtqn+VabOmW2wO6e80D7sFDI/pN/o87mLk80SqgAsAs=
+X-Received: by 2002:a2e:b88b:: with SMTP id r11mr586312ljp.50.1642013381547;
+ Wed, 12 Jan 2022 10:49:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-909957258-1642011406=:1851"
+References: <CAJvTdKm9PQrnyEG=b-8DbdnOHup8Ec6VqoKp3ZCQXwmvXU3FbA@mail.gmail.com>
+ <0bb2a3b794c19514ad30ecc0ca60d1d6e9e438b0.camel@sipsolutions.net>
+In-Reply-To: <0bb2a3b794c19514ad30ecc0ca60d1d6e9e438b0.camel@sipsolutions.net>
+From:   Len Brown <lenb@kernel.org>
+Date:   Wed, 12 Jan 2022 13:49:30 -0500
+Message-ID: <CAJvTdKmKPA_W_tXVjFOQEb5nX+sE+PmBeyVcf35=8WbLXuZapA@mail.gmail.com>
+Subject: Re: iwlwifi 0000:3a:00.0: Microcode SW error detected. Restarting 0x2000000.
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Wed, Jan 12, 2022 at 3:34 AM Johannes Berg <johannes@sipsolutions.net> wrote:
 
---8323329-909957258-1642011406=:1851
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
+> Something like this might help?
 
-On Wed, 12 Jan 2022, Andy Shevchenko wrote:
+Yes!
+I have confirmed that this patch allows wifi to work, when applied to
+Linux-5.16.
 
-> On Wed, Jan 12, 2022 at 04:24:52PM +0200, Ilpo Järvinen wrote:
-> > On Wed, 12 Jan 2022, Andy Shevchenko wrote:
-> > > On Tue, Jan 11, 2022 at 08:55:58PM -0800, Martinez, Ricardo wrote:
-> > > > On 12/16/2021 3:08 AM, Ilpo Järvinen wrote:
-> > > > > On Mon, 6 Dec 2021, Ricardo Martinez wrote:
-> > > 
-> > > > > > +	if (req->entry.next == &ring->gpd_ring)
-> > > > > > +		return list_first_entry(&ring->gpd_ring, struct cldma_request, entry);
-> > > > > > +
-> > > > > > +	return list_next_entry(req, entry);
-> > > 
-> > > ...
-> > > 
-> > > > > > +	if (req->entry.prev == &ring->gpd_ring)
-> > > > > > +		return list_last_entry(&ring->gpd_ring, struct cldma_request, entry);
-> > > > > > +
-> > > > > > +	return list_prev_entry(req, entry);
-> > > 
-> > > ...
-> > > 
-> > > > > Wouldn't these two seems generic enough to warrant adding something like
-> > > > > list_next/prev_entry_circular(...) to list.h?
-> > > > 
-> > > > Agree, in the upcoming version I'm planning to include something like this
-> > > > to list.h as suggested:
-> > > 
-> > > I think you mean for next and prev, i.o.w. two helpers, correct?
-> > > 
-> > > > #define list_next_entry_circular(pos, ptr, member) \
+Let me know when you'd like me to test a production patch.
 
-One thing I missed earlier, the sigrature should instead of ptr have head:
-#define list_next_entry_circular(pos, head, member)
+thanks!
+Len Brown, Intel Open Source Technology Center
 
-> > > >     ((pos)->member.next == (ptr) ? \
-> > > 
-> > > I believe this is list_entry_is_head().
-> > 
-> > It takes .next so it's not the same as list_entry_is_head() and 
-> > list_entry_is_last() doesn't exist.
-> 
-> But we have list_last_entry(). So, what about
-> 
-> list_last_entry() == pos ? first : next;
-> 
-> and counterpart
-> 
-> list_first_entry() == pos ? last : prev;
-> 
-> ?
-
-Yes, although now that I think it more, using them implies the head 
-element has to be always accessed. It might be marginally cache friendlier 
-to use list_entry_is_head you originally suggested but get the next entry 
-first:
-({
-	typeof(pos) next__ = list_next_entry(pos, member); \
-	!list_entry_is_head(next__, head, member) ? next__ : list_next_entry(next__, member);
-})
-(This was written directly to email, entirely untested).
-
-Here, the head element would only get accessed when we really need to walk 
-through it.
-
-> > > >     list_first_entry(ptr, typeof(*(pos)), member) : \
-> > > >     list_next_entry(pos, member))
-
--- 
- i.
-
---8323329-909957258-1642011406=:1851--
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> index 7ee4802a5ef1..56b9363a9111 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> @@ -1026,7 +1026,9 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+>         /* the ops field is at the same spot for all versions, so set in v1 */
+>         cmd.v1.ops = cpu_to_le32(IWL_PER_CHAIN_OFFSET_SET_TABLES);
+>
+> -       if (cmd_ver == 5) {
+> +       if (cmd_ver == IWL_FW_CMD_VER_UNKNOWN) {
+> +               return 0;
+> +       } else if (cmd_ver == 5) {
+>                 len = sizeof(cmd.v5);
+>                 n_bands = ARRAY_SIZE(cmd.v5.table[0]);
+>                 n_profiles = ACPI_NUM_GEO_PROFILES_REV3;
