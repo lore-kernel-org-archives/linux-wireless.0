@@ -2,42 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B19C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 14:15:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DAF5C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 14:15:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354024AbiALOO6 (ORCPT
+        id S1354041AbiALOPB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jan 2022 09:14:58 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:47894 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354006AbiALOOf (ORCPT
+        Wed, 12 Jan 2022 09:15:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43968 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354014AbiALOOk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jan 2022 09:14:35 -0500
+        Wed, 12 Jan 2022 09:14:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D61ABC061748
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 06:14:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9EFDC61418
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 14:14:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 954CEC36AE5;
-        Wed, 12 Jan 2022 14:14:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 74CF7614EB
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 14:14:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66C8AC36AE5;
+        Wed, 12 Jan 2022 14:14:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641996875;
-        bh=cun3XwP2/Dzr36iV1nkbLpNZyyXABBCHVQBdwH8Qliw=;
+        s=k20201202; t=1641996878;
+        bh=rJFr/ccMGxzX5Thiy1NAGXlf9AsqHRI3KKm8LzpKS9U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mNCYxeE6shRQeBB1MSjQQ+FZQ9ZHLBrbzm0mDDvixJtd/tLKJbk2+PWpo//Tu2PMc
-         1F7kwjmVODzalso20yu8WRU6AEX70mc1mhzjNNfu60SYRuRyaQ15E5F8lv5Jpw+wwq
-         qA2no4Om4XMT2o3MPtjTeou8oAmztJeS2vrRuHgwGVKWZTCcrvYCv3F9RArcq2dAy9
-         dh9n8qQgudEJywy+9mlxiFqiEi+M4GgiOAgWFCm69XWM/YTRM/sHf3FS6X9l4v0MfK
-         HHafa/pzl2UWP1qwQn6K/PLGhxnutzvDhMBKVzQh1s7k5CVtWxMh7JWhEECphhLVQx
-         zazEzgJbmLNAA==
+        b=RVVCZXw5Em4fPyYwalRAPwAXS2q+0fGDJeeR+7jTVwTMX5rlDIL7ziN9CCuITPKOp
+         GAFI91L+W9WvqYw74UMAm0DQXeBt3VExa4/ub5knPyNSvcaE1ExZULzzyZz5H+0lvO
+         nNv47JJbKIvAhNTI6Ff5Dypj7hxcb5DF/J94rCx4mt+MU2osRB9YLfINMjr5PQjoos
+         NeC+FDNv6wLsoKXCaq3F9ho7ybwWfGxafVWkhQ2bxpBZ6tGvDjDEu9w8iHSq56vjzT
+         96suLMeuauFxPKf/xXap2OA7ZUi+KyQDJT+TG1FYjrNSnzbS+H8qnOH94Nmt9kzLGJ
+         NQwO0UDkYUTbQ==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
         owen.peng@mediatek.com
-Subject: [PATCH 3/6] mt76: mt7915: introduce rdd_monitor debugfs node
-Date:   Wed, 12 Jan 2022 15:13:50 +0100
-Message-Id: <099d4f11a2c34db2e3312283adc3781cc0108e3a.1641996493.git.lorenzo@kernel.org>
+Subject: [PATCH 5/6] mt76: mt7915: enable radar background detection
+Date:   Wed, 12 Jan 2022 15:13:52 +0100
+Message-Id: <f97a4fe5bec70d8e5594c0f4d286b46b844939a5.1641996493.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <cover.1641996493.git.lorenzo@kernel.org>
 References: <cover.1641996493.git.lorenzo@kernel.org>
@@ -47,81 +50,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce rdd_monitor debugfs node in order to dump rdd2 configuration.
+Notify userland the hw supports background radar/CAC detection.
 
 Tested-by: Owen Peng <owen.peng@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 49 +++++++++++++++++++
- 1 file changed, 49 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index e140336a4fe1..280823fc9f92 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -308,6 +308,53 @@ static int mt7915_muru_stats_show(struct seq_file *file, void *data)
- }
- DEFINE_SHOW_ATTRIBUTE(mt7915_muru_stats);
- 
-+static int
-+mt7915_rdd_monitor(struct seq_file *s, void *data)
-+{
-+	struct mt7915_dev *dev = dev_get_drvdata(s->private);
-+	struct cfg80211_chan_def *chandef = &dev->rdd2_chandef;
-+	const char *bw;
-+	int ret = 0;
-+
-+	mutex_lock(&dev->mt76.mutex);
-+
-+	if (!cfg80211_chandef_valid(chandef)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (!dev->rdd2_phy) {
-+		seq_puts(s, "not running\n");
-+		goto out;
-+	}
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_40:
-+		bw = "40";
-+		break;
-+	case NL80211_CHAN_WIDTH_80:
-+		bw = "80";
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		bw = "160";
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		bw = "80P80";
-+		break;
-+	default:
-+		bw = "20";
-+		break;
-+	}
-+
-+	seq_printf(s, "channel %d (%d MHz) width %s MHz center1: %d MHz\n",
-+		   chandef->chan->hw_value, chandef->chan->center_freq,
-+		   bw, chandef->center_freq1);
-+out:
-+	mutex_unlock(&dev->mt76.mutex);
-+
-+	return ret;
-+}
-+
- static int
- mt7915_fw_debug_wm_set(void *data, u64 val)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 5c1643963506..91c7ce60f296 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -309,6 +309,7 @@ static void
+ mt7915_init_wiphy(struct ieee80211_hw *hw)
  {
-@@ -856,6 +903,8 @@ int mt7915_init_debugfs(struct mt7915_phy *phy)
- 				   &dev->hw_pattern);
- 		debugfs_create_file("radar_trigger", 0200, dir, dev,
- 				    &fops_radar_trigger);
-+		debugfs_create_devm_seqfile(dev->mt76.dev, "rdd_monitor", dir,
-+					    mt7915_rdd_monitor);
- 	}
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
++	struct mt76_dev *mdev = &phy->dev->mt76;
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	struct mt7915_dev *dev = phy->dev;
  
- 	if (!ext_phy)
+@@ -337,6 +338,12 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_BEACON_RATE_VHT);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_BEACON_RATE_HE);
+ 
++	if (!mdev->dev->of_node ||
++	    !of_property_read_bool(mdev->dev->of_node,
++				   "mediatek,disable-radar-background"))
++		wiphy_ext_feature_set(wiphy,
++				      NL80211_EXT_FEATURE_RADAR_BACKGROUND);
++
+ 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
+ 	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
+ 	ieee80211_hw_set(hw, SUPPORTS_RX_DECAP_OFFLOAD);
 -- 
 2.34.1
 
