@@ -2,172 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC651C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 21:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13575C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 22:43:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236366AbiAMV7P (ORCPT
+        id S235301AbiAMWnn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jan 2022 16:59:15 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:59756 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232985AbiAMV7O (ORCPT
+        Thu, 13 Jan 2022 17:43:43 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39140 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232512AbiAMWnn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jan 2022 16:59:14 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CA2CC61C14
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2022 21:59:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D4D4C36AEA;
-        Thu, 13 Jan 2022 21:59:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642111153;
-        bh=F1zXefHp3rLvfmHib8b5uVoxPX3G7+ZDlnh6gyOGpqE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G3TxsFulhUmzROxoSpW1exWdWtIVAWVCIAqnYWtJL6Om+8HwKtqAcC6JRqOYe4iFV
-         XkI2sZc/5MN0lkV4hs7yfDmG+jhh6niucX3uhzSGxkRI6dt7ZGARur/s8qRYh4E1pF
-         +/rtMmcXdD6YaQ0p5eFiVY5AXiG3Tf/O8inOTMAoyeCm1/HO/10kb39zyVgV6Jccpa
-         2a3fUiezssBSxU531+J/XQEYLKa45/mf9Vc36d/N6ruWokaF7x8acImykprWsDXa7U
-         WvJ+CPZxOqsf663exxDF2kLcU2Q4OofUNh3fivEzK3c3OX8FnlLB3koP+2FNYCw7X7
-         3UiumvJUgtvjg==
-Date:   Thu, 13 Jan 2022 15:59:12 -0600
-From:   Seth Forshee <sforshee@kernel.org>
-To:     Sungbo Eo <mans0n@gorani.run>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for South
- Korea (KR)
-Message-ID: <YeCgsJPwqFQiSmpa@ubuntu-x1>
-References: <20210929172728.7512-1-mans0n@gorani.run>
- <20211024113821.51538-1-mans0n@gorani.run>
- <YXmVLUzVEgrAMLwL@ubuntu-x1>
- <4f05b6b1-084d-9046-4c63-6975c25d7615@gorani.run>
- <Yb0JAXsCnjnIQ9c9@ubuntu-x1>
- <b2288492-cdbd-0310-0951-cdee77fc3a79@gorani.run>
- <YcDxNCSoQh2XejK8@ubuntu-x1>
+        Thu, 13 Jan 2022 17:43:43 -0500
+X-UUID: ffa7af9da401431e8acef053ad6e06a4-20220114
+X-UUID: ffa7af9da401431e8acef053ad6e06a4-20220114
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 69137826; Fri, 14 Jan 2022 06:43:41 +0800
+Received: from mtkexhb02.mediatek.inc (172.21.101.103) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.792.15; Fri, 14 Jan 2022 06:43:40 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by mtkexhb02.mediatek.inc
+ (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 14 Jan
+ 2022 06:43:39 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 14 Jan 2022 06:43:39 +0800
+From:   <sean.wang@mediatek.com>
+To:     <lorenzo.bianconi@redhat.com>
+CC:     <nbd@nbd.name>, <sean.wang@mediatek.com>,
+        <Soul.Huang@mediatek.com>, <YN.Chen@mediatek.com>,
+        <Leon.Yen@mediatek.com>, <Eric-SY.Chang@mediatek.com>,
+        <Mark-YW.Chen@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Eric.Liang@mediatek.com>,
+        <Stella.Chang@mediatek.com>, <Tom.Chou@mediatek.com>,
+        <steve.lee@mediatek.com>, <jsiuda@google.com>,
+        <frankgor@google.com>, <jemele@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH 2/3] mt76: sdio: honor the largest Tx buffer the hardware can support
+Date:   Fri, 14 Jan 2022 06:43:38 +0800
+Message-ID: <1642113818-9675-1-git-send-email-sean.wang@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <Yd/sYYP1XJ3J8RuR@lore-desk--annotate>
+References: <Yd/sYYP1XJ3J8RuR@lore-desk--annotate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YcDxNCSoQh2XejK8@ubuntu-x1>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Dec 20, 2021 at 03:10:12PM -0600, Seth Forshee wrote:
-> On Sat, Dec 18, 2021 at 04:31:17PM +0900, Sungbo Eo wrote:
-> > On 2021-12-18 07:02, Seth Forshee wrote:
-> > > On Sat, Oct 30, 2021 at 01:12:08AM +0900, Sungbo Eo wrote:
-> > > > On 2021-10-28 03:06, Seth Forshee wrote:
-> > > > > On Sun, Oct 24, 2021 at 08:38:21PM +0900, Sungbo Eo wrote:
-> > > > > > This patch is based on MSIT Public Notification 2020-113 ("Unlicensed Radio
-> > > > > > Equipment Established Without Notice"), officially announced on 2021-01-06.
-> > > > > > 
-> > > > > > The PSD must not exceed 2.5 mW/MHz if the frequency range includes all or
-> > > > > > part of 5230-5250 MHz and the bandwidth is equal to or less than 40 MHz.
-> > > > > > This leads to the following:
-> > > > > > * 5230-5250 @ 20 -> 17 dBm
-> > > > > > * 5210-5250 @ 40 -> 20 dBm
-> > > > > > Here the power limits for 80/160 MHz bandwidth are also lowered to 17 dBm,
-> > > > > > as it's not possible to set different power limits for different bandwidths
-> > > > > > at the moment.
-> > > > > > 
-> > > > > > Extend the last 5 GHz frequency range to 5850 MHz.
-> > > > > > 
-> > > > > > WiFi 6E is now allowed with the following restrictions:
-> > > > > > * Indoor: the full 1.2 GHz range, up to 160 MHz bandwidth and 250mW EIRP
-> > > > > > * Outdoor: the lower 500 MHz range, up to 160 MHz bandwidth and 25mW EIRP
-> > > > > > Here only the former entry is added.
-> > > > > > 
-> > > > > > And also update the regulatory source links.
-> > > > > > 
-> > > > > > Signed-off-by: Sungbo Eo <mans0n@gorani.run>
-> > > > > > ---
-> > > > > > v2:
-> > > > > > * split 5150-5250 MHz band rule to accommodate the PSD limit
-> > > > > > * remove AUTO-BW flag from 6 GHz band rule
-> > > > > > ---
-> > > > > >    db.txt | 17 ++++++++++++-----
-> > > > > >    1 file changed, 12 insertions(+), 5 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/db.txt b/db.txt
-> > > > > > index 6e8dbef..387ac93 100644
-> > > > > > --- a/db.txt
-> > > > > > +++ b/db.txt
-> > > > > > @@ -862,15 +862,22 @@ country KP: DFS-JP
-> > > > > >    	(5490 - 5630 @ 20), (30), DFS
-> > > > > >    	(5735 - 5815 @ 20), (30)
-> > > > > > +# Source:
-> > > > > > +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196972
-> > > > > > +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196973
-> > > > > > +# https://www.law.go.kr/LSW//admRulLsInfoP.do?chrClsCd=&admRulSeq=2100000196974
-> > > > > >    country KR: DFS-JP
-> > > > > > -	# ref: https://www.rra.go.kr
-> > > > > >    	(2400 - 2483.5 @ 40), (23)
-> > > > > > -	(5150 - 5250 @ 80), (23), AUTO-BW
-> > > > > > +	(5150 - 5210 @ 40), (23), AUTO-BW
-> > > > > > +	# max. PSD 2.5 mW/MHz in 5230-5250 MHz frequency range
-> > > > > > +	(5210 - 5230 @ 20), (20), AUTO-BW
-> > > > > > +	(5230 - 5250 @ 20), (17), AUTO-BW
-> > > > > 
-> > > > > Even with 5210-5230 split out like this, 5210-5250 @ 40 still gets
-> > > > > limited to 17 dBm by the 5230-5250 rule. So why do we need to split out
-> > > > > 5210-5230 separate from 5150-5210?
-> > > > 
-> > > > I did some tests with regdb and I found out that the rule to be applied
-> > > > depends on the main 20 MHz channel. With the rules above, if I select
-> > > > channel 48 (5230-5250) and enable VHT40, then the TX power is set to 17 dBm.
-> > > > OTOH if I select channel 44 (5210–5230) and enable VHT40, then the TX power
-> > > > is set to 20 dBm. I'm not sure whether my result is really correct, though.
-> > > 
-> > > I'm sorry, when I saw the v3 patch I realized that I forgot to reply to
-> > > this email. I had wanted to take a look at the kernel source to try and
-> > > understand the behavior you described.
-> > > 
-> > > I took a quick look, and from what I'm seeing the minimum of the power
-> > > limits for the two ranges should be used. This is the behavior I expect.
-> > > Can you provide more detail about how you're getting that result?
-> > > 
-> > > Thanks,
-> > > Seth
-> > 
-> > I've got the result on MT7623+MT7615N AP with OpenWrt installed. (kernel
-> > 5.10)
-> > I set the channel and bandwidth in /etc/config/wireless (in OpenWrt-standard
-> > way) and checked the tx power with `iw dev wlan0 info` and Android WiFi
-> > Analyzer app.
-> > 
-> > # channel 48, htmode VHT40
-> > type AP
-> > channel 48 (5240 MHz), width: 40 MHz, center1: 5230 MHz
-> > txpower 17.00 dBm
-> > 
-> > # channel 44, htmode VHT40
-> > type AP
-> > channel 44 (5220 MHz), width: 40 MHz, center1: 5230 MHz
-> > txpower 20.00 dBm
-> > 
-> > The WiFi Analyzer app also reported higher RSSI for the channel 44 case.
-> > 
-> > I also had a quick look at net/wireless/reg.c and it seems you're right.
-> > Perhaps my tests were bad, I do believe your comments more than my result.
-> > ;)
-> 
-> That definitely seems odd. I'll try to have another look and see if I
-> can figure out why that's happening. I'd have suspected that what's
-> displayed by iw might just be a result of how the information is
-> reported or displayed, but the higher RSSI argues against that.
+From: Sean Wang <sean.wang@mediatek.com>
 
-I've spent a little more time looking at this. I think the issue is that
-the regulatory rules are only used to establish channel definititions
-for 20 MHz channels, and these channel definitions are what get used
-when establishing tx parameters. While the flags are checked against the
-chandefs of secondary channels, only the primary channel's power limits
-are used for tx power. So I think the behavior of the kernel is incorect
-here.
+<snip>
+>> @@ -299,6 +301,17 @@ int mt76s_hw_init(struct mt76_dev *dev, struct
+>> sdio_func *func, int hw_ver)  }  EXPORT_SYMBOL_GPL(mt76s_hw_init);
+>>
+>> +u32 mt76s_get_xmit_buf_sz(struct mt76_dev *dev, u32 dev_max_len) {
+>> +	struct sdio_func *func = dev->sdio.func;
+>> +	u32 host_max_len = min_t(u32, func->card->host->max_req_size,
+>> +				 func->cur_blksize *
+>> +				 func->card->host->max_blk_count);
+>> +
+>> +	return min_t(u32, host_max_len, dev_max_len); }
+>> +EXPORT_SYMBOL_GPL(mt76s_get_xmit_buf_sz);
+>
+>I think we can squash this patch with the previous one and move the code above in mt76s_init(). Agree?
 
-However, I think the regulatory database should reflect the regulatory
-data as accurately as possible, so I'd prefer we not split out 5210-5230
-and try to get the bug fixed in the kernel.
+these comments you have in the patchset all look fine to me, I will post v2 soon.
 
-Thanks,
-Seth
+	Sean
+>
+>Regards,
+>Lorenzo
+>
+>> +
+>>  int mt76s_alloc_rx_queue(struct mt76_dev *dev, enum mt76_rxq_id qid)
+>> {
+>>	struct mt76_queue *q = &dev->q_rx[qid]; diff --git
+>> a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
+>> b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
+>> index a04cd2444247..9fcf507e09bd 100644
+>> --- a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
+>> +++ b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
+>> @@ -254,7 +254,7 @@ static int mt76s_tx_run_queue(struct mt76_dev *dev, struct mt76_queue *q)
+>>		}
+>>
+>>		pad = roundup(e->skb->len, 4) - e->skb->len;
+>> -		if (len + e->skb->len + pad + 4 > MT76S_XMIT_BUF_SZ)
+>> +		if (len + e->skb->len + pad + 4 > dev->sdio.xmit_buf_sz)
+>>			break;
+>>
+>>		if (mt76s_tx_pick_quota(sdio, mcu, e->buf_sz, &pse_sz,
+>> --
+>> 2.25.1
+>>
+>
