@@ -2,272 +2,154 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 218B6C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Jan 2022 23:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 132AEC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 01:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235425AbiALX12 (ORCPT
+        id S230232AbiAMBLV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jan 2022 18:27:28 -0500
-Received: from mga01.intel.com ([192.55.52.88]:22914 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235421AbiALX12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jan 2022 18:27:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642030048; x=1673566048;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=KtQ/owbWjK6HG+TVAL3VKKbtDPtAaWOC4lqP8oGoJuU=;
-  b=X/Xvg8ae3VOuhEuiByeQ6R4wojHkrYlltgYMQ8hQxrCNJYEEyfKFBUHy
-   a6weUJiw/0w+OX3L5X/2cOQqOc9XsoCZB+zU1bivE3P+dK0MFZF9tijeA
-   U+9cE/oWO7foMKOiRRNRFk8qdE9ViAuz5hf/S+dsjzfjxvyL+PjAcJCSc
-   sk2hVFcpEym1Wcgn58Qs7YjD6X59a3Kc6TRuTPIinPo69iFRqlFrlosuN
-   nZwQbfH2JWu+fdFAEGq3dnZzncxZvOimV88RIEtB+kOcbrVl+GrkpJ5ID
-   +mpNnYa8pMv5A6Vnpopz7SEtDyFR53ykAmoVz5Ro7zOd/cgpD+ZNJ1lG+
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10225"; a="268224003"
-X-IronPort-AV: E=Sophos;i="5.88,284,1635231600"; 
-   d="scan'208";a="268224003"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:27:27 -0800
-X-IronPort-AV: E=Sophos;i="5.88,284,1635231600"; 
-   d="scan'208";a="515698389"
-Received: from rmarti10-mobl2.amr.corp.intel.com (HELO [10.209.104.69]) ([10.209.104.69])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:27:27 -0800
-Message-ID: <b203030d-7120-5ed3-9543-0e4d2ff08c10@linux.intel.com>
-Date:   Wed, 12 Jan 2022 15:27:26 -0800
+        Wed, 12 Jan 2022 20:11:21 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:42612 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231266AbiAMBLJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jan 2022 20:11:09 -0500
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 20D1AtMU2031956, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 20D1AtMU2031956
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 13 Jan 2022 09:10:55 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Thu, 13 Jan 2022 09:10:55 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 13 Jan
+ 2022 09:10:54 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
+Subject: [PATCH 2/2] rtw89: include subband type in channel params
+Date:   Thu, 13 Jan 2022 09:10:42 +0800
+Message-ID: <20220113011042.6705-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220113011042.6705-1-pkshih@realtek.com>
+References: <20220113011042.6705-1-pkshih@realtek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH net-next v3 07/12] net: wwan: t7xx: Add data path
- interface
-Content-Language: en-US
-To:     =?UTF-8?Q?Ilpo_J=c3=a4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
-        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
-        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
-        haijun.liu@mediatek.com, amir.hanania@intel.com,
-        andriy.shevchenko@linux.intel.com, dinesh.sharma@intel.com,
-        eliot.lee@intel.com, mika.westerberg@linux.intel.com,
-        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
-        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
-        sreehari.kancharla@intel.com
-References: <20211207024711.2765-1-ricardo.martinez@linux.intel.com>
- <20211207024711.2765-8-ricardo.martinez@linux.intel.com>
- <5154c2b5-4b94-fcfb-fbdc-8d3dcacc34de@linux.intel.com>
-From:   "Martinez, Ricardo" <ricardo.martinez@linux.intel.com>
-In-Reply-To: <5154c2b5-4b94-fcfb-fbdc-8d3dcacc34de@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 01/13/2022 00:56:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzEvMTIgpFWkyCAxMDowMDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-On 12/16/2021 5:30 AM, Ilpo Järvinen wrote:
-...
->
->> +	for (i = 0; i < alloc_cnt; i++) {
->> +		unsigned short cur_bat_idx = bat_start_idx + i;
->> +		struct dpmaif_bat_skb *cur_skb;
->> +		struct dpmaif_bat *cur_bat;
->> +
->> +		if (cur_bat_idx >= bat_max_cnt)
->> +			cur_bat_idx -= bat_max_cnt;
->> +
->> +		cur_skb = (struct dpmaif_bat_skb *)bat_req->bat_skb + cur_bat_idx;
->> +		if (!cur_skb->skb) {
->> +			struct dpmaif_skb_info *skb_info;
->> +
->> +			skb_info = t7xx_dpmaif_dev_alloc_skb(dpmaif_ctrl, bat_req->pkt_buf_sz);
->> +			if (!skb_info)
->> +				break;
->> +
->> +			cur_skb->skb = skb_info->skb;
->> +			cur_skb->data_bus_addr = skb_info->data_bus_addr;
->> +			cur_skb->data_len = skb_info->data_len;
->> +			kfree(skb_info);
-> It seems that here you do an alloc that is immediately followed by kfree.
-> Couldn't this be solved by passing cur_skb to a function which assigns
-> those values you want directly to it?
+Make stuffs related to channel be collected in channel_params,
+and encapsulate the corresponding decision in get_channel_params().
+Then, functions that takes channel_params can also notice subband type.
 
-Yes, alloc removed in the next version.
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 34 +++++++++++++----------
+ drivers/net/wireless/realtek/rtw89/core.h |  1 +
+ 2 files changed, 20 insertions(+), 15 deletions(-)
 
-...
-
->
->> +int t7xx_dpmaif_rx_frag_alloc(struct dpmaif_ctrl *dpmaif_ctrl, struct dpmaif_bat_request *bat_req,
->> +			      const unsigned int buf_cnt, const bool initial)
->> +{
->> +	struct dpmaif_bat_page *bat_skb = bat_req->bat_skb;
->> +	unsigned short cur_bat_idx = bat_req->bat_wr_idx;
->> +	unsigned int buf_space;
->> +	int i;
->> +
->> +	if (!buf_cnt || buf_cnt > bat_req->bat_size_cnt)
->> +		return -EINVAL;
->> +
->> +	buf_space = t7xx_ring_buf_rd_wr_count(bat_req->bat_size_cnt,
->> +					      bat_req->bat_release_rd_idx, bat_req->bat_wr_idx,
->> +					      DPMAIF_WRITE);
->> +	if (buf_cnt > buf_space) {
->> +		dev_err(dpmaif_ctrl->dev,
->> +			"Requested more buffers than the space available in RX frag ring\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	for (i = 0; i < buf_cnt; i++) {
->> +		struct dpmaif_bat_page *cur_page = bat_skb + cur_bat_idx;
->> +		struct dpmaif_bat *cur_bat;
->> +		dma_addr_t data_base_addr;
->> +
->> +		if (!cur_page->page) {
->> +			unsigned long offset;
->> +			struct page *page;
->> +			void *data;
->> +
->> +			data = netdev_alloc_frag(bat_req->pkt_buf_sz);
->> +			if (!data)
->> +				break;
->> +
->> +			page = virt_to_head_page(data);
->> +			offset = data - page_address(page);
->> +
->> +			data_base_addr = dma_map_page(dpmaif_ctrl->dev, page, offset,
->> +						      bat_req->pkt_buf_sz, DMA_FROM_DEVICE);
->> +			if (dma_mapping_error(dpmaif_ctrl->dev, data_base_addr)) {
->> +				dev_err(dpmaif_ctrl->dev, "DMA mapping fail\n");
->> +				put_page(virt_to_head_page(data));
->> +				break;
->> +			}
->> +
->> +			cur_page->page = page;
->> +			cur_page->data_bus_addr = data_base_addr;
->> +			cur_page->offset = offset;
->> +			cur_page->data_len = bat_req->pkt_buf_sz;
->> +		}
->> +
->> +		data_base_addr = cur_page->data_bus_addr;
->> +		cur_bat = (struct dpmaif_bat *)bat_req->bat_base + cur_bat_idx;
->> +		cur_bat->buffer_addr_ext = upper_32_bits(data_base_addr);
->> +		cur_bat->p_buffer_addr = lower_32_bits(data_base_addr);
->> +		cur_bat_idx = t7xx_ring_buf_get_next_wrdx(bat_req->bat_size_cnt, cur_bat_idx);
->> +	}
->> +
->> +	if (i < buf_cnt)
->> +		return -ENOMEM;
->> +	bat_req->bat_wr_idx = cur_bat_idx;
-> Is there some leak if this early returns and does not update bat_wr_idx?
-> One call path seems to eventually just ignore error code.
-
-Yes, the code should not return here. Also need to unmap the pages in 
-case of error.
-
-...
-
->> +static int t7xx_dpmaif_rx_start(struct dpmaif_rx_queue *rxq, const unsigned short pit_cnt,
->> +				const unsigned long timeout)
->> +{
->> +	struct device *dev = rxq->dpmaif_ctrl->dev;
->> +	struct dpmaif_cur_rx_skb_info *skb_info;
->> +	unsigned short rx_cnt, recv_skb_cnt = 0;
->> +	unsigned int cur_pit, pit_len;
->> +	int ret = 0, ret_hw = 0;
->> +
->> +	pit_len = rxq->pit_size_cnt;
->> +	skb_info = &rxq->rx_data_info;
->> +	cur_pit = rxq->pit_rd_idx;
->> +
->> +	for (rx_cnt = 0; rx_cnt < pit_cnt; rx_cnt++) {
->> +		struct dpmaif_normal_pit *pkt_info;
->> +		u32 val;
->> +
->> +		if (!skb_info->msg_pit_received && time_after_eq(jiffies, timeout))
->> +			break;
->> +
->> +		pkt_info = (struct dpmaif_normal_pit *)rxq->pit_base + cur_pit;
->> +		if (t7xx_dpmaif_check_pit_seq(rxq, pkt_info)) {
->> +			dev_err_ratelimited(dev, "RXQ%u checks PIT SEQ fail\n", rxq->index);
->> +			return -EAGAIN;
->> +		}
->> +
->> +		val = FIELD_GET(NORMAL_PIT_PACKET_TYPE, le32_to_cpu(pkt_info->pit_header));
->> +		if (val == DES_PT_MSG) {
->> +			if (skb_info->msg_pit_received)
->> +				dev_err(dev, "RXQ%u received repeated PIT\n", rxq->index);
->> +
->> +			skb_info->msg_pit_received = true;
->> +			t7xx_dpmaif_parse_msg_pit(rxq, (struct dpmaif_msg_pit *)pkt_info,
->> +						  skb_info);
->> +		} else { /* DES_PT_PD */
->> +			val = FIELD_GET(NORMAL_PIT_BUFFER_TYPE, le32_to_cpu(pkt_info->pit_header));
->> +			if (val != PKT_BUF_FRAG)
->> +				ret = t7xx_dpmaif_get_rx_pkt(rxq, pkt_info, skb_info);
->> +			else if (!skb_info->cur_skb)
->> +				ret = -EINVAL;
->> +			else
->> +				ret = t7xx_dpmaif_get_frag(rxq, pkt_info, skb_info);
->> +
->> +			if (ret < 0) {
->> +				skb_info->err_payload = 1;
->> +				dev_err_ratelimited(dev, "RXQ%u error payload\n", rxq->index);
->> +			}
->> +
->> +			val = FIELD_GET(NORMAL_PIT_CONT, le32_to_cpu(pkt_info->pit_header));
->> +			if (!val) {
->> +				if (!skb_info->err_payload) {
->> +					t7xx_dpmaif_rx_skb(rxq, skb_info);
->> +				} else if (skb_info->cur_skb) {
->> +					dev_kfree_skb_any(skb_info->cur_skb);
->> +					skb_info->cur_skb = NULL;
->> +				}
->> +
->> +				memset(skb_info, 0, sizeof(*skb_info));
->> +
->> +				recv_skb_cnt++;
->> +				if (!(recv_skb_cnt & DPMAIF_RX_PUSH_THRESHOLD_MASK)) {
->> +					wake_up_all(&rxq->rx_wq);
->> +					recv_skb_cnt = 0;
->> +				}
->> +			}
->> +		}
->> +
->> +		cur_pit = t7xx_ring_buf_get_next_wrdx(pit_len, cur_pit);
->> +		rxq->pit_rd_idx = cur_pit;
->> +		rxq->pit_remain_release_cnt++;
->> +
->> +		if (rx_cnt > 0 && !(rx_cnt % DPMAIF_NOTIFY_RELEASE_COUNT)) {
->> +			ret_hw = t7xx_dpmaifq_rx_notify_hw(rxq);
->> +			if (ret_hw < 0)
->> +				break;
->> +		}
->> +	}
->> +
->> +	if (recv_skb_cnt)
->> +		wake_up_all(&rxq->rx_wq);
->> +
->> +	if (!ret_hw)
->> +		ret_hw = t7xx_dpmaifq_rx_notify_hw(rxq);
->> +
->> +	if (ret_hw < 0 && !ret)
->> +		ret = ret_hw;
->> +
->> +	return ret < 0 ? ret : rx_cnt;
->> +}
-> ret variable handling seems odd, loop overwrites prev errors. Is there
-> perhaps a break missing from somewhere as post loop checks seem to care
-> about the value of ret variable?
-
-ret should not be used outside of the loop, the error handling will be 
-cleaned up in the
-
-next version.
-
-ret tells if the payload is good, in the unlikely case of error, the 
-loop can continue
-
-with the next packet.
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index e7ca3db4b4cf5..805c9c0e57e55 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -230,6 +230,7 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 	u8 bandwidth = RTW89_CHANNEL_WIDTH_20;
+ 	u8 primary_chan_idx = 0;
+ 	u8 band;
++	u8 subband;
+ 
+ 	center_chan = channel->hw_value;
+ 	primary_freq = channel->center_freq;
+@@ -289,11 +290,28 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 		break;
+ 	}
+ 
++	switch (center_chan) {
++	default:
++	case 1 ... 14:
++		subband = RTW89_CH_2G;
++		break;
++	case 36 ... 64:
++		subband = RTW89_CH_5G_BAND_1;
++		break;
++	case 100 ... 144:
++		subband = RTW89_CH_5G_BAND_3;
++		break;
++	case 149 ... 177:
++		subband = RTW89_CH_5G_BAND_4;
++		break;
++	}
++
+ 	chan_param->center_chan = center_chan;
+ 	chan_param->primary_chan = channel->hw_value;
+ 	chan_param->bandwidth = bandwidth;
+ 	chan_param->pri_ch_idx = primary_chan_idx;
+ 	chan_param->band_type = band;
++	chan_param->subband_type = subband;
+ }
+ 
+ void rtw89_set_channel(struct rtw89_dev *rtwdev)
+@@ -320,21 +338,7 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
+ 	hal->prev_primary_channel = hal->current_primary_channel;
+ 	hal->current_primary_channel = ch_param.primary_chan;
+ 	hal->current_band_type = ch_param.band_type;
+-
+-	switch (center_chan) {
+-	case 1 ... 14:
+-		hal->current_subband = RTW89_CH_2G;
+-		break;
+-	case 36 ... 64:
+-		hal->current_subband = RTW89_CH_5G_BAND_1;
+-		break;
+-	case 100 ... 144:
+-		hal->current_subband = RTW89_CH_5G_BAND_3;
+-		break;
+-	case 149 ... 177:
+-		hal->current_subband = RTW89_CH_5G_BAND_4;
+-		break;
+-	}
++	hal->current_subband = ch_param.subband_type;
+ 
+ 	rtw89_chip_set_channel_prepare(rtwdev, &bak);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index bec1e640cd71b..feffad4ffd68c 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -575,6 +575,7 @@ struct rtw89_channel_params {
+ 	u8 bandwidth;
+ 	u8 pri_ch_idx;
+ 	u8 band_type;
++	u8 subband_type;
+ };
+ 
+ struct rtw89_channel_help_params {
+-- 
+2.25.1
 
