@@ -2,97 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C135C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 06:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BB5C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 08:23:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229954AbiAMGDn (ORCPT
+        id S232968AbiAMIX4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jan 2022 01:03:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33302 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229833AbiAMGDn (ORCPT
+        Thu, 13 Jan 2022 03:23:56 -0500
+Received: from mailgw01.mediatek.com ([60.244.123.138]:56310 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232966AbiAMIX4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jan 2022 01:03:43 -0500
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43368C061751
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 22:03:43 -0800 (PST)
-Received: by mail-yb1-xb49.google.com with SMTP id v48-20020a25abb3000000b006113ce63ed8so9228365ybi.22
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2022 22:03:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:cc;
-        bh=rRyEFmS7punxeQqOoiys20soJGTAicrW1PQEVjtcuOA=;
-        b=UC0FFRMh7o2iv/d1ZaJ/LghgsJZH08kcjGW6ZhhwJ4hbYSY6P+mQaFSJDBtkIeisxh
-         dMYTFNE35bneVl2jeioGSk0VZpsNrNj5umTNHSo7/WfBdW43ivLDm0uSMRRiN1q+wk18
-         KUO68aRriqBmEwRu1X2MJ4F7pNMwbp3x5cG1qIhUeqa4uGQsEkK4wE/8puOTljUSMwxF
-         bvjGIA8CNa10xPaJBAYSDpATqlY2HMsAksMnBkY1N10KeVbcV58t0I67QfSbqlDyIHqi
-         7HCGiemBUd4/oKlwlhieXx+3JMxbst/olfPkK+vw2Dy7LIHVwPax+YlCJeOetB0tNcwu
-         eOjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:cc;
-        bh=rRyEFmS7punxeQqOoiys20soJGTAicrW1PQEVjtcuOA=;
-        b=dmwhGkctBEFLsaMtcuuM4P5PGtJmPU0C0LK/U59Ifo+WTPizUaNXDfOTUrJ0h0ytlr
-         pEGJ2RyC1RkBVVtM6/ic3WtklM/qB0to3Exl+55VrKGjvRXNIJcQxkveajgJmmFsO8wk
-         14Jy6t1jCci61XB+QCx68vfFZV0Wlw+1Q1KUFiCpsAyrG98z90YqEwywXiKlldZKs30A
-         v3nUUTVSKRp8cX0B7+eahnKXRmqo46BmX9ajzzq6XZWcpFAMxjsNw/kJTG3rZRlFAt7H
-         2EExQ49Diz+D5VpsbcFqDuYrsUCAJCwuMWCgB9/rg+EfmcWo5+dLuA8pRUhXQaAGvZEK
-         gyoA==
-X-Gm-Message-State: AOAM532WASZVDP5tk7CKT2MB8+r5dTitXLXzZxCBDRukQ0UWKNoocPKs
-        VM9mLnoTMwdztU3R4RXa6zVPuNWyyQY=
-X-Google-Smtp-Source: ABdhPJxSiBZP+f3lo0Lf91MgLkH3gGGAomTSOZ3Jk/TA1UJ3E9WfxNaD7K60yMczdglZzeGoqktyox8bTi4=
-X-Received: from jaeman.seo.corp.google.com ([2401:fa00:d:11:2232:d256:314c:979c])
- (user=jaeman job=sendgmr) by 2002:a05:6902:120f:: with SMTP id
- s15mr4571599ybu.390.1642053822522; Wed, 12 Jan 2022 22:03:42 -0800 (PST)
-Date:   Thu, 13 Jan 2022 15:02:35 +0900
-Message-Id: <20220113060235.546107-1-jaeman@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.34.1.703.g22d0c6ccf7-goog
-Subject: [PATCH] mac80211_hwsim: initialize ieee80211_tx_info at hw_scan_work
-From:   JaeMan Park <jaeman@google.com>
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        adelva@google.com, kernel-team@android.com,
-        JaeMan Park <jaeman@google.com>
-Content-Type: text/plain; charset="UTF-8"
-To:     unlisted-recipients:; (no To-header on input)
+        Thu, 13 Jan 2022 03:23:56 -0500
+X-UUID: 1ac8131802dd4bef938767349359bb03-20220113
+X-UUID: 1ac8131802dd4bef938767349359bb03-20220113
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 415834181; Thu, 13 Jan 2022 16:23:54 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Thu, 13 Jan 2022 16:23:53 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 13 Jan 2022 16:23:52 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
+        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
+        <jenhao.yang@mediatek.com>, <robin.chiu@mediatek.com>,
+        <Eddie.Chen@mediatek.com>, <ch.yeh@mediatek.com>,
+        <posh.sun@mediatek.com>, <ted.huang@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
+        <jsiuda@google.com>, <frankgor@google.com>, <jemele@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 3/3] mt76: mt7921s: run sleep mode by default
+Date:   Thu, 13 Jan 2022 16:23:48 +0800
+Message-ID: <9025e5bd5212cab4bd72fd76d35b205980499056.1642061035.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <651a010d8ff888909b5b8363fa4b243aadc62d45.1642061035.git.objelf@gmail.com>
+References: <651a010d8ff888909b5b8363fa4b243aadc62d45.1642061035.git.objelf@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In mac80211_hwsim, the probe_req frame is created and sent while
-scanning. It is sent with ieee80211_tx_info which is not initialized.
-Uninitialized ieee80211_tx_info can cause problems when using
-mac80211_hwsim with wmediumd. wmediumd checks the tx_rates field of
-ieee80211_tx_info and doesn't relay probe_req frame to other clients
-even if it is a broadcasting message.
+From: Sean Wang <sean.wang@mediatek.com>
 
-Call ieee80211_tx_prepare_skb() to initialize ieee80211_tx_info for
-the probe_req that is created by hw_scan_work in mac80211_hwsim.
+Apply sleep mode by default to reduce power consumption as possible.
 
-Signed-off-by: JaeMan Park <jaeman@google.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/init.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 0307a6677907..95f1e4899231 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2336,6 +2336,13 @@ static void hw_scan_work(struct work_struct *work)
- 			if (req->ie_len)
- 				skb_put_data(probe, req->ie, req->ie_len);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index ad59ef9839dc..0166a5503aef 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -226,12 +226,8 @@ int mt7921_register_device(struct mt7921_dev *dev)
+ 	dev->pm.idle_timeout = MT7921_PM_TIMEOUT;
+ 	dev->pm.stats.last_wake_event = jiffies;
+ 	dev->pm.stats.last_doze_event = jiffies;
+-
+-	/* TODO: mt7921s run sleep mode on default  */
+-	if (mt76_is_mmio(&dev->mt76)) {
+-		dev->pm.enable = true;
+-		dev->pm.ds_enable = true;
+-	}
++	dev->pm.enable = true;
++	dev->pm.ds_enable = true;
  
-+			if (!ieee80211_tx_prepare_skb(hwsim->hw,
-+						      hwsim->hw_scan_vif,
-+						      probe,
-+						      hwsim->tmp_chan->band,
-+						      NULL))
-+				continue;
-+
- 			local_bh_disable();
- 			mac80211_hwsim_tx_frame(hwsim->hw, probe,
- 						hwsim->tmp_chan);
+ 	if (mt76_is_sdio(&dev->mt76))
+ 		hw->extra_tx_headroom += MT_SDIO_TXD_SIZE + MT_SDIO_HDR_SIZE;
 -- 
-2.34.1.703.g22d0c6ccf7-goog
+2.25.1
 
