@@ -2,61 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2561FC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 16:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3089AC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jan 2022 17:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236509AbiAMQQK (ORCPT
+        id S233507AbiAMRHR convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jan 2022 11:16:10 -0500
-Received: from out30-44.freemail.mail.aliyun.com ([115.124.30.44]:39843 "EHLO
-        out30-44.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229496AbiAMQQJ (ORCPT
+        Thu, 13 Jan 2022 12:07:17 -0500
+Received: from relay1-d.mail.gandi.net ([217.70.183.193]:48395 "EHLO
+        relay1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232285AbiAMRHQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jan 2022 11:16:09 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R331e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04395;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0V1kkd9d_1642090558;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0V1kkd9d_1642090558)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 14 Jan 2022 00:16:07 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     johannes@sipsolutions.net
-Cc:     davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] mac80211: Remove redundent assignment channel_type
-Date:   Fri, 14 Jan 2022 00:15:57 +0800
-Message-Id: <20220113161557.129427-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        Thu, 13 Jan 2022 12:07:16 -0500
+Received: (Authenticated sender: miquel.raynal@bootlin.com)
+        by relay1-d.mail.gandi.net (Postfix) with ESMTPSA id 0898724000F;
+        Thu, 13 Jan 2022 17:07:10 +0000 (UTC)
+Date:   Thu, 13 Jan 2022 18:07:09 +0100
+From:   Miquel Raynal <miquel.raynal@bootlin.com>
+To:     Alexander Aring <alex.aring@gmail.com>
+Cc:     Stefan Schmidt <stefan@datenfreihafen.org>,
+        linux-wpan - ML <linux-wpan@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
+        Michael Hennerich <michael.hennerich@analog.com>,
+        Harry Morris <h.morris@cascoda.com>,
+        Varka Bhadram <varkabhadram@gmail.com>,
+        Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
+        David Girault <david.girault@qorvo.com>,
+        Romuald Despres <romuald.despres@qorvo.com>,
+        Frederic Blain <frederic.blain@qorvo.com>,
+        Nicolas Schodet <nico@ni.fr.eu.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        "linux-wireless@vger.kernel.org Wireless" 
+        <linux-wireless@vger.kernel.org>
+Subject: Re: [wpan-next v2 18/27] net: mac802154: Handle scan requests
+Message-ID: <20220113180709.0dade123@xps13>
+In-Reply-To: <CAB_54W4PL1ty5XsqRoEKwsy-h8KL9gSGMK6N=HiWJDp6NHsb0A@mail.gmail.com>
+References: <20220112173312.764660-1-miquel.raynal@bootlin.com>
+        <20220112173312.764660-19-miquel.raynal@bootlin.com>
+        <CAB_54W4PL1ty5XsqRoEKwsy-h8KL9gSGMK6N=HiWJDp6NHsb0A@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix the following coccicheck warnings:
+Hi Alexander,
 
-net/mac80211/util.c:3265:3: warning: Value stored to 'channel_type' is
-never read [clang-analyzer-deadcode.DeadStores].
+alex.aring@gmail.com wrote on Wed, 12 Jan 2022 17:44:02 -0500:
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- net/mac80211/util.c | 1 -
- 1 file changed, 1 deletion(-)
+> Hi,
+> 
+> On Wed, 12 Jan 2022 at 12:33, Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+> ...
+> > +       return 0;
+> > +}
+> > diff --git a/net/mac802154/tx.c b/net/mac802154/tx.c
+> > index c829e4a75325..40656728c624 100644
+> > --- a/net/mac802154/tx.c
+> > +++ b/net/mac802154/tx.c
+> > @@ -54,6 +54,9 @@ ieee802154_tx(struct ieee802154_local *local, struct sk_buff *skb)
+> >         struct net_device *dev = skb->dev;
+> >         int ret;
+> >
+> > +       if (unlikely(mac802154_scan_is_ongoing(local)))
+> > +               return NETDEV_TX_BUSY;
+> > +  
+> 
+> Please look into the functions "ieee802154_wake_queue()" and
+> "ieee802154_stop_queue()" which prevent this function from being
+> called. Call stop before starting scanning and wake after scanning is
+> done or stopped.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index f71b042a5c8b..fea3d34e3ef3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3262,7 +3262,6 @@ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
- 		channel_type = NL80211_CHAN_HT40MINUS;
- 		break;
- 	default:
--		channel_type = NL80211_CHAN_NO_HT;
- 		return false;
- 	}
- 
--- 
-2.20.1.7.g153144c
+Mmmh all this is already done, isn't it?
+- mac802154_trigger_scan_locked() stops the queue before setting the
+  promiscuous mode
+- mac802154_end_of_scan() wakes the queue after resetting the
+  promiscuous mode to its original state
 
+Should I drop the check which stands for an extra precaution?
+
+
+But overall I think I don't understand well this part. What is
+a bit foggy to me is why the (async) tx implementation does:
+
+*Core*                           *Driver*
+
+stop_queue()
+drv_async_xmit() -------
+                        \------> do something
+                         ------- calls ieee802154_xmit_complete()
+wakeup_queue() <--------/
+
+So we actually disable the queue for transmitting. Why??
+
+> Also there exists a race which exists in your way and also the one
+> mentioned above. There can still be some transmissions going on... We
+> need to wait until "all possible" tx completions are done... to be
+> sure there are really no transmissions going on. However we need to be
+> sure that a wake cannot be done if a tx completion is done, we need to
+> avoid it when the scan operation is ongoing as a workaround for this
+> race.
+> 
+> This race exists and should be fixed in future work?
+
+Yep, this is true, do you have any pointers? Because I looked at the
+code and for now it appears quite unpractical to add some kind of
+flushing mechanism on that net queue. I believe we cannot use the netif
+interface for that so we would have to implement our own mechanism in
+the ieee802154 core.
+
+Thanks,
+Miquèl
