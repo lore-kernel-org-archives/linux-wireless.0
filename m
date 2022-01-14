@@ -2,72 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8602DC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 20:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42049C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 21:18:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244390AbiANUuM (ORCPT
+        id S229726AbiANVSM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jan 2022 15:50:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240439AbiANUuM (ORCPT
+        Fri, 14 Jan 2022 16:18:12 -0500
+Received: from gandalf.ozlabs.org ([150.107.74.76]:59435 "EHLO
+        gandalf.ozlabs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229610AbiANVSM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jan 2022 15:50:12 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74589C061574
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2022 12:50:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=jnZxBWMMJWD7C24u3mzTa5R6XamoCCEzXJN78OLIieo=;
-        t=1642193411; x=1643403011; b=iy2zzgo9CE4auahy8qKMEWzvwLiAK7lfAMBz/Jf9bjbMU37
-        kSP98tMVFguzOgZQ86unki6dExOZ0IrHpsgy2aadXXXa1nTSwCb0zGrqTzgx1IKuiIBuzb9TCIVFy
-        alDq9h8nyd6jP2XO/xzQYgNEvWNYwcUXcH5jrIfqIUx052fjJ/rHYjADjdD8HjOE7KbOOhRlZYOoB
-        NCtMAwP0yt54LpvNsI8vPa4a6DPZ0+v//f9zyRKIo39BxT1FSFRL3O0R/P2NGJS2CByMqNU6xMQgw
-        eOO9DPX8USFBo9AnQlsItf94CUEhG9nwNBUH6DY6keelbF/DKWnUCz0rqHc66P6A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1n8TWT-005hzJ-Rj;
-        Fri, 14 Jan 2022 21:50:09 +0100
-Message-ID: <fdda9c11506266bdaf7e922a92ef6a7981512324.camel@sipsolutions.net>
-Subject: Re: [v13 2/3] mac80211: MBSSID and EMA beacon handling in AP mode
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Aloka Dixit <alokad@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 14 Jan 2022 21:50:09 +0100
-In-Reply-To: <661712f782228b735ab65364932bb18e@codeaurora.org>
-References: <20211006040938.9531-1-alokad@codeaurora.org>
-         <20211006040938.9531-3-alokad@codeaurora.org>
-         <16a03353cee422340c8ac36240b1e088fd45802e.camel@sipsolutions.net>
-         <d2c980b72af1488282f18e8b1814b56c@codeaurora.org>
-         <ebb1ddc51e6e0eff436de50cbbddec77d61af495.camel@sipsolutions.net>
-         <661712f782228b735ab65364932bb18e@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.2 (3.42.2-1.fc35) 
+        Fri, 14 Jan 2022 16:18:12 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4JbDfn6TZnz4y4m;
+        Sat, 15 Jan 2022 08:18:09 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1642195090;
+        bh=aqd+9WcXOs53PGQiQ5d6p966oQvb4Ym651YYmVvLbjE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=YZax+LF7uTRPl6eHye+HHpO5u/NsJK5NeR25+UgQGkdIgCl8M6If5ejZ/zdbXmQ4n
+         IgiqMrXhU+GrjXWUyYdRB6/eOd27QZgEjzVri4xITP1hX1GfEYvRPqBbj7uSY6Tne8
+         X4qFW7VTTLglalr4h8qv+BwX5ppb2ocZSWFSqFHAjihuuqzPgj5FjF0wzSFm3T0KQc
+         +fMEApy1TvHY5TajYuK9E/Rl3PALgjyaEVFLglJ4LfZ1P98So95eXecCNpWxrnAfQY
+         +FESqhOf0QsDvjmEJ+m4AbjAwdXaVUMFAeYgQ1gGBwKGCPIB6r5ZY9gF8ILBtc5yhT
+         iEqP4EU5C7KJA==
+Date:   Sat, 15 Jan 2022 08:18:09 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lkp@intel.com
+Subject: Re: [PATCH wireless] MAINTAINERS: add common wireless and
+ wireless-next trees
+Message-ID: <20220115081809.64c9fec5@canb.auug.org.au>
+In-Reply-To: <20220114133415.8008-1-kvalo@kernel.org>
+References: <20220114133415.8008-1-kvalo@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Type: multipart/signed; boundary="Sig_/54f_YPH=tNa4afEtyMIegyt";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2022-01-14 at 12:34 -0800, Aloka Dixit wrote:
-> 
-> With that, what would be a better way:
-> (1) Making it work with pseudo code, still using GFP_KERNEL or
-> (2) Changing to GFP_ATOMIC but otherwise keep the code fairly similar to 
-> v13 (preferably allocating an array instead of separate pointers as you 
-> suggested)?
-> 
+--Sig_/54f_YPH=tNa4afEtyMIegyt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It's a good question. I'm not really into the code right now, but I'd
-say GFP_ATOMIC should be OK.
+Hi Kalle,
 
-I'm not even sure the functions you're modifying are always guaranteed
-to be called in a context where you can sleep? E.g. I believe the driver
-can call ieee80211_beacon_get_tim() in atomic context itself, e.g. even
-from timer/interrupt to get the next beacon?
+On Fri, 14 Jan 2022 15:34:15 +0200 Kalle Valo <kvalo@kernel.org> wrote:
+>
+> For easier maintenance we have decided to create common wireless and
+> wireless-next trees for all wireless patches. Old mac80211 and wireless-d=
+rivers
+> trees will not be used anymore.
+>=20
+> While at it, add a wiki link to wireless drivers section and a patchwork =
+link
+> to 802.11, mac80211 and rfkill sections.
+>=20
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Kalle Valo <kvalo@kernel.org>
+> ---
+>=20
+> Stephen, please use these new trees in linux-next from now on.
 
-johannes
+Done from today.  I have set you and Johannes as contacts along with
+the linux-wireless mailing list.  Also, I assume you meant to mention
+that I should use the branches called "main".
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/54f_YPH=tNa4afEtyMIegyt
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmHh6JEACgkQAVBC80lX
+0GykRwf/dF3ug/FXpM5DXFuCbr7Jxx/z5/BTp5RrYTaNiqiS8xtKDYsUUkvB+ErC
+EcFYzush/ySH743I9rH9TPJxuWn1qt7WOmfkfiWpbCF1+/e+25vD+JfF8E5xWpC1
+TE6//171OE6nX5KcksOpDjf0bg0jKaS6q8BoKByvwEg3NNvsJennJTRHHMeZSJU9
+u56jxF6Elb+WHe4rFSFeoPvBf5SOSk9Ti6nwT334Y3NHm+xKu0cbfbw6Mk8AWzRK
+vSeaOq3GdImBW1bYfUUaxR+Ohes6w/53xU9kpvCLZ1xYjamoWxWJy0OevGCBcGUp
+zoPG7pFdeNvgUwEKdw/4t3biAkDBMQ==
+=E95i
+-----END PGP SIGNATURE-----
+
+--Sig_/54f_YPH=tNa4afEtyMIegyt--
