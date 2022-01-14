@@ -2,99 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E100BC41535
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 23:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 323AFC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 23:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231297AbiANXtC (ORCPT
+        id S230304AbiANX4l (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jan 2022 18:49:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37146 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231172AbiANXs5 (ORCPT
+        Fri, 14 Jan 2022 18:56:41 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:48214 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229779AbiANX4l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jan 2022 18:48:57 -0500
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AE13C061574;
-        Fri, 14 Jan 2022 15:48:57 -0800 (PST)
-Received: by mail-wm1-x335.google.com with SMTP id p18so8990257wmg.4;
-        Fri, 14 Jan 2022 15:48:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=La6vxx89LoJkplOXTrCEQipBpHlGptWD3ksMauPkOfU=;
-        b=BogPgfoe6NchlV2k3yFPNQaiVUpwxBWO4bk/TWwvQRtnYx0ZYqHPh6f4sixPj7fyDI
-         Epk5z3YY9YuOiTKgF7wSBuylZEmJP04VIUrfRkvV/NEKq/LZQYw80dYfIeHv8qVA6psm
-         FGlC6SIaN1EYxwef4kFaPVvy4rCx5i1gdot/ZPTVTmmAJDxNQbkjfvhJ6d4MP/M2ThKJ
-         gDQVOn8mUbtXq6ORXyFtEJwnku8x53z/vhzWjOsGnZXG1YTyPOJ6GoP+oa4X5kv9/3nT
-         z257rz8N1G4PYaf3e8kecTDJRWsEqG0sEvknJUByTmUh1ZN55GhBv76BKrdkP2aSXUVX
-         TKnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=La6vxx89LoJkplOXTrCEQipBpHlGptWD3ksMauPkOfU=;
-        b=j5DvXgBTe8zEg7hv9evzKt6z8zYQLJ4tOGxFI7Wxcb+VKu4RyDAKKgAR9c4P3VJvQd
-         cZNldm2UOhvLz5SQs5OQQ1TcD8sXEXXLUTzT89OANkCgwQyjdj/3E1hlvjaq70ZDXIeG
-         mXUqs/R/pPBVsHhhD8CfK6oG9766r0bNTacfDwnyl2gMghzMyiNfCzlkCrRudfTHzFCp
-         4r9OcdVGUpFWYjjZ8gJ44Hd9VA9VZ0Dwsfx/5CeqqNtf/g6zXnJaxvBI03p5D7K6z7eP
-         S+O0zbyCApJ2Kjq2ByUcb+kOJ4RXIFuYpi2DtX2eAUT49TND6qomgEJ83IgEdwDjkFpO
-         xDSw==
-X-Gm-Message-State: AOAM531UjESgtCy2VG0RKI2Bw9NxKKEpJclbmEa8uZsyCZjb9J/wz2d+
-        2JjBiaMa4cvv5+c6CdHgBEI9a1PAbg8=
-X-Google-Smtp-Source: ABdhPJystG3jsSgdQtccETHSCVGHfilGgZfMIXRY2Kc7mkF7F3bhjNzpIyDdwTr+W7+k9nYviAlZNQ==
-X-Received: by 2002:a05:600c:3643:: with SMTP id y3mr17836122wmq.54.1642204135556;
-        Fri, 14 Jan 2022 15:48:55 -0800 (PST)
-Received: from localhost.localdomain (dynamic-2a01-0c22-7684-7400-f22f-74ff-fe21-0725.c22.pool.telefonica.de. [2a01:c22:7684:7400:f22f:74ff:fe21:725])
-        by smtp.googlemail.com with ESMTPSA id i3sm5788533wmq.21.2022.01.14.15.48.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Jan 2022 15:48:55 -0800 (PST)
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     tony0620emma@gmail.com, kvalo@codeaurora.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Neo Jou <neojou@gmail.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Pkshih <pkshih@realtek.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 4/4] rtw88: mac: Use existing interface mask macros in rtw_pwr_seq_parser()
-Date:   Sat, 15 Jan 2022 00:48:25 +0100
-Message-Id: <20220114234825.110502-5-martin.blumenstingl@googlemail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220114234825.110502-1-martin.blumenstingl@googlemail.com>
-References: <20220114234825.110502-1-martin.blumenstingl@googlemail.com>
+        Fri, 14 Jan 2022 18:56:41 -0500
+X-UUID: d9a12d22399744fca8ff03313c4f6f0d-20220115
+X-UUID: d9a12d22399744fca8ff03313c4f6f0d-20220115
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 809052308; Sat, 15 Jan 2022 07:56:38 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 15 Jan 2022 07:56:36 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 15 Jan 2022 07:56:36 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
+        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
+        <jenhao.yang@mediatek.com>, <robin.chiu@mediatek.com>,
+        <Eddie.Chen@mediatek.com>, <ch.yeh@mediatek.com>,
+        <posh.sun@mediatek.com>, <ted.huang@mediatek.com>,
+        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
+        <jsiuda@google.com>, <frankgor@google.com>, <jemele@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v2 2/2] mt76: mt7921s: run sleep mode by default
+Date:   Sat, 15 Jan 2022 07:56:33 +0800
+Message-ID: <ddbc5499b76989c7d67fcbc31eb19ff535156dfa.1642204233.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <c09673a115c39f7af692efb984a5dc0c75238a64.1642204233.git.objelf@gmail.com>
+References: <c09673a115c39f7af692efb984a5dc0c75238a64.1642204233.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace the magic numbers for the intf_mask with their existing
-RTW_PWR_INTF_PCI_MSK and RTW_PWR_INTF_USB_MSK macros to make the code
-easier to understand.
+From: Sean Wang <sean.wang@mediatek.com>
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Apply sleep mode by default to reduce power consumption as possible.
+
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+v1 -> v2: rebase on the top of
+	  ("mt76: mt7921: toggle runtime-pm adding a monitor vif")
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/init.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index d1678aed9d9c..aa6b3d2eaa38 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -217,10 +217,10 @@ static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
- 	cut_mask = cut_version_to_mask(cut);
- 	switch (rtw_hci_type(rtwdev)) {
- 	case RTW_HCI_TYPE_PCIE:
--		intf_mask = BIT(2);
-+		intf_mask = RTW_PWR_INTF_PCI_MSK;
- 		break;
- 	case RTW_HCI_TYPE_USB:
--		intf_mask = BIT(1);
-+		intf_mask = RTW_PWR_INTF_USB_MSK;
- 		break;
- 	default:
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 6059d8a0f227..fa6af85bba7b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -226,14 +226,10 @@ int mt7921_register_device(struct mt7921_dev *dev)
+ 	dev->pm.idle_timeout = MT7921_PM_TIMEOUT;
+ 	dev->pm.stats.last_wake_event = jiffies;
+ 	dev->pm.stats.last_doze_event = jiffies;
+-
+-	/* TODO: mt7921s run sleep mode on default  */
+-	if (mt76_is_mmio(&dev->mt76)) {
+-		dev->pm.enable_user = true;
+-		dev->pm.enable = true;
+-		dev->pm.ds_enable_user = true;
+-		dev->pm.ds_enable = true;
+-	}
++	dev->pm.enable_user = true;
++	dev->pm.enable = true;
++	dev->pm.ds_enable_user = true;
++	dev->pm.ds_enable = true;
+ 
+ 	if (mt76_is_sdio(&dev->mt76))
+ 		hw->extra_tx_headroom += MT_SDIO_TXD_SIZE + MT_SDIO_HDR_SIZE;
 -- 
-2.34.1
+2.25.1
 
