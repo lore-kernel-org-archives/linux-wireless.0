@@ -2,36 +2,36 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D941C43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 01:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE49AC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 01:07:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238669AbiANBHF (ORCPT
+        id S238695AbiANBHJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jan 2022 20:07:05 -0500
-Received: from mga01.intel.com ([192.55.52.88]:55115 "EHLO mga01.intel.com"
+        Thu, 13 Jan 2022 20:07:09 -0500
+Received: from mga02.intel.com ([134.134.136.20]:16346 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238625AbiANBG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S238626AbiANBG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 13 Jan 2022 20:06:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1642122417; x=1673658417;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references;
-  bh=/drQEcHU9E/sDbH8qSLbgO5GHyDjG7GKEea/om+Nu9g=;
-  b=RDTbV4WNTv4hNXmH6Lc4lCUVKHgofALRLrSyvrV0Zb/Lnoxmgml/Bm7s
-   AvW3bXX07FztLebrUUyDcr8Pi+s5sxV7TWdVTcWrDLqsawwYyymzChttp
-   pgyVWuvlAIjjoobFKU18NLP3fcEMF4JU2SOAAojLsnUg3Tc2eyrRHU4jE
-   fBrtOdzaxHK5IAt12yoqIS0FLgxiZl4FZsPLl0Iugo2ePErRx/eEKui6c
-   /mzW/kVrsRmsNCXIIQ9e5uTzXvqTvY89lNHj72hE/mB9Msq/0pXFX47rt
-   n4+jBF5p1w26fMKHoCGUw1T4pWTgb/WH5F7IFHTezdkBEzwNESkda+An1
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10226"; a="268516450"
+  bh=V0UteZoYYjAQniSAclDdLDI4ql1/qLvj4dB+Op5XrHY=;
+  b=T9yzEDNe4kk3ei5/gft9T4nXYox2PQzwh1eFLdXKxV4f+oa70vHbGM/O
+   6N0rpjmYYs8cCNsSpQ++h+FaNCCzfe35Ps8wX+ZiTd/AyQ/DR+rC7a4zg
+   OYhkHLeAUY3/m06o3ep/mgLwiGnCuEVh0hlcVh7ffhin0DmB7ApfCTxiI
+   F046YBcuTFAaDmXOF9ZOvIqBTELj6U08BwfoTAaWi+GyusPB8fCUCocBd
+   WKlsTEzww0COcDzSX9GqH28E2cCa4SIu42E//PnWC82Oe1fbbnPgw7p88
+   +3Je684qBoMl+4Lr7g0fsK3ex+FHh8vonhIW5P3fSwP2Pxxr9QDgc8bLd
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10226"; a="231503640"
 X-IronPort-AV: E=Sophos;i="5.88,287,1635231600"; 
-   d="scan'208";a="268516450"
+   d="scan'208";a="231503640"
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 17:06:55 -0800
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 17:06:55 -0800
 X-IronPort-AV: E=Sophos;i="5.88,287,1635231600"; 
-   d="scan'208";a="692014215"
+   d="scan'208";a="692014221"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
   by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 17:06:53 -0800
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
@@ -47,9 +47,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
         sreehari.kancharla@intel.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH net-next v4 09/13] net: wwan: t7xx: Add WWAN network interface
-Date:   Thu, 13 Jan 2022 18:06:23 -0700
-Message-Id: <20220114010627.21104-10-ricardo.martinez@linux.intel.com>
+Subject: [PATCH net-next v4 11/13] net: wwan: t7xx: Runtime PM
+Date:   Thu, 13 Jan 2022 18:06:25 -0700
+Message-Id: <20220114010627.21104-12-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220114010627.21104-1-ricardo.martinez@linux.intel.com>
 References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com>
@@ -59,587 +59,279 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Haijun Liu <haijun.liu@mediatek.com>
 
-Creates the Cross Core Modem Network Interface (CCMNI) which implements
-the wwan_ops for registration with the WWAN framework, CCMNI also
-implements the net_device_ops functions used by the network device.
-Network device operations include open, close, start transmission, TX
-timeout, change MTU, and select queue.
+Enables runtime power management callbacks including runtime_suspend
+and runtime_resume. Autosuspend is used to prevent overhead by frequent
+wake-ups.
 
 Signed-off-by: Haijun Liu <haijun.liu@mediatek.com>
-Co-developed-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+Co-developed-by: Eliot Lee <eliot.lee@intel.com>
+Signed-off-by: Eliot Lee <eliot.lee@intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 ---
- drivers/net/wwan/t7xx/Makefile         |   1 +
- drivers/net/wwan/t7xx/t7xx_modem_ops.c |  11 +-
- drivers/net/wwan/t7xx/t7xx_netdev.c    | 433 +++++++++++++++++++++++++
- drivers/net/wwan/t7xx/t7xx_netdev.h    |  61 ++++
- 4 files changed, 505 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wwan/t7xx/t7xx_netdev.c
- create mode 100644 drivers/net/wwan/t7xx/t7xx_netdev.h
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 13 +++++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 16 ++++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 15 +++++++++++++++
+ drivers/net/wwan/t7xx/t7xx_pci.c           | 21 +++++++++++++++++++++
+ 4 files changed, 65 insertions(+)
 
-diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
-index 04a9ba50dc14..dc6a7d682c15 100644
---- a/drivers/net/wwan/t7xx/Makefile
-+++ b/drivers/net/wwan/t7xx/Makefile
-@@ -17,3 +17,4 @@ mtk_t7xx-y:=	t7xx_pci.o \
- 		t7xx_hif_dpmaif_tx.o \
- 		t7xx_hif_dpmaif_rx.o  \
- 		t7xx_dpmaif.o \
-+		t7xx_netdev.o
-diff --git a/drivers/net/wwan/t7xx/t7xx_modem_ops.c b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-index ec55845e7ac0..3680b0b8205a 100644
---- a/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-+++ b/drivers/net/wwan/t7xx/t7xx_modem_ops.c
-@@ -35,6 +35,7 @@
- #include "t7xx_hif_cldma.h"
- #include "t7xx_mhccif.h"
- #include "t7xx_modem_ops.h"
-+#include "t7xx_netdev.h"
- #include "t7xx_pci.h"
- #include "t7xx_pcie_mac.h"
- #include "t7xx_port.h"
-@@ -652,10 +653,14 @@ int t7xx_md_init(struct t7xx_pci_dev *t7xx_dev)
- 	if (ret)
- 		goto err_destroy_hswq;
- 
--	ret = t7xx_cldma_init(md, md->md_ctrl[ID_CLDMA1]);
-+	ret = t7xx_ccmni_init(t7xx_dev);
- 	if (ret)
- 		goto err_uninit_fsm;
- 
-+	ret = t7xx_cldma_init(md, md->md_ctrl[ID_CLDMA1]);
-+	if (ret)
-+		goto err_uninit_ccmni;
-+
- 	ret = t7xx_port_proxy_init(md);
- 	if (ret)
- 		goto err_uninit_cldma;
-@@ -668,6 +673,9 @@ int t7xx_md_init(struct t7xx_pci_dev *t7xx_dev)
- err_uninit_cldma:
- 	t7xx_cldma_exit(md->md_ctrl[ID_CLDMA1]);
- 
-+err_uninit_ccmni:
-+	t7xx_ccmni_exit(t7xx_dev);
-+
- err_uninit_fsm:
- 	t7xx_fsm_uninit(md);
- 
-@@ -689,6 +697,7 @@ void t7xx_md_exit(struct t7xx_pci_dev *t7xx_dev)
- 	t7xx_fsm_append_cmd(md->fsm_ctl, FSM_CMD_PRE_STOP, FSM_CMD_FLAG_WAIT_FOR_COMPLETION);
- 	t7xx_port_proxy_uninit(md->port_prox);
- 	t7xx_cldma_exit(md->md_ctrl[ID_CLDMA1]);
-+	t7xx_ccmni_exit(t7xx_dev);
- 	t7xx_fsm_uninit(md);
- 	destroy_workqueue(md->handshake_wq);
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+index 31e32c10dabb..1678caef679c 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+@@ -34,6 +34,7 @@
+ #include <linux/list.h>
+ #include <linux/netdevice.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include <linux/sched.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+@@ -257,6 +258,8 @@ static void t7xx_cldma_rx_done(struct work_struct *work)
+ 	t7xx_cldma_clear_ip_busy(&md_ctrl->hw_info);
+ 	t7xx_cldma_hw_irq_en_txrx(&md_ctrl->hw_info, queue->index, MTK_RX);
+ 	t7xx_cldma_hw_irq_en_eq(&md_ctrl->hw_info, queue->index, MTK_RX);
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
  }
-diff --git a/drivers/net/wwan/t7xx/t7xx_netdev.c b/drivers/net/wwan/t7xx/t7xx_netdev.c
-new file mode 100644
-index 000000000000..b4a2ef2c7b17
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_netdev.c
-@@ -0,0 +1,433 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ *
-+ * Authors:
-+ *  Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-+ *  Haijun Liu <haijun.liu@mediatek.com>
-+ *  Ricardo Martinez<ricardo.martinez@linux.intel.com>
-+ *
-+ * Contributors:
-+ *  Amir Hanania <amir.hanania@intel.com>
-+ *  Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-+ *  Chiranjeevi Rapolu <chiranjeevi.rapolu@intel.com>
-+ *  Eliot Lee <eliot.lee@intel.com>
-+ *  Moises Veleta <moises.veleta@intel.com>
-+ *  Sreehari Kancharla <sreehari.kancharla@intel.com>
-+ */
-+
-+#include <linux/atomic.h>
-+#include <linux/dev_printk.h>
-+#include <linux/device.h>
-+#include <linux/gfp.h>
-+#include <linux/if_arp.h>
-+#include <linux/if_ether.h>
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/netdev_features.h>
-+#include <linux/netdevice.h>
-+#include <linux/skbuff.h>
-+#include <linux/types.h>
-+#include <linux/wwan.h>
-+#include <net/pkt_sched.h>
-+
-+#include "t7xx_common.h"
-+#include "t7xx_hif_dpmaif_rx.h"
-+#include "t7xx_hif_dpmaif_tx.h"
-+#include "t7xx_netdev.h"
-+#include "t7xx_pci.h"
-+#include "t7xx_state_monitor.h"
-+
-+#define IP_MUX_SESSION_DEFAULT	0
-+
-+static u16 t7xx_ccmni_select_queue(struct net_device *dev, struct sk_buff *skb,
-+				   struct net_device *sb_dev)
-+{
-+	return TXQ_TYPE_DEFAULT;
-+}
-+
-+static int t7xx_ccmni_open(struct net_device *dev)
-+{
-+	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
-+
-+	netif_carrier_on(dev);
-+	netif_tx_start_all_queues(dev);
-+	atomic_inc(&ccmni->usage);
-+	return 0;
-+}
-+
-+static int t7xx_ccmni_close(struct net_device *dev)
-+{
-+	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
-+
-+	if (atomic_dec_return(&ccmni->usage) < 0)
-+		return -EINVAL;
-+
-+	netif_carrier_off(dev);
-+	netif_tx_disable(dev);
-+	return 0;
-+}
-+
-+static int t7xx_ccmni_send_packet(struct t7xx_ccmni *ccmni, struct sk_buff *skb,
-+				  unsigned int txqt)
-+{
-+	struct t7xx_ccmni_ctrl *ctlb = ccmni->ctlb;
-+
-+	skb->cb[TX_CB_NETIF_IDX] = ccmni->index;
-+
-+	if (t7xx_dpmaif_tx_send_skb(ctlb->hif_ctrl, txqt, skb))
-+		return NETDEV_TX_BUSY;
-+
-+	return 0;
-+}
-+
-+static int t7xx_ccmni_start_xmit(struct sk_buff *skb, struct net_device *dev)
-+{
-+	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
-+	int skb_len = skb->len;
-+
-+	/* If MTU is changed or there is no headroom, drop the packet */
-+	if (skb->len > dev->mtu || skb_headroom(skb) < sizeof(struct ccci_header)) {
-+		dev_kfree_skb(skb);
-+		dev->stats.tx_dropped++;
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (t7xx_ccmni_send_packet(ccmni, skb, TXQ_TYPE_DEFAULT))
-+		return NETDEV_TX_BUSY;
-+
-+	dev->stats.tx_packets++;
-+	dev->stats.tx_bytes += skb_len;
-+
-+	return NETDEV_TX_OK;
-+}
-+
-+static void t7xx_ccmni_tx_timeout(struct net_device *dev, unsigned int __always_unused txqueue)
-+{
-+	struct t7xx_ccmni *ccmni = netdev_priv(dev);
-+
-+	dev->stats.tx_errors++;
-+
-+	if (atomic_read(&ccmni->usage) > 0)
-+		netif_tx_wake_all_queues(dev);
-+}
-+
-+static const struct net_device_ops ccmni_netdev_ops = {
-+	.ndo_open	  = t7xx_ccmni_open,
-+	.ndo_stop	  = t7xx_ccmni_close,
-+	.ndo_start_xmit   = t7xx_ccmni_start_xmit,
-+	.ndo_tx_timeout   = t7xx_ccmni_tx_timeout,
-+	.ndo_select_queue = t7xx_ccmni_select_queue,
-+};
-+
-+static void t7xx_ccmni_start(struct t7xx_ccmni_ctrl *ctlb)
-+{
-+	struct t7xx_ccmni *ccmni;
-+	int i;
-+
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0) {
-+			netif_tx_start_all_queues(ccmni->dev);
-+			netif_carrier_on(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void t7xx_ccmni_pre_stop(struct t7xx_ccmni_ctrl *ctlb)
-+{
-+	struct t7xx_ccmni *ccmni;
-+	int i;
-+
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0)
-+			netif_tx_disable(ccmni->dev);
-+	}
-+}
-+
-+static void t7xx_ccmni_post_stop(struct t7xx_ccmni_ctrl *ctlb)
-+{
-+	struct t7xx_ccmni *ccmni;
-+	int i;
-+
-+	for (i = 0; i < ctlb->nic_dev_num; i++) {
-+		ccmni = ctlb->ccmni_inst[i];
-+		if (!ccmni)
-+			continue;
-+
-+		if (atomic_read(&ccmni->usage) > 0)
-+			netif_carrier_off(ccmni->dev);
-+	}
-+}
-+
-+static void t7xx_ccmni_wwan_setup(struct net_device *dev)
-+{
-+	dev->header_ops = NULL;
-+	dev->hard_header_len += sizeof(struct ccci_header);
-+
-+	dev->mtu = ETH_DATA_LEN;
-+	dev->max_mtu = CCMNI_MTU_MAX;
-+	dev->tx_queue_len = DEFAULT_TX_QUEUE_LEN;
-+	dev->watchdog_timeo = CCMNI_NETDEV_WDT_TO;
-+	/* CCMNI is a pure IP device */
-+	dev->flags = IFF_POINTOPOINT | IFF_NOARP;
-+
-+	/* Not supporting VLAN */
-+	dev->features = NETIF_F_VLAN_CHALLENGED;
-+
-+	dev->features |= NETIF_F_SG;
-+	dev->hw_features |= NETIF_F_SG;
-+
-+	/* Uplink checksum offload */
-+	dev->features |= NETIF_F_HW_CSUM;
-+	dev->hw_features |= NETIF_F_HW_CSUM;
-+
-+	/* Downlink checksum offload */
-+	dev->features |= NETIF_F_RXCSUM;
-+	dev->hw_features |= NETIF_F_RXCSUM;
-+
-+	/* Use kernel default free_netdev() function */
-+	dev->needs_free_netdev = true;
-+
-+	/* No need to free again because of free_netdev() */
-+	dev->priv_destructor = NULL;
-+	dev->type = ARPHRD_NONE;
-+
-+	dev->netdev_ops = &ccmni_netdev_ops;
-+}
-+
-+static int t7xx_ccmni_wwan_newlink(void *ctxt, struct net_device *dev, u32 if_id,
-+				   struct netlink_ext_ack *extack)
-+{
-+	struct t7xx_ccmni_ctrl *ctlb = ctxt;
-+	struct t7xx_ccmni *ccmni;
-+	int ret;
-+
-+	if (if_id >= ARRAY_SIZE(ctlb->ccmni_inst))
-+		return -EINVAL;
-+
-+	ccmni = wwan_netdev_drvpriv(dev);
-+	ccmni->index = if_id;
-+	ccmni->ctlb = ctlb;
-+	ccmni->dev = dev;
-+	atomic_set(&ccmni->usage, 0);
-+	ctlb->ccmni_inst[if_id] = ccmni;
-+
-+	ret = register_netdevice(dev);
-+	if (ret)
+ 
+ static int t7xx_cldma_gpd_tx_collect(struct cldma_queue *queue)
+@@ -370,6 +373,8 @@ static void t7xx_cldma_tx_done(struct work_struct *work)
+ 	}
+ 
+ 	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
+ }
+ 
+ static void t7xx_cldma_ring_free(struct cldma_ctrl *md_ctrl,
+@@ -579,6 +584,7 @@ static void t7xx_cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
+ 		if (l2_tx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
+ 			for_each_set_bit(i, (unsigned long *)&l2_tx_int, L2_INT_BIT_COUNT) {
+ 				if (i < CLDMA_TXQ_NUM) {
++					pm_runtime_get(md_ctrl->dev);
+ 					t7xx_cldma_hw_irq_dis_eq(hw_info, i, MTK_TX);
+ 					t7xx_cldma_hw_irq_dis_txrx(hw_info, i, MTK_TX);
+ 					queue_work(md_ctrl->txq[i].worker,
+@@ -603,6 +609,7 @@ static void t7xx_cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
+ 		if (l2_rx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
+ 			l2_rx_int |= l2_rx_int >> CLDMA_RXQ_NUM;
+ 			for_each_set_bit(i, (unsigned long *)&l2_rx_int, CLDMA_RXQ_NUM) {
++				pm_runtime_get(md_ctrl->dev);
+ 				t7xx_cldma_hw_irq_dis_eq(hw_info, i, MTK_RX);
+ 				t7xx_cldma_hw_irq_dis_txrx(hw_info, i, MTK_RX);
+ 				queue_work(md_ctrl->rxq[i].worker, &md_ctrl->rxq[i].cldma_work);
+@@ -952,6 +959,10 @@ int t7xx_cldma_send_skb(struct cldma_ctrl *md_ctrl, int qno, struct sk_buff *skb
+ 	if (qno >= CLDMA_TXQ_NUM)
+ 		return -EINVAL;
+ 
++	ret = pm_runtime_resume_and_get(md_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
 +		return ret;
 +
-+	netif_device_attach(dev);
-+	return 0;
-+}
-+
-+static void t7xx_ccmni_wwan_dellink(void *ctxt, struct net_device *dev, struct list_head *head)
-+{
-+	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
-+	struct t7xx_ccmni_ctrl *ctlb = ctxt;
-+	u8 if_id = ccmni->index;
-+
-+	if (if_id >= ARRAY_SIZE(ctlb->ccmni_inst))
+ 	queue = &md_ctrl->txq[qno];
+ 
+ 	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
+@@ -1001,6 +1012,8 @@ int t7xx_cldma_send_skb(struct cldma_ctrl *md_ctrl, int qno, struct sk_buff *skb
+ 	} while (!ret);
+ 
+ allow_sleep:
++	pm_runtime_mark_last_busy(md_ctrl->dev);
++	pm_runtime_put_autosuspend(md_ctrl->dev);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+index 7df7ffea8b14..279a7e72f203 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -32,6 +32,7 @@
+ #include <linux/list.h>
+ #include <linux/mm.h>
+ #include <linux/netdevice.h>
++#include <linux/pm_runtime.h>
+ #include <linux/sched.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+@@ -915,6 +916,7 @@ static void t7xx_dpmaif_rxq_work(struct work_struct *work)
+ {
+ 	struct dpmaif_rx_queue *rxq = container_of(work, struct dpmaif_rx_queue, dpmaif_rxq_work);
+ 	struct dpmaif_ctrl *dpmaif_ctrl = rxq->dpmaif_ctrl;
++	int ret;
+ 
+ 	atomic_set(&rxq->rx_processing, 1);
+ 	/* Ensure rx_processing is changed to 1 before actually begin RX flow */
+@@ -926,8 +928,14 @@ static void t7xx_dpmaif_rxq_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
 +		return;
 +
-+	if (WARN_ON(ctlb->ccmni_inst[if_id] != ccmni))
-+		return;
-+
-+	unregister_netdevice(dev);
-+}
-+
-+static const struct wwan_ops ccmni_wwan_ops = {
-+	.priv_size = sizeof(struct t7xx_ccmni),
-+	.setup     = t7xx_ccmni_wwan_setup,
-+	.newlink   = t7xx_ccmni_wwan_newlink,
-+	.dellink   = t7xx_ccmni_wwan_dellink,
-+};
-+
-+static int t7xx_ccmni_md_state_callback(enum md_state state, void *para)
-+{
-+	struct t7xx_ccmni_ctrl *ctlb = para;
-+	int ret = 0;
-+
-+	ctlb->md_sta = state;
-+
-+	switch (state) {
-+	case MD_STATE_READY:
-+		t7xx_ccmni_start(ctlb);
-+		break;
-+
-+	case MD_STATE_EXCEPTION:
-+	case MD_STATE_STOPPED:
-+		t7xx_ccmni_pre_stop(ctlb);
-+
-+		ret = t7xx_dpmaif_md_state_callback(ctlb->hif_ctrl, state);
-+		if (ret < 0)
-+			dev_err(ctlb->hif_ctrl->dev,
-+				"dpmaif md state callback err, md_sta=%d\n", state);
-+
-+		t7xx_ccmni_post_stop(ctlb);
-+		break;
-+
-+	case MD_STATE_WAITING_FOR_HS1:
-+	case MD_STATE_WAITING_TO_STOP:
-+		ret = t7xx_dpmaif_md_state_callback(ctlb->hif_ctrl, state);
-+		if (ret < 0)
-+			dev_err(ctlb->hif_ctrl->dev,
-+				"dpmaif md state callback err, md_sta=%d\n", state);
-+
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+static void init_md_status_notifier(struct t7xx_pci_dev *t7xx_dev)
-+{
-+	struct t7xx_ccmni_ctrl	*ctlb = t7xx_dev->ccmni_ctlb;
-+	struct t7xx_fsm_notifier *md_status_notifier;
-+
-+	md_status_notifier = &ctlb->md_status_notify;
-+	INIT_LIST_HEAD(&md_status_notifier->entry);
-+	md_status_notifier->notifier_fn = t7xx_ccmni_md_state_callback;
-+	md_status_notifier->data = ctlb;
-+
-+	t7xx_fsm_notifier_register(t7xx_dev->md, md_status_notifier);
-+}
-+
-+static void t7xx_ccmni_recv_skb(struct t7xx_pci_dev *t7xx_dev, struct sk_buff *skb)
-+{
-+	struct t7xx_ccmni *ccmni;
-+	struct net_device *net_dev;
-+	int pkt_type, skb_len;
-+	u8 netif_id;
-+
-+	netif_id = skb->cb[RX_CB_NETIF_IDX];
-+	ccmni = t7xx_dev->ccmni_ctlb->ccmni_inst[netif_id];
-+	if (!ccmni) {
-+		dev_kfree_skb(skb);
-+		return;
-+	}
-+
-+	net_dev = ccmni->dev;
-+	skb->dev = net_dev;
-+
-+	pkt_type = skb->cb[RX_CB_PKT_TYPE];
-+	if (pkt_type == PKT_TYPE_IP6)
-+		skb->protocol = htons(ETH_P_IPV6);
-+	else
-+		skb->protocol = htons(ETH_P_IP);
-+
-+	skb_len = skb->len;
-+	netif_rx_any_context(skb);
-+	net_dev->stats.rx_packets++;
-+	net_dev->stats.rx_bytes += skb_len;
-+}
-+
-+static void t7xx_ccmni_queue_tx_irq_notify(struct t7xx_ccmni_ctrl *ctlb, int qno)
-+{
-+	struct t7xx_ccmni *ccmni = ctlb->ccmni_inst[0];
-+	struct netdev_queue *net_queue;
-+
-+	if (netif_running(ccmni->dev) && atomic_read(&ccmni->usage) > 0) {
-+		if (ctlb->capability & NIC_CAP_CCMNI_MQ) {
-+			net_queue = netdev_get_tx_queue(ccmni->dev, qno);
-+			if (netif_tx_queue_stopped(net_queue))
-+				netif_tx_wake_queue(net_queue);
-+		} else if (netif_queue_stopped(ccmni->dev)) {
-+			netif_wake_queue(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void t7xx_ccmni_queue_tx_full_notify(struct t7xx_ccmni_ctrl *ctlb, int qno)
-+{
-+	struct t7xx_ccmni *ccmni = ctlb->ccmni_inst[0];
-+	struct netdev_queue *net_queue;
-+
-+	if (atomic_read(&ccmni->usage) > 0) {
-+		netdev_err(ccmni->dev, "TX queue %d is full\n", qno);
-+
-+		if (ctlb->capability & NIC_CAP_CCMNI_MQ) {
-+			net_queue = netdev_get_tx_queue(ccmni->dev, qno);
-+			netif_tx_stop_queue(net_queue);
-+		} else {
-+			netif_stop_queue(ccmni->dev);
-+		}
-+	}
-+}
-+
-+static void t7xx_ccmni_queue_state_notify(struct t7xx_pci_dev *t7xx_dev,
-+					  enum dpmaif_txq_state state, int qno)
-+{
-+	struct t7xx_ccmni_ctrl *ctlb = t7xx_dev->ccmni_ctlb;
-+
-+	if (!(ctlb->capability & NIC_CAP_TXBUSY_STOP) ||
-+	    ctlb->md_sta != MD_STATE_READY)
-+		return;
-+
-+	if (!ctlb->ccmni_inst[0]) {
-+		dev_warn(&t7xx_dev->pdev->dev, "No netdev registered yet\n");
-+		return;
-+	}
-+
-+	if (state == DMPAIF_TXQ_STATE_IRQ)
-+		t7xx_ccmni_queue_tx_irq_notify(ctlb, qno);
-+	else if (state == DMPAIF_TXQ_STATE_FULL)
-+		t7xx_ccmni_queue_tx_full_notify(ctlb, qno);
-+}
-+
-+int t7xx_ccmni_init(struct t7xx_pci_dev *t7xx_dev)
-+{
-+	struct device *dev = &t7xx_dev->pdev->dev;
-+	struct t7xx_ccmni_ctrl *ctlb;
+ 	t7xx_dpmaif_do_rx(dpmaif_ctrl, rxq);
+ 
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	atomic_set(&rxq->rx_processing, 0);
+ }
+ 
+@@ -1130,11 +1138,19 @@ static void t7xx_dpmaif_bat_release_work(struct work_struct *work)
+ {
+ 	struct dpmaif_ctrl *dpmaif_ctrl = container_of(work, struct dpmaif_ctrl, bat_release_work);
+ 	struct dpmaif_rx_queue *rxq;
 +	int ret;
 +
-+	ctlb = devm_kzalloc(dev, sizeof(*ctlb), GFP_KERNEL);
-+	if (!ctlb)
-+		return -ENOMEM;
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
++		return;
+ 
+ 	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
+ 	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
+ 	t7xx_dpmaif_bat_release_and_add(rxq);
+ 	t7xx_dpmaif_frag_bat_release_and_add(rxq);
 +
-+	t7xx_dev->ccmni_ctlb = ctlb;
-+	ctlb->t7xx_dev = t7xx_dev;
-+	ctlb->callbacks.state_notify = t7xx_ccmni_queue_state_notify;
-+	ctlb->callbacks.recv_skb = t7xx_ccmni_recv_skb;
-+	ctlb->nic_dev_num = NIC_DEV_DEFAULT;
-+	ctlb->capability = NIC_CAP_TXBUSY_STOP | NIC_CAP_SGIO |
-+			   NIC_CAP_DATA_ACK_DVD | NIC_CAP_CCMNI_MQ;
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+ int t7xx_dpmaif_bat_rel_wq_alloc(struct dpmaif_ctrl *dpmaif_ctrl)
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+index 3c601492aa16..12362892a334 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -29,6 +29,7 @@
+ #include <linux/list.h>
+ #include <linux/minmax.h>
+ #include <linux/netdevice.h>
++#include <linux/pm_runtime.h>
+ #include <linux/sched.h>
+ #include <linux/spinlock.h>
+ #include <linux/skbuff.h>
+@@ -171,6 +172,10 @@ static void t7xx_dpmaif_tx_done(struct work_struct *work)
+ 	struct dpmaif_ctrl *dpmaif_ctrl = txq->dpmaif_ctrl;
+ 	int ret;
+ 
++	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++	if (ret < 0 && ret != -EACCES)
++		return;
 +
-+	ctlb->hif_ctrl = t7xx_dpmaif_hif_init(t7xx_dev, &ctlb->callbacks);
-+	if (!ctlb->hif_ctrl)
-+		return -ENOMEM;
+ 	ret = t7xx_dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
+ 	if (ret == -EAGAIN ||
+ 	    (t7xx_dpmaif_ul_clr_done(&dpmaif_ctrl->hif_hw_info, txq->index) &&
+@@ -183,6 +188,9 @@ static void t7xx_dpmaif_tx_done(struct work_struct *work)
+ 		t7xx_dpmaif_clr_ip_busy_sts(&dpmaif_ctrl->hif_hw_info);
+ 		t7xx_dpmaif_unmask_ulq_intr(dpmaif_ctrl, txq->index);
+ 	}
 +
-+	/* WWAN core will create a netdev for the default IP MUX channel */
-+	ret = wwan_register_ops(dev, &ccmni_wwan_ops, ctlb, IP_MUX_SESSION_DEFAULT);
-+	if (ret)
-+		goto err_unregister_ops;
++	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+ static void t7xx_setup_msg_drb(struct dpmaif_ctrl *dpmaif_ctrl, unsigned char q_num,
+@@ -449,6 +457,7 @@ static void t7xx_do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
+ static int t7xx_dpmaif_tx_hw_push_thread(void *arg)
+ {
+ 	struct dpmaif_ctrl *dpmaif_ctrl = arg;
++	int ret;
+ 
+ 	while (!kthread_should_stop()) {
+ 		if (t7xx_tx_lists_are_all_empty(dpmaif_ctrl) ||
+@@ -463,7 +472,13 @@ static int t7xx_dpmaif_tx_hw_push_thread(void *arg)
+ 				break;
+ 		}
+ 
++		ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
++		if (ret < 0 && ret != -EACCES)
++			return ret;
 +
-+	init_md_status_notifier(t7xx_dev);
+ 		t7xx_do_tx_hw_push(dpmaif_ctrl);
++		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
++		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
+index 7d30f597c7e9..03ed951ddfbe 100644
+--- a/drivers/net/wwan/t7xx/t7xx_pci.c
++++ b/drivers/net/wwan/t7xx/t7xx_pci.c
+@@ -32,6 +32,7 @@
+ #include <linux/mutex.h>
+ #include <linux/pci.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/pm_wakeup.h>
+ 
+ #include "t7xx_mhccif.h"
+@@ -45,6 +46,7 @@
+ #define PCI_EREG_BASE			2
+ 
+ #define PM_ACK_TIMEOUT_MS		1500
++#define PM_AUTOSUSPEND_MS		20000
+ #define PM_RESOURCE_POLL_TIMEOUT_US	10000
+ #define PM_RESOURCE_POLL_STEP_US	100
+ 
+@@ -87,6 +89,8 @@ static int t7xx_pci_pm_init(struct t7xx_pci_dev *t7xx_dev)
+ 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_INIT);
+ 
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(t7xx_dev) + DIS_ASPM_LOWPWR_SET_0);
++	pm_runtime_set_autosuspend_delay(&pdev->dev, PM_AUTOSUSPEND_MS);
++	pm_runtime_use_autosuspend(&pdev->dev);
+ 
+ 	return t7xx_wait_pm_config(t7xx_dev);
+ }
+@@ -101,6 +105,8 @@ void t7xx_pci_pm_init_late(struct t7xx_pci_dev *t7xx_dev)
+ 			     D2H_INT_RESUME_ACK_AP);
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(t7xx_dev) + DIS_ASPM_LOWPWR_CLR_0);
+ 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_RESUMED);
 +
-+	return 0;
++	pm_runtime_put_noidle(&t7xx_dev->pdev->dev);
+ }
+ 
+ static int t7xx_pci_pm_reinit(struct t7xx_pci_dev *t7xx_dev)
+@@ -110,6 +116,8 @@ static int t7xx_pci_pm_reinit(struct t7xx_pci_dev *t7xx_dev)
+ 	 */
+ 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_INIT);
+ 
++	pm_runtime_get_noresume(&t7xx_dev->pdev->dev);
 +
-+err_unregister_ops:
-+	wwan_unregister_ops(dev);
-+
-+	return ret;
-+}
-+
-+void t7xx_ccmni_exit(struct t7xx_pci_dev *t7xx_dev)
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(t7xx_dev) + DIS_ASPM_LOWPWR_SET_0);
+ 	return t7xx_wait_pm_config(t7xx_dev);
+ }
+@@ -409,6 +417,7 @@ static int __t7xx_pci_pm_resume(struct pci_dev *pdev, bool state_check)
+ 	t7xx_dev->rgu_pci_irq_en = true;
+ 	t7xx_pcie_mac_set_int(t7xx_dev, SAP_RGU_INT);
+ 	iowrite32(L1_DISABLE_BIT(0), IREG_BASE(t7xx_dev) + DIS_ASPM_LOWPWR_CLR_0);
++	pm_runtime_mark_last_busy(&pdev->dev);
+ 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_RESUMED);
+ 
+ 	return ret;
+@@ -445,6 +454,16 @@ static int t7xx_pci_pm_thaw(struct device *dev)
+ 	return __t7xx_pci_pm_resume(to_pci_dev(dev), false);
+ }
+ 
++static int t7xx_pci_pm_runtime_suspend(struct device *dev)
 +{
-+	struct t7xx_ccmni_ctrl *ctlb = t7xx_dev->ccmni_ctlb;
-+
-+	t7xx_fsm_notifier_unregister(t7xx_dev->md, &ctlb->md_status_notify);
-+	wwan_unregister_ops(&t7xx_dev->pdev->dev);
-+	t7xx_dpmaif_hif_exit(ctlb->hif_ctrl);
++	return __t7xx_pci_pm_suspend(to_pci_dev(dev));
 +}
-diff --git a/drivers/net/wwan/t7xx/t7xx_netdev.h b/drivers/net/wwan/t7xx/t7xx_netdev.h
-new file mode 100644
-index 000000000000..2553c050fca4
---- /dev/null
-+++ b/drivers/net/wwan/t7xx/t7xx_netdev.h
-@@ -0,0 +1,61 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (c) 2021, MediaTek Inc.
-+ * Copyright (c) 2021, Intel Corporation.
-+ *
-+ * Authors:
-+ *  Haijun Liu <haijun.liu@mediatek.com>
-+ *  Moises Veleta <moises.veleta@intel.com>
-+ *
-+ * Contributors:
-+ *  Amir Hanania <amir.hanania@intel.com>
-+ *  Chiranjeevi Rapolu <chiranjeevi.rapolu@intel.com>
-+ *  Ricardo Martinez<ricardo.martinez@linux.intel.com>
-+ */
 +
-+#ifndef __T7XX_NETDEV_H__
-+#define __T7XX_NETDEV_H__
++static int t7xx_pci_pm_runtime_resume(struct device *dev)
++{
++	return __t7xx_pci_pm_resume(to_pci_dev(dev), true);
++}
 +
-+#include <linux/bits.h>
-+#include <linux/netdevice.h>
-+#include <linux/types.h>
-+
-+#include "t7xx_common.h"
-+#include "t7xx_hif_dpmaif.h"
-+#include "t7xx_pci.h"
-+#include "t7xx_state_monitor.h"
-+
-+#define RXQ_NUM				DPMAIF_RXQ_NUM
-+#define NIC_DEV_MAX			21
-+#define NIC_DEV_DEFAULT			2
-+#define NIC_CAP_TXBUSY_STOP		BIT(0)
-+#define NIC_CAP_SGIO			BIT(1)
-+#define NIC_CAP_DATA_ACK_DVD		BIT(2)
-+#define NIC_CAP_CCMNI_MQ		BIT(3)
-+
-+/* Must be less than DPMAIF_HW_MTU_SIZE (3*1024 + 8) */
-+#define CCMNI_MTU_MAX			3000
-+#define CCMNI_NETDEV_WDT_TO		(1 * HZ)
-+
-+struct t7xx_ccmni {
-+	u8				index;
-+	atomic_t			usage;
-+	struct net_device		*dev;
-+	struct t7xx_ccmni_ctrl		*ctlb;
-+};
-+
-+struct t7xx_ccmni_ctrl {
-+	struct t7xx_pci_dev		*t7xx_dev;
-+	struct dpmaif_ctrl		*hif_ctrl;
-+	struct t7xx_ccmni		*ccmni_inst[NIC_DEV_MAX];
-+	struct dpmaif_callbacks		callbacks;
-+	unsigned int			nic_dev_num;
-+	unsigned int			md_sta;
-+	unsigned int			capability;
-+	struct t7xx_fsm_notifier	md_status_notify;
-+};
-+
-+int t7xx_ccmni_init(struct t7xx_pci_dev *t7xx_dev);
-+void t7xx_ccmni_exit(struct t7xx_pci_dev *t7xx_dev);
-+
-+#endif /* __T7XX_NETDEV_H__ */
+ static const struct dev_pm_ops t7xx_pci_pm_ops = {
+ 	.suspend = t7xx_pci_pm_suspend,
+ 	.resume = t7xx_pci_pm_resume,
+@@ -454,6 +473,8 @@ static const struct dev_pm_ops t7xx_pci_pm_ops = {
+ 	.poweroff = t7xx_pci_pm_suspend,
+ 	.restore = t7xx_pci_pm_resume,
+ 	.restore_noirq = t7xx_pci_pm_resume_noirq,
++	.runtime_suspend = t7xx_pci_pm_runtime_suspend,
++	.runtime_resume = t7xx_pci_pm_runtime_resume
+ };
+ 
+ static int t7xx_request_irq(struct pci_dev *pdev)
 -- 
 2.17.1
 
