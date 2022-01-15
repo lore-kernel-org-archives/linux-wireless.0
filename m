@@ -2,281 +2,245 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A111C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jan 2022 23:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D433C433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Jan 2022 00:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230369AbiANX4m (ORCPT
+        id S231421AbiAOAOi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Jan 2022 18:56:42 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:48230 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230228AbiANX4l (ORCPT
+        Fri, 14 Jan 2022 19:14:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42976 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230211AbiAOAOi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jan 2022 18:56:41 -0500
-X-UUID: 2ee1ea8f234c4f08bd855fa312bfcf1e-20220115
-X-UUID: 2ee1ea8f234c4f08bd855fa312bfcf1e-20220115
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1158199742; Sat, 15 Jan 2022 07:56:36 +0800
-Received: from mtkexhb01.mediatek.inc (172.21.101.102) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 15 Jan 2022 07:56:35 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by mtkexhb01.mediatek.inc
- (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sat, 15 Jan
- 2022 07:56:34 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 15 Jan 2022 07:56:34 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
-        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
-        <jenhao.yang@mediatek.com>, <robin.chiu@mediatek.com>,
-        <Eddie.Chen@mediatek.com>, <ch.yeh@mediatek.com>,
-        <posh.sun@mediatek.com>, <ted.huang@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
-        <jsiuda@google.com>, <frankgor@google.com>, <jemele@google.com>,
-        <abhishekpandit@google.com>, <shawnku@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        "Deren Wu" <deren.wu@mediatek.com>
-Subject: [PATCH v2 1/2] mt76: sdio: honor the largest Tx buffer the hardware can support
-Date:   Sat, 15 Jan 2022 07:56:32 +0800
-Message-ID: <c09673a115c39f7af692efb984a5dc0c75238a64.1642204233.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
+        Fri, 14 Jan 2022 19:14:38 -0500
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF206C06161C
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2022 16:14:37 -0800 (PST)
+Received: by mail-wm1-x32e.google.com with SMTP id c126-20020a1c9a84000000b00346f9ebee43so8500885wme.4
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2022 16:14:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dd6Xa7c8yt0VNmEXTcfRMxXsoAp7hK9Q6Ap/0uxazQU=;
+        b=iiwfpH9lZQMo8Y8149tzeDAXssVwRntN6Xoj2nkcCSBt7t7pmKONmnK6tgXIv9UoHN
+         rTU5IUoP7RA3Zb9QUsvOffncrq3GXf8tHdb9QeTfknvZvlYfSsBIVl6+fwXJhDKfktit
+         Fbjr878cFYs80u/9RtYTRcqdONuhorN3K/Ky+4bVXU7AU9vgiteNw6fwUn7FTur8Tz/1
+         pZfQ3Z5nCnDchcupd0R5OJcTBAO6lw3FvB2hv4CkgAIefrqjDNX2ztGqcpyoqOvxmE2N
+         F+vcMeWT2p2rbw2c8wlk8h4N0knx+iia9QcdabTnNBcDlLUTMAgc67nk9rGXP5Wk29yM
+         ++oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dd6Xa7c8yt0VNmEXTcfRMxXsoAp7hK9Q6Ap/0uxazQU=;
+        b=Dq+TQPqx8J0laQ1m1goBBm+v/NmCnSUu7Aau5xz+FURZcuezqD1U5qiv0b7JMlHOD3
+         Wom8R025Iz/mRzlFqdehwvazXUr9VbJr4cFeNQwz0P4Zcxkz01sb11X7RuM+b2ChzS42
+         ssrP5LGAv4Nql+eeVo2x7wg+kNmmhQx2Ootngu5Bqb0+z2Mhd/dwq9Mt30MLGcOLNPd1
+         01zxs9KyoN9JcecyC6bEX3PjRTAS+KdR+9X2M9NZ2kWiKZexClYQb1Zc7Nof43i6zPWR
+         cLCqQWH/Rpb2PpPiL0pPB98GmnRs90Ag8M+JNF3hdtAyKp6rlvcAQzD9z56brlGZAdYt
+         bleg==
+X-Gm-Message-State: AOAM5318Ra34oDKNVxi7NDNyZLGO7NJL8VaGFvYX8kqIwlHx7EC2Fj5D
+        OIBI+XQQ5gtfEbdIBtnswlhn4A==
+X-Google-Smtp-Source: ABdhPJwaUtnavwWtjHS2Yxd/Dt3UybOwo5kWOWX3g2wRMGPwxknDT4jq39oeTRQi6/k8oqG5L1l7eA==
+X-Received: by 2002:a7b:cbda:: with SMTP id n26mr17636584wmi.93.1642205676317;
+        Fri, 14 Jan 2022 16:14:36 -0800 (PST)
+Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
+        by smtp.gmail.com with ESMTPSA id m15sm7379494wmq.6.2022.01.14.16.14.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Jan 2022 16:14:35 -0800 (PST)
+From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+To:     kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-arm-msm@vger.kernel.org
+Cc:     loic.poulain@linaro.org, benl@squareup.com,
+        bryan.odonoghue@linaro.org
+Subject: [PATCH v3 0/4] wcn36xx: Add spectrum survey reporting
+Date:   Sat, 15 Jan 2022 00:16:42 +0000
+Message-Id: <20220115001646.3981501-1-bryan.odonoghue@linaro.org>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+V3:
+- Fixes an indexing bug in get_survey()
 
-We don't have to create a separate sdio.xmit_buf buffer for each queue.
-Instead, we just need to create one, reuse it across all queues to reduce
-memory consumption further.
+  We use an array to track snr and rssi. This array is organised so that
+  the index value passed in get_survey() references the array directly.
 
-And then we should take it into account the actual the host and the device
-MMC capability to determine what the appropriate xmit_buf_size can be.
+  We also want to know the index into the frequency band tables which are
+  divided into two parts for 2 GHz and 5 GHz.
 
-Both MT7921S and MT7663 can support up to Tx FIFO size of 0x3fe00 which
-means the device can receive 511 blocks of block size 512 in a row from
-the host. So if the driver aggregates the frames as many as possible the
-the device can support, we can merge multiple MMC requests into a single
-one to get rid of the overhead of the handling and synchronizing in those
-unnecessary MMC requests and reduce the SDIO lock contention with the
-Bluetooth concurrent traffic and finally to have the higher bus
-utilization with less idle cycle.
+  The previous patch modified the index to dereference the band instead of
+  taking a copy of the index and modifying the copy to reference the band
+  table.
 
-With the patch, it is helpful for WiFi to have steady throughput
-performance especially while running Bluetooth concurrently.
+  In other words the same index couldn't be used for both the array and the
+  band index.
 
-Co-developed-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+  Fixes by way of separating the two indices into idx and band_idx.
 
----
-v1 -> v2:
-1. move buffer allocation in mt76s_init() and remove duplicated
-   code in mt7663/mt7921.
-2. move mt76s_get_xmit_buf_sz into mt76s_init()
-3. merge 2/3 and 3/3 in v1
----
- drivers/net/wireless/mediatek/mt76/mt76.h       |  5 +++--
- .../net/wireless/mediatek/mt76/mt7615/sdio.c    | 12 +-----------
- .../net/wireless/mediatek/mt76/mt7921/sdio.c    | 12 +-----------
- drivers/net/wireless/mediatek/mt76/sdio.c       | 14 +++++++++++++-
- drivers/net/wireless/mediatek/mt76/sdio_txrx.c  | 17 +++++++----------
- 5 files changed, 25 insertions(+), 35 deletions(-)
+V2:
+- Fixes typo "ret -= ENOMEM" => "ret = -ENOMEM" - kernel test bot
+- Makes get_survey() static - kernel test bot
+- Ignores riscv warnings since none apply to code in this patch - bod
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 14f60fcb6a34..43abf0679876 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -497,7 +497,7 @@ struct mt76_usb {
- 	} mcu;
- };
- 
--#define MT76S_XMIT_BUF_SZ	(16 * PAGE_SIZE)
-+#define MT76S_XMIT_BUF_SZ	0x3fe00
- #define MT76S_NUM_TX_ENTRIES	256
- #define MT76S_NUM_RX_ENTRIES	512
- struct mt76_sdio {
-@@ -507,7 +507,8 @@ struct mt76_sdio {
- 
- 	struct work_struct stat_work;
- 
--	u8 *xmit_buf[IEEE80211_NUM_ACS + 2];
-+	u8 *xmit_buf;
-+	u32 xmit_buf_sz;
- 
- 	struct sdio_func *func;
- 	void *intr_data;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-index 71162befdae8..49ab3a1f3b9b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/sdio.c
-@@ -101,7 +101,7 @@ static int mt7663s_probe(struct sdio_func *func,
- 	struct ieee80211_ops *ops;
- 	struct mt7615_dev *dev;
- 	struct mt76_dev *mdev;
--	int i, ret;
-+	int ret;
- 
- 	ops = devm_kmemdup(&func->dev, &mt7615_ops, sizeof(mt7615_ops),
- 			   GFP_KERNEL);
-@@ -140,16 +140,6 @@ static int mt7663s_probe(struct sdio_func *func,
- 		goto error;
- 	}
- 
--	for (i = 0; i < ARRAY_SIZE(mdev->sdio.xmit_buf); i++) {
--		mdev->sdio.xmit_buf[i] = devm_kmalloc(mdev->dev,
--						      MT76S_XMIT_BUF_SZ,
--						      GFP_KERNEL);
--		if (!mdev->sdio.xmit_buf[i]) {
--			ret = -ENOMEM;
--			goto error;
--		}
--	}
--
- 	ret = mt76s_alloc_rx_queue(mdev, MT_RXQ_MAIN);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-index 743b63f66efa..a6ae29c97e0e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-@@ -121,7 +121,7 @@ static int mt7921s_probe(struct sdio_func *func,
- 
- 	struct mt7921_dev *dev;
- 	struct mt76_dev *mdev;
--	int ret, i;
-+	int ret;
- 
- 	mdev = mt76_alloc_device(&func->dev, sizeof(*dev), &mt7921_ops,
- 				 &drv_ops);
-@@ -154,16 +154,6 @@ static int mt7921s_probe(struct sdio_func *func,
- 		goto error;
- 	}
- 
--	for (i = 0; i < ARRAY_SIZE(mdev->sdio.xmit_buf); i++) {
--		mdev->sdio.xmit_buf[i] = devm_kmalloc(mdev->dev,
--						      MT76S_XMIT_BUF_SZ,
--						      GFP_KERNEL);
--		if (!mdev->sdio.xmit_buf[i]) {
--			ret = -ENOMEM;
--			goto error;
--		}
--	}
--
- 	ret = mt76s_alloc_rx_queue(mdev, MT_RXQ_MAIN);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
-index 54f72d215948..def7f325f5c5 100644
---- a/drivers/net/wireless/mediatek/mt76/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/sdio.c
-@@ -12,6 +12,8 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/host.h>
- #include <linux/sched.h>
- #include <linux/kthread.h>
- 
-@@ -627,6 +629,7 @@ int mt76s_init(struct mt76_dev *dev, struct sdio_func *func,
- 	       const struct mt76_bus_ops *bus_ops)
- {
- 	struct mt76_sdio *sdio = &dev->sdio;
-+	u32 host_max_cap;
- 	int err;
- 
- 	err = mt76_worker_setup(dev->hw, &sdio->status_worker,
-@@ -648,7 +651,16 @@ int mt76s_init(struct mt76_dev *dev, struct sdio_func *func,
- 	dev->bus = bus_ops;
- 	dev->sdio.func = func;
- 
--	return 0;
-+	host_max_cap = min_t(u32, func->card->host->max_req_size,
-+			     func->cur_blksize *
-+			     func->card->host->max_blk_count);
-+	dev->sdio.xmit_buf_sz = min_t(u32, host_max_cap, MT76S_XMIT_BUF_SZ);
-+	dev->sdio.xmit_buf = devm_kmalloc(dev->dev, dev->sdio.xmit_buf_sz,
-+					  GFP_KERNEL);
-+	if (!dev->sdio.xmit_buf)
-+		err = -ENOMEM;
-+
-+	return err;
- }
- EXPORT_SYMBOL_GPL(mt76s_init);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-index 488ad7734d85..9fcf507e09bd 100644
---- a/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/sdio_txrx.c
-@@ -229,12 +229,11 @@ static int __mt76s_xmit_queue(struct mt76_dev *dev, u8 *data, int len)
- 
- static int mt76s_tx_run_queue(struct mt76_dev *dev, struct mt76_queue *q)
- {
--	int qid, err, nframes = 0, len = 0, pse_sz = 0, ple_sz = 0;
-+	int err, nframes = 0, len = 0, pse_sz = 0, ple_sz = 0;
- 	bool mcu = q == dev->q_mcu[MT_MCUQ_WM];
- 	struct mt76_sdio *sdio = &dev->sdio;
- 	u8 pad;
- 
--	qid = mcu ? ARRAY_SIZE(sdio->xmit_buf) - 1 : q->qid;
- 	while (q->first != q->head) {
- 		struct mt76_queue_entry *e = &q->entry[q->first];
- 		struct sk_buff *iter;
-@@ -255,27 +254,25 @@ static int mt76s_tx_run_queue(struct mt76_dev *dev, struct mt76_queue *q)
- 		}
- 
- 		pad = roundup(e->skb->len, 4) - e->skb->len;
--		if (len + e->skb->len + pad + 4 > MT76S_XMIT_BUF_SZ)
-+		if (len + e->skb->len + pad + 4 > dev->sdio.xmit_buf_sz)
- 			break;
- 
- 		if (mt76s_tx_pick_quota(sdio, mcu, e->buf_sz, &pse_sz,
- 					&ple_sz))
- 			break;
- 
--		memcpy(sdio->xmit_buf[qid] + len, e->skb->data,
--		       skb_headlen(e->skb));
-+		memcpy(sdio->xmit_buf + len, e->skb->data, skb_headlen(e->skb));
- 		len += skb_headlen(e->skb);
- 		nframes++;
- 
- 		skb_walk_frags(e->skb, iter) {
--			memcpy(sdio->xmit_buf[qid] + len, iter->data,
--			       iter->len);
-+			memcpy(sdio->xmit_buf + len, iter->data, iter->len);
- 			len += iter->len;
- 			nframes++;
- 		}
- 
- 		if (unlikely(pad)) {
--			memset(sdio->xmit_buf[qid] + len, 0, pad);
-+			memset(sdio->xmit_buf + len, 0, pad);
- 			len += pad;
- 		}
- next:
-@@ -284,8 +281,8 @@ static int mt76s_tx_run_queue(struct mt76_dev *dev, struct mt76_queue *q)
- 	}
- 
- 	if (nframes) {
--		memset(sdio->xmit_buf[qid] + len, 0, 4);
--		err = __mt76s_xmit_queue(dev, sdio->xmit_buf[qid], len + 4);
-+		memset(sdio->xmit_buf + len, 0, 4);
-+		err = __mt76s_xmit_queue(dev, sdio->xmit_buf, len + 4);
- 		if (err)
- 			return err;
- 	}
+V1:
+This series enables get_survey() on wcn36xx. Tested with wcn3620 and
+wcn3680b.
+
+wcn36xx reports RSSI and SNR in the buffer descriptor of each delivered
+frame wcn36xx -> host. Thus far we have only extracted RSSI but, extracting
+the SNR lets us also report the noise-floor.
+
+Adding in some background tracking of the current tuned channel lets us
+flag which channel is currently in use when running "iw wlan0 survey dump"
+
+For both wcn3620 and wcn3680b I have verified both the STA and AP's view of
+RSSI and noise.
+
+Example wcn3620:
+  AP Asus RT-AX88U
+    SSID: "linaro-test"
+    noise: -78 dBm	Channel: 8
+    BSSID: 04:D4:C4:AA:BB:CC
+
+    MAC               RSSI
+    02:00:16:qq:xx:yy -35dBm
+
+  STA
+    root@linaro-developer:~# iw wlan0 link
+    Connected to 04:d4:c4:aa:bb:cc (on wlan0)
+          SSID: linaro-test
+          freq: 2447
+          RX: 768377 bytes (4250 packets)
+          TX: 8136 bytes (97 packets)
+          signal: -37 dBm
+
+    root@linaro-developer:~# iw wlan0 survey dump
+    Survey data from wlan0
+            frequency:                      2412 MHz
+    Survey data from wlan0
+            frequency:                      2417 MHz
+            noise:                          -12 dBm
+    Survey data from wlan0
+            frequency:                      2422 MHz
+            noise:                          -82 dBm
+    Survey data from wlan0
+            frequency:                      2427 MHz
+            noise:                          -76 dBm
+    Survey data from wlan0
+            frequency:                      2432 MHz
+            noise:                          -78 dBm
+    Survey data from wlan0
+            frequency:                      2437 MHz
+            noise:                          -100 dBm
+    Survey data from wlan0
+            frequency:                      2442 MHz
+            noise:                          -41 dBm
+    Survey data from wlan0
+            frequency:                      2447 MHz [in use]
+            noise:                          -75 dBm
+
+Example wcn3680b:
+  AP Asus RT-AX88U:
+    SSID: "linaro-test"
+    noise: -80 dBm	Channel: 60/160
+    BSSID: 04:D4:C4:DD:EE:FF	
+
+    MAC               RSSI
+    E2:C0:10:YY:XX:QQ -31dBm
+
+  STA:
+    root@linaro-developer:~# iw wlan0 link
+    Connected to 04:d4:c4:dd:ee:ff (on wlan0)
+            SSID: linaro-test
+            freq: 5300
+            RX: 5999294 bytes (32764 packets)
+            TX: 35443 bytes (493 packets)
+            signal: -27 dBm
+            rx bitrate: 433.3 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 1
+            tx bitrate: 6.0 MBit/s
+
+            bss flags:      short-slot-time
+            dtim period:    3
+            beacon int:     100
+
+    root@linaro-developer:~# iw wlan0 survey dump
+    Survey data from wlan0
+            frequency:                      2412 MHz
+            noise:                          -63 dBm
+    Survey data from wlan0
+            frequency:                      2417 MHz
+            noise:                          -57 dBm
+    Survey data from wlan0
+            frequency:                      2422 MHz
+            noise:                          -74 dBm
+    Survey data from wlan0
+            frequency:                      2427 MHz
+            noise:                          -90 dBm
+    Survey data from wlan0
+            frequency:                      2432 MHz
+            noise:                          -72 dBm
+    Survey data from wlan0
+            frequency:                      2437 MHz
+            noise:                          -33 dBm
+    Survey data from wlan0
+            frequency:                      2442 MHz
+            noise:                          -72 dBm
+    Survey data from wlan0
+            frequency:                      2447 MHz
+            noise:                          -68 dBm
+    Survey data from wlan0
+            frequency:                      2452 MHz
+            noise:                          -33 dBm
+    Survey data from wlan0
+            frequency:                      2457 MHz
+            noise:                          -33 dBm
+    Survey data from wlan0
+            frequency:                      2462 MHz
+            noise:                          -36 dBm
+    Survey data from wlan0
+            frequency:                      2467 MHz
+            noise:                          -68 dBm
+    Survey data from wlan0
+            frequency:                      2472 MHz
+            noise:                          -34 dBm
+    Survey data from wlan0
+            frequency:                      5180 MHz
+            noise:                          -63 dBm
+    Survey data from wlan0
+            frequency:                      5200 MHz
+            noise:                          -57 dBm
+    Survey data from wlan0
+            frequency:                      5220 MHz
+            noise:                          -74 dBm
+    Survey data from wlan0
+            frequency:                      5240 MHz
+            noise:                          -90 dBm
+    Survey data from wlan0
+            frequency:                      5260 MHz
+            noise:                          -72 dBm
+    Survey data from wlan0
+            frequency:                      5280 MHz
+            noise:                          -33 dBm
+    Survey data from wlan0
+            frequency:                      5300 MHz [in use]
+            noise:                          -72 dBm
+
+Bryan O'Donoghue (4):
+  wcn36xx: Implement get_snr()
+  wcn36xx: Track the band and channel we are tuned to
+  wcn36xx: Track SNR and RSSI for each RX frame
+  wcn36xx: Add SNR reporting via get_survey()
+
+ drivers/net/wireless/ath/wcn36xx/main.c    | 83 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/txrx.c    | 36 ++++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 13 ++++
+ 3 files changed, 132 insertions(+)
+
 -- 
-2.25.1
+2.33.0
 
