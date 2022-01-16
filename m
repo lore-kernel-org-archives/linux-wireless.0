@@ -2,675 +2,444 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E015C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jan 2022 12:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72E0BC433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jan 2022 12:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233212AbiAPMoE (ORCPT
+        id S235061AbiAPMrv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Jan 2022 07:44:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35544 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233200AbiAPMoE (ORCPT
+        Sun, 16 Jan 2022 07:47:51 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:6149 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232126AbiAPMru (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jan 2022 07:44:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A3CC061574
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2022 04:44:03 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 49680B80CBB
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2022 12:44:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE12AC36AEC;
-        Sun, 16 Jan 2022 12:43:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642337041;
-        bh=nAn4feF3xhJJOftXimxES6qkQSnNnyWczAf4JZk6IAM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=scg/uQ6G4LEcR61Vh82QDGhLM7JPCQssrTyUiuzT9DvRKhznQ97VdXrC/5+P22E8a
-         xys+HHbNn08izbXuWoLq7z6+bIIZkw9IF4gSyRg9ZAXRZrLKxYLdGIroNyHcnRBOOY
-         G1hjKrx93sxXlbOCx5TvrGbyEHlR4h9oVA924KteTiyxrNK6vgtaYeUiNzbLWCD9lM
-         v+t0kortM4ZqwXF6shWR5mV3MKrycOuhdxOQv8p54Y2z7tyi5EFPhY+yrSY1MJPmOf
-         R40fgpoHB0c7XEmuZ+GlZJ8ZRHCpbVOzEVOkrrMWmG/Burwo5Hqh3tPEaRtchOcdIq
-         SV54e7U7fePDA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        ryder.lee@mediatek.com, sean.wang@mediatek.com
-Subject: [PATCH 4/5] mt76: connac: move he radiotap parsing in connac module
-Date:   Sun, 16 Jan 2022 13:43:17 +0100
-Message-Id: <dcd7e4a9f10b1f0c94050453e4de4e1443fbc642.1642336806.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1642336806.git.lorenzo@kernel.org>
-References: <cover.1642336806.git.lorenzo@kernel.org>
+        Sun, 16 Jan 2022 07:47:50 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1642337270; x=1673873270;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=ZOMuM0DW+MNUqYZw7xy8/iYdynBA9cgCXE0Wy9446go=;
+  b=aUUlbOWsCpnuoYJClob3aGkXaumZj5h1s1L9iYJUDt9rnB+cfvkGca94
+   uui7BPzyo9q3rRdF98XMxKs5wSyZgj4/M1UyGDOgbv6As6kkce3YdH0XU
+   E2MeDycZsrTWBQJGlagkPxcOSb7f4vkC2UJKs8QfNb/rM4v5N52vpZ+53
+   E=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 16 Jan 2022 04:47:49 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2022 04:47:49 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Sun, 16 Jan 2022 04:47:31 -0800
+Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Sun, 16 Jan 2022 04:47:29 -0800
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh@kernel.org>, Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Subject: [PATCH v2 01/19] ath11k: PCI changes to support WCN6750
+Date:   Sun, 16 Jan 2022 18:16:57 +0530
+Message-ID: <1642337235-8618-2-git-send-email-quic_mpubbise@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1642337235-8618-1-git-send-email-quic_mpubbise@quicinc.com>
+References: <1642337235-8618-1-git-send-email-quic_mpubbise@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move HE radiotap parsing code in mt76-connac module since it is shared
-between mt7921 and mt7915 drivers.
+In order to support hybrid bus devices like WCN6750, it is
+required to move certain PCI definitions to the header file.
+As a result, add ATH11K_PCI_* prefix to these definitions.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Also, change the PCI APIs that are required to enable WCN6750
+from static to extern.
+
+Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 ---
- .../net/wireless/mediatek/mt76/mt76_connac.h  |   2 +
- .../wireless/mediatek/mt76/mt76_connac_mac.c  | 168 ++++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mac.h  |   4 +
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 175 +----------------
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 182 +-----------------
- 5 files changed, 176 insertions(+), 355 deletions(-)
+ drivers/net/wireless/ath/ath11k/pci.c | 108 +++++++++++++++-------------------
+ drivers/net/wireless/ath/ath11k/pci.h |  35 +++++++++++
+ 2 files changed, 84 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-index 04fa8706e7f1..c4e898038acc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-@@ -242,5 +242,7 @@ void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
- int mt76_connac_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_offset,
- 					struct ieee80211_sta *sta,
- 					struct ieee80211_vif *vif);
-+void mt76_connac_mac_decode_he_radiotap(struct sk_buff *skb,
-+					__le32 *rxv, u32 mode);
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index d73b522..9a50cba 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
  
- #endif /* __MT76_CONNAC_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index 78864252b782..fbc5caa02259 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -183,3 +183,171 @@ int mt76_connac_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_offset,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76_connac_reverse_frag0_hdr_trans);
-+
-+static void
-+mt76_connac_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
-+				      struct ieee80211_radiotap_he *he,
-+				      __le32 *rxv)
-+{
-+	u32 ru_h, ru_l;
-+	u8 ru, offs = 0;
-+
-+	ru_l = FIELD_GET(MT_PRXV_HE_RU_ALLOC_L, le32_to_cpu(rxv[0]));
-+	ru_h = FIELD_GET(MT_PRXV_HE_RU_ALLOC_H, le32_to_cpu(rxv[1]));
-+	ru = (u8)(ru_l | ru_h << 4);
-+
-+	status->bw = RATE_INFO_BW_HE_RU;
-+
-+	switch (ru) {
-+	case 0 ... 36:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_26;
-+		offs = ru;
-+		break;
-+	case 37 ... 52:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_52;
-+		offs = ru - 37;
-+		break;
-+	case 53 ... 60:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
-+		offs = ru - 53;
-+		break;
-+	case 61 ... 64:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_242;
-+		offs = ru - 61;
-+		break;
-+	case 65 ... 66:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_484;
-+		offs = ru - 65;
-+		break;
-+	case 67:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_996;
-+		break;
-+	case 68:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
-+		break;
-+	}
-+
-+	he->data1 |= HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
-+	he->data2 |= HE_BITS(DATA2_RU_OFFSET_KNOWN) |
-+		     le16_encode_bits(offs,
-+				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
-+}
-+
-+#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
-+static void
-+mt76_connac_mac_decode_he_mu_radiotap(struct sk_buff *skb, __le32 *rxv)
-+{
-+	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-+	static const struct ieee80211_radiotap_he_mu mu_known = {
-+		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_COMP_KNOWN),
-+		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN) |
-+			  HE_BITS(MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN),
-+	};
-+	struct ieee80211_radiotap_he_mu *he_mu;
-+
-+	status->flag |= RX_FLAG_RADIOTAP_HE_MU;
-+
-+	he_mu = skb_push(skb, sizeof(mu_known));
-+	memcpy(he_mu, &mu_known, sizeof(mu_known));
-+
-+	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
-+	if (status->he_dcm)
-+		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
-+
-+	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
-+			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
-+				 le32_get_bits(rxv[2], MT_CRXV_HE_NUM_USER));
-+
-+	he_mu->ru_ch1[0] = le32_get_bits(rxv[3], MT_CRXV_HE_RU0);
-+
-+	if (status->bw >= RATE_INFO_BW_40) {
-+		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
-+		he_mu->ru_ch2[0] = le32_get_bits(rxv[3], MT_CRXV_HE_RU1);
-+	}
-+
-+	if (status->bw >= RATE_INFO_BW_80) {
-+		he_mu->ru_ch1[1] = le32_get_bits(rxv[3], MT_CRXV_HE_RU2);
-+		he_mu->ru_ch2[1] = le32_get_bits(rxv[3], MT_CRXV_HE_RU3);
-+	}
-+}
-+
-+void mt76_connac_mac_decode_he_radiotap(struct sk_buff *skb,
-+					__le32 *rxv, u32 mode)
-+{
-+	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-+	static const struct ieee80211_radiotap_he known = {
-+		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
-+			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
-+			 HE_BITS(DATA1_STBC_KNOWN) |
-+			 HE_BITS(DATA1_CODING_KNOWN) |
-+			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
-+			 HE_BITS(DATA1_DOPPLER_KNOWN) |
-+			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
-+			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
-+		.data2 = HE_BITS(DATA2_GI_KNOWN) |
-+			 HE_BITS(DATA2_TXBF_KNOWN) |
-+			 HE_BITS(DATA2_PE_DISAMBIG_KNOWN) |
-+			 HE_BITS(DATA2_TXOP_KNOWN),
-+	};
-+	u32 ltf_size = le32_get_bits(rxv[2], MT_CRXV_HE_LTF_SIZE) + 1;
-+	struct ieee80211_radiotap_he *he;
-+
-+	status->flag |= RX_FLAG_RADIOTAP_HE;
-+
-+	he = skb_push(skb, sizeof(known));
-+	memcpy(he, &known, sizeof(known));
-+
-+	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[14]) |
-+		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[2]);
-+	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
-+	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[2]) |
-+		    le16_encode_bits(ltf_size,
-+				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
-+	if (le32_to_cpu(rxv[0]) & MT_PRXV_TXBF)
-+		he->data5 |= HE_BITS(DATA5_TXBF);
-+	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[14]) |
-+		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[14]);
-+
-+	switch (mode) {
-+	case MT_PHY_TYPE_HE_SU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN) |
-+			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN);
-+		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[14]) |
-+			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
-+		break;
-+	case MT_PHY_TYPE_HE_EXT_SU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_EXT_SU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN);
-+		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
-+		break;
-+	case MT_PHY_TYPE_HE_MU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN);
-+		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
-+		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[7]);
-+
-+		mt76_connac_mac_decode_he_radiotap_ru(status, he, rxv);
-+		mt76_connac_mac_decode_he_mu_radiotap(skb, rxv);
-+		break;
-+	case MT_PHY_TYPE_HE_TB:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
-+			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
-+			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
-+			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
-+		he->data4 |= HE_PREP(DATA4_TB_SPTL_REUSE1, SR_MASK, rxv[11]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE2, SR1_MASK, rxv[11]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE3, SR2_MASK, rxv[11]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE4, SR3_MASK, rxv[11]);
-+
-+		mt76_connac_mac_decode_he_radiotap_ru(status, he, rxv);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac_mac_decode_he_radiotap);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.h
-index 0c73875ba9a6..cf54d3efa020 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.h
-@@ -4,6 +4,10 @@
- #ifndef __MT76_CONNAC_MAC_H
- #define __MT76_CONNAC_MAC_H
+ #include <linux/module.h>
+@@ -18,24 +19,11 @@
+ #define ATH11K_PCI_DMA_MASK		32
  
-+#define HE_BITS(f)		cpu_to_le16(IEEE80211_RADIOTAP_HE_##f)
-+#define HE_PREP(f, m, v)	le16_encode_bits(le32_get_bits(v, MT_CRXV_HE_##m),\
-+						 IEEE80211_RADIOTAP_HE_##f)
-+
- #define MT_CT_PARSE_LEN			72
- #define MT_CT_DMA_BUF_NUM		2
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 121ac5b59107..b130bebfdda7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -10,10 +10,6 @@
- 
- #define to_rssi(field, rxv)	((FIELD_GET(field, rxv) - 220) / 2)
- 
--#define HE_BITS(f)		cpu_to_le16(IEEE80211_RADIOTAP_HE_##f)
--#define HE_PREP(f, m, v)	le16_encode_bits(le32_get_bits(v, MT_CRXV_HE_##m),\
--						 IEEE80211_RADIOTAP_HE_##f)
+ #define ATH11K_PCI_IRQ_CE0_OFFSET	3
+-#define ATH11K_PCI_IRQ_DP_OFFSET	14
 -
- static const struct mt7915_dfs_radar_spec etsi_radar_specs = {
- 	.pulse_th = { 110, -10, -80, 40, 5200, 128, 5200 },
- 	.radar_pattern = {
-@@ -218,175 +214,6 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 	rcu_read_unlock();
+-#define WINDOW_ENABLE_BIT		0x40000000
+-#define WINDOW_REG_ADDRESS		0x310c
+-#define WINDOW_VALUE_MASK		GENMASK(24, 19)
+-#define WINDOW_START			0x80000
+-#define WINDOW_RANGE_MASK		GENMASK(18, 0)
+ 
+ #define TCSR_SOC_HW_VERSION		0x0224
+ #define TCSR_SOC_HW_VERSION_MAJOR_MASK	GENMASK(11, 8)
+ #define TCSR_SOC_HW_VERSION_MINOR_MASK	GENMASK(7, 0)
+ 
+-/* BAR0 + 4k is always accessible, and no
+- * need to force wakeup.
+- * 4K - 32 = 0xFE0
+- */
+-#define ACCESS_ALWAYS_OFF 0xFE0
+-
+ #define QCA6390_DEVICE_ID		0x1101
+ #define QCN9074_DEVICE_ID		0x1104
+ #define WCN6855_DEVICE_ID		0x1103
+@@ -147,27 +135,30 @@ static inline void ath11k_pci_select_window(struct ath11k_pci *ab_pci, u32 offse
+ {
+ 	struct ath11k_base *ab = ab_pci->ab;
+ 
+-	u32 window = FIELD_GET(WINDOW_VALUE_MASK, offset);
++	u32 window = FIELD_GET(ATH11K_PCI_WINDOW_VALUE_MASK, offset);
+ 
+ 	lockdep_assert_held(&ab_pci->window_lock);
+ 
+ 	if (window != ab_pci->register_window) {
+-		iowrite32(WINDOW_ENABLE_BIT | window,
+-			  ab->mem + WINDOW_REG_ADDRESS);
+-		ioread32(ab->mem + WINDOW_REG_ADDRESS);
++		iowrite32(ATH11K_PCI_WINDOW_ENABLE_BIT | window,
++			  ab->mem + ATH11K_PCI_WINDOW_REG_ADDRESS);
++		ioread32(ab->mem + ATH11K_PCI_WINDOW_REG_ADDRESS);
+ 		ab_pci->register_window = window;
+ 	}
  }
  
--static void
--mt7915_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
--				 struct ieee80211_radiotap_he *he,
--				 __le32 *rxv)
--{
--	u32 ru_h, ru_l;
--	u8 ru, offs = 0;
--
--	ru_l = FIELD_GET(MT_PRXV_HE_RU_ALLOC_L, le32_to_cpu(rxv[0]));
--	ru_h = FIELD_GET(MT_PRXV_HE_RU_ALLOC_H, le32_to_cpu(rxv[1]));
--	ru = (u8)(ru_l | ru_h << 4);
--
--	status->bw = RATE_INFO_BW_HE_RU;
--
--	switch (ru) {
--	case 0 ... 36:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_26;
--		offs = ru;
--		break;
--	case 37 ... 52:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_52;
--		offs = ru - 37;
--		break;
--	case 53 ... 60:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
--		offs = ru - 53;
--		break;
--	case 61 ... 64:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_242;
--		offs = ru - 61;
--		break;
--	case 65 ... 66:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_484;
--		offs = ru - 65;
--		break;
--	case 67:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_996;
--		break;
--	case 68:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
--		break;
--	}
--
--	he->data1 |= HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
--	he->data2 |= HE_BITS(DATA2_RU_OFFSET_KNOWN) |
--		     le16_encode_bits(offs,
--				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
--}
--
--static void
--mt7915_mac_decode_he_mu_radiotap(struct sk_buff *skb, __le32 *rxv)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he_mu mu_known = {
--		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
--			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN),
--		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN),
--	};
--	struct ieee80211_radiotap_he_mu *he_mu = NULL;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE_MU;
--
--	he_mu = skb_push(skb, sizeof(mu_known));
--	memcpy(he_mu, &mu_known, sizeof(mu_known));
--
--#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
--
--	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
--	if (status->he_dcm)
--		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
--
--	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
--			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
--				 le32_get_bits(rxv[2], MT_CRXV_HE_NUM_USER));
--
--	he_mu->ru_ch1[0] = le32_get_bits(rxv[3], MT_CRXV_HE_RU0);
--
--	if (status->bw >= RATE_INFO_BW_40) {
--		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
--		he_mu->ru_ch2[0] = le32_get_bits(rxv[3], MT_CRXV_HE_RU1);
--	}
--
--	if (status->bw >= RATE_INFO_BW_80) {
--		he_mu->ru_ch1[1] = le32_get_bits(rxv[3], MT_CRXV_HE_RU2);
--		he_mu->ru_ch2[1] = le32_get_bits(rxv[3], MT_CRXV_HE_RU3);
--	}
--}
--
--static void
--mt7915_mac_decode_he_radiotap(struct sk_buff *skb, __le32 *rxv, u32 mode)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he known = {
--		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
--			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
--			 HE_BITS(DATA1_STBC_KNOWN) |
--			 HE_BITS(DATA1_CODING_KNOWN) |
--			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
--			 HE_BITS(DATA1_DOPPLER_KNOWN) |
--			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
--			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
--		.data2 = HE_BITS(DATA2_GI_KNOWN) |
--			 HE_BITS(DATA2_TXBF_KNOWN) |
--			 HE_BITS(DATA2_PE_DISAMBIG_KNOWN) |
--			 HE_BITS(DATA2_TXOP_KNOWN),
--	};
--	struct ieee80211_radiotap_he *he = NULL;
--	u32 ltf_size = le32_get_bits(rxv[2], MT_CRXV_HE_LTF_SIZE) + 1;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE;
--
--	he = skb_push(skb, sizeof(known));
--	memcpy(he, &known, sizeof(known));
--
--	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[14]) |
--		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[2]);
--	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
--	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[2]) |
--		    le16_encode_bits(ltf_size,
--				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
--	if (le32_to_cpu(rxv[0]) & MT_PRXV_TXBF)
--		he->data5 |= HE_BITS(DATA5_TXBF);
--	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[14]) |
--		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[14]);
--
--	switch (mode) {
--	case MT_PHY_TYPE_HE_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[14]) |
--			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		break;
--	case MT_PHY_TYPE_HE_EXT_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_EXT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		break;
--	case MT_PHY_TYPE_HE_MU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[7]);
--
--		mt7915_mac_decode_he_radiotap_ru(status, he, rxv);
--		mt7915_mac_decode_he_mu_radiotap(skb, rxv);
--		break;
--	case MT_PHY_TYPE_HE_TB:
--		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
--			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
--
--		he->data4 |= HE_PREP(DATA4_TB_SPTL_REUSE2, SR1_MASK, rxv[11]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE3, SR2_MASK, rxv[11]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE4, SR3_MASK, rxv[11]);
--
--		mt7915_mac_decode_he_radiotap_ru(status, he, rxv);
--		break;
--	default:
--		break;
--	}
--}
--
- static int
- mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
- 			struct mt76_rx_status *status,
-@@ -770,7 +597,7 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ static inline void ath11k_pci_select_static_window(struct ath11k_pci *ab_pci)
+ {
+-	u32 umac_window = FIELD_GET(WINDOW_VALUE_MASK, HAL_SEQ_WCSS_UMAC_OFFSET);
+-	u32 ce_window = FIELD_GET(WINDOW_VALUE_MASK, HAL_CE_WFSS_CE_REG_BASE);
++	u32 umac_window;
++	u32 ce_window;
+ 	u32 window;
+ 
++	umac_window = FIELD_GET(ATH11K_PCI_WINDOW_VALUE_MASK, HAL_SEQ_WCSS_UMAC_OFFSET);
++	ce_window = FIELD_GET(ATH11K_PCI_WINDOW_VALUE_MASK, HAL_CE_WFSS_CE_REG_BASE);
+ 	window = (umac_window << 12) | (ce_window << 6);
+ 
+-	iowrite32(WINDOW_ENABLE_BIT | window, ab_pci->ab->mem + WINDOW_REG_ADDRESS);
++	iowrite32(ATH11K_PCI_WINDOW_ENABLE_BIT | window,
++		  ab_pci->ab->mem + ATH11K_PCI_WINDOW_REG_ADDRESS);
+ }
+ 
+ static inline u32 ath11k_pci_get_window_start(struct ath11k_base *ab,
+@@ -176,13 +167,13 @@ static inline u32 ath11k_pci_get_window_start(struct ath11k_base *ab,
+ 	u32 window_start;
+ 
+ 	/* If offset lies within DP register range, use 3rd window */
+-	if ((offset ^ HAL_SEQ_WCSS_UMAC_OFFSET) < WINDOW_RANGE_MASK)
+-		window_start = 3 * WINDOW_START;
++	if ((offset ^ HAL_SEQ_WCSS_UMAC_OFFSET) < ATH11K_PCI_WINDOW_RANGE_MASK)
++		window_start = 3 * ATH11K_PCI_WINDOW_START;
+ 	/* If offset lies within CE register range, use 2nd window */
+-	else if ((offset ^ HAL_CE_WFSS_CE_REG_BASE) < WINDOW_RANGE_MASK)
+-		window_start = 2 * WINDOW_START;
++	else if ((offset ^ HAL_CE_WFSS_CE_REG_BASE) < ATH11K_PCI_WINDOW_RANGE_MASK)
++		window_start = 2 * ATH11K_PCI_WINDOW_START;
+ 	else
+-		window_start = WINDOW_START;
++		window_start = ATH11K_PCI_WINDOW_START;
+ 
+ 	return window_start;
+ }
+@@ -197,32 +188,32 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
+ 	 */
+ 	if (ab->hw_params.wakeup_mhi &&
+ 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
+-	    offset >= ACCESS_ALWAYS_OFF)
++	    offset >= ATH11K_PCI_ACCESS_ALWAYS_OFF)
+ 		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
+ 
+-	if (offset < WINDOW_START) {
++	if (offset < ATH11K_PCI_WINDOW_START) {
+ 		iowrite32(value, ab->mem  + offset);
+ 	} else {
+ 		if (ab->bus_params.static_window_map)
+ 			window_start = ath11k_pci_get_window_start(ab, offset);
+ 		else
+-			window_start = WINDOW_START;
++			window_start = ATH11K_PCI_WINDOW_START;
+ 
+-		if (window_start == WINDOW_START) {
++		if (window_start == ATH11K_PCI_WINDOW_START) {
+ 			spin_lock_bh(&ab_pci->window_lock);
+ 			ath11k_pci_select_window(ab_pci, offset);
+ 			iowrite32(value, ab->mem + window_start +
+-				  (offset & WINDOW_RANGE_MASK));
++				  (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
+ 			spin_unlock_bh(&ab_pci->window_lock);
+ 		} else {
+ 			iowrite32(value, ab->mem + window_start +
+-				  (offset & WINDOW_RANGE_MASK));
++				  (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
+ 		}
  	}
  
- 	if (rxv && mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
--		mt7915_mac_decode_he_radiotap(skb, rxv, mode);
-+		mt76_connac_mac_decode_he_radiotap(skb, rxv, mode);
- 
- 	if (!status->wcid || !ieee80211_is_data_qos(fc))
- 		return 0;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 74ebd518b8f4..491eaa67be52 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -9,10 +9,6 @@
- #include "mac.h"
- #include "mcu.h"
- 
--#define HE_BITS(f)		cpu_to_le16(IEEE80211_RADIOTAP_HE_##f)
--#define HE_PREP(f, m, v)	le16_encode_bits(le32_get_bits(v, MT_CRXV_HE_##m),\
--						 IEEE80211_RADIOTAP_HE_##f)
--
- static struct mt76_wcid *mt7921_rx_get_wcid(struct mt7921_dev *dev,
- 					    u16 idx, bool unicast)
- {
-@@ -168,182 +164,6 @@ void mt7921_mac_sta_poll(struct mt7921_dev *dev)
+ 	if (ab->hw_params.wakeup_mhi &&
+ 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
+-	    offset >= ACCESS_ALWAYS_OFF)
++	    offset >= ATH11K_PCI_ACCESS_ALWAYS_OFF)
+ 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
  }
- EXPORT_SYMBOL_GPL(mt7921_mac_sta_poll);
  
--static void
--mt7921_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
--				 struct ieee80211_radiotap_he *he,
--				 __le32 *rxv)
--{
--	u32 ru_h, ru_l;
--	u8 ru, offs = 0;
--
--	ru_l = FIELD_GET(MT_PRXV_HE_RU_ALLOC_L, le32_to_cpu(rxv[0]));
--	ru_h = FIELD_GET(MT_PRXV_HE_RU_ALLOC_H, le32_to_cpu(rxv[1]));
--	ru = (u8)(ru_l | ru_h << 4);
--
--	status->bw = RATE_INFO_BW_HE_RU;
--
--	switch (ru) {
--	case 0 ... 36:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_26;
--		offs = ru;
--		break;
--	case 37 ... 52:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_52;
--		offs = ru - 37;
--		break;
--	case 53 ... 60:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
--		offs = ru - 53;
--		break;
--	case 61 ... 64:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_242;
--		offs = ru - 61;
--		break;
--	case 65 ... 66:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_484;
--		offs = ru - 65;
--		break;
--	case 67:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_996;
--		break;
--	case 68:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
--		break;
--	}
--
--	he->data1 |= HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
--	he->data2 |= HE_BITS(DATA2_RU_OFFSET_KNOWN) |
--		     le16_encode_bits(offs,
--				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
--}
--
--static void
--mt7921_mac_decode_he_mu_radiotap(struct sk_buff *skb, __le32 *rxv)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he_mu mu_known = {
--		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
--			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_COMP_KNOWN),
--		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN) |
--			  HE_BITS(MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN),
--	};
--	struct ieee80211_radiotap_he_mu *he_mu;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE_MU;
--
--	he_mu = skb_push(skb, sizeof(mu_known));
--	memcpy(he_mu, &mu_known, sizeof(mu_known));
--
--#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
--
--	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
--	if (status->he_dcm)
--		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
--
--	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
--			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
--				 le32_get_bits(rxv[2], MT_CRXV_HE_NUM_USER));
--
--	he_mu->ru_ch1[0] = FIELD_GET(MT_CRXV_HE_RU0, le32_to_cpu(rxv[3]));
--
--	if (status->bw >= RATE_INFO_BW_40) {
--		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
--		he_mu->ru_ch2[0] =
--			FIELD_GET(MT_CRXV_HE_RU1, le32_to_cpu(rxv[3]));
--	}
--
--	if (status->bw >= RATE_INFO_BW_80) {
--		he_mu->ru_ch1[1] =
--			FIELD_GET(MT_CRXV_HE_RU2, le32_to_cpu(rxv[3]));
--		he_mu->ru_ch2[1] =
--			FIELD_GET(MT_CRXV_HE_RU3, le32_to_cpu(rxv[3]));
--	}
--}
--
--static void
--mt7921_mac_decode_he_radiotap(struct sk_buff *skb, __le32 *rxv, u32 mode)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he known = {
--		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
--			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
--			 HE_BITS(DATA1_STBC_KNOWN) |
--			 HE_BITS(DATA1_CODING_KNOWN) |
--			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
--			 HE_BITS(DATA1_DOPPLER_KNOWN) |
--			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
--			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
--		.data2 = HE_BITS(DATA2_GI_KNOWN) |
--			 HE_BITS(DATA2_TXBF_KNOWN) |
--			 HE_BITS(DATA2_PE_DISAMBIG_KNOWN) |
--			 HE_BITS(DATA2_TXOP_KNOWN),
--	};
--	struct ieee80211_radiotap_he *he = NULL;
--	u32 ltf_size = le32_get_bits(rxv[2], MT_CRXV_HE_LTF_SIZE) + 1;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE;
--
--	he = skb_push(skb, sizeof(known));
--	memcpy(he, &known, sizeof(known));
--
--	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[14]) |
--		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[2]);
--	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
--	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[2]) |
--		    le16_encode_bits(ltf_size,
--				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
--	if (le32_to_cpu(rxv[0]) & MT_PRXV_TXBF)
--		he->data5 |= HE_BITS(DATA5_TXBF);
--	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[14]) |
--		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[14]);
--
--	switch (mode) {
--	case MT_PHY_TYPE_HE_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[14]) |
--			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		he->data4 |= HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[11]);
--		break;
--	case MT_PHY_TYPE_HE_EXT_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_EXT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		break;
--	case MT_PHY_TYPE_HE_MU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[2]);
--		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[7]);
--
--		mt7921_mac_decode_he_radiotap_ru(status, he, rxv);
--		mt7921_mac_decode_he_mu_radiotap(skb, rxv);
--		break;
--	case MT_PHY_TYPE_HE_TB:
--		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
--			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
--
--		he->data4 |= HE_PREP(DATA4_TB_SPTL_REUSE1, SR_MASK, rxv[11]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE2, SR1_MASK, rxv[11]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE3, SR2_MASK, rxv[11]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE4, SR3_MASK, rxv[11]);
--
--		mt7921_mac_decode_he_radiotap_ru(status, he, rxv);
--		break;
--	default:
--		break;
--	}
--}
--
- static void
- mt7921_get_status_freq_info(struct mt7921_dev *dev, struct mt76_phy *mphy,
- 			    struct mt76_rx_status *status, u8 chfreq)
-@@ -730,7 +550,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 	mt7921_mac_assoc_rssi(dev, skb);
+@@ -236,32 +227,32 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
+ 	 */
+ 	if (ab->hw_params.wakeup_mhi &&
+ 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
+-	    offset >= ACCESS_ALWAYS_OFF)
++	    offset >= ATH11K_PCI_ACCESS_ALWAYS_OFF)
+ 		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
  
- 	if (rxv && mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
--		mt7921_mac_decode_he_radiotap(skb, rxv, mode);
-+		mt76_connac_mac_decode_he_radiotap(skb, rxv, mode);
+-	if (offset < WINDOW_START) {
++	if (offset < ATH11K_PCI_WINDOW_START) {
+ 		val = ioread32(ab->mem + offset);
+ 	} else {
+ 		if (ab->bus_params.static_window_map)
+ 			window_start = ath11k_pci_get_window_start(ab, offset);
+ 		else
+-			window_start = WINDOW_START;
++			window_start = ATH11K_PCI_WINDOW_START;
  
- 	if (!status->wcid || !ieee80211_is_data_qos(fc))
+-		if (window_start == WINDOW_START) {
++		if (window_start == ATH11K_PCI_WINDOW_START) {
+ 			spin_lock_bh(&ab_pci->window_lock);
+ 			ath11k_pci_select_window(ab_pci, offset);
+ 			val = ioread32(ab->mem + window_start +
+-				       (offset & WINDOW_RANGE_MASK));
++				       (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
+ 			spin_unlock_bh(&ab_pci->window_lock);
+ 		} else {
+ 			val = ioread32(ab->mem + window_start +
+-				       (offset & WINDOW_RANGE_MASK));
++				       (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
+ 		}
+ 	}
+ 
+ 	if (ab->hw_params.wakeup_mhi &&
+ 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
+-	    offset >= ACCESS_ALWAYS_OFF)
++	    offset >= ATH11K_PCI_ACCESS_ALWAYS_OFF)
+ 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
+ 
+ 	return val;
+@@ -470,8 +461,8 @@ int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector)
+ 	return pci_irq_vector(pci_dev, vector);
+ }
+ 
+-static void ath11k_pci_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
+-				       u32 *msi_addr_hi)
++void ath11k_pci_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
++				u32 *msi_addr_hi)
+ {
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 	struct pci_dev *pci_dev = to_pci_dev(ab->dev);
+@@ -515,8 +506,7 @@ int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_nam
+ 	return -EINVAL;
+ }
+ 
+-static void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id,
+-				      u32 *msi_idx)
++void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx)
+ {
+ 	u32 i, msi_data_idx;
+ 
+@@ -532,9 +522,9 @@ static void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id,
+ 	*msi_idx = msi_data_idx;
+ }
+ 
+-static int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
+-					  int *num_vectors, u32 *user_base_data,
+-					  u32 *base_vector)
++int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
++				   int *num_vectors, u32 *user_base_data,
++				   u32 *base_vector)
+ {
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 
+@@ -557,7 +547,7 @@ static void ath11k_pci_free_ext_irq(struct ath11k_base *ab)
+ 	}
+ }
+ 
+-static void ath11k_pci_free_irq(struct ath11k_base *ab)
++void ath11k_pci_free_irq(struct ath11k_base *ab)
+ {
+ 	int i, irq_idx;
+ 
+@@ -706,7 +696,7 @@ static void ath11k_pci_ext_grp_enable(struct ath11k_ext_irq_grp *irq_grp)
+ 		enable_irq(irq_grp->ab->irq_num[irq_grp->irqs[i]]);
+ }
+ 
+-static void ath11k_pci_ext_irq_enable(struct ath11k_base *ab)
++void ath11k_pci_ext_irq_enable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+@@ -737,7 +727,7 @@ static void ath11k_pci_sync_ext_irqs(struct ath11k_base *ab)
+ 	}
+ }
+ 
+-static void ath11k_pci_ext_irq_disable(struct ath11k_base *ab)
++void ath11k_pci_ext_irq_disable(struct ath11k_base *ab)
+ {
+ 	__ath11k_pci_ext_irq_disable(ab);
+ 	ath11k_pci_sync_ext_irqs(ab);
+@@ -850,8 +840,8 @@ static int ath11k_pci_ext_irq_config(struct ath11k_base *ab)
+ 	return 0;
+ }
+ 
+-static int ath11k_pci_set_irq_affinity_hint(struct ath11k_pci *ab_pci,
+-					    const struct cpumask *m)
++int ath11k_pci_set_irq_affinity_hint(struct ath11k_pci *ab_pci,
++				     const struct cpumask *m)
+ {
+ 	if (test_bit(ATH11K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags))
  		return 0;
+@@ -859,7 +849,7 @@ static int ath11k_pci_set_irq_affinity_hint(struct ath11k_pci *ab_pci,
+ 	return irq_set_affinity_hint(ab_pci->pdev->irq, m);
+ }
+ 
+-static int ath11k_pci_config_irq(struct ath11k_base *ab)
++int ath11k_pci_config_irq(struct ath11k_base *ab)
+ {
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 	struct ath11k_ce_pipe *ce_pipe;
+@@ -935,7 +925,7 @@ static void ath11k_pci_init_qmi_ce_config(struct ath11k_base *ab)
+ 				    &cfg->shadow_reg_v2_len);
+ }
+ 
+-static void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
++void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab)
+ {
+ 	int i;
+ 
+@@ -1147,7 +1137,7 @@ static void ath11k_pci_aspm_disable(struct ath11k_pci *ab_pci)
+ 	set_bit(ATH11K_PCI_ASPM_RESTORE, &ab_pci->flags);
+ }
+ 
+-static void ath11k_pci_aspm_restore(struct ath11k_pci *ab_pci)
++void ath11k_pci_aspm_restore(struct ath11k_pci *ab_pci)
+ {
+ 	if (test_and_clear_bit(ATH11K_PCI_ASPM_RESTORE, &ab_pci->flags))
+ 		pcie_capability_write_word(ab_pci->pdev, PCI_EXP_LNKCTL,
+@@ -1230,20 +1220,20 @@ static void ath11k_pci_kill_tasklets(struct ath11k_base *ab)
+ 	}
+ }
+ 
+-static void ath11k_pci_ce_irq_disable_sync(struct ath11k_base *ab)
++void ath11k_pci_ce_irq_disable_sync(struct ath11k_base *ab)
+ {
+ 	ath11k_pci_ce_irqs_disable(ab);
+ 	ath11k_pci_sync_ce_irqs(ab);
+ 	ath11k_pci_kill_tasklets(ab);
+ }
+ 
+-static void ath11k_pci_stop(struct ath11k_base *ab)
++void ath11k_pci_stop(struct ath11k_base *ab)
+ {
+ 	ath11k_pci_ce_irq_disable_sync(ab);
+ 	ath11k_ce_cleanup_pipes(ab);
+ }
+ 
+-static int ath11k_pci_start(struct ath11k_base *ab)
++int ath11k_pci_start(struct ath11k_base *ab)
+ {
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
+ 
+@@ -1273,8 +1263,8 @@ static void ath11k_pci_hif_ce_irq_disable(struct ath11k_base *ab)
+ 	ath11k_pci_ce_irq_disable_sync(ab);
+ }
+ 
+-static int ath11k_pci_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
+-					  u8 *ul_pipe, u8 *dl_pipe)
++int ath11k_pci_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
++				   u8 *ul_pipe, u8 *dl_pipe)
+ {
+ 	const struct service_to_pipe *entry;
+ 	bool ul_set = false, dl_set = false;
+diff --git a/drivers/net/wireless/ath/ath11k/pci.h b/drivers/net/wireless/ath/ath11k/pci.h
+index 61d67b2..4869384 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.h
++++ b/drivers/net/wireless/ath/ath11k/pci.h
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ #ifndef _ATH11K_PCI_H
+ #define _ATH11K_PCI_H
+@@ -52,6 +53,21 @@
+ #define WLAON_QFPROM_PWR_CTRL_REG		0x01f8031c
+ #define QFPROM_PWR_CTRL_VDD4BLOW_MASK		0x4
+ 
++#define ATH11K_PCI_IRQ_CE0_OFFSET	3
++#define ATH11K_PCI_IRQ_DP_OFFSET	14
++
++#define ATH11K_PCI_WINDOW_ENABLE_BIT		0x40000000
++#define ATH11K_PCI_WINDOW_REG_ADDRESS		0x310c
++#define ATH11K_PCI_WINDOW_VALUE_MASK		GENMASK(24, 19)
++#define ATH11K_PCI_WINDOW_START			0x80000
++#define ATH11K_PCI_WINDOW_RANGE_MASK		GENMASK(18, 0)
++
++/* BAR0 + 4k is always accessible, and no
++ * need to force wakeup.
++ * 4K - 32 = 0xFE0
++ */
++#define ATH11K_PCI_ACCESS_ALWAYS_OFF 0xFE0
++
+ struct ath11k_msi_user {
+ 	char *name;
+ 	int num_vectors;
+@@ -103,5 +119,24 @@ int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ar_pci, char *user_nam
+ int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector);
+ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value);
+ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset);
++void ath11k_pci_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
++				u32 *msi_addr_hi);
++void ath11k_pci_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
++void ath11k_pci_free_irq(struct ath11k_base *ab);
++int ath11k_pci_config_irq(struct ath11k_base *ab);
++void ath11k_pci_ext_irq_enable(struct ath11k_base *ab);
++void ath11k_pci_ext_irq_disable(struct ath11k_base *ab);
++void ath11k_pci_stop(struct ath11k_base *ab);
++int ath11k_pci_start(struct ath11k_base *ab);
++int ath11k_pci_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
++				   u8 *ul_pipe, u8 *dl_pipe);
++void ath11k_pci_ce_irqs_enable(struct ath11k_base *ab);
++void ath11k_pci_ce_irq_disable_sync(struct ath11k_base *ab);
++int ath11k_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
++				   int *num_vectors, u32 *user_base_data,
++				   u32 *base_vector);
++void ath11k_pci_aspm_restore(struct ath11k_pci *ab_pci);
++int ath11k_pci_set_irq_affinity_hint(struct ath11k_pci *ab_pci,
++				     const struct cpumask *m);
+ 
+ #endif
 -- 
-2.34.1
+2.7.4
 
