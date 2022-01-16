@@ -2,112 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2C8C433FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Jan 2022 14:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C84BC433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Jan 2022 08:47:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232925AbiAOOyF (ORCPT
+        id S234702AbiAPIrd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 15 Jan 2022 09:54:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35684 "EHLO
+        Sun, 16 Jan 2022 03:47:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231804AbiAOOyF (ORCPT
+        with ESMTP id S230421AbiAPIrd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Jan 2022 09:54:05 -0500
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321BEC061574
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2022 06:54:05 -0800 (PST)
-Received: by mail-pf1-x42d.google.com with SMTP id a5so5521961pfo.5
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2022 06:54:05 -0800 (PST)
+        Sun, 16 Jan 2022 03:47:33 -0500
+Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF520C061574
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2022 00:47:32 -0800 (PST)
+Received: by mail-io1-xd33.google.com with SMTP id k14so13732090ion.7
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2022 00:47:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UgQIufHzWPaegMvECWvqWJAVmHT2caDdTtGBI0wm+bY=;
-        b=wJotTsKisl222ZFNbwWXt89OP0zZLhuTKCI6cn8XcySMa8d2Upxzs08DVcNCuD1WBq
-         dAnI2CmtSa8guQHnAcDDOr8vmsutEXMkNw1ejSxlV1DCAseVODdEWGCd1tFkPKfyZOmz
-         +4v1zKGGQVj976yP+FGVHkBQM9dpJAdXVVtpcfhb3SVM5Cy5XxnJAB0IZRhCYCopLomW
-         BPkFyrbs69/TTU+l9KSyx/PsBbl/cUN3olmqBWONvLu5T97LPBIKsEfbh3kYAg2spCg8
-         d+alnQWzY08Vkm54baM4ECIexGywBE0/qL85aWOfEdxxhTQ/ocSrsQCP+guYtSYDKTLn
-         n+hA==
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=oTGeSoes78zP7shp6LveGwbQrpDtC4g9grgpUeJMQFA=;
+        b=LFCTxHHLWu8HbX1chrUiiGs1YwwsQndp8B4L8FUo390NXB1tp3YjiQtxOsjXD9TpzH
+         CGBAra+D4UL7bildOWQi57/g05Tp3nMaJ9KGzD8QRecIqBhZK3C3HWHkWO854TcqmKU9
+         CNgiTmDxJ0l/IElLPOQl+rWqnrG74D8IoaKF/acx/umZCEHJp7i7/9+zN3Ljf/9Pv7wC
+         zeKi0F+a/Wsb+JRwqC5V8fl9x9DS+qWDdcRquAyE+W2dL6EdMueDIuJ8k2/eI9IBao2i
+         RlxWZhL3Q/KrI/CAaDyHM6WPsoLUSS4xzGJz8sbZcP6IYA+WbXVevxTGAkB5a2h7Ks0a
+         MHpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UgQIufHzWPaegMvECWvqWJAVmHT2caDdTtGBI0wm+bY=;
-        b=NtcHvwh1y9Z/llcaaiYFqMJ0r0l5m2aLRVF0pOuMdgUC2Jga1D/akCOKP9MCCxbIxb
-         14+G6sF3y63onKNf0XLcP1NmvF7XbMgX46FlmSUabLzvzBOX8whMl0BYMXpVUsboEPym
-         6RpKC0vHKF/hUwpr/bNsD93nsqbuDopcbkho86YmH3OGIM5xk/0zEnnhVGNBhOli30sU
-         6Ax7HaxyxHZMx9vI7PRNVnV/3DIWc3zhORAqYhkJX1hyv2/YGC1Vn8A8qQO6z/VLHZQQ
-         KSwhClcU9dd+XyODTe5JA8Mkf3iBMZJVPVXyl9hOgJkt/3gNEGGlC6WW2wfoz1Mz4y+i
-         TLaw==
-X-Gm-Message-State: AOAM533/Ih8Ft+EUYUjB9Be7CJv6HZ1TQ/wF1OqOMf3MkUsOcKH6a3GQ
-        r5rl1fpRQsleEsqnhhCfNX7XLpJPkgDyhwV1za9s+wqH6vY=
-X-Google-Smtp-Source: ABdhPJyqDv9BBM7fSpdA3Ox2OtzLMzWErXZOfD2bRUH0cVRfJKQKWSIwCUbxYk03gxUoQCVArI98ojtu0OF2tDa1L5s=
-X-Received: by 2002:aa7:8612:0:b0:4c1:3613:2e4b with SMTP id
- p18-20020aa78612000000b004c136132e4bmr13725663pfn.74.1642258444531; Sat, 15
- Jan 2022 06:54:04 -0800 (PST)
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=oTGeSoes78zP7shp6LveGwbQrpDtC4g9grgpUeJMQFA=;
+        b=DeX82w3O1uXGozMgzoyug9vpkEkZnD+lNMXSdqAKc+UWP42aJkKKqCWjTy882RW509
+         iCD6QdYzmYafag4asQXq4QfM6Tu4cY3pEFaQ/3b/m1Bxn85NtZa4ckTWiw66TYL5FwLn
+         p0z+VoXkxWtN4b4OibfM/q7AB2cuadzeN8Cl6E5R07EWG4wDm251R9p6u4QvC0FuR/vT
+         +kE08XkoL+coNvo75ozI6rpCbHK77fVOnjFzJNecbgsx4La+Rx32dt7jOp6BGYBOfaag
+         NHBzZd8n5Laz6yRmXvC9zj4xt/+yhmAlbYOJY6ghWcfL7Vw9rpNLyKdICkyp0hNZ0jgl
+         /aaw==
+X-Gm-Message-State: AOAM530Px4d6GKiq77ccOG4mx7/I8koR+g/W4MaYvDv/Zg1Ks/St2S0/
+        HZ9o6VniUb2SXC1b2f6MwJF3IMdGDA8eCRCn4ydUal+EgRy4
+X-Google-Smtp-Source: ABdhPJw6dQ/U92+CUXXys2gsIpF6CGkCvvBWKIU3IZKdCTq0nmPyQume5FI+ZC3xY0lt9bG7hDbG57fuPXcCZ8zrqTY=
+X-Received: by 2002:a05:6638:72a:: with SMTP id j10mr6865209jad.187.1642322852137;
+ Sun, 16 Jan 2022 00:47:32 -0800 (PST)
 MIME-Version: 1.0
-References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com>
-In-Reply-To: <20220114010627.21104-1-ricardo.martinez@linux.intel.com>
-From:   Loic Poulain <loic.poulain@linaro.org>
-Date:   Sat, 15 Jan 2022 15:53:28 +0100
-Message-ID: <CAMZdPi-4N=cRcoie=2zHRsCJra1oi3WBPiFbcjJZ-3Qm-yCKcA@mail.gmail.com>
-Subject: Re: [PATCH net-next v4 00/13] net: wwan: t7xx: PCIe driver for
- MediaTek M.2 modem
-To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, m.chetan.kumar@intel.com,
-        chandrashekar.devegowda@intel.com, linuxwwan@intel.com,
-        chiranjeevi.rapolu@linux.intel.com, haijun.liu@mediatek.com,
-        amir.hanania@intel.com, andriy.shevchenko@linux.intel.com,
-        dinesh.sharma@intel.com, eliot.lee@intel.com,
-        ilpo.johannes.jarvinen@intel.com, moises.veleta@intel.com,
-        pierre-louis.bossart@intel.com, muralidharan.sethuraman@intel.com,
-        Soumya.Prakash.Mishra@intel.com, sreehari.kancharla@intel.com
+From:   Roman Evstifeev <someuniquename@gmail.com>
+Date:   Sun, 16 Jan 2022 11:47:21 +0300
+Message-ID: <CAMX-vmLhO950cqJ_QC2rREGbJojbFvYygrfo+8=O-2CMUuFquw@mail.gmail.com>
+Subject: [BUG] Realtek dmesg flood: rtw_8822ce firmware failed to leave lps state
+To:     linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 14 Jan 2022 at 02:06, Ricardo Martinez
-<ricardo.martinez@linux.intel.com> wrote:
->
-> t7xx is the PCIe host device driver for Intel 5G 5000 M.2 solution which
-> is based on MediaTek's T700 modem to provide WWAN connectivity.
-> The driver uses the WWAN framework infrastructure to create the following
-> control ports and network interfaces:
-> * /dev/wwan0mbim0 - Interface conforming to the MBIM protocol.
->   Applications like libmbim [1] or Modem Manager [2] from v1.16 onwards
->   with [3][4] can use it to enable data communication towards WWAN.
-> * /dev/wwan0at0 - Interface that supports AT commands.
-> * wwan0 - Primary network interface for IP traffic.
->
-> The main blocks in t7xx driver are:
-> * PCIe layer - Implements probe, removal, and power management callbacks.
-> * Port-proxy - Provides a common interface to interact with different types
->   of ports such as WWAN ports.
-> * Modem control & status monitor - Implements the entry point for modem
->   initialization, reset and exit, as well as exception handling.
-> * CLDMA (Control Layer DMA) - Manages the HW used by the port layer to send
->   control messages to the modem using MediaTek's CCCI (Cross-Core
->   Communication Interface) protocol.
-> * DPMAIF (Data Plane Modem AP Interface) - Controls the HW that provides
->   uplink and downlink queues for the data path. The data exchange takes
->   place using circular buffers to share data buffer addresses and metadata
->   to describe the packets.
-> * MHCCIF (Modem Host Cross-Core Interface) - Provides interrupt channels
->   for bidirectional event notification such as handshake, exception, PM and
->   port enumeration.
->
-> The compilation of the t7xx driver is enabled by the CONFIG_MTK_T7XX config
-> option which depends on CONFIG_WWAN.
-> This driver was originally developed by MediaTek. Intel adapted t7xx to
-> the WWAN framework, optimized and refactored the driver source in close
-> collaboration with MediaTek. This will enable getting the t7xx driver on
-> Approved Vendor List for interested OEM's and ODM's productization plans
-> with Intel 5G 5000 M.2 solution.
+Reproducible by at least 2 people, as reported here:
+https://bugzilla.kernel.org/show_bug.cgi?id=215496 and here:
+https://github.com/lwfinger/rtw88/issues/61
 
-From a WWAN framework perspective:
+When laptop charger is not connected, dmesg is flooded with errors
+from realtek driver
 
-Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
+Dmesg log init:
+[    3.516129] rtw_8822ce 0000:04:00.0: enabling device (0000 -> 0003)
+[    3.523097] rtw_8822ce 0000:04:00.0: Firmware version 9.9.4, H2C version 15
+[    3.530951] rtw_8822ce 0000:04:00.0: Firmware version 9.9.10, H2C version 15
+[    3.999011] rtw_8822ce 0000:04:00.0 wlp4s0: renamed from wlan0
+[    5.324088] rtw_8822ce 0000:04:00.0: start vif dc:e9:94:7e:5f:85 on port 0
+[    5.325431] rtw_8822ce 0000:04:00.0: stop vif dc:e9:94:7e:5f:85 on port 0
+[    5.561473] rtw_8822ce 0000:04:00.0: start vif ee:c7:7c:0e:6b:3c on port 0
+[    9.847260] rtw_8822ce 0000:04:00.0: stop vif ee:c7:7c:0e:6b:3c on port 0
+[   10.085443] rtw_8822ce 0000:04:00.0: start vif dc:e9:94:7e:5f:85 on port 0
+[   14.738024] rtw_8822ce 0000:04:00.0: sta 10:fe:ed:51:2a:94 joined
+with macid 0
+
+Repeated messages are:
+[   49.030634] rtw_8822ce 0000:04:00.0: firmware failed to leave lps state
+[   49.033828] rtw_8822ce 0000:04:00.0: failed to send h2c command
+[   49.036994] rtw_8822ce 0000:04:00.0: failed to send h2c command
+
+1) I connected the charger. The "firmware failed to leave lps state"
+message stopped to appear, but the "failed to send h2c command"
+message still continuously flooded my dmesg
+2) I put laptop to sleep, then wake up. Message flood stopped.
+3) I disconnected the charger, and after a few minutes messages
+started to come in again.
+
+
+lspci:
+04:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8822CE
+802.11ac PCIe Wireless Network Adapter
+        Subsystem: Lenovo Device c123
+        Flags: bus master, fast devsel, latency 0, IRQ 79, IOMMU group 12
+        I/O ports at 2000 [size=256]
+        Memory at c3600000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [70] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [148] Device Serial Number 00-e0-4c-ff-fe-c8-22-01
+        Capabilities: [158] Latency Tolerance Reporting
+        Capabilities: [160] L1 PM Substates
+        Kernel driver in use: rtw_8822ce
+        Kernel modules: rtw88_8822ce
