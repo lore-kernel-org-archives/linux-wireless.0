@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62005C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 14:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E471C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 14:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240241AbiAQObs (ORCPT
+        id S240272AbiAQObx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 09:31:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38570 "EHLO
+        Mon, 17 Jan 2022 09:31:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239064AbiAQObZ (ORCPT
+        with ESMTP id S239730AbiAQOb2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 09:31:25 -0500
+        Mon, 17 Jan 2022 09:31:28 -0500
 Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5BD1C061751;
-        Mon, 17 Jan 2022 06:30:55 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32421C06175B;
+        Mon, 17 Jan 2022 06:31:12 -0800 (PST)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: hector@marcansoft.com)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id DFEC0421F5;
-        Mon, 17 Jan 2022 14:30:46 +0000 (UTC)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 235D541E96;
+        Mon, 17 Jan 2022 14:31:02 +0000 (UTC)
 From:   Hector Martin <marcan@marcan.st>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -51,9 +51,9 @@ Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH v3 4/9] brcmfmac: pcie: Declare missing firmware files in pcie.c
-Date:   Mon, 17 Jan 2022 23:29:14 +0900
-Message-Id: <20220117142919.207370-5-marcan@marcan.st>
+Subject: [PATCH v3 6/9] brcmfmac: pcie: Fix crashes due to early IRQs
+Date:   Mon, 17 Jan 2022 23:29:16 +0900
+Message-Id: <20220117142919.207370-7-marcan@marcan.st>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20220117142919.207370-1-marcan@marcan.st>
 References: <20220117142919.207370-1-marcan@marcan.st>
@@ -63,48 +63,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move one of the declarations from sdio.c to pcie.c, since it makes no
-sense in the former (SDIO support is optional), and add missing ones.
+The driver was enabling IRQs before the message processing was
+initialized. This could cause IRQs to come in too early and crash the
+driver. Instead, move the IRQ enable and hostready to a bus preinit
+function, at which point everything is properly initialized.
 
-Fixes: 75729e110e68 ("brcmfmac: expose firmware config files through modinfo")
+Fixes: 9e37f045d5e7 ("brcmfmac: Adding PCIe bus layer support.")
 Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 Signed-off-by: Hector Martin <marcan@marcan.st>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 7 +++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 -
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c  | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index f876b1d8d00d..b1ae6c41013f 100644
+index c25f48db1f60..3ff4997e1c97 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -59,6 +59,13 @@ BRCMF_FW_DEF(4366B, "brcmfmac4366b-pcie");
- BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
- BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
+@@ -1315,6 +1315,18 @@ static void brcmf_pcie_down(struct device *dev)
+ {
+ }
  
-+/* firmware config files */
-+MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.txt");
-+MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txt");
++static int brcmf_pcie_preinit(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
 +
-+/* per-board firmware binaries */
-+MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.bin");
++	brcmf_dbg(PCIE, "Enter\n");
 +
- static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
- 	BRCMF_FW_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 8effeb7a7269..5d156e591b35 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -629,7 +629,6 @@ BRCMF_FW_CLM_DEF(43752, "brcmfmac43752-sdio");
++	brcmf_pcie_intr_enable(buspub->devinfo);
++	brcmf_pcie_hostready(buspub->devinfo);
++
++	return 0;
++}
  
- /* firmware config files */
- MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.txt");
--MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txt");
+ static int brcmf_pcie_tx(struct device *dev, struct sk_buff *skb)
+ {
+@@ -1423,6 +1435,7 @@ static int brcmf_pcie_reset(struct device *dev)
+ }
  
- /* per-board firmware binaries */
- MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.bin");
+ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
++	.preinit = brcmf_pcie_preinit,
+ 	.txdata = brcmf_pcie_tx,
+ 	.stop = brcmf_pcie_down,
+ 	.txctl = brcmf_pcie_tx_ctlpkt,
+@@ -1795,9 +1808,6 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 
+ 	init_waitqueue_head(&devinfo->mbdata_resp_wait);
+ 
+-	brcmf_pcie_intr_enable(devinfo);
+-	brcmf_pcie_hostready(devinfo);
+-
+ 	ret = brcmf_attach(&devinfo->pdev->dev);
+ 	if (ret)
+ 		goto fail;
 -- 
 2.33.0
 
