@@ -2,92 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE43C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 11:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88EBDC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 12:12:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239587AbiAQL43 (ORCPT
+        id S236953AbiAQML7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 06:56:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59498 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239457AbiAQLzp (ORCPT
+        Mon, 17 Jan 2022 07:11:59 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:38528 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236825AbiAQML6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 06:55:45 -0500
-Received: from relay12.mail.gandi.net (relay12.mail.gandi.net [IPv6:2001:4b98:dc4:8::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59C37C061749;
-        Mon, 17 Jan 2022 03:55:37 -0800 (PST)
-Received: (Authenticated sender: miquel.raynal@bootlin.com)
-        by relay12.mail.gandi.net (Postfix) with ESMTPSA id 7C79F200013;
-        Mon, 17 Jan 2022 11:55:34 +0000 (UTC)
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@datenfreihafen.org>,
-        linux-wpan@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        David Girault <david.girault@qorvo.com>,
-        Romuald Despres <romuald.despres@qorvo.com>,
-        Frederic Blain <frederic.blain@qorvo.com>,
-        Nicolas Schodet <nico@ni.fr.eu.org>,
-        Michael Hennerich <michael.hennerich@analog.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Varka Bhadram <varkabhadram@gmail.com>,
-        Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 28/41] net: mac802154: Introduce a synchronous API for MLME commands
-Date:   Mon, 17 Jan 2022 12:54:27 +0100
-Message-Id: <20220117115440.60296-29-miquel.raynal@bootlin.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220117115440.60296-1-miquel.raynal@bootlin.com>
-References: <20220117115440.60296-1-miquel.raynal@bootlin.com>
+        Mon, 17 Jan 2022 07:11:58 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C8AE61171;
+        Mon, 17 Jan 2022 12:11:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDB9CC36AE3;
+        Mon, 17 Jan 2022 12:11:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1642421517;
+        bh=6OapI7HG5+JvXcjhQ4RNwOTwEz8NgDsoFy++fuoJeZM=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EF8ZbFnuYHoObTvwKrVGQ0PXhzn1zC43qh+q6J2ApP295CNJngmV6bDfdWsZ64CFG
+         YUaqIj4UYEEWtmIrGgE251aqAV6nnu4Y4uDnFAUhr12c+jvivCWyl4QgEf5GpqG//a
+         mlK1QEwQqVlWgu2xDeQLMfh5xZVng+1Fh+giyGkFZhGgnorBP1MLMQxnF/ifKrsRg6
+         NcpYtqk7dl8hG/h2NOmZCZ6OiZJPAizsXGEVUNxyhDYTEvX68wgz6eBdUeIfYfyiTN
+         R5NrComeByw1fw9+dgEHq0twqI+nOISHhDpnTnbLTMGg2ZIOoPV2dFEw8BzuVzZdOK
+         E5VHEbGqyhHLA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc:     linux-wireless@vger.kernel.org, tony0620emma@gmail.com,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Neo Jou <neojou@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Pkshih <pkshih@realtek.com>
+Subject: Re: [PATCH 1/4] rtw88: pci: Change type of rtw_hw_queue_mapping() and ac_to_hwq to enum
+References: <20220114234825.110502-1-martin.blumenstingl@googlemail.com>
+        <20220114234825.110502-2-martin.blumenstingl@googlemail.com>
+Date:   Mon, 17 Jan 2022 14:11:50 +0200
+In-Reply-To: <20220114234825.110502-2-martin.blumenstingl@googlemail.com>
+        (Martin Blumenstingl's message of "Sat, 15 Jan 2022 00:48:22 +0100")
+Message-ID: <87k0eysgs9.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is the slow path, we need to wait for each command to be processed
-before continuing so let's introduce an helper which does the
-transmission and blocks until it gets notified of its asynchronous
-completion. This helper is going to be used when introducing scan
-support.
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- net/mac802154/ieee802154_i.h | 1 +
- net/mac802154/tx.c           | 6 ++++++
- 2 files changed, 7 insertions(+)
+> rtw_hw_queue_mapping() and ac_to_hwq[] hold values of type enum
+> rtw_tx_queue_type. Change their types to reflect this to make it easier
+> to understand this part of the code.
+>
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/pci.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+> index a0991d3f15c0..13f1f50b2867 100644
+> --- a/drivers/net/wireless/realtek/rtw88/pci.c
+> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
+> @@ -669,7 +669,7 @@ static void rtw_pci_deep_ps(struct rtw_dev *rtwdev, bool enter)
+>  	spin_unlock_bh(&rtwpci->irq_lock);
+>  }
+>  
+> -static u8 ac_to_hwq[] = {
+> +static enum rtw_tx_queue_type ac_to_hwq[] = {
+>  	[IEEE80211_AC_VO] = RTW_TX_QUEUE_VO,
+>  	[IEEE80211_AC_VI] = RTW_TX_QUEUE_VI,
+>  	[IEEE80211_AC_BE] = RTW_TX_QUEUE_BE,
 
-diff --git a/net/mac802154/ieee802154_i.h b/net/mac802154/ieee802154_i.h
-index 37d5438fdb3f..40195e2a6f1e 100644
---- a/net/mac802154/ieee802154_i.h
-+++ b/net/mac802154/ieee802154_i.h
-@@ -123,6 +123,7 @@ extern struct ieee802154_mlme_ops mac802154_mlme_wpan;
- void ieee802154_rx(struct ieee802154_local *local, struct sk_buff *skb);
- void ieee802154_xmit_sync_worker(struct work_struct *work);
- void ieee802154_sync_tx(struct ieee802154_local *local);
-+void ieee802154_mlme_tx(struct ieee802154_local *local, struct sk_buff *skb);
- netdev_tx_t
- ieee802154_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev);
- netdev_tx_t
-diff --git a/net/mac802154/tx.c b/net/mac802154/tx.c
-index d1fd2cc67cbe..334843f66ec4 100644
---- a/net/mac802154/tx.c
-+++ b/net/mac802154/tx.c
-@@ -123,6 +123,12 @@ void ieee802154_sync_tx(struct ieee802154_local *local)
- 	wait_event(local->phy->sync_txq, !atomic_read(&local->phy->ongoing_txs));
- }
- 
-+void ieee802154_mlme_tx(struct ieee802154_local *local, struct sk_buff *skb)
-+{
-+	ieee802154_tx(local, skb);
-+	ieee802154_sync_tx(local);
-+}
-+
- netdev_tx_t
- ieee802154_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
+Shouldn't ac_to_hwq be static const?
+
 -- 
-2.27.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
