@@ -2,83 +2,133 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3109AC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 19:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCCF3C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 22:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235621AbiAQTqq (ORCPT
+        id S243659AbiAQWoD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 14:46:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55118 "EHLO
+        Mon, 17 Jan 2022 17:44:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231558AbiAQTqq (ORCPT
+        with ESMTP id S237619AbiAQWoC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 14:46:46 -0500
-Received: from mail-il1-x130.google.com (mail-il1-x130.google.com [IPv6:2607:f8b0:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06672C061574
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2022 11:46:45 -0800 (PST)
-Received: by mail-il1-x130.google.com with SMTP id d3so15669827ilr.10
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2022 11:46:45 -0800 (PST)
+        Mon, 17 Jan 2022 17:44:02 -0500
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5994FC061574;
+        Mon, 17 Jan 2022 14:44:02 -0800 (PST)
+Received: by mail-wm1-x32c.google.com with SMTP id g81-20020a1c9d54000000b0034cd1acd9b5so1376696wme.1;
+        Mon, 17 Jan 2022 14:44:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jetfuse-net.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:references:cc:in-reply-to:content-transfer-encoding;
-        bh=TTgtXa8BE3vBSJ96tKvjsIjnQVKBRj53pGH768bAQyg=;
-        b=NKFY8tj9GONWv7bpUFRI1ttkailW1s4FwHEeTrktgHQbpN4fV40QhVPE3uYZwPMiZp
-         LC2j7u7la40xotkYtIaobUJjKUvRTnc5Fp5UrX6MhvU21Q8Tv8EbcxxHDnAww/qC8LqP
-         /g0r0DcTL83QPvGOgwbtB1aw2QofK4ntl79E/DvHtj3Ayn2kEFQvoYMefZ3Mu3j70AS4
-         CioYESQAJH4/jHHVPwgz//G4UO0IISPVRJy+itAcW58zCHy/5MhdaBbcGzt6L9OOqtoI
-         6rH/av4KEhdjSoozClt1D2CbhGYDKENHpOe7jTclUzOtA2KS24nNWTP2ciumvV3ts7gY
-         0aKw==
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Wao4zNgGs9ZKNZbt2qayI01/XFGowYUKQrNSetaj2LY=;
+        b=A/aSkySXAtUPt4vln9q5nyQym03kwx5QcKNTPHqtQOHVJN7raMjYotqF2qbi4m/OwT
+         1L6PkFG6xqWGPrXGYBL1upiG2I6hY1sL4NJrQOuyrhBrHaW2UJ8+2Y5i9DW3y/nL/oWe
+         ukWqlshoX1xETKh7m+dEFZrYLjqBoBxjvvfvQoNqsJIV1Q6YcyAs0EoDDXaLrJiKgIWM
+         1U2da+2M+aud/sCSJ3uAvl1JlcbryUZBkw/bvevD1V8K3fRBCD9yzybF+nCyMV3PalyV
+         6eYz6/2lhAlZfFk1N2kvZ4//i3QmcfuH82U3+nDvrtOT3ZVFyuis/dML8e8ALejhBa48
+         I02Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:references:cc:in-reply-to
-         :content-transfer-encoding;
-        bh=TTgtXa8BE3vBSJ96tKvjsIjnQVKBRj53pGH768bAQyg=;
-        b=XeoCxiQULa2KGJrKGS5LzILslZqDODquSj2riIpSw995EABwVjaKoRNc9euwmy05/V
-         JwChR94miFSW6KMU4kLT8AjotJdjHS0xAZhVOYFYcoFOi2SwGlKuuZPjY1wy9GuZKvtI
-         Wo7GQBpSkx+pXfERUraNodX0KcFH0nbVkZHobPCYmRAHOMJF0gksOFJneUEdm+lxlE95
-         0Bs140YyWpDp21ZztK8yXLnqbFicQ7rsAOc7/f1TXtkf+o6JDJSEHdb1jFOwM/Biop3/
-         S66zdBmv7GuBmtVbRO6W0gm4By9PUs2BrOqA+U9WhqXkz+ZC/75RlVierF2P7xshhDnf
-         bRmg==
-X-Gm-Message-State: AOAM5310IrbjcRSqLYs+fLnodjvWV0GMLsouxPqz+20twT7fkPt0vU0F
-        ByqQE22akelIJCnLHaxKRsMdddyYhVzOuw==
-X-Google-Smtp-Source: ABdhPJweLovUhpmzmi6A6gE49bzOtbVZoqyqvoY1POnq4Jw4y1zcwvjePFNUckijX5XtjPDRqWjsOQ==
-X-Received: by 2002:a05:6e02:180e:: with SMTP id a14mr11492150ilv.300.1642448804526;
-        Mon, 17 Jan 2022 11:46:44 -0800 (PST)
-Received: from [192.168.1.12] (174-082-179-210.res.spectrum.com. [174.82.179.210])
-        by smtp.gmail.com with ESMTPSA id q62sm4274155iod.8.2022.01.17.11.46.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 Jan 2022 11:46:44 -0800 (PST)
-Message-ID: <39b8dddb-66cd-7e8f-c5f3-c8ffea39b00e@jetfuse.net>
-Date:   Mon, 17 Jan 2022 13:46:42 -0600
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Wao4zNgGs9ZKNZbt2qayI01/XFGowYUKQrNSetaj2LY=;
+        b=CzPbnvsyI8/xrLhHlHJWFbBv176JDzdOx+aQwY7/6ZU1RteOq9KWiCysNE7v+SU3BZ
+         JBNfpoEnaj144EsKkuL5UfN+0p0oEwPhQ7QPIYKOBcp6tDyqM2QftkCJxS9FGunqLTov
+         hMtVqc66cwcxinH6eW3cOjW1JvY4g0rxpO4qHkkGn0AFDuU8JSXBAcoj16Rm78bZaVHG
+         VAzKqXmsliELE8bLrvR4K4LjjVbLSuqv4Moqu1ITVWbn+KmSu0gWCMkT1N9c2yRnIva9
+         3WprJk0RgOR2KDCKVXI3J19k0CTjvtlAH6b87GXM3aKO/oI342WmoWn6AAefBe/bRRu5
+         MbXg==
+X-Gm-Message-State: AOAM533Zd87IrXT99C1KA4/z0AHUZSBN8mrqsqU3ymJ+ZVFbpjS52aHO
+        +FqEobSRrR2QY/mTy9Wh12h0hTyv8IX37rfqY5k=
+X-Google-Smtp-Source: ABdhPJyL58sAM8T6BbJ0TLFb0ZO9PYpAbLLBdRpgLkUDdtCXsSmV+4YUzHFTzOjz55/alteSgytrzoytPY/YNqLRCwU=
+X-Received: by 2002:a1c:ed01:: with SMTP id l1mr29835529wmh.185.1642459441022;
+ Mon, 17 Jan 2022 14:44:01 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: iwlwifi: AX201 not using 2 receive streams
-Content-Language: en-US
-From:   Brandon Nielsen <nielsenb@jetfuse.net>
-To:     linux-wireless@vger.kernel.org
-References: <3cb11500-6828-6ded-bebc-cdb6e1f97bc0@jetfuse.net>
-Cc:     luciano.coelho@intel.com
-In-Reply-To: <3cb11500-6828-6ded-bebc-cdb6e1f97bc0@jetfuse.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20220117115440.60296-1-miquel.raynal@bootlin.com> <20220117115440.60296-28-miquel.raynal@bootlin.com>
+In-Reply-To: <20220117115440.60296-28-miquel.raynal@bootlin.com>
+From:   Alexander Aring <alex.aring@gmail.com>
+Date:   Mon, 17 Jan 2022 17:43:49 -0500
+Message-ID: <CAB_54W562uzk3NzXDTgRLbQzi=hgQDntJOqmMDVZwaJ_eDZZMQ@mail.gmail.com>
+Subject: Re: [PATCH v3 27/41] net: mac802154: Introduce a tx queue flushing mechanism
+To:     Miquel Raynal <miquel.raynal@bootlin.com>
+Cc:     Stefan Schmidt <stefan@datenfreihafen.org>,
+        linux-wpan - ML <linux-wpan@vger.kernel.org>,
+        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org Wireless" 
+        <linux-wireless@vger.kernel.org>,
+        David Girault <david.girault@qorvo.com>,
+        Romuald Despres <romuald.despres@qorvo.com>,
+        Frederic Blain <frederic.blain@qorvo.com>,
+        Nicolas Schodet <nico@ni.fr.eu.org>,
+        Michael Hennerich <michael.hennerich@analog.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Varka Bhadram <varkabhadram@gmail.com>,
+        Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/8/22 2:50 PM, Brandon Nielsen wrote:
-> I have a system with Intel AX201 not using 2 spatial streams in the RX 
-> (download) direction. TX (upload) functions as expected. I'm seeing 
-> similar behavior with an AX200 system. I'm seeing the same behavior on 
-> 5.15.12 as I am with 5.16.0-rc8 so I didn't mark it as a regression. 
-> Windows works as expected.
-> 
-> I have opened bug 215465[0] with some more detail.
-> 
-> [0] - https://bugzilla.kernel.org/show_bug.cgi?id=215465
+Hi,
 
-Adding luciano.coelho@intel.com to CC.
+On Mon, 17 Jan 2022 at 06:55, Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+...
+>
+>         /* stop hardware - this must stop RX */
+> diff --git a/net/mac802154/ieee802154_i.h b/net/mac802154/ieee802154_i.h
+> index 0291e49058f2..37d5438fdb3f 100644
+> --- a/net/mac802154/ieee802154_i.h
+> +++ b/net/mac802154/ieee802154_i.h
+> @@ -122,6 +122,7 @@ extern struct ieee802154_mlme_ops mac802154_mlme_wpan;
+>
+>  void ieee802154_rx(struct ieee802154_local *local, struct sk_buff *skb);
+>  void ieee802154_xmit_sync_worker(struct work_struct *work);
+> +void ieee802154_sync_tx(struct ieee802154_local *local);
+>  netdev_tx_t
+>  ieee802154_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev);
+>  netdev_tx_t
+> diff --git a/net/mac802154/tx.c b/net/mac802154/tx.c
+> index de5ecda80472..d1fd2cc67cbe 100644
+> --- a/net/mac802154/tx.c
+> +++ b/net/mac802154/tx.c
+> @@ -48,6 +48,7 @@ void ieee802154_xmit_sync_worker(struct work_struct *work)
+>
+>         kfree_skb(skb);
+>         atomic_dec(&local->phy->ongoing_txs);
+> +       wake_up(&local->phy->sync_txq);
 
-Let me know if there is more helpful diagnostic information I can provide.
+if (atomic_dec_and_test(&hw->phy->ongoing_txs))
+      wake_up(&hw->phy->sync_txq);
+
+>         netdev_dbg(dev, "transmission failed\n");
+>  }
+>
+> @@ -117,6 +118,11 @@ ieee802154_hot_tx(struct ieee802154_local *local, struct sk_buff *skb)
+>         return ieee802154_tx(local, skb);
+>  }
+>
+> +void ieee802154_sync_tx(struct ieee802154_local *local)
+> +{
+> +       wait_event(local->phy->sync_txq, !atomic_read(&local->phy->ongoing_txs));
+> +}
+> +
+>  netdev_tx_t
+>  ieee802154_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  {
+> diff --git a/net/mac802154/util.c b/net/mac802154/util.c
+> index db2ac53b937e..230fe3390df7 100644
+> --- a/net/mac802154/util.c
+> +++ b/net/mac802154/util.c
+> @@ -90,6 +90,7 @@ void ieee802154_xmit_complete(struct ieee802154_hw *hw, struct sk_buff *skb,
+>  after_wakeup:
+>         dev_consume_skb_any(skb);
+>         atomic_dec(&hw->phy->ongoing_txs);
+> +       wake_up(&hw->phy->sync_txq);
+
+if (atomic_dec_and_test(&hw->phy->ongoing_txs))
+      wake_up(&hw->phy->sync_txq);
+
+- Alex
