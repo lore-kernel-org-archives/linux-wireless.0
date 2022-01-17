@@ -2,20 +2,20 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 067B3C4321E
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 11:55:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D592C43217
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 11:55:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239392AbiAQLzr (ORCPT
+        id S239478AbiAQLzx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 06:55:47 -0500
-Received: from relay12.mail.gandi.net ([217.70.178.232]:39685 "EHLO
+        Mon, 17 Jan 2022 06:55:53 -0500
+Received: from relay12.mail.gandi.net ([217.70.178.232]:36145 "EHLO
         relay12.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236788AbiAQLzZ (ORCPT
+        with ESMTP id S239411AbiAQLz2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 06:55:25 -0500
+        Mon, 17 Jan 2022 06:55:28 -0500
 Received: (Authenticated sender: miquel.raynal@bootlin.com)
-        by relay12.mail.gandi.net (Postfix) with ESMTPSA id A8A5B20000F;
-        Mon, 17 Jan 2022 11:55:22 +0000 (UTC)
+        by relay12.mail.gandi.net (Postfix) with ESMTPSA id 452C0200009;
+        Mon, 17 Jan 2022 11:55:26 +0000 (UTC)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Alexander Aring <alex.aring@gmail.com>,
         Stefan Schmidt <stefan@datenfreihafen.org>,
@@ -31,9 +31,9 @@ Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 21/41] net: mac802154: Rename the synchronous xmit worker
-Date:   Mon, 17 Jan 2022 12:54:20 +0100
-Message-Id: <20220117115440.60296-22-miquel.raynal@bootlin.com>
+Subject: [PATCH v3 23/41] net: mac802154: Follow the count of ongoing transmissions
+Date:   Mon, 17 Jan 2022 12:54:22 +0100
+Message-Id: <20220117115440.60296-24-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220117115440.60296-1-miquel.raynal@bootlin.com>
 References: <20220117115440.60296-1-miquel.raynal@bootlin.com>
@@ -44,63 +44,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are currently two driver hooks: one is synchronous, the other is
-not. We cannot rely on driver implementations to provide a synchronous
-API (which is related to the bus medium more than a wish to have a
-synchronized implementation) so we are going to introduce a sync API
-above any kind of driver transmit function. In order to clarify what
-this worker is for (synchronous driver implementation), let's rename it
-so that people don't get bothered by the fact that their driver does not
-make use of the "xmit worker" which is a too generic name.
+In order to create a synchronous API for MLME command purposes, we need
+to be able to track the end of the ongoing transmissions. Let's
+introduce an atomic variable which is incremented and decremented when
+relevant and now at any moment if a there is an ongoing transmission.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- net/mac802154/ieee802154_i.h | 2 +-
- net/mac802154/main.c         | 4 +++-
- net/mac802154/tx.c           | 2 +-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ include/net/cfg802154.h | 3 +++
+ net/mac802154/tx.c      | 3 +++
+ net/mac802154/util.c    | 1 +
+ 3 files changed, 7 insertions(+)
 
-diff --git a/net/mac802154/ieee802154_i.h b/net/mac802154/ieee802154_i.h
-index 97b66088532b..b4882b2d7688 100644
---- a/net/mac802154/ieee802154_i.h
-+++ b/net/mac802154/ieee802154_i.h
-@@ -121,7 +121,7 @@ ieee802154_sdata_running(struct ieee802154_sub_if_data *sdata)
- extern struct ieee802154_mlme_ops mac802154_mlme_wpan;
+diff --git a/include/net/cfg802154.h b/include/net/cfg802154.h
+index 0b8b1812cea1..969cae56b000 100644
+--- a/include/net/cfg802154.h
++++ b/include/net/cfg802154.h
+@@ -283,6 +283,9 @@ struct wpan_phy {
+ 	/* the network namespace this phy lives in currently */
+ 	possible_net_t _net;
  
- void ieee802154_rx(struct ieee802154_local *local, struct sk_buff *skb);
--void ieee802154_xmit_worker(struct work_struct *work);
-+void ieee802154_xmit_sync_worker(struct work_struct *work);
- netdev_tx_t
- ieee802154_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev);
- netdev_tx_t
-diff --git a/net/mac802154/main.c b/net/mac802154/main.c
-index f08c34c27ea9..a938e49bf5dc 100644
---- a/net/mac802154/main.c
-+++ b/net/mac802154/main.c
-@@ -95,7 +95,9 @@ ieee802154_alloc_hw(size_t priv_data_len, const struct ieee802154_ops *ops)
++	/* Transmission monitoring */
++	atomic_t ongoing_txs;
++
+ 	char priv[] __aligned(NETDEV_ALIGN);
+ };
  
- 	skb_queue_head_init(&local->skb_queue);
- 
--	INIT_WORK(&local->tx_work, ieee802154_xmit_worker);
-+	INIT_WORK(&local->tx_work, ieee802154_xmit_sync_worker);
-+	INIT_DELAYED_WORK(&local->scan_work, mac802154_scan_work);
-+	INIT_DELAYED_WORK(&local->beacons_work, mac802154_beacons_work);
- 
- 	/* init supported flags with 802.15.4 default ranges */
- 	phy->supported.max_minbe = 8;
 diff --git a/net/mac802154/tx.c b/net/mac802154/tx.c
-index c829e4a75325..97df5985b830 100644
+index a01689ddd547..731e86bfe73f 100644
 --- a/net/mac802154/tx.c
 +++ b/net/mac802154/tx.c
-@@ -22,7 +22,7 @@
- #include "ieee802154_i.h"
- #include "driver-ops.h"
+@@ -45,6 +45,7 @@ void ieee802154_xmit_sync_worker(struct work_struct *work)
+ 	/* Restart the netif queue on each sub_if_data object. */
+ 	ieee802154_wake_queue(&local->hw);
+ 	kfree_skb(skb);
++	atomic_dec(&local->phy->ongoing_txs);
+ 	netdev_dbg(dev, "transmission failed\n");
+ }
  
--void ieee802154_xmit_worker(struct work_struct *work)
-+void ieee802154_xmit_sync_worker(struct work_struct *work)
- {
- 	struct ieee802154_local *local =
- 		container_of(work, struct ieee802154_local, tx_work);
+@@ -80,6 +81,7 @@ ieee802154_tx(struct ieee802154_local *local, struct sk_buff *skb)
+ 	 * cases they only provide a sync callback which we will use as a
+ 	 * fallback.
+ 	 */
++	atomic_inc(&local->phy->ongoing_txs);
+ 	if (local->ops->xmit_async) {
+ 		unsigned int len = skb->len;
+ 
+@@ -99,6 +101,7 @@ ieee802154_tx(struct ieee802154_local *local, struct sk_buff *skb)
+ 	return NETDEV_TX_OK;
+ 
+ err_tx:
++	atomic_dec(&local->phy->ongoing_txs);
+ 	kfree_skb(skb);
+ 	return NETDEV_TX_OK;
+ }
+diff --git a/net/mac802154/util.c b/net/mac802154/util.c
+index e093ccaebd76..0fa538b0debc 100644
+--- a/net/mac802154/util.c
++++ b/net/mac802154/util.c
+@@ -83,6 +83,7 @@ void ieee802154_xmit_complete(struct ieee802154_hw *hw, struct sk_buff *skb,
+ 	}
+ 
+ 	dev_consume_skb_any(skb);
++	atomic_dec(&hw->phy->ongoing_txs);
+ }
+ EXPORT_SYMBOL(ieee802154_xmit_complete);
+ 
 -- 
 2.27.0
 
