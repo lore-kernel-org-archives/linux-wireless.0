@@ -2,76 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D86C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 13:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B900FC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 14:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240106AbiAQNIz (ORCPT
+        id S238555AbiAQO3z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 08:08:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48158 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240127AbiAQNIu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 08:08:50 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 154CAC06173E
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2022 05:08:50 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4A61BB80EFF
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2022 13:08:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FE88C36AE3;
-        Mon, 17 Jan 2022 13:08:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642424927;
-        bh=mf/sb1Cwt7TIVvJhl71c/+zQwiXZL7+LbRn7cUY1d90=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=fg20wILmBQ40+cptowW9Uld4aqiyZr3K0gUxFhuAJcfYRA3BrBxKbTNLYuSRU8Xsv
-         rM97uw7WR9mqPxn8BVUabO6FReT3b8Xkw50sfNnQWBLXAsrnX0R9jyw9rf8jwGWzUp
-         ClnKjinOvLWZO1v+Q9gPkZiAes1d57eoNR9ZqEMlGVNU1j6JfZpXZ4lV6gDh5KftjH
-         oGH+dW4ckjvW5ASWAJ6Mv+BVPfEeAB1yQoQaoJ9anjrULD/ADBq/USMm2PPzr1dbnv
-         89tze00nO8fGXq9IpAw+TwLD7mQqXMJO04cpLEd3ttY3J67000T/PfiYuaudphQzOQ
-         dOqsi/vKdrXHA==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 17 Jan 2022 09:29:55 -0500
+Received: from mout.web.de ([217.72.192.78]:36709 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234449AbiAQO3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jan 2022 09:29:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1642429793;
+        bh=U8DCgnYeYcxryoKneOBMvXqg6aaJduWJhZvJpy2BCvo=;
+        h=X-UI-Sender-Class:From:To:Subject:Date;
+        b=f/Xoso3gI7pSW8Ebleat6NnvLUPTeX46NG2fcU2IzdooNe/vaWh7lUvgHMDBhbqi2
+         z3pxI6T7Njh+DdfXwg+zFWzQtHwiw0e4C0tPTOKNgBdrd04/Xcs3s6ufhkUhRu1ByP
+         +dSRbLvBS2mC2GSwTsaWmbmwM/vJKSQ2OER0P4oY=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [80.245.136.130] ([80.245.136.130]) by web-mail.web.de
+ (3c-app-webde-bap30.server.lan [172.19.172.30]) (via HTTP); Mon, 17 Jan
+ 2022 15:29:52 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: set WMI_PEER_40MHZ while peer assoc for 6 GHz
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220113023145.14292-1-quic_wgong@quicinc.com>
-References: <20220113023145.14292-1-quic_wgong@quicinc.com>
-To:     Wen Gong <quic_wgong@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <quic_wgong@quicinc.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164242492251.16331.2627237965817574376.kvalo@kernel.org>
-Date:   Mon, 17 Jan 2022 13:08:45 +0000 (UTC)
+Message-ID: <trinity-f503010b-028a-4c52-a368-56b3e6a1e645-1642429792868@3c-app-webde-bap30>
+From:   fckath@web.de
+To:     linux-wireless@vger.kernel.org
+Subject: ath11k and the 32 MSI problem
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 17 Jan 2022 15:29:52 +0100
+Importance: normal
+Sensitivity: Normal
+Content-Transfer-Encoding: quoted-printable
+X-Priority: 3
+X-Provags-ID: V03:K1:O2r+MzQFrrBl36hi/xk5KVgA3AzRq20/FCY27ja9y8Z3CWhMdQ7pYFsYvYwmGfpKKBMvn
+ 0tR7C+t8ofjfpYOM8/sK9/xeS8gqH9jw3Lo2HRq175tMJD5Uuo6zHY9oxbHMY+cBnAhpkeBuJKAP
+ uGYWgFVGPD1+yGVTc+At64wq5oC5tgVuGlPxL0cnC6ZvqtasXShhq979RQXQXYh9QL9R0imNz1vG
+ gM1uJjm3sAGuSwG4x1tkG4CJHJUsqoDnGB0rDFBb+8A1kmCfwInaN4k+2a2nsI25skTSqEcyUMYd
+ dg=
+X-UI-Out-Filterresults: notjunk:1;V03:K0:jgFf+MShmy0=:E8rCQctoEwjNlloU5+Vgp7
+ 4W6xZ879q+14Psy5CACSg98NMK6r8+eSR8m/7FIL9oaRIG1hWKusef29P8PgBCKkOwJbliUYR
+ be0ghuRuP2o1JGO9Huso6XAAuRXMSG6j8TPs8JqRkwGkiewWLIk2rO6VMHSY+VHw4h57VGTt3
+ aSdpkuTUY/2i3Q242ZwOlDveAx1IrjMefovA7O6yb8o35JRuWaoVgSnXMTdXdtenKS3QqQEm3
+ g2u3Eu3D/FFWEWG/VsSq7XZVmzgLckE2+zD/9A6La/IpCi/J3ayuWNfJYsRUpjATv9J3+mfP+
+ hD2xJ/7A5uDrqjs/p28nIlry7naJd+meEv5MeRJ+TJrf/mpG3Ze+qCkrb7WRv5hLYo1gqy3U6
+ niHOC3otby93klg6iKnhqudSq+Mw2dnrgSywYPGQ7Qp6DjPcqRaf776jfeFyUbqwU11hnw0cP
+ WLH2el6advCKqUfc0NrKs9IyCM9p9+1ezqSvY4pC9eKvuTanYlOfNpk73kKYkREwbC+R2sI0r
+ jsB4PC3tUc2+PjhykQf5+gHk/IA0meIQzb5A8o2woTllVcVXV/KCWc1ZvHdKpMtOUxAU1AUls
+ pwvzvVhdhSqLbfMGObU7SqvAI4L2+QaXH0vh7hWK3cUWCwU28KE7ggtypGKkKGHYsTNoj1xt2
+ DRRxVwl0B6sxfpkX2zTKyOZG8g16YVJsAtZb8La2AwBZB7SqQ0IZSwW6dUXNrzPeFuiiqeM3U
+ pMuY13cV8uyz9ArqkN/zIGDs3BJIg6ofgKFOw21p6nMN9/KY3bnLQkouIPnPRNFaQgfLrrsvL
+ /5oEAEA
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <quic_wgong@quicinc.com> wrote:
+Hello world;
+=C2=A0
+I've got a bunch of M=2E2 Type A/E Wifi 6e cards from Emwicon (WMX7205) an=
+d Sparklan (WNFQ-268AXI(BT)) wirth Qualcomm WCN6856 chips=2E
+=C2=A0
+I'd like to use them on DFI AL553 3=2E5" SBCs with ATOM E3940 processor (h=
+ttps://www=2Edfi=2Ecom/de/product/index/1409), but I was hit by the error m=
+essage "failed to get 32 MSI vectors, only -28 available"=2E Ok, it seems t=
+hat the Atom E3900 does not support VT-d=2E I managed to get these card wor=
+king on standard PCs with i7 and i5 with active VT-d=2E However, when disab=
+ling VT-d in the BIOS I get the same behaviour as on the Atom boards=2E
 
-> When station connect to AP of 6 GHz with 40 MHz bandwidth, the TX is
-> always stay 20 MHz, it is because the flag WMI_PEER_40MHZ is not set
-> while peer assoc. Add the flag if remote peer is 40 MHz bandwidth.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-02892.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+I tried the single MSI patch on https://wireless=2Ewiki=2Ekernel=2Eorg/en/=
+users/drivers/ath11k but failed to apply these patches to an 5=2E15=2E0 ker=
+nel from Debian backports=2E
 
-Fixes tag
+Are there
+ - patches for 5=2E15 or 5=2E16?
+ - patched drivers for 5=2E15 or 5=2E16?
+ - information where to find a matching driver source on which the patches=
+ will apply?
 
-  Fixes: 2cdf2b3cdf54 ("ath11k: add 6ghz params in peer assoc command")
+Best Regards
 
-has these problem(s):
+Frank-Christian Kruegel
 
-  - Target SHA1 does not exist
-
-Did you mean:
-
-Fixes: c3a7d7eb4c98 ("ath11k: add 6 GHz params in peer assoc command")
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220113023145.14292-1-quic_wgong@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+=C2=A0
