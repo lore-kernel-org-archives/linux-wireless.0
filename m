@@ -2,23 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7961C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 14:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62005C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jan 2022 14:31:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239702AbiAQObi (ORCPT
+        id S240241AbiAQObs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 09:31:38 -0500
-Received: from marcansoft.com ([212.63.210.85]:56132 "EHLO mail.marcansoft.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239983AbiAQObV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 09:31:21 -0500
+        Mon, 17 Jan 2022 09:31:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38570 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239064AbiAQObZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jan 2022 09:31:25 -0500
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5BD1C061751;
+        Mon, 17 Jan 2022 06:30:55 -0800 (PST)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: hector@marcansoft.com)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id 4E31A42137;
-        Mon, 17 Jan 2022 14:31:11 +0000 (UTC)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id DFEC0421F5;
+        Mon, 17 Jan 2022 14:30:46 +0000 (UTC)
 From:   Hector Martin <marcan@marcan.st>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -45,10 +49,11 @@ Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Subject: [PATCH v3 7/9] brcmfmac: of: Use devm_kstrdup for board_type & check for errors
-Date:   Mon, 17 Jan 2022 23:29:17 +0900
-Message-Id: <20220117142919.207370-8-marcan@marcan.st>
+        SHA-cyfmac-dev-list@infineon.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH v3 4/9] brcmfmac: pcie: Declare missing firmware files in pcie.c
+Date:   Mon, 17 Jan 2022 23:29:14 +0900
+Message-Id: <20220117142919.207370-5-marcan@marcan.st>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20220117142919.207370-1-marcan@marcan.st>
 References: <20220117142919.207370-1-marcan@marcan.st>
@@ -58,33 +63,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This was missing a NULL check, and we can collapse the strlen/alloc/copy
-into a devm_kstrdup().
+Move one of the declarations from sdio.c to pcie.c, since it makes no
+sense in the former (SDIO support is optional), and add missing ones.
 
+Fixes: 75729e110e68 ("brcmfmac: expose firmware config files through modinfo")
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 Signed-off-by: Hector Martin <marcan@marcan.st>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 7 +++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 -
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index 513c7e6421b2..5dc1e942e9e7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -79,8 +79,12 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index f876b1d8d00d..b1ae6c41013f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -59,6 +59,13 @@ BRCMF_FW_DEF(4366B, "brcmfmac4366b-pcie");
+ BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
+ BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
  
- 		/* get rid of '/' in the compatible string to be able to find the FW */
- 		len = strlen(tmp) + 1;
--		board_type = devm_kzalloc(dev, len, GFP_KERNEL);
--		strscpy(board_type, tmp, len);
-+		board_type = devm_kstrdup(dev, tmp, GFP_KERNEL);
-+		if (!board_type) {
-+			brcmf_err("out of memory allocating board_type\n");
-+			of_node_put(root);
-+			return;
-+		}
- 		for (i = 0; i < board_type[i]; i++) {
- 			if (board_type[i] == '/')
- 				board_type[i] = '-';
++/* firmware config files */
++MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.txt");
++MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txt");
++
++/* per-board firmware binaries */
++MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.bin");
++
+ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 8effeb7a7269..5d156e591b35 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -629,7 +629,6 @@ BRCMF_FW_CLM_DEF(43752, "brcmfmac43752-sdio");
+ 
+ /* firmware config files */
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.txt");
+-MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.*.txt");
+ 
+ /* per-board firmware binaries */
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-sdio.*.bin");
 -- 
 2.33.0
 
