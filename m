@@ -2,46 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBBBEC4167D
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:31:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23223C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:31:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230445AbiARCby (ORCPT
+        id S1343869AbiARCbz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:31:54 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:41398 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343965AbiARC2Z (ORCPT
+        Mon, 17 Jan 2022 21:31:55 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:45690 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244507AbiARC2b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:28:25 -0500
+        Mon, 17 Jan 2022 21:28:31 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C3984B8123F;
-        Tue, 18 Jan 2022 02:28:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3C1CC36AEF;
-        Tue, 18 Jan 2022 02:28:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E10F611EC;
+        Tue, 18 Jan 2022 02:28:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F26CC36AF4;
+        Tue, 18 Jan 2022 02:28:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472902;
-        bh=v+u+FK55eeNns6Q4kPKeSccsEGXeFL+oJr9NAaPDubA=;
+        s=k20201202; t=1642472909;
+        bh=3+demyXxz1HqrShCU0iSOzn9gxlNu+2vJqtRcEcN270=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eh40pJBmfGjObfNL8T8grpl6u2nXgr+ZxOR1yeUXkXCBQ8Jx9xhJKRWG4cK18Gvxn
-         FWNcVY7K0Qy2HHntcW1q6CsMwWxggReF4xt8AnSoc3MgW3yPgK4GpsAL6TDA9RqQ+1
-         QNo9YjdDEYLRIfsZrMMcGczB0L6i9rsdWSd1CuPPBagI2GTEvMCQJ70dI1krnP4I2v
-         D0MbIFC4JVMZqObvSqH+JVYtsPlHpcvyzucta94FNkxTt/rYkNoqJq6qLWPRG2Zdnh
-         HJEbL7UnIVza6GwOYdQff/6h8JRbmI/TWIr+FWq0kw/ibNuBit3oG4ttj5/eDL2LQa
-         8sPFEDMpi0wkQ==
+        b=CkUYOx/EEMVk+bmSYHiGEF0KYI6NC4BSI+5oRsjKLqzGmCwUmTc5PZmJuOHcE7gpk
+         1sWtKpYm9LEm55DU612yxsQvYl2Tsj6OqszJvK71AKE4Sas8yTvaSLW1Qo9f+qXH8t
+         fZ1TuNl2JZOs+rYcFNTwRuYnOQL4v9pg4Gqr+jphYIJeWNsOFoky/Ws+ovG84CRvD9
+         K+CKO2ZgTsQs9kPw+Ou4NbdMlj2DQN3jNkKv+venIldMeVG8hhVKKCkx7ElbrmgFFV
+         mBn3ZH6cUixYJ3mZEWDgIzrlr4M64qj5QP8E08fMU2Tx/77HjQk0psgqW3IWOGO7Ef
+         EzWBHQxWJWKsQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Deren Wu <deren.wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
-        Sasha Levin <sashal@kernel.org>, lorenzo.bianconi83@gmail.com,
-        ryder.lee@mediatek.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, matthias.bgg@gmail.com, sean.wang@mediatek.com,
-        Soul.Huang@mediatek.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.16 157/217] mt76: mt7921: fix network buffer leak by txs missing
-Date:   Mon, 17 Jan 2022 21:18:40 -0500
-Message-Id: <20220118021940.1942199-157-sashal@kernel.org>
+Cc:     Po-Hao Huang <phhuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        tony0620emma@gmail.com, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 161/217] rtw88: 8822c: update rx settings to prevent potential hw deadlock
+Date:   Mon, 17 Jan 2022 21:18:44 -0500
+Message-Id: <20220118021940.1942199-161-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -53,116 +51,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Deren Wu <deren.wu@mediatek.com>
+From: Po-Hao Huang <phhuang@realtek.com>
 
-[ Upstream commit e0bf699ad8e52330d848144a9624a067ad588bd6 ]
+[ Upstream commit c1afb26727d9e507d3e17a9890e7aaf7fc85cd55 ]
 
-TXS in mt7921 may be forwared to tx_done event. Should try to catch
-TXS information in tx_done event as well.
+These settings enables mac to detect and recover when rx fifo
+circuit deadlock occurs. Previous version missed this, so we fix it.
 
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20211217012708.8623-1-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7921/mac.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 14 ++++++++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   | 27 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
- 4 files changed, 43 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/main.c     | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 27550385c35f9..4df272f93dd47 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1072,7 +1072,7 @@ mt7921_mac_add_txs_skb(struct mt7921_dev *dev, struct mt76_wcid *wcid, int pid,
- 	return !!skb;
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index a0d4d6e31fb49..dbf1ce3daeb8e 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1868,7 +1868,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
  
--static void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
-+void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
- {
- 	struct mt7921_sta *msta = NULL;
- 	struct mt76_wcid *wcid;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 6ada1ebe7d68b..46ec9f713d772 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -418,6 +418,17 @@ mt7921_mcu_low_power_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 	trace_lp_event(dev, event->state);
- }
+ 	/* default rx filter setting */
+ 	rtwdev->hal.rcr = BIT_APP_FCS | BIT_APP_MIC | BIT_APP_ICV |
+-			  BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
++			  BIT_PKTCTL_DLEN | BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
+ 			  BIT_AB | BIT_AM | BIT_APM;
  
-+static void
-+mt7921_mcu_tx_done_event(struct mt7921_dev *dev, struct sk_buff *skb)
-+{
-+	struct mt7921_mcu_tx_done_event *event;
-+
-+	skb_pull(skb, sizeof(struct mt7921_mcu_rxd));
-+	event = (struct mt7921_mcu_tx_done_event *)skb->data;
-+
-+	mt7921_mac_add_txs(dev, event->txs);
-+}
-+
- static void
- mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
- {
-@@ -445,6 +456,9 @@ mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
- 	case MCU_EVENT_LP_INFO:
- 		mt7921_mcu_low_power_event(dev, skb);
- 		break;
-+	case MCU_EVENT_TX_DONE:
-+		mt7921_mcu_tx_done_event(dev, skb);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-index edc0c73f8c01c..68cb0ce013dbd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
-@@ -91,6 +91,33 @@ enum {
- 	MCU_EVENT_COREDUMP = 0xf0,
- };
+ 	ret = rtw_load_firmware(rtwdev, RTW_NORMAL_FW);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+index 112faa60f653e..d9fbddd7b0f35 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+@@ -131,7 +131,7 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define WLAN_TX_FUNC_CFG2		0x30
+ #define WLAN_MAC_OPT_NORM_FUNC1		0x98
+ #define WLAN_MAC_OPT_LB_FUNC1		0x80
+-#define WLAN_MAC_OPT_FUNC2		0x30810041
++#define WLAN_MAC_OPT_FUNC2		0xb0810041
  
-+struct mt7921_mcu_tx_done_event {
-+	u8 pid;
-+	u8 status;
-+	__le16 seq;
-+
-+	u8 wlan_idx;
-+	u8 tx_cnt;
-+	__le16 tx_rate;
-+
-+	u8 flag;
-+	u8 tid;
-+	u8 rsp_rate;
-+	u8 mcs;
-+
-+	u8 bw;
-+	u8 tx_pwr;
-+	u8 reason;
-+	u8 rsv0[1];
-+
-+	__le32 delay;
-+	__le32 timestamp;
-+	__le32 applied_flag;
-+	u8 txs[28];
-+
-+	u8 rsv1[32];
-+} __packed;
-+
- /* ext event table */
- enum {
- 	MCU_EXT_EVENT_RATE_REPORT = 0x87,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index e9c7c3a195076..7a6c38fbb940a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -463,4 +463,5 @@ int mt7921s_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 			   struct mt76_tx_info *tx_info);
- void mt7921s_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue_entry *e);
- bool mt7921s_tx_status_data(struct mt76_dev *mdev, u8 *update);
-+void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data);
- #endif
+ #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
+ 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index c409c8c29ec8b..e870ad7518342 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -205,7 +205,7 @@ static void rtw8822b_phy_set_param(struct rtw_dev *rtwdev)
+ #define WLAN_TX_FUNC_CFG2		0x30
+ #define WLAN_MAC_OPT_NORM_FUNC1		0x98
+ #define WLAN_MAC_OPT_LB_FUNC1		0x80
+-#define WLAN_MAC_OPT_FUNC2		0x30810041
++#define WLAN_MAC_OPT_FUNC2		0xb0810041
+ 
+ #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
+ 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 46b881e8e4feb..0e1c5d95d4649 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1962,7 +1962,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
+ #define WLAN_TX_FUNC_CFG2		0x30
+ #define WLAN_MAC_OPT_NORM_FUNC1		0x98
+ #define WLAN_MAC_OPT_LB_FUNC1		0x80
+-#define WLAN_MAC_OPT_FUNC2		0x30810041
++#define WLAN_MAC_OPT_FUNC2		0xb0810041
+ #define WLAN_MAC_INT_MIG_CFG		0x33330000
+ 
+ #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
 -- 
 2.34.1
 
