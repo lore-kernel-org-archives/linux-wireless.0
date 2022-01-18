@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 474B5C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9A7C35263
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:16:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349974AbiARDHi (ORCPT
+        id S1348544AbiARDQI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 22:07:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37368 "EHLO
+        Mon, 17 Jan 2022 22:16:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353682AbiARDC1 (ORCPT
+        with ESMTP id S1354441AbiARDGE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 22:02:27 -0500
+        Mon, 17 Jan 2022 22:06:04 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E096C028BD6;
-        Mon, 17 Jan 2022 18:47:48 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE924C08ED79;
+        Mon, 17 Jan 2022 18:48:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E4F8561127;
-        Tue, 18 Jan 2022 02:47:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31274C36AF4;
-        Tue, 18 Jan 2022 02:47:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 56D0B61325;
+        Tue, 18 Jan 2022 02:48:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6459C36AF3;
+        Tue, 18 Jan 2022 02:48:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642474067;
-        bh=jLeeFf393B8HjgrocufcT+n/GYkXVkQ4rnUo38UVcLM=;
+        s=k20201202; t=1642474104;
+        bh=6DzRQODJCjeMyBnMxcQy/tJblSzRKBAhvfHA3MzPxh0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GAcWqjAGUNwg2PHfrap6SgbqUzShHzx6hbhk4KwMIVN6clMlN67ODTH5e0MZxg/f6
-         old2LJMZvySbtvNzsZAaRWqFoSQHZ7TMPzyW7LHKGY9lJTvF9Jy4+2xUzbG2R3uvfI
-         D29yyAdW0zESYls0UQZrtcg9ZwDeumH2LnrSpbTijpMrfExXb7xJPVcIEd0AigDkvm
-         TAzTXTw3Ik891lgkuLiyoM/SS2G0axqLWnQQ5cxtt6two9WZMU0BEOGzozEgVKqXYT
-         bqR8ARNwe9M/N/FPGxPnFS4gQuUEUWP37y+PuLU6GpcNRicj5zaYjy0nvelE+7x7HQ
-         eHSXtLdp64kPA==
+        b=iSfcZ+NxfDQkQK95opOoWwYvprIlA6XmAPkPXWCF771rAFTR32gPCYmPYy2GrlHCE
+         s/y0GJgnGf1ToKslAOHQS0snqv7Wl9HNlMgvfPpmBQ/ZdHgRcNEYBku8HIDI5dYdC/
+         Q/d82v04tXW1RvOuCvpNnE/KUua/0giifxoLXreBdQSeuJOl06lcLbohBa5zRdvBrD
+         4tY/+2Py5ieEsFQzJug5yOIe6fpZS6cZd7S0Yts+E/soHQpe03tmb6sc3PkBUE2Ao8
+         Nt2jPPYOTtm+h7MDZL3tlzQvpLTZQjp3THFLfKQeNGs/FJ/UJdBzHRIH15Fe1sb0vP
+         81XHSy9YFkEHw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ath10k@lists.infradead.org,
+        davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 21/59] ath10k: Fix tx hanging
-Date:   Mon, 17 Jan 2022 21:46:22 -0500
-Message-Id: <20220118024701.1952911-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 38/59] iwlwifi: remove module loading failure message
+Date:   Mon, 17 Jan 2022 21:46:39 -0500
+Message-Id: <20220118024701.1952911-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118024701.1952911-1-sashal@kernel.org>
 References: <20220118024701.1952911-1-sashal@kernel.org>
@@ -54,54 +54,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit e8a91863eba3966a447d2daa1526082d52b5db2a ]
+[ Upstream commit 6518f83ffa51131daaf439b66094f684da3fb0ae ]
 
-While running stress tests in roaming scenarios (switching ap's every 5
-seconds, we discovered a issue which leads to tx hangings of exactly 5
-seconds while or after scanning for new accesspoints. We found out that
-this hanging is triggered by ath10k_mac_wait_tx_complete since the
-empty_tx_wq was not wake when the num_tx_pending counter reaches zero.
-To fix this, we simply move the wake_up call to htt_tx_dec_pending,
-since this call was missed on several locations within the ath10k code.
+When CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, iwlwifi crashes
+when the opmode module cannot be loaded, due to completing
+the completion before using drv->dev, which can then already
+be freed.
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20210505085806.11474-1-s.gottschall@dd-wrt.com
+Fix this by removing the (fairly useless) message. Moving the
+completion later causes a deadlock instead, so that's not an
+option.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/20211210091245.289008-2-luca@coelho.fi
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   | 2 --
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index fd011bdabb963..3718d4dfc6d60 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -158,6 +158,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
- 	htt->num_pending_tx--;
- 	if (htt->num_pending_tx == htt->max_num_pending_tx - 1)
- 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
-+
-+	if (htt->num_pending_tx == 0)
-+		wake_up(&htt->empty_tx_wq);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 72f5df66cdeb5..c44108823f796 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1532,15 +1532,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * else from proceeding if the module fails to load
+ 	 * or hangs loading.
+ 	 */
+-	if (load_module) {
++	if (load_module)
+ 		request_module("%s", op->name);
+-#ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
+-		if (err)
+-			IWL_ERR(drv,
+-				"failed to load module %s (error %d), is dynamic loading enabled?\n",
+-				op->name, err);
+-#endif
+-	}
+ 	failure = false;
+ 	goto free;
  
- int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 6c47e4b6aa6cd..888a8f4aff5d8 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -91,8 +91,6 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
--		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
- 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
 -- 
 2.34.1
 
