@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D669C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:07:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD5C5C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:07:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349003AbiARDHR (ORCPT
+        id S1354633AbiARDHW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 22:07:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37296 "EHLO
+        Mon, 17 Jan 2022 22:07:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348245AbiARC5c (ORCPT
+        with ESMTP id S1352087AbiARC5z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:57:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4218C06135D;
-        Mon, 17 Jan 2022 18:45:38 -0800 (PST)
+        Mon, 17 Jan 2022 21:57:55 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC32CC06136D;
+        Mon, 17 Jan 2022 18:46:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 95BE7B81229;
-        Tue, 18 Jan 2022 02:45:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38FCCC36AF4;
-        Tue, 18 Jan 2022 02:45:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 59D8361311;
+        Tue, 18 Jan 2022 02:46:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6C66C36AEB;
+        Tue, 18 Jan 2022 02:46:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473936;
-        bh=QzS4tXh8Kdb+NYlC5nFHkToGbuxguFI/gh7D8iqd0oc=;
+        s=k20201202; t=1642473975;
+        bh=5jWSEyoXOPCc+nJwcvUbZBzSLJhgsecoSxLzR5hVwFw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zr3CkYEioIZrxCg/om6Yx0y/pH3wOxa+DI5NgbT+bi6l1LIP2eOtIOzd/6yznb/vp
-         JevGeklzzdTPon2NM0OUTYPppVJAFRsg2hP5+CNqEHs6BptjS/rLwSbzqNtZnw7WkB
-         1vMi5Xc501yZboKv6ZSQWQHDIgsRRAUf7x9L38HZl1djit5kYiPwcdRz3rmFfp0wWK
-         UjwDHXN/FFsv7Unic+sMEkaarIYx8tmc9V6S2JFGa7dxWhU4muEwqWQLUZmV/zrHNQ
-         pDuNLHgTbYPZV5eK9paEmAq1X2GzpcAxYJFLFatI5E0ViLa23oLIReG0EaKfPWmVqS
-         Mb3PVVMM1Y9GQ==
+        b=Pun2Ac945IZyA9si7nyCXyfcaL+XGA4GfZ2ul9HSgXf86s+roDXIFJT6X+cv/nmBr
+         cgN5W6mAb3LSwf5euSYbPGdvWlVasbP//LkVSpaUpYcOO/tMiI2mAMV/U6gIyoG+0t
+         R7fWFPw3lDuaBSEL7915gp3vaDOGWVHxz7TBNqUbKQ/K8BqQL38tO89LD90rzLFWI8
+         bJ+Ysme1iq7UhxwYz73udppz7c7rODdEpDOTBeCxYdPNtUYTaqnenSZNw8l9qmPrwD
+         qHYHpBFUPvURzKRcbdFiIzxwnKw9t+j4Zrc6bwOWOYuyPfvNrGwT6tdkege+GD6FUk
+         DXsXwsM4hj0Sg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ath10k@lists.infradead.org,
+        davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 29/73] ath10k: Fix tx hanging
-Date:   Mon, 17 Jan 2022 21:43:48 -0500
-Message-Id: <20220118024432.1952028-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 50/73] iwlwifi: remove module loading failure message
+Date:   Mon, 17 Jan 2022 21:44:09 -0500
+Message-Id: <20220118024432.1952028-50-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118024432.1952028-1-sashal@kernel.org>
 References: <20220118024432.1952028-1-sashal@kernel.org>
@@ -54,54 +54,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit e8a91863eba3966a447d2daa1526082d52b5db2a ]
+[ Upstream commit 6518f83ffa51131daaf439b66094f684da3fb0ae ]
 
-While running stress tests in roaming scenarios (switching ap's every 5
-seconds, we discovered a issue which leads to tx hangings of exactly 5
-seconds while or after scanning for new accesspoints. We found out that
-this hanging is triggered by ath10k_mac_wait_tx_complete since the
-empty_tx_wq was not wake when the num_tx_pending counter reaches zero.
-To fix this, we simply move the wake_up call to htt_tx_dec_pending,
-since this call was missed on several locations within the ath10k code.
+When CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, iwlwifi crashes
+when the opmode module cannot be loaded, due to completing
+the completion before using drv->dev, which can then already
+be freed.
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20210505085806.11474-1-s.gottschall@dd-wrt.com
+Fix this by removing the (fairly useless) message. Moving the
+completion later causes a deadlock instead, so that's not an
+option.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/20211210091245.289008-2-luca@coelho.fi
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   | 2 --
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index c38e1963ebc05..f73ed1044390c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -147,6 +147,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
- 	htt->num_pending_tx--;
- 	if (htt->num_pending_tx == htt->max_num_pending_tx - 1)
- 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
-+
-+	if (htt->num_pending_tx == 0)
-+		wake_up(&htt->empty_tx_wq);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index c1a2fb154fe91..83cb2ad03451b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1599,15 +1599,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * else from proceeding if the module fails to load
+ 	 * or hangs loading.
+ 	 */
+-	if (load_module) {
++	if (load_module)
+ 		request_module("%s", op->name);
+-#ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
+-		if (err)
+-			IWL_ERR(drv,
+-				"failed to load module %s (error %d), is dynamic loading enabled?\n",
+-				op->name, err);
+-#endif
+-	}
+ 	failure = false;
+ 	goto free;
  
- int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index f46b9083bbf10..2c254f43790d2 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -80,8 +80,6 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
--		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
- 	rcu_read_lock();
 -- 
 2.34.1
 
