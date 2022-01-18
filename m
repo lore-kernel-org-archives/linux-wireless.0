@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23223C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AEEC43219
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343869AbiARCbz (ORCPT
+        id S1345729AbiARCb6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:31:55 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:45690 "EHLO
+        Mon, 17 Jan 2022 21:31:58 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:45962 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244507AbiARC2b (ORCPT
+        with ESMTP id S1344009AbiARC2q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:28:31 -0500
+        Mon, 17 Jan 2022 21:28:46 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E10F611EC;
-        Tue, 18 Jan 2022 02:28:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F26CC36AF4;
-        Tue, 18 Jan 2022 02:28:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ECDFE60AB1;
+        Tue, 18 Jan 2022 02:28:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F28DC36AF6;
+        Tue, 18 Jan 2022 02:28:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472909;
-        bh=3+demyXxz1HqrShCU0iSOzn9gxlNu+2vJqtRcEcN270=;
+        s=k20201202; t=1642472925;
+        bh=gdRe4QpHk0RWhNXsg0cQ8r/uaUlLlCnuVFMUVDFrVS4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CkUYOx/EEMVk+bmSYHiGEF0KYI6NC4BSI+5oRsjKLqzGmCwUmTc5PZmJuOHcE7gpk
-         1sWtKpYm9LEm55DU612yxsQvYl2Tsj6OqszJvK71AKE4Sas8yTvaSLW1Qo9f+qXH8t
-         fZ1TuNl2JZOs+rYcFNTwRuYnOQL4v9pg4Gqr+jphYIJeWNsOFoky/Ws+ovG84CRvD9
-         K+CKO2ZgTsQs9kPw+Ou4NbdMlj2DQN3jNkKv+venIldMeVG8hhVKKCkx7ElbrmgFFV
-         mBn3ZH6cUixYJ3mZEWDgIzrlr4M64qj5QP8E08fMU2Tx/77HjQk0psgqW3IWOGO7Ef
-         EzWBHQxWJWKsQ==
+        b=Hpcc3XsUpUwvaBYLYxQm1wnwXSZKBk1K3D8XcAdfiwSvFK9LdolO7J+ZfsbLubG0V
+         CdN2en+oyy6jQRFga5z5r985rqVIAfNZEJmtZyq1K8dIzhCQkYj0swAlprGfoloVDU
+         BC1uhS4fYVTb9AImewTulkAoIlpUSlzjGlXll2Jfe125QxIM7F0ueoMXHVfpWMINrj
+         MOlwTXme4Wm4Rciuz0ItlT/9BkifZO0WMNg0mV6YMO1b/4pRuQ/z4uPm1StQTj/N0C
+         SxXnjFz0DHuydr7RcpwO+MqDymCgam0GRwlDezXKc9drBFdoqJI7YMAB78zNYAHrDd
+         itATBWk2aXooQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Hao Huang <phhuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        tony0620emma@gmail.com, davem@davemloft.net, kuba@kernel.org,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 161/217] rtw88: 8822c: update rx settings to prevent potential hw deadlock
-Date:   Mon, 17 Jan 2022 21:18:44 -0500
-Message-Id: <20220118021940.1942199-161-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 164/217] iwlwifi: fix leaks/bad data after failed firmware load
+Date:   Mon, 17 Jan 2022 21:18:47 -0500
+Message-Id: <20220118021940.1942199-164-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -51,77 +51,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit c1afb26727d9e507d3e17a9890e7aaf7fc85cd55 ]
+[ Upstream commit ab07506b0454bea606095951e19e72c282bfbb42 ]
 
-These settings enables mac to detect and recover when rx fifo
-circuit deadlock occurs. Previous version missed this, so we fix it.
+If firmware load fails after having loaded some parts of the
+firmware, e.g. the IML image, then this would leak. For the
+host command list we'd end up running into a WARN on the next
+attempt to load another firmware image.
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20211217012708.8623-1-pkshih@realtek.com
+Fix this by calling iwl_dealloc_ucode() on failures, and make
+that also clear the data so we start fresh on the next round.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211210110539.1f742f0eb58a.I1315f22f6aa632d94ae2069f85e1bca5e734dce0@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/main.c     | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.h | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index a0d4d6e31fb49..dbf1ce3daeb8e 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1868,7 +1868,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 5cec467b995bb..ad94526a4e1e7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -130,6 +130,9 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
  
- 	/* default rx filter setting */
- 	rtwdev->hal.rcr = BIT_APP_FCS | BIT_APP_MIC | BIT_APP_ICV |
--			  BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
-+			  BIT_PKTCTL_DLEN | BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
- 			  BIT_AB | BIT_AM | BIT_APM;
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
++
++	/* clear the data for the aborted load case */
++	memset(&drv->fw, 0, sizeof(drv->fw));
+ }
  
- 	ret = rtw_load_firmware(rtwdev, RTW_NORMAL_FW);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-index 112faa60f653e..d9fbddd7b0f35 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-@@ -131,7 +131,7 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
+ static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
+@@ -1375,6 +1378,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	int i;
+ 	bool load_module = false;
+ 	bool usniffer_images = false;
++	bool failure = true;
  
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
- 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index c409c8c29ec8b..e870ad7518342 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -205,7 +205,7 @@ static void rtw8822b_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
+ 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
+ 	fw->ucode_capa.standard_phy_calibration_size =
+@@ -1644,6 +1648,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 				op->name, err);
+ #endif
+ 	}
++	failure = false;
+ 	goto free;
  
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
- 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 46b881e8e4feb..0e1c5d95d4649 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1962,7 +1962,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
- #define WLAN_MAC_INT_MIG_CFG		0x33330000
- 
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
+  try_again:
+@@ -1659,6 +1664,9 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
+  free:
++	if (failure)
++		iwl_dealloc_ucode(drv);
++
+ 	if (pieces) {
+ 		for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
+ 			kfree(pieces->img[i].sec);
 -- 
 2.34.1
 
