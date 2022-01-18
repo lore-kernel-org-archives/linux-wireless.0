@@ -2,50 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2202C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:48:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B865BC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345558AbiARCsh (ORCPT
+        id S1346136AbiARCsm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:48:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58666 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345433AbiARCbc (ORCPT
+        Mon, 17 Jan 2022 21:48:42 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:51560 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344322AbiARCgS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:31:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA08CC0617A3;
-        Mon, 17 Jan 2022 18:29:12 -0800 (PST)
+        Mon, 17 Jan 2022 21:36:18 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A478DB8123A;
-        Tue, 18 Jan 2022 02:29:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 566EBC36AF3;
-        Tue, 18 Jan 2022 02:29:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B5BB61291;
+        Tue, 18 Jan 2022 02:36:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C08BC36AEB;
+        Tue, 18 Jan 2022 02:36:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472950;
-        bh=X1Ks8FvRuAMpRB/m8dyQVbxEYAjsGrrkW6v02oHlFys=;
+        s=k20201202; t=1642473377;
+        bh=22TBzvVqrxec+4D1GlxVLaO6klk4pPbSwURl8EjB0iY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UiCbOvrvEGOo6binK/73+Tm1KJIRrHYjB1/vt5zTmCbgQArBZlSpoAPa+UifEOt2J
-         G2fQFeqwsl4yBXdWxarQDzR0nVitFLFjcGuy3lFWKUfsQSn978N7gzQCqmqs31zR+w
-         1heiRxxrRhk5XaSBnayYCagNTChvdvr8wbHMdc0mJ/0M6ybdZUmEN76sWyTS1BZ3Oz
-         2xPc+f21At697R1dWh7PmTXy/NFIQSb8r4Z7+SIHZ4VvHWF/IrJ6PDejTqWTTrJHbm
-         pqcnJ8BzAFLtXhd6zu4Naypf4Ca0Y0LkuRkredlusDTgVQTMsgkXBS0hT6EONYYPdq
-         I/49PInSpOizQ==
+        b=FIMGJ+FLZlAFKchi1C6SefhH0HxVfTbsBCjfTQ/Uo1NE0EHuuiWeul6yaix/imS5e
+         sycdeCxjLLL6R6DNuTjo3XzPDEDaDOkdH+C22q9zqiePa5qVF2N1oH2p55AU6/GdXY
+         uEF+k68SnHgXvnp9yxYwEQO1kK1/tjCgSDZ8XGoOWWM0VnVRi2oTRoWie/ddSwFGyO
+         sKBdsLh1SlSvTtIYUJlq95WEjCm3ph7ELh8dHnRPC0D0yhoJ8yuHBvo/bHHzS7WRJ/
+         rAUW7Eq+FG0B17Yz6Xvteh5y1FQBEpjQIDgZjly/7BOPoGHYQ405H8KqCk8i4azBoj
+         rNBxDmQ4QGVhA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
+        davem@davemloft.net, kuba@kernel.org, ilan.peer@intel.com,
+        avraham.stern@intel.com, emmanuel.grumbach@intel.com,
+        sara.sharon@intel.com, nathan.errera@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 172/217] ath11k: Fix napi related hang
-Date:   Mon, 17 Jan 2022 21:18:55 -0500
-Message-Id: <20220118021940.1942199-172-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 091/188] iwlwifi: mvm: avoid clearing a just saved session protection id
+Date:   Mon, 17 Jan 2022 21:30:15 -0500
+Message-Id: <20220118023152.1948105-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
-References: <20220118021940.1942199-1-sashal@kernel.org>
+In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
+References: <20220118023152.1948105-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,107 +53,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-[ Upstream commit d943fdad7589653065be0e20aadc6dff37725ed4 ]
+[ Upstream commit 8e967c137df3b236d2075f9538cb888129425d1a ]
 
-Similar to the same bug in ath10k, a napi disable w/out it being enabled
-will hang forever.  I believe I saw this while trying rmmod after driver
-had some failure on startup.  Fix it by keeping state on whether napi is
-enabled or not.
+When scheduling a session protection the id is saved but
+then it may be cleared when calling iwl_mvm_te_clear_data
+(if a previous session protection is currently active).
+Fix it by saving the id after calling iwl_mvm_te_clear_data.
 
-And, remove un-used napi pointer in ath11k driver base struct.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20200903195254.29379-1-greearb@candelatech.com
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211204130722.b0743a588d14.I098fef6677d0dab3ef1b6183ed206a10bab01eb2@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c  | 12 +++++++++---
- drivers/net/wireless/ath/ath11k/core.h |  2 +-
- drivers/net/wireless/ath/ath11k/pci.c  | 12 +++++++++---
- 3 files changed, 19 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 8c9c781afc3e5..b9939057b7baf 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -175,8 +175,11 @@ static void __ath11k_ahb_ext_irq_disable(struct ath11k_base *ab)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index e91f8e889df70..e6813317edf35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -1158,15 +1158,10 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
+ 			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 							mvmvif->color)),
+ 		.action = cpu_to_le32(FW_CTXT_ACTION_ADD),
++		.conf_id = cpu_to_le32(SESSION_PROTECT_CONF_ASSOC),
+ 		.duration_tu = cpu_to_le32(MSEC_TO_TU(duration)),
+ 	};
  
- 		ath11k_ahb_ext_grp_disable(irq_grp);
+-	/* The time_event_data.id field is reused to save session
+-	 * protection's configuration.
+-	 */
+-	mvmvif->time_event_data.id = SESSION_PROTECT_CONF_ASSOC;
+-	cmd.conf_id = cpu_to_le32(mvmvif->time_event_data.id);
+-
+ 	lockdep_assert_held(&mvm->mutex);
  
--		napi_synchronize(&irq_grp->napi);
--		napi_disable(&irq_grp->napi);
-+		if (irq_grp->napi_enabled) {
-+			napi_synchronize(&irq_grp->napi);
-+			napi_disable(&irq_grp->napi);
-+			irq_grp->napi_enabled = false;
-+		}
+ 	spin_lock_bh(&mvm->time_event_lock);
+@@ -1180,6 +1175,11 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
  	}
- }
  
-@@ -300,7 +303,10 @@ static void ath11k_ahb_ext_irq_enable(struct ath11k_base *ab)
- 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
- 		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
- 
--		napi_enable(&irq_grp->napi);
-+		if (!irq_grp->napi_enabled) {
-+			napi_enable(&irq_grp->napi);
-+			irq_grp->napi_enabled = true;
-+		}
- 		ath11k_ahb_ext_grp_enable(irq_grp);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 31d234a51c79b..62ceee363fea0 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -136,6 +136,7 @@ struct ath11k_ext_irq_grp {
- 	u32 num_irq;
- 	u32 grp_id;
- 	u64 timestamp;
-+	bool napi_enabled;
- 	struct napi_struct napi;
- 	struct net_device napi_ndev;
- };
-@@ -713,7 +714,6 @@ struct ath11k_base {
- 	u32 wlan_init_status;
- 	int irq_num[ATH11K_IRQ_NUM_MAX];
- 	struct ath11k_ext_irq_grp ext_irq_grp[ATH11K_EXT_IRQ_GRP_NUM_MAX];
--	struct napi_struct *napi;
- 	struct ath11k_targ_cap target_caps;
- 	u32 ext_service_bitmap[WMI_SERVICE_EXT_BM_SIZE];
- 	bool pdevs_macaddr_valid;
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 3d353e7c9d5c2..5a78a7cb65f5e 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -634,8 +634,11 @@ static void __ath11k_pci_ext_irq_disable(struct ath11k_base *sc)
- 
- 		ath11k_pci_ext_grp_disable(irq_grp);
- 
--		napi_synchronize(&irq_grp->napi);
--		napi_disable(&irq_grp->napi);
-+		if (irq_grp->napi_enabled) {
-+			napi_synchronize(&irq_grp->napi);
-+			napi_disable(&irq_grp->napi);
-+			irq_grp->napi_enabled = false;
-+		}
- 	}
- }
- 
-@@ -654,7 +657,10 @@ static void ath11k_pci_ext_irq_enable(struct ath11k_base *ab)
- 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
- 		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
- 
--		napi_enable(&irq_grp->napi);
-+		if (!irq_grp->napi_enabled) {
-+			napi_enable(&irq_grp->napi);
-+			irq_grp->napi_enabled = true;
-+		}
- 		ath11k_pci_ext_grp_enable(irq_grp);
- 	}
- }
+ 	iwl_mvm_te_clear_data(mvm, te_data);
++	/*
++	 * The time_event_data.id field is reused to save session
++	 * protection's configuration.
++	 */
++	te_data->id = le32_to_cpu(cmd.conf_id);
+ 	te_data->duration = le32_to_cpu(cmd.duration_tu);
+ 	te_data->vif = vif;
+ 	spin_unlock_bh(&mvm->time_event_lock);
 -- 
 2.34.1
 
