@@ -2,45 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BEAC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D62BC43219
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346473AbiARCtC (ORCPT
+        id S243116AbiARCtF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:49:02 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:55986 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241070AbiARCid (ORCPT
+        Mon, 17 Jan 2022 21:49:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60048 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345287AbiARCik (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:38:33 -0500
+        Mon, 17 Jan 2022 21:38:40 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ABF0C06175D;
+        Mon, 17 Jan 2022 18:35:10 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D1B8061269;
-        Tue, 18 Jan 2022 02:38:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE44DC36AE3;
-        Tue, 18 Jan 2022 02:38:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F27C2B81252;
+        Tue, 18 Jan 2022 02:35:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E72DC36AEF;
+        Tue, 18 Jan 2022 02:35:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473511;
-        bh=+2CGRR58hyrC+e0/rwMd7vvHpmue7xOZCLaTjHMreKA=;
+        s=k20201202; t=1642473308;
+        bh=dkmUFr49CybcD04y+WFJD6jn5JBcCH1bqnANrKf9inE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CTqQMdaINpSBKX5WTEaFrZlIpHMqyHVzCKCrcD60oI3Wz2IBKAdnnJDx0pcdeICKg
-         i+avOlVG7HBmoPjGl8vNnbsAOzPjKuAYZ+NOk3XWAUjS/wuTgx1joPETq7LErGh9E1
-         1OICg7RTxZnp2XFXf8LtKjlaXf3dlPUHoHIIG8cm7upIPxMHug2HYAmnT9O5yPDP0d
-         wFeoymbY1V2LFOK42vGlomUFT0aa9ANNuCBrswWtJWVqNookhnSeLxuv94EgmcoTay
-         ksk/SYO6Tn1GgCuig6s1C8IuNO4APaJ7272xmyAy5ZtV0plCURDGEQnJqfJ72REm0f
-         bxhdJrJN5OBHA==
+        b=DIDJi+aXoe+aq5jIRglbxdA9GHyduCMhhKYAKjgVPcmXHrO0L77QzCi9spQbS3IQ6
+         DAjl6Q/fLPytyY5y26PooUlPcZV8yGfIyYIkw7qcGP0qppnVhNaOiFYIaIEEgmyM7a
+         +88virpnYSWOb8jWZeS0eNnNQehkhnLTtV1Y9hiTe7jhlgzjUk46+QfEPO7/Ms7eZC
+         +48VgvV9su05aAReGb19ViKz3dyEKdblgaMdH8peXOstz5aSleoCvZ9sq1yWwuKYo6
+         nsfI3vLMrzZ+RFzdvxDu3LoTfOBW2RIXST8wAzcEUwitGgtXXzO8KauBuaRtTX/xGr
+         RV/8WFjX/xDXw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, johannes.berg@intel.com,
-        mordechay.goodstein@intel.com, emmanuel.grumbach@intel.com,
-        jkosina@suse.cz, ilan.peer@intel.com,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        rtl8821cerfe2 <rtl8821cerfe2@protonmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, tony0620emma@gmail.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 142/188] iwlwifi: pcie: make sure prph_info is set when treating wakeup IRQ
-Date:   Mon, 17 Jan 2022 21:31:06 -0500
-Message-Id: <20220118023152.1948105-142-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 063/188] rtw88: add quirk to disable pci caps on HP 250 G7 Notebook PC
+Date:   Mon, 17 Jan 2022 21:29:47 -0500
+Message-Id: <20220118023152.1948105-63-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
 References: <20220118023152.1948105-1-sashal@kernel.org>
@@ -52,43 +55,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit 459fc0f2c6b0f6e280bfa0f230c100c9dfe3a199 ]
+[ Upstream commit c81edb8dddaa36c4defa26240cc19127f147283f ]
 
-In some rare cases when the HW is in a bad state, we may get this
-interrupt when prph_info is not set yet.  Then we will try to
-dereference it to check the sleep_notif element, which will cause an
-oops.
+8821CE causes random freezes on HP 250 G7 Notebook PC. Add a quirk
+to disable pci ASPM capability.
 
-Fix that by ignoring the interrupt if prph_info is not set yet.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211219132536.0537aa562313.I183bb336345b9b3da196ba9e596a6f189fbcbd09@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: rtl8821cerfe2 <rtl8821cerfe2@protonmail.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20211119052437.8671-1-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 8e45eb38304b2..fea89330f692c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -2261,7 +2261,12 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 		}
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index a7a6ebfaa203c..3b367c9085eba 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1738,6 +1738,15 @@ static const struct dmi_system_id rtw88_pci_quirks[] = {
+ 		},
+ 		.driver_data = (void *)BIT(QUIRK_DIS_PCI_CAP_ASPM),
+ 	},
++	{
++		.callback = disable_pci_caps,
++		.ident = "HP HP 250 G7 Notebook PC",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "HP"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "HP 250 G7 Notebook PC"),
++		},
++		.driver_data = (void *)BIT(QUIRK_DIS_PCI_CAP_ASPM),
++	},
+ 	{}
+ };
  
--	if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP) {
-+	/*
-+	 * In some rare cases when the HW is in a bad state, we may
-+	 * get this interrupt too early, when prph_info is still NULL.
-+	 * So make sure that it's not NULL to prevent crashing.
-+	 */
-+	if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP && trans_pcie->prph_info) {
- 		u32 sleep_notif =
- 			le32_to_cpu(trans_pcie->prph_info->sleep_notif);
- 		if (sleep_notif == IWL_D3_SLEEP_STATUS_SUSPEND ||
 -- 
 2.34.1
 
