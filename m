@@ -2,52 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFEC9C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9146C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345737AbiARCb7 (ORCPT
+        id S240749AbiARCh1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:31:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58686 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344711AbiARCam (ORCPT
+        Mon, 17 Jan 2022 21:37:27 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:43710 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239774AbiARCcZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:30:42 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B06E1C0613A9;
-        Mon, 17 Jan 2022 18:27:33 -0800 (PST)
+        Mon, 17 Jan 2022 21:32:25 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C2A560AAF;
-        Tue, 18 Jan 2022 02:27:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33618C36AF5;
-        Tue, 18 Jan 2022 02:27:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BAE02B8123A;
+        Tue, 18 Jan 2022 02:32:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61D43C36AF4;
+        Tue, 18 Jan 2022 02:32:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472852;
-        bh=PVYBpWgLxzFqn93XSAf0x7uJa2crGkS0cprCA6JoWiE=;
+        s=k20201202; t=1642473141;
+        bh=z9Xl0iPAzJD3iaKf5VYmbyxLHCGM/Ya1QMtZ25AxyiM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QmQIS5I56YTs5s2TjBtTZJO0tG1CVN46V/PtifFNEJTBlBbQORyg181c2lzMW51SB
-         cPrUZpPqjsMiECSX4w6NWgLdBnzy6TXKtuToJUKJuzcu4PwhyHpJwvYbMiMMKiKIHQ
-         pHMK06GOS6a03eJasClJbOClwlWWLIZFYNv9qf1qv1V5mFihpni6W+YgqAsOXLQmz1
-         Ar60yRQLtWf8X8WRYtMT7ZO9ChRoPkPCzpO8p1hrIX7pinDMK4ZQ2Yy5KqZ21XCtRo
-         t5nlsOvAq5AYmn0+3wWlpq6MYEFIGuWcLWgElaUEL/grf3dZ7h+PH4GTCRePGMJMLN
-         a5RopO8FHvKRg==
+        b=GNN5+k6hiI/xuPB2sU/nFT2HzhBbnnQpmZtetfgTZGdxNB6lOc6/nKSB580Pn4WYC
+         oNpBsliTbgzijNZ8pt4jzgvMjGM5/bcKTIZwsS8Sm1FHNWvheuUmz4I3WPNgfbHHGl
+         Yskkc4iyry1c7WgxUQLS6ZwKBX8xcUwvRn4dbQt7ERLZO2LPk462WPKpFxq0j7zScD
+         xxxBx72o8PUh5ORMysEQGvWQvHpKmXzzVTgdrz8G+AZv84GSDFDF92JmopCLElZCcV
+         alaAQ7T05yoyp5HiSPl2lwWAeJHco8G6Q8SRI3xdu36Bk4ngLQebZOTZQxdvpI5PNY
+         ABOQT9PlTmZSA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, pontus.fuchs@gmail.com,
         kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.16 154/217] mt76: connac: fix a theoretical NULL pointer dereference in mt76_connac_get_phy_mode
-Date:   Mon, 17 Jan 2022 21:18:37 -0500
-Message-Id: <20220118021940.1942199-154-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 011/188] ar5523: Fix null-ptr-deref with unexpected WDCMSG_TARGET_START reply
+Date:   Mon, 17 Jan 2022 21:28:55 -0500
+Message-Id: <20220118023152.1948105-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
-References: <20220118021940.1942199-1-sashal@kernel.org>
+In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
+References: <20220118023152.1948105-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,43 +51,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Zekun Shen <bruceshenzk@gmail.com>
 
-[ Upstream commit c9dbeac4988f6d4c4211b3747ec9c9c75ea87967 ]
+[ Upstream commit ae80b6033834342601e99f74f6a62ff5092b1cee ]
 
-Even if it is not a real bug since mt76_connac_get_phy_mode runs just
-for mt7921 where only STA is supported, fix a theoretical NULL pointer
-dereference if new added modes do not support HE
+Unexpected WDCMSG_TARGET_START replay can lead to null-ptr-deref
+when ar->tx_cmd->odata is NULL. The patch adds a null check to
+prevent such case.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+ ar5523_cmd+0x46a/0x581 [ar5523]
+ ar5523_probe.cold+0x1b7/0x18da [ar5523]
+ ? ar5523_cmd_rx_cb+0x7a0/0x7a0 [ar5523]
+ ? __pm_runtime_set_status+0x54a/0x8f0
+ ? _raw_spin_trylock_bh+0x120/0x120
+ ? pm_runtime_barrier+0x220/0x220
+ ? __pm_runtime_resume+0xb1/0xf0
+ usb_probe_interface+0x25b/0x710
+ really_probe+0x209/0x5d0
+ driver_probe_device+0xc6/0x1b0
+ device_driver_attach+0xe2/0x120
+
+I found the bug using a custome USBFuzz port. It's a research work
+to fuzz USB stack/drivers. I modified it to fuzz ath9k driver only,
+providing hand-crafted usb descriptors to QEMU.
+
+After fixing the code (fourth byte in usb packet) to WDCMSG_TARGET_START,
+I got the null-ptr-deref bug. I believe the bug is triggerable whenever
+cmd->odata is NULL. After patching, I tested with the same input and no
+longer see the KASAN report.
+
+This was NOT tested on a real device.
+
+Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/YXsmPQ3awHFLuAj2@10-18-43-117.dynapool.wireless.nyu.edu
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 26b4b875dcc02..bcb596664b3e9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -1179,7 +1179,7 @@ mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 		if (ht_cap->ht_supported)
- 			mode |= PHY_MODE_GN;
- 
--		if (he_cap->has_he)
-+		if (he_cap && he_cap->has_he)
- 			mode |= PHY_MODE_AX_24G;
- 	} else if (band == NL80211_BAND_5GHZ || band == NL80211_BAND_6GHZ) {
- 		mode |= PHY_MODE_A;
-@@ -1190,7 +1190,7 @@ mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 		if (vht_cap->vht_supported)
- 			mode |= PHY_MODE_AC;
- 
--		if (he_cap->has_he) {
-+		if (he_cap && he_cap->has_he) {
- 			if (band == NL80211_BAND_6GHZ)
- 				mode |= PHY_MODE_AX_6G;
- 			else
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 49cc4b7ed5163..1baec4b412c8d 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -153,6 +153,10 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
+ 			ar5523_err(ar, "Invalid reply to WDCMSG_TARGET_START");
+ 			return;
+ 		}
++		if (!cmd->odata) {
++			ar5523_err(ar, "Unexpected WDCMSG_TARGET_START reply");
++			return;
++		}
+ 		memcpy(cmd->odata, hdr + 1, sizeof(u32));
+ 		cmd->olen = sizeof(u32);
+ 		cmd->res = 0;
 -- 
 2.34.1
 
