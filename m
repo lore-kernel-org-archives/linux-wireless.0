@@ -2,52 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 099B3C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10FBCC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346419AbiARCxz (ORCPT
+        id S239311AbiARCyA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:53:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34410 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348488AbiARCpb (ORCPT
+        Mon, 17 Jan 2022 21:54:00 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:43366 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350402AbiARCvk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:45:31 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C93D3C03400C;
-        Mon, 17 Jan 2022 18:38:14 -0800 (PST)
+        Mon, 17 Jan 2022 21:51:40 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 912BBB81229;
-        Tue, 18 Jan 2022 02:38:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21438C36AE3;
-        Tue, 18 Jan 2022 02:38:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 678D66134A;
+        Tue, 18 Jan 2022 02:51:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C88BC36AEF;
+        Tue, 18 Jan 2022 02:51:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473492;
-        bh=XOsj6tMeo3byH1VXmZp4CqHcytz5W+S7VP6NCTNikdo=;
+        s=k20201202; t=1642474298;
+        bh=ytqGsn8MmYRAVpbzLdd12cjfjLBCERwhbxRlqhLvZ30=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E0P4wmm7zI/vaiT0nW6pru0UiZspsP0j+cvJ2bGvWhhUCZd2/yBITWoj1SCRZvwso
-         tOaCujn7m3UJiCq15ZZJvVwYsw9Qh3RwpebrupNalrxn3M4o84scg9K2JYSdiXsR/R
-         s9KY/ZOXwsrQISoL9+u4rsZMrD6bgwwXTB/6Pm+wod6yKV1P2m2s2SxIXa2TdmmO7u
-         eYKM2mF+ufVYJ6NYXP6Ue7DqnJH9DT3bviTHUQ5T2xwzkDwZe8hYr+e6cJImeHDK2L
-         lDU81HfM4hp8QePYTANMf5bwP8ccgJtJHzZs5sCO6q3krdnp/hT8gN5KEgC9Iwvelv
-         Ejsj3Yz4qCcGA==
+        b=hFZqzbFYtxSngk8tW6EB8YYPrBSRDnYr+vjju/quO3I6pCsietOfWlmxicIISRi7f
+         iKia0qHGWdUOElCU6hhsgOEgFTct4SPfHhY9Y65u7UD1lQj2bwg73w5x6CmaHTrK8b
+         EckA+TMvbGxqg2FYBYF9+bJz5Waw+5QRYtyP2JPL0jlibkGOs09EPCamsN5nnYuXbv
+         lC68R2GnQEMNveHroH94EQajQFzG2bYLDbZNhENgYXKWpj+B1/suS5W4lORGaUNw+I
+         7b2xyeUEoX1uh3ypQNdZUGVz6TwWHd7ZihCt0gW/G2NBgjzahf4j/80Qg0/kEObkIP
+         mk+GiFppvIkjg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
-        syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>,
-        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, ath9k-devel@qca.qualcomm.com,
-        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 134/188] ath9k_htc: fix NULL pointer dereference at ath9k_htc_tx_get_packet()
-Date:   Mon, 17 Jan 2022 21:30:58 -0500
-Message-Id: <20220118023152.1948105-134-sashal@kernel.org>
+Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+        Brendan Dolan-Gavitt <brendandg@nyu.edu>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
+        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
+        huxinming820@gmail.com, kvalo@kernel.org, davem@davemloft.net,
+        kuba@kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 10/33] mwifiex: Fix skb_over_panic in mwifiex_usb_recv()
+Date:   Mon, 17 Jan 2022 21:50:52 -0500
+Message-Id: <20220118025116.1954375-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
-References: <20220118023152.1948105-1-sashal@kernel.org>
+In-Reply-To: <20220118025116.1954375-1-sashal@kernel.org>
+References: <20220118025116.1954375-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,79 +54,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+From: Zekun Shen <bruceshenzk@gmail.com>
 
-[ Upstream commit 8b3046abc99eefe11438090bcc4ec3a3994b55d0 ]
+[ Upstream commit 04d80663f67ccef893061b49ec8a42ff7045ae84 ]
 
-syzbot is reporting lockdep warning at ath9k_wmi_event_tasklet() followed
-by kernel panic at get_htc_epid_queue() from ath9k_htc_tx_get_packet() from
-ath9k_htc_txstatus() [1], for ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID)
-depends on spin_lock_init() from ath9k_init_priv() being already completed.
+Currently, with an unknown recv_type, mwifiex_usb_recv
+just return -1 without restoring the skb. Next time
+mwifiex_usb_rx_complete is invoked with the same skb,
+calling skb_put causes skb_over_panic.
 
-Since ath9k_wmi_event_tasklet() is set by ath9k_init_wmi() from
-ath9k_htc_probe_device(), it is possible that ath9k_wmi_event_tasklet() is
-called via tasklet interrupt before spin_lock_init() from ath9k_init_priv()
- from ath9k_init_device() from ath9k_htc_probe_device() is called.
+The bug is triggerable with a compromised/malfunctioning
+usb device. After applying the patch, skb_over_panic
+no longer shows up with the same input.
 
-Let's hold ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID) no-op until
-ath9k_tx_init() completes.
+Attached is the panic report from fuzzing.
+skbuff: skb_over_panic: text:000000003bf1b5fa
+ len:2048 put:4 head:00000000dd6a115b data:000000000a9445d8
+ tail:0x844 end:0x840 dev:<NULL>
+kernel BUG at net/core/skbuff.c:109!
+invalid opcode: 0000 [#1] SMP KASAN NOPTI
+CPU: 0 PID: 198 Comm: in:imklog Not tainted 5.6.0 #60
+RIP: 0010:skb_panic+0x15f/0x161
+Call Trace:
+ <IRQ>
+ ? mwifiex_usb_rx_complete+0x26b/0xfcd [mwifiex_usb]
+ skb_put.cold+0x24/0x24
+ mwifiex_usb_rx_complete+0x26b/0xfcd [mwifiex_usb]
+ __usb_hcd_giveback_urb+0x1e4/0x380
+ usb_giveback_urb_bh+0x241/0x4f0
+ ? __hrtimer_run_queues+0x316/0x740
+ ? __usb_hcd_giveback_urb+0x380/0x380
+ tasklet_action_common.isra.0+0x135/0x330
+ __do_softirq+0x18c/0x634
+ irq_exit+0x114/0x140
+ smp_apic_timer_interrupt+0xde/0x380
+ apic_timer_interrupt+0xf/0x20
+ </IRQ>
 
-Link: https://syzkaller.appspot.com/bug?extid=31d54c60c5b254d6f75b [1]
-Reported-by: syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Tested-by: syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/77b76ac8-2bee-6444-d26c-8c30858b8daa@i-love.sakura.ne.jp
+Reported-by: Brendan Dolan-Gavitt <brendandg@nyu.edu>
+Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/YX4CqjfRcTa6bVL+@Zekuns-MBP-16.fios-router.home
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          | 1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 5 +++++
- drivers/net/wireless/ath/ath9k/wmi.c          | 4 ++++
- 3 files changed, 10 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 4f71e962279af..6b45e63fae4ba 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -306,6 +306,7 @@ struct ath9k_htc_tx {
- 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
- 	struct timer_list cleanup_timer;
- 	spinlock_t tx_lock;
-+	bool initialized;
- };
- 
- struct ath9k_htc_tx_ctl {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index e7a21eaf3a68d..6a850a0bfa8ad 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -813,6 +813,11 @@ int ath9k_tx_init(struct ath9k_htc_priv *priv)
- 	skb_queue_head_init(&priv->tx.data_vi_queue);
- 	skb_queue_head_init(&priv->tx.data_vo_queue);
- 	skb_queue_head_init(&priv->tx.tx_failed);
-+
-+	/* Allow ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID) to operate. */
-+	smp_wmb();
-+	priv->tx.initialized = true;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index fe29ad4b9023c..f315c54bd3ac0 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -169,6 +169,10 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
- 					     &wmi->drv_priv->fatal_work);
- 			break;
- 		case WMI_TXSTATUS_EVENTID:
-+			/* Check if ath9k_tx_init() completed. */
-+			if (!data_race(priv->tx.initialized))
-+				break;
-+
- 			spin_lock_bh(&priv->tx.tx_lock);
- 			if (priv->tx.flags & ATH9K_HTC_OP_TX_DRAIN) {
- 				spin_unlock_bh(&priv->tx.tx_lock);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 2c4225e57c396..3a26add665ca0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -132,7 +132,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		default:
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "unknown recv_type %#x\n", recv_type);
+-			return -1;
++			ret = -1;
++			goto exit_restore_skb;
+ 		}
+ 		break;
+ 	case MWIFIEX_USB_EP_DATA:
 -- 
 2.34.1
 
