@@ -2,49 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E95C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A22C43219
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346610AbiARCtL (ORCPT
+        id S1346707AbiARCtP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:49:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60060 "EHLO
+        Mon, 17 Jan 2022 21:49:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345303AbiARCim (ORCPT
+        with ESMTP id S1347180AbiARCky (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:38:42 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D164FC061779;
-        Mon, 17 Jan 2022 18:35:13 -0800 (PST)
+        Mon, 17 Jan 2022 21:40:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A05B5C07E5FD;
+        Mon, 17 Jan 2022 18:36:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E8F7861216;
-        Tue, 18 Jan 2022 02:35:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17FCBC36AEB;
-        Tue, 18 Jan 2022 02:35:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5DCFDB81252;
+        Tue, 18 Jan 2022 02:36:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1C63C36AEB;
+        Tue, 18 Jan 2022 02:36:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473312;
-        bh=H31agwLA2ruQQdN8omOAcWslyTlbPI1GX1Gde+iH0M8=;
+        s=k20201202; t=1642473384;
+        bh=dYHVgXTJBZ/3UowgSYH+o0QhZxf6PnFIxrfZXVMuKnM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dI5+XpKMAscYkQ1jOwkYrJKIdMhQEGAORpLLEtOYdzYe7kJikZHXEzLhChPwsMJ+f
-         6DmuUNmP3OGL2KWh+m4m6jVTAowgP5IPszWS+zzHyM/duCHl1NTj7kSIelgsSZkN6q
-         rpVLrTH+uGMmSyAMZnlgHC8wmgqcNP+e5bSVFo2BUKLS+m0H6HB5wWY+UAYUkjwRuX
-         h2PPdMsUglXl3ewF8WXVl4zUyuVy7NVY4C4Y+XFxxSX60VN3lPZ58gttaC9n1pH0l6
-         fKipaOd3+1il/v0gLaKjnqMzqO07DMAIKFQaZFIRXyIhssfV/GSvI9l0xQNlHZj/Qp
-         KbzBV848Dgmng==
+        b=ty6M05+tjNefyDSAk7F7mXD29VGoBPNGwwEB7EcHEmGXsdYBGXKNMgGOmTcGczV2d
+         wh+X61VjKwbtthkwC6LhzZFlbvQpXEpjKu9WDHBcVO9SWSbah0ejSkJbdrsLCZiLTr
+         4121MZGKwdsiWt36e5f66EMUAAlDtjIi1k2fez6Ba0hxZFK3dZboxCsGhv1faQ9unQ
+         sn5UivWXq3Vw+WwE4OClygBSCft5ul+ZeyoPzDu5vTZNxdmVlIWXuc+H7fZkgoimtF
+         sVowDqQv2LO6Qa9NFUnQn2/D+SUDe+PduobkmpO/stRDX9NYw9Yp5PYmRM+koJYoIY
+         BlBZKTCNg0z+g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
-        Brendan Dolan-Gavitt <brendandg@nyu.edu>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
-        siva8118@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 065/188] rsi: Fix use-after-free in rsi_rx_done_handler()
-Date:   Mon, 17 Jan 2022 21:29:49 -0500
-Message-Id: <20220118023152.1948105-65-sashal@kernel.org>
+Cc:     Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 095/188] ath10k: Fix tx hanging
+Date:   Mon, 17 Jan 2022 21:30:19 -0500
+Message-Id: <20220118023152.1948105-95-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
 References: <20220118023152.1948105-1-sashal@kernel.org>
@@ -56,86 +54,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-[ Upstream commit b07e3c6ebc0c20c772c0f54042e430acec2945c3 ]
+[ Upstream commit e8a91863eba3966a447d2daa1526082d52b5db2a ]
 
-When freeing rx_cb->rx_skb, the pointer is not set to NULL,
-a later rsi_rx_done_handler call will try to read the freed
-address.
-This bug will very likley lead to double free, although
-detected early as use-after-free bug.
+While running stress tests in roaming scenarios (switching ap's every 5
+seconds, we discovered a issue which leads to tx hangings of exactly 5
+seconds while or after scanning for new accesspoints. We found out that
+this hanging is triggered by ath10k_mac_wait_tx_complete since the
+empty_tx_wq was not wake when the num_tx_pending counter reaches zero.
+To fix this, we simply move the wake_up call to htt_tx_dec_pending,
+since this call was missed on several locations within the ath10k code.
 
-The bug is triggerable with a compromised/malfunctional usb
-device. After applying the patch, the same input no longer
-triggers the use-after-free.
-
-Attached is the kasan report from fuzzing.
-
-BUG: KASAN: use-after-free in rsi_rx_done_handler+0x354/0x430 [rsi_usb]
-Read of size 4 at addr ffff8880188e5930 by task modprobe/231
-Call Trace:
- <IRQ>
- dump_stack+0x76/0xa0
- print_address_description.constprop.0+0x16/0x200
- ? rsi_rx_done_handler+0x354/0x430 [rsi_usb]
- ? rsi_rx_done_handler+0x354/0x430 [rsi_usb]
- __kasan_report.cold+0x37/0x7c
- ? dma_direct_unmap_page+0x90/0x110
- ? rsi_rx_done_handler+0x354/0x430 [rsi_usb]
- kasan_report+0xe/0x20
- rsi_rx_done_handler+0x354/0x430 [rsi_usb]
- __usb_hcd_giveback_urb+0x1e4/0x380
- usb_giveback_urb_bh+0x241/0x4f0
- ? __usb_hcd_giveback_urb+0x380/0x380
- ? apic_timer_interrupt+0xa/0x20
- tasklet_action_common.isra.0+0x135/0x330
- __do_softirq+0x18c/0x634
- ? handle_irq_event+0xcd/0x157
- ? handle_edge_irq+0x1eb/0x7b0
- irq_exit+0x114/0x140
- do_IRQ+0x91/0x1e0
- common_interrupt+0xf/0xf
- </IRQ>
-
-Reported-by: Brendan Dolan-Gavitt <brendandg@nyu.edu>
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/YXxQL/vIiYcZUu/j@10-18-43-117.dynapool.wireless.nyu.edu
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20210505085806.11474-1-s.gottschall@dd-wrt.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c   | 2 --
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 6821ea9918956..3cca1823c458a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -269,8 +269,12 @@ static void rsi_rx_done_handler(struct urb *urb)
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)rx_cb->data;
- 	int status = -EINVAL;
- 
-+	if (!rx_cb->rx_skb)
-+		return;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d6b8bdcef4160..b793eac2cfac8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -147,6 +147,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+ 	htt->num_pending_tx--;
+ 	if (htt->num_pending_tx == htt->max_num_pending_tx - 1)
+ 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
 +
- 	if (urb->status) {
- 		dev_kfree_skb(rx_cb->rx_skb);
-+		rx_cb->rx_skb = NULL;
- 		return;
- 	}
- 
-@@ -294,8 +298,10 @@ static void rsi_rx_done_handler(struct urb *urb)
- 	if (rsi_rx_urb_submit(dev->priv, rx_cb->ep_num, GFP_ATOMIC))
- 		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission", __func__);
- 
--	if (status)
-+	if (status) {
- 		dev_kfree_skb(rx_cb->rx_skb);
-+		rx_cb->rx_skb = NULL;
-+	}
++	if (htt->num_pending_tx == 0)
++		wake_up(&htt->empty_tx_wq);
  }
  
- static void rsi_rx_urb_kill(struct rsi_hw *adapter, u8 ep_num)
+ int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 7c9ea0c073d8b..6f8b642188941 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -82,8 +82,6 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	flags = skb_cb->flags;
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+ 	ath10k_htt_tx_dec_pending(htt);
+-	if (htt->num_pending_tx == 0)
+-		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	rcu_read_lock();
 -- 
 2.34.1
 
