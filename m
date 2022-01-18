@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8E29C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:21:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 783ADC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244798AbiARCVo (ORCPT
+        id S245474AbiARCYF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:21:44 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:37838 "EHLO
+        Mon, 17 Jan 2022 21:24:05 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:39554 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244686AbiARCVK (ORCPT
+        with ESMTP id S244793AbiARCW4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:21:10 -0500
+        Mon, 17 Jan 2022 21:22:56 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C73D961163;
-        Tue, 18 Jan 2022 02:21:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E5CAC36AF2;
-        Tue, 18 Jan 2022 02:21:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5326B60010;
+        Tue, 18 Jan 2022 02:22:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8982CC36AF3;
+        Tue, 18 Jan 2022 02:22:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472469;
-        bh=VbjM88vfkzibxjmt+y58uIpvisAVC02ljgpwkY+7PCM=;
+        s=k20201202; t=1642472575;
+        bh=rgstYFf8hJAZN1nCGJnttGKltvu+7dKK7FEZnsJpvbY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IyIqOvMJqL7RaoEbzRxRgUDtWsbYLmZquDAk1r1YUi3abPpS4Rk5WRFB17kDXL8Hi
-         xCDivf4R3oaw613eqz3sXdXVM4IQG96lHeHeI5jVDHSqInVLlEj27ym/okj7o05KkB
-         X7Gnwmz8SvkmdG9tl5jxUynZ3VFmKrTF6iffT2iPJvI3uru8eqADfrIyNfKUDmzlA8
-         kZxYppO0vKJM3jgwkm+FUejK8MkvEdMagrWA5Pi+dFabkrufg8QdKp5JyJfuWxsLN8
-         GgFIh/7kSHPidd3ZR93i8AiaMkYVkgW8qrNI2q5sjJt35MctfT7pJ5jl3BnYjJPXrx
-         Y+R0mBthx2h6g==
+        b=mIyYZ169DicBzkRx/GXxWMH5Br/CckeiwNZ+Sr27N195r65M1iJNPTxQ7K1FyxjTq
+         vb5KEIhF/eK0igHUIsTaETF5Bwa+GD4xW4KfYkLg/6xST+hnoEtziHSlMMh7eOq5yA
+         G6EqjNaEAM8NJp2GO7AO6KGLVI+TdZNHRfjpnJiUhBUJJnXfaalfIz54O+ywFGnUgj
+         ZpFvfz83BjgH3XWzQbq+H3ptdunY4kaEnmKGQBsGP0435QBIQFqupfZbBkRkoPd2Gh
+         ado/go28tgIT+FFVDXUzKvbWq8tgVC+tjwU+s32z/pO5ijcPM9T62sWNVXdS7Z/MYt
+         27obUWmZsMojQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Anilkumar Kolli <akolli@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 024/217] ath11k: enable IEEE80211_VHT_EXT_NSS_BW_CAPABLE if NSS ratio enabled
-Date:   Mon, 17 Jan 2022 21:16:27 -0500
-Message-Id: <20220118021940.1942199-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 059/217] ath11k: Fix mon status ring rx tlv processing
+Date:   Mon, 17 Jan 2022 21:17:02 -0500
+Message-Id: <20220118021940.1942199-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -51,52 +51,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-[ Upstream commit 78406044bdd0cc8987bc082b76867c63ab1c6af8 ]
+[ Upstream commit 09f16f7390f302937409738d6cb6ce99b265f455 ]
 
-When NSS ratio enabled reported by firmware, SUPPORTS_VHT_EXT_NSS_BW
-is set in ath11k, meanwhile IEEE80211_VHT_EXT_NSS_BW_CAPABLE also
-need to be set, otherwise it is invalid because spec in IEEE Std
-802.11™‐2020 as below.
+In HE monitor capture, HAL_TLV_STATUS_PPDU_DONE is received
+on processing multiple skb. Do not clear the ppdu_info
+till the HAL_TLV_STATUS_PPDU_DONE is received.
 
-Table 9-273-Supported VHT-MCS and NSS Set subfields, it has subfield
-VHT Extended NSS BW Capable, its definition is:
-Indicates whether the STA is capable of interpreting the Extended NSS
-BW Support subfield of the VHT Capabilities Information field.
+This fixes below warning and packet drops in monitor mode.
+ "Rate marked as an HE rate but data is invalid: MCS: 6, NSS: 0"
+ WARNING: at
+ PC is at ieee80211_rx_napi+0x624/0x840 [mac80211]
 
-dmesg have a message without this patch:
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-01693-QCAHKSWPL_SILICONZ-1
 
-ieee80211 phy0: copying sband (band 1) due to VHT EXT NSS BW flag
-
-It means mac80211 will set IEEE80211_VHT_EXT_NSS_BW_CAPABLE if ath11k not
-set it in ieee80211_register_hw(). So it is better to set it in ath11k.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20211013073704.15888-1-wgong@codeaurora.org
+Link: https://lore.kernel.org/r/1637249433-10316-1-git-send-email-akolli@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 1cc55602787bb..0a196fb3df9fd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -4561,6 +4561,10 @@ ath11k_create_vht_cap(struct ath11k *ar, u32 rate_cap_tx_chainmask,
- 	vht_cap.vht_supported = 1;
- 	vht_cap.cap = ar->pdev->cap.vht_cap;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index c5320847b80a7..f7968aefaabc5 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -3064,10 +3064,10 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 	if (!num_buffs_reaped)
+ 		goto exit;
  
-+	if (ar->pdev->cap.nss_ratio_enabled)
-+		vht_cap.vht_mcs.tx_highest |=
-+			cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
-+
- 	ath11k_set_vht_txbf_cap(ar, &vht_cap.cap);
+-	while ((skb = __skb_dequeue(&skb_list))) {
+-		memset(&ppdu_info, 0, sizeof(ppdu_info));
+-		ppdu_info.peer_id = HAL_INVALID_PEERID;
++	memset(&ppdu_info, 0, sizeof(ppdu_info));
++	ppdu_info.peer_id = HAL_INVALID_PEERID;
  
- 	rxmcs_map = 0;
++	while ((skb = __skb_dequeue(&skb_list))) {
+ 		if (ath11k_debugfs_is_pktlog_lite_mode_enabled(ar)) {
+ 			log_type = ATH11K_PKTLOG_TYPE_LITE_RX;
+ 			rx_buf_sz = DP_RX_BUFFER_SIZE_LITE;
+@@ -3095,10 +3095,7 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 			ath11k_dbg(ab, ATH11K_DBG_DATA,
+ 				   "failed to find the peer with peer_id %d\n",
+ 				   ppdu_info.peer_id);
+-			spin_unlock_bh(&ab->base_lock);
+-			rcu_read_unlock();
+-			dev_kfree_skb_any(skb);
+-			continue;
++			goto next_skb;
+ 		}
+ 
+ 		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
+@@ -3107,10 +3104,13 @@ int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
+ 		if (ath11k_debugfs_is_pktlog_peer_valid(ar, peer->addr))
+ 			trace_ath11k_htt_rxdesc(ar, skb->data, log_type, rx_buf_sz);
+ 
++next_skb:
+ 		spin_unlock_bh(&ab->base_lock);
+ 		rcu_read_unlock();
+ 
+ 		dev_kfree_skb_any(skb);
++		memset(&ppdu_info, 0, sizeof(ppdu_info));
++		ppdu_info.peer_id = HAL_INVALID_PEERID;
+ 	}
+ exit:
+ 	return num_buffs_reaped;
 -- 
 2.34.1
 
