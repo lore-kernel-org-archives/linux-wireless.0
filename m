@@ -2,44 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AEEC43219
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0E4C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345729AbiARCb6 (ORCPT
+        id S1345755AbiARCcA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:31:58 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:45962 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344009AbiARC2q (ORCPT
+        Mon, 17 Jan 2022 21:32:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58704 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345172AbiARCbT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:28:46 -0500
+        Mon, 17 Jan 2022 21:31:19 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04B3FC07E5FA;
+        Mon, 17 Jan 2022 18:28:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ECDFE60AB1;
-        Tue, 18 Jan 2022 02:28:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F28DC36AF6;
-        Tue, 18 Jan 2022 02:28:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DA83860AB1;
+        Tue, 18 Jan 2022 02:28:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEE72C36AF3;
+        Tue, 18 Jan 2022 02:28:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472925;
-        bh=gdRe4QpHk0RWhNXsg0cQ8r/uaUlLlCnuVFMUVDFrVS4=;
+        s=k20201202; t=1642472906;
+        bh=XOsj6tMeo3byH1VXmZp4CqHcytz5W+S7VP6NCTNikdo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Hpcc3XsUpUwvaBYLYxQm1wnwXSZKBk1K3D8XcAdfiwSvFK9LdolO7J+ZfsbLubG0V
-         CdN2en+oyy6jQRFga5z5r985rqVIAfNZEJmtZyq1K8dIzhCQkYj0swAlprGfoloVDU
-         BC1uhS4fYVTb9AImewTulkAoIlpUSlzjGlXll2Jfe125QxIM7F0ueoMXHVfpWMINrj
-         MOlwTXme4Wm4Rciuz0ItlT/9BkifZO0WMNg0mV6YMO1b/4pRuQ/z4uPm1StQTj/N0C
-         SxXnjFz0DHuydr7RcpwO+MqDymCgam0GRwlDezXKc9drBFdoqJI7YMAB78zNYAHrDd
-         itATBWk2aXooQ==
+        b=BOXlXepRtnNGK0wOg0U3O5oLDzHiNuVzpW6LzuHVK/ovoH1W0Pk27CXs2Y/0EmuGD
+         kz3LHv7zGfnJ/w2veMIpxJSA7JgNFGkT2kNzXT1fA2POLiIafdPvQLcLDf+rTCrwZS
+         3wDAWqfWkJ6CAAw8fAvnfXGfOp6wTWhVqI/9Insy7d5ZCwnoclMUJPujE4DPw2lK3M
+         6HhNWl7qVOjBMEaX3AIcFGb7YRpMSdZhOHLMY3YBkmJXUMUeaYlY4seQBsAdQRv/cK
+         JzWwoDBk0A6cNo+Q7jMb/pfJNG4uZOFZYnzRfNZo6oWozoyRxSn8sVbz/QS17rzFjw
+         diUww688x1Ltw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org,
+Cc:     Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+        syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>,
+        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, ath9k-devel@qca.qualcomm.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 164/217] iwlwifi: fix leaks/bad data after failed firmware load
-Date:   Mon, 17 Jan 2022 21:18:47 -0500
-Message-Id: <20220118021940.1942199-164-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 159/217] ath9k_htc: fix NULL pointer dereference at ath9k_htc_tx_get_packet()
+Date:   Mon, 17 Jan 2022 21:18:42 -0500
+Message-Id: <20220118021940.1942199-159-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -51,67 +56,79 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 
-[ Upstream commit ab07506b0454bea606095951e19e72c282bfbb42 ]
+[ Upstream commit 8b3046abc99eefe11438090bcc4ec3a3994b55d0 ]
 
-If firmware load fails after having loaded some parts of the
-firmware, e.g. the IML image, then this would leak. For the
-host command list we'd end up running into a WARN on the next
-attempt to load another firmware image.
+syzbot is reporting lockdep warning at ath9k_wmi_event_tasklet() followed
+by kernel panic at get_htc_epid_queue() from ath9k_htc_tx_get_packet() from
+ath9k_htc_txstatus() [1], for ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID)
+depends on spin_lock_init() from ath9k_init_priv() being already completed.
 
-Fix this by calling iwl_dealloc_ucode() on failures, and make
-that also clear the data so we start fresh on the next round.
+Since ath9k_wmi_event_tasklet() is set by ath9k_init_wmi() from
+ath9k_htc_probe_device(), it is possible that ath9k_wmi_event_tasklet() is
+called via tasklet interrupt before spin_lock_init() from ath9k_init_priv()
+ from ath9k_init_device() from ath9k_htc_probe_device() is called.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211210110539.1f742f0eb58a.I1315f22f6aa632d94ae2069f85e1bca5e734dce0@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Let's hold ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID) no-op until
+ath9k_tx_init() completes.
+
+Link: https://syzkaller.appspot.com/bug?extid=31d54c60c5b254d6f75b [1]
+Reported-by: syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Tested-by: syzbot <syzbot+31d54c60c5b254d6f75b@syzkaller.appspotmail.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/77b76ac8-2bee-6444-d26c-8c30858b8daa@i-love.sakura.ne.jp
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath9k/htc.h          | 1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 5 +++++
+ drivers/net/wireless/ath/ath9k/wmi.c          | 4 ++++
+ 3 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 5cec467b995bb..ad94526a4e1e7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -130,6 +130,9 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 4f71e962279af..6b45e63fae4ba 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -306,6 +306,7 @@ struct ath9k_htc_tx {
+ 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
+ 	struct timer_list cleanup_timer;
+ 	spinlock_t tx_lock;
++	bool initialized;
+ };
  
- 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
- 		iwl_free_fw_img(drv, drv->fw.img + i);
+ struct ath9k_htc_tx_ctl {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index e7a21eaf3a68d..6a850a0bfa8ad 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -813,6 +813,11 @@ int ath9k_tx_init(struct ath9k_htc_priv *priv)
+ 	skb_queue_head_init(&priv->tx.data_vi_queue);
+ 	skb_queue_head_init(&priv->tx.data_vo_queue);
+ 	skb_queue_head_init(&priv->tx.tx_failed);
 +
-+	/* clear the data for the aborted load case */
-+	memset(&drv->fw, 0, sizeof(drv->fw));
++	/* Allow ath9k_wmi_event_tasklet(WMI_TXSTATUS_EVENTID) to operate. */
++	smp_wmb();
++	priv->tx.initialized = true;
++
+ 	return 0;
  }
  
- static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
-@@ -1375,6 +1378,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	int i;
- 	bool load_module = false;
- 	bool usniffer_images = false;
-+	bool failure = true;
- 
- 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
- 	fw->ucode_capa.standard_phy_calibration_size =
-@@ -1644,6 +1648,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 				op->name, err);
- #endif
- 	}
-+	failure = false;
- 	goto free;
- 
-  try_again:
-@@ -1659,6 +1664,9 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	complete(&drv->request_firmware_complete);
- 	device_release_driver(drv->trans->dev);
-  free:
-+	if (failure)
-+		iwl_dealloc_ucode(drv);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index fe29ad4b9023c..f315c54bd3ac0 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -169,6 +169,10 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+ 					     &wmi->drv_priv->fatal_work);
+ 			break;
+ 		case WMI_TXSTATUS_EVENTID:
++			/* Check if ath9k_tx_init() completed. */
++			if (!data_race(priv->tx.initialized))
++				break;
 +
- 	if (pieces) {
- 		for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
- 			kfree(pieces->img[i].sec);
+ 			spin_lock_bh(&priv->tx.tx_lock);
+ 			if (priv->tx.flags & ATH9K_HTC_OP_TX_DRAIN) {
+ 				spin_unlock_bh(&priv->tx.tx_lock);
 -- 
 2.34.1
 
