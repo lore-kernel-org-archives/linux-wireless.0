@@ -2,125 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CC98C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 591A7C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 06:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355437AbiARDsp (ORCPT
+        id S235145AbiARGdU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 22:48:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33192 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346940AbiARCkR (ORCPT
+        Tue, 18 Jan 2022 01:33:20 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:43198 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230233AbiARGdU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:40:17 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63346C061A82;
-        Mon, 17 Jan 2022 18:36:16 -0800 (PST)
+        Tue, 18 Jan 2022 01:33:20 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 259AFB81244;
-        Tue, 18 Jan 2022 02:36:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D1AC36AE3;
-        Tue, 18 Jan 2022 02:36:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F25096122F
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2022 06:33:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D75DC00446;
+        Tue, 18 Jan 2022 06:33:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473373;
-        bh=u/rMJCClADWqwrUINDSCBhqeHcpdAFdoMe++HuFFxeA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pxA7rAlYNkxym2Wg+5Zl1MKLODMJsOXz8Y7dRX/b49IIyTOgSlEbsQZGa3IrTk9O/
-         a6GMFlu4UoqEDekw/SxpDHjzLDoIhTtTF2dYiU2j4AewLn4Ua2JKDMry48MBtSH4BK
-         7aLetZNZCkU3b+tA53AvqLyTjaur1skMPIFJz0obAh92tBI/q1XFKCjK9zk2uCXLBZ
-         zTimiMEm0JU3dRz2GR0We1bHHA4wFTB2i3A3BTiRRaRCrwch/DWeY9PuqzzWhHiy4i
-         kxrqH8GlwnTYNlUBAD5pfKR8Zkoj4PeAkHYGDQ03D6u+GYr4IOnNOGNjUxE651ixZ2
-         4vZRgsT9dO1yA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Maximilian Ernestus <maximilian@ernestus.de>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org,
-        mordechay.goodstein@intel.com, miriam.rachel.korenblit@intel.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 090/188] iwlwifi: mvm: synchronize with FW after multicast commands
-Date:   Mon, 17 Jan 2022 21:30:14 -0500
-Message-Id: <20220118023152.1948105-90-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
-References: <20220118023152.1948105-1-sashal@kernel.org>
+        s=k20201202; t=1642487599;
+        bh=AuLR7KOtcoYyPTyis6hGqGcPXpIpOlMrvosPBEfyGcE=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=lz7XSH5wdHFEmpG7085rBsUL7EzhNuGDGx23AlZ2TaN8dPQT/FHtHuvwm+X4kREpc
+         /T2WlYOu/zgJWSXsfncvzaj/BVaTkfyoKas6yKnWAevm1TdcCVhfdE3J/jxcM50UfA
+         nJf6ALhiuikQKaCbDykIZqG+24cuqH43JsDmDTN3om7XLg8/jy6ZRRhxdSGPAenBJY
+         T1g8exfcQxVIQBYJ7uMwsVX712NPFhpxCj6vaFkb4I1mg3Rqmzu367TMeyRgmMgtnA
+         0qjFDOBg+q2fiEcO3Tr+iI8MpXn2Km/E0qt4FsJYLHwQ84AIVoLO79P3UobwVHog0j
+         eAUvT1j4ZUHjw==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Wen Gong <quic_wgong@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath11k: set WMI_PEER_40MHZ while peer assoc for 6 GHz
+In-Reply-To: <6ac56fa1-b369-831f-2b1d-9a188b7cbacc@quicinc.com> (Wen Gong's
+        message of "Tue, 18 Jan 2022 10:43:15 +0800")
+References: <20220113023145.14292-1-quic_wgong@quicinc.com>
+        <164242492251.16331.2627237965817574376.kvalo@kernel.org>
+        <6ac56fa1-b369-831f-2b1d-9a188b7cbacc@quicinc.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Date:   Tue, 18 Jan 2022 08:33:14 +0200
+Message-ID: <877daximdx.fsf@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Wen Gong <quic_wgong@quicinc.com> writes:
 
-[ Upstream commit db66abeea3aefed481391ecc564fb7b7fb31d742 ]
+> On 1/17/2022 9:08 PM, Kalle Valo wrote:
+>> Wen Gong <quic_wgong@quicinc.com> wrote:
+>>
+>>> When station connect to AP of 6 GHz with 40 MHz bandwidth, the TX is
+>>> always stay 20 MHz, it is because the flag WMI_PEER_40MHZ is not set
+>>> while peer assoc. Add the flag if remote peer is 40 MHz bandwidth.
+>>>
+>>> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-02892.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+>> Fixes tag
+>>
+>>    Fixes: 2cdf2b3cdf54 ("ath11k: add 6ghz params in peer assoc command")
+>>
+>> has these problem(s):
+>>
+>>    - Target SHA1 does not exist
+>>
+>> Did you mean:
+>>
+>> Fixes: c3a7d7eb4c98 ("ath11k: add 6 GHz params in peer assoc command")
+>
+> Thanks.
+>
+> yes, it is.
+>
+> I see you have already changed it in master-pending.
 
-If userspace installs a lot of multicast groups very quickly, then
-we may run out of command queue space as we send the updates in an
-asynchronous fashion (due to locking concerns), and the CPU can
-create them faster than the firmware can process them. This is true
-even when mac80211 has a work struct that gets scheduled.
+Yeah, so no need to resend because of this.
 
-Fix this by synchronizing with the firmware after sending all those
-commands - outside of the iteration we can send a synchronous echo
-command that just has the effect of the CPU waiting for the prior
-asynchronous commands to finish. This also will cause fewer of the
-commands to be sent to the firmware overall, because the work will
-only run once when rescheduled multiple times while it's running.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=213649
-Suggested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reported-by: Maximilian Ernestus <maximilian@ernestus.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211204083238.51aea5b79ea4.I88a44798efda16e9fe480fb3e94224931d311b29@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c   | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 7e5ad943b20cb..750217393f480 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1687,6 +1687,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	struct iwl_mvm_mc_iter_data iter_data = {
- 		.mvm = mvm,
- 	};
-+	int ret;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1696,6 +1697,22 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	ieee80211_iterate_active_interfaces_atomic(
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_mc_iface_iterator, &iter_data);
-+
-+	/*
-+	 * Send a (synchronous) ech command so that we wait for the
-+	 * multiple asynchronous MCAST_FILTER_CMD commands sent by
-+	 * the interface iterator. Otherwise, we might get here over
-+	 * and over again (by userspace just sending a lot of these)
-+	 * and the CPU can send them faster than the firmware can
-+	 * process them.
-+	 * Note that the CPU is still faster - but with this we'll
-+	 * actually send fewer commands overall because the CPU will
-+	 * not schedule the work in mac80211 as frequently if it's
-+	 * still running when rescheduled (possibly multiple times).
-+	 */
-+	ret = iwl_mvm_send_cmd_pdu(mvm, ECHO_CMD, 0, 0, NULL);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to synchronize multicast groups update\n");
- }
- 
- static u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
 -- 
-2.34.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
