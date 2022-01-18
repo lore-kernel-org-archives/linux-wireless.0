@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BD30C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A65DC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 03:07:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354595AbiARDHH (ORCPT
+        id S242900AbiARDHI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 22:07:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35836 "EHLO
+        Mon, 17 Jan 2022 22:07:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350897AbiARCwb (ORCPT
+        with ESMTP id S245299AbiARC46 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:52:31 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97562C02C30A;
-        Mon, 17 Jan 2022 18:43:20 -0800 (PST)
+        Mon, 17 Jan 2022 21:56:58 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16F07C0613AC;
+        Mon, 17 Jan 2022 18:44:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7290C612F3;
-        Tue, 18 Jan 2022 02:43:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B151EC36AE3;
-        Tue, 18 Jan 2022 02:43:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AE293B8125F;
+        Tue, 18 Jan 2022 02:44:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45DF1C36AE3;
+        Tue, 18 Jan 2022 02:44:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473799;
-        bh=ND1OzIQ4qqHezNqKTpq1HofiiNOFrdx989O0rs0C+SM=;
+        s=k20201202; t=1642473881;
+        bh=dR6pZiRW7TNa1iTDp9N7qtUKzFnTqgXitlsxGEtbyDs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OY7xyKNwAHj7LXAXKoA5jkVgp+648FGNq50yI0LQ/jCx9DWVgirOIUDKOZyl8RWbk
-         1w0j8nbUSrgujea2uoXez6OY6L6xWH8ZQvV1aShUoWg1+I5LpNb54uVQU/ftwbi6+9
-         vbXFncRW/CNtlFxfr03BJs42mCQEEC8Tk0WlsQRquzRZEl12AYmVXwZwmsLLC1MOuI
-         E9QPDlg3XafWMfN8ybZisuILhG5RrPAfluxtZlECNen3gt+dIFRJYiZcE0wjAsL9kR
-         vf9eeSaWWy2QxisN5kpYmlX6ezGiEkyNc9cM3iVha6nXGucz7BdQMlBNef0bjCx9M/
-         ACBrhLRBV1n7Q==
+        b=mj4eQsOc+t4pPzzfbrbSMnp9+guFX0Kvx1FRQU7JprPFrq9syJ5PoPDh67X/P/CXb
+         5XoWJYXoOhc9VjUiHA3kkxcFlAVVXVuoPMmSr+S3C/0jgMGevYZNxHn4eVhRzHdbqR
+         Luoob0n2JutUKM64kXFGLH5LIj7jRjhZ5cJJDkSg+g7qzuwIGmckNjAAuxsscF551r
+         /thFpl+cBI5s08Fkat1fkkHVewpcA/P7z7ya3p/ANqZxyzpJkqJm7dUj97X//Eb+W3
+         oIH79y0nwjcgsxSVuwY1OYczR0vnaMH5oO9L//iRRhfgGracyQ3/YmhfgGsvxF1bjs
+         1cDsMxRivYwlQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Hao Huang <phhuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        tony0620emma@gmail.com, davem@davemloft.net, kuba@kernel.org,
+Cc:     Zekun Shen <bruceshenzk@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, pontus.fuchs@gmail.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 078/116] rtw88: 8822c: update rx settings to prevent potential hw deadlock
-Date:   Mon, 17 Jan 2022 21:39:29 -0500
-Message-Id: <20220118024007.1950576-78-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 05/73] ar5523: Fix null-ptr-deref with unexpected WDCMSG_TARGET_START reply
+Date:   Mon, 17 Jan 2022 21:43:24 -0500
+Message-Id: <20220118024432.1952028-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118024007.1950576-1-sashal@kernel.org>
-References: <20220118024007.1950576-1-sashal@kernel.org>
+In-Reply-To: <20220118024432.1952028-1-sashal@kernel.org>
+References: <20220118024432.1952028-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,77 +54,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Zekun Shen <bruceshenzk@gmail.com>
 
-[ Upstream commit c1afb26727d9e507d3e17a9890e7aaf7fc85cd55 ]
+[ Upstream commit ae80b6033834342601e99f74f6a62ff5092b1cee ]
 
-These settings enables mac to detect and recover when rx fifo
-circuit deadlock occurs. Previous version missed this, so we fix it.
+Unexpected WDCMSG_TARGET_START replay can lead to null-ptr-deref
+when ar->tx_cmd->odata is NULL. The patch adds a null check to
+prevent such case.
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20211217012708.8623-1-pkshih@realtek.com
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+ ar5523_cmd+0x46a/0x581 [ar5523]
+ ar5523_probe.cold+0x1b7/0x18da [ar5523]
+ ? ar5523_cmd_rx_cb+0x7a0/0x7a0 [ar5523]
+ ? __pm_runtime_set_status+0x54a/0x8f0
+ ? _raw_spin_trylock_bh+0x120/0x120
+ ? pm_runtime_barrier+0x220/0x220
+ ? __pm_runtime_resume+0xb1/0xf0
+ usb_probe_interface+0x25b/0x710
+ really_probe+0x209/0x5d0
+ driver_probe_device+0xc6/0x1b0
+ device_driver_attach+0xe2/0x120
+
+I found the bug using a custome USBFuzz port. It's a research work
+to fuzz USB stack/drivers. I modified it to fuzz ath9k driver only,
+providing hand-crafted usb descriptors to QEMU.
+
+After fixing the code (fourth byte in usb packet) to WDCMSG_TARGET_START,
+I got the null-ptr-deref bug. I believe the bug is triggerable whenever
+cmd->odata is NULL. After patching, I tested with the same input and no
+longer see the KASAN report.
+
+This was NOT tested on a real device.
+
+Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/YXsmPQ3awHFLuAj2@10-18-43-117.dynapool.wireless.nyu.edu
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/main.c     | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.h | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 2 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 565efd8806247..2ef1416899f03 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1652,7 +1652,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 
- 	/* default rx filter setting */
- 	rtwdev->hal.rcr = BIT_APP_FCS | BIT_APP_MIC | BIT_APP_ICV |
--			  BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
-+			  BIT_PKTCTL_DLEN | BIT_HTC_LOC_CTRL | BIT_APP_PHYSTS |
- 			  BIT_AB | BIT_AM | BIT_APM;
- 
- 	ret = rtw_load_firmware(rtwdev, RTW_NORMAL_FW);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-index bd01e82b6bcd0..8d1e8ff71d7ef 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-@@ -131,7 +131,7 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
- 
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
- 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 22d0dd640ac94..dbfd67c3f598c 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -204,7 +204,7 @@ static void rtw8822b_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
- 
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
- 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 79ad6232dce83..cee586335552d 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1248,7 +1248,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_TX_FUNC_CFG2		0x30
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
--#define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_OPT_FUNC2		0xb0810041
- #define WLAN_MAC_INT_MIG_CFG		0x33330000
- 
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 4c57e79e5779a..58e189ec672f9 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -153,6 +153,10 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
+ 			ar5523_err(ar, "Invalid reply to WDCMSG_TARGET_START");
+ 			return;
+ 		}
++		if (!cmd->odata) {
++			ar5523_err(ar, "Unexpected WDCMSG_TARGET_START reply");
++			return;
++		}
+ 		memcpy(cmd->odata, hdr + 1, sizeof(u32));
+ 		cmd->olen = sizeof(u32);
+ 		cmd->res = 0;
 -- 
 2.34.1
 
