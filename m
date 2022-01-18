@@ -2,50 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF97C2BA4C
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D70D9C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:53:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349559AbiARCtr (ORCPT
+        id S1344419AbiARCw5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:49:47 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:35086 "EHLO
+        Mon, 17 Jan 2022 21:52:57 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:41772 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348529AbiARCpg (ORCPT
+        with ESMTP id S245735AbiARCsY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:45:36 -0500
+        Mon, 17 Jan 2022 21:48:24 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 452F860AB1;
-        Tue, 18 Jan 2022 02:45:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 489CDC36AEB;
-        Tue, 18 Jan 2022 02:45:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D457E612E9;
+        Tue, 18 Jan 2022 02:48:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42AA3C36AF5;
+        Tue, 18 Jan 2022 02:48:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473934;
-        bh=42VGfcpCsuLzDqmi2gYeSLUCwjK3nu0k10kgmKeHXME=;
+        s=k20201202; t=1642474103;
+        bh=+/o87wEgqY3BX09jI3yJPJIclzPS1/TWr+xS85HssFE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hMLdkRc7wvDeCxyDwmyuVJ8yT6KMWXcw+X/jczQYFLF0uipTITzn1Fsepx/SxPs+T
-         X0HgvIUZINrCD2q4SGsVs3nLjLJjSrFq+ivWpJsQhLZJ6Z+xLwIlTn28Qovmqgdm/U
-         Lla49EtBQy8f/enQkTd7vpS9pZcYtmnb481du/cqQYVR+90VK3zKRrz/O2UlIfxrna
-         txaeOfG7iLT5Zm0FWV9DGvl4wKZIiK1eYMxmLqzNfpTpN16hSlyUxOwqQPNYdPiVzR
-         zRJsR38sX7+j87PIRLcB3jAl0qg0o+qZXNqafqBIxslefbvj0L/WaMycWmTfzosC7I
-         37PJP5jIQLwrA==
+        b=mB+h5fKQiS0rqopaN5K5Ywr+qjfXSe0dqsh3fE32doNQXhfV7iS0IgRWbU+THC16x
+         Z0E1C07Mw6/hHUMUGSNSE7RrvpL8wPSla25gI7v1xhugSzXJ3jxUwYRyfrmRT4FMd8
+         JiLM7NjTmBqLQgRG2vGDMWmj76Q+uUazqSaHtxhwTFsATylCdsfBjfKhquTLjam5l6
+         qdP8k7SckHsaARWAXboi+MDo3RqsT1IKnlGWRQZORdKrr5vcx/DCJjtK1LULTfFsYm
+         tG9E9+KB2bXKkP9tYPpjCCiAn4CY0csN0CJe+RSlI84JtC0xcNIBVZVOIB3BXtosH3
+         qprIL8frGOj0Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Maximilian Ernestus <maximilian@ernestus.de>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org,
-        mordechay.goodstein@intel.com, miriam.rachel.korenblit@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 28/73] iwlwifi: mvm: synchronize with FW after multicast commands
-Date:   Mon, 17 Jan 2022 21:43:47 -0500
-Message-Id: <20220118024432.1952028-28-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 37/59] iwlwifi: fix leaks/bad data after failed firmware load
+Date:   Mon, 17 Jan 2022 21:46:38 -0500
+Message-Id: <20220118024701.1952911-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118024432.1952028-1-sashal@kernel.org>
-References: <20220118024432.1952028-1-sashal@kernel.org>
+In-Reply-To: <20220118024701.1952911-1-sashal@kernel.org>
+References: <20220118024701.1952911-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,68 +53,65 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit db66abeea3aefed481391ecc564fb7b7fb31d742 ]
+[ Upstream commit ab07506b0454bea606095951e19e72c282bfbb42 ]
 
-If userspace installs a lot of multicast groups very quickly, then
-we may run out of command queue space as we send the updates in an
-asynchronous fashion (due to locking concerns), and the CPU can
-create them faster than the firmware can process them. This is true
-even when mac80211 has a work struct that gets scheduled.
+If firmware load fails after having loaded some parts of the
+firmware, e.g. the IML image, then this would leak. For the
+host command list we'd end up running into a WARN on the next
+attempt to load another firmware image.
 
-Fix this by synchronizing with the firmware after sending all those
-commands - outside of the iteration we can send a synchronous echo
-command that just has the effect of the CPU waiting for the prior
-asynchronous commands to finish. This also will cause fewer of the
-commands to be sent to the firmware overall, because the work will
-only run once when rescheduled multiple times while it's running.
+Fix this by calling iwl_dealloc_ucode() on failures, and make
+that also clear the data so we start fresh on the next round.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=213649
-Suggested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reported-by: Maximilian Ernestus <maximilian@ernestus.de>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211204083238.51aea5b79ea4.I88a44798efda16e9fe480fb3e94224931d311b29@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20211210110539.1f742f0eb58a.I1315f22f6aa632d94ae2069f85e1bca5e734dce0@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c   | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index c942255aa1dbc..29ad7804d77aa 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1696,6 +1696,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	struct iwl_mvm_mc_iter_data iter_data = {
- 		.mvm = mvm,
- 	};
-+	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index db6628d390a2a..72f5df66cdeb5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -183,6 +183,9 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
  
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1705,6 +1706,22 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
- 	ieee80211_iterate_active_interfaces_atomic(
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 		iwl_mvm_mc_iface_iterator, &iter_data);
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
 +
-+	/*
-+	 * Send a (synchronous) ech command so that we wait for the
-+	 * multiple asynchronous MCAST_FILTER_CMD commands sent by
-+	 * the interface iterator. Otherwise, we might get here over
-+	 * and over again (by userspace just sending a lot of these)
-+	 * and the CPU can send them faster than the firmware can
-+	 * process them.
-+	 * Note that the CPU is still faster - but with this we'll
-+	 * actually send fewer commands overall because the CPU will
-+	 * not schedule the work in mac80211 as frequently if it's
-+	 * still running when rescheduled (possibly multiple times).
-+	 */
-+	ret = iwl_mvm_send_cmd_pdu(mvm, ECHO_CMD, 0, 0, NULL);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to synchronize multicast groups update\n");
++	/* clear the data for the aborted load case */
++	memset(&drv->fw, 0, sizeof(drv->fw));
  }
  
- static u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
+ static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
+@@ -1270,6 +1273,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	int i;
+ 	bool load_module = false;
+ 	bool usniffer_images = false;
++	bool failure = true;
+ 
+ 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
+ 	fw->ucode_capa.standard_phy_calibration_size =
+@@ -1537,6 +1541,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 				op->name, err);
+ #endif
+ 	}
++	failure = false;
+ 	goto free;
+ 
+  try_again:
+@@ -1552,6 +1557,9 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
+  free:
++	if (failure)
++		iwl_dealloc_ucode(drv);
++
+ 	if (pieces) {
+ 		for (i = 0; i < ARRAY_SIZE(pieces->img); i++)
+ 			kfree(pieces->img[i].sec);
 -- 
 2.34.1
 
