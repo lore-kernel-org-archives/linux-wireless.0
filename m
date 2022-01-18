@@ -2,50 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F64C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F88C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:53:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351156AbiARCxl (ORCPT
+        id S1351175AbiARCxp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:53:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34854 "EHLO
+        Mon, 17 Jan 2022 21:53:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346543AbiARCtJ (ORCPT
+        with ESMTP id S1349267AbiARCtT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:49:09 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5FADC061762;
-        Mon, 17 Jan 2022 18:41:43 -0800 (PST)
+        Mon, 17 Jan 2022 21:49:19 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B96D7C061765;
+        Mon, 17 Jan 2022 18:41:47 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 96514B81261;
-        Tue, 18 Jan 2022 02:41:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5198C36AF2;
-        Tue, 18 Jan 2022 02:41:39 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2EE93612E3;
+        Tue, 18 Jan 2022 02:41:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77BEBC36AEB;
+        Tue, 18 Jan 2022 02:41:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473701;
-        bh=mMVMuisXCIt+zCi8F5XYc+fsmSAixmNaldXMRbfRe4I=;
+        s=k20201202; t=1642473706;
+        bh=P/u2NpmukKPSwfMVhe+e+rsd6DvDNxunk45fqI5RjPs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uNczL+gIxOZj8WvuS6EdSjeA/Q74XvQCmG1KzrJjqUFEKw1CxrEraND6zGvHbmHE/
-         S4/G78vAyUbHq3TOpigD6npzrT2j68kcWtPfr83tj6XRnjOoQNCRxQRaLSf7+Q9guu
-         IUCxlBB/NBeUk3YKC/AXun8xEqMEuAiNEU+LTf4WcBZjpPA/vcKZDSEhD6bZdcP/so
-         Ht9mZvyVzR2QDcCI0szsYz1FHCxP8P0Wfo/wB5UirH7g6zI4tX7qQBYSD3nGzj5IKR
-         Dm08pj27VTSmbuQRwz9CaPrWq5vAwmv2Gr+QmQT7AzhNzxjjN2w+m18HW152T99ieC
-         1vhbKw6e/0yZw==
+        b=Ifl+G3shb23vAX8Q72nFzJPLWuOuNYUgwCxNAYXFaxz4gnqgbDVHWjbpXKY5nOoft
+         8pEKxSVFe1JseYjBwv7brXXbC/9xjy75CZTkM7ydGih6DLRiGb4M4+qYHO454gmmNF
+         C90v9itrJAQrdZKcKAsQHIDX5kmbZQFSvBiJ5WOY6oc0S+gBTKMSDAv1jp1IZ9vbBd
+         nRZnyz+X5H85VqOQJ1e8gLUVDfkA1OP2KIMYZ00DWQ3fb2omj10xy/bQM+cf37vokH
+         yaKo3QqdsYnyxhXWEC+XyEK5C4bpOGHj9bMc6iaLBlvKUTnJFMsprb2i8W8iEhU/qb
+         +gL1bIUe6Ifdg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
-        Brendan Dolan-Gavitt <brendandg@nyu.edu>,
+Cc:     Sriram R <quic_srirrama@quicinc.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
-        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
-        huxinming820@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 031/116] mwifiex: Fix skb_over_panic in mwifiex_usb_recv()
-Date:   Mon, 17 Jan 2022 21:38:42 -0500
-Message-Id: <20220118024007.1950576-31-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 034/116] ath11k: Avoid NULL ptr access during mgmt tx cleanup
+Date:   Mon, 17 Jan 2022 21:38:45 -0500
+Message-Id: <20220118024007.1950576-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118024007.1950576-1-sashal@kernel.org>
 References: <20220118024007.1950576-1-sashal@kernel.org>
@@ -57,66 +54,117 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Sriram R <quic_srirrama@quicinc.com>
 
-[ Upstream commit 04d80663f67ccef893061b49ec8a42ff7045ae84 ]
+[ Upstream commit a93789ae541c7d5c1c2a4942013adb6bcc5e2848 ]
 
-Currently, with an unknown recv_type, mwifiex_usb_recv
-just return -1 without restoring the skb. Next time
-mwifiex_usb_rx_complete is invoked with the same skb,
-calling skb_put causes skb_over_panic.
+Currently 'ar' reference is not added in skb_cb during
+WMI mgmt tx. Though this is generally not used during tx completion
+callbacks, on interface removal the remaining idr cleanup callback
+uses the ar ptr from skb_cb from mgmt txmgmt_idr. Hence
+fill them during tx call for proper usage.
 
-The bug is triggerable with a compromised/malfunctioning
-usb device. After applying the patch, skb_over_panic
-no longer shows up with the same input.
+Also free the skb which is missing currently in these
+callbacks.
 
-Attached is the panic report from fuzzing.
-skbuff: skb_over_panic: text:000000003bf1b5fa
- len:2048 put:4 head:00000000dd6a115b data:000000000a9445d8
- tail:0x844 end:0x840 dev:<NULL>
-kernel BUG at net/core/skbuff.c:109!
-invalid opcode: 0000 [#1] SMP KASAN NOPTI
-CPU: 0 PID: 198 Comm: in:imklog Not tainted 5.6.0 #60
-RIP: 0010:skb_panic+0x15f/0x161
-Call Trace:
- <IRQ>
- ? mwifiex_usb_rx_complete+0x26b/0xfcd [mwifiex_usb]
- skb_put.cold+0x24/0x24
- mwifiex_usb_rx_complete+0x26b/0xfcd [mwifiex_usb]
- __usb_hcd_giveback_urb+0x1e4/0x380
- usb_giveback_urb_bh+0x241/0x4f0
- ? __hrtimer_run_queues+0x316/0x740
- ? __usb_hcd_giveback_urb+0x380/0x380
- tasklet_action_common.isra.0+0x135/0x330
- __do_softirq+0x18c/0x634
- irq_exit+0x114/0x140
- smp_apic_timer_interrupt+0xde/0x380
- apic_timer_interrupt+0xf/0x20
- </IRQ>
+Crash_info:
 
-Reported-by: Brendan Dolan-Gavitt <brendandg@nyu.edu>
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
+[19282.489476] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+[19282.489515] pgd = 91eb8000
+[19282.496702] [00000000] *pgd=00000000
+[19282.502524] Internal error: Oops: 5 [#1] PREEMPT SMP ARM
+[19282.783728] PC is at ath11k_mac_vif_txmgmt_idr_remove+0x28/0xd8 [ath11k]
+[19282.789170] LR is at idr_for_each+0xa0/0xc8
+
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-00729-QCAHKSWPL_SILICONZ-3 v2
+Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/YX4CqjfRcTa6bVL+@Zekuns-MBP-16.fios-router.home
+Link: https://lore.kernel.org/r/1637832614-13831-1-git-send-email-quic_srirrama@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 35 +++++++++++++++------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 9736aa0ab7fd4..8f01fcbe93961 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -130,7 +130,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		default:
- 			mwifiex_dbg(adapter, ERROR,
- 				    "unknown recv_type %#x\n", recv_type);
--			return -1;
-+			ret = -1;
-+			goto exit_restore_skb;
- 		}
- 		break;
- 	case MWIFIEX_USB_EP_DATA:
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 0924bc8b35205..4a4694ce7dc87 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <net/mac80211.h>
+@@ -3878,23 +3879,32 @@ static int __ath11k_set_antenna(struct ath11k *ar, u32 tx_ant, u32 rx_ant)
+ 	return 0;
+ }
+ 
+-int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
++static void ath11k_mac_tx_mgmt_free(struct ath11k *ar, int buf_id)
+ {
+-	struct sk_buff *msdu = skb;
++	struct sk_buff *msdu;
+ 	struct ieee80211_tx_info *info;
+-	struct ath11k *ar = ctx;
+-	struct ath11k_base *ab = ar->ab;
+ 
+ 	spin_lock_bh(&ar->txmgmt_idr_lock);
+-	idr_remove(&ar->txmgmt_idr, buf_id);
++	msdu = idr_remove(&ar->txmgmt_idr, buf_id);
+ 	spin_unlock_bh(&ar->txmgmt_idr_lock);
+-	dma_unmap_single(ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
++
++	if (!msdu)
++		return;
++
++	dma_unmap_single(ar->ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
+ 			 DMA_TO_DEVICE);
+ 
+ 	info = IEEE80211_SKB_CB(msdu);
+ 	memset(&info->status, 0, sizeof(info->status));
+ 
+ 	ieee80211_free_txskb(ar->hw, msdu);
++}
++
++int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
++{
++	struct ath11k *ar = ctx;
++
++	ath11k_mac_tx_mgmt_free(ar, buf_id);
+ 
+ 	return 0;
+ }
+@@ -3903,17 +3913,10 @@ static int ath11k_mac_vif_txmgmt_idr_remove(int buf_id, void *skb, void *ctx)
+ {
+ 	struct ieee80211_vif *vif = ctx;
+ 	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB((struct sk_buff *)skb);
+-	struct sk_buff *msdu = skb;
+ 	struct ath11k *ar = skb_cb->ar;
+-	struct ath11k_base *ab = ar->ab;
+ 
+-	if (skb_cb->vif == vif) {
+-		spin_lock_bh(&ar->txmgmt_idr_lock);
+-		idr_remove(&ar->txmgmt_idr, buf_id);
+-		spin_unlock_bh(&ar->txmgmt_idr_lock);
+-		dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len,
+-				 DMA_TO_DEVICE);
+-	}
++	if (skb_cb->vif == vif)
++		ath11k_mac_tx_mgmt_free(ar, buf_id);
+ 
+ 	return 0;
+ }
+@@ -3928,6 +3931,8 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	int buf_id;
+ 	int ret;
+ 
++	ATH11K_SKB_CB(skb)->ar = ar;
++
+ 	spin_lock_bh(&ar->txmgmt_idr_lock);
+ 	buf_id = idr_alloc(&ar->txmgmt_idr, skb, 0,
+ 			   ATH11K_TX_MGMT_NUM_PENDING_MAX, GFP_ATOMIC);
 -- 
 2.34.1
 
