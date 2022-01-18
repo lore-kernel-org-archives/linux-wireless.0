@@ -2,47 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C67C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA7CC4321E
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:31:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343703AbiARC3O (ORCPT
+        id S1343859AbiARC3h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:29:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57190 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343717AbiARC0y (ORCPT
+        Mon, 17 Jan 2022 21:29:37 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:44732 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343854AbiARC1d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:26:54 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB50C0617A6;
-        Mon, 17 Jan 2022 18:25:16 -0800 (PST)
+        Mon, 17 Jan 2022 21:27:33 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B894F60C74;
-        Tue, 18 Jan 2022 02:25:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0124CC36AF3;
-        Tue, 18 Jan 2022 02:25:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 49C0C6093C;
+        Tue, 18 Jan 2022 02:27:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED67AC36AE3;
+        Tue, 18 Jan 2022 02:27:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472715;
-        bh=j+02SSG+WJA1yfhrJLNJCby+1sO28pvqGD/Bh32Xm1k=;
+        s=k20201202; t=1642472850;
+        bh=ziNTfB6MFkrrpKUiqMSsH39v3XYf+3hqHdG+XYLv7Ng=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a3EgjTq4fjWxUJE9Fg6HcUeIWH562R1NX1kVXAKPozijjPIm5S0MVQTekQKKRC4B/
-         0vZz4VSf+/gEsLyVV2Yw+Yc+oNRRPfrrM7XfaM/VddBQ9oGU5QxSyQC3Q737AVzrHa
-         W3nyMhGHutLlLWCE1/iIGRr9UGnBGNJrSxF4aLrCfLojPG/MZB2Rvsd6DKV2W3FY2V
-         1Nye0bNGbB8f5UcVkl/bVH9J/y9HS3wPvcuy2Bh9zFLP94A3fKUKaKfjZ2Lp0IpN+g
-         almV/gpimmVXyyMQwQygpBg3AJfB4nMUVaYNzoQW7FEwyscIsLiBe1AOgOCBfPdF3G
-         b9VRV+ej54KMg==
+        b=Jp7omHedPjHYkzqf0U/OfyOuRe4iYMJ13hc+tDjhIdktuQZB+9xTJPLYfQCNgrFqw
+         zGsfJ6z5GVlaDiCMh7FuSwnuAPWtODay6H+x+KOH2IfAzlLw1rqM8ZjNkwLRyWQYc+
+         q9ox+p09xBOlVKzyQfioUfLkRMJ+H6IG/xwExphuL9MXkCbyXEO8h0Nf/0aoSME4g2
+         TIrY4c9RdY09s0qWPdaCAcwokGtuUoG/JvOiKbZ89dv62Oa9LwWTOp0r559nmSdjK8
+         mmQFdD+o4QsWdgj4Yle2PlSGvlOlHY7yOeAqtEGUXJOlbXWoXNTcyPtm903D6WA4RT
+         3a6R29QzXMl6w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 109/217] ath11k: avoid deadlock by change ieee80211_queue_work for regd_update_work
-Date:   Mon, 17 Jan 2022 21:17:52 -0500
-Message-Id: <20220118021940.1942199-109-sashal@kernel.org>
+Cc:     Ryder Lee <ryder.lee@mediatek.com>,
+        Fang Zhao <fang.zhao@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo.bianconi83@gmail.com, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, matthias.bgg@gmail.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        meichia.chiu@mediatek.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.16 153/217] mt76: mt7915: fix SMPS operation fail
+Date:   Mon, 17 Jan 2022 21:18:36 -0500
+Message-Id: <20220118021940.1942199-153-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -54,202 +55,162 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <quic_wgong@quicinc.com>
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-[ Upstream commit ed05c7cf1286d7e31e7623bce55ff135723591bf ]
+[ Upstream commit 8f05835425ce3f669e4b6d7c2c39a9aa22e1506c ]
 
-When enable debug config, it print below warning while shut down wlan
-interface shuh as run "ifconfig wlan0 down".
+TGn fails sending SM power save mode action frame to the AP to switch
+from dynamic SMPS mode to static mode.
 
-The reason is because ar->regd_update_work is ran once, and it is will
-call wiphy_lock(ar->hw->wiphy) in function ath11k_regd_update() which
-is running in workqueue of ieee80211_local queued by ieee80211_queue_work().
-Another thread from "ifconfig wlan0 down" will also accuqire the lock
-by wiphy_lock(sdata->local->hw.wiphy) in function ieee80211_stop(), and
-then it call ieee80211_stop_device() to flush_workqueue(local->workqueue),
-this will wait the workqueue of ieee80211_local finished. Then deadlock
-will happen easily if the two thread run meanwhile.
-
-Below warning disappeared after this change.
-
-[  914.088798] ath11k_pci 0000:05:00.0: mac remove interface (vdev 0)
-[  914.088806] ath11k_pci 0000:05:00.0: mac stop 11d scan
-[  914.088810] ath11k_pci 0000:05:00.0: mac stop 11d vdev id 0
-[  914.088827] ath11k_pci 0000:05:00.0: htc ep 2 consumed 1 credits (total 0)
-[  914.088841] ath11k_pci 0000:05:00.0: send 11d scan stop vdev id 0
-[  914.088849] ath11k_pci 0000:05:00.0: htc insufficient credits ep 2 required 1 available 0
-[  914.088856] ath11k_pci 0000:05:00.0: htc insufficient credits ep 2 required 1 available 0
-[  914.096434] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 16
-[  914.096442] ath11k_pci 0000:05:00.0: htc ep 2 got 1 credits (total 1)
-[  914.096481] ath11k_pci 0000:05:00.0: htc ep 2 consumed 1 credits (total 0)
-[  914.096491] ath11k_pci 0000:05:00.0: WMI vdev delete id 0
-[  914.111598] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 16
-[  914.111628] ath11k_pci 0000:05:00.0: htc ep 2 got 1 credits (total 1)
-[  914.114659] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 20
-[  914.114742] ath11k_pci 0000:05:00.0: htc rx completion ep 2 skb         pK-error
-[  914.115977] ath11k_pci 0000:05:00.0: vdev delete resp for vdev id 0
-[  914.116685] ath11k_pci 0000:05:00.0: vdev 00:03:7f:29:61:11 deleted, vdev_id 0
-
-[  914.117583] ======================================================
-[  914.117592] WARNING: possible circular locking dependency detected
-[  914.117600] 5.16.0-rc1-wt-ath+ #1 Tainted: G           OE
-[  914.117611] ------------------------------------------------------
-[  914.117618] ifconfig/2805 is trying to acquire lock:
-[  914.117628] ffff9c00a62bb548 ((wq_completion)phy0){+.+.}-{0:0}, at: flush_workqueue+0x87/0x470
-[  914.117674]
-               but task is already holding lock:
-[  914.117682] ffff9c00baea07d0 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: ieee80211_stop+0x38/0x180 [mac80211]
-[  914.117872]
-               which lock already depends on the new lock.
-
-[  914.117880]
-               the existing dependency chain (in reverse order) is:
-[  914.117888]
-               -> #3 (&rdev->wiphy.mtx){+.+.}-{4:4}:
-[  914.117910]        __mutex_lock+0xa0/0x9c0
-[  914.117930]        mutex_lock_nested+0x1b/0x20
-[  914.117944]        reg_process_self_managed_hints+0x3a/0xb0 [cfg80211]
-[  914.118093]        wiphy_regulatory_register+0x47/0x80 [cfg80211]
-[  914.118229]        wiphy_register+0x84f/0x9c0 [cfg80211]
-[  914.118353]        ieee80211_register_hw+0x6b1/0xd90 [mac80211]
-[  914.118486]        ath11k_mac_register+0x6af/0xb60 [ath11k]
-[  914.118550]        ath11k_core_qmi_firmware_ready+0x383/0x4a0 [ath11k]
-[  914.118598]        ath11k_qmi_driver_event_work+0x347/0x4a0 [ath11k]
-[  914.118656]        process_one_work+0x228/0x670
-[  914.118669]        worker_thread+0x4d/0x440
-[  914.118680]        kthread+0x16d/0x1b0
-[  914.118697]        ret_from_fork+0x22/0x30
-[  914.118714]
-               -> #2 (rtnl_mutex){+.+.}-{4:4}:
-[  914.118736]        __mutex_lock+0xa0/0x9c0
-[  914.118751]        mutex_lock_nested+0x1b/0x20
-[  914.118767]        rtnl_lock+0x17/0x20
-[  914.118783]        ath11k_regd_update+0x15a/0x260 [ath11k]
-[  914.118841]        ath11k_regd_update_work+0x15/0x20 [ath11k]
-[  914.118897]        process_one_work+0x228/0x670
-[  914.118909]        worker_thread+0x4d/0x440
-[  914.118920]        kthread+0x16d/0x1b0
-[  914.118934]        ret_from_fork+0x22/0x30
-[  914.118948]
-               -> #1 ((work_completion)(&ar->regd_update_work)){+.+.}-{0:0}:
-[  914.118972]        process_one_work+0x1fa/0x670
-[  914.118984]        worker_thread+0x4d/0x440
-[  914.118996]        kthread+0x16d/0x1b0
-[  914.119010]        ret_from_fork+0x22/0x30
-[  914.119023]
-               -> #0 ((wq_completion)phy0){+.+.}-{0:0}:
-[  914.119045]        __lock_acquire+0x146d/0x1cf0
-[  914.119057]        lock_acquire+0x19b/0x360
-[  914.119067]        flush_workqueue+0xae/0x470
-[  914.119084]        ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.119260]        ieee80211_do_stop+0x5d7/0x830 [mac80211]
-[  914.119409]        ieee80211_stop+0x45/0x180 [mac80211]
-[  914.119557]        __dev_close_many+0xb3/0x120
-[  914.119573]        __dev_change_flags+0xc3/0x1d0
-[  914.119590]        dev_change_flags+0x29/0x70
-[  914.119605]        devinet_ioctl+0x653/0x810
-[  914.119620]        inet_ioctl+0x193/0x1e0
-[  914.119631]        sock_do_ioctl+0x4d/0xf0
-[  914.119649]        sock_ioctl+0x262/0x340
-[  914.119665]        __x64_sys_ioctl+0x96/0xd0
-[  914.119678]        do_syscall_64+0x3d/0xd0
-[  914.119694]        entry_SYSCALL_64_after_hwframe+0x44/0xae
-[  914.119709]
-               other info that might help us debug this:
-
-[  914.119717] Chain exists of:
-                 (wq_completion)phy0 --> rtnl_mutex --> &rdev->wiphy.mtx
-
-[  914.119745]  Possible unsafe locking scenario:
-
-[  914.119752]        CPU0                    CPU1
-[  914.119758]        ----                    ----
-[  914.119765]   lock(&rdev->wiphy.mtx);
-[  914.119778]                                lock(rtnl_mutex);
-[  914.119792]                                lock(&rdev->wiphy.mtx);
-[  914.119807]   lock((wq_completion)phy0);
-[  914.119819]
-                *** DEADLOCK ***
-
-[  914.119827] 2 locks held by ifconfig/2805:
-[  914.119837]  #0: ffffffffba3dc010 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_lock+0x17/0x20
-[  914.119872]  #1: ffff9c00baea07d0 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: ieee80211_stop+0x38/0x180 [mac80211]
-[  914.120039]
-               stack backtrace:
-[  914.120048] CPU: 0 PID: 2805 Comm: ifconfig Tainted: G           OE     5.16.0-rc1-wt-ath+ #1
-[  914.120064] Hardware name: LENOVO 418065C/418065C, BIOS 83ET63WW (1.33 ) 07/29/2011
-[  914.120074] Call Trace:
-[  914.120084]  <TASK>
-[  914.120094]  dump_stack_lvl+0x73/0xa4
-[  914.120119]  dump_stack+0x10/0x12
-[  914.120135]  print_circular_bug.isra.44+0x221/0x2e0
-[  914.120165]  check_noncircular+0x106/0x150
-[  914.120203]  __lock_acquire+0x146d/0x1cf0
-[  914.120215]  ? __lock_acquire+0x146d/0x1cf0
-[  914.120245]  lock_acquire+0x19b/0x360
-[  914.120259]  ? flush_workqueue+0x87/0x470
-[  914.120286]  ? lockdep_init_map_type+0x6b/0x250
-[  914.120310]  flush_workqueue+0xae/0x470
-[  914.120327]  ? flush_workqueue+0x87/0x470
-[  914.120344]  ? lockdep_hardirqs_on+0xd7/0x150
-[  914.120391]  ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.120565]  ? ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.120736]  ieee80211_do_stop+0x5d7/0x830 [mac80211]
-[  914.120906]  ieee80211_stop+0x45/0x180 [mac80211]
-[  914.121060]  __dev_close_many+0xb3/0x120
-[  914.121081]  __dev_change_flags+0xc3/0x1d0
-[  914.121109]  dev_change_flags+0x29/0x70
-[  914.121131]  devinet_ioctl+0x653/0x810
-[  914.121149]  ? __might_fault+0x77/0x80
-[  914.121179]  inet_ioctl+0x193/0x1e0
-[  914.121194]  ? inet_ioctl+0x193/0x1e0
-[  914.121218]  ? __might_fault+0x77/0x80
-[  914.121238]  ? _copy_to_user+0x68/0x80
-[  914.121266]  sock_do_ioctl+0x4d/0xf0
-[  914.121283]  ? inet_stream_connect+0x60/0x60
-[  914.121297]  ? sock_do_ioctl+0x4d/0xf0
-[  914.121329]  sock_ioctl+0x262/0x340
-[  914.121347]  ? sock_ioctl+0x262/0x340
-[  914.121362]  ? exit_to_user_mode_prepare+0x13b/0x280
-[  914.121388]  ? syscall_enter_from_user_mode+0x20/0x50
-[  914.121416]  __x64_sys_ioctl+0x96/0xd0
-[  914.121430]  ? br_ioctl_call+0x90/0x90
-[  914.121445]  ? __x64_sys_ioctl+0x96/0xd0
-[  914.121465]  do_syscall_64+0x3d/0xd0
-[  914.121482]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-[  914.121497] RIP: 0033:0x7f0ed051737b
-[  914.121513] Code: 0f 1e fa 48 8b 05 15 3b 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 3a 0d 00 f7 d8 64 89 01 48
-[  914.121527] RSP: 002b:00007fff7be38b98 EFLAGS: 00000202 ORIG_RAX: 0000000000000010
-[  914.121544] RAX: ffffffffffffffda RBX: 00007fff7be38ba0 RCX: 00007f0ed051737b
-[  914.121555] RDX: 00007fff7be38ba0 RSI: 0000000000008914 RDI: 0000000000000004
-[  914.121566] RBP: 00007fff7be38c60 R08: 000000000000000a R09: 0000000000000001
-[  914.121576] R10: 0000000000000000 R11: 0000000000000202 R12: 00000000fffffffe
-[  914.121586] R13: 0000000000000004 R14: 0000000000000000 R15: 0000000000000000
-[  914.121620]  </TASK>
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20211201071745.17746-2-quic_wgong@quicinc.com
+Reported-by: Fang Zhao <fang.zhao@mediatek.com>
+Signed-off-by: Fang Zhao <fang.zhao@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 81 ++++++++++++-------
+ .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  8 ++
+ 2 files changed, 61 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 5ae2ef4680d6c..f673ed4695d57 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5911,7 +5911,7 @@ static int ath11k_reg_chan_list_event(struct ath11k_base *ab, struct sk_buff *sk
- 		ar = ab->pdevs[pdev_idx].ar;
- 		kfree(ab->new_regd[pdev_idx]);
- 		ab->new_regd[pdev_idx] = regd;
--		ieee80211_queue_work(ar->hw, &ar->regd_update_work);
-+		queue_work(ab->workqueue, &ar->regd_update_work);
- 	} else {
- 		/* This regd would be applied during mac registration and is
- 		 * held constant throughout for regd intersection purpose
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 852d5d97c70b1..8215b3d79bbdc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -1752,33 +1752,6 @@ int mt7915_mcu_sta_update_hdr_trans(struct mt7915_dev *dev,
+ 				     true);
+ }
+ 
+-int mt7915_mcu_add_smps(struct mt7915_dev *dev, struct ieee80211_vif *vif,
+-			struct ieee80211_sta *sta)
+-{
+-	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
+-	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
+-	struct wtbl_req_hdr *wtbl_hdr;
+-	struct tlv *sta_wtbl;
+-	struct sk_buff *skb;
+-
+-	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta,
+-				       MT7915_STA_UPDATE_MAX_SIZE);
+-	if (IS_ERR(skb))
+-		return PTR_ERR(skb);
+-
+-	sta_wtbl = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
+-
+-	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_SET, sta_wtbl,
+-					     &skb);
+-	if (IS_ERR(wtbl_hdr))
+-		return PTR_ERR(wtbl_hdr);
+-
+-	mt7915_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_hdr);
+-
+-	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-				     MCU_EXT_CMD(STA_REC_UPDATE), true);
+-}
+-
+ static inline bool
+ mt7915_is_ebf_supported(struct mt7915_phy *phy, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, bool bfee)
+@@ -2049,6 +2022,21 @@ mt7915_mcu_sta_bfee_tlv(struct mt7915_dev *dev, struct sk_buff *skb,
+ 	bfee->fb_identity_matrix = (nrow == 1 && tx_ant == 2);
+ }
+ 
++static enum mcu_mmps_mode
++mt7915_mcu_get_mmps_mode(enum ieee80211_smps_mode smps)
++{
++	switch (smps) {
++	case IEEE80211_SMPS_OFF:
++		return MCU_MMPS_DISABLE;
++	case IEEE80211_SMPS_STATIC:
++		return MCU_MMPS_STATIC;
++	case IEEE80211_SMPS_DYNAMIC:
++		return MCU_MMPS_DYNAMIC;
++	default:
++		return MCU_MMPS_DISABLE;
++	}
++}
++
+ int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_sta *sta,
+@@ -2076,7 +2064,11 @@ int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
+ 	case RATE_PARAM_FIXED_MCS:
+ 	case RATE_PARAM_FIXED_GI:
+ 	case RATE_PARAM_FIXED_HE_LTF:
+-		ra->phy = *phy;
++		if (phy)
++			ra->phy = *phy;
++		break;
++	case RATE_PARAM_MMPS_UPDATE:
++		ra->mmps_mode = mt7915_mcu_get_mmps_mode(sta->smps_mode);
+ 		break;
+ 	default:
+ 		break;
+@@ -2087,6 +2079,39 @@ int mt7915_mcu_set_fixed_rate_ctrl(struct mt7915_dev *dev,
+ 				     MCU_EXT_CMD(STA_REC_UPDATE), true);
+ }
+ 
++int mt7915_mcu_add_smps(struct mt7915_dev *dev, struct ieee80211_vif *vif,
++			struct ieee80211_sta *sta)
++{
++	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
++	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
++	struct wtbl_req_hdr *wtbl_hdr;
++	struct tlv *sta_wtbl;
++	struct sk_buff *skb;
++	int ret;
++
++	skb = mt7915_mcu_alloc_sta_req(dev, mvif, msta,
++				       MT7915_STA_UPDATE_MAX_SIZE);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	sta_wtbl = mt7915_mcu_add_tlv(skb, STA_REC_WTBL, sizeof(struct tlv));
++
++	wtbl_hdr = mt7915_mcu_alloc_wtbl_req(dev, msta, WTBL_SET, sta_wtbl,
++					     &skb);
++	if (IS_ERR(wtbl_hdr))
++		return PTR_ERR(wtbl_hdr);
++
++	mt7915_mcu_wtbl_smps_tlv(skb, sta, sta_wtbl, wtbl_hdr);
++
++	ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
++				    MCU_EXT_CMD(STA_REC_UPDATE), true);
++	if (ret)
++		return ret;
++
++	return mt7915_mcu_set_fixed_rate_ctrl(dev, vif, sta, NULL,
++					      RATE_PARAM_MMPS_UPDATE);
++}
++
+ static int
+ mt7915_mcu_add_rate_ctrl_fixed(struct mt7915_dev *dev,
+ 			       struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+index 1f5a64ba9b59d..628e90d0c394e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+@@ -365,6 +365,13 @@ enum {
+ 	MCU_PHY_STATE_OFDMLQ_CNINFO,
+ };
+ 
++enum mcu_mmps_mode {
++	MCU_MMPS_STATIC,
++	MCU_MMPS_DYNAMIC,
++	MCU_MMPS_RSV,
++	MCU_MMPS_DISABLE,
++};
++
+ #define STA_TYPE_STA			BIT(0)
+ #define STA_TYPE_AP			BIT(1)
+ #define STA_TYPE_ADHOC			BIT(2)
+@@ -960,6 +967,7 @@ struct sta_rec_ra_fixed {
+ 
+ enum {
+ 	RATE_PARAM_FIXED = 3,
++	RATE_PARAM_MMPS_UPDATE = 5,
+ 	RATE_PARAM_FIXED_HE_LTF = 7,
+ 	RATE_PARAM_FIXED_MCS,
+ 	RATE_PARAM_FIXED_GI = 11,
 -- 
 2.34.1
 
