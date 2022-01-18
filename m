@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B865BC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A5E3C4321E
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346136AbiARCsm (ORCPT
+        id S1344322AbiARCsr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:48:42 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:51560 "EHLO
+        Mon, 17 Jan 2022 21:48:47 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:55572 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344322AbiARCgS (ORCPT
+        with ESMTP id S1344971AbiARCiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:36:18 -0500
+        Mon, 17 Jan 2022 21:38:09 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B5BB61291;
-        Tue, 18 Jan 2022 02:36:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C08BC36AEB;
-        Tue, 18 Jan 2022 02:36:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5665F61118;
+        Tue, 18 Jan 2022 02:38:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34A2CC36B04;
+        Tue, 18 Jan 2022 02:38:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473377;
-        bh=22TBzvVqrxec+4D1GlxVLaO6klk4pPbSwURl8EjB0iY=;
+        s=k20201202; t=1642473488;
+        bh=G+He0CBs0oY7cJsck3Uiaa6jdKC0I2296gCo9uHeeZU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FIMGJ+FLZlAFKchi1C6SefhH0HxVfTbsBCjfTQ/Uo1NE0EHuuiWeul6yaix/imS5e
-         sycdeCxjLLL6R6DNuTjo3XzPDEDaDOkdH+C22q9zqiePa5qVF2N1oH2p55AU6/GdXY
-         uEF+k68SnHgXvnp9yxYwEQO1kK1/tjCgSDZ8XGoOWWM0VnVRi2oTRoWie/ddSwFGyO
-         sKBdsLh1SlSvTtIYUJlq95WEjCm3ph7ELh8dHnRPC0D0yhoJ8yuHBvo/bHHzS7WRJ/
-         rAUW7Eq+FG0B17Yz6Xvteh5y1FQBEpjQIDgZjly/7BOPoGHYQ405H8KqCk8i4azBoj
-         rNBxDmQ4QGVhA==
+        b=lnfwM9/wYh48ivkbzQeDlcm1673TKh6O/t1G/QBj+e2+ftUxJSjIZHmUlhCJ76plR
+         CGBzqjFgVFEylAENUhY8+PdvEuvWKF1eh+znFxlwL/xmITn4y3YpYFFjZ8Vm8+re3k
+         AprYQCtP3EaWVck9TJBzVzYQgiARHw55XYH8ln8pYAQXfFBh9hEc4PyY8q144GXArD
+         4wyp3paajypsSyZnE/0c+j7T9YCAtm1QGMYym7Yudy7T/gzP9C4PVD+BZIlJpX1Orv
+         WigCqFJN08S3xYOjgixyeOYlqj8SWFIIvQpAmYmzCgwwYFL2LvSvZt3q/hD7rhmjld
+         TVOUTiillZOKw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ilan.peer@intel.com,
-        avraham.stern@intel.com, emmanuel.grumbach@intel.com,
-        sara.sharon@intel.com, nathan.errera@intel.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 091/188] iwlwifi: mvm: avoid clearing a just saved session protection id
-Date:   Mon, 17 Jan 2022 21:30:15 -0500
-Message-Id: <20220118023152.1948105-91-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        matthias.bgg@gmail.com, sean.wang@mediatek.com,
+        shayne.chen@mediatek.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.15 132/188] mt76: mt7615: improve wmm index allocation
+Date:   Mon, 17 Jan 2022 21:30:56 -0500
+Message-Id: <20220118023152.1948105-132-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
 References: <20220118023152.1948105-1-sashal@kernel.org>
@@ -53,57 +53,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 8e967c137df3b236d2075f9538cb888129425d1a ]
+[ Upstream commit 70fb028707c8871ef9e56b3ffa3d895e14956cc4 ]
 
-When scheduling a session protection the id is saved but
-then it may be cleared when calling iwl_mvm_te_clear_data
-(if a previous session protection is currently active).
-Fix it by saving the id after calling iwl_mvm_te_clear_data.
+Typically all AP interfaces on a PHY will share the same WMM settings, while
+sta/mesh interfaces will usually inherit the settings from a remote device.
+In order minimize the likelihood of conflicting WMM settings, make all AP
+interfaces share one slot, and all non-AP interfaces another one.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20211204130722.b0743a588d14.I098fef6677d0dab3ef1b6183ed206a10bab01eb2@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This also fixes running multiple AP interfaces on MT7613, which only has 3
+WMM slots.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index e91f8e889df70..e6813317edf35 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -1158,15 +1158,10 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
- 			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
- 							mvmvif->color)),
- 		.action = cpu_to_le32(FW_CTXT_ACTION_ADD),
-+		.conf_id = cpu_to_le32(SESSION_PROTECT_CONF_ASSOC),
- 		.duration_tu = cpu_to_le32(MSEC_TO_TU(duration)),
- 	};
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 51260a669d166..fc266da54fe7b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -211,11 +211,9 @@ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 	mvif->mt76.omac_idx = idx;
  
--	/* The time_event_data.id field is reused to save session
--	 * protection's configuration.
--	 */
--	mvmvif->time_event_data.id = SESSION_PROTECT_CONF_ASSOC;
--	cmd.conf_id = cpu_to_le32(mvmvif->time_event_data.id);
--
- 	lockdep_assert_held(&mvm->mutex);
+ 	mvif->mt76.band_idx = ext_phy;
+-	if (mt7615_ext_phy(dev))
+-		mvif->mt76.wmm_idx = ext_phy * (MT7615_MAX_WMM_SETS / 2) +
+-				mvif->mt76.idx % (MT7615_MAX_WMM_SETS / 2);
+-	else
+-		mvif->mt76.wmm_idx = mvif->mt76.idx % MT7615_MAX_WMM_SETS;
++	mvif->mt76.wmm_idx = vif->type != NL80211_IFTYPE_AP;
++	if (ext_phy)
++		mvif->mt76.wmm_idx += 2;
  
- 	spin_lock_bh(&mvm->time_event_lock);
-@@ -1180,6 +1175,11 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
- 	}
- 
- 	iwl_mvm_te_clear_data(mvm, te_data);
-+	/*
-+	 * The time_event_data.id field is reused to save session
-+	 * protection's configuration.
-+	 */
-+	te_data->id = le32_to_cpu(cmd.conf_id);
- 	te_data->duration = le32_to_cpu(cmd.duration_tu);
- 	te_data->vif = vif;
- 	spin_unlock_bh(&mvm->time_event_lock);
+ 	dev->mt76.vif_mask |= BIT(mvif->mt76.idx);
+ 	dev->omac_mask |= BIT_ULL(mvif->mt76.omac_idx);
 -- 
 2.34.1
 
