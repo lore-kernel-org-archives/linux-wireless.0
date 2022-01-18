@@ -2,52 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A62EC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDACC4332F
 	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343824AbiARCxT (ORCPT
+        id S1344278AbiARCxY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:53:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34892 "EHLO
+        Mon, 17 Jan 2022 21:53:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349256AbiARCtS (ORCPT
+        with ESMTP id S1344608AbiARCq6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:49:18 -0500
+        Mon, 17 Jan 2022 21:46:58 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EDB3C061776;
-        Mon, 17 Jan 2022 18:41:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A04F0C06127B;
+        Mon, 17 Jan 2022 18:38:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 281CAB812A2;
-        Tue, 18 Jan 2022 02:41:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB1BCC36AF2;
-        Tue, 18 Jan 2022 02:41:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 57706B81232;
+        Tue, 18 Jan 2022 02:38:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13C28C36B04;
+        Tue, 18 Jan 2022 02:38:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473705;
-        bh=Jf2jqJkMT9XhVYOHueT6/brMJFdC5+zm2vIMbJgJbm8=;
+        s=k20201202; t=1642473521;
+        bh=k1sPTXp/OUsKfF7bCMnLd5fIDVSHA+u/eKcXEsG0V5c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zamqcj5gz0kJfv8lRmVxzfAecddys8dudaKIC2bnnVYWkaJ4pFYxYndulSYlXRh57
-         InvJoWo5XZ0n6ZiXITUL2EsXiL8OM9t2kPa+qpRE3cJxmaog0EIItxduk2WioWjqgr
-         khaywTTSyUJQVE9fSFJkxfF73dICOgzpfDseF2nF9M3j3r5T7g8ba9u2wgFA2pvWeO
-         y8Dn5o1sll/6KL29bLAN/d4lj38MUPNwkE5lfn+IRGo+UOHAuKbjbmNIkHNn0MWFv9
-         q6864qC6CpDSHDqK8D++kdO4GjOrCuvxwuXcuHXyzLw7ShurrRQ70xI0G0DpSNizjA
-         +hexcQox8vx8Q==
+        b=DHxgp+HPWrblSg3RVCi5LgTzR1IdgRLKWEJ4BOCeZJB6GTQbRCfiBSqda48Q/7q2V
+         Efb/Ml375lZWDC/tl7rgOnEyDhbjX7yOq1utoUvJgggvPT8QBYPjeG4Y4ynQLQ2/4O
+         8SJYvinJER3rPbM+dwlFE0+3jJM0GhO/1TxU/zbvxDphp2isA0gxeYTELC+70jduuZ
+         a8Z/GjZsLHMtZ08TaSJnn4SZho3ICmFo7Hf2itnu3aDGUFxn/3br19jpV9iSwyDUsE
+         889uHFEFEZwo2Wftdv4/N8mqT0Kim6TzqJasKVgDw+i7ZVxLkxsYbQM1YJdbxH1nRV
+         ibIbsubMgP0ig==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zekun Shen <bruceshenzk@gmail.com>,
-        Brendan Dolan-Gavitt <brendandg@nyu.edu>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, amitkarwar@gmail.com,
-        siva8118@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 033/116] rsi: Fix out-of-bounds read in rsi_read_pkt()
-Date:   Mon, 17 Jan 2022 21:38:44 -0500
-Message-Id: <20220118024007.1950576-33-sashal@kernel.org>
+Cc:     Ben Greear <greearb@candelatech.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 146/188] ath11k: Fix napi related hang
+Date:   Mon, 17 Jan 2022 21:31:10 -0500
+Message-Id: <20220118023152.1948105-146-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118024007.1950576-1-sashal@kernel.org>
-References: <20220118024007.1950576-1-sashal@kernel.org>
+In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
+References: <20220118023152.1948105-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,106 +54,107 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zekun Shen <bruceshenzk@gmail.com>
+From: Ben Greear <greearb@candelatech.com>
 
-[ Upstream commit f1cb3476e48b60c450ec3a1d7da0805bffc6e43a ]
+[ Upstream commit d943fdad7589653065be0e20aadc6dff37725ed4 ]
 
-rsi_get_* functions rely on an offset variable from usb
-input. The size of usb input is RSI_MAX_RX_USB_PKT_SIZE(3000),
-while 2-byte offset can be up to 0xFFFF. Thus a large offset
-can cause out-of-bounds read.
+Similar to the same bug in ath10k, a napi disable w/out it being enabled
+will hang forever.  I believe I saw this while trying rmmod after driver
+had some failure on startup.  Fix it by keeping state on whether napi is
+enabled or not.
 
-The patch adds a bound checking condition when rcv_pkt_len is 0,
-indicating it's USB. It's unclear whether this is triggerable
-from other type of bus. The following check might help in that case.
-offset > rcv_pkt_len - FRAME_DESC_SZ
+And, remove un-used napi pointer in ath11k driver base struct.
 
-The bug is trigerrable with conpromised/malfunctioning USB devices.
-I tested the patch with the crashing input and got no more bug report.
-
-Attached is the KASAN report from fuzzing.
-
-BUG: KASAN: slab-out-of-bounds in rsi_read_pkt+0x42e/0x500 [rsi_91x]
-Read of size 2 at addr ffff888019439fdb by task RX-Thread/227
-
-CPU: 0 PID: 227 Comm: RX-Thread Not tainted 5.6.0 #66
-Call Trace:
- dump_stack+0x76/0xa0
- print_address_description.constprop.0+0x16/0x200
- ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
- ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
- __kasan_report.cold+0x37/0x7c
- ? rsi_read_pkt+0x42e/0x500 [rsi_91x]
- kasan_report+0xe/0x20
- rsi_read_pkt+0x42e/0x500 [rsi_91x]
- rsi_usb_rx_thread+0x1b1/0x2fc [rsi_usb]
- ? rsi_probe+0x16a0/0x16a0 [rsi_usb]
- ? _raw_spin_lock_irqsave+0x7b/0xd0
- ? _raw_spin_trylock_bh+0x120/0x120
- ? __wake_up_common+0x10b/0x520
- ? rsi_probe+0x16a0/0x16a0 [rsi_usb]
- kthread+0x2b5/0x3b0
- ? kthread_create_on_node+0xd0/0xd0
- ret_from_fork+0x22/0x40
-
-Reported-by: Brendan Dolan-Gavitt <brendandg@nyu.edu>
-Signed-off-by: Zekun Shen <bruceshenzk@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/YXxXS4wgu2OsmlVv@10-18-43-117.dynapool.wireless.nyu.edu
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20200903195254.29379-1-greearb@candelatech.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c | 4 ++++
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 1 -
- drivers/net/wireless/rsi/rsi_usb.h      | 2 ++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/ahb.c  | 12 +++++++++---
+ drivers/net/wireless/ath/ath11k/core.h |  2 +-
+ drivers/net/wireless/ath/ath11k/pci.c  | 12 +++++++++---
+ 3 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 8c638cfeac52f..fe8aed58ac088 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -23,6 +23,7 @@
- #include "rsi_common.h"
- #include "rsi_coex.h"
- #include "rsi_hal.h"
-+#include "rsi_usb.h"
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 8c9c781afc3e5..b9939057b7baf 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -175,8 +175,11 @@ static void __ath11k_ahb_ext_irq_disable(struct ath11k_base *ab)
  
- u32 rsi_zone_enabled = /* INFO_ZONE |
- 			INIT_ZONE |
-@@ -168,6 +169,9 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
- 		frame_desc = &rx_pkt[index];
- 		actual_length = *(u16 *)&frame_desc[0];
- 		offset = *(u16 *)&frame_desc[2];
-+		if (!rcv_pkt_len && offset >
-+			RSI_MAX_RX_USB_PKT_SIZE - FRAME_DESC_SZ)
-+			goto fail;
+ 		ath11k_ahb_ext_grp_disable(irq_grp);
  
- 		queueno = rsi_get_queueno(frame_desc, offset);
- 		length = rsi_get_length(frame_desc, offset);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 7f34148c7dfe5..11388a1469621 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -328,7 +328,6 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num, gfp_t mem_flags)
- 	struct sk_buff *skb;
- 	u8 dword_align_bytes = 0;
+-		napi_synchronize(&irq_grp->napi);
+-		napi_disable(&irq_grp->napi);
++		if (irq_grp->napi_enabled) {
++			napi_synchronize(&irq_grp->napi);
++			napi_disable(&irq_grp->napi);
++			irq_grp->napi_enabled = false;
++		}
+ 	}
+ }
  
--#define RSI_MAX_RX_USB_PKT_SIZE	3000
- 	skb = dev_alloc_skb(RSI_MAX_RX_USB_PKT_SIZE);
- 	if (!skb)
- 		return -ENOMEM;
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 8702f434b5699..ad88f8c70a351 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -44,6 +44,8 @@
- #define RSI_USB_BUF_SIZE	     4096
- #define RSI_USB_CTRL_BUF_SIZE	     0x04
+@@ -300,7 +303,10 @@ static void ath11k_ahb_ext_irq_enable(struct ath11k_base *ab)
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
  
-+#define RSI_MAX_RX_USB_PKT_SIZE	3000
-+
- struct rx_usb_ctrl_block {
- 	u8 *data;
- 	struct urb *rx_urb;
+-		napi_enable(&irq_grp->napi);
++		if (!irq_grp->napi_enabled) {
++			napi_enable(&irq_grp->napi);
++			irq_grp->napi_enabled = true;
++		}
+ 		ath11k_ahb_ext_grp_enable(irq_grp);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 018fb2385f2a3..10d2436f553f6 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -132,6 +132,7 @@ struct ath11k_ext_irq_grp {
+ 	u32 num_irq;
+ 	u32 grp_id;
+ 	u64 timestamp;
++	bool napi_enabled;
+ 	struct napi_struct napi;
+ 	struct net_device napi_ndev;
+ };
+@@ -701,7 +702,6 @@ struct ath11k_base {
+ 	u32 wlan_init_status;
+ 	int irq_num[ATH11K_IRQ_NUM_MAX];
+ 	struct ath11k_ext_irq_grp ext_irq_grp[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+-	struct napi_struct *napi;
+ 	struct ath11k_targ_cap target_caps;
+ 	u32 ext_service_bitmap[WMI_SERVICE_EXT_BM_SIZE];
+ 	bool pdevs_macaddr_valid;
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 5abb38cc3b55f..81d0eaa13adeb 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -632,8 +632,11 @@ static void __ath11k_pci_ext_irq_disable(struct ath11k_base *sc)
+ 
+ 		ath11k_pci_ext_grp_disable(irq_grp);
+ 
+-		napi_synchronize(&irq_grp->napi);
+-		napi_disable(&irq_grp->napi);
++		if (irq_grp->napi_enabled) {
++			napi_synchronize(&irq_grp->napi);
++			napi_disable(&irq_grp->napi);
++			irq_grp->napi_enabled = false;
++		}
+ 	}
+ }
+ 
+@@ -652,7 +655,10 @@ static void ath11k_pci_ext_irq_enable(struct ath11k_base *ab)
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 
+-		napi_enable(&irq_grp->napi);
++		if (!irq_grp->napi_enabled) {
++			napi_enable(&irq_grp->napi);
++			irq_grp->napi_enabled = true;
++		}
+ 		ath11k_pci_ext_grp_enable(irq_grp);
+ 	}
+ }
 -- 
 2.34.1
 
