@@ -2,49 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F19C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 188F0C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345959AbiARCcR (ORCPT
+        id S1345855AbiARCcH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:32:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58684 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344702AbiARCal (ORCPT
+        Mon, 17 Jan 2022 21:32:07 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:45060 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245485AbiARC1w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:30:41 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1975C0613EC;
-        Mon, 17 Jan 2022 18:27:24 -0800 (PST)
+        Mon, 17 Jan 2022 21:27:52 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 146E2611C0;
-        Tue, 18 Jan 2022 02:27:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15146C36AE3;
-        Tue, 18 Jan 2022 02:27:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E29C660AAF;
+        Tue, 18 Jan 2022 02:27:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBE99C36AE3;
+        Tue, 18 Jan 2022 02:27:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472843;
-        bh=syKAXgGkNN/cd6e1sptDYNJgaiCH3RcEKn5+Joj72mU=;
+        s=k20201202; t=1642472871;
+        bh=d/Y/dKHv4FKlCXeMXYlteoOcfs+yj883sgrx/JUCzZE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o2A1H6YW7424jBk6rhLRnwsU6XGVrKIw2Lti04m3TqnnUMm8cGGv/BrsIs17yOF16
-         m3aPLZHJJfOWVUHpfmzkdttZbaKJJPYTqcMjVeSg9lbnk8RnmeAglf2HOUMa39zRRt
-         g+a1wZRK1MFxOyUPhntpaCbkX/rE1/QLj6Bf5DiI5fDZpQU38ATcN/YoQlvcn52JrV
-         ddhSKNfZrLi5J/mBaTeakdUdB7vSKkVcxaQHRtu15whP+XiYXeVEzz//2+D1zrrkvh
-         C4J7p/RvAbO8wtxNSUK207wnZG+InGsi0UtngxOhlODXm3m+u+gySLvOAguyRFvVhX
-         I22LwbyYXCWsg==
+        b=FjuBrf7qSJ+kvKvsrOOVAF4jg2NiUFsJDabYvTPRZkueFrp1rfxRBbWgxPUaqXprH
+         SzPX0y216qgbP2QM7z6pa/jlR0lhUYSGds3xxQ0lXcQ44KDqVTmDI5xsEq4STt6h2G
+         XPaZKFOVu5oFopnoFr4yncnRrRixgI2YOlxkWji/1blKDx5a/HOwcfB060UiDldqK3
+         ShHBuaD2AP1cRKkw1U/tWDYVINmuoKh0WSbl7qTuu3D8P48oPHEK2tJdYH4P5i7qWP
+         ja2XCD/q8y3tRJqD0u4YQZZbbUjkHX3FtakEQhKcd4hWJI+VViMb1b7Rzl5S5YrhyF
+         BT9rSFJcTclgw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Peter Chiu <chui-hao.chiu@mediatek.com>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
         kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
+        matthias.bgg@gmail.com, sean.wang@mediatek.com,
+        shayne.chen@mediatek.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.16 152/217] mt76: mt7615: fix possible deadlock while mt7615_register_ext_phy()
-Date:   Mon, 17 Jan 2022 21:18:35 -0500
-Message-Id: <20220118021940.1942199-152-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 156/217] mt76: mt7615: improve wmm index allocation
+Date:   Mon, 17 Jan 2022 21:18:39 -0500
+Message-Id: <20220118021940.1942199-156-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -56,49 +53,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 8c55516de3f9b76b9d9444e7890682ec2efc809f ]
+[ Upstream commit 70fb028707c8871ef9e56b3ffa3d895e14956cc4 ]
 
-ieee80211_register_hw() is called with rtnl_lock held, and this could be
-caused lockdep from a work item that's on a workqueue that is flushed
-with the rtnl held.
+Typically all AP interfaces on a PHY will share the same WMM settings, while
+sta/mesh interfaces will usually inherit the settings from a remote device.
+In order minimize the likelihood of conflicting WMM settings, make all AP
+interfaces share one slot, and all non-AP interfaces another one.
 
-Move mt7615_register_ext_phy() outside the init_work().
+This also fixes running multiple AP interfaces on MT7613, which only has 3
+WMM slots.
 
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-index a2465b49ecd0c..87b4aa52ee0f9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_init.c
-@@ -28,8 +28,6 @@ static void mt7615_pci_init_work(struct work_struct *work)
- 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 890d9b07e1563..b308d5ab5f9a6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -211,11 +211,9 @@ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 	mvif->mt76.omac_idx = idx;
  
- 	mt7615_init_work(dev);
--	if (dev->dbdc_support)
--		mt7615_register_ext_phy(dev);
- }
+ 	mvif->mt76.band_idx = ext_phy;
+-	if (mt7615_ext_phy(dev))
+-		mvif->mt76.wmm_idx = ext_phy * (MT7615_MAX_WMM_SETS / 2) +
+-				mvif->mt76.idx % (MT7615_MAX_WMM_SETS / 2);
+-	else
+-		mvif->mt76.wmm_idx = mvif->mt76.idx % MT7615_MAX_WMM_SETS;
++	mvif->mt76.wmm_idx = vif->type != NL80211_IFTYPE_AP;
++	if (ext_phy)
++		mvif->mt76.wmm_idx += 2;
  
- static int mt7615_init_hardware(struct mt7615_dev *dev)
-@@ -160,6 +158,12 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 	mt7615_init_txpower(dev, &dev->mphy.sband_2g.sband);
- 	mt7615_init_txpower(dev, &dev->mphy.sband_5g.sband);
- 
-+	if (dev->dbdc_support) {
-+		ret = mt7615_register_ext_phy(dev);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	return mt7615_init_debugfs(dev);
- }
- 
+ 	dev->mt76.vif_mask |= BIT(mvif->mt76.idx);
+ 	dev->omac_mask |= BIT_ULL(mvif->mt76.omac_idx);
 -- 
 2.34.1
 
