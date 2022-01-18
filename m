@@ -2,47 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC8BC43219
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFEC9C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:33:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345809AbiARCcE (ORCPT
+        id S1345737AbiARCb7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:32:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57100 "EHLO
+        Mon, 17 Jan 2022 21:31:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343804AbiARC1S (ORCPT
+        with ESMTP id S1344711AbiARCam (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:27:18 -0500
+        Mon, 17 Jan 2022 21:30:42 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC3AC06175E;
-        Mon, 17 Jan 2022 18:25:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B06E1C0613A9;
+        Mon, 17 Jan 2022 18:27:33 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DAC0460C8B;
-        Tue, 18 Jan 2022 02:25:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5207AC36AEB;
-        Tue, 18 Jan 2022 02:25:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C2A560AAF;
+        Tue, 18 Jan 2022 02:27:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33618C36AF5;
+        Tue, 18 Jan 2022 02:27:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472718;
-        bh=s5IjFqMJ/dT0kIt8h9WrHQlrzu3r9T+bGFdI2o8kycU=;
+        s=k20201202; t=1642472852;
+        bh=PVYBpWgLxzFqn93XSAf0x7uJa2crGkS0cprCA6JoWiE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cwwK61Rua+hpj7KR55zcFdFP1zDDMAJdDhn9LtkTTp/9qUaTLhuR7Rc4A8Ncdz6Yv
-         kCn8VLOz0n/P5KARjsrO5kRInWs1hctIxjojpVCoBh3TH8xxtjGBkjOESYo1YwpQca
-         WtDnZXv+BzBqzxoC0Qlj9c19SkCq366+St1eCXMgrkUqw0OZZqS6+HFQP+d4SJzsBh
-         GzPo2XvoOzDkBU5lIN1kE9nPnV7/WOmkopk+lP5/KClTpRgMYf4Rwph3iBMZHJoBvz
-         bIf6fUKLTXQw4FI7+iRNAYtcNJfAlRkPDm0gzatj0sGKqEyyM5sdGRq+HTZPuaP6NY
-         nI5VsDbJiJuCA==
+        b=QmQIS5I56YTs5s2TjBtTZJO0tG1CVN46V/PtifFNEJTBlBbQORyg181c2lzMW51SB
+         cPrUZpPqjsMiECSX4w6NWgLdBnzy6TXKtuToJUKJuzcu4PwhyHpJwvYbMiMMKiKIHQ
+         pHMK06GOS6a03eJasClJbOClwlWWLIZFYNv9qf1qv1V5mFihpni6W+YgqAsOXLQmz1
+         Ar60yRQLtWf8X8WRYtMT7ZO9ChRoPkPCzpO8p1hrIX7pinDMK4ZQ2Yy5KqZ21XCtRo
+         t5nlsOvAq5AYmn0+3wWlpq6MYEFIGuWcLWgElaUEL/grf3dZ7h+PH4GTCRePGMJMLN
+         a5RopO8FHvKRg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 111/217] rtw89: don't kick off TX DMA if failed to write skb
-Date:   Mon, 17 Jan 2022 21:17:54 -0500
-Message-Id: <20220118021940.1942199-111-sashal@kernel.org>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.16 154/217] mt76: connac: fix a theoretical NULL pointer dereference in mt76_connac_get_phy_mode
+Date:   Mon, 17 Jan 2022 21:18:37 -0500
+Message-Id: <20220118021940.1942199-154-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -54,39 +56,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit a58fdb7c843a37d6598204c6513961feefdadc6a ]
+[ Upstream commit c9dbeac4988f6d4c4211b3747ec9c9c75ea87967 ]
 
-This is found by Smatch static checker warning:
-	drivers/net/wireless/realtek/rtw89/mac80211.c:31 rtw89_ops_tx()
-	error: uninitialized symbol 'qsel'.
+Even if it is not a real bug since mt76_connac_get_phy_mode runs just
+for mt7921 where only STA is supported, fix a theoretical NULL pointer
+dereference if new added modes do not support HE
 
-The warning is because 'qsel' isn't filled by rtw89_core_tx_write() due to
-failed to write. The way to fix it is to avoid kicking off TX DMA, so add
-'return' to the failure case.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20211201093816.13806-1-pkshih@realtek.com
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index 16dc6fb7dbb0b..e9d61e55e2d92 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -27,6 +27,7 @@ static void rtw89_ops_tx(struct ieee80211_hw *hw,
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to transmit skb: %d\n", ret);
- 		ieee80211_free_txskb(hw, skb);
-+		return;
- 	}
- 	rtw89_core_tx_kick_off(rtwdev, qsel);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 26b4b875dcc02..bcb596664b3e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1179,7 +1179,7 @@ mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 		if (ht_cap->ht_supported)
+ 			mode |= PHY_MODE_GN;
+ 
+-		if (he_cap->has_he)
++		if (he_cap && he_cap->has_he)
+ 			mode |= PHY_MODE_AX_24G;
+ 	} else if (band == NL80211_BAND_5GHZ || band == NL80211_BAND_6GHZ) {
+ 		mode |= PHY_MODE_A;
+@@ -1190,7 +1190,7 @@ mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 		if (vht_cap->vht_supported)
+ 			mode |= PHY_MODE_AC;
+ 
+-		if (he_cap->has_he) {
++		if (he_cap && he_cap->has_he) {
+ 			if (band == NL80211_BAND_6GHZ)
+ 				mode |= PHY_MODE_AX_6G;
+ 			else
 -- 
 2.34.1
 
