@@ -2,44 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B167DC43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D8EC43219
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:54:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234854AbiARCyF (ORCPT
+        id S1346462AbiARCyG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:54:05 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:55602 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343621AbiARCmh (ORCPT
+        Mon, 17 Jan 2022 21:54:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36036 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350680AbiARCwL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:42:37 -0500
+        Mon, 17 Jan 2022 21:52:11 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DACDEC09427C;
+        Mon, 17 Jan 2022 18:42:48 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 9D36ECE13A1;
-        Tue, 18 Jan 2022 02:42:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2196C36AE3;
-        Tue, 18 Jan 2022 02:42:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 36298612E6;
+        Tue, 18 Jan 2022 02:42:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77DB1C36AF3;
+        Tue, 18 Jan 2022 02:42:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473752;
-        bh=LaksSdNhVd4U/nUy+N1NWpS58iAZEhC7d/NEn5f4/ho=;
+        s=k20201202; t=1642473767;
+        bh=Wu4PxbI8hIbDonZ3zmKT+l+rtS8XwPQg/vt8SwwVPAE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sndE/FnNNtnwBRaIWv/tuqiKliHwMzAYmxV2X6mFVl+bgHgH9dTH2BmFbsneYiSAE
-         veFn7hFTXqJpMguwCo2tdZitksPrOaqHm/Jgw2SAfbukmduJPegQX9xoXelvkpQZeu
-         SqfnhEm5x/HPeGrxjPt8DNu4LZjCae5T+/S/fs+Tb2KIk21Zmjn7L0dM6B1GE2GgpF
-         EYnhtq/iJ1x7bNm7LARCDlK8Jx3njuRdEK5A97794gwr7AhsinPa1+aZnDkn73mx1x
-         /IVW6IUUqRNkzBFEmwwyyWsW+3vjjfvSLL6hpA27E5OzCkHOiwM6X636hQmeBWYtu0
-         84EX09YgjivuQ==
+        b=sslmJYovkmEhi3OpTb9yiRnA3b5VJMTgxy1vniP83suOCKavJG0E7upo2RbeteUYy
+         70i5TILfqG07KIrlsGjfU0Ee05rfnEyIXr1Jzwsre+7ecW/OvI5LdsPfSuRvD0yog1
+         0lbUWc8UHqgm76ZQM9NVjarfsy38OSZc3ZrIIZZYkF1zlEYlzGMB6QUn1Xv4ZnCcpx
+         k9IbJZzh7mzRt7YEkqphGZ0Q3FjstNdf6Ia+LloU/pQz1+sZYAUlvDE7YfrlDUXo6K
+         yurJr5dwG+P/FyhYCmZlKIE7EMww6RR+TpjcgWj8SvffcmEpR3OBRX64nljo9HRjLX
+         jQMIcMe+VL6VQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
+Cc:     Baochen Qiang <quic_bqiang@quicinc.com>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 053/116] ath11k: avoid deadlock by change ieee80211_queue_work for regd_update_work
-Date:   Mon, 17 Jan 2022 21:39:04 -0500
-Message-Id: <20220118024007.1950576-53-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 060/116] ath11k: Avoid false DEADLOCK warning reported by lockdep
+Date:   Mon, 17 Jan 2022 21:39:11 -0500
+Message-Id: <20220118024007.1950576-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118024007.1950576-1-sashal@kernel.org>
 References: <20220118024007.1950576-1-sashal@kernel.org>
@@ -51,202 +54,179 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <quic_wgong@quicinc.com>
+From: Baochen Qiang <quic_bqiang@quicinc.com>
 
-[ Upstream commit ed05c7cf1286d7e31e7623bce55ff135723591bf ]
+[ Upstream commit 767c94caf0efad136157110787fe221b74cb5c8a ]
 
-When enable debug config, it print below warning while shut down wlan
-interface shuh as run "ifconfig wlan0 down".
+With CONFIG_LOCKDEP=y and CONFIG_DEBUG_SPINLOCK=y, lockdep reports
+below warning:
 
-The reason is because ar->regd_update_work is ran once, and it is will
-call wiphy_lock(ar->hw->wiphy) in function ath11k_regd_update() which
-is running in workqueue of ieee80211_local queued by ieee80211_queue_work().
-Another thread from "ifconfig wlan0 down" will also accuqire the lock
-by wiphy_lock(sdata->local->hw.wiphy) in function ieee80211_stop(), and
-then it call ieee80211_stop_device() to flush_workqueue(local->workqueue),
-this will wait the workqueue of ieee80211_local finished. Then deadlock
-will happen easily if the two thread run meanwhile.
-
-Below warning disappeared after this change.
-
-[  914.088798] ath11k_pci 0000:05:00.0: mac remove interface (vdev 0)
-[  914.088806] ath11k_pci 0000:05:00.0: mac stop 11d scan
-[  914.088810] ath11k_pci 0000:05:00.0: mac stop 11d vdev id 0
-[  914.088827] ath11k_pci 0000:05:00.0: htc ep 2 consumed 1 credits (total 0)
-[  914.088841] ath11k_pci 0000:05:00.0: send 11d scan stop vdev id 0
-[  914.088849] ath11k_pci 0000:05:00.0: htc insufficient credits ep 2 required 1 available 0
-[  914.088856] ath11k_pci 0000:05:00.0: htc insufficient credits ep 2 required 1 available 0
-[  914.096434] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 16
-[  914.096442] ath11k_pci 0000:05:00.0: htc ep 2 got 1 credits (total 1)
-[  914.096481] ath11k_pci 0000:05:00.0: htc ep 2 consumed 1 credits (total 0)
-[  914.096491] ath11k_pci 0000:05:00.0: WMI vdev delete id 0
-[  914.111598] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 16
-[  914.111628] ath11k_pci 0000:05:00.0: htc ep 2 got 1 credits (total 1)
-[  914.114659] ath11k_pci 0000:05:00.0: rx ce pipe 2 len 20
-[  914.114742] ath11k_pci 0000:05:00.0: htc rx completion ep 2 skb         pK-error
-[  914.115977] ath11k_pci 0000:05:00.0: vdev delete resp for vdev id 0
-[  914.116685] ath11k_pci 0000:05:00.0: vdev 00:03:7f:29:61:11 deleted, vdev_id 0
-
-[  914.117583] ======================================================
-[  914.117592] WARNING: possible circular locking dependency detected
-[  914.117600] 5.16.0-rc1-wt-ath+ #1 Tainted: G           OE
-[  914.117611] ------------------------------------------------------
-[  914.117618] ifconfig/2805 is trying to acquire lock:
-[  914.117628] ffff9c00a62bb548 ((wq_completion)phy0){+.+.}-{0:0}, at: flush_workqueue+0x87/0x470
-[  914.117674]
+[  166.059415] ============================================
+[  166.059416] WARNING: possible recursive locking detected
+[  166.059418] 5.15.0-wt-ath+ #10 Tainted: G        W  O
+[  166.059420] --------------------------------------------
+[  166.059421] kworker/0:2/116 is trying to acquire lock:
+[  166.059423] ffff9905f2083160 (&srng->lock){+.-.}-{2:2}, at: ath11k_hal_reo_cmd_send+0x20/0x490 [ath11k]
+[  166.059440]
                but task is already holding lock:
-[  914.117682] ffff9c00baea07d0 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: ieee80211_stop+0x38/0x180 [mac80211]
-[  914.117872]
-               which lock already depends on the new lock.
-
-[  914.117880]
-               the existing dependency chain (in reverse order) is:
-[  914.117888]
-               -> #3 (&rdev->wiphy.mtx){+.+.}-{4:4}:
-[  914.117910]        __mutex_lock+0xa0/0x9c0
-[  914.117930]        mutex_lock_nested+0x1b/0x20
-[  914.117944]        reg_process_self_managed_hints+0x3a/0xb0 [cfg80211]
-[  914.118093]        wiphy_regulatory_register+0x47/0x80 [cfg80211]
-[  914.118229]        wiphy_register+0x84f/0x9c0 [cfg80211]
-[  914.118353]        ieee80211_register_hw+0x6b1/0xd90 [mac80211]
-[  914.118486]        ath11k_mac_register+0x6af/0xb60 [ath11k]
-[  914.118550]        ath11k_core_qmi_firmware_ready+0x383/0x4a0 [ath11k]
-[  914.118598]        ath11k_qmi_driver_event_work+0x347/0x4a0 [ath11k]
-[  914.118656]        process_one_work+0x228/0x670
-[  914.118669]        worker_thread+0x4d/0x440
-[  914.118680]        kthread+0x16d/0x1b0
-[  914.118697]        ret_from_fork+0x22/0x30
-[  914.118714]
-               -> #2 (rtnl_mutex){+.+.}-{4:4}:
-[  914.118736]        __mutex_lock+0xa0/0x9c0
-[  914.118751]        mutex_lock_nested+0x1b/0x20
-[  914.118767]        rtnl_lock+0x17/0x20
-[  914.118783]        ath11k_regd_update+0x15a/0x260 [ath11k]
-[  914.118841]        ath11k_regd_update_work+0x15/0x20 [ath11k]
-[  914.118897]        process_one_work+0x228/0x670
-[  914.118909]        worker_thread+0x4d/0x440
-[  914.118920]        kthread+0x16d/0x1b0
-[  914.118934]        ret_from_fork+0x22/0x30
-[  914.118948]
-               -> #1 ((work_completion)(&ar->regd_update_work)){+.+.}-{0:0}:
-[  914.118972]        process_one_work+0x1fa/0x670
-[  914.118984]        worker_thread+0x4d/0x440
-[  914.118996]        kthread+0x16d/0x1b0
-[  914.119010]        ret_from_fork+0x22/0x30
-[  914.119023]
-               -> #0 ((wq_completion)phy0){+.+.}-{0:0}:
-[  914.119045]        __lock_acquire+0x146d/0x1cf0
-[  914.119057]        lock_acquire+0x19b/0x360
-[  914.119067]        flush_workqueue+0xae/0x470
-[  914.119084]        ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.119260]        ieee80211_do_stop+0x5d7/0x830 [mac80211]
-[  914.119409]        ieee80211_stop+0x45/0x180 [mac80211]
-[  914.119557]        __dev_close_many+0xb3/0x120
-[  914.119573]        __dev_change_flags+0xc3/0x1d0
-[  914.119590]        dev_change_flags+0x29/0x70
-[  914.119605]        devinet_ioctl+0x653/0x810
-[  914.119620]        inet_ioctl+0x193/0x1e0
-[  914.119631]        sock_do_ioctl+0x4d/0xf0
-[  914.119649]        sock_ioctl+0x262/0x340
-[  914.119665]        __x64_sys_ioctl+0x96/0xd0
-[  914.119678]        do_syscall_64+0x3d/0xd0
-[  914.119694]        entry_SYSCALL_64_after_hwframe+0x44/0xae
-[  914.119709]
+[  166.059442] ffff9905f2083230 (&srng->lock){+.-.}-{2:2}, at: ath11k_dp_process_reo_status+0x95/0x2d0 [ath11k]
+[  166.059491]
                other info that might help us debug this:
+[  166.059492]  Possible unsafe locking scenario:
 
-[  914.119717] Chain exists of:
-                 (wq_completion)phy0 --> rtnl_mutex --> &rdev->wiphy.mtx
-
-[  914.119745]  Possible unsafe locking scenario:
-
-[  914.119752]        CPU0                    CPU1
-[  914.119758]        ----                    ----
-[  914.119765]   lock(&rdev->wiphy.mtx);
-[  914.119778]                                lock(rtnl_mutex);
-[  914.119792]                                lock(&rdev->wiphy.mtx);
-[  914.119807]   lock((wq_completion)phy0);
-[  914.119819]
+[  166.059493]        CPU0
+[  166.059494]        ----
+[  166.059495]   lock(&srng->lock);
+[  166.059498]   lock(&srng->lock);
+[  166.059500]
                 *** DEADLOCK ***
 
-[  914.119827] 2 locks held by ifconfig/2805:
-[  914.119837]  #0: ffffffffba3dc010 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_lock+0x17/0x20
-[  914.119872]  #1: ffff9c00baea07d0 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: ieee80211_stop+0x38/0x180 [mac80211]
-[  914.120039]
+[  166.059501]  May be due to missing lock nesting notation
+
+[  166.059502] 3 locks held by kworker/0:2/116:
+[  166.059504]  #0: ffff9905c0081548 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x1f6/0x660
+[  166.059511]  #1: ffff9d2400a5fe68 ((debug_obj_work).work){+.+.}-{0:0}, at: process_one_work+0x1f6/0x660
+[  166.059517]  #2: ffff9905f2083230 (&srng->lock){+.-.}-{2:2}, at: ath11k_dp_process_reo_status+0x95/0x2d0 [ath11k]
+[  166.059532]
                stack backtrace:
-[  914.120048] CPU: 0 PID: 2805 Comm: ifconfig Tainted: G           OE     5.16.0-rc1-wt-ath+ #1
-[  914.120064] Hardware name: LENOVO 418065C/418065C, BIOS 83ET63WW (1.33 ) 07/29/2011
-[  914.120074] Call Trace:
-[  914.120084]  <TASK>
-[  914.120094]  dump_stack_lvl+0x73/0xa4
-[  914.120119]  dump_stack+0x10/0x12
-[  914.120135]  print_circular_bug.isra.44+0x221/0x2e0
-[  914.120165]  check_noncircular+0x106/0x150
-[  914.120203]  __lock_acquire+0x146d/0x1cf0
-[  914.120215]  ? __lock_acquire+0x146d/0x1cf0
-[  914.120245]  lock_acquire+0x19b/0x360
-[  914.120259]  ? flush_workqueue+0x87/0x470
-[  914.120286]  ? lockdep_init_map_type+0x6b/0x250
-[  914.120310]  flush_workqueue+0xae/0x470
-[  914.120327]  ? flush_workqueue+0x87/0x470
-[  914.120344]  ? lockdep_hardirqs_on+0xd7/0x150
-[  914.120391]  ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.120565]  ? ieee80211_stop_device+0x3b/0x50 [mac80211]
-[  914.120736]  ieee80211_do_stop+0x5d7/0x830 [mac80211]
-[  914.120906]  ieee80211_stop+0x45/0x180 [mac80211]
-[  914.121060]  __dev_close_many+0xb3/0x120
-[  914.121081]  __dev_change_flags+0xc3/0x1d0
-[  914.121109]  dev_change_flags+0x29/0x70
-[  914.121131]  devinet_ioctl+0x653/0x810
-[  914.121149]  ? __might_fault+0x77/0x80
-[  914.121179]  inet_ioctl+0x193/0x1e0
-[  914.121194]  ? inet_ioctl+0x193/0x1e0
-[  914.121218]  ? __might_fault+0x77/0x80
-[  914.121238]  ? _copy_to_user+0x68/0x80
-[  914.121266]  sock_do_ioctl+0x4d/0xf0
-[  914.121283]  ? inet_stream_connect+0x60/0x60
-[  914.121297]  ? sock_do_ioctl+0x4d/0xf0
-[  914.121329]  sock_ioctl+0x262/0x340
-[  914.121347]  ? sock_ioctl+0x262/0x340
-[  914.121362]  ? exit_to_user_mode_prepare+0x13b/0x280
-[  914.121388]  ? syscall_enter_from_user_mode+0x20/0x50
-[  914.121416]  __x64_sys_ioctl+0x96/0xd0
-[  914.121430]  ? br_ioctl_call+0x90/0x90
-[  914.121445]  ? __x64_sys_ioctl+0x96/0xd0
-[  914.121465]  do_syscall_64+0x3d/0xd0
-[  914.121482]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-[  914.121497] RIP: 0033:0x7f0ed051737b
-[  914.121513] Code: 0f 1e fa 48 8b 05 15 3b 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 3a 0d 00 f7 d8 64 89 01 48
-[  914.121527] RSP: 002b:00007fff7be38b98 EFLAGS: 00000202 ORIG_RAX: 0000000000000010
-[  914.121544] RAX: ffffffffffffffda RBX: 00007fff7be38ba0 RCX: 00007f0ed051737b
-[  914.121555] RDX: 00007fff7be38ba0 RSI: 0000000000008914 RDI: 0000000000000004
-[  914.121566] RBP: 00007fff7be38c60 R08: 000000000000000a R09: 0000000000000001
-[  914.121576] R10: 0000000000000000 R11: 0000000000000202 R12: 00000000fffffffe
-[  914.121586] R13: 0000000000000004 R14: 0000000000000000 R15: 0000000000000000
-[  914.121620]  </TASK>
+[  166.059534] CPU: 0 PID: 116 Comm: kworker/0:2 Kdump: loaded Tainted: G        W  O      5.15.0-wt-ath+ #10
+[  166.059537] Hardware name: Intel(R) Client Systems NUC8i7HVK/NUC8i7HVB, BIOS HNKBLi70.86A.0059.2019.1112.1124 11/12/2019
+[  166.059539] Workqueue: events free_obj_work
+[  166.059543] Call Trace:
+[  166.059545]  <IRQ>
+[  166.059547]  dump_stack_lvl+0x56/0x7b
+[  166.059552]  __lock_acquire+0xb9a/0x1a50
+[  166.059556]  lock_acquire+0x1e2/0x330
+[  166.059560]  ? ath11k_hal_reo_cmd_send+0x20/0x490 [ath11k]
+[  166.059571]  _raw_spin_lock_bh+0x33/0x70
+[  166.059574]  ? ath11k_hal_reo_cmd_send+0x20/0x490 [ath11k]
+[  166.059584]  ath11k_hal_reo_cmd_send+0x20/0x490 [ath11k]
+[  166.059594]  ath11k_dp_tx_send_reo_cmd+0x3f/0x130 [ath11k]
+[  166.059605]  ath11k_dp_rx_tid_del_func+0x221/0x370 [ath11k]
+[  166.059618]  ath11k_dp_process_reo_status+0x22f/0x2d0 [ath11k]
+[  166.059632]  ? ath11k_dp_service_srng+0x2ea/0x2f0 [ath11k]
+[  166.059643]  ath11k_dp_service_srng+0x2ea/0x2f0 [ath11k]
+[  166.059655]  ath11k_pci_ext_grp_napi_poll+0x1c/0x70 [ath11k_pci]
+[  166.059659]  __napi_poll+0x28/0x230
+[  166.059664]  net_rx_action+0x285/0x310
+[  166.059668]  __do_softirq+0xe6/0x4d2
+[  166.059672]  irq_exit_rcu+0xd2/0xf0
+[  166.059675]  common_interrupt+0xa5/0xc0
+[  166.059678]  </IRQ>
+[  166.059679]  <TASK>
+[  166.059680]  asm_common_interrupt+0x1e/0x40
+[  166.059683] RIP: 0010:_raw_spin_unlock_irqrestore+0x38/0x70
+[  166.059686] Code: 83 c7 18 e8 2a 95 43 ff 48 89 ef e8 22 d2 43 ff 81 e3 00 02 00 00 75 25 9c 58 f6 c4 02 75 2d 48 85 db 74 01 fb bf 01 00 00 00 <e8> 63 2e 40 ff 65 8b 05 8c 59 97 5c 85 c0 74 0a 5b 5d c3 e8 00 6a
+[  166.059689] RSP: 0018:ffff9d2400a5fca0 EFLAGS: 00000206
+[  166.059692] RAX: 0000000000000002 RBX: 0000000000000200 RCX: 0000000000000006
+[  166.059694] RDX: 0000000000000000 RSI: ffffffffa404879b RDI: 0000000000000001
+[  166.059696] RBP: ffff9905c0053000 R08: 0000000000000001 R09: 0000000000000001
+[  166.059698] R10: ffff9d2400a5fc50 R11: 0000000000000001 R12: ffffe186c41e2840
+[  166.059700] R13: 0000000000000001 R14: ffff9905c78a1c68 R15: 0000000000000001
+[  166.059704]  free_debug_processing+0x257/0x3d0
+[  166.059708]  ? free_obj_work+0x1f5/0x250
+[  166.059712]  __slab_free+0x374/0x5a0
+[  166.059718]  ? kmem_cache_free+0x2e1/0x370
+[  166.059721]  ? free_obj_work+0x1f5/0x250
+[  166.059724]  kmem_cache_free+0x2e1/0x370
+[  166.059727]  free_obj_work+0x1f5/0x250
+[  166.059731]  process_one_work+0x28b/0x660
+[  166.059735]  ? process_one_work+0x660/0x660
+[  166.059738]  worker_thread+0x37/0x390
+[  166.059741]  ? process_one_work+0x660/0x660
+[  166.059743]  kthread+0x176/0x1a0
+[  166.059746]  ? set_kthread_struct+0x40/0x40
+[  166.059749]  ret_from_fork+0x22/0x30
+[  166.059754]  </TASK>
+
+Since these two lockes are both initialized in ath11k_hal_srng_setup,
+they are assigned with the same key. As a result lockdep suspects that
+the task is trying to acquire the same lock (due to same key) while
+already holding it, and thus reports the DEADLOCK warning. However as
+they are different spinlock instances, the warning is false positive.
+
+On the other hand, even no dead lock indeed, this is a major issue for
+upstream regression testing as it disables lockdep functionality.
+
+Fix it by assigning separate lock class key for each srng->lock.
 
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20211201071745.17746-2-quic_wgong@quicinc.com
+Link: https://lore.kernel.org/r/20211209011949.151472-1-quic_bqiang@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/hal.c | 22 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/hal.h |  2 ++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 74ebe8e7d1d81..c6f91e0367a90 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -5421,7 +5421,7 @@ static int ath11k_reg_chan_list_event(struct ath11k_base *ab, struct sk_buff *sk
- 		ar = ab->pdevs[pdev_idx].ar;
- 		kfree(ab->new_regd[pdev_idx]);
- 		ab->new_regd[pdev_idx] = regd;
--		ieee80211_queue_work(ar->hw, &ar->regd_update_work);
-+		queue_work(ab->workqueue, &ar->regd_update_work);
- 	} else {
- 		/* This regd would be applied during mac registration and is
- 		 * held constant throughout for regd intersection purpose
+diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+index 9904c0eb75875..f3b9108ab6bd0 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.c
++++ b/drivers/net/wireless/ath/ath11k/hal.c
+@@ -991,6 +991,7 @@ int ath11k_hal_srng_setup(struct ath11k_base *ab, enum hal_ring_type type,
+ 	srng->msi_data = params->msi_data;
+ 	srng->initialized = 1;
+ 	spin_lock_init(&srng->lock);
++	lockdep_set_class(&srng->lock, hal->srng_key + ring_id);
+ 
+ 	for (i = 0; i < HAL_SRNG_NUM_REG_GRP; i++) {
+ 		srng->hwreg_base[i] = srng_config->reg_start[i] +
+@@ -1237,6 +1238,24 @@ static int ath11k_hal_srng_create_config(struct ath11k_base *ab)
+ 	return 0;
+ }
+ 
++static void ath11k_hal_register_srng_key(struct ath11k_base *ab)
++{
++	struct ath11k_hal *hal = &ab->hal;
++	u32 ring_id;
++
++	for (ring_id = 0; ring_id < HAL_SRNG_RING_ID_MAX; ring_id++)
++		lockdep_register_key(hal->srng_key + ring_id);
++}
++
++static void ath11k_hal_unregister_srng_key(struct ath11k_base *ab)
++{
++	struct ath11k_hal *hal = &ab->hal;
++	u32 ring_id;
++
++	for (ring_id = 0; ring_id < HAL_SRNG_RING_ID_MAX; ring_id++)
++		lockdep_unregister_key(hal->srng_key + ring_id);
++}
++
+ int ath11k_hal_srng_init(struct ath11k_base *ab)
+ {
+ 	struct ath11k_hal *hal = &ab->hal;
+@@ -1256,6 +1275,8 @@ int ath11k_hal_srng_init(struct ath11k_base *ab)
+ 	if (ret)
+ 		goto err_free_cont_rdp;
+ 
++	ath11k_hal_register_srng_key(ab);
++
+ 	return 0;
+ 
+ err_free_cont_rdp:
+@@ -1270,6 +1291,7 @@ void ath11k_hal_srng_deinit(struct ath11k_base *ab)
+ {
+ 	struct ath11k_hal *hal = &ab->hal;
+ 
++	ath11k_hal_unregister_srng_key(ab);
+ 	ath11k_hal_free_cont_rdp(ab);
+ 	ath11k_hal_free_cont_wrp(ab);
+ 	kfree(hal->srng_config);
+diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+index 1f1b29cd0aa39..5fbfded8d546c 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.h
++++ b/drivers/net/wireless/ath/ath11k/hal.h
+@@ -888,6 +888,8 @@ struct ath11k_hal {
+ 	/* shadow register configuration */
+ 	u32 shadow_reg_addr[HAL_SHADOW_NUM_REGS];
+ 	int num_shadow_reg_configured;
++
++	struct lock_class_key srng_key[HAL_SRNG_RING_ID_MAX];
+ };
+ 
+ u32 ath11k_hal_reo_qdesc_size(u32 ba_window_size, u8 tid);
 -- 
 2.34.1
 
