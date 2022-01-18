@@ -2,47 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85EB1C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:26:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7709C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:27:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244642AbiARC0H (ORCPT
+        id S244918AbiARC06 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:26:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57328 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245103AbiARCYN (ORCPT
+        Mon, 17 Jan 2022 21:26:58 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:38952 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245218AbiARCZJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:24:13 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9698FC0617B9;
-        Mon, 17 Jan 2022 18:23:48 -0800 (PST)
+        Mon, 17 Jan 2022 21:25:09 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E897760E99;
-        Tue, 18 Jan 2022 02:23:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E79EC36AF2;
-        Tue, 18 Jan 2022 02:23:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 077BAB81232;
+        Tue, 18 Jan 2022 02:25:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D1BCC36AE3;
+        Tue, 18 Jan 2022 02:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642472627;
-        bh=u4HZb+lyWjAaInD5P/fgVFne79KgKZfWz2IcpXa7bmA=;
+        s=k20201202; t=1642472706;
+        bh=22TBzvVqrxec+4D1GlxVLaO6klk4pPbSwURl8EjB0iY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DqRFNVTJ8a0ZcY85ZUvYGncVdAJz/6WoOZSFb3DNZIRv8GfwD0up1z7XOarjdf8hy
-         3Hdt6xuYd4HnU0YAPLUQkGuYM2fb2dTmEvKbU4g9GRmL1GE0OZRUGV0l+nVSDaO2O7
-         IP1B1VZsJVeuuB9Y48gKnsoEFN9VkXjz/medj7B9U9GlUFXZi37aU17IyH1vpPSpqH
-         N8sKOS5BwW7072IpbgGatYK9fTI4V+F+hDwu22OmY/iaJq89HkFIoc/fz+J+ZS8W5K
-         0hLV4mUK80LIqEb3E12eI/2slWiIN7F0sL09yDDqg1354MXBgAzVPhBoETJb1sIAOp
-         /XpvthoVWEp5Q==
+        b=Hi5viyUqKjnX7lAIwforbLN6GSq2rf1SnT7UE11LIyUrb0iDf8nl85O1uwvPmakcI
+         2NA8f8YEjZU+p5u0WvOM8iKK+UbTRXzJg0IGd0cIsRktHDkhpW6Q1HP4lQS+dQuttb
+         UIKwlHPe35xWujQEQa4uNiJEnjQ1JrHpNIvpzdsFQ8Y66pWDw7otttpgIFaqnLuD8i
+         /XnRsFwpCxmBkw2HsE2QPWpjQos5PwfMmrA5yCCncneEGgGJxlHvn+GZPsB0xBHFXo
+         CN04OBPzf9BNrK8thH/mSRIjk9MgjNcLE5MJAGmWsN9AxNBlH7Q+UdC/ZNyuCgYkQz
+         aCjHedDthnm6w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sriram R <quic_srirrama@quicinc.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, ath11k@lists.infradead.org,
+        davem@davemloft.net, kuba@kernel.org, emmanuel.grumbach@intel.com,
+        avraham.stern@intel.com, ilan.peer@intel.com,
+        sara.sharon@intel.com, nathan.errera@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 079/217] ath11k: Avoid NULL ptr access during mgmt tx cleanup
-Date:   Mon, 17 Jan 2022 21:17:22 -0500
-Message-Id: <20220118021940.1942199-79-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 105/217] iwlwifi: mvm: avoid clearing a just saved session protection id
+Date:   Mon, 17 Jan 2022 21:17:48 -0500
+Message-Id: <20220118021940.1942199-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220118021940.1942199-1-sashal@kernel.org>
 References: <20220118021940.1942199-1-sashal@kernel.org>
@@ -54,117 +53,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sriram R <quic_srirrama@quicinc.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-[ Upstream commit a93789ae541c7d5c1c2a4942013adb6bcc5e2848 ]
+[ Upstream commit 8e967c137df3b236d2075f9538cb888129425d1a ]
 
-Currently 'ar' reference is not added in skb_cb during
-WMI mgmt tx. Though this is generally not used during tx completion
-callbacks, on interface removal the remaining idr cleanup callback
-uses the ar ptr from skb_cb from mgmt txmgmt_idr. Hence
-fill them during tx call for proper usage.
+When scheduling a session protection the id is saved but
+then it may be cleared when calling iwl_mvm_te_clear_data
+(if a previous session protection is currently active).
+Fix it by saving the id after calling iwl_mvm_te_clear_data.
 
-Also free the skb which is missing currently in these
-callbacks.
-
-Crash_info:
-
-[19282.489476] Unable to handle kernel NULL pointer dereference at virtual address 00000000
-[19282.489515] pgd = 91eb8000
-[19282.496702] [00000000] *pgd=00000000
-[19282.502524] Internal error: Oops: 5 [#1] PREEMPT SMP ARM
-[19282.783728] PC is at ath11k_mac_vif_txmgmt_idr_remove+0x28/0xd8 [ath11k]
-[19282.789170] LR is at idr_for_each+0xa0/0xc8
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-00729-QCAHKSWPL_SILICONZ-3 v2
-Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1637832614-13831-1-git-send-email-quic_srirrama@quicinc.com
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20211204130722.b0743a588d14.I098fef6677d0dab3ef1b6183ed206a10bab01eb2@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 35 +++++++++++++++------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 0a196fb3df9fd..dc9bbaecb28d3 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: BSD-3-Clause-Clear
- /*
-  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index e91f8e889df70..e6813317edf35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -1158,15 +1158,10 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
+ 			cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 							mvmvif->color)),
+ 		.action = cpu_to_le32(FW_CTXT_ACTION_ADD),
++		.conf_id = cpu_to_le32(SESSION_PROTECT_CONF_ASSOC),
+ 		.duration_tu = cpu_to_le32(MSEC_TO_TU(duration)),
+ 	};
  
- #include <net/mac80211.h>
-@@ -4930,23 +4931,32 @@ static int __ath11k_set_antenna(struct ath11k *ar, u32 tx_ant, u32 rx_ant)
- 	return 0;
- }
+-	/* The time_event_data.id field is reused to save session
+-	 * protection's configuration.
+-	 */
+-	mvmvif->time_event_data.id = SESSION_PROTECT_CONF_ASSOC;
+-	cmd.conf_id = cpu_to_le32(mvmvif->time_event_data.id);
+-
+ 	lockdep_assert_held(&mvm->mutex);
  
--int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
-+static void ath11k_mac_tx_mgmt_free(struct ath11k *ar, int buf_id)
- {
--	struct sk_buff *msdu = skb;
-+	struct sk_buff *msdu;
- 	struct ieee80211_tx_info *info;
--	struct ath11k *ar = ctx;
--	struct ath11k_base *ab = ar->ab;
+ 	spin_lock_bh(&mvm->time_event_lock);
+@@ -1180,6 +1175,11 @@ void iwl_mvm_schedule_session_protection(struct iwl_mvm *mvm,
+ 	}
  
- 	spin_lock_bh(&ar->txmgmt_idr_lock);
--	idr_remove(&ar->txmgmt_idr, buf_id);
-+	msdu = idr_remove(&ar->txmgmt_idr, buf_id);
- 	spin_unlock_bh(&ar->txmgmt_idr_lock);
--	dma_unmap_single(ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
-+
-+	if (!msdu)
-+		return;
-+
-+	dma_unmap_single(ar->ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
- 			 DMA_TO_DEVICE);
- 
- 	info = IEEE80211_SKB_CB(msdu);
- 	memset(&info->status, 0, sizeof(info->status));
- 
- 	ieee80211_free_txskb(ar->hw, msdu);
-+}
-+
-+int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
-+{
-+	struct ath11k *ar = ctx;
-+
-+	ath11k_mac_tx_mgmt_free(ar, buf_id);
- 
- 	return 0;
- }
-@@ -4955,17 +4965,10 @@ static int ath11k_mac_vif_txmgmt_idr_remove(int buf_id, void *skb, void *ctx)
- {
- 	struct ieee80211_vif *vif = ctx;
- 	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB((struct sk_buff *)skb);
--	struct sk_buff *msdu = skb;
- 	struct ath11k *ar = skb_cb->ar;
--	struct ath11k_base *ab = ar->ab;
- 
--	if (skb_cb->vif == vif) {
--		spin_lock_bh(&ar->txmgmt_idr_lock);
--		idr_remove(&ar->txmgmt_idr, buf_id);
--		spin_unlock_bh(&ar->txmgmt_idr_lock);
--		dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len,
--				 DMA_TO_DEVICE);
--	}
-+	if (skb_cb->vif == vif)
-+		ath11k_mac_tx_mgmt_free(ar, buf_id);
- 
- 	return 0;
- }
-@@ -4980,6 +4983,8 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
- 	int buf_id;
- 	int ret;
- 
-+	ATH11K_SKB_CB(skb)->ar = ar;
-+
- 	spin_lock_bh(&ar->txmgmt_idr_lock);
- 	buf_id = idr_alloc(&ar->txmgmt_idr, skb, 0,
- 			   ATH11K_TX_MGMT_NUM_PENDING_MAX, GFP_ATOMIC);
+ 	iwl_mvm_te_clear_data(mvm, te_data);
++	/*
++	 * The time_event_data.id field is reused to save session
++	 * protection's configuration.
++	 */
++	te_data->id = le32_to_cpu(cmd.conf_id);
+ 	te_data->duration = le32_to_cpu(cmd.duration_tu);
+ 	te_data->vif = vif;
+ 	spin_unlock_bh(&mvm->time_event_lock);
 -- 
 2.34.1
 
