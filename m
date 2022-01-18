@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7CAC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF97C2BA4C
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jan 2022 02:52:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349574AbiARCts (ORCPT
+        id S1349559AbiARCtr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jan 2022 21:49:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34474 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348615AbiARCpm (ORCPT
+        Mon, 17 Jan 2022 21:49:47 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:35086 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348529AbiARCpg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jan 2022 21:45:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FAFAC08ED6A;
-        Mon, 17 Jan 2022 18:38:22 -0800 (PST)
+        Mon, 17 Jan 2022 21:45:36 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 35DD8B81238;
-        Tue, 18 Jan 2022 02:38:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0880DC36AF5;
-        Tue, 18 Jan 2022 02:38:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 452F860AB1;
+        Tue, 18 Jan 2022 02:45:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 489CDC36AEB;
+        Tue, 18 Jan 2022 02:45:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642473500;
-        bh=0db0lA3LF46u41ABe7SmiK02EzboUvOSIxyIoCE8fDY=;
+        s=k20201202; t=1642473934;
+        bh=42VGfcpCsuLzDqmi2gYeSLUCwjK3nu0k10kgmKeHXME=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GWEigl7t92xGkBez4PuEYlL1pzUtbGPyUsRS2fO5Wufauqw/ygIVDiWIphJJIK6bG
-         bNMVccmfYD5mPcxryIzIj8zQt1+826GImvMU/UDLFelTYdJkI2djGDK9nedimkOGIz
-         Zjzk/21mkFQE6damQK9OWF94Dk46o02CR5CQyD1rDXXkPBtGKVi3Bkhq73K2vZNWGL
-         FkfZ+yDl258nId/ukuop+Gct679Iulr3GibiH40gPZszFOXhVS1hhhTq/pYs95zaEj
-         skUXEMW8QdhM+VNvnRTOpKcJ0s+pINXPQ9qx+/B73iloAUwpCXQ4kWEHIHxw1/aqZ1
-         2LYhTZ1ZFg+ZA==
+        b=hMLdkRc7wvDeCxyDwmyuVJ8yT6KMWXcw+X/jczQYFLF0uipTITzn1Fsepx/SxPs+T
+         X0HgvIUZINrCD2q4SGsVs3nLjLJjSrFq+ivWpJsQhLZJ6Z+xLwIlTn28Qovmqgdm/U
+         Lla49EtBQy8f/enQkTd7vpS9pZcYtmnb481du/cqQYVR+90VK3zKRrz/O2UlIfxrna
+         txaeOfG7iLT5Zm0FWV9DGvl4wKZIiK1eYMxmLqzNfpTpN16hSlyUxOwqQPNYdPiVzR
+         zRJsR38sX7+j87PIRLcB3jAl0qg0o+qZXNqafqBIxslefbvj0L/WaMycWmTfzosC7I
+         37PJP5jIQLwrA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Maximilian Ernestus <maximilian@ernestus.de>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org,
+        mordechay.goodstein@intel.com, miriam.rachel.korenblit@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 139/188] iwlwifi: remove module loading failure message
-Date:   Mon, 17 Jan 2022 21:31:03 -0500
-Message-Id: <20220118023152.1948105-139-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 28/73] iwlwifi: mvm: synchronize with FW after multicast commands
+Date:   Mon, 17 Jan 2022 21:43:47 -0500
+Message-Id: <20220118024432.1952028-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220118023152.1948105-1-sashal@kernel.org>
-References: <20220118023152.1948105-1-sashal@kernel.org>
+In-Reply-To: <20220118024432.1952028-1-sashal@kernel.org>
+References: <20220118024432.1952028-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,47 +56,68 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 6518f83ffa51131daaf439b66094f684da3fb0ae ]
+[ Upstream commit db66abeea3aefed481391ecc564fb7b7fb31d742 ]
 
-When CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, iwlwifi crashes
-when the opmode module cannot be loaded, due to completing
-the completion before using drv->dev, which can then already
-be freed.
+If userspace installs a lot of multicast groups very quickly, then
+we may run out of command queue space as we send the updates in an
+asynchronous fashion (due to locking concerns), and the CPU can
+create them faster than the firmware can process them. This is true
+even when mac80211 has a work struct that gets scheduled.
 
-Fix this by removing the (fairly useless) message. Moving the
-completion later causes a deadlock instead, so that's not an
-option.
+Fix this by synchronizing with the firmware after sending all those
+commands - outside of the iteration we can send a synchronous echo
+command that just has the effect of the CPU waiting for the prior
+asynchronous commands to finish. This also will cause fewer of the
+commands to be sent to the firmware overall, because the work will
+only run once when rescheduled multiple times while it's running.
 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=213649
+Suggested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reported-by: Maximilian Ernestus <maximilian@ernestus.de>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/20211210091245.289008-2-luca@coelho.fi
+Link: https://lore.kernel.org/r/iwlwifi.20211204083238.51aea5b79ea4.I88a44798efda16e9fe480fb3e94224931d311b29@changeid
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c   | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 2206f66f69940..b7f7b9c5b670c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1597,15 +1597,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	 * else from proceeding if the module fails to load
- 	 * or hangs loading.
- 	 */
--	if (load_module) {
-+	if (load_module)
- 		request_module("%s", op->name);
--#ifdef CONFIG_IWLWIFI_OPMODE_MODULAR
--		if (err)
--			IWL_ERR(drv,
--				"failed to load module %s (error %d), is dynamic loading enabled?\n",
--				op->name, err);
--#endif
--	}
- 	failure = false;
- 	goto free;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c942255aa1dbc..29ad7804d77aa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1696,6 +1696,7 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
+ 	struct iwl_mvm_mc_iter_data iter_data = {
+ 		.mvm = mvm,
+ 	};
++	int ret;
  
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -1705,6 +1706,22 @@ static void iwl_mvm_recalc_multicast(struct iwl_mvm *mvm)
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		iwl_mvm_mc_iface_iterator, &iter_data);
++
++	/*
++	 * Send a (synchronous) ech command so that we wait for the
++	 * multiple asynchronous MCAST_FILTER_CMD commands sent by
++	 * the interface iterator. Otherwise, we might get here over
++	 * and over again (by userspace just sending a lot of these)
++	 * and the CPU can send them faster than the firmware can
++	 * process them.
++	 * Note that the CPU is still faster - but with this we'll
++	 * actually send fewer commands overall because the CPU will
++	 * not schedule the work in mac80211 as frequently if it's
++	 * still running when rescheduled (possibly multiple times).
++	 */
++	ret = iwl_mvm_send_cmd_pdu(mvm, ECHO_CMD, 0, 0, NULL);
++	if (ret)
++		IWL_ERR(mvm, "Failed to synchronize multicast groups update\n");
+ }
+ 
+ static u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
 -- 
 2.34.1
 
