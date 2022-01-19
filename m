@@ -2,57 +2,58 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B154C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jan 2022 12:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EC1C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jan 2022 12:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354668AbiASMg3 (ORCPT
+        id S1354585AbiASMgh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jan 2022 07:36:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47298 "EHLO
+        Wed, 19 Jan 2022 07:36:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354601AbiASMgM (ORCPT
+        with ESMTP id S1354609AbiASMgW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jan 2022 07:36:12 -0500
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72451C06176C
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2022 04:35:27 -0800 (PST)
-Received: by mail-pg1-x536.google.com with SMTP id 188so2409465pgf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2022 04:35:27 -0800 (PST)
+        Wed, 19 Jan 2022 07:36:22 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9FCCC06177A
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2022 04:36:19 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id pf13so2399213pjb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2022 04:36:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:in-reply-to;
-        bh=5scF7RCMgJ3w9nBpUUnzhDbWhaD7s1X5a4tyKwRbLGg=;
-        b=Kfshiq00+pUfipwZkjxmKK/vlBpw/geURaA2Quzwl4ySIw/WOGStGN9eg1J55Jnd47
-         prZQBWUVuexpv2lvA9yA8IfAC9WVWjzGQjWVXywNF6voAJnBbSjecONiwSIikMkZtLB9
-         KNuo3jmPiu9n168TGGb+gsnFY4MTFLRqM4UJE=
+        bh=h96n8ol+7uWfJuLApTfPkZf7MnWyV6QGvfn+qqFaWOo=;
+        b=cefiRFSzN9JT1a4eCpjFt7pu1w8xVykCxrd/ZG6V72PdmJvGT+IScgNH0lbJ5MLcws
+         KCSOOTFAvY6SMfbjY8oUJxitYPGeHXn3SBPmjM/m/bn5L+uERxXw2OwRto9/PwsgC3pQ
+         AW+Tmvd8owXzBKUURFMzFBjcc/WW2k7MfTyGs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:from
          :subject:to:cc:references:in-reply-to;
-        bh=5scF7RCMgJ3w9nBpUUnzhDbWhaD7s1X5a4tyKwRbLGg=;
-        b=1XwKsy4qIX5V3RAiVXJIgBgl8zHDE0GoVqIElSy2LtbhlVFVo6FpzvTufCO8aDkzfv
-         a52dUXD42w7ygTEuF7ulS7tGIdH5tLVHRvW0AHqnih4C1XKcC+3qy2VjDJQS4ry2x+l2
-         ErahRVfHgzyZO9dA3Q/TLV8TiWx5I4mtHyNYa/rmC+8ws8kxh/NnIWSf3LMSw5Xhd+8/
-         Sj08yqkqcfxR8HKbg2Qtm+2onbURQn2HDhCDhGkEegtgEzF9CphaNevg9Zh6075AgS+V
-         52uVu14+pTE+kcX5yzIlfdjs2jCTveuluktbSQ4IcvHGyxPE4DGoIKMYrdpxy29+oCKu
-         ZE0w==
-X-Gm-Message-State: AOAM533I9T7jYSqlD0jv/iBudI5bdArpRtrCqxgcSeBwNSdsLoWOPY6h
-        i9EzjhLGWU421sRFg+JajbA8kw==
-X-Google-Smtp-Source: ABdhPJwRhjc2a4xjJc2yhjc8Bltw57NtRDzfym03GkTwM9b2cn9RX6YWmOWjIuuilLo5YEdfM3FbwA==
-X-Received: by 2002:aa7:8c41:0:b0:4bc:2888:6951 with SMTP id e1-20020aa78c41000000b004bc28886951mr30650341pfd.16.1642595726931;
-        Wed, 19 Jan 2022 04:35:26 -0800 (PST)
+        bh=h96n8ol+7uWfJuLApTfPkZf7MnWyV6QGvfn+qqFaWOo=;
+        b=UyjA6nJg0U04sFKWNfBwnMPcibZoSKj9LaUrQaSYfMnFMgL7xbDTYiMW3SEmJnWc2k
+         m/k/Fka7fOnsn5jI6J/qf7ofLZrbqufZLJIsUiYn0s4ffrWkhJ2nkcyWBAGjnbBiWaZH
+         TOHEVCcR8cauXYR28cuuElj1a+hNooaqrsb/5/q6yJZdcsJGIJyNywAVTQihOVn4hbdQ
+         19c/tu6Pfj2gsOlC5WcF96ktd4/BMhlEKYkMYJGCnpccQD1cnOgKKQHIpLyS1o0y/RjW
+         AL4bnVY1B0fKF+P3/sAt1D/+1Ud2qkCt7y5H0+Cne4ZUAow3KXDrT+EgjaQZMHKy2tsw
+         7SrQ==
+X-Gm-Message-State: AOAM531H9cbV7ZWQU+PvifZNl7KI1Bk/BbLEVGFviabOouz2bPnFp4IO
+        6r2DN/W7L7IJZRrO4nbWnDgObA==
+X-Google-Smtp-Source: ABdhPJwzPVuViphNvWC+fElAHXXlQrlMo/Kx8MhqCJVWgXlfQGaX8xnT26ESmukbKPvR+qCUzmo3cA==
+X-Received: by 2002:a17:902:6844:b0:14a:1da5:88dc with SMTP id f4-20020a170902684400b0014a1da588dcmr32425809pln.30.1642595779260;
+        Wed, 19 Jan 2022 04:36:19 -0800 (PST)
 Received: from [192.168.178.136] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id d7sm14397964pfh.126.2022.01.19.04.35.19
+        by smtp.gmail.com with ESMTPSA id h8sm17612145pgs.3.2022.01.19.04.36.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Jan 2022 04:35:25 -0800 (PST)
-Message-ID: <95bf2a46-8840-e09a-8723-7e590a6ae415@broadcom.com>
-Date:   Wed, 19 Jan 2022 13:35:17 +0100
+        Wed, 19 Jan 2022 04:36:18 -0800 (PST)
+Message-ID: <dc9c8c28-feb0-0353-d5ab-8715683e3ecc@broadcom.com>
+Date:   Wed, 19 Jan 2022 13:36:10 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH v3 8/9] brcmfmac: fwil: Constify iovar name arguments
+Subject: Re: [PATCH v2 21/35] brcmfmac: chip: Only disable D11 cores; handle
+ an arbitrary number
 To:     Hector Martin <marcan@marcan.st>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -80,34 +81,41 @@ Cc:     Sven Peter <sven@svenpeter.dev>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com
-References: <20220117142919.207370-1-marcan@marcan.st>
- <20220117142919.207370-9-marcan@marcan.st>
-In-Reply-To: <20220117142919.207370-9-marcan@marcan.st>
+References: <20220104072658.69756-1-marcan@marcan.st>
+ <20220104072658.69756-22-marcan@marcan.st>
+In-Reply-To: <20220104072658.69756-22-marcan@marcan.st>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d49e3405d5ee9eeb"
+        boundary="000000000000f3853105d5eea190"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000d49e3405d5ee9eeb
+--000000000000f3853105d5eea190
 Content-Language: en-US
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-On 1/17/2022 3:29 PM, Hector Martin wrote:
-> Make all the iovar name arguments const char * instead of just char *.
+On 1/4/2022 8:26 AM, Hector Martin wrote:
+> At least on BCM4387, the D11 cores are held in reset on cold startup and
+> firmware expects to release reset itself. Just assert reset here and let
+> firmware deassert it. Premature deassertion results in the firmware
+> failing to initialize properly some of the time, with strange AXI bus
+> errors.
 > 
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Also, BCM4387 has 3 cores, up from 2. The logic for handling that is in
+> brcmf_chip_ai_resetcore(), but since we aren't using that any more, just
+> handle it here.
+
+Makes sense.
+
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 > Signed-off-by: Hector Martin <marcan@marcan.st>
 > ---
->   .../broadcom/brcm80211/brcmfmac/fwil.c        | 34 +++++++++----------
->   .../broadcom/brcm80211/brcmfmac/fwil.h        | 28 +++++++--------
->   2 files changed, 31 insertions(+), 31 deletions(-)
+>   .../net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 13 ++++++++-----
+>   1 file changed, 8 insertions(+), 5 deletions(-)
 
---000000000000d49e3405d5ee9eeb
+--000000000000f3853105d5eea190
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -178,14 +186,14 @@ aAwIDFKdqL0O19Kui0WI1qNsu1tE2wAZk0XE9FG0OKyY2a2oFwJ85c5IO0q53U7+YePIwv4/J5aP
 OGM6lFPJCVnfKc3H76g/FyPyaE4AL/hfdNP8ObvCB6N/BVCccjNdglRsL2ewttAG3GM06LkvrLhv
 UCvjMYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
 YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMMSnY
-h9J/RI6gsHbuMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCAIL/pU/vjEYYbioABH
-45oxE4eHpgBa08V+2WhMG1XTgDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMjAxMTkxMjM1MjdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
+h9J/RI6gsHbuMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCBuQfpRpnfIql6hPza8
+fLk9brPzAxms7xrVzjzIBpjaAjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
+BTEPFw0yMjAxMTkxMjM2MTlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
 AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAQdOWim6jCIQXJsNlnxebRYVAZmW5I8dKEMiF
-p+8YbcjN09jR0BrCQgys0bXwR0ZkoUEzU9oZ2lnh2R6G1scO59eHi3Mpo0JIC2fERZrWQK7vk/bE
-GOd6b4cTNlGKDv0BJdqr7dPsXJNo0VLOTjOdnHglHDGAbWsJkTOe2z81ryxCTuPcORVdkDKOk9K5
-MEGCZVfyWS+rnFlOjQBO0l96lJBY8fp0ridXs6LTKEMd+fi7cCFFedPquriKcuaeiGcnf0GTDmpq
-nhxvvsqXq/qiGdgI8Q3yYOmMwtjqFsGfFErWztoLxB8mf4xXa0MrlZqpKQ/T/KVLH49TMU8wstvr
-iw==
---000000000000d49e3405d5ee9eeb--
+BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAc3GurxsTG4WUIL6BegZVRpgdIxMr8bSb/INy
+Q/V/e6xI+NrSq7PfcymnCzm6Bi23VyaWEbryOw5mRiFS176fqui1wyXRj/FSE8b1e4X5nT/Z1wGu
+rBZ5GYO9NGs7C308CYSf+4ROdgGsQpGvjQ4XtTArT+5Maa2xFQXtu1808qZj7EtW9y5jTwmniz9m
+5WtviPPMOqtRVfwDY9TYERf6FmKzuyfsUo610AdO/iCgpcjrQu8Dt+ZqqwFaHZw1UoVupEgyRfL+
+KpeB31J3JpVwRfftxCSA0GMIe5qgMLp5Scma0UxxY79K+bjbsIZ6aH/GO6xcmc+6i4teFYk/viWM
+kA==
+--000000000000f3853105d5eea190--
