@@ -2,674 +2,197 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47500C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 10:14:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0A6C43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 10:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359799AbiATKOU (ORCPT
+        id S1359795AbiATKRw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Jan 2022 05:14:20 -0500
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:14707 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359790AbiATKOP (ORCPT
+        Thu, 20 Jan 2022 05:17:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58568 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241256AbiATKRv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jan 2022 05:14:15 -0500
+        Thu, 20 Jan 2022 05:17:51 -0500
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53D28C061574;
+        Thu, 20 Jan 2022 02:17:51 -0800 (PST)
+Received: by mail-ed1-x534.google.com with SMTP id z22so26358959edd.12;
+        Thu, 20 Jan 2022 02:17:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1642673655; x=1674209655;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=/8vtNeDsXZvyQyY0907Tb9evJsTxjliT131uyvDFhkY=;
-  b=xyx9vviKx+IFDrl8uvpsfm6JQ92o/az1w1r+vbNiYy7Vbv0Z9saFciJ1
-   NpytJTIZVkBb0yhUvXbEn9yYr1ihZNFGIw5IjDiVf6QAGxXe1IQDMyKcL
-   UcS3sNI135IT2y9psV7Qvfp/ZGpFyo5fiTuP9hBbogi/3HAncnJCz8Lpj
-   0=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 20 Jan 2022 02:14:15 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2022 02:14:00 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Thu, 20 Jan 2022 02:14:00 -0800
-Received: from cjhuang2-gv.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Thu, 20 Jan 2022 02:13:59 -0800
-From:   Carl Huang <quic_cjhuang@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/6] ath11k: Add WoW net-detect functionality
-Date:   Thu, 20 Jan 2022 18:13:23 +0800
-Message-ID: <1642673607-8896-3-git-send-email-quic_cjhuang@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1642673607-8896-1-git-send-email-quic_cjhuang@quicinc.com>
-References: <1642673607-8896-1-git-send-email-quic_cjhuang@quicinc.com>
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XbODNS9XEhmUfohkhajirJdUYNQqugPduP6DonKUI5w=;
+        b=EzcnhaVtltbVQPBaXs8ujGRh/zCo/6ET1mF8tDvNfG8GUyqihtsRZL9DFlESwnvA31
+         kaV3BIUB+sTN/6t/bDDGSXp1nKmEEV10fPm+8kVMlBLLeJ8SvomzsEZe/1fL84n/w/ES
+         iNudYzadcn8JmeDILZGdsEECazNPw+76QpvDaZo/NvsGLlu9lCdPZ++vrtFiSV3KTqfS
+         u/t/kj81cO3kf5aaEFVskAAm+uXTj6jfUnKyKuE+2z+cRZSzYl4keaTAXufTutKIZKam
+         WrChnoiwLTms4/sT+pZGhfawZJmIPuJNf+lg4TetPC4ZcfYh11CEXvYnT8338RZ1SskK
+         KRug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XbODNS9XEhmUfohkhajirJdUYNQqugPduP6DonKUI5w=;
+        b=ZC/uUslMFQIkniu6sg8ocyj+kCNw3sPuFWQF9gdJ3rzfXb6A3ytjGutQId+0fEU4Fb
+         M+rLzlTtWWVN+nSDFle0i4uGWj0GdwAtbUy8IsxrRMJNhBlmXxavaiTKoe6ve5qHiXkM
+         YgxJksr4EcwtoLBIlofI6JQuD/1GJZxNVIpwgHLxDiQnuwCdQ6IkuLqYnm87ZPhWPlGy
+         0lF3Ck8QrvF7mtvq9sTiV5CSE2GLvQKUUVQyUBxmU2PvJQDoC8zsnLv06reoJm1aULDg
+         17ASy7dmpyv/7+i1MpGzbGkU2hOQC/Tf8E80EqTa+0OcLdpfZTasfdVLEiGTHxseCKJf
+         FkCQ==
+X-Gm-Message-State: AOAM532awdM9Io+zyS52N29CKEz0KYhw6oaFk7UYiAjHoz/GQlFoaT3h
+        hJ/wQcShLFLo7Sx1DnvWWHlUzx2b9KlsF3NpZ9I=
+X-Google-Smtp-Source: ABdhPJzWErHT8YD9est7t4xyOmagkSNGhr8dJfu/I4Onv6sPoskHczjD8X0NDCVE/6muCCalsMuIKiP/VBADkzkViMM=
+X-Received: by 2002:a50:c388:: with SMTP id h8mr29341796edf.218.1642673869829;
+ Thu, 20 Jan 2022 02:17:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+References: <20220117142919.207370-1-marcan@marcan.st> <20220117142919.207370-6-marcan@marcan.st>
+In-Reply-To: <20220117142919.207370-6-marcan@marcan.st>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Thu, 20 Jan 2022 12:17:13 +0200
+Message-ID: <CAHp75Vf+xcn7SJX3RaeDJC2gK0xWVgwMQ33n_988PkDcTp4LpA@mail.gmail.com>
+Subject: Re: [PATCH v3 5/9] brcmfmac: pcie: Replace brcmf_pcie_copy_mem_todev
+ with memcpy_toio
+To:     Hector Martin <marcan@marcan.st>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>,
+        Dmitry Osipenko <digetx@gmail.com>,
+        Sven Peter <sven@svenpeter.dev>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Mark Kettenis <kettenis@openbsd.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "John W. Linville" <linville@tuxdriver.com>,
+        "brian m. carlson" <sandals@crustytoothpaste.net>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        SHA-cyfmac-dev-list@infineon.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Implement net-detect feature by setting flag
-WIPHY_WOWLAN_NET_DETECT if firmware supports this
-feature. Driver sets the related PNO configuration
-to firmware before entering WoW and firmware then
-scans periodically and wakes up host if a specific
-SSID is found.
+On Mon, Jan 17, 2022 at 4:31 PM Hector Martin <marcan@marcan.st> wrote:
+>
+> The alignment check was wrong (e.g. & 4 instead of & 3), and the logic
+> was also inefficient if the length was not a multiple of 4, since it
+> would needlessly fall back to copying the entire buffer bytewise.
+>
+> We already have a perfectly good memcpy_toio function, so just call that
+> instead of rolling our own copy logic here. brcmf_pcie_init_ringbuffers
+> was already using it anyway.
 
-Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
+My gosh, what a nice fix!
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Signed-off-by: Carl Huang <quic_cjhuang@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.h |   1 +
- drivers/net/wireless/ath/ath11k/mac.c  |  12 +++
- drivers/net/wireless/ath/ath11k/wmi.c  | 154 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h  | 169 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wow.c  | 174 ++++++++++++++++++++++++++++++++-
- 5 files changed, 509 insertions(+), 1 deletion(-)
+> Fixes: 9e37f045d5e7 ("brcmfmac: Adding PCIe bus layer support.")
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Hector Martin <marcan@marcan.st>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/pcie.c        | 48 ++-----------------
+>  1 file changed, 4 insertions(+), 44 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index b1ae6c41013f..c25f48db1f60 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -12,6 +12,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/bcma/bcma.h>
+>  #include <linux/sched.h>
+> +#include <linux/io.h>
+>  #include <asm/unaligned.h>
+>
+>  #include <soc.h>
+> @@ -454,47 +455,6 @@ brcmf_pcie_write_ram32(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+>  }
+>
+>
+> -static void
+> -brcmf_pcie_copy_mem_todev(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+> -                         void *srcaddr, u32 len)
+> -{
+> -       void __iomem *address = devinfo->tcm + mem_offset;
+> -       __le32 *src32;
+> -       __le16 *src16;
+> -       u8 *src8;
+> -
+> -       if (((ulong)address & 4) || ((ulong)srcaddr & 4) || (len & 4)) {
+> -               if (((ulong)address & 2) || ((ulong)srcaddr & 2) || (len & 2)) {
+> -                       src8 = (u8 *)srcaddr;
+> -                       while (len) {
+> -                               iowrite8(*src8, address);
+> -                               address++;
+> -                               src8++;
+> -                               len--;
+> -                       }
+> -               } else {
+> -                       len = len / 2;
+> -                       src16 = (__le16 *)srcaddr;
+> -                       while (len) {
+> -                               iowrite16(le16_to_cpu(*src16), address);
+> -                               address += 2;
+> -                               src16++;
+> -                               len--;
+> -                       }
+> -               }
+> -       } else {
+> -               len = len / 4;
+> -               src32 = (__le32 *)srcaddr;
+> -               while (len) {
+> -                       iowrite32(le32_to_cpu(*src32), address);
+> -                       address += 4;
+> -                       src32++;
+> -                       len--;
+> -               }
+> -       }
+> -}
+> -
+> -
+>  static void
+>  brcmf_pcie_copy_dev_tomem(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+>                           void *dstaddr, u32 len)
+> @@ -1570,8 +1530,8 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+>                 return err;
+>
+>         brcmf_dbg(PCIE, "Download FW %s\n", devinfo->fw_name);
+> -       brcmf_pcie_copy_mem_todev(devinfo, devinfo->ci->rambase,
+> -                                 (void *)fw->data, fw->size);
+> +       memcpy_toio(devinfo->tcm + devinfo->ci->rambase,
+> +                   (void *)fw->data, fw->size);
+>
+>         resetintr = get_unaligned_le32(fw->data);
+>         release_firmware(fw);
+> @@ -1585,7 +1545,7 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
+>                 brcmf_dbg(PCIE, "Download NVRAM %s\n", devinfo->nvram_name);
+>                 address = devinfo->ci->rambase + devinfo->ci->ramsize -
+>                           nvram_len;
+> -               brcmf_pcie_copy_mem_todev(devinfo, address, nvram, nvram_len);
+> +               memcpy_toio(devinfo->tcm + address, nvram, nvram_len);
+>                 brcmf_fw_nvram_free(nvram);
+>         } else {
+>                 brcmf_dbg(PCIE, "No matching NVRAM file found %s\n",
+> --
+> 2.33.0
+>
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 9e4e827..6010c0b 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -599,6 +599,7 @@ struct ath11k {
- 	struct completion finish_11d_ch_list;
- 	bool pending_11d;
- 	bool regdom_set_by_user;
-+	bool nlo_enabled;
- };
- 
- struct ath11k_band_cap {
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 307e957..2474772 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8237,6 +8237,18 @@ static int __ath11k_mac_register(struct ath11k *ar)
- 			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 	}
- 
-+	if (test_bit(WMI_TLV_SERVICE_NLO, ar->wmi->wmi_ab->svc_map)) {
-+		ar->hw->wiphy->max_sched_scan_ssids = WMI_PNO_MAX_SUPP_NETWORKS;
-+		ar->hw->wiphy->max_match_sets = WMI_PNO_MAX_SUPP_NETWORKS;
-+		ar->hw->wiphy->max_sched_scan_ie_len = WMI_PNO_MAX_IE_LENGTH;
-+		ar->hw->wiphy->max_sched_scan_plans = WMI_PNO_MAX_SCHED_SCAN_PLANS;
-+		ar->hw->wiphy->max_sched_scan_plan_interval =
-+			WMI_PNO_MAX_SCHED_SCAN_PLAN_INT;
-+		ar->hw->wiphy->max_sched_scan_plan_iterations =
-+			WMI_PNO_MAX_SCHED_SCAN_PLAN_ITRNS;
-+		ar->hw->wiphy->features |= NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
-+	}
-+
- 	ret = ath11k_wow_init(ar);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to init wow: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 38f1b74..f3a4181 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -7898,3 +7898,157 @@ int ath11k_wmi_wow_del_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id)
- 
- 	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_WOW_DEL_WAKE_PATTERN_CMDID);
- }
-+
-+static struct sk_buff *
-+ath11k_wmi_op_gen_config_pno_start(struct ath11k *ar,
-+				   u32 vdev_id,
-+				       struct wmi_pno_scan_req *pno)
-+{
-+	struct nlo_configured_parameters *nlo_list;
-+	struct wmi_wow_nlo_config_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	u32 *channel_list;
-+	size_t len, nlo_list_len, channel_list_len;
-+	u8 *ptr;
-+	u32 i;
-+
-+	len = sizeof(*cmd) +
-+	      sizeof(*tlv) +
-+	      /* TLV place holder for array of structures
-+	       * nlo_configured_parameters(nlo_list)
-+	       */
-+	      sizeof(*tlv);
-+	      /* TLV place holder for array of uint32 channel_list */
-+
-+	channel_list_len = sizeof(u32) * pno->a_networks[0].channel_count;
-+	len += channel_list_len;
-+
-+	nlo_list_len = sizeof(*nlo_list) * pno->uc_networks_count;
-+	len += nlo_list_len;
-+
-+	skb = ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (u8 *)skb->data;
-+	cmd = (struct wmi_wow_nlo_config_cmd *)ptr;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_NLO_CONFIG_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = pno->vdev_id;
-+	cmd->flags = WMI_NLO_CONFIG_START | WMI_NLO_CONFIG_SSID_HIDE_EN;
-+
-+	/* current FW does not support min-max range for dwell time */
-+	cmd->active_dwell_time = pno->active_max_time;
-+	cmd->passive_dwell_time = pno->passive_max_time;
-+
-+	if (pno->do_passive_scan)
-+		cmd->flags |= WMI_NLO_CONFIG_SCAN_PASSIVE;
-+
-+	cmd->fast_scan_period = pno->fast_scan_period;
-+	cmd->slow_scan_period = pno->slow_scan_period;
-+	cmd->fast_scan_max_cycles = pno->fast_scan_max_cycles;
-+	cmd->delay_start_time = pno->delay_start_time;
-+
-+	if (pno->enable_pno_scan_randomization) {
-+		cmd->flags |= WMI_NLO_CONFIG_SPOOFED_MAC_IN_PROBE_REQ |
-+				WMI_NLO_CONFIG_RANDOM_SEQ_NO_IN_PROBE_REQ;
-+		ether_addr_copy(cmd->mac_addr.addr, pno->mac_addr);
-+		ether_addr_copy(cmd->mac_mask.addr, pno->mac_addr_mask);
-+		ath11k_ce_byte_swap(cmd->mac_addr.addr, 8);
-+		ath11k_ce_byte_swap(cmd->mac_mask.addr, 8);
-+	}
-+
-+	ptr += sizeof(*cmd);
-+
-+	/* nlo_configured_parameters(nlo_list) */
-+	cmd->no_of_ssids = pno->uc_networks_count;
-+	tlv = (struct wmi_tlv *)ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG,
-+				 WMI_TAG_ARRAY_STRUCT) |
-+		      FIELD_PREP(WMI_TLV_LEN, nlo_list_len);
-+
-+	ptr += sizeof(*tlv);
-+	nlo_list = (struct nlo_configured_parameters *)ptr;
-+	for (i = 0; i < cmd->no_of_ssids; i++) {
-+		tlv = (struct wmi_tlv *)(&nlo_list[i].tlv_header);
-+		tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
-+			      FIELD_PREP(WMI_TLV_LEN, sizeof(*nlo_list) - sizeof(*tlv));
-+
-+		nlo_list[i].ssid.valid = true;
-+		nlo_list[i].ssid.ssid.ssid_len = pno->a_networks[i].ssid.ssid_len;
-+		memcpy(nlo_list[i].ssid.ssid.ssid,
-+		       pno->a_networks[i].ssid.ssid,
-+		       nlo_list[i].ssid.ssid.ssid_len);
-+		ath11k_ce_byte_swap(nlo_list[i].ssid.ssid.ssid,
-+				    roundup(nlo_list[i].ssid.ssid.ssid_len, 4));
-+
-+		if (pno->a_networks[i].rssi_threshold &&
-+		    pno->a_networks[i].rssi_threshold > -300) {
-+			nlo_list[i].rssi_cond.valid = true;
-+			nlo_list[i].rssi_cond.rssi =
-+				pno->a_networks[i].rssi_threshold;
-+		}
-+
-+		nlo_list[i].bcast_nw_type.valid = true;
-+		nlo_list[i].bcast_nw_type.bcast_nw_type =
-+			pno->a_networks[i].bcast_nw_type;
-+	}
-+
-+	ptr += nlo_list_len;
-+	cmd->num_of_channels = pno->a_networks[0].channel_count;
-+	tlv = (struct wmi_tlv *)ptr;
-+	tlv->header =  FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_UINT32) |
-+		       FIELD_PREP(WMI_TLV_LEN, channel_list_len);
-+	ptr += sizeof(*tlv);
-+	channel_list = (u32 *)ptr;
-+	for (i = 0; i < cmd->num_of_channels; i++)
-+		channel_list[i] = pno->a_networks[0].channels[i];
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "wmi tlv start pno config vdev_id %d\n",
-+		   vdev_id);
-+
-+	return skb;
-+}
-+
-+static struct sk_buff *ath11k_wmi_op_gen_config_pno_stop(struct ath11k *ar,
-+							 u32 vdev_id)
-+{
-+	struct wmi_wow_nlo_config_cmd *cmd;
-+	struct sk_buff *skb;
-+	size_t len;
-+
-+	len = sizeof(*cmd);
-+	skb = ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_wow_nlo_config_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_NLO_CONFIG_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = vdev_id;
-+	cmd->flags = WMI_NLO_CONFIG_STOP;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+		   "wmi tlv stop pno config vdev_id %d\n", vdev_id);
-+	return skb;
-+}
-+
-+int ath11k_wmi_wow_config_pno(struct ath11k *ar, u32 vdev_id,
-+			      struct wmi_pno_scan_req  *pno_scan)
-+{
-+	struct sk_buff *skb;
-+
-+	if (pno_scan->enable)
-+		skb = ath11k_wmi_op_gen_config_pno_start(ar, vdev_id, pno_scan);
-+	else
-+		skb = ath11k_wmi_op_gen_config_pno_stop(ar, vdev_id);
-+
-+	if (IS_ERR_OR_NULL(skb))
-+		return -ENOMEM;
-+
-+	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_NETWORK_LIST_OFFLOAD_CONFIG_CMDID);
-+}
-+
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 7395df9..6f997b1 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -5458,6 +5458,173 @@ struct wmi_wow_del_pattern_cmd {
- 	u32 pattern_type;
- } __packed;
- 
-+#define WMI_PNO_MAX_SCHED_SCAN_PLANS      2
-+#define WMI_PNO_MAX_SCHED_SCAN_PLAN_INT   7200
-+#define WMI_PNO_MAX_SCHED_SCAN_PLAN_ITRNS 100
-+#define WMI_PNO_MAX_NETW_CHANNELS         26
-+#define WMI_PNO_MAX_NETW_CHANNELS_EX      60
-+#define WMI_PNO_MAX_SUPP_NETWORKS         WLAN_SCAN_PARAMS_MAX_SSID
-+#define WMI_PNO_MAX_IE_LENGTH             WLAN_SCAN_PARAMS_MAX_IE_LEN
-+
-+/* size based of dot11 declaration without extra IEs as we will not carry those for PNO */
-+#define WMI_PNO_MAX_PB_REQ_SIZE    450
-+
-+#define WMI_PNO_24G_DEFAULT_CH     1
-+#define WMI_PNO_5G_DEFAULT_CH      36
-+
-+#define WMI_ACTIVE_MAX_CHANNEL_TIME 40
-+#define WMI_PASSIVE_MAX_CHANNEL_TIME   110
-+
-+/* SSID broadcast type */
-+enum wmi_ssid_bcast_type {
-+	BCAST_UNKNOWN      = 0,
-+	BCAST_NORMAL       = 1,
-+	BCAST_HIDDEN       = 2,
-+};
-+
-+#define WMI_NLO_MAX_SSIDS    16
-+#define WMI_NLO_MAX_CHAN     48
-+
-+#define WMI_NLO_CONFIG_STOP                             BIT(0)
-+#define WMI_NLO_CONFIG_START                            BIT(1)
-+#define WMI_NLO_CONFIG_RESET                            BIT(2)
-+#define WMI_NLO_CONFIG_SLOW_SCAN                        BIT(4)
-+#define WMI_NLO_CONFIG_FAST_SCAN                        BIT(5)
-+#define WMI_NLO_CONFIG_SSID_HIDE_EN                     BIT(6)
-+
-+/* This bit is used to indicate if EPNO or supplicant PNO is enabled.
-+ * Only one of them can be enabled at a given time
-+ */
-+#define WMI_NLO_CONFIG_ENLO                             BIT(7)
-+#define WMI_NLO_CONFIG_SCAN_PASSIVE                     BIT(8)
-+#define WMI_NLO_CONFIG_ENLO_RESET                       BIT(9)
-+#define WMI_NLO_CONFIG_SPOOFED_MAC_IN_PROBE_REQ         BIT(10)
-+#define WMI_NLO_CONFIG_RANDOM_SEQ_NO_IN_PROBE_REQ       BIT(11)
-+#define WMI_NLO_CONFIG_ENABLE_IE_WHITELIST_IN_PROBE_REQ BIT(12)
-+#define WMI_NLO_CONFIG_ENABLE_CNLO_RSSI_CONFIG          BIT(13)
-+
-+struct wmi_nlo_ssid_param {
-+	u32 valid;
-+	struct wmi_ssid ssid;
-+} __packed;
-+
-+struct wmi_nlo_enc_param {
-+	u32 valid;
-+	u32 enc_type;
-+} __packed;
-+
-+struct wmi_nlo_auth_param {
-+	u32 valid;
-+	u32 auth_type;
-+} __packed;
-+
-+struct wmi_nlo_bcast_nw_param {
-+	u32 valid;
-+	u32 bcast_nw_type;
-+} __packed;
-+
-+struct wmi_nlo_rssi_param {
-+	u32 valid;
-+	s32 rssi;
-+} __packed;
-+
-+struct nlo_configured_parameters {
-+	/* TLV tag and len;*/
-+	u32 tlv_header;
-+	struct wmi_nlo_ssid_param ssid;
-+	struct wmi_nlo_enc_param enc_type;
-+	struct wmi_nlo_auth_param auth_type;
-+	struct wmi_nlo_rssi_param rssi_cond;
-+
-+	/* indicates if the SSID is hidden or not */
-+	struct wmi_nlo_bcast_nw_param bcast_nw_type;
-+} __packed;
-+
-+struct wmi_network_type {
-+	struct wmi_ssid ssid;
-+	u32 authentication;
-+	u32 encryption;
-+	u32 bcast_nw_type;
-+	u8 channel_count;
-+	u16 channels[WMI_PNO_MAX_NETW_CHANNELS_EX];
-+	s32 rssi_threshold;
-+};
-+
-+struct wmi_pno_scan_req {
-+	u8 enable;
-+	u8 vdev_id;
-+	u8 uc_networks_count;
-+	struct wmi_network_type a_networks[WMI_PNO_MAX_SUPP_NETWORKS];
-+	u32 fast_scan_period;
-+	u32 slow_scan_period;
-+	u8 fast_scan_max_cycles;
-+
-+	bool do_passive_scan;
-+
-+	u32 delay_start_time;
-+	u32 active_min_time;
-+	u32 active_max_time;
-+	u32 passive_min_time;
-+	u32 passive_max_time;
-+
-+	/* mac address randomization attributes */
-+	u32 enable_pno_scan_randomization;
-+	u8 mac_addr[ETH_ALEN];
-+	u8 mac_addr_mask[ETH_ALEN];
-+};
-+
-+struct wmi_wow_nlo_config_cmd {
-+	u32 tlv_header;
-+	u32 flags;
-+	u32 vdev_id;
-+	u32 fast_scan_max_cycles;
-+	u32 active_dwell_time;
-+	u32 passive_dwell_time;
-+	u32 probe_bundle_size;
-+
-+	/* ART = IRT */
-+	u32 rest_time;
-+
-+	/* Max value that can be reached after SBM */
-+	u32 max_rest_time;
-+
-+	/* SBM */
-+	u32 scan_backoff_multiplier;
-+
-+	/* SCBM */
-+	u32 fast_scan_period;
-+
-+	/* specific to windows */
-+	u32 slow_scan_period;
-+
-+	u32 no_of_ssids;
-+
-+	u32 num_of_channels;
-+
-+	/* NLO scan start delay time in milliseconds */
-+	u32 delay_start_time;
-+
-+	/* MAC Address to use in Probe Req as SA */
-+	struct wmi_mac_addr mac_addr;
-+
-+	/* Mask on which MAC has to be randomized */
-+	struct wmi_mac_addr mac_mask;
-+
-+	/* IE bitmap to use in Probe Req */
-+	u32 ie_bitmap[8];
-+
-+	/* Number of vendor OUIs. In the TLV vendor_oui[] */
-+	u32 num_vendor_oui;
-+
-+	/* Number of connected NLO band preferences */
-+	u32 num_cnlo_band_pref;
-+
-+	/* The TLVs will follow.
-+	 * nlo_configured_parameters nlo_list[];
-+	 * u32 channel_list[num_of_channels];
-+	 */
-+} __packed;
-+
- int ath11k_wmi_cmd_send(struct ath11k_pdev_wmi *wmi, struct sk_buff *skb,
- 			u32 cmd_id);
- struct sk_buff *ath11k_wmi_alloc_skb(struct ath11k_wmi_base *wmi_sc, u32 len);
-@@ -5609,6 +5776,8 @@ int ath11k_wmi_wow_host_wakeup_ind(struct ath11k *ar);
- int ath11k_wmi_wow_enable(struct ath11k *ar);
- int ath11k_wmi_scan_prob_req_oui(struct ath11k *ar,
- 				 const u8 mac_addr[ETH_ALEN]);
-+int ath11k_wmi_wow_config_pno(struct ath11k *ar, u32 vdev_id,
-+			      struct wmi_pno_scan_req  *pno_scan);
- int ath11k_wmi_wow_del_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id);
- int ath11k_wmi_wow_add_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id,
- 			       const u8 *pattern, const u8 *mask,
-diff --git a/drivers/net/wireless/ath/ath11k/wow.c b/drivers/net/wireless/ath/ath11k/wow.c
-index 8a144f1..bef36b2 100644
---- a/drivers/net/wireless/ath/ath11k/wow.c
-+++ b/drivers/net/wireless/ath/ath11k/wow.c
-@@ -228,6 +228,100 @@ static void ath11k_wow_convert_8023_to_80211(struct cfg80211_pkt_pattern *new,
- 	}
- }
- 
-+static int ath11k_wmi_pno_check_and_convert(struct ath11k *ar, u32 vdev_id,
-+					    struct cfg80211_sched_scan_request *nd_config,
-+					    struct wmi_pno_scan_req *pno)
-+{
-+	int i, j;
-+	u8 ssid_len;
-+
-+	pno->enable = 1;
-+	pno->vdev_id = vdev_id;
-+	pno->uc_networks_count = nd_config->n_match_sets;
-+
-+	if (!pno->uc_networks_count ||
-+	    pno->uc_networks_count > WMI_PNO_MAX_SUPP_NETWORKS)
-+		return -EINVAL;
-+
-+	if (nd_config->n_channels > WMI_PNO_MAX_NETW_CHANNELS_EX)
-+		return -EINVAL;
-+
-+	/* Filling per profile params */
-+	for (i = 0; i < pno->uc_networks_count; i++) {
-+		ssid_len = nd_config->match_sets[i].ssid.ssid_len;
-+
-+		if (ssid_len == 0 || ssid_len > 32)
-+			return -EINVAL;
-+
-+		pno->a_networks[i].ssid.ssid_len = ssid_len;
-+
-+		memcpy(pno->a_networks[i].ssid.ssid,
-+		       nd_config->match_sets[i].ssid.ssid,
-+		       nd_config->match_sets[i].ssid.ssid_len);
-+		pno->a_networks[i].authentication = 0;
-+		pno->a_networks[i].encryption     = 0;
-+		pno->a_networks[i].bcast_nw_type  = 0;
-+
-+		/* Copying list of valid channel into request */
-+		pno->a_networks[i].channel_count = nd_config->n_channels;
-+		pno->a_networks[i].rssi_threshold = nd_config->match_sets[i].rssi_thold;
-+
-+		for (j = 0; j < nd_config->n_channels; j++) {
-+			pno->a_networks[i].channels[j] =
-+					nd_config->channels[j]->center_freq;
-+		}
-+	}
-+
-+	/* set scan to passive if no SSIDs are specified in the request */
-+	if (nd_config->n_ssids == 0)
-+		pno->do_passive_scan = true;
-+	else
-+		pno->do_passive_scan = false;
-+
-+	for (i = 0; i < nd_config->n_ssids; i++) {
-+		j = 0;
-+		while (j < pno->uc_networks_count) {
-+			if (pno->a_networks[j].ssid.ssid_len ==
-+				nd_config->ssids[i].ssid_len &&
-+			(memcmp(pno->a_networks[j].ssid.ssid,
-+				nd_config->ssids[i].ssid,
-+				pno->a_networks[j].ssid.ssid_len) == 0)) {
-+				pno->a_networks[j].bcast_nw_type = BCAST_HIDDEN;
-+				break;
-+			}
-+			j++;
-+		}
-+	}
-+
-+	if (nd_config->n_scan_plans == 2) {
-+		pno->fast_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+		pno->fast_scan_max_cycles = nd_config->scan_plans[0].iterations;
-+		pno->slow_scan_period =
-+			nd_config->scan_plans[1].interval * MSEC_PER_SEC;
-+	} else if (nd_config->n_scan_plans == 1) {
-+		pno->fast_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+		pno->fast_scan_max_cycles = 1;
-+		pno->slow_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+	} else {
-+		ath11k_warn(ar->ab, "Invalid number of scan plans %d !!",
-+			    nd_config->n_scan_plans);
-+	}
-+
-+	if (nd_config->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
-+		/* enable mac randomization */
-+		pno->enable_pno_scan_randomization = 1;
-+		memcpy(pno->mac_addr, nd_config->mac_addr, ETH_ALEN);
-+		memcpy(pno->mac_addr_mask, nd_config->mac_addr_mask, ETH_ALEN);
-+	}
-+
-+	pno->delay_start_time = nd_config->delay;
-+
-+	/* Current FW does not support min-max range for dwell time */
-+	pno->active_max_time = WMI_ACTIVE_MAX_CHANNEL_TIME;
-+	pno->passive_max_time = WMI_PASSIVE_MAX_CHANNEL_TIME;
-+	return 0;
-+}
-+
- static int ath11k_vif_wow_set_wakeups(struct ath11k_vif *arvif,
- 				      struct cfg80211_wowlan *wowlan)
- {
-@@ -261,6 +355,26 @@ static int ath11k_vif_wow_set_wakeups(struct ath11k_vif *arvif,
- 
- 		if (wowlan->magic_pkt)
- 			__set_bit(WOW_MAGIC_PKT_RECVD_EVENT, &wow_mask);
-+
-+		if (wowlan->nd_config) {
-+			struct wmi_pno_scan_req *pno;
-+			int ret;
-+
-+			pno = kzalloc(sizeof(*pno), GFP_KERNEL);
-+			if (!pno)
-+				return -ENOMEM;
-+
-+			ar->nlo_enabled = true;
-+
-+			ret = ath11k_wmi_pno_check_and_convert(ar, arvif->vdev_id,
-+							       wowlan->nd_config, pno);
-+			if (!ret) {
-+				ath11k_wmi_wow_config_pno(ar, arvif->vdev_id, pno);
-+				__set_bit(WOW_NLO_DETECTED_EVENT, &wow_mask);
-+			}
-+
-+			kfree(pno);
-+		}
- 		break;
- 	default:
- 		break;
-@@ -353,6 +467,51 @@ static int ath11k_wow_set_wakeups(struct ath11k *ar,
- 	return 0;
- }
- 
-+static int ath11k_vif_wow_clean_nlo(struct ath11k_vif *arvif)
-+{
-+	int ret = 0;
-+	struct ath11k *ar = arvif->ar;
-+
-+	switch (arvif->vdev_type) {
-+	case WMI_VDEV_TYPE_STA:
-+		if (ar->nlo_enabled) {
-+			struct wmi_pno_scan_req *pno;
-+
-+			pno = kzalloc(sizeof(*pno), GFP_KERNEL);
-+			if (!pno)
-+				return -ENOMEM;
-+
-+			pno->enable = 0;
-+			ar->nlo_enabled = false;
-+			ret = ath11k_wmi_wow_config_pno(ar, arvif->vdev_id, pno);
-+			kfree(pno);
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+	return ret;
-+}
-+
-+static int ath11k_wow_nlo_cleanup(struct ath11k *ar)
-+{
-+	struct ath11k_vif *arvif;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ret = ath11k_vif_wow_clean_nlo(arvif);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to clean nlo settings on vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- int ath11k_wow_op_suspend(struct ieee80211_hw *hw,
- 			  struct cfg80211_wowlan *wowlan)
- {
-@@ -438,8 +597,16 @@ int ath11k_wow_op_resume(struct ieee80211_hw *hw)
- 	ath11k_hif_irq_enable(ar->ab);
- 
- 	ret = ath11k_wow_wakeup(ar->ab);
--	if (ret)
-+	if (ret) {
- 		ath11k_warn(ar->ab, "failed to wakeup from wow: %d\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath11k_wow_nlo_cleanup(ar);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to cleanup nlo: %d\n", ret);
-+		goto exit;
-+	}
- 
- exit:
- 	if (ret) {
-@@ -476,6 +643,11 @@ int ath11k_wow_init(struct ath11k *ar)
- 		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
- 	}
- 
-+	if (test_bit(WMI_TLV_SERVICE_NLO, ar->wmi->wmi_ab->svc_map)) {
-+		ar->wow.wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
-+		ar->wow.wowlan_support.max_nd_match_sets = WMI_PNO_MAX_SUPP_NETWORKS;
-+	}
-+
- 	ar->wow.max_num_patterns = ATH11K_WOW_PATTERNS;
- 	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
- 	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+
 -- 
-2.7.4
-
+With Best Regards,
+Andy Shevchenko
