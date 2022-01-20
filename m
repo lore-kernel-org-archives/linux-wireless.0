@@ -2,23 +2,23 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8349FC43217
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 00:51:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1A4C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 00:51:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357962AbiATAvc (ORCPT
+        id S1357991AbiATAvj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:51:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45546 "EHLO
+        Wed, 19 Jan 2022 19:51:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357947AbiATAva (ORCPT
+        with ESMTP id S1357974AbiATAvg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jan 2022 19:51:30 -0500
+        Wed, 19 Jan 2022 19:51:36 -0500
 Received: from relay11.mail.gandi.net (relay11.mail.gandi.net [IPv6:2001:4b98:dc4:8::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26E28C06161C;
-        Wed, 19 Jan 2022 16:51:29 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47B25C061574;
+        Wed, 19 Jan 2022 16:51:34 -0800 (PST)
 Received: (Authenticated sender: miquel.raynal@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 33876100006;
-        Thu, 20 Jan 2022 00:51:27 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPSA id 71289100008;
+        Thu, 20 Jan 2022 00:51:31 +0000 (UTC)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Alexander Aring <alex.aring@gmail.com>,
         Stefan Schmidt <stefan@datenfreihafen.org>,
@@ -32,9 +32,9 @@ Cc:     "David S. Miller" <davem@davemloft.net>,
         Nicolas Schodet <nico@ni.fr.eu.org>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [wpan-next 02/14] net: mac802154: Create a transmit error helper
-Date:   Thu, 20 Jan 2022 01:51:10 +0100
-Message-Id: <20220120005122.309104-3-miquel.raynal@bootlin.com>
+Subject: [wpan-next 05/14] net: ieee802154: ca8210: Call _xmit_error() when a transmission fails
+Date:   Thu, 20 Jan 2022 01:51:13 +0100
+Message-Id: <20220120005122.309104-6-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220120005122.309104-1-miquel.raynal@bootlin.com>
 References: <20220120005122.309104-1-miquel.raynal@bootlin.com>
@@ -45,57 +45,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-So far there is only a helper for successful transmission, which led
-device drivers to implement their own handling in case of
-error. Unfortunately, we really need all the drivers to give the hand
-back to the core once they are done in order to be able to build a
-proper synchronous API. So let's create a _xmit_error() helper.
+ieee802154_xmit_error() is the right helper to call when a transmission
+has failed. Let's use it instead of open-coding it.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- include/net/mac802154.h | 10 ++++++++++
- net/mac802154/util.c    |  9 +++++++++
- 2 files changed, 19 insertions(+)
+ drivers/net/ieee802154/ca8210.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/mac802154.h b/include/net/mac802154.h
-index 94b2e3008e77..e7443e1acde8 100644
---- a/include/net/mac802154.h
-+++ b/include/net/mac802154.h
-@@ -498,4 +498,14 @@ void ieee802154_stop_queue(struct ieee802154_hw *hw);
- void ieee802154_xmit_complete(struct ieee802154_hw *hw, struct sk_buff *skb,
- 			      bool ifs_handling);
+diff --git a/drivers/net/ieee802154/ca8210.c b/drivers/net/ieee802154/ca8210.c
+index 91456c5e5691..2830e6fdd0fd 100644
+--- a/drivers/net/ieee802154/ca8210.c
++++ b/drivers/net/ieee802154/ca8210.c
+@@ -1765,17 +1765,19 @@ static int ca8210_async_xmit_complete(
+ 	priv->nextmsduhandle++;
  
-+/**
-+ * ieee802154_xmit_error - frame transmission failed
-+ *
-+ * @hw: pointer as obtained from ieee802154_alloc_hw().
-+ * @skb: buffer for transmission
-+ * @ifs_handling: indicate interframe space handling
-+ */
-+void ieee802154_xmit_error(struct ieee802154_hw *hw, struct sk_buff *skb,
-+			   bool ifs_handling);
+ 	if (status) {
++		bool ifs_handling =
++			status == MAC_TRANSACTION_OVERFLOW ? true : false;
 +
- #endif /* NET_MAC802154_H */
-diff --git a/net/mac802154/util.c b/net/mac802154/util.c
-index 4c06a6bd391a..8e7e4cf16fc3 100644
---- a/net/mac802154/util.c
-+++ b/net/mac802154/util.c
-@@ -94,6 +94,15 @@ void ieee802154_xmit_complete(struct ieee802154_hw *hw, struct sk_buff *skb,
- }
- EXPORT_SYMBOL(ieee802154_xmit_complete);
+ 		dev_err(
+ 			&priv->spi->dev,
+ 			"Link transmission unsuccessful, status = %d\n",
+ 			status
+ 		);
+-		if (status != MAC_TRANSACTION_OVERFLOW) {
+-			ieee802154_wake_queue(priv->hw);
+-			dev_kfree_skb_any(atusb->tx_skb);
+-			return 0;
+-		}
++
++		ieee802154_xmit_error(priv->hw, priv->tx_skb, ifs_handling);
++		return 0;
+ 	}
++
+ 	ieee802154_xmit_complete(priv->hw, priv->tx_skb, true);
  
-+
-+void ieee802154_xmit_error(struct ieee802154_hw *hw, struct sk_buff *skb,
-+			   bool ifs_handling)
-+{
-+	ieee802154_wakeup_after_xmit_done(hw, skb, ifs_handling);
-+	dev_kfree_skb_any(skb);
-+}
-+EXPORT_SYMBOL(ieee802154_xmit_error);
-+
- void ieee802154_stop_device(struct ieee802154_local *local)
- {
- 	flush_workqueue(local->workqueue);
+ 	return 0;
 -- 
 2.27.0
 
