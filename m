@@ -2,102 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97D30C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 13:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 148D2C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jan 2022 13:23:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359696AbiATNTC (ORCPT
+        id S1344643AbiATNXv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Jan 2022 08:19:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44172 "EHLO
+        Thu, 20 Jan 2022 08:23:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230246AbiATNTC (ORCPT
+        with ESMTP id S232966AbiATNXv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jan 2022 08:19:02 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4619C061574;
-        Thu, 20 Jan 2022 05:19:01 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 741E8616CD;
-        Thu, 20 Jan 2022 13:19:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80F91C340E0;
-        Thu, 20 Jan 2022 13:19:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642684740;
-        bh=svWuVG30BEbWofm+H5ZH2UveapXX1u96Z7k+t8gonX8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L/cqcdMCrpDBKsk9PhsEB2TjyNuMsFnmxVWqSKRpMbzgqSjojN1QMih90Bnkwi6Ll
-         IcRv7autdVnJLFFLSHWJBlcbqGXGVPBNQdePo3ozjszq8MyEaHou96DLa/xV3DJn44
-         IYRDVvf3D6H9WFJ3Co2fKjBTS3DV2YqKomp8+Qiav2gC8u3orAy/B/2Lfg4d2bb5G7
-         Om4DqwwRjrZ2SpRrryNaNm1z7HolnR/nzYf6r0XIz3VLXjcyx8PsrCk0+V/bEBYstf
-         s+6Iami6AQqAYGEOzSM7LWcck5ZCKp+LFs9s6Gx1NszGfI2nas6bz0NpmDM7uJ4Y4z
-         CK84V/ys+KzIg==
-Date:   Thu, 20 Jan 2022 14:18:56 +0100
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com,
-        linux-wireless@vger.kernel.org, ryder.lee@mediatek.com,
-        evelyn.tsai@mediatek.com, owen.peng@mediatek.com,
-        devicetree@vger.kernel.org, robh@kernel.org
-Subject: Re: [PATCH v2 6/6] dt-bindings:net:wireless:mediatek,mt76: add
- disable-radar-offchan
-Message-ID: <YelhQGs6MW3W13Ni@lore-desk>
-References: <cover.1642009736.git.lorenzo@kernel.org>
- <221dab8bcc95160652e608def16d822da78717bd.1642009736.git.lorenzo@kernel.org>
- <87v8yeimqz.fsf@tynnyri.adurom.net>
+        Thu, 20 Jan 2022 08:23:51 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEAD4C061574;
+        Thu, 20 Jan 2022 05:23:50 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id p27so21680079lfa.1;
+        Thu, 20 Jan 2022 05:23:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=IJ3AVBXXw8houHFsBwqKNxRpnoMUHCzOHWMOL+64gNc=;
+        b=NH6NAQT0AB4FawArepBcdhhKB/vzBDv2D9Fdvp1PFU21amw5N2mVyQM0KvfrU/4FtJ
+         MUrencMsVqsQ3K4NklXZzYQKFjuGlazr5xY72ZUqy8Dg6Es2q2vQwWEpTomZ4LXHI0K6
+         GVZLL+7wTpwosjSzRJKpUvemXvaqGQGYDbj/3QQjwsxoJxpKI5qOBNsOoyGaq8r1FjFv
+         m6Au/doq5b+rQWdTfEIim7gqn28W+GMlBu91TqE+2MCEVyiDbczrh03B5bpDE9bcVJXM
+         z8kvaUKr6/fZe5krlLKQWUGBA0u8npEw6SKb5626sQ5Ocn3yksqe+0hjYRfRjB7AIyI1
+         1oNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=IJ3AVBXXw8houHFsBwqKNxRpnoMUHCzOHWMOL+64gNc=;
+        b=V4jZ+F7JASE94pcaOAT13fG2dwr4qFwfGxCvWP3gcJ4uxBtxhgF2MPO+090U5K3fYu
+         NfIprzM8fseoU/LVQZXZB/7VF3u8BOqDPCFQcYK4H++94uBVxmONlvpWwVEoTAeTYvkN
+         o2M/Mky+hBro8gHPEpm7k/7DAtF2uWMrrhL0bWkhUa41GEEVTBWfacrYDnrRSno9CUtE
+         HOW5mYcw3VGIA/V4eler7Q4so9dgOtLh70wHIukV0zVZllfN0W5K4U60N7fbV6n/kCoV
+         Qlx45oTqaE0B9hE3CkrVng6BYLUUUtS+g2EUDX6rp8rURzKXE2PEiAHLJnZzbPmPlb/n
+         fuag==
+X-Gm-Message-State: AOAM5325jgkpU7qUb9IRSRfUKI41ZpOCc5SXeGX9TK2I5O/LkgxhmhrR
+        2ulxM7uut6JkxKRkupka/H4=
+X-Google-Smtp-Source: ABdhPJymsWGP8t1p46DpW44R3ZXzy6QM24UBihuoBW2Cahxj6xRxDhVq58roRtPU8AlidSSiIT8D9A==
+X-Received: by 2002:a19:f803:: with SMTP id a3mr31079126lff.95.1642685029058;
+        Thu, 20 Jan 2022 05:23:49 -0800 (PST)
+Received: from [192.168.2.145] (109-252-139-36.dynamic.spd-mgts.ru. [109.252.139.36])
+        by smtp.googlemail.com with ESMTPSA id k2sm243852lfe.213.2022.01.20.05.23.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 20 Jan 2022 05:23:48 -0800 (PST)
+Message-ID: <5dca45ba-a8a9-7091-365b-7a73fdd3be26@gmail.com>
+Date:   Thu, 20 Jan 2022 16:23:47 +0300
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="tNMthz8N4ZRQ07eP"
-Content-Disposition: inline
-In-Reply-To: <87v8yeimqz.fsf@tynnyri.adurom.net>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v3 3/9] brcmfmac: firmware: Do not crash on a NULL
+ board_type
+Content-Language: en-US
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Hector Martin <marcan@marcan.st>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@infineon.com>,
+        Wright Feng <wright.feng@infineon.com>
+Cc:     Sven Peter <sven@svenpeter.dev>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Mark Kettenis <kettenis@openbsd.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "John W. Linville" <linville@tuxdriver.com>,
+        "brian m. carlson" <sandals@crustytoothpaste.net>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com
+References: <20220117142919.207370-1-marcan@marcan.st>
+ <20220117142919.207370-4-marcan@marcan.st>
+ <be66ea27-c98a-68d3-40b1-f79ab62460d5@gmail.com>
+ <9db96f20-38fb-46e0-5f33-e5cd36501bf0@broadcom.com>
+From:   Dmitry Osipenko <digetx@gmail.com>
+In-Reply-To: <9db96f20-38fb-46e0-5f33-e5cd36501bf0@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+20.01.2022 11:29, Arend van Spriel пишет:
+> On 1/19/2022 11:02 PM, Dmitry Osipenko wrote:
+>> 17.01.2022 17:29, Hector Martin пишет:
+>>> This unbreaks support for USB devices, which do not have a board_type
+>>> to create an alt_path out of and thus were running into a NULL
+>>> dereference.
+>>>
+>>> Fixes: 5ff013914c62 ("brcmfmac: firmware: Allow per-board firmware
+>>> binaries")
+>>> Signed-off-by: Hector Martin <marcan@marcan.st>
+>>
+>> Technically, all patches that are intended to be included into next
+>> stable kernel update require the "Cc: stable@vger.kernel.org" tag.
+> 
+> Being the nit picker that I am I would say it is recommended to safe
+> yourself extra work, not required, for the reason you give below.
 
---tNMthz8N4ZRQ07eP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-> Lorenzo Bianconi <lorenzo@kernel.org> writes:
->=20
-> > Add the capability to disable/enable radar/CAC detection running on
-> > a dedicated offchannel chain available on some hw.
-> > Offchannel radar/CAC detection allows to avoid CAC downtime switching
-> > on a different channel during CAC detection on the selected radar
-> > channel.
-> >
-> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > ---
-> >  .../devicetree/bindings/net/wireless/mediatek,mt76.yaml  | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
->=20
-> Was the recommendation so that devicetree binding patches should be
-> first in the patchset?
-
-ah, ok..I was not aware of it :)
-
-Regards,
-Lorenzo
-
->=20
-> --=20
-> https://patchwork.kernel.org/project/linux-wireless/list/
->=20
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
-tches
-
---tNMthz8N4ZRQ07eP
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHQEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCYelhQAAKCRA6cBh0uS2t
-rE+HAPY8PMr1c2yiGJQ/bAYsMCLVRL2b/BOTqN/J3UfAi34xAQC8Ht+EVzQopKZ3
-RZHgYXhJfCVQdqxoGlTS2MCMaTFxCA==
-=wh+F
------END PGP SIGNATURE-----
-
---tNMthz8N4ZRQ07eP--
+Will be nice if stable tag could officially become a recommendation,
+implying the stable tag. It's a requirement today, at least Greg KH
+always demands to add it :)
