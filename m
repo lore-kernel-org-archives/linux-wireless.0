@@ -2,93 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA7DC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 11:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A294C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 16:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345305AbiAULka (ORCPT
+        id S1379238AbiAUQ46 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Jan 2022 06:40:30 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:52862 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230234AbiAULka (ORCPT
+        Fri, 21 Jan 2022 11:56:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49902 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1379114AbiAUQ4T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jan 2022 06:40:30 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 332651F888;
-        Fri, 21 Jan 2022 11:40:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1642765229; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=p1in7D2MoPPm603YyrrTr2s6zVMfG0P250uqSYygmeI=;
-        b=h5S0Jr6FZwY202+6mTdu9nNbF+F26Jl2zNoQmfahKHaPL88xWfJd9P7RsicQXk8sfM+CVC
-        k3EBvIUVrExSjqmvYCvhdXzPY0a0dcwvepPCjkztMWP0JwWQMnBXHEvJXir+asDOovxKPa
-        PfsZwKNUsl6pBIi8x83ZYGCAcZtUcpU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1642765229;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=p1in7D2MoPPm603YyrrTr2s6zVMfG0P250uqSYygmeI=;
-        b=IOtP3Dt8foBoh38dhybtf3hNkVwT5gsFuSCgeSs2nfKxj6LlDx8rohZRW8FgmpKMn70JRy
-        6S6nKX+lfZ6XP2Dw==
-Received: from alsa1.nue.suse.com (alsa1.suse.de [10.160.4.42])
-        by relay2.suse.de (Postfix) with ESMTP id 29FB5A3B83;
-        Fri, 21 Jan 2022 11:40:29 +0000 (UTC)
-From:   Takashi Iwai <tiwai@suse.de>
-To:     Luca Coelho <luciano.coelho@intel.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Oliver Neukum <oneukum@suse.de>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] iwlwifi: mvm: Don't call iwl_mvm_sta_from_mac80211() with NULL sta
-Date:   Fri, 21 Jan 2022 12:40:24 +0100
-Message-Id: <20220121114024.10454-1-tiwai@suse.de>
-X-Mailer: git-send-email 2.31.1
+        Fri, 21 Jan 2022 11:56:19 -0500
+Received: from mail-oi1-x233.google.com (mail-oi1-x233.google.com [IPv6:2607:f8b0:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC483C06175B;
+        Fri, 21 Jan 2022 08:55:10 -0800 (PST)
+Received: by mail-oi1-x233.google.com with SMTP id bx18so14350749oib.7;
+        Fri, 21 Jan 2022 08:55:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LECfU6cLXmTWAFEkOmILc0YJMNkX9LftVPNv4hejlLw=;
+        b=X1kgsEpBLZffAa6n2Zpdp3hS5eepWNOv7/NvBFCUrLPcDJE7Bb4iovVZguI/81N2Va
+         T9Izj9GCrpLlmiY3jAP7FHD32lbBBoDVYU9aFaII3Ci3mdxhCfgw18C5xGs6nhGcF1jA
+         OB9NWxVkn+zp78jd4frB+zrngn5WDc4SokFNup+Uv+Cl+NtmNhMjTjTKDrLiztSE5swy
+         kGcXylufL7Yg/0WuuFfpyI2wuIj6KLRC8oB27XMpp845Ykq7ovO8++bP0Mzlv8pSuFP6
+         QbpB8wwGNDPXycyEZV6d7lpuxftlO15tpuQ1t6nz/b2l4Yz02AUn4DgS7fqHEA6g9urH
+         yYPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=LECfU6cLXmTWAFEkOmILc0YJMNkX9LftVPNv4hejlLw=;
+        b=Xwxs0LT0kKh0cvNKWzDoiRLlpLt2MbZUY77hFn/bVQ0IEQ3dldS6TknoPDnZrQbxsR
+         31ezKaA8CyirypwkfqJnT0Vz1PaNnpMQNuANEx4aun3SaQOVFDUxdXSBAPPKuT1iOslg
+         xhbnN8yb2+erFuDsens1NHqIjIhTEbEqIMoJ9fCD8TWstkYZiVvjkC02uiJL1AVpb6GZ
+         Z63gWclAp3Ueo2raRxl7DR+KWJx1VjoKgk9A1qIRgcucmuJeJ7BB+EwM25TVhjxaV20e
+         MkLJHN14MZVZgA+eSuwmynLbWwQDr020h5Feuccku+JEqrAZKj3GoxCmjukjH9svM+ul
+         Q4Fg==
+X-Gm-Message-State: AOAM532xs3Sb4Xz3Q5HWxC5kfESFyGOqHdtW6yHgFxu+wHxNP0D4fZb8
+        YFPxWWnybFkI7imPjb+ZZvg=
+X-Google-Smtp-Source: ABdhPJwnMTm/HRYkycV0dhiJ7DZNarIXvBbprClF5tkRMIbPP/TqgF6weELN4MPUKaK2ZtRzAyN7JQ==
+X-Received: by 2002:a05:6808:f13:: with SMTP id m19mr1242656oiw.123.1642784109992;
+        Fri, 21 Jan 2022 08:55:09 -0800 (PST)
+Received: from thinkpad.localdomain ([2804:14d:5cd1:5d03:cf72:4317:3105:f6e5])
+        by smtp.gmail.com with ESMTPSA id y8sm1089271oou.23.2022.01.21.08.55.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Jan 2022 08:55:09 -0800 (PST)
+From:   Luiz Sampaio <sampaio.ime@gmail.com>
+To:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, Luiz Sampaio <sampaio.ime@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 15/31] net: wireless: atmel: changing LED_* from enum led_brightness to actual value
+Date:   Fri, 21 Jan 2022 13:54:20 -0300
+Message-Id: <20220121165436.30956-16-sampaio.ime@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220121165436.30956-1-sampaio.ime@gmail.com>
+References: <20220121165436.30956-1-sampaio.ime@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The recent fix for NULL sta in iwl_mvm_get_tx_rate() still has a call
-of iwl_mvm_sta_from_mac80211() that may be called with NULL sta.
-Although this practically only points to the address and the actual
-access doesn't happen due to the conditional evaluation at a later
-point, it looks a bit flaky.
-
-This patch drops the temporary variable above and evaluates
-iwm_mvm_sta_from_mac80211() directly for avoiding confusions.
-
-Fixes: d599f714b73e ("iwlwifi: mvm: don't crash on invalid rate w/o STA")
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
+The enum led_brightness, which contains the declaration of LED_OFF,
+LED_ON, LED_HALF and LED_FULL is obsolete, as the led class now supports
+max_brightness.
 ---
+ drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Corrected the subject and the description from
-  https://lore.kernel.org/r/20220121111418.9144-1-tiwai@suse.de
-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 6fa2c12f7955..4d1ddca73fb0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -318,15 +318,14 @@ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 7582761c61e2..3847c59b9672 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -523,10 +523,10 @@ static void at76_ledtrig_tx_timerfunc(struct timer_list *unused)
  
- 	/* info->control is only relevant for non HW rate control */
- 	if (!ieee80211_hw_check(mvm->hw, HAS_RATE_CONTROL)) {
--		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--
- 		/* HT rate doesn't make sense for a non data frame */
- 		WARN_ONCE(info->control.rates[0].flags & IEEE80211_TX_RC_MCS &&
- 			  !ieee80211_is_data(fc),
- 			  "Got a HT rate (flags:0x%x/mcs:%d/fc:0x%x/state:%d) for a non data frame\n",
- 			  info->control.rates[0].flags,
- 			  info->control.rates[0].idx,
--			  le16_to_cpu(fc), sta ? mvmsta->sta_state : -1);
-+			  le16_to_cpu(fc),
-+			  sta ? iwl_mvm_sta_from_mac80211(sta)->sta_state : -1);
+ 	if (tx_lastactivity != tx_activity) {
+ 		tx_lastactivity = tx_activity;
+-		led_trigger_event(ledtrig_tx, LED_FULL);
++		led_trigger_event(ledtrig_tx, 255);
+ 		mod_timer(&ledtrig_tx_timer, jiffies + HZ / 4);
+ 	} else
+-		led_trigger_event(ledtrig_tx, LED_OFF);
++		led_trigger_event(ledtrig_tx, 0);
+ }
  
- 		rate_idx = info->control.rates[0].idx;
- 	}
+ static void at76_ledtrig_tx_activity(void)
 -- 
-2.31.1
+2.34.1
 
