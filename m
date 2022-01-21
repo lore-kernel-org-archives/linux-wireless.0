@@ -2,62 +2,63 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CACFBC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 16:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 833ABC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 16:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381830AbiAUQ5W (ORCPT
+        id S1351739AbiAUQ5n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Jan 2022 11:57:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50056 "EHLO
+        Fri, 21 Jan 2022 11:57:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380350AbiAUQ44 (ORCPT
+        with ESMTP id S1379407AbiAUQ4s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jan 2022 11:56:56 -0500
-Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BE6CC061775;
-        Fri, 21 Jan 2022 08:55:51 -0800 (PST)
-Received: by mail-oi1-x22a.google.com with SMTP id s9so14319296oib.11;
-        Fri, 21 Jan 2022 08:55:51 -0800 (PST)
+        Fri, 21 Jan 2022 11:56:48 -0500
+Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC585C06173D;
+        Fri, 21 Jan 2022 08:55:17 -0800 (PST)
+Received: by mail-oo1-xc2d.google.com with SMTP id q16-20020a4a3010000000b002dde2463e66so3486305oof.9;
+        Fri, 21 Jan 2022 08:55:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JWwCA6Os6ufO2OamoDdA1VpkWXg1qWYv/gpuXYzvEa0=;
-        b=MjAl/2d7hFcNgyCHuaDhSHTjyebU3drd8M3jU8y2IQsqE6Okaz0WRef5nk97QClDqB
-         dvRMz5ydDfyCVO7XtDrt7BlmMK8yIEirVQKVXa4Ab0p+oKDAgX92r7pE+hkI77CSUetS
-         MH/DYXn1WvTkPKI+tE5gsImAWrq+f6bwAihvF9Zrbyyajq/ZWrGOG31AcvN0xvHHsQ/a
-         76Zbei7//5h/FF2ZDZo4d56PGsZXeyiJsEbzfQNDCrF7XS9IcXprwm/icw8/L0rshHl1
-         SNFx7oImgsZ6tDJvJDrHND4vFRrTq7IlAxO8d9ISxYF3yqUI1B4MhMf2hN48A52BFZM4
-         0oSw==
+        bh=IVOAJ94pJepIbpbSfUfz/TwG9KdmwHk/Cvcx+UDJ5T4=;
+        b=pIOKSl0EpHvfWhlFljlxDebl+wxZ1lCxG5dYv20Sp2Zkx6SU2GmaD5OaTmH+Wo2MfF
+         6Orxsa9dl/d5YlGtUQn6m1HOLOyIOSAO6qQVimJLB+W9GPbjzEk3FMHa3mjDGT2Truk2
+         HsYXLEUl+oAYX+Lhq0g7gMYFELX7rOAWTZ/7Vw+kRPKCGUSe6S1JAJJpTkwSMkulTlDD
+         Czl00JsRrGhseMk1qAXTK76Q8Sm099C/heQTp05HF2pjEgsnc7ldOiQAYgikA4F7crlq
+         NLqhs+rqc1W0D+hQnJSBgspyxs+2VXk+cyq5GA+2lFsNPL2oXE97+Sz4RS6P9fLxw73R
+         4aSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JWwCA6Os6ufO2OamoDdA1VpkWXg1qWYv/gpuXYzvEa0=;
-        b=PxZNcHG/qr/KxQvSQ1Z9i/Ov/3ZWXQQV57z6Hde1O73TuAe56EUWAIHv+/D4NSLYxH
-         gF/MOXhjuzR3vrTETsC9D3rbz9FC/IG0EswFyqKE1wnVgqT8MZxbXlh5pt7kS35q46Az
-         hC/zNMnZmvNm5+zl4MBWgmZG1PfPxThqIUynx7fq31dWXf49PYxkjxsQre9tubgCmVwd
-         XWN45CZ5h7TlJdOIu8XSQYIOJtDbRuYCrSVW7BtOb/Z7hZpqocefiQCkAj1q0JVz6tBq
-         yYJwNKToy60bjwXNxee7ORLWfkAt56c1QhVd6SUTudwJ4ETv2tLm8NcBtMvEZIQChkaP
-         LnBQ==
-X-Gm-Message-State: AOAM530DTZW9qPeXPJHeZmcgvj4F48d0hh8/+HtBjC8ID8AA9Xs3bUro
-        ViGcXU20Mrstl/VKD7oQ1t0=
-X-Google-Smtp-Source: ABdhPJy/+XAmfEonekRvbRYH2yUx5daOlccr8uacmMOv+0HVuWMPQYm2UMLY4TsXH0dx9xykQjzivA==
-X-Received: by 2002:a05:6808:1442:: with SMTP id x2mr1217003oiv.166.1642784150774;
-        Fri, 21 Jan 2022 08:55:50 -0800 (PST)
+        bh=IVOAJ94pJepIbpbSfUfz/TwG9KdmwHk/Cvcx+UDJ5T4=;
+        b=qzQ4LB6X/oDw/RZKK9L7FX0tpLwsDHpUxtGYOqEyiNCxJt/cvOP2E+qoiZrJUwAkPq
+         OUcYzjqtfM/2be1OqScRzKbaPfFqO90LnusCXYW9i1NA1+XLkZRyDxPu30vYI9drchbh
+         doVe2/DG0rxZ4ZPZcsVsP2YnFDXtnSK7k48t249qUxVTKlOeNaVW3Dnm0gBJcvdfnZhp
+         iFuvA46JIo6akCw4Em/b5lxJo4OvRek35bvDVIbByDqHSe900QxiHxbjpPtunmmURhAS
+         VDfzOOOXXedrLx423w+Xkzz6vGozZC5vgMi6/lKuFlBl1kyVQ9sCXUxtGUzS7+izxMvO
+         7ndg==
+X-Gm-Message-State: AOAM530y+c6e2XHLH/33b6pMKsu/dv75CnD5+HyriRt7NIt7rX2L31/1
+        FN4RzsAcaH8oOAzZb+ekvOYJ/qPGBCE=
+X-Google-Smtp-Source: ABdhPJz8GHk+7q5boe5b4Wu0fQHWY4WMc/PaCje5B6GeKDz/SFWL8Lj2dH6TwrxPxJylQDn8286Vrg==
+X-Received: by 2002:a4a:d184:: with SMTP id j4mr3108067oor.20.1642784117119;
+        Fri, 21 Jan 2022 08:55:17 -0800 (PST)
 Received: from thinkpad.localdomain ([2804:14d:5cd1:5d03:cf72:4317:3105:f6e5])
-        by smtp.gmail.com with ESMTPSA id y8sm1089271oou.23.2022.01.21.08.55.48
+        by smtp.gmail.com with ESMTPSA id y8sm1089271oou.23.2022.01.21.08.55.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jan 2022 08:55:50 -0800 (PST)
+        Fri, 21 Jan 2022 08:55:16 -0800 (PST)
 From:   Luiz Sampaio <sampaio.ime@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
+To:     Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, Luiz Sampaio <sampaio.ime@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 27/31] net: mac80211 : changing LED_* from enum led_brightness to actual value
-Date:   Fri, 21 Jan 2022 13:54:32 -0300
-Message-Id: <20220121165436.30956-28-sampaio.ime@gmail.com>
+Subject: [PATCH 17/31] net: intersil: changing LED_* from enum led_brightness to actual value
+Date:   Fri, 21 Jan 2022 13:54:22 -0300
+Message-Id: <20220121165436.30956-18-sampaio.ime@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220121165436.30956-1-sampaio.ime@gmail.com>
 References: <20220121165436.30956-1-sampaio.ime@gmail.com>
@@ -71,46 +72,22 @@ The enum led_brightness, which contains the declaration of LED_OFF,
 LED_ON, LED_HALF and LED_FULL is obsolete, as the led class now supports
 max_brightness.
 ---
- net/mac80211/led.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intersil/p54/led.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/led.c b/net/mac80211/led.c
-index 6de8d0ad5497..ac36579636bb 100644
---- a/net/mac80211/led.c
-+++ b/net/mac80211/led.c
-@@ -14,9 +14,9 @@ void ieee80211_led_assoc(struct ieee80211_local *local, bool associated)
- 	if (!atomic_read(&local->assoc_led_active))
- 		return;
- 	if (associated)
--		led_trigger_event(&local->assoc_led, LED_FULL);
-+		led_trigger_event(&local->assoc_led, 255);
- 	else
--		led_trigger_event(&local->assoc_led, LED_OFF);
-+		led_trigger_event(&local->assoc_led, 0);
- }
+diff --git a/drivers/net/wireless/intersil/p54/led.c b/drivers/net/wireless/intersil/p54/led.c
+index 4bc77010f9c1..c5966b32416e 100644
+--- a/drivers/net/wireless/intersil/p54/led.c
++++ b/drivers/net/wireless/intersil/p54/led.c
+@@ -43,7 +43,7 @@ static void p54_update_leds(struct work_struct *work)
+ 			if (tmp < blink_delay)
+ 				blink_delay = tmp;
  
- void ieee80211_led_radio(struct ieee80211_local *local, bool enabled)
-@@ -24,9 +24,9 @@ void ieee80211_led_radio(struct ieee80211_local *local, bool enabled)
- 	if (!atomic_read(&local->radio_led_active))
- 		return;
- 	if (enabled)
--		led_trigger_event(&local->radio_led, LED_FULL);
-+		led_trigger_event(&local->radio_led, 255);
- 	else
--		led_trigger_event(&local->radio_led, LED_OFF);
-+		led_trigger_event(&local->radio_led, 0);
- }
+-			if (priv->leds[i].led_dev.brightness == LED_OFF)
++			if (priv->leds[i].led_dev.brightness == 0)
+ 				rerun = true;
  
- void ieee80211_alloc_led_names(struct ieee80211_local *local)
-@@ -344,7 +344,7 @@ static void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
- 	tpt_trig->running = false;
- 	del_timer_sync(&tpt_trig->timer);
- 
--	led_trigger_event(&local->tpt_led, LED_OFF);
-+	led_trigger_event(&local->tpt_led, 0);
- }
- 
- void ieee80211_mod_tpt_led_trig(struct ieee80211_local *local,
+ 			priv->leds[i].toggled =
 -- 
 2.34.1
 
