@@ -2,56 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E21CC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 07:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C88C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 08:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379195AbiAUH4w (ORCPT
+        id S1379198AbiAUIMs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Jan 2022 02:56:52 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:49858 "EHLO
+        Fri, 21 Jan 2022 03:12:48 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:52813 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379201AbiAUH4Y (ORCPT
+        with ESMTP id S1343642AbiAUIMp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jan 2022 02:56:24 -0500
+        Fri, 21 Jan 2022 03:12:45 -0500
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 20L7uCewD032211, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 20L8A8keC004318, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 20L7uCewD032211
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 20L8A8keC004318
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 21 Jan 2022 15:56:12 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+        Fri, 21 Jan 2022 16:10:08 +0800
+Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 21 Jan 2022 15:56:12 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 21 Jan
- 2022 15:56:11 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <timlee@realtek.com>,
-        <johnson.lin@realtek.com>
-Subject: [PATCH] rtw89: refine DIG feature to support 160M and CCK PD
-Date:   Fri, 21 Jan 2022 15:55:54 +0800
-Message-ID: <20220121075555.12457-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/21/2022 07:30:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ 15.1.2308.20; Fri, 21 Jan 2022 16:10:08 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 21 Jan 2022 00:10:08 -0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e]) by
+ RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e%5]) with mapi id
+ 15.01.2308.020; Fri, 21 Jan 2022 16:10:07 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Neo Jou <neojou@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Ed Swierk <eswierk@gh.st>
+Subject: RE: [PATCH v3 0/8] rtw88: prepare locking for SDIO support
+Thread-Topic: [PATCH v3 0/8] rtw88: prepare locking for SDIO support
+Thread-Index: AQHYBCp/WStseF16x0uJ7VAbWo+1y6xqJTFAgAMM/BA=
+Date:   Fri, 21 Jan 2022 08:10:07 +0000
+Message-ID: <423f474e15c948eda4db5bc9a50fd391@realtek.com>
+References: <20220108005533.947787-1-martin.blumenstingl@googlemail.com> 
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: yes
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
  rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzEvMjEgpFekyCAwNjowMDowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/1/21_=3F=3F_07:29:00?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: multipart/mixed;
+        boundary="_002_423f474e15c948eda4db5bc9a50fd391realtekcom_"
+MIME-Version: 1.0
 X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
@@ -60,163 +69,161 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johnson Lin <johnson.lin@realtek.com>
+--_002_423f474e15c948eda4db5bc9a50fd391realtekcom_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-DIG, which is short for dynamic initial gain, is used to adjust gain to get
-good RX performance. CCK PD feature, a mechanism that adjusts 802.11b CCK
-packet detection(PD) power threshold based on environment noisy level in
-order to avoid false alarm. Also, refine related variable naming.
 
-Signed-off-by: Johnson Lin <johnson.lin@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/core.c |  9 ++++++
- drivers/net/wireless/realtek/rtw89/core.h |  1 +
- drivers/net/wireless/realtek/rtw89/phy.c  | 34 ++++++++++++++++++-----
- drivers/net/wireless/realtek/rtw89/phy.h  |  3 ++
- drivers/net/wireless/realtek/rtw89/reg.h  |  4 +++
- 5 files changed, 44 insertions(+), 7 deletions(-)
+> -----Original Message-----
+> From: Pkshih
+> Sent: Wednesday, January 19, 2022 5:38 PM
+> To: 'Martin Blumenstingl' <martin.blumenstingl@googlemail.com>; linux-wir=
+eless@vger.kernel.org
+> Cc: tony0620emma@gmail.com; kvalo@codeaurora.org; johannes@sipsolutions.n=
+et; netdev@vger.kernel.org;
+> linux-kernel@vger.kernel.org; Neo Jou <neojou@gmail.com>; Jernej Skrabec =
+<jernej.skrabec@gmail.com>; Ed
+> Swierk <eswierk@gh.st>
+> Subject: RE: [PATCH v3 0/8] rtw88: prepare locking for SDIO support
+>=20
+> Hi,
+>=20
+> > -----Original Message-----
+> > From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> > Sent: Saturday, January 8, 2022 8:55 AM
+> > To: linux-wireless@vger.kernel.org
+> > Cc: tony0620emma@gmail.com; kvalo@codeaurora.org; johannes@sipsolutions=
+.net; netdev@vger.kernel.org;
+> > linux-kernel@vger.kernel.org; Neo Jou <neojou@gmail.com>; Jernej Skrabe=
+c <jernej.skrabec@gmail.com>;
+> > Pkshih <pkshih@realtek.com>; Ed Swierk <eswierk@gh.st>; Martin Blumenst=
+ingl
+> > <martin.blumenstingl@googlemail.com>
+> > Subject: [PATCH v3 0/8] rtw88: prepare locking for SDIO support
+> >
+>=20
+> [...]
+>=20
+> I do stressed test of connection and suspend, and it get stuck after abou=
+t
+> 4 hours but no useful messages. I will re-build my kernel and turn on loc=
+kdep debug
+> to see if it can tell me what is wrong.
+>=20
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a0737eea9f81d..6f7776c3c230a 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -2347,6 +2347,13 @@ static void rtw89_read_chip_ver(struct rtw89_dev *rtwdev)
- 	rtwdev->hal.cv = cv;
- }
- 
-+static void rtw89_core_setup_phycap(struct rtw89_dev *rtwdev)
-+{
-+	rtwdev->hal.support_cckpd =
-+		!(rtwdev->chip->chip_id == RTL8852A && rtwdev->hal.cv <= CHIP_CBV) &&
-+		!(rtwdev->chip->chip_id == RTL8852B && rtwdev->hal.cv <= CHIP_CAV);
-+}
-+
- static int rtw89_chip_efuse_info_setup(struct rtw89_dev *rtwdev)
- {
- 	int ret;
-@@ -2367,6 +2374,8 @@ static int rtw89_chip_efuse_info_setup(struct rtw89_dev *rtwdev)
- 	if (ret)
- 		return ret;
- 
-+	rtw89_core_setup_phycap(rtwdev);
-+
- 	rtw89_mac_pwr_off(rtwdev);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 7c84556ec4ada..ced97f2fa8527 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2358,6 +2358,7 @@ struct rtw89_hal {
- 	u32 antenna_rx;
- 	u8 tx_nss;
- 	u8 rx_nss;
-+	bool support_cckpd;
- };
- 
- #define RTW89_MAX_MAC_ID_NUM 128
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index 147009888de04..e084eb978dbfc 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -2845,7 +2845,9 @@ static void rtw89_phy_dig_dyn_pd_th(struct rtw89_dev *rtwdev, u8 rssi,
- 	enum rtw89_bandwidth cbw = rtwdev->hal.current_band_width;
- 	struct rtw89_dig_info *dig = &rtwdev->dig;
- 	u8 final_rssi = 0, under_region = dig->pd_low_th_ofst;
--	u32 val = 0;
-+	u8 ofdm_cca_th;
-+	s8 cck_cca_th;
-+	u32 pd_val = 0;
- 
- 	under_region += PD_TH_SB_FLTR_CMP_VAL;
- 
-@@ -2856,6 +2858,9 @@ static void rtw89_phy_dig_dyn_pd_th(struct rtw89_dev *rtwdev, u8 rssi,
- 	case RTW89_CHANNEL_WIDTH_80:
- 		under_region += PD_TH_BW80_CMP_VAL;
- 		break;
-+	case RTW89_CHANNEL_WIDTH_160:
-+		under_region += PD_TH_BW160_CMP_VAL;
-+		break;
- 	case RTW89_CHANNEL_WIDTH_20:
- 		fallthrough;
- 	default:
-@@ -2866,23 +2871,38 @@ static void rtw89_phy_dig_dyn_pd_th(struct rtw89_dev *rtwdev, u8 rssi,
- 	dig->dyn_pd_th_max = dig->igi_rssi;
- 
- 	final_rssi = min_t(u8, rssi, dig->igi_rssi);
--	final_rssi = clamp_t(u8, final_rssi, PD_TH_MIN_RSSI + under_region,
--			     PD_TH_MAX_RSSI + under_region);
-+	ofdm_cca_th = clamp_t(u8, final_rssi, PD_TH_MIN_RSSI + under_region,
-+			      PD_TH_MAX_RSSI + under_region);
- 
- 	if (enable) {
--		val = (final_rssi - under_region - PD_TH_MIN_RSSI) >> 1;
-+		pd_val = (ofdm_cca_th - under_region - PD_TH_MIN_RSSI) >> 1;
- 		rtw89_debug(rtwdev, RTW89_DBG_DIG,
--			    "dyn_max=%d, final_rssi=%d, total=%d, PD_low=%d\n",
--			    dig->igi_rssi, final_rssi, under_region, val);
-+			    "igi=%d, ofdm_ccaTH=%d, backoff=%d, PD_low=%d\n",
-+			    final_rssi, ofdm_cca_th, under_region, pd_val);
- 	} else {
- 		rtw89_debug(rtwdev, RTW89_DBG_DIG,
- 			    "Dynamic PD th disabled, Set PD_low_bd=0\n");
- 	}
- 
- 	rtw89_phy_write32_mask(rtwdev, R_SEG0R_PD, B_SEG0R_PD_LOWER_BOUND_MSK,
--			       val);
-+			       pd_val);
- 	rtw89_phy_write32_mask(rtwdev, R_SEG0R_PD,
- 			       B_SEG0R_PD_SPATIAL_REUSE_EN_MSK, enable);
-+
-+	if (!rtwdev->hal.support_cckpd)
-+		return;
-+
-+	cck_cca_th = max_t(s8, final_rssi - under_region, CCKPD_TH_MIN_RSSI);
-+	pd_val = (u32)(cck_cca_th - IGI_RSSI_MAX);
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_DIG,
-+		    "igi=%d, cck_ccaTH=%d, backoff=%d, cck_PD_low=((%d))dB\n",
-+		    final_rssi, cck_cca_th, under_region, pd_val);
-+
-+	rtw89_phy_write32_mask(rtwdev, R_BMODE_PDTH_EN_V1,
-+			       B_BMODE_PDTH_LIMIT_EN_MSK_V1, enable);
-+	rtw89_phy_write32_mask(rtwdev, R_BMODE_PDTH_V1,
-+			       B_BMODE_PDTH_LOWER_BOUND_MSK_V1, pd_val);
- }
- 
- void rtw89_phy_dig_reset(struct rtw89_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index b1f059b725a10..ab703b4000235 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -87,8 +87,11 @@
- #define RXB_IDX_MAX 31
- #define RXB_IDX_MIN 0
- 
-+#define IGI_RSSI_MAX 110
- #define PD_TH_MAX_RSSI 70
- #define PD_TH_MIN_RSSI 8
-+#define CCKPD_TH_MIN_RSSI (-18)
-+#define PD_TH_BW160_CMP_VAL 9
- #define PD_TH_BW80_CMP_VAL 6
- #define PD_TH_BW40_CMP_VAL 3
- #define PD_TH_BW20_CMP_VAL 0
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index e0a416d37d0e8..96ba3c3a1e05e 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -1959,6 +1959,10 @@
- #define R_CHBW_MOD 0x4978
- #define B_CHBW_MOD_PRICH GENMASK(11, 8)
- #define B_CHBW_MOD_SBW GENMASK(13, 12)
-+#define R_BMODE_PDTH_V1 0x4B64
-+#define B_BMODE_PDTH_LOWER_BOUND_MSK_V1 GENMASK(31, 24)
-+#define R_BMODE_PDTH_EN_V1 0x4B74
-+#define B_BMODE_PDTH_LIMIT_EN_MSK_V1 BIT(30)
- #define R_CFO_COMP_SEG1_L 0x5384
- #define R_CFO_COMP_SEG1_H 0x5388
- #define R_CFO_COMP_SEG1_CTRL 0x538C
--- 
-2.25.1
+I found some deadlock:=20
 
+[ 4891.169653]        CPU0                    CPU1
+[ 4891.169732]        ----                    ----
+[ 4891.169799]   lock(&rtwdev->mutex);
+[ 4891.169874]                                lock(&local->sta_mtx);
+[ 4891.169948]                                lock(&rtwdev->mutex);
+[ 4891.170050]   lock(&local->sta_mtx);
+
+
+[ 4919.598630]        CPU0                    CPU1
+[ 4919.598715]        ----                    ----
+[ 4919.598779]   lock(&local->iflist_mtx);
+[ 4919.598900]                                lock(&rtwdev->mutex);
+[ 4919.598995]                                lock(&local->iflist_mtx);
+[ 4919.599092]   lock(&rtwdev->mutex);
+
+So, I add wrappers to iterate rtw_iterate_stas() and rtw_iterate_vifs() tha=
+t
+use _atomic version to collect sta and vif, and use list_for_each() to iter=
+ate.
+Reference code is attached, and I'm still thinking if we can have better me=
+thod.
+
+--
+Ping-Ke
+
+
+--_002_423f474e15c948eda4db5bc9a50fd391realtekcom_
+Content-Type: application/octet-stream;
+	name="0001-rtw88-use-atomic-to-collect-stas-and-does-iterators.patch"
+Content-Description: 0001-rtw88-use-atomic-to-collect-stas-and-does-iterators.patch
+Content-Disposition: attachment;
+	filename="0001-rtw88-use-atomic-to-collect-stas-and-does-iterators.patch";
+	size=4314; creation-date="Fri, 21 Jan 2022 06:33:40 GMT";
+	modification-date="Fri, 21 Jan 2022 06:33:39 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSBjOTUzOWVhNWZiYmQ2OTIwMzAzODFhNDJhZDMxZTA4NDkwZjViODA0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4KRGF0
+ZTogRnJpLCAyMSBKYW4gMjAyMiAxMTowOTo0NSArMDgwMApTdWJqZWN0OiBbUEFUQ0hdIHJ0dzg4
+OiB1c2UgYXRvbWljIHRvIGNvbGxlY3Qgc3RhcyBhbmQgZG9lcyBpdGVyYXRvcnMKCkNoYW5nZS1J
+ZDogSTc2NjUyNjhkMGNhODU5ZDRlM2MzYTYwYjFmMTViNzZmNTQ0NGYwYWIKU2lnbmVkLW9mZi1i
+eTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+Ci0tLQogdXRpbC5jIHwgOTIgKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwog
+dXRpbC5oIHwgMTMgKysrKystLS0tCiAyIGZpbGVzIGNoYW5nZWQsIDEwMCBpbnNlcnRpb25zKCsp
+LCA1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL3V0aWwuYyBiL3V0aWwuYwppbmRleCAyYzUx
+NWFmMi4uMTgzNTk2OGYgMTAwNjQ0Ci0tLSBhL3V0aWwuYworKysgYi91dGlsLmMKQEAgLTEwNSwz
+ICsxMDUsOTUgQEAgdm9pZCBydHdfZGVzY190b19tY3NyYXRlKHUxNiByYXRlLCB1OCAqbWNzLCB1
+OCAqbnNzKQogCQkqbWNzID0gcmF0ZSAtIERFU0NfUkFURU1DUzA7CiAJfQogfQorCitzdHJ1Y3Qg
+cnR3X3N0YXNfZW50cnkgeworCXN0cnVjdCBsaXN0X2hlYWQgbGlzdDsKKwlzdHJ1Y3QgaWVlZTgw
+MjExX3N0YSAqc3RhOworfTsKKworc3RydWN0IHJ0d19pdGVyX3N0YXNfZGF0YSB7CisJc3RydWN0
+IHJ0d19kZXYgKnJ0d2RldjsKKwlzdHJ1Y3QgbGlzdF9oZWFkIGxpc3Q7Cit9OworCit2b2lkIHJ0
+d19jb2xsZWN0X3N0YV9pdGVyKHZvaWQgKmRhdGEsIHN0cnVjdCBpZWVlODAyMTFfc3RhICpzdGEp
+Cit7CisJc3RydWN0IHJ0d19pdGVyX3N0YXNfZGF0YSAqaXRlcl9zdGFzID0gKHN0cnVjdCBydHdf
+aXRlcl9zdGFzX2RhdGEgKilkYXRhOworCXN0cnVjdCBydHdfc3Rhc19lbnRyeSAqc3Rhc19lbnRy
+eTsKKworCXN0YXNfZW50cnkgPSBrbWFsbG9jKHNpemVvZigqc3Rhc19lbnRyeSksIEdGUF9BVE9N
+SUMpOworCWlmICghc3Rhc19lbnRyeSkKKwkJcmV0dXJuOworCisJc3Rhc19lbnRyeS0+c3RhID0g
+c3RhOworCWxpc3RfYWRkX3RhaWwoJnN0YXNfZW50cnktPmxpc3QsICZpdGVyX3N0YXMtPmxpc3Qp
+OworfQorCit2b2lkIHJ0d19pdGVyYXRlX3N0YXMoc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJ
+ICAgICAgdm9pZCAoKml0ZXJhdG9yKSh2b2lkICpkYXRhLAorCQkJCSAgICAgICBzdHJ1Y3QgaWVl
+ZTgwMjExX3N0YSAqc3RhKSwKKwkJCQkgICAgICAgdm9pZCAqZGF0YSkKK3sKKwlzdHJ1Y3QgcnR3
+X2l0ZXJfc3Rhc19kYXRhIGl0ZXJfZGF0YTsKKwlzdHJ1Y3QgcnR3X3N0YXNfZW50cnkgKnN0YV9l
+bnRyeSwgKnRtcDsKKworCWl0ZXJfZGF0YS5ydHdkZXYgPSBydHdkZXY7CisJSU5JVF9MSVNUX0hF
+QUQoJml0ZXJfZGF0YS5saXN0KTsKKworCWllZWU4MDIxMV9pdGVyYXRlX3N0YXRpb25zX2F0b21p
+YyhydHdkZXYtPmh3LCBydHdfY29sbGVjdF9zdGFfaXRlciwKKwkJCQkJICAmaXRlcl9kYXRhKTsK
+KworCWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShzdGFfZW50cnksIHRtcCwgJml0ZXJfZGF0YS5s
+aXN0LAorCQkJCSBsaXN0KSB7CisJCWxpc3RfZGVsX2luaXQoJnN0YV9lbnRyeS0+bGlzdCk7CisJ
+CWl0ZXJhdG9yKGRhdGEsIHN0YV9lbnRyeS0+c3RhKTsKKwkJa2ZyZWUoc3RhX2VudHJ5KTsKKwl9
+Cit9CisKK3N0cnVjdCBydHdfdmlmc19lbnRyeSB7CisJc3RydWN0IGxpc3RfaGVhZCBsaXN0Owor
+CXN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWY7CisJdTggbWFjW0VUSF9BTEVOXTsKK307CisKK3N0
+cnVjdCBydHdfaXRlcl92aWZzX2RhdGEgeworCXN0cnVjdCBydHdfZGV2ICpydHdkZXY7CisJc3Ry
+dWN0IGxpc3RfaGVhZCBsaXN0OworfTsKKwordm9pZCBydHdfY29sbGVjdF92aWZfaXRlcih2b2lk
+ICpkYXRhLCB1OCAqbWFjLCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmKQoreworCXN0cnVjdCBy
+dHdfaXRlcl92aWZzX2RhdGEgKml0ZXJfc3RhcyA9IChzdHJ1Y3QgcnR3X2l0ZXJfdmlmc19kYXRh
+ICopZGF0YTsKKwlzdHJ1Y3QgcnR3X3ZpZnNfZW50cnkgKnZpZnNfZW50cnk7CisKKwl2aWZzX2Vu
+dHJ5ID0ga21hbGxvYyhzaXplb2YoKnZpZnNfZW50cnkpLCBHRlBfQVRPTUlDKTsKKwlpZiAoIXZp
+ZnNfZW50cnkpCisJCXJldHVybjsKKworCXZpZnNfZW50cnktPnZpZiA9IHZpZjsKKwlldGhlcl9h
+ZGRyX2NvcHkodmlmc19lbnRyeS0+bWFjLCBtYWMpOworCWxpc3RfYWRkX3RhaWwoJnZpZnNfZW50
+cnktPmxpc3QsICZpdGVyX3N0YXMtPmxpc3QpOworfQorCit2b2lkIHJ0d19pdGVyYXRlX3ZpZnMo
+c3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJICAgICAgdm9pZCAoKml0ZXJhdG9yKSh2b2lkICpk
+YXRhLCB1OCAqbWFjLAorCQkJCSAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmKSwKKwkJ
+ICAgICAgdm9pZCAqZGF0YSkKK3sKKwlzdHJ1Y3QgcnR3X2l0ZXJfdmlmc19kYXRhIGl0ZXJfZGF0
+YTsKKwlzdHJ1Y3QgcnR3X3ZpZnNfZW50cnkgKnZpZl9lbnRyeSwgKnRtcDsKKworCWl0ZXJfZGF0
+YS5ydHdkZXYgPSBydHdkZXY7CisJSU5JVF9MSVNUX0hFQUQoJml0ZXJfZGF0YS5saXN0KTsKKwor
+CWllZWU4MDIxMV9pdGVyYXRlX2FjdGl2ZV9pbnRlcmZhY2VzX2F0b21pYyhydHdkZXYtPmh3LAor
+CQkJSUVFRTgwMjExX0lGQUNFX0lURVJfTk9STUFMLCBydHdfY29sbGVjdF92aWZfaXRlciwgJml0
+ZXJfZGF0YSk7CisKKwlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUodmlmX2VudHJ5LCB0bXAsICZp
+dGVyX2RhdGEubGlzdCwKKwkJCQkgbGlzdCkgeworCQlsaXN0X2RlbF9pbml0KCZ2aWZfZW50cnkt
+Pmxpc3QpOworCQlpdGVyYXRvcihkYXRhLCB2aWZfZW50cnktPm1hYywgdmlmX2VudHJ5LT52aWYp
+OworCQlrZnJlZSh2aWZfZW50cnkpOworCX0KK30KZGlmZiAtLWdpdCBhL3V0aWwuaCBiL3V0aWwu
+aAppbmRleCAwNmE1YjRjNC4uZTQ5OTVkYmEgMTAwNjQ0Ci0tLSBhL3V0aWwuaAorKysgYi91dGls
+LmgKQEAgLTcsMTggKzcsMjEgQEAKIAogc3RydWN0IHJ0d19kZXY7CiAKLSNkZWZpbmUgcnR3X2l0
+ZXJhdGVfdmlmcyhydHdkZXYsIGl0ZXJhdG9yLCBkYXRhKSAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICBcCi0JaWVlZTgwMjExX2l0ZXJhdGVfYWN0aXZlX2ludGVyZmFjZXMocnR3ZGV2LT5o
+dywgICAgICAgICAgICAgICAgICAgICAgICBcCi0JCQlJRUVFODAyMTFfSUZBQ0VfSVRFUl9OT1JN
+QUwsIGl0ZXJhdG9yLCBkYXRhKQogI2RlZmluZSBydHdfaXRlcmF0ZV92aWZzX2F0b21pYyhydHdk
+ZXYsIGl0ZXJhdG9yLCBkYXRhKSAgICAgICAgICAgICAgICAgICAgICAgIFwKIAlpZWVlODAyMTFf
+aXRlcmF0ZV9hY3RpdmVfaW50ZXJmYWNlc19hdG9taWMocnR3ZGV2LT5odywgICAgICAgICAgICAg
+ICAgIFwKIAkJCUlFRUU4MDIxMV9JRkFDRV9JVEVSX05PUk1BTCwgaXRlcmF0b3IsIGRhdGEpCi0j
+ZGVmaW5lIHJ0d19pdGVyYXRlX3N0YXMocnR3ZGV2LCBpdGVyYXRvciwgZGF0YSkgICAgICAgICAg
+ICAgICAgICAgICAgICBcCi0JaWVlZTgwMjExX2l0ZXJhdGVfc3RhdGlvbnMocnR3ZGV2LT5odywg
+aXRlcmF0b3IsIGRhdGEpCiAjZGVmaW5lIHJ0d19pdGVyYXRlX3N0YXNfYXRvbWljKHJ0d2Rldiwg
+aXRlcmF0b3IsIGRhdGEpICAgICAgICAgICAgICAgICAgICAgICAgXAogCWllZWU4MDIxMV9pdGVy
+YXRlX3N0YXRpb25zX2F0b21pYyhydHdkZXYtPmh3LCBpdGVyYXRvciwgZGF0YSkKICNkZWZpbmUg
+cnR3X2l0ZXJhdGVfa2V5cyhydHdkZXYsIHZpZiwgaXRlcmF0b3IsIGRhdGEpCQkJICAgICAgIFwK
+IAlpZWVlODAyMTFfaXRlcl9rZXlzKHJ0d2Rldi0+aHcsIHZpZiwgaXRlcmF0b3IsIGRhdGEpCit2
+b2lkIHJ0d19pdGVyYXRlX3ZpZnMoc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJICAgICAgdm9p
+ZCAoKml0ZXJhdG9yKSh2b2lkICpkYXRhLCB1OCAqbWFjLAorCQkJCSAgICAgICBzdHJ1Y3QgaWVl
+ZTgwMjExX3ZpZiAqdmlmKSwKKwkJICAgICAgdm9pZCAqZGF0YSk7Cit2b2lkIHJ0d19pdGVyYXRl
+X3N0YXMoc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwKKwkJICAgICAgdm9pZCAoKml0ZXJhdG9yKSh2
+b2lkICpkYXRhLAorCQkJCSAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhKSwKKwkJCQkg
+ICAgICAgdm9pZCAqZGF0YSk7CiAKIHN0YXRpYyBpbmxpbmUgdTggKmdldF9oZHJfYnNzaWQoc3Ry
+dWN0IGllZWU4MDIxMV9oZHIgKmhkcikKIHsKLS0gCjIuMjUuMQoK
+
+--_002_423f474e15c948eda4db5bc9a50fd391realtekcom_--
