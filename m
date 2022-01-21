@@ -2,140 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FAC3C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 16:58:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBB52C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Jan 2022 17:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379623AbiAUQ6K (ORCPT
+        id S1351761AbiAURMW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Jan 2022 11:58:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49680 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380025AbiAUQzS (ORCPT
+        Fri, 21 Jan 2022 12:12:22 -0500
+Received: from sonic311-31.consmr.mail.ir2.yahoo.com ([77.238.176.163]:43372
+        "EHLO sonic311-31.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1351710AbiAURMU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jan 2022 11:55:18 -0500
-Received: from mail-oo1-xc34.google.com (mail-oo1-xc34.google.com [IPv6:2607:f8b0:4864:20::c34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 894CBC061757;
-        Fri, 21 Jan 2022 08:55:07 -0800 (PST)
-Received: by mail-oo1-xc34.google.com with SMTP id q16-20020a4a3010000000b002dde2463e66so3486183oof.9;
-        Fri, 21 Jan 2022 08:55:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=v7u/1reZfs0BoCSFwSj+daUOVIdy7CF8lGf6AzgFwV8=;
-        b=dUOYa3+iMqZXKhKXRcAf//V+c049D5heIy9QFjxhsiTO/lGEOqy6uNxoq+GzfKpUk5
-         MEZAMsqOpgmn3b+tyP42LjxdhK3iF8t2Vo9PJV+78hMvS6E3HTV7Ld+y2CpsX8SPaIbf
-         HlpuYROwuiBADozL4lPZ89RIcJGxAjwcflh8qmkWsTTdCTv41ic03v/lliYc1q2XriGH
-         GwCE6T/U7oYnOWM+Ikhp8+IjZYyCPw2Hev08/zkDx83ezLQHMUTJAFM9rqyesSoYtVVI
-         lPJFfEViD7jt9X3i5Ms/4rmyT+A3W2FzIaOjMlZ5DyE6MLCt7/WNDDI08HO5NvDZ2+kt
-         JEBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=v7u/1reZfs0BoCSFwSj+daUOVIdy7CF8lGf6AzgFwV8=;
-        b=KwH9zXLoh8iTTSbAcdYjLFKgIVlZg4enexS2l5PTbmpABZeWkh4aOP2oDV7BjBljIT
-         dwIoziHO3rtQOQtaG5Xsbyd9dTAb9D5JwIEEW25P8SiytOu11kV+iar1uT8kn8F2iHxh
-         nFitbJgB2H9XRDOeOfzG+ELSXbpHRLgDFhYYnGGokll3kWD/11veNOA7UnYSoj4pfiIu
-         VL1kK0M74Y1hNvs7zdOwAaS91YkYAvjw/ud50xE3qRkLGRrBwIarDh+jZe0c/TgB3BE8
-         VIuwSlQdbUcD6ojvTZfHd+odxCaj2rWjK11eCzlBsMSgz2zaj5SYktIN/m34rC6v2Zn7
-         xfnw==
-X-Gm-Message-State: AOAM533tDJbIuDrtEiZbilpJCOCb11aAlyboN2z3Ymqt52jbaI5OQdjo
-        8lupqaesnG+NAZleBGObGjk=
-X-Google-Smtp-Source: ABdhPJx7+MxuKThO+YBT6naKuMHTwYdavYAds1jlnbwFonjq9bexJ87FdRlAV6oXlywXptGdgQ1aAQ==
-X-Received: by 2002:a4a:e60f:: with SMTP id f15mr3106188oot.75.1642784106971;
-        Fri, 21 Jan 2022 08:55:06 -0800 (PST)
-Received: from thinkpad.localdomain ([2804:14d:5cd1:5d03:cf72:4317:3105:f6e5])
-        by smtp.gmail.com with ESMTPSA id y8sm1089271oou.23.2022.01.21.08.55.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jan 2022 08:55:06 -0800 (PST)
-From:   Luiz Sampaio <sampaio.ime@gmail.com>
-To:     Jiri Slaby <jirislaby@kernel.org>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
+        Fri, 21 Jan 2022 12:12:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1642785139; bh=SqWKv1UkNybJAVp7fOrKrSj64oAhTfKfR9pjRgvlnlE=; h=Date:From:Reply-To:To:Cc:Subject:References:From:Subject:Reply-To; b=NvX4GzeeuqN3oFLhkSztSUtZ5oSOCge/G6eLhO35ufnJSTTFsdaC4dH1npSIyNnlx1EBRmPn2gxNe2mB2ryxixgFItGYvFFupINJM27XhDj4mhgbRY/VuO2Vh71gHsxsfdY8qd8eZPCg6vZ98ME+t4/ytpubO0D8sbadiajKaoMg0Cj1aM4sKo8CjGwFwbdas4srgHIxnAy9vnZR4U9ApBSUlUsE1BCjxKWQegOY9lUaseeDkU6CCU2mMMXr6QFeNVP3XId6cFwzuzVg1BOpPhCjW1H0BnYdVlIL5TOdllBixpU8Hc4aiFxj/aHMg96hkFEzQcAY81WRNuty2zRRIg==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1642785139; bh=MKwZq94j1m2T4Dv7ZLiTRT4yg7ZpyKhxSRbmjERnhG/=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=fNryayNt23cyCinjqZUbgFcxRh7Rr2+03uTvjrInT3OxKBq2Ux9k/zn+YKV7YgqiPwzwZH7tzV7FdOkvs6B20i1QLQHNBk/ah0RCNoruV/qWUGxvcxj7HwLRfdsEAIJtcq1FTe+JaBujp+4raY7ojLoG2Wj2cZtkvO1nuOzFnW3pZIxX9vcNnJUJ2w1xf6C9K1JqRkV0HYOHSlacCuF63EORNBER7pRsHgHXXva9rwsq3qY7wCPlT3RmTI2ZiM7/EtGHJBqZcZoO8vnGHVwf2xqozjA7SNwXVOYW5+PU9pWmU9X/niY5X00cS4paLkZyviKWMUyjNBB2pTeL1sLy8g==
+X-YMail-OSG: h8__cZwVM1mOsf7y_8Ty2VFMz_Ek5p3FsS.qp_F34Isj4UIgeYWBrtcqp13z6RC
+ dW0RyPTAJR7h1rPwYyWmL53twXWyYSm8TL1xqugd_bs6_g7Q7xrB8wDM_Eg7xrDQxx0HaeBhLlVh
+ LdQzsS24wcnuIS.HNHXNl8NjvESLHte73Rc5eE80XL_tlpYHlYIjdUjWiVZL3BTfTl.GSQn642WW
+ _xdpIuvFzec3_eRDoMn4YSgOydLu35lRW67MijhJsFZBFy9DLPyVg9fSPMO_Z5sb92oU6yVl_u0T
+ p.ibu9xKvcyzkkwY19u0u91zI.5_rzmotecLA.om5VWAA.G7WN74Vd6QawWejeJyxfYfmtrIYQfD
+ dTTa2qXkrOApyVcPyXn6ra6qez.9NwabIzdCSP.cTRPUi6t7l_YfTTQ8ZrnUVphOLgb6PrwqBS6.
+ _wp4aVJO7vdvV8tddqJ9VdLNUCO7Y8ujAXO_xRpsp99lTP.n0Nt3cQs7_p0W1JJdjYpptcIlDsvk
+ YBDqygjEKXL7QyKXKaxqW8jNBlu0e4cSzIMY72W3AvrFlEuxKsgdRi_LoXyJbLGQKqIsHOggKF1G
+ wUd4mddw6N9vUfCHlMz._ymCdCSMycqM_DhATG3a0oHmxBi9mk4SyM3G8mvx7YPA58Jyuk2YrX5r
+ T4DQd8_mk0wjBokWkq9KX3O5TAgDkN7IU1ZPpM_lAkvysia4vmzRD16G.Y2TLAB.unv48MOXbf.O
+ o2PdJdQo7n1MUFTq1rIpR5_B9guniVc334BdRpeBj6smaej.mm2b4PlkTeKr6sJlu2HSKyFa_QjP
+ J0rMUf91kXfLTwSrotanZYOfBsWb6TSL9PiGB.pBgiDhWqXA4qqvsddPi_na6amH0JvH3ETWvXef
+ eEUQDSsEjUHz4kp5O.GCuwcquSfz6ViYC7XEzdmF5V0shEue.NZed81xPB86bplw.D1OIrMlOS.i
+ TDxIRhuDP6ydWdDqZL.9CjD8q8jH.96Ia3uxdO_fA3gUfwe.UngqYE2MkqnPKXoYV8lmFu2KgQYr
+ lFfczGexyV3zOCfpfzv6XMowyOtdjrGH94IZ6R7FgTvdueqAZfC.536e5AlIbvHrNtpBLKa3Luy8
+ y56G2HSdIvXOBL9izwCbpFM8CbuNwbABig1.N60vKjC84o031IwHV0ZwDyn8L9DnU.Xlz6mZmSAc
+ gXVUpy2fSleHj4NH_JYon908QwIIHksivzVmqek7MoKkNP4dn8qHbx7.h5romL.8KKoJsWfrMMpx
+ e1nVqz.SoHhhgj7guFqhz2KCIKYnsA1veuq2T2HQolt38HBs4lS0RQtphor0gLI3VrO0THIIZS0F
+ k5jqu89Qk241Ph9mQ7IfBnJaJjj.wsv.JLNAMxc9EVBUkxsHLs5ctAiDDw0C4eVSoMuolNWGgj61
+ y5mG5jQtQFMTDczvw3kGIrUCNw2keKLoWsvsw.UsQo9jyKEzXtLCPYONDTTH8fWpW_BhonEEOpE.
+ V6BFEnoCDTmX8GZEf9YCS2jcUHY3q8Ln71RkFqurqAqZ9rMvD5WfIM1PF9CrUA5riBc0rU4AI9Qb
+ NbdYPoAMSJ4_fVA1HRFvXZUFyhCANXNdI_FOXarQAiQunc.we70izx1czAo8PrgzqBr3LUFXpTub
+ v62r2hKawEMtti2aWRCg2lYz2jKJa2mRNV4fCyFYimIdm7PbvAGdIZfg367YjDAd.9ncFXeLWlUS
+ odubro_jkck.bq7hxcsqQLIhNPzV.xvV2iVFQcY9u4AdGARtYhSCEiQQo_OTIvVshRAdkohxRXTw
+ 7uRpn4CAlLwP_7CT0fuB4wVMAzK8uKfdZ31DHIVP16dsxpDZuGXM.QckQDaFk.zMvUKOXkUxQX8j
+ G9yIGua_WrnQ3QRUMqs6Ug40QOzxtzDHQWo5tGm8pYRMpYspAff5k3FtDeSagkFNMxfDnXsfJavQ
+ pHy3l960muTtDwb904OjEyuUUX4.FMA4jGqJr_0FOoECd1KEDSeWSsOCSqJq1sz4iDtvwdwZYEUm
+ dLDyigFZehkM7CidDxNtTNyZRU1YUc3C3vKW.rQCyZc9u64RCZJxSCfdOTzeQbzNzidd4ymCTlF9
+ HnqcghnoRxL4Xb2EDlj7kTjpqdzfkoHieLmRAgpiMISD8PzdHL.ERETZS3hPlVce_zjGxH4S0yPA
+ nKTQMcbiIW9RpEpF07scAFUHGv_r5qldmdkyvPMhheWxiKBFZAjnNe_niwW0uAIz8_51EGNSIhI_
+ 41rb8j0b5z9P3CbwSQUgSYI_9qUQN4m0BVE2ZYl2AlJQdXu0jXpCROsL8uhVK5IkDtHnqouUoDp8
+ TiWk-
+X-Sonic-MF: <htl10@users.sourceforge.net>
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic311.consmr.mail.ir2.yahoo.com with HTTP; Fri, 21 Jan 2022 17:12:19 +0000
+Date:   Fri, 21 Jan 2022 17:12:40 +0000 (UTC)
+From:   Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+To:     Luiz Sampaio <sampaio.ime@gmail.com>,
+        Herton Ronaldo Krzesinski <herton@canonical.com>,
+        Hin-Tak Leung <htl10@users.sourceforge.net>,
+        Larry Finger <larry.finger@lwfinger.net>,
         Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath9k-devel@qca.qualcomm.com
+        Jakub Kicinski <kuba@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, Luiz Sampaio <sampaio.ime@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 14/31] net: wireless: ath: changing LED_* from enum led_brightness to actual value
-Date:   Fri, 21 Jan 2022 13:54:19 -0300
-Message-Id: <20220121165436.30956-15-sampaio.ime@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220121165436.30956-1-sampaio.ime@gmail.com>
-References: <20220121165436.30956-1-sampaio.ime@gmail.com>
+Message-ID: <1735835679.1273895.1642785160493@mail.yahoo.com>
+Subject: Re: [PATCH 19/31] net: realtek: changing LED_* from enum
+ led_brightness to actual value
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+References: <1735835679.1273895.1642785160493.ref@mail.yahoo.com>
+X-Mailer: WebService/1.1.19615 YMailNodin
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The enum led_brightness, which contains the declaration of LED_OFF,
-LED_ON, LED_HALF and LED_FULL is obsolete, as the led class now supports
-max_brightness.
----
- drivers/net/wireless/ath/ath5k/led.c          | 2 +-
- drivers/net/wireless/ath/ath9k/gpio.c         | 4 ++--
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+> -        if (brightness == LED_FULL) {
+> +        if (brightness == 255) {
 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 33e9928af363..df3db4851bf3 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -118,7 +118,7 @@ ath5k_led_brightness_set(struct led_classdev *led_dev,
- 	struct ath5k_led *led = container_of(led_dev, struct ath5k_led,
- 		led_dev);
- 
--	if (brightness == LED_OFF)
-+	if (brightness == 0)
- 		ath5k_led_off(led->ah);
- 	else
- 		ath5k_led_on(led->ah);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index b457e52dd365..0828dc9d3503 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -52,7 +52,7 @@ static void ath_led_brightness(struct led_classdev *led_cdev,
- 			       enum led_brightness brightness)
- {
- 	struct ath_softc *sc = container_of(led_cdev, struct ath_softc, led_cdev);
--	u32 val = (brightness == LED_OFF);
-+	u32 val = (brightness == 0);
- 
- 	if (sc->sc_ah->config.led_active_high)
- 		val = !val;
-@@ -65,7 +65,7 @@ void ath_deinit_leds(struct ath_softc *sc)
- 	if (!sc->led_registered)
- 		return;
- 
--	ath_led_brightness(&sc->led_cdev, LED_OFF);
-+	ath_led_brightness(&sc->led_cdev, 0);
- 	led_classdev_unregister(&sc->led_cdev);
- 
- 	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index ecb848b60725..7a9369f06534 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -230,7 +230,7 @@ void ath9k_led_work(struct work_struct *work)
- 						   led_work);
- 
- 	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin,
--			  (priv->brightness == LED_OFF));
-+			  (priv->brightness == 0));
- }
- 
- static void ath9k_led_brightness(struct led_classdev *led_cdev,
-@@ -250,7 +250,7 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
- 	if (!priv->led_registered)
- 		return;
- 
--	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
-+	ath9k_led_brightness(&priv->led_cdev, 0);
- 	led_classdev_unregister(&priv->led_cdev);
- 	cancel_work_sync(&priv->led_work);
- 
--- 
-2.34.1
+> -        if (brightness == LED_OFF) {
+> +        if (brightness == 0) {
 
+NAKed. I haven't received the other 30 patches in this series so I don't know the full context, but I don't think replacing meaningful enum names with numerical values is an improvement. If the ENUMs are gone from a common include (and why is the ENUM removed, if drivers use them??), and the realtek driver still have such a functionality, it probably should be defined in one of the rtl818*.h as RTL818X_LED_FULL and RTL818X_LED_OFF .
+
+My $0.02, based on this one only of the 31.
+
+Regards,
+Hin-Tak
