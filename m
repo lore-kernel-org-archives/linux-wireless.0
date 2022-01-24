@@ -2,60 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF0FC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jan 2022 19:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB2EC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jan 2022 20:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353407AbiAXT7O (ORCPT
+        id S1346843AbiAXUKv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jan 2022 14:59:14 -0500
-Received: from sv16.wpblog.netowl.jp ([157.112.191.91]:37460 "EHLO
-        sv16.wpblog.netowl.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347965AbiAXTwN (ORCPT
+        Mon, 24 Jan 2022 15:10:51 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:60268 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1376758AbiAXUDw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jan 2022 14:52:13 -0500
-X-Greylist: delayed 454 seconds by postgrey-1.27 at vger.kernel.org; Mon, 24 Jan 2022 14:52:13 EST
-Received: by sv16.wpblog.netowl.jp (Postfix, from userid 3053)
-        id 029DD42A6C422; Tue, 25 Jan 2022 04:44:35 +0900 (JST)
-To:     nyorogon2000@gmail.com, linux-wireless@vger.kernel.org
-Subject: =?us-ascii?Q?=3D=3FISO-2022-JP=3FB=3FGyRCJCpMZCQkOWckbyQ7JCI?=  =?us-ascii?Q?kaiQsJEgkJiQ0JDYkJCReJDkhQzwrTikzWD0sJHJBNE5PMX?=  =?us-ascii?Q?4xZyEqSy02Nj8iRUQ9ThsoQg=3D=3D=3F=3D?=
-Date:   Mon, 24 Jan 2022 19:44:34 +0000
-From:   =?ISO-2022-JP?B?GyRCSy02Nj8iRUQ9ThsoQg==?= 
-        <wordpress@toyohashi-ueta.com>
-Reply-To: linux-wireless@vger.kernel.org
-Message-ID: <9vKbqaylywhWCg9mjh1Wqz3OTqpneYhetK9EseL2M@toyohashi-ueta.com>
-X-Mailer: PHPMailer 6.5.0 (https://github.com/PHPMailer/PHPMailer)
-X-WPCF7-Content-Type: text/plain
+        Mon, 24 Jan 2022 15:03:52 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 64EF861342
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2022 20:03:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD3F4C340E7;
+        Mon, 24 Jan 2022 20:03:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643054630;
+        bh=Clzg6womi6KSTm5YXX9h7K0ejylWUEqpWWIaLUAtGN0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=j/y5tLS/KjFH/Nx0A4pRL8mR+TdmoDofQa/rSKblOUZACaLmKakyNjr9DshPp2gc4
+         HcYVU6Br+AnGaGe2zfaGqkduuMdYPy63OaP9VyLoQGNWXkQODEKHB8nkjWfZPDdoYg
+         9xhGW9EtpKk5XRvydeCi7WuX8vaFIFHb8OHcB3ga6dE4rGdmV7o9KHzV8bmfDzOGoX
+         4VJExCjNDhQzDnIR/tTdCqezzd/GyEkTEY2dgPT29FWBaGyO6bu8A2NxJr7NymdkFu
+         pQBO6ngKeLRumi6W+ieexv19eEebuQWwzc+Th7JxoHq11/vudtqzTWGrLXHAROUlVr
+         8VDN0G+nWSqlA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        deren.wu@mediatek.com
+Subject: [PATCH] mt76: mt7921s: fix a possible memory leak in mt7921_load_patch
+Date:   Mon, 24 Jan 2022 21:03:44 +0100
+Message-Id: <e1e3c96cb9a1e305143c635c4066beba828a380d.1643054512.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-69jh2q9h様の保護者様
+Always release fw data at the end of mt7921_load_patch routine.
 
-この度は「自立学習を全力応援！豊橋植田塾」にお問い合わせをいただき、ありがとうございます。
-追ってこちらからご連絡をいたしますので、少々お待ちください。
-よろしくお願いいたします。
+Fixes: 78b217580c509 ("mt76: mt7921s: fix bus hang with wrong privilege")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
----------------------------
-お問い合わせ内容
----------------------------
-
-保護者のお名前　： ?? You have unread messages from Juliet (2)! Click Here: https://clck.ru/aoNuT?hwo ??
-
-生徒のお名前　： 69jh2q9h
-
-電話番号　： 738269350268 
-
-メールアドレス　： linux-wireless@vger.kernel.org
-
-学校名　： by1xba
-
-学年　： その他
-
-お問い合わせ内容　： 2w9f2k2
-
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 509595c4157c..33a836825cca 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -541,12 +541,8 @@ static int mt7921_load_patch(struct mt7921_dev *dev)
+ 	if (mt76_is_sdio(&dev->mt76)) {
+ 		/* activate again */
+ 		ret = __mt7921_mcu_fw_pmctrl(dev);
+-		if (ret)
+-			return ret;
+-
+-		ret = __mt7921_mcu_drv_pmctrl(dev);
+-		if (ret)
+-			return ret;
++		if (!ret)
++			ret = __mt7921_mcu_drv_pmctrl(dev);
+ 	}
+ 
+ out:
 -- 
-このメールは 自立学習を全力応援！豊橋植田塾 (http://toyohashi-ueta.com) のお問い合わせフォームから送信されました
+2.34.1
 
