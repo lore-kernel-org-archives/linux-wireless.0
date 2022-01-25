@@ -2,241 +2,274 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 504C9C43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jan 2022 10:49:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD56C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jan 2022 13:41:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352231AbiAYKtF convert rfc822-to-8bit (ORCPT
+        id S1386327AbiAYNlB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jan 2022 05:49:05 -0500
-Received: from mail-ua1-f51.google.com ([209.85.222.51]:34740 "EHLO
-        mail-ua1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359754AbiAYKnd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jan 2022 05:43:33 -0500
-Received: by mail-ua1-f51.google.com with SMTP id y4so36590173uad.1;
-        Tue, 25 Jan 2022 02:43:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=KUBI31PDeAnUzGFlBJuIh4dmvfrE44RhBRVMq2wEYSI=;
-        b=jEQDW5yodRmRVP9NIHGKf/Zqv7fciKPRB1CkTV3fKwnJqJOR9nObuvchECsV6CkowS
-         0RXMHwpiWGb2Tc8Kq8ywS8r7D5Ou/pBi+AuAod7u3AaDFL1+Z/eF6fLMeHVSznOTnWUW
-         90tv/NIVrXuMtI8sY04pwv/Mro4kUzc+Bpth5wWllcKADG4aGhnhIjbJhQzaV5RtPjzw
-         s1FdjjAQnwFOzetd3JADKbmMtsbUPpwqNRzajLB0hDQGa0Rgfbp8HOVlhxI+mK2MNTJd
-         Q5wTqyofT3OihGmTPOd6QhPLpcrEB7UCAoEmrVZTRCK/nWOxls32FCorF6O1NqCujuDv
-         dJSg==
-X-Gm-Message-State: AOAM531YcK63o+balcc5pV241srngLS5LTpT15FAMrvagHXIW5gKB3jS
-        U2c1AOPoRhAwTItUF4uz4P44uZUF4VS28vTX
-X-Google-Smtp-Source: ABdhPJwAP7sGEC010JKTiaYioiu/UTc4Mp89rGwnkrkLZob5IjBWSJ5wyDMZldWcel/u/8J+O6Kjog==
-X-Received: by 2002:a67:e146:: with SMTP id o6mr1664843vsl.4.1643107407326;
-        Tue, 25 Jan 2022 02:43:27 -0800 (PST)
-Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com. [209.85.221.178])
-        by smtp.gmail.com with ESMTPSA id s134sm3300983vkb.16.2022.01.25.02.43.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Jan 2022 02:43:27 -0800 (PST)
-Received: by mail-vk1-f178.google.com with SMTP id j185so8365206vkc.1;
-        Tue, 25 Jan 2022 02:43:27 -0800 (PST)
-X-Received: by 2002:a05:6102:34e:: with SMTP id e14mr295625vsa.68.1643107051968;
- Tue, 25 Jan 2022 02:37:31 -0800 (PST)
-MIME-Version: 1.0
-References: <20220123175201.34839-1-u.kleine-koenig@pengutronix.de> <20220123175201.34839-6-u.kleine-koenig@pengutronix.de>
-In-Reply-To: <20220123175201.34839-6-u.kleine-koenig@pengutronix.de>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 25 Jan 2022 11:37:19 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWCRyyq1=5+YnXgt2=B-qXMGWXC4XtnP_GHGvghdaH_XQ@mail.gmail.com>
-Message-ID: <CAMuHMdWCRyyq1=5+YnXgt2=B-qXMGWXC4XtnP_GHGvghdaH_XQ@mail.gmail.com>
-Subject: Re: [PATCH 5/5] spi: make remove callback a void function
-To:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     Mark Brown <broonie@kernel.org>,
-        =?UTF-8?B?TWFyZWsgQmVow7pu?= <kabel@kernel.org>,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Sam Ravnborg <sam@ravnborg.org>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Markuss Broks <markuss.broks@gmail.com>,
-        Emma Anholt <emma@anholt.net>,
-        David Lechner <david@lechnology.com>,
-        Kamlesh Gurudasani <kamlesh.gurudasani@gmail.com>,
-        =?UTF-8?Q?Noralf_Tr=C3=B8nnes?= <noralf@tronnes.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Dan Robertson <dan@dlrobertson.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Michael Hennerich <Michael.Hennerich@analog.com>,
-        Marcus Folkesson <marcus.folkesson@gmail.com>,
-        Kent Gustavsson <kent@minoris.se>,
-        Rui Miguel Silva <rmfrfs@gmail.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        Yasunari Takiguchi <Yasunari.Takiguchi@sony.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Charles-Antoine Couret <charles-antoine.couret@nexvision.fr>,
-        Antti Palosaari <crope@iki.fi>,
-        Lee Jones <lee.jones@linaro.org>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Charles Keepax <ckeepax@opensource.cirrus.com>,
-        Richard Fitzgerald <rf@opensource.cirrus.com>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Alexandre Torgue <alexandre.torgue@foss.st.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eric Piel <eric.piel@tremplin-utc.net>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Thomas Kopp <thomas.kopp@microchip.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Woojung Huh <woojung.huh@microchip.com>,
-        UNGLinuxDriver@microchip.com,
-        =?UTF-8?Q?=C5=81ukasz_Stelmach?= <l.stelmach@samsung.com>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@datenfreihafen.org>,
-        Harry Morris <h.morris@cascoda.com>,
-        Varka Bhadram <varkabhadram@gmail.com>,
-        Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Ajay Singh <ajay.kathat@microchip.com>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Mark Greer <mgreer@animalcreek.com>,
-        Benson Leung <bleung@chromium.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Mark Gross <markgross@kernel.org>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        =?UTF-8?B?SsOpcsO0bWUgUG91aWxsZXI=?= <jerome.pouiller@silabs.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Felipe Balbi <balbi@kernel.org>,
-        Daniel Thompson <daniel.thompson@linaro.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Helge Deller <deller@gmx.de>,
-        James Schulman <james.schulman@cirrus.com>,
-        David Rhodes <david.rhodes@cirrus.com>,
-        Lucas Tanure <tanureal@opensource.cirrus.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        =?UTF-8?B?TnVubyBTw6E=?= <nuno.sa@analog.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Daniel Mack <daniel@zonque.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Maxime Ripard <mripard@kernel.org>,
+        Tue, 25 Jan 2022 08:41:01 -0500
+Received: from mga14.intel.com ([192.55.52.115]:40016 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1577545AbiAYNie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Jan 2022 08:38:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1643117914; x=1674653914;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=CJl8PBWTgiP70FiEuIpmVHI/yJo5fJhxK8GLVGV7ffk=;
+  b=mgjjEkoJjrP2f6NG7ZmONpKkHRqYGbCm/6biFVkts3R6sh8yGgchE2xM
+   5UYjabPJocHh6IuWJm7YufzVRdpti/G+z27KCh3dgZP7VF8MXcDj85KrY
+   ekm0JkJWiRX7N+s+Owo8KgG3pYdqzwhERbF2ERIYTDSRqxkjl6Qf61d8O
+   dTltMAmtCSFrGlQ/Al9OFDfT7zjoSUvarXi765yupnri5NW4/2DFfayKi
+   uIv32p8DNy5+c8utLezarZeA2pW/If6HnycIM0UJ86655O+Rkrzd57pa5
+   iehi6AhppUfcDwXHSOPqcVnLxAm89/RrIBjEccsjfpcZlS6xZZc1BjofR
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10237"; a="246516412"
+X-IronPort-AV: E=Sophos;i="5.88,315,1635231600"; 
+   d="scan'208";a="246516412"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jan 2022 05:38:33 -0800
+X-IronPort-AV: E=Sophos;i="5.88,315,1635231600"; 
+   d="scan'208";a="534725441"
+Received: from nmaronch-mobl1.amr.corp.intel.com ([10.249.43.124])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jan 2022 05:38:28 -0800
+Date:   Tue, 25 Jan 2022 15:38:26 +0200 (EET)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
+cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
+        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
+        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
+        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
+        haijun.liu@mediatek.com, amir.hanania@intel.com,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Stephan Gerhold <stephan@gerhold.net>,
-        Alexandru Ardelean <ardeleanalex@gmail.com>,
-        Mike Looijmans <mike.looijmans@topic.nl>,
-        Gwendal Grignou <gwendal@chromium.org>,
-        Cai Huoqing <caihuoqing@baidu.com>,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Antoniu Miclaus <antoniu.miclaus@analog.com>,
-        Julia Lawall <Julia.Lawall@inria.fr>,
-        =?UTF-8?Q?Ronald_Tschal=C3=A4r?= <ronald@innovation.ch>,
-        Marco Felsch <m.felsch@pengutronix.de>,
-        =?UTF-8?Q?Jonathan_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-        Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>,
-        Jon Hunter <jonathanh@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Heiko Schocher <hs@denx.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        Colin Ian King <colin.king@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Tudor Ambarus <tudor.ambarus@microchip.com>,
-        Matt Kline <matt@bitbashing.io>,
-        Torin Cooper-Bennun <torin@maxiluxsystems.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        =?UTF-8?Q?Stefan_M=C3=A4tje?= <stefan.maetje@esd.eu>,
-        Frieder Schrempf <frieder.schrempf@kontron.de>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Nanyong Sun <sunnanyong@huawei.com>,
-        Yang Shen <shenyang39@huawei.com>,
-        dingsenjie <dingsenjie@yulong.com>,
-        Aditya Srivastava <yashsri421@gmail.com>,
-        Stefan Wahren <stefan.wahren@i2se.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Michael Walle <michael@walle.cc>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        wengjianfeng <wengjianfeng@yulong.com>,
-        Sidong Yang <realwakka@gmail.com>,
-        Paulo Miguel Almeida <paulo.miguel.almeida.rodenas@gmail.com>,
-        Zhang Qilong <zhangqilong3@huawei.com>,
-        Will Deacon <will@kernel.org>,
-        Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>,
-        Davidlohr Bueso <dbueso@suse.de>, Claudius Heine <ch@denx.de>,
-        Jiri Prchal <jiri.prchal@aksignal.cz>,
-        linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-gpio@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-        patches@opensource.cirrus.com, alsa-devel@alsa-project.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-can@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wpan@vger.kernel.org,
-        linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-        platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-omap@vger.kernel.org,
-        kernel@pengutronix.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        dinesh.sharma@intel.com, eliot.lee@intel.com,
+        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
+        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
+        sreehari.kancharla@intel.com
+Subject: Re: [PATCH net-next v4 04/13] net: wwan: t7xx: Add port proxy
+ infrastructure
+In-Reply-To: <20220114010627.21104-5-ricardo.martinez@linux.intel.com>
+Message-ID: <1cea423-8b82-f8bd-227b-60536bb47947@linux.intel.com>
+References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com> <20220114010627.21104-5-ricardo.martinez@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Jan 23, 2022 at 6:54 PM Uwe Kleine-König
-<u.kleine-koenig@pengutronix.de> wrote:
-> The value returned by an spi driver's remove function is mostly ignored.
-> (Only an error message is printed if the value is non-zero that the
-> error is ignored.)
->
-> So change the prototype of the remove function to return no value. This
-> way driver authors are not tempted to assume that passing an error to
-> the upper layer is a good idea. All drivers are adapted accordingly.
-> There is no intended change of behaviour, all callbacks were prepared to
-> return 0 before.
->
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+On Thu, 13 Jan 2022, Ricardo Martinez wrote:
 
->  drivers/spi/spi-slave-system-control.c                |  3 +--
->  drivers/spi/spi-slave-time.c                          |  3 +--
->  drivers/spi/spi.c                                     | 11 ++---------
->  drivers/spi/spidev.c                                  |  4 +---
+> From: Haijun Liu <haijun.liu@mediatek.com>
+> 
+> Port-proxy provides a common interface to interact with different types
+> of ports. Ports export their configuration via `struct t7xx_port` and
+> operate as defined by `struct port_ops`.
+> 
+> Signed-off-by: Haijun Liu <haijun.liu@mediatek.com>
+> Co-developed-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+> Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+> ---
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> +struct t7xx_port {
+> +	/* Members not initialized in definition */
+> +	struct t7xx_port_static *port_static;
+> +	struct wwan_port	*wwan_port;
+> +	struct t7xx_pci_dev	*t7xx_dev;
+> +	struct device		*dev;
+> +	short			seq_nums[2];
 
-Gr{oetje,eeting}s,
+Make this u16 to avoid implicit sign extensions. If port->seq_nums[MTK_TX]
+wouldn't be non-constant expression in
++       ccci_h->status |= cpu_to_le32(FIELD_PREP(HDR_FLD_SEQ, port->seq_nums[MTK_TX]));
+it would have triggered internal consistency checks due to implicit sign
+extension (in include/linux/bitfield.h):
+#define __BF_FIELD_CHECK(_mask, _reg, _val, _pfx)                       \
+                ...
+                BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?           \
+                                 ~((_mask) >> __bf_shf(_mask)) & (_val) : 
+0, \
+                                 _pfx "value too large for the field"); \
+t7xx_port_check_rx_seq_num() is already using u16 for the seq number.
 
-                        Geert
+> +#define CHECK_RX_SEQ_MASK		GENMASK(14, 0)
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+This seems same as FIELD_MAX(HDR_FLD_SEQ). Maybe drop the define and
+use it directly in t7xx_port_check_rx_seq_num() as it is already using 
+FIELD_GET(HDR_FLD_SEQ).
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> +static u16 t7xx_port_check_rx_seq_num(struct t7xx_port *port, struct ccci_header *ccci_h)
+> +{
+> +	u16 seq_num, assert_bit;
+> +
+> +	seq_num = FIELD_GET(HDR_FLD_SEQ, le32_to_cpu(ccci_h->status));
+> +	assert_bit = FIELD_GET(HDR_FLD_AST, le32_to_cpu(ccci_h->status));
+> +	if (assert_bit && port->seq_nums[MTK_RX] &&
+> +	    ((seq_num - port->seq_nums[MTK_RX]) & CHECK_RX_SEQ_MASK) != 1) {
+
+Why the non-zero port->seq_nums[MTK_RX] check? It cannot be the initial
+value check (-1 is used as the initial value). As is, it could miss ofos
+when seq_nums[MTK_RX] had overflowed back to zero).
+
+> +int t7xx_port_recv_skb(struct t7xx_port *port, struct sk_buff *skb)
+> +{
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&port->rx_wq.lock, flags);
+> +	if (port->rx_skb_list.qlen < port->rx_length_th) {
+> +		struct ccci_header *ccci_h = (struct ccci_header *)skb->data;
+> +		u32 channel;
+> +
+> +		port->flags &= ~PORT_F_RX_FULLED;
+> +		if (port->flags & PORT_F_RX_ADJUST_HEADER)
+> +			t7xx_port_adjust_skb(port, skb);
+> +
+> +		channel = FIELD_GET(HDR_FLD_CHN, le32_to_cpu(ccci_h->status));
+> +		if (channel == PORT_CH_STATUS_RX) {
+> +			port->skb_handler(port, skb);
+> +		} else {
+> +			if (port->wwan_port)
+> +				wwan_port_rx(port->wwan_port, skb);
+> +			else
+> +				__skb_queue_tail(&port->rx_skb_list, skb);
+> +		}
+> +
+> +		spin_unlock_irqrestore(&port->rx_wq.lock, flags);
+> +		wake_up_all(&port->rx_wq);
+> +		return 0;
+> +	}
+> +
+> +	port->flags |= PORT_F_RX_FULLED;
+> +	spin_unlock_irqrestore(&port->rx_wq.lock, flags);
+> +	return -ENOBUFS;
+> +}
+
+More typical construct would reverse the if condition, use goto 
+queue_full; and deindent the normal path.
+
+> +int t7xx_port_proxy_send_skb(struct t7xx_port *port, struct sk_buff *skb)
+> +{
+> +	struct ccci_header *ccci_h = (struct ccci_header *)(skb->data);
+> +	struct cldma_ctrl *md_ctrl;
+> +	unsigned char tx_qno;
+> +	int ret;
+> +
+> +	tx_qno = t7xx_port_get_queue_no(port);
+> +	t7xx_port_proxy_set_seq_num(port, ccci_h);
+> +
+> +	md_ctrl = get_md_ctrl(port);
+> +	ret = t7xx_cldma_send_skb(md_ctrl, tx_qno, skb, true);
+> +	if (ret) {
+> +		dev_err(port->dev, "Failed to send skb: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Record the port seq_num after the data is sent to HIF.
+> +	 * Only bits 0-14 are used, thus negating overflow.
+> +	 */
+> +	port->seq_nums[MTK_TX]++;
+
+I think the comment is not particularly useful (and I'd argue it's not
+factually correct either as overflow is still occurring).
+
+> +static int t7xx_port_proxy_dispatch_recv_skb(struct cldma_queue *queue, struct sk_buff *skb,
+> +					     bool *drop_skb_on_err)
+> +{
+> +	struct ccci_header *ccci_h = (struct ccci_header *)skb->data;
+> +	struct port_proxy *port_prox = queue->md->port_prox;
+> +	struct t7xx_fsm_ctl *ctl = queue->md->fsm_ctl;
+> +	struct list_head *port_list;
+> +	struct t7xx_port *port;
+> +	u16 seq_num, channel;
+> +	int ret = 0;
+> +	u8 ch_id;
+> +
+> +	channel = FIELD_GET(HDR_FLD_CHN, le32_to_cpu(ccci_h->status));
+> +	ch_id = FIELD_GET(PORT_CH_ID_MASK, channel);
+> +
+> +	if (t7xx_fsm_get_md_state(ctl) == MD_STATE_INVALID) {
+> +		*drop_skb_on_err = true;
+> +		return -EINVAL;
+> +	}
+> +
+> +	port_list = &port_prox->rx_ch_ports[ch_id];
+> +	list_for_each_entry(port, port_list, entry) {
+> +		struct t7xx_port_static *port_static = port->port_static;
+> +
+> +		if (queue->md_ctrl->hif_id != port_static->path_id || channel !=
+> +		    port_static->rx_ch)
+> +			continue;
+> +
+> +		/* Multi-cast is not supported, because one port may be freed and can modify
+> +		 * this request before another port can process it.
+> +		 * However we still can use req->state to do some kind of multi-cast if needed.
+> +		 */
+> +		if (port_static->ops->recv_skb) {
+> +			seq_num = t7xx_port_check_rx_seq_num(port, ccci_h);
+> +			ret = port_static->ops->recv_skb(port, skb);
+> +			/* If the packet is stored to RX buffer successfully or dropped,
+> +			 * the sequence number will be updated.
+> +			 */
+> +			if (ret == -ENETDOWN || (ret < 0 && port->flags & PORT_F_RX_ALLOW_DROP)) {
+> +				*drop_skb_on_err = true;
+> +				dev_err_ratelimited(port->dev,
+> +						    "port %s RX full, drop packet\n",
+> +						    port_static->name);
+> +			}
+
+One -ENETDOWN path (the only one returned by the driver itself) already 
+printed an error and the information is not consistent with what is being 
+printed here, perhaps these error branches would need to differentiated?
+
+
+> +static void t7xx_proxy_init_all_ports(struct t7xx_modem *md)
+> +{
+> +	struct port_proxy *port_prox = md->port_prox;
+> +	struct t7xx_port *port;
+> +	int i;
+> +
+> +	for_each_proxy_port(i, port, port_prox) {
+> +		struct t7xx_port_static *port_static = port->port_static;
+> +
+> +		t7xx_port_struct_init(port);
+> +
+> +		port->t7xx_dev = md->t7xx_dev;
+> +		port->dev = &md->t7xx_dev->pdev->dev;
+> +		spin_lock_init(&port->port_update_lock);
+> +		spin_lock(&port->port_update_lock);
+> +		mutex_init(&port->tx_mutex_lock);
+> +
+> +		if (port->flags & PORT_F_CHAR_NODE_SHOW)
+> +			port->chan_enable = true;
+> +		else
+> +			port->chan_enable = false;
+> +
+> +		port->chn_crt_stat = false;
+> +		spin_unlock(&port->port_update_lock);
+
+Odd looking spin_lock sequence.
+
+
+
+> +int t7xx_port_proxy_node_control(struct t7xx_modem *md, struct port_msg *port_msg)
+> +{
+> +	u32 *port_info_base = (void *)port_msg + sizeof(*port_msg);
+...
+> +		u32 *port_info = port_info_base + i;
+...
+> +		ch_id = FIELD_GET(PORT_INFO_CH_ID, *port_info);
+
+Byte-order.
+
+
+> +#define PORT_INFO_ENFLG		GENMASK(15, 15)
+
+BIT(15) would seem more sensical for a flag bit.
+
+
+-- 
+ i.
+
