@@ -2,26 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD339C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jan 2022 09:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E78C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Jan 2022 09:54:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232516AbiAYJlO (ORCPT
+        id S237672AbiAYJyF convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Jan 2022 04:41:14 -0500
-Received: from relay9-d.mail.gandi.net ([217.70.183.199]:49311 "EHLO
-        relay9-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1456442AbiAYJgJ (ORCPT
+        Tue, 25 Jan 2022 04:54:05 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4491 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235269AbiAYJsl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jan 2022 04:36:09 -0500
-Received: (Authenticated sender: alexandre.belloni@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 3CDD5FF809;
-        Tue, 25 Jan 2022 09:35:39 +0000 (UTC)
-Date:   Tue, 25 Jan 2022 10:35:38 +0100
-From:   Alexandre Belloni <alexandre.belloni@bootlin.com>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        Tue, 25 Jan 2022 04:48:41 -0500
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jjhld4vG0z6GD8Z;
+        Tue, 25 Jan 2022 17:44:45 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Tue, 25 Jan 2022 10:48:10 +0100
+Received: from localhost (10.47.76.154) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 25 Jan
+ 2022 09:48:04 +0000
+Date:   Tue, 25 Jan 2022 09:47:59 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
         <u.kleine-koenig@pengutronix.de>
-Cc:     Mark Brown <broonie@kernel.org>,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+CC:     Mark Brown <broonie@kernel.org>,
+        Marek =?UTF-8?Q?Beh=C3=BAn?= <kabel@kernel.org>,
         Peter Huewe <peterhuewe@gmx.de>,
         Jarkko Sakkinen <jarkko@kernel.org>,
         Jason Gunthorpe <jgg@ziepe.ca>,
@@ -29,31 +37,30 @@ Cc:     Mark Brown <broonie@kernel.org>,
         Stephen Boyd <sboyd@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>,
         Bartosz Golaszewski <brgl@bgdev.pl>,
-        Thierry Reding <thierry.reding@gmail.com>,
+        "Thierry Reding" <thierry.reding@gmail.com>,
         Sam Ravnborg <sam@ravnborg.org>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
+        "David Airlie" <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
         Markuss Broks <markuss.broks@gmail.com>,
         Emma Anholt <emma@anholt.net>,
         David Lechner <david@lechnology.com>,
         Kamlesh Gurudasani <kamlesh.gurudasani@gmail.com>,
-        Noralf =?iso-8859-1?Q?Tr=F8nnes?= <noralf@tronnes.org>,
+        Noralf =?UTF-8?Q?Tr=C3=B8nnes?= <noralf@tronnes.org>,
         Jean Delvare <jdelvare@suse.com>,
         Guenter Roeck <linux@roeck-us.net>,
         Dan Robertson <dan@dlrobertson.com>,
         Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
+        "Lars-Peter Clausen" <lars@metafoo.de>,
         Michael Hennerich <Michael.Hennerich@analog.com>,
         Marcus Folkesson <marcus.folkesson@gmail.com>,
         Kent Gustavsson <kent@minoris.se>,
         Rui Miguel Silva <rmfrfs@gmail.com>,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Pavel Machek <pavel@ucw.cz>,
-        Yasunari Takiguchi <Yasunari.Takiguchi@sony.com>,
+        "Yasunari Takiguchi" <Yasunari.Takiguchi@sony.com>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Charles-Antoine Couret <charles-antoine.couret@nexvision.fr>,
         Antti Palosaari <crope@iki.fi>,
-        Lee Jones <lee.jones@linaro.org>,
+        "Lee Jones" <lee.jones@linaro.org>,
         Support Opensource <support.opensource@diasemi.com>,
         Charles Keepax <ckeepax@opensource.cirrus.com>,
         Richard Fitzgerald <rf@opensource.cirrus.com>,
@@ -63,32 +70,32 @@ Cc:     Mark Brown <broonie@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Eric Piel <eric.piel@tremplin-utc.net>,
         Ulf Hansson <ulf.hansson@linaro.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
+        "Miquel Raynal" <miquel.raynal@bootlin.com>,
         Richard Weinberger <richard@nod.at>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         Wolfgang Grandegger <wg@grandegger.com>,
         Marc Kleine-Budde <mkl@pengutronix.de>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
+        "Manivannan Sadhasivam" <mani@kernel.org>,
         Thomas Kopp <thomas.kopp@microchip.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
         Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
+        "Vivien Didelot" <vivien.didelot@gmail.com>,
         Vladimir Oltean <olteanv@gmail.com>,
         Woojung Huh <woojung.huh@microchip.com>,
-        UNGLinuxDriver@microchip.com,
-        =?utf-8?Q?=C5=81ukasz?= Stelmach <l.stelmach@samsung.com>,
+        <UNGLinuxDriver@microchip.com>,
+        =?UTF-8?Q?=C5=81ukasz?= Stelmach <l.stelmach@samsung.com>,
         Alexander Aring <alex.aring@gmail.com>,
         Stefan Schmidt <stefan@datenfreihafen.org>,
-        Harry Morris <h.morris@cascoda.com>,
+        "Harry Morris" <h.morris@cascoda.com>,
         Varka Bhadram <varkabhadram@gmail.com>,
-        Xue Liu <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
+        "Xue Liu" <liuxuenetmail@gmail.com>, Alan Ott <alan@signal11.us>,
         Heiner Kallweit <hkallweit1@gmail.com>,
         Russell King <linux@armlinux.org.uk>,
-        Christian Lamparter <chunkeey@googlemail.com>,
+        "Christian Lamparter" <chunkeey@googlemail.com>,
         Kalle Valo <kvalo@kernel.org>,
-        Ajay Singh <ajay.kathat@microchip.com>,
+        "Ajay Singh" <ajay.kathat@microchip.com>,
         Claudiu Beznea <claudiu.beznea@microchip.com>,
         Solomon Peachy <pizza@shaftnet.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
@@ -97,34 +104,35 @@ Cc:     Mark Brown <broonie@kernel.org>,
         Hans de Goede <hdegoede@redhat.com>,
         Mark Gross <markgross@kernel.org>,
         Alessandro Zummo <a.zummo@towertech.it>,
-        =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        =?UTF-8?Q?J=C3=A9r=C3=B4me?= Pouiller 
+        <jerome.pouiller@silabs.com>, "Jiri Slaby" <jirislaby@kernel.org>,
         Felipe Balbi <balbi@kernel.org>,
-        Daniel Thompson <daniel.thompson@linaro.org>,
+        "Daniel Thompson" <daniel.thompson@linaro.org>,
         Jingoo Han <jingoohan1@gmail.com>,
         Helge Deller <deller@gmx.de>,
         James Schulman <james.schulman@cirrus.com>,
         David Rhodes <david.rhodes@cirrus.com>,
         Lucas Tanure <tanureal@opensource.cirrus.com>,
         Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
+        "Takashi Iwai" <tiwai@suse.com>,
+        Nuno =?UTF-8?Q?S=C3=A1?= <nuno.sa@analog.com>,
+        "Liam Girdwood" <lgirdwood@gmail.com>,
         Daniel Mack <daniel@zonque.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
+        "Thomas Zimmermann" <tzimmermann@suse.de>,
         Maxime Ripard <mripard@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
         Stephan Gerhold <stephan@gerhold.net>,
         Alexandru Ardelean <ardeleanalex@gmail.com>,
-        Mike Looijmans <mike.looijmans@topic.nl>,
+        "Mike Looijmans" <mike.looijmans@topic.nl>,
         Gwendal Grignou <gwendal@chromium.org>,
         Cai Huoqing <caihuoqing@baidu.com>,
         Minghao Chi <chi.minghao@zte.com.cn>,
         Antoniu Miclaus <antoniu.miclaus@analog.com>,
         Julia Lawall <Julia.Lawall@inria.fr>,
-        Ronald =?iso-8859-1?Q?Tschal=E4r?= <ronald@innovation.ch>,
+        Ronald =?UTF-8?Q?Tschal=C3=A4r?= <ronald@innovation.ch>,
         Marco Felsch <m.felsch@pengutronix.de>,
-        Jonathan =?iso-8859-1?Q?Neusch=E4fer?= <j.neuschaefer@gmx.net>,
+        Jonathan =?UTF-8?Q?Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
         Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>,
         Jon Hunter <jonathanh@nvidia.com>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -133,19 +141,19 @@ Cc:     Mark Brown <broonie@kernel.org>,
         Colin Ian King <colin.king@intel.com>,
         Dan Carpenter <dan.carpenter@oracle.com>,
         Tudor Ambarus <tudor.ambarus@microchip.com>,
-        Matt Kline <matt@bitbashing.io>,
+        "Matt Kline" <matt@bitbashing.io>,
         Torin Cooper-Bennun <torin@maxiluxsystems.com>,
         Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Stefan =?iso-8859-1?Q?M=E4tje?= <stefan.maetje@esd.eu>,
+        Stefan =?UTF-8?Q?M=C3=A4tje?= <stefan.maetje@esd.eu>,
         Frieder Schrempf <frieder.schrempf@kontron.de>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
+        "Wei Yongjun" <weiyongjun1@huawei.com>,
         Randy Dunlap <rdunlap@infradead.org>,
         Nanyong Sun <sunnanyong@huawei.com>,
         Yang Shen <shenyang39@huawei.com>,
         dingsenjie <dingsenjie@yulong.com>,
         Aditya Srivastava <yashsri421@gmail.com>,
         Stefan Wahren <stefan.wahren@i2se.com>,
-        Peter Zijlstra <peterz@infradead.org>,
+        "Peter Zijlstra" <peterz@infradead.org>,
         Michael Walle <michael@walle.cc>,
         Yang Li <yang.lee@linux.alibaba.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
@@ -157,36 +165,44 @@ Cc:     Mark Brown <broonie@kernel.org>,
         Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>,
         Davidlohr Bueso <dbueso@suse.de>, Claudius Heine <ch@denx.de>,
         Jiri Prchal <jiri.prchal@aksignal.cz>,
-        linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-gpio@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-        patches@opensource.cirrus.com, alsa-devel@alsa-project.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-can@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wpan@vger.kernel.org,
-        linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-        platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-omap@vger.kernel.org,
-        kernel@pengutronix.de
+        <linux-kernel@vger.kernel.org>, <linux-integrity@vger.kernel.org>,
+        <linux-clk@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <dri-devel@lists.freedesktop.org>, <linux-hwmon@vger.kernel.org>,
+        <linux-iio@vger.kernel.org>, <linux-input@vger.kernel.org>,
+        <linux-leds@vger.kernel.org>, <linux-media@vger.kernel.org>,
+        <patches@opensource.cirrus.com>, <alsa-devel@alsa-project.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mmc@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
+        <linux-can@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wpan@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <libertas-dev@lists.infradead.org>,
+        <platform-driver-x86@vger.kernel.org>, <linux-rtc@vger.kernel.org>,
+        <linux-spi@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
+        <linux-staging@lists.linux.dev>, <linux-serial@vger.kernel.org>,
+        <linux-usb@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <kernel@pengutronix.de>
 Subject: Re: [PATCH 5/5] spi: make remove callback a void function
-Message-ID: <Ye/EaiTw1Y/eWRVn@piout.net>
-References: <20220123175201.34839-1-u.kleine-koenig@pengutronix.de>
- <20220123175201.34839-6-u.kleine-koenig@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Message-ID: <20220125094759.000019c5@Huawei.com>
 In-Reply-To: <20220123175201.34839-6-u.kleine-koenig@pengutronix.de>
+References: <20220123175201.34839-1-u.kleine-koenig@pengutronix.de>
+        <20220123175201.34839-6-u.kleine-koenig@pengutronix.de>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.47.76.154]
+X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 23/01/2022 18:52:01+0100, Uwe Kleine-König wrote:
+On Sun, 23 Jan 2022 18:52:01 +0100
+Uwe Kleine-König <u.kleine-koenig@pengutronix.de> wrote:
+
 > The value returned by an spi driver's remove function is mostly ignored.
 > (Only an error message is printed if the value is non-zero that the
 > error is ignored.)
@@ -198,7 +214,20 @@ On 23/01/2022 18:52:01+0100, Uwe Kleine-König wrote:
 > return 0 before.
 > 
 > Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+
+For iio drivers.
+
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+As you mention in the cover letter we'll be wanting an immutable
+branch somewhere to pull into subsystem trees.
+
+Soon is good if possible as otherwise we'll end up with a bunch of merge
+conflicts getting resolved in next.
+
+Thanks,
+
+Jonathan
 
 > ---
 >  drivers/bus/moxtet.c                                  |  4 +---
@@ -4220,11 +4249,4 @@ Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
 >  }
 >  
 >  #ifdef CONFIG_PM_SLEEP
-> -- 
-> 2.34.1
-> 
 
--- 
-Alexandre Belloni, co-owner and COO, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
