@@ -2,77 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38AC6C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 09:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F4BC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 10:31:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238543AbiA0J1W (ORCPT
+        id S239101AbiA0KbI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jan 2022 04:27:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34100 "EHLO
+        Thu, 27 Jan 2022 05:31:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238542AbiA0J1U (ORCPT
+        with ESMTP id S235066AbiA0KbI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jan 2022 04:27:20 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AC52C06173B
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2022 01:27:20 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 239B3B821BF
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2022 09:27:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C12BC340E4;
-        Thu, 27 Jan 2022 09:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643275638;
-        bh=2AFS6B32nX4fLERjlOI7wBnNXvraqO5Z14/OQId/Dxo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tge8UB2zmrNwCEi6VZgWJRM22kne/K0OBRPuhmcfvCDY6q2JAKf3cij8A5Z3XUqoK
-         wGdc7tLOcsL6fz58HmeWWN/EOEXuC5rxxVxA3NqTk00iW6fKXTLpLYalI6h9x46MF+
-         DDluHu6bbVSNG/6CsV6VtBKZlTGg6tre8Vqi3XfLBDovU3hb6gFY9kAzDrhw4UVpmF
-         NW6kWyqKyNzjj87/hIXAmKeZOzaFs4/dDCfTEEpoOEM4/p/cOUsV4T+HhCVJ93vFEQ
-         F8/96z37dYMIWpQ9JEN+Mjxthw7yNB77tQ1+DDUqxPNJwik6DbKb5wMECCCZfTv1o/
-         HMtgD5oF8nUBA==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     linux-wireless@vger.kernel.org
-Cc:     loic.poulain@linaro.org, toke@toke.dk
-Subject: [PATCH 3/4] MAINTAINERS: hand over ath9k maintainership to Toke
-Date:   Thu, 27 Jan 2022 11:27:08 +0200
-Message-Id: <20220127092709.5203-3-kvalo@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220127092709.5203-1-kvalo@kernel.org>
-References: <20220127092709.5203-1-kvalo@kernel.org>
+        Thu, 27 Jan 2022 05:31:08 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E11D9C061714
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2022 02:31:07 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id g2so1891426pgo.9
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2022 02:31:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=1kX37wQENXCWiPhriKT3HkFTk3hHEFf0yachEDOMgyE=;
+        b=IVEbehBHnLkjoa+wODHbrfw/goFNnGQbBe9eyVGvS4awJkvFnrBscLwMmt5oNQpyBq
+         PfNeBK4V8VWWE4W+Phx7ixK8KoSZ10l+t7gxrKkkZEZawiloJHk/MjYtW2LzlhW9gPXs
+         oqf9+cHqeXTsbq45zfbIqfEncQ7DAKAv2THqC2uiuWEL9TeFU0F/YBYaELqeDszCrfJF
+         JsRyHpZ7ZlCmtOsLweq7uS5BqDqNjUoJ0YA6UdK2pKOs0YR+ppricGPJ6gyJwcwigh2W
+         nx7x1agGsE0t6xmWr+kZtzeP+g4J13rqeVS9vkMCvekl/uFV0iYfRSXTBAm9VYcHwtlD
+         nFGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=1kX37wQENXCWiPhriKT3HkFTk3hHEFf0yachEDOMgyE=;
+        b=2T9OORz6/GxRKSXm7sqeWXcjdVfx39b30GVfuf6WjdKofQMyXvh9TH7vdBSLZ5eyO1
+         8kRwGy3U9BvrddXXJal5Kg2UnRk+Eylznk+UImFTGKXySTzFfjnp3GYBZ9RW6tJQ3o3/
+         eEtBsQ1EKT6cnIIo+fhI3V5622qAFcOZC4BdrwNwAuGqDhM7I/mA2BgrkVx8x/fcXMpu
+         XKYIUmrMJ9uZ0DUnZ1pFRK0Zu+WcrW7f86QCcLzpZ5OCrzzO/gMPg9VQX4Qv1vi/+US/
+         5dfiNNhL/ohyeGpdK/HrbrDuRAuZsM9UrkaHxva4CWP3fOwMdDGZExVihtxYFRTX9krF
+         K8OQ==
+X-Gm-Message-State: AOAM530vweVkT8dzbrJlHPvffhacKfZMOyvYKiHjQCANBNwl1/YHbm3i
+        bi/tjS6W73QNiy4G1I9YVT39aIUHl8W46Lh37js4YXrvioQy5g==
+X-Google-Smtp-Source: ABdhPJyrs5iEVqx6fxrYavsoQOVvtavOGWUxbMLMdAohLqYXZos3DkxexFhMiRql+EVoORCP94yrQanMVbnFs56sepo=
+X-Received: by 2002:a05:6a00:22c9:: with SMTP id f9mr2437853pfj.79.1643279467078;
+ Thu, 27 Jan 2022 02:31:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220127092709.5203-1-kvalo@kernel.org> <20220127092709.5203-2-kvalo@kernel.org>
+In-Reply-To: <20220127092709.5203-2-kvalo@kernel.org>
+From:   Loic Poulain <loic.poulain@linaro.org>
+Date:   Thu, 27 Jan 2022 11:42:40 +0100
+Message-ID: <CAMZdPi_o=NOVivz9a_zRDfGRrPS7N70zmY3Tt2o1FC0bJGMZgg@mail.gmail.com>
+Subject: Re: [PATCH 2/4] MAINTAINERS: change Loic as wcn36xx maintainer
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, toke@toke.dk
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In practise I have been the only maintainer for ath9k for some time now but I
-don't really have time for it. Luckily Toke is willing to look after so mark
-him as maintainer. Thanks Toke!
+On Thu, 27 Jan 2022 at 10:27, Kalle Valo <kvalo@kernel.org> wrote:
+>
+> I don't have time for being wcn36xx maintainer but Loic is willing to step up.
+> Thanks Loic!
+>
+> Also remove Eugene's old tree, it has not been used for a long time.
+>
+> Signed-off-by: Kalle Valo <kvalo@kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
----
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Acked-by: Loic Poulain <loic.poulain@linaro.org>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2bf3b1f7442e..b1251fc9a71d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -15899,9 +15899,9 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
- F:	drivers/net/wireless/ath/ath11k/
- 
- QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
--M:	ath9k-devel@qca.qualcomm.com
-+M:	toke@toke.dk
- L:	linux-wireless@vger.kernel.org
--S:	Supported
-+S:	Maintained
- W:	https://wireless.wiki.kernel.org/en/users/Drivers/ath9k
- F:	Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml
- F:	drivers/net/wireless/ath/ath9k/
--- 
-2.20.1
-
+> ---
+>  MAINTAINERS | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index e250736e380e..2bf3b1f7442e 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -16082,11 +16082,10 @@ F:    Documentation/devicetree/bindings/media/*venus*
+>  F:     drivers/media/platform/qcom/venus/
+>
+>  QUALCOMM WCN36XX WIRELESS DRIVER
+> -M:     Kalle Valo <kvalo@kernel.org>
+> +M:     Loic Poulain <loic.poulain@linaro.org>
+>  L:     wcn36xx@lists.infradead.org
+>  S:     Supported
+>  W:     https://wireless.wiki.kernel.org/en/users/Drivers/wcn36xx
+> -T:     git git://github.com/KrasnikovEugene/wcn36xx.git
+>  F:     drivers/net/wireless/ath/wcn36xx/
+>
+>  QUANTENNA QTNFMAC WIRELESS DRIVER
+> --
+> 2.20.1
+>
