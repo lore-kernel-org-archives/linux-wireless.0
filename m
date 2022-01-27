@@ -2,75 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2F23C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 10:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4667C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 11:57:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239630AbiA0K6Z (ORCPT
+        id S240981AbiA0L5H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jan 2022 05:58:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55904 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbiA0K6Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jan 2022 05:58:25 -0500
-X-Greylist: delayed 473 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 27 Jan 2022 02:58:24 PST
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2002::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E87C8C061714
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2022 02:58:24 -0800 (PST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1643280626; bh=twzfaiuwidAgKgvANdRYhtKtnNrz81wgsU8UZt9EDXs=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=JY7lb67X+rDuuThi2tlBD7p4i32x+W3Xgd87LkOUxRqZHb7JeOmx0MPJgokHdMgGB
-         w5+HWOWS0qiwfeLRh3w6gD7ysuKPV02g6KqW1Hm6emRGFrKqZgEWS8VVDErlcSqGKw
-         so/XyDWcLfeqWg+DadjdIEUrvCnzmF8YXGlSGLTYoRMjsuqdX4YQsN4QIcUZ78kIyt
-         4Gac4sYllslQ09di+37ZhpwNautQQzkC7ShN+YYgxk/tcm8wsGzqzjzd5FS/L+iOOI
-         0pRKQUmjYux0p16JaGUwESozV606MAat+RaTR1IZoUHIyV/SNYvA76TzYrHWAYkicM
-         jZk2Slht0Oukw==
-To:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
-Cc:     loic.poulain@linaro.org
-Subject: Re: [PATCH 3/4] MAINTAINERS: hand over ath9k maintainership to Toke
-In-Reply-To: <20220127092709.5203-3-kvalo@kernel.org>
-References: <20220127092709.5203-1-kvalo@kernel.org>
- <20220127092709.5203-3-kvalo@kernel.org>
-Date:   Thu, 27 Jan 2022 11:50:26 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87sft91mh9.fsf@toke.dk>
+        Thu, 27 Jan 2022 06:57:07 -0500
+Received: from mga18.intel.com ([134.134.136.126]:62047 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S241124AbiA0L5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jan 2022 06:57:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1643284620; x=1674820620;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=DWnN5z/3/Ka4kDGpL0eM48NBXFbTbVUtYTk1y+OcQGI=;
+  b=enWi5wMmFl+1raU23meBjeRcXq5Q1PQOOuqO+y7ezGU0cC2FtCwExeHA
+   gNsZcF/BFx7oiqrrvLDomQFypw2q3EMXNX4zCDq3tQ104dYDuZ0O77d8z
+   Kfy68d23+wPX3tLGzk02UcGSXfap8oJDzzvH6J5ka0bp7ZkNuIz/lWtfC
+   /wbeyEh+lUZtawJq5fZApOFlD6dN+7GbzAOFBTig0+Z8FwsrYS0PZ2ga4
+   DY4goLRF6hIqaJKzjjHaqKP3gQ0Naeju3CXt5rBCLgWb6SjxGmwVrCFVD
+   WZv7sW+bXciewFQOUgO5jsIJn2vj/89JZ+17GsTV1NqciQVxkaHOQCOXY
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10239"; a="230403147"
+X-IronPort-AV: E=Sophos;i="5.88,320,1635231600"; 
+   d="scan'208";a="230403147"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 03:56:59 -0800
+X-IronPort-AV: E=Sophos;i="5.88,320,1635231600"; 
+   d="scan'208";a="535620931"
+Received: from shochwel-mobl.ger.corp.intel.com ([10.249.44.153])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 03:56:54 -0800
+Date:   Thu, 27 Jan 2022 13:56:52 +0200 (EET)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
+cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
+        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
+        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
+        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
+        haijun.liu@mediatek.com, amir.hanania@intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        dinesh.sharma@intel.com, eliot.lee@intel.com,
+        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
+        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
+        sreehari.kancharla@intel.com
+Subject: Re: [PATCH net-next v4 06/13] net: wwan: t7xx: Add AT and MBIM WWAN
+ ports
+In-Reply-To: <20220114010627.21104-7-ricardo.martinez@linux.intel.com>
+Message-ID: <7f50bddd-194-711c-1072-df6d2793@linux.intel.com>
+References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com> <20220114010627.21104-7-ricardo.martinez@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@kernel.org> writes:
+On Thu, 13 Jan 2022, Ricardo Martinez wrote:
 
-> In practise I have been the only maintainer for ath9k for some time now b=
-ut I
-> don't really have time for it. Luckily Toke is willing to look after so m=
-ark
-> him as maintainer. Thanks Toke!
->
-> Signed-off-by: Kalle Valo <kvalo@kernel.org>
+> From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> 
+> Adds AT and MBIM ports to the port proxy infrastructure.
+> The initialization method is responsible for creating the corresponding
+> ports using the WWAN framework infrastructure. The implemented WWAN port
+> operations are start, stop, and TX.
+> 
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+> Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 > ---
->  MAINTAINERS | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 2bf3b1f7442e..b1251fc9a71d 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -15899,9 +15899,9 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/=
-git/kvalo/ath.git
->  F:	drivers/net/wireless/ath/ath11k/
->=20=20
->  QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
-> -M:	ath9k-devel@qca.qualcomm.com
-> +M:	toke@toke.dk
 
-Could I get my full name in there, please? :)
 
-I know it has weird unicode characters, but you can copy-paste it from
-my other entry in MAINTAINERS, or from:
+> +		memcpy(skb_put(skb_ccci, actual_len), skb->data + i * (txq_mtu - CCCI_H_ELEN),
+> +		       actual_len);
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+Use skb_put_data().
+
+> +		t7xx_port_proxy_set_seq_num(port_private, ccci_h);
+> +
+> +		ret = t7xx_port_send_skb_to_md(port_private, skb_ccci, true);
+> +		if (ret) {
+> +			dev_err(port_private->dev, "Write error on %s port, %d\n",
+> +				port_static->name, ret);
+> +			dev_kfree_skb_any(skb_ccci);
+
+Free first.
+
+> +static void t7xx_port_wwan_uninit(struct t7xx_port *port)
+> +{
+> +	if (port->wwan_port) {
+> +		if (port->chn_crt_stat) {
+...
+> +     if (port->chn_crt_stat != port->chan_enable)
+...
+> +     if (port->chn_crt_stat != port->chan_enable)
+
+I don't see anything that would ever make chn_crt_stat true.
+
+> +struct port_ops wwan_sub_port_ops = {
+> +	.init = &t7xx_port_wwan_init,
+> +	.recv_skb = &t7xx_port_wwan_recv_skb,
+> +	.uninit = &t7xx_port_wwan_uninit,
+> +	.enable_chl = &t7xx_port_wwan_enable_chl,
+> +	.disable_chl = &t7xx_port_wwan_disable_chl,
+> +	.md_state_notify = &t7xx_port_wwan_md_state_notify,
+
+Drop & from these (in all patches).
+
+
+-- 
+ i.
+
