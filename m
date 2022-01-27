@@ -2,109 +2,99 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA99C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 05:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70567C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 05:33:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236148AbiA0FZq (ORCPT
+        id S236191AbiA0Fdn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jan 2022 00:25:46 -0500
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:6584 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236140AbiA0FZo (ORCPT
+        Thu, 27 Jan 2022 00:33:43 -0500
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:2542 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233121AbiA0Fdn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jan 2022 00:25:44 -0500
+        Thu, 27 Jan 2022 00:33:43 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1643261144; x=1674797144;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=iaMIhpzzqIVueVu4CbfPorPRdKKm1rjacCwoYKP8zKE=;
-  b=EEP6K/np4FPHShQ84kBB2gUWqwyzeMPV1uAi80UGFu4GLYorLOZ4Uc1m
-   CPNAbRvjgWPyZ9kYY1CIQ6qAyIcq+ab5gcsdVui36NHiBAG3gcU3rljJW
-   MmyPna3ns2K0uDLBOkLgC5NnM/XZM3JdZaF4kZWkq/f23bIHT6zfonzJZ
-   Q=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 26 Jan 2022 21:25:43 -0800
+  t=1643261623; x=1674797623;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=yQ3INR6n570uHvp11Q1QrySW8cBpez/o3z3TkFMm0dc=;
+  b=DqIcKK77tV+45O459S2ItjNs7Zws0OuvKBjl4/0CVge7HSLoEKLuHi8i
+   oULNuOEVPeLJ0FlVmH0WttcMDdOvaru4wFgNQ/0JUswofBjNwf7gyJVre
+   UujrENn3IorNFA3KoyxEkjHC8k0g8+czrdQ2F6M+jeb9SOL+tV5FnUAxg
+   I=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 26 Jan 2022 21:33:42 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2022 21:25:43 -0800
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2022 21:33:42 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Wed, 26 Jan 2022 21:25:22 -0800
+ 15.2.922.19; Wed, 26 Jan 2022 21:33:42 -0800
 Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Wed, 26 Jan 2022 21:25:20 -0800
+ 15.2.922.19; Wed, 26 Jan 2022 21:33:40 -0800
 From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>,
         Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH 1/2] dt: bindings: net: add bindings to add WoW support for WCN6750
-Date:   Thu, 27 Jan 2022 10:54:52 +0530
-Message-ID: <1643261093-12400-2-git-send-email-quic_mpubbise@quicinc.com>
+Subject: [PATCH RFC 0/8] Follow-on series for WCN6750
+Date:   Thu, 27 Jan 2022 11:03:21 +0530
+Message-ID: <1643261609-13500-1-git-send-email-quic_mpubbise@quicinc.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1643261093-12400-1-git-send-email-quic_mpubbise@quicinc.com>
-References: <1643261093-12400-1-git-send-email-quic_mpubbise@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add required bindings to support WoW (Wake on Wireless) for
-WCN6750 used by ATH11K driver.
+This is a follow-on series for WCN6750 adding several
+features, fixes and throughput enhancements.
 
-Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Manikanta Pubbisetty (8):
+  ath11k: Enable low power mode when WLAN is not active
+  ath11k: Register shutdown handler for WCN6750
+  ath11k: Cold boot calibration support on WCN6750
+  ath11k: Cap NSS of HE peer to radio supported NSS
+  ath11k: Enable threaded NAPI on WCN6750
+  ath11k: Increase TCL data ring size
+  ath11k: Add multi TX ring support for WCN6750
+  ath11k: Add Coredump support of MSA region for WCN6750
 ---
- .../devicetree/bindings/net/wireless/qcom,ath11k.yaml   | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Note: This series is dependent on another series adding
+      support for WCN6750 in ATH11K.
+      https://patchwork.kernel.org/project/linux-wireless/list/?series=605793
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-index dba1434..aead001 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-@@ -71,6 +71,14 @@ properties:
-     required:
-       - iommus
- 
-+  qcom,smem-states:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    description: State bits used in WCN6750 to signal the firmware
-+                 to exit from WoW.
-+
-+  qcom,smem-state-names:
-+    description: The names of the state bits used for SMP2P output
-+
- required:
-   - compatible
-   - reg
-@@ -415,6 +423,13 @@ examples:
-         };
-     };
- 
-+    smp2p-wpss {
-+        wlan_smp2p_out: wlan_smp2p_out {
-+                qcom,entry-name = "wlan";
-+                #qcom,smem-state-cells = <1>;
-+        };
-+    };
-+
-     wifi: wifi@17a10040 {
-         compatible = "qcom,wcn6750-wifi";
-         reg = <0x17A10040 0x0>;
-@@ -454,6 +469,8 @@ examples:
-                      <GIC_SPI 799 IRQ_TYPE_EDGE_RISING>;
-         qcom,rproc = <&remoteproc_wpss>;
-         memory-region = <&wlan_fw_mem &wlan_ce_mem>;
-+        qcom,smem-states = <&wlan_smp2p_out 0>;
-+        qcom,smem-state-names = "wlan-smp2p-out";
-         wifi-firmware {
-                 iommus = <&apps_smmu 0x1C02 0x1>;
-         };
+ drivers/net/wireless/ath/ath11k/Kconfig    |   1 +
+ drivers/net/wireless/ath/ath11k/Makefile   |   1 +
+ drivers/net/wireless/ath/ath11k/ahb.c      | 126 +++++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/ahb.h      |   8 +-
+ drivers/net/wireless/ath/ath11k/core.c     | 168 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath11k/core.h     |   5 +-
+ drivers/net/wireless/ath/ath11k/coredump.c |  87 +++++++++++++++
+ drivers/net/wireless/ath/ath11k/coredump.h |  71 ++++++++++++
+ drivers/net/wireless/ath/ath11k/dp.c       |  23 ++--
+ drivers/net/wireless/ath/ath11k/dp.h       |   5 +-
+ drivers/net/wireless/ath/ath11k/dp_tx.c    |  14 +--
+ drivers/net/wireless/ath/ath11k/hal.c      |   4 +-
+ drivers/net/wireless/ath/ath11k/hal.h      |   4 +-
+ drivers/net/wireless/ath/ath11k/hal_tx.c   |   4 +-
+ drivers/net/wireless/ath/ath11k/hal_tx.h   |   2 +
+ drivers/net/wireless/ath/ath11k/hw.c       | 113 ++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/hw.h       |  17 ++-
+ drivers/net/wireless/ath/ath11k/mac.c      |  28 ++++-
+ drivers/net/wireless/ath/ath11k/pci_cmn.c  |   4 +-
+ drivers/net/wireless/ath/ath11k/qmi.c      |  47 +++++++-
+ drivers/net/wireless/ath/ath11k/qmi.h      |  12 ++-
+ drivers/net/wireless/ath/ath11k/thermal.c  |  12 +++
+ 22 files changed, 685 insertions(+), 71 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath11k/coredump.c
+ create mode 100644 drivers/net/wireless/ath/ath11k/coredump.h
+
 -- 
 2.7.4
 
