@@ -2,76 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4185C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 18:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD939C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Jan 2022 21:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234786AbiA0SaD (ORCPT
+        id S240968AbiA0VxD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Jan 2022 13:30:03 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:37814 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234767AbiA0SaC (ORCPT
+        Thu, 27 Jan 2022 16:53:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40912 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234469AbiA0VxC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jan 2022 13:30:02 -0500
-Received: from 91-155-254-253.elisa-laajakaista.fi ([91.155.254.253] helo=[192.168.100.150])
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <luca@coelho.fi>)
-        id 1nD9Wy-0001eb-03;
-        Thu, 27 Jan 2022 20:30:01 +0200
-Message-ID: <9e0bd67fb408a4a0262ff094314039b900d035a3.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, lenb@kernel.org,
-        johannes@sipsolutions.net
-Date:   Thu, 27 Jan 2022 20:29:59 +0200
-In-Reply-To: <86458042c4dfcaa6aa971c9ec37f1cc77fd95cfe.camel@coelho.fi>
-References: <iwlwifi.20220113104217.0ae07c2712dc.I14e2985bfd7ddd8a8d83eb1869b800c0e7f30db4@changeid>
-         <87bl0fud2z.fsf@kernel.org>
-         <86458042c4dfcaa6aa971c9ec37f1cc77fd95cfe.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.3-1 
+        Thu, 27 Jan 2022 16:53:02 -0500
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59EC9C061714;
+        Thu, 27 Jan 2022 13:53:02 -0800 (PST)
+Received: by mail-ed1-x529.google.com with SMTP id c24so5668582edy.4;
+        Thu, 27 Jan 2022 13:53:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=d5LRRB0uqm/WR5U/+eN4GjzzHTNXrtcy+Y+FfjmNOg8=;
+        b=MCqfRrjSHkuK7W6k74FWNoXR16maAPl8kP2eOeRYCZ6qOuOm0Gg64dYj471IEp8QPN
+         J5zMO0GKccZY6MfQ+mxBTG9rK1+8HBnz2daAqonONnN4R+uzHYY//fwzjxB+cWjNzLyN
+         OP9zpuSvLXq6nnzxMqVow4bhR9Tv544ZkQKBqyEs9Zke7PQYPnuxdu8D0rqmFaJX+JvQ
+         0UaOsh2Bp/CT5Vwzcpnz2ecpwFaPmD1TPqfDAFuTo2zlTA2l8IaRZ05Oh3LydUiozvAz
+         obrM43ZGdBza30K8kVNpiLt8Fj9GSQIwCldizBURlN4UYHBYp+HDun1sLm3UYDHcENo2
+         FM2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=d5LRRB0uqm/WR5U/+eN4GjzzHTNXrtcy+Y+FfjmNOg8=;
+        b=7XRQMsOC/gXPUdCC54dikbmBci0+jZeH2uN3kGdyFNxN4spOPqv28Dg13ZxR5U5cR5
+         TPqrKFIyBouQzMUlK8nozhGJQzfc+uxe8kFhe0jWUVb4/joaQWHJdPa31OeJzqaVUxKn
+         cYpvZdMg5/WfXg8GHe/89TlwiRI4+pbx8B/AUF7tDvox6/5bUrJda1EzyMO0ubJOcu6d
+         rh23SgTO7EtBCsa92KpbvtPyEaLG79QMZn//nsVkm9AYwyLqruSScDMvby/y1K4c7gjg
+         UMCz7CEYUXxrBZE9akZ0/7/BnbGTf5NFnPhN4Gjxzjr7u/OcnzeM5E5m0X+FnY7VqYUW
+         Th2A==
+X-Gm-Message-State: AOAM533lgPTVVTn8BnefNnwwLM73d0CxWdKjo3uuMx4QyOfpU9GU00w+
+        9TfzBMMZeGXUpCvEf81j5GLUH8i3tvvTROgekHS2cdBgIWk=
+X-Google-Smtp-Source: ABdhPJzc2dhIVgVmPkviLDO7e/v7aguAYMhH6I/AnZjWb6ofb0HEACO5XoaOdWIFSiDLVLEy7t3jP4Hk+rLeNCv4ahU=
+X-Received: by 2002:a05:6402:510b:: with SMTP id m11mr5413186edd.290.1643320380653;
+ Thu, 27 Jan 2022 13:53:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] iwlwifi: mvm: check if SAR GEO is supported before
- sending command
+References: <20220108005533.947787-1-martin.blumenstingl@googlemail.com>
+ <423f474e15c948eda4db5bc9a50fd391@realtek.com> <CAFBinCBVEndU0t-6d5atE31OFYHzPyk7pOe78v0XrrFWcBec9w@mail.gmail.com>
+ <5ef8ab4f78e448df9f823385d0daed88@realtek.com>
+In-Reply-To: <5ef8ab4f78e448df9f823385d0daed88@realtek.com>
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date:   Thu, 27 Jan 2022 22:52:49 +0100
+Message-ID: <CAFBinCDjfKK3+WOXP2xbcAK-KToWof+kSzoxYztqRcc=7T1eyg@mail.gmail.com>
+Subject: Re: [PATCH v3 0/8] rtw88: prepare locking for SDIO support
+To:     Pkshih <pkshih@realtek.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Neo Jou <neojou@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Ed Swierk <eswierk@gh.st>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2022-01-13 at 14:09 +0200, Luca Coelho wrote:
-> On Thu, 2022-01-13 at 12:47 +0200, Kalle Valo wrote:
-> > Luca Coelho <luca@coelho.fi> writes:
-> > 
-> > > From: Luca Coelho <luciano.coelho@intel.com>
-> > > 
-> > > Older hardware, for instance 3160, do not support SAR GEO offsets.  We
-> > > used to check for support before sending the command, but when moving
-> > > the command to the init phase, we lost the check.  This causes a
-> > > failure when initializing HW that do not support this command.
-> > > 
-> > > Fix that by adding a check before sending the command.  Additionally,
-> > > fix the caller so that it checks for the return value of the
-> > > iwl_mvm_sar_geo_init() function, which it was ignoring.
-> > > 
-> > > Fixes: db700bc35703 ("iwlwifi: mvm: check if SAR GEO is supported before sending command")
-> > 
-> > $ git show db700bc35703
-> > fatal: ambiguous argument 'db700bc35703': unknown revision or path not in the working tree.
-> > 
-> > No need to resend because of this, if you can provide the commit id I
-> > can fix the tag.
-> 
-> Oops, sorry, I added the tag to my own commit...
-> 
-> This is the correct one:
-> 
-> Fixes: 78a19d5285d9 ("iwlwifi: mvm: Read the PPAG and SAR tables at INIT stage")
+Hi Ping-Ke,
 
-As we discussed on IRC, this is not the right fix.  I have now finally
-had the time to fix it properly, so let's drop this patch.  I'll send a
-new one soon.
+On Mon, Jan 24, 2022 at 3:59 AM Pkshih <pkshih@realtek.com> wrote:
+[...]
+> > It seems to me that we should avoid using the mutex version of
+> > ieee80211_iterate_*() because it can lead to more of these issues. So
+> > from my point of view the general idea of the code from your attached
+> > patch looks good. That said, I'm still very new to mac80211/cfg80211
+> > so I'm also interested in other's opinions.
+> >
+>
+> The attached patch can work "mostly", because both callers of iterate() and
+> ::remove_interface hold rtwdev->mutex. Theoretically, the exception is a caller
+> forks another work to iterate() between leaving ::remove_interface and mac80211
+> doesn't yet free the vif, but the work executes after mac80211 free the vif.
+> This will lead use-after-free, but I'm not sure if this scenario will happen.
+> I need time to dig this, or you can help to do this.
+>
+> To avoid this, we can add a flag to struct rtw_vif, and set this flag
+> when ::remove_interface. Then, only collect vif without this flag into list
+> when we use iterate_actiom().
+>
+> As well as ieee80211_sta can do similar fix.
+>
+> > > So, I add wrappers to iterate rtw_iterate_stas() and rtw_iterate_vifs() that
+> > > use _atomic version to collect sta and vif, and use list_for_each() to iterate.
+> > > Reference code is attached, and I'm still thinking if we can have better method.
+> > With "better method" do you mean something like in patch #2 from this
+> > series (using unsigned int num_si and struct rtw_sta_info
+> > *si[RTW_MAX_MAC_ID_NUM] inside the iter_data) are you thinking of a
+> > better way in general?
+> >
+>
+> I would like a straight method, for example, we can have another version of
+> ieee80211_iterate_xxx() and do things in iterator, like original, so we just
+> need to change the code slightly.
+>
+> Initially, I have an idea we can hold driver lock, like rtwdev->mutex, in both
+> places where we use ieee80211_iterate_() and remove sta or vif. Hopefully,
+> this can ensure it's safe to run iterator without other locks. Then, we can
+> define another ieee80211_iterate_() version with a drv_lock argument, like
+>
+> #define ieee80211_iterate_active_interfaces_drv_lock(hw, iter_flags, iterator, data, drv_lock) \
+> while (0) {     \
+>         lockdep_assert_wiphy(drv_lock); \
+>         ieee80211_iterate_active_interfaces_no_lock(hw, iter_flags, iterator, data); \
+> }
+>
+> The driv_lock argument can avoid user forgetting to hold a lock, and we need
+> a helper of no_lock version:
+>
+> void ieee80211_iterate_active_interfaces_no_lock(
+>         struct ieee80211_hw *hw, u32 iter_flags,
+>         void (*iterator)(void *data, u8 *mac,
+>                          struct ieee80211_vif *vif),
+>         void *data)
+> {
+>         struct ieee80211_local *local = hw_to_local(hw);
+>
+>         __iterate_interfaces(local, iter_flags | IEEE80211_IFACE_ITER_ACTIVE,
+>                              iterator, data);
+> }
+>
+> However, as I mentioned theoretically it is not safe entirely.
+>
+> So, I think the easiest way is to maintains the vif/sta lists in driver when
+> ::{add,remove }_interface/::sta_{add,remove}, and hold rtwdev->mutex lock to
+> access these lists. But, Johannes pointed out this is not a good idea [1].
+Thank you for this detailed explanation! I appreciate that you took
+the time to clearly explain this.
 
---
-Cheers,
-Luca.
+For the sta use-case I thought about adding a dedicated rwlock
+(include/linux/rwlock.h) for rtw_dev->mac_id_map.
+rtw_sta_{add,remove} would take a write-lock.
+rtw_iterate_stas() takes the read-lock (the lock would be acquired
+before calling into ieee80211_iterate_...). Additionally
+rtw_iterate_stas() needs to check if the station is still valid
+according to mac_id_map - if not: skip/ignore it for that iteration.
+This could be combined with your
+0001-rtw88-use-atomic-to-collect-stas-and-does-iterators.patch.
+
+For the interface use-case it's not clear to me how this works at all.
+rtw_ops_add_interface() has (in a simplified view):
+    u8 port = 0;
+    // the port variable is never changed
+    rtwvif->port = port;
+    rtwvif->conf = &rtw_vif_port[port];
+    rtw_info(rtwdev, "start vif %pM on port %d\n", vif->addr, rtwvif->port);
+How do multiple interfaces (vifs) work in rtw88 if the port is always
+zero? Is some kind of tracking of the used ports missing (similar to
+how we track the used station IDs - also called mac_id - in
+rtw_dev->mac_id_map)?
+
+
+Thank you again and best regards,
+Martin
