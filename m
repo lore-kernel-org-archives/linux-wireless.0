@@ -2,105 +2,142 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7086C43217
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jan 2022 12:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E416C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jan 2022 12:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348487AbiA1MbZ (ORCPT
+        id S1348436AbiA1MbX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Jan 2022 07:31:25 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:37832 "EHLO
+        Fri, 28 Jan 2022 07:31:23 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:37828 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1348477AbiA1MbY (ORCPT
+        with ESMTP id S1348453AbiA1MbX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jan 2022 07:31:24 -0500
+        Fri, 28 Jan 2022 07:31:23 -0500
 Received: from 91-155-254-253.elisa-laajakaista.fi ([91.155.254.253] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nDQPS-0002A0-Gt;
-        Fri, 28 Jan 2022 14:31:23 +0200
+        id 1nDQPN-0002A0-U6;
+        Fri, 28 Jan 2022 14:31:22 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Fri, 28 Jan 2022 14:30:57 +0200
-Message-Id: <iwlwifi.20220128142706.a136f9f46336.Ief7506dc3b1813a1943a5a639aa45d8e5f284f31@changeid>
+Date:   Fri, 28 Jan 2022 14:30:55 +0200
+Message-Id: <iwlwifi.20220128142706.cc51e6a6d635.I4b74a082eb8d89f9e4f556a27c4339c15444dc6c@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220128123057.524038-1-luca@coelho.fi>
 References: <20220128123057.524038-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH for v5.17 8/8] iwlwifi: mei: report RFKILL upon register when needed
+Subject: [PATCH for v5.17 6/8] iwlwifi: mei: retry mapping the shared area
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-When we register and we are in link protection passive, meaning
-that the host can't touch the device, report RFKILL immediately
-upon register() and don't wait for the CSME firmware to let us
-know again about the link protection state.
+The shared area is a DMA memory allocated in the host and
+mapped so that the host and the CSME firmware can
+exchange data. It is mapped through a dedicated PCI device
+that is driven by the mei bus driver.
 
-What happens if we wait is that the host will not see RFKILL soon
-enough and we'll have a window of time during which it can bring
-up the device which will request ownership.
+The bus driver is in charge of allocating and mapping this
+memory. It also needs to configure the CSME firmware with
+a specific set of commands, so that the CSME firmware will
+know that this memory is meant to be used by its internal
+WLAN module.
+
+For this, the CSME firmware first needs to completely
+initialize its WLAN module and only then get the mapping
+request.
+
+The problem is that the mei bus enumeration completes
+before the WLAN is completely ready. This means that
+the WLAN module's initialization is racing with iwlmei's
+allocation and mapping flow.
+
+Testing showed a problem in resume flows where iwlmei
+was too fast and the DMA mapping failed.
+
+Add a retry mechanism to make sure that we will succeed
+to map the memory.
 
 Fixes: 2da4366f9e2c ("iwlwifi: mei: add the driver to allow cooperation with CSME")
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: bcbddc4f9d02 ("iwlwifi: mei: wait before mapping the shared area")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mei/main.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 35 ++++++++++++++-----
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-index 6cc5553027a0..2f7f0f994ca3 100644
+index d9733aaf6f6e..6cc5553027a0 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /*
-- * Copyright (C) 2021 Intel Corporation
-+ * Copyright (C) 2021-2022 Intel Corporation
-  */
+@@ -229,8 +229,6 @@ static int iwl_mei_alloc_shared_mem(struct mei_cl_device *cldev)
+ 	if (IS_ERR(mem->ctrl)) {
+ 		int ret = PTR_ERR(mem->ctrl);
  
- #include <linux/etherdevice.h>
-@@ -146,6 +146,7 @@ struct iwl_mei_filters {
-  * @csme_taking_ownership: true when CSME is taking ownership. Used to remember
-  *	to send CSME_OWNERSHIP_CONFIRMED when the driver completes its down
-  *	flow.
-+ * @link_prot_state: true when we are in link protection PASSIVE
-  * @csa_throttle_end_wk: used when &csa_throttled is true
-  * @data_q_lock: protects the access to the data queues which are
-  *	accessed without the mutex.
-@@ -165,6 +166,7 @@ struct iwl_mei {
- 	bool amt_enabled;
- 	bool csa_throttled;
- 	bool csme_taking_ownership;
-+	bool link_prot_state;
- 	struct delayed_work csa_throttle_end_wk;
- 	spinlock_t data_q_lock;
+-		dev_err(&cldev->dev, "Couldn't allocate the shared memory: %d\n",
+-			ret);
+ 		mem->ctrl = NULL;
  
-@@ -667,6 +669,8 @@ iwl_mei_handle_conn_status(struct mei_cl_device *cldev,
+ 		return ret;
+@@ -1784,6 +1782,8 @@ static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei) {}
  
- 	iwl_mei_cache.ops->me_conn_status(iwl_mei_cache.priv, &conn_info);
+ #endif /* CONFIG_DEBUG_FS */
  
-+	mei->link_prot_state = status->link_prot_state;
++#define ALLOC_SHARED_MEM_RETRY_MAX_NUM	3
 +
- 	/*
- 	 * Update the Rfkill state in case the host does not own the device:
- 	 * if we are in Link Protection, ask to not touch the device, else,
-@@ -1661,9 +1665,11 @@ int iwl_mei_register(void *priv, const struct iwl_mei_ops *ops)
- 			mei_cldev_get_drvdata(iwl_mei_global_cldev);
+ /*
+  * iwl_mei_probe - the probe function called by the mei bus enumeration
+  *
+@@ -1795,6 +1795,7 @@ static void iwl_mei_dbgfs_unregister(struct iwl_mei *mei) {}
+ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 			 const struct mei_cl_device_id *id)
+ {
++	int alloc_retry = ALLOC_SHARED_MEM_RETRY_MAX_NUM;
+ 	struct iwl_mei *mei;
+ 	int ret;
  
- 		/* we have already a SAP connection */
--		if (iwl_mei_is_connected())
-+		if (iwl_mei_is_connected()) {
- 			iwl_mei_send_sap_msg(mei->cldev,
- 					     SAP_MSG_NOTIF_WIFIDR_UP);
-+			ops->rfkill(priv, mei->link_prot_state);
-+		}
- 	}
- 	ret = 0;
+@@ -1812,15 +1813,31 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
+ 	mei_cldev_set_drvdata(cldev, mei);
+ 	mei->cldev = cldev;
+ 
+-	/*
+-	 * The CSME firmware needs to boot the internal WLAN client. Wait here
+-	 * so that the DMA map request will succeed.
+-	 */
+-	msleep(20);
++	do {
++		ret = iwl_mei_alloc_shared_mem(cldev);
++		if (!ret)
++			break;
++		/*
++		 * The CSME firmware needs to boot the internal WLAN client.
++		 * This can take time in certain configurations (usually
++		 * upon resume and when the whole CSME firmware is shut down
++		 * during suspend).
++		 *
++		 * Wait a bit before retrying and hope we'll succeed next time.
++		 */
+ 
+-	ret = iwl_mei_alloc_shared_mem(cldev);
+-	if (ret)
++		dev_dbg(&cldev->dev,
++			"Couldn't allocate the shared memory: %d, attempt %d / %d\n",
++			ret, alloc_retry, ALLOC_SHARED_MEM_RETRY_MAX_NUM);
++		msleep(100);
++		alloc_retry--;
++	} while (alloc_retry);
++
++	if (ret) {
++		dev_err(&cldev->dev, "Couldn't allocate the shared memory: %d\n",
++			ret);
+ 		goto free;
++	}
+ 
+ 	iwl_mei_init_shared_mem(mei);
  
 -- 
 2.34.1
