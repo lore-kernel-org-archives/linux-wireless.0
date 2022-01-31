@@ -2,56 +2,57 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 992B4C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D271BC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380342AbiAaQ22 (ORCPT
+        id S1380392AbiAaQ2h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 11:28:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36046 "EHLO
+        Mon, 31 Jan 2022 11:28:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380451AbiAaQ17 (ORCPT
+        with ESMTP id S1380370AbiAaQ2e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 11:27:59 -0500
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68F44C06173E;
-        Mon, 31 Jan 2022 08:27:37 -0800 (PST)
-Received: by mail-ej1-x636.google.com with SMTP id j2so44245003ejk.6;
-        Mon, 31 Jan 2022 08:27:37 -0800 (PST)
+        Mon, 31 Jan 2022 11:28:34 -0500
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED60C06173B;
+        Mon, 31 Jan 2022 08:28:33 -0800 (PST)
+Received: by mail-ed1-x531.google.com with SMTP id p7so27757180edc.12;
+        Mon, 31 Jan 2022 08:28:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=dZOePB9QjNAYiNKauHeirK5pevUoAsv4ueKQKshpJRQ=;
-        b=hGHagcalOH44drGxxD/MoK2ikGX9zfIpfchIap8oo/rceJSg+nq+21ioGi065pAh5r
-         ADeLZw54l/wVIzekDoI6t50DWHGfx3qsIg7xzRYPTcffLU8sJCLVNpEbT4uNznCORRlA
-         LKU89jp5E3jc3XllI++4zxlXcqyupEk5mr++4uh92JAv/s3/EZzSEtKbmlOq+bXRXiVn
-         3tYAqa2l3m4aoLvEmo3d4GCOnNWWfPERGJeTTovaUv2uxt6zAFuyxzOyNks4+FT3GiPP
-         GFEg+0mxMxT7bHX7HDKPKYD6QRFagwQRLtz175HK0h/eWuIgO1a175TLWaPpjuJosNuQ
-         6Ssw==
+        bh=dwt+S+xaQOb5oolekdBKMH+fGFi5CzTZ33U4PJNpXnE=;
+        b=XbUONObw9m3FeEzG8kzzGOJWeQjOCK9wirykP4FDExl5B/1dbMR8BtSh9kkOYF3yQe
+         eUJfi+QOYsFQnKvZJZmBR2+gm3vdnl5dGuvjC4RaV3LPOwFiNi25VQpe2kw4ikxgJvqi
+         r5oEJSbkV7qby8nT8R0fhesITOQShBmhjsrTYlraw2qpoNgDHH9q0567RyXRDIQrvzpW
+         WiTMf4ODMq//41ZC0RbVpi3jhxUZfeV+oJlNM5+xOHspbVD0yOYbBBGze5iTRBgf9Ssq
+         oXaOYs6eCQn0mHh7MarPkl2a28yjSULvkoD8A3j/mxP+7gZgyGTI1IqYErNLJ+SVg0UX
+         OfnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=dZOePB9QjNAYiNKauHeirK5pevUoAsv4ueKQKshpJRQ=;
-        b=fnTCsRu970SS4wUJMQp7bPSHHw1k/CkUO0xgFuPKXDjqQMlPGV72I5m6EHdl8UtdH8
-         CplNLmzEjOULlazJZvaBNeQUskZreR/JCeVJpMuppuQAk13/o6x4BGc8lh7Fufr/fBcM
-         EwPdkUQwD49dk9QA1a/+D8nr4rin55LV9/LMvMI36/xhWAOaRZbuopUSXjMLqbwJ9xVg
-         3/x/YVlRBnPkFEbJgMNZlfu54onBmUH+zq991Fe5i6lrCfj+BD8eF8MNzz5q6DLc47nA
-         bOHMZ8G2NEeRvceVTiZGPbFnUhYgLt7XmxQe1n4Vi9KY6b8xcLNHxaFO487L5/e4PPIX
-         eFZQ==
-X-Gm-Message-State: AOAM5326JLiN0EDGUkffkESuhrVxXQhkvsyuF7F5ACvhQNyLy0QvCs/d
-        sUJDL+9TEe8zWW22MR0ZOaJcZn9x0sQDryandWM=
-X-Google-Smtp-Source: ABdhPJw4dOYqjyaB/vjErRBa74ILdESAo1tCkt164uJa/5L7WNYYYgCX57bs03CT9s6H5/HjHQc1Qxm4lT2628BCptE=
-X-Received: by 2002:a17:907:2d92:: with SMTP id gt18mr17177209ejc.579.1643646453901;
- Mon, 31 Jan 2022 08:27:33 -0800 (PST)
+        bh=dwt+S+xaQOb5oolekdBKMH+fGFi5CzTZ33U4PJNpXnE=;
+        b=VgBqXY5xEobCQJzAiN7z9iy5SovzNVCmb1a4sQWPKYcrR2oxMMl4PWGSb0bWMydUPW
+         w097uFX/4yuHrIgdus4cOcNjTS9P3iAcNGuxM9C+B+P9cG4e0sHGQZasVqNXdH74ZvTS
+         owHGJGP4fAvCnb4OcGVkwAqxcf1w3cqKHr/URtFBn+sxk9GxgsZVsjbe5GJZO9ayN2mu
+         gn12p/ZR71bNwHdp/QCRgSpi9/ptU+T97f0wcZSp/j25tWRwApKURzXk0FL0IGAAxCV8
+         cbbx8pnTsCCpfI6BvqPOyPVlxsY/CtE+lMRWrgWf2lUUJmQd93SZxjKy+HLxRv0lENkG
+         Oyng==
+X-Gm-Message-State: AOAM5303PK83iaxBpiSfvQHIGBEAWLSDGkp16AZPqyJPfa4y9KUEiRNl
+        3N6h4wrMDz6w7KIrOLK+zYWe9Eki934mX7kkuZU=
+X-Google-Smtp-Source: ABdhPJxSBz18NwyW86CThCeoCdkkXwq6+Gjg58B4suZ/8V/WkVaJw3IipwwO7vMKIpFbTBJGMyRYHQ29vDLeDxuWYeg=
+X-Received: by 2002:aa7:d1d4:: with SMTP id g20mr21531766edp.296.1643646512457;
+ Mon, 31 Jan 2022 08:28:32 -0800 (PST)
 MIME-Version: 1.0
-References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-10-marcan@marcan.st>
-In-Reply-To: <20220131160713.245637-10-marcan@marcan.st>
+References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-2-marcan@marcan.st>
+In-Reply-To: <20220131160713.245637-2-marcan@marcan.st>
 From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 31 Jan 2022 18:25:58 +0200
-Message-ID: <CAHp75Vcvtm1EvsEAaX8ii+qA_09iJ2-J9gFjSzsUPyOUzPoUBg@mail.gmail.com>
-Subject: Re: [PATCH v4 9/9] brcmfmac: pcie: Read the console on init and shutdown
+Date:   Mon, 31 Jan 2022 18:26:56 +0200
+Message-ID: <CAHp75VcQ=BRkVb3QT0brAO7P_L47tyaymfkM-syOPDMAKG5R3A@mail.gmail.com>
+Subject: Re: [PATCH v4 1/9] brcmfmac: pcie: Release firmwares in the
+ brcmf_pcie_setup error path
 To:     Hector Martin <marcan@marcan.st>
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -81,57 +82,43 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
         <brcm80211-dev-list.pdl@broadcom.com>,
         SHA-cyfmac-dev-list@infineon.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Stable <stable@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 31, 2022 at 6:08 PM Hector Martin <marcan@marcan.st> wrote:
+On Mon, Jan 31, 2022 at 6:07 PM Hector Martin <marcan@marcan.st> wrote:
 >
-> This allows us to get console messages if the firmware crashed during
-> early init, or if an operation failed and we're about to shut down.
-
-fails
+> This avoids leaking memory if brcmf_chip_get_raminfo fails. Note that
+> the CLM blob is released in the device remove path.
 
 Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
+
+> Fixes: 82f93cf46d60 ("brcmfmac: get chip's default RAM info during PCIe setup")
 > Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 > Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Hector Martin <marcan@marcan.st>
 > ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 ++
+>  1 file changed, 2 insertions(+)
 >
 > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index 3ff4997e1c97..4fe341376a16 100644
+> index 8b149996fc00..f876b1d8d00d 100644
 > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
 > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -744,6 +744,8 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo,
->                 return;
+> @@ -1777,6 +1777,8 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+>         ret = brcmf_chip_get_raminfo(devinfo->ci);
+>         if (ret) {
+>                 brcmf_err(bus, "Failed to get RAM info\n");
+> +               release_firmware(fw);
+> +               brcmf_fw_nvram_free(nvram);
+>                 goto fail;
+>         }
 >
->         console = &devinfo->shared.console;
-> +       if (!console->base_addr)
-> +               return;
->         addr = console->base_addr + BRCMF_CONSOLE_WRITEIDX_OFFSET;
->         newidx = brcmf_pcie_read_tcm32(devinfo, addr);
->         while (newidx != console->read_idx) {
-> @@ -1520,6 +1522,7 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
->                   shared->max_rxbufpost, shared->rx_dataoffset);
->
->         brcmf_pcie_bus_console_init(devinfo);
-> +       brcmf_pcie_bus_console_read(devinfo, false);
->
->         return 0;
->  }
-> @@ -1959,6 +1962,7 @@ brcmf_pcie_remove(struct pci_dev *pdev)
->                 return;
->
->         devinfo = bus->bus_priv.pcie->devinfo;
-> +       brcmf_pcie_bus_console_read(devinfo, false);
->
->         devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
->         if (devinfo->ci)
 > --
 > 2.33.0
 >
