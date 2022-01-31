@@ -2,23 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8946C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68688C43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:10:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380203AbiAaQJn (ORCPT
+        id S1380154AbiAaQKC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 11:09:43 -0500
-Received: from marcansoft.com ([212.63.210.85]:35068 "EHLO mail.marcansoft.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1380145AbiAaQIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 11:08:31 -0500
+        Mon, 31 Jan 2022 11:10:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59940 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349651AbiAaQJz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jan 2022 11:09:55 -0500
+Received: from mail.marcansoft.com (marcansoft.com [IPv6:2a01:298:fe:f::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFA2BC061763;
+        Mon, 31 Jan 2022 08:08:47 -0800 (PST)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: hector@marcansoft.com)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id 9AC8941F75;
-        Mon, 31 Jan 2022 16:08:22 +0000 (UTC)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id D0A4D41F7F;
+        Mon, 31 Jan 2022 16:08:38 +0000 (UTC)
 From:   Hector Martin <marcan@marcan.st>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -46,9 +50,9 @@ Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
         linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH v4 7/9] brcmfmac: of: Use devm_kstrdup for board_type & check for errors
-Date:   Tue,  1 Feb 2022 01:07:11 +0900
-Message-Id: <20220131160713.245637-8-marcan@marcan.st>
+Subject: [PATCH v4 9/9] brcmfmac: pcie: Read the console on init and shutdown
+Date:   Tue,  1 Feb 2022 01:07:13 +0900
+Message-Id: <20220131160713.245637-10-marcan@marcan.st>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20220131160713.245637-1-marcan@marcan.st>
 References: <20220131160713.245637-1-marcan@marcan.st>
@@ -58,34 +62,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This was missing a NULL check, and we can collapse the strlen/alloc/copy
-into a devm_kstrdup().
+This allows us to get console messages if the firmware crashed during
+early init, or if an operation failed and we're about to shut down.
 
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Hector Martin <marcan@marcan.st>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index 513c7e6421b2..5708de1d9f26 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -79,8 +79,11 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 3ff4997e1c97..4fe341376a16 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -744,6 +744,8 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo,
+ 		return;
  
- 		/* get rid of '/' in the compatible string to be able to find the FW */
- 		len = strlen(tmp) + 1;
--		board_type = devm_kzalloc(dev, len, GFP_KERNEL);
--		strscpy(board_type, tmp, len);
-+		board_type = devm_kstrdup(dev, tmp, GFP_KERNEL);
-+		if (!board_type) {
-+			of_node_put(root);
-+			return;
-+		}
- 		for (i = 0; i < board_type[i]; i++) {
- 			if (board_type[i] == '/')
- 				board_type[i] = '-';
+ 	console = &devinfo->shared.console;
++	if (!console->base_addr)
++		return;
+ 	addr = console->base_addr + BRCMF_CONSOLE_WRITEIDX_OFFSET;
+ 	newidx = brcmf_pcie_read_tcm32(devinfo, addr);
+ 	while (newidx != console->read_idx) {
+@@ -1520,6 +1522,7 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
+ 		  shared->max_rxbufpost, shared->rx_dataoffset);
+ 
+ 	brcmf_pcie_bus_console_init(devinfo);
++	brcmf_pcie_bus_console_read(devinfo, false);
+ 
+ 	return 0;
+ }
+@@ -1959,6 +1962,7 @@ brcmf_pcie_remove(struct pci_dev *pdev)
+ 		return;
+ 
+ 	devinfo = bus->bus_priv.pcie->devinfo;
++	brcmf_pcie_bus_console_read(devinfo, false);
+ 
+ 	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
+ 	if (devinfo->ci)
 -- 
 2.33.0
 
