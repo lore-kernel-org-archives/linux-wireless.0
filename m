@@ -2,91 +2,74 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 337A4C43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 15:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBA4C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 15:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349143AbiAaPIb (ORCPT
+        id S1359765AbiAaP3X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 10:08:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242525AbiAaPIb (ORCPT
+        Mon, 31 Jan 2022 10:29:23 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:34386 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236135AbiAaP3X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 10:08:31 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6C67C061714
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2022 07:08:30 -0800 (PST)
+        Mon, 31 Jan 2022 10:29:23 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6034BB82AB2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2022 15:08:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B1F0C340EF;
-        Mon, 31 Jan 2022 15:08:26 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3EED4B82B51
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2022 15:29:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDEFFC340E8;
+        Mon, 31 Jan 2022 15:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643641708;
-        bh=3zKxdeETFxr1a/79OocE/JHiQlVeaG49m4EjTJWV1s4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=pl5X+kVNMB8xbYUQLJzBsRW4ijAzcFDVGeIhYSsJFg5MuRwK4iDlpic/UG8Rlf2OO
-         wvv9DQcy3D6aiBmKXbnxWd6zuB3V53UnCK2ooj16YmM7mTpXpIiK7UVqZ31XOEsLQE
-         1tUIeZvVek9Rk3Xv2M/vR+9970XTYC3ytEwh7FmZpVFVWGtdtwX3Yw4/Vk4PSCtpJ4
-         goX7hq0Trt90PGltYHBchNhiGhLO2RH9H2c4waiRHG/443TutWdWljtkCR9CyBAN/O
-         cQAHauV0nTKA7ytE78VqQw+FrlRL0mcVlOXX/sDlF37bmWFlUcKpCpC/hRN3F+yQOw
-         yAIo8TiESb5ug==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Wright Feng <wright.feng@infineon.com>
-Cc:     <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list@broadcom.com>,
-        <SHA-cyfmac-dev-list@infineon.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@infineon.com>
-Subject: Re: [PATCH] MAINTAINERS: update maintainer list for Infineon
-References: <20211228061315.11126-1-wright.feng@infineon.com>
-Date:   Mon, 31 Jan 2022 17:08:22 +0200
-In-Reply-To: <20211228061315.11126-1-wright.feng@infineon.com> (Wright Feng's
-        message of "Tue, 28 Dec 2021 00:13:15 -0600")
-Message-ID: <87czk8djtl.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        s=k20201202; t=1643642961;
+        bh=1rRU0LWguILqDG6BNbTmXW3+jt/sraXkxfrk33pSNro=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=U8E/mCMgOYGBMdW0GgsY4trzWkdmtnQXCdJCyCtJqSEgtoxERMYyOO4tTCtCbZR9Q
+         ne/JNj0fgJTc3HPpw4Wn0Mbm+yevz5SqE/6fl/NO1ZZoB0XsPkL4FTfgx3Tj+gz+dJ
+         j8k1W60ppmXb5oOutUpqXIFIxJC1+2ans0YtBk++BgZDJhaH6gVuA+Fh4hKVIBikGz
+         AMvBdURL0qYX+dmXQpNeIKNHWs8u7dBXT1+5euuDsvkg7OnC3PAQIM4HI4ioIPZrc6
+         tWxvqC09n7j9PCCrLPLKKcfhzwsiE/1oFRxkTdQWZSUGHDRAOowNdEHNL/EE6WZY7X
+         izdNVnRqX62WQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] rtw88: rtw8821c: enable rfe 6 devices
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220107024739.20967-1-Larry.Finger@lwfinger.net>
+References: <20220107024739.20967-1-Larry.Finger@lwfinger.net>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        masterzorag <masterzorag@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <164364295528.21641.12931918158777730175.kvalo@kernel.org>
+Date:   Mon, 31 Jan 2022 15:29:19 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wright Feng <wright.feng@infineon.com> writes:
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-> From: Chi-Hsien Lin <chi-hsien.lin@infineon.com>
->
-> Add new maintainer and remove old maintainers.
->
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@infineon.com>
-> Signed-off-by: Wright Feng <wright.feng@infineon.com>
-> ---
->  MAINTAINERS | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 5ebfc9de0caf..845058803f95 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -3759,9 +3759,9 @@ BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
->  M:	Arend van Spriel <aspriel@gmail.com>
->  M:	Franky Lin <franky.lin@broadcom.com>
->  M:	Hante Meuleman <hante.meuleman@broadcom.com>
-> -M:	Chi-hsien Lin <chi-hsien.lin@infineon.com>
->  M:	Wright Feng <wright.feng@infineon.com>
-> -M:	Chung-hsien Hsu <chung-hsien.hsu@infineon.com>
-> +M:	Double Lo <double.lo@infineon.com>
-> +M:	Kurt Lee <kurt.lee@infineon.com>
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> In https://www.spinics.net/lists/linux-wireless/msg217116.html, Ping-Ke Shih
+> answered a question for a user about an rtl8821ce device that reported
+> RFE 6, which the driver did not support. Ping-Ke suggested a possible
+> fix, but the user never reported back.
+> 
+> A second user discovered the above thread and tested the proposed fix.
+> Accordingly, I am pushing this change, even though I am not the author.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Reported-and-tested-by: masterzorag <masterzorag@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-I'm not really a fan of having too many maintainers, I would say max is
-3 and even that needs good justification. And most importantly, is
-anyone else than Arend even doing any maintainer work for brcmfmac and
-brcmsmac?
+Lore links are preferred as they include the message id, so I'll change the link to:
+
+https://lore.kernel.org/linux-wireless/3f5e2f6eac344316b5dd518ebfea2f95@realtek.com/
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220107024739.20967-1-Larry.Finger@lwfinger.net/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
