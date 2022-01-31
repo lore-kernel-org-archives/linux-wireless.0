@@ -2,59 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D271BC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03570C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380392AbiAaQ2h (ORCPT
+        id S1380303AbiAaQ3O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 11:28:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36192 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380370AbiAaQ2e (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 11:28:34 -0500
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED60C06173B;
-        Mon, 31 Jan 2022 08:28:33 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id p7so27757180edc.12;
-        Mon, 31 Jan 2022 08:28:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dwt+S+xaQOb5oolekdBKMH+fGFi5CzTZ33U4PJNpXnE=;
-        b=XbUONObw9m3FeEzG8kzzGOJWeQjOCK9wirykP4FDExl5B/1dbMR8BtSh9kkOYF3yQe
-         eUJfi+QOYsFQnKvZJZmBR2+gm3vdnl5dGuvjC4RaV3LPOwFiNi25VQpe2kw4ikxgJvqi
-         r5oEJSbkV7qby8nT8R0fhesITOQShBmhjsrTYlraw2qpoNgDHH9q0567RyXRDIQrvzpW
-         WiTMf4ODMq//41ZC0RbVpi3jhxUZfeV+oJlNM5+xOHspbVD0yOYbBBGze5iTRBgf9Ssq
-         oXaOYs6eCQn0mHh7MarPkl2a28yjSULvkoD8A3j/mxP+7gZgyGTI1IqYErNLJ+SVg0UX
-         OfnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dwt+S+xaQOb5oolekdBKMH+fGFi5CzTZ33U4PJNpXnE=;
-        b=VgBqXY5xEobCQJzAiN7z9iy5SovzNVCmb1a4sQWPKYcrR2oxMMl4PWGSb0bWMydUPW
-         w097uFX/4yuHrIgdus4cOcNjTS9P3iAcNGuxM9C+B+P9cG4e0sHGQZasVqNXdH74ZvTS
-         owHGJGP4fAvCnb4OcGVkwAqxcf1w3cqKHr/URtFBn+sxk9GxgsZVsjbe5GJZO9ayN2mu
-         gn12p/ZR71bNwHdp/QCRgSpi9/ptU+T97f0wcZSp/j25tWRwApKURzXk0FL0IGAAxCV8
-         cbbx8pnTsCCpfI6BvqPOyPVlxsY/CtE+lMRWrgWf2lUUJmQd93SZxjKy+HLxRv0lENkG
-         Oyng==
-X-Gm-Message-State: AOAM5303PK83iaxBpiSfvQHIGBEAWLSDGkp16AZPqyJPfa4y9KUEiRNl
-        3N6h4wrMDz6w7KIrOLK+zYWe9Eki934mX7kkuZU=
-X-Google-Smtp-Source: ABdhPJxSBz18NwyW86CThCeoCdkkXwq6+Gjg58B4suZ/8V/WkVaJw3IipwwO7vMKIpFbTBJGMyRYHQ29vDLeDxuWYeg=
-X-Received: by 2002:aa7:d1d4:: with SMTP id g20mr21531766edp.296.1643646512457;
- Mon, 31 Jan 2022 08:28:32 -0800 (PST)
-MIME-Version: 1.0
-References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-2-marcan@marcan.st>
-In-Reply-To: <20220131160713.245637-2-marcan@marcan.st>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 31 Jan 2022 18:26:56 +0200
-Message-ID: <CAHp75VcQ=BRkVb3QT0brAO7P_L47tyaymfkM-syOPDMAKG5R3A@mail.gmail.com>
-Subject: Re: [PATCH v4 1/9] brcmfmac: pcie: Release firmwares in the
- brcmf_pcie_setup error path
-To:     Hector Martin <marcan@marcan.st>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Mon, 31 Jan 2022 11:29:14 -0500
+Received: from marcansoft.com ([212.63.210.85]:40322 "EHLO mail.marcansoft.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1380381AbiAaQ3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jan 2022 11:29:09 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 4DC93419BC;
+        Mon, 31 Jan 2022 16:28:59 +0000 (UTC)
+Subject: Re: [PATCH v2 33/35] brcmfmac: common: Add support for downloading
+ TxCap blobs
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -64,8 +32,8 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <wright.feng@infineon.com>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Sven Peter <sven@svenpeter.dev>,
+        Dmitry Osipenko <digetx@gmail.com>
+Cc:     Sven Peter <sven@svenpeter.dev>,
         Alyssa Rosenzweig <alyssa@rosenzweig.io>,
         Mark Kettenis <kettenis@openbsd.org>,
         =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
@@ -74,56 +42,98 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Hans de Goede <hdegoede@redhat.com>,
         "John W. Linville" <linville@tuxdriver.com>,
         "brian m. carlson" <sandals@crustytoothpaste.net>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        SHA-cyfmac-dev-list@infineon.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com
+References: <20220104072658.69756-1-marcan@marcan.st>
+ <20220104072658.69756-34-marcan@marcan.st>
+ <45d5d6c1-f03f-d7ff-3d03-70bc45a36bfd@broadcom.com>
+From:   Hector Martin <marcan@marcan.st>
+Message-ID: <ff2232c8-fdf2-0a34-783b-5a5c8596f272@marcan.st>
+Date:   Tue, 1 Feb 2022 01:28:57 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <45d5d6c1-f03f-d7ff-3d03-70bc45a36bfd@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: es-ES
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 31, 2022 at 6:07 PM Hector Martin <marcan@marcan.st> wrote:
->
-> This avoids leaking memory if brcmf_chip_get_raminfo fails. Note that
-> the CLM blob is released in the device remove path.
-
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-
-> Fixes: 82f93cf46d60 ("brcmfmac: get chip's default RAM info during PCIe setup")
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+On 21/01/2022 16.36, Arend van Spriel wrote:
+> On 1/4/2022 8:26 AM, Hector Martin wrote:
+>> The TxCap blobs are additional data blobs used on Apple devices, and
+>> are uploaded analogously to CLM blobs. Add core support for doing this.
+> 
 > Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hector Martin <marcan@marcan.st>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index 8b149996fc00..f876b1d8d00d 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -1777,6 +1777,8 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
->         ret = brcmf_chip_get_raminfo(devinfo->ci);
->         if (ret) {
->                 brcmf_err(bus, "Failed to get RAM info\n");
-> +               release_firmware(fw);
-> +               brcmf_fw_nvram_free(nvram);
->                 goto fail;
->         }
->
-> --
-> 2.33.0
->
+>> Acked-by: Linus Walleij <linus.walleij@linaro.org>
+>> Signed-off-by: Hector Martin <marcan@marcan.st>
+>> ---
+>>   .../broadcom/brcm80211/brcmfmac/bus.h         |  1 +
+>>   .../broadcom/brcm80211/brcmfmac/common.c      | 97 +++++++++++++------
+>>   2 files changed, 71 insertions(+), 27 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> index b13af8f631f3..f4bd98da9761 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> @@ -39,6 +39,7 @@ enum brcmf_bus_protocol_type {
+>>   /* Firmware blobs that may be available */
+>>   enum brcmf_blob_type {
+>>   	BRCMF_BLOB_CLM,
+>> +	BRCMF_BLOB_TXCAP,
+>>   };
+>>   
+>>   struct brcmf_mp_device;
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> index c84c48e49fde..d65308c3f070 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> 
+> [...]
+> 
+>> @@ -165,20 +157,64 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+>>   	} while ((datalen > 0) && (err == 0));
+>>   
+> 
+> [...]
+> 
+>> +static int brcmf_c_process_txcap_blob(struct brcmf_if *ifp)
+>> +{
+>> +	struct brcmf_pub *drvr = ifp->drvr;
+>> +	struct brcmf_bus *bus = drvr->bus_if;
+>> +	const struct firmware *fw = NULL;
+>> +	s32 err;
+>> +
+>> +	brcmf_dbg(TRACE, "Enter\n");
+>> +
+>> +	err = brcmf_bus_get_blob(bus, &fw, BRCMF_BLOB_TXCAP);
+>> +	if (err || !fw) {
+>> +		brcmf_info("no txcap_blob available (err=%d)\n", err);
+>> +		return 0;
+>> +	}
+>> +
+>> +	brcmf_info("TxCap blob found, loading\n");
+>> +	err = brcmf_c_download_blob(ifp, fw->data, fw->size,
+>> +				    "txcapload", "txcapload_status");
+> 
+> Although unlikely that we end up here with a firmware that does not 
+> support this command it is not impossible. Should we handle that here or 
+> introduce a feature flag for txcap loading?
 
+Hmm, like trying to read txcapload_status to set the feature flag?
+
+Honestly though, if we end up here on an unsupported firmware that
+sounds like a firmware loading error, since if we have a TxCap blob for
+a given board we better have a firmware that supports it. So it doesn't
+feel too wrong to just error out entirely so the user knows something is
+horribly wrong, instead of trying to use what is probably the wrong
+firmware.
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
