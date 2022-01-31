@@ -2,114 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E84DC43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 17:51:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20114C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 22:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381135AbiAaRvU (ORCPT
+        id S234806AbiAaWsy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 12:51:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55448 "EHLO
+        Mon, 31 Jan 2022 17:48:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381117AbiAaRuu (ORCPT
+        with ESMTP id S229890AbiAaWsx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 12:50:50 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E7FAC061758;
-        Mon, 31 Jan 2022 09:50:38 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id d10so45396765eje.10;
-        Mon, 31 Jan 2022 09:50:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8GVlcbMKWd6sknSwsJTkH3UkvUcDFFWA5/+PxWk1FBQ=;
-        b=qs/2h+iV23o0KF6R03dAhdmE/axbeR2qE3rbz2GJhNRV8SEeiSPsrQvFC/thNvlcq3
-         tTd4TlCTVFHUDFxii5lU12QyqpTgkiRelenS4rYVY0Sfee7VxRLN0+8GR9UuI7veR/iA
-         +YkLnJki9Cx2spbdIizoVgoLPnWBKCN/5S7KIOrRI64Pk7y13ep90GrkWV2rHSVtnbkB
-         vAM3w5yjo3enrcXZLSVsERNyQVsgoDnssO0Icrxlvhiof74tIw9lz6oJ2341W2TnbIJW
-         rcHcO6r177JPjXbSgyEFt59HgZcDPB3p5dXLBD+1L/F/G1qppe/y/FbWQiVi2csNbac1
-         yAbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8GVlcbMKWd6sknSwsJTkH3UkvUcDFFWA5/+PxWk1FBQ=;
-        b=FGxIua/McK9OFm9d56Ta9BY1ZCWQGA3aYXJTxf1J1djaGs8xgzc69hW75Dwm+JXpeO
-         Cc6qpdCLWuBw7g6DhSv++3ctQJPuXgpZs9A2VElDgOWkMzUs9ErRs0HRqVAERFJEouVY
-         UZT+KPlT70y6jjvDZ9sK85W8vJ9Z0DRj9dAcO2xpSbbx3SEf+vYhMlRoodePoTUvjwYI
-         Ixi7ypce8bqtXBwz5Cyier+L7SPbdaEfPaU0ztApa9ixcwprFD5qb1kkMaZo5UE5cjg5
-         IIH+gSUYAh5GPARmlgXv0hdQHHNKcvlbtCxoT11w4nR1hq/MiRAMBbPA65M4OxmTscX2
-         WXGw==
-X-Gm-Message-State: AOAM530itlxnCLONZYEVz60EjY10pZWbvIyvnMU1E1A6fi6B8CkLADoZ
-        RO44EtzH3jhtSShlxiakz3uSsfJpt/R80ocElrc=
-X-Google-Smtp-Source: ABdhPJySPMLXG826MvbuUjwZ2lW9naA71Uho8Hz9ED+TkkBh3xJuWPCfQq50w2zCupQdwrxSAXqrKp3+CE1fa/VpIeM=
-X-Received: by 2002:a17:907:2d92:: with SMTP id gt18mr17433897ejc.579.1643651436652;
- Mon, 31 Jan 2022 09:50:36 -0800 (PST)
+        Mon, 31 Jan 2022 17:48:53 -0500
+X-Greylist: delayed 485 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 31 Jan 2022 14:48:53 PST
+Received: from mail.maslowski.xyz (maslowski.xyz [IPv6:2001:19f0:5:5b98:5400:3ff:fe59:951d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A7D4C061714;
+        Mon, 31 Jan 2022 14:48:53 -0800 (PST)
+Received: from [127.0.0.1] (public-gprs393678.centertel.pl [37.47.169.15])
+        by mail.maslowski.xyz (Postfix) with ESMTPSA id 5337580D85;
+        Mon, 31 Jan 2022 22:40:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=maslowski.xyz;
+        s=mail; t=1643668846;
+        bh=TVxdwUFTFyZUGl5grFYYrubbq4iOCQK2FORp//gZCWQ=;
+        h=Date:From:To:CC:Subject:In-Reply-To:From;
+        b=ZHN9iu0VBNRr4GAmTWjz1PzN+9N5/KhB2v75W9esIAXrtOE3mLJf9LcSyjbd9W402
+         j9TufTpzHeFhr1C5JWNIwuwhGvp7FCiDQ1NJMA4Ojqh2OvIzfpF2ZGhAuX/SuRzgGc
+         BuaUrvUABoxKRvIDZrlfl+vDiPdPLixB1j7PK2JCQ0NUV0TU0zCUijnLLsPNNE7cO6
+         joiQE+SnKdJwHDxzyo5tZI0+/ggte9qpOL2uWAfps04OBo3hjuBw6nY9OMi4ExKpnl
+         0J4d49RUVHTpq0JmYo1m6yzAlqxbSw1rvuurnBo5FTrPESszvzFlX4IxF2lpvlxp/e
+         aB0TwWroU9nqA==
+Date:   Mon, 31 Jan 2022 23:33:49 +0100
+From:   =?UTF-8?Q?Piotr_Mas=C5=82owski?= <piotr@maslowski.xyz>
+To:     marcan@marcan.st
+CC:     SHA-cyfmac-dev-list@infineon.com, alyssa@rosenzweig.io,
+        andy.shevchenko@gmail.com, arend.vanspriel@broadcom.com,
+        aspriel@gmail.com, brcm80211-dev-list.pdl@broadcom.com,
+        davem@davemloft.net, devicetree@vger.kernel.org, digetx@gmail.com,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        hdegoede@redhat.com, kettenis@openbsd.org, kuba@kernel.org,
+        kvalo@codeaurora.org, lenb@kernel.org, linus.walleij@linaro.org,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+        netdev@vger.kernel.org, pieter-paul.giesberts@broadcom.com,
+        rafael@kernel.org, robh+dt@kernel.org,
+        sandals@crustytoothpaste.net, sven@svenpeter.dev,
+        wright.feng@infineon.com, zajec5@gmail.com
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_7/9=5D_brcmfmac=3A_of=3A_Use_devm?= =?US-ASCII?Q?=5Fkstrdup_for_board=5Ftype_=26_check_for_errors?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <20220131160713.245637-8-marcan@marcan.st>
+Message-ID: <5E81748D-C6A8-4904-9A03-F61512AF22E5@maslowski.xyz>
 MIME-Version: 1.0
-References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-4-marcan@marcan.st>
- <CAHp75VdgXdYXio8pTDdxsYy-iCXMvVpZM1T6gNmcxo3c1V+uJA@mail.gmail.com> <878ruvetpy.fsf@kernel.org>
-In-Reply-To: <878ruvetpy.fsf@kernel.org>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 31 Jan 2022 19:49:00 +0200
-Message-ID: <CAHp75Vc+HS0ytF3fuyEiwaG_-tLQMQriz48HLdPVyYn==jr7aA@mail.gmail.com>
-Subject: Re: [PATCH v4 3/9] brcmfmac: firmware: Do not crash on a NULL board_type
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Hector Martin <marcan@marcan.st>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@infineon.com>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Sven Peter <sven@svenpeter.dev>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Mark Kettenis <kettenis@openbsd.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        "brian m. carlson" <sandals@crustytoothpaste.net>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        SHA-cyfmac-dev-list@infineon.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 31, 2022 at 6:49 PM Kalle Valo <kvalo@kernel.org> wrote:
-> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
-> > On Mon, Jan 31, 2022 at 6:07 PM Hector Martin <marcan@marcan.st> wrote:
-
-...
-
-> >> +       if (!board_type)
-> >> +               return NULL;
-> >
-> > I still think it's better to have both callers do the same thing.
-> >
-> > Now it will be the double check in one case,
+On Mon, Jan 31, 2022 at 5:07 PM Hector Martin <marcan@marcan=2Est> wrote:
 >
-> I already applied a similar patch:
->
-> https://git.kernel.org/wireless/wireless/c/665408f4c3a5
+>This was missing a NULL check, and we can collapse the strlen/alloc/copy
+>into a devm_kstrdup()=2E
 
-"Similar" means that it took into account the concern I expressed here :-)
-I would have done slightly differently, but the main idea is the same.
-Thank you!
+=2E=2E=2E
+=20
+> 		/* get rid of '/' in the compatible string to be able to find the FW *=
+/
+> 		len =3D strlen(tmp) + 1;
+>-		board_type =3D devm_kzalloc(dev, len, >GFP_KERNEL);
+>-		strscpy(board_type, tmp, len);
+>+		board_type =3D devm_kstrdup(dev, tmp, GFP_KERNEL);
 
--- 
-With Best Regards,
-Andy Shevchenko
+Also `len` can be dropped, since it is now unused=2E
+
+--
+Best regards,
+Piotr Mas=C5=82owski
