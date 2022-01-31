@@ -2,57 +2,56 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4080C4321E
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50843C43217
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Jan 2022 16:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380415AbiAaQ3i (ORCPT
+        id S1348753AbiAaQaE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jan 2022 11:29:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35884 "EHLO
+        Mon, 31 Jan 2022 11:30:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380486AbiAaQ2R (ORCPT
+        with ESMTP id S232284AbiAaQaD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jan 2022 11:28:17 -0500
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A3DCC061401;
-        Mon, 31 Jan 2022 08:28:16 -0800 (PST)
-Received: by mail-ed1-x532.google.com with SMTP id r10so28040231edt.1;
-        Mon, 31 Jan 2022 08:28:16 -0800 (PST)
+        Mon, 31 Jan 2022 11:30:03 -0500
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23C37C061714;
+        Mon, 31 Jan 2022 08:30:03 -0800 (PST)
+Received: by mail-ej1-x630.google.com with SMTP id k25so44437396ejp.5;
+        Mon, 31 Jan 2022 08:30:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=SRGWD5HujtGaIfy6YI6sQxXDCuS1sXnoBeyNAfdeYfw=;
-        b=ChnztWGFCtrmF8AR1r+RxPbBgCvUh0CFlJUcnaF52cf5G1sjhuI7GzfAEFXFuzTQkM
-         JxycPhTVhoZtFs7XinEr+TOKblJu49ps9qXeBjK0ScLdwojro28qNzmRh10OqkWGwHhV
-         vtBa+0kLeIc6limAZBPJAZC9EgPv4VCTLX07epyDEu+yiwKgbL9tsOV0KKnmC5ZnAHvn
-         uH0fE/7Il/g8fhtNHrIh1RMxTB06zccccFG7TUwimrwW0oFiMF4+B9DkJlFQzDG04Sk9
-         CxTtObvrEBHH9Cb9TRsJY4DhJHo9u5ENG96hEs47e66AFhqodn6kekntyKOXZRDPHCEY
-         nqfA==
+        bh=vRDplifUhsb5m6qIz40Anhg2xj6DslUkXFz6GsVymy4=;
+        b=D93WKL0bH3y0DsemI7NcPaBG2KnCtuCJsu1Kw+N+S/H4CUAQsHVB2XSUXCiMQXeqJp
+         vSdxRC6Lp34sxJEQZaapbcutOoLdIpe6q0qqcvGnEXInFE/3jRUl2dFKFFAxwCrcsvQz
+         R9OaaN0daXTLHr27vJo3gSJlzS8kcXWUc5yjsuiylmQLpnk6jPlx60odaFILHliLwy2N
+         LMuaJrLRjx+ioy1WHnxzDNgEnu8Zqg7uOl+3phVC4d3EwYl8PyB5dgt8JTyEdy6EemdL
+         th8OghN8ysl/lzJV1BeGWvu/BSp8KfEpWjw5hd17vz26Se44IzXpg2BN3SM9LeLRpORx
+         XREw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=SRGWD5HujtGaIfy6YI6sQxXDCuS1sXnoBeyNAfdeYfw=;
-        b=T1aG/0uPrrDJp4vfq+mKAMaGTA77ov1vzrTLtiNd7XWrQts0QYgbvnBasn/+aUAnr7
-         xkHhvYNXs7uFSMHXS9UGBnsopwN9T65OFxvm2V+RMMnkK27QsPLJE2J46UgvcGnc9i3N
-         QNQfKLkXxujvSS77a+yuvWmdgrF8SFOXf6ye2qIPlyTaha6s8Rbcd+BnJ0OYxo88JKsM
-         csii3ZoeebIDq+uCbBCIC9xrqe2JIBUkcx76ypsac2xGzMWqrPUROFphprxLm9YztLJy
-         yOxAymO/tp8+8E5UaGQQRHou5Qy+1BQ6VnWpSMKK/Fpjp1gTpDyu/hvD6sBNIZYcxv4U
-         X/gg==
-X-Gm-Message-State: AOAM530GuvSnHY2NtfjxNxvwbT7zySvKplP5Vs5XWpQjCetsQP1qh1PI
-        u1zDdFcSfhp7k18lKi4Zp4KlEiet5ALJVlIA3A0=
-X-Google-Smtp-Source: ABdhPJxN6zodTFR1sUdARmDocQ6DqGl7M4lBjebz7UFYoBxZ4kMltyMXUVtIA2lfAdrmFf2GE2DGhFAXGCGauiLOqqI=
-X-Received: by 2002:aa7:d6c5:: with SMTP id x5mr20979293edr.29.1643646494962;
- Mon, 31 Jan 2022 08:28:14 -0800 (PST)
+        bh=vRDplifUhsb5m6qIz40Anhg2xj6DslUkXFz6GsVymy4=;
+        b=adz9dvfYFwxHLCb3+6bW7gS8i6tSDL1bwN7f5oFEn+ca1TMtSZYkIhVnjH2Tiu9F0L
+         4VGQl7uo8cHECy2F+50Dte/hFyv83TBr/Be2lDz0H38h4Y77kkyYhJNDU9eAzsKBLy1e
+         4sdrQUD5bfjZ3hcDT3ZiPzsRE7KsHxnMLf+V1h7tA5Rk7fhJ70EAVM6sjkebm35U+WEV
+         /uoVO+g9Nd4s0xQdPmZl4jV9lMpeAvVYvK/R7x+Z+hLcy3k3bLuSxgXZkgXr4MtIBGLq
+         G5SjBI/6QzrEiHGTkRxqctsykuWQbess1xFylUxytTEM3PwUN5iS3YgF2Zg9sW+Wtbhi
+         Kfxg==
+X-Gm-Message-State: AOAM530juDAlGqrjSMEK7/gPwVIcU2TUGxhadM3s5+SUCF9nlr+5WiS3
+        awZLvV5W9ALn1A/sh1yLC9Xc9KTTMHYeI8yJ7bI=
+X-Google-Smtp-Source: ABdhPJwH3lAp3JlumSNQ61ldPCI4Vyq+OLtFCZ0qJsy2dxhZ6fQQm1lW9Qqm6EetQhoC0xmpiPhNQt1zsrbA/2qNhWo=
+X-Received: by 2002:a17:906:7948:: with SMTP id l8mr17420594ejo.636.1643646601634;
+ Mon, 31 Jan 2022 08:30:01 -0800 (PST)
 MIME-Version: 1.0
-References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-3-marcan@marcan.st>
-In-Reply-To: <20220131160713.245637-3-marcan@marcan.st>
+References: <20220131160713.245637-1-marcan@marcan.st> <20220131160713.245637-4-marcan@marcan.st>
+In-Reply-To: <20220131160713.245637-4-marcan@marcan.st>
 From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 31 Jan 2022 18:26:39 +0200
-Message-ID: <CAHp75Vd8Yut7fSnyVnr-rYcK22DiZdnfofb+-DCJ6A5M9Y_VDg@mail.gmail.com>
-Subject: Re: [PATCH v4 2/9] brcmfmac: firmware: Allocate space for default
- boardrev in nvram
+Date:   Mon, 31 Jan 2022 18:28:25 +0200
+Message-ID: <CAHp75VdgXdYXio8pTDdxsYy-iCXMvVpZM1T6gNmcxo3c1V+uJA@mail.gmail.com>
+Subject: Re: [PATCH v4 3/9] brcmfmac: firmware: Do not crash on a NULL board_type
 To:     Hector Martin <marcan@marcan.st>
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -91,37 +90,22 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 On Mon, Jan 31, 2022 at 6:07 PM Hector Martin <marcan@marcan.st> wrote:
 >
-> If boardrev is missing from the NVRAM we add a default one, but this
-> might need more space in the output buffer than was allocated. Ensure
-> we have enough padding for this in the buffer.
+> This unbreaks support for USB devices, which do not have a board_type
+> to create an alt_path out of and thus were running into a NULL
+> dereference.
 
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+...
 
-> Fixes: 46f2b38a91b0 ("brcmfmac: insert default boardrev in nvram data if missing")
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hector Martin <marcan@marcan.st>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 ++
->  1 file changed, 2 insertions(+)
+> @@ -599,6 +599,9 @@ static char *brcm_alt_fw_path(const char *path, const char *board_type)
+>         char alt_path[BRCMF_FW_NAME_LEN];
+>         char suffix[5];
 >
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> index 0eb13e5df517..1001c8888bfe 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> @@ -207,6 +207,8 @@ static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
->                 size = BRCMF_FW_MAX_NVRAM_SIZE;
->         else
->                 size = data_len;
-> +       /* Add space for properties we may add */
-> +       size += strlen(BRCMF_FW_DEFAULT_BOARDREV) + 1;
->         /* Alloc for extra 0 byte + roundup by 4 + length field */
->         size += 1 + 3 + sizeof(u32);
->         nvp->nvram = kzalloc(size, GFP_KERNEL);
-> --
-> 2.33.0
->
+> +       if (!board_type)
+> +               return NULL;
 
+I still think it's better to have both callers do the same thing.
+
+Now it will be the double check in one case,
 
 -- 
 With Best Regards,
