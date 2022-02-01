@@ -2,81 +2,60 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F6B3C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 10:10:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8863AC43219
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 11:02:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238907AbiBBKKp (ORCPT
+        id S231318AbiBBLCR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Feb 2022 05:10:45 -0500
-Received: from relay.hostedemail.com ([64.99.140.27]:28268 "EHLO
-        relay.hostedemail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232365AbiBBKKo (ORCPT
+        Wed, 2 Feb 2022 06:02:17 -0500
+Received: from mail.profitfirm24.com.pl ([212.237.10.110]:59442 "EHLO
+        mail.profitfirm24.com.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343662AbiBBLCP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Feb 2022 05:10:44 -0500
-Received: from omf20.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay06.hostedemail.com (Postfix) with ESMTP id 6A2342304B;
-        Wed,  2 Feb 2022 10:10:43 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf20.hostedemail.com (Postfix) with ESMTPA id 8BB4720032;
-        Wed,  2 Feb 2022 10:10:41 +0000 (UTC)
-Message-ID: <90e40bb19320dcc2f2099b97b4b9d7d23325eaac.camel@perches.com>
-Subject: Re: [PATCH] rtlwifi: remove redundant initialization of variable
- ul_encalgo
-From:   Joe Perches <joe@perches.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Pkshih <pkshih@realtek.com>
-Cc:     "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "colin.i.king@gmail.com" <colin.i.king@gmail.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 02 Feb 2022 02:10:40 -0800
-In-Reply-To: <20220202050229.GS1951@kadam>
-References: <20220130223714.6999-1-colin.i.king@gmail.com>
-         <55f8c7f2c75b18cd628d02a25ed96fae676eace2.camel@realtek.com>
-         <20220202050229.GS1951@kadam>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1ubuntu2 
+        Wed, 2 Feb 2022 06:02:15 -0500
+Received: by mail.profitfirm24.com.pl (Postfix, from userid 1001)
+        id 6A2A2AACD7; Tue,  1 Feb 2022 09:17:44 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitfirm24.com.pl;
+        s=mail; t=1643708074;
+        bh=M1ZVeu3q6Upppe+FUx/3rgI7MKJXh389NZDbgCK1SX4=;
+        h=Date:From:To:Subject:From;
+        b=eyt1L6tKg50hhhxscZh3w3CcJLpkdmBf1Fd+JTxI30oGXW+KJcJP4pcUJ8ZvQp+Y8
+         6j5THQl1/hddKBLZdjp4wmkFju7enmzJ+SItVS3AKEAEIEjW2lp0VjthxUJMIzQHNT
+         gIbwCrNnakM+5uM0/uENU2/SDLFqWjGZJ0jQzG6QpOJzTBE5B7EapXUERgauqgDT0B
+         +PQf0MKuKfNjl9u9J30bBvMuUMmbo9Foe2rX1+PEJPCMUMohyFpdpctDq9gegTXqFI
+         NKYv4/GDxOD27J567hh9w6kOEhg8anwi+MH2WtNrivSoZ45tnPiLPaPnhva5AHz9Pf
+         DIhf70UbEtVAg==
+Received: by profitfirm24.com.pl for <linux-wireless@vger.kernel.org>; Tue,  1 Feb 2022 09:17:20 GMT
+Message-ID: <20220201074652-0.1.b.2zh4.0.j34xs1fq17@profitfirm24.com.pl>
+Date:   Tue,  1 Feb 2022 09:17:20 GMT
+From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
+        <arkadiusz.sokolowski@profitfirm24.com.pl>
+To:     <linux-wireless@vger.kernel.org>
+Subject: Koszty instalacji fotowoltaicznej
+X-Mailer: mail.profitfirm24.com.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Stat-Signature: a6iseiq8hnmqaizdxdhrz3te8wu9jjme
-X-Rspamd-Server: rspamout01
-X-Rspamd-Queue-Id: 8BB4720032
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18DU2nJGrtl7nrzKyQf5hu1M0xTgVU9im4=
-X-HE-Tag: 1643796641-41319
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2022-02-02 at 08:02 +0300, Dan Carpenter wrote:
-> On Mon, Jan 31, 2022 at 02:53:40AM +0000, Pkshih wrote:
-> > On Sun, 2022-01-30 at 22:37 +0000, Colin Ian King wrote:
-> > 
-> > When I check this patch, I find there is no 'break' for default case.
-> > Do we need one? like
-> > 
-> > @@ -226,6 +226,7 @@ void rtl_cam_empty_entry(struct ieee80211_hw *hw, u8 uc_index)
-> >                 break;
-> >         default:
-> >                 ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_AES];
-> > +               break;
-> 
-> No, it's not necessary.  The choice of style is up to the original
-> developer.
+Dzie=C5=84 dobry,
 
-every case should have one.
+stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
+ obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
 
-Documentation/process/deprecated.rst:
+Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
+acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
+ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
 
-All switch/case blocks must end in one of:
+Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
+=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
+=2E
 
-* break;
-* fallthrough;
-* continue;
-* goto <label>;
-* return [expression];
+Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
+temacie?
 
 
+Pozdrawiam
+Arkadiusz Soko=C5=82owski
