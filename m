@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 063A9C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 08:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9B6C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 08:50:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245230AbiBBIuE (ORCPT
+        id S245246AbiBBIuG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Feb 2022 03:50:04 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:37932 "EHLO
+        Wed, 2 Feb 2022 03:50:06 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:37934 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S245225AbiBBIuE (ORCPT
+        with ESMTP id S245236AbiBBIuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Feb 2022 03:50:04 -0500
+        Wed, 2 Feb 2022 03:50:05 -0500
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.lan)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nFBL0-0004v8-4l;
+        id 1nFBL0-0004v8-Uc;
         Wed, 02 Feb 2022 10:50:03 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Wed,  2 Feb 2022 10:49:38 +0200
-Message-Id: <iwlwifi.20220202104617.79ec4a4bab29.I8177a0c79d656c552e22c88931d8da06f2977896@changeid>
+Date:   Wed,  2 Feb 2022 10:49:39 +0200
+Message-Id: <iwlwifi.20220202104617.6a1d52213019.I92d82e7251cf712faa43fd09db3142327a3bce3d@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220202084947.370289-1-luca@coelho.fi>
 References: <20220202084947.370289-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/14] ieee80211: fix -Wcast-qual warnings
+Subject: [PATCH 06/14] cfg80211: fix -Wcast-qual warnings
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -43,49 +43,44 @@ the fixes are simple, just do that.
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 559b6c644938..60ee7b3f58e7 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2427,7 +2427,7 @@ struct ieee80211_tx_pwr_env {
- static inline u8
- ieee80211_he_oper_size(const u8 *he_oper_ie)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d19e48f9fdc6..f6db085ff3df 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2604,7 +2604,7 @@ const struct element *ieee80211_bss_get_elem(struct cfg80211_bss *bss, u8 id);
+  */
+ static inline const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 id)
  {
--	struct ieee80211_he_operation *he_oper = (void *)he_oper_ie;
-+	const struct ieee80211_he_operation *he_oper = (const void *)he_oper_ie;
- 	u8 oper_len = sizeof(struct ieee80211_he_operation);
- 	u32 he_oper_params;
- 
-@@ -2460,7 +2460,7 @@ ieee80211_he_oper_size(const u8 *he_oper_ie)
- static inline const struct ieee80211_he_6ghz_oper *
- ieee80211_he_6ghz_oper(const struct ieee80211_he_operation *he_oper)
- {
--	const u8 *ret = (void *)&he_oper->optional;
-+	const u8 *ret = (const void *)&he_oper->optional;
- 	u32 he_oper_params;
- 
- 	if (!he_oper)
-@@ -2475,7 +2475,7 @@ ieee80211_he_6ghz_oper(const struct ieee80211_he_operation *he_oper)
- 	if (he_oper_params & IEEE80211_HE_OPERATION_CO_HOSTED_BSS)
- 		ret++;
- 
--	return (void *)ret;
-+	return (const void *)ret;
+-	return (void *)ieee80211_bss_get_elem(bss, id);
++	return (const void *)ieee80211_bss_get_elem(bss, id);
  }
  
- /* HE Spatial Reuse defines */
-@@ -2496,7 +2496,7 @@ ieee80211_he_6ghz_oper(const struct ieee80211_he_operation *he_oper)
- static inline u8
- ieee80211_he_spr_size(const u8 *he_spr_ie)
- {
--	struct ieee80211_he_spr *he_spr = (void *)he_spr_ie;
-+	const struct ieee80211_he_spr *he_spr = (const void *)he_spr_ie;
- 	u8 spr_len = sizeof(struct ieee80211_he_spr);
- 	u8 he_spr_params;
  
+@@ -5970,9 +5970,9 @@ cfg80211_find_ie_match(u8 eid, const u8 *ies, unsigned int len,
+ 		    (!match_len && match_offset)))
+ 		return NULL;
+ 
+-	return (void *)cfg80211_find_elem_match(eid, ies, len,
+-						match, match_len,
+-						match_offset ?
++	return (const void *)cfg80211_find_elem_match(eid, ies, len,
++						      match, match_len,
++						      match_offset ?
+ 							match_offset - 2 : 0);
+ }
+ 
+@@ -6099,7 +6099,7 @@ static inline const u8 *
+ cfg80211_find_vendor_ie(unsigned int oui, int oui_type,
+ 			const u8 *ies, unsigned int len)
+ {
+-	return (void *)cfg80211_find_vendor_elem(oui, oui_type, ies, len);
++	return (const void *)cfg80211_find_vendor_elem(oui, oui_type, ies, len);
+ }
+ 
+ /**
 -- 
 2.34.1
 
