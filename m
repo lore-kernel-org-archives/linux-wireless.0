@@ -2,163 +2,725 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 092BBC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 05:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35814C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Feb 2022 07:33:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbiBBFDH (ORCPT
+        id S237229AbiBBHda (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Feb 2022 00:03:07 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:45898 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229458AbiBBFDG (ORCPT
+        Wed, 2 Feb 2022 02:33:30 -0500
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:47102 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229609AbiBBHd2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Feb 2022 00:03:06 -0500
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2120DNHx008544;
-        Wed, 2 Feb 2022 05:02:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : content-type : in-reply-to :
- mime-version; s=corp-2021-07-09;
- bh=yEJz5i4wgrqG1yaFRSy2oJPnZOWTi/+4rRC1Y5a8P/8=;
- b=P5sh6z6me6aaIRHa5nrjboTAJhhPCrCC3r+161q2SqX2HO+idvDR2ckqg0b5VMTdssHn
- /y4ehw+Jzp5zbj5mJHSyl4dk8iYqQWZMt6F6nt0QLY/V1uVaBjDv2xrjQsVRRnG0mACN
- Y/hp1ubwGzM4f2drEMmqAYcPEHtkf/bdGDb3hIqNDBPYz8YXka6KHFpGpiBqEfWUaYsh
- UxeLxXR/tYdiMFJwcZD6MHWpuR19p0rtN2NIiGdEE0iS2hQb/0HF/a4IRRrjSASlyiYU
- 2TikGd2pDYdIFXtzDHVCN0p9dN0OimszSO1KspnBgxTkVmTF/aHXD7/8fRsolxaRnFZ/ Qg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dxjatw0j7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Feb 2022 05:02:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2124thPY173546;
-        Wed, 2 Feb 2022 05:02:54 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
-        by aserp3030.oracle.com with ESMTP id 3dvumgmu8e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Feb 2022 05:02:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hXTaLBnbVMx/5FeOdF3kmx3CW4ihF02PjS00pmmEUaaJmYI5EtvarGOVRHitsre6FdsStlxpQ+Wt+1m6EXexiEus16yNrtLXhPEGjMy83sfS3hIsHPDav1FZG8uPdUFyRK0gDRDXHFQ0B1lAtHJFtJphv1IBJjDLfqDqUhp1g3ymU+FV7YdscHeOmzC84G9vBoTfb6xqVE0ohq4V5pTNoUHK+YioGg80xDzekDBxCPEGyARWBkG4zceuKzeHJz1d3ySBmr1jD0IIt2SeGEPFlf2DD1O/R6OEmbGw54cRWFHCC/Hv6Y0SySb9q7X/U5buiY/Yy1ZYieeXzmDCTo3tuA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yEJz5i4wgrqG1yaFRSy2oJPnZOWTi/+4rRC1Y5a8P/8=;
- b=lGNHiwhRExoiyf9pTUTmBbHtnXxcyEZ+RlT70tRe8eUU5thojxDNb2aVIqLw2w/WkLwseY6oUekwO7043uWmZL91F4qhBKLAM/j7rpfrh1Fm8g8DuMkECZhDuwJVNHeauFGyNuHnQKv2R+ptzd8dXNlFg1Bi7W2ZOYgK3mW/VNHugtnMQougC8EYC49SYCwIKAfjiIjeR7V/VuQnU1toN6uLRF5ddwncVHtHZKSMHfwbR6KNhzpzKPcDP6yv+5cVKnha9YIfEIFf64t1Lti8EKKQGfdUcxqnpSTGpqSgH+KqBTwRC5OJjVdCQHMocQBtJmOSsI4wddttdF2eZPyo6g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
+        Wed, 2 Feb 2022 02:33:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yEJz5i4wgrqG1yaFRSy2oJPnZOWTi/+4rRC1Y5a8P/8=;
- b=VYLYLhviqsks3PIWIbr3QIC5u1hTZPHH1BDCPDpFrVq4GfGWqo6ePtrDkKyGdvA2LDR0BlKA3yv/rwKuX5WZGR+puETaouHxCfCcMOM+hFTM5PVxLjq+XdhBLUW1TmTprZ8AH4jBBkVh4K8ypPqZB/EW1Gl5myOaqb/4I/zDz5c=
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28) by CH2PR10MB4056.namprd10.prod.outlook.com
- (2603:10b6:610:10::26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.19; Wed, 2 Feb
- 2022 05:02:52 +0000
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::e5a5:8f49:7ec4:b7b8]) by MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::e5a5:8f49:7ec4:b7b8%5]) with mapi id 15.20.4930.021; Wed, 2 Feb 2022
- 05:02:51 +0000
-Date:   Wed, 2 Feb 2022 08:02:30 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Pkshih <pkshih@realtek.com>
-Cc:     "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "colin.i.king@gmail.com" <colin.i.king@gmail.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: remove redundant initialization of variable
- ul_encalgo
-Message-ID: <20220202050229.GS1951@kadam>
-References: <20220130223714.6999-1-colin.i.king@gmail.com>
- <55f8c7f2c75b18cd628d02a25ed96fae676eace2.camel@realtek.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <55f8c7f2c75b18cd628d02a25ed96fae676eace2.camel@realtek.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-ClientProxiedBy: JN2P275CA0012.ZAFP275.PROD.OUTLOOK.COM (2603:1086:0:3::24)
- To MWHPR1001MB2365.namprd10.prod.outlook.com (2603:10b6:301:2d::28)
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1643787209; x=1675323209;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=FTXDRbTmx1LBXmv3ILEGwcd7kKZyo0g/Dx/kt/u/gGY=;
+  b=UqUKH04kkXwxO5P7ai6Qq5bLG1WlO1KDokIw7hOdFH6+K/cAAksfz6F1
+   lzPKbRenIK267lAiemJuV2W6KMZ9seisOx8GCWy5NSfdV+zb+D/EoX8u6
+   3OOXcKKc7td908j+Wvd9kzM6/XuEfDqG4DF+ucIPhv5Kbnzx0gYkngwd5
+   8=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Feb 2022 23:33:28 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2022 23:33:28 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Tue, 1 Feb 2022 23:33:28 -0800
+Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Tue, 1 Feb 2022 23:33:26 -0800
+From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH v3] ath11k: Add peer rhash table support
+Date:   Wed, 2 Feb 2022 13:03:14 +0530
+Message-ID: <1643787194-31355-1-git-send-email-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b98b9954-5c44-4444-08b4-08d9e609437f
-X-MS-TrafficTypeDiagnostic: CH2PR10MB4056:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR10MB40568E5F1D0D5C790A81C9138E279@CH2PR10MB4056.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: i2STso6A04Ue49iYlMrtZYSpT8WA7BJ47bJNwdIzqb3TTK3uZLEBCehWMxAgDwvGc/rNI0GrWSBySqm8JtGdbHsccZ6bBOJkkcHB8ll+vCULGMC2C1vk/VUthlVU0mJb3i/pVN7jXUwbUphk1QjWSMcNAcsM9uLj+I6GDcqBGdwoDlfWA2Mym/yVDigcokDCtA6UGQreUvhWCmj7GPZMA1gpoHxZlfeyjeRs0u/Qjmswvn8rv34KZXJ1X49rCD9VjVj07i69dYMNW0hlUnRCFCmnzmk1S9NJw3VtLzbHwxYf8uxhPxdkfwfNcqdoBgiCy9ceJS9k/get3RpKJmiInoO6Yl24mZv0h+aCFdA393cll06g2DTkwUAQm2+PQhBkMqshffLkglnbfvqeRjVqepyh11qMZ7B76PskLeyKk5uKng5Fu/DgaA+1rt5777xJOWLATQwImoJsxvvl/MbSIaBYVm1OJ3zJjyp5sY1q+6mhEzIgPEkUi05T+GI40tNz3+rjmynvhZ+TI85V/WjyZhfcSyOOHN2mBR8/aFwJ4GTLraIUPzkZDMhalpa99T+gVwDu7XwqS97CgnQaRRfIfQ6sdrNd1EV53ceWo0H8WO2jgiKXcNbfs+IZLU8mdk/lS6jQjcjmHtEPy+OVh/1ksd11FU8do0a/4/+Oytj5h7MZ43qTjL9L+sKqO59j5qhKkkbKq/nsBSpQg3yloYOGow==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(33656002)(52116002)(38100700002)(8936002)(38350700002)(9686003)(66476007)(66556008)(33716001)(2906002)(26005)(1076003)(54906003)(6916009)(316002)(44832011)(508600001)(4744005)(86362001)(4326008)(8676002)(6506007)(6512007)(5660300002)(66946007)(6666004)(186003)(6486002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?FYG0e/8v9ZNgD8jcGYZTD/uHhREQNeFct1Ur3CLYTuHYr4CqIeppL2XBhwUK?=
- =?us-ascii?Q?DDwchYiCTUBlzBr2NOiH68VCZ3KUwzp53dTvdLHf6tgmYE+zPdSI6mS2MvP7?=
- =?us-ascii?Q?hXch4Iuk7WI5RHT9q3i1Fw1g05WFo4PzmuRgBUlFU6RkL9h8Lm7kzwkQiawa?=
- =?us-ascii?Q?Uad9pBvpbeTzSvmUDV0tHTgQdS8AdAaTb3uAwxql+w7JZbiUMvmKOV/hdaTX?=
- =?us-ascii?Q?MAM2eVqx6NGADT00F5BY/JQ3xLefA7sYHbmCS+f/Ter99h+Y6okMwsYP4eaw?=
- =?us-ascii?Q?cWP5Zykvlfz9mHKzBBTWBkaAihQQS8rFM6bzD93LRgpgqe0gtokU1c8UpvCT?=
- =?us-ascii?Q?EQF4TX4pVS2LYBaqwP2DmzneMNOUXBKwjvtaQVJ0gtnpxFpGINTFlkxDhjHe?=
- =?us-ascii?Q?zJ/AOai42hWFk9tIQw6Q/A95HjtMZ2z96ECUGo3uIK5tWWvyTqZopXW+fxq9?=
- =?us-ascii?Q?HV4NwNO9M8LkqQCKdG42w1xvaHqPL0YaeAHGhFZ/lN8aqffZkRPgpshZaiMf?=
- =?us-ascii?Q?bEID/ZNWPORxvCzXS2PRuOVgvEa+aFJkGjQliSenvpt7zg1sntIUPtF/lmq0?=
- =?us-ascii?Q?0h4NsmvI7jtE+oqE3Pr2ua8RMfO1qfZbBLp1gaHZIe+ps3z2jzlupzofc+Db?=
- =?us-ascii?Q?ekLvxXgrKCsLqps6+jjt1Tnu7bwqGXwcy/w214rFLC+SX5+98io2J2RtCreU?=
- =?us-ascii?Q?pFbS1Q2cl/Gx6FeA6+oPH00s1p/5MR4y3hF7hUFqqi416Ha7OgG47npW30SN?=
- =?us-ascii?Q?IoKpxiQhjzqoy/yI8PUYD5JfXRM7IkbMT3K3DoNJ+olNNgSXJfRfQznRW00k?=
- =?us-ascii?Q?JBUmJU7tbtQ9UPBZAvGBmfkLS5YWGXX6JEXqOHiFdvbohnj3NUIshOmvoVFl?=
- =?us-ascii?Q?HqaBaQVwaJsxVnsJrjNhBclUrn5lpFWTBWaquSExt4Fr70jASuzfeaI7fuRb?=
- =?us-ascii?Q?y0u0Qb1LT74KkmNhGXCpkHit9ubWCUGh5Co0EWTr+nohUhkYL2VMV0dtODvI?=
- =?us-ascii?Q?zITleZqcHA7WBcQ0xtaWM3LXSJSUXc4GKM5pDS2aWjQb8gJ00LpRM5HYusZR?=
- =?us-ascii?Q?CwpNFkzN8W7Ob7OmBz/wSRUYU3hnknjvCwEzB2kISddMhoPf1Iv1GxlaPIji?=
- =?us-ascii?Q?HUr2kgmubH+YLLoCy0IFyMpxKc0xh7yITplY2wbKBT2JLlNEYMhsBJ87729D?=
- =?us-ascii?Q?0VhxWZmG9e2MhdGqBbMbBV9i3kDYVho3vWpQ7xD9g2iyUw9JBVBTGtYA+PcJ?=
- =?us-ascii?Q?TkiL22RimngYkn+2zZQv4BkirDKYX44bd26cp2Izi5tOc3pCyPd7LTIQdCrI?=
- =?us-ascii?Q?osA25IjX7xrLORlPPBxbURh3oFi3C7l0u7IkqIGIVPf9iaLnZNNFpi0Uj2F2?=
- =?us-ascii?Q?z+vqq0DwdASyBwJfmQOR2OgodRPndA9Qc8eAO2NfWhtewDxe4OgNO4DvwCc+?=
- =?us-ascii?Q?3aGe1huija1g8grnIS3oALkzviJBfVNAtzIU2B0yq127H5F/hhRW8qSz65or?=
- =?us-ascii?Q?YF7SpFWBcCHF+klsHgJrNSuQGDwiPLkukqfUzCD6RNAxuQlU3uieQSs9aPhh?=
- =?us-ascii?Q?ZJjWgttGABOAWs4xckWikoZNsDgBztSwDqhjTKgXB9wAMfkUqbNDu4vIMpN5?=
- =?us-ascii?Q?VRmeoOnyax2pKaCQfQ+sltTeVzhdeV4StdoHj8RxwRF9ndZqDRu9qDMGcJoW?=
- =?us-ascii?Q?+rzzMfsHnglklfkV7kduTp2C8yQ=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b98b9954-5c44-4444-08b4-08d9e609437f
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2022 05:02:51.3628
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DMkFyesoFal9IL133M/qa8BIAZFpH3JQQ5Lfmwynbt/LuFXnEZP1NCnGGQHZr4eH3Ues/kc3pMtMbD5buvo2yARga5DPNiuexV6MbozmpyE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4056
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10245 signatures=673430
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxscore=0 adultscore=0 suspectscore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
- definitions=main-2202020023
-X-Proofpoint-GUID: vBOastZIo5SwHjSD9hhytGqhH_a_GWtQ
-X-Proofpoint-ORIG-GUID: vBOastZIo5SwHjSD9hhytGqhH_a_GWtQ
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 31, 2022 at 02:53:40AM +0000, Pkshih wrote:
-> On Sun, 2022-01-30 at 22:37 +0000, Colin Ian King wrote:
-> 
-> When I check this patch, I find there is no 'break' for default case.
-> Do we need one? like
-> 
-> @@ -226,6 +226,7 @@ void rtl_cam_empty_entry(struct ieee80211_hw *hw, u8 uc_index)
->                 break;
->         default:
->                 ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_AES];
-> +               break;
+When more clients (128) are connected, the UL data traffic
+KPI measurement is low compared to single client. This issue
+is due to more CPU cycles spent on the peer lookup operation
+with more clients. So reduce the peer lookup operation by
+modifying the linear based lookup operation into the rhash
+based lookup operation. This improve the peak throughput
+measurement. Since this is a software algorithm change, it is
+applicable for all the platforms.
 
-No, it's not necessary.  The choice of style is up to the original
-developer.
+TCP UL 128 Clients test case Observation (64bit system):
+Previous: ~550 Mbps
+Now	: ~860 Mbps
 
-regards,
-dan carpenter
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01067-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+---
+ v3:
+   - Fix "sleeping function called from invalid context" by
+     replacing atomic lock by mutex lock in tbl write operation
+ v2:
+   - Rebase on ToT
+
+ drivers/net/wireless/ath/ath11k/core.c |   1 +
+ drivers/net/wireless/ath/ath11k/core.h |  14 ++
+ drivers/net/wireless/ath/ath11k/mac.c  |  14 ++
+ drivers/net/wireless/ath/ath11k/peer.c | 344 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/peer.h |  10 +-
+ 5 files changed, 361 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 7c508e9..1566247 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1435,6 +1435,7 @@ struct ath11k_base *ath11k_core_alloc(struct device *dev, size_t priv_size,
+ 		goto err_sc_free;
+ 
+ 	mutex_init(&ab->core_lock);
++	mutex_init(&ab->tbl_lock);
+ 	spin_lock_init(&ab->base_lock);
+ 	mutex_init(&ab->vdev_id_11d_lock);
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 10846e9..079a262 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef ATH11K_CORE_H
+@@ -10,6 +11,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/bitfield.h>
++#include <linux/rhashtable.h>
+ #include "qmi.h"
+ #include "htc.h"
+ #include "wmi.h"
+@@ -746,6 +748,18 @@ struct ath11k_base {
+ 	struct ath11k_pdev __rcu *pdevs_active[MAX_RADIOS];
+ 	struct ath11k_hal_reg_capabilities_ext hal_reg_cap[MAX_RADIOS];
+ 	unsigned long long free_vdev_map;
++
++	/* To synchronize rhash tbl write operation */
++	struct mutex tbl_lock;
++
++	/* The rhashtable containing struct ath11k_peer keyed by mac addr */
++	struct rhashtable *rhead_peer_addr;
++	struct rhashtable_params rhash_peer_addr_param;
++
++	/* The rhashtable containing struct ath11k_peer keyed by id  */
++	struct rhashtable *rhead_peer_id;
++	struct rhashtable_params rhash_peer_id_param;
++
+ 	struct list_head peers;
+ 	wait_queue_head_t peer_mapping_wq;
+ 	u8 mac_addr[ETH_ALEN];
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index ed89905..c392738 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -868,13 +868,16 @@ void ath11k_mac_peer_cleanup_all(struct ath11k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	mutex_lock(&ab->tbl_lock);
+ 	spin_lock_bh(&ab->base_lock);
+ 	list_for_each_entry_safe(peer, tmp, &ab->peers, list) {
+ 		ath11k_peer_rx_tid_cleanup(ar, peer);
++		ath11k_peer_rhash_delete(ab, peer);
+ 		list_del(&peer->list);
+ 		kfree(peer);
+ 	}
+ 	spin_unlock_bh(&ab->base_lock);
++	mutex_unlock(&ab->tbl_lock);
+ 
+ 	ar->num_peers = 0;
+ 	ar->num_stations = 0;
+@@ -4531,6 +4534,7 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		ath11k_mac_dec_num_stations(arvif, sta);
++		mutex_lock(&ar->ab->tbl_lock);
+ 		spin_lock_bh(&ar->ab->base_lock);
+ 		peer = ath11k_peer_find(ar->ab, arvif->vdev_id, sta->addr);
+ 		if (skip_peer_delete && peer) {
+@@ -4538,12 +4542,14 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 		} else if (peer && peer->sta == sta) {
+ 			ath11k_warn(ar->ab, "Found peer entry %pM n vdev %i after it was supposedly removed\n",
+ 				    vif->addr, arvif->vdev_id);
++			ath11k_peer_rhash_delete(ar->ab, peer);
+ 			peer->sta = NULL;
+ 			list_del(&peer->list);
+ 			kfree(peer);
+ 			ar->num_peers--;
+ 		}
+ 		spin_unlock_bh(&ar->ab->base_lock);
++		mutex_unlock(&ar->ab->tbl_lock);
+ 
+ 		kfree(arsta->tx_stats);
+ 		arsta->tx_stats = NULL;
+@@ -8338,6 +8344,8 @@ void ath11k_mac_unregister(struct ath11k_base *ab)
+ 
+ 		__ath11k_mac_unregister(ar);
+ 	}
++
++	ath11k_peer_rhash_tbl_destroy(ab);
+ }
+ 
+ static int __ath11k_mac_register(struct ath11k *ar)
+@@ -8548,6 +8556,10 @@ int ath11k_mac_register(struct ath11k_base *ab)
+ 	ab->cc_freq_hz = IPQ8074_CC_FREQ_HERTZ;
+ 	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS(ab))) - 1;
+ 
++	ret = ath11k_peer_rhash_tbl_init(ab);
++	if (ret)
++		return ret;
++
+ 	for (i = 0; i < ab->num_radios; i++) {
+ 		pdev = &ab->pdevs[i];
+ 		ar = pdev->ar;
+@@ -8577,6 +8589,8 @@ int ath11k_mac_register(struct ath11k_base *ab)
+ 		__ath11k_mac_unregister(ar);
+ 	}
+ 
++	ath11k_peer_rhash_tbl_destroy(ab);
++
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/peer.c b/drivers/net/wireless/ath/ath11k/peer.c
+index 332886b..5cdacd5 100644
+--- a/drivers/net/wireless/ath/ath11k/peer.c
++++ b/drivers/net/wireless/ath/ath11k/peer.c
+@@ -1,23 +1,22 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include "core.h"
+ #include "peer.h"
+ #include "debug.h"
+ 
+-struct ath11k_peer *ath11k_peer_find(struct ath11k_base *ab, int vdev_id,
+-				     const u8 *addr)
++static struct ath11k_peer *ath11k_peer_find_list_by_id(struct ath11k_base *ab,
++						       int peer_id)
+ {
+ 	struct ath11k_peer *peer;
+ 
+ 	lockdep_assert_held(&ab->base_lock);
+ 
+ 	list_for_each_entry(peer, &ab->peers, list) {
+-		if (peer->vdev_id != vdev_id)
+-			continue;
+-		if (!ether_addr_equal(peer->addr, addr))
++		if (peer->peer_id != peer_id)
+ 			continue;
+ 
+ 		return peer;
+@@ -26,15 +25,15 @@ struct ath11k_peer *ath11k_peer_find(struct ath11k_base *ab, int vdev_id,
+ 	return NULL;
+ }
+ 
+-static struct ath11k_peer *ath11k_peer_find_by_pdev_idx(struct ath11k_base *ab,
+-							u8 pdev_idx, const u8 *addr)
++struct ath11k_peer *ath11k_peer_find(struct ath11k_base *ab, int vdev_id,
++				     const u8 *addr)
+ {
+ 	struct ath11k_peer *peer;
+ 
+ 	lockdep_assert_held(&ab->base_lock);
+ 
+ 	list_for_each_entry(peer, &ab->peers, list) {
+-		if (peer->pdev_idx != pdev_idx)
++		if (peer->vdev_id != vdev_id)
+ 			continue;
+ 		if (!ether_addr_equal(peer->addr, addr))
+ 			continue;
+@@ -52,14 +51,13 @@ struct ath11k_peer *ath11k_peer_find_by_addr(struct ath11k_base *ab,
+ 
+ 	lockdep_assert_held(&ab->base_lock);
+ 
+-	list_for_each_entry(peer, &ab->peers, list) {
+-		if (!ether_addr_equal(peer->addr, addr))
+-			continue;
++	if (!ab->rhead_peer_addr)
++		return NULL;
+ 
+-		return peer;
+-	}
++	peer = rhashtable_lookup_fast(ab->rhead_peer_addr, addr,
++				      ab->rhash_peer_addr_param);
+ 
+-	return NULL;
++	return peer;
+ }
+ 
+ struct ath11k_peer *ath11k_peer_find_by_id(struct ath11k_base *ab,
+@@ -69,11 +67,13 @@ struct ath11k_peer *ath11k_peer_find_by_id(struct ath11k_base *ab,
+ 
+ 	lockdep_assert_held(&ab->base_lock);
+ 
+-	list_for_each_entry(peer, &ab->peers, list)
+-		if (peer_id == peer->peer_id)
+-			return peer;
++	if (!ab->rhead_peer_id)
++		return NULL;
+ 
+-	return NULL;
++	peer = rhashtable_lookup_fast(ab->rhead_peer_id, &peer_id,
++				      ab->rhash_peer_id_param);
++
++	return peer;
+ }
+ 
+ struct ath11k_peer *ath11k_peer_find_by_vdev_id(struct ath11k_base *ab,
+@@ -99,7 +99,7 @@ void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id)
+ 
+ 	spin_lock_bh(&ab->base_lock);
+ 
+-	peer = ath11k_peer_find_by_id(ab, peer_id);
++	peer = ath11k_peer_find_list_by_id(ab, peer_id);
+ 	if (!peer) {
+ 		ath11k_warn(ab, "peer-unmap-event: unknown peer id %d\n",
+ 			    peer_id);
+@@ -167,6 +167,76 @@ static int ath11k_wait_for_peer_common(struct ath11k_base *ab, int vdev_id,
+ 	return 0;
+ }
+ 
++static inline int ath11k_peer_rhash_insert(struct ath11k_base *ab,
++					   struct rhashtable *rtbl,
++					   struct rhash_head *rhead,
++					   struct rhashtable_params *params,
++					   void *key)
++{
++	struct ath11k_peer *tmp;
++
++	lockdep_assert_held(&ab->tbl_lock);
++
++	tmp = rhashtable_lookup_get_insert_fast(rtbl, rhead, *params);
++
++	if (!tmp)
++		return 0;
++	else if (IS_ERR(tmp))
++		return PTR_ERR(tmp);
++	else
++		return -EEXIST;
++}
++
++static inline int ath11k_peer_rhash_remove(struct ath11k_base *ab,
++					   struct rhashtable *rtbl,
++					   struct rhash_head *rhead,
++					   struct rhashtable_params *params)
++{
++	int ret;
++
++	lockdep_assert_held(&ab->tbl_lock);
++
++	ret = rhashtable_remove_fast(rtbl, rhead, *params);
++	if (ret && ret != -ENOENT)
++		return ret;
++
++	return 0;
++}
++
++static int ath11k_peer_rhash_add(struct ath11k_base *ab, struct ath11k_peer *peer)
++{
++	int ret;
++
++	lockdep_assert_held(&ab->base_lock);
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (!ab->rhead_peer_id || !ab->rhead_peer_addr)
++		return -EPERM;
++
++	ret = ath11k_peer_rhash_insert(ab, ab->rhead_peer_id, &peer->rhash_id,
++				       &ab->rhash_peer_id_param, &peer->peer_id);
++	if (ret) {
++		ath11k_warn(ab, "failed to add peer %pM with id %d in rhash_id ret %d\n",
++			    peer->addr, peer->peer_id, ret);
++		return ret;
++	}
++
++	ret = ath11k_peer_rhash_insert(ab, ab->rhead_peer_addr, &peer->rhash_addr,
++				       &ab->rhash_peer_addr_param, &peer->addr);
++	if (ret) {
++		ath11k_warn(ab, "failed to add peer %pM with id %d in rhash_addr ret %d\n",
++			    peer->addr, peer->peer_id, ret);
++		goto err_clean;
++	}
++
++	return 0;
++
++err_clean:
++	ath11k_peer_rhash_remove(ab, ab->rhead_peer_id, &peer->rhash_id,
++				 &ab->rhash_peer_id_param);
++	return ret;
++}
++
+ void ath11k_peer_cleanup(struct ath11k *ar, u32 vdev_id)
+ {
+ 	struct ath11k_peer *peer, *tmp;
+@@ -174,6 +244,7 @@ void ath11k_peer_cleanup(struct ath11k *ar, u32 vdev_id)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	mutex_lock(&ab->tbl_lock);
+ 	spin_lock_bh(&ab->base_lock);
+ 	list_for_each_entry_safe(peer, tmp, &ab->peers, list) {
+ 		if (peer->vdev_id != vdev_id)
+@@ -182,12 +253,14 @@ void ath11k_peer_cleanup(struct ath11k *ar, u32 vdev_id)
+ 		ath11k_warn(ab, "removing stale peer %pM from vdev_id %d\n",
+ 			    peer->addr, vdev_id);
+ 
++		ath11k_peer_rhash_delete(ab, peer);
+ 		list_del(&peer->list);
+ 		kfree(peer);
+ 		ar->num_peers--;
+ 	}
+ 
+ 	spin_unlock_bh(&ab->base_lock);
++	mutex_unlock(&ab->tbl_lock);
+ }
+ 
+ static int ath11k_wait_for_peer_deleted(struct ath11k *ar, int vdev_id, const u8 *addr)
+@@ -220,14 +293,35 @@ int ath11k_wait_for_peer_delete_done(struct ath11k *ar, u32 vdev_id,
+ int ath11k_peer_delete(struct ath11k *ar, u32 vdev_id, u8 *addr)
+ {
+ 	int ret;
++	struct ath11k_peer *peer;
++	struct ath11k_base *ab = ar->ab;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	mutex_lock(&ab->tbl_lock);
++	spin_lock_bh(&ab->base_lock);
++
++	peer = ath11k_peer_find_by_addr(ab, addr);
++	if (!peer) {
++		spin_unlock_bh(&ab->base_lock);
++		mutex_unlock(&ab->tbl_lock);
++
++		ath11k_warn(ab,
++			    "failed to find peer vdev_id %d addr %pM in delete\n",
++			    vdev_id, addr);
++		return -EINVAL;
++	}
++
++	ath11k_peer_rhash_delete(ab, peer);
++
++	spin_unlock_bh(&ab->base_lock);
++	mutex_unlock(&ab->tbl_lock);
++
+ 	reinit_completion(&ar->peer_delete_done);
+ 
+ 	ret = ath11k_wmi_send_peer_delete_cmd(ar, addr, vdev_id);
+ 	if (ret) {
+-		ath11k_warn(ar->ab,
++		ath11k_warn(ab,
+ 			    "failed to delete peer vdev_id %d addr %pM ret %d\n",
+ 			    vdev_id, addr, ret);
+ 		return ret;
+@@ -263,7 +357,7 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	}
+ 
+ 	spin_lock_bh(&ar->ab->base_lock);
+-	peer = ath11k_peer_find_by_pdev_idx(ar->ab, ar->pdev_idx, param->peer_addr);
++	peer = ath11k_peer_find_by_addr(ar->ab, param->peer_addr);
+ 	if (peer) {
+ 		spin_unlock_bh(&ar->ab->base_lock);
+ 		return -EINVAL;
+@@ -283,11 +377,13 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	if (ret)
+ 		return ret;
+ 
++	mutex_lock(&ar->ab->tbl_lock);
+ 	spin_lock_bh(&ar->ab->base_lock);
+ 
+ 	peer = ath11k_peer_find(ar->ab, param->vdev_id, param->peer_addr);
+ 	if (!peer) {
+ 		spin_unlock_bh(&ar->ab->base_lock);
++		mutex_unlock(&ar->ab->tbl_lock);
+ 		ath11k_warn(ar->ab, "failed to find peer %pM on vdev %i after creation\n",
+ 			    param->peer_addr, param->vdev_id);
+ 
+@@ -295,6 +391,13 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
+ 		goto cleanup;
+ 	}
+ 
++	ret = ath11k_peer_rhash_add(ar->ab, peer);
++	if (ret) {
++		spin_unlock_bh(&ar->ab->base_lock);
++		mutex_unlock(&ar->ab->tbl_lock);
++		goto cleanup;
++	}
++
+ 	peer->pdev_idx = ar->pdev_idx;
+ 	peer->sta = sta;
+ 
+@@ -319,6 +422,7 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	ar->num_peers++;
+ 
+ 	spin_unlock_bh(&ar->ab->base_lock);
++	mutex_unlock(&ar->ab->tbl_lock);
+ 
+ 	return 0;
+ 
+@@ -342,3 +446,201 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
+ exit:
+ 	return ret;
+ }
++
++int ath11k_peer_rhash_delete(struct ath11k_base *ab, struct ath11k_peer *peer)
++{
++	int ret;
++
++	lockdep_assert_held(&ab->base_lock);
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (!ab->rhead_peer_id || !ab->rhead_peer_addr)
++		return -EPERM;
++
++	ret = ath11k_peer_rhash_remove(ab, ab->rhead_peer_addr, &peer->rhash_addr,
++				       &ab->rhash_peer_addr_param);
++	if (ret) {
++		ath11k_warn(ab, "failed to remove peer %pM id %d in rhash_addr ret %d\n",
++			    peer->addr, peer->peer_id, ret);
++		return ret;
++	}
++
++	ret = ath11k_peer_rhash_remove(ab, ab->rhead_peer_id, &peer->rhash_id,
++				       &ab->rhash_peer_id_param);
++	if (ret) {
++		ath11k_warn(ab, "failed to remove peer %pM id %d in rhash_id ret %d\n",
++			    peer->addr, peer->peer_id, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ath11k_peer_rhash_id_tbl_init(struct ath11k_base *ab)
++{
++	struct rhashtable_params *param;
++	struct rhashtable *rhash_id_tbl;
++	int ret;
++	size_t size;
++
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (ab->rhead_peer_id)
++		return 0;
++
++	size = sizeof(*ab->rhead_peer_id);
++	rhash_id_tbl = kzalloc(size, GFP_KERNEL);
++	if (!rhash_id_tbl) {
++		ath11k_warn(ab, "failed to init rhash id table due to no mem (size %zu)\n",
++			    size);
++		return -ENOMEM;
++	}
++
++	param = &ab->rhash_peer_id_param;
++
++	param->key_offset = offsetof(struct ath11k_peer, peer_id);
++	param->head_offset = offsetof(struct ath11k_peer, rhash_id);
++	param->key_len = sizeof_field(struct ath11k_peer, peer_id);
++	param->automatic_shrinking = true;
++	param->nelem_hint = ab->num_radios * TARGET_NUM_PEERS_PDEV(ab);
++
++	ret = rhashtable_init(rhash_id_tbl, param);
++	if (ret) {
++		ath11k_warn(ab, "failed to init peer id rhash table %d\n", ret);
++		goto err_free;
++	}
++
++	spin_lock_bh(&ab->base_lock);
++
++	if (!ab->rhead_peer_id) {
++		ab->rhead_peer_id = rhash_id_tbl;
++	} else {
++		spin_unlock_bh(&ab->base_lock);
++		goto cleanup_tbl;
++	}
++
++	spin_unlock_bh(&ab->base_lock);
++
++	return 0;
++
++cleanup_tbl:
++	rhashtable_destroy(rhash_id_tbl);
++err_free:
++	kfree(rhash_id_tbl);
++
++	return ret;
++}
++
++static int ath11k_peer_rhash_addr_tbl_init(struct ath11k_base *ab)
++{
++	struct rhashtable_params *param;
++	struct rhashtable *rhash_addr_tbl;
++	int ret;
++	size_t size;
++
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (ab->rhead_peer_addr)
++		return 0;
++
++	size = sizeof(*ab->rhead_peer_addr);
++	rhash_addr_tbl = kzalloc(size, GFP_KERNEL);
++	if (!rhash_addr_tbl) {
++		ath11k_warn(ab, "failed to init rhash addr table due to no mem (size %zu)\n",
++			    size);
++		return -ENOMEM;
++	}
++
++	param = &ab->rhash_peer_addr_param;
++
++	param->key_offset = offsetof(struct ath11k_peer, addr);
++	param->head_offset = offsetof(struct ath11k_peer, rhash_addr);
++	param->key_len = sizeof_field(struct ath11k_peer, addr);
++	param->automatic_shrinking = true;
++	param->nelem_hint = ab->num_radios * TARGET_NUM_PEERS_PDEV(ab);
++
++	ret = rhashtable_init(rhash_addr_tbl, param);
++	if (ret) {
++		ath11k_warn(ab, "failed to init peer addr rhash table %d\n", ret);
++		goto err_free;
++	}
++
++	spin_lock_bh(&ab->base_lock);
++
++	if (!ab->rhead_peer_addr) {
++		ab->rhead_peer_addr = rhash_addr_tbl;
++	} else {
++		spin_unlock_bh(&ab->base_lock);
++		goto cleanup_tbl;
++	}
++
++	spin_unlock_bh(&ab->base_lock);
++
++	return 0;
++
++cleanup_tbl:
++	rhashtable_destroy(rhash_addr_tbl);
++err_free:
++	kfree(rhash_addr_tbl);
++
++	return ret;
++}
++
++static inline void ath11k_peer_rhash_id_tbl_destroy(struct ath11k_base *ab)
++{
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (!ab->rhead_peer_id)
++		return;
++
++	rhashtable_destroy(ab->rhead_peer_id);
++	kfree(ab->rhead_peer_id);
++	ab->rhead_peer_id = NULL;
++}
++
++static inline void ath11k_peer_rhash_addr_tbl_destroy(struct ath11k_base *ab)
++{
++	lockdep_assert_held(&ab->tbl_lock);
++
++	if (!ab->rhead_peer_addr)
++		return;
++
++	rhashtable_destroy(ab->rhead_peer_addr);
++	kfree(ab->rhead_peer_addr);
++	ab->rhead_peer_addr = NULL;
++}
++
++int ath11k_peer_rhash_tbl_init(struct ath11k_base *ab)
++{
++	int ret;
++
++	mutex_lock(&ab->tbl_lock);
++
++	ret = ath11k_peer_rhash_id_tbl_init(ab);
++	if (ret)
++		goto out;
++
++	ret = ath11k_peer_rhash_addr_tbl_init(ab);
++	if (ret)
++		goto cleanup_tbl;
++
++	mutex_unlock(&ab->tbl_lock);
++
++	return 0;
++
++cleanup_tbl:
++	ath11k_peer_rhash_id_tbl_destroy(ab);
++out:
++	mutex_unlock(&ab->tbl_lock);
++	return ret;
++}
++
++void ath11k_peer_rhash_tbl_destroy(struct ath11k_base *ab)
++{
++	mutex_lock(&ab->tbl_lock);
++
++	ath11k_peer_rhash_addr_tbl_destroy(ab);
++	ath11k_peer_rhash_id_tbl_destroy(ab);
++
++	mutex_unlock(&ab->tbl_lock);
++}
+diff --git a/drivers/net/wireless/ath/ath11k/peer.h b/drivers/net/wireless/ath/ath11k/peer.h
+index 63fe566..b687fa9 100644
+--- a/drivers/net/wireless/ath/ath11k/peer.h
++++ b/drivers/net/wireless/ath/ath11k/peer.h
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef ATH11K_PEER_H
+@@ -20,6 +21,11 @@ struct ath11k_peer {
+ 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+ 	struct dp_rx_tid rx_tid[IEEE80211_NUM_TIDS + 1];
+ 
++	/* peer id based rhashtable list pointer */
++	struct rhash_head rhash_id;
++	/* peer addr based rhashtable list pointer */
++	struct rhash_head rhash_addr;
++
+ 	/* Info used in MMIC verification of
+ 	 * RX fragments
+ 	 */
+@@ -47,5 +53,7 @@ int ath11k_wait_for_peer_delete_done(struct ath11k *ar, u32 vdev_id,
+ 				     const u8 *addr);
+ struct ath11k_peer *ath11k_peer_find_by_vdev_id(struct ath11k_base *ab,
+ 						int vdev_id);
+-
++int ath11k_peer_rhash_tbl_init(struct ath11k_base *ab);
++void ath11k_peer_rhash_tbl_destroy(struct ath11k_base *ab);
++int ath11k_peer_rhash_delete(struct ath11k_base *ab, struct ath11k_peer *peer);
+ #endif /* _PEER_H_ */
+-- 
+2.7.4
 
