@@ -2,60 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A95EC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Feb 2022 21:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B47DEC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Feb 2022 22:03:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236141AbiBDVqs (ORCPT
+        id S245218AbiBDWDD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Feb 2022 16:46:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42850 "EHLO
+        Fri, 4 Feb 2022 17:03:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233413AbiBDVqr (ORCPT
+        with ESMTP id S242141AbiBDWDC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Feb 2022 16:46:47 -0500
+        Fri, 4 Feb 2022 17:03:02 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88CE3C061714
-        for <linux-wireless@vger.kernel.org>; Fri,  4 Feb 2022 13:46:45 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01FCEC06173E
+        for <linux-wireless@vger.kernel.org>; Fri,  4 Feb 2022 14:03:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=9eVtwZfZ+uJG2ZN94tHrXDVYLfr65No0A3jJIxqdgIU=;
-        t=1644011205; x=1645220805; b=DlRmUXZP/H8Db4a+AYAGP4vnWhRrSRL+emXWIojFCsZFWuE
-        kWmD/vc5w4idtN8F8Kwr32T7iHCDIho5N0mUXLfvG8w90rocsLZGSYQWwhbbRiXPw4ROd8GpJffpA
-        HZRWHMcJH8VgJWg8NoHgmTpY9P0sBGULlU/WiaFbVyY96yOAVW7sNigRnE3pq6uU/IwlA3bbC3MdO
-        emyN+l/4E+86vWupxveKZ1Zax6Jnz++Mtr8+CpyGkG//X0vfoO/EmHUSDk35A+msoYdAULTK0Ew3M
-        8dsl+A6RMgZF4uw8/YeYfSAqoE47SgJPLH0XG7UMkmTRXiE/Zfc3UPfBincb4WIA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Resent-Cc:Resent-Message-ID; bh=vtsKOx9XNdKQUx1Dq9uJVWySVPRWa0rDd9Le+HJM1N0=;
+        t=1644012182; x=1645221782; b=bvcIgQNhqQBICl5wlTPaI4dzT1AxgSPFtAh7QDfh/sboHr/
+        HwFgOpz5M4f85ZQzr3N38h/6j5SB8Vq3FIrZYZyNeihVHpMj1rSbaGSLR3o3Ip0kuJVxETSj8zpQR
+        KCQNAr9Y+sWKHy7BHbGMgYji4i6ByZNOmOY+Yq2gcF9RJfMPhyzJ/HM5AZWKeAOsb4msHywxnM9Dl
+        ZQfRp/wRUTPxd0bAhAXVuvic7lcF+U/irUtqAVEt03N/7M9/DvTyPDFsYfJCDhsYhcsFu3JxpkJVF
+        scPtZIZugh3fDz8gjT+GfWaDCEGsIunpHA0HDmKMSAEUOXTF9wjcqhbT5xMmTbig==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nG6Pg-00EdSJ-Bb;
-        Fri, 04 Feb 2022 22:46:40 +0100
-Message-ID: <d7494a948df4fddd6a5ae783558d31bce115f0ff.camel@sipsolutions.net>
-Subject: Re: [PATCH] mt76: mt7915: fix injected MPDU transmission to not use
- HW A-MSDU
+        id 1nG6fU-00EeJL-6P;
+        Fri, 04 Feb 2022 23:03:00 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Johan Almbladh <johan.almbladh@anyfinetworks.com>, nbd@nbd.name,
-        lorenzo.bianconi83@gmail.com
-Cc:     ryder.lee@mediatek.com, linux-wireless@vger.kernel.org
-Date:   Fri, 04 Feb 2022 22:46:39 +0100
-In-Reply-To: <20220204154730.166194-1-johan.almbladh@anyfinetworks.com>
-References: <20220204154730.166194-1-johan.almbladh@anyfinetworks.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.3 (3.42.3-1.fc35) 
+To:     linux-wireless@vger.kernel.org
+Cc:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Jia Ding <quic_jiad@quicinc.com>,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Sriram R <quic_srirrama@quicinc.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/19] mac80211_hwsim: don't shadow a global variable
+Date:   Fri,  4 Feb 2022 23:02:38 +0100
+Message-Id: <20220204230119.cf7fa7622a89.I3e878e42bf2feecbb0a6ca38a68c236c23a8c9e6@changeid>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220204220255.448224-1-johannes@sipsolutions.net>
+References: <20220204220255.448224-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2022-02-04 at 16:47 +0100, Johan Almbladh wrote:
-> 
-> diff --git a/mt7915/mac.c b/mt7915/mac.c
-> index 08ee78f6..1848fa16 100644
-> --- a/mt7915/mac.c
+From: Johannes Berg <johannes.berg@intel.com>
 
-You should probably resend that with a full path.
+The argument to hwsim_init_s1g_channels() shadows a global,
+change that to be clearer.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 1fcc2000950b..aa839b395497 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -475,16 +475,16 @@ static const struct ieee80211_sta_s1g_cap hwsim_s1g_cap = {
+ 		     0 },
+ };
+ 
+-static void hwsim_init_s1g_channels(struct ieee80211_channel *channels)
++static void hwsim_init_s1g_channels(struct ieee80211_channel *chans)
+ {
+ 	int ch, freq;
+ 
+ 	for (ch = 0; ch < NUM_S1G_CHANS_US; ch++) {
+ 		freq = 902000 + (ch + 1) * 500;
+-		channels[ch].band = NL80211_BAND_S1GHZ;
+-		channels[ch].center_freq = KHZ_TO_MHZ(freq);
+-		channels[ch].freq_offset = freq % 1000;
+-		channels[ch].hw_value = ch + 1;
++		chans[ch].band = NL80211_BAND_S1GHZ;
++		chans[ch].center_freq = KHZ_TO_MHZ(freq);
++		chans[ch].freq_offset = freq % 1000;
++		chans[ch].hw_value = ch + 1;
+ 	}
+ }
+ 
+-- 
+2.34.1
+
