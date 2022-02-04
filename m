@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF6E2C43217
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Feb 2022 22:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92471C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Feb 2022 22:03:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245498AbiBDWDF (ORCPT
+        id S245671AbiBDWDG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Feb 2022 17:03:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47096 "EHLO
+        Fri, 4 Feb 2022 17:03:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245257AbiBDWDD (ORCPT
+        with ESMTP id S245281AbiBDWDE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Feb 2022 17:03:03 -0500
+        Fri, 4 Feb 2022 17:03:04 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6F5BC061741
-        for <linux-wireless@vger.kernel.org>; Fri,  4 Feb 2022 14:03:02 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BD18C06173D
+        for <linux-wireless@vger.kernel.org>; Fri,  4 Feb 2022 14:03:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=M6UKLtFxeMqdiBqhOdN00DTRssXWrdNf6QwQ7hhMpXg=;
-        t=1644012182; x=1645221782; b=O/r7RmJM2h6wCfEbGI/vTocHNif1OKhtBWlWTs/4lz0Ctkl
-        2j4Oh0CXT+xQ7kwi8qEYMqSgftI17KzUOQ2HsbxHhN+wc5iZ9gz52ih9iZ1u7R4IU5jipR+zA8D4E
-        zxIwibg/d3ffnx9RePRUMf4B4fL/W2Pw5yg5W4w1zkXgA9aISnQC8t9T8eS5UBoUAf5Danyvrm0IV
-        QgrA5u9m4tR/jMJTWqSlVHStsziRXC3VjJslwgdEMsGY2h4Ox0ig6XwENmMURVSxGESlydXd9DaO3
-        0ebUBDE6vl3x8i0PczgbOUIYhAwiqLXZCvUakvf+5xxkFhL6YD7ZMmyyG7fscRkw==;
+        Resent-Cc:Resent-Message-ID; bh=VMvZyy+EtoHdtdr4NhGXKeV9BmSXZx5G1EA+XWbR7o4=;
+        t=1644012183; x=1645221783; b=urujTjzMZ2N3om1RepYtUbV53j9qC3x2xb/G4V+mlLzQQLe
+        qIhY/P1+b870vj0u4wza7YW+dB1ICF7sjuXGopqpm6sWIlzo4myuchpw/iRkb5HTJ+6jBcbkEKfzl
+        PrNf2IHXDH9xw9mx4NWGtAWMfCU910VozAMctpRcrUBxVgvKEEdPmeVCqIfeorIhv+Id0xm+mwIn8
+        9dZmM84pgEnQu/HBJzh6URoxfOv81OE79QF0Wp5pbqxLMpvQV2kTLUJME40cvn2S04X9xZO1F+9od
+        y5fbWhGYiauDUQ3QhKdHvZBFgArNYid0I0yAtYElljo6Ja6wUyHzkC3UBXTCis3Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nG6fU-00EeJL-Tg;
+        id 1nG6fV-00EeJL-KI;
         Fri, 04 Feb 2022 23:03:01 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
@@ -38,9 +38,9 @@ Cc:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
         Jia Ding <quic_jiad@quicinc.com>,
         Mordechay Goodstein <mordechay.goodstein@intel.com>,
         Sriram R <quic_srirrama@quicinc.com>
-Subject: [PATCH 04/19] ieee80211: Add EHT (802.11be) definitions
-Date:   Fri,  4 Feb 2022 23:02:40 +0100
-Message-Id: <20220204230119.1ee92202ac30.Id30a3ef2844b296efbd5486fe1da9ca36a95c5cf@changeid>
+Subject: [PATCH 06/19] cfg80211: Add data structures to capture EHT capabilities
+Date:   Fri,  4 Feb 2022 23:02:42 +0100
+Message-Id: <20220204230119.b0eeb527d761.I2413a37c8f7d2d6d638038a3d95360a3fce0114d@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220204220255.448224-1-johannes@sipsolutions.net>
 References: <20220204220255.448224-1-johannes@sipsolutions.net>
@@ -52,323 +52,147 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ilan Peer <ilan.peer@intel.com>
 
-Based on Draft P802.11be_D1.3.
+And advertise EHT capabilities to user space when supported.
 
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 270 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 270 insertions(+)
+ include/net/cfg80211.h       | 41 ++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h | 12 +++++++++++
+ net/wireless/nl80211.c       | 17 +++++++++++++++
+ 3 files changed, 70 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 60ee7b3f58e7..25137f2b6f35 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -18,6 +18,7 @@
- #include <linux/types.h>
- #include <linux/if_ether.h>
- #include <linux/etherdevice.h>
-+#include <linux/bitfield.h>
- #include <asm/byteorder.h>
- #include <asm/unaligned.h>
- 
-@@ -1925,6 +1926,135 @@ struct ieee80211_mu_edca_param_set {
- 	struct ieee80211_he_mu_edca_param_ac_rec ac_vo;
- } __packed;
- 
-+#define IEEE80211_EHT_MCS_NSS_RX 0x0f
-+#define IEEE80211_EHT_MCS_NSS_TX 0xf0
-+
-+/**
-+ * struct ieee80211_eht_mcs_nss_supp_20mhz_only - EHT 20MHz only station max
-+ * supported NSS for per MCS.
-+ *
-+ * For each field below, bits 0 - 3 indicate the maximal number of spatial
-+ * streams for Rx, and bits 4 - 7 indicate the maximal number of spatial streams
-+ * for Tx.
-+ *
-+ * @rx_tx_mcs7_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 0 - 7.
-+ * @rx_tx_mcs9_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 8 - 9.
-+ * @rx_tx_mcs11_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 10 - 11.
-+ * @rx_tx_mcs13_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 12 - 13.
-+ */
-+struct ieee80211_eht_mcs_nss_supp_20mhz_only {
-+	u8 rx_tx_mcs7_max_nss;
-+	u8 rx_tx_mcs9_max_nss;
-+	u8 rx_tx_mcs11_max_nss;
-+	u8 rx_tx_mcs13_max_nss;
-+};
-+
-+/**
-+ * struct ieee80211_eht_mcs_nss_supp_bw - EHT max supported NSS per MCS (except
-+ * 20MHz only stations).
-+ *
-+ * For each field below, bits 0 - 3 indicate the maximal number of spatial
-+ * streams for Rx, and bits 4 - 7 indicate the maximal number of spatial streams
-+ * for Tx.
-+ *
-+ * @rx_tx_mcs9_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 8 - 9.
-+ * @rx_tx_mcs11_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 10 - 11.
-+ * @rx_tx_mcs13_max_nss: indicates the maximum number of spatial streams
-+ *     supported for reception and the maximum number of spatial streams
-+ *     supported for transmission for MCS 12 - 13.
-+ */
-+struct ieee80211_eht_mcs_nss_supp_bw {
-+	u8 rx_tx_mcs9_max_nss;
-+	u8 rx_tx_mcs11_max_nss;
-+	u8 rx_tx_mcs13_max_nss;
-+};
-+
-+/**
-+ * struct ieee80211_eht_mcs_nss_supp - EHT max supported NSS per MCS
-+ *
-+ * @only_20mhz: For a 20 MHz-only STA, indicates the maximum number of spatial
-+ *     streams supported for reception and the maximum number of spatial streams
-+ *     supported for transmission, for each MCS value. Optionally present in
-+ *     &struct ieee80211_eht_cap_elem.
-+ * @bw_80: If the operating channel width of the STA is greater than or equal to
-+ *     80 MHz, indicates the maximum number of spatial streams supported for
-+ *     reception and the maximum number of spatial streams supported for
-+ *     transmission, for each MCS value, in a PPDU with a bandwidth of 20, 40, or
-+ *     80 MHz. Optionally present in &struct ieee80211_eht_cap_elem.
-+ * @bw_160: If the operating channel width of the STA is greater than or equal to
-+ *     160 MHz, indicates the maximum number of spatial streams supported for
-+ *     reception and the maximum number of spatial streams supported for
-+ *     transmission, for each MCS value, in a PPDU with a bandwidth of 160 MHz.
-+ *     Optionally present in &struct ieee80211_eht_cap_elem.
-+ * @bw_320: If the operating channel width of the STA is greater than or equal to
-+ *     320 MHz, indicates the maximum number of spatial streams supported for
-+ *     reception and the maximum number of spatial streams supported for
-+ *     transmission, for each MCS value, in a PPDU with a bandwidth of 320 MHz.
-+ *     Optionally present in &struct ieee80211_eht_cap_elem.
-+ */
-+struct ieee80211_eht_mcs_nss_supp {
-+	struct ieee80211_eht_mcs_nss_supp_20mhz_only only_20mhz;
-+	struct ieee80211_eht_mcs_nss_supp_bw bw_80;
-+	struct ieee80211_eht_mcs_nss_supp_bw bw_160;
-+	struct ieee80211_eht_mcs_nss_supp_bw bw_320;
-+};
-+
-+/**
-+ * struct ieee80211_eht_cap_elem_fixed - EHT capabilities fixed data
-+ *
-+ * This structure is the "EHT capabilities element" fixed fields as
-+ * described in P802.11be_D1.0 section 9.4.2.295a
-+ *
-+ * @mac_cap_info: MAC capabilities
-+ * @phy_cap_info: PHY capabilities
-+ */
-+struct ieee80211_eht_cap_elem_fixed {
-+	u8 mac_cap_info[2];
-+	u8 phy_cap_info[8];
-+} __packed;
-+
-+/**
-+ * struct ieee80211_eht_cap_elem - EHT capabilities element
-+ * @fixed: fixed parts, see &ieee80211_eht_cap_elem_fixed
-+ * @optional: optional parts
-+ */
-+struct ieee80211_eht_cap_elem {
-+	struct ieee80211_eht_cap_elem_fixed fixed;
-+
-+	/*
-+	 * Followed by:
-+	 * Supported EHT-MCS And NSS Set field: 0, 3, 6, 9, or 12 octets.
-+	 * EHT PPE Thresholds field: variable length.
-+	 */
-+	u8 optional[];
-+} __packed;
-+
-+/**
-+ * struct ieee80211_eht_operation - eht operation element
-+ *
-+ * This structure is the "eht operation element" fields as
-+ * described in P802.11be_D1.0 section 9.4.2.295c
-+ *
-+ * TODO: the actual layout of the EHT operation element is not clearly defined
-+ * in the specification. For now assume the below layout.
-+ */
-+struct ieee80211_eht_operation {
-+	u8 chan_width;
-+	u8 ccfs;
-+} __packed;
-+
- /* 802.11ac VHT Capabilities */
- #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895			0x00000000
- #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991			0x00000001
-@@ -2129,6 +2259,8 @@ enum ieee80211_client_reg_power {
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G	0x04
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G		0x08
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G	0x10
-+#define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_MASK_ALL		0x1e
-+
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_RU_MAPPING_IN_2G	0x20
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_RU_MAPPING_IN_5G	0x40
- #define IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_MASK			0xfe
-@@ -2599,6 +2731,141 @@ ieee80211_he_spr_size(const u8 *he_spr_ie)
- #define S1G_OPER_CH_WIDTH_PRIMARY_1MHZ	BIT(0)
- #define S1G_OPER_CH_WIDTH_OPER		GENMASK(4, 1)
- 
-+/* EHT MAC capabilities as defined in P802.11be_D1.0 section 9.4.2.295c */
-+#define IEEE80211_EHT_MAC_CAP0_NSEP_PRIO_ACCESS_SUPP  0x01
-+#define IEEE80211_EHT_MAC_CAP0_OM_CONTROL_SUPP        0x02
-+#define IEEE80211_EHT_MAC_CAP0_TRIG_TXOP_SHARING_SUPP 0x04
-+#define IEEE80211_EHT_MAC_CAP0_ARR_CONTROL_SUPP       0x08
-+
-+/* EHT PHY capabilities as defined in P802.11be_D1.0 section 9.4.2.295c */
-+#define IEEE80211_EHT_PHY_CAP0_RSERVED                0x01
-+#define IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ         0x02
-+#define IEEE80211_EHT_PHY_CAP0_242_TONE_RU            0x04
-+#define IEEE80211_EHT_PHY_CAP0_NDP_4_EHT_LFT_32_GI    0x08
-+#define IEEE80211_EHT_PHY_CAP0_PARTIAL_BW_UL_MU_MIMO  0x10
-+#define IEEE80211_EHT_PHY_CAP0_SU_BEAMFORMER          0x20
-+#define IEEE80211_EHT_PHY_CAP0_SU_BEAMFORMEE          0x40
-+
-+/* EHT beamformee SU number of spatial streams <= 80MHz is split between octet 0
-+ * and octet 1
-+ */
-+#define IEEE80211_EHT_PHY_CAP0_SU_BEAMFORMEE_SS_80MHZ  0x80
-+
-+#define IEEE80211_EHT_PHY_CAP1_SU_BEAMFORMEE_SS_80MHZ  0x03
-+#define IEEE80211_EHT_PHY_CAP1_SU_BEAMFORMEE_SS_160MHZ 0x1c
-+#define IEEE80211_EHT_PHY_CAP1_SU_BEAMFORMEE_SS_320MHZ 0xe0
-+
-+#define IEEE80211_EHT_PHY_CAP2_SOUNDING_DIM_80MHZ      0x07
-+#define IEEE80211_EHT_PHY_CAP2_SOUNDING_DIM_160MHZ     0x38
-+
-+/* EHT number of sounding dimensions for 320MHz is split between octet 2
-+ * and octet 3
-+ */
-+#define IEEE80211_EHT_PHY_CAP2_SOUNDING_DIM_320MHZ     0xc0
-+
-+#define IEEE80211_EHT_PHY_CAP3_SOUNDING_DIM_320MHZ         0x01
-+#define IEEE80211_EHT_PHY_CAP3_NG_16_SU_FEEDBACK           0x02
-+#define IEEE80211_EHT_PHY_CAP3_NG_16_MU_FEEDBACK           0x04
-+#define IEEE80211_EHT_PHY_CAP3_CODEBOOK_4_2_SU_FEEDBACK    0x08
-+#define IEEE80211_EHT_PHY_CAP3_CODEBOOK_7_5_MU_FEEDBACK    0x10
-+#define IEEE80211_EHT_PHY_CAP3_TRIG_SU_BF_FEEDBACK         0x20
-+#define IEEE80211_EHT_PHY_CAP3_TRIG_MU_BF_PART_BW_FEEDBACK 0x40
-+#define IEEE80211_EHT_PHY_CAP3_TRIG_CQI_FEEDBACK           0x80
-+
-+#define IEEE80211_EHT_PHY_CAP4_PART_BW_DL_MU_MIMO          0x01
-+#define IEEE80211_EHT_PHY_CAP4_PSR_SR_SUPP                 0x02
-+#define IEEE80211_EHT_PHY_CAP4_POWER_BOOST_FACT_SUPP       0x04
-+#define IEEE80211_EHT_PHY_CAP4_EHT_MU_PPDU_4_EHT_LTF_08_GI 0x08
-+#define IEEE80211_EHT_PHY_CAP4_MAX_NC                      0xf0
-+
-+#define IEEE80211_EHT_PHY_CAP5_NON_TRIG_CQI_FEEDBACK       0x01
-+#define IEEE80211_EHT_PHY_CAP5_TX_LESS_242_TONE_RU_SUPP    0x02
-+#define IEEE80211_EHT_PHY_CAP5_RX_LESS_242_TONE_RU_SUPP    0x04
-+#define IEEE80211_EHT_PHY_CAP5_PPE_THRESHOLD_PRESENT       0x08
-+#define IEEE80211_EHT_PHY_CAP5_COMMON_NOMINAL              0x30
-+
-+/* Maximum number of supported EHT LTF is split between octet 5
-+ * and octet 6
-+ */
-+#define IEEE80211_EHT_PHY_CAP5_MAX_NUM_SUPP_EHT_LTF        0xc0
-+
-+#define IEEE80211_EHT_PHY_CAP6_MAX_NUM_SUPP_EHT_LTF        0x03
-+#define IEEE80211_EHT_PHY_CAP6_MCS15_SUPP                  0x7c
-+#define IEEE80211_EHT_PHY_CAP6_EHT_DUP_6GHZ_SUPP           0x80
-+
-+#define IEEE80211_EHT_PHY_CAP7_20MHZ_STA_RX_NDP_WIDER_BW   0x01
-+#define IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_80MHZ  0x02
-+#define IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_160MHZ 0x04
-+#define IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_320MHZ 0x08
-+#define IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_80MHZ         0x10
-+#define IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_160MHZ        0x20
-+#define IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_320MHZ        0x40
-+#define IEEE80211_EHT_PHY_CAP7_RESERVED                    0x80
-+
-+/*
-+ * EHT operation channel width as defined in P802.11be_D1.0 section 9.4.2.295a
-+ */
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH        0x7
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH_20MHZ  0
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH_40MHZ  1
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH_80MHZ  2
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH_160MHZ 3
-+#define IEEE80211_EHT_OPER_CHAN_WIDTH_320MHZ 4
-+
-+/* Calculate 802.11be EHT capabilities IE Tx/Rx EHT MCS NSS Support Field size */
-+static inline u8
-+ieee80211_eht_mcs_nss_size(const struct ieee80211_he_cap_elem *he_cap,
-+			   const struct ieee80211_eht_cap_elem_fixed *eht_cap)
-+{
-+	u8 count = 0;
-+
-+	if (!(he_cap->phy_cap_info[0] &
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_MASK_ALL))
-+		return 4;
-+
-+	if (he_cap->phy_cap_info[0] &
-+	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G)
-+		count += 3;
-+
-+	if (he_cap->phy_cap_info[0] &
-+	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G)
-+		count += 3;
-+
-+	if (eht_cap->phy_cap_info[0] & IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ)
-+		count += 3;
-+
-+	return count;
-+}
-+
-+/* 802.11be EHT PPE Thresholds */
-+#define IEEE80211_EHT_PPE_THRES_NSS_POS               0
-+#define IEEE80211_EHT_PPE_THRES_NSS_MASK              0xf
-+#define IEEE80211_EHT_PPE_THRES_RU_INDEX_BITMASK_MASK 0x1f0
-+#define IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE	      3
-+
-+/*
-+ * Calculate 802.11be EHT capabilities IE EHT field size
-+ */
-+static inline u8
-+ieee80211_eht_ppe_size(u16 ppe_thres_hdr, const u8 *phy_cap_info)
-+{
-+	u32 n;
-+
-+	if (!(phy_cap_info[5] &
-+	      IEEE80211_EHT_PHY_CAP5_PPE_THRESHOLD_PRESENT))
-+		return 0;
-+
-+	n = hweight8(ppe_thres_hdr &
-+		     IEEE80211_EHT_PPE_THRES_RU_INDEX_BITMASK_MASK);
-+	n *= 1 + u16_get_bits(ppe_thres_hdr, IEEE80211_EHT_PPE_THRES_NSS_MASK);
-+
-+	/*
-+	 * Each pair is 6 bits, and we need to add the 9 "header" bits to the
-+	 * total size.
-+	 */
-+	n = n * IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE * 2 + 9;
-+	return DIV_ROUND_UP(n, 8);
-+}
- 
- #define LISTEN_INT_USF	GENMASK(15, 14)
- #define LISTEN_INT_UI	GENMASK(13, 0)
-@@ -3054,6 +3321,9 @@ enum ieee80211_eid_ext {
- 	WLAN_EID_EXT_SHORT_SSID_LIST = 58,
- 	WLAN_EID_EXT_HE_6GHZ_CAPA = 59,
- 	WLAN_EID_EXT_UL_MU_POWER_CAPA = 60,
-+	WLAN_EID_EXT_EHT_OPERATION = 106,
-+	WLAN_EID_EXT_EHT_MULTI_LINK = 107,
-+	WLAN_EID_EXT_EHT_CAPABILITY = 108,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f6db085ff3df..a9098839301f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -360,6 +360,26 @@ struct ieee80211_sta_he_cap {
+ 	u8 ppe_thres[IEEE80211_HE_PPE_THRES_MAX_LEN];
  };
  
- /* Action category code */
++#define IEEE80211_EHT_PPE_THRES_MAX_LEN		32
++
++/**
++ * struct ieee80211_sta_eht_cap - STA's EHT capabilities
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11be EHT capabilities for a STA.
++ *
++ * @has_he: true iff HE data is valid.
++ * @eht_cap_elem: Fixed portion of the eht capabilities element.
++ * @eht_mcs_nss_supp: The supported NSS/MCS combinations.
++ * @eht_ppe_thres: Holds the PPE Thresholds data.
++ */
++struct ieee80211_sta_eht_cap {
++	bool has_eht;
++	struct ieee80211_eht_cap_elem_fixed eht_cap_elem;
++	struct ieee80211_eht_mcs_nss_supp eht_mcs_nss_supp;
++	u8 eht_ppe_thres[IEEE80211_EHT_PPE_THRES_MAX_LEN];
++};
++
+ /**
+  * struct ieee80211_sband_iftype_data - sband data per interface type
+  *
+@@ -379,6 +399,7 @@ struct ieee80211_sband_iftype_data {
+ 	u16 types_mask;
+ 	struct ieee80211_sta_he_cap he_cap;
+ 	struct ieee80211_he_6ghz_capa he_6ghz_capa;
++	struct ieee80211_sta_eht_cap eht_cap;
+ 	struct {
+ 		const u8 *data;
+ 		unsigned int len;
+@@ -561,6 +582,26 @@ ieee80211_get_he_6ghz_capa(const struct ieee80211_supported_band *sband,
+ 	return data->he_6ghz_capa.capa;
+ }
+ 
++/**
++ * ieee80211_get_eht_iftype_cap - return ETH capabilities for an sband's iftype
++ * @sband: the sband to search for the iftype on
++ * @iftype: enum nl80211_iftype
++ *
++ * Return: pointer to the struct ieee80211_sta_eht_cap, or NULL is none found
++ */
++static inline const struct ieee80211_sta_eht_cap *
++ieee80211_get_eht_iftype_cap(const struct ieee80211_supported_band *sband,
++			     enum nl80211_iftype iftype)
++{
++	const struct ieee80211_sband_iftype_data *data =
++		ieee80211_get_sband_iftype_data(sband, iftype);
++
++	if (data && data->eht_cap.has_eht)
++		return &data->eht_cap;
++
++	return NULL;
++}
++
+ /**
+  * wiphy_read_of_freq_limits - read frequency limits from device tree
+  *
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 195a238a322e..373c6428023d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3766,6 +3766,14 @@ enum nl80211_mpath_info {
+  *	given for all 6 GHz band channels
+  * @NL80211_BAND_IFTYPE_ATTR_VENDOR_ELEMS: vendor element capabilities that are
+  *	advertised on this band/for this iftype (binary)
++ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC: EHT MAC capabilities as in EHT
++ *     capabilities IE
++ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY: EHT PHY capabilities as in EHT
++ *     capabilities IE
++ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET: EHT supported NSS/MCS as in EHT
++ *     capabilities IE
++ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE: EHT PPE thresholds information as
++ *     defined in EHT capabilities IE
+  * @__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST: internal use
+  * @NL80211_BAND_IFTYPE_ATTR_MAX: highest band attribute currently defined
+  */
+@@ -3779,6 +3787,10 @@ enum nl80211_band_iftype_attr {
+ 	NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE,
+ 	NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA,
+ 	NL80211_BAND_IFTYPE_ATTR_VENDOR_ELEMS,
++	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC,
++	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY,
++	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET,
++	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE,
+ 
+ 	/* keep last */
+ 	__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 578bff9c378b..dda9cca736d7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1729,6 +1729,7 @@ nl80211_send_iftype_data(struct sk_buff *msg,
+ 			 const struct ieee80211_sband_iftype_data *iftdata)
+ {
+ 	const struct ieee80211_sta_he_cap *he_cap = &iftdata->he_cap;
++	const struct ieee80211_sta_eht_cap *eht_cap = &iftdata->eht_cap;
+ 
+ 	if (nl80211_put_iftypes(msg, NL80211_BAND_IFTYPE_ATTR_IFTYPES,
+ 				iftdata->types_mask))
+@@ -1749,6 +1750,22 @@ nl80211_send_iftype_data(struct sk_buff *msg,
+ 			return -ENOBUFS;
+ 	}
+ 
++	if (eht_cap->has_eht) {
++		if (nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC,
++			    sizeof(eht_cap->eht_cap_elem.mac_cap_info),
++			    eht_cap->eht_cap_elem.mac_cap_info) ||
++		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY,
++			    sizeof(eht_cap->eht_cap_elem.phy_cap_info),
++			    eht_cap->eht_cap_elem.phy_cap_info) ||
++		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET,
++			    sizeof(eht_cap->eht_mcs_nss_supp),
++			    &eht_cap->eht_mcs_nss_supp) ||
++		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE,
++			    sizeof(eht_cap->eht_ppe_thres),
++			    eht_cap->eht_ppe_thres))
++			return -ENOBUFS;
++	}
++
+ 	if (sband->band == NL80211_BAND_6GHZ &&
+ 	    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA,
+ 		    sizeof(iftdata->he_6ghz_capa),
 -- 
 2.34.1
 
