@@ -2,99 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F577C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 06:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95892C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 07:03:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230400AbiBGGlB (ORCPT
+        id S238591AbiBGHDe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Feb 2022 01:41:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54250 "EHLO
+        Mon, 7 Feb 2022 02:03:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357087AbiBGGOo (ORCPT
+        with ESMTP id S1357045AbiBGGnF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Feb 2022 01:14:44 -0500
-X-Greylist: delayed 123 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Feb 2022 22:14:43 PST
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508AEC043181
-        for <linux-wireless@vger.kernel.org>; Sun,  6 Feb 2022 22:14:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644214483; x=1675750483;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=q4Bf9L82tihKoR0vEAiIJKFbpWaB/+VxOKF7u7RB5lQ=;
-  b=MJWbChzoaXvWvVS9AQ2wzbUQwh73lbbooUd3t8nBT4PuP+8C+gynEY07
-   ghTv1IoTXCIzIzcTFeHcH85YMuVG+q61aECCrfMlvgH1bkPS1F38faHRP
-   Ac7zz+/qK/xpBlh/n5QAKIZWvGeNT6g1aFEffCyRviZfGdwl23siLbgou
-   8=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 06 Feb 2022 22:12:39 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:12:39 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Sun, 6 Feb 2022 22:12:39 -0800
-Received: from [10.253.38.163] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.922.19; Sun, 6 Feb 2022
- 22:12:38 -0800
-Message-ID: <1f02d646-892b-1c0a-2081-f4ee579e940a@quicinc.com>
-Date:   Mon, 7 Feb 2022 14:12:35 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v5 0/2] ath11k: add handler for board-2.bin without
- variant and read SMBIOS
-Content-Language: en-US
-To:     <ath11k@lists.infradead.org>
+        Mon, 7 Feb 2022 01:43:05 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FB9AC043181
+        for <linux-wireless@vger.kernel.org>; Sun,  6 Feb 2022 22:43:03 -0800 (PST)
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2176e3lwD024606, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2176e3lwD024606
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 7 Feb 2022 14:40:03 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Mon, 7 Feb 2022 14:40:03 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 7 Feb
+ 2022 14:40:03 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-References: <20211220064829.17557-1-quic_wgong@quicinc.com>
-From:   Wen Gong <quic_wgong@quicinc.com>
-In-Reply-To: <20211220064829.17557-1-quic_wgong@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Subject: [PATCH 3/7] rtw89: only STA mode change vif_type mapping dynamically
+Date:   Mon, 7 Feb 2022 14:38:56 +0800
+Message-ID: <20220207063900.43643-4-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220207063900.43643-1-pkshih@realtek.com>
+References: <20220207063900.43643-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 02/07/2022 06:18:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzIvNyCkV6TIIDAzOjUyOjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+vif_type mapping indicates hardware operating mode corresponding to vif
+type. In STA mode, hardware mode should be INFRA or NO_LINK mode
+dynamically according to association status. Since AP mode don't need to
+change this by association status intuitively, just do the mapping in
+STA mode.
 
-Do you have any comment for this patch set?
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c     | 4 ++--
+ drivers/net/wireless/realtek/rtw89/mac80211.c | 3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-On 12/20/2021 2:48 PM, Wen Gong wrote:
-> v5:
->     1. rebased to ath.git ath-202112161538
->     2. fix warning "failed to fetch board data for bus=pci,qmi-chip-id=0,qmi-board-id=255,variant=DE_1901 from ath11k/QCA6390/hw2.0/board-2.bin"
->
-> v4:
->     1. add helper function ath11k_core_create_fallback_board_name()
->     2. rebased to ath.git ath-202112071521
->
-> v3:
->     1. add patch "ath11k: add fallback board name without variant while searching board-2.bin"
->     2. reabsed to latest ath.git master ath-202111221436
->
-> v2: rebased to latest ath.git master ath-202111170737
->
-> When it does not have matched board name with variant in board-2.bin,
-> ath11k will fallback to search without variant.
->
-> Also read the variant from SMBIOS.
->
-> Wen Gong (2):
->    ath11k: add fallback board name without variant while searching
->      board-2.bin
->    ath11k: add read variant from SMBIOS for download board data
->
->   drivers/net/wireless/ath/ath11k/core.c | 109 +++++++++++++++++++++++--
->   drivers/net/wireless/ath/ath11k/core.h |  11 +++
->   drivers/net/wireless/ath/ath11k/qmi.c  |   4 +
->   3 files changed, 118 insertions(+), 6 deletions(-)
->
->
-> base-commit: 12018ad8603a598d773e2cae12542a1981c94886
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 81575463a833f..8849f3172a341 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -2047,7 +2047,8 @@ int rtw89_core_sta_disconnect(struct rtw89_dev *rtwdev,
+ 	rtw89_mac_bf_disassoc(rtwdev, vif, sta);
+ 	rtw89_core_free_sta_pending_ba(rtwdev, sta);
+ 
+-	rtw89_vif_type_mapping(vif, false);
++	if (vif->type == NL80211_IFTYPE_STATION)
++		rtw89_vif_type_mapping(vif, false);
+ 
+ 	ret = rtw89_fw_h2c_assoc_cmac_tbl(rtwdev, vif, sta);
+ 	if (ret) {
+@@ -2079,7 +2080,6 @@ int rtw89_core_sta_assoc(struct rtw89_dev *rtwdev,
+ 	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
+ 	int ret;
+ 
+-	rtw89_vif_type_mapping(vif, true);
+ 
+ 	ret = rtw89_fw_h2c_assoc_cmac_tbl(rtwdev, vif, sta);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
+index 02480a6bdf4c0..295d54c0fc94a 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
+@@ -324,6 +324,9 @@ static void rtw89_station_mode_sta_assoc(struct rtw89_dev *rtwdev,
+ 		rtw89_err(rtwdev, "can't find sta to set sta_assoc state\n");
+ 		return;
+ 	}
++
++	rtw89_vif_type_mapping(vif, true);
++
+ 	rtw89_core_sta_assoc(rtwdev, vif, sta);
+ }
+ 
+-- 
+2.25.1
+
