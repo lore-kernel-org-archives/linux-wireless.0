@@ -2,103 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AF2C4707A
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 16:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D89A0C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 17:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235736AbiBGQQc (ORCPT
+        id S240280AbiBGRv6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Feb 2022 11:16:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40946 "EHLO
+        Mon, 7 Feb 2022 12:51:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386922AbiBGQCR (ORCPT
+        with ESMTP id S239685AbiBGRng (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Feb 2022 11:02:17 -0500
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDCC5C0401CE;
-        Mon,  7 Feb 2022 08:02:16 -0800 (PST)
-Received: by mail-pf1-x429.google.com with SMTP id d187so13693608pfa.10;
-        Mon, 07 Feb 2022 08:02:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:cc:from
-         :subject:content-transfer-encoding;
-        bh=IDP7xcaBu/BjbI3M/dHvzrRQkC76UiHakyHIGFZDn0w=;
-        b=f5mnubI/HXS3OW7L+u1hGknGy03vHcdyrktKYxn4h3XZdEvkISPsdzwnab+lZjRONE
-         J3sSmU6SH5rGMI4xurcPCRmp+1DqaOpM4XPgfpti04/12ZSMmVpTlYUhEBZUl+UUf7M9
-         Lfy1W/vlTmA+e12dl3/zpxIfNo/GOsGXCv5lOkKImX34px3bv5uaJ2iqGcPVsaSip69R
-         HjzRUS9ytP1b2LqE2kBBo+RtFGAzJWqCshtGk6gdXWgZmUP7TmgirpHA2Of5yOBaGfqe
-         GsHRxtj5b2XsWXJVpUkYbWOWoFGlUozSeidhRjqGEH3Z7wTZzP34goYJDkCqaxJqiZnD
-         c+dA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:from:subject:content-transfer-encoding;
-        bh=IDP7xcaBu/BjbI3M/dHvzrRQkC76UiHakyHIGFZDn0w=;
-        b=HiIefofHCBNr2lWITjjxPvcod7mk/V0YAq3Xq9B01n8GnuLLbqD7OqLHNHj1FOe5Mk
-         rxhlIlnk/P3X30eqt9JfPz6MGCZHCgKMcC5e5plGx7TLilv2IZZvXAjCHTXUj+dwLZVm
-         Lw65sdRU2M+hCM78jIdmQDlQ++RdkjWF5R8Yqb+FPbWxyknizmj+3IpfeUh23da23R1L
-         LCfykfOEVgtqhI0k+0rD9fx0Yl+izk6pI7TFETjyXOq7Hhn4XxFI4duJN0SGlMGoYOpu
-         yUj2Lt4Kni/B8cUHH7RIY+dbTMLVPJ6V/npjy4rOPPA5R0CzIv3ZVNSLzbHoDXSJVr3K
-         VXSA==
-X-Gm-Message-State: AOAM530yZpkFO78Xw3UcHAtp5BpG1euVZ3Cj1S7EBC9iF/jl6I329anQ
-        22Rx6WdNs8ExK2NijBhPj/HphGZSHeb0LQ==
-X-Google-Smtp-Source: ABdhPJwt9sCEmVWex/KrxVf6HDJS+EckYkCgKOO6id3rD2Q2rqB1kPGQSF8ejjauek6IViTtbD8uPw==
-X-Received: by 2002:a05:6a00:1a16:: with SMTP id g22mr53263pfv.81.1644249736462;
-        Mon, 07 Feb 2022 08:02:16 -0800 (PST)
-Received: from [10.59.0.6] ([85.203.23.80])
-        by smtp.gmail.com with ESMTPSA id a3sm12221624pfk.73.2022.02.07.08.02.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Feb 2022 08:02:15 -0800 (PST)
-Message-ID: <cf81c699-77ef-651d-18d0-7d8182452ff4@gmail.com>
-Date:   Tue, 8 Feb 2022 00:02:05 +0800
+        Mon, 7 Feb 2022 12:43:36 -0500
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC8D2C0401D9
+        for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2022 09:43:35 -0800 (PST)
+Received: from evilbit.green-communications.fr ([92.154.77.116]) by
+ mrelayeu.kundenserver.de (mreue009 [213.165.67.103]) with ESMTPSA (Nemesis)
+ id 1M4bA6-1nImeo1blO-001mHW; Mon, 07 Feb 2022 18:38:12 +0100
+From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 3/3] mt76: mt7915e: Enable thermal management by default
+Date:   Mon,  7 Feb 2022 18:37:47 +0100
+Message-Id: <20220207173747.7997-3-nicolas.cavallari@green-communications.fr>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220207173747.7997-1-nicolas.cavallari@green-communications.fr>
+References: <d7ce90d8-552a-2cab-6310-3a84584172a1@green-communications.fr>
+ <20220207173747.7997-1-nicolas.cavallari@green-communications.fr>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Content-Language: en-US
-To:     pizza@shaftnet.org, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [BUG] cw1200: possible deadlock involving three functions
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:SiOGOzsTtpXIwqwfrbLkC4RZX+gb0npsvx5wVL3eBoPbb+pYnd0
+ 3Ukpv7PIrzQHSXXKRKcdae/+TJvTfETyiKWMxLQ6u0GqKPsGgjtiAWMPPBUu91kzWUy/qOX
+ zTeXiZzbcH1wxn6+yUdmPxoZeGmaHGZI7HmbXGJIAskEAlH6kwwbmwIclUj4BC1wYT/7A5l
+ 1OSRJCdedHWmX2r5cFryg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:ByNk+d52gOA=:1vhyNLvbd/ujT5ut2uZ9WR
+ iIKdvdT7gXSQHDo7nxRyvUVMOr+cruYDOQ28Vh5+nIYems7l9Z6tyQyjbmMoKlNh/NQ1ytMTp
+ p4FSd2RG20OugLvoFBu2CdItgMhXy+Z4z9gxt/DLD8VedNbVqQBL+kepwnRrsuiEkhGy0m9Jx
+ 5lVTvuiZvuRqkou5qVKl3XXW3Oh9QmoOH7OIHS6RU6Oret7v5JFhBk064ilm5VxaEFMvpJPnZ
+ ScF3174OTFYubQTny0IJX+JECX3im+1T51Fb3MKUe4B+Y00+sWv64iyf4G1OPzGwCSZNecXIv
+ zl6WyPK02heRUtPPFi2HuoiqE3fPwTu5qrlnPQoineoAXyiZwVStfIAOujMuBuELIhdNlpWLH
+ xDwXsUxda2TtvDkVVyabfHM1ACiHqmQJjLg7WJDVfI86pcwhcXCbUmENuveSe0bqTy2ULCx5c
+ 3o1/XhTR7185+50EVb8hj4472wfCJFag2+eaYtz72xhrdjwLG5olKpXiAiFfXBRBkHJWxUwqd
+ irVaCYGfXbuTZcNZrXVzl0g6gRhbrwXKlj6U7Znhz8cC2OK59NgaGiRyfjT2DiE60g8srASTN
+ dAMeyf2caUDS6AW2tuPEkqBVEdjLNJFpscTaMFOMkYGBymyWohm18P7/nxnDpxgpffN2G5pAP
+ 4dCD0WgpP+4a11g1glFnEj7TAe4svaD8+5yQrUhHNy2FwklzaHqOLQ0cUltuTEdP3uqOClKL9
+ N2qByZGSN+PerOTF9HiPqJSNx/yPhJyw/GUcmQ==
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+By default, mt7915e does not enable thermal management until the default
+thermal zone does not reach a trip point.  If the rest of the system
+have better cooling than the wireless hardware, then it is possible that
+the wireless chip can overheat while the rest of the system is fine.
 
-My static analysis tool reports a possible deadlock in the cw1200 driver 
-in Linux 5.16:
+Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-cw1200_probe_work()
-   mutex_lock(&priv->conf_mutex); --> Line 384 (Lock A)
-   wsm_flush_tx()
-     wait_event_timeout(priv->bh_evt_wq, ...) --> Line 1208 (Wait X)
-
-cw1200_bh()
-   wait_event_interruptible(priv->bh_wq, ...) --> Line 524 (Wait Y)
-   wake_up(&priv->bh_evt_wq); --> Line 534 (Wake X)
-
-cw1200_do_join()
-   mutex_lock(&priv->conf_mutex); --> Line 1238 (Lock A)
-   wsm_unlock_tx()
-     cw1200_bh_wakeup()
-       wake_up(&priv->bh_wq); --> Line 119 (Wake Y)
-
-When cw1200_probe_work() is executed, "Wait X" is performed by holding 
-"Lock A". If cw1200_bh() is executed at this time, because "Wait Y" is 
-performed, "Wake X" cannot be performed to wake up "Wait X". If 
-cw1200_do_join() is executed at this time, because "Lock A" has already 
-been hold, "Wake Y" cannot be performed to wake up "Wait Y".
-I find that "Wait X" is performed with a timeout, to relieve the 
-possible deadlock; but I think this timeout can cause inefficient execution.
-
-I am not quite sure whether this possible problem is real and how to fix 
-it if it is real.
-Any feedback would be appreciated, thanks :)
-
-Best wishes,
-Jia-Ju Bai
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 71ca4b0641b6..4fa5da9195a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -199,7 +199,8 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
+ 	phy->throttle_temp[0] = 110;
+ 	phy->throttle_temp[1] = 120;
+ 
+-	return 0;
++	return mt7915_mcu_set_thermal_throttling(phy,
++						 MT7915_THERMAL_THROTTLE_MAX);
+ }
+ 
+ static void mt7915_led_set_config(struct led_classdev *led_cdev,
+-- 
+2.34.1
 
