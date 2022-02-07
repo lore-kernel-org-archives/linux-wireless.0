@@ -2,167 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6256AC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 17:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E46D0C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 18:16:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235334AbiBGRwN (ORCPT
+        id S232556AbiBGSQl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Feb 2022 12:52:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58734 "EHLO
+        Mon, 7 Feb 2022 13:16:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238203AbiBGRn1 (ORCPT
+        with ESMTP id S1343813AbiBGSJX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Feb 2022 12:43:27 -0500
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C313C0401DA
-        for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2022 09:43:26 -0800 (PST)
-Received: from evilbit.green-communications.fr ([92.154.77.116]) by
- mrelayeu.kundenserver.de (mreue009 [213.165.67.103]) with ESMTPSA (Nemesis)
- id 1MKsaz-1nbg9L1Ran-00LEoH; Mon, 07 Feb 2022 18:38:06 +0100
-From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 1/3] mt76: mt7915e: Fix degraded performance after temporary overheat
-Date:   Mon,  7 Feb 2022 18:37:45 +0100
-Message-Id: <20220207173747.7997-1-nicolas.cavallari@green-communications.fr>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <d7ce90d8-552a-2cab-6310-3a84584172a1@green-communications.fr>
-References: <d7ce90d8-552a-2cab-6310-3a84584172a1@green-communications.fr>
+        Mon, 7 Feb 2022 13:09:23 -0500
+X-Greylist: delayed 466 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 10:09:22 PST
+Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EACCC0401E0
+        for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2022 10:09:22 -0800 (PST)
+Received: from [192.168.0.175] ([151.127.53.97]) by mrelayeu.kundenserver.de
+ (mreue109 [213.165.67.119]) with ESMTPSA (Nemesis) id
+ 1Mnac7-1o07aC2DAL-00jYjW; Mon, 07 Feb 2022 18:56:21 +0100
+Message-ID: <bea2f2a7-85f0-1768-4625-9dc1da94f604@green-communications.fr>
+Date:   Mon, 7 Feb 2022 18:56:08 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:Y8+taFohQYdEKpCEm8w7Bui8N7fbtuwdis6JaWIRccn3+CZ6t+O
- +U9vcEemMppB9nlNwxVB6gwVlO9mevqNU5UJagbjaWW8o7YJUMaTmYEj+5F+j4twHgDvTWu
- vUzl3UKLzCBZJVbxsK83HwJG+kJUsW6jShgpG9ob+f5Z2/kxrie3leHHNix27W8l6KdAyR6
- 4cVaqanNmroTHei9tzMkA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:YJShyVz0SVc=:EVh7+qJZm2R8PnBHO1gXKg
- eOFP/URom1LjUa0CKFW1pIS1ut+9txZff+93aznwOqAmUeWJCeAw6WQjYxMMhHAGDhlr2oGQv
- jpZsGPuGOqLHi7ztFFY1bXi5SdGgKvhcyI4YHkGwssKXKVEPQJVjDru7dywxmgbgKk64ZqLFJ
- ns2aTw1gn7aRfmJx/tNj6UwGs20HwNjlBcXsBfO8MaGT2FXk/Q02Ub5/ue9c2GojI5PS0ABNv
- qEiz0E/7qAc8QnY2o8PGq97lqvOR6qjv2zPH8+9s6ZQopIdrwzstXQXBKBPNKVEPFVOKOFsbo
- OFUhcMjRjTp/pcqwZDy7Jn9on6HNFugnDjl3rlMlQcDLjCT6ikH78p8oAeBw0LHBAqVZkYBPv
- gIy5kxMIoUqMBOf9HxW0Mp2jb0/+YckvEmDKty56ggASw4Pkv5rRahkVkNRHmaaJOBupsvRO0
- Qb9BmmUkbC7I/hlI9wWSuWPpyUOfE5OOlQRUHqboBft/1hr5JXElnHDaQCdbmo8IgtePdnV4Q
- gvQSV+uovk30/fz1M70tAyq5/l16thjhPk1wRlcmgNysPkWlDPmor+UDY5ivd1ADUa8KEN4TW
- 1sbGf21cDq7WPGsxV81G94muvrd5Oxso8mHepIZMYSZNeRpwZVnKM9wNjRvAjVejcz6jOr/MS
- J0SMCQ4ohjNYIjUfRUX8xTXlsqEeFtruttoVolI77zsxPm4ooIN3BuCBzfM100lRsuLTbLhRe
- FurrU259q2ca6cDUduh9KDTm+XoG+376KEKMoQ==
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH 09/13] cfg80211: Save the regulatory domain when setting
+ custom regulatory
+Content-Language: fr
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgens?= =?UTF-8?Q?en?= 
+        <toke@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <20201129153055.1971298-1-luca@coelho.fi>
+ <iwlwifi.20201129172929.290fa5c5568a.Ic5732aa64de6ee97ae3578bd5779fc723ba489d1@changeid>
+ <e8e6afa6-275e-2cc5-6351-e1ed5eb0e0af@green-communications.fr>
+ <87ily325t4.fsf@tynnyri.adurom.net>
+ <cedc93ef-496f-a403-0089-b2a82477fe0f@green-communications.fr>
+ <0848f5eba90a2125425da52b6b5f6f47ba9d6630.camel@sipsolutions.net>
+From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+In-Reply-To: <0848f5eba90a2125425da52b6b5f6f47ba9d6630.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:OuwS8Fss+UEi3QYRXx5qu6BbDmQjhjz9K6o9mixT64bOoAwGohu
+ mS3dGu6CjYVVPZbWm8oi/B1NwoOAH4Dg530br0TkTFgfT39VeMTgMZ59dJwVTT3N0qgcwjT
+ qS1RqygKEED7QgDpkJcpU45yqMQaFihJ/NTpKzqHp0eoNO1gqxl1xSx407l9dGCsam3iqeF
+ 7L83dSMjqegVfnpd9s4bA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:UZWY2v8Sr84=:R/pbfgUpGlOpU3TXhrCOhK
+ h3otz/CUgjIBSGag/tu+EmzKcxOOktfWQXNt2VpmwEdGsHDN7g5SQRUUBA0P1cSyc0z2ehlIG
+ UV93W6rFXl16wo/ajZ6tOEehPoJ2piI3LW56eF7fwoyrp39Us/iDJBNNlZblRC8L5ZZqUtJOE
+ cCgTUmORmmk0Zp02Ul/SrY0HHOhmx3cHcFDJNdRICG7GbJRmt73foIwGMy6Mzb587q199DJ+v
+ aNicG09b6ga/J4CswP2Df4e8tUfyR5hv6f/pTb4NVLvCZq5hwiHMpy2FbvRCB1mAm37gzpteM
+ hF4qTqV03/bQd9mahq8XYoFoXOzVI9acLWD07PFDrHbFXsomRE+azQw8DCaNF2MDcHQw3vWTX
+ bcyD8W+tnFiB7hR4w6+KN/kkn+S6+dDktnGujz+2NRsySLnGOmTqhSSvgmKFGRNQ580HTyirH
+ q/XntZssbo5dGkZCUYVPIdZO1JWJN2y9zb/17gfbrOAoF5RXaXff1EgdNKL/0NbMMaUUVyQhN
+ +5zolnn/thbIRZwlMIEEJBquKsTFwsnWO7PrjQ2S1feig4M4BZVitTyQJtbGkuUsvNwPee9jd
+ gvcF3JPhtTLCBYAGjZQLlFMduxj6Lur0qsLx4EzmdSV7FljUT8QOUdrjPSXk2qitXThs5JCSK
+ QRQDBBgPuqU0oTRzpjwdRkqODX2l5ii7HDHY1ynvpptuu3xtazj1UKitYqHiwm7dgcTcfEzqy
+ hTGQsjfUQtyRJB3SJqm5RsiP608IZ8JeMxL3eA==
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mt7915e registers a cooling_device with wrong semantics:
+On 03/02/2022 23:30, Johannes Berg wrote:
+> On Tue, 2021-10-12 at 12:24 +0200, Nicolas Cavallari wrote:
+>>>>
+>>>> This patch somehow appears to break ath9k's eeprom hints and restrict
+>>>> it to the world regulatory domain on v5.12.10.
+>>>>
+>>>> ath9k calls wiphy_apply_custom_regulatory() with its own kind of world
+>>>> regulatory domain, before it decodes hints from the eeprom and uses
+>>>> regulatory_hint() to request a specific alpha2.
+>>>>
+>>>> With this patch, applying the hint fails because wiphy->regd is already set.
+>>>> If i revert this patch, ath9k works again.
+>>>
+> 
+> Hm. It stands to reason that perhaps ath9k should call
+> wiphy_apply_custom_regulatory(NULL) (if that's possible) to reset the
+> knowledge of having a custom regulatory domain, before requesting the
+> correct one be applied by cfg80211 (and possibly even crda userspace).
 
-1. cooling_device expect that higher states values should cool more, but
-   mt7915e did the opposite...  with the exception of state == 0, which
-   should "disable thermal management", but does not seem to have any
-   effect since the previous state is kept.
+wiphy_apply_custom_regulatory(NULL) is apparently not possible.
+The regulatory code is still a black box to me...
 
-The result is that when the thermal zone heats up a bit and bumps the
-cooling_device state from 0 to 1 to cool a bit, the performance is
-destroyed, and when going back from 1 to 0, the performance stays bad.
-
-2. Reading the cooling_device state does not always return the last
-   written state, but can return the actual hardware throttle state,
-   which is different.
-
-This is a problem because the mt7915 firmware actually implement the
-equivalent of a thermal zone with trip points.  Setting the cooling
-device state actually changes the throttles at each trip point, so the
-following could occur if the first issue is fixed:
-
-- thermal subsystem set state to 100% power (state=0)
-- mt7915e driver set trip throttles to [100%, 50%, 25%, 12%]
-- hardware heats up and decides to switch to 50% power
-- thermal subsystem see that power is 50% (state=50), decide to increase
-  it to 60% (state=40) because the rest of the system is cool.
-- mt7915e driver set trip throttle to [60%, 30%, 15%, 7%]
-- hardware thus switches to 30% power
-[race to the bottom continues...]
-
-This patch corrects the semantics of the cooling_device to the one that
-the thermal subsystem expect it.
-
-Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 16 ++++++++++------
- .../net/wireless/mediatek/mt76/mt7915/mt7915.h   |  2 ++
- 2 files changed, 12 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 2bc9097c5214..d6efbf1a2724 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -97,7 +97,7 @@ static int
- mt7915_thermal_get_max_throttle_state(struct thermal_cooling_device *cdev,
- 				      unsigned long *state)
- {
--	*state = MT7915_THERMAL_THROTTLE_MAX;
-+	*state = MT7915_CDEV_THROTTLE_MAX;
- 
- 	return 0;
- }
-@@ -108,7 +108,7 @@ mt7915_thermal_get_cur_throttle_state(struct thermal_cooling_device *cdev,
- {
- 	struct mt7915_phy *phy = cdev->devdata;
- 
--	*state = phy->throttle_state;
-+	*state = phy->cdev_state;
- 
- 	return 0;
- }
-@@ -120,20 +120,24 @@ mt7915_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 	struct mt7915_phy *phy = cdev->devdata;
- 	int ret;
- 
--	if (state > MT7915_THERMAL_THROTTLE_MAX)
-+	if (state > MT7915_CDEV_THROTTLE_MAX)
- 		return -EINVAL;
- 
- 	if (phy->throttle_temp[0] > phy->throttle_temp[1])
- 		return 0;
- 
--	if (state == phy->throttle_state)
-+	if (state == phy->cdev_state)
- 		return 0;
- 
--	ret = mt7915_mcu_set_thermal_throttling(phy, state);
-+	// cooling_device convention: 0 = no cooling, more = more cooling
-+	// mcu convention: 1 = max cooling, more = less cooling
-+	ret = mt7915_mcu_set_thermal_throttling(phy,
-+						MT7915_THERMAL_THROTTLE_MAX
-+						- state);
- 	if (ret)
- 		return ret;
- 
--	phy->throttle_state = state;
-+	phy->cdev_state = state;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 0403912a521d..cf4c8d2dcc60 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -49,6 +49,7 @@
- #define MT7915_CFEND_RATE_11B		0x03	/* 11B LP, 11M */
- 
- #define MT7915_THERMAL_THROTTLE_MAX	100
-+#define MT7915_CDEV_THROTTLE_MAX	99
- 
- #define MT7915_SKU_RATE_NUM		161
- 
-@@ -218,6 +219,7 @@ struct mt7915_phy {
- 	struct ieee80211_vif *monitor_vif;
- 
- 	struct thermal_cooling_device *cdev;
-+	u8 cdev_state;
- 	u8 throttle_state;
- 	u32 throttle_temp[2]; /* 0: critical high, 1: maximum */
- 
--- 
-2.34.1
 
