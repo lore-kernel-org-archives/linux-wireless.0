@@ -2,87 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E46D0C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 18:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72EA7C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 20:28:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232556AbiBGSQl (ORCPT
+        id S242300AbiBGU1e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Feb 2022 13:16:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44336 "EHLO
+        Mon, 7 Feb 2022 15:27:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343813AbiBGSJX (ORCPT
+        with ESMTP id S234543AbiBGUYc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Feb 2022 13:09:23 -0500
-X-Greylist: delayed 466 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 10:09:22 PST
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EACCC0401E0
-        for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2022 10:09:22 -0800 (PST)
-Received: from [192.168.0.175] ([151.127.53.97]) by mrelayeu.kundenserver.de
- (mreue109 [213.165.67.119]) with ESMTPSA (Nemesis) id
- 1Mnac7-1o07aC2DAL-00jYjW; Mon, 07 Feb 2022 18:56:21 +0100
-Message-ID: <bea2f2a7-85f0-1768-4625-9dc1da94f604@green-communications.fr>
-Date:   Mon, 7 Feb 2022 18:56:08 +0100
+        Mon, 7 Feb 2022 15:24:32 -0500
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA3DC0401DA;
+        Mon,  7 Feb 2022 12:24:31 -0800 (PST)
+Received: by mail-lf1-x12f.google.com with SMTP id z4so14391444lfg.5;
+        Mon, 07 Feb 2022 12:24:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=gItGRtBFmuDCuiCd8LZimI8CT8KycScnCN76eWqmpsI=;
+        b=EvGmrX7VLUplcnT7jV/mKf7O+C+eUWXMUppPpYkx6X9DhLk8AvGTjImHanjDBoSfid
+         p+e+YTlRflPL2Ke4p+llrqzuoi+T9WduxnN4OGM6oMSCpsVjeJ9O7fZl8wqmLC7LBbYm
+         Lcnl9+KHWE/ges8niXD9d1f2MdpOQ89TbyZVvnUk+yvUZzfyPqnIrX9SFEdoC7Q5HR/G
+         jZMVmTDWmlvagkAEzMUAUzGHXSJ6ljsOL3VfU1f1tZK9bfUFP5YPVV0UOJOy6vu241i/
+         AJ+LjR7N37F6Zvsuc/Xfcf2LKt1YDeC+cYmpFjapst9HF1Ag1KTjQRJQugX45T/JUfjf
+         noPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=gItGRtBFmuDCuiCd8LZimI8CT8KycScnCN76eWqmpsI=;
+        b=eMB3YV6/oC9E+9DhfI8U3BY4t1gXAnaEp7iRYeUHXCIuPyJe5vxQrdWZ5hxl5/D9dM
+         ilL2o6A7b/yOAdfBGYg1V9tdj6p7QCQvbqhlk2jgRehWWRw2oHM/YQ/D+8UWmzG/820M
+         ObTbrqCDci8aHltmBb4upgCl14NFHJBGhwGtTnC347+OCkWeZPAL+RHsxNfz16qzX8vC
+         R8Q0juoiRKbQe3I9x0DFu7zg5bpkmi/QkOdti5EsJxu815TnLKTE3sxbgH6RigsEL0ev
+         ySa2PBH+BMcIeOrdjZBquivmsH9zwnIT+DzjkhJ1kLLZBBrjhE/HOnXzyTOvk11UpigF
+         mrcw==
+X-Gm-Message-State: AOAM531OxE4SopaEjVezmel34xcXD8ckR/Zem1nb68iYOcR6pAa03EVb
+        5cl/PCsc2/XNO7rNj5PnVHEaoQbhZrncEg==
+X-Google-Smtp-Source: ABdhPJz7L7ywOhhkq7VsLw/TZyIlGHs1A43QzxAPf71xzK7cAl3+cKVgqJvVR4mIAjJjhLs6FT83Fg==
+X-Received: by 2002:a05:6512:234a:: with SMTP id p10mr767844lfu.15.1644265469479;
+        Mon, 07 Feb 2022 12:24:29 -0800 (PST)
+Received: from localhost.localdomain ([94.103.224.201])
+        by smtp.gmail.com with ESMTPSA id m7sm1759127ljh.47.2022.02.07.12.24.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Feb 2022 12:24:28 -0800 (PST)
+From:   Pavel Skripkin <paskripkin@gmail.com>
+To:     ath9k-devel@qca.qualcomm.com, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, toke@toke.dk,
+        linville@tuxdriver.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Pavel Skripkin <paskripkin@gmail.com>
+Subject: [PATCH v3 2/2] ath9k: htc: clean up *STAT_* macros
+Date:   Mon,  7 Feb 2022 23:24:25 +0300
+Message-Id: <28c83b99b8fea0115ad7fbda7cc93a86468ec50d.1644265120.git.paskripkin@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <80962aae265995d1cdb724f5362c556d494c7566.1644265120.git.paskripkin@gmail.com>
+References: <80962aae265995d1cdb724f5362c556d494c7566.1644265120.git.paskripkin@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH 09/13] cfg80211: Save the regulatory domain when setting
- custom regulatory
-Content-Language: fr
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgens?= =?UTF-8?Q?en?= 
-        <toke@redhat.com>
-Cc:     linux-wireless@vger.kernel.org
-References: <20201129153055.1971298-1-luca@coelho.fi>
- <iwlwifi.20201129172929.290fa5c5568a.Ic5732aa64de6ee97ae3578bd5779fc723ba489d1@changeid>
- <e8e6afa6-275e-2cc5-6351-e1ed5eb0e0af@green-communications.fr>
- <87ily325t4.fsf@tynnyri.adurom.net>
- <cedc93ef-496f-a403-0089-b2a82477fe0f@green-communications.fr>
- <0848f5eba90a2125425da52b6b5f6f47ba9d6630.camel@sipsolutions.net>
-From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-In-Reply-To: <0848f5eba90a2125425da52b6b5f6f47ba9d6630.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:OuwS8Fss+UEi3QYRXx5qu6BbDmQjhjz9K6o9mixT64bOoAwGohu
- mS3dGu6CjYVVPZbWm8oi/B1NwoOAH4Dg530br0TkTFgfT39VeMTgMZ59dJwVTT3N0qgcwjT
- qS1RqygKEED7QgDpkJcpU45yqMQaFihJ/NTpKzqHp0eoNO1gqxl1xSx407l9dGCsam3iqeF
- 7L83dSMjqegVfnpd9s4bA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:UZWY2v8Sr84=:R/pbfgUpGlOpU3TXhrCOhK
- h3otz/CUgjIBSGag/tu+EmzKcxOOktfWQXNt2VpmwEdGsHDN7g5SQRUUBA0P1cSyc0z2ehlIG
- UV93W6rFXl16wo/ajZ6tOEehPoJ2piI3LW56eF7fwoyrp39Us/iDJBNNlZblRC8L5ZZqUtJOE
- cCgTUmORmmk0Zp02Ul/SrY0HHOhmx3cHcFDJNdRICG7GbJRmt73foIwGMy6Mzb587q199DJ+v
- aNicG09b6ga/J4CswP2Df4e8tUfyR5hv6f/pTb4NVLvCZq5hwiHMpy2FbvRCB1mAm37gzpteM
- hF4qTqV03/bQd9mahq8XYoFoXOzVI9acLWD07PFDrHbFXsomRE+azQw8DCaNF2MDcHQw3vWTX
- bcyD8W+tnFiB7hR4w6+KN/kkn+S6+dDktnGujz+2NRsySLnGOmTqhSSvgmKFGRNQ580HTyirH
- q/XntZssbo5dGkZCUYVPIdZO1JWJN2y9zb/17gfbrOAoF5RXaXff1EgdNKL/0NbMMaUUVyQhN
- +5zolnn/thbIRZwlMIEEJBquKsTFwsnWO7PrjQ2S1feig4M4BZVitTyQJtbGkuUsvNwPee9jd
- gvcF3JPhtTLCBYAGjZQLlFMduxj6Lur0qsLx4EzmdSV7FljUT8QOUdrjPSXk2qitXThs5JCSK
- QRQDBBgPuqU0oTRzpjwdRkqODX2l5ii7HDHY1ynvpptuu3xtazj1UKitYqHiwm7dgcTcfEzqy
- hTGQsjfUQtyRJB3SJqm5RsiP608IZ8JeMxL3eA==
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 03/02/2022 23:30, Johannes Berg wrote:
-> On Tue, 2021-10-12 at 12:24 +0200, Nicolas Cavallari wrote:
->>>>
->>>> This patch somehow appears to break ath9k's eeprom hints and restrict
->>>> it to the world regulatory domain on v5.12.10.
->>>>
->>>> ath9k calls wiphy_apply_custom_regulatory() with its own kind of world
->>>> regulatory domain, before it decodes hints from the eeprom and uses
->>>> regulatory_hint() to request a specific alpha2.
->>>>
->>>> With this patch, applying the hint fails because wiphy->regd is already set.
->>>> If i revert this patch, ath9k works again.
->>>
-> 
-> Hm. It stands to reason that perhaps ath9k should call
-> wiphy_apply_custom_regulatory(NULL) (if that's possible) to reset the
-> knowledge of having a custom regulatory domain, before requesting the
-> correct one be applied by cfg80211 (and possibly even crda userspace).
+I've changed *STAT_* macros a bit in previous patch and I seems like
+they become really unreadable. Align these macros definitions to make
+code cleaner.
 
-wiphy_apply_custom_regulatory(NULL) is apparently not possible.
-The regulatory code is still a black box to me...
+Also fixed following checkpatch warning
 
+ERROR: Macros with complex values should be enclosed in parentheses
+
+Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+---
+
+Changes since v2:
+	- My send-email script forgot, that mailing lists exist.
+	  Added back all related lists
+	- Fixed checkpatch warning
+
+Changes since v1:
+	- Added this patch
+
+---
+ drivers/net/wireless/ath/ath9k/htc.h | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 141642e5e00d..b4755e21a501 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -327,14 +327,14 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
+ }
+ 
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-#define __STAT_SAVE(expr) (hif_dev->htc_handle->drv_priv ? (expr) : 0)
+-#define TX_STAT_INC(c) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
+-#define TX_STAT_ADD(c, a) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
+-#define RX_STAT_INC(c) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
+-#define RX_STAT_ADD(c, a) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
+-#define CAB_STAT_INC   priv->debug.tx_stats.cab_queued++
+-
+-#define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
++#define __STAT_SAVE(expr)	(hif_dev->htc_handle->drv_priv ? (expr) : 0)
++#define TX_STAT_INC(c)		__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
++#define TX_STAT_ADD(c, a)	__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
++#define RX_STAT_INC(c)		__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
++#define RX_STAT_ADD(c, a)	__STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
++#define CAB_STAT_INC		(priv->debug.tx_stats.cab_queued++)
++
++#define TX_QSTAT_INC(q)		(priv->debug.tx_stats.queue_stats[q]++)
+ 
+ void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ 			   struct ath_rx_status *rs);
+-- 
+2.34.1
 
