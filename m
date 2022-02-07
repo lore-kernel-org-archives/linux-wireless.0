@@ -2,153 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3030FC4167E
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 20:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2007C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Feb 2022 21:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232627AbiBGU2T (ORCPT
+        id S236763AbiBGVLQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Feb 2022 15:28:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49532 "EHLO
+        Mon, 7 Feb 2022 16:11:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232919AbiBGUY0 (ORCPT
+        with ESMTP id S231882AbiBGVLO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Feb 2022 15:24:26 -0500
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E81EC0401DA;
-        Mon,  7 Feb 2022 12:24:25 -0800 (PST)
-Received: by mail-lj1-x233.google.com with SMTP id c15so21337953ljf.11;
-        Mon, 07 Feb 2022 12:24:24 -0800 (PST)
+        Mon, 7 Feb 2022 16:11:14 -0500
+X-Greylist: delayed 123 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 13:11:13 PST
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29DFAC06173B
+        for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2022 13:11:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0QZUBGn5Vf3a75LS52BCKhCqw6Mtv6YRAewQwFkN9YU=;
-        b=HhaDozkIYW6SQNj1SQEVEcn2tye5SwdgIeieSdv/hIXRvmL1r923vLwDCNEEGwxBgy
-         ejLv9/tQuSRFUF6C7yjnA3fjs9L1IZyReulArI7kR7mayrLqFa+Pu+f1s6gYvelTFBt4
-         hKPqwWco2L3GIx8GWLseYf5rrUEGQKsJFMY0Jhq9deKERJj8heycEDGAXc6H2Mlq8GUJ
-         KWLysWMrukYAbLX/0qbqPZ3ZcmXbbq6Pt85S7Edf48M0a1LqXGXmv5gXzx4AHPW06Sb2
-         Tfogob6yzAnGUGavRbX4E61OEUFN9jaWmhYiqYCD3J2RRxJeibyNkh7HBXNBFzbTkg65
-         raiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0QZUBGn5Vf3a75LS52BCKhCqw6Mtv6YRAewQwFkN9YU=;
-        b=Xrqxxh0nU7e/xPggz6YBaLVbFHCaTbKhA+9J275ZHIqGcCKjL3jZxntApVSNz5NjgC
-         21WPRwAVDnZgsw7Y74uGrwUllrtBogWHQGEWuLHAJ7qFvtBVr2XfzND6X0300NaQlSeD
-         n6eTzsGgY2iR4zykNjWRY3OSfgllVfaVj/ErKvMlUzdNUquDmsijYtIgBhHcM0ZoP7jM
-         pqxBMN0JeI4KuJKe6+bjBxdSC1IPAkMYxmsD01jLZ3OF5Uf9zacjm+fIXaWraa6RdcHS
-         NF8pgT/pjVJEivAJv4pLGl536KV3BlqfFQNE4K8uW7EH8l2A3rfoUCJWicxZR+vc6k7e
-         BCXw==
-X-Gm-Message-State: AOAM531Y7GuYkyLrSM+MC9p0uAhECLXt1iZLj2sSYcIayRP+j5l7NaFz
-        A6Gz0MT2e8T25VVi8MDInRo=
-X-Google-Smtp-Source: ABdhPJz4tTPcQksNjB3XhXBM2BhaAlFbe5VIPLCf72OHyrbnaTGpDRyfcnx/8nTl/uDcOydHOb1FUw==
-X-Received: by 2002:a2e:8447:: with SMTP id u7mr734250ljh.516.1644265463369;
-        Mon, 07 Feb 2022 12:24:23 -0800 (PST)
-Received: from localhost.localdomain ([94.103.224.201])
-        by smtp.gmail.com with ESMTPSA id n16sm1625618lfq.113.2022.02.07.12.24.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Feb 2022 12:24:22 -0800 (PST)
-From:   Pavel Skripkin <paskripkin@gmail.com>
-To:     ath9k-devel@qca.qualcomm.com, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, toke@toke.dk,
-        linville@tuxdriver.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Pavel Skripkin <paskripkin@gmail.com>,
-        syzbot+03110230a11411024147@syzkaller.appspotmail.com,
-        syzbot+c6dde1f690b60e0b9fbe@syzkaller.appspotmail.com
-Subject: [PATCH v3 1/2] ath9k: fix use-after-free in ath9k_hif_usb_rx_cb
-Date:   Mon,  7 Feb 2022 23:24:18 +0300
-Message-Id: <80962aae265995d1cdb724f5362c556d494c7566.1644265120.git.paskripkin@gmail.com>
-X-Mailer: git-send-email 2.34.1
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1644268273; x=1675804273;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=pgdzWw4Lqk/KZ+mo1Wj/e3osdS5mieE8gc5aFCdE4A4=;
+  b=TacSDbf0ecXYwjoGP1s7chGZV70rbYtKlgcSyRc/wAwEgerMq7uKKnaQ
+   79OmQYC/v0S4uPuMCkaukJ0x/4DzNmDrCW73DRMUHIrMzQLr1lpXJNXCW
+   HndmN1HaeV4BjVtCN9dab2prZW4yKsfCw9KMn8mya3FYGdrIpkq0f0AoC
+   w=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 07 Feb 2022 13:09:10 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 13:09:10 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Mon, 7 Feb 2022 13:09:10 -0800
+Received: from [10.48.246.62] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.922.19; Mon, 7 Feb 2022
+ 13:09:09 -0800
+Message-ID: <eb059b8c-1a2b-f1f7-d446-103863e2f318@quicinc.com>
+Date:   Mon, 7 Feb 2022 13:09:09 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH 04/19] ieee80211: Add EHT (802.11be) definitions
+Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>
+CC:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Jia Ding <quic_jiad@quicinc.com>,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Sriram R <quic_srirrama@quicinc.com>
+References: <20220204220255.448224-1-johannes@sipsolutions.net>
+ <20220204230119.1ee92202ac30.Id30a3ef2844b296efbd5486fe1da9ca36a95c5cf@changeid>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20220204230119.1ee92202ac30.Id30a3ef2844b296efbd5486fe1da9ca36a95c5cf@changeid>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Syzbot reported use-after-free Read in ath9k_hif_usb_rx_cb(). The
-problem was in incorrect htc_handle->drv_priv initialization.
+On 2/4/2022 2:02 PM, Johannes Berg wrote:
+> From: Ilan Peer <ilan.peer@intel.com>
+> 
+> Based on Draft P802.11be_D1.3.
 
-Probable call trace which can trigger use-after-free:
-
-ath9k_htc_probe_device()
-  /* htc_handle->drv_priv = priv; */
-  ath9k_htc_wait_for_target()      <--- Failed
-  ieee80211_free_hw()		   <--- priv pointer is freed
-
-<IRQ>
-...
-ath9k_hif_usb_rx_cb()
-  ath9k_hif_usb_rx_stream()
-   RX_STAT_INC()		<--- htc_handle->drv_priv access
-
-In order to not add fancy protection for drv_priv we can move
-htc_handle->drv_priv initialization at the end of the
-ath9k_htc_probe_device() and add helper macro to make
-all *_STAT_* macros NULL save.
-
-Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-Reported-and-tested-by: syzbot+03110230a11411024147@syzkaller.appspotmail.com
-Reported-and-tested-by: syzbot+c6dde1f690b60e0b9fbe@syzkaller.appspotmail.com
-Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
----
-
-Changes since v2:
-	- My send-email script forgot, that mailing lists exist.
-	  Added back all related lists
-
-Changes since v1:
-	- Removed clean-ups and moved them to 2/2
-
----
- drivers/net/wireless/ath/ath9k/htc.h          | 10 +++++-----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 ++-
- 2 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 6b45e63fae4b..141642e5e00d 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -327,11 +327,11 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
- }
- 
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
--
--#define TX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
--#define TX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
--#define RX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
--#define RX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
-+#define __STAT_SAVE(expr) (hif_dev->htc_handle->drv_priv ? (expr) : 0)
-+#define TX_STAT_INC(c) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
-+#define TX_STAT_ADD(c, a) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.tx_stats.c += a)
-+#define RX_STAT_INC(c) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c++)
-+#define RX_STAT_ADD(c, a) __STAT_SAVE(hif_dev->htc_handle->drv_priv->debug.skbrx_stats.c += a)
- #define CAB_STAT_INC   priv->debug.tx_stats.cab_queued++
- 
- #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index ff61ae34ecdf..07ac88fb1c57 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -944,7 +944,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 	priv->hw = hw;
- 	priv->htc = htc_handle;
- 	priv->dev = dev;
--	htc_handle->drv_priv = priv;
- 	SET_IEEE80211_DEV(hw, priv->dev);
- 
- 	ret = ath9k_htc_wait_for_target(priv);
-@@ -965,6 +964,8 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 	if (ret)
- 		goto err_init;
- 
-+	htc_handle->drv_priv = priv;
-+
- 	return 0;
- 
- err_init:
--- 
-2.34.1
-
+Since IEEE P802.11be™/D1.4, January 2022 is out, can we make sure all 
+definitions are still aligned, and update the document reference in all 
+patches that have a reference?
