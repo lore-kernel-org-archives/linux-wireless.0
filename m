@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6101DC4321E
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA7DC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:32:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239283AbiBHLcF (ORCPT
+        id S1346210AbiBHLcI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:32:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32964 "EHLO
+        Tue, 8 Feb 2022 06:32:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356586AbiBHKwG (ORCPT
+        with ESMTP id S1356600AbiBHKwK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 05:52:06 -0500
-X-Greylist: delayed 122 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 08 Feb 2022 02:52:05 PST
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F32BAC03FEC3
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:52:05 -0800 (PST)
+        Tue, 8 Feb 2022 05:52:10 -0500
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2680CC03FEC0
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:52:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644317526; x=1675853526;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=H1M7GiEBG1472fgEdXp4cPGZllRAqGb5pgJL+uEjrjU=;
-  b=Q/fs7dV6FyUH5Yw09tEI0MfylcdUyj5tRAmYMeg6tQWOEuXkl+rweeQc
-   ASt++OQ7eBPKq0naNN1N/4W+aphPDsNUDyqeolQkukYNFsF1+Nm3Wjt2G
-   oSwIMYlG8ZUSv88QBGOu35n0+HWVoPkXj2Iu9Sq12krNigX0wInpBX5U5
-   s=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 08 Feb 2022 02:50:03 -0800
+  t=1644317530; x=1675853530;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=WGEjXkVGFhTU957zTolVhkouWPqy67tUlqjNpmOkYis=;
+  b=YSD+Wl3KUzz4EpkRRQ/+hzkBFW2tmTaRkWwbhkRu/SbECS7nnIHAYki5
+   WgxhuxHVmLO2wxQNFQNmgUaqajeNVCmoRpUQxLcXO7kKhCcWO+YgoehXo
+   ohmGuJz0LnivvPGAJp8KruRNUlCYYQHChCT0Oyz+b1PT1flof2KZ+AGW1
+   I=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 08 Feb 2022 02:50:08 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 02:50:03 -0800
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 02:50:08 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:02 -0800
+ 15.2.922.19; Tue, 8 Feb 2022 02:50:06 -0800
 Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:01 -0800
+ 15.2.922.19; Tue, 8 Feb 2022 02:50:05 -0800
 From:   Wen Gong <quic_wgong@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v5 0/5] ath11k: add feature for device recovery
-Date:   Tue, 8 Feb 2022 05:49:42 -0500
-Message-ID: <20220208104947.25791-1-quic_wgong@quicinc.com>
+Subject: [PATCH v5 3/5] ath11k: configure RDDM size to mhi for recovery by firmware
+Date:   Tue, 8 Feb 2022 05:49:45 -0500
+Message-ID: <20220208104947.25791-4-quic_wgong@quicinc.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220208104947.25791-1-quic_wgong@quicinc.com>
+References: <20220208104947.25791-1-quic_wgong@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -57,48 +58,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently recovery is work success for QCA6390/WCN6855 without the RDDM dump feature,
-because patch "ath11k: configure RDDM size to mhi for recovery by firmware"
-added in v5.
+The rddm_size is needed by firmware while mhi enter RDDM state, add it
+to support recovery when ath11k receive MHI_CB_EE_RDDM message.
 
-v5:
-    1. rebased to ath.git ath-202202030905
-    2. change a few commit message
-    3. fix count set sequence of ath11k_core_reset in "ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base"
-    4. add patch "ath11k: configure RDDM size to mhi for recovery by firmware" to support RDDM
-    5. move destroy_workqueue(ab->workqueue_aux) from ath11k_pci_remove() to ath11k_core_free()
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
 
-v4: add patch "ath11k: fix invalid m3 buffer address"
-    recovery will fail when download firmware without this patch
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/mhi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-v3: remove time_left set but not used in
-    "ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base"
-
-v2: s/initilized/initialized in commit log of patch
-    "ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base"
-
-Add support for device recovery.
-
-Carl Huang (1):
-  ath11k: fix invalid m3 buffer address
-
-Wen Gong (4):
-  ath11k: add ath11k_qmi_free_resource() for recovery
-  ath11k: configure RDDM size to mhi for recovery by firmware
-  ath11k: add support for device recovery for QCA6390/WCN6855
-  ath11k: add synchronization operation between reconfigure of mac80211
-    and ath11k_base
-
- drivers/net/wireless/ath/ath11k/core.c | 121 +++++++++++++++++++++++--
- drivers/net/wireless/ath/ath11k/core.h |  18 ++++
- drivers/net/wireless/ath/ath11k/mac.c  |  40 ++++++++
- drivers/net/wireless/ath/ath11k/mhi.c  |  35 +++++++
- drivers/net/wireless/ath/ath11k/qmi.c  |   6 ++
- drivers/net/wireless/ath/ath11k/qmi.h  |   1 +
- 6 files changed, 213 insertions(+), 8 deletions(-)
-
-
-base-commit: 76680d49b5e0e661bc4abcdaf13fb7e124b4ca08
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index 8b2143802816..fc3524e83e52 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -13,6 +13,7 @@
+ #include "pci.h"
+ 
+ #define MHI_TIMEOUT_DEFAULT_MS	90000
++#define RDDM_DUMP_SIZE	0x420000
+ 
+ static struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
+ 	{
+@@ -382,6 +383,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
+ 		mhi_ctrl->iova_stop = 0xFFFFFFFF;
+ 	}
+ 
++	mhi_ctrl->rddm_size = RDDM_DUMP_SIZE;
+ 	mhi_ctrl->sbl_size = SZ_512K;
+ 	mhi_ctrl->seg_len = SZ_512K;
+ 	mhi_ctrl->fbc_download = true;
 -- 
 2.31.1
 
