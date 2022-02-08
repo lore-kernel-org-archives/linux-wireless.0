@@ -2,111 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40C7EC43217
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:32:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB34CC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 12:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376319AbiBHLb6 (ORCPT
+        id S244303AbiBHMCz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38162 "EHLO
+        Tue, 8 Feb 2022 07:02:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236598AbiBHLNT (ORCPT
+        with ESMTP id S242819AbiBHMCy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 06:13:19 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AECB3C03FEC0;
-        Tue,  8 Feb 2022 03:13:18 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id z13so640698pfa.3;
-        Tue, 08 Feb 2022 03:13:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding:content-language;
-        bh=jT1cKosXcRAQ3QgcohgO2Lw1KpFQbKWn6saHhs1RKHA=;
-        b=lj/XmEGsyYOviX8Ubzy8vnxlCH4B3X5gXp8BQ4iYG8FxHjtJqU29xFPQUBNV3uTr8q
-         FyEWO6FAoRy9hFENyGTMdp2oo49IlOk9TmOHenmQXdaKZ4yy3nVgIOtPxUb1B+UJ10f4
-         cdkr1AWz0VfCm9xRKPL7htfXKHMtaCxYkDHzulU21jFlEkmbttO0PDakAsaGqwZHaVpc
-         lClPrf0p4eBUilZdeaJEnhDrtxxWUJxNR/ZS70y8Y0WmBkZj3mZoWDhuUTOwV4jOKiRA
-         ZxX08P7jH8pGt8ccDZR1eg7eBIXleA0IbJH2lmFZIGS5Zy3XG/RX1nfVhdZ5WfMlPbmh
-         eMhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=jT1cKosXcRAQ3QgcohgO2Lw1KpFQbKWn6saHhs1RKHA=;
-        b=z07O4ULcxNTPTCg9t7BKokYFCrqqNdrMhHTltqUDUQwXSRAzyOosVn2QZmxwhOAwnE
-         eiNYQ1LlWSzubHT+5cvSQnR0gPlFF3h2A878XyVSDaxmBYfAYlXNKD9hJ48wwJ6VJ7U7
-         lVbA8eWL1UIl3j/bAOzPgUOOV74moAAhxfi2EQRGwZuatqB/Hjx4PLTNhTyiOmmoAijs
-         /koOOSOZUgjA14gvB0BPSpfB5Up6DJgcYwvhlN8blH8XHjIH6XJCEGw8fOZ7JhIFADdk
-         PMLyLbPqOpIg4RpOmLgzCX/KsapmaYACK78Dm5TXrj8XWNsEiCYPCBxhsJP+m8Zzi63H
-         Z1vQ==
-X-Gm-Message-State: AOAM5318s//PoN6UrvDJ8w3INSugOm5toD3EOT7O5jyY04Nhe/ClUWSJ
-        GcY/8wCIG9ej4p5N/EukfIV/ZJYzY8s=
-X-Google-Smtp-Source: ABdhPJzdPftreTii6GmmT++vd2facGVqjUbf4A6ncaTkAs98QhKLW+qK8LqOjFuc4VSa+LQe0eyH7Q==
-X-Received: by 2002:a63:ad44:: with SMTP id y4mr3097759pgo.160.1644318797989;
-        Tue, 08 Feb 2022 03:13:17 -0800 (PST)
-Received: from [192.168.1.100] ([166.111.139.99])
-        by smtp.gmail.com with ESMTPSA id rj1sm2581464pjb.49.2022.02.08.03.13.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Feb 2022 03:13:17 -0800 (PST)
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-To:     pontus.fuchs@gmail.com, Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: [BUG] ar5523: possible deadlocks involving locking and waiting
- operations
-Message-ID: <7c9bb278-5042-3bdc-9598-95a10e42f78d@gmail.com>
-Date:   Tue, 8 Feb 2022 19:13:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        Tue, 8 Feb 2022 07:02:54 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BC78C03FECA
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 04:02:51 -0800 (PST)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 218C2YasC002372, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 218C2YasC002372
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 8 Feb 2022 20:02:34 +0800
+Received: from RTEXMBS01.realtek.com.tw (172.21.6.94) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Tue, 8 Feb 2022 20:02:33 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 8 Feb 2022 20:02:33 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e]) by
+ RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e%5]) with mapi id
+ 15.01.2308.020; Tue, 8 Feb 2022 20:02:33 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "kvalo@kernel.org" <kvalo@kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Funny log entries for rtw88_8821ce
+Thread-Topic: Funny log entries for rtw88_8821ce
+Thread-Index: AQHYFvVq2DWVmxZS7E2VYxG/u8dgWqx9tPKAgAQJ/QCAB6gl/f//rFuA
+Date:   Tue, 8 Feb 2022 12:02:33 +0000
+Message-ID: <6baf4ae2f36c89269f74f0905ce81f38adc3a284.camel@realtek.com>
+References: <c356d5ae-a7b3-3065-1121-64c446e70333@lwfinger.net>
+         <32f2ece8acdb67f74757cb705e5467847d6bcae0.camel@realtek.com>
+         <ef7361eb-17ce-5ecf-a46a-a9f0c5aab35b@lwfinger.net>
+         <87czjxbukz.fsf@tynnyri.adurom.net>
+In-Reply-To: <87czjxbukz.fsf@tynnyri.adurom.net>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.36.1-2 
+x-originating-ip: [114.26.213.92]
+x-kse-serverinfo: RTEXMBS01.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
+ rules found
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzIvOCDkuIrljYggMTE6MDA6MDA=?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <6BB323B4FAE814439A7D68466E2D0B63@realtek.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
-
-My static analysis tool reports two possible deadlocks in the ar5523 
-driver in Linux 5.16:
-
-#BUG 1
-ar5523_hwconfig()
-   mutex_lock(&ar->mutex); --> Line 1135 (Lock A)
-   ar5523_flush_tx()
-     wait_event_timeout(ar->tx_flush_waitq, ...) --> Line 926 (Wait X)
-
-ar5523_tx_work()
-   mutex_lock(&ar->mutex); --> Line 888 (Lock A)
-   ar5523_tx_work_locked()
-     ar5523_data_tx_pkt_put()
-       wake_up(&ar->tx_flush_waitq); --> Line 727 (Wake X)
-
-#BUG 2
-ar5523_configure_filter()
-   mutex_lock(&ar->mutex); --> Line 1331 (Lock A)
-   ar5523_flush_tx()
-     wait_event_timeout(ar->tx_flush_waitq, ...) --> Line 926 (Wait X)
-
-ar5523_tx_work()
-   mutex_lock(&ar->mutex); --> Line 888 (Lock A)
-   ar5523_tx_work_locked()
-     ar5523_data_tx_pkt_put()
-       wake_up(&ar->tx_flush_waitq); --> Line 727 (Wake X)
-
-When ar5523_hwconfig()/ar5523_configure_filter() is executed, "Wait X" 
-is performed by holding "Lock A". If ar5523_tx_work() is executed at 
-this time, "Wake X" cannot be performed to wake up "Wait X", because 
-"Lock A" has been already held, causing possible deadlock.
-I find that "Wait X" is performed with a timeout, to relieve the 
-possible deadlocks; but I think this timeout can cause inefficient 
-execution.
-
-I am not quite sure whether these possible problems are real.
-Any feedback would be appreciated, thanks :)
-
-
-Best wishes,
-Jia-Ju Bai
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBLYWxsZSBWYWxvIDxrdmFsb0Br
+ZXJuZWwub3JnPg0KPiBTZW50OiBUdWVzZGF5LCBGZWJydWFyeSA4LCAyMDIyIDU6MDIgUE0NCj4g
+VG86IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4NCj4gQ2M6IFBrc2hp
+aCA8cGtzaGloQHJlYWx0ZWsuY29tPjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+
+IFN1YmplY3Q6IFJlOiBGdW5ueSBsb2cgZW50cmllcyBmb3IgcnR3ODhfODgyMWNlDQo+IA0KPiBM
+YXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+IHdyaXRlczoNCj4gDQo+ID4g
+RnJvbSB0aGVzZSBsb2cgZW50cmllcywgSSBzZWUgbm8gcmVhc29uIHdoeSB0aGVyZSBzaG91bGQg
+YmUgYSBzdG9wLXZpZg0KPiA+IDQxMiBzZWNvbmRzIGFmdGVyIHRoZSBpbnRlcmZhY2UgaXMgc2V0
+IGZyb20gZGlzYWJsZWQgdG8gZGlzY29ubmVjdGVkLg0KPiA+IFRoaXMgY3ljbGluZyBkb2VzIG5v
+dCBjYXVzZSBhbnkgcHJvYmxlbXMuIFBlcmhhcHMgdGhlIHN0YXRlbWVudHMgdGhhdA0KPiA+IGRv
+IHRoZSBsb2dnaW5nIHNob3VsZCBiZSByZW1vdmVkLg0KPiANCj4gSSBkaWQgYSBxdWljayBjaGVj
+ayBvbiBob3cgcnR3ODggdXNlcyBydHdfaW5mbygpIGFuZCBpbmRlZWQgdGhhdCBzaG91bGQNCj4g
+YmUgY2xlYW5lZCB1cC4NCj4gDQo+IFRoZXNlIHNob3VsZCBiZSB3YXJuaW5nIG9yIGVycm9yIG1l
+c3NhZ2VzOg0KPiANCj4gcnR3X2luZm8ocnR3ZGV2LCAiaW52YWxpZCBIMkMgY29tbWFuZCBmb3Jt
+YXQgZm9yIGRlYnVnXG4iKTsNCj4gcnR3X2luZm8ocnR3ZGV2LCAiaW5jb3JyZWN0IGxuYSBpbmRl
+eCAoJWQpXG4iLCBsbmFfaWR4KTsNCj4gcnR3X2luZm8ocnR3ZGV2LCAidW5zdXBwb3J0ZWQgdHgg
+cGF0aCAweCV4XG4iLCBhbnRlbm5hX3R4KTsNCj4gcnR3X2luZm8ocnR3ZGV2LCAidW5zdXBwb3J0
+ZWQgcnggcGF0aCAweCV4XG4iLCBhbnRlbm5hX3J4KTsNCj4gcnR3X2luZm8ocnR3ZGV2LCAidW5z
+dXBwb3J0ZWQgdHggcGF0aCAweCV4XG4iLCBhbnRlbm5hX3R4KTsNCj4gcnR3X2luZm8ocnR3ZGV2
+LCAidW5zdXBwb3J0ZWQgcnggcGF0aCAweCV4XG4iLCBhbnRlbm5hX3J4KTsNCj4gDQo+IE5vdCBz
+dXJlIGlmIHdhcm4gb3IgZGVidWcsIG1vc3QgbGlrZWx5IGRlYnVnOg0KPiANCj4gcnR3X2luZm8o
+cnR3ZGV2LCAiSFcgc2NhbiBhYm9ydGVkIHdpdGggY29kZTogJWRcbiIsIHJjKTsNCj4gDQo+IFRo
+ZXNlIHNob3VsZCBiZSBkZWJ1ZyBtZXNzYWdlcyB0byBhdm9pZCBzcGFtbWluZyB0aGUgbG9nczoN
+Cj4gDQo+IHJ0d19pbmZvKHJ0d2RldiwgInN0YXJ0IHZpZiAlcE0gb24gcG9ydCAlZFxuIiwgdmlm
+LT5hZGRyLCBydHd2aWYtPnBvcnQpOw0KPiBydHdfaW5mbyhydHdkZXYsICJzdG9wIHZpZiAlcE0g
+b24gcG9ydCAlZFxuIiwgdmlmLT5hZGRyLCBydHd2aWYtPnBvcnQpOw0KPiBydHdfaW5mbyhydHdk
+ZXYsICJjaGFuZ2UgdmlmICVwTSAoJWQpLT4oJWQpLCBwMnAgKCVkKS0+KCVkKVxuIiwNCj4gcnR3
+X2luZm8ocnR3ZGV2LCAic3RhICVwTSBqb2luZWQgd2l0aCBtYWNpZCAlZFxuIiwNCj4gcnR3X2lu
+Zm8ocnR3ZGV2LCAic3RhICVwTSB3aXRoIG1hY2lkICVkIGxlZnRcbiIsDQo+IHJ0d19pbmZvKHJ0
+d2RldiwgIk9uIGZyZXEgJXUgdG8gJXUsIHNldCBTQVIgJWQgaW4gMS8lbHUgZEJtXG4iDQo+IA0K
+PiBUaGlzIGlzIG9rOg0KPiANCj4gcnR3X2luZm8ocnR3ZGV2LCAiRmlybXdhcmUgdmVyc2lvbiAl
+dS4ldS4ldSwgSDJDIHZlcnNpb24gJXVcbiIsDQo+IA0KDQpJIHdpbGwgZml4IHRoZW0gYXMgd2Vs
+bCBhcyBydHc4OS4gVG8gYXZvaWQgbWlzdGFrZXMsIEkgZG8gZ29vZ2xlIHNlYXJjaCBmb3INCktF
+Uk5fSU5GTywgYW5kIGZpbmQgWzFdDQoJS0VSTl9JTkZPOiB0aGlzIGlzIHRoZSBsb2cgbGV2ZWwg
+dXNlZCBmb3IgaW5mb3JtYXRpb25hbCBtZXNzYWdlcw0KCQkgICBhYm91dCB0aGUgYWN0aW9uIHBl
+cmZvcm1lZCBieSB0aGUga2VybmVsLg0KDQpUaGVuLCBJIGhhdmUgYSBxdWVzdGlvbiBhYm91dCB0
+aGUgbWVzc2FnZSBvZiBzZXR0aW5nIFNBUjoNCglydHdfaW5mbyhydHdkZXYsICJPbiBmcmVxICV1
+IHRvICV1LCBzZXQgU0FSICVkIGluIDEvJWx1IGRCbVxuIg0KDQpXaGVuIGEgdXNlciBzZXRzIFNB
+UiB2aWEgaXcsIHRoaXMgbWVzc2FnZSBjYW4gcmVmbGVjdCB0aGUgYWN0aW9uIHBlcmZvcm1lZA0K
+YnkgZHJpdmVyLiBJcyB0aGlzIHJ0d19pbmZvIGFjY2VwdGFibGU/DQoNCg0KWzFdIGh0dHBzOi8v
+bGludXhjb25maWcub3JnL2ludHJvZHVjdGlvbi10by10aGUtbGludXgta2VybmVsLWxvZy1sZXZl
+bHMNCg0KLS0NClBpbmctS2UNCg0K
