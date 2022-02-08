@@ -2,242 +2,160 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE4FC35276
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B009C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359664AbiBHLbp (ORCPT
+        id S1359792AbiBHLbr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60730 "EHLO
+        Tue, 8 Feb 2022 06:31:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356492AbiBHKuL (ORCPT
+        with ESMTP id S1357033AbiBHLU5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 05:50:11 -0500
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A67DC03FEC0
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:50:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644317410; x=1675853410;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=gthDNO/XzgphMh/3xfNqixz/c+u6Cv2YXTjRmSHCnHg=;
-  b=Yi+5JvTDAcoegNXkOWZZDGlReQBzfZJj3/oQCr9p0IdtCV88xSw//J5m
-   RXsHRvh3hHd2Rc5DJUUfQHhXfdVpIH0ybxGT06R813Ee6ryeUJrI3yTJj
-   HF1iDp7Fjb9f8tp14r50jP67kgQKXBMrrMpLH26iU6EZA2F2lcbX8Ro3s
-   U=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 08 Feb 2022 02:50:10 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 02:50:10 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:09 -0800
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:08 -0800
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v5 5/5] ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base
-Date:   Tue, 8 Feb 2022 05:49:47 -0500
-Message-ID: <20220208104947.25791-6-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220208104947.25791-1-quic_wgong@quicinc.com>
-References: <20220208104947.25791-1-quic_wgong@quicinc.com>
+        Tue, 8 Feb 2022 06:20:57 -0500
+Received: from out2-smtp.messagingengine.com (out2-smtp.messagingengine.com [66.111.4.26])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 999FCC03FEC0
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 03:20:55 -0800 (PST)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.nyi.internal (Postfix) with ESMTP id 214925C00E0;
+        Tue,  8 Feb 2022 06:20:53 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute4.internal (MEProxy); Tue, 08 Feb 2022 06:20:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=d7RS28//0ruM0Q55s
+        H7s2j4TekvjwqskaG8l3o1lxzo=; b=ihW/Y8snH6aDQ9BEd8pFdh5V5racXFvxv
+        LLSdjantrGQeeHNhUnLZ1VaY45d013rqG6NURq3jKKusrvdovx4pwX7Z9S/vzDMJ
+        cVE/zHApa+dwp/LS0yK3ygXV2L68f0jJzyYC5rWj8zL5cSx9D5NRZ56W1kZpPIEe
+        WeGWjhiWU03HYYLGXJ/D/epUEsfUweNOsiAPLAhmQjUPGmk6Uhg1pIcbzTZS0slp
+        3pcdWpHmWaoe/I4Xx5RN6atybY3fwiUxl/zV4IGPLSSLrsu2VF7qa5C+gWyTRSBF
+        iE0RzMhOXiJg7R8BAuhy5KphTCoH7KwTPudCdXdkPpJFHT0A1Grig==
+X-ME-Sender: <xms:FFICYvjrOqevvMb7mvta7jppA9r9DwJWZC8F0XyqrsZi-uF3uWZRAw>
+    <xme:FFICYsBkrQTiNKHYWRurBmFJV1ztsnl3kYd6Z5klAMtMoUMKCqs2lWFsLnijij9tI
+    9iTLTUft4xgZw>
+X-ME-Received: <xmr:FFICYvG9uB60agCtb2lcPiBucfcz4b97pFmOtHOWzAIK0gc-tcAgj-I>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrheejgddvfecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpeffhffvuffkfhggtggujgesghdtreertddtjeenucfhrhhomhepofgrrhgvkhcu
+    ofgrrhgtiiihkhhofihskhhiqdfikphrvggtkhhiuceomhgrrhhmrghrvghksehinhhvih
+    hsihgslhgvthhhihhnghhslhgrsgdrtghomheqnecuggftrfgrthhtvghrnhepteevffei
+    gffhkefhgfegfeffhfegveeikeettdfhheevieehieeitddugeefteffnecuvehluhhsth
+    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepmhgrrhhmrghrvghksehi
+    nhhvihhsihgslhgvthhhihhnghhslhgrsgdrtghomh
+X-ME-Proxy: <xmx:FFICYsTRXmzaNzrNfuLMz5YhFILZ-E6jeF-b8ZF5HmrGTY4fYMIeAA>
+    <xmx:FFICYswsyel-9aFcCMeTtu8xbLYiaE42jpdb7pD4Hv4fTtVmxYiijA>
+    <xmx:FFICYi733f0mi-dNzbxaPqeThMmIgw1Z6vNXw5RR8sFvolwXBq5rPw>
+    <xmx:FVICYrrXDIXkX699tU2uujjfdlX72GZ-QvZE7gFZ0XeCsjngcpZbTw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 8 Feb 2022 06:20:51 -0500 (EST)
+Date:   Tue, 8 Feb 2022 12:20:46 +0100
+From:   Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= 
+        <marmarek@invisiblethingslab.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        stable@vger.kernel.org, Stefan Agner <stefan@agner.ch>,
+        Wolfgang Walter <linux@stwm.de>,
+        Jason Self <jason@bluehome.net>,
+        Dominik Behr <dominik@dominikbehr.com>
+Subject: Re: [PATCH] iwlwifi: fix use-after-free
+Message-ID: <YgJSEEmRDKKG+3lT@mail-itl>
+References: <20220208114728.e6b514cf4c85.Iffb575ca2a623d7859b542c33b2a507d01554251@changeid>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="Rj3/8RxUIYFHdmTV"
+Content-Disposition: inline
+In-Reply-To: <20220208114728.e6b514cf4c85.Iffb575ca2a623d7859b542c33b2a507d01554251@changeid>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ieee80211_reconfig() of mac80211 is the main function for recovery of
-each ieee80211_hw and ath11k, and ath11k_core_reconfigure_on_crash()
-is the main function for recovery of ath11k_base, it has more than
-one ieee80211_hw and ath11k for each ath11k_base, so it need to add
-synchronization between them, otherwise it has many issue.
 
-For example, when ath11k_core_reconfigure_on_crash() is not complete,
-mac80211 send a hw scan request to ath11k, it leads firmware crash,
-because firmware has not been initialized at that moment, firmware
-is only finished downloaded and loaded, it can not receive scan
-command.
+--Rj3/8RxUIYFHdmTV
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 8 Feb 2022 12:20:46 +0100
+From: Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+	stable@vger.kernel.org, Stefan Agner <stefan@agner.ch>,
+	Wolfgang Walter <linux@stwm.de>, Jason Self <jason@bluehome.net>,
+	Dominik Behr <dominik@dominikbehr.com>
+Subject: Re: [PATCH] iwlwifi: fix use-after-free
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
+On Tue, Feb 08, 2022 at 11:47:30AM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>=20
+> If no firmware was present at all (or, presumably, all of the
+> firmware files failed to parse), we end up unbinding by calling
+> device_release_driver(), which calls remove(), which then in
+> iwlwifi calls iwl_drv_stop(), freeing the 'drv' struct. However
+> the new code I added will still erroneously access it after it
+> was freed.
+>=20
+> Set 'failure=3Dfalse' in this case to avoid the access, all data
+> was already freed anyway.
+>=20
+> Cc: stable@vger.kernel.org
+> Reported-by: Stefan Agner <stefan@agner.ch>
+> Reported-by: Wolfgang Walter <linux@stwm.de>
+> Reported-by: Jason Self <jason@bluehome.net>
+> Reported-by: Dominik Behr <dominik@dominikbehr.com>
+> Reported-by: Marek Marczykowski-G=C3=B3recki <marmarek@invisiblethingslab=
+=2Ecom>
+> Fixes: ab07506b0454 ("iwlwifi: fix leaks/bad data after failed firmware l=
+oad")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.c | 51 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath11k/core.h |  5 +++
- drivers/net/wireless/ath/ath11k/mac.c  | 22 +++++++++++
- 3 files changed, 70 insertions(+), 8 deletions(-)
+Tested-by: Marek Marczykowski-G=C3=B3recki <marmarek@invisiblethingslab.com>
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 00c83fdb0702..8ce93fd9e1e6 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1263,12 +1263,11 @@ static void ath11k_update_11d(struct work_struct *work)
- 	}
- }
- 
--static void ath11k_core_restart(struct work_struct *work)
-+static void ath11k_core_pre_reconfigure_recovery(struct ath11k_base *ab)
- {
--	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
- 	struct ath11k *ar;
- 	struct ath11k_pdev *pdev;
--	int i, ret = 0;
-+	int i;
- 
- 	spin_lock_bh(&ab->base_lock);
- 	ab->stats.fw_crash_counter++;
-@@ -1301,12 +1300,13 @@ static void ath11k_core_restart(struct work_struct *work)
- 
- 	wake_up(&ab->wmi_ab.tx_credits_wq);
- 	wake_up(&ab->peer_mapping_wq);
-+}
- 
--	ret = ath11k_core_reconfigure_on_crash(ab);
--	if (ret) {
--		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
--		return;
--	}
-+static void ath11k_core_post_reconfigure_recovery(struct ath11k_base *ab)
-+{
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	int i;
- 
- 	for (i = 0; i < ab->num_radios; i++) {
- 		pdev = &ab->pdevs[i];
-@@ -1342,6 +1342,27 @@ static void ath11k_core_restart(struct work_struct *work)
- 	complete(&ab->driver_recovery);
- }
- 
-+static void ath11k_core_restart(struct work_struct *work)
-+{
-+	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
-+	int ret;
-+
-+	if (!ab->is_reset)
-+		ath11k_core_pre_reconfigure_recovery(ab);
-+
-+	ret = ath11k_core_reconfigure_on_crash(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
-+		return;
-+	}
-+
-+	if (ab->is_reset)
-+		complete_all(&ab->reconfigure_complete);
-+
-+	if (!ab->is_reset)
-+		ath11k_core_post_reconfigure_recovery(ab);
-+}
-+
- static void ath11k_core_reset(struct work_struct *work)
- {
- 	struct ath11k_base *ab = container_of(work, struct ath11k_base, reset_work);
-@@ -1393,6 +1414,18 @@ static void ath11k_core_reset(struct work_struct *work)
- 
- 	ab->is_reset = true;
- 	atomic_set(&ab->recovery_count, 0);
-+	reinit_completion(&ab->recovery_start);
-+	atomic_set(&ab->recovery_start_count, 0);
-+
-+	ath11k_core_pre_reconfigure_recovery(ab);
-+
-+	reinit_completion(&ab->reconfigure_complete);
-+	ath11k_core_post_reconfigure_recovery(ab);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "waiting recovery start...\n");
-+
-+	time_left = wait_for_completion_timeout(&ab->recovery_start,
-+						ATH11K_RECOVER_START_TIMEOUT_HZ);
- 
- 	ath11k_hif_power_down(ab);
- 	ath11k_qmi_free_resource(ab);
-@@ -1504,6 +1537,8 @@ struct ath11k_base *ath11k_core_alloc(struct device *dev, size_t priv_size,
- 	spin_lock_init(&ab->base_lock);
- 	mutex_init(&ab->vdev_id_11d_lock);
- 	init_completion(&ab->reset_complete);
-+	init_completion(&ab->reconfigure_complete);
-+	init_completion(&ab->recovery_start);
- 
- 	INIT_LIST_HEAD(&ab->peers);
- 	init_waitqueue_head(&ab->peer_mapping_wq);
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 3fc49e633c29..0fd5a7ee6304 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -43,6 +43,8 @@ extern unsigned int ath11k_frame_mode;
- #define ATH11K_RESET_MAX_FAIL_COUNT_FIRST 3
- #define ATH11K_RESET_MAX_FAIL_COUNT_FINAL 5
- #define ATH11K_RESET_FAIL_TIMEOUT_HZ (20 * HZ)
-+#define ATH11K_RECONFIGURE_TIMEOUT_HZ (10 * HZ)
-+#define ATH11K_RECOVER_START_TIMEOUT_HZ (20 * HZ)
- 
- enum ath11k_supported_bw {
- 	ATH11K_BW_20	= 0,
-@@ -795,8 +797,11 @@ struct ath11k_base {
- 	struct work_struct reset_work;
- 	atomic_t reset_count;
- 	atomic_t recovery_count;
-+	atomic_t recovery_start_count;
- 	bool is_reset;
- 	struct completion reset_complete;
-+	struct completion reconfigure_complete;
-+	struct completion recovery_start;
- 	/* continuous recovery fail count */
- 	atomic_t fail_cont_count;
- 	unsigned long reset_fail_timeout;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index c57a8f2c7820..1a735bb804e1 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5726,6 +5726,27 @@ static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
- 	return ret;
- }
- 
-+static void ath11k_mac_wait_reconfigure(struct ath11k_base *ab)
-+{
-+	int recovery_start_count;
-+
-+	if (!ab->is_reset)
-+		return;
-+
-+	recovery_start_count = atomic_inc_return(&ab->recovery_start_count);
-+	ath11k_dbg(ab, ATH11K_DBG_MAC, "recovery start count %d\n", recovery_start_count);
-+
-+	if (recovery_start_count == ab->num_radios) {
-+		complete(&ab->recovery_start);
-+		ath11k_dbg(ab, ATH11K_DBG_MAC, "recovery started success\n");
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC, "waiting reconfigure...\n");
-+
-+	wait_for_completion_timeout(&ab->reconfigure_complete,
-+				    ATH11K_RECONFIGURE_TIMEOUT_HZ);
-+}
-+
- static int ath11k_mac_op_start(struct ieee80211_hw *hw)
- {
- 	struct ath11k *ar = hw->priv;
-@@ -5742,6 +5763,7 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
- 		break;
- 	case ATH11K_STATE_RESTARTING:
- 		ar->state = ATH11K_STATE_RESTARTED;
-+		ath11k_mac_wait_reconfigure(ab);
- 		break;
- 	case ATH11K_STATE_RESTARTED:
- 	case ATH11K_STATE_WEDGED:
--- 
-2.31.1
+Thanks!
 
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/w=
+ireless/intel/iwlwifi/iwl-drv.c
+> index 83e3b731ad29..6651e78b39ec 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+> @@ -1707,6 +1707,8 @@ static void iwl_req_fw_callback(const struct firmwa=
+re *ucode_raw, void *context)
+>   out_unbind:
+>  	complete(&drv->request_firmware_complete);
+>  	device_release_driver(drv->trans->dev);
+> +	/* drv has just been freed by the release */
+> +	failure =3D false;
+>   free:
+>  	if (failure)
+>  		iwl_dealloc_ucode(drv);
+> --=20
+> 2.34.1
+>=20
+
+--=20
+Best Regards,
+Marek Marczykowski-G=C3=B3recki
+Invisible Things Lab
+
+--Rj3/8RxUIYFHdmTV
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhrpukzGPukRmQqkK24/THMrX1ywFAmICUhAACgkQ24/THMrX
+1ywGRgf/YiqF+79qOU1oFpLynQ3coyrojc0nCj9bFdMf0PVwfbSDXggH7a3gHzaC
+oq5FTdMGbeWysH7dmO/Hea9ppxwMfaVhcopzWmeCpvbPTTse1fpjbYlCwjA8KNHN
+mLa5Yz1koLxDLnynovAj9+UiJ4ILFnPJ4/IiVC77Fc862TsEooM/cpnmxoJaVCSD
+9HGmlxdoGBq/o5h1t49C4dsJwMoW7gyCHi2KkfHfjZixUaNv26Ta/sDvUvBnoh8R
+j+HKSIkGdsJOZn3Z7gU84x6RCcZKRUmBZc6Z/9NSSoN0KZHr3JavIMOjoVl1z2Ca
+PIBGTs7aBARQTSJg2ATt08jXXqOG9g==
+=HjcN
+-----END PGP SIGNATURE-----
+
+--Rj3/8RxUIYFHdmTV--
