@@ -2,168 +2,242 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9431C35273
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE4FC35276
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359523AbiBHLbl (ORCPT
+        id S1359664AbiBHLbp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54078 "EHLO
+        Tue, 8 Feb 2022 06:31:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356169AbiBHKVY (ORCPT
+        with ESMTP id S1356492AbiBHKuL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 05:21:24 -0500
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8292BC03FEC0
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:21:15 -0800 (PST)
-X-UUID: b7835a6d00a540258d2eff0be24a46fc-20220208
-X-UUID: b7835a6d00a540258d2eff0be24a46fc-20220208
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-        (envelope-from <bo.jiao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2064181488; Tue, 08 Feb 2022 18:21:11 +0800
-Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Tue, 8 Feb 2022 18:21:10 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS34N1.mediatek.inc
- (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Feb
- 2022 18:21:09 +0800
-Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
- MTKCAS36.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Tue, 8 Feb 2022 18:21:09 +0800
-From:   Bo Jiao <bo.jiao@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Xing Song <xing.song@mediatek.com>,
-        Sujuan Chen <sujuan.chen@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Bo Jiao <Bo.Jiao@mediatek.com>
-Subject: [PATCH v2] mt76: mt7915: Fix channel state update error issue
-Date:   Tue, 8 Feb 2022 18:21:07 +0800
-Message-ID: <a3640a21b801969744b4bd4e038bdb015d249ba2.1644312585.git.Bo.Jiao@mediatek.com>
-X-Mailer: git-send-email 2.17.0
+        Tue, 8 Feb 2022 05:50:11 -0500
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A67DC03FEC0
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:50:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1644317410; x=1675853410;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=gthDNO/XzgphMh/3xfNqixz/c+u6Cv2YXTjRmSHCnHg=;
+  b=Yi+5JvTDAcoegNXkOWZZDGlReQBzfZJj3/oQCr9p0IdtCV88xSw//J5m
+   RXsHRvh3hHd2Rc5DJUUfQHhXfdVpIH0ybxGT06R813Ee6ryeUJrI3yTJj
+   HF1iDp7Fjb9f8tp14r50jP67kgQKXBMrrMpLH26iU6EZA2F2lcbX8Ro3s
+   U=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 08 Feb 2022 02:50:10 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 02:50:10 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Tue, 8 Feb 2022 02:50:09 -0800
+Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Tue, 8 Feb 2022 02:50:08 -0800
+From:   Wen Gong <quic_wgong@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
+Subject: [PATCH v5 5/5] ath11k: add synchronization operation between reconfigure of mac80211 and ath11k_base
+Date:   Tue, 8 Feb 2022 05:49:47 -0500
+Message-ID: <20220208104947.25791-6-quic_wgong@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220208104947.25791-1-quic_wgong@quicinc.com>
+References: <20220208104947.25791-1-quic_wgong@quicinc.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-MTK:  N
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bo Jiao <Bo.Jiao@mediatek.com>
+ieee80211_reconfig() of mac80211 is the main function for recovery of
+each ieee80211_hw and ath11k, and ath11k_core_reconfigure_on_crash()
+is the main function for recovery of ath11k_base, it has more than
+one ieee80211_hw and ath11k for each ath11k_base, so it need to add
+synchronization between them, otherwise it has many issue.
 
-Fix channel state update error issue due to wrong
-register access for mt7916.
+For example, when ath11k_core_reconfigure_on_crash() is not complete,
+mac80211 send a hw scan request to ath11k, it leads firmware crash,
+because firmware has not been initialized at that moment, firmware
+is only finished downloaded and loaded, it can not receive scan
+command.
 
-Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
-Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
+
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 ---
-v2:
- - add offset to parse channel mib info event.
----
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c  | 15 +++++++++++----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c  |  8 +++++---
- drivers/net/wireless/mediatek/mt76/mt7915/regs.h | 11 ++++++++---
- 3 files changed, 24 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c | 51 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath11k/core.h |  5 +++
+ drivers/net/wireless/ath/ath11k/mac.c  | 22 +++++++++++
+ 3 files changed, 70 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 3c38031..b693868 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1845,12 +1845,17 @@ void mt7915_mac_set_timing(struct mt7915_phy *phy)
- 
- void mt7915_mac_enable_nf(struct mt7915_dev *dev, bool ext_phy)
- {
--	mt76_set(dev, MT_WF_PHY_RXTD12(ext_phy),
-+	u32 reg;
-+
-+	reg = is_mt7915(&dev->mt76) ? MT_WF_PHY_RXTD12(ext_phy) :
-+		MT_WF_PHY_RXTD12_MT7916(ext_phy);
-+	mt76_set(dev, reg,
- 		 MT_WF_PHY_RXTD12_IRPI_SW_CLR_ONLY |
- 		 MT_WF_PHY_RXTD12_IRPI_SW_CLR);
- 
--	mt76_set(dev, MT_WF_PHY_RX_CTRL1(ext_phy),
--		 FIELD_PREP(MT_WF_PHY_RX_CTRL1_IPI_EN, 0x5));
-+	reg = is_mt7915(&dev->mt76) ? MT_WF_PHY_RX_CTRL1(ext_phy) :
-+		MT_WF_PHY_RX_CTRL1_MT7916(ext_phy);
-+	mt76_set(dev, reg, FIELD_PREP(MT_WF_PHY_RX_CTRL1_IPI_EN, 0x5));
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 00c83fdb0702..8ce93fd9e1e6 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1263,12 +1263,11 @@ static void ath11k_update_11d(struct work_struct *work)
+ 	}
  }
  
- static u8
-@@ -1862,7 +1867,9 @@ mt7915_phy_get_nf(struct mt7915_phy *phy, int idx)
- 	int nss, i;
+-static void ath11k_core_restart(struct work_struct *work)
++static void ath11k_core_pre_reconfigure_recovery(struct ath11k_base *ab)
+ {
+-	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
+ 	struct ath11k *ar;
+ 	struct ath11k_pdev *pdev;
+-	int i, ret = 0;
++	int i;
  
- 	for (nss = 0; nss < hweight8(phy->mt76->chainmask); nss++) {
--		u32 reg = MT_WF_IRPI(nss + (idx << dev->dbdc_support));
-+		u32 reg = is_mt7915(&dev->mt76) ?
-+			MT_WF_IRPI_NSS(0, nss + (idx << dev->dbdc_support)) :
-+			MT_WF_IRPI_NSS_MT7916(idx, nss);
+ 	spin_lock_bh(&ab->base_lock);
+ 	ab->stats.fw_crash_counter++;
+@@ -1301,12 +1300,13 @@ static void ath11k_core_restart(struct work_struct *work)
  
- 		for (i = 0; i < ARRAY_SIZE(nf_power); i++, reg += 4) {
- 			val = mt76_rr(dev, reg);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 94837ed..529a096 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3064,10 +3064,12 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- 	struct mt7915_dev *dev = phy->dev;
- 	struct mt7915_mcu_mib *res, req[4];
- 	struct sk_buff *skb;
--	int i, ret, start = 0;
-+	int i, ret, start = 0, ofs = 20;
+ 	wake_up(&ab->wmi_ab.tx_credits_wq);
+ 	wake_up(&ab->peer_mapping_wq);
++}
  
--	if (!is_mt7915(&dev->mt76))
-+	if (!is_mt7915(&dev->mt76)) {
- 		start = 4;
-+		ofs = 0;
-+	}
+-	ret = ath11k_core_reconfigure_on_crash(ab);
+-	if (ret) {
+-		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
+-		return;
+-	}
++static void ath11k_core_post_reconfigure_recovery(struct ath11k_base *ab)
++{
++	struct ath11k *ar;
++	struct ath11k_pdev *pdev;
++	int i;
  
- 	for (i = 0; i < 4; i++) {
- 		req[i].band = cpu_to_le32(phy != &dev->phy);
-@@ -3079,7 +3081,7 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- 	if (ret)
- 		return ret;
+ 	for (i = 0; i < ab->num_radios; i++) {
+ 		pdev = &ab->pdevs[i];
+@@ -1342,6 +1342,27 @@ static void ath11k_core_restart(struct work_struct *work)
+ 	complete(&ab->driver_recovery);
+ }
  
--	res = (struct mt7915_mcu_mib *)(skb->data + 20);
-+	res = (struct mt7915_mcu_mib *)(skb->data + ofs);
- 
- 	if (chan_switch)
- 		goto out;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 6a0f681..e380fd9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -761,18 +761,23 @@ enum offs_rev {
- #define MT_WF_PP_TOP_RXQ_WFDMA_CF_5	MT_WF_PP_TOP(0x0e8)
- #define MT_WF_PP_TOP_RXQ_QID6_WFDMA_HIF_SEL_MASK	BIT(6)
- 
--#define MT_WF_IRPI_BASE			0x83006000
--#define MT_WF_IRPI(ofs)			(MT_WF_IRPI_BASE + ((ofs) << 16))
-+#define MT_WF_IRPI_BASE			0x83000000
-+#define MT_WF_IRPI(ofs)			(MT_WF_IRPI_BASE + (ofs))
- 
--/* PHY: band 0(0x83080000), band 1(0x83090000) */
-+#define MT_WF_IRPI_NSS(phy, nss)	MT_WF_IRPI(0x6000 + ((phy) << 20) + ((nss) << 16))
-+#define MT_WF_IRPI_NSS_MT7916(phy, nss)	MT_WF_IRPI(0x1000 + ((phy) << 20) + ((nss) << 16))
++static void ath11k_core_restart(struct work_struct *work)
++{
++	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
++	int ret;
 +
-+/* PHY */
- #define MT_WF_PHY_BASE			0x83080000
- #define MT_WF_PHY(ofs)			(MT_WF_PHY_BASE + (ofs))
++	if (!ab->is_reset)
++		ath11k_core_pre_reconfigure_recovery(ab);
++
++	ret = ath11k_core_reconfigure_on_crash(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
++		return;
++	}
++
++	if (ab->is_reset)
++		complete_all(&ab->reconfigure_complete);
++
++	if (!ab->is_reset)
++		ath11k_core_post_reconfigure_recovery(ab);
++}
++
+ static void ath11k_core_reset(struct work_struct *work)
+ {
+ 	struct ath11k_base *ab = container_of(work, struct ath11k_base, reset_work);
+@@ -1393,6 +1414,18 @@ static void ath11k_core_reset(struct work_struct *work)
  
- #define MT_WF_PHY_RX_CTRL1(_phy)	MT_WF_PHY(0x2004 + ((_phy) << 16))
-+#define MT_WF_PHY_RX_CTRL1_MT7916(_phy)	MT_WF_PHY(0x2004 + ((_phy) << 20))
- #define MT_WF_PHY_RX_CTRL1_IPI_EN	GENMASK(2, 0)
- #define MT_WF_PHY_RX_CTRL1_STSCNT_EN	GENMASK(11, 9)
+ 	ab->is_reset = true;
+ 	atomic_set(&ab->recovery_count, 0);
++	reinit_completion(&ab->recovery_start);
++	atomic_set(&ab->recovery_start_count, 0);
++
++	ath11k_core_pre_reconfigure_recovery(ab);
++
++	reinit_completion(&ab->reconfigure_complete);
++	ath11k_core_post_reconfigure_recovery(ab);
++
++	ath11k_dbg(ab, ATH11K_DBG_BOOT, "waiting recovery start...\n");
++
++	time_left = wait_for_completion_timeout(&ab->recovery_start,
++						ATH11K_RECOVER_START_TIMEOUT_HZ);
  
- #define MT_WF_PHY_RXTD12(_phy)		MT_WF_PHY(0x8230 + ((_phy) << 16))
-+#define MT_WF_PHY_RXTD12_MT7916(_phy)	MT_WF_PHY(0x8230 + ((_phy) << 20))
- #define MT_WF_PHY_RXTD12_IRPI_SW_CLR_ONLY	BIT(18)
- #define MT_WF_PHY_RXTD12_IRPI_SW_CLR		BIT(29)
+ 	ath11k_hif_power_down(ab);
+ 	ath11k_qmi_free_resource(ab);
+@@ -1504,6 +1537,8 @@ struct ath11k_base *ath11k_core_alloc(struct device *dev, size_t priv_size,
+ 	spin_lock_init(&ab->base_lock);
+ 	mutex_init(&ab->vdev_id_11d_lock);
+ 	init_completion(&ab->reset_complete);
++	init_completion(&ab->reconfigure_complete);
++	init_completion(&ab->recovery_start);
  
+ 	INIT_LIST_HEAD(&ab->peers);
+ 	init_waitqueue_head(&ab->peer_mapping_wq);
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 3fc49e633c29..0fd5a7ee6304 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -43,6 +43,8 @@ extern unsigned int ath11k_frame_mode;
+ #define ATH11K_RESET_MAX_FAIL_COUNT_FIRST 3
+ #define ATH11K_RESET_MAX_FAIL_COUNT_FINAL 5
+ #define ATH11K_RESET_FAIL_TIMEOUT_HZ (20 * HZ)
++#define ATH11K_RECONFIGURE_TIMEOUT_HZ (10 * HZ)
++#define ATH11K_RECOVER_START_TIMEOUT_HZ (20 * HZ)
+ 
+ enum ath11k_supported_bw {
+ 	ATH11K_BW_20	= 0,
+@@ -795,8 +797,11 @@ struct ath11k_base {
+ 	struct work_struct reset_work;
+ 	atomic_t reset_count;
+ 	atomic_t recovery_count;
++	atomic_t recovery_start_count;
+ 	bool is_reset;
+ 	struct completion reset_complete;
++	struct completion reconfigure_complete;
++	struct completion recovery_start;
+ 	/* continuous recovery fail count */
+ 	atomic_t fail_cont_count;
+ 	unsigned long reset_fail_timeout;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index c57a8f2c7820..1a735bb804e1 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -5726,6 +5726,27 @@ static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
+ 	return ret;
+ }
+ 
++static void ath11k_mac_wait_reconfigure(struct ath11k_base *ab)
++{
++	int recovery_start_count;
++
++	if (!ab->is_reset)
++		return;
++
++	recovery_start_count = atomic_inc_return(&ab->recovery_start_count);
++	ath11k_dbg(ab, ATH11K_DBG_MAC, "recovery start count %d\n", recovery_start_count);
++
++	if (recovery_start_count == ab->num_radios) {
++		complete(&ab->recovery_start);
++		ath11k_dbg(ab, ATH11K_DBG_MAC, "recovery started success\n");
++	}
++
++	ath11k_dbg(ab, ATH11K_DBG_MAC, "waiting reconfigure...\n");
++
++	wait_for_completion_timeout(&ab->reconfigure_complete,
++				    ATH11K_RECONFIGURE_TIMEOUT_HZ);
++}
++
+ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
+ {
+ 	struct ath11k *ar = hw->priv;
+@@ -5742,6 +5763,7 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
+ 		break;
+ 	case ATH11K_STATE_RESTARTING:
+ 		ar->state = ATH11K_STATE_RESTARTED;
++		ath11k_mac_wait_reconfigure(ab);
+ 		break;
+ 	case ATH11K_STATE_RESTARTED:
+ 	case ATH11K_STATE_WEDGED:
 -- 
-2.18.0
+2.31.1
 
