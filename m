@@ -2,160 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B009C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69826C43217
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359792AbiBHLbr (ORCPT
+        id S1357033AbiBHLbu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40312 "EHLO
+        Tue, 8 Feb 2022 06:31:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357033AbiBHLU5 (ORCPT
+        with ESMTP id S1356448AbiBHKrq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 06:20:57 -0500
-Received: from out2-smtp.messagingengine.com (out2-smtp.messagingengine.com [66.111.4.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 999FCC03FEC0
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 03:20:55 -0800 (PST)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 214925C00E0;
-        Tue,  8 Feb 2022 06:20:53 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Tue, 08 Feb 2022 06:20:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=d7RS28//0ruM0Q55s
-        H7s2j4TekvjwqskaG8l3o1lxzo=; b=ihW/Y8snH6aDQ9BEd8pFdh5V5racXFvxv
-        LLSdjantrGQeeHNhUnLZ1VaY45d013rqG6NURq3jKKusrvdovx4pwX7Z9S/vzDMJ
-        cVE/zHApa+dwp/LS0yK3ygXV2L68f0jJzyYC5rWj8zL5cSx9D5NRZ56W1kZpPIEe
-        WeGWjhiWU03HYYLGXJ/D/epUEsfUweNOsiAPLAhmQjUPGmk6Uhg1pIcbzTZS0slp
-        3pcdWpHmWaoe/I4Xx5RN6atybY3fwiUxl/zV4IGPLSSLrsu2VF7qa5C+gWyTRSBF
-        iE0RzMhOXiJg7R8BAuhy5KphTCoH7KwTPudCdXdkPpJFHT0A1Grig==
-X-ME-Sender: <xms:FFICYvjrOqevvMb7mvta7jppA9r9DwJWZC8F0XyqrsZi-uF3uWZRAw>
-    <xme:FFICYsBkrQTiNKHYWRurBmFJV1ztsnl3kYd6Z5klAMtMoUMKCqs2lWFsLnijij9tI
-    9iTLTUft4xgZw>
-X-ME-Received: <xmr:FFICYvG9uB60agCtb2lcPiBucfcz4b97pFmOtHOWzAIK0gc-tcAgj-I>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrheejgddvfecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvuffkfhggtggujgesghdtreertddtjeenucfhrhhomhepofgrrhgvkhcu
-    ofgrrhgtiiihkhhofihskhhiqdfikphrvggtkhhiuceomhgrrhhmrghrvghksehinhhvih
-    hsihgslhgvthhhihhnghhslhgrsgdrtghomheqnecuggftrfgrthhtvghrnhepteevffei
-    gffhkefhgfegfeffhfegveeikeettdfhheevieehieeitddugeefteffnecuvehluhhsth
-    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepmhgrrhhmrghrvghksehi
-    nhhvihhsihgslhgvthhhihhnghhslhgrsgdrtghomh
-X-ME-Proxy: <xmx:FFICYsTRXmzaNzrNfuLMz5YhFILZ-E6jeF-b8ZF5HmrGTY4fYMIeAA>
-    <xmx:FFICYswsyel-9aFcCMeTtu8xbLYiaE42jpdb7pD4Hv4fTtVmxYiijA>
-    <xmx:FFICYi733f0mi-dNzbxaPqeThMmIgw1Z6vNXw5RR8sFvolwXBq5rPw>
-    <xmx:FVICYrrXDIXkX699tU2uujjfdlX72GZ-QvZE7gFZ0XeCsjngcpZbTw>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 8 Feb 2022 06:20:51 -0500 (EST)
-Date:   Tue, 8 Feb 2022 12:20:46 +0100
-From:   Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= 
-        <marmarek@invisiblethingslab.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        stable@vger.kernel.org, Stefan Agner <stefan@agner.ch>,
+        Tue, 8 Feb 2022 05:47:46 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EEB2C03FEC0;
+        Tue,  8 Feb 2022 02:47:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=0dqhvmwEdAX++oVGM1+TtEeGArLVwX6xnXfCDjA3GJM=; t=1644317265; x=1645526865; 
+        b=NVmqo931x3XdFrXgpgK7H3FPtlP5HPHCIwMOAOHsjYQZtiK8cS8eOSJ5WFOEYnulDw724wQn91f
+        f/2e+UvQR+sbSsEpKPsaz2ABY1FyAZVmEO75npOgrd9dEhoXBH7lA2hI4ap+nuoGEjt3mdLlGgoyH
+        XfcWVNmlBkaEfJUKEhm1tAfnzpHrs1sqpVmOigof1PlZRafr4DPm8CJrX/eyhneS9B9vmolBfbUFk
+        ix7/FnJcw9v7eBulIn1t7bz8ee924YFlpfl+fY3OMo1B53TctPH+ZfBvyy+HoEtL2wkxdSOng+CWj
+        T4t8ZVgmW+jMlHzv7mDRJ5hbmVRXDYuE51bQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nHO26-00G00u-Hv;
+        Tue, 08 Feb 2022 11:47:38 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org,
+        Stefan Agner <stefan@agner.ch>,
         Wolfgang Walter <linux@stwm.de>,
         Jason Self <jason@bluehome.net>,
-        Dominik Behr <dominik@dominikbehr.com>
-Subject: Re: [PATCH] iwlwifi: fix use-after-free
-Message-ID: <YgJSEEmRDKKG+3lT@mail-itl>
-References: <20220208114728.e6b514cf4c85.Iffb575ca2a623d7859b542c33b2a507d01554251@changeid>
+        Dominik Behr <dominik@dominikbehr.com>,
+        =?UTF-8?q?Marek=20Marczykowski-G=C3=B3recki?= 
+        <marmarek@invisiblethingslab.com>
+Subject: [PATCH] iwlwifi: fix use-after-free
+Date:   Tue,  8 Feb 2022 11:47:30 +0100
+Message-Id: <20220208114728.e6b514cf4c85.Iffb575ca2a623d7859b542c33b2a507d01554251@changeid>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="Rj3/8RxUIYFHdmTV"
-Content-Disposition: inline
-In-Reply-To: <20220208114728.e6b514cf4c85.Iffb575ca2a623d7859b542c33b2a507d01554251@changeid>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---Rj3/8RxUIYFHdmTV
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 8 Feb 2022 12:20:46 +0100
-From: Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org, Stefan Agner <stefan@agner.ch>,
-	Wolfgang Walter <linux@stwm.de>, Jason Self <jason@bluehome.net>,
-	Dominik Behr <dominik@dominikbehr.com>
-Subject: Re: [PATCH] iwlwifi: fix use-after-free
+If no firmware was present at all (or, presumably, all of the
+firmware files failed to parse), we end up unbinding by calling
+device_release_driver(), which calls remove(), which then in
+iwlwifi calls iwl_drv_stop(), freeing the 'drv' struct. However
+the new code I added will still erroneously access it after it
+was freed.
 
-On Tue, Feb 08, 2022 at 11:47:30AM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> If no firmware was present at all (or, presumably, all of the
-> firmware files failed to parse), we end up unbinding by calling
-> device_release_driver(), which calls remove(), which then in
-> iwlwifi calls iwl_drv_stop(), freeing the 'drv' struct. However
-> the new code I added will still erroneously access it after it
-> was freed.
->=20
-> Set 'failure=3Dfalse' in this case to avoid the access, all data
-> was already freed anyway.
->=20
-> Cc: stable@vger.kernel.org
-> Reported-by: Stefan Agner <stefan@agner.ch>
-> Reported-by: Wolfgang Walter <linux@stwm.de>
-> Reported-by: Jason Self <jason@bluehome.net>
-> Reported-by: Dominik Behr <dominik@dominikbehr.com>
-> Reported-by: Marek Marczykowski-G=C3=B3recki <marmarek@invisiblethingslab=
-=2Ecom>
-> Fixes: ab07506b0454 ("iwlwifi: fix leaks/bad data after failed firmware l=
-oad")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Set 'failure=false' in this case to avoid the access, all data
+was already freed anyway.
 
-Tested-by: Marek Marczykowski-G=C3=B3recki <marmarek@invisiblethingslab.com>
+Cc: stable@vger.kernel.org
+Reported-by: Stefan Agner <stefan@agner.ch>
+Reported-by: Wolfgang Walter <linux@stwm.de>
+Reported-by: Jason Self <jason@bluehome.net>
+Reported-by: Dominik Behr <dominik@dominikbehr.com>
+Reported-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Fixes: ab07506b0454 ("iwlwifi: fix leaks/bad data after failed firmware load")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks!
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 83e3b731ad29..6651e78b39ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1707,6 +1707,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+  out_unbind:
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
++	/* drv has just been freed by the release */
++	failure = false;
+  free:
+ 	if (failure)
+ 		iwl_dealloc_ucode(drv);
+-- 
+2.34.1
 
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/w=
-ireless/intel/iwlwifi/iwl-drv.c
-> index 83e3b731ad29..6651e78b39ec 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-> @@ -1707,6 +1707,8 @@ static void iwl_req_fw_callback(const struct firmwa=
-re *ucode_raw, void *context)
->   out_unbind:
->  	complete(&drv->request_firmware_complete);
->  	device_release_driver(drv->trans->dev);
-> +	/* drv has just been freed by the release */
-> +	failure =3D false;
->   free:
->  	if (failure)
->  		iwl_dealloc_ucode(drv);
-> --=20
-> 2.34.1
->=20
-
---=20
-Best Regards,
-Marek Marczykowski-G=C3=B3recki
-Invisible Things Lab
-
---Rj3/8RxUIYFHdmTV
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhrpukzGPukRmQqkK24/THMrX1ywFAmICUhAACgkQ24/THMrX
-1ywGRgf/YiqF+79qOU1oFpLynQ3coyrojc0nCj9bFdMf0PVwfbSDXggH7a3gHzaC
-oq5FTdMGbeWysH7dmO/Hea9ppxwMfaVhcopzWmeCpvbPTTse1fpjbYlCwjA8KNHN
-mLa5Yz1koLxDLnynovAj9+UiJ4ILFnPJ4/IiVC77Fc862TsEooM/cpnmxoJaVCSD
-9HGmlxdoGBq/o5h1t49C4dsJwMoW7gyCHi2KkfHfjZixUaNv26Ta/sDvUvBnoh8R
-j+HKSIkGdsJOZn3Z7gU84x6RCcZKRUmBZc6Z/9NSSoN0KZHr3JavIMOjoVl1z2Ca
-PIBGTs7aBARQTSJg2ATt08jXXqOG9g==
-=HjcN
------END PGP SIGNATURE-----
-
---Rj3/8RxUIYFHdmTV--
