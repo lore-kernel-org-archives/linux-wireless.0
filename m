@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC1F5C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 08:16:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE0DC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 08:16:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348997AbiBHIQB (ORCPT
+        id S1349019AbiBHIQC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 03:16:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51288 "EHLO
+        Tue, 8 Feb 2022 03:16:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349126AbiBHIPq (ORCPT
+        with ESMTP id S1349140AbiBHIPs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 03:15:46 -0500
+        Tue, 8 Feb 2022 03:15:48 -0500
 Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E877AC03FEC3
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 00:15:44 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89C81C03FEC0
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 00:15:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644308144; x=1675844144;
+  t=1644308146; x=1675844146;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=kbxqpkhMKg+A9eZZNFP4LmSLyNXsxgm6cLVIS5welng=;
-  b=X4DHhXJv1rZGXp9uYYea3DWgVahYCjpUuqJpRYABrH6hTVO3w2LVlZea
-   Y5z0OXV2yHkj0G4fRiWtqF4VMzYcbEbpjsu3fABx2uYzQTvP/chaXiJ/5
-   lirVkEF5uAaul+q0V31EnxCYzuSAGRgh+tEYs8PMfUrhOU6C6aW4dKCC5
-   E=;
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 08 Feb 2022 00:13:40 -0800
+  bh=MjsClt5qbvH9wL2OjFDC59rox4SWMJ1Y6bx3F7fBCFA=;
+  b=FMJr9A+MZxBxjn9VH+eX87DSnoLTK0JAvTKNmUv8SS/f66oI1c78jh/+
+   MEmggvVgANCu0ZwyjgFQQSaPJRoP/qGQ0vUJqxiskJnTvsbTL3bkW8S2O
+   j/kYq58bSWCp7Oy0wbLUUvxtB9QBhc/U8zLxDAnk1rNipxGRDhFoOBbI3
+   o=;
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 08 Feb 2022 00:13:45 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 00:13:40 -0800
+  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 00:13:45 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 00:13:39 -0800
+ 15.2.922.19; Tue, 8 Feb 2022 00:13:44 -0800
 Received: from cjhuang2-gv.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 00:13:38 -0800
+ 15.2.922.19; Tue, 8 Feb 2022 00:13:43 -0800
 From:   Carl Huang <quic_cjhuang@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 2/6] ath11k: Add WoW net-detect functionality
-Date:   Tue, 8 Feb 2022 16:13:22 +0800
-Message-ID: <1644308006-22784-3-git-send-email-quic_cjhuang@quicinc.com>
+Subject: [PATCH v3 6/6] ath11k: support GTK rekey offload
+Date:   Tue, 8 Feb 2022 16:13:26 +0800
+Message-ID: <1644308006-22784-7-git-send-email-quic_cjhuang@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1644308006-22784-1-git-send-email-quic_cjhuang@quicinc.com>
 References: <1644308006-22784-1-git-send-email-quic_cjhuang@quicinc.com>
@@ -57,571 +57,336 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Implement net-detect feature by setting flag
-WIPHY_WOWLAN_NET_DETECT if firmware supports this
-feature. Driver sets the related PNO configuration
-to firmware before entering WoW and firmware then
-scans periodically and wakes up host if a specific
-SSID is found.
+Host sets GTK related info to firmware before WoW is enabled, and
+gets rekey replay_count and then disables GTK rekey when WoW quits.
 
 Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
 
 Signed-off-by: Carl Huang <quic_cjhuang@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.h |   1 +
- drivers/net/wireless/ath/ath11k/mac.c  |  12 ++
- drivers/net/wireless/ath/ath11k/wmi.c  | 154 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h  | 169 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wow.c  | 174 ++++++++++++++++++++++++-
- 5 files changed, 509 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/core.h |   8 ++
+ drivers/net/wireless/ath/ath11k/mac.c  |  32 +++++++
+ drivers/net/wireless/ath/ath11k/wmi.c  | 119 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h  |  49 ++++++++++
+ drivers/net/wireless/ath/ath11k/wow.c  |  46 +++++++++-
+ 5 files changed, 253 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index d6317cd9c15f..db92ecea7bf2 100644
+index 3a3fd3f87f84..3447330ef28e 100644
 --- a/drivers/net/wireless/ath/ath11k/core.h
 +++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -616,6 +616,7 @@ struct ath11k {
- 	bool regdom_set_by_user;
- 	int hw_rate_code;
- 	u8 twt_enabled;
-+	bool nlo_enabled;
+@@ -230,6 +230,13 @@ struct ath11k_arp_ns_offload {
+ 	u8  mac_addr[ETH_ALEN];
  };
  
- struct ath11k_band_cap {
++struct ath11k_rekey_data {
++	u8 kck[NL80211_KCK_LEN];
++	u8 kek[NL80211_KCK_LEN];
++	u64 replay_ctr;
++	bool enable_offload;
++};
++
+ struct ath11k_vif {
+ 	u32 vdev_id;
+ 	enum wmi_vdev_type vdev_type;
+@@ -285,6 +292,7 @@ struct ath11k_vif {
+ 	struct dentry *debugfs_twt;
+ #endif /* CONFIG_ATH11K_DEBUGFS */
+ 	struct ath11k_arp_ns_offload arp_ns_offload;
++	struct ath11k_rekey_data rekey_data;
+ };
+ 
+ struct ath11k_vif_iter {
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 0ea4b456f4af..32b0dd6778a3 100644
+index 609b4975efea..8af265de9f0d 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8477,6 +8477,18 @@ static int __ath11k_mac_register(struct ath11k *ar)
- 			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+@@ -2757,6 +2757,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
  	}
  
-+	if (test_bit(WMI_TLV_SERVICE_NLO, ar->wmi->wmi_ab->svc_map)) {
-+		ar->hw->wiphy->max_sched_scan_ssids = WMI_PNO_MAX_SUPP_NETWORKS;
-+		ar->hw->wiphy->max_match_sets = WMI_PNO_MAX_SUPP_NETWORKS;
-+		ar->hw->wiphy->max_sched_scan_ie_len = WMI_PNO_MAX_IE_LENGTH;
-+		ar->hw->wiphy->max_sched_scan_plans = WMI_PNO_MAX_SCHED_SCAN_PLANS;
-+		ar->hw->wiphy->max_sched_scan_plan_interval =
-+			WMI_PNO_MAX_SCHED_SCAN_PLAN_INT;
-+		ar->hw->wiphy->max_sched_scan_plan_iterations =
-+			WMI_PNO_MAX_SCHED_SCAN_PLAN_ITRNS;
-+		ar->hw->wiphy->features |= NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
-+	}
+ 	arvif->is_up = true;
++	arvif->rekey_data.enable_offload = false;
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
+ 		   "mac vdev %d up (associated) bssid %pM aid %d\n",
+@@ -2814,6 +2815,8 @@ static void ath11k_bss_disassoc(struct ieee80211_hw *hw,
+ 
+ 	arvif->is_up = false;
+ 
++	memset(&arvif->rekey_data, 0, sizeof(arvif->rekey_data));
 +
- 	ret = ath11k_wow_init(ar);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to init wow: %d\n", ret);
+ 	cancel_delayed_work_sync(&arvif->connection_loss_work);
+ }
+ 
+@@ -8175,6 +8178,34 @@ static void ath11k_mac_op_ipv6_changed(struct ieee80211_hw *hw,
+ 	ath11k_generate_ns_mc_addr(ar, offload);
+ }
+ 
++static void ath11k_mac_op_set_rekey_data(struct ieee80211_hw *hw,
++					 struct ieee80211_vif *vif,
++					 struct cfg80211_gtk_rekey_data *data)
++{
++	struct ath11k *ar = hw->priv;
++	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
++	struct ath11k_rekey_data *rekey_data = &arvif->rekey_data;
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "Set rekey data vdev_id %d\n",
++		   arvif->vdev_id);
++	mutex_lock(&ar->conf_mutex);
++
++	memcpy(rekey_data->kck, data->kck, NL80211_KCK_LEN);
++	memcpy(rekey_data->kek, data->kek, NL80211_KEK_LEN);
++
++	/* supplicant works on big-endian, converts to cpu-endian */
++	rekey_data->replay_ctr = be64_to_cpu(get_unaligned((u64 *)data->replay_ctr));
++	arvif->rekey_data.enable_offload = true;
++
++	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "KCK", NULL,
++			rekey_data->kck, NL80211_KCK_LEN);
++	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "KEK", NULL,
++			rekey_data->kck, NL80211_KEK_LEN);
++	ath11k_dbg_dump(ar->ab, ATH11K_DBG_MAC, "replay ctr", NULL,
++			&rekey_data->replay_ctr, sizeof(rekey_data->replay_ctr));
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ static const struct ieee80211_ops ath11k_ops = {
+ 	.tx				= ath11k_mac_op_tx,
+ 	.start                          = ath11k_mac_op_start,
+@@ -8189,6 +8220,7 @@ static const struct ieee80211_ops ath11k_ops = {
+ 	.hw_scan                        = ath11k_mac_op_hw_scan,
+ 	.cancel_hw_scan                 = ath11k_mac_op_cancel_hw_scan,
+ 	.set_key                        = ath11k_mac_op_set_key,
++	.set_rekey_data	                = ath11k_mac_op_set_rekey_data,
+ 	.sta_state                      = ath11k_mac_op_sta_state,
+ 	.sta_set_4addr                  = ath11k_mac_op_sta_set_4addr,
+ 	.sta_set_txpwr			= ath11k_mac_op_sta_set_txpwr,
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 183c63c95441..9ff170493dd0 100644
+index 094308d568d7..2185da7abb69 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8393,3 +8393,157 @@ int ath11k_wmi_wow_del_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id)
+@@ -7765,6 +7765,56 @@ static void ath11k_wmi_twt_add_dialog_event(struct ath11k_base *ab,
+ 	kfree(tb);
+ }
  
- 	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_WOW_DEL_WAKE_PATTERN_CMDID);
++static void
++ath11k_wmi_gtk_offload_status_event(struct ath11k_base *ab,
++				    struct sk_buff *skb)
++{
++	const void **tb;
++	const struct wmi_gtk_offload_status_event *ev;
++	struct ath11k_vif *arvif;
++	__be64 replay_ctr_be;
++	u64    replay_ctr;
++	int ret;
++
++	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ret = PTR_ERR(tb);
++		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
++		return;
++	}
++
++	ev = tb[WMI_TAG_GTK_OFFLOAD_STATUS_EVENT];
++	if (!ev) {
++		ath11k_warn(ab, "failed to fetch gtk offload status ev");
++		kfree(tb);
++		return;
++	}
++
++	arvif = ath11k_mac_get_arvif_by_vdev_id(ab, ev->vdev_id);
++	if (!arvif) {
++		ath11k_warn(ab, "failed to get arvif for vdev_id:%d\n",
++			    ev->vdev_id);
++		kfree(tb);
++		return;
++	}
++
++	ath11k_dbg(ab, ATH11K_DBG_WMI, "gtk offload event refresh_cnt:%d\n",
++		   ev->refresh_cnt);
++	ath11k_dbg_dump(ab, ATH11K_DBG_WMI, "gtk offload event replay_cnt",
++			NULL, ev->replay_ctr.counter, GTK_REPLAY_COUNTER_BYTES);
++
++	replay_ctr =  ev->replay_ctr.word1;
++	replay_ctr = (replay_ctr << 32) | ev->replay_ctr.word0;
++	arvif->rekey_data.replay_ctr = replay_ctr;
++	/* supplicant expects big-endian replay counter */
++	replay_ctr_be = cpu_to_be64(replay_ctr);
++
++	ieee80211_gtk_rekey_notify(arvif->vif, arvif->bssid,
++				   (void *)&replay_ctr_be, GFP_KERNEL);
++
++	kfree(tb);
++}
++
+ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+@@ -7896,6 +7946,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
+ 	case WMI_DIAG_EVENTID:
+ 		ath11k_wmi_diag_event(ab, skb);
+ 		break;
++	case WMI_GTK_OFFLOAD_STATUS_EVENTID:
++		ath11k_wmi_gtk_offload_status_event(ab, skb);
++		break;
+ 	/* TODO: Add remaining events */
+ 	default:
+ 		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
+@@ -8728,3 +8781,69 @@ int ath11k_wmi_arp_ns_offload(struct ath11k *ar,
+ 
+ 	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_SET_ARP_NS_OFFLOAD_CMDID);
  }
 +
-+static struct sk_buff *
-+ath11k_wmi_op_gen_config_pno_start(struct ath11k *ar,
-+				   u32 vdev_id,
-+				       struct wmi_pno_scan_req *pno)
++int ath11k_wmi_gtk_rekey_offload(struct ath11k *ar,
++				 struct ath11k_vif *arvif, bool enable)
 +{
-+	struct nlo_configured_parameters *nlo_list;
-+	struct wmi_wow_nlo_config_cmd *cmd;
-+	struct wmi_tlv *tlv;
++	struct wmi_gtk_rekey_offload_cmd *cmd;
++	struct ath11k_rekey_data *rekey_data = &arvif->rekey_data;
++	int len;
 +	struct sk_buff *skb;
-+	u32 *channel_list;
-+	size_t len, nlo_list_len, channel_list_len;
-+	u8 *ptr;
-+	u32 i;
-+
-+	len = sizeof(*cmd) +
-+	      sizeof(*tlv) +
-+	      /* TLV place holder for array of structures
-+	       * nlo_configured_parameters(nlo_list)
-+	       */
-+	      sizeof(*tlv);
-+	      /* TLV place holder for array of uint32 channel_list */
-+
-+	channel_list_len = sizeof(u32) * pno->a_networks[0].channel_count;
-+	len += channel_list_len;
-+
-+	nlo_list_len = sizeof(*nlo_list) * pno->uc_networks_count;
-+	len += nlo_list_len;
-+
-+	skb = ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (u8 *)skb->data;
-+	cmd = (struct wmi_wow_nlo_config_cmd *)ptr;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_NLO_CONFIG_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = pno->vdev_id;
-+	cmd->flags = WMI_NLO_CONFIG_START | WMI_NLO_CONFIG_SSID_HIDE_EN;
-+
-+	/* current FW does not support min-max range for dwell time */
-+	cmd->active_dwell_time = pno->active_max_time;
-+	cmd->passive_dwell_time = pno->passive_max_time;
-+
-+	if (pno->do_passive_scan)
-+		cmd->flags |= WMI_NLO_CONFIG_SCAN_PASSIVE;
-+
-+	cmd->fast_scan_period = pno->fast_scan_period;
-+	cmd->slow_scan_period = pno->slow_scan_period;
-+	cmd->fast_scan_max_cycles = pno->fast_scan_max_cycles;
-+	cmd->delay_start_time = pno->delay_start_time;
-+
-+	if (pno->enable_pno_scan_randomization) {
-+		cmd->flags |= WMI_NLO_CONFIG_SPOOFED_MAC_IN_PROBE_REQ |
-+				WMI_NLO_CONFIG_RANDOM_SEQ_NO_IN_PROBE_REQ;
-+		ether_addr_copy(cmd->mac_addr.addr, pno->mac_addr);
-+		ether_addr_copy(cmd->mac_mask.addr, pno->mac_addr_mask);
-+		ath11k_ce_byte_swap(cmd->mac_addr.addr, 8);
-+		ath11k_ce_byte_swap(cmd->mac_mask.addr, 8);
-+	}
-+
-+	ptr += sizeof(*cmd);
-+
-+	/* nlo_configured_parameters(nlo_list) */
-+	cmd->no_of_ssids = pno->uc_networks_count;
-+	tlv = (struct wmi_tlv *)ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG,
-+				 WMI_TAG_ARRAY_STRUCT) |
-+		      FIELD_PREP(WMI_TLV_LEN, nlo_list_len);
-+
-+	ptr += sizeof(*tlv);
-+	nlo_list = (struct nlo_configured_parameters *)ptr;
-+	for (i = 0; i < cmd->no_of_ssids; i++) {
-+		tlv = (struct wmi_tlv *)(&nlo_list[i].tlv_header);
-+		tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
-+			      FIELD_PREP(WMI_TLV_LEN, sizeof(*nlo_list) - sizeof(*tlv));
-+
-+		nlo_list[i].ssid.valid = true;
-+		nlo_list[i].ssid.ssid.ssid_len = pno->a_networks[i].ssid.ssid_len;
-+		memcpy(nlo_list[i].ssid.ssid.ssid,
-+		       pno->a_networks[i].ssid.ssid,
-+		       nlo_list[i].ssid.ssid.ssid_len);
-+		ath11k_ce_byte_swap(nlo_list[i].ssid.ssid.ssid,
-+				    roundup(nlo_list[i].ssid.ssid.ssid_len, 4));
-+
-+		if (pno->a_networks[i].rssi_threshold &&
-+		    pno->a_networks[i].rssi_threshold > -300) {
-+			nlo_list[i].rssi_cond.valid = true;
-+			nlo_list[i].rssi_cond.rssi =
-+				pno->a_networks[i].rssi_threshold;
-+		}
-+
-+		nlo_list[i].bcast_nw_type.valid = true;
-+		nlo_list[i].bcast_nw_type.bcast_nw_type =
-+			pno->a_networks[i].bcast_nw_type;
-+	}
-+
-+	ptr += nlo_list_len;
-+	cmd->num_of_channels = pno->a_networks[0].channel_count;
-+	tlv = (struct wmi_tlv *)ptr;
-+	tlv->header =  FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_UINT32) |
-+		       FIELD_PREP(WMI_TLV_LEN, channel_list_len);
-+	ptr += sizeof(*tlv);
-+	channel_list = (u32 *)ptr;
-+	for (i = 0; i < cmd->num_of_channels; i++)
-+		channel_list[i] = pno->a_networks[0].channels[i];
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "wmi tlv start pno config vdev_id %d\n",
-+		   vdev_id);
-+
-+	return skb;
-+}
-+
-+static struct sk_buff *ath11k_wmi_op_gen_config_pno_stop(struct ath11k *ar,
-+							 u32 vdev_id)
-+{
-+	struct wmi_wow_nlo_config_cmd *cmd;
-+	struct sk_buff *skb;
-+	size_t len;
++	__le64 replay_ctr;
 +
 +	len = sizeof(*cmd);
-+	skb = ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
++	skb =  ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
 +	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_wow_nlo_config_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_NLO_CONFIG_CMD) |
-+			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+
-+	cmd->vdev_id = vdev_id;
-+	cmd->flags = WMI_NLO_CONFIG_STOP;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+		   "wmi tlv stop pno config vdev_id %d\n", vdev_id);
-+	return skb;
-+}
-+
-+int ath11k_wmi_wow_config_pno(struct ath11k *ar, u32 vdev_id,
-+			      struct wmi_pno_scan_req  *pno_scan)
-+{
-+	struct sk_buff *skb;
-+
-+	if (pno_scan->enable)
-+		skb = ath11k_wmi_op_gen_config_pno_start(ar, vdev_id, pno_scan);
-+	else
-+		skb = ath11k_wmi_op_gen_config_pno_stop(ar, vdev_id);
-+
-+	if (IS_ERR_OR_NULL(skb))
 +		return -ENOMEM;
 +
-+	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_NETWORK_LIST_OFFLOAD_CONFIG_CMDID);
++	cmd = (struct wmi_gtk_rekey_offload_cmd *)skb->data;
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_GTK_OFFLOAD_CMD) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
++
++	cmd->vdev_id = arvif->vdev_id;
++
++	if (enable) {
++		cmd->flags = GTK_OFFLOAD_ENABLE_OPCODE;
++
++		/* the length in rekey_data and cmd is equal */
++		memcpy(cmd->kck, rekey_data->kck, sizeof(cmd->kck));
++		ath11k_ce_byte_swap(cmd->kck, GTK_OFFLOAD_KEK_BYTES);
++		memcpy(cmd->kek, rekey_data->kek, sizeof(cmd->kek));
++		ath11k_ce_byte_swap(cmd->kek, GTK_OFFLOAD_KEK_BYTES);
++
++		replay_ctr = cpu_to_le64(rekey_data->replay_ctr);
++		memcpy(cmd->replay_ctr, &replay_ctr,
++		       sizeof(replay_ctr));
++		ath11k_ce_byte_swap(cmd->replay_ctr, GTK_REPLAY_COUNTER_BYTES);
++	} else {
++		cmd->flags = GTK_OFFLOAD_DISABLE_OPCODE;
++	}
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "offload gtk rekey vdev: %d %d\n",
++		   arvif->vdev_id, enable);
++	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_GTK_OFFLOAD_CMDID);
 +}
 +
++int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
++				 struct ath11k_vif *arvif)
++{
++	struct wmi_gtk_rekey_offload_cmd *cmd;
++	int len;
++	struct sk_buff *skb;
++
++	len = sizeof(*cmd);
++	skb =  ath11k_wmi_alloc_skb(ar->wmi->wmi_ab, len);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_gtk_rekey_offload_cmd *)skb->data;
++	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_GTK_OFFLOAD_CMD) |
++			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
++
++	cmd->vdev_id = arvif->vdev_id;
++	cmd->flags = GTK_OFFLOAD_REQUEST_STATUS_OPCODE;
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "get gtk rekey vdev_id: %d\n",
++		   arvif->vdev_id);
++	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_GTK_OFFLOAD_CMDID);
++}
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index b82f432a3d95..9150e0555c6d 100644
+index b3b547c20375..6073233973cb 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -5616,6 +5616,173 @@ struct wmi_wow_del_pattern_cmd {
- 	u32 pattern_type;
+@@ -5840,6 +5840,51 @@ struct wmi_set_arp_ns_offload_cmd {
+ 	 */
  } __packed;
  
-+#define WMI_PNO_MAX_SCHED_SCAN_PLANS      2
-+#define WMI_PNO_MAX_SCHED_SCAN_PLAN_INT   7200
-+#define WMI_PNO_MAX_SCHED_SCAN_PLAN_ITRNS 100
-+#define WMI_PNO_MAX_NETW_CHANNELS         26
-+#define WMI_PNO_MAX_NETW_CHANNELS_EX      60
-+#define WMI_PNO_MAX_SUPP_NETWORKS         WLAN_SCAN_PARAMS_MAX_SSID
-+#define WMI_PNO_MAX_IE_LENGTH             WLAN_SCAN_PARAMS_MAX_IE_LEN
++#define GTK_OFFLOAD_OPCODE_MASK             0xFF000000
++#define GTK_OFFLOAD_ENABLE_OPCODE           0x01000000
++#define GTK_OFFLOAD_DISABLE_OPCODE          0x02000000
++#define GTK_OFFLOAD_REQUEST_STATUS_OPCODE   0x04000000
 +
-+/* size based of dot11 declaration without extra IEs as we will not carry those for PNO */
-+#define WMI_PNO_MAX_PB_REQ_SIZE    450
++#define GTK_OFFLOAD_KEK_BYTES       16
++#define GTK_OFFLOAD_KCK_BYTES       16
++#define GTK_REPLAY_COUNTER_BYTES    8
++#define WMI_MAX_KEY_LEN             32
++#define IGTK_PN_SIZE                6
 +
-+#define WMI_PNO_24G_DEFAULT_CH     1
-+#define WMI_PNO_5G_DEFAULT_CH      36
-+
-+#define WMI_ACTIVE_MAX_CHANNEL_TIME 40
-+#define WMI_PASSIVE_MAX_CHANNEL_TIME   110
-+
-+/* SSID broadcast type */
-+enum wmi_ssid_bcast_type {
-+	BCAST_UNKNOWN      = 0,
-+	BCAST_NORMAL       = 1,
-+	BCAST_HIDDEN       = 2,
-+};
-+
-+#define WMI_NLO_MAX_SSIDS    16
-+#define WMI_NLO_MAX_CHAN     48
-+
-+#define WMI_NLO_CONFIG_STOP                             BIT(0)
-+#define WMI_NLO_CONFIG_START                            BIT(1)
-+#define WMI_NLO_CONFIG_RESET                            BIT(2)
-+#define WMI_NLO_CONFIG_SLOW_SCAN                        BIT(4)
-+#define WMI_NLO_CONFIG_FAST_SCAN                        BIT(5)
-+#define WMI_NLO_CONFIG_SSID_HIDE_EN                     BIT(6)
-+
-+/* This bit is used to indicate if EPNO or supplicant PNO is enabled.
-+ * Only one of them can be enabled at a given time
-+ */
-+#define WMI_NLO_CONFIG_ENLO                             BIT(7)
-+#define WMI_NLO_CONFIG_SCAN_PASSIVE                     BIT(8)
-+#define WMI_NLO_CONFIG_ENLO_RESET                       BIT(9)
-+#define WMI_NLO_CONFIG_SPOOFED_MAC_IN_PROBE_REQ         BIT(10)
-+#define WMI_NLO_CONFIG_RANDOM_SEQ_NO_IN_PROBE_REQ       BIT(11)
-+#define WMI_NLO_CONFIG_ENABLE_IE_WHITELIST_IN_PROBE_REQ BIT(12)
-+#define WMI_NLO_CONFIG_ENABLE_CNLO_RSSI_CONFIG          BIT(13)
-+
-+struct wmi_nlo_ssid_param {
-+	u32 valid;
-+	struct wmi_ssid ssid;
++struct wmi_replayc_cnt {
++	union {
++		u8 counter[GTK_REPLAY_COUNTER_BYTES];
++		struct {
++			u32 word0;
++			u32 word1;
++		} __packed;
++	} __packed;
 +} __packed;
 +
-+struct wmi_nlo_enc_param {
-+	u32 valid;
-+	u32 enc_type;
-+} __packed;
-+
-+struct wmi_nlo_auth_param {
-+	u32 valid;
-+	u32 auth_type;
-+} __packed;
-+
-+struct wmi_nlo_bcast_nw_param {
-+	u32 valid;
-+	u32 bcast_nw_type;
-+} __packed;
-+
-+struct wmi_nlo_rssi_param {
-+	u32 valid;
-+	s32 rssi;
-+} __packed;
-+
-+struct nlo_configured_parameters {
-+	/* TLV tag and len;*/
-+	u32 tlv_header;
-+	struct wmi_nlo_ssid_param ssid;
-+	struct wmi_nlo_enc_param enc_type;
-+	struct wmi_nlo_auth_param auth_type;
-+	struct wmi_nlo_rssi_param rssi_cond;
-+
-+	/* indicates if the SSID is hidden or not */
-+	struct wmi_nlo_bcast_nw_param bcast_nw_type;
-+} __packed;
-+
-+struct wmi_network_type {
-+	struct wmi_ssid ssid;
-+	u32 authentication;
-+	u32 encryption;
-+	u32 bcast_nw_type;
-+	u8 channel_count;
-+	u16 channels[WMI_PNO_MAX_NETW_CHANNELS_EX];
-+	s32 rssi_threshold;
-+};
-+
-+struct wmi_pno_scan_req {
-+	u8 enable;
-+	u8 vdev_id;
-+	u8 uc_networks_count;
-+	struct wmi_network_type a_networks[WMI_PNO_MAX_SUPP_NETWORKS];
-+	u32 fast_scan_period;
-+	u32 slow_scan_period;
-+	u8 fast_scan_max_cycles;
-+
-+	bool do_passive_scan;
-+
-+	u32 delay_start_time;
-+	u32 active_min_time;
-+	u32 active_max_time;
-+	u32 passive_min_time;
-+	u32 passive_max_time;
-+
-+	/* mac address randomization attributes */
-+	u32 enable_pno_scan_randomization;
-+	u8 mac_addr[ETH_ALEN];
-+	u8 mac_addr_mask[ETH_ALEN];
-+};
-+
-+struct wmi_wow_nlo_config_cmd {
-+	u32 tlv_header;
-+	u32 flags;
++struct wmi_gtk_offload_status_event {
 +	u32 vdev_id;
-+	u32 fast_scan_max_cycles;
-+	u32 active_dwell_time;
-+	u32 passive_dwell_time;
-+	u32 probe_bundle_size;
++	u32 flags;
++	u32 refresh_cnt;
++	struct wmi_replayc_cnt replay_ctr;
++	u8 igtk_key_index;
++	u8 igtk_key_length;
++	u8 igtk_key_rsc[IGTK_PN_SIZE];
++	u8 igtk_key[WMI_MAX_KEY_LEN];
++	u8 gtk_key_index;
++	u8 gtk_key_length;
++	u8 gtk_key_rsc[GTK_REPLAY_COUNTER_BYTES];
++	u8 gtk_key[WMI_MAX_KEY_LEN];
++} __packed;
 +
-+	/* ART = IRT */
-+	u32 rest_time;
-+
-+	/* Max value that can be reached after SBM */
-+	u32 max_rest_time;
-+
-+	/* SBM */
-+	u32 scan_backoff_multiplier;
-+
-+	/* SCBM */
-+	u32 fast_scan_period;
-+
-+	/* specific to windows */
-+	u32 slow_scan_period;
-+
-+	u32 no_of_ssids;
-+
-+	u32 num_of_channels;
-+
-+	/* NLO scan start delay time in milliseconds */
-+	u32 delay_start_time;
-+
-+	/* MAC Address to use in Probe Req as SA */
-+	struct wmi_mac_addr mac_addr;
-+
-+	/* Mask on which MAC has to be randomized */
-+	struct wmi_mac_addr mac_mask;
-+
-+	/* IE bitmap to use in Probe Req */
-+	u32 ie_bitmap[8];
-+
-+	/* Number of vendor OUIs. In the TLV vendor_oui[] */
-+	u32 num_vendor_oui;
-+
-+	/* Number of connected NLO band preferences */
-+	u32 num_cnlo_band_pref;
-+
-+	/* The TLVs will follow.
-+	 * nlo_configured_parameters nlo_list[];
-+	 * u32 channel_list[num_of_channels];
-+	 */
++struct wmi_gtk_rekey_offload_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 flags;
++	u8 kek[GTK_OFFLOAD_KEK_BYTES];
++	u8 kck[GTK_OFFLOAD_KCK_BYTES];
++	u8 replay_ctr[GTK_REPLAY_COUNTER_BYTES];
 +} __packed;
 +
  int ath11k_wmi_cmd_send(struct ath11k_pdev_wmi *wmi, struct sk_buff *skb,
  			u32 cmd_id);
  struct sk_buff *ath11k_wmi_alloc_skb(struct ath11k_wmi_base *wmi_sc, u32 len);
-@@ -5777,6 +5944,8 @@ int ath11k_wmi_scan_prob_req_oui(struct ath11k *ar,
- 				 const u8 mac_addr[ETH_ALEN]);
- int ath11k_wmi_fw_dbglog_cfg(struct ath11k *ar, u32 *module_id_bitmap,
- 			     struct ath11k_fw_dbglog *dbglog);
-+int ath11k_wmi_wow_config_pno(struct ath11k *ar, u32 vdev_id,
-+			      struct wmi_pno_scan_req  *pno_scan);
- int ath11k_wmi_wow_del_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id);
- int ath11k_wmi_wow_add_pattern(struct ath11k *ar, u32 vdev_id, u32 pattern_id,
- 			       const u8 *pattern, const u8 *mask,
+@@ -6014,4 +6059,8 @@ int ath11k_wmi_send_hw_data_filter_cmd(struct ath11k *ar, u32 vdev_id,
+ 				       u32 filter_bitmap, bool enable);
+ int ath11k_wmi_arp_ns_offload(struct ath11k *ar,
+ 			      struct ath11k_vif *arvif, bool enable);
++int ath11k_wmi_gtk_rekey_offload(struct ath11k *ar,
++				 struct ath11k_vif *arvif, bool enable);
++int ath11k_wmi_gtk_rekey_getinfo(struct ath11k *ar,
++				 struct ath11k_vif *arvif);
+ #endif
 diff --git a/drivers/net/wireless/ath/ath11k/wow.c b/drivers/net/wireless/ath/ath11k/wow.c
-index 8a144f1c8b6d..bef36b244a9f 100644
+index a57f2ff9196d..cdb154fd9367 100644
 --- a/drivers/net/wireless/ath/ath11k/wow.c
 +++ b/drivers/net/wireless/ath/ath11k/wow.c
-@@ -228,6 +228,100 @@ static void ath11k_wow_convert_8023_to_80211(struct cfg80211_pkt_pattern *new,
- 	}
- }
+@@ -17,7 +17,9 @@
  
-+static int ath11k_wmi_pno_check_and_convert(struct ath11k *ar, u32 vdev_id,
-+					    struct cfg80211_sched_scan_request *nd_config,
-+					    struct wmi_pno_scan_req *pno)
-+{
-+	int i, j;
-+	u8 ssid_len;
-+
-+	pno->enable = 1;
-+	pno->vdev_id = vdev_id;
-+	pno->uc_networks_count = nd_config->n_match_sets;
-+
-+	if (!pno->uc_networks_count ||
-+	    pno->uc_networks_count > WMI_PNO_MAX_SUPP_NETWORKS)
-+		return -EINVAL;
-+
-+	if (nd_config->n_channels > WMI_PNO_MAX_NETW_CHANNELS_EX)
-+		return -EINVAL;
-+
-+	/* Filling per profile params */
-+	for (i = 0; i < pno->uc_networks_count; i++) {
-+		ssid_len = nd_config->match_sets[i].ssid.ssid_len;
-+
-+		if (ssid_len == 0 || ssid_len > 32)
-+			return -EINVAL;
-+
-+		pno->a_networks[i].ssid.ssid_len = ssid_len;
-+
-+		memcpy(pno->a_networks[i].ssid.ssid,
-+		       nd_config->match_sets[i].ssid.ssid,
-+		       nd_config->match_sets[i].ssid.ssid_len);
-+		pno->a_networks[i].authentication = 0;
-+		pno->a_networks[i].encryption     = 0;
-+		pno->a_networks[i].bcast_nw_type  = 0;
-+
-+		/* Copying list of valid channel into request */
-+		pno->a_networks[i].channel_count = nd_config->n_channels;
-+		pno->a_networks[i].rssi_threshold = nd_config->match_sets[i].rssi_thold;
-+
-+		for (j = 0; j < nd_config->n_channels; j++) {
-+			pno->a_networks[i].channels[j] =
-+					nd_config->channels[j]->center_freq;
-+		}
-+	}
-+
-+	/* set scan to passive if no SSIDs are specified in the request */
-+	if (nd_config->n_ssids == 0)
-+		pno->do_passive_scan = true;
-+	else
-+		pno->do_passive_scan = false;
-+
-+	for (i = 0; i < nd_config->n_ssids; i++) {
-+		j = 0;
-+		while (j < pno->uc_networks_count) {
-+			if (pno->a_networks[j].ssid.ssid_len ==
-+				nd_config->ssids[i].ssid_len &&
-+			(memcmp(pno->a_networks[j].ssid.ssid,
-+				nd_config->ssids[i].ssid,
-+				pno->a_networks[j].ssid.ssid_len) == 0)) {
-+				pno->a_networks[j].bcast_nw_type = BCAST_HIDDEN;
-+				break;
-+			}
-+			j++;
-+		}
-+	}
-+
-+	if (nd_config->n_scan_plans == 2) {
-+		pno->fast_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+		pno->fast_scan_max_cycles = nd_config->scan_plans[0].iterations;
-+		pno->slow_scan_period =
-+			nd_config->scan_plans[1].interval * MSEC_PER_SEC;
-+	} else if (nd_config->n_scan_plans == 1) {
-+		pno->fast_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+		pno->fast_scan_max_cycles = 1;
-+		pno->slow_scan_period = nd_config->scan_plans[0].interval * MSEC_PER_SEC;
-+	} else {
-+		ath11k_warn(ar->ab, "Invalid number of scan plans %d !!",
-+			    nd_config->n_scan_plans);
-+	}
-+
-+	if (nd_config->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
-+		/* enable mac randomization */
-+		pno->enable_pno_scan_randomization = 1;
-+		memcpy(pno->mac_addr, nd_config->mac_addr, ETH_ALEN);
-+		memcpy(pno->mac_addr_mask, nd_config->mac_addr_mask, ETH_ALEN);
-+	}
-+
-+	pno->delay_start_time = nd_config->delay;
-+
-+	/* Current FW does not support min-max range for dwell time */
-+	pno->active_max_time = WMI_ACTIVE_MAX_CHANNEL_TIME;
-+	pno->passive_max_time = WMI_PASSIVE_MAX_CHANNEL_TIME;
-+	return 0;
-+}
-+
- static int ath11k_vif_wow_set_wakeups(struct ath11k_vif *arvif,
- 				      struct cfg80211_wowlan *wowlan)
- {
-@@ -261,6 +355,26 @@ static int ath11k_vif_wow_set_wakeups(struct ath11k_vif *arvif,
- 
- 		if (wowlan->magic_pkt)
- 			__set_bit(WOW_MAGIC_PKT_RECVD_EVENT, &wow_mask);
-+
-+		if (wowlan->nd_config) {
-+			struct wmi_pno_scan_req *pno;
-+			int ret;
-+
-+			pno = kzalloc(sizeof(*pno), GFP_KERNEL);
-+			if (!pno)
-+				return -ENOMEM;
-+
-+			ar->nlo_enabled = true;
-+
-+			ret = ath11k_wmi_pno_check_and_convert(ar, arvif->vdev_id,
-+							       wowlan->nd_config, pno);
-+			if (!ret) {
-+				ath11k_wmi_wow_config_pno(ar, arvif->vdev_id, pno);
-+				__set_bit(WOW_NLO_DETECTED_EVENT, &wow_mask);
-+			}
-+
-+			kfree(pno);
-+		}
- 		break;
- 	default:
- 		break;
-@@ -353,6 +467,51 @@ static int ath11k_wow_set_wakeups(struct ath11k *ar,
+ static const struct wiphy_wowlan_support ath11k_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_DISCONNECT |
+-		 WIPHY_WOWLAN_MAGIC_PKT,
++		 WIPHY_WOWLAN_MAGIC_PKT |
++		 WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
++		 WIPHY_WOWLAN_GTK_REKEY_FAILURE,
+ 	.pattern_min_len = WOW_MIN_PATTERN_SIZE,
+ 	.pattern_max_len = WOW_MAX_PATTERN_SIZE,
+ 	.max_pkt_offset = WOW_MAX_PKT_OFFSET,
+@@ -578,6 +580,41 @@ static int ath11k_wow_arp_ns_offload(struct ath11k *ar, bool enable)
  	return 0;
  }
  
-+static int ath11k_vif_wow_clean_nlo(struct ath11k_vif *arvif)
-+{
-+	int ret = 0;
-+	struct ath11k *ar = arvif->ar;
-+
-+	switch (arvif->vdev_type) {
-+	case WMI_VDEV_TYPE_STA:
-+		if (ar->nlo_enabled) {
-+			struct wmi_pno_scan_req *pno;
-+
-+			pno = kzalloc(sizeof(*pno), GFP_KERNEL);
-+			if (!pno)
-+				return -ENOMEM;
-+
-+			pno->enable = 0;
-+			ar->nlo_enabled = false;
-+			ret = ath11k_wmi_wow_config_pno(ar, arvif->vdev_id, pno);
-+			kfree(pno);
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+	return ret;
-+}
-+
-+static int ath11k_wow_nlo_cleanup(struct ath11k *ar)
++static int ath11k_gtk_rekey_offload(struct ath11k *ar, bool enable)
 +{
 +	struct ath11k_vif *arvif;
 +	int ret;
@@ -629,10 +394,26 @@ index 8a144f1c8b6d..bef36b244a9f 100644
 +	lockdep_assert_held(&ar->conf_mutex);
 +
 +	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ret = ath11k_vif_wow_clean_nlo(arvif);
++		if (arvif->vdev_type != WMI_VDEV_TYPE_STA ||
++		    !arvif->is_up ||
++		    !arvif->rekey_data.enable_offload)
++			continue;
++
++		/* get rekey info before disable rekey offload */
++		if (!enable) {
++			ret = ath11k_wmi_gtk_rekey_getinfo(ar, arvif);
++			if (ret) {
++				ath11k_warn(ar->ab, "failed to request rekey info vdev %i, ret %d\n",
++					    arvif->vdev_id, ret);
++				return ret;
++			}
++		}
++
++		ret = ath11k_wmi_gtk_rekey_offload(ar, arvif, enable);
++
 +		if (ret) {
-+			ath11k_warn(ar->ab, "failed to clean nlo settings on vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
++			ath11k_warn(ar->ab, "failed to offload gtk reky vdev %i: enable %d, ret %d\n",
++				    arvif->vdev_id, enable, ret);
 +			return ret;
 +		}
 +	}
@@ -640,39 +421,23 @@ index 8a144f1c8b6d..bef36b244a9f 100644
 +	return 0;
 +}
 +
- int ath11k_wow_op_suspend(struct ieee80211_hw *hw,
- 			  struct cfg80211_wowlan *wowlan)
+ static int ath11k_wow_protocol_offload(struct ath11k *ar, bool enable)
  {
-@@ -438,8 +597,16 @@ int ath11k_wow_op_resume(struct ieee80211_hw *hw)
- 	ath11k_hif_irq_enable(ar->ab);
- 
- 	ret = ath11k_wow_wakeup(ar->ab);
--	if (ret)
-+	if (ret) {
- 		ath11k_warn(ar->ab, "failed to wakeup from wow: %d\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath11k_wow_nlo_cleanup(ar);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to cleanup nlo: %d\n", ret);
-+		goto exit;
-+	}
- 
- exit:
- 	if (ret) {
-@@ -476,6 +643,11 @@ int ath11k_wow_init(struct ath11k *ar)
- 		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
+ 	int ret;
+@@ -589,6 +626,13 @@ static int ath11k_wow_protocol_offload(struct ath11k *ar, bool enable)
+ 		return ret;
  	}
  
-+	if (test_bit(WMI_TLV_SERVICE_NLO, ar->wmi->wmi_ab->svc_map)) {
-+		ar->wow.wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
-+		ar->wow.wowlan_support.max_nd_match_sets = WMI_PNO_MAX_SUPP_NETWORKS;
++	ret = ath11k_gtk_rekey_offload(ar, enable);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to offload gtk rekey %d %d\n",
++			    enable, ret);
++		return ret;
 +	}
 +
- 	ar->wow.max_num_patterns = ATH11K_WOW_PATTERNS;
- 	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
- 	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+ 	return 0;
+ }
+ 
 -- 
 2.32.0
 
