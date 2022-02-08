@@ -2,97 +2,168 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A30D5C4167E
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9431C35273
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359505AbiBHLbj (ORCPT
+        id S1359523AbiBHLbl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32978 "EHLO
+        Tue, 8 Feb 2022 06:31:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356592AbiBHKwI (ORCPT
+        with ESMTP id S1356169AbiBHKVY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Feb 2022 05:52:08 -0500
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3201BC03FEC0
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:52:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644317527; x=1675853527;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=wRqVYEvtASr/2CPMz1yrWa7eoT32u3NSuYCsqJXfjXU=;
-  b=rZMof/JHCIlY+w5AiAHJetsZ/U1Z45IMRfNBwliJiKgKBcJkQ9SzkdHe
-   diD867WUYM2VEQSwxWYqaCFzsx1MwzjifpbTfuG8l5uodsFRf+zMFcVAC
-   U6G4dI1vBz2UvAxbwBs7eJ0Clrfe6PYlmXreLVlBFtNDJOi5JojDp4CJI
-   Q=;
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 08 Feb 2022 02:50:04 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 02:50:04 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:04 -0800
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 8 Feb 2022 02:50:02 -0800
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v5 1/5] ath11k: add ath11k_qmi_free_resource() for recovery
-Date:   Tue, 8 Feb 2022 05:49:43 -0500
-Message-ID: <20220208104947.25791-2-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220208104947.25791-1-quic_wgong@quicinc.com>
-References: <20220208104947.25791-1-quic_wgong@quicinc.com>
+        Tue, 8 Feb 2022 05:21:24 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8292BC03FEC0
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 02:21:15 -0800 (PST)
+X-UUID: b7835a6d00a540258d2eff0be24a46fc-20220208
+X-UUID: b7835a6d00a540258d2eff0be24a46fc-20220208
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <bo.jiao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 2064181488; Tue, 08 Feb 2022 18:21:11 +0800
+Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Tue, 8 Feb 2022 18:21:10 +0800
+Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS34N1.mediatek.inc
+ (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Feb
+ 2022 18:21:09 +0800
+Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
+ MTKCAS36.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
+ 15.0.1497.2 via Frontend Transport; Tue, 8 Feb 2022 18:21:09 +0800
+From:   Bo Jiao <bo.jiao@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Xing Song <xing.song@mediatek.com>,
+        Sujuan Chen <sujuan.chen@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Bo Jiao <Bo.Jiao@mediatek.com>
+Subject: [PATCH v2] mt76: mt7915: Fix channel state update error issue
+Date:   Tue, 8 Feb 2022 18:21:07 +0800
+Message-ID: <a3640a21b801969744b4bd4e038bdb015d249ba2.1644312585.git.Bo.Jiao@mediatek.com>
+X-Mailer: git-send-email 2.17.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ath11k_qmi_free_target_mem_chunk() and ath11k_qmi_m3_free() is static
-in qmi.c, they are needed for recovery, export them in a new function.
+From: Bo Jiao <Bo.Jiao@mediatek.com>
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
+Fix channel state update error issue due to wrong
+register access for mt7916.
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
+Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
 ---
- drivers/net/wireless/ath/ath11k/qmi.c | 5 +++++
- drivers/net/wireless/ath/ath11k/qmi.h | 1 +
- 2 files changed, 6 insertions(+)
+v2:
+ - add offset to parse channel mib info event.
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c  | 15 +++++++++++----
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c  |  8 +++++---
+ drivers/net/wireless/mediatek/mt76/mt7915/regs.h | 11 ++++++++---
+ 3 files changed, 24 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index d0701e8eca9c..1144e828cf5c 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -3025,3 +3025,8 @@ void ath11k_qmi_deinit_service(struct ath11k_base *ab)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 3c38031..b693868 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1845,12 +1845,17 @@ void mt7915_mac_set_timing(struct mt7915_phy *phy)
+ 
+ void mt7915_mac_enable_nf(struct mt7915_dev *dev, bool ext_phy)
+ {
+-	mt76_set(dev, MT_WF_PHY_RXTD12(ext_phy),
++	u32 reg;
++
++	reg = is_mt7915(&dev->mt76) ? MT_WF_PHY_RXTD12(ext_phy) :
++		MT_WF_PHY_RXTD12_MT7916(ext_phy);
++	mt76_set(dev, reg,
+ 		 MT_WF_PHY_RXTD12_IRPI_SW_CLR_ONLY |
+ 		 MT_WF_PHY_RXTD12_IRPI_SW_CLR);
+ 
+-	mt76_set(dev, MT_WF_PHY_RX_CTRL1(ext_phy),
+-		 FIELD_PREP(MT_WF_PHY_RX_CTRL1_IPI_EN, 0x5));
++	reg = is_mt7915(&dev->mt76) ? MT_WF_PHY_RX_CTRL1(ext_phy) :
++		MT_WF_PHY_RX_CTRL1_MT7916(ext_phy);
++	mt76_set(dev, reg, FIELD_PREP(MT_WF_PHY_RX_CTRL1_IPI_EN, 0x5));
  }
- EXPORT_SYMBOL(ath11k_qmi_deinit_service);
  
-+void ath11k_qmi_free_resource(struct ath11k_base *ab)
-+{
-+	ath11k_qmi_free_target_mem_chunk(ab);
-+	ath11k_qmi_m3_free(ab);
-+}
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index ba2eff4d59cb..61678de56ac7 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -492,5 +492,6 @@ void ath11k_qmi_event_work(struct work_struct *work);
- void ath11k_qmi_msg_recv_work(struct work_struct *work);
- void ath11k_qmi_deinit_service(struct ath11k_base *ab);
- int ath11k_qmi_init_service(struct ath11k_base *ab);
-+void ath11k_qmi_free_resource(struct ath11k_base *ab);
+ static u8
+@@ -1862,7 +1867,9 @@ mt7915_phy_get_nf(struct mt7915_phy *phy, int idx)
+ 	int nss, i;
  
- #endif
+ 	for (nss = 0; nss < hweight8(phy->mt76->chainmask); nss++) {
+-		u32 reg = MT_WF_IRPI(nss + (idx << dev->dbdc_support));
++		u32 reg = is_mt7915(&dev->mt76) ?
++			MT_WF_IRPI_NSS(0, nss + (idx << dev->dbdc_support)) :
++			MT_WF_IRPI_NSS_MT7916(idx, nss);
+ 
+ 		for (i = 0; i < ARRAY_SIZE(nf_power); i++, reg += 4) {
+ 			val = mt76_rr(dev, reg);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 94837ed..529a096 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -3064,10 +3064,12 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
+ 	struct mt7915_dev *dev = phy->dev;
+ 	struct mt7915_mcu_mib *res, req[4];
+ 	struct sk_buff *skb;
+-	int i, ret, start = 0;
++	int i, ret, start = 0, ofs = 20;
+ 
+-	if (!is_mt7915(&dev->mt76))
++	if (!is_mt7915(&dev->mt76)) {
+ 		start = 4;
++		ofs = 0;
++	}
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		req[i].band = cpu_to_le32(phy != &dev->phy);
+@@ -3079,7 +3081,7 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
+ 	if (ret)
+ 		return ret;
+ 
+-	res = (struct mt7915_mcu_mib *)(skb->data + 20);
++	res = (struct mt7915_mcu_mib *)(skb->data + ofs);
+ 
+ 	if (chan_switch)
+ 		goto out;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index 6a0f681..e380fd9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -761,18 +761,23 @@ enum offs_rev {
+ #define MT_WF_PP_TOP_RXQ_WFDMA_CF_5	MT_WF_PP_TOP(0x0e8)
+ #define MT_WF_PP_TOP_RXQ_QID6_WFDMA_HIF_SEL_MASK	BIT(6)
+ 
+-#define MT_WF_IRPI_BASE			0x83006000
+-#define MT_WF_IRPI(ofs)			(MT_WF_IRPI_BASE + ((ofs) << 16))
++#define MT_WF_IRPI_BASE			0x83000000
++#define MT_WF_IRPI(ofs)			(MT_WF_IRPI_BASE + (ofs))
+ 
+-/* PHY: band 0(0x83080000), band 1(0x83090000) */
++#define MT_WF_IRPI_NSS(phy, nss)	MT_WF_IRPI(0x6000 + ((phy) << 20) + ((nss) << 16))
++#define MT_WF_IRPI_NSS_MT7916(phy, nss)	MT_WF_IRPI(0x1000 + ((phy) << 20) + ((nss) << 16))
++
++/* PHY */
+ #define MT_WF_PHY_BASE			0x83080000
+ #define MT_WF_PHY(ofs)			(MT_WF_PHY_BASE + (ofs))
+ 
+ #define MT_WF_PHY_RX_CTRL1(_phy)	MT_WF_PHY(0x2004 + ((_phy) << 16))
++#define MT_WF_PHY_RX_CTRL1_MT7916(_phy)	MT_WF_PHY(0x2004 + ((_phy) << 20))
+ #define MT_WF_PHY_RX_CTRL1_IPI_EN	GENMASK(2, 0)
+ #define MT_WF_PHY_RX_CTRL1_STSCNT_EN	GENMASK(11, 9)
+ 
+ #define MT_WF_PHY_RXTD12(_phy)		MT_WF_PHY(0x8230 + ((_phy) << 16))
++#define MT_WF_PHY_RXTD12_MT7916(_phy)	MT_WF_PHY(0x8230 + ((_phy) << 20))
+ #define MT_WF_PHY_RXTD12_IRPI_SW_CLR_ONLY	BIT(18)
+ #define MT_WF_PHY_RXTD12_IRPI_SW_CLR		BIT(29)
+ 
 -- 
-2.31.1
+2.18.0
 
