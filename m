@@ -2,49 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33773C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Feb 2022 06:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57445C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Feb 2022 07:51:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233241AbiBIGQf (ORCPT
+        id S234738AbiBIHva (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Feb 2022 01:16:35 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:35734 "EHLO
+        Wed, 9 Feb 2022 02:51:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243494AbiBIGME (ORCPT
+        with ESMTP id S231367AbiBIHv3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Feb 2022 01:12:04 -0500
+        Wed, 9 Feb 2022 02:51:29 -0500
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A730BC08EDC7
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 22:12:06 -0800 (PST)
-X-UUID: da93700e5ee143a794b88f1d5ab52253-20220209
-X-UUID: da93700e5ee143a794b88f1d5ab52253-20220209
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <bo.jiao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1216009190; Wed, 09 Feb 2022 14:12:03 +0800
-Received: from MTKMBS34N1.mediatek.inc (172.27.4.172) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 9 Feb 2022 14:12:01 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS34N1.mediatek.inc
- (172.27.4.172) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 9 Feb
- 2022 14:11:59 +0800
-Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
- MTKCAS36.mediatek.inc (172.27.4.170) with Microsoft SMTP Server id
- 15.0.1497.2 via Frontend Transport; Wed, 9 Feb 2022 14:11:59 +0800
-From:   Bo Jiao <bo.jiao@mediatek.com>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95D91C0613CA
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2022 23:51:29 -0800 (PST)
+X-UUID: 4404fccbabab4970a90680771f04c507-20220209
+X-UUID: 4404fccbabab4970a90680771f04c507-20220209
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+        (envelope-from <chui-hao.chiu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1347390688; Wed, 09 Feb 2022 15:51:25 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 9 Feb 2022 15:51:24 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 9 Feb 2022 15:51:24 +0800
+From:   Peter Chiu <chui-hao.chiu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Xing Song <xing.song@mediatek.com>,
-        Sujuan Chen <sujuan.chen@mediatek.com>,
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.Lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Bo Jiao <Bo.Jiao@mediatek.com>
-Subject: [PATCH v4 0/3] add mt7986 support
-Date:   Wed, 9 Feb 2022 14:11:54 +0800
-Message-ID: <cover.1644386694.git.Bo.Jiao@mediatek.com>
-X-Mailer: git-send-email 2.17.0
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>
+Subject: [PATCH] mt76: mt7915: initialize smps mode in mt7915_mcu_sta_rate_ctrl_tlv()
+Date:   Wed, 9 Feb 2022 15:51:22 +0800
+Message-ID: <20220209075122.31219-1-chui-hao.chiu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -52,41 +48,26 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bo Jiao <Bo.Jiao@mediatek.com>
+Initialize smps mode to prevent firmware rate adaptation issue.
 
-This adds support for MT7986 SoC which integrated multi-band
-4x4 WiFi 6/6E.
-Detailed link: https://www.mediatek.com/products/mediatek-filogic-830
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Bo Jiao (2):
-  mt76: mt7915: add support for MT7986
-  mt76: mt7915: introduce band_idx in mt7915_phy
-
-Peter Chiu (1):
-  dt-bindings: net: wireless: mt76: document bindings for MT7986
-
- .../bindings/net/wireless/mediatek,mt76.yaml  |   33 +-
- .../net/wireless/mediatek/mt76/mt76_connac.h  |    5 +
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  |    6 +-
- .../net/wireless/mediatek/mt76/mt7915/Kconfig |   10 +
- .../wireless/mediatek/mt76/mt7915/Makefile    |    1 +
- .../wireless/mediatek/mt76/mt7915/debugfs.c   |    8 +-
- .../net/wireless/mediatek/mt76/mt7915/dma.c   |   28 +-
- .../wireless/mediatek/mt76/mt7915/eeprom.c    |   85 +-
- .../wireless/mediatek/mt76/mt7915/eeprom.h    |   13 +
- .../net/wireless/mediatek/mt76/mt7915/init.c  |   54 +-
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  209 +--
- .../net/wireless/mediatek/mt76/mt7915/main.c  |   21 +-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   |   81 +-
- .../net/wireless/mediatek/mt76/mt7915/mmio.c  |  125 +-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |   44 +
- .../net/wireless/mediatek/mt76/mt7915/regs.h  |  277 +++-
- .../net/wireless/mediatek/mt76/mt7915/soc.c   | 1201 +++++++++++++++++
- .../wireless/mediatek/mt76/mt7915/testmode.c  |   35 +-
- drivers/net/wireless/mediatek/mt76/testmode.c |    5 +-
- 19 files changed, 2003 insertions(+), 238 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7915/soc.c
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 462c7da93b60..0790b543fdcc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -1518,6 +1518,7 @@ mt7915_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb, struct mt7915_dev *dev,
+ 	ra->channel = chandef->chan->hw_value;
+ 	ra->bw = sta->bandwidth;
+ 	ra->phy.bw = sta->bandwidth;
++	ra->mmps_mode = mt7915_mcu_get_mmps_mode(sta->smps_mode);
+ 
+ 	if (supp_rate) {
+ 		supp_rate &= mask->control[band].legacy;
 -- 
-2.18.0
+2.29.2
 
