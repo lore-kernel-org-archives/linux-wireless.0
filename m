@@ -2,72 +2,171 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC267C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 08:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEE0C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 10:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237970AbiBJIva (ORCPT
+        id S235419AbiBJKpR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 03:51:30 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49358 "EHLO
+        Thu, 10 Feb 2022 05:45:17 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237955AbiBJIv3 (ORCPT
+        with ESMTP id S231878AbiBJKpP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 03:51:29 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0564CC2A;
-        Thu, 10 Feb 2022 00:51:31 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 966E5618A8;
-        Thu, 10 Feb 2022 08:51:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA027C004E1;
-        Thu, 10 Feb 2022 08:51:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644483090;
-        bh=EvfC7rJ1/vU9yODlAa2UFpTY70T5X3vyIK8wNpiwKjQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=PRADujnLNBprel5XN+N4dNwBUPN8vt41O2XHGKu9ZwNweL7zFdZQQ25eLqcpMp0jx
-         GMB+hhgdyUfOIerbamoe7t7SdjgtS76EVmT8ps2Y8NpJqFdBmOiouXzPmFcLjJO6lK
-         Ez48QykqtQB155K++ZxE3KyB9IQKy0vVRbZrIlFMvRyOOpAlmJ3SjdDRBb4b9y9jc+
-         HmUFQeFoWyZ22rpMhwGYVMLm2T/ccYG5/GtUPK4LQKqylwrS7PUanVTF7n33CwNBeR
-         F+bHSdtBrEoiMdn1pwvkAvT6puUocbQFsQ7KB/hcGMMIGYvdsU1ztPllj6yYQ68GzF
-         HZumCWs8TtnFQ==
-Content-Type: text/plain; charset="utf-8"
+        Thu, 10 Feb 2022 05:45:15 -0500
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42961FE2;
+        Thu, 10 Feb 2022 02:45:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644489917; x=1676025917;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=M2CM5NfwpO/sk3E/JwzC7zio62b21QRytXCQjpt6TUY=;
+  b=UaxkzIAVuqKqkM5t5xdGqOajIAbyQoWvwF6ehuVQoyFYEm0eltw16WFX
+   +5ZEUmUZsb2i+ZUsYuD//qXt1T6JGz/jnw/cq9W/Li2UkmTLb+BL2r3Kj
+   PbXeJ4jcE1/+Rsgp1h/lFpvhAxiLGii4hCvgh9FhUv3armgYF8yRlZkuI
+   YiiGX2EbSTTYLLl/z1JRylBB4OZG7rKBZmZDfdyJOEV/W5IllSCIaE8n6
+   y5seHZxLkwPpv1QeCne4rV2jqZn+PawaFjRWsf5wRL8eC3BrkfDNrwPqF
+   9pweYE2aX03GJs+b2xXX2STUFsSuO0u2AyUZqMxp73z8gLvImgx7adQ0U
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10253"; a="249412374"
+X-IronPort-AV: E=Sophos;i="5.88,358,1635231600"; 
+   d="scan'208";a="249412374"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 02:45:16 -0800
+X-IronPort-AV: E=Sophos;i="5.88,358,1635231600"; 
+   d="scan'208";a="541556883"
+Received: from asamsono-mobl1.ccr.corp.intel.com ([10.252.41.247])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 02:45:10 -0800
+Date:   Thu, 10 Feb 2022 12:45:04 +0200 (EET)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
+cc:     Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
+        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
+        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
+        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
+        haijun.liu@mediatek.com, amir.hanania@intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        dinesh.sharma@intel.com, eliot.lee@intel.com,
+        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
+        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
+        sreehari.kancharla@intel.com
+Subject: Re: [PATCH net-next v4 09/13] net: wwan: t7xx: Add WWAN network
+ interface
+In-Reply-To: <20220114010627.21104-10-ricardo.martinez@linux.intel.com>
+Message-ID: <a97968f-348c-ccb3-98c1-c58264a87c2d@linux.intel.com>
+References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com> <20220114010627.21104-10-ricardo.martinez@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wcn36xx: Uninitialized variable in
- wcn36xx_change_opchannel()
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220201125941.GA22458@kili>
-References: <20220201125941.GA22458@kili>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Bryan O'Donoghue <bryan.odonoghue@linaro.org>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164448308689.3808.15371784000486693976.kvalo@kernel.org>
-Date:   Thu, 10 Feb 2022 08:51:28 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+On Thu, 13 Jan 2022, Ricardo Martinez wrote:
 
-> This code needs "channel" to be initialized to NULL for it to work
-> correctly.
+> From: Haijun Liu <haijun.liu@mediatek.com>
 > 
-> Fixes: d6f2746691cb ("wcn36xx: Track the band and channel we are tuned to")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Reviewed-by: Bryan O'Donoghue <bryan.odonghue@linaro.org>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> Creates the Cross Core Modem Network Interface (CCMNI) which implements
+> the wwan_ops for registration with the WWAN framework, CCMNI also
+> implements the net_device_ops functions used by the network device.
+> Network device operations include open, close, start transmission, TX
+> timeout, change MTU, and select queue.
+> 
+> Signed-off-by: Haijun Liu <haijun.liu@mediatek.com>
+> Co-developed-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+> Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+> Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
+> ---
 
-Patch applied to ath-next branch of ath.git, thanks.
+> +static int t7xx_ccmni_open(struct net_device *dev)
+> +{
+> +	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
+> +
+> +	netif_carrier_on(dev);
+> +	netif_tx_start_all_queues(dev);
+> +	atomic_inc(&ccmni->usage);
+> +	return 0;
+> +}
+> +
+> +static int t7xx_ccmni_close(struct net_device *dev)
+> +{
+> +	struct t7xx_ccmni *ccmni = wwan_netdev_drvpriv(dev);
+> +
+> +	if (atomic_dec_return(&ccmni->usage) < 0)
+> +		return -EINVAL;
 
-11e41e292937 wcn36xx: Uninitialized variable in wcn36xx_change_opchannel()
+I'm certainly way out of my expertize here in knowing how/when these open 
+and close can be called. That kept in mind, I wonder if there's need to do 
+rollback for the atomic dec.
+
+> +static void t7xx_ccmni_wwan_setup(struct net_device *dev)
+> +{
+> +	dev->header_ops = NULL;
+> +	dev->hard_header_len += sizeof(struct ccci_header);
+> +
+> +	dev->mtu = ETH_DATA_LEN;
+> +	dev->max_mtu = CCMNI_MTU_MAX;
+> +	dev->tx_queue_len = DEFAULT_TX_QUEUE_LEN;
+> +	dev->watchdog_timeo = CCMNI_NETDEV_WDT_TO;
+> +	/* CCMNI is a pure IP device */
+> +	dev->flags = IFF_POINTOPOINT | IFF_NOARP;
+> +
+> +	/* Not supporting VLAN */
+> +	dev->features = NETIF_F_VLAN_CHALLENGED;
+> +
+> +	dev->features |= NETIF_F_SG;
+> +	dev->hw_features |= NETIF_F_SG;
+> +
+> +	/* Uplink checksum offload */
+> +	dev->features |= NETIF_F_HW_CSUM;
+> +	dev->hw_features |= NETIF_F_HW_CSUM;
+> +
+> +	/* Downlink checksum offload */
+> +	dev->features |= NETIF_F_RXCSUM;
+> +	dev->hw_features |= NETIF_F_RXCSUM;
+> +
+> +	/* Use kernel default free_netdev() function */
+> +	dev->needs_free_netdev = true;
+> +
+> +	/* No need to free again because of free_netdev() */
+> +	dev->priv_destructor = NULL;
+
+Isn't the struct zeroed for you?
+
+Maybe some of those comments are not that useful?
+
+
+> +	ctlb->capability = NIC_CAP_TXBUSY_STOP | NIC_CAP_SGIO |
+> +			   NIC_CAP_DATA_ACK_DVD | NIC_CAP_CCMNI_MQ;
+
+Is capability going to remain constant? And some of these are
+not used at all.
+
+Related to this, e.g., the NETIF_F_SG setting above doesn't seem to care 
+about what is in capability (assuming SGIO means what I think it does),
+should it?
+
+> +	/* WWAN core will create a netdev for the default IP MUX channel */
+> +	ret = wwan_register_ops(dev, &ccmni_wwan_ops, ctlb, IP_MUX_SESSION_DEFAULT);
+> +	if (ret)
+> +		goto err_unregister_ops;
+> +
+> +	init_md_status_notifier(t7xx_dev);
+> +
+> +	return 0;
+> +
+> +err_unregister_ops:
+> +	wwan_unregister_ops(dev);
+
+If wwan_register_ops fails, why is wwan_unregister_ops needed?
+
+> +/* Must be less than DPMAIF_HW_MTU_SIZE (3*1024 + 8) */
+
+This could be enforced with BUILD_BUG_ON if you want.
+
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220201125941.GA22458@kili/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+ i.
 
