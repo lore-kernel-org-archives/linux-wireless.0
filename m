@@ -2,142 +2,244 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D4AC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:16:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B617FC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343831AbiBJTQz (ORCPT
+        id S1343894AbiBJTUW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 14:16:55 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51406 "EHLO
+        Thu, 10 Feb 2022 14:20:22 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343829AbiBJTQy (ORCPT
+        with ESMTP id S238997AbiBJTUU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 14:16:54 -0500
+        Thu, 10 Feb 2022 14:20:20 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6915310BA
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:16:55 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 051F22AB
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:20:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=6zyPbu0mpzpCbSPZOzjaLI7jXViF1SG+MAU/UvWTaPY=; t=1644520615; x=1645730215; 
-        b=Dha+3ZbFerS14dJ+BwYRIQ8tQnSgjNjNxTKn0uh7cQLUMFReZSIRMPHlzoYW+O4/adlG5jPF1da
-        /pKQV+gxOA7eddt8tY+l34wgCTgA3sWFwekCox2za6sdXLfQl5AcGEPWHsoJdgAfbTOxyQrIHO1tG
-        5GHFufsZc6Obp+6GTuU5DzlEt0EyF2wgUWF5AQDsnPMjKeism3LsN5xqMdACBOHrMD+JpTjGOsuiY
-        amua2O4PmrIOdJqgJ4hklZkKcQIks9QcBxhetBy/QoEv4QbHhAyAzJhoukWaGCe9GJ/BuJlqx0JJz
-        JsQcGlxWDvUftB1y1VwhYAcfqJgLWpZdneWg==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=4x1Sqw+tWByIJULfq0kazHyZMMmvojgfCuF6XSLAz0o=;
+        t=1644520820; x=1645730420; b=uKNZUHPWefEjnL/IthWgMvcFqKdND+aOT25GLr8K1mpyaEP
+        j2NQ5t2MGK7iTYgtMwNdu/PEmitPg/XCnVNYZ0eFSnnJwG+HNaWNzRsVNx1GDcc6iNx6PYRgytcvw
+        nWRbKc8EPRl66XpGJ/5go5BVmMoSQFKPOKBUAxW5vxyS3dfaN3W6Ct7h8x96lMJHAxdCnIA8YGCOP
+        agUHdLLygD/kiFwOgYTl7DtP1WxDhXJ6HWzZ2FxueQLGlhJDrFgL4HutQwQy3TpqXefZVBlQSnNtF
+        /dahPVzPsEnNbkmSbjVSle+PqMsRCowgevCZ00oVNjcEI2BOMJlBvHwS8/w3OPNA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nIEw0-00HBx2-TF;
-        Thu, 10 Feb 2022 20:16:53 +0100
+        id 1nIEzJ-00HC2X-RP;
+        Thu, 10 Feb 2022 20:20:17 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Beni Lev <beni.lev@intel.com>
-Subject: [PATCH] mac80211_hwsim: Add command to control rx status RSSI
-Date:   Thu, 10 Feb 2022 20:16:50 +0100
-Message-Id: <20220210201649.dddebbb55a7f.I6c0607694587b577070339078829fcc20dfcfe2c@changeid>
+Cc:     quic_vikram@quicinc.com, quic_alokad@quicinc.com,
+        quic_jiad@quicinc.com, quic_periyasa@quicinc.com,
+        quic_msinada@quicinc.com, quic_srirrama@quicinc.com,
+        ilan.peer@intel.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 01/19] mac80211_hwsim: check TX and STA bandwidth
+Date:   Thu, 10 Feb 2022 20:19:50 +0100
+Message-Id: <20220210201853.61a4f344b7d1.Ia0cd152357a373149bab017d479ab7d5ded289c0@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220210192008.188166-1-johannes@sipsolutions.net>
+References: <20220210192008.188166-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Beni Lev <beni.lev@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Set the base RSSI of a TX frame. The final RSSI of the frame will be
-the base RSSI + the radio's TX power
+Add checks to hwsim to validate that neither TX nor any
+station's configured bandwidth can exceed the channel
+(context) configuration previously requested.
 
-Signed-off-by: Beni Lev <beni.lev@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 36 +++++++++++++++++++++++++--
- 1 file changed, 34 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 101 +++++++++++++++++++++++++-
+ 1 file changed, 98 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 8d54f9face2f..ac1caf659e0b 100644
+index ac1caf659e0b..2cf328344cb5 100644
 --- a/drivers/net/wireless/mac80211_hwsim.c
 +++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -503,6 +503,8 @@ static const struct ieee80211_rate hwsim_rates[] = {
- 	{ .bitrate = 540 }
- };
+@@ -654,6 +654,7 @@ struct mac80211_hwsim_data {
+ 		      ARRAY_SIZE(hwsim_channels_6ghz)];
  
-+#define DEFAULT_RX_RSSI -50
-+
- static const u32 hwsim_ciphers[] = {
- 	WLAN_CIPHER_SUITE_WEP40,
- 	WLAN_CIPHER_SUITE_WEP104,
-@@ -690,6 +692,9 @@ struct mac80211_hwsim_data {
- 	u64 rx_bytes;
- 	u64 tx_dropped;
- 	u64 tx_failed;
-+
-+	/* RSSI in rx status of the receiver */
-+	int rx_rssi;
- };
+ 	struct ieee80211_channel *channel;
++	enum nl80211_chan_width bw;
+ 	u64 beacon_int	/* beacon interval in us */;
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+@@ -808,6 +809,38 @@ extern int hwsim_tx_virtio(struct mac80211_hwsim_data *data,
+ #define hwsim_virtio_enabled false
+ #endif
  
- static const struct rhashtable_params hwsim_rht_params = {
-@@ -964,6 +969,29 @@ DEFINE_DEBUGFS_ATTRIBUTE(hwsim_fops_group,
- 			 hwsim_fops_group_read, hwsim_fops_group_write,
- 			 "%llx\n");
- 
-+static int hwsim_fops_rx_rssi_read(void *dat, u64 *val)
++static int hwsim_get_chanwidth(enum nl80211_chan_width bw)
 +{
-+	struct mac80211_hwsim_data *data = dat;
-+	*val = data->rx_rssi;
-+	return 0;
++	switch (bw) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++		return 20;
++	case NL80211_CHAN_WIDTH_40:
++		return 40;
++	case NL80211_CHAN_WIDTH_80:
++		return 80;
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++		return 160;
++	case NL80211_CHAN_WIDTH_5:
++		return 5;
++	case NL80211_CHAN_WIDTH_10:
++		return 10;
++	case NL80211_CHAN_WIDTH_1:
++		return 1;
++	case NL80211_CHAN_WIDTH_2:
++		return 2;
++	case NL80211_CHAN_WIDTH_4:
++		return 4;
++	case NL80211_CHAN_WIDTH_8:
++		return 8;
++	case NL80211_CHAN_WIDTH_16:
++		return 16;
++	}
++
++	return INT_MAX;
 +}
 +
-+static int hwsim_fops_rx_rssi_write(void *dat, u64 val)
-+{
-+	struct mac80211_hwsim_data *data = dat;
-+	int rssi = (int)val;
-+
-+	if (rssi >= 0 || rssi < -100)
-+		return -EINVAL;
-+
-+	data->rx_rssi = rssi;
-+	return 0;
-+}
-+
-+DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_rx_rssi,
-+			hwsim_fops_rx_rssi_read, hwsim_fops_rx_rssi_write,
-+			"%lld\n");
-+
- static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
- 					struct net_device *dev)
- {
-@@ -1482,8 +1510,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 		rx_status.bw = RATE_INFO_BW_20;
- 	if (info->control.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
- 		rx_status.enc_flags |= RX_ENC_FLAG_SHORT_GI;
--	/* TODO: simulate real signal strength (and optional packet loss) */
--	rx_status.signal = -50;
-+	/* TODO: simulate optional packet loss */
-+	rx_status.signal = data->rx_rssi;
- 	if (info->control.vif)
- 		rx_status.signal += info->control.vif->bss_conf.txpower;
+ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 				    struct sk_buff *skb,
+ 				    struct ieee80211_channel *chan);
+@@ -1623,7 +1656,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_channel *channel;
+ 	bool ack;
+-	u32 _portid;
++	enum nl80211_chan_width confbw = NL80211_CHAN_WIDTH_20_NOHT;
++	u32 _portid, i;
  
-@@ -3309,6 +3337,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		hw->wiphy->n_cipher_suites = param->n_ciphers;
+ 	if (WARN_ON(skb->len < 10)) {
+ 		/* Should not happen; just a sanity check for addr1 use */
+@@ -1633,14 +1667,17 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 
+ 	if (!data->use_chanctx) {
+ 		channel = data->channel;
++		confbw = data->bw;
+ 	} else if (txi->hw_queue == 4) {
+ 		channel = data->tmp_chan;
+ 	} else {
+ 		chanctx_conf = rcu_dereference(txi->control.vif->chanctx_conf);
+-		if (chanctx_conf)
++		if (chanctx_conf) {
+ 			channel = chanctx_conf->def.chan;
+-		else
++			confbw = chanctx_conf->def.width;
++		} else {
+ 			channel = NULL;
++		}
  	}
  
-+	data->rx_rssi = DEFAULT_RX_RSSI;
+ 	if (WARN(!channel, "TX w/o channel - queue = %d\n", txi->hw_queue)) {
+@@ -1664,6 +1701,25 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 				       txi->control.rates,
+ 				       ARRAY_SIZE(txi->control.rates));
+ 
++	for (i = 0; i < ARRAY_SIZE(txi->control.rates); i++) {
++		u16 rflags = txi->control.rates[i].flags;
++		/* initialize to data->bw for 5/10 MHz handling */
++		enum nl80211_chan_width bw = data->bw;
 +
- 	INIT_DELAYED_WORK(&data->roc_start, hw_roc_start);
- 	INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
- 	INIT_DELAYED_WORK(&data->hw_scan, hw_scan_work);
-@@ -3500,6 +3530,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	debugfs_create_file("ps", 0666, data->debugfs, data, &hwsim_fops_ps);
- 	debugfs_create_file("group", 0666, data->debugfs, data,
- 			    &hwsim_fops_group);
-+	debugfs_create_file("rx_rssi", 0666, data->debugfs, data,
-+			    &hwsim_fops_rx_rssi);
- 	if (!data->use_chanctx)
- 		debugfs_create_file("dfs_simulate_radar", 0222,
- 				    data->debugfs,
++		if (txi->control.rates[i].idx == -1)
++			break;
++
++		if (rflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++			bw = NL80211_CHAN_WIDTH_40;
++		else if (rflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
++			bw = NL80211_CHAN_WIDTH_80;
++		else if (rflags & IEEE80211_TX_RC_160_MHZ_WIDTH)
++			bw = NL80211_CHAN_WIDTH_160;
++
++		if (WARN_ON(hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)))
++			return;
++	}
++
+ 	if (skb->len >= 24 + 8 &&
+ 	    ieee80211_is_probe_resp(hdr->frame_control)) {
+ 		/* fake header transmission time */
+@@ -1963,6 +2019,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 
+ 		data->channel = conf->chandef.chan;
++		data->bw = conf->chandef.width;
+ 
+ 		for (idx = 0; idx < ARRAY_SIZE(data->survey_data); idx++) {
+ 			if (data->survey_data[idx].channel &&
+@@ -1974,6 +2031,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 	} else {
+ 		data->channel = conf->chandef.chan;
++		data->bw = conf->chandef.width;
+ 	}
+ 	mutex_unlock(&data->mutex);
+ 
+@@ -2105,12 +2163,48 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 		wiphy_dbg(hw->wiphy, "  TX Power: %d dBm\n", info->txpower);
+ }
+ 
++static void
++mac80211_hwsim_sta_rc_update(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_sta *sta,
++			     u32 changed)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	u32 bw = U32_MAX;
++	enum nl80211_chan_width confbw = NL80211_CHAN_WIDTH_20_NOHT;
++
++	switch (sta->bandwidth) {
++#define C(_bw) case IEEE80211_STA_RX_BW_##_bw: bw = _bw; break
++	C(20);
++	C(40);
++	C(80);
++	C(160);
++#undef C
++	}
++
++	if (!data->use_chanctx) {
++		confbw = data->bw;
++	} else {
++		struct ieee80211_chanctx_conf *chanctx_conf =
++			rcu_dereference(vif->chanctx_conf);
++
++		if (!WARN_ON(!chanctx_conf))
++			confbw = chanctx_conf->def.width;
++	}
++
++	WARN(bw > hwsim_get_chanwidth(confbw),
++	     "intf %pM: bad STA %pM bandwidth %d MHz (%d) > channel config %d MHz (%d)\n",
++	     vif->addr, sta->addr, bw, sta->bandwidth,
++	     hwsim_get_chanwidth(data->bw), data->bw);
++}
++
+ static int mac80211_hwsim_sta_add(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  struct ieee80211_sta *sta)
+ {
+ 	hwsim_check_magic(vif);
+ 	hwsim_set_sta_magic(sta);
++	mac80211_hwsim_sta_rc_update(hw, vif, sta, 0);
+ 
+ 	return 0;
+ }
+@@ -2677,6 +2771,7 @@ static int mac80211_hwsim_tx_last_beacon(struct ieee80211_hw *hw)
+ 	.sta_add = mac80211_hwsim_sta_add,			\
+ 	.sta_remove = mac80211_hwsim_sta_remove,		\
+ 	.sta_notify = mac80211_hwsim_sta_notify,		\
++	.sta_rc_update = mac80211_hwsim_sta_rc_update,		\
+ 	.set_tim = mac80211_hwsim_set_tim,			\
+ 	.conf_tx = mac80211_hwsim_conf_tx,			\
+ 	.get_survey = mac80211_hwsim_get_survey,		\
 -- 
 2.34.1
 
