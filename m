@@ -2,62 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE6AC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 103EEC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343896AbiBJTUW (ORCPT
+        id S1343890AbiBJTUY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 14:20:22 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53998 "EHLO
+        Thu, 10 Feb 2022 14:20:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343881AbiBJTUU (ORCPT
+        with ESMTP id S1343886AbiBJTUV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 14:20:20 -0500
+        Thu, 10 Feb 2022 14:20:21 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D08B4A
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECABF116D
         for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:20:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=QYRcPtnXIElo5tCvWZVYgDABCp3wLDJymDE/X0UX64M=; t=1644520820; x=1645730420; 
-        b=t+lbzdWmsSDf+Ote95RLzlDcyAXXdh8x3Qsfb1OInnwohZPVRK+iM5g6ybGYtU8ZDoF6vgh9qOV
-        f3H7aGHV7G6XQUAmAD2OQXhpd6X36fLANMxfKwQmmBu4dtccFfQRbEDDwR/dZq24wS13PCI6nwEvC
-        Uq4DMyFZOxDcrnOq1KP89eRnPxJ0G1WY7V6imTf8QDmB8MoJhyeMqapffTwAjzk0Xy76wr8xrZROR
-        0T1cO880DulcaauTYOCxrbypusirurPdMlwIujL07phCDzveS5WIn2XRxKAhjzFnnOi/iyWE+z0Q/
-        CjI+TzGAWLlZevSsryAK7UXqdz+EpAZ9Ut8g==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=pTzUO/iLdArxO7QBxL5WrsG8xZLnhgzyR32bcWH1LzM=;
+        t=1644520821; x=1645730421; b=moapJywS72qnZzvLb8TiEoLGNvhN0SmqXEHPy+lh94WPFDu
+        dpqMEmJrhnZxXp3FKPfjJaZe/vJCDgOEGXo2Qfcz0zF9E1szpqpRWPAHl/MQ67iJxCeO2tY6KhFuZ
+        MIdg7qlxInIlTwbkpScMN2iGRu8zPC0+Ljv5SvQg0BA7C2OaPUY/QiDWcWFrvIUt32o37Brb/GF/k
+        ExRBo25uKgL0OlkTkGvF/MNQU5bIrL+2OZWDLtLDc5yxMLdqPsl7wAAToTrFm7zFiMC33J/BXjSHI
+        PhDmoXWlmloNTQ9Dg/n36GV9PeBP7qe/Wt0UZVjr2Ru3GAVeoiBxisrBx2myvzfA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nIEzJ-00HC2X-7v;
-        Thu, 10 Feb 2022 20:20:17 +0100
+        id 1nIEzK-00HC2X-N5;
+        Thu, 10 Feb 2022 20:20:18 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     quic_vikram@quicinc.com, quic_alokad@quicinc.com,
         quic_jiad@quicinc.com, quic_periyasa@quicinc.com,
         quic_msinada@quicinc.com, quic_srirrama@quicinc.com,
         ilan.peer@intel.com
-Subject: [PATCH v2 00/19] initial EHT support
-Date:   Thu, 10 Feb 2022 20:19:49 +0100
-Message-Id: <20220210192008.188166-1-johannes@sipsolutions.net>
+Subject: [PATCH v2 03/19] mac80211_hwsim: Add custom regulatory for 6GHz
+Date:   Thu, 10 Feb 2022 20:19:52 +0100
+Message-Id: <20220210201853.bc2fddd81537.I9507395b64496d96a2276ba8c1e1323e54407aa7@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220210192008.188166-1-johannes@sipsolutions.net>
+References: <20220210192008.188166-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This has many changes, among them:
+From: Ilan Peer <ilan.peer@intel.com>
 
- - fixes for things commented out
- - moved to D1.4
- - added more validation/checks etc. like the HE series I sent
+Add a custom regulatory domain for testing 6 GHz, including
+320 MHz bandwidth. This can be used before the regulatory
+databases are all updated etc.
 
-Since the draft is still evolving, IMHO we should merge this and
-have a common base to work on - but especially the EHT operation
-element is not defined well right now.
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-johannes
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 92e055ee0bb9..defb7e36c1f2 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -173,9 +173,23 @@ static const struct ieee80211_regdomain hwsim_world_regdom_custom_02 = {
+ 	}
+ };
+ 
++static const struct ieee80211_regdomain hwsim_world_regdom_custom_03 = {
++	.n_reg_rules = 6,
++	.alpha2 =  "99",
++	.reg_rules = {
++		REG_RULE(2412 - 10, 2462 + 10, 40, 0, 20, 0),
++		REG_RULE(2484 - 10, 2484 + 10, 40, 0, 20, 0),
++		REG_RULE(5150 - 10, 5240 + 10, 40, 0, 30, 0),
++		REG_RULE(5745 - 10, 5825 + 10, 40, 0, 30, 0),
++		REG_RULE(5855 - 10, 5925 + 10, 40, 0, 33, 0),
++		REG_RULE(5955 - 10, 7125 + 10, 320, 0, 33, 0),
++	}
++};
++
+ static const struct ieee80211_regdomain *hwsim_world_regdom_custom[] = {
+ 	&hwsim_world_regdom_custom_01,
+ 	&hwsim_world_regdom_custom_02,
++	&hwsim_world_regdom_custom_03,
+ };
+ 
+ struct hwsim_vif_priv {
+-- 
+2.34.1
 
