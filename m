@@ -2,136 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70624C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FB63C4332F
 	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244841AbiBJQw3 (ORCPT
+        id S244839AbiBJQwa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 11:52:29 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36152 "EHLO
+        Thu, 10 Feb 2022 11:52:30 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244832AbiBJQw2 (ORCPT
+        with ESMTP id S244845AbiBJQw3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 11:52:28 -0500
+        Thu, 10 Feb 2022 11:52:29 -0500
 Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C2EA1BE
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5717DEE
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:30 -0800 (PST)
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nICDe-000Bxy-Su;
-        Thu, 10 Feb 2022 18:22:55 +0200
+        id 1nICDO-000Bxy-Rx;
+        Thu, 10 Feb 2022 18:22:40 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 18:22:32 +0200
-Message-Id: <iwlwifi.20220210181930.bc424f15cc4b.I06d9acae11dc69b2500666f497017a3fd4e2acd5@changeid>
+Date:   Thu, 10 Feb 2022 18:22:25 +0200
+Message-Id: <iwlwifi.20220210181930.8b352828f767.Ice4c91d8ea3e207914104e72801b87cd7f409ba7@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210162234.285578-1-luca@coelho.fi>
 References: <20220210162234.285578-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/11] iwlwifi: mvm: update BAID allocation command again
+Subject: [PATCH 02/11] iwlwifi: remove command ID argument from queue allocation
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Due to some issues found in integration, the command now has
-the (old) station mask and TID in modify/remove instead of
-the BAID, adjust accordingly.
-
-Since we don't use modify yet (and never will with v1 of the
-API), just add v1 remove inside the existing union, and use
-that, this way we don't have to duplicate everything, only
-the remove code.
+The command ID here is always hard-coded to the same, so we
+can remove it. In the future we actually need to make this
+configurable, but that doesn't need to be on each call, it
+can be done through the transport configuration.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/datapath.h  | 31 +++++++++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  6 +++-
- 2 files changed, 27 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 10 ++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c   |  5 ++---
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c  |  5 +++--
+ drivers/net/wireless/intel/iwlwifi/queue/tx.h  |  5 ++---
+ 4 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-index d268a9cba5ce..43619acc29fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-@@ -304,22 +304,34 @@ struct iwl_rx_baid_cfg_cmd_alloc {
- 
- /**
-  * struct iwl_rx_baid_cfg_cmd_modify - BAID modification data
-- * @sta_id_mask: station ID mask
-- * @baid: the BAID to modify
-+ * @old_sta_id_mask: old station ID mask
-+ * @new_sta_id_mask: new station ID mask
-+ * @tid: TID of the BAID
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 6a4d3eafdc19..50342bf0a5d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2005-2014, 2018-2021 Intel Corporation
++ * Copyright (C) 2005-2014, 2018-2022 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
   */
- struct iwl_rx_baid_cfg_cmd_modify {
--	__le32 sta_id_mask;
--	__le32 baid;
--} __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_1 */
-+	__le32 old_sta_id_mask;
-+	__le32 new_sta_id_mask;
-+	__le32 tid;
-+} __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_2 */
+@@ -571,8 +571,7 @@ struct iwl_trans_ops {
+ 	/* 22000 functions */
+ 	int (*txq_alloc)(struct iwl_trans *trans,
+ 			 __le16 flags, u8 sta_id, u8 tid,
+-			 int cmd_id, int size,
+-			 unsigned int queue_wdg_timeout);
++			 int size, unsigned int queue_wdg_timeout);
+ 	void (*txq_free)(struct iwl_trans *trans, int queue);
+ 	int (*rxq_dma_data)(struct iwl_trans *trans, int queue,
+ 			    struct iwl_trans_rxq_dma_data *data);
+@@ -1246,8 +1245,7 @@ iwl_trans_txq_free(struct iwl_trans *trans, int queue)
+ static inline int
+ iwl_trans_txq_alloc(struct iwl_trans *trans,
+ 		    __le16 flags, u8 sta_id, u8 tid,
+-		    int cmd_id, int size,
+-		    unsigned int wdg_timeout)
++		    int size, unsigned int wdg_timeout)
+ {
+ 	might_sleep();
  
- /**
-- * struct iwl_rx_baid_cfg_cmd_remove - BAID removal data
-+ * struct iwl_rx_baid_cfg_cmd_remove_v1 - BAID removal data
-  * @baid: the BAID to remove
-  */
--struct iwl_rx_baid_cfg_cmd_remove {
-+struct iwl_rx_baid_cfg_cmd_remove_v1 {
- 	__le32 baid;
- } __packed; /* RX_BAID_ALLOCATION_REMOVE_CMD_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_rx_baid_cfg_cmd_remove - BAID removal data
-+ * @sta_id_mask: the station mask of the BAID to remove
-+ * @tid: the TID of the BAID to remove
-+ */
-+struct iwl_rx_baid_cfg_cmd_remove {
-+	__le32 sta_id_mask;
-+	__le32 tid;
-+} __packed; /* RX_BAID_ALLOCATION_REMOVE_CMD_API_S_VER_2 */
-+
- /**
-  * struct iwl_rx_baid_cfg_cmd - BAID allocation/config command
-  * @action: the action, from &enum iwl_rx_baid_action
-@@ -329,9 +341,10 @@ struct iwl_rx_baid_cfg_cmd {
- 	union {
- 		struct iwl_rx_baid_cfg_cmd_alloc alloc;
- 		struct iwl_rx_baid_cfg_cmd_modify modify;
-+		struct iwl_rx_baid_cfg_cmd_remove_v1 remove_v1;
- 		struct iwl_rx_baid_cfg_cmd_remove remove;
--	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_1 */
--} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_1 */
-+	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_2 */
-+} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_2 */
- 
- /**
-  * struct iwl_rx_baid_cfg_resp - BAID allocation response
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 03869bb7dcee..9adca4619a15 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2659,8 +2659,12 @@ static int iwl_mvm_fw_baid_op_cmd(struct iwl_mvm *mvm,
- 		cmd.alloc.ssn = cpu_to_le16(ssn);
- 		cmd.alloc.win_size = cpu_to_le16(buf_size);
- 		baid = -EIO;
-+	} else if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 1) == 1) {
-+		cmd.remove_v1.baid = cpu_to_le32(baid);
-+		BUILD_BUG_ON(sizeof(cmd.remove_v1) > sizeof(cmd.remove));
- 	} else {
--		cmd.remove.baid = cpu_to_le32(baid);
-+		cmd.remove.sta_id_mask = cpu_to_le32(BIT(mvm_sta->sta_id));
-+		cmd.remove.tid = cpu_to_le32(tid);
+@@ -1260,7 +1258,7 @@ iwl_trans_txq_alloc(struct iwl_trans *trans,
  	}
  
- 	ret = iwl_mvm_send_cmd_pdu_status(mvm, cmd_id, sizeof(cmd),
+ 	return trans->ops->txq_alloc(trans, flags, sta_id, tid,
+-				     cmd_id, size, wdg_timeout);
++				     size, wdg_timeout);
+ }
+ 
+ static inline void iwl_trans_txq_set_shared_mode(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index cb993fe0bb2b..bf3aca0b2fc5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -783,9 +783,8 @@ static int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
+ 	do {
+ 		__le16 enable = cpu_to_le16(TX_QUEUE_CFG_ENABLE_QUEUE);
+ 
+-		queue = iwl_trans_txq_alloc(mvm->trans, enable,
+-					    sta_id, tid, SCD_QUEUE_CFG,
+-					    size, timeout);
++		queue = iwl_trans_txq_alloc(mvm->trans, enable, sta_id,
++					    tid, size, timeout);
+ 
+ 		if (queue < 0)
+ 			IWL_DEBUG_TX_QUEUES(mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+index 49625c679a5a..047092ea34fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+@@ -7,6 +7,7 @@
+ 
+ #include "iwl-debug.h"
+ #include "iwl-io.h"
++#include "fw/api/commands.h"
+ #include "fw/api/tx.h"
+ #include "queue/tx.h"
+ #include "iwl-fh.h"
+@@ -1185,7 +1186,7 @@ static int iwl_txq_alloc_response(struct iwl_trans *trans, struct iwl_txq *txq,
+ }
+ 
+ int iwl_txq_dyn_alloc(struct iwl_trans *trans, __le16 flags, u8 sta_id, u8 tid,
+-		      int cmd_id, int size, unsigned int timeout)
++		      int size, unsigned int timeout)
+ {
+ 	struct iwl_txq *txq;
+ 	struct iwl_tx_queue_cfg_cmd cmd = {
+@@ -1194,7 +1195,7 @@ int iwl_txq_dyn_alloc(struct iwl_trans *trans, __le16 flags, u8 sta_id, u8 tid,
+ 		.tid = tid,
+ 	};
+ 	struct iwl_host_cmd hcmd = {
+-		.id = cmd_id,
++		.id = SCD_QUEUE_CFG,
+ 		.len = { sizeof(cmd) },
+ 		.data = { &cmd, },
+ 		.flags = CMD_WANT_SKB,
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.h b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
+index 7db675b89f8d..726dd001e65b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2020-2021 Intel Corporation
++ * Copyright (C) 2020-2022 Intel Corporation
+  */
+ #ifndef __iwl_trans_queue_tx_h__
+ #define __iwl_trans_queue_tx_h__
+@@ -114,8 +114,7 @@ void iwl_txq_gen2_tfd_unmap(struct iwl_trans *trans,
+ 
+ int iwl_txq_dyn_alloc(struct iwl_trans *trans,
+ 		      __le16 flags, u8 sta_id, u8 tid,
+-		      int cmd_id, int size,
+-		      unsigned int timeout);
++		      int size, unsigned int timeout);
+ 
+ int iwl_txq_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		    struct iwl_device_tx_cmd *dev_cmd, int txq_id);
 -- 
 2.34.1
 
