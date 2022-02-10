@@ -2,83 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA08C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D51E6C4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244831AbiBJQwW (ORCPT
+        id S244837AbiBJQwW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 10 Feb 2022 11:52:22 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36002 "EHLO
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244229AbiBJQwS (ORCPT
+        with ESMTP id S244834AbiBJQwV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 11:52:18 -0500
+        Thu, 10 Feb 2022 11:52:21 -0500
 Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3DCEEE
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16F7C128
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:21 -0800 (PST)
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nICDe-000Bxy-0L;
-        Thu, 10 Feb 2022 18:22:55 +0200
+        id 1nICDW-000Bxy-K2;
+        Thu, 10 Feb 2022 18:22:49 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 18:22:31 +0200
-Message-Id: <iwlwifi.20220210181930.b8190c27dc87.Ie5b5f8c68ecafd1b51d197fc1273b024bc1575a4@changeid>
+Date:   Thu, 10 Feb 2022 18:22:28 +0200
+Message-Id: <iwlwifi.20220210181930.02142c6f0579.Ic480a0cc08625e74a8449262aeebb1813edf9979@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210162234.285578-1-luca@coelho.fi>
 References: <20220210162234.285578-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/11] iwlwifi: api: remove ttl field from TX command
+Subject: [PATCH 05/11] iwlwifi: pcie: iwlwifi: fix device id 7F70 struct
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Yaara Baruch <yaara.baruch@intel.com>
 
-This doesn't really exist in the firmware, it's just some
-leftover from older versions. Remove it.
+The device was defined under Ma instead of So, and add 2 missing
+killer devices from the 211 family.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Yaara Baruch <yaara.baruch@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index e73cc7380a26..ecc6706f66ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
- #ifndef __iwl_fw_api_tx_h__
-@@ -296,8 +296,7 @@ struct iwl_tx_cmd_gen2 {
-  * @dram_info: FW internal DRAM storage
-  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
-  *	cleared. Combination of RATE_MCS_*
-- * @ttl: time to live - packet lifetime limit. The FW should drop if
-- *	passed.
-+ * @reserved: reserved
-  * @hdr: 802.11 header
-  */
- struct iwl_tx_cmd_gen3 {
-@@ -306,7 +305,7 @@ struct iwl_tx_cmd_gen3 {
- 	__le32 offload_assist;
- 	struct iwl_dram_sec_info dram_info;
- 	__le32 rate_n_flags;
--	__le64 ttl;
-+	u8 reserved[8];
- 	struct ieee80211_hdr hdr[];
- } __packed; /* TX_CMD_API_S_VER_8,
- 	       TX_CMD_API_S_VER_10 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 8c3fd3f54e20..58a7111d4f40 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -495,11 +495,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x7AF0, PCI_ANY_ID, iwl_so_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x51F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x54F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
++	{IWL_PCI_DEVICE(0x7F70, PCI_ANY_ID, iwl_so_trans_cfg)},
+ 
+ /* Ma devices */
+ 	{IWL_PCI_DEVICE(0x2729, PCI_ANY_ID, iwl_ma_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x7E40, PCI_ANY_ID, iwl_ma_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x7F70, PCI_ANY_ID, iwl_ma_trans_cfg)},
+ 
+ /* Bz devices */
+ 	{IWL_PCI_DEVICE(0x2727, PCI_ANY_ID, iwl_bz_trans_cfg)},
+@@ -670,8 +670,8 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x2726, 0x1652, iwl_cfg_snj_hr_b0, iwl_ax201_killer_1650i_name),
+ 	IWL_DEV_INFO(0x2726, 0x1691, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690s_name),
+ 	IWL_DEV_INFO(0x2726, 0x1692, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690i_name),
+-	IWL_DEV_INFO(0x7F70, 0x1691, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690s_name),
+-	IWL_DEV_INFO(0x7F70, 0x1692, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690i_name),
++	IWL_DEV_INFO(0x7F70, 0x1691, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690s_name),
++	IWL_DEV_INFO(0x7F70, 0x1692, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690i_name),
+ 
+ 	/* SO with GF2 */
+ 	IWL_DEV_INFO(0x2726, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
+@@ -684,6 +684,8 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x7A70, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
+ 	IWL_DEV_INFO(0x7AF0, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
+ 	IWL_DEV_INFO(0x7AF0, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
++	IWL_DEV_INFO(0x7F70, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
++	IWL_DEV_INFO(0x7F70, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
+ 
+ 	/* MA with GF2 */
+ 	IWL_DEV_INFO(0x7E40, 0x1671, iwl_cfg_ma_a0_gf_a0, iwl_ax211_killer_1675s_name),
 -- 
 2.34.1
 
