@@ -2,89 +2,106 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D51E6C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E3F8C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244837AbiBJQwW (ORCPT
+        id S244843AbiBJQw2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 11:52:22 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36026 "EHLO
+        Thu, 10 Feb 2022 11:52:28 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244834AbiBJQwV (ORCPT
+        with ESMTP id S244840AbiBJQwY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 11:52:21 -0500
+        Thu, 10 Feb 2022 11:52:24 -0500
 Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16F7C128
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:21 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D548F9
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:24 -0800 (PST)
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nICDW-000Bxy-K2;
-        Thu, 10 Feb 2022 18:22:49 +0200
+        id 1nICDL-000Bxy-LE;
+        Thu, 10 Feb 2022 18:22:36 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 18:22:28 +0200
-Message-Id: <iwlwifi.20220210181930.02142c6f0579.Ic480a0cc08625e74a8449262aeebb1813edf9979@changeid>
+Date:   Thu, 10 Feb 2022 18:22:23 +0200
+Message-Id: <20220210162234.285578-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220210162234.285578-1-luca@coelho.fi>
-References: <20220210162234.285578-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/11] iwlwifi: pcie: iwlwifi: fix device id 7F70 struct
+Subject: [PATCH 00/11] iwlwifi: updates intended for v5.18 2022-02-10
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yaara Baruch <yaara.baruch@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-The device was defined under Ma instead of So, and add 2 missing
-killer devices from the 211 family.
+Hi,
 
-Signed-off-by: Yaara Baruch <yaara.baruch@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Here's the sixth set of patches intended for v5.18.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 8c3fd3f54e20..58a7111d4f40 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -495,11 +495,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x7AF0, PCI_ANY_ID, iwl_so_trans_cfg)},
- 	{IWL_PCI_DEVICE(0x51F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
- 	{IWL_PCI_DEVICE(0x54F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
-+	{IWL_PCI_DEVICE(0x7F70, PCI_ANY_ID, iwl_so_trans_cfg)},
- 
- /* Ma devices */
- 	{IWL_PCI_DEVICE(0x2729, PCI_ANY_ID, iwl_ma_trans_cfg)},
- 	{IWL_PCI_DEVICE(0x7E40, PCI_ANY_ID, iwl_ma_trans_cfg)},
--	{IWL_PCI_DEVICE(0x7F70, PCI_ANY_ID, iwl_ma_trans_cfg)},
- 
- /* Bz devices */
- 	{IWL_PCI_DEVICE(0x2727, PCI_ANY_ID, iwl_bz_trans_cfg)},
-@@ -670,8 +670,8 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 	IWL_DEV_INFO(0x2726, 0x1652, iwl_cfg_snj_hr_b0, iwl_ax201_killer_1650i_name),
- 	IWL_DEV_INFO(0x2726, 0x1691, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690s_name),
- 	IWL_DEV_INFO(0x2726, 0x1692, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690i_name),
--	IWL_DEV_INFO(0x7F70, 0x1691, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690s_name),
--	IWL_DEV_INFO(0x7F70, 0x1692, iwlax411_2ax_cfg_sosnj_gf4_a0, iwl_ax411_killer_1690i_name),
-+	IWL_DEV_INFO(0x7F70, 0x1691, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690s_name),
-+	IWL_DEV_INFO(0x7F70, 0x1692, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690i_name),
- 
- 	/* SO with GF2 */
- 	IWL_DEV_INFO(0x2726, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
-@@ -684,6 +684,8 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 	IWL_DEV_INFO(0x7A70, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
- 	IWL_DEV_INFO(0x7AF0, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
- 	IWL_DEV_INFO(0x7AF0, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
-+	IWL_DEV_INFO(0x7F70, 0x1671, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675s_name),
-+	IWL_DEV_INFO(0x7F70, 0x1672, iwlax211_2ax_cfg_so_gf_a0, iwl_ax211_killer_1675i_name),
- 
- 	/* MA with GF2 */
- 	IWL_DEV_INFO(0x7E40, 0x1671, iwl_cfg_ma_a0_gf_a0, iwl_ax211_killer_1675s_name),
+The changes are:
+
+* Fix config structure for one device;
+* Support a new FW API command version;
+* Support new queue allocation command;
+* Some more debugging improvements;
+* Some other small fixes, clean-ups and improvements.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Abhishek Naik (1):
+  iwlwifi: tlc: Add logs in rs_fw_rate_init func to print TLC
+    configuration
+
+Johannes Berg (6):
+  iwlwifi: make iwl_txq_dyn_alloc_dma() return the txq
+  iwlwifi: remove command ID argument from queue allocation
+  iwlwifi: mvm: remove iwl_mvm_disable_txq() flags argument
+  iwlwifi: support new queue allocation command
+  iwlwifi: api: remove ttl field from TX command
+  iwlwifi: mvm: update BAID allocation command again
+
+Miri Korenblit (1):
+  iwlwifi: mvm: move only to an enabled channel
+
+Mukesh Sisodiya (2):
+  iwlwifi: yoyo: support dump policy for the dump size
+  iwlwifi: yoyo: send hcmd to fw after dump collection completes.
+
+Yaara Baruch (1):
+  iwlwifi: pcie: iwlwifi: fix device id 7F70 struct
+
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  | 89 ++++++++++++++++---
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   | 32 ++++++-
+ .../net/wireless/intel/iwlwifi/fw/api/debug.h | 19 +++-
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  6 +-
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  7 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 69 +++++++++++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  5 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  3 +
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  8 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 25 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  9 ++
+ .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 31 +++++--
+ .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 14 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 53 +++++++----
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  8 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  3 +-
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c | 81 +++++++++++------
+ drivers/net/wireless/intel/iwlwifi/queue/tx.h |  9 +-
+ 19 files changed, 365 insertions(+), 108 deletions(-)
+
 -- 
 2.34.1
 
