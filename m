@@ -2,68 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17262C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 20:10:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7932DC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 22:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243246AbiBJUKU (ORCPT
+        id S1343576AbiBJW3Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 15:10:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60834 "EHLO
+        Thu, 10 Feb 2022 17:29:25 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238417AbiBJUKT (ORCPT
+        with ESMTP id S242917AbiBJW3Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 15:10:19 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84F002735
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 12:10:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Vn1v2NTrbvtFKl+aBjJrgcfektdGUDMKJCOHU2Wiack=;
-        t=1644523820; x=1645733420; b=HpfM30ZZ3fqMRD2x8JkOSDbDWGIHbk56nC/qTwuxvdUn3aa
-        WjwQZmqprpjdmCj+gaBa6DXow4jxAnHnsoRtQpBBvcnyNUrTPzjHPDkUwuYWjyiGoB6b0TB2S5ixr
-        MpQBf2vjfxdvwPLpsDQu9Kd6t5N9IrPFdOyVA15i680FljOqO1yocMrsOTdw72PKzBHnujysx6NjS
-        JC6PTLP9TGeeZ2gWA51HLXvPB1uE8rbjzR05jSr+kxVxeEvRChHlZKs2N7uU4oy8sNyaVoHpxfQ4c
-        HlEJThCSlpxoM2xBRSUMRc+Jq1hvVFHJzSak+k1BmUjynQ/Sww+JqKVtqTRGdaHg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1nIFli-00HDIv-0q;
-        Thu, 10 Feb 2022 21:10:18 +0100
-Message-ID: <bcbeaeb1c331a5570e6ab6e03a6ce2875b43f750.camel@sipsolutions.net>
+        Thu, 10 Feb 2022 17:29:25 -0500
+Received: from mail-ot1-x333.google.com (mail-ot1-x333.google.com [IPv6:2607:f8b0:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8659F10AA
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 14:29:25 -0800 (PST)
+Received: by mail-ot1-x333.google.com with SMTP id d18-20020a9d51d2000000b005a09728a8c2so4799383oth.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 14:29:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/DB+7B0RJdPFWjNfIQMbWHz/JZyg5dCXeBYTpbBq6LU=;
+        b=ES+GM8PmSq3apGXHTXfAZoqBRDptgkv81xnT1xGOHrlDmeUAmvGari1/J2DSNJBcYd
+         K8pMXtvOttxwY7nObj7/YMP+OFsuFZWEp6bpj4CsKK4AHYXrN47rnk1413YKWNVe5fct
+         2VTCyC0AflOJGgtzRhxA/5tCTblXv5ooNwwtx6U7ReJJzGUSE43fPABKsHTadn+AWwrY
+         OHy+3q7abhqhEpBoBZJaWCQHS93TU3CH8ySvl6fjCfDz7lp5G9KveLsu4b23kKOQPelc
+         J0CXDE16b8JblAqAgRedJmbOz7PBHXl0BCrpWD2WLhWZPHENrdtVicXd2pMjju7eNMAf
+         bKjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
+         :subject:content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/DB+7B0RJdPFWjNfIQMbWHz/JZyg5dCXeBYTpbBq6LU=;
+        b=IHA70Xvm2I0mQHPuTvcOXz2OVBqVAWIcBfkxsOnDFUlWo872nFiBFiIWDuwax37ujr
+         ho1sjJrxNorSdxBg7/DmWj4pgRelQYwnoPjNC03gZezmtr6ljsRPcS2oZmPS51aMVpVD
+         Piu3DMTeWve7LOkRWfUJZ5n4ijDAGlV0RiySLogxtGodCCwe7TgyudNXVnSWm5yzLWpj
+         1dHzc3KVq8ZP50OrwvGLrVdVnF5U8SaSLg4E5spIAVsx3I5OnpltsNb1SHziVK11Nog9
+         Vw0WssiNcHJzmkQZS5KkcFwWrDH/KtNHMO/L+M1nLfrfM/2iYSGTm+IlbqpblMTsnXX4
+         CSwQ==
+X-Gm-Message-State: AOAM533Vnm55vyGU0ZimLOKnTKUzCKMfEx+1dy+7CPnhcn0bGvY3qrcR
+        LVlH9J9M+zvKWgkX2MNI1ZdXkhDKVcI=
+X-Google-Smtp-Source: ABdhPJy5zh1TH9pD+AD8FBi1KyYeYGvF4AKSaWIaIk7ykfGEJwPlKYjw4SRiNO1CyY9cOxQ7Yl0Q4w==
+X-Received: by 2002:a9d:4f0a:: with SMTP id d10mr3585369otl.292.1644532164906;
+        Thu, 10 Feb 2022 14:29:24 -0800 (PST)
+Received: from [192.168.1.104] (cpe-24-31-246-181.kc.res.rr.com. [24.31.246.181])
+        by smtp.gmail.com with ESMTPSA id a15sm8743667oil.13.2022.02.10.14.29.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Feb 2022 14:29:24 -0800 (PST)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <f2985911-19ae-dd3b-6c23-93de0c188c0e@lwfinger.net>
+Date:   Thu, 10 Feb 2022 16:29:21 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
 Subject: Re: Possible bug in cfg80211
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
+Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>,
         Maxim Klimenko Sergievich <klimenkomaximsergievich@gmail.com>,
         linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 21:10:17 +0100
-In-Reply-To: <ba50e373-59d8-d544-e7f9-3fe2a3336056@lwfinger.net>
 References: <CAEqd1ZZucLqJMEktzmnCKzwXXkswzqJNf_yr2HZV20LcWtiR6A@mail.gmail.com>
-         <ba50e373-59d8-d544-e7f9-3fe2a3336056@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.3 (3.42.3-1.fc35) 
-MIME-Version: 1.0
+ <ba50e373-59d8-d544-e7f9-3fe2a3336056@lwfinger.net>
+ <bcbeaeb1c331a5570e6ab6e03a6ce2875b43f750.camel@sipsolutions.net>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <bcbeaeb1c331a5570e6ab6e03a6ce2875b43f750.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2022-02-10 at 12:54 -0600, Larry Finger wrote:
+On 2/10/22 14:10, Johannes Berg wrote:
+> On Thu, 2022-02-10 at 12:54 -0600, Larry Finger wrote:
+>>
+>> I am most concerned about that bss_entries_limit=1 option for cfg80211. Do you
+>> still get the warnings logged if you eliminate that one?
 > 
-> I am most concerned about that bss_entries_limit=1 option for cfg80211. Do you 
-> still get the warnings logged if you eliminate that one?
-
-Yeah that's probably the reason ...
-
-I guess we should ignore it if it's too low to make any sense.
-
-> I also have a question for Johannes, et al. Should the "if (WARN_ON(!oldest))" 
-> in net/wireless/scan.c be a WARN_ON_ONCE()? It does not seem worthwhile to spam 
-> the logs. It is clear that once this happens, it will happen again and again.
+> Yeah that's probably the reason ...
 > 
+> I guess we should ignore it if it's too low to make any sense.
+> 
+>> I also have a question for Johannes, et al. Should the "if (WARN_ON(!oldest))"
+>> in net/wireless/scan.c be a WARN_ON_ONCE()? It does not seem worthwhile to spam
+>> the logs. It is clear that once this happens, it will happen again and again.
+>>
+> 
+> Indeed, that seems reasonable. Want to send a patch?
 
-Indeed, that seems reasonable. Want to send a patch?
+Yes, I will send a patch. I was able to duplicate the OP's warning with 
+"bss_entries_limit=1 and I will be able to test for that warning.
 
-johannes
+Larry
+
