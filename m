@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFF7C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A1AC4332F
 	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:16:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343825AbiBJTQ3 (ORCPT
+        id S1343827AbiBJTQ3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 10 Feb 2022 14:16:29 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51068 "EHLO
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239426AbiBJTQ2 (ORCPT
+        with ESMTP id S1343826AbiBJTQ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 14:16:28 -0500
+        Thu, 10 Feb 2022 14:16:29 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF2210BA
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F400F110C
         for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:16:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=//ogqrnbTbG9qZuggmqzLjKcrKvsmNY+uCV+Rysxksw=;
-        t=1644520589; x=1645730189; b=hoJLoaODvn6YT/95svQyZHhNkaXb7tj3mWjZAAnxUDCwvdG
-        +j1cu4lkO7JWzbPXnmv6YURQJfGuWqBmLsXrUzxhgt6pS6UAN1fVkAGVWU4wj9BWXYl5ohg+FP0dZ
-        6/pl33PJjRzpr8eewH8HjRBO2p6Yv4HJ7auIegz3/PXMzPXUbO9n8u1zQ8bx7AmLuPQYgen1tBxdn
-        v/Z84zw4OmdvbTQtuAqyjoDtcoRTTJf/688ibzWh8pEaueKJmIta09R/IBy263yCPeLeU60Ff421e
-        jBu7cSZJhjoz3dUqfM8qo+/wd4BfLoZyBEg665novCHQO6zhejGGXDqFJ5VPKAWw==;
+        Resent-Cc:Resent-Message-ID; bh=mggAmGFZLWmvhUdf69OytcV2qfVXAIr7jQA86Z4BZbQ=;
+        t=1644520590; x=1645730190; b=nB7Cnf2ER7gsDXHLfrDtme+gt0hWfQntpZcSQUuavzRf6Wv
+        pOd/RpRhGiTKwgVi8hACtbtPkEMCdzGz38NSpGlOIOjHNPi8TORHmH8NDPb5o984s13ZNKTRBi7y8
+        DqNZpFx0P+cTEQvPhlZxD3k5NHPKhOk4b5+aRAfVnH/Z/llmuaGgcmyTnWvyyt5pkH6D35BRS7zPd
+        bVpmTgoXDEISvWnvCRHwOWq5yW+OOsgF2PAJFktojUxj+V5fuR5xNOim8iKsT0jXs7UtO1RwX+rce
+        7TCfm2OS1BXIAUfSOAGd3EQtYl5AbaBkyzYkKK86PlMs0+4Ea/Ds9UdmUMY+zvww==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nIEva-00HBut-9L;
+        id 1nIEva-00HBut-QT;
         Thu, 10 Feb 2022 20:16:26 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] ieee80211: add helper to check HE capability element size
-Date:   Thu, 10 Feb 2022 20:16:21 +0100
-Message-Id: <20220210201537.51af5886d599.Ie18359bd38143b7dc949078f10752413e6d36854@changeid>
+Subject: [PATCH 3/3] nl80211: accept only HE capability elements with valid size
+Date:   Thu, 10 Feb 2022 20:16:23 +0100
+Message-Id: <20220210201537.222c999d7585.Id57ce32f9538a40e36c620fabedbd2c73346ef56@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210191623.187684-1-johannes@sipsolutions.net>
 References: <20220210191623.187684-1-johannes@sipsolutions.net>
@@ -48,59 +48,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This element has a very dynamic structure, create a small helper
-function to validate its size. We're currently checking it in
-mac80211 in a conversion function, but that's actually slightly
-buggy.
+The kernel (driver code) should be able to assume that a station's
+HE capabilities are not badly sized, so reject them if they are.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a2940a853783..dfc84680af82 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -9,7 +9,7 @@
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (c) 2018 - 2021 Intel Corporation
-+ * Copyright (c) 2018 - 2022 Intel Corporation
-  */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 578bff9c378b..19b74a5ca300 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6308,6 +6308,11 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 	    statype != CFG80211_STA_AP_CLIENT_UNASSOC)
+ 		return -EINVAL;
  
- #ifndef LINUX_IEEE80211_H
-@@ -2338,6 +2338,29 @@ ieee80211_he_ppe_size(u8 ppe_thres_hdr, const u8 *phy_cap_info)
- 	return n;
- }
++	if (params->he_capa &&
++	    !ieee80211_he_capa_size_ok((const void *)params->he_capa,
++				       params->he_capa_len))
++		return -EINVAL;
++
+ 	/* When you run into this, adjust the code below for the new flag */
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
  
-+static inline bool ieee80211_he_capa_size_ok(const u8 *data, u8 len)
-+{
-+	const struct ieee80211_he_cap_elem *he_cap_ie_elem = (const void *)data;
-+	u8 needed = sizeof(*he_cap_ie_elem);
-+
-+	if (len < needed)
-+		return false;
-+
-+	needed += ieee80211_he_mcs_nss_size(he_cap_ie_elem);
-+	if (len < needed)
-+		return false;
-+
-+	if (he_cap_ie_elem->phy_cap_info[6] &
-+			IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT) {
-+		if (len < needed + 1)
-+			return false;
-+		needed += ieee80211_he_ppe_size(data[needed],
-+						he_cap_ie_elem->phy_cap_info);
-+	}
-+
-+	return len >= needed;
-+}
-+
- /* HE Operation defines */
- #define IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK		0x00000007
- #define IEEE80211_HE_OPERATION_TWT_REQUIRED			0x00000008
 -- 
 2.34.1
 
