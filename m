@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24208C43217
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 604C0C4321E
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 19:20:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343914AbiBJTU1 (ORCPT
+        id S1343922AbiBJTU2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 14:20:27 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54032 "EHLO
+        Thu, 10 Feb 2022 14:20:28 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343892AbiBJTUV (ORCPT
+        with ESMTP id S1343898AbiBJTUX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 14:20:21 -0500
+        Thu, 10 Feb 2022 14:20:23 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57775115A
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:20:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96145115D
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 11:20:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=9rnbyTQijG1mfvn6lDu1sv2VoX658cbxQFen4t9eaB4=;
-        t=1644520822; x=1645730422; b=rjsBaU7SvjANeGfzumgzLMhq1H/L28OSHTxdpAHjQBgUtla
-        NaWCwMnbr+obyW8eNjUX7a7oY1iP9ZRc+vsDNVsXtVYAWQTdmeUicRIuDFizdp+3vTNtQlihJB5Rk
-        GrisKqJP+K0nafJQKwagn1lNua5/GTxGlUOfeyr35ipfYFO1fCnPlULTlVGbTFWjllAF5EpN7LuVJ
-        LBnvdo+sMxxO8x7JgpJV9ODy+8lBwx5RAxLfFFejF/A2jd5z7QN/Ves0e0RzCOtU7m6Th1zJKQn1f
-        zsIdmw1Rm7AMdIjDZwaHNGAWGlqHBMt/ILg5VFhLP/pmYEABQ9P/TvcZ6cpJMzig==;
+        Resent-Cc:Resent-Message-ID; bh=ExPwTYuI8hmyWh1Qn7qnT2e/o9xlLQZVAU/2lkgDwrE=;
+        t=1644520823; x=1645730423; b=EzqYibnLVbibAP+OH2tip1vMF35GDd6lHjHvMbztelRkMEG
+        yYePYZKSRHmBE+dZsXQZJ1R55MrkCeQszVvjNFWZgtn7qj+DZoNQowPEbFrcFhfFqbvx8lAEqsCPl
+        CvaMPlB8mQMMfiY7iobi4BODvp+C6wTzuhhEsj4RPvaT+p7NhDitP+Hru6XibKPehewm5uvQZstI0
+        QJhPoRLnm+YxVu82a8uRw1LcErExuIq9OoA87HlGQFLaCCx07EV3bkuZI4iDe4lAK04z+4SlY/5Au
+        fQgi3BfIIp2ULYqrwhPz6dwV1CRqhZnOzROn4fki4tXrBTI2sA6tgYi0ljxJt3ww==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nIEzL-00HC2X-Va;
-        Thu, 10 Feb 2022 20:20:20 +0100
+        id 1nIEzN-00HC2X-RN;
+        Thu, 10 Feb 2022 20:20:21 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     quic_vikram@quicinc.com, quic_alokad@quicinc.com,
         quic_jiad@quicinc.com, quic_periyasa@quicinc.com,
         quic_msinada@quicinc.com, quic_srirrama@quicinc.com,
         ilan.peer@intel.com
-Subject: [PATCH v2 06/19] cfg80211: Add data structures to capture EHT capabilities
-Date:   Thu, 10 Feb 2022 20:19:55 +0100
-Message-Id: <20220210201853.c40044dc90e9.I2413a37c8f7d2d6d638038a3d95360a3fce0114d@changeid>
+Subject: [PATCH v2 10/19] cfg80211: add NO-EHT flag to regulatory
+Date:   Thu, 10 Feb 2022 20:19:59 +0100
+Message-Id: <20220210201853.787bb00fa5d7.Ifc1e2daac51c1cc5f895ccfb79faf5eaec3950ec@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210192008.188166-1-johannes@sipsolutions.net>
 References: <20220210192008.188166-1-johannes@sipsolutions.net>
@@ -51,179 +51,73 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ilan Peer <ilan.peer@intel.com>
 
-And advertise EHT capabilities to user space when supported.
+This may be necessary in some cases, add a flag and propagate
+it, just like the NO-HE that already exists.
 
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+[split off from a combined 320/no-EHT patch]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       | 63 ++++++++++++++++++++++++++++++++++++
- include/uapi/linux/nl80211.h | 12 +++++++
- net/wireless/nl80211.c       | 27 ++++++++++++++++
- 3 files changed, 102 insertions(+)
+ include/net/cfg80211.h       | 2 ++
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 3 +++
+ 3 files changed, 8 insertions(+)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f6db085ff3df..7bec15f605be 100644
+index f35ffd81d213..5cfc483dece1 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -360,6 +360,48 @@ struct ieee80211_sta_he_cap {
- 	u8 ppe_thres[IEEE80211_HE_PPE_THRES_MAX_LEN];
+@@ -114,6 +114,7 @@ struct wiphy;
+  *	channel as the control or any of the secondary channels.
+  *	This may be due to the driver or due to regulatory bandwidth
+  *	restrictions.
++ * @IEEE80211_CHAN_NO_EHT: EHT operation is not permitted on this channel.
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+@@ -136,6 +137,7 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_8MHZ		= 1<<17,
+ 	IEEE80211_CHAN_16MHZ		= 1<<18,
+ 	IEEE80211_CHAN_NO_320MHZ	= 1<<19,
++	IEEE80211_CHAN_NO_EHT		= 1<<20,
  };
  
-+/**
-+ * struct ieee80211_eht_mcs_nss_supp - EHT max supported NSS per MCS
-+ *
-+ * See P802.11be_D1.3 Table 9-401k - "Subfields of the Supported EHT-MCS
-+ * and NSS Set field"
-+ *
-+ * @only_20mhz: MCS/NSS support for 20 MHz-only STA.
-+ * @bw._80: MCS/NSS support for BW <= 80 MHz
-+ * @bw._160: MCS/NSS support for BW = 160 MHz
-+ * @bw._320: MCS/NSS support for BW = 320 MHz
-+ */
-+struct ieee80211_eht_mcs_nss_supp {
-+	union {
-+		struct ieee80211_eht_mcs_nss_supp_20mhz_only only_20mhz;
-+		struct {
-+			struct ieee80211_eht_mcs_nss_supp_bw _80;
-+			struct ieee80211_eht_mcs_nss_supp_bw _160;
-+			struct ieee80211_eht_mcs_nss_supp_bw _320;
-+		} __packed bw;
-+	} __packed;
-+} __packed;
-+
-+#define IEEE80211_EHT_PPE_THRES_MAX_LEN		32
-+
-+/**
-+ * struct ieee80211_sta_eht_cap - STA's EHT capabilities
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11be EHT capabilities for a STA.
-+ *
-+ * @has_eht: true iff EHT data is valid.
-+ * @eht_cap_elem: Fixed portion of the eht capabilities element.
-+ * @eht_mcs_nss_supp: The supported NSS/MCS combinations.
-+ * @eht_ppe_thres: Holds the PPE Thresholds data.
-+ */
-+struct ieee80211_sta_eht_cap {
-+	bool has_eht;
-+	struct ieee80211_eht_cap_elem_fixed eht_cap_elem;
-+	struct ieee80211_eht_mcs_nss_supp eht_mcs_nss_supp;
-+	u8 eht_ppe_thres[IEEE80211_EHT_PPE_THRES_MAX_LEN];
-+};
-+
- /**
-  * struct ieee80211_sband_iftype_data - sband data per interface type
-  *
-@@ -379,6 +421,7 @@ struct ieee80211_sband_iftype_data {
- 	u16 types_mask;
- 	struct ieee80211_sta_he_cap he_cap;
- 	struct ieee80211_he_6ghz_capa he_6ghz_capa;
-+	struct ieee80211_sta_eht_cap eht_cap;
- 	struct {
- 		const u8 *data;
- 		unsigned int len;
-@@ -561,6 +604,26 @@ ieee80211_get_he_6ghz_capa(const struct ieee80211_supported_band *sband,
- 	return data->he_6ghz_capa.capa;
- }
- 
-+/**
-+ * ieee80211_get_eht_iftype_cap - return ETH capabilities for an sband's iftype
-+ * @sband: the sband to search for the iftype on
-+ * @iftype: enum nl80211_iftype
-+ *
-+ * Return: pointer to the struct ieee80211_sta_eht_cap, or NULL is none found
-+ */
-+static inline const struct ieee80211_sta_eht_cap *
-+ieee80211_get_eht_iftype_cap(const struct ieee80211_supported_band *sband,
-+			     enum nl80211_iftype iftype)
-+{
-+	const struct ieee80211_sband_iftype_data *data =
-+		ieee80211_get_sband_iftype_data(sband, iftype);
-+
-+	if (data && data->eht_cap.has_eht)
-+		return &data->eht_cap;
-+
-+	return NULL;
-+}
-+
- /**
-  * wiphy_read_of_freq_limits - read frequency limits from device tree
-  *
+ #define IEEE80211_CHAN_NO_HT40 \
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 195a238a322e..d305a8b8c536 100644
+index 6a338dafcd07..baf6433c0119 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -3766,6 +3766,14 @@ enum nl80211_mpath_info {
-  *	given for all 6 GHz band channels
-  * @NL80211_BAND_IFTYPE_ATTR_VENDOR_ELEMS: vendor element capabilities that are
-  *	advertised on this band/for this iftype (binary)
-+ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC: EHT MAC capabilities as in EHT
-+ *	capabilities element
-+ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY: EHT PHY capabilities as in EHT
-+ *	capabilities element
-+ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET: EHT supported NSS/MCS as in EHT
-+ *	capabilities element
-+ * @NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE: EHT PPE thresholds information as
-+ *	defined in EHT capabilities element
-  * @__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST: internal use
-  * @NL80211_BAND_IFTYPE_ATTR_MAX: highest band attribute currently defined
-  */
-@@ -3779,6 +3787,10 @@ enum nl80211_band_iftype_attr {
- 	NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE,
- 	NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA,
- 	NL80211_BAND_IFTYPE_ATTR_VENDOR_ELEMS,
-+	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC,
-+	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY,
-+	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET,
-+	NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE,
+@@ -3999,6 +3999,8 @@ enum nl80211_wmm_rule {
+  *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_NO_320MHZ: any 320 MHz channel using this channel
+  *	as the primary or any of the secondary channels isn't possible
++ * @NL80211_FREQUENCY_ATTR_NO_EHT: EHT operation is not allowed on this channel
++ *	in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+@@ -4036,6 +4038,7 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_8MHZ,
+ 	NL80211_FREQUENCY_ATTR_16MHZ,
+ 	NL80211_FREQUENCY_ATTR_NO_320MHZ,
++	NL80211_FREQUENCY_ATTR_NO_EHT,
  
  	/* keep last */
- 	__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST,
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 19b74a5ca300..b05a77eb16be 100644
+index e8a7ad25f534..1214dbccbb10 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -1729,6 +1729,7 @@ nl80211_send_iftype_data(struct sk_buff *msg,
- 			 const struct ieee80211_sband_iftype_data *iftdata)
- {
- 	const struct ieee80211_sta_he_cap *he_cap = &iftdata->he_cap;
-+	const struct ieee80211_sta_eht_cap *eht_cap = &iftdata->eht_cap;
- 
- 	if (nl80211_put_iftypes(msg, NL80211_BAND_IFTYPE_ATTR_IFTYPES,
- 				iftdata->types_mask))
-@@ -1749,6 +1750,32 @@ nl80211_send_iftype_data(struct sk_buff *msg,
- 			return -ENOBUFS;
+@@ -1151,6 +1151,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
+ 		if ((chan->flags & IEEE80211_CHAN_NO_320MHZ) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_320MHZ))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_EHT) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_EHT))
++			goto nla_put_failure;
  	}
  
-+	if (eht_cap->has_eht && he_cap->has_he) {
-+		u8 mcs_nss_size, ppe_thresh_size;
-+		u16 ppe_thres_hdr;
-+
-+		mcs_nss_size =
-+			ieee80211_eht_mcs_nss_size(&he_cap->he_cap_elem,
-+						   &eht_cap->eht_cap_elem);
-+
-+		ppe_thres_hdr = get_unaligned_le16(&eht_cap->eht_ppe_thres[0]);
-+		ppe_thresh_size =
-+			ieee80211_eht_ppe_size(ppe_thres_hdr,
-+					       eht_cap->eht_cap_elem.phy_cap_info);
-+
-+		if (nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MAC,
-+			    sizeof(eht_cap->eht_cap_elem.mac_cap_info),
-+			    eht_cap->eht_cap_elem.mac_cap_info) ||
-+		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY,
-+			    sizeof(eht_cap->eht_cap_elem.phy_cap_info),
-+			    eht_cap->eht_cap_elem.phy_cap_info) ||
-+		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_MCS_SET,
-+			    mcs_nss_size, &eht_cap->eht_mcs_nss_supp) ||
-+		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PPE,
-+			    ppe_thresh_size, eht_cap->eht_ppe_thres))
-+			return -ENOBUFS;
-+	}
-+
- 	if (sband->band == NL80211_BAND_6GHZ &&
- 	    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA,
- 		    sizeof(iftdata->he_6ghz_capa),
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
 -- 
 2.34.1
 
