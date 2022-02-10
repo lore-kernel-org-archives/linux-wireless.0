@@ -2,106 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E3F8C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70624C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244843AbiBJQw2 (ORCPT
+        id S244841AbiBJQw3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 11:52:28 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36070 "EHLO
+        Thu, 10 Feb 2022 11:52:29 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244840AbiBJQwY (ORCPT
+        with ESMTP id S244832AbiBJQw2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 11:52:24 -0500
+        Thu, 10 Feb 2022 11:52:28 -0500
 Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D548F9
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:24 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C2EA1BE
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:27 -0800 (PST)
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nICDL-000Bxy-LE;
-        Thu, 10 Feb 2022 18:22:36 +0200
+        id 1nICDe-000Bxy-Su;
+        Thu, 10 Feb 2022 18:22:55 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 18:22:23 +0200
-Message-Id: <20220210162234.285578-1-luca@coelho.fi>
+Date:   Thu, 10 Feb 2022 18:22:32 +0200
+Message-Id: <iwlwifi.20220210181930.bc424f15cc4b.I06d9acae11dc69b2500666f497017a3fd4e2acd5@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220210162234.285578-1-luca@coelho.fi>
+References: <20220210162234.285578-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/11] iwlwifi: updates intended for v5.18 2022-02-10
+Subject: [PATCH 09/11] iwlwifi: mvm: update BAID allocation command again
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi,
+Due to some issues found in integration, the command now has
+the (old) station mask and TID in modify/remove instead of
+the BAID, adjust accordingly.
 
-Here's the sixth set of patches intended for v5.18.  It's the usual
-development, new features, cleanups and bugfixes.
+Since we don't use modify yet (and never will with v1 of the
+API), just add v1 remove inside the existing union, and use
+that, this way we don't have to duplicate everything, only
+the remove code.
 
-The changes are:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  | 31 +++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  6 +++-
+ 2 files changed, 27 insertions(+), 10 deletions(-)
 
-* Fix config structure for one device;
-* Support a new FW API command version;
-* Support new queue allocation command;
-* Some more debugging improvements;
-* Some other small fixes, clean-ups and improvements.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Abhishek Naik (1):
-  iwlwifi: tlc: Add logs in rs_fw_rate_init func to print TLC
-    configuration
-
-Johannes Berg (6):
-  iwlwifi: make iwl_txq_dyn_alloc_dma() return the txq
-  iwlwifi: remove command ID argument from queue allocation
-  iwlwifi: mvm: remove iwl_mvm_disable_txq() flags argument
-  iwlwifi: support new queue allocation command
-  iwlwifi: api: remove ttl field from TX command
-  iwlwifi: mvm: update BAID allocation command again
-
-Miri Korenblit (1):
-  iwlwifi: mvm: move only to an enabled channel
-
-Mukesh Sisodiya (2):
-  iwlwifi: yoyo: support dump policy for the dump size
-  iwlwifi: yoyo: send hcmd to fw after dump collection completes.
-
-Yaara Baruch (1):
-  iwlwifi: pcie: iwlwifi: fix device id 7F70 struct
-
- .../wireless/intel/iwlwifi/fw/api/datapath.h  | 89 ++++++++++++++++---
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   | 32 ++++++-
- .../net/wireless/intel/iwlwifi/fw/api/debug.h | 19 +++-
- .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  6 +-
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  7 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 69 +++++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  5 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |  3 +
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  8 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 25 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  9 ++
- .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 31 +++++--
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 14 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 53 +++++++----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  8 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  3 +-
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 81 +++++++++++------
- drivers/net/wireless/intel/iwlwifi/queue/tx.h |  9 +-
- 19 files changed, 365 insertions(+), 108 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
+index d268a9cba5ce..43619acc29fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
+@@ -304,22 +304,34 @@ struct iwl_rx_baid_cfg_cmd_alloc {
+ 
+ /**
+  * struct iwl_rx_baid_cfg_cmd_modify - BAID modification data
+- * @sta_id_mask: station ID mask
+- * @baid: the BAID to modify
++ * @old_sta_id_mask: old station ID mask
++ * @new_sta_id_mask: new station ID mask
++ * @tid: TID of the BAID
+  */
+ struct iwl_rx_baid_cfg_cmd_modify {
+-	__le32 sta_id_mask;
+-	__le32 baid;
+-} __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_1 */
++	__le32 old_sta_id_mask;
++	__le32 new_sta_id_mask;
++	__le32 tid;
++} __packed; /* RX_BAID_ALLOCATION_MODIFY_CMD_API_S_VER_2 */
+ 
+ /**
+- * struct iwl_rx_baid_cfg_cmd_remove - BAID removal data
++ * struct iwl_rx_baid_cfg_cmd_remove_v1 - BAID removal data
+  * @baid: the BAID to remove
+  */
+-struct iwl_rx_baid_cfg_cmd_remove {
++struct iwl_rx_baid_cfg_cmd_remove_v1 {
+ 	__le32 baid;
+ } __packed; /* RX_BAID_ALLOCATION_REMOVE_CMD_API_S_VER_1 */
+ 
++/**
++ * struct iwl_rx_baid_cfg_cmd_remove - BAID removal data
++ * @sta_id_mask: the station mask of the BAID to remove
++ * @tid: the TID of the BAID to remove
++ */
++struct iwl_rx_baid_cfg_cmd_remove {
++	__le32 sta_id_mask;
++	__le32 tid;
++} __packed; /* RX_BAID_ALLOCATION_REMOVE_CMD_API_S_VER_2 */
++
+ /**
+  * struct iwl_rx_baid_cfg_cmd - BAID allocation/config command
+  * @action: the action, from &enum iwl_rx_baid_action
+@@ -329,9 +341,10 @@ struct iwl_rx_baid_cfg_cmd {
+ 	union {
+ 		struct iwl_rx_baid_cfg_cmd_alloc alloc;
+ 		struct iwl_rx_baid_cfg_cmd_modify modify;
++		struct iwl_rx_baid_cfg_cmd_remove_v1 remove_v1;
+ 		struct iwl_rx_baid_cfg_cmd_remove remove;
+-	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_1 */
+-} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_1 */
++	}; /* RX_BAID_ALLOCATION_OPERATION_API_U_VER_2 */
++} __packed; /* RX_BAID_ALLOCATION_CONFIG_CMD_API_S_VER_2 */
+ 
+ /**
+  * struct iwl_rx_baid_cfg_resp - BAID allocation response
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 03869bb7dcee..9adca4619a15 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2659,8 +2659,12 @@ static int iwl_mvm_fw_baid_op_cmd(struct iwl_mvm *mvm,
+ 		cmd.alloc.ssn = cpu_to_le16(ssn);
+ 		cmd.alloc.win_size = cpu_to_le16(buf_size);
+ 		baid = -EIO;
++	} else if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 1) == 1) {
++		cmd.remove_v1.baid = cpu_to_le32(baid);
++		BUILD_BUG_ON(sizeof(cmd.remove_v1) > sizeof(cmd.remove));
+ 	} else {
+-		cmd.remove.baid = cpu_to_le32(baid);
++		cmd.remove.sta_id_mask = cpu_to_le32(BIT(mvm_sta->sta_id));
++		cmd.remove.tid = cpu_to_le32(tid);
+ 	}
+ 
+ 	ret = iwl_mvm_send_cmd_pdu_status(mvm, cmd_id, sizeof(cmd),
 -- 
 2.34.1
 
