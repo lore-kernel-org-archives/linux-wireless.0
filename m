@@ -2,109 +2,135 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA01C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0ED5C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 16:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244589AbiBJQwP (ORCPT
+        id S244829AbiBJQwR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 11:52:15 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35962 "EHLO
+        Thu, 10 Feb 2022 11:52:17 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244229AbiBJQwO (ORCPT
+        with ESMTP id S244229AbiBJQwQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 11:52:14 -0500
-X-Greylist: delayed 1773 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 10 Feb 2022 08:52:15 PST
+        Thu, 10 Feb 2022 11:52:16 -0500
 Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3711FEE
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:15 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FE64EE
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 08:52:17 -0800 (PST)
 Received: from 91-156-4-210.elisa-laajakaista.fi ([91.156.4.210] helo=kveik.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <luca@coelho.fi>)
-        id 1nICDf-000Bxy-MF;
-        Thu, 10 Feb 2022 18:22:56 +0200
+        id 1nICDM-000Bxy-Nd;
+        Thu, 10 Feb 2022 18:22:39 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@kernel.org
 Cc:     luca@coelho.fi, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Feb 2022 18:22:33 +0200
-Message-Id: <iwlwifi.20220210181930.03f281b6a6bc.I5b63d43ec41996d599e6f37ec3f32e878b3e405e@changeid>
+Date:   Thu, 10 Feb 2022 18:22:24 +0200
+Message-Id: <iwlwifi.20220210181930.1f0c5d72fb89.Iefca56d535558b7a8d23204fd16129c17b6704b6@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210162234.285578-1-luca@coelho.fi>
 References: <20220210162234.285578-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/11] iwlwifi: mvm: move only to an enabled channel
+Subject: [PATCH 01/11] iwlwifi: make iwl_txq_dyn_alloc_dma() return the txq
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-During disassociation we're decreasing the phy's ref count.
-If the ref count becomes 0, we're configuring the phy ctxt
-to the default channel (the lowest channel which the device
-can operate on). Currently we're not checking whether the
-the default channel is enabled or not. Fix it by configuring
-the phy ctxt to the lowest channel which is enabled.
+Use the ERR_PTR() machinery to return the queue or an
+error, instead of having a separate out parameter.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 31 +++++++++++++------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c | 26 +++++++++----------
+ 1 file changed, 12 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-index 24d86ca15850..a3cefbc43e80 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+index f80bea04e31b..49625c679a5a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
 @@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-- * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
-  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
-  * Copyright (C) 2017 Intel Deutschland GmbH
+- * Copyright (C) 2020-2021 Intel Corporation
++ * Copyright (C) 2020-2022 Intel Corporation
   */
-@@ -345,18 +345,31 @@ void iwl_mvm_phy_ctxt_unref(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt)
- 	 * otherwise we might not be able to reuse this phy.
- 	 */
- 	if (ctxt->ref == 0) {
--		struct ieee80211_channel *chan;
-+		struct ieee80211_channel *chan = NULL;
- 		struct cfg80211_chan_def chandef;
--		struct ieee80211_supported_band *sband = NULL;
--		enum nl80211_band band = NL80211_BAND_2GHZ;
-+		struct ieee80211_supported_band *sband;
-+		enum nl80211_band band;
-+		int channel;
+ #include <net/tso.h>
+ #include <linux/tcp.h>
+@@ -1083,9 +1083,8 @@ int iwl_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq, int slots_num,
+ 	return -ENOMEM;
+ }
  
--		while (!sband && band < NUM_NL80211_BANDS)
--			sband = mvm->hw->wiphy->bands[band++];
-+		for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
-+			sband = mvm->hw->wiphy->bands[band];
+-static int iwl_txq_dyn_alloc_dma(struct iwl_trans *trans,
+-				 struct iwl_txq **intxq, int size,
+-				 unsigned int timeout)
++static struct iwl_txq *
++iwl_txq_dyn_alloc_dma(struct iwl_trans *trans, int size, unsigned int timeout)
+ {
+ 	size_t bc_tbl_size, bc_tbl_entries;
+ 	struct iwl_txq *txq;
+@@ -1097,18 +1096,18 @@ static int iwl_txq_dyn_alloc_dma(struct iwl_trans *trans,
+ 	bc_tbl_entries = bc_tbl_size / sizeof(u16);
  
--		if (WARN_ON(!sband))
--			return;
-+			if (!sband)
-+				continue;
-+
-+			for (channel = 0; channel < sband->n_channels; channel++)
-+				if (!(sband->channels[channel].flags &
-+						IEEE80211_CHAN_DISABLED)) {
-+					chan = &sband->channels[channel];
-+					break;
-+				}
+ 	if (WARN_ON(size > bc_tbl_entries))
+-		return -EINVAL;
++		return ERR_PTR(-EINVAL);
  
--		chan = &sband->channels[0];
-+			if (chan)
-+				break;
-+		}
-+
-+		if (WARN_ON(!chan))
-+			return;
+ 	txq = kzalloc(sizeof(*txq), GFP_KERNEL);
+ 	if (!txq)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
  
- 		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
- 		iwl_mvm_phy_ctxt_changed(mvm, ctxt, &chandef, 1, 1);
+ 	txq->bc_tbl.addr = dma_pool_alloc(trans->txqs.bc_pool, GFP_KERNEL,
+ 					  &txq->bc_tbl.dma);
+ 	if (!txq->bc_tbl.addr) {
+ 		IWL_ERR(trans, "Scheduler BC Table allocation failed\n");
+ 		kfree(txq);
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+ 	ret = iwl_txq_alloc(trans, txq, size, false);
+@@ -1124,12 +1123,11 @@ static int iwl_txq_dyn_alloc_dma(struct iwl_trans *trans,
+ 
+ 	txq->wd_timeout = msecs_to_jiffies(timeout);
+ 
+-	*intxq = txq;
+-	return 0;
++	return txq;
+ 
+ error:
+ 	iwl_txq_gen2_free_memory(trans, txq);
+-	return ret;
++	return ERR_PTR(ret);
+ }
+ 
+ static int iwl_txq_alloc_response(struct iwl_trans *trans, struct iwl_txq *txq,
+@@ -1189,7 +1187,7 @@ static int iwl_txq_alloc_response(struct iwl_trans *trans, struct iwl_txq *txq,
+ int iwl_txq_dyn_alloc(struct iwl_trans *trans, __le16 flags, u8 sta_id, u8 tid,
+ 		      int cmd_id, int size, unsigned int timeout)
+ {
+-	struct iwl_txq *txq = NULL;
++	struct iwl_txq *txq;
+ 	struct iwl_tx_queue_cfg_cmd cmd = {
+ 		.flags = flags,
+ 		.sta_id = sta_id,
+@@ -1203,9 +1201,9 @@ int iwl_txq_dyn_alloc(struct iwl_trans *trans, __le16 flags, u8 sta_id, u8 tid,
+ 	};
+ 	int ret;
+ 
+-	ret = iwl_txq_dyn_alloc_dma(trans, &txq, size, timeout);
+-	if (ret)
+-		return ret;
++	txq = iwl_txq_dyn_alloc_dma(trans, size, timeout);
++	if (IS_ERR(txq))
++		return PTR_ERR(txq);
+ 
+ 	cmd.tfdq_addr = cpu_to_le64(txq->dma_addr);
+ 	cmd.byte_cnt_addr = cpu_to_le64(txq->bc_tbl.dma);
 -- 
 2.34.1
 
