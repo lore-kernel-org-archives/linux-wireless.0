@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7705EC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95602C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347886AbiBKIAi (ORCPT
+        id S1347875AbiBKIAh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Feb 2022 03:00:38 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59322 "EHLO
+        Fri, 11 Feb 2022 03:00:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347880AbiBKIAf (ORCPT
+        with ESMTP id S1347873AbiBKIAb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Feb 2022 03:00:35 -0500
+        Fri, 11 Feb 2022 03:00:31 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F193BD2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:33 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDDAABC4
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:29 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80LPA0023913, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80HSl8023903, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80LPA0023913
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80HSl8023903
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 11 Feb 2022 16:00:21 +0800
+        Fri, 11 Feb 2022 16:00:17 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Fri, 11 Feb 2022 16:00:21 +0800
+ 15.1.2375.17; Fri, 11 Feb 2022 16:00:17 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 11 Feb
- 2022 16:00:20 +0800
+ 2022 16:00:17 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 3/6] rtw89: extend subband for 6G band
-Date:   Fri, 11 Feb 2022 15:59:50 +0800
-Message-ID: <20220211075953.40421-4-pkshih@realtek.com>
+Subject: [PATCH 1/6] rtw89: make rfk helpers common across chips
+Date:   Fri, 11 Feb 2022 15:59:48 +0800
+Message-ID: <20220211075953.40421-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220211075953.40421-1-pkshih@realtek.com>
 References: <20220211075953.40421-1-pkshih@realtek.com>
@@ -66,134 +66,279 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Split 6G band into 8 sub-bands where indexes are from 0 to 7,
-i.e. RTW89_CH_6G_BAND_IDX[0-7]. Then, decide subband by both
-band and channel instead of just channel because conflicts
-between 5G channels and 6G channels.
-
-Moreover, add default case to the existing use of switch (subband).
+These rfk helpers are also useful for the chip which is under planning.
+So, move them to common code to avoid duplicate stuff in the future.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     | 59 +++++++++++++++----
- drivers/net/wireless/realtek/rtw89/core.h     |  9 +++
- .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |  2 +
- 3 files changed, 60 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c      | 52 ++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.h      | 59 ++++++++++++++++++
+ .../net/wireless/realtek/rtw89/rtw8852a_rfk.c | 60 -------------------
+ .../realtek/rtw89/rtw8852a_rfk_table.h        | 49 +--------------
+ 4 files changed, 112 insertions(+), 108 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a9544b006f0b4..116c5cb65fe46 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -293,19 +293,58 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
- 		break;
- 	}
- 
--	switch (center_chan) {
-+	switch (band) {
- 	default:
--	case 1 ... 14:
--		subband = RTW89_CH_2G;
--		break;
--	case 36 ... 64:
--		subband = RTW89_CH_5G_BAND_1;
-+	case RTW89_BAND_2G:
-+		switch (center_chan) {
-+		default:
-+		case 1 ... 14:
-+			subband = RTW89_CH_2G;
-+			break;
-+		}
- 		break;
--	case 100 ... 144:
--		subband = RTW89_CH_5G_BAND_3;
-+	case RTW89_BAND_5G:
-+		switch (center_chan) {
-+		default:
-+		case 36 ... 64:
-+			subband = RTW89_CH_5G_BAND_1;
-+			break;
-+		case 100 ... 144:
-+			subband = RTW89_CH_5G_BAND_3;
-+			break;
-+		case 149 ... 177:
-+			subband = RTW89_CH_5G_BAND_4;
-+			break;
-+		}
- 		break;
--	case 149 ... 177:
--		subband = RTW89_CH_5G_BAND_4;
-+	case RTW89_BAND_6G:
-+		switch (center_chan) {
-+		default:
-+		case 1 ... 29:
-+			subband = RTW89_CH_6G_BAND_IDX0;
-+			break;
-+		case 33 ... 61:
-+			subband = RTW89_CH_6G_BAND_IDX1;
-+			break;
-+		case 65 ... 93:
-+			subband = RTW89_CH_6G_BAND_IDX2;
-+			break;
-+		case 97 ... 125:
-+			subband = RTW89_CH_6G_BAND_IDX3;
-+			break;
-+		case 129 ... 157:
-+			subband = RTW89_CH_6G_BAND_IDX4;
-+			break;
-+		case 161 ... 189:
-+			subband = RTW89_CH_6G_BAND_IDX5;
-+			break;
-+		case 193 ... 221:
-+			subband = RTW89_CH_6G_BAND_IDX6;
-+			break;
-+		case 225 ... 253:
-+			subband = RTW89_CH_6G_BAND_IDX7;
-+			break;
-+		}
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index deb91f6b67375..c5d40777558ec 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -61,6 +61,15 @@ enum rtw89_subband {
- 	RTW89_CH_5G_BAND_3 = 3,
- 	RTW89_CH_5G_BAND_4 = 4,
- 
-+	RTW89_CH_6G_BAND_IDX0, /* Low */
-+	RTW89_CH_6G_BAND_IDX1, /* Low */
-+	RTW89_CH_6G_BAND_IDX2, /* Mid */
-+	RTW89_CH_6G_BAND_IDX3, /* Mid */
-+	RTW89_CH_6G_BAND_IDX4, /* High */
-+	RTW89_CH_6G_BAND_IDX5, /* High */
-+	RTW89_CH_6G_BAND_IDX6, /* Ultra-high */
-+	RTW89_CH_6G_BAND_IDX7, /* Ultra-high */
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index 130db2f46f49e..c491a11536815 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -3037,3 +3037,55 @@ void rtw89_phy_set_bss_color(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif
+ 	rtw89_phy_write32_idx(rtwdev, R_BSS_CLR_MAP, B_BSS_CLR_MAP_STAID,
+ 			      vif->bss_conf.aid, phy_idx);
+ }
 +
- 	RTW89_SUBBAND_NR,
- };
++static void
++_rfk_write_rf(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
++{
++	rtw89_write_rf(rtwdev, def->path, def->addr, def->mask, def->data);
++}
++
++static void
++_rfk_write32_mask(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
++{
++	rtw89_phy_write32_mask(rtwdev, def->addr, def->mask, def->data);
++}
++
++static void
++_rfk_write32_set(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
++{
++	rtw89_phy_write32_set(rtwdev, def->addr, def->mask);
++}
++
++static void
++_rfk_write32_clr(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
++{
++	rtw89_phy_write32_clr(rtwdev, def->addr, def->mask);
++}
++
++static void
++_rfk_delay(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
++{
++	udelay(def->data);
++}
++
++static void
++(*_rfk_handler[])(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def) = {
++	[RTW89_RFK_F_WRF] = _rfk_write_rf,
++	[RTW89_RFK_F_WM] = _rfk_write32_mask,
++	[RTW89_RFK_F_WS] = _rfk_write32_set,
++	[RTW89_RFK_F_WC] = _rfk_write32_clr,
++	[RTW89_RFK_F_DELAY] = _rfk_delay,
++};
++
++static_assert(ARRAY_SIZE(_rfk_handler) == RTW89_RFK_F_NUM);
++
++void
++rtw89_rfk_parser(struct rtw89_dev *rtwdev, const struct rtw89_rfk_tbl *tbl)
++{
++	const struct rtw89_reg5_def *p = tbl->defs;
++	const struct rtw89_reg5_def *end = tbl->defs + tbl->size;
++
++	for (; p < end; p++)
++		_rfk_handler[p->flag](rtwdev, p);
++}
++EXPORT_SYMBOL(rtw89_rfk_parser);
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
+index 2cb68f49b4d6d..81bd4aeffc755 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.h
++++ b/drivers/net/wireless/realtek/rtw89/phy.h
+@@ -328,6 +328,65 @@ static inline u32 rtw89_phy_read32_mask(struct rtw89_dev *rtwdev,
+ 	return rtw89_read32_mask(rtwdev, addr | RTW89_PHY_ADDR_OFFSET, mask);
+ }
  
++enum rtw89_rfk_flag {
++	RTW89_RFK_F_WRF = 0,
++	RTW89_RFK_F_WM = 1,
++	RTW89_RFK_F_WS = 2,
++	RTW89_RFK_F_WC = 3,
++	RTW89_RFK_F_DELAY = 4,
++	RTW89_RFK_F_NUM,
++};
++
++struct rtw89_rfk_tbl {
++	const struct rtw89_reg5_def *defs;
++	u32 size;
++};
++
++#define DECLARE_RFK_TBL(_name)			\
++const struct rtw89_rfk_tbl _name ## _tbl = {	\
++	.defs = _name,				\
++	.size = ARRAY_SIZE(_name),		\
++}
++
++#define DECL_RFK_WRF(_path, _addr, _mask, _data)	\
++	{.flag = RTW89_RFK_F_WRF,			\
++	 .path = _path,					\
++	 .addr = _addr,					\
++	 .mask = _mask,					\
++	 .data = _data,}
++
++#define DECL_RFK_WM(_addr, _mask, _data)	\
++	{.flag = RTW89_RFK_F_WM,		\
++	 .addr = _addr,				\
++	 .mask = _mask,				\
++	 .data = _data,}
++
++#define DECL_RFK_WS(_addr, _mask)	\
++	{.flag = RTW89_RFK_F_WS,	\
++	 .addr = _addr,			\
++	 .mask = _mask,}
++
++#define DECL_RFK_WC(_addr, _mask)	\
++	{.flag = RTW89_RFK_F_WC,	\
++	 .addr = _addr,			\
++	 .mask = _mask,}
++
++#define DECL_RFK_DELAY(_data)		\
++	{.flag = RTW89_RFK_F_DELAY,	\
++	 .data = _data,}
++
++void
++rtw89_rfk_parser(struct rtw89_dev *rtwdev, const struct rtw89_rfk_tbl *tbl);
++
++#define rtw89_rfk_parser_by_cond(dev, cond, tbl_t, tbl_f)	\
++	do {							\
++		typeof(dev) __dev = (dev);			\
++		if (cond)					\
++			rtw89_rfk_parser(__dev, (tbl_t));	\
++		else						\
++			rtw89_rfk_parser(__dev, (tbl_f));	\
++	} while (0)
++
+ void rtw89_phy_write_reg3_tbl(struct rtw89_dev *rtwdev,
+ 			      const struct rtw89_phy_reg3_tbl *tbl);
+ u8 rtw89_phy_get_txsc(struct rtw89_dev *rtwdev,
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
-index aa326681b5090..acdad5a300ddb 100644
+index c021e93eb07b0..aa326681b5090 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
-@@ -2917,6 +2917,7 @@ static void _tssi_set_tmeter_tbl(struct rtw89_dev *rtwdev, enum rtw89_phy_idx ph
- 	u8 i, j;
+@@ -12,66 +12,6 @@
+ #include "rtw8852a_rfk_table.h"
+ #include "rtw8852a_table.h"
  
- 	switch (subband) {
-+	default:
- 	case RTW89_CH_2G:
- 		thm_up_a = rtw89_8852a_trk_cfg.delta_swingidx_2ga_p;
- 		thm_down_a = rtw89_8852a_trk_cfg.delta_swingidx_2ga_n;
-@@ -3101,6 +3102,7 @@ static void _tssi_pak(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 	u8 subband = rtwdev->hal.current_subband;
+-static void
+-_rfk_write_rf(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
+-{
+-	rtw89_write_rf(rtwdev, def->path, def->addr, def->mask, def->data);
+-}
+-
+-static void
+-_rfk_write32_mask(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
+-{
+-	rtw89_phy_write32_mask(rtwdev, def->addr, def->mask, def->data);
+-}
+-
+-static void
+-_rfk_write32_set(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
+-{
+-	rtw89_phy_write32_set(rtwdev, def->addr, def->mask);
+-}
+-
+-static void
+-_rfk_write32_clr(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
+-{
+-	rtw89_phy_write32_clr(rtwdev, def->addr, def->mask);
+-}
+-
+-static void
+-_rfk_delay(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def)
+-{
+-	udelay(def->data);
+-}
+-
+-static void
+-(*_rfk_handler[])(struct rtw89_dev *rtwdev, const struct rtw89_reg5_def *def) = {
+-	[RTW89_RFK_F_WRF] = _rfk_write_rf,
+-	[RTW89_RFK_F_WM] = _rfk_write32_mask,
+-	[RTW89_RFK_F_WS] = _rfk_write32_set,
+-	[RTW89_RFK_F_WC] = _rfk_write32_clr,
+-	[RTW89_RFK_F_DELAY] = _rfk_delay,
+-};
+-
+-static_assert(ARRAY_SIZE(_rfk_handler) == RTW89_RFK_F_NUM);
+-
+-static void
+-rtw89_rfk_parser(struct rtw89_dev *rtwdev, const struct rtw89_rfk_tbl *tbl)
+-{
+-	const struct rtw89_reg5_def *p = tbl->defs;
+-	const struct rtw89_reg5_def *end = tbl->defs + tbl->size;
+-
+-	for (; p < end; p++)
+-		_rfk_handler[p->flag](rtwdev, p);
+-}
+-
+-#define rtw89_rfk_parser_by_cond(rtwdev, cond, tbl_t, tbl_f)	\
+-	do {							\
+-		typeof(rtwdev) _dev = (rtwdev);			\
+-		if (cond)					\
+-			rtw89_rfk_parser(_dev, (tbl_t));	\
+-		else						\
+-			rtw89_rfk_parser(_dev, (tbl_f));	\
+-	} while (0)
+-
+ static u8 _kpath(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
+ {
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RFK]dbcc_en: %x,  PHY%d\n",
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk_table.h b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk_table.h
+index 4a4a45d778ff6..33e6c404ecf9b 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk_table.h
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk_table.h
+@@ -5,54 +5,7 @@
+ #ifndef __RTW89_8852A_RFK_TABLE_H__
+ #define __RTW89_8852A_RFK_TABLE_H__
  
- 	switch (subband) {
-+	default:
- 	case RTW89_CH_2G:
- 		rtw89_rfk_parser_by_cond(rtwdev, path == RF_PATH_A,
- 					 &rtw8852a_tssi_pak_defs_a_2g_tbl,
+-#include "core.h"
+-
+-enum rtw89_rfk_flag {
+-	RTW89_RFK_F_WRF = 0,
+-	RTW89_RFK_F_WM = 1,
+-	RTW89_RFK_F_WS = 2,
+-	RTW89_RFK_F_WC = 3,
+-	RTW89_RFK_F_DELAY = 4,
+-	RTW89_RFK_F_NUM,
+-};
+-
+-struct rtw89_rfk_tbl {
+-	const struct rtw89_reg5_def *defs;
+-	u32 size;
+-};
+-
+-#define DECLARE_RFK_TBL(_name)			\
+-const struct rtw89_rfk_tbl _name ## _tbl = {	\
+-	.defs = _name,				\
+-	.size = ARRAY_SIZE(_name),		\
+-}
+-
+-#define DECL_RFK_WRF(_path, _addr, _mask, _data)	\
+-	{.flag = RTW89_RFK_F_WRF,			\
+-	 .path = _path,					\
+-	 .addr = _addr,					\
+-	 .mask = _mask,					\
+-	 .data = _data,}
+-
+-#define DECL_RFK_WM(_addr, _mask, _data)	\
+-	{.flag = RTW89_RFK_F_WM,		\
+-	 .addr = _addr,				\
+-	 .mask = _mask,				\
+-	 .data = _data,}
+-
+-#define DECL_RFK_WS(_addr, _mask)	\
+-	{.flag = RTW89_RFK_F_WS,	\
+-	 .addr = _addr,			\
+-	 .mask = _mask,}
+-
+-#define DECL_RFK_WC(_addr, _mask)	\
+-	{.flag = RTW89_RFK_F_WC,	\
+-	 .addr = _addr,			\
+-	 .mask = _mask,}
+-
+-#define DECL_RFK_DELAY(_data)		\
+-	{.flag = RTW89_RFK_F_DELAY,	\
+-	 .data = _data,}
++#include "phy.h"
+ 
+ extern const struct rtw89_rfk_tbl rtw8852a_tssi_sys_defs_tbl;
+ extern const struct rtw89_rfk_tbl rtw8852a_tssi_sys_defs_2g_tbl;
 -- 
 2.25.1
 
