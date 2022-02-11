@@ -2,107 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E53EAC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 00:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77684C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 01:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346318AbiBKAZp convert rfc822-to-8bit (ORCPT
+        id S1346875AbiBKBaD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 19:25:45 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55764 "EHLO
+        Thu, 10 Feb 2022 20:30:03 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345707AbiBKAZo (ORCPT
+        with ESMTP id S243303AbiBKBaC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 19:25:44 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 355125F6C
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 16:25:42 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B0PSPs8001800, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B0PSPs8001800
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 11 Feb 2022 08:25:28 +0800
-Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 11 Feb 2022 08:25:28 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 11 Feb 2022 08:25:27 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e]) by
- RTEXMBS04.realtek.com.tw ([fe80::35e4:d9d1:102d:605e%5]) with mapi id
- 15.01.2308.020; Fri, 11 Feb 2022 08:25:27 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Funny log entries for rtw88_8821ce
-Thread-Topic: Funny log entries for rtw88_8821ce
-Thread-Index: AQHYFvVq2DWVmxZS7E2VYxG/u8dgWqx9tPKAgAQJ/QCAB6gl/f//rFuAgAPTOxKAAKLmIA==
-Date:   Fri, 11 Feb 2022 00:25:27 +0000
-Message-ID: <ef1b6cf1c82c49faab84610ad960f72a@realtek.com>
-References: <c356d5ae-a7b3-3065-1121-64c446e70333@lwfinger.net>
-        <32f2ece8acdb67f74757cb705e5467847d6bcae0.camel@realtek.com>
-        <ef7361eb-17ce-5ecf-a46a-a9f0c5aab35b@lwfinger.net>
-        <87czjxbukz.fsf@tynnyri.adurom.net>
-        <6baf4ae2f36c89269f74f0905ce81f38adc3a284.camel@realtek.com>
- <87mtiy3iha.fsf@kernel.org>
-In-Reply-To: <87mtiy3iha.fsf@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXDAG02.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/2/10_=3F=3F_10:33:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Thu, 10 Feb 2022 20:30:02 -0500
+Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACBCC270E;
+        Thu, 10 Feb 2022 17:30:01 -0800 (PST)
+Received: by mail-qt1-x833.google.com with SMTP id b5so7478836qtq.11;
+        Thu, 10 Feb 2022 17:30:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Agn9nWvOVKSlYopW6GlbBUhQXIsnfExAgumi8G4eFTI=;
+        b=Oh7sp26UOvTWr/KLgtKlclcfG0wVdc5O8pe/M15xAnnxL6POaBe6FsHyQMsxM0Dk0o
+         L/IN4NTDy4HuUOhsjHF822y69aVfYTkts9Yihz7wsLgfNlJS0iauSwkIuwwptqcP6jhv
+         36BmzRcofOR+mroskXXiIyrfi1HCXDShmknELWCLmZbYPgOIaLxmum9q/Af4S9O315vP
+         CbdGItpX6O/Z9pIEVz2jIC+5h885yVzst4UIoN1nLBz6upFG/GZzEGS5mRIepx0/wv9X
+         WzhiCDZDVEe3Bl0CTOlONwRI6nF9hQGxZ16Ee/4L1mk2qJzZVbnPSqNa5QConazyeD/W
+         nZ0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Agn9nWvOVKSlYopW6GlbBUhQXIsnfExAgumi8G4eFTI=;
+        b=KrpwmBgGC14XUrTLwj9giCovp+vJKVuk5B1JWL+q1van3jXOrLM0m+BwhW6lTPwuw0
+         eDXuUEeGMaEypAOmdEaLt6khLHOioMIAxBboy4onv8SKUfLaP1LyICvp++U5vHCrXrYD
+         oGA7JO/hGCduPfizUQd7kZGbPu9Y3UhK9Y8MyrzelTC4sebxjyofYN7V3gdz5b+EwKUf
+         EU8u5rE9fLD+2F2fO0DQCs3BBqmj8M4W53kw9AgOK8Ci/G8w97KRny1AXqe3a8VbctNI
+         HierJAa84JMiQa/PEaOGeMm3dKX3EU59i3WemcsDLKxpnNdeU9AsAPxOMAcp00Hiul4Y
+         t1YQ==
+X-Gm-Message-State: AOAM532SuQ9r+BZITrfK3LP2TRwJ4OhwJc4IG9fewzBU0o8iUfM5Y8Cz
+        QZIj1PhHXLKMi/jtV3Zy9IE=
+X-Google-Smtp-Source: ABdhPJxuv9EpNP7UGy8548s4WvOHS/6phRk0lxUHHM85fP03AA3hW9YbxAAjwgTQxXtCoP2wOWUv6g==
+X-Received: by 2002:a05:622a:1049:: with SMTP id f9mr6919482qte.348.1644543000905;
+        Thu, 10 Feb 2022 17:30:00 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id h5sm11429608qti.95.2022.02.10.17.29.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Feb 2022 17:30:00 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: chi.minghao@zte.com.cn
+To:     kvalo@kernel.org
+Cc:     cgel.zte@gmail.com, chi.minghao@zte.com.cn, davem@davemloft.net,
+        kuba@kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        wcn36xx@lists.infradead.org, zealci@zte.com.cn
+Subject: Re: [PATCH V2] wcn36xx: use struct_size over open coded arithmetic
+Date:   Fri, 11 Feb 2022 01:29:54 +0000
+Message-Id: <20220211012954.1650997-1-chi.minghao@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <164449505175.11894.18378600637942439052.kvalo@kernel.org>
+References: <164449505175.11894.18378600637942439052.kvalo@kernel.org>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+change log:
 
-> -----Original Message-----
-> From: Kalle Valo <kvalo@kernel.org>
-> Sent: Thursday, February 10, 2022 10:27 PM
-> To: Pkshih <pkshih@realtek.com>
-> Cc: Larry.Finger@lwfinger.net; linux-wireless@vger.kernel.org
-> Subject: Re: Funny log entries for rtw88_8821ce
-> 
-> Pkshih <pkshih@realtek.com> writes:
-> 
-> > Then, I have a question about the message of setting SAR:
-> > 	rtw_info(rtwdev, "On freq %u to %u, set SAR %d in 1/%lu dBm\n"
-> >
-> > When a user sets SAR via iw, this message can reflect the action performed
-> > by driver. Is this rtw_info acceptable?
-> 
-> In general the preference for user space commands is not to print
-> anything to the log when debug messages are disabled, but of course
-> there can be exceptions if the reasons are good. Why do you want to
-> print this always? What benefit does it bring for the user?
-> 
+v1: msg_ind = kmalloc(struct_size(*msg_ind, msg, len), GFP_ATOMIC);
+v2: msg_ind = kmalloc(struct_size(msg_ind, msg, len), GFP_ATOMIC);
 
-Understand. My original thinking still focus on debug purpose.
-
-Because the SAR doesn't have a 'get' method to check status, and it affects
-TX power but a user can't be aware that clearly. If someone told me his
-laptop has low wifi performance, this message can be a good clue to address
-the problem.
-
-Fortunately, I still can use debugfs to debug this case, so I will change
-this message to debug level.
-
---
-Ping-Ke
-
+thanks
+Minghao
