@@ -2,105 +2,126 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBBEDC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Feb 2022 23:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713E0C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 00:25:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345085AbiBJXEF (ORCPT
+        id S1346308AbiBKAZc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Feb 2022 18:04:05 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55844 "EHLO
+        Thu, 10 Feb 2022 19:25:32 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244406AbiBJXEE (ORCPT
+        with ESMTP id S1345707AbiBKAZb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Feb 2022 18:04:04 -0500
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE98D55BB
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 15:04:04 -0800 (PST)
-Received: by mail-oi1-x232.google.com with SMTP id 4so7657907oil.11
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2022 15:04:04 -0800 (PST)
+        Thu, 10 Feb 2022 19:25:31 -0500
+Received: from mail-vs1-xe29.google.com (mail-vs1-xe29.google.com [IPv6:2607:f8b0:4864:20::e29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E32145594;
+        Thu, 10 Feb 2022 16:25:31 -0800 (PST)
+Received: by mail-vs1-xe29.google.com with SMTP id t184so8399687vst.13;
+        Thu, 10 Feb 2022 16:25:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=sender:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:cc:from:in-reply-to;
-        bh=vB0sKaiCA4GfUJCy/+YDgbNa43ZkKqgitArgf10NsQU=;
-        b=LhpKljVvZLojzjDM3K2LHGTYwxa0umgd6I2amnjw4PMaKVh6qsWNkl71yC5xrdjf6K
-         aOq8f1tgY3oUCVBkcP3m5ZTbHNNh7aE8DNz50rckOjTZKcLytsHqw5UhhbBT78GL+CHD
-         4UyxQJL0Ray5pou9xzJahEEZYnZ8kuZu0sblr0lN9cxoUut+RNXbgmd81jtu1VpvVjmX
-         ZEtzp3DGziF5tYCH1lEJHPwABaax2Vyq8v1PjrdnEQau+0n1T+RGjU6iDFvURjEWDVf1
-         7rUH99Ceiw5C5rFc8yRW4VVNQ0XeWOCwQk0Qgc3lXJpQRynHvKptPONgFTs2+iJ/VYDk
-         3d4g==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=XsFEH8aEgkgHkeo10lC/NBTETZY5bC6A1Dsa3VentE8=;
+        b=TCzw4iKVnFA3wJCZFhzjB1KClTtQOs1KVM+jciYqMIjeBS/ATybF3d7XprHuPT72sL
+         NH9Iaa4KFYhrz3YTyIqS74pprfnbPDMN734pMwXtb0kQuKc9VKEPS2oulONZtmggU/X3
+         QmZfyk22kskIUWlfTMcdeH2BgxGKKX7ubXLN8ZVvGUl/nqpc7aHUAueOWVbDHa8J2jC0
+         6w7Ddel5r3wKyl13wJJVMmXOA7eb4E7HCLvf9MPXET6QZNwBM6CPYOvhP0eCqyQdTnPY
+         zjB8ueB60nvhTz8al3IMZLAfxwIqalLMIbPv/usHlHfXWzhpJjVMpUZS1QKzzQfhROpr
+         2P5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
-         :subject:content-language:to:references:cc:from:in-reply-to;
-        bh=vB0sKaiCA4GfUJCy/+YDgbNa43ZkKqgitArgf10NsQU=;
-        b=jzBKrP9+CJqQK3Xh55yb3gR0rLyDgfIP6ahAw65C8fnPt6QamrxUwYDWUFShUZxT6z
-         G4wftxN5TjkPWpNhF46r/aaAZXTBoe9uZ1H8oh9hDEfjA6+53jw1115oOomXcYHjCX6y
-         22m5TFLUajvmgI8+HLcodU06gjJLSEe5geSftY/4HwgPQ+/fBTQxx9BINAIv9YutFjcw
-         zpCmHXwzvawtfZynkz87NoSv+U+twAXUIagOjtMYY3oIg03iD0rBux1Oo8HG6nwRNhqa
-         LD78Hj6+Cyooj3xM12fjPPwJuJy33Oj4AicBW3vMI6eTsYWWcos2TP3tMTnJ/045KSa+
-         l7GQ==
-X-Gm-Message-State: AOAM532SswpdA3sHqc0L99zEriEfuF3LOuejdDplaXhEj/gFHQ8IiYp+
-        6dyluVlgYJBMzw9zFH+2qjoix5NjjTs=
-X-Google-Smtp-Source: ABdhPJwwC9epBcXFCgC2C4WJYz5xBmox3Ew3/3HhSpGR761pHhmHWk/lFdj5SBulJKFvWnbdFrg+pA==
-X-Received: by 2002:aca:dfd5:: with SMTP id w204mr2129761oig.264.1644534244186;
-        Thu, 10 Feb 2022 15:04:04 -0800 (PST)
-Received: from [10.62.118.101] (cpe-24-31-246-181.kc.res.rr.com. [24.31.246.181])
-        by smtp.gmail.com with ESMTPSA id eq37sm10333200oab.19.2022.02.10.15.04.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Feb 2022 15:04:03 -0800 (PST)
-Sender: Larry Finger <larry.finger@gmail.com>
-Content-Type: multipart/mixed; boundary="------------NWR6P18wOlnzDpPPzdkmTpdC"
-Message-ID: <9fdc6313-46df-e5ab-30a4-7fcbdffe69f7@lwfinger.net>
-Date:   Thu, 10 Feb 2022 17:04:01 -0600
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=XsFEH8aEgkgHkeo10lC/NBTETZY5bC6A1Dsa3VentE8=;
+        b=JMOLnVgwKSN/vVohTy8SJv6VOnb8XmRxd7+gdGJb5Wqwgs1vDqjhTOdRM1BlMj+r/k
+         b3LeJvANHUC+Gmqrz1ERZ4Yw5Wh6IuoVEplqliEvERDuZ5RBomE3NjbgCXCR1uK4AyUa
+         n9hY3Y6s/He2/8lXexM5DQNIgFw9TqwNZCPEtJyK+4cK3bOy/V1WzlhSwAQ07M3gpyXg
+         fbJOeXFOxh7QZwypAnN4JXcnX6B98kxBC++BEetfjimR/FWAnYx2kyZ/6cSKHSj9M/tg
+         Djlq1GbfpnfGl5ByQbR9K35baOCE3JLFepkQCGlyDL0/ZgmyzzQr8+KsNlrWHVcLRoEn
+         owzw==
+X-Gm-Message-State: AOAM531LdVTniuc3/8U2iYczVmZC4jHLl5xY3THc6NR/U8beJTbHRvD9
+        MrCkJNouKpIJw5CLq640GC/3N4ILsnpbrMcDG00=
+X-Google-Smtp-Source: ABdhPJy+DVx47o6CflVet9riBFfvd0SjNbHLahFbTkbkxbmupv1eEoDGkqdqRBcv7nVgbUR9TPZixuDSkUCTEyedrjM=
+X-Received: by 2002:a05:6102:2e3:: with SMTP id j3mr3679038vsj.32.1644539131086;
+ Thu, 10 Feb 2022 16:25:31 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: Possible bug in cfg80211
-Content-Language: en-US
-To:     Maxim Klimenko Sergievich <klimenkomaximsergievich@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <CAEqd1ZZucLqJMEktzmnCKzwXXkswzqJNf_yr2HZV20LcWtiR6A@mail.gmail.com>
- <ba50e373-59d8-d544-e7f9-3fe2a3336056@lwfinger.net>
- <CAEqd1ZZkSDMkKm-TJz69iihWDd0Afu54nerc0gTqZfAV35mv9w@mail.gmail.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <CAEqd1ZZkSDMkKm-TJz69iihWDd0Afu54nerc0gTqZfAV35mv9w@mail.gmail.com>
+References: <20220114010627.21104-1-ricardo.martinez@linux.intel.com>
+ <20220114010627.21104-3-ricardo.martinez@linux.intel.com> <d5854453-84b-1eba-7cc7-d94f41a185d@linux.intel.com>
+ <4a4b2848-d665-c9ba-c66a-dd4408e94ea5@linux.intel.com>
+In-Reply-To: <4a4b2848-d665-c9ba-c66a-dd4408e94ea5@linux.intel.com>
+From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date:   Fri, 11 Feb 2022 03:25:31 +0300
+Message-ID: <CAHNKnsT9y0ssM3zVriEdEzoRMuJyianKrOx4BAcmT80PCJBigg@mail.gmail.com>
+Subject: Re: [PATCH net-next v4 02/13] net: wwan: t7xx: Add control DMA interface
+To:     "Martinez, Ricardo" <ricardo.martinez@linux.intel.com>
+Cc:     =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Loic Poulain <loic.poulain@linaro.org>,
+        M Chetan Kumar <m.chetan.kumar@intel.com>,
+        chandrashekar.devegowda@intel.com,
+        Intel Corporation <linuxwwan@intel.com>,
+        chiranjeevi.rapolu@linux.intel.com,
+        =?UTF-8?B?SGFpanVuIExpdSAo5YiY5rW35YabKQ==?= 
+        <haijun.liu@mediatek.com>, amir.hanania@intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        dinesh.sharma@intel.com, eliot.lee@intel.com,
+        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
+        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
+        sreehari.kancharla@intel.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------NWR6P18wOlnzDpPPzdkmTpdC
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Hello Ricardo,
 
-On 2/10/22 15:29, Maxim Klimenko Sergievich wrote:
+On Wed, Jan 19, 2022 at 1:22 AM Martinez, Ricardo
+<ricardo.martinez@linux.intel.com> wrote:
+> On 1/18/2022 6:13 AM, Ilpo J=C3=A4rvinen wrote:
+>> On Thu, 13 Jan 2022, Ricardo Martinez wrote:
+> ...
+>>> +#define CLDMA_NUM 2
+>> I tried to understand its purpose but it seems that only one of the
+>> indexes is used in the arrays where this define gives the size? Related =
+to
+>> this, ID_CLDMA0 is not used anywhere?
+>
+> The modem HW has 2 CLDMAs, idx 0 for the app processor (SAP) and idx 1
+> for the modem (MD).
+>
+> CLDMA_NUM is defined as 2 to reflect the HW capabilities but mainly to
+> have a cleaner upcoming patches, which will use ID_CLDMA0.
+>
+> If having array's of size 1 is not a problem then we can define
+> CLDMA_NUM as 1 and play with the CLDMA indexes.
 
-Maxim,
+Please keep CLDMA_NUM defined as 2. Especially if you have a plan for
+further driver development. Saving a few bytes in the structure for a
+short term is not worth the jungling with indexes, possible errors and
+further rework. Just document them as suggested by Ilpo and mark idx 0
+as unused at the moment.
 
-I was able to duplicate your logged warnings by loading cfg80211 with the option 
-"bss_entries_limit=1". The attached patch fixes the problem for me. Could you 
-please test on your system?
+BTW, did you consider to define the cldma_id enum something like this:
 
-If it is OK for you, I will submit it to wireless-drivers-next with you noted as 
-the reporter and tester.
+/**
+ * ...
+ * @CLDMA_ID_AP: ... (unused ATM)
+ * @CLDMA_ID_MD: ...
+ */
+enum cldma_id {
+    CLDMA_ID_AP =3D 0,
+    CLDMA_ID_MD =3D 1,
 
-Thanks,
+    CLDMA_NUM
+};
 
-Larry
---------------NWR6P18wOlnzDpPPzdkmTpdC
-Content-Type: text/x-patch; charset=UTF-8; name="patch_scan.patch"
-Content-Disposition: attachment; filename="patch_scan.patch"
-Content-Transfer-Encoding: base64
+This way elements will be self descriptive as well as CLDMA_NUM value
+will be less puzzled.
 
-ZGlmZiAtLWdpdCBhL25ldC93aXJlbGVzcy9zY2FuLmMgYi9uZXQvd2lyZWxlc3Mvc2Nhbi5j
-CmluZGV4IGI4ODg1MjJmMTMzYi4uZDVmNmZiNWUxMDdjIDEwMDY0NAotLS0gYS9uZXQvd2ly
-ZWxlc3Mvc2Nhbi5jCisrKyBiL25ldC93aXJlbGVzcy9zY2FuLmMKQEAgLTQ3NCw3ICs0NzQs
-OSBAQCBzdGF0aWMgYm9vbCBjZmc4MDIxMV9ic3NfZXhwaXJlX29sZGVzdChzdHJ1Y3QgY2Zn
-ODAyMTFfcmVnaXN0ZXJlZF9kZXZpY2UgKnJkZXYpCiAJCW9sZGVzdCA9IGJzczsKIAl9CiAK
-LQlpZiAoV0FSTl9PTighb2xkZXN0KSkKKwlpZiAocmRldi0+YnNzX2VudHJpZXMgPT0gMSkK
-KwkJcmV0dXJuIGZhbHNlOworCWlmIChXQVJOX09OX09OQ0UoIW9sZGVzdCkpCiAJCXJldHVy
-biBmYWxzZTsKIAogCS8qCg==
-
---------------NWR6P18wOlnzDpPPzdkmTpdC--
+--=20
+Sergey
