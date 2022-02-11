@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D36EEC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BDCC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347874AbiBKIAb (ORCPT
+        id S1347877AbiBKIAe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Feb 2022 03:00:31 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59274 "EHLO
+        Fri, 11 Feb 2022 03:00:34 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232799AbiBKIAa (ORCPT
+        with ESMTP id S1347871AbiBKIAb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Feb 2022 03:00:30 -0500
+        Fri, 11 Feb 2022 03:00:31 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4DC2BBF
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDDCCBD2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:29 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80H4x8023899, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80NNG0023919, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80H4x8023899
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80NNG0023919
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 11 Feb 2022 16:00:17 +0800
+        Fri, 11 Feb 2022 16:00:23 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 11 Feb 2022 16:00:16 +0800
+ 15.1.2308.20; Fri, 11 Feb 2022 16:00:22 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 11 Feb
- 2022 16:00:14 +0800
+ 2022 16:00:22 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 0/6] rtw89: preparation of RFK helpers, 6G and 160M changes to support new chip
-Date:   Fri, 11 Feb 2022 15:59:47 +0800
-Message-ID: <20220211075953.40421-1-pkshih@realtek.com>
+Subject: [PATCH 4/6] rtw89: add 6G support to rate adaptive mechanism
+Date:   Fri, 11 Feb 2022 15:59:51 +0800
+Message-ID: <20220211075953.40421-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220211075953.40421-1-pkshih@realtek.com>
+References: <20220211075953.40421-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,29 +64,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The RFK helpers will be reused by all chips, so make it as common functions.
-Add 6G and 160M supports on some components like rate adaptive mechanism.
+Construct rate mask of 6G band, and rate adaptive mechanism can work well
+on this band.
 
-Ping-Ke Shih (3):
-  rtw89: add 6G support to rate adaptive mechanism
-  rtw89: declare if chip support 160M bandwidth
-  rtw89: handle TX/RX 160M bandwidth
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/phy.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-Zong-Zhe Yang (3):
-  rtw89: make rfk helpers common across chips
-  rtw89: refine naming of rfk helpers with prefix
-  rtw89: extend subband for 6G band
-
- drivers/net/wireless/realtek/rtw89/core.c     |   93 +-
- drivers/net/wireless/realtek/rtw89/core.h     |   22 +
- drivers/net/wireless/realtek/rtw89/phy.c      |   84 +-
- drivers/net/wireless/realtek/rtw89/phy.h      |   59 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |    1 +
- .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |   62 +-
- .../realtek/rtw89/rtw8852a_rfk_table.c        | 2744 ++++++++---------
- .../realtek/rtw89/rtw8852a_rfk_table.h        |   49 +-
- 8 files changed, 1601 insertions(+), 1513 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index c491a11536815..69668108e19f3 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -161,6 +161,11 @@ static u64 rtw89_phy_ra_mask_cfg(struct rtw89_dev *rtwdev, struct rtw89_sta *rtw
+ 		cfg_mask = u64_encode_bits(mask->control[NL80211_BAND_5GHZ].legacy,
+ 					   RA_MASK_OFDM_RATES);
+ 		break;
++	case RTW89_BAND_6G:
++		band = NL80211_BAND_6GHZ;
++		cfg_mask = u64_encode_bits(mask->control[NL80211_BAND_6GHZ].legacy,
++					   RA_MASK_OFDM_RATES);
++		break;
+ 	default:
+ 		rtw89_warn(rtwdev, "unhandled band type %d\n", hal->current_band_type);
+ 		return -1;
+@@ -254,15 +259,25 @@ static void rtw89_phy_ra_sta_update(struct rtw89_dev *rtwdev,
+ 			ldpc_en = 1;
+ 	}
+ 
+-	if (rtwdev->hal.current_band_type == RTW89_BAND_2G) {
++	switch (rtwdev->hal.current_band_type) {
++	case RTW89_BAND_2G:
+ 		ra_mask |= sta->supp_rates[NL80211_BAND_2GHZ];
+ 		if (sta->supp_rates[NL80211_BAND_2GHZ] <= 0xf)
+ 			mode |= RTW89_RA_MODE_CCK;
+ 		else
+ 			mode |= RTW89_RA_MODE_CCK | RTW89_RA_MODE_OFDM;
+-	} else {
++		break;
++	case RTW89_BAND_5G:
+ 		ra_mask |= (u64)sta->supp_rates[NL80211_BAND_5GHZ] << 4;
+ 		mode |= RTW89_RA_MODE_OFDM;
++		break;
++	case RTW89_BAND_6G:
++		ra_mask |= (u64)sta->supp_rates[NL80211_BAND_6GHZ] << 4;
++		mode |= RTW89_RA_MODE_OFDM;
++		break;
++	default:
++		rtw89_err(rtwdev, "Unknown band type\n");
++		break;
+ 	}
+ 
+ 	ra_mask_bak = ra_mask;
 -- 
 2.25.1
 
