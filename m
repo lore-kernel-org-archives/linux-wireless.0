@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE4C5C43217
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7705EC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Feb 2022 08:00:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347883AbiBKIAh (ORCPT
+        id S1347886AbiBKIAi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Feb 2022 03:00:37 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59314 "EHLO
+        Fri, 11 Feb 2022 03:00:38 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347876AbiBKIAd (ORCPT
+        with ESMTP id S1347880AbiBKIAf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Feb 2022 03:00:33 -0500
+        Fri, 11 Feb 2022 03:00:35 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A0BBD9
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:31 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F193BD2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2022 00:00:33 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80PS40023927, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80PS40023927
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 21B80LPA0023913, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 21B80LPA0023913
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 11 Feb 2022 16:00:25 +0800
+        Fri, 11 Feb 2022 16:00:21 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 11 Feb 2022 16:00:25 +0800
+ 15.1.2375.17; Fri, 11 Feb 2022 16:00:21 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 11 Feb
- 2022 16:00:24 +0800
+ 2022 16:00:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 6/6] rtw89: handle TX/RX 160M bandwidth
-Date:   Fri, 11 Feb 2022 15:59:53 +0800
-Message-ID: <20220211075953.40421-7-pkshih@realtek.com>
+Subject: [PATCH 3/6] rtw89: extend subband for 6G band
+Date:   Fri, 11 Feb 2022 15:59:50 +0800
+Message-ID: <20220211075953.40421-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220211075953.40421-1-pkshih@realtek.com>
 References: <20220211075953.40421-1-pkshih@realtek.com>
@@ -56,7 +56,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzIvMTEgpFekyCAwNjowMDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -64,104 +64,136 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Apply 160M bandwidth to RA (rate adaptive) mechanism, so it can transmit
-packets with this bandwidth. On the other hand, convert 160M bandwidth
-from RX desc to rx_info_bw.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
+Split 6G band into 8 sub-bands where indexes are from 0 to 7,
+i.e. RTW89_CH_6G_BAND_IDX[0-7]. Then, decide subband by both
+band and channel instead of just channel because conflicts
+between 5G channels and 6G channels.
+
+Moreover, add default case to the existing use of switch (subband).
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 15 ++-------------
- drivers/net/wireless/realtek/rtw89/core.h | 12 ++++++++++++
- drivers/net/wireless/realtek/rtw89/phy.c  | 13 ++++++-------
- 3 files changed, 20 insertions(+), 20 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c     | 59 +++++++++++++++----
+ drivers/net/wireless/realtek/rtw89/core.h     |  9 +++
+ .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |  2 +
+ 3 files changed, 60 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index bf5b7589906d8..63828dbfef4ef 100644
+index a9544b006f0b4..116c5cb65fe46 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1165,13 +1165,7 @@ static bool rtw89_core_rx_ppdu_match(struct rtw89_dev *rtwdev,
- 		rtw89_warn(rtwdev, "invalid RX rate mode %d\n", data_rate_mode);
- 	}
- 
--	if (desc_info->bw == RTW89_CHANNEL_WIDTH_80)
--		bw = RATE_INFO_BW_80;
--	else if (desc_info->bw == RTW89_CHANNEL_WIDTH_40)
--		bw = RATE_INFO_BW_40;
--	else
--		bw = RATE_INFO_BW_20;
--
-+	bw = rtw89_hw_to_rate_info_bw(desc_info->bw);
- 	gi_ltf = rtw89_rxdesc_to_nl_he_gi(rtwdev, desc_info, false);
- 	ret = rtwdev->ppdu_sts.curr_rx_ppdu_cnt[band] == desc_info->ppdu_cnt &&
- 	      status->rate_idx == rate_idx &&
-@@ -1442,12 +1436,7 @@ static void rtw89_core_update_rx_status(struct rtw89_dev *rtwdev,
- 	    !(desc_info->sw_dec || desc_info->icv_err))
- 		rx_status->flag |= RX_FLAG_DECRYPTED;
- 
--	if (desc_info->bw == RTW89_CHANNEL_WIDTH_80)
--		rx_status->bw = RATE_INFO_BW_80;
--	else if (desc_info->bw == RTW89_CHANNEL_WIDTH_40)
--		rx_status->bw = RATE_INFO_BW_40;
--	else
--		rx_status->bw = RATE_INFO_BW_20;
-+	rx_status->bw = rtw89_hw_to_rate_info_bw(desc_info->bw);
- 
- 	data_rate = desc_info->data_rate;
- 	data_rate_mode = GET_DATA_RATE_MODE(data_rate);
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 0e55778b83ece..3254be670bd67 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3160,6 +3160,18 @@ static inline struct rtw89_sta *sta_to_rtwsta_safe(struct ieee80211_sta *sta)
- 	return sta ? (struct rtw89_sta *)sta->drv_priv : NULL;
- }
- 
-+static inline u8 rtw89_hw_to_rate_info_bw(enum rtw89_bandwidth hw_bw)
-+{
-+	if (hw_bw == RTW89_CHANNEL_WIDTH_160)
-+		return RATE_INFO_BW_160;
-+	else if (hw_bw == RTW89_CHANNEL_WIDTH_80)
-+		return RATE_INFO_BW_80;
-+	else if (hw_bw == RTW89_CHANNEL_WIDTH_40)
-+		return RATE_INFO_BW_40;
-+	else
-+		return RATE_INFO_BW_20;
-+}
-+
- static inline
- struct rtw89_addr_cam_entry *rtw89_get_addr_cam_of(struct rtw89_vif *rtwvif,
- 						   struct rtw89_sta *rtwsta)
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index 69668108e19f3..d1d3ebb5e2264 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -302,6 +302,11 @@ static void rtw89_phy_ra_sta_update(struct rtw89_dev *rtwdev,
- 	ra_mask &= rtw89_phy_ra_mask_cfg(rtwdev, rtwsta);
- 
- 	switch (sta->bandwidth) {
-+	case IEEE80211_STA_RX_BW_160:
-+		bw_mode = RTW89_CHANNEL_WIDTH_160;
-+		sgi = sta->vht_cap.vht_supported &&
-+		      (sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_160);
-+		break;
- 	case IEEE80211_STA_RX_BW_80:
- 		bw_mode = RTW89_CHANNEL_WIDTH_80;
- 		sgi = sta->vht_cap.vht_supported &&
-@@ -1439,13 +1444,7 @@ static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
+@@ -293,19 +293,58 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
  		break;
  	}
  
--	if (bw == RTW89_CHANNEL_WIDTH_80)
--		ra_report->txrate.bw = RATE_INFO_BW_80;
--	else if (bw == RTW89_CHANNEL_WIDTH_40)
--		ra_report->txrate.bw = RATE_INFO_BW_40;
--	else
--		ra_report->txrate.bw = RATE_INFO_BW_20;
--
-+	ra_report->txrate.bw = rtw89_hw_to_rate_info_bw(bw);
- 	ra_report->bit_rate = cfg80211_calculate_bitrate(&ra_report->txrate);
- 	ra_report->hw_rate = FIELD_PREP(RTW89_HW_RATE_MASK_MOD, mode) |
- 			     FIELD_PREP(RTW89_HW_RATE_MASK_VAL, rate);
+-	switch (center_chan) {
++	switch (band) {
+ 	default:
+-	case 1 ... 14:
+-		subband = RTW89_CH_2G;
+-		break;
+-	case 36 ... 64:
+-		subband = RTW89_CH_5G_BAND_1;
++	case RTW89_BAND_2G:
++		switch (center_chan) {
++		default:
++		case 1 ... 14:
++			subband = RTW89_CH_2G;
++			break;
++		}
+ 		break;
+-	case 100 ... 144:
+-		subband = RTW89_CH_5G_BAND_3;
++	case RTW89_BAND_5G:
++		switch (center_chan) {
++		default:
++		case 36 ... 64:
++			subband = RTW89_CH_5G_BAND_1;
++			break;
++		case 100 ... 144:
++			subband = RTW89_CH_5G_BAND_3;
++			break;
++		case 149 ... 177:
++			subband = RTW89_CH_5G_BAND_4;
++			break;
++		}
+ 		break;
+-	case 149 ... 177:
+-		subband = RTW89_CH_5G_BAND_4;
++	case RTW89_BAND_6G:
++		switch (center_chan) {
++		default:
++		case 1 ... 29:
++			subband = RTW89_CH_6G_BAND_IDX0;
++			break;
++		case 33 ... 61:
++			subband = RTW89_CH_6G_BAND_IDX1;
++			break;
++		case 65 ... 93:
++			subband = RTW89_CH_6G_BAND_IDX2;
++			break;
++		case 97 ... 125:
++			subband = RTW89_CH_6G_BAND_IDX3;
++			break;
++		case 129 ... 157:
++			subband = RTW89_CH_6G_BAND_IDX4;
++			break;
++		case 161 ... 189:
++			subband = RTW89_CH_6G_BAND_IDX5;
++			break;
++		case 193 ... 221:
++			subband = RTW89_CH_6G_BAND_IDX6;
++			break;
++		case 225 ... 253:
++			subband = RTW89_CH_6G_BAND_IDX7;
++			break;
++		}
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index deb91f6b67375..c5d40777558ec 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -61,6 +61,15 @@ enum rtw89_subband {
+ 	RTW89_CH_5G_BAND_3 = 3,
+ 	RTW89_CH_5G_BAND_4 = 4,
+ 
++	RTW89_CH_6G_BAND_IDX0, /* Low */
++	RTW89_CH_6G_BAND_IDX1, /* Low */
++	RTW89_CH_6G_BAND_IDX2, /* Mid */
++	RTW89_CH_6G_BAND_IDX3, /* Mid */
++	RTW89_CH_6G_BAND_IDX4, /* High */
++	RTW89_CH_6G_BAND_IDX5, /* High */
++	RTW89_CH_6G_BAND_IDX6, /* Ultra-high */
++	RTW89_CH_6G_BAND_IDX7, /* Ultra-high */
++
+ 	RTW89_SUBBAND_NR,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
+index aa326681b5090..acdad5a300ddb 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
+@@ -2917,6 +2917,7 @@ static void _tssi_set_tmeter_tbl(struct rtw89_dev *rtwdev, enum rtw89_phy_idx ph
+ 	u8 i, j;
+ 
+ 	switch (subband) {
++	default:
+ 	case RTW89_CH_2G:
+ 		thm_up_a = rtw89_8852a_trk_cfg.delta_swingidx_2ga_p;
+ 		thm_down_a = rtw89_8852a_trk_cfg.delta_swingidx_2ga_n;
+@@ -3101,6 +3102,7 @@ static void _tssi_pak(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
+ 	u8 subband = rtwdev->hal.current_subband;
+ 
+ 	switch (subband) {
++	default:
+ 	case RTW89_CH_2G:
+ 		rtw89_rfk_parser_by_cond(rtwdev, path == RF_PATH_A,
+ 					 &rtw8852a_tssi_pak_defs_a_2g_tbl,
 -- 
 2.25.1
 
