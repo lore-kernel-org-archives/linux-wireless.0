@@ -2,118 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94746C433FE
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Feb 2022 18:18:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A700AC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Feb 2022 19:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiBLSSR (ORCPT
+        id S230478AbiBLTNY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Feb 2022 13:18:17 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42174 "EHLO
+        Sat, 12 Feb 2022 14:13:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbiBLSSQ (ORCPT
+        with ESMTP id S230425AbiBLTNY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Feb 2022 13:18:16 -0500
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63BAE5E768
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2022 10:18:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644689893; x=1676225893;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=DbBWKQigkVd4E7a1OuNYzPs+0CB6gRd1vWjot3q/liA=;
-  b=WOj8DZSgWCYRGnI2XbWJnRF6uHqCyKROO4Cq0eD3lFIbnYcl0CuHQ3jh
-   DanxDEboF3hCt8I7KDNutyqHZmbqXiqWVZb2/mMGHTstN2to2IO/ahqen
-   PzN6TyTksmu/fOE8e5LDrIrtDxoJ8RZO8IphX+r1M+bKZIvOOdvvDPxLX
-   HGTs9zpxdseCo1+uHG64Typ9hnets10hWz15rYzu+COqXfHBjE2nQY6Pm
-   3rWbFktgusYVmmripcBLcWkEH+1VVL/LWQl5hjKzflqDbcHa9kx+RGhyk
-   N4UGVWX0LNV9zA+Vw3TYTIxRhV/dIDX9VfcjBD70olog004kWicjoCR+z
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10256"; a="313177327"
-X-IronPort-AV: E=Sophos;i="5.88,364,1635231600"; 
-   d="scan'208";a="313177327"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2022 10:18:12 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,364,1635231600"; 
-   d="scan'208";a="602655568"
-Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 12 Feb 2022 10:18:10 -0800
-Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nIwyI-0006Ub-2s; Sat, 12 Feb 2022 18:18:10 +0000
-Date:   Sun, 13 Feb 2022 02:17:25 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
-        ath11k@lists.infradead.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-Subject: Re: [PATCH 2/6] ath11k: CFR module initialization and
- deinitialization for IPQ8074
-Message-ID: <202202122308.vnm0MdO3-lkp@intel.com>
-References: <1644592075-27082-3-git-send-email-quic_vnaralas@quicinc.com>
+        Sat, 12 Feb 2022 14:13:24 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80D76A4
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2022 11:13:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=fSnhDYupsK3DS8l/G7Y+JvdXSMW1Dg/GIo0vkfVGo+g=;
+        t=1644693199; x=1645902799; b=iBRfV21QSVThormhOwNrvg1e/nnLTPNB2fjhXFPDHSBFRYo
+        gb4ku8U55UXU8BRXeJ9e3GEOJ49XDmLc+TNvjNr0VCAR2rxTI5JyrDuA5BfHlu4EjpjT2wVC/xsU+
+        CU4xwLMYfRCEoNdAQBg2oSViu5mFr9w1OqzUuNT2+AehOSbJmRqM+4seLiNfqX4QYZNZoCPzA1evC
+        dGLCmA2LmrbP9zirkrrHWqenis34JEb3Vop7lEF3a6n8e/xOD/X5y7cMRLQgO0JjP0o7BLlC+G/He
+        76+3xMCFGhMilOPHVerzgl6LdO6qDib/hrkcI3Eqk7UIDP2BoNo2aQIIjpz/MBLQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nIxpW-000LLt-73;
+        Sat, 12 Feb 2022 20:13:10 +0100
+Message-ID: <0d074b586c41975cb2ce59feb85ac7c91ca5b5c8.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix EAPoL rekey fail in 802.3 rx path
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Deren Wu <Deren.Wu@mediatek.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Eric Liang <Eric.Liang@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+Date:   Sat, 12 Feb 2022 20:13:07 +0100
+In-Reply-To: <6889c9fced5859ebb088564035f84fd0fa792a49.1644680751.git.deren.wu@mediatek.com>
+References: <6889c9fced5859ebb088564035f84fd0fa792a49.1644680751.git.deren.wu@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.3 (3.42.3-1.fc35) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1644592075-27082-3-git-send-email-quic_vnaralas@quicinc.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Venkateswara,
+On Sun, 2022-02-13 at 00:20 +0800, Deren Wu wrote:
+> From: Deren Wu <deren.wu@mediatek.com>
+> 
+> mac80211 set capability NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211
+> to upper layer by default. That means we should pass EAPoL packets through
+> nl80211 path only, and should not send the EAPoL skb to netdevice diretly.
+> At the meanwhile, wpa_supplicant would not regist sock to listen EAPoL skb
+> on the netdevice.
+> 
+> However, there is no contorl_port_protocol handler in mac80211 for 802.3 RX
+> packets, mac80211 driver would pass up the EAPoL rekey frame to netdevice
+> and wpa_supplicant would be never interactive with this kind of packets,
+> if SUPPORTS_RX_DECAP_OFFLOAD is enabled. This causes STA always rekey fail
+> if EAPoL frame go through 802.3 path.
+> 
+> To avoid this problem, align the same process as 802.11 type to handle
+> this frame before put it into network stack.
+> 
+> Fixes: 80a915ec4427 ("mac80211: add rx decapsulation offload support")
+> Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+> ---
+>  net/mac80211/rx.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 0544563ede52..57f5d5500282 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -4509,12 +4509,7 @@ static void ieee80211_rx_8023(struct ieee80211_rx_data *rx,
+>  
+>  	/* deliver to local stack */
+>  	skb->protocol = eth_type_trans(skb, fast_rx->dev);
+> -	memset(skb->cb, 0, sizeof(skb->cb));
+> -	if (rx->list)
+> -		list_add_tail(&skb->list, rx->list);
+> -	else
+> -		netif_receive_skb(skb);
+> -
+> +	ieee80211_deliver_skb_to_local_stack(skb, rx);
+>  }
 
-Thank you for the patch! Perhaps something to improve:
+This looks like a really good idea even for the security fix in
+ieee80211_deliver_skb_to_local_stack() ... :)
 
-[auto build test WARNING on kvalo-ath/ath-next]
-[cannot apply to wireless-next/main wireless/main jberg-mac80211-next/master jberg-mac80211/master v5.17-rc3 next-20220211]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Venkateswara-Naralasetty/ath11k-add-single-shot-periodic-CFR-capture-support-for-IPQ8074/20220211-230911
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
-config: i386-allmodconfig (https://download.01.org/0day-ci/archive/20220212/202202122308.vnm0MdO3-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project f6685f774697c85d6a352dcea013f46a99f9fe31)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/d2559d5e11b6761fa81c7b6a5dcd1f506f72ef96
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Venkateswara-Naralasetty/ath11k-add-single-shot-periodic-CFR-capture-support-for-IPQ8074/20220211-230911
-        git checkout d2559d5e11b6761fa81c7b6a5dcd1f506f72ef96
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/net/wireless/ath/ath11k/ drivers/platform/x86/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> drivers/net/wireless/ath/ath11k/cfr.c:29:6: warning: no previous prototype for function 'ath11k_cfr_ring_free' [-Wmissing-prototypes]
-   void ath11k_cfr_ring_free(struct ath11k *ar)
-        ^
-   drivers/net/wireless/ath/ath11k/cfr.c:29:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   void ath11k_cfr_ring_free(struct ath11k *ar)
-   ^
-   static 
-   1 warning generated.
-
-
-vim +/ath11k_cfr_ring_free +29 drivers/net/wireless/ath/ath11k/cfr.c
-
-    28	
-  > 29	void ath11k_cfr_ring_free(struct ath11k *ar)
-    30	{
-    31		struct ath11k_cfr *cfr = &ar->cfr;
-    32	
-    33		ath11k_dbring_buf_cleanup(ar, &cfr->rx_ring);
-    34		ath11k_dbring_srng_cleanup(ar, &cfr->rx_ring);
-    35	}
-    36	
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+johannes
