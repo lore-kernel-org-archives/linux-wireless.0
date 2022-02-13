@@ -2,70 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E3CC433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 13 Feb 2022 22:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95189C433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 13 Feb 2022 23:29:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238567AbiBMWZ0 (ORCPT
+        id S238788AbiBMX3Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 13 Feb 2022 17:25:26 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49130 "EHLO
+        Sun, 13 Feb 2022 18:29:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233686AbiBMWZ0 (ORCPT
+        with ESMTP id S233807AbiBMX3X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 Feb 2022 17:25:26 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25BED5468C
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2022 14:25:20 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CB3CFB80BED
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2022 22:25:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 473CEC004E1;
-        Sun, 13 Feb 2022 22:25:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644791117;
-        bh=6TiCAtkOA30O6+IrGW5hZ1QCXVrdhWmQ6yyS+woEdo8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vLQvjlMicWaEMpplc6gU/WgrnRBbUybf9A2IG3yGnLWe6fMrlXmSX0MGTooK7Puu3
-         th0spt/ZFWzIjtB/J/1Uxtae/joslMZ+pUKhhcW7csyyIWcpR7idrXL9rxMYQYavnG
-         /Zjmy1nGQzg2hzbLqO5OhlA1HfxjYjIcTq/sqFg4L+BukuPsDDjWq5tW2e2gSVT3gM
-         K2NZ04MKkT30PABQCIoVlolanm2Tm7yL3zf1Bg8Kamtd5N2F/+JhZ3RWGielMciDFp
-         BFb/N0mPK/aNqgpWkwHIbgbCDBffP4qJE0l9luWMJUOLg7JdoLFDJNcYPPSAaEt7YS
-         2VG+lLFr/L61g==
-Date:   Sun, 13 Feb 2022 16:25:16 -0600
-From:   Seth Forshee <sforshee@kernel.org>
-To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for China (CN)
-Message-ID: <YgmFTLBiMD+cEjvX@ubuntu-x1>
-References: <ae43589a-6ca4-4856-8f7f-b631ce44993b@www.fastmail.com>
+        Sun, 13 Feb 2022 18:29:23 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3C035133B;
+        Sun, 13 Feb 2022 15:29:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=3FoNdbZVjJP5lcX0q3ReMO6GWYXBCpciynOb6Vt0iBY=; b=f8lqDkdQkzlpC0nUVHl0bN2acH
+        EDZP0K5RnsHOB/wOVjGfhtmGV+ApMCZU05RlKRhXaxC139VkkmVB96Kgs7a7UDauXZEb7b9Qzs9au
+        d9iQSl6vIWgMxRjCzy979NgLS9Sn/3dcl1XH31dmV4NqXT3azbXficfSVryH3BltQQ6qQlysvXM+6
+        TClC+B4uswcwmZi15p4drH+r+PZn7N1ezxGfmggPSYVXhOL8nxIZflzBzOEskoI6F+sc1mQPcEXEi
+        13lEQ7jJWzxeishwV7DDKnr7LRoWGRHHlrzgarnegV+FvKrCinZhU+71rTykeKoiXv95zv6/xt8Q/
+        Fu5Fb/iQ==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nJOIr-00CM1o-8i; Sun, 13 Feb 2022 23:29:13 +0000
+Message-ID: <89df0da1-c867-43ad-096c-a1fdd1588a99@infradead.org>
+Date:   Sun, 13 Feb 2022 15:29:09 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ae43589a-6ca4-4856-8f7f-b631ce44993b@www.fastmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCH v2] bcma: cleanup comments
+Content-Language: en-US
+To:     trix@redhat.com, zajec5@gmail.com
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220213213121.2806376-1-trix@redhat.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20220213213121.2806376-1-trix@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Feb 12, 2022 at 04:29:50PM +0000, Jiaxun Yang wrote:
-> China had updated regulations on ISM frequencies by
-> "工信部无〔2021〕129号".
-> 
-> The new regulation effectives from Jan 1 2022.
-> 
-> Update regdb accroading to it's attachment "2400MHz、5100MHz
-> 和 5800MHz 频段无线电发射设备射频技术要求".
-> 
-> Announcement: https://wap.miit.gov.cn/zwgk/zcwj/wjfb/tz/art/2021/art_e4ae71252eab42928daf0ea620976e4e.html
-> Attachment: https://wap.miit.gov.cn/cms_files/filemanager/1226211233/attach/20219/d125301b13454551b698ff5afa49ca28.pdf
-> 
-> Those documents are only available in Chinese.
-> 
-> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-> ---
-> v2: Reduce 3dBm for 5150-5350 MHz due to TPC restriction
-> ---
 
-Applied, thanks!
+
+On 2/13/22 13:31, trix@redhat.com wrote:
+> From: Tom Rix <trix@redhat.com>
+> 
+> Remove the second 'info'.
+> Replacements
+> 'adventages' with 'advantages'
+> 'strenth' with 'strength'
+> 'atleast' with 'at least'
+> 'thr'u'' with 'through'
+> 'capabilty' with 'capability'
+> 'controll' with 'control'
+> 'ourself' with 'ourselves'
+> 'noone' with 'no one'
+> 'cores' to 'core's' and 'core'
+> 
+> Signed-off-by: Tom Rix <trix@redhat.com>
+
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+
+thanks.
+
+> ---
+> v2: change per Randy's suggestions
+> 
+>  drivers/bcma/driver_chipcommon.c     | 2 +-
+>  drivers/bcma/driver_chipcommon_pmu.c | 6 +++---
+>  drivers/bcma/driver_pci_host.c       | 6 +++---
+>  drivers/bcma/main.c                  | 4 ++--
+>  drivers/bcma/sprom.c                 | 4 ++--
+>  5 files changed, 11 insertions(+), 11 deletions(-)
+
+
+-- 
+~Randy
