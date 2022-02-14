@@ -2,240 +2,155 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75040C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Feb 2022 16:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77480C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Feb 2022 16:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356377AbiBNQaT (ORCPT
+        id S1356384AbiBNQaU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Feb 2022 11:30:19 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38452 "EHLO
+        Mon, 14 Feb 2022 11:30:20 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356367AbiBNQaT (ORCPT
+        with ESMTP id S1356374AbiBNQaT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 14 Feb 2022 11:30:19 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A9185FF0B
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FD8260ABD
         for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2022 08:30:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=4x1Sqw+tWByIJULfq0kazHyZMMmvojgfCuF6XSLAz0o=; t=1644856211; x=1646065811; 
-        b=Xyq5e6ygiVRxHMSx0PUydhX1qX9CL8k/ywwPvM20MMP9oYgfIYhkQElgJJuu0KAAHmaqoNFgFRe
-        Obt9aWMbmWUAqgfKbZIXnDr+OO4vcPHyVROPYqGISe8ecni00uOs/HIpaAZeZAxC90J1CGzh1Ixhf
-        vW1g/Ve1sISpn3SZ6sFQatPsKYjbyKUminIzFse8qRDS9Ji/GBYv07oStolDdZLC7Haq686IGztSz
-        gdt+XNbYxeJxhNZRvyvAYwGkqD7dhakyfRmuKwvU7FF4X9HV7gNLm41mccz9F/m9XCdO5NucX3imw
-        d5i3LHS1abLql1GW3ByELd2yoj2xhz0pX/Eg==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=6itVcV3zIC27rLMqrnzCRFsAyHKbGNABhcoUdUzjgIc=;
+        t=1644856211; x=1646065811; b=VFi1gp9/afv2B++BL+CKtCEd+yfUUV3jmntZnxQTPwAPgnN
+        1gypPdOs5j2aXMKh0CAfjaJyjXgsZFC0eNS34Z6SpKsWXekfvsc/+sFpA1GWh70AQlOUH+YxNGY63
+        6QuyZ1xPakQy6VcgQG+Jt2Cbf+RLr5PzN1JANeA4Cda9LLcBGVq1RUaN4h3mKBouR/NU6VRhMNXI9
+        pHMN8U5nA+Ag85DxLs8BZITQlG6v8lWyEFUmns3ToY+1zSKACI1ROVykajp9ENdiaK4wJh9gjHHOl
+        7JIUG4uVA4Ad11WW7f46VOXPl30GPQZ9PRjWp+1L7BH6oWfMv4igBW2uKbW+Qb0Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nJeEq-0011mw-FM;
-        Mon, 14 Feb 2022 17:30:08 +0100
+        id 1nJeEr-0011mw-IB;
+        Mon, 14 Feb 2022 17:30:09 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 01/19] mac80211_hwsim: check TX and STA bandwidth
-Date:   Mon, 14 Feb 2022 17:29:48 +0100
-Message-Id: <20220214173004.9fd154d2c3c2.Ia0cd152357a373149bab017d479ab7d5ded289c0@changeid>
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>
+Subject: [PATCH v3 05/19] ieee80211: add EHT 1K aggregation definitions
+Date:   Mon, 14 Feb 2022 17:29:52 +0100
+Message-Id: <20220214173004.b8b447ce95b7.I0ee2554c94e89abc7a752b0f7cc7fd79c273efea@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220214173004.9fd154d2c3c2.Ia0cd152357a373149bab017d479ab7d5ded289c0@changeid>
+References: <20220214173004.9fd154d2c3c2.Ia0cd152357a373149bab017d479ab7d5ded289c0@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Add checks to hwsim to validate that neither TX nor any
-station's configured bandwidth can exceed the channel
-(context) configuration previously requested.
+We add the fields for parsing extended ADDBA request/respond,
+and new max 1K aggregation for limit ADDBA request/respond.
 
+Adjust drivers to use the proper macro, IEEE80211_MAX_AMPDU_BUF ->
+IEEE80211_MAX_AMPDU_BUF_HE.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 101 +++++++++++++++++++++++++-
- 1 file changed, 98 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c            | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c     | 4 ++--
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 4 ++--
+ include/linux/ieee80211.h                        | 6 +++++-
+ net/mac80211/agg-rx.c                            | 2 +-
+ 5 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ac1caf659e0b..2cf328344cb5 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -654,6 +654,7 @@ struct mac80211_hwsim_data {
- 		      ARRAY_SIZE(hwsim_channels_6ghz)];
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 90fcd6adf2d5..bd40f4c1183a 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8448,7 +8448,7 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	ar->hw->queues = ATH11K_HW_MAX_QUEUES;
+ 	ar->hw->wiphy->tx_queue_len = ATH11K_QUEUE_LEN;
+ 	ar->hw->offchannel_tx_hw_queue = ATH11K_HW_MAX_QUEUES - 1;
+-	ar->hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++	ar->hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
  
- 	struct ieee80211_channel *channel;
-+	enum nl80211_chan_width bw;
- 	u64 beacon_int	/* beacon interval in us */;
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
-@@ -808,6 +809,38 @@ extern int hwsim_tx_virtio(struct mac80211_hwsim_data *data,
- #define hwsim_virtio_enabled false
- #endif
+ 	ar->hw->vif_data_size = sizeof(struct ath11k_vif);
+ 	ar->hw->sta_data_size = sizeof(struct ath11k_sta);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 87630d38dc52..5da9d98043fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1077,12 +1077,12 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	if (!hw)
+ 		return NULL;
  
-+static int hwsim_get_chanwidth(enum nl80211_chan_width bw)
-+{
-+	switch (bw) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_20:
-+		return 20;
-+	case NL80211_CHAN_WIDTH_40:
-+		return 40;
-+	case NL80211_CHAN_WIDTH_80:
-+		return 80;
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		return 160;
-+	case NL80211_CHAN_WIDTH_5:
-+		return 5;
-+	case NL80211_CHAN_WIDTH_10:
-+		return 10;
-+	case NL80211_CHAN_WIDTH_1:
-+		return 1;
-+	case NL80211_CHAN_WIDTH_2:
-+		return 2;
-+	case NL80211_CHAN_WIDTH_4:
-+		return 4;
-+	case NL80211_CHAN_WIDTH_8:
-+		return 8;
-+	case NL80211_CHAN_WIDTH_16:
-+		return 16;
-+	}
-+
-+	return INT_MAX;
-+}
-+
- static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- 				    struct sk_buff *skb,
- 				    struct ieee80211_channel *chan);
-@@ -1623,7 +1656,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *channel;
- 	bool ack;
--	u32 _portid;
-+	enum nl80211_chan_width confbw = NL80211_CHAN_WIDTH_20_NOHT;
-+	u32 _portid, i;
+-	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
  
- 	if (WARN_ON(skb->len < 10)) {
- 		/* Should not happen; just a sanity check for addr1 use */
-@@ -1633,14 +1667,17 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	if (cfg->max_tx_agg_size)
+ 		hw->max_tx_aggregation_subframes = cfg->max_tx_agg_size;
+ 	else
+-		hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++		hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
  
- 	if (!data->use_chanctx) {
- 		channel = data->channel;
-+		confbw = data->bw;
- 	} else if (txi->hw_queue == 4) {
- 		channel = data->tmp_chan;
- 	} else {
- 		chanctx_conf = rcu_dereference(txi->control.vif->chanctx_conf);
--		if (chanctx_conf)
-+		if (chanctx_conf) {
- 			channel = chanctx_conf->def.chan;
--		else
-+			confbw = chanctx_conf->def.width;
-+		} else {
- 			channel = NULL;
-+		}
+ 	op_mode = hw->priv;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 705f362b8f7b..4cf299ea11f5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -311,8 +311,8 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
+ 	struct mt7915_dev *dev = phy->dev;
+ 
+ 	hw->queues = 4;
+-	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
+-	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
++	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
+ 	hw->netdev_features = NETIF_F_RXCSUM;
+ 
+ 	hw->radiotap_timestamp.units_pos =
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 7204bc28ca31..a4143466cb32 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1024,6 +1024,8 @@ struct ieee80211_tpc_report_ie {
+ #define IEEE80211_ADDBA_EXT_FRAG_LEVEL_MASK	GENMASK(2, 1)
+ #define IEEE80211_ADDBA_EXT_FRAG_LEVEL_SHIFT	1
+ #define IEEE80211_ADDBA_EXT_NO_FRAG		BIT(0)
++#define IEEE80211_ADDBA_EXT_BUF_SIZE_MASK	GENMASK(7, 5)
++#define IEEE80211_ADDBA_EXT_BUF_SIZE_SHIFT	10
+ 
+ struct ieee80211_addba_ext_ie {
+ 	u8 data;
+@@ -1698,10 +1700,12 @@ struct ieee80211_ht_operation {
+  * A-MPDU buffer sizes
+  * According to HT size varies from 8 to 64 frames
+  * HE adds the ability to have up to 256 frames.
++ * EHT adds the ability to have up to 1K frames.
+  */
+ #define IEEE80211_MIN_AMPDU_BUF		0x8
+ #define IEEE80211_MAX_AMPDU_BUF_HT	0x40
+-#define IEEE80211_MAX_AMPDU_BUF		0x100
++#define IEEE80211_MAX_AMPDU_BUF_HE	0x100
++#define IEEE80211_MAX_AMPDU_BUF_EHT	0x400
+ 
+ 
+ /* Spatial Multiplexing Power Save Modes (for capability) */
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 7d2925bb966e..0d2bab9d351c 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -310,7 +310,7 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
  	}
  
- 	if (WARN(!channel, "TX w/o channel - queue = %d\n", txi->hw_queue)) {
-@@ -1664,6 +1701,25 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 				       txi->control.rates,
- 				       ARRAY_SIZE(txi->control.rates));
+ 	if (sta->sta.he_cap.has_he)
+-		max_buf_size = IEEE80211_MAX_AMPDU_BUF;
++		max_buf_size = IEEE80211_MAX_AMPDU_BUF_HE;
+ 	else
+ 		max_buf_size = IEEE80211_MAX_AMPDU_BUF_HT;
  
-+	for (i = 0; i < ARRAY_SIZE(txi->control.rates); i++) {
-+		u16 rflags = txi->control.rates[i].flags;
-+		/* initialize to data->bw for 5/10 MHz handling */
-+		enum nl80211_chan_width bw = data->bw;
-+
-+		if (txi->control.rates[i].idx == -1)
-+			break;
-+
-+		if (rflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			bw = NL80211_CHAN_WIDTH_40;
-+		else if (rflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+			bw = NL80211_CHAN_WIDTH_80;
-+		else if (rflags & IEEE80211_TX_RC_160_MHZ_WIDTH)
-+			bw = NL80211_CHAN_WIDTH_160;
-+
-+		if (WARN_ON(hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)))
-+			return;
-+	}
-+
- 	if (skb->len >= 24 + 8 &&
- 	    ieee80211_is_probe_resp(hdr->frame_control)) {
- 		/* fake header transmission time */
-@@ -1963,6 +2019,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 
- 		data->channel = conf->chandef.chan;
-+		data->bw = conf->chandef.width;
- 
- 		for (idx = 0; idx < ARRAY_SIZE(data->survey_data); idx++) {
- 			if (data->survey_data[idx].channel &&
-@@ -1974,6 +2031,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	} else {
- 		data->channel = conf->chandef.chan;
-+		data->bw = conf->chandef.width;
- 	}
- 	mutex_unlock(&data->mutex);
- 
-@@ -2105,12 +2163,48 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 		wiphy_dbg(hw->wiphy, "  TX Power: %d dBm\n", info->txpower);
- }
- 
-+static void
-+mac80211_hwsim_sta_rc_update(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta,
-+			     u32 changed)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	u32 bw = U32_MAX;
-+	enum nl80211_chan_width confbw = NL80211_CHAN_WIDTH_20_NOHT;
-+
-+	switch (sta->bandwidth) {
-+#define C(_bw) case IEEE80211_STA_RX_BW_##_bw: bw = _bw; break
-+	C(20);
-+	C(40);
-+	C(80);
-+	C(160);
-+#undef C
-+	}
-+
-+	if (!data->use_chanctx) {
-+		confbw = data->bw;
-+	} else {
-+		struct ieee80211_chanctx_conf *chanctx_conf =
-+			rcu_dereference(vif->chanctx_conf);
-+
-+		if (!WARN_ON(!chanctx_conf))
-+			confbw = chanctx_conf->def.width;
-+	}
-+
-+	WARN(bw > hwsim_get_chanwidth(confbw),
-+	     "intf %pM: bad STA %pM bandwidth %d MHz (%d) > channel config %d MHz (%d)\n",
-+	     vif->addr, sta->addr, bw, sta->bandwidth,
-+	     hwsim_get_chanwidth(data->bw), data->bw);
-+}
-+
- static int mac80211_hwsim_sta_add(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  struct ieee80211_sta *sta)
- {
- 	hwsim_check_magic(vif);
- 	hwsim_set_sta_magic(sta);
-+	mac80211_hwsim_sta_rc_update(hw, vif, sta, 0);
- 
- 	return 0;
- }
-@@ -2677,6 +2771,7 @@ static int mac80211_hwsim_tx_last_beacon(struct ieee80211_hw *hw)
- 	.sta_add = mac80211_hwsim_sta_add,			\
- 	.sta_remove = mac80211_hwsim_sta_remove,		\
- 	.sta_notify = mac80211_hwsim_sta_notify,		\
-+	.sta_rc_update = mac80211_hwsim_sta_rc_update,		\
- 	.set_tim = mac80211_hwsim_set_tim,			\
- 	.conf_tx = mac80211_hwsim_conf_tx,			\
- 	.get_survey = mac80211_hwsim_get_survey,		\
 -- 
 2.34.1
 
