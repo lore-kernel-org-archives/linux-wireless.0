@@ -2,205 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC893C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Feb 2022 12:58:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A4CAC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Feb 2022 15:44:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235480AbiBOM6V (ORCPT
+        id S241020AbiBOPo6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Feb 2022 07:58:21 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47268 "EHLO
+        Tue, 15 Feb 2022 10:44:58 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233460AbiBOM6U (ORCPT
+        with ESMTP id S240323AbiBOPov (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Feb 2022 07:58:20 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 951976D84E
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2022 04:58:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=7LvKglReSTh4y7oDa0HipqMwhaVfqLHknTKkCB4eOz0=; b=I/380slJmM2gtX4P2l9ApuK4fn
-        OL0uIAkQHNXUfGb6TDL1ttNQK8hB8blWt1nM+m7Nrq1AWI0XgHLQoLShufKjnORnq9ZshdUmycOcY
-        SMOhV2/6zwS+22ed+XRFTnRuYqgh4U/YinfN87QPfWDuPleqpEPC1KcNa2QVs8a/4/YQ=;
-Received: from p200300daa7140c00dd8883896a7868c3.dip0.t-ipconnect.de ([2003:da:a714:c00:dd88:8389:6a78:68c3] helo=Maecks.lan)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1nJxPE-0004E9-Nc
-        for linux-wireless@vger.kernel.org; Tue, 15 Feb 2022 13:58:08 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: improve signal strength reporting
-Date:   Tue, 15 Feb 2022 13:58:08 +0100
-Message-Id: <20220215125808.72378-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.32.0 (Apple Git-132)
+        Tue, 15 Feb 2022 10:44:51 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04374108BF1;
+        Tue, 15 Feb 2022 07:39:10 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FCF461719;
+        Tue, 15 Feb 2022 15:39:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DC15C340ED;
+        Tue, 15 Feb 2022 15:39:09 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="fKlwMQmG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+        t=1644939546;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=MR8uETDJg9Xeaqk+LtV2lrW0K+3vcdxP9bkf45PeWiI=;
+        b=fKlwMQmGGl+XsuXaJRJANlEQmKW31rbgKKnwOwuHDVYuAgsiz75OzV6KyNYigUqakpATd+
+        lrKV0EL0geEgSp2Iq13ZZFv3iyCO+axNLOZtKL6VfJRlHJOthZNR0OUCsth1F82w/glyFa
+        VGZJ6UBhjWAcHfat12nc6HCCT987kgg=
+Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 840e6152 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO);
+        Tue, 15 Feb 2022 15:39:06 +0000 (UTC)
+Received: by mail-yb1-f171.google.com with SMTP id c6so57273205ybk.3;
+        Tue, 15 Feb 2022 07:39:05 -0800 (PST)
+X-Gm-Message-State: AOAM53206orcEkIrcBafJxYIYkg6F8QbOvOpOjloJcQjqERCVqQsFlvL
+        qUCJJc3dnR6GcGnJDiNlLvQI2yX7a1G5iKiBab4=
+X-Google-Smtp-Source: ABdhPJx6EkevGOE04tDjGHfHD2+6REo3QOFWHcWoX1VRu7eS0/CeK2AEid1T7UKuH9ZZD7sSfy+PGSjfiEvFPJW00fQ=
+X-Received: by 2002:a25:ba49:: with SMTP id z9mr4233199ybj.32.1644939544595;
+ Tue, 15 Feb 2022 07:39:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAHmME9rkTP7bJBDvnejQ6BGPu13qpHKbtnjt3h33NEaTnYLirg@mail.gmail.com>
+In-Reply-To: <CAHmME9rkTP7bJBDvnejQ6BGPu13qpHKbtnjt3h33NEaTnYLirg@mail.gmail.com>
+From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
+Date:   Tue, 15 Feb 2022 16:38:53 +0100
+X-Gmail-Original-Message-ID: <CAHmME9r4+ENUhZ6u26rAbq0iCWoKqTPYA7=_LWbGG98KvaCE6g@mail.gmail.com>
+Message-ID: <CAHmME9r4+ENUhZ6u26rAbq0iCWoKqTPYA7=_LWbGG98KvaCE6g@mail.gmail.com>
+Subject: ath9k should perhaps use hw_random api?
+To:     miaoqing@codeaurora.org, Jason Cooper <jason@lakedaemon.net>,
+        "Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@kernel.org>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>
+Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Instead of just taking the maximum per-chain signal strength values,
-add an approximation for the sum of the combined signal.
-This should more accurately reflect the real signal strength, especially
-if the per-chain signal strength values are close to each other
+Hi Ath9k Maintainers,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 32 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7603/mac.c   |  5 ---
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  9 ------
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  2 --
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 11 +------
- .../net/wireless/mediatek/mt76/mt7921/mac.c   |  3 --
- 6 files changed, 33 insertions(+), 29 deletions(-)
+I'm emailing you because I've noticed that ath9k's rng.c is the *only*
+driver in the whole of the tree that calls
+add_hwgenerator_randomness() directly, rather than going through
+Herbert's hw_random API, as every single other hardware RNG does.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index a4bb281a74e6..9796419c99e1 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -932,6 +932,35 @@ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
- }
- EXPORT_SYMBOL(mt76_wcid_key_setup);
- 
-+static int
-+mt76_rx_signal(struct mt76_rx_status *status)
-+{
-+	s8 *chain_signal = status->chain_signal;
-+	int signal = -128;
-+	u8 chains;
-+
-+	for (chains = status->chains; chains; chains >>= 1, chain_signal++) {
-+		int cur, diff;
-+
-+		if (!(chains & BIT(0)))
-+			continue;
-+
-+		cur = *chain_signal;
-+		if (cur > signal)
-+			swap(cur, signal);
-+
-+		diff = signal - cur;
-+		if (diff == 0)
-+			signal += 3;
-+		else if (diff <= 2)
-+			signal += 2;
-+		else if (diff <= 6)
-+			signal += 1;
-+	}
-+
-+	return signal;
-+}
-+
- static void
- mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
- 		struct ieee80211_hw **hw,
-@@ -960,6 +989,9 @@ mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
- 	status->ampdu_reference = mstat.ampdu_ref;
- 	status->device_timestamp = mstat.timestamp;
- 	status->mactime = mstat.timestamp;
-+	status->signal = mt76_rx_signal(&mstat);
-+	if (status->signal <= -128)
-+		status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 	if (ieee80211_is_beacon(hdr->frame_control) ||
- 	    ieee80211_is_probe_resp(hdr->frame_control))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index a272d64808c3..2e5d26616bc2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -643,11 +643,6 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
- 		status->chain_signal[1] = FIELD_GET(MT_RXV4_IB_RSSI1, rxdg3) +
- 					  dev->rssi_offset[1];
- 
--		status->signal = status->chain_signal[0];
--		if (status->chains & BIT(1))
--			status->signal = max(status->signal,
--					     status->chain_signal[1]);
--
- 		if (FIELD_GET(MT_RXV1_FRAME_MODE, rxdg0) == 1)
- 			status->bw = RATE_INFO_BW_40;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 13109864b6d6..d1d87240f24f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -576,15 +576,6 @@ static int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
- 		status->chain_signal[1] = to_rssi(MT_RXV4_RCPI1, rxdg3);
- 		status->chain_signal[2] = to_rssi(MT_RXV4_RCPI2, rxdg3);
- 		status->chain_signal[3] = to_rssi(MT_RXV4_RCPI3, rxdg3);
--		status->signal = status->chain_signal[0];
--
--		for (i = 1; i < hweight8(mphy->antenna_mask); i++) {
--			if (!(status->chains & BIT(i)))
--				continue;
--
--			status->signal = max(status->signal,
--					     status->chain_signal[i]);
--		}
- 
- 		mt7615_mac_fill_tm_rx(mphy->priv, rxd);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index dc2aeaab72ec..2afad8c76ca6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -860,9 +860,7 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
- 		status->chain_signal[1] = mt76x02_mac_get_rssi(dev,
- 							       rxwi->rssi[1],
- 							       1);
--		signal = max_t(s8, signal, status->chain_signal[1]);
- 	}
--	status->signal = signal;
- 	status->freq = dev->mphy.chandef.chan->center_freq;
- 	status->band = dev->mphy.chandef.chan->band;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index e64afa2f181d..06186c034d93 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -593,7 +593,7 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 	u16 seq_ctrl = 0;
- 	u8 qos_ctl = 0;
- 	__le16 fc = 0;
--	int i, idx;
-+	int idx;
- 
- 	memset(status, 0, sizeof(*status));
- 
-@@ -753,15 +753,6 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 		status->chain_signal[1] = to_rssi(MT_PRXV_RCPI1, v1);
- 		status->chain_signal[2] = to_rssi(MT_PRXV_RCPI2, v1);
- 		status->chain_signal[3] = to_rssi(MT_PRXV_RCPI3, v1);
--		status->signal = status->chain_signal[0];
--
--		for (i = 1; i < hweight8(mphy->antenna_mask); i++) {
--			if (!(status->chains & BIT(i)))
--				continue;
--
--			status->signal = max(status->signal,
--					     status->chain_signal[i]);
--		}
- 
- 		/* RXD Group 5 - C-RXV */
- 		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 8e88445102ab..0a6c269a2fb6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -670,9 +670,6 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 					     status->chain_signal[i]);
- 		}
- 
--		if (status->signal == -128)
--			status->flag |= RX_FLAG_NO_SIGNAL_VAL;
--
- 		stbc = FIELD_GET(MT_PRXV_STBC, v0);
- 		gi = FIELD_GET(MT_PRXV_SGI, v0);
- 		cck = false;
--- 
-2.32.0 (Apple Git-132)
+I'm wondering if you'd consider converting your driver into something
+suitable for the hw_random API (in drivers/char/hw_random/), rather
+than adhoc rolling your own ath9k rng kthread. Is this something
+you're actively maintaining and would be interested in doing?
 
+Regards,
+Jason
