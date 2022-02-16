@@ -2,118 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5212EC4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Feb 2022 03:13:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D267C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Feb 2022 05:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243930AbiBPDNz (ORCPT
+        id S1344593AbiBPFcM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Feb 2022 22:13:55 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52924 "EHLO
+        Wed, 16 Feb 2022 00:32:12 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236446AbiBPDNy (ORCPT
+        with ESMTP id S234060AbiBPFcL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Feb 2022 22:13:54 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2042CA32A;
-        Tue, 15 Feb 2022 19:13:42 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id l19so1031005pfu.2;
-        Tue, 15 Feb 2022 19:13:42 -0800 (PST)
+        Wed, 16 Feb 2022 00:32:11 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 985AC7A9AE
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2022 21:31:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=9cauhw4HdG0CAFmvrug/PoHbP3oDfg44byQLiUdi3IA=;
-        b=II7Li7EiHZML6ng8myu8Bn6vcSrX67bfF2vBk4wc4WvdJCbvrDVmPafa/rE+dMpd9s
-         UT6KFEh00LL0Vn6ihtvb85AJGagbTC6gp7Tuea0cYMCLscO17k8CsiYWYKAJ1+rOeuRz
-         xrP+hvI/K4eJqK5l5BV2+8RgjziyT26Gm/OEYsPsjreP3p7glL/aKGeytGw8GwDL99Yy
-         PC1OQRt+McPVtc2uJk8yxNNJe3AGTld9MANGhA6/hCUn6e+HXE4aqzcONepyNfN0SeUh
-         XdivCaljb9W4d3r85HJVDStLRrFu4Dmt9uoAR6iYbnLYspU9V25/Qz764MWdw65LC9vz
-         5r3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=9cauhw4HdG0CAFmvrug/PoHbP3oDfg44byQLiUdi3IA=;
-        b=IjMA9HGNhkMqHd6OGg0oSyT1jHGa8JAoD3aBg2UoEQyGJ+skYhAoInGNBnCjo2sUtH
-         k5ZpiwkASkv7ouj/zbz9lUXT2i3rEq7vY0pFD0HGhdlAA8IdmYZ4W0755iwdkXd+BEL4
-         dGSX3KcTv3EcZ3baK6NH3nN92aHPXPgm3HDXLvH3wbMLe8OTIcfzh9tsnLNgteip7sA3
-         NBZHMSaqPxG+qtQjgThcbf+WNUfZbr39gV0h5dIasYfkC+nzPWVWH2rE3QGjCwwd5nDe
-         LIvrC709iWYPIlLngfjO2vhQrq0loruFN1r4qIvjUgJx94RvWS2p9kEjFupouBUnNyFp
-         U6dg==
-X-Gm-Message-State: AOAM533N2C+dcXyu600xYri6mLfLRVTiLR71RCEU/5zGhF8bKRH3BJTE
-        CsMx29C6fUTRU38HoOGshro=
-X-Google-Smtp-Source: ABdhPJzgIwpx5SOWmR9b7r+xKKnrCRG7ayfwffy+WjYebdbNErLoxcZUZue1e4sqwqQDwmYWQ6wWmw==
-X-Received: by 2002:a63:5c22:0:b0:34e:1a4:3bc with SMTP id q34-20020a635c22000000b0034e01a403bcmr584463pgb.487.1644981222318;
-        Tue, 15 Feb 2022 19:13:42 -0800 (PST)
-Received: from ?IPV6:2600:8802:b00:4a48:fd58:13e6:31bf:9336? ([2600:8802:b00:4a48:fd58:13e6:31bf:9336])
-        by smtp.gmail.com with ESMTPSA id s1sm18462315pjr.56.2022.02.15.19.13.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Feb 2022 19:13:41 -0800 (PST)
-Message-ID: <5c23585b-7865-54fb-3835-12e58a7aee46@gmail.com>
-Date:   Tue, 15 Feb 2022 19:13:39 -0800
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1644989518; x=1676525518;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=P6utHAWNmsrFjoyn2PZ0EjjyBLltrjhzWnzSwEelKk8=;
+  b=h9dCwQtN3QraeNUp+hQLnOoRu3y1Rw6YMDFEUpAzKnlLqtlYqrjJQfYL
+   XApy7vYnxjsVZvdHOMeZYfF3CaP7rR/8YAqUncU+dPGQ13zwzGn6TLXKh
+   Fy0Iofa7jNMtKONk2jy2Q/fTh73irNKnc6onNz+DxZ4Ei1yP16BPuz2+5
+   k=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 15 Feb 2022 21:31:56 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 21:31:56 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.15; Tue, 15 Feb 2022 21:31:56 -0800
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Tue, 15 Feb 2022 21:31:55 -0800
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+CC:     Vikram Kandukuri <quic_vikram@quicinc.com>,
+        Aloka Dixit <quic_alokad@quicinc.com>,
+        Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+Subject: [PATCH 1/3] nl80211: retrieve EHT capabilities in AP mode
+Date:   Tue, 15 Feb 2022 21:31:43 -0800
+Message-ID: <20220216053145.20898-2-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220216053145.20898-1-quic_alokad@quicinc.com>
+References: <20220216053145.20898-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v2] ath9k: use hw_random API instead of directly dumping
- into random.c
-Content-Language: en-US
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>, miaoqing@codeaurora.org,
-        rsalvaterra@gmail.com,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        "Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@kernel.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>
-Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>
-References: <CAHmME9pZaYW-p=zU4v96TjeSijm-g03cNpvUJcNvhOqh5v+Lwg@mail.gmail.com>
- <20220216000230.22625-1-Jason@zx2c4.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <20220216000230.22625-1-Jason@zx2c4.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Vikram Kandukuri <quic_vikram@quicinc.com>
 
+Add support to retrieve the EHT capabilities element passed by
+the userspace in the beacon template and store the pointer in
+struct cfg80211_ap_settings to be used by MAC80211.
 
-On 2/15/2022 4:02 PM, Jason A. Donenfeld wrote:
-> Hardware random number generators are supposed to use the hw_random
-> framework. This commit turns ath9k's kthread-based design into a proper
-> hw_random driver.
-> 
-> This compiles, but I have no hardware or other ability to determine
-> whether it works. I'll leave further development up to the ath9k
-> and hw_random maintainers.
-> 
-> Cc: Toke Høiland-Jørgensen <toke@redhat.com>
-> Cc: Kalle Valo <kvalo@kernel.org>
-> Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-> ---
+Signed-off-by: Vikram Kandukuri <quic_vikram@quicinc.com>
+Co-developed-by: Aloka Dixit <quic_alokad@quicinc.com>
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+Co-developed-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+---
+ include/net/cfg80211.h | 2 ++
+ net/wireless/nl80211.c | 3 +++
+ 2 files changed, 5 insertions(+)
 
-[snip]
-
->   	if (!AR_SREV_9300_20_OR_LATER(ah))
->   		return;
->   
-> -	sc->rng_task = kthread_run(ath9k_rng_kthread, sc, "ath9k-hwrng");
-> -	if (IS_ERR(sc->rng_task))
-> -		sc->rng_task = NULL;
-> +	sc->rng_ops.name = "ath9k";
-
-You will have to give this instance an unique name because there can be 
-multiple ath9k adapters registered in a given system (like Wi-Fi 
-routers), and one of the first thing hwrng_register() does is ensure 
-that there is not an existing rng with the same name.
-
-Maybe using a combination of ath9k + dev_name() ought to be unique enough?
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 136c0c537334..aaf25645aef3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1285,6 +1285,7 @@ struct cfg80211_unsol_bcast_probe_resp {
+  * @ht_cap: HT capabilities (or %NULL if HT isn't enabled)
+  * @vht_cap: VHT capabilities (or %NULL if VHT isn't enabled)
+  * @he_cap: HE capabilities (or %NULL if HE isn't enabled)
++ * @eht_cap: EHT capabilities (or %NULL if EHT isn't enabled)
+  * @ht_required: stations must support HT
+  * @vht_required: stations must support VHT
+  * @twt_responder: Enable Target Wait Time
+@@ -1322,6 +1323,7 @@ struct cfg80211_ap_settings {
+ 	const struct ieee80211_vht_cap *vht_cap;
+ 	const struct ieee80211_he_cap_elem *he_cap;
+ 	const struct ieee80211_he_operation *he_oper;
++	const struct ieee80211_eht_cap_elem *eht_cap;
+ 	bool ht_required, vht_required, he_required, sae_h2e_required;
+ 	bool twt_responder;
+ 	u32 flags;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1595e14fd678..03eb6870e60f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5434,6 +5434,9 @@ static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
+ 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
+ 	if (cap && cap->datalen >= sizeof(*params->he_oper) + 1)
+ 		params->he_oper = (void *)(cap->data + 1);
++	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY, ies, ies_len);
++	if (cap && cap->datalen >= sizeof(*params->eht_cap) + 1)
++		params->eht_cap = (void *)(cap->data + 1);
+ }
+ 
+ static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
 -- 
-Florian
+2.31.1
+
