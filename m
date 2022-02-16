@@ -2,50 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D6D2C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57DCCC433FE
 	for <linux-wireless@archiver.kernel.org>; Wed, 16 Feb 2022 05:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233990AbiBPFcL (ORCPT
+        id S1344596AbiBPFcN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Feb 2022 00:32:11 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46926 "EHLO
+        Wed, 16 Feb 2022 00:32:13 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230002AbiBPFcL (ORCPT
+        with ESMTP id S230002AbiBPFcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Feb 2022 00:32:11 -0500
+        Wed, 16 Feb 2022 00:32:12 -0500
 Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03DD974629
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2022 21:31:56 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B89FE7B54B
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2022 21:32:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644989516; x=1676525516;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=OsZxbmtuZ0hIT8EUvgiP9BjuG52mFcYwJTKkOqTjpME=;
-  b=F6/MyQViZBk2Ts4xNNWw19Zeh91NoCTQDZUAk/puGurJ9MepS3gkRU5L
-   yh7/68NVDCzuO30vWDJDEKX4JWUX2hVEZhn6j6gJ40+eG3ryQfG37kR5j
-   3rEyIZzVRRCXZanGlVvge+MARf6+HOHpIS0yFsgj9koQzQAxnbdZXunmf
-   0=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 15 Feb 2022 21:31:56 -0800
+  t=1644989520; x=1676525520;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=gwmYX1eeWslYyE2ZWz0TtBsoBANU3fW2bwAIzs4igpA=;
+  b=nDN0YvuS4bb01PPP2x2Brh2kcKtviUC2ISR7agP7fVhW+1VXj2/A7q8n
+   3yctSpMV44209nIISRFwPWCHkcYVstmE+UqSb3Is2bXQI0GygxqcvaQtO
+   BCDy73sNgh7CKAybRpJ5pH/Wftc2OE4vGPUnRTPl9OnlZP/0/r0CFHGdx
+   M=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 15 Feb 2022 21:31:58 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 21:31:56 -0800
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 21:31:58 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Tue, 15 Feb 2022 21:31:56 -0800
+ 15.2.986.15; Tue, 15 Feb 2022 21:31:57 -0800
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 15 Feb 2022 21:31:55 -0800
+ 15.2.922.19; Tue, 15 Feb 2022 21:31:56 -0800
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
 CC:     Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH 0/3] Support for EHT elements in AP mode
-Date:   Tue, 15 Feb 2022 21:31:42 -0800
-Message-ID: <20220216053145.20898-1-quic_alokad@quicinc.com>
+Subject: [PATCH 3/3] mac80211: EHT operation element support in AP mode
+Date:   Tue, 15 Feb 2022 21:31:45 -0800
+Message-ID: <20220216053145.20898-4-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220216053145.20898-1-quic_alokad@quicinc.com>
+References: <20220216053145.20898-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -56,52 +58,91 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to store pointers to EHT capabilities and operation
-elements received in the beacon template for AP mode.
+Add new parameters to struct ieee80211_bss_conf for EHT operation
+element data in AP mode.
 
-This patch-set is based on top of following patch-set for the
-definition of WLAN_EID_EXT_EHT_CAPABILITY:
-https://patchwork.kernel.org/project/linux-wireless/list/?series=613209&state=%2A&archive=both
-
-Patch 1/3 is taken from
-https://patchwork.kernel.org/project/linux-wireless/patch/1640163883-12696-4-git-send-email-quic_vjakkam@quicinc.com/
-
-Aloka Dixit (2):
-  nl80211: retrieve EHT operation element in AP mode
-  mac80211: EHT operation element support in AP mode
-
-Vikram Kandukuri (1):
-  nl80211: retrieve EHT capabilities in AP mode
-
- include/net/cfg80211.h     |  4 ++++
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
  include/net/mac80211.h     |  7 +++++++
  net/mac80211/cfg.c         |  8 ++++++++
  net/mac80211/eht.c         | 11 +++++++++++
  net/mac80211/ieee80211_i.h |  2 ++
- net/wireless/nl80211.c     |  6 ++++++
- 6 files changed, 38 insertions(+)
+ 4 files changed, 28 insertions(+)
 
-
-base-commit: 8aaaf2f3af2ae212428f4db1af34214225f5cec3
-prerequisite-patch-id: 328a8dc53fc4ed611094648f8354ea51a220a469
-prerequisite-patch-id: 9f6778fe7023b0f4d103e206ed80cb3074c4e4f9
-prerequisite-patch-id: 40aa2131e1529282c8099c4e270155292802f4ff
-prerequisite-patch-id: c9db940e5649f3586357ee608d24f518a7fadb00
-prerequisite-patch-id: edb4a64395858a174dd6ad739cf065f4092f2da1
-prerequisite-patch-id: eeacae90f17719f5546e53cd04082849491dcfc2
-prerequisite-patch-id: b5c0bb8119aa46b6aba653fa60c173c6546556e0
-prerequisite-patch-id: 4a58f779c257d9191efe94a7283c59eff683f7c3
-prerequisite-patch-id: fd4e44527c2965ae943c68c7c96bde33777bde59
-prerequisite-patch-id: 6c8a84b6e8e3a5c317ec3410d9f99b06a779304d
-prerequisite-patch-id: f7e51eb9ee4da52a5f79248f0314ef23db3333bc
-prerequisite-patch-id: eb4c3cfd53903f093f233af6bf00b88acab86595
-prerequisite-patch-id: 7d85d1f530c496da1ad6769c59f8524f58edfca9
-prerequisite-patch-id: ff5183a0e028a1041700c32992eb18a13dc2de8b
-prerequisite-patch-id: 159188202e4afc341f8a566d45cdf2e2afcb2d2e
-prerequisite-patch-id: e69273ed8e6c0cebb8288230fc781f345663035d
-prerequisite-patch-id: 06cfb4718beb6d69f078744feef1b6b897fad0aa
-prerequisite-patch-id: d17f643739d565fca4d8f9139da0083d522647ed
-prerequisite-patch-id: bb5917bb77a3de7b6804d25b56043ff26184d49d
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e584a3998d2c..e7e3b31a4c75 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -637,6 +637,8 @@ struct ieee80211_fils_discovery {
+  * @tx_pwr_env_num: number of @tx_pwr_env.
+  * @pwr_reduction: power constraint of BSS.
+  * @eht_support: does this BSS support EHT
++ * @eht_oper: EHT operation information of the BSS (AP/Mesh) or of the AP we
++ *	are connected to (STA).
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -712,6 +714,11 @@ struct ieee80211_bss_conf {
+ 	u8 tx_pwr_env_num;
+ 	u8 pwr_reduction;
+ 	bool eht_support;
++	struct {
++		u8 chan_width;
++		u8 ccfs;
++		u8 present_bm;
++	} eht_oper;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index aa45627a4208..4227236dd5ba 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1137,6 +1137,14 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 	}
+ 
++	if (params->eht_cap && params->eht_oper) {
++		if (!sdata->vif.bss_conf.he_support)
++			return -EOPNOTSUPP;
++
++		sdata->vif.bss_conf.eht_support = true;
++		ieee80211_eht_op_ie_to_bss_conf(&sdata->vif, params->eht_oper);
++	}
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP &&
+ 	    params->mbssid_config.tx_wdev) {
+ 		err = ieee80211_set_ap_mbssid_options(sdata,
+diff --git a/net/mac80211/eht.c b/net/mac80211/eht.c
+index 364ad0ef7692..243dfcfaf7b2 100644
+--- a/net/mac80211/eht.c
++++ b/net/mac80211/eht.c
+@@ -74,3 +74,14 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
+ 	sta->cur_max_bandwidth = ieee80211_sta_cap_rx_bw(sta);
+ 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+ }
++
++void ieee80211_eht_op_ie_to_bss_conf(struct ieee80211_vif *vif,
++				     const struct ieee80211_eht_operation *op_ie)
++{
++	if (!op_ie)
++		return;
++
++	vif->bss_conf.eht_oper.chan_width = op_ie->chan_width;
++	vif->bss_conf.eht_oper.ccfs = op_ie->ccfs;
++	vif->bss_conf.eht_oper.present_bm = op_ie->present_bm;
++}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 00d5bd6013c2..2f1261ebe94d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2532,4 +2532,6 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    const u8 *he_cap_ie, u8 he_cap_len,
+ 				    const struct ieee80211_eht_cap_elem *eht_cap_ie_elem,
+ 				    u8 eht_cap_len, struct sta_info *sta);
++void ieee80211_eht_op_ie_to_bss_conf(struct ieee80211_vif *vif,
++				     const struct ieee80211_eht_operation *eht_op);
+ #endif /* IEEE80211_I_H */
 -- 
 2.31.1
 
