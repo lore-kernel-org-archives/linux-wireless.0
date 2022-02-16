@@ -2,106 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC528C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Feb 2022 05:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B16B3C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Feb 2022 05:38:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238269AbiBPFeE (ORCPT
+        id S1344625AbiBPFig (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Feb 2022 00:34:04 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47084 "EHLO
+        Wed, 16 Feb 2022 00:38:36 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344603AbiBPFcN (ORCPT
+        with ESMTP id S230002AbiBPFif (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Feb 2022 00:32:13 -0500
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FB0778047
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2022 21:31:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1644989518; x=1676525518;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KdNmNzVZYRiytrtxz3FD2pJQQk2S9nltguF4C2aU2Ug=;
-  b=tUEC5dT6G2XD4A05iG+c9hO3khQBt4pvDgILUKsAUqMDFUx9vU2W8SDu
-   rtkBwNSzToGevApLHqF4d+WaiXcFJe15lHlAC8sDuuySL6r/5Dmtg9q8M
-   qFwx318KBhgD7V9pkbZJIzZdBpBtjxrUelN1Dk7Sg7Lt0+mH+WpLdnwLU
-   s=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 15 Feb 2022 21:31:57 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 21:31:57 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Tue, 15 Feb 2022 21:31:56 -0800
-Received: from alokad-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.922.19; Tue, 15 Feb 2022 21:31:56 -0800
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-CC:     Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH 2/3] nl80211: retrieve EHT operation element in AP mode
-Date:   Tue, 15 Feb 2022 21:31:44 -0800
-Message-ID: <20220216053145.20898-3-quic_alokad@quicinc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220216053145.20898-1-quic_alokad@quicinc.com>
-References: <20220216053145.20898-1-quic_alokad@quicinc.com>
+        Wed, 16 Feb 2022 00:38:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A9A7B8236;
+        Tue, 15 Feb 2022 21:38:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F829619FC;
+        Wed, 16 Feb 2022 05:38:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5EEC340E8;
+        Wed, 16 Feb 2022 05:38:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644989902;
+        bh=P7No01mWTKTK8n7XDrHDJxfmk9w1GcNv6CSOAUyAhM8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=cJ7R+z9PZat/2UJpKAXS/9gITtDX2by/uEFgAoBc8g/SB1OnjJ1uNI1qHGadq8LRX
+         N0u/xHxg1x+aG2v+u2LtlSFP+FMEidRMdgjtPYcOwjDMKr6xOz9aKxBqc/eJZsc2HS
+         b1nYfY/JZhz1+TZMTJczVQVvjTSEysQiwXlnqVRmQbR6qNwC29RKXYq0FBGi+M369I
+         q8nkO6ZfQahcclabOmzoWFL9upUirIkNjhpmNZQWQ83nlsL6P2Qs77oWpBOK4IcWtR
+         Cjx0UNmbZcBwasm1dsIBd8Kxhwm9WDuOVURK9kq0I7jFrsbm3UGRFrvhHZOx36NaNR
+         7TSEzEZfU/ouQ==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc:     miaoqing@codeaurora.org, rsalvaterra@gmail.com,
+        Toke =?utf-8?Q?H?= =?utf-8?Q?=C3=B8iland-J=C3=B8rgensen?= 
+        <toke@toke.dk>, "Sepehrdad\, Pouyan" <pouyans@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Subject: Re: [PATCH v2] ath9k: use hw_random API instead of directly dumping into random.c
+References: <CAHmME9pZaYW-p=zU4v96TjeSijm-g03cNpvUJcNvhOqh5v+Lwg@mail.gmail.com>
+        <20220216000230.22625-1-Jason@zx2c4.com>
+Date:   Wed, 16 Feb 2022 07:38:17 +0200
+In-Reply-To: <20220216000230.22625-1-Jason@zx2c4.com> (Jason A. Donenfeld's
+        message of "Wed, 16 Feb 2022 01:02:30 +0100")
+Message-ID: <87mtir9xrq.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to retrieve the EHT operation element passed by
-the userspace in the beacon template and store the pointer in
-struct cfg80211_ap_settings to be used by MAC80211.
+"Jason A. Donenfeld" <Jason@zx2c4.com> writes:
 
-Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
----
- include/net/cfg80211.h | 2 ++
- net/wireless/nl80211.c | 3 +++
- 2 files changed, 5 insertions(+)
+> Hardware random number generators are supposed to use the hw_random
+> framework. This commit turns ath9k's kthread-based design into a proper
+> hw_random driver.
+>
+> This compiles, but I have no hardware or other ability to determine
+> whether it works. I'll leave further development up to the ath9k
+> and hw_random maintainers.
+>
+> Cc: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Dominik Brodowski <linux@dominikbrodowski.net>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aaf25645aef3..a4c31b480a2e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1295,6 +1295,7 @@ struct cfg80211_unsol_bcast_probe_resp {
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_bss_color: BSS Color settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-+ * @eht_oper: EHT operation IE (or %NULL if EHT isn't enabled)
-  * @fils_discovery: FILS discovery transmission parameters
-  * @unsol_bcast_probe_resp: Unsolicited broadcast probe response parameters
-  * @mbssid_config: AP settings for multiple bssid
-@@ -1324,6 +1325,7 @@ struct cfg80211_ap_settings {
- 	const struct ieee80211_he_cap_elem *he_cap;
- 	const struct ieee80211_he_operation *he_oper;
- 	const struct ieee80211_eht_cap_elem *eht_cap;
-+	const struct ieee80211_eht_operation *eht_oper;
- 	bool ht_required, vht_required, he_required, sae_h2e_required;
- 	bool twt_responder;
- 	u32 flags;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 03eb6870e60f..a5f049fe8de7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5437,6 +5437,9 @@ static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY, ies, ies_len);
- 	if (cap && cap->datalen >= sizeof(*params->eht_cap) + 1)
- 		params->eht_cap = (void *)(cap->data + 1);
-+	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_OPERATION, ies, ies_len);
-+	if (cap && cap->datalen >= sizeof(*params->eht_oper) + 1)
-+		params->eht_oper = (void *)(cap->data + 1);
- }
- 
- static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
--- 
-2.31.1
+[...]
 
+> +retry:
+> +	if (max & ~3UL)
+> +		bytes_read =3D ath9k_rng_data_read(sc, buf, max >> 2);
+> +	if ((max & 3UL) && ath9k_rng_data_read(sc, &word, 1)) {
+> +		memcpy(buf + bytes_read, &word, max & 3);
+> +		bytes_read +=3D max & 3;
+> +		memzero_explicit(&word, sizeof(word));
+> +	}
+> +	if (max && unlikely(!bytes_read) && wait) {
+> +		msleep(ath9k_rng_delay_get(++fail_stats));
+> +		goto retry;
+>  	}
+
+Wouldn't a while loop be cleaner? With a some kind limit for the number
+of loops, to avoid a neverending loop.
+
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
