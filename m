@@ -2,56 +2,55 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CBAC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Feb 2022 10:56:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67672C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Feb 2022 10:57:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345430AbiBUK5R (ORCPT
+        id S1355405AbiBUK5h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Feb 2022 05:57:17 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55028 "EHLO
+        Mon, 21 Feb 2022 05:57:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355666AbiBUK4B (ORCPT
+        with ESMTP id S1344490AbiBUK5F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Feb 2022 05:56:01 -0500
+        Mon, 21 Feb 2022 05:57:05 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A42A2DD71;
-        Mon, 21 Feb 2022 02:25:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE9FE1EAE3;
+        Mon, 21 Feb 2022 02:26:59 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1773E60F5F;
-        Mon, 21 Feb 2022 10:25:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 879B5C340E9;
-        Mon, 21 Feb 2022 10:25:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5C17360B92;
+        Mon, 21 Feb 2022 10:26:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 076FFC340E9;
+        Mon, 21 Feb 2022 10:26:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645439105;
-        bh=I0h6TXzpI9LTd9+PXWtc7STtHBWbZ1omafIuWXHUcvM=;
+        s=k20201202; t=1645439218;
+        bh=zmMWec62cB5Cjd7XLarluKI+4l5tgoKWMrGx5N4Jq0Y=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=dPpIDnIeu+OeUBZ1vTyvbO1j9NeQvZqlqC/YN5IoGmfD/CmJdP73k2C0mtiBUGOFc
-         WEQTyXgwoZcQG4gYHaZZsux6ucbLuUJgrgoVjdC6djv3VScHpsUFAKxpbYpv6EM1qC
-         3JPLd0bRsue5qdYek8oAjYxJpl2KLGAlukVL9X0MFt0jydNeleoZJaFijz7X+plocd
-         YWEqAQ867NxG1pc+ftAOMD/cpZ0GXb1Xz0uilkg+Ng17WlsSDgJXggRyQsj62cyHUD
-         FW32uTlLw4uqRlTbI3vOerJSI7T++XtD//7EFfTA7Afpt3vFODb2XpqfaKQC2g6CBB
-         t22zEnQ8dYohQ==
+        b=LvmOj6uInh2/MoCt76bfE0XTL+uBGUkXe/rqCZXu9PkQ/H5WpZBJiJnsGn5n2xDsz
+         pau1uVrgLOUY8TC4eVpX5gAPKT/cDtPLtaGUoqc+ED2tVnhBulByz2Zn/wHUKT+aRT
+         fkvDPr5rhS1fEj9bv7HBr/MXhAQ3vYWoiMWfb/21khkjGskUzKyFKeBVY9tYb/Pu1f
+         W6tBOJh2IM72HfmGhEzFIRuNVjETg5hpJXHP5p6705AxEDOEr5zBLVnWoeHvYxvkwz
+         tmQwNYHzq8FfYLMVVFTdESh4rR99LmwEywgo2lJIV08NB28eMfx+V4JtZYvnncK1aq
+         ppWK0hmQzwOoA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH][next] ath11k: Replace zero-length arrays with
- flexible-array
+Subject: Re: [PATCH][next] ath: Replace zero-length arrays with flexible-array
  members
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220216194836.GA904035@embeddedor>
-References: <20220216194836.GA904035@embeddedor>
+In-Reply-To: <20220216194915.GA904081@embeddedor>
+References: <20220216194915.GA904081@embeddedor>
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
 Cc:     "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, ath11k@lists.infradead.org,
+        Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164543910185.26423.18264056361764169829.kvalo@kernel.org>
-Date:   Mon, 21 Feb 2022 10:25:03 +0000 (UTC)
+Message-ID: <164543921533.26423.14206664032852738351.kvalo@kernel.org>
+Date:   Mon, 21 Feb 2022 10:26:56 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -74,10 +73,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-e9e591686ccb ath11k: Replace zero-length arrays with flexible-array members
+cfb72c08912f ath: Replace zero-length arrays with flexible-array members
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220216194836.GA904035@embeddedor/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220216194915.GA904081@embeddedor/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
