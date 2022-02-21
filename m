@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05460C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Feb 2022 09:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E248BC4321E
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Feb 2022 09:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243660AbiBUJmg (ORCPT
+        id S1351162AbiBUJsi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Feb 2022 04:42:36 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59840 "EHLO
+        Mon, 21 Feb 2022 04:48:38 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350820AbiBUJlW (ORCPT
+        with ESMTP id S1352896AbiBUJsA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Feb 2022 04:41:22 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC5B33D1DF;
-        Mon, 21 Feb 2022 01:17:31 -0800 (PST)
+        Mon, 21 Feb 2022 04:48:00 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A68BC17A9F;
+        Mon, 21 Feb 2022 01:21:09 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 5927ACE0E90;
-        Mon, 21 Feb 2022 09:17:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C9BBC340EB;
-        Mon, 21 Feb 2022 09:17:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4444A60B1E;
+        Mon, 21 Feb 2022 09:21:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CD11C340EB;
+        Mon, 21 Feb 2022 09:21:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645435048;
-        bh=iJfhffaxaqucqlfWHbQPFYGDjZ9N6RtcLoLdRTMnIyY=;
+        s=k20201202; t=1645435268;
+        bh=G9qsOIaU98YL4dvaSW0KBRUIIJZ5fR+aEheIpSP0fSU=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=W5U/jExpVNMAES/DEUdOWgigHuCG/oVtAsjj8JoBZTk2KEHetUKwb/cFaweqMcNAZ
-         Z6kpwWnalZu3uEYgA/hKbYwgNWdczdkAG5opvih6GdxATlVYnbb1hZ94JVrmrJzLCt
-         Fij2h2sF3q0hcphj5MGm8M/rEKwxj/Cxcg/O1rq5Vh4894Nx3wCdolR3ZX9srwsl+b
-         pazkXtAD5wAfujHr0UukkEKa61if2dhZzzdey4hZ8PjrwItoCeeue6BkvHDyxASYfn
-         JkAX8Rh0kpzfmFf/a/tQv96UClGLX1hT+mrObJ1QIOty5JcVw3BAIO6DrLVS6cMwej
-         abJ2tgBzjtTQg==
+        b=YopDpMVtruprOaV/SZ/FMFShUXL8Hjwbo0vMR12S3RDVmQTEfu+fKqiHzmU3/zkYz
+         UGxCl8MwUZIKXLUBGsYaWUiQab+v3I5Sz4dStrOAg7B/V+Sl/Gts/wW428RZ3htYES
+         v8nYZdwN61GyoUVwnnR0G6LPdiKX4QP7MaaBz4F3FWDd2sQTJSigCZFHqdMTuNuIFB
+         EGqG4xh7qdHn9fICcVWCtFeIuxlNELucANaysdqKUIzHqDrqoSGokhIHloWOL7cLwm
+         YOi/FD20HkWz/sUshQmkQU6Q7oYk1fipT710V3gArlPuzU5FFBnguKeZEI9moMs94U
+         3PWzatYZl25/w==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
@@ -40,12 +40,12 @@ Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
 Subject: Re: [PATCH v2 05/19] ath11k: Remove core PCI references from PCI common code
 References: <1642337235-8618-1-git-send-email-quic_mpubbise@quicinc.com>
         <1642337235-8618-6-git-send-email-quic_mpubbise@quicinc.com>
-        <87a6fggo0h.fsf@kernel.org>
-        <df81787b-3ad4-62b7-7a39-fdca6775bae1@quicinc.com>
-Date:   Mon, 21 Feb 2022 11:17:25 +0200
-In-Reply-To: <df81787b-3ad4-62b7-7a39-fdca6775bae1@quicinc.com> (Manikanta
-        Pubbisetty's message of "Mon, 21 Feb 2022 12:25:45 +0530")
-Message-ID: <875yp8zihm.fsf@kernel.org>
+        <87a6fggo0h.fsf@kernel.org> <871r0sgn7n.fsf@kernel.org>
+        <3b8b03ba-c6a1-d794-79e5-f244bc1dffae@quicinc.com>
+Date:   Mon, 21 Feb 2022 11:21:04 +0200
+In-Reply-To: <3b8b03ba-c6a1-d794-79e5-f244bc1dffae@quicinc.com> (Manikanta
+        Pubbisetty's message of "Mon, 21 Feb 2022 12:37:41 +0530")
+Message-ID: <87wnhoy3r3.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -55,58 +55,68 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
 
-> On 1/28/2022 3:50 PM, Kalle Valo wrote:
->> Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
+> On 1/28/2022 4:07 PM, Kalle Valo wrote:
+>> Kalle Valo <kvalo@kernel.org> writes:
 >>
->>> Remove core PCI and ath11k PCI references(struct ath11k_pci)
->>> from PCI common code. Since, PCI common code will be used
->>> by hybrid bus devices, this code should be independent
->>> from ATH11K PCI references and Linux core PCI references
->>> like struct pci_dev.
+>>> Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
 >>>
->>> Since this change introduces function callbacks for bus wakeup
->>> and bus release operations, wakeup_mhi HW param is no longer
->>> needed and hence it is removed completely. Alternatively, bus
->>> wakeup/release ops for QCA9074 are initialized to NULL as
->>> QCA9704 does not need bus wakeup/release for register accesses.
+>>>> Remove core PCI and ath11k PCI references(struct ath11k_pci)
+>>>> from PCI common code. Since, PCI common code will be used
+>>>> by hybrid bus devices, this code should be independent
+>>>> from ATH11K PCI references and Linux core PCI references
+>>>> like struct pci_dev.
+>>>>
+>>>> Since this change introduces function callbacks for bus wakeup
+>>>> and bus release operations, wakeup_mhi HW param is no longer
+>>>> needed and hence it is removed completely. Alternatively, bus
+>>>> wakeup/release ops for QCA9074 are initialized to NULL as
+>>>> QCA9704 does not need bus wakeup/release for register accesses.
+>>>>
+>>>> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
+>>>> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+>>>> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+>>>> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+>>>>
+>>>> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 >>>
->>> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
->>> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
->>> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
->>> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+>>> [...]
 >>>
->>> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+>>>> @@ -651,6 +653,13 @@ struct ath11k_bus_params {
+>>>>   	bool fixed_bdf_addr;
+>>>>   	bool fixed_mem_region;
+>>>>   	bool static_window_map;
+>>>> +	struct {
+>>>> +		void (*wakeup)(struct ath11k_base *ab);
+>>>> +		void (*release)(struct ath11k_base *ab);
+>>>> +		int (*get_msi_irq)(struct ath11k_base *ab, unsigned int vector);
+>>>> +		void (*window_write32)(struct ath11k_base *ab, u32 offset, u32 value);
+>>>> +		u32 (*window_read32)(struct ath11k_base *ab, u32 offset);
+>>>> +	} ops;
+>>>>   };
+>>>
+>>> Please don't use bus_params for this, I'm starting to suspect that we
+>>> actually need to remove struct ath11k_bus_params altogether. It would be
+>>> cleaner to have separate 'struct ath11k_pci_ops' or something like that.
 >>
->> [...]
->>
->>> @@ -651,6 +653,13 @@ struct ath11k_bus_params {
->>>   	bool fixed_bdf_addr;
->>>   	bool fixed_mem_region;
->>>   	bool static_window_map;
->>> +	struct {
->>> +		void (*wakeup)(struct ath11k_base *ab);
->>> +		void (*release)(struct ath11k_base *ab);
->>> +		int (*get_msi_irq)(struct ath11k_base *ab, unsigned int vector);
->>> +		void (*window_write32)(struct ath11k_base *ab, u32 offset, u32 value);
->>> +		u32 (*window_read32)(struct ath11k_base *ab, u32 offset);
->>> +	} ops;
->>>   };
->>
->> Please don't use bus_params for this, I'm starting to suspect that we
->> actually need to remove struct ath11k_bus_params altogether. It would be
->> cleaner to have separate 'struct ath11k_pci_ops' or something like that.
+>> And after looking at this more it seems .get_msi_irq is the only
+>> function which actually has two different implementations. The other
+>> four are either run or not run, there's no difference in the
+>> implementation. So would it be cleaner to have a some sort check within
+>> the function for these other four, instead using function pointers?
 >>
 >
-> Sure, something like 'struct ath11k_bus_ops' in ath11k_base struct
-> would be appropriate.
+> WCN6750 has it's own wakeup() and release(), I'll send that patch
+> separately. QCN9074 doesn't need wakeup() and release() functions.
+>
+> The intention of the patch was to remove all Linux and ATH11K PCI
+> reference like struct pci_dev and ath11k_pci in the common code.
+> TBH, WCN6750 doesn't need these references since it is a AHB device
+> in ATH11K. If we have these references in common code, first thing is
+> the code will look kind of messed up and another aspect is we need to
+> enable CONFIG_PCI unnecessarily. This was the reason behind defining
+> other two callbacks window_write32() and read32().
 
-But we have 'struct ath11k_hif_ops' already, and that's basically
-ath11k_bus_ops with a confusing name :) (IIRC HIF means Host InterFace,
-or something like that.) So having both ath11k_bus_ops and
-ath11k_hif_ops would become even more confusing.
-
-You are basically abstracting out PCI functionality, that's why I
-suggested ath11k_pci_ops. But yeah, naming is hard :)
+Ah, makes sense.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
