@@ -2,86 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A519C4321E
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B234C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237117AbiBWCbM (ORCPT
+        id S237040AbiBWCcm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:31:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44110 "EHLO
+        Tue, 22 Feb 2022 21:32:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236987AbiBWCaa (ORCPT
+        with ESMTP id S237056AbiBWCcd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 21:30:30 -0500
+        Tue, 22 Feb 2022 21:32:33 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CACF33DDF7;
-        Tue, 22 Feb 2022 18:29:33 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E999659A53;
+        Tue, 22 Feb 2022 18:30:30 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 626D361526;
-        Wed, 23 Feb 2022 02:29:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFA59C340E8;
-        Wed, 23 Feb 2022 02:29:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C1164614FF;
+        Wed, 23 Feb 2022 02:30:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D40C340EB;
+        Wed, 23 Feb 2022 02:30:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645583372;
-        bh=OKUJ1VFByJYAVz6NAr0y42oP8C8o9h3GY4OVSvu1guQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ichZU6j43LatyNWYKTD0ONUyZ3+kAxYDHFCHMlDP3zi+UjUlfEamt31oC9qBV4U5F
-         6QxlPyqfC+u837bM+q3KHCLILLEMSaBLsQRfQnQct2h/OtA64cVL75yO80sfvCPsOo
-         AbcDkfW6OZygexTObOmgb2LQdu8dEhzNPWgCDoKCV1+hj/7rHm12YKAoxrXck0Bdfj
-         FsU1J63WjTHqwmK0UM2qDwNyJpPd/k58UFZ/J5xV9zJPn2QU0AwdB4rICyXZxRAO/O
-         wlHTTuBrAEzj4XG5zP/G8Gkut+CgbEd9i4vFI8GBEN1I3C/A/1QcVVfWuNKQdV13x0
-         cZT9piP26dfug==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 01/28] mac80211_hwsim: report NOACK frames in tx_status
-Date:   Tue, 22 Feb 2022 21:29:02 -0500
-Message-Id: <20220223022929.241127-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        s=k20201202; t=1645583422;
+        bh=h5iW1xnxYLihq1VYREsa+idqlKZAATRY4MQrqNiQGKE=;
+        h=Date:From:To:Cc:Subject:From;
+        b=VptbQJ50VYO1ckFXPf8UodRCgCOzAMPRTDKvgvQIJjjzb+v/B2kF1GqwlAPWtZGYc
+         dvNJDnM3NdMT/GIuYs6FunvztufU4tigXz+lfis3BUsMza8vP9YZgKD10NfEZWJ1Co
+         wTAKq5xm/pSdUELV2jMJy0hjLMc22YsyEHT1pkvPSJ6hc/BI/FnoHZWuyhIOl00C6z
+         ULBARob9XDxoGzMj+sS0YwujjTRwBL/v+thrOq8TH3bXvG2owLvFXM1DS/z5xzX4MX
+         v3sWaAyBFRCMlHEj2jVFVzBccD7rtFiX1TD6MObPsgiA3OUEtzjez+HTIPZGZa71mn
+         w7Ez5L1Scaw4w==
+Date:   Tue, 22 Feb 2022 20:38:16 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH 0/6][next] ath6kl: wmi: Replace one-element arrays with
+ flexible-array members
+Message-ID: <cover.1645583264.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+This series aims to replace one-element arrays with flexible-array
+members in multiple structures in drivers/net/wireless/ath/ath6kl/wmi.h
 
-[ Upstream commit 42a79960ffa50bfe9e0bf5d6280be89bf563a5dd ]
+There is a regular need in the kernel to provide a way to declare having
+a dynamically sized set of trailing elements in a structure. Kernel code
+should always use “flexible array members”[1] for these cases. The older
+style of one-element or zero-length arrays should no longer be used[2].
 
-Add IEEE80211_TX_STAT_NOACK_TRANSMITTED to tx_status flags to have proper
-statistics for non-acked frames.
+This helps with the ongoing efforts to globally enable -Warray-bounds
+and get us closer to being able to tighten the FORTIFY_SOURCE routines
+on memcpy().
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Link: https://lore.kernel.org/r/20220111221327.1499881-1-benjamin.beichler@uni-rostock.de
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 4 ++++
- 1 file changed, 4 insertions(+)
+These issues were found with the help of Coccinelle and audited and fixed,
+manually.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 0adae76eb8df1..52f13afb7cba2 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3641,6 +3641,10 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 		}
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
- 	}
-+
-+	if (hwsim_flags & HWSIM_TX_CTL_NO_ACK)
-+		txi->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+
- 	ieee80211_tx_status_irqsafe(data2->hw, skb);
- 	return 0;
- out:
+[1] https://en.wikipedia.org/wiki/Flexible_array_member
+[2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
+
+Link: https://github.com/KSPP/linux/issues/79
+
+Gustavo A. R. Silva (6):
+  ath6kl: wmi: Replace one-element array with flexible-array member in
+    struct wmi_begin_scan_cmd
+  ath6kl: wmi: Replace one-element array with flexible-array member in
+    struct wmi_start_scan_cmd
+  ath6kl: wmi: Replace one-element array with flexible-array  member in
+    struct wmi_channel_list_reply
+  ath6kl: wmi: Replace one-element array with flexible-array  member in
+    struct wmi_connect_event
+  ath6kl: wmi: Replace one-element array with flexible-array  member in
+    struct wmi_disconnect_event
+  ath6kl: wmi: Replace one-element array with flexible-array  member in
+    struct wmi_aplist_event
+
+ drivers/net/wireless/ath/ath6kl/wmi.c | 30 +++++++--------------------
+ drivers/net/wireless/ath/ath6kl/wmi.h | 12 +++++------
+ 2 files changed, 14 insertions(+), 28 deletions(-)
+
 -- 
-2.34.1
+2.27.0
 
