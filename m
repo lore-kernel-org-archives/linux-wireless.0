@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6162C4321E
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 22:35:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD5FC4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 22:35:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244462AbiBWWfx (ORCPT
+        id S244489AbiBWWf4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Feb 2022 17:35:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42332 "EHLO
+        Wed, 23 Feb 2022 17:35:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244263AbiBWWfr (ORCPT
+        with ESMTP id S244228AbiBWWfr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 23 Feb 2022 17:35:47 -0500
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B099450E2B;
-        Wed, 23 Feb 2022 14:35:16 -0800 (PST)
+Received: from mga06.intel.com (mga06.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B077650E18;
+        Wed, 23 Feb 2022 14:35:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645655716; x=1677191716;
+  t=1645655715; x=1677191715;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references;
-  bh=HUMa9CK90NomsFE/q+eM+dfjfV8q5J7Xof3xZuAIz6c=;
-  b=WqTE0M4gLSq9TEOPgYS6MPGTJqKa9028fclNhOmI32tgRtC372uUCKJh
-   0VkxMQVu9KQ7uzX/8ZBntXo4vhrRJdnKigUvGpqMyfs5boHuusDtM73ID
-   +WcAyFhLPgGJsd9nSs52EoFSFxU0UhWwSEQshP+0s3+VCEtf+AITSNyL4
-   2r59vjDpxjj7TajUjUG/tNgkYVOdsx4s3vf4tEEXF0yTc4rPQ9mOr6Mct
-   s1gS/BKed5gtoBHuc47VhgzN3Whb5G+NgKehZ7OthQQDdrxj5KQIJlrw9
-   zVDFreHeoA+X5FNgRbmKWiSgZ8ritRNRyq0XmcX52O/PqM6HxaSY9yy/e
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10267"; a="232718030"
+  bh=IVgj6KUU7RxGy5Jm1SLV80O8YA4aPErblNZ2yskhhAw=;
+  b=kI2GsOLr11cp0BknVyG3LtSE14prJhDYuedwXfHLAa5u4fxaiVU1ZzG1
+   YyN0McOs/fNpKH2OoxZpnWhyX6eAEqCmjwveeOQOdbS6ToIzVDPxiN/xd
+   rHyzerYhEjXZkMi8v+BPqcIM5k0pvrjG0iUiwLfWsVqYVt/j5dWb1yot5
+   60O/9zcSP4wWTt54+cQ6eZcloqiQ1+8OMYDj/5qS13PwaJ2SYATxgazYZ
+   JOF2zWSizvsdCzBn8YNhDjYK01y+u/Zm87ZlbH4qKFw6XNMtG3uzRZ/QC
+   4EQ4P2Db7SW4Lo/wUKV6kaxN0ONbfzqht4NsgdKscbXg2Hk6gy9G1Cw7n
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10267"; a="312812433"
 X-IronPort-AV: E=Sophos;i="5.88,392,1635231600"; 
-   d="scan'208";a="232718030"
+   d="scan'208";a="312812433"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 14:35:15 -0800
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 14:35:11 -0800
 X-IronPort-AV: E=Sophos;i="5.88,392,1635231600"; 
-   d="scan'208";a="628252296"
+   d="scan'208";a="628252242"
 Received: from rmarti10-desk.jf.intel.com ([134.134.150.146])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 14:35:15 -0800
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 14:35:10 -0800
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -51,9 +51,9 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
         sreehari.kancharla@intel.com, madhusmita.sahu@intel.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH net-next v5 13/13] net: wwan: t7xx: Add maintainers and documentation
-Date:   Wed, 23 Feb 2022 15:33:26 -0700
-Message-Id: <20220223223326.28021-14-ricardo.martinez@linux.intel.com>
+Subject: [PATCH net-next v5 06/13] net: wwan: t7xx: Add AT and MBIM WWAN ports
+Date:   Wed, 23 Feb 2022 15:33:19 -0700
+Message-Id: <20220223223326.28021-7-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220223223326.28021-1-ricardo.martinez@linux.intel.com>
 References: <20220223223326.28021-1-ricardo.martinez@linux.intel.com>
@@ -61,180 +61,299 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adds maintainers and documentation for MediaTek t7xx 5G WWAN modem
-device driver.
+From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 
+Adds AT and MBIM ports to the port proxy infrastructure.
+The initialization method is responsible for creating the corresponding
+ports using the WWAN framework infrastructure. The implemented WWAN port
+operations are start, stop, and TX.
+
+Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Co-developed-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
 
 From a WWAN framework perspective:
 Reviewed-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- .../networking/device_drivers/wwan/index.rst  |   1 +
- .../networking/device_drivers/wwan/t7xx.rst   | 120 ++++++++++++++++++
- MAINTAINERS                                   |  11 ++
- 3 files changed, 132 insertions(+)
- create mode 100644 Documentation/networking/device_drivers/wwan/t7xx.rst
+ drivers/net/wwan/t7xx/Makefile          |   1 +
+ drivers/net/wwan/t7xx/t7xx_port_proxy.c |  24 +++
+ drivers/net/wwan/t7xx/t7xx_port_proxy.h |   1 +
+ drivers/net/wwan/t7xx/t7xx_port_wwan.c  | 210 ++++++++++++++++++++++++
+ 4 files changed, 236 insertions(+)
+ create mode 100644 drivers/net/wwan/t7xx/t7xx_port_wwan.c
 
-diff --git a/Documentation/networking/device_drivers/wwan/index.rst b/Documentation/networking/device_drivers/wwan/index.rst
-index 1cb8c7371401..370d8264d5dc 100644
---- a/Documentation/networking/device_drivers/wwan/index.rst
-+++ b/Documentation/networking/device_drivers/wwan/index.rst
-@@ -9,6 +9,7 @@ Contents:
-    :maxdepth: 2
+diff --git a/drivers/net/wwan/t7xx/Makefile b/drivers/net/wwan/t7xx/Makefile
+index 63e1c67b82b5..9eec2e2472fb 100644
+--- a/drivers/net/wwan/t7xx/Makefile
++++ b/drivers/net/wwan/t7xx/Makefile
+@@ -12,3 +12,4 @@ mtk_t7xx-y:=	t7xx_pci.o \
+ 		t7xx_hif_cldma.o  \
+ 		t7xx_port_proxy.o  \
+ 		t7xx_port_ctrl_msg.o \
++		t7xx_port_wwan.o \
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.c b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
+index 256442a60cc2..9a5cc64904d3 100644
+--- a/drivers/net/wwan/t7xx/t7xx_port_proxy.c
++++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.c
+@@ -51,6 +51,30 @@
  
-    iosm
-+   t7xx
+ static struct t7xx_port_static t7xx_md_ports[] = {
+ 	{
++		.tx_ch = PORT_CH_UART2_TX,
++		.rx_ch = PORT_CH_UART2_RX,
++		.txq_index = Q_IDX_AT_CMD,
++		.rxq_index = Q_IDX_AT_CMD,
++		.txq_exp_index = 0xff,
++		.rxq_exp_index = 0xff,
++		.path_id = CLDMA_ID_MD,
++		.flags = 0,
++		.ops = &wwan_sub_port_ops,
++		.name = "AT",
++		.port_type = WWAN_PORT_AT,
++	}, {
++		.tx_ch = PORT_CH_MBIM_TX,
++		.rx_ch = PORT_CH_MBIM_RX,
++		.txq_index = Q_IDX_MBIM,
++		.rxq_index = Q_IDX_MBIM,
++		.txq_exp_index = 0,
++		.rxq_exp_index = 0,
++		.path_id = CLDMA_ID_MD,
++		.flags = 0,
++		.ops = &wwan_sub_port_ops,
++		.name = "MBIM",
++		.port_type = WWAN_PORT_MBIM,
++	}, {
+ 		.tx_ch = PORT_CH_CONTROL_TX,
+ 		.rx_ch = PORT_CH_CONTROL_RX,
+ 		.txq_index = Q_IDX_CTRL,
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_proxy.h b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
+index b23750f78d55..1c9608987728 100644
+--- a/drivers/net/wwan/t7xx/t7xx_port_proxy.h
++++ b/drivers/net/wwan/t7xx/t7xx_port_proxy.h
+@@ -80,6 +80,7 @@ struct port_msg {
+ #define PORT_ENUM_VER_MISMATCH	0x00657272
  
- .. only::  subproject and html
+ /* Port operations mapping */
++extern struct port_ops wwan_sub_port_ops;
+ extern struct port_ops ctl_port_ops;
  
-diff --git a/Documentation/networking/device_drivers/wwan/t7xx.rst b/Documentation/networking/device_drivers/wwan/t7xx.rst
+ int t7xx_port_proxy_send_skb(struct t7xx_port *port, struct sk_buff *skb);
+diff --git a/drivers/net/wwan/t7xx/t7xx_port_wwan.c b/drivers/net/wwan/t7xx/t7xx_port_wwan.c
 new file mode 100644
-index 000000000000..dd5b731957ca
+index 000000000000..ac9144021431
 --- /dev/null
-+++ b/Documentation/networking/device_drivers/wwan/t7xx.rst
-@@ -0,0 +1,120 @@
-+.. SPDX-License-Identifier: GPL-2.0-only
++++ b/drivers/net/wwan/t7xx/t7xx_port_wwan.c
+@@ -0,0 +1,210 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2021, MediaTek Inc.
++ * Copyright (c) 2021-2022, Intel Corporation.
++ *
++ * Authors:
++ *  Amir Hanania <amir.hanania@intel.com>
++ *  Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
++ *  Haijun Liu <haijun.liu@mediatek.com>
++ *  Moises Veleta <moises.veleta@intel.com>
++ *  Ricardo Martinez<ricardo.martinez@linux.intel.com>
++ *
++ * Contributors:
++ *  Andy Shevchenko <andriy.shevchenko@linux.intel.com>
++ *  Chiranjeevi Rapolu <chiranjeevi.rapolu@intel.com>
++ *  Eliot Lee <eliot.lee@intel.com>
++ *  Sreehari Kancharla <sreehari.kancharla@intel.com>
++ */
 +
-+.. Copyright (C) 2020-21 Intel Corporation
++#include <linux/atomic.h>
++#include <linux/bitfield.h>
++#include <linux/dev_printk.h>
++#include <linux/err.h>
++#include <linux/gfp.h>
++#include <linux/minmax.h>
++#include <linux/netdevice.h>
++#include <linux/skbuff.h>
++#include <linux/spinlock.h>
++#include <linux/string.h>
++#include <linux/wwan.h>
 +
-+.. _t7xx_driver_doc:
++#include "t7xx_common.h"
++#include "t7xx_port.h"
++#include "t7xx_port_proxy.h"
++#include "t7xx_state_monitor.h"
 +
-+============================================
-+t7xx driver for MTK PCIe based T700 5G modem
-+============================================
-+The t7xx driver is a WWAN PCIe host driver developed for linux or Chrome OS platforms
-+for data exchange over PCIe interface between Host platform & MediaTek's T700 5G modem.
-+The driver exposes an interface conforming to the MBIM protocol [1]. Any front end
-+application (e.g. Modem Manager) could easily manage the MBIM interface to enable
-+data communication towards WWAN. The driver also provides an interface to interact
-+with the MediaTek's modem via AT commands.
++#define CCCI_HEADROOM		128
 +
-+Basic usage
-+===========
-+MBIM & AT functions are inactive when unmanaged. The t7xx driver provides
-+WWAN port userspace interfaces representing MBIM & AT control channels and does
-+not play any role in managing their functionality. It is the job of a userspace
-+application to detect port enumeration and enable MBIM & AT functionalities.
++static int t7xx_port_ctrl_start(struct wwan_port *port)
++{
++	struct t7xx_port *port_mtk = wwan_port_get_drvdata(port);
 +
-+Examples of few such userspace applications are:
++	if (atomic_read(&port_mtk->usage_cnt))
++		return -EBUSY;
 +
-+- mbimcli (included with the libmbim [2] library), and
-+- Modem Manager [3]
++	atomic_inc(&port_mtk->usage_cnt);
++	return 0;
++}
 +
-+Management Applications to carry out below required actions for establishing
-+MBIM IP session:
++static void t7xx_port_ctrl_stop(struct wwan_port *port)
++{
++	struct t7xx_port *port_mtk = wwan_port_get_drvdata(port);
 +
-+- open the MBIM control channel
-+- configure network connection settings
-+- connect to network
-+- configure IP network interface
++	atomic_dec(&port_mtk->usage_cnt);
++}
 +
-+Management Applications to carry out below required actions for send an AT
-+command and receive response:
++static int t7xx_port_ctrl_tx(struct wwan_port *port, struct sk_buff *skb)
++{
++	struct t7xx_port *port_private = wwan_port_get_drvdata(port);
++	size_t actual_len, alloc_size, txq_mtu = CLDMA_MTU;
++	struct t7xx_port_static *port_static;
++	unsigned int len, i, packets;
++	struct t7xx_fsm_ctl *ctl;
++	enum md_state md_state;
 +
-+- open the AT control channel using a UART tool or a special user tool
++	len = skb->len;
++	if (!len || !port_private->rx_length_th || !port_private->chan_enable)
++		return -EINVAL;
 +
-+Management application development
-+==================================
-+The driver and userspace interfaces are described below. The MBIM protocol is
-+described in [1] Mobile Broadband Interface Model v1.0 Errata-1.
++	port_static = port_private->port_static;
++	ctl = port_private->t7xx_dev->md->fsm_ctl;
++	md_state = t7xx_fsm_get_md_state(ctl);
++	if (md_state == MD_STATE_WAITING_FOR_HS1 || md_state == MD_STATE_WAITING_FOR_HS2) {
++		dev_warn(port_private->dev, "Cannot write to %s port when md_state=%d\n",
++			 port_static->name, md_state);
++		return -ENODEV;
++	}
 +
-+MBIM control channel userspace ABI
-+----------------------------------
++	alloc_size = min_t(size_t, txq_mtu, len + CCCI_HEADROOM);
++	actual_len = alloc_size - CCCI_HEADROOM;
++	packets = DIV_ROUND_UP(len, txq_mtu - CCCI_HEADROOM);
 +
-+/dev/wwan0mbim0 character device
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+The driver exposes an MBIM interface to the MBIM function by implementing
-+MBIM WWAN Port. The userspace end of the control channel pipe is a
-+/dev/wwan0mbim0 character device. Application shall use this interface for
-+MBIM protocol communication.
++	for (i = 0; i < packets; i++) {
++		struct ccci_header *ccci_h;
++		struct sk_buff *skb_ccci;
++		int ret;
 +
-+Fragmentation
-+~~~~~~~~~~~~~
-+The userspace application is responsible for all control message fragmentation
-+and defragmentation as per MBIM specification.
++		if (packets > 1 && packets == i + 1) {
++			actual_len = len % (txq_mtu - CCCI_HEADROOM);
++			alloc_size = actual_len + CCCI_HEADROOM;
++		}
 +
-+/dev/wwan0mbim0 write()
-+~~~~~~~~~~~~~~~~~~~~~~~
-+The MBIM control messages from the management application must not exceed the
-+negotiated control message size.
++		skb_ccci = __dev_alloc_skb(alloc_size, GFP_KERNEL);
++		if (!skb_ccci)
++			return -ENOMEM;
 +
-+/dev/wwan0mbim0 read()
-+~~~~~~~~~~~~~~~~~~~~~~
-+The management application must accept control messages of up the negotiated
-+control message size.
++		ccci_h = skb_put(skb_ccci, sizeof(*ccci_h));
++		t7xx_ccci_header_init(ccci_h, 0, actual_len + sizeof(*ccci_h),
++				      port_static->tx_ch, 0);
++		skb_put_data(skb_ccci, skb->data + i * (txq_mtu - CCCI_HEADROOM), actual_len);
++		t7xx_port_proxy_set_tx_seq_num(port_private, ccci_h);
 +
-+MBIM data channel userspace ABI
-+-------------------------------
++		ret = t7xx_port_send_skb_to_md(port_private, skb_ccci);
++		if (ret) {
++			dev_kfree_skb_any(skb_ccci);
++			dev_err(port_private->dev, "Write error on %s port, %d\n",
++				port_static->name, ret);
++			return ret;
++		}
 +
-+wwan0-X network device
-+~~~~~~~~~~~~~~~~~~~~~~
-+The t7xx driver exposes IP link interface "wwan0-X" of type "wwan" for IP
-+traffic. Iproute network utility is used for creating "wwan0-X" network
-+interface and for associating it with MBIM IP session.
++		port_private->seq_nums[MTK_TX]++;
++	}
 +
-+The userspace management application is responsible for creating new IP link
-+prior to establishing MBIM IP session where the SessionId is greater than 0.
++	dev_kfree_skb(skb);
++	return 0;
++}
 +
-+For example, creating new IP link for a MBIM IP session with SessionId 1:
++static const struct wwan_port_ops wwan_ops = {
++	.start = t7xx_port_ctrl_start,
++	.stop = t7xx_port_ctrl_stop,
++	.tx = t7xx_port_ctrl_tx,
++};
 +
-+  ip link add dev wwan0-1 parentdev wwan0 type wwan linkid 1
++static int t7xx_port_wwan_init(struct t7xx_port *port)
++{
++	struct t7xx_port_static *port_static = port->port_static;
 +
-+The driver will automatically map the "wwan0-1" network device to MBIM IP
-+session 1.
++	port->rx_length_th = RX_QUEUE_MAXLEN;
++	port->flags |= PORT_F_RX_ADJUST_HEADER;
 +
-+AT port userspace ABI
-+----------------------------------
++	if (port_static->rx_ch == PORT_CH_UART2_RX)
++		port->flags |= PORT_F_RX_CH_TRAFFIC;
 +
-+/dev/wwan0at0 character device
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+The driver exposes an AT port by implementing AT WWAN Port.
-+The userspace end of the control port is a /dev/wwan0at0 character
-+device. Application shall use this interface to issue AT commands.
++	if (!port->chan_enable)
++		port->flags |= PORT_F_RX_ALLOW_DROP;
 +
-+The MediaTek's T700 modem supports the 3GPP TS 27.007 [4] specification.
++	return 0;
++}
 +
-+References
-+==========
-+[1] *MBIM (Mobile Broadband Interface Model) Errata-1*
++static void t7xx_port_wwan_uninit(struct t7xx_port *port)
++{
++	unsigned long flags;
 +
-+- https://www.usb.org/document-library/
++	if (!port->wwan_port)
++		return;
 +
-+[2] *libmbim "a glib-based library for talking to WWAN modems and devices which
-+speak the Mobile Interface Broadband Model (MBIM) protocol"*
++	spin_lock_irqsave(&port->rx_wq.lock, flags);
++	port->rx_length_th = 0;
++	wwan_remove_port(port->wwan_port);
++	port->wwan_port = NULL;
++	spin_unlock_irqrestore(&port->rx_wq.lock, flags);
++}
 +
-+- http://www.freedesktop.org/wiki/Software/libmbim/
++static int t7xx_port_wwan_recv_skb(struct t7xx_port *port, struct sk_buff *skb)
++{
++	struct t7xx_port_static *port_static = port->port_static;
 +
-+[3] *Modem Manager "a DBus-activated daemon which controls mobile broadband
-+(2G/3G/4G/5G) devices and connections"*
++	if (!atomic_read(&port->usage_cnt)) {
++		dev_kfree_skb_any(skb);
++		dev_err_ratelimited(port->dev, "Port %s is not opened, drop packets\n",
++				    port_static->name);
++		return 0;
++	}
 +
-+- http://www.freedesktop.org/wiki/Software/ModemManager/
++	return t7xx_port_recv_skb(port, skb);
++}
 +
-+[4] *Specification # 27.007 - 3GPP*
++static int t7xx_port_wwan_enable_chl(struct t7xx_port *port)
++{
++	spin_lock(&port->port_update_lock);
++	port->chan_enable = true;
++	port->flags &= ~PORT_F_RX_ALLOW_DROP;
++	spin_unlock(&port->port_update_lock);
 +
-+- https://www.3gpp.org/DynaReport/27007.htm
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aa0f6cbb634e..1f8c2b26de2b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12338,6 +12338,17 @@ S:	Maintained
- F:	drivers/net/dsa/mt7530.*
- F:	net/dsa/tag_mtk.c
- 
-+MEDIATEK T7XX 5G WWAN MODEM DRIVER
-+M:	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-+M:	Intel Corporation <linuxwwan@intel.com>
-+R:	Chiranjeevi Rapolu <chiranjeevi.rapolu@linux.intel.com>
-+R:	Liu Haijun <haijun.liu@mediatek.com>
-+R:	M Chetan Kumar <m.chetan.kumar@linux.intel.com>
-+R:	Ricardo Martinez <ricardo.martinez@linux.intel.com>
-+L:	netdev@vger.kernel.org
-+S:	Supported
-+F:	drivers/net/wwan/t7xx/
++	return 0;
++}
 +
- MEDIATEK USB3 DRD IP DRIVER
- M:	Chunfeng Yun <chunfeng.yun@mediatek.com>
- L:	linux-usb@vger.kernel.org
++static int t7xx_port_wwan_disable_chl(struct t7xx_port *port)
++{
++	spin_lock(&port->port_update_lock);
++	port->chan_enable = false;
++	port->flags |= PORT_F_RX_ALLOW_DROP;
++	spin_unlock(&port->port_update_lock);
++
++	return 0;
++}
++
++static void t7xx_port_wwan_md_state_notify(struct t7xx_port *port, unsigned int state)
++{
++	struct t7xx_port_static *port_static = port->port_static;
++
++	if (state != MD_STATE_READY)
++		return;
++
++	if (!port->wwan_port) {
++		port->wwan_port = wwan_create_port(port->dev, port_static->port_type,
++						   &wwan_ops, port);
++		if (IS_ERR(port->wwan_port))
++			dev_err(port->dev, "Unable to create WWWAN port %s", port_static->name);
++	}
++}
++
++struct port_ops wwan_sub_port_ops = {
++	.init = t7xx_port_wwan_init,
++	.recv_skb = t7xx_port_wwan_recv_skb,
++	.uninit = t7xx_port_wwan_uninit,
++	.enable_chl = t7xx_port_wwan_enable_chl,
++	.disable_chl = t7xx_port_wwan_disable_chl,
++	.md_state_notify = t7xx_port_wwan_md_state_notify,
++};
 -- 
 2.17.1
 
