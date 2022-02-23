@@ -2,98 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57EFBC4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 01:19:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D98C43217
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:28:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234515AbiBWBTb (ORCPT
+        id S236806AbiBWC27 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 20:19:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52170 "EHLO
+        Tue, 22 Feb 2022 21:28:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231136AbiBWBTa (ORCPT
+        with ESMTP id S236777AbiBWC24 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 20:19:30 -0500
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A69393DA51;
-        Tue, 22 Feb 2022 17:19:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1645579143; x=1677115143;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0kQShUgmQFv+XGVCWzx4wwZ+zYeAVyIwJJcXpq3EHQg=;
-  b=KljmWFdy/dKTxxnX8qntn6p2XAhi/AC07InYbS36U6Jls68e43BLScJa
-   QbEdG9uF0qtXzy7L/p5NZY0JinqRR6G8wlJWxR7gQ/4W/2Y/FOwYcAmOM
-   ybba+sp862WS9Tf+xELXOwbn4DpO/WfgPJVTr1N4B+C8IqhVeitTg7MY3
-   A=;
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 22 Feb 2022 17:19:03 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2022 17:19:02 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Tue, 22 Feb 2022 17:19:02 -0800
-Received: from [10.48.243.226] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Tue, 22 Feb
- 2022 17:19:01 -0800
-Message-ID: <31aa626d-3d39-ca5f-c91d-47aa5bf7715b@quicinc.com>
-Date:   Tue, 22 Feb 2022 17:19:01 -0800
+        Tue, 22 Feb 2022 21:28:56 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F77C3DDC3;
+        Tue, 22 Feb 2022 18:28:28 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 56474B81E0C;
+        Wed, 23 Feb 2022 02:28:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 007C7C340F0;
+        Wed, 23 Feb 2022 02:28:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645583306;
+        bh=dD7/c67Sva+hXnDYcYC8UKHl8uZid1Fjht+X0oqVgiU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iygdDWSNrsEIdmxYiWKLoMWZ22EK910KQB37P84NCulsPXGW+0USIQj8AuS/V3HF2
+         uckHaVM5uQ1kNHqkbsmrjbhdLMr5FaCoKiTdZVtk1V2sKqgtv5YuRC0FTiGqyL6Q/Q
+         oqpXkwPIKK/0ZNJr/+MkrrMRi0e3PXXo+DApbUb9KalKzn28o22+nbbnbkv7+nfNEc
+         3QzrPB1pz96sOcT3bcMS4+p0hPdetNDzR3SVDx+FPIEF2KX7v4jJU2Pvya81yrDfLS
+         zmAQZUEgsunotctXL4V2z/FCD9KDs/5FvaPAX2b3aOO8WtCc1Tq0nk6xfNKmqBZYQ2
+         7zZUQB5pNHg+w==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     JaeMan Park <jaeman@google.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 03/30] mac80211_hwsim: initialize ieee80211_tx_info at hw_scan_work
+Date:   Tue, 22 Feb 2022 21:27:52 -0500
+Message-Id: <20220223022820.240649-3-sashal@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220223022820.240649-1-sashal@kernel.org>
+References: <20220223022820.240649-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH] ath9k: make array voice_priority static const
-Content-Language: en-US
-To:     Colin Ian King <colin.i.king@gmail.com>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC:     <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20220222121749.87513-1-colin.i.king@gmail.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20220222121749.87513-1-colin.i.king@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/22/2022 4:17 AM, Colin Ian King wrote:
-> Don't populate the read-only array voice_priority on the stack but
-> instead make it static const. Also makes the object code a little
-> smaller.
-> 
-> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
-> ---
->   drivers/net/wireless/ath/ath9k/mci.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-> index 39d46c203f6b..5e0ae7e6412f 100644
-> --- a/drivers/net/wireless/ath/ath9k/mci.c
-> +++ b/drivers/net/wireless/ath/ath9k/mci.c
-> @@ -43,7 +43,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
->   				struct ath_mci_profile_info *info)
->   {
->   	struct ath_mci_profile_info *entry;
-> -	u8 voice_priority[] = { 110, 110, 110, 112, 110, 110, 114, 116, 118 };
-> +	static const u8 voice_priority[] = { 110, 110, 110, 112, 110, 110, 114, 116, 118 };
->   
->   	if ((mci->num_sco == ATH_MCI_MAX_SCO_PROFILE) &&
->   	    (info->type == MCI_GPM_COEX_PROFILE_VOICE))
+From: JaeMan Park <jaeman@google.com>
 
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+[ Upstream commit cacfddf82baf1470e5741edeecb187260868f195 ]
 
-An additional cleanup that could be performed in that function:
+In mac80211_hwsim, the probe_req frame is created and sent while
+scanning. It is sent with ieee80211_tx_info which is not initialized.
+Uninitialized ieee80211_tx_info can cause problems when using
+mac80211_hwsim with wmediumd. wmediumd checks the tx_rates field of
+ieee80211_tx_info and doesn't relay probe_req frame to other clients
+even if it is a broadcasting message.
 
-		if (info->voice_type < sizeof(voice_priority))
+Call ieee80211_tx_prepare_skb() to initialize ieee80211_tx_info for
+the probe_req that is created by hw_scan_work in mac80211_hwsim.
 
-replace sizeof() with ARRAY_SIZE() so that it works correctly if the 
-base type is ever changed from u8
+Signed-off-by: JaeMan Park <jaeman@google.com>
+Link: https://lore.kernel.org/r/20220113060235.546107-1-jaeman@google.com
+[fix memory leak]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 20fae2df848fb..f7cfda9192de2 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2336,6 +2336,15 @@ static void hw_scan_work(struct work_struct *work)
+ 			if (req->ie_len)
+ 				skb_put_data(probe, req->ie, req->ie_len);
+ 
++			if (!ieee80211_tx_prepare_skb(hwsim->hw,
++						      hwsim->hw_scan_vif,
++						      probe,
++						      hwsim->tmp_chan->band,
++						      NULL)) {
++				kfree_skb(probe);
++				continue;
++			}
++
+ 			local_bh_disable();
+ 			mac80211_hwsim_tx_frame(hwsim->hw, probe,
+ 						hwsim->tmp_chan);
+-- 
+2.34.1
+
