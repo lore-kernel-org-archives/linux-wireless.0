@@ -2,111 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE648C43219
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E038C43217
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231725AbiBWCeT (ORCPT
+        id S237555AbiBWChF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:34:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42636 "EHLO
+        Tue, 22 Feb 2022 21:37:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237335AbiBWCc5 (ORCPT
+        with ESMTP id S237280AbiBWCfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 21:32:57 -0500
+        Tue, 22 Feb 2022 21:35:53 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA73A5838B;
-        Tue, 22 Feb 2022 18:30:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE85445538;
+        Tue, 22 Feb 2022 18:32:07 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 30C81B81E0D;
-        Wed, 23 Feb 2022 02:30:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40669C340F1;
-        Wed, 23 Feb 2022 02:30:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3093BB81E10;
+        Wed, 23 Feb 2022 02:31:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB728C340E8;
+        Wed, 23 Feb 2022 02:31:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645583447;
-        bh=84NzthgNnggRukjxvstPsXLf6qk4EW6yOe7lHrtHxx0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TWv0ro/9xn6xSlMZJgb4RV1cw3oqjLzuCs6xkxP9G/AvZ7cHpd42u+8dGcuJQ1oDF
-         Vx78JVqr0lNfeSew2fveDUP+7d29/zLve+3tEcqzoS/hFnX/j1vqm5756VmLxMUhXB
-         mzZjAFuUEcqAFVj9I7QRNSSH+hfdxqGOKlbnY4enCBg07/QZEuee3fUQO0X7vsLtfT
-         uPYq1k0mNK95F0G9oLPPFSiV153zxjY5pF16rKBANM/ZvzWb6pI9pY4HQgiFl4mer0
-         PEowR1PrAX852KxMR9wmV9zFhhKNhY5/93BNkWW/KhJ0Dhdko7DnqGGY2fntZiZk6B
-         6ERGLGdcgPy1A==
-Date:   Tue, 22 Feb 2022 20:38:41 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-hardening@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH 2/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array member in struct wmi_start_scan_cmd
-Message-ID: <c7fcd70b571aecc08393a1a5ad96c0f5f35eeb15.1645583264.git.gustavoars@kernel.org>
-References: <cover.1645583264.git.gustavoars@kernel.org>
+        s=k20201202; t=1645583515;
+        bh=17QqH72kUFnUkJZ4j1HejBtx6GgW1dduu5IUz82at2E=;
+        h=From:To:Cc:Subject:Date:From;
+        b=j6QMJ3HW6u6y/s/t4aPmtRZ9/XSQph8SP6p6zHJ6NxnTWqqiYcQj681c9HbDuCoWA
+         0gP8mlX4Nf7D3U9ZaGP0r8zA5nBZQH1xI8fcxHug0fo4+CWB1hIXRShGCJO+FFtVgd
+         Za2utXF1/I2yWi4wyiqf1CUMf72KaG6fZHYwMPuJ7AhYOpAokSgwNj/xFAKoqj7fiH
+         T/+2SSHf6HjhTXb6y5vDOtnLO1sHMmXliHTF4yvco1a7H+0NuYiqBmZt+a7u1bcg6a
+         ygCCE8B+gN6L88oRzjziQiLSVf9oJPZLEvXu4PEohiWPneR74T0Xr+tWdsX54Ymzcx
+         fsPWDEPYwkKew==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 01/13] mac80211_hwsim: report NOACK frames in tx_status
+Date:   Tue, 22 Feb 2022 21:31:40 -0500
+Message-Id: <20220223023152.242065-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1645583264.git.gustavoars@kernel.org>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace one-element array with flexible-array member in struct
-wmi_start_scan_cmd. Also, make use of the struct_size() helper.
+From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
 
-This issue was found with the help of Coccinelle and audited and fixed,
-manually.
+[ Upstream commit 42a79960ffa50bfe9e0bf5d6280be89bf563a5dd ]
 
-Link: https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
-Link: https://github.com/KSPP/linux/issues/79
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Add IEEE80211_TX_STAT_NOACK_TRANSMITTED to tx_status flags to have proper
+statistics for non-acked frames.
+
+Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Link: https://lore.kernel.org/r/20220111221327.1499881-1-benjamin.beichler@uni-rostock.de
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c | 8 +-------
- drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index e1c950014f3e..bdfc057c5a82 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1959,21 +1959,15 @@ static int ath6kl_wmi_startscan_cmd(struct wmi *wmi, u8 if_idx,
- {
- 	struct sk_buff *skb;
- 	struct wmi_start_scan_cmd *sc;
--	s8 size;
- 	int i, ret;
- 
--	size = sizeof(struct wmi_start_scan_cmd);
--
- 	if ((scan_type != WMI_LONG_SCAN) && (scan_type != WMI_SHORT_SCAN))
- 		return -EINVAL;
- 
- 	if (num_chan > WMI_MAX_CHANNELS)
- 		return -EINVAL;
- 
--	if (num_chan)
--		size += sizeof(u16) * (num_chan - 1);
--
--	skb = ath6kl_wmi_get_new_buf(size);
-+	skb = ath6kl_wmi_get_new_buf(struct_size(sc, ch_list, num_chan));
- 	if (!skb)
- 		return -ENOMEM;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 322539ed9c12..9e168752bec2 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -889,7 +889,7 @@ struct wmi_start_scan_cmd {
- 	u8 num_ch;
- 
- 	/* channels in Mhz */
--	__le16 ch_list[1];
-+	__le16 ch_list[];
- } __packed;
- 
- /*
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 3564f5869b444..6cd9a8b610107 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3176,6 +3176,10 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 		}
+ 		txi->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
++
++	if (hwsim_flags & HWSIM_TX_CTL_NO_ACK)
++		txi->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
++
+ 	ieee80211_tx_status_irqsafe(data2->hw, skb);
+ 	return 0;
+ out:
 -- 
-2.27.0
+2.34.1
 
