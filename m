@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01777C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE648C43219
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237229AbiBWCeR (ORCPT
+        id S231725AbiBWCeT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:34:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43410 "EHLO
+        Tue, 22 Feb 2022 21:34:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237581AbiBWCdP (ORCPT
+        with ESMTP id S237335AbiBWCc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 21:33:15 -0500
+        Tue, 22 Feb 2022 21:32:57 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04DC755499;
-        Tue, 22 Feb 2022 18:31:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA73A5838B;
+        Tue, 22 Feb 2022 18:30:49 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 962E6B81DD2;
-        Wed, 23 Feb 2022 02:31:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E28BC340EB;
-        Wed, 23 Feb 2022 02:31:16 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 30C81B81E0D;
+        Wed, 23 Feb 2022 02:30:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40669C340F1;
+        Wed, 23 Feb 2022 02:30:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645583477;
-        bh=b4fg9t+rSbYEnlrrD0PfvXHUsfVJWu2Xtp897/eWJBg=;
+        s=k20201202; t=1645583447;
+        bh=84NzthgNnggRukjxvstPsXLf6qk4EW6yOe7lHrtHxx0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jxmoj2CZYxA+OVt0dxFgPwPk1xHQXLNTX+kgiSqd95ArDpUICHRWVm39778T7thmd
-         7uBee3ECpqEZCNygF9cTUtPeNClyqd/5g3XjwUj+hxtst0lHzGRFAj+oyvuoATK7mz
-         CLp2u3oGAvgHt6I+iFARqczW7Ha8ua9XJM9OsvuLoyLJ+O/xwxvzuB7/tn8kFtec4p
-         e3svrFHfaZN+saF6QDWoVreAV6AkKuk6cNVIoqRxI+zWh0ES8HmvRkPNF1Skrhxdmt
-         FUa1iuRrNynkXh06YzaysM9pzIKTayZC4NPh9pnvh0vLSgJls7/CqsY+Aog/JEVSJy
-         TnvslMv0dp47Q==
-Date:   Tue, 22 Feb 2022 20:39:11 -0600
+        b=TWv0ro/9xn6xSlMZJgb4RV1cw3oqjLzuCs6xkxP9G/AvZ7cHpd42u+8dGcuJQ1oDF
+         Vx78JVqr0lNfeSew2fveDUP+7d29/zLve+3tEcqzoS/hFnX/j1vqm5756VmLxMUhXB
+         mzZjAFuUEcqAFVj9I7QRNSSH+hfdxqGOKlbnY4enCBg07/QZEuee3fUQO0X7vsLtfT
+         uPYq1k0mNK95F0G9oLPPFSiV153zxjY5pF16rKBANM/ZvzWb6pI9pY4HQgiFl4mer0
+         PEowR1PrAX852KxMR9wmV9zFhhKNhY5/93BNkWW/KhJ0Dhdko7DnqGGY2fntZiZk6B
+         6ERGLGdcgPy1A==
+Date:   Tue, 22 Feb 2022 20:38:41 -0600
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Kalle Valo <kvalo@kernel.org>,
@@ -41,9 +41,9 @@ Cc:     Kalle Valo <kvalo@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
         linux-hardening@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH 6/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array  member in struct wmi_aplist_event
-Message-ID: <c2116e10dd61869e17fa40a96f1e07a415820575.1645583264.git.gustavoars@kernel.org>
+Subject: [PATCH 2/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array member in struct wmi_start_scan_cmd
+Message-ID: <c7fcd70b571aecc08393a1a5ad96c0f5f35eeb15.1645583264.git.gustavoars@kernel.org>
 References: <cover.1645583264.git.gustavoars@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -54,40 +54,7 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Replace one-element array with flexible-array member in struct
-wmi_aplist_event.
-
-It's also worth noting that due to the flexible array transformation,
-the size of struct wmi_aplist_event changed (now the size is 8-byte
-smaller), and in order to preserve the logic of before the transformation,
-the following change is needed:
-
-        -       if (len < sizeof(struct wmi_aplist_event))
-        +       if (len <= sizeof(struct wmi_aplist_event))
-
-sizeof(struct wmi_aplist_event) before the flex-array transformation:
-
-struct wmi_aplist_event {
-	u8                         ap_list_ver;          /*     0     1 */
-	u8                         num_ap;               /*     1     1 */
-	union wmi_ap_info          ap_list[1];           /*     2     8 */
-
-	/* size: 10, cachelines: 1, members: 3 */
-	/* last cacheline: 10 bytes */
-};
-
-sizeof(struct wmi_aplist_event) after the flex-array transformation:
-
-struct wmi_aplist_event {
-	u8                         ap_list_ver;          /*     0     1 */
-	u8                         num_ap;               /*     1     1 */
-	union wmi_ap_info          ap_list[];            /*     2     0 */
-
-	/* size: 2, cachelines: 1, members: 3 */
-	/* last cacheline: 2 bytes */
-};
-
-Also, make use of the struct_size() helper and remove unneeded variable
-ap_info_entry_size.
+wmi_start_scan_cmd. Also, make use of the struct_size() helper.
 
 This issue was found with the help of Coccinelle and audited and fixed,
 manually.
@@ -96,63 +63,50 @@ Link: https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-
 Link: https://github.com/KSPP/linux/issues/79
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
-Hi!
-
-It'd be great if someone can confirm or comment on the following
-changes described in the changelog text:
-
-        -       if (len < sizeof(struct wmi_aplist_event))
-        +       if (len <= sizeof(struct wmi_aplist_event))
-
-Thanks
-
- drivers/net/wireless/ath/ath6kl/wmi.c | 7 ++-----
+ drivers/net/wireless/ath/ath6kl/wmi.c | 8 +-------
  drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ 2 files changed, 2 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 645fb6cae3be..484d37e66ce6 100644
+index e1c950014f3e..bdfc057c5a82 100644
 --- a/drivers/net/wireless/ath/ath6kl/wmi.c
 +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1750,23 +1750,20 @@ static int ath6kl_wmi_snr_threshold_event_rx(struct wmi *wmi, u8 *datap,
- 
- static int ath6kl_wmi_aplist_event_rx(struct wmi *wmi, u8 *datap, int len)
+@@ -1959,21 +1959,15 @@ static int ath6kl_wmi_startscan_cmd(struct wmi *wmi, u8 if_idx,
  {
--	u16 ap_info_entry_size;
- 	struct wmi_aplist_event *ev = (struct wmi_aplist_event *) datap;
- 	struct wmi_ap_info_v1 *ap_info_v1;
- 	u8 index;
+ 	struct sk_buff *skb;
+ 	struct wmi_start_scan_cmd *sc;
+-	s8 size;
+ 	int i, ret;
  
--	if (len < sizeof(struct wmi_aplist_event) ||
-+	if (len <= sizeof(struct wmi_aplist_event) ||
- 	    ev->ap_list_ver != APLIST_VER1)
+-	size = sizeof(struct wmi_start_scan_cmd);
+-
+ 	if ((scan_type != WMI_LONG_SCAN) && (scan_type != WMI_SHORT_SCAN))
  		return -EINVAL;
  
--	ap_info_entry_size = sizeof(struct wmi_ap_info_v1);
- 	ap_info_v1 = (struct wmi_ap_info_v1 *) ev->ap_list;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WMI,
- 		   "number of APs in aplist event: %d\n", ev->num_ap);
- 
--	if (len < (int) (sizeof(struct wmi_aplist_event) +
--			 (ev->num_ap - 1) * ap_info_entry_size))
-+	if (len < struct_size(ev, ap_list, ev->num_ap))
+ 	if (num_chan > WMI_MAX_CHANNELS)
  		return -EINVAL;
  
- 	/* AP list version 1 contents */
+-	if (num_chan)
+-		size += sizeof(u16) * (num_chan - 1);
+-
+-	skb = ath6kl_wmi_get_new_buf(size);
++	skb = ath6kl_wmi_get_new_buf(struct_size(sc, ch_list, num_chan));
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
 diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 6a7fc07cd9aa..a9732660192a 100644
+index 322539ed9c12..9e168752bec2 100644
 --- a/drivers/net/wireless/ath/ath6kl/wmi.h
 +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1957,7 +1957,7 @@ union wmi_ap_info {
- struct wmi_aplist_event {
- 	u8 ap_list_ver;
- 	u8 num_ap;
--	union wmi_ap_info ap_list[1];
-+	union wmi_ap_info ap_list[];
+@@ -889,7 +889,7 @@ struct wmi_start_scan_cmd {
+ 	u8 num_ch;
+ 
+ 	/* channels in Mhz */
+-	__le16 ch_list[1];
++	__le16 ch_list[];
  } __packed;
  
- /* Developer Commands */
+ /*
 -- 
 2.27.0
 
