@@ -2,86 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67F62C4167B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40312C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237349AbiBWCeI (ORCPT
+        id S234500AbiBWCeJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:34:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44134 "EHLO
+        Tue, 22 Feb 2022 21:34:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237612AbiBWCdR (ORCPT
+        with ESMTP id S237233AbiBWCcl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 21:33:17 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 991603CA7C;
-        Tue, 22 Feb 2022 18:31:21 -0800 (PST)
+        Tue, 22 Feb 2022 21:32:41 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD9DA5A5B8;
+        Tue, 22 Feb 2022 18:30:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A53461526;
-        Wed, 23 Feb 2022 02:31:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0F8BC340E8;
-        Wed, 23 Feb 2022 02:31:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 51324B81E15;
+        Wed, 23 Feb 2022 02:30:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 563D1C340F1;
+        Wed, 23 Feb 2022 02:30:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645583480;
-        bh=R0Ss79X9yzSC9iRJKQk2wvDI1Sh7FnLe/NlY07EHVzc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=cpdkpempzBAmDwLUQTBbB7yIYCt+UTeAZPDWtzNxgfYUiUJIY/KXrs8kHlIs94dOq
-         89Q+dUZpjDI+4Cv7QrQSEQ+qOTylIY2cBiMesUapgOBAgdEx9ojk2Y5Dyks3xoAIrZ
-         iCTpy5XTRFUEaVCTgs0UMb8pQk9R2msXpt9N6BHymuUVhdzmhE2q+zdzjW7b7HEaBp
-         2nC9vG9T7hUdnAbZxpPwZDY5N1L+6ME3RKpByLgTAzQDutaUp9RXDCdRFrz8BT3Wlt
-         FyXMqlTvS7qi+P1laJgq9dtDufZWgvqi3I+RMH0Gx5Lrx2PzJhYS9XTD6bpThaP2Ud
-         UaY/AkLKYkNKg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 01/13] mac80211_hwsim: report NOACK frames in tx_status
-Date:   Tue, 22 Feb 2022 21:31:05 -0500
-Message-Id: <20220223023118.241815-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        s=k20201202; t=1645583437;
+        bh=5J/lYOlg+fnmxcJ6RZWQwnyehKvMIl8d1ncoQiQ9fcw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=l5XjhmXsJFytYXELA4i2ZwCcGg+xyPVOUOmnnsbNJQ341mu1a0oVQivPUKHALanHC
+         mpVNPFyLG4OiYCzy8Nf3m8am4Xm+5NCM/Y32QDMo02QsTh5ygKLaJdZK3iv5ikJl9h
+         68RSNY4/+tfWZ2IIoOCbVxU2a/wdr35rKdHztRXsPeGgTtxP9YwbtKTlEOyHQgE3v2
+         AzS4tXqV3OeSgLE69yzpYmRC7sOdujBNcVhxVF3b9zpsqm5fl04oGy1E4D+xwmD+nw
+         L05CUHVP7AjL5m7TchcP9uU4Cd0vgWHFVvYh3dmGPnxiJI1Ez3IOSwl2JZd2FEOk+r
+         Jt36jNXVXUPpw==
+Date:   Tue, 22 Feb 2022 20:38:31 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH 1/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array member in struct wmi_begin_scan_cmd
+Message-ID: <af3e7cf6101586a6de9710d8f1302763aa7c6396.1645583264.git.gustavoars@kernel.org>
+References: <cover.1645583264.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1645583264.git.gustavoars@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Replace one-element array with flexible-array member in struct
+wmi_begin_scan_cmd. Also, make use of the struct_size() helper.
 
-[ Upstream commit 42a79960ffa50bfe9e0bf5d6280be89bf563a5dd ]
+This issue was found with the help of Coccinelle and audited and fixed,
+manually.
 
-Add IEEE80211_TX_STAT_NOACK_TRANSMITTED to tx_status flags to have proper
-statistics for non-acked frames.
-
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Link: https://lore.kernel.org/r/20220111221327.1499881-1-benjamin.beichler@uni-rostock.de
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Link: https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
+Link: https://github.com/KSPP/linux/issues/79
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath6kl/wmi.c | 9 ++-------
+ drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 07b070b14d75d..cfd97fe92d468 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3316,6 +3316,10 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 		}
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index bd1ef6334997..e1c950014f3e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2008,7 +2008,7 @@ int ath6kl_wmi_beginscan_cmd(struct wmi *wmi, u8 if_idx,
+ 	struct ieee80211_supported_band *sband;
+ 	struct sk_buff *skb;
+ 	struct wmi_begin_scan_cmd *sc;
+-	s8 size, *supp_rates;
++	s8 *supp_rates;
+ 	int i, band, ret;
+ 	struct ath6kl *ar = wmi->parent_dev;
+ 	int num_rates;
+@@ -2023,18 +2023,13 @@ int ath6kl_wmi_beginscan_cmd(struct wmi *wmi, u8 if_idx,
+ 						num_chan, ch_list);
  	}
-+
-+	if (hwsim_flags & HWSIM_TX_CTL_NO_ACK)
-+		txi->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+
- 	ieee80211_tx_status_irqsafe(data2->hw, skb);
- 	return 0;
- out:
+ 
+-	size = sizeof(struct wmi_begin_scan_cmd);
+-
+ 	if ((scan_type != WMI_LONG_SCAN) && (scan_type != WMI_SHORT_SCAN))
+ 		return -EINVAL;
+ 
+ 	if (num_chan > WMI_MAX_CHANNELS)
+ 		return -EINVAL;
+ 
+-	if (num_chan)
+-		size += sizeof(u16) * (num_chan - 1);
+-
+-	skb = ath6kl_wmi_get_new_buf(size);
++	skb = ath6kl_wmi_get_new_buf(struct_size(sc, ch_list, num_chan));
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 784940ba4c90..322539ed9c12 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -863,7 +863,7 @@ struct wmi_begin_scan_cmd {
+ 	u8 num_ch;
+ 
+ 	/* channels in Mhz */
+-	__le16 ch_list[1];
++	__le16 ch_list[];
+ } __packed;
+ 
+ /* wmi_start_scan_cmd is to be deprecated. Use
 -- 
-2.34.1
+2.27.0
 
