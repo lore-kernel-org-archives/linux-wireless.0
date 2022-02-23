@@ -2,86 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E69F7C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6EE6C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Feb 2022 02:33:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237192AbiBWCeL (ORCPT
+        id S237186AbiBWCeP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:34:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43556 "EHLO
+        Tue, 22 Feb 2022 21:34:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237238AbiBWCcm (ORCPT
+        with ESMTP id S237591AbiBWCdQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Feb 2022 21:32:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA88B5AEDA;
-        Tue, 22 Feb 2022 18:30:39 -0800 (PST)
+        Tue, 22 Feb 2022 21:33:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70BE75E74E;
+        Tue, 22 Feb 2022 18:31:20 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 89E49B81CA7;
-        Wed, 23 Feb 2022 02:30:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33637C340F0;
-        Wed, 23 Feb 2022 02:30:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E63036157F;
+        Wed, 23 Feb 2022 02:31:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EFF3C340EB;
+        Wed, 23 Feb 2022 02:31:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645583438;
-        bh=z6b3zze1htEs3L7pwMXiihJzPahKJa4TbkzjB9MWkNE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=JUigyyMhyFDK3TR40hNZPNzH5UH/zoj0+Ut9FYWfgzWQuQVkt2i0c4TbKw42SekJw
-         /qPAvGETpH3upHimon7Q/QxblIKDuQyKlulElZRjPfQicxaiYuJmgkzFBLAW5r7ecy
-         OtelzB0Y/XZds1NZmN8X5elb6mv7hEQESRUskeag8fHpSopGVAHtOMPoNBexNAkCAa
-         WxIIOkkjb8EVCXkch06HsXIcLZH3MNxF/yBjtv5CdL6qsxAHsjIxRr/aMQKtMTjqVk
-         B7ywoLeoQCYBNzfpDA7L3syXIg9rXOc2QHKy1Qb8vKkq9Y3sRdL2qniGoMybPEe/TZ
-         Bs9smipi3wzCw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 01/18] mac80211_hwsim: report NOACK frames in tx_status
-Date:   Tue, 22 Feb 2022 21:30:18 -0500
-Message-Id: <20220223023035.241551-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        s=k20201202; t=1645583463;
+        bh=TiTQiThEcjMtldsoXuGuzk5+IrynefCoac+K2A/X0ZQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FX8vOT9INRi15jmEHdaHjHRcT7R00ciDebJJCTKPl3ZURLX0k3t8KWFCp57YgRo0J
+         Dmw9OalEKv7Cvgdy+58l+TRnmZuMHHwXFRn9rfNEEPlq1TshHsxEQLCJco7Zh5214S
+         iZSUMKOuTqENBm+B9D840+pcfuDMjfBWFqx/hLO5aiFyeZcbN1mklHAG4WwwXGGrNQ
+         Rp8vogO3oWdK52DWDd/dH7AsKtJ3hPtTzE9yKte5hkrOJSw1I4vfnnXf3CWLs4UFSu
+         tfEj9URYhHmFo5S+5zagNG1Zr/+bdhc4nxwqzun0R1GD4YO6JoXfqsvbYe4ipdh1ai
+         sGIxvJa9AN+JA==
+Date:   Tue, 22 Feb 2022 20:38:57 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH 4/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array  member in struct wmi_connect_event
+Message-ID: <8a0e347615a3516980fd8b6ad2dc4864a880613b.1645583264.git.gustavoars@kernel.org>
+References: <cover.1645583264.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1645583264.git.gustavoars@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Replace one-element array with flexible-array member in struct
+wmi_connect_event.
 
-[ Upstream commit 42a79960ffa50bfe9e0bf5d6280be89bf563a5dd ]
+It's also worth noting that due to the flexible array transformation,
+the size of struct wmi_connect_event changed (now the size is 1 byte
+smaller), and in order to preserve the logic of before the transformation,
+the following change is needed:
 
-Add IEEE80211_TX_STAT_NOACK_TRANSMITTED to tx_status flags to have proper
-statistics for non-acked frames.
+	-       if (len < sizeof(struct wmi_connect_event))
+	+       if (len <= sizeof(struct wmi_connect_event))
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Link: https://lore.kernel.org/r/20220111221327.1499881-1-benjamin.beichler@uni-rostock.de
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+This issue was found with the help of Coccinelle and audited and fixed,
+manually.
+
+Link: https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
+Link: https://github.com/KSPP/linux/issues/79
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Hi!
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b793d61d15d27..0122585a1e500 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3567,6 +3567,10 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 		}
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
- 	}
-+
-+	if (hwsim_flags & HWSIM_TX_CTL_NO_ACK)
-+		txi->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+
- 	ieee80211_tx_status_irqsafe(data2->hw, skb);
- 	return 0;
- out:
+It'd be great if someone can confirm or comment on the following
+changes described in the changelog text:
+
+        -       if (len < sizeof(struct wmi_connect_event))
+        +       if (len <= sizeof(struct wmi_connect_event))
+
+Thanks
+
+ drivers/net/wireless/ath/ath6kl/wmi.c | 2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 049d75f31f3c..ccdccead688e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -857,7 +857,7 @@ static int ath6kl_wmi_connect_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	struct wmi_connect_event *ev;
+ 	u8 *pie, *peie;
+ 
+-	if (len < sizeof(struct wmi_connect_event))
++	if (len <= sizeof(struct wmi_connect_event))
+ 		return -EINVAL;
+ 
+ 	ev = (struct wmi_connect_event *) datap;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 432e4f428a4a..6b064e669d87 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1545,7 +1545,7 @@ struct wmi_connect_event {
+ 	u8 beacon_ie_len;
+ 	u8 assoc_req_len;
+ 	u8 assoc_resp_len;
+-	u8 assoc_info[1];
++	u8 assoc_info[];
+ } __packed;
+ 
+ /* Disconnect Event */
 -- 
-2.34.1
+2.27.0
 
