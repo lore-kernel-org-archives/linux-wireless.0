@@ -2,134 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB3A3C4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 02:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0E3C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 03:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbiBXCLz (ORCPT
+        id S229609AbiBXD3N (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Feb 2022 21:11:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47216 "EHLO
+        Wed, 23 Feb 2022 22:29:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229964AbiBXCLz (ORCPT
+        with ESMTP id S229471AbiBXD3M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Feb 2022 21:11:55 -0500
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8ADB4D;
-        Wed, 23 Feb 2022 18:11:26 -0800 (PST)
+        Wed, 23 Feb 2022 22:29:12 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 740181598F5
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2022 19:28:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1645668686; x=1677204686;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=x6brwM7ZtEJWe3+MXlu4EJraFcB8hQIqzGr5Jpw6Omo=;
-  b=B4xNYAOjZ6b8KkZ6OOj3s3d20VTLnCtTuNXow3pCwGhK9B2Vm0/9benJ
-   GolozGIn0BG3+YYXmnP/NGWu7OqK++77iXZOoaXxSzRsR3Rq7AGn/0Ryu
-   /XhEvkFgjGxuAvPO0rO3M0NuEarEhBSshF2w58O8qMu6hk0c7d9e8cWFP
-   g=;
-Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
-  by alexa-out.qualcomm.com with ESMTP; 23 Feb 2022 16:53:47 -0800
+  t=1645673323; x=1677209323;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=uzaDR2DpOKs6W/KMaNLnEPWcc5zUVsz5q2VE1mDXuRw=;
+  b=bRkbdb0DNiYqYiWpzPWFF25hvGGjIRtGzgdtea5kgRhbvyXEIPgbQg5W
+   6G0VZxXxPFIdSsxDa7/rUSiw6ahJU4lNZ/oXLdCGAZ6HcdLFVsCvv8IfB
+   ojFVSPbALi41CvUOKeNpQZs4RUFJfFvtC1gOfnSwTeIojxQAaGnfBk3IU
+   w=;
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 23 Feb 2022 19:28:43 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:53:47 -0800
+  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 19:28:42 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Wed, 23 Feb 2022 16:53:46 -0800
-Received: from [10.48.243.226] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ 15.2.986.15; Wed, 23 Feb 2022 19:28:42 -0800
+Received: from qcmail1.qualcomm.com (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Wed, 23 Feb
- 2022 16:53:45 -0800
-Message-ID: <03cee2a7-1455-b788-e1f0-5fb48db3478c@quicinc.com>
-Date:   Wed, 23 Feb 2022 16:53:45 -0800
+ 2022 19:28:39 -0800
+Received: by qcmail1.qualcomm.com (sSMTP sendmail emulation); Thu, 24 Feb 2022 08:58:36 +0530
+Date:   Thu, 24 Feb 2022 08:58:36 +0530
+From:   Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>
+CC:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
+        <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+        <quic_usdutt@quicinc.com>
+Subject: Re: [PATCH v2 1/3] cfg80211: Add NL80211_IFTYPE_MLO_LINK type for
+ MLO links on MLD STA
+Message-ID: <20220224032835.GA27737@CDCCSTEX0180100-LIN>
+References: <1645613200-30221-1-git-send-email-quic_vjakkam@quicinc.com>
+ <1645613200-30221-2-git-send-email-quic_vjakkam@quicinc.com>
+ <269dcdce-ca21-211f-9f87-bc1dfc7d29b2@broadcom.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH 5/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array member in struct wmi_disconnect_event
-Content-Language: en-US
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, <netdev@vger.kernel.org>,
-        <linux-hardening@vger.kernel.org>
-References: <cover.1645583264.git.gustavoars@kernel.org>
- <4a42b591109202589cb1cf87df13daef02eb75f9.1645583264.git.gustavoars@kernel.org>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <4a42b591109202589cb1cf87df13daef02eb75f9.1645583264.git.gustavoars@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <269dcdce-ca21-211f-9f87-bc1dfc7d29b2@broadcom.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/22/2022 6:39 PM, Gustavo A. R. Silva wrote:
-> Replace one-element array with flexible-array member in struct
-> wmi_disconnect_event.
+On Wed, Feb 23, 2022 at 01:39:33PM +0100, Arend van Spriel wrote:
+> On 2/23/2022 11:46 AM, Veerendranath Jakkam wrote:
+> > In contrast, NL80211_IFTYPE_MLO_LINK can't be used to represent AP MLO
+> > link since an MLD AP must support pre-11be and 11be clients
+> > simultaneously so each AP MLO link affiliated with AP MLD must also act
+> > as independent AP for pre-11be clients so each AP MLO link must be
 > 
-> It's also worth noting that due to the flexible array transformation,
-> the size of struct wmi_disconnect_event changed (now the size is 1 byte
-> smaller), and in order to preserve the logic of before the transformation,
-> the following change is needed:
+> Not just for pre-11be clients. 11be clients can opt-out right?
 > 
->          -       if (len < sizeof(struct wmi_disconnect_event))
->          +       if (len <= sizeof(struct wmi_disconnect_event))
+> > represented by NL80211_IFTYPE_AP associated with a separate netdev.
+> > 
+> > Two link AP MLD representation:
+> > 
+> >                   AP MLD
+> >               (netdev + wdev)
+> >                  /      \
+> >                 /        \
+> >            wlan0          wlan1
+> >        IFTYPE_AP       IFTYPE_AP
+> >     (netdev + wdev)  (netdev + wdev)
+> >             |             |
+> >             |             |
+> >          radio(2G)      radio(5G)
 > 
-> This issue was found with the help of Coccinelle and audited and fixed,
-> manually.
-> 
-> Link: https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
-> Link: https://github.com/KSPP/linux/issues/79
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> ---
-> Hi!
-> 
-> It'd be great if someone can confirm or comment on the following
-> changes described in the changelog text:
-> 
->          -       if (len < sizeof(struct wmi_disconnect_event))
->          +       if (len <= sizeof(struct wmi_disconnect_event))
-> 
-> Thanks
-> 
->   drivers/net/wireless/ath/ath6kl/wmi.c | 2 +-
->   drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index ccdccead688e..645fb6cae3be 100644
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -1023,7 +1023,7 @@ static int ath6kl_wmi_disconnect_event_rx(struct wmi *wmi, u8 *datap, int len,
->   	struct wmi_disconnect_event *ev;
->   	wmi->traffic_class = 100;
->   
-> -	if (len < sizeof(struct wmi_disconnect_event))
-> +	if (len <= sizeof(struct wmi_disconnect_event))
+> So the AP MLD is a new IFTYPE? Earlier discussions were suggesting the AP
+> MLO links would be bridged, but then there would be only a netdev at AP MLD
+> level, right?
 
-this is another case where I believe the original code should remain 
-since that is checking that the "fixed" portion is present.
+Yes, having a separate interface type for AP MLD sound like a clean approach.
+Apart from the data path, AP MLD will be involved in control path as well.
+AP MLD has its own wdev. Some of the control path APIs using AP MLD
+interface are link affiliation/removal, remote MLD STA add, PTK key installation,
+and intra-bss forwarding configuration. Also EAPoL frames are expected on
+AP MLD interface.
 
-and here again what is missing in the original code is logic to verify 
-that the provide len is large enough to handle the advertised assoc_resp_len
-
->   		return -EINVAL;
->   
->   	ev = (struct wmi_disconnect_event *) datap;
-> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-> index 6b064e669d87..6a7fc07cd9aa 100644
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.h
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1596,7 +1596,7 @@ struct wmi_disconnect_event {
->   	u8 disconn_reason;
->   
->   	u8 assoc_resp_len;
-> -	u8 assoc_info[1];
-> +	u8 assoc_info[];
->   } __packed;
->   
->   /*
-
+Vasanth
