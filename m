@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AAFC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB3A3C4332F
 	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 02:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbiBXCLz (ORCPT
+        id S229995AbiBXCLz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 23 Feb 2022 21:11:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47214 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbiBXCLz (ORCPT
+        with ESMTP id S229964AbiBXCLz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 23 Feb 2022 21:11:55 -0500
 Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD843D69;
-        Wed, 23 Feb 2022 18:11:25 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8ADB4D;
+        Wed, 23 Feb 2022 18:11:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1645668685; x=1677204685;
+  t=1645668686; x=1677204686;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=fZyhYuwnNQimtogeAc+YQ3EaiDLzHnTREqeogFQmmrI=;
-  b=bERLsWhCZLj/ZLIGwVBNzuQsFDcycH1TMRsmkG6htHImLbF/IUH+GUzR
-   /aNUy0oHYJ0FTrxjXFDaoP4Rj6hSdyIqeT19Uf4pBBEW/9M6A/4BGyF+q
-   LADjbXLMFuQ7RQUq+kUvdpukOR6/4Z7uVO9TOtbzk5EEOFhNRQrNggkq+
-   E=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 23 Feb 2022 16:49:10 -0800
+  bh=x6brwM7ZtEJWe3+MXlu4EJraFcB8hQIqzGr5Jpw6Omo=;
+  b=B4xNYAOjZ6b8KkZ6OOj3s3d20VTLnCtTuNXow3pCwGhK9B2Vm0/9benJ
+   GolozGIn0BG3+YYXmnP/NGWu7OqK++77iXZOoaXxSzRsR3Rq7AGn/0Ryu
+   /XhEvkFgjGxuAvPO0rO3M0NuEarEhBSshF2w58O8qMu6hk0c7d9e8cWFP
+   g=;
+Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
+  by alexa-out.qualcomm.com with ESMTP; 23 Feb 2022 16:53:47 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:49:09 -0800
+  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:53:47 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Wed, 23 Feb 2022 16:49:09 -0800
+ 15.2.986.15; Wed, 23 Feb 2022 16:53:46 -0800
 Received: from [10.48.243.226] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Wed, 23 Feb
- 2022 16:49:08 -0800
-Message-ID: <3abb0846-a26f-3d76-8936-cd23cf4387f1@quicinc.com>
-Date:   Wed, 23 Feb 2022 16:49:08 -0800
+ 2022 16:53:45 -0800
+Message-ID: <03cee2a7-1455-b788-e1f0-5fb48db3478c@quicinc.com>
+Date:   Wed, 23 Feb 2022 16:53:45 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH 3/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array member in struct wmi_channel_list_reply
+Subject: Re: [PATCH 5/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array member in struct wmi_disconnect_event
 Content-Language: en-US
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
@@ -54,9 +54,9 @@ CC:     Kalle Valo <kvalo@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>, <netdev@vger.kernel.org>,
         <linux-hardening@vger.kernel.org>
 References: <cover.1645583264.git.gustavoars@kernel.org>
- <30306253b1b5e6b8f5c0faba97e935eda4638020.1645583264.git.gustavoars@kernel.org>
+ <4a42b591109202589cb1cf87df13daef02eb75f9.1645583264.git.gustavoars@kernel.org>
 From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <30306253b1b5e6b8f5c0faba97e935eda4638020.1645583264.git.gustavoars@kernel.org>
+In-Reply-To: <4a42b591109202589cb1cf87df13daef02eb75f9.1645583264.git.gustavoars@kernel.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.49.16.6]
@@ -66,43 +66,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/22/2022 6:38 PM, Gustavo A. R. Silva wrote:
+On 2/22/2022 6:39 PM, Gustavo A. R. Silva wrote:
 > Replace one-element array with flexible-array member in struct
-> wmi_channel_list_reply.
+> wmi_disconnect_event.
 > 
 > It's also worth noting that due to the flexible array transformation,
-> the size of struct wmi_channel_list_reply changed, see below.
+> the size of struct wmi_disconnect_event changed (now the size is 1 byte
+> smaller), and in order to preserve the logic of before the transformation,
+> the following change is needed:
 > 
-> Before flex-array transformation:
-> 
-> struct wmi_channel_list_reply {
-> 	u8                         reserved;             /*     0     1 */
-> 	u8                         num_ch;               /*     1     1 */
-> 	__le16                     ch_list[1];           /*     2     2 */
-> 
-> 	/* size: 4, cachelines: 1, members: 3 */
-> 	/* last cacheline: 4 bytes */
-> };
-> 
-> After flex-array transformation:
-> 
-> struct wmi_channel_list_reply {
-> 	u8                         reserved;             /*     0     1 */
-> 	u8                         num_ch;               /*     1     1 */
-> 	__le16                     ch_list[];            /*     2     0 */
-> 
-> 	/* size: 2, cachelines: 1, members: 3 */
-> 	/* last cacheline: 2 bytes */
-> };
-> 
-> So, the following change preserves the logic that if _len_ is at least
-> 4 bytes in size, this is the existence of at least one channel in
-> ch_list[] is being considered, then the execution jumps to call
-> ath6kl_wakeup_event(wmi->parent_dev);, otherwise _len_ is 2 bytes or
-> less and the code returns -EINVAL:
-> 
-> 	-       if (len < sizeof(struct wmi_channel_list_reply))
-> 	+       if (len <= sizeof(struct wmi_channel_list_reply))
+>          -       if (len < sizeof(struct wmi_disconnect_event))
+>          +       if (len <= sizeof(struct wmi_disconnect_event))
 > 
 > This issue was found with the help of Coccinelle and audited and fixed,
 > manually.
@@ -116,23 +90,8 @@ On 2/22/2022 6:38 PM, Gustavo A. R. Silva wrote:
 > It'd be great if someone can confirm or comment on the following
 > changes described in the changelog text:
 > 
-> 	-       if (len < sizeof(struct wmi_channel_list_reply))
-> 	+       if (len <= sizeof(struct wmi_channel_list_reply))
-
-My opinion is this can remain unchanged since being unchanged would 
-correctly handle a channel list with no channels whereas the original 
-code required that at least one channel be present.
-
-The test is really there just to make sure the entirety of the "fixed" 
-portion of the message is present.
-
-Ultimately it doesn't matter since no actual processing of the channel 
-list takes place.
-
-If actual processing took place, then it would make sense to have an 
-additional test to verify the len is large enough to handle num_ch entries.
-
-
+>          -       if (len < sizeof(struct wmi_disconnect_event))
+>          +       if (len <= sizeof(struct wmi_disconnect_event))
 > 
 > Thanks
 > 
@@ -141,31 +100,36 @@ additional test to verify the len is large enough to handle num_ch entries.
 >   2 files changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index bdfc057c5a82..049d75f31f3c 100644
+> index ccdccead688e..645fb6cae3be 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.c
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -1240,7 +1240,7 @@ static int ath6kl_wmi_ratemask_reply_rx(struct wmi *wmi, u8 *datap, int len)
+> @@ -1023,7 +1023,7 @@ static int ath6kl_wmi_disconnect_event_rx(struct wmi *wmi, u8 *datap, int len,
+>   	struct wmi_disconnect_event *ev;
+>   	wmi->traffic_class = 100;
 >   
->   static int ath6kl_wmi_ch_list_reply_rx(struct wmi *wmi, u8 *datap, int len)
->   {
-> -	if (len < sizeof(struct wmi_channel_list_reply))
-> +	if (len <= sizeof(struct wmi_channel_list_reply))
+> -	if (len < sizeof(struct wmi_disconnect_event))
+> +	if (len <= sizeof(struct wmi_disconnect_event))
+
+this is another case where I believe the original code should remain 
+since that is checking that the "fixed" portion is present.
+
+and here again what is missing in the original code is logic to verify 
+that the provide len is large enough to handle the advertised assoc_resp_len
+
 >   		return -EINVAL;
 >   
->   	ath6kl_wakeup_event(wmi->parent_dev);
+>   	ev = (struct wmi_disconnect_event *) datap;
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-> index 9e168752bec2..432e4f428a4a 100644
+> index 6b064e669d87..6a7fc07cd9aa 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.h
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1373,7 +1373,7 @@ struct wmi_channel_list_reply {
->   	u8 num_ch;
+> @@ -1596,7 +1596,7 @@ struct wmi_disconnect_event {
+>   	u8 disconn_reason;
 >   
->   	/* channel in Mhz */
-> -	__le16 ch_list[1];
-> +	__le16 ch_list[];
+>   	u8 assoc_resp_len;
+> -	u8 assoc_info[1];
+> +	u8 assoc_info[];
 >   } __packed;
 >   
->   /* List of Events (target to host) */
+>   /*
 
-whether or not you modify the length check consider this:
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
