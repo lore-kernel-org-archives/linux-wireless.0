@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E11C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 01:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0C9C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 01:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbiBXBbH (ORCPT
+        id S229543AbiBXBcs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Feb 2022 20:31:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54008 "EHLO
+        Wed, 23 Feb 2022 20:32:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbiBXBbH (ORCPT
+        with ESMTP id S229470AbiBXBcr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Feb 2022 20:31:07 -0500
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E838F9FB2;
-        Wed, 23 Feb 2022 17:30:34 -0800 (PST)
+        Wed, 23 Feb 2022 20:32:47 -0500
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A062B43395;
+        Wed, 23 Feb 2022 17:32:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1645666235; x=1677202235;
+  t=1645666338; x=1677202338;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=rRJItIkRVPSRyn6WcQ0w1H/fcH0+5dRK4WI9eRknR58=;
-  b=lbIEGCMrHixZv9VYDEGej38vFQyC8yRLZqsYDsKL3R5KlY8qmlgXuScZ
-   G/UfvZ3RMrz+UOKBbX45zyb/25J5LO2S5lWI2gBqqyHcb/1MpvmhWFTy4
-   RmnzmaDM/vEuFmAWjqDmqqmb46gL4HaGUSQ3pxZp27MKf9ka2BS8vomNH
+  bh=t8MPPK30DtlCQHux+g7xPcTxNihra4Q/dwbimkdpxrg=;
+  b=rUwKrA9ix9IdpjqmYQBuTpPDneIU7hqxFUn7vqzlvKramSrnBp0Oe12y
+   9FiJtftDsJx0mSS1eEMPDpY6cSuxeJz+0RdDok4L+V2fTyM5o5KCQ0Wsu
+   O6YbD9N/32hsYqsYPIrrNViutbYjpOHNTFHEeuP1KdnSiMAdsaKGyj0du
    c=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 23 Feb 2022 16:50:19 -0800
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Feb 2022 16:48:05 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:50:19 -0800
+  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:48:05 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Wed, 23 Feb 2022 16:50:19 -0800
+ 15.2.986.15; Wed, 23 Feb 2022 16:48:05 -0800
 Received: from [10.48.243.226] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Wed, 23 Feb
- 2022 16:50:18 -0800
-Message-ID: <6106494b-a1b3-6b57-8b44-b9528127533b@quicinc.com>
-Date:   Wed, 23 Feb 2022 16:50:18 -0800
+ 2022 16:48:04 -0800
+Message-ID: <657eecf0-a5d5-a9c0-2954-dbc865f33a7f@quicinc.com>
+Date:   Wed, 23 Feb 2022 16:48:04 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH 4/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array member in struct wmi_connect_event
+Subject: Re: [PATCH 1/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array member in struct wmi_begin_scan_cmd
 Content-Language: en-US
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
@@ -54,9 +54,9 @@ CC:     Kalle Valo <kvalo@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>, <netdev@vger.kernel.org>,
         <linux-hardening@vger.kernel.org>
 References: <cover.1645583264.git.gustavoars@kernel.org>
- <8a0e347615a3516980fd8b6ad2dc4864a880613b.1645583264.git.gustavoars@kernel.org>
+ <af3e7cf6101586a6de9710d8f1302763aa7c6396.1645583264.git.gustavoars@kernel.org>
 From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <8a0e347615a3516980fd8b6ad2dc4864a880613b.1645583264.git.gustavoars@kernel.org>
+In-Reply-To: <af3e7cf6101586a6de9710d8f1302763aa7c6396.1645583264.git.gustavoars@kernel.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.49.16.6]
@@ -68,15 +68,7 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 2/22/2022 6:38 PM, Gustavo A. R. Silva wrote:
 > Replace one-element array with flexible-array member in struct
-> wmi_connect_event.
-> 
-> It's also worth noting that due to the flexible array transformation,
-> the size of struct wmi_connect_event changed (now the size is 1 byte
-> smaller), and in order to preserve the logic of before the transformation,
-> the following change is needed:
-> 
-> 	-       if (len < sizeof(struct wmi_connect_event))
-> 	+       if (len <= sizeof(struct wmi_connect_event))
+> wmi_begin_scan_cmd. Also, make use of the struct_size() helper.
 > 
 > This issue was found with the help of Coccinelle and audited and fixed,
 > manually.
@@ -85,63 +77,57 @@ On 2/22/2022 6:38 PM, Gustavo A. R. Silva wrote:
 > Link: https://github.com/KSPP/linux/issues/79
 > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > ---
-> Hi!
-> 
-> It'd be great if someone can confirm or comment on the following
-> changes described in the changelog text:
-> 
->          -       if (len < sizeof(struct wmi_connect_event))
->          +       if (len <= sizeof(struct wmi_connect_event))
-> 
-> Thanks
-> 
->   drivers/net/wireless/ath/ath6kl/wmi.c | 2 +-
+>   drivers/net/wireless/ath/ath6kl/wmi.c | 9 ++-------
 >   drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
+>   2 files changed, 3 insertions(+), 8 deletions(-)
 > 
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index 049d75f31f3c..ccdccead688e 100644
+> index bd1ef6334997..e1c950014f3e 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.c
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -857,7 +857,7 @@ static int ath6kl_wmi_connect_event_rx(struct wmi *wmi, u8 *datap, int len,
->   	struct wmi_connect_event *ev;
->   	u8 *pie, *peie;
+> @@ -2008,7 +2008,7 @@ int ath6kl_wmi_beginscan_cmd(struct wmi *wmi, u8 if_idx,
+>   	struct ieee80211_supported_band *sband;
+>   	struct sk_buff *skb;
+>   	struct wmi_begin_scan_cmd *sc;
+> -	s8 size, *supp_rates;
+> +	s8 *supp_rates;
+>   	int i, band, ret;
+>   	struct ath6kl *ar = wmi->parent_dev;
+>   	int num_rates;
+> @@ -2023,18 +2023,13 @@ int ath6kl_wmi_beginscan_cmd(struct wmi *wmi, u8 if_idx,
+>   						num_chan, ch_list);
+>   	}
 >   
-> -	if (len < sizeof(struct wmi_connect_event))
-> +	if (len <= sizeof(struct wmi_connect_event))
-
-this is another case where IMO the original code can remain since all it 
-is really checking is to see if the entire "fixed" portion is present. 
-in reality if there was just one byte of assoc_info the response would 
-actually be invalid.
-
-what is missing is logic that verifies len is large enough to hold the 
-payload that is advertised via the beacon_ie_len, assoc_req_len, & 
-assoc_resp_len members. without this even if you change the initial len 
-check you can have a condition where len says there is one u8 in 
-assoc_info (and pass the initial test) but the other three members 
-indicate that much more data is present.
-
-but that is a pre-existing shortcoming that should be handled with a 
-separate patch.
-
-
+> -	size = sizeof(struct wmi_begin_scan_cmd);
+> -
+>   	if ((scan_type != WMI_LONG_SCAN) && (scan_type != WMI_SHORT_SCAN))
 >   		return -EINVAL;
 >   
->   	ev = (struct wmi_connect_event *) datap;
+>   	if (num_chan > WMI_MAX_CHANNELS)
+>   		return -EINVAL;
+>   
+> -	if (num_chan)
+> -		size += sizeof(u16) * (num_chan - 1);
+> -
+> -	skb = ath6kl_wmi_get_new_buf(size);
+> +	skb = ath6kl_wmi_get_new_buf(struct_size(sc, ch_list, num_chan));
+>   	if (!skb)
+>   		return -ENOMEM;
+>   
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-> index 432e4f428a4a..6b064e669d87 100644
+> index 784940ba4c90..322539ed9c12 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.h
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1545,7 +1545,7 @@ struct wmi_connect_event {
->   	u8 beacon_ie_len;
->   	u8 assoc_req_len;
->   	u8 assoc_resp_len;
-> -	u8 assoc_info[1];
-> +	u8 assoc_info[];
+> @@ -863,7 +863,7 @@ struct wmi_begin_scan_cmd {
+>   	u8 num_ch;
+>   
+>   	/* channels in Mhz */
+> -	__le16 ch_list[1];
+> +	__le16 ch_list[];
 >   } __packed;
 >   
->   /* Disconnect Event */
+>   /* wmi_start_scan_cmd is to be deprecated. Use
 
-whether or not you modify the length check consider this:
+
+
 Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
