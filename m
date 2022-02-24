@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31704C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 01:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AAFC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Feb 2022 02:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229697AbiBXBm0 (ORCPT
+        id S229982AbiBXCLz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Feb 2022 20:42:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42952 "EHLO
+        Wed, 23 Feb 2022 21:11:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbiBXBmZ (ORCPT
+        with ESMTP id S229974AbiBXCLz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Feb 2022 20:42:25 -0500
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13EFF36165;
-        Wed, 23 Feb 2022 17:41:55 -0800 (PST)
+        Wed, 23 Feb 2022 21:11:55 -0500
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD843D69;
+        Wed, 23 Feb 2022 18:11:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1645666916; x=1677202916;
+  t=1645668685; x=1677204685;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=Kt6QjyLYTRwOzZP9VnYhf/8ijLxJLwLct45EpDi/FbI=;
-  b=e44unWK+leFg2HKumixyVSRMsUotVMEW9UpzLnpFdW4Lan0wofscLHN8
-   +VThvWwhRaSj5bYN6C1r+1GpH6kN9k7JypVgqo2wacra/iP0yPMlZuCDJ
-   L73ODYqSXtJuCSf7n4u9/vzNCA3EOkAbEcaiOskloA5WB2wmaxYA7vyJQ
-   I=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 23 Feb 2022 17:01:49 -0800
+  bh=fZyhYuwnNQimtogeAc+YQ3EaiDLzHnTREqeogFQmmrI=;
+  b=bERLsWhCZLj/ZLIGwVBNzuQsFDcycH1TMRsmkG6htHImLbF/IUH+GUzR
+   /aNUy0oHYJ0FTrxjXFDaoP4Rj6hSdyIqeT19Uf4pBBEW/9M6A/4BGyF+q
+   LADjbXLMFuQ7RQUq+kUvdpukOR6/4Z7uVO9TOtbzk5EEOFhNRQrNggkq+
+   E=;
+Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 23 Feb 2022 16:49:10 -0800
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 17:01:49 -0800
+  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2022 16:49:09 -0800
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Wed, 23 Feb 2022 17:01:49 -0800
+ 15.2.986.15; Wed, 23 Feb 2022 16:49:09 -0800
 Received: from [10.48.243.226] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Wed, 23 Feb
- 2022 17:01:48 -0800
-Message-ID: <3f408c80-cabf-5ba2-2014-2eb0550b73f9@quicinc.com>
-Date:   Wed, 23 Feb 2022 17:01:48 -0800
+ 2022 16:49:08 -0800
+Message-ID: <3abb0846-a26f-3d76-8936-cd23cf4387f1@quicinc.com>
+Date:   Wed, 23 Feb 2022 16:49:08 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH 6/6][next] ath6kl: wmi: Replace one-element array with
- flexible-array member in struct wmi_aplist_event
+Subject: Re: [PATCH 3/6][next] ath6kl: wmi: Replace one-element array with
+ flexible-array member in struct wmi_channel_list_reply
 Content-Language: en-US
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
@@ -54,9 +54,9 @@ CC:     Kalle Valo <kvalo@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>, <netdev@vger.kernel.org>,
         <linux-hardening@vger.kernel.org>
 References: <cover.1645583264.git.gustavoars@kernel.org>
- <c2116e10dd61869e17fa40a96f1e07a415820575.1645583264.git.gustavoars@kernel.org>
+ <30306253b1b5e6b8f5c0faba97e935eda4638020.1645583264.git.gustavoars@kernel.org>
 From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <c2116e10dd61869e17fa40a96f1e07a415820575.1645583264.git.gustavoars@kernel.org>
+In-Reply-To: <30306253b1b5e6b8f5c0faba97e935eda4638020.1645583264.git.gustavoars@kernel.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.49.16.6]
@@ -66,42 +66,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2/22/2022 6:39 PM, Gustavo A. R. Silva wrote:
+On 2/22/2022 6:38 PM, Gustavo A. R. Silva wrote:
 > Replace one-element array with flexible-array member in struct
-> wmi_aplist_event.
+> wmi_channel_list_reply.
 > 
 > It's also worth noting that due to the flexible array transformation,
-> the size of struct wmi_aplist_event changed (now the size is 8-byte
-> smaller), and in order to preserve the logic of before the transformation,
-> the following change is needed:
+> the size of struct wmi_channel_list_reply changed, see below.
 > 
->          -       if (len < sizeof(struct wmi_aplist_event))
->          +       if (len <= sizeof(struct wmi_aplist_event))
+> Before flex-array transformation:
 > 
-> sizeof(struct wmi_aplist_event) before the flex-array transformation:
+> struct wmi_channel_list_reply {
+> 	u8                         reserved;             /*     0     1 */
+> 	u8                         num_ch;               /*     1     1 */
+> 	__le16                     ch_list[1];           /*     2     2 */
 > 
-> struct wmi_aplist_event {
-> 	u8                         ap_list_ver;          /*     0     1 */
-> 	u8                         num_ap;               /*     1     1 */
-> 	union wmi_ap_info          ap_list[1];           /*     2     8 */
-> 
-> 	/* size: 10, cachelines: 1, members: 3 */
-> 	/* last cacheline: 10 bytes */
+> 	/* size: 4, cachelines: 1, members: 3 */
+> 	/* last cacheline: 4 bytes */
 > };
 > 
-> sizeof(struct wmi_aplist_event) after the flex-array transformation:
+> After flex-array transformation:
 > 
-> struct wmi_aplist_event {
-> 	u8                         ap_list_ver;          /*     0     1 */
-> 	u8                         num_ap;               /*     1     1 */
-> 	union wmi_ap_info          ap_list[];            /*     2     0 */
+> struct wmi_channel_list_reply {
+> 	u8                         reserved;             /*     0     1 */
+> 	u8                         num_ch;               /*     1     1 */
+> 	__le16                     ch_list[];            /*     2     0 */
 > 
 > 	/* size: 2, cachelines: 1, members: 3 */
 > 	/* last cacheline: 2 bytes */
 > };
 > 
-> Also, make use of the struct_size() helper and remove unneeded variable
-> ap_info_entry_size.
+> So, the following change preserves the logic that if _len_ is at least
+> 4 bytes in size, this is the existence of at least one channel in
+> ch_list[] is being considered, then the execution jumps to call
+> ath6kl_wakeup_event(wmi->parent_dev);, otherwise _len_ is 2 bytes or
+> less and the code returns -EINVAL:
+> 
+> 	-       if (len < sizeof(struct wmi_channel_list_reply))
+> 	+       if (len <= sizeof(struct wmi_channel_list_reply))
 > 
 > This issue was found with the help of Coccinelle and audited and fixed,
 > manually.
@@ -115,68 +116,56 @@ On 2/22/2022 6:39 PM, Gustavo A. R. Silva wrote:
 > It'd be great if someone can confirm or comment on the following
 > changes described in the changelog text:
 > 
->          -       if (len < sizeof(struct wmi_aplist_event))
->          +       if (len <= sizeof(struct wmi_aplist_event))
+> 	-       if (len < sizeof(struct wmi_channel_list_reply))
+> 	+       if (len <= sizeof(struct wmi_channel_list_reply))
+
+My opinion is this can remain unchanged since being unchanged would 
+correctly handle a channel list with no channels whereas the original 
+code required that at least one channel be present.
+
+The test is really there just to make sure the entirety of the "fixed" 
+portion of the message is present.
+
+Ultimately it doesn't matter since no actual processing of the channel 
+list takes place.
+
+If actual processing took place, then it would make sense to have an 
+additional test to verify the len is large enough to handle num_ch entries.
+
+
 > 
 > Thanks
 > 
->   drivers/net/wireless/ath/ath6kl/wmi.c | 7 ++-----
+>   drivers/net/wireless/ath/ath6kl/wmi.c | 2 +-
 >   drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
->   2 files changed, 3 insertions(+), 6 deletions(-)
+>   2 files changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index 645fb6cae3be..484d37e66ce6 100644
+> index bdfc057c5a82..049d75f31f3c 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.c
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -1750,23 +1750,20 @@ static int ath6kl_wmi_snr_threshold_event_rx(struct wmi *wmi, u8 *datap,
+> @@ -1240,7 +1240,7 @@ static int ath6kl_wmi_ratemask_reply_rx(struct wmi *wmi, u8 *datap, int len)
 >   
->   static int ath6kl_wmi_aplist_event_rx(struct wmi *wmi, u8 *datap, int len)
+>   static int ath6kl_wmi_ch_list_reply_rx(struct wmi *wmi, u8 *datap, int len)
 >   {
-> -	u16 ap_info_entry_size;
->   	struct wmi_aplist_event *ev = (struct wmi_aplist_event *) datap;
->   	struct wmi_ap_info_v1 *ap_info_v1;
->   	u8 index;
->   
-> -	if (len < sizeof(struct wmi_aplist_event) ||
-> +	if (len <= sizeof(struct wmi_aplist_event) ||
-
-again IMO the original code is preferred since then we can handle a 
-0-length list
-
->   	    ev->ap_list_ver != APLIST_VER1)
+> -	if (len < sizeof(struct wmi_channel_list_reply))
+> +	if (len <= sizeof(struct wmi_channel_list_reply))
 >   		return -EINVAL;
 >   
-> -	ap_info_entry_size = sizeof(struct wmi_ap_info_v1);
->   	ap_info_v1 = (struct wmi_ap_info_v1 *) ev->ap_list;
->   
->   	ath6kl_dbg(ATH6KL_DBG_WMI,
->   		   "number of APs in aplist event: %d\n", ev->num_ap);
->   
-> -	if (len < (int) (sizeof(struct wmi_aplist_event) +
-> -			 (ev->num_ap - 1) * ap_info_entry_size))
-> +	if (len < struct_size(ev, ap_list, ev->num_ap))
-
-and unlike the prior patches in this set, at least the original code 
-here had logic to validate len against the metadata that describes the 
-number of entries in the list. so this change is good, and also supports 
-a 0-length list
-
->   		return -EINVAL;
->   
->   	/* AP list version 1 contents */
+>   	ath6kl_wakeup_event(wmi->parent_dev);
 > diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-> index 6a7fc07cd9aa..a9732660192a 100644
+> index 9e168752bec2..432e4f428a4a 100644
 > --- a/drivers/net/wireless/ath/ath6kl/wmi.h
 > +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1957,7 +1957,7 @@ union wmi_ap_info {
->   struct wmi_aplist_event {
->   	u8 ap_list_ver;
->   	u8 num_ap;
-> -	union wmi_ap_info ap_list[1];
-> +	union wmi_ap_info ap_list[];
+> @@ -1373,7 +1373,7 @@ struct wmi_channel_list_reply {
+>   	u8 num_ch;
+>   
+>   	/* channel in Mhz */
+> -	__le16 ch_list[1];
+> +	__le16 ch_list[];
 >   } __packed;
 >   
->   /* Developer Commands */
+>   /* List of Events (target to host) */
 
 whether or not you modify the length check consider this:
 Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
