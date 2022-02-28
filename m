@@ -2,180 +2,167 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A7D0C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Feb 2022 06:46:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5314CC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Feb 2022 11:09:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233368AbiB1GrG (ORCPT
+        id S235658AbiB1LJz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Feb 2022 01:47:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59984 "EHLO
+        Mon, 28 Feb 2022 06:09:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233365AbiB1GrF (ORCPT
+        with ESMTP id S235465AbiB1LJl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Feb 2022 01:47:05 -0500
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9604466C8F
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2022 22:46:27 -0800 (PST)
+        Mon, 28 Feb 2022 06:09:41 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E266C900;
+        Mon, 28 Feb 2022 03:09:00 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id a8so23987854ejc.8;
+        Mon, 28 Feb 2022 03:09:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1646030787; x=1677566787;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=phngvTnaxifJzlhzmmF1rO3OdpLOMsIIKjL0g+CQaAE=;
-  b=UqdD//IAHJ3zLhuN0pR6sgE8GB3+Vw7kWOVv2CqNy0MnsC+k0TKMe3zO
-   tkYsIJEXNVQKNF9F8Ujx80p6q68GavR9nmELgleaJ0k40RxOdRhAVlAwm
-   8U/JiiBR5avG6idlSQX3PPd7xbW+rpgVXRJg+3GiuAI+17t8WibSAkx5G
-   w=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 27 Feb 2022 22:46:27 -0800
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2022 22:46:27 -0800
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Sun, 27 Feb 2022 22:46:27 -0800
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.15; Sun, 27 Feb 2022 22:46:25 -0800
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v8 4/4] ath11k: fix the warning of dev_wake in mhi_pm_disable_transition()
-Date:   Mon, 28 Feb 2022 01:46:06 -0500
-Message-ID: <20220228064606.8981-5-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220228064606.8981-1-quic_wgong@quicinc.com>
-References: <20220228064606.8981-1-quic_wgong@quicinc.com>
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=NwvvEiJPPM0SG7ZI4yc03tHRsjcGU4DYrm0+p7QW2+g=;
+        b=XoHp2vZs5sXnnQm8jTsL06JwdjgH4Z1Am+qeboNHSyU/csHp7G8mKHTnYwT7vMJf3q
+         1zZobpdX4BxBQ2erAJx74EzSCDXfVaAB33jAX9ZekfWtpz9xLL4KIzz7DciQBlIBY9DK
+         vi6LJyw6u5UaEjT8CWPzRGPwv8GzX6oWgjgvygChKW8zu7PwVtsUQz/kuHu5rW/3vaBt
+         P3mcu2gbh7uG62xQrliOtXiVl+brL2WoHfh7VHyAXnwazE3NNCXTKdQujGPQMoLCoB+H
+         4TwL3ENhlSsI5tK0hgbUY+rfbxgFEyt/dohDr5V+g2PZ9mAGfyjh/75qZVaBOXbUEFp6
+         QPtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=NwvvEiJPPM0SG7ZI4yc03tHRsjcGU4DYrm0+p7QW2+g=;
+        b=2DYBv+XgrZiq8vdIB8XOJuShRv3BWJZy4qyNQvH19+SasqcIFAlU3BJiIuuV3A5uif
+         ImNJUHWL44mUn/Rdrt/XZbWio1u5ffkWH1hvCC1Mmy4cSeBkhycCgovBzVtWye3h66Iq
+         Tp3pqHtd4zkHZxwkrXiiAChkh7bqlUj7fZZU9RsV/5el4k8AKeQItmXaUxA7hDav/I/V
+         RQuPL5+GHULGPpEk2vPk0qZ8HafSmQD/8aY1xXqSJzZnWftIgYCKGkCjO9TssYrYJHrK
+         LEWWWhACFbBsl/n67CqmoKDZP+h8CHIDj+2hdjRmC6X1OicY1G7cnNnSkaMbxthGB5Hg
+         Socw==
+X-Gm-Message-State: AOAM531yeQkOI0e3hSuKLnvH02s/zKbGofneMFOTX8CPRKefvItXt3vL
+        3LNKEgJ1BIzsX4BxtzP+yow=
+X-Google-Smtp-Source: ABdhPJwx6JZK1Sd067eYUFaKDGIuHgaxlGXhzFGfLUQYCLtFq3NCzAqvSFrK3I6DGGTf6F+6FgXuew==
+X-Received: by 2002:a17:906:2608:b0:6c9:b248:4dcf with SMTP id h8-20020a170906260800b006c9b2484dcfmr14572317ejc.320.1646046539415;
+        Mon, 28 Feb 2022 03:08:59 -0800 (PST)
+Received: from localhost.localdomain (dhcp-077-250-038-153.chello.nl. [77.250.38.153])
+        by smtp.googlemail.com with ESMTPSA id z22-20020a17090655d600b006d229436793sm4209049ejp.223.2022.02.28.03.08.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Feb 2022 03:08:59 -0800 (PST)
+From:   Jakob Koschel <jakobkoschel@gmail.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Jakob Koschel <jakobkoschel@gmail.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Arnd Bergman <arnd@arndb.de>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Mike Rapoport <rppt@kernel.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "Brian Johannesmeyer" <bjohannesmeyer@gmail.com>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        "Bos, H.J." <h.j.bos@vu.nl>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Nathan Chancellor <nathan@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-sgx@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-crypto@vger.kernel.org,
+        dmaengine@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-usb@vger.kernel.org, linux-aspeed@lists.ozlabs.org,
+        bcm-kernel-feedback-list@broadcom.com, linux-tegra@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, kvm@vger.kernel.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org,
+        kgdb-bugreport@lists.sourceforge.net,
+        v9fs-developer@lists.sourceforge.net,
+        tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
+Subject: [PATCH 4/6] drivers: remove unnecessary use of list iterator variable
+Date:   Mon, 28 Feb 2022 12:08:20 +0100
+Message-Id: <20220228110822.491923-5-jakobkoschel@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220228110822.491923-1-jakobkoschel@gmail.com>
+References: <20220228110822.491923-1-jakobkoschel@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When test device recovery with below command, it has warning in message
-as below.
-echo assert > /sys/kernel/debug/ath11k/wcn6855\ hw2.0/simulate_fw_crash
-echo assert > /sys/kernel/debug/ath11k/qca6390\ hw2.0/simulate_fw_crash
+When list_for_each_entry() completes the iteration over the whole list
+without breaking the loop, the iterator value will *always* be a bogus
+pointer computed based on the head element.
 
-warning message:
-[ 1965.642121] ath11k_pci 0000:06:00.0: simulating firmware assert crash
-[ 1968.471364] ieee80211 phy0: Hardware restart was requested
-[ 1968.511305] ------------[ cut here ]------------
-[ 1968.511368] WARNING: CPU: 3 PID: 1546 at drivers/bus/mhi/core/pm.c:505 mhi_pm_disable_transition+0xb37/0xda0 [mhi]
-[ 1968.511443] Modules linked in: ath11k_pci ath11k mac80211 libarc4 cfg80211 qmi_helpers qrtr_mhi mhi qrtr nvme nvme_core
-[ 1968.511563] CPU: 3 PID: 1546 Comm: kworker/u17:0 Kdump: loaded Tainted: G        W         5.17.0-rc3-wt-ath+ #579
-[ 1968.511629] Hardware name: Intel(R) Client Systems NUC8i7HVK/NUC8i7HVB, BIOS HNKBLi70.86A.0067.2021.0528.1339 05/28/2021
-[ 1968.511704] Workqueue: mhi_hiprio_wq mhi_pm_st_worker [mhi]
-[ 1968.511787] RIP: 0010:mhi_pm_disable_transition+0xb37/0xda0 [mhi]
-[ 1968.511870] Code: a9 fe ff ff 4c 89 ff 44 89 04 24 e8 03 46 f6 e5 44 8b 04 24 41 83 f8 01 0f 84 21 fe ff ff e9 4c fd ff ff 0f 0b e9 af f8 ff ff <0f> 0b e9 5c f8 ff ff 48 89 df e8 da 9e ee e3 e9 12 fd ff ff 4c 89
-[ 1968.511923] RSP: 0018:ffffc900024efbf0 EFLAGS: 00010286
-[ 1968.511969] RAX: 00000000ffffffff RBX: ffff88811d241250 RCX: ffffffffc0176922
-[ 1968.512014] RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffff888118a90a24
-[ 1968.512059] RBP: ffff888118a90800 R08: 0000000000000000 R09: ffff888118a90a27
-[ 1968.512102] R10: ffffed1023152144 R11: 0000000000000001 R12: ffff888118a908ac
-[ 1968.512229] R13: ffff888118a90928 R14: dffffc0000000000 R15: ffff888118a90a24
-[ 1968.512310] FS:  0000000000000000(0000) GS:ffff888234200000(0000) knlGS:0000000000000000
-[ 1968.512405] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1968.512493] CR2: 00007f5538f443a8 CR3: 000000016dc28001 CR4: 00000000003706e0
-[ 1968.512587] Call Trace:
-[ 1968.512672]  <TASK>
-[ 1968.512751]  ? _raw_spin_unlock_irq+0x1f/0x40
-[ 1968.512859]  mhi_pm_st_worker+0x3ac/0x790 [mhi]
-[ 1968.512959]  ? mhi_pm_mission_mode_transition.isra.0+0x7d0/0x7d0 [mhi]
-[ 1968.513063]  process_one_work+0x86a/0x1400
-[ 1968.513184]  ? pwq_dec_nr_in_flight+0x230/0x230
-[ 1968.513312]  ? move_linked_works+0x125/0x290
-[ 1968.513416]  worker_thread+0x6db/0xf60
-[ 1968.513536]  ? process_one_work+0x1400/0x1400
-[ 1968.513627]  kthread+0x241/0x2d0
-[ 1968.513733]  ? kthread_complete_and_exit+0x20/0x20
-[ 1968.513821]  ret_from_fork+0x22/0x30
-[ 1968.513924]  </TASK>
+To avoid type confusion use the actual list head directly instead of last
+iterator value.
 
-Reason is mhi_deassert_dev_wake() from mhi_device_put() is called
-but mhi_assert_dev_wake() from __mhi_device_get_sync() is not called
-in progress of recovery. Commit 8e0559921f9a ("bus: mhi: core:
-Skip device wake in error or shutdown state") add check for the
-pm_state of mhi in __mhi_device_get_sync(), and the pm_state is not
-the normal state untill recovery is completed, so it leads the
-dev_wake is not 0 and above warning print in mhi_pm_disable_transition()
-while checking mhi_cntrl->dev_wake.
-
-Add check in ath11k_pci_write32()/ath11k_pci_read32() to skip call
-mhi_device_put() if mhi_device_get_sync() does not really do wake,
-then the warning gone.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
-
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Jakob Koschel <jakobkoschel@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c             | 4 ++--
+ drivers/net/ethernet/intel/i40e/i40e_ethtool.c | 3 ++-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c     | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 903758751c99..8a3ff12057e8 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -191,6 +191,7 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
- {
- 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
- 	u32 window_start;
-+	int ret = 0;
- 
- 	/* for offset beyond BAR + 4K - 32, may
- 	 * need to wakeup MHI to access.
-@@ -198,7 +199,7 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
- 	    offset >= ACCESS_ALWAYS_OFF)
--		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
-+		ret = mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	if (offset < WINDOW_START) {
- 		iowrite32(value, ab->mem  + offset);
-@@ -222,7 +223,8 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
--	    offset >= ACCESS_ALWAYS_OFF)
-+	    offset >= ACCESS_ALWAYS_OFF &&
-+	    !ret)
- 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 468d1097a1ec..7883c4831857 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -136,7 +136,7 @@ static void dw_edma_free_burst(struct dw_edma_chunk *chunk)
+ 	}
+
+ 	/* Remove the list head */
+-	kfree(child);
++	kfree(chunk->burst);
+ 	chunk->burst = NULL;
  }
- 
-@@ -230,6 +232,7 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
- {
- 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
- 	u32 val, window_start;
-+	int ret = 0;
- 
- 	/* for offset beyond BAR + 4K - 32, may
- 	 * need to wakeup MHI to access.
-@@ -237,7 +240,7 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
- 	    offset >= ACCESS_ALWAYS_OFF)
--		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
-+		ret = mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	if (offset < WINDOW_START) {
- 		val = ioread32(ab->mem + offset);
-@@ -261,7 +264,8 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
- 
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
--	    offset >= ACCESS_ALWAYS_OFF)
-+	    offset >= ACCESS_ALWAYS_OFF &&
-+	    !ret)
- 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	return val;
--- 
-2.31.1
+
+@@ -156,7 +156,7 @@ static void dw_edma_free_chunk(struct dw_edma_desc *desc)
+ 	}
+
+ 	/* Remove the list head */
+-	kfree(child);
++	kfree(desc->chunk);
+ 	desc->chunk = NULL;
+ }
+
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_ethtool.c b/drivers/net/ethernet/intel/i40e/i40e_ethtool.c
+index 091f36adbbe1..c0ea9dbc4ff6 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_ethtool.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_ethtool.c
+@@ -3963,7 +3963,8 @@ static void __i40e_reprogram_flex_pit(struct i40e_pf *pf,
+ 	 * correctly, the hardware will disable flexible field parsing.
+ 	 */
+ 	if (!list_empty(flex_pit_list))
+-		last_offset = list_prev_entry(entry, list)->src_offset + 1;
++		last_offset = list_entry(flex_pit_list->prev,
++					 struct i40e_flex_pit, list)->src_offset + 1;
+
+ 	for (; i < 3; i++, last_offset++) {
+ 		i40e_write_rx_ctl(&pf->hw,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index e3874421c4c0..cf5b05860799 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -104,7 +104,7 @@ static void ath6kl_credit_init(struct ath6kl_htc_credit_info *cred_info,
+ 	 * it use list_for_each_entry_reverse to walk around the whole ep list.
+ 	 * Therefore assign this lowestpri_ep_dist after walk around the ep_list
+ 	 */
+-	cred_info->lowestpri_ep_dist = cur_ep_dist->list;
++	cred_info->lowestpri_ep_dist = *ep_list;
+
+ 	WARN_ON(cred_info->cur_free_credits <= 0);
+
+--
+2.25.1
 
