@@ -2,80 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C891C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Mar 2022 14:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 088FEC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Mar 2022 17:13:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235419AbiCAOuz (ORCPT
+        id S233780AbiCARNt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Mar 2022 09:50:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41852 "EHLO
+        Tue, 1 Mar 2022 12:13:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235415AbiCAOuy (ORCPT
+        with ESMTP id S234377AbiCARNr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Mar 2022 09:50:54 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEDBC9284D;
-        Tue,  1 Mar 2022 06:50:13 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 663C7B81988;
-        Tue,  1 Mar 2022 14:50:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 13FB2C340F0;
-        Tue,  1 Mar 2022 14:50:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646146211;
-        bh=gA9o0xmz6RRxTdFGIbJNp+4yVSE256v/wl49/XRB9Q8=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=QDAE146Ow9/Ox35JDaM3EN7HCYmiH/E0VWCBJP3pwM7xQa/nJJ2dgJBLyz4BTeK2V
-         rasJfMqAbr6fbOCk/1sSTjrfltwkECwsJRyRy105ZZJFJ3ypmVGDUSzP3vpETQ1wU8
-         8Uo+rs5GQzty3cNTapxR6ub0rusjNmg2Q4CitUt0c8x5fQ8MB2mI3JnV9JHbSYNkfE
-         gbfwuOIkkZxW7e5al56u2ljn/kTVA16V8jVNqrF2EHHeks8Zza4PSe+6azNQHi7BNr
-         4e8q0IztvOK23BmvKQ2pQnG3OYxBLYNN4yKw0zGOB71iovV2fxdnzMDrOToaFBBp6J
-         KBSx2CbzZVDjw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id EAA87E6D44B;
-        Tue,  1 Mar 2022 14:50:10 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Tue, 1 Mar 2022 12:13:47 -0500
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7ECD3B007;
+        Tue,  1 Mar 2022 09:13:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1646154785; x=1677690785;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=k6CREB0TD0/8UF4IksukPBWP48bQZt3imPBwgI28Sps=;
+  b=mz5abiRslc3BzkZyBHTbPrhwGGb8lwlczq3bnOAE6S7xGmdJjXcqRhfg
+   xIRThIlKAMAP79r1V4AiWIZ2cfeCu10G51CMCaUp2umSN+K15VBbjigud
+   +oLRWhltDXib+guWJQqdPiXis2fcL62SzyvfPrXs/Wo4/zcslTcBfnnzk
+   o=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 01 Mar 2022 09:13:05 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2022 09:13:04 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.15; Tue, 1 Mar 2022 09:13:04 -0800
+Received: from [10.111.181.139] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.15; Tue, 1 Mar 2022
+ 09:13:04 -0800
+Message-ID: <4c3c55ac-1dda-410a-7125-ca0e2acee44d@quicinc.com>
+Date:   Tue, 1 Mar 2022 09:13:03 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH 03/10] staging: wfx: format comments on 100 columns
+Content-Language: en-US
+To:     Joe Perches <joe@perches.com>,
+        Jerome Pouiller <Jerome.Pouiller@silabs.com>,
+        <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>
+CC:     <devel@driverdev.osuosl.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <20220225112405.355599-1-Jerome.Pouiller@silabs.com>
+ <20220225112405.355599-4-Jerome.Pouiller@silabs.com>
+ <fe3c21a9c0178a2f0fcea698b8e6405a99747dea.camel@perches.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <fe3c21a9c0178a2f0fcea698b8e6405a99747dea.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: wireless 2022-03-01
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <164614621095.32176.12951724521893502415.git-patchwork-notify@kernel.org>
-Date:   Tue, 01 Mar 2022 14:50:10 +0000
-References: <20220301143948.57278-1-johannes@sipsolutions.net>
-In-Reply-To: <20220301143948.57278-1-johannes@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
-
-This pull request was applied to netdev/net.git (master)
-by David S. Miller <davem@davemloft.net>:
-
-On Tue,  1 Mar 2022 15:39:47 +0100 you wrote:
-> Hi,
+On 2/28/2022 5:12 PM, Joe Perches wrote:
+> On Fri, 2022-02-25 at 12:23 +0100, Jerome Pouiller wrote:
+>> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+>>
+>> A few comments were not yet formatted on 100 columns.
 > 
-> So now for the first time I'm sending a pull request
-> from our combined tree ... let's see if I'm getting
-> it right.
+> IMO, none of these changes are necessary or good changes.
 > 
-> We actually still have quite a few fixes, but most of
-> them trickled in through the last couple of days, or
-> were still somewhat under discussion.
+> 80 columns is preferred.
 > 
-> [...]
+> Really comments should most always use 80 columns, and
+> only occasionally should code be more than 80 columns
+> and almost never should code be more than 100 columns.
 
-Here is the summary with links:
-  - pull-request: wireless 2022-03-01
-    https://git.kernel.org/netdev/net/c/b8d06ce712e3
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+That was my reaction as well. Just because we've relaxed rules so that 
+we *can* exceed 80 columns, it doesn't mean we *should*, and definitely 
+doesn't mean we should *strive* to do so.
