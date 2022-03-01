@@ -2,85 +2,113 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43C5CC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Mar 2022 01:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D14EEC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Mar 2022 01:20:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229588AbiCABSs (ORCPT
+        id S231996AbiCABVU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Feb 2022 20:18:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53432 "EHLO
+        Mon, 28 Feb 2022 20:21:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231777AbiCABSr (ORCPT
+        with ESMTP id S231997AbiCABVS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Feb 2022 20:18:47 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB4EDFA9
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2022 17:18:03 -0800 (PST)
-X-UUID: da30f77d32b94538ab54fe721efee4cb-20220301
-X-UUID: da30f77d32b94538ab54fe721efee4cb-20220301
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1792089047; Tue, 01 Mar 2022 09:17:56 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Tue, 1 Mar 2022 09:17:54 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 1 Mar 2022 09:17:54 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Mark-YW.Chen@mediatek.com>,
-        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
-        <jenhao.yang@mediatek.com>, <robin.chiu@mediatek.com>,
-        <Eddie.Chen@mediatek.com>, <ch.yeh@mediatek.com>,
-        <posh.sun@mediatek.com>, <ted.huang@mediatek.com>,
-        <Eric.Liang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
-        <jsiuda@google.com>, <frankgor@google.com>, <jemele@google.com>,
-        <abhishekpandit@google.com>, <shawnku@google.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v3 2/2] mt76: mt7921: use mt76_hw instead of open coding it
-Date:   Tue, 1 Mar 2022 09:17:52 +0800
-Message-ID: <8f53af97f578c56c32d9dcdf92f86778e0fa0288.1646097204.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <88f1b17ebc83b428a9c9faa15de38c77ffa6d346.1646097204.git.objelf@gmail.com>
-References: <88f1b17ebc83b428a9c9faa15de38c77ffa6d346.1646097204.git.objelf@gmail.com>
+        Mon, 28 Feb 2022 20:21:18 -0500
+X-Greylist: delayed 478 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Feb 2022 17:20:36 PST
+Received: from relay4.hostedemail.com (relay4.hostedemail.com [64.99.140.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69C0F60065
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2022 17:20:36 -0800 (PST)
+Received: from omf06.hostedemail.com (a10.router.float.18 [10.200.18.1])
+        by unirelay10.hostedemail.com (Postfix) with ESMTP id EB8C16D7;
+        Tue,  1 Mar 2022 01:12:35 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf06.hostedemail.com (Postfix) with ESMTPA id 77B9F20015;
+        Tue,  1 Mar 2022 01:12:29 +0000 (UTC)
+Message-ID: <fe3c21a9c0178a2f0fcea698b8e6405a99747dea.camel@perches.com>
+Subject: Re: [PATCH 03/10] staging: wfx: format comments on 100 columns
+From:   Joe Perches <joe@perches.com>
+To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
+Cc:     devel@driverdev.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date:   Mon, 28 Feb 2022 17:12:28 -0800
+In-Reply-To: <20220225112405.355599-4-Jerome.Pouiller@silabs.com>
+References: <20220225112405.355599-1-Jerome.Pouiller@silabs.com>
+         <20220225112405.355599-4-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.4-1ubuntu2 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
+X-Stat-Signature: 77muhtja19n3dsratymaanib3ctsb9fr
+X-Rspamd-Server: rspamout07
+X-Rspamd-Queue-Id: 77B9F20015
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX18rc9SVD0a5kXusMoMzjYsxOtCG3ORwyWA=
+X-HE-Tag: 1646097149-871435
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+On Fri, 2022-02-25 at 12:23 +0100, Jerome Pouiller wrote:
+> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> 
+> A few comments were not yet formatted on 100 columns.
 
-use mt76_hw instead of open coding it
+IMO, none of these changes are necessary or good changes.
 
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
-v2, v3: no change
----
- drivers/net/wireless/mediatek/mt76/mt7921/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+80 columns is preferred.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index ce4c38b436ec..e5dcf1615f17 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -491,7 +491,7 @@ mt7921_sniffer_interface_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 
- void mt7921_set_runtime_pm(struct mt7921_dev *dev)
- {
--	struct ieee80211_hw *hw = dev->mphy.hw;
-+	struct ieee80211_hw *hw = mt76_hw(dev);
- 	struct mt76_connac_pm *pm = &dev->pm;
- 	bool monitor = !!(hw->conf.flags & IEEE80211_CONF_MONITOR);
- 
--- 
-2.25.1
+Really comments should most always use 80 columns, and
+only occasionally should code be more than 80 columns
+and almost never should code be more than 100 columns.
+
+> diff --git a/drivers/staging/wfx/data_tx.c b/drivers/staging/wfx/data_tx.c
+[]
+> @@ -117,9 +117,7 @@ static int wfx_tx_policy_get(struct wfx_vif *wvif, struct ieee80211_tx_rate *rat
+>  	if (idx >= 0) {
+>  		*renew = false;
+>  	} else {
+> -		/* If policy is not found create a new one using the oldest
+> -		 * entry in "free" list
+> -		 */
+> +		/* If policy is not found create a new one using the oldest entry in "free" list */
+>  		*renew = true;
+>  		entry = list_entry(cache->free.prev, struct wfx_tx_policy, link);
+>  		memcpy(entry->rates, wanted.rates, sizeof(entry->rates));
+> @@ -494,9 +492,7 @@ void wfx_tx_confirm_cb(struct wfx_dev *wdev, const struct wfx_hif_cnf_tx *arg)
+>  	wfx_tx_fill_rates(wdev, tx_info, arg);
+>  	skb_trim(skb, skb->len - tx_priv->icv_size);
+>  
+> -	/* From now, you can touch to tx_info->status, but do not touch to
+> -	 * tx_priv anymore
+> -	 */
+> +	/* From now, you can touch to tx_info->status, but do not touch to tx_priv anymore */
+>  	/* FIXME: use ieee80211_tx_info_clear_status() */
+>  	memset(tx_info->rate_driver_data, 0, sizeof(tx_info->rate_driver_data));
+>  	memset(tx_info->pad, 0, sizeof(tx_info->pad));
+> diff --git a/drivers/staging/wfx/queue.c b/drivers/staging/wfx/queue.c
+[]
+> @@ -210,8 +210,8 @@ bool wfx_tx_queues_has_cab(struct wfx_vif *wvif)
+>  	if (wvif->vif->type != NL80211_IFTYPE_AP)
+>  		return false;
+>  	for (i = 0; i < IEEE80211_NUM_ACS; ++i)
+> -		/* Note: since only AP can have mcast frames in queue and only
+> -		 * one vif can be AP, all queued frames has same interface id
+> +		/* Note: since only AP can have mcast frames in queue and only one vif can be AP,
+> +		 * all queued frames has same interface id
+>  		 */
+>  		if (!skb_queue_empty_lockless(&wvif->tx_queue[i].cab))
+>  			return true;
+> @@ -253,9 +253,8 @@ static struct sk_buff *wfx_tx_queues_get_skb(struct wfx_dev *wdev)
+>  			skb = skb_dequeue(&queues[i]->cab);
+>  			if (!skb)
+>  				continue;
+> -			/* Note: since only AP can have mcast frames in queue
+> -			 * and only one vif can be AP, all queued frames has
+> -			 * same interface id
+> +			/* Note: since only AP can have mcast frames in queue and only one vif can
+> +			 * be AP, all queued frames has same interface id
+>  			 */
+>  			hif = (struct wfx_hif_msg *)skb->data;
+>  			WARN_ON(hif->interface != wvif->id);
+
 
