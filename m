@@ -2,141 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7952C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Mar 2022 17:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74AC0C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Mar 2022 19:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244290AbiCBR45 (ORCPT
+        id S241886AbiCBTw0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Mar 2022 12:56:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
+        Wed, 2 Mar 2022 14:52:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244288AbiCBR44 (ORCPT
+        with ESMTP id S240435AbiCBTwZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Mar 2022 12:56:56 -0500
-X-Greylist: delayed 351 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 02 Mar 2022 09:56:12 PST
-Received: from mail.w1.fi (mail.w1.fi [212.71.239.96])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE82D227C
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 09:56:12 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.w1.fi (Postfix) with ESMTP id 9C0CD10FB1;
-        Wed,  2 Mar 2022 17:50:18 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at w1.fi
-Received: from mail.w1.fi ([127.0.0.1])
-        by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id XhKH9mXcoUA0; Wed,  2 Mar 2022 17:50:16 +0000 (UTC)
-Received: by jm (sSMTP sendmail emulation); Wed, 02 Mar 2022 19:50:14 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=w1.fi; s=default;
-        t=1646243416; bh=hjH28rMHWPqV8u0M5BGXXoiITE9qsVcforZPtpPdcFI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vnqwv9F++gHGVjfVTdR6PEJoJ+v6+hnA5LTehj8YD7vvxvVAhJH1h1DBxo+9ANJEt
-         iC+XiV4ASw3VfN7HoVnSmIP4WpgXmnOvN/7WF2qSc6eLHxSQkH6G3zx7LRnh6sFHrk
-         43u1B3UnmLuNPLRfhGQfCK2PXtmzG2uk2a9BRZkq0Me1syNXuUXSqO0up2yIfygOqX
-         OebZMG+RTuLXAq7EoWajL8HwlrT4kVqdFU9+tGN4OMbA7oG2pHFKPNaulUfDXO70yS
-         5uD9XljTn7OR939AXTOF5uk4V3WEa++BTHtLIDjWdkShvaqJ5oSFT1I8QseeSxU09C
-         mFmkNJ/D/0+UQ==
-Date:   Wed, 2 Mar 2022 19:50:14 +0200
-From:   Jouni Malinen <j@w1.fi>
-To:     Josh Boyer <jwboyer@kernel.org>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-Subject: Re: [PULL] ath11k firmware 20211223
-Message-ID: <20220302175014.GA14801@w1.fi>
-References: <BYAPR02MB4567669033A210A78AC397E9927E9@BYAPR02MB4567.namprd02.prod.outlook.com>
- <CA+5PVA4WEuJDB3OCKfYK-BPaccpVWd9t_au9S7MCEtpy7cdF-A@mail.gmail.com>
- <87ee4brodv.fsf@kernel.org>
- <CA+5PVA5DJmwPqpz8F9iDbJKcF1hDBRLdDT4URgSaiEcjet74Kw@mail.gmail.com>
+        Wed, 2 Mar 2022 14:52:25 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A9BD95D0
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 11:51:42 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id r13so6044024ejd.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2022 11:51:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=//V6s70njW8Gqdv3PUMtK2rANsRzdBZe0tVhsi6Kse0=;
+        b=S22zYVEoY8+z0lYLmvbJTkAiKzRGVyumBIZvSgJsrTx8rXQKrZAYgfc7SI+toIr13+
+         ptAM8Ii7gE+KeEdKuHY2mR19ijMMCCGUbWKLsi7L7t+iW0hHyoRRc86PwEt5oauXTvpq
+         Liq1+Q5o9LV6GjaLMOUE0ZE3FBXkJoROYF3MGdTUN49+kNU4kciDiy/gJZPGeulM5i/F
+         yU33VilDSOFA0sFFrfgTZHzEzZ3zz7aHzHGRQ5PIJeEc98lZgqGHUu/EvZeMty6f1yEZ
+         BXTVwSpnayZxXoal5itcbXHKP7zelQ8s0Qjdg6ZmzQ88lOLfeHuyKWv9Yy/8JECvExng
+         htlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=//V6s70njW8Gqdv3PUMtK2rANsRzdBZe0tVhsi6Kse0=;
+        b=MArR8+HwgLYC/QLwGckE0OMz6VulOgsV3mKuu8taXzAq9X2x+YW4sRG7FjLxldN3tj
+         HcyEgKpbrn4q54ZCZO4sYZQ51KUtyJOxd47p5RtGJoYJUvGhVMZwAoSYv61/t7Zp+7Oe
+         VBoMBFG6//9XwpsLgGQrgf9DaXxS89usBZ1YoZCfm3PHYf3lxgQs5XziJbroumRp4G7/
+         RPByfwV6y3yRjs0I+WuE6R5rmFlk3bx2v+df7Jc6BTvBvbmQFenfbpxdK9II2u9mjp4X
+         0+4wZzkpUGdEQlwUNdsh9UIq5M4NjAcue1ONWyefWurpFoiC6RfmweBWxWIoVXWnL+If
+         2UOw==
+X-Gm-Message-State: AOAM531YP0CbPtPm8HZ8VVLgZgIm8WQFpwlG7p3SXIu4XhDnErej62oH
+        7OUzceC+k7miVoOJIsjEKK7TcGd0pTE=
+X-Google-Smtp-Source: ABdhPJyBWnPsbgaLBzhEAboNhKLPGtsfO0zXdMeGDP4zjaPkmg2rsFbvMa629AWyGGZXkMeBk730nA==
+X-Received: by 2002:a17:906:130f:b0:6ce:88a9:42fa with SMTP id w15-20020a170906130f00b006ce88a942famr24107501ejb.469.1646250700767;
+        Wed, 02 Mar 2022 11:51:40 -0800 (PST)
+Received: from debian64.daheim (p5b0d776b.dip0.t-ipconnect.de. [91.13.119.107])
+        by smtp.gmail.com with ESMTPSA id n6-20020aa7c786000000b00410d2403ccfsm8841837eds.21.2022.03.02.11.51.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Mar 2022 11:51:38 -0800 (PST)
+Received: from chuck by debian64.daheim with local (Exim 4.95)
+        (envelope-from <chunkeey@gmail.com>)
+        id 1nPV0c-000IP7-Hp;
+        Wed, 02 Mar 2022 20:51:38 +0100
+From:   Christian Lamparter <chunkeey@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     Kalle Valo <kvalo@kernel.org>
+Subject: [PATCH v1 4/5] carl9170: replace bitmap_zalloc with devm_bitmap_zalloc
+Date:   Wed,  2 Mar 2022 20:51:37 +0100
+Message-Id: <0a79221aa5477501c3def032e95ef8018973a514.1646250537.git.chunkeey@gmail.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <f81a6ff3b02116c6a448c42eecb546ea5d46c108.1646250537.git.chunkeey@gmail.com>
+References: <0036538d0933626a1a5eb2c2c3935cf173028926.1646250537.git.chunkeey@gmail.com> <d1c16490462a9371ab3cc16a018ef5e08382a35e.1646250537.git.chunkeey@gmail.com> <f81a6ff3b02116c6a448c42eecb546ea5d46c108.1646250537.git.chunkeey@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+5PVA5DJmwPqpz8F9iDbJKcF1hDBRLdDT4URgSaiEcjet74Kw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Feb 18, 2022 at 10:55:37AM -0500, Josh Boyer wrote:
-> On Thu, Feb 10, 2022 at 5:45 AM Kalle Valo <kvalo@kernel.org> wrote:
-> > > On Thu, Dec 23, 2021 at 9:03 AM Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> > >>
-> > >>  WHENCE                           |   14 +-
-> > >>  ath11k/IPQ6018/hw1.0/Notice.txt  |   48 +-
+the mem_bitmap is kept around for the lifetime of the
+driver device. This is a perfect candidate for devm.
 
-> > > These Notice files seem problematic.  They're clearly well intended,
-> > > but they have language that alludes to an agreement with Atheros and a
-> > > confidential nature to some of the files.  Specifically:
-> > >
-> > > "...your use of these software
-> > > components together with the Qualcomm Atheros software (Qualcomm
-> > > Atheros software hereinafter referred to as “Software”) is
-> > > subject to the terms of your agreement from Qualcomm Atheros."
-> > >
-> > > Nobody has an opportunity to agree to anything with Atheros when they
-> > > consume the files from linux-firmware.  There's also no explicit grant
-> > > of redistribution for any of these files.
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+---
+ drivers/net/wireless/ath/carl9170/main.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-This is not the license; this is a description of the notice.txt file
-containing the notices to cover the 3rd party license requirements for
-attribution/notices included in redistribution of those parts.
-
-> > So this file we are discussing is the notice.txt file. In the WHENCE
-> > file the actual license for ath11k is:
-> >
-> > Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
-
-And this is where the license is and this includes license to
-redistribute.
-
-> Then is the notice.txt file needed at all?  If a user or distribution
-> were to install this firmware, is the expectation that the notice.txt
-> file also be installed?
-
-Those 3rd party license might require various notifications to be
-included for notification/attribution purposes, so I would expect the
-notice.txt file to be redistributed whenever the firmware image is
-redistributed.
-
-> > Does that cover your concerns about redistribution?
-> 
-> Not really.  I understand the logic, but if the binding license for
-> the firmware is LICENSE.QualcommAtheros_ath10k but we still need
-> notice.txt for some reason, they conflict.  It's ambiguous at best.
-
-Could you please be more specific on where you see a conflict? Maybe
-this would be clearer if the WHENCE file would not mark the notice.txt
-files with the "License: <file>" lines since these are not the license
-for the firmware binary and then there would be a single "License:" line
-pointing out the exact license that applies?
-
-Would the following in WHENCE work for you?
-
-Driver: ath11k - Qualcomm Technologies 802.11ax chipset support
-
-File: ath11k/IPQ6018/hw1.0/board-2.bin
-...
-Version: WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
-Notice: ath11k/IPQ6018/hw1.0/Notice.txt
-...
-File: ath11k/QCA6390/hw2.0/m3.bin
-Version: WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1
-Notice: ath11k/QCA6390/hw2.0/Notice.txt
-
-Licence: Redistributable. See LICENSE.QualcommAtheros_ath10k for details
-
-
-In other words, there would be only a single "License:" line and one
-"Notice:" line for each firmware version? The license itself (i.e.,
-LICENSE.QualcommAtheros_ath10k) is same for all the versions while the
-set of notices (i.e., those notice.txt files) can be different based on
-what is included in the particular build.
-
-> > I'm still working on your other comment about notice.txt, will get back
-> > on that later.
-
-This part about clearly identifying the files should be clear now, but
-it would be good to resolve that part about the notice.txt files in
-general before sending out an updated pull request.
-
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index e833052e9056..fae927ca4863 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1943,11 +1943,7 @@ int carl9170_register(struct ar9170 *ar)
+ 	struct ath_regulatory *regulatory = &ar->common.regulatory;
+ 	int err = 0, i;
+ 
+-	if (WARN_ON(ar->mem_bitmap))
+-		return -EINVAL;
+-
+-	ar->mem_bitmap = bitmap_zalloc(ar->fw.mem_blocks, GFP_KERNEL);
+-
++	ar->mem_bitmap = devm_bitmap_zalloc(&ar->udev->dev, ar->fw.mem_blocks, GFP_KERNEL);
+ 	if (!ar->mem_bitmap)
+ 		return -ENOMEM;
+ 
+@@ -2050,9 +2046,6 @@ void carl9170_free(struct ar9170 *ar)
+ 	kfree_skb(ar->rx_failover);
+ 	ar->rx_failover = NULL;
+ 
+-	bitmap_free(ar->mem_bitmap);
+-	ar->mem_bitmap = NULL;
+-
+ 	kfree(ar->survey);
+ 	ar->survey = NULL;
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.35.1
+
