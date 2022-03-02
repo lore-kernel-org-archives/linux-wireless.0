@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7002DC433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Mar 2022 15:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A14CC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Mar 2022 15:49:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240931AbiCBPto (ORCPT
+        id S241391AbiCBPtr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Mar 2022 10:49:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53538 "EHLO
+        Wed, 2 Mar 2022 10:49:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240741AbiCBPt1 (ORCPT
+        with ESMTP id S241394AbiCBPtg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Mar 2022 10:49:27 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 665D72D1C5
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 07:48:41 -0800 (PST)
+        Wed, 2 Mar 2022 10:49:36 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B5943389F
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 07:48:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0D1BCB8207D
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 15:48:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FC7DC340ED;
-        Wed,  2 Mar 2022 15:48:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E69636173E
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Mar 2022 15:48:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECECBC36AEB;
+        Wed,  2 Mar 2022 15:48:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646236118;
-        bh=asrPxwbalw10OfS9T8RXKhwTL8CE32GiK7t7yIecQGo=;
+        s=k20201202; t=1646236125;
+        bh=+iPUDoHud+IRm8D8s5DNTopSKM2Pi0Bb6Wsi4srYE/0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Xfab6SBSQw/fevqm4scPsTOUPAjJ3ZMoNIcOfIlkGtRjyKHW6i1yRB+YiibfI8Vyu
-         rHp17yWYghJEAQ26VFhecHwnof3mn//kUFzUONOIf8Q8q4e8e2VXMmbNpBwT3FdpRk
-         72Dw9Ka78TtdWidKSNtG+9NdTWymwZNThGKG2+czqCO8zcfXIM1Dw1vREhP9juPbNF
-         2wiU83Ij4vtivR1ovSJWn3MVjUoZoveswRpWzo9Z4RWJmSeUsXIsvc6OAC1YiiroOy
-         J+DXXkRY68t1qye0mvFUTfvYlikOHdYmAk3vLEbRJlw2UURrEhQBiNvv7lb4RemUwA
-         7V6lMo69atRHg==
+        b=RFOj4CCG1hCg+TyQot/WCGyzL+TQvv5rPrwSsdq9OQo2/czPGqkeRxLXbldDy6p8y
+         qiOfP8+DLaLFNlaVMGiEFmR6nuen9fz2mJWYGCOmEVYoDT7KwO90I+Xhr7BaHHc4tZ
+         ScUGya9eS96oh99qjHBKsyx5F0LhUeX6S3cxlhQl+exNHxvkPIFgXnm/VEdWriCacd
+         CycPEyeRPsdKT6M/gkfC7f8wabLqmFeeFCTaB4Z09ij2gZe1D65Bb5ry8FwpQJuANs
+         U0C5KTN53vugL2c7HcS2RHL8QTj5nyO2Ly6FAY4G4Szgq31ZJlNLixAqD3pK/RlJkc
+         3VUAHw/j8Na3Q==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         sean.wang@mediatek.com, deren.wu@mediatek.com,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH 2/9] mt76: usb: add req_type to ___mt76u_wr signature
-Date:   Wed,  2 Mar 2022 16:48:06 +0100
-Message-Id: <ea5bf3402f1894bd4901eca5a736a736dfe64c24.1646235785.git.lorenzo@kernel.org>
+Subject: [PATCH 5/9] mt76: mt7921: update mt7921_skb_add_usb_sdio_hdr to support usb
+Date:   Wed,  2 Mar 2022 16:48:09 +0100
+Message-Id: <38d63b1b045f27ddc8782e65a89b1def138f43eb.1646235785.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <cover.1646235785.git.lorenzo@kernel.org>
 References: <cover.1646235785.git.lorenzo@kernel.org>
@@ -50,67 +50,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is a preliminary patch to add usb support to mt7921 driver.
+This is a preliminary patch to add mt7921u driver support.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h   | 10 ++++++----
+ drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c |  2 +-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 1b0435e0ea33..4b7a816f1b93 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -121,16 +121,14 @@ static u32 mt76u_rr_ext(struct mt76_dev *dev, u32 addr)
- 	return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index f8bfd987fbc9..3c7ff09a36ac 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -352,12 +352,14 @@ static inline void mt7921_mcu_tx_cleanup(struct mt7921_dev *dev)
+ 	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_WA], false);
  }
  
--static void ___mt76u_wr(struct mt76_dev *dev, u8 req,
-+static void ___mt76u_wr(struct mt76_dev *dev, u8 req, u8 req_type,
- 			u32 addr, u32 val)
+-static inline void mt7921_skb_add_sdio_hdr(struct sk_buff *skb,
+-					   enum mt7921_sdio_pkt_type type)
++static inline void
++mt7921_skb_add_usb_sdio_hdr(struct mt7921_dev *dev, struct sk_buff *skb,
++			    int type)
  {
- 	struct mt76_usb *usb = &dev->usb;
+-	u32 hdr;
++	u32 hdr, len;
  
- 	put_unaligned_le32(val, usb->data);
--	__mt76u_vendor_request(dev, req,
--			       USB_DIR_OUT | USB_TYPE_VENDOR,
--			       addr >> 16, addr, usb->data,
--			       sizeof(__le32));
-+	__mt76u_vendor_request(dev, req, req_type, addr >> 16,
-+			       addr, usb->data, sizeof(__le32));
- 	trace_usb_reg_wr(dev, addr, val);
- }
+-	hdr = FIELD_PREP(MT7921_SDIO_HDR_TX_BYTES, skb->len + sizeof(hdr)) |
++	len = mt76_is_usb(&dev->mt76) ? skb->len : skb->len + sizeof(hdr);
++	hdr = FIELD_PREP(MT7921_SDIO_HDR_TX_BYTES, len) |
+ 	      FIELD_PREP(MT7921_SDIO_HDR_PKT_TYPE, type);
  
-@@ -146,7 +144,8 @@ static void __mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
- 		req = MT_VEND_MULTI_WRITE;
- 		break;
- 	}
--	___mt76u_wr(dev, req, addr & ~MT_VEND_TYPE_MASK, val);
-+	___mt76u_wr(dev, req, USB_DIR_OUT | USB_TYPE_VENDOR,
-+		    addr & ~MT_VEND_TYPE_MASK, val);
- }
+ 	put_unaligned_le32(hdr, skb_push(skb, sizeof(hdr)));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c
+index 4fd1d4765b04..5462ab05fb13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mac.c
+@@ -183,7 +183,7 @@ int mt7921s_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	pktid = mt76_tx_status_skb_add(&dev->mt76, wcid, skb);
+ 	mt7921s_write_txwi(dev, wcid, qid, sta, key, pktid, skb);
  
- static void mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
-@@ -159,7 +158,8 @@ static void mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
- static void mt76u_wr_ext(struct mt76_dev *dev, u32 addr, u32 val)
- {
- 	mutex_lock(&dev->usb.usb_ctrl_mtx);
--	___mt76u_wr(dev, MT_VEND_WRITE_EXT, addr, val);
-+	___mt76u_wr(dev, MT_VEND_WRITE_EXT,
-+		    USB_DIR_OUT | USB_TYPE_VENDOR, addr, val);
- 	mutex_unlock(&dev->usb.usb_ctrl_mtx);
- }
+-	mt7921_skb_add_sdio_hdr(skb, MT7921_SDIO_DATA);
++	mt7921_skb_add_usb_sdio_hdr(dev, skb, MT7921_SDIO_DATA);
+ 	pad = round_up(skb->len, 4) - skb->len;
  
-@@ -180,7 +180,8 @@ static u32 mt76u_rmw_ext(struct mt76_dev *dev, u32 addr,
- 	mutex_lock(&dev->usb.usb_ctrl_mtx);
- 	val |= ___mt76u_rr(dev, MT_VEND_READ_EXT,
- 			   USB_DIR_IN | USB_TYPE_VENDOR, addr) & ~mask;
--	___mt76u_wr(dev, MT_VEND_WRITE_EXT, addr, val);
-+	___mt76u_wr(dev, MT_VEND_WRITE_EXT,
-+		    USB_DIR_OUT | USB_TYPE_VENDOR, addr, val);
- 	mutex_unlock(&dev->usb.usb_ctrl_mtx);
+ 	err = mt76_skb_adjust_pad(skb, pad);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
+index 5d8af18c7026..54a5c712a3c3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
+@@ -36,7 +36,7 @@ mt7921s_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 	if (cmd == MCU_CMD(FW_SCATTER))
+ 		type = MT7921_SDIO_FWDL;
  
- 	return val;
+-	mt7921_skb_add_sdio_hdr(skb, type);
++	mt7921_skb_add_usb_sdio_hdr(dev, skb, type);
+ 	pad = round_up(skb->len, 4) - skb->len;
+ 	__skb_put_zero(skb, pad);
+ 
 -- 
 2.35.1
 
