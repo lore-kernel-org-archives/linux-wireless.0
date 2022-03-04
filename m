@@ -2,86 +2,167 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10551C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Mar 2022 06:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E58C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Mar 2022 06:47:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238424AbiCDGe3 (ORCPT
+        id S238520AbiCDGr4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Mar 2022 01:34:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37478 "EHLO
+        Fri, 4 Mar 2022 01:47:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238452AbiCDGeZ (ORCPT
+        with ESMTP id S238577AbiCDGrz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Mar 2022 01:34:25 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F3F8188A3E
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Mar 2022 22:33:23 -0800 (PST)
-Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1nQ1VA-0002DE-HC; Fri, 04 Mar 2022 07:33:20 +0100
-Message-ID: <02ef7552-67f5-dbcf-ece6-87b5b49e1bb5@leemhuis.info>
-Date:   Fri, 4 Mar 2022 07:33:20 +0100
+        Fri, 4 Mar 2022 01:47:55 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A243118CC21
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Mar 2022 22:47:07 -0800 (PST)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2246l0iW5011591, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2246l0iW5011591
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 4 Mar 2022 14:47:00 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Fri, 4 Mar 2022 14:47:00 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 4 Mar
+ 2022 14:47:00 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/13] rtw89: 8852c: add 8852c empty files
+Date:   Fri, 4 Mar 2022 14:46:07 +0800
+Message-ID: <20220304064619.23662-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220304064619.23662-1-pkshih@realtek.com>
+References: <20220304064619.23662-1-pkshih@realtek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: rtw_8822ce wifi regression after kernel update from 5.15 to 5.16
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Nico Sneck <snecknico@gmail.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>
-Cc:     "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-        linux-wireless@vger.kernel.org
-References: <CAO_iuKEL8tHnovpGiQGUxg7JUpZFxHpxhOHbqAMgbt5R4Eftgg@mail.gmail.com>
- <2d1c129b-d473-39e3-69b7-6f36dc1682a6@leemhuis.info>
- <9312eb18-840f-9a1f-bcb0-8e3a43e45239@leemhuis.info>
- <236d45a6-8b88-c02e-a61d-ce1773fdb0ef@lwfinger.net>
-Content-Language: en-US
-In-Reply-To: <236d45a6-8b88-c02e-a61d-ce1773fdb0ef@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1646375605;912a2ba9;
-X-HE-SMSGID: 1nQ1VA-0002DE-HC
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 03/04/2022 06:29:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvNCCkV6TIIDA0OjM0OjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi, this is your Linux kernel regression tracker.
+Add these files, and then I can add specific chip::ops or chip::info along
+with the existing chip.
 
-On 28.02.22 23:07, Larry Finger wrote:
-> On 2/28/22 08:30, Thorsten Leemhuis wrote:
-> [...]
->
-> Your use of rtw_8822ce in the title finally registered on me. With that
-> driver in use, that means that you are using my GitHub repo; however,
-> newer kernels have the driver built in, but with names such as
-> rtw88_8822ce. The difference in the name is deliberate.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 20 +++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.h | 12 +++++++
+ .../net/wireless/realtek/rtw89/rtw8852ce.c    | 36 +++++++++++++++++++
+ 3 files changed, 68 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852c.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852c.h
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852ce.c
 
-Many thx for this, the names already had made me a bit suspicious, but
-wasn't aware of this!
-
-> If you want to
-> use the GitHub version, you must blacklist the ones from the kernel.
-> 
-> To check this, run 'lsmod | grep 88'. If you see a mixture of rtw_xxx
-> and rtw88_xxx, then this is your problem.
-
-Nico didn't reply to your mail, so I'll assume for now that this is not
-a kernel regression:
-
-#regzbot invalid: seems it's a regression in a external module of
-similar name
-
-@Yan-Hsuan Chuang: sorry for the noise!
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I'm getting a lot of
-reports on my table. I can only look briefly into most of them and lack
-knowledge about most of the areas they concern. I thus unfortunately
-will sometimes get things wrong or miss something important. I hope
-that's not the case here; if you think it is, don't hesitate to tell me
-in a public reply, it's in everyone's interest to set the public record
-straight.
-
-
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+new file mode 100644
+index 0000000000000..cd0004b01ebc2
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright(c) 2019-2022  Realtek Corporation
++ */
++
++#include "rtw8852c.h"
++
++static const struct rtw89_chip_ops rtw8852c_chip_ops = {
++};
++
++const struct rtw89_chip_info rtw8852c_chip_info = {
++	.chip_id		= RTL8852C,
++	.ops			= &rtw8852c_chip_ops,
++	.fw_name		= "rtw89/rtw8852c_fw.bin",
++};
++EXPORT_SYMBOL(rtw8852c_chip_info);
++
++MODULE_FIRMWARE("rtw89/rtw8852c_fw.bin");
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11ax wireless 8852C driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.h b/drivers/net/wireless/realtek/rtw89/rtw8852c.h
+new file mode 100644
+index 0000000000000..68a397223a814
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright(c) 2019-2022  Realtek Corporation
++ */
++
++#ifndef __RTW89_8852C_H__
++#define __RTW89_8852C_H__
++
++#include "core.h"
++
++extern const struct rtw89_chip_info rtw8852c_chip_info;
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+new file mode 100644
+index 0000000000000..ee700bba1eb10
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+@@ -0,0 +1,36 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright(c) 2020-2022  Realtek Corporation
++ */
++
++#include <linux/module.h>
++#include <linux/pci.h>
++
++#include "pci.h"
++#include "reg.h"
++#include "rtw8852c.h"
++
++static const struct rtw89_driver_info rtw89_8852ce_info = {
++	.chip = &rtw8852c_chip_info,
++};
++
++static const struct pci_device_id rtw89_8852ce_id_table[] = {
++	{
++		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xc852),
++		.driver_data = (kernel_ulong_t)&rtw89_8852ce_info,
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(pci, rtw89_8852ce_id_table);
++
++static struct pci_driver rtw89_8852ce_driver = {
++	.name		= "rtw89_8852ce",
++	.id_table	= rtw89_8852ce_id_table,
++	.probe		= rtw89_pci_probe,
++	.remove		= rtw89_pci_remove,
++	.driver.pm	= &rtw89_pm_ops,
++};
++module_pci_driver(rtw89_8852ce_driver);
++
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11ax wireless 8852CE driver");
++MODULE_LICENSE("Dual BSD/GPL");
+-- 
+2.25.1
 
