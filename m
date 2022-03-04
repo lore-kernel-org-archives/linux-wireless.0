@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC7DC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Mar 2022 06:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E79EC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Mar 2022 06:47:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238557AbiCDGsc (ORCPT
+        id S238550AbiCDGse (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Mar 2022 01:48:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41784 "EHLO
+        Fri, 4 Mar 2022 01:48:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238561AbiCDGsW (ORCPT
+        with ESMTP id S238593AbiCDGsV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Mar 2022 01:48:22 -0500
+        Fri, 4 Mar 2022 01:48:21 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6672E88
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Mar 2022 22:47:26 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02EF618CC50
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Mar 2022 22:47:22 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2246lLQ01011708, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2246lLQ01011708
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2246lGCi9011675, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2246lGCi9011675
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 4 Mar 2022 14:47:21 +0800
+        Fri, 4 Mar 2022 14:47:16 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Fri, 4 Mar 2022 14:47:21 +0800
+ 15.1.2308.20; Fri, 4 Mar 2022 14:47:16 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 4 Mar
- 2022 14:47:20 +0800
+ 2022 14:47:15 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/13] rtw89: 8852c: process efuse of phycap
-Date:   Fri, 4 Mar 2022 14:46:18 +0800
-Message-ID: <20220304064619.23662-13-pkshih@realtek.com>
+Subject: [PATCH 09/13] rtw89: add page_regs to handle v1 chips
+Date:   Fri, 4 Mar 2022 14:46:15 +0800
+Message-ID: <20220304064619.23662-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220304064619.23662-1-pkshih@realtek.com>
 References: <20220304064619.23662-1-pkshih@realtek.com>
@@ -56,7 +56,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvNCCkV6TIIDA0OjM0OjAw?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -64,240 +64,368 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Read phycap data programmed in efuse, and store them into array.
+These registers are used to configure and access page size of HCI.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     |   4 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 159 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/rtw8852c.h |   2 +
- 3 files changed, 165 insertions(+)
+ drivers/net/wireless/realtek/rtw89/core.h     | 16 +++++
+ drivers/net/wireless/realtek/rtw89/mac.c      | 60 ++++++++++++-------
+ drivers/net/wireless/realtek/rtw89/reg.h      | 39 ++++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 16 +++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 16 +++++
+ 5 files changed, 124 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 3582e352c4a66..a769fccc8c016 100644
+index 14e8f48520b71..2dc19b530db62 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2637,18 +2637,22 @@ struct rtw89_cfo_tracking_info {
+@@ -2217,6 +2217,21 @@ struct rtw89_txpwr_table {
+ 		     const struct rtw89_txpwr_table *tbl);
+ };
  
- /* 2GL, 2GH, 5GL1, 5GH1, 5GM1, 5GM2, 5GH1, 5GH2 */
- #define TSSI_TRIM_CH_GROUP_NUM 8
-+#define TSSI_TRIM_CH_GROUP_NUM_6G 16
++struct rtw89_page_regs {
++	u32 hci_fc_ctrl;
++	u32 ch_page_ctrl;
++	u32 ach_page_ctrl;
++	u32 ach_page_info;
++	u32 pub_page_info3;
++	u32 pub_page_ctrl1;
++	u32 pub_page_ctrl2;
++	u32 pub_page_info1;
++	u32 pub_page_info2;
++	u32 wp_page_ctrl1;
++	u32 wp_page_ctrl2;
++	u32 wp_page_info1;
++};
++
+ struct rtw89_chip_info {
+ 	enum rtw89_core_chip_id chip_id;
+ 	const struct rtw89_chip_ops *ops;
+@@ -2288,6 +2303,7 @@ struct rtw89_chip_info {
+ 	const u32 *h2c_regs;
+ 	u32 c2h_ctrl_reg;
+ 	const u32 *c2h_regs;
++	const struct rtw89_page_regs *page_regs;
+ };
  
- #define TSSI_CCK_CH_GROUP_NUM 6
- #define TSSI_MCS_2G_CH_GROUP_NUM 5
- #define TSSI_MCS_5G_CH_GROUP_NUM 14
-+#define TSSI_MCS_6G_CH_GROUP_NUM 32
- #define TSSI_MCS_CH_GROUP_NUM \
- 	(TSSI_MCS_2G_CH_GROUP_NUM + TSSI_MCS_5G_CH_GROUP_NUM)
+ union rtw89_bus_info {
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 9ba47a72812f9..df657df6b1493 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -569,6 +569,8 @@ static int hfc_pub_cfg_chk(struct rtw89_dev *rtwdev)
  
- struct rtw89_tssi_info {
- 	u8 thermal[RF_PATH_MAX];
- 	s8 tssi_trim[RF_PATH_MAX][TSSI_TRIM_CH_GROUP_NUM];
-+	s8 tssi_trim_6g[RF_PATH_MAX][TSSI_TRIM_CH_GROUP_NUM_6G];
- 	s8 tssi_cck[RF_PATH_MAX][TSSI_CCK_CH_GROUP_NUM];
- 	s8 tssi_mcs[RF_PATH_MAX][TSSI_MCS_CH_GROUP_NUM];
-+	s8 tssi_6g_mcs[RF_PATH_MAX][TSSI_MCS_6G_CH_GROUP_NUM];
- 	s8 extra_ofst[RF_PATH_MAX];
- 	bool tssi_tracking_check[RF_PATH_MAX];
- 	u8 default_txagc_offset[RF_PATH_MAX];
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index d7a5a6362f256..bed5368869977 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2019-2022  Realtek Corporation
-  */
+ static int hfc_ch_ctrl(struct rtw89_dev *rtwdev, u8 ch)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	const struct rtw89_hfc_ch_cfg *cfg = param->ch_cfg;
+ 	int ret = 0;
+@@ -588,13 +590,15 @@ static int hfc_ch_ctrl(struct rtw89_dev *rtwdev, u8 ch)
+ 	val = u32_encode_bits(cfg[ch].min, B_AX_MIN_PG_MASK) |
+ 	      u32_encode_bits(cfg[ch].max, B_AX_MAX_PG_MASK) |
+ 	      (cfg[ch].grp ? B_AX_GRP : 0);
+-	rtw89_write32(rtwdev, R_AX_ACH0_PAGE_CTRL + ch * 4, val);
++	rtw89_write32(rtwdev, regs->ach_page_ctrl + ch * 4, val);
  
-+#include "debug.h"
- #include "fw.h"
- #include "mac.h"
- #include "reg.h"
-@@ -212,7 +213,163 @@ static int rtw8852c_pwr_off_func(struct rtw89_dev *rtwdev)
  	return 0;
  }
  
-+static void rtw8852c_phycap_parsing_tssi(struct rtw89_dev *rtwdev, u8 *phycap_map)
-+{
-+	struct rtw89_tssi_info *tssi = &rtwdev->tssi;
-+	static const u32 tssi_trim_addr[RF_PATH_NUM_8852C] = {0x5D6, 0x5AB};
-+	static const u32 tssi_trim_addr_6g[RF_PATH_NUM_8852C] = {0x5CE, 0x5A3};
-+	u32 addr = rtwdev->chip->phycap_addr;
-+	bool pg = false;
-+	u32 ofst;
-+	u8 i, j;
+ static int hfc_upd_ch_info(struct rtw89_dev *rtwdev, u8 ch)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	struct rtw89_hfc_ch_info *info = param->ch_info;
+ 	const struct rtw89_hfc_ch_cfg *cfg = param->ch_cfg;
+@@ -608,7 +612,7 @@ static int hfc_upd_ch_info(struct rtw89_dev *rtwdev, u8 ch)
+ 	if (ch > RTW89_DMA_H2C)
+ 		return -EINVAL;
+ 
+-	val = rtw89_read32(rtwdev, R_AX_ACH0_PAGE_INFO + ch * 4);
++	val = rtw89_read32(rtwdev, regs->ach_page_info + ch * 4);
+ 	info[ch].aval = u32_get_bits(val, B_AX_AVAL_PG_MASK);
+ 	if (ch < RTW89_DMA_H2C)
+ 		info[ch].used = u32_get_bits(val, B_AX_USE_PG_MASK);
+@@ -620,6 +624,8 @@ static int hfc_upd_ch_info(struct rtw89_dev *rtwdev, u8 ch)
+ 
+ static int hfc_pub_ctrl(struct rtw89_dev *rtwdev)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	const struct rtw89_hfc_pub_cfg *cfg = &rtwdev->mac.hfc_param.pub_cfg;
+ 	u32 val;
+ 	int ret;
+@@ -634,16 +640,18 @@ static int hfc_pub_ctrl(struct rtw89_dev *rtwdev)
+ 
+ 	val = u32_encode_bits(cfg->grp0, B_AX_PUBPG_G0_MASK) |
+ 	      u32_encode_bits(cfg->grp1, B_AX_PUBPG_G1_MASK);
+-	rtw89_write32(rtwdev, R_AX_PUB_PAGE_CTRL1, val);
++	rtw89_write32(rtwdev, regs->pub_page_ctrl1, val);
+ 
+ 	val = u32_encode_bits(cfg->wp_thrd, B_AX_WP_THRD_MASK);
+-	rtw89_write32(rtwdev, R_AX_WP_PAGE_CTRL2, val);
++	rtw89_write32(rtwdev, regs->wp_page_ctrl2, val);
+ 
+ 	return 0;
+ }
+ 
+ static int hfc_upd_mix_info(struct rtw89_dev *rtwdev)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	struct rtw89_hfc_pub_cfg *pub_cfg = &param->pub_cfg;
+ 	struct rtw89_hfc_prec_cfg *prec_cfg = &param->prec_cfg;
+@@ -655,20 +663,20 @@ static int hfc_upd_mix_info(struct rtw89_dev *rtwdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO1);
++	val = rtw89_read32(rtwdev, regs->pub_page_info1);
+ 	info->g0_used = u32_get_bits(val, B_AX_G0_USE_PG_MASK);
+ 	info->g1_used = u32_get_bits(val, B_AX_G1_USE_PG_MASK);
+-	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO3);
++	val = rtw89_read32(rtwdev, regs->pub_page_info3);
+ 	info->g0_aval = u32_get_bits(val, B_AX_G0_AVAL_PG_MASK);
+ 	info->g1_aval = u32_get_bits(val, B_AX_G1_AVAL_PG_MASK);
+ 	info->pub_aval =
+-		u32_get_bits(rtw89_read32(rtwdev, R_AX_PUB_PAGE_INFO2),
++		u32_get_bits(rtw89_read32(rtwdev, regs->pub_page_info2),
+ 			     B_AX_PUB_AVAL_PG_MASK);
+ 	info->wp_aval =
+-		u32_get_bits(rtw89_read32(rtwdev, R_AX_WP_PAGE_INFO1),
++		u32_get_bits(rtw89_read32(rtwdev, regs->wp_page_info1),
+ 			     B_AX_WP_AVAL_PG_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL);
++	val = rtw89_read32(rtwdev, regs->hci_fc_ctrl);
+ 	param->en = val & B_AX_HCI_FC_EN ? 1 : 0;
+ 	param->h2c_en = val & B_AX_HCI_FC_CH12_EN ? 1 : 0;
+ 	param->mode = u32_get_bits(val, B_AX_HCI_FC_MODE_MASK);
+@@ -681,21 +689,21 @@ static int hfc_upd_mix_info(struct rtw89_dev *rtwdev)
+ 	prec_cfg->wp_ch811_full_cond =
+ 		u32_get_bits(val, B_AX_HCI_FC_WP_CH811_FULL_COND_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_CH_PAGE_CTRL);
++	val = rtw89_read32(rtwdev, regs->ch_page_ctrl);
+ 	prec_cfg->ch011_prec = u32_get_bits(val, B_AX_PREC_PAGE_CH011_MASK);
+ 	prec_cfg->h2c_prec = u32_get_bits(val, B_AX_PREC_PAGE_CH12_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_CTRL2);
++	val = rtw89_read32(rtwdev, regs->pub_page_ctrl2);
+ 	pub_cfg->pub_max = u32_get_bits(val, B_AX_PUBPG_ALL_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_WP_PAGE_CTRL1);
++	val = rtw89_read32(rtwdev, regs->wp_page_ctrl1);
+ 	prec_cfg->wp_ch07_prec = u32_get_bits(val, B_AX_PREC_PAGE_WP_CH07_MASK);
+ 	prec_cfg->wp_ch811_prec = u32_get_bits(val, B_AX_PREC_PAGE_WP_CH811_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_WP_PAGE_CTRL2);
++	val = rtw89_read32(rtwdev, regs->wp_page_ctrl2);
+ 	pub_cfg->wp_thrd = u32_get_bits(val, B_AX_WP_THRD_MASK);
+ 
+-	val = rtw89_read32(rtwdev, R_AX_PUB_PAGE_CTRL1);
++	val = rtw89_read32(rtwdev, regs->pub_page_ctrl1);
+ 	pub_cfg->grp0 = u32_get_bits(val, B_AX_PUBPG_G0_MASK);
+ 	pub_cfg->grp1 = u32_get_bits(val, B_AX_PUBPG_G1_MASK);
+ 
+@@ -708,20 +716,24 @@ static int hfc_upd_mix_info(struct rtw89_dev *rtwdev)
+ 
+ static void hfc_h2c_cfg(struct rtw89_dev *rtwdev)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	const struct rtw89_hfc_prec_cfg *prec_cfg = &param->prec_cfg;
+ 	u32 val;
+ 
+ 	val = u32_encode_bits(prec_cfg->h2c_prec, B_AX_PREC_PAGE_CH12_MASK);
+-	rtw89_write32(rtwdev, R_AX_CH_PAGE_CTRL, val);
++	rtw89_write32(rtwdev, regs->ch_page_ctrl, val);
+ 
+-	rtw89_write32_mask(rtwdev, R_AX_HCI_FC_CTRL,
++	rtw89_write32_mask(rtwdev, regs->hci_fc_ctrl,
+ 			   B_AX_HCI_FC_CH12_FULL_COND_MASK,
+ 			   prec_cfg->h2c_full_cond);
+ }
+ 
+ static void hfc_mix_cfg(struct rtw89_dev *rtwdev)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	const struct rtw89_hfc_pub_cfg *pub_cfg = &param->pub_cfg;
+ 	const struct rtw89_hfc_prec_cfg *prec_cfg = &param->prec_cfg;
+@@ -729,18 +741,18 @@ static void hfc_mix_cfg(struct rtw89_dev *rtwdev)
+ 
+ 	val = u32_encode_bits(prec_cfg->ch011_prec, B_AX_PREC_PAGE_CH011_MASK) |
+ 	      u32_encode_bits(prec_cfg->h2c_prec, B_AX_PREC_PAGE_CH12_MASK);
+-	rtw89_write32(rtwdev, R_AX_CH_PAGE_CTRL, val);
++	rtw89_write32(rtwdev, regs->ch_page_ctrl, val);
+ 
+ 	val = u32_encode_bits(pub_cfg->pub_max, B_AX_PUBPG_ALL_MASK);
+-	rtw89_write32(rtwdev, R_AX_PUB_PAGE_CTRL2, val);
++	rtw89_write32(rtwdev, regs->pub_page_ctrl2, val);
+ 
+ 	val = u32_encode_bits(prec_cfg->wp_ch07_prec,
+ 			      B_AX_PREC_PAGE_WP_CH07_MASK) |
+ 	      u32_encode_bits(prec_cfg->wp_ch811_prec,
+ 			      B_AX_PREC_PAGE_WP_CH811_MASK);
+-	rtw89_write32(rtwdev, R_AX_WP_PAGE_CTRL1, val);
++	rtw89_write32(rtwdev, regs->wp_page_ctrl1, val);
+ 
+-	val = u32_replace_bits(rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL),
++	val = u32_replace_bits(rtw89_read32(rtwdev, regs->hci_fc_ctrl),
+ 			       param->mode, B_AX_HCI_FC_MODE_MASK);
+ 	val = u32_replace_bits(val, prec_cfg->ch011_full_cond,
+ 			       B_AX_HCI_FC_WD_FULL_COND_MASK);
+@@ -750,21 +762,23 @@ static void hfc_mix_cfg(struct rtw89_dev *rtwdev)
+ 			       B_AX_HCI_FC_WP_CH07_FULL_COND_MASK);
+ 	val = u32_replace_bits(val, prec_cfg->wp_ch811_full_cond,
+ 			       B_AX_HCI_FC_WP_CH811_FULL_COND_MASK);
+-	rtw89_write32(rtwdev, R_AX_HCI_FC_CTRL, val);
++	rtw89_write32(rtwdev, regs->hci_fc_ctrl, val);
+ }
+ 
+ static void hfc_func_en(struct rtw89_dev *rtwdev, bool en, bool h2c_en)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_page_regs *regs = chip->page_regs;
+ 	struct rtw89_hfc_param *param = &rtwdev->mac.hfc_param;
+ 	u32 val;
+ 
+-	val = rtw89_read32(rtwdev, R_AX_HCI_FC_CTRL);
++	val = rtw89_read32(rtwdev, regs->hci_fc_ctrl);
+ 	param->en = en;
+ 	param->h2c_en = h2c_en;
+ 	val = en ? (val | B_AX_HCI_FC_EN) : (val & ~B_AX_HCI_FC_EN);
+ 	val = h2c_en ? (val | B_AX_HCI_FC_CH12_EN) :
+ 			 (val & ~B_AX_HCI_FC_CH12_EN);
+-	rtw89_write32(rtwdev, R_AX_HCI_FC_CTRL, val);
++	rtw89_write32(rtwdev, regs->hci_fc_ctrl, val);
+ }
+ 
+ static int hfc_init(struct rtw89_dev *rtwdev, bool reset, bool en, bool h2c_en)
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index 61f9899f02fc6..30e05abc7b55f 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -217,6 +217,45 @@
+ #define B_AX_ASFF_FULL_NO_STK BIT(1)
+ #define B_AX_EN_STUCK_DBG BIT(0)
+ 
++#define R_AX_HCI_FC_CTRL_V1 0x1700
++#define R_AX_CH_PAGE_CTRL_V1 0x1704
 +
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++) {
-+		for (j = 0; j < TSSI_TRIM_CH_GROUP_NUM; j++) {
-+			/* addrs are in decreasing order */
-+			ofst = tssi_trim_addr[i] - addr - j;
-+			tssi->tssi_trim[i][j] = phycap_map[ofst];
++#define R_AX_ACH0_PAGE_CTRL_V1 0x1710
++#define R_AX_ACH1_PAGE_CTRL_V1 0x1714
++#define R_AX_ACH2_PAGE_CTRL_V1 0x1718
++#define R_AX_ACH3_PAGE_CTRL_V1 0x171C
++#define R_AX_ACH4_PAGE_CTRL_V1 0x1720
++#define R_AX_ACH5_PAGE_CTRL_V1 0x1724
++#define R_AX_ACH6_PAGE_CTRL_V1 0x1728
++#define R_AX_ACH7_PAGE_CTRL_V1 0x172C
++#define R_AX_CH8_PAGE_CTRL_V1 0x1730
++#define R_AX_CH9_PAGE_CTRL_V1 0x1734
++#define R_AX_CH10_PAGE_CTRL_V1 0x1738
++#define R_AX_CH11_PAGE_CTRL_V1 0x173C
 +
-+			if (phycap_map[ofst] != 0xff)
-+				pg = true;
-+		}
++#define R_AX_ACH0_PAGE_INFO_V1 0x1750
++#define R_AX_ACH1_PAGE_INFO_V1 0x1754
++#define R_AX_ACH2_PAGE_INFO_V1 0x1758
++#define R_AX_ACH3_PAGE_INFO_V1 0x175C
++#define R_AX_ACH4_PAGE_INFO_V1 0x1760
++#define R_AX_ACH5_PAGE_INFO_V1 0x1764
++#define R_AX_ACH6_PAGE_INFO_V1 0x1768
++#define R_AX_ACH7_PAGE_INFO_V1 0x176C
++#define R_AX_CH8_PAGE_INFO_V1 0x1770
++#define R_AX_CH9_PAGE_INFO_V1 0x1774
++#define R_AX_CH10_PAGE_INFO_V1 0x1778
++#define R_AX_CH11_PAGE_INFO_V1 0x177C
++#define R_AX_CH12_PAGE_INFO_V1 0x1780
 +
-+		for (j = 0; j < TSSI_TRIM_CH_GROUP_NUM_6G; j++) {
-+			/* addrs are in decreasing order */
-+			ofst = tssi_trim_addr_6g[i] - addr - j;
-+			tssi->tssi_trim_6g[i][j] = phycap_map[ofst];
++#define R_AX_PUB_PAGE_INFO3_V1 0x178C
++#define R_AX_PUB_PAGE_CTRL1_V1 0x1790
++#define R_AX_PUB_PAGE_CTRL2_V1 0x1794
++#define R_AX_PUB_PAGE_INFO1_V1 0x1798
++#define R_AX_PUB_PAGE_INFO2_V1 0x179C
++#define R_AX_WP_PAGE_CTRL1_V1 0x17A0
++#define R_AX_WP_PAGE_CTRL2_V1 0x17A4
++#define R_AX_WP_PAGE_INFO1_V1 0x17A8
 +
-+			if (phycap_map[ofst] != 0xff)
-+				pg = true;
-+		}
-+	}
-+
-+	if (!pg) {
-+		memset(tssi->tssi_trim, 0, sizeof(tssi->tssi_trim));
-+		memset(tssi->tssi_trim_6g, 0, sizeof(tssi->tssi_trim_6g));
-+		rtw89_debug(rtwdev, RTW89_DBG_TSSI,
-+			    "[TSSI][TRIM] no PG, set all trim info to 0\n");
-+	}
-+
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++)
-+		for (j = 0; j < TSSI_TRIM_CH_GROUP_NUM; j++)
-+			rtw89_debug(rtwdev, RTW89_DBG_TSSI,
-+				    "[TSSI] path=%d idx=%d trim=0x%x addr=0x%x\n",
-+				    i, j, tssi->tssi_trim[i][j],
-+				    tssi_trim_addr[i] - j);
-+}
-+
-+static void rtw8852c_phycap_parsing_thermal_trim(struct rtw89_dev *rtwdev,
-+						 u8 *phycap_map)
-+{
-+	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
-+	static const u32 thm_trim_addr[RF_PATH_NUM_8852C] = {0x5DF, 0x5DC};
-+	u32 addr = rtwdev->chip->phycap_addr;
-+	u8 i;
-+
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++) {
-+		info->thermal_trim[i] = phycap_map[thm_trim_addr[i] - addr];
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[THERMAL][TRIM] path=%d thermal_trim=0x%x\n",
-+			    i, info->thermal_trim[i]);
-+
-+		if (info->thermal_trim[i] != 0xff)
-+			info->pg_thermal_trim = true;
-+	}
-+}
-+
-+static void rtw8852c_thermal_trim(struct rtw89_dev *rtwdev)
-+{
-+#define __thm_setting(raw)				\
-+({							\
-+	u8 __v = (raw);					\
-+	((__v & 0x1) << 3) | ((__v & 0x1f) >> 1);	\
-+})
-+	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
-+	u8 i, val;
-+
-+	if (!info->pg_thermal_trim) {
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[THERMAL][TRIM] no PG, do nothing\n");
-+
-+		return;
-+	}
-+
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++) {
-+		val = __thm_setting(info->thermal_trim[i]);
-+		rtw89_write_rf(rtwdev, i, RR_TM2, RR_TM2_OFF, val);
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[THERMAL][TRIM] path=%d thermal_setting=0x%x\n",
-+			    i, val);
-+	}
-+#undef __thm_setting
-+}
-+
-+static void rtw8852c_phycap_parsing_pa_bias_trim(struct rtw89_dev *rtwdev,
-+						 u8 *phycap_map)
-+{
-+	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
-+	static const u32 pabias_trim_addr[RF_PATH_NUM_8852C] = {0x5DE, 0x5DB};
-+	u32 addr = rtwdev->chip->phycap_addr;
-+	u8 i;
-+
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++) {
-+		info->pa_bias_trim[i] = phycap_map[pabias_trim_addr[i] - addr];
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[PA_BIAS][TRIM] path=%d pa_bias_trim=0x%x\n",
-+			    i, info->pa_bias_trim[i]);
-+
-+		if (info->pa_bias_trim[i] != 0xff)
-+			info->pg_pa_bias_trim = true;
-+	}
-+}
-+
-+static void rtw8852c_pa_bias_trim(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_power_trim_info *info = &rtwdev->pwr_trim;
-+	u8 pabias_2g, pabias_5g;
-+	u8 i;
-+
-+	if (!info->pg_pa_bias_trim) {
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[PA_BIAS][TRIM] no PG, do nothing\n");
-+
-+		return;
-+	}
-+
-+	for (i = 0; i < RF_PATH_NUM_8852C; i++) {
-+		pabias_2g = FIELD_GET(GENMASK(3, 0), info->pa_bias_trim[i]);
-+		pabias_5g = FIELD_GET(GENMASK(7, 4), info->pa_bias_trim[i]);
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+			    "[PA_BIAS][TRIM] path=%d 2G=0x%x 5G=0x%x\n",
-+			    i, pabias_2g, pabias_5g);
-+
-+		rtw89_write_rf(rtwdev, i, RR_BIASA, RR_BIASA_TXG, pabias_2g);
-+		rtw89_write_rf(rtwdev, i, RR_BIASA, RR_BIASA_TXA, pabias_5g);
-+	}
-+}
-+
-+static int rtw8852c_read_phycap(struct rtw89_dev *rtwdev, u8 *phycap_map)
-+{
-+	rtw8852c_phycap_parsing_tssi(rtwdev, phycap_map);
-+	rtw8852c_phycap_parsing_thermal_trim(rtwdev, phycap_map);
-+	rtw8852c_phycap_parsing_pa_bias_trim(rtwdev, phycap_map);
-+
-+	return 0;
-+}
-+
-+static void rtw8852c_power_trim(struct rtw89_dev *rtwdev)
-+{
-+	rtw8852c_thermal_trim(rtwdev);
-+	rtw8852c_pa_bias_trim(rtwdev);
-+}
-+
- static const struct rtw89_chip_ops rtw8852c_chip_ops = {
-+	.read_phycap		= rtw8852c_read_phycap,
-+	.power_trim		= rtw8852c_power_trim,
- 	.pwr_on_func		= rtw8852c_pwr_on_func,
- 	.pwr_off_func		= rtw8852c_pwr_off_func,
+ #define R_AX_H2CREG_DATA0_V1 0x7140
+ #define R_AX_H2CREG_DATA1_V1 0x7144
+ #define R_AX_H2CREG_DATA2_V1 0x7148
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 9db8a8f9dd180..4eb03dde34130 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -387,6 +387,21 @@ static const u32 rtw8852a_c2h_regs[RTW89_C2HREG_MAX] = {
+ 	R_AX_C2HREG_DATA3
  };
-@@ -230,6 +387,8 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.limit_efuse_size	= 1280,
- 	.dav_phy_efuse_size	= 96,
- 	.dav_log_efuse_size	= 16,
-+	.phycap_addr		= 0x590,
-+	.phycap_size		= 0x60,
- 	.hci_func_en_addr	= R_AX_HCI_FUNC_EN_V1,
- 	.h2c_ctrl_reg		= R_AX_H2CREG_CTRL_V1,
- 	.h2c_regs		= rtw8852c_h2c_regs,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.h b/drivers/net/wireless/realtek/rtw89/rtw8852c.h
-index 68a397223a814..8abca49e6c84b 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.h
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.h
-@@ -7,6 +7,8 @@
  
- #include "core.h"
- 
-+#define RF_PATH_NUM_8852C 2
++static const struct rtw89_page_regs rtw8852a_page_regs = {
++	.hci_fc_ctrl	= R_AX_HCI_FC_CTRL,
++	.ch_page_ctrl	= R_AX_CH_PAGE_CTRL,
++	.ach_page_ctrl	= R_AX_ACH0_PAGE_CTRL,
++	.ach_page_info	= R_AX_ACH0_PAGE_INFO,
++	.pub_page_info3	= R_AX_PUB_PAGE_INFO3,
++	.pub_page_ctrl1	= R_AX_PUB_PAGE_CTRL1,
++	.pub_page_ctrl2	= R_AX_PUB_PAGE_CTRL2,
++	.pub_page_info1	= R_AX_PUB_PAGE_INFO1,
++	.pub_page_info2 = R_AX_PUB_PAGE_INFO2,
++	.wp_page_ctrl1	= R_AX_WP_PAGE_CTRL1,
++	.wp_page_ctrl2	= R_AX_WP_PAGE_CTRL2,
++	.wp_page_info1	= R_AX_WP_PAGE_INFO1,
++};
 +
- extern const struct rtw89_chip_info rtw8852c_chip_info;
+ static void rtw8852ae_efuse_parsing(struct rtw89_efuse *efuse,
+ 				    struct rtw8852a_efuse *map)
+ {
+@@ -2073,6 +2088,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.h2c_regs		= rtw8852a_h2c_regs,
+ 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL,
+ 	.c2h_regs		= rtw8852a_c2h_regs,
++	.page_regs		= &rtw8852a_page_regs,
+ };
+ EXPORT_SYMBOL(rtw8852a_chip_info);
  
- #endif
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index c08e0aebc6460..0b2f4595d1323 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -17,6 +17,21 @@ static const u32 rtw8852c_c2h_regs[RTW89_H2CREG_MAX] = {
+ 	R_AX_C2HREG_DATA3_V1
+ };
+ 
++static const struct rtw89_page_regs rtw8852c_page_regs = {
++	.hci_fc_ctrl	= R_AX_HCI_FC_CTRL_V1,
++	.ch_page_ctrl	= R_AX_CH_PAGE_CTRL_V1,
++	.ach_page_ctrl	= R_AX_ACH0_PAGE_CTRL_V1,
++	.ach_page_info	= R_AX_ACH0_PAGE_INFO_V1,
++	.pub_page_info3	= R_AX_PUB_PAGE_INFO3_V1,
++	.pub_page_ctrl1	= R_AX_PUB_PAGE_CTRL1_V1,
++	.pub_page_ctrl2	= R_AX_PUB_PAGE_CTRL2_V1,
++	.pub_page_info1	= R_AX_PUB_PAGE_INFO1_V1,
++	.pub_page_info2 = R_AX_PUB_PAGE_INFO2_V1,
++	.wp_page_ctrl1	= R_AX_WP_PAGE_CTRL1_V1,
++	.wp_page_ctrl2	= R_AX_WP_PAGE_CTRL2_V1,
++	.wp_page_info1	= R_AX_WP_PAGE_INFO1_V1,
++};
++
+ static int rtw8852c_pwr_on_func(struct rtw89_dev *rtwdev)
+ {
+ 	u32 val32;
+@@ -202,6 +217,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.h2c_regs		= rtw8852c_h2c_regs,
+ 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL_V1,
+ 	.c2h_regs		= rtw8852c_c2h_regs,
++	.page_regs		= &rtw8852c_page_regs,
+ };
+ EXPORT_SYMBOL(rtw8852c_chip_info);
+ 
 -- 
 2.25.1
 
