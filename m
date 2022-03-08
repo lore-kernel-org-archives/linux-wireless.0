@@ -2,40 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E91CC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Mar 2022 08:34:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FA9C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Mar 2022 08:49:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241170AbiCHIfK (ORCPT
+        id S1345146AbiCHIux (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Mar 2022 03:35:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36212 "EHLO
+        Tue, 8 Mar 2022 03:50:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344979AbiCHIfJ (ORCPT
+        with ESMTP id S1345142AbiCHIux (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Mar 2022 03:35:09 -0500
-X-Greylist: delayed 305 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 08 Mar 2022 00:34:13 PST
-Received: from mail.twelvesign.pl (mail.twelvesign.pl [89.221.214.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9770E3CFEA
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2022 00:34:13 -0800 (PST)
-Received: by mail.twelvesign.pl (Postfix, from userid 1002)
-        id 9CEF635726; Tue,  8 Mar 2022 09:29:06 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=twelvesign.pl;
-        s=mail; t=1646728146;
-        bh=rqcEvVJQSOmVvt10Vd77A7h4EQ3zL1XaGAodpexDxk8=;
+        Tue, 8 Mar 2022 03:50:53 -0500
+Received: from mail.olerise.pl (mail.olerise.pl [46.183.184.59])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55633FDBB
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2022 00:49:55 -0800 (PST)
+Received: by mail.olerise.pl (Postfix, from userid 1001)
+        id DF83E4439D; Tue,  8 Mar 2022 09:46:01 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=olerise.pl; s=mail;
+        t=1646729349; bh=ZNYiuZLXlxCdAPtstEG/gwJieB5RBwA/cHj1SZ3Mpl0=;
         h=Date:From:To:Subject:From;
-        b=QSr/6Sh8d3PUAttJgmVGDNoidsDNeoN9u3kTmcb5TaQ62hYY/l26oUyYYYmDDBMU/
-         RH4vqeuI8my5BA62xtvbYQk/sDV5Qa+FE+H2UIGvP0Xb7LTiUJwkUp9bBZgm4xb/Xt
-         809zYuwJqjzMvVscl+wt4fSoMOKmjT9rTZiZwGFO3+hWoDpEZ8mVm70Fw+sIIRzL1F
-         tto0B4s3s44e/4m56ov+/TkYthS4PouwcdcST116oWFaPLmMMqhUHd/kPPu9Rbcxgg
-         vbeTYgOhcCS34S1oLM9wTFDEvt/YjvresHPDwh9wrZwFErxkO1/1Q2aahL5xYS6t21
-         YePtspB9FkVzA==
-Received: by mail.twelvesign.pl for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2022 08:29:05 GMT
-Message-ID: <20220308083000-0.1.w.1urn.0.3pka9ca1im@twelvesign.pl>
-Date:   Tue,  8 Mar 2022 08:29:05 GMT
-From:   "Damian Kraska" <damian.kraska@twelvesign.pl>
+        b=LF9wxFMDNrUsbTk1rFbeK3hT6Uyg0Nxp/uE87pVqHDV2U5wkVcqgZLBlKzjUqVVOF
+         6DplIUA4FHdS+cu0Sdz7FgFkN4Zm3cHe257URcz48U9gC29UIxvq+13xjH5x9GmKNd
+         ukO9/l/pDdSaCV8tX8uBZiH68pP4BA9V5wds+Q3w9jfmgWewIkMTy0fDssXC/VL9Yn
+         +Px6q9n1YVKGp0doIE3S59ErzB8OccpwsUmUnHDJUwmolWykeC0IIdvlTtLsJniy0X
+         goAKRokk8udwuQgjF5hbzb1jTTcm8RZ9+lppDa/fugkUbw/lYpt6S/JUL+9ORbMDUj
+         vrrskD5a0KIbA==
+Received: by mail.olerise.pl for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2022 08:45:41 GMT
+Message-ID: <20220308084500-0.1.26.msf3.0.rz5qpv6dp5@olerise.pl>
+Date:   Tue,  8 Mar 2022 08:45:41 GMT
+From:   =?UTF-8?Q? "Miko=C5=82aj_Rudzik" ?= <mikolaj.rudzik@olerise.pl>
 To:     <linux-wireless@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.twelvesign.pl
+Subject: =?UTF-8?Q?Nap=C5=82yw_Klient=C3=B3w_ze_strony?=
+X-Mailer: mail.olerise.pl
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -45,15 +43,16 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Dzie=C5=84 dobry,
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+chcia=C5=82bym poinformowa=C4=87 Pa=C5=84stwa o mo=C5=BCliwo=C5=9Bci pozy=
+skania nowych zlece=C5=84 ze strony www.
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+Widzimy zainteresowanie potencjalnych Klient=C3=B3w Pa=C5=84stwa firm=C4=85=
+, dlatego ch=C4=99tnie pomo=C5=BCemy Pa=C5=84stwu dotrze=C4=87 z ofert=C4=
+=85 do wi=C4=99kszego grona odbiorc=C3=B3w poprzez efektywne metody pozyc=
+jonowania strony w Google.
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+Czy m=C3=B3g=C5=82bym liczy=C4=87 na kontakt zwrotny?
 
 
-Pozdrawiam,
-Damian Kraska
+Pozdrawiam
+Miko=C5=82aj Rudzik
