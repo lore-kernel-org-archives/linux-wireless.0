@@ -2,50 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92366C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Mar 2022 16:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 133E4C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Mar 2022 16:34:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236406AbiCIQfB (ORCPT
+        id S236420AbiCIQfG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Mar 2022 11:35:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48812 "EHLO
+        Wed, 9 Mar 2022 11:35:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235395AbiCIQcy (ORCPT
+        with ESMTP id S236556AbiCIQaC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Mar 2022 11:32:54 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3385757B26;
-        Wed,  9 Mar 2022 08:28:18 -0800 (PST)
+        Wed, 9 Mar 2022 11:30:02 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB4E3A0BC3;
+        Wed,  9 Mar 2022 08:23:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 167B5B82251;
-        Wed,  9 Mar 2022 16:27:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2119C340E8;
-        Wed,  9 Mar 2022 16:26:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A9CA6195D;
+        Wed,  9 Mar 2022 16:23:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21E9CC3410B;
+        Wed,  9 Mar 2022 16:23:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646843219;
-        bh=K3FO2TWXO6pAN8KGOhYItbIUmKhC+J+Tj77X8skAVOI=;
+        s=k20201202; t=1646842990;
+        bh=nCbAcrQeQOGTnXsdHXh8Jn0Q4uLhukoXOeCBftdREl8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EBADp+5GJnF4hXl7S5RDZSAYJfamXZWyd7TtT/tYZpVI4ucEOafmOgTovh3w9fqfc
-         bacJDNIUIw/I2d/haThEwFII21/JDTMfT30/TetlcasAXfmdDmLML8I9vssi/qlUAX
-         rzg0eL9GUGcLOVeoPMaB215pLgCsJygbVXmYqbHJNR30X5lz6XIrMS6mnX3uQ+xRmv
-         spJT/xocjTOJZmWmG8sQlYXuOJ91i3k+gopwAKpaegsP033YOaurNkRGjOeCIn6n3b
-         Y6beXTCbxGKrIywJHCP+zcxx5yyIeca+fFAwltkQFL3d+hFUYbtsI7+DymIJwt6iLa
-         B8WTFha8/gbUA==
+        b=DOCB0aR7LeeaLxmzgGjujzhNclSiOqZmWeG7rd2OUN8o1Oc/zOpgCpXxZwCcsRiCd
+         ULVAmV3kWVFj3mVwKCr9aFK9DBiUrCh3+vFrysHf+FdwQcwe7cKsg7hdER/yLkBpC8
+         qldbCfCn0WFohj4iU2flE8k08F2HRLmzOHXn5u9coR+7uZKZeO4YUnc+PQaIkhYXdO
+         g5UDDhhtCuw8dlS6dtgxoUK4fmTQI7FpVd9C9NeSQ8dGRAFQ5ajREddqQSKMs7mt/f
+         pZ3t488+FETxx8T+VYL5linwD5YX0LuLdQXaTJ2cM4vLffSIuVK3syUwkPfKY88rZ6
+         pvDdIyEAcETCQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreeramya Soratkal <quic_ssramya@quicinc.com>,
+Cc:     Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/12] nl80211: Update bss channel on channel switch for P2P_CLIENT
-Date:   Wed,  9 Mar 2022 11:26:13 -0500
-Message-Id: <20220309162618.137226-8-sashal@kernel.org>
+        mordechay.goodstein@intel.com, miriam.rachel.korenblit@intel.com,
+        ilan.peer@intel.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 14/20] iwlwifi: don't advertise TWT support
+Date:   Wed,  9 Mar 2022 11:21:52 -0500
+Message-Id: <20220309162158.136467-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220309162618.137226-1-sashal@kernel.org>
-References: <20220309162618.137226-1-sashal@kernel.org>
+In-Reply-To: <20220309162158.136467-1-sashal@kernel.org>
+References: <20220309162158.136467-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,40 +57,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sreeramya Soratkal <quic_ssramya@quicinc.com>
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-[ Upstream commit e50b88c4f076242358b66ddb67482b96947438f2 ]
+[ Upstream commit 1db5fcbba2631277b78d7f8aff99c9607d29f6d8 ]
 
-The wdev channel information is updated post channel switch only for
-the station mode and not for the other modes. Due to this, the P2P client
-still points to the old value though it moved to the new channel
-when the channel change is induced from the P2P GO.
+Some APs misbehave when TWT is used and cause our firmware to crash.
+We don't know a reasonable way to detect and work around this problem
+in the FW yet.  To prevent these crashes, disable TWT in the driver by
+stopping to advertise TWT support.
 
-Update the bss channel after CSA channel switch completion for P2P client
-interface as well.
-
-Signed-off-by: Sreeramya Soratkal <quic_ssramya@quicinc.com>
-Link: https://lore.kernel.org/r/1646114600-31479-1-git-send-email-quic_ssramya@quicinc.com
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=215523
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+[reworded the commit message]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/20220301072926.153969-1-luca@coelho.fi
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 3 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bbc3c876a5d8..7085c54e6e50 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14777,7 +14777,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 	wdev->chandef = *chandef;
- 	wdev->preset_chandef = *chandef;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index cbde21e772b1..b862cfbcd6e7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -587,8 +587,7 @@ static struct ieee80211_sband_iftype_data iwl_he_capa[] = {
+ 			.has_he = true,
+ 			.he_cap_elem = {
+ 				.mac_cap_info[0] =
+-					IEEE80211_HE_MAC_CAP0_HTC_HE |
+-					IEEE80211_HE_MAC_CAP0_TWT_REQ,
++					IEEE80211_HE_MAC_CAP0_HTC_HE,
+ 				.mac_cap_info[1] =
+ 					IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
+ 					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 922a7ea0cd24..d2c6fdb70273 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -350,7 +350,6 @@ static const u8 he_if_types_ext_capa_sta[] = {
+ 	 [0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
+ 	 [2] = WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT,
+ 	 [7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
+-	 [9] = WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT,
+ };
  
--	if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
-+	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
- 	    !WARN_ON(!wdev->current_bss))
- 		wdev->current_bss->pub.channel = chandef->chan;
- 
+ static const struct wiphy_iftype_ext_capab he_iftypes_ext_capa[] = {
 -- 
 2.34.1
 
