@@ -2,50 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2299FC4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Mar 2022 16:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBE52C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Mar 2022 16:34:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236240AbiCIQe5 (ORCPT
+        id S234902AbiCIQe7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Mar 2022 11:34:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
+        Wed, 9 Mar 2022 11:34:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238618AbiCIQbg (ORCPT
+        with ESMTP id S237337AbiCIQan (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Mar 2022 11:31:36 -0500
+        Wed, 9 Mar 2022 11:30:43 -0500
 Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AF3519BE61;
-        Wed,  9 Mar 2022 08:26:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 871551637D8;
+        Wed,  9 Mar 2022 08:24:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 61477CE1EC8;
-        Wed,  9 Mar 2022 16:26:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB8E0C340E8;
-        Wed,  9 Mar 2022 16:25:58 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id CBE08CE1F9B;
+        Wed,  9 Mar 2022 16:24:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D5E8C36AE2;
+        Wed,  9 Mar 2022 16:24:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646843161;
-        bh=588xbUtmPZNqqQ0O0bWiHhkKzSzqqyaIEJxroH93rbk=;
+        s=k20201202; t=1646843054;
+        bh=Jfcq61gqf9CXq2ZHuQFRQVZPk1VmB2ZeZedHRCCDDxA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o9l5sAY9W6YKBnvQofSJmA+nhbV2+2nhtkfAI+qhRfFLjYhn9jABfCOEFTYK6e8Y7
-         au6swBUcLSQ70j27L43KScQ4yuSyHY8eDFBHpxLI8yr86dPe3dujp60wFB1k4+/wDu
-         lYr7OZ2oxKMPEnwHhSkdagmG78lKxtFMohCb51PtexaEUb5KG+6PCaiBi3giObwPLi
-         DhMvYKPkgRRqSrJozB5aFOGE4qnPebEEt/cb7jU26IPr7dhc/XwDAQ/w4c2vwjEJMH
-         9Qzw3IF07JPWMA73wwIOs2u5zSPUGhNaPosuiBnYZ77ao8PXqyWPjqnQsOPjQzCNc5
-         Xh4RSYakIPAXQ==
+        b=mtlgg8i96wSDHMOmZ6Q2Sd/LGp3eFDzIJPrtBcznxo/4mGmU32yx1ehDFKKvHE1Al
+         u0yfmN0eMAJ564m74bnOb7El4cLNgqeVg5uqEfmId5Djs/NjcuZ3oGMF0MRxoZYBd4
+         R6//OqeNdXAOLp3h6XsTk3208pBuNP/d2Dx4eiWhq+ILgraUJxaQdcYQhwQEgFozO3
+         s8DhzY6CSxdnR0yWBg/3j22US9d61gjEZE3ooxO7JAbFnTskGYloKfNFQC00rePirS
+         RPliwgfNUn8O+qDFyFkz6OXInfCGL00V9FrM9jN3gdwausEs8b70E6lQ0OkMf+TWDj
+         SPm9oyPKwuJ6g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreeramya Soratkal <quic_ssramya@quicinc.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 10/14] nl80211: Update bss channel on channel switch for P2P_CLIENT
-Date:   Wed,  9 Mar 2022 11:25:03 -0500
-Message-Id: <20220309162508.137035-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 08/19] mac80211: refuse aggregations sessions before authorized
+Date:   Wed,  9 Mar 2022 11:23:25 -0500
+Message-Id: <20220309162337.136773-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220309162508.137035-1-sashal@kernel.org>
-References: <20220309162508.137035-1-sashal@kernel.org>
+In-Reply-To: <20220309162337.136773-1-sashal@kernel.org>
+References: <20220309162337.136773-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,40 +53,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sreeramya Soratkal <quic_ssramya@quicinc.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit e50b88c4f076242358b66ddb67482b96947438f2 ]
+[ Upstream commit a6bce78262f5dd4b50510f0aa47f3995f7b185f3 ]
 
-The wdev channel information is updated post channel switch only for
-the station mode and not for the other modes. Due to this, the P2P client
-still points to the old value though it moved to the new channel
-when the channel change is induced from the P2P GO.
+If an MFP station isn't authorized, the receiver will (or
+at least should) drop the action frame since it's a robust
+management frame, but if we're not authorized we haven't
+installed keys yet. Refuse attempts to start a session as
+they'd just time out.
 
-Update the bss channel after CSA channel switch completion for P2P client
-interface as well.
-
-Signed-off-by: Sreeramya Soratkal <quic_ssramya@quicinc.com>
-Link: https://lore.kernel.org/r/1646114600-31479-1-git-send-email-quic_ssramya@quicinc.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20220203201528.ff4d5679dce9.I34bb1f2bc341e161af2d6faf74f91b332ba11285@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/agg-tx.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c5806f46f6c9..2799ff117f5a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -15518,7 +15518,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 	wdev->chandef = *chandef;
- 	wdev->preset_chandef = *chandef;
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index f140c2b94b2c..f30cdd7f3a73 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -9,7 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2021 Intel Corporation
++ * Copyright (C) 2018 - 2022 Intel Corporation
+  */
  
--	if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
-+	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
- 	    !WARN_ON(!wdev->current_bss))
- 		wdev->current_bss->pub.channel = chandef->chan;
+ #include <linux/ieee80211.h>
+@@ -615,6 +615,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 		return -EINVAL;
+ 	}
  
++	if (test_sta_flag(sta, WLAN_STA_MFP) &&
++	    !test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
++		ht_dbg(sdata,
++		       "MFP STA not authorized - deny BA session request %pM tid %d\n",
++		       sta->sta.addr, tid);
++		return -EINVAL;
++	}
++
+ 	/*
+ 	 * 802.11n-2009 11.5.1.1: If the initiating STA is an HT STA, is a
+ 	 * member of an IBSS, and has no other existing Block Ack agreement
 -- 
 2.34.1
 
