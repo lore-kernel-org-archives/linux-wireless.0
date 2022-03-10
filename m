@@ -2,93 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF1A4C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Mar 2022 16:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFC2C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Mar 2022 17:28:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243845AbiCJQtq (ORCPT
+        id S244401AbiCJR3J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Mar 2022 11:49:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59336 "EHLO
+        Thu, 10 Mar 2022 12:29:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244657AbiCJQsL (ORCPT
+        with ESMTP id S233084AbiCJR3I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Mar 2022 11:48:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7588169230
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2022 08:47:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7AF44B82567
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2022 16:47:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3272C340EC;
-        Thu, 10 Mar 2022 16:47:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646930826;
-        bh=+smzXJfCzkc8pov9VCK3B2/WwOUVVTk+vJZJA2ByKhY=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=sKxyXANabHJ17LihD5nbSWY3FyqVa7d+1sq9l8r7OgV1QRofYxb/5fn0vKNs+By5e
-         9pHNvCyyuVYQfznX3WVTGBwZlYi157vsEfLgW4WtHtEvZlKwn8eX/y49+dWgtwBstd
-         xFR64JDl9xJrcxrtPFZspMWQ/uq1R9YN24yaARZ9O65F43YFrt1fSv/p39pVgULGB9
-         MGy9eWOVCuJn5Wa5+kOaVMbKFHjmi3mV6/jDYVB0eRnUpihvKiNFav7HGM+vKh9cag
-         hrmcMo8TvUNd9ekkncCq9BsbiVqXwJ9lboiZ320C1CJIke792o7K7Twb8bi9HBJM9E
-         yT34UqgSYpNmQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2022-03-10
-References: <d4c71b078097ae236fc20131ea59cd5c436554bb.camel@coelho.fi>
-Date:   Thu, 10 Mar 2022 18:47:03 +0200
-In-Reply-To: <d4c71b078097ae236fc20131ea59cd5c436554bb.camel@coelho.fi> (Luca
-        Coelho's message of "Thu, 10 Mar 2022 10:42:21 +0200")
-Message-ID: <87fsnprbzs.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Thu, 10 Mar 2022 12:29:08 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94DE8D4CA9
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2022 09:28:06 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id b8so5880787pjb.4
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2022 09:28:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=TqsqHCoTEdqIo0vGj3llrDDd30YnzYqjLPG/pFLVFAk=;
+        b=YjfYhI0xUjn6PIpT7EQTNQIQf+eWQB/MVfnReDuYwbFzJJZ4mMk7F0Rfb/Lubp5N9m
+         zmnw7T/ud2rCq7Mi/i6LhVxJLsU6eCXR105kEj/MYP2gXO09pAdxUh/SzrRWCHwLv77d
+         53vcp4crDD0ngx0glI6GnYYHzunzOnu9qV46Af9gtaogAsAeImpqaOGVRUqHnikWUUwc
+         EhZhVaYXiilea1E1axhSHqLeX0CsY85jjNYUO5SyiGXQYSicrIj1+lDeJ+j6F+VhbAku
+         NTkXDdIt1qXaGr7oCza5ZfWJKOhmJWJtBS5uhSGNmeSTZWPB5wpQprbJSdiQbAmE0Kte
+         IfYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=TqsqHCoTEdqIo0vGj3llrDDd30YnzYqjLPG/pFLVFAk=;
+        b=j3/EuoQJ8zcxYhMe1N61UffjjzgxdVWmZCgex3ITsmvS8AqBN9peQZGpfe2jzJsmum
+         Kv3zjg7ACAvYhaYXIoQVR+34Ozd+LLrxm8xi2SFrDnkJKTkCvRjXKnzXF77CUUIOUf7K
+         bokwybReKYgLOSw0x4Qt4Heb/d3u3iVJ5DpBzctkVnNV4aoPZAxk5/X9ZpyiuusWh6/T
+         8xNczNqkzrmfou3hpmtWweqxB/cFSP9I1cb8+XZjy/y5Uc0UJ63ChTYAjc6JLop7QZL+
+         AlKwVn58QqWqNPbwSbuDKrg2lJ2qyxHD0K3OnCFOi7cTqOwM9XEb20htJgZDvBytGc1N
+         aiuQ==
+X-Gm-Message-State: AOAM530F2CsICaVSG03XCFImBrA9Dpm2ERsszocBva52Pv/sEn/wi/zq
+        AAKIAKLNaO28I9VgwYXZGLIDOU+2wXcDKTB2RsQ=
+X-Google-Smtp-Source: ABdhPJxLFxCMg62rbSMJ/wKTW8BeJDRHrDTCtP4r8Z2l4UunDaqG8VH9C6/sL7in04b9TzdHLBl/uUhiU7n6Ie803as=
+X-Received: by 2002:a17:90a:fb4e:b0:1bc:8227:edd9 with SMTP id
+ iq14-20020a17090afb4e00b001bc8227edd9mr6135611pjb.56.1646933286007; Thu, 10
+ Mar 2022 09:28:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20220309195759.1494-1-jelonek.jonas@gmail.com>
+ <20220309195759.1494-2-jelonek.jonas@gmail.com> <bc398c48-b5b2-8037-a8c6-712b2e191202@candelatech.com>
+ <8FC6B734-4D4A-4D91-A38E-DE36E415A36E@inet.tu-berlin.de> <22a43538-a2ad-f3a7-2909-5ef6a0d2ab27@candelatech.com>
+In-Reply-To: <22a43538-a2ad-f3a7-2909-5ef6a0d2ab27@candelatech.com>
+From:   Jonas Jelonek <jelonek.jonas@gmail.com>
+Date:   Thu, 10 Mar 2022 18:27:55 +0100
+Message-ID: <CAChE-vRdnLgjGt3wDrzDC_eKWnX-wi_bWAiBYcheZrSMcfDoyQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] mac80211: extend current rate control tx status API
+To:     Ben Greear <greearb@candelatech.com>
+Cc:     =?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@inet.tu-berlin.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@kernel.org>, "nbd@nbd.name" <nbd@nbd.name>,
+        johannes@sipsolutions.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+On 3/10/22 16:43 UTC, Ben Greear wrote:
+> >
+> > Certain 802.11a/g/n Atheros chips provide a 0,5dB tx-power step granula=
+rity, while Mediatek 802.11ac chips have 1dB or even 3dB step width. So I w=
+ould argue that a 1dB step width is a good compromise as the common value f=
+or new tpc algorithms.
+>
+> If you use 0.5db units for that struct, then it will support anything wit=
+h that granularity or higher.
+> But, fine with me if you want to just have it be 1db units.
+>
+using 0.5db is more appropriate for the already existing chips that
+support this granularity, and is more future-proof.
+1db units may be easier to handle for the API and/or TPC algorithms
+but again limits existing hardware capabilities.
 
-> Hi Kalle,
+> > The ath9k chips I have used so far support a minimum tx-power of -5dBm =
+(=3D0,32mW), Mediatek has a min of 0dBm (=3D1mW)=E2=80=A6 so I would argue =
+to use 0dBm  (=3D1mW) as common minimum tx-power value, as the any possible=
+ spatial reuse gain happens from 0dBm up to max tx-power.
 >
-> Here's my second pull request for v5.18 with the last patchset I sent.
->
-> This is all normal development, new features, bugfixes and  cleanups. 
-> More details about the contents in the tag description.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 12b604d4ba693a3aa254cf7f9d0b4835770e9e97:
->
->   rtw89: declare HE capabilities in 6G band (2022-03-09 13:39:53 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2022-03-10
->
-> for you to fetch changes up to 8594ab868799ce78c770498b74fe55ded30def9e:
->
->   iwlwifi: bump FW API to 72 for AX devices (2022-03-10 09:23:29 +0200)
->
-> ----------------------------------------------------------------
-> iwlwifi patches for v5.18
->
-> * Mostly debugging infra changes;
-> * Some more work on the Bz family of devices;
-> * Bump the FW API twice;
-> * Some other small fixes, clean-ups and improvements.
->
-> ----------------------------------------------------------------
+> If a chip supports setting to txpower to -5, then why not let the API sup=
+port that?  Have The value -128
+> be 'do not set', and anything else will mean 'try to set the chip to this=
+ power or the nearest thing to it
+> that the chip supports'.
 
-Pulled, thanks Luca.
+I agree with that, having -128 as value for 'not set' or 'invalid'
+would leave the negative dBm for chips that support this.
+Whether the TPC then actually makes use of this should not be the
+reason to use 0 as default.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+To your previous question:
+retry_count =3D 1 is intended to be a single tx, so naming the struct
+member 'try_count' would be more appropriate?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Besides this, I will add proper documentation for this in the
+following patch version to clarify the units and meanings.
