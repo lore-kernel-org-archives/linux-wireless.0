@@ -2,30 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55569C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Mar 2022 14:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F9EC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Mar 2022 14:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349345AbiCKOrL (ORCPT
+        id S1349661AbiCKOrO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Mar 2022 09:47:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34090 "EHLO
+        Fri, 11 Mar 2022 09:47:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244468AbiCKOrJ (ORCPT
+        with ESMTP id S241166AbiCKOrJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 11 Mar 2022 09:47:09 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE272199E08
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2867198EE7
         for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2022 06:46:01 -0800 (PST)
-X-UUID: d29a45f879614c0fad9721d5fe5d0861-20220311
-X-UUID: d29a45f879614c0fad9721d5fe5d0861-20220311
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+X-UUID: 0d599c72777b41639b65f3f59129244a-20220311
+X-UUID: 0d599c72777b41639b65f3f59129244a-20220311
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1873285355; Fri, 11 Mar 2022 22:45:56 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Fri, 11 Mar 2022 22:45:55 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1904641060; Fri, 11 Mar 2022 22:45:57 +0800
+Received: from mtkexhb01.mediatek.inc (172.21.101.102) by
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 11 Mar 2022 22:45:55 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by mtkexhb01.mediatek.inc
+ (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 11 Mar
+ 2022 22:45:55 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
  Transport; Fri, 11 Mar 2022 22:45:55 +0800
@@ -37,11 +39,14 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         Bo Jiao <Bo.Jiao@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v2 1/3] mt76: mt7915: set band1 TGID field in tx descriptor
-Date:   Fri, 11 Mar 2022 22:44:25 +0800
-Message-ID: <20220311144427.16018-1-shayne.chen@mediatek.com>
+Subject: [PATCH v2 3/3] mt76: mt7915: fix phy cap in mt7915_set_stream_he_txbf_caps()
+Date:   Fri, 11 Mar 2022 22:44:27 +0800
+Message-ID: <20220311144427.16018-3-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20220311144427.16018-1-shayne.chen@mediatek.com>
+References: <20220311144427.16018-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -49,27 +54,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set proper group index of tx descriptor for band1.
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
+This patch fixes performance issue of beamforming tx on
+bandwidth 160MHz.
+
+Fixes: 99ad32a4ca3a ("mt76: mt7915: add support for MT7986")
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/init.c  | 25 +++++++++++++++----
+ 1 file changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 1da551f..aecf7eb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1215,8 +1215,7 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	      FIELD_PREP(MT_TXD1_WLAN_IDX, wcid->idx) |
- 	      FIELD_PREP(MT_TXD1_OWN_MAC, omac_idx);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 553d1f5..94a5ea6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -727,11 +727,18 @@ void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy)
+ }
  
--	if ((ext_phy || band_idx) &&
--	    q_idx >= MT_LMAC_ALTX0 && q_idx <= MT_LMAC_BCN0)
-+	if (ext_phy || band_idx)
- 		val |= MT_TXD1_TGID;
+ static void
+-mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
++mt7915_set_stream_he_txbf_caps(struct mt7915_dev *dev,
++			       struct ieee80211_sta_he_cap *he_cap,
+ 			       int vif, int nss)
+ {
+ 	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
+-	u8 c;
++	u8 c, nss_160;
++
++	/* Can do 1/2 of NSS streams in 160Mhz mode for mt7915 */
++	if (is_mt7915(&dev->mt76) && !dev->dbdc_support)
++		nss_160 = nss / 2;
++	else
++		nss_160 = nss;
  
- 	txwi[1] = cpu_to_le32(val);
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (vif == NL80211_IFTYPE_MESH_POINT)
+@@ -785,13 +792,21 @@ mt7915_set_stream_he_txbf_caps(struct ieee80211_sta_he_cap *he_cap,
+ 	/* num_snd_dim
+ 	 * for mt7915, max supported nss is 2 for bw > 80MHz
+ 	 */
+-	c = (nss - 1) |
+-	    IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_2;
++	c = FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
++		       nss - 1) |
++	    FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK,
++		       nss_160 - 1);
+ 	elem->phy_cap_info[5] |= c;
+ 
+ 	c = IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB |
+ 	    IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMING_PARTIAL_BW_FB;
+ 	elem->phy_cap_info[6] |= c;
++
++	if (!is_mt7915(&dev->mt76)) {
++		c = IEEE80211_HE_PHY_CAP7_STBC_TX_ABOVE_80MHZ |
++		    IEEE80211_HE_PHY_CAP7_STBC_RX_ABOVE_80MHZ;
++		elem->phy_cap_info[7] |= c;
++	}
+ }
+ 
+ static void
+@@ -953,7 +968,7 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
+ 		he_mcs->rx_mcs_80p80 = cpu_to_le16(mcs_map_160);
+ 		he_mcs->tx_mcs_80p80 = cpu_to_le16(mcs_map_160);
+ 
+-		mt7915_set_stream_he_txbf_caps(he_cap, i, nss);
++		mt7915_set_stream_he_txbf_caps(dev, he_cap, i, nss);
+ 
+ 		memset(he_cap->ppe_thres, 0, sizeof(he_cap->ppe_thres));
+ 		if (he_cap_elem->phy_cap_info[6] &
 -- 
 2.25.1
 
