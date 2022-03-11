@@ -2,255 +2,59 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D523C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Mar 2022 14:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9B3C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Mar 2022 18:04:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349357AbiCKOrQ (ORCPT
+        id S1349186AbiCKSFW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Mar 2022 09:47:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34100 "EHLO
+        Fri, 11 Mar 2022 13:05:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346834AbiCKOrL (ORCPT
+        with ESMTP id S1343712AbiCKSFW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Mar 2022 09:47:11 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEDAF199E2C
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2022 06:46:01 -0800 (PST)
-X-UUID: c9e1a2f09f034509be596adecf174eed-20220311
-X-UUID: c9e1a2f09f034509be596adecf174eed-20220311
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1156177716; Fri, 11 Mar 2022 22:45:56 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Fri, 11 Mar 2022 22:45:55 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 11 Mar 2022 22:45:55 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Bo Jiao <Bo.Jiao@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v2 2/3] mt76: mt7915: fix beamforming mib stats
-Date:   Fri, 11 Mar 2022 22:44:26 +0800
-Message-ID: <20220311144427.16018-2-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220311144427.16018-1-shayne.chen@mediatek.com>
-References: <20220311144427.16018-1-shayne.chen@mediatek.com>
+        Fri, 11 Mar 2022 13:05:22 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE991B0BD0
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2022 10:04:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=RChqngkkOkfqZxUnk5T9mEkJiANxo7SnNQDYq5MExmw=;
+        t=1647021858; x=1648231458; b=UCAch1uaom7ocMkKDmfXbsgbqBO3pGo378kPhrYvN3XqT6S
+        IYck6bT5DlQq0j8dHjqZDs1IWSUiqBX66MVJGDq7Qm8z5MQlJ+qtyX9M+f8YDtuR2+KKKOEz3qFgm
+        lo8sBA3Js6R8oaYXtteds6YZ2BaG00R94J0oNJILOfs0GJtG94gR+qPs1CdNBxUl55h5Bj3cF15JJ
+        SQSUR4rDuUEUuwhseFrprsYi7PQpZKClG84uCVP0/0CVuPFAH2VL47s39inlpcn/8x0miGEaypPL0
+        3geJzui7SsCK2GlpYUAH6Pb3+LUpkFwA1uorMugaIBFReqsld1nwJXAUNFhzPndA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nSjcZ-00Bzof-H8;
+        Fri, 11 Mar 2022 19:04:11 +0100
+Message-ID: <23914231f7ec66a5552ff6cb3fb6ec91a7c6cc61.camel@sipsolutions.net>
+Subject: Re: [PATCH] qtnfmac: fix null check
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Weiguo Li <liwg06@foxmail.com>, igor.mitsyanko.os@quantenna.com
+Cc:     kvalo@codeaurora.org, geomatsi@gmail.com,
+        linux-wireless@vger.kernel.org
+Date:   Fri, 11 Mar 2022 19:04:10 +0100
+In-Reply-To: <tencent_1874B4BE714648459A63EC78424E87226609@qq.com>
+References: <tencent_1874B4BE714648459A63EC78424E87226609@qq.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some of beamforming mib counters are moved to different offsets
-or registers in newer chipsets.
+On Fri, 2022-03-11 at 21:30 +0800, Weiguo Li wrote:
+> We did a null check after "mac_info->if_comb = kcalloc(...)", but we checked
+> "mac->macinfo.if_comb" instead of "mac_info->if_comb".
 
-Fixes: 99ad32a4ca3a ("mt76: mt7915: add support for MT7986")
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
-v2: fix mib->tx_bf_rx_fb_bw value
----
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 73 ++++++++++++-------
- .../net/wireless/mediatek/mt76/mt7915/mmio.c  |  2 +
- .../net/wireless/mediatek/mt76/mt7915/regs.h  | 28 +++++--
- 3 files changed, 69 insertions(+), 34 deletions(-)
+Yeah well:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index aecf7eb..8a9a60f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -2189,15 +2189,6 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
- 	cnt = mt76_rr(dev, MT_MIB_SDR31(phy->band_idx));
- 	mib->rx_ba_cnt += cnt;
- 
--	cnt = mt76_rr(dev, MT_MIB_SDR32(phy->band_idx));
--	mib->tx_pkt_ebf_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_EBF_CNT_MASK, cnt);
--
--	if (is_mt7915(&dev->mt76))
--		cnt = mt76_rr(dev, MT_MIB_SDR33(phy->band_idx));
--	mib->tx_pkt_ibf_cnt += is_mt7915(&dev->mt76) ?
--		       FIELD_GET(MT_MIB_SDR32_TX_PKT_IBF_CNT_MASK, cnt) :
--		       FIELD_GET(MT_MIB_SDR32_TX_PKT_IBF_CNT_MASK_MT7916, cnt);
--
- 	cnt = mt76_rr(dev, MT_MIB_SDRMUBF(phy->band_idx));
- 	mib->tx_bf_cnt += FIELD_GET(MT_MIB_MU_BF_TX_CNT, cnt);
- 
-@@ -2210,24 +2201,10 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
- 	cnt = mt76_rr(dev, MT_MIB_DR11(phy->band_idx));
- 	mib->tx_su_acked_mpdu_cnt += cnt;
- 
--	cnt = mt76_rr(dev, MT_ETBF_TX_APP_CNT(phy->band_idx));
--	mib->tx_bf_ibf_ppdu_cnt += FIELD_GET(MT_ETBF_TX_IBF_CNT, cnt);
--	mib->tx_bf_ebf_ppdu_cnt += FIELD_GET(MT_ETBF_TX_EBF_CNT, cnt);
--
--	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CNT(phy->band_idx));
--	mib->tx_bf_rx_fb_all_cnt += FIELD_GET(MT_ETBF_RX_FB_ALL, cnt);
--	mib->tx_bf_rx_fb_he_cnt += FIELD_GET(MT_ETBF_RX_FB_HE, cnt);
--	mib->tx_bf_rx_fb_vht_cnt += FIELD_GET(MT_ETBF_RX_FB_VHT, cnt);
--	mib->tx_bf_rx_fb_ht_cnt += FIELD_GET(MT_ETBF_RX_FB_HT, cnt);
--
--	cnt = mt76_rr(dev, MT_ETBF_RX_FB_CONT(phy->band_idx));
--	mib->tx_bf_rx_fb_bw = FIELD_GET(MT_ETBF_RX_FB_BW, cnt);
--	mib->tx_bf_rx_fb_nc_cnt += FIELD_GET(MT_ETBF_RX_FB_NC, cnt);
--	mib->tx_bf_rx_fb_nr_cnt += FIELD_GET(MT_ETBF_RX_FB_NR, cnt);
--
--	cnt = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP(phy->band_idx));
--	mib->tx_bf_fb_cpl_cnt += FIELD_GET(MT_ETBF_TX_FB_CPL, cnt);
--	mib->tx_bf_fb_trig_cnt += FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
-+	cnt = mt76_rr(dev, MT_ETBF_PAR_RPT0(phy->band_idx));
-+	mib->tx_bf_rx_fb_bw = FIELD_GET(MT_ETBF_PAR_RPT0_FB_BW, cnt);
-+	mib->tx_bf_rx_fb_nc_cnt += FIELD_GET(MT_ETBF_PAR_RPT0_FB_NC, cnt);
-+	mib->tx_bf_rx_fb_nr_cnt += FIELD_GET(MT_ETBF_PAR_RPT0_FB_NR, cnt);
- 
- 	for (i = 0; i < ARRAY_SIZE(mib->tx_amsdu); i++) {
- 		cnt = mt76_rr(dev, MT_PLE_AMSDU_PACK_MSDU_CNT(i));
-@@ -2256,6 +2233,26 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
- 			dev->mt76.aggr_stats[aggr1++] += val & 0xffff;
- 			dev->mt76.aggr_stats[aggr1++] += val >> 16;
- 		}
-+
-+		cnt = mt76_rr(dev, MT_MIB_SDR32(phy->band_idx));
-+		mib->tx_pkt_ebf_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_EBF_CNT, cnt);
-+
-+		cnt = mt76_rr(dev, MT_MIB_SDR33(phy->band_idx));
-+		mib->tx_pkt_ibf_cnt += FIELD_GET(MT_MIB_SDR33_TX_PKT_IBF_CNT, cnt);
-+
-+		cnt = mt76_rr(dev, MT_ETBF_TX_APP_CNT(phy->band_idx));
-+		mib->tx_bf_ibf_ppdu_cnt += FIELD_GET(MT_ETBF_TX_IBF_CNT, cnt);
-+		mib->tx_bf_ebf_ppdu_cnt += FIELD_GET(MT_ETBF_TX_EBF_CNT, cnt);
-+
-+		cnt = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP(phy->band_idx));
-+		mib->tx_bf_fb_cpl_cnt += FIELD_GET(MT_ETBF_TX_FB_CPL, cnt);
-+		mib->tx_bf_fb_trig_cnt += FIELD_GET(MT_ETBF_TX_FB_TRI, cnt);
-+
-+		cnt = mt76_rr(dev, MT_ETBF_RX_FB_CNT(phy->band_idx));
-+		mib->tx_bf_rx_fb_all_cnt += FIELD_GET(MT_ETBF_RX_FB_ALL, cnt);
-+		mib->tx_bf_rx_fb_he_cnt += FIELD_GET(MT_ETBF_RX_FB_HE, cnt);
-+		mib->tx_bf_rx_fb_vht_cnt += FIELD_GET(MT_ETBF_RX_FB_VHT, cnt);
-+		mib->tx_bf_rx_fb_ht_cnt += FIELD_GET(MT_ETBF_RX_FB_HT, cnt);
- 	} else {
- 		for (i = 0; i < 2; i++) {
- 			/* rts count */
-@@ -2284,6 +2281,28 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
- 			dev->mt76.aggr_stats[aggr0++] += FIELD_GET(GENMASK(15, 0), val);
- 			dev->mt76.aggr_stats[aggr0++] += FIELD_GET(GENMASK(31, 16), val);
- 		}
-+
-+		cnt = mt76_rr(dev, MT_MIB_SDR32(phy->band_idx));
-+		mib->tx_pkt_ibf_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_IBF_CNT, cnt);
-+		mib->tx_bf_ibf_ppdu_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_IBF_CNT, cnt);
-+		mib->tx_pkt_ebf_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_EBF_CNT, cnt);
-+		mib->tx_bf_ebf_ppdu_cnt += FIELD_GET(MT_MIB_SDR32_TX_PKT_EBF_CNT, cnt);
-+
-+		cnt = mt76_rr(dev, MT_MIB_BFCR7(phy->band_idx));
-+		mib->tx_bf_fb_cpl_cnt += FIELD_GET(MT_MIB_BFCR7_BFEE_TX_FB_CPL, cnt);
-+
-+		cnt = mt76_rr(dev, MT_MIB_BFCR2(phy->band_idx));
-+		mib->tx_bf_fb_trig_cnt += FIELD_GET(MT_MIB_BFCR2_BFEE_TX_FB_TRIG, cnt);
-+
-+		cnt = mt76_rr(dev, MT_MIB_BFCR0(phy->band_idx));
-+		mib->tx_bf_rx_fb_vht_cnt += FIELD_GET(MT_MIB_BFCR0_RX_FB_VHT, cnt);
-+		mib->tx_bf_rx_fb_all_cnt += FIELD_GET(MT_MIB_BFCR0_RX_FB_VHT, cnt);
-+		mib->tx_bf_rx_fb_ht_cnt += FIELD_GET(MT_MIB_BFCR0_RX_FB_HT, cnt);
-+		mib->tx_bf_rx_fb_all_cnt += FIELD_GET(MT_MIB_BFCR0_RX_FB_HT, cnt);
-+
-+		cnt = mt76_rr(dev, MT_MIB_BFCR1(phy->band_idx));
-+		mib->tx_bf_rx_fb_he_cnt += FIELD_GET(MT_MIB_BFCR1_RX_FB_HE, cnt);
-+		mib->tx_bf_rx_fb_all_cnt += FIELD_GET(MT_MIB_BFCR1_RX_FB_HE, cnt);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-index 1b14bba..5062e0d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-@@ -122,6 +122,7 @@ static const u32 mt7915_offs[] = {
- 	[PLE_PG_HIF_GROUP]	= 0x110,
- 	[PLE_HIF_PG_INFO]	= 0x114,
- 	[AC_OFFSET]		= 0x040,
-+	[ETBF_PAR_RPT0]		= 0x068,
- };
- 
- static const u32 mt7916_offs[] = {
-@@ -194,6 +195,7 @@ static const u32 mt7916_offs[] = {
- 	[PLE_PG_HIF_GROUP]	= 0x00c,
- 	[PLE_HIF_PG_INFO]	= 0x388,
- 	[AC_OFFSET]		= 0x080,
-+	[ETBF_PAR_RPT0]		= 0x100,
- };
- 
- static const struct __map mt7915_reg_map[] = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 8fe24ab..e5f93c4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -103,6 +103,7 @@ enum offs_rev {
- 	PLE_PG_HIF_GROUP,
- 	PLE_HIF_PG_INFO,
- 	AC_OFFSET,
-+	ETBF_PAR_RPT0,
- 	__MT_OFFS_MAX,
- };
- 
-@@ -223,10 +224,10 @@ enum offs_rev {
- #define MT_ETBF_TX_FB_CPL		GENMASK(31, 16)
- #define MT_ETBF_TX_FB_TRI		GENMASK(15, 0)
- 
--#define MT_ETBF_RX_FB_CONT(_band)	MT_WF_ETBF(_band, 0x068)
--#define MT_ETBF_RX_FB_BW		GENMASK(7, 6)
--#define MT_ETBF_RX_FB_NC		GENMASK(5, 3)
--#define MT_ETBF_RX_FB_NR		GENMASK(2, 0)
-+#define MT_ETBF_PAR_RPT0(_band)		MT_WF_ETBF(_band, __OFFS(ETBF_PAR_RPT0))
-+#define MT_ETBF_PAR_RPT0_FB_BW		GENMASK(7, 6)
-+#define MT_ETBF_PAR_RPT0_FB_NC		GENMASK(5, 3)
-+#define MT_ETBF_PAR_RPT0_FB_NR		GENMASK(2, 0)
- 
- #define MT_ETBF_TX_APP_CNT(_band)	MT_WF_ETBF(_band, 0x0f0)
- #define MT_ETBF_TX_IBF_CNT		GENMASK(31, 16)
-@@ -367,11 +368,11 @@ enum offs_rev {
- #define MT_MIB_SDR31(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR31))
- 
- #define MT_MIB_SDR32(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR32))
--#define MT_MIB_SDR32_TX_PKT_EBF_CNT_MASK	GENMASK(15, 0)
-+#define MT_MIB_SDR32_TX_PKT_EBF_CNT	GENMASK(15, 0)
-+#define MT_MIB_SDR32_TX_PKT_IBF_CNT	GENMASK(31, 16)
- 
- #define MT_MIB_SDR33(_band)		MT_WF_MIB(_band, 0x088)
--#define MT_MIB_SDR32_TX_PKT_IBF_CNT_MASK	GENMASK(15, 0)
--#define MT_MIB_SDR32_TX_PKT_IBF_CNT_MASK_MT7916	GENMASK(31, 16)
-+#define MT_MIB_SDR33_TX_PKT_IBF_CNT	GENMASK(15, 0)
- 
- #define MT_MIB_SDRMUBF(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDRMUBF))
- #define MT_MIB_MU_BF_TX_CNT		GENMASK(15, 0)
-@@ -401,6 +402,19 @@ enum offs_rev {
- 						  ((n) << 2))
- #define MT_MIB_ARNCR_RANGE(val, n)	(((val) >> ((n) << 3)) & GENMASK(7, 0))
- 
-+#define MT_MIB_BFCR0(_band)		MT_WF_MIB(_band, 0x7b0)
-+#define MT_MIB_BFCR0_RX_FB_HT		GENMASK(15, 0)
-+#define MT_MIB_BFCR0_RX_FB_VHT		GENMASK(31, 16)
-+
-+#define MT_MIB_BFCR1(_band)		MT_WF_MIB(_band, 0x7b4)
-+#define MT_MIB_BFCR1_RX_FB_HE		GENMASK(15, 0)
-+
-+#define MT_MIB_BFCR2(_band)		MT_WF_MIB(_band, 0x7b8)
-+#define MT_MIB_BFCR2_BFEE_TX_FB_TRIG	GENMASK(15, 0)
-+
-+#define MT_MIB_BFCR7(_band)		MT_WF_MIB(_band, 0x7cc)
-+#define MT_MIB_BFCR7_BFEE_TX_FB_CPL	GENMASK(15, 0)
-+
- /* WTBLON TOP */
- #define MT_WTBLON_TOP_BASE		0x820d4000
- #define MT_WTBLON_TOP(ofs)		(MT_WTBLON_TOP_BASE + (ofs))
--- 
-2.25.1
+	mac_info = &mac->macinfo;
 
+johannes
