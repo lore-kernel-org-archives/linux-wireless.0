@@ -2,51 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72EA1C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Mar 2022 11:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8D0C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Mar 2022 12:21:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239772AbiCNLz1 (ORCPT
+        id S234677AbiCNMWQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Mar 2022 07:55:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58856 "EHLO
+        Mon, 14 Mar 2022 08:22:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239731AbiCNLzY (ORCPT
+        with ESMTP id S243861AbiCNMVU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Mar 2022 07:55:24 -0400
+        Mon, 14 Mar 2022 08:21:20 -0400
 Received: from mail2-relais-roc.national.inria.fr (mail2-relais-roc.national.inria.fr [192.134.164.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D4F565D7;
-        Mon, 14 Mar 2022 04:54:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847E2BE5;
+        Mon, 14 Mar 2022 05:17:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=inria.fr; s=dc;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=P+KrW1jXCt0PEEPOuaK3dp4Clrh1+zr07rorixakTGM=;
-  b=veo7lxbt84IQANJeh6++L+J1SNK/v2rb1WrNVPKQqVjIF7dobpnEsPkk
-   SblhHr4E2Tvwk/XlO5EVssiBQCP2EWHgINi3R7m28eyEEqxORO0ETjHMk
-   VN64AU0c0oBRoJIfPOtDdQ8ITtCOHaranOSHqr6Q29XBUYHOKGDW1oUc7
-   I=;
+  bh=yAh5dhSWoezDHAmIMKrnf1fmCmAoJ/u8UhSQGN/+5rg=;
+  b=AOnEnK5rwCG4310Vpj8R+iKPhl+ZQD+1cDacCSAMGCta6CgsSn9yBslL
+   Y1TrJpCX8hv7jCgskW7U1RQ8F6ZnlT4GCA0nKToZhZGvR2wQ42o/C7TAp
+   6Uwkpl70GJ0CwzNzwB5HL+SwW86rfOZM88KpUW0hoMBFN0ZoFvJLVt9bZ
+   Y=;
 Authentication-Results: mail2-relais-roc.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
 X-IronPort-AV: E=Sophos;i="5.90,180,1643670000"; 
-   d="scan'208";a="25997343"
+   d="scan'208";a="25997353"
 Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2022 12:53:59 +0100
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2022 12:54:00 +0100
 From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Felix Fietkau <nbd@nbd.name>
+To:     Kalle Valo <kvalo@kernel.org>
 Cc:     kernel-janitors@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/30] mt76: mt7915: fix typos in comments
-Date:   Mon, 14 Mar 2022 12:53:34 +0100
-Message-Id: <20220314115354.144023-11-Julia.Lawall@inria.fr>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 20/30] airo: fix typos in comments
+Date:   Mon, 14 Mar 2022 12:53:44 +0100
+Message-Id: <20220314115354.144023-21-Julia.Lawall@inria.fr>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220314115354.144023-1-Julia.Lawall@inria.fr>
 References: <20220314115354.144023-1-Julia.Lawall@inria.fr>
@@ -62,20 +55,20 @@ Detected with the help of Coccinelle.
 Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
 
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c |    2 +-
+ drivers/net/wireless/cisco/airo.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index fd16d777f2e4..ab2a1a5f7811 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -579,7 +579,7 @@ static void mt7915_wfsys_reset(struct mt7915_dev *dev)
- 		val &= ~MT_TOP_PWR_SW_RST;
- 		mt76_wr(dev, MT_TOP_PWR_CTRL, val);
- 
--		/* release wfsys then mcu re-excutes romcode */
-+		/* release wfsys then mcu re-executes romcode */
- 		val |= MT_TOP_PWR_SW_RST;
- 		mt76_wr(dev, MT_TOP_PWR_CTRL, val);
- 
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 452d08545d31..10daef81c355 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -545,7 +545,7 @@ struct ConfigRid {
+ #define MODE_CFG_MASK cpu_to_le16(0xff)
+ #define MODE_ETHERNET_HOST cpu_to_le16(0<<8) /* rx payloads converted */
+ #define MODE_LLC_HOST cpu_to_le16(1<<8) /* rx payloads left as is */
+-#define MODE_AIRONET_EXTEND cpu_to_le16(1<<9) /* enable Aironet extenstions */
++#define MODE_AIRONET_EXTEND cpu_to_le16(1<<9) /* enable Aironet extensions */
+ #define MODE_AP_INTERFACE cpu_to_le16(1<<10) /* enable ap interface extensions */
+ #define MODE_ANTENNA_ALIGN cpu_to_le16(1<<11) /* enable antenna alignment */
+ #define MODE_ETHER_LLC cpu_to_le16(1<<12) /* enable ethernet LLC */
 
