@@ -2,172 +2,196 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BE7C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 20:00:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF71FC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 20:24:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbiCQUB0 (ORCPT
+        id S229645AbiCQUZ2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 16:01:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39116 "EHLO
+        Thu, 17 Mar 2022 16:25:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbiCQUBZ (ORCPT
+        with ESMTP id S229595AbiCQUZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 16:01:25 -0400
-X-Greylist: delayed 175 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 17 Mar 2022 13:00:05 PDT
-Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18D741546A5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 13:00:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1647547023;
-    s=strato-dkim-0002; d=hartkopp.net;
-    h=Cc:To:Subject:From:Date:Message-ID:Cc:Date:From:Subject:Sender;
-    bh=0kHIYtNRyfc63kuFEWIsqQh0ypHZqcGdcH+UyuiJeAs=;
-    b=oUpuHYu6KUyjk7GTCVPrpvPWVhvZku2T5GztWn4cNjALuIr2vJdGv4+rMKhezVV7Ox
-    DlapIvoa2IJ5jMayg3Daw1ridqwB2FyU4veGbrJ9eM2Lp6lYunsvHcdm6led9n53ij4B
-    OA4M8jzmYkejOm1vtbR6lRN5vTNy9eNCjPLvnNjwuP7S8QHZEyRzthejZ9e818rP9/5V
-    2EOmPAmeIxATcp+l9JFToFToE1x3TPOIVJQQy+TyRLmcWlxzisXpg+bTAtjihskkGkTd
-    aYmcbJV2xeLewWMXEG7oBzg8UpArFKU1lB4N4Y74EwW46QyyEjwhcTwEhZW0UG2h7EPG
-    Eh7Q==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":P2MHfkW8eP4Mre39l357AZT/I7AY/7nT2yrDxb8mjG14FZxedJy6qgO1qCHSa1GLptZHusx3hdd0DIgVuBOfXW6v7w=="
-X-RZG-CLASS-ID: mo00
-Received: from [IPV6:2a00:6020:1cfa:f900::b82]
-    by smtp.strato.de (RZmta 47.41.1 AUTH)
-    with ESMTPSA id cc2803y2HJv33fx
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Thu, 17 Mar 2022 20:57:03 +0100 (CET)
-Message-ID: <18e04a04-2aed-13de-b2fc-dbf5df864359@hartkopp.net>
-Date:   Thu, 17 Mar 2022 20:56:57 +0100
+        Thu, 17 Mar 2022 16:25:25 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8354D147AC9
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 13:24:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1647548648; x=1679084648;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=dR3YQEf3oZAGXscdmuvzHxOJ4DHaIY9z5svPhz+nrqs=;
+  b=bR0L+RYszRStrMZRYyUcG6dME5xD8Hb5IFGooabrdn+SJGyp0OzllPcC
+   XRnYob90ZBKRb935QjnO1BK9duUjzX4y3yi+oBq5uKr3TLOq5aDy3HaV5
+   bQuk+lMCvZSlNb92Pg0aGr7X117DUrdBGrVt0OBdrModaxdU8CfpW/eLJ
+   X1Gwj0awJSGs4kNIpWu7cfquyiMoGl2HLPvfJ/nfoea6FQ824bKVhyYhc
+   Gns4BQY5Ma2/7Mw37zVjWiyVW0wHKDCb4rnv0d6Zh0i258eHCXGdBxtRm
+   912NEo7HGJ6ZtSlxm0usNUC94JI/M01vFtJS1wVpC2UJCWvHHTXrSCkwE
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10289"; a="343410518"
+X-IronPort-AV: E=Sophos;i="5.90,190,1643702400"; 
+   d="scan'208";a="343410518"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2022 13:24:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,190,1643702400"; 
+   d="scan'208";a="541527291"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 17 Mar 2022 13:24:06 -0700
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nUwfF-000E1T-Sy; Thu, 17 Mar 2022 20:24:05 +0000
+Date:   Fri, 18 Mar 2022 04:23:27 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [wireless-next:pending] BUILD SUCCESS
+ d3f47e73e8d5cbb89e81a84200e5ff8369e66752
+Message-ID: <623398bf.8LlBrTbrXjFJwB2p%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-From:   Oliver Hartkopp <socketcan@hartkopp.net>
-Subject: net-next: regression: patch "iwlwifi: acpi: move ppag code from mvm
- to fw/acpi" (e8e10a37c51c) breaks wifi
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Matt Chen <matt.chen@intel.com>
-Cc:     netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git pending
+branch HEAD: d3f47e73e8d5cbb89e81a84200e5ff8369e66752  iwlwifi: mei: fix building iwlmei
 
-the patch "iwlwifi: acpi: move ppag code from mvm to fw/acpi" (net-next 
-commit e8e10a37c51c) breaks the wifi on my HP Elitebook 840 G5.
+elapsed time: 733m
 
-I detected the problem when working on the latest net-next tree and the 
-wifi was fine until this patch.
+configs tested: 119
+configs skipped: 4
 
-Please let me know if you need support for testing.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Regards,
-Oliver
+gcc tested configs:
+arm                                 defconfig
+arm64                               defconfig
+arm                              allmodconfig
+arm                              allyesconfig
+arm64                            allyesconfig
+arm                             pxa_defconfig
+sh                   rts7751r2dplus_defconfig
+nios2                         10m50_defconfig
+sh                               alldefconfig
+powerpc                     tqm8548_defconfig
+xtensa                              defconfig
+mips                  decstation_64_defconfig
+mips                      loongson3_defconfig
+mips                      maltasmvp_defconfig
+powerpc                     tqm8541_defconfig
+powerpc                     tqm8555_defconfig
+h8300                    h8300h-sim_defconfig
+m68k                          amiga_defconfig
+mips                     decstation_defconfig
+arc                      axs103_smp_defconfig
+arm                       aspeed_g5_defconfig
+parisc64                         alldefconfig
+arm                      jornada720_defconfig
+alpha                            alldefconfig
+sh                        dreamcast_defconfig
+arm                        cerfcube_defconfig
+arm                           stm32_defconfig
+sh                          sdk7780_defconfig
+arm                         vf610m4_defconfig
+arm                         at91_dt_defconfig
+arm                            qcom_defconfig
+mips                         cobalt_defconfig
+arm                  randconfig-c002-20220317
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+alpha                               defconfig
+nds32                               defconfig
+alpha                            allyesconfig
+nios2                            allyesconfig
+csky                                defconfig
+arc                                 defconfig
+sh                               allmodconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
+s390                                defconfig
+parisc                              defconfig
+parisc64                            defconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                             allyesconfig
+sparc                               defconfig
+i386                             allyesconfig
+i386                              debian-10.3
+i386                   debian-10.3-kselftests
+i386                                defconfig
+sparc                            allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                          randconfig-a003
+i386                          randconfig-a001
+i386                          randconfig-a005
+x86_64                        randconfig-a015
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+x86_64                        randconfig-a002
+x86_64                        randconfig-a004
+x86_64                        randconfig-a006
+arc                  randconfig-r043-20220317
+s390                 randconfig-r044-20220317
+riscv                randconfig-r042-20220317
+riscv                            allmodconfig
+riscv                    nommu_k210_defconfig
+riscv                    nommu_virt_defconfig
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                                  kexec
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+x86_64                    rhel-8.3-kselftests
 
-[    0.000000] Linux version 5.17.0-rc3-nn-01325-ge8e10a37c51c (xxx) 
-(gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 
-2.35.2) #15 SMP PREEMPT Thu Mar 17 20:41:21 CET 2022
-(..)
-[   12.001911] cfg80211: Loading compiled-in X.509 certificates for 
-regulatory database
-[   12.029737] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
-[   12.034170] cfg80211: loaded regulatory.db is malformed or signature 
-is missing/invalid
-[   12.086287] Bluetooth: Core ver 2.22
-[   12.087533] NET: Registered PF_BLUETOOTH protocol family
-[   12.090401] Bluetooth: HCI device and connection manager initialized
-[   12.090452] Bluetooth: HCI socket layer initialized
-[   12.090457] Bluetooth: L2CAP socket layer initialized
-[   12.090516] Bluetooth: SCO socket layer initialized
-[   12.136999] Intel(R) Wireless WiFi driver for Linux
-[   12.138353] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
-[   12.144928] iwlwifi 0000:01:00.0: loaded firmware version 
-36.ad812ee0.0 8265-36.ucode op_mode iwlmvm
-[   12.224682] usbcore: registered new interface driver btusb
-[   12.248689] Bluetooth: hci0: Bootloader revision 0.0 build 26 week 38 
-2015
-[   12.250374] Bluetooth: hci0: Device revision is 16
-[   12.251288] Bluetooth: hci0: Secure boot is enabled
-[   12.252377] Bluetooth: hci0: OTP lock is enabled
-[   12.253229] Bluetooth: hci0: API lock is enabled
-[   12.254090] Bluetooth: hci0: Debug lock is disabled
-[   12.255009] Bluetooth: hci0: Minimum firmware build 1 week 10 2014
-[   12.260320] Bluetooth: hci0: Found device firmware: intel/ibt-12-16.sfi
-[   12.373476] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band 
-Wireless AC 8265, REV=0x230
-[   12.442732] iwlwifi 0000:01:00.0: base HW address: 48:89:e7:1b:ee:64, 
-OTP minor version: 0x0
-[   12.545287] intel_rapl_common: Found RAPL domain package
-[   12.545326] intel_rapl_common: Found RAPL domain core
-[   12.545350] intel_rapl_common: Found RAPL domain uncore
-[   12.545375] intel_rapl_common: Found RAPL domain psys
-[   12.545785] ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
-[   12.850332] hp_wmi: query 0x4 returned error 0x5
-[   12.852738] hp_wmi: query 0xd returned error 0x5
-[   12.894436] input: HP WMI hotkeys as /devices/virtual/input/input23
-[   12.960086] hp_wmi: query 0x1b returned error 0x5
-[   13.053127] iwlwifi 0000:01:00.0 wlp1s0: renamed from wlan0
-[   13.114622] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
-[   13.114625] Bluetooth: BNEP filters: protocol multicast
-[   13.114631] Bluetooth: BNEP socket layer initialized
-[   13.811222] Bluetooth: hci0: Waiting for firmware download to complete
-[   13.811636] Bluetooth: hci0: Firmware loaded in 1514074 usecs
-[   13.812493] Bluetooth: hci0: Waiting for device to boot
-[   13.824416] Bluetooth: hci0: Device booted in 12199 usecs
-[   13.824418] Bluetooth: hci0: Malformed MSFT vendor event: 0x02
-[   13.824806] Bluetooth: hci0: Found Intel DDC parameters: 
-intel/ibt-12-16.ddc
-[   13.827429] Bluetooth: hci0: Applying Intel DDC parameters completed
-[   13.828449] Bluetooth: hci0: Firmware revision 0.1 build 50 week 12 2019
-[   13.845837] iwlwifi 0000:01:00.0: mac start retry 0
-[   13.895993] NET: Registered PF_ALG protocol family
-[   14.100027] iwlwifi 0000:01:00.0: mac start retry 1
-[   14.349522] iwlwifi 0000:01:00.0: mac start retry 2
-[   14.594141] iwlwifi 0000:01:00.0: mac start retry 0
-[   14.835957] iwlwifi 0000:01:00.0: mac start retry 1
-[   15.075966] iwlwifi 0000:01:00.0: mac start retry 2
-[   15.326159] iwlwifi 0000:01:00.0: mac start retry 0
-[   15.568003] iwlwifi 0000:01:00.0: mac start retry 1
-[   15.570772] Bluetooth: RFCOMM TTY layer initialized
-[   15.570784] Bluetooth: RFCOMM socket layer initialized
-[   15.570800] Bluetooth: RFCOMM ver 1.11
-[   15.832467] iwlwifi 0000:01:00.0: mac start retry 2
-[   16.109220] iwlwifi 0000:01:00.0: mac start retry 0
-[   16.378910] iwlwifi 0000:01:00.0: mac start retry 1
-[   16.646092] iwlwifi 0000:01:00.0: mac start retry 2
-[   27.288232] iwlwifi 0000:01:00.0: mac start retry 0
-[   27.553616] iwlwifi 0000:01:00.0: mac start retry 1
-[   27.818481] iwlwifi 0000:01:00.0: mac start retry 2
-[   28.088457] iwlwifi 0000:01:00.0: mac start retry 0
-[   28.354671] iwlwifi 0000:01:00.0: mac start retry 1
-[   28.620348] iwlwifi 0000:01:00.0: mac start retry 2
-[   39.290524] iwlwifi 0000:01:00.0: mac start retry 0
-[   39.554416] iwlwifi 0000:01:00.0: mac start retry 1
-[   39.820355] iwlwifi 0000:01:00.0: mac start retry 2
-[   40.085494] iwlwifi 0000:01:00.0: mac start retry 0
-[   40.348142] iwlwifi 0000:01:00.0: mac start retry 1
-[   40.614622] iwlwifi 0000:01:00.0: mac start retry 2
-[   51.296158] iwlwifi 0000:01:00.0: mac start retry 0
-[   51.564189] iwlwifi 0000:01:00.0: mac start retry 1
-[   51.832335] iwlwifi 0000:01:00.0: mac start retry 2
-[   52.100712] iwlwifi 0000:01:00.0: mac start retry 0
-[   52.366818] iwlwifi 0000:01:00.0: mac start retry 1
-[   52.630498] iwlwifi 0000:01:00.0: mac start retry 2
-[   63.300472] iwlwifi 0000:01:00.0: mac start retry 0
-[   63.570028] iwlwifi 0000:01:00.0: mac start retry 1
-[   63.836321] iwlwifi 0000:01:00.0: mac start retry 2
-[   64.107436] iwlwifi 0000:01:00.0: mac start retry 0
-[   64.377235] iwlwifi 0000:01:00.0: mac start retry 1
-[   64.646305] iwlwifi 0000:01:00.0: mac start retry 2
-[   75.298137] iwlwifi 0000:01:00.0: mac start retry 0
-[   75.564421] iwlwifi 0000:01:00.0: mac start retry 1
-[   75.829962] iwlwifi 0000:01:00.0: mac start retry 2
-[   76.102979] iwlwifi 0000:01:00.0: mac start retry 0
-[   76.372426] iwlwifi 0000:01:00.0: mac start retry 1
-[   76.641806] iwlwifi 0000:01:00.0: mac start retry 2
+clang tested configs:
+arm                    vt8500_v6_v7_defconfig
+mips                        qi_lb60_defconfig
+powerpc                 mpc832x_rdb_defconfig
+arm                           spitz_defconfig
+powerpc                       ebony_defconfig
+arm                           sama7_defconfig
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+x86_64                        randconfig-a001
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+hexagon              randconfig-r041-20220317
+hexagon              randconfig-r045-20220317
 
-
+---
+0-DAY CI Kernel Test Service
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
