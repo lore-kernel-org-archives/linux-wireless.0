@@ -2,44 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EAE3C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D75C433FE
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 06:16:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229700AbiCQGSI (ORCPT
+        id S229706AbiCQGSI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 17 Mar 2022 02:18:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47040 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229892AbiCQGRv (ORCPT
+        with ESMTP id S230001AbiCQGR6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 02:17:51 -0400
+        Thu, 17 Mar 2022 02:17:58 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4824C2C7780
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2022 22:56:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D13C1D788D
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2022 22:56:42 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22H5upE73009827, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22H5uYnH5009622, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22H5upE73009827
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22H5uYnH5009622
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 17 Mar 2022 13:56:51 +0800
+        Thu, 17 Mar 2022 13:56:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 17 Mar 2022 13:56:51 +0800
+ 15.1.2375.24; Thu, 17 Mar 2022 13:56:33 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
- 2022 13:56:51 +0800
+ 2022 13:56:33 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <leo.li@realtek.com>,
         <hsuan8331@realtek.com>, <yuanhan1020@realtek.com>
-Subject: [PATCH v2 10/12] rtw89: change value assignment style of rtw89_mac_cfg_gnt()
-Date:   Thu, 17 Mar 2022 13:55:41 +0800
-Message-ID: <20220317055543.40514-11-pkshih@realtek.com>
+Subject: [PATCH v2 00/12] rtw89: prepare more shared code to work with 8852c
+Date:   Thu, 17 Mar 2022 13:55:31 +0800
+Message-ID: <20220317055543.40514-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220317055543.40514-1-pkshih@realtek.com>
-References: <20220317055543.40514-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -65,74 +63,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use if() style would be clear than "? :", because the else cases are
-always 0. The read val from rtw89_mac_read_lte() isn't used, so remove
-this statement.
+This patchset contains MAC, BB and RF functions. The BB part changes
+CFO (central frequency offset) tracking functions to be general. The MAC
+part makes the function work on 8852c. Propose new V1 method to access new
+design of RF register. 
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/mac.c | 47 +++++++++++++-----------
- 1 file changed, 25 insertions(+), 22 deletions(-)
+As usual, this doesn't affect existing chip, and 8852C is built internally.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index d68eb3126d8ae..dd538411a3c2e 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -3621,29 +3621,32 @@ EXPORT_SYMBOL(rtw89_mac_coex_init);
- int rtw89_mac_cfg_gnt(struct rtw89_dev *rtwdev,
- 		      const struct rtw89_mac_ax_coex_gnt *gnt_cfg)
- {
--	u32 val, ret;
-+	u32 val = 0, ret;
-+
-+	if (gnt_cfg->band[0].gnt_bt)
-+		val |= B_AX_GNT_BT_RFC_S0_SW_VAL | B_AX_GNT_BT_BB_S0_SW_VAL;
-+
-+	if (gnt_cfg->band[0].gnt_bt_sw_en)
-+		val |= B_AX_GNT_BT_RFC_S0_SW_CTRL | B_AX_GNT_BT_BB_S0_SW_CTRL;
-+
-+	if (gnt_cfg->band[0].gnt_wl)
-+		val |= B_AX_GNT_WL_RFC_S0_SW_VAL | B_AX_GNT_WL_BB_S0_SW_VAL;
-+
-+	if (gnt_cfg->band[0].gnt_wl_sw_en)
-+		val |= B_AX_GNT_WL_RFC_S0_SW_CTRL | B_AX_GNT_WL_BB_S0_SW_CTRL;
-+
-+	if (gnt_cfg->band[1].gnt_bt)
-+		val |= B_AX_GNT_BT_RFC_S1_SW_VAL | B_AX_GNT_BT_BB_S1_SW_VAL;
-+
-+	if (gnt_cfg->band[1].gnt_bt_sw_en)
-+		val |= B_AX_GNT_BT_RFC_S1_SW_CTRL | B_AX_GNT_BT_BB_S1_SW_CTRL;
-+
-+	if (gnt_cfg->band[1].gnt_wl)
-+		val |= B_AX_GNT_WL_RFC_S1_SW_VAL | B_AX_GNT_WL_BB_S1_SW_VAL;
-+
-+	if (gnt_cfg->band[1].gnt_wl_sw_en)
-+		val |= B_AX_GNT_WL_RFC_S1_SW_CTRL | B_AX_GNT_WL_BB_S1_SW_CTRL;
- 
--	ret = rtw89_mac_read_lte(rtwdev, R_AX_LTE_SW_CFG_1, &val);
--	if (ret) {
--		rtw89_err(rtwdev, "Read LTE fail!\n");
--		return ret;
--	}
--	val = (gnt_cfg->band[0].gnt_bt ?
--	       B_AX_GNT_BT_RFC_S0_SW_VAL | B_AX_GNT_BT_BB_S0_SW_VAL : 0) |
--	      (gnt_cfg->band[0].gnt_bt_sw_en ?
--	       B_AX_GNT_BT_RFC_S0_SW_CTRL | B_AX_GNT_BT_BB_S0_SW_CTRL : 0) |
--	      (gnt_cfg->band[0].gnt_wl ?
--	       B_AX_GNT_WL_RFC_S0_SW_VAL | B_AX_GNT_WL_BB_S0_SW_VAL : 0) |
--	      (gnt_cfg->band[0].gnt_wl_sw_en ?
--	       B_AX_GNT_WL_RFC_S0_SW_CTRL | B_AX_GNT_WL_BB_S0_SW_CTRL : 0) |
--	      (gnt_cfg->band[1].gnt_bt ?
--	       B_AX_GNT_BT_RFC_S1_SW_VAL | B_AX_GNT_BT_BB_S1_SW_VAL : 0) |
--	      (gnt_cfg->band[1].gnt_bt_sw_en ?
--	       B_AX_GNT_BT_RFC_S1_SW_CTRL | B_AX_GNT_BT_BB_S1_SW_CTRL : 0) |
--	      (gnt_cfg->band[1].gnt_wl ?
--	       B_AX_GNT_WL_RFC_S1_SW_VAL | B_AX_GNT_WL_BB_S1_SW_VAL : 0) |
--	      (gnt_cfg->band[1].gnt_wl_sw_en ?
--	       B_AX_GNT_WL_RFC_S1_SW_CTRL | B_AX_GNT_WL_BB_S1_SW_CTRL : 0);
- 	ret = rtw89_mac_write_lte(rtwdev, R_AX_LTE_SW_CFG_1, val);
- 	if (ret) {
- 		rtw89_err(rtwdev, "Write LTE fail!\n");
+v2: patch 9/12: assign data in 'if' branch instead of '? :' style.
+    patch 10/12: add this patch because of the same reason of patch 9/12.
+    others don't change
+
+Chia-Yuan Li (3):
+  rtw89: modify MAC enable functions
+  rtw89: disable FW and H2C function if CPU disabled
+  rtw89: 8852c: add mac_ctrl_path and mac_cfg_gnt APIs
+
+Chung-Hsuan Hung (1):
+  rtw89: 8852c: add read/write rf register function
+
+Ping-Ke Shih (5):
+  rtw89: add config_rf_reg_v1 to configure RF parameter tables
+  rtw89: initialize preload window of D-MAC
+  rtw89: change value assignment style of rtw89_mac_cfg_gnt()
+  rtw89: extend mac tx_en bits from 16 to 32
+  rtw89: implement stop and resume channels transmission v1
+
+Yuan-Han Zhang (3):
+  rtw89: modify dcfo_comp to share with chips
+  rtw89: 8852c: add write/read crystal function in CFO tracking
+  rtw89: 8852c: add setting of TB UL TX power offset
+
+ drivers/net/wireless/realtek/rtw89/coex.c     |  24 +-
+ drivers/net/wireless/realtek/rtw89/core.h     |  47 ++-
+ drivers/net/wireless/realtek/rtw89/mac.c      | 283 +++++++++++++++---
+ drivers/net/wireless/realtek/rtw89/mac.h      |  12 +-
+ drivers/net/wireless/realtek/rtw89/phy.c      | 164 +++++++++-
+ drivers/net/wireless/realtek/rtw89/phy.h      |   9 +
+ drivers/net/wireless/realtek/rtw89/reg.h      |  77 +++++
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  22 +-
+ .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |  24 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  50 ++++
+ 10 files changed, 630 insertions(+), 82 deletions(-)
+
 -- 
 2.25.1
 
