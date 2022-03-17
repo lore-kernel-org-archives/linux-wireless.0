@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C2DC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 06:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A126C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 06:17:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbiCQGSN (ORCPT
+        id S229900AbiCQGSO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 02:18:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60252 "EHLO
+        Thu, 17 Mar 2022 02:18:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbiCQGSB (ORCPT
+        with ESMTP id S230087AbiCQGSE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 02:18:01 -0400
+        Thu, 17 Mar 2022 02:18:04 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EE071D59E9
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2022 22:56:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34FCC2C69CE
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2022 22:56:48 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22H5ub283009681, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22H5ub283009681
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22H5uge17009732, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22H5uge17009732
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 17 Mar 2022 13:56:37 +0800
+        Thu, 17 Mar 2022 13:56:42 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Thu, 17 Mar 2022 13:56:37 +0800
+ 15.1.2375.24; Thu, 17 Mar 2022 13:56:42 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
- 2022 13:56:37 +0800
+ 2022 13:56:42 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <leo.li@realtek.com>,
         <hsuan8331@realtek.com>, <yuanhan1020@realtek.com>
-Subject: [PATCH v2 01/12] rtw89: modify dcfo_comp to share with chips
-Date:   Thu, 17 Mar 2022 13:55:32 +0800
-Message-ID: <20220317055543.40514-2-pkshih@realtek.com>
+Subject: [PATCH v2 04/12] rtw89: 8852c: add read/write rf register function
+Date:   Thu, 17 Mar 2022 13:55:35 +0800
+Message-ID: <20220317055543.40514-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220317055543.40514-1-pkshih@realtek.com>
 References: <20220317055543.40514-1-pkshih@realtek.com>
@@ -57,7 +57,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvMTcgpFekyCAwMzoyNjowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -65,130 +65,245 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yuan-Han Zhang <yuanhan1020@realtek.com>
+From: Chung-Hsuan Hung <hsuan8331@realtek.com>
 
-The dcfo_comp is digital CFO (central frequency offset) compensation.
-Since the flow can be shared with all chips, add chip parameters to support
-variant register address and format.
+Using encoded address which BIT(16) is used to discriminate which region is
+going to access. Illustrate the calling flow as below
 
-Signed-off-by: Yuan-Han Zhang <yuanhan1020@realtek.com>
+rtw89_phy_write_rf_v1() -+-> rtw89_phy_write_rf()   // old interface
+                         +-> rtw89_phy_write_rf_a() // new interface
+
+Signed-off-by: Chung-Hsuan Hung <hsuan8331@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     |  2 ++
- drivers/net/wireless/realtek/rtw89/phy.c      | 10 ++++++----
- drivers/net/wireless/realtek/rtw89/reg.h      |  2 ++
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  6 ++++++
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  6 ++++++
- 5 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c      | 110 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.h      |   5 +
+ drivers/net/wireless/realtek/rtw89/reg.h      |  15 +++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |   4 +
+ 4 files changed, 134 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 483cf45fbcc99..51c99e50b0ed9 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2332,6 +2332,8 @@ struct rtw89_chip_info {
- 	u32 c2h_ctrl_reg;
- 	const u32 *c2h_regs;
- 	const struct rtw89_page_regs *page_regs;
-+	const struct rtw89_reg_def *dcfo_comp;
-+	u8 dcfo_comp_sft;
- };
- 
- union rtw89_bus_info {
 diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c6953a78658ae..6a7e08bdd00e7 100644
+index b75d08697a224..43d73ec3f7594 100644
 --- a/drivers/net/wireless/realtek/rtw89/phy.c
 +++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -1705,9 +1705,11 @@ static void rtw89_phy_cfo_reset(struct rtw89_dev *rtwdev)
- 
- static void rtw89_dcfo_comp(struct rtw89_dev *rtwdev, s32 curr_cfo)
- {
-+	const struct rtw89_reg_def *dcfo_comp = rtwdev->chip->dcfo_comp;
- 	bool is_linked = rtwdev->total_sta_assoc > 0;
- 	s32 cfo_avg_312;
--	s32 dcfo_comp;
-+	s32 dcfo_comp_val;
-+	u8 dcfo_comp_sft = rtwdev->chip->dcfo_comp_sft;
- 	int sign;
- 
- 	if (!is_linked) {
-@@ -1718,13 +1720,13 @@ static void rtw89_dcfo_comp(struct rtw89_dev *rtwdev, s32 curr_cfo)
- 	rtw89_debug(rtwdev, RTW89_DBG_CFO, "DCFO: curr_cfo=%d\n", curr_cfo);
- 	if (curr_cfo == 0)
- 		return;
--	dcfo_comp = rtw89_phy_read32_mask(rtwdev, R_DCFO, B_DCFO);
-+	dcfo_comp_val = rtw89_phy_read32_mask(rtwdev, R_DCFO, B_DCFO);
- 	sign = curr_cfo > 0 ? 1 : -1;
--	cfo_avg_312 = (curr_cfo << 3) / 5 + sign * dcfo_comp;
-+	cfo_avg_312 = (curr_cfo << dcfo_comp_sft) / 5 + sign * dcfo_comp_val;
- 	rtw89_debug(rtwdev, RTW89_DBG_CFO, "DCFO: avg_cfo=%d\n", cfo_avg_312);
- 	if (rtwdev->chip->chip_id == RTL8852A && rtwdev->hal.cv == CHIP_CBV)
- 		cfo_avg_312 = -cfo_avg_312;
--	rtw89_phy_set_phy_regs(rtwdev, R_DCFO_COMP_S0, B_DCFO_COMP_S0_MSK,
-+	rtw89_phy_set_phy_regs(rtwdev, dcfo_comp->addr, dcfo_comp->mask,
- 			       cfo_avg_312);
+@@ -604,6 +604,12 @@ u8 rtw89_phy_get_txsc(struct rtw89_dev *rtwdev,
  }
+ EXPORT_SYMBOL(rtw89_phy_get_txsc);
  
++static bool rtw89_phy_check_swsi_busy(struct rtw89_dev *rtwdev)
++{
++	return !!rtw89_phy_read32_mask(rtwdev, R_SWSI_V1, B_SWSI_W_BUSY_V1) ||
++	       !!rtw89_phy_read32_mask(rtwdev, R_SWSI_V1, B_SWSI_R_BUSY_V1);
++}
++
+ u32 rtw89_phy_read_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 		      u32 addr, u32 mask)
+ {
+@@ -626,6 +632,56 @@ u32 rtw89_phy_read_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ }
+ EXPORT_SYMBOL(rtw89_phy_read_rf);
+ 
++static u32 rtw89_phy_read_rf_a(struct rtw89_dev *rtwdev,
++			       enum rtw89_rf_path rf_path, u32 addr, u32 mask)
++{
++	bool busy;
++	bool done;
++	u32 val;
++	int ret;
++
++	ret = read_poll_timeout_atomic(rtw89_phy_check_swsi_busy, busy, !busy,
++				       1, 30, false, rtwdev);
++	if (ret) {
++		rtw89_err(rtwdev, "read rf busy swsi\n");
++		return INV_RF_DATA;
++	}
++
++	mask &= RFREG_MASK;
++
++	val = FIELD_PREP(B_SWSI_READ_ADDR_PATH_V1, rf_path) |
++	      FIELD_PREP(B_SWSI_READ_ADDR_ADDR_V1, addr);
++	rtw89_phy_write32_mask(rtwdev, R_SWSI_READ_ADDR_V1, B_SWSI_READ_ADDR_V1, val);
++	udelay(2);
++
++	ret = read_poll_timeout_atomic(rtw89_phy_read32_mask, done, done, 1,
++				       30, false, rtwdev, R_SWSI_V1,
++				       B_SWSI_R_DATA_DONE_V1);
++	if (ret) {
++		rtw89_err(rtwdev, "read swsi busy\n");
++		return INV_RF_DATA;
++	}
++
++	return rtw89_phy_read32_mask(rtwdev, R_SWSI_V1, mask);
++}
++
++u32 rtw89_phy_read_rf_v1(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
++			 u32 addr, u32 mask)
++{
++	bool ad_sel = FIELD_GET(RTW89_RF_ADDR_ADSEL_MASK, addr);
++
++	if (rf_path >= rtwdev->chip->rf_path_num) {
++		rtw89_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return INV_RF_DATA;
++	}
++
++	if (ad_sel)
++		return rtw89_phy_read_rf(rtwdev, rf_path, addr, mask);
++	else
++		return rtw89_phy_read_rf_a(rtwdev, rf_path, addr, mask);
++}
++EXPORT_SYMBOL(rtw89_phy_read_rf_v1);
++
+ bool rtw89_phy_write_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 			u32 addr, u32 mask, u32 data)
+ {
+@@ -651,6 +707,60 @@ bool rtw89_phy_write_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ }
+ EXPORT_SYMBOL(rtw89_phy_write_rf);
+ 
++static bool rtw89_phy_write_rf_a(struct rtw89_dev *rtwdev,
++				 enum rtw89_rf_path rf_path, u32 addr, u32 mask,
++				 u32 data)
++{
++	u8 bit_shift;
++	u32 val;
++	bool busy, b_msk_en = false;
++	int ret;
++
++	ret = read_poll_timeout_atomic(rtw89_phy_check_swsi_busy, busy, !busy,
++				       1, 30, false, rtwdev);
++	if (ret) {
++		rtw89_err(rtwdev, "write rf busy swsi\n");
++		return false;
++	}
++
++	data &= RFREG_MASK;
++	mask &= RFREG_MASK;
++
++	if (mask != RFREG_MASK) {
++		b_msk_en = true;
++		rtw89_phy_write32_mask(rtwdev, R_SWSI_BIT_MASK_V1, RFREG_MASK,
++				       mask);
++		bit_shift = __ffs(mask);
++		data = (data << bit_shift) & RFREG_MASK;
++	}
++
++	val = FIELD_PREP(B_SWSI_DATA_BIT_MASK_EN_V1, b_msk_en) |
++	      FIELD_PREP(B_SWSI_DATA_PATH_V1, rf_path) |
++	      FIELD_PREP(B_SWSI_DATA_ADDR_V1, addr) |
++	      FIELD_PREP(B_SWSI_DATA_VAL_V1, data);
++
++	rtw89_phy_write32_mask(rtwdev, R_SWSI_DATA_V1, MASKDWORD, val);
++
++	return true;
++}
++
++bool rtw89_phy_write_rf_v1(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
++			   u32 addr, u32 mask, u32 data)
++{
++	bool ad_sel = FIELD_GET(RTW89_RF_ADDR_ADSEL_MASK, addr);
++
++	if (rf_path >= rtwdev->chip->rf_path_num) {
++		rtw89_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return false;
++	}
++
++	if (ad_sel)
++		return rtw89_phy_write_rf(rtwdev, rf_path, addr, mask, data);
++	else
++		return rtw89_phy_write_rf_a(rtwdev, rf_path, addr, mask, data);
++}
++EXPORT_SYMBOL(rtw89_phy_write_rf_v1);
++
+ static void rtw89_phy_bb_reset(struct rtw89_dev *rtwdev,
+ 			       enum rtw89_phy_idx phy_idx)
+ {
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
+index d6bc84ae6cd71..e600e01cbdd17 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.h
++++ b/drivers/net/wireless/realtek/rtw89/phy.h
+@@ -8,6 +8,7 @@
+ #include "core.h"
+ 
+ #define RTW89_PHY_ADDR_OFFSET	0x10000
++#define RTW89_RF_ADDR_ADSEL_MASK  BIT(16)
+ 
+ #define get_phy_headline(addr)		FIELD_GET(GENMASK(31, 28), addr)
+ #define PHY_HEADLINE_VALID	0xf
+@@ -395,8 +396,12 @@ u8 rtw89_phy_get_txsc(struct rtw89_dev *rtwdev,
+ 		      enum rtw89_bandwidth dbw);
+ u32 rtw89_phy_read_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 		      u32 addr, u32 mask);
++u32 rtw89_phy_read_rf_v1(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
++			 u32 addr, u32 mask);
+ bool rtw89_phy_write_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 			u32 addr, u32 mask, u32 data);
++bool rtw89_phy_write_rf_v1(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
++			   u32 addr, u32 mask, u32 data);
+ void rtw89_phy_init_bb_reg(struct rtw89_dev *rtwdev);
+ void rtw89_phy_init_rf_reg(struct rtw89_dev *rtwdev);
+ void rtw89_phy_dm_init(struct rtw89_dev *rtwdev);
 diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index ec5e70b866009..a239bf017ac76 100644
+index 09bf3afd6d9f5..26efdfa70c044 100644
 --- a/drivers/net/wireless/realtek/rtw89/reg.h
 +++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -2093,6 +2093,8 @@
- #define R_CHBW_MOD 0x4978
- #define B_CHBW_MOD_PRICH GENMASK(11, 8)
- #define B_CHBW_MOD_SBW GENMASK(13, 12)
-+#define R_DCFO_COMP_S0_V1 0x4A40
-+#define B_DCFO_COMP_S0_V1_MSK GENMASK(13, 0)
- #define R_BMODE_PDTH_V1 0x4B64
- #define B_BMODE_PDTH_LOWER_BOUND_MSK_V1 GENMASK(31, 24)
- #define R_BMODE_PDTH_EN_V1 0x4B74
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index c429eeae1b567..392f6e6e0a132 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -402,6 +402,10 @@ static const struct rtw89_page_regs rtw8852a_page_regs = {
- 	.wp_page_info1	= R_AX_WP_PAGE_INFO1,
- };
- 
-+static const struct rtw89_reg_def rtw8852a_dcfo_comp = {
-+	R_DCFO_COMP_S0, B_DCFO_COMP_S0_MSK
-+};
-+
- static void rtw8852ae_efuse_parsing(struct rtw89_efuse *efuse,
- 				    struct rtw8852a_efuse *map)
- {
-@@ -2091,6 +2095,8 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL,
- 	.c2h_regs		= rtw8852a_c2h_regs,
- 	.page_regs		= &rtw8852a_page_regs,
-+	.dcfo_comp		= &rtw8852a_dcfo_comp,
-+	.dcfo_comp_sft		= 3,
- };
- EXPORT_SYMBOL(rtw8852a_chip_info);
- 
+@@ -1805,6 +1805,17 @@
+ #define B_ANAPAR_FLTRST BIT(22)
+ #define B_ANAPAR_CRXBB GENMASK(18, 16)
+ #define B_ANAPAR_14 GENMASK(15, 0)
++#define R_SWSI_DATA_V1 0x0370
++#define B_SWSI_DATA_VAL_V1 GENMASK(19, 0)
++#define B_SWSI_DATA_ADDR_V1 GENMASK(27, 20)
++#define B_SWSI_DATA_PATH_V1 GENMASK(30, 28)
++#define B_SWSI_DATA_BIT_MASK_EN_V1 BIT(31)
++#define R_SWSI_BIT_MASK_V1 0x0374
++#define B_SWSI_BIT_MASK_V1 GENMASK(19, 0)
++#define R_SWSI_READ_ADDR_V1 0x0378
++#define B_SWSI_READ_ADDR_ADDR_V1 GENMASK(7, 0)
++#define B_SWSI_READ_ADDR_PATH_V1 GENMASK(10, 8)
++#define B_SWSI_READ_ADDR_V1 GENMASK(10, 0)
+ #define R_UPD_CLK_ADC 0x0700
+ #define B_UPD_CLK_ADC_ON BIT(24)
+ #define B_UPD_CLK_ADC_VAL GENMASK(26, 25)
+@@ -1912,6 +1923,10 @@
+ #define R_CFO_COMP_SEG0_H 0x1388
+ #define R_CFO_COMP_SEG0_CTRL 0x138C
+ #define R_DBG32_D 0x1730
++#define R_SWSI_V1 0x174C
++#define B_SWSI_W_BUSY_V1 BIT(24)
++#define B_SWSI_R_BUSY_V1 BIT(25)
++#define B_SWSI_R_DATA_DONE_V1 BIT(26)
+ #define R_TX_COUNTER 0x1A40
+ #define R_IFS_CLM_TX_CNT 0x1ACC
+ #define B_IFS_CLM_EDCCA_EXCLUDE_CCA_FA_MSK GENMASK(31, 16)
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 35a9f40af3c99..f37acfe7679e1 100644
+index c74dedea511a4..173008b14c4d6 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -44,6 +44,10 @@ static const struct rtw89_page_regs rtw8852c_page_regs = {
- 	.wp_page_info1	= R_AX_WP_PAGE_INFO1_V1,
- };
+@@ -5,6 +5,7 @@
+ #include "debug.h"
+ #include "fw.h"
+ #include "mac.h"
++#include "phy.h"
+ #include "reg.h"
+ #include "rtw8852c.h"
  
-+static const struct rtw89_reg_def rtw8852c_dcfo_comp = {
-+	R_DCFO_COMP_S0_V1, B_DCFO_COMP_S0_V1_MSK
-+};
-+
- static int rtw8852c_pwr_on_func(struct rtw89_dev *rtwdev)
- {
- 	u32 val32;
-@@ -470,6 +474,8 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL_V1,
- 	.c2h_regs		= rtw8852c_c2h_regs,
- 	.page_regs		= &rtw8852c_page_regs,
-+	.dcfo_comp		= &rtw8852c_dcfo_comp,
-+	.dcfo_comp_sft		= 5,
- };
- EXPORT_SYMBOL(rtw8852c_chip_info);
- 
+@@ -484,6 +485,8 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
+ 	.read_efuse		= rtw8852c_read_efuse,
+ 	.read_phycap		= rtw8852c_read_phycap,
+ 	.power_trim		= rtw8852c_power_trim,
++	.read_rf		= rtw89_phy_read_rf_v1,
++	.write_rf		= rtw89_phy_write_rf_v1,
+ 	.set_txpwr_ul_tb_offset	= rtw8852c_set_txpwr_ul_tb_offset,
+ 	.pwr_on_func		= rtw8852c_pwr_on_func,
+ 	.pwr_off_func		= rtw8852c_pwr_off_func,
+@@ -494,6 +497,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.ops			= &rtw8852c_chip_ops,
+ 	.fw_name		= "rtw89/rtw8852c_fw.bin",
+ 	.dle_mem		= rtw8852c_dle_mem_pcie,
++	.rf_base_addr		= {0xe000, 0xf000},
+ 	.pwr_on_seq		= NULL,
+ 	.pwr_off_seq		= NULL,
+ 	.sec_ctrl_efuse_size	= 4,
 -- 
 2.25.1
 
