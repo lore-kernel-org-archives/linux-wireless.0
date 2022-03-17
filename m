@@ -2,148 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49EC8C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 17:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C49BC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 19:59:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237138AbiCQSBM (ORCPT
+        id S229560AbiCQUAP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 14:01:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41720 "EHLO
+        Thu, 17 Mar 2022 16:00:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbiCQSBL (ORCPT
+        with ESMTP id S229498AbiCQUAM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 14:01:11 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6471208C20;
-        Thu, 17 Mar 2022 10:59:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647539995; x=1679075995;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=mrEoFatINvPQoB5zn9lLrgr2v+iqz1+qM+CwhwiS228=;
-  b=jEXp0qhvOql3l3QwEGzmrXKvXEwVHeR/Pv2AImmVnYtCSLjkKTfRXNdg
-   qlBsTnPs0xcWo0yuzFy9yyksJVXRYOAOycWDCvpfI/qFrau/KHtf58AOU
-   r6ceOpz7v9iCe5QjgJwWyWzZSXpmqOD3itnVe1nqjQ5bvRcxDTxENhWbG
-   nJt1jwGA9p5nsqCYXm2k39mARfd93ipR9KuVe/yYl3X3HtJkKBppH7dsg
-   LoYzUtoVFw3zO8TTFyKgKs/sHp1l4rt3qLHgNKViBilrbD0cM+1LPVyx3
-   v1TlcHLq3/pDc0kPdRDzDbconPhW//XCx63vzdcMNqmABfQ7EmRuhp4SW
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10289"; a="236883755"
-X-IronPort-AV: E=Sophos;i="5.90,188,1643702400"; 
-   d="scan'208";a="236883755"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2022 10:59:54 -0700
-X-IronPort-AV: E=Sophos;i="5.90,188,1643702400"; 
-   d="scan'208";a="581386489"
-Received: from rmarti10-mobl2.amr.corp.intel.com (HELO [10.212.192.243]) ([10.212.192.243])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2022 10:59:53 -0700
-Message-ID: <4131e7b3-94f1-40f1-3d4f-df44cda0e5da@linux.intel.com>
-Date:   Thu, 17 Mar 2022 10:59:53 -0700
+        Thu, 17 Mar 2022 16:00:12 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5D8F7F79;
+        Thu, 17 Mar 2022 12:58:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=+8okQr4MHQH3zBSNUjLKivj6mKt9YG/HoolYiG+2r5A=;
+        t=1647547131; x=1648756731; b=Oq4P7qqRtVLqc+t+0agwe+bdjj2FGLMCtZyw0RyQl5OvpFG
+        VJMklD8mbQvetfBYya+4Szph3N+OpRE2q2HK9hLlD2LznZl/Tzm6oP6ofO+mQNZekVKnRbzdFRQrU
+        ZlYHFnk84NewB8vcAEv9jLmquP/EdE4evlAweqBhlHXLoRmj90f0dHtGba4GjXo16LU4P4fhTL5Pp
+        MilHAQKiqgxmrtITx+Lk5z6HbgzaY31OhCBWzX+uzvacGQJ1xs8WfL50nhy0rU7UZl9VyPqRAhHCp
+        k3SnFnKn6a5Q3VBLTjZB4Hi3Y+4pef2lhOT5xQ3P+ThM2NZem3mVzxQ11E4LC+DQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nUwGl-00EZKe-6Z;
+        Thu, 17 Mar 2022 20:58:47 +0100
+Message-ID: <af8ea77765cc30ff448256c278b69b2402f018f6.camel@sipsolutions.net>
+Subject: Re: net-next: regression: patch "iwlwifi: acpi: move ppag code from
+ mvm to fw/acpi" (e8e10a37c51c) breaks wifi
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Oliver Hartkopp <socketcan@hartkopp.net>,
+        Matt Chen <matt.chen@intel.com>
+Cc:     netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Date:   Thu, 17 Mar 2022 20:58:46 +0100
+In-Reply-To: <18e04a04-2aed-13de-b2fc-dbf5df864359@hartkopp.net>
+References: <18e04a04-2aed-13de-b2fc-dbf5df864359@hartkopp.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH net-next v5 05/13] net: wwan: t7xx: Add control port
-Content-Language: en-US
-To:     Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Loic Poulain <loic.poulain@linaro.org>,
-        M Chetan Kumar <m.chetan.kumar@intel.com>,
-        chandrashekar.devegowda@intel.com,
-        Intel Corporation <linuxwwan@intel.com>,
-        chiranjeevi.rapolu@linux.intel.com,
-        =?UTF-8?B?SGFpanVuIExpdSAo5YiY5rW35YabKQ==?= 
-        <haijun.liu@mediatek.com>, amir.hanania@intel.com,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        dinesh.sharma@intel.com, eliot.lee@intel.com,
-        ilpo.johannes.jarvinen@intel.com, moises.veleta@intel.com,
-        pierre-louis.bossart@intel.com, muralidharan.sethuraman@intel.com,
-        Soumya.Prakash.Mishra@intel.com, sreehari.kancharla@intel.com,
-        madhusmita.sahu@intel.com
-References: <20220223223326.28021-1-ricardo.martinez@linux.intel.com>
- <20220223223326.28021-6-ricardo.martinez@linux.intel.com>
- <CAHNKnsTUSfieWKuw5WOFPidezoVWDKkLqQV6xnDs560QAGXiCQ@mail.gmail.com>
-From:   "Martinez, Ricardo" <ricardo.martinez@linux.intel.com>
-In-Reply-To: <CAHNKnsTUSfieWKuw5WOFPidezoVWDKkLqQV6xnDs560QAGXiCQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Thu, 2022-03-17 at 20:56 +0100, Oliver Hartkopp wrote:
+> Hi all,
+> 
+> the patch "iwlwifi: acpi: move ppag code from mvm to fw/acpi" (net-next 
+> commit e8e10a37c51c) breaks the wifi on my HP Elitebook 840 G5.
+> 
+> I detected the problem when working on the latest net-next tree and the 
+> wifi was fine until this patch.
+> 
 
-Hi Sergey,
+Something like this should get submitted soon:
+https://p.sipsolutions.net/3b84353278ed68c6.txt
 
-On 3/6/2022 6:55 PM, Sergey Ryazanov wrote:
-> On Thu, Feb 24, 2022 at 1:35 AM Ricardo Martinez
-> <ricardo.martinez@linux.intel.com> wrote:
->> From: Haijun Liu <haijun.liu@mediatek.com>
->>
->> Control Port implements driver control messages such as modem-host
->> handshaking, controls port enumeration, and handles exception messages.
->>
->> The handshaking process between the driver and the modem happens during
->> the init sequence. The process involves the exchange of a list of
->> supported runtime features to make sure that modem and host are ready
->> to provide proper feature lists including port enumeration. Further
->> features can be enabled and controlled in this handshaking process.
->>
-...
->> +static void t7xx_core_hk_handler(struct t7xx_modem *md, struct t7xx_fsm_ctl *ctl,
->> +                                enum t7xx_fsm_event_state event_id,
->> +                                enum t7xx_fsm_event_state err_detect)
->> +{
->> +       struct t7xx_sys_info *core_info = &md->core_md;
->> +       struct device *dev = &md->t7xx_dev->pdev->dev;
->> +       struct t7xx_fsm_event *event, *event_next;
->> +       unsigned long flags;
->> +       void *event_data;
->> +       int ret;
->> +
->> +       t7xx_prepare_host_rt_data_query(core_info);
->> +
->> +       while (!kthread_should_stop()) {
->> +               bool event_received = false;
->> +
->> +               spin_lock_irqsave(&ctl->event_lock, flags);
->> +               list_for_each_entry_safe(event, event_next, &ctl->event_queue, entry) {
->> +                       if (event->event_id == err_detect) {
->> +                               list_del(&event->entry);
->> +                               spin_unlock_irqrestore(&ctl->event_lock, flags);
->> +                               dev_err(dev, "Core handshake error event received\n");
->> +                               goto err_free_event;
->> +                       } else if (event->event_id == event_id) {
->> +                               list_del(&event->entry);
->> +                               event_received = true;
->> +                               break;
->> +                       }
->> +               }
->> +               spin_unlock_irqrestore(&ctl->event_lock, flags);
->> +
->> +               if (event_received)
->> +                       break;
->> +
->> +               wait_event_interruptible(ctl->event_wq, !list_empty(&ctl->event_queue) ||
->> +                                        kthread_should_stop());
->> +               if (kthread_should_stop())
->> +                       goto err_free_event;
->> +       }
->> +
->> +       if (ctl->exp_flg)
->> +               goto err_free_event;
->> +
->> +       event_data = (void *)event + sizeof(*event);
-> In the V2, the event structure has a data field. But then it was
-> dropped and now the attached data offset is manually calculated. Why
-> did you do this, why event->data is not suitable here?
-
-It was removed along with other zero length arrays, although it was 
-declared as an empty array.
-
-The next iteration will use C99 flexible arrays where required, instead 
-of calculating the data offset manually.
-
-...
+johannes
