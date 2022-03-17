@@ -2,190 +2,150 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6067FC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 06:17:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41ADCC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Mar 2022 07:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229741AbiCQGSw (ORCPT
+        id S230004AbiCQHDm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 02:18:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60280 "EHLO
+        Thu, 17 Mar 2022 03:03:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230076AbiCQGSD (ORCPT
+        with ESMTP id S229533AbiCQHDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 02:18:03 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC2B72C69C6
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2022 22:56:47 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22H5ufMiB009694, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22H5ufMiB009694
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 17 Mar 2022 13:56:41 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Thu, 17 Mar 2022 13:56:40 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
- 2022 13:56:40 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <leo.li@realtek.com>,
-        <hsuan8331@realtek.com>, <yuanhan1020@realtek.com>
-Subject: [PATCH v2 03/12] rtw89: 8852c: add setting of TB UL TX power offset
-Date:   Thu, 17 Mar 2022 13:55:34 +0800
-Message-ID: <20220317055543.40514-4-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220317055543.40514-1-pkshih@realtek.com>
-References: <20220317055543.40514-1-pkshih@realtek.com>
+        Thu, 17 Mar 2022 03:03:41 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F4C813CA31
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 00:02:21 -0700 (PDT)
+X-UUID: 599849c0ea5542b8af348f8611d94c12-20220317
+X-UUID: 599849c0ea5542b8af348f8611d94c12-20220317
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 186581333; Thu, 17 Mar 2022 15:02:14 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Thu, 17 Mar 2022 15:02:13 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 17 Mar 2022 15:02:13 +0800
+Message-ID: <ef6a0d876587e3efaa228f9d28f5a6f7b97e4aef.camel@mediatek.com>
+Subject: Re: [PATCH] mt76: fix monitor rx FCS error in DFS channel
+From:   Deren Wu <deren.wu@mediatek.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Felix Fietkau <nbd@nbd.name>, Sean Wang <sean.wang@mediatek.com>,
+        "Soul Huang" <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Eric Liang <Eric.Liang@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        "Shayne Chen" <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+Date:   Thu, 17 Mar 2022 15:02:13 +0800
+In-Reply-To: <YjH/GCCfQoZ5OPPM@localhost.localdomain>
+References: <7243650f3d51b1919bd4fd0017ff8b0186149e54.1647421054.git.deren.wu@mediatek.com>
+         <YjH/GCCfQoZ5OPPM@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/17/2022 05:41:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvMTcgpFekyCAwMzoyNjowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 7bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yuan-Han Zhang <yuanhan1020@realtek.com>
+Hi Lore,
 
-Configure this TX power to indicate TX power offset that uses to transmit
-TB (trigger base) uplink frames.
-Also, shrink the unit of TX power offset changes to suitable type s8.
+On Wed, 2022-03-16 at 16:15 +0100, Lorenzo Bianconi wrote:
+> > From: Deren Wu <deren.wu@mediatek.com>
+> > 
+> > When setup monitor mode in DFS channel, mt76 send CH_SWITCH_DFS to
+> > fw for channel config. This would cause rx performance bad while
+> > monitoring frames. Settings CH_SWITCH_NORMAL in monitor mode would
+> > get the same performance as normal channels.
+> 
+> Hi Deren,
+> 
+> > 
+> > Reviewed-by: Shayne Chen <shayne.chen@mediatek.com>
+> > Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+> > ---
+> >  drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 3 ++-
+> >  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 3 ++-
+> >  drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 3 ++-
+> >  3 files changed, 6 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> > b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> > index 390add3144c2..97e2a85cb728 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+> > @@ -2151,7 +2151,8 @@ int mt7615_mcu_set_chan_info(struct
+> > mt7615_phy *phy, int cmd)
+> >  		.center_chan2 = ieee80211_frequency_to_channel(freq2),
+> >  	};
+> >  
+> > -	if (cmd == MCU_EXT_CMD(SET_RX_PATH))
+> > +	if (cmd == MCU_EXT_CMD(SET_RX_PATH) ||
+> > +	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
+> 
+> is this patch compliant with 802.11h DFS standard?
 
-Signed-off-by: Yuan-Han Zhang <yuanhan1020@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/core.h     |  2 +-
- drivers/net/wireless/realtek/rtw89/reg.h      |  2 ++
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  8 ++---
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 36 +++++++++++++++++++
- 4 files changed, 43 insertions(+), 5 deletions(-)
+Monitor mode would not tx packets and still follow standard. We will
+keep tracking this point to avoid violations.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 51c99e50b0ed9..af73347c40b16 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2065,7 +2065,7 @@ struct rtw89_chip_ops {
- 			   struct ieee80211_rx_status *status);
- 	void (*bb_ctrl_btc_preagc)(struct rtw89_dev *rtwdev, bool bt_en);
- 	void (*set_txpwr_ul_tb_offset)(struct rtw89_dev *rtwdev,
--				       s16 pw_ofst, enum rtw89_mac_idx mac_idx);
-+				       s8 pw_ofst, enum rtw89_mac_idx mac_idx);
- 	int (*pwr_on_func)(struct rtw89_dev *rtwdev);
- 	int (*pwr_off_func)(struct rtw89_dev *rtwdev);
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index a239bf017ac76..09bf3afd6d9f5 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -1525,8 +1525,10 @@
- #define B_AX_PWR_UL_TB_CTRL_EN BIT(31)
- #define R_AX_PWR_UL_TB_1T 0xD28C
- #define B_AX_PWR_UL_TB_1T_MASK GENMASK(4, 0)
-+#define B_AX_PWR_UL_TB_1T_V1_MASK GENMASK(7, 0)
- #define R_AX_PWR_UL_TB_2T 0xD290
- #define B_AX_PWR_UL_TB_2T_MASK GENMASK(4, 0)
-+#define B_AX_PWR_UL_TB_2T_V1_MASK GENMASK(7, 0)
- #define R_AX_PWR_BY_RATE_TABLE0 0xD2C0
- #define R_AX_PWR_BY_RATE_TABLE10 0xD2E8
- #define R_AX_PWR_BY_RATE R_AX_PWR_BY_RATE_TABLE0
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 392f6e6e0a132..c6986c6498138 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -1275,10 +1275,10 @@ static u32 rtw8852a_bb_cal_txpwr_ref(struct rtw89_dev *rtwdev,
- 
- static
- void rtw8852a_set_txpwr_ul_tb_offset(struct rtw89_dev *rtwdev,
--				     s16 pw_ofst, enum rtw89_mac_idx mac_idx)
-+				     s8 pw_ofst, enum rtw89_mac_idx mac_idx)
- {
--	s32 val_1t = 0;
--	s32 val_2t = 0;
-+	s8 val_1t = 0;
-+	s8 val_2t = 0;
- 	u32 reg;
- 
- 	if (pw_ofst < -16 || pw_ofst > 15) {
-@@ -1288,7 +1288,7 @@ void rtw8852a_set_txpwr_ul_tb_offset(struct rtw89_dev *rtwdev,
- 	}
- 	reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_CTRL, mac_idx);
- 	rtw89_write32_set(rtwdev, reg, B_AX_PWR_UL_TB_CTRL_EN);
--	val_1t = (s32)pw_ofst;
-+	val_1t = pw_ofst;
- 	reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_1T, mac_idx);
- 	rtw89_write32_mask(rtwdev, reg, B_AX_PWR_UL_TB_1T_MASK, val_1t);
- 	val_2t = max(val_1t - 3, -16);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index f37acfe7679e1..c74dedea511a4 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -445,10 +445,46 @@ static void rtw8852c_power_trim(struct rtw89_dev *rtwdev)
- 	rtw8852c_pa_bias_trim(rtwdev);
- }
- 
-+static
-+void rtw8852c_set_txpwr_ul_tb_offset(struct rtw89_dev *rtwdev,
-+				     s8 pw_ofst, enum rtw89_mac_idx mac_idx)
-+{
-+	s8 pw_ofst_2tx;
-+	s8 val_1t;
-+	s8 val_2t;
-+	u32 reg;
-+	u8 i;
-+
-+	if (pw_ofst < -32 || pw_ofst > 31) {
-+		rtw89_warn(rtwdev, "[ULTB] Err pwr_offset=%d\n", pw_ofst);
-+		return;
-+	}
-+	val_1t = pw_ofst << 2;
-+	pw_ofst_2tx = max(pw_ofst - 3, -32);
-+	val_2t = pw_ofst_2tx << 2;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[ULTB] val_1tx=0x%x\n", val_1t);
-+	rtw89_debug(rtwdev, RTW89_DBG_TXPWR, "[ULTB] val_2tx=0x%x\n", val_2t);
-+
-+	for (i = 0; i < 4; i++) {
-+		/* 1TX */
-+		reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_1T, mac_idx);
-+		rtw89_write32_mask(rtwdev, reg,
-+				   B_AX_PWR_UL_TB_1T_V1_MASK << (8 * i),
-+				   val_1t);
-+		/* 2TX */
-+		reg = rtw89_mac_reg_by_idx(R_AX_PWR_UL_TB_2T, mac_idx);
-+		rtw89_write32_mask(rtwdev, reg,
-+				   B_AX_PWR_UL_TB_2T_V1_MASK << (8 * i),
-+				   val_2t);
-+	}
-+}
-+
- static const struct rtw89_chip_ops rtw8852c_chip_ops = {
- 	.read_efuse		= rtw8852c_read_efuse,
- 	.read_phycap		= rtw8852c_read_phycap,
- 	.power_trim		= rtw8852c_power_trim,
-+	.set_txpwr_ul_tb_offset	= rtw8852c_set_txpwr_ul_tb_offset,
- 	.pwr_on_func		= rtw8852c_pwr_on_func,
- 	.pwr_off_func		= rtw8852c_pwr_off_func,
- };
--- 
-2.25.1
+
+Regards,
+Deren
+
+
+> 
+> Regards,
+> Lorenzo
+> 
+> >  		req.switch_reason = CH_SWITCH_NORMAL;
+> >  	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+> >  		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> > b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> > index 10dc4bf5adec..c56d48342aaf 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+> > @@ -2833,7 +2833,8 @@ int mt7915_mcu_set_chan_info(struct
+> > mt7915_phy *phy, int cmd)
+> >  	}
+> >  #endif
+> >  
+> > -	if (cmd == MCU_EXT_CMD(SET_RX_PATH))
+> > +	if (cmd == MCU_EXT_CMD(SET_RX_PATH) ||
+> > +	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
+> >  		req.switch_reason = CH_SWITCH_NORMAL;
+> >  	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+> >  		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+> > b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+> > index 5ef8b24f0ab3..da2be050ed7c 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+> > @@ -863,7 +863,8 @@ int mt7921_mcu_set_chan_info(struct mt7921_phy
+> > *phy, int cmd)
+> >  	else
+> >  		req.channel_band = chandef->chan->band;
+> >  
+> > -	if (cmd == MCU_EXT_CMD(SET_RX_PATH))
+> > +	if (cmd == MCU_EXT_CMD(SET_RX_PATH) ||
+> > +	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
+> >  		req.switch_reason = CH_SWITCH_NORMAL;
+> >  	else if (dev->mt76.hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+> >  		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
+> > -- 
+> > 2.18.0
+> > 
 
