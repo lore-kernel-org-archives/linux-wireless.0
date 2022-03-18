@@ -2,108 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A15C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 03:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E64C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 03:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232155AbiCRDki (ORCPT
+        id S232272AbiCRDpe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 23:40:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54570 "EHLO
+        Thu, 17 Mar 2022 23:45:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229555AbiCRDkh (ORCPT
+        with ESMTP id S232291AbiCRDp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 23:40:37 -0400
-X-Greylist: delayed 2317 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 17 Mar 2022 20:39:18 PDT
-Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12E4418FAFD
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 20:39:17 -0700 (PDT)
-Received: from excmbx-17.um.gwdg.de ([134.76.9.228] helo=email.gwdg.de)
-        by mailer.gwdg.de with esmtp (GWDG Mailer)
-        (envelope-from <alexander.vorwerk@stud.uni-goettingen.de>)
-        id 1nV2r0-000Eop-2n; Fri, 18 Mar 2022 04:00:38 +0100
-Received: from notebook.fritz.box (10.250.9.199) by excmbx-17.um.gwdg.de
- (134.76.9.228) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P521) id 15.1.2375.24; Fri, 18
- Mar 2022 04:00:37 +0100
-From:   Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
-To:     <kvalo@kernel.org>, <davem@davemloft.net>, <stf_xl@wp.pl>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
-Subject: [PATCH] iwlegacy: 4965-rs: remove three unused variables
-Date:   Fri, 18 Mar 2022 04:00:25 +0100
-Message-ID: <20220318030025.12890-1-alexander.vorwerk@stud.uni-goettingen.de>
-X-Mailer: git-send-email 2.17.1
+        Thu, 17 Mar 2022 23:45:28 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0246E197F83
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 20:44:07 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22I3hxwcF006510, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22I3hxwcF006510
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 18 Mar 2022 11:43:59 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.27; Fri, 18 Mar 2022 11:43:59 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 18 Mar
+ 2022 11:43:58 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
+Subject: [PATCH] rtw88: change idle mode condition during hw_scan
+Date:   Fri, 18 Mar 2022 11:43:16 +0800
+Message-ID: <20220318034316.40720-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.250.9.199]
-X-ClientProxiedBy: excmbx-11.um.gwdg.de (134.76.9.220) To excmbx-17.um.gwdg.de
- (134.76.9.228)
-X-Virus-Scanned: (clean) by clamav
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 03/18/2022 03:28:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvMTggpFekyCAwMjowMDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The following warnings showed up when compiling with W=1.
+From: Po-Hao Huang <phhuang@realtek.com>
 
-drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_stay_in_table’:
-drivers/net/wireless/intel/iwlegacy/4965-rs.c:1636:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
-  struct il_priv *il;
-                  ^~
-drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_alloc_sta’:
-drivers/net/wireless/intel/iwlegacy/4965-rs.c:2257:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
-  struct il_priv *il;
-                  ^~
-drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_sta_dbgfs_scale_table_write’:
-drivers/net/wireless/intel/iwlegacy/4965-rs.c:2535:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
-  struct il_priv *il;
-                  ^~
+Previously we only consider single interface's status, idle mode
+behavior could be unexpected when multiple interfaces is active.
+Change to enter/leave idle mode by mac80211's configuration state.
 
-Fixing by removing the variables.
-
-Signed-off-by: Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-rs.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-index 9a491e5db75b..5e4110a1e644 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-@@ -1633,9 +1633,7 @@ il4965_rs_stay_in_table(struct il_lq_sta *lq_sta, bool force_search)
- 	int i;
- 	int active_tbl;
- 	int flush_interval_passed = 0;
--	struct il_priv *il;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 8b9899e41b0bb..b57f9262f5909 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -280,7 +280,8 @@ static void rtw_ips_work(struct work_struct *work)
+ 	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev, ips_work);
  
--	il = lq_sta->drv;
- 	active_tbl = lq_sta->active_tbl;
+ 	mutex_lock(&rtwdev->mutex);
+-	rtw_enter_ips(rtwdev);
++	if (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE)
++		rtw_enter_ips(rtwdev);
+ 	mutex_unlock(&rtwdev->mutex);
+ }
  
- 	tbl = &(lq_sta->lq_info[active_tbl]);
-@@ -2254,9 +2252,7 @@ il4965_rs_alloc_sta(void *il_rate, struct ieee80211_sta *sta, gfp_t gfp)
- {
- 	struct il_station_priv *sta_priv =
- 	    (struct il_station_priv *)sta->drv_priv;
--	struct il_priv *il;
+@@ -1353,7 +1354,7 @@ void rtw_core_scan_start(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
  
--	il = (struct il_priv *)il_rate;
- 	D_RATE("create station rate scale win\n");
+ 	rtw_leave_lps(rtwdev);
  
- 	return &sta_priv->lq_sta;
-@@ -2532,12 +2528,10 @@ il4965_rs_sta_dbgfs_scale_table_write(struct file *file,
- 				      size_t count, loff_t *ppos)
- {
- 	struct il_lq_sta *lq_sta = file->private_data;
--	struct il_priv *il;
- 	char buf[64];
- 	size_t buf_size;
- 	u32 parsed_rate;
+-	if (hw_scan && rtwvif->net_type == RTW_NET_NO_LINK) {
++	if (hw_scan && (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE)) {
+ 		ret = rtw_leave_ips(rtwdev);
+ 		if (ret) {
+ 			rtw_err(rtwdev, "failed to leave idle state\n");
+@@ -1389,7 +1390,7 @@ void rtw_core_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
  
--	il = lq_sta->drv;
- 	memset(buf, 0, sizeof(buf));
- 	buf_size = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, buf_size))
+ 	rtw_coex_scan_notify(rtwdev, COEX_SCAN_FINISH);
+ 
+-	if (rtwvif->net_type == RTW_NET_NO_LINK && hw_scan)
++	if (hw_scan && (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE))
+ 		ieee80211_queue_work(rtwdev->hw, &rtwdev->ips_work);
+ }
+ 
 -- 
-2.17.1
+2.25.1
 
