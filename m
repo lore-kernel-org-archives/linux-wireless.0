@@ -2,73 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC5DC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 03:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A15C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 03:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232117AbiCRDD0 (ORCPT
+        id S232155AbiCRDki (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 23:03:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51152 "EHLO
+        Thu, 17 Mar 2022 23:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229924AbiCRDDY (ORCPT
+        with ESMTP id S229555AbiCRDkh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 23:03:24 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1838F1FDFD7;
-        Thu, 17 Mar 2022 20:02:07 -0700 (PDT)
-Received: from canpemm500007.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4KKTKJ3hV9zfYpG;
-        Fri, 18 Mar 2022 11:00:36 +0800 (CST)
-Received: from localhost (10.174.179.215) by canpemm500007.china.huawei.com
- (7.192.104.62) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 18 Mar
- 2022 11:02:05 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     <luciano.coelho@intel.com>, <kvalo@kernel.org>,
-        <davem@davemloft.net>, <kuba@kernel.org>, <pabeni@redhat.com>,
-        <ayala.beker@intel.com>, <emmanuel.grumbach@intel.com>
+        Thu, 17 Mar 2022 23:40:37 -0400
+X-Greylist: delayed 2317 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 17 Mar 2022 20:39:18 PDT
+Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12E4418FAFD
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 20:39:17 -0700 (PDT)
+Received: from excmbx-17.um.gwdg.de ([134.76.9.228] helo=email.gwdg.de)
+        by mailer.gwdg.de with esmtp (GWDG Mailer)
+        (envelope-from <alexander.vorwerk@stud.uni-goettingen.de>)
+        id 1nV2r0-000Eop-2n; Fri, 18 Mar 2022 04:00:38 +0100
+Received: from notebook.fritz.box (10.250.9.199) by excmbx-17.um.gwdg.de
+ (134.76.9.228) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P521) id 15.1.2375.24; Fri, 18
+ Mar 2022 04:00:37 +0100
+From:   Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
+To:     <kvalo@kernel.org>, <davem@davemloft.net>, <stf_xl@wp.pl>
 CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] wlwifi: mei: Fix build error without CFG80211
-Date:   Fri, 18 Mar 2022 11:01:49 +0800
-Message-ID: <20220318030149.1328-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        <linux-kernel@vger.kernel.org>,
+        Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
+Subject: [PATCH] iwlegacy: 4965-rs: remove three unused variables
+Date:   Fri, 18 Mar 2022 04:00:25 +0100
+Message-ID: <20220318030025.12890-1-alexander.vorwerk@stud.uni-goettingen.de>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.179.215]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500007.china.huawei.com (7.192.104.62)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.250.9.199]
+X-ClientProxiedBy: excmbx-11.um.gwdg.de (134.76.9.220) To excmbx-17.um.gwdg.de
+ (134.76.9.228)
+X-Virus-Scanned: (clean) by clamav
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If CFG80211 is n and IWLMEI is y,  building fails:
+The following warnings showed up when compiling with W=1.
 
-drivers/net/wireless/intel/iwlwifi/mei/net.o: In function `iwl_mei_tx_copy_to_csme':
-net.c:(.text+0xd0): undefined reference to `ieee80211_hdrlen'
+drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_stay_in_table’:
+drivers/net/wireless/intel/iwlegacy/4965-rs.c:1636:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
+  struct il_priv *il;
+                  ^~
+drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_alloc_sta’:
+drivers/net/wireless/intel/iwlegacy/4965-rs.c:2257:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
+  struct il_priv *il;
+                  ^~
+drivers/net/wireless/intel/iwlegacy/4965-rs.c: In function ‘il4965_rs_sta_dbgfs_scale_table_write’:
+drivers/net/wireless/intel/iwlegacy/4965-rs.c:2535:18: warning: variable ‘il’ set but not used [-Wunused-but-set-variable]
+  struct il_priv *il;
+                  ^~
 
-Make IWLMEI depends on CFG80211 to fix this.
+Fixing by removing the variables.
 
-Fixes: 2da4366f9e2c ("iwlwifi: mei: add the driver to allow cooperation with CSME")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
 ---
- drivers/net/wireless/intel/iwlwifi/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlegacy/4965-rs.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 85e704283755..8c003cd29ab7 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -137,7 +137,7 @@ endif
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
+index 9a491e5db75b..5e4110a1e644 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
+@@ -1633,9 +1633,7 @@ il4965_rs_stay_in_table(struct il_lq_sta *lq_sta, bool force_search)
+ 	int i;
+ 	int active_tbl;
+ 	int flush_interval_passed = 0;
+-	struct il_priv *il;
  
- config IWLMEI
- 	tristate "Intel Management Engine communication over WLAN"
--	depends on INTEL_MEI
-+	depends on INTEL_MEI && CFG80211
- 	depends on PM
- 	help
- 	  Enables the iwlmei kernel module.
+-	il = lq_sta->drv;
+ 	active_tbl = lq_sta->active_tbl;
+ 
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+@@ -2254,9 +2252,7 @@ il4965_rs_alloc_sta(void *il_rate, struct ieee80211_sta *sta, gfp_t gfp)
+ {
+ 	struct il_station_priv *sta_priv =
+ 	    (struct il_station_priv *)sta->drv_priv;
+-	struct il_priv *il;
+ 
+-	il = (struct il_priv *)il_rate;
+ 	D_RATE("create station rate scale win\n");
+ 
+ 	return &sta_priv->lq_sta;
+@@ -2532,12 +2528,10 @@ il4965_rs_sta_dbgfs_scale_table_write(struct file *file,
+ 				      size_t count, loff_t *ppos)
+ {
+ 	struct il_lq_sta *lq_sta = file->private_data;
+-	struct il_priv *il;
+ 	char buf[64];
+ 	size_t buf_size;
+ 	u32 parsed_rate;
+ 
+-	il = lq_sta->drv;
+ 	memset(buf, 0, sizeof(buf));
+ 	buf_size = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, buf_size))
 -- 
 2.17.1
 
