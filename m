@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2968C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 02:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A82FDC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 02:33:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231834AbiCRCex (ORCPT
+        id S231842AbiCRCez (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 22:34:53 -0400
+        Thu, 17 Mar 2022 22:34:55 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231240AbiCRCeo (ORCPT
+        with ESMTP id S231810AbiCRCeq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Mar 2022 22:34:44 -0400
+        Thu, 17 Mar 2022 22:34:46 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F2D319B07E
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 19:33:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDE8319B0B0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 19:33:27 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22I2XHqB4017665, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22I2XHqB4017665
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22I2XL390017683, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22I2XL390017683
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 18 Mar 2022 10:33:17 +0800
+        Fri, 18 Mar 2022 10:33:21 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 18 Mar 2022 10:33:17 +0800
+ 15.1.2375.24; Fri, 18 Mar 2022 10:33:21 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 18 Mar
- 2022 10:33:16 +0800
+ 2022 10:33:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <johnson.lin@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [PATCH 07/11] rtw89: add chip_info::h2c_desc_size/fill_txdesc_fwcmd to support new chips
-Date:   Fri, 18 Mar 2022 10:32:10 +0800
-Message-ID: <20220318023214.32411-8-pkshih@realtek.com>
+Subject: [PATCH 10/11] rtw89: support hardware generate security header
+Date:   Fri, 18 Mar 2022 10:32:13 +0800
+Message-ID: <20220318023214.32411-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220318023214.32411-1-pkshih@realtek.com>
 References: <20220318023214.32411-1-pkshih@realtek.com>
@@ -57,7 +57,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvMTggpFekyCAxMjo0MDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -65,609 +65,229 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-8852A and 8852C use different H2C header and size, so add h2c_desc_size
-to allocate different header size and fill content by fill_txdesc_fwcmd.
+The newer chip will generate security header itself, so don't set
+IEEE80211_KEY_FLAG_GENERATE_IV in this kind of chip. But, it needs to fill
+key_index, PN and 802.11 header length to TX descriptor, and then hardware
+uses these to generate security header.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/cam.c      |  2 +-
- drivers/net/wireless/realtek/rtw89/core.c     | 20 +++++
- drivers/net/wireless/realtek/rtw89/core.h     | 19 ++++
- drivers/net/wireless/realtek/rtw89/fw.c       | 74 ++++++++--------
- drivers/net/wireless/realtek/rtw89/fw.h       |  4 +-
- drivers/net/wireless/realtek/rtw89/pci.c      | 10 ++-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  2 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  2 +
- drivers/net/wireless/realtek/rtw89/txrx.h     | 86 +++++++++++++++++++
- 9 files changed, 176 insertions(+), 43 deletions(-)
+ drivers/net/wireless/realtek/rtw89/cam.c      |  4 +-
+ drivers/net/wireless/realtek/rtw89/core.c     | 50 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h     |  3 ++
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
+ drivers/net/wireless/realtek/rtw89/txrx.h     |  7 +++
+ 6 files changed, 65 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
-index 26bef9fdd2053..34df3c07c55c5 100644
+index 34df3c07c55c5..34827f174ba1e 100644
 --- a/drivers/net/wireless/realtek/rtw89/cam.c
 +++ b/drivers/net/wireless/realtek/rtw89/cam.c
-@@ -18,7 +18,7 @@ rtw89_cam_get_sec_key_cmd(struct rtw89_dev *rtwdev,
- 	u8 *cmd;
- 	int i, j;
+@@ -320,6 +320,7 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
+ 			  struct ieee80211_sta *sta,
+ 			  struct ieee80211_key_conf *key)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	u8 hw_key_type;
+ 	bool ext_key = false;
+ 	int ret;
+@@ -353,7 +354,8 @@ int rtw89_cam_sec_key_add(struct rtw89_dev *rtwdev,
+ 		return -EOPNOTSUPP;
+ 	}
  
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(cmd_len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, cmd_len);
- 	if (!skb)
- 		return NULL;
+-	key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++	if (!chip->hw_sec_hdr)
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
  
+ 	ret = rtw89_cam_sec_key_install(rtwdev, vif, sta, key, hw_key_type,
+ 					ext_key);
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index bce4834f18ec0..a5c13fd7d8a04 100644
+index 3c2cbe479197d..245d8514961e8 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -977,6 +977,26 @@ void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
- }
- EXPORT_SYMBOL(rtw89_core_fill_txdesc);
+@@ -435,6 +435,7 @@ static void
+ rtw89_core_tx_update_sec_key(struct rtw89_dev *rtwdev,
+ 			     struct rtw89_core_tx_request *tx_req)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct ieee80211_vif *vif = tx_req->vif;
+ 	struct ieee80211_sta *sta = tx_req->sta;
+ 	struct ieee80211_tx_info *info;
+@@ -446,6 +447,7 @@ rtw89_core_tx_update_sec_key(struct rtw89_dev *rtwdev,
+ 	struct rtw89_tx_desc_info *desc_info = &tx_req->desc_info;
+ 	struct sk_buff *skb = tx_req->skb;
+ 	u8 sec_type = RTW89_SEC_KEY_TYPE_NONE;
++	u64 pn64;
  
-+static __le32 rtw89_build_txwd_fwcmd0_v1(struct rtw89_tx_desc_info *desc_info)
+ 	if (!vif) {
+ 		rtw89_warn(rtwdev, "cannot set sec key without vif\n");
+@@ -491,8 +493,21 @@ rtw89_core_tx_update_sec_key(struct rtw89_dev *rtwdev,
+ 	}
+ 
+ 	desc_info->sec_en = true;
++	desc_info->sec_keyid = key->keyidx;
+ 	desc_info->sec_type = sec_type;
+ 	desc_info->sec_cam_idx = sec_cam->sec_cam_idx;
++
++	if (!chip->hw_sec_hdr)
++		return;
++
++	pn64 = atomic64_inc_return(&key->tx_pn);
++	desc_info->sec_seq[0] = pn64;
++	desc_info->sec_seq[1] = pn64 >> 8;
++	desc_info->sec_seq[2] = pn64 >> 16;
++	desc_info->sec_seq[3] = pn64 >> 24;
++	desc_info->sec_seq[4] = pn64 >> 32;
++	desc_info->sec_seq[5] = pn64 >> 40;
++	desc_info->wp_offset = 1; /* in unit of 8 bytes for security header */
+ }
+ 
+ static u16 rtw89_core_get_mgmt_rate(struct rtw89_dev *rtwdev,
+@@ -755,6 +770,17 @@ rtw89_core_tx_btc_spec_pkt_notify(struct rtw89_dev *rtwdev,
+ 	return PACKET_MAX;
+ }
+ 
++static void rtw89_core_tx_update_llc_hdr(struct rtw89_dev *rtwdev,
++					 struct rtw89_tx_desc_info *desc_info,
++					 struct sk_buff *skb)
 +{
-+	u32 dword = FIELD_PREP(AX_RXD_RPKT_LEN_MASK, desc_info->pkt_size) |
-+		    FIELD_PREP(AX_RXD_RPKT_TYPE_MASK, desc_info->fw_dl ?
-+						      RTW89_CORE_RX_TYPE_FWDL :
-+						      RTW89_CORE_RX_TYPE_H2C);
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	__le16 fc = hdr->frame_control;
++
++	desc_info->hdr_llc_len = ieee80211_hdrlen(fc);
++	desc_info->hdr_llc_len >>= 1; /* in unit of 2 bytes */
++}
++
+ static void
+ rtw89_core_tx_wake(struct rtw89_dev *rtwdev,
+ 		   struct rtw89_core_tx_request *tx_req)
+@@ -806,6 +832,7 @@ rtw89_core_tx_update_desc_info(struct rtw89_dev *rtwdev,
+ 		rtw89_core_tx_update_data_info(rtwdev, tx_req);
+ 		pkt_type = rtw89_core_tx_btc_spec_pkt_notify(rtwdev, tx_req);
+ 		rtw89_core_tx_update_he_qos_htc(rtwdev, tx_req, pkt_type);
++		rtw89_core_tx_update_llc_hdr(rtwdev, desc_info, skb);
+ 		break;
+ 	case RTW89_CORE_TX_TYPE_FWCMD:
+ 		rtw89_core_tx_update_h2c_info(rtwdev, tx_req);
+@@ -912,6 +939,7 @@ static __le32 rtw89_build_txwd_body0_v1(struct rtw89_tx_desc_info *desc_info)
+ static __le32 rtw89_build_txwd_body1_v1(struct rtw89_tx_desc_info *desc_info)
+ {
+ 	u32 dword = FIELD_PREP(RTW89_TXWD_BODY1_ADDR_INFO_NUM, desc_info->addr_info_nr) |
++		    FIELD_PREP(RTW89_TXWD_BODY1_SEC_KEYID, desc_info->sec_keyid) |
+ 		    FIELD_PREP(RTW89_TXWD_BODY1_SEC_TYPE, desc_info->sec_type);
+ 
+ 	return cpu_to_le32(dword);
+@@ -936,6 +964,24 @@ static __le32 rtw89_build_txwd_body3(struct rtw89_tx_desc_info *desc_info)
+ 	return cpu_to_le32(dword);
+ }
+ 
++static __le32 rtw89_build_txwd_body4(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(RTW89_TXWD_BODY4_SEC_IV_L0, desc_info->sec_seq[0]) |
++		    FIELD_PREP(RTW89_TXWD_BODY4_SEC_IV_L1, desc_info->sec_seq[1]);
 +
 +	return cpu_to_le32(dword);
 +}
 +
-+void rtw89_core_fill_txdesc_fwcmd_v1(struct rtw89_dev *rtwdev,
-+				     struct rtw89_tx_desc_info *desc_info,
-+				     void *txdesc)
++static __le32 rtw89_build_txwd_body5(struct rtw89_tx_desc_info *desc_info)
 +{
-+	struct rtw89_rxdesc_short *txwd_v1 = (struct rtw89_rxdesc_short *)txdesc;
++	u32 dword = FIELD_PREP(RTW89_TXWD_BODY5_SEC_IV_H2, desc_info->sec_seq[2]) |
++		    FIELD_PREP(RTW89_TXWD_BODY5_SEC_IV_H3, desc_info->sec_seq[3]) |
++		    FIELD_PREP(RTW89_TXWD_BODY5_SEC_IV_H4, desc_info->sec_seq[4]) |
++		    FIELD_PREP(RTW89_TXWD_BODY5_SEC_IV_H5, desc_info->sec_seq[5]);
 +
-+	txwd_v1->dword0 = rtw89_build_txwd_fwcmd0_v1(desc_info);
++	return cpu_to_le32(dword);
 +}
-+EXPORT_SYMBOL(rtw89_core_fill_txdesc_fwcmd_v1);
 +
- static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
- 					  struct sk_buff *skb,
- 					  struct rtw89_rx_phy_ppdu *phy_ppdu)
+ static __le32 rtw89_build_txwd_body7_v1(struct rtw89_tx_desc_info *desc_info)
+ {
+ 	u32 dword = FIELD_PREP(RTW89_TXWD_BODY7_USE_RATE_V1, desc_info->use_rate) |
+@@ -1032,6 +1078,10 @@ void rtw89_core_fill_txdesc_v1(struct rtw89_dev *rtwdev,
+ 	txwd_body->dword1 = rtw89_build_txwd_body1_v1(desc_info);
+ 	txwd_body->dword2 = rtw89_build_txwd_body2(desc_info);
+ 	txwd_body->dword3 = rtw89_build_txwd_body3(desc_info);
++	if (desc_info->sec_en) {
++		txwd_body->dword4 = rtw89_build_txwd_body4(desc_info);
++		txwd_body->dword5 = rtw89_build_txwd_body5(desc_info);
++	}
+ 	txwd_body->dword7 = rtw89_build_txwd_body7_v1(desc_info);
+ 
+ 	if (!desc_info->en_wd_info)
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 725484be2b622..c17756ff54762 100644
+index b5587d799bd83..9f53d581a48f9 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -117,6 +117,8 @@ enum rtw89_core_rx_type {
- 	RTW89_CORE_RX_TYPE_C2H		= 10,
- 	RTW89_CORE_RX_TYPE_CSI		= 11,
- 	RTW89_CORE_RX_TYPE_CQI		= 12,
-+	RTW89_CORE_RX_TYPE_H2C		= 13,
-+	RTW89_CORE_RX_TYPE_FWDL		= 14,
- };
- 
- enum rtw89_txq_flags {
-@@ -2076,6 +2078,9 @@ struct rtw89_chip_ops {
- 				       s8 pw_ofst, enum rtw89_mac_idx mac_idx);
- 	int (*pwr_on_func)(struct rtw89_dev *rtwdev);
- 	int (*pwr_off_func)(struct rtw89_dev *rtwdev);
-+	void (*fill_txdesc_fwcmd)(struct rtw89_dev *rtwdev,
-+				  struct rtw89_tx_desc_info *desc_info,
-+				  void *txdesc);
- 	int (*cfg_ctrl_path)(struct rtw89_dev *rtwdev, bool wl);
- 	int (*mac_cfg_gnt)(struct rtw89_dev *rtwdev,
- 			   const struct rtw89_mac_ax_coex_gnt *gnt_cfg);
-@@ -2344,6 +2349,7 @@ struct rtw89_chip_info {
- 	u8 ps_mode_supported;
- 
- 	u32 hci_func_en_addr;
-+	u32 h2c_desc_size;
- 	u32 h2c_ctrl_reg;
- 	const u32 *h2c_regs;
- 	u32 c2h_ctrl_reg;
-@@ -3507,6 +3513,16 @@ static inline void rtw89_ctrl_btg(struct rtw89_dev *rtwdev, bool btg)
- 		chip->ops->ctrl_btg(rtwdev, btg);
- }
- 
-+static inline
-+void rtw89_chip_fill_txdesc_fwcmd(struct rtw89_dev *rtwdev,
-+				  struct rtw89_tx_desc_info *desc_info,
-+				  void *txdesc)
-+{
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
-+
-+	chip->ops->fill_txdesc_fwcmd(rtwdev, desc_info, txdesc);
-+}
-+
- static inline
- void rtw89_chip_mac_cfg_gnt(struct rtw89_dev *rtwdev,
- 			    const struct rtw89_mac_ax_coex_gnt *gnt_cfg)
-@@ -3580,6 +3596,9 @@ void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel);
- void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
- 			    struct rtw89_tx_desc_info *desc_info,
- 			    void *txdesc);
-+void rtw89_core_fill_txdesc_fwcmd_v1(struct rtw89_dev *rtwdev,
-+				     struct rtw89_tx_desc_info *desc_info,
-+				     void *txdesc);
- void rtw89_core_rx(struct rtw89_dev *rtwdev,
- 		   struct rtw89_rx_desc_info *desc_info,
- 		   struct sk_buff *skb);
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 2c9470616a1b2..5985b40950bc1 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -10,31 +10,33 @@
- #include "phy.h"
- #include "reg.h"
- 
--static struct sk_buff *rtw89_fw_h2c_alloc_skb(u32 len, bool header)
-+static struct sk_buff *rtw89_fw_h2c_alloc_skb(struct rtw89_dev *rtwdev, u32 len,
-+					      bool header)
- {
- 	struct sk_buff *skb;
- 	u32 header_len = 0;
-+	u32 h2c_desc_size = rtwdev->chip->h2c_desc_size;
- 
- 	if (header)
- 		header_len = H2C_HEADER_LEN;
- 
--	skb = dev_alloc_skb(len + header_len + 24);
-+	skb = dev_alloc_skb(len + header_len + h2c_desc_size);
- 	if (!skb)
- 		return NULL;
--	skb_reserve(skb, header_len + 24);
-+	skb_reserve(skb, header_len + h2c_desc_size);
- 	memset(skb->data, 0, len);
- 
- 	return skb;
- }
- 
--struct sk_buff *rtw89_fw_h2c_alloc_skb_with_hdr(u32 len)
-+struct sk_buff *rtw89_fw_h2c_alloc_skb_with_hdr(struct rtw89_dev *rtwdev, u32 len)
- {
--	return rtw89_fw_h2c_alloc_skb(len, true);
-+	return rtw89_fw_h2c_alloc_skb(rtwdev, len, true);
- }
- 
--struct sk_buff *rtw89_fw_h2c_alloc_skb_no_hdr(u32 len)
-+struct sk_buff *rtw89_fw_h2c_alloc_skb_no_hdr(struct rtw89_dev *rtwdev, u32 len)
- {
--	return rtw89_fw_h2c_alloc_skb(len, false);
-+	return rtw89_fw_h2c_alloc_skb(rtwdev, len, false);
- }
- 
- static u8 _fw_get_rdy(struct rtw89_dev *rtwdev)
-@@ -309,7 +311,7 @@ static int __rtw89_fw_download_hdr(struct rtw89_dev *rtwdev, const u8 *fw, u32 l
- 	struct sk_buff *skb;
- 	u32 ret = 0;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw hdr dl\n");
- 		return -ENOMEM;
-@@ -375,7 +377,7 @@ static int __rtw89_fw_download_main(struct rtw89_dev *rtwdev,
- 		else
- 			pkt_len = residue_len;
- 
--		skb = rtw89_fw_h2c_alloc_skb_no_hdr(pkt_len);
-+		skb = rtw89_fw_h2c_alloc_skb_no_hdr(rtwdev, pkt_len);
- 		if (!skb) {
- 			rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 			return -ENOMEM;
-@@ -570,7 +572,7 @@ int rtw89_fw_h2c_cam(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_CAM_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_CAM_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -619,7 +621,7 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
- 		return 0;
- 	}
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_BA_CAM_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_BA_CAM_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c ba cam\n");
- 		return -ENOMEM;
-@@ -665,7 +667,7 @@ int rtw89_fw_h2c_fw_log(struct rtw89_dev *rtwdev, bool enable)
- 	u32 comp = enable ? BIT(RTW89_FW_LOG_COMP_INIT) | BIT(RTW89_FW_LOG_COMP_TASK) |
- 			    BIT(RTW89_FW_LOG_COMP_PS) | BIT(RTW89_FW_LOG_COMP_ERROR) : 0;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LOG_CFG_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LOG_CFG_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw log cfg\n");
- 		return -ENOMEM;
-@@ -701,7 +703,7 @@ int rtw89_fw_h2c_general_pkt(struct rtw89_dev *rtwdev, u8 macid)
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_GENERAL_PKT_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_GENERAL_PKT_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -738,7 +740,7 @@ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LPS_PARM_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LPS_PARM_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -784,7 +786,7 @@ int rtw89_fw_h2c_default_cmac_tbl(struct rtw89_dev *rtwdev,
- 	u8 map_b = hal->antenna_tx == RF_AB ? 1 : 0;
- 	u8 macid = rtwvif->mac_id;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_CMC_TBL_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_CMC_TBL_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -894,7 +896,7 @@ int rtw89_fw_h2c_assoc_cmac_tbl(struct rtw89_dev *rtwdev,
- 	if (sta)
- 		__get_sta_he_pkt_padding(rtwdev, sta, pads);
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_CMC_TBL_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_CMC_TBL_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -945,7 +947,7 @@ int rtw89_fw_h2c_txtime_cmac_tbl(struct rtw89_dev *rtwdev,
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_CMC_TBL_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_CMC_TBL_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		return -ENOMEM;
-@@ -997,7 +999,7 @@ int rtw89_fw_h2c_update_beacon(struct rtw89_dev *rtwdev,
- 	}
- 
- 	bcn_total_len = H2C_BCN_BASE_LEN + skb_beacon->len;
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(bcn_total_len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, bcn_total_len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for fw dl\n");
- 		dev_kfree_skb_any(skb_beacon);
-@@ -1051,7 +1053,7 @@ int rtw89_fw_h2c_role_maintain(struct rtw89_dev *rtwdev,
- 		self_role = rtwvif->self_role;
- 	}
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_ROLE_MAINTAIN_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_ROLE_MAINTAIN_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c join\n");
- 		return -ENOMEM;
-@@ -1093,7 +1095,7 @@ int rtw89_fw_h2c_join_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- 		net_type = dis_conn ? RTW89_NET_TYPE_NO_LINK : net_type;
- 	}
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_JOIN_INFO_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_JOIN_INFO_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c join\n");
- 		return -ENOMEM;
-@@ -1137,7 +1139,7 @@ int rtw89_fw_h2c_macid_pause(struct rtw89_dev *rtwdev, u8 sh, u8 grp,
- 	u8 len = sizeof(struct rtw89_fw_macid_pause_grp);
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_JOIN_INFO_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_JOIN_INFO_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c join\n");
- 		return -ENOMEM;
-@@ -1170,7 +1172,7 @@ int rtw89_fw_h2c_set_edca(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_EDCA_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_EDCA_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c edca\n");
- 		return -ENOMEM;
-@@ -1205,7 +1207,7 @@ int rtw89_fw_h2c_set_ofld_cfg(struct rtw89_dev *rtwdev)
- 	static const u8 cfg[] = {0x09, 0x00, 0x00, 0x00, 0x5e, 0x00, 0x00, 0x00};
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_OFLD_CFG_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_OFLD_CFG_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c ofld\n");
- 		return -ENOMEM;
-@@ -1235,7 +1237,7 @@ int rtw89_fw_h2c_ra(struct rtw89_dev *rtwdev, struct rtw89_ra_info *ra, bool csi
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_RA_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_RA_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c join\n");
- 		return -ENOMEM;
-@@ -1306,7 +1308,7 @@ int rtw89_fw_h2c_cxdrv_init(struct rtw89_dev *rtwdev)
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_CXDRVINFO_INIT);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_INIT);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_init\n");
- 		return -ENOMEM;
-@@ -1365,7 +1367,7 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
- 	u8 *cmd;
- 	int i;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_CXDRVINFO_ROLE);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_ROLE);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_role\n");
- 		return -ENOMEM;
-@@ -1433,7 +1435,7 @@ int rtw89_fw_h2c_cxdrv_ctrl(struct rtw89_dev *rtwdev)
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_CXDRVINFO_CTRL);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_CTRL);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_ctrl\n");
- 		return -ENOMEM;
-@@ -1475,7 +1477,7 @@ int rtw89_fw_h2c_cxdrv_rfk(struct rtw89_dev *rtwdev)
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_CXDRVINFO_RFK);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_RFK);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_ctrl\n");
- 		return -ENOMEM;
-@@ -1515,7 +1517,7 @@ int rtw89_fw_h2c_del_pkt_offload(struct rtw89_dev *rtwdev, u8 id)
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_PKT_OFLD);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_PKT_OFLD);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c pkt offload\n");
- 		return -ENOMEM;
-@@ -1557,7 +1559,7 @@ int rtw89_fw_h2c_add_pkt_offload(struct rtw89_dev *rtwdev, u8 *id,
- 
- 	*id = alloc_id;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_PKT_OFLD + skb_ofld->len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_PKT_OFLD + skb_ofld->len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c pkt offload\n");
- 		return -ENOMEM;
-@@ -1596,7 +1598,7 @@ int rtw89_fw_h2c_scan_list_offload(struct rtw89_dev *rtwdev, int len,
- 	int skb_len = H2C_LEN_SCAN_LIST_OFFLOAD + len * RTW89_MAC_CHINFO_SIZE;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(skb_len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, skb_len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c scan list\n");
- 		return -ENOMEM;
-@@ -1660,7 +1662,7 @@ int rtw89_fw_h2c_scan_offload(struct rtw89_dev *rtwdev,
- 	struct sk_buff *skb;
- 	u8 *cmd;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_LEN_SCAN_OFFLOAD);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_SCAN_OFFLOAD);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c scan offload\n");
- 		return -ENOMEM;
-@@ -1709,7 +1711,7 @@ int rtw89_fw_h2c_rf_reg(struct rtw89_dev *rtwdev,
- 	u8 class = info->rf_path == RF_PATH_A ?
- 		   H2C_CL_OUTSRC_RF_REG_A : H2C_CL_OUTSRC_RF_REG_B;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c rf reg\n");
- 		return -ENOMEM;
-@@ -1738,7 +1740,7 @@ int rtw89_fw_h2c_raw_with_hdr(struct rtw89_dev *rtwdev,
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(len);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for raw with hdr\n");
- 		return -ENOMEM;
-@@ -1765,7 +1767,7 @@ int rtw89_fw_h2c_raw(struct rtw89_dev *rtwdev, const u8 *buf, u16 len)
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_no_hdr(len);
-+	skb = rtw89_fw_h2c_alloc_skb_no_hdr(rtwdev, len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c raw\n");
- 		return -ENOMEM;
-@@ -2295,7 +2297,7 @@ int rtw89_fw_h2c_trigger_cpu_exception(struct rtw89_dev *rtwdev)
- {
- 	struct sk_buff *skb;
- 
--	skb = rtw89_fw_h2c_alloc_skb_with_hdr(H2C_FW_CPU_EXCEPTION_LEN);
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_FW_CPU_EXCEPTION_LEN);
- 	if (!skb) {
- 		rtw89_err(rtwdev,
- 			  "failed to alloc skb for fw cpu exception\n");
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 24ab249a8ecec..2a010154a8e88 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -2277,8 +2277,8 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
- 
- int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
- 			  struct rtw89_lps_parm *lps_param);
--struct sk_buff *rtw89_fw_h2c_alloc_skb_with_hdr(u32 len);
--struct sk_buff *rtw89_fw_h2c_alloc_skb_no_hdr(u32 len);
-+struct sk_buff *rtw89_fw_h2c_alloc_skb_with_hdr(struct rtw89_dev *rtwdev, u32 len);
-+struct sk_buff *rtw89_fw_h2c_alloc_skb_no_hdr(struct rtw89_dev *rtwdev, u32 len);
- int rtw89_fw_msg_reg(struct rtw89_dev *rtwdev,
- 		     struct rtw89_mac_h2c_info *h2c_info,
- 		     struct rtw89_mac_c2h_info *c2h_info);
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 32e8283e22f3b..9335fba28fc1e 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -1043,16 +1043,18 @@ static int rtw89_pci_fwcmd_submit(struct rtw89_dev *rtwdev,
- 				  struct rtw89_core_tx_request *tx_req)
- {
- 	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_tx_desc_info *desc_info = &tx_req->desc_info;
--	struct rtw89_txwd_body *txwd_body;
-+	void *txdesc;
-+	int txdesc_size = chip->h2c_desc_size;
- 	struct pci_dev *pdev = rtwpci->pdev;
- 	struct sk_buff *skb = tx_req->skb;
- 	struct rtw89_pci_tx_data *tx_data = RTW89_PCI_TX_SKB_CB(skb);
- 	dma_addr_t dma;
- 
--	txwd_body = (struct rtw89_txwd_body *)skb_push(skb, sizeof(*txwd_body));
--	memset(txwd_body, 0, sizeof(*txwd_body));
--	rtw89_core_fill_txdesc(rtwdev, desc_info, txwd_body);
-+	txdesc = skb_push(skb, txdesc_size);
-+	memset(txdesc, 0, txdesc_size);
-+	rtw89_chip_fill_txdesc_fwcmd(rtwdev, desc_info, txdesc);
- 
- 	dma = dma_map_single(&pdev->dev, skb->data, skb->len, DMA_TO_DEVICE);
- 	if (dma_mapping_error(&pdev->dev, dma)) {
+@@ -733,8 +733,10 @@ struct rtw89_tx_desc_info {
+ 	u8 ampdu_num;
+ 	bool sec_en;
+ 	u8 addr_info_nr;
++	u8 sec_keyid;
+ 	u8 sec_type;
+ 	u8 sec_cam_idx;
++	u8 sec_seq[6];
+ 	u16 data_rate;
+ 	u16 data_retry_lowest_rate;
+ 	bool fw_dl;
+@@ -2302,6 +2304,7 @@ struct rtw89_chip_info {
+ 	u32 rf_base_addr[2];
+ 	u8 support_bands;
+ 	bool support_bw160;
++	bool hw_sec_hdr;
+ 	u8 rf_path_num;
+ 	u8 tx_nss;
+ 	u8 rx_nss;
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 348ad08090b8d..d44502586d118 100644
+index 142e96b0723df..a745019f8ab04 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2019,6 +2019,7 @@ static const struct rtw89_chip_ops rtw8852a_chip_ops = {
- 	.set_txpwr_ul_tb_offset	= rtw8852a_set_txpwr_ul_tb_offset,
- 	.pwr_on_func		= NULL,
- 	.pwr_off_func		= NULL,
-+	.fill_txdesc_fwcmd	= rtw89_core_fill_txdesc,
- 	.cfg_ctrl_path		= rtw89_mac_cfg_ctrl_path,
- 	.mac_cfg_gnt		= rtw89_mac_cfg_gnt,
- 	.stop_sch_tx		= rtw89_mac_stop_sch_tx,
-@@ -2095,6 +2096,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 				  BIT(RTW89_PS_MODE_CLK_GATED) |
- 				  BIT(RTW89_PS_MODE_PWR_GATED),
- 	.hci_func_en_addr	= R_AX_HCI_FUNC_EN,
-+	.h2c_desc_size		= sizeof(struct rtw89_txwd_body),
- 	.h2c_ctrl_reg		= R_AX_H2CREG_CTRL,
- 	.h2c_regs		= rtw8852a_h2c_regs,
- 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL,
+@@ -2064,6 +2064,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.support_bands		= BIT(NL80211_BAND_2GHZ) |
+ 				  BIT(NL80211_BAND_5GHZ),
+ 	.support_bw160		= false,
++	.hw_sec_hdr		= false,
+ 	.rf_path_num		= 2,
+ 	.tx_nss			= 2,
+ 	.rx_nss			= 2,
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 58920e91765e8..33f0c014be7ba 100644
+index 46d63c450fece..9e3a3fc514ce7 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -490,6 +490,7 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
- 	.set_txpwr_ul_tb_offset	= rtw8852c_set_txpwr_ul_tb_offset,
- 	.pwr_on_func		= rtw8852c_pwr_on_func,
- 	.pwr_off_func		= rtw8852c_pwr_off_func,
-+	.fill_txdesc_fwcmd	= rtw89_core_fill_txdesc_fwcmd_v1,
- 	.cfg_ctrl_path		= rtw89_mac_cfg_ctrl_path_v1,
- 	.mac_cfg_gnt		= rtw89_mac_cfg_gnt_v1,
- 	.stop_sch_tx		= rtw89_mac_stop_sch_tx_v1,
-@@ -513,6 +514,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.phycap_addr		= 0x590,
- 	.phycap_size		= 0x60,
- 	.hci_func_en_addr	= R_AX_HCI_FUNC_EN_V1,
-+	.h2c_desc_size		= sizeof(struct rtw89_rxdesc_short),
- 	.h2c_ctrl_reg		= R_AX_H2CREG_CTRL_V1,
- 	.h2c_regs		= rtw8852c_h2c_regs,
- 	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL_V1,
+@@ -506,6 +506,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.rf_base_addr		= {0xe000, 0xf000},
+ 	.pwr_on_seq		= NULL,
+ 	.pwr_off_seq		= NULL,
++	.hw_sec_hdr		= true,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 2048,
 diff --git a/drivers/net/wireless/realtek/rtw89/txrx.h b/drivers/net/wireless/realtek/rtw89/txrx.h
-index 86e3d8b400d6c..4e81d6df93688 100644
+index c943e4e95721e..1250e26ade406 100644
 --- a/drivers/net/wireless/realtek/rtw89/txrx.h
 +++ b/drivers/net/wireless/realtek/rtw89/txrx.h
-@@ -79,6 +79,92 @@
+@@ -38,6 +38,7 @@
+ /* TX WD BODY DWORD 1 */
+ #define RTW89_TXWD_BODY1_ADDR_INFO_NUM GENMASK(31, 26)
+ #define RTW89_TXWD_BODY1_PAYLOAD_ID GENMASK(31, 16)
++#define RTW89_TXWD_BODY1_SEC_KEYID GENMASK(5, 4)
+ #define RTW89_TXWD_BODY1_SEC_TYPE GENMASK(3, 0)
  
- /* TX WD INFO DWORD 5 */
+ /* TX WD BODY DWORD 2 */
+@@ -52,8 +53,14 @@
+ #define RTW89_TXWD_BODY3_SW_SEQ GENMASK(11, 0)
  
-+/* RX WD dword0 */
-+#define AX_RXD_RPKT_LEN_MASK GENMASK(13, 0)
-+#define AX_RXD_SHIFT_MASK GENMASK(15, 14)
-+#define AX_RXD_WL_HD_IV_LEN_MASK GENMASK(21, 16)
-+#define AX_RXD_BB_SEL BIT(22)
-+#define AX_RXD_MAC_INFO_VLD BIT(23)
-+#define AX_RXD_RPKT_TYPE_MASK GENMASK(27, 24)
-+#define AX_RXD_DRV_INFO_SIZE_MASK GENMASK(30, 28)
-+#define AX_RXD_LONG_RXD BIT(31)
-+
-+/* RX WD dword1 */
-+#define AX_RXD_PPDU_TYPE_MASK GENMASK(3, 0)
-+#define AX_RXD_PPDU_CNT_MASK GENMASK(6, 4)
-+#define AX_RXD_SR_EN BIT(7)
-+#define AX_RXD_USER_ID_MASK GENMASK(15, 8)
-+#define AX_RXD_USER_ID_v1_MASK GENMASK(13, 8)
-+#define AX_RXD_RX_DATARATE_MASK GENMASK(24, 16)
-+#define AX_RXD_RX_GI_LTF_MASK GENMASK(27, 25)
-+#define AX_RXD_NON_SRG_PPDU BIT(28)
-+#define AX_RXD_INTER_PPDU BIT(29)
-+#define AX_RXD_NON_SRG_PPDU_v1 BIT(14)
-+#define AX_RXD_INTER_PPDU_v1 BIT(15)
-+#define AX_RXD_BW_MASK GENMASK(31, 30)
-+#define AX_RXD_BW_v1_MASK GENMASK(31, 29)
-+
-+/* RX WD dword2 */
-+#define AX_RXD_FREERUN_CNT_MASK GENMASK(31, 0)
-+
-+/* RX WD dword3 */
-+#define AX_RXD_A1_MATCH BIT(0)
-+#define AX_RXD_SW_DEC BIT(1)
-+#define AX_RXD_HW_DEC BIT(2)
-+#define AX_RXD_AMPDU BIT(3)
-+#define AX_RXD_AMPDU_END_PKT BIT(4)
-+#define AX_RXD_AMSDU BIT(5)
-+#define AX_RXD_AMSDU_CUT BIT(6)
-+#define AX_RXD_LAST_MSDU BIT(7)
-+#define AX_RXD_BYPASS BIT(8)
-+#define AX_RXD_CRC32_ERR BIT(9)
-+#define AX_RXD_ICV_ERR BIT(10)
-+#define AX_RXD_MAGIC_WAKE BIT(11)
-+#define AX_RXD_UNICAST_WAKE BIT(12)
-+#define AX_RXD_PATTERN_WAKE BIT(13)
-+#define AX_RXD_GET_CH_INFO_MASK GENMASK(15, 14)
-+#define AX_RXD_PATTERN_IDX_MASK GENMASK(20, 16)
-+#define AX_RXD_TARGET_IDC_MASK GENMASK(23, 21)
-+#define AX_RXD_CHKSUM_OFFLOAD_EN BIT(24)
-+#define AX_RXD_WITH_LLC BIT(25)
-+#define AX_RXD_RX_STATISTICS BIT(26)
-+
-+/* RX WD dword4 */
-+#define AX_RXD_TYPE_MASK GENMASK(1, 0)
-+#define AX_RXD_MC BIT(2)
-+#define AX_RXD_BC BIT(3)
-+#define AX_RXD_MD BIT(4)
-+#define AX_RXD_MF BIT(5)
-+#define AX_RXD_PWR BIT(6)
-+#define AX_RXD_QOS BIT(7)
-+#define AX_RXD_TID_MASK GENMASK(11, 8)
-+#define AX_RXD_EOSP BIT(12)
-+#define AX_RXD_HTC BIT(13)
-+#define AX_RXD_QNULL BIT(14)
-+#define AX_RXD_SEQ_MASK GENMASK(27, 16)
-+#define AX_RXD_FRAG_MASK GENMASK(31, 28)
-+
-+/* RX WD dword5 */
-+#define AX_RXD_SEC_CAM_IDX_MASK GENMASK(7, 0)
-+#define AX_RXD_ADDR_CAM_MASK GENMASK(15, 8)
-+#define AX_RXD_MAC_ID_MASK GENMASK(23, 16)
-+#define AX_RXD_RX_PL_ID_MASK GENMASK(27, 24)
-+#define AX_RXD_ADDR_CAM_VLD BIT(28)
-+#define AX_RXD_ADDR_FWD_EN BIT(29)
-+#define AX_RXD_RX_PL_MATCH BIT(30)
-+
-+/* RX WD dword6 */
-+#define AX_RXD_MAC_ADDR_MASK GENMASK(31, 0)
-+
-+/* RX WD dword7 */
-+#define AX_RXD_MAC_ADDR_H_MASK GENMASK(15, 0)
-+#define AX_RXD_SMART_ANT BIT(16)
-+#define AX_RXD_SEC_TYPE_MASK GENMASK(20, 17)
-+#define AX_RXD_HDR_CNV BIT(21)
-+#define AX_RXD_HDR_OFFSET_MASK GENMASK(26, 22)
-+#define AX_RXD_BIP_KEYID BIT(27)
-+#define AX_RXD_BIP_ENC BIT(28)
-+
- /* RX DESC helpers */
- /* Short Descriptor */
- #define RTW89_GET_RXWD_LONG_RXD(rxdesc) \
+ /* TX WD BODY DWORD 4 */
++#define RTW89_TXWD_BODY4_SEC_IV_L1 GENMASK(31, 24)
++#define RTW89_TXWD_BODY4_SEC_IV_L0 GENMASK(23, 16)
+ 
+ /* TX WD BODY DWORD 5 */
++#define RTW89_TXWD_BODY5_SEC_IV_H5 GENMASK(31, 24)
++#define RTW89_TXWD_BODY5_SEC_IV_H4 GENMASK(23, 16)
++#define RTW89_TXWD_BODY5_SEC_IV_H3 GENMASK(15, 8)
++#define RTW89_TXWD_BODY5_SEC_IV_H2 GENMASK(7, 0)
+ 
+ /* TX WD BODY DWORD 6 (V1) */
+ 
 -- 
 2.25.1
 
