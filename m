@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D74C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 02:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51932C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Mar 2022 02:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231826AbiCRCet (ORCPT
+        id S231827AbiCRCeu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Mar 2022 22:34:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
+        Thu, 17 Mar 2022 22:34:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231735AbiCRCen (ORCPT
+        with ESMTP id S231777AbiCRCen (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 17 Mar 2022 22:34:43 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A497C199E0C
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 19:33:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B14D019ABC5
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2022 19:33:21 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22I2XAuoC017631, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22I2XAuoC017631
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 22I2XFVB0017661, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 22I2XFVB0017661
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 18 Mar 2022 10:33:10 +0800
+        Fri, 18 Mar 2022 10:33:15 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 18 Mar 2022 10:33:10 +0800
+ 15.1.2375.24; Fri, 18 Mar 2022 10:33:15 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 18 Mar
- 2022 10:33:09 +0800
+ 2022 10:33:14 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <johnson.lin@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [PATCH 03/11] rtw89: regd: consider 6G band
-Date:   Fri, 18 Mar 2022 10:32:06 +0800
-Message-ID: <20220318023214.32411-4-pkshih@realtek.com>
+Subject: [PATCH 06/11] rtw89: disabled IGI configuration for unsupported hardware
+Date:   Fri, 18 Mar 2022 10:32:09 +0800
+Message-ID: <20220318023214.32411-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220318023214.32411-1-pkshih@realtek.com>
 References: <20220318023214.32411-1-pkshih@realtek.com>
@@ -57,7 +57,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzMvMTggpFekyCAxMjo0MDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -65,93 +65,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Johnson Lin <johnson.lin@realtek.com>
 
-Wrap regd debug dump into a macro and add dump for 6G band field.
-Extend the macro used to configure regd table to account for multiple
-bands beyond 2G and 5G.
+Bypass IGI, known as Rx gain, adjustment flow for incompatible hardware
+architectures.
 
-And the follow-up commit will configure the corresponding values for
-6G band into regd table.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Johnson Lin <johnson.lin@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/regd.c | 37 +++++++++++------------
- 1 file changed, 18 insertions(+), 19 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 2 ++
+ drivers/net/wireless/realtek/rtw89/core.h | 1 +
+ drivers/net/wireless/realtek/rtw89/phy.c  | 3 ++-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
-index 4c37e590e43c3..4d4bc201485b4 100644
---- a/drivers/net/wireless/realtek/rtw89/regd.c
-+++ b/drivers/net/wireless/realtek/rtw89/regd.c
-@@ -5,10 +5,9 @@
- #include "debug.h"
- #include "ps.h"
- 
--#define COUNTRY_REGD(_alpha2, _txpwr_regd_2g, _txpwr_regd_5g) \
-+#define COUNTRY_REGD(_alpha2, _txpwr_regd...) \
- 	{.alpha2 = (_alpha2), \
--	 .txpwr_regd[RTW89_BAND_2G] = (_txpwr_regd_2g), \
--	 .txpwr_regd[RTW89_BAND_5G] = (_txpwr_regd_5g) \
-+	 .txpwr_regd = {_txpwr_regd}, \
- 	}
- 
- static const struct rtw89_regulatory rtw89_ww_regd =
-@@ -272,6 +271,17 @@ static bool rtw89_regd_is_ww(const struct rtw89_regulatory *regd)
- 	return regd == &rtw89_ww_regd;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index c61061358980b..bce4834f18ec0 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -2752,6 +2752,8 @@ static void rtw89_core_setup_phycap(struct rtw89_dev *rtwdev)
+ 	rtwdev->hal.support_cckpd =
+ 		!(rtwdev->chip->chip_id == RTL8852A && rtwdev->hal.cv <= CHIP_CBV) &&
+ 		!(rtwdev->chip->chip_id == RTL8852B && rtwdev->hal.cv <= CHIP_CAV);
++	rtwdev->hal.support_igi =
++		rtwdev->chip->chip_id == RTL8852A && rtwdev->hal.cv <= CHIP_CBV;
  }
  
-+#define rtw89_debug_regd(_dev, _regd, _desc, _argv...) \
-+do { \
-+	typeof(_regd) __r = _regd; \
-+	rtw89_debug(_dev, RTW89_DBG_REGD, _desc \
-+		    ": %c%c: mapping txregd to {2g: %d, 5g: %d, 6g: %d}\n", \
-+		    ##_argv, __r->alpha2[0], __r->alpha2[1], \
-+		    __r->txpwr_regd[RTW89_BAND_2G], \
-+		    __r->txpwr_regd[RTW89_BAND_5G], \
-+		    __r->txpwr_regd[RTW89_BAND_6G]); \
-+} while (0)
-+
- int rtw89_regd_init(struct rtw89_dev *rtwdev,
- 		    void (*reg_notifier)(struct wiphy *wiphy,
- 					 struct regulatory_request *request))
-@@ -294,20 +304,12 @@ int rtw89_regd_init(struct rtw89_dev *rtwdev,
- 		if (ret)
- 			rtw89_warn(rtwdev, "failed to hint regulatory:%d\n", ret);
+ static int rtw89_chip_efuse_info_setup(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 5900cbc0efd9e..725484be2b622 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2489,6 +2489,7 @@ struct rtw89_hal {
+ 	u8 tx_nss;
+ 	u8 rx_nss;
+ 	bool support_cckpd;
++	bool support_igi;
+ };
  
--		rtw89_debug(rtwdev, RTW89_DBG_REGD,
--			    "efuse country code %c%c, mapping to 2g txregd %d, 5g txregd %d\n",
--			    rtwdev->efuse.country_code[0], rtwdev->efuse.country_code[1],
--			    rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
--			    rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
--
-+		rtw89_debug_regd(rtwdev, chip_regd, "efuse country code");
- 		return 0;
- 	}
--	rtw89_debug(rtwdev, RTW89_DBG_REGD,
--		    "worldwide roaming chip, follow the setting of stack(%c%c), mapping to 2g txregd %d, 5g txregd %d\n",
--		     rtwdev->regd->alpha2[0], rtwdev->regd->alpha2[1],
--		     rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
--		     rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
+ #define RTW89_MAX_MAC_ID_NUM 128
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index c27148acfa048..193afb1f53f5a 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -3309,7 +3309,8 @@ void rtw89_phy_dig(struct rtw89_dev *rtwdev)
+ 		    dig->igi_rssi, dig->dyn_igi_max, dig->dyn_igi_min,
+ 		    dig->igi_fa_rssi);
  
-+	rtw89_debug_regd(rtwdev, rtwdev->regd,
-+			 "worldwide roaming chip, follow the setting of stack");
- 	return 0;
- }
+-	rtw89_phy_dig_config_igi(rtwdev);
++	if (rtwdev->hal.support_igi)
++		rtw89_phy_dig_config_igi(rtwdev);
  
-@@ -341,11 +343,8 @@ void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request
- 		goto exit;
- 	}
- 	rtw89_regd_notifier_apply(rtwdev, wiphy, request);
--	rtw89_debug(rtwdev, RTW89_DBG_REGD,
--		    "get alpha2 %c%c from initiator %d, mapping to 2g txregd %d, 5g txregd %d\n",
--		    request->alpha2[0], request->alpha2[1], request->initiator,
--		    rtwdev->regd->txpwr_regd[RTW89_BAND_2G],
--		    rtwdev->regd->txpwr_regd[RTW89_BAND_5G]);
-+	rtw89_debug_regd(rtwdev, rtwdev->regd, "get from initiator %d, alpha2",
-+			 request->initiator);
- 
- 	rtw89_chip_set_txpwr(rtwdev);
+ 	rtw89_phy_dig_dyn_pd_th(rtwdev, dig->igi_fa_rssi, dig->dyn_pd_th_en);
  
 -- 
 2.25.1
