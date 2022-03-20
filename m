@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C76C43217
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 23:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA341C433F5
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 23:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343791AbiCTXcE (ORCPT
+        id S1343794AbiCTXcG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Mar 2022 19:32:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60120 "EHLO
+        Sun, 20 Mar 2022 19:32:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343790AbiCTXcD (ORCPT
+        with ESMTP id S1343795AbiCTXcF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Mar 2022 19:32:03 -0400
+        Sun, 20 Mar 2022 19:32:05 -0400
 Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-eopbgr660086.outbound.protection.outlook.com [40.107.66.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C745132E89
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 16:30:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 327F4132E8C
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 16:30:41 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=g6WU07vEaVLBD0fayC6GlksWmhalKtvPiaf7UasMs8bhBovMLyh7HxVcL0crDpbm9dIQpEoTuddiMJtRndqBzldQHEvxrlWU9NnJx6GCqbFA7LCL5x72E9iDB5CWMnbW36GmJIDzbzfKWXbQwfnLEPelTAj/dIVButeeYMHNiIOL2FPWTTGLWt0gP0afBvav2e6dcqgjH+bjPNS+SAhJRL+RjJ7Az3XDZmINURNiFrAcG9Fr2Y0KbJYdH7Tc4ELVlkeF9aMzIGnPC8JITTEkxjwvek5RoAiydiQdoeFJvp3+M2xakw3+OlQt9MX16hleCRmHdMhMYvQvn/yT8rzeOg==
+ b=IOEVL2tPOhTsQX9TDJVgomGXHwK9epTRaEhjuO6dYIYzbH8NDUP3RxTjRbIeJffpEBM6hRCFlWnAw74dNFJqPYOJdcDvu2Xi15K4Pxzf5uG6fGjWXrmblgUsqCB3Dku4n9GeGaa5gYqAlBGaaod4ejehEfbllDgXV5hjoVeapdWvzjr103Y5TifI61e/L0i+ek8gCsa6OUJRwQz9+/cgBqeLigvCmazJLAuLmfyiCJqrSosV25Mmdx0uRSQ+EJ21+ILLaiKaR+536N3ycO+1LyRgbKg+pUX2Xhg48vYj2pGpfhBK5tTn8el1rDoyWeVUTUQBx5UbPWcnZxlUp3GX2w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=O6PdhnFkSqTLNDRdmviaxpVSo4zz1Nks9HV5MOBLuc0=;
- b=HuQQDpC3Z91avSYgPd2Nuu7DJdMQIZc69Byh/l/hkNOJK8iCM2iP9qKuaXhfc3F2Tm9PBXitpggQndSe9HQ9Y+CqfsWmsys45J53wGcMg6ptJ0Y6K87M4XdYQFr8IvZNIheX/07zz+nUyBNtEKlZJjFNMZauezB4BJh5JgUoid08zS4TJ1bMaGzt1fnhHeQz/5DT1VVvs/VXT4xnYo9nX6pu97wJhmZsZYUf+51lkW+FfrOafTkYY55r/kYnC+F4BEJql8B9wrBjzJyOz47jKagJ7VyE77VuUkkJMbxNCwTQpi85ZMX1NCm2ZG5cdWKm0ElUPE1RfH2KLWATHPYtKw==
+ bh=3P/bbTUJj/+WdI/CITQLN5rbydm6fd7pty+OZOYwbJE=;
+ b=E2Potz9ZRVlo4gOW+sEoa5qosQOn1hQAyiV87WCPcewIuleSbSQXms1PNfuMZLxVOUsljx0CiLwzW+vSGnNUCDfETeamRp5zrV/A8CZ4FcSjNMun1oQ4ads/vQ/HQgFOB6IUIFjyXZCoi4fRRMPwPcS4RThzW5ETgmvi/d/YJ3nyY/QGD5yQQSyiTwwAOXR8cxZX4it1D889xSojAILlGyQDXjoeNFwFmO3FuXM/M+qJtKH8YnruFxQTVqfWbwOz4Ylx6cP0/fDxocJedfZPlkVsOpFIEF0QgFD+rYJuGIAWhSUSIYEK1mBzeOaaIH5M2hexWBFOHpjM6mAkhsNrpg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=ucalgary.ca; dmarc=pass action=none header.from=ucalgary.ca;
  dkim=pass header.d=ucalgary.ca; arc=none
@@ -32,18 +32,18 @@ Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c00:4a::23)
  by YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:18::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Sun, 20 Mar
- 2022 23:30:36 +0000
+ 2022 23:30:39 +0000
 Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::dd8c:6e57:c431:9323]) by YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::dd8c:6e57:c431:9323%6]) with mapi id 15.20.5081.022; Sun, 20 Mar 2022
- 23:30:36 +0000
+ 23:30:39 +0000
 From:   Wenli Looi <wlooi@ucalgary.ca>
 To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
         ath9k-devel@qca.qualcomm.com, Wenli Looi <wlooi@ucalgary.ca>
-Subject: [PATCH 3/6] ath9k: use AR9300_MAX_CHAINS when appropriate
-Date:   Sun, 20 Mar 2022 17:30:07 -0600
-Message-Id: <20220320233010.123106-4-wlooi@ucalgary.ca>
+Subject: [PATCH 5/6] ath9k: refactor ar9003_hw_spur_mitigate_ofdm
+Date:   Sun, 20 Mar 2022 17:30:09 -0600
+Message-Id: <20220320233010.123106-6-wlooi@ucalgary.ca>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220320233010.123106-1-wlooi@ucalgary.ca>
 References: <20220320233010.123106-1-wlooi@ucalgary.ca>
@@ -54,100 +54,115 @@ X-ClientProxiedBy: MW4PR04CA0176.namprd04.prod.outlook.com
  (2603:10b6:c00:4a::23)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a9bb04fd-28f8-4edf-b23d-08da0ac9a291
+X-MS-Office365-Filtering-Correlation-Id: ad7bed0e-4013-4294-0998-08da0ac9a478
 X-MS-TrafficTypeDiagnostic: YTBPR01MB2989:EE_
-X-Microsoft-Antispam-PRVS: <YTBPR01MB2989BA27644C92BBC3F73B6CB2159@YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <YTBPR01MB2989CB4AAFB1962BFCDC05A0B2159@YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Wj1j934utkL7nFE8GtbGAZ6sMPV2sKVjM9e5Urmww8A+49FFr9QvlGsASkuaj94N3EtLmhSqkj1Pd7BaeEVznu/98akbvhsVuam2nYZiamOunqongbfyBurKyNgb/cyGoeMjTGpAp5Ue0QcvMxbfXR19gGMhgi4e25epqr6TK0ddvaQsupCgk11pSRoB/IbpD4UArvYYqNVP2OuSpHB+21NOw+QV6x/wsd9rHeP2YmCw6fa3xXKxomWPTud7pCDoiyZ6GnIjTxFIsd69HZOz8dn2rrKxU7HmQgAf/PXLA3EagmI0eYhStYgLjaN0PK72TOZaE+o1EMUBG9LvSBUQXICaFtlU9pe3cCJjOfvQ1moynFbu/AcsKo6lRljAFWVENm4dYqc+9WqAM5AkBPB9rm/Qj12xvIJUU6hSxfJMU981fc0Cf4QpsH45UARNi+xQcf8ziCavIxnYKh946Az6oTO3WFuuii7wwRH9VTICu9K+XtzBr7itiIYPU61/NNV3ZacDLS4jGNEpXeC31JVFfEWFXaKSfxi/+HU0wTPF2JsemPsEZg/c6zaiAsza5s2fitV5kyEuYQMErn2STyRULK2+BiXMFSBAkAXK86s/Gtf6ytc+9JQHuhQPObYxD9rGA5qgnyFtt/it1wfj7RbeeKQfJzDZ54qJli6DNZ4zEoSK7E/9bvdIAtDbce3mRAnk
+X-Microsoft-Antispam-Message-Info: hS3kSJEIES/r+Rjksjksz0pVG8mB6GCdEbsYQvGEOmhoEe63gf2q4/trU/iqZD/gvMsPJrRP+f4DU+L2IKIBT39Fvwnudwfwlkc+Su6bL6j8XMaRpMy8ULJkqGhoIkJhJvKXgiF0VU1/7EkrQopSBhc/axepQjKQUSiemSkhMsPAEVzQn6xhGhUfTYcsYp0x1wmwojhdPKQbZoM27zK/d3m5V/IyMTPGAVCRyl7nX9EZo9oleJE9/KSuPmHeb14wKh0cLcMUFV3cV0Tirfi9px5XaO1dDh6yOnqUSSOMY15UzXvfABgcTjJq0OzpPXrswoFl3TB+JCppUUVheQOHpKXo5LINSD2Mtv87T0y/lP0+SzPlpDQzwfnP8KIkJO3qsQTOZaERbM2grX79PjarzI61o0vvvzskKsWeNEaGQcKZmaQePnUYQaDcX+lsHIcVVxfSV7fD3GwFkh70YIHjuaHUflYY0Qp23A0c7JjK92cCoGrVppGiF4rPxmtgGhbm6kqVggF4/M+iD11C2LDsYVggXdW7216Q+2STTbl766gPbAF+5HGnzuv0IFsao+WU7t67kn0R5pHsFzqg0ddEq4qWTfoPeJXwbGgOyN0xBbypHDJUweGsoSXtbyktYrxSK655tzSwmnboK4z3JnQ8rPjlaLminhUgBfvLTQyOEZKxzxmJBOKuvDaunKy0bIbACF/4kl35JXVFvYXhZNf0fw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(2906002)(83380400001)(66946007)(66556008)(8676002)(66476007)(4326008)(786003)(316002)(6916009)(54906003)(86362001)(508600001)(5660300002)(38100700002)(38350700002)(8936002)(186003)(36756003)(6666004)(26005)(6512007)(2616005)(6506007)(52116002)(107886003)(1076003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?vAT5N7tyjOiG851Ur4uRC9qT0P9wolxm+pv4yVXJAg0Twz1osmSOQ0QiX6fh?=
- =?us-ascii?Q?FPpd/ms/5DzVhEra7OE/jGIpGCipQtOavaHvizRXQfYWiynvg9iJOUN3k/m7?=
- =?us-ascii?Q?YOcMomtgTYsSyTfGymdye1Y/yRIiqwoDPw9F9SmBwlLrfw5lxWUw/grnpPlX?=
- =?us-ascii?Q?+72Zo+gNcBNXDb9o9GiHBdkoPhLasndhPFVQAzILFZUh2SUXu2NyyQiV3kab?=
- =?us-ascii?Q?D2hKAoH8tXN1FhyJidlbtuXpsyG4rS7Qosc6wgfKYpNdytS2WctPhSzn1BEP?=
- =?us-ascii?Q?v6SKG33bGMLsls2EVAzksVcmrQ8wkDs0LcJlbRrvj1Ky3ztcoCKdIjgsFXf0?=
- =?us-ascii?Q?dV98xRxkOTGwtbGO2Lly1WqsJJRe8YZGyzkkzTUVh6v9MXVLuh5F+1/uu8gp?=
- =?us-ascii?Q?9MEOdbveB1FE6YUOiukoXJg+Z0a1rndeU11AVMePX+s2f/8sbNesadnehV6y?=
- =?us-ascii?Q?2W+QO4SHKQWPhkKOQZDwR1xQhTM9L7H9fJDIhNppwjbIM4aNI/MhDMZlnApm?=
- =?us-ascii?Q?xwP1Olm+htujjHIBUpxwigk+zkwVVPDZUOoBiB+IyqlDlouIqHBneC1sOmXS?=
- =?us-ascii?Q?Tamak2deNj9ERwjuGgI5D78kiOHsDBwuyWpeZbQqx4I3ZB7eiVhP7h1x7cy5?=
- =?us-ascii?Q?wOqdQpbFxs4OmvOkdmYmax6ly6NO64UCY1DO2M3xhJX1PKgiQR+waf7BWcfO?=
- =?us-ascii?Q?tKh32jGaj3uSoyb8xWWiRirYKUooC0VDvKuAqiCE6J7PzlWGNoE74motlUuC?=
- =?us-ascii?Q?ucCPCUHwPKPoQgPUZ7QCNOBLFJAqz3ffw4JnQbCTVBC3jeQ9W66El690UWc3?=
- =?us-ascii?Q?TjQZX80RKigkTa/qeg7DMsyI84uRRcO580j6DyXrMDOtdoCFScByajUUet+R?=
- =?us-ascii?Q?pyms8MlHEHRFjsRNx/0BTrYfy8uGbHATGlpJQiU9ISpDX+6IN1bKxST/7cqp?=
- =?us-ascii?Q?sSNLjbEDfpJfrMIkuUiasRtd8zeuiy2NqPyLTWEWPLBBEfolaCMjm4Qv+ZVs?=
- =?us-ascii?Q?eNgQuXabTvldMk60PYg6A2fVzKumK+Xc6ORxkHUNYlrrn+zZYd5k2mF/r660?=
- =?us-ascii?Q?9Jnb3ERJFRawr2ZVE3KHQU+jJJUyelji6v5sedL+KIHusskEU1WyqC4+7xu5?=
- =?us-ascii?Q?iEa9UdWIxs4Y6KksbRWlkB4Hr9gKG7Zl6/VlJZHHWA6Q2dfRZTRJKeYVE1R/?=
- =?us-ascii?Q?/vi29bhW5NgdZLo0OI8f0/fkAwoxlzKu/xE8GDUrskkrdFn3QxGoz+jARJsF?=
- =?us-ascii?Q?1x14ogX8BxOdk7+jjM4sy5sEfam1EXCN2tgXVt72yysfMdwWu8cqEEXQdgJq?=
- =?us-ascii?Q?xYvY/NWMeVsi/by7NOzlQAqv5BHtJBUn+eGChLX7NF9ikzKiRBejnQvfCoc4?=
- =?us-ascii?Q?fRjopiP2rA5HhzJk7+JgU6SmYThQBTOwj9RY9QXRnkJCbYE5K2kflKcE92So?=
- =?us-ascii?Q?tcuIlSgkg6hEOlFz8woDNjl7Hyf2v4Hi?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?M1wAcmprbpjfQ8/CgqhNebm8KCs5F4PSMsOh2hgxulJhNHfPMrCB3rQC4zSv?=
+ =?us-ascii?Q?4KSA//55moRtBeez3JGCa+W1YaFaWKXx17C1C4wjMTeKNFqFvFdiu3jESZ+I?=
+ =?us-ascii?Q?NIhJv2ynul2QEJCVfI2WdJJRRZ8yNTfhfhRRzasdrQ5ttkYdyip1JdMV+4cE?=
+ =?us-ascii?Q?/KBIZ+L1OzHcdttg+ldkuRaK5xI9TcsXN+SFSaflqXveRvtUonpkucO8aQ9E?=
+ =?us-ascii?Q?Nr4GGAq/V5/wRC+ML5RlRytSy248rezE8Ewkge+4lmAlGoTgEWj3Jb1V1F+s?=
+ =?us-ascii?Q?ur0n1+CTRH2eaecK4azfopnLex5lTEe6eocHzRsDRXlBeoTxWXc3bpJ6X9s1?=
+ =?us-ascii?Q?d5ncBavD/hryQQ7Vo2m2IezWl6KLgiluK3zLimHmlDLeEtBU6VzV/7COulzz?=
+ =?us-ascii?Q?jNVJwjBJoGmIp+Evq+e3B9EyVuiDoi2jQknxxfxONQix7BhexV55NDs1rsxU?=
+ =?us-ascii?Q?DF2bR7tJZh7Cp6AFybfBwUeKlOn4EVTwdDyERHdAhZhM1XjLaNWbQC6eFWxp?=
+ =?us-ascii?Q?TJXD50AydKPFOGvJt7k1y3djian1UMV2NUstLskInpBVY7ETE1wHZ71nAh2V?=
+ =?us-ascii?Q?FxShFrZEG0R15IImUYO0U1F8Wx8FzAUCJU6xnscGcXwZODjTiJGkuVK8yfwG?=
+ =?us-ascii?Q?0B1j/YVhJeCXPQVElvUSbwhkXzbMPmGiRawlC5uK507RDxBsGMUEvO/V0Kr0?=
+ =?us-ascii?Q?D1MGJ4JfkLeMX+VA5Un7YhfPtWzOZ7MjtBjRD6pmJvH7+CHXnislaGTr7mWl?=
+ =?us-ascii?Q?gaSZ9GdnKOwJbXWYNNgv+Rh55ofv2KCiyHMQgFx6epFK/sgZg294jd6h1UiO?=
+ =?us-ascii?Q?s+g+F4WxJQeXGrnNSagmQr82iuzhb/WvzjHX/khCul/hJnbGyj7L5G1hFgHj?=
+ =?us-ascii?Q?rf6gYqZEjVsmyLdwd6NlbTNR0CoPPQ3rCyKW/n1ULrWBjpXlpP6U5/KRTzLq?=
+ =?us-ascii?Q?C7CEdIH+Z+EhfHkZvCawS92GotWuXatX/R46pKgdbdj76L2MGavTEdJnAhsI?=
+ =?us-ascii?Q?sd+f3/YweWDfK1pWrMIhuf8v05PkzUOAHOrJfxouUdsY5Re4Txu3Tc5h1Q6e?=
+ =?us-ascii?Q?3XIviI+LcWEeJj4hHt6AKDVj4nTfDdzhULe/qqF+XrRmOFbvjcD/7iv8U5Dt?=
+ =?us-ascii?Q?Gi8lN3ewhMGwZhlooWKJFOkcanRnFKuBZzIaWP3HVXxkXugzzw3ncew4vph0?=
+ =?us-ascii?Q?14C3M9j77Wg+TcQgyfhiMeXV8sNBe1udb4Fzo6l8unOYAQE9UIE0hP2zgKOJ?=
+ =?us-ascii?Q?n1svmxsLWKSzbnnxtPCsBJHRiTRmYC7UkHTJGfbcliP3h7Go7L5IrB7+wmSK?=
+ =?us-ascii?Q?WnlA4YlOPnGSVKHzHsenuO5yTQFyMq1OuLUuRbS6MhniaZP/PA1tFDki36E4?=
+ =?us-ascii?Q?AtDoCRP3aTggB/oTDd40+5aMwItbTa0Kd/ujiAU3ismr1Co5TEZzIg8V4N72?=
+ =?us-ascii?Q?ujpg/5kjIziIupoZmrsy7Z/A67o66K2t?=
 X-OriginatorOrg: ucalgary.ca
-X-MS-Exchange-CrossTenant-Network-Message-Id: a9bb04fd-28f8-4edf-b23d-08da0ac9a291
+X-MS-Exchange-CrossTenant-Network-Message-Id: ad7bed0e-4013-4294-0998-08da0ac9a478
 X-MS-Exchange-CrossTenant-AuthSource: YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 23:30:35.9601
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 23:30:39.1318
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: c609a0ec-a5e3-4631-9686-192280bd9151
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CvUzLemmRNifm2c6+UGqtO7AufvYsFKSBRkMd/X2jE75ZA0V9DQZ31JS+K6it4niOYrZRGsiOr8DIe8qoeAqlA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: FEKmnImcXpd1lknarZSENhRS51W1h6t5bGBqMJBeCtZB0F5aSB1z1uYQwmwDUMtCpCvom38EmQXoBqt9K5dagA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: YTBPR01MB2989
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace other constants with AR9300_MAX_CHAINS when appropriate.
-
-This change does not appear to affect the final binary.
+Similar to ar9003_hw_spur_mitigate_mrc_cck, simplify the code by using
+ar9003_get_spur_chan_ptr. This may also be required for QCN550x support,
+to provide an abstraction over the underlying EEPROM format.
 
 Signed-off-by: Wenli Looi <wlooi@ucalgary.ca>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c  | 2 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 25 +++++++--------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index dc24da1ff..6ca089f15 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -177,7 +177,7 @@ static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
- 	int i;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index daf30f994..dc0e5ea25 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -523,21 +523,10 @@ static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
+ 	int synth_freq;
+ 	int range = 10;
+ 	int freq_offset = 0;
+-	int mode;
+-	u8* spurChansPtr;
++	u8 *spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah, IS_CHAN_2GHZ(chan));
+ 	unsigned int i;
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-
+-	if (IS_CHAN_5GHZ(chan)) {
+-		spurChansPtr = &(eep->modalHeader5G.spurChans[0]);
+-		mode = 0;
+-	}
+-	else {
+-		spurChansPtr = &(eep->modalHeader2G.spurChans[0]);
+-		mode = 1;
+-	}
  
- 	/* Accumulate IQ cal measures for active chains */
--	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (ah->txchainmask & BIT(i)) {
- 			ah->totalPowerMeasI[i] +=
- 				REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index b0a4ca355..669b49b56 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3911,7 +3911,7 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
+-	if (spurChansPtr[0] == 0)
++	if (spur_fbin_ptr[0] == 0)
+ 		return; /* No spur in the mode */
  
- 	/* Test value. if 0 then attenuation is unused. Don't load anything. */
--	for (i = 0; i < 3; i++) {
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (ah->txchainmask & BIT(i)) {
- 			value = ar9003_hw_atten_chain_get(ah, i, chan);
- 			REG_RMW_FIELD(ah, ext_atten_reg[i],
-@@ -5126,7 +5126,7 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 		frequency, correction[0], correction[1], correction[2]);
+ 	if (IS_CHAN_HT40(chan)) {
+@@ -554,16 +543,18 @@ static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
  
- 	/* Store calibrated noise floor values */
--	for (ichain = 0; ichain < AR5416_MAX_CHAINS; ichain++)
-+	for (ichain = 0; ichain < AR9300_MAX_CHAINS; ichain++)
- 		if (mode) {
- 			ah->nf_5g.cal[ichain] = nf_cal[ichain];
- 			ah->nf_5g.pwr[ichain] = nf_pwr[ichain];
+ 	ar9003_hw_spur_ofdm_clear(ah);
+ 
+-	for (i = 0; i < AR_EEPROM_MODAL_SPURS && spurChansPtr[i]; i++) {
+-		freq_offset = ath9k_hw_fbin2freq(spurChansPtr[i], mode);
++	for (i = 0; i < AR_EEPROM_MODAL_SPURS && spur_fbin_ptr[i]; i++) {
++		freq_offset = ath9k_hw_fbin2freq(spur_fbin_ptr[i],
++						 IS_CHAN_2GHZ(chan));
+ 		freq_offset -= synth_freq;
+ 		if (abs(freq_offset) < range) {
+ 			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset,
+ 						 range, synth_freq);
+ 
+ 			if (AR_SREV_9565(ah) && (i < 4)) {
+-				freq_offset = ath9k_hw_fbin2freq(spurChansPtr[i + 1],
+-								 mode);
++				freq_offset =
++					ath9k_hw_fbin2freq(spur_fbin_ptr[i + 1],
++							   IS_CHAN_2GHZ(chan));
+ 				freq_offset -= synth_freq;
+ 				if (abs(freq_offset) < range)
+ 					ar9003_hw_spur_ofdm_9565(ah, freq_offset);
 -- 
 2.25.1
 
