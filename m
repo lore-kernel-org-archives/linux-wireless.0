@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85EF6C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 23:30:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEF5C43219
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 23:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343573AbiCTXbt (ORCPT
+        id S1343793AbiCTXcF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Mar 2022 19:31:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59136 "EHLO
+        Sun, 20 Mar 2022 19:32:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237876AbiCTXbs (ORCPT
+        with ESMTP id S1343792AbiCTXcE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Mar 2022 19:31:48 -0400
-Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-eopbgr660080.outbound.protection.outlook.com [40.107.66.80])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF53D132E86
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 16:30:23 -0700 (PDT)
+        Sun, 20 Mar 2022 19:32:04 -0400
+Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-eopbgr660086.outbound.protection.outlook.com [40.107.66.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63271132E94
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 16:30:40 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AW4GYvpVHR4dWTzBVRARyB4GmKmldGhb3kCFLOVIzykHfrkexQtBQiLI/Z87cKzRCnY2DTZ0kBZbInDvhJhNbwP/QKnKDEsV/2EailtbwOdiXzHe4BnywgYaT6b9V4HGLJkCx7T0iewCtzJPWWzsJBoCCkCl9IGFM9ZhLo4ENkRHDcLgl2Vfk5KZl6hQdwVxSiXjTuQ60YnhAErJFtVEqeib02Y8k/I0FIrT6eBNk5fBPTVHOHceaWLhlxR3AIxZm/ejuM9pZrxHdv9vnFB8fq/iVEjTcmdsBDOad6qo2aS/sJKcw4MZQofhOzF0Yk3p8uZBFpPYaUcMhprRnnGVNA==
+ b=TTK2TidiE9PcHa3Ldk2mF3BfpIOIzds8NiDiDj5/z2xIHHXJyLJEcNXUsfd0y9473GHZ3t8Eu78HXJqdy3KGnm4jdo7wEg/roBV/PHlHDIwmiOqT+hdPUObu27sL0LXNb5F1cyzzcDtmgFyz2i9Crwhp9BNR2+q5wQ2ztZX1SCRNIAj1rAyvnD1TQ6T8OJ6+RTCoOLrMwYsBZweWlAnPCt1lT2QvE+Fb2cLmlUO/NCngCl8rR4uqbJLpnkHFLaQSo5EUxfqEyMNSHxIGdJHdWr7tEkEXsDnP0LRzdXyLECKAboQc2W6J3cjllIiYXZzy55lqMkbgHWVqNwlADVWClA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OTujvhkIWQ6yH0hFslCrCkOlmW9EFvTqjwJXxvixihY=;
- b=NJjsd05dpPb6m2cQvYxg/kepnlXQ5qFI8WHohGD9f+sBbJLaIuUtdShDHjBy2GVScCdZPXyZC4SkOryTsTfYIlHTiz7N6WHbLlYqna8smduwh+q/DFIJFaY2jtq+uFjmp8k8eqJPf9FLyEGgy0jYwg0i3Pi/3iO4LR7PXpLgj4Lssr669BmJQdICF73QfT2W3OqvZRZR6cCp61Ppg/QZjMtmYTChQGjzuLFu8+fj/y4hwm+2wYXOLgktg+AwLV1oIqxNFmVzGuAZCgLLcPC1HeVZShLjKliPPTUMgRgqzk7MQVQkx+4CRadxqoCZVGmkPc8bybtKtuptx9pyHU51ig==
+ bh=2reHbE0WPgtyWD89wih7l4T4Dvd0Lh9f54OomM55zsA=;
+ b=YGh5+DtMmDTvpuEA2Cgd/zC8zzkzktLgr80a++WPbYwcPFcKf0k1d3pOMHmG97ETdNoB/xkvQiBkbN1tdcDqT99zFUVIgFM/E2G51yydxen0ks2Hz/A/NQDclgyv5pwL+ahdACZ00gOuS/PFZ9KgWXOpTYyEF3fYwRIJIlaMPlvvB+J3aRdbiCOIBo0xhAWfyIs/eUvYE0Kxh7mr59I7xootm8FX+CqSF5Ke01BoO4NHW6mj0r5OUZqq7US0FtAEw5E7w+uiIDe5FKhphEdqdjLdGc3+ESDsldgv8l3lDNaO9+4sqY8mUfGeFz279H8P2F0DhhhG2mIbRKp9In+CCA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=ucalgary.ca; dmarc=pass action=none header.from=ucalgary.ca;
  dkim=pass header.d=ucalgary.ca; arc=none
@@ -32,19 +32,21 @@ Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c00:4a::23)
  by YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:18::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Sun, 20 Mar
- 2022 23:30:22 +0000
+ 2022 23:30:37 +0000
 Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::dd8c:6e57:c431:9323]) by YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::dd8c:6e57:c431:9323%6]) with mapi id 15.20.5081.022; Sun, 20 Mar 2022
- 23:30:21 +0000
+ 23:30:37 +0000
 From:   Wenli Looi <wlooi@ucalgary.ca>
 To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
         ath9k-devel@qca.qualcomm.com, Wenli Looi <wlooi@ucalgary.ca>
-Subject: [PATCH 0/6] ath9k: suggested improvements and bugfixes
-Date:   Sun, 20 Mar 2022 17:30:04 -0600
-Message-Id: <20220320233010.123106-1-wlooi@ucalgary.ca>
+Subject: [PATCH 4/6] ath9k: fix ar9003_get_eepmisc
+Date:   Sun, 20 Mar 2022 17:30:08 -0600
+Message-Id: <20220320233010.123106-5-wlooi@ucalgary.ca>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220320233010.123106-1-wlooi@ucalgary.ca>
+References: <20220320233010.123106-1-wlooi@ucalgary.ca>
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-ClientProxiedBy: MW4PR04CA0176.namprd04.prod.outlook.com
@@ -52,78 +54,76 @@ X-ClientProxiedBy: MW4PR04CA0176.namprd04.prod.outlook.com
  (2603:10b6:c00:4a::23)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: eb4280dd-6d74-4f55-d9b0-08da0ac99a15
+X-MS-Office365-Filtering-Correlation-Id: 382e7f97-682a-4253-b708-08da0ac9a37d
 X-MS-TrafficTypeDiagnostic: YTBPR01MB2989:EE_
-X-Microsoft-Antispam-PRVS: <YTBPR01MB29897CC93CEF113735D193B9B2159@YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <YTBPR01MB2989FA3E36FBA643820AE6BDB2159@YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Q3S8NyoRi77XFo23R7kn3dOoO9Ty6xRit/3siS0mpFZHz5ahaDavrgt7oxcPCuju9PPSrENKJljuWk3gsh2vHuMsP7Eg7pKmzTkiWdWh+4Qz0EJSG93MXTpvd3+Bi4yUSdlLPwjdIDvCc7obwR05Ldl5wChHeeX3MPw1K4XzfuJhwNnLO+H922SeeMExruUNQRwkPpAo0qofj/fv7ub1gm0VABGp8dMeWRheNYgdfT+aP3LfH1juNdRASBa0br8HDwSutpKA0kmWwZfnxGMSoj3Lp75z8UXDdbEKzmNAA9Y8Rt/mQv2dMvFKWHDZDGiqISv/dL5QR/RMcpuCCTFTfpWz/LWlSVzHQxA/nYcS+eR3XKB+CjvJq/JfBkD40Up6x2QUJzHMT6i92CHa3qvv4S7bkEHAiUAQH/hPWiJ91ElLxRiflcuuUi8CKbYEmp7rn613EgWwpme+fytx5QywLvgzMoF9csgVJQbpO4k1tL289/p3q0tVKm903SB2GgSE6NuqMxYWZlf+IkEPv3K+OcdelUxeFilBNV45WI4eGQCnEA3/X/y5I0tCWuVrXIG+jTuRtOo8uJPklO4OxvIYZM1vRF5T9OQUEUMV6ZH2aBApGeD9hqKwtjWGaFwx5bVDin2a0ozNDuPioiqYf+pSNWJ6mz2G3OmMqRJKAuohgc3L8lCpIIWVze+0SLp2qMrB
+X-Microsoft-Antispam-Message-Info: j6+GFUUldEPDFavbQlnxf8KME7XkW/cqZNclYKknDJUFmd+qHzaGQ0l3qMzbTbPQ8VXDzKS7cyKwMl8vs+xijB0zpTjJN7l69BXHht188NkxOQyuls+bKQUYhEeFmVOn+Dt3deWadVzTx6c8GHzshhlfh/6b0P6477kyMWXJWlOY1Oo64xoodqZTQty5Js+dS3lOvfF63D/DydxXY6K78DCh+du3mpQKcd9t164aWR/Fxg3IfoqlLMrCIyS62MBMB9S7CwvTLGT97slPJBFwlKUeSGxQ3ni0Dle1B/PKJhZYUuJ8ScXfG5qASTFbifzQ122+//CM3hUvxNcNkrS9IPs+1vRFKCtW4g3yg3K9H1WzIH9mT+oA6Txtuxt2taKI+/NbLroqYhet1vHNQDC+2guBcsE7wt5MOPaG8VancCPEn8vP6Ajx1DS9PnIg3k3rXfgVhSb1IjAFlTAzrP7e/LgB2VcrF27ZUq1iLhW5kfq2ui7cQY5Gn0KiCybXqpCzHlx9d13kUVyz61DPK0Wcd1BywfruQ9MDxj9jmRr83lA1uxyBpSnpRAqY9TVZocbu095V5uKPb8Gnl84uyUNH9LKl+PkxOi/sTFWXUm1d3gIPhQ8M6TP8361kk0G2tKfCfeC76yaUlvuAUNR4YMq/EKSIf5B/GOkmOw/T6JaQlsJAaWP/fBi1tlEp/yVwUANx
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(2906002)(83380400001)(66946007)(66556008)(8676002)(66476007)(4326008)(786003)(316002)(6916009)(54906003)(86362001)(508600001)(5660300002)(38100700002)(38350700002)(4744005)(8936002)(186003)(36756003)(6666004)(26005)(6512007)(2616005)(6506007)(52116002)(107886003)(1076003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?z2bVS2dXlPdd0ovl2H/VI3HRz1zk8+MVwQ1XIe3CcChRAVedhxRxZ7fXyylJ?=
- =?us-ascii?Q?Zurr4Idd2asmJQqFnn125sj90pZINRl8nlWZ5dC2hgeNXdOK5OPFDvE+BimS?=
- =?us-ascii?Q?LieS7H2gMBqFTKasASecbjn/eOI5AcgxuyWl6M268SpQX7pg7Z/mS7vjO6an?=
- =?us-ascii?Q?Fm0jPZF1YP8Po3yjTo/CMFqBRF50Zn5WQBN2iODjqx66vZz/y0uAuKtH5T43?=
- =?us-ascii?Q?Fw+087gER2fLfFmKrrWf1qMN1siaq696BGyhGEmtQ2PBzAUEZkTyH637Wr4/?=
- =?us-ascii?Q?gbCLjnnbIsUkmU359HkSn+x554TI1QR3mvP40MQ58iLUKmKGsWh9fItWLnfw?=
- =?us-ascii?Q?8anCN3JeAu6EnNRMj9GO8Ni48h1XYCvoLZZcUT/Fwkd1BKkwioQd68Fu9/hD?=
- =?us-ascii?Q?k0IS0qbWshu8SRCLPGyu3EcdhI2e2wSSV1PgzeZU3S5w6ZHngveFK0E+JCS7?=
- =?us-ascii?Q?pVAtHrPMhTlscUPhFnRSQSdzKsS32Mkopl94NicZbO8WvKGhyka8gYUm6cme?=
- =?us-ascii?Q?CbpA3NMWl1dgQVcgv+niayeeIz5EX6BNIQTonQWAZs5K6HTbT5IqD4xeqf5R?=
- =?us-ascii?Q?FlikweQ26ABopVUf4GfrupVf7DCID1MeHD8c9mQ6IODRcFp36Hw8CweHrGXp?=
- =?us-ascii?Q?VUX5iR136apYgvWHpSYOz9u3S76vLQSnBlQseyyPM0nrG/HhBH8orYa2pfJg?=
- =?us-ascii?Q?tFy74cYHOrcx8WQ4bbJVgdZcAZjgjA/FwEThv0vrZneUxbgn2yTcDjY+m18p?=
- =?us-ascii?Q?v4lV9Wb3BomiK/27ZT/FpRCkq3ej+AK1OGxkXA2Mx/LXn0ntE8mE2O/Hjiz1?=
- =?us-ascii?Q?mLZjEJYXtI9NaWewNLIB2uqydXdMLfBpmsIw+egN/XPqNo0J6zLnF9inFOaG?=
- =?us-ascii?Q?LWc/xYq3o2Bu4FZBWPFK/sCRPI+iNoFv2Oh1efNyppH+EJkYn41ckYOuqROG?=
- =?us-ascii?Q?rUBr3cZd+YXxIAO0433Oa5RyVROhEdwJVKSi2q7lBLBFmWf7wJbxfWZz1j0S?=
- =?us-ascii?Q?lG1Ni6dkG4bvOui6+TPhKWQ3azdxu5a6HIw/5dbJaxx1sTJVdqbqPqHlCa9M?=
- =?us-ascii?Q?5NWNHCtKET12dNAh1Q4x6+6xXGpBzPN0FH4Fpjdzk8qDKpBsA5bF/Z4AWqpg?=
- =?us-ascii?Q?+djCcuP0gR+vfbetB8/M7oYSZXqAhIacEPIYgTwf0qDnCt1zd0jm9J9Az4aE?=
- =?us-ascii?Q?ecjlQBejVD/xRl02LRrKt9y0eOv9y0/ig7bFtuIM1Tl3a8ggJAdDfk36CP2y?=
- =?us-ascii?Q?ypRZT2yKJg2l5vvKcCuhK7IK+6bxiNQ/8FNmS7soPAoZH35oxmLCluP/IfUi?=
- =?us-ascii?Q?hdINmtBmzjr217cYYrsmMLDQRalfzlAQveoRxfVBJFNRSTKryD5jrMJ4odLP?=
- =?us-ascii?Q?emAv8YEp5ChhwxDLaD38jqU79tNL6bI6b+mdinzGsyv/yN4IGTYzcP4/KNcO?=
- =?us-ascii?Q?3JZ2pmKLnaBE41G02hf28gRRYMeH6jpY?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OLIOt37zWCimUeSmGgexgRk9fLn7R9CwfU4wjoebBfZ3JFZsQW8vUqcF3QQO?=
+ =?us-ascii?Q?RNwQaQFqQ6rFU/6LV1zpsIfSFHb+T741/+1KcxbER4PbWJSBrQxdeS0F3S2b?=
+ =?us-ascii?Q?3kdtSAdW6LqT/BUGEMk42Jzvg/iGOO+VGSytm86dj8wZ8LVNzyWDgXXp+1Qj?=
+ =?us-ascii?Q?2ubS9AQNXdLn0Ur/gPJmTRNFdehITLfw9pabp3IKxuuQ4vN46qgqV/2J2TfH?=
+ =?us-ascii?Q?wbhya7VtQZO4vlJcUum8DPS3GM9Zqz7fbaWuH9ejDqwXZJxDdz6h3tZHPGgV?=
+ =?us-ascii?Q?U+rtHsEAqs9dIBdYmwJa2JPSNH+/VLKRTqjOrrUEHOmTgqfV6QUdvynuaIJa?=
+ =?us-ascii?Q?9+IYeaMGPB13uxO+dX4dU/PGh4Bo4v+QMIkWBiR7Il+pMTh3a3y1K2YUsjss?=
+ =?us-ascii?Q?UD2I/nizWv4TztqQ1mZLWcHoiDK9M2+KYtAhFCQhU27slVRaiagrItjzctG7?=
+ =?us-ascii?Q?ih8Jd2JlPBHVn2/0fctV1LZ82M6pZQNTUMjyAMEtqnKXRom0707YYYbCtdku?=
+ =?us-ascii?Q?Y1Pezx7wXqbTQlWzeFaDJW8Wl0gYUGHJDDrAqxt4wyp/y72aAmksq5fLCT25?=
+ =?us-ascii?Q?7z6PQHqO7cnWs48/2Di1D0vLGCZYWWMK7FtS0LlIrXUvMEdd4fkwlitAbQbl?=
+ =?us-ascii?Q?YXVEMZ4uhZCQcz9/j4efEjAhBGIFVNghawR8R6nYqbl4bx3xMv9zlHA+cZNP?=
+ =?us-ascii?Q?nKmKJfWEMNgUDs/mI69kzA66ttxfi74Wu3xfLaZy/NLnEli5HkjVdvDepbSq?=
+ =?us-ascii?Q?4cpsN5Sh1dRLAOg6e6r5Gh61ocZSot/hyrLiGeYeKetzXhd/cl0SuXlO/1X1?=
+ =?us-ascii?Q?eFEp4moS6bPVPwb1wQmnSenm5nPOx53up0k3fr9tm6Nx7WGi4HZpVHASKyaq?=
+ =?us-ascii?Q?+cSlHRGXS+p1yiTkR9TM8My/Zz3YcwuP9ptOY+rH/QTOebYzUDV6R9+iosVN?=
+ =?us-ascii?Q?NKmG3AIwSmX9GLqSB1C3i3R4cbjjQGv92B/6PV4dNWBsGg46LTp6eKatm3xP?=
+ =?us-ascii?Q?PSXv54ePWnQZ/OI/do3vAb5/vhjxftKMcey+V87eOezEiecqI+tbpLc1B7QA?=
+ =?us-ascii?Q?qCRW9VRKxoeg4Pqgd7ro1TyFT2VO3hn6SUUHlHanfR29Easzl4S3oARD3Sxv?=
+ =?us-ascii?Q?v/UJ4+laonE1ZhBieVEjD+Eu4uBNvVuIrjy36WGwz0w3DQtBWmHyWkKmXg/H?=
+ =?us-ascii?Q?KHOVYmLX4GZpIyKLTWbh29lg87kjn1afbwqN80nPjIQmFcvP5C/LM2B5FX7Z?=
+ =?us-ascii?Q?az+M2NFiFYYyt1crVUBl/fWbJ4dAn+8gSjK8aAqzM81r/djRTEmIXaHB7zou?=
+ =?us-ascii?Q?7OmMncrzwXNRQIe/he9aPWPp2sSMcKGpc0u7WvIwuvye4zl07a3xWiJcgMu4?=
+ =?us-ascii?Q?MfH49oyxzQmPaitJE0WI6fy1uSLkY9xK3kALAS1horvMlgTNm7Y3dHwMS674?=
+ =?us-ascii?Q?+MO7jUXH+u28oeQiBxkn8h4XDoe3RV+7?=
 X-OriginatorOrg: ucalgary.ca
-X-MS-Exchange-CrossTenant-Network-Message-Id: eb4280dd-6d74-4f55-d9b0-08da0ac99a15
+X-MS-Exchange-CrossTenant-Network-Message-Id: 382e7f97-682a-4253-b708-08da0ac9a37d
 X-MS-Exchange-CrossTenant-AuthSource: YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 23:30:21.8361
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 23:30:37.5538
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: c609a0ec-a5e3-4631-9686-192280bd9151
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nEy8jt7rNjBwRkmWCGEDORfFvUNx3lFdu3AsPPANaDRnogX+JQYGULLYYVV56k60/HOlmTLqsHiuNbdpEmuQsg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: AxtTWErNdoLIcz948umcvJ2XeS0+wL/AQXPNqvLDuicAC0Nj1+NSSUn/Xr/YY3XZzJof1mNHgmeZGWE469e27Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: YTBPR01MB2989
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patchset contains suggested improvements and bugfixes to ath9k that
-I came across while attempting to implement QCN550x support. The patches
-should be independent.
+The current implementation is reading the wrong eeprom type.
 
-Wenli Looi (6):
-  ath9k: make ATH_SREV macros more consistent
-  ath9k: split set11nRateFlags and set11nChainSel
-  ath9k: use AR9300_MAX_CHAINS when appropriate
-  ath9k: fix ar9003_get_eepmisc
-  ath9k: refactor ar9003_hw_spur_mitigate_ofdm
-  ath9k: add functions to get paprd rate mask
+Fixes: d8ec2e ("ath9k: Add an eeprom_ops callback for retrieving the eepmisc value")
+Signed-off-by: Wenli Looi <wlooi@ucalgary.ca>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath9k/ar9002_mac.c   |  9 +++--
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |  2 +-
- .../net/wireless/ath/ath9k/ar9003_eeprom.c    | 39 ++++++++++---------
- .../net/wireless/ath/ath9k/ar9003_eeprom.h    |  2 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c   |  9 +++--
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 10 ++---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c   | 25 ++++--------
- drivers/net/wireless/ath/ath9k/mac.h          |  6 ++-
- drivers/net/wireless/ath/ath9k/reg.h          | 10 ++---
- 9 files changed, 56 insertions(+), 56 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 669b49b56..a109a44a1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -5615,7 +5615,7 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
+ 
+ static u8 ar9003_get_eepmisc(struct ath_hw *ah)
+ {
+-	return ah->eeprom.map4k.baseEepHeader.eepMisc;
++	return ah->eeprom.ar9300_eep.baseEepHeader.opCapFlags.eepMisc;
+ }
+ 
+ const struct eeprom_ops eep_ar9300_ops = {
 -- 
 2.25.1
 
