@@ -2,141 +2,152 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A68CC433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 20:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76137C433EF
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Mar 2022 23:30:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343632AbiCTU0e convert rfc822-to-8bit (ORCPT
+        id S1343786AbiCTXcB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Mar 2022 16:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43030 "EHLO
+        Sun, 20 Mar 2022 19:32:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236833AbiCTU0e (ORCPT
+        with ESMTP id S237876AbiCTXcA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Mar 2022 16:26:34 -0400
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05olkn2090.outbound.protection.outlook.com [40.92.89.90])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 267DF190E99
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 13:25:08 -0700 (PDT)
+        Sun, 20 Mar 2022 19:32:00 -0400
+Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-eopbgr660086.outbound.protection.outlook.com [40.107.66.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA675132E86
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2022 16:30:32 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NfoIg1664W9rgeOj97doMrMwqL3G34ofdsGJhHo7efoSG62a/XvQavO+diDa0ZMZ4OSVzi0DFLM3RJtGrhwKmJr2e/1kTSE9DL6ka2Vhbjpm+K9RRVa9XHgvGhkgXTUVbLADMbbalcVd+yrT++IfOt/C3rGdsFSHiXuHEFWzeTOh20UPU1hbvFrw6Rqdbx9f9X7pxh5Gr39kvbizr213N+8FvNaFFd6BhvreSdv2qR6eXBbWoTgBkUbg4V7WFXvmI3R/T4kppC6dugSXCbz++vaQNxY14zgv60eXDrXctXIXwhTahB7Ddg4CzK1wBfTFU4CZFi7+2a8TAHI+hAfBig==
+ b=QVzXFZCUv0zZuww1OKPZXs7gSkvYfGux+4R712zqDf+Cy93196TusIaIPNRv35OFMiA5SC01ji3NCLrLHKAxQwGfPp/PHbUjFDSjpCzYreVl4tVLbUWfpMy8qTrQVWMaCJClB9++C3Iuk/3+Y49IbRuARtPcRHpL3wKvGXrWq/pyEBJxOQ70ZFRDJZ37F+TFpsC/cT8XCZeEYqiT407FG8BdwWGC8BgynWjTJjYKB+9riJxlLRcn01Xlyyjxtiy++7rqQI6QJ56RnIWWxcbk1MrUhsWhiU09fE2L74vgZ0O6TERBW5lAacmn8m6NIZicNrHsdNVvIDrW/f9P1EunAw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+5gfmLDv/VJXhH8c+I5h6Pwjv/1hX3VEdgiGqPnHkP8=;
- b=mW5XOrA+wveMDDKwU/iRSPU31C78w28YabocfnpcDDMa/UaC2OtQ/syhLt6sJKrV5zpqdfXDcJ23LEAMHTQ2MUHd7vyCMx7sS5BXzXwq/T814tQOghkwM/dG/EO3+INGw4LbJhUHcCmyuMfrWFZVaY2PjWes6PV6gb0pLND73rIZXODwDYrHG74LHhmyG3MigMq0tSXisSbxTEbAcEvPe00/hJ6vqU3XOUCLkJO0F4y3sM8iOM+NibhCwwr+7iqa+udM/0lfajXT1uce97xS/ZMiwmHWCCxal/4XJ5O3kQwUqmVQzEpVxhjCfprUUf0aPmLAB3c7J9F3qF7MwSigxg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-Received: from AM9PR04MB8100.eurprd04.prod.outlook.com (2603:10a6:20b:3e3::12)
- by VI1PR04MB4575.eurprd04.prod.outlook.com (2603:10a6:803:6b::25) with
+ bh=bLF60ayAhZG81xVgDrxVUOb6up5Hg4WxZbU8wSzTGwo=;
+ b=Xpy6WJ8TMzCe3Pw3Z8ZdGPl9eRO4Kmmr/onKIprnsT+pZjAyLDW0Pi5KCqGR81NOCqCTrXkqniMFISnahsmXNzCgIVMQcmZIfA/9IGPA7kfEnft0JMrHPg4SiH+AP+QU1I+5o6OFvhTW3DUHHZ26ApVHNaO0hICrA6IBX4AouHEju39Ker33aWi5E4bhnopPpvkWiCWt+6YFxntS0EA1zXfs08OTouBNfmN32n0tiQw5xdTCmbkNxUuPSNhOqlWgyzkREAnBD5YgOcCG4UI9vx2PNTYEoz+pj9p1B1YO4jLiN9SoYc1d+einVKjd1j+mIFOeckGczuYz6X1tEm43QQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=ucalgary.ca; dmarc=pass action=none header.from=ucalgary.ca;
+ dkim=pass header.d=ucalgary.ca; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=ucalgary.ca;
+Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c00:4a::23)
+ by YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:18::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.18; Sun, 20 Mar
- 2022 20:25:06 +0000
-Received: from AM9PR04MB8100.eurprd04.prod.outlook.com
- ([fe80::ed4a:6bd3:4b62:2f3d]) by AM9PR04MB8100.eurprd04.prod.outlook.com
- ([fe80::ed4a:6bd3:4b62:2f3d%6]) with mapi id 15.20.5081.022; Sun, 20 Mar 2022
- 20:25:06 +0000
-From:   Bernd Dreyer <dreyerbernd@hotmail.de>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: After multiple Wifi disconnections resulting from "empty download
- folder" errors in an update software of Lubuntu most recent version, Wifi
- manger refuses to switch the Wifi network an.  
-Thread-Topic: After multiple Wifi disconnections resulting from "empty
- download folder" errors in an update software of Lubuntu most recent version,
- Wifi manger refuses to switch the Wifi network an.  
-Thread-Index: AQHYOukBqQ5dZdd3U0KsvHgklGhN0qzIuKiO
-Date:   Sun, 20 Mar 2022 20:25:06 +0000
-Message-ID: <AM9PR04MB81000425655AE7D8BFA257CDCD159@AM9PR04MB8100.eurprd04.prod.outlook.com>
-References: <AM9PR04MB8100CED1206441BBE638281DCD139@AM9PR04MB8100.eurprd04.prod.outlook.com>
-In-Reply-To: <AM9PR04MB8100CED1206441BBE638281DCD139@AM9PR04MB8100.eurprd04.prod.outlook.com>
-Accept-Language: de-DE, en-US
-Content-Language: de-DE
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn:  [qJV1WdYG4KLPqEwwZ561STNhRFrvTCRjNJ4+W9sCoPA=]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4e554161-c3f8-4e6c-7e3c-08da0aafb8c2
-x-ms-traffictypediagnostic: VI1PR04MB4575:EE_
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: +ED2itWzg5yDzrS1TNtiHab34XEgFWNynax+jtbNUm3nGoIaIDBRMfxfPBlQJGDohybqZZOUSM/zjLUrJ33ZmV+0oEOkINPNgmiuI5bOEc4YliwiE21XuFhm8ejMZyM+F0ZGg2kwvqYM+xZMk1VvVdOrwssscMj43YQg+f8dCukcssOBUHTSJ83g4z53h0sfYwD7q2d+JricOR7cdhjcpD6oAV0J6j3QKSazWwpd8TcpgZDzQyyjQVLUyKsLV4w2c3c6dPyuYN8nAgd+QxxiE0YfD5onI0wbm7Y0V0pV7aVzOqyPjfSeVw4AzldsZJe26vyReZ2nFBVql7lvWJR2DEh9fymM6ZNkQ3O0EEEby41o/lVtFBOobLA38u/5gZCdgjoqPLPo7ox+83cDKpzW+QUK/A2q2sVAGbtt7GgVExxid9i1BWQGsON9inxN2MmTSjUQqa7ln6t5xNttz5kzywMHSYvjn3EXlRhNHi7sQpkG2aaoQhKuGOjFXi9V5VjvSQPzsxiJBX50+igjKDI90W87kbqL5xrlPZrLi0xR5Li6XJC1lf76QGkAyLE2ks1g53PvADjrnSgz6u4P3oq/PA==
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?WbTePlUQhtxXY/FI45xwRusSOHcfI0Ez19dwr8zMPdr4qvZ1b1bCwWxbQy?=
- =?iso-8859-1?Q?tOYBW7GsGMpgeAmWSYeZAeLiKCass+gVA8vvNr7W7XLOeUC3Bkma2PJVTG?=
- =?iso-8859-1?Q?GbXrsfQgCEmRnk7K0Euse0FoQm/LdSzLmZqMXD5Ij3/j1rFMjSfu7JYhRs?=
- =?iso-8859-1?Q?KHWJQMguqKePRouy9NiSlUiATdt21Mb/bkXefHMKF9fdo1aV9zAth2Hu0s?=
- =?iso-8859-1?Q?L4tVShs+OlsYroTa48BL4kW1LhKuACZ4UWkDudMTdZLGYtpNaTyCt2n8jh?=
- =?iso-8859-1?Q?ZYWZRolOzV5285YXCHYqXHe/ade89U76UNKZRZpjm6FmnD7w1vTHZOFlrp?=
- =?iso-8859-1?Q?KiwfkAGwIdeiriqu0O7EBPGU6N2NbOXn19h25+0O46tHOrt92uYR7+sbAo?=
- =?iso-8859-1?Q?hxIeoRdsQC2JDKYP5iJARDAEydZ0bNhqqbDJKMbpKIvrng7urjeDDA4zNe?=
- =?iso-8859-1?Q?mNPzARoJPDAHzf9vmzTRol0A6XNmzFZMpBXtzgIfYoCsMqoTO+W0FfUEpZ?=
- =?iso-8859-1?Q?39fu5pVfrVLHbB+wvagf2Lzs0QgKHqPji9LfFBCVadqWl3VINxXSKMNdHb?=
- =?iso-8859-1?Q?j68d6eKQu9evD2QjaU/1iej7Fi4f0mdceFbiormuORtyjKAVxLnofU9ml5?=
- =?iso-8859-1?Q?N1Y3oiIrSVDXJJzYB3w+p8ZThNRrgF3R9EihpFXkV4rRV3NvS2Lr5Dhom9?=
- =?iso-8859-1?Q?EnenuqAKFb2YMBxZh0Q6O7UrREKK0mwlND/Q/MHkKqG09g1bwu4c0p9l3s?=
- =?iso-8859-1?Q?raNHfIoOlii+MsslDf3AN7A5RR6tVgCpEz2SvXyPmcOP1hRJK/hKXe9JoK?=
- =?iso-8859-1?Q?AARVIXagsEYi1gn7J5n8l8MC11R7zfuMQ8H0MpPfpaDvAswgNaV6ITxvbO?=
- =?iso-8859-1?Q?Vz5ro8Wy0FXzWSUbTR7TalJV8V2ABpla7Bgyeph78IoftyysXtibe2cBG4?=
- =?iso-8859-1?Q?CtBNyE35pMZTRVt9/IIujja1o7D2Q7x3qmn9/PqoFXXKPupj1ERhyVhhP4?=
- =?iso-8859-1?Q?hyhGhOLOSByVQiz5hY4aZoRDvvFkB0g0bm15cICxGRUZ1HPU24tBi2QC/8?=
- =?iso-8859-1?Q?d3xjBzBEjQadZj29vV8a/ITqjqmHeRfWEKCDXM9vK7MrCaLdYSMLcofCFY?=
- =?iso-8859-1?Q?qbBrAwkc/C4wx89UdTPqa8MHimXqRcYY7Fk8tEqpRk05sEZHPvUswMKqqZ?=
- =?iso-8859-1?Q?RHjAJ5JUo0gFuQ=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Sun, 20 Mar
+ 2022 23:30:31 +0000
+Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::dd8c:6e57:c431:9323]) by YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::dd8c:6e57:c431:9323%6]) with mapi id 15.20.5081.022; Sun, 20 Mar 2022
+ 23:30:31 +0000
+From:   Wenli Looi <wlooi@ucalgary.ca>
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, Wenli Looi <wlooi@ucalgary.ca>
+Subject: [PATCH 1/6] ath9k: make ATH_SREV macros more consistent
+Date:   Sun, 20 Mar 2022 17:30:05 -0600
+Message-Id: <20220320233010.123106-2-wlooi@ucalgary.ca>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220320233010.123106-1-wlooi@ucalgary.ca>
+References: <20220320233010.123106-1-wlooi@ucalgary.ca>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-ClientProxiedBy: MW4PR04CA0176.namprd04.prod.outlook.com
+ (2603:10b6:303:85::31) To YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c00:4a::23)
 MIME-Version: 1.0
-X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-03a34.templateTenant
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1356db55-eb76-4b99-41e4-08da0ac99fcb
+X-MS-TrafficTypeDiagnostic: YTBPR01MB2989:EE_
+X-Microsoft-Antispam-PRVS: <YTBPR01MB298908AD68B3784B9574AFB3B2159@YTBPR01MB2989.CANPRD01.PROD.OUTLOOK.COM>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: HpIcdphwF4CcrU50OhgW2ahzpu5Y3dgiT1sfdDJ5Yo140RTst0kam4pHnFIUcBQxv/fFPkwDfibDsyx52SP4rTT5BtzYEFVfvMO28HgmpAJvhp9A34OI7+D0+wQWO4RkGAElTuZT3P6eKg/dFg+zyhnsaCNrnGJm2vSbpDQsCc9z3m1Bnonu5xlZgTOmfJR/pihq+3O+upSWb3a9aak4it2f615qKc3nG6iAZ5g2yE7q7x3MkSI+NSLHZGpqtHkKoyamvgx9F/jDGC8ZmH+XeuEICDC7ktuSsBKXnUGb6yUW8KtzJpL6MRaGC1iMcYaeWPMmQw6HF0Bs3gSfchcZ/ClgjYbWZrSppIQlJwZH4aT4g1SyypG25feUhzkwQ/uFjAPdTFN0JLxGDYeupLKdB1I0ZMBkR8PGzDkogK7N1hOi7KWrNTVfow7hDP3Y99BF4SouhStQoBYqCIKoeRCxyNHLdPdOz828/hFYFnhbUiGSCUf7R5RbkJXbeobgxNcKrs5X/zBES6pEeujpijUzFpYm3YWwN1IOGt3JgNWJ9uIGSmzqCUu6TC8G1BvEr8LAoeD9Psy7DRklUNoKSxtwjoE6GlKuIndqJChnMvLy9WhfnRy3LJuPbslGUj0XXYVWrtvo2tgXF/ts2ciXwEw8xgm7v/Ar1+AxQux6EFj+aatC3juRmb6MG/d28K8TIpK5
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(2906002)(83380400001)(66946007)(66556008)(8676002)(66476007)(4326008)(786003)(316002)(6916009)(54906003)(86362001)(508600001)(5660300002)(38100700002)(38350700002)(8936002)(186003)(36756003)(6666004)(26005)(6512007)(2616005)(6506007)(52116002)(107886003)(1076003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VAEkBtdo90beJLB878CX8mP1wJ9a0JtHbPbVE02+4jawWBEQbqDUNmKa18z0?=
+ =?us-ascii?Q?HY/KjtfzPGFTvb1meOtXELrV5L5zNgcI4dSHb+zs0BhfacOnI632i/ptA8mp?=
+ =?us-ascii?Q?oBq0rocrrVlRHCfvahHZoiuEgNQOBeuKK1Z57Pp3OI9JTJebCsuRBcBl5nVV?=
+ =?us-ascii?Q?8QHOMirHo33AWjM9WUOfewXm/PeYIwX9FJPopV3kT8H9hABlDwGSYsFBmbJe?=
+ =?us-ascii?Q?F/oMD4nUFNn04/vwFIeGihU2SEwtlWC9jyU/xBp/YYX89JRTiOIb9b71N06W?=
+ =?us-ascii?Q?AEtiPRJheUY7JsvCV/ChykJg7IteRTO6Dczhegr923Q8n6lIl9kJYWiprSct?=
+ =?us-ascii?Q?UzIeYMRd/rImJbx/LTCzDEOzTI64rxECqBrnlpve/1Fn4dE6X0FSFAMk3Va2?=
+ =?us-ascii?Q?tFBgU7t/71bEBhs88lbI/pCKXA6BMiMyu0KjbY6BwJArei7IBXftssr6wRyg?=
+ =?us-ascii?Q?dK4/VZuU47eTiAa6LQNdd2XFo/J2eiE0GYr+J5Q0BuQ9yW5+qu2Pq7+6TboT?=
+ =?us-ascii?Q?A5X5/KxA6eCP2oqMCruhJ+dj5eWrugc4zutIwyfAnAnjv9XWB7mznGm8hUJX?=
+ =?us-ascii?Q?tVbnXkfJWtq+opUvxTZTTp9WxFPvWhleG/rc4ZTKJO84Lc2QrmVw700/7Tcd?=
+ =?us-ascii?Q?D3yMSHr8K37xATpnl8Uo9nlQeyUfjZH9ydt+tE4XEMhFHxFbw+lcmV+vclCi?=
+ =?us-ascii?Q?vfuxTPWH7I6haA07CBWH5q+qrmbO5Kg7Latq/PnYULH/76/UnJ1sVzcUHRH8?=
+ =?us-ascii?Q?6x2PjVC37jJME1Fd0bkKMO2QCtSZXr7EpbpZ+8m6JQ5dJXyv64zppwmh2SAW?=
+ =?us-ascii?Q?Yx2NSqQPBnNxvNnWbSg0dokyF/tlLZnWi5xwyoPPMFisad9J+ArWEj+tD4qv?=
+ =?us-ascii?Q?LsPhoDQPEke4mNAd3/SGBuRvPs37I5fe4Psp7kbjQCMjOTs8onP0yGy64GRr?=
+ =?us-ascii?Q?EZ7uOMBcDxSMWwNbjezWvAnNlYzqjvTHk23Mm0KPCF9KtWVML7192RxNRrp1?=
+ =?us-ascii?Q?rbH//1nbND69rO8R3hPhGIO0cC3/noBZq9CICNrfN12jhC+Oo5z5bqUdlcr2?=
+ =?us-ascii?Q?CBCDibu+2KgH7V7xoWLBWsEzg3c35zQXRoR1q77tQGZfsCJssft5hXm8uoY9?=
+ =?us-ascii?Q?gWhtkRJkZolWJzJtFAE2I24W2sNT/8wqtbqaqhPYwuTMgH+PIKcdazhfaEqj?=
+ =?us-ascii?Q?VA/kPzgIMot8i8rMfWcRd72mfkpadsrWuDq08RJJjWuuhgFDJSTgCGycDTmC?=
+ =?us-ascii?Q?vyWaOmeDUkrtcjvkd6b+dbVi3NvTRxi0MGPhX4AbpAlYoimHZmgQ6YcMFqoZ?=
+ =?us-ascii?Q?pKzAxll6TsWiQgKTSU+iLZurEQ5Su0jwCUf7DKBMijvoiSONPHV9dnqB3Veq?=
+ =?us-ascii?Q?RKmazoi/QRZuNFI8+tZAW8Po166iI7uayGCTYaHdwc0P1N+FdangmVdZWzFI?=
+ =?us-ascii?Q?nIwbClDnKGI8nkyZ+BC+4wYgWmdjw7bH?=
+X-OriginatorOrg: ucalgary.ca
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1356db55-eb76-4b99-41e4-08da0ac99fcb
+X-MS-Exchange-CrossTenant-AuthSource: YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8100.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e554161-c3f8-4e6c-7e3c-08da0aafb8c2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2022 20:25:06.1342
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 23:30:31.3354
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB4575
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: c609a0ec-a5e3-4631-9686-192280bd9151
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 07mzsvV0mLdCwiGmoz5K8FSd/3ty+p1iBpSzhhfnfZHbyhlQDxe57Ku3n6G/t+fJJQce1tVPaetT0xJEQh4o8w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: YTBPR01MB2989
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Good evening,
- 
-after multiple Wifi disconnections resulting from "empty download folder" errors during an update Software run in Lubuntu most recent version, the notbook was restarted with Windows 10. 
-Now, in Windows 10, the Wifi manager refused to switch the Wifi network on. 
+This makes the macros more consistent and removes hidden dependencies on
+ah for macros that take _ah as a parameter.
 
-Wifi manager refuses to switch on the Wifi network now in Lubuntu as well as in Windws 10 and 7. 
-Driver software is up to pdate in Windows and Lubuntu.
- 
-Wifi modul description:
-lspci -s 24:00.0 -vvv
-24:00.0 Network controller: Qualcomm Atheros AR9285 Wireless Network Adapter (PCI-Express) (rev 01)
-DeviceName: WLAN
-Subsystem: Hewlett-Packard Company AR9285 Wireless Network Adapter (PCI-Express)
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0, Cache Line Size: 64 bytes
-Interrupt: pin A routed to IRQ 19
-Region 0: Memory at c4700000 (64-bit, non-prefetchable) [size=64K]
-Capabilities: <access denied>
-Kernel driver in use: ath9k
-Kernel modules: ath9k
- 
-The nachine is a notebook HP Probook 4730s.
-The HP Probook 4730s has a button for switching off an on both the Bluetooth and the Wifi network (see below).
+This change does not appear to affect the final binary.
 
-Whereas the button for swiching off an on both Bluetooth and Wifi Network does not switch the Wifi on, (in Lubutu only) the Bluetoth symbol in the system tray however could be switched from dimmed to full color and back.
- There is no driver for the HP Probook 4730s Wifi and Bluetooh network switch button.
-HP Probook 4740 has Wifi and Bluetooh network switch button driver (for Windows 7), but also different Wifi adapter hardware.
-Is this a defective hardware or overwritten firmware issue?
- 
-Mit freundlichen Grüßen
- 
-Bernd Dreyer
-Kirchenstraße 8
-84478 Waldkraiburg
-Deutschland
-dreyerbernd@hotmail.de 
-Festnetz: +49 8638 2036295 
-Mobiltel.: +49 177 5428627
- 
- 
+Signed-off-by: Wenli Looi <wlooi@ucalgary.ca>
+---
+ drivers/net/wireless/ath/ath9k/reg.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 653e79611..8983ea6fc 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -834,8 +834,8 @@
+ 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)) || \
+ 	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+ 
+-#define AR_SREV_9100(ah) \
+-	((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
++#define AR_SREV_9100(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9100))
+ #define AR_SREV_9100_OR_LATER(_ah) \
+ 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+ 
+@@ -891,7 +891,7 @@
+ #define AR_SREV_9300_20_OR_LATER(_ah) \
+ 	((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9300)
+ #define AR_SREV_9300_22(_ah) \
+-	(AR_SREV_9300(ah) && \
++	(AR_SREV_9300((_ah)) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9300_22))
+ 
+ #define AR_SREV_9330(_ah) \
+@@ -994,8 +994,8 @@
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
+ 
+ #define AR_SREV_SOC(_ah) \
+-	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(ah) || \
+-	 AR_SREV_9561(ah))
++	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(_ah) || \
++	 AR_SREV_9561(_ah))
+ 
+ /* NOTE: When adding chips newer than Peacock, add chip check here */
+ #define AR_SREV_9580_10_OR_LATER(_ah) \
+-- 
+2.25.1
+
