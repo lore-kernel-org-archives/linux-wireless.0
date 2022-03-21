@@ -2,34 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F34B1C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Mar 2022 17:23:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B38A3C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Mar 2022 17:23:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351798AbiCURYj (ORCPT
+        id S1351802AbiCURYl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Mar 2022 13:24:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51450 "EHLO
+        Mon, 21 Mar 2022 13:24:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351792AbiCURYi (ORCPT
+        with ESMTP id S1351792AbiCURYj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Mar 2022 13:24:38 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 700B83BF8E
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2022 10:23:11 -0700 (PDT)
+        Mon, 21 Mar 2022 13:24:39 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC700ABF54
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2022 10:23:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1647883392; x=1679419392;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=yirBN0FCyH1Z6wIMXksUg4ALNTNGcfiiNQVe+V5YtEI=;
-  b=vuT/VUTwXON+MtCuJSAOTgkYZRflXKVs2EmkM2DBSiVdetMHZlJIZHiR
-   957qz0U9eDI5pcHk0N9gbTFE4HOQk1ewSmtaVdvlNeGUHJZIZKMfJ/Lm3
-   Iz4agvUPB3LaK2oiktVncHi3NTKXcjb7AliGYQ5Ctto0T0ntuz+pRsXQl
-   8=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 21 Mar 2022 10:23:11 -0700
+  t=1647883393; x=1679419393;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=bq0v/3TG9AMXPt9tj4Gz+54g8j0GQNiV2+yRV5+SM8g=;
+  b=clnxvPSd49a26WLEpvC/DdN4VOS0t1MdVuGoxxJIzuSZEl0ogCs/M/ec
+   +aINTF4sl7Ybt5C94KSOGCEPUzd16TfJwip2MgjgSdWm58mb8lPGK09cd
+   mmjsj+4useUtTR5vunrDxmhigtqfVDyNDcWIoSzUAb4aTrk6GlaXSQH/g
+   A=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 21 Mar 2022 10:23:11 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 10:23:11 -0700
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 10:23:11 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -37,15 +38,18 @@ Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
 Received: from ppranees-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 21 Mar 2022 03:17:15 -0700
+ 15.2.986.22; Mon, 21 Mar 2022 03:17:27 -0700
 From:   P Praneesh <quic_ppranees@quicinc.com>
 To:     <ath11k@lists.infradead.org>, <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>,
-        P Praneesh <quic_ppranees@quicinc.com>
-Subject: [PATCH v4 0/3] mac80211: Add extended ROC support for 40-80 MHz bandwidth
-Date:   Mon, 21 Mar 2022 15:46:34 +0530
-Message-ID: <1647857797-19749-1-git-send-email-quic_ppranees@quicinc.com>
+        P Praneesh <quic_ppranees@quicinc.com>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH v4 2/3] ath11k: Refactor update channel list function
+Date:   Mon, 21 Mar 2022 15:46:36 +0530
+Message-ID: <1647857797-19749-3-git-send-email-quic_ppranees@quicinc.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1647857797-19749-1-git-send-email-quic_ppranees@quicinc.com>
+References: <1647857797-19749-1-git-send-email-quic_ppranees@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
@@ -55,62 +59,160 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch add extended roc support for 40 and 80 Mhz bandwidth.
-It helps to handle remain on channel for wide band scan in ath11k.
+For sending scan channel list command to firmware through wmi, remain on
+channel's scan request parameter needs to be updated. Add scan_req_params
+as an argument to the existing update_scan_chan_list to update scan request
+parameter through wmi.
+
+Co-developed-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
 ---
-v4:
-	- added feature check based on the hardware advertisement
-	  SUPPORTS_EXT_REMAIN_ON_CHAN and addressed other review comments.
-v3:
-	- addressed Johannes comment to use ROC instead of SCAN command and
-	  changed cover letter title from 'add Wide Band Scan support' to
-	  'mac80211: Add extended ROC support for 40-80 MHz bandwidth'
-v2:
-	- updated message on cover letter.
+ drivers/net/wireless/ath/ath11k/mac.c |  2 +-
+ drivers/net/wireless/ath/ath11k/reg.c | 49 +++++++++++++++++++++++------------
+ drivers/net/wireless/ath/ath11k/reg.h |  2 +-
+ drivers/net/wireless/ath/ath11k/wmi.h |  2 ++
+ 4 files changed, 36 insertions(+), 19 deletions(-)
 
----
-P Praneesh (3):
-  nl80211: Extended ROC support for 40-80 MHz bandwidth
-  ath11k: Refactor update channel list function
-  ath11k: Add ROC support for wide band scan
-
- drivers/net/wireless/ath/ath10k/mac.c              |   3 +-
- drivers/net/wireless/ath/ath11k/core.c             |   1 +
- drivers/net/wireless/ath/ath11k/mac.c              | 215 ++++++++++++++++++---
- drivers/net/wireless/ath/ath11k/reg.c              |  49 +++--
- drivers/net/wireless/ath/ath11k/reg.h              |   2 +-
- drivers/net/wireless/ath/ath11k/wmi.c              |  59 +++++-
- drivers/net/wireless/ath/ath11k/wmi.h              |  26 ++-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |   5 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |  10 +-
- drivers/net/wireless/ath/ath9k/main.c              |   4 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c        |  13 +-
- drivers/net/wireless/ath/wil6210/p2p.c             |  27 ++-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  10 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   3 +-
- drivers/net/wireless/mac80211_hwsim.c              |   3 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  10 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |   4 +-
- drivers/net/wireless/marvell/mwifiex/uap_event.c   |   4 +-
- drivers/net/wireless/mediatek/mt76/mt7615/main.c   |   3 +-
- drivers/net/wireless/microchip/wilc1000/cfg80211.c |  17 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c        |   3 +-
- drivers/net/wireless/ti/wlcore/main.c              |   3 +-
- drivers/staging/rtl8723bs/include/ioctl_cfg80211.h |   4 +-
- include/net/cfg80211.h                             |  17 +-
- include/net/mac80211.h                             |   5 +-
- net/mac80211/debugfs.c                             |   1 +
- net/mac80211/driver-ops.h                          |   6 +-
- net/mac80211/ieee80211_i.h                         |   4 +-
- net/mac80211/offchannel.c                          |  64 +++---
- net/mac80211/trace.h                               |   9 +-
- net/wireless/nl80211.c                             |  27 +--
- net/wireless/rdev-ops.h                            |   6 +-
- net/wireless/trace.h                               |  44 ++---
- 35 files changed, 489 insertions(+), 176 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index d5b83f9..bde669c 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -5808,7 +5808,7 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
+ 
+ 	/* TODO: Do we need to enable ANI? */
+ 
+-	ath11k_reg_update_chan_list(ar);
++	ath11k_reg_update_chan_list(ar, NULL);
+ 
+ 	ar->num_started_vdevs = 0;
+ 	ar->num_created_vdevs = 0;
+diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
+index 81e11cd..46720a3 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -102,18 +102,19 @@ ath11k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 	ar->regdom_set_by_user = true;
+ }
+ 
+-int ath11k_reg_update_chan_list(struct ath11k *ar)
++int ath11k_reg_update_chan_list(struct ath11k *ar, const struct scan_req_params *arg)
+ {
+ 	struct ieee80211_supported_band **bands;
+ 	struct scan_chan_list_params *params;
+-	struct ieee80211_channel *channel;
+-	struct ieee80211_hw *hw = ar->hw;
+ 	struct channel_param *ch;
++	struct cfg80211_chan_def *chandef;
++	struct ieee80211_channel *channel, *req_channel;
+ 	enum nl80211_band band;
+ 	int num_channels = 0;
+-	int i, ret;
++	int params_len, i, ret;
++	bool found = false;
+ 
+-	bands = hw->wiphy->bands;
++	bands = ar->hw->wiphy->bands;
+ 	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+ 		if (!bands[band])
+ 			continue;
+@@ -130,8 +131,10 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
+ 	if (WARN_ON(!num_channels))
+ 		return -EINVAL;
+ 
+-	params = kzalloc(struct_size(params, ch_param, num_channels),
+-			 GFP_KERNEL);
++	params_len = sizeof(struct scan_chan_list_params) +
++			    num_channels * sizeof(struct channel_param);
++
++	params = kzalloc(params_len, GFP_KERNEL);
+ 	if (!params)
+ 		return -ENOMEM;
+ 
+@@ -139,6 +142,8 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
+ 	params->nallchans = num_channels;
+ 
+ 	ch = params->ch_param;
++	chandef = arg ? arg->chandef : NULL;
++	req_channel = chandef ? chandef->chan : NULL;
+ 
+ 	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+ 		if (!bands[band])
+@@ -150,6 +155,22 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
+ 			if (channel->flags & IEEE80211_CHAN_DISABLED)
+ 				continue;
+ 
++			if (req_channel && !found &&
++			    req_channel->center_freq == channel->center_freq) {
++				ch->mhz = chandef->chan->center_freq;
++				ch->cfreq1 = chandef->center_freq1;
++				ch->cfreq2 = chandef->center_freq2;
++
++				ch->phy_mode = arg->phymode;
++				channel = req_channel;
++				found = true;
++			} else {
++				ch->mhz = channel->center_freq;
++				ch->cfreq1 = channel->center_freq;
++				ch->phy_mode = (channel->band == NL80211_BAND_2GHZ) ?
++						MODE_11G : MODE_11A;
++			}
++
+ 			/* TODO: Set to true/false based on some condition? */
+ 			ch->allow_ht = true;
+ 			ch->allow_vht = true;
+@@ -163,15 +184,9 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
+ 			ch->mhz = channel->center_freq;
+ 			ch->cfreq1 = channel->center_freq;
+ 			ch->minpower = 0;
+-			ch->maxpower = channel->max_power * 2;
+-			ch->maxregpower = channel->max_reg_power * 2;
+-			ch->antennamax = channel->max_antenna_gain * 2;
+-
+-			/* TODO: Use appropriate phymodes */
+-			if (channel->band == NL80211_BAND_2GHZ)
+-				ch->phy_mode = MODE_11G;
+-			else
+-				ch->phy_mode = MODE_11A;
++			ch->maxpower = channel->max_power;
++			ch->maxregpower = channel->max_reg_power;
++			ch->antennamax = channel->max_antenna_gain;
+ 
+ 			if (channel->band == NL80211_BAND_6GHZ &&
+ 			    cfg80211_channel_is_psc(channel))
+@@ -282,7 +297,7 @@ int ath11k_regd_update(struct ath11k *ar)
+ 		goto err;
+ 
+ 	if (ar->state == ATH11K_STATE_ON) {
+-		ret = ath11k_reg_update_chan_list(ar);
++		ret = ath11k_reg_update_chan_list(ar, NULL);
+ 		if (ret)
+ 			goto err;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath11k/reg.h b/drivers/net/wireless/ath/ath11k/reg.h
+index 5fb9dc0..00c0d82 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.h
++++ b/drivers/net/wireless/ath/ath11k/reg.h
+@@ -32,5 +32,5 @@ struct ieee80211_regdomain *
+ ath11k_reg_build_regd(struct ath11k_base *ab,
+ 		      struct cur_regulatory_info *reg_info, bool intersect);
+ int ath11k_regd_update(struct ath11k *ar);
+-int ath11k_reg_update_chan_list(struct ath11k *ar);
++int ath11k_reg_update_chan_list(struct ath11k *ar, const struct scan_req_params *arg);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 587f423..89a743b 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -3323,6 +3323,8 @@ struct scan_req_params {
+ 	struct hint_bssid hint_bssid[WLAN_SCAN_MAX_HINT_BSSID];
+ 	struct wmi_mac_addr mac_addr;
+ 	struct wmi_mac_addr mac_mask;
++	u32 phymode;
++	struct cfg80211_chan_def *chandef;
+ };
+ 
+ struct wmi_ssid_arg {
 -- 
 2.7.4
 
