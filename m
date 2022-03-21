@@ -2,35 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74AC6C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Mar 2022 17:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D9BC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Mar 2022 17:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351811AbiCURYo (ORCPT
+        id S1351807AbiCURYn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Mar 2022 13:24:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51734 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351800AbiCURYn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 21 Mar 2022 13:24:43 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6472F16BFA1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2022 10:23:15 -0700 (PDT)
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51700 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1351792AbiCURYm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Mar 2022 13:24:42 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD186137F49
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2022 10:23:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1647883396; x=1679419396;
+  t=1647883393; x=1679419393;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=v+8Jv0xjRh0he1ceXQBpcbudn/EzVD/RCU8bxLktqsE=;
-  b=fT7GHT4IstW+2A5uJCWC6qwk8PxSoMMS5BrEeXMziklqOhsB3wlanD1P
-   cygQgTXj7QoW13FSoVO1YEnpaD13pPLja/KB+bab1CXSwO8fFZoYxUi4T
-   3fUFc3sAcbYtU+nbvejp+4sb8NUVj9qdVz1bUS/Uudou2kriHKXcLVlus
-   8=;
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 21 Mar 2022 10:23:12 -0700
+  bh=YQKQf/q1VFKNqEmJY4SY1dpx0WYaoeOu+AAHoj016lw=;
+  b=mavDIv3LMx7BORRAlzH0BKvO+CARau4YhZBhfa1poEwnXhLu9y8q2WMu
+   i3V+spLb/C48kp9soydTnkLyTSmFfAJ0Fz5A7DU73k1S9sQWzHIoQpNjB
+   2lw1ZL71YFe3t+W3iVygycBMQeIZNzlb8jQO0I/zViN1dyiG43SttHacM
+   w=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 21 Mar 2022 10:23:12 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 10:23:11 -0700
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 10:23:12 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -38,15 +38,15 @@ Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
 Received: from ppranees-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 21 Mar 2022 03:17:31 -0700
+ 15.2.986.22; Mon, 21 Mar 2022 03:17:23 -0700
 From:   P Praneesh <quic_ppranees@quicinc.com>
 To:     <ath11k@lists.infradead.org>, <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>,
         P Praneesh <quic_ppranees@quicinc.com>,
         Sathishkumar Muruganandam <quic_murugana@quicinc.com>
-Subject: [PATCH v4 3/3] ath11k: Add ROC support for wide band scan
-Date:   Mon, 21 Mar 2022 15:46:37 +0530
-Message-ID: <1647857797-19749-4-git-send-email-quic_ppranees@quicinc.com>
+Subject: [PATCH v4 1/3] nl80211: Extended ROC support for 40-80 MHz bandwidth
+Date:   Mon, 21 Mar 2022 15:46:35 +0530
+Message-ID: <1647857797-19749-2-git-send-email-quic_ppranees@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1647857797-19749-1-git-send-email-quic_ppranees@quicinc.com>
 References: <1647857797-19749-1-git-send-email-quic_ppranees@quicinc.com>
@@ -59,547 +59,1332 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wide Band Scan allows to perform off-channel scan on requested channel/
-frequency along with corresponding phy mode/bandwidth (40MHz, 80MHz).
-
-Doing wide band scan instead of normal 20MHz scan before spectral dump,
-allows to fetch FFT reports for the complete requested bandwidth
-(40MHz, 80MHz).
-
-Below are the FW expectations and configs from host to request
-Wide Band Scan,
-
-1. SCAN_PHYMODE_SUPPORT WMI service bit advertised from FW.
-
-2. SCAN_CHAN_LIST_CMD updated with the phymode and other channel params
-   of the requested channel to do wide band scan.
-
-3. START_SCAN_CMD updated with all the seven supported TLVs and PHYMODE
-   TLV being the last. PHYMODE TLV holds the (wmi_phy_mode + 1) value
-   corresponding to wide band scan channel. Scan flags scan_f_wide_band
-   and scan_f_passive need to be set for wide band scan request from
-   host.
-
-This new ops callback (ath11k_mac_op_remain_on_channel) for ROC will
-holds the cfg80211_chan_def of the requested channel from which we
-update the center frequencies and phymode params needed for
-SCAN_CHAN_LIST_CMD and START_SCAN_CMD to FW.
-
-Below are use cases of Wide Band Scan,
-
-1. In case of phy running both AP and monitor vifs, wide band scan on
-   a different channel along with phymode (40MHz, 80MHz) captures
-   those off-channel data frames to monitor vif.
-
-2. Doing wide band scan instead of normal 20MHz scan before spectral
-   dump, allows to fetch FFT reports for the complete requested
-   bandwidth (40MHz, 80MHz).
-
-Since wide band scan is the AP mode feature and this support is
-enabled when firmware advertise SCAN_PHYMODE_SUPPORT wmi service bit,
-it will not affect QCA6390.
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00156-QCAHKSWPL_SILICONZ-1
+Replace struct ieee80211_channel with struct cfg80211_chan_def in
+remain on channel apis, because the channel width information is
+needed to handle centre frequency of 80MHz, and it is available
+in cfg80211_chan_def. Also, add SUPPORTS_EXT_REMAIN_ON_CHAN feature
+flag check before driver ops call.
 
 Co-developed-by: Sathishkumar Muruganandam <quic_murugana@quicinc.com>
 Signed-off-by: Sathishkumar Muruganandam <quic_murugana@quicinc.com>
 Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.c |   1 +
- drivers/net/wireless/ath/ath11k/mac.c  | 213 ++++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath11k/wmi.c  |  59 ++++++++-
- drivers/net/wireless/ath/ath11k/wmi.h  |  24 +++-
- 4 files changed, 261 insertions(+), 36 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c              |  3 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |  5 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c              | 10 +++-
+ drivers/net/wireless/ath/ath9k/main.c              |  4 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        | 13 +++--
+ drivers/net/wireless/ath/wil6210/p2p.c             | 27 +++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 10 +++-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  3 +-
+ drivers/net/wireless/mac80211_hwsim.c              |  3 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 10 +++-
+ drivers/net/wireless/marvell/mwifiex/sta_event.c   |  4 +-
+ drivers/net/wireless/marvell/mwifiex/uap_event.c   |  4 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c   |  3 +-
+ drivers/net/wireless/microchip/wilc1000/cfg80211.c | 17 ++++--
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c        |  3 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  3 +-
+ drivers/staging/rtl8723bs/include/ioctl_cfg80211.h |  4 +-
+ include/net/cfg80211.h                             | 17 +++---
+ include/net/mac80211.h                             |  5 +-
+ net/mac80211/debugfs.c                             |  1 +
+ net/mac80211/driver-ops.h                          |  6 +-
+ net/mac80211/ieee80211_i.h                         |  4 +-
+ net/mac80211/offchannel.c                          | 64 ++++++++++++++--------
+ net/mac80211/trace.h                               |  9 ++-
+ net/wireless/nl80211.c                             | 27 ++++-----
+ net/wireless/rdev-ops.h                            |  6 +-
+ net/wireless/trace.h                               | 44 +++++++--------
+ 29 files changed, 192 insertions(+), 121 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 5d570a2..85d21f1 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1297,6 +1297,7 @@ static void ath11k_core_restart(struct work_struct *work)
- 		complete(&ar->vdev_delete_done);
- 		complete(&ar->bss_survey_done);
- 		complete(&ar->thermal.wmi_sync);
-+		complete(&ar->scan.on_channel);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1f73fbf..c8662aa 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7828,12 +7828,13 @@ static int ath10k_conf_tx(struct ieee80211_hw *hw,
  
- 		wake_up(&ar->dp.tx_empty_waitq);
- 		idr_for_each(&ar->txmgmt_idr,
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index bde669c..bf83569 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -3568,7 +3568,7 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 	struct ath11k *ar = hw->priv;
- 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
- 	struct cfg80211_scan_request *req = &hw_req->req;
--	struct scan_req_params arg;
-+	struct scan_req_params *arg = NULL;
+ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+-				    struct ieee80211_channel *chan,
++				    struct cfg80211_chan_def *chandef,
+ 				    int duration,
+ 				    enum ieee80211_roc_type type)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
++	struct ieee80211_channel *chan = chandef->chan;
+ 	struct wmi_start_scan_arg arg;
  	int ret = 0;
- 	int i;
+ 	u32 scan_time_msec;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index bd11838..0505028 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3023,12 +3023,13 @@ static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
  
-@@ -3615,52 +3615,56 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 			   "mac wait 11d channel list time left %ld\n", time_left);
+ static int ath6kl_remain_on_channel(struct wiphy *wiphy,
+ 				    struct wireless_dev *wdev,
+-				    struct ieee80211_channel *chan,
++				    struct cfg80211_chan_def *chandef,
+ 				    unsigned int duration,
+ 				    u64 *cookie)
+ {
+ 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+ 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
++	struct ieee80211_channel *chan = chandef->chan;
+ 	u32 id;
+ 
+ 	/* TODO: if already pending or ongoing remain-on-channel,
+@@ -3185,7 +3186,7 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+ 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+-	struct ieee80211_channel *chan = params->chan;
++	struct ieee80211_channel *chan = params->chandef.chan;
+ 	const u8 *buf = params->buf;
+ 	size_t len = params->len;
+ 	unsigned int wait = params->wait;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index bd1ef63..640d1e7 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -508,6 +508,7 @@ static int ath6kl_wmi_remain_on_chnl_event_rx(struct wmi *wmi, u8 *datap,
+ 	u32 dur;
+ 	struct ieee80211_channel *chan;
+ 	struct ath6kl *ar = wmi->parent_dev;
++	struct cfg80211_chan_def chandef;
+ 	u32 id;
+ 
+ 	if (len < sizeof(*ev))
+@@ -526,7 +527,8 @@ static int ath6kl_wmi_remain_on_chnl_event_rx(struct wmi *wmi, u8 *datap,
+ 		return -EINVAL;
  	}
+ 	id = vif->last_roc_id;
+-	cfg80211_ready_on_channel(&vif->wdev, id, chan,
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	cfg80211_ready_on_channel(&vif->wdev, id, &chandef,
+ 				  dur, GFP_ATOMIC);
  
--	memset(&arg, 0, sizeof(arg));
--	ath11k_wmi_start_scan_init(ar, &arg);
--	arg.vdev_id = arvif->vdev_id;
--	arg.scan_id = ATH11K_SCAN_ID;
-+	arg = kzalloc(sizeof(*arg), GFP_KERNEL);
-+	if (!arg) {
-+		ret = -ENOMEM;
-+		goto exit;
-+	}
+ 	return 0;
+@@ -541,6 +543,7 @@ static int ath6kl_wmi_cancel_remain_on_chnl_event_rx(struct wmi *wmi,
+ 	u32 dur;
+ 	struct ieee80211_channel *chan;
+ 	struct ath6kl *ar = wmi->parent_dev;
++	struct cfg80211_chan_def chandef;
+ 	u32 id;
+ 
+ 	if (len < sizeof(*ev))
+@@ -559,13 +562,16 @@ static int ath6kl_wmi_cancel_remain_on_chnl_event_rx(struct wmi *wmi,
+ 			   freq);
+ 		return -EINVAL;
+ 	}
 +
-+	ath11k_wmi_start_scan_init(ar, arg);
-+	arg->vdev_id = arvif->vdev_id;
-+	arg->scan_id = ATH11K_SCAN_ID;
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++
+ 	if (vif->last_cancel_roc_id &&
+ 	    vif->last_cancel_roc_id + 1 == vif->last_roc_id)
+ 		id = vif->last_cancel_roc_id; /* event for cancel command */
+ 	else
+ 		id = vif->last_roc_id; /* timeout on uncanceled r-o-c */
+ 	vif->last_cancel_roc_id = 0;
+-	cfg80211_remain_on_channel_expired(&vif->wdev, id, chan, GFP_ATOMIC);
++	cfg80211_remain_on_channel_expired(&vif->wdev, id, &chandef, GFP_ATOMIC);
  
- 	if (req->ie_len) {
--		arg.extraie.ptr = kmemdup(req->ie, req->ie_len, GFP_KERNEL);
--		if (!arg.extraie.ptr) {
-+		arg->extraie.ptr = kmemdup(req->ie, req->ie_len, GFP_KERNEL);
-+		if (!arg->extraie.ptr) {
- 			ret = -ENOMEM;
- 			goto exit;
- 		}
--		arg.extraie.len = req->ie_len;
-+		arg->extraie.len = req->ie_len;
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 98090e4..990f13b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2468,11 +2468,13 @@ static void ath9k_cancel_hw_scan(struct ieee80211_hw *hw,
+ 
+ static int ath9k_remain_on_channel(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+-				   struct ieee80211_channel *chan, int duration,
++				   struct cfg80211_chan_def *chandef,
++				   int duration,
+ 				   enum ieee80211_roc_type type)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ieee80211_channel *chan = chandef->chan;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&sc->mutex);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 764d1d1..45bcf45 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1443,7 +1443,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	bool tx_status;
+ 
+ 	wil_dbg_misc(wil, "mgmt_tx: channel %d offchan %d, wait %d\n",
+-		     params->chan ? params->chan->hw_value : -1,
++		     params->chandef.chan ? params->chandef.chan->hw_value : -1,
+ 		     params->offchan,
+ 		     params->wait);
+ 
+@@ -1452,7 +1452,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	 * mgmt_tx or listen on a channel other than active one.
+ 	 */
+ 
+-	if (params->chan && params->chan->hw_value == 0) {
++	if (params->chandef.chan && params->chandef.chan->hw_value == 0) {
+ 		wil_err(wil, "invalid channel\n");
+ 		return -EINVAL;
+ 	}
+@@ -1464,7 +1464,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		goto out;
  	}
  
- 	if (req->n_ssids) {
--		arg.num_ssids = req->n_ssids;
--		for (i = 0; i < arg.num_ssids; i++) {
--			arg.ssid[i].length  = req->ssids[i].ssid_len;
--			memcpy(&arg.ssid[i].ssid, req->ssids[i].ssid,
-+		arg->num_ssids = req->n_ssids;
-+		for (i = 0; i < arg->num_ssids; i++) {
-+			arg->ssid[i].length  = req->ssids[i].ssid_len;
-+			memcpy(&arg->ssid[i].ssid, req->ssids[i].ssid,
- 			       req->ssids[i].ssid_len);
- 		}
+-	if (!params->chan || params->chan->hw_value == vif->channel) {
++	if (!params->chandef.chan || params->chandef.chan->hw_value == vif->channel) {
+ 		wil_dbg_misc(wil,
+ 			     "send WMI_SW_TX_REQ_CMDID for on-channel\n");
+ 		rc = wmi_mgmt_tx(vif, buf, len);
+@@ -1474,12 +1474,12 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	if (params->offchan == 0) {
+ 		wil_err(wil,
+ 			"invalid channel params: current %d requested %d, off-channel not allowed\n",
+-			vif->channel, params->chan->hw_value);
++			vif->channel, params->chandef.chan->hw_value);
+ 		return -EBUSY;
+ 	}
+ 
+ 	/* use the wmi_mgmt_tx_ext only on AP mode and off-channel */
+-	rc = wmi_mgmt_tx_ext(vif, buf, len, params->chan->hw_value,
++	rc = wmi_mgmt_tx_ext(vif, buf, len, params->chandef.chan->hw_value,
+ 			     params->wait);
+ 
+ out:
+@@ -1736,11 +1736,12 @@ static int wil_cfg80211_set_default_key(struct wiphy *wiphy,
+ 
+ static int wil_remain_on_channel(struct wiphy *wiphy,
+ 				 struct wireless_dev *wdev,
+-				 struct ieee80211_channel *chan,
++				 struct cfg80211_chan_def *chandef,
+ 				 unsigned int duration,
+ 				 u64 *cookie)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	struct ieee80211_channel *chan = chandef->chan;
+ 	int rc;
+ 
+ 	wil_dbg_misc(wil,
+diff --git a/drivers/net/wireless/ath/wil6210/p2p.c b/drivers/net/wireless/ath/wil6210/p2p.c
+index f26bf04..6fd624f 100644
+--- a/drivers/net/wireless/ath/wil6210/p2p.c
++++ b/drivers/net/wireless/ath/wil6210/p2p.c
+@@ -128,6 +128,7 @@ int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
+ {
+ 	struct wil6210_vif *vif = wdev_to_vif(wil, wdev);
+ 	struct wil_p2p_info *p2p = &vif->p2p;
++	struct cfg80211_chan_def chandef;
+ 	int rc;
+ 
+ 	if (!chan)
+@@ -166,7 +167,8 @@ int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
+ 	if (vif->mid == 0)
+ 		wil->radio_wdev = wdev;
+ 
+-	cfg80211_ready_on_channel(wdev, *cookie, chan, duration,
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	cfg80211_ready_on_channel(wdev, *cookie, &chandef, duration,
+ 				  GFP_KERNEL);
+ 
+ out:
+@@ -197,6 +199,7 @@ int wil_p2p_cancel_listen(struct wil6210_vif *vif, u64 cookie)
+ {
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
+ 	struct wil_p2p_info *p2p = &vif->p2p;
++	struct cfg80211_chan_def chandef;
+ 	u8 started;
+ 
+ 	mutex_lock(&wil->mutex);
+@@ -218,9 +221,12 @@ int wil_p2p_cancel_listen(struct wil6210_vif *vif, u64 cookie)
+ 	}
+ 
+ 	mutex_lock(&wil->vif_mutex);
++
++	cfg80211_chandef_create(&chandef, &p2p->listen_chan, NL80211_CHAN_HT20);
++
+ 	cfg80211_remain_on_channel_expired(vif_to_radio_wdev(wil, vif),
+ 					   p2p->cookie,
+-					   &p2p->listen_chan,
++					   &chandef,
+ 					   GFP_KERNEL);
+ 	if (vif->mid == 0)
+ 		wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
+@@ -235,6 +241,7 @@ void wil_p2p_listen_expired(struct work_struct *work)
+ 	struct wil6210_vif *vif = container_of(p2p,
+ 			struct wil6210_vif, p2p);
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct cfg80211_chan_def chandef;
+ 	u8 started;
+ 
+ 	wil_dbg_misc(wil, "p2p_listen_expired\n");
+@@ -247,9 +254,12 @@ void wil_p2p_listen_expired(struct work_struct *work)
+ 		return;
+ 
+ 	mutex_lock(&wil->vif_mutex);
++
++	cfg80211_chandef_create(&chandef, &p2p->listen_chan, NL80211_CHAN_HT20);
++
+ 	cfg80211_remain_on_channel_expired(vif_to_radio_wdev(wil, vif),
+ 					   p2p->cookie,
+-					   &p2p->listen_chan,
++					   &chandef,
+ 					   GFP_KERNEL);
+ 	if (vif->mid == 0)
+ 		wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
+@@ -295,6 +305,7 @@ void wil_p2p_delayed_listen_work(struct work_struct *work)
+ 	struct wil6210_vif *vif = container_of(p2p,
+ 			struct wil6210_vif, p2p);
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct cfg80211_chan_def chandef;
+ 	int rc;
+ 
+ 	mutex_lock(&wil->mutex);
+@@ -313,17 +324,19 @@ void wil_p2p_delayed_listen_work(struct work_struct *work)
+ 
+ 	rc = wil_p2p_start_listen(vif);
+ 
++	cfg80211_chandef_create(&chandef, &p2p->listen_chan, NL80211_CHAN_HT20);
++
+ 	mutex_lock(&wil->vif_mutex);
+ 	if (rc) {
+ 		cfg80211_remain_on_channel_expired(p2p->pending_listen_wdev,
+ 						   p2p->cookie,
+-						   &p2p->listen_chan,
++						   &chandef,
+ 						   GFP_KERNEL);
+ 		if (vif->mid == 0)
+ 			wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
  	} else {
--		arg.scan_flags |= WMI_SCAN_FLAG_PASSIVE;
-+		arg->scan_flags |= WMI_SCAN_FLAG_PASSIVE;
+ 		cfg80211_ready_on_channel(p2p->pending_listen_wdev, p2p->cookie,
+-					  &p2p->listen_chan,
++					  &chandef,
+ 					  p2p->listen_duration, GFP_KERNEL);
+ 		if (vif->mid == 0)
+ 			wil->radio_wdev = p2p->pending_listen_wdev;
+@@ -339,6 +352,7 @@ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil)
+ {
+ 	struct wil6210_vif *vif = ndev_to_vif(wil->main_ndev);
+ 	struct wil_p2p_info *p2p = &vif->p2p;
++	struct cfg80211_chan_def chandef;
+ 	struct cfg80211_scan_info info = {
+ 		.aborted = true,
+ 	};
+@@ -367,10 +381,11 @@ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil)
+ 		cfg80211_scan_done(vif->scan_request, &info);
+ 		vif->scan_request = NULL;
+ 	} else {
++		cfg80211_chandef_create(&chandef, &p2p->listen_chan, NL80211_CHAN_HT20);
+ 		/* listen */
+ 		cfg80211_remain_on_channel_expired(wil->radio_wdev,
+ 						   p2p->cookie,
+-						   &p2p->listen_chan,
++						   &chandef,
+ 						   GFP_KERNEL);
  	}
  
- 	if (req->n_channels) {
--		arg.num_chan = req->n_channels;
--		arg.chan_list = kcalloc(arg.num_chan, sizeof(*arg.chan_list),
--					GFP_KERNEL);
--
--		if (!arg.chan_list) {
-+		arg->num_chan = req->n_channels;
-+		arg->chan_list = kcalloc(arg->num_chan, sizeof(*arg->chan_list),
-+					 GFP_KERNEL);
-+		if (!arg->chan_list) {
- 			ret = -ENOMEM;
- 			goto exit;
- 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index fb72777..a852135 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5109,7 +5109,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		       struct cfg80211_mgmt_tx_params *params, u64 *cookie)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct ieee80211_channel *chan = params->chan;
++	struct ieee80211_channel *chan = params->chandef.chan;
+ 	struct brcmf_pub *drvr = cfg->pub;
+ 	const u8 *buf = params->buf;
+ 	size_t len = params->len;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 4735063..bfa26779 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -972,10 +972,11 @@ brcmf_p2p_discover_listen(struct brcmf_p2p_info *p2p, u16 channel, u32 duration)
+  * @cookie: cookie.
+  */
+ int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+-				struct ieee80211_channel *channel,
++				struct cfg80211_chan_def *chandef,
+ 				unsigned int duration, u64 *cookie)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct ieee80211_channel *channel = chandef->chan;
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
+ 	s32 err;
+ 	u16 channel_nr;
+@@ -993,7 +994,7 @@ int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
  
--		for (i = 0; i < arg.num_chan; i++)
--			arg.chan_list[i] = req->channels[i]->center_freq;
-+		for (i = 0; i < arg->num_chan; i++)
-+			arg->chan_list[i] = req->channels[i]->center_freq;
- 	}
- 
- 	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
--		arg.scan_f_add_spoofed_mac_in_probe = 1;
--		ether_addr_copy(arg.mac_addr.addr, req->mac_addr);
--		ether_addr_copy(arg.mac_mask.addr, req->mac_addr_mask);
-+		arg->scan_f_add_spoofed_mac_in_probe = 1;
-+		ether_addr_copy(arg->mac_addr.addr, req->mac_addr);
-+		ether_addr_copy(arg->mac_mask.addr, req->mac_addr_mask);
- 	}
- 
--	ret = ath11k_start_scan(ar, &arg);
-+	ret = ath11k_start_scan(ar, arg);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to start hw scan: %d\n", ret);
- 		spin_lock_bh(&ar->data_lock);
-@@ -3670,15 +3674,11 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 
- 	/* Add a 200ms margin to account for event/command processing */
- 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
--				     msecs_to_jiffies(arg.max_scan_time +
-+				     msecs_to_jiffies(arg->max_scan_time +
- 						      ATH11K_MAC_SCAN_TIMEOUT_MSECS));
+ 	memcpy(&p2p->remain_on_channel, channel, sizeof(*channel));
+ 	*cookie = p2p->remain_on_channel_cookie;
+-	cfg80211_ready_on_channel(wdev, *cookie, channel, duration, GFP_KERNEL);
++	cfg80211_ready_on_channel(wdev, *cookie, chandef, duration, GFP_KERNEL);
  
  exit:
--	kfree(arg.chan_list);
--
--	if (req->ie_len)
--		kfree(arg.extraie.ptr);
--
-+	kfree(arg);
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
-@@ -4478,6 +4478,152 @@ static int ath11k_mac_station_add(struct ath11k *ar,
- 	return ret;
- }
+ 	return err;
+@@ -1014,6 +1015,7 @@ int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
+ {
+ 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
++	struct cfg80211_chan_def chandef;
  
-+#define ATH11K_ROC_TIMEOUT_HZ (3 * HZ)
-+
-+static int ath11k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
-+					   struct ieee80211_vif *vif,
-+					   struct cfg80211_chan_def *chandef,
-+					   int duration,
-+					   enum ieee80211_roc_type type)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ieee80211_channel *chan;
-+	struct scan_req_params *arg;
-+	int ret;
-+	u32 scan_time_msec;
-+
-+	if (!test_bit(WMI_TLV_SERVICE_SCAN_PHYMODE_SUPPORT,
-+		      ar->ab->wmi_ab.svc_map)) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "ROC feature not supported!\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (!chandef || !chandef->chan) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "null chandef !\n");
-+		return -EINVAL;
-+	}
-+
-+	arg = kzalloc(sizeof(*arg), GFP_KERNEL);
-+	if (!arg)
-+		return -ENOMEM;
-+
-+	chan = chandef->chan;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "chandef chan %d, duration %d\n",
-+		   chan->center_freq, duration);
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	switch (ar->scan.state) {
-+	case ATH11K_SCAN_IDLE:
-+		reinit_completion(&ar->scan.started);
-+		reinit_completion(&ar->scan.completed);
-+		reinit_completion(&ar->scan.on_channel);
-+		ar->scan.state = ATH11K_SCAN_STARTING;
-+		ar->scan.is_roc = true;
-+		ar->scan.vdev_id = arvif->vdev_id;
-+		ar->scan.roc_freq = chan->center_freq;
-+		ar->scan.roc_notify = true;
-+		ret = 0;
-+		break;
-+	case ATH11K_SCAN_STARTING:
-+	case ATH11K_SCAN_RUNNING:
-+	case ATH11K_SCAN_ABORTING:
-+		ret = -EBUSY;
-+		break;
-+	}
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (ret)
-+		goto exit;
-+
-+	scan_time_msec = ar->hw->wiphy->max_remain_on_channel_duration * 2;
-+
-+	ath11k_wmi_start_scan_init(ar, arg);
-+	arg->vdev_id = arvif->vdev_id;
-+	arg->scan_id = ATH11K_SCAN_ID;
-+	arg->dwell_time_active = scan_time_msec;
-+	arg->dwell_time_passive = scan_time_msec;
-+	arg->max_scan_time = scan_time_msec;
-+	arg->burst_duration = duration;
-+
-+	arg->phymode = ath11k_phymodes[chandef->chan->band][chandef->width];
-+	if (arg->phymode) {
-+		arg->scan_f_wide_band = true;
-+		arg->scan_f_passive = true;
-+		arg->chandef = chandef;
-+		arg->num_chan = 1;
-+		ret = ath11k_reg_update_chan_list(ar, arg);
-+		if (ret)
-+			goto exit;
-+	}
-+
-+	if (arg->num_chan) {
-+		arg->chan_list = kcalloc(arg->num_chan, sizeof(*arg->chan_list),
-+					 GFP_KERNEL);
-+		if (!arg->chan_list) {
-+			ret = -ENOMEM;
-+			goto exit;
-+		}
-+
-+		arg->chan_list[0] = chandef->chan->center_freq;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "ath11k ROC arg freq %d phymode %d\n",
-+		   arg->chandef->chan->center_freq, arg->phymode);
-+
-+	ret = ath11k_start_scan(ar, arg);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to start roc scan: %d\n", ret);
-+		spin_lock_bh(&ar->data_lock);
-+		ar->scan.state = ATH11K_SCAN_IDLE;
-+		spin_unlock_bh(&ar->data_lock);
-+		goto exit;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->scan.on_channel, ATH11K_ROC_TIMEOUT_HZ);
-+	if (ret == 0) {
-+		ath11k_warn(ar->ab, "failed to switch to channel for roc scan\n");
-+		ret = ath11k_scan_stop(ar);
-+		if (ret)
-+			ath11k_warn(ar->ab, "failed to stop scan: %d\n", ret);
-+
-+		ret = -ETIMEDOUT;
-+		goto exit;
-+	}
-+
-+	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
-+				     msecs_to_jiffies(arg->max_scan_time +
-+				     ATH11K_MAC_SCAN_TIMEOUT_MSECS));
-+	ret = 0;
-+exit:
-+	kfree(arg);
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static int ath11k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
-+						  struct ieee80211_vif *vif)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ar->scan.roc_notify = false;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ath11k_scan_abort(ar);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	cancel_delayed_work_sync(&ar->scan.timeout);
-+
-+	return 0;
-+}
-+
- static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_sta *sta,
-@@ -8088,6 +8234,8 @@ static const struct ieee80211_ops ath11k_ops = {
- 	.sta_set_txpwr			= ath11k_mac_op_sta_set_txpwr,
- 	.sta_rc_update			= ath11k_mac_op_sta_rc_update,
- 	.conf_tx                        = ath11k_mac_op_conf_tx,
-+	.remain_on_channel              = ath11k_mac_op_remain_on_channel,
-+	.cancel_remain_on_channel       = ath11k_mac_op_cancel_remain_on_channel,
- 	.set_antenna			= ath11k_mac_op_set_antenna,
- 	.get_antenna			= ath11k_mac_op_get_antenna,
- 	.ampdu_action			= ath11k_mac_op_ampdu_action,
-@@ -8423,6 +8571,10 @@ static int __ath11k_mac_register(struct ath11k *ar)
- 	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
- 	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
- 
-+	if (test_bit(WMI_TLV_SERVICE_SCAN_PHYMODE_SUPPORT,
-+		     ar->ab->wmi_ab.svc_map))
-+		ieee80211_hw_set(ar->hw, SUPPORTS_EXT_REMAIN_ON_CHAN);
-+
- 	if (ath11k_frame_mode == ATH11K_HW_TXRX_ETHERNET) {
- 		ieee80211_hw_set(ar->hw, SUPPORTS_TX_ENCAP_OFFLOAD);
- 		ieee80211_hw_set(ar->hw, SUPPORTS_RX_DECAP_OFFLOAD);
-@@ -8653,6 +8805,7 @@ int ath11k_mac_allocate(struct ath11k_base *ab)
- 		init_completion(&ar->scan.started);
- 		init_completion(&ar->scan.completed);
- 		init_completion(&ar->thermal.wmi_sync);
-+		init_completion(&ar->scan.on_channel);
- 
- 		INIT_DELAYED_WORK(&ar->scan.timeout, ath11k_scan_timeout_work);
- 		INIT_WORK(&ar->regd_update_work, ath11k_regd_update_work);
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index b4f86c4..d818713 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2108,9 +2108,9 @@ ath11k_wmi_copy_scan_event_cntrl_flags(struct wmi_start_scan_cmd *cmd,
- 		cmd->scan_ctrl_flags |=  WMI_SCAN_ADD_SPOOF_MAC_IN_PROBE_REQ;
- 	if (param->scan_f_add_rand_seq_in_probe)
- 		cmd->scan_ctrl_flags |=  WMI_SCAN_RANDOM_SEQ_NO_IN_PROBE_REQ;
--	if (param->scan_f_en_ie_whitelist_in_probe)
-+	if (param->scan_f_en_ie_list_in_probe)
- 		cmd->scan_ctrl_flags |=
--			 WMI_SCAN_ENABLE_IE_WHTELIST_IN_PROBE_REQ;
-+			 WMI_SCAN_ENABLE_IE_LIST_IN_PROBE_REQ;
- 
- 	/* for adaptive scan mode using 3 bits (21 - 23 bits) */
- 	WMI_SCAN_SET_DWELL_MODE(cmd->scan_ctrl_flags,
-@@ -2132,6 +2132,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	u16 extraie_len_with_pad = 0;
- 	struct hint_short_ssid *s_ssid = NULL;
- 	struct hint_bssid *hint_bssid = NULL;
-+	u8 *phy_ptr;
-+	u8 phymode_roundup = 0;
- 
- 	len = sizeof(*cmd);
- 
-@@ -2161,6 +2163,18 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 		len += TLV_HDR_SIZE +
- 		       params->num_hint_s_ssid * sizeof(struct hint_short_ssid);
- 
-+	len += TLV_HDR_SIZE;
-+	if (params->scan_f_en_ie_list_in_probe)
-+		len += params->ie_list.num_vendor_oui *
-+		       sizeof(struct wmi_vendor_oui);
-+
-+	len += TLV_HDR_SIZE;
-+	if (params->scan_f_wide_band)
-+		phymode_roundup =
-+			roundup(params->num_chan * sizeof(u8),
-+				sizeof(u32));
-+	len += phymode_roundup;
-+
- 	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
- 	if (!skb)
- 		return -ENOMEM;
-@@ -2192,11 +2206,12 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	cmd->max_scan_time = params->max_scan_time;
- 	cmd->probe_delay = params->probe_delay;
- 	cmd->burst_duration = params->burst_duration;
--	cmd->num_chan = params->num_chan;
-+	cmd->num_chan = params->num_chan;
- 	cmd->num_bssid = params->num_bssid;
- 	cmd->num_ssids = params->num_ssids;
- 	cmd->ie_len = params->extraie.len;
- 	cmd->n_probes = params->n_probes;
-+	cmd->num_vendor_oui = params->ie_list.num_vendor_oui;
- 	ether_addr_copy(cmd->mac_addr.addr, params->mac_addr.addr);
- 	ether_addr_copy(cmd->mac_mask.addr, params->mac_mask.addr);
- 
-@@ -2292,8 +2307,41 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 					&hint_bssid->bssid.addr[0]);
- 			hint_bssid++;
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (test_and_clear_bit(BRCMF_P2P_STATUS_DISCOVER_LISTEN,
+@@ -1026,9 +1028,11 @@ int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
+ 			complete(&p2p->wait_next_af);
  		}
-+		ptr += len;
-+	}
-+
-+	len = params->ie_list.num_vendor_oui *
-+	      sizeof(struct wmi_vendor_oui);
-+	tlv = ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_STRUCT) |
-+				 FIELD_PREP(WMI_TLV_LEN, len);
-+	ptr += TLV_HDR_SIZE;
-+
-+	if (params->scan_f_en_ie_list_in_probe) {
-+		/* TODO: fill vendor OUIs for probe req ie listing
-+		 * currently added for FW TLV validation
-+		 */
- 	}
  
-+	ptr += len;
-+
-+	len = phymode_roundup;
-+	tlv = ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
-+				 FIELD_PREP(WMI_TLV_LEN, len);
-+	ptr += TLV_HDR_SIZE;
-+
-+	/* Wide Band Scan */
-+	if (params->scan_f_wide_band) {
-+		phy_ptr = (u8 *)ptr;
-+		/* Add PHY mode TLV for wide band scan with phymode + 1 value
-+		 * so that phymode '0' is ignored by FW as default value.
-+		 */
-+		for (i = 0; i < params->num_chan; ++i)
-+			phy_ptr[i] = params->phymode + 1;
-+	}
-+	ptr += phymode_roundup;
-+
- 	ret = ath11k_wmi_cmd_send(wmi, skb,
- 				  WMI_START_SCAN_CMDID);
- 	if (ret) {
-@@ -5256,6 +5304,8 @@ static void ath11k_wmi_event_scan_started(struct ath11k *ar)
- 		break;
- 	case ATH11K_SCAN_STARTING:
- 		ar->scan.state = ATH11K_SCAN_RUNNING;
-+		if (ar->scan.is_roc)
-+			ieee80211_ready_on_channel(ar->hw);
- 		complete(&ar->scan.started);
- 		break;
++		cfg80211_chandef_create(&chandef, &p2p->remain_on_channel,
++					NL80211_CHAN_HT20);
+ 		cfg80211_remain_on_channel_expired(&ifp->vif->wdev,
+ 						   p2p->remain_on_channel_cookie,
+-						   &p2p->remain_on_channel,
++						   &chandef,
+ 						   GFP_KERNEL);
  	}
-@@ -5338,6 +5388,9 @@ static void ath11k_wmi_event_scan_foreign_chan(struct ath11k *ar, u32 freq)
- 	case ATH11K_SCAN_RUNNING:
- 	case ATH11K_SCAN_ABORTING:
- 		ar->scan_channel = ieee80211_get_channel(ar->hw->wiphy, freq);
-+
-+		if (ar->scan.is_roc && ar->scan.roc_freq == freq)
-+			complete(&ar->scan.on_channel);
+ 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
+index d2ecee5..1646e6e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
+@@ -156,7 +156,7 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request,
+ 			struct brcmf_cfg80211_vif *vif);
+ int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+-				struct ieee80211_channel *channel,
++				struct cfg80211_chan_def *chandef,
+ 				unsigned int duration, u64 *cookie);
+ int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
+ 				     const struct brcmf_event_msg *e,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 897e3b9..b3644dd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3874,7 +3874,7 @@ static int iwl_mvm_send_aux_roc_cmd(struct iwl_mvm *mvm,
+ 
+ static int iwl_mvm_roc(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif,
+-		       struct ieee80211_channel *channel,
++		       struct cfg80211_chan_def *chandefcfg,
+ 		       int duration,
+ 		       enum ieee80211_roc_type type)
+ {
+@@ -3882,6 +3882,7 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct cfg80211_chan_def chandef;
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt;
++	struct ieee80211_channel *channel = chandefcfg->chan;
+ 	bool band_change_removal;
+ 	int ret, i;
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 23219f3..1d0c684 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2475,11 +2475,12 @@ static void hw_roc_done(struct work_struct *work)
+ 
+ static int mac80211_hwsim_roc(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif,
+-			      struct ieee80211_channel *chan,
++			      struct cfg80211_chan_def *chandef,
+ 			      int duration,
+ 			      enum ieee80211_roc_type type)
+ {
+ 	struct mac80211_hwsim_data *hwsim = hw->priv;
++	struct ieee80211_channel *chan = chandef->chan;
+ 
+ 	mutex_lock(&hwsim->mutex);
+ 	if (WARN_ON(hwsim->tmp_chan || hwsim->hw_scan_request)) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 6f23ec3..9008c11 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -292,10 +292,11 @@ mwifiex_cfg80211_update_mgmt_frame_registrations(struct wiphy *wiphy,
+ static int
+ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
+ 				   struct wireless_dev *wdev,
+-				   struct ieee80211_channel *chan,
++				   struct cfg80211_chan_def *chandef,
+ 				   unsigned int duration, u64 *cookie)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct ieee80211_channel *chan = chandef->chan;
+ 	int ret;
+ 
+ 	if (!chan || !cookie) {
+@@ -318,7 +319,7 @@ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
+ 		priv->roc_cfg.cookie = *cookie;
+ 		priv->roc_cfg.chan = *chan;
+ 
+-		cfg80211_ready_on_channel(wdev, *cookie, chan,
++		cfg80211_ready_on_channel(wdev, *cookie, chandef,
+ 					  duration, GFP_ATOMIC);
+ 
+ 		mwifiex_dbg(priv->adapter, INFO,
+@@ -336,6 +337,7 @@ mwifiex_cfg80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 					  struct wireless_dev *wdev, u64 cookie)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct cfg80211_chan_def chandef;
+ 	int ret;
+ 
+ 	if (cookie != priv->roc_cfg.cookie)
+@@ -345,8 +347,10 @@ mwifiex_cfg80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 					 &priv->roc_cfg.chan, 0);
+ 
+ 	if (!ret) {
++		cfg80211_chandef_create(&chandef, &priv->roc_cfg.chan,
++					NL80211_CHAN_HT20);
+ 		cfg80211_remain_on_channel_expired(wdev, cookie,
+-						   &priv->roc_cfg.chan,
++						   &chandef,
+ 						   GFP_ATOMIC);
+ 
+ 		memset(&priv->roc_cfg, 0, sizeof(struct mwifiex_roc_cfg));
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 68c6326..b13883e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -705,6 +705,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 	u16 ctrl, reason_code;
+ 	u8 ibss_sta_addr[ETH_ALEN];
+ 	struct mwifiex_sta_node *sta_ptr;
++	struct cfg80211_chan_def chandef;
+ 
+ 	switch (eventcause) {
+ 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
+@@ -1007,9 +1008,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 	case EVENT_REMAIN_ON_CHAN_EXPIRED:
+ 		mwifiex_dbg(adapter, EVENT,
+ 			    "event: Remain on channel expired\n");
++		cfg80211_chandef_create(&chandef, &priv->roc_cfg.chan, NL80211_CHAN_HT20);
+ 		cfg80211_remain_on_channel_expired(&priv->wdev,
+ 						   priv->roc_cfg.cookie,
+-						   &priv->roc_cfg.chan,
++						   &chandef,
+ 						   GFP_ATOMIC);
+ 
+ 		memset(&priv->roc_cfg, 0x00, sizeof(struct mwifiex_roc_cfg));
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_event.c b/drivers/net/wireless/marvell/mwifiex/uap_event.c
+index 2e25d72..7d79331 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_event.c
+@@ -113,6 +113,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 	struct mwifiex_sta_node *node;
+ 	u8 *deauth_mac;
+ 	struct host_cmd_ds_11n_batimeout *ba_timeout;
++	struct cfg80211_chan_def chandef;
+ 	u16 ctrl;
+ 
+ 	switch (eventcause) {
+@@ -322,9 +323,10 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 	case EVENT_REMAIN_ON_CHAN_EXPIRED:
+ 		mwifiex_dbg(adapter, EVENT,
+ 			    "event: uap: Remain on channel expired\n");
++		cfg80211_chandef_create(&chandef, &priv->roc_cfg.chan, NL80211_CHAN_HT20);
+ 		cfg80211_remain_on_channel_expired(&priv->wdev,
+ 						   priv->roc_cfg.cookie,
+-						   &priv->roc_cfg.chan,
++						   &chandef,
+ 						   GFP_ATOMIC);
+ 		memset(&priv->roc_cfg, 0x00, sizeof(struct mwifiex_roc_cfg));
  		break;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 890d9b0..1bfdc4e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -1130,11 +1130,12 @@ mt7615_stop_sched_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 
+ static int mt7615_remain_on_channel(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+-				    struct ieee80211_channel *chan,
++				    struct cfg80211_chan_def *chandef,
+ 				    int duration,
+ 				    enum ieee80211_roc_type type)
+ {
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
++	struct ieee80211_channel *chan = chandef->chan;
+ 	int err;
+ 
+ 	if (test_and_set_bit(MT76_STATE_ROC, &phy->mt76->state))
+diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+index dc4bfe7..cedaf5f 100644
+--- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
++++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+@@ -1051,24 +1051,28 @@ static void wilc_wfi_remain_on_channel_expired(void *data, u64 cookie)
+ 	struct wilc_vif *vif = data;
+ 	struct wilc_priv *priv = &vif->priv;
+ 	struct wilc_wfi_p2p_listen_params *params = &priv->remain_on_ch_params;
++	struct cfg80211_chan_def chandef;
+ 
+ 	if (cookie != params->listen_cookie)
+ 		return;
+ 
+ 	priv->p2p_listen_state = false;
+ 
++	cfg80211_chandef_create(&chandef, params->listen_ch, NL80211_CHAN_HT20);
++
+ 	cfg80211_remain_on_channel_expired(&priv->wdev, params->listen_cookie,
+-					   params->listen_ch, GFP_KERNEL);
++					   &chandef, GFP_KERNEL);
  }
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 89a743b..b8ad2f4 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -3104,6 +3104,12 @@ struct wlan_ssid {
+ 
+ static int remain_on_channel(struct wiphy *wiphy,
+ 			     struct wireless_dev *wdev,
+-			     struct ieee80211_channel *chan,
++			     struct cfg80211_chan_def *chandef,
+ 			     unsigned int duration, u64 *cookie)
+ {
+ 	int ret = 0;
+ 	struct wilc_vif *vif = netdev_priv(wdev->netdev);
+ 	struct wilc_priv *priv = &vif->priv;
++	struct ieee80211_channel *chan = chandef->chan;
+ 	u64 id;
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_AP) {
+@@ -1094,7 +1098,7 @@ static int remain_on_channel(struct wiphy *wiphy,
+ 	priv->p2p_listen_state = true;
+ 	priv->remain_on_ch_params.listen_duration = duration;
+ 
+-	cfg80211_ready_on_channel(wdev, *cookie, chan, duration, GFP_KERNEL);
++	cfg80211_ready_on_channel(wdev, *cookie, chandef, duration, GFP_KERNEL);
+ 	mod_timer(&vif->hif_drv->remain_on_ch_timer,
+ 		  jiffies + msecs_to_jiffies(duration + 1000));
+ 
+@@ -1119,7 +1123,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 		   struct cfg80211_mgmt_tx_params *params,
+ 		   u64 *cookie)
+ {
+-	struct ieee80211_channel *chan = params->chan;
++	struct ieee80211_channel *chan = params->chandef.chan;
+ 	unsigned int wait = params->wait;
+ 	const u8 *buf = params->buf;
+ 	size_t len = params->len;
+@@ -1205,6 +1209,7 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 	struct wilc_vif *vif = netdev_priv(wdev->netdev);
+ 	struct wilc_priv *priv = &vif->priv;
+ 	struct host_if_drv *wfi_drv = priv->hif_drv;
++	struct cfg80211_chan_def chandef;
+ 
+ 	wfi_drv->p2p_timeout = jiffies;
+ 
+@@ -1213,9 +1218,11 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 
+ 		params = &priv->remain_on_ch_params;
+ 
++		cfg80211_chandef_create(&chandef, params->listen_ch, NL80211_CHAN_HT20);
++
+ 		cfg80211_remain_on_channel_expired(wdev,
+ 						   params->listen_cookie,
+-						   params->listen_ch,
++						   &chandef,
+ 						   GFP_KERNEL);
+ 	}
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index e70c1c7f..019d07c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1758,11 +1758,12 @@ void rsi_roc_timeout(struct timer_list *t)
+ }
+ 
+ static int rsi_mac80211_roc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			    struct ieee80211_channel *chan, int duration,
++			    struct cfg80211_chan_def *chandef, int duration,
+ 			    enum ieee80211_roc_type type)
+ {
+ 	struct rsi_hw *adapter = (struct rsi_hw *)hw->priv;
+ 	struct rsi_common *common = (struct rsi_common *)adapter->priv;
++	struct ieee80211_channel *chan = chandef->chan;
+ 	int status = 0;
+ 
+ 	rsi_dbg(INFO_ZONE, "***** Remain on channel *****\n");
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 5669f17..48f2d42 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5640,13 +5640,14 @@ static void wlcore_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ static int wlcore_op_remain_on_channel(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+-				       struct ieee80211_channel *chan,
++				       struct cfg80211_chan_def *chandef,
+ 				       int duration,
+ 				       enum ieee80211_roc_type type)
+ {
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct wl1271 *wl = hw->priv;
+ 	int channel, active_roc, ret = 0;
++	struct ieee80211_channel *chan = chandef->chan;
+ 
+ 	channel = ieee80211_frequency_to_channel(chan->center_freq);
+ 
+diff --git a/drivers/staging/rtl8723bs/include/ioctl_cfg80211.h b/drivers/staging/rtl8723bs/include/ioctl_cfg80211.h
+index 993a7b3..af75a55 100644
+--- a/drivers/staging/rtl8723bs/include/ioctl_cfg80211.h
++++ b/drivers/staging/rtl8723bs/include/ioctl_cfg80211.h
+@@ -111,7 +111,7 @@ bool rtw_cfg80211_pwr_mgmt(struct adapter *adapter);
+ #define rtw_cfg80211_rx_mgmt(adapter, freq, sig_dbm, buf, len, gfp) cfg80211_rx_mgmt((adapter)->rtw_wdev, freq, sig_dbm, buf, len, 0)
+ #define rtw_cfg80211_send_rx_assoc(adapter, bss, buf, len) cfg80211_send_rx_assoc((adapter)->pnetdev, bss, buf, len)
+ #define rtw_cfg80211_mgmt_tx_status(adapter, cookie, buf, len, ack, gfp) cfg80211_mgmt_tx_status((adapter)->rtw_wdev, cookie, buf, len, ack, gfp)
+-#define rtw_cfg80211_ready_on_channel(adapter, cookie, chan, channel_type, duration, gfp)  cfg80211_ready_on_channel((adapter)->rtw_wdev, cookie, chan, duration, gfp)
+-#define rtw_cfg80211_remain_on_channel_expired(adapter, cookie, chan, chan_type, gfp) cfg80211_remain_on_channel_expired((adapter)->rtw_wdev, cookie, chan, gfp)
++#define rtw_cfg80211_ready_on_channel(adapter, cookie, chandef, channel_type, duration, gfp)  cfg80211_ready_on_channel((adapter)->rtw_wdev, cookie, chandef, duration, gfp)
++#define rtw_cfg80211_remain_on_channel_expired(adapter, cookie, chandef, chan_type, gfp) cfg80211_remain_on_channel_expired((adapter)->rtw_wdev, cookie, chandef, gfp)
+ 
+ #endif /* __IOCTL_CFG80211_H__ */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 423f97b..6fe8348 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3238,9 +3238,9 @@ struct cfg80211_update_ft_ies_params {
+  * @dont_wait_for_ack: tells the low level not to wait for an ack
+  * @n_csa_offsets: length of csa_offsets array
+  * @csa_offsets: array of all the csa offsets in the frame
++ * @chandef: channel definition
+  */
+ struct cfg80211_mgmt_tx_params {
+-	struct ieee80211_channel *chan;
+ 	bool offchan;
+ 	unsigned int wait;
+ 	const u8 *buf;
+@@ -3249,6 +3249,7 @@ struct cfg80211_mgmt_tx_params {
+ 	bool dont_wait_for_ack;
+ 	int n_csa_offsets;
+ 	const u16 *csa_offsets;
++	struct cfg80211_chan_def chandef;
  };
  
- #define WMI_IE_BITMAP_SIZE             8
-+#define PROBE_REQ_MAX_OUIS	       16
-+
-+struct wmi_vendor_oui {
-+	u32 tlv_header;
-+	u32 oui_type_subtype; /* vendor OUI type and subtype */
-+};
+ /**
+@@ -4235,7 +4236,7 @@ struct cfg80211_ops {
  
- #define WMI_SCAN_MAX_NUM_SSID                0x0A
- /* prefix used by scan requestor ids on the host */
-@@ -3211,7 +3217,7 @@ struct  wmi_start_scan_cmd {
- #define WMI_SCAN_FLAG_HALF_RATE_SUPPORT      0x20000
- #define WMI_SCAN_FLAG_QUARTER_RATE_SUPPORT   0x40000
- #define WMI_SCAN_RANDOM_SEQ_NO_IN_PROBE_REQ 0x80000
--#define WMI_SCAN_ENABLE_IE_WHTELIST_IN_PROBE_REQ 0x100000
-+#define WMI_SCAN_ENABLE_IE_LIST_IN_PROBE_REQ 0x100000
+ 	int	(*remain_on_channel)(struct wiphy *wiphy,
+ 				     struct wireless_dev *wdev,
+-				     struct ieee80211_channel *chan,
++				     struct cfg80211_chan_def *chandef,
+ 				     unsigned int duration,
+ 				     u64 *cookie);
+ 	int	(*cancel_remain_on_channel)(struct wiphy *wiphy,
+@@ -7338,35 +7339,35 @@ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+  * cfg80211_ready_on_channel - notification of remain_on_channel start
+  * @wdev: wireless device
+  * @cookie: the request cookie
+- * @chan: The current channel (from remain_on_channel request)
++ * @chandef: chandef for the current channel (from remain_on_channel request)
+  * @duration: Duration in milliseconds that the driver intents to remain on the
+  *	channel
+  * @gfp: allocation flags
+  */
+ void cfg80211_ready_on_channel(struct wireless_dev *wdev, u64 cookie,
+-			       struct ieee80211_channel *chan,
++			       struct cfg80211_chan_def *chandef,
+ 			       unsigned int duration, gfp_t gfp);
  
- #define WMI_SCAN_DWELL_MODE_MASK 0x00E00000
- #define WMI_SCAN_DWELL_MODE_SHIFT        21
-@@ -3238,6 +3244,17 @@ struct hint_bssid {
- 	struct wmi_mac_addr bssid;
+ /**
+  * cfg80211_remain_on_channel_expired - remain_on_channel duration expired
+  * @wdev: wireless device
+  * @cookie: the request cookie
+- * @chan: The current channel (from remain_on_channel request)
++ * @chandef: chandef for the current channel
+  * @gfp: allocation flags
+  */
+ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+-					struct ieee80211_channel *chan,
++					struct cfg80211_chan_def *chandef,
+ 					gfp_t gfp);
+ 
+ /**
+  * cfg80211_tx_mgmt_expired - tx_mgmt duration expired
+  * @wdev: wireless device
+  * @cookie: the requested cookie
+- * @chan: The current channel (from tx_mgmt request)
++ * @chandef: chandef for the current channel (from tx_mgmt request)
+  * @gfp: allocation flags
+  */
+ void cfg80211_tx_mgmt_expired(struct wireless_dev *wdev, u64 cookie,
+-			      struct ieee80211_channel *chan, gfp_t gfp);
++			      struct cfg80211_chan_def *chandef, gfp_t gfp);
+ 
+ /**
+  * cfg80211_sinfo_alloc_tid_stats - allocate per-tid statistics.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dd757f0..177679d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2422,6 +2422,8 @@ struct ieee80211_txq {
+  *	usage and 802.11 frames with %RX_FLAG_ONLY_MONITOR set for monitor to
+  *	the stack.
+  *
++ * @IEEE80211_HW_SUPPORTS_EXT_REMAIN_ON_CHAN: Hardware supports extended remain
++ *	on channel for bandwidth higher than 20MHz.
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2477,6 +2479,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_TX_ENCAP_OFFLOAD,
+ 	IEEE80211_HW_SUPPORTS_RX_DECAP_OFFLOAD,
+ 	IEEE80211_HW_SUPPORTS_CONC_MON_RX_DECAP,
++	IEEE80211_HW_SUPPORTS_EXT_REMAIN_ON_CHAN,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -4118,7 +4121,7 @@ struct ieee80211_ops {
+ 
+ 	int (*remain_on_channel)(struct ieee80211_hw *hw,
+ 				 struct ieee80211_vif *vif,
+-				 struct ieee80211_channel *chan,
++				 struct cfg80211_chan_def *chandef,
+ 				 int duration,
+ 				 enum ieee80211_roc_type type);
+ 	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 8dbfe32..a355fe4 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -504,6 +504,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(SUPPORTS_TX_ENCAP_OFFLOAD),
+ 	FLAG(SUPPORTS_RX_DECAP_OFFLOAD),
+ 	FLAG(SUPPORTS_CONC_MON_RX_DECAP),
++	FLAG(SUPPORTS_EXT_REMAIN_ON_CHAN),
+ #undef FLAG
  };
  
-+struct wmi_chan_info {
-+	u32 freq;
-+	u32 phymode;
-+};
-+
-+struct wmi_probe_req_ie_list {
-+	u32 ie_bitmap[WMI_IE_BITMAP_SIZE];
-+	u32 num_vendor_oui;
-+	u32 voui[PROBE_REQ_MAX_OUIS];
-+};
-+
- struct scan_req_params {
- 	u32 scan_id;
- 	u32 scan_req_id;
-@@ -3296,11 +3313,11 @@ struct scan_req_params {
- 			    scan_f_add_ds_ie_in_probe:1,
- 			    scan_f_add_spoofed_mac_in_probe:1,
- 			    scan_f_add_rand_seq_in_probe:1,
--			    scan_f_en_ie_whitelist_in_probe:1,
-+			    scan_f_en_ie_list_in_probe:1,
- 			    scan_f_forced:1,
- 			    scan_f_2ghz:1,
- 			    scan_f_5ghz:1,
--			    scan_f_80mhz:1;
-+			    scan_f_wide_band:1;
- 		};
- 		u32 scan_flags;
- 	};
-@@ -3325,6 +3342,7 @@ struct scan_req_params {
- 	struct wmi_mac_addr mac_mask;
- 	u32 phymode;
- 	struct cfg80211_chan_def *chandef;
-+	struct wmi_probe_req_ie_list ie_list;
- };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index c336267..8babc13 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -675,7 +675,7 @@ static inline int drv_get_antenna(struct ieee80211_local *local,
  
- struct wmi_ssid_arg {
+ static inline int drv_remain_on_channel(struct ieee80211_local *local,
+ 					struct ieee80211_sub_if_data *sdata,
+-					struct ieee80211_channel *chan,
++					struct cfg80211_chan_def *chandef,
+ 					unsigned int duration,
+ 					enum ieee80211_roc_type type)
+ {
+@@ -683,9 +683,9 @@ static inline int drv_remain_on_channel(struct ieee80211_local *local,
+ 
+ 	might_sleep();
+ 
+-	trace_drv_remain_on_channel(local, sdata, chan, duration, type);
++	trace_drv_remain_on_channel(local, sdata, chandef, duration, type);
+ 	ret = local->ops->remain_on_channel(&local->hw, &sdata->vif,
+-					    chan, duration, type);
++					    chandef, duration, type);
+ 	trace_drv_return_int(local, ret);
+ 
+ 	return ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 482c98e..115e68a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -337,7 +337,7 @@ struct ieee80211_roc_work {
+ 
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	struct ieee80211_channel *chan;
++	struct cfg80211_chan_def chandef;
+ 
+ 	bool started, abort, hw_begun, notified;
+ 	bool on_channel;
+@@ -1907,7 +1907,7 @@ void ieee80211_start_next_roc(struct ieee80211_local *local);
+ void ieee80211_roc_purge(struct ieee80211_local *local,
+ 			 struct ieee80211_sub_if_data *sdata);
+ int ieee80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+-				struct ieee80211_channel *chan,
++				struct cfg80211_chan_def *chandef,
+ 				unsigned int duration, u64 *cookie);
+ int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 				       struct wireless_dev *wdev, u64 cookie);
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 853c9a3..fa5c06c 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -178,12 +178,13 @@ static void ieee80211_roc_notify_destroy(struct ieee80211_roc_work *roc)
+ 
+ 	if (!roc->mgmt_tx_cookie)
+ 		cfg80211_remain_on_channel_expired(&roc->sdata->wdev,
+-						   roc->cookie, roc->chan,
++						   roc->cookie,
++						   &roc->chandef,
+ 						   GFP_KERNEL);
+ 	else
+ 		cfg80211_tx_mgmt_expired(&roc->sdata->wdev,
+ 					 roc->mgmt_tx_cookie,
+-					 roc->chan, GFP_KERNEL);
++					 &roc->chandef, GFP_KERNEL);
+ 
+ 	list_del(&roc->list);
+ 	kfree(roc);
+@@ -235,21 +236,24 @@ static bool ieee80211_recalc_sw_work(struct ieee80211_local *local,
+ static void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc,
+ 					 unsigned long start_time)
+ {
++	enum nl80211_band band;
++
+ 	if (WARN_ON(roc->notified))
+ 		return;
+ 
++	band = roc->chandef.chan->band;
+ 	roc->start_time = start_time;
+ 	roc->started = true;
+ 
+ 	if (roc->mgmt_tx_cookie) {
+ 		if (!WARN_ON(!roc->frame)) {
+ 			ieee80211_tx_skb_tid_band(roc->sdata, roc->frame, 7,
+-						  roc->chan->band);
++						  band);
+ 			roc->frame = NULL;
+ 		}
+ 	} else {
+ 		cfg80211_ready_on_channel(&roc->sdata->wdev, roc->cookie,
+-					  roc->chan, roc->req_duration,
++					  &roc->chandef, roc->req_duration,
+ 					  GFP_KERNEL);
+ 	}
+ 
+@@ -311,7 +315,8 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 	list_for_each_entry(tmp, &local->roc_list, list) {
+ 		if (tmp == roc)
+ 			continue;
+-		if (tmp->sdata != roc->sdata || tmp->chan != roc->chan)
++		if (tmp->sdata != roc->sdata ||
++		    cfg80211_chandef_identical(&tmp->chandef, &roc->chandef))
+ 			break;
+ 		max_dur = max(tmp->duration, max_dur);
+ 		min_dur = min(tmp->duration, min_dur);
+@@ -319,7 +324,8 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 	}
+ 
+ 	if (local->ops->remain_on_channel) {
+-		int ret = drv_remain_on_channel(local, roc->sdata, roc->chan,
++		int ret = drv_remain_on_channel(local, roc->sdata,
++						&roc->chandef,
+ 						max_dur, type);
+ 
+ 		if (ret) {
+@@ -331,7 +337,8 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 			 */
+ 			list_for_each_entry(tmp, &local->roc_list, list) {
+ 				if (tmp->sdata != roc->sdata ||
+-				    tmp->chan != roc->chan)
++				    cfg80211_chandef_identical(&tmp->chandef,
++							       &roc->chandef))
+ 					break;
+ 				tmp->started = true;
+ 				tmp->abort = true;
+@@ -342,7 +349,8 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 
+ 		/* we'll notify about the start once the HW calls back */
+ 		list_for_each_entry(tmp, &local->roc_list, list) {
+-			if (tmp->sdata != roc->sdata || tmp->chan != roc->chan)
++			if (tmp->sdata != roc->sdata ||
++			    cfg80211_chandef_identical(&tmp->chandef, &roc->chandef))
+ 				break;
+ 			tmp->started = true;
+ 		}
+@@ -352,7 +360,7 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 		 * treat it as though the ROC operation started properly, so
+ 		 * other ROC operations won't interfere with this one.
+ 		 */
+-		roc->on_channel = roc->chan == local->_oper_chandef.chan &&
++		roc->on_channel = roc->chandef.chan == local->_oper_chandef.chan &&
+ 				  local->_oper_chandef.width != NL80211_CHAN_WIDTH_5 &&
+ 				  local->_oper_chandef.width != NL80211_CHAN_WIDTH_10;
+ 
+@@ -362,7 +370,7 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 		if (!roc->on_channel) {
+ 			ieee80211_offchannel_stop_vifs(local);
+ 
+-			local->tmp_channel = roc->chan;
++			local->tmp_channel = roc->chandef.chan;
+ 			ieee80211_hw_config(local, 0);
+ 		}
+ 
+@@ -371,7 +379,8 @@ static void _ieee80211_start_next_roc(struct ieee80211_local *local)
+ 
+ 		/* tell userspace or send frame(s) */
+ 		list_for_each_entry(tmp, &local->roc_list, list) {
+-			if (tmp->sdata != roc->sdata || tmp->chan != roc->chan)
++			if (tmp->sdata != roc->sdata ||
++			    cfg80211_chandef_identical(&tmp->chandef, &roc->chandef))
+ 				break;
+ 
+ 			tmp->on_channel = roc->on_channel;
+@@ -526,12 +535,13 @@ ieee80211_coalesce_hw_started_roc(struct ieee80211_local *local,
+ 
+ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 				    struct ieee80211_sub_if_data *sdata,
+-				    struct ieee80211_channel *channel,
++				    struct cfg80211_chan_def *chandef,
+ 				    unsigned int duration, u64 *cookie,
+ 				    struct sk_buff *txskb,
+ 				    enum ieee80211_roc_type type)
+ {
+ 	struct ieee80211_roc_work *roc, *tmp;
++	struct ieee80211_channel *channel = chandef->chan;
+ 	bool queued = false, combine_started = true;
+ 	int ret;
+ 
+@@ -560,7 +570,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	if (!duration)
+ 		duration = 10;
+ 
+-	roc->chan = channel;
++	roc->chandef = *chandef;
+ 	roc->duration = duration;
+ 	roc->req_duration = duration;
+ 	roc->frame = txskb;
+@@ -590,7 +600,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 			/* otherwise actually kick it off here
+ 			 * (for error handling)
+ 			 */
+-			ret = drv_remain_on_channel(local, sdata, channel,
++			ret = drv_remain_on_channel(local, sdata, chandef,
+ 						    duration, type);
+ 			if (ret) {
+ 				kfree(roc);
+@@ -606,7 +616,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	/* otherwise handle queueing */
+ 
+ 	list_for_each_entry(tmp, &local->roc_list, list) {
+-		if (tmp->chan != channel || tmp->sdata != sdata)
++		if (tmp->chandef.chan != channel || tmp->sdata != sdata)
+ 			continue;
+ 
+ 		/*
+@@ -668,7 +678,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ }
+ 
+ int ieee80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+-				struct ieee80211_channel *chan,
++				struct cfg80211_chan_def *chandef,
+ 				unsigned int duration, u64 *cookie)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+@@ -676,9 +686,13 @@ int ieee80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	int ret;
+ 
+ 	mutex_lock(&local->mtx);
+-	ret = ieee80211_start_roc_work(local, sdata, chan,
+-				       duration, cookie, NULL,
+-				       IEEE80211_ROC_TYPE_NORMAL);
++
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_EXT_REMAIN_ON_CHAN))
++		goto err;
++
++	ret = ieee80211_start_roc_work(local, sdata, chandef, duration,
++				       cookie, NULL, IEEE80211_ROC_TYPE_NORMAL);
++err:
+ 	mutex_unlock(&local->mtx);
+ 
+ 	return ret;
+@@ -766,6 +780,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 	struct ieee80211_local *local = sdata->local;
++	struct cfg80211_chan_def chandef;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+ 	const struct ieee80211_mgmt *mgmt = (void *)params->buf;
+@@ -835,7 +850,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	/* configurations requiring offchan cannot work if no channel has been
+ 	 * specified
+ 	 */
+-	if (need_offchan && !params->chan)
++	if (need_offchan && !params->chandef.chan)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&local->mtx);
+@@ -848,10 +863,10 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 
+ 		if (chanctx_conf) {
+-			need_offchan = params->chan &&
+-				       (params->chan !=
++			need_offchan = params->chandef.chan &&
++				       (params->chandef.chan !=
+ 					chanctx_conf->def.chan);
+-		} else if (!params->chan) {
++		} else if (!params->chandef.chan) {
+ 			ret = -EINVAL;
+ 			rcu_read_unlock();
+ 			goto out_unlock;
+@@ -935,8 +950,9 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		IEEE80211_SKB_CB(skb)->hw_queue =
+ 			local->hw.offchannel_tx_hw_queue;
+ 
++	chandef = params->chandef;
+ 	/* This will handle all kinds of coalescing and immediate TX */
+-	ret = ieee80211_start_roc_work(local, sdata, params->chan,
++	ret = ieee80211_start_roc_work(local, sdata, &chandef,
+ 				       params->wait, cookie, skb,
+ 				       IEEE80211_ROC_TYPE_MGMT_TX);
+ 	if (ret)
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 9e8381b..720e56c 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1226,17 +1226,17 @@ TRACE_EVENT(drv_get_antenna,
+ TRACE_EVENT(drv_remain_on_channel,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+-		 struct ieee80211_channel *chan,
++		 struct cfg80211_chan_def *chandef,
+ 		 unsigned int duration,
+ 		 enum ieee80211_roc_type type),
+ 
+-	TP_ARGS(local, sdata, chan, duration, type),
++	TP_ARGS(local, sdata, chandef, duration, type),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+ 		VIF_ENTRY
++		CHANDEF_ENTRY
+ 		__field(int, center_freq)
+-		__field(int, freq_offset)
+ 		__field(unsigned int, duration)
+ 		__field(u32, type)
+ 	),
+@@ -1244,8 +1244,7 @@ TRACE_EVENT(drv_remain_on_channel,
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
+ 		VIF_ASSIGN;
+-		__entry->center_freq = chan->center_freq;
+-		__entry->freq_offset = chan->freq_offset;
++		CHANDEF_ASSIGN(chandef);
+ 		__entry->duration = duration;
+ 		__entry->type = type;
+ 	),
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a27b3b5..ee8e7f2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11486,7 +11486,7 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
+ 		goto free_msg;
+ 	}
+ 
+-	err = rdev_remain_on_channel(rdev, wdev, chandef.chan,
++	err = rdev_remain_on_channel(rdev, wdev, &chandef,
+ 				     duration, &cookie);
+ 
+ 	if (err)
+@@ -11704,7 +11704,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
+-	params.chan = chandef.chan;
++	params.chandef = chandef;
+ 	err = cfg80211_mlme_mgmt_tx(rdev, wdev, &params, &cookie);
+ 	if (err)
+ 		goto free_msg;
+@@ -16993,10 +16993,11 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ static void nl80211_send_remain_on_chan_event(
+ 	int cmd, struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev, u64 cookie,
+-	struct ieee80211_channel *chan,
++	struct cfg80211_chan_def *chandef,
+ 	unsigned int duration, gfp_t gfp)
+ {
+ 	struct sk_buff *msg;
++	struct ieee80211_channel *chan = chandef->chan;
+ 	void *hdr;
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
+@@ -17036,42 +17037,42 @@ static void nl80211_send_remain_on_chan_event(
+ }
+ 
+ void cfg80211_ready_on_channel(struct wireless_dev *wdev, u64 cookie,
+-			       struct ieee80211_channel *chan,
++			       struct cfg80211_chan_def *chandef,
+ 			       unsigned int duration, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 
+-	trace_cfg80211_ready_on_channel(wdev, cookie, chan, duration);
++	trace_cfg80211_ready_on_channel(wdev, cookie, chandef, duration);
+ 	nl80211_send_remain_on_chan_event(NL80211_CMD_REMAIN_ON_CHANNEL,
+-					  rdev, wdev, cookie, chan,
++					  rdev, wdev, cookie, chandef,
+ 					  duration, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_ready_on_channel);
+ 
+ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+-					struct ieee80211_channel *chan,
++					struct cfg80211_chan_def *chandef,
+ 					gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 
+-	trace_cfg80211_ready_on_channel_expired(wdev, cookie, chan);
++	trace_cfg80211_ready_on_channel_expired(wdev, cookie, chandef);
+ 	nl80211_send_remain_on_chan_event(NL80211_CMD_CANCEL_REMAIN_ON_CHANNEL,
+-					  rdev, wdev, cookie, chan, 0, gfp);
++					  rdev, wdev, cookie, chandef, 0, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
+ 
+ void cfg80211_tx_mgmt_expired(struct wireless_dev *wdev, u64 cookie,
+-					struct ieee80211_channel *chan,
+-					gfp_t gfp)
++			      struct cfg80211_chan_def *chandef,
++			      gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 
+-	trace_cfg80211_tx_mgmt_expired(wdev, cookie, chan);
++	trace_cfg80211_tx_mgmt_expired(wdev, cookie, chandef);
+ 	nl80211_send_remain_on_chan_event(NL80211_CMD_FRAME_WAIT_CANCEL,
+-					  rdev, wdev, cookie, chan, 0, gfp);
++					  rdev, wdev, cookie, chandef, 0, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_tx_mgmt_expired);
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index cc1efec..e0fd09b 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -710,12 +710,12 @@ static inline int rdev_flush_pmksa(struct cfg80211_registered_device *rdev,
+ static inline int
+ rdev_remain_on_channel(struct cfg80211_registered_device *rdev,
+ 		       struct wireless_dev *wdev,
+-		       struct ieee80211_channel *chan,
++		       struct cfg80211_chan_def *chandef,
+ 		       unsigned int duration, u64 *cookie)
+ {
+ 	int ret;
+-	trace_rdev_remain_on_channel(&rdev->wiphy, wdev, chan, duration);
+-	ret = rdev->ops->remain_on_channel(&rdev->wiphy, wdev, chan,
++	trace_rdev_remain_on_channel(&rdev->wiphy, wdev, chandef, duration);
++	ret = rdev->ops->remain_on_channel(&rdev->wiphy, wdev, chandef,
+ 					   duration, cookie);
+ 	trace_rdev_return_int_cookie(&rdev->wiphy, ret, *cookie);
+ 	return ret;
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ad6c16a..c08399e 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1913,9 +1913,9 @@ DEFINE_EVENT(rdev_pmksa, rdev_del_pmksa,
+ 
+ TRACE_EVENT(rdev_remain_on_channel,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
+-		 struct ieee80211_channel *chan,
++		 struct cfg80211_chan_def *chandef,
+ 		 unsigned int duration),
+-	TP_ARGS(wiphy, wdev, chan, duration),
++	TP_ARGS(wiphy, wdev, chandef, duration),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		WDEV_ENTRY
+@@ -1925,7 +1925,7 @@ TRACE_EVENT(rdev_remain_on_channel,
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		WDEV_ASSIGN;
+-		CHAN_ASSIGN(chan);
++		CHAN_ASSIGN(chandef->chan);
+ 		__entry->duration = duration;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", " CHAN_PR_FMT ", duration: %u",
+@@ -1982,7 +1982,7 @@ TRACE_EVENT(rdev_mgmt_tx,
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		WDEV_ASSIGN;
+-		CHAN_ASSIGN(params->chan);
++		CHAN_ASSIGN(params->chandef.chan);
+ 		__entry->offchan = params->offchan;
+ 		__entry->wait = params->wait;
+ 		__entry->no_cck = params->no_cck;
+@@ -2812,60 +2812,60 @@ TRACE_EVENT(cfg80211_michael_mic_failure,
+ 
+ TRACE_EVENT(cfg80211_ready_on_channel,
+ 	TP_PROTO(struct wireless_dev *wdev, u64 cookie,
+-		 struct ieee80211_channel *chan,
++		 struct cfg80211_chan_def *chandef,
+ 		 unsigned int duration),
+-	TP_ARGS(wdev, cookie, chan, duration),
++	TP_ARGS(wdev, cookie, chandef, duration),
+ 	TP_STRUCT__entry(
+ 		WDEV_ENTRY
+ 		__field(u64, cookie)
+-		CHAN_ENTRY
++		CHAN_DEF_ENTRY
+ 		__field(unsigned int, duration)
+ 	),
+ 	TP_fast_assign(
+ 		WDEV_ASSIGN;
+ 		__entry->cookie = cookie;
+-		CHAN_ASSIGN(chan);
++		CHAN_DEF_ASSIGN(chandef);
+ 		__entry->duration = duration;
+ 	),
+-	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_PR_FMT ", duration: %u",
+-		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG,
++	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_DEF_PR_FMT ", duration: %u",
++		  WDEV_PR_ARG, __entry->cookie, CHAN_DEF_PR_ARG,
+ 		  __entry->duration)
+ );
+ 
+ TRACE_EVENT(cfg80211_ready_on_channel_expired,
+ 	TP_PROTO(struct wireless_dev *wdev, u64 cookie,
+-		 struct ieee80211_channel *chan),
+-	TP_ARGS(wdev, cookie, chan),
++		 struct cfg80211_chan_def *chandef),
++	TP_ARGS(wdev, cookie, chandef),
+ 	TP_STRUCT__entry(
+ 		WDEV_ENTRY
+ 		__field(u64, cookie)
+-		CHAN_ENTRY
++		CHAN_DEF_ENTRY
+ 	),
+ 	TP_fast_assign(
+ 		WDEV_ASSIGN;
+ 		__entry->cookie = cookie;
+-		CHAN_ASSIGN(chan);
++		CHAN_DEF_ASSIGN(chandef);
+ 	),
+-	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_PR_FMT,
+-		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
++	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_DEF_PR_FMT,
++		  WDEV_PR_ARG, __entry->cookie, CHAN_DEF_PR_ARG)
+ );
+ 
+ TRACE_EVENT(cfg80211_tx_mgmt_expired,
+ 	TP_PROTO(struct wireless_dev *wdev, u64 cookie,
+-		 struct ieee80211_channel *chan),
+-	TP_ARGS(wdev, cookie, chan),
++		 struct cfg80211_chan_def *chandef),
++	TP_ARGS(wdev, cookie, chandef),
+ 	TP_STRUCT__entry(
+ 		WDEV_ENTRY
+ 		__field(u64, cookie)
+-		CHAN_ENTRY
++		CHAN_DEF_ENTRY
+ 	),
+ 	TP_fast_assign(
+ 		WDEV_ASSIGN;
+ 		__entry->cookie = cookie;
+-		CHAN_ASSIGN(chan);
++		CHAN_DEF_ASSIGN(chandef);
+ 	),
+-	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_PR_FMT,
+-		  WDEV_PR_ARG, __entry->cookie, CHAN_PR_ARG)
++	TP_printk(WDEV_PR_FMT ", cookie: %llu, " CHAN_DEF_PR_FMT,
++		  WDEV_PR_ARG, __entry->cookie, CHAN_DEF_PR_ARG)
+ );
+ 
+ TRACE_EVENT(cfg80211_new_sta,
 -- 
 2.7.4
 
