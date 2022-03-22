@@ -2,416 +2,156 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D404C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Mar 2022 12:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85606C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Mar 2022 13:50:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234983AbiCVMoM (ORCPT
+        id S235869AbiCVNwQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Mar 2022 08:44:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48072 "EHLO
+        Tue, 22 Mar 2022 09:52:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233731AbiCVMoK (ORCPT
+        with ESMTP id S235858AbiCVNwP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Mar 2022 08:44:10 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2F0585962
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 05:42:42 -0700 (PDT)
+        Tue, 22 Mar 2022 09:52:15 -0400
+Received: from esa.hc3962-90.iphmx.com (esa.hc3962-90.iphmx.com [216.71.140.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67F2B49CAF
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 06:50:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1647952962; x=1679488962;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=GG909Gg2Gz0SruVTGw7ypa56UVz0Wv5jG8qsoXjcQos=;
-  b=LrhAX7GFWO94q6e5zKD0oTG4AMBQEGm1vtLfr0IAymlJGYwf+rtRfQdR
-   EgJ4RpXUCJt5mRHD5Gd9JBif3AVSgeTFK8obHeu3AQhJo5Q7cAADzAwt4
-   bbgJ4C2pOtIzFkt1yr0W1U4Ud7ZThlef3TgiC3MkFkBXiPeUfZBhzxw6X
-   g=;
-Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
-  by alexa-out.qualcomm.com with ESMTP; 22 Mar 2022 05:42:42 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 05:42:42 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 22 Mar 2022 05:42:41 -0700
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 22 Mar 2022 05:42:40 -0700
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH] ath11k: reduce the wait time of 11d scan and hw scan while add interface
-Date:   Tue, 22 Mar 2022 08:42:26 -0400
-Message-ID: <20220322124226.18347-1-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qccesdkim1;
+  t=1647957044; x=1648561844;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=uOs0Ix8xHLgozkBtnVsqGAxcGTavdoh3zZvideMhdeQ=;
+  b=rL4pgi6jsDSHleaNcLO2zkMe0aInEcuGobIkU++rTYOTykUJkU5RYddM
+   Bv1+Jo9GLEnudE1Oqo0Jgupwko5aJxOTBX8w6jOfm4VIOUbJt0JqItALq
+   hK6zqXZK3ymN1O1VnmifjhnKn+HqISJbQFT8d3b6/8UaPHKIqx6qvO6YZ
+   w=;
+Received: from mail-dm6nam08lp2049.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.49])
+  by ob1.hc3962-90.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 13:50:42 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Ig6YNESzp/fhIhY4ZG2zgFDTBXfVaxDmLnQke/X8fN2PuoYA+cgW31bPsUugzgToGNjoWKe+gHHrJ0fqKWxIVVz852d0aHdBsN9HhdsMvTx/Hljv7ZLSz5o3dlrckVno60uNwozIdfJrIe+egrLRGXSknGQgCfrONBQ/ngZ+sY3FR9fDh7cQKNtf17svUGoniVyvq+E8IlPtFRHtIeA3tP+sZSgdRbL4Vqb5F5ceHE381iANV2AzBIL4Al93Lk77a9lN/HGBIsVKljhEVhPj110hd+wMfE3t6w1IhS3Mu4HnLMaE1nt8v4Xx3k2iPO2ICHQnQKCJhITVhbR7Rxhs6A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uOs0Ix8xHLgozkBtnVsqGAxcGTavdoh3zZvideMhdeQ=;
+ b=mIQ7IeA8ThlDWlC8XS8kyIHyny6kYDGdNFBT66Tqq+jUZN2SpXcHAKqBHWFqYMM4QlsKngnv7wVj8umQdsygsNAKObiXU6AAFEdFQMUidljD1cROaS/4pBCCdfcUN4Fw/bYD9O/lL74ji4f/kKU6Fn8+SAEbpb3BhCkXanKt0hR+OZ7NAZHUr1s+zZQ9AhnuNOsKhvF6C3iEbPPkF4yMlHyYTedDl8CxAspdsHcMEzKz3i9I1j6PCr1yZH1gTufvZipzbsQdQQ7tZ+x/v1bDYUPotKo/ENZ6/vBPKBvVMZifLx2//5TMJYC7Vn3Xx9php2UNmyPOO4XUEGjPtLn14A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=quicinc.com; dmarc=pass action=none header.from=quicinc.com;
+ dkim=pass header.d=quicinc.com; arc=none
+Received: from DM6PR02MB4937.namprd02.prod.outlook.com (2603:10b6:5:1a::16) by
+ SJ0PR02MB8643.namprd02.prod.outlook.com (2603:10b6:a03:3fd::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Tue, 22 Mar
+ 2022 13:50:39 +0000
+Received: from DM6PR02MB4937.namprd02.prod.outlook.com
+ ([fe80::68c2:f8b4:f787:211e]) by DM6PR02MB4937.namprd02.prod.outlook.com
+ ([fe80::68c2:f8b4:f787:211e%3]) with mapi id 15.20.5081.023; Tue, 22 Mar 2022
+ 13:50:39 +0000
+From:   "Rameshkumar Sundaram (QUIC)" <quic_ramess@quicinc.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "Rameshkumar Sundaram (QUIC)" <quic_ramess@quicinc.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
+Subject: RE: [PATCH 1/2] mac80211: add support to configure 6GHz non-ht
+ duplicate transmission
+Thread-Topic: [PATCH 1/2] mac80211: add support to configure 6GHz non-ht
+ duplicate transmission
+Thread-Index: AQHYIkgqfAgpLdnS+EWoRYfPSRKpZ6y6KrAAgA9VNCCAAD8mAIAB5AFw
+Date:   Tue, 22 Mar 2022 13:50:39 +0000
+Message-ID: <DM6PR02MB493734ADBBC6C996845B9EF3E9179@DM6PR02MB4937.namprd02.prod.outlook.com>
+References: <1644914581-21682-1-git-send-email-quic_ramess@quicinc.com>
+         <1644914581-21682-2-git-send-email-quic_ramess@quicinc.com>
+         <a517835c51a5eaf00e87fdaaef47546f70ff0d42.camel@sipsolutions.net>
+         <DM6PR02MB4937C53041172E9A52846A0BE9169@DM6PR02MB4937.namprd02.prod.outlook.com>
+ <a537c6e02afbfa26eec2a54dbd8bc649f77ae3a3.camel@sipsolutions.net>
+In-Reply-To: <a537c6e02afbfa26eec2a54dbd8bc649f77ae3a3.camel@sipsolutions.net>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=quicinc.com;
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9666fb9b-ea18-40c1-2759-08da0c0af31c
+x-ms-traffictypediagnostic: SJ0PR02MB8643:EE_
+x-ld-processed: 98e9ba89-e1a1-4e38-9007-8bdabc25de1d,ExtAddr
+x-microsoft-antispam-prvs: <SJ0PR02MB8643679E13F825695F97363795179@SJ0PR02MB8643.namprd02.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: GfgQISZN6XKnCXaC5usA9N7/dnuffu6xyTcLymPk0dlzqnFDGYJEoxraYU0/pWpLLQ3UTZaxFOX2z3Z8R6Bj40YcxUHdUmYRvKlm1K6hk/TGgadHvQchYmcgWB5ny34p9OYhva091TdyIT/d0O7f1RQfgQZWHnuJpDV7HPuz26LSsKHRd08bbn5dLEFdhH9rtm0zAlX4k+gi7Ck9HgRvaw+4SL5Z340qzglWIq6aMwb3M2M/g0vHAiYaCyAhfSRbkYl8Lijqb3tEhL05RR+ny6zq2Ur3CO0rgYYZPYBS83zLEmDtsEyUAMzfpPxJL5lZmlxlx7CGqtLV6xiBu7ijDzlk5q8YTBbwEgSHPNnXHdcZQep8QST9NoYU1Gy+CP9gJZ73DZhz0+pFLyVxjYdWgBMoDisPQdWKmYNHsIV0QUXKsCz4hvj2k2WHjle9Buy8RuGl25od4de8aAOOK4SBJOQWDfUTtK6roBh7D8JpWYLvaTfwR6DVm6kQ02+7PGDSv14lOy54PSYFhxahhsm6ljH1ibPmudXr0Sr2vBNDA0q3WiUT4sqqh+Gqpn8fIBh1sIlCPiuIV2OF1eBtzkQ337iXDrf3lI/nAuT9lyrV2L6lOqXz9DyjRMJMz2ZRtYK4qi3IOd5O82skqpaAgVmqmyPxJUYTIpkV+p9M1YPhWgcTR9mxDhVB6FkEVWeNQoY32APAgWpkTxhLEV4wrdziDg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR02MB4937.namprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(83380400001)(4326008)(2906002)(52536014)(66476007)(66946007)(8676002)(66556008)(64756008)(66446008)(76116006)(55016003)(186003)(26005)(508600001)(6506007)(9686003)(8936002)(7696005)(53546011)(71200400001)(38070700005)(316002)(122000001)(86362001)(5660300002)(110136005)(54906003)(38100700002)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?aTRNdFhIdTlLL1plSnJldVRXbStETVlxTGYvL2VvNnRzMVBZdFpSNzRHTng3?=
+ =?utf-8?B?eTlqaHpKNjZuM1N2d3VnZGxzOEdYV3pGdStESzd5RSthU09NUTNJSlk5S3ZX?=
+ =?utf-8?B?dnRDY3BkbE95SFJiQTF2VVpkdHZoVFJ3T1FCL2V0TFh2SGhRRnBsdWt1ZUQ0?=
+ =?utf-8?B?WTVyVDRiVTZMS2RGa0FWOEFpOTBjWlRNQk5LZlpya1BZOVduQldmcUtxK3cy?=
+ =?utf-8?B?VGF4amllUGN5YzdtQnV4NEYydXRFK1I3cnRmODRNL1lEY29DczR6R1l5N1BR?=
+ =?utf-8?B?SkExSXZrQjZWWTRsMnNZbWpmQi9KZ1QvbUV0eGlnTDZDUjBzd2dCS0ZnYUY4?=
+ =?utf-8?B?azV1bU0vekdYRWMxQ1pDTVRpMjZDK0hEN2dSSzQ1bFI1Q3hXMVVhT2p0dFFL?=
+ =?utf-8?B?Yy9UcFNLdEF6anNSOEtVWUhiZXdKRm5EYzRGcFBrRG9sd094aFZZdzd4UkEz?=
+ =?utf-8?B?STMxOUY1YkJEYnE3dlVTUTErWnQxM3Z2SmQ2dUVLS1dDWjVRUGhGQU5RSkVv?=
+ =?utf-8?B?aWZVOHVJbkorSVRHbmkrR3NsVmdTd1hRZ0w3VEdDZFM2ajBOendiTVMvQ2Jh?=
+ =?utf-8?B?M3AzMy9tN3FNZi8rY1hwYjFzK2FHcnlDNGdZYXE0Yjl4Lzc5U0R5eGpkalov?=
+ =?utf-8?B?SjRYRFk5ZGJaaW15cTNEYXUwdkN6ZHZSVnk4ditCaUJkbE1JLytXVUJKTUJm?=
+ =?utf-8?B?TG5rd3Z5WFRrbUF2L2M3YXkraXorYzhlRjRyaUFYOHl4WG0yQ283dkZOY3ZT?=
+ =?utf-8?B?NndSeHFIWDBWNzhnbEFtOU9tY0lraFRoM2RDR0NxQUE2Q25OOWpuTlFLbXh4?=
+ =?utf-8?B?T3locUZhNWZ4WTR0ZkcrWXBNdVhPT2ExOFRDcWJmcGh3ZXdwWXNsWk9QeVdw?=
+ =?utf-8?B?MTRZd1RoV3dIazYzRXFzbit2NndxQ3hkVTBUajFnNElMZVBtVXp1M0JNbEFS?=
+ =?utf-8?B?dER6Y0grY2pkS2xRZm5jOXVSdEw2Nkx5ZHFUbFJLNWxhanhremFkQjBxcUlv?=
+ =?utf-8?B?eGQ5Wi8zQzBwS1grUUJHdjlqS1VKY3Ava3ZvQytxd0E1ODAxcEFzREpzUEh2?=
+ =?utf-8?B?NjRNaWxjQ1RhMUppbkRxODF4aENwRnhxOCtTUEFHRGZWdExLK0orenNoR3BM?=
+ =?utf-8?B?S0RJdnB5WUNjYjVMNzJqSEZlbmdHY2h5TlZoM0RNQzZsQ3l0elZ5U2dNYUgv?=
+ =?utf-8?B?Tjd0dXRZc0NyLzVrNDFlNTBMcytHQlN2eWEyTFlpdVk4SUUxUTk4bEZUaTE2?=
+ =?utf-8?B?TDB0Q0lubmJqMThFNDBRZWZKdHF6Nzk5emNUR1RVaTBzUGozNiszYUc4d3Zi?=
+ =?utf-8?B?dExXTDRCK1YvRTF0ano1QnVZV3ViOWtEVUJiWXNTelVkN3ZzTzBDV1JoREpx?=
+ =?utf-8?B?T3pFOXY1OVd2NnVKeHg5SW8xbFFUOUp0Uks3eHc4bGRobkY3cjdSVHhLNHpy?=
+ =?utf-8?B?bmltYXAvQThSdURiVzJqQ3F0Z2ZiRjJIeGl4dTJURzl2d1hWT01xMFhQTk1I?=
+ =?utf-8?B?ZE1YSDdRaXdjWWtiaXl6a2ZxZ2F2czlyVEJWa2xBQXpPK3VMeElJSUEreFMx?=
+ =?utf-8?B?U1o3azEyMmF2Nkh3cEhmUmZWSDdCT09oZ3lJaGNGSG5WRE5JR08yU01pYnpq?=
+ =?utf-8?B?QzdHdjhRcXNsQm9JdlprNmtVbzUyKzNIR0hhUGFoSXpTL1lLdFdRNlBWRXNu?=
+ =?utf-8?B?TUVGVXNVSWs3WkVpSUtNOHBiVzVTQVVUa1dKU3JvN2xPZ3BMUHNEdjg5aVFC?=
+ =?utf-8?B?UVRvRlpWTWtuZkN4Q1dkS1FjeGJzMDF2WXJQVXE2Zm1QZ0xZbUo4MS9jQ2Q2?=
+ =?utf-8?B?aGNaRjNEbXVLOHBBRm81QkVoaVVYd3pLNE1YYjJXMDg5bEJVVWtaaXpKM1d1?=
+ =?utf-8?B?M2ZsRkJHdjJPOXRkTGJHcUI2TC9qT0ZHSnVFbkx3cDJGeldFalEvaEpJS1hs?=
+ =?utf-8?Q?eu5c6FPkP7uP85x8akZWO7Dx/Eq4nwrw?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-OriginatorOrg: quicinc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR02MB4937.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9666fb9b-ea18-40c1-2759-08da0c0af31c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Mar 2022 13:50:39.3167
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 98e9ba89-e1a1-4e38-9007-8bdabc25de1d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: rjpS0dc1rHEGh7rj7WRHzVcKT91fzpXDVRt5ATzP68BP1uqfMPIPqOYg7NM0u2kKCZR1fX4yQPataGGT1fZwDw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR02MB8643
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently ath11k will wait 11d scan complete while add interface in
-ath11k_mac_op_add_interface(), when system resume without enable
-wowlan, ath11k_mac_op_add_interface() is called for each resume, thus
-it increase the resume time of system. And ath11k_mac_op_hw_scan()
-after ath11k_mac_op_add_interface() also needs some time cost because
-the previous 11d scan need more than 5 seconds when 6 GHz is enabled,
-then the scan started event will indicated to ath11k after the 11d
-scan completed.
-
-While 11d scan/hw scan is running in firmware, if ath11k update channel
-list to firmware by WMI_SCAN_CHAN_LIST_CMDID, then firmware will cancel
-the current scan which is running, it lead the scan failed. The patch
-commit 9dcf6808b253 ("ath11k: add 11d scan offload support") used
-finish_11d_scan/finish_11d_ch_list/pending_11d to synchronize the 11d
-scan/hw scan/channel list between ath11k/firmware/mac80211 and to avoid
-the scan fail.
-
-Add wait operation before ath11k update channel list, function
-ath11k_reg_update_chan_list() will wait until the current 11d scan/hw
-scan completed. And remove the wait operation of start 11d scan and
-waiting channel list complete in hw scan. After these changes, resume
-time cost reduce about 5 seconds and also hw scan time cost reduced
-obviously, and scan failed not seen.
-
-The 11d scan is sent to firmware only one time for each interface added
-in mac.c, and it is moved after the 1st hw scan because 11d scan will
-cost some time and thus leads the AP scan result update to UI delay.
-Currently priority of ath11k's hw scan is WMI_SCAN_PRIORITY_LOW, and
-priority of 11d scan in firmware is WMI_SCAN_PRIORITY_MEDIUM, then the
-11d scan which sent after hw scan will cancel the hw scan in firmware,
-so change the priority to WMI_SCAN_PRIORITY_MEDIUM for the hw scan which
-is in front of the 11d scan, thus it will not happen scan cancel in
-firmware.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
-
-Fixes: 9dcf6808b253 ("ath11k: add 11d scan offload support")
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.c |  1 +
- drivers/net/wireless/ath/ath11k/core.h | 13 ++++--
- drivers/net/wireless/ath/ath11k/mac.c  | 64 +++++++++-----------------
- drivers/net/wireless/ath/ath11k/mac.h  |  2 +-
- drivers/net/wireless/ath/ath11k/reg.c  | 38 +++++++++------
- drivers/net/wireless/ath/ath11k/wmi.c  | 16 ++++++-
- 6 files changed, 74 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 71eb7d04c3bf..90a5df1fbdbd 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1288,6 +1288,7 @@ static void ath11k_core_restart(struct work_struct *work)
- 
- 		ieee80211_stop_queues(ar->hw);
- 		ath11k_mac_drain_tx(ar);
-+		complete(&ar->completed_11d_scan);
- 		complete(&ar->scan.started);
- 		complete(&ar->scan.completed);
- 		complete(&ar->peer_assoc_done);
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index c0228e91a596..b8634eddf49a 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -38,6 +38,8 @@
- 
- extern unsigned int ath11k_frame_mode;
- 
-+#define ATH11K_SCAN_TIMEOUT_HZ (20 * HZ)
-+
- #define ATH11K_MON_TIMER_INTERVAL  10
- 
- enum ath11k_supported_bw {
-@@ -189,6 +191,12 @@ enum ath11k_scan_state {
- 	ATH11K_SCAN_ABORTING,
- };
- 
-+enum ath11k_11d_state {
-+	ATH11K_11D_IDLE,
-+	ATH11K_11D_PREPARING,
-+	ATH11K_11D_RUNNING,
-+};
-+
- enum ath11k_dev_flags {
- 	ATH11K_CAC_RUNNING,
- 	ATH11K_FLAG_CORE_REGISTERED,
-@@ -607,9 +615,8 @@ struct ath11k {
- 	bool dfs_block_radar_events;
- 	struct ath11k_thermal thermal;
- 	u32 vdev_id_11d_scan;
--	struct completion finish_11d_scan;
--	struct completion finish_11d_ch_list;
--	bool pending_11d;
-+	struct completion completed_11d_scan;
-+	enum ath11k_11d_state state_11d;
- 	bool regdom_set_by_user;
- 	int hw_rate_code;
- 	u8 twt_enabled;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index d5b83f90d27a..798111e22c66 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -3595,26 +3595,6 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto exit;
- 
--	/* Currently the pending_11d=true only happened 1 time while
--	 * wlan interface up in ath11k_mac_11d_scan_start(), it is called by
--	 * ath11k_mac_op_add_interface(), after wlan interface up,
--	 * pending_11d=false always.
--	 * If remove below wait, it always happened scan fail and lead connect
--	 * fail while wlan interface up, because it has a 11d scan which is running
--	 * in firmware, and lead this scan failed.
--	 */
--	if (ar->pending_11d) {
--		long time_left;
--		unsigned long timeout = 5 * HZ;
--
--		if (ar->supports_6ghz)
--			timeout += 5 * HZ;
--
--		time_left = wait_for_completion_timeout(&ar->finish_11d_ch_list, timeout);
--		ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
--			   "mac wait 11d channel list time left %ld\n", time_left);
--	}
--
- 	memset(&arg, 0, sizeof(arg));
- 	ath11k_wmi_start_scan_init(ar, &arg);
- 	arg.vdev_id = arvif->vdev_id;
-@@ -3680,6 +3660,10 @@ static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 		kfree(arg.extraie.ptr);
- 
- 	mutex_unlock(&ar->conf_mutex);
-+
-+	if (ar->state_11d == ATH11K_11D_PREPARING)
-+		ath11k_mac_11d_scan_start(ar, arvif->vdev_id);
-+
- 	return ret;
- }
- 
-@@ -6045,7 +6029,7 @@ static bool ath11k_mac_vif_ap_active_any(struct ath11k_base *ab)
- 	return false;
- }
- 
--void ath11k_mac_11d_scan_start(struct ath11k *ar, u32 vdev_id, bool wait)
-+void ath11k_mac_11d_scan_start(struct ath11k *ar, u32 vdev_id)
- {
- 	struct wmi_11d_scan_start_params param;
- 	int ret;
-@@ -6073,28 +6057,22 @@ void ath11k_mac_11d_scan_start(struct ath11k *ar, u32 vdev_id, bool wait)
- 
- 	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac start 11d scan\n");
- 
--	if (wait)
--		reinit_completion(&ar->finish_11d_scan);
--
- 	ret = ath11k_wmi_send_11d_scan_start_cmd(ar, &param);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to start 11d scan vdev %d ret: %d\n",
- 			    vdev_id, ret);
- 	} else {
- 		ar->vdev_id_11d_scan = vdev_id;
--		if (wait) {
--			ar->pending_11d = true;
--			ret = wait_for_completion_timeout(&ar->finish_11d_scan,
--							  5 * HZ);
--			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
--				   "mac 11d scan left time %d\n", ret);
--
--			if (!ret)
--				ar->pending_11d = false;
--		}
-+		if (ar->state_11d == ATH11K_11D_PREPARING)
-+			ar->state_11d = ATH11K_11D_RUNNING;
- 	}
- 
- fin:
-+	if (ar->state_11d == ATH11K_11D_PREPARING) {
-+		ar->state_11d = ATH11K_11D_IDLE;
-+		complete(&ar->completed_11d_scan);
-+	}
-+
- 	mutex_unlock(&ar->ab->vdev_id_11d_lock);
- }
- 
-@@ -6117,12 +6095,15 @@ void ath11k_mac_11d_scan_stop(struct ath11k *ar)
- 		vdev_id = ar->vdev_id_11d_scan;
- 
- 		ret = ath11k_wmi_send_11d_scan_stop_cmd(ar, vdev_id);
--		if (ret)
-+		if (ret) {
- 			ath11k_warn(ar->ab,
- 				    "failed to stopt 11d scan vdev %d ret: %d\n",
- 				    vdev_id, ret);
--		else
-+		} else {
- 			ar->vdev_id_11d_scan = ATH11K_11D_INVALID_VDEV_ID;
-+			ar->state_11d = ATH11K_11D_IDLE;
-+			complete(&ar->completed_11d_scan);
-+		}
- 	}
- 	mutex_unlock(&ar->ab->vdev_id_11d_lock);
- }
-@@ -6318,8 +6299,10 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 			goto err_peer_del;
- 		}
- 
--		ath11k_mac_11d_scan_start(ar, arvif->vdev_id, true);
--
-+		if (test_bit(WMI_TLV_SERVICE_11D_OFFLOAD, ab->wmi_ab.svc_map)) {
-+			reinit_completion(&ar->completed_11d_scan);
-+			ar->state_11d = ATH11K_11D_PREPARING;
-+		}
- 		break;
- 	case WMI_VDEV_TYPE_MONITOR:
- 		set_bit(ATH11K_FLAG_MONITOR_VDEV_CREATED, &ar->monitor_flags);
-@@ -7184,7 +7167,7 @@ ath11k_mac_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	}
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA)
--		ath11k_mac_11d_scan_start(ar, arvif->vdev_id, false);
-+		ath11k_mac_11d_scan_start(ar, arvif->vdev_id);
- 
- 	mutex_unlock(&ar->conf_mutex);
- }
-@@ -8665,8 +8648,7 @@ int ath11k_mac_allocate(struct ath11k_base *ab)
- 		ar->monitor_vdev_id = -1;
- 		clear_bit(ATH11K_FLAG_MONITOR_VDEV_CREATED, &ar->monitor_flags);
- 		ar->vdev_id_11d_scan = ATH11K_11D_INVALID_VDEV_ID;
--		init_completion(&ar->finish_11d_scan);
--		init_completion(&ar->finish_11d_ch_list);
-+		init_completion(&ar->completed_11d_scan);
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
-index 0e6c870b09c8..29b523af66dd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.h
-+++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -130,7 +130,7 @@ extern const struct htt_rx_ring_tlv_filter ath11k_mac_mon_status_filter_default;
- #define ATH11K_SCAN_11D_INTERVAL		600000
- #define ATH11K_11D_INVALID_VDEV_ID		0xFFFF
- 
--void ath11k_mac_11d_scan_start(struct ath11k *ar, u32 vdev_id, bool wait);
-+void ath11k_mac_11d_scan_start(struct ath11k *ar, u32 vdev_id);
- void ath11k_mac_11d_scan_stop(struct ath11k *ar);
- void ath11k_mac_11d_scan_stop_all(struct ath11k_base *ab);
- 
-diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
-index 81e11cde31d7..5e2fa69ae565 100644
---- a/drivers/net/wireless/ath/ath11k/reg.c
-+++ b/drivers/net/wireless/ath/ath11k/reg.c
-@@ -111,7 +111,31 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
- 	struct channel_param *ch;
- 	enum nl80211_band band;
- 	int num_channels = 0;
--	int i, ret;
-+	int i, ret, left;
-+
-+	if (ar->state_11d != ATH11K_11D_IDLE) {
-+		left = wait_for_completion_timeout(&ar->completed_11d_scan,
-+						   ATH11K_SCAN_TIMEOUT_HZ);
-+		if (!left) {
-+			ath11k_warn(ar->ab,
-+				    "failed to receive 11d scan complete: timed out\n");
-+			ar->state_11d = ATH11K_11D_IDLE;
-+		}
-+		ath11k_dbg(ar->ab, ATH11K_DBG_REG,
-+			   "reg 11d scan wait left time %d\n", left);
-+	}
-+
-+	if (ar->scan.state == ATH11K_SCAN_STARTING ||
-+	    ar->scan.state == ATH11K_SCAN_RUNNING) {
-+		left = wait_for_completion_timeout(&ar->scan.completed,
-+						   ATH11K_SCAN_TIMEOUT_HZ);
-+		if (!left)
-+			ath11k_warn(ar->ab,
-+				    "failed to receive hw scan complete: timed out\n");
-+
-+		ath11k_dbg(ar->ab, ATH11K_DBG_REG,
-+			   "reg hw scan wait left time %d\n", left);
-+	}
- 
- 	bands = hw->wiphy->bands;
- 	for (band = 0; band < NUM_NL80211_BANDS; band++) {
-@@ -193,11 +217,6 @@ int ath11k_reg_update_chan_list(struct ath11k *ar)
- 	ret = ath11k_wmi_send_scan_chan_list_cmd(ar, params);
- 	kfree(params);
- 
--	if (ar->pending_11d) {
--		complete(&ar->finish_11d_ch_list);
--		ar->pending_11d = false;
--	}
--
- 	return ret;
- }
- 
-@@ -263,15 +282,8 @@ int ath11k_regd_update(struct ath11k *ar)
- 		goto err;
- 	}
- 
--	if (ar->pending_11d)
--		complete(&ar->finish_11d_scan);
--
- 	rtnl_lock();
- 	wiphy_lock(ar->hw->wiphy);
--
--	if (ar->pending_11d)
--		reinit_completion(&ar->finish_11d_ch_list);
--
- 	ret = regulatory_set_wiphy_regd_sync(ar->hw->wiphy, regd_copy);
- 	wiphy_unlock(ar->hw->wiphy);
- 	rtnl_unlock();
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index b4f86c45d81f..2751fe8814df 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2015,7 +2015,10 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
- {
- 	/* setup commonly used values */
- 	arg->scan_req_id = 1;
--	arg->scan_priority = WMI_SCAN_PRIORITY_LOW;
-+	if (ar->state_11d == ATH11K_11D_PREPARING)
-+		arg->scan_priority = WMI_SCAN_PRIORITY_MEDIUM;
-+	else
-+		arg->scan_priority = WMI_SCAN_PRIORITY_LOW;
- 	arg->dwell_time_active = 50;
- 	arg->dwell_time_active_2g = 0;
- 	arg->dwell_time_passive = 150;
-@@ -6350,8 +6353,10 @@ static void ath11k_wmi_op_ep_tx_credits(struct ath11k_base *ab)
- static int ath11k_reg_11d_new_cc_event(struct ath11k_base *ab, struct sk_buff *skb)
- {
- 	const struct wmi_11d_new_cc_ev *ev;
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
- 	const void **tb;
--	int ret;
-+	int ret, i;
- 
- 	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
- 	if (IS_ERR(tb)) {
-@@ -6377,6 +6382,13 @@ static int ath11k_reg_11d_new_cc_event(struct ath11k_base *ab, struct sk_buff *s
- 
- 	kfree(tb);
- 
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+		ar->state_11d = ATH11K_11D_IDLE;
-+		complete(&ar->completed_11d_scan);
-+	}
-+
- 	queue_work(ab->workqueue, &ab->update_11d_work);
- 
- 	return 0;
-
-base-commit: d845cf007bdf8b2bf41522e1ecd0eb804e553d57
--- 
-2.31.1
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgPGpv
+aGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+DQo+IFNlbnQ6IE1vbmRheSwgTWFyY2ggMjEsIDIwMjIg
+MjoyOCBQTQ0KPiBUbzogUmFtZXNoa3VtYXIgU3VuZGFyYW0gKFFVSUMpIDxxdWljX3JhbWVzc0Bx
+dWljaW5jLmNvbT4NCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgYXRoMTFr
+QGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzJdIG1hYzgwMjEx
+OiBhZGQgc3VwcG9ydCB0byBjb25maWd1cmUgNkdIeiBub24taHQNCj4gZHVwbGljYXRlIHRyYW5z
+bWlzc2lvbg0KPiANCj4gT24gTW9uLCAyMDIyLTAzLTIxIGF0IDA1OjEyICswMDAwLCBSYW1lc2hr
+dW1hciBTdW5kYXJhbSAoUVVJQykgd3JvdGU6DQo+ID4NCj4gPiA+DQo+ID4gPiBJIGFtIHdvbmRl
+cmluZyB0aG91Z2ggaWYgdGhpcyBzaG91bGQgZXZlbiBiZSBkZXRlY3RlZCBmcm9tIHRoZSBIRQ0K
+PiA+ID4gb3BlcmF0aW9uIGVsZW1lbnQgaXRzZWxmLCByYXRoZXIgdGhhbiBmcm9tIHRoZSBiZWFj
+b24gcmF0ZSBzZXR0aW5ncw0KPiA+ID4gdGhhdCBhcmUgc2VwYXJhdGUgaW4gbmw4MDIxMT8NCj4g
+PiBUaGlzIGlzIGEgQlcgZGVwZW5kZW50IGJpdCBpbiBIRSBPcGVyIElFIGFuZCB1c2VyIHNwYWNl
+IGNhbiBzd2l0Y2ggQlcNCj4gPiAoQ1NBL2NoYW4gc3dpdGNoIHNjZW5hcmlvcykuDQo+ID4gV2hp
+Y2ggY2FuIGNhbGwgYXNzaWduX2JlYWNvbiBkaXJlY3RseSwgSGVuY2UgYWRkaW5nIHRoZSBsb2dp
+YyBoZXJlIHRvDQo+ID4gY292ZXIgYWxsIEJlYWNvbiBjaGFuZ2UgY2FzZXMuDQo+ID4NCj4gDQo+
+IFllYWggYnV0IHN0aWxsIC4uLiB3aHkgZG8gd2UgdGFrZSBpdCBmcm9tIHRoZSBjb250ZW50IHJh
+dGhlciB0aGFuIGFkZGluZyBhDQo+IGNvbnRyb2wgZm9yIGl0Pw0KU28sIFN1Z2dlc3Rpb24gaGVy
+ZSBpcyB0byBhZGQgYSBuZXcgTkwgYXR0cmlidXRlIHRvIGNhcnJ5IHRoZSBpbmZvcm1hdGlvbiBm
+cm9tIHVzZXIgc3BhY2UgZm9yDQpTVEFSVF9BUCBhbmQgU0VUX0JFQUNPTiBOTCBjb21tYW5kcyBh
+bmQgdXNlIGl0IGhlcmUsIGlzIHRoYXQgdW5kZXJzdGFuZGluZyBjb3JyZWN0ID8NCj4gDQo+IGpv
+aGFubmVzDQo=
