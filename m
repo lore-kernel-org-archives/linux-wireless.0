@@ -2,68 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D56C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Mar 2022 15:04:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 701D6C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Mar 2022 15:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235493AbiCVPF4 (ORCPT
+        id S235948AbiCVPlY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Mar 2022 11:05:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46766 "EHLO
+        Tue, 22 Mar 2022 11:41:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234323AbiCVPFz (ORCPT
+        with ESMTP id S232168AbiCVPlX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Mar 2022 11:05:55 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A01180224
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 08:04:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=HzJWqJffoHTfJ5iJdRWHRzvNFUKMdQZHExGFGT/Q/l4=;
-        t=1647961467; x=1649171067; b=VAKJDMrW1LbwYg+QNBx+7uUjTu5cb1f8ig3G8uj1B1sURZ2
-        4OTCE47V2AbjcE/1ivw+1AiXzkCVIA4/4a4CMECns3MidfzRnoLsB7R8TdkANZgIJ15eiYIhWjNGw
-        C1WAX5mMlCeSci5NJRfDU1m6Cn7wRegSAN3R/n1UXs2xQBY51ZaHHIisdVoyk/5Z9EQDP+RR3qXRt
-        pue5s5k4fIaf68rhvweBcWQV4uaTzpCI0Pn4u3sVQGDCbEdDIHzkOanixK9QPlftK4Rvf0rwvO5rw
-        vm6yTxSabN2Gxrs9trebkHlXxA0t9OIOBZ1HE2nGfudoxUvZw38FRTvQzXL23H4A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Tue, 22 Mar 2022 11:41:23 -0400
+Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95AB466CA3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 08:39:55 -0700 (PDT)
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=kveik.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1nWg3a-00GfVI-C1;
-        Tue, 22 Mar 2022 16:04:22 +0100
-Message-ID: <babc75d310031f9f92736d5da65679ca50542849.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/2] mac80211: add support to configure 6GHz non-ht
- duplicate transmission
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     "Rameshkumar Sundaram (QUIC)" <quic_ramess@quicinc.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-Date:   Tue, 22 Mar 2022 16:04:21 +0100
-In-Reply-To: <DM6PR02MB493734ADBBC6C996845B9EF3E9179@DM6PR02MB4937.namprd02.prod.outlook.com>
-References: <1644914581-21682-1-git-send-email-quic_ramess@quicinc.com>
-         <1644914581-21682-2-git-send-email-quic_ramess@quicinc.com>
-         <a517835c51a5eaf00e87fdaaef47546f70ff0d42.camel@sipsolutions.net>
-         <DM6PR02MB4937C53041172E9A52846A0BE9169@DM6PR02MB4937.namprd02.prod.outlook.com>
-         <a537c6e02afbfa26eec2a54dbd8bc649f77ae3a3.camel@sipsolutions.net>
-         <DM6PR02MB493734ADBBC6C996845B9EF3E9179@DM6PR02MB4937.namprd02.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
+        (envelope-from <luca@coelho.fi>)
+        id 1nWgbo-000d7v-AZ;
+        Tue, 22 Mar 2022 17:39:45 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@kernel.org
+Cc:     johannes@sipsolutions.net, socketcan@hartkopp.net, kuba@kernel.org,
+        luca@coelho.fi, linux-wireless@vger.kernel.org
+Date:   Tue, 22 Mar 2022 17:39:43 +0200
+Message-Id: <iwlwifi.20220322173828.fa47f369b717.I6a9c65149c2c3c11337f3a802dff22f514a3a436@changeid>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH] iwlwifi: mvm: Don't fail if PPAG isn't supported
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2022-03-22 at 13:50 +0000, Rameshkumar Sundaram (QUIC) wrote:
-> > 
-> So, Suggestion here is to add a new NL attribute to carry the
-> information from user space for
-> START_AP and SET_BEACON NL commands and use it here, is that
-> understanding correct ?
-> 
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-Well, I was thinking it would reasonably come with the beacon rate, i.e.
-as a new attribute like NL80211_TXRATE_DUP?
+When we're copying the PPAG table into the cmd structure we're failing
+if the table doesn't exist in ACPI or is invalid, or if the FW doesn't
+support PPAG setting etc.
 
-johannes
+This is wrong because those are valid scenarios.  Fix this by not
+failing in those cases.
+
+Fixes: e8e10a37c51c ("iwlwifi: acpi: move ppag code from mvm to fw/acpi")
+Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 4632d3ad1a2b..e842816134f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1015,8 +1015,9 @@ int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
+ 	int ret, cmd_size;
+ 
+ 	ret = iwl_read_ppag_table(&mvm->fwrt, &cmd, &cmd_size);
++	/* Not supporting PPAG table is a valid scenario */
+ 	if(ret < 0)
+-		return ret;
++		return 0;
+ 
+ 	IWL_DEBUG_RADIO(mvm, "Sending PER_PLATFORM_ANT_GAIN_CMD\n");
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(PHY_OPS_GROUP,
+-- 
+2.35.1
+
