@@ -2,110 +2,225 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C746C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 19:16:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 509B0C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 19:17:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344131AbiCWTS1 (ORCPT
+        id S1344123AbiCWTSl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Mar 2022 15:18:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58072 "EHLO
+        Wed, 23 Mar 2022 15:18:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344123AbiCWTSZ (ORCPT
+        with ESMTP id S234152AbiCWTSk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Mar 2022 15:18:25 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 054AB8567C
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 12:16:55 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id l20so4313238lfg.12
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 12:16:54 -0700 (PDT)
+        Wed, 23 Mar 2022 15:18:40 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 488638931C
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 12:17:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FaXnwbXaSXbCX4JA5a0+pq4aaz2a8Xc9Ap8EekKfrJg=;
-        b=P9ZcEpik6R5EPT4CggIUIW5sJuzMdcf8B0GMQ57M9+1WIls6aC+OjCSeLSGFKdwBgq
-         gDZxv7j9z3xw9CvLBywUXZn41za0VVQ/9nq70BC0iyCUf/T9GlF7P+qvj0GM1CjFfk0Y
-         40eaqcCqV0NJJlet/B4OqeaNkITYKUoe+Gn8o=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=FaXnwbXaSXbCX4JA5a0+pq4aaz2a8Xc9Ap8EekKfrJg=;
-        b=iadlLY56xx2umDQurgiUSbUGtxBqYH5BI4XrFkbjmq5bUVLA7Zw6BGmCeFg9IeulNX
-         XOwPfVrAusG6uI3avbJhzXEC55Qruss+JpMhPez8jsE1gHSHfNeXaE3lcyPIgCOuk055
-         hsRGThab8u7aousQF236XG0gIr69U9QdebatMXm8K0aBnT1bJ4QkO0lfpBPVfKTG1wu9
-         mgT6M55c2LPdMpEcvuGjHF1lQ9YEkpxIFHddQEcnAw1jSkgZItIU75L0grWLncgQaRjw
-         0zr51XPiXUCd9G6oKqUnD7wk6dxul8pnhqNUH0tFegsDPc8uXyq4oFtmaCpJ/PinjyT0
-         vCvw==
-X-Gm-Message-State: AOAM533B4d9ctGhdvRnT1JyvXIpVdKTCwZT4xFglMIh35DupVjwIiKxP
-        UEdm1F7JfW4MpjyCrA5inKk+jdFSAzt/3dzVGiI=
-X-Google-Smtp-Source: ABdhPJxRegwVcRrEiJXQUi0DIUTUklcwsYp6XPGu405joNyJIuEnftINKDK74vHB2O/aGQgG1sq6jQ==
-X-Received: by 2002:a19:9201:0:b0:443:c317:98ff with SMTP id u1-20020a199201000000b00443c31798ffmr1008093lfd.331.1648063013012;
-        Wed, 23 Mar 2022 12:16:53 -0700 (PDT)
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com. [209.85.167.46])
-        by smtp.gmail.com with ESMTPSA id 8-20020a2e1548000000b002463639d0f2sm80199ljv.68.2022.03.23.12.16.50
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 23 Mar 2022 12:16:50 -0700 (PDT)
-Received: by mail-lf1-f46.google.com with SMTP id a26so4318386lfg.10
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 12:16:50 -0700 (PDT)
-X-Received: by 2002:a05:6512:2294:b0:448:6c86:3c78 with SMTP id
- f20-20020a056512229400b004486c863c78mr987003lfu.531.1648063009559; Wed, 23
- Mar 2022 12:16:49 -0700 (PDT)
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648063030; x=1679599030;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=qQ2wmMHkn50+08badrFPHnuprRjtsCv9iwsiTcYjuWY=;
+  b=rcOB7+qaUdqGMmWWMcp3NPlVl34H61mJ2+PStfUvAZ3mGaGfgCnsFd9y
+   kuslK0uLzRiz4WP5d3YXCzzqvzEys2Xxh/hHDfXML0UovdTpKlSq6b47K
+   OBdc5FR2lQWFgUQs8MsD+ln5lkJs2cZMVBxzoFhM8QpQa+uoU14Mfk1r7
+   4=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 23 Mar 2022 12:17:10 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 12:17:10 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 23 Mar 2022 12:16:53 -0700
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 23 Mar 2022 12:16:52 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+CC:     Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH v2 3/4] nl80211: validate RU puncturing bitmap
+Date:   Wed, 23 Mar 2022 12:16:39 -0700
+Message-ID: <20220323191640.31230-3-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220323191640.31230-1-quic_alokad@quicinc.com>
+References: <20220323191640.31230-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
-References: <1812355.tdWV9SEqCh@natalenko.name> <CAHk-=wiwz+Z2MaP44h086jeniG-OpK3c=FywLsCwXV7Crvadrg@mail.gmail.com>
- <27b5a287-7a33-9a8b-ad6d-04746735fb0c@arm.com>
-In-Reply-To: <27b5a287-7a33-9a8b-ad6d-04746735fb0c@arm.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed, 23 Mar 2022 12:16:33 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wip7TCD_+2STTepuEZvGMg6wcz+o=kyFUvHjuKziTMixw@mail.gmail.com>
-Message-ID: <CAHk-=wip7TCD_+2STTepuEZvGMg6wcz+o=kyFUvHjuKziTMixw@mail.gmail.com>
-Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
- ath9k-based AP
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Oleksandr Natalenko <oleksandr@natalenko.name>,
-        Halil Pasic <pasic@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Olha Cherevyk <olha.cherevyk@gmail.com>,
-        iommu <iommu@lists.linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Mar 23, 2022 at 12:06 PM Robin Murphy <robin.murphy@arm.com> wrote:
->
-> On 2022-03-23 17:27, Linus Torvalds wrote:
-> >
-> > I'm assuming that the ath9k issue is that it gives DMA mapping a big
-> > enough area to handle any possible packet size, and just expects -
-> > quite reasonably - smaller packets to only fill the part they need.
-> >
-> > Which that "info leak" patch obviously breaks entirely.
->
-> Except that's the exact case which the new patch is addressing
+Add new attributes NL80211_ATTR_RU_PUNCT_BITMAP and
+NL80211_ATTR_RU_PUNCT_SUPP_HE to receive RU puncturing information
+from the userspace.
+- Bitmap consists of 16 bits, each bit corresponding to a 20 MHz
+channel in the operating bandwidth. Lowest bit corresponds to
+the lowest frequency. Validate the bitmap against the minimum
+bandwidth support advertised by the driver.
+- HE support flag indicates whether OFDMA puncturing patterns
+should be considered during validation.
 
-Not "addressing". Breaking.
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+ include/uapi/linux/nl80211.h | 20 +++++++++++++++
+ net/wireless/nl80211.c       | 49 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 69 insertions(+)
 
-Which is why it will almost certainly get reverted.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index bdd2cb22b5a0..e8b9f07cdd38 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1469,6 +1469,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_SAR_SPECS,
+ 
++	NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS,
++
+ 	NL80211_CMD_OBSS_COLOR_COLLISION,
+ 
+ 	NL80211_CMD_COLOR_CHANGE_REQUEST,
+@@ -1477,6 +1479,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_COLOR_CHANGE_ABORTED,
+ 	NL80211_CMD_COLOR_CHANGE_COMPLETED,
+ 
++	NL80211_CMD_AWGN_DETECT,
++
+ 	NL80211_CMD_SET_FILS_AAD,
+ 
+ 	NL80211_CMD_ASSOC_COMEBACK,
+@@ -2667,6 +2671,14 @@ enum nl80211_commands {
+  *	the driver supports preamble puncturing, value should be of type
+  *	&enum nl80211_ru_punct_supp_bw
+  *
++ * @NL80211_ATTR_RU_PUNCT_SUPP_HE: flag attribute, used to indicate that RU
++ *	puncturing bitmap validation should include OFDMA bitmaps.
++ *
++ * @NL80211_ATTR_RU_PUNCT_BITMAP: (u16) RU puncturing bitmap where the lowest
++ *	bit corresponds to the lowest 20 MHz channel. Each bit set to 1
++ *	indicates that the sub-channel is punctured, set 0 indicates that the
++ *	channel is active.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3164,6 +3176,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_DISABLE_HE,
+ 
++	NL80211_ATTR_HE_MUEDCA_PARAMS,
++
+ 	NL80211_ATTR_OBSS_COLOR_BITMAP,
+ 
+ 	NL80211_ATTR_COLOR_CHANGE_COUNT,
+@@ -3180,6 +3194,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_EHT_CAPABILITY,
+ 
+ 	NL80211_ATTR_RU_PUNCT_SUPP_BW,
++	NL80211_ATTR_RU_PUNCT_SUPP_HE,
++	NL80211_ATTR_RU_PUNCT_BITMAP,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -4170,6 +4186,10 @@ enum nl80211_reg_rule_attr {
+ 
+ 	NL80211_ATTR_DFS_CAC_TIME,
+ 
++	NL80211_ATTR_POWER_RULE_PSD,
++
++	NL80211_ATTR_REG_POWER_MODE,
++
+ 	/* keep last */
+ 	__NL80211_REG_RULE_ATTR_AFTER_LAST,
+ 	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1fbfda2b3b14..e3a7a94d89ca 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -792,6 +792,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 				 NL80211_EHT_MAX_CAPABILITY_LEN),
+ 	[NL80211_ATTR_RU_PUNCT_SUPP_BW] =
+ 		NLA_POLICY_MAX(NLA_U8, NL80211_RU_PUNCT_SUPP_BW_320),
++	[NL80211_ATTR_RU_PUNCT_SUPP_HE] = { .type = NLA_FLAG },
++	[NL80211_ATTR_RU_PUNCT_BITMAP] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3122,6 +3124,46 @@ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ 		wdev->iftype == NL80211_IFTYPE_P2P_GO;
+ }
+ 
++static int nl80211_parse_ru_punct_bitmap(struct cfg80211_registered_device *rdev,
++					 struct genl_info *info,
++					 struct cfg80211_chan_def *chandef)
++{
++	chandef->ru_punct_bitmap_supp_he =
++		nla_get_flag(info->attrs[NL80211_ATTR_RU_PUNCT_SUPP_HE]);
++
++	chandef->ru_punct_bitmap =
++		nla_get_u16(info->attrs[NL80211_ATTR_RU_PUNCT_BITMAP]);
++
++	if (!chandef->ru_punct_bitmap)
++		return 0;
++
++	if (!rdev->wiphy.ru_punct_supp_bw &&
++	    (chandef->ru_punct_bitmap || chandef->ru_punct_bitmap_supp_he))
++		return -EOPNOTSUPP;
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_80:
++		if (rdev->wiphy.ru_punct_supp_bw >=
++		    NL80211_RU_PUNCT_SUPP_BW_160)
++			return -EOPNOTSUPP;
++		break;
++
++	case NL80211_CHAN_WIDTH_160:
++		if (rdev->wiphy.ru_punct_supp_bw >=
++		    NL80211_RU_PUNCT_SUPP_BW_320)
++			return -EOPNOTSUPP;
++		break;
++
++	case NL80211_CHAN_WIDTH_320:
++		break;
++
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return 0;
++}
++
+ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 			  struct genl_info *info,
+ 			  struct cfg80211_chan_def *chandef)
+@@ -3129,6 +3171,7 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 	struct netlink_ext_ack *extack = info->extack;
+ 	struct nlattr **attrs = info->attrs;
+ 	u32 control_freq;
++	int err;
+ 
+ 	if (!attrs[NL80211_ATTR_WIPHY_FREQ])
+ 		return -EINVAL;
+@@ -3205,6 +3248,12 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ2]);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_RU_PUNCT_BITMAP]) {
++		err = nl80211_parse_ru_punct_bitmap(rdev, info, chandef);
++		if (err)
++			return err;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]) {
+ 		chandef->edmg.channels =
+ 		      nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]);
+-- 
+2.31.1
 
-Not doing DMA to the whole area seems to be quite the sane thing to do
-for things like network packets, and overwriting the part that didn't
-get DMA'd with zeroes seems to be exactly the wrong thing here.
-
-So the SG_IO - and other random untrusted block command sources - data
-leak will almost certainly have to be addressed differently. Possibly
-by simply allocating the area with GFP_ZERO to begin with.
-
-              Linus
