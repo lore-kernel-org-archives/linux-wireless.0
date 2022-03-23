@@ -2,88 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE76C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 16:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF2E7C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 16:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245305AbiCWQG1 (ORCPT
+        id S245369AbiCWQII (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Mar 2022 12:06:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37154 "EHLO
+        Wed, 23 Mar 2022 12:08:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234639AbiCWQG0 (ORCPT
+        with ESMTP id S245445AbiCWQIB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Mar 2022 12:06:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 932AB14093;
-        Wed, 23 Mar 2022 09:04:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 01B01B81F9C;
-        Wed, 23 Mar 2022 16:04:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 377EEC340E8;
-        Wed, 23 Mar 2022 16:04:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648051493;
-        bh=J6Jj3uWyZKjJ9PzohwOMwt8OqyngKpQ+spVUMeqUv28=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Nma3Zy9b+SImVRKKJ4m/jQvhdePFX4Ogdo2X7Hi0o2lZBBUA6DIa835nJbIwFSeJa
-         k0KBST/EBjBw9icoS8QpUlxeRokAd+fFYxwcedzDkytHzdNTbHlh28YvrWXeNAAvg7
-         pouH5z8cw0UuENpv5UVF/zZm6FTLYEvb5lrLBtH6Bc/ETVzFj0FyMzBkayQpG4WF4F
-         HAk+9SPOxtyfjdFpliFkZTaSL2dtexKGPTVj1s+1U20bjYliqCMC/x2bSC6IohZwUI
-         KJI4MhvmRaPXtw7ySwTEMdoMvRjFgwfP/Xe2ikFYCd0tSh4r4lwYOXwAYy94GY6hGf
-         ftgMup5HN4aDA==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Yann Gautier <yann.gautier@foss.st.com>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        <linux-wireless@vger.kernel.org>,
-        Christophe ROULLIER-SCND-02 <christophe.roullier@foss.st.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Gustavo Padovan <gustavo.padovan@collabora.com>,
-        Adrian Ratiu <adrian.ratiu@collabora.com>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <linux-kernel@vger.kernel.org>,
-        Christophe KERELLO - foss <christophe.kerello@foss.st.com>
-Subject: Re: [PATCH v2] brcmfmac: Avoid keeping power to SDIO card unless WOWL is used
-References: <20220323083950.414783-1-ulf.hansson@linaro.org>
-        <51b4917b-823d-263a-2412-a4b17cb38420@foss.st.com>
-Date:   Wed, 23 Mar 2022 18:04:46 +0200
-In-Reply-To: <51b4917b-823d-263a-2412-a4b17cb38420@foss.st.com> (Yann
-        Gautier's message of "Wed, 23 Mar 2022 14:20:36 +0100")
-Message-ID: <87a6dgk63l.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Wed, 23 Mar 2022 12:08:01 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E89B7C17E
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 09:06:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648051592; x=1679587592;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=qF5/zXwuEnWpLIRsAVxVh/Job5uOkCMuFaxCIQWpM7g=;
+  b=vnYlJ7LW7OY4OGzSDNJa/6KpTUUNqBNxfOMshlfE7AU0Krz5m/RapqEe
+   dqy3L1+o6ZwA/wYukh+yg4hm7Ttj0O5Y1zZIyd2tZPh074h6OAnEpH9VS
+   dQ5i3hfepn+5XMf3iSXHUNg+vywCEHLkZjmufvvl/19jxBKvVda4QbwM6
+   8=;
+Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
+  by alexa-out.qualcomm.com with ESMTP; 23 Mar 2022 09:06:32 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 09:06:32 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 23 Mar 2022 09:06:31 -0700
+Received: from [10.110.23.155] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 23 Mar
+ 2022 09:06:31 -0700
+Message-ID: <dc556455-51a2-06e8-8ec5-b807c2901b7e@quicinc.com>
+Date:   Wed, 23 Mar 2022 09:06:30 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [BUG] deadlock in nl80211_vendor_cmd
+Content-Language: en-US
+To:     William McVicker <willmcvicker@google.com>
+CC:     Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>
+References: <0000000000009e9b7105da6d1779@google.com>
+ <99eda6d1dad3ff49435b74e539488091642b10a8.camel@sipsolutions.net>
+ <5d5cf050-7de0-7bad-2407-276970222635@quicinc.com>
+ <YjpGlRvcg72zNo8s@google.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <YjpGlRvcg72zNo8s@google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yann Gautier <yann.gautier@foss.st.com> writes:
-
-> On 3/23/22 09:39, Ulf Hansson wrote:
->> Keeping the power to the SDIO card during system wide suspend, consumes
->> energy. Especially on battery driven embedded systems, this can be a
->> problem. Therefore, let's change the behaviour into allowing the SDIO card
->> to be powered off, unless WOWL is supported and enabled.
+On 3/22/2022 2:58 PM, William McVicker wrote:
+> On 03/22/2022, Jeff Johnson wrote:
+>> On 3/21/2022 1:07 PM, Johannes Berg wrote:
+>> [..snip..]
 >>
->> Note that, the downside from this change, is that during system resume the
->> SDIO card needs to be re-initialized and the FW must be re-programmed. Even
->> if this may take some time to complete, it should we worth it, rather than
->> draining the battery.
+>>>> I'm not an networking expert. So my main question is if I'm allowed to take
+>>>> the RTNL lock inside the nl80211_vendor_cmd callbacks?
+>>>
+>>> Evidently, you're not. It's interesting though, it used to be that we
+>>> called these with the RTNL held, now we don't, and the driver you're
+>>> using somehow "got fixed" to take it, but whoever fixed it didn't take
+>>> into account that this is not possible?
 >>
->> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
->
-> Thanks for the patch, it is OK, and tested by Christophe (R.).
-> So you can add:
-> Tested-by: Christophe Roullier <christophe.roullier@foss.st.com>
-> Acked-by: Yann Gautier <yann.gautier@foss.st.com>
+>> On this point I just want to remind that prior to the locking change that a
+>> driver would specify on a per-vendor command basis whether or not it wanted
+>> the rtnl_lock to be held via NL80211_FLAG_NEED_RTNL. I'm guessing for the
+>> command in question the driver did not set this flag since the driver wanted
+>> to explicitly take the lock itself, otherwise it would have deadlocked on
+>> itself with the 5.10 kernel.
+>>
+>> /jeff
+> 
+> On the 5.10 kernel, the core kernel sets NL80211_FLAG_NEED_RTNL as part of
+> the internal_flags for NL80211_CMD_VENDOR:
+> 
+> net/wireless/nl80211.c:
+>     {
+>        .cmd = NL80211_CMD_VENDOR,
+>        .validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+>        .doit = nl80211_vendor_cmd,
+>        .dumpit = nl80211_vendor_cmd_dump,
+>        .flags = GENL_UNS_ADMIN_PERM,
+>        .internal_flags = NL80211_FLAG_NEED_WIPHY |
+>                NL80211_FLAG_NEED_RTNL |
+>                NL80211_FLAG_CLEAR_SKB,
+>     },
+> 
+> So the 5.10 version of this driver doesn't need to directly call rtnl_lock()
+> within the vendor command doit() functions since pre_doit() handles the RTNL
+> locking.
+> 
+> It would be nice if nl80211_vendor_cmd() could support taking the RTNL lock if
+> requested via the vendor flags. That would require moving the wiphy lock to
+> nl80211_vendor_cmds() so that it could take the RTNL and wiphy lock in the
+> correct order. Is that something you'd be open to Johannes?
+> 
+> --Will
 
-Acked-by is used by the driver maintainer, so I assume you mean
-Reviewed-by?
+Thanks for correcting my understanding. I concur that it would be useful 
+for vendor commands to be able to specify that a given command needs the 
+RTNL lock to be held.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
