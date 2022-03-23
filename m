@@ -2,73 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB1BC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 13:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE76C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 16:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244308AbiCWNgu (ORCPT
+        id S245305AbiCWQG1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Mar 2022 09:36:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35280 "EHLO
+        Wed, 23 Mar 2022 12:06:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244298AbiCWNgs (ORCPT
+        with ESMTP id S234639AbiCWQG0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Mar 2022 09:36:48 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1ADB1F616
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 06:35:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=yLfh/bdmlUuRZmCWl0lmrZk5wAcGoK5FerC5+CqDlAI=;
-        t=1648042519; x=1649252119; b=pnVcYwl6S0A0eRkt8MXoSVVSKjqvj/qXOfyt6+S2h9F0Wwv
-        CqC6QbGw2Kh/TdDiAwQFUGnu9wYZezxNmQ+s2wCgeuIHn1YlI0WJyUiswqvRm5TJ2T90Ro6RTWANi
-        KM6hs6blz5hAs0KIUoxunARcrWVm0BRM9xsn1Po1xWbjN5ygSUtJkPXZHeAL0zCuSDjYHeYnaZqKf
-        KnJT2IuA7rbHNXFDnRvXwJfHUU1qn/AU6GfcGJixeBZT1w3OqQ7VgT8g2FzlR9IUFBfSqxXnphSQw
-        HEsfb+X1KPNABYvq0wogU8MCLewvm81Nwb6X9IM4fWedcEo8VxJGbirGqCp5FGNA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1nX18v-00H6F3-CT;
-        Wed, 23 Mar 2022 14:35:17 +0100
-Message-ID: <dde1f3a29b7da55697cfaca58565458766f74209.camel@sipsolutions.net>
-Subject: Re: iwlwifi: Beacon frame injection at higher modulation in kernel
- 5.13+?
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Kevin Kellar <kevin.kellar@flyzipline.com>,
-        linux-wireless@vger.kernel.org
-Date:   Wed, 23 Mar 2022 14:35:16 +0100
-In-Reply-To: <CAJyMcLWcoCAHOmoNUT2=oVUWj7Lj5R1O-57KNX_5VXHfBr91OQ@mail.gmail.com>
-References: <CAJyMcLWcoCAHOmoNUT2=oVUWj7Lj5R1O-57KNX_5VXHfBr91OQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
+        Wed, 23 Mar 2022 12:06:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 932AB14093;
+        Wed, 23 Mar 2022 09:04:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 01B01B81F9C;
+        Wed, 23 Mar 2022 16:04:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 377EEC340E8;
+        Wed, 23 Mar 2022 16:04:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648051493;
+        bh=J6Jj3uWyZKjJ9PzohwOMwt8OqyngKpQ+spVUMeqUv28=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Nma3Zy9b+SImVRKKJ4m/jQvhdePFX4Ogdo2X7Hi0o2lZBBUA6DIa835nJbIwFSeJa
+         k0KBST/EBjBw9icoS8QpUlxeRokAd+fFYxwcedzDkytHzdNTbHlh28YvrWXeNAAvg7
+         pouH5z8cw0UuENpv5UVF/zZm6FTLYEvb5lrLBtH6Bc/ETVzFj0FyMzBkayQpG4WF4F
+         HAk+9SPOxtyfjdFpliFkZTaSL2dtexKGPTVj1s+1U20bjYliqCMC/x2bSC6IohZwUI
+         KJI4MhvmRaPXtw7ySwTEMdoMvRjFgwfP/Xe2ikFYCd0tSh4r4lwYOXwAYy94GY6hGf
+         ftgMup5HN4aDA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Yann Gautier <yann.gautier@foss.st.com>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        <linux-wireless@vger.kernel.org>,
+        Christophe ROULLIER-SCND-02 <christophe.roullier@foss.st.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Gustavo Padovan <gustavo.padovan@collabora.com>,
+        Adrian Ratiu <adrian.ratiu@collabora.com>,
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        <linux-kernel@vger.kernel.org>,
+        Christophe KERELLO - foss <christophe.kerello@foss.st.com>
+Subject: Re: [PATCH v2] brcmfmac: Avoid keeping power to SDIO card unless WOWL is used
+References: <20220323083950.414783-1-ulf.hansson@linaro.org>
+        <51b4917b-823d-263a-2412-a4b17cb38420@foss.st.com>
+Date:   Wed, 23 Mar 2022 18:04:46 +0200
+In-Reply-To: <51b4917b-823d-263a-2412-a4b17cb38420@foss.st.com> (Yann
+        Gautier's message of "Wed, 23 Mar 2022 14:20:36 +0100")
+Message-ID: <87a6dgk63l.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2022-01-31 at 17:26 -0800, Kevin Kellar wrote:
-> 
-> Would anyone here be able to weigh in on:
-> If frame injection while the interface is in monitor mode is supported
-> by the iwlwifi driver
+Yann Gautier <yann.gautier@foss.st.com> writes:
 
-Kind of.
+> On 3/23/22 09:39, Ulf Hansson wrote:
+>> Keeping the power to the SDIO card during system wide suspend, consumes
+>> energy. Especially on battery driven embedded systems, this can be a
+>> problem. Therefore, let's change the behaviour into allowing the SDIO card
+>> to be powered off, unless WOWL is supported and enabled.
+>>
+>> Note that, the downside from this change, is that during system resume the
+>> SDIO card needs to be re-initialized and the FW must be re-programmed. Even
+>> if this may take some time to complete, it should we worth it, rather than
+>> draining the battery.
+>>
+>> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+>
+> Thanks for the patch, it is OK, and tested by Christophe (R.).
+> So you can add:
+> Tested-by: Christophe Roullier <christophe.roullier@foss.st.com>
+> Acked-by: Yann Gautier <yann.gautier@foss.st.com>
 
-> Whether the iwlwifi team intentionally limits supported
-> modulations/datarates for injected frames to be 802.11b 1Mb/s
+Acked-by is used by the driver maintainer, so I assume you mean
+Reviewed-by?
 
-Not really, but there's no code to handle it otherwise I guess, and
-given how rate control works that's not really trivial.
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-> Whether injection at 802.11n MCSs is supported by Intel wireless
-> device firmware, and if we could use this feature through the iwlwifi
-> driver.
-> 
-
-Yes that should work in firmware, just need to set the rate into the TX
-command (rate from command, not rate from STA LQ table)
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
