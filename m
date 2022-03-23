@@ -2,67 +2,164 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2180EC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Mar 2022 23:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0233DC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Mar 2022 07:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238806AbiCVXWP (ORCPT
+        id S242177AbiCWHVA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Mar 2022 19:22:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48016 "EHLO
+        Wed, 23 Mar 2022 03:21:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236651AbiCVXWO (ORCPT
+        with ESMTP id S233545AbiCWHU7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Mar 2022 19:22:14 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1944199A
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 16:20:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Wed, 23 Mar 2022 03:20:59 -0400
+Received: from vulcan.natalenko.name (vulcan.natalenko.name [IPv6:2001:19f0:6c00:8846:5400:ff:fe0c:dfa0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E90C772E39;
+        Wed, 23 Mar 2022 00:19:28 -0700 (PDT)
+Received: from spock.localnet (unknown [83.148.33.151])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id ADE9ACE1EE0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2022 23:20:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DE7BC340EC;
-        Tue, 22 Mar 2022 23:20:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647991241;
-        bh=stgZX6h605XxAKfywxr4EJjuodyoqFxsAASzapTxM94=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=mzq6pznfPP9DaoIeQAAq53dvARmVtRMJanBrY3mjPu8Em+ceW0bfFBvWDmY48oBt0
-         fsdyG8cNkHUL6xKILyxX4kEH5h3XKZ5BtVS7IsfU4z4/9Xe+ys/3NWcVyXYjXKFSDl
-         xxLzsZYFq71Qvu/dQrqpP28TLGyQxQQp5TeKmj6jjWmK4xbEJQfyMDRmCTOP/bKVfq
-         YZcMz/Xgi98EX0Od+vnOPxurycVekNgVXMlXmfNfzvBtYlSHxg5XCOGaE6U6OY4IUK
-         BhHgg/GUh0y7d4FCtvxderQYW5rAzqu5ER3HAKEP3SpKzmoGNOV8H6BtxyiDMB5N+i
-         KK26hVxgjI9lw==
-Date:   Tue, 22 Mar 2022 16:20:40 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net,
-        socketcan@hartkopp.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: mvm: Don't fail if PPAG isn't supported
-Message-ID: <20220322162040.4569094e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <87a6dhwzin.fsf@tynnyri.adurom.net>
-References: <iwlwifi.20220322173828.fa47f369b717.I6a9c65149c2c3c11337f3a802dff22f514a3a436@changeid>
-        <3166a024cd5bef43bf192418e95d3c75409a861f.camel@coelho.fi>
-        <87a6dhwzin.fsf@tynnyri.adurom.net>
+        by vulcan.natalenko.name (Postfix) with ESMTPSA id B6133E4442C;
+        Wed, 23 Mar 2022 08:19:25 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=natalenko.name;
+        s=dkim-20170712; t=1648019965;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Aq3wTOLIRg4bKiBb83fzJSvp8UW1zQslkrUCWcBYITQ=;
+        b=LG3o6z1WaJFYjUM/dvlifvqemxa7QhfYYuRyQw8zynNLBKallm7YPeYl4s3i1uXRuwucCa
+        IiYCtbrGOZwKeFtfW23igHSCVIiopYSMYKtYlLf+dzplA8xjOhLHSc/W0mvqenoN9hgQBq
+        656paAFP8ET1YwXu8lqE2uhasmwMoNw=
+From:   Oleksandr Natalenko <oleksandr@natalenko.name>
+To:     Halil Pasic <pasic@linux.ibm.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Toke =?ISO-8859-1?Q?H=F8iland=2DJ=F8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org
+Subject: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break ath9k-based AP
+Date:   Wed, 23 Mar 2022 08:19:24 +0100
+Message-ID: <1812355.tdWV9SEqCh@natalenko.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 22 Mar 2022 21:36:16 +0200 Kalle Valo wrote:
-> > Jakub, this is the fix for the PPAG regression that we talked about
-> > earlier.  If it's fine with Kalle, you can apply it directly to net-
-> > next to expedite it.  
-> 
-> You didn't CC netdev though so it's not visible on their patchwork.
+Hello.
 
-I think we're in luck, looks like my scripts don't care which 
-pw instance the series is in. Applied to net-next.
+The following upstream commits:
 
-> > Kalle can you ack?  
-> 
-> Acked-by: Kalle Valo <kvalo@kernel.org>
+aa6f8dcbab47 swiotlb: rework "fix info leak with DMA_FROM_DEVICE"
+ddbd89deb7d3 swiotlb: fix info leak with DMA_FROM_DEVICE
 
-Thanks everyone!
+break ath9k-based Wi-Fi access point for me. The AP emits beacons, but no client can connect to it, either from the very beginning, or shortly after start. These are the only symptoms I've noticed (i.e., no BUG/WARNING messages in `dmesg` etc).
+
+The hardware is:
+
+```
+$ dmesg | grep -i swiotlb
+[    0.426785] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+
+BIOS Information
+    Vendor: American Megatrends Inc.
+    Version: P1.50
+    Release Date: 04/16/2018
+
+Base Board Information
+    Manufacturer: ASRock
+    Product Name: J3710-ITX
+
+02:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network Adapter (rev 01)
+	Subsystem: Lite-On Communications Inc Device 6621
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 17
+	Region 0: Memory at 81400000 (64-bit, non-prefetchable) [size=512K]
+	Expansion ROM at 81480000 [disabled] [size=64K]
+	Capabilities: [40] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+		Address: 0000000000000000  Data: 0000
+		Masking: 00000000  Pending: 00000000
+	Capabilities: [70] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 <64us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 10.000W
+		DevCtl:	CorrErr- NonFatalErr- FatalErr- UnsupReq-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <4us, L1 <64us
+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s (ok), Width x1 (ok)
+			TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis+ NROPrPrP- LTR-
+			 10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
+			 EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+			 FRS- TPHComp- ExtTPHComp-
+			 AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- OBFF Disabled,
+			 AtomicOpsCtl: ReqEn-
+		LnkCap2: Supported Link Speeds: 2.5GT/s, Crosslink- Retimer- 2Retimers- DRS-
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
+			 EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+			 Retimer- 2Retimers- CrosslinkRes: unsupported
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+		AERCap:	First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+			MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+		HeaderLog: 00000000 00000000 00000000 00000000
+	Capabilities: [140 v1] Virtual Channel
+		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+		Arb:	Fixed- WRR32- WRR64- WRR128-
+		Ctrl:	ArbSelect=Fixed
+		Status:	InProgress-
+		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+			Status:	NegoPending- InProgress-
+	Capabilities: [160 v1] Device Serial Number 00-00-00-00-00-00-00-00
+	Kernel driver in use: ath9k
+	Kernel modules: ath9k
+```
+
+These commits appeared in v5.17 and v5.16.15, and both kernels are broken for me. I'm pretty confident these commits make the difference since I've built both v5.17 and v5.16.15 without them, and it fixed the issue.
+
+The machine has also got another Wi-Fi card that acts as a 802.11ax AP, and it is not affected:
+
+```
+01:00.0 Unclassified device [0002]: MEDIATEK Corp. MT7915E 802.11ax PCI Express Wireless Network Adapter (prog-if 80)
+```
+
+So, I do understand this might be an issue with regard to SG I/O handling in ath9k, hence relevant people in Cc.
+
+Please suggest on how to deal with this. Both me and Olha (in Cc) will be glad to test patches if needed. In case any extra info is required, please also let me know.
+
+Thanks.
+
+-- 
+Oleksandr Natalenko (post-factum)
+
+
