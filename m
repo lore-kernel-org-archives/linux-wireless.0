@@ -2,134 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A7DC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 01:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF5BC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 05:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241714AbiCXBUp (ORCPT
+        id S1347358AbiCXF7L (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Mar 2022 21:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47134 "EHLO
+        Thu, 24 Mar 2022 01:59:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230416AbiCXBUp (ORCPT
+        with ESMTP id S1346218AbiCXF7J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Mar 2022 21:20:45 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99AC692872
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2022 18:19:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1648084755; x=1679620755;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=aZaxFGN7wIInQGry0NnfGJUmQpkaYS5NdcbjHX9xLOI=;
-  b=zM8Dw4r3qxUqExaDdSY7Q3/S/yW+dkFtq1wRzS3wrL5S63nmkyt4CMmD
-   lGZnQUcBZwn4kOUw16vvOQpvR0G6FJvBojMHBggBrOWRT4F2BdJ+loMIR
-   T0jG6QpbGcfXMkP+7lO81x4t6odIsxnpHgndNMn9l0bJeVwaFXlIxlfVZ
-   0=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 23 Mar 2022 18:19:14 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 18:19:14 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 23 Mar 2022 18:19:13 -0700
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 23 Mar 2022 18:19:12 -0700
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v2] ath11k: store and send country code to firmware after recovery
-Date:   Wed, 23 Mar 2022 21:18:56 -0400
-Message-ID: <20220324011856.11014-1-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
+        Thu, 24 Mar 2022 01:59:09 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B0F9398F;
+        Wed, 23 Mar 2022 22:57:37 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 320C868B05; Thu, 24 Mar 2022 06:57:33 +0100 (CET)
+Date:   Thu, 24 Mar 2022 06:57:32 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+Message-ID: <20220324055732.GB12078@lst.de>
+References: <1812355.tdWV9SEqCh@natalenko.name> <CAHk-=wiwz+Z2MaP44h086jeniG-OpK3c=FywLsCwXV7Crvadrg@mail.gmail.com> <27b5a287-7a33-9a8b-ad6d-04746735fb0c@arm.com> <CAHk-=wip7TCD_+2STTepuEZvGMg6wcz+o=kyFUvHjuKziTMixw@mail.gmail.com> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently ath11k does not send the country code to firmware after device
-recovery, as a result the regdomain info is reported from firmware by
-default. Regdomain info is important, so ath11k also need to restore
-it to the value which was used before recovery.
+On Wed, Mar 23, 2022 at 08:54:08PM +0000, Robin Murphy wrote:
+> I'll admit I still never quite grasped the reason for also adding the 
+> override to swiotlb_sync_single_for_device() in aa6f8dcbab47, but I think 
+> by that point we were increasingly tired and confused and starting to 
+> second-guess ourselves (well, I was, at least). I don't think it's wrong 
+> per se, but as I said I do think it can bite anyone who's been doing 
+> dma_sync_*() wrong but getting away with it until now. If ddbd89deb7d3 
+> alone turns out to work OK then I'd be inclined to try a partial revert of 
+> just that one hunk.
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
+Agreed.  Let's try that first.
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
----
-v2: rebased to ath.git ath-202203230912
+Oleksandr, can you try the patch below:
 
- drivers/net/wireless/ath/ath11k/core.c | 1 +
- drivers/net/wireless/ath/ath11k/core.h | 1 +
- drivers/net/wireless/ath/ath11k/mac.c  | 8 ++++++++
- drivers/net/wireless/ath/ath11k/reg.c  | 1 +
- 4 files changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 9cfba73b9e22..5243bd0aadb3 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1300,6 +1300,7 @@ static void ath11k_update_11d(struct work_struct *work)
- 		pdev = &ab->pdevs[i];
- 		ar = pdev->ar;
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 6db1c475ec827..6c350555e5a1c 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -701,13 +701,10 @@ void swiotlb_tbl_unmap_single(struct device *dev, phys_addr_t tlb_addr,
+ void swiotlb_sync_single_for_device(struct device *dev, phys_addr_t tlb_addr,
+ 		size_t size, enum dma_data_direction dir)
+ {
+-	/*
+-	 * Unconditional bounce is necessary to avoid corruption on
+-	 * sync_*_for_cpu or dma_ummap_* when the device didn't overwrite
+-	 * the whole lengt of the bounce buffer.
+-	 */
+-	swiotlb_bounce(dev, tlb_addr, size, DMA_TO_DEVICE);
+-	BUG_ON(!valid_dma_direction(dir));
++	if (dir == DMA_TO_DEVICE || dir == DMA_BIDIRECTIONAL)
++		swiotlb_bounce(dev, tlb_addr, size, DMA_TO_DEVICE);
++	else
++		BUG_ON(dir != DMA_FROM_DEVICE);
+ }
  
-+		memcpy(&ar->alpha2, &set_current_param.alpha2, 2);
- 		ret = ath11k_wmi_send_set_current_country_cmd(ar, &set_current_param);
- 		if (ret)
- 			ath11k_warn(ar->ab,
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 70eb6e418422..a23812617298 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -651,6 +651,7 @@ struct ath11k {
- 	int hw_rate_code;
- 	u8 twt_enabled;
- 	bool nlo_enabled;
-+	u8 alpha2[REG_ALPHA2_LEN + 1];
- };
- 
- struct ath11k_band_cap {
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 34a62933ccd2..9c25c60587ae 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -7951,6 +7951,14 @@ ath11k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
- 		ar->state = ATH11K_STATE_ON;
- 		ieee80211_wake_queues(ar->hw);
- 
-+		if (ar->ab->hw_params.current_cc_support &&
-+		    ar->alpha2[0] != 0 && ar->alpha2[1] != 0) {
-+			struct wmi_set_current_country_params set_current_param = {};
-+
-+			memcpy(&set_current_param.alpha2, ar->alpha2, 2);
-+			ath11k_wmi_send_set_current_country_cmd(ar, &set_current_param);
-+		}
-+
- 		if (ab->is_reset) {
- 			recovery_count = atomic_inc_return(&ab->recovery_count);
- 			ath11k_dbg(ab, ATH11K_DBG_BOOT,
-diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
-index 81e11cde31d7..35eb1a0c04dc 100644
---- a/drivers/net/wireless/ath/ath11k/reg.c
-+++ b/drivers/net/wireless/ath/ath11k/reg.c
-@@ -83,6 +83,7 @@ ath11k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	 */
- 	if (ar->ab->hw_params.current_cc_support) {
- 		memcpy(&set_current_param.alpha2, request->alpha2, 2);
-+		memcpy(&ar->alpha2, &set_current_param.alpha2, 2);
- 		ret = ath11k_wmi_send_set_current_country_cmd(ar, &set_current_param);
- 		if (ret)
- 			ath11k_warn(ar->ab,
-
-base-commit: d3dc55a0ce389be715ac7d104ee2cc852681e8d1
--- 
-2.31.1
-
+ void swiotlb_sync_single_for_cpu(struct device *dev, phys_addr_t tlb_addr,
