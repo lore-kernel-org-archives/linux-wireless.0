@@ -2,76 +2,95 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BD99C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 16:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB6EDC43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 16:39:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbiCXQhH (ORCPT
+        id S1351705AbiCXQkw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Mar 2022 12:37:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48858 "EHLO
+        Thu, 24 Mar 2022 12:40:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351726AbiCXQhC (ORCPT
+        with ESMTP id S239263AbiCXQkv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Mar 2022 12:37:02 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6E2B939AE
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 09:35:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1648139729; x=1679675729;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=2J4PgJ1a5/7ztFT+xARxoHKZycXYJXqDU7KaePGH8Ug=;
-  b=BkBGlnXBFvIGXP2lmkYQDzKjC5FMPGXPdqiWO+MhKlVJMXJAUCyQukAB
-   wlvjVXMqUYSfi2quCv5cOyFo6TnH6rLzr4HiO1fMDrdWzIUXjnGT+0WnA
-   oalZGGRJRdLha2VvDdBDf8PEBg3TkzWusFkKOxXGedkqBIVHztyN6ezRK
-   I=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 24 Mar 2022 09:35:29 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 09:35:29 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Thu, 24 Mar 2022 09:35:29 -0700
-Received: from [10.111.183.2] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 24 Mar
- 2022 09:35:28 -0700
-Message-ID: <224a3fb3-df3f-7da3-8130-416a80f116f3@quicinc.com>
-Date:   Thu, 24 Mar 2022 09:35:27 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v2 2/4] cfg80211: validate RU puncturing bitmap
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-References: <20220323191640.31230-1-quic_alokad@quicinc.com>
- <20220323191640.31230-2-quic_alokad@quicinc.com>
- <1b1976bd936be8530cac9a55726382450f691e3f.camel@sipsolutions.net>
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-In-Reply-To: <1b1976bd936be8530cac9a55726382450f691e3f.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+        Thu, 24 Mar 2022 12:40:51 -0400
+X-Greylist: delayed 603 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 24 Mar 2022 09:39:17 PDT
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A088843AD9;
+        Thu, 24 Mar 2022 09:39:17 -0700 (PDT)
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 7668D208CF;
+        Thu, 24 Mar 2022 17:29:12 +0100 (CET)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 6FAA6208C9;
+        Thu, 24 Mar 2022 17:29:12 +0100 (CET)
+Message-ID: <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+From:   Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Date:   Thu, 24 Mar 2022 17:29:12 +0100
+In-Reply-To: <878rsza0ih.fsf@toke.dk>
+References: <1812355.tdWV9SEqCh@natalenko.name>
+         <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+         <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+         <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
+Organization: Freebox
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Mar 24 17:29:12 2022 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/24/2022 3:37 AM, Johannes Berg wrote:
+
+On Thu, 2022-03-24 at 15:27 +0100, Toke Høiland-Jørgensen wrote:
+
 > 
-> (and also, you included all kinds of random other things in these
-> patches, specifically in nl80211.h, so there's no way I can apply them
-> as is anyway)
-> 
+> I'm looking into this; but in the interest of a speedy resolution of
+> the regression I would be in favour of merging that partial revert
+> and reinstating it if/when we identify (and fix) any bugs in ath9k :)
 
-I had added the other nl80211 parts to match local user-space
-nl80211 order during testing, forgot to take it out.
+This looks fishy:
 
-Let's discuss once your client side version is sent out.
+ath9k/recv.c
 
-Thanks.
+                /* We will now give hardware our shiny new allocated skb */
+                new_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
+                                              common->rx_bufsize, dma_type);
+                if (unlikely(dma_mapping_error(sc->dev, new_buf_addr))) {
+                        dev_kfree_skb_any(requeue_skb);
+                        goto requeue_drop_frag;
+                }
+
+                /* Unmap the frame */
+                dma_unmap_single(sc->dev, bf->bf_buf_addr,
+                                 common->rx_bufsize, dma_type);
+
+                bf->bf_mpdu = requeue_skb;
+                bf->bf_buf_addr = new_buf_addr;
+
+-- 
+Maxime
+
+
+
