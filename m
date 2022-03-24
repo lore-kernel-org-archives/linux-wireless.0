@@ -2,106 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4792EC433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 15:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB34C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 16:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239938AbiCXQAn (ORCPT
+        id S1351764AbiCXQdT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Mar 2022 12:00:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60078 "EHLO
+        Thu, 24 Mar 2022 12:33:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351640AbiCXQAW (ORCPT
+        with ESMTP id S1351724AbiCXQdJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Mar 2022 12:00:22 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6665BB0A4F;
-        Thu, 24 Mar 2022 08:58:25 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id q189so5288156oia.9;
-        Thu, 24 Mar 2022 08:58:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=5/1n/yQL0PaM9gpjD8BL74vTTmyMhMnVzexUmrmhuJo=;
-        b=Xd02s76ifoRZYHgxVZVoGj7o32xaP8PYrWtiLUWFsLaid3Xe+Zg4MvqlbbeUF3XWJy
-         H1YsQvMOBj8Nqb1t0dXT4JKGp8mOaBbGUBbn1YBDIOaIQxb56dP1OCQvqz/Uj6VkdDIH
-         2uTUcFwYNXNlH1ggTs2KnooZD7ZK2k1TtK93J5u4zT2LWYdA+3eL9KCA4XYjf6JRS1BB
-         1kYs3JjyQu3kiibLECkxEGK/oTg/5uydV0Pd9EsUMj4NDr7S/Mi6Zrr04wEwL125Gfd8
-         3NERsTPTYs9Xl09XzBeDK3pLH8lZ/FQ/Zq/zAb7fq+otxeovbtX8wd5CPDBDWF3ozAhK
-         8fuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
-         :subject:content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=5/1n/yQL0PaM9gpjD8BL74vTTmyMhMnVzexUmrmhuJo=;
-        b=8GKLsREIorNVIWNebH0th747OL9TXgpOGXBIwy4CbKezwsIK5hts9R6cr1aeckKf9y
-         7QfXpGAcnNn2m0C+wvdqxqFoqNT0AZJuBm7uofk6v0mT6kI0waFWZkFd614KDeV9rFS/
-         MRz8UMMt9T37v7Vhy2alO3TxKpP4ktfQMyfEgdrymmJ8B7mkkshFAejl11ubrQlf/np1
-         wjS36aN3RfS6mQ11/r9WiW3Kl9AR166+dsUbgo2kJKqtKafPWqyfJgkbJnPwXIfBy+/6
-         Y1JD+2W4ecAv1SVmR6+2fLx2K4cQ+Wync0jON8aDepjGvULP/SA/eYCHr2fY4F5m6UD0
-         8AiA==
-X-Gm-Message-State: AOAM531hagjKdF7+9+8lnRTjnzDdBXhvgpzocJtW/JcrnHklcik5za61
-        dv5+gUPApCVHiUqCS8Lc5euXxAziktc=
-X-Google-Smtp-Source: ABdhPJx9Wki8uy2EDKrx8/rZ1eDeCsTF58VIL/O8LGICSDDrdUITcqbIF4jleblqxMIHXjrqPiNqYA==
-X-Received: by 2002:aca:e102:0:b0:2d9:bdc6:b2e7 with SMTP id y2-20020acae102000000b002d9bdc6b2e7mr3108149oig.128.1648137504681;
-        Thu, 24 Mar 2022 08:58:24 -0700 (PDT)
-Received: from ?IPV6:2603:8090:2005:39b3::1084? (2603-8090-2005-39b3-0000-0000-0000-1084.res6.spectrum.com. [2603:8090:2005:39b3::1084])
-        by smtp.gmail.com with ESMTPSA id m3-20020a4ae3c3000000b00320d7c78b01sm1403252oov.20.2022.03.24.08.58.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Mar 2022 08:58:23 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-Message-ID: <d7e3752e-0aad-e247-3708-41f7aba8248c@lwfinger.net>
-Date:   Thu, 24 Mar 2022 10:58:22 -0500
+        Thu, 24 Mar 2022 12:33:09 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26D0EAA017;
+        Thu, 24 Mar 2022 09:31:36 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 364BB68B05; Thu, 24 Mar 2022 17:31:32 +0100 (CET)
+Date:   Thu, 24 Mar 2022 17:31:32 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Maxime Bizon <mbizon@freebox.fr>
+Cc:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Christoph Hellwig <hch@lst.de>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+Message-ID: <20220324163132.GB26098@lst.de>
+References: <1812355.tdWV9SEqCh@natalenko.name> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com> <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name> <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk> <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH V2] wireless: broadcom: b43legacy: Fix assigning negative
- value to unsigned variable
-Content-Language: en-US
-To:     Haowen Bai <baihaowen@meizu.com>, kvalo@kernel.org
-Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-References: <1648109173-28403-1-git-send-email-baihaowen@meizu.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1648109173-28403-1-git-send-email-baihaowen@meizu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/24/22 03:06, Haowen Bai wrote:
-> fix warning reported by smatch:
-> drivers/net/wireless/broadcom/b43legacy/phy.c:1181 b43legacy_phy_lo_b_measure()
-> warn: assigning (-772) to unsigned variable 'fval'
+On Thu, Mar 24, 2022 at 05:29:12PM +0100, Maxime Bizon wrote:
+> > I'm looking into this; but in the interest of a speedy resolution of
+> > the regression I would be in favour of merging that partial revert
+> > and reinstating it if/when we identify (and fix) any bugs in ath9k :)
 > 
-> Signed-off-by: Haowen Bai <baihaowen@meizu.com>
-
-This change makes no change to the executable code, but as long as it makes 
-smatch happy -
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
-
-> ---
-> V1->V2: modify title of this patch
->   drivers/net/wireless/broadcom/b43legacy/phy.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> This looks fishy:
 > 
-> diff --git a/drivers/net/wireless/broadcom/b43legacy/phy.c b/drivers/net/wireless/broadcom/b43legacy/phy.c
-> index 05404fb..c1395e6 100644
-> --- a/drivers/net/wireless/broadcom/b43legacy/phy.c
-> +++ b/drivers/net/wireless/broadcom/b43legacy/phy.c
-> @@ -1123,7 +1123,7 @@ void b43legacy_phy_lo_b_measure(struct b43legacy_wldev *dev)
->   	struct b43legacy_phy *phy = &dev->phy;
->   	u16 regstack[12] = { 0 };
->   	u16 mls;
-> -	u16 fval;
-> +	s16 fval;
->   	int i;
->   	int j;
->   
+> ath9k/recv.c
+> 
+>                 /* We will now give hardware our shiny new allocated skb */
+>                 new_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
+>                                               common->rx_bufsize, dma_type);
+>                 if (unlikely(dma_mapping_error(sc->dev, new_buf_addr))) {
+>                         dev_kfree_skb_any(requeue_skb);
+>                         goto requeue_drop_frag;
+>                 }
+> 
+>                 /* Unmap the frame */
+>                 dma_unmap_single(sc->dev, bf->bf_buf_addr,
+>                                  common->rx_bufsize, dma_type);
+> 
+>                 bf->bf_mpdu = requeue_skb;
+>                 bf->bf_buf_addr = new_buf_addr;
 
+Creating a new mapping for the same buffer before unmapping the
+previous one does looks rather bogus.  But it does not fit the
+pattern where revering the sync_single changes make the driver
+work again.
