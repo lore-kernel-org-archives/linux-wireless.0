@@ -2,272 +2,124 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A55BC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 12:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC32DC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 14:28:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350089AbiCXMoD (ORCPT
+        id S1350928AbiCXO3d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Mar 2022 08:44:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40280 "EHLO
+        Thu, 24 Mar 2022 10:29:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234878AbiCXMoC (ORCPT
+        with ESMTP id S1350902AbiCXO32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Mar 2022 08:44:02 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584DCA94F3
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 05:42:26 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id p184-20020a1c29c1000000b0037f76d8b484so2493928wmp.5
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 05:42:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nexus-software-ie.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=SRqP4OX0c96t915lu5xWOnRiTjEBkrJ/XwZE+rbqkCo=;
-        b=P/WngdM3nakUoDenPDReFSCTsDEinjVUvPHE055Ojs+n098elhPOwpfy2UEwNBh1qJ
-         tt3ufnp2NltgdfiCFwI2q4OueAnf0nZzzXhONkfOtLiprE7e+Fo7KsUJWM/ZqqV05FX0
-         PriasQnURxxEA7nJ27996IH1yN6gLmPTC0GQe5Ad39FUz83F68sQyIG3gYTCiXLk3xpT
-         FEQ1X3KCy3EBFkuOQH09DSDjWjJgKPbjzFc9uLqqYftyXfWAev7qmDlCUSVWBx6bIQpN
-         xggBjDP8ii7xLyWTjKMnACvK4eVIHwGhfUlUUBbYbSJtZffe5Ee3oh6PNX4FxZIBoE8W
-         gznQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=SRqP4OX0c96t915lu5xWOnRiTjEBkrJ/XwZE+rbqkCo=;
-        b=gUPQp0E7JqYwQ9mmwYy5Wgk58i3aBtL+LUONSAQ4LvSI+S7/ZaEacXfx+7krU6Ro6I
-         bcIRV0YdbHp2FI5cdF0vDv8pp1CedqIakCWzMIqmTHgs/04ynFPoOhd3X4gQ1vwsJKMN
-         YvKW7K97bIuLzdkQxYG9iOCH9SdzF5+xPyyLAA41n4ppxFtPPIyLEGyzoGEh4YiQsftg
-         tim63weuO1GX14ji/jOo3y0+S2Q9h3OGUMs9EjAqqelHrZ3pC2tioymECGiabP6ysW6T
-         FhU5Y9XN/SycjAg1o0KL8BQjRGrhM0+QdEad9H8IsuKmBTykH5Vnm6bzhDrClr3C+S50
-         u8kQ==
-X-Gm-Message-State: AOAM5316++QuKQRJDQKooq9YnNGYLfaS61edgfeROM/Sgdh2E8hotIBQ
-        PYXbtWPRYE4Vig9MKlcZpaYBdw==
-X-Google-Smtp-Source: ABdhPJzVIx6jSXipIQV5bTb6qn4mBgup/uRtzIUMfD9quLWIlEB+tpRKiLSI/72mYWvvTWaMAhbzfQ==
-X-Received: by 2002:a05:600c:3b08:b0:38c:c8f1:16ca with SMTP id m8-20020a05600c3b0800b0038cc8f116camr4725686wms.192.1648125744801;
-        Thu, 24 Mar 2022 05:42:24 -0700 (PDT)
-Received: from [192.168.0.162] (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id m3-20020a5d64a3000000b00203ed35b0aesm4175170wrp.108.2022.03.24.05.42.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Mar 2022 05:42:24 -0700 (PDT)
-Message-ID: <9c90300e-ac2d-be53-a7c9-7b00a059204e@nexus-software.ie>
-Date:   Thu, 24 Mar 2022 12:42:23 +0000
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v3] wcn36xx: Implement tx_rate reporting
-Content-Language: en-US
-To:     Edmond Gagnon <egagnon@squareup.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     Benjamin Li <benl@squareup.com>, Kalle Valo <kvalo@kernel.org>,
+        Thu, 24 Mar 2022 10:29:28 -0400
+Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FEF67B105;
+        Thu, 24 Mar 2022 07:27:54 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1648132071; bh=tnWUB/odmMKWGyF8he0G98tAGrRwpBch0DMAenM1KqE=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=Nl31SHkGEOpmzbhGTx/T436+jfkG7FgLD/mSjYD7BSj0K+POWTP/XdxPCiodxbxQl
+         fs/0XEz6ZSEqIigCk9/SGOf78e9BBUztwbBZDzqH/ljmF35/Ft7SaJ2tb+ZfJ3B82v
+         5Ds6VCknje0VtdskIGdvIYT2IP30ry+Tg++Nwx0V4+GwyeAIHvqo5gXJBHda6FCGFN
+         qWMkQGe87jzEr6SAA82toe9moP0NlIgQE7lxYyU93qrPdMDq9NoRbCop8YAlmyRwBG
+         DCvoBiDd0G923RpGwr8v+jV+hGB48XSTTIsaeMsKUjkspEaeCquR+2Qwv8L3tLcNxb
+         xaKx373cf/cWw==
+To:     Robin Murphy <robin.murphy@arm.com>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220318195804.4169686-3-egagnon@squareup.com>
- <20220323214533.1951791-1-egagnon@squareup.com>
-From:   Bryan O'Donoghue <pure.logic@nexus-software.ie>
-In-Reply-To: <20220323214533.1951791-1-egagnon@squareup.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+In-Reply-To: <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com>
+References: <1812355.tdWV9SEqCh@natalenko.name>
+ <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+ <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+ <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com>
+Date:   Thu, 24 Mar 2022 15:27:50 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <878rsza0ih.fsf@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 23/03/2022 21:45, Edmond Gagnon wrote:
-> Currently, the driver reports a tx_rate of 6.0 MBit/s no matter the true
-> rate:
-> 
-> root@linaro-developer:~# iw wlan0 link
-> Connected to 6c:f3:7f:eb:9b:92 (on wlan0)
->          SSID: SQ-DEVICETEST
->          freq: 5200
->          RX: 4141 bytes (32 packets)
->          TX: 2082 bytes (15 packets)
->          signal: -77 dBm
->          rx bitrate: 135.0 MBit/s MCS 6 40MHz short GI
->          tx bitrate: 6.0 MBit/s
-> 
->          bss flags:      short-slot-time
->          dtim period:    1
->          beacon int:     100
-> 
-> This patch requests HAL_GLOBAL_CLASS_A_STATS_INFO via a hal_get_stats
-> firmware message and reports it via ieee80211_ops::sta_statistics.
-> 
-> root@linaro-developer:~# iw wlan0 link
-> Connected to 6c:f3:7f:eb:73:b2 (on wlan0)
->          SSID: SQ-DEVICETEST
->          freq: 5700
->          RX: 26788094 bytes (19859 packets)
->          TX: 1101376 bytes (12119 packets)
->          signal: -75 dBm
->          rx bitrate: 135.0 MBit/s MCS 6 40MHz short GI
->          tx bitrate: 108.0 MBit/s VHT-MCS 5 40MHz VHT-NSS 1
-> 
->          bss flags:      short-slot-time
->          dtim period:    1
->          beacon int:     100
-> 
-> Tested on MSM8939 with WCN3680B running firmware CNSS-PR-2-0-1-2-c1-00083,
-> and verified by sniffing frames over the air with Wireshark to ensure the
-> MCS indices match.
-> 
-> Signed-off-by: Edmond Gagnon <egagnon@squareup.com>
-> Reviewed-by: Benjamin Li <benl@squareup.com>
-> ---
-> 
-> Changes in v3:
->   - Refactored to report tx_rate via ieee80211_ops::sta_statistics
->   - Dropped get_sta_index patch
->   - Addressed style comments
-> Changes in v2:
->   - Refactored to use existing wcn36xx_hal_get_stats_{req,rsp}_msg structs.
->   - Added more notes about testing.
->   - Reduced reporting interval to 3000msec.
->   - Assorted type and memory safety fixes.
->   - Make wcn36xx_smd_get_stats friendlier to future message implementors.
-> 
->   drivers/net/wireless/ath/wcn36xx/hal.h  |  7 +++-
->   drivers/net/wireless/ath/wcn36xx/main.c | 16 +++++++
->   drivers/net/wireless/ath/wcn36xx/smd.c  | 56 +++++++++++++++++++++++++
->   drivers/net/wireless/ath/wcn36xx/smd.h  |  2 +
->   drivers/net/wireless/ath/wcn36xx/txrx.c | 29 +++++++++++++
->   drivers/net/wireless/ath/wcn36xx/txrx.h |  1 +
->   6 files changed, 110 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-> index 2a1db9756fd5..46a49f0a51b3 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/hal.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-> @@ -2626,7 +2626,12 @@ enum tx_rate_info {
->   	HAL_TX_RATE_SGI = 0x8,
->   
->   	/* Rate with Long guard interval */
-> -	HAL_TX_RATE_LGI = 0x10
-> +	HAL_TX_RATE_LGI = 0x10,
-> +
-> +	/* VHT rates */
-> +	HAL_TX_RATE_VHT20  = 0x20,
-> +	HAL_TX_RATE_VHT40  = 0x40,
-> +	HAL_TX_RATE_VHT80  = 0x80,
->   };
->   
->   struct ani_global_class_a_stats_info {
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index b545d4b2b8c4..fc76b090c39f 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -1400,6 +1400,21 @@ static int wcn36xx_get_survey(struct ieee80211_hw *hw, int idx,
->   	return 0;
->   }
->   
-> +static void wcn36xx_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +				   struct ieee80211_sta *sta, struct station_info *sinfo)
+Robin Murphy <robin.murphy@arm.com> writes:
 
+> On 2022-03-24 10:25, Oleksandr Natalenko wrote:
+>> Hello.
+>>=20
+>> On =C4=8Dtvrtek 24. b=C5=99ezna 2022 6:57:32 CET Christoph Hellwig wrote:
+>>> On Wed, Mar 23, 2022 at 08:54:08PM +0000, Robin Murphy wrote:
+>>>> I'll admit I still never quite grasped the reason for also adding the
+>>>> override to swiotlb_sync_single_for_device() in aa6f8dcbab47, but I th=
+ink
+>>>> by that point we were increasingly tired and confused and starting to
+>>>> second-guess ourselves (well, I was, at least). I don't think it's wro=
+ng
+>>>> per se, but as I said I do think it can bite anyone who's been doing
+>>>> dma_sync_*() wrong but getting away with it until now. If ddbd89deb7d3
+>>>> alone turns out to work OK then I'd be inclined to try a partial rever=
+t of
+>>>> just that one hunk.
+>>>
+>>> Agreed.  Let's try that first.
+>>>
+>>> Oleksandr, can you try the patch below:
+>>>
+>>>
+>>> diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+>>> index 6db1c475ec827..6c350555e5a1c 100644
+>>> --- a/kernel/dma/swiotlb.c
+>>> +++ b/kernel/dma/swiotlb.c
+>>> @@ -701,13 +701,10 @@ void swiotlb_tbl_unmap_single(struct device *dev,=
+ phys_addr_t tlb_addr,
+>>>   void swiotlb_sync_single_for_device(struct device *dev, phys_addr_t t=
+lb_addr,
+>>>   		size_t size, enum dma_data_direction dir)
+>>>   {
+>>> -	/*
+>>> -	 * Unconditional bounce is necessary to avoid corruption on
+>>> -	 * sync_*_for_cpu or dma_ummap_* when the device didn't overwrite
+>>> -	 * the whole lengt of the bounce buffer.
+>>> -	 */
+>>> -	swiotlb_bounce(dev, tlb_addr, size, DMA_TO_DEVICE);
+>>> -	BUG_ON(!valid_dma_direction(dir));
+>>> +	if (dir =3D=3D DMA_TO_DEVICE || dir =3D=3D DMA_BIDIRECTIONAL)
+>>> +		swiotlb_bounce(dev, tlb_addr, size, DMA_TO_DEVICE);
+>>> +	else
+>>> +		BUG_ON(dir !=3D DMA_FROM_DEVICE);
+>>>   }
+>>>=20=20=20
+>>>   void swiotlb_sync_single_for_cpu(struct device *dev, phys_addr_t tlb_=
+addr,
+>>>
+>>=20
+>> With this patch the AP works for me.
+>
+> Cool, thanks for confirming. So I think ath9k probably is doing=20
+> something dodgy with dma_sync_*(), but if Linus prefers to make the=20
+> above change rather than wait for that to get figured out, I believe=20
+> that should be fine.
 
-Consider running this through checkpatch.pl and fixing most of the 
-complaints, use your discretion.
+I'm looking into this; but in the interest of a speedy resolution of the
+regression I would be in favour of merging that partial revert and
+reinstating it if/when we identify (and fix) any bugs in ath9k :)
 
-scripts/checkpatch.pl --strict 
-~/Development/patches/linux/wifi/v3-wcn36xx-Implement-tx_rate-reporting.patch
-
-static void wcn36xx_sta_statistics(struct ieee80211_hw *hw,
-                                    struct ieee80211_vif *vif,
-                                    struct ieee80211_sta *sta,
-                                    struct station_info *sinfo)
-
-> +{
-> +	struct wcn36xx *wcn;
-> +	u8 sta_index;
-> +	int status = 0;
-> +
-> +	wcn = hw->priv;
-> +	sta_index = get_sta_index(vif, wcn36xx_sta_to_priv(sta));
-> +	status = wcn36xx_smd_get_stats(wcn, sta_index, HAL_GLOBAL_CLASS_A_STATS_INFO, sinfo);
-
-status = wcn36xx_smd_get_stats(wcn, sta_index,
-                                HAL_GLOBAL_CLASS_A_STATS_INFO, sinfo);
-
-
-> +
-> +	if (status)
-> +		wcn36xx_err("wcn36xx_smd_get_stats failed\n");
-> +}
-> +
->   static const struct ieee80211_ops wcn36xx_ops = {
->   	.start			= wcn36xx_start,
->   	.stop			= wcn36xx_stop,
-> @@ -1423,6 +1438,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
->   	.set_rts_threshold	= wcn36xx_set_rts_threshold,
->   	.sta_add		= wcn36xx_sta_add,
->   	.sta_remove		= wcn36xx_sta_remove,
-> +	.sta_statistics		= wcn36xx_sta_statistics,
->   	.ampdu_action		= wcn36xx_ampdu_action,
->   #if IS_ENABLED(CONFIG_IPV6)
->   	.ipv6_addr_change	= wcn36xx_ipv6_addr_change,
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index caeb68901326..8f9aa892e5ec 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -2627,6 +2627,61 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 direction, u8 sta_index)
->   	return ret;
->   }
->   
-> +int wcn36xx_smd_get_stats(struct wcn36xx *wcn, u8 sta_index, u32 stats_mask,
-> +			  struct station_info *sinfo)
-> +{
-> +	struct wcn36xx_hal_stats_req_msg msg_body;
-> +	struct wcn36xx_hal_stats_rsp_msg *rsp;
-         struct ani_global_class_a_stats_info *stats_info;
-> +	void *rsp_body;
-> +	int ret = 0;
-> +
-> +	if (stats_mask & ~HAL_GLOBAL_CLASS_A_STATS_INFO) {
-> +		wcn36xx_err("stats_mask 0x%x contains unimplemented types\n",
-> +			    stats_mask);
-> +		return -EINVAL;
-> +	}
-> +
-> +	mutex_lock(&wcn->hal_mutex);
-> +	INIT_HAL_MSG(msg_body, WCN36XX_HAL_GET_STATS_REQ);
-> +
-> +	msg_body.sta_id = sta_index;
-> +	msg_body.stats_mask = stats_mask;
-> +
-> +	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
-> +
-> +	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-> +	if (ret) {
-> +		wcn36xx_err("sending hal_get_stats failed\n");
-> +		goto out;
-> +	}
-> +
-> +	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-> +	if (ret) {
-> +		wcn36xx_err("hal_get_stats response failed err=%d\n", ret);
-> +		goto out;
-> +	}
-> +
-> +	rsp = (struct wcn36xx_hal_stats_rsp_msg *)wcn->hal_buf;
-> +	rsp_body = (wcn->hal_buf + sizeof(struct wcn36xx_hal_stats_rsp_msg));
-> +
-> +	if (rsp->stats_mask != stats_mask) {
-> +		wcn36xx_err("stats_mask 0x%x differs from requested 0x%x\n",
-> +			    rsp->stats_mask, stats_mask);
-> +		goto out;
-> +	}
-> +
-If you take a pointer and cast it, then you won't have this very long 
-line with the cast
-
-         stats_info = (struct ani_global_class_a_stats_info *)rsp_body;
-> +	if (rsp->stats_mask & HAL_GLOBAL_CLASS_A_STATS_INFO) {
-> +		wcn36xx_process_tx_rate((struct ani_global_class_a_stats_info *)rsp_body,
-> +					&sinfo->txrate);
-                 wcn36xx_process_tx_rate(stats_info, &sinfo->txrate);
-
-
-Other than that LGTM
-
-Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+-Toke
