@@ -2,39 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35115C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:42:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A02CC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:45:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231299AbiCYTn5 (ORCPT
+        id S231655AbiCYTqr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 15:43:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36180 "EHLO
+        Fri, 25 Mar 2022 15:46:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232225AbiCYTnc (ORCPT
+        with ESMTP id S231678AbiCYTq1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 15:43:32 -0400
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 06B34160FDF;
-        Fri, 25 Mar 2022 12:14:27 -0700 (PDT)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A898413D5;
-        Fri, 25 Mar 2022 12:14:26 -0700 (PDT)
-Received: from [10.57.41.19] (unknown [10.57.41.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1A5C93F73D;
-        Fri, 25 Mar 2022 12:14:23 -0700 (PDT)
-Message-ID: <a1829f4a-d916-c486-ac49-2c6dff77521a@arm.com>
-Date:   Fri, 25 Mar 2022 19:14:20 +0000
+        Fri, 25 Mar 2022 15:46:27 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 887612B51AD
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:28:09 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id h7so15023007lfl.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:28:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=c98skZ0BjUMamIjtZ5imiZLVO/gl8DuHYbRwakJRogU=;
+        b=Suev8BbZiQARkSS4t03OA365leJb0pqRURfN9ENchEyRkWs2YFj9yYWgBOyB03AwTX
+         YhQZoZ7id1LSxPtVADVUj2io0XoJ1lCVLAHAHk2KnNq1hnonb7XuA9aYxWYlTBAgFBqO
+         RtHXpHxhqkzfBGrkr/vstccVIywh2CCLpuHps=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=c98skZ0BjUMamIjtZ5imiZLVO/gl8DuHYbRwakJRogU=;
+        b=AIzzBTmGa+VqkYL2+zKgHDEfw8nDChYiWSC/sLJVcZO+Ph56ebjTEmBHCxUD/PJHyy
+         7/CCEc1ed+ZXJxvJ6yYwSvmnEhTPnp0QtdPqgPViEuwfnj7zzSIxktz7D0n2GRgQ/qhM
+         LF261SHnVCV2SVY8rQeGKjB0CwpJpWyAjPTClhjw5om3h6uT5srmIKO9cHR263wYTM+H
+         6Pi54gXljcK5YwUoxlI3h/fZMDdwEU4rZtNpp3oXTI29lbq3jAJMF3g7wDUP/cZHYMDJ
+         mRkuqy4EO5HH6kgnAu1rPhnDudctIplKzfLoEycfIc4/yjDRbK0mm2pVuxNOGD5FssPw
+         00zQ==
+X-Gm-Message-State: AOAM532QJh5D9uwjxtcKX4GjzuVqSXa2Y8jwLr4pN1BizJkrJihhnD2f
+        iTR68v5a522OkETglomuQu3RUcjqHjetENQwCpM=
+X-Google-Smtp-Source: ABdhPJwkiaPKFXhDZQ0aQR2NiKWIbHnQbrr+7VuyzvRQNHElbKIAQ1ol+ebUQVpyJ+7tD/3ZWnn2rQ==
+X-Received: by 2002:a19:dc13:0:b0:448:3735:776b with SMTP id t19-20020a19dc13000000b004483735776bmr8815280lfg.77.1648236482454;
+        Fri, 25 Mar 2022 12:28:02 -0700 (PDT)
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com. [209.85.167.49])
+        by smtp.gmail.com with ESMTPSA id n22-20020a2e7216000000b0024ac2b26734sm11035ljc.23.2022.03.25.12.28.00
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Mar 2022 12:28:01 -0700 (PDT)
+Received: by mail-lf1-f49.google.com with SMTP id bt26so14994305lfb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:28:00 -0700 (PDT)
+X-Received: by 2002:a19:e048:0:b0:448:2caa:7ed2 with SMTP id
+ g8-20020a19e048000000b004482caa7ed2mr9229114lfj.449.1648236479896; Fri, 25
+ Mar 2022 12:27:59 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
+References: <1812355.tdWV9SEqCh@natalenko.name> <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
+ <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com> <12981608.uLZWGnKmhe@natalenko.name>
+In-Reply-To: <12981608.uLZWGnKmhe@natalenko.name>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 25 Mar 2022 12:27:43 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wghZ3c4G2xjy3pR7txmdCnau21z_tidjfU2w0HO-90=sw@mail.gmail.com>
+Message-ID: <CAHk-=wghZ3c4G2xjy3pR7txmdCnau21z_tidjfU2w0HO-90=sw@mail.gmail.com>
 Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
  ath9k-based AP
-Content-Language: en-GB
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Maxime Bizon <mbizon@freebox.fr>
-Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+To:     Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc:     Maxime Bizon <mbizon@freebox.fr>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
         Christoph Hellwig <hch@lst.de>,
-        Oleksandr Natalenko <oleksandr@natalenko.name>,
         Halil Pasic <pasic@linux.ibm.com>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -48,98 +80,26 @@ Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         stable <stable@vger.kernel.org>
-References: <1812355.tdWV9SEqCh@natalenko.name>
- <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
- <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
- <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
- <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
- <20220324163132.GB26098@lst.de>
- <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com> <871qyr9t4e.fsf@toke.dk>
- <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
- <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
- <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-In-Reply-To: <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2022-03-25 18:30, Linus Torvalds wrote:
-> On Fri, Mar 25, 2022 at 3:25 AM Maxime Bizon <mbizon@freebox.fr> wrote:
->>
->> In the non-cache-coherent scenario, and assuming dma_map() did an
->> initial cache invalidation, you can write this:
-> 
-> .. but the problem is that the dma mapping code is supposed to just
-> work, and the driver isn't supposed to know or care whether dma is
-> coherent or not, or using bounce buffers or not.
-> 
-> And currently it doesn't work.
-> 
-> Because what that ath9k driver does is "natural", but it's wrong for
-> the bounce buffer case.
-> 
-> And I think the problem is squarely on the dma-mapping side for two reasons:
-> 
->   (a) this used to work, now it doesn't, and it's unclear how many
-> other drivers are affected
-> 
->   (b) the dma-mapping naming and calling conventions are horrible and
-> actively misleading
-> 
-> That (a) is a big deal. The reason the ath9k issue was found quickly
-> is very likely *NOT* because ath9k is the only thing affected. No,
-> it's because ath9k is relatively common.
-> 
-> Just grep for dma_sync_single_for_device() and ask yourself: how many
-> of those other drivers have you ever even HEARD of, much less be able
-> to test?
-> 
-> And that's just one "dma_sync" function. Admittedly it's likely one of
-> the more common ones, but still..
-> 
-> Now, (b) is why I think driver nufgt get this so wrong - or, in this
-> case, possibly the dma-mapping code itself.
-> 
-> The naming - and even the documentation(!!!) - implies that what ath9k
-> does IS THE RIGHT THING TO DO.
-> 
-> The documentation clearly states:
-> 
->    "Before giving the memory to the device, dma_sync_single_for_device() needs
->     to be called, and before reading memory written by the device,
->     dma_sync_single_for_cpu(), just like for streaming DMA mappings that are
->     reused"
+On Fri, Mar 25, 2022 at 12:26 PM Oleksandr Natalenko
+<oleksandr@natalenko.name> wrote:
+>
+> On p=C3=A1tek 25. b=C5=99ezna 2022 19:30:21 CET Linus Torvalds wrote:
+> > The reason the ath9k issue was found quickly
+> > is very likely *NOT* because ath9k is the only thing affected. No,
+> > it's because ath9k is relatively common.
+>
+> Indeed. But having a wife who complains about non-working Wi-Fi printer d=
+efinitely helps in finding the issue too.
 
-Except that's documentation for the non-coherent allocation API, rather 
-than the streaming API in question here. I'll refrain from commenting on 
-having at least 3 DMA APIs, with the same set of sync functions serving 
-two of them, and just stand back a safe distance...
+Well, maybe we should credit her in the eventual resolution (whatever
+it ends up being).
 
+Although probably not using that exact wording.
 
-
-
-Anyway, the appropriate part of that document is probably:
-
-   "You must do this:
-
-    - Before reading values that have been written by DMA from the device
-      (use the DMA_FROM_DEVICE direction)"
-
-I'm not saying it constitutes *good* documentation, but I would note how 
-it says "have been written", and not "are currently being written". 
-Similarly from the HOWTO:
-
-    "If you need to use the same streaming DMA region multiple times and
-     touch the data in between the DMA transfers, the buffer needs to be
-     synced properly..."
-
-Note "between the DMA transfers", and not "during the DMA transfers". 
-The fundamental assumption of the streaming API is that only one thing 
-is ever accessing the mapping at any given time, which is what the whole 
-notion of ownership is about.
-
-Thanks,
-Robin.
+        Linus
