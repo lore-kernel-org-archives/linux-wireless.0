@@ -2,85 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 498CDC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 07:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F18C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 07:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353683AbiCYHnp (ORCPT
+        id S1353065AbiCYHu0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 03:43:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58306 "EHLO
+        Fri, 25 Mar 2022 03:50:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235096AbiCYHnp (ORCPT
+        with ESMTP id S241046AbiCYHuY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 03:43:45 -0400
-Received: from smtpproxy21.qq.com (smtpbg701.qq.com [203.205.195.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFC4DCA0C7
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 00:42:11 -0700 (PDT)
-X-QQ-mid: bizesmtp69t1648194111t8ehr1sc
-Received: from localhost.localdomain ( [58.240.82.166])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Fri, 25 Mar 2022 15:41:43 +0800 (CST)
-X-QQ-SSF: 01400000002000D0I000B00A0000000
-X-QQ-FEAT: rn/rQ7Qm5gWG7MK9OzE7viXDPDOXIZ6A7HRPLtLB+8P2biRmSSlRLDutLf3BE
-        CvA92F+Mz5HxWCyPtVWWqMWpo8tO8FRx0BCGrdO6bOOXWPr3Uyj1ZtUg6P1iJfUx2AnAOvj
-        P/U5rQAsuIwwU5qqyRasSkMKwKWFhgXM9sXusVjxRLTeSWLwsG0Q42BLrMuyksU1gV7qgLz
-        JbDrl0f2m46gyH6vx5NA4BGGYrv05fXNQm8MYuE2t1hnVCzxEDFXd0onjfc6PoOssMPKjxP
-        rzy4e1WxZ4ztI0RixKuhXhcTwbvybhWWAPRazXo5SI68CYsZcp5IECiVyhN72+9XZwOTTjT
-        0tm5J56hkc5XbmlJUfon8VYCi/aPQ==
-X-QQ-GoodBg: 2
-From:   Meng Tang <tangmeng@uniontech.com>
-To:     stas.yakovlev@gmail.com, kvalo@kernel.org, kuba@kernel.org,
-        pabeni@redhat.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Meng Tang <tangmeng@uniontech.com>
-Subject: [PATCH] ipw2200: Fix permissions setted by DEVICE_ATTR
-Date:   Fri, 25 Mar 2022 15:41:41 +0800
-Message-Id: <20220325074141.17446-1-tangmeng@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+        Fri, 25 Mar 2022 03:50:24 -0400
+X-Greylist: delayed 1354 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Mar 2022 00:48:51 PDT
+Received: from dvalin.narfation.org (dvalin.narfation.org [IPv6:2a00:17d8:100::8b1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 472883B543
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 00:48:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1648194529;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=i+P0KHJR5IxWQGQVnkvS35TIM3P98/PQ/lmJTKSZ9jo=;
+        b=T2JIac/TgTqZJdCwgxlR4XNogDy6pp2IWqRCW9x+aSjY+/6lH849qZ7fz0++zpFDqV91L5
+        Vl/6eqzaMqFafaln7HpPRtqCokugGTgLrKBNw3l6SHAaTzugN9kWKysnFv1ca1uQn5Y0+a
+        0MdVFlMJZtiFuAYudDQ51sUYDQIbhPQ=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc:     Maharaja Kennadyrajan <quic_mkenna@quicinc.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v6 1/3] nl80211: Add support for beacon tx mode
+Date:   Fri, 25 Mar 2022 08:48:44 +0100
+Message-ID: <4555984.c4UlCidsYr@ripper>
+In-Reply-To: <20220325055949.3035053-2-quic_mkenna@quicinc.com>
+References: <20220325055949.3035053-1-quic_mkenna@quicinc.com> <20220325055949.3035053-2-quic_mkenna@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign10
-X-QQ-Bgrelay: 1
+Content-Type: multipart/signed; boundary="nextPart6084859.M4ah1GsTNC"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Because xcode_version and rtc only implement the show function
-and do not provide the store function, so ucode_version and rtc
-only need the read permission, not need the write permission more.
+--nextPart6084859.M4ah1GsTNC
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
+From: Sven Eckelmann <sven@narfation.org>
+To: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Maharaja Kennadyrajan <quic_mkenna@quicinc.com>, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v6 1/3] nl80211: Add support for beacon tx mode
+Date: Fri, 25 Mar 2022 08:48:44 +0100
+Message-ID: <4555984.c4UlCidsYr@ripper>
+In-Reply-To: <20220325055949.3035053-2-quic_mkenna@quicinc.com>
+References: <20220325055949.3035053-1-quic_mkenna@quicinc.com> <20220325055949.3035053-2-quic_mkenna@quicinc.com>
 
-So, remove the write permission from xcode_version and rtc.
+On Friday, 25 March 2022 06:59:47 CET Maharaja Kennadyrajan wrote:
+> @@ -5555,6 +5558,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>         params->dtim_period =
+>                 nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
+>  
+> +       if (info->attrs[NL80211_ATTR_BEACON_TX_MODE])
+> +               params->beacon_tx_mode =
+> +                       nla_get_u32(info->attrs[NL80211_ATTR_BEACON_TX_MODE]);
+> +
+>         err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr->iftype,
+>                                            params->beacon_interval);
+>         if (err)
 
-Signed-off-by: Meng Tang <tangmeng@uniontech.com>
----
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+But why are you setting it by vif when it is actually a PHY setting? [1]
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 6830e88c4ed6..fa4f38d54d0a 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1578,7 +1578,7 @@ static ssize_t show_ucode_version(struct device *d,
- 	return sprintf(buf, "0x%08x\n", tmp);
- }
- 
--static DEVICE_ATTR(ucode_version, 0644, show_ucode_version, NULL);
-+static DEVICE_ATTR(ucode_version, 0444, show_ucode_version, NULL);
- 
- static ssize_t show_rtc(struct device *d, struct device_attribute *attr,
- 			char *buf)
-@@ -1592,7 +1592,7 @@ static ssize_t show_rtc(struct device *d, struct device_attribute *attr,
- 	return sprintf(buf, "0x%08x\n", tmp);
- }
- 
--static DEVICE_ATTR(rtc, 0644, show_rtc, NULL);
-+static DEVICE_ATTR(rtc, 0444, show_rtc, NULL);
- 
- /*
-  * Add a device attribute to view/control the delay between eeprom
--- 
-2.20.1
+
+And there is also the open question from Felix [2]:
+
+On Tuesday, 10 August 2021 16:33:41 CET Felix Fietkau wrote:
+> It still seems to me like something that the driver should detect and
+> handle internally without user configuration, based on number of VAPs
+> and maybe multicast/beacon rate (since the packet duration issue will be
+> worse with CCK rates).
+
+Kind regards,
+        Sven
+
+[1] https://lore.kernel.org/all/2718995.X0rUDs3ZmB@ripper/
+    https://lore.kernel.org/all/4581459.tLtf2NohVe@ripper/
+    https://lore.kernel.org/all/6210385.n8AMQ0p90U@ripper/
+    https://lore.kernel.org/all/4594028.WNQrFERZ9z@ripper/
+[2] https://lore.kernel.org/all/92b48724-277c-fc48-a922-6b1d49cd6a71@nbd.name/
+--nextPart6084859.M4ah1GsTNC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAmI9c90ACgkQXYcKB8Em
+e0Y7FRAAm3fE0tpWVdZo4Hz419mTkM4kURrTcS+8uYtS7GPSRcT9ZhdwCKV4OnV3
+MIyFGSGznYUeVwTcEsNwtyac2BhmialPykapF6XHpbNK9+gaVIvCKG764mtvPOjS
+TxsEPW72RnG5PjMNVvnDNAmqxNR5R5lNPG29v6HmyOCdW7FwHfXdWm6gIC+Lg88j
+z5fMZixyQZr92EnNpfItH6VlTIwppjEt7bO2DX9Yqlrh7JESYF2c5BTiXxjXwKJ9
+qdI6iVSfHkOwkb7iC1OlMIOmq7Vsn/+zmyrOmw87gw1wY4gIC8nn0McDjLc8lycg
+7xmdOHC6afW44kJB60RUF5LCNhNxCec0Q/VVaedq59GGfj5UGrV6rDlo1Zwbr5WQ
+8jnn8Y3pCJyFlsgvdF+ydfZwJpX3Go5jKYj6Ysg5iSJo1guyqrR3puU+Fb4YhH91
+iT7E9JWBfYQtpLAH2bIWil0ibSKoVUEzxqIshFwvJEbfB41/DQ5aOnjIijpfPMtu
+WRa977JutlN6p88lZTSQ5j36aMdU7CFLVPOFi5A8URz5HmcD8qCxofW7opiW6zBj
+BYWiWCtkgrj+vUZhwcn5FfVB53EgXO//nrT7BOlP8xkDktmeEfV2c5esIgfFagQf
+t4o2vzK6bOOu0omKk+eNW+DSl+0832yO2wyl0kGAScl+x8ZB820=
+=kHAi
+-----END PGP SIGNATURE-----
+
+--nextPart6084859.M4ah1GsTNC--
 
 
 
