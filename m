@@ -2,109 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DAF6C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 10:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E27C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 11:11:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244911AbiCYKrC (ORCPT
+        id S1355011AbiCYLNb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 06:47:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43224 "EHLO
+        Fri, 25 Mar 2022 07:13:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240594AbiCYKrC (ORCPT
+        with ESMTP id S1354534AbiCYLNa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 06:47:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2025B6C951
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 03:45:28 -0700 (PDT)
+        Fri, 25 Mar 2022 07:13:30 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C89D9CFB94
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 04:11:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B5B7E616F3
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 10:45:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32EBCC340E9;
-        Fri, 25 Mar 2022 10:45:26 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7B844B82804
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 11:11:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58517C340E9;
+        Fri, 25 Mar 2022 11:11:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648205127;
-        bh=8FfUSBN/MqKEUt1dF6UlGFoqLXWVKYKCpSMOBXWYzGY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=t63Tgpy9zexB1HQ9TH5xqPlcGxCtO+Zu/iUVzhEdLK22IQiKdzr0FY6yCoXs77c1W
-         kh7vZ94NfjwyffF8YhDttIzjlQCnXRguJLYmnHpYM0EPhDS5UhtHhHHDVVCJI2sqf3
-         CaXaoJ3PH9XdNRtvXjze2NKJlUOoIINh+58FfJve1Go34ntZnxbIme2ywujX0ye6nx
-         zO5WlM8vSJv/HmHNzuiaoJh33b6bE3rY1WmpH+flyS+hJQVyxjlMORHewsxQqw+9N7
-         iUDUYNgLjSrYbg05C+yzwpXNE6xYc6z6KDVd3tgfU5zIoMjFANITMPqCBI2YcN0FRa
-         RZ3ufOMy7gFKA==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: reduce the wait time of 11d scan and hw scan
- while
- add interface
+        s=k20201202; t=1648206714;
+        bh=nsfS3cuBAHQ9pojl5XhWCldZAhd67o+MJ4q9pZdHfxc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=gHC6KOdlha3TSiFL54rhHLoUtWkS6iXg9/vtwHD7Lz4QgDZA+usS6QJtN7iJwHL3C
+         n1HEk5pRoM470Qy9y7vH5UPsomLzfHoXXtKIMEXaA920VfpU6Th9LxuJ2Texvz336F
+         LSOV2BdFJSJyK91rXn6ZdG6ZlwR/7QBRgHoShqMR5XYK+WDGEE/B2xkE/ODkmIC/gN
+         Axs6VntIfmnSVjOqvEti+ujaGQ/OSdrpUFc500AkcJlHxm8/qLv5IiEMQJ9CoNDvno
+         ju4zB8gMwb7jsDVkDckwdL1pPVs9CXS9IYw5V1u6UfEVFJggp3rAbO47SrvN2EIvSo
+         +si6Q0PxzgNCQ==
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220322124226.18347-1-quic_wgong@quicinc.com>
-References: <20220322124226.18347-1-quic_wgong@quicinc.com>
-To:     Wen Gong <quic_wgong@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <quic_wgong@quicinc.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164820512408.2234.13144214774407671269.kvalo@kernel.org>
-Date:   Fri, 25 Mar 2022 10:45:26 +0000 (UTC)
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>, <leo.li@realtek.com>
+Subject: Re: [PATCH 00/16] rtw89: refine PCI and MAC codes into function with attributes
+References: <20220325060055.58482-1-pkshih@realtek.com>
+Date:   Fri, 25 Mar 2022 13:11:50 +0200
+In-Reply-To: <20220325060055.58482-1-pkshih@realtek.com> (Ping-Ke Shih's
+        message of "Fri, 25 Mar 2022 14:00:39 +0800")
+Message-ID: <87y20ynv61.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <quic_wgong@quicinc.com> wrote:
+Ping-Ke Shih <pkshih@realtek.com> writes:
 
-> Currently ath11k will wait 11d scan complete while add interface in
-> ath11k_mac_op_add_interface(), when system resume without enable
-> wowlan, ath11k_mac_op_add_interface() is called for each resume, thus
-> it increase the resume time of system. And ath11k_mac_op_hw_scan()
-> after ath11k_mac_op_add_interface() also needs some time cost because
-> the previous 11d scan need more than 5 seconds when 6 GHz is enabled,
-> then the scan started event will indicated to ath11k after the 11d
-> scan completed.
-> 
-> While 11d scan/hw scan is running in firmware, if ath11k update channel
-> list to firmware by WMI_SCAN_CHAN_LIST_CMDID, then firmware will cancel
-> the current scan which is running, it lead the scan failed. The patch
-> commit 9dcf6808b253 ("ath11k: add 11d scan offload support") used
-> finish_11d_scan/finish_11d_ch_list/pending_11d to synchronize the 11d
-> scan/hw scan/channel list between ath11k/firmware/mac80211 and to avoid
-> the scan fail.
-> 
-> Add wait operation before ath11k update channel list, function
-> ath11k_reg_update_chan_list() will wait until the current 11d scan/hw
-> scan completed. And remove the wait operation of start 11d scan and
-> waiting channel list complete in hw scan. After these changes, resume
-> time cost reduce about 5 seconds and also hw scan time cost reduced
-> obviously, and scan failed not seen.
-> 
-> The 11d scan is sent to firmware only one time for each interface added
-> in mac.c, and it is moved after the 1st hw scan because 11d scan will
-> cost some time and thus leads the AP scan result update to UI delay.
-> Currently priority of ath11k's hw scan is WMI_SCAN_PRIORITY_LOW, and
-> priority of 11d scan in firmware is WMI_SCAN_PRIORITY_MEDIUM, then the
-> 11d scan which sent after hw scan will cancel the hw scan in firmware,
-> so change the priority to WMI_SCAN_PRIORITY_MEDIUM for the hw scan which
-> is in front of the 11d scan, thus it will not happen scan cancel in
-> firmware.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
-> 
-> Fixes: 9dcf6808b253 ("ath11k: add 11d scan offload support")
-> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> The existing PCI and MAC codes are only used by 8852AE, so many settings are
+> put in single function. To be clear, move the settings into an individual
+> function according to its functionality. Since functions will be shared
+> with chips, add attributes to make it possible to use common functions.
+>
+> Also, update the settings to the latest version of our internal code.
+>
+> This patchset is based on                                                       
+>  "rtw89: add firmware reset and dump firmware memory and backtrace" and
+>  "rtw89: update TX power table and 6G, refine IGI, and add TX/RX descriptors V1"
+> But no actual function dependency.     
 
-I see new warnings in my regression tests:
+The merge window is now open which means wireless-next is closed. I
+don't mind people submitting few -next patches during the merge window,
+but there's a limit for that. Currently I see 39 rtw89 patches in
+patchwork, that's just too much. So please try to limit the number of
+patches you submit during the merge window.
 
-[  755.217708] ath11k_pci 0000:06:00.0: failed to receive 11d scan complete: timed out
-[  794.641670] ath11k_pci 0000:06:00.0: failed to receive 11d scan complete: timed out
-
-Didn't investigate the patch in detail, gave up after seeing these warnings.
-
-Patch set to Changes Requested.
+Usually wireless-next opens few days after -rc1 is released, but there's
+no fixed schedule.
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220322124226.18347-1-quic_wgong@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/list/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
