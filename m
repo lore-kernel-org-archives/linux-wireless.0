@@ -2,191 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E14FC4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A26D6C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:39:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230438AbiCYTka (ORCPT
+        id S230453AbiCYTkb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 15:40:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42026 "EHLO
+        Fri, 25 Mar 2022 15:40:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232152AbiCYTin (ORCPT
+        with ESMTP id S232747AbiCYTjU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 15:38:43 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E13A339CEBA
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:19:42 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id n7-20020a17090aab8700b001c6aa871860so9192484pjq.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:19:42 -0700 (PDT)
+        Fri, 25 Mar 2022 15:39:20 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4907E1BB79C
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:18:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=HJYoFqClYnz+wdN3BZY0xOUstF7EqA2bCMGoKxryv/U=;
-        b=DiUDBMw13VCabtCiw+vw1MzcIzSmw1aSC87hgQlyMM6sesI4Zzzbddw9xxLgKqjI/m
-         NVKwgwBFNfjC6atuk4JAb+VjkqMJqOuVM5BcxvOd7JoNLANl9Iagy/5iXchEtbku1+bX
-         xVabghlhysHmHOrjUkSwJgB5JaybbWk9aZGKrscTuTDGoCpqCJJ3pPdSGEecfHdQCHSo
-         MdDHReKwKAxgAW0C5I17SwRCnm1d6xt2Q//p4ihSQqQaVSED3jhmIM69o0xm945Q+8Xb
-         GfW1Ln6mYsdcLWKokPaUZ5n3QGSCCUniTOeDwFaLC9T+m0D1ERUu6cNwm3OkamLkCqzr
-         pazw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=HJYoFqClYnz+wdN3BZY0xOUstF7EqA2bCMGoKxryv/U=;
-        b=ozWiZK7rZjyT069H7QeVG6NWQ6pGLhQI6zzZwjgnOUj//f/GdJocqDV5pfNDYtMTtG
-         YIGyxzZ3z3k1n4rwpoD1QQg0LPPMfxpS5KNHE1P/NGJpb/FkBvuQT02p6UVm7OKUUJ5o
-         g8yYZ6oHlyN1oEbUXrx9ikMLgng6m1ovg7Y5qzMzPfWhAJycLfZ29t1K5zSuDtI8Rt0e
-         W2IcgGMCk0hBo/k4AD1iEVT4tfqXwDRN45U8sHrGaivZfH378LMH/CVhfxtnQ419L811
-         FsPmeIcrFSOpYkPxuCu750RaVmTerPNd7d/Ovwq6dztsnwe/+D3r5Tva34OlYqt4imQ2
-         t2tw==
-X-Gm-Message-State: AOAM533JqoGQaaJCuHYSSnA1LfUd/3sErfzCXICc1Y3ZQi/KrmAAY5Z/
-        AoGZvw5oBhmJ5jvit5L4I1e1Sw54LzNG8A==
-X-Google-Smtp-Source: ABdhPJzdx+JZeNHp+KPtO/wdRkQkL6TPpEDq/CBq5CAe/wFyqK3XZpxvNIOUdhxxMPMOmxT08Ohjmw==
-X-Received: by 2002:a17:902:d2c7:b0:154:5aa1:a55b with SMTP id n7-20020a170902d2c700b001545aa1a55bmr12913770plc.5.1648231704705;
-        Fri, 25 Mar 2022 11:08:24 -0700 (PDT)
-Received: from google.com (249.189.233.35.bc.googleusercontent.com. [35.233.189.249])
-        by smtp.gmail.com with ESMTPSA id h17-20020a63df51000000b0036b9776ae5bsm6012843pgj.85.2022.03.25.11.08.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Mar 2022 11:08:23 -0700 (PDT)
-Date:   Fri, 25 Mar 2022 18:08:20 +0000
-From:   William McVicker <willmcvicker@google.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Jakub Kicinski <kuba@kernel.org>, linux-wireless@vger.kernel.org,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>, kernel-team@android.com,
-        Paolo Abeni <pabeni@redhat.com>
-Subject: Re: [BUG] deadlock in nl80211_vendor_cmd
-Message-ID: <Yj4FFIXi//ivQC3X@google.com>
-References: <0000000000009e9b7105da6d1779@google.com>
- <99eda6d1dad3ff49435b74e539488091642b10a8.camel@sipsolutions.net>
- <5d5cf050-7de0-7bad-2407-276970222635@quicinc.com>
- <YjpGlRvcg72zNo8s@google.com>
- <dc556455-51a2-06e8-8ec5-b807c2901b7e@quicinc.com>
- <Yjzpo3TfZxtKPMAG@google.com>
- <19e12e6b5f04ba9e5b192001fbe31a3fc47d380a.camel@sipsolutions.net>
- <20220325094952.10c46350@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <f4f8a27dc07c1adaab470fde302ed841113e6b7f.camel@sipsolutions.net>
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648235923; x=1679771923;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=bKj8TilLGdyVW9vS4DTruobfv+ddR2kfPYUpYlsH4ic=;
+  b=TTgZmNGLeLgGxIJFbBDXFCH+ICXUpiKrhZyfN1abo8mYYNcQ3ScuIWTr
+   jw9Aws/AKOfEZDgZjNZnMimWuWjtWNR2p7xZ6JnLgh7F3uNFASooDKY+9
+   koU2gDXFINhqmm3iNg8VIhgI4pH+eOvcRiR63cayILOL8BXxoh08OnPEN
+   w=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 25 Mar 2022 12:18:43 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2022 12:18:42 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Fri, 25 Mar 2022 12:18:42 -0700
+Received: from [10.110.27.134] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Fri, 25 Mar
+ 2022 12:18:42 -0700
+Message-ID: <bca5ba81-7e97-9b54-be57-a40df9b0634c@quicinc.com>
+Date:   Fri, 25 Mar 2022 12:18:41 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f4f8a27dc07c1adaab470fde302ed841113e6b7f.camel@sipsolutions.net>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v6 1/3] nl80211: Add support for beacon tx mode
+Content-Language: en-US
+To:     Maharaja Kennadyrajan <quic_mkenna@quicinc.com>,
+        <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+References: <20220325055949.3035053-1-quic_mkenna@quicinc.com>
+ <20220325055949.3035053-2-quic_mkenna@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20220325055949.3035053-2-quic_mkenna@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 03/25/2022, Johannes Berg wrote:
-> On Fri, 2022-03-25 at 09:49 -0700, Jakub Kicinski wrote:
-> > On Fri, 25 Mar 2022 13:04:23 +0100 Johannes Berg wrote:
-> > > So we can avoid the potential deadlock in cfg80211 in a few ways:
-> > > 
-> > >  1) export rtnl_lock_unregistering_all() or maybe a variant after
-> > >     refactoring the two versions, to allow cfg80211 to use it, that way
-> > >     netdev_run_todo() can never have a non-empty todo list
-> > > 
-> > >  2) export __rtnl_unlock() so cfg80211 can avoid running
-> > >     netdev_run_todo() in the unlock, personally I like this less because
-> > >     it might encourage random drivers to use it
-> > > 
-> > >  3) completely rework cfg80211's locking, adding a separate mutex for
-> > >     the wiphy list so we don't need to acquire the RTNL at all here
-> > >     (unless the ops need it, but there's no issue if we don't drop it),
-> > >     something like https://p.sipsolutions.net/27d08e1f5881a793.txt
-> > > 
-> > > 
-> > > I think I'm happy with 3) now (even if it took a couple of hours), so I
-> > > think we can go with it, just need to go through all the possibilities.
-> > 
-> > I like 3) as well. FWIW a few places (e.g. mlx5, devlink, I think I've
-> > seen more) had been converting to xarray for managing the "registered"
-> > objects. It may be worth looking into if you're re-doing things, anyway.
-> > 
-> 
-> That's not a bad idea, but I think I wouldn't want to backport that, so
-> separately :) I don't think that fundamentally changes the locking
-> properties though.
-> 
-> 
-> Couple of more questions I guess: First, are we assuming that the
-> cfg80211 code *is* actually broken, even if it looks like nothing can
-> cause the situation, due to the empty todo list?
+On 3/24/2022 10:59 PM, Maharaja Kennadyrajan wrote:
+[...snip...]
 
-I'm able to reproduce this issue pretty easily with a Pixel 6 when I add
-support to allow vendor commands to request for the RTNL. For this case, I just
-delay unlocking the RTNL until nl80211_vendor_cmds() at which point I check the
-flags to see if I should unlock before calling doit(). That allows me to run my
-tests again and hit this issue. I imagine that I could hit this issue without
-any changes if I re-work my vendor ops to not need the RTNL.
+> +/**
+> + * enum nl80211_beacon_tx_mode - Beacon Tx Mode enum.
+> + * @NL80211_BEACON_STAGGERED_MODE: Used to configure beacon tx mode as
+> + *	staggered mode. This is the default beacon tx mode.
 
-> 
-> Given that we have rtnl_lock_unregistering() (and also
-> rtnl_lock_unregistering_all()), it looks like we *do* in fact at least
-> not want to make an assumption that no user of __rtnl_unlock() can have
-> added a todo item.
-> 
-> I mean, there's technically yet *another* thing we could do - something
-> like this:
-> 
-> [this doesn't compile, need to suitably make net_todo_list non-static]
-> --- a/net/core/rtnetlink.c
-> +++ b/net/core/rtnetlink.c
-> @@ -95,6 +95,7 @@ void __rtnl_unlock(void)
->  
->         defer_kfree_skb_list = NULL;
->  
-> +       WARN_ON(!list_empty(&net_todo_list));
->         mutex_unlock(&rtnl_mutex);
->  
->         while (head) {
-> 
-> and actually that would allow us to get rid of rtnl_lock_unregistering()
-> and rtnl_lock_unregistering_all() simply because we'd actually guarantee
-> the invariant that when the RTNL is freshly locked, the list is empty
-> (by guaranteeing that it's always empty when it's unlocked, since it can
-> only be added to under RTNL).
-> 
-> With some suitable commentary, that might also be a reasonable thing?
-> __rtnl_unlock() is actually rather pretty rare, and not exported.
-> 
-> 
-> However, if you don't like that ...
-> 
-> I've been testing with this patch, to make lockdep complain:
-> 
-> --- a/net/core/dev.c
-> +++ b/net/core/dev.c
-> @@ -9933,6 +9933,11 @@ void netdev_run_todo(void)
->         if (!list_empty(&list))
->                 rcu_barrier();
->  
-> +#ifdef CONFIG_LOCKDEP
-> +       rtnl_lock();
-> +       __rtnl_unlock();
-> +#endif
+Documentation doesn't match the code. There is now a default mode, and 
+that is, well, the default mode
+
+> + * @NL80211_BEACON_BURST_MODE: Used to configure beacon tx mode as burst mode.
+> + */
+> +enum nl80211_beacon_tx_mode {
+> +	NL80211_BEACON_DEFAULT_MODE = 0,
+> +	NL80211_BEACON_STAGGERED_MODE = 1,
+> +	NL80211_BEACON_BURST_MODE = 2,
+> +};
 > +
->         while (!list_empty(&list)) {
->                 struct net_device *dev
->                         = list_first_entry(&list, struct net_device, todo_list);
-> 
-> 
-> That causes lockdep to complain for cfg80211 even if the list *is* in
-> fact empty.
-> 
-> Would you be open to adding something like that? Perhaps if I don't just
-> do the easy rtnl_lock/unlock, but try to find the corresponding lockdep-
-> only things to do there, to cause lockdep to do things without really
-> locking? OTOH, the locking overhead of the RTNL we just unlocked is
-> probably minimal, vs. the actual work *lockdep* is doing to track all
-> this ...
-> 
-> Thanks,
-> johannes
-
-Let me know if you'd like me to test any patches out.
-
-Thanks,
-Will
