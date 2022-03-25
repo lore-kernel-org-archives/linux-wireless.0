@@ -2,98 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D0BC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 04:02:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC91C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 06:00:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242454AbiCYED5 (ORCPT
+        id S1354240AbiCYGBp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 00:03:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
+        Fri, 25 Mar 2022 02:01:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231636AbiCYED4 (ORCPT
+        with ESMTP id S238643AbiCYGBo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 00:03:56 -0400
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0411C55BE
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 21:02:23 -0700 (PDT)
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 819343F601
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 04:02:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1648180942;
-        bh=HKJrrEY1caDaQR7fQn155PNfxwpc0Tf0D5pTcclyisE=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=PQfMVX4uKj+xJP3XlxIVrcgkqPQIPjYM4hrVjBOEFARmiYeaxnbqKjfnvN1BhJVdS
-         Gtr1spqIyhWU2BbL66j94XM9bxUGhVtlakfTe+oENXZMIkfKPy0jAB4PuFrn+FJYO6
-         xp0XGEOEbSqG52zmuwNLKPXs+9LLTNQ9hb3s7wOOC8KHsyvrHDMH2u4i7NWJq1dbcD
-         cyzRvPH/7Fg22d9WPq6KJcDVK0z26jX5pVWUUfS6U0cAxqRIvHdrSfMlwpaHSQML7L
-         D4Eb3rNfnveG0TTTFoewnycOwY90oD1/DqQUN9gx+Bv0Uo0X/6wV2VCnKkKviKQT/5
-         FAahpizKwN6NQ==
-Received: by mail-oi1-f198.google.com with SMTP id c11-20020aca1c0b000000b002da42e09f96so3805308oic.1
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 21:02:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=HKJrrEY1caDaQR7fQn155PNfxwpc0Tf0D5pTcclyisE=;
-        b=ZNzI/Ul0svXBQtpYjEr24rtK+Y1nRxVeys9WDcU6oVUQkEEV7AYFRU+OKpm1ldjZzy
-         1Xe7o8HucMbKYIAzHI9xDAZnPc5wuGVfXeWZsna5FvOqQlFQaEof5q2430u/EuEelxzC
-         BUTjH9eKu9G5/rBDSBV6rYO9Atxi16ZqtGxue+ws74y5d6QdPKk+UmutZSELUXj9vynI
-         PSqLHOmACjMzMnwkJv1c18nPx/yV6H9QJP23qGJMao0PHBtFBcvJOQFzmxPyHzTJnGDp
-         RD8DnwTXbczfurFzUtHg22W0/l2sPh2obWybFEAr6HidNBEdCqi6DLTDSbb7TB0JrbH+
-         eGjA==
-X-Gm-Message-State: AOAM531ZqSY01TmVPjjPEy966yvRFR44ASLa3A+RmtT4/GiblHtwxftF
-        vJYzk4F1Y8+mwQKtihoSc2Na0lrPjV+j7Gb5V2Ls15OGvvpHbVgxFCXyf0paiyA/k67vlasUcOx
-        4/nIgzHZgsA595L5/df9JQFA1KjQQsOvB30Y5pSYG7pvooDIVw1LxvIKu2Htg
-X-Received: by 2002:a05:6870:8182:b0:dd:cffa:9c29 with SMTP id k2-20020a056870818200b000ddcffa9c29mr4129463oae.82.1648180941006;
-        Thu, 24 Mar 2022 21:02:21 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw19v/fBmujiTN/FbIgCV0Ax4/u+DQ+UpfqJcD0b+4aMAH4mU14/pYOv4glKf5PUc/WrOsn21CTEKscgWwH/98=
-X-Received: by 2002:a05:6870:8182:b0:dd:cffa:9c29 with SMTP id
- k2-20020a056870818200b000ddcffa9c29mr4129450oae.82.1648180940751; Thu, 24 Mar
- 2022 21:02:20 -0700 (PDT)
+        Fri, 25 Mar 2022 02:01:44 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4744C681C
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 23:00:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648188011; x=1679724011;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=2mKIC4Canfy9Bt4RGPz0iaA2vqA/2yLoC71GUupdPC0=;
+  b=P/8uFKe418koV0rDZCYpijbhqn4m+XE7Qeo/fKKP92DuA3D7mrvoOm7L
+   fgZLYA/9hMRHHTIKBnPa6zAQIFrWjJMJ1Ow3lRUxsmykP+t3tWXOld3NT
+   glRGe9+cEn0tA+wAWAoxIH+uwTIkvrH4hgxg86Y4T2j+YXUNZAHL0u6xE
+   s=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 24 Mar 2022 23:00:11 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 23:00:11 -0700
+Received: from che-siroccolnx03.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 24 Mar 2022 23:00:09 -0700
+From:   Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
+To:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC:     Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
+Subject: [PATCH v6 0/3] Add support to configure beacon tx mode
+Date:   Fri, 25 Mar 2022 11:29:46 +0530
+Message-ID: <20220325055949.3035053-1-quic_mkenna@quicinc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20220318024216.42204-1-chris.chiu@canonical.com> <b764c724-9481-09ed-8dd5-a0ebeb0f8a25@reto-schneider.ch>
-In-Reply-To: <b764c724-9481-09ed-8dd5-a0ebeb0f8a25@reto-schneider.ch>
-From:   Chris Chiu <chris.chiu@canonical.com>
-Date:   Fri, 25 Mar 2022 12:02:10 +0800
-Message-ID: <CABTNMG2TUKxZL=3RJYGYLeu3-3-G-G_SMdcWHuVHUDepPVgSNQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] rtl8xxxu: Fill up more TX information
-To:     Reto Schneider <code@reto-schneider.ch>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kvalo@kernel.org,
-        Jes.Sorensen@gmail.com, davem@davemloft.net, kuba@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 25, 2022 at 12:32 AM Reto Schneider <code@reto-schneider.ch> wrote:
->
->
-> On 18.03.22 03:42, Chris Chiu wrote:
-> > The antenna information is missing in rtl8xxxu and txrate is NULL
-> > in 8188cu and 8192cu. Fill up the missing information for iw
-> > commands.
-> >
-> > Chris Chiu (2):
-> >    rtl8xxxu: feed antenna information for cfg80211
-> >    rtl8xxxu: fill up txrate info for gen1 chips
-> >
-> >   .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 75 +++++++++++++++++++
-> >   1 file changed, 75 insertions(+)
-> >
->
-> Those two patches applied to most recent master
-> (v5.17-4443-ged4643521e6a) do not compile as rtl8xxxu_legacy_ratetable[]
-> and rtl8xxxu_desc_to_mcsrate() are defined twice.
->
-> Kind regards,
-> Reto
+Add support to configure the beacon tx mode as STAGGERED
+or BURST mode via hostapd configuration during the AP
+bring-up or via wpa_suppplicant configuration during MESH
+bring-up.
 
-Thanks for pointing this out. I'll fix it in v3.
+Beacons can be sent out in burst(continuously in a single shot
+one after another) or staggered (equally spread out over beacon
+interval) mode.
 
-Chris
+V6: Addressed Jeff's comment on v5.
+
+V5: Addressed Johannes's and Felix's comment on v4.
+
+V4: Rebased on latest ath.git TOT.
+
+V3: Addressed Johnson's comment on v2 patch.
+
+V2: Addressed Johannes's comment on v1 patch.
+
+Maharaja Kennadyrajan (3):
+  nl80211: Add support for beacon tx mode
+  mac80211: Add support for beacon tx mode
+  ath11k: Add support for beacon tx mode
+
+ drivers/net/wireless/ath/ath11k/mac.c | 10 +++++++---
+ include/net/cfg80211.h                |  4 ++++
+ include/net/mac80211.h                |  2 ++
+ include/uapi/linux/nl80211.h          | 21 +++++++++++++++++++++
+ net/mac80211/cfg.c                    |  2 ++
+ net/wireless/nl80211.c                | 11 +++++++++++
+ 6 files changed, 47 insertions(+), 3 deletions(-)
+
+-- 
+2.25.1
+
