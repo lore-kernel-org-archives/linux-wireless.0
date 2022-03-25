@@ -2,167 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B7E1C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Mar 2022 21:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA2AFC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 03:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353272AbiCXWAj (ORCPT
+        id S1353286AbiCYD7c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Mar 2022 18:00:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36480 "EHLO
+        Thu, 24 Mar 2022 23:59:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352678AbiCXWAi (ORCPT
+        with ESMTP id S1344985AbiCYD7b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Mar 2022 18:00:38 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75236220CD
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 14:59:04 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id g19so4976093pfc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 14:59:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=P98EhcKlXlIoxjs8lUpPIr0xnMSUtUyiRS9iVnjcbyE=;
-        b=O41y2ze/U6Vpqs7adbkoUxMD8XLOCfhiIIaXq7rhRYPvmxkGkMim3d2fF618kL9HOf
-         vAkrkAzSlHKwyNyF9j637VbIl1qEsthq17MbaZ+3SWawM/5xryuI02LXlJfBpYSxLlw5
-         jr8w2Vs8gA3CBzeY26HTHD4skCSziuGSQ7i/5c3bZBe9W2Vw6BmlInasUn0/EHqV9qMv
-         6B6JtSMX+58nTY5PE1ZyJIpzJXKRBc+WDlZdaVnHyeAdxT1KD0XqSthKI/yGSW6mC0/V
-         Grdgf+MVNkU8CeJyjvEdEtNw1PKvaWMpgvIToIyxVswDd2JFOKDGbbuUfnE2iENEVfFd
-         1+Jg==
+        Thu, 24 Mar 2022 23:59:31 -0400
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E350C55B1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 20:57:57 -0700 (PDT)
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 727A23F195
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 03:57:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1648180670;
+        bh=rL+Lk+TkLUe4IB3XxddpXwlP/mqkcE0LsSD1mSoD/6Y=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
+        b=b3FoH5NTBaoTexQsT7R5d4PQxup5HXvBwZ1WZJQHQh6F7JQnvaxmSjXKXvNBZlUFJ
+         mhDtILpJHRDomO6MNLXmUYGXTSkGePxoo3MZsp5wCrxbrEDjG/XnsINA9bjOs8PESQ
+         /QXIeQtH8h3JdyeFOG9QTfeLBGtM45jv12S+gvztyzWGW3zwFHZf1tYOOSVyZpMxGZ
+         Quqb5ZYBaaKwvaL3+hOvGRXkW4y7ACQYoFexeNPC6nCEYRz5epRipBJ3NTKCq9F1xo
+         mKFLZIkYaHYMRQonr1JQJXUYrLT7hVnHExsu5xPd0szdDkfwZcMlj0fETYCHEV2pp1
+         6YKki8uIYNH7g==
+Received: by mail-pf1-f199.google.com with SMTP id t66-20020a625f45000000b004fabd8f5cc1so3542978pfb.11
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2022 20:57:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=P98EhcKlXlIoxjs8lUpPIr0xnMSUtUyiRS9iVnjcbyE=;
-        b=K9KhjjmrbtUSMPS60vmJ4uxnluLQoPxbU3QEBxKstzO2WOkI/9sUkmoEbeRp/F9DtI
-         AI1A8GbG6m6l6H8wEP+8/LLHWqutuHjnOFBvXBNRAlHoaQb791pz58yUCUExZhZUHM5x
-         PDz2FiL7bQ4kQ59m1DHCiAm0l4LFJXaDpXS0ZB679gXrqW7FT/rurXC4C7qnL2IYVuh5
-         DTKS3QR7pk8SvAhJBPUaAuO9r43aKYmoZDjmEnC+JsGX+khR/TB8huIY6cg5PvhOL2KS
-         XwHWNWmFrsSFmWthZiBm/rVX/70w1m7S0F5PDP1nkMPx1lEl5y6DOr1nuTo/ZeBeMiHn
-         cQ/A==
-X-Gm-Message-State: AOAM531tXe99Ffq88DyLPecTWQmwEQquWiGKbjYZgv6UlaEEvcjB8xfc
-        PQ5qn3rqd967zdjLOlE5lYTA5A==
-X-Google-Smtp-Source: ABdhPJyHxALxcXi0BFZ1RSTlzh1UKAlx0XXHZ8OWZMhP1ldReBEfj6C5ZgJP8dx3aW5WfTvwxQ1JaQ==
-X-Received: by 2002:a65:6855:0:b0:382:59e5:b6e5 with SMTP id q21-20020a656855000000b0038259e5b6e5mr5524859pgt.586.1648159143727;
-        Thu, 24 Mar 2022 14:59:03 -0700 (PDT)
-Received: from google.com (249.189.233.35.bc.googleusercontent.com. [35.233.189.249])
-        by smtp.gmail.com with ESMTPSA id cd20-20020a056a00421400b004fa7d1b35b6sm4260979pfb.80.2022.03.24.14.59.03
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=rL+Lk+TkLUe4IB3XxddpXwlP/mqkcE0LsSD1mSoD/6Y=;
+        b=6bDhOxVXXvJyFgrQbBAji32GTkqGM2jy8ojpgbzlinTpUPdLwLnXt6E/J8JJRUJTwy
+         oyHRd+7/puZIGLVIjdBgmFMNgCiPopQ3uv2suyZNm1c//azjs0DEPRfjQaEWE53Bipzh
+         EDIlLxv/rY/iHI5fJ+6cls1gj9EMdQHzmR+Dqk9eALVUCe0UjDHo4jhWJj98nxAgzDSa
+         QxixzUe+xMN9AikBhvwT+aASUmnqj2AWwUGwzEvCzfYJV/GQp1NwlCu6+2tHk5xxtF5Y
+         V4+ECUFP/UDkTVrhDJzeweYfurEncu8MQY7ote4oxbudvRQ/lytY/49nP8vr62QS7XZL
+         QO8A==
+X-Gm-Message-State: AOAM533ODkAoSINXigeUjluLbKKie+Zkl2pDKydDVlAp72Ik6ZYfbwIx
+        WP5yupwXkKrbDHcSgObcO+8oIE01wUCoGgAAP4I8g/knAMtBol9TKNYGMxJ4Q27Y4Oplrpq5x3a
+        Ih73MxWIMqFbsd36muFvBzBy/I3Ss2IQOEznMUpGHxdaX
+X-Received: by 2002:a17:902:d4c8:b0:154:2416:2185 with SMTP id o8-20020a170902d4c800b0015424162185mr9592703plg.25.1648180668949;
+        Thu, 24 Mar 2022 20:57:48 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyA3xdgqaavwF82ZP1ZAM+oGXZMZcWjM/y5nFGCHqIG/Ucn/hx021c9U9OO0rL6spHjyn789w==
+X-Received: by 2002:a17:902:d4c8:b0:154:2416:2185 with SMTP id o8-20020a170902d4c800b0015424162185mr9592674plg.25.1648180668594;
+        Thu, 24 Mar 2022 20:57:48 -0700 (PDT)
+Received: from localhost.localdomain (2001-b400-e286-bae1-8fdb-11c6-cf63-1f23.emome-ip6.hinet.net. [2001:b400:e286:bae1:8fdb:11c6:cf63:1f23])
+        by smtp.gmail.com with ESMTPSA id 21-20020a630115000000b00382a0895661sm3825801pgb.11.2022.03.24.20.57.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Mar 2022 14:59:03 -0700 (PDT)
-Date:   Thu, 24 Mar 2022 21:58:59 +0000
-From:   William McVicker <willmcvicker@google.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc:     Marek Szyprowski <m.szyprowski@samsung.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>, kernel-team@android.com,
-        Paolo Abeni <pabeni@redhat.com>
-Subject: Re: [BUG] deadlock in nl80211_vendor_cmd
-Message-ID: <Yjzpo3TfZxtKPMAG@google.com>
-References: <0000000000009e9b7105da6d1779@google.com>
- <99eda6d1dad3ff49435b74e539488091642b10a8.camel@sipsolutions.net>
- <5d5cf050-7de0-7bad-2407-276970222635@quicinc.com>
- <YjpGlRvcg72zNo8s@google.com>
- <dc556455-51a2-06e8-8ec5-b807c2901b7e@quicinc.com>
+        Thu, 24 Mar 2022 20:57:48 -0700 (PDT)
+From:   Chris Chiu <chris.chiu@canonical.com>
+To:     kvalo@kernel.org, Jes.Sorensen@gmail.com, davem@davemloft.net,
+        kuba@kernel.org
+Cc:     code@reto-schneider.ch, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chris Chiu <chris.chiu@canonical.com>
+Subject: [PATCH v3 0/2] rtl8xxxu: Fill up more TX information
+Date:   Fri, 25 Mar 2022 11:57:33 +0800
+Message-Id: <20220325035735.4745-1-chris.chiu@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dc556455-51a2-06e8-8ec5-b807c2901b7e@quicinc.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 03/23/2022, Jeff Johnson wrote:
-> On 3/22/2022 2:58 PM, William McVicker wrote:
-> > On 03/22/2022, Jeff Johnson wrote:
-> > > On 3/21/2022 1:07 PM, Johannes Berg wrote:
-> > > [..snip..]
-> > > 
-> > > > > I'm not an networking expert. So my main question is if I'm allowed to take
-> > > > > the RTNL lock inside the nl80211_vendor_cmd callbacks?
-> > > > 
-> > > > Evidently, you're not. It's interesting though, it used to be that we
-> > > > called these with the RTNL held, now we don't, and the driver you're
-> > > > using somehow "got fixed" to take it, but whoever fixed it didn't take
-> > > > into account that this is not possible?
-> > > 
-> > > On this point I just want to remind that prior to the locking change that a
-> > > driver would specify on a per-vendor command basis whether or not it wanted
-> > > the rtnl_lock to be held via NL80211_FLAG_NEED_RTNL. I'm guessing for the
-> > > command in question the driver did not set this flag since the driver wanted
-> > > to explicitly take the lock itself, otherwise it would have deadlocked on
-> > > itself with the 5.10 kernel.
-> > > 
-> > > /jeff
-> > 
-> > On the 5.10 kernel, the core kernel sets NL80211_FLAG_NEED_RTNL as part of
-> > the internal_flags for NL80211_CMD_VENDOR:
-> > 
-> > net/wireless/nl80211.c:
-> >     {
-> >        .cmd = NL80211_CMD_VENDOR,
-> >        .validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
-> >        .doit = nl80211_vendor_cmd,
-> >        .dumpit = nl80211_vendor_cmd_dump,
-> >        .flags = GENL_UNS_ADMIN_PERM,
-> >        .internal_flags = NL80211_FLAG_NEED_WIPHY |
-> >                NL80211_FLAG_NEED_RTNL |
-> >                NL80211_FLAG_CLEAR_SKB,
-> >     },
-> > 
-> > So the 5.10 version of this driver doesn't need to directly call rtnl_lock()
-> > within the vendor command doit() functions since pre_doit() handles the RTNL
-> > locking.
-> > 
-> > It would be nice if nl80211_vendor_cmd() could support taking the RTNL lock if
-> > requested via the vendor flags. That would require moving the wiphy lock to
-> > nl80211_vendor_cmds() so that it could take the RTNL and wiphy lock in the
-> > correct order. Is that something you'd be open to Johannes?
-> > 
-> > --Will
-> 
-> Thanks for correcting my understanding. I concur that it would be useful for
-> vendor commands to be able to specify that a given command needs the RTNL
-> lock to be held.
-> 
-> 
+The antenna information is missing in rtl8xxxu and txrate is NULL
+in 8188cu and 8192cu. Fill up the missing information for iw
+commands.
 
-Hi Johannes,
+Chris Chiu (2):
+  rtl8xxxu: feed antenna information for cfg80211
+  rtl8xxxu: fill up txrate info for gen1 chips
 
-I found that we can hit this same ABBA deadlock within the nl80211 code
-before ever even calling into the vendor doit() function. The issue I found
-is caused by the way we unlock the RTNL mutex. Here is the call flow that
-leads to the deadlock:
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 104 +++++++++++++-----
+ 1 file changed, 75 insertions(+), 29 deletions(-)
 
-Thread 1                         Thread 2
- nl80211_pre_doit():
-   rtnl_lock()
-   wiphy_lock()                   nl80211_pre_doit():
-                                    rtnl_lock() // blocked by Thread 1
-   rtnl_unlock():
-     netdev_run_todo():
-       __rtnl_unlock()
-                                    <got RTNL lock>
-                                    wiphy_lock() // blocked by Thread 1
-       rtnl_lock(); // DEADLOCK
- doit()
- nl80211_post_doit():
-   wiphy_unlock();
+-- 
+2.25.1
 
-Basically, unlocking the RTNL within netdev_run_todo() gives another thread
-that is waiting for the RTNL in nl80211_pre_doit() a chance to grab the
-RTNL lock leading to the deadlock. I found that there are multiple
-instances where rtnl_lock() is called within netdev_run_todo(): a couple of
-times inside netdev_wait_allrefs() and directly by netdev_run_todo().
-
-Since I'm not really familiar with all the RNTL locking requirements, I was
-hoping you could take a look at netdev_run_todo() to see if it's possible
-to refactor it to avoid this deadlock. If not, then I don't think we can
-call rtnl_unlock() while still holding the wiphy mutex.
-
-Thanks,
-Will
