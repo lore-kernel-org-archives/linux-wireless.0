@@ -2,80 +2,179 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7644BC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 10:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB92C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 10:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354158AbiCYKdY (ORCPT
+        id S1358889AbiCYKf5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 06:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36650 "EHLO
+        Fri, 25 Mar 2022 06:35:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358952AbiCYKdU (ORCPT
+        with ESMTP id S237250AbiCYKfy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 06:33:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7827CA0EE
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 03:31:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6947CB827EA
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 10:31:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46D44C340F0;
-        Fri, 25 Mar 2022 10:31:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648204304;
-        bh=EjVkXtA8bWYwusJ7cnkFZ2L4T3qiD5nWqRzmc3b8aFo=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=YjRXe6utk4e+5Pbr+48He5pXRe4KJKA3Z8ZOtnsD9V7aiRT6u6+saPdQtE8JmVACB
-         Axko06qR4ouVedWMqRvQM4L4md/zOjJFO2/K56JWB2geTFEyl9k19Xc7B8WgUeeWH1
-         FsUna5k3w52DfwVAwr6ezPcrZwvfEFQyyEcQ0z9RgeNPinECZhOy0KCo6tPcwbcWVr
-         G6fIwgZzQvXwfEFt9ZUh0MQz4bgy1+TNhBGVRq3R0quZylcmRhNK8qPGcdC+409RZK
-         +2Axf+h5Mkp9vmSSAmDVnaphOdjj4NmiXwsjijDQcqHlho8dVAU2ez6C8PzJLOvdyI
-         OAeQettzwZNvw==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Fri, 25 Mar 2022 06:35:54 -0400
+X-Greylist: delayed 530 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Mar 2022 03:34:17 PDT
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2479A88B1;
+        Fri, 25 Mar 2022 03:34:17 -0700 (PDT)
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 498C720383;
+        Fri, 25 Mar 2022 11:25:25 +0100 (CET)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 3BA7320338;
+        Fri, 25 Mar 2022 11:25:25 +0100 (CET)
+Message-ID: <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+From:   Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Date:   Fri, 25 Mar 2022 11:25:25 +0100
+In-Reply-To: <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
+References: <1812355.tdWV9SEqCh@natalenko.name>
+         <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+         <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+         <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
+         <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+         <20220324163132.GB26098@lst.de>
+         <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com> <871qyr9t4e.fsf@toke.dk>
+         <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
+Organization: Freebox
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5] ath11k: Add peer rhash table support
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <1644036628-5334-1-git-send-email-quic_periyasa@quicinc.com>
-References: <1644036628-5334-1-git-send-email-quic_periyasa@quicinc.com>
-To:     Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164820430111.12637.15917942567266663243.kvalo@kernel.org>
-Date:   Fri, 25 Mar 2022 10:31:43 +0000 (UTC)
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Fri Mar 25 11:25:25 2022 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Karthikeyan Periyasamy <quic_periyasa@quicinc.com> wrote:
 
-> When more clients (128) are connected, the UL data traffic
-> KPI measurement is low compared to single client. This issue
-> is due to more CPU cycles spent on the peer lookup operation
-> with more clients. So reduce the peer lookup operation by
-> modifying the linear based lookup operation into the rhash
-> based lookup operation. This improve the peak throughput
-> measurement. Since this is a software algorithm change, it is
-> applicable for all the platforms.
-> 
-> TCP UL 128 Clients test case Observation (64bit system):
-> Previous: ~550 Mbps
-> Now     : ~860 Mbps
-> 
-> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01067-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+On Thu, 2022-03-24 at 12:26 -0700, Linus Torvalds wrote:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> 
+> It's actually very natural in that situation to flush the caches from
+> the CPU side again. And so dma_sync_single_for_device() is a fairly
+> reasonable thing to do in that situation.
+> 
 
-7b0c70d92a43 ath11k: Add peer rhash table support
+In the non-cache-coherent scenario, and assuming dma_map() did an
+initial cache invalidation, you can write this:
+
+rx_buffer_complete_1(buf)
+{
+	invalidate_cache(buf, size)
+	if (!is_ready(buf))
+		return;
+	<proceed with receive>
+}
+
+or 
+
+rx_buffer_complete_2(buf)
+{
+	if (!is_ready(buf)) {
+		invalidate_cache(buf, size)
+		return;
+	}
+	<proceed with receive>
+}
+
+The latter is preferred for performance because dma_map() did the
+initial invalidate.
+
+Of course you could write:
+
+rx_buffer_complete_3(buf)
+{
+	invalidate_cache(buf, size)
+	if
+(!is_ready(buf)) {
+		invalidate_cache(buf, size)
+		return;
+	}
+	
+<proceed with receive>
+}
+
+
+but it's a waste of CPU cycles
+
+So I'd be very cautious assuming sync_for_cpu() and sync_for_device()
+are both doing invalidation in existing implementation of arch DMA ops,
+implementers may have taken some liberty around DMA-API to avoid
+unnecessary cache operation (not to blame them).
+
+
+For example looking at arch/arm/mm/dma-mapping.c, for DMA_FROM_DEVICE
+
+sync_single_for_device()
+  => __dma_page_cpu_to_dev()
+    => dma_cache_maint_page(op=dmac_map_area)
+      => cpu_cache.dma_map_area()
+
+sync_single_for_cpu()
+  => __dma_page_dev_to_cpu()
+    =>
+__dma_page_cpu_to_dev(op=dmac_unmap_area)
+      =>
+cpu_cache.dma_unmap_area()
+
+dma_map_area() always does cache invalidate.
+
+But for a couple of CPU variant, dma_unmap_area() is a noop, so
+sync_for_cpu() does nothing.
+
+Toke's patch will break ath9k on those platforms (mostly silent
+breakage, rx corruption leading to bad performance)
+
+
+> There's a fair number of those dma_sync_single_for_device() things
+> all over. Could we find mis-uses and warn about them some way? It
+> seems to be a very natural thing to do in this context, but bounce
+> buffering does make them very fragile.
+
+At least in network drivers, there are at least two patterns:
+
+1) The issue at hand, hardware mixing rx_status and data inside the
+same area. Usually very old hardware, very quick grep in network
+drivers only revealed slicoss.c. Probably would have gone unnoticed if
+ath9k hardware wasn't so common.
+
+
+2) The very common "copy break" pattern. If a received packet is
+smaller than a certain threshold, the driver rx path is changed to do:
+
+ sync_for_cpu()
+ alloc_small_skb()
+ memcpy(small_skb, rx_buffer_data)
+ sync_for_device()
+
+Original skb is left in the hardware, this reduces memory wasted.
+
+This pattern is completely valid wrt DMA-API, the buffer is always
+either owned by CPU or device.
+
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1644036628-5334-1-git-send-email-quic_periyasa@quicinc.com/
+Maxime
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
 
