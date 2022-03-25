@@ -2,268 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11029C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 08:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1487C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 09:21:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347318AbiCYIOq (ORCPT
+        id S1356722AbiCYJXX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 04:14:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47566 "EHLO
+        Fri, 25 Mar 2022 05:23:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346416AbiCYIOp (ORCPT
+        with ESMTP id S1345014AbiCYJXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 04:14:45 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74D6BC0B
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 01:13:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1648195991; x=1679731991;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=l8shMzMIeFBbNb205xbxfy+9MlVcmL5YFu4MfGWuIvA=;
-  b=Fw1sYsn4s/K0UL3zuZjgpzTuoBF5owqu0NNX916r7uUTTrQxEMOxgSFE
-   fWeNNrB7jBs7SVAHrqzDzWPsV8ImyE+LhG8v9ioDZ64sTWLVEli1/buDU
-   wqA9vuQckXm+sxGfxMLIzzNth96BzZ/yyNlkh51WIM0YzlOhzjiH2hfNQ
-   M=;
-Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
-  by alexa-out.qualcomm.com with ESMTP; 25 Mar 2022 01:13:10 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2022 01:13:10 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 25 Mar 2022 01:13:09 -0700
-Received: from ramess-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 25 Mar 2022 01:13:07 -0700
-From:   Rameshkumar Sundaram <quic_ramess@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Lavanya Suresh <lavaks@codeaurora.org>,
-        Rameshkumar Sundaram <quic_ramess@quicinc.com>
-Subject: [PATCH v4] mac80211: disable BSS color collision detection in case of no free colors
-Date:   Fri, 25 Mar 2022 13:42:41 +0530
-Message-ID: <1648195961-3811-1-git-send-email-quic_ramess@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        Fri, 25 Mar 2022 05:23:23 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A99BCF49F;
+        Fri, 25 Mar 2022 02:21:49 -0700 (PDT)
+Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1nXg8U-00023m-32; Fri, 25 Mar 2022 10:21:34 +0100
+Message-ID: <a45549b5-1c05-f995-2c0f-99c0e40cea09@leemhuis.info>
+Date:   Fri, 25 Mar 2022 10:21:24 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+Content-Language: en-US
+To:     Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Maxime Bizon <mbizon@freebox.fr>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgense?= =?UTF-8?Q?n?= 
+        <toke@toke.dk>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+References: <1812355.tdWV9SEqCh@natalenko.name>
+ <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com> <871qyr9t4e.fsf@toke.dk>
+ <4699073.GXAFRqVoOG@natalenko.name>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <4699073.GXAFRqVoOG@natalenko.name>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1648200109;1a0d0afe;
+X-HE-SMSGID: 1nXg8U-00023m-32
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lavanya Suresh <lavaks@codeaurora.org>
+On 25.03.22 08:12, Oleksandr Natalenko wrote:
+> On čtvrtek 24. března 2022 18:07:29 CET Toke Høiland-Jørgensen wrote:
+>> Right, but is that sync_for_device call really needed? AFAICT, that
+>> ath9k_hw_process_rxdesc_edma() invocation doesn't actually modify any of
+>> the data when it returns EINPROGRESS, so could we just skip it? Like
+>> the patch below? Or am I misunderstanding the semantics here?
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index 0c0624a3b40d..19244d4c0ada 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -647,12 +647,8 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+>>                                 common->rx_bufsize, DMA_FROM_DEVICE);
+>>  
+>>         ret = ath9k_hw_process_rxdesc_edma(ah, rs, skb->data);
+>> -       if (ret == -EINPROGRESS) {
+>> -               /*let device gain the buffer again*/
+>> -               dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+>> -                               common->rx_bufsize, DMA_FROM_DEVICE);
+>> +       if (ret == -EINPROGRESS)
+>>                 return false;
+>> -       }
+>>  
+>>         __skb_unlink(skb, &rx_edma->rx_fifo);
+>>         if (ret == -EINVAL) {
+> 
+> With this patch and both ddbd89deb7d3+aa6f8dcbab47 in place the AP works for me.
 
-AP may run out of BSS color after color collision
-detection event from driver.
-Disable BSS color collision detection if no free colors are
-available based on bss color disabled bit sent as a part of
-NL80211_ATTR_HE_BSS_COLOR attribute sent in
-NL80211_CMD_SET_BEACON.
+TWIMC: If anyone needs more testers or something, I noticed two bug
+report in bko about this problem:
 
-It can be reenabled once new color is available.
+https://bugzilla.kernel.org/show_bug.cgi?id=215703
+https://bugzilla.kernel.org/show_bug.cgi?id=215698
 
-Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
-Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
----
-Changes since v3:
- - Updated subject
+I'll point both to this discussion and the patch.
 
-Changes since v2:
- - Moved the logic to ieee80211_change_beacon() to have this
-   BSS color enabled unset only during set_beacon case based
-   on NL80211_ATTR_HE_BSS_COLOR attribute sent by hostapd.
- - Removed the relocation and parsing changes done on v1 and moved
-   he_bss_color to cfg80211_beacon_data and parsed
-   NL80211_ATTR_HE_BSS_COLOR in nl80211_parse_beacon()
-
-Changes since v1:
- - Relocated ap params to cfg80211_beacon_data and
-   nl80211_calculate_ap_params() to nl80211_parse_beacon()
-   to have them parsed for all (start_ap and change beacon) commands.
----
- include/net/cfg80211.h |  4 ++--
- net/mac80211/cfg.c     | 11 +++++++--
- net/wireless/nl80211.c | 62 ++++++++++++++++++++++++--------------------------
- 3 files changed, 41 insertions(+), 36 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a887086..08b795d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1113,6 +1113,7 @@ struct cfg80211_mbssid_elems {
-  *	Token (measurement type 11)
-  * @lci_len: LCI data length
-  * @civicloc_len: Civic location data length
-+ * @he_bss_color: BSS Color settings
-  */
- struct cfg80211_beacon_data {
- 	const u8 *head, *tail;
-@@ -1132,6 +1133,7 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- 	size_t lci_len;
- 	size_t civicloc_len;
-+	struct cfg80211_he_bss_color he_bss_color;
- };
- 
- struct mac_address {
-@@ -1233,7 +1235,6 @@ enum cfg80211_ap_settings_flags {
-  * @sae_h2e_required: stations must support direct H2E technique in SAE
-  * @flags: flags, as defined in enum cfg80211_ap_settings_flags
-  * @he_obss_pd: OBSS Packet Detection settings
-- * @he_bss_color: BSS Color settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-  * @fils_discovery: FILS discovery transmission parameters
-  * @unsol_bcast_probe_resp: Unsolicited broadcast probe response parameters
-@@ -1267,7 +1268,6 @@ struct cfg80211_ap_settings {
- 	bool twt_responder;
- 	u32 flags;
- 	struct ieee80211_he_obss_pd he_obss_pd;
--	struct cfg80211_he_bss_color he_bss_color;
- 	struct cfg80211_fils_discovery fils_discovery;
- 	struct cfg80211_unsol_bcast_probe_resp unsol_bcast_probe_resp;
- 	struct cfg80211_mbssid_config mbssid_config;
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 26cc762..f54aaf1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1133,7 +1133,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
- 		changed |= BSS_CHANGED_HE_OBSS_PD;
- 
--		if (params->he_bss_color.enabled)
-+		if (params->beacon.he_bss_color.enabled)
- 			changed |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
- 
-@@ -1190,7 +1190,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->vif.bss_conf.allow_p2p_go_ps = sdata->vif.p2p;
- 	sdata->vif.bss_conf.twt_responder = params->twt_responder;
- 	sdata->vif.bss_conf.he_obss_pd = params->he_obss_pd;
--	sdata->vif.bss_conf.he_bss_color = params->he_bss_color;
-+	sdata->vif.bss_conf.he_bss_color = params->beacon.he_bss_color;
- 	sdata->vif.bss_conf.s1g = params->chandef.chan->band ==
- 				  NL80211_BAND_S1GHZ;
- 
-@@ -1272,6 +1272,7 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_beacon_data *params)
- {
- 	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_bss_conf *bss_conf;
- 	struct beacon_data *old;
- 	int err;
- 
-@@ -1291,6 +1292,12 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	err = ieee80211_assign_beacon(sdata, params, NULL, NULL);
- 	if (err < 0)
- 		return err;
-+
-+	bss_conf = &sdata->vif.bss_conf;
-+	if (params->he_bss_color.enabled != bss_conf->he_bss_color.enabled) {
-+		bss_conf->he_bss_color.enabled = params->he_bss_color.enabled;
-+		err |= BSS_CHANGED_HE_BSS_COLOR;
-+	}
- 	ieee80211_bss_info_change_notify(sdata, err);
- 	return 0;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bfa5d74..df609e4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5124,6 +5124,30 @@ nl80211_parse_mbssid_elems(struct wiphy *wiphy, struct nlattr *attrs)
- 	return elems;
- }
- 
-+static int nl80211_parse_he_bss_color(struct nlattr *attrs,
-+				      struct cfg80211_he_bss_color *he_bss_color)
-+{
-+	struct nlattr *tb[NL80211_HE_BSS_COLOR_ATTR_MAX + 1];
-+	int err;
-+
-+	err = nla_parse_nested(tb, NL80211_HE_BSS_COLOR_ATTR_MAX, attrs,
-+			       he_bss_color_policy, NULL);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_HE_BSS_COLOR_ATTR_COLOR])
-+		return -EINVAL;
-+
-+	he_bss_color->color =
-+		nla_get_u8(tb[NL80211_HE_BSS_COLOR_ATTR_COLOR]);
-+	he_bss_color->enabled =
-+		!nla_get_flag(tb[NL80211_HE_BSS_COLOR_ATTR_DISABLED]);
-+	he_bss_color->partial =
-+		nla_get_flag(tb[NL80211_HE_BSS_COLOR_ATTR_PARTIAL]);
-+
-+	return 0;
-+}
-+
- static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
- 				struct nlattr *attrs[],
- 				struct cfg80211_beacon_data *bcn)
-@@ -5204,6 +5228,12 @@ static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
- 		bcn->ftm_responder = -1;
- 	}
- 
-+	if (attrs[NL80211_ATTR_HE_BSS_COLOR]) {
-+		err = nl80211_parse_he_bss_color(attrs[NL80211_ATTR_HE_BSS_COLOR],
-+						 &bcn->he_bss_color);
-+		if (err)
-+			return err;
-+	}
- 	if (attrs[NL80211_ATTR_MBSSID_ELEMS]) {
- 		struct cfg80211_mbssid_elems *mbssid =
- 			nl80211_parse_mbssid_elems(&rdev->wiphy,
-@@ -5262,30 +5292,6 @@ static int nl80211_parse_he_obss_pd(struct nlattr *attrs,
- 	return 0;
- }
- 
--static int nl80211_parse_he_bss_color(struct nlattr *attrs,
--				      struct cfg80211_he_bss_color *he_bss_color)
--{
--	struct nlattr *tb[NL80211_HE_BSS_COLOR_ATTR_MAX + 1];
--	int err;
--
--	err = nla_parse_nested(tb, NL80211_HE_BSS_COLOR_ATTR_MAX, attrs,
--			       he_bss_color_policy, NULL);
--	if (err)
--		return err;
--
--	if (!tb[NL80211_HE_BSS_COLOR_ATTR_COLOR])
--		return -EINVAL;
--
--	he_bss_color->color =
--		nla_get_u8(tb[NL80211_HE_BSS_COLOR_ATTR_COLOR]);
--	he_bss_color->enabled =
--		!nla_get_flag(tb[NL80211_HE_BSS_COLOR_ATTR_DISABLED]);
--	he_bss_color->partial =
--		nla_get_flag(tb[NL80211_HE_BSS_COLOR_ATTR_PARTIAL]);
--
--	return 0;
--}
--
- static int nl80211_parse_fils_discovery(struct cfg80211_registered_device *rdev,
- 					struct nlattr *attrs,
- 					struct cfg80211_ap_settings *params)
-@@ -5677,14 +5683,6 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			goto out;
- 	}
- 
--	if (info->attrs[NL80211_ATTR_HE_BSS_COLOR]) {
--		err = nl80211_parse_he_bss_color(
--					info->attrs[NL80211_ATTR_HE_BSS_COLOR],
--					&params->he_bss_color);
--		if (err)
--			goto out;
--	}
--
- 	if (info->attrs[NL80211_ATTR_FILS_DISCOVERY]) {
- 		err = nl80211_parse_fils_discovery(rdev,
- 						   info->attrs[NL80211_ATTR_FILS_DISCOVERY],
--- 
-2.7.4
-
+Ciao, Thorsten
