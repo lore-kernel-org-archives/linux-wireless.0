@@ -2,108 +2,191 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDCFC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:36:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E14FC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230490AbiCYThp (ORCPT
+        id S230438AbiCYTka (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 15:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59508 "EHLO
+        Fri, 25 Mar 2022 15:40:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230481AbiCYTh1 (ORCPT
+        with ESMTP id S232152AbiCYTin (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 15:37:27 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97F49261DD3
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:55 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id d5so14973347lfj.9
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:55 -0700 (PDT)
+        Fri, 25 Mar 2022 15:38:43 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E13A339CEBA
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:19:42 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id n7-20020a17090aab8700b001c6aa871860so9192484pjq.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:19:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4MqmH9CCCrUKFAq5y+I/qeK/sNikgDEGLg2VH+hZ/B8=;
-        b=EEYCtzdxDwF4pZQoFLQy5R1bkbtIioQJ+didZOsq+7BOWsBdCAqNeXRuHlQHbxjkxI
-         6ZpgNOxAuZZNbggkh7Po3d0QcOFG1glqGOPQvM9m9QhMt25NNyLu1evDrcAPEgux5s6f
-         doW8iQM9agqh0IgmvQNxMRNQkwdp7w1AkhPq4=
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=HJYoFqClYnz+wdN3BZY0xOUstF7EqA2bCMGoKxryv/U=;
+        b=DiUDBMw13VCabtCiw+vw1MzcIzSmw1aSC87hgQlyMM6sesI4Zzzbddw9xxLgKqjI/m
+         NVKwgwBFNfjC6atuk4JAb+VjkqMJqOuVM5BcxvOd7JoNLANl9Iagy/5iXchEtbku1+bX
+         xVabghlhysHmHOrjUkSwJgB5JaybbWk9aZGKrscTuTDGoCpqCJJ3pPdSGEecfHdQCHSo
+         MdDHReKwKAxgAW0C5I17SwRCnm1d6xt2Q//p4ihSQqQaVSED3jhmIM69o0xm945Q+8Xb
+         GfW1Ln6mYsdcLWKokPaUZ5n3QGSCCUniTOeDwFaLC9T+m0D1ERUu6cNwm3OkamLkCqzr
+         pazw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4MqmH9CCCrUKFAq5y+I/qeK/sNikgDEGLg2VH+hZ/B8=;
-        b=6LRl08f7pUAkoX25yPiQft+FGbGC6zR7/sd107QY6eCXcM6s8UXrCrfQtbuaUxAyHO
-         MQZW8+2QM+A7TJRYS3PwQoFBM5cCy2QrqOv+hsD++kbo86YaG1N6Y7HHfWlwnAAK80px
-         pPXGQZb8CBtJZCpe/D8Bx8ua8fEEGd2titArNtRAn58CmLqMq2FO7ZEEB9TLvxSm91ff
-         nC/pPiiculs6Q/G4JWgBNOcizIBGDyKve1E+TtLt59eSljp63XnIGuRhg23uvwfI6eHq
-         07EqtOC33JrxyPZyBj218MckEuHHLCuxRH3sM0a0aKXfNw6aoCdKehYLoQXYof7rRit+
-         Vs5A==
-X-Gm-Message-State: AOAM531nsrNCroU369ASoWX69Ve+jDPUHT+S7qXSL4r6tsUdQMefWg/k
-        tqM3HAD2pSvOn9rtbh75zeVrn1ImSvGVZy3xaUY=
-X-Google-Smtp-Source: ABdhPJzmlil6CrUunu7vqwacCgmkluuwec68zdM/wlkJKinBS3grLuKcuzS2XBJ5QlIG2SDjvFccTA==
-X-Received: by 2002:ac2:5e31:0:b0:44a:247d:6022 with SMTP id o17-20020ac25e31000000b0044a247d6022mr8688477lfg.509.1648236113589;
-        Fri, 25 Mar 2022 12:21:53 -0700 (PDT)
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
-        by smtp.gmail.com with ESMTPSA id f17-20020a2e1f11000000b00247f8eb86a7sm746771ljf.108.2022.03.25.12.21.50
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Mar 2022 12:21:51 -0700 (PDT)
-Received: by mail-lf1-f45.google.com with SMTP id 5so14988820lfp.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:50 -0700 (PDT)
-X-Received: by 2002:ac2:4203:0:b0:448:8053:d402 with SMTP id
- y3-20020ac24203000000b004488053d402mr8851909lfh.687.1648236109737; Fri, 25
- Mar 2022 12:21:49 -0700 (PDT)
-MIME-Version: 1.0
-References: <1812355.tdWV9SEqCh@natalenko.name> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
- <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
- <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
- <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
- <20220324163132.GB26098@lst.de> <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com>
- <871qyr9t4e.fsf@toke.dk> <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
- <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
- <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com> <a1829f4a-d916-c486-ac49-2c6dff77521a@arm.com>
-In-Reply-To: <a1829f4a-d916-c486-ac49-2c6dff77521a@arm.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri, 25 Mar 2022 12:21:33 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whpKDePfUoKmvJhSNbWcHFY5e7Uq5qEypD=R14+66DNvQ@mail.gmail.com>
-Message-ID: <CAHk-=whpKDePfUoKmvJhSNbWcHFY5e7Uq5qEypD=R14+66DNvQ@mail.gmail.com>
-Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
- ath9k-based AP
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Maxime Bizon <mbizon@freebox.fr>,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        Christoph Hellwig <hch@lst.de>,
-        Oleksandr Natalenko <oleksandr@natalenko.name>,
-        Halil Pasic <pasic@linux.ibm.com>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=HJYoFqClYnz+wdN3BZY0xOUstF7EqA2bCMGoKxryv/U=;
+        b=ozWiZK7rZjyT069H7QeVG6NWQ6pGLhQI6zzZwjgnOUj//f/GdJocqDV5pfNDYtMTtG
+         YIGyxzZ3z3k1n4rwpoD1QQg0LPPMfxpS5KNHE1P/NGJpb/FkBvuQT02p6UVm7OKUUJ5o
+         g8yYZ6oHlyN1oEbUXrx9ikMLgng6m1ovg7Y5qzMzPfWhAJycLfZ29t1K5zSuDtI8Rt0e
+         W2IcgGMCk0hBo/k4AD1iEVT4tfqXwDRN45U8sHrGaivZfH378LMH/CVhfxtnQ419L811
+         FsPmeIcrFSOpYkPxuCu750RaVmTerPNd7d/Ovwq6dztsnwe/+D3r5Tva34OlYqt4imQ2
+         t2tw==
+X-Gm-Message-State: AOAM533JqoGQaaJCuHYSSnA1LfUd/3sErfzCXICc1Y3ZQi/KrmAAY5Z/
+        AoGZvw5oBhmJ5jvit5L4I1e1Sw54LzNG8A==
+X-Google-Smtp-Source: ABdhPJzdx+JZeNHp+KPtO/wdRkQkL6TPpEDq/CBq5CAe/wFyqK3XZpxvNIOUdhxxMPMOmxT08Ohjmw==
+X-Received: by 2002:a17:902:d2c7:b0:154:5aa1:a55b with SMTP id n7-20020a170902d2c700b001545aa1a55bmr12913770plc.5.1648231704705;
+        Fri, 25 Mar 2022 11:08:24 -0700 (PDT)
+Received: from google.com (249.189.233.35.bc.googleusercontent.com. [35.233.189.249])
+        by smtp.gmail.com with ESMTPSA id h17-20020a63df51000000b0036b9776ae5bsm6012843pgj.85.2022.03.25.11.08.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Mar 2022 11:08:23 -0700 (PDT)
+Date:   Fri, 25 Mar 2022 18:08:20 +0000
+From:   William McVicker <willmcvicker@google.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Jakub Kicinski <kuba@kernel.org>, linux-wireless@vger.kernel.org,
         Marek Szyprowski <m.szyprowski@samsung.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Olha Cherevyk <olha.cherevyk@gmail.com>,
-        iommu <iommu@lists.linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>, kernel-team@android.com,
+        Paolo Abeni <pabeni@redhat.com>
+Subject: Re: [BUG] deadlock in nl80211_vendor_cmd
+Message-ID: <Yj4FFIXi//ivQC3X@google.com>
+References: <0000000000009e9b7105da6d1779@google.com>
+ <99eda6d1dad3ff49435b74e539488091642b10a8.camel@sipsolutions.net>
+ <5d5cf050-7de0-7bad-2407-276970222635@quicinc.com>
+ <YjpGlRvcg72zNo8s@google.com>
+ <dc556455-51a2-06e8-8ec5-b807c2901b7e@quicinc.com>
+ <Yjzpo3TfZxtKPMAG@google.com>
+ <19e12e6b5f04ba9e5b192001fbe31a3fc47d380a.camel@sipsolutions.net>
+ <20220325094952.10c46350@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <f4f8a27dc07c1adaab470fde302ed841113e6b7f.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f4f8a27dc07c1adaab470fde302ed841113e6b7f.camel@sipsolutions.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 25, 2022 at 12:14 PM Robin Murphy <robin.murphy@arm.com> wrote:
->
-> Note "between the DMA transfers", and not "during the DMA transfers".
-> The fundamental assumption of the streaming API is that only one thing
-> is ever accessing the mapping at any given time, which is what the whole
-> notion of ownership is about.
+On 03/25/2022, Johannes Berg wrote:
+> On Fri, 2022-03-25 at 09:49 -0700, Jakub Kicinski wrote:
+> > On Fri, 25 Mar 2022 13:04:23 +0100 Johannes Berg wrote:
+> > > So we can avoid the potential deadlock in cfg80211 in a few ways:
+> > > 
+> > >  1) export rtnl_lock_unregistering_all() or maybe a variant after
+> > >     refactoring the two versions, to allow cfg80211 to use it, that way
+> > >     netdev_run_todo() can never have a non-empty todo list
+> > > 
+> > >  2) export __rtnl_unlock() so cfg80211 can avoid running
+> > >     netdev_run_todo() in the unlock, personally I like this less because
+> > >     it might encourage random drivers to use it
+> > > 
+> > >  3) completely rework cfg80211's locking, adding a separate mutex for
+> > >     the wiphy list so we don't need to acquire the RTNL at all here
+> > >     (unless the ops need it, but there's no issue if we don't drop it),
+> > >     something like https://p.sipsolutions.net/27d08e1f5881a793.txt
+> > > 
+> > > 
+> > > I think I'm happy with 3) now (even if it took a couple of hours), so I
+> > > think we can go with it, just need to go through all the possibilities.
+> > 
+> > I like 3) as well. FWIW a few places (e.g. mlx5, devlink, I think I've
+> > seen more) had been converting to xarray for managing the "registered"
+> > objects. It may be worth looking into if you're re-doing things, anyway.
+> > 
+> 
+> That's not a bad idea, but I think I wouldn't want to backport that, so
+> separately :) I don't think that fundamentally changes the locking
+> properties though.
+> 
+> 
+> Couple of more questions I guess: First, are we assuming that the
+> cfg80211 code *is* actually broken, even if it looks like nothing can
+> cause the situation, due to the empty todo list?
 
-Well, but that ignores reality.
+I'm able to reproduce this issue pretty easily with a Pixel 6 when I add
+support to allow vendor commands to request for the RTNL. For this case, I just
+delay unlocking the RTNL until nl80211_vendor_cmds() at which point I check the
+flags to see if I should unlock before calling doit(). That allows me to run my
+tests again and hit this issue. I imagine that I could hit this issue without
+any changes if I re-work my vendor ops to not need the RTNL.
 
-Any documentation that ignores the "CPU will want to see the
-intermediate state" is by definition garbage, because that is clearly
-a simple fact.
+> 
+> Given that we have rtnl_lock_unregistering() (and also
+> rtnl_lock_unregistering_all()), it looks like we *do* in fact at least
+> not want to make an assumption that no user of __rtnl_unlock() can have
+> added a todo item.
+> 
+> I mean, there's technically yet *another* thing we could do - something
+> like this:
+> 
+> [this doesn't compile, need to suitably make net_todo_list non-static]
+> --- a/net/core/rtnetlink.c
+> +++ b/net/core/rtnetlink.c
+> @@ -95,6 +95,7 @@ void __rtnl_unlock(void)
+>  
+>         defer_kfree_skb_list = NULL;
+>  
+> +       WARN_ON(!list_empty(&net_todo_list));
+>         mutex_unlock(&rtnl_mutex);
+>  
+>         while (head) {
+> 
+> and actually that would allow us to get rid of rtnl_lock_unregistering()
+> and rtnl_lock_unregistering_all() simply because we'd actually guarantee
+> the invariant that when the RTNL is freshly locked, the list is empty
+> (by guaranteeing that it's always empty when it's unlocked, since it can
+> only be added to under RTNL).
+> 
+> With some suitable commentary, that might also be a reasonable thing?
+> __rtnl_unlock() is actually rather pretty rare, and not exported.
+> 
+> 
+> However, if you don't like that ...
+> 
+> I've been testing with this patch, to make lockdep complain:
+> 
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -9933,6 +9933,11 @@ void netdev_run_todo(void)
+>         if (!list_empty(&list))
+>                 rcu_barrier();
+>  
+> +#ifdef CONFIG_LOCKDEP
+> +       rtnl_lock();
+> +       __rtnl_unlock();
+> +#endif
+> +
+>         while (!list_empty(&list)) {
+>                 struct net_device *dev
+>                         = list_first_entry(&list, struct net_device, todo_list);
+> 
+> 
+> That causes lockdep to complain for cfg80211 even if the list *is* in
+> fact empty.
+> 
+> Would you be open to adding something like that? Perhaps if I don't just
+> do the easy rtnl_lock/unlock, but try to find the corresponding lockdep-
+> only things to do there, to cause lockdep to do things without really
+> locking? OTOH, the locking overhead of the RTNL we just unlocked is
+> probably minimal, vs. the actual work *lockdep* is doing to track all
+> this ...
+> 
+> Thanks,
+> johannes
 
-We don't write documentation for fantasy.
+Let me know if you'd like me to test any patches out.
 
-            Linus
+Thanks,
+Will
