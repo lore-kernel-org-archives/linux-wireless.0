@@ -2,35 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1C4C43219
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDCFC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Mar 2022 19:36:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230071AbiCYTgc (ORCPT
+        id S230490AbiCYThp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 15:36:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55872 "EHLO
+        Fri, 25 Mar 2022 15:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230233AbiCYTgT (ORCPT
+        with ESMTP id S230481AbiCYTh1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 15:36:19 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4635E2E5189;
-        Fri, 25 Mar 2022 12:09:37 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1648232133; bh=0utGQUdnredYmwlCMqdQtSEkBccDpSSgRbC0K8pIlyE=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=w6KsBX3PIGQNPBEgDloGd557TP6k0E++rJTP9enh7kdXUK8fIxK8ftlFsszFTkDqJ
-         II+Y/Pgar/yJX6LDWXi3wvTO5jwnoNgZPUBUbZFGztXs4kAFdc5WiMPMD2h93vyAIV
-         sHpYer3QEiC1v7Dkqh+TuWhgznbszU65z6D+NJ9WsKaIjQHHAgsPnJZY2z8q70XmrP
-         onr1kPSQXO6u4FGkY6a53ST6TPH9eOX4hKDjTlEuDECQeSS3kUZihtZUFUgw131lWG
-         FJj7lbn92eVVKRfL+qOZXdNSYBzv9KrFNJYpt58jEkoUh7mbwjy6sxdeFvrhyLKA2L
-         qB6tWvUxyilfw==
-To:     Christoph Hellwig <hch@lst.de>, Halil Pasic <pasic@linux.ibm.com>
-Cc:     Robin Murphy <robin.murphy@arm.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Fri, 25 Mar 2022 15:37:27 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97F49261DD3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:55 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id d5so14973347lfj.9
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4MqmH9CCCrUKFAq5y+I/qeK/sNikgDEGLg2VH+hZ/B8=;
+        b=EEYCtzdxDwF4pZQoFLQy5R1bkbtIioQJ+didZOsq+7BOWsBdCAqNeXRuHlQHbxjkxI
+         6ZpgNOxAuZZNbggkh7Po3d0QcOFG1glqGOPQvM9m9QhMt25NNyLu1evDrcAPEgux5s6f
+         doW8iQM9agqh0IgmvQNxMRNQkwdp7w1AkhPq4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4MqmH9CCCrUKFAq5y+I/qeK/sNikgDEGLg2VH+hZ/B8=;
+        b=6LRl08f7pUAkoX25yPiQft+FGbGC6zR7/sd107QY6eCXcM6s8UXrCrfQtbuaUxAyHO
+         MQZW8+2QM+A7TJRYS3PwQoFBM5cCy2QrqOv+hsD++kbo86YaG1N6Y7HHfWlwnAAK80px
+         pPXGQZb8CBtJZCpe/D8Bx8ua8fEEGd2titArNtRAn58CmLqMq2FO7ZEEB9TLvxSm91ff
+         nC/pPiiculs6Q/G4JWgBNOcizIBGDyKve1E+TtLt59eSljp63XnIGuRhg23uvwfI6eHq
+         07EqtOC33JrxyPZyBj218MckEuHHLCuxRH3sM0a0aKXfNw6aoCdKehYLoQXYof7rRit+
+         Vs5A==
+X-Gm-Message-State: AOAM531nsrNCroU369ASoWX69Ve+jDPUHT+S7qXSL4r6tsUdQMefWg/k
+        tqM3HAD2pSvOn9rtbh75zeVrn1ImSvGVZy3xaUY=
+X-Google-Smtp-Source: ABdhPJzmlil6CrUunu7vqwacCgmkluuwec68zdM/wlkJKinBS3grLuKcuzS2XBJ5QlIG2SDjvFccTA==
+X-Received: by 2002:ac2:5e31:0:b0:44a:247d:6022 with SMTP id o17-20020ac25e31000000b0044a247d6022mr8688477lfg.509.1648236113589;
+        Fri, 25 Mar 2022 12:21:53 -0700 (PDT)
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
+        by smtp.gmail.com with ESMTPSA id f17-20020a2e1f11000000b00247f8eb86a7sm746771ljf.108.2022.03.25.12.21.50
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Mar 2022 12:21:51 -0700 (PDT)
+Received: by mail-lf1-f45.google.com with SMTP id 5so14988820lfp.1
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2022 12:21:50 -0700 (PDT)
+X-Received: by 2002:ac2:4203:0:b0:448:8053:d402 with SMTP id
+ y3-20020ac24203000000b004488053d402mr8851909lfh.687.1648236109737; Fri, 25
+ Mar 2022 12:21:49 -0700 (PDT)
+MIME-Version: 1.0
+References: <1812355.tdWV9SEqCh@natalenko.name> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+ <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+ <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
+ <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+ <20220324163132.GB26098@lst.de> <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com>
+ <871qyr9t4e.fsf@toke.dk> <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
+ <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
+ <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com> <a1829f4a-d916-c486-ac49-2c6dff77521a@arm.com>
+In-Reply-To: <a1829f4a-d916-c486-ac49-2c6dff77521a@arm.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 25 Mar 2022 12:21:33 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whpKDePfUoKmvJhSNbWcHFY5e7Uq5qEypD=R14+66DNvQ@mail.gmail.com>
+Message-ID: <CAHk-=whpKDePfUoKmvJhSNbWcHFY5e7Uq5qEypD=R14+66DNvQ@mail.gmail.com>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Maxime Bizon <mbizon@freebox.fr>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
         Christoph Hellwig <hch@lst.de>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Halil Pasic <pasic@linux.ibm.com>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -43,43 +86,24 @@ Cc:     Robin Murphy <robin.murphy@arm.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         stable <stable@vger.kernel.org>
-Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
- ath9k-based AP
-In-Reply-To: <20220325163204.GB16426@lst.de>
-References: <1812355.tdWV9SEqCh@natalenko.name>
- <CAHk-=wiwz+Z2MaP44h086jeniG-OpK3c=FywLsCwXV7Crvadrg@mail.gmail.com>
- <27b5a287-7a33-9a8b-ad6d-04746735fb0c@arm.com>
- <CAHk-=wip7TCD_+2STTepuEZvGMg6wcz+o=kyFUvHjuKziTMixw@mail.gmail.com>
- <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
- <20220324190216.0efa067f.pasic@linux.ibm.com>
- <20220325163204.GB16426@lst.de>
-Date:   Fri, 25 Mar 2022 19:15:32 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87y20x7vaz.fsf@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> writes:
-
-> On Thu, Mar 24, 2022 at 07:02:16PM +0100, Halil Pasic wrote:
->> > If 
->> > ddbd89deb7d3 alone turns out to work OK then I'd be inclined to try a 
->> > partial revert of just that one hunk.
->> >
->> 
->> I'm not against being pragmatic and doing the partial revert. But as
->> explained above, I do believe for correctness of swiotlb we ultimately
->> do need that change. So if the revert is the short term solution,
->> what should be our mid-term road-map?
+On Fri, Mar 25, 2022 at 12:14 PM Robin Murphy <robin.murphy@arm.com> wrote:
 >
-> Unless I'm misunderstanding this thread we found the bug in ath9k
-> and have a fix for that now?
+> Note "between the DMA transfers", and not "during the DMA transfers".
+> The fundamental assumption of the streaming API is that only one thing
+> is ever accessing the mapping at any given time, which is what the whole
+> notion of ownership is about.
 
-According to Maxim's comment on the other subthread, that ath9k patch
-wouldn't work on all platforms (and constitutes a bit of a violation of
-the DMA API ownership abstraction). So not quite, I think?
+Well, but that ignores reality.
 
--Toke
+Any documentation that ignores the "CPU will want to see the
+intermediate state" is by definition garbage, because that is clearly
+a simple fact.
+
+We don't write documentation for fantasy.
+
+            Linus
