@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE307C43217
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 17:03:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24565C4167D
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233923AbiCZRFH (ORCPT
+        id S234346AbiCZRKs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Mar 2022 13:05:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46148 "EHLO
+        Sat, 26 Mar 2022 13:10:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234187AbiCZRDw (ORCPT
+        with ESMTP id S234049AbiCZRKj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Mar 2022 13:03:52 -0400
+        Sat, 26 Mar 2022 13:10:39 -0400
 Received: from stuerz.xyz (unknown [45.77.206.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE27218114C;
-        Sat, 26 Mar 2022 10:01:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D42D35864;
+        Sat, 26 Mar 2022 10:08:58 -0700 (PDT)
 Received: by stuerz.xyz (Postfix, from userid 114)
-        id C8712FBC43; Sat, 26 Mar 2022 17:01:48 +0000 (UTC)
+        id 13C5EFB7F7; Sat, 26 Mar 2022 16:59:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314109; bh=zpxJ79zszsKX8TM//ybBnHh4vZKZRo3BO9XqXVgJ4hc=;
+        t=1648313997; bh=ORSaJ6zLK3T5QJ6ekZf62I3PpS/KQZ/OU2UVDjr9uRg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HsVTDpQf8DGOqsdDGkFbM6cftL9a2IWd7w3yL5twO0Xea/Sq+VbjpjORVDuNbuyTA
-         wnv4Y8XfCeTMAnd1InbytVShx+wlT6sQvWDD7UXf78NAl0w8cmGhE7RXMYpKooangs
-         08FqJo+Fse3SDFJCtsipm31nEhBWKHIIhemjbcPo6sRWWLcbGNGindBThcwNG6L4er
-         2mEPoVgp+YfBXlSrM3Y4uNgv0+/y1DKKkh5bFlhFz+f1v9cxDEBuS7AzE/LfqecXV/
-         zCpCKem0vgoGTyFbtDK7XmiO46rYbUofHiz7wSmN0BMUrfwKIJQBJ1JXsiso8cclFQ
-         AJ1jli2/Cvhyw==
+        b=AMXOPB+IPlepS4sIrI8Po1BHRQdegUsgoGM6VYJuSgrZ0P/EUXInfdO79xyiuFmka
+         qpcacAlDe+T79tUd2kTzfx6MSShZcWzMY4hW+ebrJxX6dwD/n5xIYAZaNqciP1Smsm
+         kkEzlCIiHQuZFGK50AzFarp40Fda/RsvFX1FRDJQy5vTyzQxFZIVp/7XC8kCB+ybfo
+         Rg7PM5XMo7J/5+M78HnT+TaHsDF3l09f1EChq4wH/dCYBFtZMsrft3U0J2Wm8MJA1h
+         zHwLU6V3+Z2AKs9Tfy1s5k4ai7yC9mNT1lhEbNCFXgg9Tv8YuL/UHklzzncXYhOgeC
+         Jnb3wNMN6Xo/w==
 Received: from benni-fedora.. (unknown [IPv6:2a02:8109:a100:1a48:ff0:ef2f:d4da:17d8])
-        by stuerz.xyz (Postfix) with ESMTPSA id BF429FBC00;
-        Sat, 26 Mar 2022 17:01:39 +0000 (UTC)
+        by stuerz.xyz (Postfix) with ESMTPSA id 41A1DFB7DE;
+        Sat, 26 Mar 2022 16:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314106; bh=zpxJ79zszsKX8TM//ybBnHh4vZKZRo3BO9XqXVgJ4hc=;
+        t=1648313993; bh=ORSaJ6zLK3T5QJ6ekZf62I3PpS/KQZ/OU2UVDjr9uRg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QFzkX74QwvGJRSAH8nyF07v7tuFcsGUKMAzRbKS3uDpNx91ZpOF5dGe9b+4Bv85yo
-         70jPo5unJpPvS56P8dHLYofQ7y1rDtfgtZk8+TlkYDhfPm9XnE8iB2A8u4L2yM46Fd
-         669OAbDndeFdLy+diF2W2mrLDGyPQUmL0lWs464/oQs9O/bUjXXd/lCo7nLW7pDa79
-         4NOUamqZwEO0a2FO04rW5OgmGgUIdWccKwRJAyvTdnyleVgq8z7hZ9I8rAN6WqHyUw
-         F/tYZ46CRFeXYIzLANoC69PP10fAQQ3dtVOQ2BejnXMk7j3InWh1EUHil7rYDCGUY/
-         fkwZDJ4hUFfnw==
+        b=wq21HltneWdL6v4ZLSJXC/plweTDbrb3ui94N5yiQei93RLb63mS41Cg7dVqI4fte
+         9BqCFfq9VrIThMsyqq0VB1mZUqCXu0nH3/0YtYuj3fDiM2ZTv6HqDxtkQWuuGPZGDl
+         N87b29RPMjyQMTbtoN714T9xt2bJioTmNWsoDEcxyjF6T5Adg+8hZX7ykzJJVzq4mv
+         QyjX/stjxxs0Aq6YgOFQRPY3aB5QHr8caGS+ENicUHCHYZDLLKeArivV7C+1sgEsA6
+         0Tgoe831JrmoLDcuBMxeugIow66ZHsyeskR0RGhE8X3sTVac/00kVNKHIBShyMJiDp
+         xaU9YW7xKRuYA==
 From:   =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
 To:     andrew@lunn.ch
 Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
@@ -67,9 +67,9 @@ Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
         wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
-Subject: [PATCH 22/22] pci: Replace comments with C99 initializers
-Date:   Sat, 26 Mar 2022 17:59:09 +0100
-Message-Id: <20220326165909.506926-22-benni@stuerz.xyz>
+Subject: [PATCH 05/22] acpica: Replace comments with C99 initializers
+Date:   Sat, 26 Mar 2022 17:58:52 +0100
+Message-Id: <20220326165909.506926-5-benni@stuerz.xyz>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220326165909.506926-1-benni@stuerz.xyz>
 References: <20220326165909.506926-1-benni@stuerz.xyz>
@@ -85,147 +85,231 @@ initializers because the kernel supports them now.
 
 Signed-off-by: Benjamin Stürz <benni@stuerz.xyz>
 ---
- drivers/pci/probe.c | 116 ++++++++++++++++++++++----------------------
- 1 file changed, 58 insertions(+), 58 deletions(-)
+ drivers/acpi/acpica/utdecode.c | 183 ++++++++++++++++-----------------
+ 1 file changed, 90 insertions(+), 93 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 17a969942d37..3de27b0765c8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -653,42 +653,42 @@ EXPORT_SYMBOL(pci_free_host_bridge);
-
- /* Indexed by PCI_X_SSTATUS_FREQ (secondary bus mode and frequency) */
- static const unsigned char pcix_bus_speed[] = {
--	PCI_SPEED_UNKNOWN,		/* 0 */
--	PCI_SPEED_66MHz_PCIX,		/* 1 */
--	PCI_SPEED_100MHz_PCIX,		/* 2 */
--	PCI_SPEED_133MHz_PCIX,		/* 3 */
--	PCI_SPEED_UNKNOWN,		/* 4 */
--	PCI_SPEED_66MHz_PCIX_ECC,	/* 5 */
--	PCI_SPEED_100MHz_PCIX_ECC,	/* 6 */
--	PCI_SPEED_133MHz_PCIX_ECC,	/* 7 */
--	PCI_SPEED_UNKNOWN,		/* 8 */
--	PCI_SPEED_66MHz_PCIX_266,	/* 9 */
--	PCI_SPEED_100MHz_PCIX_266,	/* A */
--	PCI_SPEED_133MHz_PCIX_266,	/* B */
--	PCI_SPEED_UNKNOWN,		/* C */
--	PCI_SPEED_66MHz_PCIX_533,	/* D */
--	PCI_SPEED_100MHz_PCIX_533,	/* E */
--	PCI_SPEED_133MHz_PCIX_533	/* F */
-+	[0x0] = PCI_SPEED_UNKNOWN,
-+	[0x1] = PCI_SPEED_66MHz_PCIX,
-+	[0x2] = PCI_SPEED_100MHz_PCIX,
-+	[0x3] = PCI_SPEED_133MHz_PCIX,
-+	[0x4] = PCI_SPEED_UNKNOWN,
-+	[0x5] = PCI_SPEED_66MHz_PCIX_ECC,
-+	[0x6] = PCI_SPEED_100MHz_PCIX_ECC,
-+	[0x7] = PCI_SPEED_133MHz_PCIX_ECC,
-+	[0x8] = PCI_SPEED_UNKNOWN,
-+	[0x9] = PCI_SPEED_66MHz_PCIX_266,
-+	[0xA] = PCI_SPEED_100MHz_PCIX_266,
-+	[0xB] = PCI_SPEED_133MHz_PCIX_266,
-+	[0xC] = PCI_SPEED_UNKNOWN,
-+	[0xD] = PCI_SPEED_66MHz_PCIX_533,
-+	[0xE] = PCI_SPEED_100MHz_PCIX_533,
-+	[0xF] = PCI_SPEED_133MHz_PCIX_533
+diff --git a/drivers/acpi/acpica/utdecode.c b/drivers/acpi/acpica/utdecode.c
+index bcd3871079d7..d19868d2ea46 100644
+--- a/drivers/acpi/acpica/utdecode.c
++++ b/drivers/acpi/acpica/utdecode.c
+@@ -156,37 +156,37 @@ static const char acpi_gbl_bad_type[] = "UNDEFINED";
+ /* Printable names of the ACPI object types */
+ 
+ static const char *acpi_gbl_ns_type_names[] = {
+-	/* 00 */ "Untyped",
+-	/* 01 */ "Integer",
+-	/* 02 */ "String",
+-	/* 03 */ "Buffer",
+-	/* 04 */ "Package",
+-	/* 05 */ "FieldUnit",
+-	/* 06 */ "Device",
+-	/* 07 */ "Event",
+-	/* 08 */ "Method",
+-	/* 09 */ "Mutex",
+-	/* 10 */ "Region",
+-	/* 11 */ "Power",
+-	/* 12 */ "Processor",
+-	/* 13 */ "Thermal",
+-	/* 14 */ "BufferField",
+-	/* 15 */ "DdbHandle",
+-	/* 16 */ "DebugObject",
+-	/* 17 */ "RegionField",
+-	/* 18 */ "BankField",
+-	/* 19 */ "IndexField",
+-	/* 20 */ "Reference",
+-	/* 21 */ "Alias",
+-	/* 22 */ "MethodAlias",
+-	/* 23 */ "Notify",
+-	/* 24 */ "AddrHandler",
+-	/* 25 */ "ResourceDesc",
+-	/* 26 */ "ResourceFld",
+-	/* 27 */ "Scope",
+-	/* 28 */ "Extra",
+-	/* 29 */ "Data",
+-	/* 30 */ "Invalid"
++	[0]  = "Untyped",
++	[1]  = "Integer",
++	[2]  = "String",
++	[3]  = "Buffer",
++	[4]  = "Package",
++	[5]  = "FieldUnit",
++	[6]  = "Device",
++	[7]  = "Event",
++	[8]  = "Method",
++	[9]  = "Mutex",
++	[10] = "Region",
++	[11] = "Power",
++	[12] = "Processor",
++	[13] = "Thermal",
++	[14] = "BufferField",
++	[15] = "DdbHandle",
++	[16] = "DebugObject",
++	[17] = "RegionField",
++	[18] = "BankField",
++	[19] = "IndexField",
++	[20] = "Reference",
++	[21] = "Alias",
++	[22] = "MethodAlias",
++	[23] = "Notify",
++	[24] = "AddrHandler",
++	[25] = "ResourceDesc",
++	[26] = "ResourceFld",
++	[27] = "Scope",
++	[28] = "Extra",
++	[29] = "Data",
++	[30] = "Invalid"
  };
-
- /* Indexed by PCI_EXP_LNKCAP_SLS, PCI_EXP_LNKSTA_CLS */
- const unsigned char pcie_link_speed[] = {
--	PCI_SPEED_UNKNOWN,		/* 0 */
--	PCIE_SPEED_2_5GT,		/* 1 */
--	PCIE_SPEED_5_0GT,		/* 2 */
--	PCIE_SPEED_8_0GT,		/* 3 */
--	PCIE_SPEED_16_0GT,		/* 4 */
--	PCIE_SPEED_32_0GT,		/* 5 */
--	PCIE_SPEED_64_0GT,		/* 6 */
--	PCI_SPEED_UNKNOWN,		/* 7 */
--	PCI_SPEED_UNKNOWN,		/* 8 */
--	PCI_SPEED_UNKNOWN,		/* 9 */
--	PCI_SPEED_UNKNOWN,		/* A */
--	PCI_SPEED_UNKNOWN,		/* B */
--	PCI_SPEED_UNKNOWN,		/* C */
--	PCI_SPEED_UNKNOWN,		/* D */
--	PCI_SPEED_UNKNOWN,		/* E */
--	PCI_SPEED_UNKNOWN		/* F */
-+	[0x0] = PCI_SPEED_UNKNOWN,
-+	[0x1] = PCIE_SPEED_2_5GT,
-+	[0x2] = PCIE_SPEED_5_0GT,
-+	[0x3] = PCIE_SPEED_8_0GT,
-+	[0x4] = PCIE_SPEED_16_0GT,
-+	[0x5] = PCIE_SPEED_32_0GT,
-+	[0x6] = PCIE_SPEED_64_0GT,
-+	[0x7] = PCI_SPEED_UNKNOWN,
-+	[0x8] = PCI_SPEED_UNKNOWN,
-+	[0x9] = PCI_SPEED_UNKNOWN,
-+	[0xA] = PCI_SPEED_UNKNOWN,
-+	[0xB] = PCI_SPEED_UNKNOWN,
-+	[0xC] = PCI_SPEED_UNKNOWN,
-+	[0xD] = PCI_SPEED_UNKNOWN,
-+	[0xE] = PCI_SPEED_UNKNOWN,
-+	[0xF] = PCI_SPEED_UNKNOWN
+ 
+ const char *acpi_ut_get_type_name(acpi_object_type type)
+@@ -284,22 +284,22 @@ const char *acpi_ut_get_node_name(void *object)
+ /* Printable names of object descriptor types */
+ 
+ static const char *acpi_gbl_desc_type_names[] = {
+-	/* 00 */ "Not a Descriptor",
+-	/* 01 */ "Cached Object",
+-	/* 02 */ "State-Generic",
+-	/* 03 */ "State-Update",
+-	/* 04 */ "State-Package",
+-	/* 05 */ "State-Control",
+-	/* 06 */ "State-RootParseScope",
+-	/* 07 */ "State-ParseScope",
+-	/* 08 */ "State-WalkScope",
+-	/* 09 */ "State-Result",
+-	/* 10 */ "State-Notify",
+-	/* 11 */ "State-Thread",
+-	/* 12 */ "Tree Walk State",
+-	/* 13 */ "Parse Tree Op",
+-	/* 14 */ "Operand Object",
+-	/* 15 */ "Namespace Node"
++	[0]  = "Not a Descriptor",
++	[1]  = "Cached Object",
++	[2]  = "State-Generic",
++	[3]  = "State-Update",
++	[4]  = "State-Package",
++	[5]  = "State-Control",
++	[6]  = "State-RootParseScope",
++	[7]  = "State-ParseScope",
++	[8]  = "State-WalkScope",
++	[9]  = "State-Result",
++	[10] = "State-Notify",
++	[11] = "State-Thread",
++	[12] = "Tree Walk State",
++	[13] = "Parse Tree Op",
++	[14] = "Operand Object",
++	[15] = "Namespace Node"
  };
- EXPORT_SYMBOL_GPL(pcie_link_speed);
-
-@@ -696,32 +696,32 @@ const char *pci_speed_string(enum pci_bus_speed speed)
- {
- 	/* Indexed by the pci_bus_speed enum */
- 	static const char *speed_strings[] = {
--	    "33 MHz PCI",		/* 0x00 */
--	    "66 MHz PCI",		/* 0x01 */
--	    "66 MHz PCI-X",		/* 0x02 */
--	    "100 MHz PCI-X",		/* 0x03 */
--	    "133 MHz PCI-X",		/* 0x04 */
--	    NULL,			/* 0x05 */
--	    NULL,			/* 0x06 */
--	    NULL,			/* 0x07 */
--	    NULL,			/* 0x08 */
--	    "66 MHz PCI-X 266",		/* 0x09 */
--	    "100 MHz PCI-X 266",	/* 0x0a */
--	    "133 MHz PCI-X 266",	/* 0x0b */
--	    "Unknown AGP",		/* 0x0c */
--	    "1x AGP",			/* 0x0d */
--	    "2x AGP",			/* 0x0e */
--	    "4x AGP",			/* 0x0f */
--	    "8x AGP",			/* 0x10 */
--	    "66 MHz PCI-X 533",		/* 0x11 */
--	    "100 MHz PCI-X 533",	/* 0x12 */
--	    "133 MHz PCI-X 533",	/* 0x13 */
--	    "2.5 GT/s PCIe",		/* 0x14 */
--	    "5.0 GT/s PCIe",		/* 0x15 */
--	    "8.0 GT/s PCIe",		/* 0x16 */
--	    "16.0 GT/s PCIe",		/* 0x17 */
--	    "32.0 GT/s PCIe",		/* 0x18 */
--	    "64.0 GT/s PCIe",		/* 0x19 */
-+		[0x00] = "33 MHz PCI",
-+		[0x01] = "66 MHz PCI",
-+		[0x02] = "66 MHz PCI-X",
-+		[0x03] = "100 MHz PCI-X",
-+		[0x04] = "133 MHz PCI-X",
-+		[0x05] = NULL,
-+		[0x06] = NULL,
-+		[0x07] = NULL,
-+		[0x08] = NULL,
-+		[0x09] = "66 MHz PCI-X 266",
-+		[0x0a] = "100 MHz PCI-X 266",
-+		[0x0b] = "133 MHz PCI-X 266",
-+		[0x0c] = "Unknown AGP",
-+		[0x0d] = "1x AGP",
-+		[0x0e] = "2x AGP",
-+		[0x0f] = "4x AGP",
-+		[0x10] = "8x AGP",
-+		[0x11] = "66 MHz PCI-X 533",
-+		[0x12] = "100 MHz PCI-X 533",
-+		[0x13] = "133 MHz PCI-X 533",
-+		[0x14] = "2.5 GT/s PCIe",
-+		[0x15] = "5.0 GT/s PCIe",
-+		[0x16] = "8.0 GT/s PCIe",
-+		[0x17] = "16.0 GT/s PCIe",
-+		[0x18] = "32.0 GT/s PCIe",
-+		[0x19] = "64.0 GT/s PCIe",
- 	};
-
- 	if (speed < ARRAY_SIZE(speed_strings))
---
+ 
+ const char *acpi_ut_get_descriptor_name(void *object)
+@@ -331,13 +331,13 @@ const char *acpi_ut_get_descriptor_name(void *object)
+ /* Printable names of reference object sub-types */
+ 
+ static const char *acpi_gbl_ref_class_names[] = {
+-	/* 00 */ "Local",
+-	/* 01 */ "Argument",
+-	/* 02 */ "RefOf",
+-	/* 03 */ "Index",
+-	/* 04 */ "DdbHandle",
+-	/* 05 */ "Named Object",
+-	/* 06 */ "Debug"
++	[0] = "Local",
++	[1] = "Argument",
++	[2] = "RefOf",
++	[3] = "Index",
++	[4] = "DdbHandle",
++	[5] = "Named Object",
++	[6] = "Debug"
+ };
+ 
+ const char *acpi_ut_get_reference_name(union acpi_operand_object *object)
+@@ -416,25 +416,22 @@ const char *acpi_ut_get_mutex_name(u32 mutex_id)
+ /* Names for Notify() values, used for debug output */
+ 
+ static const char *acpi_gbl_generic_notify[ACPI_GENERIC_NOTIFY_MAX + 1] = {
+-	/* 00 */ "Bus Check",
+-	/* 01 */ "Device Check",
+-	/* 02 */ "Device Wake",
+-	/* 03 */ "Eject Request",
+-	/* 04 */ "Device Check Light",
+-	/* 05 */ "Frequency Mismatch",
+-	/* 06 */ "Bus Mode Mismatch",
+-	/* 07 */ "Power Fault",
+-	/* 08 */ "Capabilities Check",
+-	/* 09 */ "Device PLD Check",
+-	/* 0A */ "Reserved",
+-	/* 0B */ "System Locality Update",
+-								/* 0C */ "Reserved (was previously Shutdown Request)",
+-								/* Reserved in ACPI 6.0 */
+-	/* 0D */ "System Resource Affinity Update",
+-								/* 0E */ "Heterogeneous Memory Attributes Update",
+-								/* ACPI 6.2 */
+-						/* 0F */ "Error Disconnect Recover"
+-						/* ACPI 6.3 */
++	[0]  = "Bus Check",
++	[1]  = "Device Check",
++	[2]  = "Device Wake",
++	[3]  = "Eject Request",
++	[4]  = "Device Check Light",
++	[5]  = "Frequency Mismatch",
++	[6]  = "Bus Mode Mismatch",
++	[7]  = "Power Fault",
++	[8]  = "Capabilities Check",
++	[9]  = "Device PLD Check",
++	[10] = "Reserved",
++	[11] = "System Locality Update",
++	[12] = "Reserved (was previously Shutdown Request)",  /* Reserved in ACPI 6.0 */
++	[13] = "System Resource Affinity Update",
++	[14] = "Heterogeneous Memory Attributes Update",      /* ACPI 6.2 */
++	[15] = "Error Disconnect Recover"                     /* ACPI 6.3 */
+ };
+ 
+ static const char *acpi_gbl_device_notify[5] = {
+@@ -521,26 +518,26 @@ const char *acpi_ut_get_notify_name(u32 notify_value, acpi_object_type type)
+  ******************************************************************************/
+ 
+ static const char *acpi_gbl_argument_type[20] = {
+-	/* 00 */ "Unknown ARGP",
+-	/* 01 */ "ByteData",
+-	/* 02 */ "ByteList",
+-	/* 03 */ "CharList",
+-	/* 04 */ "DataObject",
+-	/* 05 */ "DataObjectList",
+-	/* 06 */ "DWordData",
+-	/* 07 */ "FieldList",
+-	/* 08 */ "Name",
+-	/* 09 */ "NameString",
+-	/* 0A */ "ObjectList",
+-	/* 0B */ "PackageLength",
+-	/* 0C */ "SuperName",
+-	/* 0D */ "Target",
+-	/* 0E */ "TermArg",
+-	/* 0F */ "TermList",
+-	/* 10 */ "WordData",
+-	/* 11 */ "QWordData",
+-	/* 12 */ "SimpleName",
+-	/* 13 */ "NameOrRef"
++	[0x00] = "Unknown ARGP",
++	[0x01] = "ByteData",
++	[0x02] = "ByteList",
++	[0x03] = "CharList",
++	[0x04] = "DataObject",
++	[0x05] = "DataObjectList",
++	[0x06] = "DWordData",
++	[0x07] = "FieldList",
++	[0x08] = "Name",
++	[0x09] = "NameString",
++	[0x0A] = "ObjectList",
++	[0x0B] = "PackageLength",
++	[0x0C] = "SuperName",
++	[0x0D] = "Target",
++	[0x0E] = "TermArg",
++	[0x0F] = "TermList",
++	[0x10] = "WordData",
++	[0x11] = "QWordData",
++	[0x12] = "SimpleName",
++	[0x13] = "NameOrRef"
+ };
+ 
+ const char *acpi_ut_get_argument_type_name(u32 arg_type)
+-- 
 2.35.1
 
