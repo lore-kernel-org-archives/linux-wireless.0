@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3107FC4332F
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 00:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF2E6C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 00:32:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229667AbiCZAbN (ORCPT
+        id S229708AbiCZAeI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Mar 2022 20:31:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35994 "EHLO
+        Fri, 25 Mar 2022 20:34:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiCZAbM (ORCPT
+        with ESMTP id S229459AbiCZAeH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Mar 2022 20:31:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B2F3130C10;
-        Fri, 25 Mar 2022 17:29:37 -0700 (PDT)
+        Fri, 25 Mar 2022 20:34:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2A5821C068;
+        Fri, 25 Mar 2022 17:32:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C0C56B82A72;
-        Sat, 26 Mar 2022 00:29:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAB47C2BBE4;
-        Sat, 26 Mar 2022 00:29:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43BFD617F4;
+        Sat, 26 Mar 2022 00:32:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D718DC2BBE4;
+        Sat, 26 Mar 2022 00:32:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648254574;
-        bh=poGETAG+DQJ31NcrGPl7LcOyeM6AhqeGMqyfZs2gRLI=;
+        s=k20201202; t=1648254748;
+        bh=W5ABJmkgq2kfOth8hTGu20ms0KqbgyZnr4kOvfQYbiw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=epZOOWmcpDs0p9MOFj+cVMezAqejQAfLPEtWKpR0plyEvjeKH0kv7EHTIcKWwbTvy
-         bEMygfnBxIVJHkoaDhzo5Z+z1YFFa5hJVjcxerb3/f943HfDUAjbiw/65dvZrNPU7G
-         J5CMm9lDDJX8hF/wv9b7tQRQu+v0I/Yi0yytsJN862Gyg3501bbUo44a5YDP/ytRt+
-         EiSTq3kd7aaOxShfvfP5BuTWfXdZVAdyibXX07AoUvFfwhMKWpVz2PtNDSvP6+TbE8
-         1WaUkG41bs8RLlU2g3uSlVW4LTs/+y2LH3uLfLUfuXinUttHQ00rL+2DfDiVQt0Sv7
-         QD/fNp7kzVDng==
-Date:   Fri, 25 Mar 2022 19:38:43 -0500
+        b=F0y8LKzONRFCzxxREDehPswEzK0Lz1D+t2A67KRv8WDBwz0ydH0lQh+4TKmgWRs1c
+         A1gGihtCwmZ0Ztcix/7u6qz+GpbrYYVTVlpwIzMgKxDMWa2qFHdsPch3V/7gQ5+T4T
+         WB/FIqBeqT90YUz8qdBZsUhq2vCOmgEnmtIRI6/QW4IN6VbB/UH+dRRiAWhQlLf9Lz
+         TXKvf8VyOoc2ShHrjn1oEsR9P5gZq9lAu1v0NVwY58/Hbt/dVOEfJ9moxN9U+KSCr6
+         d3lSHi1RrBh1Hu007pZvlcjENdxm0PgsNGdOLLFqQdDlVjGYzAmD/z1uzz81qD6luB
+         db65bzOem1Ddg==
+Date:   Fri, 25 Mar 2022 19:41:37 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Luca Coelho <luciano.coelho@intel.com>,
@@ -42,22 +42,22 @@ Cc:     Luca Coelho <luciano.coelho@intel.com>,
         Jakub Kicinski <kuba@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] iwlwifi: fw: Replace zero-length arrays with
- flexible-array members
-Message-ID: <20220326003843.GA2602091@embeddedor>
-References: <20220216195015.GA904148@embeddedor>
- <202202161235.2FB20E6A5@keescook>
+Subject: Re: [PATCH][next] iwlwifi: mei: Replace zero-length array with
+ flexible-array member
+Message-ID: <20220326004137.GB2602091@embeddedor>
+References: <20220216195030.GA904170@embeddedor>
+ <202202161235.F3A134A9@keescook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <202202161235.2FB20E6A5@keescook>
+In-Reply-To: <202202161235.F3A134A9@keescook>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Feb 16, 2022 at 12:35:14PM -0800, Kees Cook wrote:
-> On Wed, Feb 16, 2022 at 01:50:15PM -0600, Gustavo A. R. Silva wrote:
+On Wed, Feb 16, 2022 at 12:35:22PM -0800, Kees Cook wrote:
+> On Wed, Feb 16, 2022 at 01:50:30PM -0600, Gustavo A. R. Silva wrote:
 > > There is a regular need in the kernel to provide a way to declare
 > > having a dynamically sized set of trailing elements in a structure.
 > > Kernel code should always use “flexible array members”[1] for these
