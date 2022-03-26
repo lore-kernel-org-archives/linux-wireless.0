@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0772C4321E
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 17:02:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C72B1C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Mar 2022 17:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233924AbiCZRDu (ORCPT
+        id S233984AbiCZRD4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Mar 2022 13:03:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49852 "EHLO
+        Sat, 26 Mar 2022 13:03:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233923AbiCZRDS (ORCPT
+        with ESMTP id S234096AbiCZRDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Mar 2022 13:03:18 -0400
-Received: from stuerz.xyz (stuerz.xyz [IPv6:2001:19f0:5:15da:5400:3ff:fecc:7379])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 305A716F07B;
-        Sat, 26 Mar 2022 10:01:24 -0700 (PDT)
+        Sat, 26 Mar 2022 13:03:41 -0400
+Received: from stuerz.xyz (unknown [45.77.206.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46A1E17289E;
+        Sat, 26 Mar 2022 10:01:36 -0700 (PDT)
 Received: by stuerz.xyz (Postfix, from userid 114)
-        id 7761FFBC19; Sat, 26 Mar 2022 17:01:22 +0000 (UTC)
+        id 89F01FBB90; Sat, 26 Mar 2022 17:01:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314083; bh=Atyp98CUeE2ls+rskgXqrYpiNVHIwFrsLn7qDkbs1Uk=;
+        t=1648314095; bh=OIgqNWNKM4FUx2aMq66C59LbU1toNuGdnuhts8rWjzE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=emwG8nalb+cKRb9rbSSMQUWpXih8LgYIA+oLYyPxg44CRUiEfKtmNngfXMyv7UPQO
-         ruUDGJ4RMfUnJ5R2cUfUoKVElH7YDMeVF8V+vienoYH8AjJhvBfm6OmqCxGxbP38Iq
-         vFCrvCxPz+mG5euXDJwYDf0etqWfnfKqwqKrTIMO4gCM3Mm6MTU6epmZUHgD80e0qp
-         PV4vsElXkb/6jUHVpzh9+Z+gdhROvdd09FYVd71UGN/8Wl+P3a9ocdNAf1Y3qQ2WbC
-         ycBnyl1uQxHF107aaHJcc2LASnsDdojAGotqxPBvlvmK3IKHevKi60FuawcSkIfK6W
-         EQ+ebWKwBO17g==
+        b=NGGF9R0nGgvoNNFVbJq7YUOhpFoUvd+UDHPvUqEnMYzLPg6wG2+tJNo4wtSym83rv
+         3e8aQn+XKbF4ttvz+4/KC3GeQGYXzEoJtc4y0BaafRf5EeDEg4ovOyVXZPS4FyKcRw
+         42c5RuqTLZhMmlfOxY2yReWU3IX8rYIr5t1BuqHffgiBNdXmZ+Q61YcTqgbkXLqV3L
+         H3bt49ICqE4L7YN0S0TZFVtOO1hluDvo1e7tniOsD047S/6Mh4K5ujrrtQTh5JZM4X
+         MHcbHwfrRCu8oq7ZWcxEz7lDMAtFI8pfUKvg9henVTNaE1F2VXlf1qeW4DJ16fL0+s
+         K2d8xFT7UTT5A==
 Received: from benni-fedora.. (unknown [IPv6:2a02:8109:a100:1a48:ff0:ef2f:d4da:17d8])
-        by stuerz.xyz (Postfix) with ESMTPSA id 4CC2BFBB90;
-        Sat, 26 Mar 2022 17:01:13 +0000 (UTC)
+        by stuerz.xyz (Postfix) with ESMTPSA id 88BC8FBB90;
+        Sat, 26 Mar 2022 17:01:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314079; bh=Atyp98CUeE2ls+rskgXqrYpiNVHIwFrsLn7qDkbs1Uk=;
+        t=1648314092; bh=OIgqNWNKM4FUx2aMq66C59LbU1toNuGdnuhts8rWjzE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qP7TgvW3oJ/sA3Yix4CPfWDhnnvNFSatDRinq+EiKUXUQ0FdQI4CUN9Ml1XU1whAq
-         vjdvv9SLrRySrhuWfF7F3KT2Q0Q/afP2v/4p8uBka44hkcxbWaTdYLE/dfa6u+aVZs
-         Hu5FjvNMk5YoWc87f4DSc4bGRxf3NY8w37161qCITHdWuasXmmoH++J1nnLZ8uMitr
-         F2UHAiWPQaYkH9C51bVT6N2PKeePCyXwAGryWdjCX70SGZRwLFc7L5r/epKTjpJVF3
-         Zxaxa7nN8V9aWqLDpaEQ1RakPYyfGoCHqw6V3gcaaKjBWRIkdx8c/QesH3NlUg1hGk
-         gD7/Pz6t0ggBg==
+        b=q5q75UwSTKYtxZSPnmZk34FK8PeXDHcTNRBj5CzYGeK0w2pwNaZU+fi90Oz/WKkid
+         4WEqyQWecLkpaeHn3vE+T8T9IhcPNKppIdLidXwWPOkvmIRMdMQbgLWo7vumkiu7Ys
+         yL3ZKk/BMn4WTB83Nz4BUSd7BvbvSh4mfApi64G8Ns4vDjEHHeCqwRPzckTwSkHXvN
+         1U+V2EqlTgJP/JpZgtNYZ8hAXXSUwrkojdQjapu3jM+5NwQBSrq5YhphrzOyacM/cb
+         qKXKHKGluyZwgMCRmQwUm/8nWGTHWd6eeIhFKVdr6V3ZsPI8N++ZPoBFNYgkN7OQEI
+         2haFTg5IDR/XQ==
 From:   =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
 To:     andrew@lunn.ch
 Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
@@ -67,9 +67,9 @@ Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
         wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
-Subject: [PATCH 18/22] smsc: Replace comments with C99 initializers
-Date:   Sat, 26 Mar 2022 17:59:05 +0100
-Message-Id: <20220326165909.506926-18-benni@stuerz.xyz>
+Subject: [PATCH 20/22] wireless: Replace comments with C99 initializers
+Date:   Sat, 26 Mar 2022 17:59:07 +0100
+Message-Id: <20220326165909.506926-20-benni@stuerz.xyz>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220326165909.506926-1-benni@stuerz.xyz>
 References: <20220326165909.506926-1-benni@stuerz.xyz>
@@ -85,65 +85,51 @@ initializers because the kernel supports them now.
 
 Signed-off-by: Benjamin Stürz <benni@stuerz.xyz>
 ---
- drivers/net/ethernet/smsc/smc9194.h | 15 ++++++---------
- drivers/net/ethernet/smsc/smc91x.h  | 18 ++++++++----------
- 2 files changed, 14 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ray_cs.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/ethernet/smsc/smc9194.h b/drivers/net/ethernet/smsc/smc9194.h
-index cf69d0a5a1cb..e1c780afb9bb 100644
---- a/drivers/net/ethernet/smsc/smc9194.h
-+++ b/drivers/net/ethernet/smsc/smc9194.h
-@@ -163,15 +163,12 @@ typedef unsigned long int 		dword;
- #define CHIP_91100	7
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 87e98ab068ed..dd11018b956c 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -2529,20 +2529,23 @@ static void clear_interrupt(ray_dev_t *local)
+ #define MAXDATA (PAGE_SIZE - 80)
  
- static const char * chip_ids[ 15 ] =  {
--	NULL, NULL, NULL,
--	/* 3 */ "SMC91C90/91C92",
--	/* 4 */ "SMC91C94",
--	/* 5 */ "SMC91C95",
--	NULL,
--	/* 7 */ "SMC91C100",
--	/* 8 */ "SMC91C100FD",
--	NULL, NULL, NULL,
--	NULL, NULL, NULL};
-+	[3] = "SMC91C90/91C92",
-+	[4] = "SMC91C94",
-+	[5] = "SMC91C95",
-+	[7] = "SMC91C100",
-+	[8] = "SMC91C100FD",
-+};
+ static const char *card_status[] = {
+-	"Card inserted - uninitialized",	/* 0 */
+-	"Card not downloaded",			/* 1 */
+-	"Waiting for download parameters",	/* 2 */
+-	"Card doing acquisition",		/* 3 */
+-	"Acquisition complete",			/* 4 */
+-	"Authentication complete",		/* 5 */
+-	"Association complete",			/* 6 */
+-	"???", "???", "???", "???",		/* 7 8 9 10 undefined */
+-	"Card init error",			/* 11 */
+-	"Download parameters error",		/* 12 */
+-	"???",					/* 13 */
+-	"Acquisition failed",			/* 14 */
+-	"Authentication refused",		/* 15 */
+-	"Association failed"			/* 16 */
++	[0]  = "Card inserted - uninitialized",
++	[1]  = "Card not downloaded",
++	[2]  = "Waiting for download parameters",
++	[3]  = "Card doing acquisition",
++	[4]  = "Acquisition complete",
++	[5]  = "Authentication complete",
++	[6]  = "Association complete",
++	[7]  = "???",
++	[8]  = "???",
++	[9]  = "???",
++	[10] = "???",
++	[11] = "Card init error",
++	[12] = "Download parameters error",
++	[13] = "???",
++	[14] = "Acquisition failed",
++	[15] = "Authentication refused",
++	[16] = "Association failed"
+ };
  
- /*
-  . Transmit status bits
-diff --git a/drivers/net/ethernet/smsc/smc91x.h b/drivers/net/ethernet/smsc/smc91x.h
-index 387539a8094b..122cdc849507 100644
---- a/drivers/net/ethernet/smsc/smc91x.h
-+++ b/drivers/net/ethernet/smsc/smc91x.h
-@@ -731,16 +731,14 @@ smc_pxa_dma_insw(void __iomem *ioaddr, struct smc_local *lp, int reg, int dma,
- #define CHIP_91111FD	9
- 
- static const char * chip_ids[ 16 ] =  {
--	NULL, NULL, NULL,
--	/* 3 */ "SMC91C90/91C92",
--	/* 4 */ "SMC91C94",
--	/* 5 */ "SMC91C95",
--	/* 6 */ "SMC91C96",
--	/* 7 */ "SMC91C100",
--	/* 8 */ "SMC91C100FD",
--	/* 9 */ "SMC91C11xFD",
--	NULL, NULL, NULL,
--	NULL, NULL, NULL};
-+	[3] = "SMC91C90/91C92",
-+	[4] = "SMC91C94",
-+	[5] = "SMC91C95",
-+	[6] = "SMC91C96",
-+	[7] = "SMC91C100",
-+	[8] = "SMC91C100FD",
-+	[9] = "SMC91C11xFD",
-+};
- 
- 
- /*
+ static const char *nettype[] = { "Adhoc", "Infra " };
 -- 
 2.35.1
 
