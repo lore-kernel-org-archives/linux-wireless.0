@@ -2,153 +2,254 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFB7C433EF
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Mar 2022 17:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707D4C433EF
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Mar 2022 19:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236140AbiC0RPo (ORCPT
+        id S236512AbiC0TZo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Mar 2022 13:15:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54308 "EHLO
+        Sun, 27 Mar 2022 15:25:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236122AbiC0RPm (ORCPT
+        with ESMTP id S231214AbiC0TZj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Mar 2022 13:15:42 -0400
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DACF11C2D
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 10:14:03 -0700 (PDT)
-Received: by mail-ej1-x62c.google.com with SMTP id pv16so24325383ejb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 10:14:03 -0700 (PDT)
+        Sun, 27 Mar 2022 15:25:39 -0400
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8740AAE57
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 12:23:56 -0700 (PDT)
+Received: by mail-lj1-x231.google.com with SMTP id v12so3837814ljd.3
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 12:23:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=+O4s6ak/A5yinAv1VSo+xOscSi9+hU2/upvm8fRSKuM=;
-        b=JSAYRtdM5YAkvcZnvrRyg7U/vqwjYG5lGK6c+tkEc3eL2fPCbrkPQ/TXdnf9ec3Tan
-         ThPstqd4cZLmx9vgrgqH90IkWO8P7PiaJzpx/Ys5PRot23YqHx7c24YIulpHS7Fdbup6
-         rB6JdDKIpgP2IpMZJkB5sZ9VcSCx1XbPPW61aeWlId8RDlZy//0ztLmrEd1N3XaTY3Rx
-         tHgw0s47LXGzBD2mnpG1rNFmnRuM/bM4Y4u5cH436wbOFiHQm7aefVEhVbxhXTt28SBz
-         smXUcDmL5V0MPK8uOLmJNFO2mADDHuuuaS4OFLlFT3QZjf5dEVAJM48wRVlRH4hqmeBQ
-         Wm4g==
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=81R8ObTvU5bcOjgPkhjrVdYMQgLpHwwmsUh10DuWTXw=;
+        b=QVswRSXvuEFhZlnuaBAnMB1TOMg78uyn8mRLwSOZtWi/86mVxTdWeJmg8H09RYWcp4
+         O6lvIOKP0C2OxXUCyV3ffNy61gxSdcLR6Kl9jGUx2xgYt16l8oVTj7BEMInCe8aUUdRF
+         U28WrmitywInVLFpJqv3NSZNOfcB3kKShK/cw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=+O4s6ak/A5yinAv1VSo+xOscSi9+hU2/upvm8fRSKuM=;
-        b=SkxVh51Nb8kNh9LtZ8/kyCFglg7Ilty0hD6mVUlJQ/vmdxf9DvVxk8kOpUTtv9PgDk
-         Nsd0cX87bWFBISjTcitsEc9DsNxVndbmu5AlTFgyOORMS3BtzqIb19pDnK7vMPdvmY1T
-         Ti8kTbSI7bzJNhrCwENdfFGT/zUuPYgoEADtBblvJATIIs36/fjTJAEck1Xrt/8yAwDo
-         bQf3kmkBvfKvHkzd9IUKoaUFdX+X0+ikFQTBJRpe0XuLG/zgqteb3aUUv1KZmhuYD5Xe
-         aR/kjMxeI7Kwlsz2ZXK/aEvgBh9CXurHZ+VctMzjpInjtOoz0c6gSWKCzeeuSkXvzRdd
-         prAA==
-X-Gm-Message-State: AOAM532nq1iEle4znI2g6an0q+ed7NJ/w2zPOAKcZv9OUIPhAJgyOhXg
-        RVWBOf3klGG7ILqua8V4+5U=
-X-Google-Smtp-Source: ABdhPJz1yaBSXEbXGTItoOO5HcREi+w4C4NYq6bkDOjQ5jxqQAa9DHqXULxKBntzwXKnUUUEGMa9Yw==
-X-Received: by 2002:a17:906:d555:b0:6db:148e:5cc with SMTP id cr21-20020a170906d55500b006db148e05ccmr22393408ejc.63.1648401242061;
-        Sun, 27 Mar 2022 10:14:02 -0700 (PDT)
-Received: from localhost.localdomain (81-233-89-221-no75.tbcn.telia.com. [81.233.89.221])
-        by smtp.gmail.com with ESMTPSA id o5-20020a170906974500b006dfc781498dsm4866769ejy.37.2022.03.27.10.14.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Mar 2022 10:14:01 -0700 (PDT)
-From:   Erik Stromdahl <erik.stromdahl@gmail.com>
-To:     kvalo@kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, davem@davemloft.net, kuba@kernel.org
-Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 2/2] ath10k: enable napi on RX path for usb
-Date:   Sun, 27 Mar 2022 19:13:40 +0200
-Message-Id: <20220327171340.7893-2-erik.stromdahl@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220327171340.7893-1-erik.stromdahl@gmail.com>
-References: <20220327171340.7893-1-erik.stromdahl@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=81R8ObTvU5bcOjgPkhjrVdYMQgLpHwwmsUh10DuWTXw=;
+        b=7w3z21mk1ZlxYyzRZ7xQxoywqf4+7ZLkz/NGWWqEX2gPZ73MN9Vjd0E2M8RG2RPBBU
+         6VhPaQgf5YxxZ9xgKp3NVvs3XNaUE4axWBTLYzHI+TrnObFQ6UILarmtTgSw8i0IrIlz
+         swKtlxImzZJ59hj3VzfKfCDnargjsGOyEC9YLPwwnDzfFVUJwhi11YLojPtod4Lqed7u
+         2q5/vxXYkn507c5XiqRNv8ezECVLgKml16CuJc3rxbBirBVq+vzBtuTySCN8akjndfvl
+         dY3pgxjuR698YSuO02HTRUhznfxyjGGfOeTYqBtvRwBE4oORJOcokFgWvbZS6xdlCogj
+         N1sA==
+X-Gm-Message-State: AOAM533L0QfV6c2ZUiYwAGMV/xvgG0Nf9hkmtlHqFRXB9TybmdvBwcV8
+        fgQr3QYjG13ORo9Z0M2dc10VcgkQRuleDBiroB0=
+X-Google-Smtp-Source: ABdhPJwn2sP1GbCw7BKW6nGXuy+pnWZHu6b376mWRaVjKwfbmHxB76uqfbdSFdH+gIV1ugeW6PD0Xw==
+X-Received: by 2002:a2e:818f:0:b0:24a:7c17:7226 with SMTP id e15-20020a2e818f000000b0024a7c177226mr9675644ljg.472.1648409034484;
+        Sun, 27 Mar 2022 12:23:54 -0700 (PDT)
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com. [209.85.208.171])
+        by smtp.gmail.com with ESMTPSA id j11-20020a056512108b00b0044a23c1e679sm1437521lfg.18.2022.03.27.12.23.52
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 27 Mar 2022 12:23:52 -0700 (PDT)
+Received: by mail-lj1-f171.google.com with SMTP id 17so16574948lji.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 12:23:52 -0700 (PDT)
+X-Received: by 2002:a05:651c:1213:b0:247:e2d9:cdda with SMTP id
+ i19-20020a05651c121300b00247e2d9cddamr17499555lja.443.1648409031649; Sun, 27
+ Mar 2022 12:23:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1812355.tdWV9SEqCh@natalenko.name> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+ <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+ <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
+ <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+ <20220324163132.GB26098@lst.de> <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com>
+ <871qyr9t4e.fsf@toke.dk> <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
+ <20220327054848.1a545b12.pasic@linux.ibm.com> <CAHk-=whUJ=tMEgP3KiWwk0pzmHn+1QORUu50syE+zOGk4UnFog@mail.gmail.com>
+ <CAHk-=wgUx5CVF_1aEkhhEiRGXHgKzUdKiyctBKcHAxkxPpbiaw@mail.gmail.com> <0745b44456d44d1e9fc364e5a3780d9a@AcuMS.aculab.com>
+In-Reply-To: <0745b44456d44d1e9fc364e5a3780d9a@AcuMS.aculab.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun, 27 Mar 2022 12:23:34 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wgLyqNJx=bb8=o0Nk5U8gMnf0-=qx53ShLEb3V=Yrt8fw@mail.gmail.com>
+Message-ID: <CAHk-=wgLyqNJx=bb8=o0Nk5U8gMnf0-=qx53ShLEb3V=Yrt8fw@mail.gmail.com>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+To:     David Laight <David.Laight@aculab.com>
+Cc:     Halil Pasic <pasic@linux.ibm.com>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Maxime Bizon <mbizon@freebox.fr>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-commit cfee8793a74dc3afabb08fc9 ("ath10k: enable napi on RX path for
-sdio") introduced napi for SDIO and updated the htt interface for high
-latency devices.
+On Sun, Mar 27, 2022 at 8:24 AM David Laight <David.Laight@aculab.com> wrote:
+>
+> Aren't bounce buffers just a more extreme case on non-coherent
+> memory accesses?
 
-These changes breaks USB, so USB code must be updated to use napi as
-well in order to have a working RX path.
+No.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/usb.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+In fact, this whoe change came about exactly because bounce buffers
+are different.
 
-diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
-index 7ed2022ac3c2..10df6ca303a1 100644
---- a/drivers/net/wireless/ath/ath10k/usb.c
-+++ b/drivers/net/wireless/ath/ath10k/usb.c
-@@ -345,6 +345,12 @@ static void ath10k_usb_rx_complete(struct ath10k *ar, struct sk_buff *skb)
- 	ep->ep_ops.ep_rx_complete(ar, skb);
- 	/* The RX complete handler now owns the skb... */
- 
-+	if (test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags)) {
-+		local_bh_disable();
-+		napi_schedule(&ar->napi);
-+		local_bh_enable();
-+	}
-+
- 	return;
- 
- out_free_skb:
-@@ -387,6 +393,7 @@ static int ath10k_usb_hif_start(struct ath10k *ar)
- 	int i;
- 	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
- 
-+	ath10k_core_napi_enable(ar);
- 	ath10k_usb_start_recv_pipes(ar);
- 
- 	/* set the TX resource avail threshold for each TX pipe */
-@@ -462,6 +469,7 @@ static int ath10k_usb_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
- static void ath10k_usb_hif_stop(struct ath10k *ar)
- {
- 	ath10k_usb_flush_all(ar);
-+	ath10k_core_napi_sync_disable(ar);
- }
- 
- static u16 ath10k_usb_hif_get_free_queue_number(struct ath10k *ar, u8 pipe_id)
-@@ -966,6 +974,20 @@ static int ath10k_usb_create(struct ath10k *ar,
- 	return ret;
- }
- 
-+static int ath10k_usb_napi_poll(struct napi_struct *ctx, int budget)
-+{
-+	struct ath10k *ar = container_of(ctx, struct ath10k, napi);
-+	int done;
-+
-+	done = ath10k_htt_rx_hl_indication(ar, budget);
-+	ath10k_dbg(ar, ATH10K_DBG_USB, "napi poll: done: %d, budget:%d\n", done, budget);
-+
-+	if (done < budget)
-+		napi_complete_done(ctx, done);
-+
-+	return done;
-+}
-+
- /* ath10k usb driver registered functions */
- static int ath10k_usb_probe(struct usb_interface *interface,
- 			    const struct usb_device_id *id)
-@@ -992,6 +1014,9 @@ static int ath10k_usb_probe(struct usb_interface *interface,
- 		return -ENOMEM;
- 	}
- 
-+	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_usb_napi_poll,
-+		       ATH10K_NAPI_BUDGET);
-+
- 	usb_get_dev(dev);
- 	vendor_id = le16_to_cpu(dev->descriptor.idVendor);
- 	product_id = le16_to_cpu(dev->descriptor.idProduct);
-@@ -1045,6 +1070,7 @@ static void ath10k_usb_remove(struct usb_interface *interface)
- 		return;
- 
- 	ath10k_core_unregister(ar_usb->ar);
-+	netif_napi_del(&ar_usb->ar->napi);
- 	ath10k_usb_destroy(ar_usb->ar);
- 	usb_put_dev(interface_to_usbdev(interface));
- 	ath10k_core_destroy(ar_usb->ar);
--- 
-2.35.1
+The difference is that bounce buffers have that (wait for it) bounce
+buffer, which can have stale contents.
 
+> They just need explicit memory copies rather than just cache
+> writeback and invalidate operations.
+
+That's the thing - the memory copies introduce entirely new issues.
+
+I really think that instead of making up abstract rules ("ownership"
+or "bounce buffers are just extreme cases of non-coherency") we should
+make the rules very much practical and down to earth, and write out
+exactly what they *do*.
+
+The whole "sync DMA" is odd and abstract enough as a concept on its
+own, we shouldn't then make the rules for it odd and abstract. We
+should make them very very practical.
+
+So I will propose that we really make it very much about practical
+concerns, and we document things as
+
+ (a) the "sync" operation has by definition a "whose _future_ access
+do we sync for" notion.
+
+     So "dma_sync_single_for_cpu()" says that the future accesses to
+this dma area is for the CPU.
+
+     Note how it does *NOT* say that the "CPU owns the are". That's
+bullsh*t, and we now know it's BS.
+
+ (b) but the sync operation also has a "who wrote the data we're syncing"
+
+     Note that this is *not* "who accessed or owned it last", because
+that's nonsensical: if we're syncing for the CPU, then the only reason
+to do so is because we expect that the last access was by the device,
+so specifying that separately would just be redundant and stupid.
+
+     But specifying who *wrote* to the area is meaningful and matters.
+It matters for the non-coherent cache case (because of writeback
+issues), but it also matters for the bounce buffer case (becasue it
+determines which way we should copy).
+
+Note how this makes sense: a "sync" operation is clearly about taking
+some past state, and making it palatable for a future use. The past
+state is pretty much defined by who wrote the data, and then we can
+use that and the "the next thing to access it" to determine what we
+need to do about the sync.
+
+It is *NOT* about "ownership".
+
+So let's go through the cases, and I'm going to ignore the "CPU caches
+are coherent with device DMA" case because that's always going to be a
+no-op wrt data movement (but it will still generally need a memory
+barrier, which I will mention here and then ignore going forward).
+
+Syncing for *CPU* accesses (ie dma_sync_single_for_cpu()) has four
+choices I can see:
+
+ - nobody wrote the data at all (aka DMA_NONE).
+
+   This is nonsensical and should warn. If nobody wrote to it, why
+would the CPU ever validly access it?
+
+   Maybe you should have written "memset(buffer, 0, size)" instead?
+
+ - the CPU wrote the data in the first place (aka DMA_TO_DEVICE)
+
+   This is a no-op (possibly a memory barrier), because even stale CPU
+caches are fine, and even if it was in a bounce buffer, the original
+CPU-side data is fine.
+
+ - the device wrote the data (aka DMA_FROM_DEVICE)
+
+   This is just the regular case of a device having written something,
+and the CPU wants to see it.
+
+   It obviously needs real work, but it's simple and straightforward.
+
+   For non-coherent caches, it needs a cache invalidate. For a bounce
+buffer, it needs a copy from the bounce buffer to the "real" buffer.
+
+ - it's not clear who write the data (aka DMA_BIDIRECTIONAL)
+
+   This is not really doable for a bounce buffer - we just don't know
+which buffer contents are valid.
+
+   I think it's very very questionable for non-coherent caches too,
+but "writeback and invalidate" probably can't hurt.
+
+   So probably warn about it, and do whatever we used to do historically.
+
+Syncing for device accesses (ie dma_sync_single_for_device()) also has
+the same four choices I can see, but obviously does different things:
+
+ - nobody wrote the data at all (aka DMA_NONE)
+
+   This sounds as nonsensical as the CPU case, but maybe isn't.
+
+   We may not have any previous explicit writes, but we *do* have that
+"insecure and possibly stale buffer contents" bounce buffer thing on
+the device side.
+
+   So with a bounce buffer, it's actually somewhat sane to say
+"initialize the bounce buffer to a known state".
+
+   Because bounce buffers *are* special. Unlike even the "noncoherent
+caches" issue, they have that entirely *other* hidden state in the
+form of the bounce buffer itself.
+
+   Discuss.
+
+ - the CPU wrote the data in the first place (aka DMA_TO_DEVICE).
+
+   This is the regular and common case of "we have data on the CPU
+side that is written to the device".
+
+   Again, needs work, but is simple and straightforward.
+
+   For non-coherent caches, we need a writeback on the CPU. For a
+bounce buffer, we need to copy from the regular buffer to the bounce
+buffer.
+
+ - the device wrote the data in the first place (aka DMA_FROM_DEVICE)
+
+   This is the case that we hit on ath9k. It's *not* obvious, but when
+we write this out this way, I really think the semantics are pretty
+clear.
+
+   For non-coherent caches, we may need an "invalidate". For a bounce
+buffer, it's a no-op (because the bounce buffer already contains the
+data)
+
+ - it's not clear who write the data (aka DMA_BIDIRECTIONAL)
+
+   This is again not really doable for a bounce buffer. We don't know
+which buffer contains the right data, we should warn about it and do
+whatever we used to do historically.
+
+   Again, it's very questionable for non-coherent caches too, but
+"writeback and invalidate" probably at least can't hurt.
+
+So hey, that's my thinking. The whole "ownership"  model is, I think,
+obviously untenable.
+
+But just going through and listing the different cases and making them
+explicit I think explains exactly what the different situations are,
+and that then makes it fairly clear what the different combinations
+should do.
+
+No?
+
+           Linus
