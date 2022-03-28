@@ -2,101 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00628C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 06:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C09EAC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 06:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238513AbiC1G1Y (ORCPT
+        id S238500AbiC1GjN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Mar 2022 02:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60552 "EHLO
+        Mon, 28 Mar 2022 02:39:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238511AbiC1G1G (ORCPT
+        with ESMTP id S238377AbiC1GjM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Mar 2022 02:27:06 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77FDA527C2
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 23:25:04 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id f3so10442454pfe.2
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2022 23:25:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8HCUS1XD9Y9CKN2kQWAX+DXJBDXsDCawO6AGnd0cclU=;
-        b=Hqytv7IFwuXR+z/zuUbNN+kAIRbGZDbh0V9jHtaIQcTHDYw3FO+Nkde4JNUepwyAP/
-         IzmzaWAZSS9ftQB6FmKWSEUw/DTBRwRkmLMdvt3J3v0VrUEag9CCevDPJCZCT2szkjy9
-         MqhC19YjuIPAzQJRE71xwXyB9ScCDB1TjGumgy7+RDN9SveyN6EVnDv7OujxizhfklSc
-         c28lpDyUJ7e11gchDYr7ffJ3LOyvk8+2l+U2WaAmknRrYgqLln7tQ8d+tBVGnEXmrsXP
-         1NDglVUbVQ3JofnnlxHutYHwpwNv2EN7VXW3yIDvRmTSjLQyjjQfGmGYPoeEv1i3ROZp
-         Sglg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8HCUS1XD9Y9CKN2kQWAX+DXJBDXsDCawO6AGnd0cclU=;
-        b=CciHv9Y8wwtW/0ugZ5YGuL2EphslNilX9CUA2YuztBCyb37O9kvkay6hGviUNHJvmx
-         9Av7M008C4u7iHiWSggaZtcoEZhCPjSRuSnX+Rq3EWOu0SiCKflXMGGnP24L0ApZHrP9
-         RJbC1TUcT18Y6ZxdO4E7bgoa1NgUBo74Nqmb8r/KPzjHOLa41KTGg41DJ+6vc0X2IJ2M
-         zBGTTQr6WE/6So6BL9KO9s7oiFv4VhoN/zwuV+uTL98OxbqC5e3S75qTY/FEzDxgbcyQ
-         met28XsKLEy1PuuLyepOlBqYovqDUjL40Xj8Xe8uOl/yh9qutxxNiD1MTcjhjpL3B53Z
-         Hdng==
-X-Gm-Message-State: AOAM532WAkwnBcwMbRmYNbobS7+xLXm6s4J7vsnYk7m21nrioIX8ktLw
-        Qyl8kXJptfK2J4yqqxxJ5TM=
-X-Google-Smtp-Source: ABdhPJw71bqFIOQ2NPYdZRkzX/UDeuxPuBir5InwH2Ba6O0arOZWp4C5VVuzhCQrJI/Fi8uW60oW7w==
-X-Received: by 2002:aa7:82d9:0:b0:4fa:2c7f:41e with SMTP id f25-20020aa782d9000000b004fa2c7f041emr22175770pfn.1.1648448703868;
-        Sun, 27 Mar 2022 23:25:03 -0700 (PDT)
-Received: from localhost.localdomain (2403-5806-8049--9c5.ip6.aussiebb.net. [2403:5806:8049::9c5])
-        by smtp.gmail.com with ESMTPSA id h13-20020a056a00170d00b004fb1450229bsm10806396pfc.16.2022.03.27.23.25.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Mar 2022 23:25:03 -0700 (PDT)
-From:   Richard Huynh <voxlympha@gmail.com>
-To:     sforshee@kernel.org
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Richard Huynh <voxlympha@gmail.com>
-Subject: [PATCH] wireless-regdb: Update regulatory rules for Australia (AU)
-Date:   Mon, 28 Mar 2022 17:22:51 +1100
-Message-Id: <20220328062250.15903-1-voxlympha@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        Mon, 28 Mar 2022 02:39:12 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 427E348E7F;
+        Sun, 27 Mar 2022 23:37:28 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6558068B05; Mon, 28 Mar 2022 08:37:23 +0200 (CEST)
+Date:   Mon, 28 Mar 2022 08:37:23 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Christoph Hellwig <hch@lst.de>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+Message-ID: <20220328063723.GA29405@lst.de>
+References: <1812355.tdWV9SEqCh@natalenko.name> <CAHk-=wiwz+Z2MaP44h086jeniG-OpK3c=FywLsCwXV7Crvadrg@mail.gmail.com> <27b5a287-7a33-9a8b-ad6d-04746735fb0c@arm.com> <CAHk-=wip7TCD_+2STTepuEZvGMg6wcz+o=kyFUvHjuKziTMixw@mail.gmail.com> <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com> <20220324190216.0efa067f.pasic@linux.ibm.com> <20220325163204.GB16426@lst.de> <87y20x7vaz.fsf@toke.dk> <e077b229-c92b-c9a6-3581-61329c4b4a4b@arm.com> <CAHk-=wgKF5GfLXyVGDQDifh0MpMccDdmBvJBG3dt2+idCa5DzQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wgKF5GfLXyVGDQDifh0MpMccDdmBvJBG3dt2+idCa5DzQ@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Changes allowing lower portion of WiFi 6E spectrum. (5925-6425)
+On Fri, Mar 25, 2022 at 11:46:09AM -0700, Linus Torvalds wrote:
+> I think my list of three different sync cases (not just two! It's not
+> just about whether to sync for the CPU or the device, it's also about
+> what direction the data itself is taking) is correct.
+> 
+> But maybe I'm wrong.
 
-Amendment: https://www.legislation.gov.au/Details/F2022L00249
-Full text: https://www.legislation.gov.au/Details/F2022C00281
+At the high level you are correct.  It is all about which direction
+the data is taking.  That is the direction argument that all the
+map/unmap/sync call take.  The sync calls then just toggle the ownership.
+You seem to hate that ownership concept, but I don't see how things
+could work without that ownership concept as we're going to be in
+trouble without having that.  And yes, a peek operation could work in
+some cases, but it would have to be at the cache line granularity.
 
-Allows for both 250mW EIRP indoors or 25mW outdoors.
-However, only the former limit is defined in this commit.
+arch/arc/mm/dma.c has a really good comment how these transfers relate
+to actual cache operations btw>
 
-Signed-off-by: Richard Huynh <voxlympha@gmail.com>
----
- db.txt | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index e887c73..15de29f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -121,7 +121,7 @@ country AT: DFS-ETSI
- 	(57000 - 66000 @ 2160), (40)
- 
- # Source:
--# https://www.legislation.gov.au/Details/F2016C00432
-+# https://www.legislation.gov.au/Details/F2022C00281
- # Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B.
- # The EIRP for DFS bands can be increased by 3dB if TPC is implemented.
- # In order to allow 80MHz operation between 5650-5730MHz the upper boundary
-@@ -133,6 +133,7 @@ country AU: DFS-ETSI
- 	(5470 - 5600 @ 80), (27), DFS
- 	(5650 - 5730 @ 80), (27), DFS
- 	(5730 - 5850 @ 80), (36)
-+	(5925 - 6425 @ 160), (24), NO-OUTDOOR, AUTO-BW
- 	(57000 - 66000 @ 2160), (43), NO-OUTDOOR
- 
- country AW: DFS-ETSI
--- 
-2.35.1
-
+ *
+ *          |   map          ==  for_device     |   unmap     ==  for_cpu
+ *          |----------------------------------------------------------------
+ * TO_DEV   |   writeback        writeback      |   none          none
+ * FROM_DEV |   invalidate       invalidate     |   invalidate*	  invalidate*
+ * BIDIR    |   writeback+inv    writeback+inv  |   invalidate    invalidate
+ *
+ *     [*] needed for CPU speculative prefetches
