@@ -2,125 +2,485 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B8DC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 09:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15904C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 09:49:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239954AbiC1Jur (ORCPT
+        id S239965AbiC1Juu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Mar 2022 05:50:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47240 "EHLO
+        Mon, 28 Mar 2022 05:50:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239941AbiC1Jup (ORCPT
+        with ESMTP id S239956AbiC1Jur (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Mar 2022 05:50:45 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0F5F41F9E;
+        Mon, 28 Mar 2022 05:50:47 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A49AE41F95;
         Mon, 28 Mar 2022 02:49:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=/93dChLt+Za1uKCUhSTu2aRMCha+vAJZKphFzk7McsE=;
-        t=1648460942; x=1649670542; b=GrQqsPGmXslqKPkkMv5L9TKn0aHOqHUDd7Mwgbobfr+0/wj
-        ZfRjwz5YxIiiphH2lJt0/j4nocADL6fH/wGwU0+eI/w/2NOg6NhhOGFUtGK+kLkkJ2jVdMxCuTmFS
-        J3wqwMkDf3QphTt5Jx5M/CJzEsRRhwX2YRo4mRBNobtPwgt/VyA/7JtAhpxcAUyiFGkeUz7b9ZaAG
-        DxIUHDdw/HVcbQ8Xjd8AyY2Ry+4ecO6/1wxFkPV8y2e24sPYClwRmqXlOOdyDtXQc8RzEzsZNUb7t
-        KGzPMRop5JNPlDKyDrX4Lh3CslI/XWA8uWx9DKPodItgWYXUmO+/e8lHJgyLgxxA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1nYlzJ-001WuR-EZ;
-        Mon, 28 Mar 2022 11:48:37 +0200
-Message-ID: <f94c4fc26251262de0ecab003c74833617c1b305.camel@sipsolutions.net>
-Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
- ath9k-based AP
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Halil Pasic <pasic@linux.ibm.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Maxime Bizon <mbizon@freebox.fr>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Oleksandr Natalenko <oleksandr@natalenko.name>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Olha Cherevyk <olha.cherevyk@gmail.com>,
-        iommu <iommu@lists.linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable <stable@vger.kernel.org>
-Date:   Mon, 28 Mar 2022 11:48:36 +0200
-In-Reply-To: <20220327051502.63fde20a.pasic@linux.ibm.com>
-References: <1812355.tdWV9SEqCh@natalenko.name>
-         <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
-         <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
-         <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
-         <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
-         <20220324163132.GB26098@lst.de>
-         <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com> <871qyr9t4e.fsf@toke.dk>
-         <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
-         <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
-         <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com>
-         <298f4f9ccad7c3308d3a1fd8b4b4740571305204.camel@sipsolutions.net>
-         <CAHk-=whXAan2ExANMryPSFaBWeyzikPi+fPUseMoVhQAxR7cEA@mail.gmail.com>
-         <e42e4c8bf35b62c671ec20ec6c21a43216e7daa6.camel@sipsolutions.net>
-         <20220327051502.63fde20a.pasic@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648460942; x=1679996942;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Nmq+8IycA3kQh1ekuwiycLYluelXOYEsGGGUmPpjIuQ=;
+  b=XVg9ZnrWABZ6NpLhsVZJV91i2bIwdoU2TQkJc/5xWvq9kCbCsdaghVEh
+   eXrabAexpPFDfAHyruGzSKpaTqzEJbMCqZTPKpHPGxZBmH8p8alTA+Dmr
+   0mfCjBqL0VGosqZp2Nh71LL5bPMk06ciFOkQiTI6sqPTe65RqNDCvXCeq
+   M=;
+Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
+  by alexa-out.qualcomm.com with ESMTP; 28 Mar 2022 02:49:02 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2022 02:49:02 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 28 Mar 2022 02:49:01 -0700
+Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 28 Mar 2022 02:48:59 -0700
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh@kernel.org>, Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Subject: [PATCH v3 01/12] dt: bindings: net: add bindings of WCN6750 for ath11k
+Date:   Mon, 28 Mar 2022 15:18:27 +0530
+Message-ID: <20220328094838.14093-2-quic_mpubbise@quicinc.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220328094838.14093-1-quic_mpubbise@quicinc.com>
+References: <20220328094838.14093-1-quic_mpubbise@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 2022-03-27 at 05:15 +0200, Halil Pasic wrote:
+WCN6750 is the WLAN chip on Qualcomm Snapdragon SoC SC7280;
+Though being a PCIe based solution, it is not attached to
+the APSS processor (Application Processor SubSystem), it is
+instead attached to another tiny processor called WPSS Q6
+processor (Wireless Processor SubSystem) on the SC7280 MSM,
+where the WLAN firmware runs, and it is the WLAN firmware
+running on the Q6 processor which enumerates WCN6750, as a
+result APPS processor would never know such a device being
+present in the system and would not detect the WCN6750
+hardware unless and otherwise WCN6750 is registered as a
+platform device. This is the reason behind adding WCN6750
+WLAN node in the device tree.
 
-> 
-> The key here is "sync_sg API, all the parameters must be the same
-> as those passed into the single mapping API", but I have to admit,
-> I don't understand the *single* in here.
-> 
+Add WCN6750 wireless driver support, its based on ath11k driver.
 
-Hah. So I wasn't imagining things after all.
+Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+---
+ .../bindings/net/wireless/qcom,ath11k.yaml    | 361 ++++++++++++------
+ 1 file changed, 252 insertions(+), 109 deletions(-)
 
-However, as the rest of the thread arrives, this still means it's all
-broken ... :)
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+index cdf7b873b419..67104d69fd72 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+@@ -20,120 +20,17 @@ properties:
+     enum:
+       - qcom,ipq8074-wifi
+       - qcom,ipq6018-wifi
++      - qcom,wcn6750-wifi
+ 
+   reg:
+     maxItems: 1
+ 
+   interrupts:
+-    items:
+-      - description: misc-pulse1 interrupt events
+-      - description: misc-latch interrupt events
+-      - description: sw exception interrupt events
+-      - description: watchdog interrupt events
+-      - description: interrupt event for ring CE0
+-      - description: interrupt event for ring CE1
+-      - description: interrupt event for ring CE2
+-      - description: interrupt event for ring CE3
+-      - description: interrupt event for ring CE4
+-      - description: interrupt event for ring CE5
+-      - description: interrupt event for ring CE6
+-      - description: interrupt event for ring CE7
+-      - description: interrupt event for ring CE8
+-      - description: interrupt event for ring CE9
+-      - description: interrupt event for ring CE10
+-      - description: interrupt event for ring CE11
+-      - description: interrupt event for ring host2wbm-desc-feed
+-      - description: interrupt event for ring host2reo-re-injection
+-      - description: interrupt event for ring host2reo-command
+-      - description: interrupt event for ring host2rxdma-monitor-ring3
+-      - description: interrupt event for ring host2rxdma-monitor-ring2
+-      - description: interrupt event for ring host2rxdma-monitor-ring1
+-      - description: interrupt event for ring reo2ost-exception
+-      - description: interrupt event for ring wbm2host-rx-release
+-      - description: interrupt event for ring reo2host-status
+-      - description: interrupt event for ring reo2host-destination-ring4
+-      - description: interrupt event for ring reo2host-destination-ring3
+-      - description: interrupt event for ring reo2host-destination-ring2
+-      - description: interrupt event for ring reo2host-destination-ring1
+-      - description: interrupt event for ring rxdma2host-monitor-destination-mac3
+-      - description: interrupt event for ring rxdma2host-monitor-destination-mac2
+-      - description: interrupt event for ring rxdma2host-monitor-destination-mac1
+-      - description: interrupt event for ring ppdu-end-interrupts-mac3
+-      - description: interrupt event for ring ppdu-end-interrupts-mac2
+-      - description: interrupt event for ring ppdu-end-interrupts-mac1
+-      - description: interrupt event for ring rxdma2host-monitor-status-ring-mac3
+-      - description: interrupt event for ring rxdma2host-monitor-status-ring-mac2
+-      - description: interrupt event for ring rxdma2host-monitor-status-ring-mac1
+-      - description: interrupt event for ring host2rxdma-host-buf-ring-mac3
+-      - description: interrupt event for ring host2rxdma-host-buf-ring-mac2
+-      - description: interrupt event for ring host2rxdma-host-buf-ring-mac1
+-      - description: interrupt event for ring rxdma2host-destination-ring-mac3
+-      - description: interrupt event for ring rxdma2host-destination-ring-mac2
+-      - description: interrupt event for ring rxdma2host-destination-ring-mac1
+-      - description: interrupt event for ring host2tcl-input-ring4
+-      - description: interrupt event for ring host2tcl-input-ring3
+-      - description: interrupt event for ring host2tcl-input-ring2
+-      - description: interrupt event for ring host2tcl-input-ring1
+-      - description: interrupt event for ring wbm2host-tx-completions-ring3
+-      - description: interrupt event for ring wbm2host-tx-completions-ring2
+-      - description: interrupt event for ring wbm2host-tx-completions-ring1
+-      - description: interrupt event for ring tcl2host-status-ring
+-
++    minItems: 32
++    maxItems: 52
+ 
+   interrupt-names:
+-    items:
+-      - const: misc-pulse1
+-      - const: misc-latch
+-      - const: sw-exception
+-      - const: watchdog
+-      - const: ce0
+-      - const: ce1
+-      - const: ce2
+-      - const: ce3
+-      - const: ce4
+-      - const: ce5
+-      - const: ce6
+-      - const: ce7
+-      - const: ce8
+-      - const: ce9
+-      - const: ce10
+-      - const: ce11
+-      - const: host2wbm-desc-feed
+-      - const: host2reo-re-injection
+-      - const: host2reo-command
+-      - const: host2rxdma-monitor-ring3
+-      - const: host2rxdma-monitor-ring2
+-      - const: host2rxdma-monitor-ring1
+-      - const: reo2ost-exception
+-      - const: wbm2host-rx-release
+-      - const: reo2host-status
+-      - const: reo2host-destination-ring4
+-      - const: reo2host-destination-ring3
+-      - const: reo2host-destination-ring2
+-      - const: reo2host-destination-ring1
+-      - const: rxdma2host-monitor-destination-mac3
+-      - const: rxdma2host-monitor-destination-mac2
+-      - const: rxdma2host-monitor-destination-mac1
+-      - const: ppdu-end-interrupts-mac3
+-      - const: ppdu-end-interrupts-mac2
+-      - const: ppdu-end-interrupts-mac1
+-      - const: rxdma2host-monitor-status-ring-mac3
+-      - const: rxdma2host-monitor-status-ring-mac2
+-      - const: rxdma2host-monitor-status-ring-mac1
+-      - const: host2rxdma-host-buf-ring-mac3
+-      - const: host2rxdma-host-buf-ring-mac2
+-      - const: host2rxdma-host-buf-ring-mac1
+-      - const: rxdma2host-destination-ring-mac3
+-      - const: rxdma2host-destination-ring-mac2
+-      - const: rxdma2host-destination-ring-mac1
+-      - const: host2tcl-input-ring4
+-      - const: host2tcl-input-ring3
+-      - const: host2tcl-input-ring2
+-      - const: host2tcl-input-ring1
+-      - const: wbm2host-tx-completions-ring3
+-      - const: wbm2host-tx-completions-ring2
+-      - const: wbm2host-tx-completions-ring1
+-      - const: tcl2host-status-ring
++    maxItems: 52
+ 
+   qcom,rproc:
+     $ref: /schemas/types.yaml#/definitions/phandle
+@@ -151,20 +48,205 @@ properties:
+       board-2.bin for designs with colliding bus and device specific ids
+ 
+   memory-region:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 2
+     description:
+       phandle to a node describing reserved memory (System RAM memory)
+       used by ath11k firmware (see bindings/reserved-memory/reserved-memory.txt)
+ 
++  iommus:
++    minItems: 1
++    maxItems: 2
++
++  wifi-firmware:
++    type: object
++    description: |
++      WCN6750 wifi node can contain one optional firmware subnode.
++      Firmware subnode is needed when the platform does not have Tustzone.
++    required:
++      - iommus
++
+ required:
+   - compatible
+   - reg
+   - interrupts
+-  - interrupt-names
+   - qcom,rproc
+ 
+ additionalProperties: false
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,ipq8074-wifi
++              - qcom,ipq6018-wifi
++    then:
++      properties:
++        interrupts:
++          items:
++            - description: misc-pulse1 interrupt events
++            - description: misc-latch interrupt events
++            - description: sw exception interrupt events
++            - description: watchdog interrupt events
++            - description: interrupt event for ring CE0
++            - description: interrupt event for ring CE1
++            - description: interrupt event for ring CE2
++            - description: interrupt event for ring CE3
++            - description: interrupt event for ring CE4
++            - description: interrupt event for ring CE5
++            - description: interrupt event for ring CE6
++            - description: interrupt event for ring CE7
++            - description: interrupt event for ring CE8
++            - description: interrupt event for ring CE9
++            - description: interrupt event for ring CE10
++            - description: interrupt event for ring CE11
++            - description: interrupt event for ring host2wbm-desc-feed
++            - description: interrupt event for ring host2reo-re-injection
++            - description: interrupt event for ring host2reo-command
++            - description: interrupt event for ring host2rxdma-monitor-ring3
++            - description: interrupt event for ring host2rxdma-monitor-ring2
++            - description: interrupt event for ring host2rxdma-monitor-ring1
++            - description: interrupt event for ring reo2ost-exception
++            - description: interrupt event for ring wbm2host-rx-release
++            - description: interrupt event for ring reo2host-status
++            - description: interrupt event for ring reo2host-destination-ring4
++            - description: interrupt event for ring reo2host-destination-ring3
++            - description: interrupt event for ring reo2host-destination-ring2
++            - description: interrupt event for ring reo2host-destination-ring1
++            - description: interrupt event for ring rxdma2host-monitor-destination-mac3
++            - description: interrupt event for ring rxdma2host-monitor-destination-mac2
++            - description: interrupt event for ring rxdma2host-monitor-destination-mac1
++            - description: interrupt event for ring ppdu-end-interrupts-mac3
++            - description: interrupt event for ring ppdu-end-interrupts-mac2
++            - description: interrupt event for ring ppdu-end-interrupts-mac1
++            - description: interrupt event for ring rxdma2host-monitor-status-ring-mac3
++            - description: interrupt event for ring rxdma2host-monitor-status-ring-mac2
++            - description: interrupt event for ring rxdma2host-monitor-status-ring-mac1
++            - description: interrupt event for ring host2rxdma-host-buf-ring-mac3
++            - description: interrupt event for ring host2rxdma-host-buf-ring-mac2
++            - description: interrupt event for ring host2rxdma-host-buf-ring-mac1
++            - description: interrupt event for ring rxdma2host-destination-ring-mac3
++            - description: interrupt event for ring rxdma2host-destination-ring-mac2
++            - description: interrupt event for ring rxdma2host-destination-ring-mac1
++            - description: interrupt event for ring host2tcl-input-ring4
++            - description: interrupt event for ring host2tcl-input-ring3
++            - description: interrupt event for ring host2tcl-input-ring2
++            - description: interrupt event for ring host2tcl-input-ring1
++            - description: interrupt event for ring wbm2host-tx-completions-ring3
++            - description: interrupt event for ring wbm2host-tx-completions-ring2
++            - description: interrupt event for ring wbm2host-tx-completions-ring1
++            - description: interrupt event for ring tcl2host-status-ring
++        interrupt-names:
++          items:
++            - const: misc-pulse1
++            - const: misc-latch
++            - const: sw-exception
++            - const: watchdog
++            - const: ce0
++            - const: ce1
++            - const: ce2
++            - const: ce3
++            - const: ce4
++            - const: ce5
++            - const: ce6
++            - const: ce7
++            - const: ce8
++            - const: ce9
++            - const: ce10
++            - const: ce11
++            - const: host2wbm-desc-feed
++            - const: host2reo-re-injection
++            - const: host2reo-command
++            - const: host2rxdma-monitor-ring3
++            - const: host2rxdma-monitor-ring2
++            - const: host2rxdma-monitor-ring1
++            - const: reo2ost-exception
++            - const: wbm2host-rx-release
++            - const: reo2host-status
++            - const: reo2host-destination-ring4
++            - const: reo2host-destination-ring3
++            - const: reo2host-destination-ring2
++            - const: reo2host-destination-ring1
++            - const: rxdma2host-monitor-destination-mac3
++            - const: rxdma2host-monitor-destination-mac2
++            - const: rxdma2host-monitor-destination-mac1
++            - const: ppdu-end-interrupts-mac3
++            - const: ppdu-end-interrupts-mac2
++            - const: ppdu-end-interrupts-mac1
++            - const: rxdma2host-monitor-status-ring-mac3
++            - const: rxdma2host-monitor-status-ring-mac2
++            - const: rxdma2host-monitor-status-ring-mac1
++            - const: host2rxdma-host-buf-ring-mac3
++            - const: host2rxdma-host-buf-ring-mac2
++            - const: host2rxdma-host-buf-ring-mac1
++            - const: rxdma2host-destination-ring-mac3
++            - const: rxdma2host-destination-ring-mac2
++            - const: rxdma2host-destination-ring-mac1
++            - const: host2tcl-input-ring4
++            - const: host2tcl-input-ring3
++            - const: host2tcl-input-ring2
++            - const: host2tcl-input-ring1
++            - const: wbm2host-tx-completions-ring3
++            - const: wbm2host-tx-completions-ring2
++            - const: wbm2host-tx-completions-ring1
++            - const: tcl2host-status-ring
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,ipq8074-wifi
++              - qcom,ipq6018-wifi
++    then:
++      required:
++        - interrupt-names
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,wcn6750-wifi
++    then:
++      properties:
++        interrupts:
++          items:
++            - description: interrupt event for ring CE1
++            - description: interrupt event for ring CE2
++            - description: interrupt event for ring CE3
++            - description: interrupt event for ring CE4
++            - description: interrupt event for ring CE5
++            - description: interrupt event for ring CE6
++            - description: interrupt event for ring CE7
++            - description: interrupt event for ring CE8
++            - description: interrupt event for ring CE9
++            - description: interrupt event for ring CE10
++            - description: interrupt event for ring DP1
++            - description: interrupt event for ring DP2
++            - description: interrupt event for ring DP3
++            - description: interrupt event for ring DP4
++            - description: interrupt event for ring DP5
++            - description: interrupt event for ring DP6
++            - description: interrupt event for ring DP7
++            - description: interrupt event for ring DP8
++            - description: interrupt event for ring DP9
++            - description: interrupt event for ring DP10
++            - description: interrupt event for ring DP11
++            - description: interrupt event for ring DP12
++            - description: interrupt event for ring DP13
++            - description: interrupt event for ring DP14
++            - description: interrupt event for ring DP15
++            - description: interrupt event for ring DP16
++            - description: interrupt event for ring DP17
++            - description: interrupt event for ring DP18
++            - description: interrupt event for ring DP19
++            - description: interrupt event for ring DP20
++            - description: interrupt event for ring DP21
++            - description: interrupt event for ring DP22
++
+ examples:
+   - |
+ 
+@@ -309,3 +391,64 @@ examples:
+             };
+         };
+     };
++
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    reserved-memory {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        wlan_ce_mem: wlan_ce_mem@4cd000 {
++            no-map;
++            reg = <0x0 0x4cd000 0x0 0x1000>;
++        };
++
++        wlan_fw_mem: wlan_fw_mem@80c00000 {
++            no-map;
++            reg = <0x0 0x80c00000 0x0 0xc00000>;
++        };
++    };
++
++    wifi: wifi@17a10040 {
++        compatible = "qcom,wcn6750-wifi";
++        reg = <0x17A10040 0x0>;
++        iommus = <&apps_smmu 0x1C00 0x1>;
++        interrupts = <GIC_SPI 768 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 769 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 770 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 771 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 772 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 773 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 774 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 775 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 776 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 777 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 778 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 779 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 780 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 781 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 782 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 783 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 784 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 785 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 786 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 787 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 788 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 789 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 790 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 791 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 792 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 793 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 794 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 795 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 796 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 797 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 798 IRQ_TYPE_EDGE_RISING>,
++                     <GIC_SPI 799 IRQ_TYPE_EDGE_RISING>;
++        qcom,rproc = <&remoteproc_wpss>;
++        memory-region = <&wlan_fw_mem>, <&wlan_ce_mem>;
++        wifi-firmware {
++                iommus = <&apps_smmu 0x1C02 0x1>;
++        };
++    };
+-- 
+2.35.1
 
-> The intended meaning of the
-> last sentence is that one can do partial sync by choose 
-> dma_hande_sync, size_sync such that dma_handle_mapping <= dma_handle_sync
-> < dma_handle_mapping + size_mapping and dma_handle_sync + size_sync <=
-> dma_handle_mapping + size_mapping. But the direction has to remain the
-> same.
-
-Right.
-
-> BTW, the current documented definition of the direction is about the
-> data transfer direction between memory and the device, and how the CPU
-> is interacting with the memory is not in scope. A quote form the
-> documentation.
-> 
-> """
-> ======================= =============================================
-> DMA_NONE                no direction (used for debugging)
-> DMA_TO_DEVICE           data is going from the memory to the device
-> DMA_FROM_DEVICE         data is coming from the device to the memory
-> DMA_BIDIRECTIONAL       direction isn't known
-> ======================= =============================================
-> """
-> (Documentation/core-api/dma-api.rst)
-> 
-> My feeling is, that re-defining the dma direction is not a good idea. But
-> I don't think my opinion has much weight here.
-
-However, this basically means that the direction argument to the flush
-APIs are completely useless, and we do have to define something
-new/else...
-
-johannes
