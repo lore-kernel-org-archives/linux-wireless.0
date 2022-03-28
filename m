@@ -2,183 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AC1C43219
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 09:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B8DC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Mar 2022 09:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239945AbiC1Juq (ORCPT
+        id S239954AbiC1Jur (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Mar 2022 05:50:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47242 "EHLO
+        Mon, 28 Mar 2022 05:50:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239942AbiC1Jup (ORCPT
+        with ESMTP id S239941AbiC1Jup (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 28 Mar 2022 05:50:45 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC154424A4;
-        Mon, 28 Mar 2022 02:49:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1648460945; x=1679996945;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=NuVWP9n3JnzbcqZ0mZb7h0QD9EGnI1KQMyKg+FuIhGI=;
-  b=UwGjVoh56Gf1rqFKImw7uKk7t+Np2LI71jDsufuWymUHRlT8tSh66HJe
-   9Czf7oKnTJdEn+BfBxif0h6CAcinviMrzfgyPMI5a41uG8bk+EoNuzqRp
-   YoSGfsfzUJYzrcptNoX+fgWxjYMguC1E3xbBpTBW5KIL3kVGK5qmYmyfN
-   Q=;
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 28 Mar 2022 02:49:04 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2022 02:49:04 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 28 Mar 2022 02:49:04 -0700
-Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 28 Mar 2022 02:49:02 -0700
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh@kernel.org>, Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH v3 02/12] ath11k: Add HW params for WCN6750
-Date:   Mon, 28 Mar 2022 15:18:28 +0530
-Message-ID: <20220328094838.14093-3-quic_mpubbise@quicinc.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220328094838.14093-1-quic_mpubbise@quicinc.com>
-References: <20220328094838.14093-1-quic_mpubbise@quicinc.com>
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0F5F41F9E;
+        Mon, 28 Mar 2022 02:49:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=/93dChLt+Za1uKCUhSTu2aRMCha+vAJZKphFzk7McsE=;
+        t=1648460942; x=1649670542; b=GrQqsPGmXslqKPkkMv5L9TKn0aHOqHUDd7Mwgbobfr+0/wj
+        ZfRjwz5YxIiiphH2lJt0/j4nocADL6fH/wGwU0+eI/w/2NOg6NhhOGFUtGK+kLkkJ2jVdMxCuTmFS
+        J3wqwMkDf3QphTt5Jx5M/CJzEsRRhwX2YRo4mRBNobtPwgt/VyA/7JtAhpxcAUyiFGkeUz7b9ZaAG
+        DxIUHDdw/HVcbQ8Xjd8AyY2Ry+4ecO6/1wxFkPV8y2e24sPYClwRmqXlOOdyDtXQc8RzEzsZNUb7t
+        KGzPMRop5JNPlDKyDrX4Lh3CslI/XWA8uWx9DKPodItgWYXUmO+/e8lHJgyLgxxA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nYlzJ-001WuR-EZ;
+        Mon, 28 Mar 2022 11:48:37 +0200
+Message-ID: <f94c4fc26251262de0ecab003c74833617c1b305.camel@sipsolutions.net>
+Subject: Re: [REGRESSION] Recent swiotlb DMA_FROM_DEVICE fixes break
+ ath9k-based AP
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Halil Pasic <pasic@linux.ibm.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Maxime Bizon <mbizon@freebox.fr>,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Oleksandr Natalenko <oleksandr@natalenko.name>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Olha Cherevyk <olha.cherevyk@gmail.com>,
+        iommu <iommu@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable <stable@vger.kernel.org>
+Date:   Mon, 28 Mar 2022 11:48:36 +0200
+In-Reply-To: <20220327051502.63fde20a.pasic@linux.ibm.com>
+References: <1812355.tdWV9SEqCh@natalenko.name>
+         <f88ca616-96d1-82dc-1bc8-b17480e937dd@arm.com>
+         <20220324055732.GB12078@lst.de> <4386660.LvFx2qVVIh@natalenko.name>
+         <81ffc753-72aa-6327-b87b-3f11915f2549@arm.com> <878rsza0ih.fsf@toke.dk>
+         <4be26f5d8725cdb016c6fdd9d05cfeb69cdd9e09.camel@freebox.fr>
+         <20220324163132.GB26098@lst.de>
+         <d8a1cbf4-a521-78ec-1560-28d855e0913e@arm.com> <871qyr9t4e.fsf@toke.dk>
+         <CAHk-=whUQCCaQXJt3KUeQ8mtnLeVXEScNXCp+_DYh2SNY7EcEA@mail.gmail.com>
+         <31434708dcad126a8334c99ee056dcce93e507f1.camel@freebox.fr>
+         <CAHk-=wippum+MksdY7ixMfa3i1sZ+nxYPWLLpVMNyXCgmiHbBQ@mail.gmail.com>
+         <298f4f9ccad7c3308d3a1fd8b4b4740571305204.camel@sipsolutions.net>
+         <CAHk-=whXAan2ExANMryPSFaBWeyzikPi+fPUseMoVhQAxR7cEA@mail.gmail.com>
+         <e42e4c8bf35b62c671ec20ec6c21a43216e7daa6.camel@sipsolutions.net>
+         <20220327051502.63fde20a.pasic@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 (3.42.4-1.fc35) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add HW params for WCN6750. It is similar to the HW params
-of QCA6390 with few differences wrt DP APIs and register
-offsets.
+On Sun, 2022-03-27 at 05:15 +0200, Halil Pasic wrote:
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+> 
+> The key here is "sync_sg API, all the parameters must be the same
+> as those passed into the single mapping API", but I have to admit,
+> I don't understand the *single* in here.
+> 
 
-Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.c | 61 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/core.h |  1 +
- drivers/net/wireless/ath/ath11k/qmi.h  |  2 +
- 3 files changed, 64 insertions(+)
+Hah. So I wasn't imagining things after all.
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 02d407011a8b..93bab713f754 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -427,6 +427,67 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.dbr_debug_support = false,
- 		.global_reset = true,
- 	},
-+	{
-+		.name = "wcn6750 hw1.0",
-+		.hw_rev = ATH11K_HW_WCN6750_HW10,
-+		.fw = {
-+			.dir = "WCN6750/hw1.0",
-+			.board_size = 256 * 1024,
-+			.cal_offset = 128 * 1024,
-+		},
-+		.max_radios = 1,
-+		.bdf_addr = 0x4B0C0000,
-+		.ring_mask = &ath11k_hw_ring_mask_qca6390,
-+		.internal_sleep_clock = false,
-+		.qmi_service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_WCN6750,
-+		.host_ce_config = ath11k_host_ce_config_qca6390,
-+		.ce_count = 9,
-+		.target_ce_config = ath11k_target_ce_config_wlan_qca6390,
-+		.target_ce_count = 9,
-+		.svc_to_ce_map = ath11k_target_service_to_ce_map_wlan_qca6390,
-+		.svc_to_ce_map_len = 14,
-+		.rfkill_pin = 0,
-+		.rfkill_cfg = 0,
-+		.rfkill_on_level = 0,
-+		.single_pdev_only = true,
-+		.rxdma1_enable = false,
-+		.num_rxmda_per_pdev = 1,
-+		.rx_mac_buf_ring = true,
-+		.vdev_start_delay = true,
-+		.htt_peer_map_v2 = false,
-+
-+		.spectral = {
-+			.fft_sz = 0,
-+			.fft_pad_sz = 0,
-+			.summary_pad_sz = 0,
-+			.fft_hdr_len = 0,
-+			.max_fft_bins = 0,
-+		},
-+
-+		.interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+					BIT(NL80211_IFTYPE_AP),
-+		.supports_monitor = false,
-+		.supports_shadow_regs = true,
-+		.idle_ps = true,
-+		.supports_sta_ps = true,
-+		.cold_boot_calib = false,
-+		.fw_mem_mode = 0,
-+		.num_vdevs = 16 + 1,
-+		.num_peers = 512,
-+		.supports_suspend = false,
-+		.supports_regdb = true,
-+		.fix_l1ss = false,
-+		.credit_flow = true,
-+		.max_tx_ring = DP_TCL_NUM_RING_MAX_QCA6390,
-+		.hal_params = &ath11k_hw_hal_params_qca6390,
-+		.supports_dynamic_smps_6ghz = false,
-+		.alloc_cacheable_memory = false,
-+		.supports_rssi_stats = true,
-+		.fw_wmi_diag_event = false,
-+		.current_cc_support = true,
-+		.dbr_debug_support = false,
-+		.global_reset = false,
-+	},
- };
- 
- static inline struct ath11k_pdev *ath11k_core_get_single_pdev(struct ath11k_base *ab)
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 406d16b8735d..915ebe36114a 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -138,6 +138,7 @@ enum ath11k_hw_rev {
- 	ATH11K_HW_QCN9074_HW10,
- 	ATH11K_HW_WCN6855_HW20,
- 	ATH11K_HW_WCN6855_HW21,
-+	ATH11K_HW_WCN6750_HW10,
- };
- 
- enum ath11k_firmware_mode {
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index 61678de56ac7..872646c3b3ed 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -1,6 +1,7 @@
- /* SPDX-License-Identifier: BSD-3-Clause-Clear */
- /*
-  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2021-2022, Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #ifndef ATH11K_QMI_H
-@@ -20,6 +21,7 @@
- #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCA6390	0x01
- #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_IPQ8074	0x02
- #define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_QCN9074	0x07
-+#define ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_WCN6750	0x03
- #define ATH11K_QMI_WLANFW_MAX_TIMESTAMP_LEN_V01	32
- #define ATH11K_QMI_RESP_LEN_MAX			8192
- #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	52
--- 
-2.35.1
+However, as the rest of the thread arrives, this still means it's all
+broken ... :)
 
+> The intended meaning of the
+> last sentence is that one can do partial sync by choose 
+> dma_hande_sync, size_sync such that dma_handle_mapping <= dma_handle_sync
+> < dma_handle_mapping + size_mapping and dma_handle_sync + size_sync <=
+> dma_handle_mapping + size_mapping. But the direction has to remain the
+> same.
+
+Right.
+
+> BTW, the current documented definition of the direction is about the
+> data transfer direction between memory and the device, and how the CPU
+> is interacting with the memory is not in scope. A quote form the
+> documentation.
+> 
+> """
+> ======================= =============================================
+> DMA_NONE                no direction (used for debugging)
+> DMA_TO_DEVICE           data is going from the memory to the device
+> DMA_FROM_DEVICE         data is coming from the device to the memory
+> DMA_BIDIRECTIONAL       direction isn't known
+> ======================= =============================================
+> """
+> (Documentation/core-api/dma-api.rst)
+> 
+> My feeling is, that re-defining the dma direction is not a good idea. But
+> I don't think my opinion has much weight here.
+
+However, this basically means that the direction argument to the flush
+APIs are completely useless, and we do have to define something
+new/else...
+
+johannes
