@@ -2,182 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5D5C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Mar 2022 12:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7312FC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Mar 2022 15:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236336AbiC2Mcl (ORCPT
+        id S237264AbiC2PEe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Mar 2022 08:32:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47014 "EHLO
+        Tue, 29 Mar 2022 11:04:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236321AbiC2Mci (ORCPT
+        with ESMTP id S237094AbiC2PEe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Mar 2022 08:32:38 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 065EB606F3
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2022 05:30:53 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id o10so34840316ejd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2022 05:30:52 -0700 (PDT)
+        Tue, 29 Mar 2022 11:04:34 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D92618C0D0
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2022 08:02:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=nRQGNy0JNeG8yPE1QXXWKqsK/KgT2iVgd9NOSAmnpao=;
-        b=rghn0NZ7veo+c7F9TgovwmfTphDZN1nzJMzcXj5lds+VNPPlWVx4s9Km9UFuESnj9C
-         0j6zPwG/Xf6D92JpGQDO2SsY514Cc3dispUkIKCGzRnO4C9HS7T9TWQ6L1NWItI9HoVR
-         Wk/smMInsq69ioZO8yNZDu546rixqBUH1Q7RKjgyI+USlKpBx73H+Jxrz2inmb2EkToU
-         H2vf7Sa/pckmLcWFoAxiMBDzr7UgHBsB2Q8hra4/Kl5ny0G8cLhgWaE+yEkyTutDGHt1
-         d/7ehdh+gvbKH2tMg6SF+fI/PRBhqZLpgBB/Oz9YxV+MxEClGvdSUz2pl20OT0F+Mpvd
-         d2oQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=nRQGNy0JNeG8yPE1QXXWKqsK/KgT2iVgd9NOSAmnpao=;
-        b=oTPPA8tFMU1YKWFOvvXP8A3GdY3Mp1tGLQr2yPHcR7Bgq9boMbMyJUFYCVLCBOYMXC
-         8KbryoreMyRnp6TYnpnp9hPGmrHWZL+JEgi51K7miX5ASsMnGw/xUVxIZEsif8bpOwed
-         dPNoAff48/0P3O5CMX9gLzZqk9BseoPNlCNKXKIPuT5jMaaVhRFTjPkSqpdgwanGIJjs
-         w2rIDdfa78B2qN5NMQuoZWG8jrvotVLqnUTI1ujZT6HktxGR+CFRNKz+HFA5zhiJUqTC
-         tFasV7X+LTxoxRkWukkRKYEFGskqrtgZRXxp5fZAAoDlww6+Q68lveavDwZi6kOyunP8
-         b1NA==
-X-Gm-Message-State: AOAM53236gF6aK9+tQAhbznaGAe79GuyoTGWvPl7Djx+2hN9AL1qvWJ8
-        FpBssVFiqNSwsSM9IJx80/dUDIGvSUtP4JRY8s1lFw==
-X-Google-Smtp-Source: ABdhPJyPZNX8y3gOGfSZgg3AGAll74j9kjPNXJs0DTpnrEh1/wBVEgROdTkgglF1+DGDwH7nabIubcnQbpp8LiNpfow=
-X-Received: by 2002:a17:907:d2a:b0:6e0:963c:97d9 with SMTP id
- gn42-20020a1709070d2a00b006e0963c97d9mr28430774ejc.736.1648557051475; Tue, 29
- Mar 2022 05:30:51 -0700 (PDT)
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648566171; x=1680102171;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=sXujaEN5nHLpPV9RxMoiZbS35N+Y4Qx+sgw2qjfj924=;
+  b=rPX4GcIX9HB2eoNq2KteSmQ0X6RtppCcMPV9GyTYZ5iKXQMww+vjRldq
+   H0Avq+FvAFvzJ4O3iuepgH97qQlxFkAQhaF+r4K2XINua4K/EBDlklwn4
+   0QgE1kqXwzaPFyKW5Bvr8ZhU8sIEkSYja96Sn/D3o+SW2zXxHCaf3KrbS
+   E=;
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 29 Mar 2022 08:02:50 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2022 08:02:50 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Tue, 29 Mar 2022 08:02:50 -0700
+Received: from akalaise-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Tue, 29 Mar 2022 08:02:48 -0700
+From:   Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+Subject: [PATCH] ath11k: Change max no of active probe SSID and BSSID to fw capability
+Date:   Tue, 29 Mar 2022 20:32:21 +0530
+Message-ID: <20220329150221.21907-1-quic_kathirve@quicinc.com>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-References: <20220326165909.506926-1-benni@stuerz.xyz> <20220326165909.506926-9-benni@stuerz.xyz>
-In-Reply-To: <20220326165909.506926-9-benni@stuerz.xyz>
-From:   Bartosz Golaszewski <brgl@bgdev.pl>
-Date:   Tue, 29 Mar 2022 14:30:40 +0200
-Message-ID: <CAMRc=Md5qTnP1ZYak4f3hyqmaOR6jT_KL=rNr5cwAOcZ22yXfg@mail.gmail.com>
-Subject: Re: [PATCH 09/22] gpio-winbond: Use C99 initializers
-To:     =?UTF-8?Q?Benjamin_St=C3=BCrz?= <benni@stuerz.xyz>
-Cc:     Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Russell King <linux@armlinux.org.uk>, linux@simtec.co.uk,
-        Krzysztof Kozlowski <krzk@kernel.org>, alim.akhtar@samsung.com,
-        Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
-        Borislav Petkov <bp@alien8.de>, dave.hansen@linux.intel.com,
-        hpa@zytor.com, robert.moore@intel.com,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, lenb@kernel.org,
-        3chas3@gmail.com, laforge@gnumonks.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Tony Luck <tony.luck@intel.com>,
-        James Morse <james.morse@arm.com>,
-        Robert Richter <rric@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        mike.marciniszyn@cornelisnetworks.com,
-        dennis.dalessandro@cornelisnetworks.com, jgg@ziepe.ca,
-        pali@kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        isdn@linux-pingi.de,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        fbarrat@linux.ibm.com, ajd@linux.ibm.com,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, nico@fluxnic.net,
-        loic.poulain@linaro.org, kvalo@kernel.org, pkshih@realtek.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        devel@acpica.org, linux-atm-general@lists.sourceforge.net,
-        netdev <netdev@vger.kernel.org>, linux-edac@vger.kernel.org,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        linux-rdma@vger.kernel.org,
-        Linux Input <linux-input@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Mar 26, 2022 at 6:00 PM Benjamin St=C3=BCrz <benni@stuerz.xyz> wrot=
-e:
->
-> This replaces comments with C99's designated
-> initializers because the kernel supports them now.
->
-> Signed-off-by: Benjamin St=C3=BCrz <benni@stuerz.xyz>
-> ---
->  drivers/gpio/gpio-winbond.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/gpio/gpio-winbond.c b/drivers/gpio/gpio-winbond.c
-> index 7f8f5b02e31d..0b637fdb407c 100644
-> --- a/drivers/gpio/gpio-winbond.c
-> +++ b/drivers/gpio/gpio-winbond.c
-> @@ -249,7 +249,7 @@ struct winbond_gpio_info {
->  };
->
->  static const struct winbond_gpio_info winbond_gpio_infos[6] =3D {
-> -       { /* 0 */
-> +       [0] =3D {
->                 .dev =3D WB_SIO_DEV_GPIO12,
->                 .enablereg =3D WB_SIO_GPIO12_REG_ENABLE,
->                 .enablebit =3D WB_SIO_GPIO12_ENABLE_1,
-> @@ -266,7 +266,7 @@ static const struct winbond_gpio_info winbond_gpio_in=
-fos[6] =3D {
->                         .warnonly =3D true
->                 }
->         },
-> -       { /* 1 */
-> +       [1] =3D {
->                 .dev =3D WB_SIO_DEV_GPIO12,
->                 .enablereg =3D WB_SIO_GPIO12_REG_ENABLE,
->                 .enablebit =3D WB_SIO_GPIO12_ENABLE_2,
-> @@ -277,7 +277,7 @@ static const struct winbond_gpio_info winbond_gpio_in=
-fos[6] =3D {
->                 .datareg =3D WB_SIO_GPIO12_REG_DATA2
->                 /* special conflict handling so doesn't use conflict data=
- */
->         },
-> -       { /* 2 */
-> +       [2] =3D {
->                 .dev =3D WB_SIO_DEV_GPIO34,
->                 .enablereg =3D WB_SIO_GPIO34_REG_ENABLE,
->                 .enablebit =3D WB_SIO_GPIO34_ENABLE_3,
-> @@ -294,7 +294,7 @@ static const struct winbond_gpio_info winbond_gpio_in=
-fos[6] =3D {
->                         .warnonly =3D true
->                 }
->         },
-> -       { /* 3 */
-> +       [3] =3D {
->                 .dev =3D WB_SIO_DEV_GPIO34,
->                 .enablereg =3D WB_SIO_GPIO34_REG_ENABLE,
->                 .enablebit =3D WB_SIO_GPIO34_ENABLE_4,
-> @@ -311,7 +311,7 @@ static const struct winbond_gpio_info winbond_gpio_in=
-fos[6] =3D {
->                         .warnonly =3D true
->                 }
->         },
-> -       { /* 4 */
-> +       [4] =3D {
->                 .dev =3D WB_SIO_DEV_WDGPIO56,
->                 .enablereg =3D WB_SIO_WDGPIO56_REG_ENABLE,
->                 .enablebit =3D WB_SIO_WDGPIO56_ENABLE_5,
-> @@ -328,7 +328,7 @@ static const struct winbond_gpio_info winbond_gpio_in=
-fos[6] =3D {
->                         .warnonly =3D true
->                 }
->         },
-> -       { /* 5 */
-> +       [5] =3D {
->                 .dev =3D WB_SIO_DEV_WDGPIO56,
->                 .enablereg =3D WB_SIO_WDGPIO56_REG_ENABLE,
->                 .enablebit =3D WB_SIO_WDGPIO56_ENABLE_6,
-> --
-> 2.35.1
->
+The maximum number of SSIDs in a for active probe requests is currently
+reported as 16 (WLAN_SCAN_PARAMS_MAX_SSID) when registering the driver.
+The scan_req_params structure only has the capacity to hold 10 SSIDs.
+This leads to a buffer overflow which can be triggered from
+wpa_supplicant in userspace. When copying the SSIDs into the
+scan_req_params structure in the ath11k_mac_op_hw_scan route, it can
+overwrite the extraie pointer.
 
-Acked-by: Bartosz Golaszewski <brgl@bgdev.pl>
+Firmware supports 16 ssid * 4 bssid, for each ssid 4 bssid combo probe
+request will be sent, so totally 64 probe requests supported. So
+set both max ssid and bssid to 16 and 4 respectively. Remove the
+redundant macros of ssid and bssid.
+
+Tested-on : WLAN.HK.2.7.0.1-01300-QCAHKSWPL_SILICONZ-1 v1
+
+Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.h | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 587f42307250..b5b72483477d 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -3088,9 +3088,6 @@ enum scan_dwelltime_adaptive_mode {
+ 	SCAN_DWELL_MODE_STATIC = 4
+ };
+ 
+-#define WLAN_SCAN_MAX_NUM_SSID          10
+-#define WLAN_SCAN_MAX_NUM_BSSID         10
+-
+ #define WLAN_SSID_MAX_LEN 32
+ 
+ struct element_info {
+@@ -3105,7 +3102,6 @@ struct wlan_ssid {
+ 
+ #define WMI_IE_BITMAP_SIZE             8
+ 
+-#define WMI_SCAN_MAX_NUM_SSID                0x0A
+ /* prefix used by scan requestor ids on the host */
+ #define WMI_HOST_SCAN_REQUESTOR_ID_PREFIX 0xA000
+ 
+@@ -3113,10 +3109,6 @@ struct wlan_ssid {
+ /* host cycles through the lower 12 bits to generate ids */
+ #define WMI_HOST_SCAN_REQ_ID_PREFIX 0xA000
+ 
+-#define WLAN_SCAN_PARAMS_MAX_SSID    16
+-#define WLAN_SCAN_PARAMS_MAX_BSSID   4
+-#define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
+-
+ /* Values lower than this may be refused by some firmware revisions with a scan
+  * completion with a timedout reason.
+  */
+@@ -3312,8 +3304,8 @@ struct scan_req_params {
+ 	u32 n_probes;
+ 	u32 *chan_list;
+ 	u32 notify_scan_events;
+-	struct wlan_ssid ssid[WLAN_SCAN_MAX_NUM_SSID];
+-	struct wmi_mac_addr bssid_list[WLAN_SCAN_MAX_NUM_BSSID];
++	struct wlan_ssid ssid[WLAN_SCAN_PARAMS_MAX_SSID];
++	struct wmi_mac_addr bssid_list[WLAN_SCAN_PARAMS_MAX_BSSID];
+ 	struct element_info extraie;
+ 	struct element_info htcap;
+ 	struct element_info vhtcap;
+
+base-commit: 1198cbe26aa57ebef7a5c4315260d2e93a93e9a6
+-- 
+2.23.0
+
