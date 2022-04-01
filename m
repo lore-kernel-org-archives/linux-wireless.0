@@ -2,51 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F20EC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19A55C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347219AbiDAOb4 (ORCPT
+        id S1347299AbiDAOcI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:31:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
+        Fri, 1 Apr 2022 10:32:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347170AbiDAOaz (ORCPT
+        with ESMTP id S1347300AbiDAObe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:30:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9BD286F53;
-        Fri,  1 Apr 2022 07:27:47 -0700 (PDT)
+        Fri, 1 Apr 2022 10:31:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB97728CA89;
+        Fri,  1 Apr 2022 07:27:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4E2BFB82500;
-        Fri,  1 Apr 2022 14:27:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1AE1C2BBE4;
-        Fri,  1 Apr 2022 14:27:42 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E4A2A61CB1;
+        Fri,  1 Apr 2022 14:27:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E866EC340EE;
+        Fri,  1 Apr 2022 14:27:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823265;
-        bh=fOMAEttNRP3JQe3JAD4ElWJ5oYZt9g8F/dp3fJIe+uo=;
+        s=k20201202; t=1648823271;
+        bh=IhAv2eFLJLfC1GR+6qO0J/BQ7ziqUh6KCgtAw1cda8A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MpX0IOixdktOTWR+T1Bi87dS5RdlhL+gc4kH53vTPoab2vmbiX0TN5tFkgf94ylYu
-         Njz56RXTbEuMTCAAbrOTy2oTR2S2i8hT2WHs3sGuvH/WcWrhZQA8W/S8kpJ3pD9exv
-         FaPOmeMMSXdEdjBhHGH8ln/07Fva3FWh8T2+izno5d61H35cKglu+GYpcDEQygyxql
-         8tRaBs8QKIQpuG5sIjzVTJgtInAJFtIhmRURexvnJ7YA1VDLyXLjIb2T5mc6ytQDIg
-         kqVCZAj6ZZpLuAXO1nVlUovs/G1d4c/WURQbRO8G1MEtH9+vjIY9DAMgDYR/oebkmK
-         zj2iu16N4QH0g==
+        b=r4+CJL98g9xQXbd3It+xVqHJ73Sj9upUPmvSe8cC/T7OBp6dpTYOiUwdQypkupo3c
+         RspWnpMFXtFWMC97LueMRA9lvGNNofzIFzXuxqINCAGUxcZXuonvhyatodFTbtL/XB
+         S1e//NnnKCRO6ZLT/2XE9TX2vvn1n6mybmoe8tElGvKbYLeYkCXECE8kK9eoSY5eqa
+         XLOKqDiSQBG/oQrWf6W4S2FoExaqmioCGIyoZ1iL1XrJgkvI2P9WgSrCp3U4NGpnf3
+         +MSm/M3vK5NA9ZCumBZKm9OHF/UNjEjI+TiE1+86LjaEYbx3aUiHbZ8Fnn/A1LOAQx
+         KlttrLDuCl+5Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>, Felix Fietkau <nbd@nbd.name>,
-        Sasha Levin <sashal@kernel.org>, lorenzo.bianconi83@gmail.com,
-        ryder.lee@mediatek.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, pabeni@redhat.com, matthias.bgg@gmail.com,
-        sean.wang@mediatek.com, deren.wu@mediatek.com,
-        johannes.berg@intel.com, YN.Chen@mediatek.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.17 039/149] mt76: mt7921: fix crash when startup fails.
-Date:   Fri,  1 Apr 2022 10:23:46 -0400
-Message-Id: <20220401142536.1948161-39-sashal@kernel.org>
+Cc:     Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 042/149] cfg80211: don't add non transmitted BSS to 6GHz scanned channels
+Date:   Fri,  1 Apr 2022 10:23:49 -0400
+Message-Id: <20220401142536.1948161-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401142536.1948161-1-sashal@kernel.org>
 References: <20220401142536.1948161-1-sashal@kernel.org>
@@ -58,39 +55,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-[ Upstream commit 827e7799c61b978fbc2cc9dac66cb62401b2b3f0 ]
+[ Upstream commit 5666ee154f4696c011dfa8544aaf5591b6b87515 ]
 
-If the nic fails to start, it is possible that the
-reset_work has already been scheduled.  Ensure the
-work item is canceled so we do not have use-after-free
-crash in case cleanup is called before the work item
-is executed.
+When adding 6GHz channels to scan request based on reported
+co-located APs, don't add channels that have only APs with
+"non-transmitted" BSSes if they only match the wildcard SSID since
+they will be found by probing the "transmitted" BSS.
 
-This fixes crash on my x86_64 apu2 when mt7921k radio
-fails to work.  Radio still fails, but OS does not
-crash.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20220202104617.f6ddf099f934.I231e55885d3644f292d00dfe0f42653269f2559e@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/scan.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 7a8d2596c226..4abb7a6e775a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -273,6 +273,7 @@ static void mt7921_stop(struct ieee80211_hw *hw)
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index b888522f133b..b2fdac96bab0 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -700,8 +700,12 @@ static bool cfg80211_find_ssid_match(struct cfg80211_colocated_ap *ap,
  
- 	cancel_delayed_work_sync(&dev->pm.ps_work);
- 	cancel_work_sync(&dev->pm.wake_work);
-+	cancel_work_sync(&dev->reset_work);
- 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
+ 	for (i = 0; i < request->n_ssids; i++) {
+ 		/* wildcard ssid in the scan request */
+-		if (!request->ssids[i].ssid_len)
++		if (!request->ssids[i].ssid_len) {
++			if (ap->multi_bss && !ap->transmitted_bssid)
++				continue;
++
+ 			return true;
++		}
  
- 	mt7921_mutex_acquire(dev);
+ 		if (ap->ssid_len &&
+ 		    ap->ssid_len == request->ssids[i].ssid_len) {
+@@ -827,6 +831,9 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
+ 		    !cfg80211_find_ssid_match(ap, request))
+ 			continue;
+ 
++		if (!request->n_ssids && ap->multi_bss && !ap->transmitted_bssid)
++			continue;
++
+ 		cfg80211_scan_req_add_chan(request, chan, true);
+ 		memcpy(scan_6ghz_params->bssid, ap->bssid, ETH_ALEN);
+ 		scan_6ghz_params->short_ssid = ap->short_ssid;
 -- 
 2.34.1
 
