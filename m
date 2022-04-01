@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E18C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D4E8C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348993AbiDAPxi (ORCPT
+        id S1348324AbiDAPxm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:53:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47958 "EHLO
+        Fri, 1 Apr 2022 11:53:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350653AbiDAPAX (ORCPT
+        with ESMTP id S1350521AbiDAPAH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 11:00:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 451EA11C35;
-        Fri,  1 Apr 2022 07:48:32 -0700 (PDT)
+        Fri, 1 Apr 2022 11:00:07 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 173665BD14;
+        Fri,  1 Apr 2022 07:47:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D6F0760AC9;
-        Fri,  1 Apr 2022 14:48:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C42CC2BBE4;
-        Fri,  1 Apr 2022 14:48:29 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 79A2BCE2589;
+        Fri,  1 Apr 2022 14:47:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A610C340F2;
+        Fri,  1 Apr 2022 14:47:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824511;
+        s=k20201202; t=1648824453;
         bh=aDjIbtXpZcKp3KyrL3zGXS1AA90UMCdcBlY1qKml0nA=;
         h=From:To:Cc:Subject:Date:From;
-        b=Ey+LGhs6zVh3i5IJlfCZHu7bYX1sj/7Hz0tX48kGYgKouDEnbY98CIfdP2YajZvHX
-         uLTZqzeE8A13QjAAXRyUPlLUOr7QIhkXYA/ULAMNnKYZ00GmHWImYhXwDmMwhUpE+K
-         QPDfRgoWX/BKFrJt/KqNnm7qXVluiHUD5NyfYUk242+fVFCPPbRqlymcolCt3ik+5g
-         Ok8LOgIv8B4zaLmwa6bLYgjb4NzXXLetYalRZGD1tlKxRBc2eu1Su9xxz0eZJEHm+z
-         2SleE1eDH3iYtTnxrMQzS23gtiZiJ4ynyAWW0lYHiH2vkLHjTVs2RZkUX8jT3R1N3z
-         4bqoRal6JnDFQ==
+        b=PCJgpfNcREqiFvuvIhMKIDs0cu+pR70e8W0s8LQo4i0eARbGuSKqe5UxFVdfJg3+9
+         0N4JuszvFPVe9ZCBfUvZxbq3OFsEBmkagyrey4a+Hm5eTh2QD6Km9DEWuudNsQvTzL
+         NRuxUCB/S8mL3+VgRrSoJLc/fbuIJ1s0/ROlKOqLc7L5rz9ZJXVW5gPSmz83U5oVxe
+         X0c3s9/vRNA+nA0j1j8bASYYbQbbjBl5WJCu19ShfA/qYUTkX5VaL3DsZfOWpSICah
+         SACCaSrMPsw0x10PqEJxRkM16bQUUaeMDKld1XU7Iar9Eav6W8a1DvgasyC2ZXqS2A
+         yVl6tUIqNUR+w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zekun Shen <bruceshenzk@gmail.com>,
@@ -42,9 +42,9 @@ Cc:     Zekun Shen <bruceshenzk@gmail.com>,
         mickflemm@gmail.com, mcgrof@kernel.org, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 01/16] ath5k: fix OOB in ath5k_eeprom_read_pcal_info_5111
-Date:   Fri,  1 Apr 2022 10:48:12 -0400
-Message-Id: <20220401144827.1955845-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 01/22] ath5k: fix OOB in ath5k_eeprom_read_pcal_info_5111
+Date:   Fri,  1 Apr 2022 10:47:08 -0400
+Message-Id: <20220401144729.1955554-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 X-stable: review
