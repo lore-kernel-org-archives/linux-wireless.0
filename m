@@ -2,49 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13DE8C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D37C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:39:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347528AbiDAOhQ (ORCPT
+        id S244454AbiDAOlf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:37:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38240 "EHLO
+        Fri, 1 Apr 2022 10:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347633AbiDAOdP (ORCPT
+        with ESMTP id S1347651AbiDAOk7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:33:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6622F25664E;
-        Fri,  1 Apr 2022 07:30:21 -0700 (PDT)
+        Fri, 1 Apr 2022 10:40:59 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5599528CA87;
+        Fri,  1 Apr 2022 07:34:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8D636B8240E;
-        Fri,  1 Apr 2022 14:30:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D23BC36AF8;
-        Fri,  1 Apr 2022 14:30:16 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E7DDAB8251F;
+        Fri,  1 Apr 2022 14:33:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D3E4C3410F;
+        Fri,  1 Apr 2022 14:33:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823418;
-        bh=fClYw0h0vjp076jfaNI0Hj1eCWF7x7bOsKy8xtc1bWY=;
+        s=k20201202; t=1648823632;
+        bh=XBEpcDax8qRSbttUHaQbFXCkJGe2sYnlZAoXEQznmhU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YTN7GacEnXpcROdzZf+e2Cc9r8fgr+BbqEfy2dQRMqpNUfRo9xPB0KLYXqWOynsLA
-         5syYGH/pGx7PfaRmOWqSkXT+AZoxsRgNBSugkLmUBvW1cOr3555EKd/NpZNrx7178A
-         j2GLnLAGziM+ViOJdVQ9owm2/rwo5JCCbrOwIXX4dkhfmlBA3LE+Wygoo196lArg3+
-         a4kydj68wtsoPr4/gINqRc0QXbRbfH+1vvgvbuMnWYVr7QbDkv6LiksGxFvqplRz+j
-         21XaIUZKddBN678baG6AoyfCsfXRXcSsZKt5RbAhVYU/h8dmKOKyp5Kf/Gfp3gVJMV
-         JxMkP0J1JYocA==
+        b=leczA58TgiYYxr+nmh/7NviNw65Im8IIQJ9YPKDa8ucq1K/ItX7FUyvbNijkL5kiG
+         uuNDSlZBF1d46Ej22jWjtipplvrYebBXhtVYE92B9WbI3L5+NejSKWtB+4AsVL8omh
+         0YdsCsG5MfHiSx1bNZsBhyYTNZXMwQnrkhfzsMLEh/3Un0EeqK3q0gtjfDdGbPsy0S
+         xvNo8A/7+Vaqb4IcnmWC+4h2M5NEEkTwDloc5e0fVT7LWiGq89tLwl6Lu+X3J9M7qd
+         qwZ/QdH9WoLY+ZaCgQpUf2s/vZ+56WlBo+DOLUorlCIRTt2Ozf/7zYdSw39WghznPa
+         TIHeA9kffq8mQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jiri Kosina <jkosina@suse.cz>, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+Cc:     Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 085/149] rtw89: fix RCU usage in rtw89_core_txq_push()
-Date:   Fri,  1 Apr 2022 10:24:32 -0400
-Message-Id: <20220401142536.1948161-85-sashal@kernel.org>
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 019/109] ath11k: fix kernel panic during unload/load ath11k modules
+Date:   Fri,  1 Apr 2022 10:31:26 -0400
+Message-Id: <20220401143256.1950537-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401142536.1948161-1-sashal@kernel.org>
-References: <20220401142536.1948161-1-sashal@kernel.org>
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,114 +55,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jiri Kosina <jkosina@suse.cz>
+From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
 
-[ Upstream commit f3d825a35920714fb7f73e4d4f36ea2328860660 ]
+[ Upstream commit 22b59cb965f79ee1accf83172441c9ca0ecb632a ]
 
-ieee80211_tx_h_select_key() is performing a series of RCU dereferences,
-but rtw89_core_txq_push() is calling it (via ieee80211_tx_dequeue_ni())
-without RCU read-side lock held; fix that.
+Call netif_napi_del() from ath11k_ahb_free_ext_irq() to fix
+the following kernel panic when unload/load ath11k modules
+for few iterations.
 
-This addresses the splat below.
+[  971.201365] Unable to handle kernel paging request at virtual address 6d97a208
+[  971.204227] pgd = 594c2919
+[  971.211478] [6d97a208] *pgd=00000000
+[  971.214120] Internal error: Oops: 5 [#1] PREEMPT SMP ARM
+[  971.412024] CPU: 2 PID: 4435 Comm: insmod Not tainted 5.4.89 #0
+[  971.434256] Hardware name: Generic DT based system
+[  971.440165] PC is at napi_by_id+0x10/0x40
+[  971.445019] LR is at netif_napi_add+0x160/0x1dc
 
- =============================
- WARNING: suspicious RCU usage
- 5.17.0-rc4-00003-gccad664b7f14 #3 Tainted: G            E
- -----------------------------
- net/mac80211/tx.c:593 suspicious rcu_dereference_check() usage!
+[  971.743127] (napi_by_id) from [<807d89a0>] (netif_napi_add+0x160/0x1dc)
+[  971.751295] (netif_napi_add) from [<7f1209ac>] (ath11k_ahb_config_irq+0xf8/0x414 [ath11k_ahb])
+[  971.759164] (ath11k_ahb_config_irq [ath11k_ahb]) from [<7f12135c>] (ath11k_ahb_probe+0x40c/0x51c [ath11k_ahb])
+[  971.768567] (ath11k_ahb_probe [ath11k_ahb]) from [<80666864>] (platform_drv_probe+0x48/0x94)
+[  971.779670] (platform_drv_probe) from [<80664718>] (really_probe+0x1c8/0x450)
+[  971.789389] (really_probe) from [<80664cc4>] (driver_probe_device+0x15c/0x1b8)
+[  971.797547] (driver_probe_device) from [<80664f60>] (device_driver_attach+0x44/0x60)
+[  971.805795] (device_driver_attach) from [<806650a0>] (__driver_attach+0x124/0x140)
+[  971.814822] (__driver_attach) from [<80662adc>] (bus_for_each_dev+0x58/0xa4)
+[  971.823328] (bus_for_each_dev) from [<80663a2c>] (bus_add_driver+0xf0/0x1e8)
+[  971.831662] (bus_add_driver) from [<806658a4>] (driver_register+0xa8/0xf0)
+[  971.839822] (driver_register) from [<8030269c>] (do_one_initcall+0x78/0x1ac)
+[  971.847638] (do_one_initcall) from [<80392524>] (do_init_module+0x54/0x200)
+[  971.855968] (do_init_module) from [<803945b0>] (load_module+0x1e30/0x1ffc)
+[  971.864126] (load_module) from [<803948b0>] (sys_init_module+0x134/0x17c)
+[  971.871852] (sys_init_module) from [<80301000>] (ret_fast_syscall+0x0/0x50)
 
- other info that might help us debug this:
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.6.0.1-00760-QCAHKSWPL_SILICONZ-1
 
- rcu_scheduler_active = 2, debug_locks = 1
- 2 locks held by kworker/u33:0/184:
-  #0: ffff9c0b14811d38 ((wq_completion)rtw89_tx_wq){+.+.}-{0:0}, at: process_one_work+0x258/0x660
-  #1: ffffb97380cf3e78 ((work_completion)(&rtwdev->txq_work)){+.+.}-{0:0}, at: process_one_work+0x258/0x660
-
- stack backtrace:
- CPU: 8 PID: 184 Comm: kworker/u33:0 Tainted: G            E     5.17.0-rc4-00003-gccad664b7f14 #3 473b49ab0e7c2d6af2900c756bfd04efd7a9de13
- Hardware name: LENOVO 20UJS2B905/20UJS2B905, BIOS R1CET63W(1.32 ) 04/09/2021
- Workqueue: rtw89_tx_wq rtw89_core_txq_work [rtw89_core]
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x58/0x71
-  ieee80211_tx_h_select_key+0x2c0/0x530 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
-  ieee80211_tx_dequeue+0x1a7/0x1260 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
-  rtw89_core_txq_work+0x1a6/0x420 [rtw89_core b39ba493f2e517ad75e0f8187ecc24edf58bbbea]
-  process_one_work+0x2d8/0x660
-  worker_thread+0x39/0x3e0
-  ? process_one_work+0x660/0x660
-  kthread+0xe5/0x110
-  ? kthread_complete_and_exit+0x20/0x20
-  ret_from_fork+0x22/0x30
-  </TASK>
-
- =============================
- WARNING: suspicious RCU usage
- 5.17.0-rc4-00003-gccad664b7f14 #3 Tainted: G            E
- -----------------------------
- net/mac80211/tx.c:607 suspicious rcu_dereference_check() usage!
-
- other info that might help us debug this:
-
- rcu_scheduler_active = 2, debug_locks = 1
- 2 locks held by kworker/u33:0/184:
-  #0: ffff9c0b14811d38 ((wq_completion)rtw89_tx_wq){+.+.}-{0:0}, at: process_one_work+0x258/0x660
-  #1: ffffb97380cf3e78 ((work_completion)(&rtwdev->txq_work)){+.+.}-{0:0}, at: process_one_work+0x258/0x660
-
- stack backtrace:
- CPU: 8 PID: 184 Comm: kworker/u33:0 Tainted: G            E     5.17.0-rc4-00003-gccad664b7f14 #3 473b49ab0e7c2d6af2900c756bfd04efd7a9de13
- Hardware name: LENOVO 20UJS2B905/20UJS2B905, BIOS R1CET63W(1.32 ) 04/09/2021
- Workqueue: rtw89_tx_wq rtw89_core_txq_work [rtw89_core]
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x58/0x71
-  ieee80211_tx_h_select_key+0x464/0x530 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
-  ieee80211_tx_dequeue+0x1a7/0x1260 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
-  rtw89_core_txq_work+0x1a6/0x420 [rtw89_core b39ba493f2e517ad75e0f8187ecc24edf58bbbea]
-  process_one_work+0x2d8/0x660
-  worker_thread+0x39/0x3e0
-  ? process_one_work+0x660/0x660
-  kthread+0xe5/0x110
-  ? kthread_complete_and_exit+0x20/0x20
-  ret_from_fork+0x22/0x30
-  </TASK>
-
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/nycvar.YFH.7.76.2202152037000.11721@cbobk.fhfr.pm
+Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/1642583973-21599-1-git-send-email-quic_vnaralas@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/ahb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a0737eea9f81..9632e7f218dd 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1509,11 +1509,12 @@ static void rtw89_core_txq_push(struct rtw89_dev *rtwdev,
- 	unsigned long i;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 3fb0aa000825..24bd0520926b 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -391,6 +391,8 @@ static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
  
-+	rcu_read_lock();
- 	for (i = 0; i < frame_cnt; i++) {
- 		skb = ieee80211_tx_dequeue_ni(rtwdev->hw, txq);
- 		if (!skb) {
- 			rtw89_debug(rtwdev, RTW89_DBG_TXRX, "dequeue a NULL skb\n");
--			return;
-+			goto out;
- 		}
- 		rtw89_core_txq_check_agg(rtwdev, rtwtxq, skb);
- 		ret = rtw89_core_tx_write(rtwdev, vif, sta, skb, NULL);
-@@ -1523,6 +1524,8 @@ static void rtw89_core_txq_push(struct rtw89_dev *rtwdev,
- 			break;
- 		}
+ 		for (j = 0; j < irq_grp->num_irq; j++)
+ 			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
++
++		netif_napi_del(&irq_grp->napi);
  	}
-+out:
-+	rcu_read_unlock();
  }
  
- static u32 rtw89_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev, u8 tid)
 -- 
 2.34.1
 
