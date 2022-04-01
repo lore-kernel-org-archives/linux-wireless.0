@@ -2,54 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1717C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAEEEC43217
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349164AbiDAOzb (ORCPT
+        id S1348840AbiDAOze (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60714 "EHLO
+        Fri, 1 Apr 2022 10:55:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352162AbiDAOt7 (ORCPT
+        with ESMTP id S1349207AbiDAOpk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:49:59 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9742B19DA;
-        Fri,  1 Apr 2022 07:41:10 -0700 (PDT)
+        Fri, 1 Apr 2022 10:45:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E97D829A541;
+        Fri,  1 Apr 2022 07:35:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 68B76B82504;
-        Fri,  1 Apr 2022 14:40:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DD15C2BBE4;
-        Fri,  1 Apr 2022 14:40:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5E9A060AAF;
+        Fri,  1 Apr 2022 14:35:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 813BAC2BBE4;
+        Fri,  1 Apr 2022 14:35:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824029;
-        bh=9Wc3k6gE6jmVeDTnq2FcMaJX6Ctbq58Pzce8ZBN2X+c=;
+        s=k20201202; t=1648823734;
+        bh=sXYWVK0lthYG0YtqGswx+v1n0pnOJ5A9MyQ31rH2NdQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HBi+scHJlORbjdv5JIfJwlokRmWF/VVoBT+JgjB+MadOsxqd1Mli4e+XMpHyZRM/9
-         SWiPcWBhe5MBsBu6kOq8yKUjA9ddTY+nyz04JLcWWXdLiJFeoHFWeSX/nBAYybKe4C
-         Lnzsu7iuNLjCtbZrc/wsqN1pmeUihiA9I2hYUKUI0L6pxtOWuXDSgrwOfZcX+VIwoS
-         l4PUFWwgwMkq6+dB2d1gyDNrAnOKsxqaiBS4jqeCc7bNh6XXmhgjxr81hMVIEo/PIY
-         lFtYAPumZbiZfPlzxlB0QzNYG/x59dSaUAA9JCl5vHpC7UVZBDBp+LtM9Hg2Er3Mqc
-         XD0OXYMRUXI6A==
+        b=lsYy+QWjE19YYSBJPB3t2+p+l0G17D1VjgUK4PiC20bz89PERFeGc79+YQEuXOZtr
+         U+O2gQqLNpXzp1Yfjsw9lmwjQJjo1VpqvdRI7Cnpw7N1QXsvk38EcEFNQlKUuKov8P
+         V9FqN2t0L6xcG5wlJC3bCGq+pZ3U2q0gwRbY0LpMqfj9/FItYCF2wYR6quu3hTcr2R
+         Slvud9CCogaiHoKr9C7pGaP/MxToy9yLogdUmgUfxL+onCM4uqCax0yzVWqzyZtPm9
+         MGbyfpPXifJmvHlGqOB535OlaJyZn9pzmQu7Do5PtkjBGRBDfQGQZ8X50am5vhUuJg
+         7BvQXjsTsQp6w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johan Almbladh <johan.almbladh@anyfinetworks.com>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
-        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        pabeni@redhat.com, matthias.bgg@gmail.com, Bo.Jiao@mediatek.com,
-        shayne.chen@mediatek.com, greearb@candelatech.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.15 58/98] mt76: mt7915: fix injected MPDU transmission to not use HW A-MSDU
-Date:   Fri,  1 Apr 2022 10:37:02 -0400
-Message-Id: <20220401143742.1952163-58-sashal@kernel.org>
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        mukesh.sisodiya@intel.com, johannes.berg@intel.com,
+        mordechay.goodstein@intel.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 055/109] iwlwifi: fix small doc mistake for iwl_fw_ini_addr_val
+Date:   Fri,  1 Apr 2022 10:32:02 -0400
+Message-Id: <20220401143256.1950537-55-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
-References: <20220401143742.1952163-1-sashal@kernel.org>
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,46 +55,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johan Almbladh <johan.almbladh@anyfinetworks.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-[ Upstream commit 28225a6ef80ebf46c46e5fbd5b1ee231a0b2b5b7 ]
+[ Upstream commit 3009c797c4b3840495e8f48d8d07f48d2ddfed80 ]
 
-Before, the hardware would be allowed to transmit injected 802.11 MPDUs
-as A-MSDU. This resulted in corrupted frames being transmitted. Now,
-injected MPDUs are transmitted as-is, without A-MSDU.
+There was a small copy and paste mistake in the doc declaration of
+iwl_fw_ini_addr_val.  Fix it.
 
-The fix was verified with frame injection on MT7915 hardware, both with
-and without the injected frame being encrypted.
-
-If the hardware cannot do A-MSDU aggregation on MPDUs, this problem
-would also be present in the TX path where mac80211 does the 802.11
-encapsulation. However, I have not observed any such problem when
-disabling IEEE80211_HW_SUPPORTS_TX_ENCAP_OFFLOAD to force that mode.
-Therefore this fix is isolated to injected frames only.
-
-The same A-MSDU logic is also present in the mt7921 driver, so it is
-likely that this fix should be applied there too. I do not have access
-to mt7921 hardware so I have not been able to test that.
-
-Signed-off-by: Johan Almbladh <johan.almbladh@anyfinetworks.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20220205112029.aeec71c397b3.I0ba3234419eb8c8c7512a2ca531a6dbb55046cf7@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index ff613d705611..7691292526e0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -899,6 +899,7 @@ mt7915_mac_write_txwi_80211(struct mt7915_dev *dev, __le32 *txwi,
- 		val = MT_TXD3_SN_VALID |
- 		      FIELD_PREP(MT_TXD3_SEQ, IEEE80211_SEQ_TO_SN(seqno));
- 		txwi[3] |= cpu_to_le32(val);
-+		txwi[7] &= ~cpu_to_le32(MT_TXD7_HW_AMSDU);
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index 3988f5fea33a..6b2a2828cb83 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2018-2021 Intel Corporation
++ * Copyright (C) 2018-2022 Intel Corporation
+  */
+ #ifndef __iwl_fw_dbg_tlv_h__
+ #define __iwl_fw_dbg_tlv_h__
+@@ -244,11 +244,10 @@ struct iwl_fw_ini_hcmd_tlv {
+ } __packed; /* FW_TLV_DEBUG_HCMD_API_S_VER_1 */
  
- 	val = FIELD_PREP(MT_TXD7_TYPE, fc_type) |
+ /**
+-* struct iwl_fw_ini_conf_tlv - preset configuration TLV
++* struct iwl_fw_ini_addr_val - Address and value to set it to
+ *
+ * @address: the base address
+ * @value: value to set at address
+-
+ */
+ struct iwl_fw_ini_addr_val {
+ 	__le32 address;
 -- 
 2.34.1
 
