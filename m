@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2D2C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 05:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2151DC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 05:52:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245221AbiDAFxx (ORCPT
+        id S245215AbiDAFxy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 01:53:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54402 "EHLO
+        Fri, 1 Apr 2022 01:53:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245206AbiDAFxu (ORCPT
+        with ESMTP id S245218AbiDAFxv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 01:53:50 -0400
+        Fri, 1 Apr 2022 01:53:51 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75C732619AC
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 22:52:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8884A25DA9C
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 22:52:02 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2315pl3F3019750, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2315pl3F3019750
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2315ppGS3019771, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2315ppGS3019771
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 1 Apr 2022 13:51:47 +0800
+        Fri, 1 Apr 2022 13:51:51 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 1 Apr 2022 13:51:47 +0800
+ 15.1.2375.24; Fri, 1 Apr 2022 13:51:51 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 1 Apr
- 2022 13:51:46 +0800
+ 2022 13:51:50 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <ku920601@realtek.com>,
         <phhuang@realtek.com>
-Subject: [PATCH v2 1/4] rtw89: change idle mode condition during hw_scan
-Date:   Fri, 1 Apr 2022 13:50:40 +0800
-Message-ID: <20220401055043.12512-2-pkshih@realtek.com>
+Subject: [PATCH v2 4/4] rtw89: fix misconfiguration on hw_scan channel time
+Date:   Fri, 1 Apr 2022 13:50:43 +0800
+Message-ID: <20220401055043.12512-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220401055043.12512-1-pkshih@realtek.com>
 References: <20220401055043.12512-1-pkshih@realtek.com>
@@ -57,7 +57,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvMSCkV6TIIDAzOjI4OjAw?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -67,50 +67,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Po Hao Huang <phhuang@realtek.com>
 
-Previously we only consider single interface's status, idle mode
-behavior could be unexpected when multiple interfaces is active.
-Change to enter/leave idle mode by mac80211's configuration state.
+Without this patch, hw scan won't stay long enough on DFS/passive
+channels. Found previous logic error and fix it.
 
 Signed-off-by: Po Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index c61061358980b..be25b9a42fc11 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1798,9 +1798,9 @@ static void rtw89_ips_work(struct work_struct *work)
- {
- 	struct rtw89_dev *rtwdev = container_of(work, struct rtw89_dev,
- 						ips_work);
--
- 	mutex_lock(&rtwdev->mutex);
--	rtw89_enter_ips(rtwdev);
-+	if (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE)
-+		rtw89_enter_ips(rtwdev);
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-@@ -2703,7 +2703,7 @@ void rtw89_core_scan_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- 
- 	rtwdev->scanning = true;
- 	rtw89_leave_lps(rtwdev);
--	if (hw_scan && rtwvif->net_type == RTW89_NET_TYPE_NO_LINK)
-+	if (hw_scan && (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE))
- 		rtw89_leave_ips(rtwdev);
- 
- 	ether_addr_copy(rtwvif->mac_addr, mac_addr);
-@@ -2727,7 +2727,7 @@ void rtw89_core_scan_complete(struct rtw89_dev *rtwdev,
- 
- 	rtwdev->scanning = false;
- 	rtwdev->dig.bypass_dig = true;
--	if (hw_scan && rtwvif->net_type == RTW89_NET_TYPE_NO_LINK)
-+	if (hw_scan && (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE))
- 		ieee80211_queue_work(rtwdev->hw, &rtwdev->ips_work);
- }
- 
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 4848f25e7a0af..022d52b0c2e78 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2099,7 +2099,7 @@ static void rtw89_hw_scan_add_chan(struct rtw89_dev *rtwdev, int chan_type,
+ 		ch_info->num_pkt = 0;
+ 		break;
+ 	case RTW89_CHAN_DFS:
+-		ch_info->period = min_t(u8, ch_info->period,
++		ch_info->period = max_t(u8, ch_info->period,
+ 					RTW89_DFS_CHAN_TIME);
+ 		ch_info->dwell_time = RTW89_DWELL_TIME;
+ 		break;
 -- 
 2.25.1
 
