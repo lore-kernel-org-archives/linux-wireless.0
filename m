@@ -2,48 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A68C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CE3C4167D
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348747AbiDAPxf (ORCPT
+        id S241578AbiDAPxg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:53:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45384 "EHLO
+        Fri, 1 Apr 2022 11:53:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349140AbiDAOxR (ORCPT
+        with ESMTP id S1345602AbiDAOze (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:53:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CAF92B519B;
-        Fri,  1 Apr 2022 07:42:39 -0700 (PDT)
+        Fri, 1 Apr 2022 10:55:34 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 190B060CC9;
+        Fri,  1 Apr 2022 07:43:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0D076B824D8;
-        Fri,  1 Apr 2022 14:42:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED40C3410F;
-        Fri,  1 Apr 2022 14:42:36 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CA1AEB823EB;
+        Fri,  1 Apr 2022 14:43:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1351C340EE;
+        Fri,  1 Apr 2022 14:43:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824157;
-        bh=655SPyw+7+b05qOtVv9OrDh+FzGI99dWI1geAjap6zY=;
+        s=k20201202; t=1648824226;
+        bh=LSzVRn0NDfhPSMCSW4F1VVYlmUgrs7tEe750gpeqMOs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Fn9FY5D6uMnUVBy0mmoIfkeDESmiMNkiCaBUZA9wYjbstLIctWT/YCeK7Ifz1QH8f
-         dFvkRFNRWdaJ6uXxVBooyAm9WZBceRZfiIthckXqKPhUu5pX1FvgeApxZOyqrSWN4G
-         pV6M43Fc4vRUdCFJGe3x61uBNbN/25Rr8coS12S6YmEMuEoauYiarC3+yryUotVHlA
-         +vZef0UNoQdWIeqBrc6YfT8ciHNRv/OX2gzkkUa4rymG+0ayducckaBlzlVHjnsRcL
-         vQj3YmwQGsb6yOMhyiTGjpYvDSMrNKLjFkTu0JOyGXYEkMVdswluhhGeiUbpJZCgfl
-         xQCPifObhhgyA==
+        b=ddy5brxVmk4E0iIcdxzLkArG1ZV86eSiO+DiNgmfspO6qP2o2jfAczO7LUEKED+QZ
+         UQadmcfgaW39i5s+uI05duO/bMvn+4bvzTuMYSWAMBeR/LwX9jncx/ahIIyI697LTr
+         cNTUmOIVFG8kwzSnhDNpkCkffEpLrcWEuMaV+MdryXi6sEUxx2nrKv0HnFCRMpbl90
+         xkVu+3prTsv7xSchz7Ar+GHeBZ26mBxUqRDONzo2ONU84m7G+MBBOq3iGoshbYLpio
+         Jiy90UIBxAb/6D55Gw0GvTMBMbBU+4C9NPwm8o9DsLTA0oZE/eilCVBsM41ElQ/Tkl
+         xZz+o2pXhuPHg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 09/65] ath11k: fix kernel panic during unload/load ath11k modules
-Date:   Fri,  1 Apr 2022 10:41:10 -0400
-Message-Id: <20220401144206.1953700-9-sashal@kernel.org>
+Cc:     Yang Li <yang.lee@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        pabeni@redhat.com, matthias.bgg@gmail.com, xing.song@mediatek.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.10 38/65] mt76: mt7615: Fix assigning negative values to unsigned variable
+Date:   Fri,  1 Apr 2022 10:41:39 -0400
+Message-Id: <20220401144206.1953700-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401144206.1953700-1-sashal@kernel.org>
 References: <20220401144206.1953700-1-sashal@kernel.org>
@@ -55,63 +58,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+From: Yang Li <yang.lee@linux.alibaba.com>
 
-[ Upstream commit 22b59cb965f79ee1accf83172441c9ca0ecb632a ]
+[ Upstream commit 9273ffcc9a11942bd586bb42584337ef3962b692 ]
 
-Call netif_napi_del() from ath11k_ahb_free_ext_irq() to fix
-the following kernel panic when unload/load ath11k modules
-for few iterations.
+Smatch reports the following:
+drivers/net/wireless/mediatek/mt76/mt7615/mac.c:1865
+mt7615_mac_adjust_sensitivity() warn: assigning (-110) to unsigned
+variable 'def_th'
+drivers/net/wireless/mediatek/mt76/mt7615/mac.c:1865
+mt7615_mac_adjust_sensitivity() warn: assigning (-98) to unsigned
+variable 'def_th'
 
-[  971.201365] Unable to handle kernel paging request at virtual address 6d97a208
-[  971.204227] pgd = 594c2919
-[  971.211478] [6d97a208] *pgd=00000000
-[  971.214120] Internal error: Oops: 5 [#1] PREEMPT SMP ARM
-[  971.412024] CPU: 2 PID: 4435 Comm: insmod Not tainted 5.4.89 #0
-[  971.434256] Hardware name: Generic DT based system
-[  971.440165] PC is at napi_by_id+0x10/0x40
-[  971.445019] LR is at netif_napi_add+0x160/0x1dc
-
-[  971.743127] (napi_by_id) from [<807d89a0>] (netif_napi_add+0x160/0x1dc)
-[  971.751295] (netif_napi_add) from [<7f1209ac>] (ath11k_ahb_config_irq+0xf8/0x414 [ath11k_ahb])
-[  971.759164] (ath11k_ahb_config_irq [ath11k_ahb]) from [<7f12135c>] (ath11k_ahb_probe+0x40c/0x51c [ath11k_ahb])
-[  971.768567] (ath11k_ahb_probe [ath11k_ahb]) from [<80666864>] (platform_drv_probe+0x48/0x94)
-[  971.779670] (platform_drv_probe) from [<80664718>] (really_probe+0x1c8/0x450)
-[  971.789389] (really_probe) from [<80664cc4>] (driver_probe_device+0x15c/0x1b8)
-[  971.797547] (driver_probe_device) from [<80664f60>] (device_driver_attach+0x44/0x60)
-[  971.805795] (device_driver_attach) from [<806650a0>] (__driver_attach+0x124/0x140)
-[  971.814822] (__driver_attach) from [<80662adc>] (bus_for_each_dev+0x58/0xa4)
-[  971.823328] (bus_for_each_dev) from [<80663a2c>] (bus_add_driver+0xf0/0x1e8)
-[  971.831662] (bus_add_driver) from [<806658a4>] (driver_register+0xa8/0xf0)
-[  971.839822] (driver_register) from [<8030269c>] (do_one_initcall+0x78/0x1ac)
-[  971.847638] (do_one_initcall) from [<80392524>] (do_init_module+0x54/0x200)
-[  971.855968] (do_init_module) from [<803945b0>] (load_module+0x1e30/0x1ffc)
-[  971.864126] (load_module) from [<803948b0>] (sys_init_module+0x134/0x17c)
-[  971.871852] (sys_init_module) from [<80301000>] (ret_fast_syscall+0x0/0x50)
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.6.0.1-00760-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/1642583973-21599-1-git-send-email-quic_vnaralas@quicinc.com
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 9ff6e6853314..190bc5712e96 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -366,6 +366,8 @@ static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
- 
- 		for (j = 0; j < irq_grp->num_irq; j++)
- 			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
-+
-+		netif_napi_del(&irq_grp->napi);
- 	}
- }
- 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 424be103093c..1465a92ea3fc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1626,7 +1626,7 @@ mt7615_mac_adjust_sensitivity(struct mt7615_phy *phy,
+ 	struct mt7615_dev *dev = phy->dev;
+ 	int false_cca = ofdm ? phy->false_cca_ofdm : phy->false_cca_cck;
+ 	bool ext_phy = phy != &dev->phy;
+-	u16 def_th = ofdm ? -98 : -110;
++	s16 def_th = ofdm ? -98 : -110;
+ 	bool update = false;
+ 	s8 *sensitivity;
+ 	int signal;
 -- 
 2.34.1
 
