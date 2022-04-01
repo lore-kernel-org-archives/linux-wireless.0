@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD84C43217
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:35:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4DFC4167B
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:35:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347990AbiDAOgp (ORCPT
+        id S1347411AbiDAOgt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:36:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57910 "EHLO
+        Fri, 1 Apr 2022 10:36:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348409AbiDAOeV (ORCPT
+        with ESMTP id S1347638AbiDAOdP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:34:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77CA2BC7;
-        Fri,  1 Apr 2022 07:32:32 -0700 (PDT)
+        Fri, 1 Apr 2022 10:33:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0638258FDE;
+        Fri,  1 Apr 2022 07:30:22 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E23F261C1A;
-        Fri,  1 Apr 2022 14:32:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF3B9C34111;
-        Fri,  1 Apr 2022 14:32:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 802FAB82500;
+        Fri,  1 Apr 2022 14:30:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9A13C36AE2;
+        Fri,  1 Apr 2022 14:30:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823551;
-        bh=fp7jiniWyo2eC0F5ZPLfhtbsZIvtute4v9PstEC8ezg=;
+        s=k20201202; t=1648823420;
+        bh=4TM1wtHMHWiJixswzsOH0WgzU0dcCN1z4qTkFA7BIr8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mx3qMwlusCkBbNyipx5xOXvk/4iBNicQztlTLO52CU2ApIEYZdzMeElllc6/gRcvu
-         Bmeb4nc4AXy64TWBSl8UwWk01ZORn2hXx6+Ez/myRpTmi9L2zHGV/bj1ejs7HxelEp
-         KaOjpls3ACVptO8mx4RTR7hHEM7/knpasWy7KLObIgQAL/bc68XAIYsxnYJw5pRLVe
-         Gc1Uar/vD9rU3+o6nDtgvsD27gG0mY1OPsUri8NhoVhvMB1TPe5DbaIemnz9QZW7IK
-         IVLVY7HAof1USNL9SQgwukhXy8cYVeDx0crJgfJBBu/WwCH0+G4eE8RGrE+eYhixJU
-         2tVXAex3TAICQ==
+        b=Z9hJMtVfScEpJy6qM/u+LYJqCGEWSEMeYhVpORnQXToXqfYHQOwom51ADo0sMXgcx
+         qntm39cNyL9XP2jhms08VZ/ElqE6LglVUG2T+/hNA/CuK/XsNzEv10TZOL4jbw6bU3
+         9Pb8Ak0O1wqostpWv8kFEvq32qTwhZ26BNRNVs5xQxKOC1fxLeXW0kh64XPv7cs1UZ
+         Qy/LfJ+56lN/qgsLFLLghtHAcm8Yi7m6DSN1GHOMh6LXh49e1t4a3H44DLP7xgNQ00
+         4YXl0babZiCOO1ze4Sa2kRyD0fv6wPJcgniyVjqciclndKnKbHn3qqGzs1ZGQ2CKOt
+         KfOgg+DeGm5QQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Emmanuel Grumbach <Emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+Cc:     Baochen Qiang <quic_bqiang@quicinc.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 140/149] iwlwifi: mei: fix building iwlmei
-Date:   Fri,  1 Apr 2022 10:25:27 -0400
-Message-Id: <20220401142536.1948161-140-sashal@kernel.org>
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 086/149] ath11k: Fix frames flush failure caused by deadlock
+Date:   Fri,  1 Apr 2022 10:24:33 -0400
+Message-Id: <20220401142536.1948161-86-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401142536.1948161-1-sashal@kernel.org>
 References: <20220401142536.1948161-1-sashal@kernel.org>
@@ -55,42 +55,134 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Baochen Qiang <quic_bqiang@quicinc.com>
 
-[ Upstream commit 066291bec0c55315e568ead501bebdefcb8453d2 ]
+[ Upstream commit 261b07519518bd14cb168b287b17e1d195f8d0c8 ]
 
-Building iwlmei without CONFIG_CFG80211 causes a link-time warning:
+We are seeing below warnings:
 
-ld.lld: error: undefined symbol: ieee80211_hdrlen
->>> referenced by net.c
->>>               net/wireless/intel/iwlwifi/mei/net.o:(iwl_mei_tx_copy_to_csme) in archive drivers/built-in.a
+kernel: [25393.301506] ath11k_pci 0000:01:00.0: failed to flush mgmt transmit queue 0
+kernel: [25398.421509] ath11k_pci 0000:01:00.0: failed to flush mgmt transmit queue 0
+kernel: [25398.421831] ath11k_pci 0000:01:00.0: dropping mgmt frame for vdev 0, is_started 0
 
-Add an explicit dependency to avoid this. In theory it should not
-be needed here, but it also seems pointless to allow IWLMEI
-for configurations without CFG80211.
+this means ath11k fails to flush mgmt. frames because wmi_mgmt_tx_work
+has no chance to run in 5 seconds.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Emmanuel Grumbach <Emmanuel.grumbach@intel.com>
-Acked-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220316183617.1470631-1-arnd@kernel.org
+By setting /proc/sys/kernel/hung_task_timeout_secs to 20 and increasing
+ATH11K_FLUSH_TIMEOUT to 50 we get below warnings:
+
+kernel: [  120.763160] INFO: task wpa_supplicant:924 blocked for more than 20 seconds.
+kernel: [  120.763169]       Not tainted 5.10.90 #12
+kernel: [  120.763177] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kernel: [  120.763186] task:wpa_supplicant  state:D stack:    0 pid:  924 ppid:     1 flags:0x000043a0
+kernel: [  120.763201] Call Trace:
+kernel: [  120.763214]  __schedule+0x785/0x12fa
+kernel: [  120.763224]  ? lockdep_hardirqs_on_prepare+0xe2/0x1bb
+kernel: [  120.763242]  schedule+0x7e/0xa1
+kernel: [  120.763253]  schedule_timeout+0x98/0xfe
+kernel: [  120.763266]  ? run_local_timers+0x4a/0x4a
+kernel: [  120.763291]  ath11k_mac_flush_tx_complete+0x197/0x2b1 [ath11k 13c3a9bf37790f4ac8103b3decf7ab4008ac314a]
+kernel: [  120.763306]  ? init_wait_entry+0x2e/0x2e
+kernel: [  120.763343]  __ieee80211_flush_queues+0x167/0x21f [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763378]  __ieee80211_recalc_idle+0x105/0x125 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763411]  ieee80211_recalc_idle+0x14/0x27 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763441]  ieee80211_free_chanctx+0x77/0xa2 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763473]  __ieee80211_vif_release_channel+0x100/0x131 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763540]  ieee80211_vif_release_channel+0x66/0x81 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763572]  ieee80211_destroy_auth_data+0xa3/0xe6 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763612]  ieee80211_mgd_deauth+0x178/0x29b [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.763654]  cfg80211_mlme_deauth+0x1a8/0x22c [cfg80211 8945aa5bc2af5f6972336665d8ad6f9c191ad5be]
+kernel: [  120.763697]  nl80211_deauthenticate+0xfa/0x123 [cfg80211 8945aa5bc2af5f6972336665d8ad6f9c191ad5be]
+kernel: [  120.763715]  genl_rcv_msg+0x392/0x3c2
+kernel: [  120.763750]  ? nl80211_associate+0x432/0x432 [cfg80211 8945aa5bc2af5f6972336665d8ad6f9c191ad5be]
+kernel: [  120.763782]  ? nl80211_associate+0x432/0x432 [cfg80211 8945aa5bc2af5f6972336665d8ad6f9c191ad5be]
+kernel: [  120.763802]  ? genl_rcv+0x36/0x36
+kernel: [  120.763814]  netlink_rcv_skb+0x89/0xf7
+kernel: [  120.763829]  genl_rcv+0x28/0x36
+kernel: [  120.763840]  netlink_unicast+0x179/0x24b
+kernel: [  120.763854]  netlink_sendmsg+0x393/0x401
+kernel: [  120.763872]  sock_sendmsg+0x72/0x76
+kernel: [  120.763886]  ____sys_sendmsg+0x170/0x1e6
+kernel: [  120.763897]  ? copy_msghdr_from_user+0x7a/0xa2
+kernel: [  120.763914]  ___sys_sendmsg+0x95/0xd1
+kernel: [  120.763940]  __sys_sendmsg+0x85/0xbf
+kernel: [  120.763956]  do_syscall_64+0x43/0x55
+kernel: [  120.763966]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+kernel: [  120.763977] RIP: 0033:0x79089f3fcc83
+kernel: [  120.763986] RSP: 002b:00007ffe604f0508 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+kernel: [  120.763997] RAX: ffffffffffffffda RBX: 000059b40e987690 RCX: 000079089f3fcc83
+kernel: [  120.764006] RDX: 0000000000000000 RSI: 00007ffe604f0558 RDI: 0000000000000009
+kernel: [  120.764014] RBP: 00007ffe604f0540 R08: 0000000000000004 R09: 0000000000400000
+kernel: [  120.764023] R10: 00007ffe604f0638 R11: 0000000000000246 R12: 000059b40ea04980
+kernel: [  120.764032] R13: 00007ffe604f0638 R14: 000059b40e98c360 R15: 00007ffe604f0558
+...
+kernel: [  120.765230] INFO: task kworker/u32:26:4239 blocked for more than 20 seconds.
+kernel: [  120.765238]       Not tainted 5.10.90 #12
+kernel: [  120.765245] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kernel: [  120.765253] task:kworker/u32:26  state:D stack:    0 pid: 4239 ppid:     2 flags:0x00004080
+kernel: [  120.765284] Workqueue: phy0 ieee80211_iface_work [mac80211]
+kernel: [  120.765295] Call Trace:
+kernel: [  120.765306]  __schedule+0x785/0x12fa
+kernel: [  120.765316]  ? find_held_lock+0x3d/0xb2
+kernel: [  120.765331]  schedule+0x7e/0xa1
+kernel: [  120.765340]  schedule_preempt_disabled+0x15/0x1e
+kernel: [  120.765349]  __mutex_lock_common+0x561/0xc0d
+kernel: [  120.765375]  ? ieee80211_sta_work+0x3e/0x1232 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.765390]  mutex_lock_nested+0x20/0x26
+kernel: [  120.765416]  ieee80211_sta_work+0x3e/0x1232 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.765430]  ? skb_dequeue+0x54/0x5e
+kernel: [  120.765456]  ? ieee80211_iface_work+0x7b/0x339 [mac80211 335da900954f1c5ea7f1613d92088ce83342042c]
+kernel: [  120.765485]  process_one_work+0x270/0x504
+kernel: [  120.765501]  worker_thread+0x215/0x376
+kernel: [  120.765514]  kthread+0x159/0x168
+kernel: [  120.765526]  ? pr_cont_work+0x5b/0x5b
+kernel: [  120.765536]  ? kthread_blkcg+0x31/0x31
+kernel: [  120.765550]  ret_from_fork+0x22/0x30
+...
+kernel: [  120.765867] Showing all locks held in the system:
+...
+kernel: [  120.766164] 5 locks held by wpa_supplicant/924:
+kernel: [  120.766172]  #0: ffffffffb1e63eb0 (cb_lock){++++}-{3:3}, at: genl_rcv+0x19/0x36
+kernel: [  120.766197]  #1: ffffffffb1e5b1c8 (rtnl_mutex){+.+.}-{3:3}, at: nl80211_pre_doit+0x2a/0x15c [cfg80211]
+kernel: [  120.766238]  #2: ffff99f08347cd08 (&wdev->mtx){+.+.}-{3:3}, at: nl80211_deauthenticate+0xde/0x123 [cfg80211]
+kernel: [  120.766279]  #3: ffff99f09df12a48 (&local->mtx){+.+.}-{3:3}, at: ieee80211_destroy_auth_data+0x9b/0xe6 [mac80211]
+kernel: [  120.766321]  #4: ffff99f09df12ce0 (&local->chanctx_mtx){+.+.}-{3:3}, at: ieee80211_vif_release_channel+0x5e/0x81 [mac80211]
+...
+kernel: [  120.766585] 3 locks held by kworker/u32:26/4239:
+kernel: [  120.766593]  #0: ffff99f04458f948 ((wq_completion)phy0){+.+.}-{0:0}, at: process_one_work+0x19a/0x504
+kernel: [  120.766621]  #1: ffffbad54b3cfe50 ((work_completion)(&sdata->work)){+.+.}-{0:0}, at: process_one_work+0x1c0/0x504
+kernel: [  120.766649]  #2: ffff99f08347cd08 (&wdev->mtx){+.+.}-{3:3}, at: ieee80211_sta_work+0x3e/0x1232 [mac80211]
+
+With above info the issue is clear: First wmi_mgmt_tx_work is inserted
+to local->workqueue after sdata->work inserted, then wpa_supplicant
+acquires wdev->mtx in nl80211_deauthenticate and finally calls
+ath11k_mac_op_flush where it waits all mgmt. frames to be sent out by
+wmi_mgmt_tx_work. Meanwhile, sdata->work is blocked by wdev->mtx in
+ieee80211_sta_work, as a result wmi_mgmt_tx_work has no chance to run.
+
+Change to use ab->workqueue instead of local->workqueue to fix this issue.
+
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20220217084545.18844-1-quic_bqiang@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 85e704283755..a647a406b87b 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -139,6 +139,7 @@ config IWLMEI
- 	tristate "Intel Management Engine communication over WLAN"
- 	depends on INTEL_MEI
- 	depends on PM
-+	depends on CFG80211
- 	help
- 	  Enables the iwlmei kernel module.
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 07f499d5ec92..36be4ec969ad 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -5566,7 +5566,7 @@ static int ath11k_mac_mgmt_tx(struct ath11k *ar, struct sk_buff *skb,
  
+ 	skb_queue_tail(q, skb);
+ 	atomic_inc(&ar->num_pending_mgmt_tx);
+-	ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
++	queue_work(ar->ab->workqueue, &ar->wmi_mgmt_tx_work);
+ 
+ 	return 0;
+ }
 -- 
 2.34.1
 
