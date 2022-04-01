@@ -2,76 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E527CC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 19:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05DA3C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 23:06:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236399AbiDATIk (ORCPT
+        id S1348134AbiDAXIr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 15:08:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42798 "EHLO
+        Fri, 1 Apr 2022 19:08:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236385AbiDATIg (ORCPT
+        with ESMTP id S231414AbiDAXIq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 15:08:36 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF00F28A012
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 12:06:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1648840006; x=1680376006;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=BmSH22NnDtVbiQhBZhwGhDzGiNVDa1XzVcMrc/H0d2s=;
-  b=AlSoFThzDPYITwOxBNmmmjtvxPUaOR+YS2d5kUDY4vx/DtPPuJMe9o0L
-   MnuPAc7EjE8TTyxuQ0lqDFGOO2p35jP26IZQidQmdlpbgBr7gQeWWp7Ol
-   LdJb/XGh0CUsn9GQhCY9vXqJhJvdvdjMPuSJ4ygPuM2evy75UvWpPA1Q6
-   U=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Apr 2022 12:06:46 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 12:06:46 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 1 Apr 2022 12:06:46 -0700
-Received: from [10.110.67.71] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Fri, 1 Apr 2022
- 12:06:45 -0700
-Message-ID: <cb07aa82-2971-69dd-bf80-ff7f0cff4569@quicinc.com>
-Date:   Fri, 1 Apr 2022 12:06:44 -0700
+        Fri, 1 Apr 2022 19:08:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 666B61A7748
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 16:06:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1648854415;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=jNUDi778AJUhlrN3PBTxwa1i48FL+T4gzIs+ukoa52k=;
+        b=RdxQ+ywU6MSkGFZP8jV9gN8YZuF2RrI+0brV2uqgcYOS7zowh2LaSR6ujSFxbk6VpeICV1
+        IyG/PfYlBY1RSRXlFinkdX2ZI4il9mvKr49BJ4193iG1goDqWKP0ll7J5YUPMXA6MlCj2t
+        FdKsdyzWPwtX6D6/LYPP8eDEBENNwJI=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-314-RQzBc1z2OpyCDii5fjW-EQ-1; Fri, 01 Apr 2022 19:06:54 -0400
+X-MC-Unique: RQzBc1z2OpyCDii5fjW-EQ-1
+Received: by mail-qk1-f199.google.com with SMTP id bs8-20020a05620a470800b0067e383077adso2831350qkb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2022 16:06:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jNUDi778AJUhlrN3PBTxwa1i48FL+T4gzIs+ukoa52k=;
+        b=QnA20ccIJMKvUffo7RUnhrEMo0+/eltqqKzQFlbidzrl8zvxsRpOLpnv3zQXWfRRag
+         hXPXzFeEMA76AGobnuuuKrjeoQYjoIZDm4N5jD23dvqmqRe0J9WgsRmyV5AlU2RDWLYT
+         Cd9HCquRj2Trdf9ZZTYXmTCw4K2BXoNJ6ePvA6ZtvunrN4ZH8hpW5BNJAVNKK5WzQImX
+         Aojwq+ygl/gGQBZf2lKOJNTRroJ9UqlGuFdHGjmAOFIQiBD7MxR+Giy8j+kCAyJLMOMe
+         pP7m1UH49BenCjlAvmYJ8MVE1zPHEqHSOGXs1DThiSMPIhrvR5ZN7f4coLR2jKFMWqQj
+         tnNw==
+X-Gm-Message-State: AOAM531mb56EZs9iRk1qKRsHFaqoUY9o6X+x3s3aP0powLF963r6Otze
+        A9UNVr5V+ZSytFf7R+gUpejy+XHLmJmeO5/dTap+gdPkz+VaSbrTRh03RortK5r491apvt7YVGX
+        Ixylusaf56ZMeF7a64qMBTbJWxco=
+X-Received: by 2002:a0c:fc46:0:b0:440:f78f:f4c4 with SMTP id w6-20020a0cfc46000000b00440f78ff4c4mr40795355qvp.108.1648854413665;
+        Fri, 01 Apr 2022 16:06:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw/F5Dq6Hq/AtU56gvFP3PTl65Ek+RzTn9Hp1ejEDvmMZTNZW0XxrZQHMh6L/ecLIyTztZc5A==
+X-Received: by 2002:a0c:fc46:0:b0:440:f78f:f4c4 with SMTP id w6-20020a0cfc46000000b00440f78ff4c4mr40795338qvp.108.1648854413437;
+        Fri, 01 Apr 2022 16:06:53 -0700 (PDT)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id y11-20020ac85f4b000000b002e1e038a8fdsm2712923qta.13.2022.04.01.16.06.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Apr 2022 16:06:52 -0700 (PDT)
+From:   Tom Rix <trix@redhat.com>
+To:     luciano.coelho@intel.com, kvalo@kernel.org, davem@davemloft.net,
+        kuba@kernel.org, pabeni@redhat.com, nathan@kernel.org,
+        ndesaulniers@google.com, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, dan.carpenter@oracle.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH] iwlwifi: mvm: initialize seq variable
+Date:   Fri,  1 Apr 2022 19:06:40 -0400
+Message-Id: <20220401230640.3196196-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v4 2/2] ath11k: Add support for SAR
-Content-Language: en-US
-To:     Baochen Qiang <quic_bqiang@quicinc.com>,
-        <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20220401120948.1312956-1-quic_bqiang@quicinc.com>
- <20220401120948.1312956-3-quic_bqiang@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20220401120948.1312956-3-quic_bqiang@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 4/1/2022 5:09 AM, Baochen Qiang wrote:
-> ath11k assigns ath11k_mac_op_set_bios_sar_specs to ath11k_ops,
-> and this function is called when user space application
-> calls NL80211_CMD_SET_SAR_SPECS. ath11k also registers SAR
-> type and frequency ranges to wiphy so user space can query
-> SAR capabilities.
+Clang static analysis reports this issue
+d3.c:567:22: warning: The left operand of '>' is
+  a garbage value
+  if (seq.tkip.iv32 > cur_rx_iv32)
+      ~~~~~~~~~~~~~ ^
 
-I find this commit text very confusing since it uses "present simple" 
-tense instead of "imperative" tense so it comes across as describing 
-what the driver did prior to the patch instead of what the driver is 
-supposed to do after the patch is applied.
+seq is never initialized. Call ieee80211_get_key_rx_seq() to
+initialize seq.
 
-The patch itself LGTM.
+Fixes: 0419e5e672d6 ("iwlwifi: mvm: d3: separate TKIP data from key iteration")
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index a995bba0ba81..9b190b3ce6c1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -563,6 +563,7 @@ static void iwl_mvm_wowlan_get_tkip_data(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		for (i = 0; i < IWL_NUM_RSC; i++) {
++			ieee80211_get_key_rx_seq(key, i, &seq);
+ 			/* wrapping isn't allowed, AP must rekey */
+ 			if (seq.tkip.iv32 > cur_rx_iv32)
+ 				cur_rx_iv32 = seq.tkip.iv32;
+-- 
+2.27.0
+
