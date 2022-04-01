@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E78DC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2254BC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348248AbiDAOme (ORCPT
+        id S1348228AbiDAOyq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:42:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34472 "EHLO
+        Fri, 1 Apr 2022 10:54:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347993AbiDAOl3 (ORCPT
+        with ESMTP id S1352008AbiDAOtr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:41:29 -0400
+        Fri, 1 Apr 2022 10:49:47 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433242921C6;
-        Fri,  1 Apr 2022 07:34:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C61502921ED;
+        Fri,  1 Apr 2022 07:40:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 99E56B82515;
-        Fri,  1 Apr 2022 14:33:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EB2CC34112;
-        Fri,  1 Apr 2022 14:33:52 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 176FAB82502;
+        Fri,  1 Apr 2022 14:40:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D162C2BBE4;
+        Fri,  1 Apr 2022 14:40:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823634;
-        bh=I6ui8yr5ddiJmm8uIzxNym8y7SedmbS78BmSFkx9b2I=;
+        s=k20201202; t=1648824001;
+        bh=bRdx8OImyd8hpObz/0qEKfFH0PdnVpMb4ukSvdDBojU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YGPkVMDrDvqeqkeKO3utmuO40VKB+Qzz23g//7+mYAE76nQmqDM911iZTonjkFzb6
-         80FOM9LWLu+pi9tXoz6o6sAoXAbc5pHtmYo/kqNar1jMgGp3TZpH/ZhN+KzrPeCJCH
-         ywHqBFocy6Pf5PgwiQUHLKbcMxXnhZkUhe23AyTkwA683Q2ylnLxOnoK1+B873CzX+
-         wcJULDWh943TBEwfu5Jc+eSm82ivV/NbPHiBGJeJ+Cfb6zsdta4dvUufBfZeiMUQSy
-         DscyZDhfEZ3AF/SxwTfpWjzDh3gLWONaL2jSYMwxg6Vc7RZXs5EXWgUx+9D8ZURuXS
-         JjBDmrXOkLcuw==
+        b=opdzYuiimqyed1qCYjUg/mBWmZkcS+mk/2NkLn7blDc5D+YoPAEzb0oXKhQdr9ZPI
+         T4G9p4V+kuXc8sADk4f8HvvlWT1FaHl9kqRF9wevlwcQ27fgPUGitO/nO2HzTaitZY
+         9PYpMiHMDeAJS3mJylATbVlnZDXwoJqLKqKumd010kHvvqe1SIco4kYdTfK5AYyYYQ
+         8lbBm+f1jc1xIQH4+3N4lZdKSOLxuZ+11fiMg2zVH8YCS3csjTGFRWs5CBIPWjF/ON
+         jV7Cmz9hzpvBV61XRGUQmz2Yj1Rt+XonT4+zL/leoZZLr0MynTV3WWaqSFVzAe3ZBY
+         4w+x9XRjisZ/w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kalle Valo <quic_kvalo@quicinc.com>,
-        Mario Limonciello <mario.limonciello@amd.com>,
+Cc:     Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        johannes.berg@intel.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 020/109] ath11k: pci: fix crash on suspend if board file is not found
-Date:   Fri,  1 Apr 2022 10:31:27 -0400
-Message-Id: <20220401143256.1950537-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 46/98] iwlwifi: mvm: move only to an enabled channel
+Date:   Fri,  1 Apr 2022 10:36:50 -0400
+Message-Id: <20220401143742.1952163-46-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
-References: <20220401143256.1950537-1-sashal@kernel.org>
+In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
+References: <20220401143742.1952163-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,92 +55,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-[ Upstream commit b4f4c56459a5c744f7f066b9fc2b54ea995030c5 ]
+[ Upstream commit e04135c07755d001b5cde61048c69a7cc84bb94b ]
 
-Mario reported that the kernel was crashing on suspend if ath11k was not able
-to find a board file:
+During disassociation we're decreasing the phy's ref count.
+If the ref count becomes 0, we're configuring the phy ctxt
+to the default channel (the lowest channel which the device
+can operate on). Currently we're not checking whether the
+the default channel is enabled or not. Fix it by configuring
+the phy ctxt to the lowest channel which is enabled.
 
-[  473.693286] PM: Suspending system (s2idle)
-[  473.693291] printk: Suspending console(s) (use no_console_suspend to debug)
-[  474.407787] BUG: unable to handle page fault for address: 0000000000002070
-[  474.407791] #PF: supervisor read access in kernel mode
-[  474.407794] #PF: error_code(0x0000) - not-present page
-[  474.407798] PGD 0 P4D 0
-[  474.407801] Oops: 0000 [#1] PREEMPT SMP NOPTI
-[  474.407805] CPU: 2 PID: 2350 Comm: kworker/u32:14 Tainted: G        W         5.16.0 #248
-[...]
-[  474.407868] Call Trace:
-[  474.407870]  <TASK>
-[  474.407874]  ? _raw_spin_lock_irqsave+0x2a/0x60
-[  474.407882]  ? lock_timer_base+0x72/0xa0
-[  474.407889]  ? _raw_spin_unlock_irqrestore+0x29/0x3d
-[  474.407892]  ? try_to_del_timer_sync+0x54/0x80
-[  474.407896]  ath11k_dp_rx_pktlog_stop+0x49/0xc0 [ath11k]
-[  474.407912]  ath11k_core_suspend+0x34/0x130 [ath11k]
-[  474.407923]  ath11k_pci_pm_suspend+0x1b/0x50 [ath11k_pci]
-[  474.407928]  pci_pm_suspend+0x7e/0x170
-[  474.407935]  ? pci_pm_freeze+0xc0/0xc0
-[  474.407939]  dpm_run_callback+0x4e/0x150
-[  474.407947]  __device_suspend+0x148/0x4c0
-[  474.407951]  async_suspend+0x20/0x90
-dmesg-efi-164255130401001:
-Oops#1 Part1
-[  474.407955]  async_run_entry_fn+0x33/0x120
-[  474.407959]  process_one_work+0x220/0x3f0
-[  474.407966]  worker_thread+0x4a/0x3d0
-[  474.407971]  kthread+0x17a/0x1a0
-[  474.407975]  ? process_one_work+0x3f0/0x3f0
-[  474.407979]  ? set_kthread_struct+0x40/0x40
-[  474.407983]  ret_from_fork+0x22/0x30
-[  474.407991]  </TASK>
-
-The issue here is that board file loading happens after ath11k_pci_probe()
-succesfully returns (ath11k initialisation happends asynchronously) and the
-suspend handler is still enabled, of course failing as ath11k is not properly
-initialised. Fix this by checking ATH11K_FLAG_QMI_FAIL during both suspend and
-resume.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
-
-Reported-by: Mario Limonciello <mario.limonciello@amd.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=215504
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20220127090117.2024-1-kvalo@kernel.org
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20220210181930.03f281b6a6bc.I5b63d43ec41996d599e6f37ec3f32e878b3e405e@changeid
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 31 +++++++++++++------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 4c348bacf2cb..754578f3dcf1 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -1419,6 +1419,11 @@ static __maybe_unused int ath11k_pci_pm_suspend(struct device *dev)
- 	struct ath11k_base *ab = dev_get_drvdata(dev);
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+index 035336a9e755..6d82725cb87d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
+  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2017 Intel Deutschland GmbH
+  */
+@@ -295,18 +295,31 @@ void iwl_mvm_phy_ctxt_unref(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt)
+ 	 * otherwise we might not be able to reuse this phy.
+ 	 */
+ 	if (ctxt->ref == 0) {
+-		struct ieee80211_channel *chan;
++		struct ieee80211_channel *chan = NULL;
+ 		struct cfg80211_chan_def chandef;
+-		struct ieee80211_supported_band *sband = NULL;
+-		enum nl80211_band band = NL80211_BAND_2GHZ;
++		struct ieee80211_supported_band *sband;
++		enum nl80211_band band;
++		int channel;
  
-+	if (test_bit(ATH11K_FLAG_QMI_FAIL, &ab->dev_flags)) {
-+		ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot skipping pci suspend as qmi is not initialised\n");
-+		return 0;
-+	}
-+
- 	ret = ath11k_core_suspend(ab);
- 	if (ret)
- 		ath11k_warn(ab, "failed to suspend core: %d\n", ret);
-@@ -1431,6 +1436,11 @@ static __maybe_unused int ath11k_pci_pm_resume(struct device *dev)
- 	struct ath11k_base *ab = dev_get_drvdata(dev);
- 	int ret;
+-		while (!sband && band < NUM_NL80211_BANDS)
+-			sband = mvm->hw->wiphy->bands[band++];
++		for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
++			sband = mvm->hw->wiphy->bands[band];
  
-+	if (test_bit(ATH11K_FLAG_QMI_FAIL, &ab->dev_flags)) {
-+		ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot skipping pci resume as qmi is not initialised\n");
-+		return 0;
-+	}
+-		if (WARN_ON(!sband))
+-			return;
++			if (!sband)
++				continue;
 +
- 	ret = ath11k_core_resume(ab);
- 	if (ret)
- 		ath11k_warn(ab, "failed to resume core: %d\n", ret);
++			for (channel = 0; channel < sband->n_channels; channel++)
++				if (!(sband->channels[channel].flags &
++						IEEE80211_CHAN_DISABLED)) {
++					chan = &sband->channels[channel];
++					break;
++				}
+ 
+-		chan = &sband->channels[0];
++			if (chan)
++				break;
++		}
++
++		if (WARN_ON(!chan))
++			return;
+ 
+ 		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
+ 		iwl_mvm_phy_ctxt_changed(mvm, ctxt, &chandef, 1, 1);
 -- 
 2.34.1
 
