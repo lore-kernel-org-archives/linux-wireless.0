@@ -2,52 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C7FC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E16FC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349346AbiDAOzT (ORCPT
+        id S1349382AbiDAOz0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:55:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54906 "EHLO
+        Fri, 1 Apr 2022 10:55:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351941AbiDAOtn (ORCPT
+        with ESMTP id S1349559AbiDAOqK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:49:43 -0400
+        Fri, 1 Apr 2022 10:46:10 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 136BD2B120E;
-        Fri,  1 Apr 2022 07:40:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 810CD29C97A;
+        Fri,  1 Apr 2022 07:36:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4CEAA60C9B;
-        Fri,  1 Apr 2022 14:39:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45AE3C2BBE4;
-        Fri,  1 Apr 2022 14:39:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3355960A3C;
+        Fri,  1 Apr 2022 14:35:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D42C36AE2;
+        Fri,  1 Apr 2022 14:35:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823997;
-        bh=kGf7ZIV+v4tY82G8Mz72jUPIY7jgqniLJ05Zmhp+eIA=;
+        s=k20201202; t=1648823744;
+        bh=PJeafsnUQnriLKTm/R8j1CwVfZCJuZ9TyKc2Zi2Znw8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SElphT/VYwHN1zbJW2GJew4foS9gdxmhtrZrqfIny8NDpEoEguHSGDd4ydcE18+RN
-         kLOvHVRfZBVNFhWaQxnOIVDZxyTVLHVC5ndz3REHmt9G18ZLRzrkpdlLrhb90ugG8/
-         Q/s48ewAgz3bXKk3kdOH96Y1q91GUiuo/XeCt+R1HpLH6E6fB25NXjvfx1JwAMN6+h
-         Zv1dqsZD/0gmj8BOI/PFcvMImziJpjz70zZd+4yp3gUTiXjcZn6qWXFIIFEacq0QRb
-         WYEmyM7/z7jCGcD18LlrwhxysNSY+yslrylqxZmrQ6xDHEZ/iO9FZZ9cUm9eGrT9q9
-         w8MvSPvQenB9w==
+        b=XVFkL+J/BzntJznj7EZgNkjIrFd1Q+M2EvAORdtD/9saMBWSNGGTjqeuZV9SxixsX
+         kVpKDLTaJfOMrpFdLvLXNF5+PNNZqBKdZJk0CUNaQp4l7A8V9jAnq/YznuAoJR4fU6
+         5Xle3IFhza699/+BlChIEC60P+hQMb8aA3XqKTNI2d8NDZ68Hxk6rQJAUUphxPOiYR
+         pg6i7l4OZ7vCKAHjq4j+KNJS9yBHif0SG4vIrt9Gkyu0MDke24aFNcUr6rWMmLi6pn
+         jk9lB8pIODZFlioF3e262btGqDmL4jZ/mI01dyPyOIycU3P7p9gFnWEjjOYYRsn/Sh
+         ieFl10AwIddhQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Jiri Kosina <jkosina@suse.cz>, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        johannes.berg@intel.com, ayala.beker@intel.com,
-        avraham.stern@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 45/98] iwlwifi: mvm: Passively scan non PSC channels only when requested so
-Date:   Fri,  1 Apr 2022 10:36:49 -0400
-Message-Id: <20220401143742.1952163-45-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 058/109] rtw89: fix RCU usage in rtw89_core_txq_push()
+Date:   Fri,  1 Apr 2022 10:32:05 -0400
+Message-Id: <20220401143256.1950537-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
-References: <20220401143742.1952163-1-sashal@kernel.org>
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,113 +53,114 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Jiri Kosina <jkosina@suse.cz>
 
-[ Upstream commit 9966904e9472703a05861f343157cd78f47514fd ]
+[ Upstream commit f3d825a35920714fb7f73e4d4f36ea2328860660 ]
 
-Non PSC channels should generally be scanned based on information about
-collocated APs obtained during scan on legacy bands, and otherwise
-should not be scanned unless specifically requested so (as there are
-relatively many non PSC channels, scanning them passively is time consuming
-and interferes with regular data traffic).
+ieee80211_tx_h_select_key() is performing a series of RCU dereferences,
+but rtw89_core_txq_push() is calling it (via ieee80211_tx_dequeue_ni())
+without RCU read-side lock held; fix that.
 
-Thus, modify the scan logic to avoid passively scanning PSC channels
-if there is no information about collocated APs and the scan is not
-a passive scan.
+This addresses the splat below.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20220204122220.457da4cc95eb.Ic98472bab5f5475f1e102547644caaae89ce4c4a@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+ =============================
+ WARNING: suspicious RCU usage
+ 5.17.0-rc4-00003-gccad664b7f14 #3 Tainted: G            E
+ -----------------------------
+ net/mac80211/tx.c:593 suspicious rcu_dereference_check() usage!
+
+ other info that might help us debug this:
+
+ rcu_scheduler_active = 2, debug_locks = 1
+ 2 locks held by kworker/u33:0/184:
+  #0: ffff9c0b14811d38 ((wq_completion)rtw89_tx_wq){+.+.}-{0:0}, at: process_one_work+0x258/0x660
+  #1: ffffb97380cf3e78 ((work_completion)(&rtwdev->txq_work)){+.+.}-{0:0}, at: process_one_work+0x258/0x660
+
+ stack backtrace:
+ CPU: 8 PID: 184 Comm: kworker/u33:0 Tainted: G            E     5.17.0-rc4-00003-gccad664b7f14 #3 473b49ab0e7c2d6af2900c756bfd04efd7a9de13
+ Hardware name: LENOVO 20UJS2B905/20UJS2B905, BIOS R1CET63W(1.32 ) 04/09/2021
+ Workqueue: rtw89_tx_wq rtw89_core_txq_work [rtw89_core]
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x58/0x71
+  ieee80211_tx_h_select_key+0x2c0/0x530 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
+  ieee80211_tx_dequeue+0x1a7/0x1260 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
+  rtw89_core_txq_work+0x1a6/0x420 [rtw89_core b39ba493f2e517ad75e0f8187ecc24edf58bbbea]
+  process_one_work+0x2d8/0x660
+  worker_thread+0x39/0x3e0
+  ? process_one_work+0x660/0x660
+  kthread+0xe5/0x110
+  ? kthread_complete_and_exit+0x20/0x20
+  ret_from_fork+0x22/0x30
+  </TASK>
+
+ =============================
+ WARNING: suspicious RCU usage
+ 5.17.0-rc4-00003-gccad664b7f14 #3 Tainted: G            E
+ -----------------------------
+ net/mac80211/tx.c:607 suspicious rcu_dereference_check() usage!
+
+ other info that might help us debug this:
+
+ rcu_scheduler_active = 2, debug_locks = 1
+ 2 locks held by kworker/u33:0/184:
+  #0: ffff9c0b14811d38 ((wq_completion)rtw89_tx_wq){+.+.}-{0:0}, at: process_one_work+0x258/0x660
+  #1: ffffb97380cf3e78 ((work_completion)(&rtwdev->txq_work)){+.+.}-{0:0}, at: process_one_work+0x258/0x660
+
+ stack backtrace:
+ CPU: 8 PID: 184 Comm: kworker/u33:0 Tainted: G            E     5.17.0-rc4-00003-gccad664b7f14 #3 473b49ab0e7c2d6af2900c756bfd04efd7a9de13
+ Hardware name: LENOVO 20UJS2B905/20UJS2B905, BIOS R1CET63W(1.32 ) 04/09/2021
+ Workqueue: rtw89_tx_wq rtw89_core_txq_work [rtw89_core]
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x58/0x71
+  ieee80211_tx_h_select_key+0x464/0x530 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
+  ieee80211_tx_dequeue+0x1a7/0x1260 [mac80211 911c23e2351c0ae60b597a67b1204a5ea955e365]
+  rtw89_core_txq_work+0x1a6/0x420 [rtw89_core b39ba493f2e517ad75e0f8187ecc24edf58bbbea]
+  process_one_work+0x2d8/0x660
+  worker_thread+0x39/0x3e0
+  ? process_one_work+0x660/0x660
+  kthread+0xe5/0x110
+  ? kthread_complete_and_exit+0x20/0x20
+  ret_from_fork+0x22/0x30
+  </TASK>
+
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/nycvar.YFH.7.76.2202152037000.11721@cbobk.fhfr.pm
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 42 ++++++++++++++-----
- 1 file changed, 32 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 65e382756de6..f1217e2b7a11 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1733,27 +1733,37 @@ iwl_mvm_umac_scan_fill_6g_chan_list(struct iwl_mvm *mvm,
- }
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index d02ec5a735cb..9d9c0984903f 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1501,11 +1501,12 @@ static void rtw89_core_txq_push(struct rtw89_dev *rtwdev,
+ 	unsigned long i;
+ 	int ret;
  
- /* TODO: this function can be merged with iwl_mvm_scan_umac_fill_ch_p_v6 */
--static void
--iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
-+static u32
-+iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm *mvm,
-+				     struct iwl_mvm_scan_params *params,
- 				     u32 n_channels,
- 				     struct iwl_scan_probe_params_v4 *pp,
- 				     struct iwl_scan_channel_params_v6 *cp,
- 				     enum nl80211_iftype vif_type)
- {
--	struct iwl_scan_channel_cfg_umac *channel_cfg = cp->channel_config;
- 	int i;
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
- 		params->scan_6ghz_params;
-+	u32 ch_cnt;
- 
--	for (i = 0; i < params->n_channels; i++) {
-+	for (i = 0, ch_cnt = 0; i < params->n_channels; i++) {
- 		struct iwl_scan_channel_cfg_umac *cfg =
--			&cp->channel_config[i];
-+			&cp->channel_config[ch_cnt];
- 
- 		u32 s_ssid_bitmap = 0, bssid_bitmap = 0, flags = 0;
- 		u8 j, k, s_max = 0, b_max = 0, n_used_bssid_entries;
- 		bool force_passive, found = false, allow_passive = true,
- 		     unsolicited_probe_on_chan = false, psc_no_listen = false;
- 
-+		/*
-+		 * Avoid performing passive scan on non PSC channels unless the
-+		 * scan is specifically a passive scan, i.e., no SSIDs
-+		 * configured in the scan command.
-+		 */
-+		if (!cfg80211_channel_is_psc(params->channels[i]) &&
-+		    !params->n_6ghz_params && params->n_ssids)
-+			continue;
-+
- 		cfg->v1.channel_num = params->channels[i]->hw_value;
- 		cfg->v2.band = 2;
- 		cfg->v2.iter_count = 1;
-@@ -1872,8 +1882,16 @@ iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
- 		    (!flags && !cfg80211_channel_is_psc(params->channels[i])))
- 			flags |= IWL_UHB_CHAN_CFG_FLAG_FORCE_PASSIVE;
- 
--		channel_cfg[i].flags |= cpu_to_le32(flags);
-+		cfg->flags |= cpu_to_le32(flags);
-+		ch_cnt++;
++	rcu_read_lock();
+ 	for (i = 0; i < frame_cnt; i++) {
+ 		skb = ieee80211_tx_dequeue_ni(rtwdev->hw, txq);
+ 		if (!skb) {
+ 			rtw89_debug(rtwdev, RTW89_DBG_TXRX, "dequeue a NULL skb\n");
+-			return;
++			goto out;
+ 		}
+ 		rtw89_core_txq_check_agg(rtwdev, rtwtxq, skb);
+ 		ret = rtw89_core_tx_write(rtwdev, vif, sta, skb, NULL);
+@@ -1515,6 +1516,8 @@ static void rtw89_core_txq_push(struct rtw89_dev *rtwdev,
+ 			break;
+ 		}
  	}
-+
-+	if (params->n_channels > ch_cnt)
-+		IWL_DEBUG_SCAN(mvm,
-+			       "6GHz: reducing number channels: (%u->%u)\n",
-+			       params->n_channels, ch_cnt);
-+
-+	return ch_cnt;
++out:
++	rcu_read_unlock();
  }
  
- static u8 iwl_mvm_scan_umac_chan_flags_v2(struct iwl_mvm *mvm,
-@@ -2406,10 +2424,14 @@ static int iwl_mvm_scan_umac_v14(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
- 
--	iwl_mvm_umac_scan_cfg_channels_v6_6g(params,
--					     params->n_channels,
--					     pb, cp, vif->type);
--	cp->count = params->n_channels;
-+	cp->count = iwl_mvm_umac_scan_cfg_channels_v6_6g(mvm, params,
-+							 params->n_channels,
-+							 pb, cp, vif->type);
-+	if (!cp->count) {
-+		mvm->scan_uid_status[uid] = 0;
-+		return -EINVAL;
-+	}
-+
- 	if (!params->n_ssids ||
- 	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
- 		cp->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
+ static u32 rtw89_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev, u8 tid)
 -- 
 2.34.1
 
