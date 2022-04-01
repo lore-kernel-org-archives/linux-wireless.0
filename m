@@ -2,49 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C001DC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB08C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 14:53:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348449AbiDAOys (ORCPT
+        id S1348697AbiDAOyv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:54:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55258 "EHLO
+        Fri, 1 Apr 2022 10:54:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349513AbiDAOqB (ORCPT
+        with ESMTP id S1348452AbiDAOnS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 10:46:01 -0400
+        Fri, 1 Apr 2022 10:43:18 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3D6329C953;
-        Fri,  1 Apr 2022 07:36:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4239F2963C8;
+        Fri,  1 Apr 2022 07:34:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4F352B8251D;
-        Fri,  1 Apr 2022 14:35:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A5DAC2BBE4;
-        Fri,  1 Apr 2022 14:35:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 82EE3B8250B;
+        Fri,  1 Apr 2022 14:34:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A55FBC2BBE4;
+        Fri,  1 Apr 2022 14:34:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823730;
-        bh=RZ5MzN15iUd+U++gU+5YPigZbBU8LavD9EctC8smRGA=;
+        s=k20201202; t=1648823657;
+        bh=ckzIrfL6TdjsEI+KDgKSPG8nEY/WesOEbocmrIN68qM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gn32J1xGWXtfIRPq9bUNlhf/l6btv6+gsz6WXga9LysNrKnjWgO8MV8q9rEsp1X7w
-         +H7O7FCiGyP0V93I5EjhM6YlBK1XAXiu/VypF87mxQBZT4rBPdivoLnHN0cscs9wwM
-         Xjx2erV4VVluy/8osjI+icY5GfSi4tJNyVqnm3OXPuU27wg+JMkoNmG8FDoBwPeiSr
-         snBz6GcSySClgo5MUSqUKHV4/LrBFasu1Fs4afT+L2wyMbtdusI8SHf+2GsDBo+m4N
-         NuTEV3txkSKXbPLEz3aJgH7Y5zczKaWY6YgUuk5xGYONYDOB9mza34MoYYn/3hAg60
-         mWHwGE9b9CaWw==
+        b=lhYwHfshJcciMKIeH+40iYo4/7XFS2YIHGujdHcBF0Nh+eU8sqYZfBhciFaGUiC+R
+         +PzKvU8UfOt5H4r2bx1Sqo1VJWsr4yJ+RCqWy788ykfA1qZ7SsdWtUx84cLHFA9wC1
+         jhq3sVCpHJHQQC7Yc8oxbMFRrN28Xbd11tEtgfcIstCdMjUEmJne7WH/B5TAJoD9MX
+         ZAla235kLe3JiSIFyJ/IIwJAY8EHD1zjH2Ug10LyEyHs6RxoBCc+6Gxs/9FBjb/Iy0
+         GyAGyh9HNXinGrAR3UnV7jKUBASS4qLgu++tY3nN7S7f6O6FbbyYYPKUzc1hi3s+CJ
+         AnO+KgDuRVOqg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        johannes.berg@intel.com, ayala.beker@intel.com,
-        avraham.stern@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 054/109] iwlwifi: mvm: Passively scan non PSC channels only when requested so
-Date:   Fri,  1 Apr 2022 10:32:01 -0400
-Message-Id: <20220401143256.1950537-54-sashal@kernel.org>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo.bianconi83@gmail.com, ryder.lee@mediatek.com,
+        kvalo@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        pabeni@redhat.com, matthias.bgg@gmail.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.16 030/109] mt76: dma: initialize skip_unmap in mt76_dma_rx_fill
+Date:   Fri,  1 Apr 2022 10:31:37 -0400
+Message-Id: <20220401143256.1950537-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
 References: <20220401143256.1950537-1-sashal@kernel.org>
@@ -56,113 +57,87 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit 9966904e9472703a05861f343157cd78f47514fd ]
+[ Upstream commit 577298ec55dfc8b9aece54520f0258c3f93a6573 ]
 
-Non PSC channels should generally be scanned based on information about
-collocated APs obtained during scan on legacy bands, and otherwise
-should not be scanned unless specifically requested so (as there are
-relatively many non PSC channels, scanning them passively is time consuming
-and interferes with regular data traffic).
+Even if it is only a false-positive since skip_buf0/skip_buf1 are only
+used in mt76_dma_tx_cleanup_idx routine, initialize skip_unmap in
+mt76_dma_rx_fill in order to fix the following UBSAN report:
 
-Thus, modify the scan logic to avoid passively scanning PSC channels
-if there is no information about collocated APs and the scan is not
-a passive scan.
+[   13.924906] UBSAN: invalid-load in linux-5.15.0/drivers/net/wireless/mediatek/mt76/dma.c:162:13
+[   13.924909] load of value 225 is not a valid value for type '_Bool'
+[   13.924912] CPU: 9 PID: 672 Comm: systemd-udevd Not tainted 5.15.0-18-generic #18-Ubuntu
+[   13.924914] Hardware name: LENOVO 21A0000CMX/21A0000CMX, BIOS R1MET43W (1.13 ) 11/05/2021
+[   13.924915] Call Trace:
+[   13.924917]  <TASK>
+[   13.924920]  show_stack+0x52/0x58
+[   13.924925]  dump_stack_lvl+0x4a/0x5f
+[   13.924931]  dump_stack+0x10/0x12
+[   13.924932]  ubsan_epilogue+0x9/0x45
+[   13.924934]  __ubsan_handle_load_invalid_value.cold+0x44/0x49
+[   13.924935]  ? __iommu_dma_map+0x84/0xf0
+[   13.924939]  mt76_dma_add_buf.constprop.0.cold+0x23/0x85 [mt76]
+[   13.924949]  mt76_dma_rx_fill.isra.0+0x102/0x1f0 [mt76]
+[   13.924954]  mt76_dma_init+0xc9/0x150 [mt76]
+[   13.924959]  ? mt7921_dma_enable+0x110/0x110 [mt7921e]
+[   13.924966]  mt7921_dma_init+0x1e3/0x260 [mt7921e]
+[   13.924970]  mt7921_register_device+0x29d/0x510 [mt7921e]
+[   13.924975]  mt7921_pci_probe.part.0+0x17f/0x1b0 [mt7921e]
+[   13.924980]  mt7921_pci_probe+0x43/0x60 [mt7921e]
+[   13.924984]  local_pci_probe+0x4b/0x90
+[   13.924987]  pci_device_probe+0x115/0x1f0
+[   13.924989]  really_probe+0x21e/0x420
+[   13.924992]  __driver_probe_device+0x115/0x190
+[   13.924994]  driver_probe_device+0x23/0xc0
+[   13.924996]  __driver_attach+0xbd/0x1d0
+[   13.924998]  ? __device_attach_driver+0x110/0x110
+[   13.924999]  bus_for_each_dev+0x7e/0xc0
+[   13.925001]  driver_attach+0x1e/0x20
+[   13.925003]  bus_add_driver+0x135/0x200
+[   13.925005]  driver_register+0x95/0xf0
+[   13.925008]  ? 0xffffffffc0766000
+[   13.925010]  __pci_register_driver+0x68/0x70
+[   13.925011]  mt7921_pci_driver_init+0x23/0x1000 [mt7921e]
+[   13.925015]  do_one_initcall+0x48/0x1d0
+[   13.925019]  ? kmem_cache_alloc_trace+0x19e/0x2e0
+[   13.925022]  do_init_module+0x62/0x280
+[   13.925025]  load_module+0xac9/0xbb0
+[   13.925027]  __do_sys_finit_module+0xbf/0x120
+[   13.925029]  __x64_sys_finit_module+0x18/0x20
+[   13.925030]  do_syscall_64+0x5c/0xc0
+[   13.925033]  ? do_syscall_64+0x69/0xc0
+[   13.925034]  ? sysvec_reschedule_ipi+0x78/0xe0
+[   13.925036]  ? asm_sysvec_reschedule_ipi+0xa/0x20
+[   13.925039]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[   13.925040] RIP: 0033:0x7fbf2b90f94d
+[   13.925045] RSP: 002b:00007ffe2ec7e5d8 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+[   13.925047] RAX: ffffffffffffffda RBX: 000056106b0634e0 RCX: 00007fbf2b90f94d
+[   13.925048] RDX: 0000000000000000 RSI: 00007fbf2baa3441 RDI: 0000000000000013
+[   13.925049] RBP: 0000000000020000 R08: 0000000000000000 R09: 0000000000000002
+[   13.925050] R10: 0000000000000013 R11: 0000000000000246 R12: 00007fbf2baa3441
+[   13.925051] R13: 000056106b062620 R14: 000056106b0610c0 R15: 000056106b0640d0
+[   13.925053]  </TASK>
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20220204122220.457da4cc95eb.Ic98472bab5f5475f1e102547644caaae89ce4c4a@changeid
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 42 ++++++++++++++-----
- 1 file changed, 32 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index e3eefc55beaf..212e558b9aa0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1733,27 +1733,37 @@ iwl_mvm_umac_scan_fill_6g_chan_list(struct iwl_mvm *mvm,
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 5e1c1506a4c6..7aecde35cb9a 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -465,6 +465,7 @@ mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q)
  
- /* TODO: this function can be merged with iwl_mvm_scan_umac_fill_ch_p_v6 */
--static void
--iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
-+static u32
-+iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm *mvm,
-+				     struct iwl_mvm_scan_params *params,
- 				     u32 n_channels,
- 				     struct iwl_scan_probe_params_v4 *pp,
- 				     struct iwl_scan_channel_params_v6 *cp,
- 				     enum nl80211_iftype vif_type)
- {
--	struct iwl_scan_channel_cfg_umac *channel_cfg = cp->channel_config;
- 	int i;
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
- 		params->scan_6ghz_params;
-+	u32 ch_cnt;
- 
--	for (i = 0; i < params->n_channels; i++) {
-+	for (i = 0, ch_cnt = 0; i < params->n_channels; i++) {
- 		struct iwl_scan_channel_cfg_umac *cfg =
--			&cp->channel_config[i];
-+			&cp->channel_config[ch_cnt];
- 
- 		u32 s_ssid_bitmap = 0, bssid_bitmap = 0, flags = 0;
- 		u8 j, k, s_max = 0, b_max = 0, n_used_bssid_entries;
- 		bool force_passive, found = false, allow_passive = true,
- 		     unsolicited_probe_on_chan = false, psc_no_listen = false;
- 
-+		/*
-+		 * Avoid performing passive scan on non PSC channels unless the
-+		 * scan is specifically a passive scan, i.e., no SSIDs
-+		 * configured in the scan command.
-+		 */
-+		if (!cfg80211_channel_is_psc(params->channels[i]) &&
-+		    !params->n_6ghz_params && params->n_ssids)
-+			continue;
-+
- 		cfg->v1.channel_num = params->channels[i]->hw_value;
- 		cfg->v2.band = 2;
- 		cfg->v2.iter_count = 1;
-@@ -1872,8 +1882,16 @@ iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params *params,
- 		    (!flags && !cfg80211_channel_is_psc(params->channels[i])))
- 			flags |= IWL_UHB_CHAN_CFG_FLAG_FORCE_PASSIVE;
- 
--		channel_cfg[i].flags |= cpu_to_le32(flags);
-+		cfg->flags |= cpu_to_le32(flags);
-+		ch_cnt++;
+ 		qbuf.addr = addr + offset;
+ 		qbuf.len = len - offset;
++		qbuf.skip_unmap = false;
+ 		mt76_dma_add_buf(dev, q, &qbuf, 1, 0, buf, NULL);
+ 		frames++;
  	}
-+
-+	if (params->n_channels > ch_cnt)
-+		IWL_DEBUG_SCAN(mvm,
-+			       "6GHz: reducing number channels: (%u->%u)\n",
-+			       params->n_channels, ch_cnt);
-+
-+	return ch_cnt;
- }
- 
- static u8 iwl_mvm_scan_umac_chan_flags_v2(struct iwl_mvm *mvm,
-@@ -2414,10 +2432,14 @@ static int iwl_mvm_scan_umac_v14(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
- 
--	iwl_mvm_umac_scan_cfg_channels_v6_6g(params,
--					     params->n_channels,
--					     pb, cp, vif->type);
--	cp->count = params->n_channels;
-+	cp->count = iwl_mvm_umac_scan_cfg_channels_v6_6g(mvm, params,
-+							 params->n_channels,
-+							 pb, cp, vif->type);
-+	if (!cp->count) {
-+		mvm->scan_uid_status[uid] = 0;
-+		return -EINVAL;
-+	}
-+
- 	if (!params->n_ssids ||
- 	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
- 		cp->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
 -- 
 2.34.1
 
