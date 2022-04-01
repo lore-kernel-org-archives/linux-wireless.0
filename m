@@ -2,182 +2,331 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD51FC433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 17:27:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 076E8C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 17:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347028AbiDAR3I (ORCPT
+        id S1350065AbiDARck (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 13:29:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45252 "EHLO
+        Fri, 1 Apr 2022 13:32:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346717AbiDAR3H (ORCPT
+        with ESMTP id S1350082AbiDARci (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 13:29:07 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 723361DEC31
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 10:27:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1648834019;
-        bh=HqOCuC1H2I9cFtyHGGFmnXk49q2U5SFLwsN7dcIE6YY=;
-        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
-        b=R8u16VBhtpq4kF6wW2fJjppmkZJIKFa0B1L6bwEiOqSMo0Pb92tbyasb161qAnBuh
-         AP/6s2zULC3wADsCYy+LWLsjfwzpJranx64LoloCSUrmpGPCulHoOYaTH8FYU5Wg82
-         Y9dnhW6TuBaJ4PZzeJeQRqa1k0AWGGSkrwtwqKnU=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from localhost ([62.216.209.24]) by mail.gmx.net (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MbRk3-1oBbbv3v33-00brSn; Fri, 01
- Apr 2022 19:26:59 +0200
-Date:   Fri, 1 Apr 2022 19:26:57 +0200
-From:   Peter Seiderer <ps.report@gmx.net>
-To:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@toke.dk>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: Re: [PATCH v5.18] ath9k: Properly clear TX status area before
- reporting to mac80211
-Message-ID: <20220401192657.16674bf7@gmx.net>
-In-Reply-To: <20220330164409.16645-1-toke@toke.dk>
-References: <20220330164409.16645-1-toke@toke.dk>
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-suse-linux-gnu)
+        Fri, 1 Apr 2022 13:32:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2E781AA8E2
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 10:30:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3DDF361D49
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 17:30:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E707AC340F2;
+        Fri,  1 Apr 2022 17:30:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648834247;
+        bh=Vq5ZcotMnOIsFOE2qHwHRxVIuW6lIkZiCPSMh1eHLMw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=X2A4qBnidwr+oN9rwauWn8ugOh/JfT0vl4ezM9HkvuiG47hXBHUeeNAShHIV3YH+O
+         InVig1/RNTRAc0umI7/ZRR9gszODhaLvgqbGI7BHSX+WWSyu8jMgaRwEDDO8TKEJyB
+         SGJXXU/vZkXYNf8vTXBFyXMc0WsaaD3BL+GPBxAUF8r8z2IefLf5CP3Ca9Ao+rr24q
+         t56iKsR4G7zLz0gr/uCZxkytwrDGtcjuoLkZOPxDPcw2PhNE6O79SNIYiGT1lb1mpF
+         WpeeAfjlGaQN+1JBJbOnhYzGcaa0m51YNNaJNO1nz4EncTuLXc8/SM4/biywB8/JYI
+         VPa18ZBYTQcuQ==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath11k: mhi: remove state machine
+Date:   Fri,  1 Apr 2022 20:30:40 +0300
+Message-Id: <20220401173042.17467-2-kvalo@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220401173042.17467-1-kvalo@kernel.org>
+References: <20220401173042.17467-1-kvalo@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:O+NQH1r29WAU58EHYmB1r+RRyIOi2YbCYPFRg5VoMmM7Z9GbuNT
- XdbJx1cycAG39vyqAu74ViGtde7uTqJH+TQHNM2QPL3FK4k0bnPYzPSmA7CZCQJ+pfwFffE
- U1W3Q1DvoB9utVwgEY98pFMd5aALxZ8e4dFSo7od8PHxAbyYIOHgnofFC/JdxRk36Pi712J
- cOSsgHAGmJzOthPB3QlZQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:PPUzbdgWfrw=:2tbXkNIw9phlg7mFdRqa7F
- jyyCkfn5sK9gyYnoaKM12pwTu8yBHXC83LH5nIOVupszjrb+HRquTbjtCLZXpHlcHvUpmZ2Uw
- UyTwLpIxX8nDy0Mrug2m3NWMP+2IN9RyXQuxja5ZSsFFLI/1wYUvxmm3QNaUkeVTuf7Cd80GP
- qPt0k9UCXSmzcCqvKT8g7V4/YpxQTJZhGvQrjtlOoOx5w/BNOyVQop1R4izygodbEIPTfwjHg
- c7SQVPHf+ivtEkCectba+0DmZh/EyASNx46l1O0zBs0M5pkK01UrFEY7SgcK/cT7T31TpoJSm
- 6evfODLHdFy9LeLoJYwMqv6SUzhj5jr3BhY11GqxMogKCkBO8BHIW8w+GWTeG+EH8CBoC/6fW
- 2rZhVBo7gZDujoSSv2LseIDLBZP8FTOluGXxjdBNslO6RTXmMyu309LIiwBWGNuLnjoCYUTwB
- GUYPOd2ffg4OrZMT8bUa1DZVIBEsUIjWJMSCZDSC4cdpnDyVi1QXbi1KiRdoujJQAa5IcgUBD
- TaHJxEb9LBGl9Wl85pZcbyDHQ+WfEBcw8UNkcUCMq657rmu+iWcLouNSicSk3lCzto3AFDNZP
- SvmuJGnveaz0PaIau80PFFUKXTNy7H9d3koHNsuxfPsbBn8pLXW3k8KKfEiYGne3TcjhMfW9D
- UI876C3nciJc04EJ6oFRYBPpGdLLBhD/JyV82GBdOfpR6DVT9zsgg0ZiAI+ua1kkhkZYNE8oj
- S7jRgU5b1kNGbf+GAzFLiChJwX+iVA+Z7oCNcvqNqIBWHBVMch/SkUY3luwjz/f5OsTqEFzed
- QZHDMjUOSo4ctFjeAmjTDD65Lnqz6aMLvOpdIhAv8CxEa6WJ8/hzlqqDvoDihGKQCHUa7KMcW
- 81LbmM3QLwqdpdpg99iolJOcL326lvCAop753YuGGSTkULaeP7wVr0gnruwBfM+2rytHFaoar
- RRDf+q7A/S6yoyVC8M69YSwgRbKrHfohhgKsb5qnQ4T8fU+RNEtdOvlWfyBOxzGo+j//WW1xT
- m5DdBKZFbGZoUUBcTag7tgjnro0zY8ptKp9JhVgul1cpMLk3sMs8KrpyhNI6jFWiBfJIUpOt5
- JE39g8TMPuvSPk=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Toke,
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-On Wed, 30 Mar 2022 18:44:09 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <toke@=
-toke.dk> wrote:
+State machines are difficult to understand and in this case it's just useless,
+which is shown by the diffstat. So remove it entirely to make the code simpler.
 
-> The ath9k driver was not properly clearing the status area in the
-> ieee80211_tx_info struct before reporting TX status to mac80211. Instead,
-> it was manually filling in fields, which meant that fields introduced lat=
-er
-> were left as-is.
->=20
-> Conveniently, mac80211 actually provides a helper to zero out the status
-> area, so use that to make sure we zero everything.
->=20
-> The last commit touching the driver function writing the status informati=
-on
-> seems to have actually been fixing an issue that was also caused by the
-> area being uninitialised; but it only added clearing of a single field
-> instead of the whole struct. That is now redundant, though, so revert that
-> commit and use it as a convenient Fixes tag.
->=20
-> Fixes: cc591d77aba1 ("ath9k: Make sure to zero status.tx_time before repo=
-rting TX status")
-> Reported-by: Bagas Sanjaya <bagasdotme@gmail.com>
-> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
-> ---
->  drivers/net/wireless/ath/ath9k/xmit.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless=
-/ath/ath9k/xmit.c
-> index d0caf1de2bde..cbcf96ac303e 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -2553,6 +2553,8 @@ static void ath_tx_rc_status(struct ath_softc *sc, =
-struct ath_buf *bf,
->  	struct ath_hw *ah =3D sc->sc_ah;
->  	u8 i, tx_rateindex;
-> =20
-> +	ieee80211_tx_info_clear_status(tx_info);
-> +
+No functional changes.
 
-As this also clears the status.rates[].count, see include/net/mac80211.h:
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
 
-1195 static inline void
-1196 ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-1197 {
-1198         int i;
-1199        =20
-1200         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) =
-!=3D
-1201                      offsetof(struct ieee80211_tx_info, control.rates)=
-);
-1202         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) =
-!=3D
-1203                      offsetof(struct ieee80211_tx_info, driver_rates));
-1204         BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, status.rates) =
-!=3D 8)     ;      =20
-1205         /* clear the rate counts */
-1206         for (i =3D 0; i < IEEE80211_TX_MAX_RATES; i++)
-1207                 info->status.rates[i].count =3D 0;
-1208         memset_after(&info->status, 0, rates);
-1209 }
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/mhi.c | 194 ++------------------------
+ drivers/net/wireless/ath/ath11k/mhi.h |  13 --
+ drivers/net/wireless/ath/ath11k/pci.h |   1 -
+ 3 files changed, 10 insertions(+), 198 deletions(-)
 
-I would have expected some lines added to restore the count (for the
-rates with index < tx_rateindex), e.g. as done in
-drivers/net/wireless/ath/ath5k/base.c:
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index 61d83be4841f..d9b63a1f8219 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -461,195 +461,17 @@ void ath11k_mhi_unregister(struct ath11k_pci *ab_pci)
+ 	mhi_free_controller(mhi_ctrl);
+ }
+ 
+-static char *ath11k_mhi_state_to_str(enum ath11k_mhi_state mhi_state)
+-{
+-	switch (mhi_state) {
+-	case ATH11K_MHI_INIT:
+-		return "INIT";
+-	case ATH11K_MHI_DEINIT:
+-		return "DEINIT";
+-	case ATH11K_MHI_POWER_ON:
+-		return "POWER_ON";
+-	case ATH11K_MHI_POWER_OFF:
+-		return "POWER_OFF";
+-	case ATH11K_MHI_FORCE_POWER_OFF:
+-		return "FORCE_POWER_OFF";
+-	case ATH11K_MHI_SUSPEND:
+-		return "SUSPEND";
+-	case ATH11K_MHI_RESUME:
+-		return "RESUME";
+-	case ATH11K_MHI_TRIGGER_RDDM:
+-		return "TRIGGER_RDDM";
+-	case ATH11K_MHI_RDDM_DONE:
+-		return "RDDM_DONE";
+-	default:
+-		return "UNKNOWN";
+-	}
+-};
+-
+-static void ath11k_mhi_set_state_bit(struct ath11k_pci *ab_pci,
+-				     enum ath11k_mhi_state mhi_state)
+-{
+-	struct ath11k_base *ab = ab_pci->ab;
+-
+-	switch (mhi_state) {
+-	case ATH11K_MHI_INIT:
+-		set_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_DEINIT:
+-		clear_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_POWER_ON:
+-		set_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_POWER_OFF:
+-	case ATH11K_MHI_FORCE_POWER_OFF:
+-		clear_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state);
+-		clear_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state);
+-		clear_bit(ATH11K_MHI_RDDM_DONE, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_SUSPEND:
+-		set_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_RESUME:
+-		clear_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_TRIGGER_RDDM:
+-		set_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state);
+-		break;
+-	case ATH11K_MHI_RDDM_DONE:
+-		set_bit(ATH11K_MHI_RDDM_DONE, &ab_pci->mhi_state);
+-		break;
+-	default:
+-		ath11k_err(ab, "unhandled mhi state (%d)\n", mhi_state);
+-	}
+-}
+-
+-static int ath11k_mhi_check_state_bit(struct ath11k_pci *ab_pci,
+-				      enum ath11k_mhi_state mhi_state)
+-{
+-	struct ath11k_base *ab = ab_pci->ab;
+-
+-	switch (mhi_state) {
+-	case ATH11K_MHI_INIT:
+-		if (!test_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_DEINIT:
+-	case ATH11K_MHI_POWER_ON:
+-		if (test_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state) &&
+-		    !test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_FORCE_POWER_OFF:
+-		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_POWER_OFF:
+-	case ATH11K_MHI_SUSPEND:
+-		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state) &&
+-		    !test_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_RESUME:
+-		if (test_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_TRIGGER_RDDM:
+-		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state) &&
+-		    !test_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state))
+-			return 0;
+-		break;
+-	case ATH11K_MHI_RDDM_DONE:
+-		return 0;
+-	default:
+-		ath11k_err(ab, "unhandled mhi state: %s(%d)\n",
+-			   ath11k_mhi_state_to_str(mhi_state), mhi_state);
+-	}
+-
+-	ath11k_err(ab, "failed to set mhi state %s(%d) in current mhi state (0x%lx)\n",
+-		   ath11k_mhi_state_to_str(mhi_state), mhi_state,
+-		   ab_pci->mhi_state);
+-
+-	return -EINVAL;
+-}
+-
+-static int ath11k_mhi_set_state(struct ath11k_pci *ab_pci,
+-				enum ath11k_mhi_state mhi_state)
+-{
+-	struct ath11k_base *ab = ab_pci->ab;
+-	int ret;
+-
+-	ret = ath11k_mhi_check_state_bit(ab_pci, mhi_state);
+-	if (ret)
+-		goto out;
+-
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "setting mhi state: %s(%d)\n",
+-		   ath11k_mhi_state_to_str(mhi_state), mhi_state);
+-
+-	switch (mhi_state) {
+-	case ATH11K_MHI_INIT:
+-		ret = mhi_prepare_for_power_up(ab_pci->mhi_ctrl);
+-		break;
+-	case ATH11K_MHI_DEINIT:
+-		mhi_unprepare_after_power_down(ab_pci->mhi_ctrl);
+-		ret = 0;
+-		break;
+-	case ATH11K_MHI_POWER_ON:
+-		ret = mhi_sync_power_up(ab_pci->mhi_ctrl);
+-		break;
+-	case ATH11K_MHI_POWER_OFF:
+-		mhi_power_down(ab_pci->mhi_ctrl, true);
+-		ret = 0;
+-		break;
+-	case ATH11K_MHI_FORCE_POWER_OFF:
+-		mhi_power_down(ab_pci->mhi_ctrl, false);
+-		ret = 0;
+-		break;
+-	case ATH11K_MHI_SUSPEND:
+-		ret = mhi_pm_suspend(ab_pci->mhi_ctrl);
+-		break;
+-	case ATH11K_MHI_RESUME:
+-		/* Do force MHI resume as some devices like QCA6390, WCN6855
+-		 * are not in M3 state but they are functional. So just ignore
+-		 * the MHI state while resuming.
+-		 */
+-		ret = mhi_pm_resume_force(ab_pci->mhi_ctrl);
+-		break;
+-	case ATH11K_MHI_TRIGGER_RDDM:
+-		ret = mhi_force_rddm_mode(ab_pci->mhi_ctrl);
+-		break;
+-	case ATH11K_MHI_RDDM_DONE:
+-		break;
+-	default:
+-		ath11k_err(ab, "unhandled MHI state (%d)\n", mhi_state);
+-		ret = -EINVAL;
+-	}
+-
+-	if (ret)
+-		goto out;
+-
+-	ath11k_mhi_set_state_bit(ab_pci, mhi_state);
+-
+-	return 0;
+-
+-out:
+-	ath11k_err(ab, "failed to set mhi state: %s(%d)\n",
+-		   ath11k_mhi_state_to_str(mhi_state), mhi_state);
+-	return ret;
+-}
+-
+ int ath11k_mhi_start(struct ath11k_pci *ab_pci)
+ {
+ 	int ret;
+ 
+ 	ab_pci->mhi_ctrl->timeout_ms = MHI_TIMEOUT_DEFAULT_MS;
+ 
+-	ret = ath11k_mhi_set_state(ab_pci, ATH11K_MHI_INIT);
++	ret = mhi_prepare_for_power_up(ab_pci->mhi_ctrl);
+ 	if (ret)
+ 		goto out;
+ 
+-	ret = ath11k_mhi_set_state(ab_pci, ATH11K_MHI_POWER_ON);
++	ret = mhi_sync_power_up(ab_pci->mhi_ctrl);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -661,16 +483,20 @@ int ath11k_mhi_start(struct ath11k_pci *ab_pci)
+ 
+ void ath11k_mhi_stop(struct ath11k_pci *ab_pci)
+ {
+-	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_POWER_OFF);
+-	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_DEINIT);
++	mhi_power_down(ab_pci->mhi_ctrl, true);
++	mhi_unprepare_after_power_down(ab_pci->mhi_ctrl);
+ }
+ 
+ void ath11k_mhi_suspend(struct ath11k_pci *ab_pci)
+ {
+-	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_SUSPEND);
++	mhi_pm_suspend(ab_pci->mhi_ctrl);
+ }
+ 
+ void ath11k_mhi_resume(struct ath11k_pci *ab_pci)
+ {
+-	ath11k_mhi_set_state(ab_pci, ATH11K_MHI_RESUME);
++	/* Do force MHI resume as some devices like QCA6390, WCN6855
++	 * are not in M3 state but they are functional. So just ignore
++	 * the MHI state while resuming.
++	 */
++	mhi_pm_resume_force(ab_pci->mhi_ctrl);
+ }
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.h b/drivers/net/wireless/ath/ath11k/mhi.h
+index 488dada5d31c..5dd024f879c4 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.h
++++ b/drivers/net/wireless/ath/ath11k/mhi.h
+@@ -16,19 +16,6 @@
+ #define MHICTRL					0x38
+ #define MHICTRL_RESET_MASK			0x2
+ 
+-enum ath11k_mhi_state {
+-	ATH11K_MHI_INIT,
+-	ATH11K_MHI_DEINIT,
+-	ATH11K_MHI_POWER_ON,
+-	ATH11K_MHI_POWER_OFF,
+-	ATH11K_MHI_FORCE_POWER_OFF,
+-	ATH11K_MHI_SUSPEND,
+-	ATH11K_MHI_RESUME,
+-	ATH11K_MHI_TRIGGER_RDDM,
+-	ATH11K_MHI_RDDM,
+-	ATH11K_MHI_RDDM_DONE,
+-};
+-
+ int ath11k_mhi_start(struct ath11k_pci *ar_pci);
+ void ath11k_mhi_stop(struct ath11k_pci *ar_pci);
+ int ath11k_mhi_register(struct ath11k_pci *ar_pci);
+diff --git a/drivers/net/wireless/ath/ath11k/pci.h b/drivers/net/wireless/ath/ath11k/pci.h
+index 61d67b20a0eb..2a28a9e8cda5 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.h
++++ b/drivers/net/wireless/ath/ath11k/pci.h
+@@ -79,7 +79,6 @@ struct ath11k_pci {
+ 	u32 msi_ep_base_data;
+ 	struct mhi_controller *mhi_ctrl;
+ 	const struct ath11k_msi_config *msi_config;
+-	unsigned long mhi_state;
+ 	u32 register_window;
+ 
+ 	/* protects register_window above */
+-- 
+2.30.2
 
-1731         ieee80211_tx_info_clear_status(info);
-1732=20
-1733         for (i =3D 0; i < ts->ts_final_idx; i++) {
-1734                 struct ieee80211_tx_rate *r =3D
-1735                         &info->status.rates[i];
-1736=20
-1737                 r->count =3D tries[i];
-1738         }
-
-In drivers/net/wireless/ath/ath9k/xmit.c this is only done/changed for
-the tx_rateindex index (which is often zero in case the first suggested rate
-succeeds, but in noisy environment is sometimes > 0)...
-
->  	if (txok)
->  		tx_info->status.ack_signal =3D ts->ts_rssi;
-> =20
-> @@ -2595,9 +2597,6 @@ static void ath_tx_rc_status(struct ath_softc *sc, =
-struct ath_buf *bf,
->  	}
-> =20
->  	tx_info->status.rates[)].count =3D ts->ts_longretry + 1;
-> -
-> -	/* we report airtime in ath_tx_count_airtime(), don't report twice */
-> -	tx_info->status.tx_time =3D 0;
->  }
-> =20
->  static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
-
-
-And from drivers/net/wireless/ath/ath9k/xmit.c:
-
-2592         for (i =3D tx_rateindex + 1; i < hw->max_rates; i++) {
-2593                 tx_info->status.rates[i].count =3D 0;
-2594                 tx_info->status.rates[i].idx =3D -1;
-2595         }
-
-Line 2593 can be deleted as status.rates[].count is already zeroed through =
-the
-ieee80211_tx_info_clear_status() call...
-
-And it should be sufficient to do:
-
-	if (tx_rateindex + 1 < hw->max_rates)
-		tx_info->status.rates[tx_rateindex + 1].idx =3D -1;
-
-Regards,
-Peter
