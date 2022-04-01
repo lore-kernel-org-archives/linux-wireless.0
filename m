@@ -2,94 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 501F2C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 05:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7303EC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 05:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235252AbiDAFsq (ORCPT
+        id S245205AbiDAFxu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 01:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35732 "EHLO
+        Fri, 1 Apr 2022 01:53:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233956AbiDAFsp (ORCPT
+        with ESMTP id S245201AbiDAFxt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 01:48:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B98C220FD1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 22:46:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5133661B5F
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 05:46:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B40B6C2BBE4;
-        Fri,  1 Apr 2022 05:46:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648792014;
-        bh=Yi1ww34V/4lgByjz2wZL+Sp/2Eq+U8FYc9kImdBmQhk=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=Q5cRatCHYoDPG3EspBtGpM5PCM3Qh0jt+DVc2W3lk03RVN1WIEe17W6tvMq4w9eRz
-         72EpAfCfc2RR08D6YA21ihQzYZbh2X6vQY7Usl/YB6LaRMX5rZ9Qe+pIoGzCcob5bx
-         ctflp7Em36ki1ZbVRo9O2Ss1rip//4KqvgcBMDS7436tPmmq3uHg93TFILfVSLaE+b
-         hbrtfLA65qQY3vLqx4YLSjOQDjT4dSERj2t/E31ToNJVVf3bsp/8n3Vd+F2E1aaQgK
-         Q7GtQuBzxWDN0c307tvHP40wOrbBWzA2YrXymT6DQW1S0SYBq2YIKVJBLfT40+8qRy
-         9bdT6fY0jcQ0g==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     "Nagarajan Maran \(QUIC\)" <quic_nmaran@quicinc.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "ath11k\@lists.infradead.org" <ath11k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v5.18] ath11k: fix driver initialization failure with WoW unsupported hw
-In-Reply-To: <MW2PR02MB3899E0AF9C08EDF0F9CE1E52EDE19@MW2PR02MB3899.namprd02.prod.outlook.com>
-        (Nagarajan Maran's message of "Thu, 31 Mar 2022 16:37:35 +0000")
-References: <20220331073110.3846-1-quic_nmaran@quicinc.com>
-        <87sfqyv1td.fsf@kernel.org>
-        <2f25bb87e665488b30f6fdaa5877ad8b5b19da0a.camel@sipsolutions.net>
-        <MW2PR02MB3899E0AF9C08EDF0F9CE1E52EDE19@MW2PR02MB3899.namprd02.prod.outlook.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-Date:   Fri, 01 Apr 2022 08:46:49 +0300
-Message-ID: <87mth5uzhy.fsf@kernel.org>
+        Fri, 1 Apr 2022 01:53:49 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1880225DAB7
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 22:51:59 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2315pjgY7019736, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2315pjgY7019736
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 1 Apr 2022 13:51:45 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 1 Apr 2022 13:51:45 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 1 Apr
+ 2022 13:51:44 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <ku920601@realtek.com>,
+        <phhuang@realtek.com>
+Subject: [PATCH v2 0/4] rtw89: some fixes related to hw_scan
+Date:   Fri, 1 Apr 2022 13:50:39 +0800
+Message-ID: <20220401055043.12512-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/01/2022 05:41:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvMSCkV6TIIDAzOjI4OjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Nagarajan Maran (QUIC)" <quic_nmaran@quicinc.com> writes:
+After applying hw_scan, it can't play STA and monitor mode simultaneously,
+because power is off after hw_scan unconditionally. The new firmware,
+which supports hw_scan, adds an new C2H message to notify driver, but
+this message is debug purpose, so just add a dummy function to avoid the
+unsupported message. More, correct BT-coexistence behavior during hw_scan,
+and correct dwell period of DFS channel.
 
-> -----Original Message-----
-> From: Johannes Berg <johannes@sipsolutions.net> 
-> Sent: Thursday, March 31, 2022 5:29 PM
-> To: Kalle Valo <kvalo@kernel.org>; Nagarajan Maran (QUIC) <quic_nmaran@quicinc.com>
-> Cc: ath11k@lists.infradead.org; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH v5.18] ath11k: fix driver initialization failure
-> with WoW unsupported hw
->
-> On Thu, 2022-03-31 at 13:44 +0300, Kalle Valo wrote:
->> > 
->> > Fixes: ba9177fcef21 ("Add basic WoW functionalities")
->> 
->> Fixes tag is wrong, it should be:
->> 
->> Fixes: ba9177fcef21 ("ath11k: Add basic WoW functionalities")
->> 
->
-> $ git config --global --add alias.fixes 'show -q --format=fixes'
-> $ git config --global --add pretty.fixes 'Fixes: %h ("%s")'
-> $ git config --global --add core.abbrev 12 $ git fixes ba9177fcef21
-> Fixes: ba9177fcef21 ("ath11k: Add basic WoW functionalities")
->
-> :)
->
-> Johannes
->
-> Thank you for the commands.
+This patchset is based on "rtw89: add firmware reset and dump firmware memory and backtrace"
 
-Please use '> ' in your quotation, otherwise your replies are hard to
-read. See item 5 here:
+v2: add more fixes to make hw_scan work well.
 
-http://www.infradead.org/~dwmw2/email.html
+---
+Hi Kalle,
+
+I know this week is still merge window. I would like to put these fixes
+together to correct hw_scan behavior in one go.
+
+Ching-Te Ku (1):
+  rtw89: coex: Add case for scan offload
+
+Po Hao Huang (3):
+  rtw89: change idle mode condition during hw_scan
+  rtw89: packet offload handler to avoid warning
+  rtw89: fix misconfiguration on hw_scan channel time
+
+ drivers/net/wireless/realtek/rtw89/coex.c | 12 +++++++++++-
+ drivers/net/wireless/realtek/rtw89/core.c |  8 ++++----
+ drivers/net/wireless/realtek/rtw89/fw.c   |  2 +-
+ drivers/net/wireless/realtek/rtw89/mac.c  |  8 +++++++-
+ 4 files changed, 23 insertions(+), 7 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
