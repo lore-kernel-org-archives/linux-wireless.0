@@ -2,71 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03681C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 06:40:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD903C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 06:43:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245757AbiDAGm2 (ORCPT
+        id S245708AbiDAGox (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 02:42:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46692 "EHLO
+        Fri, 1 Apr 2022 02:44:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343606AbiDAGmA (ORCPT
+        with ESMTP id S1344630AbiDAGon (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 02:42:00 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEE339FEA
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 23:38:43 -0700 (PDT)
+        Fri, 1 Apr 2022 02:44:43 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23411DEA2
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2022 23:42:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 24BB6B82273
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 06:38:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 057C7C34110;
-        Fri,  1 Apr 2022 06:38:39 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B15D561181
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 06:42:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FEB5C2BBE4;
+        Fri,  1 Apr 2022 06:42:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648795120;
-        bh=H+IA/BpNadDS+C7iLuR4zKbyhEp2uGoxPfknbcvWpig=;
+        s=k20201202; t=1648795374;
+        bh=zpGusPb2GLs2SQoY5se99PFqzVJuoqfex/4tGGoevZc=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Y1kAjk8d9ry+c5ms0d58/4vsxKgxobmtJTs9WJcE9BJdyAgjAVXZPCodFY2e/a6VN
-         9ijEjLkmzsp1bJuW+pF90iOY5ywsBoB5njHX/U6x6QUq3YL3z/M+Yg1HGd2Gf5p6w2
-         hfAbtOkeZrTUegeTGw3WQBxmM3caOdR8TeES+vg6Ob0YB1E8/ccGg5PlwbiQOjGMPB
-         fhakg7EQ9sXgfUjv9ZdBwrxlba+GcNX9MYUhQi/jOkyQYTScUcQuwCzjCKfR6F+hSn
-         6k2G7sekFl7FACYwNaQUcTJCMiK49XV1ixYWzJzE+8E0fQPtO0yvcJu5/LdzgyGr7E
-         gq2O6lSnJmNtg==
+        b=N5Ea4BGxpsw//UFyoH62ycEWvEBiVAwoIF/FMoLgiTcBr35nPlxCu/4w1ajovK6it
+         q8nCzxUemFlnigkoxMohwSc1R7/EzPDwgaVf2bGWpQW/aZz1If1WqsaXZkHPLG9gzv
+         7p+nK24AbO5YU78uh4toUeIjwj3G0sEdQ1o+E1F+xd8lQpfYBvO7MGU5PRNcfARMTV
+         2Xa/T/cJ2V7u09zR2iuqmjjqkHFA4t2qo0Eta6q8NVLhWdEEciK1zoqAR2Z2OcmxLT
+         Me/RxBVhqUduZumeF+rglptocwaFPwB+4qhatlw/2QoQ+oo/BKdDChohRzUzhjFOdL
+         r6R9m83J9HFxQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] MAINTAINERS: claim include/uapi/linux/wireless.h
+Subject: Re: [PATCH v5.18] Revert "ath11k: mesh: add support for 256 bitmap in
+ blockack frames in 11ax"
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220328114029.526fbb42784d.If7c79b4ca827dfe82a545689f2d31fcedabd8387@changeid>
-References: <20220328114029.526fbb42784d.If7c79b4ca827dfe82a545689f2d31fcedabd8387@changeid>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
+In-Reply-To: <1648701477-16367-1-git-send-email-quic_akolli@quicinc.com>
+References: <1648701477-16367-1-git-send-email-quic_akolli@quicinc.com>
+To:     Anilkumar Kolli <quic_akolli@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        Anilkumar Kolli <quic_akolli@quicinc.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164879511773.20606.6214879248988291030.kvalo@kernel.org>
-Date:   Fri,  1 Apr 2022 06:38:39 +0000 (UTC)
+Message-ID: <164879537083.4811.14737896570748276541.kvalo@kernel.org>
+Date:   Fri,  1 Apr 2022 06:42:52 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Anilkumar Kolli <quic_akolli@quicinc.com> wrote:
 
-> From: Johannes Berg <johannes.berg@intel.com>
+> This reverts commit 743b9065fe6348a5f8f5ce04869ce2d701e5e1bc.
 > 
-> As much as I don't really want to maintain this legacy
-> cruft that we started replacing 15+ years ago, for now
-> it still falls on me to take care of it. Add a missing
-> file to the list.
+> The original commit breaks the 256 bitmap in blockack frames in AP
+> mode. After reverting the commit the feature works again in both AP and
+> mesh modes
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Tested-on: IPQ8074 hw2.0 PCI WLAN.HK.2.6.0.1-00786-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: Anilkumar Kolli <quic_akolli@quicinc.com>
 
-Patch applied to wireless.git, thanks.
+I'll add:
 
-598be865ee00 MAINTAINERS: claim include/uapi/linux/wireless.h
+Fixes: 743b9065fe63 ("ath11k: mesh: add support for 256 bitmap in blockack frames in 11ax")
+
+It's not clear for me if reverts should have the Fixes tag, but to be on the
+safe side I'll add it.
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220328114029.526fbb42784d.If7c79b4ca827dfe82a545689f2d31fcedabd8387@changeid/
+https://patchwork.kernel.org/project/linux-wireless/patch/1648701477-16367-1-git-send-email-quic_akolli@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
