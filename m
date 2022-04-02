@@ -2,188 +2,129 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CBE2C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Apr 2022 23:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FB93C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Apr 2022 09:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236818AbiDBAA5 (ORCPT
+        id S239919AbiDBJyZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Apr 2022 20:00:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53700 "EHLO
+        Sat, 2 Apr 2022 05:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233669AbiDBAAz (ORCPT
+        with ESMTP id S239868AbiDBJyY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Apr 2022 20:00:55 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 415ED83027
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2022 16:59:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648857545; x=1680393545;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mM+WXpDsO9dlensgqSDPC5m+B3WsxfJP2XPe+/7tK74=;
-  b=El0q52vvUXSofvxPCkM8oyVs/olr4VHXK+ez0VXEOEjJPb8T8DatYTh/
-   qWMIu6IDS7cV93zkPAV8biiczHU6ykqPtKxg9CHmsMd7ylr516BQTqjAd
-   q2k5HI8agDVc+CB+WGd4SVlye46A4nar45BrE2wZKlnotAfE3UVR7RohI
-   1c16kpa583mS3qO5WhfiuLX7y6WDDElbiRl+PR1jUAEOj6/59OhD5QoLK
-   +RSIyEbDdHQLch87al3qKPwEk1OYwgcCErqgJxkFGDLml1vGYz6nfMaPC
-   SfSb/AnjTbggLkH/0M9FNtlbzKlSWmdFcHzo6xS25+VDqCVuNKHG18Hma
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10304"; a="260432925"
-X-IronPort-AV: E=Sophos;i="5.90,229,1643702400"; 
-   d="scan'208";a="260432925"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 16:59:04 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,229,1643702400"; 
-   d="scan'208";a="567930866"
-Received: from lkp-server02.sh.intel.com (HELO 3231c491b0e2) ([10.239.97.151])
-  by orsmga008.jf.intel.com with ESMTP; 01 Apr 2022 16:59:03 -0700
-Received: from kbuild by 3231c491b0e2 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1naRAU-0001bs-KG;
-        Fri, 01 Apr 2022 23:59:02 +0000
-Date:   Sat, 02 Apr 2022 07:58:36 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [wireless:main] BUILD SUCCESS
- 61a891efbb1099bb7bdcedfc50f802fabbe46a0e
-Message-ID: <624791ac.k5x7GbUZlRfxkfp+%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Sat, 2 Apr 2022 05:54:24 -0400
+Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBE4198974;
+        Sat,  2 Apr 2022 02:52:32 -0700 (PDT)
+Received: by mail-qt1-x82f.google.com with SMTP id t7so4046290qta.10;
+        Sat, 02 Apr 2022 02:52:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Rf+Z8BCmAsoqSh2imF0kTHHsFmoLp9md0M8PNzOORW0=;
+        b=FpjP+yDw+rd8QIuPn3pAflciBU8szYdoU9YGdbrT3mDllMK2WthyTvaRMVJyXhWwf+
+         NZwiHHwVcxGhm9/fc3iVPMB8CtrcqxkWDayKmli159Hi2vbE5Sp+iUAa56LzExqyFzZF
+         fqQxgW51lj//KnlluAqJ4+b4rXSU8yW2d8H5Zm7U31dW435C8NQCmKGkDMHDlwsUUV3Y
+         C5+qo4qACTYkiJXZ9BiJ4CeT9LkvkfD3isd1pc5xt1bbzjyUWFlpFOWMZsxxgkFmFCzZ
+         Ny2uM5CDI3opmvKuHc+JCX88TYNEZnPHxYsdxQuGCC0bGaD/1ZFT/qzxmlKKzmH5yuHZ
+         njnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Rf+Z8BCmAsoqSh2imF0kTHHsFmoLp9md0M8PNzOORW0=;
+        b=bUbQ/wggRrYIAt0F+B8LXwzQVNgf/nJieRfF6Rm+1cUkOQe/pFhTacsHDX3unTdDHv
+         EyedNLZjJlM/0qU/D7xNxMZy9DAmHwerurtG0j2YpbC2xGAyBFxU+hRdN7kBg+iVYo33
+         jZJKT4wdevJ3/oQNaO3olfB4kngwGp51Xh/X0f60GEJCgYjZbnCjH+INXv9klT4sD+Op
+         LapunoLK0aAKXCCV+J++nTkZyUFUDzOhDjK6lnNlSn1hdtVT/WSaxft0Pmzoe1wkUJT2
+         Hr4ck2NziWKtK56T0cpOveb8H9Sl+8cOU4XmjBSUdP9hgm+MY29N4S8cKmStCsAo1+9R
+         cLmg==
+X-Gm-Message-State: AOAM531BAaz9pcG7g2cXfYu+XdgRbbAqFm76HErXCd3l9hv0xbism4qq
+        rSLHsoBLBrpi0h5GgTHSgRek5Bakf1OqaU2AsRX++eC2Fkk=
+X-Google-Smtp-Source: ABdhPJzM3PO5vJI14orWCHqDgZL3GwaLuRPCeqgqlwej3gH0Wk3KtPQmkf0ZAisVJGYGwj4tfQH5Nz4ETHT/H2ITgIo=
+X-Received: by 2002:a05:622a:4cd:b0:2e1:ec2f:8c22 with SMTP id
+ q13-20020a05622a04cd00b002e1ec2f8c22mr11532022qtx.494.1648893152007; Sat, 02
+ Apr 2022 02:52:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20220401093554.360211-1-robimarko@gmail.com> <87ilrsuab4.fsf@kernel.org>
+In-Reply-To: <87ilrsuab4.fsf@kernel.org>
+From:   Robert Marko <robimarko@gmail.com>
+Date:   Sat, 2 Apr 2022 11:52:21 +0200
+Message-ID: <CAOX2RU4pCn8C-HhhuOzyikjk2Ax3VDcjMKh7N6X5HeMN4xLMEg@mail.gmail.com>
+Subject: Re: [PATCH] ath11k: select QRTR for AHB as well
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git main
-branch HEAD: 61a891efbb1099bb7bdcedfc50f802fabbe46a0e  MAINTAINERS: mark wil6210 as orphan
+On Fri, 1 Apr 2022 at 16:51, Kalle Valo <kvalo@kernel.org> wrote:
+>
+> Robert Marko <robimarko@gmail.com> writes:
+>
+> > Currently, ath11k only selects QRTR if ath11k PCI is selected, however
+> > AHB support requires QRTR, more precisely QRTR_SMD because it is using
+> > QMI as well which in turn uses QRTR.
+> >
+> > Without QRTR_SMD AHB does not work, so select QRTR in ATH11K and then
+> > select QRTR_SMD for ATH11K_AHB and QRTR_MHI for ATH11K_PCI.
+> >
+> > Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
+> >
+> > Signed-off-by: Robert Marko <robimarko@gmail.com>
+> > ---
+> >  drivers/net/wireless/ath/ath11k/Kconfig | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath11k/Kconfig b/drivers/net/wireless/ath/ath11k/Kconfig
+> > index ad5cc6cac05b..b45baad184f6 100644
+> > --- a/drivers/net/wireless/ath/ath11k/Kconfig
+> > +++ b/drivers/net/wireless/ath/ath11k/Kconfig
+> > @@ -5,6 +5,7 @@ config ATH11K
+> >       depends on CRYPTO_MICHAEL_MIC
+> >       select ATH_COMMON
+> >       select QCOM_QMI_HELPERS
+> > +     select QRTR
+> >       help
+> >         This module adds support for Qualcomm Technologies 802.11ax family of
+> >         chipsets.
+> > @@ -15,6 +16,7 @@ config ATH11K_AHB
+> >       tristate "Atheros ath11k AHB support"
+> >       depends on ATH11K
+> >       depends on REMOTEPROC
+> > +     select QRTR_SMD
+> >       help
+> >         This module adds support for AHB bus
+> >
+> > @@ -22,7 +24,6 @@ config ATH11K_PCI
+> >       tristate "Atheros ath11k PCI support"
+> >       depends on ATH11K && PCI
+> >       select MHI_BUS
+> > -     select QRTR
+> >       select QRTR_MHI
+> >       help
+> >         This module adds support for PCIE bus
+>
+> I now see a new warning:
+>
+> WARNING: unmet direct dependencies detected for QRTR_SMD
+>   Depends on [n]: NET [=y] && QRTR [=m] && (RPMSG [=n] || COMPILE_TEST [=n] && RPMSG [=n]=n)
+>   Selected by [m]:
+>   - ATH11K_AHB [=m] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_ATH [=y] && ATH11K [=m] && REMOTEPROC [=y]
 
-elapsed time: 1005m
+Ahh yeah, since it's SMD then it requires RPMGS which in turn requires
+more stuff.
+What do you think about making it depend on QRTR_SMD instead, because
+without it AHB literally does not work?
 
-configs tested: 108
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm                              allmodconfig
-arm                              allyesconfig
-arm64                               defconfig
-arm64                            allyesconfig
-i386                          randconfig-c001
-ia64                      gensparse_defconfig
-powerpc                       maple_defconfig
-powerpc64                        alldefconfig
-m68k                       m5208evb_defconfig
-m68k                       m5275evb_defconfig
-sh                            titan_defconfig
-arm                            zeus_defconfig
-sparc                       sparc64_defconfig
-powerpc                     mpc83xx_defconfig
-arc                        nsimosci_defconfig
-x86_64                        randconfig-c001
-arm                  randconfig-c002-20220331
-ia64                             allyesconfig
-ia64                             allmodconfig
-ia64                                defconfig
-m68k                                defconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-alpha                               defconfig
-csky                                defconfig
-nios2                            allyesconfig
-alpha                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-h8300                            allyesconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-parisc64                            defconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-s390                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-sparc                            allyesconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-i386                                defconfig
-i386                             allyesconfig
-sparc                               defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-powerpc                          allyesconfig
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-i386                          randconfig-a001
-i386                          randconfig-a003
-i386                          randconfig-a005
-x86_64                        randconfig-a015
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-arc                  randconfig-r043-20220331
-riscv                            allmodconfig
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                          rv32_defconfig
-riscv                            allyesconfig
-riscv                               defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                                  kexec
-x86_64                          rhel-8.3-func
-x86_64                               rhel-8.3
-x86_64                    rhel-8.3-kselftests
-x86_64                         rhel-8.3-kunit
-
-clang tested configs:
-powerpc              randconfig-c003-20220331
-x86_64                        randconfig-c007
-s390                 randconfig-c005-20220331
-arm                  randconfig-c002-20220331
-riscv                randconfig-c006-20220331
-mips                 randconfig-c004-20220331
-i386                          randconfig-c001
-powerpc                     pseries_defconfig
-arm                        neponset_defconfig
-powerpc                      obs600_defconfig
-powerpc                     akebono_defconfig
-powerpc                    mvme5100_defconfig
-arm                             mxs_defconfig
-mips                      malta_kvm_defconfig
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
-hexagon              randconfig-r041-20220331
-hexagon              randconfig-r045-20220331
-s390                 randconfig-r044-20220331
-riscv                randconfig-r042-20220331
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Regards,
+Robert
+>
+> --
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
