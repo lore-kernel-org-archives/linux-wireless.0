@@ -2,84 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF06BC433FE
-	for <linux-wireless@archiver.kernel.org>; Sun,  3 Apr 2022 13:23:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C31A8C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun,  3 Apr 2022 15:41:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347425AbiDCNZI (ORCPT
+        id S1352925AbiDCPnL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 3 Apr 2022 09:25:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57940 "EHLO
+        Sun, 3 Apr 2022 11:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232198AbiDCNZH (ORCPT
+        with ESMTP id S1359258AbiDCPml (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Apr 2022 09:25:07 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA2F2FFF0;
-        Sun,  3 Apr 2022 06:23:12 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1648992189; bh=vxP9q518XE3KdAztl9//KGX9bUTP+1n779ioHEPSOHc=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=kTXyJBdpSrLqD2Jq+JcFdR04mE5KkGWlUPpwy8lKKYGmk60+oYBCeWWqWSL9Gg3tZ
-         hT5svZvRPSA5eJ3r0k2noh+NTBD6yvUzKify+jCbz0Mkxfyy+ciSZhAmySuYYW4kfc
-         vkzqzX38Q3FPsV8VhGN858L3T/UC7bkJ5bT0isJYEOgYvMlmhzH5J5eWTGA1WwxGFR
-         pIMf70rYTcfd04DZJkg49U/nSRzLKSHAyXcGHzwXB5fAsDW/KkkMRIl2fVKJIg25aG
-         iB/el4mu9uBfE+SpFaVE853rsEOsKD6d/TKGoRn+99XlGhd0XHogF/GTQWfG9Z3po4
-         slZsTo/feS42g==
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-        Peter Seiderer <ps.report@gmx.net>
-Subject: Re: [PATCH v5.18] ath9k: Save rate counts before clearing tx status
- area
-In-Reply-To: <874k3btm41.fsf@kernel.org>
-References: <20220402122752.2347797-1-toke@toke.dk>
- <d04373063ca88490d95101e52cd1b65d123d207e.camel@sipsolutions.net>
- <87lewnfwyg.fsf@toke.dk> <874k3btm41.fsf@kernel.org>
-Date:   Sun, 03 Apr 2022 15:23:08 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87a6d2fghv.fsf@toke.dk>
+        Sun, 3 Apr 2022 11:42:41 -0400
+Received: from smtp.smtpout.orange.fr (smtp01.smtpout.orange.fr [80.12.242.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2DAB2E68C
+        for <linux-wireless@vger.kernel.org>; Sun,  3 Apr 2022 08:40:40 -0700 (PDT)
+Received: from pop-os.home ([90.126.236.122])
+        by smtp.orange.fr with ESMTPA
+        id b2LBnqhuvxsSgb2LCnvlQt; Sun, 03 Apr 2022 17:40:38 +0200
+X-ME-Helo: pop-os.home
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Sun, 03 Apr 2022 17:40:38 +0200
+X-ME-IP: 90.126.236.122
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Deren Wu <deren.wu@mediatek.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH] mt76: mt7921: Fix the error handling path of mt7921_pci_probe()
+Date:   Sun,  3 Apr 2022 17:40:33 +0200
+Message-Id: <ca5003e9c6fd2293d7a14ec693e15cc3d6e849a6.1649000427.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@kernel.org> writes:
+In case of error, some resources must be freed, as already done above and
+below the devm_kmemdup() and __mt7921e_mcu_drv_pmctrl() calls added in the
+commit in Fixes:.
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>
->>> On Sat, 2022-04-02 at 14:27 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wro=
-te:
->>>>=20
->>>> @@ -2591,12 +2602,6 @@ static void ath_tx_rc_status(struct ath_softc *=
-sc, struct ath_buf *bf,
->>>>  				hw->max_rate_tries;
->>>>  	}
->>>>=20=20
->>>> -	for (i =3D tx_rateindex + 1; i < hw->max_rates; i++) {
->>>
->>> might want to drop that blank line too :)
->>>
->>>> -		tx_info->status.rates[i].count =3D 0;
->>>> -		tx_info->status.rates[i].idx =3D -1;
->>>> -	}
->>>> -
->>>> -	tx_info->status.rates[tx_rateindex].count =3D ts->ts_longretry + 1;
->>>>  }
->>>
->>> since there's nothing else.
->>
->> Hmm, fair point; Kalle, I don't suppose I could trouble you for a fixup
->> when committing? :)
->
-> Sorry, editing the diff is more difficult for me. It would be easier if
-> you could submit v2.
+Fixes: 602cc0c9618a ("mt76: mt7921e: fix possible probe failure after reboot")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+This is more or less a blind fix.
+Review with care.
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Alright, no worries, can do. Seems we may need more changes anyway, so
-will wait for the results of Peter's tests before submitting v2...
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 1a01d025bbe5..062e2b422478 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -302,8 +302,10 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 	dev->bus_ops = dev->mt76.bus;
+ 	bus_ops = devm_kmemdup(dev->mt76.dev, dev->bus_ops, sizeof(*bus_ops),
+ 			       GFP_KERNEL);
+-	if (!bus_ops)
+-		return -ENOMEM;
++	if (!bus_ops) {
++		ret = -ENOMEM;
++		goto err_free_dev;
++	}
+ 
+ 	bus_ops->rr = mt7921_rr;
+ 	bus_ops->wr = mt7921_wr;
+@@ -312,7 +314,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 
+ 	ret = __mt7921e_mcu_drv_pmctrl(dev);
+ 	if (ret)
+-		return ret;
++		goto err_free_dev;
+ 
+ 	mdev->rev = (mt7921_l1_rr(dev, MT_HW_CHIPID) << 16) |
+ 		    (mt7921_l1_rr(dev, MT_HW_REV) & 0xff);
+-- 
+2.32.0
 
--Toke
