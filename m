@@ -2,156 +2,173 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E040C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAFD2C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 23:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243443AbiDDVym (ORCPT
+        id S240973AbiDDXNb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:54:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56282 "EHLO
+        Mon, 4 Apr 2022 19:13:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384453AbiDDVfp (ORCPT
+        with ESMTP id S245394AbiDDXLw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 17:35:45 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE8A48335;
-        Mon,  4 Apr 2022 14:26:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1649107514;
-        bh=Ro4B9BImMndeuI5KT1TcwaX2nQXOXMqp5IujRLN9o60=;
-        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
-        b=Q+UG0XJUFefJviD9xFpD2w/hLKt8PtLpC5JXKtomSoqPbnaKMOdUdjI2aXg5odyYO
-         HoE4i99Gu85QGXAD+TQHdZJLZn3inhtM8KHDu+pgqooCSjhqaZyn3NFR0ZfmPnhcOO
-         Iix0rQ4oyJEYp2RVJqrJtGELhsv6dsSWIRzqv0X8=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from localhost ([62.216.209.4]) by mail.gmx.net (mrgmx005
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MqJm5-1oNB4T0I9z-00nPsq; Mon, 04
- Apr 2022 23:25:14 +0200
-Date:   Mon, 4 Apr 2022 23:25:12 +0200
-From:   Peter Seiderer <ps.report@gmx.net>
-To:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@toke.dk>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v1 2/2] mac80211: minstrel_ht: fill all requested rates
-Message-ID: <20220404232512.4fdd7eb9@gmx.net>
-In-Reply-To: <87fsmseml7.fsf@toke.dk>
-References: <20220402153014.31332-1-ps.report@gmx.net>
-        <20220402153014.31332-2-ps.report@gmx.net>
-        <87fsmseml7.fsf@toke.dk>
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-suse-linux-gnu)
+        Mon, 4 Apr 2022 19:11:52 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B50B26FE
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 15:51:02 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.67.121])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id CFE5C1A0068
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 22:51:00 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 98C4A4C009F
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 22:51:00 +0000 (UTC)
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 0A3EB13C2B0;
+        Mon,  4 Apr 2022 15:51:00 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0A3EB13C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1649112660;
+        bh=1iwDxC6ujRhg/xJSQNybtzQggExjPVsczveA7x69l/A=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LDfHC9lTdZZ0sn2AXkN7hnrbWDcnKFB0vjV1saLoQZVlHhHEU+4Af9qKlD66Hj2N+
+         PbcE11gZE8LHfxMmF7NlpAONU/E1ztW/8hWz5+/aGBZSefh58RDoqulZXzTD4+bSdZ
+         THpKOQioTvEqJ3GOnrDobU76c5zQ/u0WVP4ZfUVE=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] mt76: mt7915:  retry pci probe logic up to 3 times.
+Date:   Mon,  4 Apr 2022 15:50:57 -0700
+Message-Id: <20220404225058.32475-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:KZKJ2B/82F/1PI1nVtiO1SFg08+X1scy2oosau6ElqX5HcXlYRR
- 7aFO78O4JQX2wXL16Pd8iuXAZDyrfMiHqzbgKpRmhhLmpnSwS85TVVBGUzBl/OvVTKZ9qvJ
- cyibel71SBEkWUsQdvmwnLlP6vdkMo1IWaN82rtvcpe+9p+kD7wNrZzfn5ejPrVV4+GUnYE
- hlb1aWqtyKSmDYu47Eo2Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:SzPVeetkwDI=:aW9kEi57qgJAIiTgaZjWIL
- V8gq/L9Adw4YrEXegqCIVPfMJt6qi/lM5lQWYUdYzDajnOaa1DGNHPIONZriS/mOAHVSoS3P7
- CgzUJtdenZx/F6f1IOy/XutSWCVWh9qsS8+7Olv0uG+5DSLe0AQpjb0agSP3oMRQbCcKlUvku
- u5DO5+foiEeeWAO2C+GJzyBDoozcMNo8xovd9FK+GbdSYr88rAU+sjoa1GymiBo53J5fUVUq/
- X6gkNs4VcFqs9nvz4E1HUfVWGXqqEzCjaVYFmRbEsrnizQ2J7zX0RSPYawPyr7+nHoTXfteOH
- mKB7z4TIUBo8ssLX+3kJzUQpx1JJxiAPfwxbM7bzUdOWLZbLV4D+jvwCM9gjKz5tVwhWqmtso
- BV6tUNQT1KtzuLaZ05OKbsJCIJJ2n8GizzjUkvTOfK2POZ0CJPxach1mFOJQ2nn9UVA9p/f9s
- P58I9IFiP1eWuFl6xD1veWMm5B4qeYUNEvA+1kUV/N6zOwZwwWZov3hSD+yKdLApz+gQYapy7
- O4gkkPutObcAeZkDPmAYsjgj+LvZGpyLtNXyk7Fx8PUf8YLlkG4Lj+mAARnQFSSHRoDow+IeJ
- YUE0FETs0sG90g3TUsMnou8LAqWVY8BJj2o7Vc++WgT4laPg16Jlw1vbDiYFfUx3/9C+UXIxp
- aUJjp32KcH9/5GhUdBpSil28uKj1h2d/V6/aIvssuRiAxjEaAKNj9XAvsCc/O+ls3eTtML+Y9
- q03+UM2QaMzbR6uqAWoT0uNboM/h1Zotje1FpiTNt4lDdSaXEb6L5zvQqLthNAfcU5tf6RIwB
- U+CPNEPhvRpgrwvDqv8xru8hvwp5kJAP59WNS4qv//rwI8FSzbYwH3e9RB8Xo5jDkZaEq4unw
- gY/EEPGoclZZLMqBtceH6/+RE1JDIsu4wwnXO5MuZACpFwiF1srhB43UP2vyijLzl3IW42Ldr
- g0OuDqJwRm4tZQkb8ly7Rek/O+JhKGEh7hDxLqCkZzYEn1kN/IeQ79aF8msjiZQN8R1nLsR+o
- j95FjOePmEakOLJxi1wa5/GOwPphWWbruk0GKh8ditPIa4XD8967KdJIUT2em00hqO93Quijl
- 51HtC25MRhq59Q=
+Content-Transfer-Encoding: 8bit
+X-MDID: 1649112661-LnSlg-cs1YHA
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Toke, Felix,
+From: Ben Greear <greearb@candelatech.com>
 
-On Mon, 04 Apr 2022 20:21:24 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <toke@=
-toke.dk> wrote:
+On my x86-64 system with 6 mtk7915 radios, one or more radios
+often fails to start upon reboot.  So, do up to 3 retries in
+the pci probe logic.  Example of this mitigation working:
 
-> +Felix
->=20
-> Peter Seiderer <ps.report@gmx.net> writes:
->=20
-> > Fill all requested rates (in case of ath9k 4 rate slots are
-> > available, so fill all 4 instead of only 3), improves throughput in
-> > noisy environment. =20
->=20
-> How did you test this? Could you quantify the gains in throughput you saw?
+[    8.637908] mt7915e 0000:06:00.0: ASIC revision: 79150000
+[    8.638026] mt7915e 0000:06:00.0: mt7915:  register_device  Driver-Version: 5.17.0-ct
+[   28.863203] mt7915e 0000:06:00.0: MCU: Initial Failure: Message 00000010 (cid 10 ext_cid: 0 seq 1) timeout.  Last successful cmd: 0x0
+[   28.873960] mt7915e 0000:06:00.0: Failed to get patch semaphore: -110
+[   28.879141] mt7915e 0000:06:00.0: mcu-init: Failed to load firmware, err: -11
+[   28.879143] mt7915e 0000:06:00.0: mt7915_register_device failed, ret: -11
+[   28.884796] mt7915e 0000:06:00.0: mt7915_pci_probe had error on try 1/3, ret: -11
+[   28.891161] mt7915e 0000:06:00.0: ASIC revision: 79150094
+[   28.891261] mt7915e 0000:06:00.0: mt7915:  register_device  Driver-Version: 5.17.0-ct
+[   29.022875] mt7915e 0000:06:00.0: HW/SW Version: 0x8a108a10, Build Time: 20211222184017a
+[   29.033934] mt7915e 0000:06:00.0: WM Firmware Version: ____000000, Build Time: 20211222184052
+[   29.051992] mt7915e 0000:06:00.0: WA Firmware Version: DEV_000000, Build Time: 20211222184111
+[   29.446014] mt7915e 0000:06:00.0: mt7915_pci_probe succeeded on try 2/3
 
-Investigating some performance degradation of a wifi system original with a=
-th5k
-cards using a legacy kernel and madwifi driver compared against the=20
-performance using a ath9k card running IBSS mode over long distance/with
-additional amplifier and using iperf for measurement...
+A quick test of traffic shows the radio works fine after recovery.
 
-With the ath5k cards under bad conditions the throughput is going down below
-10 Mbits/s but with stable throughput..., with the ath9k card and the exact=
- same
-setup there are short periods with good throughput values and periods up to=
- 10-15
-seconds with 0 Mbits/s...
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ .../net/wireless/mediatek/mt76/mt7915/pci.c   | 61 +++++++++++++------
+ 1 file changed, 44 insertions(+), 17 deletions(-)
 
-The actual in-door/laboratory test setup is a wired connection between the
-two wifi systems (with fixed attenuators in between) and an adjustable nois=
-e/
-disturb signal induced by a signal generator...
-
-Without this patch the 0 Mbits/s periods from the field test are reproducib=
-le,
-with this patch applied we see a more or less stable throughput of 1-5 Mbit=
-s/s...
-
-Regards,
-Peter
-
->=20
-> -Toke
->=20
-> > Signed-off-by: Peter Seiderer <ps.report@gmx.net>
-> > ---
-> >  net/mac80211/rc80211_minstrel_ht.c | 14 +++++++-------
-> >  1 file changed, 7 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_=
-minstrel_ht.c
-> > index 9c6ace858107..cd6a0f153688 100644
-> > --- a/net/mac80211/rc80211_minstrel_ht.c
-> > +++ b/net/mac80211/rc80211_minstrel_ht.c
-> > @@ -1436,17 +1436,17 @@ minstrel_ht_update_rates(struct minstrel_priv *=
-mp, struct minstrel_ht_sta *mi)
-> >  	/* Start with max_tp_rate[0] */
-> >  	minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[0]);
-> > =20
-> > -	if (mp->hw->max_rates >=3D 3) {
-> > -		/* At least 3 tx rates supported, use max_tp_rate[1] next */
-> > -		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[1]);
-> > -	}
-> > +	/* Fill up remaining, keep one entry for max_probe_rate */
-> > +	for (; i < (mp->hw->max_rates - 1); i++)
-> > +		minstrel_ht_set_rate(mp, mi, rates, i, mi->max_tp_rate[i]);
-> > =20
-> > -	if (mp->hw->max_rates >=3D 2) {
-> > +	if (i < mp->hw->max_rates)
-> >  		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
-> > -	}
-> > +
-> > +	if (i < IEEE80211_TX_RATE_TABLE_SIZE)
-> > +		rates->rate[i].idx =3D -1;
-> > =20
-> >  	mi->sta->max_rc_amsdu_len =3D minstrel_ht_get_max_amsdu_len(mi);
-> > -	rates->rate[i].idx =3D -1;
-> >  	rate_control_set_rates(mp->hw, mi->sta, rates);
-> >  }
-> > =20
-> > --=20
-> > 2.35.1 =20
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+index 6f819c41a4c4..07cb8a699b75 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/pci.c
+@@ -92,8 +92,8 @@ static int mt7915_pci_hif2_probe(struct pci_dev *pdev)
+ 	return 0;
+ }
+ 
+-static int mt7915_pci_probe(struct pci_dev *pdev,
+-			    const struct pci_device_id *id)
++static int _mt7915_pci_probe(struct pci_dev *pdev,
++			     const struct pci_device_id *id)
+ {
+ 	struct mt7915_dev *dev;
+ 	struct mt76_dev *mdev;
+@@ -101,20 +101,6 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
+ 	int irq;
+ 	int ret;
+ 
+-	ret = pcim_enable_device(pdev);
+-	if (ret)
+-		return ret;
+-
+-	ret = pcim_iomap_regions(pdev, BIT(0), pci_name(pdev));
+-	if (ret)
+-		return ret;
+-
+-	pci_set_master(pdev);
+-
+-	ret = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (ret)
+-		return ret;
+-
+ 	mt76_pci_disable_aspm(pdev);
+ 
+ 	if (id->device == 0x7916 || id->device == 0x790a)
+@@ -161,8 +147,11 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	ret = mt7915_register_device(dev);
+-	if (ret)
++	if (ret) {
++		dev_err(dev->mt76.dev, "mt7915_register_device failed, ret: %d",
++			ret);
+ 		goto free_hif2_irq;
++	}
+ 
+ 	return 0;
+ 
+@@ -181,6 +170,44 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
+ 	return ret;
+ }
+ 
++static int mt7915_pci_probe(struct pci_dev *pdev,
++			     const struct pci_device_id *id)
++{
++	int z;
++	int ret;
++
++	ret = pcim_enable_device(pdev);
++	if (ret)
++		return ret;
++
++	ret = pcim_iomap_regions(pdev, BIT(0), pci_name(pdev));
++	if (ret)
++		return ret;
++
++	pci_set_master(pdev);
++
++	ret = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
++	if (ret)
++		return ret;
++
++	for (z = 0; z<3; z++) {
++		ret = _mt7915_pci_probe(pdev, id);
++		if (ret) {
++			dev_err(&pdev->dev, "mt7915_pci_probe had error on try %d/3, ret: %d",
++			       z + 1, ret);
++		} else {
++			/* It is worth a message to let user know we succeeded if
++			 * earlier attempts failed.
++			 */
++			if (z > 0)
++				dev_info(&pdev->dev, "mt7915_pci_probe succeeded on try %d/3",
++					 z + 1);
++			break;
++		}
++	}
++	return ret;
++}
++
+ static void mt7915_hif_remove(struct pci_dev *pdev)
+ {
+ 	struct mt7915_hif *hif = pci_get_drvdata(pdev);
+-- 
+2.20.1
 
