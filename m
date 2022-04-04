@@ -2,85 +2,142 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7AAC3527B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D95DC3527E
 	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379069AbiDDVSm (ORCPT
+        id S1379081AbiDDVSn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:18:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36884 "EHLO
+        Mon, 4 Apr 2022 17:18:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380030AbiDDSlV (ORCPT
+        with ESMTP id S1379832AbiDDSOV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 14:41:21 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959D85F99;
-        Mon,  4 Apr 2022 11:39:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 42A3FB818D8;
-        Mon,  4 Apr 2022 18:39:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B0EC340F3;
-        Mon,  4 Apr 2022 18:39:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649097561;
-        bh=uoCUt9kRip3xmuGeLGDqglk9GEPAPCSc46dVFwVFFvs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=pWjK8T/SiEbCNPFdLabaKBhPZF8HEsxpYiFOPoj11AhzUzWc0mFSTNoTlb44mzjIt
-         F3UZs1LSUjPo/vOdjOWkHWODjT6vCZV4ZDdN74DxYDMI5v/o8GBHU2fLfKRNJyKNv7
-         gtUzy0Kf5ojn5swpmgVLnbCnNNgCbQO7w0i9dnoCj/kzOzhXBF6WNWKxFi9motkxV1
-         mAZPq5pTW07Pv3EOFvaB4dD/VUmByyweb+IizmotBRaNxe2OECt5SeCdq2GbRkzw8s
-         AQKJTPhJozQ/0jP8eneP9qLPjEAktInngDlNV+gUc4cd2uHWA+D6yPbPP1WfCZEgV2
-         5G+GoDEs7Lu2A==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, sparclinux@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        linux-rdma@vger.kernel.org, linux-um@lists.infradead.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-xfs@vger.kernel.org, alsa-devel@alsa-project.org,
-        linux-s390@vger.kernel.org
-Subject: Re: Build regressions/improvements in v5.18-rc1
-References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
-        <20220404074734.1092959-1-geert@linux-m68k.org>
-        <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
-Date:   Mon, 04 Apr 2022 21:39:15 +0300
-In-Reply-To: <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg> (Geert
-        Uytterhoeven's message of "Mon, 4 Apr 2022 10:16:08 +0200 (CEST)")
-Message-ID: <874k38u20c.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Mon, 4 Apr 2022 14:14:21 -0400
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 600AC3EA8F;
+        Mon,  4 Apr 2022 11:12:24 -0700 (PDT)
+From:   =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1649095942; bh=t7buVznG3yYA/clRrtCyeVOjJjj86PX29F+Mo7FFbD4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=hgq637ASRyJWWnpb/5p+PzMyiwCmOZ1E7FjoJroS8IjnYnPBEyiAnozUq4Y/4O/Zv
+         WBms5xwx7I26Q4XR4Zp1Gb/P0Gdtc9QBBglKjvQeeognTIjidKHl3mNCG/GuzSXTvv
+         zbDR2M6WhuKDO55eUOEn3lsGFz1zxtTAV+2xGJ2lZ1c/Hf+HUjrjrjn6Q7aEVYAhEL
+         uDjO0cEOOp3nJXy3jc3Xiy2ligDg+8BhzKQqZa1MUfxJuCLyI4peA5R2Ga/iP1vyNE
+         o6p7ATmqefViqKsIkik/jBSDExZGlXvFe9flumwCL1ob8uXetNEKzcG0jQaKB0LG6E
+         WfBrU6/4AY8DA==
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
+        stable@vger.kernel.org, Peter Seiderer <ps.report@gmx.net>
+Subject: [PATCH for-5.18 v2] ath9k: Fix usage of driver-private space in tx_info
+Date:   Mon,  4 Apr 2022 20:11:51 +0200
+Message-Id: <20220404181151.2669173-1-toke@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+From: Toke Høiland-Jørgensen <toke@redhat.com>
 
->> /kisskb/src/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:
->> error: case label does not reduce to an integer constant: => 3798:2,
->> 3809:2
->
-> arm64-gcc5.4/arm64-allmodconfig
-> powerpc-gcc5/powerpc-allmodconfig
-> powerpc-gcc5/ppc64_book3e_allmodconfig
+The ieee80211_tx_info_clear_status() helper also clears the rate counts and
+the driver-private part of struct ieee80211_tx_info, so using it breaks
+quite a few other things. So back out of using it, and instead define a
+ath-internal helper that only clears the area between the
+status_driver_data and the rates info. Combined with moving the
+ath_frame_info struct to status_driver_data, this avoids clearing anything
+we shouldn't be, and so we can keep the existing code for handling the rate
+information.
 
-After v5.17 there were two commits to brcmfmac/sdio.c:
+While fixing this I also noticed that the setting of
+tx_info->status.rates[tx_rateindex].count on hardware underrun errors was
+always immediately overridden by the normal setting of the same fields, so
+rearrange the code so that the underrun detection actually takes effect.
 
-$ git log --oneline v5.17.. drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-ed26edf7bfd9 brcmfmac: Add BCM43454/6 support
-6d766d8cb505 brcmfmac: pcie: Declare missing firmware files in pcie.c
+The new helper could be generalised to a 'memset_between()' helper, but
+leave it as a driver-internal helper for now since this needs to go to
+stable.
 
-I can't see how either of them could cause this warning. Could something
-else cause this or am I missing something?
+Cc: stable@vger.kernel.org
+Reported-by: Peter Seiderer <ps.report@gmx.net>
+Fixes: 037250f0a45c ("ath9k: Properly clear TX status area before reporting to mac80211")
+Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 30 ++++++++++++++++++---------
+ 1 file changed, 20 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index cbcf96ac303e..db83cc4ba810 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -141,8 +141,8 @@ static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	BUILD_BUG_ON(sizeof(struct ath_frame_info) >
+-		     sizeof(tx_info->rate_driver_data));
+-	return (struct ath_frame_info *) &tx_info->rate_driver_data[0];
++		     sizeof(tx_info->status.status_driver_data));
++	return (struct ath_frame_info *) &tx_info->status.status_driver_data[0];
+ }
+ 
+ static void ath_send_bar(struct ath_atx_tid *tid, u16 seqno)
+@@ -2542,6 +2542,16 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ }
+ 
++static void ath_clear_tx_status(struct ieee80211_tx_info *tx_info)
++{
++	void *ptr = &tx_info->status;
++
++	memset(ptr + sizeof(tx_info->status.rates), 0,
++	       sizeof(tx_info->status) -
++	       sizeof(tx_info->status.rates) -
++	       sizeof(tx_info->status.status_driver_data));
++}
++
+ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ 			     struct ath_tx_status *ts, int nframes, int nbad,
+ 			     int txok)
+@@ -2553,7 +2563,7 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	u8 i, tx_rateindex;
+ 
+-	ieee80211_tx_info_clear_status(tx_info);
++	ath_clear_tx_status(tx_info);
+ 
+ 	if (txok)
+ 		tx_info->status.ack_signal = ts->ts_rssi;
+@@ -2569,6 +2579,13 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ 	tx_info->status.ampdu_len = nframes;
+ 	tx_info->status.ampdu_ack_len = nframes - nbad;
+ 
++	tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
++
++	for (i = tx_rateindex + 1; i < hw->max_rates; i++) {
++		tx_info->status.rates[i].count = 0;
++		tx_info->status.rates[i].idx = -1;
++	}
++
+ 	if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
+ 	    (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) == 0) {
+ 		/*
+@@ -2590,13 +2607,6 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ 			tx_info->status.rates[tx_rateindex].count =
+ 				hw->max_rate_tries;
+ 	}
+-
+-	for (i = tx_rateindex + 1; i < hw->max_rates; i++) {
+-		tx_info->status.rates[i].count = 0;
+-		tx_info->status.rates[i].idx = -1;
+-	}
+-
+-	tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
+ }
+ 
+ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.35.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
