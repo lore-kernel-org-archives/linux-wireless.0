@@ -2,69 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 857A6C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67192C3527E
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379030AbiDDVSf (ORCPT
+        id S1378964AbiDDVSb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:18:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34132 "EHLO
+        Mon, 4 Apr 2022 17:18:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380692AbiDDVDR (ORCPT
+        with ESMTP id S1379285AbiDDQxV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 17:03:17 -0400
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80E9238A3
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 14:01:20 -0700 (PDT)
-From:   =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1649106079; bh=F0pmMQO96ia8+/SEA9XaTI2abIY52/1JRNbsDWWFqVE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=T5yioeBf8JNcZc5KcPfMzEm4qocZya63qBwzPuDm9w1/7n+tMLLgyJgaSgE7cgA9m
-         R8ZUymBVho88iiERcoIi1IvDngbnw20AcXUrBkpAHQlT0ocnmO4fjmP8+rfo3fn2Cg
-         zDqtI15gTo0F56H3e7X9UWHsksFQ4xw5QNVKMgESGvL56E0MNyKV65rhF1p2uZvCSZ
-         3xlI/dnhCS4eXuOKtfg8dGbYSUCOLPcLliQjIRKCDMCicRMgW+ERawf90DsImmguSp
-         CstJmYRvM7MO1iSuA4FEhVAoiq9K6xHp3Mu9+XB5u+hV9cd05cMxr865OQeHkooNZa
-         TleRlTQGKBm9w==
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH] mac80211: Improve confusing comment around tx_info clearing
-Date:   Mon,  4 Apr 2022 23:01:08 +0200
-Message-Id: <20220404210108.2684907-1-toke@toke.dk>
+        Mon, 4 Apr 2022 12:53:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2E023B032;
+        Mon,  4 Apr 2022 09:51:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8E82160DBC;
+        Mon,  4 Apr 2022 16:51:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CF3AC340EE;
+        Mon,  4 Apr 2022 16:51:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649091083;
+        bh=0bh6tgeWrV6jjXz4an0tH+2Fm7IC79r94QHSjTTYizg=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=SzHqFfKCWYDzEtYwvxuBw1O026/x4UNrHPbqWBBvEqsH3XKPeaigYqDfzDfeR6y1f
+         /KYDcs8Jnyu/qmti7lJGLW3C0eONEUZ1cp10t+8pzJQ9qW4bfHF8QAyEDQ0fUCp+Zq
+         B7Sucg4RitfcjnrTsF0JrY1W1SJ1F2WdHFhHVBxNZJ10EX7YIGcRRfYsxZGUMG+xhO
+         kxRG6LgacZEjeNY97G0Vcglq+E3XoA0SU54X6izDtzeA26Cdf9btWB8RbHod1uhdKT
+         98svNsanspmPNPf3m6w2CxrEc02b2htKumn7+vzILhZkqDlB9xvyUMilKsOGVl9Mok
+         ZIpI9SQsylqSA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Michael Straube <straube.linux@gmail.com>
+Cc:     Robert Marko <robert.marko@sartura.hr>,
+        David Miller <davem@davemloft.net>, kuba@kernel.org,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath11k: do not return random value
+References: <20220404105324.13810-1-straube.linux@gmail.com>
+        <CA+HBbNHEK=CbyeeyPG=s=D2xofdSbk8Lxx5R9nij_cp6t7ybDA@mail.gmail.com>
+        <1bd30dce-4046-721b-2207-32ace83af441@gmail.com>
+Date:   Mon, 04 Apr 2022 19:51:16 +0300
+In-Reply-To: <1bd30dce-4046-721b-2207-32ace83af441@gmail.com> (Michael
+        Straube's message of "Mon, 4 Apr 2022 18:45:11 +0200")
+Message-ID: <87ilrossfv.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The comment above the ieee80211_tx_info_clear_status() helper was somewhat
-confusing as to which fields it was or wasn't clearing. So replace it by
-something that is hopefully more, well, clear.
+Michael Straube <straube.linux@gmail.com> writes:
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- include/net/mac80211.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On 4/4/22 18:35, Robert Marko wrote:
+>> On Mon, Apr 4, 2022 at 12:54 PM Michael Straube <straube.linux@gmail.com> wrote:
+>>>
+>>> Function ath11k_qmi_assign_target_mem_chunk() returns a random value
+>>> if of_parse_phandle() fails because the return variable ret is not
+>>> initialized before calling of_parse_phandle(). Return -EINVAL to avoid
+>>> possibly returning 0, which would be wrong here.
+>>>
+>>> Issue found by smatch.
+>>>
+>>> Signed-off-by: Michael Straube <straube.linux@gmail.com>
+>>> ---
+>>>   drivers/net/wireless/ath/ath11k/qmi.c | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+>>> index 65d3c6ba35ae..81b2304b1fde 100644
+>>> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+>>> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+>>> @@ -1932,7 +1932,7 @@ static int ath11k_qmi_assign_target_mem_chunk(struct ath11k_base *ab)
+>>>                          if (!hremote_node) {
+>>>                                  ath11k_dbg(ab, ATH11K_DBG_QMI,
+>>>                                             "qmi fail to get hremote_node\n");
+>>> -                               return ret;
+>>> +                               return -EINVAL;
+>>>                          }
+>>>
+>>>                          ret = of_address_to_resource(hremote_node, 0, &res);
+>>> --
+>>> 2.35.1
+>>
+>> Hi Michael,
+>> This is already solved in ath-next and 5.18-rc1:
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/ath/ath11k/qmi.c?h=v5.18-rc1&id=c9b41832dc080fa59bad597de94865b3ea2d5bab
+>>
+>
+> Hi Robert,
+>
+> Ah ok, then I worked with the wrong tree (wireless-drivers-next).
+> Sorry for the noise.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 382ebb862ea8..db992f71604d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1201,9 +1201,9 @@ static inline struct ieee80211_rx_status *IEEE80211_SKB_RXCB(struct sk_buff *skb
-  * in the TX status but the rate control information (it does clear
-  * the count since you need to fill that in anyway).
-  *
-- * NOTE: You can only use this function if you do NOT use
-- *	 info->driver_data! Use info->rate_driver_data
-- *	 instead if you need only the less space that allows.
-+ * NOTE: While the rates array is kept intact, this will wipe all of the
-+ *	 driver_data fields in info, so it's up to the driver to restore
-+ *	 any fields it needs after calling this helper.
-  */
- static inline void
- ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+wireless-drivers[-next] and mac80211[-next] trees are not in use
+anymore, we switched to using a common wireless and wireless-next trees:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git/
+
+https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git/
+
 -- 
-2.35.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
