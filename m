@@ -2,96 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24355C352B6
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 869C3C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378981AbiDDVSc (ORCPT
+        id S1379049AbiDDVSg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:18:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35196 "EHLO
+        Mon, 4 Apr 2022 17:18:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379925AbiDDSXW (ORCPT
+        with ESMTP id S1379548AbiDDRaM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 14:23:22 -0400
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F21122B20;
-        Mon,  4 Apr 2022 11:21:26 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1649096484; bh=SLo9d96mThar86dgaQcYX5QHm8tQkuqDH+jBwfpMzbI=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=aWF3yN5E1EG5YjRBbEsUeRcqbRiOYTHkZ9dONDIoQqc+LuZqSWTWvU+fcoWY3KdZ5
-         vPUwr6sugS5CjsDG+nVkDYCp1XvAZa7AzTsmXJm8x6j1yBBOhQgg4jxTtB5AdNmeEW
-         Nk/3U1T776AwYYHFrX9RDoDQEkqom7Neh12ITsXxpTOtr2ZI20eaAaeT4HFz6/mlrB
-         uOtQWxEplrTgaSoy/oTqMP4E96Xudy+6X2byJ9uHq1kOt4lJwbNkVgm2iOrayYGZFq
-         ytGzGC6JaGqHlpkOVmYLuju4kGDcS9JE1dhNPkwd9VXbolkDfex+G13UfrycHbUi0C
-         Z0web2oOgDHGg==
-To:     Peter Seiderer <ps.report@gmx.net>, linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v1 2/2] mac80211: minstrel_ht: fill all requested rates
-In-Reply-To: <20220402153014.31332-2-ps.report@gmx.net>
-References: <20220402153014.31332-1-ps.report@gmx.net>
- <20220402153014.31332-2-ps.report@gmx.net>
-Date:   Mon, 04 Apr 2022 20:21:24 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87fsmseml7.fsf@toke.dk>
+        Mon, 4 Apr 2022 13:30:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8668124BF9
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 10:28:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2934760D29
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 17:28:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D16DC2BBE4;
+        Mon,  4 Apr 2022 17:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649093294;
+        bh=T8rWXhNuqO8D+8WJdfkxSjv2dbhMzpbfLsgE+/tuISI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=SFfUPGaJdPuOq1Tgog0cxE/ULb180aIxCXcNm7E5or5ti2zq4YJqBwAJyuNDjh9mX
+         ITc0HuXEF4qc2N1B+gR05gRODRSAKumTtPG+ckXIA/7pqbgekZptECwX16KB1Umxba
+         NOV23Bywv8reyRTGT3B+owVzQI0w+b/OOpvXySXYk7rQwTFup9Y330bGi99FYHX1j0
+         P+revV62irVoo3ZcFgL7vJW3RcjGQxm/QfRxAnDMntjsjQOqScJdn+nFacXllnWUEI
+         PxFMODQSNlQmANPQ7gV8XQ1xtAP/j2AzCqZL3+XrU1Q2GmAB+6AKCRXNdv8g8vHoNr
+         yVGWG2mHnqdSg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
+Subject: [PATCH] mt76: mt7915: use 0xff to initialize bitrate_mask in mt7915_init_bitrate_mask
+Date:   Mon,  4 Apr 2022 19:28:02 +0200
+Message-Id: <a62fcd69daa16e9fe5a75fb6ea1a7198bc9072c8.1649093220.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+Felix
+Use 0xff (GENMASK(7,0)) in mt7915_init_bitrate_mask routine in order to
+initialize bitrate_mask structure in order to avoid truncating value in
+memset().
 
-Peter Seiderer <ps.report@gmx.net> writes:
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> Fill all requested rates (in case of ath9k 4 rate slots are
-> available, so fill all 4 instead of only 3), improves throughput in
-> noisy environment.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 865694c755cf..9b8defb15b4e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -174,14 +174,14 @@ static void mt7915_init_bitrate_mask(struct ieee80211_vif *vif)
+ 
+ 	for (i = 0; i < ARRAY_SIZE(mvif->bitrate_mask.control); i++) {
+ 		mvif->bitrate_mask.control[i].gi = NL80211_TXRATE_DEFAULT_GI;
+-		mvif->bitrate_mask.control[i].he_gi = GENMASK(7, 0);
+-		mvif->bitrate_mask.control[i].he_ltf = GENMASK(7, 0);
++		mvif->bitrate_mask.control[i].he_gi = 0xff;
++		mvif->bitrate_mask.control[i].he_ltf = 0xff;
+ 		mvif->bitrate_mask.control[i].legacy = GENMASK(31, 0);
+-		memset(mvif->bitrate_mask.control[i].ht_mcs, GENMASK(7, 0),
++		memset(mvif->bitrate_mask.control[i].ht_mcs, 0xff,
+ 		       sizeof(mvif->bitrate_mask.control[i].ht_mcs));
+-		memset(mvif->bitrate_mask.control[i].vht_mcs, GENMASK(15, 0),
++		memset(mvif->bitrate_mask.control[i].vht_mcs, 0xff,
+ 		       sizeof(mvif->bitrate_mask.control[i].vht_mcs));
+-		memset(mvif->bitrate_mask.control[i].he_mcs, GENMASK(15, 0),
++		memset(mvif->bitrate_mask.control[i].he_mcs, 0xff,
+ 		       sizeof(mvif->bitrate_mask.control[i].he_mcs));
+ 	}
+ }
+-- 
+2.35.1
 
-How did you test this? Could you quantify the gains in throughput you saw?
-
--Toke
-
-> Signed-off-by: Peter Seiderer <ps.report@gmx.net>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 9c6ace858107..cd6a0f153688 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -1436,17 +1436,17 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
->  	/* Start with max_tp_rate[0] */
->  	minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[0]);
->  
-> -	if (mp->hw->max_rates >= 3) {
-> -		/* At least 3 tx rates supported, use max_tp_rate[1] next */
-> -		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate[1]);
-> -	}
-> +	/* Fill up remaining, keep one entry for max_probe_rate */
-> +	for (; i < (mp->hw->max_rates - 1); i++)
-> +		minstrel_ht_set_rate(mp, mi, rates, i, mi->max_tp_rate[i]);
->  
-> -	if (mp->hw->max_rates >= 2) {
-> +	if (i < mp->hw->max_rates)
->  		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
-> -	}
-> +
-> +	if (i < IEEE80211_TX_RATE_TABLE_SIZE)
-> +		rates->rate[i].idx = -1;
->  
->  	mi->sta->max_rc_amsdu_len = minstrel_ht_get_max_amsdu_len(mi);
-> -	rates->rate[i].idx = -1;
->  	rate_control_set_rates(mp->hw, mi->sta, rates);
->  }
->  
-> -- 
-> 2.35.1
