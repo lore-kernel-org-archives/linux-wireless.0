@@ -2,74 +2,116 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D777EC46467
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B922C4321E
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Apr 2022 21:16:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378905AbiDDVSW (ORCPT
+        id S1378928AbiDDVSY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:18:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51714 "EHLO
+        Mon, 4 Apr 2022 17:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379478AbiDDROT (ORCPT
+        with ESMTP id S1380641AbiDDUrp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 13:14:19 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 618B913D16
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 10:12:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1FB71B81809
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 17:12:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F14BFC2BBE4;
-        Mon,  4 Apr 2022 17:12:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649092340;
-        bh=VArUYLLgUbosde1+81GiVTwWc2kxPtVmhn7384CbKIY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=VIzpKoFY/i/nbeXs9YhlVf117iFOTzYgc6Q73hIvYRBT6KSMrtjrPr+R37PBKL9s5
-         9qRGGReabDxOr+4IVbkBAfqafSlHD3Nczo1HIqW/y6dulu1boIzsbi14IbH7ZxIzDH
-         ZqVKlkJF3MY7mDne3SkmDTaJEh/Vs3Z/bCNn1s3CLfbkZgnfO4CQQisrCRnsiTRm8r
-         yxNnQqMzAR8V54mvXvGRqNeYe0fp69XKdrAQpWr85m196Qr6KPIegj11NRBFPJNtU1
-         n60n68Slj/ZLTXWO6Zv6X+pC+hb8GOqO7WMuVpKrrPm1Qm1iFWN36tils7xKMiPOjA
-         B1BLrmyOt5vYQ==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 4 Apr 2022 16:47:45 -0400
+Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E11B13E9A;
+        Mon,  4 Apr 2022 13:45:48 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1649105146; bh=PPkiu+urIKPtgvOJca3nK/rJD3o5hAzywiUYLWo5p4w=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=Q8w2Q5ZZ7Oa4YQR1jpAjtNPxmIDsN8CJHipsYyQ34L+BC+deTHN6RAu9jPZtq1QQ2
+         4OhsIy0/FhHNnz44hvYD3SFSZKBEiGw4ZUBxD7OAMWTR5Zs/9FeF2LA1saRk+5vgzu
+         0/ox5vIrlQXFWb/Oa8F7hurGPVtv7LDm3POBDVQS6fi+hI+xgCET0vK+vKDhVBz9Y/
+         2og+XcRmYaBMSoBforsDnB1NHymVME2GkzwyDVtxmUlzP42Z6mfvEuSJ9+BarS77IT
+         HqyC2MvjJGCqG/N5yqBxrOHwN2Sqhk5LC9ZW6lOY0paylqsrHhILmw1BtPdXBQhmBg
+         dAqVSg+GtdMwQ==
+To:     Peter Seiderer <ps.report@gmx.net>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH for-5.18 v2] ath9k: Fix usage of driver-private space in
+ tx_info
+In-Reply-To: <20220404222655.7276fb9d@gmx.net>
+References: <20220404181151.2669173-1-toke@toke.dk>
+ <20220404222655.7276fb9d@gmx.net>
+Date:   Mon, 04 Apr 2022 22:45:46 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <877d84efwl.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [v5.18] Revert "ath11k: mesh: add support for 256 bitmap in
- blockack frames in 11ax"
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <1648701477-16367-1-git-send-email-quic_akolli@quicinc.com>
-References: <1648701477-16367-1-git-send-email-quic_akolli@quicinc.com>
-To:     Anilkumar Kolli <quic_akolli@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <quic_akolli@quicinc.com>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164909233481.29714.6659230438745116028.kvalo@kernel.org>
-Date:   Mon,  4 Apr 2022 17:12:19 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Anilkumar Kolli <quic_akolli@quicinc.com> wrote:
+Peter Seiderer <ps.report@gmx.net> writes:
 
-> This reverts commit 743b9065fe6348a5f8f5ce04869ce2d701e5e1bc.
-> 
-> The original commit breaks the 256 bitmap in blockack frames in AP
-> mode. After reverting the commit the feature works again in both AP and
-> mesh modes
-> 
-> Tested-on: IPQ8074 hw2.0 PCI WLAN.HK.2.6.0.1-00786-QCAHKSWPL_SILICONZ-1
-> 
-> Fixes: 743b9065fe63 ("ath11k: mesh: add support for 256 bitmap in blockack frames in 11ax")
-> Signed-off-by: Anilkumar Kolli <quic_akolli@quicinc.com>
+> Hello Toke,
+>
+> On Mon,  4 Apr 2022 20:11:51 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <tok=
+e@toke.dk> wrote:
+>
+>> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+>>=20
+>> The ieee80211_tx_info_clear_status() helper also clears the rate counts =
+and
+>> the driver-private part of struct ieee80211_tx_info, so using it breaks
+>> quite a few other things. So back out of using it, and instead define a
+>> ath-internal helper that only clears the area between the
+>> status_driver_data and the rates info. Combined with moving the
+>> ath_frame_info struct to status_driver_data, this avoids clearing anythi=
+ng
+>> we shouldn't be, and so we can keep the existing code for handling the r=
+ate
+>> information.
+>>=20
+>> While fixing this I also noticed that the setting of
+>> tx_info->status.rates[tx_rateindex].count on hardware underrun errors was
+>> always immediately overridden by the normal setting of the same fields, =
+so
+>> rearrange the code so that the underrun detection actually takes effect.
+>>=20
+>> The new helper could be generalised to a 'memset_between()' helper, but
+>> leave it as a driver-internal helper for now since this needs to go to
+>> stable.
+>>=20
+>> Cc: stable@vger.kernel.org
+>> Reported-by: Peter Seiderer <ps.report@gmx.net>
+>> Fixes: 037250f0a45c ("ath9k: Properly clear TX status area before report=
+ing to mac80211")
+>> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/xmit.c | 30 ++++++++++++++++++---------
+>>  1 file changed, 20 insertions(+), 10 deletions(-)
+>>=20
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireles=
+s/ath/ath9k/xmit.c
+>> index cbcf96ac303e..db83cc4ba810 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -141,8 +141,8 @@ static struct ath_frame_info *get_frame_info(struct =
+sk_buff *skb)
+>>  {
+>>  	struct ieee80211_tx_info *tx_info =3D IEEE80211_SKB_CB(skb);
+>>  	BUILD_BUG_ON(sizeof(struct ath_frame_info) >
+>> -		     sizeof(tx_info->rate_driver_data));
+>> -	return (struct ath_frame_info *) &tx_info->rate_driver_data[0];
+>> +		     sizeof(tx_info->status.status_driver_data));
+>> +	return (struct ath_frame_info *) &tx_info->status.status_driver_data[0=
+];
+>>  }
+>
+> Would be too easy if all locations would use get_frame_info()..., at leas=
+t one location
+> in drivers/net/wireless/ath/ath9k/main.c uses direct access:
+>
+>  841                 txinfo =3D IEEE80211_SKB_CB(bf->bf_mpdu);
+>  842                 fi =3D (struct ath_frame_info *)&txinfo->rate_driver=
+_data[0];
+>  843                 if (fi->keyix =3D=3D keyix)
+>  844                         return true;
 
-Patch applied to wireless.git, thanks.
+Ah, bugger; nice find! I'll fix that up as well, but I do believe it's
+the only one.
 
-10cb21f4ff3f Revert "ath11k: mesh: add support for 256 bitmap in blockack frames in 11ax"
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/1648701477-16367-1-git-send-email-quic_akolli@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+-Toke
