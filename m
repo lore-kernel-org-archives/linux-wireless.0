@@ -2,89 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 825EAC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 07:20:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C95F4C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 07:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232336AbiDEHWj (ORCPT
+        id S231697AbiDEHkG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 03:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36262 "EHLO
+        Tue, 5 Apr 2022 03:40:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231891AbiDEHVM (ORCPT
+        with ESMTP id S231665AbiDEHkF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 03:21:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E187BE0F;
-        Tue,  5 Apr 2022 00:17:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9F78A61659;
-        Tue,  5 Apr 2022 07:17:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EC7AC3410F;
-        Tue,  5 Apr 2022 07:17:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649143026;
-        bh=aYpALUpGIhvwoqvnAr4xyO9/+4aLJKCPdk1Wh7E09AM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=tfRzrIN56Qr3iYvSUHEtst9hY32ltX5sTZ9kTMxaXTsA1vGqaqeFEGtcOiDQIrqlV
-         ip9r9w86q85V9NjEjuWwQrXOTL64A5IIKG4jmn5wpwN9g/hUpNYAEe+EEf4Up6UHFu
-         K53ogdeTAhl7Xqxt2xXZikV4IIHfoDa4NUJ27D+SwK2VE+Nziuuy/QLA1KFeXAObTs
-         2p5rnmxd9Lsaxp3wRad0WhxWjIBKgefpXE7G26jyyegx73aWdfYUmT8PxayG8jFpge
-         PFylYwENBPdbsEGvyQFYOPRmu7CXZS8oKiGGINX89LBukwpFcoKHUsm/PJ8dGpkNj8
-         GiMgJQAtQIs7A==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     =?utf-8?B?SsOpcsO0bWU=?= Pouiller <jerome.pouiller@silabs.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v10 0/1] wfx: get out from the staging area
-References: <20220226092142.10164-1-Jerome.Pouiller@silabs.com>
-        <YhojjHGp4EfsTpnG@kroah.com> <87wnhhsr9m.fsf@kernel.org>
-        <5830958.DvuYhMxLoT@pc-42> <878rslt975.fsf@tynnyri.adurom.net>
-        <20220404232247.01cc6567@kernel.org>
-        <20220404232930.05dd49cf@kernel.org>
-Date:   Tue, 05 Apr 2022 10:16:58 +0300
-In-Reply-To: <20220404232930.05dd49cf@kernel.org> (Jakub Kicinski's message of
-        "Mon, 4 Apr 2022 23:29:30 -0700")
-Message-ID: <878rskrod1.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Tue, 5 Apr 2022 03:40:05 -0400
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2BD74B402
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 00:38:07 -0700 (PDT)
+Received: by mail-io1-f70.google.com with SMTP id f7-20020a056602088700b00645ebbe277cso7833945ioz.22
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2022 00:38:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
+         :from:to;
+        bh=wcyi7XrZQP853dByi9+1YxDyQa3+xhgfC53tgafqARg=;
+        b=S0eQg4VgSDOibF3D69JxoEsXNFIH6aiHOIe8HZggfzDiFQdgKdM16H95yhsGLLAImY
+         SPtn/a4yz/HwNwls8FuytE+aPRwygeAJzml4wLnluGEBYcT6hdpiBAaR7g9mlrcciDC2
+         p/EmDqaqVuPsyEnSBQQGj5Ze/s8Uet7b9eOkrp/uoy6cep4b5Z2RfhlrW1094xjoEGG/
+         cGxe03zPDh5tpRcCsl6eFKV5MjhdWr7bYmcxogE8x3gQQAFaFPeQq4sfyQ27vMY8o54L
+         YfcNq4v+Fl1bZaA5nL/8ymK7l97G+0HgUlwh88ZO6rC5h1H/pzTqpg95S2H7MBVsghD6
+         dzsw==
+X-Gm-Message-State: AOAM531cSaf6nbcG0WQYqJChADHZ8U9a0cEbXkxsc/i+MOTJ4yZOt4uc
+        L5PKHyy4Pk6b8pXF7cmJyikAvETLPJnY8zTGgWPRZuYUc+nI
+X-Google-Smtp-Source: ABdhPJylwAgh1hTPED7kBLSTNMTi5KhXxeEahh2ttq/LYtuLKAfNNHO6HKO8c5krILmrEuJME3L2D43vjv+w9+R5yfXJVTS9+bYv
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Received: by 2002:a05:6e02:1d8e:b0:2ca:41bf:554a with SMTP id
+ h14-20020a056e021d8e00b002ca41bf554amr1051738ila.128.1649144286768; Tue, 05
+ Apr 2022 00:38:06 -0700 (PDT)
+Date:   Tue, 05 Apr 2022 00:38:06 -0700
+In-Reply-To: <0000000000001779fd05a46b001f@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000006574b705dbe3533f@google.com>
+Subject: Re: [syzbot] INFO: task hung in linkwatch_event (2)
+From:   syzbot <syzbot+96ff6cfc4551fcc29342@syzkaller.appspotmail.com>
+To:     allison@lohutok.net, andrew@lunn.ch, aviad.krawczyk@huawei.com,
+        axboe@kernel.dk, davem@davemloft.net, gregkh@linuxfoundation.org,
+        hdanton@sina.com, io-uring@vger.kernel.org,
+        johannes.berg@intel.com, johannes@sipsolutions.net,
+        kuba@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linyunsheng@huawei.com, luobin9@huawei.com, netdev@vger.kernel.org,
+        pabeni@redhat.com, phind.uet@gmail.com,
+        syzkaller-bugs@googlegroups.com, tglx@linutronix.de,
+        viro@zeniv.linux.org.uk, xiaoguang.wang@linux.alibaba.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jakub Kicinski <kuba@kernel.org> writes:
+syzbot suspects this issue was fixed by commit:
 
-> On Mon, 4 Apr 2022 23:22:47 -0700 Jakub Kicinski wrote:
->> On Mon, 04 Apr 2022 13:49:18 +0300 Kalle Valo wrote:
->> > Dave&Jakub, once you guys open net-next will it be based on -rc1?  
->> 
->> Not normally. We usually let net feed net-next so it'd get -rc1 this
->> Thursday. But we should be able to fast-forward, let me confirm with
->> Dave.
->
-> Wait, why is -rc1 magic? If you based the branch on whatever
-> the merge-base of net-next and staging-next is, would that be
-> an aberration?
+commit 563fbefed46ae4c1f70cffb8eb54c02df480b2c2
+Author: Nguyen Dinh Phi <phind.uet@gmail.com>
+Date:   Wed Oct 27 17:37:22 2021 +0000
 
-Sure, that would technically work. But I just think it's cleaner to use
--rc1 (or later) as the baseline for an immutable branch. If the baseline
-is an arbitrary commit somewhere within merge windows commits, it's more
-work for everyone to verify the branch is suitable.
+    cfg80211: call cfg80211_stop_ap when switch from P2P_GO type
 
-Also in general I would also prefer to base -next trees to -rc1 or newer
-to make the bisect cleaner. The less we need to test kernels from the
-merge window (ie. commits after the final release and before -rc1) the
-better.
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1048725f700000
+start commit:   dd86e7fa07a3 Merge tag 'pci-v5.11-fixes-2' of git://git.ke..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=e83e68d0a6aba5f6
+dashboard link: https://syzkaller.appspot.com/bug?extid=96ff6cfc4551fcc29342
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=11847bc4d00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1267e5a0d00000
 
-But this is just a small wish from me, I fully understand that it might
-be too much changes to your process. Wanted to point out this anyway.
+If the result looks correct, please mark the issue as fixed by replying with:
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+#syz fix: cfg80211: call cfg80211_stop_ap when switch from P2P_GO type
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
