@@ -2,61 +2,327 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF16C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:08:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F42C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352473AbiDFDHz (ORCPT
+        id S1449398AbiDFDJQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:07:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37654 "EHLO
+        Tue, 5 Apr 2022 23:09:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376730AbiDEUuP (ORCPT
+        with ESMTP id S1573399AbiDETHJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 16:50:15 -0400
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66A38FED;
-        Tue,  5 Apr 2022 13:27:43 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1649190461; bh=nqSNpZUYa15jc1r1KsKxXRNob2r5GycPU1hZtLnFTY0=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=x1wbzqS91lCyk12gCiBfIbywrwtN6fUVHpZBegaLMEy7Bz9Q9blZnokTdh+i27Agy
-         zmPDF+jb0LWIbcb/qDtV48Z3vkA5AxeP/LzXZppHmmWnhlL5a3r9ORAYz6039Qjznw
-         +lmRHDYVrpWkZSCNHQ9I40W76Fq4IICzBttjbgxJvt30MQn7roYNowipE6poMOCnT4
-         YaU9eTbUE6BLQJF93mvk5kQcw+nzHZ4EU0VHBOEwuvy4R+G+6Cl/0uBXFizgXu8X+V
-         quYgHL61oZNy4HKDADG47DLu8skRCyIYVsPKRBrnzOV7WsY46cb8QA2UBGvJYakj2h
-         XRUH7fxYjzgnA==
-To:     Peter Seiderer <ps.report@gmx.net>, linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] ath9k: fix ath_get_rate_txpower() to respect the
- rate list end tag
-In-Reply-To: <20220402153014.31332-1-ps.report@gmx.net>
-References: <20220402153014.31332-1-ps.report@gmx.net>
-Date:   Tue, 05 Apr 2022 22:27:41 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87pmlvcm2q.fsf@toke.dk>
+        Tue, 5 Apr 2022 15:07:09 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C72CDFD76
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 12:05:09 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.171])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 597C62A0076;
+        Tue,  5 Apr 2022 19:05:08 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C8E589C007F;
+        Tue,  5 Apr 2022 19:05:07 +0000 (UTC)
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 3372013C2B0;
+        Tue,  5 Apr 2022 12:05:07 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3372013C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1649185507;
+        bh=dWk1G7Zo7e1Psp+eJunsVvxRVsHXBbrglX5JCFWR0XQ=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=dqfqNdmOM8+eQdDXSa+wfLTNTk3YnkCyXTN3E49rIJtCiEqAbd+fF3JUP1OkO9awS
+         65w7Y/ZqjCsUqpXHd87/hJ5E8Nk/aQ71it78osd6H1x4kcKBl7altzhCiD2WYEnpcc
+         rTrw9ddii3y+RC/VC9kNTof7xm6x1y7te92cnwYg=
+Subject: Re: [PATCH 04/12] iwlwifi: mvm: Passively scan non PSC channels only
+ when requested so
+To:     "Peer, Ilan" <ilan.peer@intel.com>, Luca Coelho <luca@coelho.fi>,
+        "kvalo@kernel.org" <kvalo@kernel.org>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20220204102511.606112-1-luca@coelho.fi>
+ <iwlwifi.20220204122220.457da4cc95eb.Ic98472bab5f5475f1e102547644caaae89ce4c4a@changeid>
+ <f18f11f2-b9b9-9d86-340e-d567247ef7bc@candelatech.com>
+ <DM4PR11MB60435B74198FD8A0FE70853DE9E59@DM4PR11MB6043.namprd11.prod.outlook.com>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <200b2f77-6832-85e5-5294-97c918f62c06@candelatech.com>
+Date:   Tue, 5 Apr 2022 12:05:06 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <DM4PR11MB60435B74198FD8A0FE70853DE9E59@DM4PR11MB6043.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-MDID: 1649185508-OaGMLODVCjTJ
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Peter Seiderer <ps.report@gmx.net> writes:
+Hello Ilan,
 
-> Stop reading (and copying) from ieee80211_tx_rate to ath_tx_info.rates
-> after list end tag (count =3D=3D 0, idx < 0), prevents copying of garbage
-> to card registers.
->
-> Note: no need to write to the remaining ath_tx_info.rates entries
-> as the complete ath_tx_info struct is already initialized to zero from
-> both call sites.
->
-> Signed-off-by: Peter Seiderer <ps.report@gmx.net>
+I will try this soon.  But, any idea why it is not
+accepted into hostap project yet?
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+Thanks,
+Ben
+
+On 4/4/22 12:02 PM, Peer, Ilan wrote:
+> Hi Ben,
+> 
+> Sorry for the late response.
+> 
+> Can you please try this with the following patch for hostap?
+> 
+> https://patchwork.ozlabs.org/project/hostap/patch/20211130153943.3531922-1-andrei.otcheretianski@intel.com/
+> 
+> I believe that reason the connection fails is due to user space not setting the collocated scan flag when not scanning passively.
+> 
+> If this resolves the issue, I'll try to find a better solution for handling this.
+> 
+> Thanks in advance,
+> 
+> Ilan.
+> 
+>> -----Original Message-----
+>> From: Ben Greear <greearb@candelatech.com>
+>> Sent: Friday, March 25, 2022 20:12
+>> To: Luca Coelho <luca@coelho.fi>; kvalo@kernel.org
+>> Cc: linux-wireless@vger.kernel.org
+>> Subject: Re: [PATCH 04/12] iwlwifi: mvm: Passively scan non PSC channels
+>> only when requested so
+>>
+>> On 2/4/22 2:25 AM, Luca Coelho wrote:
+>>> From: Ilan Peer <ilan.peer@intel.com>
+>>>
+>>> Non PSC channels should generally be scanned based on information
+>>> about collocated APs obtained during scan on legacy bands, and
+>>> otherwise should not be scanned unless specifically requested so (as
+>>> there are relatively many non PSC channels, scanning them passively is
+>>> time consuming and interferes with regular data traffic).
+>>>
+>>> Thus, modify the scan logic to avoid passively scanning PSC channels
+>>> if there is no information about collocated APs and the scan is not a
+>>> passive scan.
+>>
+>> Hello,
+>>
+>> This breaks association against a Cisco test AP on frequency 5995.
+>>
+>> Here are logs of the previous commit working (scan takes longer, but SSID is
+>> found), and at the bottom, scan with this commit, which fails to detect the
+>> SSID.
+>>
+>> # ethtool -i sta0000
+>> driver: iwlwifi
+>> version: 5.17.0+
+>> firmware-version: 68.01d30b0c.0 ty-a0-gf-a0-68.uc
+>> expansion-rom-version:
+>> bus-info: 0000:05:00.0
+>> supports-statistics: yes
+>> supports-test: no
+>> supports-eeprom-access: no
+>> supports-register-dump: no
+>> supports-priv-flags: no
+>>
+>> It breaks on version 71 firmware too.
+>>
+>> 2022-03-25 09:56:35.464  1.1:  sta0000 (phy #0): scan started
+>> 2022-03-25 09:56:42.095  1.1:  sta0000 (phy #0): scan finished: 2412 2417 2422
+>> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
+>> 5280
+>> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
+>> 5765 5785 5805 5825 5955 5975 5995 6015 6035 6055 6075 6095 6115 6135 6155
+>> 6175 6195
+>> 6215 6235 6255 6275 6295 6315 6335 6355 6375 6395 6415 6435 6455 6475 6495
+>> 6515 6535 6555 6575 6595 6615 6635 6655 6675 6695 6715 6735 6755 6775 6795
+>> 6815 6835
+>> 6855 6875 6895 6915 6935 6955 6975 6995 7015 7035 7055 7075 7095 7115, ""
+>> 2022-03-25 09:56:42.101  1.1:  IFNAME=sta0000 <3>SME: Trying to
+>> authenticate with 68:7d:b4:60:04:b8 (SSID=
+>> 2022-03-25 09:56:42.122  1.1:  sta0000: new station 68:7d:b4:60:04:b8
+>> 2022-03-25 09:56:42.252  1.1:  sta0000 (phy #0): auth 68:7d:b4:60:04:b8 ->
+>> a4:6b:b6:5a:b1:da status: 126: <unknown>
+>> 2022-03-25 09:56:42.254  1.1:  IFNAME=sta0000 <3>SME: Trying to
+>> authenticate with 68:7d:b4:60:04:b8 (SSID=
+>> 2022-03-25 09:56:42.310  1.1:  sta0000 (phy #0): auth 68:7d:b4:60:04:b8 ->
+>> a4:6b:b6:5a:b1:da status: 0: Successful
+>> 2022-03-25 09:56:42.310  1.1:  IFNAME=sta0000 <3>PMKSA-CACHE-ADDED
+>> 68:7d:b4:60:04:b8 0
+>> 2022-03-25 09:56:42.311  1.1:  IFNAME=sta0000 <3>Trying to associate with
+>> 68:7d:b4:60:04:b8 (SSID=
+>> 2022-03-25 09:56:42.312  1.1:  IFNAME=sta0000 <3>EAPOL-RX
+>> 68:7d:b4:60:04:b8 121
+>> 2022-03-25 09:56:42.313  1.1:  sta0000 (phy #0): assoc 68:7d:b4:60:04:b8 ->
+>> a4:6b:b6:5a:b1:da status: 0: Successful
+>> 2022-03-25 09:56:42.313  1.1:  IFNAME=sta0000 <3>Associated with
+>> 68:7d:b4:60:04:b8
+>> 2022-03-25 09:56:42.314  1.1:  IFNAME=sta0000 <3>EAPOL-RX
+>> 68:7d:b4:60:04:b8 121
+>> 2022-03-25 09:56:42.321  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-SUBNET-
+>> STATUS-UPDATE status=0
+>> 2022-03-25 09:56:42.322  1.1:  sta0000 (phy #0): ctrl. port TX status (cookie 1):
+>> acked
+>> 2022-03-25 09:56:42.323  1.1:  IFNAME=sta0000 <3>EAPOL-RX
+>> 68:7d:b4:60:04:b8 195
+>> 2022-03-25 09:56:42.328  1.1:  sta0000 (phy #0): ctrl. port TX status (cookie 2):
+>> acked
+>> 2022-03-25 09:56:42.364  1.1:  IFNAME=sta0000 <3>WPA: Key negotiation
+>> completed with 68:7d:b4:60:04:b8 [PTK=CCMP GTK=CCMP]
+>> 2022-03-25 09:56:42.403  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-CONNECTED
+>> - Connection to 68:7d:b4:60:04:b8 completed [id=0 id_str=]
+>> 2022-03-25 09:56:42.403  1.1:  IFNAME=sta0000 <3>WPA: Key negotiation
+>> completed with 68:7d:b4:60:04:b8 [PTK=CCMP GTK=CCMP]
+>>
+>>
+>>
+>> 2022-03-25 10:05:52.416  1.1:  sta0000 (phy #7): scan started
+>> 2022-03-25 10:05:56.215  1.1:  sta0000 (phy #7): scan finished: 2412 2417 2422
+>> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
+>> 5280
+>> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
+>> 5765 5785 5805 5825, ""
+>> 2022-03-25 10:05:56.215  1.1:  phy #7: regulatory domain change (phy): set to
+>> US by a driver request on phy7
+>> 2022-03-25 10:05:56.216  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-NETWORK-
+>> NOT-FOUND
+>> 2022-03-25 10:05:56.216  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-REGDOM-
+>> CHANGE init=DRIVER type=COUNTRY alpha2=US
+>> 2022-03-25 10:06:01.217  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-SCAN-
+>> STARTED
+>> 2022-03-25 10:06:01.217  1.1:  sta0000 (phy #7): scan started
+>> 2022-03-25 10:06:02.739  1.1:  sta0000 (phy #7): scan finished: 2412 2417 2422
+>> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
+>> 5280
+>> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
+>> 5765 5785 5805 5825 5955 5975 5995 6015 6035 6055 6075 6095 6115 6135 6155
+>> 6175 6195
+>> 6215 6235 6255 6275 6295 6315 6335 6355 6375 6395 6415 6435 6455 6475 6495
+>> 6515 6535 6555 6575 6595 6615 6635 6655 6675 6695 6715 6735 6755 6775 6795
+>> 6815 6835
+>> 6855 6875 6895 6915 6935 6955 6975 6995 7015 7035 7055 7075 7095 7115, ""
+>>
+>> [ SSID is not found, sta never associates]
+>>
+>> Thanks,
+>> Ben
+>>
+>>>
+>>> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+>>> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>>> ---
+>>>    drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 42 ++++++++++++++-----
+>>>    1 file changed, 32 insertions(+), 10 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+>>> b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+>>> index 8c7cb491330d..901df916baa4 100644
+>>> --- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+>>> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+>>> @@ -1728,27 +1728,37 @@ iwl_mvm_umac_scan_fill_6g_chan_list(struct
+>> iwl_mvm *mvm,
+>>>    }
+>>>
+>>>    /* TODO: this function can be merged with
+>>> iwl_mvm_scan_umac_fill_ch_p_v6 */ -static void
+>>> -iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params
+>>> *params,
+>>> +static u32
+>>> +iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm *mvm,
+>>> +				     struct iwl_mvm_scan_params *params,
+>>>    				     u32 n_channels,
+>>>    				     struct iwl_scan_probe_params_v4 *pp,
+>>>    				     struct iwl_scan_channel_params_v6 *cp,
+>>>    				     enum nl80211_iftype vif_type)
+>>>    {
+>>> -	struct iwl_scan_channel_cfg_umac *channel_cfg = cp-
+>>> channel_config;
+>>>    	int i;
+>>>    	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
+>>>    		params->scan_6ghz_params;
+>>> +	u32 ch_cnt;
+>>>
+>>> -	for (i = 0; i < params->n_channels; i++) {
+>>> +	for (i = 0, ch_cnt = 0; i < params->n_channels; i++) {
+>>>    		struct iwl_scan_channel_cfg_umac *cfg =
+>>> -			&cp->channel_config[i];
+>>> +			&cp->channel_config[ch_cnt];
+>>>
+>>>    		u32 s_ssid_bitmap = 0, bssid_bitmap = 0, flags = 0;
+>>>    		u8 j, k, s_max = 0, b_max = 0, n_used_bssid_entries;
+>>>    		bool force_passive, found = false, allow_passive = true,
+>>>    		     unsolicited_probe_on_chan = false, psc_no_listen = false;
+>>>
+>>> +		/*
+>>> +		 * Avoid performing passive scan on non PSC channels unless
+>> the
+>>> +		 * scan is specifically a passive scan, i.e., no SSIDs
+>>> +		 * configured in the scan command.
+>>> +		 */
+>>> +		if (!cfg80211_channel_is_psc(params->channels[i]) &&
+>>> +		    !params->n_6ghz_params && params->n_ssids)
+>>> +			continue;
+>>> +
+>>>    		cfg->v1.channel_num = params->channels[i]->hw_value;
+>>>    		cfg->v2.band = 2;
+>>>    		cfg->v2.iter_count = 1;
+>>> @@ -1868,8 +1878,16 @@
+>> iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params
+>> *params,
+>>>    		else
+>>>    			flags |= bssid_bitmap | (s_ssid_bitmap << 16);
+>>>
+>>> -		channel_cfg[i].flags |= cpu_to_le32(flags);
+>>> +		cfg->flags |= cpu_to_le32(flags);
+>>> +		ch_cnt++;
+>>>    	}
+>>> +
+>>> +	if (params->n_channels > ch_cnt)
+>>> +		IWL_DEBUG_SCAN(mvm,
+>>> +			       "6GHz: reducing number channels: (%u->%u)\n",
+>>> +			       params->n_channels, ch_cnt);
+>>> +
+>>> +	return ch_cnt;
+>>>    }
+>>>
+>>>    static u8 iwl_mvm_scan_umac_chan_flags_v2(struct iwl_mvm *mvm,
+>> @@
+>>> -2415,10 +2433,14 @@ static int
+>> iwl_mvm_scan_umac_v14_and_above(struct
+>>> iwl_mvm *mvm,
+>>>
+>>>    	iwl_mvm_umac_scan_fill_6g_chan_list(mvm, params, pb);
+>>>
+>>> -	iwl_mvm_umac_scan_cfg_channels_v6_6g(params,
+>>> -					     params->n_channels,
+>>> -					     pb, cp, vif->type);
+>>> -	cp->count = params->n_channels;
+>>> +	cp->count = iwl_mvm_umac_scan_cfg_channels_v6_6g(mvm,
+>> params,
+>>> +							 params-
+>>> n_channels,
+>>> +							 pb, cp, vif->type);
+>>> +	if (!cp->count) {
+>>> +		mvm->scan_uid_status[uid] = 0;
+>>> +		return -EINVAL;
+>>> +	}
+>>> +
+>>>    	if (!params->n_ssids ||
+>>>    	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
+>>>    		cp->flags |=
+>> IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
+>>>
+>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+> 
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
