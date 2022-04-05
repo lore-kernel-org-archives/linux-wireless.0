@@ -2,80 +2,74 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DBCC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 08:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 288B0C43217
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 08:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234476AbiDEIZY (ORCPT
+        id S234439AbiDEIZQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 04:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57524 "EHLO
+        Tue, 5 Apr 2022 04:25:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237677AbiDEISL (ORCPT
+        with ESMTP id S239343AbiDEIT7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 04:18:11 -0400
+        Tue, 5 Apr 2022 04:19:59 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39438B6E55
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 01:07:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4101BB916
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 01:11:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CFA26B81B90
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 08:07:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F64C385A3;
-        Tue,  5 Apr 2022 08:07:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AA46FB81A32
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 08:11:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88FB8C385A0;
+        Tue,  5 Apr 2022 08:11:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649146032;
-        bh=XIDDvt1ftw2GOb3RkcuJpSwO8lvCv8diT65itEWJWmw=;
+        s=k20201202; t=1649146291;
+        bh=lfSf3YuaNH30TPILlbBPZ1DPyWyyk4WrXjhN08cVlWw=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=NbV3g6fVVH04VzcmTLZbQajhr1aGT8QvHyjPqI2PuhRhoKBwFqBLl8YZgb5Zegsqh
-         BjBiffb3Z/ve42oKYVdtcKkkpDlkYVwJ9mVcvAOD7zJizSZgzwNGrKJP8QF5506wE1
-         moOvUG0+mYZjZxK3sCMykvGzFJ1whpWiC/PihDQ+X6gSpMaFYWXP2C5xWq/gVFykui
-         QF1Z/PfbtPmSymdCPhxX05XTziKLGFd2ZzOFSa9Sz0YHL91VB2hwRat4ky7sGW7aEx
-         OGTAbtHCDbmLL1cp8ICblJe6S3xxymmdmdIOMxAz3j1z4tYXFaSgdiEOESMJMPJ6qG
-         MdDi3NKrPT+dQ==
+        b=GJK1ClGYOw/fBj4KN+e8VWpptZeAC2Uo/c0NOoed/ZDSetUpLU3OKHq55lbO3H9d1
+         Y+fsjzxdSfbGdeMMYrs//amTWJBbFwcXmDqYi7K1p0CUz87cZocQMmE1xTLTsQRQz1
+         cEcaAP8Mf210oeBctoXvq79vpa5OP7HZW1PVHNQP7deSFhZx1SaMYBt4EfHWvj6lS0
+         LUOvGUiGrcTjsOzifGr0Lt47+BHU143fgWa1Stmf+UktWXCC3Xza+Q+YOnUzELM0zn
+         YjpsI3xX4sHNFOJUbHdmrlpRXiCmvJor33gzkBIrxWFb0yEu2mcQZeHxmQIgkj/zEl
+         4JeTR9Y3pX81Q==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 1/5] ath11k: PCI changes to support WCN6750
+Subject: Re: [PATCH] ath11k: Remove unnecessary delay in ath11k_core_suspend
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220328055714.6449-2-quic_mpubbise@quicinc.com>
-References: <20220328055714.6449-2-quic_mpubbise@quicinc.com>
-To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+In-Reply-To: <20220331002105.1162099-1-quic_bqiang@quicinc.com>
+References: <20220331002105.1162099-1-quic_bqiang@quicinc.com>
+To:     Baochen Qiang <quic_bqiang@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164914602727.12306.5327755878544147353.kvalo@kernel.org>
-Date:   Tue,  5 Apr 2022 08:07:11 +0000 (UTC)
+Message-ID: <164914628848.12306.8288528929953544140.kvalo@kernel.org>
+Date:   Tue,  5 Apr 2022 08:11:30 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Manikanta Pubbisetty <quic_mpubbise@quicinc.com> wrote:
+Baochen Qiang <quic_bqiang@quicinc.com> wrote:
 
-> In order to add the support for WCN6750 in ATH11K , it is
-> required to move certain PCI definitions to the header file.
-> As a result, add ATH11K_PCI_* prefix to these definitions.
+> The intended delay in ath11k_core_suspend is introduced in commit
+> d1b0c33850d2 ("ath11k: implement suspend for QCA6390 PCI devices"),
+> now with ath11k_mac_wait_tx_complete added in commit ba9177fcef21
+> ("ath11k: Add basic WoW functionalities"), that delay is not
+> necessary now, so remove it.
 > 
-> Also, change the scope of certain PCI APIs that are required
-> to enable WCN6750 from static to global.
+> This is found in code review.
 > 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-02431-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 > 
-> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-5 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-948171b5f6fc ath11k: PCI changes to support WCN6750
-bbfdc5a751a6 ath11k: Refactor PCI code to support WCN6750
-8d06b8023ace ath11k: Choose MSI config based on HW revision
-0cfaf2243e9e ath11k: Refactor MSI logic to support WCN6750
-5b32b6dd9663 ath11k: Remove core PCI references from PCI common code
+2dd398dee7aa ath11k: Remove unnecessary delay in ath11k_core_suspend
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220328055714.6449-2-quic_mpubbise@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220331002105.1162099-1-quic_bqiang@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
