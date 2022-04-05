@@ -2,55 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED5EC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AFB5C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:08:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389699AbiDFDIS (ORCPT
+        id S236078AbiDFDIi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:08:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37194 "EHLO
+        Tue, 5 Apr 2022 23:08:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1456964AbiDEQCf (ORCPT
+        with ESMTP id S1573403AbiDETHd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 12:02:35 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CAC8E7F75;
-        Tue,  5 Apr 2022 08:25:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 859BBB81E30;
-        Tue,  5 Apr 2022 15:25:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1782C385A0;
-        Tue,  5 Apr 2022 15:25:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649172337;
-        bh=+xFbJqvwMJbQSj9nFNnlG1Arjg38F6OzcmwY3dTsFQ4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=uIuEDxP6ZeCDhTVHagvUEbxwEJq2viGhA/Lc3oGsoongfmoEMblsuITW0rw1MIaza
-         Xd8biZfxObEYo1U+FJpjsLVAtadGW4aMg7NTYPwedhQGeIyAQFZvKbRdxwPcpznhWl
-         DLyxV7ipXnY9exHsnUktrYNcD/ZSyekx69EIZ1DT8fayxtwkcy+0XfFf8eyLOYrOKH
-         iw+JK+P5f6vFct8RAkzV5ss9bLnhT8mGEqqHV3hkIlFTawW/z5sEIUllDIsoBjwQPz
-         ol7+B7F1SPT9HffpPgncyq5M1GqVk+3NUjsaFlNjC5wSb9OsiUIMFmBlLTyaAPx8DG
-         2Scic8xo0aZnw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Borislav Petkov <bp@alien8.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        "David S. Miller" <davem@davemloft.net>,
+        Tue, 5 Apr 2022 15:07:33 -0400
+Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63A7BDFD76;
+        Tue,  5 Apr 2022 12:05:33 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1649185531; bh=SAA9dfx55MysOmiQzcHDMnPsN4/x681hTalOLovhpPE=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=SBHOSgcXwcMafMQKThYaJOM7QfgUspeVO8YsgV+jXTp14qIw7kLMTjpP/4HI0J1XC
+         uH6ZeKg5K2t8Hn4E/zDhjQa01z01Cxs7lBNar6GXKpAHN/V0TNRvoIqCH7gvVLGDA7
+         g1K6/cIXTPUb4jkXy9TONf0QPYnMRjWNwI0LPb7paU3M97Dkv90mS6kKzhIASYuokC
+         tMJ94WaRh08SGM7JE+rgNNDwL2exRtl/f6uGuCej3eX3u/oReRMeuOFItgCL3Tx5XI
+         c1OACToIa5uv2vxHIK3XaSPc+VR3d9f8fql3DbAniQH31fOFjazzsLw7jjds3a+dP8
+         wgD6ZMPyI00UA==
+To:     Peter Seiderer <ps.report@gmx.net>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/11] brcmfmac: sdio: Fix undefined behavior due to shift overflowing the constant
-References: <20220405151517.29753-1-bp@alien8.de>
-        <20220405151517.29753-7-bp@alien8.de>
-Date:   Tue, 05 Apr 2022 18:25:30 +0300
-In-Reply-To: <20220405151517.29753-7-bp@alien8.de> (Borislav Petkov's message
-        of "Tue, 5 Apr 2022 17:15:12 +0200")
-Message-ID: <87y20jr1qt.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Paolo Abeni <pabeni@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] ath9k: fix ath_get_rate_txpower() to respect the
+ rate list end tag
+In-Reply-To: <20220404225212.2876091a@gmx.net>
+References: <20220402153014.31332-1-ps.report@gmx.net>
+ <87ilroemo4.fsf@toke.dk> <20220404225212.2876091a@gmx.net>
+Date:   Tue, 05 Apr 2022 21:05:31 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87v8vncpvo.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -58,60 +48,80 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ linux-wireless
+Peter Seiderer <ps.report@gmx.net> writes:
 
-Borislav Petkov <bp@alien8.de> writes:
-
-> From: Borislav Petkov <bp@suse.de>
+> Hello Toke,
 >
-> Fix:
+> On Mon, 04 Apr 2022 20:19:39 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <tok=
+e@toke.dk> wrote:
 >
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c: In function =
-=E2=80=98brcmf_sdio_drivestrengthinit=E2=80=99:
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:3798:2: error: =
-case label does not reduce to an integer constant
->     case SDIOD_DRVSTR_KEY(BRCM_CC_43143_CHIP_ID, 17):
->     ^~~~
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:3809:2: error: =
-case label does not reduce to an integer constant
->     case SDIOD_DRVSTR_KEY(BRCM_CC_43362_CHIP_ID, 13):
->     ^~~~
+>> Peter Seiderer <ps.report@gmx.net> writes:
+>>=20
+>> > Stop reading (and copying) from ieee80211_tx_rate to ath_tx_info.rates
+>> > after list end tag (count =3D=3D 0, idx < 0), prevents copying of garb=
+age
+>> > to card registers.=20=20
+>>=20
+>> In the normal case I don't think this patch does anything, since any
+>> invalid rate entries will already be skipped (just one at a time instead
+>> of all at once). So this comment is a bit misleading.
 >
-> See https://lore.kernel.org/r/YkwQ6%2BtIH8GQpuct@zn.tnic for the gory
-> details as to why it triggers with older gccs only.
+> Save some (minimal) compute time? Found it something misleading while
+> debugging to see random values written out to the card and found this
+> comment in net/mac80211/rate.c:
 >
-> Signed-off-by: Borislav Petkov <bp@suse.de>
-> Cc: Arend van Spriel <aspriel@gmail.com>
-> Cc: Franky Lin <franky.lin@broadcom.com>
-> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-> Cc: Kalle Valo <kvalo@kernel.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: brcm80211-dev-list.pdl@broadcom.com
-> Cc: netdev@vger.kernel.org
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  648                 /*
+>  649                  * make sure there's no valid rate following
+>  650                  * an invalid one, just in case drivers don't
+>  651                  * take the API seriously to stop at -1.
+>  652                  */
 >
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index ba3c159111d3..d78ccc223709 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -557,7 +557,7 @@ enum brcmf_sdio_frmtype {
->  	BRCMF_SDIO_FT_SUB,
->  };
->=20=20
-> -#define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
-> +#define SDIOD_DRVSTR_KEY(chip, pmu)     (((unsigned int)(chip) << 16) | =
-(pmu))
+> and multiple places doing the same check (count =3D=3D 0, idx < 0) for va=
+lidation
+> e.g.:
+>
+>  723                 if (i < ARRAY_SIZE(info->control.rates) &&
+>  724                     info->control.rates[i].idx >=3D 0 &&
+>  725                     info->control.rates[i].count) {
+>
+> or=20
+>
+>  742                 if (rates[i].idx < 0 || !rates[i].count)
+>  743                         break;
+>
+>>=20
+>> Also, Minstrel could in principle produce a rate sequence where the
+>> indexes are all positive, but there's one in the middle with a count of
+>> 0, couldn't it? With this patch, the last entries of such a sequence
+>> would now be skipped...
+>
+> According to net/mac80211/rc80211_minstrel_ht.c:
+>
+> 1128 static bool
+> 1129 minstrel_ht_txstat_valid(struct minstrel_priv *mp, struct minstrel_h=
+t_sta *     mi,
+> 1130                          struct ieee80211_tx_rate *rate)
+> 1131 {
+> 1132         int i;
+> 1133=20
+> 1134         if (rate->idx < 0)
+> 1135                 return false;
+> 1136=20
+> 1137         if (!rate->count)
+> 1138                 return false;
+> 1139=20
+>
+> minstrel although evaluates a rate count of zero as invalid...
 
-Via which tree is this going? I assume not the wireless tree, so:
+So my concern was mostly that the documentation (in mac80211.h) says
+that an idx of -1 indicates the end, but says nothing about the count.
+Which implies that in principle you could have a rate table of { idx,
+count } like { 1, 1 }, { 2, 0 }, { 3, 1 } which would mean all three
+rates was valid but the second one would just be "skipped" due to a
+count of zero.
 
-Acked-by: Kalle Valo <kvalo@kernel.org>
+But it seems that the code populating the rate table that you linked
+above (lines 742/743) actually do abort on either condition, so I guess
+it's safe to do so in the driver as well...
 
---=20
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+-Toke
