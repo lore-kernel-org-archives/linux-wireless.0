@@ -2,91 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC722C43217
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 356E1C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:16:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1453277AbiDFDKD (ORCPT
+        id S1454255AbiDFDKg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:10:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41810 "EHLO
+        Tue, 5 Apr 2022 23:10:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573227AbiDES1f (ORCPT
+        with ESMTP id S1573101AbiDER7U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 14:27:35 -0400
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B84625C2;
-        Tue,  5 Apr 2022 11:25:34 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1649183131; bh=z/z39V2h2Ell0dkMKVRzEpV5Eg6+3vxUnVLnfYEBrgk=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=sZpeQsF6h7Sz8UOnGoOfUZJ+CXEwWeXR88bGHvZwbEIHRRQ4ntkCJ9ttrl6Pt71Kk
-         1UqGn27RMYPz1n6pTTB2UYm+B4ZsTQfDNXZvGznZrxQAoZQRNPgnHRqiSuvJL2Ygmi
-         cxf1nOhRjc/Gs5ARWFnLqCL1CBx0KLFLr3gnKT/9H0DasdjHYLOhul3sy9Aq75D5JN
-         XUvUFlrqqYU2eWVT30ztxsMcUraQCVYWMBCEdqfBs2d4nONzhClD9KNSVWq2VRhYTU
-         wDdI2mDG44DikGHo1Msm1BZoHRpDAzHYtjbu6zXHywS21Q65DtwtqsPjGd6Oor/bAK
-         g58gh9NYNhzuA==
-To:     Peter Seiderer <ps.report@gmx.net>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH for-5.18 v3] ath9k: Fix usage of driver-private space in
- tx_info
-In-Reply-To: <20220405184908.7fb44111@gmx.net>
-References: <20220404204800.2681133-1-toke@toke.dk>
- <20220405184908.7fb44111@gmx.net>
-Date:   Tue, 05 Apr 2022 20:25:30 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <874k37e6at.fsf@toke.dk>
+        Tue, 5 Apr 2022 13:59:20 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23AF8E7F59
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 10:57:21 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id p15so24625956lfk.8
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2022 10:57:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=hBgkgZVxUFaHHWVT8MJPRfMm0CbtM8C9QcwHO150roA=;
+        b=cikBVFVsqfHRfiS3Za+lqvw+SF2Z6x/1MAsZHBWiKm3TYeQxJz3Y0V9vvb2Vr+8BwK
+         Jn1ZJp1uro8v3++kb/aq9ZfjZVI6oa3qIicCw98cuFEYl/dIeN/oj/xmGC4g2dqmIZqm
+         GU6YFirBWWt7ZxKJZRVr7StDOW++mx3rKhSt9xa1tOiTMyk7a+nTs04xo1uxfG6hIxBI
+         GOHsndkoLejoUUhZfN2WHf48bDJKSJQKfeGOyi6KSg4cZaKaVNFoY9HZ/jDgCuSjRyqh
+         Ls/cOFBuFDhnoL/DtPqxcNbIKqg9dVW60GggP6esN5jq3IZPfcDGEh5dDc4zL/J2B6rJ
+         ptow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=hBgkgZVxUFaHHWVT8MJPRfMm0CbtM8C9QcwHO150roA=;
+        b=cexdCTgxoIghsYGGZOQAvVqMWsycG8NY7RsC14hBcx7dBiZx+AIpGAmusgPFPKDhXl
+         OMVX3qkPxZ0q2BWSviB7hCtPrA0EEbnvJutSnpJ7P3OfmCZ/tzZ6FHckDuIoOD9lpCPK
+         Onv29zY8TXTZ9mAo44o36sLPtlqmgia7Z5hlC2g8u2o8uhgemLieOQyDUjPzB2YvYS/I
+         C1JVcB5CD0+oT0vmF1KlCusyc1NvJ9B0KoJMVB9sYnwTg6B1DBuNcuMj2SZ3kUIIWyTq
+         0yZlTVg3qO43v9HOmTl1Bz+YZ1BBuKqmkCSYIp1xir/kDBnopMC4Hd2drGRMuFvtnyDZ
+         iYNw==
+X-Gm-Message-State: AOAM532EZIutnurZ0DoP63RRd0X1F7CYjSNnGB9SjRDHiAtFZTV/KJDx
+        5evc/hsgd421plzJ+S3ZF0NAQGmA0sDv1X+Y9lzG0A==
+X-Google-Smtp-Source: ABdhPJz2VaFmMYt5PGtt9rPGIZ+g8Of7B0s0umeXy0XDUFW7BCfGgvKZYRvQKJox0fPHoaedJxkrhq2IosfOwyw+srk=
+X-Received: by 2002:a05:6512:33d4:b0:44a:9971:de48 with SMTP id
+ d20-20020a05651233d400b0044a9971de48mr3392619lfg.392.1649181439072; Tue, 05
+ Apr 2022 10:57:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+References: <20220401230640.3196196-1-trix@redhat.com>
+In-Reply-To: <20220401230640.3196196-1-trix@redhat.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Tue, 5 Apr 2022 10:57:07 -0700
+Message-ID: <CAKwvOdng7CbqGrDH+WYwY0aAkjpW8mT428m4p=K8VTTD8ddV0Q@mail.gmail.com>
+Subject: Re: [PATCH] iwlwifi: mvm: initialize seq variable
+To:     Tom Rix <trix@redhat.com>
+Cc:     luciano.coelho@intel.com, kvalo@kernel.org, davem@davemloft.net,
+        kuba@kernel.org, pabeni@redhat.com, nathan@kernel.org,
+        johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        dan.carpenter@oracle.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Peter Seiderer <ps.report@gmx.net> writes:
+On Fri, Apr 1, 2022 at 4:06 PM Tom Rix <trix@redhat.com> wrote:
+>
+> Clang static analysis reports this issue
+> d3.c:567:22: warning: The left operand of '>' is
+>   a garbage value
+>   if (seq.tkip.iv32 > cur_rx_iv32)
+>       ~~~~~~~~~~~~~ ^
+>
+> seq is never initialized. Call ieee80211_get_key_rx_seq() to
+> initialize seq.
+>
+> Fixes: 0419e5e672d6 ("iwlwifi: mvm: d3: separate TKIP data from key iteration")
+> Signed-off-by: Tom Rix <trix@redhat.com>
 
-> Hello Toke,
->
-> On Mon,  4 Apr 2022 22:48:00 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <tok=
-e@toke.dk> wrote:
->
->> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
->>=20
->> The ieee80211_tx_info_clear_status() helper also clears the rate counts =
-and
->> the driver-private part of struct ieee80211_tx_info, so using it breaks
->> quite a few other things. So back out of using it, and instead define a
->> ath-internal helper that only clears the area between the
->> status_driver_data and the rates info. Combined with moving the
->> ath_frame_info struct to status_driver_data, this avoids clearing anythi=
-ng
->> we shouldn't be, and so we can keep the existing code for handling the r=
-ate
->> information.
->>=20
->> While fixing this I also noticed that the setting of
->> tx_info->status.rates[tx_rateindex].count on hardware underrun errors was
->> always immediately overridden by the normal setting of the same fields, =
-so
->> rearrange the code so that the underrun detection actually takes effect.
->>=20
->> The new helper could be generalised to a 'memset_between()' helper, but
->> leave it as a driver-internal helper for now since this needs to go to
->> stable.
->>=20
->> Cc: stable@vger.kernel.org
->> Reported-by: Peter Seiderer <ps.report@gmx.net>
->> Fixes: 037250f0a45c ("ath9k: Properly clear TX status area before report=
-ing to mac80211")
->> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
->
-> And finally found time to test your latest version of the patch, you can =
-add my
->
-> Reviewed-by: Peter Seiderer <ps.report@gmx.net>
-> Tested-by: Peter Seiderer <ps.report@gmx.net>
+Thanks for the patch!
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-Awesome! Thanks for testing! :)
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> index a995bba0ba81..9b190b3ce6c1 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> @@ -563,6 +563,7 @@ static void iwl_mvm_wowlan_get_tkip_data(struct ieee80211_hw *hw,
+>                 }
+>
+>                 for (i = 0; i < IWL_NUM_RSC; i++) {
+> +                       ieee80211_get_key_rx_seq(key, i, &seq);
+>                         /* wrapping isn't allowed, AP must rekey */
+>                         if (seq.tkip.iv32 > cur_rx_iv32)
+>                                 cur_rx_iv32 = seq.tkip.iv32;
+> --
+> 2.27.0
+>
 
--Toke
+
+-- 
+Thanks,
+~Nick Desaulniers
