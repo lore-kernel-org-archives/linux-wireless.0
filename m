@@ -2,82 +2,80 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E183DC43217
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 08:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92DBCC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 08:23:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234374AbiDEIZH (ORCPT
+        id S234476AbiDEIZY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 04:25:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39696 "EHLO
+        Tue, 5 Apr 2022 04:25:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238686AbiDEITR (ORCPT
+        with ESMTP id S237677AbiDEISL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 04:19:17 -0400
+        Tue, 5 Apr 2022 04:18:11 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B0731AF1D
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 01:09:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39438B6E55
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 01:07:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE06BB81B18
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 08:09:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66635C385A0;
-        Tue,  5 Apr 2022 08:09:16 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CFA26B81B90
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 08:07:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F64C385A3;
+        Tue,  5 Apr 2022 08:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649146157;
-        bh=VzMbINFNTvSENLG/I6ooncrp2ypoqck+oxssEZccqoM=;
+        s=k20201202; t=1649146032;
+        bh=XIDDvt1ftw2GOb3RkcuJpSwO8lvCv8diT65itEWJWmw=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=RRvQs/ew/vr6siHZtExBHLT9lWLJNq8Hyy4R9/QXp7goNUlHhRv5ouiMwqvaym8nS
-         KW4UrRfoLi8M+IRhl/WIajFgH0jx31qT3ibM9ZFQrAHYdqRlZ69JFr4akgquE80Yfd
-         V1tnoHoTaYjq3BDO1Fj3lO8/3IjN7HLvqiRG0siMp5r/YC+cjF+birFgWxCppUzAxC
-         VvDmsjqvYw/5WKT9MnoNdmnb4frQKfqNcCimdVDHvvNvs4bwF+DR0K3GPtAmb8/W5r
-         Q4F/B1EBeYk/vuJWtsDH4Lgg2Pxzpu+KG1fLu3PrDFEWOVEvDt5o870PXs+mn7XCLm
-         EJIcfYqJOZPFA==
+        b=NbV3g6fVVH04VzcmTLZbQajhr1aGT8QvHyjPqI2PuhRhoKBwFqBLl8YZgb5Zegsqh
+         BjBiffb3Z/ve42oKYVdtcKkkpDlkYVwJ9mVcvAOD7zJizSZgzwNGrKJP8QF5506wE1
+         moOvUG0+mYZjZxK3sCMykvGzFJ1whpWiC/PihDQ+X6gSpMaFYWXP2C5xWq/gVFykui
+         QF1Z/PfbtPmSymdCPhxX05XTziKLGFd2ZzOFSa9Sz0YHL91VB2hwRat4ky7sGW7aEx
+         OGTAbtHCDbmLL1cp8ICblJe6S3xxymmdmdIOMxAz3j1z4tYXFaSgdiEOESMJMPJ6qG
+         MdDi3NKrPT+dQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: Change max no of active probe SSID and BSSID to
- fw
- capability
+Subject: Re: [PATCH v3 1/5] ath11k: PCI changes to support WCN6750
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220329150221.21907-1-quic_kathirve@quicinc.com>
-References: <20220329150221.21907-1-quic_kathirve@quicinc.com>
-To:     Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+In-Reply-To: <20220328055714.6449-2-quic_mpubbise@quicinc.com>
+References: <20220328055714.6449-2-quic_mpubbise@quicinc.com>
+To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164914615451.12306.2945099051936753478.kvalo@kernel.org>
-Date:   Tue,  5 Apr 2022 08:09:16 +0000 (UTC)
+Message-ID: <164914602727.12306.5327755878544147353.kvalo@kernel.org>
+Date:   Tue,  5 Apr 2022 08:07:11 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Karthikeyan Kathirvel <quic_kathirve@quicinc.com> wrote:
+Manikanta Pubbisetty <quic_mpubbise@quicinc.com> wrote:
 
-> The maximum number of SSIDs in a for active probe requests is currently
-> reported as 16 (WLAN_SCAN_PARAMS_MAX_SSID) when registering the driver.
-> The scan_req_params structure only has the capacity to hold 10 SSIDs.
-> This leads to a buffer overflow which can be triggered from
-> wpa_supplicant in userspace. When copying the SSIDs into the
-> scan_req_params structure in the ath11k_mac_op_hw_scan route, it can
-> overwrite the extraie pointer.
+> In order to add the support for WCN6750 in ATH11K , it is
+> required to move certain PCI definitions to the header file.
+> As a result, add ATH11K_PCI_* prefix to these definitions.
 > 
-> Firmware supports 16 ssid * 4 bssid, for each ssid 4 bssid combo probe
-> request will be sent, so totally 64 probe requests supported. So
-> set both max ssid and bssid to 16 and 4 respectively. Remove the
-> redundant macros of ssid and bssid.
+> Also, change the scope of certain PCI APIs that are required
+> to enable WCN6750 from static to global.
 > 
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01300-QCAHKSWPL_SILICONZ-1
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
 > 
-> Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+5 patches applied to ath-next branch of ath.git, thanks.
 
-50dc9ce9f805 ath11k: Change max no of active probe SSID and BSSID to fw capability
+948171b5f6fc ath11k: PCI changes to support WCN6750
+bbfdc5a751a6 ath11k: Refactor PCI code to support WCN6750
+8d06b8023ace ath11k: Choose MSI config based on HW revision
+0cfaf2243e9e ath11k: Refactor MSI logic to support WCN6750
+5b32b6dd9663 ath11k: Remove core PCI references from PCI common code
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220329150221.21907-1-quic_kathirve@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220328055714.6449-2-quic_mpubbise@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
