@@ -2,327 +2,208 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F42C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F31C4332F
 	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1449398AbiDFDJQ (ORCPT
+        id S1450737AbiDFDJf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46126 "EHLO
+        Tue, 5 Apr 2022 23:09:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573399AbiDETHJ (ORCPT
+        with ESMTP id S1457827AbiDEQvT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 15:07:09 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C72CDFD76
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 12:05:09 -0700 (PDT)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.171])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 597C62A0076;
-        Tue,  5 Apr 2022 19:05:08 +0000 (UTC)
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C8E589C007F;
-        Tue,  5 Apr 2022 19:05:07 +0000 (UTC)
-Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 3372013C2B0;
-        Tue,  5 Apr 2022 12:05:07 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3372013C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1649185507;
-        bh=dWk1G7Zo7e1Psp+eJunsVvxRVsHXBbrglX5JCFWR0XQ=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=dqfqNdmOM8+eQdDXSa+wfLTNTk3YnkCyXTN3E49rIJtCiEqAbd+fF3JUP1OkO9awS
-         65w7Y/ZqjCsUqpXHd87/hJ5E8Nk/aQ71it78osd6H1x4kcKBl7altzhCiD2WYEnpcc
-         rTrw9ddii3y+RC/VC9kNTof7xm6x1y7te92cnwYg=
-Subject: Re: [PATCH 04/12] iwlwifi: mvm: Passively scan non PSC channels only
- when requested so
-To:     "Peer, Ilan" <ilan.peer@intel.com>, Luca Coelho <luca@coelho.fi>,
-        "kvalo@kernel.org" <kvalo@kernel.org>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20220204102511.606112-1-luca@coelho.fi>
- <iwlwifi.20220204122220.457da4cc95eb.Ic98472bab5f5475f1e102547644caaae89ce4c4a@changeid>
- <f18f11f2-b9b9-9d86-340e-d567247ef7bc@candelatech.com>
- <DM4PR11MB60435B74198FD8A0FE70853DE9E59@DM4PR11MB6043.namprd11.prod.outlook.com>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <200b2f77-6832-85e5-5294-97c918f62c06@candelatech.com>
-Date:   Tue, 5 Apr 2022 12:05:06 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        Tue, 5 Apr 2022 12:51:19 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AE2E1EEF7;
+        Tue,  5 Apr 2022 09:49:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1649177350;
+        bh=1vKIY1gt3vNVn9t8j/gQpo9Svf0e2HT6996YcqD20j0=;
+        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
+        b=Rdvc3SUdaMu6xlV9oRqJf63w+sA/Ev6pmXyhr6xsCvd3u7wJgj5sdBeF+qN7rpwnR
+         XmE09JmpVH39ujD0tBH9U6sx95qfQw33fsXbtmlAcryy5QZI+hVFtk0IldxntZGYYa
+         VYwiBl/DRlN7gnBwT8rGrVJhVg4ACOJ+zDkLLnt8=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from localhost ([62.216.209.249]) by mail.gmx.net (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1Mwfac-1nwBdU00K2-00yAw9; Tue, 05
+ Apr 2022 18:49:10 +0200
+Date:   Tue, 5 Apr 2022 18:49:08 +0200
+From:   Peter Seiderer <ps.report@gmx.net>
+To:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@toke.dk>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@redhat.com>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH for-5.18 v3] ath9k: Fix usage of driver-private space in
+ tx_info
+Message-ID: <20220405184908.7fb44111@gmx.net>
+In-Reply-To: <20220404204800.2681133-1-toke@toke.dk>
+References: <20220404204800.2681133-1-toke@toke.dk>
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-suse-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <DM4PR11MB60435B74198FD8A0FE70853DE9E59@DM4PR11MB6043.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-MDID: 1649185508-OaGMLODVCjTJ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:ceKWhUrIGRqutIOUnCDDKP1g11zL2it54z2JX7OfhXfiQGUXDKo
+ onAaeaJSvRSxxI/JYGus9IQpCXIFjLXGZsBgTnqlnYBmXQ0284XKHHqVkh5Pu3KX560NH9A
+ C1Uh+J0AYaNE/+yDhPFJRZTz3fBV7cZt0zZAQBXnWPOxt1mu4cBlFWjKxo9OSNw4+ce/Rx5
+ JgaOXpGkECgXlUrWTTSWA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Y4mTKqgVeVM=:m5SnoiftRPvZflGXeSlutK
+ +Qa7CahFsT41kQLd2kudItf5vW0qCEzYjfeb5T4/Hfq7TtB/XL5TfSUB7H12tEdjNroRLNRBD
+ JClwaVBvFd309cfG8ossvKHMXbxlPabQDAniTTTcAIlWn5C+iTEe8yGfbjA6sCEL2hKwrVkH0
+ p23GUWuorbFimRX87yU87h/iAKCtmm4ZsmW4sCmZH2EqkLv3CSDEDIIBI7IekYXQQuy+++OTj
+ atUnefx6ownpemtoNZZBdqsR9WAg9FflZ9p6OmP882FK2NtnklPPU88EqXbc3rAikLKeUeuUU
+ xJgjUZICB0AzDOpvZDw7Vcv4rQw9j+YYHRKRS1b3wQaaYLGLVnk3QOfYpX5wgf8yV8Saqo632
+ BPY09nTXsAM8vEmnHGoQ+OgSmiMssetySiOwPG3lGIoFlFjMPTJ7+eBUlSyJOB37vraL2sMST
+ MvIMT6OSu48lyCW3UFSefZ9W4t4Q/mwq7r42rJvlU3BsPsTfXNPmVpCK/L/LqsjzFFYVUEI7g
+ IPz2/9HGlpdMuoxwNlUR1aY8SjZfMkZ6jPMOThGFR5Z04nnNJ2DVa8EmY5vei0HJbffhcriaW
+ UQS9zOXKTYM3PiddQxzIyFCB+87A23HKQ639xwht90Czz/wD1AeZ11NWy2Iqq4oV1EteDvBQ3
+ aYDTk/7N3gHbAXflQuNZ1lC3bgVkWRsX48Dt6UFpKftQD3Y52Ji1/f8tnuLDVkzJf5eL40p6B
+ KZIOH7AcrxxCs2IDI+5bzVgr4b3Hb6OKx24+mULUdY3qHie3Pz4D5EhZMK3ojJ84aximjdJYl
+ 9sNAGwiw0eI7Moa/qjrKEVZpXsk1Qq/eCw7jijZr0Ov0MRSR70lZ4gOEtGstIZ3P/wf5ZwvJ3
+ BHC8wvsPXJrQbnp/A8BfSByvFeYuRSkGRS455PvJR14xDPS1DJ+8GFau4iRePT0y3VUs8GVhM
+ 4CM7YbskC2Jt7Qp5V3sZi3NzCnoHWpuMa+J/bIByYSa22y7XgxYu6OJWo2rzD/Jff5wzBpsvR
+ hjDDSPneM5dIM8h5PPH16ldAkfqkE2ufpHbCr7u19ekzrj6PeB/tBWya9djRlTE7ns96VeEOH
+ x1QXP9oNjvewLw=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Ilan,
+Hello Toke,
 
-I will try this soon.  But, any idea why it is not
-accepted into hostap project yet?
+On Mon,  4 Apr 2022 22:48:00 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <toke@=
+toke.dk> wrote:
+
+> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+>=20
+> The ieee80211_tx_info_clear_status() helper also clears the rate counts a=
+nd
+> the driver-private part of struct ieee80211_tx_info, so using it breaks
+> quite a few other things. So back out of using it, and instead define a
+> ath-internal helper that only clears the area between the
+> status_driver_data and the rates info. Combined with moving the
+> ath_frame_info struct to status_driver_data, this avoids clearing anything
+> we shouldn't be, and so we can keep the existing code for handling the ra=
+te
+> information.
+>=20
+> While fixing this I also noticed that the setting of
+> tx_info->status.rates[tx_rateindex].count on hardware underrun errors was
+> always immediately overridden by the normal setting of the same fields, so
+> rearrange the code so that the underrun detection actually takes effect.
+>=20
+> The new helper could be generalised to a 'memset_between()' helper, but
+> leave it as a driver-internal helper for now since this needs to go to
+> stable.
+>=20
+> Cc: stable@vger.kernel.org
+> Reported-by: Peter Seiderer <ps.report@gmx.net>
+> Fixes: 037250f0a45c ("ath9k: Properly clear TX status area before reporti=
+ng to mac80211")
+> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+
+And finally found time to test your latest version of the patch, you can ad=
+d my
+
+Reviewed-by: Peter Seiderer <ps.report@gmx.net>
+Tested-by: Peter Seiderer <ps.report@gmx.net>
 
 Thanks,
-Ben
 
-On 4/4/22 12:02 PM, Peer, Ilan wrote:
-> Hi Ben,
-> 
-> Sorry for the late response.
-> 
-> Can you please try this with the following patch for hostap?
-> 
-> https://patchwork.ozlabs.org/project/hostap/patch/20211130153943.3531922-1-andrei.otcheretianski@intel.com/
-> 
-> I believe that reason the connection fails is due to user space not setting the collocated scan flag when not scanning passively.
-> 
-> If this resolves the issue, I'll try to find a better solution for handling this.
-> 
-> Thanks in advance,
-> 
-> Ilan.
-> 
->> -----Original Message-----
->> From: Ben Greear <greearb@candelatech.com>
->> Sent: Friday, March 25, 2022 20:12
->> To: Luca Coelho <luca@coelho.fi>; kvalo@kernel.org
->> Cc: linux-wireless@vger.kernel.org
->> Subject: Re: [PATCH 04/12] iwlwifi: mvm: Passively scan non PSC channels
->> only when requested so
->>
->> On 2/4/22 2:25 AM, Luca Coelho wrote:
->>> From: Ilan Peer <ilan.peer@intel.com>
->>>
->>> Non PSC channels should generally be scanned based on information
->>> about collocated APs obtained during scan on legacy bands, and
->>> otherwise should not be scanned unless specifically requested so (as
->>> there are relatively many non PSC channels, scanning them passively is
->>> time consuming and interferes with regular data traffic).
->>>
->>> Thus, modify the scan logic to avoid passively scanning PSC channels
->>> if there is no information about collocated APs and the scan is not a
->>> passive scan.
->>
->> Hello,
->>
->> This breaks association against a Cisco test AP on frequency 5995.
->>
->> Here are logs of the previous commit working (scan takes longer, but SSID is
->> found), and at the bottom, scan with this commit, which fails to detect the
->> SSID.
->>
->> # ethtool -i sta0000
->> driver: iwlwifi
->> version: 5.17.0+
->> firmware-version: 68.01d30b0c.0 ty-a0-gf-a0-68.uc
->> expansion-rom-version:
->> bus-info: 0000:05:00.0
->> supports-statistics: yes
->> supports-test: no
->> supports-eeprom-access: no
->> supports-register-dump: no
->> supports-priv-flags: no
->>
->> It breaks on version 71 firmware too.
->>
->> 2022-03-25 09:56:35.464  1.1:  sta0000 (phy #0): scan started
->> 2022-03-25 09:56:42.095  1.1:  sta0000 (phy #0): scan finished: 2412 2417 2422
->> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
->> 5280
->> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
->> 5765 5785 5805 5825 5955 5975 5995 6015 6035 6055 6075 6095 6115 6135 6155
->> 6175 6195
->> 6215 6235 6255 6275 6295 6315 6335 6355 6375 6395 6415 6435 6455 6475 6495
->> 6515 6535 6555 6575 6595 6615 6635 6655 6675 6695 6715 6735 6755 6775 6795
->> 6815 6835
->> 6855 6875 6895 6915 6935 6955 6975 6995 7015 7035 7055 7075 7095 7115, ""
->> 2022-03-25 09:56:42.101  1.1:  IFNAME=sta0000 <3>SME: Trying to
->> authenticate with 68:7d:b4:60:04:b8 (SSID=
->> 2022-03-25 09:56:42.122  1.1:  sta0000: new station 68:7d:b4:60:04:b8
->> 2022-03-25 09:56:42.252  1.1:  sta0000 (phy #0): auth 68:7d:b4:60:04:b8 ->
->> a4:6b:b6:5a:b1:da status: 126: <unknown>
->> 2022-03-25 09:56:42.254  1.1:  IFNAME=sta0000 <3>SME: Trying to
->> authenticate with 68:7d:b4:60:04:b8 (SSID=
->> 2022-03-25 09:56:42.310  1.1:  sta0000 (phy #0): auth 68:7d:b4:60:04:b8 ->
->> a4:6b:b6:5a:b1:da status: 0: Successful
->> 2022-03-25 09:56:42.310  1.1:  IFNAME=sta0000 <3>PMKSA-CACHE-ADDED
->> 68:7d:b4:60:04:b8 0
->> 2022-03-25 09:56:42.311  1.1:  IFNAME=sta0000 <3>Trying to associate with
->> 68:7d:b4:60:04:b8 (SSID=
->> 2022-03-25 09:56:42.312  1.1:  IFNAME=sta0000 <3>EAPOL-RX
->> 68:7d:b4:60:04:b8 121
->> 2022-03-25 09:56:42.313  1.1:  sta0000 (phy #0): assoc 68:7d:b4:60:04:b8 ->
->> a4:6b:b6:5a:b1:da status: 0: Successful
->> 2022-03-25 09:56:42.313  1.1:  IFNAME=sta0000 <3>Associated with
->> 68:7d:b4:60:04:b8
->> 2022-03-25 09:56:42.314  1.1:  IFNAME=sta0000 <3>EAPOL-RX
->> 68:7d:b4:60:04:b8 121
->> 2022-03-25 09:56:42.321  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-SUBNET-
->> STATUS-UPDATE status=0
->> 2022-03-25 09:56:42.322  1.1:  sta0000 (phy #0): ctrl. port TX status (cookie 1):
->> acked
->> 2022-03-25 09:56:42.323  1.1:  IFNAME=sta0000 <3>EAPOL-RX
->> 68:7d:b4:60:04:b8 195
->> 2022-03-25 09:56:42.328  1.1:  sta0000 (phy #0): ctrl. port TX status (cookie 2):
->> acked
->> 2022-03-25 09:56:42.364  1.1:  IFNAME=sta0000 <3>WPA: Key negotiation
->> completed with 68:7d:b4:60:04:b8 [PTK=CCMP GTK=CCMP]
->> 2022-03-25 09:56:42.403  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-CONNECTED
->> - Connection to 68:7d:b4:60:04:b8 completed [id=0 id_str=]
->> 2022-03-25 09:56:42.403  1.1:  IFNAME=sta0000 <3>WPA: Key negotiation
->> completed with 68:7d:b4:60:04:b8 [PTK=CCMP GTK=CCMP]
->>
->>
->>
->> 2022-03-25 10:05:52.416  1.1:  sta0000 (phy #7): scan started
->> 2022-03-25 10:05:56.215  1.1:  sta0000 (phy #7): scan finished: 2412 2417 2422
->> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
->> 5280
->> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
->> 5765 5785 5805 5825, ""
->> 2022-03-25 10:05:56.215  1.1:  phy #7: regulatory domain change (phy): set to
->> US by a driver request on phy7
->> 2022-03-25 10:05:56.216  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-NETWORK-
->> NOT-FOUND
->> 2022-03-25 10:05:56.216  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-REGDOM-
->> CHANGE init=DRIVER type=COUNTRY alpha2=US
->> 2022-03-25 10:06:01.217  1.1:  IFNAME=sta0000 <3>CTRL-EVENT-SCAN-
->> STARTED
->> 2022-03-25 10:06:01.217  1.1:  sta0000 (phy #7): scan started
->> 2022-03-25 10:06:02.739  1.1:  sta0000 (phy #7): scan finished: 2412 2417 2422
->> 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 5180 5200 5220 5240 5260
->> 5280
->> 5300 5320 5500 5520 5540 5560 5580 5600 5620 5640 5660 5680 5700 5720 5745
->> 5765 5785 5805 5825 5955 5975 5995 6015 6035 6055 6075 6095 6115 6135 6155
->> 6175 6195
->> 6215 6235 6255 6275 6295 6315 6335 6355 6375 6395 6415 6435 6455 6475 6495
->> 6515 6535 6555 6575 6595 6615 6635 6655 6675 6695 6715 6735 6755 6775 6795
->> 6815 6835
->> 6855 6875 6895 6915 6935 6955 6975 6995 7015 7035 7055 7075 7095 7115, ""
->>
->> [ SSID is not found, sta never associates]
->>
->> Thanks,
->> Ben
->>
->>>
->>> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
->>> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->>> ---
->>>    drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 42 ++++++++++++++-----
->>>    1 file changed, 32 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
->>> b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
->>> index 8c7cb491330d..901df916baa4 100644
->>> --- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
->>> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
->>> @@ -1728,27 +1728,37 @@ iwl_mvm_umac_scan_fill_6g_chan_list(struct
->> iwl_mvm *mvm,
->>>    }
->>>
->>>    /* TODO: this function can be merged with
->>> iwl_mvm_scan_umac_fill_ch_p_v6 */ -static void
->>> -iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params
->>> *params,
->>> +static u32
->>> +iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm *mvm,
->>> +				     struct iwl_mvm_scan_params *params,
->>>    				     u32 n_channels,
->>>    				     struct iwl_scan_probe_params_v4 *pp,
->>>    				     struct iwl_scan_channel_params_v6 *cp,
->>>    				     enum nl80211_iftype vif_type)
->>>    {
->>> -	struct iwl_scan_channel_cfg_umac *channel_cfg = cp-
->>> channel_config;
->>>    	int i;
->>>    	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
->>>    		params->scan_6ghz_params;
->>> +	u32 ch_cnt;
->>>
->>> -	for (i = 0; i < params->n_channels; i++) {
->>> +	for (i = 0, ch_cnt = 0; i < params->n_channels; i++) {
->>>    		struct iwl_scan_channel_cfg_umac *cfg =
->>> -			&cp->channel_config[i];
->>> +			&cp->channel_config[ch_cnt];
->>>
->>>    		u32 s_ssid_bitmap = 0, bssid_bitmap = 0, flags = 0;
->>>    		u8 j, k, s_max = 0, b_max = 0, n_used_bssid_entries;
->>>    		bool force_passive, found = false, allow_passive = true,
->>>    		     unsolicited_probe_on_chan = false, psc_no_listen = false;
->>>
->>> +		/*
->>> +		 * Avoid performing passive scan on non PSC channels unless
->> the
->>> +		 * scan is specifically a passive scan, i.e., no SSIDs
->>> +		 * configured in the scan command.
->>> +		 */
->>> +		if (!cfg80211_channel_is_psc(params->channels[i]) &&
->>> +		    !params->n_6ghz_params && params->n_ssids)
->>> +			continue;
->>> +
->>>    		cfg->v1.channel_num = params->channels[i]->hw_value;
->>>    		cfg->v2.band = 2;
->>>    		cfg->v2.iter_count = 1;
->>> @@ -1868,8 +1878,16 @@
->> iwl_mvm_umac_scan_cfg_channels_v6_6g(struct iwl_mvm_scan_params
->> *params,
->>>    		else
->>>    			flags |= bssid_bitmap | (s_ssid_bitmap << 16);
->>>
->>> -		channel_cfg[i].flags |= cpu_to_le32(flags);
->>> +		cfg->flags |= cpu_to_le32(flags);
->>> +		ch_cnt++;
->>>    	}
->>> +
->>> +	if (params->n_channels > ch_cnt)
->>> +		IWL_DEBUG_SCAN(mvm,
->>> +			       "6GHz: reducing number channels: (%u->%u)\n",
->>> +			       params->n_channels, ch_cnt);
->>> +
->>> +	return ch_cnt;
->>>    }
->>>
->>>    static u8 iwl_mvm_scan_umac_chan_flags_v2(struct iwl_mvm *mvm,
->> @@
->>> -2415,10 +2433,14 @@ static int
->> iwl_mvm_scan_umac_v14_and_above(struct
->>> iwl_mvm *mvm,
->>>
->>>    	iwl_mvm_umac_scan_fill_6g_chan_list(mvm, params, pb);
->>>
->>> -	iwl_mvm_umac_scan_cfg_channels_v6_6g(params,
->>> -					     params->n_channels,
->>> -					     pb, cp, vif->type);
->>> -	cp->count = params->n_channels;
->>> +	cp->count = iwl_mvm_umac_scan_cfg_channels_v6_6g(mvm,
->> params,
->>> +							 params-
->>> n_channels,
->>> +							 pb, cp, vif->type);
->>> +	if (!cp->count) {
->>> +		mvm->scan_uid_status[uid] = 0;
->>> +		return -EINVAL;
->>> +	}
->>> +
->>>    	if (!params->n_ssids ||
->>>    	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
->>>    		cp->flags |=
->> IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
->>>
->>
->>
->> --
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
-> 
+Peter Seiderer
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |  2 +-
+>  drivers/net/wireless/ath/ath9k/xmit.c | 30 ++++++++++++++++++---------
+>  2 files changed, 21 insertions(+), 11 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless=
+/ath/ath9k/main.c
+> index 98090e40e1cf..e2791d45f5f5 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -839,7 +839,7 @@ static bool ath9k_txq_list_has_key(struct list_head *=
+txq_list, u32 keyix)
+>  			continue;
+> =20
+>  		txinfo =3D IEEE80211_SKB_CB(bf->bf_mpdu);
+> -		fi =3D (struct ath_frame_info *)&txinfo->rate_driver_data[0];
+> +		fi =3D (struct ath_frame_info *)&txinfo->status.status_driver_data[0];
+>  		if (fi->keyix =3D=3D keyix)
+>  			return true;
+>  	}
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless=
+/ath/ath9k/xmit.c
+> index cbcf96ac303e..db83cc4ba810 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -141,8 +141,8 @@ static struct ath_frame_info *get_frame_info(struct s=
+k_buff *skb)
+>  {
+>  	struct ieee80211_tx_info *tx_info =3D IEEE80211_SKB_CB(skb);
+>  	BUILD_BUG_ON(sizeof(struct ath_frame_info) >
+> -		     sizeof(tx_info->rate_driver_data));
+> -	return (struct ath_frame_info *) &tx_info->rate_driver_data[0];
+> +		     sizeof(tx_info->status.status_driver_data));
+> +	return (struct ath_frame_info *) &tx_info->status.status_driver_data[0];
+>  }
+> =20
+>  static void ath_send_bar(struct ath_atx_tid *tid, u16 seqno)
+> @@ -2542,6 +2542,16 @@ static void ath_tx_complete_buf(struct ath_softc *=
+sc, struct ath_buf *bf,
+>  	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+>  }
+> =20
+> +static void ath_clear_tx_status(struct ieee80211_tx_info *tx_info)
+> +{
+> +	void *ptr =3D &tx_info->status;
+> +
+> +	memset(ptr + sizeof(tx_info->status.rates), 0,
+> +	       sizeof(tx_info->status) -
+> +	       sizeof(tx_info->status.rates) -
+> +	       sizeof(tx_info->status.status_driver_data));
+> +}
+> +
+>  static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+>  			     struct ath_tx_status *ts, int nframes, int nbad,
+>  			     int txok)
+> @@ -2553,7 +2563,7 @@ static void ath_tx_rc_status(struct ath_softc *sc, =
+struct ath_buf *bf,
+>  	struct ath_hw *ah =3D sc->sc_ah;
+>  	u8 i, tx_rateindex;
+> =20
+> -	ieee80211_tx_info_clear_status(tx_info);
+> +	ath_clear_tx_status(tx_info);
+> =20
+>  	if (txok)
+>  		tx_info->status.ack_signal =3D ts->ts_rssi;
+> @@ -2569,6 +2579,13 @@ static void ath_tx_rc_status(struct ath_softc *sc,=
+ struct ath_buf *bf,
+>  	tx_info->status.ampdu_len =3D nframes;
+>  	tx_info->status.ampdu_ack_len =3D nframes - nbad;
+> =20
+> +	tx_info->status.rates[tx_rateindex].count =3D ts->ts_longretry + 1;
+> +
+> +	for (i =3D tx_rateindex + 1; i < hw->max_rates; i++) {
+> +		tx_info->status.rates[i].count =3D 0;
+> +		tx_info->status.rates[i].idx =3D -1;
+> +	}
+> +
+>  	if ((ts->ts_status & ATH9K_TXERR_FILT) =3D=3D 0 &&
+>  	    (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) =3D=3D 0) {
+>  		/*
+> @@ -2590,13 +2607,6 @@ static void ath_tx_rc_status(struct ath_softc *sc,=
+ struct ath_buf *bf,
+>  			tx_info->status.rates[tx_rateindex].count =3D
+>  				hw->max_rate_tries;
+>  	}
+> -
+> -	for (i =3D tx_rateindex + 1; i < hw->max_rates; i++) {
+> -		tx_info->status.rates[i].count =3D 0;
+> -		tx_info->status.rates[i].idx =3D -1;
+> -	}
+> -
+> -	tx_info->status.rates[tx_rateindex].count =3D ts->ts_longretry + 1;
+>  }
+> =20
+>  static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
 
