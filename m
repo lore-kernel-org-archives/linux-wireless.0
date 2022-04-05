@@ -2,74 +2,210 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 288B0C43217
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 08:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F02C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 09:53:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234439AbiDEIZQ (ORCPT
+        id S1346530AbiDEJzL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 04:25:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45380 "EHLO
+        Tue, 5 Apr 2022 05:55:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239343AbiDEIT7 (ORCPT
+        with ESMTP id S1347990AbiDEJ3A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 04:19:59 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4101BB916
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 01:11:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AA46FB81A32
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 08:11:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88FB8C385A0;
-        Tue,  5 Apr 2022 08:11:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649146291;
-        bh=lfSf3YuaNH30TPILlbBPZ1DPyWyyk4WrXjhN08cVlWw=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=GJK1ClGYOw/fBj4KN+e8VWpptZeAC2Uo/c0NOoed/ZDSetUpLU3OKHq55lbO3H9d1
-         Y+fsjzxdSfbGdeMMYrs//amTWJBbFwcXmDqYi7K1p0CUz87cZocQMmE1xTLTsQRQz1
-         cEcaAP8Mf210oeBctoXvq79vpa5OP7HZW1PVHNQP7deSFhZx1SaMYBt4EfHWvj6lS0
-         LUOvGUiGrcTjsOzifGr0Lt47+BHU143fgWa1Stmf+UktWXCC3Xza+Q+YOnUzELM0zn
-         YjpsI3xX4sHNFOJUbHdmrlpRXiCmvJor33gzkBIrxWFb0yEu2mcQZeHxmQIgkj/zEl
-         4JeTR9Y3pX81Q==
-Content-Type: text/plain; charset="utf-8"
+        Tue, 5 Apr 2022 05:29:00 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6335DFF9E
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 02:15:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649150157; x=1680686157;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ErHXiJAgPHy14hHLapHHdqwUIsS5VH7Das9sv9pl0+Y=;
+  b=DrbaXN7uQvYw4qmWOgC4SLPiyPDdI2v5bXeB8BAx51kGyn3kavvHC0aF
+   I1Q9FZ2qqPJgNWwl+nYFAAMJywT+Bip3sr6KFkIdWTJEhh16Iwooj3Zt7
+   Qr8HZyOrBOS2vXvXIt+6LSmnmqvqnpDbLcbCTp8fkMqK67wIq4KdJiX/4
+   mX0hiwzgg90yt3FaFErqz/kUyfPxFIW1YYzvI+V7mS6+LpKFHZQle7Gdw
+   1KjhPxJBorQt4yxE3Ed7k0Ov60sCEjwhK9Luqa//XZKflPqrE3e+5tM73
+   vgspFTxc0NlcYo9hsIq0wbfvUiCWpPT4YN5lgdf+JVKGfG5gTg+y8b0Kv
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10307"; a="323878009"
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="323878009"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 02:15:56 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="721977604"
+Received: from lkp-server02.sh.intel.com (HELO a44fdfb70b94) ([10.239.97.151])
+  by orsmga005.jf.intel.com with ESMTP; 05 Apr 2022 02:15:55 -0700
+Received: from kbuild by a44fdfb70b94 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nbfI2-0002v5-E8;
+        Tue, 05 Apr 2022 09:15:54 +0000
+Date:   Tue, 05 Apr 2022 17:14:59 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [wireless:main] BUILD SUCCESS
+ 10cb21f4ff3f9cb36d1e1c39bf80426f02f4986a
+Message-ID: <624c0893.H+pcHax2I33777uS%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: Remove unnecessary delay in ath11k_core_suspend
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220331002105.1162099-1-quic_bqiang@quicinc.com>
-References: <20220331002105.1162099-1-quic_bqiang@quicinc.com>
-To:     Baochen Qiang <quic_bqiang@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164914628848.12306.8288528929953544140.kvalo@kernel.org>
-Date:   Tue,  5 Apr 2022 08:11:30 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Baochen Qiang <quic_bqiang@quicinc.com> wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git main
+branch HEAD: 10cb21f4ff3f9cb36d1e1c39bf80426f02f4986a  Revert "ath11k: mesh: add support for 256 bitmap in blockack frames in 11ax"
 
-> The intended delay in ath11k_core_suspend is introduced in commit
-> d1b0c33850d2 ("ath11k: implement suspend for QCA6390 PCI devices"),
-> now with ath11k_mac_wait_tx_complete added in commit ba9177fcef21
-> ("ath11k: Add basic WoW functionalities"), that delay is not
-> necessary now, so remove it.
-> 
-> This is found in code review.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-02431-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-> 
-> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+elapsed time: 829m
 
-Patch applied to ath-next branch of ath.git, thanks.
+configs tested: 130
+configs skipped: 3
 
-2dd398dee7aa ath11k: Remove unnecessary delay in ath11k_core_suspend
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm64                               defconfig
+arm64                            allyesconfig
+arm                              allmodconfig
+arm                                 defconfig
+arm                              allyesconfig
+i386                          randconfig-c001
+arm                         s3c6400_defconfig
+mips                         db1xxx_defconfig
+openrisc                 simple_smp_defconfig
+arm                         at91_dt_defconfig
+arm                         lpc18xx_defconfig
+sh                           se7343_defconfig
+sh                         ap325rxa_defconfig
+arm                       imx_v6_v7_defconfig
+arc                        vdk_hs38_defconfig
+sh                           se7751_defconfig
+m68k                       m5475evb_defconfig
+arc                           tb10x_defconfig
+sh                          sdk7786_defconfig
+powerpc                        cell_defconfig
+powerpc                      chrp32_defconfig
+csky                             alldefconfig
+mips                    maltaup_xpa_defconfig
+arm                           stm32_defconfig
+powerpc                     pq2fads_defconfig
+powerpc                 mpc837x_mds_defconfig
+ia64                          tiger_defconfig
+powerpc                     stx_gp3_defconfig
+parisc                           alldefconfig
+powerpc                  storcenter_defconfig
+powerpc                      tqm8xx_defconfig
+mips                       capcella_defconfig
+mips                     loongson1b_defconfig
+arm                          pxa910_defconfig
+openrisc                  or1klitex_defconfig
+mips                           jazz_defconfig
+sh                ecovec24-romimage_defconfig
+sh                     magicpanelr2_defconfig
+sh                        edosk7760_defconfig
+powerpc                  iss476-smp_defconfig
+sh                           se7750_defconfig
+powerpc                      pcm030_defconfig
+sh                  sh7785lcr_32bit_defconfig
+xtensa                generic_kc705_defconfig
+m68k                       m5249evb_defconfig
+m68k                       m5275evb_defconfig
+sh                     sh7710voipgw_defconfig
+powerpc                      pasemi_defconfig
+powerpc                      arches_defconfig
+i386                                defconfig
+sh                            migor_defconfig
+sh                 kfr2r09-romimage_defconfig
+x86_64                        randconfig-c001
+arm                  randconfig-c002-20220405
+ia64                             allmodconfig
+ia64                             allyesconfig
+ia64                                defconfig
+m68k                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+nios2                               defconfig
+arc                              allyesconfig
+csky                                defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+s390                                defconfig
+s390                             allmodconfig
+parisc                              defconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+s390                             allyesconfig
+sparc                               defconfig
+sparc                            allyesconfig
+i386                             allyesconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                           allnoconfig
+powerpc                          allmodconfig
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+riscv                            allmodconfig
+riscv                            allyesconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                         rhel-8.3-kunit
+x86_64                               rhel-8.3
+
+clang tested configs:
+x86_64                        randconfig-c007
+i386                          randconfig-c001
+powerpc              randconfig-c003-20220405
+riscv                randconfig-c006-20220405
+mips                 randconfig-c004-20220405
+arm                  randconfig-c002-20220405
+arm                         lpc32xx_defconfig
+powerpc                     ksi8560_defconfig
+arm                  colibri_pxa300_defconfig
+mips                     loongson1c_defconfig
+arm                        neponset_defconfig
+mips                         tb0219_defconfig
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+i386                          randconfig-a006
+i386                          randconfig-a002
+i386                          randconfig-a004
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+hexagon              randconfig-r045-20220405
+riscv                randconfig-r042-20220405
+hexagon              randconfig-r041-20220405
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220331002105.1162099-1-quic_bqiang@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
