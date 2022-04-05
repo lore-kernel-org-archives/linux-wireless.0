@@ -2,78 +2,66 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 569C4C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 03:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F26BC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Apr 2022 06:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbiDEDLm (ORCPT
+        id S230002AbiDEGYu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Apr 2022 23:11:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46746 "EHLO
+        Tue, 5 Apr 2022 02:24:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231482AbiDEDL1 (ORCPT
+        with ESMTP id S229687AbiDEGYr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Apr 2022 23:11:27 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 664C2140EB
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2022 20:03:17 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id o20so4038404pla.13
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2022 20:03:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=QIV74h+ksSLMqZM4vSiU78U364uH43VkZJFlZQMUtBU=;
-        b=K45Bxv59an5fVjW6keOrUro1TI+B8229YHWDiNqcKOuMCiBFue1DMskUfabUrkRrNo
-         Zoxhlr8Aj+k1lAWI6IjoZcAGi1u5o9enPFnw7dvSvmSNf6RUzESdxqQURKDyZYeUIASE
-         u+HJLNOizDscunk3sKXzVqhWPMlxlb06CBShhQOKclt0E84eW7Qp0O/iwZPxyD27yWWq
-         q6B8zTWhWQQM1Xt3d3QxY2hxRa5IEBhhIEwRF1hlrwS7jPe6zWLo+oh7zkMVQc4aydAJ
-         p72bKaH80gvJBtHHwb4X9Ata13gJiU9Ba+XVHfpPaHg6ElAe6EZOoe6zp36AdZHPry6M
-         vMPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=QIV74h+ksSLMqZM4vSiU78U364uH43VkZJFlZQMUtBU=;
-        b=hX7sP+1t1/k6IiV15NAfaAoLUaWAPJpZR6EJLFPRQvDA4038ItE4osNcbXsx1nmomS
-         FCizczFf68h+S/fmUxy/fSbJLXbK/BQxr/AM+74Lg/tG0v1Y4czvfA9/yzZfVaLnNgPN
-         4VmH8v6ZaYuOrB8XfC1PC/0s2CYO9II3WawxFdysLC//+plRwsu72DUNNS+62Lya+CwD
-         T97mqxszFcP3ZWt8mRl6lOIASnYO8n+hWyn7N04YSmzhLTe1BfkmbQFfMIhPyB5/8xOX
-         z0mrZc7zEXB3bnh+UjRlwOfvOJpiyoGWI/vH64v7nwsyqk/lTeT4+TWRMxc9JDcGj0q9
-         JRAA==
-X-Gm-Message-State: AOAM53006AZXazfBBIzCFqyM4eIUoPlFolzrCs6e+0kV9xpl+OYIovIN
-        mPubr8ZlEqWM8brWD+mXus5+JRLOaV5rdmt4SE0WweUA
-X-Google-Smtp-Source: ABdhPJxsYOwtmd+VRGlvjfo6/XUDPII7uagJVj1iMZOE1zGlT6VFVZNBlVPlEPuTqJRUmJY2n2cGnr2QcNpYOATco8U=
-X-Received: by 2002:a17:90a:380f:b0:1bd:4aa6:651 with SMTP id
- w15-20020a17090a380f00b001bd4aa60651mr1519747pjb.83.1649127796929; Mon, 04
- Apr 2022 20:03:16 -0700 (PDT)
+        Tue, 5 Apr 2022 02:24:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F3C205CA;
+        Mon,  4 Apr 2022 23:22:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 45F9B61532;
+        Tue,  5 Apr 2022 06:22:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DFBFC340F3;
+        Tue,  5 Apr 2022 06:22:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649139768;
+        bh=xXEL+YknXtKDAX6XRHo39ncmyrqoFzRAaSwV+tKIxe8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=aD1FdEE+PjeEtJnBg650OCYILre8OzP8v40FdDy5cbvhCWRYDc2pvgHvux4cM8u5i
+         p5gREJM62TQ3fD2H+gI1hJQq3ecP+YK3wxJI/RxD4/t1VQ+NkickrYY6HtCCaZJXEJ
+         spfT+oxfgtqZYNDKj3FtpuqovlVqgOyIZSCIwR6zm+n8JuujG7HHbhLmKW6V9G7Qrf
+         twEEdkNdTOhHpur5LyeAiFrZEi116H7FQntis3ZgnIEFrLfH1hWaQZDkh8M77pZCcN
+         FqAmSeAZozOCRTKF/DRcUJesJPKwmfvzi0h9L8eezmKrYIZlfMZbFtPFuFkhvYNH/F
+         biMWWEiasMK4w==
+Date:   Mon, 4 Apr 2022 23:22:47 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     =?UTF-8?B?SsOpcsO0bWU=?= Pouiller <jerome.pouiller@silabs.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v10 0/1] wfx: get out from the staging area
+Message-ID: <20220404232247.01cc6567@kernel.org>
+In-Reply-To: <878rslt975.fsf@tynnyri.adurom.net>
+References: <20220226092142.10164-1-Jerome.Pouiller@silabs.com>
+        <YhojjHGp4EfsTpnG@kroah.com>
+        <87wnhhsr9m.fsf@kernel.org>
+        <5830958.DvuYhMxLoT@pc-42>
+        <878rslt975.fsf@tynnyri.adurom.net>
 MIME-Version: 1.0
-From:   Jupiter <jupiter.hce@gmail.com>
-Date:   Tue, 5 Apr 2022 13:02:40 +1000
-Message-ID: <CAA=hcWQFNOeycXFPhrtHcQG3V8fWSShNRuAi49jtv8h1fPVUuQ@mail.gmail.com>
-Subject: Support for bcm43364 wireless chipset in brcm80211/brcmfmac
-To:     "David S. Miller" <davem@davemloft.net>,
-        Sean Lanigan <sean@lano.id.au>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi David and Sean,
+On Mon, 04 Apr 2022 13:49:18 +0300 Kalle Valo wrote:
+> Dave&Jakub, once you guys open net-next will it be based on -rc1?
 
-I am considering using the Murata WiFi module LBWA1KL1FX which is
-based on the CYW43364 / Broadcom BCM43364 Chipset.
+Not normally. We usually let net feed net-next so it'd get -rc1 this
+Thursday. But we should be able to fast-forward, let me confirm with
+Dave.
 
-Our design criteria is that it must be supported by mainline Linux.
-Searching kernel log file to find that you added bcm43364 wireless
-chipset to broadcom/brcm80211/brcmfmac driver, could you please advise
-how stable and reliable to run brcm80211/brcmfmac for CYW43364 /
-Broadcom BCM43364 Chipset?
-
-In addition to add CONFIG_BRCMFMAC and CONFIG_BRCMFMAC_SDIO, should I
-also add   CONFIG_BRCMFMAC_PROTO_MSGBUF, CONFIG_DMI,
-CONFIG_BRCMFMAC_PROTO_BCDC and CONFIG_OF?
-
-Thank you very much.
-
-Kind regards,
-
-Jupiter
+> That would make it easier for me to create an immutable branch between
+> staging-next and wireless-next.
