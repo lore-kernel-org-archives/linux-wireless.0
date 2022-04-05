@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AFB5C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF16C433EF
 	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:08:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236078AbiDFDIi (ORCPT
+        id S1352473AbiDFDHz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48010 "EHLO
+        Tue, 5 Apr 2022 23:07:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573403AbiDETHd (ORCPT
+        with ESMTP id S1376730AbiDEUuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 15:07:33 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63A7BDFD76;
-        Tue,  5 Apr 2022 12:05:33 -0700 (PDT)
+        Tue, 5 Apr 2022 16:50:15 -0400
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66A38FED;
+        Tue,  5 Apr 2022 13:27:43 -0700 (PDT)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1649185531; bh=SAA9dfx55MysOmiQzcHDMnPsN4/x681hTalOLovhpPE=;
+        t=1649190461; bh=nqSNpZUYa15jc1r1KsKxXRNob2r5GycPU1hZtLnFTY0=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=SBHOSgcXwcMafMQKThYaJOM7QfgUspeVO8YsgV+jXTp14qIw7kLMTjpP/4HI0J1XC
-         uH6ZeKg5K2t8Hn4E/zDhjQa01z01Cxs7lBNar6GXKpAHN/V0TNRvoIqCH7gvVLGDA7
-         g1K6/cIXTPUb4jkXy9TONf0QPYnMRjWNwI0LPb7paU3M97Dkv90mS6kKzhIASYuokC
-         tMJ94WaRh08SGM7JE+rgNNDwL2exRtl/f6uGuCej3eX3u/oReRMeuOFItgCL3Tx5XI
-         c1OACToIa5uv2vxHIK3XaSPc+VR3d9f8fql3DbAniQH31fOFjazzsLw7jjds3a+dP8
-         wgD6ZMPyI00UA==
-To:     Peter Seiderer <ps.report@gmx.net>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        b=x1wbzqS91lCyk12gCiBfIbywrwtN6fUVHpZBegaLMEy7Bz9Q9blZnokTdh+i27Agy
+         zmPDF+jb0LWIbcb/qDtV48Z3vkA5AxeP/LzXZppHmmWnhlL5a3r9ORAYz6039Qjznw
+         +lmRHDYVrpWkZSCNHQ9I40W76Fq4IICzBttjbgxJvt30MQn7roYNowipE6poMOCnT4
+         YaU9eTbUE6BLQJF93mvk5kQcw+nzHZ4EU0VHBOEwuvy4R+G+6Cl/0uBXFizgXu8X+V
+         quYgHL61oZNy4HKDADG47DLu8skRCyIYVsPKRBrnzOV7WsY46cb8QA2UBGvJYakj2h
+         XRUH7fxYjzgnA==
+To:     Peter Seiderer <ps.report@gmx.net>, linux-wireless@vger.kernel.org
+Cc:     Kalle Valo <kvalo@kernel.org>,
         "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
@@ -35,12 +35,11 @@ Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v1 1/2] ath9k: fix ath_get_rate_txpower() to respect the
  rate list end tag
-In-Reply-To: <20220404225212.2876091a@gmx.net>
+In-Reply-To: <20220402153014.31332-1-ps.report@gmx.net>
 References: <20220402153014.31332-1-ps.report@gmx.net>
- <87ilroemo4.fsf@toke.dk> <20220404225212.2876091a@gmx.net>
-Date:   Tue, 05 Apr 2022 21:05:31 +0200
+Date:   Tue, 05 Apr 2022 22:27:41 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87v8vncpvo.fsf@toke.dk>
+Message-ID: <87pmlvcm2q.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -50,78 +49,14 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Peter Seiderer <ps.report@gmx.net> writes:
 
-> Hello Toke,
+> Stop reading (and copying) from ieee80211_tx_rate to ath_tx_info.rates
+> after list end tag (count =3D=3D 0, idx < 0), prevents copying of garbage
+> to card registers.
 >
-> On Mon, 04 Apr 2022 20:19:39 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <tok=
-e@toke.dk> wrote:
+> Note: no need to write to the remaining ath_tx_info.rates entries
+> as the complete ath_tx_info struct is already initialized to zero from
+> both call sites.
 >
->> Peter Seiderer <ps.report@gmx.net> writes:
->>=20
->> > Stop reading (and copying) from ieee80211_tx_rate to ath_tx_info.rates
->> > after list end tag (count =3D=3D 0, idx < 0), prevents copying of garb=
-age
->> > to card registers.=20=20
->>=20
->> In the normal case I don't think this patch does anything, since any
->> invalid rate entries will already be skipped (just one at a time instead
->> of all at once). So this comment is a bit misleading.
->
-> Save some (minimal) compute time? Found it something misleading while
-> debugging to see random values written out to the card and found this
-> comment in net/mac80211/rate.c:
->
->  648                 /*
->  649                  * make sure there's no valid rate following
->  650                  * an invalid one, just in case drivers don't
->  651                  * take the API seriously to stop at -1.
->  652                  */
->
-> and multiple places doing the same check (count =3D=3D 0, idx < 0) for va=
-lidation
-> e.g.:
->
->  723                 if (i < ARRAY_SIZE(info->control.rates) &&
->  724                     info->control.rates[i].idx >=3D 0 &&
->  725                     info->control.rates[i].count) {
->
-> or=20
->
->  742                 if (rates[i].idx < 0 || !rates[i].count)
->  743                         break;
->
->>=20
->> Also, Minstrel could in principle produce a rate sequence where the
->> indexes are all positive, but there's one in the middle with a count of
->> 0, couldn't it? With this patch, the last entries of such a sequence
->> would now be skipped...
->
-> According to net/mac80211/rc80211_minstrel_ht.c:
->
-> 1128 static bool
-> 1129 minstrel_ht_txstat_valid(struct minstrel_priv *mp, struct minstrel_h=
-t_sta *     mi,
-> 1130                          struct ieee80211_tx_rate *rate)
-> 1131 {
-> 1132         int i;
-> 1133=20
-> 1134         if (rate->idx < 0)
-> 1135                 return false;
-> 1136=20
-> 1137         if (!rate->count)
-> 1138                 return false;
-> 1139=20
->
-> minstrel although evaluates a rate count of zero as invalid...
+> Signed-off-by: Peter Seiderer <ps.report@gmx.net>
 
-So my concern was mostly that the documentation (in mac80211.h) says
-that an idx of -1 indicates the end, but says nothing about the count.
-Which implies that in principle you could have a rate table of { idx,
-count } like { 1, 1 }, { 2, 0 }, { 3, 1 } which would mean all three
-rates was valid but the second one would just be "skipped" due to a
-count of zero.
-
-But it seems that the code populating the rate table that you linked
-above (lines 742/743) actually do abort on either condition, so I guess
-it's safe to do so in the driver as well...
-
--Toke
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
