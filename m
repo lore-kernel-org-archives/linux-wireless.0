@@ -2,90 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1249C43219
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:16:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C27FC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:18:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233026AbiDFNSu (ORCPT
+        id S233189AbiDFNUI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 09:18:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
+        Wed, 6 Apr 2022 09:20:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232933AbiDFNRP (ORCPT
+        with ESMTP id S232299AbiDFNSf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 09:17:15 -0400
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6449407E18
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 21:42:17 -0700 (PDT)
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        Wed, 6 Apr 2022 09:18:35 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB8B24EB1B7;
+        Wed,  6 Apr 2022 02:58:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 112153F85E
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 04:42:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1649220135;
-        bh=Mt/wIr8VCHfxx+fAT86RPcS+1hpBF4cXlsZS+mb9xdE=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=iUxOvNG6YajEHp0kF2JdMv/52tmbHq5DRlxwkH+QUcg186VpeTNqgoccW2JMMf2ji
-         aP7tWesAOlh6pHj1OzkqU7c6smWgkFYBL7yBhaKMOSyJ14hbkhkW12sawK/pUvi7Yw
-         lYgPqOYRWOwXz4ljmXdLj6ArCxWZ+cqnnqwBt/fjlN0sxSYvZMWiMVFqWPTN5xzDbP
-         aWgYrLG1F/g7Uqala43Zwlised96gzeiFSPeobgq2uL7nOv3AR4ZI9/yfPLqI0XTel
-         2IEpUtCd0CgjJ8eAp9bMLrQGmTyWbhivmr0TKSE1NZURD8wsmC2jbxiHGecGzS/Zi/
-         WMzYmJUcOYaJg==
-Received: by mail-ot1-f70.google.com with SMTP id n7-20020a9d4d07000000b005b2389a99cfso755462otf.17
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2022 21:42:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Mt/wIr8VCHfxx+fAT86RPcS+1hpBF4cXlsZS+mb9xdE=;
-        b=Wlq5rPNXMC/fgTGpdiYA2X/uA0SFgqPwdtKAp7c2epzHA18fg4/LopHw0g/Xef2XnI
-         q6dAVUYR7l8wrn5ig3p8qrghMFxpaEZoAU5EGUVwHAC0yrgYyCGkLJnf3VpHb1j+Q9Qu
-         e79RtWED30JnZUb6c1rXv6+h9GR8T79xzorFFYUnpYonblzxMo9eNEZ/ghS4r9022IBP
-         Tmb1aP6/cZUeHs8ry+cQjvm0gmI0ONaGzbBt86Z5XlvqwdIDzrEHGquD2pBoRhVlPeIk
-         BaZ5UBnRjtOkOXzeHOIvf9pjnUzDl+OHakAACXECj+F+YTlFg5+A8IFtFrgdEl6uTpgL
-         f74Q==
-X-Gm-Message-State: AOAM5322Sx0so6eBC2+a0DhByQ7aTGnt9JOxg/vnqdyFiZD8KWnCrjEp
-        lzvApdqrWeAQ3gBX671tO21WqgsOc+c5DwTgAFVcmZELakdVQBk4qp6DwAM2pkYwNtsihWIYK55
-        wCEkR/87un+jIhZeqqx4O3AMI0fshRYitfwGNsV3e5uLwb7CskJhM/soDGQrR
-X-Received: by 2002:a05:6830:2456:b0:5ce:7f4:c702 with SMTP id x22-20020a056830245600b005ce07f4c702mr2472249otr.269.1649220130605;
-        Tue, 05 Apr 2022 21:42:10 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwHon0m0wisgENa7vRcxIQKSklrsxRLeAHmcisDb0KZ+faoRnPeYjrTDc6wEXCRXA5PMWMjLRWCaPLy2KtTmTE=
-X-Received: by 2002:a05:6830:2456:b0:5ce:7f4:c702 with SMTP id
- x22-20020a056830245600b005ce07f4c702mr2472245otr.269.1649220130353; Tue, 05
- Apr 2022 21:42:10 -0700 (PDT)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2E16FB82202;
+        Wed,  6 Apr 2022 09:58:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 319CCC385A1;
+        Wed,  6 Apr 2022 09:58:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649239118;
+        bh=jbHPSkJfWymWcChZS9h8IsoHjPzPs3UEKYf8YDD44QU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=gOaTY3IkTaYcWOddj01CvigmJljeODuL+j74KW3JyGr76gT2Zs/gOc8as7j0TaIAG
+         l+1wS29mcylE2ykOj0teWzTHERgF0bMuevRnPiN/emFdeg6Litz+hPIRZtFL/BxL9W
+         NvXvBr+jhZde2bGrTw7iYtWL1BMeI7Tb7z7Qx4dcHKpuekVoPTuJ2QHZjo0ve6WI4z
+         9klE7u08b8XBzXGk9BA5EejiDbJKDOAUCokQoXbJc+vqyk+2IktWNZFtlrOq6x4xSA
+         GZ/XZp5tQvI03ztK/icrhxTazSrVccVLwlbczSbqGB7Qz36lpEy8KlUcFncthba6WL
+         CZw2+JferEjKw==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Meng Tang <tangmeng@uniontech.com>
+Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net] ipw2x00: use DEVICE_ATTR_*() macro
+References: <20220406015444.14408-1-tangmeng@uniontech.com>
+Date:   Wed, 06 Apr 2022 12:58:31 +0300
+In-Reply-To: <20220406015444.14408-1-tangmeng@uniontech.com> (Meng Tang's
+        message of "Wed, 6 Apr 2022 09:54:44 +0800")
+Message-ID: <87r16apm7s.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-References: <20220325035735.4745-1-chris.chiu@canonical.com>
-In-Reply-To: <20220325035735.4745-1-chris.chiu@canonical.com>
-From:   Chris Chiu <chris.chiu@canonical.com>
-Date:   Wed, 6 Apr 2022 12:41:58 +0800
-Message-ID: <CABTNMG2z33a6FgsBPbj=cFN9umVdhF8nXwsnVkkF--PYbeGS7Q@mail.gmail.com>
-Subject: Re: [PATCH v3 0/2] rtl8xxxu: Fill up more TX information
-To:     kvalo@kernel.org, Jes.Sorensen@gmail.com, davem@davemloft.net,
-        kuba@kernel.org
-Cc:     code@reto-schneider.ch, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 25, 2022 at 11:57 AM Chris Chiu <chris.chiu@canonical.com> wrote:
->
-> The antenna information is missing in rtl8xxxu and txrate is NULL
-> in 8188cu and 8192cu. Fill up the missing information for iw
-> commands.
->
-> Chris Chiu (2):
->   rtl8xxxu: feed antenna information for cfg80211
->   rtl8xxxu: fill up txrate info for gen1 chips
->
->  .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 104 +++++++++++++-----
->  1 file changed, 75 insertions(+), 29 deletions(-)
->
-> --
-> 2.25.1
->
+Meng Tang <tangmeng@uniontech.com> writes:
 
-Gentle ping. Any comment or suggestion is appreciated. Thanks
+> Use DEVICE_ATTR_*() helper instead of plain DEVICE_ATTR,
+> which makes the code a bit shorter and easier to read.
+>
+> Signed-off-by: Meng Tang <tangmeng@uniontech.com>
+> ---
+>  drivers/net/wireless/intel/ipw2x00/ipw2100.c |  64 +++++-----
+>  drivers/net/wireless/intel/ipw2x00/ipw2200.c | 119 +++++++++----------
+>  2 files changed, 90 insertions(+), 93 deletions(-)
+
+You have submitted a similar (or identical?) patch earlier:
+
+https://patchwork.kernel.org/project/linux-wireless/patch/20220401053138.17749-1-tangmeng@uniontech.com/
+
+If you submit a new patch mark it as v2 and include a changelog. Please
+read our documentation:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
