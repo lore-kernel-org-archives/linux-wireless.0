@@ -2,71 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77899C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 12:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2CDC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 12:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231495AbiDFMED (ORCPT
+        id S232063AbiDFMG2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 08:04:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56402 "EHLO
+        Wed, 6 Apr 2022 08:06:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232533AbiDFMCp (ORCPT
+        with ESMTP id S230201AbiDFMFV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 08:02:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0614F2156F3
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 00:45:16 -0700 (PDT)
+        Wed, 6 Apr 2022 08:05:21 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9307347CDEF
+        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 00:48:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9128161AEA
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 07:45:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 062B7C385A3;
-        Wed,  6 Apr 2022 07:45:13 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3ABB6B82135
+        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 07:48:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E870EC385A1;
+        Wed,  6 Apr 2022 07:48:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649231115;
-        bh=vgqAnGJT8XnrSAocLAe/2YDF+6R9HNTSaG/Mtg4yPPg=;
+        s=k20201202; t=1649231327;
+        bh=sUa+cmlS9FuJXAqIkwT4f8T97GpnbJ3xFzoP5aUC2Fs=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=MvUc130w6R/evhZnPgxLDQr/Ld9ahk/p139DIFDGEVKOpGMvuQL+O3h2n0eDZGG9C
-         QMjaeJO47GaH0o1WIit/vy1AvA/9pDrphNJ2GT+6gPlCqiwWXC1z+yg1TUeV86sFD0
-         taojK1QrRYnKXFbu4mzwVwxUa0KKw5w09jXtbIISWosJrlPvVvcEtjIk/bWjyaWGE/
-         B6HSzIuXzT/o3Sf0p7B71G8THdvUyj1SrKs4l6HQ7IKXNBlxplt5oHec525l4CFI5v
-         t+ZaV++RqCghhgmgcxRFXiCYt22HdFmAAdO/JX9caxKK7St2XBaI0AqJQxCc4o1FmB
-         m6d+PumhWMQmg==
+        b=rv11ASdnYBPDsrEGpHzOSp30UbGa9noKecYAUcT3RlPzwpn5QRpOjbmEXeE/T/Kpy
+         mOqDPWvNsX5bLLU0+5LMX0M2u6bDJb5bp603sEbVvFcD+XGzxPsAjWKaOtlQTFeWRY
+         CQVVGDCz6AchudWkjalWCUhGnczJpQTSsE/WkPvZeBEyr0M/yM20wNaGyOE081+x7o
+         5EcPT9WyeluM0XCqHX2i4IJnzfdRun8ri4MWMt0IDIeRYbxLe5vB3OcCiAGRHfoV+W
+         3KdLfJ8jbyYMYj3I35Y1a0fPgwSfSBny2nkwINffHpSrDFuhV0aaZBsGhF0IkXc+Pn
+         FCAGfFjZXbYEQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtw88: change idle mode condition during hw_scan
+Subject: Re: [PATCH 01/11] rtw89: add UK to regulation type
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220318034316.40720-1-pkshih@realtek.com>
-References: <20220318034316.40720-1-pkshih@realtek.com>
+In-Reply-To: <20220318023214.32411-2-pkshih@realtek.com>
+References: <20220318023214.32411-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <tony0620emma@gmail.com>, <linux-wireless@vger.kernel.org>,
-        <phhuang@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>, <johnson.lin@realtek.com>,
+        <kevin_yang@realtek.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164923111032.18336.5898870461159532440.kvalo@kernel.org>
-Date:   Wed,  6 Apr 2022 07:45:13 +0000 (UTC)
+Message-ID: <164923132099.18336.6363944763958355945.kvalo@kernel.org>
+Date:   Wed,  6 Apr 2022 07:48:46 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Po-Hao Huang <phhuang@realtek.com>
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
 > 
-> Previously we only consider single interface's status, idle mode
-> behavior could be unexpected when multiple interfaces is active.
-> Change to enter/leave idle mode by mac80211's configuration state.
+> Add RTW89_UK to enum rtw89_regulation_type.
+> The follow-up commit will configure the corresponding values for it
+> to TX power tables.
 > 
-> Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Patch applied to wireless-next.git, thanks.
+11 patches applied to wireless-next.git, thanks.
 
-29ed2d7606bb rtw88: change idle mode condition during hw_scan
+5a0e776bec96 rtw89: add UK to regulation type
+c504bf23290c rtw89: 8852a: update txpwr tables to HALRF_027_00_038
+034307088cb2 rtw89: regd: consider 6G band
+1ae30c37ecf1 rtw89: regd: update mapping table to R59-R32
+bed4045ffb9c rtw89: packed IGI configuration flow into function for DIG feature
+1e6f0d2a677a rtw89: disabled IGI configuration for unsupported hardware
+a95bd62ec01d rtw89: add chip_info::h2c_desc_size/fill_txdesc_fwcmd to support new chips
+6d5b5d6290ec rtw89: pci: support variant of fill_txaddr_info
+f59acdde5197 rtw89: support variant of fill_txdesc
+79a6c9a4f3c4 rtw89: support hardware generate security header
+84fc6999f0d0 rtw89: read RX bandwidth from v1 type RX descriptor
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220318034316.40720-1-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220318023214.32411-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
