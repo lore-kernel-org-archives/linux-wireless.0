@@ -2,307 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98464C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 15:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E9EDC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 16:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236441AbiDFPjS (ORCPT
+        id S237525AbiDFQgd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 11:39:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60370 "EHLO
+        Wed, 6 Apr 2022 12:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236889AbiDFPiW (ORCPT
+        with ESMTP id S237821AbiDFQgM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 11:38:22 -0400
-Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DF436C730
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 05:52:46 -0700 (PDT)
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=kveik.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <luca@coelho.fi>)
-        id 1nc4Tb-000pov-Bo;
-        Wed, 06 Apr 2022 15:09:33 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net, kvalo@kernel.org
-Cc:     luca@coelho.fi, gregory.greenman@intel.com,
-        linux-wireless@vger.kernel.org
-Date:   Wed,  6 Apr 2022 15:09:20 +0300
-Message-Id: <iwlwifi.20220406145756.04af2017dd54.I8817e862b11039a7ead1ac8395ea314250462460@changeid>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220406120924.979792-1-luca@coelho.fi>
-References: <20220406120924.979792-1-luca@coelho.fi>
+        Wed, 6 Apr 2022 12:36:12 -0400
+Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66ECC2C9923;
+        Wed,  6 Apr 2022 08:08:44 -0700 (PDT)
+Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-de48295467so3220917fac.2;
+        Wed, 06 Apr 2022 08:08:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=RBUbX74ObfqzzSNCHOoh02AEXuH/Bv5AB2YAxYPhz64=;
+        b=pCXcRlFeRqL1CBjktd9etRPJbEh/UUKTawuNove875XSKExyTpolm+mN1ynmiTUiao
+         ugkE9DWysb58whjlrOlcvE6cjHhwQM6wfTDAHnotq7pxALmnEUcJ9HPkHSCGl0iH8l59
+         lvSXmqLNqjlu4ugFJOusaNqahFblUxnlh/Pzcz/mq/beudvL3lO9q3HReekjszbdlbEP
+         0RDuEEOa7x3sK+KAZF+sULI6YMilroslncTIweE1SVeux1NB48aZCTk/sqTRwcK5Ks4M
+         +nYtTeaw9sILFTf8xmZTzFtVKcW5Sf6F611wabur1z+04k+0SgIfEA4F7cc4cnxoREvw
+         1PhQ==
+X-Gm-Message-State: AOAM532R01CnOdwFP6jFg79KkOubV7SAx+OC93q7arzUZeTAaB9Wwc9h
+        SRqDyMua5ngaHzcGRtW4NwH789HWxg==
+X-Google-Smtp-Source: ABdhPJx1qtYaiwuI0WnLa7ET2uBlBwt+jJZcV45wjauHWImhM3vIaQgljQ4NKCifrB4FrBLJqNNfRA==
+X-Received: by 2002:a05:6870:c1cb:b0:dd:b81f:3ea1 with SMTP id i11-20020a056870c1cb00b000ddb81f3ea1mr4004298oad.131.1649257723709;
+        Wed, 06 Apr 2022 08:08:43 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id fw15-20020a056870080f00b000ddc3ec2533sm6547545oab.9.2022.04.06.08.08.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Apr 2022 08:08:43 -0700 (PDT)
+Received: (nullmailer pid 2253710 invoked by uid 1000);
+        Wed, 06 Apr 2022 15:08:42 -0000
+Date:   Wed, 6 Apr 2022 10:08:42 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Cc:     linux-wireless@vger.kernel.org, mka@chromium.org,
+        ath11k@lists.infradead.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 01/12] dt: bindings: net: add bindings of WCN6750 for
+ ath11k
+Message-ID: <Yk2s+srO9DKP7xW1@robh.at.kernel.org>
+References: <20220406094107.17878-1-quic_mpubbise@quicinc.com>
+ <20220406094107.17878-2-quic_mpubbise@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/7] cfg80211/nl80211: move rx management data into a struct
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220406094107.17878-2-quic_mpubbise@quicinc.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+On Wed, 06 Apr 2022 15:10:55 +0530, Manikanta Pubbisetty wrote:
+> WCN6750 is the WLAN chip on Qualcomm Snapdragon SoC SC7280;
+> Though being a PCIe based solution, it is not attached to
+> the APSS processor (Application Processor SubSystem), it is
+> instead attached to another tiny processor called WPSS Q6
+> processor (Wireless Processor SubSystem) on the SC7280 MSM,
+> where the WLAN firmware runs, and it is the WLAN firmware
+> running on the Q6 processor which enumerates WCN6750, as a
+> result APPS processor would never know such a device being
+> present in the system and would not detect the WCN6750
+> hardware unless and otherwise WCN6750 is registered as a
+> platform device. This is the reason behind adding WCN6750
+> WLAN node in the device tree.
+> 
+> Add WCN6750 wireless driver support, its based on ath11k driver.
+> 
+> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+> ---
+>  .../bindings/net/wireless/qcom,ath11k.yaml    | 361 ++++++++++++------
+>  1 file changed, 252 insertions(+), 109 deletions(-)
+> 
 
-The functions for reporting rx management take many arguments.
-Collect all the arguments into a struct, which also make it easier
-to add more arguments if needed.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h | 60 +++++++++++++++++++++++++++++++++++++++---
- net/wireless/mlme.c    | 21 +++++++--------
- net/wireless/nl80211.c | 19 +++++++------
- net/wireless/nl80211.h |  5 ++--
- net/wireless/trace.h   |  8 +++---
- 5 files changed, 81 insertions(+), 32 deletions(-)
+Please add Acked-by/Reviewed-by tags when posting new versions. However,
+there's no need to repost patches *only* to add the tags. The upstream
+maintainer will do that for acks received on the version they apply.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 13c2ad88adb1..ae20256c3243 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -7529,6 +7529,39 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
- 			  enum nl80211_connect_failed_reason reason,
- 			  gfp_t gfp);
- 
-+/**
-+ * struct cfg80211_rx_info - received management frame info
-+ *
-+ * @freq: Frequency on which the frame was received in kHz
-+ * @sig_dbm: signal strength in dBm, or 0 if unknown
-+ * @buf: Management frame (header + body)
-+ * @len: length of the frame data
-+ * @flags: flags, as defined in enum nl80211_rxmgmt_flags
-+ */
-+struct cfg80211_rx_info {
-+	int freq;
-+	int sig_dbm;
-+	const u8 *buf;
-+	size_t len;
-+	u32 flags;
-+};
-+
-+/**
-+ * cfg80211_rx_mgmt_ext - management frame notification with extended info
-+ * @wdev: wireless device receiving the frame
-+ * @info: RX info as defined in struct cfg80211_rx_info
-+ *
-+ * This function is called whenever an Action frame is received for a station
-+ * mode interface, but is not processed in kernel.
-+ *
-+ * Return: %true if a user space application has registered for this frame.
-+ * For action frames, that makes it responsible for rejecting unrecognized
-+ * action frames; %false otherwise, in which case for action frames the
-+ * driver is responsible for rejecting the frame.
-+ */
-+bool cfg80211_rx_mgmt_ext(struct wireless_dev *wdev,
-+			  struct cfg80211_rx_info *info);
-+
- /**
-  * cfg80211_rx_mgmt_khz - notification of received, unprocessed management frame
-  * @wdev: wireless device receiving the frame
-@@ -7546,8 +7579,20 @@ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-  * action frames; %false otherwise, in which case for action frames the
-  * driver is responsible for rejecting the frame.
-  */
--bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
--			  const u8 *buf, size_t len, u32 flags);
-+static inline bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq,
-+					int sig_dbm, const u8 *buf, size_t len,
-+					u32 flags)
-+{
-+	struct cfg80211_rx_info info = {
-+		.freq = freq,
-+		.sig_dbm = sig_dbm,
-+		.buf = buf,
-+		.len = len,
-+		.flags = flags
-+	};
-+
-+	return cfg80211_rx_mgmt_ext(wdev, &info);
-+}
- 
- /**
-  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
-@@ -7570,8 +7615,15 @@ static inline bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq,
- 				    int sig_dbm, const u8 *buf, size_t len,
- 				    u32 flags)
- {
--	return cfg80211_rx_mgmt_khz(wdev, MHZ_TO_KHZ(freq), sig_dbm, buf, len,
--				    flags);
-+	struct cfg80211_rx_info info = {
-+		.freq = MHZ_TO_KHZ(freq),
-+		.sig_dbm = sig_dbm,
-+		.buf = buf,
-+		.len = len,
-+		.flags = flags
-+	};
-+
-+	return cfg80211_rx_mgmt_ext(wdev, &info);
- }
- 
- /**
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index c8155a483ec2..f3492c5fb3d3 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -4,7 +4,7 @@
-  *
-  * Copyright (c) 2009, Jouni Malinen <j@w1.fi>
-  * Copyright (c) 2015		Intel Deutschland GmbH
-- * Copyright (C) 2019-2020 Intel Corporation
-+ * Copyright (C) 2019-2020, 2022 Intel Corporation
-  */
- 
- #include <linux/kernel.h>
-@@ -759,15 +759,15 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 	return rdev_mgmt_tx(rdev, wdev, params, cookie);
- }
- 
--bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
--			  const u8 *buf, size_t len, u32 flags)
-+bool cfg80211_rx_mgmt_ext(struct wireless_dev *wdev,
-+			  struct cfg80211_rx_info *info)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct cfg80211_mgmt_registration *reg;
- 	const struct ieee80211_txrx_stypes *stypes =
- 		&wiphy->mgmt_stypes[wdev->iftype];
--	struct ieee80211_mgmt *mgmt = (void *)buf;
-+	struct ieee80211_mgmt *mgmt = (void *)info->buf;
- 	const u8 *data;
- 	int data_len;
- 	bool result = false;
-@@ -775,7 +775,7 @@ bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
- 		cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
- 	u16 stype;
- 
--	trace_cfg80211_rx_mgmt(wdev, freq, sig_dbm);
-+	trace_cfg80211_rx_mgmt(wdev, info);
- 	stype = (le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_STYPE) >> 4;
- 
- 	if (!(stypes->rx & BIT(stype))) {
-@@ -783,8 +783,8 @@ bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
- 		return false;
- 	}
- 
--	data = buf + ieee80211_hdrlen(mgmt->frame_control);
--	data_len = len - ieee80211_hdrlen(mgmt->frame_control);
-+	data = info->buf + ieee80211_hdrlen(mgmt->frame_control);
-+	data_len = info->len - ieee80211_hdrlen(mgmt->frame_control);
- 
- 	spin_lock_bh(&rdev->mgmt_registrations_lock);
- 
-@@ -801,9 +801,8 @@ bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
- 		/* found match! */
- 
- 		/* Indicate the received Action frame to user space */
--		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid,
--				      freq, sig_dbm,
--				      buf, len, flags, GFP_ATOMIC))
-+		if (nl80211_send_mgmt(rdev, wdev, reg->nlportid, info,
-+				      GFP_ATOMIC))
- 			continue;
- 
- 		result = true;
-@@ -815,7 +814,7 @@ bool cfg80211_rx_mgmt_khz(struct wireless_dev *wdev, int freq, int sig_dbm,
- 	trace_cfg80211_return_bool(result);
- 	return result;
- }
--EXPORT_SYMBOL(cfg80211_rx_mgmt_khz);
-+EXPORT_SYMBOL(cfg80211_rx_mgmt_ext);
- 
- void cfg80211_sched_dfs_chan_update(struct cfg80211_registered_device *rdev)
- {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bc9818dd2f9a..fe4b62b4715f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -17420,14 +17420,13 @@ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
- 
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlportid,
--		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, u32 flags, gfp_t gfp)
-+		      struct cfg80211_rx_info *info, gfp_t gfp)
- {
- 	struct net_device *netdev = wdev->netdev;
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(100 + len, gfp);
-+	msg = nlmsg_new(100 + info->len, gfp);
- 	if (!msg)
- 		return -ENOMEM;
- 
-@@ -17442,13 +17441,13 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 					netdev->ifindex)) ||
- 	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
- 			      NL80211_ATTR_PAD) ||
--	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, KHZ_TO_MHZ(freq)) ||
--	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET, freq % 1000) ||
--	    (sig_dbm &&
--	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
--	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
--	    (flags &&
--	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, flags)))
-+	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, KHZ_TO_MHZ(info->freq)) ||
-+	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET, info->freq % 1000) ||
-+	    (info->sig_dbm &&
-+	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, info->sig_dbm)) ||
-+	    nla_put(msg, NL80211_ATTR_FRAME, info->len, info->buf) ||
-+	    (info->flags &&
-+	     nla_put_u32(msg, NL80211_ATTR_RXMGMT_FLAGS, info->flags)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index d642e3be4ee7..88824b357a7d 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- /*
-  * Portions of this file
-- * Copyright (C) 2018, 2020-2021 Intel Corporation
-+ * Copyright (C) 2018, 2020-2022 Intel Corporation
-  */
- #ifndef __NET_WIRELESS_NL80211_H
- #define __NET_WIRELESS_NL80211_H
-@@ -107,8 +107,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
- 
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlpid,
--		      int freq, int sig_dbm,
--		      const u8 *buf, size_t len, u32 flags, gfp_t gfp);
-+		      struct cfg80211_rx_info *info, gfp_t gfp);
- 
- void
- nl80211_radar_notify(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 228079d7690a..288ee19e1eb6 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2892,8 +2892,8 @@ DEFINE_EVENT(cfg80211_netdev_mac_evt, cfg80211_del_sta,
- );
- 
- TRACE_EVENT(cfg80211_rx_mgmt,
--	TP_PROTO(struct wireless_dev *wdev, int freq, int sig_dbm),
--	TP_ARGS(wdev, freq, sig_dbm),
-+	TP_PROTO(struct wireless_dev *wdev, struct cfg80211_rx_info *info),
-+	TP_ARGS(wdev, info),
- 	TP_STRUCT__entry(
- 		WDEV_ENTRY
- 		__field(int, freq)
-@@ -2901,8 +2901,8 @@ TRACE_EVENT(cfg80211_rx_mgmt,
- 	),
- 	TP_fast_assign(
- 		WDEV_ASSIGN;
--		__entry->freq = freq;
--		__entry->sig_dbm = sig_dbm;
-+		__entry->freq = info->freq;
-+		__entry->sig_dbm = info->sig_dbm;
- 	),
- 	TP_printk(WDEV_PR_FMT ", freq: "KHZ_F", sig dbm: %d",
- 		  WDEV_PR_ARG, PR_KHZ(__entry->freq), __entry->sig_dbm)
--- 
-2.35.1
+If a tag was not added on purpose, please state why and what changed.
 
