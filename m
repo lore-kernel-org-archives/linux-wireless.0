@@ -2,202 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E411C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1249C43219
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232032AbiDFNIl (ORCPT
+        id S233026AbiDFNSu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 09:08:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60406 "EHLO
+        Wed, 6 Apr 2022 09:18:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232023AbiDFNIH (ORCPT
+        with ESMTP id S232933AbiDFNRP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 09:08:07 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C288A4DF887;
-        Wed,  6 Apr 2022 02:42:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1649238124; x=1680774124;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=qEli3OM61q29quVb4hWbU5LNPZDYGQjOjkLxvVl1CEQ=;
-  b=fk6ZlUkKSGPAp6Rbly23W13WdUa7QbIQFAEbudzBNeon5P4VEglzYswY
-   QPhlbh57t7SNTPqb/gLTYdEwmPy0rzETMZQnNNRT1xC2wd4aZ1DSEGiYw
-   0MgRgfpSome2t9wbmBSrFBcgUfXr5wbmCEkAfljN8HsIsnrsWnhQw+3ae
-   E=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 06 Apr 2022 02:41:55 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2022 02:41:55 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 6 Apr 2022 02:41:55 -0700
-Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 6 Apr 2022 02:41:52 -0700
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh@kernel.org>, <mka@chromium.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH v4 11/12] ath11k: Update WBM idle ring HP after FW mode on
-Date:   Wed, 6 Apr 2022 15:11:05 +0530
-Message-ID: <20220406094107.17878-12-quic_mpubbise@quicinc.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220406094107.17878-1-quic_mpubbise@quicinc.com>
-References: <20220406094107.17878-1-quic_mpubbise@quicinc.com>
+        Wed, 6 Apr 2022 09:17:15 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6449407E18
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 21:42:17 -0700 (PDT)
+Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 112153F85E
+        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 04:42:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1649220135;
+        bh=Mt/wIr8VCHfxx+fAT86RPcS+1hpBF4cXlsZS+mb9xdE=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=iUxOvNG6YajEHp0kF2JdMv/52tmbHq5DRlxwkH+QUcg186VpeTNqgoccW2JMMf2ji
+         aP7tWesAOlh6pHj1OzkqU7c6smWgkFYBL7yBhaKMOSyJ14hbkhkW12sawK/pUvi7Yw
+         lYgPqOYRWOwXz4ljmXdLj6ArCxWZ+cqnnqwBt/fjlN0sxSYvZMWiMVFqWPTN5xzDbP
+         aWgYrLG1F/g7Uqala43Zwlised96gzeiFSPeobgq2uL7nOv3AR4ZI9/yfPLqI0XTel
+         2IEpUtCd0CgjJ8eAp9bMLrQGmTyWbhivmr0TKSE1NZURD8wsmC2jbxiHGecGzS/Zi/
+         WMzYmJUcOYaJg==
+Received: by mail-ot1-f70.google.com with SMTP id n7-20020a9d4d07000000b005b2389a99cfso755462otf.17
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2022 21:42:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Mt/wIr8VCHfxx+fAT86RPcS+1hpBF4cXlsZS+mb9xdE=;
+        b=Wlq5rPNXMC/fgTGpdiYA2X/uA0SFgqPwdtKAp7c2epzHA18fg4/LopHw0g/Xef2XnI
+         q6dAVUYR7l8wrn5ig3p8qrghMFxpaEZoAU5EGUVwHAC0yrgYyCGkLJnf3VpHb1j+Q9Qu
+         e79RtWED30JnZUb6c1rXv6+h9GR8T79xzorFFYUnpYonblzxMo9eNEZ/ghS4r9022IBP
+         Tmb1aP6/cZUeHs8ry+cQjvm0gmI0ONaGzbBt86Z5XlvqwdIDzrEHGquD2pBoRhVlPeIk
+         BaZ5UBnRjtOkOXzeHOIvf9pjnUzDl+OHakAACXECj+F+YTlFg5+A8IFtFrgdEl6uTpgL
+         f74Q==
+X-Gm-Message-State: AOAM5322Sx0so6eBC2+a0DhByQ7aTGnt9JOxg/vnqdyFiZD8KWnCrjEp
+        lzvApdqrWeAQ3gBX671tO21WqgsOc+c5DwTgAFVcmZELakdVQBk4qp6DwAM2pkYwNtsihWIYK55
+        wCEkR/87un+jIhZeqqx4O3AMI0fshRYitfwGNsV3e5uLwb7CskJhM/soDGQrR
+X-Received: by 2002:a05:6830:2456:b0:5ce:7f4:c702 with SMTP id x22-20020a056830245600b005ce07f4c702mr2472249otr.269.1649220130605;
+        Tue, 05 Apr 2022 21:42:10 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwHon0m0wisgENa7vRcxIQKSklrsxRLeAHmcisDb0KZ+faoRnPeYjrTDc6wEXCRXA5PMWMjLRWCaPLy2KtTmTE=
+X-Received: by 2002:a05:6830:2456:b0:5ce:7f4:c702 with SMTP id
+ x22-20020a056830245600b005ce07f4c702mr2472245otr.269.1649220130353; Tue, 05
+ Apr 2022 21:42:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+References: <20220325035735.4745-1-chris.chiu@canonical.com>
+In-Reply-To: <20220325035735.4745-1-chris.chiu@canonical.com>
+From:   Chris Chiu <chris.chiu@canonical.com>
+Date:   Wed, 6 Apr 2022 12:41:58 +0800
+Message-ID: <CABTNMG2z33a6FgsBPbj=cFN9umVdhF8nXwsnVkkF--PYbeGS7Q@mail.gmail.com>
+Subject: Re: [PATCH v3 0/2] rtl8xxxu: Fill up more TX information
+To:     kvalo@kernel.org, Jes.Sorensen@gmail.com, davem@davemloft.net,
+        kuba@kernel.org
+Cc:     code@reto-schneider.ch, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, WBM idle ring HP is updated much before the shadow
-configuration is sent to the FW. Any update to the shadow
-registers before FW mode on request would not be reflected
-on to the actual HW registers failing to bring up the device.
-Send FW mode ON QMI request before WBM idle ring HP update
-to fix this problem.
+On Fri, Mar 25, 2022 at 11:57 AM Chris Chiu <chris.chiu@canonical.com> wrote:
+>
+> The antenna information is missing in rtl8xxxu and txrate is NULL
+> in 8188cu and 8192cu. Fill up the missing information for iw
+> commands.
+>
+> Chris Chiu (2):
+>   rtl8xxxu: feed antenna information for cfg80211
+>   rtl8xxxu: fill up txrate info for gen1 chips
+>
+>  .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 104 +++++++++++++-----
+>  1 file changed, 75 insertions(+), 29 deletions(-)
+>
+> --
+> 2.25.1
+>
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/ce.c   |  4 +--
- drivers/net/wireless/ath/ath11k/core.c | 45 ++++++++++++++++++--------
- 2 files changed, 32 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index aaa7b05ff49d..c14c51f38709 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: BSD-3-Clause-Clear
- /*
-  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #include "dp_rx.h"
-@@ -918,9 +919,6 @@ int ath11k_ce_init_pipes(struct ath11k_base *ab)
- 	int i;
- 	int ret;
- 
--	ath11k_ce_get_shadow_config(ab, &ab->qmi.ce_cfg.shadow_reg_v2,
--				    &ab->qmi.ce_cfg.shadow_reg_v2_len);
--
- 	for (i = 0; i < ab->hw_params.ce_count; i++) {
- 		pipe = &ab->ce.ce_pipe[i];
- 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 17db898166f0..82044f605a85 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1189,21 +1189,14 @@ static void ath11k_core_pdev_destroy(struct ath11k_base *ab)
- 	ath11k_debugfs_pdev_destroy(ab);
- }
- 
--static int ath11k_core_start(struct ath11k_base *ab,
--			     enum ath11k_firmware_mode mode)
-+static int ath11k_core_start(struct ath11k_base *ab)
- {
- 	int ret;
- 
--	ret = ath11k_qmi_firmware_start(ab, mode);
--	if (ret) {
--		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
--		return ret;
--	}
--
- 	ret = ath11k_wmi_attach(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
--		goto err_firmware_stop;
-+		return ret;
- 	}
- 
- 	ret = ath11k_htc_init(ab);
-@@ -1303,8 +1296,23 @@ static int ath11k_core_start(struct ath11k_base *ab,
- 	ath11k_hif_stop(ab);
- err_wmi_detach:
- 	ath11k_wmi_detach(ab);
--err_firmware_stop:
--	ath11k_qmi_firmware_stop(ab);
-+
-+	return ret;
-+}
-+
-+static int ath11k_core_start_firmware(struct ath11k_base *ab,
-+				      enum ath11k_firmware_mode mode)
-+{
-+	int ret;
-+
-+	ath11k_ce_get_shadow_config(ab, &ab->qmi.ce_cfg.shadow_reg_v2,
-+				    &ab->qmi.ce_cfg.shadow_reg_v2_len);
-+
-+	ret = ath11k_qmi_firmware_start(ab, mode);
-+	if (ret) {
-+		ath11k_err(ab, "failed to send firmware start: %d\n", ret);
-+		return ret;
-+	}
- 
- 	return ret;
- }
-@@ -1334,16 +1342,22 @@ int ath11k_core_qmi_firmware_ready(struct ath11k_base *ab)
- {
- 	int ret;
- 
-+	ret = ath11k_core_start_firmware(ab, ATH11K_FIRMWARE_MODE_NORMAL);
-+	if (ret) {
-+		ath11k_err(ab, "failed to start firmware: %d\n", ret);
-+		return ret;
-+	}
-+
- 	ret = ath11k_ce_init_pipes(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to initialize CE: %d\n", ret);
--		return ret;
-+		goto err_firmware_stop;
- 	}
- 
- 	ret = ath11k_dp_alloc(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to init DP: %d\n", ret);
--		return ret;
-+		goto err_firmware_stop;
- 	}
- 
- 	switch (ath11k_crypto_mode) {
-@@ -1364,7 +1378,7 @@ int ath11k_core_qmi_firmware_ready(struct ath11k_base *ab)
- 		set_bit(ATH11K_FLAG_RAW_MODE, &ab->dev_flags);
- 
- 	mutex_lock(&ab->core_lock);
--	ret = ath11k_core_start(ab, ATH11K_FIRMWARE_MODE_NORMAL);
-+	ret = ath11k_core_start(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to start core: %d\n", ret);
- 		goto err_dp_free;
-@@ -1393,6 +1407,9 @@ int ath11k_core_qmi_firmware_ready(struct ath11k_base *ab)
- err_dp_free:
- 	ath11k_dp_free(ab);
- 	mutex_unlock(&ab->core_lock);
-+err_firmware_stop:
-+	ath11k_qmi_firmware_stop(ab);
-+
- 	return ret;
- }
- 
--- 
-2.35.1
-
+Gentle ping. Any comment or suggestion is appreciated. Thanks
