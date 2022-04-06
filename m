@@ -2,97 +2,148 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C81C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD314C43217
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 13:05:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230523AbiDFNGT (ORCPT
+        id S231706AbiDFNHx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 09:06:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46602 "EHLO
+        Wed, 6 Apr 2022 09:07:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231754AbiDFNGM (ORCPT
+        with ESMTP id S232695AbiDFNHi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 09:06:12 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1720307746
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 18:45:02 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2361ivndF023423, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2361ivndF023423
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 6 Apr 2022 09:44:57 +0800
-Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Wed, 6 Apr 2022 09:44:57 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Wed, 6 Apr 2022 09:44:57 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::41d7:1d2e:78a6:ff34]) by
- RTEXMBS04.realtek.com.tw ([fe80::41d7:1d2e:78a6:ff34%5]) with mapi id
- 15.01.2308.021; Wed, 6 Apr 2022 09:44:57 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
-        "honyuenkwun@gmail.com" <honyuenkwun@gmail.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtw88: 8821ce: add support for device ID 0xb821
-Thread-Topic: [PATCH] rtw88: 8821ce: add support for device ID 0xb821
-Thread-Index: AQHYR7cf1DCZfB3cJUGciCqImwI3cqzhmgmA
-Date:   Wed, 6 Apr 2022 01:44:57 +0000
-Message-ID: <52b3df7b5d5ac976ce3697364447aa001125b6a2.camel@realtek.com>
-References: <20220404000107.11327-1-honyuenkwun@gmail.com>
-In-Reply-To: <20220404000107.11327-1-honyuenkwun@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.21.190]
-x-kse-serverinfo: RTEXDAG01.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvNSDkuIvljYggMTA6MTc6MDA=?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <956F0BD6697CF84F85CE44AB10714DD5@realtek.com>
-Content-Transfer-Encoding: base64
+        Wed, 6 Apr 2022 09:07:38 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E877A5E3C29;
+        Wed,  6 Apr 2022 02:41:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1649238114; x=1680774114;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=DC9/dD5vE9ABuSr3zpKqd6KiCOzEC4l3tzPeOHBhjfc=;
+  b=COJcDJoU3aEXc1tYC3LKoKWLT7r3Ig+ozYUzCz1g1nEbq/GQDGyYBdOq
+   8q4r+opeW1DncPWca0PIg3V8cS75V66ZwM1c5hj9LDFFKvX7f7r51IDRt
+   uZusi8EQoNhzrjUiGTOKhQXp0utTQXS3qUJqMVvFFUAV+GvQceJ27uZ8k
+   Q=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 06 Apr 2022 02:41:26 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2022 02:41:27 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 6 Apr 2022 02:41:25 -0700
+Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 6 Apr 2022 02:41:23 -0700
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh@kernel.org>, <mka@chromium.org>,
+        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Subject: [PATCH v4 00/12] add support for WCN6750
+Date:   Wed, 6 Apr 2022 15:10:54 +0530
+Message-ID: <20220406094107.17878-1-quic_mpubbise@quicinc.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gU3VuLCAyMDIyLTA0LTAzIGF0IDE5OjAxIC0wNTAwLCBKaW1teSBIb24gd3JvdGU6DQo+IE5l
-dyBkZXZpY2UgSUQgMHhiODIxIGZvdW5kIG9uIFRQLUxpbmsgVDJFDQo+IFRlc3RlZCBpdCB3aXRo
-IGM4MjEgZHJpdmVyLiAyLjRHSHogYW5kIDVHSHogd29ya3MuDQo+IA0KPiBQQ0kgaWQ6DQo+IDA1
-OjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28uLCBMdGQu
-IERldmljZSBiODIxDQo+ICAgICAgICAgU3Vic3lzdGVtOiBSZWFsdGVrIFNlbWljb25kdWN0b3Ig
-Q28uLCBMdGQuIERldmljZSBiODIxDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBKaW1teSBIb24gPGhv
-bnl1ZW5rd3VuQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
-dGVrL3J0dzg4L3BjaS5jICAgICAgIHwgMiArLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
-bHRlay9ydHc4OC9ydHc4ODIxY2UuYyB8IDQgKysrKw0KPiAgMiBmaWxlcyBjaGFuZ2VkLCA1IGlu
-c2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
-bHRlay9ydHc4OC9wY2kuYw0KPiBpbmRleCBhMDk5MWQzZjE1YzAuLjM4ZWQ1YzM1YTJiZCAxMDA2
-NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9wY2kuYw0KPiAr
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jDQo+IEBAIC0xNzcw
-LDcgKzE3NzAsNyBAQCBpbnQgcnR3X3BjaV9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwNCj4g
-IAl9DQo+ICANCj4gIAkvKiBEaXNhYmxlIFBDSWUgQVNQTSBMMSB3aGlsZSBkb2luZyBOQVBJIHBv
-bGwgZm9yIDg4MjFDRSAqLw0KPiAtCWlmIChwZGV2LT5kZXZpY2UgPT0gMHhjODIxICYmIGJyaWRn
-ZS0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfSU5URUwpDQo+ICsJaWYgKChwZGV2LT5kZXZpY2Ug
-PT0gMHhjODIxIHx8IHBkZXYtPmRldmljZSA9PSAweGM4MjEpICYmIGJyaWRnZS0+dmVuZG9yID09
-DQo+IFBDSV9WRU5ET1JfSURfSU5URUwpDQoNClRoaXMgc3RhdG1lbnQgaXMgdXNlZCB0byBmaXgg
-MHhjODIxIHdoaWxlIGRvaW5nIE5BUEkgcG9sbC4gQWN0dWFsbHksIHlvdSBkaWRuJ3QNCnJlYWxs
-eSBmaWxsIHRoZSBuZXcgSUQgMHhiODIxLCBidXQgaXQgc3RpbGwgd29ya3MuIFNvLCBJIGRvbid0
-IHRoaW5rIHlvdSBuZWVkIHRvDQphZGQgMHhiODIxIHRvIHRoaXMgc3RhdGVtZW50LCByaWdodD8N
-Cg0KSWYgeW91IHJlYWxseSB3YW50IHRvIGFkZCAweGI4MjEsIHVzZSBjaGlwX2lkIHdvdWxkIGJl
-IGJldHRlci4NCg0KLSAgICAgICBpZiAocGRldi0+ZGV2aWNlID09IDB4YzgyMSAmJiBicmlkZ2Ut
-PnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0lOVEVMKQ0KKyAgICAgICBpZiAocnR3ZGV2LT5jaGlw
-LT5pZCA9PSBSVFdfQ0hJUF9UWVBFXzg4MjFDICYmIGJyaWRnZS0+dmVuZG9yID09IFBDSV9WRU5E
-T1JfSURfSU5URUwpDQoNCi0tDQpQaW5nLUtlDQoNCg0K
+WCN6750 is non-DBS 2x2 11AX chipset. Unlike QCA6390/WCN6855 which
+are DBS (dual band simultaneous) solutions (2 LMACs), WCN6750 has a
+single LMAC supporting 2G, 5G and 6G bands. It can be operated only
+on one band at any given point.
+
+WCN6750 is a PCIe device. Unlike other supported ATH11K PCIe devices
+which are directly attached to APSS (Application Processor SubSystem),
+WCN6750 is not attached to APSS, it is attached to the WPSS
+(Wireless Processor SubSystem) Q6 processor, the FW which runs on the
+Q6 processor will enumerate the PCIe device. Since APSS is unaware of
+such a device, it has to be registered as a platform device(AHB) to the
+kernel for device probing. Like other AHB devices, remoteproc APIs are
+used to boot up or shutdown of WCN6750.
+
+WCN6750 uses both AHB and PCIe ATH11K APIs for it's operation.
+It uses AHB APIs for device probe and booting of the remote processor.
+Once device is booted up, it uses ATH11K PCIe APIs for initialization
+and register access. Hence, it is referred as hybrid bus device in
+the rest of this series.
+
+Since the chip is enumerated by WPSS Q6, device information like
+BAR and BAR size is not known to the APSS processor. A new QMI message
+called device info QMI request will be sent to the target for fetching
+these details.
+
+STA and AP modes are supported; Basic connectivity and ping are
+verified in both the modes.
+
+An important point to note is that though WCN6750 is a PCIe device,
+it cannot be attached to any other platform except on Qualcomm
+Snapdragon SoCs due to the aforementioned reasons.
+
+Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
+
+Manikanta Pubbisetty (12):
+  dt: bindings: net: add bindings of WCN6750 for ath11k
+  ath11k: Add HW params for WCN6750
+  ath11k: Add bus params for WCN6750
+  ath11k: Add register access logic for WCN6750
+  ath11k: Fetch device information via QMI for WCN6750
+  ath11k: Add QMI changes for WCN6750
+  ath11k: HAL changes to support WCN6750
+  ath11k: Datapath changes to support WCN6750
+  ath11k: Do not put HW in DBS mode for WCN6750
+  ath11k: WMI changes to support WCN6750
+  ath11k: Update WBM idle ring HP after FW mode on
+  ath11k: Add support for WCN6750 device
+---
+V4:
+ - Addressed comments on DT binding (Matthias Kaehlcke <mka@chromium.org>)
+ - Rebased on ToT SHAID: 607c3dc2750382befa0f3f20063943bd058a2bc1
+
+V3:
+ - Patch series with 19 patches is split in 2 patch series, this is the second one
+ - Rebased on ToT SHAID: 7316a74e54318d0cd648242b18ea83cdef6dda96
+ - Addessed DT binding concerns
+ - PCI common code is moved to ath11k.ko
+ - Added a new HW param for WCN6750 which uses fixed firmware memory, this is
+   needed to differentiate WCN6750 from other ATH11K chipsets
+ - Modified the logic in patch "ath11k: Add support for WCN6750 device" based on the latest DT binding
+
+V2:
+ - Rebased on ToT
+ - Addressed comments on DT binding
+
+ .../bindings/net/wireless/qcom,ath11k.yaml    | 361 ++++++++++++------
+ drivers/net/wireless/ath/ath11k/Makefile      |   5 +-
+ drivers/net/wireless/ath/ath11k/ahb.c         | 162 +++++++-
+ drivers/net/wireless/ath/ath11k/ahb.h         |   1 +
+ drivers/net/wireless/ath/ath11k/ce.c          |   4 +-
+ drivers/net/wireless/ath/ath11k/core.c        | 118 +++++-
+ drivers/net/wireless/ath/ath11k/core.h        |   5 +
+ drivers/net/wireless/ath/ath11k/hal.c         |  15 +-
+ drivers/net/wireless/ath/ath11k/hal.h         |  15 +-
+ drivers/net/wireless/ath/ath11k/hw.c          | 166 ++++++++
+ drivers/net/wireless/ath/ath11k/hw.h          |  11 +
+ drivers/net/wireless/ath/ath11k/pci.c         |   4 +
+ drivers/net/wireless/ath/ath11k/pcic.c        |  76 ++--
+ drivers/net/wireless/ath/ath11k/qmi.c         | 220 +++++++++--
+ drivers/net/wireless/ath/ath11k/qmi.h         |  26 +-
+ drivers/net/wireless/ath/ath11k/wmi.c         |  13 +-
+ 16 files changed, 976 insertions(+), 226 deletions(-)
+
+-- 
+2.35.1
+
