@@ -2,107 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B35CC433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 19:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1569AC4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 19:46:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232139AbiDFTpD (ORCPT
+        id S231781AbiDFTr7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 15:45:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37974 "EHLO
+        Wed, 6 Apr 2022 15:47:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232535AbiDFTod (ORCPT
+        with ESMTP id S232708AbiDFTr0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 15:44:33 -0400
-Received: from relay5.hostedemail.com (relay5.hostedemail.com [64.99.140.40])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9A262AE9CE
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 10:58:41 -0700 (PDT)
-Received: from omf13.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay10.hostedemail.com (Postfix) with ESMTP id C613E35D0;
-        Wed,  6 Apr 2022 17:58:39 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf13.hostedemail.com (Postfix) with ESMTPA id AA85120011;
-        Wed,  6 Apr 2022 17:58:37 +0000 (UTC)
-Message-ID: <1064228a2bb8a5fbdcb483295c641c100dd08c9f.camel@perches.com>
-Subject: Re: [PATCH v4 1/2] ray_cs: Improve card_status[]
-From:   Joe Perches <joe@perches.com>
-To:     Benjamin =?ISO-8859-1?Q?St=FCrz?= <benni@stuerz.xyz>,
-        kvalo@kernel.org
-Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Wed, 06 Apr 2022 10:58:35 -0700
-In-Reply-To: <20220406152247.386267-2-benni@stuerz.xyz>
-References: <20220406152247.386267-1-benni@stuerz.xyz>
-         <20220406152247.386267-2-benni@stuerz.xyz>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1ubuntu2 
+        Wed, 6 Apr 2022 15:47:26 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C50BE1B29CD
+        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 10:18:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1649265522; x=1680801522;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=lywqDxuFyq8jmISbZMF7nT/GLm9AppEw/b7NMOK6A8g=;
+  b=A9z+VJhNJxR8VSHzzKIj8QgoHY8bIu4oBeTsNBOnUutj83E8cWIJeupq
+   kgoPPtgU8+sEYjtKr/lJW4sMBuaX/DPVoPYSM85lPew9SqQknJYfAQDGh
+   zemc57ao6r+ZmCvtGS8k5ok/3wWA94Ql0K/w3UU7Wxkm3gaYdNW9zbzM8
+   8=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 06 Apr 2022 10:18:42 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2022 10:18:41 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 6 Apr 2022 10:18:41 -0700
+Received: from [10.110.72.142] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 6 Apr 2022
+ 10:18:40 -0700
+Message-ID: <907e5b13-ceaa-4ae3-9d61-a0a5d0eab20b@quicinc.com>
+Date:   Wed, 6 Apr 2022 10:18:40 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Stat-Signature: 4x93hygzkp67pzsimy8pxrem6idwkheg
-X-Rspamd-Server: rspamout04
-X-Rspamd-Queue-Id: AA85120011
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18okezJojRz1U2N98r1sNAPyIQfCdYT8Jw=
-X-HE-Tag: 1649267917-578212
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 2/7] cfg80211: add a function for reporting TX status with
+ hardware timestamps
+Content-Language: en-US
+To:     Luca Coelho <luca@coelho.fi>, <johannes@sipsolutions.net>,
+        <kvalo@kernel.org>
+CC:     <gregory.greenman@intel.com>, <linux-wireless@vger.kernel.org>
+References: <20220406120924.979792-1-luca@coelho.fi>
+ <iwlwifi.20220406145756.721e5cd5a682.I411bb8c79a26ffb33898bea2075f6779c7da0cb4@changeid>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <iwlwifi.20220406145756.721e5cd5a682.I411bb8c79a26ffb33898bea2075f6779c7da0cb4@changeid>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2022-04-06 at 17:22 +0200, Benjamin Stürz wrote:
-> Replace comments with C99's designated initializers to improve
-> readability and maintainability.
-[]
-> diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-[]
-> @@ -2529,20 +2529,23 @@ static void clear_interrupt(ray_dev_t *local)
->  #define MAXDATA (PAGE_SIZE - 80)
->  
->  static const char *card_status[] = {
-> -	"Card inserted - uninitialized",	/* 0 */
-> -	"Card not downloaded",			/* 1 */
-> -	"Waiting for download parameters",	/* 2 */
-> -	"Card doing acquisition",		/* 3 */
-> -	"Acquisition complete",			/* 4 */
-> -	"Authentication complete",		/* 5 */
-> -	"Association complete",			/* 6 */
-> -	"???", "???", "???", "???",		/* 7 8 9 10 undefined */
-> -	"Card init error",			/* 11 */
-> -	"Download parameters error",		/* 12 */
-> -	"???",					/* 13 */
-> -	"Acquisition failed",			/* 14 */
-> -	"Authentication refused",		/* 15 */
-> -	"Association failed"			/* 16 */
-> +	[CARD_INSERTED]		= "Card inserted - uninitialized",
-> +	[CARD_AWAITING_PARAM]	= "Card not downloaded",
-> +	[CARD_DL_PARAM]		= "Waiting for download parameters",
-> +	[CARD_DOING_ACQ]	= "Card doing acquisition",
-> +	[CARD_ACQ_COMPLETE]	= "Acquisition complete",
-> +	[CARD_AUTH_COMPLETE]	= "Authentication complete",
-> +	[CARD_ASSOC_COMPLETE]	= "Association complete",
-> +	[7]			= "???",
-> +	[8]			= "???",
-> +	[9]			= "???",
-> +	[10]			= "???",
+On 4/6/2022 5:09 AM, Luca Coelho wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> Add a function for reporting TX status with hardware timestamps. This
+> function shall be used for reporting the TX status of Timing
+> measurement and Fine timing measurement action frames by devices that
+> support reporting hardware timestamps.
+> 
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+>   include/net/cfg80211.h | 47 ++++++++++++++++++++++++++++++++++++++++--
+>   net/wireless/nl80211.c | 42 ++++++++++++++++++++++++-------------
+>   2 files changed, 73 insertions(+), 16 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 68713388b617..13c2ad88adb1 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -7574,6 +7574,38 @@ static inline bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq,
+>   				    flags);
+>   }
+>   
+> +/**
+> + * struct cfg80211_tx_status - TX status for management frame information
+> + *
+> + * @cookie: Cookie returned by cfg80211_ops::mgmt_tx()
+> + * @tx_tstamp: hardware TX timestamp in nanoseconds
+> + * @ack_tstamp: hardware ack RX timestamp in nanoseconds
+> + * @buf: Management frame (header + body)
+> + * @len: length of the frame data
+> + * @ack: Whether frame was acknowledged
+> + */
+> +struct cfg80211_tx_status {
+> +	u64 cookie;
+> +	u64 tx_tstamp;
+> +	u64 ack_tstamp;
+> +	const u8 *buf;
+> +	size_t len;
+> +	bool ack;
+> +};
+> +
+> +/**
+> + * cfg80211_mgmt_tx_status_ext - TX status notification with extended info
+> + * @wdev: wireless device receiving the frame
+> + * @status: TX status data
+> + * @gfp: context flags
+> + *
+> + * This function is called whenever a management frame was requested to be
+> + * transmitted with cfg80211_ops::mgmt_tx() to report the TX status of the
+> + * transmission attempt with extended info.
+> + */
+> +void cfg80211_mgmt_tx_status_ext(struct wireless_dev *wdev,
+> +				 struct cfg80211_tx_status *status, gfp_t gfp);
 
-Rather than using specific numbers and "???"
-it's probably better to use no initialization at all
-and change the output call to test the array index
-ao all of the [number] = "???" could be removed.
+can/should status be const?
 
----
- drivers/net/wireless/ray_cs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+snipping the rest, but consider for all cases where status is now passed 
+as a struct pointer
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 87e98ab068ed..29451cd0a22a 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -2600,7 +2600,7 @@ static int ray_cs_proc_show(struct seq_file *m, void *v)
- 		i = 10;
- 	if (i > 16)
- 		i = 10;
--	seq_printf(m, "Card status          = %s\n", card_status[i]);
-+	seq_printf(m, "Card status          = %s\n", card_status[i] ?: "???");
- 
- 	seq_printf(m, "Framing mode         = %s\n", framing[translate]);
- 
-
+/jeff
