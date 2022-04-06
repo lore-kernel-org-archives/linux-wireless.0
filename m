@@ -2,119 +2,67 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE27C4167D
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 03:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EACDC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 07:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1456296AbiDFDM3 (ORCPT
+        id S231236AbiDFHb7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Apr 2022 23:12:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39158 "EHLO
+        Wed, 6 Apr 2022 03:31:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573152AbiDESDo (ORCPT
+        with ESMTP id S238416AbiDFG4H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Apr 2022 14:03:44 -0400
-Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07970EBBAA
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2022 11:01:46 -0700 (PDT)
-Received: by mail-lj1-x22f.google.com with SMTP id c15so26109ljr.9
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2022 11:01:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UtPjO+bxq+tkrbVKUaDcJXid+W/QeCc20ZhEe/m6WHk=;
-        b=Xq6IZspRICfswBPKfRG9/rkA8zzqUrYc8AEaIS7BqLjxD8XxrJt/TSd6TeV+PoOh+x
-         TWLTo87XR/66DLc3P6r3wOUKYiKC5VWuBkx+6ER1S5fqR8uVVLbE/Mnt/gH1EKOF0zMl
-         EMq7iQ4CLUD2xX1/ZT+FGVsskv4zGNk9k0kI+FnwBzf1dA/sQfweLGYAVlAZk6QClzZ1
-         nobRJrADpU/Tz+gYnl+iHQu9q539LiyMt0IlZ6xFi6lJArxzxWE3TK8eslO84swXM4xa
-         I4CGW7Vw9/WAuQl2A2SW1HyL4qebDsG468bz3mFPIUYcQxmjKImFm9B12ojvWxmqxxY5
-         SfIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UtPjO+bxq+tkrbVKUaDcJXid+W/QeCc20ZhEe/m6WHk=;
-        b=MdGkrLS5W7A/qnPsYMspNGnoS+DxZ6S4RykcHjjQYSTrcw7K+Tc9cfv39aNgmZmoXN
-         reOfnX2+HacRFCvJJNbx1RX2Rww9R9+e6IxVeaEk2kW3jkBTfjP/uKYQwctruVYXrrmI
-         S96dluD7KBByc7LDkLCVUWMA6kpt/Fe86X8AP6XZExA9jHHMHu0IXGGA7pzgWLjeqH3P
-         6O7zEOq/Q7Bs+ZkjtS/LR7gVYcZYeZz0DJXNWsgmOXWeWFNr+FomNX4m70px99QfpRuh
-         HfoFrHfiI5W48k7Kzge07u9ClmUWLGYOgyWKuCwTNP9aTWdXEzZaBostNSl49u9npm/O
-         dSrw==
-X-Gm-Message-State: AOAM533c1/yA9IR1wO8X0NquVkTDa+O3oosRHLImYey4r9qwaXa0Pkyn
-        rc0bkOwK+sc0yT5LJSbnjVjZoTtK9lFRommNxjhyxg==
-X-Google-Smtp-Source: ABdhPJxmwIX/bZD6HHeBC8Mgm7SLI3AbupPtrtLQAue+dvE6QpFk1/V9rIQtTW8xUGyHm5vacR8kUrbKGxc6La1y6Es=
-X-Received: by 2002:a2e:b70d:0:b0:24b:11d8:8e63 with SMTP id
- j13-20020a2eb70d000000b0024b11d88e63mr2819981ljo.472.1649181704075; Tue, 05
- Apr 2022 11:01:44 -0700 (PDT)
+        Wed, 6 Apr 2022 02:56:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A15A1DB7F2;
+        Tue,  5 Apr 2022 22:24:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E5FB619EC;
+        Wed,  6 Apr 2022 05:24:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 241FFC385A1;
+        Wed,  6 Apr 2022 05:24:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649222643;
+        bh=Mul9AJ93AVH0Pdg7HmZn/H/9BvyBCq6o30Igx61Upxc=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Am9WcrfAlbrARvfo6v8rQN4UAAli/FBiMCG+pmwkxJptd2owz3q1KXTJPyBgU39lA
+         7mUSWKzmubvs+ZYaqqJeY7YyJnnoRm5OUBR8T+XSZkqS3vVAW6ZadxLfR3Gx/Rot6G
+         Gem374uz50GhTPFu4tKwjWFTO/Uu8YZ3Rkn7yyb52BzmV9S/JWldfGNTROeWljkDo0
+         bRcGpI1q/2a88MJU1I+FrOTzckRVIVrz9Lj0VQF3qylc/3zUKLzlLCv5NkBYKQotC9
+         2gq8lHuWs21rJdzTBerVR20PgxP5AOOfXFZU74E9ZUD1W5QB6aG0iPywAo/OP5AX3+
+         BS7crmsY4SsdQ==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Meng Tang <tangmeng@uniontech.com>
+Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net] ipw2x00: use DEVICE_ATTR_*() macro
+References: <20220406015444.14408-1-tangmeng@uniontech.com>
+Date:   Wed, 06 Apr 2022 08:23:57 +0300
+In-Reply-To: <20220406015444.14408-1-tangmeng@uniontech.com> (Meng Tang's
+        message of "Wed, 6 Apr 2022 09:54:44 +0800")
+Message-ID: <87y20iss2a.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-References: <20220401233802.1710547-1-trix@redhat.com>
-In-Reply-To: <20220401233802.1710547-1-trix@redhat.com>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Tue, 5 Apr 2022 11:01:32 -0700
-Message-ID: <CAKwvOdkkfdjuNLzWimi+Q_PSD9T4ZxumBb+28g1vDbUX0VQVcg@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: fw: move memset before early return
-To:     Tom Rix <trix@redhat.com>
-Cc:     luciano.coelho@intel.com, kvalo@kernel.org, davem@davemloft.net,
-        kuba@kernel.org, pabeni@redhat.com, nathan@kernel.org,
-        johannes.berg@intel.com, mukesh.sisodiya@intel.com,
-        mordechay.goodstein@intel.com, matti.gottlieb@intel.com,
-        rotem.saado@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Apr 1, 2022 at 4:38 PM Tom Rix <trix@redhat.com> wrote:
->
-> Clang static analysis reports this representative issue
-> dbg.c:1455:6: warning: Branch condition evaluates to
-> a garbage value
->   if (!rxf_data.size)
->        ^~~~~~~~~~~~~~
->
-> This check depends on iwl_ini_get_rxf_data() to clear
-> rxf_data but the function can return early without
-> doing the clear.  So move the memset before the early
-> return.
->
-> Fixes: cc9b6012d34b ("iwlwifi: yoyo: use hweight_long instead of bit manipulating")
-> Signed-off-by: Tom Rix <trix@redhat.com>
+Meng Tang <tangmeng@uniontech.com> writes:
 
-Conditional initialization in a helper is a pretty dangerous pattern.
-How about we move the memset to the two callers of
-iwl_ini_get_rxf_data?
+> Use DEVICE_ATTR_*() helper instead of plain DEVICE_ATTR,
+> which makes the code a bit shorter and easier to read.
+>
+> Signed-off-by: Meng Tang <tangmeng@uniontech.com>
 
-> ---
->  drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-> index abf49022edbe..666de922af61 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-> @@ -1388,13 +1388,13 @@ static void iwl_ini_get_rxf_data(struct iwl_fw_runtime *fwrt,
->         if (!data)
->                 return;
->
-> +       memset(data, 0, sizeof(*data));
-> +
->         /* make sure only one bit is set in only one fid */
->         if (WARN_ONCE(hweight_long(fid1) + hweight_long(fid2) != 1,
->                       "fid1=%x, fid2=%x\n", fid1, fid2))
->                 return;
->
-> -       memset(data, 0, sizeof(*data));
-> -
->         if (fid1) {
->                 fifo_idx = ffs(fid1) - 1;
->                 if (WARN_ONCE(fifo_idx >= MAX_NUM_LMAC, "fifo_idx=%d\n",
-> --
-> 2.27.0
->
-
+ipw2x00 patches go to wireless trees, I think for this patch
+wireless-next is more approriate than wireless. No need to resend
+because of this.
 
 -- 
-Thanks,
-~Nick Desaulniers
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
