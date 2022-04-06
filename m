@@ -2,84 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB95C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 15:16:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD5AC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 Apr 2022 15:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235740AbiDFPSY (ORCPT
+        id S236213AbiDFPi7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 Apr 2022 11:18:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58688 "EHLO
+        Wed, 6 Apr 2022 11:38:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235868AbiDFPQn (ORCPT
+        with ESMTP id S236680AbiDFPhs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Apr 2022 11:16:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16694215902;
-        Wed,  6 Apr 2022 05:16:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 86374B82004;
-        Wed,  6 Apr 2022 12:11:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E54D8C385A3;
-        Wed,  6 Apr 2022 12:11:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649247085;
-        bh=gi/43PSg3s+HncWV4pygeyKCzviOExbVIekcbIkX8Eg=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=LF66WlE+eNojHyvhuXfcyptyUC9bV8RwAoGcAAMBUwA/eQHSMwUBqYTFkZpm/A9JB
-         bsSr/KL4JOo4hkRS2ZCFtqB9JC4y2GNGdGRZjTCqTbBolC3t4qjQ4wm3KrBZC5e5bt
-         Mz57FFzXk1mF88JMMPHo+7qi20wmUqncyqIiQqCo6LG2BY42sjz/YlkSkrRlD/NdNk
-         NlQSRO3JU7/KFNHt+vlHZSOIayN6YPDCCvjpuRegxQr6f6b33ssFTx7q0mdEc9J63K
-         XhTXJaYkrKOqLp0r2ysyt0qgTUDxU++/KapRG2oSxUAlXV+1D9InhPKcC7mEBMApxR
-         gMHkcVtoBf1WQ==
-Content-Type: text/plain; charset="utf-8"
+        Wed, 6 Apr 2022 11:37:48 -0400
+Received: from farmhouse.coelho.fi (paleale.coelho.fi [176.9.41.70])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 961BC4E387
+        for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2022 05:52:16 -0700 (PDT)
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=kveik.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.95)
+        (envelope-from <luca@coelho.fi>)
+        id 1nc4TV-000pov-AS;
+        Wed, 06 Apr 2022 15:09:28 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     johannes@sipsolutions.net, kvalo@kernel.org
+Cc:     luca@coelho.fi, gregory.greenman@intel.com,
+        linux-wireless@vger.kernel.org
+Date:   Wed,  6 Apr 2022 15:09:17 +0300
+Message-Id: <20220406120924.979792-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [v2] brcmfmac: Avoid keeping power to SDIO card unless WOWL is
- used
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220323083950.414783-1-ulf.hansson@linaro.org>
-References: <20220323083950.414783-1-ulf.hansson@linaro.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     linux-wireless@vger.kernel.org,
-        Yann Gautier <yann.gautier@foss.st.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Gustavo Padovan <gustavo.padovan@collabora.com>,
-        Adrian Ratiu <adrian.ratiu@collabora.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164924707922.19026.4759219518482379162.kvalo@kernel.org>
-Date:   Wed,  6 Apr 2022 12:11:22 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 0/7] cfg80211/mac80211: updates intended for v5.19 2022-04-06
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ulf Hansson <ulf.hansson@linaro.org> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> Keeping the power to the SDIO card during system wide suspend, consumes
-> energy. Especially on battery driven embedded systems, this can be a
-> problem. Therefore, let's change the behaviour into allowing the SDIO card
-> to be powered off, unless WOWL is supported and enabled.
-> 
-> Note that, the downside from this change, is that during system resume the
-> SDIO card needs to be re-initialized and the FW must be re-programmed. Even
-> if this may take some time to complete, it should we worth it, rather than
-> draining the battery.
-> 
-> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
-> Tested-by: Christophe Roullier <christophe.roullier@foss.st.com>
-> Reviewed-by: Yann Gautier <yann.gautier@foss.st.com>
+Hi,
 
-Patch applied to wireless-next.git, thanks.
+Here are some patches that implement time measurement timestamps in
+cfg80211 and mac80211.  Then there is an iwlwifi patch on top that
+depends on them.
 
-92cadedd9d5f brcmfmac: Avoid keeping power to SDIO card unless WOWL is used
+Since we have a single tree now, I sent the series with both cfg/mac
+and iwlwifi patches.  Let me know if you prefer to have them
+separately.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+I will report if there are any issues.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (7):
+  nl80211: add RX and TX timestamp attributes
+  cfg80211: add a function for reporting TX status with hardware
+    timestamps
+  cfg80211/nl80211: move rx management data into a struct
+  cfg80211: add hardware timestamps to frame RX info
+  ieee80211: add helper functions for detecting TM/FTM frames
+  mac80211: add hardware timestamps for RX and TX
+  iwlwifi: mvm: report hardware timestamps in RX/TX status
+
+ .../wireless/intel/iwlwifi/fw/api/commands.h  |  20 +-
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  | 126 ++++++++++++-
+ .../net/wireless/intel/iwlwifi/mvm/Makefile   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   8 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  12 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |   6 +
+ .../wireless/intel/iwlwifi/mvm/time-sync.c    | 172 ++++++++++++++++++
+ .../wireless/intel/iwlwifi/mvm/time-sync.h    |  30 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |   4 +-
+ include/linux/ieee80211.h                     |  54 ++++++
+ include/net/cfg80211.h                        | 111 ++++++++++-
+ include/net/mac80211.h                        |  30 ++-
+ include/uapi/linux/nl80211.h                  |  27 ++-
+ net/mac80211/rx.c                             |  32 +++-
+ net/mac80211/status.c                         |  40 +++-
+ net/wireless/mlme.c                           |  21 +--
+ net/wireless/nl80211.c                        |  69 ++++---
+ net/wireless/nl80211.h                        |   5 +-
+ net/wireless/trace.h                          |   8 +-
+ 21 files changed, 713 insertions(+), 75 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/time-sync.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/time-sync.h
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220323083950.414783-1-ulf.hansson@linaro.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.35.1
 
