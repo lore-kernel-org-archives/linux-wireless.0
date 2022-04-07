@@ -2,115 +2,91 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52FA3C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Apr 2022 09:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D52DC433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Apr 2022 10:28:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244092AbiDGKBf (ORCPT
+        id S238034AbiDGKac (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Apr 2022 06:01:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42926 "EHLO
+        Thu, 7 Apr 2022 06:30:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244080AbiDGKBd (ORCPT
+        with ESMTP id S244238AbiDGKaY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Apr 2022 06:01:33 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F229E190E80
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 02:59:33 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2379xQRE1006140, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2379xQRE1006140
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 7 Apr 2022 17:59:26 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 7 Apr 2022 17:59:26 +0800
-Received: from localhost (172.16.21.190) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 7 Apr
- 2022 17:59:25 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
-Subject: [PATCH 6/6] rtw88: 8821c: fix debugfs rssi value
-Date:   Thu, 7 Apr 2022 17:58:58 +0800
-Message-ID: <20220407095858.46807-7-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220407095858.46807-1-pkshih@realtek.com>
-References: <20220407095858.46807-1-pkshih@realtek.com>
+        Thu, 7 Apr 2022 06:30:24 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A1FD7562E;
+        Thu,  7 Apr 2022 03:28:24 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id r13so7142600wrr.9;
+        Thu, 07 Apr 2022 03:28:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ysgmGY6z1GzJduDa17oOz+oi20hGek39JwUR/trWayM=;
+        b=p/UKZVzzSUUKarQCEnoZqYwnOj+5vqcExcRo3+EUkYFVCcXjRLJIEQI5GVNfNtmCcF
+         v8midJ0etw5XJGZTnMUnHCf95YASegao9CAoqK5BkIPREypo3OSYwoAVWIsB868p7x3N
+         +xt6oxh97IpMEpGqXt4G5QNCPIcjcbqaDG0lxhtXHlJrTG/N910e2LFuEBqson19rxh1
+         XF9x1CyDwoUwZPMo/fa0ngSje09cbZMublaAXz7je8SfS8mhDo4Hl5eDAkyMWWJREsbO
+         3rgFQBxtbt0v98Zg0m3Uya9j10VNdFDtllzVNsDdpUsI/OPNmjcjDMFIdH/ejYcNbo6/
+         LajQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ysgmGY6z1GzJduDa17oOz+oi20hGek39JwUR/trWayM=;
+        b=RAhyODHFcMUSpOjfZfZh20hkkeYyz266nXi4hJ9ZmUI2ZNiqlADblfK4xP05QE8dYo
+         agvSGOzpIfRZoWQrgC72eiLjbBimzvnlg9pwvV5i7ANtjPHMYWvqiOh9pb2wylYlu4nG
+         m7q28USKtuTb4fbCnbxKZk447Y2iBaZyHRhIqt2xyNpZtKz92SUkHxZQ5HvmrXBk/HYC
+         K9bKv5FM8I0iH8ofX/m58XI28/e1tdSyUXGJpfstSwHo5Hoqe3Sl8EdpJBP51kUXN0dS
+         7aeFZtJK5OiQbj4LCl+jpZ6/3aZaPO9NqEBR9CYbyXqK7IoV1vV2GmiPC/qS5cBnaLog
+         3uVA==
+X-Gm-Message-State: AOAM5331/t+MXWUL80q1sRhacNakGLB+fEEuCyUob3zsdjx+nx284QyU
+        6YvJgcSX02uivf+XZv0JucI=
+X-Google-Smtp-Source: ABdhPJypRKzmEZSzNa0J3mxMTVI9MuNVTozm69KlQDYEEvfmJj13FcjuX0vcYG5/HgQzqulKmvGw7w==
+X-Received: by 2002:adf:dcc1:0:b0:206:1a02:95a0 with SMTP id x1-20020adfdcc1000000b002061a0295a0mr10127116wrm.183.1649327302637;
+        Thu, 07 Apr 2022 03:28:22 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id m5-20020a05600c3b0500b0038e7466b048sm7727933wms.0.2022.04.07.03.28.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Apr 2022 03:28:21 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] ath11k: Fix spelling mistake "reseting" -> "resetting"
+Date:   Thu,  7 Apr 2022 11:28:20 +0100
+Message-Id: <20220407102820.613881-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.21.190]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 04/07/2022 09:44:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvNyCkV6TIIDA4OjExOjAw?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+There is a spelling mistake in an ath11k_warn message. Fix it.
 
-RSSI value per frame is reported to mac80211 but not maintained in
-our own statistics, add it back to help us debug.
-
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8821c.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index 99eee128ae945..ec38a7c849517 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -512,6 +512,7 @@ static s8 get_cck_rx_pwr(struct rtw_dev *rtwdev, u8 lna_idx, u8 vga_idx)
- static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
- 				   struct rtw_rx_pkt_stat *pkt_stat)
- {
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
- 	s8 rx_power;
- 	u8 lna_idx = 0;
- 	u8 vga_idx = 0;
-@@ -523,6 +524,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index cbac1919867f..1537ec0ae2e7 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1567,7 +1567,7 @@ static void ath11k_core_reset(struct work_struct *work)
+ 		 * completed, then the second reset worker will destroy the previous one,
+ 		 * thus below is to avoid that.
+ 		 */
+-		ath11k_warn(ab, "already reseting count %d\n", reset_count);
++		ath11k_warn(ab, "already resetting count %d\n", reset_count);
  
- 	pkt_stat->rx_power[RF_PATH_A] = rx_power;
- 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
- 	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
- 	pkt_stat->signal_power = rx_power;
- }
-@@ -530,6 +532,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
- static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
- 				   struct rtw_rx_pkt_stat *pkt_stat)
- {
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
- 	u8 rxsc, bw;
- 	s8 min_rx_power = -120;
- 
-@@ -549,6 +552,7 @@ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
- 
- 	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
- 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
- 	pkt_stat->bw = bw;
- 	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
- 				     min_rx_power);
+ 		reinit_completion(&ab->reset_complete);
+ 		time_left = wait_for_completion_timeout(&ab->reset_complete,
 -- 
-2.25.1
+2.35.1
 
