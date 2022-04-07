@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E05C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Apr 2022 09:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9923BC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Apr 2022 09:59:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244084AbiDGKBb (ORCPT
+        id S244093AbiDGKBc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Apr 2022 06:01:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42650 "EHLO
+        Thu, 7 Apr 2022 06:01:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244081AbiDGKB2 (ORCPT
+        with ESMTP id S244088AbiDGKBa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Apr 2022 06:01:28 -0400
+        Thu, 7 Apr 2022 06:01:30 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7402218DA9F
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 02:59:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1A58190597
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 02:59:30 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2379xKVW1006112, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2379xNDM1006130, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2379xKVW1006112
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2379xNDM1006130
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 7 Apr 2022 17:59:20 +0800
+        Thu, 7 Apr 2022 17:59:23 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 7 Apr 2022 17:59:20 +0800
+ 15.1.2375.24; Thu, 7 Apr 2022 17:59:23 +0800
 Received: from localhost (172.16.21.190) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 7 Apr
- 2022 17:59:20 +0800
+ 2022 17:59:23 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>
-Subject: [PATCH 2/6] rtw88: fix incorrect frequency reported
-Date:   Thu, 7 Apr 2022 17:58:54 +0800
-Message-ID: <20220407095858.46807-3-pkshih@realtek.com>
+Subject: [PATCH 4/6] rtw88: 8821c: Enable TX report for management frames
+Date:   Thu, 7 Apr 2022 17:58:56 +0800
+Message-ID: <20220407095858.46807-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220407095858.46807-1-pkshih@realtek.com>
 References: <20220407095858.46807-1-pkshih@realtek.com>
@@ -66,30 +66,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Po-Hao Huang <phhuang@realtek.com>
 
-We should only fill in frequency reported by firmware during scan.
-Add this so frames won't be dropped by mac80211 due to frequency
-mismatch.
+Without this setting, hardware would not report to driver even if
+management frames are transmitted successfully. So we fix it.
 
 Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/rtw8821c_table.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
-index d2d607e22198d..84aedabdf2853 100644
---- a/drivers/net/wireless/realtek/rtw88/rx.c
-+++ b/drivers/net/wireless/realtek/rtw88/rx.c
-@@ -158,7 +158,8 @@ void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
- 	memset(rx_status, 0, sizeof(*rx_status));
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
--	if (rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD))
-+	if (rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD) &&
-+	    test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
- 		rtw_set_rx_freq_by_pktstat(pkt_stat, rx_status);
- 	if (pkt_stat->crc_err)
- 		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c_table.c b/drivers/net/wireless/realtek/rtw88/rtw8821c_table.c
+index 8e8915c5c4988..6c82c43834977 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c_table.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c_table.c
+@@ -13,7 +13,7 @@ static const u32 rtw8821c_mac[] = {
+ 	0x04F, 0x00000001,
+ 	0x029, 0x000000F9,
+ 	0x420, 0x00000080,
+-	0x421, 0x0000000F,
++	0x421, 0x0000001F,
+ 	0x428, 0x0000000A,
+ 	0x429, 0x00000010,
+ 	0x430, 0x00000000,
 -- 
 2.25.1
 
