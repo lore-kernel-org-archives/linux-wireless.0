@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A84E1C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Apr 2022 07:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F6DCC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Apr 2022 07:51:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbiDHHxR (ORCPT
+        id S230050AbiDHHxT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Apr 2022 03:53:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47450 "EHLO
+        Fri, 8 Apr 2022 03:53:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbiDHHxQ (ORCPT
+        with ESMTP id S229957AbiDHHxR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Apr 2022 03:53:16 -0400
-Received: from CHE01-ZR0-obe.outbound.protection.outlook.com (mail-zr0che01on2128.outbound.protection.outlook.com [40.107.24.128])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C2781F42D9;
-        Fri,  8 Apr 2022 00:51:13 -0700 (PDT)
+        Fri, 8 Apr 2022 03:53:17 -0400
+Received: from CHE01-GV0-obe.outbound.protection.outlook.com (mail-gv0che01on2130.outbound.protection.outlook.com [40.107.23.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DB8F1F99F7;
+        Fri,  8 Apr 2022 00:51:14 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fMp8OyRmRGNG7enQaB7/7x4TgP85FqI+N7BdGiH6qCh6IBXBKQz+RlYLY0wrC/H5xp45u2N3EwjsXwKpaynYFwm4lsX0hTXtedmr85P+Ah9bpBQKRluMZ+hmgesH+Oigdd/eACDYuzgIUX2o7SEHcFmJrycZRfCTyEWjrldDNzGfYdIr21FnWvjUtrLYfUtjAOhSX+l9M10OLcavGLgc/BE9BlB6MPRMpOQ9e6phkTk89NpvlPWxBUC9agOYXw9HzHyY7HJzefrvmdoQDXe2o9okL+igffeUU9OiFRH57odZwyJzfxG0DMKRrJoPyLMyYg7zrhUtNE+MBmzyPFKp0g==
+ b=apO973yTrO2blMyohzn6iwBgFLlgyBFrMkHyuSu3/GAM5I+P2LILkKL82+4S02CCSsoIALFp2i/bk+t3a8ar3dSYxUK08pG1AQWIw0WlTVWGR6OFa2Vdi2Y5ZubrfbhOE0EvWq+5q9j99xX7+l3tP2dPdXo/FGDDrkQ5Dcl9fTlshtv6wOhnL4fm6NTK3LWUWGyWKK/8yQI2sSMeVWIpAtQZA1I2JKvb5D0olz3+SUMVLEPb8G6eLdSboQi/7fsYyY0pnnaB+Vqiv5HIq2hDuTE5jzI5WAayT6BXPOc2YefxBMracedY4mIWSD/L6/CdY2kiv5TEEXcmU8EQXrpNVQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yKXRH8rOVFwlNIkLFMsE7MbPvvHUeWBKZ/VCp+LW2B0=;
- b=eLiS8wd3C4qYH5p+2hFimdMgQ8ZVagqHywtsspugp6isdhKBbeUcnmDVe4w6PzOk18XBt1dkp1Z/7HhGk0wCFrUe4JpsZkMeB0lUEOnitOVTdSdpfzGJo+g5XeJtJURliscZNXnu+aihdXCYCD2Hj7PKjWQdkyNlVps+YxaXJyMlr3OWr2INJVjBJjap4mKHtjiziIoGxlIjbO2xBZ7sdyo+iSQBIxxN4hu0DtSzWv9P6KYt9Fqg/Y1q8ZIyBuLFIMczaf4spZZ32KSe/XVaVqTdujSjMXS7iGUxzb5VAIE9XkuFRKu4YHouxWvQsfgqWRrtkAuOgCfpSCV1zYfAvQ==
+ bh=izmf8fMfZRV4zrOiR3WyISlwqnT08C3mNn0It/5hIjA=;
+ b=leBU7jlfTDgscsUOBHT+AVaPC1dSAAcWnk0pgcHXZSEMaddv3CRHWX/Urmq6NTc/wGmbvBUiiEOuC0nVFRpmIXkR53W8DUbx27zZ2xNNo1Yug1gz+QKhfaeTQnhheeNPsQoHCUSkX9qOaI/htcLWfdD/AoDenUGma66+8VcMma3esOH5/ROOvvSPr8sCW9CI3rqqtoow3clUxu8gRN1m+6086wVr4UkkoNfaCo4NhaifgjhMONvmA8HS/D3/L8iKj5NZGgDh8ptNvLS0GP4S4S5b3duvJVh3+FU1H5PGA7yRuONnpKvPwP15FLc5wx6ZJlL+4cw48KqC4CltiFzATQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=toradex.com; dmarc=pass action=none header.from=toradex.com;
  dkim=pass header.d=toradex.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=toradex.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yKXRH8rOVFwlNIkLFMsE7MbPvvHUeWBKZ/VCp+LW2B0=;
- b=lhX3GGoW3lM48sGR/8rWJuIxyxarAMobZaUyaIV5EGaAoHJSL2+BkUMW79bWVJVc3ztGo7AhfiJZSWIYZGtOM8GVDAjte8RbrfCytDFRwomssrOQK6xkr0ktaIMYGqdYHZMVUGmCXMqb0zObuwbQnVqnegDtk0Sy/mjetkka890=
+ bh=izmf8fMfZRV4zrOiR3WyISlwqnT08C3mNn0It/5hIjA=;
+ b=gvGVIKaAPags+DFkshnq60ur3EwSofFH7zp+3qIkO4to763wdfzf8OcD8/ubS7kttg7VT6CC+XnPspJd02RKC9Gu0QTQ9Y6Ro+jF0h+7pIIxLQ84tT2VTTYRodeZzmk8+d9T4sVtpcOmB4zy0W3aNLCb2agZElm/gO43+ftfmAI=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=toradex.com;
 Received: from GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM (2603:10a6:710:57::6) by
- ZRAP278MB0562.CHEP278.PROD.OUTLOOK.COM (2603:10a6:910:3d::7) with Microsoft
+ GV0P278MB0001.CHEP278.PROD.OUTLOOK.COM (2603:10a6:710:1d::8) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5144.22; Fri, 8 Apr 2022 07:51:11 +0000
+ 15.20.5144.25; Fri, 8 Apr 2022 07:51:11 +0000
 Received: from GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM
  ([fe80::d03a:14ba:bd9a:e165]) by GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM
  ([fe80::d03a:14ba:bd9a:e165%6]) with mapi id 15.20.5144.025; Fri, 8 Apr 2022
@@ -55,10 +55,12 @@ Cc:     Andrejs Cainikovs <andrejs.cainikovs@toradex.com>,
         =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
         Francesco Dolcini <francesco.dolcini@toradex.com>,
         netdev@vger.kernel.org
-Subject: [PATCH 0/2] mwifiex: Select firmware based on strapping
-Date:   Fri,  8 Apr 2022 09:50:58 +0200
-Message-Id: <20220408075100.10458-1-andrejs.cainikovs@toradex.com>
+Subject: [PATCH 2/2] mwifiex: Add SD8997 SDIO-UART firmware
+Date:   Fri,  8 Apr 2022 09:51:00 +0200
+Message-Id: <20220408075100.10458-3-andrejs.cainikovs@toradex.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220408075100.10458-1-andrejs.cainikovs@toradex.com>
+References: <20220408075100.10458-1-andrejs.cainikovs@toradex.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: ZR0P278CA0193.CHEP278.PROD.OUTLOOK.COM
@@ -66,71 +68,101 @@ X-ClientProxiedBy: ZR0P278CA0193.CHEP278.PROD.OUTLOOK.COM
  (2603:10a6:710:57::6)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7c55cf88-7553-42cb-b5f7-08da19348c56
-X-MS-TrafficTypeDiagnostic: ZRAP278MB0562:EE_
-X-Microsoft-Antispam-PRVS: <ZRAP278MB0562FD50775630489E8872E8E2E99@ZRAP278MB0562.CHEP278.PROD.OUTLOOK.COM>
+X-MS-Office365-Filtering-Correlation-Id: 4819016d-ae0c-4e14-e60e-08da19348ccd
+X-MS-TrafficTypeDiagnostic: GV0P278MB0001:EE_
+X-Microsoft-Antispam-PRVS: <GV0P278MB0001ADB80A028ED101A998F1E2E99@GV0P278MB0001.CHEP278.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: u9qcFtTmBNP/ci+06FBjCui6xKIGBDUE0nToZWF6iuJHkbt5ZWd3tDAjersGD+4xFsLcjnHiIhb3qb8gk+bfU4zSG1r5Ts906Ufvr0i6ifNq70coSdWc5EneNpTDifQ3+pLIcbYpEwK5ZnTfwTJ2E2msEnIuLYpE5TklaO2zvvWaCvCTU0az5p4LDD1aW8CIiCUtJTZx9g42UHZahDuDgE99UMBCW80T/pZupjUGUs8AHRcfOXwh4oPdITc1xRmvQw1pDoPB5sKYKuhq6iEVWooGxPfcg2XLAFHv/VSudaRFj8xybqYHkqoLQdzmGN1zdLQTPdhimP4AMk3908kfRI6mM/4gcjGOhdOjxWNpCeNLhxAGkBMfERFUYpDsRwLca6OtW5Z3CDqD04ujIcQOXDPHRlBnspPGPinsGBo5lUAwgYKV+us3GywCnP64ACS0DjzgsJ9/yIw76yG6zN95EArEd2oGebFp7xx6z+VGZqBbPXAgaIqTtPzGDJQDkE1LxrMx1wYPKVK5sX/JKYw9Nq2porEUV7Q/Zh7rTG2mKIUrhVn8zqdqpgrgAwPnHcttSjjliv2Vmpg17JV75T/rlSYj9ElSGRjhsRVp+nf8Rmh7MT8aGJb4b5AP6Rw6cfhlPYHxSm65MU2UVZQ2iKI1GJ5DlJ6a2ktVbAHh6xt/AGcVxO+wwfCICKOTT/l84RDqY8eQxvskj/pfVaPkH182Gw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(396003)(136003)(376002)(39850400004)(346002)(366004)(54906003)(6666004)(316002)(66556008)(6506007)(66946007)(66476007)(52116002)(110136005)(5660300002)(1076003)(186003)(508600001)(4326008)(6512007)(26005)(2906002)(2616005)(36756003)(8936002)(83380400001)(6486002)(7416002)(4744005)(86362001)(8676002)(44832011)(38350700002)(38100700002);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: Q+sgHa0UYvZM0Ygl/2pC19u3BqB0WhutftWfnsTHr/EE2/ZX4/+ZhvfEAnpYCPbXt3sXIUJBTRlo/myX7foXv+OFeJ046tdNF2Qh9CwoUIwS8l9M/YlMv83wjE+Fo6ceIFIoYMfXd82dtUevslE9kKGW0PRocEMgBleTGeCarynHIU8IlB8UJ0JkDX3ovp8c2lhksID+ijDFDB4EjGqwMrL014c/OpbAGpkW5kQ9FYWh5zXbB31DPamBlya2xuq5fE2A9Y2bStZsAUFAFsfFRVJOje4kzbrEqdNVp35w/oS2ZbTwXIajpgdDWcHc+H78RgQ0qIwdgu3AuYa8IZRXKMOY/QCUGNuYnkWN6CBdVXHOAlOC95WvwQaVnnN+oyz8rkdEEE0Rkvczmz3/HBV1kObAJ5idHQ8A2WAPXskdcYyDQFeR+O51Imgcr7sBDi4pXMM8US2ORLjWYbUJBE+0VtbRgcFLEs7kfg4gRyGLVrwAeMP6AqQQuQOpxmmlgFnTu4ZdTRJSsTYigBoR+Cvenzc/U96XZV4/BtPsKBO9tNeEePxPQtxyZYUqYtpnahoRqCEKFY7oFVhoO4n4Z9+EudpFaqGHaSClJtkYcNCyv1g0wNsQTl0NgwVWlE5Ib5WP9jmxdN2LImQvEz/gWhLFZ/Dg/r88DPqDs814GcYNe/XZD123NYlrrGZK4zDcrVkVXL1+bPzyocQYSTYy0AMIjA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(376002)(366004)(396003)(136003)(346002)(39850400004)(6486002)(8936002)(86362001)(2616005)(6666004)(2906002)(52116002)(1076003)(66946007)(6512007)(36756003)(38100700002)(44832011)(26005)(6506007)(186003)(38350700002)(4326008)(5660300002)(508600001)(7416002)(110136005)(66476007)(54906003)(66556008)(83380400001)(316002)(8676002);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?QhNbq78IDDQOZbEtO7c/XoNTHCcHYhvy6GNIBPiAWsbf0WpvxXXR6FCzwvxF?=
- =?us-ascii?Q?8E5cRCknVuLbsiC0cDxqLWCHHG0p3ikrapxCcuZ4Db4ti61pHo21qKu0Pc64?=
- =?us-ascii?Q?tGheZl9hDFx94KnnNPfcyJhSJS5Rg502GgADiSyBw/yuHApXcOqI07YRLuND?=
- =?us-ascii?Q?DH4t6ZDUKlhNhCyWh4pGC9bZHooqS5bCtVvYlbLXC9UWOQQdRQbKYjEATKyh?=
- =?us-ascii?Q?TfTgmSRLntldieKTsFIt8SLytCpRNZ8XO3hoviLG+wUpehRYWtjW/4jtNTGj?=
- =?us-ascii?Q?5LCLMia8VqqmWZIqbncaYVUzDFfCaMTg0KWX0HtHynY3sEwQrtrLBtXD3Hj8?=
- =?us-ascii?Q?usEJbJaGQat9da1ypvgGIq7UQjZSXXqR1llVEF2EZm/GWH2eOA8361/U1khx?=
- =?us-ascii?Q?nrsyHx0pOnISx3cr0DYBZc3zwFfEgDaDfMQsrVkSs6DVnF4GMD7O4woyWnlz?=
- =?us-ascii?Q?xAYsq3hADO4HEvqHDxaqH9UvBQRoYvqrPThDIlQgA1X4g4uQJJ9N9zpuREt3?=
- =?us-ascii?Q?qQkzTXvfe8VaUpMOkPeasx7ofhcjc0SC5ak0ZmazJJk6+qwCj98cmjI2VQ5S?=
- =?us-ascii?Q?s7zyPtPamr8z8uMxItZSVxU1QNwoKxMMy008q+qKA1qdykRowf/e+Zogr3Zh?=
- =?us-ascii?Q?BV8tC3F7BdCYP+sFxPurgvymZUNKd2Z79q+1ZeSy2/M6MtxO0rWMJwMyuKlO?=
- =?us-ascii?Q?qY/iQm3m0A/jaTrdGm5Ein24u1iHHaVHvHyrxG0gtarnuPAgeNBczHsRFKSj?=
- =?us-ascii?Q?27UhlGCrXaDOz8Sd818cnH8h1WYAysdIsekvSJDA/L7Szdo4+JMnQc+qlb3z?=
- =?us-ascii?Q?mW/XpsUUAorLEE/dAd6pClZ340WG+orgJYVlsm3ICV3RVBCGEeJDdM0P4rw+?=
- =?us-ascii?Q?mO9bjj8jgiAbYf49r1saogvvyrOdQKKbPNk1B9/cwVqDnOj9okrzAKzksXqq?=
- =?us-ascii?Q?HxbvMAcuGbfQ4TgioqBiRRhJ+aCCnV45WPu1joNyfaswkdHnqsq2+T4GAZWr?=
- =?us-ascii?Q?R5wReyKSS1AHIyk5oeKnrWzwfl7rrvWyLXWhwaFTCsaYpYUNJLtEW2mFQfmG?=
- =?us-ascii?Q?UdBFnk7yjAp5Tds2XQN8cmABBZ8fDkH4dy+YXgKYjPfwCAK3c7LMN44uNTqV?=
- =?us-ascii?Q?j4hC4+PVsUsHlaoh/kh1oizpWa3Iwv7c40x151v5Pr4jYf4OuNkciUULHHxb?=
- =?us-ascii?Q?KuE88IET3KzAiwBiYY0zbsbVkJBlPIUeMyQPM3M6sm2F7JrY3N6BeqdYHsSt?=
- =?us-ascii?Q?CZ68OOZaFHtVSfb6vKo0WL5kIEYDFqCG3/fxHDXaEkqw9qYZULIfuDCkRJDp?=
- =?us-ascii?Q?bPMLQzPbTEHm1s80GoQ+TcfrzYnuFfFpbuchTdTpvAOeClUKxvBlBuedvQeE?=
- =?us-ascii?Q?NthTJPtNiTqfFGwrIYKXZRpOs0vqbOn6RfWJomVk5zAPP+0zyDbUKlMoct3S?=
- =?us-ascii?Q?uuusOBjS2m69neBp6cPWbYqDQNJz4BoSxRU94ENeFnA+M80cKpVp2jtVIyy1?=
- =?us-ascii?Q?FDv4LLAJI63BadSksB9ZbZPwtJ9VJ1SK6gd8lyVSa2TY+7W0/912VelC1Avc?=
- =?us-ascii?Q?AKasn7LiTbMVCOTCjhMo59aC7bXVqSAU4Z3WofHX+YVAPbeOihjp8PR8FFnj?=
- =?us-ascii?Q?hoDRQ1IdNTU7U7S3RjrJAvxvCCYVsLYiF6Q+qzTrE+MyKr+5lr3SKaYrQPcy?=
- =?us-ascii?Q?C2h///GyW95YmZdr4vUwTKl5U5JE2/lX2iY6BeG8BN887Pey54b2j5dJ8fYG?=
- =?us-ascii?Q?YZYwou1fa0QcMUY9sENb3xgcLXEiqDY=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?sr6YgcxRfMH14Du5Ji446S9HuPAduq19JDZcHE25HoQ8rhIC2rN6E39osaqp?=
+ =?us-ascii?Q?ccmVehqi0YHcFtdAj7p4Cu2+dvmLT6PO8HzchtnAYyyTfFjWNh0cCL5lAcfr?=
+ =?us-ascii?Q?rQJc1jbzZJOah0ehtT9gxSpCT9Q8KxTMjJ5fu4ruwuWhbVXhal7uXSF+1DJ2?=
+ =?us-ascii?Q?Y1781zmtUaJKnCM181QiEOqkRSh1fArIcmGHdGEC2USc/IMzakZ2AKOtDztU?=
+ =?us-ascii?Q?J/j8NEjIV16c+IqtyQLiivLQW4BoIW9juRVIE+xo0J2Zdktj/Xvpbe0wgXG1?=
+ =?us-ascii?Q?EgY6oqIBibIJBZgGyHxaKlry360ojjB05rk9r+9f0/cCYruYR2sjS73lvqQK?=
+ =?us-ascii?Q?S3gXelUEH39Fd4RztS65wlCQJxLYihruMvnB4DWWvPIfbkbDlm59rNOHWycA?=
+ =?us-ascii?Q?8wah0IfamypkcXBHHyDso/DG+FSBS3IBGiyZZQa1w90Iam9ufvnhvEBst32O?=
+ =?us-ascii?Q?9pT1rxVCc5IL70oINUspKI6rexZriaiZrWagBqi/qjk6Iv57BlgphEu+D6PF?=
+ =?us-ascii?Q?NxZ3WMn+sCI78KlDHavhVYhUr3gR5EO2rB9JloKdxl5fo4XrTtCv58tOwsmh?=
+ =?us-ascii?Q?HYYmfd3OaBpnurZhpPEw5zWIY3P4iq0XGgqH/ak3884SXaRSXESuXWVI5B/Y?=
+ =?us-ascii?Q?+3vVnZlrAnd123tdiTkYYI50DYml5Ap2gDQDAdBrkgaj/B0Njr9sX+c+hA4p?=
+ =?us-ascii?Q?yLzqOvks/IK+t77laqNv0EWN0pyMKeNVaMjlL3Pj1SMSQ1DToa1hxpV0YO9b?=
+ =?us-ascii?Q?dQ2u4XffmcDWqB7X9VZM8+HK6VFW+c1KczqqXM6S3SrYc+FTfmDTcrrZX6A/?=
+ =?us-ascii?Q?i8hcZwBh/6dH20SUSCU8v7g/uwgGWdBybGLSyVuNvybYre6xXNPqE3nmrYgN?=
+ =?us-ascii?Q?JY2OmM+N+0Pg4A0iF/XDf/efBj8EL0X0vyNFykvb/qLTV685GUjD9OfdLccF?=
+ =?us-ascii?Q?uJ1cpMcdYtL6hXetsryQyb0S/LB9Tg+be1pS3SHxswhu3EJqk5QTdDTnA+eg?=
+ =?us-ascii?Q?Jx9qPz6QlSOOBg6SNzX+axQ1TFPe38+GKe+xPbPCBcuXhV/6RU1xEgaps1i4?=
+ =?us-ascii?Q?V4dzoRj4pTU5aZLWyaiyl0zgLm/C3p47bJ0AHe+SxzAcnd5XOGAg1+v6DIVb?=
+ =?us-ascii?Q?/Hbf60qn50zUnLwYHAyLvf+yQHE27P9lrUWDZmISwFqLuAdhmNGa5QLOtTNJ?=
+ =?us-ascii?Q?xAOEncbC+XRXVtmwPH4Nd0UMMtAj8zCR+CPCwkscJM+rFK9VmomRIml1pvAv?=
+ =?us-ascii?Q?gpmKaVHcg/aUaW+x9s1Nhllf98pLhCR1XzuVszvg3cPcjksWwFLbGkaY/Aqi?=
+ =?us-ascii?Q?YEvC7Wo9mnLgs2t5qs5hTdoH+Z/MTzH9XHcxVrIJU5TkxHbFNjmMZHVOvQyR?=
+ =?us-ascii?Q?k/KeISTXNci6LV4nmW9W52XYsxH12ss2vtIh3qbZkfI5ZH546liJlrzSiv3h?=
+ =?us-ascii?Q?QKjCIaEl9VpqCyYNeHxrEDf9TZTzORb8XErDN2nmIt69vaNM0/bom4nX7hTR?=
+ =?us-ascii?Q?PHorQY44uCGCEBRsj1f2a+vQReuR7UHi3uCQBt2PAdauRpPfmGXDeEhyKP1E?=
+ =?us-ascii?Q?tSh03gFyrqLdPiyariNQlfo1JOdOkMOm6xG0X+VVBX4zLBxcmrvjg9yHZW5w?=
+ =?us-ascii?Q?X8BR+vI+o+XR6rcNAd0KIS5dCplKcOq5PMAZJj3hL/Iu604UTHiwvQMb6vyq?=
+ =?us-ascii?Q?l6XgRSiM0lVXmRPwXUTjvK7wLEoPDjRIZLAFEUBW5QUr5QwwsG3vU3on5g30?=
+ =?us-ascii?Q?8QVN7sQsr6D74Ew7WE6I0xbUtTGmSxo=3D?=
 X-OriginatorOrg: toradex.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7c55cf88-7553-42cb-b5f7-08da19348c56
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4819016d-ae0c-4e14-e60e-08da19348ccd
 X-MS-Exchange-CrossTenant-AuthSource: GVAP278MB0929.CHEP278.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 07:51:11.0926
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 07:51:11.8582
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: d9995866-0d9b-4251-8315-093f062abab4
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 545QCZL/IurrAN0E/B4hQN6HSQhDzletkrHYh3+V55xoDDx30IB5UiLLr4jSHDTwHUp6NmGZlNKmYT/FnBwtGQbiyPIV50so1fUUqdPPXUU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: ZRAP278MB0562
+X-MS-Exchange-CrossTenant-UserPrincipalName: d0ZrYCCLAPeqXMqE3WPsgTY3FCRATlXsf3ZCt9FNLeDNlAyPP6b3HYDnVeA4bv4nda9mY77kZu3orehUTpidbF048OHDBlBIOXa7+a2oHAY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV0P278MB0001
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch set introduces a way to automatically select appropriate
-firmware depending of the host connection method.
+With a recent change now it is possible to detect the strapping
+option on SD8997, which allows to pick up a correct firmware
+for either SDIO-SDIO or SDIO-UART.
 
-Andrejs Cainikovs (2):
-  mwifiex: Select firmware based on strapping
-  mwifiex: Add SD8997 SDIO-UART firmware
+This commit enables SDIO-UART firmware on SD8997.
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 20 +++++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/sdio.h |  6 ++++++
- 2 files changed, 25 insertions(+), 1 deletion(-)
+Signed-off-by: Andrejs Cainikovs <andrejs.cainikovs@toradex.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 2 ++
+ drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
+ 2 files changed, 3 insertions(+)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 23160d179485..dd5eb1a370b0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -405,6 +405,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8977 = {
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8997 = {
+ 	.firmware = SD8997_DEFAULT_FW_NAME,
++	.firmware_sdiouart = SD8997_SDIOUART_FW_NAME,
+ 	.reg = &mwifiex_reg_sd8997,
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+@@ -3173,3 +3174,4 @@ MODULE_FIRMWARE(SD8887_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8977_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8987_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8997_DEFAULT_FW_NAME);
++MODULE_FIRMWARE(SD8997_SDIOUART_FW_NAME);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+index ad2c28cbb630..28e8f76bdd58 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.h
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+@@ -39,6 +39,7 @@
+ #define SD8977_DEFAULT_FW_NAME "mrvl/sdsd8977_combo_v2.bin"
+ #define SD8987_DEFAULT_FW_NAME "mrvl/sd8987_uapsta.bin"
+ #define SD8997_DEFAULT_FW_NAME "mrvl/sdsd8997_combo_v4.bin"
++#define SD8997_SDIOUART_FW_NAME "mrvl/sdiouart8997_combo_v4.bin"
+ 
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
 -- 
 2.25.1
 
