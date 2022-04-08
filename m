@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFEAC4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Apr 2022 00:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F623C43217
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Apr 2022 00:14:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232812AbiDHAQi (ORCPT
+        id S232818AbiDHAQk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:16:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53140 "EHLO
+        Thu, 7 Apr 2022 20:16:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232777AbiDHAQ2 (ORCPT
+        with ESMTP id S232766AbiDHAQ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Apr 2022 20:16:28 -0400
+        Thu, 7 Apr 2022 20:16:29 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BAA61A6E6E
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 17:14:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8387A280C26
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 17:14:27 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2380EI4j8019403, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2380ELSu8019413, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2380EI4j8019403
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2380ELSu8019413
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 8 Apr 2022 08:14:18 +0800
+        Fri, 8 Apr 2022 08:14:21 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 8 Apr 2022 08:14:17 +0800
+ 15.1.2308.27; Fri, 8 Apr 2022 08:14:21 +0800
 Received: from localhost (172.16.21.190) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 8 Apr
- 2022 08:14:17 +0800
+ 2022 08:14:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <leo.li@realtek.com>,
         <johnson.lin@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 07/13] rtw89: 8852c: disable firmware watchdog if CPU disabled
-Date:   Fri, 8 Apr 2022 08:13:47 +0800
-Message-ID: <20220408001353.17188-8-pkshih@realtek.com>
+Subject: [PATCH v2 09/13] rtw89: 8852c: add 8852c specific BT-coexistence initial function
+Date:   Fri, 8 Apr 2022 08:13:49 +0800
+Message-ID: <20220408001353.17188-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220408001353.17188-1-pkshih@realtek.com>
 References: <20220408001353.17188-1-pkshih@realtek.com>
@@ -67,138 +67,217 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chia-Yuan Li <leo.li@realtek.com>
 
-Disable watchdog timer to prevent it timeout suddenly.
+Initialize registers to default values, such as PTA and GNT pin, and set
+pin MUX according to number of antenna on hardware module.
 
 Signed-off-by: Chia-Yuan Li <leo.li@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c | 37 +++++++++++++++++++++++-
- drivers/net/wireless/realtek/rtw89/mac.h |  6 ++--
- drivers/net/wireless/realtek/rtw89/reg.h | 16 ++++++++++
- 3 files changed, 55 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/mac.c      | 28 +++++++++
+ drivers/net/wireless/realtek/rtw89/mac.h      |  2 +
+ drivers/net/wireless/realtek/rtw89/reg.h      | 33 +++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 59 +++++++++++++++++++
+ 4 files changed, 122 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 91383c08beb3a..da66d28e98a62 100644
+index da66d28e98a62..684065820dfd7 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.c
 +++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -10,7 +10,7 @@
- #include "reg.h"
- #include "util.h"
- 
--const u32 rtw89_mac_mem_base_addrs[RTW89_MAC_MEM_MAX] = {
-+const u32 rtw89_mac_mem_base_addrs[RTW89_MAC_MEM_NUM] = {
- 	[RTW89_MAC_MEM_AXIDMA]	        = AXIDMA_BASE_ADDR,
- 	[RTW89_MAC_MEM_SHARED_BUF]	= SHARED_BUF_BASE_ADDR,
- 	[RTW89_MAC_MEM_DMAC_TBL]	= DMAC_TBL_BASE_ADDR,
-@@ -28,8 +28,27 @@ const u32 rtw89_mac_mem_base_addrs[RTW89_MAC_MEM_MAX] = {
- 	[RTW89_MAC_MEM_TXD_FIFO_1]	= TXD_FIFO_1_BASE_ADDR,
- 	[RTW89_MAC_MEM_TXDATA_FIFO_0]	= TXDATA_FIFO_0_BASE_ADDR,
- 	[RTW89_MAC_MEM_TXDATA_FIFO_1]	= TXDATA_FIFO_1_BASE_ADDR,
-+	[RTW89_MAC_MEM_CPU_LOCAL]	= CPU_LOCAL_BASE_ADDR,
- };
- 
-+static void rtw89_mac_mem_write(struct rtw89_dev *rtwdev, u32 offset,
-+				u32 val, enum rtw89_mac_mem_sel sel)
-+{
-+	u32 addr = rtw89_mac_mem_base_addrs[sel] + offset;
-+
-+	rtw89_write32(rtwdev, R_AX_FILTER_MODEL_ADDR, addr);
-+	rtw89_write32(rtwdev, R_AX_INDIR_ACCESS_ENTRY, val);
-+}
-+
-+static u32 rtw89_mac_mem_read(struct rtw89_dev *rtwdev, u32 offset,
-+			      enum rtw89_mac_mem_sel sel)
-+{
-+	u32 addr = rtw89_mac_mem_base_addrs[sel] + offset;
-+
-+	rtw89_write32(rtwdev, R_AX_FILTER_MODEL_ADDR, addr);
-+	return rtw89_read32(rtwdev, R_AX_INDIR_ACCESS_ENTRY);
-+}
-+
- int rtw89_mac_check_mac_en(struct rtw89_dev *rtwdev, u8 mac_idx,
- 			   enum rtw89_mac_hwmod_sel sel)
- {
-@@ -2965,6 +2984,19 @@ static int rtw89_mac_trx_init(struct rtw89_dev *rtwdev)
- 	return 0;
+@@ -3973,6 +3973,34 @@ int rtw89_mac_coex_init(struct rtw89_dev *rtwdev, const struct rtw89_mac_ax_coex
  }
+ EXPORT_SYMBOL(rtw89_mac_coex_init);
  
-+static void rtw89_disable_fw_watchdog(struct rtw89_dev *rtwdev)
++int rtw89_mac_coex_init_v1(struct rtw89_dev *rtwdev,
++			   const struct rtw89_mac_ax_coex *coex)
 +{
-+	u32 val32;
++	rtw89_write32_set(rtwdev, R_AX_BTC_CFG,
++			  B_AX_BTC_EN | B_AX_BTG_LNA1_GAIN_SEL);
++	rtw89_write32_set(rtwdev, R_AX_BT_CNT_CFG, B_AX_BT_CNT_EN);
++	rtw89_write16_set(rtwdev, R_AX_CCA_CFG_0, B_AX_BTCCA_EN);
++	rtw89_write16_clr(rtwdev, R_AX_CCA_CFG_0, B_AX_BTCCA_BRK_TXOP_EN);
 +
-+	rtw89_mac_mem_write(rtwdev, R_AX_WDT_CTRL,
-+			    WDT_CTRL_ALL_DIS, RTW89_MAC_MEM_CPU_LOCAL);
++	switch (coex->pta_mode) {
++	case RTW89_MAC_AX_COEX_RTK_MODE:
++		rtw89_write32_mask(rtwdev, R_AX_BTC_CFG, B_AX_BTC_MODE_MASK,
++				   MAC_AX_RTK_MODE);
++		rtw89_write32_mask(rtwdev, R_AX_RTK_MODE_CFG_V1,
++				   B_AX_SAMPLE_CLK_MASK, MAC_AX_RTK_RATE);
++		break;
++	case RTW89_MAC_AX_COEX_CSR_MODE:
++		rtw89_write32_mask(rtwdev, R_AX_BTC_CFG, B_AX_BTC_MODE_MASK,
++				   MAC_AX_CSR_MODE);
++		break;
++	default:
++		return -EINVAL;
++	}
 +
-+	val32 = rtw89_mac_mem_read(rtwdev, R_AX_WDT_STATUS, RTW89_MAC_MEM_CPU_LOCAL);
-+	val32 |= B_AX_FS_WDT_INT;
-+	val32 &= ~B_AX_FS_WDT_INT_MSK;
-+	rtw89_mac_mem_write(rtwdev, R_AX_WDT_STATUS, val32, RTW89_MAC_MEM_CPU_LOCAL);
++	return 0;
 +}
++EXPORT_SYMBOL(rtw89_mac_coex_init_v1);
 +
- static void rtw89_mac_disable_cpu(struct rtw89_dev *rtwdev)
+ int rtw89_mac_cfg_gnt(struct rtw89_dev *rtwdev,
+ 		      const struct rtw89_mac_ax_coex_gnt *gnt_cfg)
  {
- 	clear_bit(RTW89_FLAG_FW_RDY, rtwdev->flags);
-@@ -2973,6 +3005,9 @@ static void rtw89_mac_disable_cpu(struct rtw89_dev *rtwdev)
- 	rtw89_write32_clr(rtwdev, R_AX_WCPU_FW_CTRL, B_AX_WCPU_FWDL_EN |
- 			  B_AX_H2C_PATH_RDY | B_AX_FWDL_PATH_RDY);
- 	rtw89_write32_clr(rtwdev, R_AX_SYS_CLK_CTRL, B_AX_CPU_CLK_EN);
-+
-+	rtw89_disable_fw_watchdog(rtwdev);
-+
- 	rtw89_write32_clr(rtwdev, R_AX_PLATFORM_ENABLE, B_AX_PLATFORM_EN);
- 	rtw89_write32_set(rtwdev, R_AX_PLATFORM_ENABLE, B_AX_PLATFORM_EN);
- }
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index de65d9becb056..31d53de97cfce 100644
+index 31d53de97cfce..9eb4afe348b30 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.h
 +++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -245,6 +245,7 @@ enum rtw89_mac_dbg_port_sel {
- #define	TXD_FIFO_1_BASE_ADDR		0x188A1080
- #define	TXDATA_FIFO_0_BASE_ADDR		0x18856000
- #define	TXDATA_FIFO_1_BASE_ADDR		0x188A1000
-+#define	CPU_LOCAL_BASE_ADDR		0x18003000
- 
- #define CCTL_INFO_SIZE		32
- 
-@@ -266,11 +267,10 @@ enum rtw89_mac_mem_sel {
- 	RTW89_MAC_MEM_TXD_FIFO_1,
- 	RTW89_MAC_MEM_TXDATA_FIFO_0,
- 	RTW89_MAC_MEM_TXDATA_FIFO_1,
-+	RTW89_MAC_MEM_CPU_LOCAL,
- 
- 	/* keep last */
--	RTW89_MAC_MEM_LAST,
--	RTW89_MAC_MEM_MAX = RTW89_MAC_MEM_LAST,
--	RTW89_MAC_MEM_INVALID = RTW89_MAC_MEM_LAST,
-+	RTW89_MAC_MEM_NUM,
- };
- 
- extern const u32 rtw89_mac_mem_base_addrs[];
+@@ -829,6 +829,8 @@ int rtw89_mac_cfg_ppdu_status(struct rtw89_dev *rtwdev, u8 mac_ids, bool enable)
+ void rtw89_mac_update_rts_threshold(struct rtw89_dev *rtwdev, u8 mac_idx);
+ void rtw89_mac_flush_txq(struct rtw89_dev *rtwdev, u32 queues, bool drop);
+ int rtw89_mac_coex_init(struct rtw89_dev *rtwdev, const struct rtw89_mac_ax_coex *coex);
++int rtw89_mac_coex_init_v1(struct rtw89_dev *rtwdev,
++			   const struct rtw89_mac_ax_coex *coex);
+ int rtw89_mac_cfg_gnt(struct rtw89_dev *rtwdev,
+ 		      const struct rtw89_mac_ax_coex_gnt *gnt_cfg);
+ int rtw89_mac_cfg_gnt_v1(struct rtw89_dev *rtwdev,
 diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index bc343e756aad7..15d29c226b0c3 100644
+index 15d29c226b0c3..98465d7469898 100644
 --- a/drivers/net/wireless/realtek/rtw89/reg.h
 +++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3773,4 +3773,20 @@
- #define B_IQKINF2_FCNT GENMASK(23, 16)
- #define B_IQKINF2_KCNT GENMASK(15, 8)
- #define B_IQKINF2_NCTLV GENMAKS(7, 0)
+@@ -87,6 +87,8 @@
+ #define B_AX_BTMODE_MASK GENMASK(7, 6)
+ #define MAC_AX_BT_MODE_0_3 0
+ #define MAC_AX_BT_MODE_2 2
++#define MAC_AX_RTK_MODE 0
++#define MAC_AX_CSR_MODE 1
+ #define B_AX_ENBT BIT(5)
+ #define B_AX_EROM_EN BIT(4)
+ #define B_AX_ENUARTRX BIT(2)
+@@ -2962,11 +2964,40 @@
+ #define R_AX_TXPWR_ISR_C1 0xF9E4
+ 
+ #define R_AX_BTC_CFG 0xDA00
++#define B_AX_BTC_EN BIT(31)
++#define B_AX_EN_EXT_BT_PINMUX BIT(29)
++#define B_AX_BTC_RST BIT(28)
++#define B_AX_BTC_DBG_SRC_SEL BIT(27)
++#define B_AX_BTC_MODE_MASK GENMASK(25, 24)
++#define B_AX_INV_WL_ACT2 BIT(17)
++#define B_AX_BTG_LNA1_GAIN_SEL BIT(16)
++#define B_AX_COEX_DLY_CLK_MASK GENMASK(15, 8)
++#define B_AX_IGN_GNT_BT2_RX BIT(7)
++#define B_AX_IGN_GNT_BT2_TX BIT(6)
++#define B_AX_IGN_GNT_BT2 BIT(5)
++#define B_AX_BTC_DBG_SEL_MASK GENMASK(4, 3)
+ #define B_AX_DIS_BTC_CLK_G BIT(2)
++#define B_AX_GNT_WL_RX_CTRL BIT(1)
++#define B_AX_WL_SRC BIT(0)
 +
-+/* WiFi CPU local domain */
-+#define R_AX_WDT_CTRL 0x0040
-+#define B_AX_WDT_EN BIT(31)
-+#define B_AX_WDT_OPT_RESET_PLATFORM_EN BIT(29)
-+#define B_AX_IO_HANG_IMR BIT(27)
-+#define B_AX_IO_HANG_CMAC_RDATA_EN BIT(26)
-+#define B_AX_IO_HANG_DMAC_EN BIT(25)
-+#define B_AX_WDT_CLR BIT(16)
-+#define B_AX_WDT_COUNT_MASK GENMASK(15, 0)
-+#define WDT_CTRL_ALL_DIS 0
++#define R_AX_RTK_MODE_CFG_V1 0xDA04
++#define R_AX_RTK_MODE_CFG_V1_C1 0xFA04
++#define B_AX_BT_BLE_EN_V1 BIT(24)
++#define B_AX_BT_ULTRA_EN BIT(16)
++#define B_AX_BT_L_RX_ULTRA_MASK GENMASK(15, 14)
++#define B_AX_BT_L_TX_ULTRA_MASK GENMASK(13, 12)
++#define B_AX_BT_H_RX_ULTRA_MASK GENMASK(11, 10)
++#define B_AX_BT_H_TX_ULTRA_MASK GENMASK(9, 8)
++#define B_AX_SAMPLE_CLK_MASK GENMASK(7, 0)
+ 
+ #define R_AX_WL_PRI_MSK 0xDA10
+ #define B_AX_PTA_WL_PRI_MASK_BCNQ BIT(8)
+ 
++#define R_AX_BT_CNT_CFG 0xDA10
++#define R_AX_BT_CNT_CFG_C1 0xFA10
++#define B_AX_BT_CNT_RST_V1 BIT(1)
++#define B_AX_BT_CNT_EN BIT(0)
 +
-+#define R_AX_WDT_STATUS 0x0044
-+#define B_AX_FS_WDT_INT BIT(8)
-+#define B_AX_FS_WDT_INT_MSK BIT(0)
+ #define R_AX_BTC_FUNC_EN 0xDA20
+ #define R_AX_BTC_FUNC_EN_C1 0xFA20
+ #define B_AX_PTA_WL_TX_EN BIT(1)
+@@ -2999,6 +3030,8 @@
+ #define B_AX_WL_ACT_MASK_ENABLE BIT(1)
+ #define B_AX_ENHANCED_BT BIT(0)
+ 
++#define R_AX_BT_BREAK_TABLE 0xDA44
 +
- #endif
+ #define R_AX_BT_STAST_HIGH 0xDA44
+ #define B_AX_STATIS_BT_HI_RX_MASK GENMASK(31, 16)
+ #define B_AX_STATIS_BT_HI_TX_MASK GENMASK(15, 0)
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index ca254339ea7a9..38b1383307161 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -2,6 +2,7 @@
+ /* Copyright(c) 2019-2022  Realtek Corporation
+  */
+ 
++#include "coex.h"
+ #include "debug.h"
+ #include "fw.h"
+ #include "mac.h"
+@@ -528,6 +529,62 @@ void rtw8852c_set_txpwr_ul_tb_offset(struct rtw89_dev *rtwdev,
+ 	}
+ }
+ 
++static
++void rtw8852c_set_trx_mask(struct rtw89_dev *rtwdev, u8 path, u8 group, u32 val)
++{
++	rtw89_write_rf(rtwdev, path, RR_LUTWE, RFREG_MASK, 0x20000);
++	rtw89_write_rf(rtwdev, path, RR_LUTWA, RFREG_MASK, group);
++	rtw89_write_rf(rtwdev, path, RR_LUTWD0, RFREG_MASK, val);
++	rtw89_write_rf(rtwdev, path, RR_LUTWE, RFREG_MASK, 0x0);
++}
++
++static void rtw8852c_btc_init_cfg(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_module *module = &btc->mdinfo;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_mac_ax_coex coex_params = {
++		.pta_mode = RTW89_MAC_AX_COEX_RTK_MODE,
++		.direction = RTW89_MAC_AX_COEX_INNER,
++	};
++
++	/* PTA init  */
++	rtw89_mac_coex_init_v1(rtwdev, &coex_params);
++
++	/* set WL Tx response = Hi-Pri */
++	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_TX_RESP, true);
++	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_BEACON, true);
++
++	/* set rf gnt debug off */
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_WLSEL, RFREG_MASK, 0x0);
++	rtw89_write_rf(rtwdev, RF_PATH_B, RR_WLSEL, RFREG_MASK, 0x0);
++
++	/* set WL Tx thru in TRX mask table if GNT_WL = 0 && BT_S1 = ss group */
++	if (module->ant.type == BTC_ANT_SHARED) {
++		rtw8852c_set_trx_mask(rtwdev,
++				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5ff);
++		rtw8852c_set_trx_mask(rtwdev,
++				      RF_PATH_B, BTC_BT_SS_GROUP, 0x5ff);
++		/* set path-A(S0) Tx/Rx no-mask if GNT_WL=0 && BT_S1=tx group */
++		rtw8852c_set_trx_mask(rtwdev,
++				      RF_PATH_A, BTC_BT_TX_GROUP, 0x5ff);
++	} else { /* set WL Tx stb if GNT_WL = 0 && BT_S1 = ss group for 3-ant */
++		rtw8852c_set_trx_mask(rtwdev,
++				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5df);
++		rtw8852c_set_trx_mask(rtwdev,
++				      RF_PATH_B, BTC_BT_SS_GROUP, 0x5df);
++	}
++
++	/* set PTA break table */
++	rtw89_write32(rtwdev, R_AX_BT_BREAK_TABLE, BTC_BREAK_PARAM);
++
++	 /* enable BT counter 0xda10[1:0] = 2b'11 */
++	rtw89_write32_set(rtwdev,
++			  R_AX_BT_CNT_CFG, B_AX_BT_CNT_EN |
++			  B_AX_BT_CNT_RST_V1);
++	btc->cx.wl.status.map.init_ok = true;
++}
++
+ static int rtw8852c_mac_enable_bb_rf(struct rtw89_dev *rtwdev)
+ {
+ 	int ret;
+@@ -588,6 +645,8 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
+ 	.mac_cfg_gnt		= rtw89_mac_cfg_gnt_v1,
+ 	.stop_sch_tx		= rtw89_mac_stop_sch_tx_v1,
+ 	.resume_sch_tx		= rtw89_mac_resume_sch_tx_v1,
++
++	.btc_init_cfg		= rtw8852c_btc_init_cfg,
+ };
+ 
+ const struct rtw89_chip_info rtw8852c_chip_info = {
 -- 
 2.25.1
 
