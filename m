@@ -2,100 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1A8C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Apr 2022 23:58:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5B1C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Apr 2022 00:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232675AbiDHAAj (ORCPT
+        id S232706AbiDHADX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:00:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54432 "EHLO
+        Thu, 7 Apr 2022 20:03:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232672AbiDHAAg (ORCPT
+        with ESMTP id S232705AbiDHADW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Apr 2022 20:00:36 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B6AA15D395
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 16:58:35 -0700 (PDT)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.24])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 63FE32005E
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 23:58:33 +0000 (UTC)
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 3A6243C006D
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2022 23:58:33 +0000 (UTC)
-Received: from v-f30-64.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 6707213C2B0;
-        Thu,  7 Apr 2022 16:58:32 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 6707213C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1649375912;
-        bh=8MLdQagpbw4WzvDiPv2GGJpvCs3gfxgDUB0YKiCRPzU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Gma7nb3lMDpjMju/Oo3KPDkKGhPMFCQS8Xi7dKeypS28giJU/Zlodg9b4wOQo4L83
-         GKYw3SpICr0KADmkAzbmE+v+bWCjfRQZQwIOwsSsa/jpRJlRO+43pKppVBSVWDjp9E
-         yDU60lKFV4Zs+2gORheRyOVMzCMxDhV+iYGpblZY=
-From:   greearb@candelatech.com
-To:     linux-wireless@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] iw:  print out assoc comeback event.
-Date:   Thu,  7 Apr 2022 16:58:26 -0700
-Message-Id: <20220407235826.2690-1-greearb@candelatech.com>
-X-Mailer: git-send-email 2.21.3
+        Thu, 7 Apr 2022 20:03:22 -0400
+Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E2FF217977;
+        Thu,  7 Apr 2022 17:01:19 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R391e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=12;SR=0;TI=SMTPD_---0V9T1PDU_1649376075;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0V9T1PDU_1649376075)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 08 Apr 2022 08:01:15 +0800
+From:   Yang Li <yang.lee@linux.alibaba.com>
+To:     kvalo@kernel.org
+Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        loic.poulain@linaro.org, toke@toke.dk, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Yang Li <yang.lee@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH -next 1/2] wcn36xx: clean up some inconsistent indenting
+Date:   Fri,  8 Apr 2022 08:01:12 +0800
+Message-Id: <20220408000113.129906-1-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1649375913-OkeH9kG5buQy
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+Eliminate the follow smatch warning:
+drivers/net/wireless/ath/wcn36xx/smd.c:3151
+wcn36xx_smd_gtk_offload_get_info_rsp() warn: inconsistent indenting
 
-Looks like this was added in 5.17 kernel.  We see this event
-when trying (and failing) to do .11r roaming).
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
 ---
- event.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/event.c b/event.c
-index 1d201a8..ee73a57 100644
---- a/event.c
-+++ b/event.c
-@@ -893,6 +893,23 @@ static void parse_ch_switch_notify(struct nlattr **attrs, int command)
- 	printf("\n");
- }
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 872b37875c57..691e637b94f1 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -3148,9 +3148,9 @@ static int wcn36xx_smd_gtk_offload_get_info_rsp(struct wcn36xx *wcn,
+ 			cpu_to_le64(rsp->key_replay_counter);
+ 		ieee80211_gtk_rekey_notify(vif, vif->bss_conf.bssid,
+ 					   (void *)&replay_ctr, GFP_KERNEL);
+-		 wcn36xx_dbg(WCN36XX_DBG_HAL,
+-			     "GTK replay counter increment %llu\n",
+-			     rsp->key_replay_counter);
++		wcn36xx_dbg(WCN36XX_DBG_HAL,
++			    "GTK replay counter increment %llu\n",
++			    rsp->key_replay_counter);
+ 	}
  
-+static void parse_assoc_comeback(struct nlattr **attrs, int command)
-+{
-+	__u32 timeout = 0;
-+	char macbuf[6*3];
-+
-+	macbuf[0] = 0;
-+
-+	if (attrs[NL80211_ATTR_MAC])
-+		mac_addr_n2a(macbuf, nla_data(attrs[NL80211_ATTR_MAC]));
-+
-+	if (attrs[NL80211_ATTR_TIMEOUT])
-+		timeout = nla_get_u32(attrs[NL80211_ATTR_TIMEOUT]);
-+
-+	printf("assoc comeback bssid %s timeout %d\n",
-+	       macbuf, timeout);
-+}
-+
- static int print_event(struct nl_msg *msg, void *arg)
- {
- 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-@@ -1285,6 +1302,9 @@ static int print_event(struct nl_msg *msg, void *arg)
- 	case NL80211_CMD_CH_SWITCH_NOTIFY:
- 		parse_ch_switch_notify(tb, gnlh->cmd);
- 		break;
-+	case NL80211_CMD_ASSOC_COMEBACK: /* 147 */
-+		parse_assoc_comeback(tb, gnlh->cmd);
-+		break;
- 	default:
- 		printf("unknown event %d (%s)\n",
- 		       gnlh->cmd, command_name(gnlh->cmd));
+ 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 -- 
-2.21.3
+2.20.1.7.g153144c
 
