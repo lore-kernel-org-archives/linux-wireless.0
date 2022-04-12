@@ -2,83 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 868BEC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 09:54:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DD9C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 09:54:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357455AbiDLJ4H (ORCPT
+        id S236543AbiDLJ4Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Apr 2022 05:56:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56896 "EHLO
+        Tue, 12 Apr 2022 05:56:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356182AbiDLHek (ORCPT
+        with ESMTP id S1382263AbiDLIYz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Apr 2022 03:34:40 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61FAB265C
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2022 00:09:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-        References:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=EXRqyyFbECu6GEBfrNfZPIBbjds5Ej7Fq838pGzWpHc=; b=dcFjm0Mc2ZG7YRfXxLPx2nio/n
-        E0LWy8kDXNcjn32L7FeEEs3AF9gw6L5ZgdsN7jMk/NQWrIkltePH0/ri8FbR30Ef1yA2h0JZS+uTF
-        HCs5zJSXrPAe4CkRJbtJ6NaLA9ccA+VNkUov/IgZKSjsBWMiaJlms7+Qorr6hNYKUaas=;
-Received: from p57a6f1f9.dip0.t-ipconnect.de ([87.166.241.249] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1neAe8-0007N0-LC; Tue, 12 Apr 2022 09:09:04 +0200
-Message-ID: <35ae1b48-e9e6-3c05-1abe-7d11dfb03797@nbd.name>
-Date:   Tue, 12 Apr 2022 09:09:04 +0200
+        Tue, 12 Apr 2022 04:24:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D42F55A0B0;
+        Tue, 12 Apr 2022 00:58:40 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 769A7B81B6E;
+        Tue, 12 Apr 2022 07:58:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ACBDC385A6;
+        Tue, 12 Apr 2022 07:58:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649750318;
+        bh=S6Ecj+oMnzphF92CX567UA+xQmV0L3zOe3a4qBjW4mI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=JqS1uE+bRV1nU6ZasB/x0T4MpbLev4IR8ayLND1nfOm1QBRKjluxjD978qBjLwoGs
+         BL46i8KhSZk23+wrVVvYNGNjleli9Pw/BvyCvyn2p5o7s4Enrs12IULVQIzVOhDO9Q
+         xChdSy6HrdOXcj13bn8DCKR6vpyA++RduWSaGMY6nOHwvIgkcyIM50Itd+Y/0zdnwi
+         KaeWixq2OV6eQSWWJFXmEC60/Gitf834JoSjbCxgaGfIACaMFOBYQqfi/WYZ+sVFaD
+         ETFWe/3YTCBYwKaDpD6jW17a3DYq6T6xrV3UeMQG4KuC7DJOfwvhGA5gRkE3y8luJY
+         YL3oACFsv4c4A==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Build regressions/improvements in v5.18-rc2
+References: <CAHk-=wh0+DYC2+Aeu2=vfUtGaDqVuKxKrxyhwQFoG89rcynzww@mail.gmail.com>
+        <20220411103528.2187797-1-geert@linux-m68k.org>
+        <alpine.DEB.2.22.394.2204111240560.38484@ramsan.of.borg>
+        <87zgkrqyff.fsf@tynnyri.adurom.net>
+        <CAMuHMdUgdPBTwg8LN8x_sZRWWzdE9ZKytZuAna+qdKL1Ced5Vw@mail.gmail.com>
+Date:   Tue, 12 Apr 2022 10:58:31 +0300
+In-Reply-To: <CAMuHMdUgdPBTwg8LN8x_sZRWWzdE9ZKytZuAna+qdKL1Ced5Vw@mail.gmail.com>
+        (Geert Uytterhoeven's message of "Tue, 12 Apr 2022 09:09:59 +0200")
+Message-ID: <877d7upwbc.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH] mt76: mt7915: add device name in eeprom request
-Content-Language: en-US
-To:     Daniel Danzberger <daniel@dd-wrt.com>,
-        linux-wireless@vger.kernel.org
-References: <20220411142309.886165-1-daniel@dd-wrt.com>
-From:   Felix Fietkau <nbd@nbd.name>
-In-Reply-To: <20220411142309.886165-1-daniel@dd-wrt.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Geert Uytterhoeven <geert@linux-m68k.org> writes:
 
-On 11.04.22 16:23, Daniel Danzberger wrote:
-> When an eerpom is requested from userspace via request_firmware, the
-> device name is appened to the firmware name so the userspace can load
-> different eeproms/caldata for different devices.
-> 
-> Signed-off-by: Daniel Danzberger <daniel@dd-wrt.com>
-> ---
->   mt7915/eeprom.c |  7 ++++++-
->   mt7915/mt7915.h | 16 ++++++++--------
->   2 files changed, 14 insertions(+), 9 deletions(-)
-> 
-> diff --git a/mt7915/eeprom.c b/mt7915/eeprom.c
-> index 4b1a9811..99c1d650 100644
-> --- a/mt7915/eeprom.c
-> +++ b/mt7915/eeprom.c
-> @@ -76,8 +76,13 @@ mt7915_eeprom_load_default(struct mt7915_dev *dev)
->   	u8 *eeprom = dev->mt76.eeprom.data;
->   	const struct firmware *fw = NULL;
->   	int ret;
-> +	char eeprom_name[100];
->   
-> -	ret = request_firmware(&fw, mt7915_eeprom_name(dev), dev->mt76.dev);
-> +	scnprintf(eeprom_name, sizeof(eeprom_name),
-> +		"mediatek/%s-%s.bin",
-> +		mt7915_eeprom_name(dev), dev_name(dev->mt76.dev));
-In order to not break compatibility, please keep the existing code that 
-loads eeprom files based on the chip name.
-For the device name based eeprom file, you don't need to include the 
-chip id. Just make it mt76-eeprom-<name>.bin or something like that.
-I also think you don't need the mediatek/ prefix here, since that's 
-usually used for files shipped with linux-firmware.git
+> Hi Kalle,
+>
+> On Mon, Apr 11, 2022 at 8:15 PM Kalle Valo <kvalo@kernel.org> wrote:
+>> Geert Uytterhoeven <geert@linux-m68k.org> writes:
+>> > On Mon, 11 Apr 2022, Geert Uytterhoeven wrote:
+>> >> JFYI, when comparing v5.18-rc2[1] to v5.18-rc1[3], the summaries are:
+>
+>> >   + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_491' declared with attribute error: FIELD_PREP: mask is not constant:  => 352:38
+>> >   + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_520' declared with attribute error: FIELD_PREP: mask is not constant:  => 352:38
+>> >
+>> > mipsel/mips-allmodconfig
+>> > arm64-gcc5.4/arm64-allmodconfig
+>> >
+>> > Actual error is:
+>> >
+>> >     /kisskb/src/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c: In function 'mt76x2e_probe':
+>> >     /kisskb/src/include/linux/compiler_types.h:352:38: error: call to '__compiletime_assert_520' declared with attribute error: FIELD_PREP: mask is not constant
+>>
+>> Does this commit fix it:
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git/commit/?id=dbc2b1764734857d68425468ffa8486e97ab89df
+>>
+>> Or is this another issue?
+>
+> I'm not in a position to verify this, but given both configs used gcc-5,
+> I assume this will fix the issue.
 
-- Felix
+Ok, do let me know if the commit doesn't fix the warning.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
