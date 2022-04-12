@@ -2,73 +2,99 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B04CC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 10:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 867BDC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 10:59:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243068AbiDLKlu (ORCPT
+        id S240707AbiDLLCI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Apr 2022 06:41:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58926 "EHLO
+        Tue, 12 Apr 2022 07:02:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355827AbiDLKdp (ORCPT
+        with ESMTP id S233157AbiDLLAA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Apr 2022 06:33:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F7355BD11;
-        Tue, 12 Apr 2022 02:34:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A6AD760BC8;
-        Tue, 12 Apr 2022 09:34:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4722DC385A5;
-        Tue, 12 Apr 2022 09:34:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649756095;
-        bh=oAkd2HMCyRHzsEbQYwM6YJGQ2zXVP3kaN1iufD17kAg=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=POJL7IvsbItT44cf4muVPhcT0u+5PP82kbHbjmmH0O+J8cQ05OE34aPylnfdGUi1s
-         n9K666b2EWpQAXTV+M8BCreZjhD18bBfNDZxSjZdESvnje3k5MtvegQ/bhqPhoefBQ
-         I2TDCsMKyEuc8QvdLDkoRf5nmUm+O3FnhOwb3m/SIA+LlOdYuvumI3sWL/pIpzhXvg
-         AAv5baZ+7IJ2Tgsl/nWWWcyNTe+9oAfidwA+Y4+4Q8qBL2wwlBI7bFmh585ZnliN0g
-         x648MpuIQzra/X/XuTgFk+Mbh5Hzu7Uh40XOMU43zlJJEK38NFVYghjssl+5kNddeR
-         131Ka7IYu7uiA==
-Content-Type: text/plain; charset="utf-8"
+        Tue, 12 Apr 2022 07:00:00 -0400
+X-Greylist: delayed 1140 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 12 Apr 2022 02:50:58 PDT
+Received: from mxout012.mail.hostpoint.ch (mxout012.mail.hostpoint.ch [IPv6:2a00:d70:0:e::312])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E270165163;
+        Tue, 12 Apr 2022 02:50:56 -0700 (PDT)
+Received: from [10.0.2.44] (helo=asmtp014.mail.hostpoint.ch)
+        by mxout012.mail.hostpoint.ch with esmtps  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+        (Exim 4.95 (FreeBSD))
+        (envelope-from <dev@pschenker.ch>)
+        id 1neCSD-000OOB-IK;
+        Tue, 12 Apr 2022 11:04:53 +0200
+Received: from 31-10-206-124.static.upc.ch ([31.10.206.124] helo=localhost.localdomain)
+        by asmtp014.mail.hostpoint.ch with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+        (Exim 4.95 (FreeBSD))
+        (envelope-from <dev@pschenker.ch>)
+        id 1neCSD-000CGw-Ce;
+        Tue, 12 Apr 2022 11:04:53 +0200
+X-Authenticated-Sender-Id: dev@pschenker.ch
+From:   Philippe Schenker <dev@pschenker.ch>
+To:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Cc:     linux@leemhuis.info, Philippe Schenker <dev@pschenker.ch>,
+        "David S. Miller" <davem@davemloft.net>,
+        Deren Wu <deren.wu@mediatek.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@kernel.org>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, netdev@vger.kernel.org
+Subject: [PATCH] Revert "mt76: mt7921: enable aspm by default"
+Date:   Tue, 12 Apr 2022 11:04:14 +0200
+Message-Id: <20220412090415.17541-1-dev@pschenker.ch>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wlcore: using pm_runtime_resume_and_get instead of
- pm_runtime_get_sync
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220408081205.2494512-1-chi.minghao@zte.com.cn>
-References: <20220408081205.2494512-1-chi.minghao@zte.com.cn>
-To:     cgel.zte@gmail.com
-Cc:     davem@davemloft.net, kuba@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <164975609097.5724.17794967869431754911.kvalo@kernel.org>
-Date:   Tue, 12 Apr 2022 09:34:53 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-cgel.zte@gmail.com wrote:
+This reverts commit bf3747ae2e25dda6a9e6c464a717c66118c588c8.
 
-> From: Minghao Chi <chi.minghao@zte.com.cn>
-> 
-> Using pm_runtime_resume_and_get is more appropriate
-> for simplifing code
-> 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+This commit introduces a regression on some systems where the kernel is
+crashing in different locations after a reboot was issued.
 
-I'll rename this to:
+This issue was bisected on a Thinkpad P14s Gen2 (AMD) with latest firmware.
 
-wlcore: debugfs: use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
+Link: https://lore.kernel.org/linux-wireless/5077a953487275837e81bdf1808ded00b9676f9f.camel@pschenker.ch/
+Signed-off-by: Philippe Schenker <dev@pschenker.ch>
+---
 
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 1a01d025bbe5..59f9ee089389 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -20,10 +20,6 @@ static const struct pci_device_id mt7921_pci_device_table[] = {
+ 	{ },
+ };
+ 
+-static bool mt7921_disable_aspm;
+-module_param_named(disable_aspm, mt7921_disable_aspm, bool, 0644);
+-MODULE_PARM_DESC(disable_aspm, "disable PCI ASPM support");
+-
+ static void
+ mt7921_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
+ {
+@@ -280,8 +276,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 	if (ret)
+ 		goto err_free_pci_vec;
+ 
+-	if (mt7921_disable_aspm)
+-		mt76_pci_disable_aspm(pdev);
++	mt76_pci_disable_aspm(pdev);
+ 
+ 	mdev = mt76_alloc_device(&pdev->dev, sizeof(*dev), &mt7921_ops,
+ 				 &drv_ops);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220408081205.2494512-1-chi.minghao@zte.com.cn/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.35.1
 
