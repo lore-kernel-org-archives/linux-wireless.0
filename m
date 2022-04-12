@@ -2,41 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 867BDC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 10:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF14C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Apr 2022 11:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240707AbiDLLCI (ORCPT
+        id S244941AbiDLLJY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Apr 2022 07:02:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55194 "EHLO
+        Tue, 12 Apr 2022 07:09:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233157AbiDLLAA (ORCPT
+        with ESMTP id S1353482AbiDLLEz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Apr 2022 07:00:00 -0400
-X-Greylist: delayed 1140 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 12 Apr 2022 02:50:58 PDT
-Received: from mxout012.mail.hostpoint.ch (mxout012.mail.hostpoint.ch [IPv6:2a00:d70:0:e::312])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E270165163;
-        Tue, 12 Apr 2022 02:50:56 -0700 (PDT)
-Received: from [10.0.2.44] (helo=asmtp014.mail.hostpoint.ch)
-        by mxout012.mail.hostpoint.ch with esmtps  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-        (Exim 4.95 (FreeBSD))
-        (envelope-from <dev@pschenker.ch>)
-        id 1neCSD-000OOB-IK;
-        Tue, 12 Apr 2022 11:04:53 +0200
-Received: from 31-10-206-124.static.upc.ch ([31.10.206.124] helo=localhost.localdomain)
-        by asmtp014.mail.hostpoint.ch with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-        (Exim 4.95 (FreeBSD))
-        (envelope-from <dev@pschenker.ch>)
-        id 1neCSD-000CGw-Ce;
-        Tue, 12 Apr 2022 11:04:53 +0200
-X-Authenticated-Sender-Id: dev@pschenker.ch
-From:   Philippe Schenker <dev@pschenker.ch>
-To:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Cc:     linux@leemhuis.info, Philippe Schenker <dev@pschenker.ch>,
+        Tue, 12 Apr 2022 07:04:55 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C39CE5FF2A;
+        Tue, 12 Apr 2022 02:55:21 -0700 (PDT)
+Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1neDEx-0005Ez-CY; Tue, 12 Apr 2022 11:55:15 +0200
+Message-ID: <7aa0bbd0-5498-ba74-ad6d-6dacbade8a3d@leemhuis.info>
+Date:   Tue, 12 Apr 2022 11:55:13 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Content-Language: en-US
+To:     Kalle Valo <kvalo@kernel.org>, Philippe Schenker <dev@pschenker.ch>
+Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
         "David S. Miller" <davem@davemloft.net>,
         Deren Wu <deren.wu@mediatek.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Kalle Valo <kvalo@kernel.org>,
         Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         Paolo Abeni <pabeni@redhat.com>,
@@ -45,56 +38,54 @@ Cc:     linux@leemhuis.info, Philippe Schenker <dev@pschenker.ch>,
         Shayne Chen <shayne.chen@mediatek.com>,
         YN Chen <YN.Chen@mediatek.com>,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, netdev@vger.kernel.org
-Subject: [PATCH] Revert "mt76: mt7921: enable aspm by default"
-Date:   Tue, 12 Apr 2022 11:04:14 +0200
-Message-Id: <20220412090415.17541-1-dev@pschenker.ch>
-X-Mailer: git-send-email 2.35.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        linux-mediatek@lists.infradead.org, netdev@vger.kernel.org,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+References: <20220412090415.17541-1-dev@pschenker.ch>
+ <87y20aod5d.fsf@kernel.org>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [PATCH] Revert "mt76: mt7921: enable aspm by default"
+In-Reply-To: <87y20aod5d.fsf@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1649757321;4339350e;
+X-HE-SMSGID: 1neDEx-0005Ez-CY
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This reverts commit bf3747ae2e25dda6a9e6c464a717c66118c588c8.
+On 12.04.22 11:37, Kalle Valo wrote:
+> Philippe Schenker <dev@pschenker.ch> writes:
+> 
+>> This reverts commit bf3747ae2e25dda6a9e6c464a717c66118c588c8.
+>>
+>> This commit introduces a regression on some systems where the kernel is
+>> crashing in different locations after a reboot was issued.
+>>
+>> This issue was bisected on a Thinkpad P14s Gen2 (AMD) with latest firmware.
+>>
+>> Link: https://lore.kernel.org/linux-wireless/5077a953487275837e81bdf1808ded00b9676f9f.camel@pschenker.ch/
+>> Signed-off-by: Philippe Schenker <dev@pschenker.ch>
+> 
+> Can I take this to wireless tree? Felix, ack?
+> 
+> I'll also add:
+> 
+> Fixes: bf3747ae2e25 ("mt76: mt7921: enable aspm by default")
 
-This commit introduces a regression on some systems where the kernel is
-crashing in different locations after a reboot was issued.
+Sorry, stupid questions from the regression tracker: wouldn't this cause
+a regression for users of kernel versions post-bf3747ae2e25, as the
+power consumption is likely to increase for them? Without having dug
+into the backstory much: would disabling ASPM for this particular
+machine using a quirk be the better approach? Or are we assuming a lot
+of machines are affected?
 
-This issue was bisected on a Thinkpad P14s Gen2 (AMD) with latest firmware.
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
 
-Link: https://lore.kernel.org/linux-wireless/5077a953487275837e81bdf1808ded00b9676f9f.camel@pschenker.ch/
-Signed-off-by: Philippe Schenker <dev@pschenker.ch>
----
-
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 1a01d025bbe5..59f9ee089389 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -20,10 +20,6 @@ static const struct pci_device_id mt7921_pci_device_table[] = {
- 	{ },
- };
- 
--static bool mt7921_disable_aspm;
--module_param_named(disable_aspm, mt7921_disable_aspm, bool, 0644);
--MODULE_PARM_DESC(disable_aspm, "disable PCI ASPM support");
--
- static void
- mt7921_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
- {
-@@ -280,8 +276,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
- 	if (ret)
- 		goto err_free_pci_vec;
- 
--	if (mt7921_disable_aspm)
--		mt76_pci_disable_aspm(pdev);
-+	mt76_pci_disable_aspm(pdev);
- 
- 	mdev = mt76_alloc_device(&pdev->dev, sizeof(*dev), &mt7921_ops,
- 				 &drv_ops);
--- 
-2.35.1
+P.S.: As the Linux kernel's regression tracker I'm getting a lot of
+reports on my table. I can only look briefly into most of them and lack
+knowledge about most of the areas they concern. I thus unfortunately
+will sometimes get things wrong or miss something important. I hope
+that's not the case here; if you think it is, don't hesitate to tell me
+in a public reply, it's in everyone's interest to set the public record
+straight.
 
