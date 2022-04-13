@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F17F2C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68752C433FE
 	for <linux-wireless@archiver.kernel.org>; Wed, 13 Apr 2022 01:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbiDMBLC (ORCPT
+        id S231271AbiDMBLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Apr 2022 21:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56324 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231282AbiDMBLB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 12 Apr 2022 21:11:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231250AbiDMBLA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Apr 2022 21:11:00 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EAA525590
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2022 18:08:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA21A25595
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2022 18:08:39 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23D18VBm8014614, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23D18RkuC014509, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23D18VBm8014614
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23D18RkuC014509
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 13 Apr 2022 09:08:31 +0800
+        Wed, 13 Apr 2022 09:08:27 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Wed, 13 Apr 2022 09:08:30 +0800
+ 15.1.2308.27; Wed, 13 Apr 2022 09:08:26 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 13 Apr
- 2022 09:08:30 +0800
+ 2022 09:08:26 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 3/4] rtw89: configure security CAM for V1 chip
-Date:   Wed, 13 Apr 2022 09:08:03 +0800
-Message-ID: <20220413010804.8941-4-pkshih@realtek.com>
+Subject: [PATCH v3 1/4] rtw89: extend H2C of CMAC control info
+Date:   Wed, 13 Apr 2022 09:08:01 +0800
+Message-ID: <20220413010804.8941-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220413010804.8941-1-pkshih@realtek.com>
 References: <20220413010804.8941-1-pkshih@realtek.com>
@@ -64,100 +64,255 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add to configure security CAM while mac80211 calls set_key and del_key.
+In order to support new chip that has capability of 160M, we need new
+format to fill new information, so add a new V1 ID for newer use. Since
+most fields are the same, fill fields according to the function ID of chip.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/cam.c      |  9 +++++++++
- drivers/net/wireless/realtek/rtw89/core.h     | 15 +++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h     |  3 +-
+ drivers/net/wireless/realtek/rtw89/fw.c       | 47 ++++++++++++-------
+ drivers/net/wireless/realtek/rtw89/fw.h       | 43 ++++++++++++++---
  drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
  drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
- 4 files changed, 26 insertions(+)
+ 5 files changed, 72 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
-index 08b9779163bb5..8a26adeb23fb2 100644
---- a/drivers/net/wireless/realtek/rtw89/cam.c
-+++ b/drivers/net/wireless/realtek/rtw89/cam.c
-@@ -244,6 +244,12 @@ static int rtw89_cam_attach_sec_cam(struct rtw89_dev *rtwdev,
- 	addr_cam->sec_ent[key_idx] = sec_cam->sec_cam_idx;
- 	addr_cam->sec_entries[key_idx] = sec_cam;
- 	set_bit(key_idx, addr_cam->sec_cam_map);
-+	ret = rtw89_chip_h2c_dctl_sec_cam(rtwdev, rtwvif, rtwsta);
-+	if (ret) {
-+		rtw89_err(rtwdev, "failed to update dctl cam sec entry: %d\n",
-+			  ret);
-+		return ret;
-+	}
- 	ret = rtw89_fw_h2c_cam(rtwdev, rtwvif, rtwsta, NULL);
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to update addr cam sec entry: %d\n",
-@@ -398,6 +404,9 @@ int rtw89_cam_sec_key_del(struct rtw89_dev *rtwdev,
- 	clear_bit(key_idx, addr_cam->sec_cam_map);
- 	addr_cam->sec_entries[key_idx] = NULL;
- 	if (inform_fw) {
-+		ret = rtw89_chip_h2c_dctl_sec_cam(rtwdev, rtwvif, rtwsta);
-+		if (ret)
-+			rtw89_err(rtwdev, "failed to update dctl cam del key: %d\n", ret);
- 		ret = rtw89_fw_h2c_cam(rtwdev, rtwvif, rtwsta, NULL);
- 		if (ret)
- 			rtw89_err(rtwdev, "failed to update cam del key: %d\n", ret);
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 2715dc1ff73ff..090d416569010 100644
+index ec181c1989bc6..2715dc1ff73ff 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2106,6 +2106,9 @@ struct rtw89_chip_ops {
- 	int (*stop_sch_tx)(struct rtw89_dev *rtwdev, u8 mac_idx,
- 			   u32 *tx_en, enum rtw89_sch_tx_sel sel);
- 	int (*resume_sch_tx)(struct rtw89_dev *rtwdev, u8 mac_idx, u32 tx_en);
-+	int (*h2c_dctl_sec_cam)(struct rtw89_dev *rtwdev,
-+				struct rtw89_vif *rtwvif,
-+				struct rtw89_sta *rtwsta);
+@@ -578,7 +578,7 @@ enum rtw89_ps_mode {
+ #define RTW89_2G_BW_NUM (RTW89_CHANNEL_WIDTH_40 + 1)
+ #define RTW89_5G_BW_NUM (RTW89_CHANNEL_WIDTH_160 + 1)
+ #define RTW89_6G_BW_NUM (RTW89_CHANNEL_WIDTH_160 + 1)
+-#define RTW89_PPE_BW_NUM (RTW89_CHANNEL_WIDTH_80 + 1)
++#define RTW89_PPE_BW_NUM (RTW89_CHANNEL_WIDTH_160 + 1)
  
- 	void (*btc_set_rfe)(struct rtw89_dev *rtwdev);
- 	void (*btc_init_cfg)(struct rtw89_dev *rtwdev);
-@@ -3634,6 +3637,18 @@ int rtw89_chip_resume_sch_tx(struct rtw89_dev *rtwdev, u8 mac_idx, u32 tx_en)
- 	return chip->ops->resume_sch_tx(rtwdev, mac_idx, tx_en);
- }
+ enum rtw89_ru_bandwidth {
+ 	RTW89_RU26 = 0,
+@@ -2413,6 +2413,7 @@ struct rtw89_chip_info {
+ 	const struct rtw89_btc_rf_trx_para *rf_para_dlink;
+ 	u8 ps_mode_supported;
  
-+static inline
-+int rtw89_chip_h2c_dctl_sec_cam(struct rtw89_dev *rtwdev,
-+				struct rtw89_vif *rtwvif,
-+				struct rtw89_sta *rtwsta)
-+{
++	u32 h2c_cctl_func_id;
+ 	u32 hci_func_en_addr;
+ 	u32 h2c_desc_size;
+ 	u32 txwd_body_size;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 986d6249c1084..bd07d2b83d077 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -780,6 +780,7 @@ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
+ int rtw89_fw_h2c_default_cmac_tbl(struct rtw89_dev *rtwdev,
+ 				  struct rtw89_vif *rtwvif)
+ {
 +	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 	struct sk_buff *skb;
+ 	u8 ntx_path = hal->antenna_tx ? hal->antenna_tx : RF_B;
+@@ -794,16 +795,18 @@ int rtw89_fw_h2c_default_cmac_tbl(struct rtw89_dev *rtwdev,
+ 	skb_put(skb, H2C_CMC_TBL_LEN);
+ 	SET_CTRL_INFO_MACID(skb->data, macid);
+ 	SET_CTRL_INFO_OPERATION(skb->data, 1);
+-	SET_CMC_TBL_TXPWR_MODE(skb->data, 0);
+-	SET_CMC_TBL_NTX_PATH_EN(skb->data, ntx_path);
+-	SET_CMC_TBL_PATH_MAP_A(skb->data, 0);
+-	SET_CMC_TBL_PATH_MAP_B(skb->data, map_b);
+-	SET_CMC_TBL_PATH_MAP_C(skb->data, 0);
+-	SET_CMC_TBL_PATH_MAP_D(skb->data, 0);
+-	SET_CMC_TBL_ANTSEL_A(skb->data, 0);
+-	SET_CMC_TBL_ANTSEL_B(skb->data, 0);
+-	SET_CMC_TBL_ANTSEL_C(skb->data, 0);
+-	SET_CMC_TBL_ANTSEL_D(skb->data, 0);
++	if (chip->h2c_cctl_func_id == H2C_FUNC_MAC_CCTLINFO_UD) {
++		SET_CMC_TBL_TXPWR_MODE(skb->data, 0);
++		SET_CMC_TBL_NTX_PATH_EN(skb->data, ntx_path);
++		SET_CMC_TBL_PATH_MAP_A(skb->data, 0);
++		SET_CMC_TBL_PATH_MAP_B(skb->data, map_b);
++		SET_CMC_TBL_PATH_MAP_C(skb->data, 0);
++		SET_CMC_TBL_PATH_MAP_D(skb->data, 0);
++		SET_CMC_TBL_ANTSEL_A(skb->data, 0);
++		SET_CMC_TBL_ANTSEL_B(skb->data, 0);
++		SET_CMC_TBL_ANTSEL_C(skb->data, 0);
++		SET_CMC_TBL_ANTSEL_D(skb->data, 0);
++	}
+ 	SET_CMC_TBL_DOPPLER_CTRL(skb->data, 0);
+ 	SET_CMC_TBL_TXPWR_TOLERENCE(skb->data, 0);
+ 	if (rtwvif->net_type == RTW89_NET_TYPE_AP_MODE)
+@@ -811,7 +814,7 @@ int rtw89_fw_h2c_default_cmac_tbl(struct rtw89_dev *rtwdev,
+ 
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_MAC, H2C_CL_MAC_FR_EXCHG,
+-			      H2C_FUNC_MAC_CCTLINFO_UD, 0, 1,
++			      chip->h2c_cctl_func_id, 0, 1,
+ 			      H2C_CMC_TBL_LEN);
+ 
+ 	if (rtw89_h2c_tx(rtwdev, skb, false)) {
+@@ -851,6 +854,8 @@ static void __get_sta_he_pkt_padding(struct rtw89_dev *rtwdev,
+ 
+ 		for (i = 0; i < RTW89_PPE_BW_NUM; i++)
+ 			pads[i] = pad;
 +
-+	if (!chip->ops->h2c_dctl_sec_cam)
-+		return 0;
-+	return chip->ops->h2c_dctl_sec_cam(rtwdev, rtwvif, rtwsta);
++		return;
+ 	}
+ 
+ 	ru_bitmap = FIELD_GET(IEEE80211_PPE_THRES_RU_INDEX_BITMASK_MASK, ppe_thres_hdr);
+@@ -885,6 +890,7 @@ int rtw89_fw_h2c_assoc_cmac_tbl(struct rtw89_dev *rtwdev,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_sta *sta)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 	struct rtw89_sta *rtwsta = sta_to_rtwsta_safe(sta);
+ 	struct rtw89_vif *rtwvif = (struct rtw89_vif *)vif->drv_priv;
+@@ -917,9 +923,17 @@ int rtw89_fw_h2c_assoc_cmac_tbl(struct rtw89_dev *rtwdev,
+ 	else
+ 		SET_CMC_TBL_ULDL(skb->data, 0);
+ 	SET_CMC_TBL_MULTI_PORT_ID(skb->data, rtwvif->port);
+-	SET_CMC_TBL_NOMINAL_PKT_PADDING(skb->data, pads[RTW89_CHANNEL_WIDTH_20]);
+-	SET_CMC_TBL_NOMINAL_PKT_PADDING40(skb->data, pads[RTW89_CHANNEL_WIDTH_40]);
+-	SET_CMC_TBL_NOMINAL_PKT_PADDING80(skb->data, pads[RTW89_CHANNEL_WIDTH_80]);
++	if (chip->h2c_cctl_func_id == H2C_FUNC_MAC_CCTLINFO_UD_V1) {
++		SET_CMC_TBL_NOMINAL_PKT_PADDING_V1(skb->data, pads[RTW89_CHANNEL_WIDTH_20]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING40_V1(skb->data, pads[RTW89_CHANNEL_WIDTH_40]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING80_V1(skb->data, pads[RTW89_CHANNEL_WIDTH_80]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING160_V1(skb->data, pads[RTW89_CHANNEL_WIDTH_160]);
++	} else if (chip->h2c_cctl_func_id == H2C_FUNC_MAC_CCTLINFO_UD) {
++		SET_CMC_TBL_NOMINAL_PKT_PADDING(skb->data, pads[RTW89_CHANNEL_WIDTH_20]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING40(skb->data, pads[RTW89_CHANNEL_WIDTH_40]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING80(skb->data, pads[RTW89_CHANNEL_WIDTH_80]);
++		SET_CMC_TBL_NOMINAL_PKT_PADDING160(skb->data, pads[RTW89_CHANNEL_WIDTH_160]);
++	}
+ 	if (sta)
+ 		SET_CMC_TBL_BSR_QUEUE_SIZE_FORMAT(skb->data,
+ 						  sta->deflink.he_cap.has_he);
+@@ -928,7 +942,7 @@ int rtw89_fw_h2c_assoc_cmac_tbl(struct rtw89_dev *rtwdev,
+ 
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_MAC, H2C_CL_MAC_FR_EXCHG,
+-			      H2C_FUNC_MAC_CCTLINFO_UD, 0, 1,
++			      chip->h2c_cctl_func_id, 0, 1,
+ 			      H2C_CMC_TBL_LEN);
+ 
+ 	if (rtw89_h2c_tx(rtwdev, skb, false)) {
+@@ -946,6 +960,7 @@ int rtw89_fw_h2c_assoc_cmac_tbl(struct rtw89_dev *rtwdev,
+ int rtw89_fw_h2c_txtime_cmac_tbl(struct rtw89_dev *rtwdev,
+ 				 struct rtw89_sta *rtwsta)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct sk_buff *skb;
+ 
+ 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_CMC_TBL_LEN);
+@@ -967,7 +982,7 @@ int rtw89_fw_h2c_txtime_cmac_tbl(struct rtw89_dev *rtwdev,
+ 
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_MAC, H2C_CL_MAC_FR_EXCHG,
+-			      H2C_FUNC_MAC_CCTLINFO_UD, 0, 1,
++			      chip->h2c_cctl_func_id, 0, 1,
+ 			      H2C_CMC_TBL_LEN);
+ 
+ 	if (rtw89_h2c_tx(rtwdev, skb, false)) {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 2a010154a8e88..9cba8990b8365 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -973,6 +973,36 @@ static inline void SET_CMC_TBL_ANTSEL_D(void *table, u32 val)
+ 	le32p_replace_bits((__le32 *)(table) + 14, SET_CMC_TBL_MASK_ANTSEL_D,
+ 			   BIT(31));
+ }
++
++#define SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING GENMASK(1, 0)
++static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING_V1(void *table, u32 val)
++{
++	le32p_replace_bits((__le32 *)(table) + 7, val, GENMASK(1, 0));
++	le32p_replace_bits((__le32 *)(table) + 15, SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING,
++			   GENMASK(1, 0));
 +}
 +
- static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
++static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING40_V1(void *table, u32 val)
++{
++	le32p_replace_bits((__le32 *)(table) + 7, val, GENMASK(3, 2));
++	le32p_replace_bits((__le32 *)(table) + 15, SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING,
++			   GENMASK(3, 2));
++}
++
++static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING80_V1(void *table, u32 val)
++{
++	le32p_replace_bits((__le32 *)(table) + 7, val, GENMASK(5, 4));
++	le32p_replace_bits((__le32 *)(table) + 15, SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING,
++			   GENMASK(5, 4));
++}
++
++static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING160_V1(void *table, u32 val)
++{
++	le32p_replace_bits((__le32 *)(table) + 7, val, GENMASK(7, 6));
++	le32p_replace_bits((__le32 *)(table) + 15, SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING,
++			   GENMASK(7, 6));
++}
++
+ #define SET_CMC_TBL_MASK_ADDR_CAM_INDEX GENMASK(7, 0)
+ static inline void SET_CMC_TBL_ADDR_CAM_INDEX(void *table, u32 val)
  {
- 	__le16 fc = hdr->frame_control;
+@@ -1001,7 +1031,6 @@ static inline void SET_CMC_TBL_DOPPLER_CTRL(void *table, u32 val)
+ 	le32p_replace_bits((__le32 *)(table) + 15, SET_CMC_TBL_MASK_DOPPLER_CTRL,
+ 			   GENMASK(19, 18));
+ }
+-#define SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING GENMASK(1, 0)
+ static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING(void *table, u32 val)
+ {
+ 	le32p_replace_bits((__le32 *)(table) + 7, val, GENMASK(21, 20));
+@@ -1106,13 +1135,14 @@ static inline void SET_CMC_TBL_CSI_GI_LTF(void *table, u32 val)
+ 	le32p_replace_bits((__le32 *)(table) + 16, SET_CMC_TBL_MASK_CSI_GI_LTF,
+ 			   GENMASK(27, 25));
+ }
+-#define SET_CMC_TBL_MASK_CSI_GID_SEL BIT(0)
+-static inline void SET_CMC_TBL_CSI_GID_SEL(void *table, u32 val)
++
++static inline void SET_CMC_TBL_NOMINAL_PKT_PADDING160(void *table, u32 val)
+ {
+-	le32p_replace_bits((__le32 *)(table) + 8, val, BIT(29));
+-	le32p_replace_bits((__le32 *)(table) + 16, SET_CMC_TBL_MASK_CSI_GID_SEL,
+-			   BIT(29));
++	le32p_replace_bits((__le32 *)(table) + 8, val, GENMASK(29, 28));
++	le32p_replace_bits((__le32 *)(table) + 16, SET_CMC_TBL_MASK_NOMINAL_PKT_PADDING,
++			   GENMASK(29, 28));
+ }
++
+ #define SET_CMC_TBL_MASK_CSI_BW GENMASK(1, 0)
+ static inline void SET_CMC_TBL_CSI_BW(void *table, u32 val)
+ {
+@@ -2170,6 +2200,7 @@ struct rtw89_fw_h2c_rf_reg_info {
+ #define H2C_CL_MAC_FR_EXCHG		0x5
+ #define H2C_FUNC_MAC_CCTLINFO_UD	0x2
+ #define H2C_FUNC_MAC_BCN_UPD		0x5
++#define H2C_FUNC_MAC_CCTLINFO_UD_V1	0xa
+ 
+ /* CLASS 6 - Address CAM */
+ #define H2C_CL_MAC_ADDR_CAM_UPDATE	0x6
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 6371bbf7a2fd5..975c504953049 100644
+index 9871ed78e44ca..6371bbf7a2fd5 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2075,6 +2075,7 @@ static const struct rtw89_chip_ops rtw8852a_chip_ops = {
- 	.mac_cfg_gnt		= rtw89_mac_cfg_gnt,
- 	.stop_sch_tx		= rtw89_mac_stop_sch_tx,
- 	.resume_sch_tx		= rtw89_mac_resume_sch_tx,
-+	.h2c_dctl_sec_cam	= NULL,
- 
- 	.btc_set_rfe		= rtw8852a_btc_set_rfe,
- 	.btc_init_cfg		= rtw8852a_btc_init_cfg,
+@@ -2147,6 +2147,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.ps_mode_supported	= BIT(RTW89_PS_MODE_RFOFF) |
+ 				  BIT(RTW89_PS_MODE_CLK_GATED) |
+ 				  BIT(RTW89_PS_MODE_PWR_GATED),
++	.h2c_cctl_func_id	= H2C_FUNC_MAC_CCTLINFO_UD,
+ 	.hci_func_en_addr	= R_AX_HCI_FUNC_EN,
+ 	.h2c_desc_size		= sizeof(struct rtw89_txwd_body),
+ 	.txwd_body_size		= sizeof(struct rtw89_txwd_body),
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index d900129c1a7c8..d56d65661ce08 100644
+index 38b1383307161..d900129c1a7c8 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -645,6 +645,7 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
- 	.mac_cfg_gnt		= rtw89_mac_cfg_gnt_v1,
- 	.stop_sch_tx		= rtw89_mac_stop_sch_tx_v1,
- 	.resume_sch_tx		= rtw89_mac_resume_sch_tx_v1,
-+	.h2c_dctl_sec_cam	= rtw89_fw_h2c_dctl_sec_cam_v1,
- 
- 	.btc_init_cfg		= rtw8852c_btc_init_cfg,
- };
+@@ -667,6 +667,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.dav_log_efuse_size	= 16,
+ 	.phycap_addr		= 0x590,
+ 	.phycap_size		= 0x60,
++	.h2c_cctl_func_id	= H2C_FUNC_MAC_CCTLINFO_UD_V1,
+ 	.hci_func_en_addr	= R_AX_HCI_FUNC_EN_V1,
+ 	.h2c_desc_size		= sizeof(struct rtw89_rxdesc_short),
+ 	.txwd_body_size		= sizeof(struct rtw89_txwd_body_v1),
 -- 
 2.25.1
 
