@@ -2,131 +2,149 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CF63C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Apr 2022 07:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9229EC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Apr 2022 08:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232134AbiDMHIW (ORCPT
+        id S233487AbiDMIne (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Apr 2022 03:08:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53408 "EHLO
+        Wed, 13 Apr 2022 04:43:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233244AbiDMHIO (ORCPT
+        with ESMTP id S234432AbiDMInM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Apr 2022 03:08:14 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E84D62ED4A
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2022 00:05:52 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id b15so1214106pfm.5
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2022 00:05:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=wA/XhN+liF7FNQdYD63xlSjmBiv/wnn45LKu56yG8aw=;
-        b=AreLMy3LsZ/2P+aighUoU5gjlgpeBV8R7aO4E6ZmNrH9sPFlHDYfXCQ9dsaQSKUUDZ
-         jV695MA6AjTW9RaVAKwYYDjPOSnx5VhKZBhY+t+VOpMmHsvuvmUO3uevsu7U4SoQZX/Q
-         hKY670Ht3+qDXUL6ihxfD4vmxjl3ro3ScX1SDiJ3bn9yNvTvyI5Jk5d9mYgm8hoPX7qr
-         1+qPrlrepeFD1qFKz+Inw4HQwj7zVmeaIa1RIZvKj+dElNrFnhxT76DSr9HnuNU6qNNj
-         CDAr/V+AXPW6hm65wKobzJCFQHpgmZ/HCfP68ZL1bibg1imj6sYE0SrrHqGdYcyfLpKZ
-         /IFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=wA/XhN+liF7FNQdYD63xlSjmBiv/wnn45LKu56yG8aw=;
-        b=2ixaLKUyv2iWQv5ceSZuo+qkgn5nkYyWu+qV451zwicXNPahSGBWjHQUUV3TH3RhG9
-         zwh/IfJFrXE6/sbQTrqsYXMDifJljK7VdgXaxAPaNuKp6V5KXyDA9xKvH0NA6ZbAOLzZ
-         md8kZ+uYex+RD98OUjHbuBRUpppGbU558PIUbw2B4BdOh647GHSva4Gu5G7b0FzqBzHf
-         FFOEkECGzwnBSNzaCMoH7GlLwLU7tjqf2DwmHr80ln9mepmVuobuzMaPvcx/ElYKH/aO
-         hdhd8zBmwksQaFGzJGY5TCOSc8FCtVo887vC7z1sY4+tLcxwXw5DEct6Sr71LF5LJ4bw
-         JcYA==
-X-Gm-Message-State: AOAM532wPtxHGNWnleX+QALP7tr233ACqUgGb9dEo6UbLDQ3/DTk4McD
-        M01xZHVuoc759d8x/VYPAc1i
-X-Google-Smtp-Source: ABdhPJzozXDajJ1TNHGEamoE5ZZSxjlxIF5/046swX9Uyn7xnV9vkvwlcsjXH3KBZ12ieR4vKeneWw==
-X-Received: by 2002:a05:6a00:10cc:b0:505:ada6:e03e with SMTP id d12-20020a056a0010cc00b00505ada6e03emr17405824pfu.45.1649833552212;
-        Wed, 13 Apr 2022 00:05:52 -0700 (PDT)
-Received: from thinkpad ([117.207.28.99])
-        by smtp.gmail.com with ESMTPSA id t15-20020a63b70f000000b00381510608e9sm5035307pgf.14.2022.04.13.00.05.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Apr 2022 00:05:51 -0700 (PDT)
-Date:   Wed, 13 Apr 2022 12:35:42 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        Prasad Malisetty <quic_pmaliset@quicinc.com>,
-        agross@kernel.org, bjorn.andersson@linaro.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        rajatja@google.com, refactormyself@gmail.com,
-        quic_vbadigan@quicinc.com, quic_ramkri@quicinc.com,
-        swboyd@chromium.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org
-Subject: Re: [PATCH v4] PCI: qcom: Add system PM support
-Message-ID: <20220413070542.GB2015@thinkpad>
-References: <1646679306-4768-1-git-send-email-quic_pmaliset@quicinc.com>
- <20220412060144.GA41348@thinkpad>
- <87k0buoa9j.fsf@kernel.org>
- <20220413054904.GA2015@thinkpad>
- <CAA8EJprcQtVFvjL_WsMoDxvPSAqaRMS90ZuTsD_cDuujtr83Xw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAA8EJprcQtVFvjL_WsMoDxvPSAqaRMS90ZuTsD_cDuujtr83Xw@mail.gmail.com>
+        Wed, 13 Apr 2022 04:43:12 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41E83377FD
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2022 01:40:52 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id E97C11F38D;
+        Wed, 13 Apr 2022 08:40:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1649839250; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IaPPTWya/VKzjjNmn+IY5/AuKBTZK3KmyyeZDAx4Gc0=;
+        b=yWCsD1emTwO6139KdiLkVgQcAv/X0Khfr8A4Ash/shn16ot7Bl+sdU9tNheklm3chhEXsT
+        ktqTldVQ8hpyfQ1U391hjihran9W+rq1kAV8CXMJFt7Sj4IjnQAjbUQq5cr3RqFS3ZxW5J
+        CdpEwUYNtpkAuynTwrq/juOiZqCO5Fg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1649839250;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IaPPTWya/VKzjjNmn+IY5/AuKBTZK3KmyyeZDAx4Gc0=;
+        b=OGhjr95hrTIE45n1d3Z12tDXnpp/q75j0HlN9e00rXDq+4kmJkfNDpSG4JvLL2Q1OufscB
+        R4I56aKB3fZNrrCw==
+Received: from alsa1.suse.de (alsa1.suse.de [10.160.4.42])
+        by relay2.suse.de (Postfix) with ESMTP id C849FA3B92;
+        Wed, 13 Apr 2022 08:40:50 +0000 (UTC)
+Date:   Wed, 13 Apr 2022 10:40:50 +0200
+Message-ID: <s5hk0bt74vh.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Takashi Iwai <tiwai@suse.de>, Jouni Malinen <j@w1.fi>,
+        Josh Boyer <jwboyer@kernel.org>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
+Subject: Re: [PULL] ath11k firmware 20211223
+In-Reply-To: <87h76xmlrw.fsf@kernel.org>
+References: <BYAPR02MB4567669033A210A78AC397E9927E9@BYAPR02MB4567.namprd02.prod.outlook.com>
+        <CA+5PVA4WEuJDB3OCKfYK-BPaccpVWd9t_au9S7MCEtpy7cdF-A@mail.gmail.com>
+        <87ee4brodv.fsf@kernel.org>
+        <CA+5PVA5DJmwPqpz8F9iDbJKcF1hDBRLdDT4URgSaiEcjet74Kw@mail.gmail.com>
+        <20220302175014.GA14801@w1.fi>
+        <CA+5PVA6R6F=VqAZRf=xDwGcC+cpqLY1kStkoHck53XiLURVyaw@mail.gmail.com>
+        <20220304161430.GA430462@w1.fi>
+        <s5h1qytw0rw.wl-tiwai@suse.de>
+        <87h76xmlrw.fsf@kernel.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Apr 13, 2022 at 09:36:30AM +0300, Dmitry Baryshkov wrote:
-> On Wed, 13 Apr 2022 at 08:49, Manivannan Sadhasivam
-> <manivannan.sadhasivam@linaro.org> wrote:
+On Wed, 13 Apr 2022 10:26:43 +0200,
+Kalle Valo wrote:
+> 
+> Takashi Iwai <tiwai@suse.de> writes:
+> 
+> > On Fri, 04 Mar 2022 17:14:30 +0100,
+> > Jouni Malinen wrote:
+> >> 
+> >> On Fri, Mar 04, 2022 at 08:04:26AM -0500, Josh Boyer wrote:
+> >> > On Wed, Mar 2, 2022 at 12:50 PM Jouni Malinen <j@w1.fi> wrote:
+> >> > > Would the following in WHENCE work for you?
+> >> > >
+> >> > > Driver: ath11k - Qualcomm Technologies 802.11ax chipset support
+> >> > >
+> >> > > File: ath11k/IPQ6018/hw1.0/board-2.bin
+> >> > > ...
+> >> > > Version: WLAN.HK.2.1.0.1-01238-QCAHKSWPL_SILICONZ-2
+> >> > > Notice: ath11k/IPQ6018/hw1.0/Notice.txt
+> >> > 
+> >> > We'd have to teach copy-firmware.sh what to do with a "Notice:" key.
+> >> > Is there a reason "File:" wouldn't work?  The intention is to install
+> >> > the notices alongside the binaries, so that would accomplish it.
+> >> 
+> >> Yeah, that sounds reasonable to me. From copying/installing/distribution
+> >> view point, these can really be handled in the exact same way as the
+> >> actual firmware binaries in practice.
+> >> 
+> >> > > In other words, there would be only a single "License:" line and one
+> >> > > "Notice:" line for each firmware version? The license itself (i.e.,
+> >> > > LICENSE.QualcommAtheros_ath10k) is same for all the versions while the
+> >> > > set of notices (i.e., those notice.txt files) can be different based on
+> >> > > what is included in the particular build.
+> >> > 
+> >> > Yes, that would help.  Would you be able to adjust the existing
+> >> > entries for ath firmware in the same way?
+> >> 
+> >> Yes, I'll work with Kalle to update the existing ath* WLAN cases.
+> >> 
+> >> > > > > I'm still working on your other comment about notice.txt, will get back
+> >> > > > > on that later.
+> >> > >
+> >> > > This part about clearly identifying the files should be clear now, but
+> >> > > it would be good to resolve that part about the notice.txt files in
+> >> > > general before sending out an updated pull request.
+> >> > 
+> >> > Given these were merged in the past, perhaps I'm being overly
+> >> > pedantic.  If we can mark them as Files or Notices instead of
+> >> > Licenses, I won't hold it up.  It leaves me slightly confused why
+> >> > attribution files need to reference agreements with Qualcomm, splatter
+> >> > Confidential and Proprietary throughout the file, and reference
+> >> > COPYING and README in reference to GPLv2 when the BSD license was
+> >> > clearly chosen.  Perhaps that could be cleaned up in the future.
+> >> 
+> >> Thanks. We'll remove most of the unnecessary information from the new
+> >> notice.txt files and that should get rid of many of the potentially
+> >> confusing parts. If that cleanup leaves something confusing in place,
+> >> we are open to cleaning these up further in followup patches, but it
+> >> would be nice to be able to get the updated versions into
+> >> linux-firmware.git without much more additional delay and yes, this
+> >> would be with the File: instead of Licence: entries for the notice.txt
+> >> files.
 > >
-> > On Tue, Apr 12, 2022 at 01:40:08PM +0300, Kalle Valo wrote:
-> > > + ath11k
-> > >
-> > > Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org> writes:
-> > >
-> > > > +Kalle, linux-wireless
-> > > >
-> > > > On Tue, Mar 08, 2022 at 12:25:06AM +0530, Prasad Malisetty wrote:
-> > > >> Add suspend_noirq and resume_noirq callbacks to handle
-> > > >> system suspend and resume in dwc PCIe controller driver.
-> > > >>
-> > > >> When system suspends, send PME turnoff message to enter
-> > > >> link into L2 state. Along with powerdown the PHY, disable
-> > > >> pipe clock, switch gcc_pcie_1_pipe_clk_src to XO if mux is
-> > > >> supported and disable the pcie clocks, regulators.
-> > > >>
-> > > >
-> > > > Kalle, is this behaviour appropriate for WLAN devices as well? The devices
-> > > > will be put into poweroff state (assuming no Vaux provided in D3cold) during
-> > > > system suspend.
-> > >
-> > > ath11k leaves the firmware running during suspend. I don't fully
-> > > understand what the patch is doing, but if it cuts the power from the
-> > > WLAN chip during suspend that will break ath11k.
-> > >
+> > The problem of "File:" is that it's more or less intended to be
+> > installed as the firmware files themselves, i.e. they are installed in
+> > /lib/firmware/* that can be loaded to the kernel.  Putting such a
+> > random (document) file there makes me a bit nervous.
 > >
-> > Thanks Kalle for the confirmation. Yes the device will be put into D3cold state
-> > and that will most likely equal to poweroff state.
+> > We may introduce another tag to list up misc document files
+> > (e.g. "Doc:" or whatever)?  Distros can pick up them and put to the
+> > appropriate places in the package, too.
 > 
-> Just to remind that ath11k on Qualcomm boards has a separate power
-> supply, not directly tied to the PCIe power supply.
-> 
+> What about "Notice:" which I proposed above? To me "Doc:" sounds like an
+> optional file, which notice.txt files are not. That's why I prefer
+> "Notice:".
 
-It may change in the future or on a different OEM setup. Irrespective of that,
-this patch sends the PME_Turn_Off event to the ep devices. The devices in turn
-will shutdown the internal resources for poweroff/refclk removal. Therefore the
-device state shall be lost.
+Sure, it'd work, too.  Only a patch is missing :)
 
-Thanks,
-Mani
 
-> > Prasad, you should try to just turn off the host resources like clocks and
-> > regulators (not refclk) and let the device be in the default state
-> > (D3hot/L{0/1}?) during suspend.
-> 
-> 
-> -- 
-> With best wishes
-> Dmitry
+thanks,
+
+Takashi
