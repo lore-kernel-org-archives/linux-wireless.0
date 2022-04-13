@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D68BC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B262EC433EF
 	for <linux-wireless@archiver.kernel.org>; Wed, 13 Apr 2022 01:08:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231255AbiDMBLA (ORCPT
+        id S231256AbiDMBLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Apr 2022 21:11:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56300 "EHLO
+        Tue, 12 Apr 2022 21:11:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbiDMBK7 (ORCPT
+        with ESMTP id S231214AbiDMBK7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 12 Apr 2022 21:10:59 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 669092558D
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 672C525590
         for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2022 18:08:38 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23D18PON0014487, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23D18WK70014638, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23D18PON0014487
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23D18WK70014638
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 13 Apr 2022 09:08:25 +0800
+        Wed, 13 Apr 2022 09:08:32 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 13 Apr 2022 09:08:24 +0800
+ 15.1.2375.24; Wed, 13 Apr 2022 09:08:32 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 13 Apr
- 2022 09:08:24 +0800
+ 2022 09:08:31 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 0/4] rtw89: refine interrupt masks for SER, and add H2C for new chip
-Date:   Wed, 13 Apr 2022 09:08:00 +0800
-Message-ID: <20220413010804.8941-1-pkshih@realtek.com>
+Subject: [PATCH v3 4/4] rtw89: pci: correct return value handling of rtw89_write16_mdio_mask()
+Date:   Wed, 13 Apr 2022 09:08:04 +0800
+Message-ID: <20220413010804.8941-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220413010804.8941-1-pkshih@realtek.com>
+References: <20220413010804.8941-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,38 +64,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SER, standing for System Error Recovery, is triggered by hardware interrupt
-with mask settings. Though it is working in firmware, driver needs to
-configure masks properly before downloading firmware. (Those get merged)
+Fix wrong checking statement. Fortunately, this wrong code doesn't affect
+existing chip.
 
-Patches 1/4~3/4 are to add new H2C for new chip to control TX info
-and security CAM.
+Fixes: 740c431c22fe ("rtw89: pci: add register definition to rtw89_pci_info to generalize pci code")
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The last one is to fix trivial error of return value handling.
-
-v3: do rebase to the latest
-    13 patches (v2) -> 4 patches (v3)
-
-v2: correct register name of
-    "rtw89: 8852c: disable firmware watchdog if CPU disabled",
-    but not change logic.
-
-Ping-Ke Shih (4):
-  rtw89: extend H2C of CMAC control info
-  rtw89: add new H2C to configure security CAM via DCTL for V1 chip
-  rtw89: configure security CAM for V1 chip
-  rtw89: pci: correct return value handling of rtw89_write16_mdio_mask()
-
- drivers/net/wireless/realtek/rtw89/cam.c      |  37 ++
- drivers/net/wireless/realtek/rtw89/cam.h      |   4 +
- drivers/net/wireless/realtek/rtw89/core.h     |  18 +-
- drivers/net/wireless/realtek/rtw89/fw.c       |  82 +++-
- drivers/net/wireless/realtek/rtw89/fw.h       | 349 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw89/pci.c      |   4 +-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |   2 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |   2 +
- 8 files changed, 473 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index dcf907b81cffa..ecb419010f0c2 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -1522,7 +1522,7 @@ rtw89_write16_mdio_mask(struct rtw89_dev *rtwdev, u8 addr, u16 mask, u16 data, u
+ 	u16 val;
+ 
+ 	ret = rtw89_read16_mdio(rtwdev, addr, speed, &val);
+-	if (!ret)
++	if (ret)
+ 		return ret;
+ 
+ 	shift = __ffs(mask);
+@@ -1530,7 +1530,7 @@ rtw89_write16_mdio_mask(struct rtw89_dev *rtwdev, u8 addr, u16 mask, u16 data, u
+ 	val |= ((data << shift) & mask);
+ 
+ 	ret = rtw89_write16_mdio(rtwdev, addr, val, speed);
+-	if (!ret)
++	if (ret)
+ 		return ret;
+ 
+ 	return 0;
 -- 
 2.25.1
 
