@@ -2,117 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CCA1C43217
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Apr 2022 02:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA82C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Apr 2022 18:39:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbiDPCHC (ORCPT
+        id S232758AbiDPSmO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Apr 2022 22:07:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36682 "EHLO
+        Sat, 16 Apr 2022 14:42:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229617AbiDPCGB (ORCPT
+        with ESMTP id S232746AbiDPSmO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Apr 2022 22:06:01 -0400
-Received: from mail-oa1-x33.google.com (mail-oa1-x33.google.com [IPv6:2001:4860:4864:20::33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185726E36D;
-        Fri, 15 Apr 2022 18:59:30 -0700 (PDT)
-Received: by mail-oa1-x33.google.com with SMTP id 586e51a60fabf-dacc470e03so9422768fac.5;
-        Fri, 15 Apr 2022 18:59:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=CZl1G0yOWcHR+4w7BioZbnZEDnrT5AWLArVFooO2o4c=;
-        b=D5xuKdFnExTDBQqGU6R+W9iBOJpgg5vTWz80N32DLEL+l8fWuCwxG0MVcgkEwFH7RW
-         YvkGiShTxKYq2hXm+RWPdnsD6DLANCncDhkkitJ9shRjRuHTzU8q6hyWi1WbXnZAR2TZ
-         evkw8KDtAyW9Zr3GMDBwD7RLvmc2Y9f7bznv649G1+oIzcWr/WP3E4T96M8KiNQ9Tqan
-         CusSHAAqLghyE6N8VPTqmRNKvIGPefCOr2mLmjhUs1uUG0N/faddOvgUzzHSOJXBwzNi
-         c0t0wfXtojBK6O41quttPCM+v96WGPpztgmcEjzGZ2JQwXccwOo8vK/sellCw3CigLCn
-         pthA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=CZl1G0yOWcHR+4w7BioZbnZEDnrT5AWLArVFooO2o4c=;
-        b=1NqdEKfQx/IwrlFeIrHhcnYcTpCZuYN1uM1kptxfGIR0vOW2i5YtK02mUVDoyYuktI
-         iRA1PxkwumuLKUetCixjumbY0Js5RpbMS6Am1Jcn7wJplXdVh4IUDbuUZXNpao0zE3I8
-         sqoWeMeMq7vWzq/4Rav6Au9RhJlOgunkfGp6bdgRIAuYrK2jB88uanG8xAGbGqg0Ivet
-         Pa7cQdFyxPEbHKaMRuyAmuNuG6bJ1FuVWQ2p/aPBs8YGtL2G5HRgPd67XTl4ajIVnkYn
-         k7z8sNTLG1S2KcnKsmeW7JUkXwurBsbZ8A90cEnb9KJmDdKR6Xv4Y4wKllvAfadmVKcA
-         IYOg==
-X-Gm-Message-State: AOAM532dEyrt3i81XfDq67YdJfu6NYzkDKcU0HD+bsXaiJkbKNHcqo8i
-        0FVpBa6Smi0+9e8eLFu9kgabAIBtteDtTA==
-X-Google-Smtp-Source: ABdhPJyxSVABo8qkGB7Wudcok21+GD2dj2PEU388i7rw/ixuqjyPAXobglCig6MbNKyzeogfnUBjzA==
-X-Received: by 2002:a17:90a:8581:b0:1b2:7541:af6c with SMTP id m1-20020a17090a858100b001b27541af6cmr1747571pjn.48.1650073848590;
-        Fri, 15 Apr 2022 18:50:48 -0700 (PDT)
-Received: from d3 ([2405:6580:97e0:3100:ae94:2ee7:59a:4846])
-        by smtp.gmail.com with ESMTPSA id v18-20020a17090a899200b001d22f3fe3e2sm205313pjn.35.2022.04.15.18.50.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Apr 2022 18:50:48 -0700 (PDT)
-Date:   Sat, 16 Apr 2022 10:50:42 +0900
-From:   Benjamin Poirier <benjamin.poirier@gmail.com>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     Yihao Han <hanyihao@vivo.com>, Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@vivo.com
-Subject: Re: [PATCH v2] ath11k: simplify if-if to if-else
-Message-ID: <Ylog8qhT6X/bYiZZ@d3>
-References: <20220415125853.86418-1-hanyihao@vivo.com>
- <ca2944bd-e80e-e0ff-0804-c8439f54b28a@quicinc.com>
+        Sat, 16 Apr 2022 14:42:14 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D65131DDF
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2022 11:39:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=Tdo84jjlIRX21EAN5K2akVMMm/PADP48RrtviqRdXFY=; b=pf4p8qMRTPvU2BL5s0m9xo4pzk
+        e6rdYE4JG4DpxU3O5c95dEg/BTGNHHI73U5zp5Y1OvihrLacgpl5NnNLd7DhAA1cRNYg3ClbgRGhO
+        wUSvUmE1Y7VhBpThRjhC0zmZwv7wYYs8MdsWMQ9XRc9SUE/gQtuZRsKj36gKQ/WIDXyU=;
+Received: from p57a6f1f9.dip0.t-ipconnect.de ([87.166.241.249] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1nfnKY-0001pv-A0; Sat, 16 Apr 2022 20:39:34 +0200
+Message-ID: <91c58969-c60e-2f41-00ac-737786d435ae@nbd.name>
+Date:   Sat, 16 Apr 2022 20:39:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ca2944bd-e80e-e0ff-0804-c8439f54b28a@quicinc.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH] ath9k: fix QCA9561 PA bias
+Content-Language: en-US
+To:     =?UTF-8?Q?Thibaut_VAR=c3=88NE?= <hacks+kernel@slashdirt.org>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
+Cc:     =?UTF-8?Q?Petr_=c5=a0tetiar?= <ynezz@true.cz>,
+        Clemens Hopfer <openwrt@wireloss.net>
+References: <20220415104419.22749-1-hacks+kernel@slashdirt.org>
+From:   Felix Fietkau <nbd@nbd.name>
+In-Reply-To: <20220415104419.22749-1-hacks+kernel@slashdirt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2022-04-15 16:02 -0700, Jeff Johnson wrote:
-> On 4/15/2022 5:58 AM, Yihao Han wrote:
-> > Replace `if (!ab->is_reset)` with `else` for simplification
-> > according to the kernel coding style:
-> > 
-> > "Do not unnecessarily use braces where a single statement will do."
-> > 
-> > ...
-> > 
-> > "This does not apply if only one branch of a conditional statement is
-> > a single statement; in the latter case use braces in both branches"
-> > 
-> > Please refer to:
-> > https://www.kernel.org/doc/html/v5.17-rc8/process/coding-style.html
-> 
-> why are you referring to braces when your patch has nothing to do with
-> braces?
-> 
-> changing if (foo) X;if (!foo) Y; to if (foo) X else Y; is not a design
-> pattern referenced in the coding style
-> 
-> > 
-> > Suggested-by: Benjamin Poirier <benjamin.poirier@gmail.com>
 
-I did not suggest this change. Please remove this tag.
-
-> > Signed-off-by: Yihao Han <hanyihao@vivo.com>
-> > ---
-> > v2:edit commit message
-> > ---
-> >   drivers/net/wireless/ath/ath11k/core.c | 3 +--
-> >   1 file changed, 1 insertion(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-> > index cbac1919867f..80009482165a 100644
-> > --- a/drivers/net/wireless/ath/ath11k/core.c
-> > +++ b/drivers/net/wireless/ath/ath11k/core.c
-> > @@ -1532,8 +1532,7 @@ static void ath11k_core_restart(struct work_struct *work)
-> >   	if (ab->is_reset)
-> >   		complete_all(&ab->reconfigure_complete);
-> > -
-> > -	if (!ab->is_reset)
-> > +	else
-> >   		ath11k_core_post_reconfigure_recovery(ab);
-> >   }
+On 15.04.22 12:44, Thibaut VARÈNE wrote:
+> ath9k is setting the TX PA DC bias level differently on QCA9561 and
+> QCA9565 although they have the same radio IP-core, which results in a
+> very low output power and very low throughput as devices are further
+> away from the AP (compared to other 2.4GHz APs).
 > 
+> In real life testing, without this patch the 2.4GHz throughput on
+> Yuncore XD3200 is around 10Mbps sitting next to the AP, and close to
+> practical maximum with the patch applied.
+> 
+> Tested-by: Petr Štetiar <ynezz@true.cz>
+> Signed-off-by: Clemens Hopfer <openwrt@wireloss.net>
+> Signed-off-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
+> ---
+>   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> index b0a4ca355..8f8682f25 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> @@ -3606,9 +3606,10 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+>   	int bias = ar9003_modal_header(ah, is2ghz)->xpaBiasLvl;
+>   
+>   	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
+> -	    AR_SREV_9531(ah) || AR_SREV_9561(ah))
+> +	    AR_SREV_9531(ah))
+>   		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+> -	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
+> +	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9561(ah) ||
+> +		 AR_SREV_9565(ah))
+>   		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+The patch looks wrong to me. I'm pretty sure that AR_CH0_TOP2 is the 
+correct register, the definition has an explicit check for 9561 as well.
+I believe this patch works by accident because it avoids writing a wrong 
+value to that register.
+The value written to that register is wrong, because while the mask 
+definition AR_CH0_TOP2_XPABIASLVL uses a different value for 9561, the 
+shift definition AR_CH0_TOP2_XPABIASLVL_S is hardcoded to 12, which is 
+wrong for 9561.
+Please try adjusting it to this:
+#define AR_CH0_TOP2_XPABIASLVL_S (AR_SREV_9561(ah) ? 9 : 12)
+
+- Felix
