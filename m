@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE50C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Apr 2022 12:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07751C433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Apr 2022 12:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383476AbiDUMNK (ORCPT
+        id S1383414AbiDUMNL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Apr 2022 08:13:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54520 "EHLO
+        Thu, 21 Apr 2022 08:13:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383318AbiDUMM3 (ORCPT
+        with ESMTP id S231910AbiDUMM3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Apr 2022 08:12:29 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 845182ED77
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2022 05:09:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1A2C2ED6D
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2022 05:09:39 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23LC9YWV0028983, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23LC9S7u8028963, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23LC9YWV0028983
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23LC9S7u8028963
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 21 Apr 2022 20:09:34 +0800
+        Thu, 21 Apr 2022 20:09:28 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Thu, 21 Apr 2022 20:09:34 +0800
+ 15.1.2308.27; Thu, 21 Apr 2022 20:09:28 +0800
 Received: from localhost (172.16.16.159) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 21 Apr
- 2022 20:09:34 +0800
+ 2022 20:09:27 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/14] rtw89: ser: re-enable interrupt in threadfn if under_recovery
-Date:   Thu, 21 Apr 2022 20:08:54 +0800
-Message-ID: <20220421120903.73715-6-pkshih@realtek.com>
+Subject: [PATCH 03/14] rtw89: pci: reclaim TX BD only if it really need
+Date:   Thu, 21 Apr 2022 20:08:52 +0800
+Message-ID: <20220421120903.73715-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220421120903.73715-1-pkshih@realtek.com>
 References: <20220421120903.73715-1-pkshih@realtek.com>
@@ -64,28 +64,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Normally, we re-enable interrupt by napi_poll, but for this special
-situation, we must turn it on immediately because napi_poll isn't
-scheduled.
+To reclaim TX BD, we need to read hardware reading index to determine if
+any DMA is complete. Since this IO spends time, do this thing only if we
+really need it when TX BD has no free buffer corresponding to target skb.
+
+The experimental result shows that reading counter decreases from 26,000
+to 130 per second.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/pci.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index e8bcecbe77e14..ad3db5aa890c6 100644
+index 338a032490e16..c1bb44bcd48e1 100644
 --- a/drivers/net/wireless/realtek/rtw89/pci.c
 +++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -743,7 +743,7 @@ static irqreturn_t rtw89_pci_interrupt_threadfn(int irq, void *dev)
- 		rtw89_ser_notify(rtwdev, rtw89_mac_get_err_status(rtwdev));
+@@ -412,9 +412,12 @@ static void rtw89_pci_release_txwd_skb(struct rtw89_dev *rtwdev,
+ 	u8 txch = tx_ring->txch;
  
- 	if (unlikely(rtwpci->under_recovery))
--		return IRQ_HANDLED;
-+		goto enable_intr;
+ 	if (!list_empty(&txwd->list)) {
+-		rtw89_warn(rtwdev, "queue %d txwd %d is not idle\n",
+-			   txch, seq);
+-		return;
++		rtw89_pci_reclaim_txbd(rtwdev, tx_ring);
++		if (!list_empty(&txwd->list)) {
++			rtw89_warn(rtwdev, "queue %d txwd %d is not idle\n",
++				   txch, seq);
++			return;
++		}
+ 	}
  
- 	if (unlikely(rtwpci->low_power)) {
- 		rtw89_pci_low_power_interrupt_handler(rtwdev);
+ 	/* currently, support for only one frame */
+@@ -458,7 +461,6 @@ static void rtw89_pci_release_rpp(struct rtw89_dev *rtwdev,
+ 	}
+ 
+ 	tx_ring = &rtwpci->tx_rings[txch];
+-	rtw89_pci_reclaim_txbd(rtwdev, tx_ring);
+ 	wd_ring = &tx_ring->wd_ring;
+ 	txwd = &wd_ring->pages[seq];
+ 
+@@ -915,6 +917,10 @@ static u32 __rtw89_pci_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
+ 		if (!cnt)
+ 			goto out_unlock;
+ 		rtw89_pci_release_tx(rtwdev, rx_ring, cnt);
++
++		bd_cnt = rtw89_pci_get_avail_txbd_num(tx_ring);
++		if (bd_cnt == 0)
++			rtw89_pci_reclaim_txbd(rtwdev, tx_ring);
+ 	}
+ 
+ 	bd_cnt = rtw89_pci_get_avail_txbd_num(tx_ring);
 -- 
 2.25.1
 
