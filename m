@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0206C433EF
-	for <linux-wireless@archiver.kernel.org>; Sat, 23 Apr 2022 12:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C58C433F5
+	for <linux-wireless@archiver.kernel.org>; Sat, 23 Apr 2022 12:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234802AbiDWMsz (ORCPT
+        id S235444AbiDWMt0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 23 Apr 2022 08:48:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58362 "EHLO
+        Sat, 23 Apr 2022 08:49:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231717AbiDWMsz (ORCPT
+        with ESMTP id S233371AbiDWMtY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Apr 2022 08:48:55 -0400
+        Sat, 23 Apr 2022 08:49:24 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2BC8BEC;
-        Sat, 23 Apr 2022 05:45:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ECA5114F;
+        Sat, 23 Apr 2022 05:46:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FAE6610AB;
-        Sat, 23 Apr 2022 12:45:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D9BCC385A5;
-        Sat, 23 Apr 2022 12:45:55 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0AA30610A5;
+        Sat, 23 Apr 2022 12:46:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABD2AC385A5;
+        Sat, 23 Apr 2022 12:46:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650717957;
-        bh=pZgBCGqzSpZFGZFs77ncuwGPCPkctR6rHLCakx1n/V8=;
+        s=k20201202; t=1650717985;
+        bh=Uvl6zhZc/mlmKjzrsz1ZwJVfGfONfLa+j/xeTUPpcWw=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=DIHIZiZf49Ifa6XOoloc4hVEmHPkSQFStdSjr2xsX1MkJyZQJ3MMSLpQfXEhfH5lc
-         OTnpwx5QqiAVgmnh56Y5c/PER/W1Qb1cLgjVwcnWWkdhrg5lfihj+N2NibxYWxKsZF
-         BqWZEKJJZdrlCXLtgalEdeWEeSQgVBCgaP54RFwIW5Zgv14Zme/YvUFVpzfVywX8H3
-         065NSeosgL/yyYimQkZDmb4AENsMUSRPFYJu63U71E+mSAeW6ASJy7svwmkoxmX0cH
-         v88h6wnJBtFI/qG9wiDVqcvNrnYsQpNz9gVlYv7p5VTJ5wj2FTs9a97+hY4ebKtse7
-         jSA0awMLbMtYQ==
+        b=EXG7R3RlOPZs0rgEu8pLeYglJcWYT2sTVSY7uqJEqUw1h4wzr+VPZgXRNj9+ygiuy
+         LXyN+nXkGKE5B8cCDBpMv5uGLAjlobF1AQW+n+oxk+WgGC3jmg4Meynw7j0yT45zOJ
+         aErA3hgGkm3bDOD8bXynceNRi0ccr8QZ+birRwZudpaUX+EyTaOi76zH3/lDKpXYB7
+         5cPCSrTsrRgz4HHaaUIaym5/kKXvbah+BAWLNL81rUlZdxBuZ1+ceD1QYABpLfyWVp
+         9lSKsmEf5jnA1OYQFCm1Msx6+0Ew+57UM80vSTak4mC5Kb3KyDOf20/cMX7M39ZsvL
+         N7TiUs5UcW03Q==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: wl12xx: use pm_runtime_resume_and_get() instead of
+Subject: Re: wl12xx: scan: use pm_runtime_resume_and_get() instead of
  pm_runtime_get_sync()
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220420090214.2588618-1-chi.minghao@zte.com.cn>
-References: <20220420090214.2588618-1-chi.minghao@zte.com.cn>
+In-Reply-To: <20220420090247.2588680-1-chi.minghao@zte.com.cn>
+References: <20220420090247.2588680-1-chi.minghao@zte.com.cn>
 To:     cgel.zte@gmail.com
 Cc:     davem@davemloft.net, kuba@kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <165071795417.1434.13837411851415220071.kvalo@kernel.org>
-Date:   Sat, 23 Apr 2022 12:45:55 +0000 (UTC)
+Message-ID: <165071798166.1434.12954171686384361276.kvalo@kernel.org>
+Date:   Sat, 23 Apr 2022 12:46:23 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -66,10 +66,10 @@ cgel.zte@gmail.com wrote:
 
 Patch applied to wireless-next.git, thanks.
 
-54d5ecc1710e wl12xx: use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
+c94e36908467 wl12xx: scan: use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220420090214.2588618-1-chi.minghao@zte.com.cn/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220420090247.2588680-1-chi.minghao@zte.com.cn/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
