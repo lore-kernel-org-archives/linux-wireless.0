@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F36C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 06:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAFEC4167E
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 06:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242892AbiDZGgY (ORCPT
+        id S234510AbiDZGg1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Apr 2022 02:36:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50654 "EHLO
+        Tue, 26 Apr 2022 02:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235958AbiDZGgV (ORCPT
+        with ESMTP id S241507AbiDZGgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Apr 2022 02:36:21 -0400
+        Tue, 26 Apr 2022 02:36:23 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E238715FD2
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2022 23:33:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AECA15FE8
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2022 23:33:17 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23Q6X1VP0015210, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com ([172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23Q6X1VP0015210
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23Q6XBBp8015278, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com ([172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23Q6XBBp8015278
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 26 Apr 2022 14:33:01 +0800
+        Tue, 26 Apr 2022 14:33:11 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 26 Apr 2022 14:33:01 +0800
+ 15.1.2308.27; Tue, 26 Apr 2022 14:33:11 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 26 Apr
- 2022 14:33:01 +0800
+ 2022 14:33:10 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/15] rtw89: 8852c: rfk: add LCK
-Date:   Tue, 26 Apr 2022 14:32:23 +0800
-Message-ID: <20220426063235.41650-4-pkshih@realtek.com>
+Subject: [PATCH 10/15] rtw89: 8852c: add chip_ops::bb_ctrl_btc_preagc
+Date:   Tue, 26 Apr 2022 14:32:30 +0800
+Message-ID: <20220426063235.41650-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220426063235.41650-1-pkshih@realtek.com>
 References: <20220426063235.41650-1-pkshih@realtek.com>
@@ -56,7 +56,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvMjYgpFekyCAwNDozODowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -64,174 +64,95 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-LCK is short fro LC Tank calibration. Do this calibration once driver
-loads RF parameters table. Since the characteristic can be changed by
-temperature, we do this calibration again if difference of thermal value
-is over a threshold.
+Add to configure BT share RX path and related settings.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     |  5 ++
- drivers/net/wireless/realtek/rtw89/reg.h      |  2 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  7 +++
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 63 +++++++++++++++++++
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.h |  2 +
- 5 files changed, 79 insertions(+)
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 64 +++++++++++++++++++
+ 1 file changed, 64 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index d544cf29e588a..41d23711dc354 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2642,6 +2642,10 @@ struct rtw89_mcc_info {
- 	u8 table_idx;
- };
- 
-+struct rtw89_lck_info {
-+	u8 thermal[RF_PATH_MAX];
-+};
-+
- struct rtw89_iqk_info {
- 	bool lok_cor_fail[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
- 	bool lok_fin_fail[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
-@@ -3114,6 +3118,7 @@ struct rtw89_dev {
- 	struct rtw89_iqk_info iqk;
- 	struct rtw89_dpk_info dpk;
- 	struct rtw89_mcc_info mcc;
-+	struct rtw89_lck_info lck;
- 	bool is_tssi_mode[RF_PATH_MAX];
- 	bool is_bt_iqk_timeout;
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index ce472d3b1a665..028c881308237 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3327,6 +3327,8 @@
- #define RR_MIXER_GN GENMASK(4, 3)
- #define RR_XTALX2 0xb8
- #define RR_MALSEL 0xbe
-+#define RR_LCK_TRG 0xd3
-+#define RR_LCK_TRGSEL BIT(8)
- #define RR_RCKD 0xde
- #define RR_RCKD_POW GENMASK(19, 13)
- #define RR_RCKD_BW BIT(2)
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index c318849ac5aae..3089a4edc60f1 100644
+index e6b3d60da980b..d2fe3976e4ae9 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -1771,6 +1771,7 @@ static void rtw8852c_rfk_init(struct rtw89_dev *rtwdev)
- 	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
- 
- 	memset(mcc_info, 0, sizeof(*mcc_info));
-+	rtw8852c_lck_init(rtwdev);
- 
- 	rtw8852c_dack(rtwdev);
- }
-@@ -1780,6 +1781,11 @@ static void rtw8852c_rfk_channel(struct rtw89_dev *rtwdev)
- 	rtw89_fw_h2c_rf_ntfy_mcc(rtwdev);
- }
- 
-+static void rtw8852c_rfk_track(struct rtw89_dev *rtwdev)
-+{
-+	rtw8852c_lck_track(rtwdev);
-+}
-+
- static u32 rtw8852c_bb_cal_txpwr_ref(struct rtw89_dev *rtwdev,
- 				     enum rtw89_phy_idx phy_idx, s16 ref)
- {
-@@ -2708,6 +2714,7 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
- 	.read_phycap		= rtw8852c_read_phycap,
- 	.rfk_init		= rtw8852c_rfk_init,
- 	.rfk_channel		= rtw8852c_rfk_channel,
-+	.rfk_track		= rtw8852c_rfk_track,
- 	.power_trim		= rtw8852c_power_trim,
- 	.set_txpwr		= rtw8852c_set_txpwr,
- 	.set_txpwr_ctrl		= rtw8852c_set_txpwr_ctrl,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index 8369370fcc37e..7af21986e79bd 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -628,6 +628,69 @@ static void _rxbb_bw(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
+@@ -2338,6 +2338,69 @@ static void rtw8852c_ctrl_tx_path_tmac(struct rtw89_dev *rtwdev, u8 tx_path,
  	}
  }
  
-+static void _lck_keep_thermal(struct rtw89_dev *rtwdev)
++static void rtw8852c_bb_ctrl_btc_preagc(struct rtw89_dev *rtwdev, bool bt_en)
 +{
-+	struct rtw89_lck_info *lck = &rtwdev->lck;
-+	int path;
-+
-+	for (path = 0; path < rtwdev->chip->rf_path_num; path++) {
-+		lck->thermal[path] =
-+			ewma_thermal_read(&rtwdev->phystat.avg_thermal[path]);
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK_TRACK,
-+			    "[LCK] path=%d thermal=0x%x", path, lck->thermal[path]);
++	if (bt_en) {
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_FRC_FIR_TYPE_V1,
++				       B_PATH0_FRC_FIR_TYPE_MSK_V1, 0x3);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_FRC_FIR_TYPE_V1,
++				       B_PATH1_FRC_FIR_TYPE_MSK_V1, 0x3);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_RXBB_V1,
++				       B_PATH0_RXBB_MSK_V1, 0xf);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_RXBB_V1,
++				       B_PATH1_RXBB_MSK_V1, 0xf);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_LNA6_OP1DB_V1,
++				       B_PATH0_G_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_LNA6_OP1DB_V1,
++				       B_PATH1_G_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_TIA0_LNA6_OP1DB_V1,
++				       B_PATH0_G_TIA0_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_TIA1_LNA6_OP1DB_V1,
++				       B_PATH0_G_TIA1_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA0_LNA6_OP1DB_V1,
++				       B_PATH1_G_TIA0_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA1_LNA6_OP1DB_V1,
++				       B_PATH1_G_TIA1_LNA6_OP1DB_V1, 0x80);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_BT_BACKOFF_V1,
++				       B_PATH0_BT_BACKOFF_V1, 0x780D1E);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_BT_BACKOFF_V1,
++				       B_PATH1_BT_BACKOFF_V1, 0x780D1E);
++		rtw89_phy_write32_mask(rtwdev, R_P0_BACKOFF_IBADC_V1,
++				       B_P0_BACKOFF_IBADC_V1, 0x34);
++		rtw89_phy_write32_mask(rtwdev, R_P1_BACKOFF_IBADC_V1,
++				       B_P1_BACKOFF_IBADC_V1, 0x34);
++	} else {
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_FRC_FIR_TYPE_V1,
++				       B_PATH0_FRC_FIR_TYPE_MSK_V1, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_FRC_FIR_TYPE_V1,
++				       B_PATH1_FRC_FIR_TYPE_MSK_V1, 0x0);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_RXBB_V1,
++				       B_PATH0_RXBB_MSK_V1, 0x60);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_RXBB_V1,
++				       B_PATH1_RXBB_MSK_V1, 0x60);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_LNA6_OP1DB_V1,
++				       B_PATH0_G_LNA6_OP1DB_V1, 0x1a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_LNA6_OP1DB_V1,
++				       B_PATH1_G_LNA6_OP1DB_V1, 0x1a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_TIA0_LNA6_OP1DB_V1,
++				       B_PATH0_G_TIA0_LNA6_OP1DB_V1, 0x2a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_G_TIA1_LNA6_OP1DB_V1,
++				       B_PATH0_G_TIA1_LNA6_OP1DB_V1, 0x2a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA0_LNA6_OP1DB_V1,
++				       B_PATH1_G_TIA0_LNA6_OP1DB_V1, 0x2a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA1_LNA6_OP1DB_V1,
++				       B_PATH1_G_TIA1_LNA6_OP1DB_V1, 0x2a);
++		rtw89_phy_write32_mask(rtwdev, R_PATH0_BT_BACKOFF_V1,
++				       B_PATH0_BT_BACKOFF_V1, 0x79E99E);
++		rtw89_phy_write32_mask(rtwdev, R_PATH1_BT_BACKOFF_V1,
++				       B_PATH1_BT_BACKOFF_V1, 0x79E99E);
++		rtw89_phy_write32_mask(rtwdev, R_P0_BACKOFF_IBADC_V1,
++				       B_P0_BACKOFF_IBADC_V1, 0x26);
++		rtw89_phy_write32_mask(rtwdev, R_P1_BACKOFF_IBADC_V1,
++				       B_P1_BACKOFF_IBADC_V1, 0x26);
 +	}
 +}
 +
-+static void _lck(struct rtw89_dev *rtwdev)
-+{
-+	u32 tmp18[2];
-+	int path = rtwdev->dbcc_en ? 2 : 1;
-+	int i;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_RFK_TRACK, "[LCK] DO LCK\n");
-+
-+	tmp18[0] = rtw89_read_rf(rtwdev, RF_PATH_A, RR_CFGCH, RFREG_MASK);
-+	tmp18[1] = rtw89_read_rf(rtwdev, RF_PATH_B, RR_CFGCH, RFREG_MASK);
-+
-+	for (i = 0; i < path; i++) {
-+		rtw89_write_rf(rtwdev, i, RR_LCK_TRG, RR_LCK_TRGSEL, 0x1);
-+		rtw89_write_rf(rtwdev, i, RR_CFGCH, RFREG_MASK, tmp18[i]);
-+		rtw89_write_rf(rtwdev, i, RR_LCK_TRG, RR_LCK_TRGSEL, 0x0);
-+	}
-+
-+	_lck_keep_thermal(rtwdev);
-+}
-+
-+#define RTW8852C_LCK_TH 8
-+
-+void rtw8852c_lck_track(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_lck_info *lck = &rtwdev->lck;
-+	u8 cur_thermal;
-+	int delta;
-+	int path;
-+
-+	for (path = 0; path < rtwdev->chip->rf_path_num; path++) {
-+		cur_thermal =
-+			ewma_thermal_read(&rtwdev->phystat.avg_thermal[path]);
-+		delta = abs((int)cur_thermal - lck->thermal[path]);
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK_TRACK,
-+			    "[LCK] path=%d current thermal=0x%x delta=0x%x\n",
-+			    path, cur_thermal, delta);
-+
-+		if (delta >= RTW8852C_LCK_TH) {
-+			_lck(rtwdev);
-+			return;
-+		}
-+	}
-+}
-+
-+void rtw8852c_lck_init(struct rtw89_dev *rtwdev)
-+{
-+	_lck_keep_thermal(rtwdev);
-+}
-+
- static
- void rtw8852c_ctrl_bw_ch(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 			 u8 central_ch, enum rtw89_band band,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-index 7323183e74d41..4ce76ef4c5e60 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-@@ -11,5 +11,7 @@ void rtw8852c_dack(struct rtw89_dev *rtwdev);
- void rtw8852c_set_channel_rf(struct rtw89_dev *rtwdev,
- 			     struct rtw89_channel_params *param,
- 			     enum rtw89_phy_idx phy_idx);
-+void rtw8852c_lck_init(struct rtw89_dev *rtwdev);
-+void rtw8852c_lck_track(struct rtw89_dev *rtwdev);
- 
- #endif
+ static void rtw8852c_bb_cfg_txrx_path(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+@@ -2747,6 +2810,7 @@ static const struct rtw89_chip_ops rtw8852c_chip_ops = {
+ 	.init_txpwr_unit	= rtw8852c_init_txpwr_unit,
+ 	.get_thermal		= rtw8852c_get_thermal,
+ 	.query_ppdu		= rtw8852c_query_ppdu,
++	.bb_ctrl_btc_preagc	= rtw8852c_bb_ctrl_btc_preagc,
+ 	.read_rf		= rtw89_phy_read_rf_v1,
+ 	.write_rf		= rtw89_phy_write_rf_v1,
+ 	.set_txpwr_ul_tb_offset	= rtw8852c_set_txpwr_ul_tb_offset,
 -- 
 2.25.1
 
