@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57503C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 14:56:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7577FC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 14:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351850AbiDZO7M (ORCPT
+        id S1351831AbiDZO7q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Apr 2022 10:59:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58834 "EHLO
+        Tue, 26 Apr 2022 10:59:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351904AbiDZO7E (ORCPT
+        with ESMTP id S1351829AbiDZO6w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Apr 2022 10:59:04 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63B363AA;
-        Tue, 26 Apr 2022 07:55:56 -0700 (PDT)
+        Tue, 26 Apr 2022 10:58:52 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C20B13E1E;
+        Tue, 26 Apr 2022 07:55:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1650984956; x=1682520956;
+  t=1650984943; x=1682520943;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=twF+s2C7/i7W0bdJ9thztSH3slAFaA+sMxDfUbNFHwc=;
-  b=Dj2wK/zlEhQLJeUYxPFi/w3thaMszuohhJND+CEtSW285QLnzRq0gKJl
-   N6cTwGnPMArJVd4uuy+876JsY6el5Y/VnMMcCSbEVhNQ1U99EjwiJh/J5
-   ry4OPo77XXr0QcIzzF34574jgQAz4Pwh5tLOjvfWvI07GvWJM6CgzejcP
-   g=;
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 26 Apr 2022 07:55:56 -0700
+  bh=pNdJlq/5TqcpkvkpuLn9cip96kKkcwZHu4AbX939tT8=;
+  b=ABGc+nU8dv6ovo9+1fHhl+97zvI+dK6LIQpYtw1QQqyIKKbM87Hnjm9j
+   nt5kv6A/vBR/4AWg576a8LEz00Qu7dqZqqRVeqJsEOOIZgmXglyjRIA0x
+   glJo4CqxjsYGf5u/DBEhrVeyNxGUJyFAJDyv7RT4Hx2+L3LGeRvU/aLcL
+   Q=;
+Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
+  by alexa-out.qualcomm.com with ESMTP; 26 Apr 2022 07:55:43 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2022 07:55:56 -0700
+  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2022 07:55:43 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 26 Apr 2022 07:55:55 -0700
+ 15.2.986.22; Tue, 26 Apr 2022 07:55:42 -0700
 Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 26 Apr 2022 07:55:53 -0700
+ 15.2.986.22; Tue, 26 Apr 2022 07:55:39 -0700
 From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <robh@kernel.org>, <mka@chromium.org>,
         Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH v5 12/12] ath11k: Add support for WCN6750 device
-Date:   Tue, 26 Apr 2022 20:24:56 +0530
-Message-ID: <20220426145456.8055-13-quic_mpubbise@quicinc.com>
+Subject: [PATCH v5 07/12] ath11k: HAL changes to support WCN6750
+Date:   Tue, 26 Apr 2022 20:24:51 +0530
+Message-ID: <20220426145456.8055-8-quic_mpubbise@quicinc.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220426145456.8055-1-quic_mpubbise@quicinc.com>
 References: <20220426145456.8055-1-quic_mpubbise@quicinc.com>
@@ -60,28 +60,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WCN6750 is non-DBS 2x2 11AX chipset. Unlike QCA6390 which is a
-DBS (dual band simultaneous) solution (2 LMACs), WCN6750 has a
-single LMAC supporting 2G, 5G and 6G bands but will operate only
-on one band at any given point.
-
-WCN6750 is a PCIe based solution, but it is attached to the WPSS
-(Wireless Processor SubSystem) Q6 processor, hence it is enumerated
-by the Q6 processor. It is registered to the APSS processor
-(Application Processor SubSystem) as a platform device(AHB) and
-remoteproc APIs are used to boot up or shutdown the device like
-other AHB devices.
-
-Also, Device information like BAR and it's size is not known to the
-APSS processor as the chip is enumerated by WPSS Q6. These details
-are fetched over QMI.
-
-STA and AP modes are supported. Verified basic connectivity and ping
-in both the modes.
-
-An important point to note is that though WCN6750 is a PCIe device,
-it cannot be attached to any other platform except on Qualcomm
-Snapdragon SoCs due to the aforementioned reasons.
+Add HAL changes required to support WCN6750. Offsets of some registers
+for WCN6750 are different from other supported devices; move such
+register offsets to platform specific ath11k_hw_regs.
 
 Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
@@ -90,437 +71,394 @@ Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/Makefile |   5 +-
- drivers/net/wireless/ath/ath11k/ahb.c    | 152 ++++++++++++++++++++---
- drivers/net/wireless/ath/ath11k/ahb.h    |   1 -
- drivers/net/wireless/ath/ath11k/core.h   |   1 +
- drivers/net/wireless/ath/ath11k/pcic.c   |  23 ++++
- 5 files changed, 164 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c |   2 +
+ drivers/net/wireless/ath/ath11k/hal.c  |  15 +--
+ drivers/net/wireless/ath/ath11k/hal.h  |  15 +--
+ drivers/net/wireless/ath/ath11k/hw.c   | 134 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/hw.h   |  10 ++
+ 5 files changed, 163 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/Makefile b/drivers/net/wireless/ath/ath11k/Makefile
-index 0ebfe41d6143..cc47e0114595 100644
---- a/drivers/net/wireless/ath/ath11k/Makefile
-+++ b/drivers/net/wireless/ath/ath11k/Makefile
-@@ -16,7 +16,8 @@ ath11k-y += core.o \
- 	    ce.o \
- 	    peer.o \
- 	    dbring.o \
--	    hw.o
-+	    hw.o \
-+	    pcic.o
- 
- ath11k-$(CONFIG_ATH11K_DEBUGFS) += debugfs.o debugfs_htt_stats.o debugfs_sta.o
- ath11k-$(CONFIG_NL80211_TESTMODE) += testmode.o
-@@ -29,7 +30,7 @@ obj-$(CONFIG_ATH11K_AHB) += ath11k_ahb.o
- ath11k_ahb-y += ahb.o
- 
- obj-$(CONFIG_ATH11K_PCI) += ath11k_pci.o
--ath11k_pci-y += mhi.o pci.o pcic.o
-+ath11k_pci-y += mhi.o pci.o
- 
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index d27fc7276977..4fa5aba286ff 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -13,6 +13,7 @@
- #include "debug.h"
- #include "hif.h"
- #include <linux/remoteproc.h>
-+#include "pcic.h"
- 
- static const struct of_device_id ath11k_ahb_of_match[] = {
- 	/* TODO: Should we change the compatible string to something similar
-@@ -24,19 +25,22 @@ static const struct of_device_id ath11k_ahb_of_match[] = {
- 	{ .compatible = "qcom,ipq6018-wifi",
- 	  .data = (void *)ATH11K_HW_IPQ6018_HW10,
- 	},
-+	{ .compatible = "qcom,wcn6750-wifi",
-+	  .data = (void *)ATH11K_HW_WCN6750_HW10,
-+	},
- 	{ }
- };
- 
- MODULE_DEVICE_TABLE(of, ath11k_ahb_of_match);
- 
--static const struct ath11k_bus_params ath11k_ahb_bus_params = {
-+static const struct ath11k_bus_params ath11k_ahb_bus_params_ipq8074 = {
- 	.mhi_support = false,
- 	.m3_fw_support = false,
- 	.fixed_bdf_addr = true,
- 	.fixed_mem_region = true,
- };
- 
--const struct ath11k_bus_params ath11k_ahb_hybrid_bus_params = {
-+static const struct ath11k_bus_params ath11k_ahb_bus_params_wcn6750 = {
- 	.mhi_support = false,
- 	.m3_fw_support = false,
- 	.fixed_bdf_addr = false,
-@@ -47,6 +51,16 @@ const struct ath11k_bus_params ath11k_ahb_hybrid_bus_params = {
- 	.ce_window_idx = 2,
- };
- 
-+static int
-+ath11k_ahb_get_msi_irq_wcn6750(struct ath11k_base *ab, unsigned int vector)
-+{
-+	return ab->pci.msi.irqs[vector];
-+}
-+
-+static const struct ath11k_pci_ops ath11k_ahb_pci_ops_wcn6750 = {
-+	.get_msi_irq = ath11k_ahb_get_msi_irq_wcn6750,
-+};
-+
- #define ATH11K_IRQ_CE0_OFFSET 4
- 
- static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
-@@ -413,6 +427,9 @@ static void ath11k_ahb_free_irq(struct ath11k_base *ab)
- 	int irq_idx;
- 	int i;
- 
-+	if (ab->bus_params.hybrid_bus_type)
-+		return ath11k_pcic_free_irq(ab);
-+
- 	for (i = 0; i < ab->hw_params.ce_count; i++) {
- 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
- 			continue;
-@@ -567,6 +584,9 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
- 	int irq, irq_idx, i;
- 	int ret;
- 
-+	if (ab->bus_params.hybrid_bus_type)
-+		return ath11k_pcic_config_irq(ab);
-+
- 	/* Configure CE irqs */
- 	for (i = 0; i < ab->hw_params.ce_count; i++) {
- 		struct ath11k_ce_pipe *ce_pipe = &ab->ce.ce_pipe[i];
-@@ -636,7 +656,7 @@ static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id
- 	return 0;
- }
- 
--static const struct ath11k_hif_ops ath11k_ahb_hif_ops = {
-+static const struct ath11k_hif_ops ath11k_ahb_hif_ops_ipq8074 = {
- 	.start = ath11k_ahb_start,
- 	.stop = ath11k_ahb_stop,
- 	.read32 = ath11k_ahb_read32,
-@@ -648,6 +668,20 @@ static const struct ath11k_hif_ops ath11k_ahb_hif_ops = {
- 	.power_up = ath11k_ahb_power_up,
- };
- 
-+static const struct ath11k_hif_ops ath11k_ahb_hif_ops_wcn6750 = {
-+	.start = ath11k_pcic_start,
-+	.stop = ath11k_pcic_stop,
-+	.read32 = ath11k_pcic_read32,
-+	.write32 = ath11k_pcic_write32,
-+	.irq_enable = ath11k_pcic_ext_irq_enable,
-+	.irq_disable = ath11k_pcic_ext_irq_disable,
-+	.get_msi_address =  ath11k_pcic_get_msi_address,
-+	.get_user_msi_vector = ath11k_pcic_get_user_msi_assignment,
-+	.map_service_to_pipe = ath11k_pcic_map_service_to_pipe,
-+	.power_down = ath11k_ahb_power_down,
-+	.power_up = ath11k_ahb_power_up,
-+};
-+
- static int ath11k_core_get_rproc(struct ath11k_base *ab)
- {
- 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
-@@ -670,12 +704,85 @@ static int ath11k_core_get_rproc(struct ath11k_base *ab)
- 	return 0;
- }
- 
-+static int ath11k_ahb_setup_msi_resources(struct ath11k_base *ab)
-+{
-+	struct platform_device *pdev = ab->pdev;
-+	phys_addr_t msi_addr_pa;
-+	dma_addr_t msi_addr_iova;
-+	struct resource *res;
-+	int int_prop;
-+	int ret;
-+	int i;
-+
-+	ret = ath11k_pcic_init_msi_config(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to init msi config: %d\n", ret);
-+		return ret;
-+	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		ath11k_err(ab, "failed to fetch msi_addr\n");
-+		return -ENOENT;
-+	}
-+
-+	msi_addr_pa = res->start;
-+	msi_addr_iova = dma_map_resource(ab->dev, msi_addr_pa, PAGE_SIZE,
-+					 DMA_FROM_DEVICE, 0);
-+	if (dma_mapping_error(ab->dev, msi_addr_iova))
-+		return -ENOMEM;
-+
-+	ab->pci.msi.addr_lo = lower_32_bits(msi_addr_iova);
-+	ab->pci.msi.addr_hi = upper_32_bits(msi_addr_iova);
-+
-+	ret = of_property_read_u32_index(ab->dev->of_node, "interrupts", 1, &int_prop);
-+	if (ret)
-+		return ret;
-+
-+	ab->pci.msi.ep_base_data = int_prop + 32;
-+
-+	for (i = 0; i < ab->pci.msi.config->total_vectors; i++) {
-+		res = platform_get_resource(pdev, IORESOURCE_IRQ, i);
-+		if (!res)
-+			return -ENODEV;
-+
-+		ab->pci.msi.irqs[i] = res->start;
-+	}
-+
-+	set_bit(ATH11K_FLAG_MULTI_MSI_VECTORS, &ab->dev_flags);
-+
-+	return 0;
-+}
-+
-+static int ath11k_ahb_setup_resources(struct ath11k_base *ab)
-+{
-+	struct platform_device *pdev = ab->pdev;
-+	struct resource *mem_res;
-+	void __iomem *mem;
-+
-+	if (ab->bus_params.hybrid_bus_type)
-+		return ath11k_ahb_setup_msi_resources(ab);
-+
-+	mem = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
-+	if (IS_ERR(mem)) {
-+		dev_err(&pdev->dev, "ioremap error\n");
-+		return PTR_ERR(mem);
-+	}
-+
-+	ab->mem = mem;
-+	ab->mem_len = resource_size(mem_res);
-+
-+	return 0;
-+}
-+
- static int ath11k_ahb_probe(struct platform_device *pdev)
- {
- 	struct ath11k_base *ab;
- 	const struct of_device_id *of_id;
--	struct resource *mem_res;
--	void __iomem *mem;
-+	const struct ath11k_bus_params *bus_params;
-+	const struct ath11k_hif_ops *hif_ops;
-+	const struct ath11k_pci_ops *pci_ops;
-+	enum ath11k_hw_rev hw_rev;
- 	int ret;
- 
- 	of_id = of_match_device(ath11k_ahb_of_match, &pdev->dev);
-@@ -684,10 +791,23 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	mem = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
--	if (IS_ERR(mem)) {
--		dev_err(&pdev->dev, "ioremap error\n");
--		return PTR_ERR(mem);
-+	hw_rev = (enum ath11k_hw_rev)of_id->data;
-+
-+	switch (hw_rev) {
-+	case ATH11K_HW_IPQ8074:
-+	case ATH11K_HW_IPQ6018_HW10:
-+		bus_params = &ath11k_ahb_bus_params_ipq8074;
-+		hif_ops = &ath11k_ahb_hif_ops_ipq8074;
-+		pci_ops = NULL;
-+		break;
-+	case ATH11K_HW_WCN6750_HW10:
-+		bus_params = &ath11k_ahb_bus_params_wcn6750;
-+		hif_ops = &ath11k_ahb_hif_ops_wcn6750;
-+		pci_ops = &ath11k_ahb_pci_ops_wcn6750;
-+		break;
-+	default:
-+		dev_err(&pdev->dev, "unsupported device type %d\n", hw_rev);
-+		return -EOPNOTSUPP;
- 	}
- 
- 	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-@@ -697,20 +817,22 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
- 	}
- 
- 	ab = ath11k_core_alloc(&pdev->dev, sizeof(struct ath11k_ahb),
--			       ATH11K_BUS_AHB,
--			       &ath11k_ahb_bus_params);
-+			       ATH11K_BUS_AHB, bus_params);
- 	if (!ab) {
- 		dev_err(&pdev->dev, "failed to allocate ath11k base\n");
- 		return -ENOMEM;
- 	}
- 
--	ab->hif.ops = &ath11k_ahb_hif_ops;
-+	ab->hif.ops = hif_ops;
-+	ab->pci.ops = pci_ops;
- 	ab->pdev = pdev;
--	ab->hw_rev = (enum ath11k_hw_rev)of_id->data;
--	ab->mem = mem;
--	ab->mem_len = resource_size(mem_res);
-+	ab->hw_rev = hw_rev;
- 	platform_set_drvdata(pdev, ab);
- 
-+	ret = ath11k_ahb_setup_resources(ab);
-+	if (ret)
-+		goto err_core_free;
-+
- 	ret = ath11k_core_pre_init(ab);
- 	if (ret)
- 		goto err_core_free;
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.h b/drivers/net/wireless/ath/ath11k/ahb.h
-index a276e3d1dff8..eeb1feed2c81 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.h
-+++ b/drivers/net/wireless/ath/ath11k/ahb.h
-@@ -10,7 +10,6 @@
- 
- #define ATH11K_AHB_RECOVERY_TIMEOUT (3 * HZ)
- struct ath11k_base;
--extern const struct ath11k_bus_params ath11k_ahb_hybrid_bus_params;
- 
- struct ath11k_ahb {
- 	struct rproc *tgt_rproc;
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index d3bfaafcd571..201af26803d7 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -936,6 +936,7 @@ struct ath11k_base {
- 		struct {
- 			const struct ath11k_msi_config *config;
- 			u32 ep_base_data;
-+			u32 irqs[32];
- 			u32 addr_lo;
- 			u32 addr_hi;
- 		} msi;
-diff --git a/drivers/net/wireless/ath/ath11k/pcic.c b/drivers/net/wireless/ath/ath11k/pcic.c
-index 6d0b5307d5c7..0f343d768ac2 100644
---- a/drivers/net/wireless/ath/ath11k/pcic.c
-+++ b/drivers/net/wireless/ath/ath11k/pcic.c
-@@ -106,6 +106,15 @@ static const struct ath11k_msi_config ath11k_msi_config[] = {
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index ed600617a71a..ca0a704c4d5e 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -449,8 +449,10 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
  		},
- 		.hw_rev = ATH11K_HW_WCN6855_HW21,
- 	},
-+	{
-+		.total_vectors = 28,
-+		.total_users = 2,
-+		.users = (struct ath11k_msi_user[]) {
-+			{ .name = "CE", .num_vectors = 10, .base_vector = 0 },
-+			{ .name = "DP", .num_vectors = 18, .base_vector = 10 },
-+		},
-+		.hw_rev = ATH11K_HW_WCN6750_HW10,
-+	},
+ 		.max_radios = 1,
+ 		.bdf_addr = 0x4B0C0000,
++		.hw_ops = &wcn6750_ops,
+ 		.ring_mask = &ath11k_hw_ring_mask_qca6390,
+ 		.internal_sleep_clock = false,
++		.regs = &wcn6750_regs,
+ 		.qmi_service_ins_id = ATH11K_QMI_WLFW_SERVICE_INS_ID_V01_WCN6750,
+ 		.host_ce_config = ath11k_host_ce_config_qca6390,
+ 		.ce_count = 9,
+diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+index 2ec09ae90080..9a6340d655b7 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.c
++++ b/drivers/net/wireless/ath/ath11k/hal.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ #include <linux/dma-mapping.h>
+ #include "hal_tx.h"
+@@ -1082,10 +1083,10 @@ static void ath11k_hal_srng_update_hp_tp_addr(struct ath11k_base *ab,
+ 	srng = &hal->srng_list[ring_id];
+ 
+ 	if (srng_config->ring_dir == HAL_SRNG_DIR_DST)
+-		srng->u.dst_ring.tp_addr = (u32 *)(HAL_SHADOW_REG(shadow_cfg_idx) +
++		srng->u.dst_ring.tp_addr = (u32 *)(HAL_SHADOW_REG(ab, shadow_cfg_idx) +
+ 						   (unsigned long)ab->mem);
+ 	else
+-		srng->u.src_ring.hp_addr = (u32 *)(HAL_SHADOW_REG(shadow_cfg_idx) +
++		srng->u.src_ring.hp_addr = (u32 *)(HAL_SHADOW_REG(ab, shadow_cfg_idx) +
+ 						   (unsigned long)ab->mem);
+ }
+ 
+@@ -1120,7 +1121,7 @@ int ath11k_hal_srng_update_shadow_config(struct ath11k_base *ab,
+ 	ath11k_dbg(ab, ATH11k_DBG_HAL,
+ 		   "target_reg %x, shadow reg 0x%x shadow_idx 0x%x, ring_type %d, ring num %d",
+ 		  target_reg,
+-		  HAL_SHADOW_REG(shadow_cfg_idx),
++		  HAL_SHADOW_REG(ab, shadow_cfg_idx),
+ 		  shadow_cfg_idx,
+ 		  ring_type, ring_num);
+ 
+@@ -1193,12 +1194,12 @@ static int ath11k_hal_srng_create_config(struct ath11k_base *ab)
+ 	s->reg_start[1] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_TCL_RING_HP(ab);
+ 
+ 	s = &hal->srng_config[HAL_REO_REINJECT];
+-	s->reg_start[0] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_BASE_LSB;
+-	s->reg_start[1] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_HP;
++	s->reg_start[0] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_BASE_LSB(ab);
++	s->reg_start[1] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_HP(ab);
+ 
+ 	s = &hal->srng_config[HAL_REO_CMD];
+-	s->reg_start[0] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_RING_BASE_LSB;
+-	s->reg_start[1] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_HP;
++	s->reg_start[0] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_RING_BASE_LSB(ab);
++	s->reg_start[1] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_HP(ab);
+ 
+ 	s = &hal->srng_config[HAL_REO_STATUS];
+ 	s->reg_start[0] = HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_STATUS_RING_BASE_LSB(ab);
+diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+index a7d9b4c551ad..6fbda016cd63 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.h
++++ b/drivers/net/wireless/ath/ath11k/hal.h
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef ATH11K_HAL_H
+@@ -31,12 +32,12 @@ struct ath11k_base;
+ #define HAL_DSCP_TID_TBL_SIZE			24
+ 
+ /* calculate the register address from bar0 of shadow register x */
+-#define HAL_SHADOW_BASE_ADDR			0x000008fc
++#define HAL_SHADOW_BASE_ADDR(ab)		ab->hw_params.regs->hal_shadow_base_addr
+ #define HAL_SHADOW_NUM_REGS			36
+ #define HAL_HP_OFFSET_IN_REG_START		1
+ #define HAL_OFFSET_FROM_HP_TO_TP		4
+ 
+-#define HAL_SHADOW_REG(x) (HAL_SHADOW_BASE_ADDR + (4 * (x)))
++#define HAL_SHADOW_REG(ab, x) (HAL_SHADOW_BASE_ADDR(ab) + (4 * (x)))
+ 
+ /* WCSS Relative address */
+ #define HAL_SEQ_WCSS_UMAC_OFFSET		0x00a00000
+@@ -180,16 +181,18 @@ struct ath11k_base;
+ #define HAL_REO_TCL_RING_HP(ab)			ab->hw_params.regs->hal_reo_tcl_ring_hp
+ 
+ /* REO CMD R0 address */
+-#define HAL_REO_CMD_RING_BASE_LSB		0x00000194
++#define HAL_REO_CMD_RING_BASE_LSB(ab) \
++	ab->hw_params.regs->hal_reo_cmd_ring_base_lsb
+ 
+ /* REO CMD R2 address */
+-#define HAL_REO_CMD_HP				0x00003020
++#define HAL_REO_CMD_HP(ab)			ab->hw_params.regs->hal_reo_cmd_ring_hp
+ 
+ /* SW2REO R0 address */
+-#define HAL_SW2REO_RING_BASE_LSB		0x000001ec
++#define HAL_SW2REO_RING_BASE_LSB(ab) \
++	ab->hw_params.regs->hal_sw2reo_ring_base_lsb
+ 
+ /* SW2REO R2 address */
+-#define HAL_SW2REO_RING_HP			0x00003028
++#define HAL_SW2REO_RING_HP(ab)			ab->hw_params.regs->hal_sw2reo_ring_hp
+ 
+ /* CE ring R0 address */
+ #define HAL_CE_DST_RING_BASE_LSB		0x00000000
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 46449a18b5cb..fc026969069c 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/types.h>
+@@ -1014,6 +1015,13 @@ const struct ath11k_hw_ops wcn6855_ops = {
+ 	.rx_desc_mpdu_start_addr2 = ath11k_hw_wcn6855_rx_desc_mpdu_start_addr2,
  };
  
- int ath11k_pcic_init_msi_config(struct ath11k_base *ab)
-@@ -173,6 +182,7 @@ void ath11k_pcic_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 	    !ret)
- 		ab->pci.ops->release(ab);
- }
-+EXPORT_SYMBOL(ath11k_pcic_write32);
++const struct ath11k_hw_ops wcn6750_ops = {
++	.get_hw_mac_from_pdev_id = ath11k_hw_ipq8074_mac_from_pdev_id,
++	.wmi_init_config = ath11k_init_wmi_config_qca6390,
++	.mac_id_to_pdev_id = ath11k_hw_mac_id_to_pdev_id_qca6390,
++	.mac_id_to_srng_id = ath11k_hw_mac_id_to_srng_id_qca6390,
++};
++
+ #define ATH11K_TX_RING_MASK_0 0x1
+ #define ATH11K_TX_RING_MASK_1 0x2
+ #define ATH11K_TX_RING_MASK_2 0x4
+@@ -1908,10 +1916,18 @@ const struct ath11k_hw_regs ipq8074_regs = {
+ 	.hal_reo_tcl_ring_base_lsb = 0x000003fc,
+ 	.hal_reo_tcl_ring_hp = 0x00003058,
  
- u32 ath11k_pcic_read32(struct ath11k_base *ab, u32 offset)
++	/* REO CMD ring address */
++	.hal_reo_cmd_ring_base_lsb = 0x00000194,
++	.hal_reo_cmd_ring_hp = 0x00003020,
++
+ 	/* REO status address */
+ 	.hal_reo_status_ring_base_lsb = 0x00000504,
+ 	.hal_reo_status_hp = 0x00003070,
+ 
++	/* SW2REO ring address */
++	.hal_sw2reo_ring_base_lsb = 0x000001ec,
++	.hal_sw2reo_ring_hp = 0x00003028,
++
+ 	/* WCSS relative address */
+ 	.hal_seq_wcss_umac_ce0_src_reg = 0x00a00000,
+ 	.hal_seq_wcss_umac_ce0_dst_reg = 0x00a01000,
+@@ -1932,6 +1948,9 @@ const struct ath11k_hw_regs ipq8074_regs = {
+ 	/* PCIe base address */
+ 	.pcie_qserdes_sysclk_en_sel = 0x0,
+ 	.pcie_pcs_osc_dtct_config_base = 0x0,
++
++	/* Shadow register area */
++	.hal_shadow_base_addr = 0x0,
+ };
+ 
+ const struct ath11k_hw_regs qca6390_regs = {
+@@ -1979,10 +1998,18 @@ const struct ath11k_hw_regs qca6390_regs = {
+ 	.hal_reo_tcl_ring_base_lsb = 0x000003a4,
+ 	.hal_reo_tcl_ring_hp = 0x00003050,
+ 
++	/* REO CMD ring address */
++	.hal_reo_cmd_ring_base_lsb = 0x00000194,
++	.hal_reo_cmd_ring_hp = 0x00003020,
++
+ 	/* REO status address */
+ 	.hal_reo_status_ring_base_lsb = 0x000004ac,
+ 	.hal_reo_status_hp = 0x00003068,
+ 
++	/* SW2REO ring address */
++	.hal_sw2reo_ring_base_lsb = 0x000001ec,
++	.hal_sw2reo_ring_hp = 0x00003028,
++
+ 	/* WCSS relative address */
+ 	.hal_seq_wcss_umac_ce0_src_reg = 0x00a00000,
+ 	.hal_seq_wcss_umac_ce0_dst_reg = 0x00a01000,
+@@ -2003,6 +2030,9 @@ const struct ath11k_hw_regs qca6390_regs = {
+ 	/* PCIe base address */
+ 	.pcie_qserdes_sysclk_en_sel = 0x01e0c0ac,
+ 	.pcie_pcs_osc_dtct_config_base = 0x01e0c628,
++
++	/* Shadow register area */
++	.hal_shadow_base_addr = 0x000008fc,
+ };
+ 
+ const struct ath11k_hw_regs qcn9074_regs = {
+@@ -2050,10 +2080,18 @@ const struct ath11k_hw_regs qcn9074_regs = {
+ 	.hal_reo_tcl_ring_base_lsb = 0x000003fc,
+ 	.hal_reo_tcl_ring_hp = 0x00003058,
+ 
++	/* REO CMD ring address */
++	.hal_reo_cmd_ring_base_lsb = 0x00000194,
++	.hal_reo_cmd_ring_hp = 0x00003020,
++
+ 	/* REO status address */
+ 	.hal_reo_status_ring_base_lsb = 0x00000504,
+ 	.hal_reo_status_hp = 0x00003070,
+ 
++	/* SW2REO ring address */
++	.hal_sw2reo_ring_base_lsb = 0x000001ec,
++	.hal_sw2reo_ring_hp = 0x00003028,
++
+ 	/* WCSS relative address */
+ 	.hal_seq_wcss_umac_ce0_src_reg = 0x01b80000,
+ 	.hal_seq_wcss_umac_ce0_dst_reg = 0x01b81000,
+@@ -2074,6 +2112,9 @@ const struct ath11k_hw_regs qcn9074_regs = {
+ 	/* PCIe base address */
+ 	.pcie_qserdes_sysclk_en_sel = 0x01e0e0a8,
+ 	.pcie_pcs_osc_dtct_config_base = 0x01e0f45c,
++
++	/* Shadow register area */
++	.hal_shadow_base_addr = 0x0,
+ };
+ 
+ const struct ath11k_hw_regs wcn6855_regs = {
+@@ -2121,10 +2162,18 @@ const struct ath11k_hw_regs wcn6855_regs = {
+ 	.hal_reo_tcl_ring_base_lsb = 0x00000454,
+ 	.hal_reo_tcl_ring_hp = 0x00003060,
+ 
++	/* REO CMD ring address */
++	.hal_reo_cmd_ring_base_lsb = 0x00000194,
++	.hal_reo_cmd_ring_hp = 0x00003020,
++
+ 	/* REO status address */
+ 	.hal_reo_status_ring_base_lsb = 0x0000055c,
+ 	.hal_reo_status_hp = 0x00003078,
+ 
++	/* SW2REO ring address */
++	.hal_sw2reo_ring_base_lsb = 0x000001ec,
++	.hal_sw2reo_ring_hp = 0x00003028,
++
+ 	/* WCSS relative address */
+ 	.hal_seq_wcss_umac_ce0_src_reg = 0x1b80000,
+ 	.hal_seq_wcss_umac_ce0_dst_reg = 0x1b81000,
+@@ -2145,6 +2194,91 @@ const struct ath11k_hw_regs wcn6855_regs = {
+ 	/* PCIe base address */
+ 	.pcie_qserdes_sysclk_en_sel = 0x01e0c0ac,
+ 	.pcie_pcs_osc_dtct_config_base = 0x01e0c628,
++
++	/* Shadow register area */
++	.hal_shadow_base_addr = 0x000008fc,
++};
++
++const struct ath11k_hw_regs wcn6750_regs = {
++	/* SW2TCL(x) R0 ring configuration address */
++	.hal_tcl1_ring_base_lsb = 0x00000694,
++	.hal_tcl1_ring_base_msb = 0x00000698,
++	.hal_tcl1_ring_id = 0x0000069c,
++	.hal_tcl1_ring_misc = 0x000006a4,
++	.hal_tcl1_ring_tp_addr_lsb = 0x000006b0,
++	.hal_tcl1_ring_tp_addr_msb = 0x000006b4,
++	.hal_tcl1_ring_consumer_int_setup_ix0 = 0x000006c4,
++	.hal_tcl1_ring_consumer_int_setup_ix1 = 0x000006c8,
++	.hal_tcl1_ring_msi1_base_lsb = 0x000006dc,
++	.hal_tcl1_ring_msi1_base_msb = 0x000006e0,
++	.hal_tcl1_ring_msi1_data = 0x000006e4,
++	.hal_tcl2_ring_base_lsb = 0x000006ec,
++	.hal_tcl_ring_base_lsb = 0x0000079c,
++
++	/* TCL STATUS ring address */
++	.hal_tcl_status_ring_base_lsb = 0x000008a4,
++
++	/* REO2SW(x) R0 ring configuration address */
++	.hal_reo1_ring_base_lsb = 0x000001ec,
++	.hal_reo1_ring_base_msb = 0x000001f0,
++	.hal_reo1_ring_id = 0x000001f4,
++	.hal_reo1_ring_misc = 0x000001fc,
++	.hal_reo1_ring_hp_addr_lsb = 0x00000200,
++	.hal_reo1_ring_hp_addr_msb = 0x00000204,
++	.hal_reo1_ring_producer_int_setup = 0x00000210,
++	.hal_reo1_ring_msi1_base_lsb = 0x00000234,
++	.hal_reo1_ring_msi1_base_msb = 0x00000238,
++	.hal_reo1_ring_msi1_data = 0x0000023c,
++	.hal_reo2_ring_base_lsb = 0x00000244,
++	.hal_reo1_aging_thresh_ix_0 = 0x00000564,
++	.hal_reo1_aging_thresh_ix_1 = 0x00000568,
++	.hal_reo1_aging_thresh_ix_2 = 0x0000056c,
++	.hal_reo1_aging_thresh_ix_3 = 0x00000570,
++
++	/* REO2SW(x) R2 ring pointers (head/tail) address */
++	.hal_reo1_ring_hp = 0x00003028,
++	.hal_reo1_ring_tp = 0x0000302c,
++	.hal_reo2_ring_hp = 0x00003030,
++
++	/* REO2TCL R0 ring configuration address */
++	.hal_reo_tcl_ring_base_lsb = 0x000003fc,
++	.hal_reo_tcl_ring_hp = 0x00003058,
++
++	/* REO CMD ring address */
++	.hal_reo_cmd_ring_base_lsb = 0x000000e4,
++	.hal_reo_cmd_ring_hp = 0x00003010,
++
++	/* REO status address */
++	.hal_reo_status_ring_base_lsb = 0x00000504,
++	.hal_reo_status_hp = 0x00003070,
++
++	/* SW2REO ring address */
++	.hal_sw2reo_ring_base_lsb = 0x0000013c,
++	.hal_sw2reo_ring_hp = 0x00003018,
++
++	/* WCSS relative address */
++	.hal_seq_wcss_umac_ce0_src_reg = 0x01b80000,
++	.hal_seq_wcss_umac_ce0_dst_reg = 0x01b81000,
++	.hal_seq_wcss_umac_ce1_src_reg = 0x01b82000,
++	.hal_seq_wcss_umac_ce1_dst_reg = 0x01b83000,
++
++	/* WBM Idle address */
++	.hal_wbm_idle_link_ring_base_lsb = 0x00000874,
++	.hal_wbm_idle_link_ring_misc = 0x00000884,
++
++	/* SW2WBM release address */
++	.hal_wbm_release_ring_base_lsb = 0x000001ec,
++
++	/* WBM2SW release address */
++	.hal_wbm0_release_ring_base_lsb = 0x00000924,
++	.hal_wbm1_release_ring_base_lsb = 0x0000097c,
++
++	/* PCIe base address */
++	.pcie_qserdes_sysclk_en_sel = 0x0,
++	.pcie_pcs_osc_dtct_config_base = 0x0,
++
++	/* Shadow register area */
++	.hal_shadow_base_addr = 0x00000504,
+ };
+ 
+ const struct ath11k_hw_hal_params ath11k_hw_hal_params_ipq8074 = {
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index c2ee39f977c2..f91009ef60b7 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -246,6 +246,7 @@ extern const struct ath11k_hw_ops ipq6018_ops;
+ extern const struct ath11k_hw_ops qca6390_ops;
+ extern const struct ath11k_hw_ops qcn9074_ops;
+ extern const struct ath11k_hw_ops wcn6855_ops;
++extern const struct ath11k_hw_ops wcn6750_ops;
+ 
+ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074;
+ extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qca6390;
+@@ -348,6 +349,12 @@ struct ath11k_hw_regs {
+ 	u32 hal_reo_status_ring_base_lsb;
+ 	u32 hal_reo_status_hp;
+ 
++	u32 hal_reo_cmd_ring_base_lsb;
++	u32 hal_reo_cmd_ring_hp;
++
++	u32 hal_sw2reo_ring_base_lsb;
++	u32 hal_sw2reo_ring_hp;
++
+ 	u32 hal_seq_wcss_umac_ce0_src_reg;
+ 	u32 hal_seq_wcss_umac_ce0_dst_reg;
+ 	u32 hal_seq_wcss_umac_ce1_src_reg;
+@@ -363,12 +370,15 @@ struct ath11k_hw_regs {
+ 
+ 	u32 pcie_qserdes_sysclk_en_sel;
+ 	u32 pcie_pcs_osc_dtct_config_base;
++
++	u32 hal_shadow_base_addr;
+ };
+ 
+ extern const struct ath11k_hw_regs ipq8074_regs;
+ extern const struct ath11k_hw_regs qca6390_regs;
+ extern const struct ath11k_hw_regs qcn9074_regs;
+ extern const struct ath11k_hw_regs wcn6855_regs;
++extern const struct ath11k_hw_regs wcn6750_regs;
+ 
+ static inline const char *ath11k_bd_ie_type_str(enum ath11k_bd_ie_type type)
  {
-@@ -204,6 +214,7 @@ u32 ath11k_pcic_read32(struct ath11k_base *ab, u32 offset)
- 
- 	return val;
- }
-+EXPORT_SYMBOL(ath11k_pcic_read32);
- 
- void ath11k_pcic_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
- 				 u32 *msi_addr_hi)
-@@ -211,6 +222,7 @@ void ath11k_pcic_get_msi_address(struct ath11k_base *ab, u32 *msi_addr_lo,
- 	*msi_addr_lo = ab->pci.msi.addr_lo;
- 	*msi_addr_hi = ab->pci.msi.addr_hi;
- }
-+EXPORT_SYMBOL(ath11k_pcic_get_msi_address);
- 
- int ath11k_pcic_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
- 					int *num_vectors, u32 *user_base_data,
-@@ -238,6 +250,7 @@ int ath11k_pcic_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
- 
- 	return -EINVAL;
- }
-+EXPORT_SYMBOL(ath11k_pcic_get_user_msi_assignment);
- 
- void ath11k_pcic_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx)
- {
-@@ -254,6 +267,7 @@ void ath11k_pcic_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx)
- 	}
- 	*msi_idx = msi_data_idx;
- }
-+EXPORT_SYMBOL(ath11k_pcic_get_ce_msi_idx);
- 
- static void ath11k_pcic_free_ext_irq(struct ath11k_base *ab)
- {
-@@ -282,6 +296,7 @@ void ath11k_pcic_free_irq(struct ath11k_base *ab)
- 
- 	ath11k_pcic_free_ext_irq(ab);
- }
-+EXPORT_SYMBOL(ath11k_pcic_free_irq);
- 
- static void ath11k_pcic_ce_irq_enable(struct ath11k_base *ab, u16 ce_id)
- {
-@@ -432,6 +447,7 @@ void ath11k_pcic_ext_irq_enable(struct ath11k_base *ab)
- 		ath11k_pcic_ext_grp_enable(irq_grp);
- 	}
- }
-+EXPORT_SYMBOL(ath11k_pcic_ext_irq_enable);
- 
- static void ath11k_pcic_sync_ext_irqs(struct ath11k_base *ab)
- {
-@@ -452,6 +468,7 @@ void ath11k_pcic_ext_irq_disable(struct ath11k_base *ab)
- 	__ath11k_pcic_ext_irq_disable(ab);
- 	ath11k_pcic_sync_ext_irqs(ab);
- }
-+EXPORT_SYMBOL(ath11k_pcic_ext_irq_disable);
- 
- static int ath11k_pcic_ext_grp_napi_poll(struct napi_struct *napi, int budget)
- {
-@@ -631,6 +648,7 @@ int ath11k_pcic_config_irq(struct ath11k_base *ab)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath11k_pcic_config_irq);
- 
- void ath11k_pcic_ce_irqs_enable(struct ath11k_base *ab)
- {
-@@ -644,6 +662,7 @@ void ath11k_pcic_ce_irqs_enable(struct ath11k_base *ab)
- 		ath11k_pcic_ce_irq_enable(ab, i);
- 	}
- }
-+EXPORT_SYMBOL(ath11k_pcic_ce_irqs_enable);
- 
- static void ath11k_pcic_kill_tasklets(struct ath11k_base *ab)
- {
-@@ -665,12 +684,14 @@ void ath11k_pcic_ce_irq_disable_sync(struct ath11k_base *ab)
- 	ath11k_pcic_sync_ce_irqs(ab);
- 	ath11k_pcic_kill_tasklets(ab);
- }
-+EXPORT_SYMBOL(ath11k_pcic_ce_irq_disable_sync);
- 
- void ath11k_pcic_stop(struct ath11k_base *ab)
- {
- 	ath11k_pcic_ce_irq_disable_sync(ab);
- 	ath11k_ce_cleanup_pipes(ab);
- }
-+EXPORT_SYMBOL(ath11k_pcic_stop);
- 
- int ath11k_pcic_start(struct ath11k_base *ab)
- {
-@@ -681,6 +702,7 @@ int ath11k_pcic_start(struct ath11k_base *ab)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath11k_pcic_start);
- 
- int ath11k_pcic_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
- 				    u8 *ul_pipe, u8 *dl_pipe)
-@@ -724,3 +746,4 @@ int ath11k_pcic_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath11k_pcic_map_service_to_pipe);
 -- 
 2.35.1
 
