@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2505C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 06:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97FB9C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Apr 2022 06:33:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232790AbiDZGgU (ORCPT
+        id S233576AbiDZGgV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Apr 2022 02:36:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50388 "EHLO
+        Tue, 26 Apr 2022 02:36:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231839AbiDZGgS (ORCPT
+        with ESMTP id S229548AbiDZGgS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 26 Apr 2022 02:36:18 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AEAA15A11
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2022 23:33:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D9571582E
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2022 23:33:10 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23Q6X4Yl8015234, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com ([172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23Q6X4Yl8015234
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23Q6WuKN2015183, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com ([172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23Q6WuKN2015183
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 26 Apr 2022 14:33:04 +0800
+        Tue, 26 Apr 2022 14:32:56 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 26 Apr 2022 14:33:04 +0800
+ 15.1.2308.27; Tue, 26 Apr 2022 14:32:56 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 26 Apr
- 2022 14:33:04 +0800
+ 2022 14:32:56 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/15] rtw89: 8852c: rfk: add RCK
-Date:   Tue, 26 Apr 2022 14:32:25 +0800
-Message-ID: <20220426063235.41650-6-pkshih@realtek.com>
+Subject: [PATCH 00/15] rtw89: 8852c: add RFK and then enable 8852ce in Makefile and Kconfig
+Date:   Tue, 26 Apr 2022 14:32:20 +0800
+Message-ID: <20220426063235.41650-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220426063235.41650-1-pkshih@realtek.com>
-References: <20220426063235.41650-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -56,7 +54,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzQvMjYgpFekyCAwNDozODowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -64,101 +62,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RCK is synchronize RC calibration. It needs to be triggered only once when
-interface is going to up.
+After this patchset, basic functions are ready, so we can enable 8852ce.
+It can play as STA, AP and monitor modes. The BT coexistence and power save
+are still cooking, but these don't affect the performance of Wi-Fi only.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 43 +++++++++++++++++++
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.h |  1 +
- 3 files changed, 45 insertions(+)
+Patches 1-9 are related to RF calibration (RFK). These RFK can be called
+once interface is going up, or when we are going to connect to AP in
+certain channel, or band is changed. The general steps of calibration are
+to backup registers (optional) and set a set of registers before doing
+calibration according to channels or something else, and then trigger the
+calibration and poll if calibration is complete. Then, check the result
+is positive or not to decide to adjust parameters and re-trigger again.
+If the result is okay, set registers accordingly, and restore registers
+we backup before (optional).
 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 80c6471269e78..7e7a7b30bc6f4 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -1777,6 +1777,7 @@ static void rtw8852c_rfk_init(struct rtw89_dev *rtwdev)
- 	memset(mcc_info, 0, sizeof(*mcc_info));
- 	rtw8852c_lck_init(rtwdev);
- 
-+	rtw8852c_rck(rtwdev);
- 	rtw8852c_dack(rtwdev);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index 21693dce79e82..2fb188463ac79 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -456,6 +456,41 @@ static void _dac_cal(struct rtw89_dev *rtwdev, bool force)
- 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[DACK]DACK finish!!!\n");
- }
- 
-+static void _rck(struct rtw89_dev *rtwdev, enum rtw89_rf_path path)
-+{
-+	u32 rf_reg5, rck_val = 0;
-+	u32 val;
-+	int ret;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] ====== S%d RCK ======\n", path);
-+
-+	rf_reg5 = rtw89_read_rf(rtwdev, path, RR_RSV1, RFREG_MASK);
-+
-+	rtw89_write_rf(rtwdev, path, RR_RSV1, RR_RSV1_RST, 0x0);
-+	rtw89_write_rf(rtwdev, path, RR_MOD, RR_MOD_MASK, RR_MOD_V_RX);
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] RF0x00 = 0x%x\n",
-+		    rtw89_read_rf(rtwdev, path, RR_MOD, RFREG_MASK));
-+
-+	/* RCK trigger */
-+	rtw89_write_rf(rtwdev, path, RR_RCKC, RFREG_MASK, 0x00240);
-+
-+	ret = read_poll_timeout_atomic(rtw89_read_rf, val, val, 2, 20,
-+				       false, rtwdev, path, 0x1c, BIT(3));
-+	if (ret)
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] RCK timeout\n");
-+
-+	rck_val = rtw89_read_rf(rtwdev, path, RR_RCKC, RR_RCKC_CA);
-+	rtw89_write_rf(rtwdev, path, RR_RCKC, RFREG_MASK, rck_val);
-+
-+	rtw89_write_rf(rtwdev, path, RR_RSV1, RFREG_MASK, rf_reg5);
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_RFK,
-+		    "[RCK] RF 0x1b / 0x1c = 0x%x / 0x%x\n",
-+		    rtw89_read_rf(rtwdev, path, RR_RCKC, RFREG_MASK),
-+		    rtw89_read_rf(rtwdev, path, RR_RCKS, RFREG_MASK));
-+}
-+
- static void _tssi_set_sys(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 			  enum rtw89_rf_path path)
- {
-@@ -1615,6 +1650,14 @@ void rtw8852c_set_channel_rf(struct rtw89_dev *rtwdev,
- 			    param->bandwidth);
- }
- 
-+void rtw8852c_rck(struct rtw89_dev *rtwdev)
-+{
-+	u8 path;
-+
-+	for (path = 0; path < 2; path++)
-+		_rck(rtwdev, path);
-+}
-+
- void rtw8852c_dack(struct rtw89_dev *rtwdev)
- {
- 	u8 phy_map = rtw89_btc_phymap(rtwdev, RTW89_PHY_0, 0);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-index a16ad9305ba42..faacdf17a9286 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-@@ -7,6 +7,7 @@
- 
- #include "core.h"
- 
-+void rtw8852c_rck(struct rtw89_dev *rtwdev);
- void rtw8852c_dack(struct rtw89_dev *rtwdev);
- void rtw8852c_tssi(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy);
- void rtw8852c_tssi_scan(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy);
+Patches 10-11 are to add necessary chip_ops and chip_info.
+
+Patch 12 is to fine tune polling interval to enter/leave low power mode.
+Since 8852ce will do this more frequently, polling interval become more
+important.
+
+Patch 13-14 are to correct registers settings found when we develop 8852ce.
+
+Final patch is to add 8852ce to Makefile and Kconfig, so user can use it
+with firmware version 0.27.20.0 that I will send out after this patchset.
+
+Ping-Ke Shih (15):
+  rtw89: 8852c: rfk: add RFK tables
+  rtw89: 8852c: rfk: add DACK
+  rtw89: 8852c: rfk: add LCK
+  rtw89: 8852c: rfk: add TSSI
+  rtw89: 8852c: rfk: add RCK
+  rtw89: 8852c: rfk: add RX DCK
+  rtw89: 8852c: rfk: add IQK
+  rtw89: 8852c: rfk: add DPK
+  rtw89: 8852c: rfk: get calibrated channels to notify firmware
+  rtw89: 8852c: add chip_ops::bb_ctrl_btc_preagc
+  rtw89: 8852c: add basic and remaining chip_info
+  rtw89: ps: fine tune polling interval while changing low power mode
+  rtw89: correct AID settings of beamformee
+  rtw89: 8852c: correct register definitions used by 8852c
+  rtw89: 8852c: add 8852ce to Makefile and Kconfig
+
+ drivers/net/wireless/realtek/rtw89/Kconfig    |   18 +-
+ drivers/net/wireless/realtek/rtw89/Makefile   |    9 +
+ drivers/net/wireless/realtek/rtw89/core.h     |   19 +-
+ drivers/net/wireless/realtek/rtw89/mac.c      |    7 +-
+ drivers/net/wireless/realtek/rtw89/reg.h      |  219 +-
+ .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |    8 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  181 +-
+ .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 3812 +++++++++++++++++
+ .../net/wireless/realtek/rtw89/rtw8852c_rfk.h |   14 +
+ .../realtek/rtw89/rtw8852c_rfk_table.c        |  781 ++++
+ .../realtek/rtw89/rtw8852c_rfk_table.h        |   67 +
+ 11 files changed, 5107 insertions(+), 28 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.h
+
 -- 
 2.25.1
 
