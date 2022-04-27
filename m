@@ -2,57 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC6AFC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Apr 2022 07:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 777A3C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Apr 2022 07:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358789AbiD0HcD (ORCPT
+        id S1358796AbiD0HcE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Apr 2022 03:32:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47654 "EHLO
+        Wed, 27 Apr 2022 03:32:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353070AbiD0HcC (ORCPT
+        with ESMTP id S1358790AbiD0HcD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Apr 2022 03:32:02 -0400
-Received: from mail.fixingbiz.pl (mail.fixingbiz.pl [217.61.22.139])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3007075632
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2022 00:28:51 -0700 (PDT)
-Received: by mail.fixingbiz.pl (Postfix, from userid 1001)
-        id 23FDDA4E41; Wed, 27 Apr 2022 08:28:21 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fixingbiz.pl; s=mail;
-        t=1651044529; bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
-        h=Date:From:To:Subject:From;
-        b=TxaicWqaT7P39VexEKlHhAtma+uheZQcI93gq7Wbo16NQsMK3KRr5lHgGQn+r+KCo
-         eIz2WM/K0VSm/VONHqOMhDgcwqv3/AR35bsDxqrHDNpahECOe6xV7JjwH037mA+prN
-         lwkVvQaFZk98rP2Df2xH4rjajIZLJUOE0M8l49hg7A98SVLXHE9rb40Wc8qRwW4H18
-         F2BQbHXxqzAQ4fmK0Cdma32DTNAoIha+dZCQUuwey0Htj9SQYtyeXEfLsCHaFF9Gqu
-         UcgEu1P15R4pP/niSB71+ftcrmmcsKzg/ZeouT1ysOJrjhs1kPIufFwAp8IbfIFWF5
-         OKf56A+tXA5lA==
-Received: by mail.fixingbiz.pl for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2022 07:28:09 GMT
-Message-ID: <20220427073002-0.1.22.ai39.0.k6aj5e7jqj@fixingbiz.pl>
-Date:   Wed, 27 Apr 2022 07:28:09 GMT
-From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
-        <przemyslaw.wroblewski@fixingbiz.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.fixingbiz.pl
+        Wed, 27 Apr 2022 03:32:03 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B23E75E52;
+        Wed, 27 Apr 2022 00:28:52 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8B2D7B82522;
+        Wed, 27 Apr 2022 07:28:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26D72C385A7;
+        Wed, 27 Apr 2022 07:28:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651044530;
+        bh=xLk9XWu/k/y+HAMQv3vTG9xohoGfdtDQLMATOYpRQt8=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=gS3OoIK9EZ1RArYZjN1MapVRm+myv9AfvjD12vQoZzNIv2tKOdcHRbgcLllfy57yZ
+         VIKB8I35g9XDZve+1WoZv2IWtFdVVPR2sEmEvShFk1YOfdWpvidlynDMX0sCtRhMB+
+         QIQRNJBjsOTSJB0YtCd4r4HVxMua2Y4K7V/v5Vy8XYVyZ0TFawXSzbqTEIf8SAAQm6
+         LALClRl3YCxMMzpIv5d/c2XnR0hhAE/5x8m3RQBdP+dR3thLFOfLrSTWx0Q0A2mTI6
+         G51yWjUTc9/9q8duMV+gLKr3FVSnJhELLcZ7VM4Q2HNpyOlNeHLyyZufzOPtVo20/x
+         ZUpsMUOQPov8w==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: simplify if-if to if-else
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220424094522.105262-1-wanjiabing@vivo.com>
+References: <20220424094522.105262-1-wanjiabing@vivo.com>
+To:     Wan Jiabing <wanjiabing@vivo.com>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kael_w@yeah.net,
+        Wan Jiabing <wanjiabing@vivo.com>
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165104452604.30072.1720851618351508731.kvalo@kernel.org>
+Date:   Wed, 27 Apr 2022 07:28:47 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Wan Jiabing <wanjiabing@vivo.com> wrote:
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+> Use if and else instead of if(A) and if (!A).
+> 
+> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+7471f7d273ac ath10k: simplify if-if to if-else
 
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20220424094522.105262-1-wanjiabing@vivo.com/
 
-Pozdrawiam,
-Przemys=C5=82aw Wr=C3=B3blewski
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
