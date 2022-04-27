@@ -2,114 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16321C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Apr 2022 01:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF24C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Apr 2022 04:55:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356798AbiD0BlL convert rfc822-to-8bit (ORCPT
+        id S1357753AbiD0E6Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Apr 2022 21:41:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46868 "EHLO
+        Wed, 27 Apr 2022 00:58:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356792AbiD0BlK (ORCPT
+        with ESMTP id S1357747AbiD0E6X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Apr 2022 21:41:10 -0400
-X-Greylist: delayed 482 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 26 Apr 2022 18:37:56 PDT
-Received: from rtits2.realtek.com.tw (unknown [122.146.120.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4297BFDD3C;
-        Tue, 26 Apr 2022 18:37:55 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 23R1T7Q80001571, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 23R1T7Q80001571
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 27 Apr 2022 09:29:07 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 27 Apr 2022 09:29:07 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 27 Apr 2022 09:29:06 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
- RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
- 15.01.2308.021; Wed, 27 Apr 2022 09:29:06 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     Yang Li <yang.lee@linux.alibaba.com>,
-        "davem@davemloft.net" <davem@davemloft.net>
-CC:     "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: RE: [PATCH -next] rtw89: remove unneeded semicolon
-Thread-Topic: [PATCH -next] rtw89: remove unneeded semicolon
-Thread-Index: AQHYWc42Nr9Q9fn5+kKBPYJ4G5aYIa0C+LAQ
-Date:   Wed, 27 Apr 2022 01:29:06 +0000
-Message-ID: <ef7a754fa9a04bb09b355d9e063eb950@realtek.com>
-References: <20220427003142.107916-1-yang.lee@linux.alibaba.com>
-In-Reply-To: <20220427003142.107916-1-yang.lee@linux.alibaba.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS04.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/4/26_=3F=3F_11:20:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Wed, 27 Apr 2022 00:58:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A476765B;
+        Tue, 26 Apr 2022 21:55:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CE3C9B820BF;
+        Wed, 27 Apr 2022 04:55:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19094C385AC;
+        Wed, 27 Apr 2022 04:55:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651035309;
+        bh=vNsSGro3tjsLEvCKJAV7pF1cLp48nJjmb/iNK//5bW4=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=NYe0vbMsYoaFOoRIo0HrU6ZP2w8namY75HbZQG7RNH4daaccJfQK2rCDD2Fflxh5w
+         d8Xcb3CBNqZLLVJ7osrtro3T7ndZDU609GWHcIzYWIzQprcsbp3o9Fnf2H5+91V1AA
+         1I2mWKWA1EVrsfFBMjEN93HX5oK0J60OkzjvwAutArp7YKLkiyYWncTjGXR87D9fbg
+         xBFiq/2izmnaRCU8LoCO7iXCFScd5fAFvPsJnovyqLxCnZuo1mKQVqV9g8hxwMJxls
+         KAat0gZfV998flrK+K78RyAbLsHnJ0CBrSaitt2NwXNeeQoANwfJj8BSH/GfxKzYYL
+         XNZZZ7CXFQN3Q==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v22 1/2] wireless: Initial driver submission for pureLiFi
+ STA
+ devices
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220224182042.132466-3-srini.raju@purelifi.com>
+References: <20220224182042.132466-3-srini.raju@purelifi.com>
+To:     Srinivasan Raju <srini.raju@purelifi.com>
+Cc:     mostafa.afgani@purelifi.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS)),
+        netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165103530291.18987.16551168313134772063.kvalo@kernel.org>
+Date:   Wed, 27 Apr 2022 04:55:07 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Srinivasan Raju <srini.raju@purelifi.com> wrote:
 
+> This driver implementation has been based on the zd1211rw driver
+> 
+> Driver is based on 802.11 softMAC Architecture and uses
+> native 802.11 for configuration and management
+> 
+> The driver is compiled and tested in ARM, x86 architectures and
+> compiled in powerpc architecture
+> 
+> Signed-off-by: Srinivasan Raju <srini.raju@purelifi.com>
 
-> -----Original Message-----
-> From: Yang Li <yang.lee@linux.alibaba.com>
-> Sent: Wednesday, April 27, 2022 8:32 AM
-> To: davem@davemloft.net
-> Cc: kuba@kernel.org; pabeni@redhat.com; kvalo@kernel.org; Pkshih <pkshih@realtek.com>;
-> linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; Yang Li
-> <yang.lee@linux.alibaba.com>; Abaci Robot <abaci@linux.alibaba.com>
-> Subject: [PATCH -next] rtw89: remove unneeded semicolon
-> 
-> Eliminate the following coccicheck warning:
-> ./drivers/net/wireless/realtek/rtw89/rtw8852c.c:2556:2-3: Unneeded
-> semicolon
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+Applied with my changes to wireless-next:
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+68d57a07bfe5 wireless: add plfxlc driver for pureLiFi X, XL, XC devices
 
-> ---
->  drivers/net/wireless/realtek/rtw89/rtw8852c.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-> b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-> index 858611c64e6b..275568468212 100644
-> --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-> +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-> @@ -2553,7 +2553,7 @@ do {								\
->  	default:
->  		val = arg.gnt_bt.data;
->  		break;
-> -	};
-> +	}
-> 
->  	__write_ctrl(R_AX_PWR_COEXT_CTRL, B_AX_TXAGC_BT_MASK, val,
->  		     B_AX_TXAGC_BT_EN, arg.ctrl_gnt_bt != 0xffff);
-> --
-> 2.20.1.7.g153144c
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20220224182042.132466-3-srini.raju@purelifi.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
