@@ -2,72 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFE99C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 18:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 914F6C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 May 2022 14:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1388909AbiEFTAC (ORCPT
+        id S238012AbiEBOmJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 May 2022 15:00:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39796 "EHLO
+        Mon, 2 May 2022 10:42:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235093AbiEFTAA (ORCPT
+        with ESMTP id S238024AbiEBOmI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 May 2022 15:00:00 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A88033A2C
-        for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 11:56:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1651863377; x=1683399377;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=qsJCVDIq75HwaCW+DhzSJRaUi8sL0u49qU19KlIr1Io=;
-  b=cweRJsqUjgTs7d9r8A0f97fY5bBf9tqRvVLlN9XksYpSFb63PxTRJ9c1
-   KB/hELXQlnIQ4TwRKBD7NLLuxUhpstMwnOgMjSPRCgbjULDlNT4T5cXQQ
-   t1rtoNxIdZWS9r4mOcJrudR5liDPGqsi4VuSgAb/d+FzibfeSS5OnqN0R
-   U=;
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 06 May 2022 11:56:17 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2022 11:56:17 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 6 May 2022 11:56:16 -0700
-Received: from [10.110.125.2] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Fri, 6 May 2022
- 11:56:16 -0700
-Message-ID: <56483fa2-c743-86c8-8790-db00ec79e331@quicinc.com>
-Date:   Fri, 6 May 2022 11:56:15 -0700
+        Mon, 2 May 2022 10:42:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A9A410BD;
+        Mon,  2 May 2022 07:38:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9808160FAD;
+        Mon,  2 May 2022 14:38:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AAF0C385AC;
+        Mon,  2 May 2022 14:38:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651502314;
+        bh=5xmYs16DqQgvQQ7n8Eayk+zOE2UfeGbZ788MYHG/7C0=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=IwFi0V7jBWekNpU1Soz8LkJsUFRzMgEoIqJaHkIc3S8nt49GInIlirO6RrYn9pRGx
+         wkXv32V1UOIlev3yzM9vqY3UmUhU/MnOEHVRslt0gDj8Sgz+Hml8/uV0mUfDo8yMlQ
+         W5A6TbYsElP40EEPUbGbaCTUdrti70OqGustplloPw8QEMpuVsNl1LBJorO3vnpl/+
+         9nJjF09qS2CFYPhDITC1IH54GLNgvN61MUfsX81TD8YWgKuVun9/hFIU2BQcfDvTj+
+         jCDtFr3JZQZRlot/nNbBNJYIU+5AsX38ntxfWk7vCugJZnyS1ynU7grlN0NirkVsi2
+         DmOYkCWreUluw==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH] rtw88: adjutst adaptivity option to 1
-Content-Language: en-US
-To:     Ping-Ke Shih <pkshih@realtek.com>, <tony0620emma@gmail.com>,
-        <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <timlee@realtek.com>
-References: <20220505090745.158892-1-pkshih@realtek.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20220505090745.158892-1-pkshih@realtek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Subject: Re: [PATCH] [v3] plfxlc: fix le16_to_cpu warning for beacon_interval
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <CWLP265MB3217FDFE8E945E52492B002FE0FC9@CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM>
+References: <CWLP265MB3217FDFE8E945E52492B002FE0FC9@CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM>
+To:     Srinivasan Raju <srini.raju@purelifi.com>
+Cc:     unlisted-recipients:; (no To-header on input)
+        "David S. Miller" <davem@davemloft.net>,
+        "edumazet@google.com" <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "pabeni@redhat.com" <pabeni@redhat.com>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Illegal-Object: Syntax error in Cc: address found on vger.kernel.org:
+        Cc:     unlisted-recipients:; (no To-header on input)"David S. Miller" <davem@davemloft.net>
+                                                                     ^-missing end of address
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165150230926.32510.3611898103134896335.kvalo@kernel.org>
+Date:   Mon,  2 May 2022 14:38:31 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/5/2022 2:07 AM, Ping-Ke Shih wrote:
-> From: Chin-Yen Lee <timlee@realtek.com>
-> 
-> Fine tune algorithm of adaptivity sensitivity to avoid disconnecting
-> from AP suddenly in field.
-> 
-> Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Srinivasan Raju <srini.raju@purelifi.com> wrote:
 
-nit: s/adjutst/adjust/ in subject
+> Fix the following sparse warnings:
+> drivers/net/wireless/purelifi/plfxlc/chip.c:36:31: sparse: expected unsigned short [usertype] beacon_interval
+> drivers/net/wireless/purelifi/plfxlc/chip.c:36:31: sparse: got restricted __le16 [usertype]
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Srinivasan Raju <srini.raju@purelifi.com>
+
+Failed to apply, please rebase on top of wireless-next. And also I
+strongly recommend to use git send-email for avoiding any formatting
+problems.
+
+error: patch failed: drivers/net/wireless/purelifi/plfxlc/chip.c:29
+error: drivers/net/wireless/purelifi/plfxlc/chip.c: patch does not apply
+error: Did you hand edit your patch?
+It does not apply to blobs recorded in its index.
+hint: Use 'git am --show-current-patch=diff' to see the failed patch
+Applying: plfxlc: fix le16_to_cpu warning for beacon_interval
+Using index info to reconstruct a base tree...
+Patch failed at 0001 plfxlc: fix le16_to_cpu warning for beacon_interval
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/CWLP265MB3217FDFE8E945E52492B002FE0FC9@CWLP265MB3217.GBRP265.PROD.OUTLOOK.COM/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
