@@ -2,105 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CF31C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 May 2022 14:25:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3519BC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 May 2022 14:39:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237665AbiEBO2q (ORCPT
+        id S238216AbiEBOma (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 May 2022 10:28:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36178 "EHLO
+        Mon, 2 May 2022 10:42:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237585AbiEBO2j (ORCPT
+        with ESMTP id S238156AbiEBOm3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 May 2022 10:28:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A68F2BF6B
-        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 07:25:10 -0700 (PDT)
+        Mon, 2 May 2022 10:42:29 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B728C60F3
+        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 07:39:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4140F60B6B
-        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 14:25:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D918AC385A4;
-        Mon,  2 May 2022 14:25:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6A809B81058
+        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 14:38:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20DA6C385AC;
+        Mon,  2 May 2022 14:38:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651501509;
-        bh=rYy4mpAx6EyxzNfDAK8Zp5xCShNoIUSIErNAxKOZE1o=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=nm2I33v4dmGau/a2WmCkzYyxbFqRIfac0f719qLFowSTDqcyF64cGKUuSfqTTcXB8
-         beIm6Bsu9XCy3C8++HhKWK1+LotmtWbqLBqDVMSnEkJfd+WBOYicpgCzQ16y2//8ps
-         SCi+MIp/+V/c8N6W6C7MuIqf3ipxKr366T78bcKrHoOwf9wv0IxqsVHiUiV9MtwDtl
-         lBVJCoP5p71ZL5dax+wtIRqYDlPpIfhxKLKLPE2iKRyvXTf0xm5hNK5wF4sVEn04u6
-         a3gubEOs+iFljmb9pbhy0OtBkoziszXxzk84h7u9e9e6GUf27E34hni5DW+o5seplq
-         gyzTrVWPthD2w==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath11k: Fix RX de-fragmentation issue on WCN6750
-References: <20220328061947.28813-1-quic_mpubbise@quicinc.com>
-Date:   Mon, 02 May 2022 17:25:04 +0300
-In-Reply-To: <20220328061947.28813-1-quic_mpubbise@quicinc.com> (Manikanta
-        Pubbisetty's message of "Mon, 28 Mar 2022 11:49:47 +0530")
-Message-ID: <87bkwgau67.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        s=k20201202; t=1651502338;
+        bh=L/dvX2BgI8HxvXU5xU2F5JMzkoAkwfnr/326EOEanVM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=rPzMmQYUf28JH07PmLcrlZoF4cVPT5xwsQsNSrYCSR5pxV0MI5TFw2gGvK6ubSGdt
+         A/nsf4HsduklsNRIheCUhmI3eyefbxoWqEkMKCFIvypk6VrdHpQRNZ+OpTK5Dgp+I3
+         JH1MK1CdyY/kgoEX7Pm8dbDPD68yDGPIQ1ZX/pe2WgrPyyhYzHTW/+jTrReLIRGh47
+         8em/62o6YNbjiMfQfIm0tsoh41Zr1KpyKzfGi7i2QKcHdtUNlmFM/m6iah+Rp4Mi9I
+         X8NeHcFXFAjeheesugVoh31g3AXfxNyW1QeBHhl3SknmFg0TmO/JBIV5rItooFMi+A
+         CDsAdgkk8nHgw==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [wireless-next,1/3] rtw88: remove a copy of the NAPI_POLL_WEIGHT
+ define
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220429174643.196994-2-kuba@kernel.org>
+References: <20220429174643.196994-2-kuba@kernel.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        tony0620emma@gmail.com
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165150233492.32510.1215509289795240440.kvalo@kernel.org>
+Date:   Mon,  2 May 2022 14:38:56 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
+Jakub Kicinski <kuba@kernel.org> wrote:
 
-> The offset of REO register where the RX fragment destination ring
-> is configured is different in WCN6750 as compared to WCN6855.
-> Due to this differnce in offsets, on WCN6750, fragment destination
-> ring will be configured incorrectly, leading to RX fragments not
-> getting delivered to the driver. Fix this by defining HW specific
-> offset for the REO MISC CTL register.
->
-> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00573-QCAMSLSWPLZ-1
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
->
-> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+> Defining local versions of NAPI_POLL_WEIGHT with the same
+> values in the drivers just makes refactoring harder.
+> 
+> Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 
-[...]
+Patch applied to wireless-next.git, thanks.
 
-> @@ -2229,6 +2229,9 @@ const struct ath11k_hw_regs wcn6855_regs = {
->  
->  	/* Shadow register area */
->  	.hal_shadow_base_addr = 0x000008fc,
-> +
-> +	/* REO MISC CTRL */
-> +	.hal_reo1_misc_ctl = 0x00000630,
->  };
-
-I don't really see the benefit from the comment, it doesn't bring any
-extra information.
-
->  const struct ath11k_hw_regs wcn6750_regs = {
-> @@ -2311,6 +2314,9 @@ const struct ath11k_hw_regs wcn6750_regs = {
->  
->  	/* Shadow register area */
->  	.hal_shadow_base_addr = 0x00000504,
-> +
-> +	/* REO MISC CTRL */
-> +	.hal_reo1_misc_ctl = 0x000005d8,
-
-Ditto.
-
-What about other ath11k_hw_regs tables:
-
-<global>[1906]                 const struct ath11k_hw_regs ipq8074_regs = {
-<global>[1988]                 const struct ath11k_hw_regs qca6390_regs = {
-<global>[2070]                 const struct ath11k_hw_regs qcn9074_regs = {
-
-You don't mention anything about those in the commit log. If they don't
-use this register (didn't check) we should at least initialise the
-fields to zero, deadbeef or something to make it clear they are unused.
+0d3b26c4b97a rtw88: remove a copy of the NAPI_POLL_WEIGHT define
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220429174643.196994-2-kuba@kernel.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
