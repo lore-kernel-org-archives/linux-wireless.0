@@ -2,101 +2,99 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F53C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 May 2022 06:04:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A71C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 May 2022 12:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbiECGHy (ORCPT
+        id S235006AbiECMEN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 May 2022 02:07:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54598 "EHLO
+        Tue, 3 May 2022 08:04:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiECGHw (ORCPT
+        with ESMTP id S235000AbiECMDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 May 2022 02:07:52 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FD3D33351
-        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 23:04:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 700A5B81C89
-        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 06:04:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54D87C385A4;
-        Tue,  3 May 2022 06:04:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651557857;
-        bh=JaeLcKSUKWQsW5Alndt0sH184FKi93Smpt1/is3vpHA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=J/j0Wkg6UpjKxWZvnOObpehI351Y6yyC/EuUjSNIh3+JBI5KzUSNqUIJ5mYB5erxn
-         4Xpeiqf/OY3Rs/MbwdI+FgMsHZ9APGDZL+oD7Ds8auwbqG8Iw9+dR4DaCVa4caX7RZ
-         KJeqc9cNPGuSCECqGXlBcd0i7WlrJRmmfNQsm2ysElp2GfNpw/TZHf0Pw0cY2Cghou
-         TKG85ITnhjc/lnFInP34Ix6do2p5CNeyV0HNx2hPm27rlVftokk0wtlhchWGjsFjNg
-         GNSXSGV5Ew/BEySvqnUQF567WGnoahMdd831PzT5yCyg1oCevKicgOKXAh4+Refg5T
-         hz5Qb5Thy6uOg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ath11k: mac: fix too long line
-Date:   Tue,  3 May 2022 09:04:14 +0300
-Message-Id: <20220503060415.24499-1-kvalo@kernel.org>
-X-Mailer: git-send-email 2.30.2
+        Tue, 3 May 2022 08:03:54 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD136165BF
+        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 05:00:20 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 243C0FHF0005022, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 243C0FHF0005022
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 3 May 2022 20:00:15 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 3 May 2022 20:00:14 +0800
+Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 3 May
+ 2022 20:00:14 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/8] rtw89: ps: fine tune polling interval while changing low power mode
+Date:   Tue, 3 May 2022 19:59:57 +0800
+Message-ID: <20220503120001.79272-5-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220503120001.79272-1-pkshih@realtek.com>
+References: <20220503120001.79272-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.17.21]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/03/2022 11:37:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMyCkV6TIIDEwOjAxOjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+By experiments, it spends ~45/1090~2480us to enter/leave low power mode,
+so the old polling interval 1000us can waste time. Use smaller polling
+interval depends on experimental results to reduce the time to transition
+state.
 
-checkpatch warns:
-
-drivers/net/wireless/ath/ath11k/mac.c:7760: line length of 91 exceeds 90 columns
-
-This was introduced by commit 046d2e7c50e3 ("mac80211: prepare sta handling for
-MLO support").
-
-Compile tested only.
-
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/mac.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index c76cac5d6849..32fb0142124d 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -7735,6 +7735,7 @@ ath11k_mac_validate_vht_he_fixed_rate_settings(struct ath11k *ar, enum nl80211_b
- 	bool he_fixed_rate = false, vht_fixed_rate = false;
- 	struct ath11k_peer *peer, *tmp;
- 	const u16 *vht_mcs_mask, *he_mcs_mask;
-+	struct ieee80211_link_sta *deflink;
- 	u8 vht_nss, he_nss;
- 	bool ret = true;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 05b94842fe662..07f6634d56a01 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -1050,6 +1050,7 @@ static int rtw89_mac_check_cpwm_state(struct rtw89_dev *rtwdev,
+ void rtw89_mac_power_mode_change(struct rtw89_dev *rtwdev, bool enter)
+ {
+ 	enum rtw89_rpwm_req_pwr_state state;
++	unsigned long delay = enter ? 10 : 150;
+ 	int ret;
  
-@@ -7757,13 +7758,16 @@ ath11k_mac_validate_vht_he_fixed_rate_settings(struct ath11k *ar, enum nl80211_b
- 	spin_lock_bh(&ar->ab->base_lock);
- 	list_for_each_entry_safe(peer, tmp, &ar->ab->peers, list) {
- 		if (peer->sta) {
--			if (vht_fixed_rate && (!peer->sta->deflink.vht_cap.vht_supported ||
--					       peer->sta->deflink.rx_nss < vht_nss)) {
-+			deflink = &peer->sta->deflink;
-+
-+			if (vht_fixed_rate && (!deflink->vht_cap.vht_supported ||
-+					       deflink->rx_nss < vht_nss)) {
- 				ret = false;
- 				goto out;
- 			}
--			if (he_fixed_rate && (!peer->sta->deflink.he_cap.has_he ||
--					      peer->sta->deflink.rx_nss < he_nss)) {
-+
-+			if (he_fixed_rate && (!deflink->he_cap.has_he ||
-+					      deflink->rx_nss < he_nss)) {
- 				ret = false;
- 				goto out;
- 			}
-
-base-commit: f39af96d352dd4f36a4a43601ea90561e17e5ca6
+ 	if (enter)
+@@ -1059,7 +1060,7 @@ void rtw89_mac_power_mode_change(struct rtw89_dev *rtwdev, bool enter)
+ 
+ 	rtw89_mac_send_rpwm(rtwdev, state, false);
+ 	ret = read_poll_timeout_atomic(rtw89_mac_check_cpwm_state, ret, !ret,
+-				       1000, 15000, false, rtwdev, state);
++				       delay, 15000, false, rtwdev, state);
+ 	if (ret)
+ 		rtw89_err(rtwdev, "firmware failed to ack for %s ps mode\n",
+ 			  enter ? "entering" : "leaving");
 -- 
-2.30.2
+2.25.1
 
