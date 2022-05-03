@@ -2,74 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E5E6C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 May 2022 05:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F210C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 May 2022 06:04:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231397AbiECFgB (ORCPT
+        id S229605AbiECGHw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 May 2022 01:36:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52418 "EHLO
+        Tue, 3 May 2022 02:07:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231342AbiECFf7 (ORCPT
+        with ESMTP id S229503AbiECGHv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 May 2022 01:35:59 -0400
+        Tue, 3 May 2022 02:07:51 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E61E86383
-        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 22:32:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DCC33334C
+        for <linux-wireless@vger.kernel.org>; Mon,  2 May 2022 23:04:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E3BD6154E
-        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 05:32:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14246C385A9;
-        Tue,  3 May 2022 05:32:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9B4916154B
+        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 06:04:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 643EBC385AF;
+        Tue,  3 May 2022 06:04:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651555947;
-        bh=V4fsb/Y32PF6lSgD08L06lHAZnmFRx1QqQuwOHirZ2w=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Xu2Frw8ynt/gn4In1RxGcYvqizHYDpDQL3Ey5brVIN+kOuCtoH6YOuhatIp3njmJd
-         fcAgrYSOCWGDIdmcwxM2FKvsmRS9VPDPxYUpYouVdeOrm7NBO+aX5RmAruC7dT1iVg
-         KNz4dJGOozVCf/72xqA0I2WoqTmDGnJrclktt8sI9ZBMiqmwBIi44a/u43AmmbjPkF
-         uVyLc4SHLrosOGWBl0elD3/3RuFze5wEP9h6J4HOGArinW2ao50sMAFe+qR+jxC+wV
-         47T6sTa0hM2v/muwbCGSv2QjBgPC6tlBksCrxLZJ+9+gBqH+DlYkiwo6TRf7mt55fg
-         85ckShb9eG66Q==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 1/8] rtw89: 8852c: rfk: add RFK tables
+        s=k20201202; t=1651557859;
+        bh=EvdgrcgpdiBbXp+X43whOkPl5MOnDiwPgm4Llg/4DbU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ekjL7rR0faEVTP1ESde3+frYFdxJjhLBcFe39c4k3cFA8XCdO4uT38ENex3X32npZ
+         i5CupZg1VnT+R4J9AL1nkZj/Pc74LZ0QsX6cBuIWAG78bK0G4tMyXryTFDh/cDNpNY
+         Bc7JsfTwHqZ6OntjewQoYIXbapc3Big5meisW5i3m8+F3GkJWsHThUb/HswY3t1w/8
+         RGnuT368GHAlrchbbPUAtwzU8nzBVV0ZiEU6jCFF3LfeEkt3hH+oTaEcZ3zxLRVdNe
+         aEsfdrqqz9IWAv5aFeAgk5z81jo25FtA/1nOmE774ysxWxSU+Vf+fssOw6NwD89qWV
+         RN9TNhfmiGTvw==
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220502235408.15052-2-pkshih@realtek.com>
-References: <20220502235408.15052-2-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <linux-wireless@vger.kernel.org>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <165155594485.23375.12221972503203207176.kvalo@kernel.org>
-Date:   Tue,  3 May 2022 05:32:26 +0000 (UTC)
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] ath10k: mac: fix too long lines
+Date:   Tue,  3 May 2022 09:04:15 +0300
+Message-Id: <20220503060415.24499-2-kvalo@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220503060415.24499-1-kvalo@kernel.org>
+References: <20220503060415.24499-1-kvalo@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-> These tables are used by RFK (RF calibration) to set parameters. These
-> parameters can trigger certain calibration, or configure/reset settings
-> before and after RF calibrations.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+checkpatch warns:
 
-8 patches applied to wireless-next.git, thanks.
+drivers/net/wireless/ath/ath10k/mac.c:2696: line length of 92 exceeds 90 columns
+drivers/net/wireless/ath/ath10k/mac.c:6942: line length of 94 exceeds 90 columns
+drivers/net/wireless/ath/ath10k/mac.c:6948: line length of 91 exceeds 90 columns
 
-ec424639d41b rtw89: 8852c: rfk: add RFK tables
-76599a8d0b7d rtw89: 8852c: rfk: add DACK
-fb8177d729f2 rtw89: 8852c: rfk: add LCK
-e5efc4d55c20 rtw89: 8852c: rfk: add TSSI
-30052c5a1c99 rtw89: 8852c: rfk: add RCK
-ac91be975616 rtw89: 8852c: rfk: add RX DCK
-2da8109d9885 rtw89: 8852c: rfk: add IQK
-da4cea16cb13 rtw89: 8852c: rfk: add DPK
+These were introduced by commit 046d2e7c50e3 ("mac80211: prepare sta handling
+for MLO support").
 
+Compile tested only.
+
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 06a51a48c1d9..3570a5895ea8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2692,8 +2692,10 @@ static bool ath10k_mac_sta_has_ofdm_only(struct ieee80211_sta *sta)
+ static enum wmi_phy_mode ath10k_mac_get_phymode_vht(struct ath10k *ar,
+ 						    struct ieee80211_sta *sta)
+ {
++	struct ieee80211_sta_vht_cap *vht_cap = &sta->deflink.vht_cap;
++
+ 	if (sta->deflink.bandwidth == IEEE80211_STA_RX_BW_160) {
+-		switch (sta->deflink.vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
++		switch (vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
+ 		case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
+ 			return MODE_11AC_VHT160;
+ 		case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ:
+@@ -6926,6 +6928,9 @@ static int ath10k_mac_validate_rate_mask(struct ath10k *ar,
+ 					 struct ieee80211_sta *sta,
+ 					 u32 rate_ctrl_flag, u8 nss)
+ {
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->deflink.ht_cap;
++	struct ieee80211_sta_vht_cap *vht_cap = &sta->deflink.vht_cap;
++
+ 	if (nss > sta->deflink.rx_nss) {
+ 		ath10k_warn(ar, "Invalid nss field, configured %u limit %u\n",
+ 			    nss, sta->deflink.rx_nss);
+@@ -6933,19 +6938,19 @@ static int ath10k_mac_validate_rate_mask(struct ath10k *ar,
+ 	}
+ 
+ 	if (ATH10K_HW_PREAMBLE(rate_ctrl_flag) == WMI_RATE_PREAMBLE_VHT) {
+-		if (!sta->deflink.vht_cap.vht_supported) {
++		if (!vht_cap->vht_supported) {
+ 			ath10k_warn(ar, "Invalid VHT rate for sta %pM\n",
+ 				    sta->addr);
+ 			return -EINVAL;
+ 		}
+ 	} else if (ATH10K_HW_PREAMBLE(rate_ctrl_flag) == WMI_RATE_PREAMBLE_HT) {
+-		if (!sta->deflink.ht_cap.ht_supported || sta->deflink.vht_cap.vht_supported) {
++		if (!ht_cap->ht_supported || vht_cap->vht_supported) {
+ 			ath10k_warn(ar, "Invalid HT rate for sta %pM\n",
+ 				    sta->addr);
+ 			return -EINVAL;
+ 		}
+ 	} else {
+-		if (sta->deflink.ht_cap.ht_supported || sta->deflink.vht_cap.vht_supported)
++		if (ht_cap->ht_supported || vht_cap->vht_supported)
+ 			return -EINVAL;
+ 	}
+ 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220502235408.15052-2-pkshih@realtek.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.30.2
 
