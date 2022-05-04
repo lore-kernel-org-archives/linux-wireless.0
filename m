@@ -2,187 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4332CC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 08:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF628C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 09:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240893AbiEDIm7 (ORCPT
+        id S1347223AbiEDJ3T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 May 2022 04:42:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39978 "EHLO
+        Wed, 4 May 2022 05:29:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240868AbiEDImz (ORCPT
+        with ESMTP id S1347229AbiEDJ3Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 May 2022 04:42:55 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8A524977
-        for <linux-wireless@vger.kernel.org>; Wed,  4 May 2022 01:39:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1651653560; x=1683189560;
+        Wed, 4 May 2022 05:29:16 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6887425C6E;
+        Wed,  4 May 2022 02:25:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651656338; x=1683192338;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=wjwJhR2OAxHa5P8ARk9m0NUgZJn5+8QZrILgs2vpKZ8=;
-  b=BG/yoIFCUsAwLYfyChLID7E3Uv5qkPfSe3O9Bco8gGh4DRbSGTWduur/
-   YfAYaPHO7i/c72I9uMowZ0lp4XWfNnC/EMtl0uskw+s0GZ4nAY7fB07vK
-   Y9cI3TLB4vW/038i0Xid02toe0sXhAeqeNsaNdMcHlfYhnGbYMROHk/Bi
-   g=;
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 04 May 2022 01:39:19 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2022 01:39:19 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 4 May 2022 01:39:19 -0700
-Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 4 May 2022 01:39:17 -0700
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH v4] ath11k: Fix RX de-fragmentation issue on WCN6750
-Date:   Wed, 4 May 2022 14:09:00 +0530
-Message-ID: <20220504083900.31513-1-quic_mpubbise@quicinc.com>
+  bh=98FMhtqkWE2Gw7W9NUjtO6+ea68PEyBVJedwM2qsaNM=;
+  b=SuLOroBE5UpB0euLUQXYProLd0l1xZflRr6OAacfHtI5yVFJgc0lqDTH
+   OttKCOGDnoVRSTU3dqgRoVl1wAgHwMBaHCDDmUUPMOv6y6lQD35AcsS8M
+   wBKwg7hWWkUTjoC6jiodW58Th6JqZGxE+AB7ctAxRtZis5tXRqFOOoLpg
+   rQatnVHU0xZRBAp8ofIr7xWc7IvJg6H+n8sl4tXxyVwu0YGs92QUq/6vX
+   g9NKIQRJkvcJnu991O3W5BSS9pPzNdgb5KrKNsY49krBotnYWSLgnfCBo
+   eqrz2Km7mXeRGZmttIOh+2Ic7Po2Hpz0rt0ebjFN5sMe0+bUjm6igO0ev
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10336"; a="247621531"
+X-IronPort-AV: E=Sophos;i="5.91,197,1647327600"; 
+   d="scan'208";a="247621531"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2022 02:25:38 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,197,1647327600"; 
+   d="scan'208";a="890293046"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga005.fm.intel.com with ESMTP; 04 May 2022 02:25:37 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 2EF9A1A5; Wed,  4 May 2022 12:25:38 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH v2 1/1] bcma: gpio: Switch to use fwnode instead of of_node
+Date:   Wed,  4 May 2022 12:25:26 +0300
+Message-Id: <20220504092525.71668-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The offset of REO register where the RX fragment destination ring
-is configured is different in WCN6750 as compared to WCN6855.
-Due to this differnce in offsets, on WCN6750, fragment destination
-ring will be configured incorrectly, leading to RX fragments not
-getting delivered to the driver. Fix this by defining HW specific
-offsets for the REO MISC CTL register.
+GPIO library now accepts fwnode as a firmware node,
+so switch the driver to use it.
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00192-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
-V4:
- - Added relevant comments wherever needed
- - Initialized REO misc control register to zero on other HWs that don't use this register
- - Rebased on ToT SHAID: b04efb72cd9d2d471a14f0a5758873f6c78923c2
+v2: fixed typo (LKP)
+ drivers/bcma/driver_gpio.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-V3:
- - Rebased on ToT SHAID: 7316a74e54318d0cd648242b18ea83cdef6dda96
-
-V2:
- - Rebased on ToT
-
- drivers/net/wireless/ath/ath11k/hal.h |  2 +-
- drivers/net/wireless/ath/ath11k/hw.c  | 23 +++++++++++++++++++++--
- drivers/net/wireless/ath/ath11k/hw.h  |  1 +
- 3 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
-index 1aadb1566df8..110c337ddf33 100644
---- a/drivers/net/wireless/ath/ath11k/hal.h
-+++ b/drivers/net/wireless/ath/ath11k/hal.h
-@@ -121,7 +121,7 @@ struct ath11k_base;
- #define HAL_REO1_DEST_RING_CTRL_IX_1		0x00000008
- #define HAL_REO1_DEST_RING_CTRL_IX_2		0x0000000c
- #define HAL_REO1_DEST_RING_CTRL_IX_3		0x00000010
--#define HAL_REO1_MISC_CTL			0x00000630
-+#define HAL_REO1_MISC_CTL(ab)			ab->hw_params.regs->hal_reo1_misc_ctl
- #define HAL_REO1_RING_BASE_LSB(ab)		ab->hw_params.regs->hal_reo1_ring_base_lsb
- #define HAL_REO1_RING_BASE_MSB(ab)		ab->hw_params.regs->hal_reo1_ring_base_msb
- #define HAL_REO1_RING_ID(ab)			ab->hw_params.regs->hal_reo1_ring_id
-diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index 09ce357f0f0d..96db85c55585 100644
---- a/drivers/net/wireless/ath/ath11k/hw.c
-+++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -771,10 +771,10 @@ static void ath11k_hw_wcn6855_reo_setup(struct ath11k_base *ab)
- 		FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_FLUSH_ENABLE, 1);
- 	ath11k_hif_write32(ab, reo_base + HAL_REO1_GEN_ENABLE, val);
- 
--	val = ath11k_hif_read32(ab, reo_base + HAL_REO1_MISC_CTL);
-+	val = ath11k_hif_read32(ab, reo_base + HAL_REO1_MISC_CTL(ab));
- 	val &= ~HAL_REO1_MISC_CTL_FRAGMENT_DST_RING;
- 	val |= FIELD_PREP(HAL_REO1_MISC_CTL_FRAGMENT_DST_RING, HAL_SRNG_RING_ID_REO2SW1);
--	ath11k_hif_write32(ab, reo_base + HAL_REO1_MISC_CTL, val);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_MISC_CTL(ab), val);
- 
- 	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_0(ab),
- 			   HAL_DEFAULT_REO_TIMEOUT_USEC);
-@@ -1983,6 +1983,9 @@ const struct ath11k_hw_regs ipq8074_regs = {
- 
- 	/* Shadow register area */
- 	.hal_shadow_base_addr = 0x0,
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 1e74ec1c7f23..fac8ff983aec 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -11,6 +11,8 @@
+ #include <linux/gpio/driver.h>
+ #include <linux/interrupt.h>
+ #include <linux/export.h>
++#include <linux/property.h>
 +
-+	/* REO misc control register, not used in IPQ8074 */
-+	.hal_reo1_misc_ctl = 0x0,
- };
+ #include <linux/bcma/bcma.h>
  
- const struct ath11k_hw_regs qca6390_regs = {
-@@ -2065,6 +2068,9 @@ const struct ath11k_hw_regs qca6390_regs = {
- 
- 	/* Shadow register area */
- 	.hal_shadow_base_addr = 0x000008fc,
+ #include "bcma_private.h"
+@@ -182,9 +184,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ 	chip->direction_input	= bcma_gpio_direction_input;
+ 	chip->direction_output	= bcma_gpio_direction_output;
+ 	chip->parent		= bus->dev;
+-#if IS_BUILTIN(CONFIG_OF)
+-	chip->of_node		= cc->core->dev.of_node;
+-#endif
++	chip->fwnode		= dev_fwnode(&cc->core->dev);
 +
-+	/* REO misc control register, not used in QCA6390 */
-+	.hal_reo1_misc_ctl = 0x0,
- };
- 
- const struct ath11k_hw_regs qcn9074_regs = {
-@@ -2147,6 +2153,9 @@ const struct ath11k_hw_regs qcn9074_regs = {
- 
- 	/* Shadow register area */
- 	.hal_shadow_base_addr = 0x0,
-+
-+	/* REO misc control register, not used in QCN9074 */
-+	.hal_reo1_misc_ctl = 0x0,
- };
- 
- const struct ath11k_hw_regs wcn6855_regs = {
-@@ -2229,6 +2238,11 @@ const struct ath11k_hw_regs wcn6855_regs = {
- 
- 	/* Shadow register area */
- 	.hal_shadow_base_addr = 0x000008fc,
-+
-+	/* REO misc control register, used for fragment
-+	 * destination ring config in WCN6855.
-+	 */
-+	.hal_reo1_misc_ctl = 0x00000630,
- };
- 
- const struct ath11k_hw_regs wcn6750_regs = {
-@@ -2311,6 +2325,11 @@ const struct ath11k_hw_regs wcn6750_regs = {
- 
- 	/* Shadow register area */
- 	.hal_shadow_base_addr = 0x00000504,
-+
-+	/* REO misc control register, used for fragment
-+	 * destination ring config in WCN6750.
-+	 */
-+	.hal_reo1_misc_ctl = 0x000005d8,
- };
- 
- const struct ath11k_hw_hal_params ath11k_hw_hal_params_ipq8074 = {
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index 6d588cd80093..3a2abde63489 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -379,6 +379,7 @@ struct ath11k_hw_regs {
- 	u32 pcie_pcs_osc_dtct_config_base;
- 
- 	u32 hal_shadow_base_addr;
-+	u32 hal_reo1_misc_ctl;
- };
- 
- extern const struct ath11k_hw_regs ipq8074_regs;
+ 	switch (bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM4707:
+ 	case BCMA_CHIP_ID_BCM5357:
 -- 
 2.35.1
 
