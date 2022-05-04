@@ -2,105 +2,154 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1523C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 17:44:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40975C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 18:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359153AbiEDRsX (ORCPT
+        id S1376910AbiEDSdA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 May 2022 13:48:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58798 "EHLO
+        Wed, 4 May 2022 14:33:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359470AbiEDRoV (ORCPT
+        with ESMTP id S1376932AbiEDScm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 May 2022 13:44:21 -0400
-Received: from mail-qv1-xf34.google.com (mail-qv1-xf34.google.com [IPv6:2607:f8b0:4864:20::f34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BD2052B02;
-        Wed,  4 May 2022 10:07:32 -0700 (PDT)
-Received: by mail-qv1-xf34.google.com with SMTP id kk28so1274210qvb.3;
-        Wed, 04 May 2022 10:07:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=IgL2IduVNcxBKQc1brpNbRJTmw+R5dGVZ1KkF4Imnfs=;
-        b=Eg5gAEMva3cKrtqR2A0Cc+3z5UUxLVsQA8v8rh2j36ZiCIVUt2H4HorcB4rwOuvWR6
-         JKNe++YLVfI/Sve1YFOIGZQfOgj6AfpwPRB3m/gb/hpvooo0XnPg0HpJYkGOH9nFB0/Q
-         jTK+a8wIo7oIvH3qgH5+ZRDz0YB9ixQ/yKzoe3Ez0ADPXowkRCfMr+HrgabOymRJoOb/
-         3LaM0ZlStKwt1NWQQWzHvaMoDJ0ayZ9I1kITpzOHM6iNWLBon1t3UAb6iJMoXE84vHGy
-         NsinH4cIOjFQgXdOI4hiZwDbidIff8YK35NKG3wSwTuTejjAgkljnlNx93NbwOEOFML8
-         NQDQ==
+        Wed, 4 May 2022 14:32:42 -0400
+Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C50E5AA43;
+        Wed,  4 May 2022 11:09:11 -0700 (PDT)
+Received: by mail-ot1-f43.google.com with SMTP id m6-20020a05683023a600b0060612720715so1395504ots.10;
+        Wed, 04 May 2022 11:09:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=IgL2IduVNcxBKQc1brpNbRJTmw+R5dGVZ1KkF4Imnfs=;
-        b=xnxKbgmfPoZqd2gr5xmejmfnLe/w+ox889nHfXG0NU/saHQbWZ2GerzWvrLgne2dKD
-         MZ9cmL2l4kaI+5QriaFdODNI2UQIc7yHmPDkf9MRcRXbLBpvL+vtSECueIw5Qk9EYH0z
-         G98SP/qcBv9uuF9Maur70gxPipkyYSiMYVPUK5wmuJq6CUKlYlFO+MM6Pe1LddfLm/bV
-         EBNsbDUDt2f7mrwJ+XLa+tYYgDg2zbSfbAbsdWjX8GYR3AnLK510dHneaaTGDISg59uA
-         8VWgAlK77uWqMBStcrNHhg0xr7L1Rlg+LjsPX/TQA51Te2ut6aUTEwT29GQKMrT9+iNw
-         l1Ag==
-X-Gm-Message-State: AOAM530GF1E7/ZkKv2fBh4TUyrsxdlzPentpIN3cLGMJ13fdVfXodWOE
-        hMio2Gh5U/NZNsYaqj7XHqveV64MLj9UIQ==
-X-Google-Smtp-Source: ABdhPJymonwwKJEu+zKIwUyz7H7uJGSZslAlFiLL0za6AjT3ELvv5KYH3MFj0YwaRMr8wXpaUes4gw==
-X-Received: by 2002:a0c:ec41:0:b0:456:51c6:1800 with SMTP id n1-20020a0cec41000000b0045651c61800mr18384061qvq.44.1651684051063;
-        Wed, 04 May 2022 10:07:31 -0700 (PDT)
-Received: from jaehee-ThinkPad-X1-Extreme ([4.34.18.218])
-        by smtp.gmail.com with ESMTPSA id h3-20020ac85683000000b002f39b99f692sm7647171qta.44.2022.05.04.10.07.29
+        bh=D+E9lNuRbHFdd170vr+MtjOcic+cq6LuKuOZKRSFmmQ=;
+        b=hqu6R1IRae0VoX6RVScHw+Zzo1GjIz7JEVjL/qj/M5RsjpSzZPnxbWaJ2QRNj9pG/V
+         GzcagHr+46Vvmokee05IR5m2irmd6EgL7Zj5NeOxB9mO4H+0VWs7t+QY6SdSEHLAFOQX
+         7nlxFOlTSSaPyJczzOi0IByyUPBRQBxkBJureHxsnNNwZLVdOxVmsPv3XR9dms/Hhmdq
+         Dpei6T4pf7hR9BSOp3RbmeuXVXYkTBZhjTdTpNg8Sjcc5Id2RNDvW92doze4AoQiouKc
+         /p5ZsjI6uJj0BqaJNqAfTwSy3ZnrnJ6J4Wl3iDw286tyYbPdWZk0VQKlkpwQfXgmyYMV
+         dCDg==
+X-Gm-Message-State: AOAM531GBGiEJMipM7x6IPEegxYs2k8skR7Jmuzu2kokd0nLw2UfSWFh
+        7VEkFE2UyuEFyw5s9SPLig==
+X-Google-Smtp-Source: ABdhPJz7UxGCoN/1mtQLUptxPhW193aedSmrIFdTLYGH8vHQEwAOv7HLwELKhlP+txzkjgVxGZbMKA==
+X-Received: by 2002:a05:6830:116:b0:606:3fb1:e89e with SMTP id i22-20020a056830011600b006063fb1e89emr2227922otp.310.1651687750783;
+        Wed, 04 May 2022 11:09:10 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id d19-20020a4ad353000000b0035eb4e5a6bfsm6240803oos.21.2022.05.04.11.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 May 2022 10:07:30 -0700 (PDT)
-Date:   Wed, 4 May 2022 13:07:26 -0400
-From:   Jaehee Park <jhpark1013@gmail.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Stefano Brivio <sbrivio@redhat.com>,
-        =?iso-8859-1?B?Suly9G1l?= Pouiller <jerome.pouiller@silabs.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-staging@lists.linux.dev,
-        Outreachy Linux Kernel <outreachy@lists.linux.dev>
-Subject: Re: [PATCH] wfx: use container_of() to get vif
-Message-ID: <20220504170726.GA970146@jaehee-ThinkPad-X1-Extreme>
-References: <20220418035110.GA937332@jaehee-ThinkPad-X1-Extreme>
- <87y200nf0a.fsf@kernel.org>
- <CAA1TwFCOEEwnayexnJin8T=Fc2HEgHC9jyfj5HxfiWybjUi9GA@mail.gmail.com>
- <20220504093347.GB4009@kadam>
- <20220504135059.7132b2b6@elisabeth>
- <20220504132551.GD4009@kadam>
- <87o80d9tay.fsf@kernel.org>
+        Wed, 04 May 2022 11:09:10 -0700 (PDT)
+Received: (nullmailer pid 1975953 invoked by uid 1000);
+        Wed, 04 May 2022 18:09:09 -0000
+Date:   Wed, 4 May 2022 13:09:09 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Chris Zankel <chris@zankel.net>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        linux-xtensa@linux-xtensa.org, devicetree@vger.kernel.org,
+        kunit-dev@googlegroups.com, linux-arm-kernel@lists.infradead.org,
+        linux-bluetooth@vger.kernel.org, linux-hardening@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, llvm@lists.linux.dev,
+        netdev@vger.kernel.org, selinux@vger.kernel.org
+Subject: Re: [PATCH 29/32] xtensa: Use mem_to_flex_dup() with struct property
+Message-ID: <YnKbaXEUHyu+btOD@robh.at.kernel.org>
+References: <20220504014440.3697851-1-keescook@chromium.org>
+ <20220504014440.3697851-30-keescook@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87o80d9tay.fsf@kernel.org>
+In-Reply-To: <20220504014440.3697851-30-keescook@chromium.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, May 04, 2022 at 07:05:57PM +0300, Kalle Valo wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
-> 
-> > On Wed, May 04, 2022 at 01:50:59PM +0200, Stefano Brivio wrote:
-> >> And that it's *obvious* that container_of() would trigger warnings
-> >> otherwise. Well, obvious just for me, it seems.
-> >
-> > :P
-> >
-> > Apparently it wasn't obvious to Kalle and me.  My guess is that you saw
-> > the build error.  Either that or Kalle and I are geezers who haven't
-> > looked at container_of() since before the BUILD_BUG_ON() was added five
-> > years ago.
-> 
-> Exactly, I also had to duplicate the error myself before I was able to
-> understand the issue. So I'm officially a geezer now :D
-> 
+Gmail won't send this, so I've trimmed the recipients...
 
-Hi Dan and Kalle, thanks for your messages!
-Understood -- I'll copy the error for reference next time. Sorry you
-had to recreate the build error yourself!
-
-> -- 
-> https://patchwork.kernel.org/project/linux-wireless/list/
+On Tue, May 03, 2022 at 06:44:38PM -0700, Kees Cook wrote:
+> As part of the work to perform bounds checking on all memcpy() uses,
+> replace the open-coded a deserialization of bytes out of memory into a
+> trailing flexible array by using a flex_array.h helper to perform the
+> allocation, bounds checking, and copying.
 > 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> Cc: Chris Zankel <chris@zankel.net>
+> Cc: Max Filippov <jcmvbkbc@gmail.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Frank Rowand <frowand.list@gmail.com>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: linux-xtensa@linux-xtensa.org
+> Cc: devicetree@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  arch/xtensa/platforms/xtfpga/setup.c | 9 +++------
+>  include/linux/of.h                   | 3 ++-
+>  2 files changed, 5 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/xtensa/platforms/xtfpga/setup.c b/arch/xtensa/platforms/xtfpga/setup.c
+> index 538e6748e85a..31c1fa4ba4ec 100644
+> --- a/arch/xtensa/platforms/xtfpga/setup.c
+> +++ b/arch/xtensa/platforms/xtfpga/setup.c
+> @@ -102,7 +102,7 @@ CLK_OF_DECLARE(xtfpga_clk, "cdns,xtfpga-clock", xtfpga_clk_setup);
+>  #define MAC_LEN 6
+>  static void __init update_local_mac(struct device_node *node)
+>  {
+> -	struct property *newmac;
+> +	struct property *newmac = NULL;
+>  	const u8* macaddr;
+>  	int prop_len;
+>  
+> @@ -110,19 +110,16 @@ static void __init update_local_mac(struct device_node *node)
+>  	if (macaddr == NULL || prop_len != MAC_LEN)
+>  		return;
+>  
+> -	newmac = kzalloc(sizeof(*newmac) + MAC_LEN, GFP_KERNEL);
+> -	if (newmac == NULL)
+> +	if (mem_to_flex_dup(&newmac, macaddr, MAC_LEN, GFP_KERNEL))
+>  		return;
+>  
+> -	newmac->value = newmac + 1;
+> -	newmac->length = MAC_LEN;
+> +	newmac->value = newmac->contents;
+>  	newmac->name = kstrdup("local-mac-address", GFP_KERNEL);
+>  	if (newmac->name == NULL) {
+>  		kfree(newmac);
+>  		return;
+>  	}
+>  
+> -	memcpy(newmac->value, macaddr, MAC_LEN);
+>  	((u8*)newmac->value)[5] = (*(u32*)DIP_SWITCHES_VADDR) & 0x3f;
+>  	of_update_property(node, newmac);
+>  }
+> diff --git a/include/linux/of.h b/include/linux/of.h
+> index 17741eee0ca4..efb0f419fd1f 100644
+> --- a/include/linux/of.h
+> +++ b/include/linux/of.h
+> @@ -30,7 +30,7 @@ typedef u32 ihandle;
+>  
+>  struct property {
+>  	char	*name;
+> -	int	length;
+> +	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, length);
+>  	void	*value;
+>  	struct property *next;
+>  #if defined(CONFIG_OF_DYNAMIC) || defined(CONFIG_SPARC)
+> @@ -42,6 +42,7 @@ struct property {
+>  #if defined(CONFIG_OF_KOBJ)
+>  	struct bin_attribute attr;
+>  #endif
+> +	DECLARE_FLEX_ARRAY_ELEMENTS(u8, contents);
+
+99.9% of the time, this is not where the property value is stored as it 
+points into an FDT blob. I suppose that is okay, but just want to make 
+sure.
+
+The DT API for creating new nodes and properties is horrible as it is 
+multiple allocs and strdups which makes for tricky error paths. A better 
+API to centralize it would be welcome, but if this is the only case you 
+came across it's certainly not a requirement.
+
+Rob
