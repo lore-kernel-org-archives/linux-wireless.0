@@ -2,74 +2,64 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD3D9C46467
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 01:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAC26C4167D
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 01:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343520AbiEDBwe (ORCPT
+        id S1343596AbiEDBwg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 May 2022 21:52:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56772 "EHLO
+        Tue, 3 May 2022 21:52:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245576AbiEDBw1 (ORCPT
+        with ESMTP id S245279AbiEDBw3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 May 2022 21:52:27 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D631F40927
-        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 18:47:39 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d17so192501plg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2022 18:47:39 -0700 (PDT)
+        Tue, 3 May 2022 21:52:29 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E59F419BD
+        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 18:47:47 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id bo5so13320pfb.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2022 18:47:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=szeqM9M0yrMyJS9vcuYR4tTzvEASeBs+sh1JgS4qPAo=;
-        b=SNMym2HDPaFxMLeJFcK68nelvSK8kE0Z3iij6ppE4Nnk5PkLPyihqCWqJWEyxTK+Ad
-         Wlo0fMMZpa7cEJ44ZnUWiYYlbNhSmn3I+2rzPJ3v+90je6UlKRw4Aqz10rVm1pygvoeV
-         KVh5PeFOgavCCRafhGFy8OhJb2FMOsRW4OkVk=
+        bh=tt+uE/qYWOs3CEanZOjmvMoORa5i/xMNqAO3DwAd5m4=;
+        b=YmT1lNTRttmLRyn/WOgpT0DAFWD3BvjkOIsApwxFa4B3Com0bh2yQqIJO66Wiak8Tt
+         rwU+QSbZtL4swuVhrV8kkivMWLyJT9AqfxXpJ4Lm9ZibQLMBbHjNrpcN7FDNu1QRPCS+
+         uiBQnyfLBZT2SNnaE6twmHxSxmZ2FlIbgcsF8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=szeqM9M0yrMyJS9vcuYR4tTzvEASeBs+sh1JgS4qPAo=;
-        b=7JkGfOvxXkYu2r1L0XA9KZrYeG+5PkowzNOwHK306qk050daDvuLkFVoOq9FTpMJoq
-         kXtQDOZI5wt3xTPpqfH8DzQhBKXs4Jd5xy6UPv8nuFR7UvcyvrFKG27JIQ1QmsAXsPjL
-         j6agLx5tT1Q/c8ZVUu2MEBQ4mjdxZOq3JtqmOvjLH3kFD6Tn3ahQV44SnHkKE2Ouvsnf
-         JMu/m0Xe/fpZh2u8cvOitGBn7tXVkVhtnHL9ObB9jcGsKsdxzqZwgI1R47EjT6Vpo5P0
-         +XLpvDMgiLebuqP6ML4+/zPo02JPx4VEvMEEKOA6CQwW7OhLKycF3hxZcsli05m1UniL
-         Fv/w==
-X-Gm-Message-State: AOAM533JzXf0d5+eJ5Prsr5TmfQs3zqmjPjFx2qBGj91GVnrJHmom5NK
-        Emy3xIo8G/jb/ErzdiVTJeee0Q==
-X-Google-Smtp-Source: ABdhPJyLljkiQcnpMeBAkbABtu5tfsx1RQAtFvxNI6eRYUdVP5PUSieP/fvUB77typ12OdIz4mCUCg==
-X-Received: by 2002:a17:902:c952:b0:15e:9e3d:8e16 with SMTP id i18-20020a170902c95200b0015e9e3d8e16mr14572083pla.51.1651628858230;
-        Tue, 03 May 2022 18:47:38 -0700 (PDT)
+        bh=tt+uE/qYWOs3CEanZOjmvMoORa5i/xMNqAO3DwAd5m4=;
+        b=JMhD1GLPPwEkMxkG/5LyW3tcVtyFCmpK9zNsCUe4cCutpCOwEx89w3mPWFRB5Rf2Tl
+         86XVXkyyXS3rMERrp61bowgHBy2/4npQM5B9z11IkL2iWJbMHyyFfJzvJiQoIKB+4e3P
+         60cKJpUxoQIlRez1ya2AwYj/WhO8RT7UhiWyA/C3hgAG5/qGTAxmTOVSIfb3HLXasaQ6
+         Pnc0H55fXiK2jd5F/cdR8eA2wJZTE0jLwW5m+PFeASuAfJcKlr0m44j6dJNuQCQyc++3
+         wMderIsiQuJS/7AkV9Xu+EsVDcLn6Ps92wWZGNNrEFEnodwevW0nnGZU7M2S99KzDELJ
+         T1aw==
+X-Gm-Message-State: AOAM533qnbixRh/Ge4xTOkFOa4bU7b2wwOtO4YCFEKuMnRA610CrwOmZ
+        jhFc1QAK4fVeJFzzAvPt0I6Qng==
+X-Google-Smtp-Source: ABdhPJyaDNAFsbp7ZFwZAoK9Xc4UX4Pztt8PjVEG/vpKdBDmGO/KaYu31SJFp8S1HaJxz30qr/Lnug==
+X-Received: by 2002:a05:6a00:1c5c:b0:505:7469:134a with SMTP id s28-20020a056a001c5c00b005057469134amr19088479pfw.16.1651628867093;
+        Tue, 03 May 2022 18:47:47 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id k21-20020aa792d5000000b0050dc7628159sm6928738pfa.51.2022.05.03.18.47.35
+        by smtp.gmail.com with ESMTPSA id q26-20020a63505a000000b003aa8b87feb5sm13939242pgl.0.2022.05.03.18.47.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 May 2022 18:47:37 -0700 (PDT)
+        Tue, 03 May 2022 18:47:44 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     "Gustavo A . R . Silva" <gustavoars@kernel.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        Alexei Starovoitov <ast@kernel.org>,
+Cc:     Kees Cook <keescook@chromium.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-arm-msm@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>,
         alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
         Andrew Gabbasov <andrew_gabbasov@mentor.com>,
         Andrew Morton <akpm@linux-foundation.org>,
-        Andy Gross <agross@kernel.org>,
         Andy Lavr <andy.lavr@gmail.com>,
+        Arend van Spriel <aspriel@gmail.com>,
         Baowen Zheng <baowen.zheng@corigine.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Bradley Grove <linuxdrivers@attotech.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
         Christian Brauner <brauner@kernel.org>,
         =?UTF-8?q?Christian=20G=C3=B6ttsche?= <cgzones@googlemail.com>,
         Christian Lamparter <chunkeey@googlemail.com>,
@@ -80,21 +70,26 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Dan Williams <dan.j.williams@intel.com>,
         David Gow <davidgow@google.com>,
         David Howells <dhowells@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
         Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
         devicetree@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
         Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
         Eli Cohen <elic@nvidia.com>,
+        Eric Dumazet <edumazet@google.com>,
         Eric Paris <eparis@parisplace.org>,
         Eugeniu Rosca <erosca@de.adit-jv.com>,
         Felipe Balbi <balbi@kernel.org>,
         Francis Laniel <laniel_francis@privacyrequired.com>,
         Frank Rowand <frowand.list@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Gregory Greenman <gregory.greenman@intel.com>,
         Guenter Roeck <linux@roeck-us.net>,
         Haiyang Zhang <haiyangz@microsoft.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
         Herbert Xu <herbert@gondor.apana.org.au>,
         Hulk Robot <hulkci@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         James Morris <jmorris@namei.org>,
         Jarkko Sakkinen <jarkko@kernel.org>,
@@ -104,7 +99,7 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Johannes Berg <johannes@sipsolutions.net>,
         John Keeping <john@metanate.com>,
-        Juergen Gross <jgross@suse.com>,
+        Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
         Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
         kunit-dev@googlegroups.com,
         Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
@@ -116,11 +111,11 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux1394-devel@lists.sourceforge.net,
         linux-afs@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-xtensa@linux-xtensa.org,
+        linux-bluetooth@vger.kernel.org, linux-hardening@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-xtensa@linux-xtensa.org,
         llvm@lists.linux.dev, Loic Poulain <loic.poulain@linaro.org>,
         Louis Peens <louis.peens@corigine.com>,
         Luca Coelho <luciano.coelho@intel.com>,
@@ -132,14 +127,16 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Max Filippov <jcmvbkbc@gmail.com>,
         Mimi Zohar <zohar@linux.ibm.com>,
         Muchun Song <songmuchun@bytedance.com>,
-        Nathan Chancellor <nathan@kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>, netdev@vger.kernel.org,
         Nick Desaulniers <ndesaulniers@google.com>,
         =?UTF-8?q?Nuno=20S=C3=A1?= <nuno.sa@analog.com>,
+        Paolo Abeni <pabeni@redhat.com>,
         Paul Moore <paul@paul-moore.com>,
         Rich Felker <dalias@aerifal.cx>,
         Rob Herring <robh+dt@kernel.org>,
         Russell King <linux@armlinux.org.uk>, selinux@vger.kernel.org,
         "Serge E. Hallyn" <serge@hallyn.com>,
+        SHA-cyfmac-dev-list@infineon.com,
         Simon Horman <simon.horman@corigine.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
@@ -154,14 +151,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         xen-devel@lists.xenproject.org,
         Xiu Jianfeng <xiujianfeng@huawei.com>,
         Yang Yingliang <yangyingliang@huawei.com>
-Subject: [PATCH 05/32] brcmfmac: Use mem_to_flex_dup() with struct brcmf_fweh_queue_item
-Date:   Tue,  3 May 2022 18:44:14 -0700
-Message-Id: <20220504014440.3697851-6-keescook@chromium.org>
+Subject: [PATCH 21/32] soc: qcom: apr: Use mem_to_flex_dup() with struct apr_rx_buf
+Date:   Tue,  3 May 2022 18:44:30 -0700
+Message-Id: <20220504014440.3697851-22-keescook@chromium.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220504014440.3697851-1-keescook@chromium.org>
 References: <20220504014440.3697851-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2425; h=from:subject; bh=LUlPP0dMftItb3yi/Nge8ZTfomS6k0b5Ud+psHgt9Uk=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqBCnVywLtiCXwEUYb08oAOpk1h97YdS8IXrTwN m34sdVuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagQAKCRCJcvTf3G3AJokcD/ 944yjyiL4MM2Llyg3BhqwjaPE/1VNwGW9grsHKNIASpW8lInBdW90HjydT+vZ0wCt1VpknFi2upnQI XFtVoH0BT1G9pp4WHMjMMAaSqS3XB0bqdYs4DVvPzTKh5kGr5jX6k9+GTSve/itnWwnYDdM80IlUNt S0IhtkWMACqLlgyqGlt11fTu2Zpj0mRgIVFYh1FPaQRGj+skxj5+tzJqnIxOvBBPtzMq5leG8tzvRp gGF1ADH/0BhWsidIuY5CltVSgionGZ0at33CGy6Yb686fc3WZxfkwUqwKd4kWy0/RHSdYt4O0S9KnY r3h5ztCJtoyE+LsOyQfAjweyIO2LhMxNdieb0lZcJ/4W95rILXttIhcQ8iyf4yAsY69UgQuHPKDcAf nBH2PYzGNfEsEHmEr7bOtF2WG7xXUZXn6gi1luh2tpxiaDAkWSbwC0/Hg4An1+r4RDKB8TaO47Qgsp PG9QvJ1Ej3BAp6hSui4/P+qsMcNSEBBM0dZS2Ro11mi+jDDxK5En0Xgd/el0xn+qwqq+NFNlC0jKcW /QhhJ9GSxPsZzAT51pgi/Q//ZlDNoXI6Xmoho22SXd2se2PmaeWQDnuPK8bWnerpItxcrS1KP5jR9H przw+F/g76E2CP74njdcHJE58D4/zsqYKWbbLWi2QfpgIWTEZ+hV+/A44Ihw==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1693; h=from:subject; bh=f797ezn2sQWsQcALbTjtcz0/uVJxqqsdCbEE9J5EL4c=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqFcya5M1Ba7xKOXe16qG7jIlVI8ph+ibFXwwOp nrqS7nGJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHahQAKCRCJcvTf3G3AJhB6D/ 4mAanYpWDhhzP0wFox6ZgqAP9umNDzMV7dRX4Y08wPvedXkTuo/N0jclu6EdK/Bs4KaQilIZSFkLno xsM8xXSf4UqStJoT27N7DzjgnXKUJuyB5HZu1PfC+8PJ3QEnqiU5wE/l/2KdIJiAa7Xrj82dQB2cOe f9cgwxVbs3UnZy77Wv+k8FP5dMShK5yfzH0kpSd88R+/mDgZ6PLzi6zr8ZQiGCGdehQ7yp7ahiIA+i aAsDm3/+QhB0XaYdbqgAm2IAn+ouEdBPFgeXFzXqJwdi8AEfwBoByO06B8F23M3UCLdd6ZTRuaYeVQ kIZhzXstlVWDB9mIUnTP7dpfIY0lC+xzWyCLtZeT4bAvCwQB9CAAEWnSx7qfxwfOCYH1OjKUWJ+Xo4 5bWdci/vlaLQLD13TFP2X8QMY+seDM4SmnQAjgo5eITKrQ8RREz044kssPiR5qrnynNMOFWoNryxir 5TxsUJqEcElCuxyYstu2GZWqRpIeTKHVnaCu6XWtUkfQXhXikks9R9eVs6gSl+qIiVvgsVs7Tv/R9N rFtDfCJB155p3+TaJfCxSA/1e92fAlkjvrq+Ar3n/Jqs+/JGlPFT7Zy0qsgxzMjclrsboCWAvbLZZ2 OSexYpHjEn8jykFiHVbn1z48UtV3JdplNzCir+Gph+mH4axRJfHc0k7gYzyA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -173,66 +170,53 @@ replace the open-coded a deserialization of bytes out of memory into a
 trailing flexible array by using a flex_array.h helper to perform the
 allocation, bounds checking, and copying.
 
-Cc: Arend van Spriel <aspriel@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Kalle Valo <kvalo@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: SHA-cyfmac-dev-list@infineon.com
-Cc: netdev@vger.kernel.org
+Cc: Andy Gross <agross@kernel.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: linux-arm-msm@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/fweh.c   | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/soc/qcom/apr.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index bc3f4e4edcdf..bea798ca6466 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -32,8 +32,8 @@ struct brcmf_fweh_queue_item {
- 	u8 ifidx;
- 	u8 ifaddr[ETH_ALEN];
- 	struct brcmf_event_msg_be emsg;
--	u32 datalen;
--	u8 data[];
-+	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(u32, datalen);
-+	DECLARE_FLEX_ARRAY_ELEMENTS(u8, data);
+diff --git a/drivers/soc/qcom/apr.c b/drivers/soc/qcom/apr.c
+index 3caabd873322..6cf6f6df276e 100644
+--- a/drivers/soc/qcom/apr.c
++++ b/drivers/soc/qcom/apr.c
+@@ -40,8 +40,8 @@ struct packet_router {
+ 
+ struct apr_rx_buf {
+ 	struct list_head node;
+-	int len;
+-	uint8_t buf[];
++	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, len);
++	DECLARE_FLEX_ARRAY_ELEMENTS(uint8_t, buf);
  };
  
- /*
-@@ -395,7 +395,7 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+ /**
+@@ -162,7 +162,7 @@ static int apr_callback(struct rpmsg_device *rpdev, void *buf,
+ 				  int len, void *priv, u32 addr)
  {
- 	enum brcmf_fweh_event_code code;
- 	struct brcmf_fweh_info *fweh = &drvr->fweh;
--	struct brcmf_fweh_queue_item *event;
-+	struct brcmf_fweh_queue_item *event = NULL;
- 	void *data;
- 	u32 datalen;
+ 	struct packet_router *apr = dev_get_drvdata(&rpdev->dev);
+-	struct apr_rx_buf *abuf;
++	struct apr_rx_buf *abuf = NULL;
+ 	unsigned long flags;
  
-@@ -414,8 +414,7 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 	    datalen + sizeof(*event_packet) > packet_len)
- 		return;
+ 	if (len <= APR_HDR_SIZE) {
+@@ -171,13 +171,9 @@ static int apr_callback(struct rpmsg_device *rpdev, void *buf,
+ 		return -EINVAL;
+ 	}
  
--	event = kzalloc(sizeof(*event) + datalen, gfp);
--	if (!event)
-+	if (mem_to_flex_dup(&event, data, datalen, gfp))
- 		return;
+-	abuf = kzalloc(sizeof(*abuf) + len, GFP_ATOMIC);
+-	if (!abuf)
++	if (mem_to_flex_dup(&abuf, buf, len, GFP_ATOMIC))
+ 		return -ENOMEM;
  
- 	event->code = code;
-@@ -423,8 +422,6 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 
- 	/* use memcpy to get aligned event message */
- 	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
--	memcpy(event->data, data, datalen);
--	event->datalen = datalen;
- 	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
- 
- 	brcmf_fweh_queue_event(fweh, event);
+-	abuf->len = len;
+-	memcpy(abuf->buf, buf, len);
+-
+ 	spin_lock_irqsave(&apr->rx_lock, flags);
+ 	list_add_tail(&abuf->node, &apr->rx_list);
+ 	spin_unlock_irqrestore(&apr->rx_lock, flags);
 -- 
 2.32.0
 
