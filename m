@@ -2,59 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 386B9C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 01:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F063C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 May 2022 01:49:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343737AbiEDBxH (ORCPT
+        id S1343611AbiEDBxT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 May 2022 21:53:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56960 "EHLO
+        Tue, 3 May 2022 21:53:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343625AbiEDBwy (ORCPT
+        with ESMTP id S245635AbiEDBwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 May 2022 21:52:54 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EDE340DF
-        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 18:48:25 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id z5-20020a17090a468500b001d2bc2743c4so40102pjf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2022 18:48:25 -0700 (PDT)
+        Tue, 3 May 2022 21:52:35 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F81C44769
+        for <linux-wireless@vger.kernel.org>; Tue,  3 May 2022 18:48:20 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id k1so167696pll.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2022 18:48:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=P7uM3xoAcE7zuGNsfEYVdWWhl8RQOVkTgxnXHqQm9tk=;
-        b=Ttm1udnLhK1uzAB04KBRSr/POGM0kwPI1bs4XPEU6UEtgK8/23ubm+dxeV4+X853RT
-         0+Il5Jok8kr0+FDj5VV/8TyC5lx1HeS1NOnJkl2lVk9pme8hyn7Y1lYALOBUqbtoGYi3
-         cAWN4x8Bl4pcx02o/CTto17Eyhwd5u2uMzQSw=
+        bh=xT+5hQcq61BvthAgaoVmL+Iixyk9Kz6M9vS9nNgwYZE=;
+        b=foxymm92zvgmK0ETJD/OF52F7nwlYYgJQ8oVdho7r9BzWtgtuSGYfDYK5MhNshEOoZ
+         2wn0h0u9CPuexCbq87DKe80piTtxK5R6ZpJwSBGXRNF7rOHEPYzOtCIu9lKjSdiUbhe+
+         r2DkWtw3UKhrg5w4I5ukgiJdOnG5MzFcAx9yc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=P7uM3xoAcE7zuGNsfEYVdWWhl8RQOVkTgxnXHqQm9tk=;
-        b=KKfVtB8EluGj7Grzvp9hIWDyjEc0UHHlPsezWXRXXsGF7/tTUZJMOtVgemE0TBpwbV
-         RfQ2y6djL9hXV/KdtrkMo/axa9s7a5VUpsChsk+661XBaRXFBoUSJM7tVckMKJnmEebS
-         E7pcghKVCJLRz73S+Cq6pl0oo2fvZqYPEn8zKBdBjcyvlrM0VLVLUymfws5l3b2Q7WxP
-         SvZ1FSZr9QSKI+UDJG+RqOssFGcLHOxaNiEH1jILmbswhB6/NRYNB4LMHOQ8AkuabqLG
-         g49L/KpG3uZDEe3ETskxZQLOrjilziGbfQat7asZsDsv7jOlNJ8akPG4atYAeNgxioi8
-         KBRw==
-X-Gm-Message-State: AOAM532QTCELqvfFqdSAgzZuaLjwutxmcdecqDyor2C8Gf7kv/8mWjM/
-        nget9g5B+OdyP8Ss1qQ4JWsJdQ==
-X-Google-Smtp-Source: ABdhPJxlINiFv6UJHBX+/eJqyerMOceaIDiYJHkzj2pPV40RgErLtQ31Acn4ZOqZFTEIOPf1xFj0AA==
-X-Received: by 2002:a17:90b:3b42:b0:1dc:5cdf:5649 with SMTP id ot2-20020a17090b3b4200b001dc5cdf5649mr7783206pjb.239.1651628861490;
-        Tue, 03 May 2022 18:47:41 -0700 (PDT)
+        bh=xT+5hQcq61BvthAgaoVmL+Iixyk9Kz6M9vS9nNgwYZE=;
+        b=MMZ3kdeiQmTHhf2BDigyIHDi3ussUUP6Jsnm0DeSh9x/za+d07swbtkVzcaKRpixpT
+         YEcqYC2s+gGGCxMY1T6EgBQOCdgSx4wtyK10vU6iqwm1BEVJbjBBx6+xGB3OfoAXoLNP
+         IzAGC1wWThYTK0Ol4PxssEpBqd6eVeOaxCvPQS4UXydN5UCkDoI96zWxcS6BaWnvezzb
+         nfxYAY2oKeqiIoOvsvAtsyLlq8jNG7yQWmnFKpxQ8wJ8OUhffIsWDaIOKgVMVmVWLUGE
+         ci+3JcB0NDp+yV5o3HwlNRsE3i/V4SHBCf2BodSvFh3H4sU3YafB/zJ6y7BGChToZXbq
+         guJA==
+X-Gm-Message-State: AOAM532tPU5VEQ41t9w5ZCffOPNWgG0johm2MPCh9/T8tLrkYrmyPR4I
+        GtJEBdvwmdIuzNRJdXAVLVFkiw==
+X-Google-Smtp-Source: ABdhPJycw4EcllNGdcYu/hsnVxTNLEqPs1svu/l7N5hfPruKY3mWUaTfGlJqogJnY0zHUzGi9AG+AQ==
+X-Received: by 2002:a17:90b:4d8f:b0:1db:d41d:9336 with SMTP id oj15-20020a17090b4d8f00b001dbd41d9336mr7719381pjb.29.1651628859970;
+        Tue, 03 May 2022 18:47:39 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id on13-20020a17090b1d0d00b001d9acbc3b4esm2003067pjb.47.2022.05.03.18.47.38
+        by smtp.gmail.com with ESMTPSA id s11-20020a170902b18b00b0015e8d4eb258sm7004776plr.162.2022.05.03.18.47.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 03 May 2022 18:47:39 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     "Gustavo A . R . Silva" <gustavoars@kernel.org>
 Cc:     Kees Cook <keescook@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Gregory Greenman <gregory.greenman@intel.com>,
         Eric Dumazet <edumazet@google.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Alexei Starovoitov <ast@kernel.org>,
         alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
         Andrew Gabbasov <andrew_gabbasov@mentor.com>,
@@ -88,7 +91,6 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Frank Rowand <frowand.list@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
         Guenter Roeck <linux@roeck-us.net>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
@@ -102,7 +104,7 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Johan Hedberg <johan.hedberg@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>,
         John Keeping <john@metanate.com>,
-        Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
+        Juergen Gross <jgross@suse.com>,
         Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
         kunit-dev@googlegroups.com,
         Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
@@ -121,7 +123,6 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-usb@vger.kernel.org, linux-xtensa@linux-xtensa.org,
         llvm@lists.linux.dev, Loic Poulain <loic.poulain@linaro.org>,
         Louis Peens <louis.peens@corigine.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
         Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
         Marc Dionne <marc.dionne@auristor.com>,
         Marcel Holtmann <marcel@holtmann.org>,
@@ -153,14 +154,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         xen-devel@lists.xenproject.org,
         Xiu Jianfeng <xiujianfeng@huawei.com>,
         Yang Yingliang <yangyingliang@huawei.com>
-Subject: [PATCH 11/32] nl80211: Use mem_to_flex_dup() with struct cfg80211_cqm_config
-Date:   Tue,  3 May 2022 18:44:20 -0700
-Message-Id: <20220504014440.3697851-12-keescook@chromium.org>
+Subject: [PATCH 08/32] iwlwifi: mvm: Use mem_to_flex_dup() with struct ieee80211_key_conf
+Date:   Tue,  3 May 2022 18:44:17 -0700
+Message-Id: <20220504014440.3697851-9-keescook@chromium.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220504014440.3697851-1-keescook@chromium.org>
 References: <20220504014440.3697851-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2217; h=from:subject; bh=rRfAu1/k1e5caQg21/8VBHhysNqsP1FR5GA2AHrLW6w=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqDYqJpVuI+Da24TYyn7rK2cAZcih+2ZRWaGUhg VviQcPmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagwAKCRCJcvTf3G3AJjdwD/ 9GoZycFvhK6h6fbIQwuLO60vgqzr+JFBMz2boSXTBJSryctNsbZrwuvUuiBZUKC1y9sGE+SgzQm0T7 WzDZtyTlGmT1CZjKFpgdCfMbuMLVROkIwwyYoraeYFirZmIIRURYhLoAsJh4ZeL+hi8jOWnaV5ClMm GpAX4WW1YsM9YRJimQri0QE7pLQKGb80KxVsDgul4e0OUj1wYZTYbTgr98Zpysc1nSby6oGnxfPJ5B GvVh8QA/SYaCCMlYyUKr3bjTLrKOZ0NSnt6bAW38OpCXj8344D0TsfmO6tGo0jkheFbpEhSFjRi0Lj 1/+lxcBQ3jvc7zB+0Q5hpVWgX0kC+MxgbmIRdXF66gXOY9KMZzGl6dt9Fdm0xQWH6kFZlX7zpOBeHx To/pgX+EVE7aw6zudBInH3vlkkTYIklAIL/O9ajINZfL2HKHTp1XgnQdpa0KDyxqJilBhkXXekcKjn s7KJFzs28RJWqn+YgyJ+4W4uA6XLQvHdqVGZu5zS748KLU05KkgCeTW+Wm195aiMdUvqPG1QyqpCX5 1oMep8SXDkjOyDi6DnWcfFivJfrpKBqXU3oWsvXdBRhX+fVXmfr/E7qrARl1smC7xBgqWCcJf152Rh nwFocx9Hoo9dTUkHbkM4z/OFi36I6ENfaPOS+x9fFE1riA7xPsrh1gW6nwwA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2437; h=from:subject; bh=kqrSs6qCwh+Lec2OX97eOmuBYGTxbYZO/oveyYvsSyU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqCYob8Le101GWyzNPT8SUQLcWbnMdLaBLnNMKi PFuQ5FWJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHaggAKCRCJcvTf3G3AJrrrD/ 41pLe3vLmy1DT131k402AnWkbvKKTeLHCfdZOZOBG/caJXqmnpOxwil6RAxg5u6hN5hKr+gqoQg3jM PjxMAKOnj4UigmA4/hMbFkpe2UAFQce0nHR1yDX9KirGdKMvnAq1KmeZTOvAK12ubsFuw1otFOoOY9 il9bAkoOcb67DGRv3WnjeBeJAIZesPeob+hkdIGXBLwjDM9HsKNWnS0CO4faN9H2UB5yHtan5AE3fY ejNDT+faux7HktJ5LMXGuFK8hNTMT6DzsBUJMh/VqnJUQfz4J8NZnt1C2fhjm2UKTMJJXaSL2VTIls +E869VhJZmwXhnjNOoXxgs2ypZPdZn7bJMJt9MVXQCWOJ/r5Z4HL//NjQwlMsxa5eN/OtY6fhuJmQa Kt081e3mYWawz+yHoGLyrxfgEVcaxPetNNZbtFWAguSAm+2kDAVJoYtbd1P/PeFNxjV9iclz5KMbsR vfwg2FoAJ4/UE7uv/e9hwMg874lDgZBVxecyw2BfPg0CFqa9KiQ4QmpYRs8HaRBhJQv/jDtfxWqnVh RhanF8E/YIf8Mwjneo+/nQykVNYJP+mnin2t2PXGGQTtyZfdgc4mogRxpnvnUcDOoGAndvfOm8tHL7 lnC6lEffqiIvIoLzddv1Yrb2IU0R/a/tFtHusn7zJ+WlS695vP3r1pDWMDUg==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -172,64 +173,67 @@ replace the open-coded a deserialization of bytes out of memory into a
 trailing flexible array by using a flex_array.h helper to perform the
 allocation, bounds checking, and copying.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Kalle Valo <kvalo@kernel.org>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Gregory Greenman <gregory.greenman@intel.com>
+Cc: Eric Dumazet <edumazet@google.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
-Cc: Eric Dumazet <edumazet@google.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/wireless/core.h    |  4 ++--
- net/wireless/nl80211.c | 15 ++++-----------
- 2 files changed, 6 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 ++------
+ include/net/mac80211.h                       | 4 ++--
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3a7dbd63d8c6..899d111993c6 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -295,8 +295,8 @@ struct cfg80211_beacon_registration {
- struct cfg80211_cqm_config {
- 	u32 rssi_hyst;
- 	s32 last_rssi_event_value;
--	int n_rssi_thresholds;
--	s32 rssi_thresholds[];
-+	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, n_rssi_thresholds);
-+	DECLARE_FLEX_ARRAY_ELEMENTS(s32, rssi_thresholds);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 406f0a50a5bf..23cade528dcf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -4108,7 +4108,7 @@ int iwl_mvm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	int ret;
+ 	u16 queue;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	struct ieee80211_key_conf *keyconf;
++	struct ieee80211_key_conf *keyconf = NULL;
+ 
+ 	ret = iwl_mvm_allocate_int_sta(mvm, sta, 0,
+ 				       NL80211_IFTYPE_UNSPECIFIED,
+@@ -4122,15 +4122,11 @@ int iwl_mvm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		goto out;
+ 
+-	keyconf = kzalloc(sizeof(*keyconf) + key_len, GFP_KERNEL);
+-	if (!keyconf) {
++	if (mem_to_flex_dup(&keyconf, key, key_len, GFP_KERNEL)) {
+ 		ret = -ENOBUFS;
+ 		goto out;
+ 	}
+-
+ 	keyconf->cipher = cipher;
+-	memcpy(keyconf->key, key, key_len);
+-	keyconf->keylen = key_len;
+ 
+ 	ret = iwl_mvm_send_sta_key(mvm, sta->sta_id, keyconf, false,
+ 				   0, NULL, 0, 0, true);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 75880fc70700..4abe52963a96 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1890,8 +1890,8 @@ struct ieee80211_key_conf {
+ 	u8 hw_key_idx;
+ 	s8 keyidx;
+ 	u16 flags;
+-	u8 keylen;
+-	u8 key[];
++	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(u8, keylen);
++	DECLARE_FLEX_ARRAY_ELEMENTS(u8, key);
  };
  
- void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 945ed87d12e0..70df7132cce8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12096,21 +12096,14 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 
- 	wdev_lock(wdev);
- 	if (n_thresholds) {
--		struct cfg80211_cqm_config *cqm_config;
-+		struct cfg80211_cqm_config *cqm_config = NULL;
- 
--		cqm_config = kzalloc(struct_size(cqm_config, rssi_thresholds,
--						 n_thresholds),
--				     GFP_KERNEL);
--		if (!cqm_config) {
--			err = -ENOMEM;
-+		err = mem_to_flex_dup(&cqm_config, thresholds, n_thresholds,
-+				      GFP_KERNEL);
-+		if (err)
- 			goto unlock;
--		}
- 
- 		cqm_config->rssi_hyst = hysteresis;
--		cqm_config->n_rssi_thresholds = n_thresholds;
--		memcpy(cqm_config->rssi_thresholds, thresholds,
--		       flex_array_size(cqm_config, rssi_thresholds,
--				       n_thresholds));
- 
- 		wdev->cqm_config = cqm_config;
- 	}
+ #define IEEE80211_MAX_PN_LEN	16
 -- 
 2.32.0
 
