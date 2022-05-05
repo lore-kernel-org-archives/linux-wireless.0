@@ -2,87 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A1C5C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 17:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69BF9C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 18:42:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345353AbiEERjo (ORCPT
+        id S244853AbiEESpt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 13:39:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56630 "EHLO
+        Thu, 5 May 2022 14:45:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243664AbiEERio (ORCPT
+        with ESMTP id S1384918AbiEESoK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 13:38:44 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABED5BE47
-        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 10:35:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1651772103; x=1683308103;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=MGPruOtKwHBXaOEME50xKey8/+ae64miPwtEjFaDvGs=;
-  b=p70sycuXuWJNn1H1gVVCvSXx7OZgRgbfiS/B1OlreCW9g3qMWsxlSd3S
-   H0672bbzPBJ5ha+bGT4vJIRMSjFI2CfuEGLaqaLBSAUutL/u1XT2Uawps
-   rOzGssqb5LQdrf2s8nPjRVYwP+IqptTczhgLHnQiIFiljAawtrW9d1Msa
-   8=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 05 May 2022 10:35:03 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 10:35:03 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Thu, 5 May 2022 10:35:02 -0700
-Received: from alokad-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Thu, 5 May 2022 10:35:02 -0700
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH v2 0/2]  Additional processing in NL80211_CMD_SET_BEACON
-Date:   Thu, 5 May 2022 10:34:47 -0700
-Message-ID: <20220505173449.4424-1-quic_alokad@quicinc.com>
-X-Mailer: git-send-email 2.31.1
+        Thu, 5 May 2022 14:44:10 -0400
+Received: from mail.w1.fi (mail.w1.fi [212.71.239.96])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1914A6A024
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 11:33:07 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.w1.fi (Postfix) with ESMTP id 754EB10F4D;
+        Thu,  5 May 2022 18:19:21 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at w1.fi
+Received: from mail.w1.fi ([127.0.0.1])
+        by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id wsaQWuqafDEb; Thu,  5 May 2022 18:19:19 +0000 (UTC)
+Received: by jm (sSMTP sendmail emulation); Thu, 05 May 2022 21:19:17 +0300
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=w1.fi; s=default;
+        t=1651774759; bh=tf2aE6rHDorHeFRFBJY7gW5T2f9tqmgWbVFdANAhNcs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=v5c17ivTgkn/ATb/0W/koHioRTV3DRGjk/3ekV2uT2Qo1goyFhkJG008wV2DqtqoS
+         JvlQ1FlB390zAv15t7vEAsxIeENN+fy/Pd/QSHgiMll0AYk3ytks5POTjK08zY/hVf
+         mjmNKMY38is6oUC1SeVkUhmmdZZ2a+bemJZzCTXXN4O0tn5eG+vVvgix7ECNOmGEMH
+         g/+lQWE/XkVuv0cWsWBYkcx8lntRRiL4dNz/0G4nkfD66INZR68JtmgOw9E4ByS2AA
+         gNMOCfl5Lu0A3WKjuOFUhfb5Cr1Osr5YWdB95+/YdqdFW0LALcH8EEmK6NcPyKNg7B
+         NpWcwHOOXhBJg==
+Date:   Thu, 5 May 2022 21:19:17 +0300
+From:   Jouni Malinen <j@w1.fi>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] cfg80211: Add support for sending more than two AKMs
+ in crypto settings
+Message-ID: <20220505181917.GA25102@w1.fi>
+References: <1650344143-1615-1-git-send-email-quic_vjakkam@quicinc.com>
+ <cb419675d2ae276d9b4eac8ab5deafe62167051f.camel@sipsolutions.net>
+ <22bf2f78-587d-429b-867f-f73e542018d2@quicinc.com>
+ <53062c8fbe3eaaa281f24c4808a15804938c83ef.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <53062c8fbe3eaaa281f24c4808a15804938c83ef.camel@sipsolutions.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-FILS discovery and unsolicited broadcast probe response transmissions
-are configured as part of NL80211_CMD_START_AP, however both stop
-after userspace issues NL80211_CMD_SET_BEACON command as these
-attributes are not processed as part of this command.
-Add the missing implementation in nl80211 and mac80211 to fix the issue.
+On Thu, May 05, 2022 at 09:18:40AM +0200, Johannes Berg wrote:
+> I also came to think - where's the upstream driver using this?
 
-This series addresses the comments for the following series:
-https://patchwork.kernel.org/project/linux-wireless/list/?series=417807&state=%2A&archive=both
+This capability is needed to implement WPA3-Personal transition mode
+correctly with any driver that handles roaming internally, i.e., that
+advertises NL80211_ATTR_ROAM_SUPPORT (WIPHY_FLAG_SUPPORTS_FW_ROAM). It
+looks like there are two such drivers in the upstream tree today: ath6kl
+and brcmfmac. Since WPA3 requires PMF, ath6kl is not really a candidate
+for the main use for this (having to indicate PSK, PSK-SHA-256, and SAE
+AKMs as allowed), but brcmfmac looks like an example that would need
+this to allow the local network profile parameters to be set
+appropriately to the driver to allow all the desired roaming cases
+between BSSs using different AKM suite selectors to be performed.
 
-Command NL80211_CMD_SET_BEACON is not renamed to NL80211_CMD_UPDATE_AP
-as part of this series to keep the changes to a minimum but it can be
-done if necessary.
+That said, I do not know whether someone would be planning on using this
+additional capability to extend brcmfmac to take benefit of the proposed
+extension. I would support this capability in wpa_supplicant, though, so
+the information would be available for that purpose.
 
-Aloka Dixit (2):
-  nl80211: process additional attributes in NL80211_CMD_SET_BEACON
-  nl80211: process additional data in ieee80211_change_beacon()
+> I've been saying this for something like a decade now, I think I'll stop
+> investing time in such patches.
 
- include/net/cfg80211.h  |  2 +-
- net/mac80211/cfg.c      | 25 +++++++++++++++++---
- net/wireless/nl80211.c  | 24 ++++++++++++++++---
- net/wireless/rdev-ops.h |  2 +-
- net/wireless/trace.h    | 52 +++++++++++++++++++++++------------------
- 5 files changed, 74 insertions(+), 31 deletions(-)
+Do you have any preference on how to address out-of-the-tree driver
+needs for this type of functionality? Many cases today can be covered
+through the use of vendor specific commands and events, but there are
+some inconvenient examples like the Connect command that is not really
+straightforward to replace or extend with vendor commands due to the
+concept of tracking the user space process associated with the
+connection and internal cfg80211 tracking of the connection in general.
 
+If additional nl80211 attributes cannot be accepted into the upstream
+tree for such specific needs, could there be some way of allowing
+vendor specific attributes to be added into the Connect command? Or
+would this need to use some kind of ugly combination of a vendor
+specific command first to modify the behavior of the following Connect
+command to address this type of needs?
 
-base-commit: fc20106d6e2086dd37bf286605c28b28b4f2492c
 -- 
-2.31.1
-
+Jouni Malinen                                            PGP id EFC895FA
