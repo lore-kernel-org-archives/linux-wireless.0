@@ -2,89 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4E9C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 08:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6988C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 09:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348099AbiEEIaC (ORCPT
+        id S241340AbiEEJLu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 04:30:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40024 "EHLO
+        Thu, 5 May 2022 05:11:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347188AbiEEI3v (ORCPT
+        with ESMTP id S1351732AbiEEJLt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 04:29:51 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397502D1EB
-        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 01:26:03 -0700 (PDT)
-X-UUID: 43f3fdad3a9843a4bc5e03a3321ca796-20220505
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:4c15cad6-33bb-40df-8014-0c5fe003c181,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:100,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:100
-X-CID-INFO: VERSION:1.1.4,REQID:4c15cad6-33bb-40df-8014-0c5fe003c181,OB:0,LOB:
-        0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:100,FILE:0,RULE:Spam_GS981B3D,AC
-        TION:quarantine,TS:100
-X-CID-META: VersionHash:faefae9,CLOUDID:b0ceaab2-56b5-4c9e-8d83-0070b288eb6a,C
-        OID:a5cd4d0f3da0,Recheck:0,SF:28|16|19|48,TC:nil,Content:0,EDM:-3,File:nil
-        ,QS:0,BEC:nil
-X-UUID: 43f3fdad3a9843a4bc5e03a3321ca796-20220505
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <chui-hao.chiu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 412830401; Thu, 05 May 2022 16:25:58 +0800
-Received: from mtkmbs07n1.mediatek.inc (172.21.101.16) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Thu, 5 May 2022 16:25:56 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 5 May 2022 16:25:56 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 5 May 2022 16:25:56 +0800
-From:   Peter Chiu <chui-hao.chiu@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.Lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Peter Chiu <chui-hao.chiu@mediatek.com>
-Subject: [PATCH 2/4] mt76: mt7915: fix twt table_mask to u16 in mt7915_dev
-Date:   Thu, 5 May 2022 16:25:52 +0800
-Message-ID: <20220505082554.16656-2-chui-hao.chiu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220505082554.16656-1-chui-hao.chiu@mediatek.com>
-References: <20220505082554.16656-1-chui-hao.chiu@mediatek.com>
+        Thu, 5 May 2022 05:11:49 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D85754BBBA
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 02:08:07 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24597rq66014998, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24597rq66014998
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 5 May 2022 17:07:53 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.27; Thu, 5 May 2022 17:07:53 +0800
+Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 5 May
+ 2022 17:07:52 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <timlee@realtek.com>
+Subject: [PATCH] rtw88: adjutst adaptivity option to 1
+Date:   Thu, 5 May 2022 17:07:45 +0800
+Message-ID: <20220505090745.158892-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.17.21]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/05/2022 08:48:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvNSCkV6TIIDA3OjUwOjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mt7915 can support 16 twt stations so modify table_mask to u16.
+From: Chin-Yen Lee <timlee@realtek.com>
 
-Fixes: 3782b69d03e7 ("mt76: mt7915: introduce mt7915_mac_add_twt_setup routine")
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Fine tune algorithm of adaptivity sensitivity to avoid disconnecting
+from AP suddenly in field.
+
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h | 2 +-
+ drivers/net/wireless/realtek/rtw88/fw.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 6c590eff14f1..0f51d7657caf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -319,7 +319,7 @@ struct mt7915_dev {
- 	void *cal;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index e344e058f9432..090610e48d08c 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -1786,7 +1786,7 @@ void rtw_fw_adaptivity(struct rtw_dev *rtwdev)
  
- 	struct {
--		u8 table_mask;
-+		u16 table_mask;
- 		u8 n_agrt;
- 	} twt;
- 
+ 	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_ADAPTIVITY);
+ 	SET_ADAPTIVITY_MODE(h2c_pkt, dm_info->edcca_mode);
+-	SET_ADAPTIVITY_OPTION(h2c_pkt, 2);
++	SET_ADAPTIVITY_OPTION(h2c_pkt, 1);
+ 	SET_ADAPTIVITY_IGI(h2c_pkt, dm_info->igi_history[0]);
+ 	SET_ADAPTIVITY_L2H(h2c_pkt, dm_info->l2h_th_ini);
+ 	SET_ADAPTIVITY_DENSITY(h2c_pkt, dm_info->scan_density);
 -- 
-2.18.0
+2.25.1
 
