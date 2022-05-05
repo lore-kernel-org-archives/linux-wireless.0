@@ -2,110 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F28EEC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 15:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A92C3C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 17:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354455AbiEEP6D (ORCPT
+        id S232443AbiEERjY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 11:58:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45608 "EHLO
+        Thu, 5 May 2022 13:39:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242926AbiEEP6C (ORCPT
+        with ESMTP id S1382757AbiEERio (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 11:58:02 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 779015BD3E
-        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 08:54:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 263FCB82DFA
-        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 15:54:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AFD4C385A4;
-        Thu,  5 May 2022 15:54:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651766059;
-        bh=BZ4OcKa4RZLJkgigptDDspCRyo7W2fFlrgS6bKz8hPg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=tGz4QzBrZjDakhoRCIYMtY0E6VP9AT3BDrvh7fBOOLqGng6wlt9IXiBOspYw5aArR
-         GSxxe+TnBsFNfJ0DEQcTFhfcmmJFX31i3xdEo8hh1SoYNWgzRIwenI1EiUtPy4mYIV
-         7BLGcRH7ZcPdOshHCdesv1OGrQv7oEujFSh57+tnobIz9wMp7oGumXxFdPM8/StEsz
-         zdzlJXJZSC1Zl4Tirtq6Yivs+ZFmu6qzvIZNf1u7N9H0X+eFKmJIoWnjtE1fsxDVc1
-         rwksg63l7dq20zrejecaOQAUhGZW8MR8AgQfB7H74HyB3hpU8Y0WRtjkNtlKucgnvw
-         +S4vHkEp99ENg==
-Date:   Thu, 5 May 2022 08:54:18 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-next 0/3] wifi: netif_napi_add() conversions
-Message-ID: <20220505085418.5384f6c9@kernel.org>
-In-Reply-To: <87a6bwzjvk.fsf@kernel.org>
-References: <20220504163316.549648-1-kuba@kernel.org>
-        <87a6bwzjvk.fsf@kernel.org>
+        Thu, 5 May 2022 13:38:44 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10AF75D5EC
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 10:35:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1651772104; x=1683308104;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=EepX6IiCdCHd69YKPdnJG6wAq3HOe79QsU2UoF/ncfc=;
+  b=abvugfycTI2QAHFNnZbp8P7OJpeb7SymF85omH8ncaHWTQHkTO3JVt5I
+   5mHbPxm00xo9qEcFKAUpppL7kHap+czWHtChj8uwYDRG5Rat5D1aVVBDm
+   orvqtg5M4FjAgM2XpR46CWtV08RUAeyvaub/C4hh1SkvVTv5YBqUHliiT
+   k=;
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 05 May 2022 10:35:03 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 10:35:03 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 5 May 2022 10:35:03 -0700
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 5 May 2022 10:35:02 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>,
+        Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH v2 2/2] mac80211: process additional data in ieee80211_change_beacon()
+Date:   Thu, 5 May 2022 10:34:49 -0700
+Message-ID: <20220505173449.4424-3-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220505173449.4424-1-quic_alokad@quicinc.com>
+References: <20220505173449.4424-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 05 May 2022 07:25:03 +0300 Kalle Valo wrote:
-> Jakub Kicinski <kuba@kernel.org> writes:
-> 
-> > Convert wifi callers to the new netif_napi_add() APIs.
-> >
-> > The callers passing 64 or NAPI_POLL_WEIGHT to the non-Tx flavor
-> > are left alone. I'm planning to include wifi drivers in the massive
-> > tree-wide patch/series which will drop the last argument from
-> > netif_napi_add(). Alternatively I can switch all of wifi to
-> > netif_napi_add_tx_weight() and back after the netif_napi_add()
-> > change makes its wait into wireless-next.
-> > Please LMK if you prefer that.
-> >
-> > Jakub Kicinski (3):
-> >   wifi: wil6210: switch to netif_napi_add_tx()
-> >   wifi: mt76: switch to netif_napi_add_tx()
-> >   wifi: qtnfmac: switch to netif_napi_add_weight()  
-> 
-> We don't use that "wifi:" prefix, otherwise looks good. 
+Modify the prototype for ieee80211_change_beacon() to accept
+an instance of struct cfg80211_ap_settings instead of
+struct cfg80211_beacon_data to process FILS discovery and
+unsolicited broadcast probe response transmission configuration.
 
-I know, my silent effort to make git log --oneline be more
-understandable for folks outside of networking is not really
-being met with much applause :) Ethernet people also don't
-like the "eth:" prefix..
+Set the respective flags when applicable.
 
-AFAICS drivers tend to use a format consisting of (numbers at 
-the top denoting commonality):
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+v1:
+https://patchwork.kernel.org/project/linux-wireless/patch/20210120005229.32582-3-alokad@codeaurora.org/
 
-3    4       1       2
-net: vendor: driver: component: bla bla
+ net/mac80211/cfg.c | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
 
-Driver name is the most common prefix. It is the most meaningful
-and natural for people working on the code. Not everyone is working 
-on the driver code, tho.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f1d211e61e49..22843184d6ee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1313,11 +1313,12 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+-				   struct cfg80211_beacon_data *params)
++				   struct cfg80211_ap_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct beacon_data *old;
+ 	int err;
++	u32 changed;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	sdata_assert_lock(sdata);
+@@ -1332,10 +1333,28 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	if (!old)
+ 		return -ENOENT;
+ 
+-	err = ieee80211_assign_beacon(sdata, params, NULL, NULL);
++	err = ieee80211_assign_beacon(sdata, &params->beacon, NULL, NULL);
+ 	if (err < 0)
+ 		return err;
+-	ieee80211_bss_info_change_notify(sdata, err);
++	changed = err;
++
++	if (params->fils_discovery.max_interval) {
++		err = ieee80211_set_fils_discovery(sdata,
++						   &params->fils_discovery);
++		if (err < 0)
++			return err;
++		changed |= BSS_CHANGED_FILS_DISCOVERY;
++	}
++
++	if (params->unsol_bcast_probe_resp.interval) {
++		err = ieee80211_set_unsol_bcast_probe_resp(sdata,
++							   &params->unsol_bcast_probe_resp);
++		if (err < 0)
++			return err;
++		changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
++	}
++
++	ieee80211_bss_info_change_notify(sdata, changed);
+ 	return 0;
+ }
+ 
+-- 
+2.31.1
 
-1) When I send PRs to Linus I always wonder how much he can 
-make out of the shortlog. And if people throw "net:" into the mix
-whether it's still clear when something is "just" a driver bug vs
-a core bug affecting everyone. So I started using "eth: " for ethernet
-drivers, and "wifi: " for wireless drivers in the text of the PRs.
-
-2) For people doing backporting the driver names may not be meaningful,
-but if I'm doing backports for a datacenter kernel I know to pay
-attention to "eth:" while "wifi:" I can safely skip.
-
-3) The case of this set - I have conversions for the entire tree queued
-up on a branch, it's quite useful for me to use a common area-specific
-prefix to see what goes were.
-
-Anyway, that's just me rambling. I hope you don't mind if I send things
-with a wifi prefix from time to time given it's a convenient way for me
-to mark the queued patches.
-
-> Feel free to take via your tree:
-> 
-> Acked-by: Kalle Valo <kvalo@kernel.org>
-
-Actually I didn't cc netdev so would be easier if you could take them :)
-I have to wait for RDMA/infiniband to get merged up before I can start
-deleting stuff anyway :(
