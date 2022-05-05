@@ -2,39 +2,36 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5037C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 08:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA28C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 08:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347742AbiEEI3z (ORCPT
+        id S232163AbiEEI37 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 04:29:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40032 "EHLO
+        Thu, 5 May 2022 04:29:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238329AbiEEI3s (ORCPT
+        with ESMTP id S1346959AbiEEI3v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 04:29:48 -0400
+        Thu, 5 May 2022 04:29:51 -0400
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F1E2D1F5
-        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 01:26:04 -0700 (PDT)
-X-UUID: c186732969904fe3b24f21083a24a98e-20220505
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CE032D1F8
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 01:26:05 -0700 (PDT)
+X-UUID: c4ccf3d257064e8fb8b0f700681bafda-20220505
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:17151af6-e12e-44a0-b815-5fc877a7fe06,OB:0,LO
+X-CID-O-INFO: VERSION:1.1.4,REQID:51b0960d-7456-4430-9ab3-d009d5911578,OB:0,LO
         B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
         ON:release,TS:0
-X-CID-META: VersionHash:faefae9,CLOUDID:8a284b16-2e53-443e-b81a-655c13977218,C
+X-CID-META: VersionHash:faefae9,CLOUDID:b4ceaab2-56b5-4c9e-8d83-0070b288eb6a,C
         OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,File:nil,QS:0,BEC:nil
-X-UUID: c186732969904fe3b24f21083a24a98e-20220505
+X-UUID: c4ccf3d257064e8fb8b0f700681bafda-20220505
 Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
         (envelope-from <chui-hao.chiu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1736132449; Thu, 05 May 2022 16:25:57 +0800
-Received: from MTKMBS07N2.mediatek.inc (172.21.101.141) by
+        with ESMTP id 190243629; Thu, 05 May 2022 16:25:57 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
  mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Thu, 5 May 2022 16:25:57 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 5 May 2022 16:25:56 +0800
+ Thu, 5 May 2022 16:25:56 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
  Transport; Thu, 5 May 2022 16:25:56 +0800
@@ -47,12 +44,10 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Peter Chiu <chui-hao.chiu@mediatek.com>
-Subject: [PATCH 4/4] mt76: mt7915: limit minimum twt duration
-Date:   Thu, 5 May 2022 16:25:54 +0800
-Message-ID: <20220505082554.16656-4-chui-hao.chiu@mediatek.com>
+Subject: [PATCH 1/4] mt76: mt7915: update mt7986 patch in mt7986_wmac_adie_patch_7976()
+Date:   Thu, 5 May 2022 16:25:51 +0800
+Message-ID: <20220505082554.16656-1-chui-hao.chiu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220505082554.16656-1-chui-hao.chiu@mediatek.com>
-References: <20220505082554.16656-1-chui-hao.chiu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -60,40 +55,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The minimum twt duration supported by mt7915 is 64 according to hardware
-design. Reply station with TWT_SETUP_CMD_DICTATE if min_twt_dur smaller
-than 64.
+Update mt7976 adie patch for different adie version.
 
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+Reviewed-by: Shayne Chen <shayne.chen@mediatek.com>
 Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7915/regs.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7915/soc.c   | 19 +++++++++++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index ff60a3d2d26d..e912ecacb578 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -2633,6 +2633,7 @@ void mt7915_mac_add_twt_setup(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta,
- 			      struct ieee80211_twt_setup *twt)
- {
-+#define MT7915_MIN_TWT_DUR 64
- 	enum ieee80211_twt_setup_cmd setup_cmd = TWT_SETUP_CMD_REJECT;
- 	struct mt7915_sta *msta = (struct mt7915_sta *)sta->drv_priv;
- 	struct ieee80211_twt_params *twt_agrt = (void *)twt->params;
-@@ -2654,6 +2655,12 @@ void mt7915_mac_add_twt_setup(struct ieee80211_hw *hw,
- 	if (hweight8(msta->twt.flowid_mask) == ARRAY_SIZE(msta->twt.flow))
- 		goto unlock;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index bac76bc2770f..338dfbee0f93 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -797,6 +797,7 @@ enum offs_rev {
  
-+	if (twt_agrt->min_twt_dur < MT7915_MIN_TWT_DUR) {
-+		setup_cmd = TWT_SETUP_CMD_DICTATE;
-+		twt_agrt->min_twt_dur = MT7915_MIN_TWT_DUR;
-+		goto unlock;
+ /* ADIE */
+ #define MT_ADIE_CHIP_ID			0x02c
++#define MT_ADIE_VERSION_MASK		GENMASK(15, 0)
+ #define MT_ADIE_CHIP_ID_MASK		GENMASK(31, 16)
+ #define MT_ADIE_IDX0			GENMASK(15, 0)
+ #define MT_ADIE_IDX1			GENMASK(31, 16)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+index 04e62d569599..c418b5dfda7f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+@@ -470,17 +470,32 @@ static int mt7986_wmac_adie_xtal_trim_7976(struct mt7915_dev *dev, u8 adie)
+ 
+ static int mt7986_wmac_adie_patch_7976(struct mt7915_dev *dev, u8 adie)
+ {
++	u32 id, version, rg_xo_01, rg_xo_03;
+ 	int ret;
+ 
++	ret = mt76_wmac_spi_read(dev, adie, MT_ADIE_CHIP_ID, &id);
++	if (ret)
++		return ret;
++
++	version = FIELD_GET(MT_ADIE_VERSION_MASK, id);
++
+ 	ret = mt76_wmac_spi_write(dev, adie, MT_ADIE_RG_TOP_THADC, 0x4a563b00);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = mt76_wmac_spi_write(dev, adie, MT_ADIE_RG_XO_01, 0x1d59080f);
++	if (version == 0x8a00 || version == 0x8a10 || version == 0x8b00) {
++		rg_xo_01 = 0x1d59080f;
++		rg_xo_03 = 0x34c00fe0;
++	} else {
++		rg_xo_01 = 0x1959f80f;
++		rg_xo_03 = 0x34d00fe0;
 +	}
 +
- 	flowid = ffs(~msta->twt.flowid_mask) - 1;
- 	le16p_replace_bits(&twt_agrt->req_type, flowid,
- 			   IEEE80211_TWT_REQTYPE_FLOWID);
++	ret = mt76_wmac_spi_write(dev, adie, MT_ADIE_RG_XO_01, rg_xo_01);
+ 	if (ret)
+ 		return ret;
+ 
+-	return mt76_wmac_spi_write(dev, adie, MT_ADIE_RG_XO_03, 0x34c00fe0);
++	return mt76_wmac_spi_write(dev, adie, MT_ADIE_RG_XO_03, rg_xo_03);
+ }
+ 
+ static int
 -- 
 2.18.0
 
