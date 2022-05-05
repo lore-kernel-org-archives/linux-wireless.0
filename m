@@ -2,125 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F71CC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 15:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F28EEC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 May 2022 15:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380832AbiEEPsH (ORCPT
+        id S1354455AbiEEP6D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 11:48:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37960 "EHLO
+        Thu, 5 May 2022 11:58:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230240AbiEEPsG (ORCPT
+        with ESMTP id S242926AbiEEP6C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 11:48:06 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A2E4532E2;
-        Thu,  5 May 2022 08:44:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651765466; x=1683301466;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/K27mxZVpjV2wVe4/S1pgizw/HTC8KiYO9tIqdJDhro=;
-  b=PYL7hq5OsEEpdMOVmkYyI1NSZsdKTEkDoWM/RT57PqS7WZbpPmoius0h
-   Q1QjnDamKW+pe545yKrwH7WLHlSBod3uKQpqpKnX7cjk4Cn+KpQzje2yi
-   Drk283JZqSOVxMxieHLK6FcqntyprVJC61+aKruIOKKw0OzDpNk6O8WbL
-   eiPECPreg6wOgiW113ZLLz3oCnPeLr/zf3KcDa03Gi21khpOmVBu27TYC
-   wgDpHS2a4iLaS2rf/m+BiDm7bbBP2TWKlWXOlebQhgDpWq+O0eUR81Qpw
-   d13OSkCaXqfYIvsJH9L0EmdL0xzakO/EhJGCao99ZYjZmbVGLasosOdid
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10338"; a="268297952"
-X-IronPort-AV: E=Sophos;i="5.91,201,1647327600"; 
-   d="scan'208";a="268297952"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 08:18:09 -0700
-X-IronPort-AV: E=Sophos;i="5.91,201,1647327600"; 
-   d="scan'208";a="563286371"
-Received: from bfu-mobl3.ccr.corp.intel.com ([10.255.31.7])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 08:18:05 -0700
-Message-ID: <0f39c2be651d75895d3dfca1d8afc7cad2d4a1af.camel@intel.com>
-Subject: Re: [PATCH 0/7] PM: Solution for S0ix failure caused by PCH
- overheating
-From:   Zhang Rui <rui.zhang@intel.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Oliver Neukum <oneukum@suse.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>, kvalo@kernel.org,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linux-rtc@vger.kernel.org,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        merez@codeaurora.org, mat.jonczyk@o2.pl,
-        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
-        Len Brown <len.brown@intel.com>
-Date:   Thu, 05 May 2022 23:18:02 +0800
-In-Reply-To: <CAJZ5v0hceDVkv05=SFbO53wsmHWkrs1SSoxZ=FuErYsnNutGWg@mail.gmail.com>
-References: <20220505015814.3727692-1-rui.zhang@intel.com>
-         <40b8ad06-6ef2-113c-fffb-2fa001603b3f@suse.com>
-         <CAJZ5v0hceDVkv05=SFbO53wsmHWkrs1SSoxZ=FuErYsnNutGWg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
+        Thu, 5 May 2022 11:58:02 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 779015BD3E
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 08:54:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 263FCB82DFA
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 15:54:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AFD4C385A4;
+        Thu,  5 May 2022 15:54:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651766059;
+        bh=BZ4OcKa4RZLJkgigptDDspCRyo7W2fFlrgS6bKz8hPg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=tGz4QzBrZjDakhoRCIYMtY0E6VP9AT3BDrvh7fBOOLqGng6wlt9IXiBOspYw5aArR
+         GSxxe+TnBsFNfJ0DEQcTFhfcmmJFX31i3xdEo8hh1SoYNWgzRIwenI1EiUtPy4mYIV
+         7BLGcRH7ZcPdOshHCdesv1OGrQv7oEujFSh57+tnobIz9wMp7oGumXxFdPM8/StEsz
+         zdzlJXJZSC1Zl4Tirtq6Yivs+ZFmu6qzvIZNf1u7N9H0X+eFKmJIoWnjtE1fsxDVc1
+         rwksg63l7dq20zrejecaOQAUhGZW8MR8AgQfB7H74HyB3hpU8Y0WRtjkNtlKucgnvw
+         +S4vHkEp99ENg==
+Date:   Thu, 5 May 2022 08:54:18 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless-next 0/3] wifi: netif_napi_add() conversions
+Message-ID: <20220505085418.5384f6c9@kernel.org>
+In-Reply-To: <87a6bwzjvk.fsf@kernel.org>
+References: <20220504163316.549648-1-kuba@kernel.org>
+        <87a6bwzjvk.fsf@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi, Neukum,
-
-Thanks for your response, I missed your original reply in my Inbox.
-
-On Thu, 2022-05-05 at 14:02 +0200, Rafael J. Wysocki wrote:
-> On Thu, May 5, 2022 at 10:23 AM Oliver Neukum <oneukum@suse.com>
-> wrote:
-> > 
-> > 
-> > 
-> > On 05.05.22 03:58, Zhang Rui wrote:
-> > > On some Intel client platforms like SKL/KBL/CNL/CML, there is a
-> > > PCH thermal sensor that monitors the PCH temperature and blocks
-> > > the system
-> > > from entering S0ix in case it overheats.
-> > > 
-> > > Commit ef63b043ac86 ("thermal: intel: pch: fix S0ix failure due
-> > > to PCH
-> > > temperature above threshold") introduces a delay loop to cool the
-> > > temperature down for this purpose.
-> > > 
-> > > However, in practice, we found that the time it takes to cool the
-> > > PCH down
-> > > below threshold highly depends on the initial PCH temperature
-> > > when the
-> > > delay starts, as well as the ambient temperature.
-> > > 
-> > > This patch series has been tested on the same Dell XPS 9360
-> > > laptop and
-> > > S0ix is 100% achieved across 1000+ s2idle iterations.
-> > > 
-> > 
-> > Hi,
-> > 
-> > what is the user experience if this ever triggers? At that stage
-> > the
-> > system will appear to be suspended to an external observer, won't
-> > it?
-> > So in effect you'd have a system that spontaneously wakes up, won't
-> > you?
+On Thu, 05 May 2022 07:25:03 +0300 Kalle Valo wrote:
+> Jakub Kicinski <kuba@kernel.org> writes:
 > 
-> No, you won't.
+> > Convert wifi callers to the new netif_napi_add() APIs.
+> >
+> > The callers passing 64 or NAPI_POLL_WEIGHT to the non-Tx flavor
+> > are left alone. I'm planning to include wifi drivers in the massive
+> > tree-wide patch/series which will drop the last argument from
+> > netif_napi_add(). Alternatively I can switch all of wifi to
+> > netif_napi_add_tx_weight() and back after the netif_napi_add()
+> > change makes its wait into wireless-next.
+> > Please LMK if you prefer that.
+> >
+> > Jakub Kicinski (3):
+> >   wifi: wil6210: switch to netif_napi_add_tx()
+> >   wifi: mt76: switch to netif_napi_add_tx()
+> >   wifi: qtnfmac: switch to netif_napi_add_weight()  
 > 
-> It will just go ahead and reach S0ix when it can.  It will only wake
-> up if there's a legitimate wakeup even in the meantime.
+> We don't use that "wifi:" prefix, otherwise looks good. 
 
-Please correct me if I misunderstand your question, Oliver.
+I know, my silent effort to make git log --oneline be more
+understandable for folks outside of networking is not really
+being met with much applause :) Ethernet people also don't
+like the "eth:" prefix..
 
-Without the patch, the system becomes suspended and stays in PCx.
-With the patch, the system first stays in PCx during suspending (in the
-intel_pch_thermal driver' cooling delays), and then becomes suspended
-and stays in S0ix.
+AFAICS drivers tend to use a format consisting of (numbers at 
+the top denoting commonality):
 
-thanks,
-rui
+3    4       1       2
+net: vendor: driver: component: bla bla
 
+Driver name is the most common prefix. It is the most meaningful
+and natural for people working on the code. Not everyone is working 
+on the driver code, tho.
+
+1) When I send PRs to Linus I always wonder how much he can 
+make out of the shortlog. And if people throw "net:" into the mix
+whether it's still clear when something is "just" a driver bug vs
+a core bug affecting everyone. So I started using "eth: " for ethernet
+drivers, and "wifi: " for wireless drivers in the text of the PRs.
+
+2) For people doing backporting the driver names may not be meaningful,
+but if I'm doing backports for a datacenter kernel I know to pay
+attention to "eth:" while "wifi:" I can safely skip.
+
+3) The case of this set - I have conversions for the entire tree queued
+up on a branch, it's quite useful for me to use a common area-specific
+prefix to see what goes were.
+
+Anyway, that's just me rambling. I hope you don't mind if I send things
+with a wifi prefix from time to time given it's a convenient way for me
+to mark the queued patches.
+
+> Feel free to take via your tree:
+> 
+> Acked-by: Kalle Valo <kvalo@kernel.org>
+
+Actually I didn't cc netdev so would be easier if you could take them :)
+I have to wait for RDMA/infiniband to get merged up before I can start
+deleting stuff anyway :(
