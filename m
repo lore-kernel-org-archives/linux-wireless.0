@@ -2,347 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A70BC43217
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 01:17:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B3FC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 01:24:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1387901AbiEFBV2 (ORCPT
+        id S1378537AbiEFB22 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 May 2022 21:21:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42674 "EHLO
+        Thu, 5 May 2022 21:28:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1387890AbiEFBVL (ORCPT
+        with ESMTP id S236485AbiEFB21 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 May 2022 21:21:11 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 773FA61604;
-        Thu,  5 May 2022 18:16:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651799819; x=1683335819;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=LHjui994kYaVlUGyjP72cpZujtLeuiIrGlhywqj2caA=;
-  b=J0yK8dgLPE+AY5YbmX9fzK540M0HwuwGJt/9jzYucjs2yEiXhYJ5KQBs
-   rM+XuFanBZTSC57Tu1xfsXXl+eTblJ5F5iRMKj8BoSjWkumMyaJJZl3jC
-   MxHW1uiP9v6iWokZ3TT6FugHfYYMNe/Oi+ukxIHWJzB9Wx8t7sFbFPRvK
-   RSDGzM1xH+6ihdPL7pPIdXPVNxtshDRUNvF6n0PAGZa+o4O3/qjT6ZIkn
-   Uy/fQUxpMjf9Uea1MUScGRTNyUhKeDuczMvNbtamNe08unbYxaQv4jd8w
-   sXVXUGfLBdcoHox+kohUripwWBoVoDObooxMRWoVHd7rHAKaB1V0Y0gbv
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10338"; a="265902497"
-X-IronPort-AV: E=Sophos;i="5.91,203,1647327600"; 
-   d="scan'208";a="265902497"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 18:16:54 -0700
-X-IronPort-AV: E=Sophos;i="5.91,203,1647327600"; 
-   d="scan'208";a="654482497"
-Received: from kdjohns3-mobl1.amr.corp.intel.com (HELO rmarti10-nuc3.hsd1.or.comcast.net) ([10.212.250.65])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 18:16:53 -0700
-From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
-To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
-        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
-        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
-        haijun.liu@mediatek.com, amir.hanania@intel.com,
-        andriy.shevchenko@linux.intel.com, dinesh.sharma@intel.com,
-        eliot.lee@intel.com, ilpo.johannes.jarvinen@intel.com,
-        moises.veleta@intel.com, pierre-louis.bossart@intel.com,
-        muralidharan.sethuraman@intel.com, Soumya.Prakash.Mishra@intel.com,
-        sreehari.kancharla@intel.com, madhusmita.sahu@intel.com,
-        Ricardo Martinez <ricardo.martinez@linux.intel.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH net-next v7 12/14] net: wwan: t7xx: Runtime PM
-Date:   Thu,  5 May 2022 18:16:14 -0700
-Message-Id: <20220506011616.1774805-13-ricardo.martinez@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220506011616.1774805-1-ricardo.martinez@linux.intel.com>
-References: <20220506011616.1774805-1-ricardo.martinez@linux.intel.com>
+        Thu, 5 May 2022 21:28:27 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C934512776
+        for <linux-wireless@vger.kernel.org>; Thu,  5 May 2022 18:24:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1651800286; x=1683336286;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=ZAyW46bDt1XyBpp4qIIkQWPnxgGn42ujUL/CEZ0UftA=;
+  b=Itpu/OK6vRm7i0JXAzO0u+rl0WJ3yEjpuMI/Y4WPmqxb+om37Q/TzAxV
+   lHNEYjfPo2Nvew4VD7Nw2BovXcHug36bBP8ue9nslqyGN/YWEMQxuGWvY
+   lwup6PuBDGH4LHdpm4R3tJhIygDVQiWJkbuXD9vXbYTdoDr9q125CCQGr
+   Q=;
+Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
+  by alexa-out.qualcomm.com with ESMTP; 05 May 2022 18:24:46 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 18:24:46 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 5 May 2022 18:24:45 -0700
+Received: from [10.253.34.102] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 5 May 2022
+ 18:24:44 -0700
+Message-ID: <699e4be8-f32e-7cc7-4c38-3c321334245f@quicinc.com>
+Date:   Fri, 6 May 2022 09:24:42 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH] ath11k: Handle keepalive during wowlan suspend and resume
+Content-Language: en-US
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
+        <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>
+References: <20220505014657.1549947-1-quic_bqiang@quicinc.com>
+ <f270b2fb-a1c4-9c6b-6eda-c2d0a8c8c190@quicinc.com>
+From:   Baochen Qiang <quic_bqiang@quicinc.com>
+In-Reply-To: <f270b2fb-a1c4-9c6b-6eda-c2d0a8c8c190@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haijun Liu <haijun.liu@mediatek.com>
 
-Enables runtime power management callbacks including runtime_suspend
-and runtime_resume. Autosuspend is used to prevent overhead by frequent
-wake-ups.
+On 5/6/2022 3:04 AM, Jeff Johnson wrote:
+> On 5/4/2022 6:46 PM, Baochen Qiang wrote:
+>> With wowlan enabled and after sleeping for a rather long time,
+>
+> nit: s/wowlan/WoWLAN/ to conform to common usage (also in subject)
+>
+already fixed in v2.
 
-Signed-off-by: Haijun Liu <haijun.liu@mediatek.com>
-Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Co-developed-by: Eliot Lee <eliot.lee@intel.com>
-Signed-off-by: Eliot Lee <eliot.lee@intel.com>
-Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 14 ++++++++++++++
- drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 17 +++++++++++++++++
- drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 15 +++++++++++++++
- drivers/net/wwan/t7xx/t7xx_pci.c           | 22 ++++++++++++++++++++++
- 4 files changed, 68 insertions(+)
 
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-index cbe5ea4495e0..90306eb9858b 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
-@@ -33,6 +33,7 @@
- #include <linux/list.h>
- #include <linux/netdevice.h>
- #include <linux/pci.h>
-+#include <linux/pm_runtime.h>
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/slab.h>
-@@ -251,6 +252,8 @@ static void t7xx_cldma_rx_done(struct work_struct *work)
- 	t7xx_cldma_clear_ip_busy(&md_ctrl->hw_info);
- 	t7xx_cldma_hw_irq_en_txrx(&md_ctrl->hw_info, queue->index, MTK_RX);
- 	t7xx_cldma_hw_irq_en_eq(&md_ctrl->hw_info, queue->index, MTK_RX);
-+	pm_runtime_mark_last_busy(md_ctrl->dev);
-+	pm_runtime_put_autosuspend(md_ctrl->dev);
- }
- 
- static int t7xx_cldma_gpd_tx_collect(struct cldma_queue *queue)
-@@ -360,6 +363,9 @@ static void t7xx_cldma_tx_done(struct work_struct *work)
- 		t7xx_cldma_hw_irq_en_txrx(hw_info, queue->index, MTK_TX);
- 	}
- 	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
-+
-+	pm_runtime_mark_last_busy(md_ctrl->dev);
-+	pm_runtime_put_autosuspend(md_ctrl->dev);
- }
- 
- static void t7xx_cldma_ring_free(struct cldma_ctrl *md_ctrl,
-@@ -568,6 +574,7 @@ static void t7xx_cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
- 		if (l2_tx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
- 			for_each_set_bit(i, &l2_tx_int, L2_INT_BIT_COUNT) {
- 				if (i < CLDMA_TXQ_NUM) {
-+					pm_runtime_get(md_ctrl->dev);
- 					t7xx_cldma_hw_irq_dis_eq(hw_info, i, MTK_TX);
- 					t7xx_cldma_hw_irq_dis_txrx(hw_info, i, MTK_TX);
- 					queue_work(md_ctrl->txq[i].worker,
-@@ -592,6 +599,7 @@ static void t7xx_cldma_irq_work_cb(struct cldma_ctrl *md_ctrl)
- 		if (l2_rx_int & (TXRX_STATUS_BITMASK | EMPTY_STATUS_BITMASK)) {
- 			l2_rx_int |= l2_rx_int >> CLDMA_RXQ_NUM;
- 			for_each_set_bit(i, &l2_rx_int, CLDMA_RXQ_NUM) {
-+				pm_runtime_get(md_ctrl->dev);
- 				t7xx_cldma_hw_irq_dis_eq(hw_info, i, MTK_RX);
- 				t7xx_cldma_hw_irq_dis_txrx(hw_info, i, MTK_RX);
- 				queue_work(md_ctrl->rxq[i].worker, &md_ctrl->rxq[i].cldma_work);
-@@ -922,6 +930,10 @@ int t7xx_cldma_send_skb(struct cldma_ctrl *md_ctrl, int qno, struct sk_buff *skb
- 	if (qno >= CLDMA_TXQ_NUM)
- 		return -EINVAL;
- 
-+	ret = pm_runtime_resume_and_get(md_ctrl->dev);
-+	if (ret < 0 && ret != -EACCES)
-+		return ret;
-+
- 	queue = &md_ctrl->txq[qno];
- 
- 	spin_lock_irqsave(&md_ctrl->cldma_lock, flags);
-@@ -965,6 +977,8 @@ int t7xx_cldma_send_skb(struct cldma_ctrl *md_ctrl, int qno, struct sk_buff *skb
- 	} while (!ret);
- 
- allow_sleep:
-+	pm_runtime_mark_last_busy(md_ctrl->dev);
-+	pm_runtime_put_autosuspend(md_ctrl->dev);
- 	return ret;
- }
- 
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
-index d110f7edf56b..5f25555eb4a4 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
-@@ -32,6 +32,7 @@
- #include <linux/minmax.h>
- #include <linux/mm.h>
- #include <linux/netdevice.h>
-+#include <linux/pm_runtime.h>
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/slab.h>
-@@ -910,6 +911,7 @@ static void t7xx_dpmaif_rxq_work(struct work_struct *work)
- {
- 	struct dpmaif_rx_queue *rxq = container_of(work, struct dpmaif_rx_queue, dpmaif_rxq_work);
- 	struct dpmaif_ctrl *dpmaif_ctrl = rxq->dpmaif_ctrl;
-+	int ret;
- 
- 	atomic_set(&rxq->rx_processing, 1);
- 	/* Ensure rx_processing is changed to 1 before actually begin RX flow */
-@@ -921,7 +923,14 @@ static void t7xx_dpmaif_rxq_work(struct work_struct *work)
- 		return;
- 	}
- 
-+	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
-+	if (ret < 0 && ret != -EACCES)
-+		return;
-+
- 	t7xx_dpmaif_do_rx(dpmaif_ctrl, rxq);
-+
-+	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
-+	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
- 	atomic_set(&rxq->rx_processing, 0);
- }
- 
-@@ -1123,11 +1132,19 @@ static void t7xx_dpmaif_bat_release_work(struct work_struct *work)
- {
- 	struct dpmaif_ctrl *dpmaif_ctrl = container_of(work, struct dpmaif_ctrl, bat_release_work);
- 	struct dpmaif_rx_queue *rxq;
-+	int ret;
-+
-+	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
-+	if (ret < 0 && ret != -EACCES)
-+		return;
- 
- 	/* ALL RXQ use one BAT table, so choose DPF_RX_QNO_DFT */
- 	rxq = &dpmaif_ctrl->rxq[DPF_RX_QNO_DFT];
- 	t7xx_dpmaif_bat_release_and_add(rxq);
- 	t7xx_dpmaif_frag_bat_release_and_add(rxq);
-+
-+	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
-+	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
- }
- 
- int t7xx_dpmaif_bat_rel_wq_alloc(struct dpmaif_ctrl *dpmaif_ctrl)
-diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
-index e8435a871842..a5ac9dfaecfd 100644
---- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
-+++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
-@@ -28,6 +28,7 @@
- #include <linux/list.h>
- #include <linux/minmax.h>
- #include <linux/netdevice.h>
-+#include <linux/pm_runtime.h>
- #include <linux/sched.h>
- #include <linux/spinlock.h>
- #include <linux/skbuff.h>
-@@ -161,6 +162,10 @@ static void t7xx_dpmaif_tx_done(struct work_struct *work)
- 	struct dpmaif_hw_info *hw_info;
- 	int ret;
- 
-+	ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
-+	if (ret < 0 && ret != -EACCES)
-+		return;
-+
- 	hw_info = &dpmaif_ctrl->hw_info;
- 	ret = t7xx_dpmaif_tx_release(dpmaif_ctrl, txq->index, txq->drb_size_cnt);
- 	if (ret == -EAGAIN ||
-@@ -174,6 +179,9 @@ static void t7xx_dpmaif_tx_done(struct work_struct *work)
- 		t7xx_dpmaif_clr_ip_busy_sts(hw_info);
- 		t7xx_dpmaif_unmask_ulq_intr(hw_info, txq->index);
- 	}
-+
-+	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
-+	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
- }
- 
- static void t7xx_setup_msg_drb(struct dpmaif_ctrl *dpmaif_ctrl, unsigned int q_num,
-@@ -423,6 +431,7 @@ static void t7xx_do_tx_hw_push(struct dpmaif_ctrl *dpmaif_ctrl)
- static int t7xx_dpmaif_tx_hw_push_thread(void *arg)
- {
- 	struct dpmaif_ctrl *dpmaif_ctrl = arg;
-+	int ret;
- 
- 	while (!kthread_should_stop()) {
- 		if (t7xx_tx_lists_are_all_empty(dpmaif_ctrl) ||
-@@ -437,7 +446,13 @@ static int t7xx_dpmaif_tx_hw_push_thread(void *arg)
- 				break;
- 		}
- 
-+		ret = pm_runtime_resume_and_get(dpmaif_ctrl->dev);
-+		if (ret < 0 && ret != -EACCES)
-+			return ret;
-+
- 		t7xx_do_tx_hw_push(dpmaif_ctrl);
-+		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
-+		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wwan/t7xx/t7xx_pci.c b/drivers/net/wwan/t7xx/t7xx_pci.c
-index 564147664af0..400c11f7b31e 100644
---- a/drivers/net/wwan/t7xx/t7xx_pci.c
-+++ b/drivers/net/wwan/t7xx/t7xx_pci.c
-@@ -31,6 +31,7 @@
- #include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/pm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/pm_wakeup.h>
- 
- #include "t7xx_mhccif.h"
-@@ -44,6 +45,7 @@
- #define T7XX_PCI_EREG_BASE		2
- 
- #define PM_ACK_TIMEOUT_MS		1500
-+#define PM_AUTOSUSPEND_MS		20000
- #define PM_RESOURCE_POLL_TIMEOUT_US	10000
- #define PM_RESOURCE_POLL_STEP_US	100
- 
-@@ -82,6 +84,8 @@ static int t7xx_pci_pm_init(struct t7xx_pci_dev *t7xx_dev)
- 				DPM_FLAG_NO_DIRECT_COMPLETE);
- 
- 	iowrite32(T7XX_L1_BIT(0), IREG_BASE(t7xx_dev) + DISABLE_ASPM_LOWPWR);
-+	pm_runtime_set_autosuspend_delay(&pdev->dev, PM_AUTOSUSPEND_MS);
-+	pm_runtime_use_autosuspend(&pdev->dev);
- 
- 	return t7xx_wait_pm_config(t7xx_dev);
- }
-@@ -96,6 +100,8 @@ void t7xx_pci_pm_init_late(struct t7xx_pci_dev *t7xx_dev)
- 			     D2H_INT_RESUME_ACK_AP);
- 	iowrite32(T7XX_L1_BIT(0), IREG_BASE(t7xx_dev) + ENABLE_ASPM_LOWPWR);
- 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_RESUMED);
-+
-+	pm_runtime_put_noidle(&t7xx_dev->pdev->dev);
- }
- 
- static int t7xx_pci_pm_reinit(struct t7xx_pci_dev *t7xx_dev)
-@@ -104,6 +110,9 @@ static int t7xx_pci_pm_reinit(struct t7xx_pci_dev *t7xx_dev)
- 	 * so just roll back PM setting to the init setting.
- 	 */
- 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_INIT);
-+
-+	pm_runtime_get_noresume(&t7xx_dev->pdev->dev);
-+
- 	iowrite32(T7XX_L1_BIT(0), IREG_BASE(t7xx_dev) + DISABLE_ASPM_LOWPWR);
- 	return t7xx_wait_pm_config(t7xx_dev);
- }
-@@ -403,6 +412,7 @@ static int __t7xx_pci_pm_resume(struct pci_dev *pdev, bool state_check)
- 	t7xx_dev->rgu_pci_irq_en = true;
- 	t7xx_pcie_mac_set_int(t7xx_dev, SAP_RGU_INT);
- 	iowrite32(T7XX_L1_BIT(0), IREG_BASE(t7xx_dev) + ENABLE_ASPM_LOWPWR);
-+	pm_runtime_mark_last_busy(&pdev->dev);
- 	atomic_set(&t7xx_dev->md_pm_state, MTK_PM_RESUMED);
- 
- 	return ret;
-@@ -439,6 +449,16 @@ static int t7xx_pci_pm_thaw(struct device *dev)
- 	return __t7xx_pci_pm_resume(to_pci_dev(dev), false);
- }
- 
-+static int t7xx_pci_pm_runtime_suspend(struct device *dev)
-+{
-+	return __t7xx_pci_pm_suspend(to_pci_dev(dev));
-+}
-+
-+static int t7xx_pci_pm_runtime_resume(struct device *dev)
-+{
-+	return __t7xx_pci_pm_resume(to_pci_dev(dev), true);
-+}
-+
- static const struct dev_pm_ops t7xx_pci_pm_ops = {
- 	.suspend = t7xx_pci_pm_suspend,
- 	.resume = t7xx_pci_pm_resume,
-@@ -448,6 +468,8 @@ static const struct dev_pm_ops t7xx_pci_pm_ops = {
- 	.poweroff = t7xx_pci_pm_suspend,
- 	.restore = t7xx_pci_pm_resume,
- 	.restore_noirq = t7xx_pci_pm_resume_noirq,
-+	.runtime_suspend = t7xx_pci_pm_runtime_suspend,
-+	.runtime_resume = t7xx_pci_pm_runtime_resume
- };
- 
- static int t7xx_request_irq(struct pci_dev *pdev)
--- 
-2.25.1
+>> we are seeing that with some APs, it is not able to wake up
+>> the STA though the correct wake up pattern has been configured.
+>> This is because the host doesn't send keepalive command to
+>> firmware, thus firmware will not send any packet to the AP and
+>> after a specific time the AP kicks out the DUT.
+>>
+>> Fix this issue by enabling keepalive before going to suspend
+>> and disabling it after resume back.
+>>
+>> Tested-on: WCN6855 hw2.0 PCI 
+>> WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
+>>
+>> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+>> ---
+>
+> [...]
+>
+>> +
+>> +enum wmi_sta_keepalive_method {
+>> +    WMI_STA_KEEPALIVE_METHOD_NULL_FRAME = 1, /* 802.11 NULL frame */
+>> +    WMI_STA_KEEPALIVE_METHOD_UNSOLICITED_ARP_RESPONSE = 2, /* ARP 
+>> response */
+>> +    WMI_STA_KEEPALIVE_METHOD_ETHERNET_LOOPBACK = 3, /*ETHERNET 
+>> LOOPBACK*/
+>> +    WMI_STA_KEEPALIVE_METHOD_GRATUITOUS_ARP_REQUEST = 4, /* 
+>> gratuitous ARP req*/
+>
+> nit: for the two above consistently have space separating comment from 
+> /* and */
+>
+sure, will address in v3.
 
+
+>> + WMI_STA_KEEPALIVE_METHOD_MGMT_VENDOR_ACTION = 5, /* vendor action 
+>> frame */
+>> +};
+> [...]
