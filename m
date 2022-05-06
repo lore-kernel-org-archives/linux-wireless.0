@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C709C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 12:02:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C897C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 12:03:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1391621AbiEFMGi (ORCPT
+        id S1391626AbiEFMGn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 May 2022 08:06:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59944 "EHLO
+        Fri, 6 May 2022 08:06:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1391620AbiEFMGh (ORCPT
+        with ESMTP id S1378312AbiEFMGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 May 2022 08:06:37 -0400
+        Fri, 6 May 2022 08:06:40 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F095644FF
-        for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 05:02:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F35C6471C
+        for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 05:02:56 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2gj46029478, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2pd36029501, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2gj46029478
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2pd36029501
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 6 May 2022 20:02:43 +0800
+        Fri, 6 May 2022 20:02:51 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 6 May 2022 20:02:42 +0800
+ 15.1.2375.24; Fri, 6 May 2022 20:02:51 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 6 May
- 2022 20:02:42 +0800
+ 2022 20:02:46 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <hsuan8331@realtek.com>
-Subject: [PATCH 3/5] rtw89: correct CCA control
-Date:   Fri, 6 May 2022 20:02:14 +0800
-Message-ID: <20220506120216.58567-4-pkshih@realtek.com>
+Subject: [PATCH 5/5] rtw89: add debug entry to dump BSSID CAM
+Date:   Fri, 6 May 2022 20:02:16 +0800
+Message-ID: <20220506120216.58567-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220506120216.58567-1-pkshih@realtek.com>
 References: <20220506120216.58567-1-pkshih@realtek.com>
@@ -64,33 +64,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-EDCCA signal can block transmitting in certain situation, so ignore this
-signal and use others to decide transmitting time.
+BSSID CAM is a kind of CAM that is used to determine if we receive a packet
+or not. Add an entry to assist in debugging.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/mac.c | 1 +
+ drivers/net/wireless/realtek/rtw89/mac.h | 1 +
+ 2 files changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index e1a1699a1a9cf..3b61ff02fe849 100644
+index 3b61ff02fe849..3cf892912c1d9 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.c
 +++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -1890,11 +1890,12 @@ static int cca_ctrl_init(struct rtw89_dev *rtwdev, u8 mac_idx)
- 		B_AX_CTN_CHK_BASIC_NAV | B_AX_CTN_CHK_BTCCA |
- 		B_AX_CTN_CHK_EDCCA | B_AX_CTN_CHK_CCA_S80 |
- 		B_AX_CTN_CHK_CCA_S40 | B_AX_CTN_CHK_CCA_S20 |
--		B_AX_CTN_CHK_CCA_P20 | B_AX_SIFS_CHK_EDCCA);
-+		B_AX_CTN_CHK_CCA_P20);
- 	val &= ~(B_AX_TB_CHK_TX_NAV | B_AX_TB_CHK_CCA_S80 |
- 		 B_AX_TB_CHK_CCA_S40 | B_AX_TB_CHK_CCA_S20 |
- 		 B_AX_SIFS_CHK_CCA_S80 | B_AX_SIFS_CHK_CCA_S40 |
--		 B_AX_SIFS_CHK_CCA_S20 | B_AX_CTN_CHK_TXNAV);
-+		 B_AX_SIFS_CHK_CCA_S20 | B_AX_CTN_CHK_TXNAV |
-+		 B_AX_SIFS_CHK_EDCCA);
+@@ -29,6 +29,7 @@ const u32 rtw89_mac_mem_base_addrs[RTW89_MAC_MEM_NUM] = {
+ 	[RTW89_MAC_MEM_TXDATA_FIFO_0]	= TXDATA_FIFO_0_BASE_ADDR,
+ 	[RTW89_MAC_MEM_TXDATA_FIFO_1]	= TXDATA_FIFO_1_BASE_ADDR,
+ 	[RTW89_MAC_MEM_CPU_LOCAL]	= CPU_LOCAL_BASE_ADDR,
++	[RTW89_MAC_MEM_BSSID_CAM]	= BSSID_CAM_BASE_ADDR,
+ };
  
- 	rtw89_write32(rtwdev, reg, val);
+ static void rtw89_mac_mem_write(struct rtw89_dev *rtwdev, u32 offset,
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
+index 9eb4afe348b30..9f511c8d8a376 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.h
++++ b/drivers/net/wireless/realtek/rtw89/mac.h
+@@ -268,6 +268,7 @@ enum rtw89_mac_mem_sel {
+ 	RTW89_MAC_MEM_TXDATA_FIFO_0,
+ 	RTW89_MAC_MEM_TXDATA_FIFO_1,
+ 	RTW89_MAC_MEM_CPU_LOCAL,
++	RTW89_MAC_MEM_BSSID_CAM,
  
+ 	/* keep last */
+ 	RTW89_MAC_MEM_NUM,
 -- 
 2.25.1
 
