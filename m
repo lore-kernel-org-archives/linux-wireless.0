@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70615C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9B2C433FE
 	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 12:02:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354337AbiEFMGg (ORCPT
+        id S1391619AbiEFMGh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 May 2022 08:06:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59878 "EHLO
+        Fri, 6 May 2022 08:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237297AbiEFMGf (ORCPT
+        with ESMTP id S237515AbiEFMGf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 6 May 2022 08:06:35 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D65994B1C2
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6B0564730
         for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 05:02:51 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2jWH2029485, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2bQaA029457, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2jWH2029485
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2bQaA029457
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 6 May 2022 20:02:45 +0800
+        Fri, 6 May 2022 20:02:37 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 6 May 2022 20:02:45 +0800
+ 15.1.2308.27; Fri, 6 May 2022 20:02:37 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 6 May
- 2022 20:02:43 +0800
+ 2022 20:02:36 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <hsuan8331@realtek.com>
-Subject: [PATCH 4/5] rtw89: add debug select to dump MAC pages 0x30 to 0x33
-Date:   Fri, 6 May 2022 20:02:15 +0800
-Message-ID: <20220506120216.58567-5-pkshih@realtek.com>
+Subject: [PATCH 0/5] rtw89: correct 8852c settings
+Date:   Fri, 6 May 2022 20:02:11 +0800
+Message-ID: <20220506120216.58567-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220506120216.58567-1-pkshih@realtek.com>
-References: <20220506120216.58567-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -64,42 +62,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dump new region 0x3000 to 0x33ff to help debug.
+We are continue to verify 8852CE, and use additional debug entries to
+find some unexpected settings. First patch is to handle spur due to effect
+of DC. Patches 2 and 3 are to correct two settings related to MAC. The
+last two patches are debug entries that can help to analyze problem.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/debug.c | 5 +++++
- drivers/net/wireless/realtek/rtw89/debug.h | 1 +
- 2 files changed, 6 insertions(+)
+Hsuan Hung (1):
+  rtw89: 8852c: add settings to decrease the effect of DC
 
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index f93f3fee15058..7820bc3ab3b47 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.c
-+++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -635,6 +635,11 @@ static int rtw89_debug_priv_mac_reg_dump_get(struct seq_file *m, void *v)
- 		start = 0x000;
- 		end = 0x014;
- 		break;
-+	case RTW89_DBG_SEL_MAC_30:
-+		seq_puts(m, "Debug selected MAC page 0x30\n");
-+		start = 0x030;
-+		end = 0x033;
-+		break;
- 	case RTW89_DBG_SEL_MAC_40:
- 		seq_puts(m, "Debug selected MAC page 0x40\n");
- 		start = 0x040;
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.h b/drivers/net/wireless/realtek/rtw89/debug.h
-index 1745815f5e00f..de72155ad1fea 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.h
-+++ b/drivers/net/wireless/realtek/rtw89/debug.h
-@@ -28,6 +28,7 @@ enum rtw89_debug_mask {
- 
- enum rtw89_debug_mac_reg_sel {
- 	RTW89_DBG_SEL_MAC_00,
-+	RTW89_DBG_SEL_MAC_30,
- 	RTW89_DBG_SEL_MAC_40,
- 	RTW89_DBG_SEL_MAC_80,
- 	RTW89_DBG_SEL_MAC_C0,
+Ping-Ke Shih (4):
+  rtw89: correct setting of RX MPDU length
+  rtw89: correct CCA control
+  rtw89: add debug select to dump MAC pages 0x30 to 0x33
+  rtw89: add debug entry to dump BSSID CAM
+
+ drivers/net/wireless/realtek/rtw89/debug.c    |  5 ++
+ drivers/net/wireless/realtek/rtw89/debug.h    |  1 +
+ drivers/net/wireless/realtek/rtw89/mac.c      | 16 ++---
+ drivers/net/wireless/realtek/rtw89/mac.h      |  1 +
+ drivers/net/wireless/realtek/rtw89/reg.h      | 14 +++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 63 +++++++++++++++++--
+ 6 files changed, 88 insertions(+), 12 deletions(-)
+
 -- 
 2.25.1
 
