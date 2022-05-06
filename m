@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9B2C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 12:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F32C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 May 2022 12:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1391619AbiEFMGh (ORCPT
+        id S1391624AbiEFMGi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 May 2022 08:06:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59880 "EHLO
+        Fri, 6 May 2022 08:06:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237515AbiEFMGf (ORCPT
+        with ESMTP id S1391609AbiEFMGg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 May 2022 08:06:35 -0400
+        Fri, 6 May 2022 08:06:36 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6B0564730
-        for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 05:02:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EEBC6473D
+        for <linux-wireless@vger.kernel.org>; Fri,  6 May 2022 05:02:52 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2bQaA029457, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 246C2fDE2029471, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2bQaA029457
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 246C2fDE2029471
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 6 May 2022 20:02:37 +0800
+        Fri, 6 May 2022 20:02:41 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 6 May 2022 20:02:37 +0800
+ 15.1.2308.27; Fri, 6 May 2022 20:02:41 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 6 May
- 2022 20:02:36 +0800
+ 2022 20:02:40 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <hsuan8331@realtek.com>
-Subject: [PATCH 0/5] rtw89: correct 8852c settings
-Date:   Fri, 6 May 2022 20:02:11 +0800
-Message-ID: <20220506120216.58567-1-pkshih@realtek.com>
+Subject: [PATCH 2/5] rtw89: correct setting of RX MPDU length
+Date:   Fri, 6 May 2022 20:02:13 +0800
+Message-ID: <20220506120216.58567-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220506120216.58567-1-pkshih@realtek.com>
+References: <20220506120216.58567-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,28 +64,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We are continue to verify 8852CE, and use additional debug entries to
-find some unexpected settings. First patch is to handle spur due to effect
-of DC. Patches 2 and 3 are to correct two settings related to MAC. The
-last two patches are debug entries that can help to analyze problem.
+Set proper setting according to RX quota, and then it doesn't break buffer
+due to size of received packet exceeding buffer size.
 
-Hsuan Hung (1):
-  rtw89: 8852c: add settings to decrease the effect of DC
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/mac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Ping-Ke Shih (4):
-  rtw89: correct setting of RX MPDU length
-  rtw89: correct CCA control
-  rtw89: add debug select to dump MAC pages 0x30 to 0x33
-  rtw89: add debug entry to dump BSSID CAM
-
- drivers/net/wireless/realtek/rtw89/debug.c    |  5 ++
- drivers/net/wireless/realtek/rtw89/debug.h    |  1 +
- drivers/net/wireless/realtek/rtw89/mac.c      | 16 ++---
- drivers/net/wireless/realtek/rtw89/mac.h      |  1 +
- drivers/net/wireless/realtek/rtw89/reg.h      | 14 +++++
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 63 +++++++++++++++++--
- 6 files changed, 88 insertions(+), 12 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index a06ca65b339ff..e1a1699a1a9cf 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -2005,6 +2005,7 @@ static int rmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ #define TRXCFG_RMAC_DATA_TO	15
+ #define RX_MAX_LEN_UNIT 512
+ #define PLD_RLS_MAX_PG 127
++#define RX_SPEC_MAX_LEN (11454 + RX_MAX_LEN_UNIT)
+ 	int ret;
+ 	u32 reg, rx_max_len, rx_qta;
+ 	u16 val;
+@@ -2035,11 +2036,10 @@ static int rmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ 		rx_qta = rtwdev->mac.dle_info.c0_rx_qta;
+ 	else
+ 		rx_qta = rtwdev->mac.dle_info.c1_rx_qta;
+-	rx_qta = rx_qta > PLD_RLS_MAX_PG ? PLD_RLS_MAX_PG : rx_qta;
+-	rx_max_len = (rx_qta - 1) * rtwdev->mac.dle_info.ple_pg_size /
+-		     RX_MAX_LEN_UNIT;
+-	rx_max_len = rx_max_len > B_AX_RX_MPDU_MAX_LEN_SIZE ?
+-		     B_AX_RX_MPDU_MAX_LEN_SIZE : rx_max_len;
++	rx_qta = min_t(u32, rx_qta, PLD_RLS_MAX_PG);
++	rx_max_len = rx_qta * rtwdev->mac.dle_info.ple_pg_size;
++	rx_max_len = min_t(u32, rx_max_len, RX_SPEC_MAX_LEN);
++	rx_max_len /= RX_MAX_LEN_UNIT;
+ 	rtw89_write32_mask(rtwdev, reg, B_AX_RX_MPDU_MAX_LEN_MASK, rx_max_len);
+ 
+ 	if (rtwdev->chip->chip_id == RTL8852A &&
 -- 
 2.25.1
 
