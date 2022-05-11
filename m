@@ -2,83 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F17FC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 May 2022 19:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACCFC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 May 2022 01:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231585AbiEJT2Q (ORCPT
+        id S239228AbiEKBqN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 May 2022 15:28:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37510 "EHLO
+        Tue, 10 May 2022 21:46:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243829AbiEJT1x (ORCPT
+        with ESMTP id S240757AbiEKBqK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 May 2022 15:27:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2875D39813
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2022 12:27:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B0E20B81F70
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2022 19:27:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CCE2C385C2;
-        Tue, 10 May 2022 19:27:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652210848;
-        bh=5joIHAuRNLNHToSfeuBBqX17xHMOEVop/AOqjxOtWEw=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=GEcQGy6dWjYB7Fa0gQmDktVJVtN2AcCcJJ92HHDg+73q+xNIHyymQaJlGuYyjHkH+
-         O5VBCXjdSWHSAlISobpUThlUsOurAjakCSUInapAEeXczXCXYUSWPb7Hm797FJ6GwV
-         ilymEiUKGjP67yA06PzC10qc+/TM7dhu3NS9fmqu2CTEXzcJlCCdHEa80BvuN7Joio
-         IyVBvteZnb2VIaPHQKlSZPR53ljSbuk9Cri2MlqkbXspNuD28z1yVEqFquCZnkoeWV
-         zUZ8QNIhC587W5dyOIFWWtwM5S2oSlOAAnEJZJoLQ+67s7cHKfvDyTDhKW/vPFccfr
-         INGTqHLNv9F8g==
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 45CF034E351; Tue, 10 May 2022 21:27:25 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@kernel.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Felix Fietkau <nbd@nbd.name>,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Simplify queue selection
-In-Reply-To: <b900d560d5dabaea1a9faf9d8ff8a019ed813e25.camel@sipsolutions.net>
-References: <20220510155828.9406-1-alexander@wetzel-home.de>
- <54589d98-882c-cee4-dd6d-140d50f400d0@nbd.name>
- <b900d560d5dabaea1a9faf9d8ff8a019ed813e25.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 10 May 2022 21:27:25 +0200
-Message-ID: <87tu9xw5lu.fsf@toke.dk>
+        Tue, 10 May 2022 21:46:10 -0400
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF67B3586E;
+        Tue, 10 May 2022 18:46:08 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id g23so729030edy.13;
+        Tue, 10 May 2022 18:46:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=lyB03zfkduhEQiKRtkxNNhqSXJSw0Ic5n3CoIbYjaT8=;
+        b=PQfJWnTl4JTkqYV9vXc5RAPcrHTk3U40whCmQ7E/JC7ivDUBuz4k48ILtQKDiSWBRG
+         JptbT4Td5Rn1lOXj5gyNVWMVXgdEVd3Ikn5LUZwwkSdotAC5tFwvqrboc+E0fahrbkVy
+         fDsek+rD/1D3nA1uh/mw06whwWIKbVdw7j5F5UioiQBnXsflDDlC/8hrYpqu3sUNS0Tv
+         iYK5aXLgujdlQVA8Pja79jS8+mLsuWN8dPobMkyYnJLMGH3Ar3tvUk+eR6AJFQYhsoXv
+         UWcsSB7JLJ0CVPd0PV98W6sq+N1z+l5+iRmiPBEi8PjXuRT8iYWVkX7Z5yC+rEcHZg2v
+         w04g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=lyB03zfkduhEQiKRtkxNNhqSXJSw0Ic5n3CoIbYjaT8=;
+        b=FV4SIkobs4KTgj4J6oAiymy1Rxt5jDNfk/5+vUgpFvwSeV8HfBJ957kVgts4ITnobP
+         KshvHfPYMN+BQzVlRmhQLIJz5bLvvq5tlOlXo57g+tnM6TOEm7MqIuZ4Cqj/DeESTva7
+         J0J9SKC3CNZmH3x/EpgASdgI9zjM2yRVQ33zhGl9tXCDemhb1Jf190Mw1gagxbrUj/T9
+         3raok+RQ32fcZ8KZfzvrzdWOTRUH+JlnALUFFsnHaFRpOSkLjYKS2kpTfUUg5aquAZdG
+         TLQBmX4FfdV3V9UM5df8bhM+jV2vGr7JWCNcsH5kZeyTZ64O+iiJFIUtlq8Okl+4r/N4
+         KiRg==
+X-Gm-Message-State: AOAM533Q0+F/V81u8nX0aHh1K1cohbxuN0+dX2CEkrSJbExZn1Wp3u7x
+        8aYK0VPR9zRu3/O04p+Y9+FZ3QAnbrODSAtLwSw=
+X-Google-Smtp-Source: ABdhPJyqTVojPz5rdn5gqtln5rHLx1GDmbyqtSJ8oJaxRgefOPVmNUn4LBKW8qWffhB2mSlIbhsHF6lAOHGx1jixXLw=
+X-Received: by 2002:aa7:cd58:0:b0:427:b21f:5f79 with SMTP id
+ v24-20020aa7cd58000000b00427b21f5f79mr25894850edw.172.1652233566587; Tue, 10
+ May 2022 18:46:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20220510092503.1546698-1-dzm91@hust.edu.cn> <87ee118kmk.fsf@kernel.org>
+In-Reply-To: <87ee118kmk.fsf@kernel.org>
+From:   Dongliang Mu <mudongliangabcd@gmail.com>
+Date:   Wed, 11 May 2022 09:45:40 +0800
+Message-ID: <CAD-N9QULVjecGcsmFGREGV=joyA2SoZFzLB9A-2tRPsVM0_Ohg@mail.gmail.com>
+Subject: Re: [PATCH] net: rtlwifi: Use pr_warn_once instead of WARN_ONCE
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Tue, 2022-05-10 at 18:10 +0200, Felix Fietkau wrote:
->> On 10.05.22 17:58, Alexander Wetzel wrote:
->> > Let iTXQ drivers also register four queues in netdev and move queue
->> > assignment to ndo_select_queue(), like it's done for other drivers.
->> > 
->> > This gets rid of a special case in mac80211 and also increases the
->> > chance that when we call skb_get_hash() the skb is still hot in the CPU
->> > buffers.
->> > 
->> > Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
->> 
->> This has the disadvantage of requiring a redundant sta lookup in the tx 
->> path for iTXQ drivers. I think the CPU cost of that one is probably 
->> higher than any potential gain from calling skb_get_hash a bit earlier.
->> 
+On Tue, May 10, 2022 at 11:37 PM Kalle Valo <kvalo@kernel.org> wrote:
 >
-> However, that's independent - we can still calculate the hash there, and
-> then bail out, i.e. put it right before the "if (wake_tx_queue) return"
-> part, no?
+> Dongliang Mu <dzm91@hust.edu.cn> writes:
 >
-> OTOH we don't even need the hash in the other cases, do we?
+> > From: Dongliang Mu <mudongliangabcd@gmail.com>
+> >
+> > This memory allocation failure can be triggered by fault injection or
+> > high pressure testing, resulting a WARN.
+> >
+> > Fix this by replacing WARN with pr_warn_once.
+> >
+> > Signed-off-by: Dongliang Mu <mudongliangabcd@gmail.com>
+> > ---
+> >  drivers/net/wireless/realtek/rtlwifi/usb.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> > index 86a236873254..acb0c15e9748 100644
+> > --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
+> > +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> > @@ -1014,7 +1014,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+> >       hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
+> >                               sizeof(struct rtl_usb_priv), &rtl_ops);
+> >       if (!hw) {
+> > -             WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
+> > +             pr_warn_once("rtl_usb: ieee80211 alloc failed\n");
+> >               return -ENOMEM;
+> >       }
+> >       rtlpriv = hw->priv;
+>
+> I think we should warn every time ieee80211_alloc_hw() fails, it's
+> called only once per device initialisation, so pr_warn() is more
+> approriate.
 
-Nope, that was my point on the "moving it to shared netdev core"
-question :)
+Yes, this is better. Already sent a v2 patch.
 
--Toke
+>
+> --
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
