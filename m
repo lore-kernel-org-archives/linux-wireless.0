@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F929C433F5
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 May 2022 19:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2632EC433FE
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 May 2022 19:54:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358204AbiELTyU (ORCPT
+        id S1358207AbiELTyZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 May 2022 15:54:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50612 "EHLO
+        Thu, 12 May 2022 15:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356894AbiELTyT (ORCPT
+        with ESMTP id S1358208AbiELTyX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 May 2022 15:54:19 -0400
+        Thu, 12 May 2022 15:54:23 -0400
 Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-qb1can01on2070.outbound.protection.outlook.com [40.107.66.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F052701B4
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2022 12:54:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBEE72701B4
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2022 12:54:21 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YYZQ1yexaoRc7CGJCzMmQWGyZlA1tQ1m+iS/VgvFYYRK81hcCTBxuqX8KdEbGvkVUPt65Pc3VatLDnfSO9KA8yaeXmPN7dZZWzwD1ZG8D8HYZCP8D5+fCIPwVuhMHEkxByjNj4qEiJvcsxL7Aqf/iy2uY4QElyTDc0i4/5fuiWEJNmGH0+bGLX+vNkPkkvIAWRrNulXj8ipJb/aCJOG+YQ5+aonWL5q3PFM7+IRCSf49+ygzbBeJ2LgcyYr/nGtePQVzNP1SF/OvmO3t4VA/YL87SPRWdyeR/zZJJbT0bSsvBUlvfpWCsug2KKmMt8Mgk+mOHm/3MZRV6eHqKanZ9g==
+ b=H75t9nypmHcxT7h8c0cb1ukxMadrJf95ITCPi0bNnXWbMq3TJ/SKUX/9IRBPH6341s2E+x4AHSmU6y7S6TrrzVow3x5G2YX8sPminS70Il/PsNzKPar40HX1swi2zhM/aSKLPV6SpP/ZLMg2tuxwWMngxPeL2L/vqc0D2BBGagFIk3O5i5ci5mN6ReyehA2UTL7Fv5y9SWklaFy/U5VpqX1o6pRMPYXzgnFWlFk4WDxkyXqShR6aulK9iycyyL6MwuEh/NPNRtuqK/DcmZbmU3LJt0LabRQFcJ3qji1T86QEYJsGtmtrDKK7XKmwGyOenIzDbLVWgAgEAAkq0yOQFA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0dpZETlNHUy8Q49OGk9DY4M7CBvgNRYRG/Sv6kce2/E=;
- b=WH2RvJzeYwhFrvjtaXNo6Pa291cV9otOza8kvcEktBTaC224xY4/Gdn9p5F+ua+HSNEFpBKhe9Q/4+qxQhl/hETpx7HlKrTdQ5EezqTACdZDADhnHSTjzVwnmQE1RUcdqM9vUrv5ZlSXOSMJVrhj83PGtKAMSsrvRINL6p8OjQO86dybqIIh6fyZ4FL1o5AJnOGVFBQlz5FsJLSIAB0cGnYjBdKz0HWHscI4c/8YlPkrw50L46xWQAyxtHFkgn+9FTnzzgbV/OoIuhO5FAiOZuCjSia5nHi6PECrQ/MF1uHEwhvznHlAG61C5PHM34011YYS3i7UOu7mZ5Vkvty1ng==
+ bh=7RJ6gQPtRHsXMex/bkqsdemvP90bkjJRcc4whXjvl7s=;
+ b=m1L9V75j5ke1NFwlOZUEXKFmMWLH+gQiL/0vqPPT5dmZK59w8Ght2NziHihsyRkFtUvYDPhq4Kb+UO+Xn7VpwgT93KQ2yYwnArpif1W4wVIHh6+/Y7D/YV5YxtimzGVGZ8s7k6Ao08IsbogVkmGN8LJxZI+ZvEqliCdfaBhOEUW7ogaigKCNvkQNmSno8sW0TjZO1ze+6sXoEI5QLyxcB9EZYreNdqzbc5J4m1nHrdL0UjAHfGb4mzhuZdVAv1tjmaLCIvxXpkRda4DNMxBA/BdBhxvWN/8d6I6VYsHI5CNcr4X16ofLCV98mJXcgAHup1ykuaT8vdzZs4qYZIgBrw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=ucalgary.ca; dmarc=pass action=none header.from=ucalgary.ca;
  dkim=pass header.d=ucalgary.ca; arc=none
@@ -32,18 +32,18 @@ Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c00:4a::23)
  by YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c01:58::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Thu, 12 May
- 2022 19:54:16 +0000
+ 2022 19:54:21 +0000
 Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::a17b:bb51:f663:e98f]) by YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::a17b:bb51:f663:e98f%4]) with mapi id 15.20.5227.023; Thu, 12 May 2022
- 19:54:16 +0000
+ 19:54:20 +0000
 From:   Wenli Looi <wlooi@ucalgary.ca>
 To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
         Wenli Looi <wlooi@ucalgary.ca>
-Subject: [PATCH v2 1/9] ath9k: add QCN550x device IDs
-Date:   Thu, 12 May 2022 12:53:11 -0700
-Message-Id: <20220512195319.14635-2-wlooi@ucalgary.ca>
+Subject: [PATCH v2 4/9] ath9k: implement QCN550x rx
+Date:   Thu, 12 May 2022 12:53:14 -0700
+Message-Id: <20220512195319.14635-5-wlooi@ucalgary.ca>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220512195319.14635-1-wlooi@ucalgary.ca>
 References: <20220512195319.14635-1-wlooi@ucalgary.ca>
@@ -54,159 +54,212 @@ X-ClientProxiedBy: BYAPR03CA0026.namprd03.prod.outlook.com
  (2603:10b6:c00:4a::23)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b90f8f8d-150a-40e7-dfd0-08da345131e3
+X-MS-Office365-Filtering-Correlation-Id: a39def9a-5a8f-44b5-62b6-08da345134bd
 X-MS-TrafficTypeDiagnostic: YQBPR0101MB9515:EE_
-X-Microsoft-Antispam-PRVS: <YQBPR0101MB9515AED6D3217F9A5AD38AFBB2CB9@YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <YQBPR0101MB951573298BDFA00C55A831D8B2CB9@YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: iBL91E08EWPGIMsqXtkXe7nm11Sce8K+GMnx+Pg4Jl+Rlhx1Tskmv5PZSFXMMY+o56c9//9Uc3OF67lQPZgeFghSpZ/olk+uvTTdtD6zW6wbuxIcmofN3xoY9MInG1V/I38I/rOztWQ5CX8zwNsYmgW790hQTfrceWClKX1mI7p/wVas6Vkg2yq4bOpGnjSHp4NsQmKJod1TS5FWPIAyTBDH3Mp4kegACjrCkVm3DnE3oFlcVOcf6YUzaJfk6sXIRESVTey0fOaZaINlreWA8yvP9hXLra/BmBh7fFeINp+TzcbQtn3S4HWUyaojOFauMSmGmeE49Ygc2SDv2CpaV3aTFXju741rzxcP8MbWd6IOF9wCYo9T2NVbW1IKZe//vlQwx8H/MzBbg8iCXKY6PNOtxSpYqLvlNYx/E/jgI4kedN9/ZPpE0yBJVeabOQiWwiorpP4CUTuTn8G+Od09ot1fRS683wv/PG8f4Ss/o7oEDeuw9+us9annqjtV6P8cwIL0xUPBnPk+TcPIFOzOKi0K+Sc8EhQ8fW81xvTAj6AcO2vvURMStiuk1N2ZliDKOtDEg08PtB7CrMUh8GQuBgpftBSH4ylv05R8Fe1DErxnsLAOyXUHeupjfFlQQ3APGeVHOCBcZyJkv4k0Osq8Ub7R7u3D8y1CG8O0jbI6ABSLBbX8oyG9Eu1NLodDxh/0+GGTfF1zBfXIi7AWyvB4EA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(66946007)(6506007)(5660300002)(1076003)(107886003)(83380400001)(8676002)(4326008)(6666004)(26005)(186003)(66476007)(52116002)(2906002)(6512007)(86362001)(2616005)(6486002)(8936002)(508600001)(6916009)(54906003)(36756003)(786003)(316002)(38350700002)(38100700002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wzBOXu/nVzf/DRhooNoiymWRairRS7rJSDRJDm3qBdpXUyWCI6clJFbxp+dvyMW6sS8OIJqufKd78MCKDhLAYX+P1XmK81gmkivOGyJhUUIqe4UZK8iOqB8dcvt83rZ15JpiySqGPzOkXAfrXHSCBAR/nKmMylslMqz3hP9mi25DuXqkqqX/Qor83FR+eU/WWkB54hv/S+Fc62VEM7Z63G5c94hjyuAFT6ccxFq6PW0oxsSMHMuBsRQPNghpLlk1Flus5/hdvvu/FBwi6QUOYtSqakHiUVi2cslWKUMDQazzoOj504qZuQ/RvvUSmhBLnqmnjsVPjel9xPbakXtS5C6DtQbH3laDRmomTYeVCfwq0W3SMC9JkcFC/PGvO88OoGLTTVgDflcelvZF5ajtv+gbI9BDSpHsBDIs5q6MpYeT52Ucpjfx49aPbbD86xDJuBTcwNUJycJcd+LU3fYQ4F5aU7okU+J8Jx7l2DC77NsMkg2fZendXz4kLJEKclVwXp1P0BTKfP4Hm5+nj5HEwFNSlta/u037AGg/7RxhTsXNm38mqr/o5UXeef4ckLsSGh0YVeWz0NdpUqMqHfjBFZD6b/q8NM/1IblMEEqD5gD+uK4baurjBed0IfJZr61kjKR61Run3UUgPAnuafUR2BmOTgIAKscmkOWmqAVEuHyLjhKjwSYRYRWd5ZeadHXqCnh0w8Tc08BSht/n5uB9v0GP/FXGvjdEBhJBQfIcTOc=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(66946007)(6506007)(5660300002)(1076003)(107886003)(83380400001)(8676002)(4326008)(6666004)(26005)(186003)(66476007)(52116002)(2906002)(6512007)(86362001)(2616005)(6486002)(8936002)(508600001)(6916009)(54906003)(36756003)(786003)(316002)(38350700002)(38100700002)(83323001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wdQB5nQvb0NDDyRTYBKfv/Nu7dOEO/HucBopIxXJ/IAVEiK7JOTML3AQBOdc?=
- =?us-ascii?Q?qTEhsgBXtZ690/ixA1UM7bYHvHYlUnXK3T+j/oci9SbxyE162j4ogYlD/i+V?=
- =?us-ascii?Q?2STsMsOaJMXtXA11Avhhe4TqeYuzn01Dt1jeC30Ab0G9Fi/8nbW69Xn96EYJ?=
- =?us-ascii?Q?o+Xzsp5nPvxzs7MuX1H6RU/hIaJc5354LrHtoZ2pVuCi9Gdo4fmWqTmVZRvS?=
- =?us-ascii?Q?q+6Bd2/YKZ3SDEcpSzP3po8vTVyO75NE47tf1/GqPIpTFIR2U0Oml1wEoidS?=
- =?us-ascii?Q?CS5rsB0m4iUZnFn7WEWkWP+RS4aLbfxRsgvyB2IKLpg6htGmXmdFqFFYXQl+?=
- =?us-ascii?Q?wrwEKAMLvKIYkgEGjPYKTHShQv+4SDd2PR6E+bphFkwyU6R1xcujF5dTY/wZ?=
- =?us-ascii?Q?qZdTyySv4+itAvoNZzRwGETwWqSMNM6FKxhH7ZlGZTM7lcD9mpnSuvNMwFQK?=
- =?us-ascii?Q?N7xKNZOhOKQIuWb1jglQnXxTRsRgQDbBftX8XMLWuCQEJRPvcKSJi2PE3VLu?=
- =?us-ascii?Q?7mZF/NfpYaICFCaW10lG46ojb1kIA1siiotBe29MiuXY0t27aablU4HbsOWr?=
- =?us-ascii?Q?jcB3dNR2+6keI6w9+yVD7Ll+WosqMnZRrs94wwNKuXXQMb127B8tBxXB52ny?=
- =?us-ascii?Q?5dieNK2nFpV658iMGGSfAjidtQY3hPkWZh/YBIcsor1aolOpxpoaWNxruR7t?=
- =?us-ascii?Q?X9xPeAsDw8rYqFaOQVOtPm9m4DQ3Zfg5xQVGhCouvsnfityqxAu6GNeRV3B4?=
- =?us-ascii?Q?qr1DFkQ/2se6KrxUzucPnAwQx2Efzd6jfWw0T37xPbdBfz++igwwyeOzmiUr?=
- =?us-ascii?Q?oIk7UTu0y+s30twWqCHgba9QxjDIXcJlgdvG+a9CvJSmt3+U8ImSr72pjH9J?=
- =?us-ascii?Q?u+DDoY4rb/QYE8aAwKnZMS6E5jNY24qBWD5El2TQrMCrZLbKjVD+mQxE/Sab?=
- =?us-ascii?Q?9d2SSFBKKzporptEwBYMrHIExweoQWUQZ0NEvHDpUfJ+1YPlp4pzsnCMKHrU?=
- =?us-ascii?Q?HdGLDCM5VTXNPbVTKCYtrlgMx8Xc3DXXplmf3yEqnH8bXDy3zaQSEAXjlJ8c?=
- =?us-ascii?Q?NZEAWIwfwn6R7620eeYJX3LjlCNlMvM6g3bdgVqusLAy7xJo4YgcspI+ZMKF?=
- =?us-ascii?Q?BiUh+qOXGapgsWqR5/g1598Lu9f6LSUw4aKGaOklMAtsT63a+y//KwJlIh9X?=
- =?us-ascii?Q?BRIdoducLm+UmH2pi5AyKfHjPq9YuZOXmYDue3raptUv/VSWOMpeMIoU6Zej?=
- =?us-ascii?Q?KRqfifJrgC2LwGQZPI49IE8swzOnOfCPlOQY+S6wmrO8ATKYDP3IY/GZs/ZH?=
- =?us-ascii?Q?L/VLn3Bowyl47uBXZYenDKS0KUVN1A0Yqx9klv5r3Vs1PFSpRKOOcygHi6rJ?=
- =?us-ascii?Q?wiJ3IpeL8q7nlKe49/wzMbrPA5+4O4xQl6qacRQU4tS68DJouH/MZFKUhYf3?=
- =?us-ascii?Q?WX3DdAhMfmh/qyJb9+dSI3dL+PthekjqGvCIfkMzLFAiYiCRRzN8Kjk1dh+Y?=
- =?us-ascii?Q?AHqmTLLVOImMwlFiMiy+hthwZLAGgy1eovk/KdJfLKNTebV8V7nbJ5uVmM0i?=
- =?us-ascii?Q?xJfSSb2ifNVG5zgC8EZXB7RZu8nWNnwwOKNKEXicCa/5+cjtAKhvQ1SeajfZ?=
- =?us-ascii?Q?q+z1RyjjnhYbKUEtVwGT87ALC4uuxPXh6cy7zM2OeBxR1Shf/VyXZLL1yFa4?=
- =?us-ascii?Q?eV6SnnxZBMgIMRKaX/rofl/5BFi/EOHrsdNbZJ/ka+MiC31Pj9yV7o+gZNG+?=
- =?us-ascii?Q?sQ/Iq4IU1w=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?A3xzryQA+hma6u8Ek1/7Rm6S3sqq7iVwiGmgShJ/13PcQWl9fsK9SJB1EiOk?=
+ =?us-ascii?Q?Gfo0t/sAZ9kPROGoCYZvWPyJA9TT7VPniDXWlP++QeDywgKojuVJsJJz+uAg?=
+ =?us-ascii?Q?daR+h75W4+YDiBvRlY6B9kOcrKytzDS5+WG0ys3NlAN+UOtDqExESAWWIbJ3?=
+ =?us-ascii?Q?kl7OqHWV0AhbzWU1HYcsb/aECBIGGiQ7rrI/VUvN8TQgihag2uF5l4oLSpdz?=
+ =?us-ascii?Q?Okb62+aiVkYWuPzloIk47E1WgBmexE0ThuOsszGGhw1dg4QcuHOgbsGFOCmE?=
+ =?us-ascii?Q?x8EurufWp6Yc7IwJJETOHHDfcqmw0c+qPHfpf14TCk30f52D3cli+O4bkrSL?=
+ =?us-ascii?Q?3Uvggm/kUC0BRDgrVByDr+sMPdUcNjEA5pD1OdlS5WqEcd00YYaBD7fhryrX?=
+ =?us-ascii?Q?RVJM4Rf8Wyxcd8To95CDz1fIO8imyXYXRavTwPz2L95jl9HS7DSpoLVHDtrk?=
+ =?us-ascii?Q?6zGj4chmG3WnKIKCTmQTakMwCaYbnfydjlkEG5oq7s7beG7h9kcvYdfiQv07?=
+ =?us-ascii?Q?gszZQBWe0gnWvfuz4AvjSh63C1XF6f7zr89IMToqOSOh3IWhb9R9ik/PuTyp?=
+ =?us-ascii?Q?Vym2jl1n7AGTPhoN0anff8kEuabdT2ODM0LuDfhtVJsMfJ8QVGDHwmdJgjA/?=
+ =?us-ascii?Q?JHCwAEo2w7GS4AgURwKwKNc3l+X8LeitRFP8r0OJsGPKfib6OSthG3Jq4EC+?=
+ =?us-ascii?Q?XJxTU7qaDJA1cHY4IpeNI8O7zK7MSZ0fyVhAwRVbBtu4NzDifuvgSGfdw+7d?=
+ =?us-ascii?Q?ij0T67C13BxAn21KewSaBNRObtSLH8ervIE12kbFUvRGAsVmIhH8xDy0gbUI?=
+ =?us-ascii?Q?tyfo2CLAIOXWYW1QOmHxSWVSP8aiiekqHeH9CwI3fi30btgK8i7yQRYDKNqE?=
+ =?us-ascii?Q?f8TTH6m0ToToSO5mELKft3tuMlH/vLLWuApE+PVcRAOEt1VXwcOtzulZJPJa?=
+ =?us-ascii?Q?tHuPeLI521kzXznS/QpofVBCNUFHQApEMjZEKJIEvwUb7Qvnr+wbHAaWFxZf?=
+ =?us-ascii?Q?MPlFEVdkuocklpGUvlPHpkS+FKcBoIqPveLK9C7DdP3d2HgHmdPp0BlQAd55?=
+ =?us-ascii?Q?Rd/5R52AmJoIuJ14m3hUfYF2qUyQSd89XFrJEP/isA3lKc9ptfjIjyWNHm23?=
+ =?us-ascii?Q?6dw/M3yHRJxw+TtKgzL5V/KyxdsWfMRUtJJhwwJTSV8mHNjaB9h7WBtu0J60?=
+ =?us-ascii?Q?lPXOMMA4viVcBuV/SjRtdk4PuT45dyoZYPq+v8uEblLUBU35f2T+XA0VpT6a?=
+ =?us-ascii?Q?ejVgae+REIGq+f4N2peGWJiQ7Nc3kFXrzM3V8I1QmnxC7WA5r29T+KdhG/wE?=
+ =?us-ascii?Q?Sl9RyYR3SPLG5P7RdSmhv8N01GAoMnmCmo0+BOB5H/r5FGw81pYBN+VrvI0t?=
+ =?us-ascii?Q?v50L4weEKPCJLF8CXH8CDMAtfFgVmRnTEnsZz3fhMaw5BkaF2R8DmBY0IuFS?=
+ =?us-ascii?Q?oYNmle9v+i9FcXpReUWYHL9SgNtCQM3ibtmVKYfbczhTpoZYYZyyG0n+1tnI?=
+ =?us-ascii?Q?mR9FlLJAQdmEyWL9boQcFS5zmCwV2agVg1a9tt6Js450JM1VsX5POlimGJho?=
+ =?us-ascii?Q?y3z7ysQN2Fwj/+YWldxdUhGQ3Zy58387hTWrzX3bkKCnSNbaBPikIxp0x57t?=
+ =?us-ascii?Q?J895hRfjvyG6a/AM8FX7sJTk43S+SxMj//SrIYKyg3k4a5P1/e0g1eq1Q3/Q?=
+ =?us-ascii?Q?rWbn1jTpajdmm6GxpwtKL2w5+ZrwJsPrbm4BxIyCPgiDjMbrq+qyIdlgxLuR?=
+ =?us-ascii?Q?jdvKg93YuA=3D=3D?=
 X-OriginatorOrg: ucalgary.ca
-X-MS-Exchange-CrossTenant-Network-Message-Id: b90f8f8d-150a-40e7-dfd0-08da345131e3
+X-MS-Exchange-CrossTenant-Network-Message-Id: a39def9a-5a8f-44b5-62b6-08da345134bd
 X-MS-Exchange-CrossTenant-AuthSource: YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2022 19:54:16.1453
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2022 19:54:20.9418
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: c609a0ec-a5e3-4631-9686-192280bd9151
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: K7vPD+xRYRjOaNzQZ8hVnw8EgwSc1L7oLQ3aitFR2QSGBem1O7NYlBS6tR4gwa/etmxoGsFUk+aEG9XmUFuZLg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: ouL55sC/EVfOl0KE1870b2rvmGQSlBcp7MQqFsEh/q121nhwu2vFihpe6Y/JY9yRl7nuldwL7uqmWDaS7mTM9Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: YQBPR0101MB9515
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adds the device ID constants and augments the initialization code to
-recognize the device.
+ar9003_rxs in this device has 2 additional status values.
 
 Signed-off-by: Wenli Looi <wlooi@ucalgary.ca>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c | 4 ++++
- drivers/net/wireless/ath/ath9k/hw.c  | 6 ++++++
- drivers/net/wireless/ath/ath9k/hw.h  | 1 +
- drivers/net/wireless/ath/ath9k/reg.h | 5 ++++-
- 4 files changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c | 37 +++++++++++----------
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |  6 ++++
+ drivers/net/wireless/ath/ath9k/hw.c         |  4 ++-
+ drivers/net/wireless/ath/ath9k/reg.h        |  1 +
+ 4 files changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9cd12b20b..1835b4469 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -47,6 +47,10 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
- 		.name = "qca956x_wmac",
- 		.driver_data = AR9300_DEVID_QCA956X,
- 	},
-+	{
-+		.name = "qcn550x_wmac",
-+		.driver_data = AR9300_DEVID_QCN550X,
-+	},
- 	{},
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index ff8ab58e6..059e4bfce 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -483,8 +483,11 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ {
+ 	struct ar9003_rxs *rxsp = buf_addr;
+ 	unsigned int phyerr;
++	/* status12 and status13 are only present in ar9300_rxs V2. */
++	u32 last_status =
++		AR_SREV_AR9003_RXS_V2(ah) ? rxsp->status13 : rxsp->status11;
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 172081ffe..047512ce1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -282,6 +282,9 @@ static bool ath9k_hw_read_revisions(struct ath_hw *ah)
- 	case AR9300_DEVID_QCA956X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
- 		return true;
-+	case AR9300_DEVID_QCN550X:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_5502;
-+		return true;
+-	if ((rxsp->status11 & AR_RxDone) == 0)
++	if ((last_status & AR_RxDone) == 0)
+ 		return -EINPROGRESS;
+ 
+ 	if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
+@@ -510,17 +513,17 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->rs_rssi_ext[1] = MS(rxsp->status5, AR_RxRSSIAnt11);
+ 	rxs->rs_rssi_ext[2] = MS(rxsp->status5, AR_RxRSSIAnt12);
+ 
+-	if (rxsp->status11 & AR_RxKeyIdxValid)
+-		rxs->rs_keyix = MS(rxsp->status11, AR_KeyIdx);
++	if (last_status & AR_RxKeyIdxValid)
++		rxs->rs_keyix = MS(last_status, AR_KeyIdx);
+ 	else
+ 		rxs->rs_keyix = ATH9K_RXKEYIX_INVALID;
+ 
+ 	rxs->rs_rate = MS(rxsp->status1, AR_RxRate);
+ 	rxs->rs_more = (rxsp->status2 & AR_RxMore) ? 1 : 0;
+ 
+-	rxs->rs_firstaggr = (rxsp->status11 & AR_RxFirstAggr) ? 1 : 0;
+-	rxs->rs_isaggr = (rxsp->status11 & AR_RxAggr) ? 1 : 0;
+-	rxs->rs_moreaggr = (rxsp->status11 & AR_RxMoreAggr) ? 1 : 0;
++	rxs->rs_firstaggr = (last_status & AR_RxFirstAggr) ? 1 : 0;
++	rxs->rs_isaggr = (last_status & AR_RxAggr) ? 1 : 0;
++	rxs->rs_moreaggr = (last_status & AR_RxMoreAggr) ? 1 : 0;
+ 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
+ 	rxs->enc_flags |= (rxsp->status4 & AR_GI) ? RX_ENC_FLAG_SHORT_GI : 0;
+ 	rxs->enc_flags |=
+@@ -533,16 +536,16 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->evm3 = rxsp->status9;
+ 	rxs->evm4 = (rxsp->status10 & 0xffff);
+ 
+-	if (rxsp->status11 & AR_PreDelimCRCErr)
++	if (last_status & AR_PreDelimCRCErr)
+ 		rxs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+ 
+-	if (rxsp->status11 & AR_PostDelimCRCErr)
++	if (last_status & AR_PostDelimCRCErr)
+ 		rxs->rs_flags |= ATH9K_RX_DELIM_CRC_POST;
+ 
+-	if (rxsp->status11 & AR_DecryptBusyErr)
++	if (last_status & AR_DecryptBusyErr)
+ 		rxs->rs_flags |= ATH9K_RX_DECRYPT_BUSY;
+ 
+-	if ((rxsp->status11 & AR_RxFrameOK) == 0) {
++	if ((last_status & AR_RxFrameOK) == 0) {
+ 		/*
+ 		 * AR_CRCErr will bet set to true if we're on the last
+ 		 * subframe and the AR_PostDelimCRCErr is caught.
+@@ -551,14 +554,14 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 		 * possibly be reviewing the last subframe. AR_CRCErr
+ 		 * is the CRC of the actual data.
+ 		 */
+-		if (rxsp->status11 & AR_CRCErr)
++		if (last_status & AR_CRCErr)
+ 			rxs->rs_status |= ATH9K_RXERR_CRC;
+-		else if (rxsp->status11 & AR_DecryptCRCErr)
++		else if (last_status & AR_DecryptCRCErr)
+ 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
+-		else if (rxsp->status11 & AR_MichaelErr)
++		else if (last_status & AR_MichaelErr)
+ 			rxs->rs_status |= ATH9K_RXERR_MIC;
+-		if (rxsp->status11 & AR_PHYErr) {
+-			phyerr = MS(rxsp->status11, AR_PHYErrCode);
++		if (last_status & AR_PHYErr) {
++			phyerr = MS(last_status, AR_PHYErrCode);
+ 			/*
+ 			 * If we reach a point here where AR_PostDelimCRCErr is
+ 			 * true it implies we're *not* on the last subframe. In
+@@ -573,7 +576,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 			 * delimiter for an A-MPDU subframe (0x4E = 'N' ASCII).
+ 			 */
+ 			if ((phyerr == ATH9K_PHYERR_OFDM_RESTART) &&
+-			    (rxsp->status11 & AR_PostDelimCRCErr)) {
++			    (last_status & AR_PostDelimCRCErr)) {
+ 				rxs->rs_phyerr = 0;
+ 			} else {
+ 				rxs->rs_status |= ATH9K_RXERR_PHY;
+@@ -582,7 +585,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 		}
  	}
  
- 	srev = REG_READ(ah, AR_SREV);
-@@ -592,6 +595,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9565:
- 	case AR_SREV_VERSION_9531:
- 	case AR_SREV_VERSION_9561:
-+	case AR_SREV_VERSION_5502:
- 		break;
- 	default:
- 		ath_err(common,
-@@ -688,6 +692,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9300_DEVID_AR9565:
- 	case AR9300_DEVID_AR953X:
- 	case AR9300_DEVID_QCA956X:
-+	case AR9300_DEVID_QCN550X:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-@@ -3315,6 +3320,7 @@ static struct {
- 	{ AR_SREV_VERSION_9565,         "9565" },
- 	{ AR_SREV_VERSION_9531,         "9531" },
- 	{ AR_SREV_VERSION_9561,         "9561" },
-+	{ AR_SREV_VERSION_5502,         "5502" },
- };
+-	if (rxsp->status11 & AR_KeyMiss)
++	if (last_status & AR_KeyMiss)
+ 		rxs->rs_status |= ATH9K_RXERR_KEYMISS;
  
- /* For devices with external radios */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 096a206f4..759a5991a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -56,6 +56,7 @@
- #define AR9300_DEVID_AR9565     0x0036
- #define AR9300_DEVID_AR953X     0x003d
- #define AR9300_DEVID_QCA956X    0x003f
-+#define AR9300_DEVID_QCN550X    0x0040
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index cbf60b090..07f073821 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -65,8 +65,14 @@ struct ar9003_rxs {
+ 	u32 status9;
+ 	u32 status10;
+ 	u32 status11;
++	/* status12 and status13 are only present in ar9003_rxs V2. */
++	u32 status12;
++	u32 status13;
+ } __packed __aligned(4);
  
- #define AR5416_AR9100_DEVID	0x000b
++#define AR9003_RXS_SIZE_V1 (12 * sizeof(u32))
++#define AR9003_RXS_SIZE_V2 (sizeof(struct ar9003_rxs))
++
+ /* Transmit Control Descriptor */
+ struct ar9003_txc {
+ 	u32 info;   /* descriptor information */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c32b201a3..df59bea41 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2621,7 +2621,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
  
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+ 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
+-		pCap->rx_status_len = sizeof(struct ar9003_rxs);
++		pCap->rx_status_len = AR_SREV_AR9003_RXS_V2(ah) ?
++					      AR9003_RXS_SIZE_V2 :
++						    AR9003_RXS_SIZE_V1;
+ 		pCap->tx_desc_len = sizeof(struct ar9003_txc);
+ 		pCap->txs_len = sizeof(struct ar9003_txs);
+ 	} else {
 diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 8983ea6fc..5a07cf7d8 100644
+index d465167ac..5ec263b7f 100644
 --- a/drivers/net/wireless/ath/ath9k/reg.h
 +++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -825,6 +825,7 @@
- #define AR_SREV_REVISION_9531_11        1
- #define AR_SREV_REVISION_9531_20        2
- #define AR_SREV_VERSION_9561            0x600
-+#define AR_SREV_VERSION_5502            0x700
- 
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
-@@ -992,10 +993,12 @@
- 
- #define AR_SREV_9561(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
-+#define AR_SREV_5502(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5502))
- 
+@@ -999,6 +999,7 @@
  #define AR_SREV_SOC(_ah) \
  	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(_ah) || \
--	 AR_SREV_9561(_ah))
-+	 AR_SREV_9561(_ah) || AR_SREV_5502(_ah))
+ 	 AR_SREV_9561(_ah) || AR_SREV_5502(_ah))
++#define AR_SREV_AR9003_RXS_V2(_ah) (AR_SREV_5502(_ah))
  
  /* NOTE: When adding chips newer than Peacock, add chip check here */
  #define AR_SREV_9580_10_OR_LATER(_ah) \
