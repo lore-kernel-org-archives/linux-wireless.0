@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2632EC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 May 2022 19:54:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DBAEC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 May 2022 19:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358207AbiELTyZ (ORCPT
+        id S1358205AbiELTyX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 May 2022 15:54:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50668 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358208AbiELTyX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 12 May 2022 15:54:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50648 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358206AbiELTyV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 May 2022 15:54:21 -0400
 Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-qb1can01on2070.outbound.protection.outlook.com [40.107.66.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBEE72701B4
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2022 12:54:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2FBF270C82
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2022 12:54:19 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=H75t9nypmHcxT7h8c0cb1ukxMadrJf95ITCPi0bNnXWbMq3TJ/SKUX/9IRBPH6341s2E+x4AHSmU6y7S6TrrzVow3x5G2YX8sPminS70Il/PsNzKPar40HX1swi2zhM/aSKLPV6SpP/ZLMg2tuxwWMngxPeL2L/vqc0D2BBGagFIk3O5i5ci5mN6ReyehA2UTL7Fv5y9SWklaFy/U5VpqX1o6pRMPYXzgnFWlFk4WDxkyXqShR6aulK9iycyyL6MwuEh/NPNRtuqK/DcmZbmU3LJt0LabRQFcJ3qji1T86QEYJsGtmtrDKK7XKmwGyOenIzDbLVWgAgEAAkq0yOQFA==
+ b=BdWi51LY1dLU4bEV1U06VyvUIFKOWzjzdOgZsOLGKkrn8vmHLswohBA/318d4udS0j3WmUylmI/Kp04wazk25bh3uvTQSLWf7PdssTDjjYW1hmkIyoupGb1Ci6JDLrJSl1q0GYYQxrSFUtfJO5wpcMlqxM3w9nbbZYL+4a5Xri9ordonSTpLwEyI0z+8iomEZPN536Vpr3WFKQMw1mJz9yBPHQce9aFAhn0VjuJFq+nlBH332IeMSUxLDIWys2NXaVLcD51sXm8HwwWzTKvE7vwBAdjdtfIWtKuYju8JosSAr1B+AAVrYxvNSzetQG6NlETcMXWK/Al+rqafoWwSOw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7RJ6gQPtRHsXMex/bkqsdemvP90bkjJRcc4whXjvl7s=;
- b=m1L9V75j5ke1NFwlOZUEXKFmMWLH+gQiL/0vqPPT5dmZK59w8Ght2NziHihsyRkFtUvYDPhq4Kb+UO+Xn7VpwgT93KQ2yYwnArpif1W4wVIHh6+/Y7D/YV5YxtimzGVGZ8s7k6Ao08IsbogVkmGN8LJxZI+ZvEqliCdfaBhOEUW7ogaigKCNvkQNmSno8sW0TjZO1ze+6sXoEI5QLyxcB9EZYreNdqzbc5J4m1nHrdL0UjAHfGb4mzhuZdVAv1tjmaLCIvxXpkRda4DNMxBA/BdBhxvWN/8d6I6VYsHI5CNcr4X16ofLCV98mJXcgAHup1ykuaT8vdzZs4qYZIgBrw==
+ bh=y7p0+wZLR0R8xJVfr0Xr6bcGLHlSiDkQOquEQ87iRLo=;
+ b=azBn05TXdMk1ZhQxqzmal3hdFw8gYx/l9J+Z5o48bs+4vThvNXsyEE6OetiNrZ7CcifLVo9stET4GT++4RvSVzT/V7i9VeHrXpkPGqv+/v9OKsxB3kFbVLOeJs06+N+wRhQ3HCtojLiZqqZaz4RwHlMie4oZvaz9+RWPw1n63ZIXkWTHMnlMP133JeHfTqRFNYf7i1FYzy2QvCjCO4J2i2+Kcn6bc1/0yW5PD/n9K5He65hhYm8I4/vhZl1R3kLsS8P/DQ4ccHfAi6LckKKAHnHsivfHVFYPvqtV3JoPOvtHgjeoRQl+p07WJn4LHw6sCylHcY0Y8XgDJk/qbzg4Dw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=ucalgary.ca; dmarc=pass action=none header.from=ucalgary.ca;
  dkim=pass header.d=ucalgary.ca; arc=none
@@ -32,18 +32,18 @@ Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c00:4a::23)
  by YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:c01:58::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Thu, 12 May
- 2022 19:54:21 +0000
+ 2022 19:54:18 +0000
 Received: from YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::a17b:bb51:f663:e98f]) by YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
  ([fe80::a17b:bb51:f663:e98f%4]) with mapi id 15.20.5227.023; Thu, 12 May 2022
- 19:54:20 +0000
+ 19:54:18 +0000
 From:   Wenli Looi <wlooi@ucalgary.ca>
 To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
         Wenli Looi <wlooi@ucalgary.ca>
-Subject: [PATCH v2 4/9] ath9k: implement QCN550x rx
-Date:   Thu, 12 May 2022 12:53:14 -0700
-Message-Id: <20220512195319.14635-5-wlooi@ucalgary.ca>
+Subject: [PATCH v2 2/9] ath9k: basic support for QCN550x
+Date:   Thu, 12 May 2022 12:53:12 -0700
+Message-Id: <20220512195319.14635-3-wlooi@ucalgary.ca>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220512195319.14635-1-wlooi@ucalgary.ca>
 References: <20220512195319.14635-1-wlooi@ucalgary.ca>
@@ -54,215 +54,710 @@ X-ClientProxiedBy: BYAPR03CA0026.namprd03.prod.outlook.com
  (2603:10b6:c00:4a::23)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a39def9a-5a8f-44b5-62b6-08da345134bd
+X-MS-Office365-Filtering-Correlation-Id: 9f1115f5-bbde-4c29-1df9-08da345132ea
 X-MS-TrafficTypeDiagnostic: YQBPR0101MB9515:EE_
-X-Microsoft-Antispam-PRVS: <YQBPR0101MB951573298BDFA00C55A831D8B2CB9@YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <YQBPR0101MB95152174DD338AEF6A717F7EB2CB9@YQBPR0101MB9515.CANPRD01.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wzBOXu/nVzf/DRhooNoiymWRairRS7rJSDRJDm3qBdpXUyWCI6clJFbxp+dvyMW6sS8OIJqufKd78MCKDhLAYX+P1XmK81gmkivOGyJhUUIqe4UZK8iOqB8dcvt83rZ15JpiySqGPzOkXAfrXHSCBAR/nKmMylslMqz3hP9mi25DuXqkqqX/Qor83FR+eU/WWkB54hv/S+Fc62VEM7Z63G5c94hjyuAFT6ccxFq6PW0oxsSMHMuBsRQPNghpLlk1Flus5/hdvvu/FBwi6QUOYtSqakHiUVi2cslWKUMDQazzoOj504qZuQ/RvvUSmhBLnqmnjsVPjel9xPbakXtS5C6DtQbH3laDRmomTYeVCfwq0W3SMC9JkcFC/PGvO88OoGLTTVgDflcelvZF5ajtv+gbI9BDSpHsBDIs5q6MpYeT52Ucpjfx49aPbbD86xDJuBTcwNUJycJcd+LU3fYQ4F5aU7okU+J8Jx7l2DC77NsMkg2fZendXz4kLJEKclVwXp1P0BTKfP4Hm5+nj5HEwFNSlta/u037AGg/7RxhTsXNm38mqr/o5UXeef4ckLsSGh0YVeWz0NdpUqMqHfjBFZD6b/q8NM/1IblMEEqD5gD+uK4baurjBed0IfJZr61kjKR61Run3UUgPAnuafUR2BmOTgIAKscmkOWmqAVEuHyLjhKjwSYRYRWd5ZeadHXqCnh0w8Tc08BSht/n5uB9v0GP/FXGvjdEBhJBQfIcTOc=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(66946007)(6506007)(5660300002)(1076003)(107886003)(83380400001)(8676002)(4326008)(6666004)(26005)(186003)(66476007)(52116002)(2906002)(6512007)(86362001)(2616005)(6486002)(8936002)(508600001)(6916009)(54906003)(36756003)(786003)(316002)(38350700002)(38100700002)(83323001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Oq65diZtdoSjnuI/z9Mm1ck9Sqaptbem+jlLhs5tJdWvy0kXTxX8j8pFWgPahq725iTv473EyR714omPiGgaRQxaTvHlxenK7vtX0hIMe15zak71S2dr0pTjxHbWeAk+r6r1Z7NfniSMZAskS3I3djZAH1WAdnhbNIkjOY2QR1sHWfcEXzcI2DNhRa5+1RxRRWk/Vjr2N89qiUdvaiUVfolZZbxnGFEiTRwdyj5uUUhvSUqgjQOLpSt5Y6m+TUNzrQ9CM3/5Oua/4GtLfpX6CE80GUVaLV6Kh7I5HMXjKaIGKfEy+Hez7u/ol8n1th2875doAYQaqKWODBjX/ZdBHvRU4MwRKrL2wEWbrWlFnzEYLo6Ol38G3u6kXTS5mL66jP1QeiFVmUvBO7XHDhEhnozw6giBYOl1jtoyHjsFR3rsLREFrN3r5MmkFOfPJ6KIF7Bk57WcDwcOVBvS5YW5MTxXqnt6YkaHGHtyijN5N6GTspYDzTMs7hwvUExtB0Zdb+GlnOV0cwlAzmTBBKCvZUpHqoiBtINm3300Pzr3fU96SABQlnR61K175X93er8dm3wnj9urP7yNLhrFm+GtEOhTzjJE11EywjRGIET9JWGHeQTR6K1oAVBJ57Ft+jrFzRAmnqxOxtLbk5jCLwIXSbBmjSHMXitvOimflkfOPbUImaYzUUmpbv8Ko2tZtXT9F3OUmHoWbJj2kIvbL/Jbfw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(66946007)(6506007)(5660300002)(1076003)(107886003)(83380400001)(8676002)(4326008)(6666004)(26005)(186003)(66476007)(52116002)(2906002)(6512007)(30864003)(86362001)(2616005)(6486002)(8936002)(508600001)(6916009)(54906003)(36756003)(786003)(316002)(38350700002)(38100700002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?A3xzryQA+hma6u8Ek1/7Rm6S3sqq7iVwiGmgShJ/13PcQWl9fsK9SJB1EiOk?=
- =?us-ascii?Q?Gfo0t/sAZ9kPROGoCYZvWPyJA9TT7VPniDXWlP++QeDywgKojuVJsJJz+uAg?=
- =?us-ascii?Q?daR+h75W4+YDiBvRlY6B9kOcrKytzDS5+WG0ys3NlAN+UOtDqExESAWWIbJ3?=
- =?us-ascii?Q?kl7OqHWV0AhbzWU1HYcsb/aECBIGGiQ7rrI/VUvN8TQgihag2uF5l4oLSpdz?=
- =?us-ascii?Q?Okb62+aiVkYWuPzloIk47E1WgBmexE0ThuOsszGGhw1dg4QcuHOgbsGFOCmE?=
- =?us-ascii?Q?x8EurufWp6Yc7IwJJETOHHDfcqmw0c+qPHfpf14TCk30f52D3cli+O4bkrSL?=
- =?us-ascii?Q?3Uvggm/kUC0BRDgrVByDr+sMPdUcNjEA5pD1OdlS5WqEcd00YYaBD7fhryrX?=
- =?us-ascii?Q?RVJM4Rf8Wyxcd8To95CDz1fIO8imyXYXRavTwPz2L95jl9HS7DSpoLVHDtrk?=
- =?us-ascii?Q?6zGj4chmG3WnKIKCTmQTakMwCaYbnfydjlkEG5oq7s7beG7h9kcvYdfiQv07?=
- =?us-ascii?Q?gszZQBWe0gnWvfuz4AvjSh63C1XF6f7zr89IMToqOSOh3IWhb9R9ik/PuTyp?=
- =?us-ascii?Q?Vym2jl1n7AGTPhoN0anff8kEuabdT2ODM0LuDfhtVJsMfJ8QVGDHwmdJgjA/?=
- =?us-ascii?Q?JHCwAEo2w7GS4AgURwKwKNc3l+X8LeitRFP8r0OJsGPKfib6OSthG3Jq4EC+?=
- =?us-ascii?Q?XJxTU7qaDJA1cHY4IpeNI8O7zK7MSZ0fyVhAwRVbBtu4NzDifuvgSGfdw+7d?=
- =?us-ascii?Q?ij0T67C13BxAn21KewSaBNRObtSLH8ervIE12kbFUvRGAsVmIhH8xDy0gbUI?=
- =?us-ascii?Q?tyfo2CLAIOXWYW1QOmHxSWVSP8aiiekqHeH9CwI3fi30btgK8i7yQRYDKNqE?=
- =?us-ascii?Q?f8TTH6m0ToToSO5mELKft3tuMlH/vLLWuApE+PVcRAOEt1VXwcOtzulZJPJa?=
- =?us-ascii?Q?tHuPeLI521kzXznS/QpofVBCNUFHQApEMjZEKJIEvwUb7Qvnr+wbHAaWFxZf?=
- =?us-ascii?Q?MPlFEVdkuocklpGUvlPHpkS+FKcBoIqPveLK9C7DdP3d2HgHmdPp0BlQAd55?=
- =?us-ascii?Q?Rd/5R52AmJoIuJ14m3hUfYF2qUyQSd89XFrJEP/isA3lKc9ptfjIjyWNHm23?=
- =?us-ascii?Q?6dw/M3yHRJxw+TtKgzL5V/KyxdsWfMRUtJJhwwJTSV8mHNjaB9h7WBtu0J60?=
- =?us-ascii?Q?lPXOMMA4viVcBuV/SjRtdk4PuT45dyoZYPq+v8uEblLUBU35f2T+XA0VpT6a?=
- =?us-ascii?Q?ejVgae+REIGq+f4N2peGWJiQ7Nc3kFXrzM3V8I1QmnxC7WA5r29T+KdhG/wE?=
- =?us-ascii?Q?Sl9RyYR3SPLG5P7RdSmhv8N01GAoMnmCmo0+BOB5H/r5FGw81pYBN+VrvI0t?=
- =?us-ascii?Q?v50L4weEKPCJLF8CXH8CDMAtfFgVmRnTEnsZz3fhMaw5BkaF2R8DmBY0IuFS?=
- =?us-ascii?Q?oYNmle9v+i9FcXpReUWYHL9SgNtCQM3ibtmVKYfbczhTpoZYYZyyG0n+1tnI?=
- =?us-ascii?Q?mR9FlLJAQdmEyWL9boQcFS5zmCwV2agVg1a9tt6Js450JM1VsX5POlimGJho?=
- =?us-ascii?Q?y3z7ysQN2Fwj/+YWldxdUhGQ3Zy58387hTWrzX3bkKCnSNbaBPikIxp0x57t?=
- =?us-ascii?Q?J895hRfjvyG6a/AM8FX7sJTk43S+SxMj//SrIYKyg3k4a5P1/e0g1eq1Q3/Q?=
- =?us-ascii?Q?rWbn1jTpajdmm6GxpwtKL2w5+ZrwJsPrbm4BxIyCPgiDjMbrq+qyIdlgxLuR?=
- =?us-ascii?Q?jdvKg93YuA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?e6VGdLXzqDyuhejk+MRDQJV4tFD8yXd8YK49mjBfAiDdjsA3tMCTDQP+4qgg?=
+ =?us-ascii?Q?wd806BXrZgwPicYWYZkBGcIER/iXch4YRZjmAUWn+8/AOeRWaYvoE7u47TXS?=
+ =?us-ascii?Q?9bC+DdqyEfPiSNomcLqefeqi5eNgqJgEhiM6PeL0cedBMYAio1aRhcq35FVx?=
+ =?us-ascii?Q?UCSFzGKg2L4B56ZClsJ0PrnHK5enZbPpfOBpNwLjL0/dJHNf16TgbfW8BR5b?=
+ =?us-ascii?Q?3A0OnRy/ZgBFIlVXuSxzivcFgRlWrTbkDdbh4ZTeqMgxCwwhHiQOXEAiH/2N?=
+ =?us-ascii?Q?kdx6eTpDbmq5KTIoSYfYEGmrG+oh6f5BwQfxVddICHAyFstBbB1x1CLg0bIr?=
+ =?us-ascii?Q?kocdh5RzUyr47X+fcFF/1Sprmhvc3D0l7mjw+c/hJ3hal/90ZW61ef1SBkLT?=
+ =?us-ascii?Q?3+heV/UqsmVW4IOpBV80Pz1FOkl+M5qJrEFDWn7gOrcAxLG5FoadTgVCCvIz?=
+ =?us-ascii?Q?qVlm5IBAVzzic2mWzmzucwhUjxdjQaJWAO9V7XqBugrLUeewMxAupF8lYX68?=
+ =?us-ascii?Q?yzmSGm23dSaddqxIpxSIC5DYk0TzBgyd1m3I++K2Zzh5ICignRAudIQEK9ic?=
+ =?us-ascii?Q?HZfunOG41h2DaoazDZZFfFpUY7Po1pbvMGK2G+bYx4TGg/V7doJVlwu5T8yr?=
+ =?us-ascii?Q?BvvdDdsMAXTjZm5tvSKqoMIcxK2l/E4bpcN2CFXVUs9AO8b2/WDNkB7VqsJI?=
+ =?us-ascii?Q?zKy1p7U1DmnTSdSpdZv6XKtuz1KyCB2ntuz7egS8SnpxH8PxfVladhWMsUfR?=
+ =?us-ascii?Q?RUDXpJTjF8voryj4a9ExXPR56+BGr2BSZiArETY5o139ldcqrlJbNS37X7DB?=
+ =?us-ascii?Q?Z7FCD239Zg3WfEC8b14VFQQg1Cnb9rsDnKvSO9GaaY1s5UvKak8/KAdvFSKp?=
+ =?us-ascii?Q?SeDS41nPb/p6K+wEpHARFd9XNmAYJAoGuJBd/dLOKxwJMpHveNNTzXEUft0H?=
+ =?us-ascii?Q?v7+bxVmEuG+8P4SDBm+NQ8wkviJ3YN/1LuY2XfAaFnL04Tt3091zLk1uYnWl?=
+ =?us-ascii?Q?/z52vSwoRDhkX7n0eWj5tsaGVi1E8Ng2FlGq1kdRVtr2Rvj+sABiU3NM9bG7?=
+ =?us-ascii?Q?SfGuRLxloMzXgh06xPon/+lHptF61hEmpuMwogcwdM779RCmkLm+JegCcgYB?=
+ =?us-ascii?Q?wb3QxP5dJRPLhhPyFqLhXunkO1DsCWYnB8jhSz5eUBvV7PorkH8qAvZ+uvtG?=
+ =?us-ascii?Q?32TMwV/UgClD0P1q599InkfjFni7V6ZVg6jxR7MaTz310uYW4hPmmjkfVqBh?=
+ =?us-ascii?Q?ReBbi4RM9kE8Z/fvYTkzpML3ZlEkLW7sJf4SXP+K6AyeWdXNpDVSll5iXl/r?=
+ =?us-ascii?Q?GQNm96/8BVMUaA5RUc3CtU/mi9CrC9b/aW9ShB1+gldkCPRRklyvp3voiYEd?=
+ =?us-ascii?Q?Uz41XqmS19bsHxDLFanXK7+Z7gsqMNXY9jQd+Fzbt4OA2MXDMooUTy/HKP5Y?=
+ =?us-ascii?Q?C+1DG/AXEax2Rbj+Qe88e/jkdyRTYtvKCcXb6xZIYy21Q0PH5adR0jJ2SpBj?=
+ =?us-ascii?Q?aCHkZ/TG0yS3ERhKuIFJT4EjQmcS0NE7iAZ7EdpyVD9YA7SBBWcWXt+7KXGG?=
+ =?us-ascii?Q?sz/hoM+x2o/6szZpPJCYwV215EqJ4GnfTFw973TJ5F9ptPXhTOUWBaTBvSjE?=
+ =?us-ascii?Q?f6auJsePrdUErDHUbVHDfgKMvTFJmDfK+/3rjigy4eFkh5v9OytAc5rYXP4L?=
+ =?us-ascii?Q?AdPrXSTRUrJ6jK+A3j5Ck3+QN5Pzjxy1R9TF7rTYd583ZMeKo841LiBIRs1s?=
+ =?us-ascii?Q?wth7XCmovw=3D=3D?=
 X-OriginatorOrg: ucalgary.ca
-X-MS-Exchange-CrossTenant-Network-Message-Id: a39def9a-5a8f-44b5-62b6-08da345134bd
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9f1115f5-bbde-4c29-1df9-08da345132ea
 X-MS-Exchange-CrossTenant-AuthSource: YQXPR01MB3302.CANPRD01.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2022 19:54:20.9418
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2022 19:54:17.9420
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: c609a0ec-a5e3-4631-9686-192280bd9151
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ouL55sC/EVfOl0KE1870b2rvmGQSlBcp7MQqFsEh/q121nhwu2vFihpe6Y/JY9yRl7nuldwL7uqmWDaS7mTM9Q==
+X-MS-Exchange-CrossTenant-UserPrincipalName: udMb5NgXHdSuRGeCcPJF5R3s3w6oSDlI3ImCTWNluMfOvxY/OyVwM5RC+mtW3mWBpN5vC6ljllik8ClZq4947A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: YQBPR0101MB9515
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ar9003_rxs in this device has 2 additional status values.
+QCN550x is very similar to QCA956x. Note that AR_CH0_XTAL is
+intentionally unchanged. Certain arrays are no longer static because
+they are no longer constant.
 
 Signed-off-by: Wenli Looi <wlooi@ucalgary.ca>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c | 37 +++++++++++----------
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |  6 ++++
- drivers/net/wireless/ath/ath9k/hw.c         |  4 ++-
- drivers/net/wireless/ath/ath9k/reg.h        |  1 +
- 4 files changed, 30 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c          |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |  4 +-
+ .../net/wireless/ath/ath9k/ar9003_eeprom.c    | 17 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |  4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c   | 35 ++++----
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h   | 83 ++++++++++++-------
+ drivers/net/wireless/ath/ath9k/hw.c           | 28 ++++---
+ drivers/net/wireless/ath/ath9k/mac.c          |  2 +-
+ drivers/net/wireless/ath/ath9k/recv.c         |  2 +-
+ drivers/net/wireless/ath/ath9k/reg.h          |  4 +-
+ drivers/net/wireless/ath/ath9k/reg_aic.h      |  6 +-
+ 11 files changed, 112 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index ff8ab58e6..059e4bfce 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -483,8 +483,11 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- {
- 	struct ar9003_rxs *rxsp = buf_addr;
- 	unsigned int phyerr;
-+	/* status12 and status13 are only present in ar9300_rxs V2. */
-+	u32 last_status =
-+		AR_SREV_AR9003_RXS_V2(ah) ? rxsp->status13 : rxsp->status11;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 41d192709..281103865 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -261,7 +261,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
  
--	if ((rxsp->status11 & AR_RxDone) == 0)
-+	if ((last_status & AR_RxDone) == 0)
- 		return -EINPROGRESS;
+ 	/* Skip MRC CCK for pre AR9003 families */
+ 	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah) ||
+-	    AR_SREV_9565(ah) || AR_SREV_9561(ah))
++	    AR_SREV_9565(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		return;
  
- 	if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
-@@ -510,17 +513,17 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 	rxs->rs_rssi_ext[1] = MS(rxsp->status5, AR_RxRSSIAnt11);
- 	rxs->rs_rssi_ext[2] = MS(rxsp->status5, AR_RxRSSIAnt12);
+ 	if (aniState->mrcCCK != entry_cck->mrc_cck_on)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 6ca089f15..e2cf4b733 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -201,7 +201,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 	u32 qCoffDenom, iCoffDenom;
+ 	int32_t qCoff, iCoff;
+ 	int iqCorrNeg, i;
+-	static const u_int32_t offset_array[3] = {
++	const u_int32_t offset_array[3] = {
+ 		AR_PHY_RX_IQCAL_CORR_B0,
+ 		AR_PHY_RX_IQCAL_CORR_B1,
+ 		AR_PHY_RX_IQCAL_CORR_B2,
+@@ -1202,7 +1202,7 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
  
--	if (rxsp->status11 & AR_RxKeyIdxValid)
--		rxs->rs_keyix = MS(rxsp->status11, AR_KeyIdx);
-+	if (last_status & AR_RxKeyIdxValid)
-+		rxs->rs_keyix = MS(last_status, AR_KeyIdx);
- 	else
- 		rxs->rs_keyix = ATH9K_RXKEYIX_INVALID;
+ 	if (AR_SREV_9550(ah) || AR_SREV_9531(ah))
+ 		peak_detect_threshold = 8;
+-	else if (AR_SREV_9561(ah))
++	else if (AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		peak_detect_threshold = 11;
  
- 	rxs->rs_rate = MS(rxsp->status1, AR_RxRate);
- 	rxs->rs_more = (rxsp->status2 & AR_RxMore) ? 1 : 0;
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 16bfcd0a1..49be3a315 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3608,6 +3608,8 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
+ 	    AR_SREV_9531(ah) || AR_SREV_9561(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
++	else if (AR_SREV_5502(ah))
++		REG_RMW_FIELD(ah, AR_CH0_TOP3, AR_CH0_TOP3_XPABIASLVL, bias);
+ 	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+ 	else {
+@@ -3648,7 +3650,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	int chain;
+ 	u32 regval, value, gpio;
+-	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
++	const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
+ 			AR_PHY_SWITCH_CHAIN_0,
+ 			AR_PHY_SWITCH_CHAIN_1,
+ 			AR_PHY_SWITCH_CHAIN_2,
+@@ -3669,7 +3671,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
+-	} else if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah)) {
++	} else if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++			   AR_SREV_5502(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 				AR_SWITCH_TABLE_COM_AR9550_ALL, value);
+ 	} else
+@@ -4000,11 +4003,11 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
+ 		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah) ||
+-			   AR_SREV_9561(ah)) {
++			   AR_SREV_9561(ah) || AR_SREV_5502(ah)) {
+ 			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
  
--	rxs->rs_firstaggr = (rxsp->status11 & AR_RxFirstAggr) ? 1 : 0;
--	rxs->rs_isaggr = (rxsp->status11 & AR_RxAggr) ? 1 : 0;
--	rxs->rs_moreaggr = (rxsp->status11 & AR_RxMoreAggr) ? 1 : 0;
-+	rxs->rs_firstaggr = (last_status & AR_RxFirstAggr) ? 1 : 0;
-+	rxs->rs_isaggr = (last_status & AR_RxAggr) ? 1 : 0;
-+	rxs->rs_moreaggr = (last_status & AR_RxMoreAggr) ? 1 : 0;
- 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
- 	rxs->enc_flags |= (rxsp->status4 & AR_GI) ? RX_ENC_FLAG_SHORT_GI : 0;
- 	rxs->enc_flags |=
-@@ -533,16 +536,16 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 	rxs->evm3 = rxsp->status9;
- 	rxs->evm4 = (rxsp->status10 & 0xffff);
+-			if (AR_SREV_9561(ah))
++			if (AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 				REG_WRITE(ah, AR_PHY_PMU2, 0x10200000);
+ 		} else {
+ 			/* Internal regulator is ON. Write swreg register. */
+@@ -4109,7 +4112,8 @@ static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is2ghz)
+ 	    !AR_SREV_9340(ah) &&
+ 	    !AR_SREV_9580(ah) &&
+ 	    !AR_SREV_9531(ah) &&
+-	    !AR_SREV_9561(ah))
++	    !AR_SREV_9561(ah) &&
++	    !AR_SREV_5502(ah))
+ 		return;
  
--	if (rxsp->status11 & AR_PreDelimCRCErr)
-+	if (last_status & AR_PreDelimCRCErr)
- 		rxs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+ 	xpa_ctl = ar9003_modal_header(ah, is2ghz)->txFrameToXpaOn;
+@@ -4889,7 +4893,8 @@ static void ar9003_hw_power_control_override(struct ath_hw *ah,
+ 	}
  
--	if (rxsp->status11 & AR_PostDelimCRCErr)
-+	if (last_status & AR_PostDelimCRCErr)
- 		rxs->rs_flags |= ATH9K_RX_DELIM_CRC_POST;
+ tempslope:
+-	if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah)) {
++	if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++	    AR_SREV_5502(ah)) {
+ 		u8 txmask = (eep->baseEepHeader.txrxMask & 0xf0) >> 4;
  
--	if (rxsp->status11 & AR_DecryptBusyErr)
-+	if (last_status & AR_DecryptBusyErr)
- 		rxs->rs_flags |= ATH9K_RX_DECRYPT_BUSY;
- 
--	if ((rxsp->status11 & AR_RxFrameOK) == 0) {
-+	if ((last_status & AR_RxFrameOK) == 0) {
  		/*
- 		 * AR_CRCErr will bet set to true if we're on the last
- 		 * subframe and the AR_PostDelimCRCErr is caught.
-@@ -551,14 +554,14 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 		 * possibly be reviewing the last subframe. AR_CRCErr
- 		 * is the CRC of the actual data.
- 		 */
--		if (rxsp->status11 & AR_CRCErr)
-+		if (last_status & AR_CRCErr)
- 			rxs->rs_status |= ATH9K_RXERR_CRC;
--		else if (rxsp->status11 & AR_DecryptCRCErr)
-+		else if (last_status & AR_DecryptCRCErr)
- 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
--		else if (rxsp->status11 & AR_MichaelErr)
-+		else if (last_status & AR_MichaelErr)
- 			rxs->rs_status |= ATH9K_RXERR_MIC;
--		if (rxsp->status11 & AR_PHYErr) {
--			phyerr = MS(rxsp->status11, AR_PHYErrCode);
-+		if (last_status & AR_PHYErr) {
-+			phyerr = MS(last_status, AR_PHYErrCode);
- 			/*
- 			 * If we reach a point here where AR_PostDelimCRCErr is
- 			 * true it implies we're *not* on the last subframe. In
-@@ -573,7 +576,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 			 * delimiter for an A-MPDU subframe (0x4E = 'N' ASCII).
- 			 */
- 			if ((phyerr == ATH9K_PHYERR_OFDM_RESTART) &&
--			    (rxsp->status11 & AR_PostDelimCRCErr)) {
-+			    (last_status & AR_PostDelimCRCErr)) {
- 				rxs->rs_phyerr = 0;
- 			} else {
- 				rxs->rs_status |= ATH9K_RXERR_PHY;
-@@ -582,7 +585,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index b2d53b6c0..ff45abd14 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -138,12 +138,12 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
+ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	static const u32 ctrl0[3] = {
++	const u32 ctrl0[3] = {
+ 		AR_PHY_PAPRD_CTRL0_B0,
+ 		AR_PHY_PAPRD_CTRL0_B1,
+ 		AR_PHY_PAPRD_CTRL0_B2
+ 	};
+-	static const u32 ctrl1[3] = {
++	const u32 ctrl1[3] = {
+ 		AR_PHY_PAPRD_CTRL1_B0,
+ 		AR_PHY_PAPRD_CTRL1_B1,
+ 		AR_PHY_PAPRD_CTRL1_B2
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index dc0e5ea25..7cbe30bc4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -157,9 +157,9 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	freq = centers.synth_center;
+ 
+ 	if (freq < 4800) {     /* 2 GHz, fractional mode */
+-		if (AR_SREV_9330(ah) || AR_SREV_9485(ah) ||
+-		    AR_SREV_9531(ah) || AR_SREV_9550(ah) ||
+-		    AR_SREV_9561(ah) || AR_SREV_9565(ah)) {
++		if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9531(ah) ||
++		    AR_SREV_9550(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah) ||
++		    AR_SREV_9565(ah)) {
+ 			if (ah->is_clk_25mhz)
+ 				div = 75;
+ 			else
+@@ -182,8 +182,8 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		/* Set to 2G mode */
+ 		bMode = 1;
+ 	} else {
+-		if ((AR_SREV_9340(ah) || AR_SREV_9550(ah) ||
+-		     AR_SREV_9531(ah) || AR_SREV_9561(ah)) &&
++		if ((AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
++		     AR_SREV_9561(ah) || AR_SREV_5502(ah)) &&
+ 		    ah->is_clk_25mhz) {
+ 			channelSel = freq / 75;
+ 			chan_frac = ((freq % 75) * 0x20000) / 75;
+@@ -250,7 +250,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	 */
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
+-	    AR_SREV_9550(ah) || AR_SREV_9561(ah)) {
++	    AR_SREV_9550(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah)) {
+ 		if (spur_fbin_ptr[0] == 0) /* No spur */
+ 			return;
+ 		max_spur_cnts = 5;
+@@ -277,7 +277,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 
+ 		negative = 0;
+ 		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
+-		    AR_SREV_9550(ah) || AR_SREV_9561(ah))
++		    AR_SREV_9550(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 			cur_bb_spur = ath9k_hw_fbin2freq(spur_fbin_ptr[i],
+ 							 IS_CHAN_2GHZ(chan));
+ 		else
+@@ -619,7 +619,7 @@ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
+ 	/* Enable 11n HT, 20 MHz */
+ 	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SHORT_GI_40 | enableDacFifo;
+ 
+-	if (!AR_SREV_9561(ah))
++	if (!(AR_SREV_9561(ah) || AR_SREV_5502(ah)))
+ 		phymode |= AR_PHY_GC_SINGLE_HT_LTF1;
+ 
+ 	/* Configure baseband for dynamic 20/40 operation */
+@@ -724,7 +724,7 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
+ 		ah->enabled_cals &= ~TX_CL_CAL;
+ 
+ 	if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah) ||
+-	    AR_SREV_9561(ah)) {
++	    AR_SREV_9561(ah) || AR_SREV_5502(ah)) {
+ 		if (ah->is_clk_25mhz) {
+ 			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
+ 			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
+@@ -905,23 +905,25 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
  		}
  	}
  
--	if (rxsp->status11 & AR_KeyMiss)
-+	if (last_status & AR_KeyMiss)
- 		rxs->rs_status |= ATH9K_RXERR_KEYMISS;
+-	if (AR_SREV_9550(ah) || AR_SREV_9561(ah))
++	if (AR_SREV_9550(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		REG_WRITE_ARRAY(&ah->ini_modes_rx_gain_bounds, modesIndex,
+ 				regWrites);
  
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index cbf60b090..07f073821 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -65,8 +65,14 @@ struct ar9003_rxs {
- 	u32 status9;
- 	u32 status10;
- 	u32 status11;
-+	/* status12 and status13 are only present in ar9003_rxs V2. */
-+	u32 status12;
-+	u32 status13;
- } __packed __aligned(4);
+-	if (AR_SREV_9561(ah) && (ar9003_hw_get_rx_gain_idx(ah) == 0))
++	if ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) &&
++	    (ar9003_hw_get_rx_gain_idx(ah) == 0))
+ 		REG_WRITE_ARRAY(&ah->ini_modes_rxgain_xlna,
+ 				modesIndex, regWrites);
+ 	/*
+ 	 * TXGAIN initvals.
+ 	 */
+-	if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah)) {
++	if (AR_SREV_9550(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++	    AR_SREV_5502(ah)) {
+ 		int modes_txgain_index = 1;
  
-+#define AR9003_RXS_SIZE_V1 (12 * sizeof(u32))
-+#define AR9003_RXS_SIZE_V2 (sizeof(struct ar9003_rxs))
+ 		if (AR_SREV_9550(ah))
+ 			modes_txgain_index = ar9550_hw_get_modes_txgain_index(ah, chan);
+ 
+-		if (AR_SREV_9561(ah))
++		if (AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 			modes_txgain_index =
+ 				ar9561_hw_get_modes_txgain_index(ah, chan);
+ 
+@@ -1922,7 +1924,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+-	static const u32 ar9300_cca_regs[6] = {
++	const u32 ar9300_cca_regs[6] = {
+ 		AR_PHY_CCA_0,
+ 		AR_PHY_CCA_1,
+ 		AR_PHY_CCA_2,
+@@ -1935,7 +1937,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->spur_mitigate_freq = ar9003_hw_spur_mitigate;
+ 
+ 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-	    AR_SREV_9561(ah))
++	    AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		priv_ops->compute_pll_control = ar9003_hw_compute_pll_control_soc;
+ 	else
+ 		priv_ops->compute_pll_control = ar9003_hw_compute_pll_control;
+@@ -2021,7 +2023,8 @@ bool ar9003_hw_bb_watchdog_check(struct ath_hw *ah)
+ 	case 0x04000b09:
+ 		return true;
+ 	case 0x04000409:
+-		if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah))
++		if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++		    AR_SREV_5502(ah))
+ 			return false;
+ 		else
+ 			return true;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index ad949eb02..2557de36d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -20,7 +20,7 @@
+ /*
+  * Channel Register Map
+  */
+-#define AR_CHAN_BASE	0x9800
++#define AR_CHAN_BASE	(AR_SREV_5502(ah) ? 0x29800 : 0x9800)
+ 
+ #define AR_PHY_TIMING1      (AR_CHAN_BASE + 0x0)
+ #define AR_PHY_TIMING2      (AR_CHAN_BASE + 0x4)
+@@ -214,7 +214,7 @@
+ /*
+  * MRC Register Map
+  */
+-#define AR_MRC_BASE	0x9c00
++#define AR_MRC_BASE	(AR_SREV_5502(ah) ? 0x29c00 : 0x9c00)
+ 
+ #define AR_PHY_TIMING_3A       (AR_MRC_BASE + 0x0)
+ #define AR_PHY_LDPC_CNTL1      (AR_MRC_BASE + 0x4)
+@@ -255,12 +255,12 @@
+ /*
+  * BBB Register Map
+  */
+-#define AR_BBB_BASE	0x9d00
++#define AR_BBB_BASE	(AR_SREV_5502(ah) ? 0x29d00 : 0x9d00)
+ 
+ /*
+  * AGC Register Map
+  */
+-#define AR_AGC_BASE	0x9e00
++#define AR_AGC_BASE	(AR_SREV_5502(ah) ? 0x29e00 : 0x9e00)
+ 
+ #define AR_PHY_SETTLING         (AR_AGC_BASE + 0x0)
+ #define AR_PHY_FORCEMAX_GAINS_0 (AR_AGC_BASE + 0x4)
+@@ -448,14 +448,16 @@
+ /*
+  * SM Register Map
+  */
+-#define AR_SM_BASE	0xa200
++#define AR_SM_BASE	(AR_SREV_5502(ah) ? 0x2a200 : 0xa200)
+ 
+ #define AR_PHY_D2_CHIP_ID        (AR_SM_BASE + 0x0)
+ #define AR_PHY_GEN_CTRL          (AR_SM_BASE + 0x4)
+ #define AR_PHY_MODE              (AR_SM_BASE + 0x8)
+ #define AR_PHY_ACTIVE            (AR_SM_BASE + 0xc)
+-#define AR_PHY_SPUR_MASK_A       (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x18 : 0x20))
+-#define AR_PHY_SPUR_MASK_B       (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x1c : 0x24))
++#define AR_PHY_SPUR_MASK_A                                                     \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x18 : 0x20))
++#define AR_PHY_SPUR_MASK_B                                                     \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x1c : 0x24))
+ #define AR_PHY_SPECTRAL_SCAN     (AR_SM_BASE + 0x28)
+ #define AR_PHY_RADAR_BW_FILTER   (AR_SM_BASE + 0x2c)
+ #define AR_PHY_SEARCH_START_DELAY (AR_SM_BASE + 0x30)
+@@ -498,7 +500,8 @@
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A                       0x3FF
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A_S                     0
+ 
+-#define AR_PHY_TEST              (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x15c : 0x160))
++#define AR_PHY_TEST                                                            \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x15c : 0x160))
+ 
+ #define AR_PHY_TEST_BBB_OBS_SEL       0x780000
+ #define AR_PHY_TEST_BBB_OBS_SEL_S     19
+@@ -509,7 +512,8 @@
+ #define AR_PHY_TEST_CHAIN_SEL      0xC0000000
+ #define AR_PHY_TEST_CHAIN_SEL_S    30
+ 
+-#define AR_PHY_TEST_CTL_STATUS   (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x160 : 0x164))
++#define AR_PHY_TEST_CTL_STATUS                                                 \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x160 : 0x164))
+ #define AR_PHY_TEST_CTL_TSTDAC_EN         0x1
+ #define AR_PHY_TEST_CTL_TSTDAC_EN_S       0
+ #define AR_PHY_TEST_CTL_TX_OBS_SEL        0x1C
+@@ -523,23 +527,32 @@
+ #define AR_PHY_TEST_CTL_DEBUGPORT_SEL	  0xe0000000
+ #define AR_PHY_TEST_CTL_DEBUGPORT_SEL_S	  29
+ 
++#define AR_PHY_TSTDAC                                                          \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x164 : 0x168))
+ 
+-#define AR_PHY_TSTDAC            (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x164 : 0x168))
++#define AR_PHY_CHAN_STATUS                                                     \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x168 : 0x16c))
+ 
+-#define AR_PHY_CHAN_STATUS       (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x168 : 0x16c))
+-
+-#define AR_PHY_CHAN_INFO_MEMORY (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x16c : 0x170))
++#define AR_PHY_CHAN_INFO_MEMORY                                                \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x16c : 0x170))
+ #define AR_PHY_CHAN_INFO_MEMORY_CHANINFOMEM_S2_READ	0x00000008
+ #define AR_PHY_CHAN_INFO_MEMORY_CHANINFOMEM_S2_READ_S	3
+ 
+-#define AR_PHY_CHNINFO_NOISEPWR  (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x170 : 0x174))
+-#define AR_PHY_CHNINFO_GAINDIFF  (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x174 : 0x178))
+-#define AR_PHY_CHNINFO_FINETIM   (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x178 : 0x17c))
+-#define AR_PHY_CHAN_INFO_GAIN_0  (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x17c : 0x180))
+-#define AR_PHY_SCRAMBLER_SEED    (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x184 : 0x190))
+-#define AR_PHY_CCK_TX_CTRL       (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x188 : 0x194))
+-
+-#define AR_PHY_HEAVYCLIP_CTL     (AR_SM_BASE + (AR_SREV_9561(ah) ? 0x198 : 0x1a4))
++#define AR_PHY_CHNINFO_NOISEPWR                                                \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x170 : 0x174))
++#define AR_PHY_CHNINFO_GAINDIFF                                                \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x174 : 0x178))
++#define AR_PHY_CHNINFO_FINETIM                                                 \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x178 : 0x17c))
++#define AR_PHY_CHAN_INFO_GAIN_0                                                \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x17c : 0x180))
++#define AR_PHY_SCRAMBLER_SEED                                                  \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x184 : 0x190))
++#define AR_PHY_CCK_TX_CTRL                                                     \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x188 : 0x194))
 +
- /* Transmit Control Descriptor */
- struct ar9003_txc {
- 	u32 info;   /* descriptor information */
++#define AR_PHY_HEAVYCLIP_CTL                                                   \
++	(AR_SM_BASE + ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x198 : 0x1a4))
+ #define AR_PHY_HEAVYCLIP_20      (AR_SM_BASE + 0x1a8)
+ #define AR_PHY_HEAVYCLIP_40      (AR_SM_BASE + 0x1ac)
+ #define AR_PHY_HEAVYCLIP_1	 (AR_SM_BASE + 0x19c)
+@@ -722,6 +735,10 @@
+ #define AR_CH0_TOP2_XPABIASLVL		(AR_SREV_9561(ah) ? 0x1e00 : 0xf000)
+ #define AR_CH0_TOP2_XPABIASLVL_S	(AR_SREV_9561(ah) ? 9 : 12)
+ 
++#define AR_CH0_TOP3		0x16288
++#define AR_CH0_TOP3_XPABIASLVL		0xf0000
++#define AR_CH0_TOP3_XPABIASLVL_S	16
++
+ #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
+ 				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : \
+ 				  (AR_SREV_9561(ah) ? 0x162c0 : 0x16290)))
+@@ -730,13 +747,17 @@
+ #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
+ #define AR_CH0_XTAL_CAPOUTDAC_S	17
+ 
+-#define AR_PHY_PMU1		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16340 : \
+-				 (AR_SREV_9561(ah) ? 0x16cc0 : 0x16c40))
++#define AR_PHY_PMU1                                                            \
++	((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ?                              \
++		 0x16340 :                                                     \
++		       ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x16cc0 : 0x16c40))
+ #define AR_PHY_PMU1_PWD		0x1
+ #define AR_PHY_PMU1_PWD_S	0
+ 
+-#define AR_PHY_PMU2		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16344 : \
+-				 (AR_SREV_9561(ah) ? 0x16cc4 : 0x16c44))
++#define AR_PHY_PMU2                                                            \
++	((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ?                              \
++		 0x16344 :                                                     \
++		       ((AR_SREV_9561(ah) || AR_SREV_5502(ah)) ? 0x16cc4 : 0x16c44))
+ #define AR_PHY_PMU2_PGM		0x00200000
+ #define AR_PHY_PMU2_PGM_S	21
+ 
+@@ -925,7 +946,7 @@
+ /*
+  * Channel 1 Register Map
+  */
+-#define AR_CHAN1_BASE	0xa800
++#define AR_CHAN1_BASE	(AR_SREV_5502(ah) ? 0x2a800 : 0xa800)
+ 
+ #define AR_PHY_EXT_CCA_1            (AR_CHAN1_BASE + 0x30)
+ #define AR_PHY_TX_PHASE_RAMP_1      (AR_CHAN1_BASE + 0xd0)
+@@ -944,7 +965,7 @@
+ /*
+  * AGC 1 Register Map
+  */
+-#define AR_AGC1_BASE	0xae00
++#define AR_AGC1_BASE	(AR_SREV_5502(ah) ? 0x2ae00 : 0xae00)
+ 
+ #define AR_PHY_FORCEMAX_GAINS_1      (AR_AGC1_BASE + 0x4)
+ #define AR_PHY_EXT_ATTEN_CTL_1       (AR_AGC1_BASE + 0x18)
+@@ -963,7 +984,7 @@
+ /*
+  * SM 1 Register Map
+  */
+-#define AR_SM1_BASE	0xb200
++#define AR_SM1_BASE	(AR_SREV_5502(ah) ? 0x2b200 : 0xb200)
+ 
+ #define AR_PHY_SWITCH_CHAIN_1   (AR_SM1_BASE + 0x84)
+ #define AR_PHY_FCAL_2_1         (AR_SM1_BASE + 0xd0)
+@@ -989,7 +1010,7 @@
+ /*
+  * Channel 2 Register Map
+  */
+-#define AR_CHAN2_BASE	0xb800
++#define AR_CHAN2_BASE	(AR_SREV_5502(ah) ? 0x2b800 : 0xb800)
+ 
+ #define AR_PHY_EXT_CCA_2            (AR_CHAN2_BASE + 0x30)
+ #define AR_PHY_TX_PHASE_RAMP_2      (AR_CHAN2_BASE + 0xd0)
+@@ -1007,7 +1028,7 @@
+ /*
+  * AGC 2 Register Map
+  */
+-#define AR_AGC2_BASE	0xbe00
++#define AR_AGC2_BASE	(AR_SREV_5502(ah) ? 0x2be00 : 0xbe00)
+ 
+ #define AR_PHY_FORCEMAX_GAINS_2      (AR_AGC2_BASE + 0x4)
+ #define AR_PHY_EXT_ATTEN_CTL_2       (AR_AGC2_BASE + 0x18)
+@@ -1024,7 +1045,7 @@
+ /*
+  * SM 2 Register Map
+  */
+-#define AR_SM2_BASE	0xc200
++#define AR_SM2_BASE	(AR_SREV_5502(ah) ? 0x2c200 : 0xc200)
+ 
+ #define AR_PHY_SWITCH_CHAIN_2    (AR_SM2_BASE + 0x84)
+ #define AR_PHY_FCAL_2_2          (AR_SM2_BASE + 0xd0)
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c32b201a3..df59bea41 100644
+index 047512ce1..c32b201a3 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2621,7 +2621,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+@@ -834,7 +834,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
+ 			      AR_CH0_BB_DPLL3_PHASE_SHIFT, 0x1);
+ 	} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-		   AR_SREV_9561(ah)) {
++		   AR_SREV_9561(ah) || AR_SREV_5502(ah)) {
+ 		u32 regval, pll2_divint, pll2_divfrac, refdiv;
+ 
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL,
+@@ -845,7 +845,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		udelay(100);
+ 
+ 		if (ah->is_clk_25mhz) {
+-			if (AR_SREV_9531(ah) || AR_SREV_9561(ah)) {
++			if (AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++			    AR_SREV_5502(ah)) {
+ 				pll2_divint = 0x1c;
+ 				pll2_divfrac = 0xa3d2;
+ 				refdiv = 1;
+@@ -861,15 +862,16 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 				refdiv = 5;
+ 			} else {
+ 				pll2_divint = 0x11;
+-				pll2_divfrac = (AR_SREV_9531(ah) ||
+-						AR_SREV_9561(ah)) ?
++				pll2_divfrac =
++					(AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++					 AR_SREV_5502(ah)) ?
+ 						0x26665 : 0x26666;
+ 				refdiv = 1;
+ 			}
+ 		}
+ 
+ 		regval = REG_READ(ah, AR_PHY_PLL_MODE);
+-		if (AR_SREV_9531(ah) || AR_SREV_9561(ah))
++		if (AR_SREV_9531(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 			regval |= (0x1 << 22);
+ 		else
+ 			regval |= (0x1 << 16);
+@@ -887,7 +889,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 				(0x1 << 13) |
+ 				(0x4 << 26) |
+ 				(0x18 << 19);
+-		else if (AR_SREV_9531(ah) || AR_SREV_9561(ah)) {
++		else if (AR_SREV_9531(ah) || AR_SREV_9561(ah) ||
++			 AR_SREV_5502(ah)) {
+ 			regval = (regval & 0x01c00fff) |
+ 				(0x1 << 31) |
+ 				(0x2 << 29) |
+@@ -904,7 +907,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 				(0x60 << 19);
+ 		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
+ 
+-		if (AR_SREV_9531(ah) || AR_SREV_9561(ah))
++		if (AR_SREV_9531(ah) || AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 			REG_WRITE(ah, AR_PHY_PLL_MODE,
+ 				  REG_READ(ah, AR_PHY_PLL_MODE) & 0xffbfffff);
+ 		else
+@@ -945,7 +948,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 	u32 msi_cfg = 0;
+ 
+ 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-	    AR_SREV_9561(ah))
++	    AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+@@ -1777,7 +1780,7 @@ static void ath9k_hw_init_desc(struct ath_hw *ah)
+ #ifdef __BIG_ENDIAN
+ 		else if (AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
+ 			 AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-			 AR_SREV_9561(ah))
++			 AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 			REG_RMW(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB, 0);
+ 		else
+ 			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
+@@ -2474,6 +2477,9 @@ static void ath9k_gpio_cap_init(struct ath_hw *ah)
+ 	} else if (AR_SREV_9561(ah)) {
+ 		pCap->num_gpio_pins = AR9561_NUM_GPIO;
+ 		pCap->gpio_mask = AR9561_GPIO_MASK;
++	} else if (AR_SREV_5502(ah)) {
++		pCap->num_gpio_pins = AR5502_NUM_GPIO;
++		pCap->gpio_mask = AR5502_GPIO_MASK;
+ 	} else if (AR_SREV_9565(ah)) {
+ 		pCap->num_gpio_pins = AR9565_NUM_GPIO;
+ 		pCap->gpio_mask = AR9565_GPIO_MASK;
+@@ -2610,7 +2616,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
+ 		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah) &&
+-		    !AR_SREV_9561(ah) && !AR_SREV_9565(ah))
++		    !AR_SREV_9561(ah) && !AR_SREV_5502(ah) && !AR_SREV_9565(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
  
  		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
- 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
--		pCap->rx_status_len = sizeof(struct ar9003_rxs);
-+		pCap->rx_status_len = AR_SREV_AR9003_RXS_V2(ah) ?
-+					      AR9003_RXS_SIZE_V2 :
-+						    AR9003_RXS_SIZE_V1;
- 		pCap->tx_desc_len = sizeof(struct ar9003_txc);
- 		pCap->txs_len = sizeof(struct ar9003_txs);
- 	} else {
+@@ -2627,7 +2633,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	if (AR_SREV_9300_20_OR_LATER(ah))
+ 		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
+ 
+-	if (AR_SREV_9561(ah))
++	if (AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		ah->ent_mode = 0x3BDA000;
+ 	else if (AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ent_mode = REG_READ(ah, AR_ENT_OTP);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 58d02c19b..08f91f558 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -813,7 +813,7 @@ static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 	u32 async_mask;
+ 
+ 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-	    AR_SREV_9561(ah))
++	    AR_SREV_9561(ah) || AR_SREV_5502(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 
+ 	async_mask = AR_INTR_MAC_IRQ;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0c0624a3b..3299aef65 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -422,7 +422,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	}
+ 
+ 	if (AR_SREV_9550(sc->sc_ah) || AR_SREV_9531(sc->sc_ah) ||
+-	    AR_SREV_9561(sc->sc_ah))
++	    AR_SREV_9561(sc->sc_ah) || AR_SREV_5502(sc->sc_ah))
+ 		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
+ 
+ 	if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
 diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index d465167ac..5ec263b7f 100644
+index 5a07cf7d8..d465167ac 100644
 --- a/drivers/net/wireless/ath/ath9k/reg.h
 +++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -999,6 +999,7 @@
- #define AR_SREV_SOC(_ah) \
- 	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(_ah) || \
- 	 AR_SREV_9561(_ah) || AR_SREV_5502(_ah))
-+#define AR_SREV_AR9003_RXS_V2(_ah) (AR_SREV_5502(_ah))
+@@ -1138,6 +1138,7 @@ enum {
+ #define AR9531_NUM_GPIO				 18
+ #define AR9550_NUM_GPIO				 24
+ #define AR9561_NUM_GPIO				 23
++#define AR5502_NUM_GPIO				 20
+ #define AR9565_NUM_GPIO				 14
+ #define AR9580_NUM_GPIO				 16
+ #define AR7010_NUM_GPIO                          16
+@@ -1155,6 +1156,7 @@ enum {
+ #define AR9531_GPIO_MASK			 0x0000000F
+ #define AR9550_GPIO_MASK			 0x0000000F
+ #define AR9561_GPIO_MASK			 0x0000000F
++#define AR5502_GPIO_MASK			 0x0000000F
+ #define AR9565_GPIO_MASK			 0x00003FFF
+ #define AR9580_GPIO_MASK			 0x0000F4FF
+ #define AR7010_GPIO_MASK			 0x0000FFFF
+@@ -2114,7 +2116,7 @@ enum {
+ 						     * pcu_txsm.
+ 						     */
  
- /* NOTE: When adding chips newer than Peacock, add chip check here */
- #define AR_SREV_9580_10_OR_LATER(_ah) \
+-#define AR9300_SM_BASE				0xa200
++#define AR9300_SM_BASE				(AR_SREV_5502(ah) ? 0x2a200 : 0xa200)
+ #define AR9002_PHY_AGC_CONTROL			0x9860
+ #define AR9003_PHY_AGC_CONTROL			AR9300_SM_BASE + 0xc4
+ #define AR_PHY_AGC_CONTROL			(AR_SREV_9300_20_OR_LATER(ah) ? AR9003_PHY_AGC_CONTROL : AR9002_PHY_AGC_CONTROL)
+diff --git a/drivers/net/wireless/ath/ath9k/reg_aic.h b/drivers/net/wireless/ath/ath9k/reg_aic.h
+index 955147ab4..abd0370e0 100644
+--- a/drivers/net/wireless/ath/ath9k/reg_aic.h
++++ b/drivers/net/wireless/ath/ath9k/reg_aic.h
+@@ -17,9 +17,9 @@
+ #ifndef REG_AIC_H
+ #define REG_AIC_H
+ 
+-#define AR_SM_BASE                              0xa200
+-#define AR_SM1_BASE                             0xb200
+-#define AR_AGC_BASE                             0x9e00
++#define AR_SM_BASE                              (AR_SREV_5502(ah) ? 0x2a200 : 0xa200)
++#define AR_SM1_BASE                             (AR_SREV_5502(ah) ? 0x2b200 : 0xb200)
++#define AR_AGC_BASE                             (AR_SREV_5502(ah) ? 0x29e00 : 0x9e00)
+ 
+ #define AR_PHY_AIC_CTRL_0_B0                    (AR_SM_BASE + 0x4b0)
+ #define AR_PHY_AIC_CTRL_1_B0                    (AR_SM_BASE + 0x4b4)
 -- 
 2.25.1
 
