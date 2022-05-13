@@ -2,267 +2,119 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16586C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 13:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A2BC43217
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 15:15:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231339AbiEMNux (ORCPT
+        id S1381769AbiEMPPp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 May 2022 09:50:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52956 "EHLO
+        Fri, 13 May 2022 11:15:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1382452AbiEMNsT (ORCPT
+        with ESMTP id S1381220AbiEMPPi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 May 2022 09:48:19 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C72C4BFEE
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2022 06:48:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=5xBuWRW3Lkv/UrR2KPYisX5AO4bb8LQj6Pm9VFPrsDI=;
-        t=1652449697; x=1653659297; b=Yl0VdiamYybY5LoaYKl+Up94x6iY1oxPvRYUICXy4mO7MYc
-        4rptPpK67OlibHtnF8ov48G3umRcOAQL5uE8zQcddvGrMANzyRXLmtNh2yuSGfbxxMzfpdDSfj0SN
-        41quldSrccmFdK6WCKxBIC7PSvw1d4obnsFphQPVaVzxqhRt2bfX+UUv0mnrcWQAU7sjVH1PYTcHa
-        NMxe2bNKV1+qGfDiluyyR5I65y7J/Dgf4MZhmoBuxYgDA/OETJJG4H8ZgmMaUGCGoZYgdEDtwO+zv
-        L0ShpUoxDvtOmcpToO2GcOej0Pgxd1IFjQiEXdaRiV29FpWaMB5BxT3pdi7dax1g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1npVeQ-00Abtz-9M;
-        Fri, 13 May 2022 15:48:14 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: use ifmgd->bssid instead of ifmgd->associated->bssid
-Date:   Fri, 13 May 2022 15:48:05 +0200
-Message-Id: <20220513154805.6d84f3407fce.Ic51ef93a9fc004b137f2cae4935bb9da4a17db18@changeid>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20220513154805.23c69eb5e00a.I9f843f8106faa8572380bcf3954cf26ce9e592d3@changeid>
-References: <20220513154805.23c69eb5e00a.I9f843f8106faa8572380bcf3954cf26ce9e592d3@changeid>
+        Fri, 13 May 2022 11:15:38 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08B3A55213
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2022 08:15:31 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id k2so11878445wrd.5
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2022 08:15:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4kMBq3ML8i4Cw0yoGEU+fJc6+bgjz8wLr/JmgXqi+0Y=;
+        b=sSPnHzKsfAMHfdJZEceCGudvpiXtlhgaJ1KH/jFERZw+Cwc4GNQJYDOsKkIwlRr1SG
+         zkWovpQQtEag6AdaxK7LyAXiyW4g8aA5dcLn+9igMe8Z3FYGQlwHPZ1wvRN/wEYYdiHu
+         hMkkGjyQ+Tg2fqdGTUSLDTrNDPk2ljGdh5zd3aZlkZJpJe6aTklZSUiwHBRbGGHQYQGu
+         ok9S/0Q9HjL69n9v7eso0j2N64NbQr2B6Zd/FL9ssgXm67yxf6bgcK+dfcKAnLT9EwdE
+         5ObekqAsaYhfBzkthbhzG+YTC8/USyXkFJr1R21N2xOWBQa1TszxvMOXXJCCK3dpGgXF
+         HzhA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4kMBq3ML8i4Cw0yoGEU+fJc6+bgjz8wLr/JmgXqi+0Y=;
+        b=Pit605nuBlbppV5wSSceET0sKx5dE2y22ekh1tVwuuYBMNbloE3XjvmfXjF/EktBhi
+         KmjcfJTBg2/qxinp8GrwrE5HaKdw7QG0DUNNRL8xMKeTkPX32SG47gkks+q88gqv1ZcX
+         Xd9Wc+0jJO81Dq48GdhF/Ng5VYiyAY7tM8SeX5YfLJxIX/OL4P8P4rVOR+zRUoVyqr3t
+         Aoc1H/CHIvp5jG4IFniuMNtiYgyxnhYYxPn2XUayDrPsK69OjDL/+Tlaud9rSXMuzcmB
+         OaU+lGLajUV5DcEU3E729FJfUDyB9KnLmRpcz7ekbRhcbwbKRR/OAj+agJVjlGkxmYyF
+         x5ew==
+X-Gm-Message-State: AOAM530NdMp1zRoeJsu0CX12rT7iuEeJCjGMk725d9eUeG09Bdmc+AMU
+        yaxkXK77lZNFkuem4iXijpo+VQ==
+X-Google-Smtp-Source: ABdhPJxYzFSnDNuHEGkraj3axUSnYZQ3NLj17U3JhPBsXfiJv7WzEL40kF+makqi7xt9BaGY90jGXw==
+X-Received: by 2002:a05:6000:86:b0:20a:d7be:e09b with SMTP id m6-20020a056000008600b0020ad7bee09bmr4325701wrx.398.1652454929639;
+        Fri, 13 May 2022 08:15:29 -0700 (PDT)
+Received: from localhost.localdomain (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id y15-20020a05600c364f00b003945237fea1sm2741440wmq.0.2022.05.13.08.15.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 May 2022 08:15:29 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Govind Singh <govinds@codeaurora.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-arm-msm@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH] ath10k: do not enforce interrupt trigger type
+Date:   Fri, 13 May 2022 17:15:16 +0200
+Message-Id: <20220513151516.357549-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Interrupt line can be configured on different hardware in different way,
+even inverted.  Therefore driver should not enforce specific trigger
+type - edge rising - but instead rely on Devicetree to configure it.
 
-Since we always track the BSSID there when we get associated,
-these are equivalent, but ifmgd->bssid saves a dereference and
-thus makes the code a bit smaller, and more readable.
+All Qualcomm DTSI with WCN3990 define the interrupt type as level high,
+so the mismatch between DTSI and driver causes rebind issues:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  $ echo 18800000.wifi > /sys/bus/platform/drivers/ath10k_snoc/unbind
+  $ echo 18800000.wifi > /sys/bus/platform/drivers/ath10k_snoc/bind
+  [   44.763114] irq: type mismatch, failed to map hwirq-446 for interrupt-controller@17a00000!
+  [   44.763130] ath10k_snoc 18800000.wifi: error -ENXIO: IRQ index 0 not found
+  [   44.763140] ath10k_snoc 18800000.wifi: failed to initialize resource: -6
+
+Fixes: c963a683e701 ("ath10k: add resource init and deinit for WCN3990")
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+
 ---
- net/mac80211/cfg.c            |  2 +-
- net/mac80211/debugfs_netdev.c |  2 +-
- net/mac80211/main.c           |  2 +-
- net/mac80211/mlme.c           | 34 +++++++++++++++++-----------------
- net/mac80211/offchannel.c     |  2 +-
- 5 files changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f1d211e61e49..f817cf763069 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2928,7 +2928,7 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
- 		return 0;
- 
--	ap = sdata->u.mgd.associated->bssid;
-+	ap = sdata->u.mgd.bssid;
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index e490c3da3aca..cf71484658c6 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -337,7 +337,7 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
- 			dev_kfree_skb(skb);
- 			return -ENOTCONN;
- 		}
--		memcpy(hdr->addr1, sdata->u.mgd.associated->bssid, ETH_ALEN);
-+		memcpy(hdr->addr1, sdata->u.mgd.bssid, ETH_ALEN);
- 		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
- 		memcpy(hdr->addr3, addr, ETH_ALEN);
- 		sdata_unlock(sdata);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a48a32f87897..03f772c4ee42 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -287,7 +287,7 @@ static void ieee80211_restart_work(struct work_struct *work)
- 			if (sdata->vif.csa_active) {
- 				sdata_lock(sdata);
- 				ieee80211_sta_connection_lost(sdata,
--							      sdata->u.mgd.associated->bssid,
-+							      sdata->u.mgd.bssid,
- 							      WLAN_REASON_UNSPECIFIED, false);
- 				sdata_unlock(sdata);
- 			}
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c32cfb5de5d8..1bf6efe86c02 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1398,7 +1398,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	res = ieee80211_parse_ch_switch_ie(sdata, elems, current_band,
- 					   bss->vht_cap_info,
- 					   ifmgd->flags,
--					   ifmgd->associated->bssid, &csa_ie);
-+					   ifmgd->bssid, &csa_ie);
- 
- 	if (!res) {
- 		ch_switch.timestamp = timestamp;
-@@ -1427,7 +1427,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	    csa_ie.chandef.chan->band) {
- 		sdata_info(sdata,
- 			   "AP %pM switches to different band (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
--			   ifmgd->associated->bssid,
-+			   ifmgd->bssid,
- 			   csa_ie.chandef.chan->center_freq,
- 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
- 			   csa_ie.chandef.center_freq2);
-@@ -1440,7 +1440,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			   "AP %pM switches to unsupported channel "
- 			   "(%d.%03d MHz, width:%d, CF1/2: %d.%03d/%d MHz), "
- 			   "disconnecting\n",
--			   ifmgd->associated->bssid,
-+			   ifmgd->bssid,
- 			   csa_ie.chandef.chan->center_freq,
- 			   csa_ie.chandef.chan->freq_offset,
- 			   csa_ie.chandef.width, csa_ie.chandef.center_freq1,
-@@ -1456,7 +1456,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			return;
- 		sdata_info(sdata,
- 			   "AP %pM tries to chanswitch to same channel, ignore\n",
--			   ifmgd->associated->bssid);
-+			   ifmgd->bssid);
- 		ifmgd->csa_ignored_same_chan = true;
- 		return;
- 	}
-@@ -2609,7 +2609,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+Separate question is whether DTS has a proper interrupt type (level
+high) configured...
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 607e8164bf98..5576ad9fd116 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1249,13 +1249,12 @@ static void ath10k_snoc_init_napi(struct ath10k *ar)
+ static int ath10k_snoc_request_irq(struct ath10k *ar)
  {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	const struct element *ssid;
--	u8 *dst = ifmgd->associated->bssid;
-+	u8 *dst = ifmgd->bssid;
- 	u8 unicast_limit = max(1, max_probe_tries - 3);
- 	struct sta_info *sta;
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+-	int irqflags = IRQF_TRIGGER_RISING;
+ 	int ret, id;
  
-@@ -3219,8 +3219,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (ifmgd->associated &&
--	    ether_addr_equal(mgmt->bssid, ifmgd->associated->bssid)) {
--		const u8 *bssid = ifmgd->associated->bssid;
-+	    ether_addr_equal(mgmt->bssid, ifmgd->bssid)) {
-+		const u8 *bssid = ifmgd->bssid;
- 
- 		sdata_info(sdata, "deauthenticated from %pM (Reason: %u=%s)\n",
- 			   bssid, reason_code,
-@@ -3262,7 +3262,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	if (!ifmgd->associated ||
--	    !ether_addr_equal(mgmt->bssid, ifmgd->associated->bssid))
-+	    !ether_addr_equal(mgmt->bssid, ifmgd->bssid))
- 		return;
- 
- 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
-@@ -3966,7 +3966,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status);
- 
- 	if (ifmgd->associated &&
--	    ether_addr_equal(mgmt->bssid, ifmgd->associated->bssid))
-+	    ether_addr_equal(mgmt->bssid, ifmgd->bssid))
- 		ieee80211_reset_ap_probe(sdata);
- }
- 
-@@ -4197,7 +4197,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (!ifmgd->associated ||
- 	    !ieee80211_rx_our_beacon(bssid,  ifmgd->associated))
- 		return;
--	bssid = ifmgd->associated->bssid;
-+	bssid = ifmgd->bssid;
- 
- 	if (!(rx_status->flag & RX_FLAG_NO_SIGNAL_VAL))
- 		ieee80211_handle_beacon_sig(sdata, ifmgd, bss_conf,
-@@ -4747,7 +4747,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 		u8 bssid[ETH_ALEN];
- 		int max_tries;
- 
--		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
-+		memcpy(bssid, ifmgd->bssid, ETH_ALEN);
- 
- 		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
- 			max_tries = max_nullfunc_tries;
-@@ -4928,7 +4928,7 @@ void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
- 			.bssid = bssid,
- 		};
- 
--		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
-+		memcpy(bssid, ifmgd->bssid, ETH_ALEN);
- 		ieee80211_mgd_deauth(sdata, &req);
- 	}
- 
-@@ -4950,7 +4950,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- 		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_RESUME;
- 		mlme_dbg(sdata, "driver requested disconnect after resume\n");
- 		ieee80211_sta_connection_lost(sdata,
--					      ifmgd->associated->bssid,
-+					      ifmgd->bssid,
- 					      WLAN_REASON_UNSPECIFIED,
- 					      true);
- 		sdata_unlock(sdata);
-@@ -4961,7 +4961,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- 		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_HW_RESTART;
- 		mlme_dbg(sdata, "driver requested disconnect after hardware restart\n");
- 		ieee80211_sta_connection_lost(sdata,
--					      ifmgd->associated->bssid,
-+					      ifmgd->bssid,
- 					      WLAN_REASON_UNSPECIFIED,
- 					      true);
- 		sdata_unlock(sdata);
-@@ -5836,7 +5836,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 		sdata_info(sdata,
- 			   "disconnect from AP %pM for new auth to %pM\n",
--			   ifmgd->associated->bssid, req->bss->bssid);
-+			   ifmgd->bssid, req->bss->bssid);
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       WLAN_REASON_UNSPECIFIED,
- 				       false, frame_buf);
-@@ -5912,7 +5912,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 		sdata_info(sdata,
- 			   "disconnect from AP %pM for new assoc to %pM\n",
--			   ifmgd->associated->bssid, req->bss->bssid);
-+			   ifmgd->bssid, req->bss->bssid);
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       WLAN_REASON_UNSPECIFIED,
- 				       false, frame_buf);
-@@ -6270,7 +6270,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (ifmgd->associated &&
--	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
-+	    ether_addr_equal(ifmgd->bssid, req->bssid)) {
- 		sdata_info(sdata,
- 			   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
- 			   req->bssid, req->reason_code,
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 853c9a369d72..c5d2ab9df1e7 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -819,7 +819,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		if (!sdata->u.mgd.associated ||
- 		    (params->offchan && params->wait &&
- 		     local->ops->remain_on_channel &&
--		     memcmp(sdata->u.mgd.associated->bssid,
-+		     memcmp(sdata->u.mgd.bssid,
- 			    mgmt->bssid, ETH_ALEN)))
- 			need_offchan = true;
- 		sdata_unlock(sdata);
+ 	for (id = 0; id < CE_COUNT_MAX; id++) {
+ 		ret = request_irq(ar_snoc->ce_irqs[id].irq_line,
+-				  ath10k_snoc_per_engine_handler,
+-				  irqflags, ce_name[id], ar);
++				  ath10k_snoc_per_engine_handler, 0,
++				  ce_name[id], ar);
+ 		if (ret) {
+ 			ath10k_err(ar,
+ 				   "failed to register IRQ handler for CE %d: %d\n",
 -- 
-2.35.3
+2.32.0
 
