@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BDDC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 17:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20085C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 17:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383091AbiEMRfG (ORCPT
+        id S241962AbiEMRfH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 May 2022 13:35:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58958 "EHLO
+        Fri, 13 May 2022 13:35:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241962AbiEMRfC (ORCPT
+        with ESMTP id S1344148AbiEMRfD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 May 2022 13:35:02 -0400
+        Fri, 13 May 2022 13:35:03 -0400
 Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10C4FE091;
-        Fri, 13 May 2022 10:35:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEBCD101E8;
+        Fri, 13 May 2022 10:35:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652463301; x=1683999301;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=B/QqEFQ2mEUkuczZyZDlIEde5EgILxhh1qTOe1s6O0c=;
-  b=Xoo0gpqQXyUcXJitQaqV4gBBtnh0h4hhEqq4BRIzr+qheunHtPXCwtU8
-   /R0iiBnCGNabsckDaPhQajbEIbd84bb/7EG8pji++3Ne7sJLvGk4f4T/x
-   qNIf/pkIDty8AfsAdU8OgjBtEYrLMin14QjFP+F/Xm8eSXw6RrkA62oyL
-   9bZcQgACsqvpkCB1SswASQzlmTrxLyHsP7bR2p8mXV8wDbfiHLedTXi+L
-   PVRYM4pS+4QZDe0DWeZeroshdYHOKPruX6MQc6SRKccwiRxwF6AKuS+ED
-   Qv9P2Nx6NvKeaKJz8h8j0pBUoV3+chlOHw9fkLmgCWLgCebxjpOfj3OLT
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10346"; a="250895684"
+  t=1652463302; x=1683999302;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=OvrdMRFv5ZpZRNGmaPVVhvFlhhKbFzQ/U/+kvsTJ00c=;
+  b=h8BEy/b4BxvPBqo5eTCmLFJYqxtewL3H1ZlGdimgBY5WdWJv7v9m36FG
+   UhQpj20uJoAJ7YzCQf6z+8+tqNjiG5qj2sXZu3Cc+omn1IQLgncDNTIxp
+   +k7FcPIMzXYWndqXcsO6ROujekS1Ko6xgzS5DLM09ezyfSqfBAS5O3zMc
+   8ebUZNY00uk5AY5FvKFKv8v5Hsr5xDrmY8z8iEFJzupbuJTG1Bqbza1kq
+   RpclJX29AVoN7rq2nxGQ5xwHNf0L3Yq82tMAp7fncFdy4f2P/NkCkEy6F
+   HmUPZLOaM7EO6Mt7gZyqG0sdJJZVXCoYTgsdCGrgWvGJJdpqTKoYYTgTT
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10346"; a="250895681"
 X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
-   d="scan'208";a="250895684"
+   d="scan'208";a="250895681"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 10:34:15 -0700
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 10:34:14 -0700
 X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
-   d="scan'208";a="624950940"
+   d="scan'208";a="624950921"
 Received: from abarkat-mobl.amr.corp.intel.com (HELO rmarti10-nuc3.hsd1.or.comcast.net) ([10.212.160.143])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 10:34:15 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 10:34:13 -0700
 From:   Ricardo Martinez <ricardo.martinez@linux.intel.com>
 To:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
@@ -48,47 +48,30 @@ Cc:     kuba@kernel.org, davem@davemloft.net, johannes@sipsolutions.net,
         dinesh.sharma@intel.com, ilpo.jarvinen@linux.intel.com,
         moises.veleta@intel.com, sreehari.kancharla@intel.com,
         Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Subject: [PATCH net-next 2/2] net: skb: Remove skb_data_area_size()
-Date:   Fri, 13 May 2022 10:34:00 -0700
-Message-Id: <20220513173400.3848271-3-ricardo.martinez@linux.intel.com>
+Subject: [PATCH net-next 0/2] net: skb: Remove skb_data_area_size()
+Date:   Fri, 13 May 2022 10:33:58 -0700
+Message-Id: <20220513173400.3848271-1-ricardo.martinez@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220513173400.3848271-1-ricardo.martinez@linux.intel.com>
-References: <20220513173400.3848271-1-ricardo.martinez@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-skb_data_area_size() is not needed. As Jakub pointed out [1]:
-For Rx, drivers can use the size passed during skb allocation or
-use skb_tailroom().
-For Tx, drivers should use skb_headlen().
+This patch series removes the skb_data_area_size() helper,
+replacing it in t7xx driver with the size used during skb allocation.
 
-[1] https://lore.kernel.org/netdev/CAHNKnsTmH-rGgWi3jtyC=ktM1DW2W1VJkYoTMJV2Z_Bt498bsg@mail.gmail.com/
+https://lore.kernel.org/netdev/CAHNKnsTmH-rGgWi3jtyC=ktM1DW2W1VJkYoTMJV2Z_Bt498bsg@mail.gmail.com/
 
-Signed-off-by: Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- include/linux/skbuff.h | 5 -----
- 1 file changed, 5 deletions(-)
+Ricardo Martinez (2):
+  net: wwan: t7xx: Avoid calls to skb_data_area_size()
+  net: skb: Remove skb_data_area_size()
 
-diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-index 9d82a8b6c8f1..2810a3abe81a 100644
---- a/include/linux/skbuff.h
-+++ b/include/linux/skbuff.h
-@@ -1764,11 +1764,6 @@ static inline void skb_set_end_offset(struct sk_buff *skb, unsigned int offset)
- }
- #endif
- 
--static inline unsigned int skb_data_area_size(struct sk_buff *skb)
--{
--	return skb_end_pointer(skb) - skb->data;
--}
--
- struct ubuf_info *msg_zerocopy_realloc(struct sock *sk, size_t size,
- 				       struct ubuf_info *uarg);
- 
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 7 +++----
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 6 ++----
+ include/linux/skbuff.h                     | 5 -----
+ 3 files changed, 5 insertions(+), 13 deletions(-)
+
 -- 
 2.25.1
 
