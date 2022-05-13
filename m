@@ -2,43 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E501C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 13:50:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0C2C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 May 2022 13:50:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349207AbiEMNur (ORCPT
+        id S1349485AbiEMNut (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 May 2022 09:50:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52938 "EHLO
+        Fri, 13 May 2022 09:50:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1382450AbiEMNsT (ORCPT
+        with ESMTP id S1382451AbiEMNsT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 13 May 2022 09:48:19 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F4AFD3C
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 750684BFE3
         for <linux-wireless@vger.kernel.org>; Fri, 13 May 2022 06:48:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=gMV3qebm/IUQpicVsS6UZ5ZUBWHJZnDFwO46s6iwiic=; t=1652449697; x=1653659297; 
-        b=l86sEkXSEhqRmU//dFHyVjse+KR8HYgVQp97+IxiKl0pZRRYrufr3Lq+5g4kjgCyEc0la707Bbk
-        QeQ+wXgKNrQzo5BV/IOFF143SCpb6Xb1/dztn5AwTfkr9ZuR7PJvPEjnlj/s/PPPXjVrvTh2tGM0q
-        oi17pWZvNWdywNPR9908JcoGBC5ZP0Gi0YBbFoTwpe3b0E3UC9qOBomy97hRtiuCw4x47/MUPmmBY
-        2mjxjtn06TCCKR2SA6bc2k0YvoUEsPSGLr29QDLnT9lxZCxfy6+8MWQ9i38OwF/vglmK3CHyswhZN
-        si/54rCepyUJfqBz5WZH0nIJiMMfzpOLz0gQ==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=9YCcrFeHzxArli9oS8pfdeJEWrQkuBjU1AS+J0qCbyI=;
+        t=1652449697; x=1653659297; b=luJngPqNLOncpq3WOMm/ror68Gcdig3hOiR1pmuj1J255AY
+        MNFvrkjzO7yVemUWZMOu9uyUWLpnrU8iBkjKOLz0CblmLfRZ7jQjJ+k6ntfy/gtnrIkFCeiUqRNnf
+        FXuIoFH5FLw042F/1s3moB4DdPlvIVOg4HmPM5V9h8GtiV2da/iwMSvKTmFVvulYxELAH7yJfsTE4
+        Bn3JnS6DpQLWAIiR5bks2bJyaKcqPDU/H76CUvvjzxMF4vzyoKLrrzy4a7M0wj/j6eZ4xLbCTr6aR
+        kgdsmSh8OZQXwcKh9Ho6oXYsLZcMmLnaJXI4u613SfPDsE2ZM87+pVgKfuIkxMbw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1npVeQ-00Abtz-03;
+        id 1npVeQ-00Abtz-Hb;
         Fri, 13 May 2022 15:48:14 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: mlme: move in RSSI reporting code
-Date:   Fri, 13 May 2022 15:48:04 +0200
-Message-Id: <20220513154805.23c69eb5e00a.I9f843f8106faa8572380bcf3954cf26ce9e592d3@changeid>
+Subject: [PATCH 3/3] mac80211: mlme: use local SSID copy
+Date:   Fri, 13 May 2022 15:48:06 +0200
+Message-Id: <20220513154805.89b855fd46f3.Ibdacb74eb4f9b21bc473072605df05bfd8bb2d75@changeid>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20220513154805.23c69eb5e00a.I9f843f8106faa8572380bcf3954cf26ce9e592d3@changeid>
+References: <20220513154805.23c69eb5e00a.I9f843f8106faa8572380bcf3954cf26ce9e592d3@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -47,115 +48,51 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This code is tightly coupled to the sdata->u.mgd data
-structure, so there's no reason for it to be in utils.
-Move it to mlme.c.
+There's no need to look it up from the ifmgd->associated
+BSS configuration, we already maintain a local copy since
+commit b0140fda626e ("mac80211: mlme: save ssid info to
+ieee80211_bss_conf while assoc"), though now it's in the
+vif->cfg instead of bss_conf.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 40 ++++++++++++++++++++++++++++++++++++++++
- net/mac80211/util.c | 40 ----------------------------------------
- 2 files changed, 40 insertions(+), 40 deletions(-)
+ net/mac80211/mlme.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f02137b4cb12..c32cfb5de5d8 100644
+index 1bf6efe86c02..26b4863ae1ea 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -6379,3 +6379,43 @@ void ieee80211_cqm_beacon_loss_notify(struct ieee80211_vif *vif, gfp_t gfp)
- 	cfg80211_cqm_beacon_loss_notify(sdata->dev, gfp);
- }
- EXPORT_SYMBOL(ieee80211_cqm_beacon_loss_notify);
-+
-+static void _ieee80211_enable_rssi_reports(struct ieee80211_sub_if_data *sdata,
-+					    int rssi_min_thold,
-+					    int rssi_max_thold)
-+{
-+	trace_api_enable_rssi_reports(sdata, rssi_min_thold, rssi_max_thold);
-+
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
-+		return;
-+
-+	/*
-+	 * Scale up threshold values before storing it, as the RSSI averaging
-+	 * algorithm uses a scaled up value as well. Change this scaling
-+	 * factor if the RSSI averaging algorithm changes.
-+	 */
-+	sdata->u.mgd.rssi_min_thold = rssi_min_thold*16;
-+	sdata->u.mgd.rssi_max_thold = rssi_max_thold*16;
-+}
-+
-+void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
-+				    int rssi_min_thold,
-+				    int rssi_max_thold)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	WARN_ON(rssi_min_thold == rssi_max_thold ||
-+		rssi_min_thold > rssi_max_thold);
-+
-+	_ieee80211_enable_rssi_reports(sdata, rssi_min_thold,
-+				       rssi_max_thold);
-+}
-+EXPORT_SYMBOL(ieee80211_enable_rssi_reports);
-+
-+void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	_ieee80211_enable_rssi_reports(sdata, 0, 0);
-+}
-+EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 682a164f795a..1e26b5235add 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2854,46 +2854,6 @@ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset)
- 	return pos;
- }
- 
--static void _ieee80211_enable_rssi_reports(struct ieee80211_sub_if_data *sdata,
--					    int rssi_min_thold,
--					    int rssi_max_thold)
--{
--	trace_api_enable_rssi_reports(sdata, rssi_min_thold, rssi_max_thold);
--
--	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
--		return;
--
--	/*
--	 * Scale up threshold values before storing it, as the RSSI averaging
--	 * algorithm uses a scaled up value as well. Change this scaling
--	 * factor if the RSSI averaging algorithm changes.
--	 */
--	sdata->u.mgd.rssi_min_thold = rssi_min_thold*16;
--	sdata->u.mgd.rssi_max_thold = rssi_max_thold*16;
--}
--
--void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
--				    int rssi_min_thold,
--				    int rssi_max_thold)
--{
--	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--
--	WARN_ON(rssi_min_thold == rssi_max_thold ||
--		rssi_min_thold > rssi_max_thold);
--
--	_ieee80211_enable_rssi_reports(sdata, rssi_min_thold,
--				       rssi_max_thold);
--}
--EXPORT_SYMBOL(ieee80211_enable_rssi_reports);
--
--void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
--{
--	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--
--	_ieee80211_enable_rssi_reports(sdata, 0, 0);
--}
--EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
--
- u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			      u16 cap)
+@@ -2608,7 +2608,6 @@ static void ieee80211_mlme_send_probe_req(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
  {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	const struct element *ssid;
+ 	u8 *dst = ifmgd->bssid;
+ 	u8 unicast_limit = max(1, max_probe_tries - 3);
+ 	struct sta_info *sta;
+@@ -2642,19 +2641,10 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 		ifmgd->nullfunc_failed = false;
+ 		ieee80211_send_nullfunc(sdata->local, sdata, false);
+ 	} else {
+-		int ssid_len;
+-
+-		rcu_read_lock();
+-		ssid = ieee80211_bss_get_elem(ifmgd->associated, WLAN_EID_SSID);
+-		if (WARN_ON_ONCE(ssid == NULL))
+-			ssid_len = 0;
+-		else
+-			ssid_len = ssid->datalen;
+-
+ 		ieee80211_mlme_send_probe_req(sdata, sdata->vif.addr, dst,
+-					      ssid->data, ssid_len,
++					      sdata->vif.cfg.ssid,
++					      sdata->vif.cfg.ssid_len,
+ 					      ifmgd->associated->channel);
+-		rcu_read_unlock();
+ 	}
+ 
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
 -- 
 2.35.3
 
