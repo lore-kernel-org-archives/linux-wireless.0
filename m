@@ -2,53 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DA8C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 03:25:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44D0CC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 03:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239630AbiEPDZs (ORCPT
+        id S239634AbiEPDZt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 May 2022 23:25:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50710 "EHLO
+        Sun, 15 May 2022 23:25:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239631AbiEPDZn (ORCPT
+        with ESMTP id S239626AbiEPDZk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 May 2022 23:25:43 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA4D1098
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 20:25:40 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id i10so23524456lfg.13
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 20:25:40 -0700 (PDT)
+        Sun, 15 May 2022 23:25:40 -0400
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 800251C91E
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 20:25:38 -0700 (PDT)
+Received: by mail-lj1-x234.google.com with SMTP id o22so15688949ljp.8
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 20:25:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=PbV+baTfSf6u1EDu9ZnZDC1YNNi38GdcisAOvMHD4Bw=;
-        b=QjqTZxQwXXCe9KlmtuQOjaJbbV3YEk8MZRY48gyp7x0GHLEwRygQadvXbirjLzk+zj
-         Sp8Jc53dQmw18KW02rUNzBVVgbzVRbTPjNWSQ5EzSuDw/S0zcz4PLpbB3gdAAKBcOi2I
-         LXB/ynjKURRV6uQf9/q1fXPbEgdD8PF7RrQHhZsFNSW4EMx8vQcC6FPNY99DYQTNqWZv
-         HI8R3e3c3Yv1LN/UCTibYdHm79gEmpEK6Xgb7XxvGhB+Kwt741oZDJswLDcKU0n/5dwY
-         mr4Qhfu2rgsPJLntQZUB9vDSv508LyqDPSFvqzYJSgT2Kmihbx/1gq7RQB9h2tQZTyy8
-         qv4w==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lTb+0fH6xwh52af2Ognq9gCoUohS2TbZEntfebl88fk=;
+        b=cyD9JFpY5Z3k6H03vJq6Mn9BORJdehXiCRCdmQNwV8xREPt4+33fT7l9OR/iop8i2/
+         ToLqXPiiJQ0xQABZ1LvX8bCKqYd4eCZjVC0pLrccYgBfEzwH7un6sn5EXcmRKh3QpLuD
+         ZEpg47ns5yXyKJwKkcrSLpgQCJQ1iM+Eo3kmHxDSwT4ge54xz3A3t87zlXMWeDIov2T1
+         /AiqC4DaC6Nupy1k1DfOdhxLu1/cpbPxSuDhidBr+qaoHkDitZalXEPui03XFBnDYGxk
+         FCZmAwmDWSFpMNoO0VIUPvNAumaHtsjTMVuFwOBNI+kEHwaPYT4tmkorQpOfZcCFniiT
+         FyMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=PbV+baTfSf6u1EDu9ZnZDC1YNNi38GdcisAOvMHD4Bw=;
-        b=BtdEEMZwj00KlfFDL4o/ugys9aBVsDwpnm0LdzndhhPOKg6eu7qlUUF8lg4lyzAVhW
-         KDRsZpHMAros3WR2hepWMfDo73tn2RSXMYTFDmKF4tOkq5iUCpw2ff5Pa9El3FC8jE4k
-         +14zyK4r+WLmtRKBW8bv6abL0yhmrEmqS8JZbP1iNp8pk7t6azu8gyBIUFf8GBRfKQCr
-         68xqLGzpnR1Re0ltpzIvY/6Q3MdUbfoYqTYuDEWazAwXMhYwlS0WQTtRG1xDZoAmDOqI
-         KUqKH/VK4MsjPxGmi7NvGAnInJIwnvYFxsICwcxPH+8sc0EROXOaSvJBaykPxveQoGc+
-         YsCA==
-X-Gm-Message-State: AOAM533QY1MiMlQFMahZ5ixpxaS3lmyMYHTTr2VxUwm6TJffqxNZ6Emb
-        LZMGPbSO5IullT/9lIQPYi0=
-X-Google-Smtp-Source: ABdhPJwU9s6rz8F3sSWiajSPUAgQAz/+1eMgZfds0TGo4wJnVLbd99mweI9PRVB8lYbNM+sP4Y8NKg==
-X-Received: by 2002:a05:6512:2308:b0:473:da88:ea2b with SMTP id o8-20020a056512230800b00473da88ea2bmr11781591lfu.339.1652671538728;
-        Sun, 15 May 2022 20:25:38 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lTb+0fH6xwh52af2Ognq9gCoUohS2TbZEntfebl88fk=;
+        b=CL/0GzIaT+z58gf9QkD7743AyUiF+BGV313XIoeDRFenecW84rtaKuz4LHX/ApyRSY
+         y90wMAISDvjZOzMSLu2etVFS/WWvykSuQeq93WTNB/fBBt4TRLNZRXkr7KFV/6GIZy0l
+         J5iHGKKAczkVVjO4fd5vIfA1tJBoC89FCW4L5t5vP6VH7WD4toi2AoVz0PoGwiXxr4uM
+         sJJhDS5YeMsuQKiVgM0B69/KVYeETkNPe3s7AloFiVZxW9UqLFAJseSjYGnOeT49fmjL
+         OsVGACKW068V8E5lsYsJ2OvEUtNb7WSU+WFi/W/NhQEaO3IsOpfFtG1ihv/8fRCfEIAR
+         iH7A==
+X-Gm-Message-State: AOAM530LI/e3ZHcoInrMcvOgN7vS2MwYDdJ5FU1Ij4B08wkwXlcRaL0X
+        PFwIRBf+C2T1XDFhbDUqd78=
+X-Google-Smtp-Source: ABdhPJxXGOycHqCQErj4YXorjs6Fj9NBYcnL8HljJN4ShAZGcVjI7LhAGsOs9gVbB5miDlchhjMcxQ==
+X-Received: by 2002:a2e:9e43:0:b0:24b:3c6:3832 with SMTP id g3-20020a2e9e43000000b0024b03c63832mr9868446ljk.63.1652671536665;
+        Sun, 15 May 2022 20:25:36 -0700 (PDT)
 Received: from rsa-laptop.internal.lan ([217.25.229.52])
-        by smtp.gmail.com with ESMTPSA id q18-20020a2e9152000000b0024f3d1daee5sm1337251ljg.109.2022.05.15.20.25.37
+        by smtp.gmail.com with ESMTPSA id q18-20020a2e9152000000b0024f3d1daee5sm1337251ljg.109.2022.05.15.20.25.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 May 2022 20:25:38 -0700 (PDT)
+        Sun, 15 May 2022 20:25:36 -0700 (PDT)
 From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To:     Kalle Valo <kvalo@kernel.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
@@ -58,180 +58,105 @@ Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         Tom Psyborg <pozega.tomislav@gmail.com>,
         Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
         Zhijun You <hujy652@gmail.com>
-Subject: [PATCH 2/4] ath10k: htt_tx: do not interpret Eth frames as WiFi
-Date:   Mon, 16 May 2022 06:25:17 +0300
-Message-Id: <20220516032519.29831-3-ryazanov.s.a@gmail.com>
+Subject: [PATCH 0/4] ath10k: add encapsulation offloading support
+Date:   Mon, 16 May 2022 06:25:15 +0300
+Message-Id: <20220516032519.29831-1-ryazanov.s.a@gmail.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220516032519.29831-1-ryazanov.s.a@gmail.com>
-References: <20220516032519.29831-1-ryazanov.s.a@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The xmit path for the Ethernet encapsulated frames become more or less
-usable since d740d8fd2439 ("ath10k: unify tx mode and dispatch"). This
-change reorganize the xmit path in a manageable way to properly support
-various tx modes, but misses that the Ethernet encapsulated frame is a
-special case. We do not have an IEEE 802.11 header at the begining of
-them. But the HTT Tx handler still interprets first bytes of each frame
-as an IEEE 802.11 Frame Control field.
+Hello,
 
-Than this code was copied by e62ee5c381c5 ("ath10k: Add support for
-htt_data_tx_desc_64 descriptor") and a2097d6444c3 ("ath10k: htt: High
-latency TX support") to another handlers. In fact the issue in the high
-latency (HL) handler was introduced by 83ac260151e7 ("ath10k: add mic
-bytes for pmf management packet").
+this series introduces driver support for hardware encapsulation
+offloading feature.
 
-Ethernet encapsulated frame tx mode stay unused until 75d85fd9993c
-("ath10k: introduce basic tdls functionality") started using it for TDLS
-frames to avoid key selection issue in some firmwares.
+The main goal of the series is an overall improvement of system
+performance. On a QCA9563+QCA9888-based access point in bridged mode,
+encapsulation offloading increases TCP 16-streams DL throughput from
+365 to 396 mbps (+8%) and UDP DL throughput from 436 to 483 mbps (+11%).
 
-Trying to interpret the begining of an Ethernet encapsulated frame as an
-IEEE 802.11 header was not hurt us noticeably since we need to meet two
-conditions: (1) xmit should be performed towards a TDLS peer, and (2)
-the TDLS peer should have a specific OUI part of its MAC address. Looks
-like that the rareness in TDLS communications of OUIs that can be
-interpreted as an 802.11 management frame saves users from facing this
-issue earlier.
+The series consist of four patches, the first three prepare the code,
+and the last one introduces the offloading support itself. The first
+patch reworks transmission status reporting to make it flexible enough
+to support 802.11 and Ethernet encapsulated frames reporting. The second
+patch reworks improves Ethernet encapsulated frames handling in the HTT
+Tx layer. The third patch reworks the module parameter that configures
+the main encapsulation format of frames that are passed from the driver
+to the hardware. It makes it possible to configure more encapsulation
+methods than just raw or not-raw. And, as stated before, the fourth
+patch actually introduces offloading support. It changes a couple of
+frame analysis places along the xmit path and starts reporting
+offloading support to mac80211 via the corresponding hw attribute.
 
-Improve Ethernet tx mode support in the HTT Tx handler by avoiding
-interpreting its first bytes as an IEEE 802.11 header. While at it, make
-the ieee80211_hdr variable local to the code block that is guarded by
-!is_eth check. In this way, we clarify in which cases a frame can be
-interpreted as IEEE 802.11, and saves us from similar issues in the
-future.
+The new feature has been extensively tested with QCA9888. It works well
+and introduces a measurable performance increase on platforms with not
+so fast CPU (e.g. QCA9563). Tests with MT7621+QCA6174 show no
+regression. I was unable to observe any measurable throughput increase
+in tests with QCA6174 due to the poor perfomance the SISO client and OTA
+testing. Only slight downlink rate stability increase with slight
+reducing of the SIRQ load on the AP side.
 
-Credits: this change as part of xmit encapsulation offloading support
-was originally made by QCA and then submitted for inclusion by John
-Crispin [1]. But the whole work was not accepted due to the lack of a
-part for 64-bits descriptors [2]. Zhijun You then pointed this out to me
-in a reply to my initial RFC patch series. And I made this slightly
-reworked version that covered all the HTT Tx handler variants.
+Tests with QCA9880, QCA9980, QCA9984, QCA9377 revealed no regression
+[1]. No specific throughput tests have been performed. In OTA tests with
+a regular load, there is a slight increase in througput stability.
 
-1. https://lore.kernel.org/all/20191216092207.31032-1-john@phrozen.org/
-2. https://patchwork.kernel.org/project/linux-wireless/patch/20191216092207.31032-1-john@phrozen.org/
+In tests of the QCA9377 in Sta mode, Edward Matijevic noticed a possible
+regression in the Ethernet tx mode compared to the Native WiFi tx
+mode:
+> There might be a regression in download bandwidth under ETHERNET mode
+> but I didn't do enough tests to see if was my PC or the adapter as the
+> upload bandwidth was similar to other tests.
+> NATIVE_WIFI performs the same as without the patch.
 
-Reported-by: Zhijun You <hujy652@gmail.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Signed-off-by: John Crispin <john@phrozen.org>
-Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
----
+Credits: thanks to OpenWrt folks Oldřich Jedlička
+<oldium.pro@gmail.com> and Edward Matijevic <motolav@gmail.com> who
+helped me a lot to perform extensive testing with various chips after a
+RFC/RFT post in the OpenWrt development mailing list [1]. Thanks to
+Zhijun You <hujy652@gmail.com> who helped with the testing, pointed me
+to the previous work (see below) and the missed parts in the HTT Tx
+layer [1].
+
+Prior work: similar patches were independently developed by QCA and then
+submitted for inclusion by John Crispin <john@phrozen.org> [2] and
+latter by Zhijun You <hujy652@gmail.com> [3]. The work was not merged
+due to the lack of a part for 64-bits descriptors [4]. The idea of HTT
+Tx layer change from this work was adopted for the series in patch #2.
+
+1. https://www.mail-archive.com/openwrt-devel@lists.openwrt.org/msg62013.html
+2. https://lore.kernel.org/all/20191216092207.31032-1-john@phrozen.org/
+3. https://lore.kernel.org/all/20210524103130.66693-1-hujy652@gmail.com/
+4. https://patchwork.kernel.org/project/linux-wireless/patch/20191216092207.31032-1-john@phrozen.org/
+
+CC: Edward Matijevic <motolav@gmail.com>
+CC: John Crispin <john@phrozen.org>
+CC: Oldřich Jedlička <oldium.pro@gmail.com>
+CC: Tom Psyborg <pozega.tomislav@gmail.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: Zhijun You <hujy652@gmail.com>
 
 Changes since RFC:
- * new patch
+ * new Tested-on and Tested-by tags
+ * new patch #2 for better Ethernet encapsulation support in the HTT Tx
+   layer
+ * rebased on top of latest ath-next
 
- drivers/net/wireless/ath/ath10k/htt_tx.c | 61 ++++++++++++++----------
- 1 file changed, 35 insertions(+), 26 deletions(-)
+Sergey Ryazanov (3):
+  ath10k: improve tx status reporting
+  ath10k: htt_tx: do not interpret Eth frames as WiFi
+  ath10k: turn rawmode into frame_mode
+  ath10k: add encapsulation offloading support
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 9842a4b2f78f..a19b0795c86d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1275,7 +1275,6 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
- 	struct ath10k *ar = htt->ar;
- 	int res, data_len;
- 	struct htt_cmd_hdr *cmd_hdr;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
- 	struct htt_data_tx_desc *tx_desc;
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct sk_buff *tmp_skb;
-@@ -1286,11 +1285,15 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
- 	u16 flags1 = 0;
- 	u16 msdu_id = 0;
- 
--	if ((ieee80211_is_action(hdr->frame_control) ||
--	     ieee80211_is_deauth(hdr->frame_control) ||
--	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	if (!is_eth) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
-+
-+		if ((ieee80211_is_action(hdr->frame_control) ||
-+		     ieee80211_is_deauth(hdr->frame_control) ||
-+		     ieee80211_is_disassoc(hdr->frame_control)) &&
-+		     ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+		}
- 	}
- 
- 	data_len = msdu->len;
-@@ -1387,7 +1390,6 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct ath10k_hif_sg_item sg_items[2];
-@@ -1419,15 +1421,19 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
- 	txbuf_paddr = htt->txbuf.paddr +
- 		      (sizeof(struct ath10k_htt_txbuf_32) * msdu_id);
- 
--	if ((ieee80211_is_action(hdr->frame_control) ||
--	     ieee80211_is_deauth(hdr->frame_control) ||
--	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
--	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
--		   txmode == ATH10K_HW_TXRX_RAW &&
--		   ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	if (!is_eth) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
-+
-+		if ((ieee80211_is_action(hdr->frame_control) ||
-+		     ieee80211_is_deauth(hdr->frame_control) ||
-+		     ieee80211_is_disassoc(hdr->frame_control)) &&
-+		     ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+		} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
-+			   txmode == ATH10K_HW_TXRX_RAW &&
-+			   ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+		}
- 	}
- 
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
-@@ -1589,7 +1595,6 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct ath10k_hif_sg_item sg_items[2];
-@@ -1621,15 +1626,19 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
- 	txbuf_paddr = htt->txbuf.paddr +
- 		      (sizeof(struct ath10k_htt_txbuf_64) * msdu_id);
- 
--	if ((ieee80211_is_action(hdr->frame_control) ||
--	     ieee80211_is_deauth(hdr->frame_control) ||
--	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
--	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
--		   txmode == ATH10K_HW_TXRX_RAW &&
--		   ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	if (!is_eth) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
-+
-+		if ((ieee80211_is_action(hdr->frame_control) ||
-+		     ieee80211_is_deauth(hdr->frame_control) ||
-+		     ieee80211_is_disassoc(hdr->frame_control)) &&
-+		     ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+		} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
-+			   txmode == ATH10K_HW_TXRX_RAW &&
-+			   ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+		}
- 	}
- 
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
+ drivers/net/wireless/ath/ath10k/core.c   | 11 ++--
+ drivers/net/wireless/ath/ath10k/core.h   |  1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 61 ++++++++++++---------
+ drivers/net/wireless/ath/ath10k/mac.c    | 67 +++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/txrx.c   | 12 ++++-
+ 5 files changed, 108 insertions(+), 44 deletions(-)
+
 -- 
 2.35.1
 
