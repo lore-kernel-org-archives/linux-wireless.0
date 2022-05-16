@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C39C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DAA1C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236491AbiEPAwj (ORCPT
+        id S237664AbiEPAwk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 May 2022 20:52:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48326 "EHLO
+        Sun, 15 May 2022 20:52:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232404AbiEPAwg (ORCPT
+        with ESMTP id S231476AbiEPAwi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 May 2022 20:52:36 -0400
+        Sun, 15 May 2022 20:52:38 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AFD52558A
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95242559B
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:36 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qSJr9000815, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qU8u9000850, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qSJr9000815
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qU8u9000850
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 16 May 2022 08:52:28 +0800
+        Mon, 16 May 2022 08:52:30 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Mon, 16 May 2022 08:52:28 +0800
+ 15.1.2375.28; Mon, 16 May 2022 08:52:30 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 16 May
- 2022 08:52:27 +0800
+ 2022 08:52:30 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 1/6] rtw89: add ieee80211::sta_rc_update ops
-Date:   Mon, 16 May 2022 08:52:10 +0800
-Message-ID: <20220516005215.5878-2-pkshih@realtek.com>
+Subject: [PATCH v2 3/6] rtw89: cfo: check mac_id to avoid out-of-bounds
+Date:   Mon, 16 May 2022 08:52:12 +0800
+Message-ID: <20220516005215.5878-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220516005215.5878-1-pkshih@realtek.com>
 References: <20220516005215.5878-1-pkshih@realtek.com>
@@ -64,101 +64,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When peer's NSS, rate or bandwidth is changed, we update RA(rate adaptive)
-mask to ensure transmitting packets properly.
+Somehow, hardware reports incorrect mac_id and pollute memory. Check index
+before we access the array.
+
+  UBSAN: array-index-out-of-bounds in rtw89/phy.c:2517:23
+  index 188 is out of range for type 's32 [64]'
+  CPU: 1 PID: 51550 Comm: irq/35-rtw89_pc Tainted: G           OE
+  Call Trace:
+   <IRQ>
+   show_stack+0x52/0x58
+   dump_stack_lvl+0x4c/0x63
+   dump_stack+0x10/0x12
+   ubsan_epilogue+0x9/0x45
+   __ubsan_handle_out_of_bounds.cold+0x44/0x49
+   ? __alloc_skb+0x92/0x1d0
+   rtw89_phy_cfo_parse+0x44/0x7f [rtw89_core]
+   rtw89_core_rx+0x261/0x871 [rtw89_core]
+   ? __alloc_skb+0xee/0x1d0
+   rtw89_pci_napi_poll+0x3fa/0x4ea [rtw89_pci]
+   __napi_poll+0x33/0x1a0
+   net_rx_action+0x126/0x260
+   ? __queue_work+0x217/0x4c0
+   __do_softirq+0xd9/0x315
+   ? disable_irq_nosync+0x10/0x10
+   do_softirq.part.0+0x6d/0x90
+   </IRQ>
+   <TASK>
+   __local_bh_enable_ip+0x62/0x70
+   rtw89_pci_interrupt_threadfn+0x182/0x1a6 [rtw89_pci]
+   irq_thread_fn+0x28/0x60
+   irq_thread+0xc8/0x190
+   ? irq_thread_fn+0x60/0x60
+   kthread+0x16b/0x190
+   ? irq_thread_check_affinity+0xe0/0xe0
+   ? set_kthread_struct+0x50/0x50
+   ret_from_fork+0x22/0x30
+   </TASK>
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac80211.c | 12 +++++++++++-
- drivers/net/wireless/realtek/rtw89/phy.c      | 12 +++++++++---
- drivers/net/wireless/realtek/rtw89/phy.h      |  3 ++-
- 3 files changed, 22 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index 8da3e117ad382..f24e4a208376b 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -630,7 +630,7 @@ static void rtw89_ra_mask_info_update_iter(void *data, struct ieee80211_sta *sta
- 
- 	rtwsta->use_cfg_mask = true;
- 	rtwsta->mask = *br_data->mask;
--	rtw89_phy_ra_updata_sta(br_data->rtwdev, sta);
-+	rtw89_phy_ra_updata_sta(br_data->rtwdev, sta, IEEE80211_RC_SUPP_RATES_CHANGED);
- }
- 
- static void rtw89_ra_mask_info_update(struct rtw89_dev *rtwdev,
-@@ -759,6 +759,15 @@ static void rtw89_ops_cancel_hw_scan(struct ieee80211_hw *hw,
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-+static void rtw89_ops_sta_rc_update(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_sta *sta, u32 changed)
-+{
-+	struct rtw89_dev *rtwdev = hw->priv;
-+
-+	rtw89_phy_ra_updata_sta(rtwdev, sta, changed);
-+}
-+
- const struct ieee80211_ops rtw89_ops = {
- 	.tx			= rtw89_ops_tx,
- 	.wake_tx_queue		= rtw89_ops_wake_tx_queue,
-@@ -788,5 +797,6 @@ const struct ieee80211_ops rtw89_ops = {
- 	.hw_scan		= rtw89_ops_hw_scan,
- 	.cancel_hw_scan		= rtw89_ops_cancel_hw_scan,
- 	.set_sar_specs		= rtw89_ops_set_sar_specs,
-+	.sta_rc_update		= rtw89_ops_sta_rc_update,
- };
- EXPORT_SYMBOL(rtw89_ops);
 diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index 33494e8451cf3..c9a4ae989ac7d 100644
+index c9a4ae989ac7d..79e4c28495c80 100644
 --- a/drivers/net/wireless/realtek/rtw89/phy.c
 +++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -357,13 +357,19 @@ static void rtw89_phy_ra_sta_update(struct rtw89_dev *rtwdev,
- 	ra->csi_mode = csi_mode;
- }
+@@ -2462,6 +2462,11 @@ void rtw89_phy_cfo_parse(struct rtw89_dev *rtwdev, s16 cfo_val,
+ 	struct rtw89_cfo_tracking_info *cfo = &rtwdev->cfo_tracking;
+ 	u8 macid = phy_ppdu->mac_id;
  
--void rtw89_phy_ra_updata_sta(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta)
-+void rtw89_phy_ra_updata_sta(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta,
-+			     u32 changed)
- {
- 	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
- 	struct rtw89_ra_info *ra = &rtwsta->ra;
- 
- 	rtw89_phy_ra_sta_update(rtwdev, sta, false);
--	ra->upd_mask = 1;
++	if (macid >= CFO_TRACK_MAX_USER) {
++		rtw89_warn(rtwdev, "mac_id %d is out of range\n", macid);
++		return;
++	}
 +
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED)
-+		ra->upd_mask = 1;
-+	if (changed & (IEEE80211_RC_BW_CHANGED | IEEE80211_RC_NSS_CHANGED))
-+		ra->upd_bw_nss_mask = 1;
-+
- 	rtw89_debug(rtwdev, RTW89_DBG_RA,
- 		    "ra updat: macid = %d, bw = %d, nss = %d, gi = %d %d",
- 		    ra->macid,
-@@ -487,7 +493,7 @@ static void rtw89_phy_ra_updata_sta_iter(void *data, struct ieee80211_sta *sta)
- {
- 	struct rtw89_dev *rtwdev = (struct rtw89_dev *)data;
- 
--	rtw89_phy_ra_updata_sta(rtwdev, sta);
-+	rtw89_phy_ra_updata_sta(rtwdev, sta, IEEE80211_RC_SUPP_RATES_CHANGED);
- }
- 
- void rtw89_phy_ra_update(struct rtw89_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index 3ca5efa4c097b..291660154d58d 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -471,7 +471,8 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev,
- 			      u8 bw, u8 ntx, u8 rs, u8 bf, u8 ch);
- void rtw89_phy_ra_assoc(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta);
- void rtw89_phy_ra_update(struct rtw89_dev *rtwdev);
--void rtw89_phy_ra_updata_sta(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta);
-+void rtw89_phy_ra_updata_sta(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta,
-+			     u32 changed);
- void rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
- 				struct ieee80211_vif *vif,
- 				const struct cfg80211_bitrate_mask *mask);
+ 	cfo->cfo_tail[macid] += cfo_val;
+ 	cfo->cfo_cnt[macid]++;
+ 	cfo->packet_count++;
 -- 
 2.25.1
 
