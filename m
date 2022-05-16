@@ -2,66 +2,61 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E4EC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 16:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10E15C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 16:23:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236231AbiEPQMD (ORCPT
+        id S1343549AbiEPQXa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 May 2022 12:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45404 "EHLO
+        Mon, 16 May 2022 12:23:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241391AbiEPQL7 (ORCPT
+        with ESMTP id S1343558AbiEPQX3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 May 2022 12:11:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65E00387B9
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2022 09:11:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B691061014
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2022 16:11:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AB17C385AA;
-        Mon, 16 May 2022 16:11:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652717517;
-        bh=k4Z629lD4jDxAZwSbnjVJOG6WtkNWbSIW3DDKaMroFE=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=mgNKFxad3brHr5iIOwNJ7Ab7Rmg7MLeTJdmIYIWl/gGwMxCt1uYuZ6vjxSMEP0DQY
-         O+LlzLmgR6QufLIksNzVaPY1GeZmCaR213Frou6mvFXGwkzHTqbHZh3DpvnUkxrk7v
-         BJ1mBmuiCjEy4LeQyDLl6wbywnr4gD59J3zV+3ELGefJoRFICYXr8sKuzQDr4jIdGl
-         VfecWhlK8AStcAju4qLErJBK57V8l4p96U/XD4fxFRByzIIavp/0FLI6vGU/klqsb0
-         /AplshdL/9H1MqA8TdqSgSAZUSurqWZMP7JVDsv3obwUHJQFnI4bA31S9I4sXsscye
-         LBXpVXModne6g==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Maxime Bizon <mbizon@freebox.fr>
+        Mon, 16 May 2022 12:23:29 -0400
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A985028E3A
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2022 09:23:26 -0700 (PDT)
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 23E5C200FA;
+        Mon, 16 May 2022 18:23:25 +0200 (CEST)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 1FDD9200D9;
+        Mon, 16 May 2022 18:23:25 +0200 (CEST)
+Message-ID: <c4bf5262bc250afd9c9e52248f1b576a7882c8d4.camel@freebox.fr>
+Subject: Re: [PATCH] ath10k: fix misreported tx bandwidth for 160Mhz
+From:   Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To:     Kalle Valo <kvalo@kernel.org>
 Cc:     ath10k@lists.infradead.org,
         linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix misreported tx bandwidth for 160Mhz
+Date:   Mon, 16 May 2022 18:23:25 +0200
+In-Reply-To: <87o7zx4fue.fsf@kernel.org>
 References: <cd2735a40da7f4fcc5323e3fca3775e7b5402ece.camel@freebox.fr>
-Date:   Mon, 16 May 2022 19:11:53 +0300
-In-Reply-To: <cd2735a40da7f4fcc5323e3fca3775e7b5402ece.camel@freebox.fr>
-        (Maxime Bizon's message of "Mon, 16 May 2022 17:23:43 +0200")
-Message-ID: <87o7zx4fue.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+         <87o7zx4fue.fsf@kernel.org>
+Organization: Freebox
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Mon May 16 18:23:25 2022 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Maxime Bizon <mbizon@freebox.fr> writes:
 
-> Because of this missing switch case, 160Mhz transmit was reported as
-> 20Mhz, leading to wrong airtime calculation and AQL limiting max
-> throughput.
->
-> Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
+On Mon, 2022-05-16 at 19:11 +0300, Kalle Valo wrote:
 
-On what ath10k hardware and afirmware version did you test this? I can
-add that to the commit log.
+Hello Kalle,
+
+> On what ath10k hardware and afirmware version did you test this? I
+> can add that to the commit log.
+> 
+
+QCA9984 
+10.4-3.10-00047
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+Maxime
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+
