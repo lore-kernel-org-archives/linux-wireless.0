@@ -2,63 +2,238 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57909C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 20:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3570EC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 20:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239487AbiEPUeC (ORCPT
+        id S1348143AbiEPUtI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 May 2022 16:34:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56606 "EHLO
+        Mon, 16 May 2022 16:49:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349178AbiEPUcO (ORCPT
+        with ESMTP id S1348227AbiEPUsH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 May 2022 16:32:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E990A2126E;
-        Mon, 16 May 2022 13:16:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9C366B8160F;
-        Mon, 16 May 2022 20:16:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8A03C34100;
-        Mon, 16 May 2022 20:16:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652732164;
-        bh=ME96KX8IfX1svEsT1z2Dl5hSwjXyNb9P2yDf0uGA9FI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=O0S4GRNM6WUisWnWefckQXgbR6PZD+pb7qWIyAS80cWIqtkYFGEqTiXoM0C8+PXTh
-         F59z5FAtrV9TgdbPvFLCsthZn3BL0km6e8LY3p6X4TLCswVx6PREdHIRrqdmcYSa2R
-         yqDF2uCaa+ZZOqqAS2ZdR88IVh2JT3zfq0shj29RnD9a7NFcF6ktABlDs93Sz8mXlF
-         IoSDKLxBiYjc6dEr50+2tC5tDBvKh5RTGSGNvTGCFqHhapqxaRYK5chPgdTj0AX4uN
-         4vm+E0+rjYccB934PBjZQv8twso3aZ9Wawv4JE4UEgONtBK0OOddQ6NTuw6abU0xbU
-         iWV4JSCCOuZpA==
-Date:   Mon, 16 May 2022 13:16:02 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Ricardo Martinez <ricardo.martinez@linux.intel.com>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
-        m.chetan.kumar@intel.com, chandrashekar.devegowda@intel.com,
-        linuxwwan@intel.com, chiranjeevi.rapolu@linux.intel.com,
-        haijun.liu@mediatek.com, andriy.shevchenko@linux.intel.com,
-        dinesh.sharma@intel.com, ilpo.jarvinen@linux.intel.com,
-        moises.veleta@intel.com, sreehari.kancharla@intel.com
-Subject: Re: [PATCH net-next 0/2] net: skb: Remove skb_data_area_size()
-Message-ID: <20220516131602.3dfddf42@kernel.org>
-In-Reply-To: <20220513173400.3848271-1-ricardo.martinez@linux.intel.com>
-References: <20220513173400.3848271-1-ricardo.martinez@linux.intel.com>
+        Mon, 16 May 2022 16:48:07 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 824624B1EF
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2022 13:25:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1652732706; x=1684268706;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=dLsN9+tMGNSmyxpcHdK1wwe0o/QR5zEeNH6dnF4J+1A=;
+  b=eUcgOm4gT0kFh4HU8zSr2DnA6yffiJHi+0fmmJoLUAfZDo7U1BhPDYW2
+   Tfy0ZpzYz6qeOX6lkrcfUPstc9t7Pwbl9EiUsMeA3UApQMEQpIT91Ecao
+   gRDZQlix/o4Ts77RJYpvlXHM8Y0e0AhJQa3xyueMMqTV4xlcRqcqMXSBL
+   A=;
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 16 May 2022 13:25:05 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2022 13:25:05 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 16 May 2022 13:25:05 -0700
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 16 May 2022 13:25:04 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>,
+        Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH v5 1/3] cfg80211: additional processing in NL80211_CMD_SET_BEACON
+Date:   Mon, 16 May 2022 13:24:52 -0700
+Message-ID: <20220516202454.4925-2-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220516202454.4925-1-quic_alokad@quicinc.com>
+References: <20220516202454.4925-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 13 May 2022 10:33:58 -0700 Ricardo Martinez wrote:
-> This patch series removes the skb_data_area_size() helper,
-> replacing it in t7xx driver with the size used during skb allocation.
-> 
-> https://lore.kernel.org/netdev/CAHNKnsTmH-rGgWi3jtyC=ktM1DW2W1VJkYoTMJV2Z_Bt498bsg@mail.gmail.com/
+FILS discovery and unsolicited broadcast probe response transmissions
+are configured as part of NL80211_CMD_START_AP, however both stop
+after userspace uses the NL80211_CMD_SET_BEACON command as these
+attributes are not processed in that command.
 
-Thanks for following up!
+- Add the missing implementation.
+- Modify the local variable in nl80211_set_beacon() and input parameter
+to rdev_change_beacon() from type struct cfg80211_beacon_data to
+type struct cfg80211_ap_settings to support the new processing.
+
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+ include/net/cfg80211.h  |  2 +-
+ net/wireless/nl80211.c  | 28 ++++++++++++++++++----
+ net/wireless/rdev-ops.h |  2 +-
+ net/wireless/trace.h    | 52 +++++++++++++++++++++++------------------
+ 4 files changed, 55 insertions(+), 29 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 97a5804ccdcf..880ade4a0430 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4200,7 +4200,7 @@ struct cfg80211_ops {
+ 	int	(*start_ap)(struct wiphy *wiphy, struct net_device *dev,
+ 			    struct cfg80211_ap_settings *settings);
+ 	int	(*change_beacon)(struct wiphy *wiphy, struct net_device *dev,
+-				 struct cfg80211_beacon_data *info);
++				 struct cfg80211_ap_settings *info);
+ 	int	(*stop_ap)(struct wiphy *wiphy, struct net_device *dev);
+ 
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 740b29481bc6..e738902a9b99 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5809,7 +5809,8 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	struct cfg80211_beacon_data params;
++	struct cfg80211_ap_settings *params;
++	struct nlattr *attrs;
+ 	int err;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+@@ -5822,16 +5823,35 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 	if (!wdev->beacon_interval)
+ 		return -EINVAL;
+ 
+-	err = nl80211_parse_beacon(rdev, info->attrs, &params);
++	params = kzalloc(sizeof(*params), GFP_KERNEL);
++	if (!params)
++		return -ENOMEM;
++
++	err = nl80211_parse_beacon(rdev, info->attrs, &params->beacon);
+ 	if (err)
+ 		goto out;
+ 
++	attrs = info->attrs[NL80211_ATTR_FILS_DISCOVERY];
++	if (attrs) {
++		err = nl80211_parse_fils_discovery(rdev, attrs, params);
++		if (err)
++			goto out;
++	}
++
++	attrs = info->attrs[NL80211_ATTR_UNSOL_BCAST_PROBE_RESP];
++	if (attrs) {
++		err = nl80211_parse_unsol_bcast_probe_resp(rdev, attrs,	params);
++		if (err)
++			goto out;
++	}
++
+ 	wdev_lock(wdev);
+-	err = rdev_change_beacon(rdev, dev, &params);
++	err = rdev_change_beacon(rdev, dev, params);
+ 	wdev_unlock(wdev);
+ 
+ out:
+-	kfree(params.mbssid_ies);
++	kfree(params->beacon.mbssid_ies);
++	kfree(params);
+ 	return err;
+ }
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 439bcf52369c..131fbe9c3199 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -162,7 +162,7 @@ static inline int rdev_start_ap(struct cfg80211_registered_device *rdev,
+ 
+ static inline int rdev_change_beacon(struct cfg80211_registered_device *rdev,
+ 				     struct net_device *dev,
+-				     struct cfg80211_beacon_data *info)
++				     struct cfg80211_ap_settings *info)
+ {
+ 	int ret;
+ 	trace_rdev_change_beacon(&rdev->wiphy, dev, info);
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 228079d7690a..97ca10cbbfee 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -597,44 +597,50 @@ TRACE_EVENT(rdev_start_ap,
+ 
+ TRACE_EVENT(rdev_change_beacon,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+-		 struct cfg80211_beacon_data *info),
++		 struct cfg80211_ap_settings *info),
+ 	TP_ARGS(wiphy, netdev, info),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+-		__dynamic_array(u8, head, info ? info->head_len : 0)
+-		__dynamic_array(u8, tail, info ? info->tail_len : 0)
+-		__dynamic_array(u8, beacon_ies, info ? info->beacon_ies_len : 0)
++		__dynamic_array(u8, head, info ? info->beacon.head_len : 0)
++		__dynamic_array(u8, tail, info ? info->beacon.tail_len : 0)
++		__dynamic_array(u8, beacon_ies,
++				info ? info->beacon.beacon_ies_len : 0)
+ 		__dynamic_array(u8, proberesp_ies,
+-				info ? info->proberesp_ies_len : 0)
++				info ? info->beacon.proberesp_ies_len : 0)
+ 		__dynamic_array(u8, assocresp_ies,
+-				info ? info->assocresp_ies_len : 0)
+-		__dynamic_array(u8, probe_resp, info ? info->probe_resp_len : 0)
++				info ? info->beacon.assocresp_ies_len : 0)
++		__dynamic_array(u8, probe_resp,
++				info ? info->beacon.probe_resp_len : 0)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		NETDEV_ASSIGN;
+ 		if (info) {
+-			if (info->head)
+-				memcpy(__get_dynamic_array(head), info->head,
+-				       info->head_len);
+-			if (info->tail)
+-				memcpy(__get_dynamic_array(tail), info->tail,
+-				       info->tail_len);
+-			if (info->beacon_ies)
++			if (info->beacon.head)
++				memcpy(__get_dynamic_array(head),
++				       info->beacon.head,
++				       info->beacon.head_len);
++			if (info->beacon.tail)
++				memcpy(__get_dynamic_array(tail),
++				       info->beacon.tail,
++				       info->beacon.tail_len);
++			if (info->beacon.beacon_ies)
+ 				memcpy(__get_dynamic_array(beacon_ies),
+-				       info->beacon_ies, info->beacon_ies_len);
+-			if (info->proberesp_ies)
++				       info->beacon.beacon_ies,
++				       info->beacon.beacon_ies_len);
++			if (info->beacon.proberesp_ies)
+ 				memcpy(__get_dynamic_array(proberesp_ies),
+-				       info->proberesp_ies,
+-				       info->proberesp_ies_len);
+-			if (info->assocresp_ies)
++				       info->beacon.proberesp_ies,
++				       info->beacon.proberesp_ies_len);
++			if (info->beacon.assocresp_ies)
+ 				memcpy(__get_dynamic_array(assocresp_ies),
+-				       info->assocresp_ies,
+-				       info->assocresp_ies_len);
+-			if (info->probe_resp)
++				       info->beacon.assocresp_ies,
++				       info->beacon.assocresp_ies_len);
++			if (info->beacon.probe_resp)
+ 				memcpy(__get_dynamic_array(probe_resp),
+-				       info->probe_resp, info->probe_resp_len);
++				       info->beacon.probe_resp,
++				       info->beacon.probe_resp_len);
+ 		}
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT, WIPHY_PR_ARG, NETDEV_PR_ARG)
+-- 
+2.31.1
+
