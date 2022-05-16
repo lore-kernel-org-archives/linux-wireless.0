@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A975C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F6DEC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233872AbiEPAwh (ORCPT
+        id S235758AbiEPAwi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 May 2022 20:52:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48312 "EHLO
+        Sun, 15 May 2022 20:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231476AbiEPAwf (ORCPT
+        with ESMTP id S232864AbiEPAwg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 May 2022 20:52:35 -0400
+        Sun, 15 May 2022 20:52:36 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C64D252B5
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13D0525592
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:34 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qQKS1000784, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qTyfD000846, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qQKS1000784
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qTyfD000846
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 16 May 2022 08:52:26 +0800
+        Mon, 16 May 2022 08:52:29 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Mon, 16 May 2022 08:52:26 +0800
+ 15.1.2308.27; Mon, 16 May 2022 08:52:29 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 16 May
- 2022 08:52:26 +0800
+ 2022 08:52:28 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 0/6] rtw89: add missing functions and fix misbehavior found by verification
-Date:   Mon, 16 May 2022 08:52:09 +0800
-Message-ID: <20220516005215.5878-1-pkshih@realtek.com>
+Subject: [PATCH v2 2/6] rtw89: 8852c: set TX antenna path
+Date:   Mon, 16 May 2022 08:52:11 +0800
+Message-ID: <20220516005215.5878-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220516005215.5878-1-pkshih@realtek.com>
+References: <20220516005215.5878-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,40 +64,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To continuously verify 8852ce, we add a patch to set TX antenna path to do
-TX power measurement, so we also update the power table to ensure TX power
-as expectation.
+To make user space can set TX antenna via iw command. Then, we can diagnose
+antenna is connected properly or not, and measure TX power in single path.
 
-During verification, we got some messages from supplicant and kernel, and
-then add ieee80211::sta_rc_update and fix a out-of-bounds issue.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-In endurance test, it get stuck because SER interrupt event isn't handled
-properly. Fix it by the last patch.
-
-v2: Use SI terminology to describe frequencies in commit messages.
-
-Ping-Ke Shih (4):
-  rtw89: add ieee80211::sta_rc_update ops
-  rtw89: 8852c: set TX antenna path
-  rtw89: cfo: check mac_id to avoid out-of-bounds
-  rtw89: pci: only mask out INT indicator register for disable interrupt
-    v1
-
-Zong-Zhe Yang (2):
-  rtw89: 8852c: update txpwr tables to HALRF_027_00_052
-  rtw89: convert rtw89_band to nl80211_band precisely
-
- drivers/net/wireless/realtek/rtw89/core.c     |   11 +-
- drivers/net/wireless/realtek/rtw89/core.h     |   14 +
- drivers/net/wireless/realtek/rtw89/fw.c       |    2 +-
- drivers/net/wireless/realtek/rtw89/mac80211.c |   12 +-
- drivers/net/wireless/realtek/rtw89/pci.c      |    3 -
- drivers/net/wireless/realtek/rtw89/phy.c      |   30 +-
- drivers/net/wireless/realtek/rtw89/phy.h      |    3 +-
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |    9 +-
- .../wireless/realtek/rtw89/rtw8852c_table.c   | 3714 ++++++++---------
- 9 files changed, 1918 insertions(+), 1880 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 77dcdbd86c63a..64840c8d9efe8 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -2360,19 +2360,19 @@ static void rtw8852c_ctrl_tx_path_tmac(struct rtw89_dev *rtwdev, u8 tx_path,
+ 		rtw89_write32(rtwdev, reg, 0);
+ 	}
+ 
+-	if (tx_path == RF_PATH_A) {
++	if (tx_path == RF_A) {
+ 		path_com[0].data = AX_PATH_COM0_PATHA;
+ 		path_com[1].data = AX_PATH_COM1_PATHA;
+ 		path_com[2].data = AX_PATH_COM2_PATHA;
+ 		path_com[7].data = AX_PATH_COM7_PATHA;
+ 		path_com[8].data = AX_PATH_COM8_PATHA;
+-	} else if (tx_path == RF_PATH_B) {
++	} else if (tx_path == RF_B) {
+ 		path_com[0].data = AX_PATH_COM0_PATHB;
+ 		path_com[1].data = AX_PATH_COM1_PATHB;
+ 		path_com[2].data = AX_PATH_COM2_PATHB;
+ 		path_com[7].data = AX_PATH_COM7_PATHB;
+ 		path_com[8].data = AX_PATH_COM8_PATHB;
+-	} else if (tx_path == RF_PATH_AB) {
++	} else if (tx_path == RF_AB) {
+ 		path_com[0].data = AX_PATH_COM0_PATHAB;
+ 		path_com[1].data = AX_PATH_COM1_PATHAB;
+ 		path_com[2].data = AX_PATH_COM2_PATHAB;
+@@ -2457,6 +2457,7 @@ static void rtw8852c_bb_ctrl_btc_preagc(struct rtw89_dev *rtwdev, bool bt_en)
+ static void rtw8852c_bb_cfg_txrx_path(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_hal *hal = &rtwdev->hal;
++	u8 ntx_path = hal->antenna_tx ? hal->antenna_tx : RF_AB;
+ 
+ 	rtw8852c_bb_cfg_rx_path(rtwdev, RF_PATH_AB);
+ 
+@@ -2472,7 +2473,7 @@ static void rtw8852c_bb_cfg_txrx_path(struct rtw89_dev *rtwdev)
+ 		rtw89_phy_write32_mask(rtwdev, R_RXHE, B_RXHETB_MAX_NSS, 1);
+ 	}
+ 
+-	rtw8852c_ctrl_tx_path_tmac(rtwdev, RF_PATH_AB, RTW89_MAC_0);
++	rtw8852c_ctrl_tx_path_tmac(rtwdev, ntx_path, RTW89_MAC_0);
+ }
+ 
+ static u8 rtw8852c_get_thermal(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path)
 -- 
 2.25.1
 
