@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DAA1C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09BB4C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 May 2022 00:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237664AbiEPAwk (ORCPT
+        id S238386AbiEPAwl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 May 2022 20:52:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48402 "EHLO
+        Sun, 15 May 2022 20:52:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231476AbiEPAwi (ORCPT
+        with ESMTP id S238185AbiEPAwk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 May 2022 20:52:38 -0400
+        Sun, 15 May 2022 20:52:40 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95242559B
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706ED255B4
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2022 17:52:39 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qU8u9000850, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qU8u9000850
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24G0qY0A1000858, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24G0qY0A1000858
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 16 May 2022 08:52:30 +0800
+        Mon, 16 May 2022 08:52:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Mon, 16 May 2022 08:52:30 +0800
+ 15.1.2308.27; Mon, 16 May 2022 08:52:33 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 16 May
- 2022 08:52:30 +0800
+ 2022 08:52:33 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
-Subject: [PATCH v2 3/6] rtw89: cfo: check mac_id to avoid out-of-bounds
-Date:   Mon, 16 May 2022 08:52:12 +0800
-Message-ID: <20220516005215.5878-4-pkshih@realtek.com>
+Subject: [PATCH v2 5/6] rtw89: convert rtw89_band to nl80211_band precisely
+Date:   Mon, 16 May 2022 08:52:14 +0800
+Message-ID: <20220516005215.5878-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220516005215.5878-1-pkshih@realtek.com>
 References: <20220516005215.5878-1-pkshih@realtek.com>
@@ -56,7 +56,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMTUgpFWkyCAxMDowMDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -64,64 +64,139 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Somehow, hardware reports incorrect mac_id and pollute memory. Check index
-before we access the array.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-  UBSAN: array-index-out-of-bounds in rtw89/phy.c:2517:23
-  index 188 is out of range for type 's32 [64]'
-  CPU: 1 PID: 51550 Comm: irq/35-rtw89_pc Tainted: G           OE
-  Call Trace:
-   <IRQ>
-   show_stack+0x52/0x58
-   dump_stack_lvl+0x4c/0x63
-   dump_stack+0x10/0x12
-   ubsan_epilogue+0x9/0x45
-   __ubsan_handle_out_of_bounds.cold+0x44/0x49
-   ? __alloc_skb+0x92/0x1d0
-   rtw89_phy_cfo_parse+0x44/0x7f [rtw89_core]
-   rtw89_core_rx+0x261/0x871 [rtw89_core]
-   ? __alloc_skb+0xee/0x1d0
-   rtw89_pci_napi_poll+0x3fa/0x4ea [rtw89_pci]
-   __napi_poll+0x33/0x1a0
-   net_rx_action+0x126/0x260
-   ? __queue_work+0x217/0x4c0
-   __do_softirq+0xd9/0x315
-   ? disable_irq_nosync+0x10/0x10
-   do_softirq.part.0+0x6d/0x90
-   </IRQ>
-   <TASK>
-   __local_bh_enable_ip+0x62/0x70
-   rtw89_pci_interrupt_threadfn+0x182/0x1a6 [rtw89_pci]
-   irq_thread_fn+0x28/0x60
-   irq_thread+0xc8/0x190
-   ? irq_thread_fn+0x60/0x60
-   kthread+0x16b/0x190
-   ? irq_thread_check_affinity+0xe0/0xe0
-   ? set_kthread_struct+0x50/0x50
-   ret_from_fork+0x22/0x30
-   </TASK>
+Before 6 GHz band was supported, i.e. only 2 GHz and 5 GHz, they were the
+same from the numerical point of view. However, after 6 GHz band support,
+we need to do this conversion logically.
 
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtw89/core.c | 11 +++++++----
+ drivers/net/wireless/realtek/rtw89/core.h | 14 ++++++++++++++
+ drivers/net/wireless/realtek/rtw89/fw.c   |  2 +-
+ drivers/net/wireless/realtek/rtw89/phy.c  | 13 +++++++------
+ 4 files changed, 29 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index e3317deafa1d0..a6a90572e74bf 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1608,10 +1608,13 @@ static void rtw89_core_update_rx_status(struct rtw89_dev *rtwdev,
+ 
+ 	if (rtwdev->scanning &&
+ 	    RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD, &rtwdev->fw)) {
+-		rx_status->freq =
+-			ieee80211_channel_to_frequency(hal->current_channel,
+-						       hal->current_band_type);
+-		rx_status->band = rtwdev->hal.current_band_type;
++		u8 chan = hal->current_channel;
++		u8 band = hal->current_band_type;
++		enum nl80211_band nl_band;
++
++		nl_band = rtw89_hw_to_nl80211_band(band);
++		rx_status->freq = ieee80211_channel_to_frequency(chan, nl_band);
++		rx_status->band = nl_band;
+ 	}
+ 
+ 	if (desc_info->icv_err || desc_info->crc32_err)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 2921814842ffa..e8a77225a90ff 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3480,6 +3480,20 @@ static inline u8 rtw89_hw_to_rate_info_bw(enum rtw89_bandwidth hw_bw)
+ 		return RATE_INFO_BW_20;
+ }
+ 
++static inline
++enum nl80211_band rtw89_hw_to_nl80211_band(enum rtw89_band hw_band)
++{
++	switch (hw_band) {
++	default:
++	case RTW89_BAND_2G:
++		return NL80211_BAND_2GHZ;
++	case RTW89_BAND_5G:
++		return NL80211_BAND_5GHZ;
++	case RTW89_BAND_6G:
++		return NL80211_BAND_6GHZ;
++	}
++}
++
+ static inline
+ enum rtw89_bandwidth nl_to_rtw89_bandwidth(enum nl80211_chan_width width)
+ {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index e4be785709d10..4718aced1428a 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2068,7 +2068,7 @@ static void rtw89_release_pkt_list(struct rtw89_dev *rtwdev)
+ 	struct rtw89_pktofld_info *info, *tmp;
+ 	u8 idx;
+ 
+-	for (idx = RTW89_BAND_2G; idx < NUM_NL80211_BANDS; idx++) {
++	for (idx = NL80211_BAND_2GHZ; idx < NUM_NL80211_BANDS; idx++) {
+ 		if (!(rtwdev->chip->support_bands & BIT(idx)))
+ 			continue;
+ 
 diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c9a4ae989ac7d..79e4c28495c80 100644
+index 79e4c28495c80..762cdba9d3cfd 100644
 --- a/drivers/net/wireless/realtek/rtw89/phy.c
 +++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -2462,6 +2462,11 @@ void rtw89_phy_cfo_parse(struct rtw89_dev *rtwdev, s16 cfo_val,
- 	struct rtw89_cfo_tracking_info *cfo = &rtwdev->cfo_tracking;
- 	u8 macid = phy_ppdu->mac_id;
+@@ -429,27 +429,28 @@ void rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
+ 					 RTW89_HW_RATE_MCS16,
+ 					 RTW89_HW_RATE_MCS24};
+ 	u8 band = rtwdev->hal.current_band_type;
++	enum nl80211_band nl_band = rtw89_hw_to_nl80211_band(band);
+ 	u8 tx_nss = rtwdev->hal.tx_nss;
+ 	u8 i;
  
-+	if (macid >= CFO_TRACK_MAX_USER) {
-+		rtw89_warn(rtwdev, "mac_id %d is out of range\n", macid);
-+		return;
-+	}
-+
- 	cfo->cfo_tail[macid] += cfo_val;
- 	cfo->cfo_cnt[macid]++;
- 	cfo->packet_count++;
+ 	for (i = 0; i < tx_nss; i++)
+ 		if (!__check_rate_pattern(&next_pattern, hw_rate_he[i],
+ 					  RA_MASK_HE_RATES, RTW89_RA_MODE_HE,
+-					  mask->control[band].he_mcs[i],
++					  mask->control[nl_band].he_mcs[i],
+ 					  0, true))
+ 			goto out;
+ 
+ 	for (i = 0; i < tx_nss; i++)
+ 		if (!__check_rate_pattern(&next_pattern, hw_rate_vht[i],
+ 					  RA_MASK_VHT_RATES, RTW89_RA_MODE_VHT,
+-					  mask->control[band].vht_mcs[i],
++					  mask->control[nl_band].vht_mcs[i],
+ 					  0, true))
+ 			goto out;
+ 
+ 	for (i = 0; i < tx_nss; i++)
+ 		if (!__check_rate_pattern(&next_pattern, hw_rate_ht[i],
+ 					  RA_MASK_HT_RATES, RTW89_RA_MODE_HT,
+-					  mask->control[band].ht_mcs[i],
++					  mask->control[nl_band].ht_mcs[i],
+ 					  0, true))
+ 			goto out;
+ 
+@@ -457,18 +458,18 @@ void rtw89_phy_rate_pattern_vif(struct rtw89_dev *rtwdev,
+ 	 * require at least one basic rate for ieee80211_set_bitrate_mask,
+ 	 * so the decision just depends on if all bitrates are set or not.
+ 	 */
+-	sband = rtwdev->hw->wiphy->bands[band];
++	sband = rtwdev->hw->wiphy->bands[nl_band];
+ 	if (band == RTW89_BAND_2G) {
+ 		if (!__check_rate_pattern(&next_pattern, RTW89_HW_RATE_CCK1,
+ 					  RA_MASK_CCK_RATES | RA_MASK_OFDM_RATES,
+ 					  RTW89_RA_MODE_CCK | RTW89_RA_MODE_OFDM,
+-					  mask->control[band].legacy,
++					  mask->control[nl_band].legacy,
+ 					  BIT(sband->n_bitrates) - 1, false))
+ 			goto out;
+ 	} else {
+ 		if (!__check_rate_pattern(&next_pattern, RTW89_HW_RATE_OFDM6,
+ 					  RA_MASK_OFDM_RATES, RTW89_RA_MODE_OFDM,
+-					  mask->control[band].legacy,
++					  mask->control[nl_band].legacy,
+ 					  BIT(sband->n_bitrates) - 1, false))
+ 			goto out;
+ 	}
 -- 
 2.25.1
 
