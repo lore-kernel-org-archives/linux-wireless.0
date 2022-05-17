@@ -2,84 +2,151 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB5FC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 08:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE6DC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:06:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238468AbiEQIhv (ORCPT
+        id S238456AbiEQJGt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 May 2022 04:37:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54364 "EHLO
+        Tue, 17 May 2022 05:06:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232605AbiEQIht (ORCPT
+        with ESMTP id S245120AbiEQJGg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 May 2022 04:37:49 -0400
-Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A83636151
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 01:37:48 -0700 (PDT)
-Received: by mail-vk1-xa33.google.com with SMTP id e144so8681714vke.9
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 01:37:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=d9Asr0SeltTw/PH/mfYIRVg4glPFZ1rj4w1tcUD07rs=;
-        b=PIYIRnb82+X/4SqmLtRLy7keWVP2YyhMzpyh9YAKvbSGIIACp3IurgVNVgMpFh3cRo
-         y7iHeZ7/vfQt/kEaAHdq45GTyzvSPoxboGVuLozgy/VyzG1LID+3VCdZIiei2y0W07pC
-         o0WzSsGYaJwTGceJg3nMuh6hGG+RoytIKdztWMSnC3JMzHioRNGR3s9LDLaVIDfckDA0
-         0cSxjpsqs8x0RyMLeKnhPe04lsGbrIwx8HnhprF+ZF16Nj9rwr4M0+6T0Sv8UNNrjlkw
-         gdcxGEJcWiC/+mRpXsbn44FM1v3QeYubU6Znziqj71tAPxysaNGX5rmqhI58DpX2Dhv4
-         fdYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=d9Asr0SeltTw/PH/mfYIRVg4glPFZ1rj4w1tcUD07rs=;
-        b=e5sPlkCb/1+NH1UnqMzDZKDDGqvH6dG7aw5y+KWqAa3WbC3eney53GLt4/k+TGfevt
-         Pn52fUi1oY2X/7q833ZvL1kH7fjWKQUfn8LXMBuMGu6uVhmIAZyxird17SWaOZ7RDHAD
-         3kiAODExjH6XPsNG6NxrbEGr01uazuCIqfx61IehF9RzZmyRrhekqosaURr5b3gpWXkT
-         eu5n4aP9Z2Hy3w9UZjZfdXqTuPKGLka+f/+fSwTRnsjxyUNm0ubPW43qxTYTEexp8cZN
-         ZAjUBiPAcJOYNPQdYZqro/AjpaH/LD0wDGuV2dL77aO+D2d0JG/vnnZDkAb4oWjwUo9r
-         6AdA==
-X-Gm-Message-State: AOAM5308KS2OLjGysIJmbjmru3rM29eGZLmGh3DireEwFHa6LC1g8qB2
-        vOv2xso5QWVkUKtz8eglv01CvF6yiDbNrmg6ne6Djt+IgZw=
-X-Google-Smtp-Source: ABdhPJz1VBgB0+0+lF8vdD2fAqckoVwXjPs32pRcGWWJu3JLt4+yvqqO3vM9ugzS91PuNTenkRJRAc2813RR0OA0L7c=
-X-Received: by 2002:a05:6122:890:b0:352:b096:d44b with SMTP id
- 16-20020a056122089000b00352b096d44bmr8021401vkf.41.1652776667432; Tue, 17 May
- 2022 01:37:47 -0700 (PDT)
+        Tue, 17 May 2022 05:06:36 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38FBE13D69
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1652778384; x=1684314384;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=8jRbqIHiHeBiztgMpidCFiYoDSGB6hVCWljyXRFrVpc=;
+  b=Eq+mjsPsOzub/tQ4tlzT/H2asiHlXx362RBdEIyxXDzaV4mN07q5pxnG
+   gTni6ztbhA8sEN/MoE7ORn3PTGAPf6mXhhPo6QeRG5PChyasQiICwpr8L
+   hTks3VaL2K4y9H/Rp9mIvgiEmdB0EvRXhlaUy3gEC4ePUJ3futQwUDyHx
+   FTi/w7OB4AR1VaxrnbxSdxrdp3q8ls+elfukvr0KzaiIwdT9iFFrviVxB
+   QwuMsDPvkk1aTGJ6FMLzjLNCQnEu9lkcxMRAv1TmR3MVue0fdecVqSRg/
+   6ceG7isNuWMl/xFezOZZArzi67K3zJNhvnJc0V852yoVpD6dpyCleOf91
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="251014092"
+X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
+   d="scan'208";a="251014092"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:07 -0700
+X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
+   d="scan'208";a="741679635"
+Received: from sgens-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.212.48])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:05 -0700
+From:   gregory.greenman@intel.com
+To:     kvalo@kernel.org
+Cc:     johannes@sipsolutions.net, gregory.greenman@intel.com,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/10] iwlwifi: pcie: simplify MSI-X cause mapping
+Date:   Tue, 17 May 2022 12:05:05 +0300
+Message-Id: <20220517120044.19abe9a4d171.I934356911277f9b2a955808763f317986f69a461@changeid>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220517090514.211796-1-gregory.greenman@intel.com>
+References: <20220517090514.211796-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-References: <20220516032519.29831-1-ryazanov.s.a@gmail.com> <CAByNJ6qDgqwxqGe0+uKSGCFKLULqEQ+NeBr-dAP=2Maov9ynqA@mail.gmail.com>
-In-Reply-To: <CAByNJ6qDgqwxqGe0+uKSGCFKLULqEQ+NeBr-dAP=2Maov9ynqA@mail.gmail.com>
-From:   Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date:   Tue, 17 May 2022 11:37:36 +0300
-Message-ID: <CAHNKnsRx0VWDVsP_KOKaPrU=eODOUCmpyBbYsN1rYEBXvRdaGA@mail.gmail.com>
-Subject: Re: [PATCH 0/4] ath10k: add encapsulation offloading support
-To:     Edward Matijevic <motolav@gmail.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Edward,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Tue, May 17, 2022 at 5:37 AM Edward Matijevic <motolav@gmail.com> wrote:
-> Hello,
-> I confirm now my QCA9377 pci module has no regressions in either modes
-> with these patches
-> I was able to test it as an AP and it worked under ETHERNET mode
-> without any obvious regressions but I'm unable to check maximum
-> throughput
->
-> My hardware info from dmesg and tested on kernel 5.17.7
-> qca9377 hw1.0 target 0x05020000 chip_id 0x003820ff sub 11ad:0806
-> firmware ver WLAN.TF.2.1-00021-QCARMSWP-1 api 6 features
-> wowlan,ignore-otp crc32 42e41877
->
-> My quoted statement of a possible regression seems to have been my old
-> CPU acting up and is ok to remove
+We're currently manually encoding a calculation here since the HW
+just maps all the bits of specific registers to specific offsets,
+which led to the bug fixed here previously with the Bz SW_ERROR
+interrupt.
 
-Thank you for the update.
+Clean up the code to only know about the mapping offset (-16 or
+16 depending on the register) to avoid such issues in the future.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 48 +++++++++++--------
+ 1 file changed, 29 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 8be3c3c8c68b..6fc69c42f36e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1085,34 +1085,44 @@ bool iwl_pcie_check_hw_rf_kill(struct iwl_trans *trans)
+ }
+ 
+ struct iwl_causes_list {
+-	u32 cause_num;
+-	u32 mask_reg;
++	u16 mask_reg;
++	u8 bit;
+ 	u8 addr;
+ };
+ 
++#define CAUSE(reg, mask)						\
++	{								\
++		.mask_reg = reg,					\
++		.bit = ilog2(mask),					\
++		.addr = ilog2(mask) +					\
++			((reg) == CSR_MSIX_FH_INT_MASK_AD ? -16 :	\
++			 (reg) == CSR_MSIX_HW_INT_MASK_AD ? 16 :	\
++			 0xffff),	/* causes overflow warning */	\
++	}
++
+ static const struct iwl_causes_list causes_list_common[] = {
+-	{MSIX_FH_INT_CAUSES_D2S_CH0_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0},
+-	{MSIX_FH_INT_CAUSES_D2S_CH1_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0x1},
+-	{MSIX_FH_INT_CAUSES_S2D,		CSR_MSIX_FH_INT_MASK_AD, 0x3},
+-	{MSIX_FH_INT_CAUSES_FH_ERR,		CSR_MSIX_FH_INT_MASK_AD, 0x5},
+-	{MSIX_HW_INT_CAUSES_REG_ALIVE,		CSR_MSIX_HW_INT_MASK_AD, 0x10},
+-	{MSIX_HW_INT_CAUSES_REG_WAKEUP,		CSR_MSIX_HW_INT_MASK_AD, 0x11},
+-	{MSIX_HW_INT_CAUSES_REG_RESET_DONE,	CSR_MSIX_HW_INT_MASK_AD, 0x12},
+-	{MSIX_HW_INT_CAUSES_REG_CT_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x16},
+-	{MSIX_HW_INT_CAUSES_REG_RF_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x17},
+-	{MSIX_HW_INT_CAUSES_REG_PERIODIC,	CSR_MSIX_HW_INT_MASK_AD, 0x18},
+-	{MSIX_HW_INT_CAUSES_REG_SCD,		CSR_MSIX_HW_INT_MASK_AD, 0x2A},
+-	{MSIX_HW_INT_CAUSES_REG_FH_TX,		CSR_MSIX_HW_INT_MASK_AD, 0x2B},
+-	{MSIX_HW_INT_CAUSES_REG_HW_ERR,		CSR_MSIX_HW_INT_MASK_AD, 0x2D},
+-	{MSIX_HW_INT_CAUSES_REG_HAP,		CSR_MSIX_HW_INT_MASK_AD, 0x2E},
++	CAUSE(CSR_MSIX_FH_INT_MASK_AD, MSIX_FH_INT_CAUSES_D2S_CH0_NUM),
++	CAUSE(CSR_MSIX_FH_INT_MASK_AD, MSIX_FH_INT_CAUSES_D2S_CH1_NUM),
++	CAUSE(CSR_MSIX_FH_INT_MASK_AD, MSIX_FH_INT_CAUSES_S2D),
++	CAUSE(CSR_MSIX_FH_INT_MASK_AD, MSIX_FH_INT_CAUSES_FH_ERR),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_ALIVE),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_WAKEUP),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_RESET_DONE),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_CT_KILL),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_RF_KILL),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_PERIODIC),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_SCD),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_FH_TX),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_HW_ERR),
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_HAP),
+ };
+ 
+ static const struct iwl_causes_list causes_list_pre_bz[] = {
+-	{MSIX_HW_INT_CAUSES_REG_SW_ERR,		CSR_MSIX_HW_INT_MASK_AD, 0x29},
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_SW_ERR),
+ };
+ 
+ static const struct iwl_causes_list causes_list_bz[] = {
+-	{MSIX_HW_INT_CAUSES_REG_SW_ERR_BZ,	CSR_MSIX_HW_INT_MASK_AD, 0x15},
++	CAUSE(CSR_MSIX_HW_INT_MASK_AD, MSIX_HW_INT_CAUSES_REG_SW_ERR_BZ),
+ };
+ 
+ static void iwl_pcie_map_list(struct iwl_trans *trans,
+@@ -1124,7 +1134,7 @@ static void iwl_pcie_map_list(struct iwl_trans *trans,
+ 	for (i = 0; i < arr_size; i++) {
+ 		iwl_write8(trans, CSR_MSIX_IVAR(causes[i].addr), val);
+ 		iwl_clear_bit(trans, causes[i].mask_reg,
+-			      causes[i].cause_num);
++			      BIT(causes[i].bit));
+ 	}
+ }
+ 
 -- 
-Sergey
+2.35.1
+
