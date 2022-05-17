@@ -2,102 +2,86 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B0EC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:07:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC51EC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:08:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234206AbiEQJHp (ORCPT
+        id S244386AbiEQJIC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 May 2022 05:07:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58150 "EHLO
+        Tue, 17 May 2022 05:08:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243998AbiEQJGp (ORCPT
+        with ESMTP id S244333AbiEQJHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 May 2022 05:06:45 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BC2A21828
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:32 -0700 (PDT)
+        Tue, 17 May 2022 05:07:43 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A654B237C6
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652778393; x=1684314393;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=X/uyHbVlQA8hVGzzFATBMx7IXCafqOtE0vkyAZoaYt4=;
-  b=DBuWS8ie161NXtPdMuok0Jvx7q1ig6syn6lLjlj4vmD1+Yjh6bq4+P+2
-   /6a2cLIZNFO8AM76tAdSZD28lS3BJ771lo3ARy3RCoSLDf4DrbDkcOIfu
-   snwHjonrDA+iOz4sc+nbJiBoD2LzX9CqAyVUaFomtE9aco/hLTpu8JqAP
-   xY1AiNlWdC0xn0F+p0/lCjqZM1Qu3fOwWigjFPlqGepQTLuQbT9PvjWP4
-   jBXh7fx7t9kERQ1GE8rA4MkgfPAra1m2NT578pLzxGtZ2jvvL0m76UbaZ
-   kLQkryXBbm2hLmsMUQgpaDkXw3QnVjRxprenhs/IEzwjalp056Olq8HLz
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="268700427"
+  t=1652778405; x=1684314405;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=pxzImEr2FqVezDKIsh+BgClOxH9/kQuTHkdbYQzNPZ4=;
+  b=c0WlRuoMGqffEQ3HinjcIG/su6bdzuNodVcslyoI1q/mtIDnZTfDeb1T
+   z5MYmu06miyR5Rkcmh6RiIlgjh3U4KmkalP9pCdS96ntsVJwiHpxv/YZ9
+   NpkKMT/mytlPjz9OkSiHfUsta9dqbxy8o9Vs1WKSuD5D+h4P6O7CyrBBy
+   6djGP8Y7gGgfg5cPK3Wl1LqLzpIEA4YztCL+ihP96nvYHfmQ/ZDYTePz2
+   tIzi4JXco3ZN9cHrrq1XiOIN3YkXUGFez4LHnVHvy5AFHMNIHrGr3BVcd
+   r/FQ4X9Z+qQ8+12bqbuHtOgpzmJLxF3mF2mtUFLcf6gaR6EMiCnUbmoiA
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="271064778"
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="268700427"
+   d="scan'208";a="271064778"
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:05:53 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:27 -0700
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="741679516"
+   d="scan'208";a="741679730"
 Received: from sgens-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.212.48])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:05:51 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:25 -0700
 From:   gregory.greenman@intel.com
 To:     kvalo@kernel.org
 Cc:     johannes@sipsolutions.net, gregory.greenman@intel.com,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 00/10] iwlwifi: updates intended for v5.18 2022-05-17
-Date:   Tue, 17 May 2022 12:05:04 +0300
-Message-Id: <20220517090514.211796-1-gregory.greenman@intel.com>
+        linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/10] iwlwifi: mvm: fix assert 1F04 upon reconfig
+Date:   Tue, 17 May 2022 12:05:09 +0300
+Message-Id: <20220517120044.ed2ffc8ce732.If786e19512d0da4334a6382ea6148703422c7d7b@changeid>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220517090514.211796-1-gregory.greenman@intel.com>
+References: <20220517090514.211796-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Hello,
+When we reconfig we must not send the MAC_POWER command that relates to
+a MAC that was not yet added to the firmware.
 
-Here's a set of patches intended for v5.18 if time permits. It's the
-usual developement, bugfixes and small cleanups. Nothing major in this
-series.
+Ignore those in the iterator.
 
-Thanks,
-Gregory
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Avraham Stern (1):
-  iwlwifi: mei: clear the sap data header before sending
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: fix assert 1F04 upon reconfig
-  iwlwifi: mvm: always tell the firmware to accept MCAST frames in BSS
-
-Haim Dreyfuss (1):
-  iwlwifi: mvm: use NULL instead of ERR_PTR when parsing wowlan status
-
-Johannes Berg (4):
-  iwlwifi: pcie: simplify MSI-X cause mapping
-  iwlwifi: mvm: clean up authorized condition
-  iwlwifi: fw: init SAR GEO table only if data is present
-  iwlwifi: mei: fix potential NULL-ptr deref
-
-Miri Korenblit (1):
-  iwlwifi: mvm: remove vif_count
-
-Mordechay Goodstein (1):
-  iwlwifi: mvm: add OTP info in case of init failure
-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  3 ++
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  2 +
- drivers/net/wireless/intel/iwlwifi/mei/main.c |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 22 ++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 15 +++---
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 32 +++----------
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 17 ++-----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- .../net/wireless/intel/iwlwifi/mvm/power.c    |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 44 ++++++++++++-----
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 48 +++++++++++--------
- 11 files changed, 102 insertions(+), 88 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index b2ea2fca5376..b9bd81242b21 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -563,6 +563,9 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
+ 	struct iwl_power_vifs *power_iterator = _data;
+ 	bool active = mvmvif->phy_ctxt && mvmvif->phy_ctxt->id < NUM_PHY_CTX;
+ 
++	if (!mvmvif->uploaded)
++		return;
++
+ 	switch (ieee80211_vif_type_p2p(vif)) {
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
 -- 
 2.35.1
 
