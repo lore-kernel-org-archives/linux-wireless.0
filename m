@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0661C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF0DC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:08:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244299AbiEQJIK (ORCPT
+        id S244401AbiEQJIM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 May 2022 05:08:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34358 "EHLO
+        Tue, 17 May 2022 05:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244350AbiEQJHn (ORCPT
+        with ESMTP id S244329AbiEQJHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 17 May 2022 05:07:43 -0400
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C706A237D3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 177C523170
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652778405; x=1684314405;
+  t=1652778404; x=1684314404;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=KmWmLlbKUi121ynjXFfpB6/+wcP8pN4quC5pQRcgklE=;
-  b=YH6JDToA5fXJiHpG4jrANUsgPTRNnYyFL0TxfZiUZ6NW1qxwDr2zQ+ye
-   u+o2t4OiLWqPKsHr0cn63lwUFOq/wwjZoY22rD5GBb03sR6fhpbG/ZW+n
-   BR2GphdwbIkPe7OOjDfLojzzHoJK+jcEcTjDNsJdCce2bx05q/RRFZL0B
-   ZbDX9BhIkw624vgN1qt+voTTrrbst8d/qsdz+euI1nDFpZVagyfVFTr+R
-   n49G0mw5K8nvd4Yvc5u4eA8gtZdlFwSKemmvuj4+afVn3iFLUb94U3sAe
-   eEE+s87iv6M9LOB9SSqcWUVsfCq/Pmr4B2kt3cNT3MNHSC1PV+Hm9ZZe6
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="271064796"
+  bh=RqAcVvj8Iaveho+UptY7zpPaFNxnh6HtT8Kpw9jk40M=;
+  b=XnQFJmr6enfp7+h3cH9agD4oqMBhts7OfhEg/D//orqrV4QRpAye5N0I
+   c90LDnZXuZPD+6b7yeDYbz1Lu2TP7+Hrm7w5PV9LHtUf2Itd/lqjlssQC
+   ZLWyMQZyHm8hchpNlohLJgUe+gAepp0TF6lTxL8NCU687Z+sQEHybCAmc
+   iduSbID3dR8Rzc8EM1c+itzBQyW2nmzltLucgUS++TEqQEm2qwKUqMxxV
+   TqgY20CEF1q+QKacoX2xyUtk3TWXgvYwyA+J4ElxnfeyKbaY/t8m2zdyF
+   IuYlWwjiUm6ttKGmUbo11CcMfW/lHGCEV2VwXV7XMglyi9mGzck8y/CwX
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="271064723"
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="271064796"
+   d="scan'208";a="271064723"
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:29 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:21 -0700
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="741679742"
+   d="scan'208";a="741679697"
 Received: from sgens-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.212.48])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:27 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:20 -0700
 From:   gregory.greenman@intel.com
 To:     kvalo@kernel.org
 Cc:     johannes@sipsolutions.net, gregory.greenman@intel.com,
         linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Subject: [PATCH 06/10] iwlwifi: mvm: add OTP info in case of init failure
-Date:   Tue, 17 May 2022 12:05:10 +0300
-Message-Id: <20220517120045.48464938b27a.I9b381f0da5e0636ad6a5f6c13f98edb9031b50fb@changeid>
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Subject: [PATCH 02/10] iwlwifi: mvm: use NULL instead of ERR_PTR when parsing wowlan status
+Date:   Tue, 17 May 2022 12:05:06 +0300
+Message-Id: <20220517120044.78a7651327bb.I77480de7c26db850680f96a3440fb6a1b45dd9d2@changeid>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220517090514.211796-1-gregory.greenman@intel.com>
 References: <20220517090514.211796-1-gregory.greenman@intel.com>
@@ -55,67 +55,114 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-This helps to understand HW issues that can happen while
-initializing the nic.
+We anyway don't differentiate between the errors so it is pointless,
+returning NULL will be simpler in this case.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 15 +++++++++------
- 2 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 22 ++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index a22788a68168..157d1f31c487 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -389,6 +389,8 @@ enum {
- #define WFPM_LMAC1_PD_NOTIFICATION      0xa0338c
- #define WFPM_ARC1_PD_NOTIFICATION       0xa03044
- #define HPM_SECONDARY_DEVICE_STATE      0xa03404
-+#define WFPM_MAC_OTP_CFG7_ADDR		0xa03338
-+#define WFPM_MAC_OTP_CFG7_DATA		0xa0333c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index bcc4ed20fe5b..61f9136a333d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -1956,18 +1956,18 @@ iwl_mvm_parse_wowlan_status_common_ ## _ver(struct iwl_mvm *mvm,	\
+ 									\
+ 	if (len < sizeof(*data)) {					\
+ 		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");	\
+-		return ERR_PTR(-EIO);					\
++		return NULL;						\
+ 	}								\
+ 									\
+ 	data_size = ALIGN(le32_to_cpu(data->wake_packet_bufsize), 4);	\
+ 	if (len != sizeof(*data) + data_size) {				\
+ 		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");	\
+-		return ERR_PTR(-EIO);					\
++		return NULL;						\
+ 	}								\
+ 									\
+ 	status = kzalloc(sizeof(*status) + data_size, GFP_KERNEL);	\
+ 	if (!status)							\
+-		return ERR_PTR(-ENOMEM);				\
++		return NULL;						\
+ 									\
+ 	/* copy all the common fields */				\
+ 	status->replay_ctr = le64_to_cpu(data->replay_ctr);		\
+@@ -2097,7 +2097,7 @@ iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
+ 		struct iwl_wowlan_status_v6 *v6 = (void *)cmd.resp_pkt->data;
  
+ 		status = iwl_mvm_parse_wowlan_status_common_v6(mvm, v6, len);
+-		if (IS_ERR(status))
++		if (!status)
+ 			goto out_free_resp;
  
- /* For UMAG_GEN_HW_STATUS reg check */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e842816134f1..f041e77af059 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -287,6 +287,9 @@ static bool iwl_wait_phy_db_entry(struct iwl_notif_wait_data *notif_wait,
+ 		BUILD_BUG_ON(sizeof(v6->gtk.decrypt_key) >
+@@ -2128,7 +2128,7 @@ iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
+ 		struct iwl_wowlan_status_v7 *v7 = (void *)cmd.resp_pkt->data;
  
- static void iwl_mvm_print_pd_notification(struct iwl_mvm *mvm)
- {
-+#define IWL_FW_PRINT_REG_INFO(reg_name) \
-+	IWL_ERR(mvm, #reg_name ": 0x%x\n", iwl_read_umac_prph(trans, reg_name))
-+
- 	struct iwl_trans *trans = mvm->trans;
- 	enum iwl_device_family device_family = trans->trans_cfg->device_family;
+ 		status = iwl_mvm_parse_wowlan_status_common_v7(mvm, v7, len);
+-		if (IS_ERR(status))
++		if (!status)
+ 			goto out_free_resp;
  
-@@ -294,15 +297,15 @@ static void iwl_mvm_print_pd_notification(struct iwl_mvm *mvm)
- 		return;
+ 		iwl_mvm_convert_key_counters(status, &v7->gtk[0].rsc.all_tsc_rsc);
+@@ -2141,7 +2141,7 @@ iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
+ 		 * difference is only in a few not used (reserved) fields.
+ 		 */
+ 		status = iwl_mvm_parse_wowlan_status_common_v9(mvm, v9, len);
+-		if (IS_ERR(status))
++		if (!status)
+ 			goto out_free_resp;
  
- 	if (device_family <= IWL_DEVICE_FAMILY_9000)
--		IWL_ERR(mvm, "WFPM_ARC1_PD_NOTIFICATION: 0x%x\n",
--			iwl_read_umac_prph(trans, WFPM_ARC1_PD_NOTIFICATION));
-+		IWL_FW_PRINT_REG_INFO(WFPM_ARC1_PD_NOTIFICATION);
- 	else
--		IWL_ERR(mvm, "WFPM_LMAC1_PD_NOTIFICATION: 0x%x\n",
--			iwl_read_umac_prph(trans, WFPM_LMAC1_PD_NOTIFICATION));
-+		IWL_FW_PRINT_REG_INFO(WFPM_LMAC1_PD_NOTIFICATION);
+ 		iwl_mvm_convert_key_counters(status, &v9->gtk[0].rsc.all_tsc_rsc);
+@@ -2153,7 +2153,7 @@ iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
+ 		struct iwl_wowlan_status_v12 *v12 = (void *)cmd.resp_pkt->data;
  
--	IWL_ERR(mvm, "HPM_SECONDARY_DEVICE_STATE: 0x%x\n",
--		iwl_read_umac_prph(trans, HPM_SECONDARY_DEVICE_STATE));
-+	IWL_FW_PRINT_REG_INFO(HPM_SECONDARY_DEVICE_STATE);
+ 		status = iwl_mvm_parse_wowlan_status_common_v12(mvm, v12, len);
+-		if (IS_ERR(status))
++		if (!status)
+ 			goto out_free_resp;
  
-+	/* print OPT info */
-+	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_ADDR);
-+	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_DATA);
- }
+ 		iwl_mvm_convert_key_counters_v5(status, &v12->gtk[0].sc);
+@@ -2165,7 +2165,7 @@ iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm, u8 sta_id)
+ 		IWL_ERR(mvm,
+ 			"Firmware advertises unknown WoWLAN status response %d!\n",
+ 			notif_ver);
+-		status = ERR_PTR(-EIO);
++		status = NULL;
+ 	}
  
- static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ out_free_resp:
+@@ -2203,7 +2203,7 @@ static bool iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_sta *mvm_ap_sta;
+ 
+ 	status = iwl_mvm_get_wakeup_status(mvm, mvmvif->ap_sta_id);
+-	if (IS_ERR(status))
++	if (!status)
+ 		goto out_unlock;
+ 
+ 	IWL_DEBUG_WOWLAN(mvm, "wakeup reason 0x%x\n",
+@@ -2370,7 +2370,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+ 	int i, n_matches, ret;
+ 
+ 	status = iwl_mvm_get_wakeup_status(mvm, IWL_MVM_INVALID_STA);
+-	if (!IS_ERR(status)) {
++	if (status) {
+ 		reasons = status->wakeup_reasons;
+ 		kfree(status);
+ 	}
 -- 
 2.35.1
 
