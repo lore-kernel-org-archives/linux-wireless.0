@@ -2,75 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D43DFC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 15:14:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2544AC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 15:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349775AbiEQPOj (ORCPT
+        id S1350005AbiEQPc0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 May 2022 11:14:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38366 "EHLO
+        Tue, 17 May 2022 11:32:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243212AbiEQPOg (ORCPT
+        with ESMTP id S239158AbiEQPcW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 May 2022 11:14:36 -0400
-Received: from mail-io1-f46.google.com (mail-io1-f46.google.com [209.85.166.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 363704BB93;
-        Tue, 17 May 2022 08:14:34 -0700 (PDT)
-Received: by mail-io1-f46.google.com with SMTP id s23so19505665iog.13;
-        Tue, 17 May 2022 08:14:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mbFG0j0OOb8L9zhN2w48Y4xmkuGMCVJKy6dA52/T7lY=;
-        b=Oe2oZ4fRNldQ2RrA3y4TuzVMwHgFBnJJFsDcII6BiLBtCcecpKJkYEtaYUVNX1jRxp
-         RqOJ6pPxt+Rhc6xgGHxQaQSo8EOV8lUc4wtJbYXmAEsIOcV7RwcZSGjWOAK00lhvUTan
-         eW43CY5IGdWWCuldiSwSXkWHHFm+Ew2vYIcY0LiAit/Y7wrGBq6gOcxU51BWchULamXO
-         bdaiWk2D4/xFIXEPgy4CJdEICEtXfNcFBAaeps7P8s4gPx0hnLA2Bna1CQRfvkNv4Ga+
-         ShbYa5smC7CHTmV2T+EXjsmu5xWUpIxXT8QstKF9rWC+Fa6MKnC/cUy3pVyCtcrcamgp
-         1Y4g==
-X-Gm-Message-State: AOAM533zT/fbiJZu/oRqguWHfT+J+alEDblKxXSINUtinWtu03KTAoAF
-        iO/zQY0GhzIO4pJ+SngNCu2CYV3Zy+v15JuqAVk=
-X-Google-Smtp-Source: ABdhPJw5xQpiFWoBi/dY9A7l3qiBSYaoqRi7wvq1y38zlaEpSiq91Cpu4sxBMJ0hvEtSAzij38P5pYCiRnixLE2uvw0=
-X-Received: by 2002:a05:6638:3289:b0:32e:2c45:93b5 with SMTP id
- f9-20020a056638328900b0032e2c4593b5mr6150196jav.96.1652800473303; Tue, 17 May
- 2022 08:14:33 -0700 (PDT)
+        Tue, 17 May 2022 11:32:22 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6145140E66
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 08:32:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1FCFFB81983
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 15:32:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16E04C34113;
+        Tue, 17 May 2022 15:32:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652801538;
+        bh=Bxmt/HIG8Y1l9M1uiZ+B55O4s5z6M5V6YbHxU6QDr+I=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=UcOu0T6WnO7FBvU0enEWKM09BNmIKipZlf29Gp9bCW8FQEgFKIvTlwFjBJR3QyTeY
+         palmuJCR29sLFhmadjMsERPnUSLj2He4d/ZQ6HVx/Q9ipDcfz37M8/XrO+TnGtwMQJ
+         thBMrW5h80w1OXiIMJmXuH3clvkdIOwVaDvqhypoVonX5w1QqwDoFLYdO1ViS0Cdjc
+         AwVeOl8/wY7NwxTcz6R40rXSbX0JCW/Jx3Mvj0Qa5Z2EwAwizQXlxf1U1d4z5RkxB5
+         Q3nOZROT0pLMLoJTSaG/b1OVJ1XR9E3rRZPVPx+aZOtouAL0a9N9X2jNOdgHlmkwhR
+         /9JXQc/sSKCdw==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <20220505015814.3727692-1-rui.zhang@intel.com> <20220505015814.3727692-8-rui.zhang@intel.com>
-In-Reply-To: <20220505015814.3727692-8-rui.zhang@intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 17 May 2022 17:14:22 +0200
-Message-ID: <CAJZ5v0jt1OND_d08mC0TC1LZ-JGANDY5fiDmH5RUfdtRk1vZFw@mail.gmail.com>
-Subject: Re: [PATCH 7/7] rtc: cmos: Add suspend/resume endurance testing hook
-To:     Zhang Rui <rui.zhang@intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>, kvalo@kernel.org,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linux-rtc@vger.kernel.org,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        merez@codeaurora.org, mat.jonczyk@o2.pl,
-        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
-        Len Brown <len.brown@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 1/6] rtw89: add ieee80211::sta_rc_update ops
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220516005215.5878-2-pkshih@realtek.com>
+References: <20220516005215.5878-2-pkshih@realtek.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>, <kevin_yang@realtek.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165280153588.3650.15868744684838045026.kvalo@kernel.org>
+Date:   Tue, 17 May 2022 15:32:17 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 5, 2022 at 3:58 AM Zhang Rui <rui.zhang@intel.com> wrote:
->
-> Automated suspend/resume testing uses the RTC for wakeup.
-> A short rtcwake period is desirable, so that more suspend/resume
-> cycles can be completed, while the machine is available for testing.
->
-> But if too short a wake interval is specified, the event can occur,
-> while still suspending, and then no event wakes the suspended system
-> until the user notices that testing has stalled, and manually intervenes.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-If the wakeup event occurs while still suspending, it should abort the
-suspend in progress, shouldn't it?  But the above implies that it
-doesn't do that.
+> When peer's NSS, rate or bandwidth is changed, we update RA(rate adaptive)
+> mask to ensure transmitting packets properly.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-If this is fixed, wouldn't it address the issue at hand?
+6 patches applied to wireless-next.git, thanks.
+
+9d9a9edcf8ed rtw89: add ieee80211::sta_rc_update ops
+d3efeee240f8 rtw89: 8852c: set TX antenna path
+97df85871a5b rtw89: cfo: check mac_id to avoid out-of-bounds
+aebc048d1000 rtw89: 8852c: update txpwr tables to HALRF_027_00_052
+a06d2dd7e22f rtw89: convert rtw89_band to nl80211_band precisely
+a456021c6f14 rtw89: pci: only mask out INT indicator register for disable interrupt v1
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20220516005215.5878-2-pkshih@realtek.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
