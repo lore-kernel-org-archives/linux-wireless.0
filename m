@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6587C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0661C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 May 2022 09:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234407AbiEQJII (ORCPT
+        id S244299AbiEQJIK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 May 2022 05:08:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34402 "EHLO
+        Tue, 17 May 2022 05:08:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244368AbiEQJHn (ORCPT
+        with ESMTP id S244350AbiEQJHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 17 May 2022 05:07:43 -0400
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C10CC23BDA
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C706A237D3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2022 02:06:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652778408; x=1684314408;
+  t=1652778405; x=1684314405;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=X7hqQuWLjGbzwuQc3/hk7pjGIVA3iPZ8N9MJZIMMrtg=;
-  b=O1T+UOMoXOMnmaeFiwgNLbjM6U3v+lgA0URwJPXdq5mf9ZaoFM/StABm
-   YGypyG7+gQHGvIKEp3CISsthOdCAh3Ag9Q3QVELtvXSxBkTR8s42zsFPr
-   UKkiytsUjTG8WweK+VQgzvcj0eXaGyf2HTuGLKjmVk34l5cElU2I+w8IQ
-   1zwOl/BkZ5+tZvo/OWYAZFw4qyklSdtLuChs7NHvIblaSJNHfokx8MJZ8
-   GcGFp7r+t9t0c7OTGqFvapKvILi985LupCWnZn5FiQ1EMlAtZCTNid4rv
-   G0nkpHB3u4DdwfHz04ksMIQ9waqTFPCyqRUAxCE5ofIyizSU5jj5+CvwJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="271064846"
+  bh=KmWmLlbKUi121ynjXFfpB6/+wcP8pN4quC5pQRcgklE=;
+  b=YH6JDToA5fXJiHpG4jrANUsgPTRNnYyFL0TxfZiUZ6NW1qxwDr2zQ+ye
+   u+o2t4OiLWqPKsHr0cn63lwUFOq/wwjZoY22rD5GBb03sR6fhpbG/ZW+n
+   BR2GphdwbIkPe7OOjDfLojzzHoJK+jcEcTjDNsJdCce2bx05q/RRFZL0B
+   ZbDX9BhIkw624vgN1qt+voTTrrbst8d/qsdz+euI1nDFpZVagyfVFTr+R
+   n49G0mw5K8nvd4Yvc5u4eA8gtZdlFwSKemmvuj4+afVn3iFLUb94U3sAe
+   eEE+s87iv6M9LOB9SSqcWUVsfCq/Pmr4B2kt3cNT3MNHSC1PV+Hm9ZZe6
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10349"; a="271064796"
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="271064846"
+   d="scan'208";a="271064796"
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:36 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:29 -0700
 X-IronPort-AV: E=Sophos;i="5.91,232,1647327600"; 
-   d="scan'208";a="741679785"
+   d="scan'208";a="741679742"
 Received: from sgens-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.212.48])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:34 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 02:06:27 -0700
 From:   gregory.greenman@intel.com
 To:     kvalo@kernel.org
 Cc:     johannes@sipsolutions.net, gregory.greenman@intel.com,
         linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/10] iwlwifi: mei: fix potential NULL-ptr deref
-Date:   Tue, 17 May 2022 12:05:14 +0300
-Message-Id: <20220517120045.90c1b1fd534e.Ibb42463e74d0ec7d36ec81df22e171ae1f6268b0@changeid>
+        Mordechay Goodstein <mordechay.goodstein@intel.com>
+Subject: [PATCH 06/10] iwlwifi: mvm: add OTP info in case of init failure
+Date:   Tue, 17 May 2022 12:05:10 +0300
+Message-Id: <20220517120045.48464938b27a.I9b381f0da5e0636ad6a5f6c13f98edb9031b50fb@changeid>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220517090514.211796-1-gregory.greenman@intel.com>
 References: <20220517090514.211796-1-gregory.greenman@intel.com>
@@ -55,33 +55,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-If SKB allocation fails, continue rather than using the NULL
-pointer.
+This helps to understand HW issues that can happen while
+initializing the nic.
 
-Coverity CID: 1497650
-
-Fixes: 2da4366f9e2c ("iwlwifi: mei: add the driver to allow cooperation with CSME")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mei/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 15 +++++++++------
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-index 3d2eb15a9662..357f14626cf4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-@@ -1020,6 +1020,8 @@ static void iwl_mei_handle_sap_data(struct mei_cl_device *cldev,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index a22788a68168..157d1f31c487 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -389,6 +389,8 @@ enum {
+ #define WFPM_LMAC1_PD_NOTIFICATION      0xa0338c
+ #define WFPM_ARC1_PD_NOTIFICATION       0xa03044
+ #define HPM_SECONDARY_DEVICE_STATE      0xa03404
++#define WFPM_MAC_OTP_CFG7_ADDR		0xa03338
++#define WFPM_MAC_OTP_CFG7_DATA		0xa0333c
  
- 		/* We need enough room for the WiFi header + SNAP + IV */
- 		skb = netdev_alloc_skb(netdev, len + QOS_HDR_IV_SNAP_LEN);
-+		if (!skb)
-+			continue;
  
- 		skb_reserve(skb, QOS_HDR_IV_SNAP_LEN);
- 		ethhdr = skb_push(skb, sizeof(*ethhdr));
+ /* For UMAG_GEN_HW_STATUS reg check */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index e842816134f1..f041e77af059 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -287,6 +287,9 @@ static bool iwl_wait_phy_db_entry(struct iwl_notif_wait_data *notif_wait,
+ 
+ static void iwl_mvm_print_pd_notification(struct iwl_mvm *mvm)
+ {
++#define IWL_FW_PRINT_REG_INFO(reg_name) \
++	IWL_ERR(mvm, #reg_name ": 0x%x\n", iwl_read_umac_prph(trans, reg_name))
++
+ 	struct iwl_trans *trans = mvm->trans;
+ 	enum iwl_device_family device_family = trans->trans_cfg->device_family;
+ 
+@@ -294,15 +297,15 @@ static void iwl_mvm_print_pd_notification(struct iwl_mvm *mvm)
+ 		return;
+ 
+ 	if (device_family <= IWL_DEVICE_FAMILY_9000)
+-		IWL_ERR(mvm, "WFPM_ARC1_PD_NOTIFICATION: 0x%x\n",
+-			iwl_read_umac_prph(trans, WFPM_ARC1_PD_NOTIFICATION));
++		IWL_FW_PRINT_REG_INFO(WFPM_ARC1_PD_NOTIFICATION);
+ 	else
+-		IWL_ERR(mvm, "WFPM_LMAC1_PD_NOTIFICATION: 0x%x\n",
+-			iwl_read_umac_prph(trans, WFPM_LMAC1_PD_NOTIFICATION));
++		IWL_FW_PRINT_REG_INFO(WFPM_LMAC1_PD_NOTIFICATION);
+ 
+-	IWL_ERR(mvm, "HPM_SECONDARY_DEVICE_STATE: 0x%x\n",
+-		iwl_read_umac_prph(trans, HPM_SECONDARY_DEVICE_STATE));
++	IWL_FW_PRINT_REG_INFO(HPM_SECONDARY_DEVICE_STATE);
+ 
++	/* print OPT info */
++	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_ADDR);
++	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_DATA);
+ }
+ 
+ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
 -- 
 2.35.1
 
