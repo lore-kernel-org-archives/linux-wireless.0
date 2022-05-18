@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4ABC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 08:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 825D5C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 08:24:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233201AbiERIX5 (ORCPT
+        id S233105AbiERIYB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 May 2022 04:23:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37500 "EHLO
+        Wed, 18 May 2022 04:24:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233050AbiERIXr (ORCPT
+        with ESMTP id S233082AbiERIXr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 18 May 2022 04:23:47 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 607581078BA
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C591078BB
         for <linux-wireless@vger.kernel.org>; Wed, 18 May 2022 01:23:37 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1nrExn-0004Qz-0t; Wed, 18 May 2022 10:23:23 +0200
+        id 1nrExn-0004R4-0x; Wed, 18 May 2022 10:23:23 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1nrExm-0032p8-Ds; Wed, 18 May 2022 10:23:21 +0200
+        id 1nrExn-0032pL-Eq; Wed, 18 May 2022 10:23:22 +0200
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1nrExj-00GXTd-U5; Wed, 18 May 2022 10:23:19 +0200
+        id 1nrExk-00GXTp-1c; Wed, 18 May 2022 10:23:20 +0200
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -38,9 +38,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
         kernel@pengutronix.de, Johannes Berg <johannes@sipsolutions.net>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH 03/10] rtw88: Drop h2c.lock
-Date:   Wed, 18 May 2022 10:23:11 +0200
-Message-Id: <20220518082318.3898514-4-s.hauer@pengutronix.de>
+Subject: [PATCH 07/10] rtw88: Add rtw8723du chipset support
+Date:   Wed, 18 May 2022 10:23:15 +0200
+Message-Id: <20220518082318.3898514-8-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220518082318.3898514-1-s.hauer@pengutronix.de>
 References: <20220518082318.3898514-1-s.hauer@pengutronix.de>
@@ -54,117 +54,185 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The h2c.lock spinlock is used in rtw_fw_send_h2c_command() and
-rtw_fw_send_h2c_packet().  Most callers call this with rtwdev->mutex
-held, except from one callsite in the debugfs code. The debugfs code
-alone doesn't justify the extra lock, so acquire rtwdev->mutex in
-debugfs and drop the now unnecessary spinlock.
+Add support for the rtw8723du chipset based on
+https://github.com/ulli-kroll/rtw88-usb.git
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c |  2 ++
- drivers/net/wireless/realtek/rtw88/fw.c    | 13 ++++---------
- drivers/net/wireless/realtek/rtw88/main.c  |  1 -
- drivers/net/wireless/realtek/rtw88/main.h  |  2 --
- 4 files changed, 6 insertions(+), 12 deletions(-)
+ drivers/net/wireless/realtek/rtw88/Kconfig    | 11 +++++
+ drivers/net/wireless/realtek/rtw88/Makefile   |  3 ++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 19 +++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h |  1 +
+ .../net/wireless/realtek/rtw88/rtw8723du.c    | 40 +++++++++++++++++++
+ .../net/wireless/realtek/rtw88/rtw8723du.h    | 13 ++++++
+ 6 files changed, 87 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index ba5ba852efb8c..79939aa6b752c 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -396,7 +396,9 @@ static ssize_t rtw_debugfs_set_h2c(struct file *filp,
- 		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
+index 1624c5db69bac..ad1ac453015a9 100644
+--- a/drivers/net/wireless/realtek/rtw88/Kconfig
++++ b/drivers/net/wireless/realtek/rtw88/Kconfig
+@@ -64,6 +64,17 @@ config RTW88_8723DE
  
-+	mutex_lock(&rtwdev->mutex);
- 	rtw_fw_h2c_cmd_dbg(rtwdev, param);
-+	mutex_unlock(&rtwdev->mutex);
+ 	  802.11n PCIe wireless network adapter
  
- 	return count;
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index aa2aeb5fb2ccd..c3ad2a1b47212 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -320,7 +320,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		h2c[3], h2c[2], h2c[1], h2c[0],
- 		h2c[7], h2c[6], h2c[5], h2c[4]);
++config RTW88_8723DU
++	tristate "Realtek 8723DU USB wireless network adapter"
++	depends on USB
++	select RTW88_CORE
++	select RTW88_USB
++	select RTW88_8723D
++	help
++	  Select this option will enable support for 8723DU chipset
++
++	  802.11n USB wireless network adapter
++
+ config RTW88_8821CE
+ 	tristate "Realtek 8821CE PCI wireless network adapter"
+ 	depends on PCI
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index 9e095f8181483..eb26c215fcde3 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -38,6 +38,9 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+ obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
+ rtw88_8723de-objs		:= rtw8723de.o
  
--	spin_lock(&rtwdev->h2c.lock);
-+	lockdep_assert_held(&rtwdev->mutex);
++obj-$(CONFIG_RTW88_8723DU)	+= rtw88_8723du.o
++rtw88_8723du-objs		:= rtw8723du.o
++
+ obj-$(CONFIG_RTW88_8821C)	+= rtw88_8821c.o
+ rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
  
- 	box = rtwdev->h2c.last_box_num;
- 	switch (box) {
-@@ -342,7 +342,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		break;
- 	default:
- 		WARN(1, "invalid h2c mail box number\n");
--		goto out;
-+		return;
- 	}
- 
- 	ret = read_poll_timeout_atomic(rtw_read8, box_state,
-@@ -351,7 +351,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
--		goto out;
-+		return;
- 	}
- 
- 	for (idx = 0; idx < 4; idx++)
-@@ -361,9 +361,6 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 
- 	if (++rtwdev->h2c.last_box_num >= 4)
- 		rtwdev->h2c.last_box_num = 0;
--
--out:
--	spin_unlock(&rtwdev->h2c.lock);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index ad2b323a0423c..ccd23902756e1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -210,6 +210,12 @@ static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
+ 	ether_addr_copy(efuse->addr, map->e.mac_addr);
  }
  
- void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-@@ -375,15 +372,13 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
++static void rtw8723du_efuse_parsing(struct rtw_efuse *efuse,
++				    struct rtw8723d_efuse *map)
++{
++	ether_addr_copy(efuse->addr, map->u.mac_addr);
++}
++
+ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
  {
- 	int ret;
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	lockdep_assert_held(&rtwdev->mutex);
- 
- 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
- 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
- 	if (ret)
- 		rtw_err(rtwdev, "failed to send h2c packet\n");
- 	rtwdev->h2c.seq++;
--
--	spin_unlock(&rtwdev->h2c.lock);
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+@@ -239,6 +245,9 @@ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 	case RTW_HCI_TYPE_PCIE:
+ 		rtw8723de_efuse_parsing(efuse, map);
+ 		break;
++	case RTW_HCI_TYPE_USB:
++		rtw8723du_efuse_parsing(efuse, map);
++		break;
+ 	default:
+ 		/* unsupported now */
+ 		return -ENOTSUPP;
+@@ -1945,6 +1954,15 @@ static void rtw8723d_pwr_track(struct rtw_dev *rtwdev)
+ 	dm_info->pwr_trk_triggered = false;
  }
  
- void
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index f9864840ffd9c..baf4d29fde678 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1994,7 +1994,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	skb_queue_head_init(&rtwdev->coex.queue);
- 	skb_queue_head_init(&rtwdev->tx_report.queue);
++static void rtw8723d_fill_txdesc_checksum(struct rtw_dev *rtwdev,
++					  struct rtw_tx_pkt_info *pkt_info,
++					  u8 *txdesc)
++{
++	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
++
++	fill_txdesc_checksum_common(txdesc, words);
++}
++
+ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.phy_set_param		= rtw8723d_phy_set_param,
+ 	.read_efuse		= rtw8723d_read_efuse,
+@@ -1965,6 +1983,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.config_bfee		= NULL,
+ 	.set_gid_table		= NULL,
+ 	.cfg_csi_rate		= NULL,
++	.fill_txdesc_checksum	= rtw8723d_fill_txdesc_checksum,
  
--	spin_lock_init(&rtwdev->h2c.lock);
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
+ 	.coex_set_init		= rtw8723d_coex_cfg_init,
+ 	.coex_set_ant_switch	= NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+index 41d35174a5425..8113bd97edf57 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+@@ -70,6 +70,7 @@ struct rtw8723d_efuse {
+ 	u8 country_code[2];
+ 	u8 res[3];
+ 	struct rtw8723de_efuse e;
++	struct rtw8723de_efuse u;
+ };
  
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index df6c6032bbd3b..619ee6e8d2807 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -2018,8 +2018,6 @@ struct rtw_dev {
- 	struct {
- 		/* incicate the mail box to use with fw */
- 		u8 last_box_num;
--		/* protect to send h2c to fw */
--		spinlock_t lock;
- 		u32 seq;
- 	} h2c;
- 
+ /* phy status page0 */
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.c b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
+new file mode 100644
+index 0000000000000..910f64c168131
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
+@@ -0,0 +1,40 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright(c) 2018-2019  Realtek Corporation
++ */
++
++#include <linux/module.h>
++#include <linux/usb.h>
++#include "main.h"
++#include "rtw8723du.h"
++#include "usb.h"
++
++static const struct usb_device_id rtw_8723du_id_table[] = {
++	/*
++	 * ULLI :
++	 * ID found in rtw8822bu sources
++	 */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK,
++					0xD723,
++					0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8723d_hw_spec) }, /* 8723DU 1*1 */
++	{ },
++};
++MODULE_DEVICE_TABLE(usb, rtw_8723du_id_table);
++
++static int rtw8723du_probe(struct usb_interface *intf,
++			    const struct usb_device_id *id)
++{
++	return rtw_usb_probe(intf, id);
++}
++
++static struct usb_driver rtw_8723du_driver = {
++	.name = "rtw_8723du",
++	.id_table = rtw_8723du_id_table,
++	.probe = rtw8723du_probe,
++	.disconnect = rtw_usb_disconnect,
++};
++module_usb_driver(rtw_8723du_driver);
++
++MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
++MODULE_DESCRIPTION("Realtek 802.11n wireless 8723du driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.h b/drivers/net/wireless/realtek/rtw88/rtw8723du.h
+new file mode 100644
+index 0000000000000..2e069f65c0551
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.h
+@@ -0,0 +1,13 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright(c) 2018-2019  Realtek Corporation
++ */
++
++#ifndef __RTW_8723DU_H_
++#define __RTW_8723DU_H_
++
++/* USB Vendor/Product IDs */
++#define RTW_USB_VENDOR_ID_REALTEK		0x0BDA
++
++extern struct rtw_chip_info rtw8723d_hw_spec;
++
++#endif
 -- 
 2.30.2
 
