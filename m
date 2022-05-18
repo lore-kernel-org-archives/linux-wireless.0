@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE01DC4321E
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 12:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 077B5C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 12:34:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237078AbiERMdb (ORCPT
+        id S237108AbiERMd7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 May 2022 08:33:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50832 "EHLO
+        Wed, 18 May 2022 08:33:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236999AbiERMdJ (ORCPT
+        with ESMTP id S237032AbiERMdR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 May 2022 08:33:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A15CF14D7A4;
-        Wed, 18 May 2022 05:29:27 -0700 (PDT)
+        Wed, 18 May 2022 08:33:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9170170F16;
+        Wed, 18 May 2022 05:29:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 14CEB61678;
-        Wed, 18 May 2022 12:28:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 104CCC34100;
-        Wed, 18 May 2022 12:28:52 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BED30B81F40;
+        Wed, 18 May 2022 12:29:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E3D7C34119;
+        Wed, 18 May 2022 12:29:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652876934;
-        bh=chbWy/TEaB5WRdwytyMUcR6JYaAww5Sa6VH1cBD2hdE=;
+        s=k20201202; t=1652876973;
+        bh=3GySsgKbj9YOlHOOORgomtwxeGx2+Fwp1qtu2bu+WUI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lY07lkQ5DbsmA44y4GcRc3PPLRKLKaaWePOVPGuiY1lMORgSqig4YM7yYENxOnH3m
-         ebd38wRqK9//k0mG1s+pPAFTrW6fCa4ggj03ySt8Cp6egSQqMuUP9WNZxChmdHipql
-         s5cJuEZ/cjhze1a9d0QXddIDHydp7X4SxoCNIkJGaprVlyIAjinOEXkGfuM6U7ExJp
-         pT1gBx42r5MWlb9vIlL6PNavAotrgdTjlbHjJ2+nyqAHeZMPpLfpyg8F+qzbeVVICP
-         unA4UbImZLTa0ds6cRbzYLmRG7IXMmivU/4V3rc/pXvtvCzrb7A0X/RExvIgzKr/pQ
-         W8VxHJj07ODxQ==
+        b=mzCfu1pB0iUmZ0J7SPazVmmhkI7mLoK3dZX+JY1f7RjCmuti6aAKPmOKtDIj9rRnf
+         Fg2A1eLBa8QPIQKodeT0QHt+NVAzIqbqvyKxjqKRTf/n5O0VKdGjFFRh1hmFXSL/VL
+         uvxFIUIR9kJUWSGKA5FYrHyxmFy46xATS2DhxPZaO9/MHjPVEVvu/4BH6aiDfRBWhm
+         aJCDD7MyEOkeqEndZnA5FDO+fJz/BhbctT/l3B++9aOc7SKkZ6ph5Ht9hfOQeJEgqt
+         i0sEOyACdzdbkn6RnwSy2DcPnjvPNEGFHXooY7IVIzroY44d/2j7mNd520TIBm1NVE
+         QsdUvIOImsgTg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
@@ -41,12 +41,12 @@ Cc:     Felix Fietkau <nbd@nbd.name>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 02/13] mac80211: fix rx reordering with non explicit / psmp ack policy
-Date:   Wed, 18 May 2022 08:28:33 -0400
-Message-Id: <20220518122844.343220-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 2/6] mac80211: fix rx reordering with non explicit / psmp ack policy
+Date:   Wed, 18 May 2022 08:29:25 -0400
+Message-Id: <20220518122929.343615-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220518122844.343220-1-sashal@kernel.org>
-References: <20220518122844.343220-1-sashal@kernel.org>
+In-Reply-To: <20220518122929.343615-1-sashal@kernel.org>
+References: <20220518122929.343615-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1e7614abd947..e991abb45f68 100644
+index ab91683d9459..99d5f8b58e92 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -1387,8 +1387,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+@@ -1400,8 +1400,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
  		goto dont_reorder;
  
  	/* not part of a BA session */
