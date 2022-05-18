@@ -2,50 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C0C4C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 12:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DBE2C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 12:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236697AbiERMac (ORCPT
+        id S236940AbiERMcu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 May 2022 08:30:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48032 "EHLO
+        Wed, 18 May 2022 08:32:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236948AbiERM3w (ORCPT
+        with ESMTP id S237012AbiERMbY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 May 2022 08:29:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DB9D19668F;
-        Wed, 18 May 2022 05:28:26 -0700 (PDT)
+        Wed, 18 May 2022 08:31:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4983819C743;
+        Wed, 18 May 2022 05:28:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D936B6168C;
-        Wed, 18 May 2022 12:28:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 272BBC36AEC;
-        Wed, 18 May 2022 12:28:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2A4C2616A4;
+        Wed, 18 May 2022 12:28:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 104B4C36AE5;
+        Wed, 18 May 2022 12:28:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652876897;
-        bh=k+ohMeJjp2tFo/hvSvVUArrdssbnYwApznZxYrJaEVc=;
+        s=k20201202; t=1652876936;
+        bh=/r6wJWqx/YH3mr4hvjPSEsqqM3Us8PleY8Agi7vVwo8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TqqcHjOOYg92O/2IgN/NOwN8niBMZFERxwevQbXrsLoL3cOkZkCpRp4dnxWQloDLl
-         G9IagM6KPzyeBN/ghXk8iJpOO3cRLndvyUZJDxtdRYq1SoDjY0TH9LdHWWf0rcZd1Y
-         0I3VlIp58noyp9EfL20AQPVhn9kXdl+kHC7DTdT50G99JN/iHuYwNS2XxPbAMy/314
-         oXK4K1d8yvwIlGTHinjJ9lbdU61eaF3mVle3zwFx0ePHAdbJBUdUcTLZEXpif8jvzp
-         HvWB43dHC/XYHouWvYSx9hMIkj7TxskrmKLDQoHqOZWgawxIE3qREmfiLoSkrQbcDh
-         D8nMYJL/r7yJg==
+        b=lVlLSEO7rtorsI/xkdLaZpesdEqOxeN4+e+VoqcO3FQgpY2jBdGaiO2ntHVdbll89
+         DHPfJ3M9DKpakAsWvJ3Aq7UUaMIpFfidsJURVy39pgWcoFJkrEtKmkMUJJNtY8Ugl4
+         xOfRr7t/BSjIkMEKCcQxdH62jjUu4mhLV1ZDKPxVzJ1k9paDZoycyO9UGjjW0eSZK+
+         fapT4RM7VOEqCitZf2aB9V6nFabn7xDcDuydRcIdZsrVas585lbLek9KRM4WMjc6SD
+         3PBAkteNFKP6SugoxDh4sG7YTXbwScuP37LElSo12TsH/d1ba9sNyeN6gFoZ8m8w5+
+         g3bGXgVOhqfDw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Kieran Frewen <kieran.frewen@morsemicro.com>,
+        Bassem Dawood <bassem@morsemicro.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 09/17] nl80211: fix locking in nl80211_set_tx_bitrate_mask()
-Date:   Wed, 18 May 2022 08:27:43 -0400
-Message-Id: <20220518122753.342758-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 03/13] nl80211: validate S1G channel width
+Date:   Wed, 18 May 2022 08:28:34 -0400
+Message-Id: <20220518122844.343220-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220518122753.342758-1-sashal@kernel.org>
-References: <20220518122753.342758-1-sashal@kernel.org>
+In-Reply-To: <20220518122844.343220-1-sashal@kernel.org>
+References: <20220518122844.343220-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,51 +56,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Kieran Frewen <kieran.frewen@morsemicro.com>
 
-[ Upstream commit f971e1887fdb3ab500c9bebf4b98f62d49a20655 ]
+[ Upstream commit 5d087aa759eb82b8208411913f6c2158bd85abc0 ]
 
-This accesses the wdev's chandef etc., so cannot safely
-be used without holding the lock.
+Validate the S1G channel width input by user to ensure it matches
+that of the requested channel
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Link: https://lore.kernel.org/r/20220506102136.06b7205419e6.I2a87c05fbd8bc5e565e84d190d4cfd2e92695a90@changeid
+Signed-off-by: Kieran Frewen <kieran.frewen@morsemicro.com>
+Signed-off-by: Bassem Dawood <bassem@morsemicro.com>
+Link: https://lore.kernel.org/r/20220420041321.3788789-2-kieran.frewen@morsemicro.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9fae09e860e1..7c65ad17bf50 100644
+index 12f44ad4e0d8..283447df5fc6 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -11341,18 +11341,23 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 	struct cfg80211_bitrate_mask mask;
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
- 
- 	if (!rdev->ops->set_bitrate_mask)
- 		return -EOPNOTSUPP;
- 
-+	wdev_lock(wdev);
- 	err = nl80211_parse_tx_bitrate_mask(info, info->attrs,
- 					    NL80211_ATTR_TX_RATES, &mask,
- 					    dev, true);
- 	if (err)
--		return err;
-+		goto out;
- 
--	return rdev_set_bitrate_mask(rdev, dev, NULL, &mask);
-+	err = rdev_set_bitrate_mask(rdev, dev, NULL, &mask);
-+out:
-+	wdev_unlock(wdev);
-+	return err;
- }
- 
- static int nl80211_register_mgmt(struct sk_buff *skb, struct genl_info *info)
+@@ -2955,6 +2955,15 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 	} else if (attrs[NL80211_ATTR_CHANNEL_WIDTH]) {
+ 		chandef->width =
+ 			nla_get_u32(attrs[NL80211_ATTR_CHANNEL_WIDTH]);
++		if (chandef->chan->band == NL80211_BAND_S1GHZ) {
++			/* User input error for channel width doesn't match channel  */
++			if (chandef->width != ieee80211_s1g_channel_width(chandef->chan)) {
++				NL_SET_ERR_MSG_ATTR(extack,
++						    attrs[NL80211_ATTR_CHANNEL_WIDTH],
++						    "bad channel width");
++				return -EINVAL;
++			}
++		}
+ 		if (attrs[NL80211_ATTR_CENTER_FREQ1]) {
+ 			chandef->center_freq1 =
+ 				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ1]);
 -- 
 2.35.1
 
