@@ -2,87 +2,144 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7CEC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 May 2022 10:27:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6201CC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 May 2022 10:56:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236562AbiESK1Q (ORCPT
+        id S234481AbiESK4q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 May 2022 06:27:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42646 "EHLO
+        Thu, 19 May 2022 06:56:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230084AbiESK1O (ORCPT
+        with ESMTP id S229498AbiESK4n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 May 2022 06:27:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5D6A7E10;
-        Thu, 19 May 2022 03:27:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F13861A2A;
-        Thu, 19 May 2022 10:27:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42F1AC385AA;
-        Thu, 19 May 2022 10:27:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652956032;
-        bh=zZn8lhF17xR3SguiEoCZ4AuQDVWpkYaG3umQFppop0o=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=PQNyRfAnTpDMMXoFgeopUIj8zO3ymPXg+MHaFzMqTf4expv/QcR6NTCznGP1adlaW
-         4oU9hyOm8KYYrhcBGBo+jhPKLIOMRAapCq4XBmSN+E2FIyc5I89Y/9Pmw60pRyMQqS
-         FX05pYD53C2sSk4poB2SA1Ba72NLzEqJXag6rB2gHcXrCyjBeqHUupNi3ZO9zqHkKg
-         mDAA9jv+4SyiFHXIci/95X2kl06AYPRqPkMgM8b9rRG1Jk0Vxqh9/5RPM4ViPedWxe
-         BLXx3iqAMwABGe+Mvq9LE9nQUf/00bDbqFQuaYCJaLzwSq0aUoLK58Pbf/NSioZQnm
-         LHfeeRD6Epqyg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Duoming Zhou <duoming@zju.edu.cn>
-Cc:     linux-kernel@vger.kernel.org, amitkarwar@gmail.com,
-        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
-        huxinming820@gmail.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH net] net: wireless: marvell: mwifiex: fix sleep in atomic context bugs
-In-Reply-To: <20220519101656.44513-1-duoming@zju.edu.cn> (Duoming Zhou's
-        message of "Thu, 19 May 2022 18:16:56 +0800")
-References: <20220519101656.44513-1-duoming@zju.edu.cn>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-Date:   Thu, 19 May 2022 13:27:07 +0300
-Message-ID: <87fsl53jic.fsf@kernel.org>
+        Thu, 19 May 2022 06:56:43 -0400
+Received: from mail-yb1-f182.google.com (mail-yb1-f182.google.com [209.85.219.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E80F9674C8;
+        Thu, 19 May 2022 03:56:40 -0700 (PDT)
+Received: by mail-yb1-f182.google.com with SMTP id i11so8345727ybq.9;
+        Thu, 19 May 2022 03:56:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CsPdkWTA95Eqpmk1DP4Hoq5zSJ+0tKlh8Uu+b07Gp3I=;
+        b=pIf9QKtn0Qd8es0SBlcyJKGIswkPAhV0/KRRrAqIAsw4SwWd8xzfHjc3NOIzEdh3UI
+         7LQRwDP193hX6DmoWepvqYsQ7fSFqyAKMbwxaMOjLgkRLCbV+HtHm8MXt4pPq3Xrng2T
+         ap78Cl6ELvduRBYu75MIciyMirRy95/Q+rqNlsg7d3L8BXi7XHGz3qxzPerP7kSzO32K
+         KVpt6OJmIVG17h9qE0ZhanakzNQs0dEvVeCoz5QvHGPa3r54JQH/DDQ3Qkt12jXawLue
+         yayGoIMH8fjNl8TZygpRvSZXeolOmXEICXbYExj6YRLtYUhEh456FrhV6B5g3orZ7YUu
+         MJaQ==
+X-Gm-Message-State: AOAM533ukr+QXG+k42c1XIe3DyItwTc8ZlXX7fyKUT10AQxZBCjabc6y
+        DqFzbKg/EzzsForx2bsN/lrT/ydQ5ljjqZyhGTnalOMxvOw=
+X-Google-Smtp-Source: ABdhPJwCu8Y04Iz7ROUNEcavVfM2tjOMiMfDIW+3GBT9+Gd0rU87hBC+0P8SwDbKar1qT4O1G+LjmO2Jv1cWC99NNq8=
+X-Received: by 2002:a25:d687:0:b0:64e:3a41:8d5 with SMTP id
+ n129-20020a25d687000000b0064e3a4108d5mr3688875ybg.622.1652957800200; Thu, 19
+ May 2022 03:56:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20220505015814.3727692-1-rui.zhang@intel.com> <20220505015814.3727692-8-rui.zhang@intel.com>
+ <CAJZ5v0jt1OND_d08mC0TC1LZ-JGANDY5fiDmH5RUfdtRk1vZFw@mail.gmail.com>
+ <2dc4aa933d07add206a2aeefa15a4837aca6ff62.camel@intel.com>
+ <CAJZ5v0h=pYZkbhN2EiYzUGn36Q4-2tMyzfUP0uyFO=Sybse4DA@mail.gmail.com>
+ <20ad397b7975775d69d6c0ea902ca362fa3cf395.camel@intel.com> <CAJvTdKnRmsR+1b2urHr7=u7AcvCfr7m+GqLfLLgOgoB9KaB-zQ@mail.gmail.com>
+In-Reply-To: <CAJvTdKnRmsR+1b2urHr7=u7AcvCfr7m+GqLfLLgOgoB9KaB-zQ@mail.gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Thu, 19 May 2022 12:56:28 +0200
+Message-ID: <CAJZ5v0jZgLdVboWEG_akqC1U3wk4q9NqiFVqiOdvDMw1uqK_oA@mail.gmail.com>
+Subject: Re: [PATCH 7/7] rtc: cmos: Add suspend/resume endurance testing hook
+To:     Len Brown <lenb@kernel.org>
+Cc:     Zhang Rui <rui.zhang@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Kalle Valo <kvalo@kernel.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        linux-rtc@vger.kernel.org,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        merez@codeaurora.org, mat.jonczyk@o2.pl,
+        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
+        Len Brown <len.brown@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Duoming Zhou <duoming@zju.edu.cn> writes:
-
-> There are sleep in atomic context bugs when uploading device dump
-> data on usb interface. The root cause is that the operations that
-> may sleep are called in fw_dump_timer_fn which is a timer handler.
-> The call tree shows the execution paths that could lead to bugs:
+On Thu, May 19, 2022 at 4:33 AM Len Brown <lenb@kernel.org> wrote:
 >
->    (Interrupt context)
-> fw_dump_timer_fn
->   mwifiex_upload_device_dump
->     dev_coredumpv(..., GFP_KERNEL)
->       dev_coredumpm()
->         kzalloc(sizeof(*devcd), gfp); //may sleep
->         dev_set_name
->           kobject_set_name_vargs
->             kvasprintf_const(GFP_KERNEL, ...); //may sleep
->             kstrdup(s, GFP_KERNEL); //may sleep
+> First let's agree on why this should not be ignored.
 >
-> This patch moves the operations that may sleep into a work item.
-> The work item will run in another kernel thread which is in
-> process context to execute the bottom half of the interrupt.
-> So it could prevent atomic context from sleeping.
+> Our development team at Intel has lab with laptops, we run sleepgraph
+> on every RC, and we publish the tool in public:
+> https://www.intel.com/content/www/us/en/developer/topic-technology/open/pm-graph/overview.html
 >
-> Fixes: f5ecd02a8b20 ("mwifiex: device dump support for usb interface")
-> Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
+> But even if we were funded to do it (which we are not), we can't
+> possibly test every kind of device.
+> We need the community to help testing Linux (suspend/resume,
+> specifically) on a broad range of devices, so together we can make it
+> better for all.
+>
+> The community is made up mostly of users, rather than kernel hackers,
+> and so this effectively means that distro binary kernels need to be
+> able to support testing.
+>
+> Enabling that broad community of users/contributors is the goal.
+>
+> As Rui explained, this patch does nothing and breaks nothing if the
+> new hook remains unused.
+> If it is used, then overrides the wakeup duration for all subsequent
+> system suspends, until it is cleared.
+> If it does more than that, or does that in a clumsy way, then let's fix that.
+>
+> Today it gives us two new capabilities:
+>
+> 1. Prevents a lost wake event.  Commonly we see this with kcompatd
+> taking 20 seconds when we had previously armed the RTC for 15 seconds.
+> The system will sleep forever, until the user intervenes -- which may
+> be a very long time later.
+>
+> Rafael, If you have a better way to fix that, I'm all ears.  Aborted
+> suspend flows are ugly -- particularly when the user didn't want them,
+> but they are much less ugly then losing a wake event, which can result
+> in losing, say 10-hours of test time.
 
-Have you tested this on real hardware? Or is this just a theoretical
-fix?
+The real problem here is the missed wakeup events and I've already
+said in this thread how this can be fixed and Rui appears to agree
+with me.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+So I'd say why don't we just go and fix it?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+And it is orthogonal to the first 3 patches in this series, because
+they move the PCH thermal delay to the noirq phase which is later than
+the arming of the RTC Fixed Event IIUC.
+
+> 2. Allows more suspends/resume cycles per time.  Say the early wake is
+> fixed.  Then we have to decide how long to sleep before being
+> suspended.  If we set it for 1 second, and suspend takes longer than 1
+> second, then all of our tests will fail with early wakeups and we have
+> tested nothing.
+
+We have tested "early" wakeups which is what the users would see on
+the system in question if they set the RTC wake time to 1 second
+before suspending.
+
+This may not be what we want to test, though, but that is a different
+problem, as discussed below.
+
+> If we set it to 60 seconds, and suspend takes 1
+> second, then 59/60 seconds are spent sleeping, when they could be
+> spent testing Linux.  With this patch, we can set it to the minimum of
+> 2 seconds right before we sleep, guaranteeing that we spend at least 1
+> second, and under 2 seconds sleeping, and the rest of the time testing
+> -- which allows us to meet the goal.
+
+So the goal specifically is to test the last phase of system suspend
+and in particular whether or not the platform has reached the specific
+minimum-power state at the end of it.
+
+In order to do that, we basically want to ignore all of the wakeup
+events except for the special RTC wakeup 1 second after the platform
+has been asked to get into the minimum-power state, so what we are
+talking about here really is a special suspend test mode using the RTC
+as a wakeup vehicle.
