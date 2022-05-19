@@ -2,124 +2,114 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C15C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 May 2022 21:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C375C43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 May 2022 02:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243155AbiERVT3 (ORCPT
+        id S232906AbiESCd4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 May 2022 17:19:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59860 "EHLO
+        Wed, 18 May 2022 22:33:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243133AbiERVT2 (ORCPT
+        with ESMTP id S229437AbiESCdz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 May 2022 17:19:28 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA1C3175690
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2022 14:19:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1652908767; x=1684444767;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=5TAXv85sybfkVh2uXaxyRsEjnfyIHguGLkaoHwsn03U=;
-  b=FXNn09X/7mw3gfdLKvu2EDK3CtWufaZpBjHOnBtGqlzdLhWYnvv6MXSG
-   cqT2HsnQTSpMKooNFftWNDKbbN7DmucBjFHHQ/qNxIjOa5hsl6TLB5OX0
-   4groVfYqxtXtKupHw8EyvLPfPfwMeD9OpJHJY+ai6cw3X26OPoUkhLhcl
-   U=;
-Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 18 May 2022 14:19:27 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2022 14:19:27 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 18 May 2022 14:19:27 -0700
-Received: from [10.110.66.23] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 18 May
- 2022 14:19:26 -0700
-Message-ID: <7c05bbc5-c51f-2eb6-84a2-3a20c45b8b22@quicinc.com>
-Date:   Wed, 18 May 2022 14:19:25 -0700
+        Wed, 18 May 2022 22:33:55 -0400
+Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com [209.85.221.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12548C6E74;
+        Wed, 18 May 2022 19:33:55 -0700 (PDT)
+Received: by mail-vk1-f177.google.com with SMTP id d132so2118250vke.0;
+        Wed, 18 May 2022 19:33:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=e6jbyutOwumj+LrvLcjzetQUKqPKzUNIp/FTCu48hvw=;
+        b=jOoVC97FIxfNPed3L7v50RfQbh4AxRDz6r5YpX9jAZhcRTU0o+NQKZykKjHAh2F/ys
+         xrm0S25mrpm5bSv+yLmkFFLSy7E/yEB1FdoBWm40eZqCcIqzOHOyz3T0aJ7jJk8q+bSK
+         MHNlEdAHDIapuoQug+gYN8/qLy2ZuuEKXToj7ELyy0Q8jDxQj2QJiYHv67p9Dar+Tfpi
+         KzUczpBWalmeW13dOSI428BpE2wF8Ao+1QAp6M2v/wyw/3d8X3SH7oWwOodIuuyOzUzj
+         4gZxvH3+fnz2X5zF+db+v5uAiHLXzSe7bJPGIm/0vbEdygxuJxOW9AWTAtvEd0AyCTht
+         RC3A==
+X-Gm-Message-State: AOAM530F454QTKv0KMPfxJUShz+1r9KRmFXRwOYuVoL1bEyqPCu0gPFc
+        zDzLC9EjLHuS6wFEP4vKSwRrb6JDUpVPhHhkrK8=
+X-Google-Smtp-Source: ABdhPJwON+5z8eNTjw6bpXmLZQJvvRhiCNs5QCAZObqr3pRwKRoTxGdMQmC3/+8n/nYodjdo61T9rduIi1V9+RNE1ck=
+X-Received: by 2002:a1f:5907:0:b0:352:6327:926f with SMTP id
+ n7-20020a1f5907000000b003526327926fmr986181vkb.1.1652927634185; Wed, 18 May
+ 2022 19:33:54 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [PATCH v2 2/9] ath9k: basic support for QCN550x
-Content-Language: en-US
-To:     Wenli Looi <wlooi@ucalgary.ca>
-CC:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>
-References: <20220512195319.14635-1-wlooi@ucalgary.ca>
- <20220512195319.14635-3-wlooi@ucalgary.ca>
- <69feb893-d73a-46e5-fbe6-2f49e091c625@quicinc.com>
- <CAKe_nd3u+iiCGC7M_i+ovF+_bgDMkFUh0OpJ7HFWMhmgZQa7bw@mail.gmail.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <CAKe_nd3u+iiCGC7M_i+ovF+_bgDMkFUh0OpJ7HFWMhmgZQa7bw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+References: <20220505015814.3727692-1-rui.zhang@intel.com> <20220505015814.3727692-8-rui.zhang@intel.com>
+ <CAJZ5v0jt1OND_d08mC0TC1LZ-JGANDY5fiDmH5RUfdtRk1vZFw@mail.gmail.com>
+ <2dc4aa933d07add206a2aeefa15a4837aca6ff62.camel@intel.com>
+ <CAJZ5v0h=pYZkbhN2EiYzUGn36Q4-2tMyzfUP0uyFO=Sybse4DA@mail.gmail.com> <20ad397b7975775d69d6c0ea902ca362fa3cf395.camel@intel.com>
+In-Reply-To: <20ad397b7975775d69d6c0ea902ca362fa3cf395.camel@intel.com>
+From:   Len Brown <lenb@kernel.org>
+Date:   Wed, 18 May 2022 16:33:43 -1000
+Message-ID: <CAJvTdKnRmsR+1b2urHr7=u7AcvCfr7m+GqLfLLgOgoB9KaB-zQ@mail.gmail.com>
+Subject: Re: [PATCH 7/7] rtc: cmos: Add suspend/resume endurance testing hook
+To:     Zhang Rui <rui.zhang@intel.com>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Kalle Valo <kvalo@kernel.org>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        linux-rtc@vger.kernel.org,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        merez@codeaurora.org, mat.jonczyk@o2.pl,
+        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
+        Len Brown <len.brown@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/17/2022 11:08 PM, Wenli Looi wrote:
-> On Thu, May 12, 2022 at 2:45 PM Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
->>
->> On 5/12/2022 12:53 PM, Wenli Looi wrote:
->>> QCN550x is very similar to QCA956x. Note that AR_CH0_XTAL is
->>> intentionally unchanged. Certain arrays are no longer static because
->>> they are no longer constant.
->>
->> I don't understand the last sentence. You removed the 'static' keyword
->> but left the 'const' keyword, hence they are still constant.
->>
->> And I didn't actually see any instances where the arrays are being modified.
->>
->> Can you highlight which are being modified?
-> 
-> I changed several arrays from "static const" to "const" because their
-> values now depend on ah, so it won't compile if they are static. For
-> example, offset_array contains AR_PHY_RX_IQCAL_CORR_B0 which depends
-> on AR_CHAN_BASE (which now depends on ah but did not before).
+First let's agree on why this should not be ignored.
 
-So the values are no longer constant, hence IMO the 'const' qualifier 
-should also be removed
+Our development team at Intel has lab with laptops, we run sleepgraph
+on every RC, and we publish the tool in public:
+https://www.intel.com/content/www/us/en/developer/topic-technology/open/pm-graph/overview.html
 
-> 
->>> -#define AR_CHAN_BASE 0x9800
->>> +#define AR_CHAN_BASE (AR_SREV_5502(ah) ? 0x29800 : 0x9800)
->>
->> this violates the coding style:
->> <https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl>
->>
->> Things to avoid when using macros:
->> macros that depend on having a local variable with a magic name
->>
->> So you should add ah as a parameter to the macro
->>
->> Repeat for all instances below where ah is being used
->>
-> 
-> The macros like AR_CHAN_BASE and AR_SM_BASE are referenced by a lot of
-> other macros, some of which already have a "magic name" dependency on
-> ah like these ones:
-> 
-> https://github.com/torvalds/linux/blob/210e04ff768142b96452030c4c2627512b30ad95/drivers/net/wireless/ath/ath9k/ar9003_phy.h#L527
-> 
-> However I think it's probably good to avoid introducing new macros
-> with the magic name dependency. If desired, for every macro that I
-> have modified, I could try to add the ah parameter to all dependent
-> macros. This would probably be a rather large change so it might make
-> sense to be a separate commit.
+But even if we were funded to do it (which we are not), we can't
+possibly test every kind of device.
+We need the community to help testing Linux (suspend/resume,
+specifically) on a broad range of devices, so together we can make it
+better for all.
 
-Your current change illustrates one of the many pitfalls of using magic 
-names. IMO you should have a precursor patch that changes all of the 
-"bad" macros to take ah as a parameter rather than be a magic name.
+The community is made up mostly of users, rather than kernel hackers,
+and so this effectively means that distro binary kernels need to be
+able to support testing.
 
-At a minimum you should add ah as a parameter to the ones you are 
-modifying so that it is clear why you need to change the attributes of 
-those arrays.
+Enabling that broad community of users/contributors is the goal.
 
-/jeff
+As Rui explained, this patch does nothing and breaks nothing if the
+new hook remains unused.
+If it is used, then overrides the wakeup duration for all subsequent
+system suspends, until it is cleared.
+If it does more than that, or does that in a clumsy way, then let's fix that.
+
+Today it gives us two new capabilities:
+
+1. Prevents a lost wake event.  Commonly we see this with kcompatd
+taking 20 seconds when we had previously armed the RTC for 15 seconds.
+The system will sleep forever, until the user intervenes -- which may
+be a very long time later.
+
+Rafael, If you have a better way to fix that, I'm all ears.  Aborted
+suspend flows are ugly -- particularly when the user didn't want them,
+but they are much less ugly then losing a wake event, which can result
+in losing, say 10-hours of test time.
+
+2. Allows more suspends/resume cycles per time.  Say the early wake is
+fixed.  Then we have to decide how long to sleep before being
+suspended.  If we set it for 1 second, and suspend takes longer than 1
+second, then all of our tests will fail with early wakeups and we have
+tested nothing.  If we set it to 60 seconds, and suspend takes 1
+second, then 59/60 seconds are spent sleeping, when they could be
+spent testing Linux.  With this patch, we can set it to the minimum of
+2 seconds right before we sleep, guaranteeing that we spend at least 1
+second, and under 2 seconds sleeping, and the rest of the time testing
+-- which allows us to meet the goal.
+
+thanks,
+Len Brown, Intel
