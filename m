@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8999EC4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6ABC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353286AbiETTnb (ORCPT
+        id S1353281AbiETTnd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 15:43:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59424 "EHLO
+        Fri, 20 May 2022 15:43:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353281AbiETTn1 (ORCPT
+        with ESMTP id S1353279AbiETTn0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 15:43:27 -0400
+        Fri, 20 May 2022 15:43:26 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75D73199489;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C2AC199487;
         Fri, 20 May 2022 12:43:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0F7C361B9A;
-        Fri, 20 May 2022 19:43:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB9ECC34115;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ADB2B61BD5;
         Fri, 20 May 2022 19:43:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E31A8C36AE5;
+        Fri, 20 May 2022 19:43:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1653075805;
-        bh=7YbNykz9c0aOCfyDPVpLz+qw4U51npRt4eZFKtm6Hoc=;
+        bh=Zsa+f6JCTzDTQi/tJsr1BPpvgwcSPn0bBlCB7MGA9x8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qWUE9y/h7QwfETx0oy7xKGmX5Xbb6QWoIx57tCK1rS27ZXCPMC5goUnEKRcnrn8W3
-         ziF7gZ4qmWgFClZSaFdAAg2ncvljRLlUX8V+cCIpgcpFTEbRlWU26ODdCnzKYLQTjH
-         6Zz5zvpXFTrGBzlxe1J1RJ4oQjUYh5SvD4cRvyuahuxlHAmOhW1mL4U96vFh6OV90g
-         WnoblE4At5zYaTpaodBxkhl6J7vaewMHV4+Cj3P1YO4aSXdfHqu4Fjyg0tZTapuf1Y
-         tR35OqBy1ydxOyE1P7JbhXzWziWl/c7c9Imu40HyDlW8h96b4ZGiwR5xtlJw6p6L0l
-         H9JiWmbEa/4ng==
+        b=ATxhh3SCoyDIvjyBnvDp4a5iDHXO6AYZTxT4uh62WYvhDH9bg1PjaDtpVacHPWJg8
+         KaCYgOQGaU5btpo0MDAAJyW0E1qP9ni2xhONFs/P4EIXICfuW94kn847Q7iwu+/Zdm
+         65GKUGV9ZgCqfShZwtAmN06mQujISyeCfJIALXC+5tLqJ5nkqD2MBqnTKZ8YBmUL6N
+         tdEG+Hb4aFa4IWmQMdUtI3EpEaYrH6g1WSUyCGr26I7IvqqfDPgwO7YN3qMplogXn9
+         IpPWDL4hQ+LV4WidaU+j2cvR4FZev3JP8jER77ndRiv3HyNlblSnbjptLsd6vm5AqY
+         L+15LmfZFt79w==
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     kvalo@kernel.org, johannes@sipsolutions.net
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH net-next 4/8] wifi: ath6k: silence false positive -Wno-dangling-pointer warning on GCC 12
-Date:   Fri, 20 May 2022 12:43:16 -0700
-Message-Id: <20220520194320.2356236-5-kuba@kernel.org>
+        Jakub Kicinski <kuba@kernel.org>, toke@toke.dk
+Subject: [PATCH net-next 2/8] wifi: ath9k: silence array-bounds warning on GCC 12
+Date:   Fri, 20 May 2022 12:43:14 -0700
+Message-Id: <20220520194320.2356236-3-kuba@kernel.org>
 X-Mailer: git-send-email 2.34.3
 In-Reply-To: <20220520194320.2356236-1-kuba@kernel.org>
 References: <20220520194320.2356236-1-kuba@kernel.org>
@@ -50,41 +50,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For some reason GCC 12 decided to complain about the common
-pattern of queuing an object onto a list on the stack in ath6k:
+GCC 12 says:
 
-    inlined from ‘ath6kl_htc_mbox_tx’ at drivers/net/wireless/ath/ath6kl/htc_mbox.c:1142:3:
-include/linux/list.h:74:19: warning: storing the address of local variable ‘queue’ in ‘*&packet_15(D)->list.prev’ [-Wdangling-pointer=]
-   74 |         new->prev = prev;
-      |         ~~~~~~~~~~^~~~~~
+drivers/net/wireless/ath/ath9k/mac.c: In function ‘ath9k_hw_resettxqueue’:
+drivers/net/wireless/ath/ath9k/mac.c:373:22: warning: array subscript 32 is above array bounds of ‘struct ath9k_tx_queue_info[10]’ [-Warray-bounds]
+  373 |         qi = &ah->txq[q];
+      |               ~~~~~~~^~~
 
-Move the warning to W=1, hopefully it goes away with a compiler
-update.
+I don't know where it got the 32 from, relegate the warning to W=1+.
 
 Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
+CC: toke@toke.dk
 CC: kvalo@kernel.org
 CC: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath6kl/Makefile | 5 +++++
+ drivers/net/wireless/ath/ath9k/Makefile | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
-index dc2b3b46781e..01cc0d50fee6 100644
---- a/drivers/net/wireless/ath/ath6kl/Makefile
-+++ b/drivers/net/wireless/ath/ath6kl/Makefile
-@@ -36,6 +36,11 @@ ath6kl_core-y += wmi.o
- ath6kl_core-y += core.o
- ath6kl_core-y += recovery.o
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index eff94bcd1f0a..9bdfcee2f448 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -45,6 +45,11 @@ ath9k_hw-y:=	\
+ 		ar9003_eeprom.o \
+ 		ar9003_paprd.o
  
-+# FIXME: temporarily silence -Wdangling-pointer on non W=1+ builds
++# FIXME: temporarily silence -Warray-bounds on non W=1+ builds
 +ifndef KBUILD_EXTRA_WARN
-+CFLAGS_htc_mbox.o += -Wno-dangling-pointer
++CFLAGS_mac.o += -Wno-array-bounds
 +endif
 +
- ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
- ath6kl_core-$(CONFIG_ATH6KL_TRACING) += trace.o
+ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
  
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
 -- 
 2.34.3
 
